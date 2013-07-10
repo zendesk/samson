@@ -1,8 +1,7 @@
 <%= @task.name %>
 
-<button id="execute">
-  Execute
-</button>
+<button id="execute">Execute</button>
+<button disabled="disabled" id="stop">Stop</button>
 
 <div>
   <pre id="log"></pre>
@@ -11,9 +10,22 @@
 <script type="text/javascript">
   $('#execute').click(function() {
     var ws = new WebSocket('ws://' + window.location.host + window.location.pathname + '/execute');
+    var log = document.getElementById('log');
+
     ws.onmessage = function(m) {
-      var log = document.getElementById('log');
       log.innerHTML += m.data;
     };
+
+    ws.onclose = function() {
+      log.innerHTML += "Stopped\n";
+    }
+
+    $(this).attr("disabled", "disabled");
+
+    $('#stop').removeAttr("disabled").click(function() {
+      $('#execute').removeAttr("disabled");
+      $('#stop').attr("disabled", "disabled");
+      ws.close();
+    });
   });
 </script>

@@ -37,17 +37,20 @@ Pusher.class_eval do
       return 200 if !request.websocket?
 
       request.websocket do |ws|
-        connection = nil
+        connection = io = nil
 
         ws.onopen do
           ws.send("Executing \"#{@task.command}\" and tailing the output...\n")
 
-          io = IO.popen("#{@task.command} 2>&1")
+          io = IO.popen(@task.command.split(" ").push(:err => [:child, :out]))
           connection = EventMachine.watch(io, Readable, ws)
           connection.notify_readable = true
         end
 
-        ws.onclose { connection.detach }
+        ws.onclose do
+          connection.detach
+          Process.kill("KILL", io.pid) && io.close
+        end
       end
     end
 
