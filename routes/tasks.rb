@@ -29,16 +29,13 @@ Pusher.class_eval do
         ws.onopen do
           ws.send("Executing \"#{@task.command}\" and tailing the output...\n")
 
-          command = CommandTail.new(@task.command) do |message|
-            ws.send(message.force_encoding("utf-8"))
-          end
+          command = CommandTail.new(@task.command,
+            proc {|message| ws.send(message.force_encoding("utf-8"))},
+            proc { ws.close_websocket })
         end
 
         ws.onmessage do |msg|
-          if msg == "close"
-            command.close
-            ws.close_websocket
-          end
+          command.close if msg == "close"
         end
       end
     end

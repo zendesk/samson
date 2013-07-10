@@ -13,13 +13,15 @@
     var log = document.getElementById('log');
 
     ws.onmessage = function(m) { log.innerHTML += m.data; };
-    ws.onclose = function() { log.innerHTML += "Stopped\n" };
+    ws.onclose = function() {
+      $('#execute').removeAttr("disabled");
+      $('#stop').attr("disabled", "disabled");
+      log.innerHTML += "Stopped\n"
+    };
 
     $(this).attr("disabled", "disabled");
 
     $('#stop').removeAttr("disabled").click(function() {
-      $('#execute').removeAttr("disabled");
-      $('#stop').attr("disabled", "disabled");
       ws.send("close");
     });
   });
