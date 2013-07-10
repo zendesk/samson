@@ -1,6 +1,7 @@
 require "./routes/pusher.rb"
 
-EventMachine.kqueue = true
-EventMachine.epoll
+# Needed for process watching
+EventMachine.epoll if EventMachine.epoll?
+EventMachine.kqueue = true if EventMachine.kqueue?
 
 run Pusher
