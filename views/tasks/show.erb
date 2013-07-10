@@ -12,20 +12,15 @@
     var ws = new WebSocket('ws://' + window.location.host + window.location.pathname + '/execute');
     var log = document.getElementById('log');
 
-    ws.onmessage = function(m) {
-      log.innerHTML += m.data;
-    };
-
-    ws.onclose = function() {
-      log.innerHTML += "Stopped\n";
-    }
+    ws.onmessage = function(m) { log.innerHTML += m.data; };
+    ws.onclose = function() { log.innerHTML += "Stopped" };
 
     $(this).attr("disabled", "disabled");
 
     $('#stop').removeAttr("disabled").click(function() {
       $('#execute').removeAttr("disabled");
       $('#stop').attr("disabled", "disabled");
-      ws.close();
+      ws.send("close");
     });
   });
 </script>

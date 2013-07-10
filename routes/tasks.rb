@@ -1,5 +1,5 @@
 require 'sinatra-websocket'
-require 'open3'
+require 'pty'
 
 Pusher.class_eval do
   class Readable < EventMachine::Connection
@@ -10,7 +10,10 @@ Pusher.class_eval do
     end
 
     def notify_readable
-      @socket.send(@io.readline)
+      while buffer = @io.read_nonblock(4096)
+        @socket.send(buffer)
+      end
+    rescue EOFError, Errno::EAGAIN
     end
   end
 
@@ -37,19 +40,28 @@ Pusher.class_eval do
       return 200 if !request.websocket?
 
       request.websocket do |ws|
-        connection = io = nil
+        connection = io = pid = nil
 
         ws.onopen do
           ws.send("Executing \"#{@task.command}\" and tailing the output...\n")
 
-          io = IO.popen(@task.command.split(" ").push(:err => [:child, :out]))
+          io, _, pid = PTY.spawn(@task.command)
+
           connection = EventMachine.watch(io, Readable, ws)
           connection.notify_readable = true
         end
 
-        ws.onclose do
-          connection.detach
-          Process.kill("KILL", io.pid) && io.close
+        ws.onmessage do |msg|
+          if msg == "close"
+            Process.kill("INT", pid)
+
+            ws.send(io.read)
+
+            connection.detach
+            io.close
+
+            ws.close_websocket
+          end
         end
       end
     end
