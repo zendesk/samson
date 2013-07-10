@@ -1,3 +1,5 @@
+require 'eventmachine'
+
 class Readable < EventMachine::Connection
   IO_BUFFER_READ = 4096
 
