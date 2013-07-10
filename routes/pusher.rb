@@ -7,6 +7,7 @@ require Bundler.root.join("config", "data_mapper.rb")
 class Pusher < Sinatra::Base
   enable :sessions, :logging
   set :root, Bundler.root
+  set :protection, except: :session_hijacking
 
   register Sinatra::Namespace
 
@@ -20,3 +21,4 @@ class Pusher < Sinatra::Base
 end
 
 require_relative "tasks"
+require_relative "tail"
