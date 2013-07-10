@@ -25,26 +25,19 @@ Pusher.class_eval do
       return 200 if !request.websocket?
 
       request.websocket do |ws|
-        connection = io = pid = nil
+        connection = command = nil
 
         ws.onopen do
           ws.send("Executing \"#{@task.command}\" and tailing the output...\n")
 
-          io, _, pid = PTY.spawn(@task.command)
-
-          connection = EventMachine.watch(io, Readable, ws)
-          connection.notify_readable = true
+          command = CommandTail.new(@task.command) do |message|
+            ws.send(message)
+          end
         end
 
         ws.onmessage do |msg|
           if msg == "close"
-            Process.kill("INT", pid)
-
-            ws.send(io.read_nonblock(Readable::IO_BUFFER_READ))
-
-            connection.detach
-            io.close
-
+            command.close
             ws.close_websocket
           end
         end

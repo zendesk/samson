@@ -3,15 +3,15 @@ require 'eventmachine'
 class Readable < EventMachine::Connection
   IO_BUFFER_READ = 4096
 
-  def initialize(socket)
+  def initialize(callback)
     super
 
-    @socket = socket
+    @callback = callback
   end
 
   def notify_readable
     while buffer = @io.read_nonblock(IO_BUFFER_READ)
-      @socket.send(buffer)
+      @callback.call(buffer)
     end
   rescue EOFError, Errno::EAGAIN
   end
