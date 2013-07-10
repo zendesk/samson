@@ -2,6 +2,8 @@ require 'sinatra/base'
 require 'sinatra/reloader'
 require 'sinatra/namespace'
 
+require Bundler.root.join("config", "data_mapper.rb")
+
 class Pusher < Sinatra::Base
   enable :sessions, :logging
   set :root, Bundler.root
