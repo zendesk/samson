@@ -2,21 +2,6 @@ require 'sinatra-websocket'
 require 'pty'
 
 Pusher.class_eval do
-  class Readable < EventMachine::Connection
-    def initialize(socket)
-      super
-
-      @socket = socket
-    end
-
-    def notify_readable
-      while buffer = @io.read_nonblock(4096)
-        @socket.send(buffer)
-      end
-    rescue EOFError, Errno::EAGAIN
-    end
-  end
-
   namespace "/tasks" do
     get "/new" do
       @task = Task.new
@@ -55,7 +40,7 @@ Pusher.class_eval do
           if msg == "close"
             Process.kill("INT", pid)
 
-            ws.send(io.read)
+            ws.send(io.read_nonblock(Readable::IO_BUFFER_READ))
 
             connection.detach
             io.close

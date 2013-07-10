@@ -13,7 +13,7 @@
     var log = document.getElementById('log');
 
     ws.onmessage = function(m) { log.innerHTML += m.data; };
-    ws.onclose = function() { log.innerHTML += "Stopped" };
+    ws.onclose = function() { log.innerHTML += "Stopped\n" };
 
     $(this).attr("disabled", "disabled");
 
