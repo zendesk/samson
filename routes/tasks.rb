@@ -30,7 +30,7 @@ Pusher.class_eval do
           ws.send("Executing \"#{@task.command}\" and tailing the output...\n")
 
           command = CommandTail.new(@task.command) do |message|
-            ws.send(message)
+            ws.send(message.force_encoding("utf-8"))
           end
         end
 
