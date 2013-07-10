@@ -3,4 +3,5 @@ class Task
 
   property :id, Serial
   property :name, String
+  property :command, String
 end

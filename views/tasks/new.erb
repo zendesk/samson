@@ -1,4 +1,5 @@
 <form method="POST" action="/tasks">
   <input type="text" value="<%= @task.name %>" name="task[name]" id="task_name" />
+  <input type="text" value="<%= @task.command %>" name="task[command]" id="task_command" />
   <input type="submit" value="Create" />
 </form>

@@ -21,4 +21,3 @@ class Pusher < Sinatra::Base
 end
 
 require_relative "tasks"
-require_relative "tail"

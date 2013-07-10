@@ -1,20 +1,3 @@
 <h1>Hello</h1>
 
 <a href="/tasks/new">Create a new task</a>
-
-<pre id="msgs"></pre>
-
-<script type="text/javascript">
-  window.onload = function(){
-    (function(){
-      var show = function(el){
-        return function(msg){ el.innerHTML += msg; }
-      }(document.getElementById('msgs'));
-
-      var ws       = new WebSocket('ws://' + window.location.host + '/tail');
-      ws.onopen    = function()  { show("websocket opened\n"); };
-      ws.onclose   = function()  { show("websocket closed\n"); }
-      ws.onmessage = function(m) { show(m.data); };
-    })();
-  }
-</script>

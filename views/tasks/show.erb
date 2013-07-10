@@ -1,0 +1,22 @@
+<%= @task.name %>
+
+<button id="execute">
+  Execute
+</button>
+
+<div>
+  <pre id="log"></pre>
+</div>
+
+<script type="text/javascript">
+  $('#execute').click(function() {
+    var show = function(el){
+      return function(msg){ el.innerHTML += msg; }
+    }(document.getElementById('log'));
+
+    var ws       = new WebSocket('ws://' + window.location.host + window.location.pathname + '/execute');
+    ws.onopen    = function()  { show("websocket opened\n"); };
+    ws.onclose   = function()  { show("websocket closed\n"); }
+    ws.onmessage = function(m) { show(m.data); };
+  });
+</script>
