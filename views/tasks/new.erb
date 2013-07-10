@@ -1,3 +1,11 @@
+<% if @task.errors.any? %>
+  <div>
+    <% @task.errors.each do |error| %>
+      <p><%= error.to_s %></p>
+    <% end %>
+  </div>
+<% end %>
+
 <form method="POST" action="/tasks">
   <input type="text" value="<%= @task.name %>" name="task[name]" id="task_name" />
   <input type="text" value="<%= @task.command %>" name="task[command]" id="task_command" />

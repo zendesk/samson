@@ -40,6 +40,8 @@ Pusher.class_eval do
         connection = nil
 
         ws.onopen do
+          ws.send("Executing \"#{@task.command}\" and tailing the output...\n")
+
           io = IO.popen("#{@task.command} 2>&1")
           connection = EventMachine.watch(io, Readable, ws)
           connection.notify_readable = true

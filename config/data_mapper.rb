@@ -6,5 +6,3 @@ Dir.glob(Bundler.root.join("models", "*.rb")).each do |file|
 end
 
 DataMapper.finalize.auto_upgrade!
-
-

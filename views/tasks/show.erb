@@ -10,13 +10,10 @@
 
 <script type="text/javascript">
   $('#execute').click(function() {
-    var show = function(el){
-      return function(msg){ el.innerHTML += msg; }
-    }(document.getElementById('log'));
-
-    var ws       = new WebSocket('ws://' + window.location.host + window.location.pathname + '/execute');
-    ws.onopen    = function()  { show("websocket opened\n"); };
-    ws.onclose   = function()  { show("websocket closed\n"); }
-    ws.onmessage = function(m) { show(m.data); };
+    var ws = new WebSocket('ws://' + window.location.host + window.location.pathname + '/execute');
+    ws.onmessage = function(m) {
+      var log = document.getElementById('log');
+      log.innerHTML += m.data;
+    };
   });
 </script>
