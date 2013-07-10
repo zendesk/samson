@@ -1,5 +1,4 @@
 require 'sinatra-websocket'
-require 'pty'
 
 Pusher.class_eval do
   namespace "/tasks" do
