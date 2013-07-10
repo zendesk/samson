@@ -4,6 +4,10 @@ require 'sinatra/namespace'
 
 require Bundler.root.join("config", "data_mapper.rb")
 
+# Needed for process watching
+EventMachine.epoll if EventMachine.epoll?
+EventMachine.kqueue = true if EventMachine.kqueue?
+
 class Pusher < Sinatra::Base
   enable :sessions, :logging
   set :root, Bundler.root

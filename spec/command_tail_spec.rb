@@ -7,10 +7,10 @@ describe CommandTail do
     before do
       Timeout.timeout(5) do
         EventMachine.run do
-          tail = CommandTail.new("echo 'hi'") {|message|
+          tail = CommandTail.new("echo 'hi'", proc {|message|
             messages << message
             EventMachine.stop
-          }
+          })
 
           EventMachine.add_shutdown_hook do
             tail.close
