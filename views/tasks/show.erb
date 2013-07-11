@@ -1,4 +1,6 @@
-<%= @task.name %>
+<h1><%= @task.name %></h1>
+
+<a href="/tasks/<%= @task.id %>/edit">Edit</a>
 
 <button id="execute">Execute</button>
 <button disabled="disabled" id="stop">Stop</button>

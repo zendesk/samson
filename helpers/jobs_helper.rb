@@ -1,8 +1,4 @@
 module JobsHelper
-  def form_method(model)
-    model.id ? "PUT" : "POST"
-  end
-
   def task_ids
     @job.tasks.map(&:id) + (Task.all - @job.tasks).map(&:id)
   end

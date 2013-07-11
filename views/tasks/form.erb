@@ -1,0 +1,8 @@
+<%= erb :"shared/errors", :locals => { :object => @task } %>
+
+<form method="<%= form_method(@task) %>" action="/tasks">
+  <input type="text" value="<%= @task.name %>" name="task[name]" id="task_name" />
+  <input type="text" value="<%= @task.command %>" name="task[command]" id="task_command" />
+  <input type="submit" value="Save" />
+  <button><a href="/tasks">Cancel</a></button>
+</form>

@@ -27,6 +27,8 @@ class Pusher < Sinatra::Base
     register Sinatra::Reloader
   end
 
+  helpers FormsHelper
+
   get "/" do
     erb :index
   end

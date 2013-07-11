@@ -1,7 +1,3 @@
-<%= erb :"shared/errors", :locals => { :object => @job } %>
+<h1>Create a new task</h1>
 
-<form method="POST" action="/tasks">
-  <input type="text" value="<%= @task.name %>" name="task[name]" id="task_name" />
-  <input type="text" value="<%= @task.command %>" name="task[command]" id="task_command" />
-  <input type="submit" value="Create" />
-</form>
+<%= erb :"tasks/form" %>
