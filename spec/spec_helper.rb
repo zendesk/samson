@@ -1,4 +1,5 @@
 ENV['RACK_ENV'] = 'test'
+ENV['DATABASE_URL'] = "mysql://root@localhost/pusher_test"
 
 require 'bundler/setup'
 
@@ -13,6 +14,7 @@ RSpec.configure do |config|
 
   config.before(:suite) do
     DatabaseCleaner.strategy = :transaction
+    DatabaseCleaner.clean_with(:truncation)
   end
 
   config.before(:each) do

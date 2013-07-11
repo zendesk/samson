@@ -5,9 +5,9 @@ gem "sinatra-contrib"
 gem "sinatra-websocket"
 
 gem "data_mapper"
-gem "dm-sqlite-adapter"
+gem "dm-mysql-adapter"
 
-# gem "debugger"
+gem "debugger"
 
 group :test do
   gem "rspec"

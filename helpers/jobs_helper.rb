@@ -1,6 +1,16 @@
 module JobsHelper
   def task_ids
-    @job.tasks.map(&:id) + (Task.all - @job.tasks).map(&:id)
+    tasks = Task.all
+
+    if @job.id
+      mapped = @job.tasks.map do |task|
+        tasks.index(task)
+      end
+
+      mapped += (mapped.size..(tasks.size - @job.tasks.size)).to_a
+    else
+      (0..(tasks.size)).to_a
+    end
   end
 
   def add_job_tasks

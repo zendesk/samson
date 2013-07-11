@@ -43,8 +43,56 @@ describe "Pusher::jobs" do
       end
     end
 
+    describe "updating the task sort" do
+      let(:params) do
+        job.tasks << Task.create(:name => "test", :command => "true")
+        job.tasks << Task.create(:name => "tester", :command => "false")
+        job.save
+
+        {
+          :tasks => job.tasks.map(&:id),
+          :task_priorities => "tasks[]=#{job.tasks.last.id}&tasks[]=#{job.tasks.first.id}"
+        }
+      end
+
+      it "should update" do
+        tasks = job.tasks
+        job.reload.tasks.should == tasks.reverse
+      end
+    end
+
+    describe "adding a task" do
+      let(:task) { Task.create(:name => "tester", :command => "false") }
+      let(:params) do
+        job.tasks << Task.create(:name => "test", :command => "true")
+        job.save
+
+        { :tasks => job.tasks.map(&:id).push(task.id) }
+      end
+
+      it "should update" do
+        job.reload.tasks.should include(task)
+      end
+    end
+
+    describe "removing a task" do
+      let(:task) { Task.create(:name => "test", :command => "true") }
+
+      let(:params) do
+        job.tasks << Task.create(:name => "tester", :command => "false")
+        job.tasks << task
+        job.save
+
+        { :tasks => [task.id] }
+      end
+
+      it "should update" do
+        job.reload.tasks.should == [task]
+      end
+    end
+
     describe "invalid" do
-      let(:params) {{ :job => {} }}
+      let(:params) {{ :job => { :name => nil } }}
 
       it "should render" do
         last_response.should be_ok

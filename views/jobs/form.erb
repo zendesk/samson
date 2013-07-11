@@ -37,7 +37,7 @@
     var order = <%= task_ids %>;
 
     $("#tasks").empty().html($.map(order, function(value) {
-      return tasks.get(value - 1);
+      return tasks.get(value);
     }));
   });
 </script>

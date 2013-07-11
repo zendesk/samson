@@ -36,11 +36,20 @@ Pusher.class_eval do
 
     put "/:id" do |id|
       @job = Job.get!(id)
-      @job.attributes = params[:job]
+      @job.attributes = params[:job] if params[:job]
 
-      add_job_tasks
+      result = false
 
-      if @job.save
+      # HAHAHAHA Fuck you DataMapper
+      # It won't let you delete from
+      # a "has n" collection
+      @job.transaction do |t|
+        @job.job_tasks.destroy
+        add_job_tasks
+        t.rollback unless (result = @job.save)
+      end
+
+      if result
         redirect '/jobs'
       else
         erb :"jobs/edit"
