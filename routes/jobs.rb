@@ -1,5 +1,7 @@
 Pusher.class_eval do
   namespace "/jobs" do
+    helpers JobsHelper
+
     get do
       @jobs = Job.all
       erb :"jobs/index"
@@ -15,24 +17,33 @@ Pusher.class_eval do
       erb :"jobs/show"
     end
 
+    get "/:id/edit" do |id|
+      @job = Job.get!(id)
+      erb :"jobs/edit"
+    end
+
     post do
       @job = Job.new(params[:job])
 
-      priorities = []
-
-      if params[:task_priorities] && !params[:task_priorities].empty?
-        priorities = Rack::Utils.parse_nested_query(params[:task_priorities])
-        priorities = priorities["tasks"]
-      end
-
-      params.fetch(:tasks, []).each do |task|
-        @job.job_tasks.new(:task_id => task, :priority => priorities.index(task))
-      end
+      add_job_tasks
 
       if @job.save
         redirect '/jobs'
       else
         erb :"jobs/new"
+      end
+    end
+
+    put "/:id" do |id|
+      @job = Job.get!(id)
+      @job.job_tasks.clear
+
+      add_job_tasks
+
+      if @job.save
+        redirect '/jobs'
+      else
+        erb :"jobs/edit"
       end
     end
 

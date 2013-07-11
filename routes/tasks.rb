@@ -2,9 +2,10 @@ require 'sinatra-websocket'
 
 Pusher.class_eval do
   namespace "/tasks" do
+    helpers TasksHelper
+
     get "/new" do
       @task = Task.new
-
       erb :"tasks/new"
     end
 

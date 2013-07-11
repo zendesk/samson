@@ -1,32 +1,3 @@
-<% if @job.errors.any? %>
-  <div>
-    <% @job.errors.each do |error| %>
-      <p><%= error %></p>
-    <% end %>
-  </div>
-<% end %>
+<h1>Create a new job</h1>
 
-<form method="POST" action="/jobs">
-  <input type="text" value="<%= @job.name %>" name="job[name]" id="job_name" />
-
-  <ol id="tasks">
-    <% Task.all.each do |task| %>
-      <li class="task" id="tasks_<%= task.id %>">
-        <input type="checkbox" id="task_<%= task.id %>" name="tasks[]" value="<%= task.id %>" />
-        <%= task.name %> "<%= task.command %>"
-      </li>
-    <% end %>
-  </ol>
-
-  <input type="hidden" name="task_priorities" id="task_priorities" />
-  <input type="submit" value="Create" />
-</form>
-
-<script type="text/javascript">
-  $("#tasks").sortable({
-    items: ".task",
-    update: function() {
-      $("#task_priorities").val($(this).sortable("serialize"));
-    }
-  });
-</script>
+<%= erb :"jobs/form" %>

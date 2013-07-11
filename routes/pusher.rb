@@ -4,6 +4,10 @@ require 'sinatra/namespace'
 
 require Bundler.root.join("config", "data_mapper.rb")
 
+Dir.glob(Bundler.root.join("helpers", "*.rb")) do |file|
+  require file
+end
+
 # Needed for process watching
 EventMachine.epoll if EventMachine.epoll?
 EventMachine.kqueue = true if EventMachine.kqueue?

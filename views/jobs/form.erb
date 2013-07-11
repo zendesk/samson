@@ -1,0 +1,38 @@
+<%= erb :"shared/errors", :locals => { :object => @job } %>
+
+<style type="text/css">.task { cursor: pointer; }</style>
+
+<form method="<%= form_method(@job) %>" action="/jobs">
+  <input type="text" value="<%= @job.name %>" name="job[name]" id="job_name" />
+
+  <ol id="tasks">
+    <% Task.all.each do |task| %>
+      <li class="task" id="tasks_<%= task.id %>">
+        <input <%= @job.tasks.include?(task) ? 'checked="checked"' : '' %> type="checkbox" id="task_<%= task.id %>" name="tasks[]" value="<%= task.id %>" />
+        <%= task.name %> "<%= task.command %>"
+      </li>
+    <% end %>
+  </ol>
+
+  <input type="hidden" name="task_priorities" id="task_priorities" />
+  <input type="submit" value="Save" />
+</form>
+
+<script type="text/javascript">
+  $(document).ready(function() {
+    $("#tasks").sortable({
+      items: ".task",
+      cursor: "move",
+      update: function() {
+        $("#task_priorities").val($(this).sortable("serialize"));
+      }
+    }).disableSelection();
+
+    var tasks = $(".task");
+    var order = <%= task_ids %>;
+
+    $("#tasks").empty().html($.map(order, function(value) {
+      return tasks.get(value - 1);
+    }));
+  });
+</script>
