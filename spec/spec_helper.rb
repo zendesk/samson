@@ -1,3 +1,5 @@
+ENV['RACK_ENV'] = 'test'
+
 require 'bundler/setup'
 
 require Bundler.root.join('routes', 'pusher')

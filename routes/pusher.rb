@@ -13,6 +13,10 @@ class Pusher < Sinatra::Base
   set :root, Bundler.root
   set :protection, except: :session_hijacking
 
+  configure :test do
+    disable :show_exceptions
+  end
+
   register Sinatra::Namespace
 
   configure :development do

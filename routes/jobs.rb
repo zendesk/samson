@@ -7,10 +7,6 @@ Pusher.class_eval do
 
     get "/new" do
       @job = Job.new
-
-      @tasks = Task.all
-      @plugins = Plugin.all
-
       erb :"jobs/new"
     end
 
@@ -22,17 +18,20 @@ Pusher.class_eval do
     post do
       @job = Job.new(params[:job])
 
-      params[:tasks].each do |task|
-        priority = params[:task_priorities][task]
-        @job.job_tasks.new(:task_id => task, :priority => priority)
+      priorities = []
+
+      if params[:task_priorities] && !params[:task_priorities].empty?
+        priorities = Rack::Utils.parse_nested_query(params[:task_priorities])
+        priorities = priorities["tasks"]
+      end
+
+      params.fetch(:tasks, []).each do |task|
+        @job.job_tasks.new(:task_id => task, :priority => priorities.index(task))
       end
 
       if @job.save
         redirect '/jobs'
       else
-        @tasks = Task.all
-        @plugins = Plugin.all
-
         erb :"jobs/new"
       end
     end
