@@ -63,7 +63,7 @@ Pusher.class_eval do
       @job = Job.get!(id)
 
       stream(:keep_open) do |io|
-        command = CommandTail.new(@job.tasks.map(&:command).join("\r\n"),
+        command = CommandTail.new(command_string,
           proc {|msg| io.write(msg.force_encoding("utf-8")) },
           proc { io.close })
 
@@ -81,7 +81,7 @@ Pusher.class_eval do
         connection = command = nil
 
         ws.onopen do
-          command = CommandTail.new(@job.tasks.map(&:command).join("\r\n"),
+          command = CommandTail.new(command_string,
             proc {|msg| ws.send(msg.force_encoding("utf-8"))},
             proc { ws.close_websocket })
         end

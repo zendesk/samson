@@ -13,6 +13,10 @@ module JobsHelper
     end
   end
 
+  def command_string
+    @job.tasks.map(&:command).join("\r\n")
+  end
+
   def add_job_tasks
     priorities = []
 
