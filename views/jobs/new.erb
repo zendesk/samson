@@ -13,6 +13,7 @@
     <% @tasks.each do |task| %>
       <li>
         <input type="checkbox" id="task_<%= task.id %>" name="tasks[]" value="<%= task.id %>" />
+        <%= task.name %>
         <input type="text" id="task_priority_<%= task.id %>" name="task_priorities[<%= task.id %>]" />
       </li>
     <% end %>

@@ -1,9 +1,9 @@
+require_relative "job_task"
+
 class Job
   include DataMapper::Resource
 
-  has n, :job_tasks, :order => [:priority.desc]
-  has n, :tasks, :through => :job_tasks
-
+  has n, :tasks, :through => :job_tasks, :order => JobTask.priority
   has n, :plugins, :through => :job_plugins
 
   property :id, Serial

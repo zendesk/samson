@@ -43,16 +43,16 @@ Pusher.class_eval do
       return 200 if !request.websocket?
 
       request.websocket do |ws|
-        connection = commands = nil
+        connection = command = nil
 
         ws.onopen do
-          commands = CommandsExecuter.new(@job.tasks.map(&:command),
+          command = CommandTail.new(@job.tasks.map(&:command).join(" && "),
             proc {|msg| ws.send(msg.force_encoding("utf-8"))},
             proc { ws.close_websocket })
         end
 
         ws.onmessage do |msg|
-          commands.close if msg == "close"
+          command.close if msg == "close"
         end
       end
     end
