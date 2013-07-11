@@ -7,7 +7,7 @@ module JobsHelper
         tasks.index(task)
       end
 
-      mapped += (mapped.size..(tasks.size - @job.tasks.size)).to_a
+      mapped += (tasks - @job.tasks).map {|task| tasks.index(task)}
     else
       (0..(tasks.size)).to_a
     end
