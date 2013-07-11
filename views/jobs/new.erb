@@ -1,0 +1,26 @@
+<% if @job.errors.any? %>
+  <div>
+    <% @job.errors.each do |error| %>
+      <p><%= error %></p>
+    <% end %>
+  </div>
+<% end %>
+
+<form method="POST" action="/jobs">
+  <input type="text" value="<%= @job.name %>" name="job[name]" id="job_name" />
+
+  <ul>
+    <% @tasks.each do |task| %>
+      <li>
+        <input type="checkbox" id="task_<%= task.id %>" name="tasks[]" value="<%= task.id %>" />
+        <input type="text" id="task_priority_<%= task.id %>" name="task_priorities[<%= task.id %>]" />
+      </li>
+    <% end %>
+  </ul>
+
+
+  <% @plugins.each do |plugin| %>
+  <% end %>
+
+  <input type="submit" value="Create" />
+</form>

@@ -1,0 +1,38 @@
+<h1><%= @job.name %></h1>
+
+
+<div>
+Will execute:
+  <ol>
+    <% @job.tasks.each do |task| %>
+      <li><%= task.name %>: <%= task.command %></li>
+    <% end %>
+  </ol>
+</div>
+
+<button id="execute">Execute</button>
+<button disabled="disabled" id="stop">Stop</button>
+
+<div>
+  <pre id="log"></pre>
+</div>
+
+<script type="text/javascript">
+  $('#execute').click(function() {
+    var ws = new WebSocket('ws://' + window.location.host + window.location.pathname + '/execute');
+    var log = document.getElementById('log');
+
+    ws.onmessage = function(m) { log.innerHTML += m.data; };
+    ws.onclose = function() {
+      $('#execute').removeAttr("disabled");
+      $('#stop').attr("disabled", "disabled");
+      log.innerHTML += "Stopped\n"
+    };
+
+    $(this).attr("disabled", "disabled");
+
+    $('#stop').removeAttr("disabled").click(function() {
+      ws.send("close");
+    });
+  });
+</script>

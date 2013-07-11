@@ -1,0 +1,5 @@
+<h1>Jobs</h1>
+
+<% @jobs.each do |job| %>
+  <a href="/jobs/<%= job.id %>"><%= job.name %></a><br />
+<% end %>
