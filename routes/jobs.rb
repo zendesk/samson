@@ -1,6 +1,9 @@
+require "sinatra/streaming"
+
 Pusher.class_eval do
   namespace "/jobs" do
     helpers JobsHelper
+    helpers Sinatra::Streaming
 
     get do
       @jobs = Job.all
@@ -56,6 +59,19 @@ Pusher.class_eval do
       end
     end
 
+    get "/:id/stream" do |id|
+      @job = Job.get!(id)
+
+      stream(:keep_open) do |io|
+        command = CommandTail.new(@job.tasks.map(&:command).join("\r\n"),
+          proc {|msg| io.write(msg.force_encoding("utf-8")) },
+          proc { io.close })
+
+        io.callback { command.close }
+        io.errback { command.close }
+      end
+    end
+
     get "/:id/execute" do |id|
       @job = Job.get!(id)
 
@@ -65,7 +81,7 @@ Pusher.class_eval do
         connection = command = nil
 
         ws.onopen do
-          command = CommandTail.new(@job.tasks.map(&:command).join(" && "),
+          command = CommandTail.new(@job.tasks.map(&:command).join("\r\n"),
             proc {|msg| ws.send(msg.force_encoding("utf-8"))},
             proc { ws.close_websocket })
         end

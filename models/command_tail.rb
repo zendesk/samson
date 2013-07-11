@@ -15,14 +15,15 @@ class CommandTail
 
   def exited
     @connection.detach
-    @io.close
+    @io.close unless @io.closed?
     @close_callback.call if @close_callback
   end
 
   def close
-    @process_connection.stop_watching
-
-    Process.kill("INT", @pid)
+    if PTY.check(@pid).nil?
+      @process_connection.stop_watching
+      Process.kill("INT", @pid)
+    end
 
     @connection.notify_readable
 

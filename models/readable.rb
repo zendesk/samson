@@ -13,6 +13,6 @@ class Readable < EventMachine::Connection
     while buffer = @io.read_nonblock(IO_BUFFER_READ)
       @callback.call(buffer)
     end
-  rescue EOFError, Errno::EAGAIN
+  rescue IOError, EOFError, Errno::EAGAIN
   end
 end
