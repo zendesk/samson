@@ -19,6 +19,11 @@ Pusher.class_eval do
       erb :"tasks/show"
     end
 
+    get "/:id/edit" do |id|
+      @task = Task.get!(id)
+      erb :"tasks/edit"
+    end
+
     get "/:id/execute" do |id|
       @task = Task.get!(id)
 
@@ -38,6 +43,17 @@ Pusher.class_eval do
         ws.onmessage do |msg|
           command.close if msg == "close"
         end
+      end
+    end
+
+    put "/:id" do |id|
+      @task = Task.get!(id)
+      @task.attributes = params[:task]
+
+      if @task.save
+        redirect '/tasks'
+      else
+        erb :"tasks/edit"
       end
     end
 

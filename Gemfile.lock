@@ -60,8 +60,6 @@ GEM
       eventmachine (>= 0.12.9)
     eventmachine (1.0.3)
     fastercsv (1.5.5)
-    file-tail (1.0.12)
-      tins (~> 0.5)
     json (1.8.0)
     json_pure (1.8.0)
     multi_json (1.7.7)
@@ -99,7 +97,6 @@ GEM
       eventmachine (>= 0.12.6)
       rack (>= 1.0.0)
     tilt (1.4.1)
-    tins (0.8.2)
     uuidtools (2.1.4)
 
 PLATFORMS
@@ -109,7 +106,6 @@ DEPENDENCIES
   data_mapper
   database_cleaner
   dm-sqlite-adapter
-  file-tail
   rspec
   sinatra
   sinatra-contrib

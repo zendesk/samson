@@ -28,6 +28,30 @@ describe "Pusher::jobs" do
     end
   end
 
+  describe "a PUT to /jobs/:id" do
+    let(:job) { Job.create(:name => "tester") }
+
+    before do
+      put "/jobs/#{job.id}", params
+    end
+
+    describe "valid" do
+      let(:params) {{ :job => { :name => "test" }}}
+
+      it "should redirect" do
+        last_response.location.should match(%r{/jobs$})
+      end
+    end
+
+    describe "invalid" do
+      let(:params) {{ :job => {} }}
+
+      it "should render" do
+        last_response.should be_ok
+      end
+    end
+  end
+
   describe "a POST to /jobs" do
     before do
       post "/jobs", params
@@ -38,6 +62,27 @@ describe "Pusher::jobs" do
 
       it "should redirect" do
         last_response.location.should match(%r{/jobs$})
+      end
+    end
+
+    describe "adding and sorting tasks" do
+      let(:tasks) {[
+        Task.create(:name => "tester", :command => "true"),
+        Task.create(:name => "falser", :command => "false"),
+      ]}
+
+      let(:params) {{
+        :job => { :name => "test" },
+        :tasks => tasks.map(&:id),
+        :task_priorities => "tasks[]=#{tasks.last.id}&tasks[]=#{tasks.first.id}"
+      }}
+
+      it "should redirect" do
+        last_response.location.should match(%r{/jobs$})
+      end
+
+      it "should setup tasks" do
+        Job.last.tasks.should == tasks.reverse
       end
     end
 

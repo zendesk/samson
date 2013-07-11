@@ -7,7 +7,7 @@ gem "sinatra-websocket"
 gem "data_mapper"
 gem "dm-sqlite-adapter"
 
-gem "file-tail"
+# gem "debugger"
 
 group :test do
   gem "rspec"

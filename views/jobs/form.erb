@@ -2,7 +2,9 @@
 
 <style type="text/css">.task { cursor: pointer; }</style>
 
-<form method="<%= form_method(@job) %>" action="/jobs">
+<form method="POST" action="/jobs<%= form_url(@job) %>">
+  <%= method_override if @job.id %>
+
   <input type="text" value="<%= @job.name %>" name="job[name]" id="job_name" />
 
   <ol id="tasks">
@@ -29,6 +31,8 @@
       }
     }).disableSelection();
 
+    // Sortable automatically sorts, but we
+    // want the selected ones first, in the correct order
     var tasks = $(".task");
     var order = <%= task_ids %>;
 

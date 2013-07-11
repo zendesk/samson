@@ -36,7 +36,7 @@ Pusher.class_eval do
 
     put "/:id" do |id|
       @job = Job.get!(id)
-      @job.job_tasks.clear
+      @job.attributes = params[:job]
 
       add_job_tasks
 

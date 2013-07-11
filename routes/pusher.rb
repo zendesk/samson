@@ -13,7 +13,7 @@ EventMachine.epoll if EventMachine.epoll?
 EventMachine.kqueue = true if EventMachine.kqueue?
 
 class Pusher < Sinatra::Base
-  enable :sessions, :logging
+  enable :sessions, :logging, :method_override
   set :root, Bundler.root
   set :protection, except: :session_hijacking
 

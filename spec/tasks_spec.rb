@@ -28,6 +28,37 @@ describe "Pusher::tasks" do
     end
   end
 
+  describe "a PUT to /tasks/:id" do
+    let(:task) { Task.create(:name => "test", :command => "true") }
+
+    before do
+      put "/tasks/#{task.id}", params
+    end
+
+    describe "valid" do
+      let(:params) {{ :task => { :name => "tester", :command => "false" }}}
+
+      it "should redirect" do
+        last_response.location.should match(%r{/tasks$})
+      end
+
+      it "should update" do
+        task.reload
+
+        task.name.should == "tester"
+        task.command.should == "false"
+      end
+    end
+
+    describe "invalid" do
+      let(:params) {{ :task => { :command => nil }}}
+
+      it "should render" do
+        last_response.should be_ok
+      end
+    end
+  end
+
   describe "a POST to /tasks" do
     before do
       post "/tasks", params
