@@ -1,3 +1,6 @@
+services: mysql
+before_script:
+  - mysql -e 'create database pusher_test;'
 rvm:
   - 1.9.3
   - 2.0
