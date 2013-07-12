@@ -1,6 +1,8 @@
 require "sinatra/streaming"
 
 Pusher.class_eval do
+  set :jobs, {}
+
   namespace "/jobs" do
     helpers JobsHelper
     helpers Sinatra::Streaming
@@ -71,12 +73,15 @@ Pusher.class_eval do
       @job = Job.get!(id)
 
       stream(:keep_open) do |io|
-        command = CommandTail.new(command_string,
-          proc {|msg| io.write(msg.force_encoding("utf-8")) },
-          proc { io.close })
+        settings.jobs[@job.id] << io
 
-        io.callback { command.close }
-        io.errback { command.close }
+        io.callback do
+          settings.jobs[@job.id].delete(io)
+        end
+
+        io.errback do
+          settings.jobs[@job.id].delete(io)
+        end
       end
     end
 
@@ -89,9 +94,11 @@ Pusher.class_eval do
         connection = command = nil
 
         ws.onopen do
+          settings.jobs[@job.id] = [ws]
+
           command = CommandTail.new(command_string,
-            proc {|msg| ws.send(msg.force_encoding("utf-8"))},
-            proc { ws.close_websocket })
+            proc {|msg| settings.jobs[@job.id].each {|socket| socket.respond_to?(:write) ? socket.write(msg.force_encoding("utf-8")) : socket.send(msg.force_encoding("utf-8"))}},
+            proc { settings.jobs[@job.id].each {|socket| socket.close_websocket }})
         end
 
         ws.onmessage do |msg|
