@@ -14,6 +14,20 @@ Will execute:
 <button id="execute">Execute</button>
 <button disabled="disabled" id="stop">Stop</button>
 
+<a href="#" id="add-a-plugin">Add a plugin</a>
+
+<div id="plugins" class="hide">
+  <ul>
+    <% Plugin.all.each do |plugin| %>
+      <li><a class="plugin" href="#" data-id="<%= plugin.id %>"><%= plugin.name %></a></li>
+    <% end %>
+  </ul>
+</div>
+
+<% @job.plugins.each do |plugin| %>
+ <%= plugin.content %>
+<% end %>
+
 <div>
   <pre id="log"></pre>
 </div>
@@ -35,5 +49,14 @@ Will execute:
     $('#stop').removeAttr("disabled").click(function() {
       ws.send("close");
     });
+  });
+
+  $('#add-a-plugin').click(function() { $('#plugins').toggle(); });
+  $('.plugin').click(function() {
+      var id = $(this).data('id');
+
+      $('<form />').
+        attr('action', '/jobs/<%= @job.id %>/plugins/' + id).
+        attr('method', 'POST').submit();
   });
 </script>

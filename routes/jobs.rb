@@ -59,6 +59,14 @@ Pusher.class_eval do
       end
     end
 
+    post "/:id/plugins/:plugin_id" do |id, plugin_id|
+      @job = Job.get!(id)
+      @job.job_plugins.new(:plugin_id => plugin_id, :position => params[:position] || @job.job_plugins.size)
+      @job.save
+
+      redirect "/jobs/#{id}"
+    end
+
     get "/:id/stream" do |id|
       @job = Job.get!(id)
 

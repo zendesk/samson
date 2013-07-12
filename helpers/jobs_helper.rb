@@ -7,7 +7,13 @@ module JobsHelper
         tasks.index(task)
       end
 
-      mapped += (tasks - @job.tasks).map {|task| tasks.index(task)}
+      # Can't do (tasks - @job.tasks)
+      # as DataMapper doesn't like the
+      # the ordering of tasks through JobTask
+      task_ids = tasks.map(&:id)
+      job_task_ids = @job.tasks.map(&:id)
+
+      mapped += (task_ids - job_task_ids).map {|task| task_ids.index(task)}
     else
       (0..(tasks.size)).to_a
     end

@@ -159,4 +159,22 @@ describe "Pusher::jobs" do
       end
     end
   end
+
+  describe "a POST to /jobs/:id/plugins/:plugin_id" do
+    let(:job) { Job.create(:name => "test") }
+    let(:plugin) { Plugin.create(:name => "tester") }
+
+    before do
+      post "/jobs/#{job.id}/plugins/#{plugin.id}"
+    end
+
+    it "should add the plugin" do
+      job.reload.plugins.should == [plugin]
+      job.job_plugins.first.position.should == 0
+    end
+
+    it "should redirect" do
+      last_response.location.should match(%r{/jobs/#{job.id}})
+    end
+  end
 end
