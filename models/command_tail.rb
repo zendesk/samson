@@ -10,8 +10,9 @@ class CommandTail
     @connection = EventMachine.watch(@io, Readable, @callback)
     @connection.notify_readable = true
 
-    if EventMachine.epoll? || EventMachine.kqueue?
+    begin
       @process_connection = EventMachine.watch_process(@pid, Watchable, self)
+    rescue EventMachine::Unsupported
     end
   end
 
