@@ -10,7 +10,9 @@ class CommandTail
     @connection = EventMachine.watch(@io, Readable, @callback)
     @connection.notify_readable = true
 
-    @process_connection = EventMachine.watch_process(@pid, Watchable, self)
+    if EventMachine.epoll? || EventMachine.kqueue?
+      @process_connection = EventMachine.watch_process(@pid, Watchable, self)
+    end
   end
 
   def exited
@@ -21,7 +23,7 @@ class CommandTail
 
   def close
     if PTY.check(@pid).nil?
-      @process_connection.stop_watching
+      @process_connection.stop_watching if @process_connection
       Process.kill("INT", @pid)
     end
 
