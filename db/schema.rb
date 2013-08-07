@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20130807182821) do
+ActiveRecord::Schema.define(version: 20130807191252) do
 
   create_table "job_histories", force: true do |t|
     t.text     "log"
@@ -23,6 +23,13 @@ ActiveRecord::Schema.define(version: 20130807182821) do
 
   create_table "projects", force: true do |t|
     t.string   "name"
+    t.datetime "created_at"
+    t.datetime "updated_at"
+  end
+
+  create_table "users", force: true do |t|
+    t.string   "name"
+    t.string   "email"
     t.datetime "created_at"
     t.datetime "updated_at"
   end
