@@ -1,0 +1,26 @@
+<div class="panel col-lg-4">
+  <div class="panel-heading text-center">
+    <%= project.name %>
+
+    <%= link_to edit_project_path(project), class: "pull-right" do %>
+      <i class="glyphicon glyphicon-edit"></i>
+    <% end %>
+  </div>
+
+  <% project.job_locks.each do |lock| %>
+    <p>
+      Locked for <%= lock.environment %>
+      <% if lock.job_history_id %>
+        by a <%= link_to "running job", "#" %>
+      <% else %>
+        until <%= lock.expires_at %>
+      <% end %>
+    </p>
+  <% end %>
+
+  <p>Last five jobs:</p>
+
+  <%= link_to project_path(project), class: "pull-right" do %>
+    <i class="glyphicon glyphicon-play-circle"></i>
+  <% end %>
+</div>

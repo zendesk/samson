@@ -3,6 +3,8 @@ ZendeskPusher::Application.routes.draw do
     member { get :execute }
   end
 
+  resources :projects, only: [:edit, :show]
+
   get '/auth/:provider/callback', to: 'sessions#create'
   get '/auth/failure', to: 'sessions#failure'
 

@@ -11,14 +11,25 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20130807191252) do
+ActiveRecord::Schema.define(version: 20130807232645) do
 
   create_table "job_histories", force: true do |t|
     t.text     "log"
-    t.integer  "status"
+    t.string   "environment"
+    t.string   "state"
     t.integer  "project_id"
+    t.integer  "user_id"
+    t.datetime "expires_at"
     t.datetime "created_at"
     t.datetime "updated_at"
+  end
+
+  create_table "job_locks", force: true do |t|
+    t.string   "environment"
+    t.integer  "job_history_id"
+    t.integer  "project_id"
+    t.datetime "created_at"
+    t.datetime "expires_at"
   end
 
   create_table "projects", force: true do |t|

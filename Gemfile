@@ -25,12 +25,12 @@ gem 'jquery-rails'
 # gem 'turbolinks'
 
 # Build JSON APIs with ease. Read more: https://github.com/rails/jbuilder
-gem 'jbuilder', '~> 1.2'
+# gem 'jbuilder', '~> 1.2'
 
-group :doc do
+#group :doc do
   # bundle exec rake doc:rails generates the API under doc/api.
-  gem 'sdoc', require: false
-end
+#  gem 'sdoc', require: false
+#end
 
 # Use ActiveModel has_secure_password
 # gem 'bcrypt-ruby', '~> 3.0.0'
@@ -43,5 +43,13 @@ gem "rainbows"
 # Use debugger
 # gem 'debugger', group: [:development, :test]
 
-gem "omniauth"
-gem "omniauth-oauth2"
+gem "omniauth", "~> 1.1"
+gem "omniauth-oauth2", "~> 1.1"
+
+gem 'anjlab-bootstrap-rails', :require => 'bootstrap-rails',
+  :github => 'anjlab/bootstrap-rails', :branch => '3.0.0'
+gem 'bootstrap-glyphicons'
+
+gem "soft_deletion", "~> 0.4"
+
+gem "state_machine", "~> 1.2"

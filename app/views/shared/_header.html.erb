@@ -1,0 +1,16 @@
+<div class="navbar">
+  <%= link_to "Zendesk Deployer", root_path, class: "navbar-brand" %>
+
+  <ul class="nav navbar-nav">
+    <li><a href="#">Job History</a></li>
+    <li><a href="#">Current Deploys</a></li>
+  </ul>
+
+  <button type="button" class="btn btn-default navbar-btn pull-right">
+    <% if logged_in? %>
+      <%= link_to "Logout", logout_path, title: "Logged in as #{current_user.name}" %>
+    <% else %>
+      <%= link_to "Login", login_path %>
+    <% end %>
+  </button>
+</div>

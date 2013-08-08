@@ -12,8 +12,9 @@ class SessionsController < ApplicationController
 
     if user
       self.current_user = user
+      flash[:notice] = "You have been logged in."
     else
-      # error
+      flash[:error] = "Could not log you in."
     end
 
     redirect_to root_path
@@ -21,6 +22,7 @@ class SessionsController < ApplicationController
 
   def destroy
     logout!
+    flash[:notice] = "You have been logged out."
 
     redirect_to root_path
   end
