@@ -6,15 +6,13 @@ class JobsController < ApplicationController
 
     response.headers['Content-Type'] = 'text/event-stream'
 
-    job = project.job_histories.create!(job_params.slice(:environment))
-    job.run!
+    job = project.job_histories.active.find_or_create_by!(job_params.slice(:environment))
+    job.run! unless job.running?
 
     while job.running?
       job.latest_log_lines.each do |line|
         response.stream.write(line)
       end
-
-      sleep(20)
     end
   rescue IOError
     # When the client disconnects, we'll get an IOError on write

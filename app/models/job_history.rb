@@ -1,4 +1,6 @@
 class JobHistory < ActiveRecord::Base
+  scope :active, -> { where(state: ["started", "running"]) }
+
   belongs_to :project
   belongs_to :user
 
@@ -35,6 +37,7 @@ class JobHistory < ActiveRecord::Base
 
   def latest_log_lines
     # TODO
+    ["hello\n"]
   end
 
   private
