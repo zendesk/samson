@@ -4,6 +4,7 @@ class CreateJobHistories < ActiveRecord::Migration
       t.text :log
 
       t.string :environment
+      t.string :sha
       t.string :state
 
       t.belongs_to :project

@@ -5,4 +5,3 @@ staging: localhost:6379
 remote: localhost:6379
 selenium: localhost:6379
 production: 10.0.64.10:6379
-

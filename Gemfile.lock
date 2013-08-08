@@ -50,6 +50,7 @@ GEM
       multipart-post (~> 1.2.0)
     hashie (2.0.5)
     hike (1.2.3)
+    hiredis (0.4.5)
     httpauth (0.2.0)
     i18n (0.6.4)
     jquery-rails (3.0.4)
@@ -66,6 +67,7 @@ GEM
     mono_logger (1.1.0)
     multi_json (1.7.8)
     multipart-post (1.2.0)
+    net-ssh (2.6.8)
     oauth2 (0.8.1)
       faraday (~> 0.8)
       httpauth (~> 0.1)
@@ -157,8 +159,10 @@ PLATFORMS
 DEPENDENCIES
   anjlab-bootstrap-rails!
   bootstrap-glyphicons
-  em-synchrony
+  em-synchrony (~> 1.0)
+  hiredis (~> 0.4.5)
   jquery-rails
+  net-ssh (~> 2.6)
   omniauth (~> 1.1)
   omniauth-oauth2 (~> 1.1)
   rails (= 4.0.0)

@@ -57,4 +57,7 @@ gem "state_machine", "~> 1.2"
 gem "resque", "~> 1.24"
 
 # Used for redis driver
+gem "hiredis", "~> 0.4.5"
 gem "em-synchrony", "~> 1.0"
+
+gem "net-ssh", "~> 2.6"

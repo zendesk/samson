@@ -35,9 +35,13 @@ class JobHistory < ActiveRecord::Base
     job_lock.exists?
   end
 
-  def latest_log_lines
-    # TODO
-    ["hello\n"]
+  def channel
+    Digest::MD5.hexdigest([
+      project.name,
+      environment,
+      sha,
+      created_at
+    ].join)
   end
 
   private
