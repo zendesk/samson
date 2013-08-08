@@ -53,3 +53,8 @@ gem 'bootstrap-glyphicons'
 gem "soft_deletion", "~> 0.4"
 
 gem "state_machine", "~> 1.2"
+
+gem "resque", "~> 1.24"
+
+# Used for redis driver
+gem "em-synchrony", "~> 1.0"
