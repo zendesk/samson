@@ -60,4 +60,5 @@ gem "resque", "~> 1.24"
 gem "hiredis", "~> 0.4.5"
 gem "em-synchrony", "~> 1.0"
 
-gem "net-ssh", "~> 2.6"
+gem "net-ssh", "~> 2.1.0"
+gem "net-ssh-shell", "~> 0.2"

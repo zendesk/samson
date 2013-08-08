@@ -14,8 +14,9 @@
 ActiveRecord::Schema.define(version: 20130807232645) do
 
   create_table "job_histories", force: true do |t|
-    t.text     "log"
+    t.text     "log",         default: "", null: false
     t.string   "environment"
+    t.string   "sha"
     t.string   "state"
     t.integer  "project_id"
     t.integer  "user_id"

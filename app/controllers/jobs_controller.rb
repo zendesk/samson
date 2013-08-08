@@ -1,21 +1,29 @@
 class JobsController < ApplicationController
   include ActionController::Live
 
-  def execute
-    project = Project.find(params[:id])
-
+  def stream
     response.headers['Content-Type'] = 'text/event-stream'
 
-    job = project.job_histories.active.find_or_create_by!(job_params.slice(:environment))
-    job.run! unless job.running?
-
-    while job.running?
-      job.latest_log_lines.each do |line|
-        response.stream.write(line)
+    Resque.redis.redis.psubscribe(params[:id]) do |on|
+      on.pmessage do |pattern, event, message|
+        response.stream.write(message)
       end
     end
-  rescue IOError
-    # When the client disconnects, we'll get an IOError on write
+
+=begin
+    AsyncRedis.psubscribe(params[:id]).callback do |data|
+      response.stream.write(data)
+    end.errback do |error|
+      response.stream.close
+    end
+
+
+    loop {}
+=end
+  rescue IOError => e
+    puts "Got IOError #{e.message}"
+    puts e.backtrace.join("\n")
+    # just passing through
   ensure
     response.stream.close
   end

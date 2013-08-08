@@ -1,6 +1,6 @@
 ZendeskPusher::Application.routes.draw do
   resources :jobs, only: [] do
-    member { get :execute }
+    member { get :stream }
   end
 
   resources :projects, only: [:edit, :show]
