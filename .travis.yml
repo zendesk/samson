@@ -1,6 +1,5 @@
-services: mysql
 before_script:
-  - mysql -e 'create database pusher_test;'
+  - cp config/redis.yml.example config/redis.yml
 rvm:
   - 1.9.3
   - 2.0
