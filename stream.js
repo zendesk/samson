@@ -1,5 +1,7 @@
 /**
- * Module dependencies.
+ * Module dependencies:
+ * express
+ * redis
  */
 
 var express = require('express'),
