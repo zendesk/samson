@@ -35,7 +35,7 @@ gem 'jquery-rails'
 # Use ActiveModel has_secure_password
 # gem 'bcrypt-ruby', '~> 3.0.0'
 
-gem "rainbows"
+gem "unicorn"
 
 # Use Capistrano for deployment
 # gem 'capistrano', group: :development
@@ -56,9 +56,7 @@ gem "state_machine", "~> 1.2"
 
 gem "resque", "~> 1.24"
 
-# Used for redis driver
-gem "hiredis", "~> 0.4.5"
-gem "em-synchrony", "~> 1.0"
-
 gem "net-ssh", "~> 2.1.0"
 gem "net-ssh-shell", "~> 0.2"
+
+gem "foreman"

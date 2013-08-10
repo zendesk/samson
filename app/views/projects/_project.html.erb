@@ -14,15 +14,24 @@
 
     <% project.job_locks.each do |lock| %>
       <p>
-      Locked for <%= lock.environment %>
-      <% if lock.job_history_id %>
-        by a <%= link_to "running job", "#" %>
-      <% else %>
-        until <%= lock.expires_at %>
-      <% end %>
-    </p>
+        Locked for <%= lock.environment %>
+        <% if lock.job_history %>
+          by a <%= link_to "running job", project_job_path(project, lock.job_history.channel) %>
+        <% else %>
+          until <%= lock.expires_at %>
+        <% end %>
+      </p>
     <% end %>
 
-    <!-- p>Last five jobs:</p-->
+    <% if last_n(project) > 0 %>
+      <p>Last <%= last_n(project) %> deploy(s):</p>
+      <ul class="job-history">
+        <% project.job_histories.limit(last_n(project)).each do |job| %>
+          <li class="<%= job_state_class(job) %>">
+            <%= link_to "#{job.sha} to #{job.environment} by #{job.user.name}", project_job_path(project, job.channel) %>
+          </li>
+        <% end %>
+      </ul>
+    <% end %>
   </div>
 </div>

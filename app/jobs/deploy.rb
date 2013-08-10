@@ -1,65 +1,91 @@
+Net::SSH::Connection::Session.class_eval do
+  alias :old_loop :loop
+  # Non-blocking loop, Net::SSH doesn't
+  # let us pass through when using start
+  def loop(wait = 0, &block)
+    old_loop(wait, &block)
+  end
+end
+
 class Deploy < Resque::Job
   def self.queue
     :deployment
   end
 
-  def self.perform(job_history)
-    job = new(job_history)
-
-    if job.work
-      job_history.success!
-    else
-      job_history.failure!
-    end
+  def self.perform(id)
+    new(id).work
   end
 
-  def initialize(job)
-    @job = job
+  def initialize(id)
+    @job = JobHistory.find(id)
   end
 
   def work
+    @job.run!
+
     Net::SSH.start("admin04.pod1", "sdavidovitz") do |ssh|
       ssh.shell do |sh|
         [
-          "cd #{@job.project.name.downcase}",
+          "cd #{@job.project.name.parameterize("_")}",
           "git fetch -ap",
           "git reset --hard #{@job.sha}",
           "bundle --deployment",
           "capsu #{@job.environment} deploy TAG=#{@job.sha}"
         ].each do |command|
           if !exec!(sh, command)
-            return false
-            break
+            publish_messages("Failed to execute \"#{command}\"")
+            @job.failed!
+
+            return
           end
         end
       end
     end
+
+    @job.success!
   end
 
   def exec!(shell, command)
     retval = true
 
     process = shell.execute(command)
+
     process.on_output do |ch, data|
-      @job.log += data
-      redis.publish(@job.channel, data)
-      Rails.logger.info(data)
+      publish_messages(data)
     end
 
     process.on_error_output do |ch, type, data|
-      msg = "**err: #{data}"
-
-      @job.log += msg
-      redis.publish(@job.channel, msg)
-      Rails.logger.error(data)
+      publish_messages(data, "**ERR")
     end
 
-    process.manager.channel.on_request("exit-status") do |ch,data|
-      retval = data.read_long == 0
+    process.manager.channel.on_process do
+      @job.save if @job.changed?
+
+      if message = redis.get("#{@job.channel}:input")
+        process.send_data("#{message}\n")
+        redis.del("#{@job.channel}:input")
+      end
     end
 
-    process.wait!
-    retval
+    shell.wait!
+    process.exit_status == 0
+  end
+
+  def publish_messages(data, prefix = "")
+    messages = data.split(/\r?\n|\r/).
+      map(&:lstrip).reject(&:blank?)
+
+    if prefix.present?
+      messages.map! do |msg|
+        "#{prefix}#{msg}"
+      end
+    end
+
+    messages.each do |message|
+      @job.log += "#{message}\n"
+      redis.publish(@job.channel, message)
+      Rails.logger.info(message)
+    end
   end
 
   def redis

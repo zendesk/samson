@@ -6,7 +6,11 @@ class JobHistory < ActiveRecord::Base
 
   has_one :job_lock
 
+  before_create :set_channel
+
   validates :project_id, presence: true
+
+  validates :sha, presence: true
 
   validates :environment, presence: true,
     inclusion: { in: %w{master1 master2 staging pod1:gamma pod1 pod2:gamma pod2} }
@@ -52,5 +56,9 @@ class JobHistory < ActiveRecord::Base
 
   def unlock!
     job_lock.destroy!
+  end
+
+  def set_channel
+    write_attribute(:channel, channel)
   end
 end

@@ -1,4 +1,6 @@
 class SessionsController < ApplicationController
+  skip_before_filter :login_users
+
   def new
     if logged_in?
       redirect_to root_path

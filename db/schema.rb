@@ -18,6 +18,7 @@ ActiveRecord::Schema.define(version: 20130807232645) do
     t.string   "environment"
     t.string   "sha"
     t.string   "state"
+    t.string   "channel"
     t.integer  "project_id"
     t.integer  "user_id"
     t.datetime "expires_at"

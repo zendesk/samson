@@ -4,6 +4,7 @@ module CurrentUser
   included do
     helper_method :logged_in?
     helper_method :current_user
+    before_filter :login_users
   end
 
   def current_user
@@ -24,5 +25,11 @@ module CurrentUser
 
   def logged_in?
     !!current_user
+  end
+
+  def login_users
+    if !logged_in?
+      redirect_to login_path
+    end
   end
 end

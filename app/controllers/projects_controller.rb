@@ -1,6 +1,6 @@
 class ProjectsController < ApplicationController
   def index
-    @projects = Project.all(limit: 9)
+    @projects = Project.limit(9).includes(job_histories: :user, job_locks: nil)
   end
 
   def show

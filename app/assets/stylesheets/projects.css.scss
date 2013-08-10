@@ -1,3 +1,19 @@
 // Place all the styles related to the projects controller here.
 // They will automatically be included in application.css.
 // You can use Sass (SCSS) here: http://sass-lang.com/
+
+.job-history {
+  padding-left: 15px;
+}
+
+.job-history li {
+  list-style-type: none;
+}
+
+.job-history li.success > a {
+  color: green;
+}
+
+.job-history li.failed > a {
+  color: red;
+}
