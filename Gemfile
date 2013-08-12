@@ -47,7 +47,7 @@ gem "omniauth", "~> 1.1"
 gem "omniauth-oauth2", "~> 1.1"
 
 gem 'anjlab-bootstrap-rails', :require => 'bootstrap-rails',
-  :github => 'anjlab/bootstrap-rails', :branch => '3.0.0'
+  :git => 'git@github.com:anjlab/bootstrap-rails.git', :branch => '3.0.0'
 gem 'bootstrap-glyphicons'
 
 gem "soft_deletion", "~> 0.4"
