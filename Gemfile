@@ -60,3 +60,5 @@ gem "net-ssh", "~> 2.1.0"
 gem "net-ssh-shell", "~> 0.2"
 
 gem "foreman"
+
+gem "active_hash", "~> 1.0"
