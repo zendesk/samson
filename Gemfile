@@ -62,3 +62,8 @@ gem "net-ssh-shell", "~> 0.2"
 gem "foreman"
 
 gem "active_hash", "~> 1.0"
+
+group :development do
+  gem "better_errors"
+  gem "binding_of_caller"
+end

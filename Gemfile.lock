@@ -38,10 +38,17 @@ GEM
       tzinfo (~> 0.3.37)
     arel (4.0.0)
     atomic (1.1.12)
+    better_errors (0.9.0)
+      coderay (>= 1.0.0)
+      erubis (>= 2.6.6)
+    binding_of_caller (0.7.2)
+      debug_inspector (>= 0.0.1)
     bootstrap-glyphicons (0.0.1)
       railties (>= 3.0)
       sass (>= 3.2)
     builder (3.1.4)
+    coderay (1.0.9)
+    debug_inspector (0.0.2)
     dotenv (0.8.0)
     erubis (2.7.0)
     execjs (1.4.0)
@@ -159,6 +166,8 @@ PLATFORMS
 DEPENDENCIES
   active_hash (~> 1.0)
   anjlab-bootstrap-rails!
+  better_errors
+  binding_of_caller
   bootstrap-glyphicons
   foreman
   jquery-rails
