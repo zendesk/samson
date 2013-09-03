@@ -1,6 +1,12 @@
 ZendeskPusher::Application.routes.draw do
-  resources :projects, only: [:edit, :show] do
+  resources :projects, except: [:index, :destroy] do
     resources :jobs, only: [:create, :show, :update]
+  end
+
+  resources :jobs, only: [:index] do
+    collection do
+      get :active
+    end
   end
 
   get '/auth/:provider/callback', to: 'sessions#create'

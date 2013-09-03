@@ -3,7 +3,43 @@ class ProjectsController < ApplicationController
     @projects = Project.limit(9).includes(job_histories: :user, job_locks: nil)
   end
 
+  def new
+    @project = Project.new
+  end
+
+  def create
+    @project = Project.create(project_params)
+
+    if @project.persisted?
+      redirect_to root_path
+    else
+      flash[:error] = @project.errors.full_messages.join("<br />")
+      render :new
+    end
+  end
+
   def show
     @project = Project.find(params[:id])
+  end
+
+  def edit
+    @project = Project.find(params[:id])
+  end
+
+  def update
+    @project = Project.find(params[:id])
+
+    if @project.update_attributes(project_params)
+      redirect_to root_path
+    else
+      flash[:error] = @project.errors.full_messages.join("<br />")
+      render :edit
+    end
+  end
+
+  protected
+
+  def project_params
+    params.require(:project).permit(:name)
   end
 end

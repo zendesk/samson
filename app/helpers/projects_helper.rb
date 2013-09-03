@@ -19,4 +19,20 @@ module ProjectsHelper
       "success"
     end
   end
+
+  def project_form_method
+    if @project.new_record?
+      :post
+    else
+      :put
+    end
+  end
+
+  def project_form_legend
+    if @project.new_record?
+      "New Project"
+    else
+      "Editing #{@project.name}"
+    end
+  end
 end

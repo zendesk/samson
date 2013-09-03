@@ -2,8 +2,8 @@
   <%= link_to "Zendesk Deployer", root_path, class: "navbar-brand" %>
 
   <ul class="nav navbar-nav">
-    <li><a href="#">Job History</a></li>
-    <li><a href="#">Current Deploys</a></li>
+    <li><%= link_to "Job History", jobs_path %></li>
+    <li><%= link_to "Current Deploys", active_jobs_path %></li>
   </ul>
 
   <button type="button" class="btn btn-default navbar-btn pull-right">

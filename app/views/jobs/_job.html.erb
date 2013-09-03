@@ -1,0 +1,15 @@
+<div class="col-md-12">
+  <div class="panel">
+    <div class="panel-heading">
+      <%= link_to job.project.name, project_path(job.project) %>
+
+      <span class="pull-right">
+        <%= link_to "#{job.user.name} deployed #{job.sha} to #{job.environment}", project_job_path(job.project, job.channel) %>
+      </span>
+    </div>
+
+    <pre class="pre-scrollable <%= job.state %>" style="height: 100px;">
+<%= job.log.strip -%>
+    </pre>
+  </div>
+</div>

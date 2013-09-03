@@ -3,7 +3,14 @@ class JobsController < ApplicationController
 
   include ActionController::Live
 
-  helper_method :project, :job_history
+  helper_method :project, :job_history, :job_histories
+
+  def index
+  end
+
+  def active
+    render :index
+  end
 
   def create
     job = project.job_histories.create!(
@@ -53,5 +60,17 @@ class JobsController < ApplicationController
 
   def job_history
     @job_history ||= JobHistory.find_by_channel!(params[:id])
+  end
+
+  def job_histories_scope
+    if action_name == "active"
+      JobHistory.active
+    else
+      JobHistory
+    end
+  end
+
+  def job_histories
+    @job_histories ||= job_histories_scope.limit(10).order("created_at DESC")
   end
 end

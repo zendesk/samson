@@ -13,7 +13,7 @@
   <% end %>
 </pre>
 
-<% if true # (job_history.started? || job_history.running?) && job_history.user == current_user %>
+<% if (job_history.started? || job_history.running?) && job_history.user == current_user %>
   <%= form_for :job, url: url_for, method: :put, remote: true, html: { class: "form-inline" } do |form| %>
     <%= form.text_field :message, class: "form-control" %>
     <button class="btn btn-default pull-right">Submit</button>

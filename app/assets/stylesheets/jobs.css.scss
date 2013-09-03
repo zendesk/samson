@@ -10,3 +10,17 @@
 #job_message {
   width: 90%;
 }
+
+.panel {
+  .failed {
+    border-color: red;
+  }
+
+  .running, .started {
+    border-color: blue;
+  }
+
+  .successful {
+    border-color: green;
+  }
+}
