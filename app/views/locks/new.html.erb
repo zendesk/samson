@@ -1,0 +1,33 @@
+<%= form_for @lock, url: project_lock_path, html: { class: "form-horizontal" } do |form| %>
+  <fieldset>
+    <legend>Locking <%= project.name %></legend>
+
+    <div class="form-group">
+      <%= form.label :sha, "Environment", class: "col-lg-2 control-label" %>
+      <div class="col-lg-4">
+        <%= form.select :environment, select_valid_environments, {}, class: "form-control" %>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <%= form.label :expires_at, "Expires At", class: "col-lg-2 control-label" %>
+      <div class="col-lg-4">
+        <%= form.text_field :expires_at, class: "form-control", placeholder: "YYYY-MM-DD HH:MM" %>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <div class="col-lg-offset-2 col-lg-10">
+        <button type="submit" class="btn btn-default">Save</button>
+      </div>
+    </div>
+  </fieldset>
+<% end %>
+
+<%= javascript_tag do %>
+  $(document).ready(function() {
+    $("#job_lock_expires_at").datetimepicker({
+      dateFormat: "yy-mm-dd"
+    });
+  });
+<% end %>

@@ -1,12 +1,24 @@
 <div class="col-6 col-sm-4 col-lg-4">
   <div class="panel">
     <div class="panel-heading text-center">
-      <%= link_to project_path(project), class: "pull-right" do %>
-        <i class="glyphicon glyphicon-play-circle"></i>
-      <% end %>
+      <div class="pull-right">
+        <% if current_user.is_admin? %>
+          <%= link_to new_project_lock_path(project) do %>
+            <i class="glyphicon glyphicon-lock"></i>
+          <% end %>
+        <% end %>
 
-      <%= link_to edit_project_path(project), class: "pull-left" do %>
-        <i class="glyphicon glyphicon-edit"></i>
+        <% if current_user.is_deployer? %>
+          <%= link_to project_path(project) do %>
+            <i class="glyphicon glyphicon-play-circle"></i>
+          <% end %>
+        <% end %>
+      </div>
+
+      <% if current_user.is_admin? %>
+        <%= link_to edit_project_path(project), class: "pull-left" do %>
+          <i class="glyphicon glyphicon-edit"></i>
+        <% end %>
       <% end %>
 
       <%= project.name %>

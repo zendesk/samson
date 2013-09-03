@@ -1,4 +1,6 @@
 class JobHistory < ActiveRecord::Base
+  extend EnvironmentsHelper
+
   scope :active, -> { where(state: ["started", "running"]) }
 
   belongs_to :project
@@ -8,12 +10,14 @@ class JobHistory < ActiveRecord::Base
 
   before_create :set_channel
 
+  validate :unlocked_project, on: :create
+
   validates :project_id, presence: true
 
   validates :sha, presence: true
 
   validates :environment, presence: true,
-    inclusion: { in: %w{master1 master2 staging pod1:gamma pod1 pod2:gamma pod2} }
+    inclusion: { in: valid_environments }
 
   validates_uniqueness_of :state, scope: [:environment, :project_id],
     conditions: -> { where(state: "running") }
@@ -60,5 +64,11 @@ class JobHistory < ActiveRecord::Base
 
   def set_channel
     write_attribute(:channel, channel)
+  end
+
+  def unlocked_project
+    lock = project.job_locks.where(environment: environment).first
+    return unless lock
+    errors.add(:environment, "is locked")
   end
 end

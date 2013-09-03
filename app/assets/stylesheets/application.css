@@ -11,6 +11,7 @@
  *= require_self
  *= require twitter/bootstrap
  *= require bootstrap/glyphicons
+ *= require jquery.ui.all
  *= require_tree .
  */
 

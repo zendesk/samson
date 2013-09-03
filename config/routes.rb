@@ -1,6 +1,7 @@
 ZendeskPusher::Application.routes.draw do
   resources :projects, except: [:index, :destroy] do
     resources :jobs, only: [:create, :show, :update]
+    resource  :lock, only: [:new, :create, :destroy]
   end
 
   resources :jobs, only: [:index] do

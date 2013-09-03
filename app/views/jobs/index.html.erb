@@ -1,9 +1,9 @@
 <%= render partial: "job", collection: job_histories %>
 
-<script type="text/javascript">
+<%= javascript_tag do %>
   $(document).ready(function() {
     $(".pre-scrollable").each(function(i, pre) {
       $(pre).scrollTop(pre.scrollHeight - 120);
     });
   });
-</script>
+<% end %>

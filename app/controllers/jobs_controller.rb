@@ -24,7 +24,7 @@ class JobsController < ApplicationController
 
     redirect_to project_job_path(project, job.channel)
   rescue ActiveRecord::RecordInvalid => e
-    flash[:error] = e.record.errors.full_messages.join("<br />")
+    flash[:error] = e.record.errors.full_messages.join("<br />").html_safe
     redirect_to project_path(project)
   end
 
