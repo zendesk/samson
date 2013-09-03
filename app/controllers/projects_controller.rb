@@ -1,4 +1,7 @@
 class ProjectsController < ApplicationController
+  before_filter :authorize_admin!, only: [:new, :create, :edit, :update]
+  before_filter :authorize_deployer!, only: [:show]
+
   def index
     @projects = Project.limit(9).includes(job_histories: :user, job_locks: nil)
   end

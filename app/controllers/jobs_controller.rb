@@ -1,4 +1,6 @@
 class JobsController < ApplicationController
+  before_filter :authorize_deployer!, only: [:create]
+
   rescue_from ActiveRecord::RecordInvalid, with: :invalid_job
 
   include ActionController::Live

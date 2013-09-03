@@ -6,4 +6,19 @@ class ApplicationController < ActionController::Base
   protect_from_forgery with: :exception
 
   helper :flash
+
+  protected
+
+  def authorize_admin!
+    unauthorized! unless current_user.is_admin?
+  end
+
+  def authorize_deployer!
+    unauthorized! unless current_user.is_deployer?
+  end
+
+  def unauthorized!
+    flash[:error] = "You are not authorized to view this page."
+    redirect_to root_path
+  end
 end
