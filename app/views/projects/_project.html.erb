@@ -28,7 +28,7 @@
       <p>
         Locked for <%= lock.environment %>
         <% if lock.job_history %>
-          by a <%= link_to "running job", project_job_path(project, lock.job_history.channel) %>
+          by a <%= link_to "running job", project_job_path(project, lock.job_history) %>
         <% else %>
           until <%= lock.expires_at %>
         <% end %>
@@ -40,7 +40,7 @@
       <ul class="job-history">
         <% project.job_histories.limit(last_n(project)).each do |job| %>
           <li class="<%= job_state_class(job) %>">
-            <%= link_to "#{job.sha} to #{job.environment} by #{job.user.name}", project_job_path(project, job.channel) %>
+            <%= link_to "#{job.sha} to #{job.environment} by #{job.user.name}", project_job_path(project, job) %>
           </li>
         <% end %>
       </ul>

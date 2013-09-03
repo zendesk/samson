@@ -22,10 +22,27 @@ class JobsController < ApplicationController
 
     Resque.enqueue(Deploy, job.id)
 
-    redirect_to project_job_path(project, job.channel)
+    redirect_to project_job_path(project, job)
   rescue ActiveRecord::RecordInvalid => e
     flash[:error] = e.record.errors.full_messages.join("<br />").html_safe
     redirect_to project_path(project)
+  end
+
+  def stream
+    response.headers['Content-Type'] = 'text/event-stream'
+    response.headers['Cache-Control'] = 'no-cache'
+
+    Resque.redis.redis.subscribe(params[:id]) do |on|
+      on.message do |_, message|
+        # response.stream.write("event: nil")
+        data = JSON.dump(msg: message)
+        response.stream.write("data: #{data}\n\n")
+      end
+    end
+  rescue IOError
+    # Raised on stream close
+  ensure
+    response.stream.close
   end
 
   def show

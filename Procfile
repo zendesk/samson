@@ -1,3 +1,2 @@
-rails: unicorn_rails -p 8080
-node: node stream.js
+rails: puma -C config/puma.rb -p 8080
 work: rake resque:work

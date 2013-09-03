@@ -52,6 +52,10 @@ class JobHistory < ActiveRecord::Base
     ].join)
   end
 
+  def to_param
+    channel
+  end
+
   private
 
   def lock!

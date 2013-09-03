@@ -5,6 +5,10 @@ ZendeskPusher::Application.routes.draw do
   end
 
   resources :jobs, only: [:index] do
+    member do
+      get :stream
+    end
+
     collection do
       get :active
     end

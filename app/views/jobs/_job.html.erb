@@ -4,7 +4,7 @@
       <%= link_to job.project.name, project_path(job.project) %>
 
       <span class="pull-right">
-        <%= link_to "#{job.user.name} deployed #{job.sha} to #{job.environment}", project_job_path(job.project, job.channel) %>
+        <%= link_to "#{job.user.name} deployed #{job.sha} to #{job.environment}", project_job_path(job.project, job) %>
       </span>
     </div>
 

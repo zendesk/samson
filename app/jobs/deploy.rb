@@ -1,4 +1,6 @@
 class Deploy < Resque::Job
+  STOP_MESSAGE = "stop"
+
   def self.queue
     :deployment
   end
@@ -52,7 +54,12 @@ class Deploy < Resque::Job
       @job.save if @job.changed?
 
       if message = redis.get("#{@job.channel}:input")
-        process.send_data("#{message}\n")
+        if message == STOP_MESSAGE
+          process.close!
+        else
+          process.send_data("#{message}\n")
+        end
+
         redis.del("#{@job.channel}:input")
       end
     end

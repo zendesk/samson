@@ -14,9 +14,12 @@
 </pre>
 
 <% if (job_history.started? || job_history.running?) && job_history.user == current_user %>
-  <%= form_for :job, url: url_for, method: :put, remote: true, html: { class: "form-inline" } do |form| %>
+  <%= form_for :job, url: url_for, method: :put, html: { class: "form-inline" } do |form| %>
     <%= form.text_field :message, class: "form-control" %>
-    <button class="btn btn-default pull-right">Submit</button>
+    <div id="job_actions">
+      <button id="job_stop" class="btn btn-danger">Stop</button>
+      <button class="btn btn-default">Submit</button>
+    </div>
   <% end %>
 <% else %>
   <div class="alert alert-<%= job_history.failed?? "danger" : "success" %>">
@@ -28,7 +31,7 @@
 <%= javascript_tag do %>
   var messages = $("#messages");
 
-  var source = new EventSource('//' + location.hostname + ':8081/jobs/<%= params[:id] %>/stream');
+  var source = new EventSource("<%= stream_job_path(job_history) %>");
   source.addEventListener('message', function(e) {
     messages.append(JSON.parse(e.data).msg + '\n');
     messages.scrollTop(messages[0].scrollHeight);
@@ -46,6 +49,10 @@
   }, false);
 
   $("form").on("ajax:complete", function() {
-    $("#job_message").val("")
+    $("#job_message").val("");
+  });
+
+  $("#job_stop").on("click", function() {
+    $("#job_message").val("<%= Deploy::STOP_MESSAGE %>");
   });
 <% end %>

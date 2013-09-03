@@ -11,7 +11,7 @@ gem 'uglifier', '>= 1.3.0'
 gem 'jquery-rails'
 gem 'jquery-ui-rails'
 
-gem "unicorn"
+gem "puma"
 
 gem "omniauth", "~> 1.1"
 gem "omniauth-oauth2", "~> 1.1"
