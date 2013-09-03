@@ -1,12 +1,3 @@
-Net::SSH::Connection::Session.class_eval do
-  alias :old_loop :loop
-  # Non-blocking loop, Net::SSH doesn't
-  # let us pass through when using start
-  def loop(wait = 0, &block)
-    old_loop(wait, &block)
-  end
-end
-
 class Deploy < Resque::Job
   def self.queue
     :deployment
@@ -29,7 +20,6 @@ class Deploy < Resque::Job
           "cd #{@job.project.name.parameterize("_")}",
           "git fetch -ap",
           "git reset --hard #{@job.sha}",
-          "bundle --deployment",
           "capsu #{@job.environment} deploy TAG=#{@job.sha}"
         ].each do |command|
           if !exec!(sh, command)
