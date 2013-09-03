@@ -31,6 +31,8 @@ gem "foreman"
 
 gem "active_hash", "~> 1.0"
 
+gem "ansible"
+
 group :development do
   gem "better_errors"
   gem "binding_of_caller"

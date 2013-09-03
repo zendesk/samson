@@ -8,8 +8,10 @@
       </span>
     </div>
 
-    <pre class="pre-scrollable <%= job.state %>" style="height: 100px;">
-<%= job.log.strip -%>
+    <pre class="log pre-scrollable <%= job.state %>" style="height: 100px;">
+      <% job.log.split("\n").each do |log| %>
+<%= render_log(log) %>
+      <% end %>
     </pre>
   </div>
 </div>

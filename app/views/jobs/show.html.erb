@@ -7,9 +7,9 @@
   </div>
 </h1>
 
-<pre id="messages" class="pre-scrollable">
+<pre class="pre-scrollable log">
   <% job_history.log.split("\n").each do |log| %>
-<%= log %>
+<%= render_log(log) %>
   <% end %>
 </pre>
 
