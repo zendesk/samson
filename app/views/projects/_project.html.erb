@@ -24,18 +24,18 @@
       <%= project.name %>
     </div>
 
-    <% project.job_locks.each do |lock| %>
-      <p>
-        Locked for <%= lock.environment %>
-        <% if lock.job_history %>
-          by a <%= link_to "running job", project_job_path(project, lock.job_history) %>
-        <% else %>
-          until <%= lock.expires_at %>
-        <% end %>
-      </p>
-    <% end %>
-
     <div class="panel-body">
+      <% project.job_locks.each do |lock| %>
+        <p>
+          Locked for <%= lock.environment %>
+          <% if lock.job_history %>
+            by a <%= link_to "running job", project_job_path(project, lock.job_history) %>
+          <% else %>
+            until <%= lock.expires_at %>
+          <% end %>
+        </p>
+      <% end %>
+
       <% if last_n(project) > 0 %>
         <p>Last <%= last_n(project) %> deploy(s):</p>
         <ul class="job-history">
