@@ -1,6 +1,9 @@
 class Project < ActiveRecord::Base
   # Heroku passes a fake DB to precompilation, fail
-  has_soft_deletion default_scope: true raise nil
+  begin
+    has_soft_deletion default_scope: true
+  rescue nil
+  end
 
   validates_presence_of :name
 
