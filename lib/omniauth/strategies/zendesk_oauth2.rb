@@ -8,7 +8,7 @@ module OmniAuth
       option :client_options,
         token_url: "/oauth/tokens",
         authorize_url: "/oauth/authorizations/new",
-        site: "http://dev.localhost",
+        site: ENV["ZENDESK_URL"] || "http://dev.localhost",
         ssl: { verify: !Rails.env.development? }
 
       uid { raw_info['id'] }
