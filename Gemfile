@@ -1,5 +1,8 @@
 source 'https://rubygems.org'
 
+# Heroku
+ruby '1.9.3', :engine => 'jruby', :engine_version => '1.7.4'
+
 gem 'rails', '4.0.0'
 
 gem 'sqlite3', :platform => :ruby
