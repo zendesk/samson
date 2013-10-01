@@ -9,8 +9,7 @@
  * compiled file, but it's generally better to create a new file per style scope.
  *
  *= require_self
- *= require twitter/bootstrap
- *= require bootstrap/glyphicons
+ *= require bootstrap
  *= require jquery.ui.all
  *= require_tree .
  */
@@ -29,4 +28,8 @@
 .pre-scrollable.log {
   background-color: black;
   color: white;
+}
+
+.navbar .navbar-btn.pull-right {
+  margin-right: 15px;
 }

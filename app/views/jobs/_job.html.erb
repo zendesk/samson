@@ -1,5 +1,5 @@
 <div class="col-md-12">
-  <div class="panel">
+  <div class="panel panel-default">
     <div class="panel-heading">
       <%= link_to job.project.name, project_path(job.project) %>
 
@@ -8,10 +8,12 @@
       </span>
     </div>
 
-    <pre class="log pre-scrollable <%= job.state %>" style="height: 100px;">
-      <% job.log.split("\n").each do |log| %>
+    <div class="panel-body">
+      <pre class="log pre-scrollable <%= job.state %>" style="height: 100px;">
+        <% job.log.split("\n").each do |log| %>
 <%= render_log(log) %>
-      <% end %>
-    </pre>
+        <% end %>
+      </pre>
+    </div>
   </div>
 </div>

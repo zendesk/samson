@@ -1,11 +1,9 @@
 GIT
-  remote: https://github.com/anjlab/bootstrap-rails.git
-  revision: addb7143365f97f938e3bdbb2ccfc52591230eda
-  branch: 3.0.0
+  remote: https://github.com/thomas-mcdonald/bootstrap-sass.git
+  revision: c0e12a90ba3e44ab68d3f153411fba3edc400b2a
   specs:
-    anjlab-bootstrap-rails (3.0.0.rc2)
-      railties (>= 3.0)
-      sass (>= 3.2)
+    bootstrap-sass (3.0.0.0)
+      sass (~> 3.2)
 
 GEM
   remote: https://rubygems.org/
@@ -53,9 +51,6 @@ GEM
       erubis (>= 2.6.6)
     binding_of_caller (0.7.2)
       debug_inspector (>= 0.0.1)
-    bootstrap-glyphicons (0.0.1)
-      railties (>= 3.0)
-      sass (>= 3.2)
     builder (3.1.4)
     coderay (1.0.9)
     debug_inspector (0.0.2)
@@ -191,11 +186,10 @@ DEPENDENCIES
   active_hash (~> 1.0)
   activerecord-jdbcpostgresql-adapter
   activerecord-jdbcsqlite3-adapter
-  anjlab-bootstrap-rails!
   ansible
   better_errors
   binding_of_caller
-  bootstrap-glyphicons
+  bootstrap-sass!
   foreman
   jdbc-sqlite3
   jquery-rails

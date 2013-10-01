@@ -17,14 +17,12 @@ gem 'uglifier', '>= 1.3.0'
 gem 'jquery-rails'
 gem 'jquery-ui-rails'
 
+gem 'bootstrap-sass', :git => 'https://github.com/thomas-mcdonald/bootstrap-sass.git'
+
 gem "puma"
 
 gem "omniauth", "~> 1.1"
 gem "omniauth-oauth2", "~> 1.1"
-
-gem 'anjlab-bootstrap-rails', :require => 'bootstrap-rails',
-  :git => 'https://github.com/anjlab/bootstrap-rails.git', :branch => '3.0.0'
-gem 'bootstrap-glyphicons'
 
 gem "soft_deletion", "~> 0.4"
 

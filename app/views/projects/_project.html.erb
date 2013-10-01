@@ -1,5 +1,5 @@
 <div class="col-6 col-sm-4 col-lg-4">
-  <div class="panel">
+  <div class="panel panel-default">
     <div class="panel-heading text-center">
       <div class="pull-right">
         <% if current_user.is_admin? %>
@@ -35,15 +35,17 @@
       </p>
     <% end %>
 
-    <% if last_n(project) > 0 %>
-      <p>Last <%= last_n(project) %> deploy(s):</p>
-      <ul class="job-history">
-        <% project.job_histories.limit(last_n(project)).each do |job| %>
-          <li class="<%= job_state_class(job) %>">
-            <%= link_to "#{job.sha} to #{job.environment} by #{job.user.name}", project_job_path(project, job) %>
-          </li>
-        <% end %>
-      </ul>
-    <% end %>
+    <div class="panel-body">
+      <% if last_n(project) > 0 %>
+        <p>Last <%= last_n(project) %> deploy(s):</p>
+        <ul class="job-history">
+          <% project.job_histories.limit(last_n(project)).each do |job| %>
+            <li class="<%= job_state_class(job) %>">
+              <%= link_to "#{job.sha} to #{job.environment} by #{job.user.name}", project_job_path(project, job) %>
+            </li>
+          <% end %>
+        </ul>
+      <% end %>
+    </div>
   </div>
 </div>
