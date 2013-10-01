@@ -16,7 +16,12 @@ class Deploy < Resque::Job
   def work
     @job.run!
 
-    Net::SSH.start("admin04.pod1", "sdavidovitz") do |ssh|
+    options = {}
+    if ENV["DEPLOY_KEY"]
+      options[:key_data] = [ENV["DEPLOY_KEY"]]
+    end
+
+    Net::SSH.start("admin01.ord.zdsys.com", "sdavidovitz", options) do |ssh|
       ssh.shell do |sh|
         [
           "cd #{@job.project.name.parameterize("_")}",

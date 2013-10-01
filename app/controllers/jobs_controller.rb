@@ -1,6 +1,9 @@
 class JobsController < ApplicationController
   before_filter :authorize_deployer!, only: [:create]
 
+  # ?
+  skip_before_filter :login_users, only: [:stream]
+
   rescue_from ActiveRecord::RecordInvalid, with: :invalid_job
 
   include ActionController::Live
@@ -29,6 +32,17 @@ class JobsController < ApplicationController
   end
 
   def stream
+    # Using puma, because Redis#subscribe blocks while
+    # waiting for a message, we won't get an IOError
+    # raised when the connection is closed on the client
+    # side until a message is sent. So we have a heartbeat thread.
+    heartbeat = Thread.new do
+      while true
+        response.stream.write("data:\n\n")
+        sleep(3)
+      end
+    end
+
     response.headers['Content-Type'] = 'text/event-stream'
     response.headers['Cache-Control'] = 'no-cache'
 
@@ -42,6 +56,7 @@ class JobsController < ApplicationController
   rescue IOError
     # Raised on stream close
   ensure
+    heartbeat.join
     response.stream.close
   end
 

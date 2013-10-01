@@ -2,7 +2,12 @@ source 'https://rubygems.org'
 
 gem 'rails', '4.0.0'
 
-gem 'sqlite3'
+gem 'sqlite3', :platform => :ruby
+
+platform :jruby do
+  gem 'jdbc-sqlite3'
+  gem 'activerecord-jdbcsqlite3-adapter'
+end
 
 gem 'sass-rails', '~> 4.0.0'
 
@@ -36,6 +41,8 @@ gem "active_hash", "~> 1.0"
 gem "ansible"
 
 group :development do
-  gem "better_errors"
-  gem "binding_of_caller"
+  platform :ruby do
+    gem "better_errors"
+    gem "binding_of_caller"
+  end
 end
