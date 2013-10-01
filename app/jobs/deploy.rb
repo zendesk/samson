@@ -1,19 +1,11 @@
-class Deploy < Resque::Job
+class Deploy
   STOP_MESSAGE = "stop"
 
-  def self.queue
-    :deployment
-  end
+  include SuckerPunch::Job
+  workers 4
 
-  def self.perform(id)
-    new(id).work
-  end
-
-  def initialize(id)
+  def perform(id)
     @job = JobHistory.find(id)
-  end
-
-  def work
     @job.run!
 
     options = {}
@@ -91,6 +83,6 @@ class Deploy < Resque::Job
   end
 
   def redis
-    @redis ||= Resque.redis.redis
+    @redis ||= REDIS
   end
 end

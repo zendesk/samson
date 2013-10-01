@@ -23,7 +23,7 @@ class JobsController < ApplicationController
       environment: create_job_params[:environment],
       sha: create_job_params[:sha])
 
-    Resque.enqueue(Deploy, job.id)
+    Deploy.new.async.perform(job.id)
 
     redirect_to project_job_path(project, job)
   rescue ActiveRecord::RecordInvalid => e
@@ -46,7 +46,7 @@ class JobsController < ApplicationController
     response.headers['Content-Type'] = 'text/event-stream'
     response.headers['Cache-Control'] = 'no-cache'
 
-    Resque.redis.redis.subscribe(params[:id]) do |on|
+    REDIS.subscribe(params[:id]) do |on|
       on.message do |_, message|
         # response.stream.write("event: nil")
         data = JSON.dump(msg: message)
@@ -65,7 +65,7 @@ class JobsController < ApplicationController
 
   def update
     if job_history.user_id == current_user.id
-      Resque.redis.redis.set("#{job_history.channel}:input", message_params[:message])
+      REDIS.set("#{job_history.channel}:input", message_params[:message])
       head :ok
     else
       head :forbidden

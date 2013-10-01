@@ -1,7 +1,0 @@
-development: localhost:6379
-test: localhost:6379
-master: localhost:6379
-staging: localhost:6379
-remote: localhost:6379
-selenium: localhost:6379
-production: 10.0.64.10:6379

@@ -28,7 +28,9 @@ gem "soft_deletion", "~> 0.4"
 
 gem "state_machine", "~> 1.2"
 
-gem "resque", "~> 1.24"
+gem "sucker_punch", "~> 1.0"
+
+gem "redis", "~> 3.0"
 
 gem "net-ssh", "~> 2.1.0"
 gem "net-ssh-shell", "~> 0.2"
