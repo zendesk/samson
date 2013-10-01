@@ -1,5 +1,7 @@
 class Project < ActiveRecord::Base
-  has_soft_deletion default_scope: true
+  if connection.connected?
+    has_soft_deletion default_scope: true
+  end
 
   validates_presence_of :name
 
