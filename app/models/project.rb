@@ -1,7 +1,6 @@
 class Project < ActiveRecord::Base
-  if connection.connected?
-    has_soft_deletion default_scope: true
-  end
+  # Heroku passes a fake DB to precompilation, fail
+  has_soft_deletion default_scope: true raise nil
 
   validates_presence_of :name
 
