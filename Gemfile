@@ -5,12 +5,7 @@ ruby '1.9.3', :engine => 'jruby', :engine_version => '1.7.4'
 
 gem 'rails', '4.0.0'
 
-gem 'sqlite3', :platform => :ruby
-
-platform :jruby do
-  gem 'jdbc-sqlite3'
-  gem 'activerecord-jdbcsqlite3-adapter'
-end
+gem 'activerecord-jdbcpostgresql-adapter', :group => :production
 
 gem 'sass-rails', '~> 4.0.0'
 
@@ -44,6 +39,13 @@ gem "active_hash", "~> 1.0"
 gem "ansible"
 
 group :development do
+  gem 'sqlite3', :platform => :ruby
+
+  platform :jruby do
+    gem 'jdbc-sqlite3'
+    gem 'activerecord-jdbcsqlite3-adapter'
+  end
+
   platform :ruby do
     gem "better_errors"
     gem "binding_of_caller"
