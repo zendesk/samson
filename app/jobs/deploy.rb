@@ -8,7 +8,7 @@ class Deploy
     @job = JobHistory.find(id)
     @job.run!
 
-    options = {}
+    options = { :port => 2222 }
     if ENV["DEPLOY_KEY"]
       options[:key_data] = [ENV["DEPLOY_KEY"]]
     end
