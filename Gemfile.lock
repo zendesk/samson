@@ -1,9 +1,9 @@
 GIT
-  remote: git@github.com:anjlab/bootstrap-rails.git
-  revision: f4c1c3d0cc44a3bf6af2ff473351b41e365b257f
+  remote: https://github.com/anjlab/bootstrap-rails.git
+  revision: addb7143365f97f938e3bdbb2ccfc52591230eda
   branch: 3.0.0
   specs:
-    anjlab-bootstrap-rails (3.0.0.rc1)
+    anjlab-bootstrap-rails (3.0.0.rc2)
       railties (>= 3.0)
       sass (>= 3.2)
 
@@ -105,6 +105,8 @@ GEM
       oauth2 (~> 0.8.0)
       omniauth (~> 1.0)
     polyglot (0.3.3)
+    puma (2.4.0)
+      rack (>= 1.1, < 2.0)
     puma (2.4.0-java)
       rack (>= 1.1, < 2.0)
     rack (1.5.2)
