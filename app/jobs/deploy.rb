@@ -9,7 +9,7 @@ class Deploy
   def perform
     @job.run!
 
-    options = { :port => 2222, :forward_agent => true }
+    options = { :port => 2222, :verbose => :debug, :forward_agent => true }
 
     if ENV["DEPLOY_KEY"]
       options[:key_data] = [ENV["DEPLOY_KEY"]]
