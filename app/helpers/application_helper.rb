@@ -1,3 +1,5 @@
+require 'ansible'
+
 module ApplicationHelper
   include Ansible
 

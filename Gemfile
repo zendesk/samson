@@ -10,14 +10,16 @@ group :production do
   gem 'activerecord-jdbcpostgresql-adapter'
 end
 
-gem 'sass-rails', '~> 4.0.0'
+group :assets do
+  gem 'sass-rails', '~> 4.0.0'
 
-gem 'uglifier', '>= 1.3.0'
+  gem 'uglifier', '>= 1.3.0'
 
-gem 'jquery-rails'
-gem 'jquery-ui-rails'
+  gem 'jquery-rails'
+  gem 'jquery-ui-rails'
 
-gem 'bootstrap-sass', :git => 'https://github.com/thomas-mcdonald/bootstrap-sass.git'
+  gem 'bootstrap-sass', :git => 'https://github.com/thomas-mcdonald/bootstrap-sass.git'
+end
 
 gem "puma"
 
@@ -32,10 +34,6 @@ gem "redis", "~> 3.0"
 
 gem "net-ssh", "~> 2.1"
 gem "net-ssh-shell", "~> 0.2", :git => 'https://github.com/9peso/net-ssh-shell.git'
-
-platform :jruby do
-  gem "jruby-pageant"
-end
 
 gem "foreman"
 
