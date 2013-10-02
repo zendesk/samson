@@ -52,7 +52,7 @@ class JobsController < ApplicationController
     response.headers['Content-Type'] = 'text/event-stream'
     response.headers['Cache-Control'] = 'no-cache'
 
-    Redis.subscriber.subscribe(params[:id]) do |on|
+    redis.subscribe(params[:id]) do |on|
       on.message do |channel, message|
         data = JSON.dump(msg: render_log(message).to_s)
         response.stream.write("data: #{data}\n\n")
@@ -62,6 +62,7 @@ class JobsController < ApplicationController
     # Raised on stream close
   ensure
     heartbeat.join
+    redis.quit
     response.stream.close
   end
 
@@ -70,7 +71,9 @@ class JobsController < ApplicationController
 
   def update
     if job_history.user_id == current_user.id
-      Redis.publisher.set("#{job_history.channel}:input", message_params[:message])
+      redis.set("#{job_history.channel}:input", message_params[:message])
+      redis.quit
+
       head :ok
     else
       head :forbidden
@@ -107,6 +110,10 @@ class JobsController < ApplicationController
     else
       JobHistory
     end
+  end
+
+  def redis
+    @redis ||= Redis.subscriber
   end
 
   def job_histories

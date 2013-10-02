@@ -3,12 +3,12 @@ class Deploy
 
   def initialize(id)
     @job = JobHistory.find(id)
+
     perform
+    redis.quit
   end
 
   def perform
-    @job.run!
-
     options = { :port => 2222, :verbose => :debug, :forward_agent => true }
 
     if ENV["DEPLOY_KEY"] && ENV["DEPLOY_PASSPHRASE"]
@@ -18,6 +18,8 @@ class Deploy
 
     Net::SSH.start("admin01.ord.zdsys.com", "sdavidovitz", options) do |ssh|
       ssh.shell do |sh|
+        @job.run!
+
         [
           "cd #{@job.project.name.parameterize("_")}",
           "git fetch -ap",
