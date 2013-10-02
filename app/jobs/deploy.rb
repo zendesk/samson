@@ -1,4 +1,3 @@
-require 'net/ssh'
 require 'net/ssh/shell'
 
 class Deploy

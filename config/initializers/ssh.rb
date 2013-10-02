@@ -1,3 +1,5 @@
+require 'net/ssh'
+
 Net::SSH::Connection::Session.class_eval do
   alias :old_loop :loop
   # Non-blocking loop, Net::SSH doesn't
