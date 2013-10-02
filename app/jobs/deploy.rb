@@ -13,7 +13,7 @@ class Deploy
 
     if ENV["DEPLOY_KEY"] && ENV["DEPLOY_PASSWORD"]
       options[:key_data] = [ENV["DEPLOY_KEY"]]
-      options[:passwordl] = ENV["DEPLOY_PASSWORD"]
+      options[:password] = ENV["DEPLOY_PASSWORD"]
     end
 
     Net::SSH.start("admin01.ord.zdsys.com", "sdavidovitz", options) do |ssh|
