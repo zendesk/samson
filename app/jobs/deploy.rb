@@ -11,8 +11,9 @@ class Deploy
 
     options = { :port => 2222, :verbose => :debug, :forward_agent => true }
 
-    if ENV["DEPLOY_KEY"]
+    if ENV["DEPLOY_KEY"] && ENV["DEPLOY_PASSPHRASE"]
       options[:key_data] = [ENV["DEPLOY_KEY"]]
+      options[:passphrase] = ENV["DEPLOY_PASSPHRASE"]
     end
 
     Net::SSH.start("admin01.ord.zdsys.com", "sdavidovitz", options) do |ssh|
