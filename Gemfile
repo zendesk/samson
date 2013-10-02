@@ -28,8 +28,6 @@ gem "soft_deletion", "~> 0.4"
 
 gem "state_machine", "~> 1.2"
 
-gem "sucker_punch", "~> 1.0"
-
 gem "redis", "~> 3.0"
 
 gem "net-ssh", "~> 2.1"

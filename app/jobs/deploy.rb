@@ -1,14 +1,15 @@
 class Deploy
   STOP_MESSAGE = "stop"
 
-  include SuckerPunch::Job
-  workers 4
-
-  def perform(id)
+  def initialize(id)
     @job = JobHistory.find(id)
+    perform
+  end
+
+  def perform
     @job.run!
 
-    options = { :port => 2222, :verbose => :debug }
+    options = { :port => 2222, :forward_agent => true }
 
     if ENV["DEPLOY_KEY"]
       options[:key_data] = [ENV["DEPLOY_KEY"]]
@@ -36,18 +37,13 @@ class Deploy
   end
 
   def exec!(shell, command)
-    retval = true
-
-    Rails.logger.info("Executing \"#{command}\"")
     process = shell.execute(command)
 
     process.on_output do |ch, data|
-      Rails.logger.info("Output: #{data.inspect}")
       publish_messages(data)
     end
 
     process.on_error_output do |ch, type, data|
-      Rails.logger.info("Error output: #{data.inspect}")
       publish_messages(data, "**ERR")
     end
 
@@ -65,9 +61,7 @@ class Deploy
       end
     end
 
-    Rails.logger.info("Waiting")
     shell.wait!
-    Rails.logger.info("Exit status: #{process.exit_status}")
     process.exit_status == 0
   end
 
@@ -89,6 +83,6 @@ class Deploy
   end
 
   def redis
-    @redis ||= REDIS
+    @redis ||= Redis.publisher
   end
 end
