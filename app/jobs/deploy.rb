@@ -11,14 +11,8 @@ class Deploy
 
     options = { :port => 2222, :verbose => :debug, :forward_agent => true }
 
-    if ENV["DEPLOY_KEY"] && ENV["DEPLOY_PASSPHRASE"]
+    if ENV["DEPLOY_KEY"]
       options[:key_data] = [ENV["DEPLOY_KEY"]]
-      options[:passphrase] = ENV["DEPLOY_PASSPHRASE"]
-    end
-
-    ssh_agent = `ssh-agent`
-    ssh_agent.match(/SSH_AUTH_SOCK=([^;]+);/) do |match|
-      ENV["SSH_AUTH_SOCK"] = match[1]
     end
 
     Net::SSH.start("admin01.ord.zdsys.com", "sdavidovitz", options) do |ssh|
