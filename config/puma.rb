@@ -1,2 +1,2 @@
-threads 8,32
+threads 8,250
 preload_app!
