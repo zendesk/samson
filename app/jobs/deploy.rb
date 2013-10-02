@@ -16,7 +16,10 @@ class Deploy
       options[:passphrase] = ENV["DEPLOY_PASSPHRASE"]
     end
 
-    `ssh-agent`
+    ssh_agent = `ssh-agent`
+    ssh_agent.match(/SSH_AUTH_SOCK=([^;]+);/) do |match|
+      ENV["SSH_AUTH_SOCK"] = match[1]
+    end
 
     Net::SSH.start("admin01.ord.zdsys.com", "sdavidovitz", options) do |ssh|
       ssh.shell do |sh|
