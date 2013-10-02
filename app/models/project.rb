@@ -1,3 +1,5 @@
+require 'soft_deletion'
+
 class Project < ActiveRecord::Base
   # Heroku passes a fake DB to precompilation, fail
   begin

@@ -1,3 +1,6 @@
+require 'net/ssh'
+require 'net/ssh/shell'
+
 class Deploy
   STOP_MESSAGE = "stop"
 

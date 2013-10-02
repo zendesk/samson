@@ -1,3 +1,5 @@
+require 'state_machine'
+
 class JobHistory < ActiveRecord::Base
   extend EnvironmentsHelper
 

@@ -8,6 +8,7 @@ gem 'rails', '4.0.0'
 group :production do
   gem 'rails_12factor'
   gem 'activerecord-jdbcpostgresql-adapter'
+  gem 'heroku-forward'
 end
 
 group :assets do
@@ -23,26 +24,27 @@ end
 
 gem "puma"
 
-gem "omniauth", "~> 1.1"
-gem "omniauth-oauth2", "~> 1.1"
+group :no_preload do
+  gem "omniauth", "~> 1.1"
+  gem "omniauth-oauth2", "~> 1.1"
 
-gem "soft_deletion", "~> 0.4"
+  gem "soft_deletion", "~> 0.4"
 
-gem "state_machine", "~> 1.2"
+  gem "state_machine", "~> 1.2"
 
-gem "redis", "~> 3.0"
+  gem "redis", "~> 3.0"
 
-gem "net-ssh", "~> 2.1"
-gem "net-ssh-shell", "~> 0.2", :git => 'https://github.com/9peso/net-ssh-shell.git'
+  gem "net-ssh", "~> 2.1"
+  gem "net-ssh-shell", "~> 0.2", :git => 'https://github.com/9peso/net-ssh-shell.git'
 
-gem "foreman"
+  gem "active_hash", "~> 1.0"
 
-gem "active_hash", "~> 1.0"
-
-gem "ansible"
+  gem "ansible"
+end
 
 group :development do
   gem 'sqlite3', :platform => :ruby
+  gem 'foreman'
 
   platform :jruby do
     gem 'jdbc-sqlite3'

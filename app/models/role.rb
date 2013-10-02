@@ -1,3 +1,5 @@
+require 'active_hash'
+
 class Role < ActiveHash::Base
   include ActiveHash::Enum
 

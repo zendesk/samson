@@ -1,3 +1,5 @@
+require 'omniauth'
+
 OmniAuth.config.logger = Rails.logger
 
 require 'omniauth/strategies/zendesk_oauth2'
