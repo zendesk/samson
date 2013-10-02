@@ -14,7 +14,11 @@
  *= require_tree .
  */
 
-.ansible_30    { color: green; } /* Usually black, but our background is black */
+.ansible_30 {
+  background-color: white;
+  color: black;
+}
+
 .ansible_31    { color: red; }
 .ansible_32    { color: limegreen; }
 .ansible_33    { color: yellow;}
