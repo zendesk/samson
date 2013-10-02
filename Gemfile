@@ -8,7 +8,7 @@ gem 'rails', '4.0.0'
 group :production do
   gem 'rails_12factor'
   gem 'activerecord-jdbcpostgresql-adapter'
-  gem 'heroku-forward'
+#  gem 'heroku-forward'
 end
 
 group :assets do
@@ -22,7 +22,7 @@ group :assets do
   gem 'bootstrap-sass', :git => 'https://github.com/thomas-mcdonald/bootstrap-sass.git'
 end
 
-gem "puma"
+gem 'puma'
 
 group :no_preload do
   gem "omniauth", "~> 1.1"
