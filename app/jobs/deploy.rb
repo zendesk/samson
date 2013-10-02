@@ -16,6 +16,8 @@ class Deploy
       options[:passphrase] = ENV["DEPLOY_PASSPHRASE"]
     end
 
+    `ssh-agent`
+
     Net::SSH.start("admin01.ord.zdsys.com", "sdavidovitz", options) do |ssh|
       ssh.shell do |sh|
         [
