@@ -8,7 +8,8 @@ class Deploy
     @job = JobHistory.find(id)
     @job.run!
 
-    options = { :port => 2222 }
+    options = { :port => 2222, :verbose => :debug }
+
     if ENV["DEPLOY_KEY"]
       options[:key_data] = [ENV["DEPLOY_KEY"]]
     end
@@ -37,13 +38,16 @@ class Deploy
   def exec!(shell, command)
     retval = true
 
+    Rails.logger.info("Executing \"#{command}\"")
     process = shell.execute(command)
 
     process.on_output do |ch, data|
+      Rails.logger.info("Output: #{data.inspect}")
       publish_messages(data)
     end
 
     process.on_error_output do |ch, type, data|
+      Rails.logger.info("Error output: #{data.inspect}")
       publish_messages(data, "**ERR")
     end
 
@@ -61,7 +65,9 @@ class Deploy
       end
     end
 
+    Rails.logger.info("Waiting")
     shell.wait!
+    Rails.logger.info("Exit status: #{process.exit_status}")
     process.exit_status == 0
   end
 

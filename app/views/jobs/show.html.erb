@@ -33,8 +33,10 @@
 
   var source = new EventSource("<%= stream_job_path(job_history) %>");
   source.addEventListener('message', function(e) {
-    messages.append(JSON.parse(e.data).msg + '\n');
-    messages.scrollTop(messages[0].scrollHeight);
+    if(e.data !== "") {
+      messages.append(JSON.parse(e.data).msg + '\n');
+      messages.scrollTop(messages[0].scrollHeight);
+    }
   }, false);
 
   source.addEventListener('open', function(e) {

@@ -32,8 +32,12 @@ gem "sucker_punch", "~> 1.0"
 
 gem "redis", "~> 3.0"
 
-gem "net-ssh", "~> 2.1.0"
-gem "net-ssh-shell", "~> 0.2"
+gem "net-ssh", "~> 2.1"
+gem "net-ssh-shell", "~> 0.2", :git => 'https://github.com/9peso/net-ssh-shell.git'
+
+platform :jruby do
+  gem "jruby-pageant"
+end
 
 gem "foreman"
 
