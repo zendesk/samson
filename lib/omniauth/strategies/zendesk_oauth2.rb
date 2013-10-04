@@ -29,7 +29,10 @@ module OmniAuth
       protected
 
       def raw_info
-        @raw_info ||= access_token.get('/api/v2/users/me.json').parsed['user']
+        @raw_info ||= begin
+          Rails.logger.info("Trying to find user with token #{access_token.inspect}")
+          access_token.get('/api/v2/users/me.json').parsed['user']
+        end
       end
     end
   end
