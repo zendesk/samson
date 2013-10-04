@@ -18,7 +18,7 @@ class Deploy
       options[:passphrase] = ENV["DEPLOY_PASSPHRASE"]
     end
 
-    Net::SSH.start("admin01.ord.zdsys.com", "sdavidovitz", options) do |ssh|
+    @ssh = Net::SSH.start("admin01.ord.zdsys.com", "sdavidovitz", options) do |ssh|
       ssh.shell do |sh|
         @job.run!
 
@@ -39,6 +39,16 @@ class Deploy
     end
 
     @job.success!
+  end
+
+  def stop
+    return if !@job || @ssh.closed?
+
+    redis = Redis.driver
+    redis.set("#{@job.channel}:input", STOP_MESSAGE)
+    redis.quit
+
+    @ssh.close
   end
 
   def exec!(shell, command)
