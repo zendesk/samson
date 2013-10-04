@@ -1,6 +1,10 @@
 class ApplicationController < ActionController::Base
   include CurrentUser
 
+  rescue_from ActionController::ParameterMissing do
+    redirect_to root_path
+  end
+
   force_ssl if Rails.env.production?
 
   # Prevent CSRF attacks by raising an exception.

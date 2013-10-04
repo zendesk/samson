@@ -57,3 +57,7 @@ group :development do
     gem "binding_of_caller"
   end
 end
+
+group :test do
+  gem "minitest-rails", "~> 0.9"
+end
