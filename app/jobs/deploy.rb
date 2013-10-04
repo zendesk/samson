@@ -69,7 +69,7 @@ class Deploy
         redis.del("#{@job.channel}:input")
 
         if message == STOP_MESSAGE
-          process.close!
+          shell.close!
           return false
         else
           process.send_data("#{message}\n")
