@@ -1,4 +1,4 @@
-if [ -x /usr/bin/setsid ]; then
+if [ "$RAILS_ENV" == "production" ]; then
   eval `ssh-agent`
   mkdir -p tmp
   echo "$DEPLOY_KEY" > tmp/id_rsa
