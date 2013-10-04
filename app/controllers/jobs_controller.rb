@@ -24,7 +24,9 @@ class JobsController < ApplicationController
       environment: create_job_params[:environment],
       sha: create_job_params[:sha])
 
-    Thread.new { Deploy.new(job.id) }
+    Thread.new do
+      Deploy.new(job.id)
+    end
 
     redirect_to project_job_path(project, job)
   rescue ActiveRecord::RecordInvalid => e
@@ -33,6 +35,7 @@ class JobsController < ApplicationController
   end
 
   def stream
+=begin
     # Using puma, because Redis#subscribe blocks while
     # waiting for a message, we won't get an IOError
     # raised when the connection is closed on the client
@@ -48,10 +51,14 @@ class JobsController < ApplicationController
         response.stream.close
       end
     end
+=end
+
+    ActiveRecord::Base.connection_pool.release_connection
 
     response.headers['Content-Type'] = 'text/event-stream'
     response.headers['Cache-Control'] = 'no-cache'
 
+    redis = Redis.driver
     redis.subscribe(params[:id]) do |on|
       on.message do |channel, message|
         data = JSON.dump(msg: render_log(message).to_s)
@@ -61,7 +68,7 @@ class JobsController < ApplicationController
   rescue IOError
     # Raised on stream close
   ensure
-    heartbeat.join
+#    heartbeat.join
     redis.quit
     response.stream.close
   end
@@ -71,6 +78,7 @@ class JobsController < ApplicationController
 
   def update
     if job_history.user_id == current_user.id
+      redis = Redis.driver
       redis.set("#{job_history.channel}:input", message_params[:message])
       redis.quit
 
@@ -110,10 +118,6 @@ class JobsController < ApplicationController
     else
       JobHistory
     end
-  end
-
-  def redis
-    @redis ||= Redis.subscriber
   end
 
   def job_histories

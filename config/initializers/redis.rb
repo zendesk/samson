@@ -1,14 +1,6 @@
 require 'redis'
 
 Redis.instance_eval do
-  def publisher
-    @publisher ||= driver
-  end
-
-  def subscriber
-    @subscriber ||= driver
-  end
-
   def driver
     if ENV["REDISTOGO_URL"]
       uri = URI.parse(ENV["REDISTOGO_URL"])

@@ -56,13 +56,14 @@ class Deploy
       @job.save if @job.changed?
 
       if message = redis.get("#{@job.channel}:input")
+        redis.del("#{@job.channel}:input")
+
         if message == STOP_MESSAGE
           process.close!
+          return false
         else
           process.send_data("#{message}\n")
         end
-
-        redis.del("#{@job.channel}:input")
       end
     end
 
@@ -88,6 +89,6 @@ class Deploy
   end
 
   def redis
-    @redis ||= Redis.publisher
+    @redis ||= Redis.driver
   end
 end
