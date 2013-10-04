@@ -9,13 +9,7 @@ module OmniAuth
         token_url: "/oauth/tokens",
         authorize_url: "/oauth/authorizations/new",
         site: ENV["ZENDESK_URL"] || "http://dev.localhost",
-        connection_opts: {
-          ssl: { verify: !Rails.env.development? },
-          headers: {
-            # Hack for IP restrictions on support
-            "User-Agent" => "Zendesk for iPhone"
-          }
-        }
+        ssl: { verify: !Rails.env.development? }
 
       uid { raw_info['id'] }
 
@@ -36,7 +30,9 @@ module OmniAuth
 
       def raw_info
         @raw_info ||= begin
-          Rails.logger.info("Trying to find user with token #{access_token.inspect}")
+          # Hack for ip restrictions on support.zendesk.com
+          access_token.client.connection.headers["User-Agent"] = "Zendesk for iPhone"
+
           access_token.get('/api/v2/users/me.json').parsed['user']
         end
       end
