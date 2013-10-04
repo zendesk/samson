@@ -9,8 +9,8 @@ module OmniAuth
         token_url: "/oauth/tokens",
         authorize_url: "/oauth/authorizations/new",
         site: ENV["ZENDESK_URL"] || "http://dev.localhost",
-        ssl: { verify: !Rails.env.development? },
-        connection_options: {
+        connection_opts: {
+          ssl: { verify: !Rails.env.development? },
           headers: {
             # Hack for IP restrictions on support
             "User-Agent" => "Zendesk for iPhone"
