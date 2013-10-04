@@ -35,7 +35,7 @@ describe LocksController do
     end
 
     describe "invalid parameters" do
-      let(:params) { { :job_lock => { { :environment => "blah" } } }
+      let(:params) { { :job_lock => { :environment => "blah" } } }
 
       it "renders new template" do
         assert_template :new
