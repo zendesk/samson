@@ -11,12 +11,14 @@ class Deploy
   end
 
   def perform
-    options = { :port => 2222, :verbose => :debug, :forward_agent => true }
+    options = { :port => 2222, :forward_agent => true }
 
     if ENV["DEPLOY_KEY"] && ENV["DEPLOY_PASSPHRASE"]
       options[:key_data] = [ENV["DEPLOY_KEY"]]
       options[:passphrase] = ENV["DEPLOY_PASSPHRASE"]
     end
+
+    success = true
 
     @ssh = Net::SSH.start("admin01.ord.zdsys.com", "sdavidovitz", options) do |ssh|
       ssh.shell do |sh|
@@ -30,15 +32,18 @@ class Deploy
         ].each do |command|
           if !exec!(sh, command)
             publish_messages("Failed to execute \"#{command}\"")
-            @job.failed!
-
-            return
+            success = false
+            break
           end
         end
       end
     end
 
-    @job.success!
+    if success
+      @job.success!
+    else
+      @job.failed!
+    end
   end
 
   def stop
@@ -69,7 +74,6 @@ class Deploy
         redis.del("#{@job.channel}:input")
 
         if message == STOP_MESSAGE
-          shell.close!
           return false
         else
           process.send_data("#{message}\n")

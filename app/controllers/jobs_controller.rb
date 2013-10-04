@@ -25,8 +25,8 @@ class JobsController < ApplicationController
       sha: create_job_params[:sha])
 
     Thread.main[:deploys] << Thread.new do
-      self[:deploy] = Deploy.new(job.id)
-      Thread.main[:deploys].delete(self)
+      Thread.current[:deploy] = Deploy.new(job.id)
+      Thread.main[:deploys].delete(Thread.current)
     end
 
     redirect_to project_job_path(project, job)
