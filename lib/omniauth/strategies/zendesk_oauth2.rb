@@ -26,12 +26,7 @@ module OmniAuth
         }
       end
 
-      def callback_phase
-        super.tap do
-          token_id = access_token.get('/api/v2/oauth/tokens/current.json').parsed['token']['id']
-          access_token.delete("/api/v2/oauth/tokens/#{token_id}.json")
-        end
-      end
+      protected
 
       def raw_info
         @raw_info ||= access_token.get('/api/v2/users/me.json').parsed['user']

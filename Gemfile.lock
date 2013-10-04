@@ -60,6 +60,7 @@ GEM
       debug_inspector (>= 0.0.1)
     builder (3.1.4)
     coderay (1.0.9)
+    columnize (0.3.6)
     debug_inspector (0.0.2)
     dotenv (0.8.0)
     erubis (2.7.0)
@@ -135,6 +136,10 @@ GEM
       thor (>= 0.18.1, < 2.0)
     rake (10.1.0)
     redis (3.0.4)
+    ruby-debug (0.10.4)
+      columnize (>= 0.1)
+      ruby-debug-base (~> 0.10.4.0)
+    ruby-debug-base (0.10.4-java)
     sass (3.2.10)
     sass-rails (4.0.0)
       railties (>= 4.0.0.beta, < 5.0)
@@ -190,6 +195,7 @@ DEPENDENCIES
   rails (= 4.0.0)
   rails_12factor
   redis (~> 3.0)
+  ruby-debug
   sass-rails (~> 4.0.0)
   soft_deletion (~> 0.4)
   sqlite3

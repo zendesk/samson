@@ -49,6 +49,7 @@ group :development do
   platform :jruby do
     gem 'jdbc-sqlite3'
     gem 'activerecord-jdbcsqlite3-adapter'
+    gem 'ruby-debug'
   end
 
   platform :ruby do
