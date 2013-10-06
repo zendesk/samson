@@ -15,10 +15,10 @@
 
 <% if (job_history.started? || job_history.running?) && job_history.user == current_user %>
   <%= form_for :job, url: url_for, method: :put, remote: true, html: { class: "form-inline" } do |form| %>
-    <%= form.text_field :message, class: "form-control" %>
+    <%= form.password_field :message, class: "form-control", :autocomplete => "off" %>
     <div id="job_actions">
-      <button id="job_stop" class="btn btn-danger">Stop</button>
       <button class="btn btn-default">Submit</button>
+      <button id="job_stop" class="btn btn-danger">Stop</button>
     </div>
   <% end %>
 
@@ -45,12 +45,23 @@
         //}
       }, false);
 
+      var password_field = true;
       $("form").on("ajax:complete", function() {
         $("#job_message").val("");
+
+        // For SSH passphrase on deploy
+        if(password_field) {
+          $("#job_message").attr("type", "text");
+          password_field = false;
+        }
       });
 
       $("#job_stop").on("click", function() {
-        $("#job_message").val("<%= Deploy::STOP_MESSAGE %>");
+        $.ajax("<%= project_job_path(project, job_history) %>", {
+          type: 'DELETE'
+        });
+        messages.addClass('failed');
+        event.preventDefault();
       });
     });
   <% end %>

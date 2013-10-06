@@ -1,29 +1,50 @@
 require 'net/ssh/shell'
 
 class Deploy
-  STOP_MESSAGE = "stop"
+  attr_reader :job_id
 
   def initialize(id)
-    @job = JobHistory.find(id)
-
-    perform
-    redis.quit
+    @job_id, @job = id, JobHistory.find(id)
+    @stopped = false
   end
 
   def perform
-    options = { :port => 2222, :forward_agent => true }
+    @job.run!
 
-    if ENV["DEPLOY_KEY"] && ENV["DEPLOY_PASSPHRASE"]
-      options[:key_data] = [ENV["DEPLOY_KEY"]]
-      options[:passphrase] = ENV["DEPLOY_PASSPHRASE"]
-    end
+    # Give the stream a little time to start
+    sleep(1.5)
 
     success = true
 
+    publish_messages("Please enter your passphrase:\n")
+    @job.save
+
+    options = { :port => 2222, :forward_agent => true }
+
+    if ENV["DEPLOY_KEY"]
+      options[:key_data] = [ENV["DEPLOY_KEY"]]
+    end
+
+    until options[:passphrase] = get_message
+      if @stopped
+        publish_messages("Deploy stopped.\n")
+        success = false
+        break
+      end
+    end
+
+    if success && ssh_deploy(options)
+      @job.success!
+    else
+      @job.failed!
+    end
+
+    redis.quit
+  end
+
+  def ssh_deploy(options)
     @ssh = Net::SSH.start("admin01.ord.zdsys.com", "sdavidovitz", options) do |ssh|
       ssh.shell do |sh|
-        @job.run!
-
         [
           "cd #{@job.project.name.parameterize("_")}",
           "git fetch -ap",
@@ -32,28 +53,20 @@ class Deploy
         ].each do |command|
           if !exec!(sh, command)
             publish_messages("Failed to execute \"#{command}\"")
-            success = false
-            break
+            return false
           end
         end
       end
     end
 
-    if success
-      @job.success!
-    else
-      @job.failed!
-    end
+    true
   end
 
   def stop
-    return if !@job || @ssh.closed?
+    return if !@job || @ssh.try(:closed?)
 
-    redis = Redis.driver
-    redis.set("#{@job.channel}:input", STOP_MESSAGE)
-    redis.quit
-
-    @ssh.close
+    @stopped = true
+    Rails.logger.info("Deploy #{@job_id} stopped")
   end
 
   def exec!(shell, command)
@@ -68,21 +81,22 @@ class Deploy
     end
 
     process.manager.channel.on_process do
+      return false if @stopped
       @job.save if @job.changed?
 
-      if message = redis.get("#{@job.channel}:input")
-        redis.del("#{@job.channel}:input")
-
-        if message == STOP_MESSAGE
-          return false
-        else
-          process.send_data("#{message}\n")
-        end
+      if message = get_message
+        process.send_data("#{message}\n")
       end
     end
 
     shell.wait!
     process.exit_status == 0
+  end
+
+  def get_message
+    redis.get("#{@job.channel}:input").tap do |message|
+      redis.del("#{@job.channel}:input") if message
+    end
   end
 
   def publish_messages(data, prefix = "")

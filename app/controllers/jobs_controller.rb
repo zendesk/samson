@@ -3,8 +3,12 @@ class JobsController < ApplicationController
   include ActionController::Live
 
   rescue_from ActiveRecord::RecordInvalid, with: :invalid_job
+  rescue_from ActiveRecord::RecordNotFound do |error|
+    flash[:error] = "Job not found."
+    redirect_to root_path
+  end
 
-  before_filter :authorize_deployer!, only: [:create]
+  before_filter :authorize_deployer!, only: [:create, :update, :destroy]
 
   # XXX -- Need to verify viewers somehow for curl?
   skip_before_filter :login_users, only: [:stream]
@@ -25,7 +29,8 @@ class JobsController < ApplicationController
       sha: create_job_params[:sha])
 
     Thread.main[:deploys] << Thread.new do
-      Thread.current[:deploy] = Deploy.new(job.id)
+      Thread.current[:deploy] = deploy = Deploy.new(job.id)
+      deploy.perform
       Thread.main[:deploys].delete(Thread.current)
     end
 
@@ -37,21 +42,21 @@ class JobsController < ApplicationController
 
   def stream
 =begin
-    # Using puma, because Redis#subscribe blocks while
-    # waiting for a message, we won't get an IOError
-    # raised when the connection is closed on the client
-    # side until a message is sent. So we have a heartbeat thread.
-    heartbeat = Thread.new do
-      begin
-        while true
-          response.stream.write("data:\n\n")
-          sleep(3)
+      # Using puma, because Redis#subscribe blocks while
+      # waiting for a message, we won't get an IOError
+      # raised when the connection is closed on the client
+      # side until a message is sent. So we have a heartbeat thread.
+      heartbeat = Thread.new do
+        begin
+          while true
+            response.stream.write("data:\n\n")
+            sleep(3)
+          end
+        rescue IOError
+          # Raised on stream close
+          response.stream.close
         end
-      rescue IOError
-        # Raised on stream close
-        response.stream.close
       end
-    end
 =end
 
     ActiveRecord::Base.connection_pool.release_connection
@@ -70,11 +75,14 @@ class JobsController < ApplicationController
     # Raised on stream close
   ensure
 #    heartbeat.join
-    redis.quit
+    redis.try(:quit)
     response.stream.close
   end
 
   def show
+    if !job_history
+      render :status => 404
+    end
   end
 
   def update
@@ -89,10 +97,20 @@ class JobsController < ApplicationController
     end
   end
 
+  def destroy
+    if deploy = current_deploy
+      deploy.stop
+
+      head :ok
+    else
+      head :not_found
+    end
+  end
+
   protected
 
   def job_params
-    params.permit(:id, :environment)
+    params.permit(:id, :environment, :project_id)
   end
 
   def create_job_params
@@ -123,5 +141,15 @@ class JobsController < ApplicationController
 
   def job_histories
     @job_histories ||= job_histories_scope.limit(10).order("created_at DESC")
+  end
+
+  def current_deploy
+    @current_deploy ||= Thread.main[:deploys].detect {|thread|
+      thread[:deploy].job_id == job_history.id
+    }.try(:[], :deploy)
+  end
+
+  def invalid_job
+    # TODO
   end
 end
