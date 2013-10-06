@@ -1,4 +1,4 @@
-if [ "$RAILS_ENV" == "production" ]; then
+if [[ "$RAILS_ENV" == "production" && ! -e tmp/passphrase.sh ]]; then
   eval `ssh-agent`
   mkdir -p tmp
   echo "$DEPLOY_KEY" > tmp/id_rsa
