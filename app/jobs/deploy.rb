@@ -43,7 +43,7 @@ class Deploy
   end
 
   def ssh_deploy(options)
-    `bash -c "#{Rails.root.join("lib/ssh-agent.sh")} #{options[:passphrase}"`
+    `bash -c "#{Rails.root.join("lib/ssh-agent.sh")} #{options[:passphrase]}"`
 
     @ssh = Net::SSH.start("admin01.ord.zdsys.com", "sdavidovitz", options) do |ssh|
       ssh.shell do |sh|
