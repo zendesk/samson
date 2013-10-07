@@ -33,6 +33,8 @@ class Deploy
       end
     end
 
+    Rails.logger.info("Found passphrase, continuing with deploy? #{success.inspect}")
+
     if success && ssh_deploy(options)
       @job.success!
     else
@@ -43,7 +45,9 @@ class Deploy
   end
 
   def ssh_deploy(options)
+    Rails.logger.info("Executing ssh-agent.")
     `bash -c "#{Rails.root.join("lib/ssh-agent.sh")} #{options[:passphrase]}"`
+    Rails.logger.info("Starting ssh deploy.")
 
     @ssh = Net::SSH.start("admin01.ord.zdsys.com", "sdavidovitz", options) do |ssh|
       ssh.shell do |sh|
