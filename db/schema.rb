@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20130813002317) do
+ActiveRecord::Schema.define(version: 20131007183106) do
 
   create_table "job_histories", force: true do |t|
     t.text     "log",         default: "", null: false
@@ -36,6 +36,7 @@ ActiveRecord::Schema.define(version: 20130813002317) do
 
   create_table "projects", force: true do |t|
     t.string   "name"
+    t.datetime "deleted_at"
     t.datetime "created_at"
     t.datetime "updated_at"
   end
@@ -45,7 +46,8 @@ ActiveRecord::Schema.define(version: 20130813002317) do
     t.string   "email"
     t.datetime "created_at"
     t.datetime "updated_at"
-    t.integer  "role_id",    default: 0, null: false
+    t.integer  "role_id",       default: 0, null: false
+    t.string   "current_token"
   end
 
 end
