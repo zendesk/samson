@@ -46,7 +46,13 @@ class Deploy
 
   def ssh_deploy(options)
     Rails.logger.info("Executing ssh-agent.")
-    `bash -c "#{Rails.root.join("lib/ssh-agent.sh")} #{options[:passphrase]}"`
+
+    Process.spawn("bash -c \"#{Rails.root.join("lib/ssh-agent.sh")} #{options[:passphrase]}\"")
+
+    # Make sure ssh-agent actually ran, can't Process.wait or use ``/system because
+    # of setsid usage
+    sleep(1)
+
     Rails.logger.info("Starting ssh deploy.")
 
     @ssh = Net::SSH.start("admin01.ord.zdsys.com", "sdavidovitz", options) do |ssh|
