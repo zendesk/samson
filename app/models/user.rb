@@ -1,22 +1,24 @@
 class User < ActiveRecord::Base
   validates :role_id, inclusion: { in: Role.all.map(&:id) }
-  validates :current_token, presence: true
 
   def self.find_or_create_from_oauth(hash, strategy)
     return unless hash.info.email.present?
 
     user = User.find_by_email(hash.info.email)
+    user ||= User.new
 
     # If the user already has a token, delete it
-    if user.try(:current_token)
-      current_token = OAuth2::AccessToken.new(oauth_client, user.current_token)
+    if user.current_token
+      current_token = OAuth2::AccessToken.new(strategy.client, user.current_token)
       delete_token(current_token)
     end
 
     access_token = strategy.access_token
     delete_token(access_token)
 
-    user ||= User.create(:name => hash.info.name, :email => hash.info.email, :current_token => access_token.token)
+    user.attributes = { :name => hash.info.name, :email => hash.info.email, :current_token => access_token.token }
+    user.save
+
     user
   end
 

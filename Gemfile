@@ -60,4 +60,5 @@ end
 
 group :test do
   gem "minitest-rails", "~> 0.9"
+  gem "webmock"
 end
