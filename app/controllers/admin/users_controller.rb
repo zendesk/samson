@@ -14,7 +14,7 @@ class Admin::UsersController < ApplicationController
     end
 
     flash[:notice] = "Successfully updated users."
-  rescue ActiveRecord::Rollback
+  rescue ActiveRecord::RecordInvalid
     flash[:error] = "Could not update users."
   ensure
     redirect_to admin_users_path
