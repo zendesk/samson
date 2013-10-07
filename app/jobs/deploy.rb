@@ -45,15 +45,20 @@ class Deploy
   end
 
   def ssh_deploy(options)
-    Rails.logger.info("Executing ssh-agent.")
+    if Rails.env.production?
+      Process.spawn("bash -c \"#{Rails.root.join("lib/ssh-agent.sh")} #{options[:passphrase]}\"")
+      socket = Rails.root.join("tmp/auth_sock")
 
-    Process.spawn("bash -c \"#{Rails.root.join("lib/ssh-agent.sh")} #{options[:passphrase]}\"")
+      until File.exist?(socket)
+        if @stopped
+          publish_messages("Deploy stopped.\n")
+          success = false
+          break
+        end
+      end
 
-    # Make sure ssh-agent actually ran, can't Process.wait or use ``/system because
-    # of setsid usage
-    sleep(1)
-
-    Rails.logger.info("Starting ssh deploy.")
+      ENV["SSH_AUTH_SOCK"] = File.readlink(socket)
+    end
 
     @ssh = Net::SSH.start("admin01.ord.zdsys.com", "sdavidovitz", options) do |ssh|
       ssh.shell do |sh|
