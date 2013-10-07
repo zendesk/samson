@@ -4,6 +4,7 @@
     <tr>
       <th>#</th>
       <th>Name</th>
+      <th>Email</th>
       <th>Role</th>
     </tr>
   </thead>
@@ -13,6 +14,7 @@
       <tr>
         <td><%= user.id %></td>
         <td><%= user.name %></td>
+        <td><%= user.email %></td>
         <td>
           <% Role.all.each do |role| %>
           <label class="radio-inline">
