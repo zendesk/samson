@@ -10,3 +10,6 @@ foreman start
 ```
 
 Site runs at `localhost:8080`.
+
+Currently `sdavidovitz` is hardcoded as the deploy user, you may want
+to change it to your own for testing. See app/jobs/deploy.rb.
