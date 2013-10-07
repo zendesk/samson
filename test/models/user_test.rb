@@ -84,15 +84,6 @@ describe User do
       describe "with a current_token" do
         before do
           existing_user.update_attributes!(:current_token => "def456")
-
-          stub_request(:get, %r{/api/v2/oauth/tokens/current}).
-            with(:headers => { :authorization => "Bearer def456" }).
-            to_return(
-              :headers => { :content_type => "application/json" },
-              :body => JSON.dump(:token => { :id => 1 })
-            )
-
-          stub_request(:delete, %r{/api/v2/oauth/tokens/2})
         end
 
         it "resets the current token" do

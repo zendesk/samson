@@ -7,19 +7,11 @@ class User < ActiveRecord::Base
     user = User.find_by_email(hash.info.email)
     user ||= User.new
 
-    # If the user already has a token, delete it
-    if user.current_token
-      current_token = OAuth2::AccessToken.new(strategy.client, user.current_token)
-      delete_token(current_token)
-    end
-
     access_token = strategy.access_token
     delete_token(access_token)
 
     user.attributes = { :name => hash.info.name, :email => hash.info.email, :current_token => access_token.token }
-    user.save
-
-    user
+    user.tap(&:save)
   end
 
   Role.all.each do |role|
