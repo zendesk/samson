@@ -13,5 +13,6 @@
 //= require jquery
 //= require jquery_ujs
 //= require bootstrap/alert
+//= require bootstrap/dropdown
 //= require jquery.ui.all
 //= require_tree .

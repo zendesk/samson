@@ -20,5 +20,10 @@ ZendeskPusher::Application.routes.draw do
   get '/login', to: 'sessions#new'
   get '/logout', to: 'sessions#destroy'
 
+  namespace :admin do
+    resource :users, only: [:show, :update]
+    resource :projects, only: [:show]
+  end
+
   root to: 'projects#index'
 end
