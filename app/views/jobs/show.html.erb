@@ -15,11 +15,15 @@
 
 <% if (job_history.started? || job_history.running?) && job_history.user == current_user %>
   <%= form_for :job, url: url_for, method: :put, remote: true, html: { class: "form-inline" } do |form| %>
-    <%= form.password_field :message, class: "form-control", :autocomplete => "off" %>
+    <%= form.password_field :message, class: "form-control", autocomplete: "off" %>
     <div id="job_actions">
       <button class="btn btn-default">Submit</button>
       <button id="job_stop" class="btn btn-danger">Stop</button>
     </div>
+
+    <small>
+      <%= link_to "toggle input text", "#", id: "toggle-message-field" %>
+    </small>
   <% end %>
 
   <%= javascript_tag do %>
@@ -45,15 +49,19 @@
         //}
       }, false);
 
-      var password_field = true;
+      $("#toggle-message-field").click(function(event) {
+        var input = $("#job_message");
+
+        if(input.attr("type") == "password")
+          input.attr("type", "text");
+        else
+          input.attr("type", "password");
+
+        event.preventDefault();
+      });
+
       $("form").on("ajax:complete", function() {
         $("#job_message").val("");
-
-        // For SSH passphrase on deploy
-        if(password_field) {
-          $("#job_message").attr("type", "text");
-          password_field = false;
-        }
       });
 
       $("#job_stop").on("click", function() {
