@@ -1,4 +1,6 @@
 class Admin::UsersController < ApplicationController
+  before_filter :authorize_admin!
+
   def show
     @users = User.all
   end
@@ -14,7 +16,7 @@ class Admin::UsersController < ApplicationController
     end
 
     flash[:notice] = "Successfully updated users."
-  rescue ActiveRecord::RecordInvalid
+  rescue ActiveRecord::RecordInvalid, ActiveRecord::RecordNotFound
     flash[:error] = "Could not update users."
   ensure
     redirect_to admin_users_path
