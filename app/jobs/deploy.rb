@@ -19,7 +19,7 @@ class Deploy
     publish_messages("Please enter your passphrase:\n")
     @job.save
 
-    options = { :port => 2222, :forward_agent => true }
+    options = { :port => 2222, :forward_agent => true, :timeout => 20 }
 
     if ENV["DEPLOY_KEY"]
       options[:key_data] = [ENV["DEPLOY_KEY"]]
@@ -83,6 +83,9 @@ class Deploy
     end
 
     true
+  rescue Net::SSH::ConnectionTimeout
+    publish_messages("SSH connection timeout.")
+    false
   end
 
   def stop
