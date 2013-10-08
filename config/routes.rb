@@ -6,7 +6,7 @@ ZendeskPusher::Application.routes.draw do
 
   resources :jobs, only: [:index] do
     member do
-      get :stream
+      get :stream, controller: 'streams'
     end
 
     collection do

@@ -49,18 +49,16 @@ class Deploy
       Process.spawn("bash -c \"#{Rails.root.join("lib/ssh-agent.sh")} #{options[:passphrase]}\"")
       socket = Rails.root.join("tmp/auth_sock")
 
-      begin
-        Timeout.timeout(5) do
-          until File.exist?(socket)
-            if stopped?
-              publish_messages("Deploy stopped.\n")
-              return false
-            end
-          end
+      time = Time.now
+
+      until File.exist?(socket)
+        if stopped?
+          publish_messages("Deploy stopped.\n")
+          return false
+        elsif (Time.now - time) >= 5
+          publish_messages("SSH Agent failed to start.\n")
+          return false
         end
-      rescue Timeout::Error
-        publish_messages("SSH Agent failed to start.\n")
-        return false
       end
 
       ENV["SSH_AUTH_SOCK"] = File.readlink(socket)
