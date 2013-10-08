@@ -11,7 +11,6 @@ class CreateJobHistories < ActiveRecord::Migration
       t.belongs_to :project
       t.belongs_to :user
 
-      t.timestamp :expires_at
       t.timestamps
     end
   end

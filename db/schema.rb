@@ -21,7 +21,6 @@ ActiveRecord::Schema.define(version: 20131007183106) do
     t.string   "channel"
     t.integer  "project_id"
     t.integer  "user_id"
-    t.datetime "expires_at"
     t.datetime "created_at"
     t.datetime "updated_at"
   end

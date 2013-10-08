@@ -25,21 +25,21 @@ end
 gem 'puma'
 
 group :no_preload do
-  gem "omniauth", "~> 1.1"
-  gem "omniauth-oauth2", "~> 1.1"
+  gem 'omniauth', '~> 1.1'
+  gem 'omniauth-oauth2', '~> 1.1'
 
-  gem "soft_deletion", "~> 0.4"
+  gem 'soft_deletion', '~> 0.4'
 
-  gem "state_machine", "~> 1.2"
+  gem 'state_machine', '~> 1.2'
 
-  gem "redis", "~> 3.0"
+  gem 'redis', '~> 3.0'
 
-  gem "net-ssh", "~> 2.1"
-  gem "net-ssh-shell", "~> 0.2", :git => 'https://github.com/9peso/net-ssh-shell.git'
+  gem 'net-ssh', '~> 2.1'
+  gem 'net-ssh-shell', '~> 0.2', :git => 'https://github.com/9peso/net-ssh-shell.git'
 
-  gem "active_hash", "~> 1.0"
+  gem 'active_hash', '~> 1.0'
 
-  gem "ansible"
+  gem 'ansible'
 end
 
 group :development do
@@ -53,12 +53,13 @@ group :development do
   end
 
   platform :ruby do
-    gem "better_errors"
-    gem "binding_of_caller"
+    gem 'better_errors'
+    gem 'binding_of_caller'
   end
 end
 
 group :test do
-  gem "minitest-rails", "~> 0.9"
-  gem "webmock"
+  gem 'minitest-rails', '~> 0.9'
+  gem 'webmock'
+  gem 'fakeredis'
 end

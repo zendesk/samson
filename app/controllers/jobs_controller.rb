@@ -1,5 +1,6 @@
 class JobsController < ApplicationController
   rescue_from ActiveRecord::RecordInvalid, with: :invalid_job
+
   rescue_from ActiveRecord::RecordNotFound do |error|
     flash[:error] = "Job not found."
     redirect_to root_path
@@ -35,27 +36,26 @@ class JobsController < ApplicationController
   end
 
   def show
-    if !job_history
-      render :status => 404
-    end
   end
 
   def update
     if message_params[:message].blank?
       head :unprocessable_entity
-    elsif job_history.user_id == current_user.id
+    elsif job_history.user_id != current_user.id
+      head :forbidden
+    else
       redis = Redis.driver
       redis.set("#{job_history.channel}:input", message_params[:message])
       redis.quit
 
       head :ok
-    else
-      head :forbidden
     end
   end
 
   def destroy
-    if deploy = current_deploy
+    if job_history.user_id != current_user.id
+      head :forbidden
+    elsif (deploy = current_deploy)
       deploy.stop
 
       head :ok
