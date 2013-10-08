@@ -7,7 +7,7 @@ A web interface to Zendesk's deployments.
 ### How?
 
 [app/jobs/deploy.rb](app/jobs/deploy.rb) holds the heart of the deploy service.
-It sshs to admin01 (\*), changes directory to the parameterized project name (e.g. "CSV Exporter" -> "csv_exporter"),
+It sshs to admin01\*, changes directory to the parameterized project name (e.g. "CSV Exporter" -> "csv_exporter"),
 ensures the repository is up-to-date, and then executes capsu.
 
 Pub-sub streaming is done through redis and a separate controller (StreamsController) that allows both web access
@@ -19,7 +19,7 @@ of threads, hence the requirement on JRuby.
 
 To run:
 
-```
+```bash
 # Make sure you have JRuby installed
 bundle install
 
