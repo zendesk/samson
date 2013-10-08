@@ -34,7 +34,7 @@ foreman start
 
 The website runs at `localhost:8080` by default.
 
-\* Currently `sdavidovitz` is hardcoded as the deploy user, you will want
+\* Currently `deploy` is hardcoded as the deploy user, you will want
 to change it to your own for testing.
 
 [1]: https://github.com/rails/rails/issues/10989
