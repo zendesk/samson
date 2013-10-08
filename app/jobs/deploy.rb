@@ -11,31 +11,13 @@ class Deploy
   def perform
     @job.run!
 
-    # Give the stream a little time to start
-    sleep(1.5)
-
-    success = true
-
-    publish_messages("Please enter your passphrase:\n")
-    @job.save
-
     options = { :port => 2222, :forward_agent => true, :timeout => 20 }
 
     if ENV["DEPLOY_KEY"]
       options[:key_data] = [ENV["DEPLOY_KEY"]]
     end
 
-    until options[:passphrase] = get_message
-      if stopped?
-        publish_messages("Deploy stopped.\n")
-        success = false
-        break
-      end
-    end
-
-    Rails.logger.info("Found passphrase, continuing with deploy? #{success.inspect}")
-
-    if success && ssh_deploy(options)
+    if ssh_deploy(options)
       @job.success!
     else
       @job.failed!
@@ -48,7 +30,7 @@ class Deploy
     socket = Rails.root.join("tmp/auth_sock")
 
     if Rails.env.production? && !File.exist?(socket)
-      Process.spawn("#{Rails.root.join("lib/ssh-agent.sh")} #{options[:passphrase]}")
+      Process.spawn(Rails.root.join("lib/ssh-agent.sh"))
 
       time = Time.now
 
@@ -71,7 +53,7 @@ class Deploy
           "cd #{@job.project.name.parameterize("_")}",
           "git fetch -ap",
           "git reset --hard #{@job.sha}",
-          "capsu #{@job.environment} deploy TAG=#{@job.sha}"
+          "capsu \"$(pwd)\" #{@job.environment} deploy TAG=#{@job.sha}"
         ].each do |command|
           if !exec!(sh, command)
             publish_messages("Failed to execute \"#{command}\"")
@@ -84,6 +66,12 @@ class Deploy
     true
   rescue Net::SSH::ConnectionTimeout
     publish_messages("SSH connection timeout.")
+    false
+  rescue IOError => e
+    Rails.logger.info("Deploy failed: #{e.message}")
+    Rails.logger.info(e.backtrace)
+
+    publish_messages("Deploy failed.")
     false
   end
 
