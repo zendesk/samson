@@ -1,5 +1,4 @@
 class JobsController < ApplicationController
-  include ApplicationHelper # for render_log
   include ActionController::Live
 
   rescue_from ActiveRecord::RecordInvalid, with: :invalid_job
@@ -9,7 +8,6 @@ class JobsController < ApplicationController
   end
 
   before_filter :authorize_deployer!, only: [:create, :update, :destroy]
-  before_filter :authorize_viewer!, only: [:stream]
 
   helper_method :project, :job_history, :job_histories
 
@@ -39,41 +37,23 @@ class JobsController < ApplicationController
   end
 
   def stream
-=begin
-      # Using puma, because Redis#subscribe blocks while
-      # waiting for a message, we won't get an IOError
-      # raised when the connection is closed on the client
-      # side until a message is sent. So we have a heartbeat thread.
-      heartbeat = Thread.new do
-        begin
-          while true
-            response.stream.write("data:\n\n")
-            sleep(3)
-          end
-        rescue IOError
-          # Raised on stream close
-          response.stream.close
-        end
-      end
-=end
-
     ActiveRecord::Base.connection_pool.release_connection
 
     response.headers['Content-Type'] = 'text/event-stream'
     response.headers['Cache-Control'] = 'no-cache'
 
-    redis = Redis.driver
-    redis.subscribe(params[:id]) do |on|
-      on.message do |channel, message|
-        data = JSON.dump(msg: render_log(message).to_s)
-        response.stream.write("data: #{data}\n\n")
-      end
+    Thread.main[:streams][params[:id]] ||= []
+    Thread.main[:streams][params[:id]] << response.stream
+
+    # Heartbeat thread
+    while true
+      response.stream.write("data: \n\n")
+      sleep(2)
     end
   rescue IOError
     # Raised on stream close
   ensure
-#    heartbeat.join
-    redis.try(:quit)
+    Thread.main[:streams][params[:id]].delete(response.stream)
     response.stream.close
   end
 

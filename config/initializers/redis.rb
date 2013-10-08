@@ -12,3 +12,27 @@ Redis.instance_eval do
     end
   end
 end
+
+Thread.abort_on_exception = !Rails.env.production?
+
+Thread.main[:streams] = {}
+
+thread = Thread.new do
+  include ApplicationHelper # for render_log
+
+  Redis.driver.psubscribe("deploy:*") do |on|
+    Rails.logger.info("Subscribed")
+
+    on.pmessage do |pattern, channel, message|
+      if (streams = Thread.main[:streams][channel])
+        data = JSON.dump(msg: render_log(message).to_s)
+
+        streams.each do |stream|
+          stream.write("data: #{data}\n\n")
+        end
+      end
+    end
+  end
+end
+
+at_exit { thread.kill }

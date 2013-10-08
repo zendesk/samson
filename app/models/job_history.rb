@@ -46,7 +46,7 @@ class JobHistory < ActiveRecord::Base
   end
 
   def channel
-    Digest::MD5.hexdigest([
+    "deploy:" + Digest::MD5.hexdigest([
       project.name,
       environment,
       sha,

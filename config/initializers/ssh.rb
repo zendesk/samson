@@ -8,5 +8,3 @@ Net::SSH::Connection::Session.class_eval do
     old_loop(wait, &block)
   end
 end
-
-Thread.abort_on_exception = !Rails.env.production?
