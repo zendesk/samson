@@ -51,7 +51,8 @@ class Deploy
         [
           "cd #{@job.project.name.parameterize("_")}",
           "git fetch -ap",
-          "git reset --hard #{@job.sha}",
+          "git checkout -f #{@job.sha}",
+          "git pull",
           "capsu \"$(pwd)\" #{@job.environment} deploy TAG=#{@job.sha}"
         ].each do |command|
           if !exec!(sh, command)
