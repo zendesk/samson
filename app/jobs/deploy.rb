@@ -46,7 +46,7 @@ class Deploy
 
   def ssh_deploy(options)
     if Rails.env.production?
-      Process.wait(Process.spawn("#{Rails.root.join("lib/ssh-agent.sh")} #{options[:passphrase]}")
+      Process.wait(Process.spawn("#{Rails.root.join("lib/ssh-agent.sh")} #{options[:passphrase]}"))
       ENV["SSH_AUTH_SOCK"] = File.readlink(Rails.root.join("tmp/auth_sock"))
     end
 
