@@ -60,7 +60,7 @@
         event.preventDefault();
       });
 
-      $("form").on("ajax:complete", function() {
+      $("form").on("submit", function() {
         $("#job_message").val("");
       });
 
