@@ -41,7 +41,9 @@ class JobsController < ApplicationController
   end
 
   def update
-    if job_history.user_id == current_user.id
+    if message_params[:message].blank?
+      head :unprocessable_entity
+    elsif job_history.user_id == current_user.id
       redis = Redis.driver
       redis.set("#{job_history.channel}:input", message_params[:message])
       redis.quit
