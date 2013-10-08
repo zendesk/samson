@@ -46,22 +46,8 @@ class Deploy
 
   def ssh_deploy(options)
     if Rails.env.production?
-      Process.spawn("bash -c \"#{Rails.root.join("lib/ssh-agent.sh")} #{options[:passphrase]}\"")
-      socket = Rails.root.join("tmp/auth_sock")
-
-      time = Time.now
-
-      until File.exist?(socket)
-        if stopped?
-          publish_messages("Deploy stopped.\n")
-          return false
-        elsif (Time.now - time) >= 5
-          publish_messages("SSH Agent failed to start.\n")
-          return false
-        end
-      end
-
-      ENV["SSH_AUTH_SOCK"] = File.readlink(socket)
+      Process.wait(Process.spawn("#{Rails.root.join("lib/ssh-agent.sh")} #{options[:passphrase]}")
+      ENV["SSH_AUTH_SOCK"] = File.readlink(Rails.root.join("tmp/auth_sock"))
     end
 
     @ssh = Net::SSH.start("admin01.ord.zdsys.com", "sdavidovitz", options) do |ssh|
