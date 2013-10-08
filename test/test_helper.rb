@@ -46,8 +46,8 @@ class ActiveSupport::TestCase
         alias :_perform :perform
 
         def initialize(id)
-          @job_id = @job = id
-          @stopped = false
+          @job_id, @job = id, JobHistory.new
+          @job.channel = "abc123"
         end
 
         def perform

@@ -5,7 +5,6 @@ class Deploy
 
   def initialize(id)
     @job_id, @job = id, JobHistory.find(id)
-    @stopped = false
   end
 
   def perform
@@ -75,17 +74,10 @@ class Deploy
     false
   end
 
-  def stop
-    return if !@job || @ssh.try(:closed?)
-
-    @stopped = true
-    Rails.logger.info("Deploy #{@job_id} stopped")
-  end
-
-  # When not on Heroku, should be changed
-  # to read from a :stopped redis key
   def stopped?
-    @stopped
+    @stopped ||= redis.get("#{@job.channel}:stop").present?.tap do |present|
+      redis.del("#{@job.channel}:stop") if present
+    end
   end
 
   def exec!(shell, command)

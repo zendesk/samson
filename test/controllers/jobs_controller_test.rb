@@ -84,7 +84,7 @@ describe JobsController do
 
         teardown do
           Thread.main[:deploys].each do |thr|
-            thr[:deploy].stop
+            Redis.driver.set("abc123:stop", "true")
             thr.join
           end
 
@@ -155,38 +155,16 @@ describe JobsController do
 
     describe "a DELETE to :destroy" do
       describe "with a valid deploy" do
-        let(:deploy) { MiniTest::Mock.new }
-
         setup do
-          deploy.expect(:job_id, job.id)
-          deploy.expect(:stop, true)
-
-          Thread.main[:deploys] << { :deploy => deploy }
-
           delete :destroy, project_id: project.id, id: job.to_param
         end
 
-        teardown { Thread.main[:deploys].clear }
-
-        it "stops the deploy" do
-          deploy.verify
-        end
-      end
-
-      describe "with a different deploy" do
-        let(:deploy) { MiniTest::Mock.new }
-
-        setup do
-          deploy.expect(:job_id, "RANDOMNESS")
-          Thread.main[:deploys] << { :deploy => deploy }
-
-          delete :destroy, project_id: project.id, id: job.to_param
+        it "responds ok" do
+          response.status.must_equal(200)
         end
 
-        teardown { Thread.main[:deploys].clear }
-
-        it "stops the deploy" do
-          deploy.verify
+        it "sets the redis channel" do
+          Redis.driver.get("#{job.channel}:stop").must_equal("true")
         end
       end
 
@@ -197,14 +175,6 @@ describe JobsController do
 
         it "is forbidden" do
           response.status.must_equal(403)
-        end
-      end
-
-      describe "without a valid deploy" do
-        setup { delete :destroy, :project_id => project.id, :id => job.to_param }
-
-        it "responds 404" do
-          response.status.must_equal(404)
         end
       end
     end
