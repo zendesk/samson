@@ -30,7 +30,7 @@ class Deploy
     socket = Rails.root.join("tmp/auth_sock")
 
     if Rails.env.production? && !File.exist?(socket)
-      Process.spawn(Rails.root.join("lib/ssh-agent.sh"))
+      Process.spawn(Rails.root.join("lib/ssh-agent.sh").to_s)
 
       time = Time.now
 
