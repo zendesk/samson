@@ -9,9 +9,7 @@ class JobsController < ApplicationController
   end
 
   before_filter :authorize_deployer!, only: [:create, :update, :destroy]
-
-  # XXX -- Need to verify viewers somehow for curl?
-  skip_before_filter :login_users, only: [:stream]
+  before_filter :authorize_viewer!, only: [:stream]
 
   helper_method :project, :job_history, :job_histories
 
