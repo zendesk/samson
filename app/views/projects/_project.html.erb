@@ -2,13 +2,13 @@
   <div class="panel panel-default">
     <div class="panel-heading text-center">
       <% if current_user.is_admin? %>
-        <%= link_to new_project_lock_path(project), class: "pull-left" do %>
+        <%= link_to new_project_lock_path(project), class: "pull-left", title: "Lock this project" do %>
           <i class="glyphicon glyphicon-lock"></i>
         <% end %>
       <% end %>
 
       <% if current_user.is_deployer? %>
-        <%= link_to project_path(project), class: "pull-right" do %>
+        <%= link_to project_path(project), class: "pull-right", title: "Kick off a deploy" do %>
           <i class="glyphicon glyphicon-play-circle"></i>
         <% end %>
       <% end %>
