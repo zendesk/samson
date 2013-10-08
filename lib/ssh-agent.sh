@@ -1,3 +1,5 @@
+#!/bin/bash
+
 if [[ ! -e tmp/auth_sock ]]; then
   eval `ssh-agent`
   mkdir -p tmp
