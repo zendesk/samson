@@ -75,7 +75,6 @@
   <% end %>
 <% else %>
   <div class="alert alert-<%= job_history.failed?? "danger" : "success" %>">
-    <button type="button" class="close" data-dismiss="alert">&times;</button>
     <%= job_history.user.name %> deployed <%= job_history.sha %> on <%= job_history.environment %> at <%= job_history.created_at %>
   </div>
 <% end %>
