@@ -26,7 +26,7 @@ class Deploy
     end
 
     until options[:passphrase] = get_message
-      if @stopped
+      if stopped?
         publish_messages("Deploy stopped.\n")
         success = false
         break
@@ -52,7 +52,7 @@ class Deploy
       begin
         Timeout.timeout(5) do
           until File.exist?(socket)
-            if @stopped
+            if stopped?
               publish_messages("Deploy stopped.\n")
               return false
             end
@@ -92,6 +92,12 @@ class Deploy
     Rails.logger.info("Deploy #{@job_id} stopped")
   end
 
+  # When not on Heroku, should be changed
+  # to read from a :stopped redis key
+  def stopped?
+    @stopped
+  end
+
   def exec!(shell, command)
     process = shell.execute(command)
 
@@ -104,7 +110,7 @@ class Deploy
     end
 
     process.manager.channel.on_process do
-      return false if @stopped
+      return false if stopped?
       @job.save if @job.changed?
 
       if message = get_message
