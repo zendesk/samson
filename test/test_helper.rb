@@ -2,9 +2,12 @@ ENV["RAILS_ENV"] ||= "test"
 require File.expand_path('../../config/environment', __FILE__)
 require 'rails/test_help'
 require 'minitest/rails'
+require 'minitest-metadata'
 require 'webmock/minitest'
 
 class ActiveSupport::TestCase
+  include MiniTest::Metadata
+
   ActiveRecord::Migration.check_pending!
 
   # Setup all fixtures in test/fixtures/*.yml for all tests in alphabetical order.
@@ -32,6 +35,33 @@ class ActiveSupport::TestCase
 
           instance_eval(&block)
         end
+      end
+    end
+  end
+
+  setup do
+    if metadata[:stub_deploy]
+      Deploy.class_eval do
+        alias :_initialize :initialize
+        alias :_perform :perform
+
+        def initialize(id)
+          @job_id = @job = id
+          @stopped = false
+        end
+
+        def perform
+          sleep(1) until stopped?
+        end
+      end
+    end
+  end
+
+  teardown do
+    if metadata[:stub_deploy]
+      Deploy.class_eval do
+        alias :perform :_perform
+        alias :initialize :_initialize
       end
     end
   end

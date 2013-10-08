@@ -60,6 +60,8 @@ end
 
 group :test do
   gem 'minitest-rails', '~> 0.9'
+  gem 'minitest-metadata', :require => false
+
   gem 'webmock'
   gem 'fakeredis'
 end

@@ -70,7 +70,9 @@ describe JobsController do
 
   as_a_admin do
     describe "a POST to :create" do
-      setup { post :create, params.merge(project_id: project.id) }
+      setup do
+        post :create, params.merge(project_id: project.id)
+      end
 
       describe "with valid params" do
         let(:params) {{ job: {
@@ -81,15 +83,19 @@ describe JobsController do
         let(:job) { project.job_histories.last }
 
         teardown do
-          Thread.main[:deploys].each(&:kill)
+          Thread.main[:deploys].each do |thr|
+            thr[:deploy].stop
+            thr.join
+          end
+
           Thread.main[:deploys].clear
         end
 
-        it "redirects to the job path" do
+        it "redirects to the job path", :stub_deploy do
           assert_redirected_to project_job_path(project, job)
         end
 
-        it "creates a deploy" do
+        it "creates a deploy", :stub_deploy do
           Thread.main[:deploys].size.must_equal(1)
         end
       end

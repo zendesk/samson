@@ -99,6 +99,8 @@ GEM
       treetop (~> 1.4.8)
     mime-types (1.23)
     minitest (4.7.5)
+    minitest-metadata (0.4.0)
+      minitest (~> 4.7)
     minitest-rails (0.9.2)
       minitest (~> 4.7)
       rails (>= 3.0)
@@ -203,6 +205,7 @@ DEPENDENCIES
   jdbc-sqlite3
   jquery-rails
   jquery-ui-rails
+  minitest-metadata
   minitest-rails (~> 0.9)
   net-ssh (~> 2.1)
   net-ssh-shell (~> 0.2)!
