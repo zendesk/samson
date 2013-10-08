@@ -17,6 +17,7 @@ class Deploy
     end
 
     if ssh_deploy(options)
+      publish_messages("Deploy succeeded.\n")
       @job.success!
     else
       @job.failed!
