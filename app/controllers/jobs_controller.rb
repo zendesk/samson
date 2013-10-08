@@ -1,6 +1,4 @@
 class JobsController < ApplicationController
-  include ActionController::Live
-
   rescue_from ActiveRecord::RecordInvalid, with: :invalid_job
   rescue_from ActiveRecord::RecordNotFound do |error|
     flash[:error] = "Job not found."
@@ -34,27 +32,6 @@ class JobsController < ApplicationController
   rescue ActiveRecord::RecordInvalid => e
     flash[:error] = e.record.errors.full_messages.join("<br />").html_safe
     redirect_to project_path(project)
-  end
-
-  def stream
-    ActiveRecord::Base.connection_pool.release_connection
-
-    response.headers['Content-Type'] = 'text/event-stream'
-    response.headers['Cache-Control'] = 'no-cache'
-
-    Thread.main[:streams][params[:id]] ||= []
-    Thread.main[:streams][params[:id]] << response.stream
-
-    # Heartbeat thread
-    while true
-      response.stream.write("data: \n\n")
-      sleep(2)
-    end
-  rescue IOError
-    # Raised on stream close
-  ensure
-    Thread.main[:streams][params[:id]].delete(response.stream)
-    response.stream.close
   end
 
   def show

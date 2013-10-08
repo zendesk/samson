@@ -1,4 +1,5 @@
 ZendeskPusher::Application.routes.draw do
+  get "streams/show"
   resources :projects, except: [:index, :destroy] do
     resources :jobs, only: [:create, :show, :update, :destroy]
     resource  :lock, only: [:new, :create, :destroy]
@@ -6,7 +7,7 @@ ZendeskPusher::Application.routes.draw do
 
   resources :jobs, only: [:index] do
     member do
-      get :stream, controller: 'streams'
+      get :stream, to: 'streams#show'
     end
 
     collection do
