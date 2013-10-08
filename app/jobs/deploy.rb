@@ -65,7 +65,7 @@ class Deploy
 
     ENV["SSH_AUTH_SOCK"] = File.readlink(socket)
 
-    @ssh = Net::SSH.start("admin01.ord.zdsys.com", "sdavidovitz", options) do |ssh|
+    @ssh = Net::SSH.start("admin01.ord.zdsys.com", "deploy", options) do |ssh|
       ssh.shell do |sh|
         [
           "cd #{@job.project.name.parameterize("_")}",
