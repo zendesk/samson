@@ -46,12 +46,13 @@ class JobHistory < ActiveRecord::Base
   end
 
   def channel
-    "deploy:" + Digest::MD5.hexdigest([
-      project.name,
-      environment,
-      sha,
-      created_at
-    ].join)
+    read_attribute(:channel) ||
+      "deploy:" + Digest::MD5.hexdigest([
+        project.name,
+        environment,
+        sha,
+        created_at
+      ].join)
   end
 
   def to_param
