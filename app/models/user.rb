@@ -3,6 +3,7 @@ class User < ActiveRecord::Base
 
   def self.find_or_create_from_oauth(hash, strategy)
     return unless hash.info.email.present?
+    return if hash.info.role == "end-user"
 
     user = User.find_by_email(hash.info.email)
     user ||= User.new

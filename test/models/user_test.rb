@@ -14,6 +14,14 @@ describe User do
       mock
     end
 
+    describe "with an end-user hash" do
+      let(:info) {{ :role => "end-user" }}
+
+      it "wont create a user" do
+        user.must_be_nil
+      end
+    end
+
     describe "with an anonymous user hash" do
       let(:info) {{}}
 
@@ -26,6 +34,7 @@ describe User do
       let(:info) {{
         :name => "Test User",
         :email => "test@example.org",
+        :role => "admin"
       }}
 
       before do
