@@ -1,5 +1,5 @@
-<%= form_for :job, url: project_jobs_path(@project), html: { class: "form-horizontal" } do |form| %>
-  <%= form.hidden_field :project_id, value: @project.id %>
+<%= form_for :job, url: project_jobs_path(project), html: { class: "form-horizontal" } do |form| %>
+  <%= form.hidden_field :project_id, value: project.id %>
 
   <fieldset>
     <legend>Deploy</legend>

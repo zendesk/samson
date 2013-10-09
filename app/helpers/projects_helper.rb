@@ -14,7 +14,7 @@ module ProjectsHelper
   end
 
   def project_form_method
-    if @project.new_record?
+    if project.new_record?
       :post
     else
       :put
@@ -22,10 +22,10 @@ module ProjectsHelper
   end
 
   def project_form_legend
-    if @project.new_record?
+    if project.new_record?
       "New Project"
     else
-      "Editing #{@project.name}"
+      "Editing #{project.name}"
     end
   end
 end

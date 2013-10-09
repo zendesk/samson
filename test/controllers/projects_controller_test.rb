@@ -90,7 +90,8 @@ describe ProjectsController do
       end
 
       it "removes the project" do
-        lambda { project.reload }.must_raise ActiveRecord::RecordNotFound
+        project.reload
+        project.deleted_at.wont_be_nil
       end
 
       it "sets the flash" do
@@ -109,7 +110,7 @@ describe ProjectsController do
 
     describe "as an admin" do
       setup do
-        post :update, params.merge(:id => project.id)
+        put :update, params.merge(:id => project.id)
       end
 
       describe "with valid parameters" do
@@ -145,8 +146,23 @@ describe ProjectsController do
       end
     end
 
+    describe "non-existant" do
+      setup do
+        project.soft_delete!
+        put :update, :id => project.id
+      end
+
+      it "sets the flash error" do
+        request.flash[:error].wont_be_nil
+      end
+
+      it "redirects to root url" do
+        assert_redirected_to root_path
+      end
+    end
+
     as_a_deployer do
-      setup { post :update, :id => project.id }
+      setup { put :update, :id => project.id }
       it_is_unauthorized
     end
   end
@@ -161,6 +177,21 @@ describe ProjectsController do
 
       it "renders a template" do
         assert_template :edit
+      end
+    end
+
+    describe "non-existant" do
+      setup do
+        project.soft_delete!
+        get :edit, :id => project.id
+      end
+
+      it "sets the flash error" do
+        request.flash[:error].wont_be_nil
+      end
+
+      it "redirects to root url" do
+        assert_redirected_to root_path
       end
     end
 
@@ -180,6 +211,21 @@ describe ProjectsController do
 
       it "renders a template" do
         assert_template :show
+      end
+    end
+
+    describe "non-existant" do
+      setup do
+        project.soft_delete!
+        get :edit, :id => project.id
+      end
+
+      it "sets the flash error" do
+        request.flash[:error].wont_be_nil
+      end
+
+      it "redirects to root url" do
+        assert_redirected_to root_path
       end
     end
 

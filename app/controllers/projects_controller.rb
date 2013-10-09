@@ -2,8 +2,16 @@ class ProjectsController < ApplicationController
   before_filter :authorize_admin!, only: [:new, :create, :edit, :update, :destroy]
   before_filter :authorize_deployer!, only: [:show]
 
+  helper_method :project
+
+  rescue_from ActiveRecord::RecordNotFound do
+    flash[:error] = "Project not found."
+    redirect_to root_path
+  end
+
   def index
-    @projects = Project.limit(9).includes(job_histories: :user, job_locks: nil)
+    @projects = Project.limit(9).where(deleted_at: nil).
+      includes(job_histories: :user, job_locks: nil)
   end
 
   def new
@@ -22,26 +30,22 @@ class ProjectsController < ApplicationController
   end
 
   def show
-    @project = Project.find(params[:id])
   end
 
   def edit
-    @project = Project.find(params[:id])
   end
 
   def update
-    @project = Project.find(params[:id])
-
-    if @project.update_attributes(project_params)
+    if project.update_attributes(project_params)
       redirect_to root_path
     else
-      flash[:error] = @project.errors.full_messages.join("<br />")
+      flash[:error] = project.errors.full_messages.join("<br />")
       render :edit
     end
   end
 
   def destroy
-    Project.destroy(params[:id])
+    project.soft_delete!
 
     flash[:notice] = "Project removed."
     redirect_to admin_projects_path
@@ -51,5 +55,9 @@ class ProjectsController < ApplicationController
 
   def project_params
     params.require(:project).permit(:name)
+  end
+
+  def project
+    @project ||= Project.where(deleted_at: nil).find(params[:id])
   end
 end
