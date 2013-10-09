@@ -1,5 +1,5 @@
 class ProjectsController < ApplicationController
-  before_filter :authorize_admin!, only: [:new, :create, :edit, :update]
+  before_filter :authorize_admin!, only: [:new, :create, :edit, :update, :destroy]
   before_filter :authorize_deployer!, only: [:show]
 
   def index
@@ -38,6 +38,13 @@ class ProjectsController < ApplicationController
       flash[:error] = @project.errors.full_messages.join("<br />")
       render :edit
     end
+  end
+
+  def destroy
+    Project.destroy(params[:id])
+
+    flash[:notice] = "Project removed."
+    redirect_to admin_projects_path
   end
 
   protected

@@ -77,6 +77,33 @@ describe ProjectsController do
     end
   end
 
+  describe "a DELETE to #destroy" do
+    let(:project) { projects(:test) }
+
+    describe "as an admin" do
+      setup do
+        delete :destroy, :id => project.id
+      end
+
+      it "redirects to root url" do
+        assert_redirected_to admin_projects_path
+      end
+
+      it "removes the project" do
+        lambda { project.reload }.must_raise ActiveRecord::RecordNotFound
+      end
+
+      it "sets the flash" do
+        request.flash[:notice].wont_be_nil
+      end
+    end
+
+    as_a_deployer do
+      setup { delete :destroy, :id => project.id }
+      it_is_unauthorized
+    end
+  end
+
   describe "a PUT to #update" do
     let(:project) { projects(:test) }
 
