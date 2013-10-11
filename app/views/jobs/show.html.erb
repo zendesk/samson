@@ -13,17 +13,19 @@
   <% end %>
 </pre>
 
-<% if (job_history.started? || job_history.running?) && job_history.user == current_user %>
-  <%= form_for :job, url: url_for, method: :put, remote: true, html: { class: "form-inline" } do |form| %>
-    <%= form.password_field :message, class: "form-control", autocomplete: "off" %>
-    <div id="job_actions">
-      <button class="btn btn-default">Submit</button>
-      <button id="job_stop" class="btn btn-danger">Stop</button>
-    </div>
+<% if job_history.started? || job_history.running? %>
+  <% if job_history.user == current_user %>
+    <%= form_for :job, url: url_for, method: :put, remote: true, html: { class: "form-inline" } do |form| %>
+      <%= form.password_field :message, class: "form-control", autocomplete: "off" %>
+      <div id="job_actions">
+        <button class="btn btn-default">Submit</button>
+        <button id="job_stop" class="btn btn-danger">Stop</button>
+      </div>
 
-    <small>
-      <%= link_to "toggle input text", "#", id: "toggle-message-field", title: "Toggles the input field between password and text" %>
-    </small>
+      <small>
+        <%= link_to "toggle input text", "#", id: "toggle-message-field", title: "Toggles the input field between password and text" %>
+      </small>
+    <% end %>
   <% end %>
 
   <%= javascript_tag do %>
