@@ -54,7 +54,7 @@ class Deploy
           "git fetch -ap",
           "git checkout -f #{@job.sha}",
           "git pull",
-          "capsu \"$(pwd)\" #{@job.environment} deploy TAG=#{@job.sha}"
+          "capsu $(pwd) $(rvm current) #{@job.environment} deploy TAG=#{@job.sha}"
         ].each do |command|
           if !exec!(sh, command)
             publish_messages("Failed to execute \"#{command}\"")
