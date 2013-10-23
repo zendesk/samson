@@ -56,7 +56,7 @@ class Deploy
           "cd #{@job.project.name.parameterize("_")}",
           "git fetch -ap",
           "git checkout -f #{@job.sha}",
-          "(git status | grep 'HEAD detached') || git pull",
+          "(git status | grep 'On branch') && git pull",
           "capsu $(pwd) $(rvm current | tail -1) #{@job.environment} deploy TAG=#{@job.sha}"
         ].each do |command|
           if !exec!(sh, command)
