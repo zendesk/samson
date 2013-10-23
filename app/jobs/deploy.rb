@@ -52,6 +52,7 @@ class Deploy
     @ssh = Net::SSH.start("admin01.ord.zdsys.com", "deploy", options) do |ssh|
       ssh.shell do |sh|
         [
+          "export SUDO_USER=#{@job.user.email}",
           "cd #{@job.project.name.parameterize("_")}",
           "git fetch -ap",
           "git checkout -f #{@job.sha}",
