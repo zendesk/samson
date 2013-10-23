@@ -29,23 +29,25 @@ class Deploy
   def ssh_deploy(options)
     socket = Rails.root.join("tmp/auth_sock")
 
-    if Rails.env.production? && !File.exist?(socket)
-      Process.spawn(Rails.root.join("lib/ssh-agent.sh").to_s)
+    if Rails.env.production?
+      unless File.exist?(socket)
+        Process.spawn(Rails.root.join("lib/ssh-agent.sh").to_s)
 
-      time = Time.now
+        time = Time.now
 
-      until File.exist?(socket)
-        if stopped?
-          publish_messages("Deploy stopped.\n")
-          return false
-        elsif (Time.now - time) >= 5
-          publish_messages("SSH Agent failed to start.\n")
-          return false
+        until File.exist?(socket)
+          if stopped?
+            publish_messages("Deploy stopped.\n")
+            return false
+          elsif (Time.now - time) >= 5
+            publish_messages("SSH Agent failed to start.\n")
+            return false
+          end
         end
       end
-    end
 
-    ENV["SSH_AUTH_SOCK"] = File.readlink(socket)
+      ENV["SSH_AUTH_SOCK"] = File.readlink(socket)
+    end
 
     @ssh = Net::SSH.start("admin01.ord.zdsys.com", "deploy", options) do |ssh|
       ssh.shell do |sh|
@@ -54,7 +56,7 @@ class Deploy
           "git fetch -ap",
           "git checkout -f #{@job.sha}",
           "git pull",
-          "capsu $(pwd) $(rvm current) #{@job.environment} deploy TAG=#{@job.sha}"
+          "capsu $(pwd) $(rvm current | tail -1) #{@job.environment} deploy TAG=#{@job.sha}"
         ].each do |command|
           if !exec!(sh, command)
             publish_messages("Failed to execute \"#{command}\"")
