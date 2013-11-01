@@ -12,7 +12,7 @@ class Project < ActiveRecord::Base
   has_many :job_histories, -> { order("created_at DESC") }
   has_many :job_locks, -> { order("created_at DESC") }
 
-  after_create :update_project_environments
+  after_create :update_project_environments, unless: -> { Rails.env.test? }
 
   serialize :environments
 

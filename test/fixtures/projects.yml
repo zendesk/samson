@@ -1,2 +1,4 @@
 test:
   name: "Project"
+  environments:
+    - master1
