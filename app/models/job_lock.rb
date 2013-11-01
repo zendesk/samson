@@ -1,10 +1,10 @@
 class JobLock < ActiveRecord::Base
-  extend EnvironmentsHelper
+  include EnvironmentsHelper
 
   default_scope { where("expires_at IS NULL OR expires_at >= ?", Time.now) }
 
-  validates :environment, presence: true,
-    inclusion: { in: valid_environments }
+  validates :environment, presence: true
+  validate :valid_environment
 
   belongs_to :project
   belongs_to :job_history

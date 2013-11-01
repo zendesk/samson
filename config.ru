@@ -6,4 +6,6 @@ if RUBY_PLATFORM == "java" && ['development', 'testing', ''].include?(ENV["RAILS
 end
 
 require ::File.expand_path('../config/environment',  __FILE__)
+
+Rails.application.config.after_initialize { Project.update_project_environments }
 run Rails.application

@@ -1,7 +1,7 @@
 require 'state_machine'
 
 class JobHistory < ActiveRecord::Base
-  extend EnvironmentsHelper
+  include EnvironmentsHelper
 
   scope :active, -> { where(state: ["started", "running"]) }
 
@@ -17,9 +17,9 @@ class JobHistory < ActiveRecord::Base
   validates :project_id, presence: true
 
   validates :sha, presence: true
+  validates :environment, presence: true
 
-  validates :environment, presence: true,
-    inclusion: { in: valid_environments }
+  validate :valid_environment
 
   validates_uniqueness_of :state, scope: [:environment, :project_id],
     conditions: -> { where(state: "running") }
