@@ -1,4 +1,6 @@
 if Rails.env.production?
+  socket = Rails.root.join("tmp/auth_sock")
+
   unless File.exist?(socket)
     Process.spawn(Rails.root.join("lib/ssh-agent.sh").to_s)
 

@@ -21,8 +21,6 @@ class Deploy
   end
 
   def ssh_deploy
-    socket = Rails.root.join("tmp/auth_sock")
-
     @ssh = SshExecutor.new do |command, process|
       process.on_output do |ch, data|
         publish_messages(data)
