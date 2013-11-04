@@ -48,7 +48,7 @@ puts JSON.dump(:id => #{project.id}, :env => config.fetch(:environments))
 
         script.gsub!(/(\r?\n|\r)+/, ';')
 
-        ["cd #{project.name.parameterize("_")}", "bundle check || bundle install --deployment --without test", %Q|bundle exec ruby -e "#{script}"|, "cd ~"]
+        ["cd #{project.name.parameterize("_")}", "git checkout -f master", "git pull", "bundle check || bundle install --deployment --without test", %Q|bundle exec ruby -e "#{script}"|, "cd ~"]
       end.flatten
 
       executor = SshExecutor.new do |command, process|
