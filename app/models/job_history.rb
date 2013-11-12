@@ -3,6 +3,8 @@ require 'state_machine'
 class JobHistory < ActiveRecord::Base
   include EnvironmentsHelper
 
+  before_validation :initialize_log, on: :create
+
   scope :active, -> { where(state: ["started", "running"]) }
 
   belongs_to :project
@@ -77,5 +79,9 @@ class JobHistory < ActiveRecord::Base
     lock = project.job_locks.where(environment: environment).first
     return unless lock
     errors.add(:environment, "is locked")
+  end
+
+  def initialize_log
+    self.log ||= ""
   end
 end

@@ -22,3 +22,5 @@
 /node_modules
 
 /public/assets
+
+/db/schema.rb
