@@ -11,7 +11,15 @@ class SshExecutor
     end
 
     @options = default_options.merge(options)
-    @host, @user = "admin01.ord.zdsys.com", "deploy"
+    @host = "admin01.ord.zdsys.com"
+
+    @user = if Rails.env.development?
+      config = Net::SSH.configuration_for("pod1")
+      config && config[:user] ? config[:user] : ENV["USER"]
+    else
+      "deploy"
+    end
+
     @callbacks = block
   end
 
