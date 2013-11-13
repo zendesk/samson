@@ -20,6 +20,10 @@ class Project < ActiveRecord::Base
     "#{id}-#{name.parameterize}"
   end
 
+  def repo_name
+    name.parameterize("_")
+  end
+
   def environments
     read_attribute(:environments) || []
   end
@@ -29,6 +33,8 @@ class Project < ActiveRecord::Base
       require 'lib/ssh_executor'
 
       projects = Project.where(deleted_at: nil).to_a.inject({}) {|h,p| h.merge(p.id => p)}
+      Thread.exit if projects.empty?
+
       commands = projects.values.map do |project|
         script = <<-G
 require 'json'

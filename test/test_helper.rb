@@ -41,28 +41,7 @@ class ActiveSupport::TestCase
 
   setup do
     if metadata[:stub_deploy]
-      Deploy.class_eval do
-        alias :_initialize :initialize
-        alias :_perform :perform
-
-        def initialize(id)
-          @job_id, @job = id, JobHistory.new
-          @job.channel = "abc123"
-        end
-
-        def perform
-          sleep(1) until stopped?
-        end
-      end
-    end
-  end
-
-  teardown do
-    if metadata[:stub_deploy]
-      Deploy.class_eval do
-        alias :perform :_perform
-        alias :initialize :_initialize
-      end
+      @controller.stubs(enqueue_job: nil)
     end
   end
 end

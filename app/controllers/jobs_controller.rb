@@ -23,11 +23,7 @@ class JobsController < ApplicationController
       environment: create_job_params[:environment],
       sha: create_job_params[:sha])
 
-    Thread.main[:deploys] << Thread.new do
-      Thread.current[:deploy] = deploy = Deploy.new(job.id)
-      deploy.perform
-      Thread.main[:deploys].delete(Thread.current)
-    end
+    enqueue_job(job)
 
     redirect_to project_job_path(project, job)
   rescue ActiveRecord::RecordInvalid => e

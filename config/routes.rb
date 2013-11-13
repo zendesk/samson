@@ -26,5 +26,7 @@ ZendeskPusher::Application.routes.draw do
     resource :projects, only: [:show]
   end
 
+  post "/travis" => "travis#create"
+
   root to: 'projects#index'
 end

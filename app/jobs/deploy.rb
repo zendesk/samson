@@ -1,7 +1,8 @@
 require 'lib/ssh_executor'
+require 'net/ssh'
 
 class Deploy
-  attr_reader :job_id
+  attr_reader :job_id, :job
 
   def initialize(id)
     @job_id, @job = id, JobHistory.find(id)
@@ -46,8 +47,10 @@ class Deploy
 
     retval, command = @ssh.execute!(
       "export SUDO_USER=#{@job.user.email}",
-      "cd #{@job.project.name.parameterize("_")}",
+      "cd #{@job.project.repo_name}",
       "git fetch -ap",
+      # "mkdir -p /tmp/deploy/#{@job.channel}",
+      # "git archive --format tar $(git rev-parse #{@job.sha}) | tar -x -C /tmp/deploy/#{@job.channel}"
       "git checkout -f #{@job.sha}",
       "! (git status | grep 'On branch') || git pull",
       "capsu $(pwd) $(rvm current | tail -1) #{@job.environment} deploy TAG=#{@job.sha}"
