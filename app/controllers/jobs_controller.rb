@@ -1,6 +1,4 @@
 class JobsController < ApplicationController
-  rescue_from ActiveRecord::RecordInvalid, with: :invalid_job
-
   rescue_from ActiveRecord::RecordNotFound do |error|
     flash[:error] = "Job not found."
     redirect_to root_path
@@ -21,7 +19,8 @@ class JobsController < ApplicationController
     job = project.job_histories.create!(
       user_id: current_user.id,
       environment: create_job_params[:environment],
-      sha: create_job_params[:sha])
+      sha: create_job_params[:sha]
+    )
 
     enqueue_job(job)
 
@@ -90,10 +89,6 @@ class JobsController < ApplicationController
 
   def job_histories
     @job_histories ||= job_histories_scope.limit(10).order("created_at DESC")
-  end
-
-  def invalid_job
-    # TODO
   end
 
   def send_message(channel, message)

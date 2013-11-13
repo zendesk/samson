@@ -82,21 +82,17 @@ describe JobsController do
 
         let(:job) { project.job_histories.last }
 
-        teardown do
-          Thread.main[:deploys].each do |thr|
-            Redis.driver.set("abc123:stop", "true")
-            thr.join
-          end
-
-          Thread.main[:deploys].clear
-        end
-
         it "redirects to the job path", :stub_deploy do
           assert_redirected_to project_job_path(project, job)
         end
 
         it "creates a deploy", :stub_deploy do
-          Thread.main[:deploys].size.must_equal(1)
+          assert_received(@controller, :enqueue_job) do |expect|
+            expect.with do |job|
+              job.sha == "master"
+              job.environment == "master1"
+            end
+          end
         end
       end
 
