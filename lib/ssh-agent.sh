@@ -5,6 +5,7 @@ if [[ ! -e tmp/auth_sock ]]; then
   mkdir -p tmp
   ln -sf $SSH_AUTH_SOCK tmp/auth_sock
   echo "$DEPLOY_KEY" > tmp/id_rsa
+  chmod 0600 tmp/id_rsa
   echo -e "#!/bin/bash\necho $1" > tmp/passphrase.sh
   chmod +x tmp/passphrase.sh
   export SSH_ASKPASS=./tmp/passphrase.sh
