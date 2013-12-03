@@ -14,8 +14,7 @@ Pub-sub streaming is done through redis and a [separate controller](app/controll
 and curl (TODO) access. A [subscriber thread](config/initializers/redis.rb) is created on startup that handles
 writing messages to each individual stream. Since Redis subscription blocks, it is difficult to work with ActionController::Live. [1]
 
-This project is currently deployed on Heroku and makes extensive use
-of threads, hence the requirement on JRuby.
+This project makes extensive use of threads, hence the requirement on JRuby.
 
 To run:
 

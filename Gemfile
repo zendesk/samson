@@ -1,14 +1,10 @@
 source 'https://rubygems.org'
 
-# Heroku
-ruby '1.9.3', :engine => 'jruby', :engine_version => '1.7.4'
-
 gem 'rails', '4.0.0'
 
 group :production do
   gem 'rails_12factor'
   gem 'activerecord-jdbcpostgresql-adapter'
-#  gem 'heroku-forward'
 end
 
 group :assets do

@@ -1,4 +1,4 @@
-unless Rails.env.development?
+unless Rails.env.development? || Rails.env.test?
   socket = Rails.root.join("tmp/auth_sock")
 
   unless File.exist?(socket)

@@ -7,5 +7,9 @@ end
 
 require ::File.expand_path('../config/environment',  __FILE__)
 
-Rails.application.config.after_initialize { Project.update_project_environments }
+Rails.application.config.after_initialize do
+  require 'lib/environment_updater'
+  EnvironmentUpdater.new(Project.all).run
+end
+
 run Rails.application

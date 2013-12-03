@@ -12,6 +12,7 @@ class Project < ActiveRecord::Base
   has_many :job_histories, -> { order("created_at DESC") }
   has_many :job_locks, -> { order("created_at DESC") }
 
+  before_create :set_default_environments
   after_create :update_project_environments, unless: -> { Rails.env.test? }
 
   serialize :environments
@@ -28,65 +29,13 @@ class Project < ActiveRecord::Base
     read_attribute(:environments) || []
   end
 
-  def self.update_project_environments
-    Thread.new do
-      require 'lib/ssh_executor'
+  private
 
-      projects = Project.where(deleted_at: nil).to_a.inject({}) {|h,p| h.merge(p.id => p)}
-      Thread.exit if projects.empty?
-
-      commands = projects.values.map do |project|
-        script = <<-G
-require 'json'
-
-require 'capistrano'
-require 'capistrano/cli'
-
-cli = Capistrano::CLI.new([])
-cli.instance_variable_set(:@options, { :recipes => ['Capfile'] })
-
-config = cli.instantiate_configuration
-
-cli.load_recipes(config)
-
-puts JSON.dump(:id => #{project.id}, :env => config.fetch(:environments))
-        G
-
-        script.gsub!(/(\r?\n|\r)+/, ';')
-
-        ["cd #{project.name.parameterize("_")}", "git checkout -f master", "git pull", "bundle check || bundle install --deployment --without test", %Q|bundle exec ruby -e "#{script}"|, "cd ~"]
-      end.flatten
-
-      executor = SshExecutor.new do |command, process|
-        process.on_output do |ch, data|
-          # zendesk_deployment does upload_log at_exit
-          # so we just disregard it
-          data = data.split(/\r?\n|\r/).compact.first
-
-          if data && data.start_with?('{')
-            json_data = JSON.parse(data)
-
-            project = projects[json_data["id"]]
-
-            environments = json_data["env"].map do |env|
-              if env =~ /pod/
-                [env, "#{env}:gamma"]
-              else
-                env
-              end
-            end
-
-            project.environments = environments.tap(&:flatten!)
-            project.save!
-          end
-        end
-      end
-
-      executor.execute!(*commands)
-    end
+  def set_default_environments
+    self.environments ||= %w{master1 master2 staging qa pod1 pod1:gamma pod2 pod2:gamma pod3 pod3:gamma}
   end
 
   def update_project_environments
-    self.class.update_project_environments
+    EnvironmentUpdater.new(Project.all).run
   end
 end
