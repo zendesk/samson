@@ -5,6 +5,7 @@ gem 'rails', '4.0.2'
 group :production do
   gem 'rails_12factor'
   gem 'activerecord-jdbcpostgresql-adapter'
+  gem 'activerecord-jdbcmysql-adapter'
 end
 
 group :assets do
@@ -62,3 +63,10 @@ group :test do
   gem 'webmock'
   gem 'fakeredis'
 end
+
+group :deployment do
+  gem 'capistrano', '< 3'
+  gem 'zendesk_deployment', :git => 'git@github.com:zendesk/zendesk_deployment.git', :tag  => 'v1.5.0'
+end
+
+gem 'dotenv-rails', '~> 0.9.0'
