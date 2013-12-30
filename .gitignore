@@ -16,8 +16,11 @@
 /log/*.log
 /tmp
 
+# Ignore config
+/config/database.yml
 /config/redis.yml
 /config/redis.development.conf
+/config/puma.rb
 
 /node_modules
 

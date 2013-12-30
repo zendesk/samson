@@ -1,6 +1,8 @@
 services:
   - redis-server
 before_script:
+  - cp config/database.sqlite.yml.example config/database.yml
+  - cp config/puma.rb.example config/puma.rb
   - cp config/redis.yml.example config/redis.yml
 language: ruby
 cache: bundler
