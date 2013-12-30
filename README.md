@@ -26,6 +26,7 @@ cp .env.example .env
 
 # fill in .env with a couple variables
 # CLIENT_SECRET is mandatory and is the secret of a "deployment" OAuth client.
+# The callback for the OAuth client is {HOST}/auth/zendesk/callback
 # ZENDESK_URL defaults to "http://dev.localhost", but is used for authorization
 
 foreman start
