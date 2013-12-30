@@ -1,3 +1,5 @@
+services:
+  - redis-server
 before_script:
   - cp config/redis.yml.example config/redis.yml
 language: ruby
