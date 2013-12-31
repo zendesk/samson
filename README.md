@@ -30,7 +30,7 @@ cp .env.example .env
 # ZENDESK_URL defaults to "http://dev.localhost", but is used for authorization
 
 ln -s config/database.mysql.yml.exmple config/database.yml
-ln -s config/puma.rb.exmple config/puma.rb
+ln -s config/puma.rb.example config/puma.rb
 ln -s config/redis.yml.exmple config/redis.yml
 ln -s config/redis.development.conf.example config/redis.development.conf
 
