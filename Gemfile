@@ -65,7 +65,6 @@ group :test do
 end
 
 group :deployment do
-  gem 'capistrano', '< 3'
   gem 'zendesk_deployment', :git => 'git@github.com:zendesk/zendesk_deployment.git', :tag  => 'v1.5.0'
 end
 
