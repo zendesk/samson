@@ -33,6 +33,8 @@ ln -s config/database.mysql.yml.exmple config/database.yml
 ln -s config/redis.yml.exmple config/redis.yml
 ln -s config/redis.development.conf.example config/redis.development.conf
 
+bundle exec rake db:setup
+
 foreman start
 ```
 
