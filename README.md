@@ -16,7 +16,7 @@ writing messages to each individual stream. Since Redis subscription blocks, it 
 
 This project makes extensive use of threads, hence the requirement on JRuby.
 
-To run:
+#### To run:
 
 ```bash
 # Make sure you have JRuby installed
@@ -35,6 +35,15 @@ ln -s config/redis.development.conf.example config/redis.development.conf
 
 foreman start
 ```
+
+#### Admin user
+
+Once you've successfully logged in via oauth, you can make your first user an admin via:
+
+```bash
+rails runner 'User.first.update_attribute(:role, 2)'
+```
+
 
 The website runs at `localhost:8080` by default.
 
