@@ -12,8 +12,9 @@ namespace :pusher do
 
   task :update_symlinks do
     config_files.each do |file|
-      system "ln -nfs /etc/zendesk/pusher/#{file} #{release_path}/config/#{file}"
+      run "ln -nfs /etc/zendesk/pusher/#{file} #{release_path}/config/#{file}"
     end
+    run "ln -nfs /data/pusher/config/.env #{release_path}/.env"
     run "cd #{release_path} && rm -rf log && ln -s #{deploy_to}/log log"
   end
 end
