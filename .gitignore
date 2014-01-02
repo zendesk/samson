@@ -16,6 +16,8 @@
 /log/*.log
 /tmp
 
+# Ignore config
+/config/database.yml
 /config/redis.yml
 /config/redis.development.conf
 

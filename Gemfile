@@ -1,10 +1,13 @@
 source 'https://rubygems.org'
 
 gem 'rails', '4.0.2'
+gem 'puma'
+gem 'dotenv-rails', '~> 0.9.0'
 
 group :production do
   gem 'rails_12factor'
   gem 'activerecord-jdbcpostgresql-adapter'
+  gem 'activerecord-jdbcmysql-adapter'
 end
 
 group :assets do
@@ -17,8 +20,6 @@ group :assets do
 
   gem 'bootstrap-sass', :git => 'https://github.com/thomas-mcdonald/bootstrap-sass.git'
 end
-
-gem 'puma'
 
 group :no_preload do
   gem 'omniauth', '~> 1.1'
@@ -62,3 +63,8 @@ group :test do
   gem 'webmock'
   gem 'fakeredis'
 end
+
+group :deployment do
+  gem 'zendesk_deployment', :git => 'git@github.com:zendesk/zendesk_deployment.git', :tag  => 'v1.5.0'
+end
+
