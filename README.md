@@ -38,6 +38,8 @@ bundle exec rake db:setup
 foreman start
 ```
 
+The website runs at `localhost:8080` by default.
+
 #### Admin user
 
 Once you've successfully logged in via oauth, you can make your first user an admin via:
@@ -46,8 +48,7 @@ Once you've successfully logged in via oauth, you can make your first user an ad
 rails runner 'User.first.update_attribute(:role, 2)'
 ```
 
-
-The website runs at `localhost:8080` by default.
+#### Notes
 
 \* Currently `deploy` is hardcoded as the deploy user, you will want
 to change it to your own for testing.
