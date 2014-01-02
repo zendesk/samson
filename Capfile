@@ -1,13 +1,13 @@
 require 'zendesk/deployment'
 
-set :application, 'zendesk_deploy_service'
-set :repository,  'git@github.com:zendesk/zendesk_deploy_service'
+set :application, 'pusher'
+set :repository,  'git@github.com:zendesk/pusher'
 set :environments, [:staging, :pod3]
 set :ruby_version, 'jruby'
 set :require_tag?, false
 set :email_notification, ['deploys@zendesk.com', 'epahl@zendesk.com']
 
-namespace :zendesk_deploy_service do
+namespace :pusher do
   set :config_files, %w( database.yml redis.yml )
 
   task :update_symlinks do
@@ -18,4 +18,4 @@ namespace :zendesk_deploy_service do
   end
 end
 
-after "deploy:update_code","zendesk_deploy_service:update_symlinks"
+after "deploy:update_code","pusher:update_symlinks"
