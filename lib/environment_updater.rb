@@ -51,7 +51,7 @@ class EnvironmentUpdater
 
       begin
         executor.execute!(*commands)
-      rescue Errno::ECONNREFUSED, Net::SSH::ConnectionTimeout, IOError => e
+      rescue Errno::ECONNREFUSED, Net::SSH::ConnectionTimeout, IOError, Timeout::Error => e
         Rails.logger.error("Received #{e.class} when trying EnvironmentUpdater: #{e.message}")
         Rails.logger.error(e.backtrace.join("\n"))
       end
