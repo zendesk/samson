@@ -45,7 +45,7 @@ The website runs at `localhost:8080` by default.
 Once you've successfully logged in via oauth, you can make your first user an admin via:
 
 ```bash
-rails runner 'User.first.update_attribute(:role_id, 2)'
+rails runner 'User.first.update_attribute(:role_id, Role::ADMIN.id)'
 ```
 
 #### Notes
