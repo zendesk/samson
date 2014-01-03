@@ -7,6 +7,20 @@ set :ruby_version, 'jruby'
 set :require_tag?, false
 set :email_notification, ['deploys@zendesk.com', 'epahl@zendesk.com']
 
+namespace :deploy do
+  task :restart do
+    sudo "/etc/init.d/puma.pusher restart"
+  end
+
+  task :start do
+    sudo "/etc/init.d/puma.pusher start"
+  end
+
+  task :stop do
+    sudo "/etc/init.d/puma.pusher stop"
+  end
+end
+
 namespace :pusher do
   set :config_files, %w( database.yml redis.yml )
 
