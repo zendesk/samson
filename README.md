@@ -16,7 +16,7 @@ writing messages to each individual stream. Since Redis subscription blocks, it 
 
 This project makes extensive use of threads, hence the requirement on JRuby.
 
-To run:
+#### To run:
 
 ```bash
 # Make sure you have JRuby installed
@@ -33,10 +33,22 @@ ln -s config/database.mysql.yml.example config/database.yml
 ln -s config/redis.yml.exmple config/redis.yml
 ln -s config/redis.development.conf.example config/redis.development.conf
 
+bundle exec rake db:setup
+
 foreman start
 ```
 
 The website runs at `localhost:8080` by default.
+
+#### Admin user
+
+Once you've successfully logged in via oauth, you can make your first user an admin via:
+
+```bash
+rails runner 'User.first.update_attribute(:role_id, Role::ADMIN.id)'
+```
+
+#### Notes
 
 \* Currently `deploy` is hardcoded as the deploy user, you will want
 to change it to your own for testing.
