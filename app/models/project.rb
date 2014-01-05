@@ -1,11 +1,7 @@
 require 'soft_deletion'
 
 class Project < ActiveRecord::Base
-  # Heroku passes a fake DB to precompilation, fail
-  begin
-    has_soft_deletion
-  rescue
-  end
+  has_soft_deletion
 
   validates_presence_of :name
 
