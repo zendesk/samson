@@ -34,8 +34,7 @@ ln -s config/redis.yml.exmple config/redis.yml
 ln -s config/redis.development.conf.example config/redis.development.conf
 
 bundle exec rake db:setup
-
-foreman start
+bundle exec puma -C config/puma.rb
 ```
 
 The website runs at `localhost:8080` by default.

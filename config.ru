@@ -1,6 +1,4 @@
 # This file is used by Rack-based servers to start the application.
-require 'dotenv'
-Dotenv.load
 
 # https://github.com/jruby/jruby/wiki/UnlimitedStrengthCrypto
 if RUBY_PLATFORM == "java" && ['development', 'testing', ''].include?(ENV["RAILS_ENV"].to_s)
