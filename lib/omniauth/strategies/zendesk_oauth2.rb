@@ -30,12 +30,7 @@ module OmniAuth
       protected
 
       def raw_info
-        @raw_info ||= begin
-          # Hack for ip restrictions on support.zendesk.com
-          access_token.client.connection.headers["User-Agent"] = "Zendesk for iPhone"
-
-          access_token.get('/api/v2/users/me.json').parsed['user']
-        end
+        @raw_info ||= access_token.get('/api/v2/users/me.json').parsed['user']
       end
     end
   end
