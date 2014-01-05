@@ -95,12 +95,6 @@ GEM
       redis (~> 3.0.0)
     faraday (0.8.8)
       multipart-post (~> 1.2.0)
-    foreman (0.63.0)
-      dotenv (>= 0.7)
-      thor (>= 0.13.6)
-    foreman (0.63.0-java)
-      dotenv (>= 0.7)
-      thor (>= 0.13.6)
     hashie (2.0.5)
     highline (1.6.20)
     hike (1.2.3)
@@ -235,7 +229,6 @@ DEPENDENCIES
   bourne
   dotenv-rails (~> 0.9.0)
   fakeredis
-  foreman
   jdbc-sqlite3
   jquery-rails
   jquery-ui-rails

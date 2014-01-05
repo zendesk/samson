@@ -44,7 +44,6 @@ end
 
 group :development do
   gem 'sqlite3', :platform => :ruby
-  gem 'foreman'
 
   platform :jruby do
     gem 'jdbc-sqlite3'
