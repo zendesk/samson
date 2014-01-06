@@ -11,7 +11,11 @@ class SshExecutor
     end
 
     @options = default_options.merge(options)
-    @host = "admin01.ord.zdsys.com"
+    @host = if Rails.env.staging?
+      "deploy1.rsc.zdsys.com"
+    else
+      "admin01.ord.zdsys.com"
+    end
 
     @user = if Rails.env.development?
       config = Net::SSH.configuration_for("pod1")
