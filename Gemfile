@@ -6,7 +6,7 @@ gem 'dotenv-rails', '~> 0.9.0'
 
 group :production do
   gem 'rails_12factor'
-  gem 'mysql2'
+  gem 'mysql2', :platform => :ruby
 
   platform :jruby do
     gem 'activerecord-jdbcpostgresql-adapter'
