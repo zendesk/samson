@@ -2,7 +2,7 @@ unless Rails.env.development? || Rails.env.test?
   socket = Rails.root.join("tmp/auth_sock")
 
   unless File.exist?(socket)
-    Process.spawn({ "DEPLOY_KEY" => ENV["DEPLOY_KEY"] }, Rails.root.join("lib/ssh-agent.sh").to_s)
+    Process.spawn({ "DEPLOY_KEY" => ENV['DEPLOY_KEY'].gsub(/\\n/, "\n") }, Rails.root.join("lib/ssh-agent.sh").to_s)
 
     time = Time.now
 
