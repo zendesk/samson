@@ -3,7 +3,7 @@ require 'zendesk/deployment'
 set :application, 'pusher'
 set :repository,  'git@github.com:zendesk/pusher'
 set :environments, [:staging, :pod3]
-set :ruby_version, 'jruby'
+set :ruby_version, '2.0.0-p353'
 set :require_tag?, false
 set :email_notification, ['deploys@zendesk.com', 'epahl@zendesk.com']
 
