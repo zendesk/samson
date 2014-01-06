@@ -2,6 +2,10 @@ class StreamsController < ApplicationController
   include ActionController::Live
   include ApplicationHelper
 
+  rescue_from ActiveRecord::RecordNotFound do
+    head :not_found
+  end
+
   def show
     ActiveRecord::Base.connection_pool.release_connection
 
