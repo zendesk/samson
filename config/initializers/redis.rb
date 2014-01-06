@@ -1,16 +1,10 @@
 require 'redis'
 
-Redis.instance_eval do
-  def driver
-    if ENV["REDISTOGO_URL"]
-      uri = URI.parse(ENV["REDISTOGO_URL"])
-      Redis.new(:host => uri.host, :port => uri.port, :password => uri.password)
-    elsif !Rails.env.production?
-      redis_config = YAML.load_file(Rails.root.join('config/redis.yml'))[Rails.env]
-      host, port = redis_config.split(":")
-      Redis.new(host: host, port: port, driver: :ruby)
-    end
-  end
+redis_config = YAML.load_file(Rails.root.join('config/redis.yml'))[Rails.env]
+host, port = redis_config.split(":")
+
+Redis.define_singleton_method(:driver) do
+  new(host: host, port: port, driver: :ruby)
 end
 
 Thread.abort_on_exception = !Rails.env.production?

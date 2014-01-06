@@ -6,8 +6,11 @@ gem 'dotenv-rails', '~> 0.9.0'
 
 group :production do
   gem 'rails_12factor'
-  gem 'activerecord-jdbcpostgresql-adapter'
-  gem 'activerecord-jdbcmysql-adapter'
+
+  platform :jruby do
+    gem 'activerecord-jdbcpostgresql-adapter'
+    gem 'activerecord-jdbcmysql-adapter'
+  end
 end
 
 group :assets do
@@ -41,7 +44,6 @@ end
 
 group :development do
   gem 'sqlite3', :platform => :ruby
-  gem 'foreman'
 
   platform :jruby do
     gem 'jdbc-sqlite3'
