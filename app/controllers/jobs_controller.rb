@@ -39,7 +39,7 @@ class JobsController < ApplicationController
     elsif job_history.user_id != current_user.id
       head :forbidden
     else
-      send_message("#{job_history.channel}:input", message_params[:message])
+      deploy.input(message_params[:message])
 
       head :ok
     end
@@ -49,7 +49,7 @@ class JobsController < ApplicationController
     if job_history.user_id != current_user.id
       head :forbidden
     else
-      send_message("#{job_history.channel}:stop", "true")
+      deploy.stop
 
       head :ok
     end
@@ -91,9 +91,7 @@ class JobsController < ApplicationController
     @job_histories ||= job_histories_scope.limit(10).order("created_at DESC")
   end
 
-  def send_message(channel, message)
-    redis = Redis.driver
-    redis.set(channel, message)
-    redis.quit
+  def deploy
+    @deploy ||= Thread.main[:deploys][job_history.id][:deploy]
   end
 end

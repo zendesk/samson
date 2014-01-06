@@ -56,8 +56,7 @@ describe TravisController do
       end
 
       teardown do
-        Thread.main[:deploys].each do |thr|
-          Redis.driver.set("abc123:stop", "true")
+        Thread.main[:deploys].each do |_, thr|
           thr.join
         end
 

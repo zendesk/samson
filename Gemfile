@@ -33,8 +33,6 @@ group :no_preload do
 
   gem 'state_machine', '~> 1.2'
 
-  gem 'redis', '~> 3.0'
-
   gem 'net-ssh', '~> 2.1'
   gem 'net-ssh-shell', '~> 0.2', :git => 'https://github.com/9peso/net-ssh-shell.git'
 
@@ -64,7 +62,6 @@ group :test do
   gem 'bourne'
 
   gem 'webmock'
-  gem 'fakeredis'
 end
 
 group :deployment do

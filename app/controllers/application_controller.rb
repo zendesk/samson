@@ -29,7 +29,7 @@ class ApplicationController < ActionController::Base
   end
 
   def enqueue_job(job)
-    Thread.main[:deploys] << Thread.new do
+    Thread.main[:deploys][job.id] = Thread.new do
       Thread.current[:deploy] = deploy = Deploy.new(job.id)
       deploy.perform
       Thread.main[:deploys].delete(Thread.current)

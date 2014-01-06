@@ -1,4 +1,4 @@
-Thread.main[:deploys] = []
+Thread.main[:deploys] = {}
 
 at_exit do
   Thread.main[:deploys].each do |thread|

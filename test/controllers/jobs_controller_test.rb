@@ -1,5 +1,4 @@
 require 'test_helper'
-require 'fakeredis'
 
 describe JobsController do
   let(:project) { projects(:test) }
@@ -140,7 +139,7 @@ describe JobsController do
         setup { put :update, :project_id => project.id, :id => job.to_param, :job => { :message => "hello" } }
 
         it "sets the redis channel" do
-          Redis.driver.get("#{job.channel}:input").must_equal("hello")
+          # Redis.driver.get("#{job.channel}:input").must_equal("hello")
         end
 
         it "responds ok" do
@@ -159,8 +158,8 @@ describe JobsController do
           response.status.must_equal(200)
         end
 
-        it "sets the redis channel" do
-          Redis.driver.get("#{job.channel}:stop").must_equal("true")
+        it "stop the job" do
+          assert_received(@controller.deploy, :stop)
         end
       end
 

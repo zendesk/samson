@@ -17,8 +17,6 @@ class Deploy
     else
       @job.failed!
     end
-
-    redis.quit
   end
 
   def ssh_deploy
@@ -99,9 +97,5 @@ class Deploy
       redis.publish(@job.channel, message)
       Rails.logger.info(message)
     end
-  end
-
-  def redis
-    @redis ||= Redis.driver
   end
 end
