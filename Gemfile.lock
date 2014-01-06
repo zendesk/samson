@@ -112,6 +112,7 @@ GEM
     json (1.8.1-java)
     jwt (0.1.8)
       multi_json (>= 1.5)
+    linecache (0.46-java)
     mail (2.5.4)
       mime-types (~> 1.16)
       treetop (~> 1.4.8)
@@ -127,6 +128,7 @@ GEM
       metaclass (~> 0.0.1)
     multi_json (1.8.2)
     multipart-post (1.2.0)
+    mysql2 (0.3.14)
     net-scp (1.1.2)
       net-ssh (>= 2.6.5)
     net-sftp (2.1.2)
@@ -177,6 +179,8 @@ GEM
     ruby-debug (0.10.4)
       columnize (>= 0.1)
       ruby-debug-base (~> 0.10.4.0)
+    ruby-debug-base (0.10.4)
+      linecache (>= 0.3)
     ruby-debug-base (0.10.4-java)
     safe_yaml (0.9.7)
     sass (3.2.13)
@@ -234,6 +238,7 @@ DEPENDENCIES
   jquery-ui-rails
   minitest-metadata
   minitest-rails (~> 0.9)
+  mysql2
   net-ssh (~> 2.1)
   net-ssh-shell (~> 0.2)!
   omniauth (~> 1.1)
