@@ -2,10 +2,13 @@ require Rails.root.join('lib', 'ssh_executor')
 require 'net/ssh'
 
 class Deploy
-  attr_reader :job_id, :job
+  attr_reader :job_id, :job, :output
 
   def initialize(id)
     @job_id, @job = id, JobHistory.find(id)
+
+    @input, @output = Queue.new, Queue.new
+    @stopped = false
   end
 
   def perform
@@ -17,9 +20,17 @@ class Deploy
     else
       @job.failed!
     end
-
-    redis.quit
   end
+
+  def stop
+    @stopped = true
+  end
+
+  def input(message)
+    @input.push(message)
+  end
+
+  private
 
   def ssh_deploy
     @ssh = SshExecutor.new do |command, process|
@@ -73,15 +84,11 @@ class Deploy
   end
 
   def stopped?
-    @stopped ||= redis.get("#{@job.channel}:stop").present?.tap do |present|
-      redis.del("#{@job.channel}:stop") if present
-    end
+    @stopped
   end
 
   def get_message
-    redis.get("#{@job.channel}:input").tap do |message|
-      redis.del("#{@job.channel}:input") if message
-    end
+    @input.pop(true)
   end
 
   def publish_messages(data, prefix = "")
@@ -96,12 +103,8 @@ class Deploy
 
     messages.each do |message|
       @job.log += "#{message}\n"
-      redis.publish(@job.channel, message)
+      @output.push(message)
       Rails.logger.info(message)
     end
-  end
-
-  def redis
-    @redis ||= Redis.driver
   end
 end
