@@ -7,13 +7,28 @@ set :ruby_version, 'jruby'
 set :require_tag?, false
 set :email_notification, ['deploys@zendesk.com', 'epahl@zendesk.com']
 
+namespace :deploy do
+  task :restart do
+    sudo "/etc/init.d/puma.pusher restart"
+  end
+
+  task :start do
+    sudo "/etc/init.d/puma.pusher start"
+  end
+
+  task :stop do
+    sudo "/etc/init.d/puma.pusher stop"
+  end
+end
+
 namespace :pusher do
   set :config_files, %w( database.yml redis.yml )
 
   task :update_symlinks do
     config_files.each do |file|
-      system "ln -nfs /etc/zendesk/pusher/#{file} #{release_path}/config/#{file}"
+      run "ln -nfs /etc/zendesk/pusher/#{file} #{release_path}/config/#{file}"
     end
+    run "ln -nfs /data/pusher/config/.env #{release_path}/.env"
     run "cd #{release_path} && rm -rf log && ln -s #{deploy_to}/log log"
   end
 end
