@@ -8,8 +8,10 @@
 </h1>
 
 <pre id="messages" class="pre-scrollable log">
-  <% job_history.log.split("\n").each do |log| %>
+  <% unless job_history.started? || job_history.running? %>
+    <% job_history.log.split("\n").each do |log| %>
 <%= render_log(log) %>
+    <% end %>
   <% end %>
 </pre>
 

@@ -2,12 +2,12 @@ require Rails.root.join('lib', 'ssh_executor')
 require 'net/ssh'
 
 class Deploy
-  attr_reader :job_id, :job, :output
+  attr_reader :job_id, :job, :output, :publisher
 
   def initialize(id)
     @job_id, @job = id, JobHistory.find(id)
 
-    @input, @output = Queue.new, Queue.new
+    @input, @output = Queue.new, DeployOutput.new
     @stopped = false
   end
 
@@ -89,6 +89,8 @@ class Deploy
 
   def get_message
     @input.pop(true)
+  rescue ThreadError
+    nil
   end
 
   def publish_messages(data, prefix = "")
@@ -103,8 +105,8 @@ class Deploy
 
     messages.each do |message|
       @job.log += "#{message}\n"
-      @output.push(message)
       Rails.logger.info(message)
+      @output.push(message)
     end
   end
 end
