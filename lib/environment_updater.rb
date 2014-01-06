@@ -1,4 +1,4 @@
-require 'lib/ssh_executor'
+require_relative 'ssh_executor'
 
 class EnvironmentUpdater
   attr_reader :projects

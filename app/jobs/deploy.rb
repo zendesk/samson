@@ -1,4 +1,4 @@
-require 'lib/ssh_executor'
+require Rails.root.join('lib', 'ssh_executor')
 require 'net/ssh'
 
 class Deploy
