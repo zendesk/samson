@@ -136,10 +136,15 @@ describe JobsController do
       end
 
       describe "valid" do
-        setup { put :update, :project_id => project.id, :id => job.to_param, :job => { :message => "hello" } }
+        setup do
+          @controller.stubs(deploy: stub(input: nil))
+          put :update, :project_id => project.id, :id => job.to_param, :job => { :message => "hello" }
+        end
 
-        it "sets the redis channel" do
-          # Redis.driver.get("#{job.channel}:input").must_equal("hello")
+        it "calls input on the job" do
+          assert_received(@controller.deploy, :input) do |expect|
+            expect.with {|with| with.must_equal("hello")}
+          end
         end
 
         it "responds ok" do
@@ -151,6 +156,7 @@ describe JobsController do
     describe "a DELETE to :destroy" do
       describe "with a valid deploy" do
         setup do
+          @controller.stubs(deploy: stub(stop: nil))
           delete :destroy, project_id: project.id, id: job.to_param
         end
 
