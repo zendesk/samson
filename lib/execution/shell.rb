@@ -1,11 +1,14 @@
+require_relative 'base'
 require 'open3'
 
 module Execution
-  class Shell
+  class Shell < Base
     def execute!(*commands)
       command = commands.map do |command|
         execute_command(command)
       end.join("\n")
+
+      retval = false
 
       Open3.popen3(command) do |stdin, stdout, stderr, wait_thr|
         output_thr = Thread.new do
@@ -23,9 +26,10 @@ module Execution
         stdin.close_write
         wait_thr.join
         output_thr.join; error_thr.join
+        retval = wait_thr.value.success?
       end
 
-      wait_thr.value.success?
+      retval
     end
 
     private

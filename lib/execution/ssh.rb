@@ -1,3 +1,4 @@
+require_relative 'base'
 require 'net/ssh/shell'
 
 module Execution
@@ -26,6 +27,8 @@ module Execution
       else
         "deploy"
       end
+
+      @callbacks[:process] = []
     end
 
     def execute!(*commands)
@@ -41,6 +44,10 @@ module Execution
       end
 
       true
+    end
+
+    def process(&block)
+      @callbacks[:process] << block
     end
 
     private

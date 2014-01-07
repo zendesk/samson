@@ -1,10 +1,11 @@
 module Execution
   class Base
+    attr_reader :callbacks
+
     def initialize
       @callbacks = {
         :stdout => [],
-        :stderr => [],
-        :process => []
+        :stderr => []
       }
     end
 
@@ -14,10 +15,6 @@ module Execution
 
     def error_output(&block)
       @callbacks[:stderr] << block
-    end
-
-    def process(&block)
-      @callbacks[:process] << block
     end
 
     def execute!(*commands)
