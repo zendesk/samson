@@ -46,10 +46,6 @@ class DeploysController < ApplicationController
     params.require(:deploy).permit(:commit, :stage_id)
   end
 
-  def message_params
-    params.require(:job).permit(:message)
-  end
-
   def find_project
     @project = Project.find(params[:project_id])
   end
