@@ -53,7 +53,8 @@ class JobExecution
     end
   end
 
-  def wait
+  def start_and_wait!
+    start!
     @thread.join
   end
 

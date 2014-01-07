@@ -22,8 +22,7 @@ describe JobExecution do
   end
 
   it "clones the project's repository if it's not already cloned" do
-    execution.start!
-    execution.wait
+    execution.start_and_wait!
 
     assert File.directory?("#{cached_repo_dir}/.git")
   end
