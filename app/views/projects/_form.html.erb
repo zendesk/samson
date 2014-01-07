@@ -16,7 +16,7 @@
       </div>
     </div>
 
-    <%= form.fields_for :stages do |stage_fields| %>
+    <%= form.fields_for :stages, [@stage].compact do |stage_fields| %>
       <%= render 'stages/fields', form: stage_fields %>
     <% end %>
 

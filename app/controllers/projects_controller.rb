@@ -15,7 +15,7 @@ class ProjectsController < ApplicationController
 
   def new
     @project = Project.new
-    @project.stages.build(name: "production", command: "cap production deploy")
+    @stage = @project.stages.new(name: "production", command: "cap production deploy")
   end
 
   def create
