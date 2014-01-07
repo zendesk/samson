@@ -25,11 +25,15 @@ class JobExecution
       @job.run!
 
       dir = "/tmp/deploy-#{@job.id}"
+      project = @job.project
+      repo_url = project.repository_url
+      cached_repos_dir = File.join(Rails.root, "cached_repos")
+      repo_cache_dir = File.join(cached_repos_dir, project.id.to_s)
 
       commands = [
-        "cd ~/#{@job.project.repo_name}",
-        "git fetch -ap",
-        "git clone . #{dir}",
+        "mkdir -p #{cached_repos_dir}",
+        "if [ -d #{repo_cache_dir} ]; then cd #{repo_cache_dir} && git fetch -ap; else git clone #{repo_url} #{repo_cache_dir}; fi",
+        "git clone #{repo_cache_dir} #{dir}",
         "cd #{dir}",
         "git checkout --quiet #{@commit}",
         # "export SUDO_USER=#{job.user.email}", capsu-only? We need a user.

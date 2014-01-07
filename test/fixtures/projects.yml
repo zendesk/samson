@@ -1,2 +1,3 @@
 test:
   name: "Project"
+  repository_url: git://example.com/foo.git

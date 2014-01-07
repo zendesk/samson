@@ -9,6 +9,13 @@
       </div>
     </div>
 
+    <div class="form-group">
+      <%= form.label :repository_url, class: "col-lg-2 control-label" %>
+      <div class="col-lg-4">
+        <%= form.text_field :repository_url, class: "form-control" %>
+      </div>
+    </div>
+
     <%= form.fields_for :stages do |stage_fields| %>
       <%= render 'stages/fields', form: stage_fields %>
     <% end %>

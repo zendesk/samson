@@ -39,7 +39,7 @@ describe ProjectsController do
       end
 
       describe "with valid parameters" do
-        let(:params) { { :project => { :name => "Hello" } } }
+        let(:params) { { :project => { :name => "Hello", :repository_url => "git://foo.com/bar" } } }
 
         it "redirects to root url" do
           assert_redirected_to root_path
