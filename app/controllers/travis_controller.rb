@@ -10,11 +10,9 @@ class TravisController < ApplicationController
   # POST /travis?project="Zendesk Carson"
   def create
     if travis_authorization == request.authorization && deploy?
-      enqueue_job(project.job_histories.create!(
-        user_id: user.id,
-        environment: 'master1', # TODO master2 as well...
-        sha: payload['commit']
-      ))
+      stage = project.stages.first
+      deploy_service = DeployService.new(project, stage, user)
+      deploy = deploy_service.deploy!(payload["commit"])
 
       head :ok
     else

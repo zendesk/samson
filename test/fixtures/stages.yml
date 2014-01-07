@@ -1,0 +1,4 @@
+test_staging:
+  name: Staging
+  project: test
+  command: echo hello

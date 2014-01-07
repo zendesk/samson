@@ -1,8 +1,7 @@
-Thread.main[:deploys] = {}
+JobExecution.setup
 
 at_exit do
-  Thread.main[:deploys].each do |_, thread|
-    thread[:deploy].try(:stop)
-    thread.join
+  JobExecution.all.each do |job_execution|
+    job_execution.stop
   end
 end

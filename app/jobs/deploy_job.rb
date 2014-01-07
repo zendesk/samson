@@ -1,7 +1,7 @@
 require Rails.root.join('lib', 'ssh_executor')
 require 'net/ssh'
 
-class Deploy
+class DeployJob
   attr_reader :job_id, :job, :output, :publisher
 
   def initialize(id)

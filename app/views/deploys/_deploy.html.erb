@@ -1,0 +1,19 @@
+<div class="col-md-12">
+  <div class="panel panel-default">
+    <div class="panel-heading">
+      <%= link_to deploy.project.name, project_path(deploy.project) %>
+
+      <span class="pull-right">
+        <%= link_to "#{deploy.user.name} deployed #{deploy.commit} to #{deploy.stage.name}", project_deploy_path(deploy.project, deploy) %>
+      </span>
+    </div>
+
+    <div class="panel-body">
+      <pre class="log pre-scrollable <%= deploy.status %>" style="height: 100px;">
+        <% deploy.output.split("\n").each do |line| %>
+<%= render_log(line) %>
+        <% end %>
+      </pre>
+    </div>
+  </div>
+</div>

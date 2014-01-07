@@ -11,26 +11,24 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20131101202029) do
+ActiveRecord::Schema.define(version: 20140107000258) do
 
-  create_table "job_histories", force: true do |t|
-    t.text     "log",         null: false
-    t.string   "environment"
-    t.string   "sha"
-    t.string   "state"
-    t.string   "channel"
-    t.integer  "project_id"
-    t.integer  "user_id"
+  create_table "deploys", force: true do |t|
+    t.integer  "stage_id",   null: false
+    t.integer  "job_id",     null: false
+    t.string   "commit",     null: false
     t.datetime "created_at"
     t.datetime "updated_at"
   end
 
-  create_table "job_locks", force: true do |t|
-    t.string   "environment"
-    t.integer  "job_history_id"
-    t.integer  "project_id"
+  create_table "jobs", force: true do |t|
+    t.text     "command",                        null: false
+    t.integer  "user_id",                        null: false
+    t.integer  "project_id",                     null: false
+    t.string   "status",     default: "pending"
+    t.text     "output"
     t.datetime "created_at"
-    t.datetime "expires_at"
+    t.datetime "updated_at"
   end
 
   create_table "projects", force: true do |t|
@@ -38,7 +36,14 @@ ActiveRecord::Schema.define(version: 20131101202029) do
     t.datetime "deleted_at"
     t.datetime "created_at"
     t.datetime "updated_at"
-    t.text     "environments"
+  end
+
+  create_table "stages", force: true do |t|
+    t.string   "name",       null: false
+    t.text     "command"
+    t.integer  "project_id", null: false
+    t.datetime "created_at"
+    t.datetime "updated_at"
   end
 
   create_table "users", force: true do |t|

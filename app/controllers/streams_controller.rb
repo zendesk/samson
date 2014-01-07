@@ -2,9 +2,7 @@ class StreamsController < ApplicationController
   include ActionController::Live
   include ApplicationHelper
 
-  rescue_from ActiveRecord::RecordNotFound do
-    head :not_found
-  end
+  before_filter :find_job_execution
 
   def show
     ActiveRecord::Base.connection_pool.release_connection
@@ -13,7 +11,7 @@ class StreamsController < ApplicationController
     response.headers['Cache-Control'] = 'no-cache'
 
     # Heartbeat thread
-    deploy.output.each_message do |message|
+    @job_execution.output.each_message do |message|
       msg = JSON.dump(msg: render_log(message).to_s)
       response.stream.write("data: #{msg}\n\n")
     end
@@ -25,15 +23,9 @@ class StreamsController < ApplicationController
 
   protected
 
-  def deploy
-    @deploy ||= if (thread = Thread.main[:deploys][job_history.id])
-      thread[:deploy]
-    else
-      raise ActiveRecord::RecordNotFound
-    end
-  end
+  def find_job_execution
+    @job_execution = JobExecution.find_by_id(params[:id])
 
-  def job_history
-    @job_history ||= JobHistory.find_by_channel!(params[:id])
+    head :not_found if @job_execution.nil?
   end
 end

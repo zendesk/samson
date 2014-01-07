@@ -2,9 +2,12 @@ require 'test_helper'
 
 describe TravisController do
   let(:project) { projects(:test) }
+  let(:deploy_service) { stub(deploy!: nil) }
 
   setup do
     @orig_token, ENV["TRAVIS_TOKEN"] = ENV["TRAVIS_TOKEN"], "TOKEN"
+
+    DeployService.stubs(:new).returns(deploy_service)
   end
 
   teardown do
@@ -55,14 +58,6 @@ describe TravisController do
           payload: JSON.dump(payload)
       end
 
-      teardown do
-        Thread.main[:deploys].each do |_, thr|
-          thr.join
-        end
-
-        Thread.main[:deploys].clear
-      end
-
       describe "failure" do
         let(:payload) {{
           status_message: 'Failure',
@@ -99,11 +94,8 @@ describe TravisController do
         it "creates a deploy", :stub_deploy do
           response.status.must_equal(200)
 
-          assert_received(@controller, :enqueue_job) do |expect|
-            expect.with do |job|
-              job.sha.must_equal('123abc')
-              job.user.must_equal(user)
-            end
+          assert_received(deploy_service, :deploy!) do |expect|
+            expect.with '123abc'
           end
         end
       end
@@ -122,11 +114,8 @@ describe TravisController do
           it "creates a deploy", :stub_deploy do
             response.status.must_equal(200)
 
-            assert_received(@controller, :enqueue_job) do |expect|
-              expect.with do |job|
-                job.sha.must_equal('123abc')
-                job.user.must_equal(user)
-              end
+            assert_received(deploy_service, :deploy!) do |expect|
+              expect.with '123abc'
             end
           end
         end
@@ -140,16 +129,11 @@ describe TravisController do
             commit: '123abc'
           }}
 
-
           it "creates a deploy", :stub_deploy do
             response.status.must_equal(200)
 
-            assert_received(@controller, :enqueue_job) do |expect|
-              expect.with do |job|
-                job.sha.must_equal('123abc')
-                job.user.email.must_equal('test.user@example.com')
-                job.user.name.must_equal('Test User')
-              end
+            assert_received(deploy_service, :deploy!) do |expect|
+              expect.with '123abc'
             end
           end
         end

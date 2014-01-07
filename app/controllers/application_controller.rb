@@ -27,12 +27,4 @@ class ApplicationController < ActionController::Base
     flash[:error] = "You are not authorized to view this page."
     redirect_to root_path
   end
-
-  def enqueue_job(job)
-    Thread.main[:deploys][job.id] = Thread.new do
-      Thread.current[:deploy] = deploy = Deploy.new(job.id)
-      deploy.perform
-      Thread.main[:deploys].delete(job.id)
-    end
-  end
 end
