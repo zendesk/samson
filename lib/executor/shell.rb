@@ -34,7 +34,7 @@ module Executor
       <<-EOF
         #{command}
         RETVAL=$?
-        if [[ $RETVAL -ne 0 ]];
+        if [ $RETVAL != 0 ];
         then
           echo 'Failed to execute "#{command}"'
           exit $RETVAL
