@@ -10,19 +10,7 @@
     </div>
 
     <%= form.fields_for :stages do |stage_fields| %>
-      <div class="form-group">
-        <%= stage_fields.label :name, "Deploy stage name", class: "col-lg-2 control-label" %>
-        <div class="col-lg-4">
-          <%= stage_fields.text_field :name, class: "form-control" %>
-        </div>
-      </div>
-
-      <div class="form-group">
-        <%= stage_fields.label :command, class: "col-lg-2 control-label" %>
-        <div class="col-lg-4">
-          <%= stage_fields.text_field :command, class: "form-control" %>
-        </div>
-      </div>
+      <%= render 'stages/fields', form: stage_fields %>
     <% end %>
 
     <div class="form-group">

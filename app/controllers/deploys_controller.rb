@@ -17,6 +17,9 @@ class DeploysController < ApplicationController
     render :index
   end
 
+  def new
+  end
+
   def create
     commit = deploy_params[:commit]
     stage = @project.stages.find(deploy_params[:stage_id])
