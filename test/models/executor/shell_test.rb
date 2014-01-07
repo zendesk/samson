@@ -47,7 +47,7 @@ describe Executor::Shell do
     it 'does not execute the other commands' do
       stdout.must_be_empty
       stderr.must_equal([
-        "ls: cannot access /nonexistent/place\n",
+        "ls: cannot access /nonexistent/place: No such file or directory\n",
         "Failed to execute \"ls /nonexistent/place\"\n"
       ])
     end
