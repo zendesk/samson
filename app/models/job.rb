@@ -24,6 +24,26 @@ class Job < ActiveRecord::Base
     status!("failed")
   end
 
+  def pending?
+    status == "pending"
+  end
+
+  def running?
+    status == "running"
+  end
+
+  def succeeded?
+    status == "succeeded"
+  end
+
+  def cancelling?
+    status == "cancelling"
+  end
+
+  def failed?
+    status == "failed"
+  end
+
   def output
     super || ""
   end

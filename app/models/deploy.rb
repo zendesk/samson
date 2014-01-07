@@ -3,30 +3,11 @@ class Deploy < ActiveRecord::Base
   belongs_to :job
 
   delegate :started_by?, :stop!, :status, :user, :output, to: :job
+  delegate :pending?, :running?, :cancelling?, :succeeded?, :failed?, to: :job
   delegate :project, to: :stage
 
   def summary
     "#{job.user.name} #{summary_action} #{commit} to #{stage.name}"
-  end
-
-  def pending?
-    status == "pending"
-  end
-
-  def running?
-    status == "running"
-  end
-
-  def succeeded?
-    status == "succeeded"
-  end
-
-  def cancelling?
-    status == "cancelling"
-  end
-
-  def failed?
-    status == "failed"
   end
 
   def self.active
