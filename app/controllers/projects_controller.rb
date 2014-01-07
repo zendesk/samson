@@ -10,8 +10,7 @@ class ProjectsController < ApplicationController
   end
 
   def index
-    @projects = Project.limit(9).where(deleted_at: nil).
-      includes(job_histories: :user, job_locks: nil)
+    @projects = Project.limit(9).where(deleted_at: nil)
   end
 
   def new

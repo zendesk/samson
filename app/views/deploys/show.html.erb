@@ -1,0 +1,72 @@
+<h1>
+  <%= @project.name %>
+  <div class="pull-right">
+    <button class="btn btn-default">
+      <%= link_to "Back", project_path(@project) %>
+    </button>
+  </div>
+</h1>
+
+<h2><%= @deploy.summary %></h2>
+
+<pre id="messages" class="pre-scrollable log">
+  <% unless @deploy.pending? || @deploy.running? %>
+    <% @deploy.output.split("\n").each do |line| %>
+<%= render_log(line) %>
+    <% end %>
+  <% end %>
+</pre>
+
+<% if @deploy.pending? || @deploy.running? %>
+  <%= javascript_tag do %>
+    $(document).ready(function() {
+      var messages = $("#messages");
+
+      var source = new EventSource("<%= stream_deploy_path(@deploy) %>");
+      source.addEventListener('message', function(e) {
+        if(e.data !== "") {
+          messages.append(JSON.parse(e.data).msg + '\n');
+          messages.scrollTop(messages[0].scrollHeight);
+        }
+      }, false);
+
+      source.addEventListener('open', function(e) {
+        // Connection was opened.
+      }, false);
+
+      source.addEventListener('error', function(e) {
+        console.log("error", e);
+        //if (e.readyState == EventSource.CLOSED) {
+          // Connection was closed.
+        //}
+      }, false);
+
+      $("#toggle-message-field").click(function(event) {
+        var input = $("#deploy_message");
+
+        if(input.attr("type") == "password")
+          input.attr("type", "text");
+        else
+          input.attr("type", "password");
+
+        event.preventDefault();
+      });
+
+      $("form").on("ajax:complete", function() {
+        $("#deploy_message").val("");
+      });
+
+      $("#deploy_stop").on("click", function() {
+        $.ajax("<%= project_deploy_path(@project, @deploy) %>", {
+          type: 'DELETE'
+        });
+        messages.addClass('failed');
+        event.preventDefault();
+      });
+    });
+  <% end %>
+<% else %>
+  <div class="alert alert-<%= deploy.failed?? "danger" : "success" %>">
+    <%= deploy.user.name %> deployed <%= deploy.commit %> on <%= deploy.stage.name %> at <%= deploy.created_at %>
+  </div>
+<% end %>

@@ -38,10 +38,4 @@ class ActiveSupport::TestCase
       end
     end
   end
-
-  setup do
-    if metadata[:stub_deploy]
-      @controller.stubs(enqueue_job: nil)
-    end
-  end
 end

@@ -2,8 +2,8 @@
   <%= link_to "Zendesk Deployer", root_path, class: "navbar-brand" %>
 
   <ul class="nav navbar-nav">
-    <li><%= link_to "Job History", jobs_path %></li>
-    <li><%= link_to "Current Deploys", active_jobs_path %></li>
+    <li><%= link_to "Deploy History", deploys_path %></li>
+    <li><%= link_to "Current Deploys", active_deploys_path %></li>
 
     <% if current_user.is_admin? %>
       <li class="dropdown">
