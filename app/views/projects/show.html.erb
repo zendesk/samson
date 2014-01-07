@@ -3,7 +3,7 @@
 <h2>Stages</h2>
 <ul>
   <% project.stages.each do |stage| %>
-    <li><%= link_to stage.name, project_stage_path(project, stage) %></li>
+    <li><%= link_to stage.name, project_stage_path(project, stage) %> (<%= link_to "delete", project_stage_path(project, stage), method: :delete, confirm: "Are you sure?" %>)</li>
   <% end %>
   <li><%= link_to "Add stage...", new_project_stage_path(project) %></li>
 </ul>

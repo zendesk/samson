@@ -1,6 +1,6 @@
 class StagesController < ApplicationController
   before_filter :find_project
-  before_filter :find_stage, only: [:show, :edit, :update]
+  before_filter :find_stage, only: [:show, :edit, :update, :destroy]
 
   def show
   end
@@ -22,6 +22,12 @@ class StagesController < ApplicationController
     @stage.update_attributes(stage_params)
 
     redirect_to project_stage_path(@project, @stage)
+  end
+
+  def destroy
+    @stage.destroy
+
+    redirect_to project_path(@project)
   end
 
   private
