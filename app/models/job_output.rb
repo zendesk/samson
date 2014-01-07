@@ -11,6 +11,10 @@ class JobOutput
     @listeners.each {|listener| listener.push(message)}
   end
 
+  def to_s
+    @messages.join("\n")
+  end
+
   def each_message
     queue = Queue.new
     @listeners << queue

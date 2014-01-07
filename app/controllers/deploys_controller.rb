@@ -1,12 +1,11 @@
 class DeploysController < ApplicationController
   rescue_from ActiveRecord::RecordNotFound do |error|
-    flash[:error] = "Job not found."
+    flash[:error] = "Deploy not found."
     redirect_to root_path
   end
 
   before_filter :authorize_deployer!, only: [:create, :update, :destroy]
   before_filter :find_project
-  before_filter :find_deploy, only: [:show, :update, :destroy]
 
   def index
     @deploys = Deploy.limit(10).order("created_at DESC")
@@ -28,13 +27,14 @@ class DeploysController < ApplicationController
   end
 
   def show
+    deploy
   end
 
   def destroy
-    if !@deploy.started_by?(current_user)
+    if !deploy.started_by?(current_user)
       head :forbidden
     else
-      @deploy.stop!
+      deploy.stop!
 
       head :ok
     end
@@ -50,7 +50,7 @@ class DeploysController < ApplicationController
     @project = Project.find(params[:project_id])
   end
 
-  def find_deploy
-    @deploy = Deploy.find(params[:id])
+  def deploy
+    @deploy ||= Deploy.find(params[:id])
   end
 end

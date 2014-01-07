@@ -21,25 +21,30 @@ module Executor
           end
         end
 
-        stdin.close_write
-        wait_thr.join
-        output_thr.join; error_thr.join
         wait_thr.value.success?
       end
+    # JRuby raises an IOError on a nonexistent first command
+    rescue IOError => e
+      @callbacks[:stderr].each {|callback| callback.call(error(commands.first))}
+      false
     end
 
     private
 
     def execute_command(command)
-      <<-EOF
-        #{command}
-        RETVAL=$?
-        if [ $RETVAL != 0 ];
-        then
-          echo 'Failed to execute "#{command}"'
-          exit $RETVAL
-        fi
-      EOF
+      <<-G
+#{command}
+RETVAL=$?
+if [ $RETVAL != 0 ];
+then
+  echo '#{error(command)}' >&2
+  exit $RETVAL
+fi
+      G
+    end
+
+    def error(command)
+      "Failed to execute \"#{command}\""
     end
   end
 end

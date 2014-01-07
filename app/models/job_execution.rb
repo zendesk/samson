@@ -16,7 +16,15 @@ class JobExecution
       @output.push(message)
     end
 
-    @executor.execute!(job.command)
+    job.start!
+
+    if @executor.execute!(job.command)
+      job.success!
+    else
+      job.fail!
+    end
+
+    job.update_output!(@output.to_s)
   end
 
   def stop!

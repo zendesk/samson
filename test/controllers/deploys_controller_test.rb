@@ -60,7 +60,6 @@ describe DeploysController do
 
     describe "a DELETE to :destroy" do
       setup do
-        deploy.stubs(:stop!)
         delete :destroy, project_id: project.id, id: job.to_param
       end
 
@@ -93,11 +92,18 @@ describe DeploysController do
     describe "a DELETE to :destroy" do
       describe "with a valid deploy" do
         setup do
+          @controller.stubs(deploy: deploy)
+          deploy.stubs(:stop!)
+
           delete :destroy, project_id: project.id, id: deploy.to_param
         end
 
         it "responds ok" do
           response.status.must_equal(200)
+        end
+
+        it "stops the deploy" do
+          assert_received(deploy, :stop!)
         end
       end
 
