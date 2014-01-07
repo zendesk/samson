@@ -8,8 +8,6 @@ module Executor
         execute_command(command)
       end.join("\n")
 
-      retval = false
-
       Open3.popen3(command) do |stdin, stdout, stderr, wait_thr|
         output_thr = Thread.new do
           stdout.each do |line|
@@ -26,10 +24,8 @@ module Executor
         stdin.close_write
         wait_thr.join
         output_thr.join; error_thr.join
-        retval = wait_thr.value.success?
+        wait_thr.value.success?
       end
-
-      retval
     end
 
     private
@@ -37,10 +33,11 @@ module Executor
     def execute_command(command)
       <<-EOF
         #{command}
-        if [[ $? -ne 0 ]];
+        RETVAL=$?
+        if [[ $RETVAL -ne 0 ]];
         then
           echo 'Failed to execute "#{command}"'
-          exit $?
+          exit $RETVAL
         fi
       EOF
     end

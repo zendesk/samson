@@ -3,7 +3,7 @@ require 'executor/shell'
 
 describe Executor::Shell do
   subject do
-    Execution::Shell.new.tap do |shell|
+    Executor::Shell.new.tap do |shell|
       shell.output do |line|
         stdout << line
       end
@@ -48,5 +48,13 @@ describe Executor::Shell do
       stdout.must_equal(["Failed to execute \"ls /nonexistent/place\"\n"])
       stderr.wont_be_empty
     end
+  end
+
+  it 'correctly returns error value' do
+    subject.execute!('blah').must_equal(false)
+  end
+
+  it 'correctly returns success value' do
+    subject.execute!('echo "hi"').must_equal(true)
   end
 end

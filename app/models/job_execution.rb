@@ -1,11 +1,11 @@
 require 'thread_safe'
+require 'executor/shell'
 
 class JobExecution
   attr_reader :output
 
   def initialize
-    @output = JobOutput.new
-    @output.push("Hello, World!")
+    @executor = Executor::Shell.new
   end
 
   def stop!
