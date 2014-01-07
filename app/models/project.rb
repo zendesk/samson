@@ -6,8 +6,8 @@ class Project < ActiveRecord::Base
   validates_presence_of :name
 
   has_many :stages
-  has_many :deploys, through: :stages
-  has_many :jobs, -> { order("created_at DESC") }
+  has_many :deploys, -> { order('created_at DESC') }, through: :stages
+  has_many :jobs, -> { order('created_at DESC') }
 
   accepts_nested_attributes_for :stages
 
