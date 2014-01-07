@@ -15,7 +15,7 @@ class ProjectsController < ApplicationController
 
   def new
     @project = Project.new
-    @project.stages.build(name: "production", command: "cap production deploy")
+    @stage = @project.stages.new(name: "production", command: "cap production deploy")
   end
 
   def create
@@ -54,7 +54,7 @@ class ProjectsController < ApplicationController
   protected
 
   def project_params
-    params.require(:project).permit(:name, stages_attributes: [:name, :command])
+    params.require(:project).permit(:name, :repository_url, stages_attributes: [:name, :command])
   end
 
   def project

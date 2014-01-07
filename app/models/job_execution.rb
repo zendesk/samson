@@ -4,10 +4,10 @@ require 'executor/shell'
 class JobExecution
   attr_reader :output
 
-  def initialize(commit, job)
+  def initialize(commit, job, base_dir = Rails.root)
     @output = JobOutput.new
     @executor = Executor::Shell.new
-    @job, @commit = job, commit
+    @job, @commit, @base_dir = job, commit, base_dir
 
     @executor.output do |message|
       Rails.logger.debug(message)
@@ -25,11 +25,21 @@ class JobExecution
       @job.run!
 
       dir = "/tmp/deploy-#{@job.id}"
+      project = @job.project
+      repo_url = project.repository_url
+      cached_repos_dir = File.join(@base_dir, "cached_repos")
+      repo_cache_dir = File.join(cached_repos_dir, project.id.to_s)
 
       commands = [
-        "cd ~/#{@job.project.repo_name}",
-        "git fetch -ap",
-        "git clone . #{dir}",
+        "mkdir -p #{cached_repos_dir}",
+        <<-SHELL,
+          if [ -d #{repo_cache_dir} ]
+            then cd #{repo_cache_dir} && git fetch -ap
+          else
+            git clone #{repo_url} #{repo_cache_dir}
+          fi
+        SHELL
+        "git clone #{repo_cache_dir} #{dir}",
         "cd #{dir}",
         "git checkout --quiet #{@commit}",
         # "export SUDO_USER=#{job.user.email}", capsu-only? We need a user.
@@ -47,6 +57,11 @@ class JobExecution
 
       @job.update_output!(@output.to_s)
     end
+  end
+
+  def start_and_wait!
+    start!
+    @thread.join
   end
 
   def stop!

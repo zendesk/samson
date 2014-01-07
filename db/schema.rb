@@ -32,7 +32,8 @@ ActiveRecord::Schema.define(version: 20140107000258) do
   end
 
   create_table "projects", force: true do |t|
-    t.string   "name"
+    t.string   "name",           null: false
+    t.string   "repository_url", null: false
     t.datetime "deleted_at"
     t.datetime "created_at"
     t.datetime "updated_at"
