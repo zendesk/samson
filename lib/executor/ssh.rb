@@ -1,7 +1,7 @@
 require_relative 'base'
 require 'net/ssh/shell'
 
-module Execution
+module Executor
   class Ssh < Base
     def initialize(options = {})
       super()

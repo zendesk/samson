@@ -1,8 +1,8 @@
 require_relative '../../test_helper'
-require 'execution/base'
+require 'executor/base'
 
-describe Execution::Base do
-  subject { Execution::Base.new }
+describe Executor::Base do
+  subject { Executor::Base.new }
 
   it 'sets the callbacks up' do
     subject.callbacks[:stdout].must_equal([])

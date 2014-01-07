@@ -1,4 +1,4 @@
-module Execution
+module Executor
   class Base
     attr_reader :callbacks
 

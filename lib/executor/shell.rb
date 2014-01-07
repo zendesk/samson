@@ -1,7 +1,7 @@
 require_relative 'base'
 require 'open3'
 
-module Execution
+module Executor
   class Shell < Base
     def execute!(*commands)
       command = commands.map do |command|
