@@ -1,9 +1,12 @@
 require_relative 'base'
+require 'extensions/net/ssh'
 require 'net/ssh/shell'
 
 module Executor
   class Ssh < Base
     def initialize(options = {})
+      self.class.create_auth_sock
+
       super()
 
       default_options = {
@@ -57,6 +60,27 @@ module Executor
 
     def process(&block)
       @callbacks[:process] << block
+    end
+
+    def self.create_auth_sock
+      return if ENV["SSH_AUTH_SOCK"].present?
+
+      socket = Rails.root.join("tmp/auth_sock")
+
+      unless File.exist?(socket)
+        Process.spawn({ "DEPLOY_KEY" => ENV['DEPLOY_KEY'].gsub(/\\n/, "\n") }, Rails.root.join("lib/ssh-agent.sh").to_s)
+
+        time = Time.now
+
+        until File.exist?(socket)
+          if (Time.now - time) >= 5
+            Rails.logger.error("Could not start SSH Agent!")
+            return
+          end
+        end
+      end
+
+      ENV["SSH_AUTH_SOCK"] = File.readlink(socket)
     end
 
     private
