@@ -13,7 +13,11 @@ describe JobExecution do
     `#{<<-SHELL}`
       cd #{repository_url}
       git init
-      git commit --allow-empty -m "initial commit"
+      git config user.email "test@example.com"
+      git config user.name "Test User"
+      echo monkey > foo
+      git add foo
+      git commit -m "initial commit"
     SHELL
   end
 
@@ -28,6 +32,22 @@ describe JobExecution do
   end
 
   it "clones the cached repository into a temporary repository"
-  it "checks out the specified commit"
+
+  it "checks out the specified commit" do
+    `#{<<-SHELL}`
+      cd #{repository_url}
+      git tag foobar
+      echo giraffe > foo
+      git add foo
+      git commit -m "second commit"
+    SHELL
+
+    job.command = "cat foo"
+    execution = JobExecution.new("foobar", job, base_dir)
+    execution.start_and_wait!
+
+    assert_equal "monkey", job.output.to_s.split("\n").last.strip
+  end
+
   it "runs the commands specified by the job"
 end
