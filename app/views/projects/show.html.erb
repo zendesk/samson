@@ -1,0 +1,15 @@
+<h1><%= project.name %></h1>
+
+<h2>Stages</h2>
+<ul>
+  <% project.stages.each do |stage| %>
+    <li><%= stage.name %></li>
+  <% end %>
+</ul>
+
+<h2>Recent deploys</h2>
+<ul>
+  <% project.deploys.limit(10).each do |deploy| %>
+    <li><%= link_to deploy.summary, project_deploy_path(project, deploy) %></li>
+  <% end %>
+</ul>
