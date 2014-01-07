@@ -1,0 +1,13 @@
+<h1>Edit <%= @project.name %> &ndash; <%= @stage.name %></h1>
+
+<%= form_for [@project, @stage], html: { class: "form-horizontal" } do |form| %>
+  <fieldset>
+    <%= render 'stages/fields', form: form %>
+  </fieldset>
+
+  <div class="form-group">
+    <div class="col-lg-offset-2 col-lg-10">
+      <button type="submit" class="btn btn-default">Save</button>
+    </div>
+  </div>
+<% end %>

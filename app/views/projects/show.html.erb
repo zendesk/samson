@@ -3,7 +3,7 @@
 <h2>Stages</h2>
 <ul>
   <% project.stages.each do |stage| %>
-    <li><%= stage.name %></li>
+    <li><%= link_to stage.name, project_stage_path(project, stage) %></li>
   <% end %>
 </ul>
 

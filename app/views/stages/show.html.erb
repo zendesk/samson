@@ -1,0 +1,12 @@
+<h1><%= @project.name %> &ndash; <%= @stage.name %></h1>
+
+<pre><%= @stage.command %></pre>
+
+<p><%= link_to "Edit", edit_project_stage_path(@project, @stage) %></p>
+
+<h2>Recent deploys</h2>
+<ul>
+  <% @stage.deploys.limit(10).each do |deploy| %>
+    <li><%= link_to deploy.summary, project_deploy_path(@project, deploy) %></li>
+  <% end %>
+</ul>
