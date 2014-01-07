@@ -17,6 +17,14 @@ class Deploy < ActiveRecord::Base
     status == "running"
   end
 
+  def succeeded?
+    status == "succeeded"
+  end
+
+  def cancelling?
+    status == "cancelling"
+  end
+
   def failed?
     status == "failed"
   end
@@ -32,6 +40,12 @@ class Deploy < ActiveRecord::Base
       "is waiting to deploy"
     elsif running?
       "is deploying"
+    elsif cancelling?
+      "is cancelling a deploy of"
+    elsif succeeded?
+      "successfully deployed"
+    elsif failed?
+      "failed to deploy"
     end
   end
 end
