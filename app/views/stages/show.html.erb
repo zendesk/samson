@@ -2,6 +2,8 @@
 
 <pre><%= @stage.command %></pre>
 
+<p><%= link_to "Deploy", new_project_deploy_path(@project, stage_id: @stage.id) %></p>
+
 <p><%= link_to "Edit", edit_project_stage_path(@project, @stage) %> | <%= link_to "Delete", project_stage_path(@project, @stage), method: :delete, confirm: "Are you sure?" %></p>
 
 <h2>Recent deploys</h2>

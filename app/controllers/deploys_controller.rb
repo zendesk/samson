@@ -19,6 +19,7 @@ class DeploysController < ApplicationController
   end
 
   def new
+    @deploy = @project.deploys.build(stage_id: params[:stage_id])
   end
 
   def create

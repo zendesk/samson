@@ -1,5 +1,7 @@
 <h1><%= project.name %></h1>
 
+<p><%= link_to "Deploy", new_project_deploy_path(project) %></p>
+
 <h2>Stages</h2>
 <ul>
   <% project.stages.each do |stage| %>
