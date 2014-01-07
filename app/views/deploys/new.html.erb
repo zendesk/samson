@@ -1,6 +1,4 @@
-<%= form_for :deploy, url: project_deploys_path(project), html: { class: "form-horizontal" } do |form| %>
-  <%= form.hidden_field :project_id, value: project.id %>
-
+<%= form_for :deploy, url: project_deploys_path(@project), html: { class: "form-horizontal" } do |form| %>
   <fieldset>
     <legend>Deploy</legend>
     <div class="form-group">
@@ -12,7 +10,7 @@
     <div class="form-group">
       <%= form.label :stage_id, "Stage", class: "col-lg-2 control-label" %>
       <div class="col-lg-4">
-        <%= form.select :stage_id, options_from_collection_for_select(project.stages, :id, :name), {}, class: "form-control" %>
+        <%= form.select :stage_id, options_from_collection_for_select(@project.stages, :id, :name), {}, class: "form-control" %>
       </div>
     </div>
     <div class="form-group">
