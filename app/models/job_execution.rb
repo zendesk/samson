@@ -1,14 +1,34 @@
 require 'thread_safe'
+require 'executor/shell'
 
 class JobExecution
   attr_reader :output
 
-  def initialize
+  def initialize(commit, job)
     @output = JobOutput.new
-    @output.push("Hello, World!")
+    @executor = Executor::Shell.new
+
+    @executor.output do |message|
+      @output.push(message)
+    end
+
+    @executor.error_output do |message|
+      @output.push(message)
+    end
+
+    job.start!
+
+    if @executor.execute!(job.command)
+      job.success!
+    else
+      job.fail!
+    end
+
+    job.update_output!(@output.to_s)
   end
 
   def stop!
+    # @executor.stop!
   end
 
   class << self
@@ -21,12 +41,12 @@ class JobExecution
     end
 
     def find_by_id(id)
-      registry.fetch(id.to_i)
+      registry[id.to_i]
     end
 
     def start_job(commit, job)
       Rails.logger.debug "Starting job #{job.id.inspect}"
-      registry[job.id] = new
+      registry[job.id] = new(commit, job)
     end
 
     def all

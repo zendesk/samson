@@ -41,21 +41,6 @@
         //}
       }, false);
 
-      $("#toggle-message-field").click(function(event) {
-        var input = $("#deploy_message");
-
-        if(input.attr("type") == "password")
-          input.attr("type", "text");
-        else
-          input.attr("type", "password");
-
-        event.preventDefault();
-      });
-
-      $("form").on("ajax:complete", function() {
-        $("#deploy_message").val("");
-      });
-
       $("#deploy_stop").on("click", function() {
         $.ajax("<%= project_deploy_path(@project, @deploy) %>", {
           type: 'DELETE'
@@ -65,6 +50,8 @@
       });
     });
   <% end %>
+
+  <button id="deploy_stop" class="btn btn-danger pull-right">Stop</button>
 <% else %>
   <div class="alert alert-<%= deploy.failed?? "danger" : "success" %>">
     <%= deploy.user.name %> deployed <%= deploy.commit %> on <%= deploy.stage.name %> at <%= deploy.created_at %>
