@@ -18,7 +18,20 @@ class JobExecution
 
     job.start!
 
-    if @executor.execute!(job.command)
+    dir = "/tmp/deploy-#{job.id}"
+
+    commands = [
+      "cd ~/#{job.project.repo_name}",
+      "git fetch -ap",
+      "git clone . #{dir}",
+      "cd #{dir}",
+      "git checkout #{commit}",
+      "bundle check || bundle install --deployment --local --without test",
+      # "export SUDO_USER=#{job.user.email}", capsu-only? We need a user.
+      job.command
+    ]
+
+    if @executor.execute!(*commands)
       job.success!
     else
       job.fail!
@@ -28,7 +41,7 @@ class JobExecution
   end
 
   def stop!
-    # @executor.stop!
+    @executor.stop!
   end
 
   class << self

@@ -53,6 +53,19 @@ describe Executor::Shell do
     end
   end
 
+  describe '#stop!' do
+    it 'properly kills the execution' do
+      thr = Thread.new(subject) do |shell|
+        sleep(1) until shell.pid
+        shell.stop!
+      end
+
+      Timeout.timeout(5) do
+        subject.execute!('sleep 100').must_equal(false)
+      end
+    end
+  end
+
   it 'correctly returns error value' do
     subject.execute!('blah').must_equal(false)
   end
