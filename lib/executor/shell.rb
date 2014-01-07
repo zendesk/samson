@@ -10,8 +10,11 @@ module Executor
         execute_command(command)
       end.join("\n")
 
-      stdin, stdout, stderr, wait_thr = Open3.popen3(command)
-      @pid = wait_thr.pid
+      if RUBY_ENGINE == 'jruby'
+        command = %Q{/bin/sh -c "#{command.gsub(/"/, '\\"')}"}
+      end
+
+      stdin, stdout, stderr, @internal_thread = Open3.popen3(command)
 
       output_thr = Thread.new do
         stdout.each do |line|
@@ -25,7 +28,14 @@ module Executor
         end
       end
 
-      wait_thr.value.success?.tap do
+      # JRuby has the possiblity of returning the internal_thread
+      # without a pid attached. We're going to block until it comes
+      # back so that we can kill the process TODO: may be deadlock-y
+      if RUBY_ENGINE == 'jruby'
+        sleep(0.1) until pid
+      end
+
+      @internal_thread.value.success?.tap do
         output_thr.join
         error_thr.join
       end
@@ -33,6 +43,10 @@ module Executor
     rescue IOError => e
       @callbacks[:stderr].each {|callback| callback.call(error(commands.first))}
       false
+    end
+
+    def pid
+      @internal_thread.try(:pid)
     end
 
     def stop!
@@ -47,7 +61,7 @@ module Executor
       <<-G
 #{command}
 RETVAL=$?
-if [ $RETVAL != 0 ];
+if [ "$RETVAL" != "0" ];
 then
   echo '#{error(command)}' >&2
   exit $RETVAL
