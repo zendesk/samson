@@ -4,10 +4,10 @@ require 'executor/shell'
 class JobExecution
   attr_reader :output
 
-  def initialize(commit, job)
+  def initialize(commit, job, base_dir = Rails.root)
     @output = JobOutput.new
     @executor = Executor::Shell.new
-    @job, @commit = job, commit
+    @job, @commit, @base_dir = job, commit, base_dir
 
     @executor.output do |message|
       Rails.logger.debug(message)
@@ -27,7 +27,7 @@ class JobExecution
       dir = "/tmp/deploy-#{@job.id}"
       project = @job.project
       repo_url = project.repository_url
-      cached_repos_dir = File.join(Rails.root, "cached_repos")
+      cached_repos_dir = File.join(@base_dir, "cached_repos")
       repo_cache_dir = File.join(cached_repos_dir, project.id.to_s)
 
       commands = [
@@ -51,6 +51,10 @@ class JobExecution
 
       @job.update_output!(@output.to_s)
     end
+  end
+
+  def wait
+    @thread.join
   end
 
   def stop!
