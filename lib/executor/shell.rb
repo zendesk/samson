@@ -15,13 +15,13 @@ module Executor
 
       output_thr = Thread.new do
         stdout.each do |line|
-          @callbacks[:stdout].each {|callback| callback.call(line)}
+          @callbacks[:stdout].each {|callback| callback.call(line.chomp)}
         end
       end
 
       error_thr = Thread.new do
         stderr.each do |line|
-          @callbacks[:stderr].each {|callback| callback.call(line)}
+          @callbacks[:stderr].each {|callback| callback.call(line.chomp)}
         end
       end
 

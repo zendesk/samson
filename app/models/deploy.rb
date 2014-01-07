@@ -3,7 +3,7 @@ class Deploy < ActiveRecord::Base
   belongs_to :job
 
   delegate :started_by?, :stop!, :status, :user, :output, to: :job
-  delegate :pending?, :running?, :cancelling?, :succeeded?, :failed?, to: :job
+  delegate :active?, :pending?, :running?, :cancelling?, :succeeded?, :failed?, to: :job
   delegate :project, to: :stage
 
   def summary
