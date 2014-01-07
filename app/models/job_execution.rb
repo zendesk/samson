@@ -32,7 +32,13 @@ class JobExecution
 
       commands = [
         "mkdir -p #{cached_repos_dir}",
-        "if [ -d #{repo_cache_dir} ]; then cd #{repo_cache_dir} && git fetch -ap; else git clone #{repo_url} #{repo_cache_dir}; fi",
+        <<-SHELL,
+          if [ -d #{repo_cache_dir} ]
+            then cd #{repo_cache_dir} && git fetch -ap
+          else
+            git clone #{repo_url} #{repo_cache_dir}
+          fi
+        SHELL
         "git clone #{repo_cache_dir} #{dir}",
         "cd #{dir}",
         "git checkout --quiet #{@commit}",
