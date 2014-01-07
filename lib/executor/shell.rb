@@ -25,7 +25,10 @@ module Executor
         end
       end
 
-      wait_thr.value.success?
+      wait_thr.value.success?.tap do
+        output_thr.join
+        error_thr.join
+      end
     # JRuby raises an IOError on a nonexistent first command
     rescue IOError => e
       @callbacks[:stderr].each {|callback| callback.call(error(commands.first))}
