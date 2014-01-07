@@ -25,7 +25,7 @@ class JobExecution
       "git fetch -ap",
       "git clone . #{dir}",
       "cd #{dir}",
-      "git checkout #{commit}",
+      "git checkout --quiet #{commit}",
       "bundle check || bundle install --deployment --local --without test",
       # "export SUDO_USER=#{job.user.email}", capsu-only? We need a user.
       job.command
