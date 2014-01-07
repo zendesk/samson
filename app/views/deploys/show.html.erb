@@ -10,14 +10,14 @@
 <h2><%= @deploy.summary %></h2>
 
 <pre id="messages" class="pre-scrollable log">
-  <% unless @deploy.pending? || @deploy.running? %>
+  <% unless @deploy.active? %>
     <% @deploy.output.split("\n").each do |line| %>
 <%= render_log(line) %>
     <% end %>
   <% end %>
 </pre>
 
-<% if @deploy.pending? || @deploy.running? %>
+<% if @deploy.active? %>
   <%= javascript_tag do %>
     $(document).ready(function() {
       var messages = $("#messages");

@@ -6,14 +6,18 @@ class Job < ActiveRecord::Base
     self.user == user
   end
 
+  def commands
+    command.split("\n")
+  end
+
   def stop!
     status!("cancelling")
-    execution.stop!
+    execution.try(:stop!)
     status!("cancelled")
   end
 
-  def start!
-    status!("started")
+  def run!
+    status!("running")
   end
 
   def success!
@@ -42,6 +46,10 @@ class Job < ActiveRecord::Base
 
   def failed?
     status == "failed"
+  end
+
+  def active?
+    pending? || running?
   end
 
   def output

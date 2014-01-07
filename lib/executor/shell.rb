@@ -3,30 +3,42 @@ require 'open3'
 
 module Executor
   class Shell < Base
+    attr_reader :pid
+
     def execute!(*commands)
       command = commands.map do |command|
         execute_command(command)
       end.join("\n")
 
-      Open3.popen3(command) do |stdin, stdout, stderr, wait_thr|
-        output_thr = Thread.new do
-          stdout.each do |line|
-            @callbacks[:stdout].each {|callback| callback.call(line)}
-          end
-        end
+      stdin, stdout, stderr, wait_thr = Open3.popen3(command)
+      @pid = wait_thr.pid
 
-        error_thr = Thread.new do
-          stderr.each do |line|
-            @callbacks[:stderr].each {|callback| callback.call(line)}
-          end
+      output_thr = Thread.new do
+        stdout.each do |line|
+          @callbacks[:stdout].each {|callback| callback.call(line.chomp)}
         end
+      end
 
-        wait_thr.value.success?
+      error_thr = Thread.new do
+        stderr.each do |line|
+          @callbacks[:stderr].each {|callback| callback.call(line.chomp)}
+        end
+      end
+
+      wait_thr.value.success?.tap do
+        output_thr.join
+        error_thr.join
       end
     # JRuby raises an IOError on a nonexistent first command
     rescue IOError => e
       @callbacks[:stderr].each {|callback| callback.call(error(commands.first))}
       false
+    end
+
+    def stop!
+      # Need pkill because we want all
+      # children of the parent process dead
+      `pkill -INT -P #{pid}` if pid
     end
 
     private

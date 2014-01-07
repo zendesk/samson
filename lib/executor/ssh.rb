@@ -29,6 +29,7 @@ module Executor
       end
 
       @callbacks[:process] = []
+      @stopped = false
     end
 
     def execute!(*commands)
@@ -44,6 +45,14 @@ module Executor
       end
 
       true
+    end
+
+    def stop!
+      @stopped = true
+    end
+
+    def stopped?
+      @stopped
     end
 
     def process(&block)
@@ -68,6 +77,10 @@ module Executor
       end
 
       process.manager.channel.on_process do
+        if stopped?
+          return false
+        end
+
         @callbacks[:process].each do |callback|
           callback.call(command, process)
         end

@@ -7,28 +7,51 @@ class JobExecution
   def initialize(commit, job)
     @output = JobOutput.new
     @executor = Executor::Shell.new
+    @job, @commit = job, commit
 
     @executor.output do |message|
+      Rails.logger.debug(message)
       @output.push(message)
     end
 
     @executor.error_output do |message|
+      Rails.logger.debug(message)
       @output.push(message)
     end
+  end
 
-    job.start!
+  def start!
+    @thread = Thread.new do
+      @job.run!
 
-    if @executor.execute!(job.command)
-      job.success!
-    else
-      job.fail!
+      dir = "/tmp/deploy-#{@job.id}"
+
+      commands = [
+        "cd ~/#{@job.project.repo_name}",
+        "git fetch -ap",
+        "git clone . #{dir}",
+        "cd #{dir}",
+        "git checkout --quiet #{@commit}",
+        # "export SUDO_USER=#{job.user.email}", capsu-only? We need a user.
+        *@job.commands
+      ]
+
+      # Cleanup
+      # `rm -rf #{dir}`
+
+      if @executor.execute!(*commands)
+        @job.success!
+      else
+        @job.fail!
+      end
+
+      @job.update_output!(@output.to_s)
     end
-
-    job.update_output!(@output.to_s)
   end
 
   def stop!
-    # @executor.stop!
+    @executor.stop!
+    @thread.try(:join)
   end
 
   class << self
@@ -46,7 +69,7 @@ class JobExecution
 
     def start_job(commit, job)
       Rails.logger.debug "Starting job #{job.id.inspect}"
-      registry[job.id] = new(commit, job)
+      registry[job.id] = new(commit, job).tap(&:start!)
     end
 
     def all

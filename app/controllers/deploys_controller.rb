@@ -5,7 +5,8 @@ class DeploysController < ApplicationController
   end
 
   before_filter :authorize_deployer!, only: [:create, :update, :destroy]
-  before_filter :find_project
+  before_filter :find_project, except: [:index, :active]
+  before_filter :find_deploy, except: [:index, :active, :new, :create]
 
   def index
     @deploys = Deploy.limit(10).order("created_at DESC")
@@ -30,14 +31,13 @@ class DeploysController < ApplicationController
   end
 
   def show
-    deploy
   end
 
   def destroy
-    if !deploy.started_by?(current_user)
+    if !@deploy.started_by?(current_user)
       head :forbidden
     else
-      deploy.stop!
+      @deploy.stop!
 
       head :ok
     end
@@ -53,7 +53,7 @@ class DeploysController < ApplicationController
     @project = Project.find(params[:project_id])
   end
 
-  def deploy
-    @deploy ||= Deploy.find(params[:id])
+  def find_deploy
+    @deploy = Deploy.find(params[:id])
   end
 end
