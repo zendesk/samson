@@ -4,11 +4,23 @@ require 'executor/shell'
 class JobExecution
   attr_reader :output
 
-  def initialize
+  def initialize(commit, job)
+    @output = JobOutput.new
     @executor = Executor::Shell.new
+
+    @executor.output do |message|
+      @output.push(message)
+    end
+
+    @executor.error_output do |message|
+      @output.push(message)
+    end
+
+    @executor.execute!(job.command)
   end
 
   def stop!
+    # @executor.stop!
   end
 
   class << self
@@ -21,12 +33,12 @@ class JobExecution
     end
 
     def find_by_id(id)
-      registry.fetch(id.to_i)
+      registry[id.to_i]
     end
 
     def start_job(commit, job)
       Rails.logger.debug "Starting job #{job.id.inspect}"
-      registry[job.id] = new
+      registry[job.id] = new(commit, job)
     end
 
     def all
