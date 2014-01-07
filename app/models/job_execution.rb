@@ -1,8 +1,6 @@
 require 'thread_safe'
 require 'executor/shell'
 
-Thread.abort_on_exception = Rails.env.development?
-
 class JobExecution
   attr_reader :output
 
