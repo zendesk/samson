@@ -58,14 +58,6 @@ describe TravisController do
           payload: JSON.dump(payload)
       end
 
-      teardown do
-        Thread.main[:deploys].each do |_, thr|
-          thr.join
-        end
-
-        Thread.main[:deploys].clear
-      end
-
       describe "failure" do
         let(:payload) {{
           status_message: 'Failure',

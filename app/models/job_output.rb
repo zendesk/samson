@@ -1,6 +1,6 @@
 require 'thread_safe'
 
-class DeployOutput
+class JobOutput
   def initialize
     @listeners = ThreadSafe::Array.new
     @messages = ThreadSafe::Array.new

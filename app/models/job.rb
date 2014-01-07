@@ -8,7 +8,7 @@ class Job < ActiveRecord::Base
 
   def stop!
     status!("cancelling")
-    execution.stop!
+    execution.stop! rescue nil
     status!("cancelled")
   end
 
