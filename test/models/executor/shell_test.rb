@@ -23,7 +23,7 @@ describe Executor::Shell do
     end
 
     it 'keeps all lines' do
-      stdout.must_equal(["hi\n", "hello\n"])
+      stdout.must_equal(%w{hi hello})
       stderr.must_equal([])
     end
   end
@@ -34,7 +34,7 @@ describe Executor::Shell do
     end
 
     it 'keeps all lines' do
-      stderr.must_equal(["hi\n", "hello\n"])
+      stderr.must_equal(%w{hi hello})
       stdout.must_equal([])
     end
   end
@@ -47,8 +47,8 @@ describe Executor::Shell do
     it 'does not execute the other commands' do
       stdout.must_be_empty
       stderr.must_equal([
-        "ls: cannot access /nonexistent/place: No such file or directory\n",
-        "Failed to execute \"ls /nonexistent/place\"\n"
+        "ls: cannot access /nonexistent/place: No such file or directory",
+        "Failed to execute \"ls /nonexistent/place\""
       ])
     end
   end
