@@ -1,8 +1,18 @@
 class StagesController < ApplicationController
   before_filter :find_project
-  before_filter :find_stage
+  before_filter :find_stage, only: [:show, :edit, :update]
 
   def show
+  end
+
+  def new
+    @stage = @project.stages.build
+  end
+
+  def create
+    @stage = @project.stages.create!(stage_params)
+
+    redirect_to project_stage_path(@project, @stage)
   end
 
   def edit

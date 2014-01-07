@@ -3,7 +3,7 @@ ZendeskPusher::Application.routes.draw do
 
   resources :projects, except: [:index] do
     resources :deploys, only: [:new, :create, :show, :destroy]
-    resources :stages, only: [:show, :edit, :update]
+    resources :stages
   end
 
   resources :deploys, only: [:index] do

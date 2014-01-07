@@ -1,4 +1,4 @@
-<h1><%= @project.name %> &ndash; <%= @stage.name %></h1>
+<h1><%= link_to @project.name, project_path(@project) %> &ndash; <%= @stage.name %></h1>
 
 <pre><%= @stage.command %></pre>
 
