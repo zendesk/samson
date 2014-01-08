@@ -12,7 +12,11 @@ module Executor
         command = %Q{/bin/sh -c "#{command.gsub(/"/, '\\"')}"}
       end
 
-      execute_command!(command)
+      payload = {}
+
+      ActiveSupport::Notifications.instrument("execute_shell.pusher", payload) do
+        payload[:success] = execute_command!(command)
+      end
     end
 
     def pid
