@@ -30,7 +30,8 @@ namespace :pusher do
     config_files.each do |file|
       run "ln -nfs /etc/zendesk/pusher/#{file} #{release_path}/config/#{file}"
     end
-    run "ln -nfs /data/pusher/config/.env #{release_path}/.env"
+    # deploy_to defaults to /data/#{application}
+    run "ln -nfs #{deploy_to}/config/.env #{release_path}/.env"
     run "cd #{release_path} && rm -rf log && ln -s #{deploy_to}/log log"
     run "mkdir -p #{deploy_to}/cached_repos && cd #{release_path} && rm -rf cached_repos && ln -s #{deploy_to}/cached_repos cached_repos"
   end
