@@ -8,10 +8,10 @@ module Executor
     def execute!(*commands)
       command = commands.map do |command|
         execute_command(command)
-      end.join("\n")
+      end.join("\n").gsub(/"/, '\\"').gsub(/\$/, '\\$')
 
       if RUBY_ENGINE == 'jruby'
-        command = %Q{/bin/sh -c "#{command.gsub(/"/, '\\"')}"}
+        command = %Q{/bin/sh -c "#{command}"}
       end
 
       stdin, stdout, stderr, @internal_thread = Open3.popen3(command)
