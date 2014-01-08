@@ -1,4 +1,5 @@
 require 'zendesk/deployment'
+require 'zendesk/deployment/migrations'
 
 set :application, 'pusher'
 set :repository,  'git@github.com:zendesk/pusher'
