@@ -22,7 +22,7 @@ namespace :deploy do
 end
 
 namespace :pusher do
-  set :config_files, %w( database.yml redis.yml )
+  set :config_files, %w( database.yml )
 
   task :update_symlinks do
     config_files.each do |file|
@@ -30,6 +30,7 @@ namespace :pusher do
     end
     run "ln -nfs /data/pusher/config/.env #{release_path}/.env"
     run "cd #{release_path} && rm -rf log && ln -s #{deploy_to}/log log"
+    run "mkdir -p #{deploy_to}/cached_repos && cd #{release_path} && rm -rf cached_repos && ln -s #{deploy_to}/cached_repos cached_repos"
   end
 end
 
