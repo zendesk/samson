@@ -54,6 +54,7 @@ class JobExecution
       end
 
       @job.update_output!(@output.to_s)
+      @output.close
       ActiveRecord::Base.connection_pool.release_connection
     end
   end
