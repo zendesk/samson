@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20140108010302) do
+ActiveRecord::Schema.define(version: 20140108011517) do
 
   create_table "deploys", force: true do |t|
     t.integer  "stage_id",   null: false
@@ -58,5 +58,16 @@ ActiveRecord::Schema.define(version: 20140108010302) do
     t.integer  "role_id",       default: 0, null: false
     t.string   "current_token"
   end
+
+  create_table "webhooks", force: true do |t|
+    t.integer  "project_id", null: false
+    t.integer  "stage_id",   null: false
+    t.string   "branch",     null: false
+    t.datetime "created_at"
+    t.datetime "updated_at"
+  end
+
+  add_index "webhooks", ["project_id", "branch"], name: "index_webhooks_on_project_id_and_branch", using: :btree
+  add_index "webhooks", ["stage_id", "branch"], name: "index_webhooks_on_stage_id_and_branch", unique: true, using: :btree
 
 end
