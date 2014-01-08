@@ -35,10 +35,7 @@
       }, false);
 
       source.addEventListener('error', function(e) {
-        console.log("error", e);
-        //if (e.readyState == EventSource.CLOSED) {
-          // Connection was closed.
-        //}
+        // Connection was closed
       }, false);
 
       $("#deploy_stop").on("click", function() {
