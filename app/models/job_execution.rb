@@ -82,7 +82,6 @@ class JobExecution
     end
 
     def start_job(commit, job)
-      Rails.logger.debug "Starting job #{job.id.inspect}"
       registry[job.id] = new(commit, job).tap(&:start!)
     end
 
