@@ -6,14 +6,28 @@ module Executor
     attr_reader :pid
 
     def execute!(*commands)
-      command = commands.map do |command|
-        execute_command(command)
-      end.join("\n")
+      command = commands.map {|command| wrap_command(command) }.join("\n")
 
       if RUBY_ENGINE == 'jruby'
         command = %Q{/bin/sh -c "#{command.gsub(/"/, '\\"')}"}
       end
 
+      execute_command!(command)
+    end
+
+    def pid
+      @internal_thread.try(:pid)
+    end
+
+    def stop!
+      # Need pkill because we want all
+      # children of the parent process dead
+      `pkill -INT -P #{pid}` if pid
+    end
+
+    private
+
+    def execute_command!(command)
       stdin, stdout, stderr, @internal_thread = Bundler.with_clean_env do
         Open3.popen3(command)
       end
@@ -42,19 +56,7 @@ module Executor
       false
     end
 
-    def pid
-      @internal_thread.try(:pid)
-    end
-
-    def stop!
-      # Need pkill because we want all
-      # children of the parent process dead
-      `pkill -INT -P #{pid}` if pid
-    end
-
-    private
-
-    def execute_command(command)
+    def wrap_command(command)
       <<-G
 #{command}
 RETVAL=$?
