@@ -7,6 +7,7 @@ class JobExecution
   def initialize(commit, job, base_dir = Rails.root)
     @output = JobOutput.new
     @executor = Executor::Shell.new
+    @subscribers = []
     @job, @commit, @base_dir = job, commit, base_dir
 
     @executor.output do |message|
@@ -57,6 +58,10 @@ class JobExecution
       end
 
       @job.update_output!(@output.to_s)
+
+      @subscribers.each do |subscriber|
+        subscriber.call(@job)
+      end
     end
   end
 
@@ -68,6 +73,10 @@ class JobExecution
   def stop!
     @executor.stop!
     @thread.try(:join)
+  end
+
+  def add_subscriber(&block)
+    @subscribers << block
   end
 
   class << self
