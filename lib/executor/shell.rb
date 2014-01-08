@@ -14,7 +14,9 @@ module Executor
         command = %Q{/bin/sh -c "#{command.gsub(/"/, '\\"')}"}
       end
 
-      stdin, stdout, stderr, @internal_thread = Open3.popen3(command)
+      stdin, stdout, stderr, @internal_thread = Bundler.with_clean_env do
+        Open3.popen3(command)
+      end
 
       output_thr = Thread.new do
         stdout.each do |line|
