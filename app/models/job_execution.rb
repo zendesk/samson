@@ -42,7 +42,8 @@ class JobExecution
         "git clone #{repo_cache_dir} #{dir}",
         "cd #{dir}",
         "git checkout --quiet #{@commit}",
-        # "export SUDO_USER=#{job.user.email}", capsu-only? We need a user.
+        "export SUDO_USER=#{job.user.email}", # capsu-only? We need a user.
+        "export BUNDLE_GEMFILE=", # clear the environment?
         *@job.commands,
         "rm -fr #{dir}"
       ]
