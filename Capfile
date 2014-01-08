@@ -6,7 +6,7 @@ set :repository,  'git@github.com:zendesk/pusher'
 set :environments, [:staging, :pod3]
 set :ruby_version, '2.1.0'
 set :require_tag?, false
-set :email_notification, ['deploys@zendesk.com', 'epahl@zendesk.com']
+set :email_notification, ['deploys@zendesk.com', 'pusher@zendesk.flowdock.com', 'epahl@zendesk.com']
 set :user, 'deploy'
 
 namespace :deploy do
