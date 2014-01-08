@@ -46,7 +46,7 @@ class JobExecution
         "git clone . #{dir}",
         "cd #{dir}",
         "git checkout --quiet $REV",
-        "export USER=#{@job.user.email}",
+        "export DEPLOYER=#{@job.user.email}",
         *@job.commands,
         "rm -fr #{dir}"
       ]
