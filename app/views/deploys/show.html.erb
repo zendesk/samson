@@ -1,9 +1,7 @@
 <h1>
   <%= @project.name %>
   <div class="pull-right">
-    <button class="btn btn-default">
-      <%= link_to "Back", project_path(@project) %>
-    </button>
+    <%= link_to "Back", project_path(@project), class: "btn btn-default" %>
   </div>
 </h1>
 
