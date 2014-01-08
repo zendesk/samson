@@ -42,7 +42,7 @@ class JobExecution
           fi
         SHELL
         "cd #{repo_cache_dir}",
-        "export REV=$(git rev-parse origin/#{@commit} || git rev-parse #{@commit})"
+        "export REV=$(git rev-parse origin/#{@commit} || git rev-parse #{@commit})",
         "git clone . #{dir}",
         "cd #{dir}",
         "git checkout --quiet $REV",
