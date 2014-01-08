@@ -22,21 +22,8 @@ module Executor
         ActiveRecord::Base.connection_pool.release_connection
       end
 
-      output_thr = Thread.new do
-        ActiveRecord::Base.connection_pool.release_connection
-
-        stdout.each do |line|
-          @callbacks[:stdout].each {|callback| callback.call(line.chomp)}
-        end
-      end
-
-      error_thr = Thread.new do
-        ActiveRecord::Base.connection_pool.release_connection
-
-        stderr.each do |line|
-          @callbacks[:stderr].each {|callback| callback.call(line.chomp)}
-        end
-      end
+      output_thr = setup_callbacks(stdout, :stdout)
+      error_thr = setup_callbacks(stderr, :stderr)
 
       # JRuby has the possiblity of returning the internal_thread
       # without a pid attached. We're going to block until it comes
@@ -81,6 +68,16 @@ fi
 
     def error(command)
       "Failed to execute \"#{command}\""
+    end
+
+    def setup_callbacks(io, io_name)
+      Thread.new do
+        ActiveRecord::Base.connection_pool.release_connection
+
+        io.each do |line|
+          @callbacks[io_name].each {|callback| callback.call(line.chomp) }
+        end
+      end
     end
   end
 end
