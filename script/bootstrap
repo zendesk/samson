@@ -1,0 +1,11 @@
+#!/bin/sh
+
+set -e
+
+bundle install --local
+
+cp .env.example .env
+
+ln -vs database.mysql.yml.example config/database.yml || true
+
+bundle exec rake db:setup
