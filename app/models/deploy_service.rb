@@ -1,11 +1,11 @@
 class DeployService
-  attr_reader :project, :stage, :user
+  attr_reader :project, :user
 
-  def initialize(project, stage, user)
-    @project, @stage, @user = project, stage, user
+  def initialize(project, user)
+    @project, @user = project, user
   end
 
-  def deploy!(commit)
+  def deploy!(stage, commit)
     job = project.jobs.create!(user: user, command: stage.command)
     deploy = stage.deploys.create!(commit: commit, job: job)
 

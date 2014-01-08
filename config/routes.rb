@@ -4,6 +4,7 @@ ZendeskPusher::Application.routes.draw do
   resources :projects, except: [:index] do
     resources :deploys, only: [:new, :create, :show, :destroy]
     resources :stages
+    resources :webhooks, only: [:index, :create, :destroy]
   end
 
   resources :deploys, only: [:index] do
@@ -28,6 +29,7 @@ ZendeskPusher::Application.routes.draw do
   end
 
   post "/travis" => "travis#create"
+  post "/semaphore/:token" => "semaphore#create", as: :semaphore_deploy
 
   root to: 'projects#index'
 end

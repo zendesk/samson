@@ -25,8 +25,8 @@ class DeploysController < ApplicationController
   def create
     commit = deploy_params[:commit]
     stage = @project.stages.find(deploy_params[:stage_id])
-    deploy_service = DeployService.new(@project, stage, current_user)
-    deploy = deploy_service.deploy!(commit)
+    deploy_service = DeployService.new(@project, current_user)
+    deploy = deploy_service.deploy!(stage, commit)
 
     redirect_to project_deploy_path(@project, deploy)
   end

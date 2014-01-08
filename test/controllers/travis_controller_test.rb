@@ -2,6 +2,7 @@ require 'test_helper'
 
 describe TravisController do
   let(:project) { projects(:test) }
+  let(:stage) { stages(:test_staging) }
   let(:deploy_service) { stub(deploy!: nil) }
 
   setup do
@@ -95,7 +96,7 @@ describe TravisController do
           response.status.must_equal(200)
 
           assert_received(deploy_service, :deploy!) do |expect|
-            expect.with '123abc'
+            expect.with stage, '123abc'
           end
         end
       end
@@ -115,7 +116,7 @@ describe TravisController do
             response.status.must_equal(200)
 
             assert_received(deploy_service, :deploy!) do |expect|
-              expect.with '123abc'
+              expect.with stage, '123abc'
             end
           end
         end
@@ -133,7 +134,7 @@ describe TravisController do
             response.status.must_equal(200)
 
             assert_received(deploy_service, :deploy!) do |expect|
-              expect.with '123abc'
+              expect.with stage, '123abc'
             end
           end
         end
