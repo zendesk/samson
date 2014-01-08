@@ -60,8 +60,8 @@ group :test do
   gem 'minitest-rails', '~> 0.9'
   gem 'minitest-metadata', :require => false
   gem 'bourne'
-
   gem 'webmock'
+  gem 'debugger'
 end
 
 group :deployment do

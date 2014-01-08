@@ -85,6 +85,12 @@ GEM
     crack (0.4.1)
       safe_yaml (~> 0.9.0)
     debug_inspector (0.0.2)
+    debugger (1.6.4)
+      columnize (>= 0.3.1)
+      debugger-linecache (~> 1.2.0)
+      debugger-ruby_core_source (~> 1.3.0)
+    debugger-linecache (1.2.0)
+    debugger-ruby_core_source (1.3.0)
     deep_merge (1.0.0)
     dotenv (0.9.0)
     dotenv-rails (0.9.0)
@@ -110,7 +116,6 @@ GEM
     json (1.8.1-java)
     jwt (0.1.8)
       multi_json (>= 1.5)
-    linecache (0.46-java)
     mail (2.5.4)
       mime-types (~> 1.16)
       treetop (~> 1.4.8)
@@ -176,8 +181,6 @@ GEM
     ruby-debug (0.10.4)
       columnize (>= 0.1)
       ruby-debug-base (~> 0.10.4.0)
-    ruby-debug-base (0.10.4)
-      linecache (>= 0.3)
     ruby-debug-base (0.10.4-java)
     safe_yaml (0.9.7)
     sass (3.2.13)
@@ -228,6 +231,7 @@ DEPENDENCIES
   binding_of_caller
   bootstrap-sass!
   bourne
+  debugger
   dotenv-rails (~> 0.9.0)
   jdbc-sqlite3
   jquery-rails

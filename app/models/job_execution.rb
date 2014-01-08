@@ -22,11 +22,9 @@ class JobExecution
 
   def start!
     @thread = Thread.new do
-      ActiveRecord::Base.connection_pool.release_connection
-
       @job.run!
 
-      dir = "/tmp/deploy-#{@job.id}"
+      dir = File.join(Dir.tmpdir, "/deploy-#{@job.id}")
       project = @job.project
       repo_url = project.repository_url
       cached_repos_dir = File.join(@base_dir, "cached_repos")
@@ -56,6 +54,7 @@ class JobExecution
       end
 
       @job.update_output!(@output.to_s)
+      ActiveRecord::Base.connection_pool.release_connection
     end
   end
 

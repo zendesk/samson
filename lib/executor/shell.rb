@@ -18,13 +18,21 @@ module Executor
         Open3.popen3(command)
       end
 
+      @internal_thread.instance_eval do
+        ActiveRecord::Base.connection_pool.release_connection
+      end
+
       output_thr = Thread.new do
+        ActiveRecord::Base.connection_pool.release_connection
+
         stdout.each do |line|
           @callbacks[:stdout].each {|callback| callback.call(line.chomp)}
         end
       end
 
       error_thr = Thread.new do
+        ActiveRecord::Base.connection_pool.release_connection
+
         stderr.each do |line|
           @callbacks[:stderr].each {|callback| callback.call(line.chomp)}
         end
