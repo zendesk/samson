@@ -22,6 +22,8 @@ class JobExecution
 
   def start!
     @thread = Thread.new do
+      ActiveRecord::Base.connection_pool.release_connection
+
       @job.run!
 
       dir = "/tmp/deploy-#{@job.id}"
