@@ -10,16 +10,13 @@ class StreamsController < ApplicationController
 
     # Heartbeat thread until puma/puma#389 is solved
     @heartbeat = Thread.new do
-      running = true
-      while running
-        begin
+      begin
+        while true
           response.stream.write("data: \n\n")
-        rescue IOError
-          response.stream.close
-          running = false
+          sleep(5) # Timeout of 5 seconds
         end
-
-        sleep(5) # Timeout of 5 seconds
+      rescue IOError
+        response.stream.close
       end
     end
 
