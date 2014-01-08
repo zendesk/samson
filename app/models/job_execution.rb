@@ -43,7 +43,8 @@ class JobExecution
         "cd #{dir}",
         "git checkout --quiet #{@commit}",
         # "export SUDO_USER=#{job.user.email}", capsu-only? We need a user.
-        *@job.commands
+        *@job.commands,
+        "rm -fr #{dir}"
       ]
 
       # Cleanup
