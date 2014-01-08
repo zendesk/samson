@@ -7,6 +7,8 @@ class SemaphoreController < ActionController::Base
   end
 
   def create
+    return head :ok if params[:result] != "passed"
+
     project = Project.find_by_token!(params[:token])
     stages = project.webhook_stages_for_branch(params[:branch_name])
     deploy_service = DeployService.new(project, User.first)
