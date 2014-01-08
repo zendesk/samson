@@ -37,3 +37,11 @@ namespace :pusher do
 end
 
 after "deploy:update_code","pusher:update_symlinks"
+
+def role_mapping(n)
+  super.tap do |mapping|
+    unless mapping.empty?
+      mapping.merge!(:db => { :primary => true })
+    end
+  end
+end
