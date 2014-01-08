@@ -10,7 +10,7 @@ describe DeploysController do
   let(:deploy_service) { stub(deploy!: nil) }
 
   setup do
-    DeployService.stubs(:new).with(project, stage, admin).returns(deploy_service)
+    DeployService.stubs(:new).with(project, admin).returns(deploy_service)
     deploy_service.stubs(:deploy!).returns(deploy)
   end
 
@@ -84,7 +84,7 @@ describe DeploysController do
 
       it "creates a deploy" do
         assert_received(deploy_service, :deploy!) do |expect|
-          expect.with "master"
+          expect.with stage, "master"
         end
       end
     end

@@ -22,14 +22,24 @@ describe SemaphoreController do
         "message" => "Update 'shoulda' gem.",
         "timestamp" => "2012-07-04T18:14:08Z"
       }
-    }
+    }.with_indifferent_access
   end
 
-  it "triggers a deploy if the master green passed" do
+  before do
+    project.webhooks.create!(stage: stages(:test_staging), branch: "master")
+  end
+
+  it "triggers a deploy if there's a webhook mapping for the branch" do
     post :create, payload.merge(token: project.token)
 
     deploy = project.deploys.last
     deploy.commit.must_equal commit
+  end
+
+  it "doesn't trigger a deploy if there's no webhook mapping for the branch" do
+    post :create, payload.merge(token: project.token, branch_name: "foobar")
+
+    project.deploys.must_equal []
   end
 
   it "responds with 200 OK if the request is valid" do

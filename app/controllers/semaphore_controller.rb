@@ -8,9 +8,12 @@ class SemaphoreController < ActionController::Base
 
   def create
     project = Project.find_by_token!(params[:token])
-    stage = project.stages.first
-    deploy_service = DeployService.new(project, stage, User.first)
-    deploy = deploy_service.deploy!(params[:commit][:id])
+    stages = project.webhook_stages_for_branch(params[:branch_name])
+    deploy_service = DeployService.new(project, User.first)
+
+    stages.each do |stage|
+      deploy_service.deploy!(stage, params[:commit][:id])
+    end
 
     head :ok
   end

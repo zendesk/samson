@@ -21,6 +21,10 @@ class Project < ActiveRecord::Base
     name.parameterize("_")
   end
 
+  def webhook_stages_for_branch(branch)
+    webhooks.for_branch(branch).map(&:stage)
+  end
+
   private
 
   def generate_token
