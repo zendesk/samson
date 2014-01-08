@@ -1,5 +1,6 @@
 before_script:
-  - cp config/database.sqlite.yml.example config/database.yml
+  - cp config/database.travis.yml config/database.yml
+  - bundle exec rake db:create
 language: ruby
 cache: bundler
 rvm:
