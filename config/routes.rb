@@ -28,6 +28,7 @@ ZendeskPusher::Application.routes.draw do
   end
 
   post "/travis" => "travis#create"
+  post "/semaphore/:token" => "semaphore#create"
 
   root to: 'projects#index'
 end
