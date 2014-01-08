@@ -61,7 +61,6 @@ group :test do
   gem 'minitest-metadata', :require => false
   gem 'bourne'
   gem 'webmock'
-  gem 'debugger'
 end
 
 group :deployment do
