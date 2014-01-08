@@ -1,6 +1,7 @@
-<%= form_for :deploy, url: project_deploys_path(@project), html: { class: "form-horizontal" } do |form| %>
+<%= form_for [@project, @deploy], html: { class: "form-horizontal" } do |form| %>
   <fieldset>
-    <legend>Deploy</legend>
+    <legend>Deploy <%= @project.name %></legend>
+
     <div class="form-group">
       <%= form.label :commit, "Tag or SHA", class: "col-lg-2 control-label" %>
       <div class="col-lg-4">
@@ -10,12 +11,14 @@
     <div class="form-group">
       <%= form.label :stage_id, "Stage", class: "col-lg-2 control-label" %>
       <div class="col-lg-4">
-        <%= form.select :stage_id, options_from_collection_for_select(@project.stages, :id, :name), {}, class: "form-control" %>
+        <%= form.collection_select :stage_id, @project.stages, :id, :name, {}, class: "form-control" %>
       </div>
     </div>
     <div class="form-group">
       <div class="col-lg-offset-2 col-lg-10">
         <button type="submit" class="btn btn-danger">Go!</button>
+
+        or <%= link_to "cancel", :back %>
       </div>
     </div>
   </fieldset>
