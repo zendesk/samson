@@ -47,7 +47,8 @@ namespace :pusher do
   end
 end
 
-after "deploy:update_code","pusher:update_symlinks"
+# Need to use before, or else this won't run in time.
+before 'deploy:finalize_update', 'pusher:update_symlinks'
 after "deploy:update_code","pusher:assets:precompile"
 after "deploy:update_code","pusher:cleanup_stale_deploys"
 
