@@ -11,8 +11,8 @@ class TravisController < ApplicationController
   def create
     if travis_authorization == request.authorization && deploy?
       stage = project.stages.first
-      deploy_service = DeployService.new(project, stage, user)
-      deploy = deploy_service.deploy!(payload["commit"])
+      deploy_service = DeployService.new(project, user)
+      deploy = deploy_service.deploy!(stage, payload["commit"])
 
       head :ok
     else
