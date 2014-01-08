@@ -41,11 +41,12 @@ class JobExecution
             git clone #{repo_url} #{repo_cache_dir}
           fi
         SHELL
-        "git clone #{repo_cache_dir} #{dir}",
+        "cd #{repo_cache_dir}",
+        "export REV=$(git rev-parse origin/#{@commit} || git rev-parse #{@commit})"
+        "git clone . #{dir}",
         "cd #{dir}",
-        "git checkout --quiet #{@commit}",
-        "export SUDO_USER=#{@job.user.email}", # capsu-only? We need a user.
-        "export BUNDLE_GEMFILE=", # clear the environment?
+        "git checkout --quiet $REV",
+        "export USER=#{@job.user.email}",
         *@job.commands,
         "rm -fr #{dir}"
       ]
