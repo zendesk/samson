@@ -7,7 +7,7 @@ class SemaphoreController < ActionController::Base
   end
 
   def create
-    project = Project.find(params[:token])
+    project = Project.find_by_token!(params[:token])
     stage = project.stages.first
     deploy_service = DeployService.new(project, stage, User.first)
     deploy = deploy_service.deploy!(params[:commit][:id])

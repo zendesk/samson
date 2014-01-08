@@ -1,7 +1,8 @@
 require 'test_helper'
 
 class ProjectTest < ActiveSupport::TestCase
-  # test "the truth" do
-  #   assert true
-  # end
+  it "generates a secure token when created" do
+    project = Project.create!(name: "hello", repository_url: "world")
+    project.token.wont_be_nil
+  end
 end

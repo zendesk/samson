@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20140107000258) do
+ActiveRecord::Schema.define(version: 20140108010302) do
 
   create_table "deploys", force: true do |t|
     t.integer  "stage_id",   null: false
@@ -37,7 +37,10 @@ ActiveRecord::Schema.define(version: 20140107000258) do
     t.datetime "deleted_at"
     t.datetime "created_at"
     t.datetime "updated_at"
+    t.string   "token"
   end
+
+  add_index "projects", ["token"], name: "index_projects_on_token", using: :btree
 
   create_table "stages", force: true do |t|
     t.string   "name",       null: false

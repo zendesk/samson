@@ -26,14 +26,14 @@ describe SemaphoreController do
   end
 
   it "triggers a deploy if the master green passed" do
-    post :create, payload.merge(token: project.id)
+    post :create, payload.merge(token: project.token)
 
     deploy = project.deploys.last
     deploy.commit.must_equal commit
   end
 
   it "responds with 200 OK if the request is valid" do
-    post :create, payload.merge(token: project.id)
+    post :create, payload.merge(token: project.token)
 
     response.status.must_equal 200
   end

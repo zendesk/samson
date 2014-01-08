@@ -4,6 +4,7 @@ class Project < ActiveRecord::Base
   has_soft_deletion
 
   validates_presence_of :name
+  before_create :generate_token
 
   has_many :stages
   has_many :deploys, -> { order('created_at DESC') }, through: :stages
@@ -17,5 +18,11 @@ class Project < ActiveRecord::Base
 
   def repo_name
     name.parameterize("_")
+  end
+
+  private
+
+  def generate_token
+    self.token = SecureRandom.hex
   end
 end
