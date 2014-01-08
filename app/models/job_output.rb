@@ -1,6 +1,8 @@
 require 'thread_safe'
 
 class JobOutput
+  attr_reader :messages
+
   def initialize
     @listeners = ThreadSafe::Array.new
     @messages = ThreadSafe::Array.new

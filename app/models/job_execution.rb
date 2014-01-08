@@ -25,7 +25,7 @@ class JobExecution
     @thread = Thread.new do
       @job.run!
 
-      dir = "/tmp/deploy-#{@job.id}"
+      dir = File.join(Dir.tmpdir, "/deploy-#{@job.id}")
       project = @job.project
       repo_url = project.repository_url
       cached_repos_dir = File.join(@base_dir, "cached_repos")
@@ -43,8 +43,7 @@ class JobExecution
         "git clone #{repo_cache_dir} #{dir}",
         "cd #{dir}",
         "git checkout --quiet #{@commit}",
-        "export SUDO_USER=#{@job.user.email}", # capsu-only? We need a user.
-        "export BUNDLE_GEMFILE=", # clear the environment?
+        "export DEPLOYER=#{@job.user.email}",
         *@job.commands,
         "rm -fr #{dir}"
       ]
@@ -56,6 +55,7 @@ class JobExecution
       end
 
       @job.update_output!(@output.to_s)
+      ActiveRecord::Base.connection_pool.release_connection
 
       @subscribers.each do |subscriber|
         subscriber.call(@job)

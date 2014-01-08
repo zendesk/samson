@@ -7,7 +7,7 @@ class Job < ActiveRecord::Base
   end
 
   def commands
-    command.split("\n")
+    command.split(/\r?\n|\r/)
   end
 
   def stop!
