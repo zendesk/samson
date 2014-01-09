@@ -93,8 +93,6 @@ GEM
     execjs (2.0.2)
     faraday (0.8.8)
       multipart-post (~> 1.2.0)
-    ffi (1.9.3)
-    ffi (1.9.3-java)
     hashie (2.0.5)
     highline (1.6.20)
     hike (1.2.3)
@@ -112,7 +110,6 @@ GEM
     json (1.8.1-java)
     jwt (0.1.8)
       multi_json (>= 1.5)
-    linecache (0.46-java)
     mail (2.5.4)
       mime-types (~> 1.16)
       treetop (~> 1.4.8)
@@ -126,7 +123,6 @@ GEM
       rails (>= 3.0)
     mocha (0.14.0)
       metaclass (~> 0.0.1)
-    msgpack (0.5.8)
     multi_json (1.8.2)
     multipart-post (1.2.0)
     mysql2 (0.3.14)
@@ -176,15 +172,9 @@ GEM
       rake (>= 0.8.7)
       thor (>= 0.18.1, < 2.0)
     rake (10.1.1)
-    rbtrace (0.4.2)
-      ffi (>= 1.0.6)
-      msgpack (>= 0.4.3)
-      trollop (>= 1.16.2)
     ruby-debug (0.10.4)
       columnize (>= 0.1)
       ruby-debug-base (~> 0.10.4.0)
-    ruby-debug-base (0.10.4)
-      linecache (>= 0.3)
     ruby-debug-base (0.10.4-java)
     safe_yaml (0.9.7)
     sass (3.2.13)
@@ -213,7 +203,6 @@ GEM
     treetop (1.4.15)
       polyglot
       polyglot (>= 0.3.1)
-    trollop (2.0)
     tzinfo (0.3.38)
     uglifier (2.4.0)
       execjs (>= 0.3.0)
@@ -250,7 +239,6 @@ DEPENDENCIES
   puma
   rails (= 4.0.2)
   rails_12factor
-  rbtrace
   ruby-debug
   sass-rails (~> 4.0.0)
   soft_deletion (~> 0.4)
