@@ -1,5 +1,5 @@
 class ProjectsController < ApplicationController
-  before_filter :authorize_admin!, only: [:new, :create, :edit, :update, :destroy, :reorder]
+  before_filter :authorize_admin!, except: [:show, :index]
   before_filter :authorize_deployer!, only: [:show]
 
   helper_method :project
@@ -52,13 +52,9 @@ class ProjectsController < ApplicationController
   end
 
   def reorder
-    new_order = params[:stage_id]
+    Stage.reorder params[:stage_id]
 
-    new_order.each.with_index { |stage_id, index| Stage.update stage_id.to_i, order: index }
-
-    head 200
-  rescue ActiveRecord::ActiveRecordError
-    head 500
+    head :ok
   end
 
   protected
