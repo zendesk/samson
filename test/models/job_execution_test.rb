@@ -10,8 +10,7 @@ describe JobExecution do
   let(:execution) { JobExecution.new("master", job, base_dir) }
 
   before do
-    `#{<<-SHELL}`
-      cd #{repository_url}
+    execute_on_remote_repo <<-SHELL
       git init
       git config user.email "test@example.com"
       git config user.name "Test User"
@@ -34,8 +33,7 @@ describe JobExecution do
   it "clones the cached repository into a temporary repository"
 
   it "checks out the specified commit" do
-    `#{<<-SHELL}`
-      cd #{repository_url}
+    execute_on_remote_repo <<-SHELL
       git tag foobar
       echo giraffe > foo
       git add foo
@@ -50,9 +48,7 @@ describe JobExecution do
   end
 
   it "checks out the specified remote branch" do
-    `#{<<-SHELL}`
-      exec 2> /dev/null # ignore stderr
-      cd #{repository_url}
+    execute_on_remote_repo <<-SHELL
       git co -b armageddon
       echo lion > foo
       git add foo
@@ -68,4 +64,8 @@ describe JobExecution do
   end
 
   it "runs the commands specified by the job"
+
+  def execute_on_remote_repo(cmds)
+    `exec 2> /dev/null; cd #{repository_url}; #{cmds}`
+  end
 end
