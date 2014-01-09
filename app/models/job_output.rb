@@ -21,8 +21,8 @@ class JobOutput
 
   # Returns an Enumerator::Lazy that will enumerate the messages in the output.
   def lazy
-    Enumerator::Lazy.new(self) do |yielder, output|
-      output.each {|message| yielder << message }
+    Enumerator::Lazy.new(self) do |yielder, message|
+      yielder << message
     end
   end
 
