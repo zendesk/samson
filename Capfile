@@ -42,7 +42,7 @@ namespace :pusher do
   end
 
   task :cleanup_stale_deploys do
-    run "find #{Dir.tmpdir} -maxdepth 1 -name 'deploy-*' -cmin +180 -exec rm -r {} \;"
+    run "find #{Dir.tmpdir} -maxdepth 1 -name 'deploy-*' -cmin +180 -exec rm -r {} \\;"
   end
 end
 
