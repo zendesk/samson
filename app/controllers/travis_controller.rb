@@ -2,7 +2,7 @@ require 'digest/sha2'
 
 class TravisController < ApplicationController
   rescue_from(ActiveRecord::RecordNotFound) { head :not_found }
-  rescue_from(ActiveRecord::RecordInvalid) { head :bad_request }
+  rescue_from(ActiveRecord::RecordNotSaved) { head :bad_request }
 
   skip_before_filter :login_users
   skip_before_filter :verify_authenticity_token
