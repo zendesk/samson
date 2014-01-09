@@ -25,6 +25,7 @@ script/bootstrap
 # CLIENT_SECRET is mandatory and is the secret of a "deployment" OAuth client
 # The callback for the OAuth client is {HOST}/auth/zendesk/callback
 # ZENDESK_URL defaults to "http://dev.localhost", but is used for authorization
+# An example Zendesk OAuth Client config - http://cl.ly/image/47282r002n02
 
 bundle exec puma -C config/puma.rb -p 8080
 ```
