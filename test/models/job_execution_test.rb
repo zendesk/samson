@@ -27,7 +27,7 @@ describe JobExecution do
   it "clones the project's repository if it's not already cloned" do
     execution.start_and_wait!
 
-    assert File.directory?("#{cached_repo_dir}/.git")
+    assert File.directory?(cached_repo_dir)
   end
 
   it "clones the cached repository into a temporary repository"
@@ -61,19 +61,29 @@ describe JobExecution do
     assert_equal "lion", job.output.to_s.split("\n").last.strip
   end
 
-  it "can execute multiple times for the same project" do
-    execution = JobExecution.new("master", job, base_dir)
+  it "updates the branch to match what's in the remote repository" do
+    execute_on_remote_repo <<-SHELL
+      git checkout -b safari
+      echo tiger > foo
+      git add foo
+      git commit -m "commit"
+      git checkout master
+    SHELL
+
+    execution = JobExecution.new("safari", job, base_dir)
     execution.start_and_wait!
 
-    assert_equal "monkey", job.output.to_s.split("\n").last.strip
+    assert_equal "tiger", job.output.to_s.split("\n").last.strip
 
     execute_on_remote_repo <<-SHELL
+      git checkout safari
       echo zebra > foo
       git add foo
       git commit -m "second commit"
+      git checkout master
     SHELL
     
-    execution = JobExecution.new("master", job, base_dir)
+    execution = JobExecution.new("safari", job, base_dir)
     execution.start_and_wait!
 
     assert_equal "zebra", job.output.to_s.split("\n").last.strip
