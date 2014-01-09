@@ -48,7 +48,7 @@ end
 
 after "deploy:update_code","pusher:update_symlinks"
 after "deploy:update_code","pusher:assets:precompile"
-after "deploy:update_code","pusher:clean_stale_deploys"
+after "deploy:update_code","pusher:cleanup_stale_deploys"
 
 def role_mapping(n)
   super.tap do |mapping|
