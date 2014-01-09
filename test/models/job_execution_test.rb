@@ -49,5 +49,23 @@ describe JobExecution do
     assert_equal "monkey", job.output.to_s.split("\n").last.strip
   end
 
+  it "checks out the specified remote branch" do
+    `#{<<-SHELL}`
+      exec 2> /dev/null # ignore stderr
+      cd #{repository_url}
+      git co -b armageddon
+      echo lion > foo
+      git add foo
+      git commit -m "branch commit"
+      git checkout master
+    SHELL
+
+    job.command = "cat foo"
+    execution = JobExecution.new("armageddon", job, base_dir)
+    execution.start_and_wait!
+
+    assert_equal "lion", job.output.to_s.split("\n").last.strip
+  end
+
   it "runs the commands specified by the job"
 end
