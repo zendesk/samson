@@ -40,10 +40,9 @@ describe JobExecution do
       git commit -m "second commit"
     SHELL
 
-    execution = JobExecution.new("foobar", job, base_dir)
-    execution.start_and_wait!
+    execute_job "foobar"
 
-    assert_equal "monkey", job.output.to_s.split("\n").last.strip
+    assert_equal "monkey", last_line_of_output
   end
 
   it "checks out the specified remote branch" do
@@ -55,10 +54,9 @@ describe JobExecution do
       git checkout master
     SHELL
 
-    execution = JobExecution.new("armageddon", job, base_dir)
-    execution.start_and_wait!
+    execute_job "armageddon"
 
-    assert_equal "lion", job.output.to_s.split("\n").last.strip
+    assert_equal "lion", last_line_of_output
   end
 
   it "updates the branch to match what's in the remote repository" do
@@ -70,10 +68,9 @@ describe JobExecution do
       git checkout master
     SHELL
 
-    execution = JobExecution.new("safari", job, base_dir)
-    execution.start_and_wait!
+    execute_job "safari"
 
-    assert_equal "tiger", job.output.to_s.split("\n").last.strip
+    assert_equal "tiger", last_line_of_output
 
     execute_on_remote_repo <<-SHELL
       git checkout safari
@@ -83,15 +80,23 @@ describe JobExecution do
       git checkout master
     SHELL
     
-    execution = JobExecution.new("safari", job, base_dir)
-    execution.start_and_wait!
+    execute_job "safari"
 
-    assert_equal "zebra", job.output.to_s.split("\n").last.strip
+    assert_equal "zebra", last_line_of_output
   end
 
   it "runs the commands specified by the job"
 
+  def execute_job(branch = master)
+    execution = JobExecution.new(branch, job, base_dir)
+    execution.start_and_wait!
+  end
+
   def execute_on_remote_repo(cmds)
     `exec 2> /dev/null; cd #{repository_url}; #{cmds}`
+  end
+
+  def last_line_of_output
+    job.output.to_s.split("\n").last.strip
   end
 end
