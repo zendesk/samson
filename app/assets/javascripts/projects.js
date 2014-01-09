@@ -6,7 +6,6 @@ $(function() {
 
   $stagesBox.sortable();
   $saveButton.on("click", function() {
-    console.log($(this).data("url"));
     $.ajax({
       url: $(this).data("url"),
       data: $stagesBox.sortable("serialize", { attribute: "data-id" }),

@@ -57,9 +57,9 @@ class ProjectsController < ApplicationController
 
     new_order.each.with_index { |stage_id, index| Stage.update stage_id.to_i, order: index }
 
-    render status: 202, layout: false
+    render status: 202, nothing: true
   rescue
-    render status: 500, layout: false
+    render status: 500, nothing: true
   end
 
   protected
