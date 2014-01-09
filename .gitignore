@@ -24,4 +24,5 @@
 /node_modules
 
 /public/assets
-/cached_repos
+/cached_repos/
+.gitkeep

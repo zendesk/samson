@@ -48,6 +48,20 @@ describe SemaphoreController do
     project.deploys.must_equal []
   end
 
+  it "deploys as the Semaphore user" do
+    user = User.create!(name: "Semaphore")
+
+    post :create, payload.merge(token: project.token)
+
+    project.deploys.last.user.must_equal user
+  end
+
+  it "creates the Semaphore user if it does not exist" do
+    post :create, payload.merge(token: project.token)
+
+    User.find_by_name("Semaphore").wont_be_nil
+  end
+
   it "responds with 200 OK if the request is valid" do
     post :create, payload.merge(token: project.token)
 

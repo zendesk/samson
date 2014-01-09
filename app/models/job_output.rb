@@ -1,6 +1,8 @@
 require 'thread_safe'
 
 class JobOutput
+  CLOSE = Object.new
+
   attr_reader :messages
 
   def initialize
@@ -17,13 +19,24 @@ class JobOutput
     @messages.join("\n")
   end
 
-  def each_message
+  # Returns an Enumerator::Lazy that will enumerate the messages in the output.
+  def lazy
+    Enumerator::Lazy.new(self) do |yielder, message|
+      yielder << message
+    end
+  end
+
+  def close
+    push(CLOSE)
+  end
+
+  def each
     queue = Queue.new
     @listeners << queue
 
     @messages.each {|message| yield message }
 
-    while (message = queue.pop)
+    while (message = queue.pop) && message != CLOSE
       yield message
     end
   ensure

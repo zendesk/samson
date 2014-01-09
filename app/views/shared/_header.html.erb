@@ -16,11 +16,11 @@
     <% end %>
   </ul>
 
-  <button type="button" class="btn btn-default navbar-btn pull-right">
+  <div class="navbar-btn pull-right">
     <% if logged_in? %>
-      <%= link_to "Logout", logout_path, title: "Logged in as #{current_user.name}" %>
+      <%= link_to "Logout", logout_path, title: "Logged in as #{current_user.name}", class: "btn btn-default" %>
     <% else %>
-      <%= link_to "Login", login_path %>
+      <%= link_to "Login", login_path, class: "btn btn-default" %>
     <% end %>
-  </button>
+  </div>
 </div>
