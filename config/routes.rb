@@ -28,8 +28,10 @@ ZendeskPusher::Application.routes.draw do
     resource :projects, only: [:show]
   end
 
-  post "/travis" => "travis#create"
-  post "/semaphore/:token" => "semaphore#create", as: :semaphore_deploy
+  scope :integrations do
+    post "/travis" => "travis#create"
+    post "/semaphore/:token" => "semaphore#create", as: :semaphore_deploy
+  end
 
   root to: 'projects#index'
 end
