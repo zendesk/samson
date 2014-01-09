@@ -13,8 +13,7 @@ class StreamsController < ApplicationController
     streamer = OutputStreamer.new(response.stream)
 
     if job.active? && (execution = JobExecution.find_by_id(job.id))
-      output = execution.output.lazy.map {|message| render_log(message) }
-      streamer.start(output)
+      streamer.start(execution.output) {|line| render_log(line) }
     else
       streamer.finished
     end
