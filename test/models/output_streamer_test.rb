@@ -40,9 +40,15 @@ describe OutputStreamer do
   end
 
   it "writes each message in the output into the stream" do
-    stream.lines.must_include "event: output\n"
-    stream.lines.must_include %(data: {"msg":"world"}\n\n)
-    stream.lines.must_include %(data: {"msg":"world"}\n\n)
+    stream.lines.must_include %(event: append\ndata: {"msg":"\\nhello"}\n\n)
+    stream.lines.must_include %(event: append\ndata: {"msg":"\\nworld"}\n\n)
+  end
+
+  it "overwrites the previous lines if a carriage return or clear line code is present" do
+    output = FakeOutput.new(["hello\rworld\n"])
+    streamer.start(output)
+    stream.lines.must_include %(event: append\ndata: {"msg":"\\nhello"}\n\n)
+    stream.lines.must_include %(event: replace\ndata: {"msg":"world\\n"}\n\n)
   end
 
   it "closes the stream when there is no more output" do
@@ -50,7 +56,6 @@ describe OutputStreamer do
   end
 
   it "writes a finished event" do
-    stream.lines.must_include "event: finished\n"
-    stream.lines.must_include "data: \n\n"
+    stream.lines.must_include "event: finished\ndata: \n\n"
   end
 end

@@ -10,12 +10,10 @@ class JobExecution
     @job, @commit, @base_dir = job, commit, base_dir
 
     @executor.output do |message|
-      Rails.logger.debug(message)
       @output.push(message)
     end
 
     @executor.error_output do |message|
-      Rails.logger.debug(message)
       @output.push(message)
     end
   end
@@ -35,7 +33,7 @@ class JobExecution
           if [ -d #{repo_cache_dir} ]
             then cd #{repo_cache_dir} && git fetch -ap
           else
-            git clone --quiet --mirror #{repo_url} #{repo_cache_dir}
+            git clone --mirror #{repo_url} #{repo_cache_dir}
           fi
         SHELL
         "git clone #{repo_cache_dir} #{dir}",

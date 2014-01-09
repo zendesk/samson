@@ -75,7 +75,7 @@ fi
 
         begin
           io.each do |line|
-            @callbacks[io_name].each {|callback| callback.call(line.chomp) }
+            @callbacks[io_name].each {|callback| callback.call(line.chomp("\n")) }
           end
         rescue Errno::EIO
           # The IO has been closed.

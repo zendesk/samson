@@ -19,13 +19,6 @@ class JobOutput
     @messages.join("\n")
   end
 
-  # Returns an Enumerator::Lazy that will enumerate the messages in the output.
-  def lazy
-    Enumerator::Lazy.new(self) do |yielder, message|
-      yielder << message
-    end
-  end
-
   def close
     push(CLOSE)
   end
