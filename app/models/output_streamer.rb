@@ -10,7 +10,7 @@ class OutputStreamer
   def start
     # Heartbeat thread until puma/puma#389 is solved
     start_heartbeat!
-    @output.each_message {|message| write_message(message) }
+    @output.each {|message| write_message(message) }
   rescue IOError
     # Raised on stream close
   ensure
