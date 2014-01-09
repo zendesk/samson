@@ -4,7 +4,7 @@ require 'zendesk/deployment/migrations'
 set :application, 'pusher'
 set :repository,  'git@github.com:zendesk/pusher'
 set :environments, [:staging, :pod3]
-set :ruby_version, '2.0.0-p353'
+set :ruby_version, '2.1.0'
 set :require_tag?, false
 set :email_notification, ['deploys@zendesk.com', 'epahl@zendesk.com']
 set :user, 'deploy'
