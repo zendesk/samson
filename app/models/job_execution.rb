@@ -60,7 +60,11 @@ class JobExecution
 
   def start_and_wait!
     start!
-    @thread.join
+    wait!
+  end
+
+  def wait!
+    @thread.try(:join)
   end
 
   def stop!
