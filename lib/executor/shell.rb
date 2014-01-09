@@ -1,5 +1,5 @@
 require_relative 'base'
-require 'open3'
+require 'pty'
 
 module Executor
   class Shell < Base
@@ -20,7 +20,7 @@ module Executor
     end
 
     def pid
-      @internal_thread.try(:pid)
+      @pid
     end
 
     def stop!
@@ -32,32 +32,23 @@ module Executor
     private
 
     def execute_command!(command)
-      stdin, stdout, stderr, @internal_thread = Bundler.with_clean_env do
-        Open3.popen3(command)
-      end
+      stdout, out = PTY.open
+      stderr, err = PTY.open
 
-      @internal_thread.instance_eval do
-        ActiveRecord::Base.connection_pool.release_connection
-      end
+      @pid = Process.spawn(command, in: "/dev/null", out: out, err: err)
 
-      output_thr = setup_callbacks(stdout, :stdout)
-      error_thr = setup_callbacks(stderr, :stderr)
+      out_thread = setup_callbacks(stdout, :stdout)
+      err_thread = setup_callbacks(stderr, :stderr)
 
-      # JRuby has the possiblity of returning the internal_thread
-      # without a pid attached. We're going to block until it comes
-      # back so that we can kill the process TODO: may be deadlock-y
-      if RUBY_ENGINE == 'jruby'
-        sleep(0.1) until pid
-      end
+      _, status = Process.wait2(@pid)
 
-      @internal_thread.value.success?.tap do
-        output_thr.join
-        error_thr.join
-      end
-    # JRuby raises an IOError on a nonexistent first command
-    rescue IOError => e
-      @callbacks[:stderr].each {|callback| callback.call(error(commands.first))}
-      false
+      out.close
+      err.close
+
+      out_thread.join
+      err_thread.join
+
+      return status.success?
     end
 
     def wrap_command(command)
@@ -80,8 +71,12 @@ fi
       Thread.new do
         ActiveRecord::Base.connection_pool.release_connection
 
-        io.each do |line|
-          @callbacks[io_name].each {|callback| callback.call(line.chomp) }
+        begin
+          io.each do |line|
+            @callbacks[io_name].each {|callback| callback.call(line.chomp) }
+          end
+        rescue Errno::EIO
+          # The IO has been closed.
         end
       end
     end
