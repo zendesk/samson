@@ -30,6 +30,7 @@ class ProjectsController < ApplicationController
   end
 
   def show
+    @ordered_stages = project.stages.find(:all, :order => 'order')
   end
 
   def edit
@@ -53,6 +54,7 @@ class ProjectsController < ApplicationController
 
   def reorder
     render status: 202, layout: false
+
   end
 
   protected
