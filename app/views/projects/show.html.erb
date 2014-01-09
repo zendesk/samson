@@ -1,19 +1,18 @@
-<%= stylesheet_link_tag "project" %>
-
 <h1><%= project.name %></h1>
 
 <p><%= link_to "Deploy", new_project_deploy_path(project) %> | <%= link_to "Webhooks", project_webhooks_path(project) %></p>
 
 <h2>Stages</h2>
 <ul id="stages">
-  <% project.stages.each do |stage| %>
-    <li class="stages list-unstyled clearfix">
+  <% project.stages.each.with_index do |stage, index| %>
+    <li class="stages list-unstyled clearfix" data-order="index_<%= index %>">
       <%= link_to stage.name, project_stage_path(project, stage) %>
       <%= link_to "Delete", project_stage_path(project, stage), method: :delete, data: { confirm: "Are you sure?" }, class: "btn btn-danger pull-right" %>
     </li>
   <% end %>
 </ul>
 <%= link_to "Add Stage", new_project_stage_path(project), class: "btn btn-default" %>
+<span id="save" class="btn btn-default" data-url="<%= project_path(project) %>/reorder">Save Positions</span>
 
 <h2>Recent deploys</h2>
 <ul>
@@ -21,5 +20,3 @@
     <li><%= link_to deploy.summary, project_deploy_path(project, deploy) %></li>
   <% end %>
 </ul>
-
-<%= javascript_include_tag "project" %>
