@@ -1,5 +1,5 @@
 class ProjectsController < ApplicationController
-  before_filter :authorize_admin!, only: [:new, :create, :edit, :update, :destroy]
+  before_filter :authorize_admin!, only: [:new, :create, :edit, :update, :destroy, :reorder]
   before_filter :authorize_deployer!, only: [:show]
 
   helper_method :project
@@ -49,6 +49,10 @@ class ProjectsController < ApplicationController
 
     flash[:notice] = "Project removed."
     redirect_to admin_projects_path
+  end
+
+  def reorder
+    render status: 202, layout: false
   end
 
   protected
