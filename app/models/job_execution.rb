@@ -31,7 +31,6 @@ class JobExecution
       repo_cache_dir = File.join(cached_repos_dir, project.id.to_s)
 
       commands = [
-        "mkdir -p #{cached_repos_dir}",
         <<-SHELL,
           if [ -d #{repo_cache_dir} ]
             then cd #{repo_cache_dir} && git fetch -ap
