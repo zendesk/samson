@@ -26,7 +26,7 @@ describe OutputStreamer do
       @content = content
     end
 
-    def each_message(&block)
+    def each(&block)
       @content.each(&block)
     end
   end
