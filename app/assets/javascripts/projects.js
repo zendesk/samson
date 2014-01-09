@@ -11,13 +11,13 @@ $(function() {
       data: $stagesBox.sortable("serialize", { attribute: "data-id" }),
       type: 'PUT',
     }).done(function(data) {
-      $("#success_message").removeClass("hidden");
+      $("#success_message").fadeIn(200);
     }).fail(function() {
-      $("#error_message").removeClass("hidden");
+      $("#error_message").fadeIn(200);
     }).always(function() {
       setTimeout(function() {
-        $(".message").addClass("hidden");
-      }, 3000);
+        $(".messages").fadeOut();
+      }, 2000);
     })
   });
 });

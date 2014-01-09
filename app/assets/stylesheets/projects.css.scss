@@ -23,6 +23,7 @@
 }
 
 .stages {
+  background-color: #fff;
   border-radius: 3px;
   border: 1px solid #ddd;
   cursor: pointer;
@@ -32,4 +33,8 @@
 
 .stages a:first-child {
   line-height: 34px;
+}
+
+.messages {
+  display: none;
 }
