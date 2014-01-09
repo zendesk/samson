@@ -1,4 +1,6 @@
 class User < ActiveRecord::Base
+  has_many :commands
+
   validates :role_id, inclusion: { in: Role.all.map(&:id) }
 
   def self.create_or_update_from_hash(hash)

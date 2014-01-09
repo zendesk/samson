@@ -33,7 +33,7 @@ class StagesController < ApplicationController
   private
 
   def stage_params
-    params.require(:stage).permit(:name, :notify_email_address, :command)
+    params.require(:stage).permit(:name, :notify_email_address, :command_ids => [])
   end
 
   def find_project

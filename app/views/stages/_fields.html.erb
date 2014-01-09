@@ -14,7 +14,9 @@
 
 <div class="form-group">
   <%= form.label :command, class: "col-lg-2 control-label" %>
+  <label class="col-lg-2 control-label">Commands</label>
+  <!-- TODO: sortable -->
   <div class="col-lg-4">
-    <%= form.text_area :command, rows: 8, class: "form-control" %>
+    <%= command_check_boxes(form) %>
   </div>
 </div>

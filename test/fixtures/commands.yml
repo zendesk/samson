@@ -1,0 +1,4 @@
+echo:
+  name: echo
+  command: echo hello
+  user: admin

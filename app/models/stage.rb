@@ -1,6 +1,8 @@
 class Stage < ActiveRecord::Base
   belongs_to :project
   has_many :deploys
+  has_many :stage_commands
+  has_many :commands, through: :stage_commands
 
   default_scope { order(:order) }
 
@@ -14,4 +16,7 @@ class Stage < ActiveRecord::Base
     notify_email_address.present?
   end
 
+  def command
+    @command ||= commands.map(&:command).join("\n")
+  end
 end
