@@ -35,7 +35,9 @@ module Executor
       stdout, out = PTY.open
       stderr, err = PTY.open
 
-      @pid = Process.spawn(command, in: "/dev/null", out: out, err: err)
+      @pid = Bundler.with_clean_env do
+        Process.spawn(command, in: "/dev/null", out: out, err: err)
+      end
 
       out_thread = setup_callbacks(stdout, :stdout)
       err_thread = setup_callbacks(stderr, :stderr)
