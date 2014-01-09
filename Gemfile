@@ -40,7 +40,7 @@ group :no_preload do
 
   gem 'ansible'
 
-  gem 'rbtrace'
+  gem 'rbtrace', :platform => :ruby
 end
 
 group :development do
