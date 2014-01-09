@@ -21,29 +21,21 @@ class StreamsController < ApplicationController
     end
 
     if job.active? && (execution = JobExecution.find_by_id(job.id))
-      execution.output.subscribe do |subscriber|
-        subscriber.on_message do |message|
-          msg = JSON.dump(msg: render_log(message).to_s)
-          response.stream.write("data: #{msg}\n\n")
-        end
-
-        subscriber.on_close { close_stream }
+      execution.output.each_message do |message|
+        msg = JSON.dump(msg: render_log(message).to_s)
+        response.stream.write("data: #{msg}\n\n")
       end
     end
   rescue IOError
     # Raised on stream close
   ensure
-    close_stream
+    @heartbeat.try(:kill)
+    response.stream.close
   end
 
   protected
 
   def job
     @job ||= Job.find(params[:id])
-  end
-
-  def close_stream
-    @heartbeat.try(:kill)
-    response.stream.close
   end
 end

@@ -1,31 +1,9 @@
 require 'thread_safe'
 
 class JobOutput
+  CLOSE = Object.new
+
   attr_reader :messages
-
-  class Subscriber
-    attr_reader :queue
-
-    def initialize
-      @queue = Queue.new
-    end
-
-    def message(message, &block)
-      @on_message.try(:call, message)
-    end
-
-    def close
-      @on_close.try(:call)
-    end
-
-    def on_message(&block)
-      @on_message = block
-    end
-
-    def on_close(&block)
-      @on_close = block
-    end
-  end
 
   def initialize
     @listeners = ThreadSafe::Array.new
@@ -34,7 +12,7 @@ class JobOutput
 
   def push(message)
     @messages << message
-    @listeners.each {|listener| listener.queue.push(message)}
+    @listeners.each {|listener| listener.push(message)}
   end
 
   def to_s
@@ -42,23 +20,19 @@ class JobOutput
   end
 
   def close
-    @listeners.each(&:close)
+    push(CLOSE)
   end
 
-  def subscribe
-    subscriber = Subscriber.new
-    @listeners << subscriber
+  def each_message
+    queue = Queue.new
+    @listeners << queue
 
-    yield subscriber
+    @messages.each {|message| yield message }
 
-    @messages.each do |message|
-      subscriber.message(message)
-    end
-
-    while (message = subscriber.queue.pop)
-      subscriber.message(message)
+    while (message = queue.pop) && message != CLOSE
+      yield message
     end
   ensure
-    @listeners.delete(subscriber)
+    @listeners.delete(queue)
   end
 end
