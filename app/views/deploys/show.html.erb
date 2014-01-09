@@ -21,26 +21,21 @@
       var messages = $("#messages");
 
       var source = new EventSource("<%= stream_deploy_path(@deploy.job) %>");
-      source.addEventListener('message', function(e) {
+      source.addEventListener('output', function(e) {
         if(e.data !== "") {
           messages.append(JSON.parse(e.data).msg + '\n');
           messages.scrollTop(messages[0].scrollHeight);
         }
       }, false);
 
-      source.addEventListener('open', function(e) {
-        // Connection was opened.
-      }, false);
-
-      source.addEventListener('error', function(e) {
-        // Connection was closed
+      source.addEventListener('finished', function(e) {
+        window.location.reload();
       }, false);
 
       $("#deploy_stop").on("click", function() {
         $.ajax("<%= project_deploy_path(@project, @deploy) %>", {
           type: 'DELETE'
         });
-        messages.addClass('failed');
         event.preventDefault();
       });
     });

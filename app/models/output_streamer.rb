@@ -1,20 +1,22 @@
 class OutputStreamer
-  def initialize(output, stream)
-    @output, @stream = output, stream
+  def initialize(stream)
+    @stream = stream
   end
 
-  def self.start(output, stream)
-    new(output, stream).start
-  end
-
-  def start
+  def start(output)
     # Heartbeat thread until puma/puma#389 is solved
     start_heartbeat!
-    @output.each {|message| write_message(message) }
+    output.each {|message| write_message(message) }
   rescue IOError
     # Raised on stream close
   ensure
     stop_heartbeat!
+    finished
+  end
+
+  def finished
+    @stream.write("event: finished\n")
+    @stream.write("data: \n\n")
     @stream.close
   end
 
@@ -22,6 +24,7 @@ class OutputStreamer
 
   def write_message(message)
     data = JSON.dump(msg: message)
+    @stream.write("event: output\n")
     @stream.write("data: #{data}\n\n")
   end
 
@@ -33,7 +36,7 @@ class OutputStreamer
           sleep(5) # Timeout of 5 seconds
         end
       rescue IOError
-        @stream.close
+        finished
       end
     end
   end
