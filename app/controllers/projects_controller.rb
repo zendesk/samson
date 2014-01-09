@@ -30,7 +30,7 @@ class ProjectsController < ApplicationController
   end
 
   def show
-    @ordered_stages = project.stages.find(:all, :order => 'order')
+    @ordered_stages = project.stages.find(:all, :order => '`order`')
   end
 
   def edit

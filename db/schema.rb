@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20140108011517) do
+ActiveRecord::Schema.define(version: 20140109041859) do
 
   create_table "deploys", force: true do |t|
     t.integer  "stage_id",   null: false
@@ -48,6 +48,7 @@ ActiveRecord::Schema.define(version: 20140108011517) do
     t.integer  "project_id", null: false
     t.datetime "created_at"
     t.datetime "updated_at"
+    t.integer  "order"
   end
 
   create_table "users", force: true do |t|
