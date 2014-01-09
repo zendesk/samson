@@ -17,3 +17,24 @@
 .job-history li.failed > a {
   color: red;
 }
+
+#stages {
+  padding: 0;
+}
+
+.stages {
+  background-color: #fff;
+  border-radius: 3px;
+  border: 1px solid #ddd;
+  cursor: pointer;
+  margin-bottom: 5px;
+  padding: 5px 5px 5px 15px;
+}
+
+.stages a:first-child {
+  line-height: 34px;
+}
+
+.messages {
+  display: none;
+}

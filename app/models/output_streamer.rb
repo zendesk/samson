@@ -3,10 +3,10 @@ class OutputStreamer
     @stream = stream
   end
 
-  def start(output)
+  def start(output, &block)
     # Heartbeat thread until puma/puma#389 is solved
     start_heartbeat!
-    output.each {|message| write_message(message) }
+    output.each {|message| write_message(message, &block) }
   rescue IOError
     # Raised on stream close
   ensure
@@ -15,17 +15,29 @@ class OutputStreamer
   end
 
   def finished
-    @stream.write("event: finished\n")
-    @stream.write("data: \n\n")
+    emit_event "finished"
     @stream.close
   end
 
   private
 
-  def write_message(message)
-    data = JSON.dump(msg: message)
-    @stream.write("event: output\n")
-    @stream.write("data: #{data}\n\n")
+  def write_message(message, &block)
+    lines = message.split("\r")
+    block ||= proc {|x| x }
+
+    emit_event "append", "\n" << block.call(lines.shift)
+
+    lines.each do |line|
+      emit_event "replace", block.call(line)
+    end
+  end
+
+  def emit_event(name, data = "")
+    json = data.present? ? JSON.dump(msg: data) : ""
+
+    Rails.logger.debug data.inspect
+
+    @stream.write("event: #{name}\ndata: #{json}\n\n")
   end
 
   def start_heartbeat!

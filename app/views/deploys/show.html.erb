@@ -21,11 +21,20 @@
       var messages = $("#messages");
 
       var source = new EventSource("<%= stream_deploy_path(@deploy.job) %>");
-      source.addEventListener('output', function(e) {
-        if(e.data !== "") {
-          messages.append(JSON.parse(e.data).msg + '\n');
-          messages.scrollTop(messages[0].scrollHeight);
-        }
+
+      var addLine = function(data) {
+        var msg = JSON.parse(data).msg;
+        messages.append(msg);
+        messages.scrollTop(messages[0].scrollHeight);
+      }
+
+      source.addEventListener('append', function(e) {
+        addLine(e.data);
+      }, false);
+
+      source.addEventListener('replace', function(e) {
+        messages.children().last().remove();
+        addLine(e.data);
       }, false);
 
       source.addEventListener('finished', function(e) {
