@@ -35,7 +35,7 @@ class JobExecution
           if [ -d #{repo_cache_dir} ]
             then cd #{repo_cache_dir} && git fetch -ap
           else
-            git clone --mirror #{repo_url} #{repo_cache_dir}
+            git clone --quiet --mirror #{repo_url} #{repo_cache_dir}
           fi
         SHELL
         "git clone #{repo_cache_dir} #{dir}",
