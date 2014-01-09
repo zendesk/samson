@@ -5,7 +5,7 @@
 <h2>Stages</h2>
 <ul id="stages">
   <% @ordered_stages.each.with_index do |stage, index| %>
-    <li class="stages list-unstyled clearfix" data-order="index_<%= index %>">
+    <li class="stages list-unstyled clearfix" data-order="index_<%= index %>" data-id="id_<%= stage.id %>">
       <%= link_to stage.name, project_stage_path(project, stage) %>
       <%= link_to "Delete", project_stage_path(project, stage), method: :delete, data: { confirm: "Are you sure?" }, class: "btn btn-danger pull-right" %>
     </li>
