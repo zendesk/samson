@@ -9,13 +9,16 @@ $(function() {
     console.log($(this).data("url"));
     $.ajax({
       url: $(this).data("url"),
-      data: $stagesBox.sortable("serialize", { attribute: "data-order" }),
+      data: $stagesBox.sortable("serialize", { attribute: "data-id" }),
       type: 'PUT',
     }).done(function(data) {
-      console.log(data);
-      console.log("success");
+      $("#success_message").removeClass("hidden");
     }).fail(function() {
-      console.log("failure");
-    });
+      $("#error_message").removeClass("hidden");
+    }).always(function() {
+      setTimeout(function() {
+        $(".message").addClass("hidden");
+      }, 3000);
+    })
   });
 });

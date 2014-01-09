@@ -53,8 +53,13 @@ class ProjectsController < ApplicationController
   end
 
   def reorder
-    render status: 202, layout: false
+    new_order = params[:stage_id]
 
+    new_order.each.with_index { |stage_id, index| Stage.update stage_id.to_i, order: index }
+
+    render status: 202, layout: false
+  rescue
+    render status: 500, layout: false
   end
 
   protected
