@@ -49,7 +49,7 @@ describe JobExecution do
 
   it "checks out the specified remote branch" do
     execute_on_remote_repo <<-SHELL
-      git co -b armageddon
+      git checkout -b armageddon
       echo lion > foo
       git add foo
       git commit -m "branch commit"
