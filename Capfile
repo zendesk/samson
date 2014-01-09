@@ -34,9 +34,16 @@ namespace :pusher do
     run "cd #{release_path} && rm -rf log && ln -s #{deploy_to}/log log"
     run "mkdir -p #{deploy_to}/cached_repos && cd #{release_path} && rm -rf cached_repos && ln -s #{deploy_to}/cached_repos cached_repos"
   end
+
+  namespace :assets do
+    task :precompile do
+      run "cd #{release_path} && bundle exec rake assets:precompile"
+    end
+  end
 end
 
 after "deploy:update_code","pusher:update_symlinks"
+after "deploy:update_code","pusher:assets:precompile"
 
 def role_mapping(n)
   super.tap do |mapping|
