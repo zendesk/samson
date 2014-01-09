@@ -24,19 +24,18 @@ class JobExecution
     @thread = Thread.new do
       @job.run!
 
-      dir = File.join(Dir.tmpdir, "/deploy-#{@job.id}")
+      dir = File.join(Dir.tmpdir, "deploy-#{@job.id}")
       project = @job.project
       repo_url = project.repository_url
       cached_repos_dir = File.join(@base_dir, "cached_repos")
       repo_cache_dir = File.join(cached_repos_dir, project.id.to_s)
 
       commands = [
-        "mkdir -p #{cached_repos_dir}",
         <<-SHELL,
           if [ -d #{repo_cache_dir} ]
             then cd #{repo_cache_dir} && git fetch -ap
           else
-            git clone #{repo_url} #{repo_cache_dir}
+            git clone --quiet --mirror #{repo_url} #{repo_cache_dir}
           fi
         SHELL
         "git clone #{repo_cache_dir} #{dir}",
@@ -54,6 +53,7 @@ class JobExecution
       end
 
       @job.update_output!(@output.to_s)
+      @output.close
       ActiveRecord::Base.connection_pool.release_connection
     end
   end
@@ -82,7 +82,6 @@ class JobExecution
     end
 
     def start_job(commit, job)
-      Rails.logger.debug "Starting job #{job.id.inspect}"
       registry[job.id] = new(commit, job).tap(&:start!)
     end
 

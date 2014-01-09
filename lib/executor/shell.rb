@@ -1,62 +1,26 @@
 require_relative 'base'
-require 'open3'
+require 'pty'
 
 module Executor
   class Shell < Base
     attr_reader :pid
 
     def execute!(*commands)
-      command = commands.map do |command|
-        execute_command(command)
-      end.join("\n")
+      command = commands.map {|command| wrap_command(command) }.join("\n")
 
       if RUBY_ENGINE == 'jruby'
         command = %Q{/bin/sh -c "#{command.gsub(/"/, '\\"')}"}
       end
 
-      stdin, stdout, stderr, @internal_thread = Bundler.with_clean_env do
-        Open3.popen3(command)
+      payload = {}
+
+      ActiveSupport::Notifications.instrument("execute_shell.pusher", payload) do
+        payload[:success] = execute_command!(command)
       end
-
-      @internal_thread.instance_eval do
-        ActiveRecord::Base.connection_pool.release_connection
-      end
-
-      output_thr = Thread.new do
-        ActiveRecord::Base.connection_pool.release_connection
-
-        stdout.each do |line|
-          @callbacks[:stdout].each {|callback| callback.call(line.chomp)}
-        end
-      end
-
-      error_thr = Thread.new do
-        ActiveRecord::Base.connection_pool.release_connection
-
-        stderr.each do |line|
-          @callbacks[:stderr].each {|callback| callback.call(line.chomp)}
-        end
-      end
-
-      # JRuby has the possiblity of returning the internal_thread
-      # without a pid attached. We're going to block until it comes
-      # back so that we can kill the process TODO: may be deadlock-y
-      if RUBY_ENGINE == 'jruby'
-        sleep(0.1) until pid
-      end
-
-      @internal_thread.value.success?.tap do
-        output_thr.join
-        error_thr.join
-      end
-    # JRuby raises an IOError on a nonexistent first command
-    rescue IOError => e
-      @callbacks[:stderr].each {|callback| callback.call(error(commands.first))}
-      false
     end
 
     def pid
-      @internal_thread.try(:pid)
+      @pid
     end
 
     def stop!
@@ -67,7 +31,29 @@ module Executor
 
     private
 
-    def execute_command(command)
+    def execute_command!(command)
+      stdout, out = PTY.open
+      stderr, err = PTY.open
+
+      @pid = Bundler.with_clean_env do
+        Process.spawn(command, in: "/dev/null", out: out, err: err)
+      end
+
+      out_thread = setup_callbacks(stdout, :stdout)
+      err_thread = setup_callbacks(stderr, :stderr)
+
+      _, status = Process.wait2(@pid)
+
+      out.close
+      err.close
+
+      out_thread.join
+      err_thread.join
+
+      return status.success?
+    end
+
+    def wrap_command(command)
       <<-G
 #{command}
 RETVAL=$?
@@ -81,6 +67,20 @@ fi
 
     def error(command)
       "Failed to execute \"#{command}\""
+    end
+
+    def setup_callbacks(io, io_name)
+      Thread.new do
+        ActiveRecord::Base.connection_pool.release_connection
+
+        begin
+          io.each do |line|
+            @callbacks[io_name].each {|callback| callback.call(line.chomp) }
+          end
+        rescue Errno::EIO
+          # The IO has been closed.
+        end
+      end
     end
   end
 end

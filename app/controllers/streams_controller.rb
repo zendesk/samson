@@ -8,21 +8,15 @@ class StreamsController < ApplicationController
     response.headers['Content-Type'] = 'text/event-stream'
     response.headers['Cache-Control'] = 'no-cache'
 
+    job = Job.find(params[:id])
+
+    streamer = OutputStreamer.new(response.stream)
+
     if job.active? && (execution = JobExecution.find_by_id(job.id))
-      execution.output.each_message do |message|
-        msg = JSON.dump(msg: render_log(message).to_s)
-        response.stream.write("data: #{msg}\n\n")
-      end
+      output = execution.output.lazy.map {|message| render_log(message) }
+      streamer.start(output)
+    else
+      streamer.finished
     end
-  rescue IOError
-    # Raised on stream close
-  ensure
-    response.stream.close
-  end
-
-  protected
-
-  def job
-    @job ||= Job.find(params[:id])
   end
 end
