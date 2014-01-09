@@ -24,7 +24,7 @@ class JobExecution
     @thread = Thread.new do
       @job.run!
 
-      dir = File.join(Dir.tmpdir, "/deploy-#{@job.id}")
+      dir = File.join(Dir.tmpdir, "deploy-#{@job.id}")
       project = @job.project
       repo_url = project.repository_url
       cached_repos_dir = File.join(@base_dir, "cached_repos")

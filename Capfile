@@ -40,10 +40,15 @@ namespace :pusher do
       run "cd #{release_path} && bundle exec rake assets:precompile"
     end
   end
+
+  task :cleanup_stale_deploys do
+    run "find #{Dir.tmpdir} -maxdepth 1 -name 'deploy-*' -cmin +180 -exec rm -r {} \;"
+  end
 end
 
 after "deploy:update_code","pusher:update_symlinks"
 after "deploy:update_code","pusher:assets:precompile"
+after "deploy:update_code","pusher:clean_stale_deploys"
 
 def role_mapping(n)
   super.tap do |mapping|
