@@ -30,7 +30,6 @@ class ProjectsController < ApplicationController
   end
 
   def show
-    @ordered_stages = project.stages.find(:all, :order => '`order`')
   end
 
   def edit
@@ -57,9 +56,9 @@ class ProjectsController < ApplicationController
 
     new_order.each.with_index { |stage_id, index| Stage.update stage_id.to_i, order: index }
 
-    render status: 202, nothing: true
-  rescue
-    render status: 500, nothing: true
+    head 200
+  rescue ActiveRecord::ActiveRecordError
+    head 500
   end
 
   protected
