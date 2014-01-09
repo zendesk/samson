@@ -1,6 +1,8 @@
 require 'thread_safe'
 
 class JobOutput
+  CLOSE = Object.new
+
   attr_reader :messages
 
   def initialize
@@ -17,13 +19,17 @@ class JobOutput
     @messages.join("\n")
   end
 
+  def close
+    push(CLOSE)
+  end
+
   def each_message
     queue = Queue.new
     @listeners << queue
 
     @messages.each {|message| yield message }
 
-    while (message = queue.pop)
+    while (message = queue.pop) && message != CLOSE
       yield message
     end
   ensure
