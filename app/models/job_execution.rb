@@ -34,7 +34,7 @@ class JobExecution
         "mkdir -p #{cached_repos_dir}",
         <<-SHELL,
           if [ -d #{repo_cache_dir} ]
-            then cd #{repo_cache_dir} && git fetch -ap
+            then cd #{repo_cache_dir} && git fetch -ap && git reset --hard FETCH_HEAD
           else
             git clone #{repo_url} #{repo_cache_dir}
           fi

@@ -6,7 +6,7 @@ describe JobExecution do
   let(:project) { Project.create!(name: "duck", repository_url: repository_url) }
   let(:cached_repo_dir) { "#{base_dir}/cached_repos/#{project.id}" }
   let(:user) { User.create! }
-  let(:job) { project.jobs.create!(command: "echo hello", user: user) }
+  let(:job) { project.jobs.create!(command: "cat foo", user: user) }
   let(:execution) { JobExecution.new("master", job, base_dir) }
 
   before do
@@ -40,7 +40,6 @@ describe JobExecution do
       git commit -m "second commit"
     SHELL
 
-    job.command = "cat foo"
     execution = JobExecution.new("foobar", job, base_dir)
     execution.start_and_wait!
 
@@ -56,11 +55,28 @@ describe JobExecution do
       git checkout master
     SHELL
 
-    job.command = "cat foo"
     execution = JobExecution.new("armageddon", job, base_dir)
     execution.start_and_wait!
 
     assert_equal "lion", job.output.to_s.split("\n").last.strip
+  end
+
+  it "can execute multiple times for the same project" do
+    execution = JobExecution.new("master", job, base_dir)
+    execution.start_and_wait!
+
+    assert_equal "monkey", job.output.to_s.split("\n").last.strip
+
+    execute_on_remote_repo <<-SHELL
+      echo zebra > foo
+      git add foo
+      git commit -m "second commit"
+    SHELL
+    
+    execution = JobExecution.new("master", job, base_dir)
+    execution.start_and_wait!
+
+    assert_equal "zebra", job.output.to_s.split("\n").last.strip
   end
 
   it "runs the commands specified by the job"
