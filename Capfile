@@ -6,7 +6,7 @@ set :repository,  'git@github.com:zendesk/pusher'
 set :environments, [:staging, :pod3]
 set :ruby_version, '2.1.0'
 set :require_tag?, false
-set :email_notification, ['deploys@zendesk.com', 'epahl@zendesk.com']
+set :email_notification, ['deploys@zendesk.com', 'pusher@zendesk.flowdock.com', 'epahl@zendesk.com']
 set :user, 'deploy'
 
 namespace :deploy do
@@ -30,7 +30,8 @@ namespace :pusher do
     config_files.each do |file|
       run "ln -nfs /etc/zendesk/pusher/#{file} #{release_path}/config/#{file}"
     end
-    run "ln -nfs /data/pusher/config/.env #{release_path}/.env"
+    # deploy_to defaults to /data/#{application}
+    run "ln -nfs #{deploy_to}/config/.env #{release_path}/.env"
     run "cd #{release_path} && rm -rf log && ln -s #{deploy_to}/log log"
     run "mkdir -p #{deploy_to}/cached_repos && cd #{release_path} && rm -rf cached_repos && ln -s #{deploy_to}/cached_repos cached_repos"
   end
@@ -46,7 +47,8 @@ namespace :pusher do
   end
 end
 
-after "deploy:update_code","pusher:update_symlinks"
+# Need to use before, or else this won't run in time.
+before 'deploy:finalize_update', 'pusher:update_symlinks'
 after "deploy:update_code","pusher:assets:precompile"
 after "deploy:update_code","pusher:cleanup_stale_deploys"
 
