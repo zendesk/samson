@@ -39,6 +39,8 @@ group :no_preload do
   gem 'active_hash', '~> 1.0'
 
   gem 'ansible'
+
+  gem 'rbtrace'
 end
 
 group :development do
