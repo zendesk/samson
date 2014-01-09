@@ -73,7 +73,7 @@ class JobExecution
     @thread.try(:join)
   end
 
-  def add_subscriber(&block)
+  def subscribe(&block)
     @subscribers << block
   end
 

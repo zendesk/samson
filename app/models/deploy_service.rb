@@ -11,7 +11,7 @@ class DeployService
 
     job_execution = JobExecution.start_job(commit, job)
 
-    job_execution.add_subscriber do |job|
+    job_execution.subscribe do |job|
       send_notifications(deploy, job)
     end
 
