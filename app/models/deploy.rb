@@ -29,4 +29,12 @@ class Deploy < ActiveRecord::Base
       "failed to deploy"
     end
   end
+
+  def self.latest_for_project(project_id)
+    return limit(10).order("created_at DESC").joins(:job).where(jobs: {project_id: project_id})
+  end
+
+  def self.latest_for_stage(stage_id)
+    return limit(10).order("created_at DESC").where(stage_id: stage_id)
+  end
 end
