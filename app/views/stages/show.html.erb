@@ -7,8 +7,15 @@
 <p><%= link_to "Edit", edit_project_stage_path(@project, @stage) %> | <%= link_to "Delete", project_stage_path(@project, @stage), method: :delete, confirm: "Are you sure?" %></p>
 
 <h2>Recent deploys</h2>
-<ul>
-  <% @stage.deploys.limit(10).each do |deploy| %>
-    <li><%= link_to deploy.summary, project_deploy_path(@project, deploy) %></li>
-  <% end %>
-</ul>
+  <table class="table table-striped">
+    <thead>
+      <tr>
+        <th>Who</th>
+        <th>Status</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      <%= render partial: "/projects/deploy", collection: @deploys %>
+    </tbody>
+</table>

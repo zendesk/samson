@@ -1,0 +1,5 @@
+<tr>
+  <td><%= link_to "#{deploy.user.name} deployed #{deploy.commit} to #{deploy.stage.name}", project_deploy_path(deploy.project, deploy) %></td>
+  <td><span class="label label-success"><%= deploy.status %></span></td>
+  <td><%= link_to "View", project_deploy_path(deploy.project, deploy) %></td>
+</tr>

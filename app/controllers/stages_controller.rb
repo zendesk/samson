@@ -3,6 +3,7 @@ class StagesController < ApplicationController
   before_filter :find_stage, only: [:show, :edit, :update, :destroy]
 
   def show
+    @deploys = Deploy.latest_for_stage find_stage.id
   end
 
   def new
