@@ -17,9 +17,10 @@ class EventStreamer
 
   def finished
     emit_event "finished"
-    @stream.close unless @stream.closed?
   rescue IOError
     # Raised on stream close
+  ensure
+    @stream.close
   end
 
   private
