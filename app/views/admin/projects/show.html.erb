@@ -20,7 +20,7 @@
       <% @projects.each do |project| %>
         <tr>
           <td><%= project.id %></td>
-          <td><%= project.name %></td>
+          <td><%= link_to project.name, project_path(project) %></td>
           <td>
             <%= link_to "Edit", edit_project_path(project) %>
 
