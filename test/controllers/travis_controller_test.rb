@@ -92,7 +92,7 @@ describe TravisController do
           committer_email: user.email
         }}
 
-        it "creates a deploy", :stub_deploy do
+        it "creates a deploy" do
           response.status.must_equal(200)
 
           assert_received(deploy_service, :deploy!) do |expect|
@@ -112,7 +112,7 @@ describe TravisController do
             commit: '123abc'
           }}
 
-          it "creates a deploy", :stub_deploy do
+          it "creates a deploy" do
             response.status.must_equal(200)
 
             assert_received(deploy_service, :deploy!) do |expect|
@@ -130,7 +130,7 @@ describe TravisController do
             commit: '123abc'
           }}
 
-          it "creates a deploy", :stub_deploy do
+          it "creates a deploy" do
             response.status.must_equal(200)
 
             assert_received(deploy_service, :deploy!) do |expect|

@@ -2,12 +2,14 @@ ENV["RAILS_ENV"] ||= "test"
 require_relative '../config/environment'
 require 'rails/test_help'
 require 'minitest/rails'
-require 'minitest-metadata'
 require 'webmock/minitest'
 
-class ActiveSupport::TestCase
-  include MiniTest::Metadata
+if ENV['COVERAGE']
+  require 'simplecov'
+  SimpleCov.start 'rails'
+end
 
+class ActiveSupport::TestCase
   ActiveRecord::Migration.check_pending!
 
   # Setup all fixtures in test/fixtures/*.yml for all tests in alphabetical order.
