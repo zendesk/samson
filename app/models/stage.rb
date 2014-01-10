@@ -1,8 +1,11 @@
 class Stage < ActiveRecord::Base
   belongs_to :project
   has_many :deploys
-  has_many :stage_commands
-  has_many :commands, through: :stage_commands
+
+  has_many :stage_commands, autosave: true
+  has_many :commands,
+    -> { order('stage_commands.position ASC') },
+    through: :stage_commands
 
   default_scope { order(:order) }
 
@@ -17,6 +20,22 @@ class Stage < ActiveRecord::Base
   end
 
   def command
-    @command ||= commands.map(&:command).join("\n")
+    commands.map(&:command).join("\n")
+  end
+
+  def command_ids=(command_ids)
+    super.tap do
+      reorder_commands(command_ids)
+    end
+  end
+
+  private
+
+  def reorder_commands(command_ids)
+    command_ids = command_ids.reject(&:blank?).map(&:to_i)
+    stage_commands.each do |stage_command|
+      next unless (pos = command_ids.index(stage_command.command_id))
+      stage_command.position = pos
+    end
   end
 end
