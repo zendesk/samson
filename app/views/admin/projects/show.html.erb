@@ -1,33 +1,36 @@
-<table class="table table-hover table-condensed">
-  <thead>
-    <tr>
-      <th>#</th>
-      <th>Name</th>
-      <th>
-        <%= link_to new_project_path, class: "pull-right" do %>
-          <i class="glyphicon glyphicon-plus"></i>
-        <% end %>
+<% if @projects.empty? %>
 
-        Actions
-      </th>
-    </tr>
-  </thead>
+  <div class="alert alert-warning alert-dismissable">
+    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+    You currently don't have any projects setup.
+  </div>
 
-  <tbody>
-    <% @projects.each do |project| %>
+<% else %>
+
+  <table class="table table-hover table-condensed">
+    <thead>
       <tr>
-        <td><%= project.id %></td>
-        <td><%= project.name %></td>
-        <td>
-          <%= link_to edit_project_path(project) do %>
-            <i class="glyphicon glyphicon-edit"></i>
-          <% end %>
-
-          <%= link_to project_path(project), method: :delete, data: { confirm: "Are you sure?" } do %>
-            <i class="glyphicon glyphicon-trash"></i>
-          <% end %>
-        </td>
+        <th>#</th>
+        <th>Name</th>
+        <th>Actions</th>
       </tr>
-    <% end %>
-  </tbody>
-</table>
+    </thead>
+
+    <tbody>
+      <% @projects.each do |project| %>
+        <tr>
+          <td><%= project.id %></td>
+          <td><%= project.name %></td>
+          <td>
+            <%= link_to "Edit", edit_project_path(project) %>
+
+            <%= link_to "Delete", project_path(project), method: :delete, data: { confirm: "Are you sure?" } %>
+          </td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+
+<% end %>
+
+<%= link_to "Add a new project", new_project_path, class: "btn btn-default" %>
