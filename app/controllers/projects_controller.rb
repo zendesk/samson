@@ -60,7 +60,14 @@ class ProjectsController < ApplicationController
   protected
 
   def project_params
-    params.require(:project).permit(:name, :repository_url, stages_attributes: [:name, :command])
+    params.require(:project).permit(
+      :name, :repository_url,
+      stages_attributes: [
+        :name, :command,
+        :notify_email_address,
+        :command_ids => []
+      ]
+    )
   end
 
   def project
