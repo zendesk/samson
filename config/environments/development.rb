@@ -18,7 +18,7 @@ ZendeskPusher::Application.configure do
 
   config.action_mailer.default_url_options = {
     host: "localhost",
-    port: "8080"
+    port: "9080"
   }
 
   # Print deprecation notices to the Rails logger.
