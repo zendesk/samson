@@ -29,6 +29,18 @@ class Stage < ActiveRecord::Base
     end
   end
 
+  def all_commands
+    all_commands = commands
+
+    if command_ids.any?
+      all_commands += Command.where(['id NOT in (?)', @stage.command_ids])
+    else
+      all_commands += Command.all
+    end
+
+    all_commands
+  end
+
   private
 
   def reorder_commands(command_ids)
