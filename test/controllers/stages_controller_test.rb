@@ -65,13 +65,46 @@ describe StagesController do
     end
 
     describe 'POST to #create' do
+      let(:project) { projects(:test) }
+
       describe 'valid' do
+        before do
+          post :create, :project_id => project.id, :stage => {
+            :name => 'test',
+            :command_ids => [commands(:echo).id]
+          }
+        end
+
+        it 'is created' do
+          assigns(:stage).persisted?.must_equal(true)
+          assigns(:stage).command_ids.must_equal([commands(:echo).id])
+        end
+
+        it 'redirects' do
+          assert_redirected_to project_stage_path(project, assigns(:stage))
+        end
       end
 
       describe 'invalid attributes' do
+        before do
+          post :create, :project_id => project.id, :stage => {
+            :name => nil
+          }
+        end
+
+        it 'renders' do
+          assert_template :new
+        end
       end
 
       describe 'invalid project id' do
+        before do
+          post :create, :project_id => 123123
+        end
+
+        it 'redirects' do
+          assert_redirected_to root_path
+        end
       end
     end
 

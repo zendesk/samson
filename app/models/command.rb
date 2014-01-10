@@ -3,5 +3,5 @@ class Command < ActiveRecord::Base
   has_many :stages, through: :stage_commands
   belongs_to :user
 
-  validates_presence_of :name, :command, :user_id
+  validates :name, :command, :user_id, presence: true
 end

@@ -20,9 +20,14 @@ class StagesController < ApplicationController
   end
 
   def create
-    @stage = @project.stages.create!(stage_params)
+    @stage = @project.stages.create(stage_params)
 
-    redirect_to project_stage_path(@project, @stage)
+    if @stage.persisted?
+      redirect_to project_stage_path(@project, @stage)
+    else
+      flash[:error] = 'Stage failed.'
+      render :new
+    end
   end
 
   def edit
@@ -44,7 +49,7 @@ class StagesController < ApplicationController
   def stage_params
     params.require(:stage).permit(
       :name, :notify_email_address,
-      :command_ids => [], :command_positions => []
+      :command_ids => []
     )
   end
 

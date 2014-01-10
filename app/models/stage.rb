@@ -9,6 +9,8 @@ class Stage < ActiveRecord::Base
 
   default_scope { order(:order) }
 
+  validates :name, presence: true
+
   def self.reorder(new_order)
     transaction do
       new_order.each.with_index { |stage_id, index| Stage.update stage_id.to_i, order: index }
