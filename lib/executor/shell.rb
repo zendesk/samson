@@ -74,8 +74,8 @@ fi
         ActiveRecord::Base.connection_pool.release_connection
 
         begin
-          io.each do |line|
-            @callbacks[io_name].each {|callback| callback.call(line.chomp("\n")) }
+          io.each(3) do |line|
+            @callbacks[io_name].each {|callback| callback.call(line) }
           end
         rescue Errno::EIO
           # The IO has been closed.

@@ -8,10 +8,11 @@ class JobOutput
   def initialize
     @listeners = ThreadSafe::Array.new
     @messages = ThreadSafe::Array.new
+    @closed = false
   end
 
   def push(message)
-    @messages << message
+    @messages << message unless message == CLOSE
     @listeners.each {|listener| listener.push(message)}
   end
 
@@ -20,10 +21,13 @@ class JobOutput
   end
 
   def close
+    @closed = true
     push(CLOSE)
   end
 
-  def each
+  def each(&block)
+    return @messages.each(&block) if @closed
+
     queue = Queue.new
     @listeners << queue
 

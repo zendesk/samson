@@ -1,4 +1,4 @@
-class OutputStreamer
+class EventStreamer
   def initialize(stream)
     @stream = stream
   end
@@ -6,6 +6,7 @@ class OutputStreamer
   def start(output, &block)
     # Heartbeat thread until puma/puma#389 is solved
     start_heartbeat!
+    @scanner = TerminalOutputScanner.new
     output.each {|message| write_message(message, &block) }
   rescue IOError
     # Raised on stream close
@@ -16,19 +17,20 @@ class OutputStreamer
 
   def finished
     emit_event "finished"
-    @stream.close
+    @stream.close unless @stream.closed?
+  rescue IOError
+    # Raised on stream close
   end
 
   private
 
   def write_message(message, &block)
-    lines = message.split("\r")
     block ||= proc {|x| x }
 
-    emit_event "append", "\n" << block.call(lines.shift)
+    @scanner.write(message)
 
-    lines.each do |line|
-      emit_event "replace", block.call(line)
+    @scanner.each do |event, data|
+      emit_event event, block.call(data)
     end
   end
 

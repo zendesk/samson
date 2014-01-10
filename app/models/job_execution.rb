@@ -20,6 +20,7 @@ class JobExecution
 
   def start!
     @thread = Thread.new do
+      output_aggregator = OutputAggregator.new(@output)
       @job.run!
 
       dir = File.join(Dir.tmpdir, "deploy-#{@job.id}")
@@ -50,8 +51,9 @@ class JobExecution
         @job.fail!
       end
 
-      @job.update_output!(@output.to_s)
       @output.close
+      @job.update_output!(output_aggregator.to_s)
+
       ActiveRecord::Base.connection_pool.release_connection
     end
   end

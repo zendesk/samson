@@ -10,7 +10,7 @@ class StreamsController < ApplicationController
 
     job = Job.find(params[:id])
 
-    streamer = OutputStreamer.new(response.stream)
+    streamer = EventStreamer.new(response.stream)
 
     if job.active? && (execution = JobExecution.find_by_id(job.id))
       streamer.start(execution.output) {|line| render_log(line) }
