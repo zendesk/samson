@@ -1,11 +1,10 @@
 require_relative '../test_helper'
 
 describe StagesController do
+  subject { stages(:test_staging) }
+
   as_a_deployer do
-
     describe 'GET to :show' do
-      subject { stages(:test_staging) }
-
       describe 'valid' do
         before do
           get :show, :project_id => subject.project_id,
@@ -23,19 +22,19 @@ describe StagesController do
             :id => subject.id
         end
 
-        it 'renders the template' do
-          assert_template :show
+        it 'redirects' do
+          assert_redirected_to root_path
         end
       end
 
       describe 'invalid stage' do
         before do
-          get :show, :project_id => 123123,
-            :id => subject.id
+          get :show, :project_id => subject.project_id,
+            :id => 123123
         end
 
-        it 'renders the template' do
-          assert_template :show
+        it 'redirects' do
+          assert_redirected_to project_path(subject.project)
         end
       end
     end
@@ -47,5 +46,89 @@ describe StagesController do
   end
 
   as_a_admin do
+    describe 'GET to #new' do
+      describe 'valid' do
+        before { get :new, project_id: subject.project_id }
+
+        it 'renders' do
+          assert_template :new
+        end
+      end
+
+      describe 'invalid project_id' do
+        before { get :new, project_id: 123123 }
+
+        it 'redirects' do
+          assert_redirected_to root_path
+        end
+      end
+    end
+
+    describe 'POST to #create' do
+      describe 'valid' do
+      end
+
+      describe 'invalid attributes' do
+      end
+
+      describe 'invalid project id' do
+      end
+    end
+
+    describe 'GET to #edit' do
+      describe 'valid' do
+        before { get :edit, project_id: subject.project_id, id: subject.id }
+
+        it 'renders' do
+          assert_template :edit
+        end
+      end
+
+      describe 'invalid project_id' do
+        before { get :edit, project_id: 123123, id: 1 }
+
+        it 'redirects' do
+          assert_redirected_to root_path
+        end
+      end
+
+      describe 'invalid id' do
+        before { get :edit, project_id: subject.project_id, id: 123123 }
+
+        it 'redirects' do
+          assert_redirected_to project_path(subject.project)
+        end
+      end
+    end
+
+    describe 'DELETE to #destroy' do
+      describe 'valid' do
+        before { delete :destroy, project_id: subject.project_id, id: subject.id }
+
+        it 'redirects' do
+          assert_redirected_to project_path(subject.project)
+        end
+
+        it 'removes stage' do
+          Stage.exists?(subject.id).must_equal(false)
+        end
+      end
+
+      describe 'invalid project_id' do
+        before { delete :destroy, project_id: 123123, id: 1 }
+
+        it 'redirects' do
+          assert_redirected_to root_path
+        end
+      end
+
+      describe 'invalid id' do
+        before { delete :destroy, project_id: subject.project_id, id: 123123 }
+
+        it 'redirects' do
+          assert_redirected_to project_path(subject.project)
+        end
+      end
+    end
   end
 end

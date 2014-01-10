@@ -4,6 +4,14 @@ class StagesController < ApplicationController
   before_filter :find_project
   before_filter :find_stage, only: [:show, :edit, :update, :destroy]
 
+  rescue_from ActiveRecord::RecordNotFound do
+    if @project
+      redirect_to project_path(@project)
+    else
+      redirect_to root_path
+    end
+  end
+
   def show
   end
 
@@ -21,14 +29,13 @@ class StagesController < ApplicationController
   end
 
   def update
-    @stage.update_attributes(stage_params)
+    @stage.update_attributes!(stage_params)
 
     redirect_to project_stage_path(@project, @stage)
   end
 
   def destroy
     @stage.destroy
-
     redirect_to project_path(@project)
   end
 
