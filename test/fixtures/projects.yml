@@ -1,4 +1,4 @@
 test:
-  name: "Project"
-  repository_url: git://example.com/foo.git
+  name: Project
+  repository_url: ssh://git@example.com:bar/foo.git
   token: kanyewest

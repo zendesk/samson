@@ -24,7 +24,7 @@ describe TddiumController do
       "ref" => "refs/head/production",
       "repository" => {
         "name" => "repo_name",
-        "url" => "ssh =>//git@github.com/organization_name/repo_name",
+        "url" => project.repository_url,
         "org_name" => "organization_name"
       },
       "xid" => "372da4f69"
