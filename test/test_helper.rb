@@ -22,13 +22,25 @@ class ActiveSupport::TestCase
 end
 
 class ActionController::TestCase
-  def self.it_is_unauthorized
-    it "sets a flash error" do
-      request.flash[:error].wont_be_nil
+  class << self
+    def unauthorized(method, action, params = {})
+      describe "a #{method} to #{action} with #{params}" do
+        before { send(method, action, params) }
+
+        it 'is unauthorized' do
+          flash[:error].must_equal('You are not authorized to view this page.')
+          assert_redirected_to root_url
+        end
+      end
     end
 
-    it "redirects to the root url" do
-      assert_redirected_to root_path
+    %w{admin deployer viewer}.each do |user|
+      define_method "as_a_#{user}" do |&block|
+        describe "as a #{user}" do
+          setup { request.env['warden'].set_user(users(user)) }
+          instance_eval(&block)
+        end
+      end
     end
   end
 
@@ -49,15 +61,4 @@ class ActionController::TestCase
   end
 
   alias_method_chain :process, :catch_warden
-
-  class << self
-    %w{admin deployer viewer}.each do |user|
-      define_method "as_a_#{user}" do |&block|
-        describe "as a #{user}" do
-          setup { request.env['warden'].set_user(users(user)) }
-          instance_eval(&block)
-        end
-      end
-    end
-  end
 end
