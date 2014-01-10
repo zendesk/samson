@@ -1,8 +1,8 @@
 class DeployService
   attr_reader :project, :user
 
-  def initialize(project, stage, user)
-    @project, @stage, @user = project, stage, user
+  def initialize(project, user)
+    @project, @user = project, user
   end
 
   def deploy!(stage, commit)
@@ -12,7 +12,7 @@ class DeployService
     job_execution = JobExecution.start_job(commit, job)
 
     job_execution.subscribe do |job|
-      send_notifications(deploy, job)
+      send_notifications(stage, deploy, job)
     end
 
     deploy
@@ -20,9 +20,9 @@ class DeployService
 
   private
 
-  def send_notifications(deploy, job)
-    if @stage.send_email_notifications?
-      DeployMailer.deploy_email(@stage, deploy, job).deliver
+  def send_notifications(stage, deploy, job)
+    if stage.send_email_notifications?
+      DeployMailer.deploy_email(stage, deploy, job).deliver
     end
   end
 end
