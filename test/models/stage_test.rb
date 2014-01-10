@@ -1,9 +1,9 @@
 require_relative '../test_helper'
 
 describe Stage do
-  describe '#command' do
-    subject { stages(:test_staging) }
+  subject { stages(:test_staging) }
 
+  describe '#command' do
     describe 'adding + sorting a command' do
       before do
         command = Command.create!(
@@ -32,16 +32,26 @@ describe Stage do
   end
 
   describe '#all_commands' do
-    before do
-      Command.create!(
-        :name => 'test',
-        :command => 'test',
-        :user => users(:admin)
-      )
+    describe 'with commands' do
+      before do
+        Command.create!(
+          :name => 'test',
+          :command => 'test',
+          :user => users(:admin)
+        )
+      end
+
+      it 'includes all commands, sorted' do
+        subject.all_commands.must_equal(subject.commands.push(Command.last))
+      end
     end
 
-    it 'includes all commands, sorted' do
-      subject.all_commands.must_equal(subject.commands.push(Command.last))
+    describe 'no commands' do
+      subject { Stage.new }
+
+      it 'includes all commands' do
+        subject.all_commands.must_equal(Command.all)
+      end
     end
   end
 end

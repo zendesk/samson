@@ -33,7 +33,7 @@ class Stage < ActiveRecord::Base
     all_commands = commands
 
     if command_ids.any?
-      all_commands += Command.where(['id NOT in (?)', @stage.command_ids])
+      all_commands += Command.where(['id NOT in (?)', command_ids])
     else
       all_commands += Command.all
     end
