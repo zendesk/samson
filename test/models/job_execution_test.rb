@@ -10,6 +10,8 @@ describe JobExecution do
   let(:execution) { JobExecution.new("master", job, base_dir) }
 
   before do
+    JobExecution.enabled = true
+
     execute_on_remote_repo <<-SHELL
       git init
       git config user.email "test@example.com"
@@ -22,6 +24,7 @@ describe JobExecution do
 
   after do
     system("rm -fr #{repository_url}")
+    JobExecution.enabled = false
   end
 
   it "clones the project's repository if it's not already cloned" do

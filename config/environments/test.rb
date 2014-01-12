@@ -38,4 +38,8 @@ ZendeskPusher::Application.configure do
     host: "localhost",
     port: "9080"
   }
+
+  # By default, we don't want to actually execute jobs when testing. However,
+  # this setting can be enabled on a per-test basis.
+  config.pusher.enable_job_execution = false
 end

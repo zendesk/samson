@@ -24,5 +24,11 @@ module ZendeskPusher
     # Allow streaming
     config.preload_frameworks = true
     config.allow_concurrency = true
+
+    # Used for all Pusher specific configuration.
+    config.pusher = ActiveSupport::OrderedOptions.new
+
+    # Whether or not jobs are actually executed.
+    config.pusher.enable_job_execution = true
   end
 end
