@@ -6,12 +6,4 @@ module Admin::CommandsHelper
       "Edit Command"
     end
   end
-
-  def command_form_method
-    if @command.new_record?
-      :post
-    else
-      :put
-    end
-  end
 end

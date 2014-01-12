@@ -1,4 +1,4 @@
-<%= form_for @command, url: url_for(['admin', @command]), html: { class: "form-horizontal" }, method: command_form_method do |form| %>
+<%= form_for [:admin, @command], html: { class: "form-horizontal" } do |form| %>
   <fieldset>
     <legend><%= command_form_legend %></legend>
 
