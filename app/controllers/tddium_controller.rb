@@ -9,7 +9,10 @@ class TddiumController < ActionController::Base
   def create
     return head :ok if params[:status] != "passed"
 
-    project = Project.find_by!(token: params[:token], repository_url: params[:repository][:url])
+    project = Project.find_by_token!(params[:token])
+
+    return head :ok if project.repository_url != params[:repository][:url]
+
     stages = project.webhook_stages_for_branch(params[:branch])
     tddium_user = User.find_or_create_by(name: "Tddium")
     deploy_service = DeployService.new(project, tddium_user)

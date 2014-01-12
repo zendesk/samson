@@ -74,8 +74,14 @@ describe TddiumController do
     response.status.must_equal 200
   end
 
-  it "responds with 404 Not Found if the repository url is invalid" do
+  it "responds with 200 OK if the token is valid but the repository url is invalid" do
     post :create, payload.merge(token: project.token, repository: { url: "foobar"} )
+
+    response.status.must_equal 200
+  end
+
+  it "responds with 404 Not Found if the token is invalid" do
+    post :create, payload.merge(token: "foobar")
 
     response.status.must_equal 404
   end
