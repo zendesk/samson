@@ -27,10 +27,10 @@ script/bootstrap
 # ZENDESK_URL defaults to "http://dev.localhost", but is used for authorization
 # An example Zendesk OAuth Client config - http://cl.ly/image/47282r002n02
 
-bundle exec puma -C config/puma.rb -p 8080
+bundle exec puma -C config/puma.rb
 ```
 
-The website runs at `localhost:8080` by default.
+The website runs at `localhost:9080` by default.
 
 #### Admin user
 
