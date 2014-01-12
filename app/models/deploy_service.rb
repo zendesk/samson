@@ -11,8 +11,8 @@ class DeployService
 
     job_execution = JobExecution.start_job(commit, job)
 
-    job_execution.subscribe do |job|
-      send_notifications(stage, deploy, job)
+    job_execution.subscribe do |_|
+      send_notifications(stage, deploy)
     end
 
     deploy
@@ -20,9 +20,9 @@ class DeployService
 
   private
 
-  def send_notifications(stage, deploy, job)
+  def send_notifications(stage, deploy)
     if stage.send_email_notifications?
-      DeployMailer.deploy_email(stage, deploy, job).deliver
+      DeployMailer.deploy_email(stage, deploy).deliver
     end
   end
 end
