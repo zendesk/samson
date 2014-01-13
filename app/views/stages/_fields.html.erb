@@ -14,8 +14,11 @@
 
 <div id="commands" class="form-group">
   <label class="col-lg-2 control-label">Commands</label>
+
   <div class="col-lg-4">
     <%= command_check_boxes(form) %>
+    <hr />
+    <%= form.text_area :command, rows: 4, class: "form-control", value: nil %>
   </div>
 </div>
 

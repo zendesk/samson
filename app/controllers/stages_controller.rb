@@ -20,7 +20,9 @@ class StagesController < ApplicationController
   end
 
   def create
-    @stage = @project.stages.create(stage_params)
+    @stage = @project.stages.create(stage_params) do |stage|
+      stage.stage_commands.build(command: command) if command
+    end
 
     if @stage.persisted?
       redirect_to project_stage_path(@project, @stage)
@@ -34,9 +36,14 @@ class StagesController < ApplicationController
   end
 
   def update
-    @stage.update_attributes!(stage_params)
+    @stage.stage_commands.build(command: command) if command
 
-    redirect_to project_stage_path(@project, @stage)
+    if @stage.update_attributes(stage_params)
+      redirect_to project_stage_path(@project, @stage)
+    else
+      flash[:error] = 'Stage failed.'
+      render :edit
+    end
   end
 
   def destroy
@@ -53,11 +60,21 @@ class StagesController < ApplicationController
     )
   end
 
+  def command_param
+    params.require(:stage).permit(:command)
+  end
+
   def find_project
     @project = Project.find(params[:project_id])
   end
 
   def find_stage
     @stage = @project.stages.find(params[:id])
+  end
+
+  def command
+    @command ||= if command_param[:command].present?
+      Command.new(command: command_param[:command], user: current_user)
+    end
   end
 end

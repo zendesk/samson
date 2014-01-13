@@ -7,8 +7,8 @@ describe StagesController do
     describe 'GET to :show' do
       describe 'valid' do
         before do
-          get :show, :project_id => subject.project_id,
-            :id => subject.id
+          get :show, project_id: subject.project_id,
+            id: subject.id
         end
 
         it 'renders the template' do
@@ -18,8 +18,8 @@ describe StagesController do
 
       describe 'invalid project' do
         before do
-          get :show, :project_id => 123123,
-            :id => subject.id
+          get :show, project_id: 123123,
+            id: subject.id
         end
 
         it 'redirects' do
@@ -29,8 +29,8 @@ describe StagesController do
 
       describe 'invalid stage' do
         before do
-          get :show, :project_id => subject.project_id,
-            :id => 123123
+          get :show, project_id: subject.project_id,
+            id: 123123
         end
 
         it 'redirects' do
@@ -42,6 +42,7 @@ describe StagesController do
     unauthorized :get, :new, project_id: 1
     unauthorized :post, :create, project_id: 1
     unauthorized :get, :edit, project_id: 1, id: 1
+    unauthorized :patch, :update, project_id: 1, id: 1
     unauthorized :delete, :destroy, project_id: 1, id: 1
   end
 
@@ -68,16 +69,23 @@ describe StagesController do
       let(:project) { projects(:test) }
 
       describe 'valid' do
+        subject { assigns(:stage) }
+
         before do
-          post :create, :project_id => project.id, :stage => {
-            :name => 'test',
-            :command_ids => [commands(:echo).id]
+          post :create, project_id: project.id, stage: {
+            name: 'test',
+            command: 'test command',
+            command_ids: [commands(:echo).id]
           }
+
+          subject.reload
+          subject.commands.reload
         end
 
         it 'is created' do
-          assigns(:stage).persisted?.must_equal(true)
-          assigns(:stage).command_ids.must_equal([commands(:echo).id])
+          subject.persisted?.must_equal(true)
+          subject.command_ids.must_include(commands(:echo).id)
+          subject.commands.last.command.must_equal('test command')
         end
 
         it 'redirects' do
@@ -87,8 +95,8 @@ describe StagesController do
 
       describe 'invalid attributes' do
         before do
-          post :create, :project_id => project.id, :stage => {
-            :name => nil
+          post :create, project_id: project.id, stage: {
+            name: nil
           }
         end
 
@@ -99,7 +107,7 @@ describe StagesController do
 
       describe 'invalid project id' do
         before do
-          post :create, :project_id => 123123
+          post :create, project_id: 123123
         end
 
         it 'redirects' do
@@ -127,6 +135,61 @@ describe StagesController do
 
       describe 'invalid id' do
         before { get :edit, project_id: subject.project_id, id: 123123 }
+
+        it 'redirects' do
+          assert_redirected_to project_path(subject.project)
+        end
+      end
+    end
+
+    describe 'PATCH to #update' do
+      describe 'valid id' do
+        before do
+          patch :update, project_id: subject.project_id, id: subject.id,
+            stage: attributes
+
+          subject.reload
+        end
+
+        describe 'valid attributes' do
+          let(:attributes) {{
+            command: 'test command',
+            name: 'Hello'
+          }}
+
+          it 'updates name' do
+            subject.name.must_equal('Hello')
+          end
+
+          it 'redirects' do
+            assert_redirected_to project_stage_path(subject.project, subject)
+          end
+
+          it 'adds a command' do
+            command = subject.commands.reload.last
+            command.command.must_equal('test command')
+          end
+        end
+
+        describe 'invalid attributes' do
+          let(:attributes) {{ name: nil }}
+
+          it 'renders' do
+            assert_template :edit
+          end
+        end
+      end
+
+      describe 'invalid project_id' do
+        before { patch :update, project_id: 123123, id: 1 }
+
+        it 'redirects' do
+          assert_redirected_to root_path
+        end
+      end
+
+      describe 'invalid id' do
+        before { patch :update, project_id: subject.project_id, id: 123123 }
 
         it 'redirects' do
           assert_redirected_to project_path(subject.project)

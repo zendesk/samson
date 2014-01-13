@@ -4,6 +4,22 @@ describe Stage do
   subject { stages(:test_staging) }
 
   describe '#command' do
+    describe 'adding a built command' do
+      before do
+        subject.stage_commands.build(command:
+          Command.new(:command => 'test', :user => users(:admin))
+        )
+
+        subject.command_ids = [commands(:echo).id]
+        subject.save!
+        subject.reload
+      end
+
+      it 'add new command to the end' do
+        subject.command.must_equal("#{commands(:echo).command}\ntest")
+      end
+    end
+
     describe 'adding + sorting a command' do
       before do
         command = Command.create!(

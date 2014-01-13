@@ -20,11 +20,11 @@ describe Admin::CommandsController do
 
     describe 'POST to #create' do
       before do
-        post :create, :command => attributes
+        post :create, command: attributes
       end
 
       describe 'invalid' do
-        let(:attributes) {{ :command => nil }}
+        let(:attributes) {{ command: nil }}
 
         it 'renders and sets the flash' do
           flash[:error].wont_be_nil
@@ -33,7 +33,7 @@ describe Admin::CommandsController do
       end
 
       describe 'valid' do
-        let(:attributes) {{ :command => 'echo hi' }}
+        let(:attributes) {{ command: 'echo hi' }}
 
         it 'redirects and sets the flash' do
           flash[:notice].wont_be_nil
@@ -60,14 +60,14 @@ describe Admin::CommandsController do
       end
     end
 
-    describe 'PUT to #update' do
+    describe 'PATCH to #update' do
       before do
-        put :update, :id => commands(:echo).id,
-          :command => attributes
+        patch :update, id: commands(:echo).id,
+          command: attributes
       end
 
       describe 'invalid' do
-        let(:attributes) {{ :command => nil }}
+        let(:attributes) {{ command: nil }}
 
         it 'renders and sets the flash' do
           flash[:error].wont_be_nil
@@ -76,7 +76,7 @@ describe Admin::CommandsController do
       end
 
       describe 'valid' do
-        let(:attributes) {{ :command => 'echo hi' }}
+        let(:attributes) {{ command: 'echo hi' }}
 
         it 'redirects and sets the flash' do
           flash[:notice].wont_be_nil
@@ -87,7 +87,7 @@ describe Admin::CommandsController do
 
     describe 'DELETE to #destroy' do
       describe 'invalid' do
-        before { delete :destroy, :id => 123123 }
+        before { delete :destroy, id: 123123 }
 
         it 'redirects' do
           assert_redirected_to admin_commands_path
@@ -95,7 +95,7 @@ describe Admin::CommandsController do
       end
 
       describe 'valid' do
-        before { delete :destroy, :id => commands(:echo).id }
+        before { delete :destroy, id: commands(:echo).id }
 
         it 'redirects' do
           flash[:notice].wont_be_nil

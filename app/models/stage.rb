@@ -48,7 +48,9 @@ class Stage < ActiveRecord::Base
   def reorder_commands(command_ids)
     command_ids = command_ids.reject(&:blank?).map(&:to_i)
     stage_commands.each do |stage_command|
-      next unless (pos = command_ids.index(stage_command.command_id))
+      pos = command_ids.index(stage_command.command_id) ||
+        stage_commands.length
+
       stage_command.position = pos
     end
   end
