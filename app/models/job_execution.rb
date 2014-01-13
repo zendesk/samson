@@ -32,26 +32,8 @@ class JobExecution
 
       begin
         dir = File.join(Dir.tmpdir, "deploy-#{@job.id}")
-        project = @job.project
-        repo_url = project.repository_url
-        cached_repos_dir = File.join(@base_dir, "cached_repos")
-        repo_cache_dir = File.join(cached_repos_dir, project.id.to_s)
 
-        setup = [
-          <<-SHELL,
-            if [ -d #{repo_cache_dir} ]
-              then cd #{repo_cache_dir} && git fetch -ap
-            else
-              git clone --mirror #{repo_url} #{repo_cache_dir}
-            fi
-          SHELL
-          "git clone #{repo_cache_dir} #{dir}",
-          "cd #{dir}",
-          "git checkout --quiet #{@commit}",
-          "export DEPLOYER=#{@job.user.email}"
-        ]
-
-        if !@executor.execute!(*setup)
+        if !setup!(dir)
           @job.error!
         elsif @executor.execute!("cd #{dir}", *@job.commands)
           @job.success!
@@ -89,6 +71,31 @@ class JobExecution
 
   def subscribe(&block)
     @subscribers << block
+  end
+
+  private
+
+  def setup!(dir)
+    project = @job.project
+    repo_url = project.repository_url
+    cached_repos_dir = File.join(@base_dir, "cached_repos")
+    repo_cache_dir = File.join(cached_repos_dir, project.id.to_s)
+
+    commands = [
+      <<-SHELL,
+        if [ -d #{repo_cache_dir} ]
+          then cd #{repo_cache_dir} && git fetch -ap
+        else
+          git clone --mirror #{repo_url} #{repo_cache_dir}
+        fi
+      SHELL
+      "git clone #{repo_cache_dir} #{dir}",
+      "cd #{dir}",
+      "git checkout --quiet #{@commit}",
+      "export DEPLOYER=#{@job.user.email}"
+    ]
+
+    @executor.execute!(*commands)
   end
 
   class << self
