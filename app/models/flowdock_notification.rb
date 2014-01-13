@@ -4,6 +4,7 @@ class FlowdockNotification
   def initialize(stage, deploy)
     @stage, @deploy = stage, deploy
     @project = @stage.project
+    @user = @deploy.user
   end
 
   def deliver
@@ -23,7 +24,7 @@ class FlowdockNotification
     @flow ||= Flowdock::Flow.new(
       api_token: api_tokens,
       source: "pusher",
-      from: { name: "Pusher", address: "pusher@example.com" }
+      from: { name: @user.name, address: @user.email }
     )
   end
 end
