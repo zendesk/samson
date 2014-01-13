@@ -13,7 +13,7 @@ class StagesController < ApplicationController
   end
 
   def show
-    @deploys = find_stage.deploys.latest
+    @deploys = @stage.deploys.latest
   end
 
   def new
