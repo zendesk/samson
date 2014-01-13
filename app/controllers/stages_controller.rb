@@ -4,7 +4,7 @@ class StagesController < ApplicationController
 
   def show
     @deploys = find_stage.latest_deploys
-     @deploy_status_for_label = {"running" => "label-info", "succeeded" => "label-success", "failed" => "label-danger", "pending" => "label-default", "cancelling" => "label-warning", "cancelled" => "label-danger"}
+    @deploy_status_for_label = {"running" => "label-info", "succeeded" => "label-success", "failed" => "label-danger", "pending" => "label-default", "cancelling" => "label-warning", "cancelled" => "label-danger"}
   end
 
   def new
