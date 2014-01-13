@@ -12,9 +12,18 @@
   </div>
 </div>
 
-<div class="form-group">
-  <%= form.label :command, class: "col-lg-2 control-label" %>
+<div id="commands" class="form-group">
+  <label class="col-lg-2 control-label">Commands</label>
+
   <div class="col-lg-4">
-    <%= form.text_area :command, rows: 8, class: "form-control" %>
+    <%= command_check_boxes(form) %>
+    <hr />
+    <%= form.text_field :command, class: "form-control", value: nil, placeholder: 'cap production deploy' %>
   </div>
 </div>
+
+<%= javascript_tag do %>
+  $(document).ready(function() {
+    $('#commands').sortable({ items: '.checkbox' });
+  });
+<% end %>

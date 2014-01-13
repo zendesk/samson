@@ -27,8 +27,7 @@ describe ProjectsController do
     end
 
     as_a_deployer do
-      setup { get :new }
-      it_is_unauthorized
+      unauthorized :get, :new
     end
   end
 
@@ -72,8 +71,7 @@ describe ProjectsController do
     end
 
     as_a_deployer do
-      setup { post :create }
-      it_is_unauthorized
+      unauthorized :post, :create
     end
   end
 
@@ -100,8 +98,7 @@ describe ProjectsController do
     end
 
     as_a_deployer do
-      setup { delete :destroy, :id => project.id }
-      it_is_unauthorized
+      unauthorized :delete, :destroy, id: 1
     end
   end
 
@@ -162,8 +159,7 @@ describe ProjectsController do
     end
 
     as_a_deployer do
-      setup { put :update, :id => project.id }
-      it_is_unauthorized
+      unauthorized :put, :update, id: 1
     end
   end
 
@@ -196,8 +192,7 @@ describe ProjectsController do
     end
 
     as_a_deployer do
-      setup { get :edit, :id => project.id }
-      it_is_unauthorized
+      unauthorized :get, :edit, id: 1
     end
   end
 
@@ -230,8 +225,7 @@ describe ProjectsController do
     end
 
     as_a_viewer do
-      setup { get :show, :id => project.id }
-      it_is_unauthorized
+      unauthorized :get, :show, id: 1
     end
   end
 end

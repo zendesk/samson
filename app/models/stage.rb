@@ -2,7 +2,14 @@ class Stage < ActiveRecord::Base
   belongs_to :project
   has_many :deploys
 
+  has_many :stage_commands, autosave: true
+  has_many :commands,
+    -> { order('stage_commands.position ASC') },
+    through: :stage_commands
+
   default_scope { order(:order) }
+
+  validates :name, presence: true
 
   def self.reorder(new_order)
     transaction do
@@ -14,4 +21,37 @@ class Stage < ActiveRecord::Base
     notify_email_address.present?
   end
 
+  def command
+    commands.map(&:command).join("\n")
+  end
+
+  def command_ids=(command_ids)
+    super.tap do
+      reorder_commands(command_ids)
+    end
+  end
+
+  def all_commands
+    all_commands = commands
+
+    if command_ids.any?
+      all_commands += Command.where(['id NOT in (?)', command_ids])
+    else
+      all_commands += Command.all
+    end
+
+    all_commands
+  end
+
+  private
+
+  def reorder_commands(command_ids)
+    command_ids = command_ids.reject(&:blank?).map(&:to_i)
+    stage_commands.each do |stage_command|
+      pos = command_ids.index(stage_command.command_id) ||
+        stage_commands.length
+
+      stage_command.position = pos
+    end
+  end
 end

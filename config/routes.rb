@@ -28,6 +28,7 @@ ZendeskPusher::Application.routes.draw do
   namespace :admin do
     resource :users, only: [:show, :update]
     resource :projects, only: [:show]
+    resources :commands, except: [:show]
   end
 
   scope :integrations do
