@@ -1,5 +1,7 @@
 class Warden::Strategies::ZendeskOAuth2Strategy < Warden::Strategies::Base
-  def valid?; true; end
+  def valid?
+    true
+  end
 
   def authenticate!
     redirect!('/auth/zendesk')

@@ -1,4 +1,4 @@
-require 'test_helper'
+require_relative '../test_helper'
 
 describe SessionsController do
   describe "a GET to #new" do
@@ -44,7 +44,7 @@ describe SessionsController do
 
   describe "a DELETE to #destroy" do
     setup do
-      session[:user_id] = users(:admin).id
+      login_as(users(:admin))
       delete :destroy
     end
 

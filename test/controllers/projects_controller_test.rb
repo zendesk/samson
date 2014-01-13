@@ -1,8 +1,8 @@
-require 'test_helper'
+require_relative '../test_helper'
 
 describe ProjectsController do
   setup do
-    session[:user_id] = users(:admin).id
+    request.env['warden'].set_user(users(:admin))
   end
 
   describe "a GET to #index" do

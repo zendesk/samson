@@ -2,6 +2,7 @@ admin:
   name: "Admin"
   email: "admin@example.com"
   role_id: <%= Role::ADMIN.id %>
+  current_token: abc123
 deployer:
   name: "Deployer"
   email: "deployer@example.com"

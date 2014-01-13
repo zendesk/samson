@@ -13,10 +13,9 @@ require 'warden/strategies/zendesk_oauth2_strategy'
 
 Rails.application.config.middleware.insert_after(ActionDispatch::Flash, Warden::Manager) do |manager|
   manager.default_strategies :basic, :zendesk_oauth2
-
   manager.failure_app = Class.new do
-    def call(env)
-      [401, {}, '']
+    def self.call(env)
+      [401, {}, StringIO.new]
     end
   end
 end

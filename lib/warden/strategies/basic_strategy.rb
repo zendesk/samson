@@ -12,11 +12,13 @@ class Warden::Strategies::BasicStrategy < Warden::Strategies::Base
   def authenticate!
     email, token = Base64.decode64(authorization.sub!(/^Basic /, '')).split(':')
 
-    if (user = User.where(email: email).where(current_token: token).first)
-      # This + store? change stops the Set-Cookie header from being sent
-      request.session_options[:skip] = true
+    # This + store? change stops the Set-Cookie header from being sent
+    request.session_options[:skip] = true
 
+    if (user = User.where(email: email).where(current_token: token).first)
       success!(user)
+    else
+      halt!
     end
   end
 

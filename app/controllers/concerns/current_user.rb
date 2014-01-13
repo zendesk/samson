@@ -4,7 +4,7 @@ module CurrentUser
   included do
     helper_method :logged_in?
     helper_method :current_user
-    before_filter :login_users
+    prepend_before_filter :login_users
   end
 
   def current_user
@@ -29,6 +29,6 @@ module CurrentUser
   end
 
   def warden
-    env['warden']
+    request.env['warden']
   end
 end
