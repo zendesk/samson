@@ -7,7 +7,7 @@ describe JobExecution do
   let(:cached_repo_dir) { "#{base_dir}/cached_repos/#{project.id}" }
   let(:user) { User.create! }
   let(:job) { project.jobs.create!(command: "cat foo", user: user) }
-  let(:execution) { JobExecution.new("master", job, base_dir) }
+  let(:execution) { JobExecution.new("master", job) }
 
   before do
     JobExecution.enabled = true
@@ -29,8 +29,9 @@ describe JobExecution do
 
   it "clones the project's repository if it's not already cloned" do
     execution.start_and_wait!
+    repo_dir = File.join(Rails.application.config.pusher.cached_repos_dir, project.id.to_s)
 
-    assert File.directory?(cached_repo_dir)
+    assert File.directory?(repo_dir)
   end
 
   it "clones the cached repository into a temporary repository"
@@ -91,7 +92,7 @@ describe JobExecution do
   it "runs the commands specified by the job"
 
   def execute_job(branch = master)
-    execution = JobExecution.new(branch, job, base_dir)
+    execution = JobExecution.new(branch, job)
     execution.start_and_wait!
   end
 

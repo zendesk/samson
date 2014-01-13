@@ -6,13 +6,16 @@ class JobExecution
   # execution for testing purposes.
   cattr_accessor(:enabled, instance_reader: true) { true }
 
+  # The directory in which repositories should be cached.
+  cattr_accessor(:cached_repos_dir, instance_reader: true)
+
   attr_reader :output
 
-  def initialize(commit, job, base_dir = Rails.root)
+  def initialize(commit, job)
     @output = JobOutput.new
     @executor = Executor::Shell.new
     @subscribers = []
-    @job, @commit, @base_dir = job, commit, base_dir
+    @job, @commit = job, commit
 
     @executor.output do |message|
       @output.push(message)
@@ -90,7 +93,6 @@ class JobExecution
   def setup!(dir)
     project = @job.project
     repo_url = project.repository_url
-    cached_repos_dir = File.join(@base_dir, "cached_repos")
     repo_cache_dir = File.join(cached_repos_dir, project.id.to_s)
 
     commands = [
