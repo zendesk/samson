@@ -7,6 +7,12 @@ class User < ActiveRecord::Base
     user = User.where(email: hash[:email]).first
     user ||= User.new
 
+    role_id = hash.delete(:role_id)
+
+    if role_id && (user.new_record? || role_id >= user.role_id)
+      user.role_id = role_id
+    end
+
     user.attributes = hash
     user.tap(&:save)
   end

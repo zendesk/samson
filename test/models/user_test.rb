@@ -19,6 +19,10 @@ describe User do
       it "sets the current token" do
         user.current_token.must_equal("abc123")
       end
+
+      it "sets the role_id" do
+        user.role_id.must_equal(Role::ADMIN.id)
+      end
     end
 
     describe "with an existing user" do
@@ -44,6 +48,38 @@ describe User do
 
       it "sets the current token" do
         user.current_token.must_equal("abc123")
+      end
+
+      describe "with a higher role_id" do
+        let(:hash) {{
+          :name => "Test User",
+          :email => "test@example.org",
+          :role_id => Role::ADMIN.id
+        }}
+
+        setup do
+          existing_user.update_attributes!(:role_id => Role::VIEWER.id)
+        end
+
+        it "is overwritten" do
+          user.role_id.must_equal(Role::ADMIN.id)
+        end
+      end
+
+      describe "with a lower role_id" do
+        let(:hash) {{
+          :name => "Test User",
+          :email => "test@example.org",
+          :role_id => Role::VIEWER.id
+        }}
+
+        setup do
+          existing_user.update_attributes!(role_id: Role::ADMIN.id)
+        end
+
+        it "is ignored" do
+          user.role_id.must_equal(Role::ADMIN.id)
+        end
       end
     end
   end
