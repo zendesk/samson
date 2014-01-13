@@ -37,7 +37,7 @@ class JobExecution
         cached_repos_dir = File.join(@base_dir, "cached_repos")
         repo_cache_dir = File.join(cached_repos_dir, project.id.to_s)
 
-        commands = [
+        setup = [
           <<-SHELL,
             if [ -d #{repo_cache_dir} ]
               then cd #{repo_cache_dir} && git fetch -ap
@@ -48,11 +48,12 @@ class JobExecution
           "git clone #{repo_cache_dir} #{dir}",
           "cd #{dir}",
           "git checkout --quiet #{@commit}",
-          "export DEPLOYER=#{@job.user.email}",
-          *@job.commands
+          "export DEPLOYER=#{@job.user.email}"
         ]
 
-        if @executor.execute!(*commands)
+        if !@executor.execute!(*setup)
+          @job.error!
+        elsif @executor.execute!("cd #{dir}", *@job.commands)
           @job.success!
         else
           @job.fail!
