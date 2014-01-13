@@ -11,13 +11,13 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20140113010124) do
+ActiveRecord::Schema.define(version: 20140113083726) do
 
   create_table "commands", force: true do |t|
     t.text     "command",    limit: 16777215
-    t.integer  "user_id"
     t.datetime "created_at"
     t.datetime "updated_at"
+    t.integer  "project_id"
   end
 
   create_table "deploys", force: true do |t|

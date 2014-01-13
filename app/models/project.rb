@@ -10,6 +10,7 @@ class Project < ActiveRecord::Base
   has_many :deploys, -> { order('created_at DESC') }, through: :stages
   has_many :jobs, -> { order('created_at DESC') }
   has_many :webhooks
+  has_many :commands
 
   accepts_nested_attributes_for :stages
 

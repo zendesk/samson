@@ -7,7 +7,7 @@ describe Stage do
     describe 'adding a built command' do
       before do
         subject.stage_commands.build(command:
-          Command.new(:command => 'test', :user => users(:admin))
+          Command.new(:command => 'test')
         )
 
         subject.command_ids = [commands(:echo).id]
@@ -22,10 +22,7 @@ describe Stage do
 
     describe 'adding + sorting a command' do
       before do
-        command = Command.create!(
-          :command => 'test',
-          :user => users(:admin)
-        )
+        command = Command.create!(command: 'test')
 
         subject.command_ids = [command.id, commands(:echo).id]
         subject.save!
@@ -49,10 +46,7 @@ describe Stage do
   describe '#all_commands' do
     describe 'with commands' do
       before do
-        Command.create!(
-          :command => 'test',
-          :user => users(:admin)
-        )
+        Command.create!(command: 'test')
       end
 
       it 'includes all commands, sorted' do
@@ -61,10 +55,19 @@ describe Stage do
     end
 
     describe 'no commands' do
+      let(:project) { projects(:test) }
+      subject { project.stages.build }
+
+      it 'includes all commands' do
+        subject.all_commands.must_equal(Command.for_project(project))
+      end
+    end
+
+    describe 'no project' do
       subject { Stage.new }
 
       it 'includes all commands' do
-        subject.all_commands.must_equal(Command.all)
+        subject.all_commands.must_equal(Command.global)
       end
     end
   end

@@ -21,14 +21,16 @@ class StagesController < ApplicationController
   end
 
   def create
-    @stage = @project.stages.create(stage_params) do |stage|
-      stage.stage_commands.build(command: command) if command
-    end
+    # Need to ensure project is already associated
+    @stage = @project.stages.build
+    @stage.attributes = stage_params
 
-    if @stage.persisted?
+    if @stage.save
       redirect_to project_stage_path(@project, @stage)
     else
       flash[:error] = 'Stage failed.'
+
+      @stage.flowdock_flows.build
       render :new
     end
   end
@@ -38,12 +40,12 @@ class StagesController < ApplicationController
   end
 
   def update
-    @stage.stage_commands.build(command: command) if command
-
     if @stage.update_attributes(stage_params)
       redirect_to project_stage_path(@project, @stage)
     else
       flash[:error] = 'Stage failed.'
+
+      @stage.flowdock_flows.build
       render :edit
     end
   end
@@ -57,15 +59,11 @@ class StagesController < ApplicationController
 
   def stage_params
     params.require(:stage).permit(
-      :name,
+      :name, :command,
       :notify_email_address,
       command_ids: [],
       flowdock_flows_attributes: [:id, :name, :token, :_destroy]
     )
-  end
-
-  def command_param
-    params.require(:stage).permit(:command)
   end
 
   def find_project
@@ -74,11 +72,5 @@ class StagesController < ApplicationController
 
   def find_stage
     @stage = @project.stages.find(params[:id])
-  end
-
-  def command
-    @command ||= if command_param[:command].present?
-      Command.new(command: command_param[:command], user: current_user)
-    end
   end
 end
