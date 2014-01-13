@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20140110000439) do
+ActiveRecord::Schema.define(version: 20140113010124) do
 
   create_table "commands", force: true do |t|
     t.text     "command",    limit: 16777215
@@ -24,6 +24,14 @@ ActiveRecord::Schema.define(version: 20140110000439) do
     t.integer  "stage_id",   null: false
     t.integer  "job_id",     null: false
     t.string   "commit",     null: false
+    t.datetime "created_at"
+    t.datetime "updated_at"
+  end
+
+  create_table "flowdock_flows", force: true do |t|
+    t.string   "name",       null: false
+    t.string   "token",      null: false
+    t.integer  "stage_id",   null: false
     t.datetime "created_at"
     t.datetime "updated_at"
   end

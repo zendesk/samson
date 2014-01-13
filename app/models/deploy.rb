@@ -18,13 +18,13 @@ class Deploy < ActiveRecord::Base
 
   def summary_action
     if pending?
-      "is waiting to deploy"
+      "is about to deploy"
     elsif running?
       "is deploying"
     elsif cancelling?
       "is cancelling a deploy of"
     elsif succeeded?
-      "successfully deployed"
+      "deployed"
     elsif failed?
       "failed to deploy"
     end

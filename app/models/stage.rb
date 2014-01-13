@@ -1,6 +1,7 @@
 class Stage < ActiveRecord::Base
   belongs_to :project
   has_many :deploys
+  has_many :flowdock_flows
 
   has_many :stage_commands, autosave: true
   has_many :commands,
@@ -11,6 +12,8 @@ class Stage < ActiveRecord::Base
 
   validates :name, presence: true
 
+  accepts_nested_attributes_for :flowdock_flows, allow_destroy: true, reject_if: :no_flowdock_token?
+
   def self.reorder(new_order)
     transaction do
       new_order.each.with_index { |stage_id, index| Stage.update stage_id.to_i, order: index }
@@ -19,6 +22,14 @@ class Stage < ActiveRecord::Base
 
   def send_email_notifications?
     notify_email_address.present?
+  end
+
+  def send_flowdock_notifications?
+    flowdock_flows.any?
+  end
+
+  def flowdock_tokens
+    flowdock_flows.map(&:token)
   end
 
   def command
@@ -53,5 +64,9 @@ class Stage < ActiveRecord::Base
 
       stage_command.position = pos
     end
+  end
+
+  def no_flowdock_token?(flowdock_attrs)
+    flowdock_attrs['token'].blank?
   end
 end
