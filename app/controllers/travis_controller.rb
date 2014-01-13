@@ -8,7 +8,7 @@ class TravisController < ApplicationController
   skip_before_filter :verify_authenticity_token
 
   def create
-    unless travis_authorization == request.authorization && deploy?
+    unless project && deploy?
       return head :bad_request
     end
 

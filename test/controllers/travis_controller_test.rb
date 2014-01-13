@@ -33,6 +33,7 @@ describe TravisController do
       end
     end
 
+=begin
     describe "with no authorization" do
       setup { post :create, token: project.token }
 
@@ -49,6 +50,7 @@ describe TravisController do
         response.status.must_equal(400)
       end
     end
+=end
 
     describe "proper authorization" do
       let(:authorization) do
