@@ -5,18 +5,11 @@ class TerminalExecutor
   attr_reader :callbacks
 
   def initialize
-    @callbacks = {
-      :stdout => [],
-      :stderr => []
-    }
+    @callbacks = []
   end
 
   def output(&block)
-    @callbacks[:stdout] << block
-  end
-
-  def error_output(&block)
-    @callbacks[:stderr] << block
+    @callbacks << block
   end
 
   def execute!(*commands)
@@ -46,23 +39,18 @@ class TerminalExecutor
   private
 
   def execute_command!(command)
-    stdout, out = PTY.open
-    stderr, err = PTY.open
+    master, slave = PTY.open
 
     @pid = Bundler.with_clean_env do
-      Process.spawn(command, in: "/dev/null", out: out, err: err)
+      Process.spawn(command, in: "/dev/null", out: slave, err: slave)
     end
 
-    out_thread = setup_callbacks(stdout, :stdout)
-    err_thread = setup_callbacks(stderr, :stderr)
+    io_thread = callback_thread(master)
 
     _, status = Process.wait2(@pid)
 
-    out.close
-    err.close
-
-    out_thread.join
-    err_thread.join
+    slave.close
+    io_thread.join
 
     return status.success?
   end
@@ -83,13 +71,13 @@ fi
     "Failed to execute \"#{command}\""
   end
 
-  def setup_callbacks(io, io_name)
+  def callback_thread(io)
     Thread.new do
       ActiveRecord::Base.connection_pool.release_connection
 
       begin
         io.each(3) do |line|
-          @callbacks[io_name].each {|callback| callback.call(line) }
+          @callbacks.each {|callback| callback.call(line) }
         end
       rescue Errno::EIO
         # The IO has been closed.

@@ -20,10 +20,6 @@ class JobExecution
     @executor.output do |message|
       @output.push(message)
     end
-
-    @executor.error_output do |message|
-      @output.push(message)
-    end
   end
 
   def start!

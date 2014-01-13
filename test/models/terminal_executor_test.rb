@@ -1,5 +1,4 @@
-require_relative '../../test_helper'
-require 'executor/shell'
+require_relative '../test_helper'
 
 describe TerminalExecutor do
   subject do
@@ -7,15 +6,10 @@ describe TerminalExecutor do
       shell.output do |line|
         stdout << line
       end
-
-      shell.error_output do |line|
-        stderr << line
-      end
     end
   end
 
   let(:stdout) { [] }
-  let(:stderr) { [] }
 
   describe 'stdout' do
     before do
@@ -24,7 +18,6 @@ describe TerminalExecutor do
 
     it 'keeps all lines' do
       stdout.join.must_equal("hi\r\nhello\r\n")
-      stderr.must_equal([])
     end
   end
 
@@ -34,8 +27,7 @@ describe TerminalExecutor do
     end
 
     it 'keeps all lines' do
-      stderr.join.must_equal("hi\r\nhello\r\n")
-      stdout.must_equal([])
+      stdout.join.must_equal("hi\r\nhello\r\n")
     end
   end
 
@@ -45,8 +37,7 @@ describe TerminalExecutor do
     end
 
     it 'does not execute the other commands' do
-      stdout.must_be_empty
-      stderr.join.must_equal([
+      stdout.join.must_equal([
         "ls: cannot access /nonexistent/place: No such file or directory\r\n",
         "Failed to execute \"ls /nonexistent/place\"\r\n"
       ].join)
