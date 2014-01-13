@@ -12,7 +12,8 @@ class SessionsController < ApplicationController
   def github
     user = User.find_or_create_from_hash(
       name: auth_hash.info.name,
-      email: auth_hash.info.email
+      email: auth_hash.info.email,
+      current_token: SecureRandom.hex
     )
 
     if user
