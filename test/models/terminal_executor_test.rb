@@ -1,23 +1,16 @@
 require_relative '../test_helper'
 
 describe TerminalExecutor do
-  subject do
-    TerminalExecutor.new.tap do |shell|
-      shell.output do |line|
-        stdout << line
-      end
-    end
-  end
+  let(:output) { [] }
+  subject { TerminalExecutor.new(output) }
 
-  let(:stdout) { [] }
-
-  describe 'stdout' do
+  describe 'output' do
     before do
       subject.execute!('echo "hi"', 'echo "hello"')
     end
 
     it 'keeps all lines' do
-      stdout.join.must_equal("hi\r\nhello\r\n")
+      output.join.must_equal("hi\r\nhello\r\n")
     end
   end
 
@@ -27,7 +20,7 @@ describe TerminalExecutor do
     end
 
     it 'keeps all lines' do
-      stdout.join.must_equal("hi\r\nhello\r\n")
+      output.join.must_equal("hi\r\nhello\r\n")
     end
   end
 
@@ -37,7 +30,7 @@ describe TerminalExecutor do
     end
 
     it 'does not execute the other commands' do
-      stdout.join.must_equal([
+      output.join.must_equal([
         "ls: cannot access /nonexistent/place: No such file or directory\r\n",
         "Failed to execute \"ls /nonexistent/place\"\r\n"
       ].join)

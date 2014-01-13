@@ -2,14 +2,9 @@ require 'pty'
 
 class TerminalExecutor
   attr_reader :pid
-  attr_reader :callbacks
 
-  def initialize
-    @callbacks = []
-  end
-
-  def output(&block)
-    @callbacks << block
+  def initialize(output)
+    @output = output
   end
 
   def execute!(*commands)
@@ -76,9 +71,7 @@ fi
       ActiveRecord::Base.connection_pool.release_connection
 
       begin
-        io.each(3) do |line|
-          @callbacks.each {|callback| callback.call(line) }
-        end
+        io.each(3) {|line| @output.push(line) }
       rescue Errno::EIO
         # The IO has been closed.
       end

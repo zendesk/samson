@@ -13,13 +13,9 @@ class JobExecution
 
   def initialize(commit, job)
     @output = JobOutput.new
-    @executor = TerminalExecutor.new
+    @executor = TerminalExecutor.new(@output)
     @subscribers = []
     @job, @commit = job, commit
-
-    @executor.output do |message|
-      @output.push(message)
-    end
   end
 
   def start!
