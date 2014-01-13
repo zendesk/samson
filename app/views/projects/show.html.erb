@@ -1,7 +1,8 @@
 <h1><%= project.name %></h1>
 
 <%= link_to "Deploy", new_project_deploy_path(project) , class: "btn btn-default" %>
-
+<div class="column-container">
+<div class="left-column">
 <h2>Webhooks</h2>
 <ul id="webhooks">
   <% project.webhooks.each.with_index do |webhook, index| %>
@@ -12,16 +13,17 @@
   <% end %>
 </ul>
 <%= link_to "Add Webhook", new_project_webhook_path(project), class: "btn btn-default" %>
-
+</div>
+<div class="right-column">
 <h2>Stages</h2>
 <ul id="stages">
   <% project.stages.each.with_index do |stage, index| %>
     <li class="stages bar list-unstyled clearfix" data-id="stage_id_<%= stage.id %>">
       <%= link_to stage.name, project_stage_path(project, stage) %>
       <div class="btn-group pull-right">
-      <%= link_to "Delete", project_stage_path(project, stage), method: :delete, data: { confirm: "Are you sure?" }, class: "btn btn-danger" %>
       <%= link_to "Deploy", new_project_deploy_path(@project, stage_id: stage.id), class: "btn btn-default" %>
       <%= link_to "Edit", edit_project_stage_path(@project, stage), class: "btn btn-default" %>
+      <%= link_to "Delete", project_stage_path(project, stage), method: :delete, data: { confirm: "Are you sure?" }, class: "btn btn-danger" %>
       </div>
     </li>
   <% end %>
@@ -34,7 +36,8 @@
 <button id="success_message" class="messages btn btn-success" disabled>
   Success!
 </button>
-
+</div>
+</div>
 <h2>Recent deploys</h2>
   <table class="table table-striped">
     <thead>
