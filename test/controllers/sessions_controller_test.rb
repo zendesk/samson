@@ -49,7 +49,7 @@ describe SessionsController do
     end
 
     it "removes the user_id" do
-      session[:user_id].must_be_nil
+      session.to_hash.except("flash").must_be_empty
     end
 
     it "redirects to the root url" do
