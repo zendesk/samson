@@ -8,19 +8,16 @@ module CurrentUser
   end
 
   def current_user
-    @current_user ||= User.find(session[:user_id])
-  rescue ActiveRecord::RecordNotFound
-    session[:user_id] = nil
+    @current_user ||= warden.user
   end
 
+  # Called from SessionsController for OmniAuth
   def current_user=(user)
-    session[:user_id] = user.id
-    @current_user = user
+    warden.set_user(user, :event => :authentication)
   end
 
   def logout!
-    @current_user = nil
-    reset_session
+    warden.logout
   end
 
   def logged_in?
@@ -28,8 +25,10 @@ module CurrentUser
   end
 
   def login_users
-    if !logged_in?
-      redirect_to login_path
-    end
+    warden.authenticate!
+  end
+
+  def warden
+    env['warden']
   end
 end

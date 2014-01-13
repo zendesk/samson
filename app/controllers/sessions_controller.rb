@@ -9,14 +9,28 @@ class SessionsController < ApplicationController
     end
   end
 
-  def create
-    user = User.find_or_create_from_oauth(auth_hash, strategy)
-
-    if user
-      self.current_user = user
-      flash[:notice] = "You have been logged in."
+  def zendesk
+    if auth_hash.info.role == "end-user" || auth_hash.info.email.blank?
+      flash[:error] = 'You are unauthorized.'
     else
-      flash[:error] = "Could not log you in."
+      role_id = if auth_hash.info.role == 'admin'
+        Role::ADMIN.id
+      else
+        Role::VIEWER.id
+      end
+
+      user = User.find_or_create_from_hash(
+        name: auth_hash.info.name,
+        email: auth_hash.info.email,
+        role_id: role_id
+      )
+
+      if user
+        self.current_user = user
+        flash[:notice] = "You have been logged in."
+      else
+        flash[:error] = "Could not log you in."
+      end
     end
 
     redirect_to root_path

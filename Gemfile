@@ -29,6 +29,8 @@ group :no_preload do
   gem 'omniauth', '~> 1.1'
   gem 'omniauth-oauth2', '~> 1.1'
 
+  gem 'warden', '~> 1.2'
+
   gem 'soft_deletion', '~> 0.4'
 
   gem 'state_machine', '~> 1.2'

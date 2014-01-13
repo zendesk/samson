@@ -18,7 +18,7 @@ ZendeskPusher::Application.routes.draw do
     end
   end
 
-  get '/auth/:provider/callback', to: 'sessions#create'
+  get '/auth/zendesk/callback', to: 'sessions#zendesk'
   get '/auth/failure', to: 'sessions#failure'
 
   get '/login', to: 'sessions#new'
