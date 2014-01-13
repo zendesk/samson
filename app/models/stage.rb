@@ -14,8 +14,4 @@ class Stage < ActiveRecord::Base
     notify_email_address.present?
   end
 
-  def latest_deploys
-    deploys.latest
-  end
-
 end

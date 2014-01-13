@@ -30,8 +30,7 @@ class ProjectsController < ApplicationController
   end
 
   def show
-     @deploys = project.latest_deploys
-     @deploy_status_for_label = {"running" => "label-info", "succeeded" => "label-success", "failed" => "label-danger", "pending" => "label-default", "cancelling" => "label-warning", "cancelled" => "label-danger"}
+     @deploys = project.deploys.latest
   end
 
   def edit

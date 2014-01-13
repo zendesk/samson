@@ -2,19 +2,19 @@
 
 <%= link_to "Deploy", new_project_deploy_path(project) , class: "btn btn-default" %>
 <div class="column-container">
-<div class="left-column">
+<div class="column">
 <h2>Webhooks</h2>
 <ul id="webhooks">
   <% project.webhooks.each.with_index do |webhook, index| %>
     <li class="webhooks bar list-unstyled clearfix" data-id="webhook_id_<%= webhook.id %>">
-      <%= link_to "#{webhook.branch} (id: #{webhook.id})", project_webhook_path(project, webhook) %>
+      <%= link_to "branch: #{webhook.branch} | stage: #{webhook.stage.name}", project_webhook_path(project, webhook) %>
       <%= link_to "Delete", project_webhook_path(project, webhook), method: :delete, data: { confirm: "Are you sure?" }, class: "btn btn-danger pull-right" %>
     </li>
   <% end %>
 </ul>
 <%= link_to "Add Webhook", new_project_webhook_path(project), class: "btn btn-default" %>
 </div>
-<div class="right-column">
+<div class="column">
 <h2>Stages</h2>
 <ul id="stages">
   <% project.stages.each.with_index do |stage, index| %>

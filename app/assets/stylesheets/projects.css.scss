@@ -18,7 +18,8 @@
   color: red;
 }
 
-#stages, #webhooks {
+#stages,
+#webhooks {
   padding: 0;
 }
 
@@ -42,14 +43,9 @@
   display: none;
 }
 
-.left-column {
+.column {
   width: 50%;
   float: left;
-  padding-right: 5px;
+  padding: 0 5px;
 }
 
-.right-column {
-  width: 50%;
-  float: left;
-  padding-left: 5px;
-}

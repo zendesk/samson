@@ -3,8 +3,7 @@ class StagesController < ApplicationController
   before_filter :find_stage, only: [:show, :edit, :update, :destroy]
 
   def show
-    @deploys = find_stage.latest_deploys
-    @deploy_status_for_label = {"running" => "label-info", "succeeded" => "label-success", "failed" => "label-danger", "pending" => "label-default", "cancelling" => "label-warning", "cancelled" => "label-danger"}
+    @deploys = find_stage.deploys.latest
   end
 
   def new
