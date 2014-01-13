@@ -7,6 +7,8 @@ class FlowdockNotification
 
   def deliver
     flow.push_to_team_inbox(subject: @deploy.summary, content: @deploy.summary)
+  rescue Flowdock::Flow::ApiError
+    # Invalid token or something.
   end
 
   private
