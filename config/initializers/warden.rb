@@ -5,14 +5,14 @@ Warden::Manager.serialize_into_session do |user|
 end
 
 Warden::Manager.serialize_from_session do |id|
-  User.find_by_id(id)
+  User.where(id: id).first
 end
 
 require 'warden/strategies/basic_strategy'
-require 'warden/strategies/zendesk_oauth2_strategy'
+require 'warden/strategies/session_strategy'
 
 Rails.application.config.middleware.insert_after(ActionDispatch::Flash, Warden::Manager) do |manager|
-  manager.default_strategies :basic, :zendesk_oauth2
+  manager.default_strategies :basic, :session
   manager.failure_app = Class.new do
     def self.call(env)
       [401, {}, StringIO.new]
