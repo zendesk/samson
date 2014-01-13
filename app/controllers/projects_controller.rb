@@ -16,6 +16,7 @@ class ProjectsController < ApplicationController
   def new
     @project = Project.new
     @stage = @project.stages.new(name: "production")
+    @stage.flowdock_flows.build
   end
 
   def create
@@ -65,7 +66,8 @@ class ProjectsController < ApplicationController
       stages_attributes: [
         :name, :command,
         :notify_email_address,
-        :command_ids => []
+        :command_ids => [],
+        flowdock_flows_attributes: [:name, :token]
       ]
     )
   end

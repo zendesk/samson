@@ -22,6 +22,27 @@
   </div>
 </div>
 
+<fieldset>
+  <legend>Flowdock flows</legend>
+  <p>Add the name and API token of the Flowdock flow which should be notified of deploys.</p>
+
+  <%= form.fields_for :flowdock_flows do |flow_fields| %>
+    <div class="form-group">
+      <%= flow_fields.label :name, class: "col-lg-2 control-label" %>
+      <div class="col-lg-4">
+        <%= flow_fields.text_field :name, class: "form-control" %>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <%= flow_fields.label :token, class: "col-lg-2 control-label" %>
+      <div class="col-lg-4">
+        <%= flow_fields.text_field :token, class: "form-control" %>
+      </div>
+    </div>
+  <% end %>
+</fieldset>
+
 <%= javascript_tag do %>
   $(document).ready(function() {
     $('#commands').sortable({ items: '.checkbox' });

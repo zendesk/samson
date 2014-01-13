@@ -24,5 +24,9 @@ class DeployService
     if stage.send_email_notifications?
       DeployMailer.deploy_email(stage, deploy).deliver
     end
+
+    if stage.send_flowdock_notifications?
+      FlowdockNotification.new(stage, deploy).deliver
+    end
   end
 end
