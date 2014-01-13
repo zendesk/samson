@@ -2,6 +2,10 @@ require 'thread_safe'
 require 'executor/shell'
 
 class JobExecution
+  # Whether or not execution is enabled. This allows completely disabling job
+  # execution for testing purposes.
+  cattr_accessor(:enabled, instance_reader: true) { true }
+
   attr_reader :output
 
   def initialize(commit, job, base_dir = Rails.root)
@@ -20,6 +24,8 @@ class JobExecution
   end
 
   def start!
+    return unless enabled
+
     @thread = Thread.new do
       output_aggregator = OutputAggregator.new(@output)
       @job.run!
