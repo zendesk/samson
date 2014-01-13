@@ -24,7 +24,7 @@ describe Admin::CommandsController do
       end
 
       describe 'invalid' do
-        let(:attributes) {{ :name => nil }}
+        let(:attributes) {{ :command => nil }}
 
         it 'renders and sets the flash' do
           flash[:error].wont_be_nil
@@ -33,7 +33,7 @@ describe Admin::CommandsController do
       end
 
       describe 'valid' do
-        let(:attributes) {{ :name => 'Base deploy', :command => 'echo hi' }}
+        let(:attributes) {{ :command => 'echo hi' }}
 
         it 'redirects and sets the flash' do
           flash[:notice].wont_be_nil
@@ -67,7 +67,7 @@ describe Admin::CommandsController do
       end
 
       describe 'invalid' do
-        let(:attributes) {{ :name => nil }}
+        let(:attributes) {{ :command => nil }}
 
         it 'renders and sets the flash' do
           flash[:error].wont_be_nil
@@ -76,7 +76,7 @@ describe Admin::CommandsController do
       end
 
       describe 'valid' do
-        let(:attributes) {{ :name => 'Base deploy', :command => 'echo hi' }}
+        let(:attributes) {{ :command => 'echo hi' }}
 
         it 'redirects and sets the flash' do
           flash[:notice].wont_be_nil

@@ -7,7 +7,6 @@ describe Stage do
     describe 'adding + sorting a command' do
       before do
         command = Command.create!(
-          :name => 'test',
           :command => 'test',
           :user => users(:admin)
         )
@@ -35,7 +34,6 @@ describe Stage do
     describe 'with commands' do
       before do
         Command.create!(
-          :name => 'test',
           :command => 'test',
           :user => users(:admin)
         )

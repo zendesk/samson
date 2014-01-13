@@ -14,7 +14,6 @@
 ActiveRecord::Schema.define(version: 20140110000439) do
 
   create_table "commands", force: true do |t|
-    t.string   "name"
     t.text     "command",    limit: 16777215
     t.integer  "user_id"
     t.datetime "created_at"

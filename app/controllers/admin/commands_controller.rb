@@ -51,7 +51,6 @@ class Admin::CommandsController < ApplicationController
   private
 
   def command_params
-    params.require(:command).
-      permit(:name, :command)
+    params.require(:command).permit(:command)
   end
 end
