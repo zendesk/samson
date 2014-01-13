@@ -1,13 +1,11 @@
-<h1><%= project.name %></h1>
-
-<%= link_to "Deploy", new_project_deploy_path(project) , class: "btn btn-default" %>
+<h1 class="project_title"><%= project.name %><%= link_to "Deploy", new_project_deploy_path(project) , class: "btn btn-primary deploy_button" %></h1>
 <div class="column-container">
 <div class="column">
 <h2>Webhooks</h2>
 <ul id="webhooks">
   <% project.webhooks.each.with_index do |webhook, index| %>
     <li class="webhooks bar list-unstyled clearfix" data-id="webhook_id_<%= webhook.id %>">
-      <%= link_to "branch: #{webhook.branch} | stage: #{webhook.stage.name}", project_webhook_path(project, webhook) %>
+      <%= "branch: #{webhook.branch} " %><span class="glyphicon glyphicon-arrow-right"></span><%= " stage: #{webhook.stage.name}" %>
       <%= link_to "Delete", project_webhook_path(project, webhook), method: :delete, data: { confirm: "Are you sure?" }, class: "btn btn-danger pull-right" %>
     </li>
   <% end %>

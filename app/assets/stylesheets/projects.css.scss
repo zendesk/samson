@@ -35,7 +35,8 @@
   padding: 5px 5px 5px 15px;
 }
 
-.bar > a:first-child {
+.webhooks,
+.stages > a:first-child {
   line-height: 34px;
 }
 
@@ -49,3 +50,6 @@
   padding: 0 5px;
 }
 
+.deploy_button {
+  margin-left: 25px;
+}
