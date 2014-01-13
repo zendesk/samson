@@ -32,14 +32,7 @@ class JobExecution
 
       begin
         dir = File.join(Dir.tmpdir, "deploy-#{@job.id}")
-
-        if !setup!(dir)
-          @job.error!
-        elsif @executor.execute!("cd #{dir}", *@job.commands)
-          @job.success!
-        else
-          @job.fail!
-        end
+        execute!(dir)
       ensure
         FileUtils.rm_rf(dir)
       end
@@ -74,6 +67,19 @@ class JobExecution
   end
 
   private
+
+  def execute!(dir)
+    unless setup!(dir)
+      @job.error!
+      return
+    end
+
+    if @executor.execute!("cd #{dir}", *@job.commands)
+      @job.success!
+    else
+      @job.fail!
+    end
+  end
 
   def setup!(dir)
     project = @job.project
