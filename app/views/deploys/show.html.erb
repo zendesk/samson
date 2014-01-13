@@ -52,7 +52,7 @@
 
   <button id="deploy_stop" class="btn btn-danger pull-right">Stop</button>
 <% else %>
-  <div class="alert alert-<%= @deploy.failed?? "danger" : "success" %>">
+  <div class="alert alert-<%= @deploy.succeeded?? "success" : "danger" %>">
     <%= @deploy.user.name %> deployed <%= @deploy.commit %> on <%= @deploy.stage.name %> at <%= @deploy.created_at %>
   </div>
 <% end %>

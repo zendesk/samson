@@ -3,7 +3,7 @@ class Deploy < ActiveRecord::Base
   belongs_to :job
 
   delegate :started_by?, :stop!, :status, :user, :output, to: :job
-  delegate :active?, :pending?, :running?, :cancelling?, :succeeded?, :failed?, to: :job
+  delegate :active?, :pending?, :running?, :cancelling?, :succeeded?, :errored?, :failed?, to: :job
   delegate :project, to: :stage
 
   def summary
@@ -27,6 +27,8 @@ class Deploy < ActiveRecord::Base
       "successfully deployed"
     elsif failed?
       "failed to deploy"
+    elsif errored?
+      "encountered an error deploying"
     end
   end
 end

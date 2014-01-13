@@ -52,6 +52,10 @@ class Job < ActiveRecord::Base
     status == "failed"
   end
 
+  def errored?
+    status == "errored"
+  end
+
   def active?
     pending? || running?
   end
