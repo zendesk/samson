@@ -25,6 +25,10 @@ class Project < ActiveRecord::Base
     webhooks.for_branch(branch).map(&:stage)
   end
 
+  def latest_deploys
+    deploys.latest
+  end
+
   private
 
   def generate_token

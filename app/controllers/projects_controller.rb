@@ -30,7 +30,7 @@ class ProjectsController < ApplicationController
   end
 
   def show
-     @deploys = Deploy.latest_for_project project.id
+     @deploys = project.latest_deploys
   end
 
   def edit
