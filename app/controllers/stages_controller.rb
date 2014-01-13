@@ -17,6 +17,7 @@ class StagesController < ApplicationController
 
   def new
     @stage = @project.stages.build
+    @stage.flowdock_flows.build
   end
 
   def create
@@ -33,6 +34,7 @@ class StagesController < ApplicationController
   end
 
   def edit
+    @stage.flowdock_flows.build
   end
 
   def update
@@ -58,7 +60,7 @@ class StagesController < ApplicationController
       :name,
       :notify_email_address,
       command_ids: [],
-      flowdock_flows_attributes: [:id, :name, :token]
+      flowdock_flows_attributes: [:id, :name, :token, :_destroy]
     )
   end
 

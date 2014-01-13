@@ -12,7 +12,7 @@ class Stage < ActiveRecord::Base
 
   validates :name, presence: true
 
-  accepts_nested_attributes_for :flowdock_flows
+  accepts_nested_attributes_for :flowdock_flows, allow_destroy: true, reject_if: :no_flowdock_token?
 
   def self.reorder(new_order)
     transaction do
@@ -64,5 +64,9 @@ class Stage < ActiveRecord::Base
 
       stage_command.position = pos
     end
+  end
+
+  def no_flowdock_token?(flowdock_attrs)
+    flowdock_attrs['token'].blank?
   end
 end

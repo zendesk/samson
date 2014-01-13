@@ -28,17 +28,20 @@
 
   <%= form.fields_for :flowdock_flows do |flow_fields| %>
     <div class="form-group">
-      <%= flow_fields.label :name, class: "col-lg-2 control-label" %>
-      <div class="col-lg-4">
-        <%= flow_fields.text_field :name, class: "form-control" %>
+      <div class="col-lg-2 col-lg-offset-2">
+        <%= flow_fields.text_field :name, class: "form-control", placeholder: "Flow name" %>
       </div>
-    </div>
 
-    <div class="form-group">
-      <%= flow_fields.label :token, class: "col-lg-2 control-label" %>
       <div class="col-lg-4">
-        <%= flow_fields.text_field :token, class: "form-control" %>
+        <%= flow_fields.text_field :token, class: "form-control", placeholder: "Token" %>
       </div>
+
+      <% if flow_fields.object.persisted? %>
+        <div class="col-lg-1 checkbox">
+          <%= flow_fields.check_box :_destroy if flow_fields.object.persisted? %>
+          <%= flow_fields.label :_destroy, "Delete" %>
+        </div>
+      <% end %>
     </div>
   <% end %>
 </fieldset>
