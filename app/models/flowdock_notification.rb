@@ -9,7 +9,14 @@ class FlowdockNotification
 
   def deliver
     subject = "[#{@project.name}] #{@deploy.summary}"
-    flow.push_to_team_inbox(subject: subject, content: @deploy.summary)
+    url = url_helpers.project_deploy_url(@project, @deploy)
+
+    flow.push_to_team_inbox(
+      subject: subject,
+      content: @deploy.summary,
+      tags: ["deploy", @stage.name.downcase],
+      link: url
+    )
   rescue Flowdock::Flow::ApiError
     # Invalid token or something.
   end
@@ -22,5 +29,9 @@ class FlowdockNotification
       source: "pusher",
       from: { name: @user.name, address: @user.email }
     )
+  end
+
+  def url_helpers
+    Rails.application.routes.url_helpers
   end
 end
