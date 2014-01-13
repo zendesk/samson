@@ -1,8 +1,10 @@
-<h1><%= link_to @project.name, project_path(@project) %> &ndash; <%= @stage.name %></h1>
+<h1>
+  <%= link_to @project.name, project_path(@project) %>
+  <small><%= @stage.name %></small>
+  <div class="pull-right"><%= deploy_link @project, stage_id: @stage.id %></div>
+</h1>
 
 <pre><%= @stage.command %></pre>
-
-<p><%= link_to "Deploy", new_project_deploy_path(@project, stage_id: @stage.id) %></p>
 
 <p><%= link_to "Edit", edit_project_stage_path(@project, @stage) %> | <%= link_to "Delete", project_stage_path(@project, @stage), method: :delete, data: { confirm: "Are you sure?" } %></p>
 
