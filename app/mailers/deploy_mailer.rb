@@ -1,7 +1,7 @@
 class DeployMailer < ActionMailer::Base
-  default from: "deploys@example.com"
+  default from: "deploys@zendesk.com"
 
-  def deploy_email(stage, deploy, job)
+  def deploy_email(stage, deploy)
     @project = stage.project
     @deploy = deploy
 
