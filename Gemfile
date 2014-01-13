@@ -58,9 +58,9 @@ end
 
 group :test do
   gem 'minitest-rails', '~> 0.9'
-  gem 'minitest-metadata', :require => false
   gem 'bourne'
-  gem 'webmock'
+  gem 'webmock', :require => false
+  gem 'simplecov', :require => false
 end
 
 group :deployment do
