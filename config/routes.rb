@@ -32,7 +32,7 @@ ZendeskPusher::Application.routes.draw do
   end
 
   scope :integrations do
-    post "/travis" => "travis#create"
+    post "/travis/:token" => "travis#create", as: :travis_deploy
     post "/semaphore/:token" => "semaphore#create", as: :semaphore_deploy
     post "/tddium/:token" => "tddium#create", as: :tddium_deploy
   end
