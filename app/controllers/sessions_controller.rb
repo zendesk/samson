@@ -9,6 +9,22 @@ class SessionsController < ApplicationController
     end
   end
 
+  def github
+    user = User.find_or_create_from_hash(
+      name: auth_hash.info.name,
+      email: auth_hash.info.email
+    )
+
+    if user
+      self.current_user = user
+      flash[:notice] = "You have been logged in."
+    else
+      flash[:error] = "Could not log you in."
+    end
+
+    redirect_to root_path
+  end
+
   def zendesk
     if auth_hash.info.role == "end-user" || auth_hash.info.email.blank?
       flash[:error] = 'You are unauthorized.'
@@ -22,7 +38,8 @@ class SessionsController < ApplicationController
       user = User.find_or_create_from_hash(
         name: auth_hash.info.name,
         email: auth_hash.info.email,
-        role_id: role_id
+        role_id: role_id,
+        current_token: strategy.access_token.token
       )
 
       if user
