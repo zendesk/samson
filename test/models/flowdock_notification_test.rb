@@ -4,7 +4,7 @@ describe FlowdockNotification do
   it "notifies all Flowdock flows configured for the stage" do
     project = stub(name: "Glitter")
     user = stub(name: "John Wu", email: "wu@rocks.com")
-    stage = stub(flowdock_tokens: ["x123yx"], project: project)
+    stage = stub(name: "staging", flowdock_tokens: ["x123yx"], project: project)
     deploy = stub(summary: "hello world!", user: user)
 
     notification = FlowdockNotification.new(stage, deploy)
