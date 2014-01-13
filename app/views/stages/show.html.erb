@@ -1,4 +1,8 @@
-<h1><%= link_to @project.name, project_path(@project) %> &ndash; <%= @stage.name %> <div class="pull-right"><%= deploy_link @project, stage_id: @stage.id %></div></h1>
+<h1>
+  <%= link_to @project.name, project_path(@project) %>
+  <small><%= @stage.name %></small>
+  <div class="pull-right"><%= deploy_link @project, stage_id: @stage.id %></div>
+</h1>
 
 <pre><%= @stage.command %></pre>
 
