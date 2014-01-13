@@ -17,13 +17,6 @@ class User < ActiveRecord::Base
     user.tap(&:save)
   end
 
-  def self.semaphore_user
-    name = "Semaphore"
-    email = "semaphore@renderedtext.com"
-
-    create_with(name: name).find_or_create_by(email: email)
-  end
-
   Role.all.each do |role|
     define_method "is_#{role.name}?" do
       role_id >= role.id
