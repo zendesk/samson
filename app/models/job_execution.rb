@@ -6,13 +6,16 @@ class JobExecution
   # execution for testing purposes.
   cattr_accessor(:enabled, instance_reader: true) { true }
 
+  # The directory in which repositories should be cached.
+  cattr_accessor(:cached_repos_dir, instance_reader: true)
+
   attr_reader :output
 
-  def initialize(commit, job, base_dir = Rails.root)
+  def initialize(commit, job)
     @output = JobOutput.new
     @executor = Executor::Shell.new
     @subscribers = []
-    @job, @commit, @base_dir = job, commit, base_dir
+    @job, @commit = job, commit
 
     @executor.output do |message|
       @output.push(message)
@@ -30,32 +33,11 @@ class JobExecution
       output_aggregator = OutputAggregator.new(@output)
       @job.run!
 
-      dir = File.join(Dir.tmpdir, "deploy-#{@job.id}")
-      project = @job.project
-      repo_url = project.repository_url
-      cached_repos_dir = File.join(@base_dir, "cached_repos")
-      repo_cache_dir = File.join(cached_repos_dir, project.id.to_s)
-
-      commands = [
-        <<-SHELL,
-          if [ -d #{repo_cache_dir} ]
-            then cd #{repo_cache_dir} && git fetch -ap
-          else
-            git clone --mirror #{repo_url} #{repo_cache_dir}
-          fi
-        SHELL
-        "git clone #{repo_cache_dir} #{dir}",
-        "cd #{dir}",
-        "git checkout --quiet #{@commit}",
-        "export DEPLOYER=#{@job.user.email}",
-        *@job.commands,
-        "rm -fr #{dir}"
-      ]
-
-      if @executor.execute!(*commands)
-        @job.success!
-      else
-        @job.fail!
+      begin
+        dir = Dir.mktmpdir
+        execute!(dir)
+      ensure
+        FileUtils.rm_rf(dir)
       end
 
       @output.close
@@ -85,6 +67,48 @@ class JobExecution
 
   def subscribe(&block)
     @subscribers << block
+  end
+
+  private
+
+  def execute!(dir)
+    unless setup!(dir)
+      @job.error!
+      return
+    end
+
+    commands = [
+      "export DEPLOYER=#{@job.user.email}",
+      "cd #{dir}",
+      *@job.commands
+    ]
+
+    if @executor.execute!(*commands)
+      @job.success!
+    else
+      @job.fail!
+    end
+  end
+
+  def setup!(dir)
+    project = @job.project
+    repo_url = project.repository_url
+    repo_cache_dir = File.join(cached_repos_dir, project.id.to_s)
+
+    commands = [
+      <<-SHELL,
+        if [ -d #{repo_cache_dir} ]
+          then cd #{repo_cache_dir} && git fetch -ap
+        else
+          git clone --mirror #{repo_url} #{repo_cache_dir}
+        fi
+      SHELL
+      "git clone #{repo_cache_dir} #{dir}",
+      "cd #{dir}",
+      "git checkout --quiet #{@commit}"
+    ]
+
+    @executor.execute!(*commands)
   end
 
   class << self

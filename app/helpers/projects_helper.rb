@@ -6,10 +6,10 @@ module ProjectsHelper
   end
 
   def job_state_class(job)
-    if job.failed?
-      "failed"
-    else
+    if job.succeeded?
       "success"
+    else
+      "failed"
     end
   end
 
