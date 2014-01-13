@@ -31,7 +31,7 @@ class JobExecution
       @job.run!
 
       begin
-        dir = File.join(Dir.tmpdir, "deploy-#{@job.id}")
+        dir = Dir.mktmpdir
         execute!(dir)
       ensure
         FileUtils.rm_rf(dir)
