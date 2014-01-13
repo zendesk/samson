@@ -4,7 +4,7 @@ describe SessionsController do
   describe "a GET to #new" do
     describe "when logged in" do
       setup do
-        session[:user_id] = users(:admin).id
+        request.env['warden'].set_user(users(:admin))
         get :new
       end
 
