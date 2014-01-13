@@ -10,7 +10,7 @@ class ProjectsController < ApplicationController
   end
 
   def index
-    @projects = Project.limit(9).where(deleted_at: nil)
+    @projects = Project.limit(9)
   end
 
   def new
@@ -73,6 +73,6 @@ class ProjectsController < ApplicationController
   end
 
   def project
-    @project ||= Project.where(deleted_at: nil).find(params[:id])
+    @project ||= Project.find(params[:id])
   end
 end
