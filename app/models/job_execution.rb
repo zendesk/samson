@@ -30,32 +30,35 @@ class JobExecution
       output_aggregator = OutputAggregator.new(@output)
       @job.run!
 
-      dir = File.join(Dir.tmpdir, "deploy-#{@job.id}")
-      project = @job.project
-      repo_url = project.repository_url
-      cached_repos_dir = File.join(@base_dir, "cached_repos")
-      repo_cache_dir = File.join(cached_repos_dir, project.id.to_s)
+      begin
+        dir = File.join(Dir.tmpdir, "deploy-#{@job.id}")
+        project = @job.project
+        repo_url = project.repository_url
+        cached_repos_dir = File.join(@base_dir, "cached_repos")
+        repo_cache_dir = File.join(cached_repos_dir, project.id.to_s)
 
-      commands = [
-        <<-SHELL,
-          if [ -d #{repo_cache_dir} ]
-            then cd #{repo_cache_dir} && git fetch -ap
-          else
-            git clone --mirror #{repo_url} #{repo_cache_dir}
-          fi
-        SHELL
-        "git clone #{repo_cache_dir} #{dir}",
-        "cd #{dir}",
-        "git checkout --quiet #{@commit}",
-        "export DEPLOYER=#{@job.user.email}",
-        *@job.commands,
-        "rm -fr #{dir}"
-      ]
+        commands = [
+          <<-SHELL,
+            if [ -d #{repo_cache_dir} ]
+              then cd #{repo_cache_dir} && git fetch -ap
+            else
+              git clone --mirror #{repo_url} #{repo_cache_dir}
+            fi
+          SHELL
+          "git clone #{repo_cache_dir} #{dir}",
+          "cd #{dir}",
+          "git checkout --quiet #{@commit}",
+          "export DEPLOYER=#{@job.user.email}",
+          *@job.commands
+        ]
 
-      if @executor.execute!(*commands)
-        @job.success!
-      else
-        @job.fail!
+        if @executor.execute!(*commands)
+          @job.success!
+        else
+          @job.fail!
+        end
+      ensure
+        FileUtils.rm_rf(dir)
       end
 
       @output.close
