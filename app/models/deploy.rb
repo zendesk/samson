@@ -3,7 +3,7 @@ class Deploy < ActiveRecord::Base
   belongs_to :job
 
   delegate :started_by?, :stop!, :status, :user, :output, to: :job
-  delegate :active?, :pending?, :running?, :cancelling?, :succeeded?, :failed?, to: :job
+  delegate :active?, :pending?, :running?, :cancelling?, :succeeded?, :errored?, :failed?, to: :job
   delegate :project, to: :stage
 
   def summary
@@ -18,15 +18,17 @@ class Deploy < ActiveRecord::Base
 
   def summary_action
     if pending?
-      "is waiting to deploy"
+      "is about to deploy"
     elsif running?
       "is deploying"
     elsif cancelling?
       "is cancelling a deploy of"
     elsif succeeded?
-      "successfully deployed"
+      "deployed"
     elsif failed?
       "failed to deploy"
+    elsif errored?
+      "encountered an error deploying"
     end
   end
 

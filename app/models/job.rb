@@ -28,6 +28,10 @@ class Job < ActiveRecord::Base
     status!("failed")
   end
 
+  def error!
+    status!("errored")
+  end
+
   def pending?
     status == "pending"
   end
@@ -46,6 +50,10 @@ class Job < ActiveRecord::Base
 
   def failed?
     status == "failed"
+  end
+
+  def errored?
+    status == "errored"
   end
 
   def active?

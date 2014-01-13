@@ -4,7 +4,7 @@ gem 'rails', '4.0.2'
 gem 'puma'
 gem 'dotenv-rails', '~> 0.9.0'
 
-group :production do
+group :production, :staging do
   gem 'rails_12factor'
   gem 'mysql2', :platform => :ruby
 
@@ -28,6 +28,11 @@ end
 group :no_preload do
   gem 'omniauth', '~> 1.1'
   gem 'omniauth-oauth2', '~> 1.1'
+  gem 'omniauth-github', '~> 1.1'
+
+  gem 'warden', '~> 1.2'
+
+  gem 'flowdock', '~> 0.3.1'
 
   gem 'soft_deletion', '~> 0.4'
 

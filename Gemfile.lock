@@ -16,7 +16,7 @@ GIT
 
 GIT
   remote: https://github.com/thomas-mcdonald/bootstrap-sass.git
-  revision: 0146e5dca0fc644a9a6a51d0258082be2975b4f1
+  revision: f9801791672aec6abd8257506487fdf1541fa74a
   specs:
     bootstrap-sass (3.0.3.0)
       sass (~> 3.2)
@@ -44,16 +44,16 @@ GEM
       activesupport (= 4.0.2)
       arel (~> 4.0.0)
     activerecord-deprecated_finders (1.0.3)
-    activerecord-jdbc-adapter (1.3.4)
+    activerecord-jdbc-adapter (1.3.5)
       activerecord (>= 2.2)
-    activerecord-jdbcmysql-adapter (1.3.4)
-      activerecord-jdbc-adapter (~> 1.3.4)
+    activerecord-jdbcmysql-adapter (1.3.5)
+      activerecord-jdbc-adapter (~> 1.3.5)
       jdbc-mysql (>= 5.1.22)
-    activerecord-jdbcpostgresql-adapter (1.3.4)
-      activerecord-jdbc-adapter (~> 1.3.4)
+    activerecord-jdbcpostgresql-adapter (1.3.5)
+      activerecord-jdbc-adapter (~> 1.3.5)
       jdbc-postgres (>= 9.1)
-    activerecord-jdbcsqlite3-adapter (1.3.4)
-      activerecord-jdbc-adapter (~> 1.3.4)
+    activerecord-jdbcsqlite3-adapter (1.3.5)
+      activerecord-jdbc-adapter (~> 1.3.5)
       jdbc-sqlite3 (~> 3.7.2)
     activesupport (4.0.2)
       i18n (~> 0.6, >= 0.6.4)
@@ -86,20 +86,26 @@ GEM
       safe_yaml (~> 0.9.0)
     debug_inspector (0.0.2)
     deep_merge (1.0.0)
-    docile (1.1.1)
+    docile (1.1.2)
     dotenv (0.9.0)
     dotenv-rails (0.9.0)
       dotenv (= 0.9.0)
     erubis (2.7.0)
     execjs (2.0.2)
-    faraday (0.8.8)
+    faraday (0.8.9)
       multipart-post (~> 1.2.0)
+    flowdock (0.3.1)
+      httparty (~> 0.7)
+      multi_json
     hashie (2.0.5)
     highline (1.6.20)
     hike (1.2.3)
+    httparty (0.12.0)
+      json (~> 1.8)
+      multi_xml (>= 0.5.2)
     httpauth (0.2.0)
     i18n (0.6.9)
-    jdbc-mysql (5.1.27)
+    jdbc-mysql (5.1.28)
     jdbc-postgres (9.3.1100)
     jdbc-sqlite3 (3.7.2.1)
     jquery-rails (3.0.4)
@@ -109,12 +115,12 @@ GEM
       railties (>= 3.1.0)
     json (1.8.1)
     json (1.8.1-java)
-    jwt (0.1.8)
+    jwt (0.1.10)
       multi_json (>= 1.5)
     mail (2.5.4)
       mime-types (~> 1.16)
       treetop (~> 1.4.8)
-    metaclass (0.0.1)
+    metaclass (0.0.2)
     mime-types (1.25.1)
     minitest (4.7.5)
     minitest-rails (0.9.2)
@@ -122,7 +128,8 @@ GEM
       rails (>= 3.0)
     mocha (0.14.0)
       metaclass (~> 0.0.1)
-    multi_json (1.8.2)
+    multi_json (1.8.4)
+    multi_xml (0.5.5)
     multipart-post (1.2.0)
     mysql2 (0.3.14)
     net-scp (1.1.2)
@@ -141,6 +148,9 @@ GEM
     omniauth (1.1.4)
       hashie (>= 1.2, < 3)
       rack
+    omniauth-github (1.1.1)
+      omniauth (~> 1.0)
+      omniauth-oauth2 (~> 1.1)
     omniauth-oauth2 (1.1.1)
       oauth2 (~> 0.8.0)
       omniauth (~> 1.0)
@@ -211,6 +221,8 @@ GEM
     uglifier (2.4.0)
       execjs (>= 0.3.0)
       json (>= 1.8.0)
+    warden (1.2.3)
+      rack (>= 1.0)
     webmock (1.16.1)
       addressable (>= 2.2.7)
       crack (>= 0.3.2)
@@ -230,6 +242,7 @@ DEPENDENCIES
   bootstrap-sass!
   bourne
   dotenv-rails (~> 0.9.0)
+  flowdock (~> 0.3.1)
   jdbc-sqlite3
   jquery-rails
   jquery-ui-rails
@@ -238,6 +251,7 @@ DEPENDENCIES
   net-ssh (~> 2.1)
   net-ssh-shell (~> 0.2)!
   omniauth (~> 1.1)
+  omniauth-github (~> 1.1)
   omniauth-oauth2 (~> 1.1)
   puma
   rails (= 4.0.2)
@@ -249,5 +263,6 @@ DEPENDENCIES
   sqlite3
   state_machine (~> 1.2)
   uglifier (>= 1.3.0)
+  warden (~> 1.2)
   webmock
   zendesk_deployment!

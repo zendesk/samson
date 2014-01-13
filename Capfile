@@ -4,7 +4,7 @@ require 'zendesk/deployment/migrations'
 set :application, 'pusher'
 set :repository,  'git@github.com:zendesk/pusher'
 set :environments, [:staging, :pod3]
-set :ruby_version, '2.1.0'
+set :ruby_version, '2.0.0'
 set :require_tag?, false
 set :email_notification, ['deploys@zendesk.com', 'pusher@zendesk.flowdock.com', 'epahl@zendesk.com']
 set :user, 'deploy'
@@ -41,16 +41,11 @@ namespace :pusher do
       run "cd #{release_path} && bundle exec rake assets:precompile"
     end
   end
-
-  task :cleanup_stale_deploys do
-    run "find #{Dir.tmpdir} -maxdepth 1 -name 'deploy-*' -cmin +180 -exec rm -r {} \\;"
-  end
 end
 
 # Need to use before, or else this won't run in time.
 before 'deploy:finalize_update', 'pusher:update_symlinks'
 after "deploy:update_code","pusher:assets:precompile"
-after "deploy:update_code","pusher:cleanup_stale_deploys"
 
 def role_mapping(n)
   super.tap do |mapping|

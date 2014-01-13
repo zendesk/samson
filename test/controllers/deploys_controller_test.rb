@@ -53,18 +53,8 @@ describe DeploysController do
       end
     end
 
-    describe "a POST to :create" do
-      setup { post :create, project_id: project.id }
-      it_is_unauthorized
-    end
-
-    describe "a DELETE to :destroy" do
-      setup do
-        delete :destroy, project_id: project.id, id: job.to_param
-      end
-
-      it_is_unauthorized
-    end
+    unauthorized :post, :create, project_id: 1
+    unauthorized :delete, :destroy, project_id: 1, id: 1
   end
 
   as_a_admin do

@@ -15,7 +15,8 @@ class ProjectsController < ApplicationController
 
   def new
     @project = Project.new
-    @stage = @project.stages.new(name: "production", command: "cap production deploy")
+    @stage = @project.stages.new(name: "production")
+    @stage.flowdock_flows.build
   end
 
   def create
@@ -61,7 +62,15 @@ class ProjectsController < ApplicationController
   protected
 
   def project_params
-    params.require(:project).permit(:name, :repository_url, stages_attributes: [:name, :command])
+    params.require(:project).permit(
+      :name, :repository_url,
+      stages_attributes: [
+        :name,
+        :notify_email_address,
+        :command_ids => [],
+        flowdock_flows_attributes: [:name, :token]
+      ]
+    )
   end
 
   def project

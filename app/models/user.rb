@@ -1,17 +1,19 @@
 class User < ActiveRecord::Base
+  has_many :commands
+
   validates :role_id, inclusion: { in: Role.all.map(&:id) }
 
-  def self.find_or_create_from_oauth(hash, strategy)
-    return unless hash.info.email.present?
-    return if hash.info.role == "end-user"
-
-    user = User.find_by_email(hash.info.email)
+  def self.create_or_update_from_hash(hash)
+    user = User.where(email: hash[:email]).first
     user ||= User.new
 
-    access_token = strategy.access_token
-    delete_token(access_token)
+    role_id = hash.delete(:role_id)
 
-    user.attributes = { :name => hash.info.name, :email => hash.info.email, :current_token => access_token.token }
+    if role_id && (user.new_record? || role_id >= user.role_id)
+      user.role_id = role_id
+    end
+
+    user.attributes = hash
     user.tap(&:save)
   end
 
@@ -19,13 +21,5 @@ class User < ActiveRecord::Base
     define_method "is_#{role.name}?" do
       role_id >= role.id
     end
-  end
-
-  private
-
-  # Takes an OAuth2::AccessToken
-  def self.delete_token(token)
-    token_id = token.get('/api/v2/oauth/tokens/current.json').parsed['token']['id']
-    token.delete("/api/v2/oauth/tokens/#{token_id}.json")
   end
 end

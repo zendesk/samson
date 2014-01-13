@@ -11,7 +11,6 @@ class SemaphoreController < ActionController::Base
 
     project = Project.find_by_token!(params[:token])
     stages = project.webhook_stages_for_branch(params[:branch_name])
-    semaphore_user = User.find_or_create_by(name: "Semaphore")
     deploy_service = DeployService.new(project, semaphore_user)
 
     stages.each do |stage|
@@ -19,5 +18,14 @@ class SemaphoreController < ActionController::Base
     end
 
     head :ok
+  end
+
+  private
+
+  def semaphore_user
+    name = "Semaphore"
+    email = "deploy+semaphore@zendesk.com"
+
+    User.create_with(name: name).find_or_create_by(email: email)
   end
 end

@@ -7,28 +7,26 @@ class TravisController < ApplicationController
   skip_before_filter :login_users
   skip_before_filter :verify_authenticity_token
 
-  # POST /travis?project="Zendesk Carson"
   def create
-    if travis_authorization == request.authorization && deploy?
-      stage = project.stages.first
-      deploy_service = DeployService.new(project, user)
-      deploy = deploy_service.deploy!(stage, payload["commit"])
-
-      head :ok
-    else
-      head :bad_request
+    unless project && deploy?
+      return head :bad_request
     end
+
+    stages = project.webhook_stages_for_branch(payload['branch'])
+    travis_user = User.find_or_create_by(name: "Travis")
+    deploy_service = DeployService.new(project, travis_user)
+
+    stages.each do |stage|
+      deploy_service.deploy!(stage, payload['commit'])
+    end
+
+    head :ok
   end
 
   protected
 
   def project
-    @project ||= Project.find_by_name!(params[:project])
-  end
-
-  def deploy?
-    payload['status_message'] == 'Passed' &&
-      (payload['branch'] == 'master' || payload['message'] =~ /#autodeploy/)
+    @project ||= Project.find_by_token!(params[:token])
   end
 
   def payload
@@ -36,12 +34,16 @@ class TravisController < ApplicationController
   end
 
   def travis_authorization
-    Digest::SHA2.hexdigest("zendesk/#{project.repo_name}#{ENV['TRAVIS_TOKEN']}")
+    Digest::SHA2.hexdigest("#{repository}#{ENV['TRAVIS_TOKEN']}")
   end
 
-  def user
-    @user ||= User.find_or_create_by!(email: payload['committer_email']) do |user|
-      user.name = payload['committer_name']
+  def deploy?
+    payload['status_message'] == 'Passed'
+  end
+
+  def repository
+    project.repository_url.match(/:([^:]+)\.git$/) do |match|
+      return match[1]
     end
   end
 end

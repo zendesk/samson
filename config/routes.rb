@@ -18,7 +18,8 @@ ZendeskPusher::Application.routes.draw do
     end
   end
 
-  get '/auth/:provider/callback', to: 'sessions#create'
+  get '/auth/zendesk/callback', to: 'sessions#zendesk'
+  get '/auth/github/callback', to: 'sessions#github'
   get '/auth/failure', to: 'sessions#failure'
 
   get '/login', to: 'sessions#new'
@@ -27,10 +28,11 @@ ZendeskPusher::Application.routes.draw do
   namespace :admin do
     resource :users, only: [:show, :update]
     resource :projects, only: [:show]
+    resources :commands, except: [:show]
   end
 
   scope :integrations do
-    post "/travis" => "travis#create"
+    post "/travis/:token" => "travis#create", as: :travis_deploy
     post "/semaphore/:token" => "semaphore#create", as: :semaphore_deploy
     post "/tddium/:token" => "tddium#create", as: :tddium_deploy
   end

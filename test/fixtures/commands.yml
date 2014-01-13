@@ -1,0 +1,3 @@
+echo:
+  command: echo hello
+  user: admin

@@ -30,5 +30,11 @@ module ZendeskPusher
 
     # Whether or not jobs are actually executed.
     config.pusher.enable_job_execution = true
+
+    # Tired of the i18n deprecation warning
+    config.i18n.enforce_available_locales = true
+
+    # The directory in which repositories should be cached.
+    config.pusher.cached_repos_dir = Rails.root.join("cached_repos")
   end
 end

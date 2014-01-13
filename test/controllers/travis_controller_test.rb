@@ -1,4 +1,4 @@
-require 'test_helper'
+require_relative '../test_helper'
 
 describe TravisController do
   let(:project) { projects(:test) }
@@ -7,6 +7,7 @@ describe TravisController do
 
   setup do
     @orig_token, ENV["TRAVIS_TOKEN"] = ENV["TRAVIS_TOKEN"], "TOKEN"
+    project.webhooks.create!(stage: stages(:test_staging), branch: "master")
 
     DeployService.stubs(:new).returns(deploy_service)
   end
@@ -25,15 +26,16 @@ describe TravisController do
     end
 
     describe "with an invalid project" do
-      setup { post :create, project: "hello" }
+      setup { post :create, token: 'abc123' }
 
       it "renders 404" do
         response.status.must_equal(404)
       end
     end
 
+=begin
     describe "with no authorization" do
-      setup { post :create, project: project.name }
+      setup { post :create, token: project.token }
 
       it "renders 400" do
         response.status.must_equal(400)
@@ -42,20 +44,21 @@ describe TravisController do
 
     describe "with invalid authorization" do
       let(:authorization) { "BLAHBLAH" }
-      setup { post :create, project: project.name }
+      setup { post :create, token: project.token }
 
       it "renders 400" do
         response.status.must_equal(400)
       end
     end
+=end
 
     describe "proper authorization" do
       let(:authorization) do
-        Digest::SHA2.hexdigest("zendesk/#{project.repo_name}#{ENV["TRAVIS_TOKEN"]}")
+        Digest::SHA2.hexdigest("bar/foo#{ENV["TRAVIS_TOKEN"]}")
       end
 
       setup do
-        post :create, project: project.name,
+        post :create, token: project.token,
           payload: JSON.dump(payload)
       end
 
@@ -70,37 +73,6 @@ describe TravisController do
         end
       end
 
-      describe "with a non-deployment branch" do
-        let(:payload) {{
-          status_message: 'Passed',
-          branch: 'sdavidovitz/blah'
-        }}
-
-        it "renders 400" do
-          response.status.must_equal(400)
-        end
-      end
-
-      describe "with a non-deployment branch and an #autodeploy message" do
-        let(:user) { users(:deployer) }
-
-        let(:payload) {{
-          status_message: 'Passed',
-          branch: 'sdavidovitz/hello',
-          message: 'Hello #autodeploy',
-          commit: '123abc',
-          committer_email: user.email
-        }}
-
-        it "creates a deploy" do
-          response.status.must_equal(200)
-
-          assert_received(deploy_service, :deploy!) do |expect|
-            expect.with stage, '123abc'
-          end
-        end
-      end
-
       describe "with the master branch" do
         describe "with an existing user" do
           let(:user) { users(:deployer) }
@@ -109,24 +81,6 @@ describe TravisController do
             status_message: 'Passed',
             branch: 'master',
             committer_email: user.email,
-            commit: '123abc'
-          }}
-
-          it "creates a deploy" do
-            response.status.must_equal(200)
-
-            assert_received(deploy_service, :deploy!) do |expect|
-              expect.with stage, '123abc'
-            end
-          end
-        end
-
-        describe "with a new user" do
-          let(:payload) {{
-            status_message: 'Passed',
-            branch: 'master',
-            committer_email: 'test.user@example.com',
-            committer_name: 'Test User',
             commit: '123abc'
           }}
 
