@@ -30,6 +30,8 @@ class JobExecution
     return unless enabled
 
     @thread = Thread.new do
+      ActiveRecord::Base.connection_pool.release_connection
+
       output_aggregator = OutputAggregator.new(@output)
       @job.run!
 
@@ -42,8 +44,6 @@ class JobExecution
 
       @output.close
       @job.update_output!(output_aggregator.to_s)
-
-      ActiveRecord::Base.connection_pool.release_connection
 
       @subscribers.each do |subscriber|
         subscriber.call(@job)
