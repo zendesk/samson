@@ -32,6 +32,8 @@ group :no_preload do
 
   gem 'warden', '~> 1.2'
 
+  gem 'flowdock', '~> 0.3.1'
+
   gem 'soft_deletion', '~> 0.4'
 
   gem 'state_machine', '~> 1.2'
