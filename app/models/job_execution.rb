@@ -12,7 +12,7 @@ class JobExecution
   attr_reader :output
 
   def initialize(commit, job)
-    @output = JobOutput.new
+    @output = OutputBuffer.new
     @executor = TerminalExecutor.new(@output)
     @subscribers = []
     @job, @commit = job, commit

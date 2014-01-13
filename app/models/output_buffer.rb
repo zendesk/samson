@@ -1,6 +1,6 @@
 require 'thread_safe'
 
-class JobOutput
+class OutputBuffer
   CLOSE = Object.new
 
   attr_reader :messages
