@@ -1,10 +1,10 @@
-require 'test_helper'
+require_relative '../test_helper'
 
 describe SessionsController do
   describe "a GET to #new" do
     describe "when logged in" do
       setup do
-        session[:user_id] = users(:admin).id
+        request.env['warden'].set_user(users(:admin))
         get :new
       end
 
@@ -24,7 +24,7 @@ describe SessionsController do
     end
   end
 
-  describe "a POST to #create" do
+  describe "a POST to #zendesk" do
     # TODO
   end
 
@@ -44,12 +44,12 @@ describe SessionsController do
 
   describe "a DELETE to #destroy" do
     setup do
-      session[:user_id] = users(:admin).id
+      login_as(users(:admin))
       delete :destroy
     end
 
     it "removes the user_id" do
-      session[:user_id].must_be_nil
+      session.to_hash.except("flash").must_be_empty
     end
 
     it "redirects to the root url" do

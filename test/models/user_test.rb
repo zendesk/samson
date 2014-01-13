@@ -1,50 +1,16 @@
-require 'test_helper'
+require_relative '../test_helper'
 
 describe User do
-  describe ".find_or_create_from_oauth" do
-    let(:user) { User.find_or_create_from_oauth(auth, strategy) }
-    let(:client) { OAuth2::Client.new("test", "secret") }
-    let(:token) { OAuth2::AccessToken.new(client, "abc123") }
-    let(:auth) { Hashie::Mash.new(:info => info) }
-
-    let(:strategy) do
-      mock = Minitest::Mock.new
-      mock.expect(:access_token, token)
-      mock.expect(:client, client)
-      mock
-    end
-
-    describe "with an end-user hash" do
-      let(:info) {{ :role => "end-user" }}
-
-      it "wont create a user" do
-        user.must_be_nil
-      end
-    end
-
-    describe "with an anonymous user hash" do
-      let(:info) {{}}
-
-      it "wont create a user" do
-        user.must_be_nil
-      end
-    end
+  describe ".create_or_update_from_hash" do
+    let(:user) { User.create_or_update_from_hash(hash) }
 
     describe "with a new user" do
-      let(:info) {{
+      let(:hash) {{
         :name => "Test User",
         :email => "test@example.org",
-        :role => "admin"
+        :role_id => Role::ADMIN.id,
+        :current_token => "abc123"
       }}
-
-      before do
-        stub_request(:get, %r{/api/v2/oauth/tokens/current}).to_return(
-          :headers => { :content_type => "application/json" },
-          :body => JSON.dump(:token => { :id => 1 })
-        )
-
-        stub_request(:delete, %r{/api/v2/oauth/tokens/1})
-      end
 
       it "creates a new user" do
         user.persisted?.must_equal(true)
@@ -56,27 +22,17 @@ describe User do
     end
 
     describe "with an existing user" do
-      let(:info) {{
+      let(:hash) {{
         :name => "Test User",
         :email => "test@example.org",
+        :current_token => "abc123"
       }}
 
       let(:existing_user) do
         User.create!(:name => "Test", :email => "test@example.org")
       end
 
-      before do
-        stub_request(:get, %r{/api/v2/oauth/tokens/current}).
-          with(:headers => { :authorization => "Bearer abc123" }).
-          to_return(
-            :headers => { :content_type => "application/json" },
-            :body => JSON.dump(:token => { :id => 1 })
-          )
-
-        stub_request(:delete, %r{/api/v2/oauth/tokens/1})
-
-        existing_user
-      end
+      setup { existing_user }
 
       it "updates the user" do
         user.name.must_equal("Test User")
@@ -88,16 +44,6 @@ describe User do
 
       it "sets the current token" do
         user.current_token.must_equal("abc123")
-      end
-
-      describe "with a current_token" do
-        before do
-          existing_user.update_attributes!(:current_token => "def456")
-        end
-
-        it "resets the current token" do
-          user.current_token.must_equal("abc123")
-        end
       end
     end
   end
