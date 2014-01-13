@@ -1,9 +1,24 @@
-require_relative 'base'
 require 'pty'
 
 module Executor
-  class Shell < Base
+  class Shell
     attr_reader :pid
+    attr_reader :callbacks
+
+    def initialize
+      @callbacks = {
+        :stdout => [],
+        :stderr => []
+      }
+    end
+
+    def output(&block)
+      @callbacks[:stdout] << block
+    end
+
+    def error_output(&block)
+      @callbacks[:stderr] << block
+    end
 
     def execute!(*commands)
       command = commands.map {|command| wrap_command(command) }.join("\n")
