@@ -15,7 +15,7 @@ class DeploysController < ApplicationController
 
   def active
     @deploys = Deploy.active.limit(10).order("created_at DESC")
-
+    @deploy_status_for_label = {"running" => "label-info", "succeeded" => "label-success", "failed" => "label-danger", "pending" => "label-default", "cancelling" => "label-warning", "cancelled" => "label-danger"}
     render :index
   end
 
