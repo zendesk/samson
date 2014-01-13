@@ -10,7 +10,7 @@ class SessionsController < ApplicationController
   end
 
   def github
-    user = User.find_or_create_from_hash(
+    user = User.create_or_update_from_hash(
       name: auth_hash.info.name,
       email: auth_hash.info.email,
       current_token: SecureRandom.hex
@@ -36,7 +36,7 @@ class SessionsController < ApplicationController
         Role::VIEWER.id
       end
 
-      user = User.find_or_create_from_hash(
+      user = User.create_or_update_from_hash(
         name: auth_hash.info.name,
         email: auth_hash.info.email,
         role_id: role_id,

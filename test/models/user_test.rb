@@ -1,8 +1,8 @@
 require_relative '../test_helper'
 
 describe User do
-  describe ".find_or_create_from_hash" do
-    let(:user) { User.find_or_create_from_hash(hash) }
+  describe ".create_or_update_from_hash" do
+    let(:user) { User.create_or_update_from_hash(hash) }
 
     describe "with a new user" do
       let(:hash) {{

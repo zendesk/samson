@@ -1,8 +1,8 @@
 class User < ActiveRecord::Base
   validates :role_id, inclusion: { in: Role.all.map(&:id) }
 
-  def self.find_or_create_from_hash(hash)
-    user = User.find_by_email(hash[:email])
+  def self.create_or_update_from_hash(hash)
+    user = User.where(email: hash[:email]).first
     user ||= User.new
 
     user.attributes = hash
