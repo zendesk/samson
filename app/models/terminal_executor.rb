@@ -71,7 +71,7 @@ fi
       ActiveRecord::Base.connection_pool.release_connection
 
       begin
-        io.each(3) {|line| @output.push(line) }
+        io.each(3) {|line| @output.write(line) }
       rescue Errno::EIO
         # The IO has been closed.
       end
