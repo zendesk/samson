@@ -4,7 +4,7 @@ gem 'rails', '4.0.2'
 gem 'puma'
 gem 'dotenv-rails', '~> 0.9.0'
 
-group :production do
+group :production, :staging do
   gem 'rails_12factor'
   gem 'mysql2', :platform => :ruby
 
