@@ -79,6 +79,7 @@ class JobExecution
 
     commands = [
       "export DEPLOYER=#{@job.user.email}",
+      "export REVISION=#{@commit}",
       "cd #{dir}",
       *@job.commands
     ]
