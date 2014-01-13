@@ -1,5 +1,5 @@
 require 'thread_safe'
-require 'executor/shell'
+require 'terminal_executor'
 
 class JobExecution
   # Whether or not execution is enabled. This allows completely disabling job
@@ -13,7 +13,7 @@ class JobExecution
 
   def initialize(commit, job)
     @output = JobOutput.new
-    @executor = Executor::Shell.new
+    @executor = TerminalExecutor.new
     @subscribers = []
     @job, @commit = job, commit
 

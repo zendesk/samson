@@ -1,9 +1,9 @@
 require_relative '../../test_helper'
 require 'executor/shell'
 
-describe Executor::Shell do
+describe TerminalExecutor do
   subject do
-    Executor::Shell.new.tap do |shell|
+    TerminalExecutor.new.tap do |shell|
       shell.output do |line|
         stdout << line
       end
