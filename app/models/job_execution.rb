@@ -74,7 +74,13 @@ class JobExecution
       return
     end
 
-    if @executor.execute!("cd #{dir}", *@job.commands)
+    commands = [
+      "export DEPLOYER=#{@job.user.email}",
+      "cd #{dir}",
+      *@job.commands
+    ]
+
+    if @executor.execute!(*commands)
       @job.success!
     else
       @job.fail!
@@ -97,8 +103,7 @@ class JobExecution
       SHELL
       "git clone #{repo_cache_dir} #{dir}",
       "cd #{dir}",
-      "git checkout --quiet #{@commit}",
-      "export DEPLOYER=#{@job.user.email}"
+      "git checkout --quiet #{@commit}"
     ]
 
     @executor.execute!(*commands)
