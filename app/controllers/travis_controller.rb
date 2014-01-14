@@ -13,7 +13,6 @@ class TravisController < ApplicationController
     end
 
     stages = project.webhook_stages_for_branch(payload['branch'])
-    travis_user = User.find_or_create_by(name: "Travis")
     deploy_service = DeployService.new(project, travis_user)
 
     stages.each do |stage|
@@ -45,5 +44,12 @@ class TravisController < ApplicationController
     project.repository_url.match(/:([^:]+)\.git$/) do |match|
       return match[1]
     end
+  end
+
+  def travis_user
+    name = "Travis"
+    email = "deploy+travis@zendesk.com"
+
+    User.create_with(name: name).find_or_create_by(email: email)
   end
 end
