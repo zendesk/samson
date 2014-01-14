@@ -24,6 +24,15 @@ describe OutputBuffer do
     listener.value.must_equal ["hello"]
   end
 
+  it "yields the buffered chunks and returns if closed" do
+    buffer.write("hello")
+    buffer.close
+
+    content = []
+    buffer.each {|chunk| content << chunk }
+    content.must_equal ["hello"]
+  end
+
   def build_listener
     Thread.new do
       content = []
