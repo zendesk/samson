@@ -9,7 +9,6 @@ describe User do
         :name => "Test User",
         :email => "test@example.org",
         :role_id => Role::ADMIN.id,
-        :current_token => "abc123"
       }}
 
       it "creates a new user" do
@@ -17,7 +16,7 @@ describe User do
       end
 
       it "sets the current token" do
-        user.current_token.must_equal("abc123")
+        user.current_token.must_match(/[a-z0-9]+/)
       end
 
       it "sets the role_id" do

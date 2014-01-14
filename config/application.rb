@@ -36,5 +36,11 @@ module ZendeskPusher
 
     # The directory in which repositories should be cached.
     config.pusher.cached_repos_dir = Rails.root.join("cached_repos")
+
+    # The Github teams and organizations used for permissions
+    config.pusher.github = ActiveSupport::OrderedOptions.new
+    config.pusher.github.organization = 'zendesk'
+    config.pusher.github.admin_team = 'owners'
+    config.pusher.github.deploy_team = 'engineering'
   end
 end

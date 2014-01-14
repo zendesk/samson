@@ -45,4 +45,8 @@ ZendeskPusher::Application.configure do
 
   # We don't want to persist the repository cache between test runs.
   config.pusher.cached_repos_dir = Dir.mktmpdir
+
+  config.pusher.github.organization = 'test_org'
+  config.pusher.github.admin_team = 'admins'
+  config.pusher.github.deploy_team = 'deployers'
 end

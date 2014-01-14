@@ -1,0 +1,16 @@
+#login {
+  .row {
+    border-bottom: 1px solid gray;
+    padding-bottom: 15px;
+    padding-top: 15px;
+  }
+
+  .row:first-child {
+    padding-top: 0;
+  }
+
+  .row:last-child {
+    border: none;
+    padding-bottom: 0;
+  }
+}
