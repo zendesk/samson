@@ -12,15 +12,27 @@
   </div>
 </div>
 
-<div id="commands" class="form-group">
-  <label class="col-lg-2 control-label">Commands</label>
+<fieldset>
+  <legend>Commands</legend>
+  <p>Select the commands you want to run when executing this stage.</p>
 
-  <div class="col-lg-4">
-    <%= command_check_boxes(form) %>
-    <hr />
-    <%= form.text_area :command, class: "form-control", rows: 4, value: nil, placeholder: 'cap production deploy' %>
+  <div id="commands" class="form-group">
+    <div class="col-lg-6 col-lg-offset-2">
+      <%= form.collection_check_boxes(:command_ids, @stage.all_commands, :id, :command) do |b| %>
+        <div data-id="<%= b.value %>" class="checkbox">
+          <%= b.label do %>
+            <%= b.check_box %>
+            <pre><%= b.text %></pre>
+          <% end %>
+        </div>
+      <% end %>
+
+      <hr />
+
+      <%= form.text_area :command, class: "form-control", rows: 4, value: nil, placeholder: 'cap production deploy' %>
+    </div>
   </div>
-</div>
+</fieldset>
 
 <fieldset>
   <legend>Flowdock flows</legend>
