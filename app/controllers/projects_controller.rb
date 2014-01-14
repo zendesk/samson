@@ -25,7 +25,7 @@ class ProjectsController < ApplicationController
     if @project.persisted?
       redirect_to root_path
     else
-      flash[:error] = @project.errors.full_messages.join("<br />")
+      flash[:error] = @project.errors.full_messages
       render :new
     end
   end
@@ -42,7 +42,7 @@ class ProjectsController < ApplicationController
     if project.update_attributes(project_params)
       redirect_to root_path
     else
-      flash[:error] = project.errors.full_messages.join("<br />")
+      flash[:error] = project.errors.full_messages
       render :edit
     end
   end

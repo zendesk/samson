@@ -1,4 +1,4 @@
-<div class="navbar navbar-default">
+<div class="navbar navbar-inverse">
   <%= link_to "Pusher", root_path, class: "navbar-brand" %>
 
   <ul class="nav navbar-nav">
@@ -21,6 +21,10 @@
 
   <div class="navbar-btn pull-right">
     <% if logged_in? %>
+      <% if revision %>
+        <%= link_to revision[0..7], "https://github.com/zendesk/pusher/commit/#{revision}", title: "Pusher release commit", class: "btn btn-default" %>
+      <% end %>
+
       <%= link_to "Logout", logout_path, title: "Logged in as #{current_user.name}", class: "btn btn-default" %>
     <% end %>
   </div>
