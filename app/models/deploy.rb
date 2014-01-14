@@ -33,7 +33,6 @@ class Deploy < ActiveRecord::Base
   end
 
   def self.latest
-    limit(10).order("created_at DESC")
+    limit(10).order("#{table_name}.created_at DESC")
   end
-
 end
