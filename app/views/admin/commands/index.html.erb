@@ -4,10 +4,6 @@
       <th>Command</th>
       <th>Project</th>
       <th>
-        <%= link_to new_admin_command_path, class: "pull-right" do %>
-          <i class="glyphicon glyphicon-plus"></i>
-        <% end %>
-
         Actions
       </th>
     </tr>
@@ -21,16 +17,13 @@
         </td>
         <td><%= command.project.try(:name) %></td>
         <td>
-          <%= link_to edit_admin_command_path(command) do %>
-            <i class="glyphicon glyphicon-edit"></i>
-          <% end %>
-
-          <%= link_to admin_command_path(command), method: :delete, data: { confirm: "Are you sure?" } do %>
-            <i class="glyphicon glyphicon-trash"></i>
-          <% end %>
+          <%= link_to "Edit", edit_admin_command_path(command) %>
+          |
+          <%= link_to "Delete", admin_command_path(command), method: :delete, data: { confirm: "Are you sure?" } %>
         </td>
       </tr>
 
     <% end %>
   </tbody>
 </table>
+ <%= link_to "New command", new_admin_command_path, class: "btn btn-default" %>
