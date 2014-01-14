@@ -6,7 +6,7 @@
 <ul id="webhooks">
   <% project.webhooks.each.with_index do |webhook, index| %>
     <li class="webhooks bar list-unstyled clearfix" data-id="webhook_id_<%= webhook.id %>">
-      <%= "branch: #{webhook.branch} " %><span class="glyphicon glyphicon-arrow-right"></span><%= " stage: #{webhook.stage.name}" %>
+       branch: <%= webhook.branch %><span class="glyphicon glyphicon-arrow-right"></span> stage: <%= webhook.stage.name %>
       <%= link_to "Delete", project_webhook_path(project, webhook), method: :delete, data: { confirm: "Are you sure?" }, class: "btn btn-danger pull-right" %>
     </li>
   <% end %>
