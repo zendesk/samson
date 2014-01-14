@@ -7,7 +7,7 @@ class Project < ActiveRecord::Base
   before_create :generate_token
 
   has_many :stages
-  has_many :deploys, -> { order('created_at DESC') }, through: :stages
+  has_many :deploys, through: :stages
   has_many :jobs, -> { order('created_at DESC') }
   has_many :webhooks
   has_many :commands
