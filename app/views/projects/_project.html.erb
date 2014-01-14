@@ -1,13 +1,10 @@
 <div class="col-6 col-sm-4 col-lg-4">
   <div class="panel panel-default">
     <div class="panel-heading text-center">
+    <%= link_to project.name, project_path(project) %>
       <% if current_user.is_deployer? %>
-        <%= link_to new_project_deploy_path(project), class: "pull-right", title: "Kick off a deploy" do %>
-          <i class="glyphicon glyphicon-play-circle"></i>
-        <% end %>
+        <%= link_to "Deploy", new_project_deploy_path(project), class: "btn btn-danger pull-right short-button"%>
       <% end %>
-
-      <%= link_to project.name, project_path(project) %>
     </div>
 
     <div class="panel-body">
