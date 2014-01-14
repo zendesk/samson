@@ -14,8 +14,6 @@
       <div class="btn-group pull-right">
       <%= link_to "Deploy", new_project_deploy_path(@project, stage_id: stage.id), class: "btn btn-danger" %>
       <%= link_to "Edit", edit_project_stage_path(@project, stage), class: "btn btn-default" %>
-      <%= link_to "Delete", project_stage_path(project, stage), method: :delete, data: { confirm: "Are you sure?" }, class: "btn btn-danger" %>
-      </div>
     </li>
   <% end %>
 </ul>
