@@ -1,10 +1,7 @@
 <h1 class="project_title"><%= project.name %></h1>
 
-<ul class="nav nav-tabs">
-  <li class="active"><a href="#">Overview</a></li>
-  <li><%= link_to "Webhooks", project_webhooks_path(project) %></li>
-  <li><%= link_to "Settings", edit_project_path(project) %></li>
-</ul>
+<%= render partial: "shared/project_tabs",
+           locals: { active: "overview" } %>
 
 <h2>Stages</h2>
 <ul id="stages">

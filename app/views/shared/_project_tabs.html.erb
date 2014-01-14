@@ -1,0 +1,11 @@
+<ul class="nav nav-tabs">
+  <li class="<%= 'active' if active == 'overview'%>">
+    <%= link_to "Overview", project_path(project) %>
+  </li>
+  <li class="<%= 'active' if active == 'webhooks'%>">
+    <%= link_to "Webhooks", project_webhooks_path(project) %>
+  </li>
+  <li class="<%= 'active' if active == 'settings'%>">
+    <%= link_to "Settings", edit_project_path(project) %>
+  </li>
+</ul>
