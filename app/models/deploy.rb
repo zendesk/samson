@@ -32,7 +32,7 @@ class Deploy < ActiveRecord::Base
     end
   end
 
-  def self.latest
-    limit(10).order("#{table_name}.created_at DESC")
+  def self.latest(limit = 10)
+    limit(limit).order("#{table_name}.created_at DESC")
   end
 end
