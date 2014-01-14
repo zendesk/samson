@@ -37,7 +37,7 @@ class TravisController < ApplicationController
   end
 
   def deploy?
-    payload['status_message'] == 'Passed'
+    payload['status_message'] == 'Passed' && payload['type'] == 'push'
   end
 
   def repository
