@@ -11,8 +11,7 @@ class Deploy < ActiveRecord::Base
   end
 
   def commit
-    commit = job && job.commit
-    commit.blank?? reference : commit
+    job.try(:commit).presence || reference
   end
 
   def self.active
