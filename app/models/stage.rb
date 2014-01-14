@@ -14,7 +14,7 @@ class Stage < ActiveRecord::Base
 
   default_scope { order(:order) }
 
-  validates :name, :project_id, presence: true
+  validates :name, presence: true
 
   accepts_nested_attributes_for :flowdock_flows, allow_destroy: true, reject_if: :no_flowdock_token?
 
