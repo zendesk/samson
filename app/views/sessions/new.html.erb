@@ -1,23 +1,12 @@
-<div class="col-lg-3"></div>
-<div class="col-lg-6 text-center">
-  <div class="panel panel-default" id="login">
-    <div class="panel-heading">
-      <h3 class="panel-title">Login</h3>
-    </div>
-
-    <div class="panel-body">
-      <div class="row">
-        <%= link_to '/auth/github' do %>
-          <%= image_tag image_url('github.png') %>
-        <% end %>
-      </div>
-
-      <div class="row">
-        <%= link_to '/auth/zendesk' do %>
-          <%= image_tag image_url('zendesk.png') %>
-        <% end %>
-      </div>
-    </div>
+<div class="login-wrapper fade-in">
+  <h1>Pusher</h1>
+  <p>Understand what is being deployed.</p>
+  <div class="login">
+    <%= link_to '/auth/github', class: "action github" do %>
+      <%= image_tag image_url('github.png') %> Login with Github
+    <% end %>
+    <%= link_to '/auth/zendesk', class: "action zendesk" do %>
+      <%= image_tag image_url('zendesk.png') %> Login with Zendesk
+    <% end %>
   </div>
 </div>
-<div class="col-lg-3"></div>
