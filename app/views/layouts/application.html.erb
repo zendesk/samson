@@ -9,10 +9,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
   </head>
   <body class="<%= controller_action %>" >
-    <div class="container">
+    <div class="wrap">
       <%= render "shared/header" %>
       <%= render "shared/alerts" %>
-      <%= yield %>
+      <div class="container">
+        <%= yield %>
+      </div>
     </div>
+    <%= render "shared/footer" %>
   </body>
 </html>
