@@ -52,7 +52,7 @@ class StagesController < ApplicationController
   end
 
   def destroy
-    @stage.destroy
+    @stage.soft_delete!
     redirect_to project_path(@project)
   end
 

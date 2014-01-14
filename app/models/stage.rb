@@ -1,4 +1,8 @@
+require 'soft_deletion'
+
 class Stage < ActiveRecord::Base
+  has_soft_deletion default_scope: true
+
   belongs_to :project
   has_many :deploys
   has_many :flowdock_flows
