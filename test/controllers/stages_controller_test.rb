@@ -72,10 +72,14 @@ describe StagesController do
         subject { assigns(:stage) }
 
         before do
+          new_command = Command.create!(
+            command: 'test2 command'
+          )
+
           post :create, project_id: project.id, stage: {
             name: 'test',
             command: 'test command',
-            command_ids: [commands(:echo).id]
+            command_ids: [commands(:echo).id, new_command.id]
           }
 
           subject.reload
@@ -85,7 +89,7 @@ describe StagesController do
         it 'is created' do
           subject.persisted?.must_equal(true)
           subject.command_ids.must_include(commands(:echo).id)
-          subject.commands.last.command.must_equal('test command')
+          subject.command.must_equal(commands(:echo).command + "\ntest2 command\ntest command")
         end
 
         it 'redirects' do

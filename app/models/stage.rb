@@ -10,7 +10,7 @@ class Stage < ActiveRecord::Base
 
   default_scope { order(:order) }
 
-  validates :name, presence: true
+  validates :name, :project_id, presence: true
 
   accepts_nested_attributes_for :flowdock_flows, allow_destroy: true, reject_if: :no_flowdock_token?
 
@@ -36,28 +36,34 @@ class Stage < ActiveRecord::Base
     commands.map(&:command).join("\n")
   end
 
-  def command_ids=(command_ids)
+  def command=(command)
+    return unless command.present?
+
+    new_command = project.commands.build(command: command)
+    stage_commands.build(command: new_command).tap do
+      reorder_commands
+    end
+  end
+
+  def command_ids=(new_command_ids)
     super.tap do
-      reorder_commands(command_ids)
+      reorder_commands(new_command_ids.reject(&:blank?).map(&:to_i))
     end
   end
 
   def all_commands
-    all_commands = commands
+    command_scope = project ? Command.for_project(project) : Command.global
 
     if command_ids.any?
-      all_commands += Command.where(['id NOT in (?)', command_ids])
-    else
-      all_commands += Command.all
+      command_scope = command_scope.where(['id NOT in (?)', command_ids])
     end
 
-    all_commands
+    commands + command_scope
   end
 
   private
 
-  def reorder_commands(command_ids)
-    command_ids = command_ids.reject(&:blank?).map(&:to_i)
+  def reorder_commands(command_ids = self.command_ids)
     stage_commands.each do |stage_command|
       pos = command_ids.index(stage_command.command_id) ||
         stage_commands.length

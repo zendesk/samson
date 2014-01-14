@@ -14,7 +14,7 @@ class Admin::CommandsController < ApplicationController
   end
 
   def create
-    @command = current_user.commands.create(command_params)
+    @command = Command.create(command_params)
 
     if @command.persisted?
       flash[:notice] = 'Command created.'
@@ -51,6 +51,6 @@ class Admin::CommandsController < ApplicationController
   private
 
   def command_params
-    params.require(:command).permit(:command)
+    params.require(:command).permit(:command, :project_id)
   end
 end

@@ -10,6 +10,13 @@
     </div>
 
     <div class="form-group">
+      <%= form.label :project_id, value: "Project", class: "col-lg-2 control-label" %>
+      <div class="col-lg-4">
+        <%= form.select :project_id, Project.all.map {|p| [p.name, p.id]}, { include_blank: true }, class: "form-control" %>
+      </div>
+    </div>
+
+    <div class="form-group">
       <div class="col-lg-offset-2 col-lg-10">
         <button type="submit" class="btn btn-default">Save</button>
       </div>
