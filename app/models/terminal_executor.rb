@@ -32,10 +32,6 @@ class TerminalExecutor
     end
   end
 
-  def pid
-    @pid
-  end
-
   def stop!
     # Need pkill because we want all
     # children of the parent process dead
@@ -49,12 +45,15 @@ class TerminalExecutor
       PTY.spawn(command, in: "/dev/null")
     end
 
-    io_thread = callback_thread(output)
+    begin
+      output.each(3) {|line| @output.write(line) }
+    rescue Errno::EIO
+      # The IO has been closed.
+    end
 
     _, status = Process.wait2(@pid)
 
     input.close
-    io_thread.join
 
     return status.success?
   end
@@ -73,17 +72,5 @@ fi
 
   def error(command)
     "Failed to execute \"#{command}\""
-  end
-
-  def callback_thread(io)
-    Thread.new do
-      ActiveRecord::Base.connection_pool.release_connection
-
-      begin
-        io.each(3) {|line| @output.write(line) }
-      rescue Errno::EIO
-        # The IO has been closed.
-      end
-    end
   end
 end
