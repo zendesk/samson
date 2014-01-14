@@ -1,4 +1,11 @@
-<h1 class="project_title"><%= project.name %><span class="btn-group pull-right"><%= link_to "Webhooks", project_webhooks_path(project) , class: "btn btn-primary deploy_button" %><%= link_to "Project settings", edit_project_path(project), class: "btn btn-default" %></span></h1>
+<h1 class="project_title"><%= project.name %></h1>
+
+<ul class="nav nav-tabs">
+  <li class="active"><a href="#">Overview</a></li>
+  <li><%= link_to "Webhooks", project_webhooks_path(project) %></li>
+  <li><%= link_to "Settings", edit_project_path(project) %></li>
+</ul>
+
 <h2>Stages</h2>
 <ul id="stages">
   <% @stages.each.with_index do |stage, index| %>

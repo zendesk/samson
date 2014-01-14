@@ -1,4 +1,10 @@
-<h1>Webhooks for <%= @project.name %></h1>
+<h1><%= @project.name %></h1>
+
+<ul class="nav nav-tabs">
+  <li><%= link_to "Overview", project_path(@project) %></li>
+  <li class="active"><a href="#">Webhooks</a></li>
+  <li><%= link_to "Settings", edit_project_path(@project) %></li>
+</ul>
 
 <p>In order to automatically trigger a deploy to a stage, add a branch &rarr; stage mapping below
 and paste in the project's webhook URL to your CI service of choice.</p>
