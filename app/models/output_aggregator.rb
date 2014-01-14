@@ -5,10 +5,8 @@ class OutputAggregator
   end
 
   def to_s
-    scanner = TerminalOutputScanner.new
+    scanner = TerminalOutputScanner.new(@output)
     log = []
-
-    @output.each {|part| scanner.write(part) }
 
     scanner.each do |event, data|
       log.pop if event == :replace

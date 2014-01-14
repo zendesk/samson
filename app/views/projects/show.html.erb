@@ -1,4 +1,4 @@
-<h1 class="project_title"><%= project.name %><%= link_to "Deploy", new_project_deploy_path(project) , class: "btn btn-primary deploy_button" %></h1>
+<h1 class="project_title"><%= project.name %> <span class="btn-group"><%= link_to "Deploy", new_project_deploy_path(project) , class: "btn btn-primary deploy_button" %><%= link_to "Project settings", edit_project_path(project), class: "btn btn-default" %></span></h1>
 <div class="container">
 <div class="row">
 <div class="col-md-6">

@@ -1,7 +1,7 @@
 require 'soft_deletion'
 
 class Project < ActiveRecord::Base
-  has_soft_deletion
+  has_soft_deletion default_scope: true
 
   validates :name, presence: true
   before_create :generate_token
@@ -10,6 +10,7 @@ class Project < ActiveRecord::Base
   has_many :deploys, -> { order('created_at DESC') }, through: :stages
   has_many :jobs, -> { order('created_at DESC') }
   has_many :webhooks
+  has_many :commands
 
   accepts_nested_attributes_for :stages
 
