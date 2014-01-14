@@ -14,12 +14,24 @@ class Deploy < ActiveRecord::Base
     job.try(:commit).presence || reference
   end
 
+  def previous_deploy
+    stage.deploys.prior_to(self).last
+  end
+
+  def previous_commit
+    previous_deploy.try(:commit)
+  end
+
   def self.active
     joins(:job).where(jobs: { status: %w[pending running] })
   end
 
   def self.running
     joins(:job).where(jobs: { status: "running" })
+  end
+
+  def self.prior_to(deploy)
+    where("#{table_name}.id < ?", deploy.id)
   end
 
   private

@@ -22,6 +22,11 @@ class Project < ActiveRecord::Base
     name.parameterize("_")
   end
 
+  # The user/repo part of the repository URL.
+  def github_repo
+    repository_url.scan(/:(\w+\/\w+)\.git$/).join
+  end
+
   def webhook_stages_for_branch(branch)
     webhooks.for_branch(branch).map(&:stage)
   end
