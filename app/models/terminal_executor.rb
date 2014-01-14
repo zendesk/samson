@@ -45,17 +45,15 @@ class TerminalExecutor
   private
 
   def execute_command!(command)
-    master, slave = PTY.open
-
-    @pid = Bundler.with_clean_env do
-      Process.spawn(command, in: "/dev/null", out: slave, err: slave)
+    output, input, @pid = Bundler.with_clean_env do
+      PTY.spawn(command, in: "/dev/null")
     end
 
-    io_thread = callback_thread(master)
+    io_thread = callback_thread(output)
 
     _, status = Process.wait2(@pid)
 
-    slave.close
+    input.close
     io_thread.join
 
     return status.success?
