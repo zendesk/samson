@@ -7,13 +7,13 @@
 
     <div class="panel-body">
       <div class="row">
-        <%= link_to github_login_path do %>
+        <%= link_to '/auth/github' do %>
           <%= image_tag image_url('github.png') %>
         <% end %>
       </div>
 
       <div class="row">
-        <%= link_to zendesk_login_path do %>
+        <%= link_to '/auth/zendesk' do %>
           <%= image_tag image_url('zendesk.png') %>
         <% end %>
       </div>

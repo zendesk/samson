@@ -18,8 +18,8 @@ ZendeskPusher::Application.routes.draw do
     end
   end
 
-  get '/auth/zendesk/callback', to: 'sessions#zendesk', as: :zendesk_login
-  get '/auth/github/callback', to: 'sessions#github', as: :github_login
+  get '/auth/zendesk/callback', to: 'sessions#zendesk'
+  get '/auth/github/callback', to: 'sessions#github'
   get '/auth/failure', to: 'sessions#failure'
 
   get '/login', to: 'sessions#new'
