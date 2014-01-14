@@ -1,3 +1,9 @@
+# Scans a stream of characters, yielding a stream of tokens.
+#
+# The scanner understands some terminal escape codes - in particular, it pays
+# attention to newlines (`\n`) and carriage returns (`\r`). When a carriage
+# return is encountered, the scanner's cursor is reset to the start of the
+# current line, and the next data will overwrite that line.
 class TerminalOutputScanner
   def initialize(source)
     @source, @queue = source, []
