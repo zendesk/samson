@@ -51,7 +51,7 @@ class StagesController < ApplicationController
   end
 
   def destroy
-    @stage.destroy
+    @stage.soft_delete!
     redirect_to project_path(@project)
   end
 
@@ -71,6 +71,6 @@ class StagesController < ApplicationController
   end
 
   def find_stage
-    @stage = @project.stages.find(params[:id])
+    @stage = @project.stages.where(deleted_at: nil).find(params[:id])
   end
 end

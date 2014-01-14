@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20140113083726) do
+ActiveRecord::Schema.define(version: 20140114004419) do
 
   create_table "commands", force: true do |t|
     t.text     "command",    limit: 16777215
@@ -72,6 +72,7 @@ ActiveRecord::Schema.define(version: 20140113083726) do
     t.datetime "updated_at"
     t.string   "notify_email_address"
     t.integer  "order"
+    t.datetime "deleted_at"
   end
 
   create_table "users", force: true do |t|

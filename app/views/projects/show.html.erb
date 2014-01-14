@@ -4,7 +4,7 @@
 
 <h2>Stages</h2>
 <ul id="stages">
-  <% project.stages.each.with_index do |stage, index| %>
+  <% @stages.each.with_index do |stage, index| %>
     <li class="stages list-unstyled clearfix" data-id="stage_id_<%= stage.id %>">
       <%= link_to stage.name, project_stage_path(project, stage) %>
       <%= link_to "Delete", project_stage_path(project, stage), method: :delete, data: { confirm: "Are you sure?" }, class: "btn btn-danger pull-right" %>

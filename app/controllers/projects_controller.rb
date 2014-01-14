@@ -31,6 +31,7 @@ class ProjectsController < ApplicationController
   end
 
   def show
+    @stages = Stage.where(deleted_at: nil, project: project)
   end
 
   def edit
