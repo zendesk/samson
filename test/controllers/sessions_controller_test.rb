@@ -26,7 +26,101 @@ describe SessionsController do
   end
 
   describe "a POST to #github" do
-    # TODO
+    let(:user) { users(:viewer) }
+    let(:teams) {[]}
+
+    let(:access_token) { OAuth2::AccessToken.new(nil, 123) }
+    let(:auth_hash) do
+      Hashie::Mash.new(
+        info: Hashie::Mash.new(
+          name: user.name,
+          email: user.email
+        )
+      )
+    end
+
+    def stub_github_api(url, response = {}, status = 200)
+      url = Regexp.new(Regexp.escape('https://api.github.com/' + url + '?access_token=123'))
+      stub_request(:get, url).to_return(
+        status: status,
+        body: JSON.dump(response),
+        headers: { 'Content-Type' => 'application/json' }
+      )
+    end
+
+    setup do
+      @controller.stubs(strategy: Hashie::Mash.new(access_token: access_token))
+      @controller.stubs(auth_hash: auth_hash)
+      @controller.stubs(github_login: 'test.user')
+
+      stub_github_api('orgs/zendesk/teams', teams)
+
+      teams.each do |team|
+        stub_github_api("teams/#{team[:id]}/members/test.user", {}, team[:member] ? 204 : 404)
+      end
+
+      post :github
+    end
+
+    describe 'with no teams' do
+      it 'keeps the user a viewer' do
+        user.reload.role_id.must_equal(Role::VIEWER.id)
+      end
+    end
+
+    describe 'with an owners team' do
+      let(:teams) {[
+        { id: 1, slug: 'owners', member: member? }
+      ]}
+
+      describe 'as a team member' do
+        let(:member?) { true }
+
+        it 'updates the user to admin' do
+          user.reload.role_id.must_equal(Role::ADMIN.id)
+        end
+      end
+
+      describe 'not a team member' do
+        let(:member?) { false }
+
+        it 'does not update the user to admin' do
+          user.reload.role_id.must_equal(Role::VIEWER.id)
+        end
+      end
+    end
+
+    describe 'with a engineering team' do
+      let(:teams) {[
+        { id: 2, slug: 'engineering', member: member? }
+      ]}
+
+      describe 'as a team member' do
+        let(:member?) { true }
+
+        it 'updates the user to admin' do
+          user.reload.role_id.must_equal(Role::DEPLOYER.id)
+        end
+      end
+
+      describe 'not a team member' do
+        let(:member?) { false }
+        it 'does not update the user to admin' do
+          user.reload.role_id.must_equal(Role::VIEWER.id)
+        end
+      end
+    end
+
+    describe 'with both teams' do
+      let(:teams) {[
+        { id: 1, slug: 'owners', member: true },
+        { id: 2, slug: 'engineering', member: true }
+      ]}
+
+      it 'updates the user to admin' do
+        user.reload.role_id.must_equal(Role::ADMIN.id)
+      end
+    end
   end
 
   describe "a GET to #failure" do

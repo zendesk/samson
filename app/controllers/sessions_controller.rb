@@ -10,7 +10,7 @@ class SessionsController < ApplicationController
   def github
     teams = github_api.orgs.teams.list('zendesk')
     owner_team = find_team(teams, 'owners')
-    deploy_team = find_team(teams, 'deploy')
+    deploy_team = find_team(teams, 'engineering')
 
     role = if team_member?(owner_team)
       Role::ADMIN.id
@@ -64,7 +64,7 @@ class SessionsController < ApplicationController
   end
 
   def find_team(teams, slug)
-    teams.find {|t| t.slug == slug && %w{push admin}.include?(t.permission)}
+    teams.find {|t| t.slug == slug}
   end
 
   def team_member?(team)
