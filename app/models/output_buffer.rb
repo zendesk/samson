@@ -21,6 +21,7 @@ require 'thread_safe'
 #   listener2.value #=> "hello world!"
 #
 class OutputBuffer
+  # A magic object that signals the end of the stream.
   CLOSE = Object.new
 
   attr_reader :chunks
@@ -46,6 +47,8 @@ class OutputBuffer
   end
 
   def each(&block)
+    # If the buffer is closed, there's no reason to block the listening
+    # thread - just yield all the buffered chunks and return.
     return @chunks.each(&block) if @closed
 
     queue = Queue.new
