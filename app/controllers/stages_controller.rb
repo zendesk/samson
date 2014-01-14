@@ -13,6 +13,7 @@ class StagesController < ApplicationController
   end
 
   def show
+    @deploys = @stage.deploys.latest
   end
 
   def new

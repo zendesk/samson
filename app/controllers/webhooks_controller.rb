@@ -5,6 +5,10 @@ class WebhooksController < ApplicationController
     @webhooks = @project.webhooks
   end
 
+  def new
+    @webhooks = @project.webhooks
+  end
+
   def create
     @project.webhooks.create!(webhook_params)
 
@@ -18,6 +22,10 @@ class WebhooksController < ApplicationController
     redirect_to project_webhooks_path(@project)
   end
 
+  def show
+    @webhook = @project.webhooks.find(params[:id])
+  end
+
   private
 
   def find_project
@@ -27,4 +35,5 @@ class WebhooksController < ApplicationController
   def webhook_params
     params.require(:webhook).permit(:branch, :stage_id)
   end
+
 end

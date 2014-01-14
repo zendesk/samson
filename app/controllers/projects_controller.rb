@@ -31,6 +31,7 @@ class ProjectsController < ApplicationController
   end
 
   def show
+     @deploys = project.deploys.latest
   end
 
   def edit

@@ -1,4 +1,16 @@
-<%= render partial: "deploy", collection: @deploys %>
+<table class="table table-striped">
+	<thead>
+		<tr>
+			<th>Project</th>
+			<th>Who</th>
+			<th>Status</th>
+			<th></th>
+		</tr>
+	</thead>
+	<tbody>
+		<%= render partial: "deploy", collection: @deploys %>
+	</tbody>
+</table>
 
 <%= javascript_tag do %>
   $(document).ready(function() {

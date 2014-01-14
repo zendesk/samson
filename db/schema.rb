@@ -70,8 +70,8 @@ ActiveRecord::Schema.define(version: 20140113083726) do
     t.integer  "project_id",           null: false
     t.datetime "created_at"
     t.datetime "updated_at"
-    t.string   "notify_email_address"
     t.integer  "order"
+    t.string   "notify_email_address"
   end
 
   create_table "users", force: true do |t|

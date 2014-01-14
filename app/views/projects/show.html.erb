@@ -1,19 +1,14 @@
-<h1>
-  <%= project.name %>
-  <div class="pull-right">
-    <%= link_to "Project settings", edit_project_path(project), class: "btn btn-default" %>
-    <%= link_to "Webhooks", project_webhooks_path(project), class: "btn btn-default" %>
-    <%= deploy_link project %>
-  </div>
-</h1>
-
-
+<h1 class="project_title"><%= project.name %><span class="btn-group pull-right"><%= link_to "Webhooks", project_webhooks_path(project) , class: "btn btn-primary deploy_button" %><%= link_to "Project settings", edit_project_path(project), class: "btn btn-default" %></span></h1>
 <h2>Stages</h2>
 <ul id="stages">
   <% project.stages.each.with_index do |stage, index| %>
-    <li class="stages list-unstyled clearfix" data-id="stage_id_<%= stage.id %>">
+    <li class="stages bar list-unstyled clearfix" data-id="stage_id_<%= stage.id %>">
       <%= link_to stage.name, project_stage_path(project, stage) %>
-      <%= link_to "Delete", project_stage_path(project, stage), method: :delete, data: { confirm: "Are you sure?" }, class: "btn btn-danger pull-right" %>
+      <div class="btn-group pull-right">
+      <%= link_to "Deploy", new_project_deploy_path(@project, stage_id: stage.id), class: "btn btn-danger" %>
+      <%= link_to "Edit", edit_project_stage_path(@project, stage), class: "btn btn-default" %>
+      <%= link_to "Delete", project_stage_path(project, stage), method: :delete, data: { confirm: "Are you sure?" }, class: "btn btn-danger" %>
+      </div>
     </li>
   <% end %>
 </ul>
@@ -25,10 +20,16 @@
 <button id="success_message" class="messages btn btn-success" disabled>
   Success!
 </button>
-
 <h2>Recent deploys</h2>
-<ul>
-  <% project.deploys.limit(10).each do |deploy| %>
-    <li><%= link_to deploy.summary, project_deploy_path(project, deploy) %></li>
-  <% end %>
-</ul>
+  <table class="table table-striped">
+    <thead>
+      <tr>
+        <th>Who</th>
+        <th>Status</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      <%= render partial: "deploy", collection: @deploys %>
+    </tbody>
+</table>
