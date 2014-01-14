@@ -1,26 +1,11 @@
-<h1 class="project_title"><%= project.name %> <span class="btn-group"><%= link_to "Deploy", new_project_deploy_path(project) , class: "btn btn-primary deploy_button" %><%= link_to "Project settings", edit_project_path(project), class: "btn btn-default" %></span></h1>
-<div class="container">
-<div class="row">
-<div class="col-md-6">
-<h2>Webhooks</h2>
-<ul id="webhooks">
-  <% project.webhooks.each.with_index do |webhook, index| %>
-    <li class="webhooks bar list-unstyled clearfix" data-id="webhook_id_<%= webhook.id %>">
-       branch: <%= webhook.branch %><span class="glyphicon glyphicon-arrow-right"></span> stage: <%= webhook.stage.name %>
-      <%= link_to "Delete", project_webhook_path(project, webhook), method: :delete, data: { confirm: "Are you sure?" }, class: "btn btn-danger pull-right" %>
-    </li>
-  <% end %>
-</ul>
-<%= link_to "Add Webhook", new_project_webhook_path(project), class: "btn btn-default" %>
-</div>
-<div class="col-md-6">
+<h1 class="project_title"><%= project.name %><span class="btn-group pull-right"><%= link_to "Webhooks", project_webhooks_path(project) , class: "btn btn-primary deploy_button" %><%= link_to "Project settings", edit_project_path(project), class: "btn btn-default" %></span></h1>
 <h2>Stages</h2>
 <ul id="stages">
   <% project.stages.each.with_index do |stage, index| %>
     <li class="stages bar list-unstyled clearfix" data-id="stage_id_<%= stage.id %>">
       <%= link_to stage.name, project_stage_path(project, stage) %>
       <div class="btn-group pull-right">
-      <%= link_to "Deploy", new_project_deploy_path(@project, stage_id: stage.id), class: "btn btn-default" %>
+      <%= link_to "Deploy", new_project_deploy_path(@project, stage_id: stage.id), class: "btn btn-danger" %>
       <%= link_to "Edit", edit_project_stage_path(@project, stage), class: "btn btn-default" %>
       <%= link_to "Delete", project_stage_path(project, stage), method: :delete, data: { confirm: "Are you sure?" }, class: "btn btn-danger" %>
       </div>
@@ -35,9 +20,6 @@
 <button id="success_message" class="messages btn btn-success" disabled>
   Success!
 </button>
-</div>
-</div>
-</div>
 <h2>Recent deploys</h2>
   <table class="table table-striped">
     <thead>

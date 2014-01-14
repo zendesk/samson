@@ -5,7 +5,7 @@ ZendeskPusher::Application.routes.draw do
     put '/reorder' => 'projects#reorder', as: :reorder_stages
     resources :deploys, only: [:new, :create, :show, :destroy]
     resources :stages
-    resources :webhooks, only: [:new, :create, :destroy]
+    resources :webhooks, only: [:index, :create, :destroy]
   end
 
   resources :deploys, only: [:index] do
