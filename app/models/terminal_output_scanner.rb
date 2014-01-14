@@ -1,8 +1,24 @@
+# Scans a stream of characters, yielding a stream of tokens.
+#
+# The scanner understands some terminal escape codes - in particular, it pays
+# attention to newlines (`\n`) and carriage returns (`\r`). When a carriage
+# return is encountered, the scanner's cursor is reset to the start of the
+# current line, and the next data will overwrite that line.
 class TerminalOutputScanner
-  def initialize(queue = [])
-    @queue = queue
+  def initialize(source)
+    @source, @queue = source, []
     reset_buffer!
   end
+
+  def each(&block)
+    @source.each do |data|
+      write(data)
+      @queue.each(&block)
+      @queue.clear
+    end
+  end
+
+  private
 
   def write(data)
     data.scan(/\r?[^\r]*/).each do |part|
@@ -10,13 +26,6 @@ class TerminalOutputScanner
       write_part(part)
     end
   end
-
-  def each(&block)
-    @queue.each(&block)
-    @queue.clear
-  end
-
-  private
 
   def write_part(part)
     if part.start_with?("\r") || part.start_with?("\n")

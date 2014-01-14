@@ -1,13 +1,41 @@
+# Streams the terminal output events from a output source to a destination IO
+# stream.
+#
+# The streamed data will be in the forms of Server Sent Event messages:
+#
+#   event: append
+#   data: { "msg": "hello" }
+#
+#   event: replace
+#   data: { "msg" {"world\n" }
+#
+# The `append` event is meant to insert a new line at the end of some client
+# buffer while the `replace` event is meant to replace the last line of the
+# client buffer with the data contained in the message.
+#
+# Example:
+#
+#   # `stream` is e.g. the response.stream object in a Rails controller.
+#   streamer = EventStreamer.new(stream)
+#
+#   # `output` is anything that responds to `#each`. The block will be called
+#   # with each chunk of data that is about to be streamed - its return value
+#   # will be sent instead.
+#   streamer.start(output) {|chunk| chunk.html_safe }
+#
 class EventStreamer
   def initialize(stream)
     @stream = stream
   end
 
   def start(output, &block)
+    block ||= proc {|x| x }
+
     # Heartbeat thread until puma/puma#389 is solved
     start_heartbeat!
-    @scanner = TerminalOutputScanner.new
-    output.each {|message| write_message(message, &block) }
+
+    @scanner = TerminalOutputScanner.new(output)
+    @scanner.each {|event, data| emit_event(event, block.call(data)) }
   rescue IOError
     # Raised on stream close
   ensure
@@ -24,16 +52,6 @@ class EventStreamer
   end
 
   private
-
-  def write_message(message, &block)
-    block ||= proc {|x| x }
-
-    @scanner.write(message)
-
-    @scanner.each do |event, data|
-      emit_event event, block.call(data)
-    end
-  end
 
   def emit_event(name, data = "")
     json = data.present? ? JSON.dump(msg: data) : ""
