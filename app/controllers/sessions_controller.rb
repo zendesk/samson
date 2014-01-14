@@ -10,7 +10,7 @@ class SessionsController < ApplicationController
   def github
     teams = github_api.orgs.teams.list('zendesk')
     owner_team = find_team(teams, 'owners')
-    deploy_team = find_team(teams, 'pusher')
+    deploy_team = find_team(teams, 'deploy')
 
     role = if team_member?(owner_team)
       Role::ADMIN.id

@@ -25,7 +25,7 @@ describe SessionsController do
     end
   end
 
-  describe "a POST to #zendesk" do
+  describe "a POST to #github" do
     # TODO
   end
 
