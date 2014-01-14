@@ -8,9 +8,9 @@ class SessionsController < ApplicationController
   end
 
   def github
-    teams = github_api.orgs.teams.list('zendesk')
-    owner_team = find_team(teams, 'owners')
-    deploy_team = find_team(teams, 'engineering')
+    teams = github_api.orgs.teams.list(github_config.organization)
+    owner_team = find_team(teams, github_config.admin_team)
+    deploy_team = find_team(teams, github_config.deploy_team)
 
     role = if team_member?(owner_team)
       Role::ADMIN.id
@@ -73,5 +73,9 @@ class SessionsController < ApplicationController
 
   def github_login
     auth_hash.extra.raw_info.login
+  end
+
+  def github_config
+    Rails.application.config.pusher.github
   end
 end

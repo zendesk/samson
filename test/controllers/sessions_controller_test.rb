@@ -28,6 +28,7 @@ describe SessionsController do
   describe "a POST to #github" do
     let(:user) { users(:viewer) }
     let(:teams) {[]}
+    let(:config) { Rails.application.config.pusher.github }
 
     let(:access_token) { OAuth2::AccessToken.new(nil, 123) }
     let(:auth_hash) do
@@ -40,7 +41,7 @@ describe SessionsController do
     end
 
     def stub_github_api(url, response = {}, status = 200)
-      url = Regexp.new(Regexp.escape('https://api.github.com/' + url + '?access_token=123'))
+      url = 'https://api.github.com/' + url + '?access_token=123'
       stub_request(:get, url).to_return(
         status: status,
         body: JSON.dump(response),
@@ -53,7 +54,7 @@ describe SessionsController do
       @controller.stubs(auth_hash: auth_hash)
       @controller.stubs(github_login: 'test.user')
 
-      stub_github_api('orgs/zendesk/teams', teams)
+      stub_github_api("orgs/#{config.organization}/teams", teams)
 
       teams.each do |team|
         stub_github_api("teams/#{team[:id]}/members/test.user", {}, team[:member] ? 204 : 404)
@@ -68,9 +69,9 @@ describe SessionsController do
       end
     end
 
-    describe 'with an owners team' do
+    describe 'with an admin team' do
       let(:teams) {[
-        { id: 1, slug: 'owners', member: member? }
+        { id: 1, slug: config.admin_team, member: member? }
       ]}
 
       describe 'as a team member' do
@@ -90,9 +91,9 @@ describe SessionsController do
       end
     end
 
-    describe 'with a engineering team' do
+    describe 'with a deploy team' do
       let(:teams) {[
-        { id: 2, slug: 'engineering', member: member? }
+        { id: 2, slug: config.deploy_team, member: member? }
       ]}
 
       describe 'as a team member' do
@@ -113,8 +114,8 @@ describe SessionsController do
 
     describe 'with both teams' do
       let(:teams) {[
-        { id: 1, slug: 'owners', member: true },
-        { id: 2, slug: 'engineering', member: true }
+        { id: 1, slug: config.admin_team, member: true },
+        { id: 2, slug: config.deploy_team, member: true }
       ]}
 
       it 'updates the user to admin' do
