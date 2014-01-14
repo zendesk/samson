@@ -21,6 +21,10 @@
 
   <div class="navbar-btn pull-right">
     <% if logged_in? %>
+      <% if File.exists?('REVISION') %>
+        <% rev = File.read('REVISION') %>
+        <%= link_to(rev[0..7], "https://github.com/zendesk/pusher/commit/#{rev}", title: "Pusher release commit", class: "btn btn-default") %>
+      <% end %>
       <%= link_to "Logout", logout_path, title: "Logged in as #{current_user.name}", class: "btn btn-default" %>
     <% end %>
   </div>
