@@ -1,8 +1,18 @@
 class TerminalOutputScanner
-  def initialize(queue = [])
-    @queue = queue
+  def initialize(source)
+    @source, @queue = source, []
     reset_buffer!
   end
+
+  def each(&block)
+    @source.each do |data|
+      write(data)
+      @queue.each(&block)
+      @queue.clear
+    end
+  end
+
+  private
 
   def write(data)
     data.scan(/\r?[^\r]*/).each do |part|
@@ -10,13 +20,6 @@ class TerminalOutputScanner
       write_part(part)
     end
   end
-
-  def each(&block)
-    @queue.each(&block)
-    @queue.clear
-  end
-
-  private
 
   def write_part(part)
     if part.start_with?("\r") || part.start_with?("\n")

@@ -4,10 +4,13 @@ class EventStreamer
   end
 
   def start(output, &block)
+    block ||= proc {|x| x }
+
     # Heartbeat thread until puma/puma#389 is solved
     start_heartbeat!
-    @scanner = TerminalOutputScanner.new
-    output.each {|message| write_message(message, &block) }
+
+    @scanner = TerminalOutputScanner.new(output)
+    @scanner.each {|event, data| emit_event(event, block.call(data)) }
   rescue IOError
     # Raised on stream close
   ensure
@@ -24,16 +27,6 @@ class EventStreamer
   end
 
   private
-
-  def write_message(message, &block)
-    block ||= proc {|x| x }
-
-    @scanner.write(message)
-
-    @scanner.each do |event, data|
-      emit_event event, block.call(data)
-    end
-  end
 
   def emit_event(name, data = "")
     json = data.present? ? JSON.dump(msg: data) : ""
