@@ -71,6 +71,6 @@ class StagesController < ApplicationController
   end
 
   def find_stage
-    @stage = @project.stages.where(deleted_at: nil).find(params[:id])
+    @stage = @project.stages.find(params[:id])
   end
 end

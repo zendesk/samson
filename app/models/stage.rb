@@ -1,7 +1,7 @@
 require 'soft_deletion'
 
 class Stage < ActiveRecord::Base
-  has_soft_deletion
+  has_soft_deletion default_scope: true
 
   belongs_to :project
   has_many :deploys
