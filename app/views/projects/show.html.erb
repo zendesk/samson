@@ -1,6 +1,7 @@
 <h1 class="project_title"><%= project.name %><%= link_to "Deploy", new_project_deploy_path(project) , class: "btn btn-primary deploy_button" %></h1>
-<div class="column-container">
-<div class="column">
+<div class="container">
+<div class="row">
+<div class="col-md-6">
 <h2>Webhooks</h2>
 <ul id="webhooks">
   <% project.webhooks.each.with_index do |webhook, index| %>
@@ -12,7 +13,7 @@
 </ul>
 <%= link_to "Add Webhook", new_project_webhook_path(project), class: "btn btn-default" %>
 </div>
-<div class="column">
+<div class="col-md-6">
 <h2>Stages</h2>
 <ul id="stages">
   <% project.stages.each.with_index do |stage, index| %>
@@ -34,6 +35,7 @@
 <button id="success_message" class="messages btn btn-success" disabled>
   Success!
 </button>
+</div>
 </div>
 </div>
 <h2>Recent deploys</h2>
