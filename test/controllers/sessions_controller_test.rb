@@ -19,7 +19,8 @@ describe SessionsController do
       end
 
       it "redirects to the auth url" do
-        assert_redirected_to "/auth/zendesk"
+        warden.status.must_equal(302)
+        warden.headers['Location'].must_equal('/auth/github')
       end
     end
   end

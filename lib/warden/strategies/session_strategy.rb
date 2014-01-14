@@ -5,7 +5,7 @@ class Warden::Strategies::SessionStrategy < Warden::Strategies::Base
 
   def authenticate!
     # Default OmniAuth strategy
-    redirect!('/auth/zendesk')
+    redirect!('/auth/github')
   end
 end
 
