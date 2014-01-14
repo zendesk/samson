@@ -54,6 +54,10 @@ class ActionController::TestCase
     Warden.test_reset!
   end
 
+  def warden
+    request.env['warden']
+  end
+
   def process_with_catch_warden(*args)
     catch(:warden) do
       process_without_catch_warden(*args)

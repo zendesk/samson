@@ -69,9 +69,12 @@ class JobExecution
       return
     end
 
+    FileUtils.mkdir_p(artifact_cache_dir)
+
     commands = [
       "export DEPLOYER=#{@job.user.email}",
       "export REVISION=#{@commit}",
+      "export CACHE_DIR=#{artifact_cache_dir}",
       "cd #{dir}",
       *@job.commands
     ]
@@ -84,9 +87,7 @@ class JobExecution
   end
 
   def setup!(dir)
-    project = @job.project
-    repo_url = project.repository_url
-    repo_cache_dir = File.join(cached_repos_dir, project.id.to_s)
+    repo_url = @job.project.repository_url
 
     commands = [
       <<-SHELL,
@@ -102,6 +103,14 @@ class JobExecution
     ]
 
     @executor.execute!(*commands)
+  end
+
+  def repo_cache_dir
+    File.join(cached_repos_dir, @job.project.id.to_s)
+  end
+
+  def artifact_cache_dir
+    File.join(repo_cache_dir, "artifacts")
   end
 
   class << self

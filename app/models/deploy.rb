@@ -31,4 +31,9 @@ class Deploy < ActiveRecord::Base
       "encountered an error deploying"
     end
   end
+
+  def self.latest
+    limit(10).order("created_at DESC")
+  end
+
 end

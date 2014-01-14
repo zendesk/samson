@@ -1,16 +1,26 @@
 <h1>
   <%= link_to @project.name, project_path(@project) %>
   <small><%= @stage.name %></small>
-  <div class="pull-right"><%= deploy_link @project, stage_id: @stage.id %></div>
+
+  <div class="pull-right">
+    <%= link_to "Edit stage", edit_project_stage_path(@project, @stage), class: "btn btn-default" %>
+    <%= deploy_link @project, stage_id: @stage.id %>
+  </div>
 </h1>
 
 <pre><%= @stage.command %></pre>
 
-<p><%= link_to "Edit", edit_project_stage_path(@project, @stage) %> | <%= link_to "Delete", project_stage_path(@project, @stage), method: :delete, data: { confirm: "Are you sure?" } %></p>
 
 <h2>Recent deploys</h2>
-<ul>
-  <% @stage.deploys.limit(10).each do |deploy| %>
-    <li><%= link_to deploy.summary, project_deploy_path(@project, deploy) %></li>
-  <% end %>
-</ul>
+  <table class="table table-striped">
+    <thead>
+      <tr>
+        <th>Who</th>
+        <th>Status</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      <%= render partial: "/projects/deploy", collection: @deploys %>
+    </tbody>
+</table>

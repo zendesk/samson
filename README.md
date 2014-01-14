@@ -22,10 +22,10 @@ This project makes extensive use of threads, hence the requirement on JRuby.
 script/bootstrap
 
 # fill in .env with a couple variables
-# CLIENT_SECRET is mandatory and is the secret of a "deployment" OAuth client
-# The callback for the OAuth client is {HOST}/auth/zendesk/callback
-# ZENDESK_URL defaults to "http://dev.localhost", but is used for authorization
-# An example Zendesk OAuth Client config - http://cl.ly/image/47282r002n02
+# GITHUB_CLIENT_ID and GITHUB_CLIENT_SECRET are mandatory
+# and can be obtained by creating a new Github Application
+# See: https://github.com/settings/applications
+# https://developer.github.com/v3/oauth/
 
 bundle exec puma -C config/puma.rb
 ```

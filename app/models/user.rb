@@ -3,6 +3,8 @@ class User < ActiveRecord::Base
 
   validates :role_id, inclusion: { in: Role.all.map(&:id) }
 
+  before_create :set_current_token
+
   def self.create_or_update_from_hash(hash)
     user = User.where(email: hash[:email]).first
     user ||= User.new
@@ -21,5 +23,11 @@ class User < ActiveRecord::Base
     define_method "is_#{role.name}?" do
       role_id >= role.id
     end
+  end
+
+  private
+
+  def set_current_token
+    self.current_token = SecureRandom.hex
   end
 end

@@ -1,11 +1,11 @@
+require 'omniauth/github_authorization'
+
 class SessionsController < ApplicationController
   skip_before_filter :login_users
 
   def new
     if logged_in?
       redirect_to root_path
-    else
-      redirect_to '/auth/zendesk'
     end
   end
 
@@ -13,7 +13,7 @@ class SessionsController < ApplicationController
     user = User.create_or_update_from_hash(
       name: auth_hash.info.name,
       email: auth_hash.info.email,
-      current_token: SecureRandom.hex
+      role_id: github_authorization.role_id
     )
 
     if user
@@ -27,7 +27,7 @@ class SessionsController < ApplicationController
   end
 
   def zendesk
-    if auth_hash.info.role == "end-user" || auth_hash.info.email.blank?
+    if auth_hash.info.role == 'end-user' || auth_hash.info.email.blank?
       flash[:error] = 'You are unauthorized.'
     else
       role_id = if auth_hash.info.role == 'admin'
@@ -40,7 +40,6 @@ class SessionsController < ApplicationController
         name: auth_hash.info.name,
         email: auth_hash.info.email,
         role_id: role_id,
-        current_token: strategy.access_token.token
       )
 
       if user
@@ -61,8 +60,8 @@ class SessionsController < ApplicationController
 
   def destroy
     logout!
-    flash[:notice] = "You have been logged out."
 
+    flash[:notice] = "You have been logged out."
     redirect_to root_path
   end
 
@@ -74,5 +73,12 @@ class SessionsController < ApplicationController
 
   def strategy
     request.env['omniauth.strategy']
+  end
+
+  def github_authorization
+    GithubAuthorization.new(
+      auth_hash.extra.raw_info.login,
+      strategy.access_token.token
+    )
   end
 end

@@ -18,23 +18,36 @@
   color: red;
 }
 
-#stages {
+#stages,
+#webhooks {
   padding: 0;
 }
 
 .stages {
+  cursor: pointer;
+}
+
+.bar {
   background-color: #fff;
   border-radius: 3px;
   border: 1px solid #ddd;
-  cursor: pointer;
   margin-bottom: 5px;
   padding: 5px 5px 5px 15px;
 }
 
-.stages a:first-child {
+.webhooks,
+.stages > a:first-child {
   line-height: 34px;
 }
 
 .messages {
   display: none;
+}
+
+.deploy_button {
+  margin-left: 25px;
+}
+
+.short-button {
+  padding: 0 12px;
 }

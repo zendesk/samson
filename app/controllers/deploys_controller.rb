@@ -1,4 +1,5 @@
 class DeploysController < ApplicationController
+
   rescue_from ActiveRecord::RecordNotFound do |error|
     flash[:error] = "Deploy not found."
     redirect_to root_path
@@ -14,7 +15,6 @@ class DeploysController < ApplicationController
 
   def active
     @deploys = Deploy.active.limit(10).order("created_at DESC")
-
     render :index
   end
 

@@ -32,6 +32,7 @@ class ProjectsController < ApplicationController
 
   def show
     @stages = project.stages
+    @deploys = project.deploys.latest
   end
 
   def edit
