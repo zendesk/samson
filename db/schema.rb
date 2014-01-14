@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20140114004419) do
+ActiveRecord::Schema.define(version: 20140114051012) do
 
   create_table "commands", force: true do |t|
     t.text     "command",    limit: 16777215
@@ -23,7 +23,7 @@ ActiveRecord::Schema.define(version: 20140114004419) do
   create_table "deploys", force: true do |t|
     t.integer  "stage_id",   null: false
     t.integer  "job_id",     null: false
-    t.string   "commit",     null: false
+    t.string   "reference",  null: false
     t.datetime "created_at"
     t.datetime "updated_at"
   end
@@ -44,6 +44,7 @@ ActiveRecord::Schema.define(version: 20140114004419) do
     t.text     "output",     limit: 2147483647
     t.datetime "created_at"
     t.datetime "updated_at"
+    t.string   "commit"
   end
 
   create_table "projects", force: true do |t|

@@ -6,7 +6,7 @@ describe DeploysController do
   let(:admin) { users(:admin) }
   let(:command) { "echo hello" }
   let(:job) { Job.create!(command: command, project: project, user: admin) }
-  let(:deploy) { Deploy.create!(stage: stage, job: job, commit: "foo") }
+  let(:deploy) { Deploy.create!(stage: stage, job: job, reference: "foo") }
   let(:deploy_service) { stub(deploy!: nil) }
 
   setup do
@@ -65,7 +65,7 @@ describe DeploysController do
 
       let(:params) {{ deploy: {
         stage_id: stage.id,
-        commit: "master"
+        reference: "master"
       }}}
 
       it "redirects to the job path" do

@@ -68,6 +68,10 @@ class Job < ActiveRecord::Base
     update_attribute(:output, output)
   end
 
+  def update_commit!(commit)
+    update_attribute(:commit, commit)
+  end
+
   private
 
   def execution
