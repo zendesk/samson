@@ -1,5 +1,16 @@
 require 'pty'
 
+# Executes commands in a fake terminal. The output will be streamed to a
+# specified IO-like object.
+#
+# Example:
+#
+#   output = StringIO.new
+#   terminal = TerminalExecutor.new(output)
+#   terminal.execute!("echo hello", "echo world")
+#
+#   output.string #=> "hello\r\nworld\r\n"
+#
 class TerminalExecutor
   attr_reader :pid
 
