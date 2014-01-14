@@ -210,7 +210,8 @@ describe StagesController do
         end
 
         it 'removes stage' do
-          Stage.exists?(subject.id).must_equal(false)
+          subject.reload
+          subject.deleted_at.wont_be_nil
         end
       end
 
@@ -229,6 +230,7 @@ describe StagesController do
           assert_redirected_to project_path(subject.project)
         end
       end
+
     end
   end
 end
