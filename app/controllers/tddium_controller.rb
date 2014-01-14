@@ -14,7 +14,6 @@ class TddiumController < ActionController::Base
     return head :ok if project.repository_url != params[:repository][:url]
 
     stages = project.webhook_stages_for_branch(params[:branch])
-    tddium_user = User.find_or_create_by(name: "Tddium")
     deploy_service = DeployService.new(project, tddium_user)
 
     stages.each do |stage|
@@ -22,5 +21,14 @@ class TddiumController < ActionController::Base
     end
 
     head :ok
+  end
+
+  private
+
+  def tddium_user
+    name = "Tddium"
+    email = "deploy+tddium@zendesk.com"
+
+    User.create_with(name: name).find_or_create_by(email: email)
   end
 end

@@ -1,4 +1,4 @@
-require 'test_helper'
+require_relative '../test_helper'
 
 describe TddiumController do
   let(:commit) { "dc395381e650f3bac18457909880829fc20e34ba" }
@@ -55,7 +55,7 @@ describe TddiumController do
   end
 
   it "deploys as the Tddium user" do
-    user = User.create!(name: "Tddium")
+    user = User.create!(name: "Tddium", email: "deploy+tddium@zendesk.com")
 
     post :create, payload.merge(token: project.token)
 
