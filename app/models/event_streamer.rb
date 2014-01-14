@@ -1,3 +1,28 @@
+# Streams the terminal output events from a output source to a destination IO
+# stream.
+#
+# The streamed data will be in the forms of Server Sent Event messages:
+#
+#   event: append
+#   data: { "msg": "hello" }
+#
+#   event: replace
+#   data: { "msg" {"world\n" }
+#
+# The `append` event is meant to insert a new line at the end of some client
+# buffer while the `replace` event is meant to replace the last line of the
+# client buffer with the data contained in the message.
+#
+# Example:
+#
+#   # `stream` is e.g. the response.stream object in a Rails controller.
+#   streamer = EventStreamer.new(stream)
+#
+#   # `output` is anything that responds to `#each`. The block will be called
+#   # with each chunk of data that is about to be streamed - its return value
+#   # will be sent instead.
+#   streamer.start(output) {|chunk| chunk.html_safe }
+#
 class EventStreamer
   def initialize(stream)
     @stream = stream
