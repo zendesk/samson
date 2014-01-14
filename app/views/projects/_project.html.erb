@@ -11,10 +11,11 @@
     </div>
 
     <div class="panel-body">
-      <% if last_n(project.deploys) > 0 %>
-        <p>Last <%= last_n(project.deploys) %> deploy(s):</p>
+      <%- latest_deploys = project.deploys.latest(5) %>
+      <% if latest_deploys.any? %>
+        <p>Last <%= latest_deploys.count > 1 ? "#{latest_deploys.count} deploys" : 'deploy' %>:</p>
         <ul class="job-history">
-          <% project.deploys.limit(last_n(project.deploys)).each do |deploy| %>
+          <% latest_deploys.each do |deploy| %>
             <li class="<%= job_state_class(deploy) %>">
               <%= link_to "#{deploy.commit} to #{deploy.stage.name} by #{deploy.user.name}", project_deploy_path(project, deploy) %>
             </li>
