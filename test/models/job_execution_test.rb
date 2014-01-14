@@ -89,9 +89,18 @@ describe JobExecution do
     assert_equal "zebra", last_line_of_output
   end
 
+  it "maintains a cache of build artifacts between runs" do
+    job.command = "echo hello > $CACHE_DIR/foo"
+    execute_job
+
+    job.command = "cat $CACHE_DIR/foo"
+    execute_job
+    assert_equal "hello", last_line_of_output
+  end
+
   it "runs the commands specified by the job"
 
-  def execute_job(branch = master)
+  def execute_job(branch = "master")
     execution = JobExecution.new(branch, job)
     execution.start_and_wait!
   end
