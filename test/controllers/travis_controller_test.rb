@@ -81,7 +81,8 @@ describe TravisController do
             status_message: 'Passed',
             branch: 'master',
             committer_email: user.email,
-            commit: '123abc'
+            commit: '123abc',
+            type: 'push'
           }}
 
           it "creates a deploy" do
