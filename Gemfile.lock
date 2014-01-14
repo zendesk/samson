@@ -267,6 +267,7 @@ DEPENDENCIES
   net-ssh-shell (~> 0.2)!
   omniauth (~> 1.1)
   omniauth-github (~> 1.1)
+  omniauth-oauth2 (~> 1.1)
   puma
   rails (= 4.0.2)
   rails_12factor

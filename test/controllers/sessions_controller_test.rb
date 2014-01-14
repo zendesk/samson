@@ -20,7 +20,7 @@ describe SessionsController do
 
       it "redirects to the auth url" do
         warden.status.must_equal(302)
-        warden.headers['Location'].must_equal('/auth/github')
+        warden.headers['Location'].must_equal('/login')
       end
     end
   end
@@ -122,6 +122,9 @@ describe SessionsController do
         user.reload.role_id.must_equal(Role::ADMIN.id)
       end
     end
+  end
+
+  describe 'a POST to #zendesk' do
   end
 
   describe "a GET to #failure" do

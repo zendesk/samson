@@ -27,6 +27,7 @@ end
 
 group :no_preload do
   gem 'omniauth', '~> 1.1'
+  gem 'omniauth-oauth2', '~> 1.1'
   gem 'omniauth-github', '~> 1.1'
   gem 'github_api', '~> 0.11'
 

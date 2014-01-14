@@ -1,0 +1,23 @@
+<div class="col-lg-3"></div>
+<div class="col-lg-6 text-center">
+  <div class="panel panel-default" id="login">
+    <div class="panel-heading">
+      <h3 class="panel-title">Login</h3>
+    </div>
+
+    <div class="panel-body">
+      <div class="row">
+        <%= link_to github_login_path do %>
+          <%= image_tag image_url('github.png') %>
+        <% end %>
+      </div>
+
+      <div class="row">
+        <%= link_to zendesk_login_path do %>
+          <%= image_tag image_url('zendesk.png') %>
+        <% end %>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="col-lg-3"></div>

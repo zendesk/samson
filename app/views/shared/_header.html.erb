@@ -1,11 +1,13 @@
 <div class="navbar navbar-default">
-  <%= link_to "Zendesk Deployer", root_path, class: "navbar-brand" %>
+  <%= link_to "Pusher", root_path, class: "navbar-brand" %>
 
   <ul class="nav navbar-nav">
-    <li><%= link_to "Deploy History", deploys_path %></li>
-    <li><%= link_to "Current Deploys", active_deploys_path %></li>
+    <% if current_user %>
+      <li><%= link_to "Deploy History", deploys_path %></li>
+      <li><%= link_to "Current Deploys", active_deploys_path %></li>
+    <% end %>
 
-    <% if current_user.is_admin? %>
+    <% if current_user.try(:is_admin?) %>
       <li class="dropdown">
         <a href="#" class="dropdown-toggle" data-toggle="dropdown">Admin <b class="caret"></b></a>
         <ul class="dropdown-menu">
@@ -20,8 +22,6 @@
   <div class="navbar-btn pull-right">
     <% if logged_in? %>
       <%= link_to "Logout", logout_path, title: "Logged in as #{current_user.name}", class: "btn btn-default" %>
-    <% else %>
-      <%= link_to "Login", login_path, class: "btn btn-default" %>
     <% end %>
   </div>
 </div>
