@@ -1,0 +1,84 @@
+a {
+  color: #358cce;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5 {
+  font-family: "Helvetica Neue", sans-serif;
+}
+
+h1 {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.07);
+  font-size: 28px;
+  line-height: 28px;
+  margin-bottom: 10px;
+  margin-top: 36px;
+  padding-bottom: 10px;
+}
+
+h2 {
+  margin-top: 30px;
+  font-size: 23px;
+  line-height: 23px;
+}
+
+.navbar {
+  border-top-right-radius: 0;
+  border-top-left-radius: 0;
+
+  .navbar-brand {
+    color: #FFF;
+    &:hover {
+      color: #EEE;
+    }
+  }
+
+}
+
+.navbar-inverse {
+
+  .btn-default {
+    background: #585858;
+    border: 0;
+    color: rgba(225,225,225,0.7);
+
+    &:hover {
+      color: #FFF;
+    }
+
+  }
+
+}
+
+
+/* Animations */
+
+@-webkit-keyframes fadeIn {
+  from { opacity:0; top: -10px; } to { opacity:1; top: 0px; }
+}
+@-moz-keyframes fadeIn {
+  from { opacity:0; top: -10px; } to { opacity:1; top: 0px; }
+}
+@keyframes fadeIn {
+  from { opacity:0; top: -10px; } to { opacity:1; top: 0px; }
+}
+
+.fade-in {
+  position: relative;
+  top: -10px;
+  opacity:0;
+  -webkit-animation: fadeIn ease-in 1;
+  -moz-animation: fadeIn ease-in 1;
+  animation: fadeIn ease-in 1;
+
+  -webkit-animation-fill-mode: forwards;
+  -moz-animation-fill-mode: forwards;
+  animation-fill-mode: forwards;
+
+  -webkit-animation-duration: 0.75s;
+  -moz-animation-duration: 0.75s;
+  animation-duration: 0.75s;
+}

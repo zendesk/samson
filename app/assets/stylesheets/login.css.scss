@@ -1,0 +1,53 @@
+.sessions.new {
+  background: #343131;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  .navbar {
+    display: none;
+  }
+}
+
+.login-wrapper {
+  background: #F0F0F0;
+  width: 350px;
+  margin: 200px auto 0;
+  padding: 10px;
+  border-radius: 4px;
+
+  h1 {
+    margin-top: 5px;
+  }
+
+  a {
+    color: #FFF;
+    text-decoration: none;
+  }
+
+  .action {
+    border-radius: 4px;
+    display: block;
+    margin-top: 10px;
+    padding: 5px;
+    font-size: 16px;
+
+    &:hover {
+      opacity: 0.95;
+    }
+
+    img {
+      width: 40px;
+      height: 40px;
+      margin: 5px 10px;
+    }
+  }
+
+  .github {
+    background: #000;
+  }
+
+	.zendesk {
+    background: #78A300;
+  }
+}

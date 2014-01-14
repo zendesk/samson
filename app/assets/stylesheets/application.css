@@ -32,6 +32,7 @@
 .pre-scrollable.log {
   background-color: black;
   color: white;
+  max-height: 550px;
 }
 
 .navbar .navbar-btn.pull-right {

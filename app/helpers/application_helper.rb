@@ -15,4 +15,8 @@ module ApplicationHelper
       concat " Deploy!"
     end
   end
+
+  def controller_action
+    "#{controller_name} #{action_name}"
+  end
 end
