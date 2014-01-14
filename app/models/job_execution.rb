@@ -27,11 +27,8 @@ class JobExecution
       output_aggregator = OutputAggregator.new(@output)
       @job.run!
 
-      begin
-        dir = Dir.mktmpdir
+      Dir.mktmpdir do |dir|
         execute!(dir)
-      ensure
-        FileUtils.rm_rf(dir)
       end
 
       @output.close
