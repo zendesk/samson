@@ -17,7 +17,7 @@
         <ul class="job-history">
           <% latest_deploys.each do |deploy| %>
             <li class="<%= job_state_class(deploy) %>">
-              <%= link_to "#{deploy.commit} to #{deploy.stage.name} by #{deploy.user.name}", project_deploy_path(project, deploy) %>
+              <%= link_to deploy.summary, project_deploy_path(project, deploy) %>
             </li>
           <% end %>
         </ul>
