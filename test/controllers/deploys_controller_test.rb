@@ -57,6 +57,36 @@ describe DeploysController do
     unauthorized :delete, :destroy, project_id: 1, id: 1
   end
 
+  as_a_deployer do
+    describe "a DELETE to :destroy" do
+      describe "with a deploy owned by the deployer" do
+        setup do
+          Deploy.any_instance.stubs(:started_by?).returns(true)
+
+          delete :destroy, project_id: project.id, id: deploy.to_param
+        end
+
+        it "responds with 200" do
+          response.status.must_equal(200)
+        end
+      end
+
+      describe "with a deploy not owned by the deployer" do
+        setup do
+          Deploy.any_instance.stubs(:started_by?).returns(false)
+          admin.stubs(:is_admin?).returns(false)
+
+          delete :destroy, project_id: project.id, id: deploy.to_param
+        end
+
+        it "responds with 403" do
+          response.status.must_equal(403)
+        end
+      end
+    end
+
+  end
+
   as_a_admin do
     describe "a POST to :create" do
       setup do
