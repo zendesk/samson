@@ -61,7 +61,7 @@ class ProjectsController < ApplicationController
   end
 
   def deploys
-    @deploys = project.deploys.all
+    @deploys = project.deploys
   end
 
   protected
