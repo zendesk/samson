@@ -1,3 +1,5 @@
+JobExecution.setup
+
 Rails.application.config.after_initialize do
   Job.pending.each do |job|
     JobExecution.start_job(job.deploy.reference, job)
@@ -11,4 +13,10 @@ Signal.trap('USR1') do
 
   # Pass USR2 to the underlying server
   Process.kill('USR2', $$)
+end
+
+at_exit do
+  Deploy.active.each do |deploy|
+    deploy.stop!
+  end
 end
