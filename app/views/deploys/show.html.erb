@@ -5,50 +5,27 @@
   </div>
 </h1>
 
-<h2>
-  <%= @deploy.summary %>
-  <small><%= time_ago_in_words @deploy.created_at %> ago</small>
-</h2>
+<p><%= @deploy.summary %> <%= time_ago_in_words @deploy.created_at %> ago</p>
 
-<h4>Changes</h4>
-<p>Commit range: <code><%= link_to @changeset.commit_range, @changeset.github_url %></code></p>
+<ul id="deploy-tabs" class="nav nav-tabs">
+  <li class="active"><a href="#output" data-toggle="tab">Output</a></li>
+  <li><a href="#files" data-toggle="tab">Files</a></li>
+  <li><a href="#commits" data-toggle="tab">Commits</a></li>
+</ul>
 
-<table class="table">
-  <tbody>
-  <% @changeset.files.each do |file| %>
-    <tr>
-      <td><%= file_status_label file.status %> &nbsp; <%= file.filename %></td>
-      <td align="right">
-        <%= file_changes_label file.additions, "success" %>
-        <%= file_changes_label file.changes, "info" %>
-        <%= file_changes_label file.deletions, "danger" %>
-      </td>
-    </tr>
-  <% end %>
-  </tbody>
-</table>
+<div class="tab-content">
+  <div class="tab-pane active" id="output">
+    <%= render 'deploys/output', deploy: @deploy %>
+  </div>
 
-<h4>Commits</h4>
-<table class="table">
-  <tbody>
-  <% @changeset.commits.each do |commit| %>
-    <tr>
-      <td><%= image_tag commit.author_avatar_url, width: 20, height: 20 %></td>
-      <td><%= link_to commit.author_name, commit.author_url %></td>
-      <td><%= link_to commit.message, commit.url %></td>
-    </tr>
-  <% end %>
-  </tbody>
-</table>
+  <div class="tab-pane" id="files">
+    <%= render 'deploys/files', changeset: @changeset %>
+  </div>
 
-<h4>Output</h4>
-<pre id="messages" class="pre-scrollable log">
-  <% unless @deploy.active? %>
-    <% @deploy.output.split("\n").each do |line| %>
-<%= render_log(line) %>
-    <% end %>
-  <% end %>
-</pre>
+  <div class="tab-pane" id="commits">
+    <%= render 'deploys/commits', changeset: @changeset %>
+  </div>
+</div>
 
 <% if !JobExecution.enabled %>
   <div class="alert alert-info">

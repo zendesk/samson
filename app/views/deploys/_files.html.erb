@@ -1,0 +1,16 @@
+<p>Commit range: <code><%= link_to changeset.commit_range, changeset.github_url %></code></p>
+
+<table class="table">
+  <tbody>
+  <% changeset.files.each do |file| %>
+    <tr>
+      <td><%= file_status_label file.status %> &nbsp; <%= file.filename %></td>
+      <td align="right">
+        <%= file_changes_label file.additions, "success" %>
+        <%= file_changes_label file.changes, "info" %>
+        <%= file_changes_label file.deletions, "danger" %>
+      </td>
+    </tr>
+  <% end %>
+  </tbody>
+</table>
