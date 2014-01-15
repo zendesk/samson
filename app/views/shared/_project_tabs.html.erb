@@ -5,6 +5,9 @@
   <li class="<%= 'active' if active == 'deploys'%>">
     <%= link_to "Deploys", project_deploys_path(project) %>
   </li>
+  <li class="<%= 'active' if active == 'stages'%>">
+    <%= link_to "Stages", project_stages_path(project) %>
+  </li>
   <li class="<%= 'active' if active == 'webhooks'%>">
     <%= link_to "Webhooks", project_webhooks_path(project) %>
   </li>
