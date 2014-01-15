@@ -11,11 +11,11 @@ class JobExecution
 
   attr_reader :output
 
-  def initialize(commit, job)
+  def initialize(reference, job)
     @output = OutputBuffer.new
     @executor = TerminalExecutor.new(@output)
     @subscribers = []
-    @job, @commit = job, commit
+    @job, @reference = job, reference
   end
 
   def start!
@@ -27,11 +27,8 @@ class JobExecution
       output_aggregator = OutputAggregator.new(@output)
       @job.run!
 
-      begin
-        dir = Dir.mktmpdir
+      Dir.mktmpdir do |dir|
         execute!(dir)
-      ensure
-        FileUtils.rm_rf(dir)
       end
 
       @output.close
@@ -73,7 +70,7 @@ class JobExecution
 
     commands = [
       "export DEPLOYER=#{@job.user.email}",
-      "export REVISION=#{@commit}",
+      "export REVISION=#{@reference}",
       "export CACHE_DIR=#{artifact_cache_dir}",
       "cd #{dir}",
       *@job.commands
@@ -99,14 +96,19 @@ class JobExecution
       SHELL
       "git clone #{repo_cache_dir} #{dir}",
       "cd #{dir}",
-      "git checkout --quiet #{@commit}"
+      "git checkout --quiet #{@reference}"
     ]
 
-    @executor.execute!(*commands)
+    @executor.execute!(*commands).tap do |status|
+      if status
+        commit = `cd #{repo_cache_dir} && git rev-parse #{@reference}`.chomp
+        @job.update_commit!(commit)
+      end
+    end
   end
 
   def repo_cache_dir
-    File.join(cached_repos_dir, @job.project.id.to_s)
+    File.join(cached_repos_dir, @job.project_id.to_s)
   end
 
   def artifact_cache_dir
@@ -126,8 +128,8 @@ class JobExecution
       registry[id.to_i]
     end
 
-    def start_job(commit, job)
-      registry[job.id] = new(commit, job).tap(&:start!)
+    def start_job(reference, job)
+      registry[job.id] = new(reference, job).tap(&:start!)
     end
 
     def all

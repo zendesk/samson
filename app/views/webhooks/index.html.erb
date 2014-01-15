@@ -1,4 +1,7 @@
-<h1>Webhooks for <%= @project.name %></h1>
+<h1><%= @project.name %></h1>
+
+<%= render partial: "shared/project_tabs",
+           locals: { project: @project, active: "webhooks" } %>
 
 <p>In order to automatically trigger a deploy to a stage, add a branch &rarr; stage mapping below
 and paste in the project's webhook URL to your CI service of choice.</p>
@@ -9,14 +12,16 @@ and paste in the project's webhook URL to your CI service of choice.</p>
   <dt>Travis:</dt><dd><%= link_to travis_deploy_url(@project.token) %></dd>
 </dl>
 
-<h4>Webhooks mappings</h4>
-<ul>
-  <% @webhooks.each do |webhook| %>
-    <li><strong><%= webhook.branch %></strong> branch &rarr; <strong><%= webhook.stage.name %></strong> stage (<%= link_to "remove", project_webhook_path(@project, webhook), method: :delete %>)</li>
-  <% end %>
-</ul>
+<% if @webhooks.any? %>
+  <h2>Webhooks mappings</h2>
+  <ul>
+    <% @webhooks.each do |webhook| %>
+      <li><strong><%= webhook.branch %></strong> branch &rarr; <strong><%= webhook.stage.name %></strong> stage (<%= link_to "remove", project_webhook_path(@project, webhook), method: :delete %>)</li>
+    <% end %>
+  </ul>
+<% end %>
 
-<h4>Add webhook mapping</h4>
+<h2>Add webhook mapping</h2>
 <%= form_for :webhook, url: project_webhooks_path(@project), html: { class: "form-inline" } do |form| %>
   <div class="form-group">
     <%= form.text_field :branch, class: "form-control", placeholder: "Branch" %>

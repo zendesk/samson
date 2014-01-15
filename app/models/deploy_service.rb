@@ -5,13 +5,13 @@ class DeployService
     @project, @user = project, user
   end
 
-  def deploy!(stage, commit)
+  def deploy!(stage, reference)
     job = project.jobs.create!(user: user, command: stage.command)
-    deploy = stage.deploys.create!(commit: commit, job: job)
+    deploy = stage.deploys.create!(reference: reference, job: job)
 
     send_before_notifications(stage, deploy)
 
-    job_execution = JobExecution.start_job(commit, job)
+    job_execution = JobExecution.start_job(reference, job)
 
     job_execution.subscribe do |_|
       send_after_notifications(stage, deploy)

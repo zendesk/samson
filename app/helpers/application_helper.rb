@@ -15,4 +15,12 @@ module ApplicationHelper
       concat " Deploy!"
     end
   end
+
+  def controller_action
+    "#{controller_name} #{action_name}"
+  end
+
+  def revision
+    Rails.application.config.pusher.revision.presence
+  end
 end

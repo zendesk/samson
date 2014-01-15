@@ -7,7 +7,11 @@ class Deploy < ActiveRecord::Base
   delegate :project, to: :stage
 
   def summary
-    "#{job.user.name} #{summary_action} #{commit} to #{stage.name}"
+    "#{job.user.name} #{summary_action} #{reference} to #{stage.name}"
+  end
+
+  def commit
+    job.try(:commit).presence || reference
   end
 
   def self.active

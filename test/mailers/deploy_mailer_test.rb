@@ -2,7 +2,7 @@ require_relative '../test_helper'
 
 describe DeployMailer do
   let(:stage) { stages(:test_staging) }
-  let(:deploy) { Deploy.create!(stage: stage, job: job, commit: 'master') }
+  let(:deploy) { Deploy.create!(stage: stage, job: job, reference: 'master') }
   let(:job) do
     Job.create!(command: '', project: projects(:test), user: users(:admin))
   end

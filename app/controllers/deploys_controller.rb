@@ -23,10 +23,10 @@ class DeploysController < ApplicationController
   end
 
   def create
-    commit = deploy_params[:commit]
+    reference = deploy_params[:reference]
     stage = @project.stages.find(deploy_params[:stage_id])
     deploy_service = DeployService.new(@project, current_user)
-    deploy = deploy_service.deploy!(stage, commit)
+    deploy = deploy_service.deploy!(stage, reference)
 
     redirect_to project_deploy_path(@project, deploy)
   end
@@ -47,7 +47,7 @@ class DeploysController < ApplicationController
   protected
 
   def deploy_params
-    params.require(:deploy).permit(:commit, :stage_id)
+    params.require(:deploy).permit(:reference, :stage_id)
   end
 
   def find_project
