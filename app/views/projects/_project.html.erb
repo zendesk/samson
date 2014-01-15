@@ -8,7 +8,7 @@
     </div>
 
     <div class="panel-body">
-      <%- latest_deploys = project.deploys.latest(5) %>
+      <%- latest_deploys = project.deploys.page(1).per(5) %>
       <% if latest_deploys.any? %>
         <p>Last <%= latest_deploys.count > 1 ? "#{latest_deploys.count} deploys" : 'deploy' %>:</p>
         <ul class="job-history">

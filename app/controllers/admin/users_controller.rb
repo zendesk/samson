@@ -2,7 +2,7 @@ class Admin::UsersController < ApplicationController
   before_filter :authorize_admin!
 
   def show
-    @users = User.all
+    @users = User.page(params[:page])
   end
 
   def update
