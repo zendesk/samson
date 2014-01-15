@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20140114051012) do
+ActiveRecord::Schema.define(version: 20140115063327) do
 
   create_table "commands", force: true do |t|
     t.text     "command",    limit: 16777215
@@ -27,6 +27,8 @@ ActiveRecord::Schema.define(version: 20140114051012) do
     t.datetime "created_at"
     t.datetime "updated_at"
   end
+
+  add_index "deploys", ["created_at"], name: "index_deploys_on_created_at", using: :btree
 
   create_table "flowdock_flows", force: true do |t|
     t.string   "name",       null: false
@@ -71,9 +73,9 @@ ActiveRecord::Schema.define(version: 20140114051012) do
     t.integer  "project_id",           null: false
     t.datetime "created_at"
     t.datetime "updated_at"
-    t.string   "notify_email_address"
     t.integer  "order"
     t.datetime "deleted_at"
+    t.string   "notify_email_address"
   end
 
   create_table "users", force: true do |t|
