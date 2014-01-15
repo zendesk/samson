@@ -1,5 +1,5 @@
 <tr>
   <td class="stage_td"><%= link_to stage.name, project_stage_path(project, stage) %></td>
   <td></td>
-  <td><%= link_to "Deploy", new_project_deploy_path(@project, stage_id: stage.id), class: "btn btn-danger" %></td>
+  <td><%= deploy_link @project, stage_id: stage.id %></td>
 </tr>
