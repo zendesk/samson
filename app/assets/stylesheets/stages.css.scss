@@ -2,16 +2,13 @@
   padding: 0;
 }
 
-.bar {
-  background-color: #fff;
-  border-radius: 3px;
-  border: 1px solid #ddd;
-  margin-bottom: 5px;
-  padding: 5px 5px 5px 15px;
-}
-
 .stage-bar {
-  cursor: pointer;
+  background: rgb(248, 248, 248) 5px center url(/assets/grabber.png) no-repeat;
+  background-size: 10px;
+  border-radius: 3px;
+  margin-bottom: 5px;
+  padding: 5px 5px 5px 20px;
+  cursor: move;
 }
 
 .stage-td > a:first-child,
