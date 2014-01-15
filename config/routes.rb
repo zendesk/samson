@@ -33,7 +33,7 @@ ZendeskPusher::Application.routes.draw do
   get '/logout', to: 'sessions#destroy'
 
   namespace :admin do
-    resource :users, only: [:show, :update]
+    resource :users, only: [:show, :update, :destroy]
     resource :projects, only: [:show]
     resources :commands, except: [:show]
   end

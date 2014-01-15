@@ -6,6 +6,7 @@
       <th>Name</th>
       <th>Email</th>
       <th>Role</th>
+      <th></th>
     </tr>
   </thead>
 
@@ -22,6 +23,9 @@
             <%= role.name %>
           </label>
           <% end %>
+        </td>
+        <td>
+          <%= link_to "Delete", admin_users_path, method: :delete, data: { confirm: "Delete ##{user.id} #{user.name} #{user.email} ?" }, class: "btn btn-danger" %>
         </td>
       </tr>
     <% end %>
