@@ -38,12 +38,12 @@ class DeploysController < ApplicationController
   end
 
   def destroy
-    if !@deploy.started_by?(current_user)
-      head :forbidden
-    else
+    if @deploy.started_by?(current_user) || current_user.is_admin?
       @deploy.stop!
 
       head :ok
+    else
+      head :forbidden
     end
   end
 
