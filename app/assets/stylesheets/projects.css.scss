@@ -31,21 +31,17 @@
   padding: 5px 5px 5px 15px;
 }
 
-.stage_bar {
+.stage-bar {
   cursor: pointer;
 }
 
-.stage_td > a:first-child,
-.stage_bar > a:first-child {
+.stage-td > a:first-child,
+.stage-bar > a:first-child {
   line-height: 34px;
 }
 
 .messages {
   display: none;
-}
-
-.deploy_button {
-  margin-left: 25px;
 }
 
 .short-button {

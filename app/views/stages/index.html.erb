@@ -5,7 +5,7 @@
 
 <ul id="stages">
   <% @stages.each.with_index do |stage, index| %>
-    <li class="stage_bar bar list-unstyled clearfix" data-id="stage_id_<%= stage.id %>">
+    <li class="stage-bar bar list-unstyled clearfix" data-id="stage_id_<%= stage.id %>">
       <%= link_to stage.name, project_stage_path(@project, stage) %>
       <div class="btn-group pull-right">
       <%= deploy_link @project, stage_id: stage.id %>
