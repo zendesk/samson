@@ -25,6 +25,10 @@ class Changeset::Commit
     @data.sha
   end
 
+  def short_sha
+    @data.sha[0...7]
+  end
+
   def url
     "https://github.com/#{@repo}/commit/#{sha}"
   end
