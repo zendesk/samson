@@ -5,7 +5,10 @@
   </div>
 </h1>
 
-<h2><%= @deploy.summary %></h2>
+<h2>
+  <%= @deploy.summary %>
+  <small><%= time_ago_in_words @deploy.created_at %> ago</small>
+</h2>
 
 <pre id="messages" class="pre-scrollable log">
   <% unless @deploy.active? %>
