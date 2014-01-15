@@ -45,7 +45,7 @@ class JobExecution
         subscriber.call(@job)
       end
 
-      self.class.finished_job(@job)
+      JobExecution.finished_job(@job)
     end
   end
 
