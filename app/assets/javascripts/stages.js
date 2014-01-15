@@ -1,28 +1,54 @@
 // Place all the behaviors and hooks related to the matching controller here.
 // All this logic will automatically be available in application.js.
 $(function() {
-  var $stagesBox  = $("#stages");
+  var $stagesBox = $("#stages"),
+      $messages  = $(".messages"),
+      $successs  = $("#success_message"),
+      $error     = $("#error_message");
+
   $stagesBox.sortable();
+
+  var reorderCtrl = {
+    reorder:    reorder,
+    timeout:    null,
+    sending:    false,
+    needResend: false
+  };
 
   function reorder() {
     $.ajax({
-      url: $(this).data("url"),
+      url:  $stagesBox.data("url"),
       data: $stagesBox.sortable("serialize", { attribute: "data-id" }),
-      type: 'PUT',
+      type: "PUT",
     }).done(function(data) {
-      $("#success_message").fadeIn(200);
+      clearTimeout(reorderCtrl.timeout);
+      $successs.fadeIn(200);
     }).fail(function() {
-      $("#error_message").fadeIn(200);
+      clearTimeout(reorderCtrl.timeout);
+      $error.fadeIn(200);
     }).always(function() {
-      setTimeout(function() {
-        $(".messages").fadeOut();
+      if (reorderCtrl.needResend) {
+        $messages.hide();
+        reorderCtrl.reorder();
+        reorderCtrl.needResend = false;
+      } else {
+        reorderCtrl.sending = false;
+      }
+
+      reorderCtrl.timeout = setTimeout(function() {
+        $messages.fadeOut(300);
       }, 2000);
     })
   }
 
   $stagesBox.sortable({
-    stop: function() {
-      reorder.apply(this);
+    update: function() {
+      if (reorderCtrl.sending) {
+        reorderCtrl.needResend = true;
+      } else {
+        reorderCtrl.sending = true;
+        reorderCtrl.reorder();
+      }
     }
   });
 });
