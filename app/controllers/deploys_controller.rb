@@ -1,5 +1,4 @@
 class DeploysController < ApplicationController
-
   rescue_from ActiveRecord::RecordNotFound do |error|
     flash[:error] = "Deploy not found."
     redirect_to root_path
@@ -32,6 +31,7 @@ class DeploysController < ApplicationController
   end
 
   def show
+    @changeset = Changeset.new(@project.github_repo, @deploy.previous_commit, @deploy.commit)
   end
 
   def destroy

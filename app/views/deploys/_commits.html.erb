@@ -1,0 +1,15 @@
+<% if changeset.commits.any? %>
+  <table class="table">
+    <tbody>
+    <% changeset.commits.each do |commit| %>
+      <tr>
+        <td><%= image_tag commit.author_avatar_url, width: 20, height: 20 %></td>
+        <td><%= link_to commit.author_name, commit.author_url %></td>
+        <td><%= link_to commit.message, commit.url %></td>
+      </tr>
+    <% end %>
+    </tbody>
+  </table>
+<% else %>
+  <p>There were no new commits in this deploy.</p>
+<% end %>

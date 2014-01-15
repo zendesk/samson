@@ -20,4 +20,11 @@ class ProjectTest < ActiveSupport::TestCase
       project.webhook_stages_for_branch("production").must_equal [production_stage]
     end
   end
+
+  describe "#github_project" do
+    it "returns the user/repo part of the repository URL" do
+      project = Project.new(repository_url: "git@github.com:foo/bar.git")
+      project.github_repo.must_equal "foo/bar"
+    end
+  end
 end

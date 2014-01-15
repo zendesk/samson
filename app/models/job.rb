@@ -22,7 +22,7 @@ class Job < ActiveRecord::Base
     status!("cancelled")
   end
 
-  %w{pending running succeeded cancelling failed errored}.each do |status|
+  %w{pending running succeeded cancelling cancelled failed errored}.each do |status|
     define_method "#{status}?" do
       self.status == status
     end
@@ -42,6 +42,10 @@ class Job < ActiveRecord::Base
 
   def error!
     status!("errored")
+  end
+
+  def finished?
+    succeeded? || failed? || errored? || cancelled?
   end
 
   def active?

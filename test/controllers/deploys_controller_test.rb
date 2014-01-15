@@ -32,6 +32,11 @@ describe DeploysController do
     end
 
     describe "a GET to :show" do
+      setup do
+        changeset = stub_everything(files: [], commits: [])
+        Changeset.stubs(:new).returns(changeset)
+      end
+
       describe "with a valid deploy" do
         setup { get :show, project_id: project.id, id: deploy.to_param }
 
