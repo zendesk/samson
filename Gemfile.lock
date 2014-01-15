@@ -1,9 +1,9 @@
 GIT
   remote: git@github.com:zendesk/zendesk_deployment.git
-  revision: c3e5b60eabaf536ffe32d9cf3db920a8208e45cb
-  tag: v1.5.0
+  revision: 84e1882958b5fe3c57840adeb1f0552bb6d85128
+  ref: v1.6.0
   specs:
-    zendesk_deployment (1.5.0)
+    zendesk_deployment (1.6.0)
       capistrano (< 3.0.0)
       deep_merge
 
