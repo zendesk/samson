@@ -1,3 +1,10 @@
+/* Common styles */
+
+html,
+body {
+  height: 100%;
+}
+
 a {
   color: #358cce;
 }
@@ -14,7 +21,6 @@ h5 {
 }
 
 h1 {
-  border-bottom: 1px solid rgba(0, 0, 0, 0.07);
   font-size: 28px;
   line-height: 28px;
   margin-bottom: 10px;
@@ -29,11 +35,21 @@ h2 {
 }
 
 
+/* Containers */
+
+.wrap {
+  min-height: 100%;
+  height: auto !important;
+  height: 100%;
+  margin: 0 auto -60px;
+  padding-bottom: 80px;
+}
+
+
 /* Navigation */
 
 .navbar {
-  border-top-right-radius: 0;
-  border-top-left-radius: 0;
+  border-radius: 0;
 
   .navbar-brand {
     color: #FFF;
@@ -57,6 +73,29 @@ h2 {
 
   }
 
+}
+
+.nav-tabs {
+  margin-bottom: 20px;
+}
+
+
+/* Footer */
+
+.footer {
+  background: #f5f5f5;
+  color: #999;
+  height: 60px;
+  font-size: 13px;
+
+  .links {
+    margin: 20px 0;
+  }
+
+  .sha {
+    font-family: Monaco, "Liberation Mono", Courier, monospace;
+    font-size: 12px;
+  }
 }
 
 
