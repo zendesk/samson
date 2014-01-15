@@ -21,3 +21,37 @@
     </div>
   </fieldset>
 <% end %>
+
+<%= javascript_tag do %>
+  var timeout = null;
+  var form_group = $('#deploy_reference').parent();
+
+  function check_status(sha) {
+    $.ajax({
+      url: "<%= project_path(@project) %>/commit_statuses/" + sha,
+      success: function(data, status, xhr) {
+        if(data.status == 'pending') {
+          form_group.addClass('has-warning');
+        } else if(data.status == 'success') {
+          form_group.addClass('has-success');
+        } else if(data.status == 'failure' || data.status == 'error') {
+          form_group.addClass('has-error');
+        }
+      }
+    });
+  }
+
+  $('#deploy_reference').keyup(function() {
+    form_group.removeClass('has-success has-warning has-error');
+
+    var sha = $(this).val();
+
+    if(timeout) {
+      clearTimeout(timeout);
+    }
+
+    if(sha != '') {
+      timeout = setTimeout(function() { check_status(sha); }, 200);
+    }
+  });
+<% end %>
