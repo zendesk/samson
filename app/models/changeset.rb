@@ -7,6 +7,10 @@ class Changeset
 
   def initialize(repo, previous_commit, commit)
     @repo, @previous_commit, @commit = repo, previous_commit, commit
+
+    # If there's no previous commit, there's no basis no perform a comparison
+    # on. Just show an empty changeset then.
+    @previous_commit ||= @commit
   end
 
   def github_url
