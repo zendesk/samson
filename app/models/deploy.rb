@@ -1,4 +1,6 @@
 class Deploy < ActiveRecord::Base
+  paginates_per 10
+
   belongs_to :stage
   belongs_to :job
 
