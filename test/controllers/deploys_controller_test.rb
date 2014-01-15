@@ -3,14 +3,14 @@ require 'test_helper'
 describe DeploysController do
   let(:project) { projects(:test) }
   let(:stage) { stages(:test_staging) }
-  let(:admin) { users(:admin) }
+  let(:deployer) { users(:deployer) }
   let(:command) { "echo hello" }
-  let(:job) { Job.create!(command: command, project: project, user: admin) }
+  let(:job) { Job.create!(command: command, project: project, user: deployer) }
   let(:deploy) { Deploy.create!(stage: stage, job: job, reference: "foo") }
   let(:deploy_service) { stub(deploy!: nil) }
 
   setup do
-    DeployService.stubs(:new).with(project, admin).returns(deploy_service)
+    DeployService.stubs(:new).with(project, deployer).returns(deploy_service)
     deploy_service.stubs(:deploy!).returns(deploy)
   end
 
@@ -58,6 +58,27 @@ describe DeploysController do
   end
 
   as_a_deployer do
+    describe "a POST to :create" do
+      setup do
+        post :create, params.merge(project_id: project.id)
+      end
+
+      let(:params) {{ deploy: {
+        stage_id: stage.id,
+        reference: "master"
+      }}}
+
+      it "redirects to the job path" do
+        assert_redirected_to project_deploy_path(project, deploy)
+      end
+
+      it "creates a deploy" do
+        assert_received(deploy_service, :deploy!) do |expect|
+          expect.with stage, "master"
+        end
+      end
+    end
+
     describe "a DELETE to :destroy" do
       describe "with a deploy owned by the deployer" do
         setup do
@@ -88,27 +109,6 @@ describe DeploysController do
   end
 
   as_a_admin do
-    describe "a POST to :create" do
-      setup do
-        post :create, params.merge(project_id: project.id)
-      end
-
-      let(:params) {{ deploy: {
-        stage_id: stage.id,
-        reference: "master"
-      }}}
-
-      it "redirects to the job path" do
-        assert_redirected_to project_deploy_path(project, deploy)
-      end
-
-      it "creates a deploy" do
-        assert_received(deploy_service, :deploy!) do |expect|
-          expect.with stage, "master"
-        end
-      end
-    end
-
     describe "a DELETE to :destroy" do
       describe "with a valid deploy" do
         setup do
@@ -117,16 +117,6 @@ describe DeploysController do
 
         it "responds ok" do
           response.status.must_equal(200)
-        end
-      end
-
-      as_a_deployer do
-        setup do
-          delete :destroy, project_id: project.id, id: deploy.to_param
-        end
-
-        it "is forbidden" do
-          response.status.must_equal(403)
         end
       end
     end
