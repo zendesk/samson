@@ -13,7 +13,7 @@
   <% end %>
 </ul>
 <%= link_to "Add Stage", new_project_stage_path(@project), class: "btn btn-default" %>
-<span id="save" class="btn btn-default" data-url="<%= project_reorder_stages_path(@project) %>">Save Positions</span>
+<span id="save" class="btn btn-default" data-url="<%= reorder_stages_project_path(@project) %>">Save Positions</span>
 <button id="error_message" class="messages btn btn-danger" disabled>
   Failed to save!
 </button>

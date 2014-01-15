@@ -19,6 +19,20 @@ class ActiveSupport::TestCase
   # Note: You'll currently still have to declare fixtures explicitly in integration tests
   # -- they do not yet inherit this setting
   fixtures :all
+
+end
+
+class MiniTest::Spec
+  def stub_github_api(url, response = {}, status = 200)
+    url = 'https://api.github.com/' + url
+    stub_request(:get, url).with(
+      'Authorization' => 'token 123'
+    ).to_return(
+      status: status,
+      body: JSON.dump(response),
+      headers: { 'Content-Type' => 'application/json' }
+    )
+  end
 end
 
 class ActionController::TestCase
