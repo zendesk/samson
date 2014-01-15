@@ -10,6 +10,7 @@ gem 'newrelic_rpm', '>= 3.7.1'
 
 group :production, :staging do
   gem 'rails_12factor'
+  gem 'airbrake'
 end
 
 group :assets do
