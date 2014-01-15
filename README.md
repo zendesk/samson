@@ -26,6 +26,9 @@ script/bootstrap
 # and can be obtained by creating a new Github Application
 # See: https://github.com/settings/applications
 # https://developer.github.com/v3/oauth/
+#
+# You also need to fill in your personal GitHub token. You can generate a new
+# at https://github.com/settings/applications - assign it to GITHUB_TOKEN.
 
 bundle exec puma -C config/puma.rb
 ```

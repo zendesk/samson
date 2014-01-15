@@ -1,21 +1,23 @@
 class DeploysController < ApplicationController
-
   rescue_from ActiveRecord::RecordNotFound do |error|
     flash[:error] = "Deploy not found."
     redirect_to root_path
   end
 
   before_filter :authorize_deployer!, only: [:create, :update, :destroy]
-  before_filter :find_project, except: [:index, :active]
-  before_filter :find_deploy, except: [:index, :active, :new, :create]
+  before_filter :find_project, except: [:recent, :active]
+  before_filter :find_deploy, except: [:index, :recent, :active, :new, :create]
 
   def index
+    @deploys = @project.deploys
+  end
+
+  def recent
     @deploys = Deploy.limit(10).order("created_at DESC")
   end
 
   def active
     @deploys = Deploy.active.limit(10).order("created_at DESC")
-    render :index
   end
 
   def new
@@ -32,6 +34,7 @@ class DeploysController < ApplicationController
   end
 
   def show
+    @changeset = Changeset.new(@project.github_repo, @deploy.previous_commit, @deploy.commit)
   end
 
   def destroy

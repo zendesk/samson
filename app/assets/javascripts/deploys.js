@@ -1,2 +1,13 @@
-// Place all the behaviors and hooks related to the matching controller here.
-// All this logic will automatically be available in application.js.
+$(function () {
+  $('#deploy-tabs a').click(function (e) {
+      e.preventDefault()
+      $(this).tab('show')
+  });
+
+  $('.file-summary').click(function (e) {
+    var row = $(this);
+    var patch = row.next();
+
+    patch.toggle();
+  });
+});

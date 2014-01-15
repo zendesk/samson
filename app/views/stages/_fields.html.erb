@@ -17,7 +17,7 @@
   <p>Select the commands you want to run when executing this stage.</p>
 
   <div id="commands" class="form-group">
-    <%= form.collection_check_boxes(:command_ids, @stage.all_commands, :id, :command) do |b| %>
+    <%= form.collection_check_boxes(:command_ids, form.object.all_commands, :id, :command) do |b| %>
       <div class="row">
         <div data-id="<%= b.value %>" class="col-lg-2">
           <span class="checkbox">

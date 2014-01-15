@@ -1,3 +1,10 @@
+<ol class="breadcrumb">
+  <li><%= link_to "Home", root_path %></li>
+  <li><%= link_to @project.name, project_path(@project) %></li>
+  <li><%= link_to @deploy.stage.name, project_stage_path(@project, @deploy.stage) %></li>
+  <li class="active">Deploy #<%= @deploy.id %></li>
+</ol>
+
 <h1>
   <%= @project.name %>
   <div class="pull-right">
@@ -5,20 +12,52 @@
   </div>
 </h1>
 
-<h2>
-  <%= @deploy.summary %>
-  <small><%= time_ago_in_words @deploy.created_at %> ago</small>
-</h2>
+<%= deploy_status_panel @deploy %>
 
-<pre id="messages" class="pre-scrollable log">
-  <% unless @deploy.active? %>
-    <% @deploy.output.split("\n").each do |line| %>
-<%= render_log(line) %>
-    <% end %>
+<ul id="deploy-tabs" class="nav nav-tabs">
+  <li class="active"><a href="#output" data-toggle="tab">Output</a></li>
+  <li><a href="#files" data-toggle="tab">Files</a></li>
+  <li><a href="#commits" data-toggle="tab">Commits</a></li>
+</ul>
+
+<div class="tab-content">
+  <div class="tab-pane active" id="output">
+    <%= render 'deploys/output', deploy: @deploy %>
+  </div>
+
+  <div class="tab-pane" id="files">
+    <%= render 'deploys/files', changeset: @changeset %>
+  </div>
+
+  <div class="tab-pane" id="commits">
+    <%= render 'deploys/commits', changeset: @changeset %>
+  </div>
+</div>
+
+<% if !JobExecution.enabled %>
+  <div class="alert alert-info">
+    Pusher is currently restarting, your deploy has been queued and will be resumed shortly.
+  </div>
+
+  <%= javascript_tag do %>
+    function check_enabled() {
+      $.ajax({
+        url: "<%= enabled_jobs_path %>",
+        success: function(data, status, xhr) {
+          if(xhr.status == 204) {
+            window.location.reload()
+          }
+        }
+      });
+
+      setTimeout(check_enabled, 5000);
+    }
+
+    $(document).ready(function() {
+      check_enabled();
+    });
   <% end %>
-</pre>
-
-<% if @deploy.active? %>
+<% elsif @deploy.active? %>
   <%= javascript_tag do %>
     $(document).ready(function() {
       var messages = $("#messages");
@@ -54,8 +93,4 @@
   <% end %>
 
   <button id="deploy_stop" class="btn btn-danger pull-right">Stop</button>
-<% else %>
-  <div class="alert alert-<%= @deploy.succeeded?? "success" : "danger" %>">
-    <%= @deploy.user.name %> deployed <%= @deploy.commit %> on <%= @deploy.stage.name %> at <%= @deploy.created_at %>
-  </div>
 <% end %>

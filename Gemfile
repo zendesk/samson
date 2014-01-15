@@ -4,6 +4,8 @@ gem 'rails', '4.0.2'
 gem 'puma'
 gem 'dotenv-rails', '~> 0.9.0'
 gem 'mysql2', '~> 0.3'
+gem 'sqlite3'
+gem 'newrelic_rpm', '>= 3.7.1'
 
 group :production, :staging do
   gem 'rails_12factor'
@@ -24,7 +26,7 @@ group :no_preload do
   gem 'omniauth', '~> 1.1'
   gem 'omniauth-oauth2', '~> 1.1'
   gem 'omniauth-github', '~> 1.1'
-  gem 'github_api', '~> 0.11'
+  gem 'octokit', '~> 2.7.0'
 
   gem 'warden', '~> 1.2'
 

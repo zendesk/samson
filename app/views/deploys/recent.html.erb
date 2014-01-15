@@ -1,0 +1,16 @@
+<h1>Recent Deploys</h1>
+
+<table class="table table-striped">
+  <thead>
+    <tr>
+      <th>Project</th>
+      <th>Who</th>
+      <th>When</th>
+      <th>Status</th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    <%= render partial: "deploy", collection: @deploys %>
+  </tbody>
+</table>

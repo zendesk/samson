@@ -3,7 +3,7 @@ require 'soft_deletion'
 class Project < ActiveRecord::Base
   has_soft_deletion default_scope: true
 
-  validates :name, presence: true
+  validates :name, :repository_url, presence: true
   before_create :generate_token
 
   has_many :stages
@@ -20,6 +20,11 @@ class Project < ActiveRecord::Base
 
   def repo_name
     name.parameterize("_")
+  end
+
+  # The user/repo part of the repository URL.
+  def github_repo
+    repository_url.scan(/:(\w+\/\w+)\.git$/).join
   end
 
   def webhook_stages_for_branch(branch)

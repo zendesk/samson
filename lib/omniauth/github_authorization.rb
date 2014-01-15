@@ -1,13 +1,13 @@
-require 'github_api'
+require 'octokit'
 
 class GithubAuthorization
   def initialize(login, token)
     @login = login
-    @github = Github.new(oauth_token: token)
+    @github = Octokit::Client.new(access_token: token)
   end
 
   def role_id
-    teams = @github.orgs.teams.list(config.organization)
+    teams = @github.organization_teams(config.organization)
     owner_team = find_team(teams, config.admin_team)
     deploy_team = find_team(teams, config.deploy_team)
 
@@ -27,7 +27,7 @@ class GithubAuthorization
   end
 
   def team_member?(team)
-    team && @github.orgs.teams.team_member?(team.id, @login)
+    team && @github.team_member?(team.id, @login)
   end
 
   def config

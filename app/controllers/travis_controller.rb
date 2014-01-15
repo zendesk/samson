@@ -33,17 +33,11 @@ class TravisController < ApplicationController
   end
 
   def travis_authorization
-    Digest::SHA2.hexdigest("#{repository}#{ENV['TRAVIS_TOKEN']}")
+    Digest::SHA2.hexdigest("#{project.github_repo}#{ENV['TRAVIS_TOKEN']}")
   end
 
   def deploy?
     payload['status_message'] == 'Passed' && payload['type'] == 'push'
-  end
-
-  def repository
-    project.repository_url.match(/:([^:]+)\.git$/) do |match|
-      return match[1]
-    end
   end
 
   def travis_user

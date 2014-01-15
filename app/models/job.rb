@@ -2,6 +2,12 @@ class Job < ActiveRecord::Base
   belongs_to :project
   belongs_to :user
 
+  has_one :deploy
+
+  def self.pending
+    where(status: 'pending')
+  end
+
   def started_by?(user)
     self.user == user
   end
@@ -14,6 +20,12 @@ class Job < ActiveRecord::Base
     status!("cancelling")
     execution.try(:stop!)
     status!("cancelled")
+  end
+
+  %w{pending running succeeded cancelling cancelled failed errored}.each do |status|
+    define_method "#{status}?" do
+      self.status == status
+    end
   end
 
   def run!
@@ -32,28 +44,8 @@ class Job < ActiveRecord::Base
     status!("errored")
   end
 
-  def pending?
-    status == "pending"
-  end
-
-  def running?
-    status == "running"
-  end
-
-  def succeeded?
-    status == "succeeded"
-  end
-
-  def cancelling?
-    status == "cancelling"
-  end
-
-  def failed?
-    status == "failed"
-  end
-
-  def errored?
-    status == "errored"
+  def finished?
+    succeeded? || failed? || errored? || cancelled?
   end
 
   def active?
