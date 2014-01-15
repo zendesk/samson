@@ -51,6 +51,9 @@ GEM
       thread_safe (~> 0.1)
       tzinfo (~> 0.3.37)
     addressable (2.3.5)
+    airbrake (3.1.14)
+      builder
+      json
     ansible (0.2.0)
     arel (4.0.1)
     atomic (1.1.14)
@@ -219,6 +222,7 @@ PLATFORMS
 
 DEPENDENCIES
   active_hash (~> 1.0)
+  airbrake
   ansible
   better_errors
   binding_of_caller

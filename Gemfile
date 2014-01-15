@@ -8,6 +8,7 @@ gem 'sqlite3'
 
 group :production, :staging do
   gem 'rails_12factor'
+  gem 'airbrake'
 end
 
 group :assets do
