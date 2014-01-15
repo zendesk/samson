@@ -238,7 +238,7 @@ DEPENDENCIES
   jquery-rails
   jquery-ui-rails
   minitest-rails (~> 0.9)
-  mysql2
+  mysql2 (~> 0.3)
   net-ssh (~> 2.1)
   net-ssh-shell (~> 0.2)!
   omniauth (~> 1.1)

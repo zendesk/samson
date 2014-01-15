@@ -3,7 +3,7 @@ source 'https://rubygems.org'
 gem 'rails', '4.0.2'
 gem 'puma'
 gem 'dotenv-rails', '~> 0.9.0'
-gem 'mysql2'
+gem 'mysql2', '~> 0.3'
 
 group :production, :staging do
   gem 'rails_12factor'
