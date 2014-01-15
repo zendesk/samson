@@ -1,11 +1,10 @@
 // Place all the behaviors and hooks related to the matching controller here.
 // All this logic will automatically be available in application.js.
 $(function() {
-  var $stagesBox  = $("#stages"),
-      $saveButton = $("#save");
-
+  var $stagesBox  = $("#stages");
   $stagesBox.sortable();
-  $saveButton.on("click", function() {
+
+  function reorder() {
     $.ajax({
       url: $(this).data("url"),
       data: $stagesBox.sortable("serialize", { attribute: "data-id" }),
@@ -19,5 +18,11 @@ $(function() {
         $(".messages").fadeOut();
       }, 2000);
     })
+  }
+
+  $stagesBox.sortable({
+    stop: function() {
+      reorder.apply(this);
+    }
   });
 });
