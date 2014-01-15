@@ -7,11 +7,6 @@ gem 'dotenv-rails', '~> 0.9.0'
 group :production, :staging do
   gem 'rails_12factor'
   gem 'mysql2', :platform => :ruby
-
-  platform :jruby do
-    gem 'activerecord-jdbcpostgresql-adapter'
-    gem 'activerecord-jdbcmysql-adapter'
-  end
 end
 
 group :assets do
@@ -49,12 +44,6 @@ end
 
 group :development do
   gem 'sqlite3', :platform => :ruby
-
-  platform :jruby do
-    gem 'jdbc-sqlite3'
-    gem 'activerecord-jdbcsqlite3-adapter'
-    gem 'ruby-debug'
-  end
 
   platform :ruby do
     gem 'better_errors'
