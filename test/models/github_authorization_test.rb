@@ -7,8 +7,10 @@ describe GithubAuthorization do
   let(:authorization) { GithubAuthorization.new('test.user', '123') }
 
   def stub_github_api(url, response = {}, status = 200)
-    url = 'https://api.github.com/' + url + '?access_token=123'
-    stub_request(:get, url).to_return(
+    url = 'https://api.github.com/' + url
+    stub_request(:get, url).with(
+      headers: { 'Authorization' => 'token 123' }
+    ).to_return(
       status: status,
       body: JSON.dump(response),
       headers: { 'Content-Type' => 'application/json' }
