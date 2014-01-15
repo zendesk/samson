@@ -22,6 +22,21 @@
 <button id="success_message" class="messages btn btn-success" disabled>
   Success!
 </button>
+
+<h2>Current stages</h2>
+  <table class="table table-striped">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Last Deploy</th>
+        <th>Deploy</th>
+      </tr>
+    </thead>
+    <tbody>
+      <%= render partial: "stage", collection: @stages %>
+    </tbody>
+</table>
+
 <h2>Recent deploys</h2>
   <table class="table table-striped">
     <thead>

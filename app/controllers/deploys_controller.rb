@@ -6,16 +6,19 @@ class DeploysController < ApplicationController
   end
 
   before_filter :authorize_deployer!, only: [:create, :update, :destroy]
-  before_filter :find_project, except: [:index, :active]
-  before_filter :find_deploy, except: [:index, :active, :new, :create]
+  before_filter :find_project, except: [:recent, :active]
+  before_filter :find_deploy, except: [:index, :recent, :active, :new, :create]
 
   def index
+    @deploys = @project.deploys
+  end
+
+  def recent
     @deploys = Deploy.limit(10).order("created_at DESC")
   end
 
   def active
     @deploys = Deploy.active.limit(10).order("created_at DESC")
-    render :index
   end
 
   def new
