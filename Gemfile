@@ -3,15 +3,10 @@ source 'https://rubygems.org'
 gem 'rails', '4.0.2'
 gem 'puma'
 gem 'dotenv-rails', '~> 0.9.0'
+gem 'mysql2', '~> 0.3'
 
 group :production, :staging do
   gem 'rails_12factor'
-  gem 'mysql2', :platform => :ruby
-
-  platform :jruby do
-    gem 'activerecord-jdbcpostgresql-adapter'
-    gem 'activerecord-jdbcmysql-adapter'
-  end
 end
 
 group :assets do
@@ -48,18 +43,8 @@ group :no_preload do
 end
 
 group :development do
-  gem 'sqlite3', :platform => :ruby
-
-  platform :jruby do
-    gem 'jdbc-sqlite3'
-    gem 'activerecord-jdbcsqlite3-adapter'
-    gem 'ruby-debug'
-  end
-
-  platform :ruby do
-    gem 'better_errors'
-    gem 'binding_of_caller'
-  end
+  gem 'better_errors'
+  gem 'binding_of_caller'
 end
 
 group :test do
@@ -72,4 +57,3 @@ end
 group :deployment do
   gem 'zendesk_deployment', :git => 'git@github.com:zendesk/zendesk_deployment.git', :ref => 'v1.6.0'
 end
-
