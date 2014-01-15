@@ -15,16 +15,21 @@ class ProjectsController < ApplicationController
 
   def new
     @project = Project.new
-    @stage = @project.stages.build(name: "production")
-    @stage.flowdock_flows.build
+
+    stage = @project.stages.build(name: "production")
+    stage.flowdock_flows.build
   end
 
   def create
-    @project = Project.create(project_params)
+    @project = Project.new(project_params)
 
-    if @project.persisted?
+    if @project.save
       redirect_to root_path
     else
+      stage = @project.stages.last
+      stage ||= @project.stages.build
+      stage.flowdock_flows.build if stage.flowdock_flows.empty?
+
       flash[:error] = @project.errors.full_messages
       render :new
     end
@@ -68,7 +73,8 @@ class ProjectsController < ApplicationController
 
   def project_params
     params.require(:project).permit(
-      :name, :repository_url,
+      :name,
+      :repository_url,
       stages_attributes: [
         :name,
         :notify_email_address,

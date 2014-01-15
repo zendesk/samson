@@ -6,15 +6,6 @@ describe GithubAuthorization do
   let(:config) { Rails.application.config.pusher.github }
   let(:authorization) { GithubAuthorization.new('test.user', '123') }
 
-  def stub_github_api(url, response = {}, status = 200)
-    url = 'https://api.github.com/' + url + '?access_token=123'
-    stub_request(:get, url).to_return(
-      status: status,
-      body: JSON.dump(response),
-      headers: { 'Content-Type' => 'application/json' }
-    )
-  end
-
   before do
     stub_github_api("orgs/#{config.organization}/teams", teams)
 

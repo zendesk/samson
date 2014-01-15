@@ -5,13 +5,13 @@ unless Rails.env.test?
     JobExecution.start_job(job.deploy.reference, job)
   end
 
-  Signal.trap('USR1') do
+  Signal.trap('SIGUSR1') do
     # Disable new job execution
     JobExecution.enabled = false
     sleep(5) until JobExecution.all.empty?
 
     # Pass USR2 to the underlying server
-    Process.kill('USR2', $$)
+    Process.kill('SIGUSR2', $$)
   end
 
   at_exit do
