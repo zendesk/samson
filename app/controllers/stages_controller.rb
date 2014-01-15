@@ -12,6 +12,10 @@ class StagesController < ApplicationController
     end
   end
 
+  def index
+    @stages = @project.stages
+  end
+
   def show
     @deploys = @stage.deploys.latest
   end

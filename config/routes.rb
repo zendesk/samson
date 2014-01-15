@@ -3,24 +3,27 @@ ZendeskPusher::Application.routes.draw do
 
   resources :projects, except: [:index] do
     put '/reorder' => 'projects#reorder', as: :reorder_stages
-    resources :deploys, only: [:new, :create, :show, :destroy]
+    resources :deploys, only: [:index, :new, :create, :show, :destroy]
     resources :stages
     resources :webhooks, only: [:index, :create, :destroy]
   end
 
-  resources :deploys, only: [:index] do
+  resources :deploys do
     member do
       get :stream, to: 'streams#show'
     end
 
     collection do
       get :active
+      get :recent
     end
   end
 
   get '/auth/zendesk/callback', to: 'sessions#zendesk'
   get '/auth/github/callback', to: 'sessions#github'
   get '/auth/failure', to: 'sessions#failure'
+
+  get '/jobs/enabled', to: 'jobs#enabled', as: :enabled_jobs
 
   get '/login', to: 'sessions#new'
   get '/logout', to: 'sessions#destroy'

@@ -23,15 +23,28 @@ describe DeploysController do
       end
     end
 
+    describe "a GET to :recent" do
+      setup { get :recent, project_id: project.id }
+
+      it "renders the template" do
+        assert_template :recent
+      end
+    end
+
     describe "a GET to :active" do
       setup { get :active, project_id: project.id }
 
       it "renders the template" do
-        assert_template :index
+        assert_template :active
       end
     end
 
     describe "a GET to :show" do
+      setup do
+        changeset = stub_everything(files: [], commits: [])
+        Changeset.stubs(:new).returns(changeset)
+      end
+
       describe "with a valid deploy" do
         setup { get :show, project_id: project.id, id: deploy.to_param }
 

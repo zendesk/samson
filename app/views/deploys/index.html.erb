@@ -1,3 +1,8 @@
+<h1><%= @project.name %></h1>
+
+<%= render partial: "shared/project_tabs",
+           locals: { project: @project, active: "deploys" } %>
+
 <table class="table table-striped">
 	<thead>
 		<tr>
@@ -15,10 +20,3 @@
 <div class="page-container">
 <%= paginate @deploys %>
 </div>
-<%= javascript_tag do %>
-  $(document).ready(function() {
-    $(".pre-scrollable").each(function(i, pre) {
-      $(pre).scrollTop(pre.scrollHeight - 120);
-    });
-  });
-<% end %>
