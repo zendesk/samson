@@ -25,6 +25,10 @@ class Changeset
     comparison.files
   end
 
+  def authors
+    commits.map(&:author_name).uniq
+  end
+
   private
 
   def comparison

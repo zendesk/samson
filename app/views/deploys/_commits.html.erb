@@ -1,4 +1,6 @@
 <% if changeset.commits.any? %>
+  <p><%= changeset.commits.size %> commits by <%= pluralize changeset.authors.size, "author" %>.</p>
+
   <table class="table">
     <tbody>
     <% changeset.commits.each do |commit| %>
