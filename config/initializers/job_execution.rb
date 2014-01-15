@@ -15,7 +15,7 @@ unless Rails.env.test?
   end
 
   at_exit do
-    Deploy.active.each do |deploy|
+    Deploy.running.each do |deploy|
       deploy.stop!
     end
   end
