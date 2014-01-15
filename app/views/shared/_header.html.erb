@@ -10,7 +10,8 @@
         </li>
         <li class="<%= 'active' if current_page?(controller: 'deploys', action: 'active') %>">
           <%= link_to active_deploys_path do %>
-            Current Deploys <span class="badge">42</span>
+            Current Deploys
+            <%= content_tag(:span, Deploy.active.count, class: "badge") unless Deploy.active.count.zero? %>
           <% end %>
         </li>
       <% end %>
