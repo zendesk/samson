@@ -33,6 +33,7 @@ namespace :pusher do
     end
     # deploy_to defaults to /data/#{application}
     run "ln -nfs #{deploy_to}/config/.env #{release_path}/.env"
+    run "test -e #{deploy_to}/config/newrelic.yml && ln -nfs #{deploy_to}/config/newrelic.yml #{release_path}/config/"
     run "cd #{release_path} && rm -rf log && ln -s #{deploy_to}/log log"
     run "mkdir -p #{deploy_to}/cached_repos && cd #{release_path} && rm -rf cached_repos && ln -s #{deploy_to}/cached_repos cached_repos"
   end
