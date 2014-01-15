@@ -2,6 +2,8 @@ class Deploy < ActiveRecord::Base
   belongs_to :stage
   belongs_to :job
 
+  default_scope { order('created_at DESC') }
+
   delegate :started_by?, :stop!, :status, :user, :output, to: :job
   delegate :active?, :pending?, :running?, :cancelling?, :succeeded?, to: :job
   delegate :finished?, :errored?, :failed?, to: :job
