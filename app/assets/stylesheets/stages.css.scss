@@ -1,0 +1,28 @@
+#stages {
+  padding: 0;
+}
+
+.bar {
+  background-color: #fff;
+  border-radius: 3px;
+  border: 1px solid #ddd;
+  margin-bottom: 5px;
+  padding: 5px 5px 5px 15px;
+}
+
+.stage-bar {
+  cursor: pointer;
+}
+
+.stage-td > a:first-child,
+.stage-bar > a:first-child {
+  line-height: 34px;
+}
+
+.messages {
+  display: none;
+}
+
+.short-button {
+  padding: 0 12px;
+}
