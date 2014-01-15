@@ -16,8 +16,9 @@ class Changeset::Commit
     "https://github.com/#{@data.author.login}"
   end
 
-  def message
-    @data.commit.message
+  def summary
+    summary = @data.commit.message.split("\n").first
+    summary.truncate(80)
   end
 
   def sha
