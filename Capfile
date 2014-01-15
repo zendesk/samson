@@ -28,12 +28,11 @@ namespace :pusher do
   set :config_files, %w( database.yml )
 
   task :update_symlinks do
-    config_files.each do |file|
-      run "ln -nfs /etc/zendesk/pusher/#{file} #{release_path}/config/#{file}"
-    end
     # deploy_to defaults to /data/#{application}
+    run "ln -nfs #{deploy_to}/config/database.yml #{release_path}/config/database.yml"
     run "ln -nfs #{deploy_to}/config/.env #{release_path}/.env"
-    run "test -e #{deploy_to}/config/newrelic.yml && ln -nfs #{deploy_to}/config/newrelic.yml #{release_path}/config/"
+    run "(test -e #{deploy_to}/config/newrelic.yml && ln -nfs #{deploy_to}/config/newrelic.yml #{release_path}/config/) || true"
+
     run "cd #{release_path} && rm -rf log && ln -s #{deploy_to}/log log"
     run "mkdir -p #{deploy_to}/cached_repos && cd #{release_path} && rm -rf cached_repos && ln -s #{deploy_to}/cached_repos cached_repos"
   end
