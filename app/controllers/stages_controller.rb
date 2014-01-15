@@ -29,7 +29,7 @@ class StagesController < ApplicationController
     if @stage.save
       redirect_to project_stage_path(@project, @stage)
     else
-      flash[:error] = 'Stage failed.'
+      flash[:error] = @stage.errors.full_messages
 
       @stage.flowdock_flows.build
       render :new
@@ -44,7 +44,7 @@ class StagesController < ApplicationController
     if @stage.update_attributes(stage_params)
       redirect_to project_stage_path(@project, @stage)
     else
-      flash[:error] = 'Stage failed.'
+      flash[:error] = @stage.errors.full_messages
 
       @stage.flowdock_flows.build
       render :edit
