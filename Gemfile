@@ -3,10 +3,10 @@ source 'https://rubygems.org'
 gem 'rails', '4.0.2'
 gem 'puma'
 gem 'dotenv-rails', '~> 0.9.0'
+gem 'mysql2'
 
 group :production, :staging do
   gem 'rails_12factor'
-  gem 'mysql2'
 end
 
 group :assets do
@@ -57,4 +57,3 @@ end
 group :deployment do
   gem 'zendesk_deployment', :git => 'git@github.com:zendesk/zendesk_deployment.git', :tag  => 'v1.5.0'
 end
-
