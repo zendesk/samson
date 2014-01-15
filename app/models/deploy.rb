@@ -6,6 +6,8 @@ class Deploy < ActiveRecord::Base
 
   default_scope { order('created_at DESC') }
 
+  validates_presence_of :reference
+
   delegate :started_by?, :stop!, :status, :user, :output, to: :job
   delegate :active?, :pending?, :running?, :cancelling?, :succeeded?, to: :job
   delegate :finished?, :errored?, :failed?, to: :job

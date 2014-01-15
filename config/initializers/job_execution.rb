@@ -2,7 +2,7 @@ JobExecution.setup
 
 unless Rails.env.test?
   Job.pending.each do |job|
-    JobExecution.start_job(job.deploy.reference, job)
+    JobExecution.start_job(job.deploy.reference, job) if job.deploy
   end
 
   Signal.trap('SIGUSR1') do
