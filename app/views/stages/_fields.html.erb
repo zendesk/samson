@@ -18,7 +18,7 @@
 
   <div id="commands" class="form-group">
     <div class="col-lg-6 col-lg-offset-2">
-      <%= form.collection_check_boxes(:command_ids, @stage.all_commands, :id, :command) do |b| %>
+      <%= form.collection_check_boxes(:command_ids, form.object.all_commands, :id, :command) do |b| %>
         <div data-id="<%= b.value %>" class="checkbox">
           <%= b.label do %>
             <%= b.check_box %>

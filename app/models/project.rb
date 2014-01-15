@@ -3,7 +3,7 @@ require 'soft_deletion'
 class Project < ActiveRecord::Base
   has_soft_deletion default_scope: true
 
-  validates :name, presence: true
+  validates :name, :repository_url, presence: true
   before_create :generate_token
 
   has_many :stages
