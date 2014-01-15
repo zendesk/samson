@@ -17,7 +17,7 @@ class StagesController < ApplicationController
   end
 
   def show
-    @deploys = @stage.deploys
+    @deploys = @stage.deploys.page(params[:page])
   end
 
   def new

@@ -6,7 +6,7 @@ class Admin::CommandsController < ApplicationController
   end
 
   def index
-    @commands = Command.page params[:page]
+    @commands = Command.page(params[:page])
   end
 
   def new

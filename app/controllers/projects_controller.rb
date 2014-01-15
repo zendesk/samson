@@ -32,7 +32,7 @@ class ProjectsController < ApplicationController
 
   def show
     @stages = project.stages
-    @deploys = project.deploys.page params[:page]
+    @deploys = project.deploys.page(params[:page])
   end
 
   def edit
@@ -61,7 +61,7 @@ class ProjectsController < ApplicationController
   end
 
   def deploys
-    @deploys = project.deploys.page params[:page]
+    @deploys = project.deploys.page(params[:page])
   end
 
   protected
