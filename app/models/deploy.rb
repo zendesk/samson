@@ -1,4 +1,6 @@
 class Deploy < ActiveRecord::Base
+  default_scope order('created_at DESC')
+
   belongs_to :stage
   belongs_to :job
 
@@ -57,7 +59,4 @@ class Deploy < ActiveRecord::Base
     end
   end
 
-  def self.latest(limit = 10)
-    limit(limit).order("#{table_name}.created_at DESC")
-  end
 end

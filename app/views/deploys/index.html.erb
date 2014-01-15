@@ -17,3 +17,6 @@
 		<%= render partial: "deploy", collection: @deploys %>
 	</tbody>
 </table>
+<div class="page-container">
+	<%= paginate @deploys %>
+</div>

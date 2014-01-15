@@ -1,4 +1,5 @@
 class User < ActiveRecord::Base
+  paginates_per 50
   has_many :commands
 
   validates :role_id, inclusion: { in: Role.all.map(&:id) }

@@ -9,15 +9,15 @@ class DeploysController < ApplicationController
   before_filter :find_deploy, except: [:index, :recent, :active, :new, :create]
 
   def index
-    @deploys = @project.deploys
-  end
-
-  def recent
-    @deploys = Deploy.limit(10).order("created_at DESC")
+    @deploys = Deploy.page(params[:page])
   end
 
   def active
-    @deploys = Deploy.active.limit(10).order("created_at DESC")
+    @deploys = Deploy.active.page(params[:page])
+  end
+
+  def recent
+    @deploys = Deploy.page(params[:page])
   end
 
   def new
