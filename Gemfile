@@ -6,7 +6,7 @@ gem 'dotenv-rails', '~> 0.9.0'
 
 group :production, :staging do
   gem 'rails_12factor'
-  gem 'mysql2', :platform => :ruby
+  gem 'mysql2'
 end
 
 group :assets do
@@ -43,12 +43,8 @@ group :no_preload do
 end
 
 group :development do
-  gem 'sqlite3', :platform => :ruby
-
-  platform :ruby do
-    gem 'better_errors'
-    gem 'binding_of_caller'
-  end
+  gem 'better_errors'
+  gem 'binding_of_caller'
 end
 
 group :test do
