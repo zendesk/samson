@@ -60,6 +60,10 @@ class ProjectsController < ApplicationController
     head :ok
   end
 
+  def deploys
+    @deploys = project.deploys
+  end
+
   protected
 
   def project_params

@@ -1,27 +1,31 @@
 <h1>
-  <%= link_to @project.name, project_path(@project) %>
-  <small><%= @stage.name %></small>
-
+  <%= @project.name %>
   <div class="pull-right">
     <%= link_to "Edit stage", edit_project_stage_path(@project, @stage), class: "btn btn-default" %>
     <%= deploy_link @project, stage_id: @stage.id %>
   </div>
 </h1>
 
+<%= render partial: "shared/project_tabs",
+           locals: { project: @project, active: "stages" } %>
+
+<h2>Stage: <%= @stage.name %></h2>
+
+<h3>Command</h3>
 <pre><%= @stage.command %></pre>
 
 
-<h2>Recent deploys</h2>
-  <table class="table table-striped">
-    <thead>
-      <tr>
-        <th>When</th>
-        <th>Who</th>
-        <th>Status</th>
-        <th></th>
-      </tr>
-    </thead>
-    <tbody>
-      <%= render partial: "/projects/deploy", collection: @deploys %>
-    </tbody>
+<h3>Recent deploys</h3>
+<table class="table table-striped">
+  <thead>
+    <tr>
+      <th>When</th>
+      <th>Who</th>
+      <th>Status</th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    <%= render partial: "/projects/deploy", collection: @deploys %>
+  </tbody>
 </table>

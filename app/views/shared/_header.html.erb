@@ -5,7 +5,7 @@
 
     <ul class="nav navbar-nav">
       <% if current_user %>
-        <li><%= link_to "Deploy History", deploys_path %></li>
+        <li><%= link_to "Recent Deploys", recent_deploys_path %></li>
         <li><%= link_to "Current Deploys", active_deploys_path %></li>
       <% end %>
 
