@@ -23,10 +23,6 @@
   padding: 0;
 }
 
-.stages {
-  cursor: pointer;
-}
-
 .bar {
   background-color: #fff;
   border-radius: 3px;
@@ -35,8 +31,12 @@
   padding: 5px 5px 5px 15px;
 }
 
+.stage_bar {
+  cursor: pointer;
+}
+
 .webhooks,
-.stages > a:first-child {
+.stage_bar > a:first-child {
   line-height: 34px;
 }
 

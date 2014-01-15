@@ -8,9 +8,6 @@ set :ruby_version, '2.0.0'
 set :require_tag?, false
 set :email_notification, ['deploys@zendesk.com', 'pusher@zendesk.flowdock.com', 'epahl@zendesk.com']
 set :user, 'deploy'
-
-# Don't ask about pending migrations
-# just execute 'deploy:migrate' below
 set :check_for_pending_migrations?, false
 
 namespace :deploy do
@@ -50,7 +47,6 @@ end
 # Need to use before, or else this won't run in time.
 before 'deploy:finalize_update', 'pusher:update_symlinks'
 after "deploy:update_code", "pusher:assets:precompile"
-after "deploy:update_code", "deploy:migrate"
 
 def role_mapping(n)
   super.tap do |mapping|
