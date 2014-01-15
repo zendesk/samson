@@ -74,7 +74,7 @@ describe DeploysController do
       describe "with a deploy not owned by the deployer" do
         setup do
           Deploy.any_instance.stubs(:started_by?).returns(false)
-          admin.stubs(:is_admin?).returns(false)
+          User.any_instance.stubs(:is_admin?).returns(false)
 
           delete :destroy, project_id: project.id, id: deploy.to_param
         end
