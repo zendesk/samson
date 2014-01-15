@@ -13,6 +13,17 @@
       <span class="help-block">Enter the email addresses that should be notified of new deploys, separated by <code>;</code></span>
     </div>
   </div>
+
+  <div class="form-group">
+    <div class="col-lg-4 col-lg-offset-2">
+      <div class="checkbox">
+        <%= form.label :confirm do %>
+          <%= form.check_box :confirm %>
+          Confirm before deployment
+        <% end %>
+      </div>
+    </div>
+  </div>
 </fieldset>
 
 <fieldset>

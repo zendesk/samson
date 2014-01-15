@@ -84,6 +84,7 @@ ActiveRecord::Schema.define(version: 20140116050403) do
     t.string   "notify_email_address"
     t.integer  "order"
     t.datetime "deleted_at"
+    t.boolean  "confirm"
   end
 
   create_table "users", force: true do |t|

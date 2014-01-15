@@ -20,8 +20,15 @@ ZendeskPusher::Application.routes.draw do
       get :releases
     end
 
+    resources :deploys, only: [:index, :new, :create, :show, :destroy] do
+      collection do
+        post :confirm
+      end
+    end
+
+    resources :stages
     resources :webhooks, only: [:index, :create, :destroy]
-    resources :commit_statuses, only: [:show], constraints: { id: /.+/ }
+    resource  :commit_statuses, only: [:show]
   end
 
   resources :deploys, only: [] do

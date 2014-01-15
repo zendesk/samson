@@ -58,4 +58,85 @@ $(function () {
   // The typeahead plugin removes the focus from the input - restore it
   // after initialization.
   $("#deploy_reference").focus();
+
+  // Shows commit status from Github as border color
+  var timeout = null;
+  var tag_form_group = $('#deploy_reference').parent();
+
+  function check_status(ref) {
+    $.ajax({
+      url: $('#new_deploy').data('commit-status-url'),
+      data: { ref: ref },
+      success: function(data, status, xhr) {
+        if(data.status == 'pending') {
+          tag_form_group.addClass('has-warning');
+        } else if(data.status == 'success') {
+          tag_form_group.addClass('has-success');
+        } else if(data.status == 'failure' || data.status == 'error') {
+          tag_form_group.addClass('has-error');
+        }
+      }
+    });
+  }
+
+  $('#deploy_reference').keyup(function() {
+    tag_form_group.removeClass('has-success has-warning has-error');
+
+    var ref = $(this).val();
+
+    if(timeout) {
+      clearTimeout(timeout);
+    }
+
+    if(ref != '') {
+      timeout = setTimeout(function() { check_status(ref); }, 200);
+    }
+  });
+
+  // Shows confirmation dropdown using Github comparison
+  var confirmed = false;
+
+  $('#new_deploy').submit(function(event) {
+    var selected_stage = $('#deploy_stage_id option:selected');
+
+    if(!confirmed && selected_stage.data('confirmation')) {
+      $('#confirm-button-text').show();
+      $('#deploy-button-text').hide();
+
+      $.ajax({
+        method: 'POST',
+        url: $(this).data('confirm-url'),
+        data: $(this).serialize(),
+        success: function(data, status, xhr) {
+          var container = $(".deploy-details");
+          var placeholderPanes = container.find(".changeset-placeholder");
+
+          placeholderPanes.remove();
+          container.append(data);
+
+          $('#deploy-confirmation').removeClass('hide');
+          $('#deploy-confirmation a:first').tab('show');
+
+          confirmed = true;
+        }
+      });
+
+      event.preventDefault();
+    }
+  });
+
+  $('#new-deploy-cancel').click(function(event) {
+    if(confirmed) {
+      $('#deploy-confirmation').addClass('hide');
+
+      $('#confirm-button-text').hide();
+      $('#deploy-button-text').show();
+
+      confirmed = false;
+    } else {
+      window.location = $(this).data('url');
+    }
+
+    event.preventDefault();
+  });
 });
