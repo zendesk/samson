@@ -4,10 +4,14 @@ require 'terminal_executor'
 class JobExecution
   # Whether or not execution is enabled. This allows completely disabling job
   # execution for testing purposes.
-  cattr_accessor(:enabled, instance_reader: true) { true }
+  cattr_accessor(:enabled, instance_reader: true) do
+    Rails.application.config.pusher.enable_job_execution
+  end
 
   # The directory in which repositories should be cached.
-  cattr_accessor(:cached_repos_dir, instance_reader: true)
+  cattr_accessor(:cached_repos_dir, instance_reader: true) do
+    Rails.application.config.pusher.cached_repos_dir
+  end
 
   attr_reader :output
 
@@ -40,6 +44,8 @@ class JobExecution
       @subscribers.each do |subscriber|
         subscriber.call(@job)
       end
+
+      self.class.finished_job(@job)
     end
   end
 
@@ -137,6 +143,10 @@ class JobExecution
 
     def all
       registry.values
+    end
+
+    def finished_job(job)
+      registry.delete(job.id)
     end
 
     private

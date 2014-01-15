@@ -22,6 +22,8 @@ ZendeskPusher::Application.routes.draw do
   get '/auth/github/callback', to: 'sessions#github'
   get '/auth/failure', to: 'sessions#failure'
 
+  get '/jobs/enabled', to: 'jobs#enabled', as: :enabled_jobs
+
   get '/login', to: 'sessions#new'
   get '/logout', to: 'sessions#destroy'
 
