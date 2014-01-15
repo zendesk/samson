@@ -16,7 +16,7 @@ class Deploy < ActiveRecord::Base
   end
 
   def previous_deploy
-    stage.deploys.prior_to(self).last
+    stage.deploys.successful.prior_to(self).last
   end
 
   def previous_commit
@@ -29,6 +29,10 @@ class Deploy < ActiveRecord::Base
 
   def self.running
     joins(:job).where(jobs: { status: "running" })
+  end
+
+  def self.successful
+    joins(:job).where(jobs: { status: %w[succeeded] })
   end
 
   def self.prior_to(deploy)
