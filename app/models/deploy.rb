@@ -18,6 +18,10 @@ class Deploy < ActiveRecord::Base
     joins(:job).where(jobs: { status: %w[pending running] })
   end
 
+  def self.running
+    joins(:job).where(jobs: { status: "running" })
+  end
+
   private
 
   def summary_action

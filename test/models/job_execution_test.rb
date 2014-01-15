@@ -1,4 +1,4 @@
-require 'test_helper'
+require_relative '../test_helper'
 
 describe JobExecution do
   let(:repository_url) { Dir.mktmpdir }
@@ -83,7 +83,7 @@ describe JobExecution do
       git commit -m "second commit"
       git checkout master
     SHELL
-    
+
     execute_job "safari"
 
     assert_equal "zebra", last_line_of_output
@@ -96,6 +96,16 @@ describe JobExecution do
     job.command = "cat $CACHE_DIR/foo"
     execute_job
     assert_equal "hello", last_line_of_output
+  end
+
+  it "removes the job from the registry" do
+    execution = JobExecution.start_job("master", job)
+
+    JobExecution.find_by_job(job).wont_be_nil
+
+    execution.wait!
+
+    JobExecution.find_by_job(job).must_be_nil
   end
 
   it "runs the commands specified by the job"
