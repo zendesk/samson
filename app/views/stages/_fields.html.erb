@@ -1,3 +1,4 @@
+<fieldset>
 <div class="form-group">
   <%= form.label :name, "Deploy stage name", class: "col-lg-2 control-label" %>
   <div class="col-lg-4">
@@ -11,12 +12,12 @@
     <%= form.text_field :notify_email_address, class: "form-control" %>
   </div>
 </div>
-
+</fieldset>
 <fieldset>
   <legend>Commands</legend>
   <p>Select the commands you want to run when executing this stage.</p>
 
-  <div id="commands" class="form-group">
+  <div id="commands">
     <%= form.collection_check_boxes(:command_ids, form.object.all_commands, :id, :command) do |b| %>
       <div class="row">
         <div data-id="<%= b.value %>" class="col-lg-2">
@@ -24,7 +25,7 @@
             <%= b.check_box %>
           </span>
         </div>
-        <div class="col-lg-6">
+        <div class="col-lg-4">
           <pre><%= b.text %></pre>
         </div>
       </div>
