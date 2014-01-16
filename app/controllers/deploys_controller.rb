@@ -25,10 +25,7 @@ class DeploysController < ApplicationController
   end
 
   def create
-    reference = deploy_params[:reference]
-    stage = @project.stages.find(deploy_params[:stage_id])
-    deploy_service = DeployService.new(@project, current_user)
-    @deploy = deploy_service.deploy!(stage, reference)
+    deploy! deploy_params[:reference]
 
     if @deploy.persisted?
       redirect_to project_deploy_path(@project, @deploy)
@@ -52,10 +49,17 @@ class DeploysController < ApplicationController
   end
 
   def retry
-    redirect_to project_retry_deploy_path(@deploy)
+    p @deploy
+    head :ok
   end
 
   protected
+
+  def deploy!(reference)
+    stage = @project.stages.find(deploy_params[:stage_id])
+    deploy_service = DeployService.new(@project, current_user)
+    @deploy = deploy_service.deploy!(stage, reference)
+  end
 
   def deploy_params
     params.require(:deploy).permit(:reference, :stage_id)
