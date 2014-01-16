@@ -19,6 +19,7 @@
   <li><a href="#files" data-toggle="tab">Files</a></li>
   <li><a href="#commits" data-toggle="tab">Commits</a></li>
   <li><a href="#pulls" data-toggle="tab">Pull Requests</a></li>
+  <li><a href="#risks" data-toggle="tab">Risks</a></li>
 </ul>
 
 <div class="tab-content">
@@ -36,6 +37,10 @@
 
   <div class="tab-pane" id="pulls">
     <%= render 'deploys/pulls', changeset: @changeset %>
+  </div>
+
+  <div class="tab-pane" id="risks">
+    <%= render 'deploys/risks', pull_requests: @changeset.pull_requests.select(&:risky?) %>
   </div>
 </div>
 

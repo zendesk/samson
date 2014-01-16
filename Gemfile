@@ -44,6 +44,8 @@ group :no_preload do
   gem 'active_hash', '~> 1.0'
 
   gem 'ansible'
+
+  gem 'github-markdown', '~> 0.6.3'
 end
 
 group :development do

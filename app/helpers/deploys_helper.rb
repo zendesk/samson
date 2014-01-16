@@ -15,6 +15,16 @@ module DeploysHelper
     content_tag :span, count.to_s, class: "label label-#{type}" unless count.zero?
   end
 
+  def github_users(users)
+    users.map {|user| github_user_avatar(user) }.join(" ").html_safe
+  end
+
+  def github_user_avatar(user)
+    link_to user.url, title: user.login do
+      image_tag user.avatar_url, width: 20, height: 20
+    end
+  end
+
   def deploy_status_panel(deploy)
     mapping = {
       "succeeded" => "success",

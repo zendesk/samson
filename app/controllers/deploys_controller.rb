@@ -9,7 +9,7 @@ class DeploysController < ApplicationController
   before_filter :find_deploy, except: [:index, :recent, :active, :new, :create]
 
   def index
-    @deploys = Deploy.page(params[:page])
+    @deploys = @project.deploys.page(params[:page])
   end
 
   def active

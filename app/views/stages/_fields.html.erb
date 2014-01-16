@@ -33,12 +33,13 @@
 
     <hr />
 
+    <p>Add a command which is specific to your project</p>
     <%= form.text_area :command, class: "form-control", rows: 4, value: nil, placeholder: 'cap production deploy' %>
   </div>
 </fieldset>
 
 <fieldset>
-  <legend>Flowdock flows</legend>
+  <legend>Flowdock</legend>
   <p>Add the name and API token of the Flowdock flow which should be notified of deploys.</p>
 
   <%= form.fields_for :flowdock_flows do |flow_fields| %>

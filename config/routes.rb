@@ -12,7 +12,7 @@ ZendeskPusher::Application.routes.draw do
     resources :commit_statuses, only: [:show], constraints: { id: /.+/ }
   end
 
-  resources :deploys do
+  resources :deploys, only: [] do
     member do
       get :stream, to: 'streams#show'
     end
