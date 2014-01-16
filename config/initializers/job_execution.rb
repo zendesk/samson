@@ -1,6 +1,8 @@
 JobExecution.setup
 
 unless Rails.env.test?
+  JobExecution.enabled = true
+
   Job.pending.each do |job|
     JobExecution.start_job(job.deploy.reference, job)
   end
