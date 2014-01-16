@@ -8,7 +8,7 @@ class Deploy < ActiveRecord::Base
   validates_presence_of :reference
 
   delegate :started_by?, :stop!, :status, :user, :output, to: :job
-  delegate :active?, :pending?, :running?, :cancelling?, :succeeded?, to: :job
+  delegate :active?, :pending?, :running?, :cancelling?, :cancelled?, :succeeded?, to: :job
   delegate :finished?, :errored?, :failed?, to: :job
   delegate :project, to: :stage
 
@@ -53,6 +53,8 @@ class Deploy < ActiveRecord::Base
       "is deploying"
     elsif cancelling?
       "is cancelling a deploy of"
+    elsif cancelled?
+      "cancelled a deploy of"
     elsif succeeded?
       "deployed"
     elsif failed?
