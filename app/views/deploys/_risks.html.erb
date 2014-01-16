@@ -1,0 +1,8 @@
+<% if pull_requests.any? %>
+  <% pull_requests.each do |pr| %>
+    <h5><strong>#<%= pr.number %></strong> <%= link_to pr.title, pr.url %> <%= github_users(pr.users) %></h5>
+    <%= markdown pr.risks %>
+  <% end %>
+<% else %>
+  <p>There are no risks described in any pull request in this deploy.</p>
+<% end %>
