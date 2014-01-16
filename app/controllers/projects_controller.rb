@@ -16,7 +16,7 @@ class ProjectsController < ApplicationController
   def new
     @project = Project.new
 
-    stage = @project.stages.build(name: "production")
+    stage = @project.stages.build(name: "Production")
     stage.flowdock_flows.build
   end
 
