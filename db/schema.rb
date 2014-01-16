@@ -111,6 +111,15 @@ ActiveRecord::Schema.define(version: 20140331121039) do
     t.boolean  "deploy_on_release",           default: false
   end
 
+  create_table "stars", force: true do |t|
+    t.integer  "user_id",    null: false
+    t.integer  "project_id", null: false
+    t.datetime "created_at"
+    t.datetime "updated_at"
+  end
+
+  add_index "stars", ["user_id", "project_id"], name: "index_stars_on_user_id_and_project_id", unique: true, using: :btree
+
   create_table "users", force: true do |t|
     t.string   "name"
     t.string   "email"

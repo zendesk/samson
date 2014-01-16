@@ -8,8 +8,19 @@
         <li class="dropdown <%= 'active' if request.path.starts_with?('/projects') %>">
           <a href="#" class="dropdown-toggle" data-toggle="dropdown">Projects <b class="caret"></b></a>
           <ul class="dropdown-menu">
-            <% Project.alphabetical.each do |project| %>
-              <li><%= link_to project.name, project_path(project) %></li>
+            <% current_user.starred_projects.alphabetical.each do |project| %>
+              <li>
+              <%= link_to project_path(project) do %>
+                <span class="glyphicon glyphicon-star"></span> <%= project.name %>
+              <% end %>
+              </li>
+            <% end %>
+            <% (Project.alphabetical.all - current_user.starred_projects).each do |project| %>
+              <li>
+              <%= link_to project_path(project) do %>
+                <span class="glyphicon">&nbsp;</span> <%= project.name %>
+              <% end %>
+              </li>
             <% end %>
           </ul>
         </li>

@@ -54,6 +54,8 @@ ZendeskSamson::Application.routes.draw do
   get '/login', to: 'sessions#new'
   get '/logout', to: 'sessions#destroy'
 
+  resources :stars, only: [:create, :destroy]
+
   namespace :admin do
     resource :users, only: [:show, :update]
     resources :users, only: [:destroy]
