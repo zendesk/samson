@@ -3,7 +3,7 @@ class StreamsController < ApplicationController
   include ApplicationHelper
 
   def show
-    ActiveRecord::Base.connection_pool.release_connection
+    ActiveRecord::Base.clear_active_connections!
 
     response.headers['Content-Type'] = 'text/event-stream'
     response.headers['Cache-Control'] = 'no-cache'

@@ -26,7 +26,7 @@ class JobExecution
     return unless enabled
 
     @thread = Thread.new do
-      ActiveRecord::Base.connection_pool.release_connection
+      ActiveRecord::Base.clear_active_connections!
 
       output_aggregator = OutputAggregator.new(@output)
       @job.run!
