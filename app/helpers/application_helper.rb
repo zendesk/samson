@@ -11,9 +11,8 @@ module ApplicationHelper
   def deploy_link(project, options = {})
     path = new_project_deploy_path(project, options)
 
-    link_to path, role: "button", class: "btn btn-danger" do
-      concat content_tag :span, "", class: "glyphicon glyphicon-play"
-      concat " Deploy!"
+    link_to path, role: "button", class: "btn btn-success" do
+      "Deploy"
     end
   end
 
