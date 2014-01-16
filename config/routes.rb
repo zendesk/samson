@@ -2,16 +2,20 @@ ZendeskPusher::Application.routes.draw do
   get "streams/show"
 
   resources :projects, except: [:index] do
-    member do
-      put :reorder, as: :reorder_stages
-    end
-
     resources :deploys, only: [:index, :new, :create, :show, :destroy] do
       member do
         post :retry
       end
     end
-    resources :stages
+
+    resources :stages do
+      resource :lock, only: [:create, :destroy]
+
+      collection do
+        patch :reorder
+      end
+    end
+
     resources :webhooks, only: [:index, :create, :destroy]
     resources :commit_statuses, only: [:show], constraints: { id: /.+/ }
   end
@@ -40,6 +44,7 @@ ZendeskPusher::Application.routes.draw do
     resource :users, only: [:show, :update]
     resource :projects, only: [:show]
     resources :commands, except: [:show]
+    resource :lock, only: [:create, :destroy]
   end
 
   scope :integrations do

@@ -4,6 +4,12 @@
   <li class="active">Deploy</li>
 </ol>
 
+<% if global_lock? %>
+  <div class="alert alert-warning">
+    All deploys locked until further notice! Contact <%= global_lock.user.name %> for details.
+  </div>
+<% end %>
+
 <%= form_for [@project, @deploy], html: { class: "form-horizontal" } do |form| %>
   <fieldset>
     <% if @deploy.errors.any? %>
@@ -28,12 +34,16 @@
     <div class="form-group">
       <%= form.label :stage_id, "Stage", class: "col-lg-2 control-label" %>
       <div class="col-lg-4">
-        <%= form.collection_select :stage_id, @project.stages, :id, :name, {}, class: "form-control" %>
+        <%= form.collection_select :stage_id, @project.stages.unlocked, :id, :name, {}, class: "form-control" %>
       </div>
     </div>
     <div class="form-group">
       <div class="col-lg-offset-2 col-lg-10">
-        <button type="submit" class="btn btn-primary">Deploy</button>
+        <button type="submit" class="btn btn-danger" <%= 'disabled="disabled"' if global_lock? %>>
+          <span class="glyphicon glyphicon-play"></span>
+          Deploy!
+        </button>
+
         or <%= link_to "cancel", :back %>
       </div>
     </div>
