@@ -10,4 +10,10 @@ $(function () {
 
     patch.toggle();
   });
+
+  $("span[data-time]").each(function() {
+    var utcString = this.dataset.time,
+    localDate     = new Date(utcString);
+    $(this).attr('title', localDate);
+  })
 });

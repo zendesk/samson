@@ -9,7 +9,7 @@ class DeploysController < ApplicationController
   before_filter :find_deploy, except: [:index, :recent, :active, :new, :create]
 
   def index
-    @deploys = Deploy.page(params[:page])
+    @deploys = @project.deploys.page(params[:page])
   end
 
   def active
@@ -17,7 +17,7 @@ class DeploysController < ApplicationController
   end
 
   def recent
-    @deploys = Deploy.page(params[:page])
+    @deploys = Deploy.limit(15)
   end
 
   def new
@@ -31,7 +31,7 @@ class DeploysController < ApplicationController
   end
 
   def show
-    @changeset = Changeset.new(@project.github_repo, @deploy.previous_commit, @deploy.commit)
+    @changeset = Changeset.find(@project.github_repo, @deploy.previous_commit, @deploy.commit)
   end
 
   def destroy

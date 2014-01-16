@@ -26,4 +26,5 @@
     <% end %>
   </tbody>
 </table>
- <%= link_to "New command", new_admin_command_path, class: "btn btn-default" %>
+<div><%= paginate @commands %></div>
+<%= link_to "New command", new_admin_command_path, class: "btn btn-default" %>

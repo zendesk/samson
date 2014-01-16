@@ -3,7 +3,7 @@
 <%= render partial: "shared/project_tabs",
            locals: { project: @project, active: "stages" } %>
 
-<ul id="stages">
+<ul id="stages" data-url="<%= reorder_stages_project_path(@project) %>">
   <% @stages.each.with_index do |stage, index| %>
     <li class="stage-bar bar list-unstyled clearfix" data-id="stage_id_<%= stage.id %>">
       <%= link_to stage.name, project_stage_path(@project, stage) %>
@@ -13,10 +13,9 @@
   <% end %>
 </ul>
 <%= link_to "Add Stage", new_project_stage_path(@project), class: "btn btn-default" %>
-<span id="save" class="btn btn-default" data-url="<%= reorder_stages_project_path(@project) %>">Save Positions</span>
 <button id="error_message" class="messages btn btn-danger" disabled>
-  Failed to save!
+  Failed to save
 </button>
 <button id="success_message" class="messages btn btn-success" disabled>
-  Success!
+  Saved
 </button>

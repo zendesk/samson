@@ -21,9 +21,11 @@
   <li class="active"><a href="#output" data-toggle="tab">Output</a></li>
   <li><a href="#files" data-toggle="tab">Files</a></li>
   <li><a href="#commits" data-toggle="tab">Commits</a></li>
+  <li><a href="#pulls" data-toggle="tab">Pull Requests</a></li>
+  <li><a href="#risks" data-toggle="tab">Risks</a></li>
 </ul>
 
-<div class="tab-content">
+<div class="tab-content deploy-details">
   <div class="tab-pane active" id="output">
     <%= render 'deploys/output', deploy: @deploy %>
   </div>
@@ -35,32 +37,17 @@
   <div class="tab-pane" id="commits">
     <%= render 'deploys/commits', changeset: @changeset %>
   </div>
-</div>
 
-<% if !JobExecution.enabled %>
-  <div class="alert alert-info">
-    Pusher is currently restarting, your deploy has been queued and will be resumed shortly.
+  <div class="tab-pane" id="pulls">
+    <%= render 'deploys/pulls', changeset: @changeset %>
   </div>
 
-  <%= javascript_tag do %>
-    function check_enabled() {
-      $.ajax({
-        url: "<%= enabled_jobs_path %>",
-        success: function(data, status, xhr) {
-          if(xhr.status == 204) {
-            window.location.reload()
-          }
-        }
-      });
+  <div class="tab-pane" id="risks">
+    <%= render 'deploys/risks', pull_requests: @changeset.pull_requests.select(&:risky?) %>
+  </div>
+</div>
 
-      setTimeout(check_enabled, 5000);
-    }
-
-    $(document).ready(function() {
-      check_enabled();
-    });
-  <% end %>
-<% elsif @deploy.active? %>
+<% if @deploy.active? %>
   <%= javascript_tag do %>
     $(document).ready(function() {
       var messages = $("#messages");
@@ -96,4 +83,27 @@
   <% end %>
 
   <button id="deploy_stop" class="btn btn-danger pull-right">Stop</button>
+<% elsif !JobExecution.enabled %>
+  <div class="alert alert-info">
+    Pusher is currently restarting, your deploy has been queued and will be resumed shortly.
+  </div>
+
+  <%= javascript_tag do %>
+    function check_enabled() {
+      $.ajax({
+        url: "<%= enabled_jobs_path %>",
+        success: function(data, status, xhr) {
+          if(xhr.status == 204) {
+            window.location.reload()
+          }
+        }
+      });
+
+      setTimeout(check_enabled, 5000);
+    }
+
+    $(document).ready(function() {
+      check_enabled();
+    });
+  <% end %>
 <% end %>

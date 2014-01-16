@@ -13,10 +13,4 @@ unless Rails.env.test?
     # Pass USR2 to the underlying server
     Process.kill('SIGUSR2', $$)
   end
-
-  at_exit do
-    Deploy.running.each do |deploy|
-      deploy.stop!
-    end
-  end
 end

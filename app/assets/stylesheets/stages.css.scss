@@ -1,0 +1,21 @@
+#stages {
+  padding: 0;
+}
+
+.stage-bar {
+  background: #F8F8F8 10px center url(/assets/grabber.png) no-repeat;
+  background-size: 10px;
+  border-radius: 3px;
+  margin-bottom: 5px;
+  padding: 5px 5px 5px 30px;
+  cursor: move;
+}
+
+.stage-td > a:first-child,
+.stage-bar > a:first-child {
+  line-height: 34px;
+}
+
+.messages {
+  display: none;
+}

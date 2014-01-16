@@ -1,17 +1,17 @@
 <fieldset>
-<div class="form-group">
-  <%= form.label :name, "Deploy stage name", class: "col-lg-2 control-label" %>
-  <div class="col-lg-4">
-    <%= form.text_field :name, class: "form-control" %>
+  <div class="form-group">
+    <%= form.label :name, "Deploy stage name", class: "col-lg-2 control-label" %>
+    <div class="col-lg-4">
+      <%= form.text_field :name, class: "form-control" %>
+    </div>
   </div>
-</div>
 
-<div class="form-group">
-  <%= form.label :notify_email_address, "Notify this email address of deploys", class: "col-lg-2 control-label" %>
-  <div class="col-lg-4">
-    <%= form.text_field :notify_email_address, class: "form-control" %>
+  <div class="form-group">
+    <%= form.label :notify_email_address, "Notify this email address of deploys", class: "col-lg-2 control-label" %>
+    <div class="col-lg-4">
+      <%= form.text_field :notify_email_address, class: "form-control" %>
+    </div>
   </div>
-</div>
 </fieldset>
 <fieldset>
   <legend>Commands</legend>
@@ -26,20 +26,20 @@
           </span>
         </div>
         <div class="col-lg-4">
-          <pre><%= b.text %></pre>
+          <pre class="pre-inline"><%= b.text %></pre>
         </div>
       </div>
     <% end %>
 
-      <hr />
+    <hr />
 
-      <%= form.text_area :command, class: "form-control", rows: 4, value: nil, placeholder: 'cap production deploy' %>
-
+    <p>Add a command which is specific to your project</p>
+    <%= form.text_area :command, class: "form-control", rows: 4, value: nil, placeholder: 'cap production deploy' %>
   </div>
 </fieldset>
 
 <fieldset>
-  <legend>Flowdock flows</legend>
+  <legend>Flowdock</legend>
   <p>Add the name and API token of the Flowdock flow which should be notified of deploys.</p>
 
   <%= form.fields_for :flowdock_flows do |flow_fields| %>
