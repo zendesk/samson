@@ -7,6 +7,7 @@ gem 'mysql2', '~> 0.3'
 gem 'kaminari'
 gem 'sqlite3'
 gem 'newrelic_rpm', '>= 3.7.1'
+gem 'github-markdown', '~> 0.6.3', require: false
 
 group :production, :staging do
   gem 'rails_12factor'

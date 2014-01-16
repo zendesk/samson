@@ -1,4 +1,5 @@
 require 'ansible'
+require 'github/markdown'
 
 module ApplicationHelper
   include Ansible
@@ -6,6 +7,10 @@ module ApplicationHelper
   def render_log(str)
     escaped = ERB::Util.html_escape(str)
     ansi_escaped(escaped).gsub(/\[([A-Z]|[0-9]+)m?/, '').html_safe
+  end
+
+  def markdown(str)
+    GitHub::Markdown.render_gfm(str).html_safe
   end
 
   def deploy_link(project, options = {})

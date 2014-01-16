@@ -3,6 +3,7 @@
     <tbody>
     <% changeset.pull_requests.each do |pr| %>
       <tr>
+        <td><%= github_users(pr.users) %></td>
         <td><strong>#<%= pr.number %></strong></td>
         <td><%= link_to pr.title, pr.url %></td>
         <td align="right">
