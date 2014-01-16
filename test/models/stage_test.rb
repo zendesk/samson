@@ -43,6 +43,26 @@ describe Stage do
     end
   end
 
+  describe "#create_deploy" do
+    let(:user) { users(:deployer) }
+
+    it "creates a new deploy" do
+      deploy = subject.create_deploy(reference: "foo", user: user)
+      deploy.reference.must_equal "foo"
+    end
+
+    it "creates a new job" do
+      deploy = subject.create_deploy(reference: "foo", user: user)
+      deploy.job.user.must_equal user
+    end
+
+    it "creates neither job nor deploy if one fails to save" do
+      assert_no_difference "Deploy.count + Job.count" do
+        subject.create_deploy(reference: "", user: user)
+      end
+    end
+  end
+
   describe '#all_commands' do
     describe 'with commands' do
       before do

@@ -6,13 +6,12 @@ class DeployService
   end
 
   def deploy!(stage, reference)
-    job = project.jobs.create!(user: user, command: stage.command)
-    deploy = stage.deploys.create(reference: reference, job: job)
+    deploy = stage.create_deploy(reference: reference, user: user)
 
     if deploy.persisted?
       send_before_notifications(stage, deploy)
 
-      job_execution = JobExecution.start_job(reference, job)
+      job_execution = JobExecution.start_job(reference, deploy.job)
 
       job_execution.subscribe do |_|
         send_after_notifications(stage, deploy)
