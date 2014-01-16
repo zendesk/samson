@@ -54,6 +54,10 @@ describe StagesController do
         it 'renders' do
           assert_template :new
         end
+
+        it 'adds global commands by default' do
+          assigns(:stage).command_ids.wont_be_empty
+        end
       end
 
       describe 'invalid project_id' do

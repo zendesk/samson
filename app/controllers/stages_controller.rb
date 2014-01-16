@@ -21,7 +21,7 @@ class StagesController < ApplicationController
   end
 
   def new
-    @stage = @project.stages.build
+    @stage = @project.stages.build(command_ids: Command.global.pluck(:id))
     @stage.flowdock_flows.build
   end
 
