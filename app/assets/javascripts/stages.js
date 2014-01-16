@@ -7,6 +7,10 @@ $(function() {
   $stagesBox.sortable();
 
   var reorderCtrl = {
+    sending:               false,
+    orderChanged:          false,
+    messageFadeOutTimeout: null,
+
     reorder: function() {
       $.ajax({
         url:  $stagesBox.data("url"),
@@ -31,11 +35,7 @@ $(function() {
           $messages.fadeOut(300);
         }, 2000);
       })
-    },
-
-    sending:               false,
-    orderChanged:          false,
-    messageFadeOutTimeout: null
+    }
   };
 
 
