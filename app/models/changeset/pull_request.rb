@@ -1,4 +1,7 @@
 class Changeset::PullRequest
+  # Matches a section heading named "Risks".
+  RISKS_SECTION = /#+\s+Risks.*\n/i
+
   def self.find(repo, number)
     github = Octokit::Client.new(access_token: ENV['GITHUB_TOKEN'])
     data = github.pull_request(repo, number)
@@ -16,5 +19,25 @@ class Changeset::PullRequest
 
   def url
     "https://github.com/#{repo}/pulls/#{number}"
+  end
+
+  def risky?
+    risks.present?
+  end
+
+  def risks
+    @risks ||= parse_risks!
+  end
+
+  private
+
+  def parse_risks!
+    parts = @data.body.split(RISKS_SECTION, 2)
+
+    if parts.size == 1
+      nil
+    else
+      parts[1] && parts[1].strip
+    end
   end
 end
