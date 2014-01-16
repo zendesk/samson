@@ -7,10 +7,10 @@ $(function() {
   $stagesBox.sortable();
 
   var reorderCtrl = {
-    reorder:    reorder,
-    timeout:    null,
-    sending:    false,
-    needResend: false
+    reorder:               reorder,
+    sending:               false,
+    orderChanged:          false,
+    messageFadeOutTimeout: null
   };
 
   function reorder() {
@@ -19,21 +19,21 @@ $(function() {
       data: $stagesBox.sortable("serialize", { attribute: "data-id" }),
       type: "PUT",
     }).done(function(data) {
-      clearTimeout(reorderCtrl.timeout);
+      clearTimeout(reorderCtrl.messageFadeOutTimeout);
       $successs.fadeIn(200);
     }).fail(function() {
-      clearTimeout(reorderCtrl.timeout);
+      clearTimeout(reorderCtrl.messageFadeOutTimeout);
       $error.fadeIn(200);
     }).always(function() {
-      if (reorderCtrl.needResend) {
+      if (reorderCtrl.orderChanged) {
         $messages.hide();
         reorderCtrl.reorder();
-        reorderCtrl.needResend = false;
+        reorderCtrl.orderChanged = false;
       } else {
         reorderCtrl.sending = false;
       }
 
-      reorderCtrl.timeout = setTimeout(function() {
+      reorderCtrl.messageFadeOutTimeout = setTimeout(function() {
         $messages.fadeOut(300);
       }, 2000);
     })
@@ -42,7 +42,7 @@ $(function() {
   $stagesBox.sortable({
     update: function() {
       if (reorderCtrl.sending) {
-        reorderCtrl.needResend = true;
+        reorderCtrl.orderChanged = true;
       } else {
         reorderCtrl.sending = true;
         reorderCtrl.reorder();
