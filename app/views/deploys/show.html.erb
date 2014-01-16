@@ -9,7 +9,7 @@
   <%= @project.name %>
   <div class="pull-right">
     <% unless @deploy.succeeded? || @deploy.running? %>
-      <%= link_to "Redeploy", retry_project_deploy_path, method: :post, class: "btn btn-danger" %>
+      <%= link_to "Redeploy", project_deploys_path(@project, deploy: { reference: @deploy.reference, stage_id: @deploy.stage_id }), method: :post, class: "btn btn-danger" %>
     <% end %>
     <%= link_to "Back", project_path(@project), class: "btn btn-default" %>
   </div>

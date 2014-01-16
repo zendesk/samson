@@ -44,13 +44,6 @@ class DeploysController < ApplicationController
     end
   end
 
-  def retry
-    deploy! @deploy.stage, @deploy.reference
-
-    flash[:notice] = "This is a redeploy of #{@deploy.reference} to #{@deploy.stage.name}"
-    post_deploy
-  end
-
   protected
 
   def post_deploy
