@@ -16,7 +16,7 @@ module ApplicationHelper
   def deploy_link(project, options = {})
     path = new_project_deploy_path(project, options)
 
-    link_to path, role: "button", class: "btn btn-success" do
+    link_to path, role: "button", class: "btn btn-primary" do
       "Deploy"
     end
   end
