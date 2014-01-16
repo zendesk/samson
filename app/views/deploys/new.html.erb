@@ -1,6 +1,8 @@
-<h1><%= @project.name %></h1>
-
-<h2>New deploy</h2>
+<ol class="breadcrumb">
+  <li><%= link_to "Home", root_path %></li>
+  <li><%= link_to @project.name, project_path(@project) %></li>
+  <li class="active">Deploy</li>
+</ol>
 
 <%= form_for [@project, @deploy], html: { class: "form-horizontal" } do |form| %>
   <fieldset>
