@@ -1,0 +1,19 @@
+<% if changeset.pull_requests.any? %>
+  <table class="table">
+    <tbody>
+    <% changeset.pull_requests.each do |pr| %>
+      <tr>
+        <td><%= github_users(pr.users) %></td>
+        <td><strong>#<%= pr.number %></strong></td>
+        <td><%= link_to pr.title, pr.url %></td>
+        <td align="right">
+          <%= file_changes_label pr.additions, "success" %>
+          <%= file_changes_label pr.deletions, "danger" %>
+        </td>
+      </tr>
+    <% end %>
+    </tbody>
+  </table>
+<% else %>
+  <p>There were no pull requests in this deploy.</p>
+<% end %>

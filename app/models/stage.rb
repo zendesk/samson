@@ -1,11 +1,10 @@
-require 'soft_deletion'
-
 class Stage < ActiveRecord::Base
   has_soft_deletion default_scope: true
 
   belongs_to :project
   has_many :deploys
   has_many :flowdock_flows
+  has_one :lock
 
   has_many :stage_commands, autosave: true
   has_many :commands,
@@ -21,6 +20,26 @@ class Stage < ActiveRecord::Base
   def self.reorder(new_order)
     transaction do
       new_order.each.with_index { |stage_id, index| Stage.update stage_id.to_i, order: index }
+    end
+  end
+
+  def self.unlocked
+    where(locks: { id: nil }).
+    joins("LEFT OUTER JOIN locks ON \
+          locks.deleted_at IS NULL AND \
+          locks.stage_id = stages.id")
+  end
+
+  def locked?
+    lock.present?
+  end
+
+  def create_deploy(options = {})
+    user = options.fetch(:user)
+    reference = options.fetch(:reference)
+
+    deploys.create(reference: reference) do |deploy|
+      deploy.build_job(project: project, user: user, command: command)
     end
   end
 

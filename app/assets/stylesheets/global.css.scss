@@ -79,6 +79,18 @@ h3 {
 
   }
 
+  .badge {
+    background: #585858;
+    color: rgba(225, 225, 225, 0.7);
+  }
+
+  a:hover,
+  li.active {
+    .badge {
+      color: #FFF;
+    }
+  }
+
 }
 
 .nav-tabs {
@@ -104,6 +116,11 @@ h3 {
   }
 }
 
+/* Forms */
+
+fieldset {
+  margin-top: 30px;
+}
 
 /* Animations */
 

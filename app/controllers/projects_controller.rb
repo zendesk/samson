@@ -10,13 +10,13 @@ class ProjectsController < ApplicationController
   end
 
   def index
-    @projects = Project.limit(9)
+    @projects = Project.all
   end
 
   def new
     @project = Project.new
 
-    stage = @project.stages.build(name: "production")
+    stage = @project.stages.build(name: "Production")
     stage.flowdock_flows.build
   end
 
@@ -63,10 +63,6 @@ class ProjectsController < ApplicationController
     Stage.reorder params[:stage_id]
 
     head :ok
-  end
-
-  def deploys
-    @deploys = project.deploys.page(params[:page])
   end
 
   protected

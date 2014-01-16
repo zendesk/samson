@@ -13,9 +13,9 @@
     <% @commands.each do |command| %>
       <tr>
         <td>
-          <pre><%= command.command.truncate(30) %></pre>
+          <pre class="pre-command pre-scrollable"><%= command.command %></pre>
         </td>
-        <td><%= command.project.try(:name) %></td>
+        <td><%= command.project.try(:name) ? command.project.name : "Global" %></td>
         <td>
           <%= link_to "Edit", edit_admin_command_path(command) %>
           |
@@ -26,4 +26,5 @@
     <% end %>
   </tbody>
 </table>
- <%= link_to "New command", new_admin_command_path, class: "btn btn-default" %>
+<div><%= paginate @commands %></div>
+<%= link_to "New command", new_admin_command_path, class: "btn btn-default" %>

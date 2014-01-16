@@ -9,7 +9,7 @@ class DeploysController < ApplicationController
   before_filter :find_deploy, except: [:index, :recent, :active, :new, :create]
 
   def index
-    @deploys = Deploy.page(params[:page])
+    @deploys = @project.deploys.page(params[:page])
   end
 
   def active
@@ -17,7 +17,7 @@ class DeploysController < ApplicationController
   end
 
   def recent
-    @deploys = Deploy.page(params[:page])
+    @deploys = Deploy.limit(15)
   end
 
   def new
@@ -28,13 +28,17 @@ class DeploysController < ApplicationController
     reference = deploy_params[:reference]
     stage = @project.stages.find(deploy_params[:stage_id])
     deploy_service = DeployService.new(@project, current_user)
-    deploy = deploy_service.deploy!(stage, reference)
+    @deploy = deploy_service.deploy!(stage, reference)
 
-    redirect_to project_deploy_path(@project, deploy)
+    if @deploy.persisted?
+      redirect_to project_deploy_path(@project, @deploy)
+    else
+      render :new
+    end
   end
 
   def show
-    @changeset = Changeset.new(@project.github_repo, @deploy.previous_commit, @deploy.commit)
+    @changeset = Changeset.find(@project.github_repo, @deploy.previous_commit, @deploy.commit)
   end
 
   def destroy

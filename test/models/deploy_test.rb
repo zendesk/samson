@@ -1,4 +1,4 @@
-require 'test_helper'
+require_relative '../test_helper'
 
 describe Deploy do
   let(:project) { projects(:test) }
@@ -9,8 +9,11 @@ describe Deploy do
     it "returns the deploy prior to that deploy" do
       deploy1 = create_deploy!
       deploy2 = create_deploy!
+      deploy3 = create_deploy!
+
 
       deploy2.previous_deploy.must_equal deploy1
+      deploy3.previous_deploy.must_equal deploy2
     end
 
     it "excludes non-successful deploys" do
@@ -29,6 +32,16 @@ describe Deploy do
       deploy3 = create_deploy!
 
       stage.deploys.prior_to(deploy2).must_equal [deploy1]
+    end
+  end
+
+  describe 'deploy locked stage' do
+    before do
+      stage.create_lock!(user: user)
+    end
+
+    it 'fails' do
+      lambda { create_deploy! }.must_raise(ActiveRecord::RecordInvalid)
     end
   end
 

@@ -1,10 +1,11 @@
 class Deploy < ActiveRecord::Base
-  default_scope order('created_at DESC')
-
   belongs_to :stage
   belongs_to :job
 
-  default_scope { order('created_at DESC') }
+  default_scope { order('created_at DESC, id DESC') }
+
+  validates_presence_of :reference
+  validate :stage_is_unlocked
 
   delegate :started_by?, :stop!, :status, :user, :output, to: :job
   delegate :active?, :pending?, :running?, :cancelling?, :succeeded?, to: :job
@@ -20,7 +21,7 @@ class Deploy < ActiveRecord::Base
   end
 
   def previous_deploy
-    stage.deploys.successful.prior_to(self).last
+    stage.deploys.successful.prior_to(self).first
   end
 
   def previous_commit
@@ -61,4 +62,9 @@ class Deploy < ActiveRecord::Base
     end
   end
 
+  def stage_is_unlocked
+    if stage.locked? || Lock.global.exists?
+      errors.add(:stage, 'is locked')
+    end
+  end
 end
