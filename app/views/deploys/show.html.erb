@@ -34,30 +34,7 @@
   </div>
 </div>
 
-<% if !JobExecution.enabled %>
-  <div class="alert alert-info">
-    Pusher is currently restarting, your deploy has been queued and will be resumed shortly.
-  </div>
-
-  <%= javascript_tag do %>
-    function check_enabled() {
-      $.ajax({
-        url: "<%= enabled_jobs_path %>",
-        success: function(data, status, xhr) {
-          if(xhr.status == 204) {
-            window.location.reload()
-          }
-        }
-      });
-
-      setTimeout(check_enabled, 5000);
-    }
-
-    $(document).ready(function() {
-      check_enabled();
-    });
-  <% end %>
-<% elsif @deploy.active? %>
+<% if @deploy.active? %>
   <%= javascript_tag do %>
     $(document).ready(function() {
       var messages = $("#messages");
@@ -93,4 +70,27 @@
   <% end %>
 
   <button id="deploy_stop" class="btn btn-danger pull-right">Stop</button>
+<% elsif !JobExecution.enabled %>
+  <div class="alert alert-info">
+    Pusher is currently restarting, your deploy has been queued and will be resumed shortly.
+  </div>
+
+  <%= javascript_tag do %>
+    function check_enabled() {
+      $.ajax({
+        url: "<%= enabled_jobs_path %>",
+        success: function(data, status, xhr) {
+          if(xhr.status == 204) {
+            window.location.reload()
+          }
+        }
+      });
+
+      setTimeout(check_enabled, 5000);
+    }
+
+    $(document).ready(function() {
+      check_enabled();
+    });
+  <% end %>
 <% end %>
