@@ -1,4 +1,6 @@
 class StreamsController < ApplicationController
+  newrelic_ignore if respond_to?(:newrelic_ignore)
+
   include ActionController::Live
   include ApplicationHelper
 
