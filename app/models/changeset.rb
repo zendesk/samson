@@ -32,11 +32,15 @@ class Changeset
   end
 
   def commits
-    comparison.commits.map {|data| Commit.new(repo, data) }
+    @commits ||= comparison.commits.map {|data| Commit.new(repo, data) }
   end
 
   def files
     comparison.files
+  end
+
+  def pull_requests
+    @pull_requests ||= find_pull_requests
   end
 
   def authors
@@ -44,6 +48,11 @@ class Changeset
   end
 
   private
+
+  def find_pull_requests
+    numbers = commits.map(&:pull_request_number).compact
+    numbers.map {|num| PullRequest.find(repo, num) }
+  end
 
   class NullComparison
     def self.commits

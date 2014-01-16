@@ -1,4 +1,6 @@
 class Changeset::Commit
+  PULL_REQUEST_MERGE_MESSAGE = /\AMerge pull request #(\d+)/
+
   def initialize(repo, data)
     @repo, @data = repo, data
   end
@@ -27,6 +29,12 @@ class Changeset::Commit
 
   def short_sha
     @data.sha[0...7]
+  end
+
+  def pull_request_number
+    if summary =~ PULL_REQUEST_MERGE_MESSAGE
+      Integer($1)
+    end
   end
 
   def url
