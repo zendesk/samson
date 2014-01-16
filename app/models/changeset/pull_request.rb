@@ -21,6 +21,11 @@ class Changeset::PullRequest
     "https://github.com/#{repo}/pulls/#{number}"
   end
 
+  def users
+    users = [@data.user, @data.merged_by]
+    users.map {|user| Changeset::GithubUser.new(user) }.uniq
+  end
+
   def risky?
     risks.present?
   end
