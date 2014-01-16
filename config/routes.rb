@@ -34,7 +34,7 @@ ZendeskPusher::Application.routes.draw do
 
   namespace :admin do
     resource :users, only: [:show, :update]
-    resources :users, only: [:destroy], as: :delete_user
+    delete 'users/:id' => 'users#destroy', as: :delete_user
     resource :projects, only: [:show]
     resources :commands, except: [:show]
   end
