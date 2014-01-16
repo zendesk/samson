@@ -25,7 +25,7 @@
           <% end %>
         </td>
         <td>
-          <%= link_to "Delete", admin_users_path, method: :delete, data: { confirm: "Delete ##{user.id} #{user.name} #{user.email} ?" }, class: "btn btn-danger" %>
+          <%= link_to "Delete", admin_delete_user_path(user.id), method: :delete, data: { confirm: "Delete ##{user.id} #{user.name} #{user.email} ?" }, class: "btn btn-danger" %>
         </td>
       </tr>
     <% end %>

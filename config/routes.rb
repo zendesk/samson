@@ -1,5 +1,5 @@
 ZendeskPusher::Application.routes.draw do
-  get "streams/show"
+  get 'streams/show'
 
   resources :projects, except: [:index] do
     member do
@@ -33,15 +33,16 @@ ZendeskPusher::Application.routes.draw do
   get '/logout', to: 'sessions#destroy'
 
   namespace :admin do
-    resource :users, only: [:show, :update, :destroy]
+    resource :users, only: [:show, :update]
+    resources :users, only: [:destroy], as: :delete_user
     resource :projects, only: [:show]
     resources :commands, except: [:show]
   end
 
   scope :integrations do
-    post "/travis/:token" => "travis#create", as: :travis_deploy
-    post "/semaphore/:token" => "semaphore#create", as: :semaphore_deploy
-    post "/tddium/:token" => "tddium#create", as: :tddium_deploy
+    post '/travis/:token' => 'travis#create', as: :travis_deploy
+    post '/semaphore/:token' => 'semaphore#create', as: :semaphore_deploy
+    post '/tddium/:token' => 'tddium#create', as: :tddium_deploy
   end
 
   root to: 'projects#index'
