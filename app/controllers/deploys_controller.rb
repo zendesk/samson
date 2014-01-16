@@ -28,9 +28,13 @@ class DeploysController < ApplicationController
     reference = deploy_params[:reference]
     stage = @project.stages.find(deploy_params[:stage_id])
     deploy_service = DeployService.new(@project, current_user)
-    deploy = deploy_service.deploy!(stage, reference)
+    @deploy = deploy_service.deploy!(stage, reference)
 
-    redirect_to project_deploy_path(@project, deploy)
+    if @deploy.persisted?
+      redirect_to project_deploy_path(@project, @deploy)
+    else
+      render :new
+    end
   end
 
   def show
