@@ -1,9 +1,8 @@
 class Deploy < ActiveRecord::Base
-
   belongs_to :stage
   belongs_to :job
 
-  default_scope { order('created_at DESC') }
+  default_scope { order('created_at DESC, id DESC') }
 
   validates_presence_of :reference
 
@@ -21,7 +20,7 @@ class Deploy < ActiveRecord::Base
   end
 
   def previous_deploy
-    stage.deploys.successful.prior_to(self).last
+    stage.deploys.successful.prior_to(self).first
   end
 
   def previous_commit
