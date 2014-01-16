@@ -26,7 +26,7 @@
       <% end %>
 
       <% if current_user.try(:is_admin?) %>
-        <li class="dropdown">
+        <li class="dropdown <%= 'active' if request.path.starts_with?('/admin') %>">
           <a href="#" class="dropdown-toggle" data-toggle="dropdown">Admin <b class="caret"></b></a>
           <ul class="dropdown-menu">
             <li><%= link_to "Projects", admin_projects_path %></li>
