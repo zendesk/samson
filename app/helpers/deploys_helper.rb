@@ -42,5 +42,4 @@ module DeploysHelper
 
     content_tag :div, content, class: "alert alert-#{status}"
   end
-
 end

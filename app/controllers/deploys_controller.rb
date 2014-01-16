@@ -64,5 +64,4 @@ class DeploysController < ApplicationController
   def find_deploy
     @deploy = Deploy.find(params[:id])
   end
-
 end
