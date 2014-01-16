@@ -8,8 +8,12 @@ class Changeset::Commit
   end
 
   def author_avatar_url
-    gravatar_id = @data.author.gravatar_id
-    "http://www.gravatar.com/avatar/#{gravatar_id}?s=20"
+    author = @data.author 
+
+    if author.present?
+      gravatar_id = author.gravatar_id
+      "http://www.gravatar.com/avatar/#{gravatar_id}?s=20"
+    end
   end
 
   def author_url
