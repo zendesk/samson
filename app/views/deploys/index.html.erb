@@ -3,18 +3,18 @@
 <%= render partial: "shared/project_tabs",
            locals: { project: @project, active: "deploys" } %>
 
-  <table class="table table-striped">
-    <thead>
-      <tr>
-        <th>When</th>
-        <th>Who</th>
-        <th>Status</th>
-        <th></th>
-      </tr>
-    </thead>
-    <tbody>
-      <%= render partial: "/projects/deploy", collection: @deploys %>
-    </tbody>
+<table class="table table-striped">
+  <thead>
+    <tr>
+      <th>When</th>
+      <th>Who</th>
+      <th>Status</th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    <%= render partial: "/projects/deploy", collection: @deploys %>
+  </tbody>
 </table>
 <div class="page-container">
   <%= paginate @deploys %>
