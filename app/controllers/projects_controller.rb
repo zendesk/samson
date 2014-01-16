@@ -10,7 +10,7 @@ class ProjectsController < ApplicationController
   end
 
   def index
-    @projects = Project.limit(9)
+    @projects = Project.all
   end
 
   def new

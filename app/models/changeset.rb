@@ -36,10 +36,26 @@ class Changeset
   private
 
   def comparison
-    @comparison ||= github.compare(@repo, @previous_commit, @commit)
+    @comparison ||= get_comparison
+  end
+
+  def get_comparison
+    github.compare(@repo, @previous_commit, @commit)
+  rescue Octokit::NotFound
+    NullComparison
   end
 
   def github
     @github ||= Octokit::Client.new(access_token: token)
+  end
+
+  class NullComparison
+    def self.commits
+      []
+    end
+
+    def self.files
+      []
+    end
   end
 end

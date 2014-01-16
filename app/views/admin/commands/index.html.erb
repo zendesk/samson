@@ -13,7 +13,7 @@
     <% @commands.each do |command| %>
       <tr>
         <td>
-          <pre><%= command.command.truncate(30) %></pre>
+          <pre class="pre-scrollable"><%= command.command %></pre>
         </td>
         <td><%= command.project.try(:name) ? command.project.name : "Global" %></td>
         <td>
