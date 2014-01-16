@@ -24,6 +24,15 @@ class Stage < ActiveRecord::Base
     end
   end
 
+  def create_deploy(options = {})
+    user = options.fetch(:user)
+    reference = options.fetch(:reference)
+
+    deploys.create(reference: reference) do |deploy|
+      deploy.build_job(project: project, user: user, command: command)
+    end
+  end
+
   def send_email_notifications?
     notify_email_address.present?
   end

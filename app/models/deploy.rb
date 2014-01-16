@@ -2,6 +2,10 @@ class Deploy < ActiveRecord::Base
   belongs_to :stage
   belongs_to :job
 
+  default_scope { order('created_at DESC, id DESC') }
+
+  validates_presence_of :reference
+
   delegate :started_by?, :stop!, :status, :user, :output, to: :job
   delegate :active?, :pending?, :running?, :cancelling?, :succeeded?, to: :job
   delegate :finished?, :errored?, :failed?, to: :job
@@ -16,7 +20,7 @@ class Deploy < ActiveRecord::Base
   end
 
   def previous_deploy
-    stage.deploys.successful.prior_to(self).last
+    stage.deploys.successful.prior_to(self).first
   end
 
   def previous_commit
@@ -57,7 +61,4 @@ class Deploy < ActiveRecord::Base
     end
   end
 
-  def self.latest(limit = 10)
-    limit(limit).order("#{table_name}.created_at DESC")
-  end
 end

@@ -5,8 +5,15 @@
 
     <ul class="nav navbar-nav">
       <% if current_user %>
-        <li><%= link_to "Recent Deploys", recent_deploys_path %></li>
-        <li><%= link_to "Current Deploys", active_deploys_path %></li>
+        <li class="<%= 'active' if current_page?(controller: '/deploys', action: 'recent') %>">
+          <%= link_to "Recent Deploys", recent_deploys_path %>
+        </li>
+        <li class="<%= 'active' if current_page?(controller: '/deploys', action: 'active') %>">
+          <%= link_to active_deploys_path do %>
+            Current Deploys
+            <%= content_tag(:span, Deploy.active.count, class: "badge") unless Deploy.active.count.zero? %>
+          <% end %>
+        </li>
       <% end %>
 
       <% if current_user.try(:is_admin?) %>
