@@ -4,6 +4,15 @@
     <%= link_to "Pusher", root_path, class: "navbar-brand" %>
 
     <ul class="nav navbar-nav">
+      <li class="dropdown">
+        <a href="#" class="dropdown-toggle" data-toggle="dropdown">Projects <b class="caret"></b></a>
+        <ul class="dropdown-menu">
+          <% Project.all.each do |project| %>
+            <li><%= link_to project.name, project_path(project) %></li>
+          <% end %>
+        </ul>
+      </li>
+
       <% if current_user %>
         <li class="<%= 'active' if current_page?(controller: '/deploys', action: 'recent') %>">
           <%= link_to "Recent Deploys", recent_deploys_path %>
