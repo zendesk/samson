@@ -17,7 +17,7 @@ class DeploysController < ApplicationController
   end
 
   def recent
-    @deploys = Deploy.page(params[:page])
+    @deploys = Deploy.limit(15)
   end
 
   def new
