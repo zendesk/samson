@@ -26,14 +26,11 @@ describe TerminalExecutor do
 
   describe 'command failures' do
     before do
-      subject.execute!('ls /nonexistent/place', 'echo "hi"')
+      subject.execute!('false', 'echo "hi"')
     end
 
     it 'does not execute the other commands' do
-      output.string.must_equal([
-        "ls: cannot access /nonexistent/place: No such file or directory\r\n",
-        "Failed to execute \"ls /nonexistent/place\"\r\n"
-      ].join)
+      output.string.must_equal("Failed to execute \"false\"\r\n")
     end
   end
 
