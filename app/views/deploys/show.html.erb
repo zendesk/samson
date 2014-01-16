@@ -8,7 +8,7 @@
 <h1>
   <%= @project.name %>
   <div class="pull-right">
-    <% unless %w{running succeeded}.include? @deploy.status %>
+    <% unless @deploy.succeeded? || @deploy.running? %>
       <%= link_to "Redeploy", retry_project_deploy_path, method: :post, class: "btn btn-danger" %>
     <% end %>
     <%= link_to "Back", project_path(@project), class: "btn btn-default" %>
