@@ -1,25 +1,22 @@
 class LocksController < ApplicationController
-  before_filter :authorize_admin!
-  helper_method :project
+  before_filter :authorize_deployer!
 
-  def new
-    @lock = project.job_locks.build
-  end
-
-  def create
-    @lock = project.job_locks.create(lock_params)
-
-    if @lock.persisted?
-      redirect_to root_path
+  rescue_from ActiveRecord::RecordNotFound do
+    if Project.exists?(params[:project_id])
+      redirect_to project_stages_path(project)
     else
-      flash[:error] = lock_errors
-      render :new
+      redirect_to root_path
     end
   end
 
+  def create
+    stage.create_lock(user: current_user)
+    redirect_to project_stages_path(project)
+  end
+
   def destroy
-    project.job_locks.destroy(params[:id])
-    redirect_to root_path
+    stage.lock.try(:soft_delete)
+    redirect_to project_stages_path(project)
   end
 
   protected
@@ -28,14 +25,7 @@ class LocksController < ApplicationController
     @project ||= Project.find(params[:project_id])
   end
 
-  def lock_params
-    params.require(:job_lock).
-      permit(:environment, :expires_at)
-  end
-
-  def lock_errors
-    [:environment, :expires_at].map do |key|
-      @lock.errors.full_messages_for(key)
-    end.flatten.join("<br />").html_safe
+  def stage
+    @stage ||= project.stages.find(params[:stage_id])
   end
 end

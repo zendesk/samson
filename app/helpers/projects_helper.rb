@@ -1,19 +1,9 @@
 module ProjectsHelper
-  include EnvironmentsHelper
-
   def job_state_class(job)
     if job.succeeded?
       "success"
     else
       "failed"
-    end
-  end
-
-  def project_form_legend
-    if project.new_record?
-      "New Project"
-    else
-      "Editing #{project.name}"
     end
   end
 end

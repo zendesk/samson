@@ -91,4 +91,42 @@ describe Stage do
       end
     end
   end
+
+  describe 'unlocked/locked?' do
+    describe 'with a lock' do
+      before do
+        subject.create_lock!(user: users(:deployer))
+      end
+
+      it 'is not included' do
+        Stage.unlocked.wont_include(subject)
+      end
+
+      it 'is locked?' do
+        subject.reload.must_be(:locked?)
+      end
+    end
+
+    describe 'with a global lock' do
+      before do
+        Lock.create!(user: users(:admin))
+      end
+
+      it 'is not empty' do
+        Stage.unlocked.wont_be_empty
+      end
+
+      it 'is not locked' do
+        subject.wont_be(:locked?)
+      end
+    end
+
+    it 'includes unlocked stage' do
+      Stage.unlocked.must_include(subject)
+    end
+
+    it 'is not locked' do
+      subject.wont_be(:locked?)
+    end
+  end
 end

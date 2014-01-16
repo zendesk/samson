@@ -3,19 +3,26 @@
 <%= render partial: "shared/project_tabs",
            locals: { project: @project, active: "stages" } %>
 
-<ul id="stages" data-url="<%= reorder_stages_project_path(@project) %>">
+<ul id="stages" data-url="<%= reorder_project_stages_path(@project) %>">
   <% @stages.each.with_index do |stage, index| %>
     <li class="stage-bar bar list-unstyled clearfix" data-id="stage_id_<%= stage.id %>">
       <%= link_to stage.name, project_stage_path(@project, stage) %>
+      <% if stage.locked? %>
+        <span class="label label-warning"><i class="glyphicon glyphicon-lock"></i> Locked</span>
+      <% end %>
       <div class="btn-group pull-right">
-      <%= deploy_link @project, stage_id: stage.id %>
+        <%= deploy_link @project, stage %>
+      </div>
     </li>
   <% end %>
 </ul>
+
 <%= link_to "Add Stage", new_project_stage_path(@project), class: "btn btn-default" %>
+
 <button id="error_message" class="messages btn btn-danger" disabled>
   Failed to save
 </button>
+
 <button id="success_message" class="messages btn btn-success" disabled>
   Saved
 </button>
