@@ -23,7 +23,7 @@ class Admin::UsersController < ApplicationController
   end
 
   def destroy
-    User.find(params[:id]).destroy
+    User.find(params[:id]).soft_delete!
 
     redirect_to admin_users_path
   end

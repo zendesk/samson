@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20140115063327) do
+ActiveRecord::Schema.define(version: 20140116001521) do
 
   create_table "commands", force: true do |t|
     t.text     "command",    limit: 16777215
@@ -85,6 +85,7 @@ ActiveRecord::Schema.define(version: 20140115063327) do
     t.datetime "updated_at"
     t.integer  "role_id",       default: 0, null: false
     t.string   "current_token"
+    t.datetime "deleted_at"
   end
 
   create_table "webhooks", force: true do |t|
