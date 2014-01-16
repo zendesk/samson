@@ -5,13 +5,6 @@
   <li class="active">Deploy #<%= @deploy.id %></li>
 </ol>
 
-<h1>
-  <%= @project.name %>
-  <div class="pull-right">
-    <%= link_to "Back", project_path(@project), class: "btn btn-default" %>
-  </div>
-</h1>
-
 <%= deploy_status_panel @deploy %>
 
 <ul id="deploy-tabs" class="nav nav-tabs">
@@ -22,7 +15,7 @@
   <li><a href="#risks" data-toggle="tab">Risks</a></li>
 </ul>
 
-<div class="tab-content">
+<div class="tab-content deploy-details">
   <div class="tab-pane active" id="output">
     <%= render 'deploys/output', deploy: @deploy %>
   </div>
