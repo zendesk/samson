@@ -3,7 +3,7 @@
     <div class="panel-heading text-center">
     <%= link_to project.name, project_path(project) %>
       <% if current_user.is_deployer? %>
-        <%= link_to "Deploy", new_project_deploy_path(project), class: "btn btn-danger pull-right short-button"%>
+        <%= link_to "Deploy", new_project_deploy_path(project), class: "btn btn-danger pull-right btn-xs"%>
       <% end %>
     </div>
 
