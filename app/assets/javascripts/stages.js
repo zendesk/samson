@@ -7,37 +7,37 @@ $(function() {
   $stagesBox.sortable();
 
   var reorderCtrl = {
-    reorder:               reorder,
+    reorder: function() {
+      $.ajax({
+        url:  $stagesBox.data("url"),
+        data: $stagesBox.sortable("serialize", { attribute: "data-id" }),
+        type: "PUT",
+      }).done(function(data) {
+        clearTimeout(reorderCtrl.messageFadeOutTimeout);
+        $successs.fadeIn(200);
+      }).fail(function() {
+        clearTimeout(reorderCtrl.messageFadeOutTimeout);
+        $error.fadeIn(200);
+      }).always(function() {
+        if (reorderCtrl.orderChanged) {
+          $messages.hide();
+          reorderCtrl.reorder();
+          reorderCtrl.orderChanged = false;
+        } else {
+          reorderCtrl.sending = false;
+        }
+
+        reorderCtrl.messageFadeOutTimeout = setTimeout(function() {
+          $messages.fadeOut(300);
+        }, 2000);
+      })
+    },
+
     sending:               false,
     orderChanged:          false,
     messageFadeOutTimeout: null
   };
 
-  function reorder() {
-    $.ajax({
-      url:  $stagesBox.data("url"),
-      data: $stagesBox.sortable("serialize", { attribute: "data-id" }),
-      type: "PUT",
-    }).done(function(data) {
-      clearTimeout(reorderCtrl.messageFadeOutTimeout);
-      $successs.fadeIn(200);
-    }).fail(function() {
-      clearTimeout(reorderCtrl.messageFadeOutTimeout);
-      $error.fadeIn(200);
-    }).always(function() {
-      if (reorderCtrl.orderChanged) {
-        $messages.hide();
-        reorderCtrl.reorder();
-        reorderCtrl.orderChanged = false;
-      } else {
-        reorderCtrl.sending = false;
-      }
-
-      reorderCtrl.messageFadeOutTimeout = setTimeout(function() {
-        $messages.fadeOut(300);
-      }, 2000);
-    })
-  }
 
   $stagesBox.sortable({
     update: function() {
