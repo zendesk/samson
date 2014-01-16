@@ -1,7 +1,7 @@
 <tr>
   <td><%= link_to deploy.project.name, project_path(deploy.project) %></td>
   <td><%= link_to "#{deploy.summary}", project_deploy_path(deploy.project, deploy) %></td>
-  <td><%= time_ago_in_words deploy.created_at %> ago</td>
+  <td><span class="mouseover" data-time="<%= deploy.created_at %>"><%= time_ago_in_words deploy.created_at %> ago</span></td>
   <td><span class="label <%= deploy_status_for_label(deploy.status) %>"><%= deploy.status.titleize %></span></td>
   <td><%= link_to "View", project_deploy_path(deploy.project, deploy), class: "btn btn-default btn-xs" %></td>
 </tr>
