@@ -20,21 +20,7 @@
     <%= render 'deploys/output', deploy: @deploy %>
   </div>
 
-  <div class="tab-pane" id="files">
-    <%= render 'deploys/files', changeset: @changeset %>
-  </div>
-
-  <div class="tab-pane" id="commits">
-    <%= render 'deploys/commits', changeset: @changeset %>
-  </div>
-
-  <div class="tab-pane" id="pulls">
-    <%= render 'deploys/pulls', changeset: @changeset %>
-  </div>
-
-  <div class="tab-pane" id="risks">
-    <%= render 'deploys/risks', pull_requests: @changeset.pull_requests.select(&:risky?) %>
-  </div>
+  <%= render 'deploys/changeset_panes' %>
 </div>
 
 <% if @deploy.active? %>
