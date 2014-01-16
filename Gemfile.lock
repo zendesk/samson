@@ -51,6 +51,9 @@ GEM
       thread_safe (~> 0.1)
       tzinfo (~> 0.3.37)
     addressable (2.3.5)
+    airbrake (3.1.14)
+      builder
+      json
     ansible (0.2.0)
     arel (4.0.1)
     atomic (1.1.14)
@@ -102,6 +105,10 @@ GEM
     json (1.8.1-java)
     jwt (0.1.10)
       multi_json (>= 1.5)
+    kaminari (0.13.0)
+      actionpack (>= 3.0.0)
+      activesupport (>= 3.0.0)
+      railties (>= 3.0.0)
     mail (2.5.4)
       mime-types (~> 1.16)
       treetop (~> 1.4.8)
@@ -224,6 +231,7 @@ PLATFORMS
 
 DEPENDENCIES
   active_hash (~> 1.0)
+  airbrake
   ansible
   better_errors
   binding_of_caller
@@ -233,6 +241,7 @@ DEPENDENCIES
   flowdock (~> 0.3.1)
   jquery-rails
   jquery-ui-rails
+  kaminari
   minitest-rails (~> 0.9)
   mysql2 (~> 0.3)
   net-ssh (~> 2.1)

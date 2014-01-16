@@ -3,14 +3,14 @@ require 'test_helper'
 describe DeploysController do
   let(:project) { projects(:test) }
   let(:stage) { stages(:test_staging) }
-  let(:admin) { users(:admin) }
+  let(:deployer) { users(:deployer) }
   let(:command) { "echo hello" }
-  let(:job) { Job.create!(command: command, project: project, user: admin) }
+  let(:job) { Job.create!(command: command, project: project, user: deployer) }
   let(:deploy) { Deploy.create!(stage: stage, job: job, reference: "foo") }
   let(:deploy_service) { stub(deploy!: nil) }
 
   setup do
-    DeployService.stubs(:new).with(project, admin).returns(deploy_service)
+    DeployService.stubs(:new).with(project, deployer).returns(deploy_service)
     deploy_service.stubs(:deploy!).returns(deploy)
   end
 
@@ -70,7 +70,7 @@ describe DeploysController do
     unauthorized :delete, :destroy, project_id: 1, id: 1
   end
 
-  as_a_admin do
+  as_a_deployer do
     describe "a POST to :create" do
       setup do
         post :create, params.merge(project_id: project.id)
@@ -93,6 +93,36 @@ describe DeploysController do
     end
 
     describe "a DELETE to :destroy" do
+      describe "with a deploy owned by the deployer" do
+        setup do
+          Deploy.any_instance.stubs(:started_by?).returns(true)
+
+          delete :destroy, project_id: project.id, id: deploy.to_param
+        end
+
+        it "responds with 200" do
+          response.status.must_equal(200)
+        end
+      end
+
+      describe "with a deploy not owned by the deployer" do
+        setup do
+          Deploy.any_instance.stubs(:started_by?).returns(false)
+          User.any_instance.stubs(:is_admin?).returns(false)
+
+          delete :destroy, project_id: project.id, id: deploy.to_param
+        end
+
+        it "responds with 403" do
+          response.status.must_equal(403)
+        end
+      end
+    end
+
+  end
+
+  as_a_admin do
+    describe "a DELETE to :destroy" do
       describe "with a valid deploy" do
         setup do
           delete :destroy, project_id: project.id, id: deploy.to_param
@@ -100,16 +130,6 @@ describe DeploysController do
 
         it "responds ok" do
           response.status.must_equal(200)
-        end
-      end
-
-      as_a_deployer do
-        setup do
-          delete :destroy, project_id: project.id, id: deploy.to_param
-        end
-
-        it "is forbidden" do
-          response.status.must_equal(403)
         end
       end
     end

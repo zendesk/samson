@@ -1,6 +1,9 @@
 class Deploy < ActiveRecord::Base
+
   belongs_to :stage
   belongs_to :job
+
+  default_scope { order('created_at DESC') }
 
   delegate :started_by?, :stop!, :status, :user, :output, to: :job
   delegate :active?, :pending?, :running?, :cancelling?, :succeeded?, to: :job
@@ -57,7 +60,4 @@ class Deploy < ActiveRecord::Base
     end
   end
 
-  def self.latest(limit = 10)
-    limit(limit).order("#{table_name}.created_at DESC")
-  end
 end

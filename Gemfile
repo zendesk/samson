@@ -4,11 +4,13 @@ gem 'rails', '4.0.2'
 gem 'puma'
 gem 'dotenv-rails', '~> 0.9.0'
 gem 'mysql2', '~> 0.3'
+gem 'kaminari'
 gem 'sqlite3'
 gem 'newrelic_rpm', '>= 3.7.1'
 
 group :production, :staging do
   gem 'rails_12factor'
+  gem 'airbrake'
 end
 
 group :assets do
