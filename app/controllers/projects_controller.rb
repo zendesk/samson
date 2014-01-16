@@ -65,10 +65,6 @@ class ProjectsController < ApplicationController
     head :ok
   end
 
-  def deploys
-    @deploys = project.deploys.page(params[:page])
-  end
-
   protected
 
   def project_params

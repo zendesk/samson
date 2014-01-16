@@ -4,19 +4,18 @@
            locals: { project: @project, active: "deploys" } %>
 
 <table class="table table-striped">
-	<thead>
-		<tr>
-			<th>Project</th>
-			<th>Who</th>
-			<th>When</th>
-			<th>Status</th>
-			<th></th>
-		</tr>
-	</thead>
-	<tbody>
-		<%= render partial: "deploy", collection: @deploys %>
-	</tbody>
+  <thead>
+    <tr>
+      <th>When</th>
+      <th>Who</th>
+      <th>Status</th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    <%= render partial: "/projects/deploy", collection: @deploys %>
+  </tbody>
 </table>
 <div class="page-container">
-	<%= paginate @deploys %>
+  <%= paginate @deploys %>
 </div>
