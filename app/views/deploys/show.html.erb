@@ -73,7 +73,7 @@
   <% end %>
 
   <button id="deploy_stop" class="btn btn-danger pull-right">Stop</button>
-<% elsif !JobExecution.enabled %>
+<% elsif !job.finished? && !JobExecution.enabled %>
   <div class="alert alert-info">
     Pusher is currently restarting, your deploy has been queued and will be resumed shortly.
   </div>
