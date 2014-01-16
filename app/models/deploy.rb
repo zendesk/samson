@@ -15,6 +15,10 @@ class Deploy < ActiveRecord::Base
     "#{job.user.name} #{summary_action} #{reference} to #{stage.name}"
   end
 
+  def summary_for_email
+    "#{job.user.name} #{summary_action} #{project.name} to #{stage.name} #{reference}"
+  end
+
   def commit
     job.try(:commit).presence || reference
   end
