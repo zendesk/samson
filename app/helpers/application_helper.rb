@@ -30,4 +30,13 @@ module ApplicationHelper
   def revision
     Rails.application.config.pusher.revision.presence
   end
+
+  def global_lock?
+    global_lock.present?
+  end
+
+  def global_lock
+    return @global_lock if defined?(@global_lock)
+    @global_lock = Lock.global.first
+  end
 end

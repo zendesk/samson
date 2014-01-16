@@ -1,3 +1,9 @@
+<% if global_lock? %>
+  <div class="alert alert-warning">
+    All deploys locked until further notice! Contact <%= global_lock.user.name %> for details.
+  </div>
+<% end %>
+
 <% if @projects.empty? %>
 
   <div class="alert alert-warning alert-dismissable">

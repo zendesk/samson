@@ -8,8 +8,6 @@ class DeploysController < ApplicationController
   before_filter :find_project, except: [:recent, :active]
   before_filter :find_deploy, except: [:index, :recent, :active, :new, :create]
 
-  helper_method :global_lock, :global_lock?
-
   def index
     @deploys = @project.deploys.page(params[:page])
   end
@@ -67,12 +65,4 @@ class DeploysController < ApplicationController
     @deploy = Deploy.find(params[:id])
   end
 
-  def global_lock?
-    global_lock.present?
-  end
-
-  def global_lock
-    return @global_lock if defined?(@global_lock)
-    @global_lock = Lock.global.first
-  end
 end
