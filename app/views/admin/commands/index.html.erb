@@ -15,7 +15,7 @@
         <td>
           <pre><%= command.command.truncate(30) %></pre>
         </td>
-        <td><%= command.project.try(:name) %></td>
+        <td><%= command.project.try(:name) ? command.project.name : "Global" %></td>
         <td>
           <%= link_to "Edit", edit_admin_command_path(command) %>
           |
