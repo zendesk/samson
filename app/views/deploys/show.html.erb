@@ -18,6 +18,7 @@
   <li class="active"><a href="#output" data-toggle="tab">Output</a></li>
   <li><a href="#files" data-toggle="tab">Files</a></li>
   <li><a href="#commits" data-toggle="tab">Commits</a></li>
+  <li><a href="#pulls" data-toggle="tab">Pull Requests</a></li>
 </ul>
 
 <div class="tab-content">
@@ -31,6 +32,10 @@
 
   <div class="tab-pane" id="commits">
     <%= render 'deploys/commits', changeset: @changeset %>
+  </div>
+
+  <div class="tab-pane" id="pulls">
+    <%= render 'deploys/pulls', changeset: @changeset %>
   </div>
 </div>
 

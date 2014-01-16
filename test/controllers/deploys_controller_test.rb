@@ -41,8 +41,8 @@ describe DeploysController do
 
     describe "a GET to :show" do
       setup do
-        changeset = stub_everything(files: [], commits: [])
-        Changeset.stubs(:new).returns(changeset)
+        changeset = stub_everything(files: [], commits: [], pull_requests: [])
+        Changeset.stubs(:find).returns(changeset)
       end
 
       describe "with a valid deploy" do
