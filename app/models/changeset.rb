@@ -1,20 +1,30 @@
 require 'octokit'
 
 class Changeset
-  attr_reader :previous_commit, :commit
+  attr_reader :comparison, :repo, :previous_commit, :commit
 
   cattr_accessor(:token) { ENV['GITHUB_TOKEN'] }
 
-  def initialize(repo, previous_commit, commit)
-    @repo, @previous_commit, @commit = repo, previous_commit, commit
+  def initialize(comparison, repo, previous_commit, commit)
+    @comparison, @repo = comparison, repo
+    @previous_commit, @commit = previous_commit, commit
+  end
 
+  def self.find(repo, previous_commit, commit)
     # If there's no previous commit, there's no basis no perform a comparison
     # on. Just show an empty changeset then.
-    @previous_commit ||= @commit
+    previous_commit ||= commit
+
+    github = Octokit::Client.new(access_token: token)
+    comparison = github.compare(repo, previous_commit, commit)
+
+    new(comparison, repo, previous_commit, commit)
+  rescue Octokit::NotFound
+    new(NullComparison, repo, previous_commit, commit)
   end
 
   def github_url
-    "https://github.com/#{@repo}/compare/#{commit_range}"
+    "https://github.com/#{repo}/compare/#{commit_range}"
   end
 
   def commit_range
@@ -22,7 +32,7 @@ class Changeset
   end
 
   def commits
-    comparison.commits.map {|data| Commit.new(@repo, data) }
+    comparison.commits.map {|data| Commit.new(repo, data) }
   end
 
   def files
@@ -34,20 +44,6 @@ class Changeset
   end
 
   private
-
-  def comparison
-    @comparison ||= get_comparison
-  end
-
-  def get_comparison
-    github.compare(@repo, @previous_commit, @commit)
-  rescue Octokit::NotFound
-    NullComparison
-  end
-
-  def github
-    @github ||= Octokit::Client.new(access_token: token)
-  end
 
   class NullComparison
     def self.commits

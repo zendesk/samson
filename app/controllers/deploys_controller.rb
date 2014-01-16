@@ -38,7 +38,7 @@ class DeploysController < ApplicationController
   end
 
   def show
-    @changeset = Changeset.new(@project.github_repo, @deploy.previous_commit, @deploy.commit)
+    @changeset = Changeset.find(@project.github_repo, @deploy.previous_commit, @deploy.commit)
   end
 
   def destroy
