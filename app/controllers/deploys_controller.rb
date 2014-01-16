@@ -51,6 +51,10 @@ class DeploysController < ApplicationController
     end
   end
 
+  def retry
+    redirect_to project_retry_deploy_path(@deploy)
+  end
+
   protected
 
   def deploy_params

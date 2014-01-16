@@ -7,6 +7,7 @@ ZendeskPusher::Application.routes.draw do
     end
 
     resources :deploys, only: [:index, :new, :create, :show, :destroy]
+    post '/deploys/retry/:id' => 'deploys#retry', as: :retry_deploy
     resources :stages
     resources :webhooks, only: [:index, :create, :destroy]
     resources :commit_statuses, only: [:show], constraints: { id: /.+/ }
