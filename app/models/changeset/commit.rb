@@ -9,17 +9,16 @@ class Changeset::Commit
     @data.commit.author.name
   end
 
-  def author_avatar_url
-    author = @data.author 
+  def author
+    @author ||= Changeset::GithubUser.new(@data.author) if @data.author
+  end
 
-    if author.present?
-      gravatar_id = author.gravatar_id
-      "http://www.gravatar.com/avatar/#{gravatar_id}?s=20"
-    end
+  def author_avatar_url
+    author.avatar_url if author.present?
   end
 
   def author_url
-    "https://github.com/#{@data.author.login}"
+    author.url if author.present?
   end
 
   def summary
