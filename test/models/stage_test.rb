@@ -70,7 +70,7 @@ describe Stage do
       end
 
       it 'includes all commands, sorted' do
-        subject.all_commands.must_equal(subject.commands.push(Command.last))
+        subject.all_commands.must_equal(subject.commands + Command.global)
       end
     end
 
