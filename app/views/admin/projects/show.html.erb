@@ -26,3 +26,9 @@
 <%= paginate @projects %>
 <%= link_to "Add a new project", new_project_path, class: "btn btn-default" %>
 
+
+<% if Lock.global.exists? %>
+  <%= link_to "Unlock all projects", admin_lock_path, class: "btn btn-info", method: :delete %>
+<% else %>
+  <%= link_to "Lock all projects", admin_lock_path, class: "btn btn-warning", method: :post %>
+<% end %>

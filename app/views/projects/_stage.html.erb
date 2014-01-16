@@ -7,5 +7,5 @@
       <%= link_to stage.deploys.first.summary, project_deploy_path(@project, stage.deploys.first) %>
     <% end %>
   </td>
-  <td><%= deploy_link @project, stage_id: stage.id %></td>
+  <td><%= deploy_link @project, stage %></td>
 </tr>

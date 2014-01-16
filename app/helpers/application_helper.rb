@@ -13,8 +13,10 @@ module ApplicationHelper
     GitHub::Markdown.render_gfm(str).html_safe
   end
 
-  def deploy_link(project, options = {})
-    path = new_project_deploy_path(project, options)
+  def deploy_link(project, stage)
+    path = new_project_deploy_path(project, stage_id: stage.id)
+    classes = %w{btn btn-danger}
+    classes << 'disabled' if stage.locked?
 
     link_to path, role: "button", class: "btn btn-primary" do
       "Deploy"

@@ -15,7 +15,7 @@ $(function() {
       $.ajax({
         url:  $stagesBox.data("url"),
         data: $stagesBox.sortable("serialize", { attribute: "data-id" }),
-        type: "PUT",
+        type: "PATCH",
       }).done(function(data) {
         clearTimeout(reorderCtrl.messageFadeOutTimeout);
         $successs.fadeIn(200);

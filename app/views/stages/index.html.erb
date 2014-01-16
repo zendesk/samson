@@ -8,14 +8,24 @@
     <li class="stage-bar bar list-unstyled clearfix" data-id="stage_id_<%= stage.id %>">
       <%= link_to stage.name, project_stage_path(@project, stage) %>
       <div class="btn-group pull-right">
-      <%= deploy_link @project, stage_id: stage.id %>
+        <% if stage.locked? %>
+          <%= link_to 'Unlock', project_stage_lock_path(@project, stage), class: 'btn btn-info', method: :delete %>
+        <% else %>
+          <%= link_to 'Lock', project_stage_lock_path(@project, stage), class: 'btn btn-warning', method: :post %>
+        <% end %>
+
+        <%= deploy_link @project, stage %>
+      </div>
     </li>
   <% end %>
 </ul>
+
 <%= link_to "Add Stage", new_project_stage_path(@project), class: "btn btn-default" %>
+
 <button id="error_message" class="messages btn btn-danger" disabled>
   Failed to save
 </button>
+
 <button id="success_message" class="messages btn btn-success" disabled>
   Saved
 </button>

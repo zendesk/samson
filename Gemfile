@@ -1,16 +1,20 @@
 source 'https://rubygems.org'
 
+gem 'dotenv-rails', '~> 0.9.0'
 gem 'rails', '4.0.2'
 gem 'puma'
-gem 'dotenv-rails', '~> 0.9.0'
+
+gem 'sqlite3'
 gem 'mysql2', '~> 0.3'
+
 gem 'kaminari'
 gem 'sqlite3'
-gem 'newrelic_rpm', '>= 3.7.1'
+gem 'soft_deletion', '~> 0.4'
 
 group :production, :staging do
   gem 'rails_12factor'
   gem 'airbrake'
+  gem 'newrelic_rpm', '>= 3.7.1'
 end
 
 group :assets do
@@ -33,8 +37,6 @@ group :no_preload do
   gem 'warden', '~> 1.2'
 
   gem 'flowdock', '~> 0.3.1'
-
-  gem 'soft_deletion', '~> 0.4'
 
   gem 'state_machine', '~> 1.2'
 

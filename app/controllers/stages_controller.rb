@@ -2,7 +2,7 @@ class StagesController < ApplicationController
   before_filter :authorize_admin!, except: [:show]
 
   before_filter :find_project
-  before_filter :find_stage, only: [:show, :edit, :update, :destroy]
+  before_filter :find_stage, only: [:show, :edit, :update, :lock, :unlock, :destroy]
 
   rescue_from ActiveRecord::RecordNotFound do
     if @project
@@ -54,6 +54,18 @@ class StagesController < ApplicationController
       render :edit
     end
   end
+
+  def lock
+    @stage.lock!
+    redirect_to project_stages_path(@project)
+  end
+
+  def unlock
+    @stage.unlock!
+    redirect_to project_stages_path(@project)
+  end
+
+
 
   def destroy
     @stage.soft_delete!

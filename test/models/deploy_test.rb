@@ -35,6 +35,16 @@ describe Deploy do
     end
   end
 
+  describe 'deploy locked stage' do
+    before do
+      stage.create_lock!(user: user)
+    end
+
+    it 'fails' do
+      lambda { create_deploy! }.must_raise(ActiveRecord::RecordInvalid)
+    end
+  end
+
   def create_deploy!(attrs = {})
     default_attrs = {
       reference: "baz",

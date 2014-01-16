@@ -8,7 +8,7 @@
   <%= @stage.name %>
   <div class="pull-right">
     <%= link_to "Edit stage", edit_project_stage_path(@project, @stage), class: "btn btn-default" %>
-    <%= deploy_link @project, stage_id: @stage.id %>
+    <%= deploy_link @project, @stage %>
   </div>
 </h1>
 
