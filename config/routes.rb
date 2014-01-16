@@ -6,8 +6,11 @@ ZendeskPusher::Application.routes.draw do
       put :reorder, as: :reorder_stages
     end
 
-    resources :deploys, only: [:index, :new, :create, :show, :destroy]
-    post '/deploys/retry/:id' => 'deploys#retry', as: :retry_deploy
+    resources :deploys, only: [:index, :new, :create, :show, :destroy] do
+      member do
+        post :retry
+      end
+    end
     resources :stages
     resources :webhooks, only: [:index, :create, :destroy]
     resources :commit_statuses, only: [:show], constraints: { id: /.+/ }
