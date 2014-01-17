@@ -18,7 +18,7 @@ class User < ActiveRecord::Base
 
     user.attributes = hash
     unless User.exists?
-      user.role_id = Role.find_by_name("admin").id
+      user.role_id = Role::ADMIN.id
     end
     user.tap(&:save)
   end
