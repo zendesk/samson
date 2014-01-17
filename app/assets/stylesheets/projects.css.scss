@@ -1,8 +1,11 @@
+.dashboard {
+}
+
 .project-tile {
   background: #333;
   min-height: 200px;
   padding: 15px;
-  cursor: pointer;
+  margin-top: 30px;
 
   &:hover {
     text-decoration: none;
@@ -13,6 +16,10 @@
     margin: 0;
     padding-bottom: 15px;
     font-size: 18px;
+
+    a {
+      color: #FFF;
+    }
   }
 
   ul {
