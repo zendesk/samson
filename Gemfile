@@ -8,7 +8,6 @@ gem 'sqlite3'
 gem 'mysql2', '~> 0.3'
 
 gem 'kaminari'
-gem 'sqlite3'
 gem 'soft_deletion', '~> 0.4'
 
 group :production, :staging do
