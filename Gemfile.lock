@@ -75,6 +75,7 @@ GEM
     coderay (1.1.0)
     crack (0.4.1)
       safe_yaml (~> 0.9.0)
+    dalli (2.7.0)
     debug_inspector (0.0.2)
     deep_merge (1.0.0)
     docile (1.1.2)
@@ -234,6 +235,7 @@ DEPENDENCIES
   binding_of_caller
   bootstrap-sass!
   bourne
+  dalli (~> 2.7.0)
   dotenv-rails (~> 0.9.0)
   flowdock (~> 0.3.1)
   github-markdown (~> 0.6.3)

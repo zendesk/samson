@@ -1,9 +1,11 @@
 class StreamsController < ApplicationController
+  newrelic_ignore if respond_to?(:newrelic_ignore)
+
   include ActionController::Live
   include ApplicationHelper
 
   def show
-    ActiveRecord::Base.connection_pool.release_connection
+    ActiveRecord::Base.clear_active_connections!
 
     response.headers['Content-Type'] = 'text/event-stream'
     response.headers['Cache-Control'] = 'no-cache'

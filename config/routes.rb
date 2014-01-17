@@ -2,7 +2,11 @@ ZendeskPusher::Application.routes.draw do
   get 'streams/show'
 
   resources :projects, except: [:index] do
-    resources :deploys, only: [:index, :new, :create, :show, :destroy]
+    resources :deploys, only: [:index, :new, :create, :show, :destroy] do
+      member do
+        get :changeset
+      end
+    end
 
     resources :stages do
       resource :lock, only: [:create, :destroy]
@@ -44,10 +48,10 @@ ZendeskPusher::Application.routes.draw do
     resource :lock, only: [:create, :destroy]
   end
 
-  scope :integrations do
-    post '/travis/:token' => 'travis#create', as: :travis_deploy
-    post '/semaphore/:token' => 'semaphore#create', as: :semaphore_deploy
-    post '/tddium/:token' => 'tddium#create', as: :tddium_deploy
+  namespace :integrations do
+    post "/travis/:token" => "travis#create", as: :travis_deploy
+    post "/semaphore/:token" => "semaphore#create", as: :semaphore_deploy
+    post "/tddium/:token" => "tddium#create", as: :tddium_deploy
   end
 
   root to: 'projects#index'

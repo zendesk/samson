@@ -7,7 +7,7 @@
 
 <%= deploy_status_panel @deploy %>
 
-<ul id="deploy-tabs" class="nav nav-tabs">
+<ul id="deploy-tabs" class="nav nav-tabs" data-changeset-url="<%= changeset_project_deploy_url(@project, @deploy) %>">
   <li class="active"><a href="#output" data-toggle="tab">Output</a></li>
   <li><a href="#files" data-toggle="tab">Files</a></li>
   <li><a href="#commits" data-toggle="tab">Commits</a></li>
@@ -20,24 +20,14 @@
     <%= render 'deploys/output', deploy: @deploy %>
   </div>
 
-  <div class="tab-pane" id="files">
-    <%= render 'deploys/files', changeset: @changeset %>
-  </div>
-
-  <div class="tab-pane" id="commits">
-    <%= render 'deploys/commits', changeset: @changeset %>
-  </div>
-
-  <div class="tab-pane" id="pulls">
-    <%= render 'deploys/pulls', changeset: @changeset %>
-  </div>
-
-  <div class="tab-pane" id="risks">
-    <%= render 'deploys/risks', pull_requests: @changeset.pull_requests.select(&:risky?) %>
-  </div>
+  <% %w(files commits pulls risks).each do |pane| %>
+    <div class="tab-pane changeset-placeholder" id="<%= pane %>">
+      <p>Loading...</p>
+    </div>
+  <% end %>
 </div>
 
-<% if @deploy.active? %>
+<% if @deploy.active? && JobExecution.enabled %>
   <%= javascript_tag do %>
     $(document).ready(function() {
       var messages = $("#messages");
@@ -73,7 +63,7 @@
   <% end %>
 
   <button id="deploy_stop" class="btn btn-danger pull-right">Stop</button>
-<% elsif !JobExecution.enabled %>
+<% elsif !@deploy.finished? %>
   <div class="alert alert-info">
     Pusher is currently restarting, your deploy has been queued and will be resumed shortly.
   </div>

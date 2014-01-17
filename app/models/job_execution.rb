@@ -14,6 +14,7 @@ class JobExecution
   end
 
   attr_reader :output
+  attr_reader :job
 
   def initialize(reference, job)
     @output = OutputBuffer.new
@@ -26,7 +27,7 @@ class JobExecution
     return unless enabled
 
     @thread = Thread.new do
-      ActiveRecord::Base.connection_pool.release_connection
+      ActiveRecord::Base.clear_active_connections!
 
       output_aggregator = OutputAggregator.new(@output)
       @job.run!
