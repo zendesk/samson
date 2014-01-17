@@ -1,36 +1,38 @@
 <%= form_for :users, method: :put, class: "form-inline" do |form| %>
-<table class="table table-hover table-condensed">
-  <thead>
-    <tr>
-      <th>#</th>
-      <th>Name</th>
-      <th>Email</th>
-      <th>Role</th>
-    </tr>
-  </thead>
-
-  <tbody>
-    <% @users.each do |user| %>
+  <table class="table table-hover table-condensed">
+    <thead>
       <tr>
-        <td><%= user.id %></td>
-        <td><%= user.name %></td>
-        <td><%= user.email %></td>
-        <td>
-          <% Role.all.each do |role| %>
-          <label class="radio-inline">
-            <%= radio_button_tag "users[#{user.id}][role]", role.id, user.role_id == role.id %>
-            <%= role.name %>
-          </label>
-          <% end %>
-        </td>
+        <th>#</th>
+        <th>Name</th>
+        <th>Email</th>
+        <th>Role</th>
       </tr>
-    <% end %>
-  </tbody>
-</table>
-<%= paginate @users %>
+    </thead>
 
-<div class="pull-right">
-  <button type="submit" class="btn btn-default">Save Changes</button>
-</div>
+    <tbody>
+      <% @users.each do |user| %>
+        <tr>
+          <td><%= user.id %></td>
+          <td><%= user.name %></td>
+          <td><%= user.email %></td>
+          <td>
+            <% Role.all.each do |role| %>
+            <label class="radio-inline">
+              <%= radio_button_tag "users[#{user.id}][role]", role.id, user.role_id == role.id %>
+              <%= role.name %>
+            </label>
+            <% end %>
+          </td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
 
+  <div class="admin-actions">
+    <div class="pull-right">
+      <button type="submit" class="btn btn-default">Save Changes</button>
+    </div>
+
+    <%= paginate @users %>
+  </div>
 <% end %>
