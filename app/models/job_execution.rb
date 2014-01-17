@@ -14,6 +14,7 @@ class JobExecution
   end
 
   attr_reader :output
+  attr_reader :job
 
   def initialize(reference, job)
     @output = OutputBuffer.new

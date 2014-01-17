@@ -27,7 +27,7 @@
   <% end %>
 </div>
 
-<% if @deploy.active? %>
+<% if @deploy.active? && JobExecution.enabled? %>
   <%= javascript_tag do %>
     $(document).ready(function() {
       var messages = $("#messages");
@@ -63,7 +63,7 @@
   <% end %>
 
   <button id="deploy_stop" class="btn btn-danger pull-right">Stop</button>
-<% elsif !@deploy.finished? && !JobExecution.enabled %>
+<% elsif !@deploy.finished? %>
   <div class="alert alert-info">
     Pusher is currently restarting, your deploy has been queued and will be resumed shortly.
   </div>
