@@ -6,30 +6,39 @@ A web interface to Zendesk's deployments.
 
 ### How?
 
-[app/jobs/deploy.rb](app/jobs/deploy.rb) holds the heart of the deploy service.
 It sshs to admin01\*, changes directory to the parameterized project name (e.g. `CSV Exporter` -> `csv_exporter`),
 ensures the repository is up-to-date, and then executes capsu.
 
-Pub-sub streaming is done through redis and a [separate controller](app/controllers/streams_controller.rb) that allows both web access
-and curl (TODO) access. A [subscriber thread](config/initializers/redis.rb) is created on startup that handles
-writing messages to each individual stream. Since Redis subscription blocks, it is difficult to work with ActionController::Live. [1]
+Streaming is done through a [controller](app/controllers/streams_controller.rb) that allows both web access and curl access. A [subscriber thread](config/initializers/instrumentation.rb) is created on startup.
 
-This project makes extensive use of threads, hence the requirement on JRuby.
+This project used to use JRuby, now it is on MRI 2.0.0, but there is some remnant JRuby code in the codebase. Tests are also run on 2.1.0.
 
-#### To run:
+#### Got boxen?
+
+Upgrade your manifest:
+```Puppet
+include projects::pusher
+```
+
+#### Config:
 
 ```bash
 script/bootstrap
 
 # fill in .env with a couple variables
-# GITHUB_CLIENT_ID and GITHUB_CLIENT_SECRET are mandatory
+# GITHUB_CLIENT_ID and GITHUB_CLIENT_SECRET are mandatory for production
 # and can be obtained by creating a new Github Application
 # See: https://github.com/settings/applications
 # https://developer.github.com/v3/oauth/
 #
 # You also need to fill in your personal GitHub token. You can generate a new
-# at https://github.com/settings/applications - assign it to GITHUB_TOKEN.
+# at https://github.com/settings/applications - it gets assigned to GITHUB_TOKEN.
+# You can currently auth through your Zendesk, in that case your Zendesk token gets set to CLIENT_SECRET. Make one at https://<YOU>.zendesk.com/agent/#/admin/api -> OAuth clients. Set the UID to 'deployment' and the redirect URL to http://localhost:9080/auth/zendesk/callback
+```
 
+#### To run:
+
+```bash
 bundle exec puma -C config/puma.rb
 ```
 
@@ -37,11 +46,7 @@ The website runs at `localhost:9080` by default.
 
 #### Admin user
 
-Once you've successfully logged in via oauth, you can make your first user an admin via:
-
-```bash
-rails runner 'User.first.update_attribute(:role_id, Role::ADMIN.id)'
-```
+Once you've successfully logged in via oauth, your first user automatically becomes an admin.
 
 #### Notes
 

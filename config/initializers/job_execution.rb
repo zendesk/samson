@@ -1,6 +1,6 @@
 JobExecution.setup
 
-unless Rails.env.test?
+unless Rails.env.test? || File.basename($0) == "rake"
   JobExecution.enabled = true
 
   Job.pending.each do |job|
