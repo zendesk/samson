@@ -2,7 +2,11 @@ ZendeskPusher::Application.routes.draw do
   get "streams/show"
 
   resources :projects, except: [:index] do
-    resources :deploys, only: [:index, :new, :create, :show, :destroy]
+    resources :deploys, only: [:index, :new, :create, :show, :destroy] do
+      member do
+        get :changeset
+      end
+    end
 
     resources :stages do
       resource :lock, only: [:create, :destroy]
