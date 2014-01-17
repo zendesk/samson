@@ -70,6 +70,12 @@ class StagesController < ApplicationController
     redirect_to project_path(@project)
   end
 
+  def reorder
+    Stage.reorder(params[:stage_id])
+
+    head :ok
+  end
+
   private
 
   def stage_params

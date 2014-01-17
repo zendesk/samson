@@ -29,8 +29,13 @@
 
 <% end %>
 
-<%= paginate @projects %>
-<%= link_to "Add a new project", new_project_path, class: "btn btn-default" %>
+<div class="admin-actions">
+  <div class="pull-right">
+    <%= link_to "Add a new project", new_project_path, class: "btn btn-default" %>
+  </div>
+
+  <%= paginate @projects %>
+</div>
 
 
 <% if Lock.global.exists? %>

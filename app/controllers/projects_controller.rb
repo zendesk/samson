@@ -59,12 +59,6 @@ class ProjectsController < ApplicationController
     redirect_to admin_projects_path
   end
 
-  def reorder
-    Stage.reorder params[:stage_id]
-
-    head :ok
-  end
-
   protected
 
   def project_params
