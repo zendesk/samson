@@ -24,8 +24,6 @@ class JobExecution
   end
 
   def start!
-    return unless enabled
-
     @thread = Thread.new do
       ActiveRecord::Base.clear_active_connections!
 
@@ -136,7 +134,9 @@ class JobExecution
     end
 
     def start_job(reference, job)
-      registry[job.id] = new(reference, job).tap(&:start!)
+      new(reference, job).tap do |job_execution|
+        registry[job.id] = job_execution.tap(&:start!) if enabled
+      end
     end
 
     def all

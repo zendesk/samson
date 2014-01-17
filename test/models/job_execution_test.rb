@@ -110,6 +110,18 @@ describe JobExecution do
 
   it "runs the commands specified by the job"
 
+  describe "when JobExecution is disabled" do
+    before do
+      JobExecution.enabled = false
+    end
+
+    it "does not add the job to the registry" do
+      job_execution = JobExecution.start_job('master', job)
+      job_execution.wont_be_nil
+      JobExecution.find_by_job(job).must_be_nil
+    end
+  end
+
   def execute_job(branch = "master")
     execution = JobExecution.new(branch, job)
     execution.start_and_wait!
