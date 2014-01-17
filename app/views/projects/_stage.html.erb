@@ -5,12 +5,12 @@
       <span class="label label-warning"><i class="glyphicon glyphicon-lock"></i> Locked</span>
     <% end %>
   </td>
-  <td>
-    <% if stage.deploys.empty? %>
-      -
-    <% else %>
-      <%= link_to stage.deploys.first.summary, project_deploy_path(@project, stage.deploys.first) %>
-    <% end %>
-  </td>
-  <td><%= deploy_link @project, stage %></td>
+  <% if stage.last_deploy.nil? %>
+    <td>-</td>
+    <td>-</td>
+  <% else %>
+    <td><%= stage.last_deploy.user.name %></td>
+    <td><%= link_to truncate(stage.last_deploy.try(:reference), length: 25), project_deploy_path(project, stage.last_deploy) %></td>
+  <% end %>
+  <td align="right"><%= deploy_link @project, stage %></td>
 </tr>

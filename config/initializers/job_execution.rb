@@ -1,6 +1,6 @@
 JobExecution.setup
 
-unless Rails.env.test?
+if !Rails.env.test? && Job.table_exists?
   JobExecution.enabled = true
 
   Job.pending.each do |job|
@@ -12,7 +12,7 @@ unless Rails.env.test?
     JobExecution.enabled = false
 
     until JobExecution.all.empty?
-      Rails.logger.info("Waiting for jobs: #{JobExecution.all.map {|je| je.job.id}}")
+      puts "Waiting for jobs: #{JobExecution.all.map {|je| je.job.id}}"
       sleep(5)
     end
 
