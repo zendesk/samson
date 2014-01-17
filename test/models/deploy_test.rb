@@ -35,6 +35,18 @@ describe Deploy do
     end
   end
 
+  describe "#short_reference" do
+    it "returns the first seven characters if the reference looks like a SHA" do
+      deploy = Deploy.new(reference: "8e7c20937de160905e8ffb13be72eb483ab4170a")
+      deploy.short_reference.must_equal "8e7c209"
+    end
+
+    it "returns the full reference if it doesn't look like a SHA" do
+      deploy = Deploy.new(reference: "foobarbaz")
+      deploy.short_reference.must_equal "foobarbaz"
+    end
+  end
+
   describe 'deploy locked stage' do
     before do
       stage.create_lock!(user: user)
