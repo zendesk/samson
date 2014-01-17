@@ -18,7 +18,7 @@ class Changeset::PullRequest
   delegate :number, :title, :additions, :deletions, to: :@data
 
   def url
-    "https://github.com/#{repo}/pulls/#{number}"
+    "https://github.com/#{repo}/pull/#{number}"
   end
 
   def users
