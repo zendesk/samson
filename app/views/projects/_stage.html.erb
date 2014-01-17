@@ -1,5 +1,5 @@
 <tr>
-  <td class="stage-td">
+  <td>
     <%= link_to stage.name, project_stage_path(project, stage) %>
     <% if stage.locked? %>
       <span class="label label-warning"><i class="glyphicon glyphicon-lock"></i> Locked</span>
