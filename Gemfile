@@ -10,6 +10,7 @@ gem 'mysql2', '~> 0.3'
 gem 'kaminari'
 gem 'sqlite3'
 gem 'soft_deletion', '~> 0.4'
+gem 'dalli', '~> 2.7.0'
 
 group :production, :staging do
   gem 'rails_12factor'

@@ -21,6 +21,8 @@ module ZendeskPusher
     # config.i18n.default_locale = :de
     #
 
+    config.cache_store = :dalli_store
+
     # Allow streaming
     config.preload_frameworks = true
     config.allow_concurrency = true
