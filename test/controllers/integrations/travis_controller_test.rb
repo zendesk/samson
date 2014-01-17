@@ -1,6 +1,6 @@
-require_relative '../test_helper'
+require_relative '../../test_helper'
 
-describe TravisController do
+describe Integrations::TravisController do
   let(:project) { projects(:test) }
   let(:stage) { stages(:test_staging) }
   let(:deploy_service) { stub(deploy!: nil) }
@@ -68,8 +68,8 @@ describe TravisController do
           branch: 'sdavidovitz/blah'
         }}
 
-        it "renders 400" do
-          response.status.must_equal(400)
+        it "renders ok" do
+          response.status.must_equal(200)
         end
       end
 

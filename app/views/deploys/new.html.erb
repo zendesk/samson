@@ -39,9 +39,8 @@
     </div>
     <div class="form-group">
       <div class="col-lg-offset-2 col-lg-10">
-        <button type="submit" class="btn btn-danger" <%= 'disabled="disabled"' if global_lock? %>>
-          <span class="glyphicon glyphicon-play"></span>
-          Deploy!
+        <button type="submit" class="btn btn-primary" <%= 'disabled="disabled"' if global_lock? %>>
+          Deploy
         </button>
 
         or <%= link_to "cancel", :back %>
