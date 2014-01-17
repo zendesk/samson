@@ -47,6 +47,14 @@ class Stage < ActiveRecord::Base
     deploys.successful.first
   end
 
+  def current_deploy
+    deploys.running.first
+  end
+
+  def currently_deploying?
+    current_deploy.present?
+  end
+
   def send_email_notifications?
     notify_email_address.present?
   end
