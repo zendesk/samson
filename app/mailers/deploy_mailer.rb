@@ -8,6 +8,6 @@ class DeployMailer < ActionMailer::Base
 
     subject =  "[#{Rails.application.config.pusher.email_prefix}] #{deploy.summary_for_email}"
 
-    mail(to: stage.notify_email_address, subject: subject)
+    mail(to: stage.notify_email_addresses, subject: subject)
   end
 end

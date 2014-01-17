@@ -1,6 +1,6 @@
-require 'test_helper'
+require_relative '../test_helper'
 
-class ProjectTest < ActiveSupport::TestCase
+describe Project do
   it "generates a secure token when created" do
     project = Project.create!(name: "hello", repository_url: "world")
     project.token.wont_be_nil
@@ -25,6 +25,27 @@ class ProjectTest < ActiveSupport::TestCase
     it "returns the user/repo part of the repository URL" do
       project = Project.new(repository_url: "git@github.com:foo/bar.git")
       project.github_repo.must_equal "foo/bar"
+    end
+  end
+
+  describe "nested stages attributes" do
+    let(:params) {{
+      name: "Hello",
+      repository_url: "git://foo.com/bar",
+      stages_attributes: {
+        '0' => {
+          name: 'Production',
+          command: 'test command',
+          command_ids: [commands(:echo).id]
+        }
+      }
+    }}
+
+    it 'creates a new project and stage'do
+      project = Project.create!(params)
+      stage = project.stages.where(name: 'Production').first
+      stage.wont_be_nil
+      stage.command.must_equal("echo hello\ntest command")
     end
   end
 end
