@@ -19,7 +19,7 @@ class Changeset
     comparison = github.compare(repo, previous_commit, commit)
 
     new(comparison, repo, previous_commit, commit)
-  rescue Octokit::NotFound
+  rescue Octokit::NotFound, Octokit::InternalServerError
     new(NullComparison, repo, previous_commit, commit)
   end
 
