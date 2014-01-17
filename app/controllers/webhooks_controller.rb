@@ -1,4 +1,5 @@
 class WebhooksController < ApplicationController
+  before_filter :authorize_deployer!
   before_filter :find_project
 
   def index

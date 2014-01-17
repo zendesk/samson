@@ -4,7 +4,7 @@ class DeploysController < ApplicationController
     redirect_to root_path
   end
 
-  before_filter :authorize_deployer!, only: [:create, :update, :destroy]
+  before_filter :authorize_deployer!, only: [:new, :create, :update, :destroy]
   before_filter :find_project, except: [:recent, :active]
   before_filter :find_deploy, except: [:index, :recent, :active, :new, :create]
 

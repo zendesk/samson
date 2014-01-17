@@ -225,7 +225,13 @@ describe ProjectsController do
     end
 
     as_a_viewer do
-      unauthorized :get, :show, id: 1
+      setup do
+        get :show, :id => project.id
+      end
+
+      it "redirects to the deploys page" do
+        assert_redirected_to project_deploys_path(project)
+      end
     end
   end
 end
