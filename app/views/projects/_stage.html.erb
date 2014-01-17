@@ -12,5 +12,5 @@
     <td><%= stage.last_deploy.user.name %></td>
     <td><%= link_to truncate(stage.last_deploy.try(:reference), length: 25), project_deploy_path(project, stage.last_deploy) %></td>
   <% end %>
-  <td><%= deploy_link @project, stage %></td>
+  <td align="right"><%= deploy_link @project, stage %></td>
 </tr>
