@@ -1,6 +1,6 @@
 class ProjectsController < ApplicationController
   before_filter :authorize_admin!, except: [:show, :index]
-  before_filter :authorize_deployer!, only: [:show]
+  before_filter :redirect_viewers!, only: [:show]
 
   helper_method :project
 
@@ -82,5 +82,11 @@ class ProjectsController < ApplicationController
 
   def project
     @project ||= Project.find(params[:id])
+  end
+
+  def redirect_viewers!
+    unless current_user.is_deployer?
+      redirect_to project_deploys_path(project)
+    end
   end
 end

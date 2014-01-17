@@ -1,7 +1,9 @@
 <h1><%= @project.name %></h1>
 
-<%= render partial: "shared/project_tabs",
-           locals: { project: @project, active: "deploys" } %>
+<% if current_user.is_deployer? %>
+  <%= render partial: "shared/project_tabs",
+    locals: { project: @project, active: "deploys" } %>
+<% end %>
 
 <table class="table table-striped">
   <thead>
