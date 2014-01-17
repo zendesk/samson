@@ -1,6 +1,6 @@
 JobExecution.setup
 
-unless Rails.env.test?
+if !Rails.env.test? && Job.table_exists?
   JobExecution.enabled = true
 
   Job.pending.each do |job|
