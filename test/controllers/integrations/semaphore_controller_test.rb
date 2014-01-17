@@ -1,6 +1,6 @@
-require 'test_helper'
+require_relative '../../test_helper'
 
-describe SemaphoreController do
+describe Integrations::SemaphoreController do
   let(:commit) { "dc395381e650f3bac18457909880829fc20e34ba" }
   let(:project) { projects(:test) }
 
