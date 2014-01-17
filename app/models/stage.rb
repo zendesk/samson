@@ -55,6 +55,10 @@ class Stage < ActiveRecord::Base
     current_deploy.present?
   end
 
+  def notify_email_addresses
+    notify_email_address.split(";").map(&:strip)
+  end
+
   def send_email_notifications?
     notify_email_address.present?
   end

@@ -63,6 +63,13 @@ describe Stage do
     end
   end
 
+  describe "#notify_email_addresses" do
+    it "returns email addresses separated by a semicolon" do
+      stage = Stage.new(notify_email_address: "a@foo.com; b@foo.com")
+      stage.notify_email_addresses.must_equal ["a@foo.com", "b@foo.com"]
+    end
+  end
+
   describe '#all_commands' do
     describe 'with commands' do
       before do
