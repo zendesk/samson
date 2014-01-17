@@ -26,3 +26,12 @@ pre.pre-inline {
   display: inline-block;
   white-space: pre;
 }
+
+.recent-deploys .label {
+  font-size: 90%;
+  font-weight: normal;
+}
+
+.project-stages > tbody > tr > td {
+  line-height: 37px;
+}
