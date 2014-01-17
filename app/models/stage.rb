@@ -17,6 +17,9 @@ class Stage < ActiveRecord::Base
 
   accepts_nested_attributes_for :flowdock_flows, allow_destroy: true, reject_if: :no_flowdock_token?
 
+  attr_writer :command
+  before_save :build_new_project_command
+
   def self.reorder(new_order)
     transaction do
       new_order.each.with_index { |stage_id, index| Stage.update stage_id.to_i, order: index }
@@ -71,15 +74,6 @@ class Stage < ActiveRecord::Base
     commands.map(&:command).join("\n")
   end
 
-  def command=(command)
-    return unless command.present?
-
-    new_command = project.commands.build(command: command)
-    stage_commands.build(command: new_command).tap do
-      reorder_commands
-    end
-  end
-
   def command_ids=(new_command_ids)
     super.tap do
       reorder_commands(new_command_ids.reject(&:blank?).map(&:to_i))
@@ -97,6 +91,15 @@ class Stage < ActiveRecord::Base
   end
 
   private
+
+  def build_new_project_command
+    return unless @command.present?
+
+    new_command = project.commands.build(command: @command)
+    stage_commands.build(command: new_command).tap do
+      reorder_commands
+    end
+  end
 
   def reorder_commands(command_ids = self.command_ids)
     stage_commands.each do |stage_command|
