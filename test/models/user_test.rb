@@ -85,15 +85,15 @@ describe User do
 
   describe "#admin?" do
     it "is true for an admin" do
-      users(:admin).is_admin?.must_equal(true)
+      users(:admin).must_be(:is_admin?)
     end
 
     it "is false for a deployer" do
-      users(:deployer).is_admin?.wont_equal(true)
+      users(:deployer).wont_be(:is_admin?)
     end
 
     it "is false for an viewer" do
-      User.new.is_admin?.wont_equal(true)
+      User.new.wont_be(:is_admin?)
     end
   end
 

@@ -3,7 +3,7 @@
 }
 
 .stage-bar {
-  background: #F8F8F8 10px center url(/assets/grabber.png) no-repeat;
+  background: #F8F8F8 10px center image-url('grabber.png') no-repeat;
   background-size: 10px;
   border-radius: 3px;
   margin-bottom: 5px;
@@ -18,4 +18,27 @@
 
 .messages {
   display: none;
+}
+
+#commands {
+  .pre-command {
+    margin: 5px 0 5px 0;
+    width: 100%;
+  }
+
+  .command-checkbox {
+    input {
+      margin-top: 18px;
+    }
+
+    width: 10px;
+    padding-left: 5px;
+
+    margin-right: 0;
+  }
+
+  .row {
+    padding: 0;
+    margin: 0 0 5px 0;
+  }
 }

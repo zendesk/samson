@@ -16,7 +16,7 @@ class ProjectsController < ApplicationController
   def new
     @project = Project.new
 
-    stage = @project.stages.build(name: "production")
+    stage = @project.stages.build(name: "Production")
     stage.flowdock_flows.build
   end
 
@@ -65,10 +65,6 @@ class ProjectsController < ApplicationController
     head :ok
   end
 
-  def deploys
-    @deploys = project.deploys.page(params[:page])
-  end
-
   protected
 
   def project_params
@@ -76,7 +72,7 @@ class ProjectsController < ApplicationController
       :name,
       :repository_url,
       stages_attributes: [
-        :name,
+        :name, :command,
         :notify_email_address,
         :command_ids => [],
         flowdock_flows_attributes: [:name, :token]

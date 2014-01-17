@@ -13,32 +13,32 @@
     </div>
   </div>
 </fieldset>
+
 <fieldset>
   <legend>Commands</legend>
   <p>Select the commands you want to run when executing this stage.</p>
 
   <div id="commands">
     <%= form.collection_check_boxes(:command_ids, form.object.all_commands, :id, :command) do |b| %>
-      <div class="row">
-        <div data-id="<%= b.value %>" class="col-lg-2">
-          <span class="checkbox">
-            <%= b.check_box %>
-          </span>
+      <div class="row stage-bar bar">
+        <div data-id="<%= b.value %>" class="col-lg-offset-2 col-lg-2 command-checkbox">
+          <%= b.check_box %>
         </div>
-        <div class="col-lg-4">
-          <pre class="pre-inline"><%= b.text %></pre>
+        <div class="col-lg-8">
+          <pre class="pre-command pre-inline"><%= b.text %></pre>
         </div>
       </div>
     <% end %>
 
     <hr />
 
+    <p>Add a command which is specific to your project</p>
     <%= form.text_area :command, class: "form-control", rows: 4, value: nil, placeholder: 'cap production deploy' %>
   </div>
 </fieldset>
 
 <fieldset>
-  <legend>Flowdock flows</legend>
+  <legend>Flowdock</legend>
   <p>Add the name and API token of the Flowdock flow which should be notified of deploys.</p>
 
   <%= form.fields_for :flowdock_flows do |flow_fields| %>
@@ -63,6 +63,6 @@
 
 <%= javascript_tag do %>
   $(document).ready(function() {
-    $('#commands').sortable({ items: '.checkbox' });
+    $('#commands').sortable();
   });
 <% end %>
