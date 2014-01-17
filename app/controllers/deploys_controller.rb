@@ -38,7 +38,12 @@ class DeploysController < ApplicationController
   end
 
   def show
+  end
+
+  def changeset
     @changeset = Changeset.find(@project.github_repo, @deploy.previous_commit, @deploy.commit)
+
+    render 'changeset', layout: false
   end
 
   def destroy

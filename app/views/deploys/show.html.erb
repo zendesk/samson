@@ -7,7 +7,7 @@
 
 <%= deploy_status_panel @deploy %>
 
-<ul id="deploy-tabs" class="nav nav-tabs">
+<ul id="deploy-tabs" class="nav nav-tabs" data-changeset-url="<%= changeset_project_deploy_url(@project, @deploy) %>">
   <li class="active"><a href="#output" data-toggle="tab">Output</a></li>
   <li><a href="#files" data-toggle="tab">Files</a></li>
   <li><a href="#commits" data-toggle="tab">Commits</a></li>
@@ -20,7 +20,11 @@
     <%= render 'deploys/output', deploy: @deploy %>
   </div>
 
-  <%= render 'deploys/changeset_panes' %>
+  <% %w(files commits pulls risks).each do |pane| %>
+    <div class="tab-pane changeset-placeholder" id="<%= pane %>">
+      <p>Loading...</p>
+    </div>
+  <% end %>
 </div>
 
 <% if @deploy.active? %>
