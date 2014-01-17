@@ -20,6 +20,10 @@ class User < ActiveRecord::Base
     user.tap(&:save)
   end
 
+  def name
+    super.presence || email
+  end
+
   Role.all.each do |role|
     define_method "is_#{role.name}?" do
       role_id >= role.id

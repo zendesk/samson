@@ -1,6 +1,32 @@
 require_relative '../test_helper'
 
 describe User do
+
+  describe "#name" do
+    let(:user) { User.new(name: name, email: 'test@test.com') }
+
+    describe 'nil name' do
+      let(:name) { nil }
+      it 'falls back to the email' do
+        user.name.must_equal('test@test.com')
+      end
+    end
+
+    describe 'blank name' do
+      let(:name) { '' }
+      it 'falls back to the email' do
+        user.name.must_equal('test@test.com')
+      end
+    end
+
+    describe 'real name' do
+      let(:name) { 'Hello' }
+      it 'uses the name' do
+        user.name.must_equal(name)
+      end
+    end
+  end
+
   describe ".create_or_update_from_hash" do
     let(:user) { User.create_or_update_from_hash(hash) }
 
