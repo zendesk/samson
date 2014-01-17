@@ -30,6 +30,9 @@ module ZendeskPusher
     # Used for all Pusher specific configuration.
     config.pusher = ActiveSupport::OrderedOptions.new
 
+    # Email prefix e.g. [PREFIX] Someone deployed PROJECT to STAGE (REF)
+    config.pusher.email_prefix = "ZD DEPLOY"
+
     # Whether or not jobs are actually executed.
     config.pusher.enable_job_execution = true
 
