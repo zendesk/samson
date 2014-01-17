@@ -3,7 +3,7 @@
     <h2><%= project.name %></h2>
     <ul>
       <% project.stages.each do |stage| %>
-        <li><%= stage.name %>  <span class="pull-right"><%= stage.deploys.last.commit[0...10] %></span></li>
+        <li><%= stage.name %>  <span class="pull-right"><%= stage.deploys.last.commit[0...10] if stage.deploys.last.commit %></span></li>
       <% end %>
     </ul>
   </div>
