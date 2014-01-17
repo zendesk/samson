@@ -4,6 +4,7 @@ class DeployMailer < ActionMailer::Base
   def deploy_email(stage, deploy)
     @project = stage.project
     @deploy = deploy
+    @changeset = Changeset.find(@project.github_repo, @deploy.previous_commit, @deploy.commit)
 
     subject =  "[#{Rails.application.config.pusher.email_prefix}] #{deploy.summary_for_email}"
 

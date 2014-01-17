@@ -2,13 +2,9 @@
 
 Deploy details: <%= project_deploy_url(@project, @deploy) %>
 
-<%
-  changeset = Changeset.find(@project.github_repo, @deploy.previous_commit, @deploy.commit)
-%>
-
 Pull Requests:
-<% if changeset.pull_requests.any? %>
-  <% changeset.pull_requests.each do |pr| %>
+<% if @changeset.pull_requests.any? %>
+  <% @changeset.pull_requests.each do |pr| %>
     #<%= pr.number %> <%= pr.title %> <%= pr.url %>
     Risks:
     <% unless pr.risks %>
@@ -20,5 +16,5 @@ Pull Requests:
   <% end %>
 <% end %>
 
-Commit Range: <%= changeset.commit_range %>
-<%= changeset.github_url %>
+Commit Range: <%= @changeset.commit_range %>
+<%= @changeset.github_url %>
