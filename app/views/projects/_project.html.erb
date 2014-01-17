@@ -1,24 +1,10 @@
-<div class="col-6 col-sm-4 col-lg-4">
-  <div class="panel panel-default">
-    <div class="panel-heading text-center">
-    <%= link_to project.name, project_path(project) %>
-      <% if current_user.is_deployer? %>
-        <%= link_to "Deploy", new_project_deploy_path(project), class: "btn btn-danger pull-right btn-xs"%>
+<div class="col-sm-4">
+  <div class="project-tile" data-href="<%= project_path(project) %>">
+    <h2><%= project.name %></h2>
+    <ul>
+      <% project.stages.each do |stage| %>
+        <li><%= stage.name %>  <span class="pull-right"><%= stage.deploys.last.commit[0...10] %></span></li>
       <% end %>
-    </div>
-
-    <div class="panel-body">
-      <%- latest_deploys = project.deploys.limit(5) %>
-      <% if latest_deploys.any? %>
-        <p>Last <%= latest_deploys.count > 1 ? "#{latest_deploys.count} deploys" : 'deploy' %>:</p>
-        <ul class="job-history">
-          <% latest_deploys.each do |deploy| %>
-            <li class="<%= job_state_class(deploy) %>">
-              <%= link_to deploy.summary, project_deploy_path(project, deploy) %>
-            </li>
-          <% end %>
-        </ul>
-      <% end %>
-    </div>
+    </ul>
   </div>
 </div>

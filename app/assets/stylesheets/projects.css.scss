@@ -1,6 +1,29 @@
-// Place all the styles related to the projects controller here.
-// They will automatically be included in application.css.
-// You can use Sass (SCSS) here: http://sass-lang.com/
+.project-tile {
+  background: #333;
+  min-height: 200px;
+  padding: 15px;
+
+  &:hover {
+    text-decoration: none;
+  }
+
+  h2 {
+    color: #FFF;
+    margin: 0;
+    padding-bottom: 15px;
+    font-size: 18px;
+  }
+
+  ul {
+    padding-left: 0;
+  }
+
+  li {
+    list-style: none;
+    margin: 0;
+    color: #FFF;
+  }
+}
 
 .job-history {
   padding-left: 15px;
