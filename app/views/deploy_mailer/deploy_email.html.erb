@@ -1,3 +1,17 @@
-<%= @deploy.summary %>
+<h1>
+  <%= @deploy.user.name %> has just tried to deploy <%= @project.name %> to <%= @deploy.stage.name %> <%= @deploy.reference %>
+</h1>
 
-<%= project_deploy_url(@project, @deploy) %>
+<p>
+  The deploy <%= @deploy.status %>, and detailed log can be viewed at <%= link_to 'here', project_deploy_url(@project, @deploy) %>
+</p>
+
+<%
+  changeset = Changeset.find(@project.github_repo, @deploy.previous_commit, @deploy.commit)
+%>
+
+<h3>Risk</h3>
+<%= render '/deploys/risks', pull_requests: changeset.pull_requests.select(&:risky?) %>
+
+<h3>Commits</h3>
+<%= render 'deploys/commits', changeset: changeset %>

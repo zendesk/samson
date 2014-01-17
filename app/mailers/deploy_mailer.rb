@@ -5,6 +5,6 @@ class DeployMailer < ActionMailer::Base
     @project = stage.project
     @deploy = deploy
 
-    mail(to: stage.notify_email_address, subject: "[ZD DEPLOY] deploy.summary_for_email")
+    mail(to: stage.notify_email_address, subject: "[ZD DEPLOY] #{deploy.summary_for_email}")
   end
 end
