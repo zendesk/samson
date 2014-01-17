@@ -25,9 +25,17 @@ class DeploysController < ApplicationController
   end
 
   def create
-    deploy! @project.stages.find(deploy_params[:stage_id]), deploy_params[:reference]
+    stage = @project.stages.find(deploy_params[:stage_id])
+    reference = deploy_params[:reference]
 
-    post_deploy
+    deploy_service = DeployService.new(@project, current_user)
+    @deploy = deploy_service.deploy!(stage, reference)
+
+    if @deploy.persisted?
+      redirect_to project_deploy_path(@project, @deploy)
+    else
+      render :new
+    end
   end
 
   def show
@@ -45,19 +53,6 @@ class DeploysController < ApplicationController
   end
 
   protected
-
-  def post_deploy
-    if @deploy.persisted?
-      redirect_to project_deploy_path(@project, @deploy)
-    else
-      render :new
-    end
-  end
-
-  def deploy!(stage, reference)
-    deploy_service = DeployService.new(@project, current_user)
-    @deploy = deploy_service.deploy!(stage, reference)
-  end
 
   def deploy_params
     params.require(:deploy).permit(:reference, :stage_id)
