@@ -1,7 +1,5 @@
-<h1>Projects</h1>
-
-<% @projects.each_slice(3) do |projects| %>
-  <div class="row">
+<div class="row dashboard">
+<% @projects.each do |projects| %>
     <%= render projects %>
-  </div>
 <% end %>
+</div>
