@@ -30,7 +30,7 @@ $(function () {
       }
   });
 
-  $('.file-summary').click(function (e) {
+  $('.file-summary').on("click", function (e) {
     var row = $(this);
     var patch = row.next();
 
