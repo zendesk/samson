@@ -22,18 +22,24 @@ include projects::pusher
 
 #### Config:
 
+1. We need to add a database configuration yaml file with your credentials. 2. set up an authentication method in `.env` - at least one of Zendesk (`CLIENT_SECRET`)and GitHub (`GITHUB_TOKEN`).
+
+
 ```bash
+cp config/database.<MS_ACCESS>.yml.example config/database.yml # replace <MS_ACCESS> by your favourite database from mysql, postgres or sqlite
+subl config/database.yml # put your credentials in
 script/bootstrap
 
-# fill in .env with a couple variables
-# GITHUB_CLIENT_ID and GITHUB_CLIENT_SECRET are mandatory for production
+# [OPTIONAL] fill in .env with a couple variables
+# GITHUB_CLIENT_ID and GITHUB_CLIENT_SECRET are mandatory for GitHub auth
 # and can be obtained by creating a new Github Application
 # See: https://github.com/settings/applications
 # https://developer.github.com/v3/oauth/
 #
-# You also need to fill in your personal GitHub token. You can generate a new
+# You also can fill in your personal GitHub token. You can generate a new
 # at https://github.com/settings/applications - it gets assigned to GITHUB_TOKEN.
-# You can currently auth through your Zendesk, in that case your Zendesk token gets set to CLIENT_SECRET. Make one at https://<YOU>.zendesk.com/agent/#/admin/api -> OAuth clients. Set the UID to 'deployment' and the redirect URL to http://localhost:9080/auth/zendesk/callback
+# You can currently auth through your Zendesk, in that case set your Zendesk token to CLIENT_SECRET in .env.
+# Make one at https://<YOU>.zendesk.com/agent/#/admin/api -> OAuth clients. Set the UID to 'deployment' and the redirect URL to http://localhost:9080/auth/zendesk/callback
 ```
 
 #### To run:

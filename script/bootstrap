@@ -6,6 +6,8 @@ bundle install --local
 
 cp .env.example .env
 
-ln -vs database.mysql.yml.example config/database.yml || true
+cp database.mysql.yml.example config/database.yml || true
 
 bundle exec rake db:setup
+
+echo '[\033[32mNOTE\033[0m] To use GitHub, you have to configure \033[32mpusher/.env\033[0m'
