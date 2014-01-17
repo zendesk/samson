@@ -15,7 +15,9 @@ module ApplicationHelper
 
   def deploy_link(project, stage)
     if stage.currently_deploying?
-      content_tag :a, "Deploying #{stage.current_deploy.reference}...", class: "btn btn-primary disabled", disabled: true
+      content_tag :a, class: "btn btn-primary disabled", disabled: true do
+        "Deploying #{stage.current_deploy.reference}..."
+      end
     else
       path = new_project_deploy_path(project, stage_id: stage.id)
 
