@@ -1,4 +1,8 @@
-<h1><%= @project.name %></h1>
+<ol class="breadcrumb">
+  <li><%= link_to "Home", root_path %></li>
+  <li><%= link_to @project.name, project_path(@project) %></li>
+  <li class="active"><%= @stage.name %></li>
+</ol>
 
 <h2>Edit stage</h2>
 
