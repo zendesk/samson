@@ -1,12 +1,12 @@
-require_relative '../test_helper'
+require_relative '../../test_helper'
 
-describe TddiumController do
+describe Integrations::TddiumController do
   let(:commit) { "dc395381e650f3bac18457909880829fc20e34ba" }
   let(:project) { projects(:test) }
 
   let(:payload) do
     {
-      "event" => "test",
+      "event" => "stop",
       "session" => 351279,
       "commit_id" => commit,
       "status" => "passed",
@@ -24,7 +24,7 @@ describe TddiumController do
       "ref" => "refs/head/production",
       "repository" => {
         "name" => "repo_name",
-        "url" => project.repository_url,
+        "url" => "git://project/repo",
         "org_name" => "organization_name"
       },
       "xid" => "372da4f69"

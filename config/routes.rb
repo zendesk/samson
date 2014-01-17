@@ -47,7 +47,7 @@ ZendeskPusher::Application.routes.draw do
     resource :lock, only: [:create, :destroy]
   end
 
-  scope :integrations do
+  namespace :integrations do
     post "/travis/:token" => "travis#create", as: :travis_deploy
     post "/semaphore/:token" => "semaphore#create", as: :semaphore_deploy
     post "/tddium/:token" => "tddium#create", as: :tddium_deploy

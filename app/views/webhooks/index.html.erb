@@ -7,9 +7,9 @@
 and paste in the project's webhook URL to your CI service of choice.</p>
 
 <dl>
-  <dt>Semaphore:</dt><dd><%= link_to semaphore_deploy_url(@project.token) %></dd>
-  <dt>Tddium:</dt><dd><%= link_to tddium_deploy_url(@project.token) %></dd>
-  <dt>Travis:</dt><dd><%= link_to travis_deploy_url(@project.token) %></dd>
+  <dt>Semaphore:</dt><dd><%= link_to integrations_semaphore_deploy_url(@project.token) %></dd>
+  <dt>Tddium:</dt><dd><%= link_to integrations_tddium_deploy_url(@project.token) %></dd>
+  <dt>Travis:</dt><dd><%= link_to integrations_travis_deploy_url(@project.token) %></dd>
 </dl>
 
 <% if @webhooks.any? %>
