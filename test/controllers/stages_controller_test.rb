@@ -93,7 +93,7 @@ describe StagesController do
         it 'is created' do
           subject.persisted?.must_equal(true)
           subject.command_ids.must_include(commands(:echo).id)
-          subject.command.must_equal(commands(:echo).command + "\ntest command\ntest2 command")
+          subject.command.must_equal(commands(:echo).command + "\ntest2 command\ntest command")
         end
 
         it 'redirects' do
