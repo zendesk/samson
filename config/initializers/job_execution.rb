@@ -10,7 +10,11 @@ unless Rails.env.test?
   Signal.trap('SIGUSR1') do
     # Disable new job execution
     JobExecution.enabled = false
-    sleep(5) until JobExecution.all.empty?
+
+    until JobExecution.all.empty?
+      Rails.logger.info("Waiting for jobs: #{JobExecution.all.map {|je| je.job.id}}")
+      sleep(5)
+    end
 
     # Pass USR2 to the underlying server
     Process.kill('SIGUSR2', $$)
