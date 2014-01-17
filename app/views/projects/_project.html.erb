@@ -8,7 +8,7 @@
           <%= content_tag :span, "Deploying", class: "label label-primary" if stage.currently_deploying? %>
           <%= content_tag :span, "Locked", class: "label label-warning" if stage.locked? %>
 
-          <%= link_to stage.last_deploy.reference[0...10].titleize,
+          <%= link_to stage.last_deploy.short_reference,
                       project_deploy_path(project, stage.last_deploy),
                       class: "status pull-right label #{deploy_status_for_label(stage.last_deploy.status)}" if stage.last_deploy %>
           </a>

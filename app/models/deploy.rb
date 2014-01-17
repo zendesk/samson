@@ -13,11 +13,19 @@ class Deploy < ActiveRecord::Base
   delegate :project, to: :stage
 
   def summary
-    "#{job.user.name} #{summary_action} #{reference} to #{stage.name}"
+    "#{job.user.name} #{summary_action} #{short_reference} to #{stage.name}"
   end
 
   def commit
     job.try(:commit).presence || reference
+  end
+
+  def short_reference
+    if reference =~ /\A[0-9a-f]{40}\Z/
+      reference[0...7]
+    else
+      reference
+    end
   end
 
   def previous_deploy
