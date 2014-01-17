@@ -2,21 +2,17 @@ require 'test_helper'
 
 describe Admin::UsersController do
   describe 'a GET to #show' do
-    as_a_admin do
-      setup do
-        get :show
-      end
+    before do
+      get :show
+    end
 
+    as_a_admin do
       it 'succeeds' do
         assert_template :show
       end
     end
 
     as_a_deployer do
-      setup do
-        get :show
-      end
-
       it 'redirects to home page' do
         assert_redirected_to root_path
       end
@@ -27,11 +23,11 @@ describe Admin::UsersController do
 
     let(:user) { users(:viewer) }
 
-    as_a_admin do
-      setup do
-        delete :destroy, id: user.id
-      end
+    before do
+      delete :destroy, id: user.id
+    end
 
+    as_a_admin do
       it 'soft delete the user' do
         user.reload.deleted_at.wont_be_nil
       end
@@ -42,10 +38,6 @@ describe Admin::UsersController do
     end
 
     as_a_deployer do
-      setup do
-        delete :destroy, id: user.id
-      end
-
       it 'redirects to home page' do
         assert_redirected_to root_path
       end
