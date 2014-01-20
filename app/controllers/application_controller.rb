@@ -23,6 +23,8 @@ class ApplicationController < ActionController::Base
 
   def unauthorized!
     flash[:error] = "You are not authorized to view this page."
+    redirect_to :back
+  rescue ActionController::RedirectBackError
     redirect_to root_path
   end
 end
