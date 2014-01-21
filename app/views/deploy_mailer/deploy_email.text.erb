@@ -2,18 +2,15 @@
 
 Deploy details: <%= project_deploy_url(@project, @deploy) %>
 
-Pull Requests:
-<% if @changeset.pull_requests.any? %>
-  <% @changeset.pull_requests.each do |pr| %>
+Risks:
+<% if (risks = @changeset.pull_requests.select(&:risky?)) && risks.any? %>
+  <% risks.each do |pr| %>
     #<%= pr.number %> <%= pr.title %> <%= pr.url %>
-    Risks:
-    <% unless pr.risks %>
-      None
-    <% else %>
-      pr.risks
-    <% end %>
+      <%= pr.risks %>
 
   <% end %>
+<% else %>
+  None
 <% end %>
 
 Commit Range: <%= @changeset.commit_range %>

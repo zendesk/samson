@@ -1,6 +1,9 @@
 class DeployMailer < ActionMailer::Base
   default from: "deploys@zendesk.com"
 
+  add_template_helper(DeploysHelper)
+  add_template_helper(ApplicationHelper)
+
   def deploy_email(stage, deploy)
     @project = stage.project
     @deploy = deploy
