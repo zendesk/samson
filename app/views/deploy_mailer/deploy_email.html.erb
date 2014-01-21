@@ -1,0 +1,11 @@
+<h1>
+  <%= @deploy.summary_for_email %>
+</h1>
+
+<p>The detailed log can be viewed at <%= link_to 'here', project_deploy_url(@project, @deploy) %></p>
+
+<h3>Risk</h3>
+<%= render 'deploys/risks', pull_requests: @changeset.pull_requests.select(&:risky?) %>
+
+<h3>Commits</h3>
+<%= render 'deploys/commits', changeset: @changeset %>
