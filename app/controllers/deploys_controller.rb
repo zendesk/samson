@@ -54,7 +54,7 @@ class DeploysController < ApplicationController
 
   def changeset
     if stale?(etag: @deploy.cache_key, last_modified: @deploy.updated_at)
-      @changeset = Changeset.find(project.github_repo, previous_commit, commit)
+      @changeset = Changeset.find(@deploy.project.github_repo, @deploy.previous_commit, @deploy.commit)
       render 'changeset', layout: false
     end
   end
