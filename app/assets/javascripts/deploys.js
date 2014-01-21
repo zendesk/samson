@@ -54,4 +54,8 @@ $(function () {
       ttl: 30000 // 30 seconds
     }
   });
+
+  // The typeahead plugin removes the focus from the input - restore it
+  // after initialization.
+  $("#deploy_reference").focus();
 });
