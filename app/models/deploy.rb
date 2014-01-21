@@ -12,12 +12,6 @@ class Deploy < ActiveRecord::Base
   delegate :finished?, :errored?, :failed?, to: :job
   delegate :project, to: :stage
 
-  def changeset
-    Rails.cache.fetch(cache_key) do
-      Changeset.find(project.github_repo, previous_commit, commit)
-    end
-  end
-
   def cache_key
     [self, commit]
   end

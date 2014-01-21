@@ -1,5 +1,3 @@
-require 'octokit'
-
 class CommitStatus
   cattr_accessor(:token) { ENV['GITHUB_TOKEN'] }
 

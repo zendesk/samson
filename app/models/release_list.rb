@@ -1,5 +1,3 @@
-require 'octokit'
-
 class ReleaseList
   def self.latest_releases_for(repo)
     github = Octokit::Client.new(access_token: ENV['GITHUB_TOKEN'])

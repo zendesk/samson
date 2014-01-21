@@ -1,5 +1,3 @@
-require 'octokit'
-
 class GithubAuthorization
   def initialize(login, token)
     @login = login
