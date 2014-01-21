@@ -25,8 +25,9 @@ class DeploysController < ApplicationController
   end
 
   def create
-    reference = deploy_params[:reference]
     stage = @project.stages.find(deploy_params[:stage_id])
+    reference = deploy_params[:reference]
+
     deploy_service = DeployService.new(@project, current_user)
     @deploy = deploy_service.deploy!(stage, reference)
 

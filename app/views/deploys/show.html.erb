@@ -5,6 +5,16 @@
   <li class="active">Deploy #<%= @deploy.id %></li>
 </ol>
 
+<h1>
+  <%= @project.name %>
+  <div class="pull-right">
+    <% unless @deploy.succeeded? || @deploy.running? %>
+      <%= link_to "Redeploy", project_deploys_path(@project, deploy: { reference: @deploy.reference, stage_id: @deploy.stage_id }), method: :post, class: "btn btn-danger" %>
+    <% end %>
+    <%= link_to "Back", project_path(@project), class: "btn btn-default" %>
+  </div>
+</h1>
+
 <%= deploy_status_panel @deploy %>
 
 <ul id="deploy-tabs" class="nav nav-tabs" data-changeset-url="<%= changeset_project_deploy_url(@project, @deploy) %>">
