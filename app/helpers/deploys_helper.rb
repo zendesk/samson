@@ -1,3 +1,5 @@
+require 'coderay'
+
 module DeploysHelper
   def file_status_label(status)
     mapping = {
@@ -41,5 +43,9 @@ module DeploysHelper
     end
 
     content_tag :div, content, class: "alert alert-#{status}"
+  end
+
+  def syntax_highlight(code, language = :ruby)
+    CodeRay.scan(code, language).html.html_safe
   end
 end

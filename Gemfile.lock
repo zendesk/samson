@@ -235,6 +235,7 @@ DEPENDENCIES
   binding_of_caller
   bootstrap-sass!
   bourne
+  coderay (~> 1.1.0)
   dalli (~> 2.7.0)
   dotenv-rails (~> 0.9.0)
   flowdock (~> 0.3.1)
