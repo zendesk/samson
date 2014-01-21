@@ -10,7 +10,7 @@
   </div>
 <% end %>
 
-<%= form_for [@project, @deploy], html: { class: "form-horizontal" } do |form| %>
+<%= form_for [@project, @deploy], html: { class: "form-horizontal" }, data: { 'commit-status-url' => project_commit_statuses_path(@project), 'confirm-url' => confirm_project_deploys_path(@project) } do |form| %>
   <fieldset>
     <% if @deploy.errors.any? %>
       <div class="row">
@@ -34,51 +34,41 @@
     <div class="form-group">
       <%= form.label :stage_id, "Stage", class: "col-lg-2 control-label" %>
       <div class="col-lg-4">
-        <%= form.collection_select :stage_id, @project.stages.unlocked, :id, :name, {}, class: "form-control" %>
+        <%= form.select :stage_id, stages_select_options, {}, class: "form-control" %>
       </div>
     </div>
-    <div class="form-group">
+    <div class="form-group" id="new-deploy-buttons">
       <div class="col-lg-offset-2 col-lg-10">
         <button type="submit" class="btn btn-primary" <%= 'disabled="disabled"' if global_lock? %>>
-          Deploy
+          <span id="deploy-button-text">Deploy!</span>
+          <span style="display: none;" id="confirm-button-text">Confirm!</span>
         </button>
 
-        or <%= link_to "cancel", :back %>
+        or <%= link_to "cancel", '#', data: { url: project_path(@project) }, id: 'new-deploy-cancel' %>
+      </div>
+    </div>
+
+    <div id="deploy-confirmation" class="hide">
+      <ul class="nav nav-tabs">
+        <li><a href="#files" data-toggle="tab">Files</a></li>
+        <li><a href="#commits" data-toggle="tab">Commits</a></li>
+        <li><a href="#pulls" data-toggle="tab">Pull Requests</a></li>
+        <li><a href="#risks" data-toggle="tab">Risks</a></li>
+      </ul>
+
+      <div class="tab-content deploy-details">
+        <% %w(files commits pulls risks).each_with_index do |pane, i| %>
+          <div class="tab-pane changeset-placeholder" id="<%= pane %>">
+            <p>Loading...</p>
+          </div>
+        <% end %>
       </div>
     </div>
   </fieldset>
 <% end %>
 
 <%= javascript_tag do %>
-  var timeout = null;
-  var form_group = $('#deploy_reference').parent();
+  $(document).ready(function() {
 
-  function check_status(sha) {
-    $.ajax({
-      url: "<%= project_path(@project) %>/commit_statuses/" + sha,
-      success: function(data, status, xhr) {
-        if(data.status == 'pending') {
-          form_group.addClass('has-warning');
-        } else if(data.status == 'success') {
-          form_group.addClass('has-success');
-        } else if(data.status == 'failure' || data.status == 'error') {
-          form_group.addClass('has-error');
-        }
-      }
-    });
-  }
-
-  $('#deploy_reference').keyup(function() {
-    form_group.removeClass('has-success has-warning has-error');
-
-    var sha = $(this).val();
-
-    if(timeout) {
-      clearTimeout(timeout);
-    }
-
-    if(sha != '') {
-      timeout = setTimeout(function() { check_status(sha); }, 200);
-    }
   });
 <% end %>

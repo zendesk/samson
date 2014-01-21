@@ -81,7 +81,7 @@ class StagesController < ApplicationController
 
   def stage_params
     params.require(:stage).permit(
-      :name, :command,
+      :name, :command, :confirm,
       :notify_email_address,
       command_ids: [],
       flowdock_flows_attributes: [:id, :name, :token, :_destroy]

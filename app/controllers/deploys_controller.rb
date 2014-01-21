@@ -4,9 +4,9 @@ class DeploysController < ApplicationController
     redirect_to root_path
   end
 
-  before_filter :authorize_deployer!, only: [:new, :create, :update, :destroy]
+  before_filter :authorize_deployer!, only: [:new, :create, :confirm, :update, :destroy]
   before_filter :find_project, except: [:recent, :active]
-  before_filter :find_deploy, except: [:index, :recent, :active, :new, :create]
+  before_filter :find_deploy, except: [:index, :recent, :active, :new, :create, :confirm]
 
   def index
     @deploys = @project.deploys.page(params[:page])
@@ -38,11 +38,25 @@ class DeploysController < ApplicationController
     end
   end
 
+  def confirm
+    reference = deploy_params[:reference]
+
+    stage = @project.stages.find(deploy_params[:stage_id])
+    previous_commit = stage.last_deploy.try(:commit)
+
+    @changeset = Changeset.find(@project.github_repo, previous_commit, reference)
+
+    render 'changeset', layout: false
+  end
+
   def show
   end
 
   def changeset
-    render 'changeset', layout: false
+    if stale?(etag: @deploy.cache_key, last_modified: @deploy.updated_at)
+      @changeset = Changeset.find(project.github_repo, previous_commit, commit)
+      render 'changeset', layout: false
+    end
   end
 
   def destroy

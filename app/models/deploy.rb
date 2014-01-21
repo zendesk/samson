@@ -12,6 +12,10 @@ class Deploy < ActiveRecord::Base
   delegate :finished?, :errored?, :failed?, to: :job
   delegate :project, to: :stage
 
+  def cache_key
+    [self, commit]
+  end
+
   def summary
     "#{job.user.name} #{summary_action} #{short_reference} to #{stage.name}"
   end

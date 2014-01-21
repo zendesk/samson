@@ -1,4 +1,4 @@
-require 'test_helper'
+require_relative '../test_helper'
 
 describe DeploysController do
   let(:project) { projects(:test) }
@@ -89,6 +89,23 @@ describe DeploysController do
         assert_received(deploy_service, :deploy!) do |expect|
           expect.with stage, "master"
         end
+      end
+    end
+
+    describe "a POST to :confirm" do
+      let(:changeset) { stub_everything(commits: [], files: [], pull_requests: []) }
+
+      setup do
+        Changeset.stubs(:find).with(project.github_repo, nil, 'master').returns(changeset)
+
+        post :confirm, project_id: project.id, deploy: {
+          stage_id: stage.id,
+          reference: "master",
+        }
+      end
+
+      it "renders the template" do
+        assert_template :changeset
       end
     end
 

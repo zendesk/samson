@@ -72,7 +72,7 @@ class ProjectsController < ApplicationController
       :name,
       :repository_url,
       stages_attributes: [
-        :name, :command,
+        :name, :confirm, :command,
         :notify_email_address,
         :command_ids => [],
         flowdock_flows_attributes: [:name, :token]

@@ -1,5 +1,3 @@
-require 'octokit'
-
 class Changeset
   attr_reader :comparison, :repo, :previous_commit, :commit
 

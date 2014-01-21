@@ -94,6 +94,10 @@ class Stage < ActiveRecord::Base
     commands + command_scope
   end
 
+  def last_deploy
+    deploys.successful.last
+  end
+
   private
 
   def build_new_project_command

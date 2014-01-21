@@ -1,21 +1,15 @@
-<% cache [@deploy, @deploy.commit] do %>
-  <%
-    changeset = Changeset.find(@project.github_repo, @deploy.previous_commit, @deploy.commit)
-  %>
+<div class="tab-pane" id="files">
+  <%= render 'deploys/files', changeset: @changeset %>
+</div>
 
-  <div class="tab-pane" id="files">
-    <%= render 'deploys/files', changeset: changeset %>
-  </div>
+<div class="tab-pane" id="commits">
+  <%= render 'deploys/commits', changeset: @changeset %>
+</div>
 
-  <div class="tab-pane" id="commits">
-    <%= render 'deploys/commits', changeset: changeset %>
-  </div>
+<div class="tab-pane" id="pulls">
+  <%= render 'deploys/pulls', changeset: @changeset %>
+</div>
 
-  <div class="tab-pane" id="pulls">
-    <%= render 'deploys/pulls', changeset: changeset %>
-  </div>
-
-  <div class="tab-pane" id="risks">
-    <%= render 'deploys/risks', pull_requests: changeset.pull_requests.select(&:risky?) %>
-  </div>
-<% end %>
+<div class="tab-pane" id="risks">
+  <%= render 'deploys/risks', pull_requests: @changeset.pull_requests.select(&:risky?) %>
+</div>

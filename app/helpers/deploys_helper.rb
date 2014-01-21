@@ -48,4 +48,10 @@ module DeploysHelper
   def syntax_highlight(code, language = :ruby)
     CodeRay.scan(code, language).html.html_safe
   end
+
+  def stages_select_options
+    @project.stages.unlocked.map do |stage|
+      [stage.name, stage.id, 'data-confirmation' => stage.confirm?]
+    end
+  end
 end
