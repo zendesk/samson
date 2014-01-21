@@ -49,6 +49,9 @@ $(function () {
 
   $("#deploy_reference").typeahead({
     name: "releases",
-    prefetch: prefetchUrl
+    prefetch: {
+      url: prefetchUrl,
+      ttl: 30000 // 30 seconds
+    }
   });
 });
