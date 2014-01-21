@@ -22,6 +22,12 @@ class Admin::UsersController < ApplicationController
     redirect_to admin_users_path
   end
 
+  def destroy
+    User.find(params[:id]).soft_delete!
+
+    redirect_to admin_users_path
+  end
+
   protected
 
   def user_params

@@ -94,6 +94,7 @@ ActiveRecord::Schema.define(version: 20140116050403) do
     t.datetime "updated_at"
     t.integer  "role_id",       default: 0, null: false
     t.string   "current_token"
+    t.datetime "deleted_at"
   end
 
   create_table "webhooks", force: true do |t|

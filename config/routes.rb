@@ -1,5 +1,5 @@
 ZendeskPusher::Application.routes.draw do
-  get "streams/show"
+  get 'streams/show'
 
   resources :projects, except: [:index] do
     resources :deploys, only: [:index, :new, :create, :show, :destroy] do
@@ -53,6 +53,7 @@ ZendeskPusher::Application.routes.draw do
 
   namespace :admin do
     resource :users, only: [:show, :update]
+    resources :users, only: [:destroy]
     resource :projects, only: [:show]
     resources :commands, except: [:show]
     resource :lock, only: [:create, :destroy]

@@ -23,6 +23,9 @@
             </label>
             <% end %>
           </td>
+          <td>
+            <%= link_to "Delete", admin_user_path(user.id), method: :delete, data: { confirm: "Delete ##{user.id} #{user.name} #{user.email} ?" }, class: "btn btn-danger" %>
+          </td>
         </tr>
       <% end %>
     </tbody>
