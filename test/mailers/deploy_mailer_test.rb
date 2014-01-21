@@ -10,7 +10,6 @@ describe DeployMailer do
   before do
     stage.update_attributes!(notify_email_address: 'test@test.com')
 
-    stub_request(:get, "https://api.github.com/repos/bar/foo/compare/master...master")
     changeset = stub_everything(files: [], commits: [], pull_requests: [])
     Changeset.stubs(:find).returns(changeset)
 
