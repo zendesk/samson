@@ -95,7 +95,7 @@ class Stage < ActiveRecord::Base
   end
 
   def last_deploy
-    deploys.successful.last
+    deploys.successful.first
   end
 
   private
