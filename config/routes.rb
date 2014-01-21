@@ -16,6 +16,10 @@ ZendeskPusher::Application.routes.draw do
       end
     end
 
+    member do
+      get :releases
+    end
+
     resources :webhooks, only: [:index, :create, :destroy]
     resources :commit_statuses, only: [:show], constraints: { id: /.+/ }
   end

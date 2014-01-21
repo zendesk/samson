@@ -43,6 +43,12 @@ class ProjectsController < ApplicationController
   def edit
   end
 
+  def releases
+    @releases = ReleaseList.latest_releases_for(project.github_repo)
+
+    render json: @releases
+  end
+
   def update
     if project.update_attributes(project_params)
       redirect_to root_path
