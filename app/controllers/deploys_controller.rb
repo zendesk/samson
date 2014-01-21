@@ -22,7 +22,6 @@ class DeploysController < ApplicationController
 
   def new
     @deploy = @project.deploys.build(stage_id: params[:stage_id])
-    @deploy.reference = ReleaseList.latest_release_for(@project.github_repo)
   end
 
   def create

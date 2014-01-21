@@ -1,9 +1,8 @@
 require 'octokit'
 
 class ReleaseList
-  def self.latest_release_for(repo)
+  def self.latest_releases_for(repo)
     github = Octokit::Client.new(access_token: ENV['GITHUB_TOKEN'])
-    release = github.releases(repo, per_page: 1).first
-    release && release.tag_name
+    github.releases(repo, limit: 30).map {|release| release.tag_name }
   end
 end

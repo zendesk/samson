@@ -1,3 +1,5 @@
+//= require typeahead
+
 $(function () {
   var changesetLoaded = false;
 
@@ -42,4 +44,11 @@ $(function () {
     localDate     = new Date(utcString);
     $(this).attr('title', localDate);
   })
+
+  var prefetchUrl = $("#deploy_reference").data("prefetchUrl");
+
+  $("#deploy_reference").typeahead({
+    name: "releases",
+    prefetch: prefetchUrl
+  });
 });
