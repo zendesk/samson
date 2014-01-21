@@ -33,6 +33,28 @@
   cursor: help;
 }
 
+.file-diff {
+  pre {
+    background-color: #fff;
+  }
+
+  .line {
+    display: inline-block;
+  }
+
+  .change {
+    color: #777;
+  }
+
+  .line.delete {
+    background-color: #fdd;
+  }
+
+  .line.insert {
+    background-color: #dfd;
+  }
+}
+
 .deploy-details {
   padding: 0 50px;
 }

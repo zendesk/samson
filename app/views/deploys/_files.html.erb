@@ -12,7 +12,7 @@
         </td>
       </tr>
       <tr class="file-diff" style="display:none">
-        <td colspan="2"><pre><%= file.patch %></pre></td>
+        <td colspan="2"><pre><%= syntax_highlight file.patch, :diff %></pre></td>
       </tr>
     <% end %>
     </tbody>
