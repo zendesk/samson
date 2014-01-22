@@ -2,7 +2,7 @@ class Deploy < ActiveRecord::Base
   belongs_to :stage
   belongs_to :job
 
-  default_scope { order('created_at DESC, id DESC') }
+  default_scope { order(created_at: :desc, id: :desc) }
 
   validates_presence_of :reference
   validate :stage_is_unlocked
@@ -45,15 +45,15 @@ class Deploy < ActiveRecord::Base
   end
 
   def self.active
-    joins(:job).where(jobs: { status: %w[pending running] })
+    includes(:job).where(jobs: { status: %w[pending running] })
   end
 
   def self.running
-    joins(:job).where(jobs: { status: "running" })
+    includes(:job).where(jobs: { status: 'running' })
   end
 
   def self.successful
-    joins(:job).where(jobs: { status: %w[succeeded] })
+    includes(:job).where(jobs: { status: 'succeeded' })
   end
 
   def self.prior_to(deploy)
