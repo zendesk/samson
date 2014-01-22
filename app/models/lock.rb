@@ -18,7 +18,7 @@ class Lock < ActiveRecord::Base
   end
 
   def summary
-    "Locked by #{self.user.name} #{time_ago_in_words(self.created_at)}"
+    "Locked by #{self.user.name} #{time_ago_in_words(self.created_at)} ago"
   end
 
   private
