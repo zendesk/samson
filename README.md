@@ -21,7 +21,8 @@ include projects::pusher
 
 #### Config:
 
-1. We need to add a database configuration yaml file with your credentials. 2. set up an authentication method in `.env` - at least one of Zendesk (`CLIENT_SECRET` and `ZENDESK_URL`)and GitHub (`GITHUB_CLIENT_ID` and `GITHUB_CLIENT_SECRET`).
+1. We need to add a database configuration yaml file with your credentials. 
+2. Set up an authentication method in `.env` - at least one of Zendesk (`CLIENT_SECRET` and `ZENDESK_URL`)and GitHub (`GITHUB_CLIENT_ID` and `GITHUB_CLIENT_SECRET`).
 
 
 ```bash
