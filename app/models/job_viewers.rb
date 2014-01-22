@@ -5,14 +5,16 @@ class JobViewers < ThreadSafe::Array
   end
 
   def push(*args)
-    super.tap do
-      @output.write(:viewers, self)
-    end
+    super.tap { output }
   end
 
   def delete(*args)
-    super.tap do
-      @output.write(:viewers, self)
-    end
+    super.tap { output }
+  end
+
+  private
+
+  def output
+    @output.write(self, :viewers)
   end
 end

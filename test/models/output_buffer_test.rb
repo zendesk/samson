@@ -1,4 +1,4 @@
-require 'test_helper'
+require_relative '../test_helper'
 
 describe OutputBuffer do
   let(:buffer) { OutputBuffer.new }
@@ -30,15 +30,13 @@ describe OutputBuffer do
     buffer.write("hello")
     buffer.close
 
-    content = []
-    buffer.each {|chunk| content << chunk }
-    content.must_equal ["hello"]
+    build_listener.value.must_equal ["hello"]
   end
 
   def build_listener
     Thread.new do
       content = []
-      buffer.each {|chunk| content << chunk }
+      buffer.each {|_, chunk| content << chunk }
       content
     end
   end

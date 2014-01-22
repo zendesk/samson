@@ -29,8 +29,8 @@ class OutputBuffer
     @closed = false
   end
 
-  def write(event, data)
-    @chunks << [event, data]
+  def write(data, event = :message)
+    @chunks << [event, data] unless event == :close
     @listeners.each {|listener| listener.push([event, data]) }
   end
 
@@ -42,7 +42,7 @@ class OutputBuffer
 
   def close
     @closed = true
-    write(:close, nil)
+    write(nil, :close)
   end
 
   def each(&block)
