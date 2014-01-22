@@ -10,7 +10,7 @@ class ProjectsController < ApplicationController
   end
 
   def index
-    @projects = Project.includes(stages: [:current_deploy, :last_deploy, :lock])
+    @projects = Project.includes(stages: [:current_deploy, :last_deploy, { lock: :user }])
   end
 
   def new
@@ -37,7 +37,7 @@ class ProjectsController < ApplicationController
 
   def show
     @stages = project.stages.includes(:last_deploy, :lock)
-    @deploys = project.deploys.page(params[:page])
+    @deploys = project.deploys.includes(:stage, job: :user).page(params[:page])
   end
 
   def edit

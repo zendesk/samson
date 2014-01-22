@@ -18,7 +18,7 @@ class StagesController < ApplicationController
   end
 
   def show
-    @deploys = @stage.deploys.page(params[:page])
+    @deploys = @stage.deploys.includes(:stage, job: :user).page(params[:page])
   end
 
   def new
