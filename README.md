@@ -70,14 +70,16 @@ You can find a link to webhook on every project page.
 There are links on webhook pages that you will want to add to your project settings on your CI service.
 Set up your webhooks and the deployment process can be automated.
 
-`start`  
--> push to branch(e.g. master)  
+##### Process
+
+-> Push to branch(e.g. master)  
 -> CI validation  
 -> CI makes webhook call  
 -> Pusher receives webhook call  
 -> Pusher checks if validation is passed  
--> deploy if passed / do nothing if failed  
-`end`  
+-> Deploy if passed / do nothing if failed  
+
+##### Supported services
 
 * Travis
     * You can add a webhook notification to the .travis.yml file per project
