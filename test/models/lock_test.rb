@@ -20,6 +20,10 @@ describe Lock do
         Lock.global.first.must_equal(global_lock)
       end
 
+      it 'lists the user who created the lock' do
+        global_lock.summary.must_include('Locked by Admin')
+      end
+
       describe 'soft deleted' do
         before { global_lock.soft_delete! }
 
@@ -35,6 +39,14 @@ describe Lock do
       it 'is invalid' do
         lambda { global_lock }.must_raise(ActiveRecord::RecordInvalid)
       end
+    end
+  end
+
+  describe 'indiviual locks' do
+    let(:user_lock) { Lock.create!(user: users(:deployer), stage: stages(:test_staging)) }
+
+    it 'says who created the lock' do
+      user_lock.summary.must_include('Locked by Deployer')
     end
   end
 end
