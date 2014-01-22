@@ -28,7 +28,7 @@ describe JobExecution do
   end
 
   it "clones the project's repository if it's not already cloned" do
-    execution.start_and_wait!
+    execution.run!
     repo_dir = File.join(Rails.application.config.pusher.cached_repos_dir, project.id.to_s)
 
     assert File.directory?(repo_dir)
@@ -124,7 +124,7 @@ describe JobExecution do
 
   def execute_job(branch = "master")
     execution = JobExecution.new(branch, job)
-    execution.start_and_wait!
+    execution.run!
   end
 
   def execute_on_remote_repo(cmds)
