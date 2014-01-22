@@ -1,4 +1,6 @@
 class Lock < ActiveRecord::Base
+  include ActionView::Helpers::DateHelper
+
   has_soft_deletion default_scope: true
 
   belongs_to :stage
@@ -13,6 +15,10 @@ class Lock < ActiveRecord::Base
 
   def global?
     stage_id.blank?
+  end
+
+  def summary
+    "Locked by #{self.user.name} #{time_ago_in_words(self.created_at)} ago"
   end
 
   private
