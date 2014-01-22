@@ -21,7 +21,7 @@ class Deploy < ActiveRecord::Base
   end
 
   def summary_for_email
-    "#{job.user.name} #{summary_action} #{project.name} to #{stage.name} #{reference}"
+    "#{job.user.name} #{summary_action} #{project.name} to #{stage.name} (#{reference})"
   end
 
   def commit
