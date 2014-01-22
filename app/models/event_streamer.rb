@@ -24,18 +24,23 @@
 #   streamer.start(output) {|chunk| chunk.html_safe }
 #
 class EventStreamer
-  def initialize(stream)
+  def initialize(user, execution, stream, &block)
+    @user = user
+    @execution = execution
     @stream = stream
+    @finished = block
   end
 
   def start(output, &block)
+    @execution.viewers.push(@user)
+
     block ||= proc {|x| x }
 
     # Heartbeat thread until puma/puma#389 is solved
     start_heartbeat!
 
     @scanner = TerminalOutputScanner.new(output)
-    @scanner.each {|event, data| emit_event(event, block.call(data)) }
+    @scanner.each {|event, data| emit_event(event, block.call(event, data)) }
   rescue IOError
     # Raised on stream close
   ensure
@@ -44,21 +49,22 @@ class EventStreamer
   end
 
   def finished
-    emit_event "finished"
+    emit_event('finished', @finished.try(:call) || '')
   rescue IOError
     # Raised on stream close
   ensure
+    if @execution
+      @execution.viewers.delete(@user)
+    end
+
     @stream.close
   end
 
   private
 
   def emit_event(name, data = "")
-    json = data.present? ? JSON.dump(msg: data) : ""
-
-    Rails.logger.debug data.inspect
-
-    @stream.write("event: #{name}\ndata: #{json}\n\n")
+    Rails.logger.debug("#{name}: #{data.inspect}")
+    @stream.write("event: #{name}\ndata: #{data}\n\n")
   end
 
   def start_heartbeat!

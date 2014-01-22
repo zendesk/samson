@@ -12,6 +12,11 @@ class Job < ActiveRecord::Base
     self.user == user
   end
 
+  def viewers
+    Thread.main[:viewers] ||= ThreadSafe::Cache.new
+    Thread.main[:viewers][job.id] ||= ThreadSafe::Array.new
+  end
+
   def commands
     command.split(/\r?\n|\r/)
   end

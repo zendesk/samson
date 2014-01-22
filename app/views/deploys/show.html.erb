@@ -7,17 +7,9 @@
   <li class="active">Deploy #<%= @deploy.id %></li>
 </ol>
 
-<h1>
-  <%= @project.name %>
-  <div class="pull-right">
-    <% unless @deploy.succeeded? || @deploy.running? %>
-      <%= link_to "Redeploy", project_deploys_path(@project, deploy: { reference: @deploy.reference, stage_id: @deploy.stage_id }), method: :post, class: "btn btn-danger" %>
-    <% end %>
-    <%= link_to "Back", project_path(@project), class: "btn btn-default" %>
-  </div>
-</h1>
-
-<%= deploy_status_panel @deploy %>
+<div id="header">
+  <%= render 'header' %>
+</div>
 
 <ul id="deploy-tabs" class="nav nav-tabs" data-changeset-url="<%= changeset_project_deploy_url(@project, @deploy) %>">
   <li class="active"><a href="#output" data-toggle="tab">Output</a></li>
@@ -73,7 +65,7 @@
     $(document).ready(function() {
       var messages = $("#messages");
 
-      var source = new EventSource("<%= stream_deploy_path(@deploy.job) %>");
+      var source = new EventSource("<%= deploy_stream_path(@deploy.job) %>");
 
       var addLine = function(data) {
         var msg = JSON.parse(data).msg;
@@ -85,13 +77,31 @@
         addLine(e.data);
       }, false);
 
+      source.addEventListener('viewers', function(e) {
+        var users = JSON.parse(e.data);
+
+        if(users.length > 0) {
+          var viewers = $.map(users, function(user) {
+            return user.name;
+          }).join(', ');
+
+          $("#viewers").removeClass('hide');
+          $("#viewers").html(viewers);
+        } else {
+          $("#viewers").addClass('hide');
+          $("#viewers").html('');
+        }
+      }, false);
+
       source.addEventListener('replace', function(e) {
         messages.children().last().remove();
         addLine(e.data);
       }, false);
 
       source.addEventListener('finished', function(e) {
-        window.location.reload();
+        $('#header').html(JSON.parse(e.data).html);
+        $('#tag-line').hide();
+        source.close();
       }, false);
 
       $("#deploy_stop").on("click", function() {
@@ -103,9 +113,12 @@
     });
   <% end %>
 
-  <% if current_user.is_deployer? %>
-    <button id="deploy_stop" class="btn btn-danger pull-right">Stop</button>
-  <% end %>
+  <div id="tag-line" class="pull-right">
+    <span id="viewers" class="alert alert-info hide"></span>
+    <% if current_user.is_deployer? %>
+      <button id="deploy_stop" class="btn btn-danger">Stop</button>
+    <% end %>
+  </div>
 <% elsif !@deploy.finished? %>
   <div class="alert alert-info">
     Pusher is currently restarting, your deploy has been queued and will be resumed shortly.

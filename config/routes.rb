@@ -36,8 +36,10 @@ ZendeskPusher::Application.routes.draw do
   end
 
   resources :deploys, only: [] do
+    resource :stream, only: [:show]
+
     member do
-      get :stream, to: 'streams#show'
+      get :viewers
     end
 
     collection do

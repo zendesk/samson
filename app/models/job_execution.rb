@@ -15,10 +15,12 @@ class JobExecution
 
   attr_reader :output
   attr_reader :job
+  attr_reader :viewers
 
   def initialize(reference, job)
     @output = OutputBuffer.new
     @executor = TerminalExecutor.new(@output)
+    @viewers = JobViewers.new(@output)
     @subscribers = []
     @job, @reference = job, reference
   end

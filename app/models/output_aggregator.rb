@@ -9,6 +9,8 @@ class OutputAggregator
     log = []
 
     scanner.each do |event, data|
+      next unless [:replace, :append].include?(event)
+
       log.pop if event == :replace
       log.push(data)
     end

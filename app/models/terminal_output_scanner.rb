@@ -11,8 +11,13 @@ class TerminalOutputScanner
   end
 
   def each(&block)
-    @source.each do |data|
-      write(data)
+    @source.each do |event, data|
+      if event == :message
+        write(data)
+      else
+        output(event, data)
+      end
+
       @queue.each(&block)
       @queue.clear
     end
