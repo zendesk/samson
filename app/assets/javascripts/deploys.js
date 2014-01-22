@@ -40,9 +40,10 @@ $(function () {
   });
 
   $("span[data-time]").each(function() {
-    var utcString = this.dataset.time,
-    localDate     = new Date(utcString);
-    $(this).attr('title', localDate);
+    var utcms     = this.dataset.time,
+        localDate = new Date(Number.parseInt(utcms));
+
+    this.title = localDate.toString();
   })
 
   var prefetchUrl = $("#deploy_reference").data("prefetchUrl");
