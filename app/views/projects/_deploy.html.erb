@@ -1,5 +1,5 @@
 <tr>
-  <td><span class="mouseover" data-time="<%= deploy.created_at.to_i * 1000 %>"><%= time_ago_in_words deploy.created_at %> ago</span></td>
-  <td><%= link_to "#{deploy.summary}", project_deploy_path(deploy.project, deploy) %></td>
+  <td><span class="mouseover" data-time="<%= datetime_to_js_ms(deploy.created_at) %>"><%= time_ago_in_words deploy.created_at %> ago</span></td>
+  <td><%= link_to "#{deploy.summary}", project_deploy_path(@project || deploy.project, deploy) %></td>
   <td><span class="label <%= deploy_status_for_label(deploy.status) %>"><%= deploy.status.titleize %></span></td>
 </tr>

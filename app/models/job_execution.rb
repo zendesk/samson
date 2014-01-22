@@ -25,29 +25,35 @@ class JobExecution
 
   def start!
     @thread = Thread.new do
-      ActiveRecord::Base.clear_active_connections!
-
-      output_aggregator = OutputAggregator.new(@output)
-      @job.run!
-
-      Dir.mktmpdir do |dir|
-        execute!(dir)
+      begin
+        run!
+      rescue => e
+        Airbrake.notify(e,
+          :error_message => "JobExecution failed: #{e.message}",
+          :job_id => @job.id
+        )
+      ensure
+        JobExecution.finished_job(@job)
       end
-
-      @output.close
-      @job.update_output!(output_aggregator.to_s)
-
-      @subscribers.each do |subscriber|
-        subscriber.call(@job)
-      end
-
-      JobExecution.finished_job(@job)
     end
   end
 
-  def start_and_wait!
-    start!
-    wait!
+  def run!
+    ActiveRecord::Base.clear_active_connections!
+
+    output_aggregator = OutputAggregator.new(@output)
+    @job.run!
+
+    Dir.mktmpdir do |dir|
+      execute!(dir)
+    end
+
+    @output.close
+    @job.update_output!(output_aggregator.to_s)
+
+    @subscribers.each do |subscriber|
+      subscriber.call(@job)
+    end
   end
 
   def wait!
@@ -56,7 +62,7 @@ class JobExecution
 
   def stop!
     @executor.stop!
-    @thread.try(:join)
+    wait!
   end
 
   def subscribe(&block)

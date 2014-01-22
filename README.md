@@ -21,7 +21,8 @@ include projects::pusher
 
 #### Config:
 
-1. We need to add a database configuration yaml file with your credentials. 2. set up an authentication method in `.env` - at least one of Zendesk (`CLIENT_SECRET` and `ZENDESK_URL`)and GitHub (`GITHUB_CLIENT_ID` and `GITHUB_CLIENT_SECRET`).
+1. We need to add a database configuration yaml file with your credentials. 
+2. Set up an authentication method in `.env` - at least one of Zendesk (`CLIENT_SECRET` and `ZENDESK_URL`)and GitHub (`GITHUB_CLIENT_ID` and `GITHUB_CLIENT_SECRET`).
 
 
 ```bash
@@ -69,22 +70,24 @@ You can find a link to webhook on every project page.
 There are links on webhook pages that you will want to add to your project settings on your CI service.
 Set up your webhooks and the deployment process can be automated.
 
-`start`  
--> push to branch(e.g. master)  
+##### Process
+
+-> Push to branch(e.g. master)  
 -> CI validation  
 -> CI makes webhook call  
 -> Pusher receives webhook call  
 -> Pusher checks if validation is passed  
--> deploy if passed / do nothing if failed  
-`end`  
+-> Deploy if passed / do nothing if failed  
+
+##### Supported services
 
 * Travis
-    * TBA
+    * You can add a webhook notification to the .travis.yml file per project
 * Semaphore
     * Semaphore has webhook per project settings
-    * add webhook link to your semaphore project
+    * Add webhook link to your semaphore project
 * Tddium
     * Tddium only has webhook per organisation setting
     * However you can have multiple webhooks per organisation
-    * add all webhooks to your organisation
+    * Add all webhooks to your organisation
     * Pusher will match url to see if the webhook call is for the correct project

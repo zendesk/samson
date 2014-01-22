@@ -11,6 +11,14 @@ class Stage < ActiveRecord::Base
     -> { order('stage_commands.position ASC') },
     through: :stage_commands
 
+  has_one :last_deploy, -> {
+    Deploy.successful
+  }, class_name: 'Deploy'
+
+  has_one :current_deploy, -> {
+    Deploy.running
+  }, class_name: 'Deploy'
+
   default_scope { order(:order) }
 
   validates :name, presence: true, uniqueness: { scope: :project }
@@ -44,14 +52,6 @@ class Stage < ActiveRecord::Base
     deploys.create(reference: reference) do |deploy|
       deploy.build_job(project: project, user: user, command: command)
     end
-  end
-
-  def last_deploy
-    deploys.successful.first
-  end
-
-  def current_deploy
-    deploys.running.first
   end
 
   def currently_deploying?
@@ -92,10 +92,6 @@ class Stage < ActiveRecord::Base
     end
 
     commands + command_scope
-  end
-
-  def last_deploy
-    deploys.successful.first
   end
 
   private
