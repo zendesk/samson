@@ -80,12 +80,12 @@ Set up your webhooks and the deployment process can be automated.
 `end`  
 
 * Travis
-    * TBA
+    * You can add a webhook notification to the .travis.yml file per project
 * Semaphore
     * Semaphore has webhook per project settings
-    * add webhook link to your semaphore project
+    * Add webhook link to your semaphore project
 * Tddium
     * Tddium only has webhook per organisation setting
     * However you can have multiple webhooks per organisation
-    * add all webhooks to your organisation
+    * Add all webhooks to your organisation
     * Pusher will match url to see if the webhook call is for the correct project
