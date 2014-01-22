@@ -43,4 +43,8 @@ module ApplicationHelper
     return @global_lock if defined?(@global_lock)
     @global_lock = Lock.global.first
   end
+
+  def datetime_to_js_ms(utc_string)
+    utc_string.to_i * 1000
+  end
 end
