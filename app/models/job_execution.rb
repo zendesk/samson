@@ -41,7 +41,7 @@ class JobExecution
   end
 
   def run!
-    ActiveRecord::Base.clear_active_connections!
+    ActiveRecord::Base.clear_all_connections!
 
     output_aggregator = OutputAggregator.new(@output)
     @job.run!
