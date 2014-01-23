@@ -3,13 +3,13 @@
 $(function () {
   var changesetLoaded = false;
 
-  $('#deploy-tabs a').click(function (e) {
+  $("#deploy-tabs a").click(function (e) {
       e.preventDefault();
       var tab = $(this);
-      tab.tab('show');
+      tab.tab("show");
 
       if (!changesetLoaded) {
-        var changesetUrl = $('#deploy-tabs').data('changesetUrl');
+        var changesetUrl = $("#deploy-tabs").data("changesetUrl");
 
         changesetLoaded = true;
 
@@ -25,14 +25,14 @@ $(function () {
 
             // We need to switch to another tab and then switch back in order for
             // the plugin to detect that the DOM node has been replaced.
-            $("#deploy-tabs a:first").tab('show');
-            tab.tab('show');
+            $("#deploy-tabs a:first").tab("show");
+            tab.tab("show");
           }
         });
       }
   });
 
-  $('.deploy-details').on('click', '.file-summary', function (e) {
+  $(".deploy-details").on("click", ".file-summary", function (e) {
     var row = $(this);
     var patch = row.next();
 
@@ -40,9 +40,10 @@ $(function () {
   });
 
   $("span[data-time]").each(function() {
-    var utcString = this.dataset.time,
-    localDate     = new Date(utcString);
-    $(this).attr('title', localDate);
+    var utcms     = this.dataset.time,
+        localDate = new Date(Number.parseInt(utcms));
+
+    this.title = localDate.toString();
   })
 
   var prefetchUrl = $("#deploy_reference").data("prefetchUrl");
@@ -61,26 +62,26 @@ $(function () {
 
   // Shows commit status from Github as border color
   var timeout = null;
-  var tag_form_group = $('#deploy_reference').parent();
+  var tag_form_group = $("#deploy_reference").parent();
 
   function check_status(ref) {
     $.ajax({
-      url: $('#new_deploy').data('commit-status-url'),
+      url: $("#new_deploy").data("commit-status-url"),
       data: { ref: ref },
       success: function(data, status, xhr) {
-        if(data.status == 'pending') {
-          tag_form_group.addClass('has-warning');
-        } else if(data.status == 'success') {
-          tag_form_group.addClass('has-success');
-        } else if(data.status == 'failure' || data.status == 'error') {
-          tag_form_group.addClass('has-error');
+        if(data.status == "pending") {
+          tag_form_group.addClass("has-warning");
+        } else if(data.status == "success") {
+          tag_form_group.addClass("has-success");
+        } else if(data.status == "failure" || data.status == "error") {
+          tag_form_group.addClass("has-error");
         }
       }
     });
   }
 
-  $('#deploy_reference').keyup(function() {
-    tag_form_group.removeClass('has-success has-warning has-error');
+  $("#deploy_reference").keyup(function() {
+    tag_form_group.removeClass("has-success has-warning has-error");
 
     var ref = $(this).val();
 
@@ -88,7 +89,7 @@ $(function () {
       clearTimeout(timeout);
     }
 
-    if(ref != '') {
+    if(ref != "") {
       timeout = setTimeout(function() { check_status(ref); }, 200);
     }
   });
@@ -96,16 +97,16 @@ $(function () {
   // Shows confirmation dropdown using Github comparison
   var confirmed = false;
 
-  $('#new_deploy').submit(function(event) {
-    var selected_stage = $('#deploy_stage_id option:selected');
+  $("#new_deploy").submit(function(event) {
+    var selected_stage = $("#deploy_stage_id option:selected");
 
-    if(!confirmed && selected_stage.data('confirmation')) {
-      $('#confirm-button-text').show();
-      $('#deploy-button-text').hide();
+    if(!confirmed && selected_stage.data("confirmation")) {
+      $("#confirm-button-text").show();
+      $("#deploy-button-text").hide();
 
       $.ajax({
-        method: 'POST',
-        url: $(this).data('confirm-url'),
+        method: "POST",
+        url: $(this).data("confirm-url"),
         data: $(this).serialize(),
         success: function(data, status, xhr) {
           var container = $(".deploy-details");
@@ -114,8 +115,8 @@ $(function () {
           placeholderPanes.remove();
           container.append(data);
 
-          $('#deploy-confirmation').removeClass('hide');
-          $('#deploy-confirmation a:first').tab('show');
+          $("#deploy-confirmation").removeClass("hide");
+          $("#deploy-confirmation a:first").tab("show");
 
           confirmed = true;
         }
@@ -125,16 +126,16 @@ $(function () {
     }
   });
 
-  $('#new-deploy-cancel').click(function(event) {
+  $("#new-deploy-cancel").click(function(event) {
     if(confirmed) {
-      $('#deploy-confirmation').addClass('hide');
+      $("#deploy-confirmation").addClass("hide");
 
-      $('#confirm-button-text').hide();
-      $('#deploy-button-text').show();
+      $("#confirm-button-text").hide();
+      $("#deploy-button-text").show();
 
       confirmed = false;
     } else {
-      window.location = $(this).data('url');
+      window.location = $(this).data("url");
     }
 
     event.preventDefault();
