@@ -91,3 +91,7 @@ Set up your webhooks and the deployment process can be automated.
     * However you can have multiple webhooks per organisation
     * Add all webhooks to your organisation
     * Pusher will match url to see if the webhook call is for the correct project
+
+### Team
+
+Core team is Steven D (SF), Daniel S (CPH), Jason S (MEL), Elliot P (MEL), Po C (MEL) & Roman S (MEL).
