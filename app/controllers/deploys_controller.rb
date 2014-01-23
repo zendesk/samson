@@ -9,7 +9,7 @@ class DeploysController < ApplicationController
   before_filter :find_deploy, except: [:index, :recent, :active, :new, :create, :confirm]
 
   def index
-    @deploys = @project.deploys.includes(:stage, job: :user).limit(15)
+    @deploys = @project.deploys.includes(:stage, job: :user).page(params[:page])
   end
 
   def active
@@ -17,7 +17,7 @@ class DeploysController < ApplicationController
   end
 
   def recent
-    @deploys = Deploy.includes(:stage, job: :user).page(params[:page])
+    @deploys = Deploy.includes(:stage, job: :user).limit(15)
   end
 
   def new
