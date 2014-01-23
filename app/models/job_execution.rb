@@ -29,8 +29,10 @@ class JobExecution
         run!
       rescue => e
         Airbrake.notify(e,
-          :error_message => "JobExecution failed: #{e.message}",
-          :job_id => @job.id
+          error_message: "JobExecution failed: #{e.message}",
+          parameters: {
+            job_id: @job.id
+          }
         )
       ensure
         JobExecution.finished_job(@job)
