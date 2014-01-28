@@ -11,7 +11,7 @@ gem 'kaminari'
 gem 'dogapi', '~> 1.9.1'
 gem 'soft_deletion', '~> 0.4'
 gem 'dalli', '~> 2.7.0'
-gem 'coderay', '~> 1.1.0', require: false
+gem 'active_model_serializers', '~> 0.8.0'
 
 gem 'angularjs-rails'
 gem 'jbuilder'
@@ -65,6 +65,8 @@ group :no_preload do
 
   gem 'newrelic_api'
   gem 'activeresource'
+
+  gem 'coderay', '~> 1.1.0'
 end
 
 group :development do

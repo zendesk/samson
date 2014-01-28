@@ -5,15 +5,29 @@ class DeploysController < ApplicationController
   end
 
   before_filter :authorize_deployer!, only: [:new, :create, :confirm, :update, :destroy]
-  before_filter :find_project, except: [:recent, :active]
+  before_filter :find_project, except: [:active]
   before_filter :find_deploy, except: [:index, :recent, :active, :new, :create, :confirm]
 
   def index
     @deploys = @project.deploys.includes(:stage, job: :user).page(params[:page])
+
+    respond_to do |format|
+      format.html
+      format.json do
+        render json: @deploys
+      end
+    end
   end
 
   def active
-    @deploys = Deploy.includes(:stage, job: :user).active.page(params[:page])
+    @deploys = (@project.try(:deploys) || Deploy).includes(:stage, job: :user).active.page(params[:page])
+
+    respond_to do |format|
+      format.html
+      format.json do
+        render json: @deploys
+      end
+    end
   end
 
   def recent
@@ -36,10 +50,18 @@ class DeploysController < ApplicationController
     deploy_service = DeployService.new(@project, current_user)
     @deploy = deploy_service.deploy!(stage, reference)
 
-    if @deploy.persisted?
-      redirect_to project_deploy_path(@project, @deploy)
-    else
-      render :new
+    respond_to do |format|
+      format.html do
+        if @deploy.persisted?
+          redirect_to project_deploy_path(@project, @deploy)
+        else
+          render :new
+        end
+      end
+
+      format.json do
+        render json: {}, status: @deploy.persisted? ? 200 : 422
+      end
     end
   end
 
@@ -90,7 +112,7 @@ class DeploysController < ApplicationController
   end
 
   def find_project
-    @project = Project.find(params[:project_id])
+    @project = Project.find(params[:project_id]) if params[:project_id]
   end
 
   def find_deploy

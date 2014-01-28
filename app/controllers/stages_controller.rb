@@ -15,6 +15,13 @@ class StagesController < ApplicationController
 
   def index
     @stages = @project.stages
+
+    respond_to do |format|
+      format.html
+      format.json do
+        render json: @stages
+      end
+    end
   end
 
   def show

@@ -1,6 +1,4 @@
 class ApplicationController < ActionController::Base
-  include CurrentUser
-
   rescue_from ActionController::ParameterMissing do
     redirect_to root_path
   end
@@ -9,9 +7,16 @@ class ApplicationController < ActionController::Base
   # For APIs, you may want to use :null_session instead.
   protect_from_forgery with: :exception
 
+  # Must be after protect_from_forgery, so that authenticate! is called
+  include CurrentUser
+
   helper :flash
 
   protected
+
+  def verified_request?
+    warden.winning_strategy || super
+  end
 
   def authorize_admin!
     unauthorized! unless current_user.is_admin?
@@ -22,9 +27,19 @@ class ApplicationController < ActionController::Base
   end
 
   def unauthorized!
-    flash[:error] = "You are not authorized to view this page."
-    redirect_to :back
-  rescue ActionController::RedirectBackError
-    redirect_to root_path
+    respond_to do |format|
+      format.html do
+        begin
+          flash[:error] = "You are not authorized to view this page."
+          redirect_to :back
+        rescue ActionController::RedirectBackError
+          redirect_to root_path
+        end
+      end
+
+      format.json do
+        render json: {}, status: 404
+      end
+    end
   end
 end
