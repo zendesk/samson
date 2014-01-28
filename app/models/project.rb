@@ -12,6 +12,8 @@ class Project < ActiveRecord::Base
 
   accepts_nested_attributes_for :stages
 
+  scope :alphabetical, -> { order('name') }
+
   def to_param
     "#{id}-#{name.parameterize}"
   end

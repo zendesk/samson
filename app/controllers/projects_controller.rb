@@ -10,7 +10,7 @@ class ProjectsController < ApplicationController
   end
 
   def index
-    @projects = Project.includes(stages: [:current_deploy, :last_deploy, { lock: :user }])
+    @projects = Project.alphabetical.includes(stages: [:current_deploy, :last_deploy, { lock: :user }])
   end
 
   def new
