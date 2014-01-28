@@ -41,20 +41,26 @@ class JobExecution
   end
 
   def run!
-    ActiveRecord::Base.clear_all_connections!
+    @job.run!
+
+    ActiveRecord::Base.clear_active_connections!
 
     output_aggregator = OutputAggregator.new(@output)
-    @job.run!
 
     Dir.mktmpdir do |dir|
       execute!(dir)
     end
 
     @output.close
-    @job.update_output!(output_aggregator.to_s)
 
-    @subscribers.each do |subscriber|
-      subscriber.call(@job)
+    ActiveRecord::Base.connection_pool.with_connection do |connection|
+      connection.verify!
+
+      @job.update_output!(output_aggregator.to_s)
+
+      @subscribers.each do |subscriber|
+        subscriber.call(@job)
+      end
     end
   end
 
