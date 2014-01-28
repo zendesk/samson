@@ -2,7 +2,7 @@
   <div class="project-tile">
     <h2>
       <%= link_to project.name, project_path(project) %>
-      <a class="github" href="<%= project.repository_url %>" target="_blank" title="View repository on Github"><i class="fa fa-github"></i></a>
+      <%= render partial: "shared/github_link", locals: { project: project } %>
     </h2>
     <ul>
       <% project.stages.each do |stage| %>

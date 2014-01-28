@@ -2,7 +2,7 @@
 
 <h1 class="project-title">
   <%= project.name %>
-  <a class="github" href="<%= project.repository_url %>" title="View repository on Github"><i class="fa fa-github"></i></a>
+  <%= render partial: "shared/github_link", locals: { project: project } %>
 </h1>
 
 <%= render partial: "shared/project_tabs",
