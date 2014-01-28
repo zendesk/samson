@@ -31,6 +31,9 @@ subl config/database.yml # put your credentials in
 script/bootstrap
 
 # fill in .env with a couple variables
+# [SESSION]
+# SECRET_TOKEN for rails, can be generated with `bundle exec rake secret`.
+#
 # [AUTH]
 # GITHUB_CLIENT_ID and GITHUB_CLIENT_SECRET are for GitHub auth
 # and can be obtained by creating a new Github Application
