@@ -1,6 +1,9 @@
 <% content_for :page_title, project.name %>
 
-<h1 class="project_title"><%= project.name %></h1>
+<h1 class="project-title">
+  <%= project.name %>
+  <a class="github" href="<%= project.repository_url %>" title="View repository on Github"><i class="fa fa-github"></i></a>
+</h1>
 
 <%= render partial: "shared/project_tabs",
            locals: { active: "overview" } %>

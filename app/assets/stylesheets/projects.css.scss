@@ -84,3 +84,14 @@ pre.pre-inline {
 .project-stages > tbody > tr > td {
   line-height: 37px;
 }
+
+.project-title {
+  position: relative;
+
+  .github {
+    color: #333;
+    position: absolute;
+    right: 0;
+    top: 0;
+  }
+}
