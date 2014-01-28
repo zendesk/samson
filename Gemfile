@@ -27,6 +27,7 @@ group :assets do
   gem 'jquery-ui-rails'
 
   gem 'bootstrap-sass', :git => 'https://github.com/thomas-mcdonald/bootstrap-sass.git'
+  gem 'font-awesome-sass'
 end
 
 group :no_preload do
