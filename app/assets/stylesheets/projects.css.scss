@@ -5,6 +5,7 @@
   background: #333;
   min-height: 200px;
   padding: 15px;
+  position: relative;
   margin-top: 30px;
 
   &:hover {
@@ -19,6 +20,12 @@
 
     a {
       color: #FFF;
+    }
+
+    .github {
+      position: absolute;
+      right: 15px;
+      top: 15px;
     }
   }
 

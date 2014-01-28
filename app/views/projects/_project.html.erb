@@ -1,6 +1,9 @@
 <div class="col-sm-4">
   <div class="project-tile">
-    <h2><%= link_to project.name, project_path(project) %></h2>
+    <h2>
+      <%= link_to project.name, project_path(project) %>
+      <a class="github" href="<%= project.repository_url %>" target="_blank"><i class="fa fa-github"></i></a>
+    </h2>
     <ul>
       <% project.stages.each do |stage| %>
         <li>
