@@ -14,13 +14,6 @@ GIT
     net-ssh-shell (0.3.0.dev)
       net-ssh (~> 2.0)
 
-GIT
-  remote: https://github.com/thomas-mcdonald/bootstrap-sass.git
-  revision: f9801791672aec6abd8257506487fdf1541fa74a
-  specs:
-    bootstrap-sass (3.0.3.0)
-      sass (~> 3.2)
-
 GEM
   remote: https://rubygems.org/
   specs:
@@ -63,6 +56,8 @@ GEM
       erubis (>= 2.6.6)
     binding_of_caller (0.7.2)
       debug_inspector (>= 0.0.1)
+    bootstrap-sass (3.0.3.0)
+      sass (~> 3.2)
     bourne (1.5.0)
       mocha (>= 0.13.2, < 0.15)
     builder (3.1.4)
@@ -237,7 +232,7 @@ DEPENDENCIES
   ansible
   better_errors
   binding_of_caller
-  bootstrap-sass!
+  bootstrap-sass
   bourne
   coderay (~> 1.1.0)
   dalli (~> 2.7.0)
