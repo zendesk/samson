@@ -23,7 +23,7 @@ class SessionsController < ApplicationController
       flash[:error] = "Could not log you in."
     end
 
-    redirect_to root_path
+    redirect_to_origin_or_default
   end
 
   def zendesk
@@ -50,7 +50,7 @@ class SessionsController < ApplicationController
       end
     end
 
-    redirect_to root_path
+    redirect_to_origin_or_default
   end
 
   def failure
@@ -80,5 +80,9 @@ class SessionsController < ApplicationController
       auth_hash.extra.raw_info.login,
       strategy.access_token.token
     )
+  end
+
+  def redirect_to_origin_or_default
+    redirect_to request.env['omniauth.origin'] || root_path
   end
 end

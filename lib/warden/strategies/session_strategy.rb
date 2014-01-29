@@ -4,7 +4,7 @@ class Warden::Strategies::SessionStrategy < Warden::Strategies::Base
   end
 
   def authenticate!
-    redirect!('/login')
+    redirect!('/login', origin: request.path)
   end
 end
 

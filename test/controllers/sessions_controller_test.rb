@@ -25,6 +25,7 @@ describe SessionsController do
   end
 
   describe "a POST to #github" do
+    let(:env) {{}}
     let(:user) { users(:viewer) }
     let(:auth_hash) do
       Hashie::Mash.new(
@@ -36,8 +37,10 @@ describe SessionsController do
     end
 
     setup do
-      @controller.stubs(auth_hash: auth_hash)
       @controller.stubs(github_authorization: stub(role_id: Role::VIEWER.id))
+
+      @request.env.merge!(env)
+      @request.env.merge!('omniauth.auth' => auth_hash)
 
       post :github
     end
@@ -49,9 +52,18 @@ describe SessionsController do
     it 'redirects to the root path' do
       assert_redirected_to root_path
     end
+
+    describe 'with an origin' do
+      let(:env) {{ 'omniauth.origin' => '/hello' }}
+
+      it 'redirects to /hello' do
+        assert_redirected_to '/hello'
+      end
+    end
   end
 
   describe 'a POST to #zendesk' do
+    let(:env) {{}}
     let(:user) { users(:viewer) }
     let(:email) { user.email }
     let(:role) { 'admin' }
@@ -66,7 +78,9 @@ describe SessionsController do
     end
 
     setup do
-      @controller.stubs(auth_hash: auth_hash)
+      @request.env.merge!(env)
+      @request.env.merge!('omniauth.auth' => auth_hash)
+
       post :zendesk
     end
 
@@ -80,6 +94,14 @@ describe SessionsController do
 
     it 'sets the user role to DEPLOYER' do
       user.reload.role_id.must_equal(Role::ADMIN.id)
+    end
+
+    describe 'with an origin' do
+      let(:env) {{ 'omniauth.origin' => '/hello' }}
+
+      it 'redirects to /hello' do
+        assert_redirected_to '/hello'
+      end
     end
 
     describe 'with no email' do
