@@ -5,6 +5,7 @@
   background: #333;
   min-height: 200px;
   padding: 15px;
+  position: relative;
   margin-top: 30px;
 
   &:hover {
@@ -19,6 +20,12 @@
 
     a {
       color: #FFF;
+    }
+
+    .github {
+      position: absolute;
+      right: 15px;
+      top: 15px;
     }
   }
 
@@ -76,4 +83,15 @@ pre.pre-inline {
 
 .project-stages > tbody > tr > td {
   line-height: 37px;
+}
+
+.project-title {
+  position: relative;
+
+  .github {
+    color: #333;
+    position: absolute;
+    right: 0;
+    top: 0;
+  }
 }

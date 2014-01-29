@@ -1,6 +1,9 @@
 <div class="col-sm-4">
   <div class="project-tile">
-    <h2><%= link_to project.name, project_path(project) %></h2>
+    <h2>
+      <%= link_to project.name, project_path(project) %>
+      <%= render partial: "shared/github_link", locals: { project: project } %>
+    </h2>
     <ul>
       <% project.stages.each do |stage| %>
         <li>
