@@ -35,6 +35,7 @@ class JobExecution
           }
         )
       ensure
+        ActiveRecord::Base.clear_active_connections!
         JobExecution.finished_job(@job)
       end
     end
@@ -43,11 +44,9 @@ class JobExecution
   def run!
     @job.run!
 
-    ActiveRecord::Base.clear_active_connections!
-
     output_aggregator = OutputAggregator.new(@output)
 
-    Dir.mktmpdir do |dir|
+    result = Dir.mktmpdir do |dir|
       execute!(dir)
     end
 
@@ -55,6 +54,12 @@ class JobExecution
 
     ActiveRecord::Base.connection_pool.with_connection do |connection|
       connection.verify!
+
+      if result
+        @job.success!
+      else
+        @job.fail!
+      end
 
       @job.update_output!(output_aggregator.to_s)
 
@@ -95,11 +100,8 @@ class JobExecution
       *@job.commands
     ]
 
-    if @executor.execute!(*commands)
-      @job.success!
-    else
-      @job.fail!
-    end
+    ActiveRecord::Base.clear_active_connections!
+    @executor.execute!(*commands)
   end
 
   def setup!(dir)
