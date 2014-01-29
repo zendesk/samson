@@ -1,4 +1,4 @@
-if Rails.env.staging? || Rails.env.production?
+if !defined?(Rails) || Rails.env.staging? || Rails.env.production?
   require 'airbrake'
 
   Airbrake.configure do |config|
