@@ -26,7 +26,7 @@ group :assets do
   gem 'jquery-rails'
   gem 'jquery-ui-rails'
 
-  gem 'bootstrap-sass', :git => 'https://github.com/thomas-mcdonald/bootstrap-sass.git'
+  gem 'bootstrap-sass'
   gem 'font-awesome-sass'
 end
 

@@ -9,4 +9,4 @@
 
 # Make sure your secret_key_base is kept private
 # if you're sharing your code publicly.
-ZendeskPusher::Application.config.secret_key_base = '20ad84709314cfe5b7134210cc55215186faacc0d54efd860a8493f44646bb22019aa1de8aa7f6321d29cc1e0667954175efc0cbad0e8f2ed6d2e293bb3e4845'
+ZendeskPusher::Application.config.secret_key_base = ENV['SECRET_TOKEN']
