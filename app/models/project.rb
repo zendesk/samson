@@ -27,6 +27,10 @@ class Project < ActiveRecord::Base
     repository_url.scan(/:(\w+\/\w+)\.git$/).join
   end
 
+  def repository_homepage
+    "//github.com/#{github_repo}"
+  end
+
   def webhook_stages_for_branch(branch)
     webhooks.for_branch(branch).map(&:stage)
   end
