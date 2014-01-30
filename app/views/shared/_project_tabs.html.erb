@@ -11,7 +11,9 @@
   <li class="<%= 'active' if active == 'webhooks'%>">
     <%= link_to "Webhooks", project_webhooks_path(project) %>
   </li>
+<% if current_user.is_admin? %>
   <li class="<%= 'active' if active == 'settings'%>">
     <%= link_to "Settings", edit_project_path(project) %>
   </li>
+<% end %>
 </ul>
