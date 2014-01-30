@@ -58,6 +58,8 @@ GEM
       debug_inspector (>= 0.0.1)
     bootstrap-sass (3.0.3.0)
       sass (~> 3.2)
+    bootstrap-x-editable-rails (1.5.1.1)
+      railties (>= 3.0)
     bourne (1.5.0)
       mocha (>= 0.13.2, < 0.15)
     builder (3.1.4)
@@ -235,6 +237,7 @@ DEPENDENCIES
   better_errors
   binding_of_caller
   bootstrap-sass
+  bootstrap-x-editable-rails
   bourne
   coderay (~> 1.1.0)
   dalli (~> 2.7.0)

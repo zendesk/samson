@@ -12,6 +12,7 @@
  *= require bootstrap
  *= require font-awesome
  *= require jquery.ui.all
+ *= require bootstrap3-editable/bootstrap-editable
  *= require_tree .
  */
 

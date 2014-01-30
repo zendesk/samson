@@ -33,11 +33,23 @@ class Admin::CommandsController < ApplicationController
     @command = Command.find(params[:id])
 
     if @command.update_attributes(command_params)
-      flash[:notice] = 'Command updated.'
-      redirect_to admin_commands_path
+      respond_to do |format|
+        format.json { render json: {} }
+
+        format.html do
+          flash[:notice] = 'Command updated.'
+          redirect_to admin_commands_path
+        end
+      end
     else
-      flash[:error] = 'Command failure.'
-      render :edit
+      respond_to do |format|
+        format.json { render json: {}, status: :unprocessable_entity }
+
+        format.html do
+          flash[:error] = 'Command failure.'
+          render :edit
+        end
+      end
     end
   end
 

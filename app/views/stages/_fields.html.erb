@@ -28,7 +28,7 @@
 
 <fieldset>
   <legend>Commands</legend>
-  <p>Select the commands you want to run when executing this stage.</p>
+  <p>Select the commands you want to run when executing this stage. Double click to edit commands local to this project.</p>
 
   <div id="commands">
     <%= form.collection_check_boxes(:command_ids, form.object.all_commands, :id, :command) do |b| %>
@@ -37,7 +37,7 @@
           <%= b.check_box %>
         </div>
         <div class="col-lg-8">
-          <pre class="pre-command pre-inline"><%= b.text %></pre>
+          <pre data-type="textarea" data-global="<%= b.object.global? %>" data-url="<%= admin_command_path(b.value, format: :json) %>" class="pre-command pre-inline"><%= b.text %></pre>
         </div>
       </div>
     <% end %>
@@ -76,5 +76,18 @@
 <%= javascript_tag do %>
   $(document).ready(function() {
     $('#commands').sortable();
+    $('#commands pre[data-global=false]').editable({
+      mode: 'inline',
+      send: 'always',
+      toggle: 'dblclick',
+      highlight: false,
+      params: function(params) {
+        return { command: { command: params.value } };
+      },
+      ajaxOptions: {
+        type: 'PATCH',
+        dataType: 'json'
+      },
+    });
   });
 <% end %>

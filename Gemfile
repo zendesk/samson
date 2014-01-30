@@ -28,6 +28,8 @@ group :assets do
 
   gem 'bootstrap-sass'
   gem 'font-awesome-sass'
+
+  gem 'bootstrap-x-editable-rails'
 end
 
 group :no_preload do

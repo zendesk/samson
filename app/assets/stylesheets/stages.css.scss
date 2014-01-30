@@ -41,4 +41,16 @@
     padding: 0;
     margin: 0 0 5px 0;
   }
+
+  .editable-container {
+    width: 100%;
+
+    .editable-input, .form-control, .form-group {
+      width: 100%;
+    }
+
+    .form-group {
+      margin: 0 0 0 0;
+    }
+  }
 }
