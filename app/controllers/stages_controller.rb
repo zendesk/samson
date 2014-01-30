@@ -1,5 +1,5 @@
 class StagesController < ApplicationController
-  before_filter :authorize_admin!, except: [:show]
+  before_filter :authorize_admin!, except: [:index, :show]
   before_filter :authorize_deployer!
 
   before_filter :find_project
@@ -54,16 +54,6 @@ class StagesController < ApplicationController
       @stage.flowdock_flows.build
       render :edit
     end
-  end
-
-  def lock
-    @stage.lock!
-    redirect_to project_stages_path(@project)
-  end
-
-  def unlock
-    @stage.unlock!
-    redirect_to project_stages_path(@project)
   end
 
   def destroy

@@ -3,11 +3,16 @@
 }
 
 .stage-bar {
-  background: #F8F8F8 10px center image-url('grabber.png') no-repeat;
-  background-size: 10px;
+  background: #F8F8F8 10px center;
   border-radius: 3px;
   margin-bottom: 5px;
   padding: 5px 5px 5px 30px;
+}
+
+.stage-bar.sortable {
+  background-image: image-url('grabber.png');
+  background-repeat: no-repeat;
+  background-size: 10px;
   cursor: move;
 }
 
