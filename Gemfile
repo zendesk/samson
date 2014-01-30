@@ -30,6 +30,8 @@ group :assets do
   gem 'font-awesome-sass'
 
   gem 'bootstrap-x-editable-rails'
+
+  gem 'rickshaw_rails'
 end
 
 group :no_preload do

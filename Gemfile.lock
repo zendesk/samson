@@ -188,6 +188,8 @@ GEM
       rake (>= 0.8.7)
       thor (>= 0.18.1, < 2.0)
     rake (10.1.1)
+    rickshaw_rails (1.4.5)
+      railties (>= 3.1.0)
     safe_yaml (0.9.7)
     sass (3.2.13)
     sass-rails (4.0.1)
@@ -270,6 +272,7 @@ DEPENDENCIES
   puma
   rails (= 4.0.2)
   rails_12factor
+  rickshaw_rails
   sass-rails (~> 4.0.0)
   simplecov
   soft_deletion (~> 0.4)
