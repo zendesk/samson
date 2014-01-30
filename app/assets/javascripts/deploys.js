@@ -3,7 +3,7 @@
 $(function () {
   var changesetLoaded = false;
 
-  $("#deploy-tabs a").click(function (e) {
+  $("#deploy-tabs a[data-type=github]").click(function (e) {
       e.preventDefault();
       var tab = $(this);
       tab.tab("show");
@@ -20,8 +20,7 @@ $(function () {
             var container = $(".deploy-details");
             var placeholderPanes = container.find(".changeset-placeholder");
 
-            placeholderPanes.remove();
-            container.append(data);
+            placeholderPanes.replace(data);
 
             // We need to switch to another tab and then switch back in order for
             // the plugin to detect that the DOM node has been replaced.

@@ -51,6 +51,8 @@ ZendeskPusher::Application.routes.draw do
   get '/login', to: 'sessions#new'
   get '/logout', to: 'sessions#destroy'
 
+  get '/newrelic' => 'new_relic#show', as: :newrelic
+
   namespace :admin do
     resource :users, only: [:show, :update]
     resources :users, only: [:destroy]

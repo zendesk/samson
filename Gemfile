@@ -54,6 +54,9 @@ group :no_preload do
   gem 'ansible'
 
   gem 'github-markdown', '~> 0.6.3'
+
+  gem 'newrelic_api'
+  gem 'activeresource'
 end
 
 group :development do

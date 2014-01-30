@@ -1,0 +1,2 @@
+module NewRelicHelper
+end
