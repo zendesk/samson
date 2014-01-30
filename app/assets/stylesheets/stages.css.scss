@@ -1,3 +1,5 @@
+@import "bootstrap/mixins";
+
 #stages {
   padding: 0;
 }
@@ -21,9 +23,25 @@
 }
 
 #commands {
+  .editable-buttons {
+    * {
+      width: 80px;
+      margin: 7px 0 0 0;
+      display: block;
+    }
+
+    :first-child {
+      margin: 0;
+    }
+  }
+
   .pre-command {
     margin: 5px 0 5px 0;
     width: 100%;
+  }
+
+  .pre-command.local {
+    @include box-shadow(inset -5px 0 0 rgba(94, 184, 92, 0.35));
   }
 
   .command-checkbox {

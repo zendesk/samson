@@ -28,7 +28,7 @@
 
 <fieldset>
   <legend>Commands</legend>
-  <p>Select the commands you want to run when executing this stage. Double click to edit commands local to this project.</p>
+  <p>Select the commands you want to run when executing this stage. Double click to edit commands local (indicated with green) to this project.</p>
 
   <div id="commands">
     <%= form.collection_check_boxes(:command_ids, form.object.all_commands, :id, :command) do |b| %>
@@ -37,7 +37,7 @@
           <%= b.check_box %>
         </div>
         <div class="col-lg-8">
-          <pre data-type="textarea" data-global="<%= b.object.global? %>" data-url="<%= admin_command_path(b.value, format: :json) %>" class="pre-command pre-inline"><%= b.text %></pre>
+          <pre data-type="textarea" data-url="<%= admin_command_path(b.value, format: :json) %>" class="pre-command pre-inline<%= ' local' unless b.object.global? %>"><%= b.text %></pre>
         </div>
       </div>
     <% end %>
@@ -76,7 +76,9 @@
 <%= javascript_tag do %>
   $(document).ready(function() {
     $('#commands').sortable();
-    $('#commands pre[data-global=false]').editable({
+    $.fn.editableform.buttons = <%= render('commands/buttons').inspect.html_safe %>;
+
+    $('#commands pre.local').editable({
       mode: 'inline',
       send: 'always',
       toggle: 'dblclick',
@@ -87,7 +89,24 @@
       ajaxOptions: {
         type: 'PATCH',
         dataType: 'json'
-      },
+      }
+    });
+
+    $('#commands').on('click', '.editable-destroy', function(event) {
+      var editable = $(this).closest('div.col-lg-8').children('.pre-command');
+
+      if(confirm('Are you sure you would like to remove this command from all stages?')) {
+        $.ajax({
+          method: 'DELETE',
+          dataType: 'json',
+          url: editable.data('url'),
+          success: function() {
+            editable.closest('.row').fadeOut();
+          }
+        });
+      }
+
+      event.preventDefault();
     });
   });
 <% end %>

@@ -34,21 +34,21 @@ class Admin::CommandsController < ApplicationController
 
     if @command.update_attributes(command_params)
       respond_to do |format|
-        format.json { render json: {} }
-
         format.html do
           flash[:notice] = 'Command updated.'
           redirect_to admin_commands_path
         end
+
+        format.json { render json: {} }
       end
     else
       respond_to do |format|
-        format.json { render json: {}, status: :unprocessable_entity }
-
         format.html do
           flash[:error] = 'Command failure.'
           render :edit
         end
+
+        format.json { render json: {}, status: :unprocessable_entity }
       end
     end
   end
@@ -56,8 +56,14 @@ class Admin::CommandsController < ApplicationController
   def destroy
     Command.destroy(params[:id])
 
-    flash[:notice] = 'Command removed.'
-    redirect_to admin_commands_path
+    respond_to do |format|
+      format.html do
+        flash[:notice] = 'Command removed.'
+        redirect_to admin_commands_path
+      end
+
+      format.json { render json: {} }
+    end
   end
 
   private
