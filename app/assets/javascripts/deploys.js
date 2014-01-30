@@ -103,6 +103,10 @@ $(function () {
     if(!confirmed && selected_stage.data("confirmation")) {
       $("#confirm-button-text").show();
       $("#deploy-button-text").hide();
+      $("#deploy-confirmation").removeClass("hide");
+      $("#deploy-confirmation .nav-tabs a:first").tab("show");
+
+      confirmed = true;
 
       $.ajax({
         method: "POST",
@@ -115,10 +119,10 @@ $(function () {
           placeholderPanes.remove();
           container.append(data);
 
-          $("#deploy-confirmation").removeClass("hide");
-          $("#deploy-confirmation a:first").tab("show");
-
-          confirmed = true;
+          // We need to switch to another tab and then switch back in order for
+          // the plugin to detect that the DOM node has been replaced.
+          $('#deploy-confirmation .nav-tabs a').tab("show");
+          $('#deploy-confirmation .nav-tabs a:first').tab("show");
         }
       });
 
