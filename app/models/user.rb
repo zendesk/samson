@@ -1,4 +1,5 @@
 require 'soft_deletion'
+require 'digest/md5'
 
 class User < ActiveRecord::Base
   has_soft_deletion default_scope: true
@@ -29,6 +30,11 @@ class User < ActiveRecord::Base
 
   def name
     super.presence || email
+  end
+
+  def gravatar_url
+    md5 = Digest::MD5.hexdigest(email)
+    "http://www.gravatar.com/avatar/#{md5}"
   end
 
   Role.all.each do |role|

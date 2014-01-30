@@ -44,7 +44,7 @@ $(function () {
         localDate = new Date(Number.parseInt(utcms));
 
     this.title = localDate.toString();
-  })
+  });
 
   var prefetchUrl = $("#deploy_reference").data("prefetchUrl");
 
