@@ -74,7 +74,9 @@
     });
   <% end %>
 
-  <button id="deploy_stop" class="btn btn-danger pull-right">Stop</button>
+  <% if current_user.is_deployer? %>
+    <button id="deploy_stop" class="btn btn-danger pull-right">Stop</button>
+  <% end %>
 <% elsif !@deploy.finished? %>
   <div class="alert alert-info">
     Pusher is currently restarting, your deploy has been queued and will be resumed shortly.
