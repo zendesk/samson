@@ -1,7 +1,7 @@
 <div class="timeline-entry clearfix">
-  <header class="col-md-2">
+  <header class="col-md-1">
     <div class="timeline-time" data-time="<%= datetime_to_js_ms timeline_entry.job.updated_at %>">
-      <%= time_ago_in_words timeline_entry.job.updated_at %> ago
+      ...
     </div>
     <img class="gravatar img-square" src="<%= timeline_entry.user.gravatar_url %>" alt="Gravatar">
   </header>
@@ -10,7 +10,7 @@
       <%= timeline_entry.project.name %>
     </div>
   </div>
-  <div class="timeline-content col-md-6">
+  <div class="timeline-content col-md-6 <%= deploy_status(timeline_entry.status, 'bgcolor') %>">
     <div class="center-text">
       <%= timeline_entry.summary %>
     </div>

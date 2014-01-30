@@ -1,3 +1,7 @@
+hr {
+  margin: 0;
+}
+
 .timeline-entry {
   margin-top: 40px;
   position: relative;
@@ -13,9 +17,8 @@
 .timeline-project,
 .timeline-content {
   color: #333;
+  height: 50px;
   top: 5px;
-  bottom: 5px;
-  height: 70px;
 
   &:before {
     content: " ";
@@ -24,27 +27,22 @@
     height: 0;
     top: 0;
     right: 100%;
-    border-top: 35px solid transparent;
-    border-bottom: 35px solid transparent;
+    border-top: 25px solid transparent;
+    border-bottom: 25px solid transparent;
   }
 }
 
 .timeline-project {
-  background-color: #38f;
-  margin-left: -50px;
+  background-color: #333;
 
   &:before {
-    border-right: 35px solid #38f;
+    border-right: 25px solid #333;
   }
 }
 
 .timeline-content {
   background-color: #ddd;
   margin-left: 10px;
-
-  &:before {
-    border-right: 35px solid #ddd;
-  }
 }
 
 .timeline-time {
@@ -55,13 +53,59 @@
 }
 
 .gravatar {
-  height: 80px;
+  height: 60px;
   margin-left: 20px;
 }
 
 .center-text {
   display: table-cell;
-  height: 70px;
+  height: 50px;
+  color: #fff;
   text-align: center;
   vertical-align: middle;
+}
+
+.bgcolor-primary {
+  background-color: #428bca;
+
+  &:before {
+    border-right: 25px solid #428bca;
+  }
+}
+
+.bgcolor-success {
+  background-color: #5cb85c;
+
+  &:before {
+    border-right: 25px solid #5cb85c;
+  }
+}
+
+.bgcolor-warning {
+  background-color: #f0ad4e;
+
+  &:before {
+    border-right: 25px solid #f0ad4e;
+  }
+}
+
+.bgcolor-danger {
+  background-color: #d9534f;
+
+  &:before {
+    border-right: 25px solid #d9534f;
+  }
+}
+
+.bgcolor-info {
+  background-color: #5bc0de;
+
+  &:before {
+    border-right: 25px solid #5bc0de;
+  }
+}
+
+.timeline-date {
+  font-weight: bold;
+  margin-top: 25px;
 }
