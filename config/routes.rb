@@ -14,6 +14,10 @@ ZendeskPusher::Application.routes.draw do
       collection do
         patch :reorder
       end
+
+      member do
+        get :new_relic, to: 'new_relic#show'
+      end
     end
 
     member do
@@ -50,8 +54,6 @@ ZendeskPusher::Application.routes.draw do
 
   get '/login', to: 'sessions#new'
   get '/logout', to: 'sessions#destroy'
-
-  get '/newrelic' => 'new_relic#show', as: :newrelic
 
   namespace :admin do
     resource :users, only: [:show, :update]

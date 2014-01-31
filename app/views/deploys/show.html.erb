@@ -25,7 +25,7 @@
   <li><a href="#commits" data-type="github" data-toggle="tab">Commits</a></li>
   <li><a href="#pulls" data-type="github" data-toggle="tab">Pull Requests</a></li>
   <li><a href="#risks" data-type="github" data-toggle="tab">Risks</a></li>
-  <li><a href="#newrelic" id="newrelic-tab" data-toggle="tab">NewRelic</a></li>
+  <li><a href="#newrelic" id="newrelic-tab" data-url="<%= new_relic_project_stage(@project, @deploy.stage, format: :json) %>" data-interval="60000" data-toggle="tab">NewRelic</a></li>
 </ul>
 
 <div class="tab-content deploy-details">
@@ -40,109 +40,15 @@
   <% end %>
 
   <div class="tab-pane" id="newrelic">
-    <div id="newrelic-response-time"></div>
-    <div id="newrelic-throughput"></div>
+    <div class="chart">
+      <h2>Response Time</h2>
+      <div id="newrelic-response-time"></div>
+    </div>
 
-    <%= javascript_tag do %>
-      $(document).ready(function() {
-        newrelic_loaded = false;
-        $('a[data-toggle="tab"]').on('shown.bs.tab', function(e) {
-          if(e.target.id != 'newrelic-tab' || newrelic_loaded)
-            return;
-
-          newrelic_loaded = true;
-          var response_chart = null;
-          var throughput_chart = null;
-
-          var apps = {};
-          var times = [];
-
-          function updateNewRelic() {
-            $.ajax({
-              url: '/newrelic.json',
-              success: function(data, status, xhr) {
-                times.push(data.time);
-                for(var app_name in data.applications) {
-                  var application = apps[app_name];
-
-                  if(!application) {
-                    application = apps[app_name] = {};
-                    application.name = app_name;
-                    application.response_time = [];
-                    application.throughput = [];
-                  }
-
-                  application.response_time.push(data.applications[app_name].response_time);
-                  application.throughput.push(data.applications[app_name].throughput);
-
-                  if(times.length > 30) {
-                    application.response_time.shift();
-                    application.throughput.shift();
-                  }
-                }
-
-                if(times.length > 30) {
-                  times.shift();
-                }
-
-                var responses = [];
-                var throughputs = [];
-
-                for(var app in apps) {
-                  app = apps[app];
-
-                  responses.push([app.name].concat(app.response_time));
-                  throughputs.push([app.name].concat(app.throughput));
-                }
-
-                if(!response_chart && !throughput_chart) {
-                  response_chart = c3.generate({
-                    bindto: '#newrelic-response-time',
-                    data: {
-                      x: 'time',
-                      columns: [
-                        ['time'].concat(times),
-                      ].concat(responses),
-                      axis: {
-                        x: { type: 'timeseries' }
-                      }
-                    },
-                  });
-
-                  throughput_chart = c3.generate({
-                    bindto: '#newrelic-throughput',
-                    data: {
-                      x: 'time',
-                      columns: [
-                        ['time'].concat(times)
-                      ].concat(throughputs),
-                      axis: {
-                        x: { type: 'timeseries' }
-                      }
-                    }
-                  });
-                }
-
-                response_chart.load({
-                  columns: [
-                    ['time'].concat(times),
-                  ].concat(responses)
-                });
-
-                throughput_chart.load({
-                  columns: [
-                    ['time'].concat(times)
-                  ].concat(throughputs)
-                });
-              }
-            });
-          }
-
-          updateNewRelic();
-          setInterval(updateNewRelic, 5000);
-        });
-      });
-    <% end %>
+    <div class="chart">
+      <h2>Throughput</h2>
+      <div id="newrelic-throughput"></div>
+    </div>
   </div>
 </div>
 

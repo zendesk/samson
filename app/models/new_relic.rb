@@ -22,11 +22,11 @@ class NewRelic
     end
 
     def throughput
-      thresholds.detect { |t| t.name == "Throughput" }.metric_value.to_i
+      thresholds.detect {|t| t.name == "Throughput"}.metric_value
     end
 
     def response_time
-      thresholds.detect { |t| t.name == "Response Time" }.metric_value.to_i
+      thresholds.detect {|t| t.name == "Response Time"}.metric_value
     end
 
     def get_metric(metric, field, start_time = Time.now, count = 0)
@@ -44,16 +44,15 @@ class NewRelic
       end
 
       data = []
-      doc  = JSON.parse(response.body)
-
-      doc['metrics'].each do |metric|
-        stamp = Time.parse(metric["begin"]).to_i
-        value = metric.at("field").text.to_f
-        data << [ stamp, value ]
+      doc = JSON.parse(response.body)
+      doc.select {|m| m['name'] == metric }.each do |m|
+        stamp = Time.parse(m['begin']).to_i
+        value = m[field]
+        data << [stamp, value]
       end
 
       if count > 0
-        data + get_metric(metric, field, from, count -1)
+        data + get_metric(metric, field, from, count - 1)
       else
         data
       end
@@ -63,17 +62,12 @@ class NewRelic
       data = get_metric('HttpDispatcher', 'average_response_time', time, count)
 
       data.map do |stamp, value|
-        [ stamp, (value * 1000).to_i ]
+        [stamp, (value * 1000).to_i]
       end
     end
 
     def historic_throughput(time = Time.now, count = 0)
       get_metric('HttpDispatcher', 'requests_per_minute', time, count)
-    end
-
-    def error_rate
-      metric = thresholds.detect { |t| t.name == "Error Rate" }
-      metric ? metric.metric_value.round(2) : 0.0
     end
 
     def thresholds
