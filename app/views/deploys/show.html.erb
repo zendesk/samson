@@ -25,7 +25,10 @@
   <li><a href="#commits" data-type="github" data-toggle="tab">Commits</a></li>
   <li><a href="#pulls" data-type="github" data-toggle="tab">Pull Requests</a></li>
   <li><a href="#risks" data-type="github" data-toggle="tab">Risks</a></li>
+
+<% if NewRelicApi.api_key.present? %>
   <li><a href="#newrelic" id="newrelic-tab" data-url="<%= new_relic_project_stage_path(@project, @deploy.stage, format: :json) %>" data-interval="60000" data-toggle="tab">New Relic</a></li>
+<% end %>
 </ul>
 
 <div class="tab-content deploy-details">
@@ -39,6 +42,7 @@
     </div>
   <% end %>
 
+<% if NewRelicApi.api_key.present? %>
   <div class="tab-pane" id="newrelic">
     <div class="chart">
       <h2>Response Time</h2>
@@ -50,6 +54,7 @@
       <div id="newrelic-throughput"></div>
     </div>
   </div>
+<% end %>
 </div>
 
 <% if @deploy.active? && JobExecution.enabled %>
