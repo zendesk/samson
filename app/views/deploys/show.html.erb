@@ -13,10 +13,11 @@
 
 <ul id="deploy-tabs" class="nav nav-tabs" data-changeset-url="<%= changeset_project_deploy_url(@project, @deploy) %>">
   <li class="active"><a href="#output" data-toggle="tab">Output</a></li>
-  <li><a href="#files" data-type="github" data-toggle="tab">Files</a></li>
-  <li><a href="#commits" data-type="github" data-toggle="tab">Commits</a></li>
-  <li><a href="#pulls" data-type="github" data-toggle="tab">Pull Requests</a></li>
-  <li><a href="#risks" data-type="github" data-toggle="tab">Risks</a></li>
+  <li><a href="#files" data-toggle="tab">Files</a></li>
+  <li><a href="#commits" data-toggle="tab">Commits</a></li>
+  <li><a href="#pulls" data-toggle="tab">Pull Requests</a></li>
+  <li><a href="#risks" data-toggle="tab">Risks</a></li>
+  <li><a href="#viewers" data-toggle="tab" id="viewers-link">Viewers <span class="badge">0</span></a></li>
 
 <% if NewRelicApi.api_key.present? %>
   <li>
@@ -40,6 +41,10 @@
       <p>Loading...</p>
     </div>
   <% end %>
+
+  <div class="tab-pane" id="viewers">
+    No ther viewers.
+  </div>
 
 <% if NewRelicApi.api_key.present? %>
   <div class="tab-pane" id="newrelic">
@@ -83,13 +88,13 @@
         if(users.length > 0) {
           var viewers = $.map(users, function(user) {
             return user.name;
-          }).join(', ');
+          }).join(', ') + ' are also viewing this deploy.';
 
-          $("#viewers").removeClass('hide');
+          $('#viewers-link .badge').html(viewers.length);
           $("#viewers").html(viewers);
         } else {
-          $("#viewers").addClass('hide');
-          $("#viewers").html('');
+          $('#viewers-link .badge').html(0);
+          $("#viewers").html('No other viewers.');
         }
       }, false);
 
@@ -100,7 +105,7 @@
 
       source.addEventListener('finished', function(e) {
         $('#header').html(JSON.parse(e.data).html);
-        $('#tag-line').hide();
+        $('#deploy_stop').hide();
         source.close();
       }, false);
 
@@ -113,12 +118,9 @@
     });
   <% end %>
 
-  <div id="tag-line" class="pull-right">
-    <span id="viewers" class="alert alert-info hide"></span>
-    <% if current_user.is_deployer? %>
-      <button id="deploy_stop" class="btn btn-danger">Stop</button>
-    <% end %>
-  </div>
+  <% if current_user.is_deployer? %>
+    <button id="deploy_stop" class="pull-right btn btn-danger">Stop</button>
+  <% end %>
 <% elsif !@deploy.finished? %>
   <div class="alert alert-info">
     Pusher is currently restarting, your deploy has been queued and will be resumed shortly.
