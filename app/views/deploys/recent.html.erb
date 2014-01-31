@@ -1,6 +1,3 @@
-<h1>Recent Deploys</h1>
-
-<div class="timeline" ng-controller="TimelineCtrl">
+<div class="timeline" ng-controller="TimelineCtrl" timeline-scroll>
   <%= render partial: "timeline_entry" %>
-  <span class="btn btn-default" ng-click="loadEntries()">More</span>
 </div>

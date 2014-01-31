@@ -1,6 +1,6 @@
-var timeline = angular.module('timeline', [])
+var timeline = angular.module("timeline", [])
 
-timeline.controller('TimelineCtrl', ['$scope', '$http', function($scope, $http) {
+timeline.controller("TimelineCtrl", ["$scope", "$http", function($scope, $http) {
   var NUM_TO_MONTH = [
     "January",
     "February",
@@ -93,4 +93,20 @@ timeline.controller('TimelineCtrl', ['$scope', '$http', function($scope, $http) 
   };
 
   $scope.loadEntries();
+
+  // CAUTION: Global scope code
+
+  var $window = $(window),
+      loading = false;
+
+  $window.on('scroll', function() {
+    if (window.scrollY >= window.scrollMaxY - 100 && !loading) {
+      $scope.$apply("loadEntries()");
+      loading = true;
+
+      setTimeout(function() {
+        loading = false;
+      }, 500);
+    }
+  });
 }]);
