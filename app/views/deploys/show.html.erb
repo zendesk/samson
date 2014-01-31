@@ -88,10 +88,10 @@
         if(users.length > 0) {
           var viewers = $.map(users, function(user) {
             return user.name;
-          }).join(', ') + ' are also viewing this deploy.';
+          }).join(', ') + '.';
 
-          $('#viewers-link .badge').html(viewers.length);
-          $("#viewers").html(viewers);
+          $('#viewers-link .badge').html(users.length);
+          $("#viewers").html('Other viewers: ' + viewers);
         } else {
           $('#viewers-link .badge').html(0);
           $("#viewers").html('No other viewers.');
