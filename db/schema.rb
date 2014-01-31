@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20140116050403) do
+ActiveRecord::Schema.define(version: 20140131005054) do
 
   create_table "commands", force: true do |t|
     t.text     "command",    limit: 16777215
@@ -55,6 +55,11 @@ ActiveRecord::Schema.define(version: 20140116050403) do
     t.datetime "created_at"
     t.datetime "updated_at"
     t.datetime "deleted_at"
+  end
+
+  create_table "new_relic_applications", force: true do |t|
+    t.string  "name"
+    t.integer "stage_id"
   end
 
   create_table "projects", force: true do |t|

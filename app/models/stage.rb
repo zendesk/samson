@@ -4,6 +4,7 @@ class Stage < ActiveRecord::Base
   belongs_to :project
   has_many :deploys
   has_many :flowdock_flows
+  has_many :new_relic_applications
   has_one :lock
 
   has_many :stage_commands, autosave: true
@@ -24,6 +25,7 @@ class Stage < ActiveRecord::Base
   validates :name, presence: true, uniqueness: { scope: :project }
 
   accepts_nested_attributes_for :flowdock_flows, allow_destroy: true, reject_if: :no_flowdock_token?
+  accepts_nested_attributes_for :new_relic_applications, allow_destroy: true
 
   attr_writer :command
   before_save :build_new_project_command

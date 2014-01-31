@@ -8,13 +8,7 @@ class NewRelicController < ApplicationController
   end
 
   def show
-    apps = [
-      'RS Production',
-      'Pod2 Application Servers',
-      'pod3 Application Servers'
-    ]
-
-    values = stage.new_relic_applications.inject({}) do |map, app_name|
+    values = stage.new_relic_applications.map(&:name).inject({}) do |map, app_name|
       app = NewRelic.applications[app_name]
       map[app_name] = { id: app.id }
 

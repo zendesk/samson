@@ -25,7 +25,7 @@
   <li><a href="#commits" data-type="github" data-toggle="tab">Commits</a></li>
   <li><a href="#pulls" data-type="github" data-toggle="tab">Pull Requests</a></li>
   <li><a href="#risks" data-type="github" data-toggle="tab">Risks</a></li>
-  <li><a href="#newrelic" id="newrelic-tab" data-url="<%= new_relic_project_stage(@project, @deploy.stage, format: :json) %>" data-interval="60000" data-toggle="tab">NewRelic</a></li>
+  <li><a href="#newrelic" id="newrelic-tab" data-url="<%= new_relic_project_stage_path(@project, @deploy.stage, format: :json) %>" data-interval="60000" data-toggle="tab">NewRelic</a></li>
 </ul>
 
 <div class="tab-content deploy-details">

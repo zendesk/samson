@@ -73,6 +73,26 @@
   <% end %>
 </fieldset>
 
+<fieldset>
+  <legend>New Relic</legend>
+  <p>Add the name of New Relic Applications that you would like to keep of during this stages' deploys.</p>
+
+  <%= form.fields_for :new_relic_applications do |app_fields| %>
+    <div class="form-group">
+      <div class="col-lg-6 col-lg-offset-2">
+        <%= app_fields.text_field :name, class: "form-control", placeholder: "Application name" %>
+      </div>
+
+      <% if app_fields.object.persisted? %>
+        <div class="col-lg-1 checkbox">
+          <%= app_fields.check_box :_destroy if app_fields.object.persisted? %>
+          <%= app_fields.label :_destroy, "Delete" %>
+        </div>
+      <% end %>
+    </div>
+  <% end %>
+</fieldset>
+
 <%= javascript_tag do %>
   $(document).ready(function() {
     $('#commands').sortable();
