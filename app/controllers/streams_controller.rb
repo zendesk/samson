@@ -14,8 +14,7 @@ class StreamsController < ApplicationController
     streamer = EventStreamer.new(response.stream) do |event, data|
       case event
       when :viewers
-        viewers = data.uniq
-        viewers.delete(current_user)
+        viewers = data.uniq.reject {|user| user == current_user}
         viewers.to_json(only: [:id, :name])
       when :finished
         execution.viewers.delete(current_user) if execution
