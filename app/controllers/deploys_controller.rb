@@ -80,6 +80,6 @@ class DeploysController < ApplicationController
   end
 
   def find_deploy
-    @deploy = Deploy.find(params[:id])
+    @deploy = Deploy.includes(stage: [:new_relic_applications]).find(params[:id])
   end
 end

@@ -1,13 +1,14 @@
 $(document).ready(function() {
   newrelic_loaded = false;
 
-  $('a[data-toggle="tab"]').on('shown.bs.tab', function(e) {
-    if(e.target.id != 'newrelic-tab' || newrelic_loaded)
+  $('#newrelic-tab').on('shown.bs.tab', function(e) {
+    var tab = $(e.target);
+
+    if(!tab.data('enabled') || newrelic_loaded)
       return;
 
     var response_chart = null;
     var throughput_chart = null;
-    var tab = $(e.target);
 
     var apps = {};
     var times = [];
@@ -51,6 +52,10 @@ $(document).ready(function() {
             times = data.historic_times;
           } else {
             times.push(data.time);
+          }
+
+          if($.isEmptyObject(data.applications)) {
+            return;
           }
 
           for(var app_name in data.applications) {

@@ -22,45 +22,39 @@ class NewRelic
       thresholds.detect {|t| t.name == "Response Time"}.metric_value
     end
 
-    def get_metric(metric, field, start_time = Time.now, count = 0)
+    def get_metric(metric, field, start_time = Time.now.utc)
       url = "https://api.newrelic.com/api/v1/accounts/#{app.account_id}/applications/#{app.id}/data.json"
-      url << "?metrics[]=#{metric}&field=#{field}&begin="
 
-      from = start_time.utc - 30*60
+      query = {
+        metrics: [metric],
+        field: field,
+        begin: (start_time - 60 * 30).strftime("%Y-%m-%dT%H:%M:00Z"),
+        end: start_time.strftime("%Y-%m-%dT%H:%M:00Z")
+      }
 
-      url << from.strftime("%Y-%m-%dT%H:%M:00Z")
-      url << "&end="
-      url << start_time.strftime("%Y-%m-%dT%H:%M:00Z")
-
-      response = Faraday.get(url) do |request|
+      response = Faraday.get(url, query) do |request|
         request.headers['X-Api-Key'] = NewRelicApi.api_key
       end
 
       doc = JSON.parse(response.body)
 
-      data = doc.select {|m| m['name'] == metric }.map do |m|
+      doc.select {|m| m['name'] == metric}.map do |m|
         stamp = Time.parse(m['begin']).to_i
         value = m[field]
         [stamp, value]
       end
-
-      if count > 0
-        data + get_metric(metric, field, from, count - 1)
-      else
-        data
-      end
     end
 
-    def historic_response_time(time = Time.now, count = 0)
-      data = get_metric('HttpDispatcher', 'average_response_time', time, count)
+    def historic_response_time(time = Time.now.utc)
+      data = get_metric('HttpDispatcher', 'average_response_time', time)
 
       data.map do |stamp, value|
         [stamp, (value * 1000).to_i]
       end
     end
 
-    def historic_throughput(time = Time.now, count = 0)
-      get_metric('HttpDispatcher', 'requests_per_minute', time, count)
+    def historic_throughput(time = Time.now.utc, count = 0)
+      get_metric('HttpDispatcher', 'requests_per_minute', time)
     end
 
     def thresholds
