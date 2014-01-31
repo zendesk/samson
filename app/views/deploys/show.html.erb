@@ -17,17 +17,20 @@
   <li><a href="#commits" data-toggle="tab">Commits</a></li>
   <li><a href="#pulls" data-toggle="tab">Pull Requests</a></li>
   <li><a href="#risks" data-toggle="tab">Risks</a></li>
+
+<% if active? %>
   <li><a href="#viewers" data-toggle="tab" id="viewers-link">Viewers <span class="badge">0</span></a></li>
 
-<% if NewRelicApi.api_key.present? %>
-  <li>
-    <a href="#newrelic" id="newrelic-tab"
-      data-enabled="<%= @deploy.stage.new_relic_applications.any? %>"
-      data-url="<%= new_relic_project_stage_path(@project, @deploy.stage, format: :json) %>"
-      data-interval="60000" data-toggle="tab">
-    New Relic
-    </a>
-  </li>
+  <% if NewRelicApi.api_key.present? %>
+    <li>
+      <a href="#newrelic" id="newrelic-tab"
+        data-enabled="<%= @deploy.stage.new_relic_applications.any? %>"
+        data-url="<%= new_relic_project_stage_path(@project, @deploy.stage, format: :json) %>"
+        data-interval="60000" data-toggle="tab">
+      New Relic
+      </a>
+    </li>
+  <% end %>
 <% end %>
 </ul>
 
@@ -42,30 +45,31 @@
     </div>
   <% end %>
 
+<% if active? %>
   <div class="tab-pane" id="viewers">
     No ther viewers.
   </div>
 
-<% if NewRelicApi.api_key.present? %>
-  <div class="tab-pane" id="newrelic">
-    <% if @deploy.stage.new_relic_applications.any? %>
-      <div class="chart">
-        <h2>Response Time</h2>
-        <div id="newrelic-response-time"></div>
-      </div>
+  <% if NewRelicApi.api_key.present? %>
+    <div class="tab-pane" id="newrelic">
+      <% if @deploy.stage.new_relic_applications.any? %>
+        <div class="chart">
+          <h2>Response Time</h2>
+          <div id="newrelic-response-time"></div>
+        </div>
 
-      <div class="chart">
-        <h2>Throughput</h2>
-        <div id="newrelic-throughput"></div>
-      </div>
-    <% else %>
-      No New Relic applications configured.
-    <% end %>
-  </div>
+        <div class="chart">
+          <h2>Throughput</h2>
+          <div id="newrelic-throughput"></div>
+        </div>
+      <% else %>
+        No New Relic applications configured.
+      <% end %>
+    </div>
 <% end %>
 </div>
 
-<% if @deploy.active? && JobExecution.enabled %>
+<% if active? %>
   <%= javascript_tag do %>
     $(document).ready(function() {
       var messages = $("#messages");
