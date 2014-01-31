@@ -12,10 +12,6 @@ $lightWarning: lighten(#f0ad4e, $scale);
 $lightDanger: lighten(#d9534f, $scale);
 $lightInfo: lighten(#5bc0de, $scale);
 
-hr {
-  margin: 0;
-}
-
 .timeline-entry {
   margin-top: 40px;
   position: relative;
@@ -36,7 +32,6 @@ hr {
 
 .timeline-project {
   color: #eee;
-  background-color: $lightPusherDark;
   text-align: center;
 }
 
@@ -61,47 +56,46 @@ hr {
   vertical-align: middle;
 }
 
-.bgcolor-primary {
+.bg-primary {
   background-color: $primary;
 }
 
-.bgcolor-success {
+.bg-success {
   background-color: $success;
 }
 
-.bgcolor-warning {
+.bg-warning {
   background-color: $warning;
 }
 
-.bgcolor-danger {
+.bg-danger {
   background-color: $danger;
 }
 
-.bgcolor-info {
+.bg-info {
   background-color: $info;
 }
 
-.bgcolor-light-primary {
+.bg-light-primary {
   background-color: $lightPrimary;
 }
 
-.bgcolor-light-success {
+.bg-light-success {
   background-color: $lightSuccess;
 }
 
-.bgcolor-light-warning {
+.bg-light-warning {
   background-color: $lightWarning;
 }
 
-.bgcolor-light-danger {
+.bg-light-danger {
   background-color: $lightDanger;
 }
 
-.bgcolor-light-info {
+.bg-light-info {
   background-color: $lightInfo;
 }
 
 .timeline-date {
   font-weight: bold;
-  margin-top: 25px;
 }

@@ -1,18 +1,22 @@
-<div class="timeline-entry clearfix">
+<div class="timeline-entry clearfix" ng-repeat="entry in entries">
+  <div ng-if="entry.time.date != entries[$index - 1].time.date">
+    <div class="timeline-date">{{entry.time.day + ", " + entry.time.year + " " + entry.time.month + " " + entry.time.date}}</div>
+    <hr>
+  </div>
   <header class="col-md-2">
-    <div class="timeline-time" data-time="<%= datetime_to_js_ms timeline_entry.job.updated_at %>">
-      ...
+    <div class="timeline-time">
+      {{dayTime(entry.time)}}
     </div>
-    <img class="gravatar img-square" src="<%= timeline_entry.user.gravatar_url %>" alt="Gravatar">
+    <img class="gravatar img-square" ng-src="{{entry.gravatarURL}}" alt="Gravatar">
   </header>
-  <div class="timeline-project col-md-2 <%= deploy_status(timeline_entry.status, 'bgcolor') %>">
+  <div class="timeline-project col-md-2 bg-{{transformStatus(entry.status)}}">
     <div class="v-text">
-      <%= timeline_entry.project.name %>
+      {{entry.projectName}}
     </div>
   </div>
-  <div class="timeline-content col-md-6 <%= deploy_status(timeline_entry.status, 'bgcolor-light') %>">
+  <div class="timeline-content col-md-6 bg-light-{{transformStatus(entry.status)}}">
     <div class="v-text">
-      <%= timeline_entry.summary %>
+      {{entry.summary}}
     </div>
   </div>
 </div>

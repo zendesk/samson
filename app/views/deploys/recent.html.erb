@@ -1,3 +1,6 @@
 <h1>Recent Deploys</h1>
 
-<%= render partial: "timeline_entry", collection: @deploys %>
+<div class="timeline" ng-controller="TimelineCtrl">
+  <%= render partial: "timeline_entry" %>
+  <span class="btn btn-default" ng-click="loadEntries()">More</span>
+</div>
