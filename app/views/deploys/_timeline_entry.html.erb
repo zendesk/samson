@@ -9,14 +9,18 @@
     </div>
     <img class="gravatar img-square" ng-src="{{entry.gravatarURL}}" alt="Gravatar">
   </header>
-  <div class="timeline-project col-md-2 bg-{{transformStatus(entry.status)}}">
-    <div class="v-text">
-      {{entry.projectName}}
+  <a ng-href="/projects/{{entry.projectId}}-{{entry.project.name}}">
+    <div class="timeline-project col-md-2 bg-{{transformStatus(entry.status)}}">
+      <div class="v-text">
+        {{entry.projectName}}
+      </div>
     </div>
-  </div>
-  <div class="timeline-content col-md-6 bg-light-{{transformStatus(entry.status)}}">
-    <div class="v-text">
-      {{entry.summary}}
+  </a>
+  <a ng-href="/projects/{{entry.projectId}}-{{entry.project.name}}/deploys/{{entry.deployId}}">
+    <div class="timeline-content col-md-6 bg-light-{{transformStatus(entry.status)}}">
+      <div class="v-text">
+        {{entry.summary}}
+      </div>
     </div>
-  </div>
+  </a>
 </div>

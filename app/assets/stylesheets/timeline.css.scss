@@ -12,6 +12,15 @@ $lightWarning: lighten(#f0ad4e, $scale);
 $lightDanger: lighten(#d9534f, $scale);
 $lightInfo: lighten(#5bc0de, $scale);
 
+a {
+  color: inherit;
+}
+
+a:hover {
+  text-decoration: none;
+  color: inherit;
+}
+
 .timeline-entry {
   margin-top: 40px;
   position: relative;
