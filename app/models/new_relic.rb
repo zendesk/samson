@@ -7,18 +7,11 @@ class NewRelic
   end
 
   class Application
-    attr_accessor :app
+    attr_reader :app
+    delegate :id, :name, to: :app
 
     def initialize(app)
       @app = app
-    end
-
-    def name
-      app.name
-    end
-
-    def id
-      app.id
     end
 
     def throughput
@@ -40,15 +33,15 @@ class NewRelic
       url << start_time.strftime("%Y-%m-%dT%H:%M:00Z")
 
       response = Faraday.get(url) do |request|
-        request.headers['X-Api-Key'] = ENV['NEWRELIC_API_KEY']
+        request.headers['X-Api-Key'] = NewRelicApi.api_key
       end
 
-      data = []
       doc = JSON.parse(response.body)
-      doc.select {|m| m['name'] == metric }.each do |m|
+
+      data = doc.select {|m| m['name'] == metric }.map do |m|
         stamp = Time.parse(m['begin']).to_i
         value = m[field]
-        data << [stamp, value]
+        [stamp, value]
       end
 
       if count > 0
