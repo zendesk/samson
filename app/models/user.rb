@@ -4,7 +4,6 @@ require 'digest/md5'
 class User < ActiveRecord::Base
   has_soft_deletion default_scope: true
 
-  paginates_per 50
   has_many :commands
 
   validates :role_id, inclusion: { in: Role.all.map(&:id) }

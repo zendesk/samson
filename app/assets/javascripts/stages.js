@@ -4,8 +4,6 @@ $(function() {
       $successs  = $("#success_message"),
       $error     = $("#error_message");
 
-  $stagesBox.sortable();
-
   var reorderCtrl = {
     sending:               false,
     orderChanged:          false,
@@ -38,15 +36,16 @@ $(function() {
     }
   };
 
-
-  $stagesBox.sortable({
-    update: function() {
-      if (reorderCtrl.sending) {
-        reorderCtrl.orderChanged = true;
-      } else {
-        reorderCtrl.sending = true;
-        reorderCtrl.reorder();
+  if($stagesBox.data('sortable')) {
+    $stagesBox.sortable({
+      update: function() {
+        if (reorderCtrl.sending) {
+          reorderCtrl.orderChanged = true;
+        } else {
+          reorderCtrl.sending = true;
+          reorderCtrl.reorder();
+        }
       }
-    }
-  });
+    });
+  }
 });

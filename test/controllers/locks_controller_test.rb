@@ -24,7 +24,7 @@ describe LocksController do
           before { post :create, project_id: project.id, stage_id: 1 }
 
           it 'redirects' do
-            assert_redirected_to project_stages_path(project)
+            assert_redirected_to project_path(project)
           end
         end
 
@@ -36,7 +36,7 @@ describe LocksController do
           end
 
           it 'redirects' do
-            assert_redirected_to project_stages_path(project)
+            assert_redirected_to project_stage_path(project, stage)
           end
         end
       end
@@ -56,7 +56,7 @@ describe LocksController do
           before { delete :destroy, project_id: project.id, stage_id: 1 }
 
           it 'redirects' do
-            assert_redirected_to project_stages_path(project)
+            assert_redirected_to project_path(project)
           end
         end
 
@@ -65,7 +65,7 @@ describe LocksController do
             before { delete :destroy, project_id: project.id, stage_id: stage.id }
 
             it 'redirects' do
-              assert_redirected_to project_stages_path(project)
+              assert_redirected_to project_stage_path(project, stage)
             end
           end
 

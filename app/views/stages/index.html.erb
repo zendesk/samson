@@ -3,9 +3,9 @@
 <%= render partial: "shared/project_tabs",
            locals: { project: @project, active: "stages" } %>
 
-<ul id="stages" data-url="<%= reorder_project_stages_path(@project) %>">
+<ul id="stages" data-url="<%= reorder_project_stages_path(@project) %>" data-sortable="<%= current_user.is_admin? %>">
   <% @stages.each.with_index do |stage, index| %>
-    <li class="stage-bar bar list-unstyled clearfix" data-id="stage_id_<%= stage.id %>">
+    <li class="stage-bar bar list-unstyled clearfix<%= ' sortable' if current_user.is_admin? %>" data-id="stage_id_<%= stage.id %>">
       <%= link_to stage.name, project_stage_path(@project, stage) %>
       <% if stage.locked? %>
         <span class="label label-warning" title="<%= stage.lock.summary %>"><i class="glyphicon glyphicon-lock"></i> Locked</span>
@@ -17,7 +17,9 @@
   <% end %>
 </ul>
 
-<%= link_to "Add Stage", new_project_stage_path(@project), class: "btn btn-default" %>
+<% if current_user.is_admin? %>
+  <%= link_to "Add Stage", new_project_stage_path(@project), class: "btn btn-default" %>
+<% end %>
 
 <button id="error_message" class="messages btn btn-danger" disabled>
   Failed to save

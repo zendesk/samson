@@ -3,7 +3,7 @@ class LocksController < ApplicationController
 
   rescue_from ActiveRecord::RecordNotFound do
     if Project.exists?(params[:project_id])
-      redirect_to project_stages_path(project)
+      redirect_to project_path(project)
     else
       redirect_to root_path
     end
@@ -11,12 +11,12 @@ class LocksController < ApplicationController
 
   def create
     stage.create_lock(user: current_user)
-    redirect_to project_stages_path(project)
+    redirect_to project_stage_path(project, stage)
   end
 
   def destroy
     stage.lock.try(:soft_delete)
-    redirect_to project_stages_path(project)
+    redirect_to project_stage_path(project, stage)
   end
 
   protected
