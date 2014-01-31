@@ -1,3 +1,17 @@
+$pusherDark: #333;
+$lightPusherDark: lighten($pusherDark, 30%);
+$primary: #428bca;
+$success: #5cb85c;
+$warning: #f0ad4e;
+$danger: #d9534f;
+$info: #5bc0de;
+$scale: 30%;
+$lightPrimary: lighten(#428bca, $scale);
+$lightSuccess: lighten(#5cb85c, $scale);
+$lightWarning: lighten(#f0ad4e, $scale);
+$lightDanger: lighten(#d9534f, $scale);
+$lightInfo: lighten(#5bc0de, $scale);
+
 hr {
   margin: 0;
 }
@@ -16,93 +30,75 @@ hr {
 
 .timeline-project,
 .timeline-content {
-  color: #333;
-  height: 50px;
-  top: 5px;
-
-  &:before {
-    content: " ";
-    position: absolute;
-    width: 0;
-    height: 0;
-    top: 0;
-    right: 100%;
-    border-top: 25px solid transparent;
-    border-bottom: 25px solid transparent;
-  }
+  color: $pusherDark;
+  height: 40px;
 }
 
 .timeline-project {
-  background-color: #333;
-
-  &:before {
-    border-right: 25px solid #333;
-  }
+  color: #eee;
+  background-color: $lightPusherDark;
+  text-align: center;
 }
 
 .timeline-content {
-  background-color: #ddd;
-  margin-left: 10px;
+  color: $pusherDark;
 }
 
 .timeline-time {
   color: #999;
   text-transform: uppercase;
-  position: absolute;
-  bottom: 110%;
+  float: left;
 }
 
 .gravatar {
-  height: 60px;
-  margin-left: 20px;
+  height: 40px;
+  float: right;
 }
 
-.center-text {
+.v-text {
   display: table-cell;
-  height: 50px;
-  color: #fff;
-  text-align: center;
+  height: 40px;
   vertical-align: middle;
 }
 
 .bgcolor-primary {
-  background-color: #428bca;
-
-  &:before {
-    border-right: 25px solid #428bca;
-  }
+  background-color: $primary;
 }
 
 .bgcolor-success {
-  background-color: #5cb85c;
-
-  &:before {
-    border-right: 25px solid #5cb85c;
-  }
+  background-color: $success;
 }
 
 .bgcolor-warning {
-  background-color: #f0ad4e;
-
-  &:before {
-    border-right: 25px solid #f0ad4e;
-  }
+  background-color: $warning;
 }
 
 .bgcolor-danger {
-  background-color: #d9534f;
-
-  &:before {
-    border-right: 25px solid #d9534f;
-  }
+  background-color: $danger;
 }
 
 .bgcolor-info {
-  background-color: #5bc0de;
+  background-color: $info;
+}
 
-  &:before {
-    border-right: 25px solid #5bc0de;
-  }
+.bgcolor-light-primary {
+  background-color: $lightPrimary;
+}
+
+.bgcolor-light-success {
+  background-color: $lightSuccess;
+}
+
+.bgcolor-light-warning {
+  background-color: $lightWarning;
+}
+
+.bgcolor-light-danger {
+  background-color: $lightDanger;
+}
+
+.bgcolor-light-info {
+  background-color: $lightInfo;
 }
 
 .timeline-date {

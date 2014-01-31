@@ -1,17 +1,17 @@
 <div class="timeline-entry clearfix">
-  <header class="col-md-1">
+  <header class="col-md-2">
     <div class="timeline-time" data-time="<%= datetime_to_js_ms timeline_entry.job.updated_at %>">
       ...
     </div>
     <img class="gravatar img-square" src="<%= timeline_entry.user.gravatar_url %>" alt="Gravatar">
   </header>
-  <div class="timeline-project col-md-2">
-    <div class="center-text">
+  <div class="timeline-project col-md-2 <%= deploy_status(timeline_entry.status, 'bgcolor') %>">
+    <div class="v-text">
       <%= timeline_entry.project.name %>
     </div>
   </div>
-  <div class="timeline-content col-md-6 <%= deploy_status(timeline_entry.status, 'bgcolor') %>">
-    <div class="center-text">
+  <div class="timeline-content col-md-6 <%= deploy_status(timeline_entry.status, 'bgcolor-light') %>">
+    <div class="v-text">
       <%= timeline_entry.summary %>
     </div>
   </div>
