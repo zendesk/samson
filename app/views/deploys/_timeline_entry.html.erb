@@ -1,4 +1,4 @@
-<div class="timeline-entry clearfix" ng-repeat="entry in entries">
+<div class="timeline-entry clearfix" ng-repeat="entry in entries | filter: search">
   <div ng-if="entry.time.date != entries[$index - 1].time.date">
     <div class="timeline-date">{{entry.time.day + ", " + entry.time.year + " " + entry.time.month + " " + entry.time.date}}</div>
     <hr>

@@ -1,3 +1,7 @@
 <div class="timeline" ng-controller="TimelineCtrl" timeline-scroll>
+  <h2>Filters</h2><hr>
+  <div class="timeline-filter">
+    <label for="tl-project">Project: <input id="tl-project" type="text" ng-model="search.projectName"></label>
+  </div>
   <%= render partial: "timeline_entry" %>
 </div>
