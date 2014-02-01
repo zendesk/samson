@@ -1,6 +1,10 @@
 require_relative '../test_helper'
 
 describe NewRelicController do
+  setup do
+    NewRelicApi.api_key = 'hello'
+  end
+
   as_a_deployer do
     describe 'without a project' do
       setup do
