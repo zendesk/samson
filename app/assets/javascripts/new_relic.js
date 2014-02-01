@@ -1,11 +1,12 @@
 $(document).ready(function() {
-  newrelic_loaded = false;
+  var newrelic_loaded = false;
 
   $('#newrelic-tab').on('shown.bs.tab', function(e) {
     var tab = $(e.target);
 
-    if(!tab.data('enabled') || newrelic_loaded)
+    if(!tab.data('enabled') || newrelic_loaded) {
       return;
+    }
 
     var response_chart = null;
     var throughput_chart = null;
@@ -31,7 +32,7 @@ $(document).ready(function() {
 
       new Rickshaw.Graph.HoverDetail({ graph: chart });
       new Rickshaw.Graph.Axis.Time({ graph: chart });
-      new Rickshaw.Graph.Axis.Y({ graph: chart, tickFormat: Rickshaw.Fixtures.Number.formatKMBT })
+      new Rickshaw.Graph.Axis.Y({ graph: chart, tickFormat: Rickshaw.Fixtures.Number.formatKMBT });
 
       return chart;
     }

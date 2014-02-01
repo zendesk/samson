@@ -1,8 +1,48 @@
 class NewRelic
-  def self.applications
-    @applications ||= NewRelicApi::Account.first.applications.inject({}) do |map, app|
-      map[app.name] = Application.new(app)
-      map
+  class << self
+    def applications
+      @applications ||= NewRelicApi::Account.first.applications.inject({}) do |map, app|
+        map[app.name] = Application.new(app)
+        map
+      end
+    end
+
+    def metrics(application_names, initial = false)
+      values = application_names.inject({}) do |map, app_name|
+        app = NewRelic.applications[app_name]
+        map[app_name] = { id: app.id }
+
+        if initial
+          map[app_name].merge!(
+            historic_response_time: app.historic_response_time.map(&:last),
+            historic_throughput: app.historic_throughput.map(&:last)
+          )
+        else
+          map[app_name].merge!(response_time: app.response_time, throughput: app.throughput)
+        end
+
+        map
+      end
+
+      metrics = { applications: values, count: values.size }
+
+      if initial
+        metrics.merge!(historic_times: historic_times)
+      else
+        metrics.merge!(time: Time.now.utc.to_i)
+      end
+
+      metrics
+    end
+
+    private
+
+    def historic_times
+      time = Time.now.utc.to_i
+
+      (0...30).inject([]) do |ary, i|
+        ary.unshift(time - 60 * i)
+      end
     end
   end
 

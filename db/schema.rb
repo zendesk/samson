@@ -62,6 +62,8 @@ ActiveRecord::Schema.define(version: 20140131005054) do
     t.integer "stage_id"
   end
 
+  add_index "new_relic_applications", ["stage_id", "name"], name: "index_new_relic_applications_on_stage_id_and_name", unique: true, using: :btree
+
   create_table "projects", force: true do |t|
     t.string   "name",           null: false
     t.string   "repository_url", null: false
