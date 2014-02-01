@@ -24,6 +24,7 @@ class StagesController < ApplicationController
   def new
     @stage = @project.stages.build(command_ids: Command.global.pluck(:id))
     @stage.flowdock_flows.build
+    @stage.new_relic_applications.build
   end
 
   def create
@@ -37,12 +38,15 @@ class StagesController < ApplicationController
       flash[:error] = @stage.errors.full_messages
 
       @stage.flowdock_flows.build
+      @stage.new_relic_applications.build
+
       render :new
     end
   end
 
   def edit
     @stage.flowdock_flows.build
+    @stage.new_relic_applications.build
   end
 
   def update
@@ -52,6 +56,8 @@ class StagesController < ApplicationController
       flash[:error] = @stage.errors.full_messages
 
       @stage.flowdock_flows.build
+      @stage.new_relic_applications.build
+
       render :edit
     end
   end
@@ -74,7 +80,8 @@ class StagesController < ApplicationController
       :name, :command, :confirm,
       :notify_email_address,
       command_ids: [],
-      flowdock_flows_attributes: [:id, :name, :token, :_destroy]
+      flowdock_flows_attributes: [:id, :name, :token, :_destroy],
+      new_relic_applications_attributes: [:id, :name, :_destroy]
     )
   end
 

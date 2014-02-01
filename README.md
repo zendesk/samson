@@ -45,6 +45,9 @@ script/bootstrap
 # [OPTIONAL]
 # You also can fill in your personal GitHub token. You can generate a new
 # at https://github.com/settings/applications - it gets assigned to GITHUB_TOKEN.
+#
+# You may fill in NEWRELIC_API_KEY using the instructions below if you would like a dynamic chart of response time and throughput during deploys.
+# https://docs.newrelic.com/docs/features/getting-started-with-the-new-relic-rest-api#setup
 ```
 
 #### To run:

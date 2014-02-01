@@ -37,6 +37,10 @@ GEM
       activesupport (= 4.0.2)
       arel (~> 4.0.0)
     activerecord-deprecated_finders (1.0.3)
+    activeresource (4.0.0)
+      activemodel (~> 4.0)
+      activesupport (~> 4.0)
+      rails-observers (~> 0.1.1)
     activesupport (4.0.2)
       i18n (~> 0.6, >= 0.6.4)
       minitest (~> 4.2)
@@ -59,6 +63,8 @@ GEM
       debug_inspector (>= 0.0.1)
     bootstrap-sass (3.0.3.0)
       sass (~> 3.2)
+    bootstrap-x-editable-rails (1.5.1.1)
+      railties (>= 3.0)
     bourne (1.5.0)
       mocha (>= 0.13.2, < 0.15)
     builder (3.1.4)
@@ -138,6 +144,7 @@ GEM
     net-ssh (2.7.0)
     net-ssh-gateway (1.2.0)
       net-ssh (>= 2.6.5)
+    newrelic_api (1.2.4)
     newrelic_rpm (3.7.1.182)
     oauth2 (0.8.1)
       faraday (~> 0.8)
@@ -172,6 +179,8 @@ GEM
       bundler (>= 1.3.0, < 2.0)
       railties (= 4.0.2)
       sprockets-rails (~> 2.0.0)
+    rails-observers (0.1.2)
+      activemodel (~> 4.0)
     rails_12factor (0.0.2)
       rails_serve_static_assets
       rails_stdout_logging
@@ -183,6 +192,8 @@ GEM
       rake (>= 0.8.7)
       thor (>= 0.18.1, < 2.0)
     rake (10.1.1)
+    rickshaw_rails (1.4.5)
+      railties (>= 3.1.0)
     safe_yaml (0.9.7)
     sass (3.2.13)
     sass-rails (4.0.1)
@@ -234,12 +245,14 @@ PLATFORMS
 
 DEPENDENCIES
   active_hash (~> 1.0)
+  activeresource
   airbrake
   angularjs-rails
   ansible
   better_errors
   binding_of_caller
   bootstrap-sass
+  bootstrap-x-editable-rails
   bourne
   coderay (~> 1.1.0)
   dalli (~> 2.7.0)
@@ -256,6 +269,7 @@ DEPENDENCIES
   mysql2 (~> 0.3)
   net-ssh (~> 2.1)
   net-ssh-shell (~> 0.2)!
+  newrelic_api
   newrelic_rpm (>= 3.7.1)
   octokit (~> 2.7.0)
   omniauth (~> 1.1)
@@ -264,6 +278,7 @@ DEPENDENCIES
   puma
   rails (= 4.0.2)
   rails_12factor
+  rickshaw_rails
   sass-rails (~> 4.0.0)
   simplecov
   soft_deletion (~> 0.4)

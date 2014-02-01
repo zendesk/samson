@@ -16,6 +16,8 @@ if !Rails.env.test? && Job.table_exists?
       sleep(5)
     end
 
+    puts "Passing SIGUSR2 on."
+
     # Pass USR2 to the underlying server
     Process.kill('SIGUSR2', $$)
   end

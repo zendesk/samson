@@ -4,7 +4,7 @@ class Changeset::GithubUser
   end
 
   def avatar_url
-    "http://www.gravatar.com/avatar/#{@data.gravatar_id}?s=20"
+    "https://www.gravatar.com/avatar/#{@data.gravatar_id}?s=20"
   end
 
   def url

@@ -14,6 +14,10 @@ ZendeskPusher::Application.routes.draw do
       collection do
         patch :reorder
       end
+
+      member do
+        get :new_relic, to: 'new_relic#show'
+      end
     end
 
     member do
@@ -32,9 +36,7 @@ ZendeskPusher::Application.routes.draw do
   end
 
   resources :deploys, only: [] do
-    member do
-      get :stream, to: 'streams#show'
-    end
+    resource :stream, only: [:show]
 
     collection do
       get :active

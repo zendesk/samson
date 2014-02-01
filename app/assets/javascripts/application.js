@@ -16,5 +16,9 @@
 //= require bootstrap/alert
 //= require bootstrap/dropdown
 //= require bootstrap/tab
+//= require bootstrap/tooltip
+//= require bootstrap/popover
 //= require jquery.ui.all
+//= require bootstrap3-editable/bootstrap-editable
+//= require rickshaw_with_d3
 //= require_tree .
