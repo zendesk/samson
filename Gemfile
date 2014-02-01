@@ -30,6 +30,8 @@ group :assets do
   gem 'font-awesome-sass'
 
   gem 'bootstrap-x-editable-rails'
+
+  gem 'rickshaw_rails'
 end
 
 group :no_preload do
@@ -54,6 +56,9 @@ group :no_preload do
   gem 'ansible'
 
   gem 'github-markdown', '~> 0.6.3'
+
+  gem 'newrelic_api'
+  gem 'activeresource'
 end
 
 group :development do

@@ -14,6 +14,10 @@ ZendeskPusher::Application.routes.draw do
       collection do
         patch :reorder
       end
+
+      member do
+        get :new_relic, to: 'new_relic#show'
+      end
     end
 
     member do

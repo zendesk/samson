@@ -21,10 +21,21 @@
 
 <ul id="deploy-tabs" class="nav nav-tabs" data-changeset-url="<%= changeset_project_deploy_url(@project, @deploy) %>">
   <li class="active"><a href="#output" data-toggle="tab">Output</a></li>
-  <li><a href="#files" data-toggle="tab">Files</a></li>
-  <li><a href="#commits" data-toggle="tab">Commits</a></li>
-  <li><a href="#pulls" data-toggle="tab">Pull Requests</a></li>
-  <li><a href="#risks" data-toggle="tab">Risks</a></li>
+  <li><a href="#files" data-type="github" data-toggle="tab">Files</a></li>
+  <li><a href="#commits" data-type="github" data-toggle="tab">Commits</a></li>
+  <li><a href="#pulls" data-type="github" data-toggle="tab">Pull Requests</a></li>
+  <li><a href="#risks" data-type="github" data-toggle="tab">Risks</a></li>
+
+<% if NewRelicApi.api_key.present? %>
+  <li>
+    <a href="#newrelic" id="newrelic-tab"
+      data-enabled="<%= @deploy.stage.new_relic_applications.any? %>"
+      data-url="<%= new_relic_project_stage_path(@project, @deploy.stage, format: :json) %>"
+      data-interval="60000" data-toggle="tab">
+    New Relic
+    </a>
+  </li>
+<% end %>
 </ul>
 
 <div class="tab-content deploy-details">
@@ -37,6 +48,24 @@
       <p>Loading...</p>
     </div>
   <% end %>
+
+<% if NewRelicApi.api_key.present? %>
+  <div class="tab-pane" id="newrelic">
+    <% if @deploy.stage.new_relic_applications.any? %>
+      <div class="chart">
+        <h2>Response Time</h2>
+        <div id="newrelic-response-time"></div>
+      </div>
+
+      <div class="chart">
+        <h2>Throughput</h2>
+        <div id="newrelic-throughput"></div>
+      </div>
+    <% else %>
+      No New Relic applications configured.
+    <% end %>
+  </div>
+<% end %>
 </div>
 
 <% if @deploy.active? && JobExecution.enabled %>
