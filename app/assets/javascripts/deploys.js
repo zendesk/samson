@@ -20,7 +20,7 @@ $(function () {
             var container = $(".deploy-details");
             var placeholderPanes = container.find(".changeset-placeholder");
 
-            placeholderPanes.replace(data);
+            placeholderPanes.html(data);
 
             // We need to switch to another tab and then switch back in order for
             // the plugin to detect that the DOM node has been replaced.
