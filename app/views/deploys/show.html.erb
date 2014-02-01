@@ -7,34 +7,30 @@
   <li class="active">Deploy #<%= @deploy.id %></li>
 </ol>
 
-<h1>
-  <%= @project.name %>
-  <div class="pull-right">
-    <% unless @deploy.succeeded? || @deploy.running? %>
-      <%= link_to "Redeploy", project_deploys_path(@project, deploy: { reference: @deploy.reference, stage_id: @deploy.stage_id }), method: :post, class: "btn btn-danger" %>
-    <% end %>
-    <%= link_to "Back", project_path(@project), class: "btn btn-default" %>
-  </div>
-</h1>
-
-<%= deploy_status_panel @deploy %>
+<div id="header">
+  <%= render 'header' %>
+</div>
 
 <ul id="deploy-tabs" class="nav nav-tabs" data-changeset-url="<%= changeset_project_deploy_url(@project, @deploy) %>">
   <li class="active"><a href="#output" data-toggle="tab">Output</a></li>
-  <li><a href="#files" data-type="github" data-toggle="tab">Files</a></li>
-  <li><a href="#commits" data-type="github" data-toggle="tab">Commits</a></li>
-  <li><a href="#pulls" data-type="github" data-toggle="tab">Pull Requests</a></li>
-  <li><a href="#risks" data-type="github" data-toggle="tab">Risks</a></li>
+  <li><a href="#files" data-toggle="tab">Files</a></li>
+  <li><a href="#commits" data-toggle="tab">Commits</a></li>
+  <li><a href="#pulls" data-toggle="tab">Pull Requests</a></li>
+  <li><a href="#risks" data-toggle="tab">Risks</a></li>
 
-<% if NewRelicApi.api_key.present? %>
-  <li>
-    <a href="#newrelic" id="newrelic-tab"
-      data-enabled="<%= @deploy.stage.new_relic_applications.any? %>"
-      data-url="<%= new_relic_project_stage_path(@project, @deploy.stage, format: :json) %>"
-      data-interval="60000" data-toggle="tab">
-    New Relic
-    </a>
-  </li>
+<% if active? %>
+  <li><a href="#viewers" data-toggle="tab" id="viewers-link">Viewers <span class="badge">0</span></a></li>
+
+  <% if NewRelicApi.api_key.present? %>
+    <li>
+      <a href="#newrelic" id="newrelic-tab"
+        data-enabled="<%= @deploy.stage.new_relic_applications.any? %>"
+        data-url="<%= new_relic_project_stage_path(@project, @deploy.stage, format: :json) %>"
+        data-interval="60000" data-toggle="tab">
+      New Relic
+      </a>
+    </li>
+  <% end %>
 <% end %>
 </ul>
 
@@ -49,31 +45,37 @@
     </div>
   <% end %>
 
-<% if NewRelicApi.api_key.present? %>
-  <div class="tab-pane" id="newrelic">
-    <% if @deploy.stage.new_relic_applications.any? %>
-      <div class="chart">
-        <h2>Response Time</h2>
-        <div id="newrelic-response-time"></div>
-      </div>
-
-      <div class="chart">
-        <h2>Throughput</h2>
-        <div id="newrelic-throughput"></div>
-      </div>
-    <% else %>
-      No New Relic applications configured.
-    <% end %>
+<% if active? %>
+  <div class="tab-pane" id="viewers">
+    No ther viewers.
   </div>
+
+  <% if NewRelicApi.api_key.present? %>
+    <div class="tab-pane" id="newrelic">
+      <% if @deploy.stage.new_relic_applications.any? %>
+        <div class="chart">
+          <h2>Response Time</h2>
+          <div id="newrelic-response-time"></div>
+        </div>
+
+        <div class="chart">
+          <h2>Throughput</h2>
+          <div id="newrelic-throughput"></div>
+        </div>
+      <% else %>
+        No New Relic applications configured.
+      <% end %>
+    </div>
+  <% end %>
 <% end %>
 </div>
 
-<% if @deploy.active? && JobExecution.enabled %>
+<% if active? %>
   <%= javascript_tag do %>
     $(document).ready(function() {
       var messages = $("#messages");
 
-      var source = new EventSource("<%= stream_deploy_path(@deploy.job) %>");
+      var source = new EventSource("<%= deploy_stream_path(@deploy.job) %>");
 
       var addLine = function(data) {
         var msg = JSON.parse(data).msg;
@@ -85,13 +87,31 @@
         addLine(e.data);
       }, false);
 
+      source.addEventListener('viewers', function(e) {
+        var users = JSON.parse(e.data);
+
+        if(users.length > 0) {
+          var viewers = $.map(users, function(user) {
+            return user.name;
+          }).join(', ') + '.';
+
+          $('#viewers-link .badge').html(users.length);
+          $("#viewers").html('Other viewers: ' + viewers);
+        } else {
+          $('#viewers-link .badge').html(0);
+          $("#viewers").html('No other viewers.');
+        }
+      }, false);
+
       source.addEventListener('replace', function(e) {
         messages.children().last().remove();
         addLine(e.data);
       }, false);
 
       source.addEventListener('finished', function(e) {
-        window.location.reload();
+        $('#header').html(JSON.parse(e.data).html);
+        $('#deploy_stop').hide();
+        source.close();
       }, false);
 
       $("#deploy_stop").on("click", function() {
@@ -104,7 +124,7 @@
   <% end %>
 
   <% if current_user.is_deployer? %>
-    <button id="deploy_stop" class="btn btn-danger pull-right">Stop</button>
+    <button id="deploy_stop" class="pull-right btn btn-danger">Stop</button>
   <% end %>
 <% elsif !@deploy.finished? %>
   <div class="alert alert-info">

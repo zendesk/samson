@@ -1,4 +1,4 @@
-require 'test_helper'
+require_relative '../test_helper'
 
 describe EventStreamer do
   class FakeStream
@@ -31,7 +31,7 @@ describe EventStreamer do
     end
   end
 
-  let(:output) { FakeOutput.new(["hello\n", "world\n"]) }
+  let(:output) { FakeOutput.new([[:message, "hello\n"], [:message, "world\n"]]) }
   let(:stream) { FakeStream.new }
   let(:streamer) { EventStreamer.new(stream) }
 
@@ -42,14 +42,14 @@ describe EventStreamer do
   end
 
   it "overwrites the previous lines if a carriage return or clear line code is present" do
-    output = FakeOutput.new(["hello\rworld\n"])
+    output = FakeOutput.new([[:message, "hello\rworld\n"]])
     streamer.start(output)
     stream.lines.must_include %(event: append\ndata: {"msg":"hello"}\n\n)
     stream.lines.must_include %(event: replace\ndata: {"msg":"world\\n"}\n\n)
   end
 
   it "splits by newlines and carriage returns" do
-    output = FakeOutput.new(["hel", "lo\rwo", "rld\n"])
+    output = FakeOutput.new([[:message, "hel"], [:message, "lo\rwo"], [:message, "rld\n"]])
     streamer.start(output)
     stream.lines.must_include %(event: append\ndata: {"msg":"hello"}\n\n)
     stream.lines.must_include %(event: replace\ndata: {"msg":"world\\n"}\n\n)

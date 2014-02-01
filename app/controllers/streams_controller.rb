@@ -5,17 +5,35 @@ class StreamsController < ApplicationController
   include ApplicationHelper
 
   def show
-    ActiveRecord::Base.clear_active_connections!
-
     response.headers['Content-Type'] = 'text/event-stream'
     response.headers['Cache-Control'] = 'no-cache'
 
-    job = Job.find(params[:id])
+    job = Job.find(params[:deploy_id])
+    execution = JobExecution.find_by_id(job.id)
 
-    streamer = EventStreamer.new(response.stream)
+    streamer = EventStreamer.new(response.stream) do |event, data|
+      case event
+      when :viewers
+        viewers = data.uniq.reject {|user| user == current_user}
+        viewers.to_json(only: [:id, :name])
+      when :finished
+        execution.viewers.delete(current_user) if execution
 
-    if job.active? && (execution = JobExecution.find_by_id(job.id))
-      streamer.start(execution.output) {|line| render_log(line) }
+        job.reload
+
+        @project = job.project
+        @deploy = job.deploy
+
+        JSON.dump(html: render_to_string(partial: 'deploys/header', formats: :html))
+      else
+        JSON.dump(msg: render_log(data))
+      end
+    end
+
+    if job.active? && execution
+      execution.viewers.push(current_user)
+      ActiveRecord::Base.clear_active_connections!
+      streamer.start(execution.output)
     else
       streamer.finished
     end

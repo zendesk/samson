@@ -21,9 +21,6 @@ require 'thread_safe'
 #   listener2.value #=> "hello world!"
 #
 class OutputBuffer
-  # A magic object that signals the end of the stream.
-  CLOSE = Object.new
-
   attr_reader :chunks
 
   def initialize
@@ -32,18 +29,20 @@ class OutputBuffer
     @closed = false
   end
 
-  def write(chunk)
-    @chunks << chunk unless chunk == CLOSE
-    @listeners.each {|listener| listener.push(chunk) }
+  def write(data, event = :message)
+    @chunks << [event, data] unless event == :close
+    @listeners.each {|listener| listener.push([event, data]) }
   end
 
   def to_s
-    chunks.join("\n")
+    chunks.select do |event, data|
+      event == :message
+    end.join("\n")
   end
 
   def close
     @closed = true
-    write(CLOSE)
+    write(nil, :close)
   end
 
   def each(&block)
@@ -56,7 +55,7 @@ class OutputBuffer
 
     @chunks.each {|chunk| yield chunk }
 
-    while (chunk = queue.pop) && chunk != CLOSE
+    while (chunk = queue.pop) && chunk.first != :close
       yield chunk
     end
   ensure

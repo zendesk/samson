@@ -36,9 +36,7 @@ ZendeskPusher::Application.routes.draw do
   end
 
   resources :deploys, only: [] do
-    member do
-      get :stream, to: 'streams#show'
-    end
+    resource :stream, only: [:show]
 
     collection do
       get :active

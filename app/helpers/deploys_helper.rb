@@ -1,6 +1,10 @@
 require 'coderay'
 
 module DeploysHelper
+  def active?
+    @deploy.active? && JobExecution.enabled
+  end
+
   def file_status_label(status)
     mapping = {
       "added"    => "success",
