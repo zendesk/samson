@@ -1,4 +1,4 @@
-class NewRelic
+module NewRelic
   class << self
     def applications
       @applications ||= NewRelicApi::Account.first.applications.inject({}) do |map, app|
