@@ -1,25 +1,25 @@
-<div class="timeline-entry clearfix" ng-repeat="entry in entries | filter: search">
+<div class="timeline-entry clearfix" ng-repeat="entry in entries | filter: search | filter: select : roboFilter">
   <div ng-if="entry.time.date != entries[$index - 1].time.date">
-    <div class="timeline-date">{{entry.time.day + ", " + entry.time.year + " " + entry.time.month + " " + entry.time.date}}</div>
+    <div class="timeline-date">{{ fullDate(entry.time) }}</div>
     <hr>
   </div>
   <header class="col-md-2">
     <div class="timeline-time">
-      {{dayTime(entry.time)}}
+      {{ dayTime(entry.time) }}
     </div>
-    <img class="gravatar img-square" ng-src="{{entry.gravatarURL}}" alt="Gravatar">
+    <img class="gravatar img-square" ng-src="{{ entry.gravatarURL }}" title="{{entry.user}}" alt="Gravatar">
   </header>
-  <a ng-href="/projects/{{entry.projectId}}-{{entry.project.name}}">
-    <div class="timeline-project col-md-2 bg-{{transformStatus(entry.status)}}">
-      <div class="v-text">
-        {{entry.projectName}}
+  <a ng-href="/projects/{{ entry.projectId }}-{{ entry.project.name }}">
+    <div class="timeline-project col-md-2">
+      <div class="v-text {{ transformStatus(entry.status) }}">
+        {{ entry.projectName }}
       </div>
     </div>
   </a>
-  <a ng-href="/projects/{{entry.projectId}}-{{entry.project.name}}/deploys/{{entry.deployId}}">
-    <div class="timeline-content col-md-6 bg-light-{{transformStatus(entry.status)}}">
-      <div class="v-text">
-        {{entry.summary}}
+  <a ng-href="/projects/{{ entry.projectId }}-{{ entry.project.name }}/deploys/{{ entry.deployId }}">
+    <div class="timeline-content col-md-6">
+      <div class="v-text {{ transformStatus(entry.status) }}">
+        {{ entry.summary }}
       </div>
     </div>
   </a>

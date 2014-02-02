@@ -7,6 +7,13 @@
     <label for="tlf-user">User: <input id="tlf-user" type="text" ng-model="search.user"></label>
   </div>
   <div class="timeline-filter">
+    <label for="tlf-user-type">
+      <select id="tlf-user-type" ng-model="select.user" ng-options="option for option in humanVSrobot">
+        <option value="">All</option>
+      </select>
+    </label>
+  </div>
+  <div class="timeline-filter">
     <label for="tlf-prod">Production: <input id="tlf-prod" type="checkbox" ng-model="search.production"></label>
   </div>
   <%= render partial: "timeline_entry" %>

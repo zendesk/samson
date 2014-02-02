@@ -1,6 +1,6 @@
 var timeline = angular.module("timeline", [])
 
-timeline.controller("TimelineCtrl", ["$scope", "$http", function($scope, $http) {
+timeline.controller("TimelineCtrl", ["$scope", "$http", "$timeout", "$window", function($scope, $http, $timeout, $window) {
   var NUM_TO_MONTH = [
     "January",
     "February",
@@ -33,15 +33,43 @@ timeline.controller("TimelineCtrl", ["$scope", "$http", function($scope, $http) 
     "pending": "default",
     "cancelling": "warning",
     "cancelled": "danger"
-  }
+  };
+
+  $scope.humanVSrobot = ["Human", "Robot"];
+
+  $scope.roboFilter = (function() {
+    var hookSources = /^(?:travis|tddium|semaphore)$/i;
+    return function(actual, expected) {
+      if (expected) {
+        var robot = hookSources.test(actual)
+        if (expected == "Human") {
+          return !robot;
+        } else {
+          return robot;
+        }
+      }
+      return true;
+    };
+  })();
 
   $scope.entries = [];
   $scope.page = 1;
+  $scope.loading = false;
+  $scope.theEnd = false;
 
   $scope.loadEntries = function() {
+    if ($scope.theEnd) { return; }
+
+    $scope.loading = true;
+
     $http.get("/deploys/recent.json", { params: { page: $scope.page } }).
       success(function(data) {
-        if (data) { $scope.page += 1; }
+        if (data && data.length) {
+          $scope.page += 1;
+        } else if (data.length === 0) {
+          $scope.theEnd = true;
+          return;
+        }
 
         for (var i = 0; i < data.length; i++) {
           data[i].time = $scope.localize(data[i].time);
@@ -50,6 +78,9 @@ timeline.controller("TimelineCtrl", ["$scope", "$http", function($scope, $http) 
       }).
       error(function() {
         alert("Failed to load more entries");
+      }).
+      finally(function() {
+        $timeout(function() { $scope.loading = false; }, 500);
       });
   };
 
@@ -59,6 +90,10 @@ timeline.controller("TimelineCtrl", ["$scope", "$http", function($scope, $http) 
 
   $scope.dayTime = function(local) {
     return local.hour + ":" + local.minute + " " + local.ampm;
+  };
+
+  $scope.fullDate = function(local) {
+    return local.day + ", " + local.year + " " + local.month + " " + local.date;
   };
 
   $scope.localize = function(ms) {
@@ -94,19 +129,9 @@ timeline.controller("TimelineCtrl", ["$scope", "$http", function($scope, $http) 
 
   $scope.loadEntries();
 
-  // CAUTION: Global scope code
-
-  var $window = $(window),
-      loading = false;
-
-  $window.on('scroll', function() {
-    if (window.scrollY >= window.scrollMaxY - 100 && !loading) {
+  $window.onscroll = function() {
+    if ($window.scrollY >= $window.scrollMaxY - 100 && !$scope.loading) {
       $scope.$apply("loadEntries()");
-      loading = true;
-
-      setTimeout(function() {
-        loading = false;
-      }, 500);
     }
-  });
+  };
 }]);

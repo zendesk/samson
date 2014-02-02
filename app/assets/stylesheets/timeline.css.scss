@@ -1,11 +1,11 @@
 $pusherDark: #333;
-$lightPusherDark: lighten($pusherDark, 30%);
+$PusherGrey: lighten($pusherDark, 70%);
 $primary: #428bca;
 $success: #5cb85c;
 $warning: #f0ad4e;
 $danger: #d9534f;
 $info: #5bc0de;
-$scale: 30%;
+$scale: 25%;
 $lightPrimary: lighten(#428bca, $scale);
 $lightSuccess: lighten(#5cb85c, $scale);
 $lightWarning: lighten(#f0ad4e, $scale);
@@ -45,12 +45,11 @@ a:hover {
 }
 
 .timeline-project {
-  color: #eee;
   text-align: center;
 }
 
-.timeline-content {
-  color: $pusherDark;
+.timeline-content > .v-text{
+  padding-left: 10px;
 }
 
 .timeline-time {
@@ -68,46 +67,57 @@ a:hover {
   display: table-cell;
   height: 40px;
   vertical-align: middle;
+  border-bottom: 1px solid $PusherGrey;
 }
 
-.bg-primary {
-  background-color: $primary;
+.timeline-project > .primary {
+  border-top: 3px solid $primary;
+  border-left: 2px solid $primary;
 }
 
-.bg-success {
-  background-color: $success;
+.timeline-project > .success {
+  border-top: 3px solid $success;
+  border-left: 2px solid $success;
 }
 
-.bg-warning {
-  background-color: $warning;
+.timeline-project > .warning {
+  border-top: 3px solid $warning;
+  border-left: 2px solid $warning;
 }
 
-.bg-danger {
-  background-color: $danger;
+.timeline-project > .danger {
+  border-top: 3px solid $danger;
+  border-left: 2px solid $danger;
 }
 
-.bg-info {
-  background-color: $info;
+.timeline-project > .info {
+  border-top: 3px solid $info;
+  border-left: 2px solid $info;
 }
 
-.bg-light-primary {
-  background-color: $lightPrimary;
+.timeline-content > .primary {
+  border-top: 3px solid $lightPrimary;
+  border-left: 2px solid $lightPrimary;
 }
 
-.bg-light-success {
-  background-color: $lightSuccess;
+.timeline-content > .success {
+  border-top: 3px solid $lightSuccess;
+  border-left: 2px solid $lightSuccess;
 }
 
-.bg-light-warning {
-  background-color: $lightWarning;
+.timeline-content > .warning {
+  border-top: 3px solid $lightWarning;
+  border-left: 2px solid $lightWarning;
 }
 
-.bg-light-danger {
-  background-color: $lightDanger;
+.timeline-content > .danger {
+  border-top: 3px solid $lightDanger;
+  border-left: 2px solid $lightDanger;
 }
 
-.bg-light-info {
-  background-color: $lightInfo;
+.timeline-content > .info {
+  border-top: 3px solid $lightInfo;
+  border-left: 2px solid $lightInfo;
 }
 
 .timeline-date {
