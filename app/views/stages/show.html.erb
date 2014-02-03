@@ -20,6 +20,9 @@
       <% end %>
     <% end %>
     <%= deploy_link @project, @stage %>
+    <%= link_to project_stage_path(@project, @stage), class: 'btn btn-danger', method: :delete, data: { confirm: "Are you sure?" } do %>
+      <i class="glyphicon glyphicon-remove"></i> Delete
+    <% end %>
   </div>
 </h1>
 
