@@ -18,6 +18,10 @@ module ApplicationHelper
       content_tag :a, class: "btn btn-primary disabled", disabled: true do
         "Deploying #{stage.current_deploy.short_reference}..."
       end
+    elsif stage.locked?
+      content_tag :a, class: "btn btn-primary disabled", disabled: true do
+        "Locked"
+      end
     else
       path = new_project_deploy_path(project, stage_id: stage.id)
 
