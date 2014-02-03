@@ -8,13 +8,22 @@
   </div>
   <div class="timeline-filter">
     <label for="tlf-user-type">
-      <select id="tlf-user-type" ng-model="select.user" ng-options="option for option in humanVSrobot">
+      <select id="tlf-user-type" ng-model="userType" ng-options="option for option in humanVSrobot">
         <option value="">All</option>
       </select>
     </label>
   </div>
   <div class="timeline-filter">
-    <label for="tlf-prod">Production: <input id="tlf-prod" type="checkbox" ng-model="search.production"></label>
+    <label for="tlf-prod">Stage:
+      <select id="tlf-prod" ng-model="stageType" ng-options="value as key for (key, value) in production">
+        <option value="">All</option>
+      </select>
+    </label>
   </div>
   <%= render partial: "timeline_entry" %>
+  <%# if there is not enough height for scrolling %>
+  <div ng-if="shortWindow()">
+    <hr>
+    <span class="btn btn-default" ng-click="loadEntries()">Load More .. {{page}}</span>
+  </div>
 </div>

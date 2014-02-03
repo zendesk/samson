@@ -37,8 +37,9 @@ timeline.controller("TimelineCtrl", ["$scope", "$http", "$timeout", "$window", f
 
   $scope.humanVSrobot = ["Human", "Robot"];
 
-  $scope.roboFilter = (function() {
+  $scope.userFilter = (function() {
     var hookSources = /^(?:travis|tddium|semaphore)$/i;
+
     return function(actual, expected) {
       if (expected) {
         var robot = hookSources.test(actual)
@@ -51,6 +52,15 @@ timeline.controller("TimelineCtrl", ["$scope", "$http", "$timeout", "$window", f
       return true;
     };
   })();
+
+  $scope.production = { "Production": true, "Non-production": false };
+
+  $scope.stageFilter = function(actual, expected) {
+    if (expected !== null) {
+      return actual === expected;
+    }
+    return true;
+  };
 
   $scope.entries = [];
   $scope.page = 1;
@@ -88,6 +98,15 @@ timeline.controller("TimelineCtrl", ["$scope", "$http", "$timeout", "$window", f
     return STATUS_MAPPING[status];
   };
 
+  $scope.compareDate = function(previous, current) {
+    if (previous) {
+      return previous.date !== current.date ||
+        previous.month !== current.month ||
+        previous.year !== current.year;
+    }
+    return true;
+  };
+
   $scope.dayTime = function(local) {
     return local.hour + ":" + local.minute + " " + local.ampm;
   };
@@ -107,8 +126,8 @@ timeline.controller("TimelineCtrl", ["$scope", "$http", "$timeout", "$window", f
         month  = NUM_TO_MONTH[localDate.getMonth()],
         ampm   = null;
 
-    if (hour > 12) {
-      hour -= 12;
+    if (hour >= 12) {
+      if (hour > 12) { hour -= 12; }
       ampm = "PM";
     } else {
       ampm = "AM";
@@ -133,5 +152,9 @@ timeline.controller("TimelineCtrl", ["$scope", "$http", "$timeout", "$window", f
     if ($window.scrollY >= $window.scrollMaxY - 100 && !$scope.loading) {
       $scope.$apply("loadEntries()");
     }
+  };
+
+  $scope.shortWindow = function() {
+    return !$scope.theEnd && $window.scrollMaxY === 0;
   };
 }]);

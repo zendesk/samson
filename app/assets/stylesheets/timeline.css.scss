@@ -12,11 +12,11 @@ $lightWarning: lighten(#f0ad4e, $scale);
 $lightDanger: lighten(#d9534f, $scale);
 $lightInfo: lighten(#5bc0de, $scale);
 
-a {
+.timeline a {
   color: inherit;
 }
 
-a:hover {
+.timeline a:hover {
   text-decoration: none;
   color: inherit;
 }
