@@ -93,6 +93,19 @@
   <% end %>
 </fieldset>
 
+<fieldset>
+  <legend>Datadog</legend>
+  <p>Add the tags that should be used when notifying Datadog of deploys. Leave empty if you don't want
+  to send notifications to Datadog.</p>
+
+  <div class="form-group">
+    <div class="col-lg-6 col-lg-offset-2">
+      <%= form.text_field :datadog_tags, class: "form-control", placeholder: "Datadog tags" %>
+      <span class="help-block">Enter the tags that should be used on deploy events, separated by <code>;</code></span>
+    </div>
+  </div>
+</fieldset>
+
 <%= javascript_tag do %>
   $(document).ready(function() {
     $('#commands').sortable();

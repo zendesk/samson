@@ -136,4 +136,28 @@ describe Stage do
       subject.wont_be(:locked?)
     end
   end
+
+  def datadog_tags
+    it "returns an array of the tags" do
+      subject.datadog_tags = " foo; bar; baz "
+      subject.datadog_tags.must_equal ["foo", "bar", "baz"]
+    end
+
+    it "returns an empty array if no tags have been configured" do
+      subject.datadog_tags = nil
+      subject.datadog_tags.must_equal []
+    end
+  end
+
+  describe "#send_datadog_notifications?" do
+    it "returns true if the stage has a Datadog tag configured" do
+      subject.datadog_tags = "env:beta"
+      subject.send_datadog_notifications?.must_equal true
+    end
+
+    it "returns false if the stage does not have a Datadog tag configured" do
+      subject.datadog_tags = nil
+      subject.send_datadog_notifications?.must_equal false
+    end
+  end
 end
