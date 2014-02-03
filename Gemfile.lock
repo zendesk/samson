@@ -80,6 +80,8 @@ GEM
     debug_inspector (0.0.2)
     deep_merge (1.0.0)
     docile (1.1.2)
+    dogapi (1.9.1)
+      json (>= 1.5.1)
     dotenv (0.9.0)
     dotenv-rails (0.9.0)
       dotenv (= 0.9.0)
@@ -251,6 +253,7 @@ DEPENDENCIES
   bourne
   coderay (~> 1.1.0)
   dalli (~> 2.7.0)
+  dogapi (~> 1.9.1)
   dotenv-rails (~> 0.9.0)
   faraday-http-cache (~> 0.3)
   flowdock (~> 0.3.1)
