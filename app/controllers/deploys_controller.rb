@@ -21,7 +21,7 @@ class DeploysController < ApplicationController
   end
 
   def new
-    @deploy = @project.deploys.build(stage_id: params[:stage_id])
+    @deploy = @project.deploys.build(params.permit(:stage_id, :reference))
   end
 
   def create
