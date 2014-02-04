@@ -1,3 +1,5 @@
+<% content_for(:page_title, "Editing #{@stage.name} (#{@project.name})") %>
+
 <ol class="breadcrumb">
   <li><%= link_to "Home", root_path %></li>
   <li><%= link_to @project.name, project_path(@project) %></li>
