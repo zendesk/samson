@@ -6,6 +6,10 @@
   <li class="active"><%= @stage.name %></li>
 </ol>
 
+<% if @stage.locked? %>
+ <div class="alert alert-warning">Deployments to this stage were locked by <%= @stage.lock.user.name %> <%= time_ago_in_words(@stage.lock.created_at) %> ago.</div>
+<% end %>
+
 <h1>
   <%= @stage.name %>
   <div class="pull-right">
