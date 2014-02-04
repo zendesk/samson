@@ -95,29 +95,31 @@ $(function () {
   });
 
   // Shows confirmation dropdown using Github comparison
-  var confirmed = false;
+  var confirmed = false,
+      $container = $(".deploy-details"),
+      $placeholderPanes = $container.find(".changeset-placeholder");
 
   $("#new_deploy").submit(function(event) {
-    var selected_stage = $("#deploy_stage_id option:selected");
+    var $selected_stage = $("#deploy_stage_id option:selected"),
+        $this = $(this);
 
-    if(!confirmed && selected_stage.data("confirmation")) {
+    if(!confirmed && $selected_stage.data("confirmation")) {
       $("#confirm-button-text").show();
       $("#deploy-button-text").hide();
-      $("#deploy-confirmation").removeClass("hide");
+      $("#deploy-confirmation").show();
       $("#deploy-confirmation .nav-tabs a:first").tab("show");
+      $container.empty();
+      $container.append($placeholderPanes);
 
       confirmed = true;
 
       $.ajax({
         method: "POST",
-        url: $(this).data("confirm-url"),
-        data: $(this).serialize(),
+        url: $this.data("confirm-url"),
+        data: $this.serialize(),
         success: function(data, status, xhr) {
-          var container = $(".deploy-details");
-          var placeholderPanes = container.find(".changeset-placeholder");
-
-          placeholderPanes.remove();
-          container.append(data);
+          $placeholderPanes.detach();
+          $container.append(data);
 
           // We need to switch to another tab and then switch back in order for
           // the plugin to detect that the DOM node has been replaced.
@@ -132,7 +134,7 @@ $(function () {
 
   $("#new-deploy-cancel").click(function(event) {
     if(confirmed) {
-      $("#deploy-confirmation").addClass("hide");
+      $("#deploy-confirmation").hide();
 
       $("#confirm-button-text").hide();
       $("#deploy-button-text").show();
