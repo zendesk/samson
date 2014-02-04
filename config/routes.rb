@@ -30,7 +30,6 @@ ZendeskPusher::Application.routes.draw do
       end
     end
 
-    resources :stages
     resources :webhooks, only: [:index, :create, :destroy]
     resource  :commit_statuses, only: [:show]
   end
