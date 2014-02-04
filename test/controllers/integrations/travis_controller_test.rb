@@ -65,7 +65,8 @@ describe Integrations::TravisController do
       describe "failure" do
         let(:payload) {{
           status_message: 'Failure',
-          branch: 'sdavidovitz/blah'
+          branch: 'sdavidovitz/blah',
+          message: 'A change'
         }}
 
         it "renders ok" do
@@ -80,6 +81,7 @@ describe Integrations::TravisController do
           let(:payload) {{
             status_message: 'Passed',
             branch: 'master',
+            message: 'A change',
             committer_email: user.email,
             commit: '123abc',
             type: 'push'

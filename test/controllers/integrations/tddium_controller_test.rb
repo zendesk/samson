@@ -32,6 +32,8 @@ describe Integrations::TddiumController do
   end
 
   before do
+    stub_github_api("repos/repo_name/commits/dc395381e650f3bac18457909880829fc20e34ba", commit: {message: "hi"})
+
     project.webhooks.create!(stage: stages(:test_staging), branch: "production")
   end
 
@@ -75,6 +77,8 @@ describe Integrations::TddiumController do
   end
 
   it "responds with 200 OK if the token is valid but the repository url is invalid" do
+    stub_github_api("repos/commits/dc395381e650f3bac18457909880829fc20e34ba", commit: {message: "hi"})
+
     post :create, payload.merge(token: project.token, repository: { url: "foobar"} )
 
     response.status.must_equal 200

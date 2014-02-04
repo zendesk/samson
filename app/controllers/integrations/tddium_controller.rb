@@ -1,9 +1,22 @@
+require 'octokit'
+
 class Integrations::TddiumController < Integrations::BaseController
   protected
 
   def deploy?
     params[:status] == 'passed' &&
-      params[:event] == 'stop'
+      params[:event] == 'stop' &&
+      !skip?
+  end
+
+  def skip?
+    # Tddium doesn't send commit message, so we have to get creative
+    github = Octokit::Client.new(access_token: ENV['GITHUB_TOKEN'])
+    data = github.commit(params[:repository][:name], params[:commit_id])
+    data.commit.message.include?("[deploy skip]")
+  rescue Faraday::Error::ClientError
+    # We'll assume that if we don't hear back, don't skip
+    false
   end
 
   def branch
