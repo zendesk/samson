@@ -137,7 +137,7 @@ describe Stage do
     end
   end
 
-  def datadog_tags
+  describe "#datadog_tags" do
     it "returns an array of the tags" do
       subject.datadog_tags = " foo; bar; baz "
       subject.datadog_tags.must_equal ["foo", "bar", "baz"]
