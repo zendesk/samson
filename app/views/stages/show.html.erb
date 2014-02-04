@@ -9,7 +9,7 @@
 <h1>
   <%= @stage.name %>
   <div class="pull-right">
-    <%= link_to "Edit stage", edit_project_stage_path(@project, @stage), class: "btn btn-default" %>
+    <%= deploy_link @project, @stage %>
     <% if @stage.locked? %>
       <%= link_to project_stage_lock_path(@project, @stage), class: 'btn btn-default', method: :delete do %>
         <i class="glyphicon glyphicon-lock"></i> Unlock
@@ -19,7 +19,10 @@
         <i class="glyphicon glyphicon-lock"></i> Lock
       <% end %>
     <% end %>
-    <%= deploy_link @project, @stage %>
+    <%= link_to "Edit stage", edit_project_stage_path(@project, @stage), class: "btn btn-default" %>
+    <%= link_to project_stage_path(@project, @stage), class: 'btn btn-danger', method: :delete, data: { confirm: "Are you sure?" } do %>
+      <i class="glyphicon glyphicon-remove"></i> Delete
+    <% end %>
   </div>
 </h1>
 
