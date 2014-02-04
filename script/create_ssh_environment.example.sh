@@ -2,6 +2,8 @@
 
 # Run this script as your deploy user to start or reuse an ssh-agent and load
 # in the deploy user's ssh key.
+#
+# This should be run early in deployments to setup your environment.
 
 SSH_ENV="${HOME}/.ssh/environment"
 
