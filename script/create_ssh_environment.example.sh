@@ -1,5 +1,9 @@
 #!/bin/bash
-SSH_ENV="/home/deploy/.ssh/environment"
+
+# Run this script as your deploy user to start or reuse an ssh-agent and load
+# in the deploy user's ssh key.
+
+SSH_ENV="${HOME}/.ssh/environment"
 
 function start_agent {
     echo "Initialising new SSH agent..."
@@ -7,7 +11,7 @@ function start_agent {
     echo succeeded
     chmod 600 "${SSH_ENV}"
     . "${SSH_ENV}" > /dev/null
-    /usr/bin/ssh-add /home/deploy/.ssh/id_rsa;
+    /usr/bin/ssh-add ${HOME}/.ssh/id_rsa;
 }
 
 # Source SSH settings, if applicable
