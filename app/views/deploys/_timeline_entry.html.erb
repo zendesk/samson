@@ -10,14 +10,14 @@
     </div>
     <img class="gravatar img-square" ng-src="{{entry.gravatarURL}}" title="{{entry.user}}" alt="Gravatar">
   </header>
-  <a ng-href="/projects/{{entry.projectId}}-{{entry.project.name}}">
+  <a ng-href="/projects/{{entry.projectURLParam}}">
     <div class="timeline-project col-md-2">
       <div class="v-text {{transformStatus(entry.status)}}">
         {{entry.projectName}}
       </div>
     </div>
   </a>
-  <a ng-href="/projects/{{entry.projectId}}-{{entry.project.name}}/deploys/{{entry.deployId}}">
+  <a ng-href="/projects/{{entry.projectURLParam}}/deploys/{{entry.deployId}}">
     <div class="timeline-content col-md-6">
       <div class="v-text {{transformStatus(entry.status)}}">
         {{entry.summary}}
