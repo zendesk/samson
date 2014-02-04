@@ -137,6 +137,24 @@ describe Stage do
     end
   end
 
+  describe "#next_stage" do
+    let(:project) { Project.new }
+    let(:stage1) { Stage.new(project: project) }
+    let(:stage2) { Stage.new(project: project) }
+
+    before do
+      project.stages = [stage1, stage2]
+    end
+
+    it "returns the next stage of the project" do
+      stage1.next_stage.must_equal stage2
+    end
+
+    it "returns nil if the current stage is the last stage" do
+      stage2.next_stage.must_be_nil
+    end
+  end
+
   describe "#datadog_tags" do
     it "returns an array of the tags" do
       subject.datadog_tags = " foo; bar; baz "
