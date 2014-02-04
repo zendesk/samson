@@ -74,6 +74,7 @@ class ProjectsController < ApplicationController
       stages_attributes: [
         :name, :confirm, :command,
         :notify_email_address,
+        :datadog_tags,
         :command_ids => [],
         flowdock_flows_attributes: [:name, :token]
       ]

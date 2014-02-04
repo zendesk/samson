@@ -96,6 +96,14 @@ class Stage < ActiveRecord::Base
     commands + command_scope
   end
 
+  def datadog_tags
+    super.to_s.split(";").map(&:strip)
+  end
+
+  def send_datadog_notifications?
+    datadog_tags.any?
+  end
+
   private
 
   def build_new_project_command

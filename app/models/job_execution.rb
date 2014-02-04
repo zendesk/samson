@@ -1,4 +1,5 @@
 require 'thread_safe'
+require 'airbrake'
 require 'terminal_executor'
 
 class JobExecution
