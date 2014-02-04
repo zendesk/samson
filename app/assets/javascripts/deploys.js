@@ -100,9 +100,10 @@ $(function () {
       $placeholderPanes = $container.find(".changeset-placeholder");
 
   $("#new_deploy").submit(function(event) {
-    var selected_stage = $("#deploy_stage_id option:selected");
+    var $selected_stage = $("#deploy_stage_id option:selected"),
+        $this = $(this);
 
-    if(!confirmed && selected_stage.data("confirmation")) {
+    if(!confirmed && $selected_stage.data("confirmation")) {
       $("#confirm-button-text").show();
       $("#deploy-button-text").hide();
       $("#deploy-confirmation").show();
@@ -111,7 +112,6 @@ $(function () {
       $container.append($placeholderPanes);
 
       confirmed = true;
-      var $this = $(this);
 
       $.ajax({
         method: "POST",

@@ -44,7 +44,7 @@
           <span style="display: none;" id="confirm-button-text">Confirm!</span>
         </button>
 
-        or <%= link_to "cancel", '#', data: { url: project_path(@project) }, id: 'new-deploy-cancel' %>
+        <%= link_to "cancel", '#', class: 'btn btn-default', data: { url: project_path(@project) }, id: 'new-deploy-cancel' %>
       </div>
     </div>
 
