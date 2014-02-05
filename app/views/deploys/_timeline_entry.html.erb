@@ -1,26 +1,26 @@
 <div class="timeline-entry clearfix"
-  ng-repeat="entry in (filteredEntries = (entries | filter:search | userFilter:userType | stageFilter:stageType))">
-  <div ng-hide="isSameDate(filteredEntries[$index - 1].time, entry.time)">
-    <div class="timeline-date">{{entry.time | fullDate}}</div>
+  ng-repeat="deploy in (deploys = (timelineDeploys.entries | filter:search | userFilter:userType | stageFilter:stageType))">
+  <div ng-hide="isSameDate(deploys[$index - 1].time, deploy.time)">
+    <div class="timeline-date">{{deploy.time | fullDate}}</div>
     <hr>
   </div>
   <header class="col-md-2">
     <div class="timeline-time">
-      {{entry.time | dayTime}}
+      {{deploy.time | dayTime}}
     </div>
-    <img class="gravatar img-square" ng-src="{{entry.gravatarURL}}" title="{{entry.user}}" alt="Gravatar">
+    <img class="gravatar img-square" ng-src="{{deploy.gravatarURL}}" title="{{deploy.user}}" alt="Gravatar">
   </header>
-  <a ng-href="/projects/{{entry.projectURLParam}}">
+  <a ng-href="/projects/{{deploy.projectURLParam}}">
     <div class="timeline-project col-md-2">
-      <div class="v-text {{entry.status | transformStatus}}">
-        {{entry.projectName}}
+      <div class="v-text {{deploy.status | transformStatus}}">
+        {{deploy.projectName}}
       </div>
     </div>
   </a>
-  <a ng-href="/projects/{{entry.projectURLParam}}/deploys/{{entry.deployId}}">
+  <a ng-href="/projects/{{deploy.projectURLParam}}/deploys/{{deploy.deployId}}">
     <div class="timeline-content col-md-6">
-      <div class="v-text {{entry.status | transformStatus}}">
-        {{entry.summary}}
+      <div class="v-text {{deploy.status | transformStatus}}">
+        {{deploy.summary}}
       </div>
     </div>
   </a>

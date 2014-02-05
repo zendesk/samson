@@ -90,43 +90,88 @@ pusher.filter("fullDate",
   }
 );
 
-pusher.controller("TimelineCtrl", ["$scope", "$http", "$timeout", "$window", "MONTHS", "DAYS", "STATUS_MAPPING",
-function($scope, $http, $timeout, $window, MONTHS, DAYS, STATUS_MAPPING) {
-  $scope.userTypes = ["Human", "Robot"];
+pusher.filter("localize",
+  ["DAYS", "MONTHS", function(DAYS, MONTHS) {
+    return function(ms) {
+      var localDate = new Date(parseInt(ms));
 
+      var hour   = localDate.getHours(),
+          minute = localDate.getMinutes(),
+          day    = DAYS[localDate.getDay()],
+          year   = localDate.getFullYear(),
+          date   = localDate.getDate(),
+          month  = MONTHS[localDate.getMonth()],
+          ampm   = null;
+
+      if (hour >= 12) {
+        if (hour > 12) { hour -= 12; }
+        ampm = "PM";
+      } else {
+        ampm = "AM";
+      }
+
+      minute = (minute < 10) ? "0" + minute : minute;
+
+      return {
+        hour: hour,
+        minute: minute,
+        ampm: ampm,
+        year: year,
+        month: month,
+        date: date,
+        day: day
+      };
+    };
+  }]
+);
+
+pusher.factory("Deploys",
+  ["$filter", "$http", "$timeout", function($filter, $http, $timeout) {
+    var localize = $filter("localize");
+
+    var Deploys = {
+      entries: [],
+      page: 1,
+      loading: false,
+      theEnd: false,
+
+      loadMore: function() {
+        if (this.theEnd) { return; }
+
+        Deploys.loading = true;
+
+        $http.get("/deploys/recent.json", { params: { page: Deploys.page } }).
+          success(function(data) {
+            if (data && data.length) {
+              this.page += 1;
+            } else if (data.length === 0) {
+              this.theEnd = true;
+              return;
+            }
+
+            for (var i = 0; i < data.length; i++) {
+              data[i].time = localize(data[i].time);
+              this.entries.push(data[i]);
+            }
+          }.bind(Deploys)).
+          error(function() {
+            alert("Failed to load more entries");
+          }).
+          finally(function() {
+            $timeout(function() { this.loading = false; }.bind(Deploys), 500);
+          });
+      }
+    };
+
+    return Deploys;
+  }]
+);
+
+pusher.controller("TimelineCtrl", ["$scope", "$window", "Deploys",
+function($scope, $window, Deploys) {
+  $scope.userTypes = ["Human", "Robot"];
   $scope.stageTypes = { "Production": true, "Non-production": false };
 
-  $scope.entries = [];
-  $scope.page = 1;
-  $scope.loading = false;
-  $scope.theEnd = false;
-
-  $scope.loadEntries = function() {
-    if ($scope.theEnd) { return; }
-
-    $scope.loading = true;
-
-    $http.get("/deploys/recent.json", { params: { page: $scope.page } }).
-      success(function(data) {
-        if (data && data.length) {
-          $scope.page += 1;
-        } else if (data.length === 0) {
-          $scope.theEnd = true;
-          return;
-        }
-
-        for (var i = 0; i < data.length; i++) {
-          data[i].time = $scope.localize(data[i].time);
-          $scope.entries.push(data[i]);
-        }
-      }).
-      error(function() {
-        alert("Failed to load more entries");
-      }).
-      finally(function() {
-        $timeout(function() { $scope.loading = false; }, 500);
-      });
-  };
 
   $scope.isSameDate = function(previous, current) {
     if (previous) {
@@ -137,46 +182,17 @@ function($scope, $http, $timeout, $window, MONTHS, DAYS, STATUS_MAPPING) {
     return false;
   };
 
-  $scope.localize = function(ms) {
-    var localDate = new Date(Number.parseInt(ms));
+  $scope.timelineDeploys = Deploys;
 
-    var hour   = localDate.getHours(),
-        minute = localDate.getMinutes(),
-        day    = DAYS[localDate.getDay()],
-        year   = localDate.getFullYear(),
-        date   = localDate.getDate(),
-        month  = MONTHS[localDate.getMonth()],
-        ampm   = null;
-
-    if (hour >= 12) {
-      if (hour > 12) { hour -= 12; }
-      ampm = "PM";
-    } else {
-      ampm = "AM";
-    }
-
-    minute = (minute < 10) ? "0" + minute : minute;
-
-    return {
-      hour: hour,
-      minute: minute,
-      ampm: ampm,
-      year: year,
-      month: month,
-      date: date,
-      day: day
-    };
-  };
-
-  $scope.loadEntries();
+  $scope.timelineDeploys.loadMore();
 
   angular.element($window).on("scroll", function() {
-    if ($window.scrollY >= $window.scrollMaxY - 100 && !$scope.loading) {
-      $scope.$apply($scope.loadEntries);
+    if ($window.scrollY >= $window.scrollMaxY - 100 && !$scope.timelineDeploys.loading) {
+      $scope.$apply($scope.timelineDeploys.loadMore);
     }
   });
 
   $scope.shortWindow = function() {
-    return !$scope.theEnd && $window.scrollMaxY === 0;
+    return !$scope.timelineDeploys.theEnd && $window.scrollMaxY === 0;
   };
 }]);
