@@ -44,6 +44,10 @@ class Deploy < ActiveRecord::Base
     previous_deploy.try(:commit)
   end
 
+  def changeset
+    @changeset ||= Changeset.find(project.github_repo, previous_commit, commit)
+  end
+
   def self.active
     includes(:job).where(jobs: { status: %w[pending running] })
   end
