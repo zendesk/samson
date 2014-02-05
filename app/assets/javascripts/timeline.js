@@ -1,7 +1,7 @@
 var timeline = angular.module("timeline", [])
 
-timeline.controller("TimelineCtrl", ["$scope", "$http", "$timeout", "$window", function($scope, $http, $timeout, $window) {
-  var NUM_TO_MONTH = [
+timeline.constant("MONTHS",
+  [
     "January",
     "February",
     "March",
@@ -14,9 +14,11 @@ timeline.controller("TimelineCtrl", ["$scope", "$http", "$timeout", "$window", f
     "October",
     "November",
     "December"
-  ];
+  ]
+);
 
-  var NUM_TO_DAY = [
+timeline.constant("DAYS",
+  [
     "Sunday",
     "Monday",
     "Tuesday",
@@ -24,17 +26,22 @@ timeline.controller("TimelineCtrl", ["$scope", "$http", "$timeout", "$window", f
     "Thursday",
     "Friday",
     "Saturday"
-  ];
+  ]
+);
 
-  var STATUS_MAPPING = {
+timeline.constant('STATUS_MAPPING',
+  {
     "running": "primary",
     "succeeded": "success",
     "failed": "danger",
     "pending": "default",
     "cancelling": "warning",
     "cancelled": "danger"
-  };
+  }
+);
 
+timeline.controller("TimelineCtrl", ["$scope", "$http", "$timeout", "$window", "MONTHS", "DAYS", "STATUS_MAPPING",
+function($scope, $http, $timeout, $window, MONTHS, DAYS, STATUS_MAPPING) {
   $scope.humanVSrobot = ["Human", "Robot"];
 
   $scope.userFilter = (function() {
@@ -120,10 +127,10 @@ timeline.controller("TimelineCtrl", ["$scope", "$http", "$timeout", "$window", f
 
     var hour   = localDate.getHours(),
         minute = localDate.getMinutes(),
-        day    = NUM_TO_DAY[localDate.getDay()],
+        day    = DAYS[localDate.getDay()],
         year   = localDate.getFullYear(),
         date   = localDate.getDate(),
-        month  = NUM_TO_MONTH[localDate.getMonth()],
+        month  = MONTHS[localDate.getMonth()],
         ampm   = null;
 
     if (hour >= 12) {
