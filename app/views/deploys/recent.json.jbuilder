@@ -4,7 +4,7 @@ json.array! @deploys do |deploy|
   json.projectName(deploy.project.name)
   json.projectId(deploy.project.id)
   json.user(deploy.user.name)
-  json.production(!!deploy.stage.confirm)
+  json.stageType(!!deploy.stage.confirm)
   json.deployId(deploy.id)
   json.gravatarURL(deploy.user.gravatar_url)
   json.status(deploy.status)

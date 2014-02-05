@@ -1,6 +1,4 @@
-var timeline = angular.module("timeline", [])
-
-timeline.constant("MONTHS",
+pusher.constant("MONTHS",
   [
     "January",
     "February",
@@ -17,7 +15,7 @@ timeline.constant("MONTHS",
   ]
 );
 
-timeline.constant("DAYS",
+pusher.constant("DAYS",
   [
     "Sunday",
     "Monday",
@@ -29,7 +27,7 @@ timeline.constant("DAYS",
   ]
 );
 
-timeline.constant('STATUS_MAPPING',
+pusher.constant('STATUS_MAPPING',
   {
     "running": "primary",
     "succeeded": "success",
@@ -40,34 +38,63 @@ timeline.constant('STATUS_MAPPING',
   }
 );
 
-timeline.controller("TimelineCtrl", ["$scope", "$http", "$timeout", "$window", "MONTHS", "DAYS", "STATUS_MAPPING",
-function($scope, $http, $timeout, $window, MONTHS, DAYS, STATUS_MAPPING) {
-  $scope.humanVSrobot = ["Human", "Robot"];
-
-  $scope.userFilter = (function() {
+pusher.filter("userFilter",
+  function() {
     var hookSources = /^(?:travis|tddium|semaphore)$/i;
 
-    return function(actual, expected) {
-      if (expected) {
-        var robot = hookSources.test(actual)
-        if (expected == "Human") {
-          return !robot;
-        } else {
-          return robot;
-        }
+    return function(deploys, userType) {
+      if (userType !== undefined && userType !== null) {
+        return deploys.filter(function(deploy) {
+          return (deploy.user.match(hookSources) !== null) === (userType === "Robot");
+        });
       }
-      return true;
+      return deploys;
     };
-  })();
+  }
+);
 
-  $scope.production = { "Production": true, "Non-production": false };
+pusher.filter("stageFilter",
+  function() {
+    return function(deploys, stageType) {
+      if (stageType !== undefined && stageType !== null) {
+        return deploys.filter(function(deploy) {
+          return deploy.stageType == stageType;
+        });
+      }
+      return deploys;
+    };
+  }
+);
 
-  $scope.stageFilter = function(actual, expected) {
-    if (expected !== null) {
-      return actual === expected;
-    }
-    return true;
-  };
+pusher.filter("transformStatus",
+  ["STATUS_MAPPING", function(STATUS_MAPPING) {
+    return function(status) {
+      return STATUS_MAPPING[status];
+    };
+  }]
+);
+
+pusher.filter("dayTime",
+  function() {
+    return function(local) {
+      return local.hour + ":" + local.minute + " " + local.ampm;
+    };
+  }
+);
+
+pusher.filter("fullDate",
+  function() {
+    return function(local) {
+      return local.day + ", " + local.year + " " + local.month + " " + local.date;
+    };
+  }
+);
+
+pusher.controller("TimelineCtrl", ["$scope", "$http", "$timeout", "$window", "MONTHS", "DAYS", "STATUS_MAPPING",
+function($scope, $http, $timeout, $window, MONTHS, DAYS, STATUS_MAPPING) {
+  $scope.userTypes = ["Human", "Robot"];
+
+  $scope.stageTypes = { "Production": true, "Non-production": false };
 
   $scope.entries = [];
   $scope.page = 1;
@@ -101,25 +128,13 @@ function($scope, $http, $timeout, $window, MONTHS, DAYS, STATUS_MAPPING) {
       });
   };
 
-  $scope.transformStatus = function(status) {
-    return STATUS_MAPPING[status];
-  };
-
-  $scope.compareDate = function(previous, current) {
+  $scope.isSameDate = function(previous, current) {
     if (previous) {
-      return previous.date !== current.date ||
-        previous.month !== current.month ||
-        previous.year !== current.year;
+      return previous.date === current.date &&
+        previous.month === current.month &&
+        previous.year === current.year;
     }
-    return true;
-  };
-
-  $scope.dayTime = function(local) {
-    return local.hour + ":" + local.minute + " " + local.ampm;
-  };
-
-  $scope.fullDate = function(local) {
-    return local.day + ", " + local.year + " " + local.month + " " + local.date;
+    return false;
   };
 
   $scope.localize = function(ms) {
@@ -155,11 +170,11 @@ function($scope, $http, $timeout, $window, MONTHS, DAYS, STATUS_MAPPING) {
 
   $scope.loadEntries();
 
-  $window.onscroll = function() {
+  angular.element($window).on("scroll", function() {
     if ($window.scrollY >= $window.scrollMaxY - 100 && !$scope.loading) {
-      $scope.$apply("loadEntries()");
+      $scope.$apply($scope.loadEntries);
     }
-  };
+  });
 
   $scope.shortWindow = function() {
     return !$scope.theEnd && $window.scrollMaxY === 0;

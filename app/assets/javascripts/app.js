@@ -1,1 +1,1 @@
-var pusher = angular.module("pusher", ["timeline"]);
+var pusher = angular.module("pusher", []);

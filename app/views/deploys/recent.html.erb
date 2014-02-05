@@ -8,14 +8,14 @@
   </div>
   <div class="timeline-filter">
     <label for="tlf-user-type">
-      <select id="tlf-user-type" ng-model="userType" ng-options="option for option in humanVSrobot">
+      <select id="tlf-user-type" ng-model="userType" ng-options="option for option in userTypes">
         <option value="">All</option>
       </select>
     </label>
   </div>
   <div class="timeline-filter">
     <label for="tlf-prod">Stage:
-      <select id="tlf-prod" ng-model="stageType" ng-options="value as key for (key, value) in production">
+      <select id="tlf-prod" ng-model="stageType" ng-options="value as key for (key, value) in stageTypes">
         <option value="">All</option>
       </select>
     </label>

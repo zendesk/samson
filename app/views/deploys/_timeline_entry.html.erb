@@ -1,25 +1,25 @@
 <div class="timeline-entry clearfix"
-  ng-repeat="entry in (filteredEntries = (entries | filter:search | filter:{ user: userType }:userFilter | filter:{ production: stageType }:stageFilter))">
-  <div ng-show="compareDate(filteredEntries[$index - 1].time, entry.time)">
-    <div class="timeline-date">{{fullDate(entry.time)}}</div>
+  ng-repeat="entry in (filteredEntries = (entries | filter:search | userFilter:userType | stageFilter:stageType))">
+  <div ng-hide="isSameDate(filteredEntries[$index - 1].time, entry.time)">
+    <div class="timeline-date">{{entry.time | fullDate}}</div>
     <hr>
   </div>
   <header class="col-md-2">
     <div class="timeline-time">
-      {{dayTime(entry.time)}}
+      {{entry.time | dayTime}}
     </div>
     <img class="gravatar img-square" ng-src="{{entry.gravatarURL}}" title="{{entry.user}}" alt="Gravatar">
   </header>
   <a ng-href="/projects/{{entry.projectURLParam}}">
     <div class="timeline-project col-md-2">
-      <div class="v-text {{transformStatus(entry.status)}}">
+      <div class="v-text {{entry.status | transformStatus}}">
         {{entry.projectName}}
       </div>
     </div>
   </a>
   <a ng-href="/projects/{{entry.projectURLParam}}/deploys/{{entry.deployId}}">
     <div class="timeline-content col-md-6">
-      <div class="v-text {{transformStatus(entry.status)}}">
+      <div class="v-text {{entry.status | transformStatus}}">
         {{entry.summary}}
       </div>
     </div>
