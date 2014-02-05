@@ -96,6 +96,26 @@ describe Integrations::TravisController do
           end
         end
       end
+      describe "with the master branch" do
+        describe "with an existing user and [deploy skip] in the message" do
+          let(:user) { users(:deployer) }
+
+          let(:payload) {{
+            status_message: 'Passed',
+            branch: 'master',
+            message: 'A change but this time [deploy skip] is included',
+            committer_email: user.email,
+            commit: '123abc',
+            type: 'push'
+          }}
+
+          it "doesn't deploy" do
+            response.status.must_equal(200)
+
+            project.deploys.must_equal []
+          end
+        end
+      end
     end
   end
 end

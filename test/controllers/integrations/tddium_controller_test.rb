@@ -34,7 +34,7 @@ describe Integrations::TddiumController do
   before do
     stub_github_api("repos/repo_name/commits/dc395381e650f3bac18457909880829fc20e34ba", commit: {message: "hi"})
 
-    project.webhooks.create!(stage: stages(:test_staging), branch: "production")
+    @webhook = project.webhooks.create!(stage: stages(:test_staging), branch: "production")
   end
 
   it "triggers a deploy if there's a webhook mapping for the branch" do
@@ -88,5 +88,16 @@ describe Integrations::TddiumController do
     post :create, payload.merge(token: "foobar")
 
     response.status.must_equal 404
+  end
+
+  it "doesn't trigger a deploy if the commit message contains [deploy skip]" do
+    @webhook.destroy!
+
+    stub_github_api("repos/repo_name/commits/dc395381e650f3bac18457909880829fc20e34ba", commit: {message: "hi[deploy skip]"})
+
+    project.webhooks.create!(stage: stages(:test_staging), branch: "production")
+    post :create, payload.merge(token: project.token)
+
+    project.deploys.must_equal []
   end
 end
