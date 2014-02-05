@@ -13,8 +13,10 @@ class Changeset
     # on. Just show an empty changeset then.
     previous_commit ||= commit
 
-    github = Octokit::Client.new(access_token: token)
-    comparison = github.compare(repo, previous_commit, commit)
+    comparison = Rails.cache.fetch([self, repo, previous_commit, commit].join("-")) do
+      github = Octokit::Client.new(access_token: token)
+      github.compare(repo, previous_commit, commit)
+    end
 
     new(comparison, repo, previous_commit, commit)
   rescue Octokit::NotFound, Octokit::InternalServerError
