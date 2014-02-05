@@ -1,15 +1,13 @@
 require_relative '../../test_helper'
 
 describe Integrations::TravisController do
+  let(:commit) { "123abc" }
   let(:project) { projects(:test) }
   let(:stage) { stages(:test_staging) }
-  let(:deploy_service) { stub(deploy!: nil) }
 
   setup do
     @orig_token, ENV["TRAVIS_TOKEN"] = ENV["TRAVIS_TOKEN"], "TOKEN"
     project.webhooks.create!(stage: stages(:test_staging), branch: "master")
-
-    DeployService.stubs(:new).returns(deploy_service)
   end
 
   teardown do
@@ -90,9 +88,10 @@ describe Integrations::TravisController do
           it "creates a deploy" do
             response.status.must_equal(200)
 
-            assert_received(deploy_service, :deploy!) do |expect|
-              expect.with stage, '123abc'
-            end
+            post :create, payload.merge(token: project.token)
+
+            deploy = project.deploys.last
+            deploy.try(:commit).must_equal commit
           end
         end
       end
@@ -111,10 +110,9 @@ describe Integrations::TravisController do
 
           it "doesn't deploy" do
             response.status.must_equal(200)
+            post :create, payload.merge(token: project.token)
 
-            assert_received(deploy_service, :deploy!) do |expect|
-              expect.never
-            end
+            project.deploys.must_equal []
           end
         end
       end
