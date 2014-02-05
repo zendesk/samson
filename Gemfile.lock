@@ -278,6 +278,7 @@ DEPENDENCIES
   font-awesome-sass
   github-markdown (~> 0.6.3)
   jasmine
+  jasmine-core
   jbuilder
   jquery-rails
   jquery-ui-rails
