@@ -112,7 +112,9 @@ describe Integrations::TravisController do
           it "doesn't deploy" do
             response.status.must_equal(200)
 
-            project.deploys.must_equal []
+            assert_received(deploy_service, :deploy!) do |expect|
+              expect.never
+            end
           end
         end
       end
