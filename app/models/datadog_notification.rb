@@ -11,7 +11,7 @@ class DatadogNotification
 
     status = @deploy.succeeded? ? "success" : "error"
 
-    event = Dogapi::Event.new(@deploy.summary,
+    event = Dogapi::Event.new(body,
       msg_title: @deploy.summary,
       event_type: "deploy",
       event_object: Digest::MD5.hexdigest("#{Time.new}|#{rand}"),
@@ -32,6 +32,10 @@ class DatadogNotification
   end
 
   private
+
+  def body
+    "@#{@deploy.user.email} deployed #{@deploy.short_reference} to #{@stage.name}"
+  end
 
   def api_key
     ENV["DATADOG_API_KEY"]
