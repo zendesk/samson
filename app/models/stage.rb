@@ -60,6 +60,12 @@ class Stage < ActiveRecord::Base
     current_deploy.present?
   end
 
+  # The next stage for the project. If this is the last stage, returns nil.
+  def next_stage
+    stages = project.stages.to_a
+    stages[stages.index(self) + 1]
+  end
+
   def notify_email_addresses
     notify_email_address.split(";").map(&:strip)
   end
@@ -94,6 +100,14 @@ class Stage < ActiveRecord::Base
     end
 
     commands + command_scope
+  end
+
+  def datadog_tags
+    super.to_s.split(";").map(&:strip)
+  end
+
+  def send_datadog_notifications?
+    datadog_tags.any?
   end
 
   private

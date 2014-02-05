@@ -41,7 +41,7 @@ $(function () {
 
   $("span[data-time]").each(function() {
     var utcms     = this.dataset.time,
-        localDate = new Date(Number.parseInt(utcms));
+        localDate = new Date(parseInt(utcms));
 
     this.title = localDate.toString();
   });
@@ -95,29 +95,31 @@ $(function () {
   });
 
   // Shows confirmation dropdown using Github comparison
-  var confirmed = false;
+  var confirmed = false,
+      $container = $(".deploy-details"),
+      $placeholderPanes = $container.find(".changeset-placeholder");
 
   $("#new_deploy").submit(function(event) {
-    var selected_stage = $("#deploy_stage_id option:selected");
+    var $selected_stage = $("#deploy_stage_id option:selected"),
+        $this = $(this);
 
-    if(!confirmed && selected_stage.data("confirmation")) {
+    if(!confirmed && $selected_stage.data("confirmation")) {
       $("#confirm-button-text").show();
       $("#deploy-button-text").hide();
-      $("#deploy-confirmation").removeClass("hide");
+      $("#deploy-confirmation").show();
       $("#deploy-confirmation .nav-tabs a:first").tab("show");
+      $container.empty();
+      $container.append($placeholderPanes);
 
       confirmed = true;
 
       $.ajax({
         method: "POST",
-        url: $(this).data("confirm-url"),
-        data: $(this).serialize(),
+        url: $this.data("confirm-url"),
+        data: $this.serialize(),
         success: function(data, status, xhr) {
-          var container = $(".deploy-details");
-          var placeholderPanes = container.find(".changeset-placeholder");
-
-          placeholderPanes.remove();
-          container.append(data);
+          $placeholderPanes.detach();
+          $container.append(data);
 
           // We need to switch to another tab and then switch back in order for
           // the plugin to detect that the DOM node has been replaced.
@@ -132,7 +134,7 @@ $(function () {
 
   $("#new-deploy-cancel").click(function(event) {
     if(confirmed) {
-      $("#deploy-confirmation").addClass("hide");
+      $("#deploy-confirmation").hide();
 
       $("#confirm-button-text").hide();
       $("#deploy-button-text").show();
@@ -145,3 +147,48 @@ $(function () {
     event.preventDefault();
   });
 });
+
+function startDeployStream() {
+  $(document).ready(function() {
+    var messages = $("#messages");
+    var streamUrl = $("#output").data("streamUrl");
+    var source = new EventSource(streamUrl);
+
+    var addLine = function(data) {
+      var msg = JSON.parse(data).msg;
+      messages.append(msg);
+      messages.scrollTop(messages[0].scrollHeight);
+    }
+
+    source.addEventListener('append', function(e) {
+      addLine(e.data);
+    }, false);
+
+    source.addEventListener('viewers', function(e) {
+      var users = JSON.parse(e.data);
+
+      if(users.length > 0) {
+        var viewers = $.map(users, function(user) {
+          return user.name;
+        }).join(', ') + '.';
+
+        $('#viewers-link .badge').html(users.length);
+        $("#viewers").html('Other viewers: ' + viewers);
+      } else {
+        $('#viewers-link .badge').html(0);
+        $("#viewers").html('No other viewers.');
+      }
+    }, false);
+
+    source.addEventListener('replace', function(e) {
+      messages.children().last().remove();
+      addLine(e.data);
+    }, false);
+
+    source.addEventListener('finished', function(e) {
+      $('#header').html(JSON.parse(e.data).html);
+      $('#deploy_stop').hide();
+      source.close();
+    }, false);
+  });
+}

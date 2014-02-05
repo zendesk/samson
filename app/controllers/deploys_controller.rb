@@ -26,7 +26,7 @@ class DeploysController < ApplicationController
   end
 
   def new
-    @deploy = @project.deploys.build(stage_id: params[:stage_id])
+    @deploy = @project.deploys.build(params.permit(:stage_id, :reference))
   end
 
   def create
@@ -59,7 +59,7 @@ class DeploysController < ApplicationController
 
   def changeset
     if stale?(etag: @deploy.cache_key, last_modified: @deploy.updated_at)
-      @changeset = Changeset.find(@deploy.project.github_repo, @deploy.previous_commit, @deploy.commit)
+      @changeset = @deploy.changeset
       render 'changeset', layout: false
     end
   end

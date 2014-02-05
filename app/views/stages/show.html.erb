@@ -6,10 +6,14 @@
   <li class="active"><%= @stage.name %></li>
 </ol>
 
+<% if @stage.locked? %>
+ <div class="alert alert-warning">Deployments to this stage were locked by <%= @stage.lock.user.name %> <%= time_ago_in_words(@stage.lock.created_at) %> ago.</div>
+<% end %>
+
 <h1>
   <%= @stage.name %>
   <div class="pull-right">
-    <%= link_to "Edit stage", edit_project_stage_path(@project, @stage), class: "btn btn-default" %>
+    <%= deploy_link @project, @stage %>
     <% if @stage.locked? %>
       <%= link_to project_stage_lock_path(@project, @stage), class: 'btn btn-default', method: :delete do %>
         <i class="glyphicon glyphicon-lock"></i> Unlock
@@ -19,7 +23,10 @@
         <i class="glyphicon glyphicon-lock"></i> Lock
       <% end %>
     <% end %>
-    <%= deploy_link @project, @stage %>
+    <%= link_to "Edit stage", edit_project_stage_path(@project, @stage), class: "btn btn-default" %>
+    <%= link_to project_stage_path(@project, @stage), class: 'btn btn-danger', method: :delete, data: { confirm: "Are you sure?" } do %>
+      <i class="glyphicon glyphicon-remove"></i> Delete
+    <% end %>
   </div>
 </h1>
 
@@ -33,7 +40,6 @@
       <th>When</th>
       <th>Who</th>
       <th>Status</th>
-      <th></th>
     </tr>
   </thead>
   <tbody>

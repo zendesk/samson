@@ -44,11 +44,11 @@
           <span style="display: none;" id="confirm-button-text">Confirm!</span>
         </button>
 
-        or <%= link_to "cancel", '#', data: { url: project_path(@project) }, id: 'new-deploy-cancel' %>
+        <%= link_to "cancel", '#', class: 'btn btn-default', data: { url: project_path(@project) }, id: 'new-deploy-cancel' %>
       </div>
     </div>
 
-    <div id="deploy-confirmation" class="hide">
+    <div id="deploy-confirmation">
       <ul class="nav nav-tabs">
         <li><a href="#files" data-toggle="tab">Files</a></li>
         <li><a href="#commits" data-toggle="tab">Commits</a></li>

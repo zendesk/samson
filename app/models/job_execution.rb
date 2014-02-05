@@ -1,4 +1,5 @@
 require 'thread_safe'
+require 'airbrake'
 require 'terminal_executor'
 
 class JobExecution
@@ -96,6 +97,8 @@ class JobExecution
 
     commands = [
       "export DEPLOYER=#{@job.user.email}",
+      "export DEPLOYER_EMAIL=#{@job.user.email}",
+      "export DEPLOYER_NAME=#{@job.user.name}",
       "export REVISION=#{@reference}",
       "export CACHE_DIR=#{artifact_cache_dir}",
       "cd #{dir}",

@@ -13,7 +13,7 @@ class FlowdockNotification
 
     flow.push_to_team_inbox(
       subject: subject,
-      content: @deploy.summary,
+      content: content,
       tags: ["deploy", @stage.name.downcase],
       link: url
     )
@@ -29,6 +29,10 @@ class FlowdockNotification
       source: "pusher",
       from: { name: @user.name, address: @user.email }
     )
+  end
+
+  def content
+    @content ||= FlowdockNotificationRenderer.render(@deploy)
   end
 
   def url_helpers
