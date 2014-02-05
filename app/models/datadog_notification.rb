@@ -21,7 +21,7 @@ class DatadogNotification
       tags: @stage.datadog_tags + ["deploy"]
     )
 
-    client = Dogapi::Client.new(api_key)
+    client = Dogapi::Client.new(api_key, nil, "")
     status, _ = client.emit_event(event)
 
     if status == "202"

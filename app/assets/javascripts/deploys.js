@@ -41,7 +41,7 @@ $(function () {
 
   $("span[data-time]").each(function() {
     var utcms     = this.dataset.time,
-        localDate = new Date(Number.parseInt(utcms));
+        localDate = new Date(parseInt(utcms));
 
     this.title = localDate.toString();
   })
