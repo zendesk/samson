@@ -74,6 +74,9 @@ group :test do
   gem 'bourne'
   gem 'webmock', :require => false
   gem 'simplecov', :require => false
+
+  gem 'jasmine'
+  gem 'jasmine-core'
 end
 
 group :deployment do
