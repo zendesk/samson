@@ -21,105 +21,94 @@ $lightInfo: lighten(#5bc0de, $scale);
   color: inherit;
 }
 
+.timeline hr {
+  margin: 10px 0;
+}
+
 .timeline-filter {
   display: inline-block;
   margin-right: 10px;
 }
 
 .timeline-entry {
-  margin-top: 40px;
   position: relative;
-}
-
-.timeline-entry > header,
-.timeline-project,
-.timeline-content {
-  display: table;
-  position: relative;
+  border-bottom: 1px solid $PusherGrey;
+  padding: 10px 0;
 }
 
 .timeline-project,
 .timeline-content {
   color: $pusherDark;
-  height: 40px;
 }
 
 .timeline-project {
   text-align: center;
+  line-height: 30px;
+  font-size: 12px;
+  margin: 0 40px;
+}
+
+.timeline-project-name {
+  display: block;
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background-color: $PusherGrey;
+  padding: 5px 15px;
 }
 
 .timeline-content > .v-text{
   padding-left: 10px;
 }
 
-.timeline-time {
-  color: #999;
-  text-transform: uppercase;
+.timeline-gravatar {
+  height: 20px;
   float: left;
 }
 
-.gravatar {
-  height: 40px;
-  float: right;
+.timeline-icon {
+  text-align: right;
+  font-size: 3rem;
+}
+
+.timeline-icon > .primary {
+  color: $primary;
+}
+
+.timeline-icon > .success {
+  color: $success;
+}
+
+.timeline-icon > .warning {
+  color: $warning;
+}
+
+.timeline-icon > .danger {
+  color: $danger;
+}
+
+.timeline-icon > .info {
+  color: $info;
 }
 
 .v-text {
-  display: table-cell;
   height: 40px;
   vertical-align: middle;
-  border-bottom: 1px solid $PusherGrey;
-}
-
-.timeline-project > .primary {
-  border-top: 3px solid $primary;
-  border-left: 2px solid $primary;
-}
-
-.timeline-project > .success {
-  border-top: 3px solid $success;
-  border-left: 2px solid $success;
-}
-
-.timeline-project > .warning {
-  border-top: 3px solid $warning;
-  border-left: 2px solid $warning;
-}
-
-.timeline-project > .danger {
-  border-top: 3px solid $danger;
-  border-left: 2px solid $danger;
-}
-
-.timeline-project > .info {
-  border-top: 3px solid $info;
-  border-left: 2px solid $info;
-}
-
-.timeline-content > .primary {
-  border-top: 3px solid $lightPrimary;
-  border-left: 2px solid $lightPrimary;
-}
-
-.timeline-content > .success {
-  border-top: 3px solid $lightSuccess;
-  border-left: 2px solid $lightSuccess;
-}
-
-.timeline-content > .warning {
-  border-top: 3px solid $lightWarning;
-  border-left: 2px solid $lightWarning;
-}
-
-.timeline-content > .danger {
-  border-top: 3px solid $lightDanger;
-  border-left: 2px solid $lightDanger;
-}
-
-.timeline-content > .info {
-  border-top: 3px solid $lightInfo;
-  border-left: 2px solid $lightInfo;
 }
 
 .timeline-date {
+  margin-top: 10px;
   font-weight: bold;
+}
+
+.timeline-summary {
+  font-weight: bold;
+}
+
+.timeline-time {
+  color: #999;
+  float: left;
+  padding-left: 10px;
 }

@@ -1,5 +1,6 @@
 json.array! @deploys do |deploy|
   json.time(datetime_to_js_ms deploy.updated_at)
+  json.timeAgo(time_ago_in_words deploy.updated_at)
   json.projectURLParam(deploy.project.to_param)
   json.projectName(deploy.project.name)
   json.projectId(deploy.project.id)

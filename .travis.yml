@@ -3,8 +3,8 @@ before_script:
   - bundle exec rake db:create
   - npm install karma
 script:
-  - rake
   - npm test
+  - rake
 language: ruby
 cache: bundler
 env:

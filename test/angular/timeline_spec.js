@@ -58,24 +58,13 @@ describe("Timeline", function() {
     });
 
     describe("time filters", function() {
-      describe("dayTime filter", function() {
-        beforeEach(inject(function($filter) {
-          filter = $filter("dayTime");
-        }));
-
-        it("consumes an object and returns the time in a day", function() {
-          expect(filter({hour: 1, minute: 20, ampm: "PM"})).toBe("1:20 PM");
-          expect(filter({hour: 5, minute: 30, ampm: "AM"})).toBe("5:30 AM");
-        });
-      });
-
       describe("fullDate filter", function() {
         beforeEach(inject(function($filter) {
           filter = $filter("fullDate");
         }));
 
         it("consumes an object and returns the date in a year", function() {
-          expect(filter({day: "Tuesday", month: "January", year: "2010", date: "28"})).toBe("Tuesday, 2010 January 28");
+          expect(filter({day: "Tuesday", month: "January", year: "2010", date: "28"})).toBe("Tuesday, 28 January 2010");
         });
       });
 
@@ -93,18 +82,12 @@ describe("Timeline", function() {
 
         it("consumes a UTC time in ms [int] and returns an object representing the local datetime", function() {
           expect(filter(timezoneAdjustment(12345678000))).toEqual({
-            hour: 7,
-            minute: 21,
-            ampm: "AM",
             year: 1970,
             month: "May",
             date: 24,
             day: "Sunday"
           });
           expect(filter(timezoneAdjustment(765432100000))).toEqual({
-            hour: 2,
-            minute: "01",
-            ampm: "PM",
             year: 1994,
             month: "April",
             date: 4,
@@ -115,18 +98,18 @@ describe("Timeline", function() {
     });
 
     describe("utility filters", function() {
-      describe("transformStatus filter", function() {
+      describe("statusToIcon filter", function() {
         beforeEach(inject(function($filter) {
-          filter = $filter("transformStatus");
+          filter = $filter("statusToIcon");
         }));
 
         it("transforms deploy status to visual status", function() {
-          expect(filter("running")).toEqual("primary");
-          expect(filter("succeeded")).toEqual("success");
-          expect(filter("failed")).toEqual("danger");
-          expect(filter("pending")).toEqual("default");
-          expect(filter("cancelling")).toEqual("warning");
-          expect(filter("cancelled")).toEqual("danger");
+          expect(filter("running")).toEqual("plus-sign primary");
+          expect(filter("succeeded")).toEqual("ok-sign success");
+          expect(filter("failed")).toEqual("remove-sign danger");
+          expect(filter("pending")).toEqual("minus-sign info");
+          expect(filter("cancelling")).toEqual("exclamation-sign warning");
+          expect(filter("cancelled")).toEqual("ban-circle danger");
         });
       });
     });

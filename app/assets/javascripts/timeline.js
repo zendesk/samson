@@ -29,12 +29,12 @@ pusher.constant("DAYS",
 
 pusher.constant('STATUS_MAPPING',
   {
-    "running": "primary",
-    "succeeded": "success",
-    "failed": "danger",
-    "pending": "default",
-    "cancelling": "warning",
-    "cancelled": "danger"
+    "running": "plus-sign primary",
+    "succeeded": "ok-sign success",
+    "failed": "remove-sign danger",
+    "pending": "minus-sign info",
+    "cancelling": "exclamation-sign warning",
+    "cancelled": "ban-circle danger"
   }
 );
 
@@ -66,7 +66,7 @@ pusher.filter("stageFilter",
   }
 );
 
-pusher.filter("transformStatus",
+pusher.filter("statusToIcon",
   ["STATUS_MAPPING", function(STATUS_MAPPING) {
     return function(status) {
       return STATUS_MAPPING[status];
@@ -74,18 +74,10 @@ pusher.filter("transformStatus",
   }]
 );
 
-pusher.filter("dayTime",
-  function() {
-    return function(local) {
-      return local.hour + ":" + local.minute + " " + local.ampm;
-    };
-  }
-);
-
 pusher.filter("fullDate",
   function() {
     return function(local) {
-      return local.day + ", " + local.year + " " + local.month + " " + local.date;
+      return local.day + ", " + local.date + " " + local.month + " " + local.year;
     };
   }
 );
@@ -95,27 +87,12 @@ pusher.filter("localize",
     return function(ms) {
       var localDate = new Date(parseInt(ms));
 
-      var hour   = localDate.getHours(),
-          minute = localDate.getMinutes(),
-          day    = DAYS[localDate.getDay()],
+      var day    = DAYS[localDate.getDay()],
           year   = localDate.getFullYear(),
           date   = localDate.getDate(),
-          month  = MONTHS[localDate.getMonth()],
-          ampm   = null;
-
-      if (hour >= 12) {
-        if (hour > 12) { hour -= 12; }
-        ampm = "PM";
-      } else {
-        ampm = "AM";
-      }
-
-      minute = (minute < 10) ? "0" + minute : minute;
+          month  = MONTHS[localDate.getMonth()];
 
       return {
-        hour: hour,
-        minute: minute,
-        ampm: ampm,
         year: year,
         month: month,
         date: date,
