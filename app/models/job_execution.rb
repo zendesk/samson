@@ -111,8 +111,10 @@ class JobExecution
 
   def setup!(dir)
     @job.project.mutex ||= Mutex.new
+    repo_url = @job.project.repository_url
+    commands = nil
+
     @job.project.mutex.synchronize {
-      repo_url = @job.project.repository_url
       commands = [
         <<-SHELL,
           if [ -d #{repo_cache_dir} ]
