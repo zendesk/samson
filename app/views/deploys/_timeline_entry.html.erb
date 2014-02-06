@@ -5,20 +5,22 @@
     <h3 class="timeline-date">{{deploy.time | fullDate}}</h3>
   </div>
 
-  <div class="timeline-icon">
-    <i class="glyphicon glyphicon-{{deploy.status | statusToIcon}}"></i>
-  </div>
-
-  <a class="timeline-project" ng-href="/projects/{{deploy.projectURLParam}}">{{deploy.projectName}}</a>
-
-  <a class="timeline-content clearfix" ng-href="/projects/{{deploy.projectURLParam}}/deploys/{{deploy.deployId}}">
-    <span class="timeline-summary">{{deploy.summary}}</span>
-    <div class="clearfix">
-      <img class="timeline-gravatar img-circle" ng-src="{{deploy.gravatarURL}}" title="{{deploy.user}}" alt="Gravatar">
-      <div class="timeline-who">
-        {{deploy.user}} <span class="timeline-time">{{deploy.timeAgo}} ago</span>
-      </div>
+  <div class="timeline-entry-main">
+    <div class="timeline-icon">
+      <i class="glyphicon glyphicon-{{deploy.status | statusToIcon}}"></i>
     </div>
-  </a>
+
+    <a class="timeline-project" ng-href="/projects/{{deploy.projectURLParam}}">{{deploy.projectName}}</a>
+
+    <a class="timeline-content clearfix" ng-href="/projects/{{deploy.projectURLParam}}/deploys/{{deploy.deployId}}">
+      <div class="timeline-summary">{{deploy.summary}}</div>
+      <div class="clearfix">
+        <img class="timeline-gravatar img-circle" ng-src="{{deploy.gravatarURL}}" title="{{deploy.user}}" alt="Gravatar">
+        <div class="timeline-who">
+          {{deploy.user}} <span class="timeline-time">{{deploy.timeAgo}} ago</span>
+        </div>
+      </div>
+    </a>
+  </div>
 
 </div>
