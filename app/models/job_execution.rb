@@ -110,20 +110,23 @@ class JobExecution
   end
 
   def setup!(dir)
-    repo_url = @job.project.repository_url
-
-    commands = [
-      <<-SHELL,
-        if [ -d #{repo_cache_dir} ]
-          then cd #{repo_cache_dir} && git fetch -ap
-        else
-          git clone --mirror #{repo_url} #{repo_cache_dir}
-        fi
-      SHELL
-      "git clone #{repo_cache_dir} #{dir}",
-      "cd #{dir}",
-      "git checkout --quiet #{@reference}"
-    ]
+    @job.project.mutex ||= Mutex.new
+    @job.project.mutex.synchronize {
+      repo_url = @job.project.repository_url
+      debugger
+      commands = [
+        <<-SHELL,
+          if [ -d #{repo_cache_dir} ]
+            then cd #{repo_cache_dir} && git fetch -ap
+          else
+            git clone --mirror #{repo_url} #{repo_cache_dir}
+          fi
+        SHELL
+        "git clone #{repo_cache_dir} #{dir}",
+        "cd #{dir}",
+        "git checkout --quiet #{@reference}"
+      ]
+    }
 
     @executor.execute!(*commands).tap do |status|
       if status
