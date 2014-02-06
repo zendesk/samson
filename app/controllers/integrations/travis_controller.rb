@@ -12,7 +12,14 @@ class Integrations::TravisController < Integrations::BaseController
   end
 
   def deploy?
-    project && payload['status_message'] == 'Passed' && payload['type'] == 'push'
+    project &&
+      payload['status_message'] == 'Passed' &&
+      payload['type'] == 'push' &&
+      !skip?
+  end
+
+  def skip?
+    payload['message'].include?("[deploy skip]")
   end
 
   def branch

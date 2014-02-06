@@ -98,6 +98,11 @@ Set up your webhooks and the deployment process can be automated.
     * Add all webhooks to your organisation
     * Pusher will match url to see if the webhook call is for the correct project
 
+Skip a deploy:
+
+Add "[deploy skip]" to your commit message, and pusher will ignore the webhook
+from CI.
+
 ### Team
 
 Core team is Steven D (SF), Daniel S (CPH), Jason S (MEL), Elliot P (MEL), Po C (MEL) & Roman S (MEL).

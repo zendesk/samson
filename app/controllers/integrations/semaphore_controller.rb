@@ -2,7 +2,12 @@ class Integrations::SemaphoreController < Integrations::BaseController
   protected
 
   def deploy?
-    params[:result] == 'passed'
+    params[:result] == 'passed' &&
+      !skip?
+  end
+
+  def skip?
+    params[:commit][:message].include?("[deploy skip]")
   end
 
   def commit
