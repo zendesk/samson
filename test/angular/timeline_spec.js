@@ -80,12 +80,19 @@ describe("Timeline", function() {
       });
 
       describe("localize filter", function() {
+        function timezoneAdjustment(t) {
+          var DEV_TIMEZONE  = -660,
+              TEST_TIMEZONE = (new Date()).getTimezoneOffset();
+              timezoneDiff  = DEV_TIMEZONE - TEST_TIMEZONE;
+          return t + timezoneDiff * 60000;
+        }
+
         beforeEach(inject(function($filter) {
           filter = $filter("localize");
         }));
 
         it("consumes a UTC time in ms [int] and returns an object representing the local datetime", function() {
-          expect(filter(12345678000)).toEqual({
+          expect(filter(timezoneAdjustment(12345678000))).toEqual({
             hour: 7,
             minute: 21,
             ampm: "AM",
@@ -94,7 +101,7 @@ describe("Timeline", function() {
             date: 24,
             day: "Sunday"
           });
-          expect(filter(765432100000)).toEqual({
+          expect(filter(timezoneAdjustment(765432100000))).toEqual({
             hour: 2,
             minute: "01",
             ampm: "PM",
