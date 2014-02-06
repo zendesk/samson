@@ -1,30 +1,24 @@
 <div class="timeline-entry clearfix"
   ng-repeat="deploy in (deploys = (timelineDeploys.entries | filter:search | userFilter:userType | stageFilter:stageType))">
+
   <div ng-hide="isSameDate(deploys[$index - 1].time, deploy.time)">
-    <div class="timeline-date">{{deploy.time | fullDate}}</div>
-    <hr>
+    <h3 class="timeline-date">{{deploy.time | fullDate}}</h3>
   </div>
-  <header class="col-md-1">
-    <div class="timeline-icon v-text">
-      <i class="glyphicon glyphicon-{{deploy.status | statusToIcon}}"></i>
-    </div>
-  </header>
-  <a ng-href="/projects/{{deploy.projectURLParam}}">
-    <div class="timeline-project col-md-2">
-      <div class="v-text">
-        <span class="timeline-project-name">{{deploy.projectName}}</span>
+
+  <div class="timeline-icon">
+    <i class="glyphicon glyphicon-{{deploy.status | statusToIcon}}"></i>
+  </div>
+
+  <a class="timeline-project" ng-href="/projects/{{deploy.projectURLParam}}">{{deploy.projectName}}</a>
+
+  <a class="timeline-content clearfix" ng-href="/projects/{{deploy.projectURLParam}}/deploys/{{deploy.deployId}}">
+    <span class="timeline-summary">{{deploy.summary}}</span>
+    <div class="clearfix">
+      <img class="timeline-gravatar img-circle" ng-src="{{deploy.gravatarURL}}" title="{{deploy.user}}" alt="Gravatar">
+      <div class="timeline-who">
+        {{deploy.user}} <span class="timeline-time">{{deploy.timeAgo}} ago</span>
       </div>
     </div>
   </a>
-  <a ng-href="/projects/{{deploy.projectURLParam}}/deploys/{{deploy.deployId}}">
-    <div class="timeline-content col-md-6">
-      <span class="timeline-summary">{{deploy.summary}}</span>
-      <footer class="clearfix">
-        <img class="timeline-gravatar img-circle" ng-src="{{deploy.gravatarURL}}" title="{{deploy.user}}" alt="Gravatar">
-        <div class="timeline-time">
-          {{deploy.timeAgo}} ago
-        </div>
-      </footer>
-    </div>
-  </a>
+
 </div>
