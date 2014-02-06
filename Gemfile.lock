@@ -1,13 +1,4 @@
 GIT
-  remote: git://github.com/dasch/sawyer.git
-  revision: d71998f5829007ccd911adf17cf695d604d13619
-  branch: dasch/fix-marshal-problem
-  specs:
-    sawyer (0.5.3)
-      addressable (~> 2.3.5)
-      faraday (~> 0.8, < 0.10)
-
-GIT
   remote: git@github.com:zendesk/zendesk_deployment.git
   revision: 84e1882958b5fe3c57840adeb1f0552bb6d85128
   ref: v1.6.0
@@ -22,6 +13,15 @@ GIT
   specs:
     net-ssh-shell (0.3.0.dev)
       net-ssh (~> 2.0)
+
+GIT
+  remote: https://github.com/dasch/sawyer.git
+  revision: d71998f5829007ccd911adf17cf695d604d13619
+  branch: dasch/fix-marshal-problem
+  specs:
+    sawyer (0.5.3)
+      addressable (~> 2.3.5)
+      faraday (~> 0.8, < 0.10)
 
 GEM
   remote: https://rubygems.org/
