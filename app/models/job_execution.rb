@@ -113,7 +113,6 @@ class JobExecution
     @job.project.mutex ||= Mutex.new
     @job.project.mutex.synchronize {
       repo_url = @job.project.repository_url
-      debugger
       commands = [
         <<-SHELL,
           if [ -d #{repo_cache_dir} ]
