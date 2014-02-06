@@ -13,7 +13,7 @@
 
           <%= link_to stage.last_deploy.short_reference,
                       project_deploy_path(project, stage.last_deploy),
-                      class: "status pull-right label #{deploy_status_for_label(stage.last_deploy.status)}" if stage.last_deploy %>
+                      class: "status pull-right label #{deploy_status(stage.last_deploy.status, 'label')}" if stage.last_deploy %>
           </a>
         </li>
       <% end %>

@@ -60,6 +60,7 @@ GEM
     airbrake (3.1.14)
       builder
       json
+    angularjs-rails (1.2.10)
     ansible (0.2.0)
     arel (4.0.1)
     atomic (1.1.14)
@@ -116,6 +117,9 @@ GEM
       multi_xml (>= 0.5.2)
     httpauth (0.2.0)
     i18n (0.6.9)
+    jbuilder (2.0.2)
+      activesupport (>= 3.0.0)
+      multi_json (>= 1.2.0)
     jquery-rails (3.0.4)
       railties (>= 3.0, < 5.0)
       thor (>= 0.14, < 2.0)
@@ -251,6 +255,7 @@ DEPENDENCIES
   active_hash (~> 1.0)
   activeresource
   airbrake
+  angularjs-rails
   ansible
   better_errors
   binding_of_caller
@@ -265,6 +270,7 @@ DEPENDENCIES
   flowdock (~> 0.3.1)
   font-awesome-sass
   github-markdown (~> 0.6.3)
+  jbuilder
   jquery-rails
   jquery-ui-rails
   kaminari

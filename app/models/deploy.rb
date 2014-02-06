@@ -17,7 +17,7 @@ class Deploy < ActiveRecord::Base
   end
 
   def summary
-    "#{job.user.name} #{summary_action} #{short_reference} to #{stage.name}"
+    "#{short_reference} #{summary_action} to #{stage.name}"
   end
 
   def summary_for_email
@@ -72,11 +72,11 @@ class Deploy < ActiveRecord::Base
     elsif running?
       "is deploying"
     elsif cancelling?
-      "is cancelling a deploy of"
+      "is cancelling a deploy"
     elsif cancelled?
-      "cancelled a deploy of"
+      "cancelled a deploy"
     elsif succeeded?
-      "deployed"
+      "was deployed"
     elsif failed?
       "failed to deploy"
     elsif errored?

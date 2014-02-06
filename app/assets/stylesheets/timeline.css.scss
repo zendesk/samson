@@ -1,0 +1,114 @@
+$pusherDark: #333;
+$PusherGrey: lighten($pusherDark, 70%);
+$primary: #428bca;
+$success: #5cb85c;
+$warning: #f0ad4e;
+$danger: #d9534f;
+$info: #5bc0de;
+$scale: 25%;
+$lightPrimary: lighten(#428bca, $scale);
+$lightSuccess: lighten(#5cb85c, $scale);
+$lightWarning: lighten(#f0ad4e, $scale);
+$lightDanger: lighten(#d9534f, $scale);
+$lightInfo: lighten(#5bc0de, $scale);
+
+.timeline a {
+  color: inherit;
+}
+
+.timeline a:hover {
+  text-decoration: none;
+  color: inherit;
+}
+
+.timeline hr {
+  margin: 10px 0;
+}
+
+.timeline-filter {
+  display: inline-block;
+  margin-right: 10px;
+}
+
+.timeline-entry {
+  position: relative;
+  border-bottom: 1px solid $PusherGrey;
+  padding: 10px 0;
+}
+
+.timeline-project,
+.timeline-content {
+  color: $pusherDark;
+}
+
+.timeline-project {
+  text-align: center;
+  line-height: 30px;
+  font-size: 12px;
+  margin: 0 40px;
+}
+
+.timeline-project-name {
+  display: block;
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background-color: $PusherGrey;
+  padding: 5px 15px;
+}
+
+.timeline-content > .v-text{
+  padding-left: 10px;
+}
+
+.timeline-gravatar {
+  height: 20px;
+  float: left;
+}
+
+.timeline-icon {
+  text-align: right;
+  font-size: 3rem;
+}
+
+.timeline-icon > .primary {
+  color: $primary;
+}
+
+.timeline-icon > .success {
+  color: $success;
+}
+
+.timeline-icon > .warning {
+  color: $warning;
+}
+
+.timeline-icon > .danger {
+  color: $danger;
+}
+
+.timeline-icon > .info {
+  color: $info;
+}
+
+.v-text {
+  height: 40px;
+  vertical-align: middle;
+}
+
+.timeline-date {
+  margin-top: 10px;
+  font-weight: bold;
+}
+
+.timeline-summary {
+  font-weight: bold;
+}
+
+.timeline-time {
+  color: #999;
+  float: left;
+  padding-left: 10px;
+}
