@@ -81,8 +81,8 @@ describe("Timeline", function() {
 
       describe("localize filter", function() {
         function timezoneAdjustment(t) {
-          var DEV_TIMEZONE  = -660,
-              TEST_TIMEZONE = (new Date()).getTimezoneOffset();
+          var DEV_TIMEZONE  = 660,
+              TEST_TIMEZONE = - (new Date()).getTimezoneOffset();
               timezoneDiff  = DEV_TIMEZONE - TEST_TIMEZONE;
           return t + timezoneDiff * 60000;
         }
