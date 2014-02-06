@@ -5,7 +5,7 @@ module.exports = function(config) {
   config.set({
 
     // base path, that will be used to resolve files and exclude
-    basePath: '',
+    basePath: '.',
 
 
     // frameworks to use
@@ -16,7 +16,6 @@ module.exports = function(config) {
     files: [
       'vendor/assets/javascripts/angular.min.js',
       'vendor/assets/javascripts/angular-mocks.js',
-      'vendor/assets/javascripts/angular-scenario.js',
       'app/assets/javascripts/app.js',
       'app/assets/javascripts/timeline.js',
       'test/angular/timeline_spec.js'

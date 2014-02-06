@@ -117,12 +117,6 @@ GEM
       multi_xml (>= 0.5.2)
     httpauth (0.2.0)
     i18n (0.6.9)
-    jasmine (2.0.0)
-      jasmine-core (~> 2.0.0)
-      phantomjs
-      rack (>= 1.2.1)
-      rake
-    jasmine-core (2.0.0)
     jbuilder (2.0.2)
       activesupport (>= 3.0.0)
       multi_json (>= 1.2.0)
@@ -180,7 +174,6 @@ GEM
     omniauth-oauth2 (1.1.1)
       oauth2 (~> 0.8.0)
       omniauth (~> 1.0)
-    phantomjs (1.9.2.1)
     polyglot (0.3.3)
     puma (2.7.1)
       rack (>= 1.1, < 2.0)
@@ -277,8 +270,6 @@ DEPENDENCIES
   flowdock (~> 0.3.1)
   font-awesome-sass
   github-markdown (~> 0.6.3)
-  jasmine
-  jasmine-core
   jbuilder
   jquery-rails
   jquery-ui-rails
