@@ -19,7 +19,7 @@ gem 'jbuilder'
 # We need this specific version of Sawyer (which Octokit uses) because it supports
 # marshalling resources, which we use when caching responses. Once that's been released
 # we can use a normal gem version again.
-gem 'sawyer', github: 'dasch/sawyer', branch: 'dasch/fix-marshal-problem'
+gem 'sawyer', git: 'https://github.com/dasch/sawyer.git', branch: 'dasch/fix-marshal-problem'
 
 group :production, :staging do
   gem 'rails_12factor'
