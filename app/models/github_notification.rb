@@ -1,5 +1,4 @@
 class GithubNotification
-  PULL_REQUEST_MERGE_MESSAGE = /\AMerge pull request #(\d+)/
 
   def initialize(stage, deploy)
     @stage, @deploy = stage, deploy
@@ -14,7 +13,7 @@ class GithubNotification
     pull_requests = @deploy.changeset.pull_requests
 
     if pull_requests.any?
-      pull_requests.each do |pull_request|
+      in_multiple_threads(pull_requests) do |pull_request|
 
         pull_id = pull_request.number
         status = github.add_comment(@project.github_repo, pull_id, body)
@@ -33,6 +32,18 @@ class GithubNotification
 
   def body
     "This PR was deployed to #{@stage.name}. Reference: #{@deploy.short_reference}"
+  end
+
+  def in_multiple_threads(data)
+    threads = [10, data.size].min
+    data = data.dup
+    (0...threads).to_a.map do
+      Thread.new do
+        while slice = data.shift
+          yield slice
+        end
+      end
+    end.each(&:join)
   end
 
 end
