@@ -1,5 +1,5 @@
 $pusherDark: #333;
-$PusherGrey: lighten($pusherDark, 70%);
+$pusherGrey: lighten($pusherDark, 70%);
 $primary: #428bca;
 $success: #5cb85c;
 $warning: #f0ad4e;
@@ -21,8 +21,10 @@ $lightInfo: lighten(#5bc0de, $scale);
   color: inherit;
 }
 
-.timeline hr {
-  margin: 10px 0;
+.timeline h3 {
+  border-bottom: 1px solid $pusherGrey;
+  padding-bottom: 10px;
+  margin: 20px 0 15px;
 }
 
 .timeline-filter {
@@ -32,8 +34,19 @@ $lightInfo: lighten(#5bc0de, $scale);
 
 .timeline-entry {
   position: relative;
-  border-bottom: 1px solid $PusherGrey;
-  padding: 10px 0;
+  border-bottom: 1px solid $pusherGrey;
+  padding: 15px 0;
+}
+
+.timeline-entry-main {
+  display: flex;
+  align-items: center;
+}
+
+.timeline-icon,
+.timeline-project,
+.timeline-content {
+  float: left;
 }
 
 .timeline-project,
@@ -42,25 +55,14 @@ $lightInfo: lighten(#5bc0de, $scale);
 }
 
 .timeline-project {
+  background-color: $pusherGrey;
+  border-radius: 3px;
+  display: block;
   text-align: center;
   line-height: 30px;
-  font-size: 12px;
-  margin: 0 40px;
-}
-
-.timeline-project-name {
-  display: block;
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  background-color: $PusherGrey;
-  padding: 5px 15px;
-}
-
-.timeline-content > .v-text{
-  padding-left: 10px;
+  margin: 0 30px 0;
+  padding: 2px 10px;
+  width: 150px;
 }
 
 .timeline-gravatar {
@@ -69,8 +71,9 @@ $lightInfo: lighten(#5bc0de, $scale);
 }
 
 .timeline-icon {
-  text-align: right;
-  font-size: 3rem;
+  font-size: 4rem;
+  line-height: 40px;
+  height: 40px;
 }
 
 .timeline-icon > .primary {
@@ -93,11 +96,6 @@ $lightInfo: lighten(#5bc0de, $scale);
   color: $info;
 }
 
-.v-text {
-  height: 40px;
-  vertical-align: middle;
-}
-
 .timeline-date {
   margin-top: 10px;
   font-weight: bold;
@@ -105,10 +103,16 @@ $lightInfo: lighten(#5bc0de, $scale);
 
 .timeline-summary {
   font-weight: bold;
+  font-size: 16px;
+  line-height: 16px;
+  margin-bottom: 8px;
+}
+
+.timeline-who {
+  float: left;
+  padding-left: 5px;
 }
 
 .timeline-time {
   color: #999;
-  float: left;
-  padding-left: 10px;
 }
