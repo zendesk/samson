@@ -9,16 +9,14 @@ class GithubNotification
   def deliver
     Rails.logger.info "Updating Github PR..."
 
-    github = Octokit::Client.new(access_token: api_key)
+    github = Octokit::Client.new(access_token: ENV['GITHUB_TOKEN'])
 
-    @merged_pull_requests = @deploy.changeset.merged_pull_requests
+    pull_requests = @deploy.changeset.pull_requests
 
-    if @merged_pull_requests
-      @merged_pull_requests.each do |message|
-        if message =~ PULL_REQUEST_MERGE_MESSAGE
-          pull_id = Integer($1)
-        end
+    if pull_requests.any?
+      pull_requests.each do |pull_request|
 
+        pull_id = pull_request.number
         status = github.add_comment(@project.github_repo, pull_id, body)
 
         if status == "201"
@@ -37,7 +35,4 @@ class GithubNotification
     "This PR was deployed to #{@stage.name}. Reference: #{@deploy.short_reference}"
   end
 
-  def api_key
-    ENV['GITHUB_TOKEN']
-  end
 end
