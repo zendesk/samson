@@ -3,8 +3,6 @@ class Changeset
 
   cattr_accessor(:token) { ENV['GITHUB_TOKEN'] }
 
-  PULL_REQUEST_MERGE_MESSAGE = /\AMerge pull request #(\d+)/
-
   def initialize(comparison, repo, previous_commit, commit)
     @comparison, @repo = comparison, repo
     @previous_commit, @commit = previous_commit, commit
@@ -53,19 +51,11 @@ class Changeset
     commits.map(&:author_name).uniq
   end
 
-  def merged_pull_requests
-    @merged_pull_requests ||= find_merged_pull_requests
-  end
-
   private
 
   def find_pull_requests
     numbers = commits.map(&:pull_request_number).compact
     numbers.map {|num| PullRequest.find(repo, num) }.compact
-  end
-
-  def find_merged_pull_requests
-    commits.map(&:summary).select{|message| message =~ PULL_REQUEST_MERGE_MESSAGE}
   end
 
   class NullComparison
