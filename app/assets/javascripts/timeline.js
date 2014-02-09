@@ -163,11 +163,14 @@ function($scope, $window, Deploys) {
 
   $scope.timelineDeploys.loadMore();
 
-  angular.element($window).on("scroll", function() {
-    if ($window.scrollY >= $window.scrollMaxY - 100 && !$scope.timelineDeploys.loading) {
-      $scope.$apply($scope.timelineDeploys.loadMore);
-    }
-  });
+  angular.element($window).on("scroll", (function() {
+    var html = document.querySelector("html");
+    return function() {
+      if ($window.scrollY >= html.scrollHeight - $window.innerHeight - 100 && !$scope.timelineDeploys.loading) {
+        $scope.$apply($scope.timelineDeploys.loadMore);
+      }
+    };
+  })());
 
   $scope.shortWindow = function() {
     return !$scope.timelineDeploys.theEnd && $window.scrollMaxY === 0;
