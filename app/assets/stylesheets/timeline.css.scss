@@ -39,7 +39,9 @@ $lightInfo: lighten(#5bc0de, $scale);
 }
 
 .timeline-entry-main {
+  display: -webkit-flex;
   display: flex;
+  -webkit-align-items: center;
   align-items: center;
 }
 
