@@ -110,31 +110,30 @@ class JobExecution
   end
 
   def setup!(dir)
-    @job.project.mutex ||= Mutex.new
+    @job.project.repo_lock ||= Mutex.new
     repo_url = @job.project.repository_url
-    commands = nil
+    logger.debug "MUTEX: " + @job.project.repo_lock
 
-    @job.project.mutex.synchronize {
-      commands = [
-        <<-SHELL,
-          if [ -d #{repo_cache_dir} ]
-            then cd #{repo_cache_dir} && git fetch -ap
-          else
-            git clone --mirror #{repo_url} #{repo_cache_dir}
-          fi
-        SHELL
-        "git clone #{repo_cache_dir} #{dir}",
-        "cd #{dir}",
-        "git checkout --quiet #{@reference}"
-      ]
-    }
-
-    @executor.execute!(*commands).tap do |status|
-      if status
-        commit = `cd #{repo_cache_dir} && git rev-parse #{@reference}`.chomp
-        @job.update_commit!(commit)
+    commands = [
+      <<-SHELL,
+        if [ -d #{repo_cache_dir} ]
+          then cd #{repo_cache_dir} && git fetch -ap
+        else
+          git clone --mirror #{repo_url} #{repo_cache_dir}
+        fi
+      SHELL
+      "git clone #{repo_cache_dir} #{dir}",
+      "cd #{dir}",
+      "git checkout --quiet #{@reference}"
+    ]
+    @job.project.repo_lock.synchronize {
+      @executor.execute!(*commands).tap do |status|
+        if status
+          commit = `cd #{repo_cache_dir} && git rev-parse #{@reference}`.chomp
+          @job.update_commit!(commit)
+        end
       end
-    end
+    }
   end
 
   def repo_cache_dir

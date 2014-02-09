@@ -10,8 +10,8 @@ class Project < ActiveRecord::Base
   has_many :webhooks
   has_many :commands
 
-  attr_accessor :mutex
-  
+  attr_accessor :repo_lock
+
   accepts_nested_attributes_for :stages
 
   scope :alphabetical, -> { order('name') }
