@@ -22,7 +22,7 @@ class ActiveSupport::TestCase
 
 end
 
-class MiniTest::Spec
+module StubGithubAPI
   def stub_github_api(url, response = {}, status = 200)
     url = 'https://api.github.com/' + url
     stub_request(:get, url).with(
@@ -35,7 +35,13 @@ class MiniTest::Spec
   end
 end
 
+class MiniTest::Spec
+  include StubGithubAPI
+end
+
 class ActionController::TestCase
+  include StubGithubAPI
+
   class << self
     def unauthorized(method, action, params = {})
       describe "a #{method} to #{action} with #{params}" do

@@ -1,16 +1,29 @@
-<h1>Recent Deploys</h1>
-
-<table class="table table-striped">
-  <thead>
-    <tr>
-      <th>Project</th>
-      <th>Who</th>
-      <th>When</th>
-      <th>Status</th>
-      <th></th>
-    </tr>
-  </thead>
-  <tbody>
-    <%= render partial: "deploy", collection: @deploys %>
-  </tbody>
-</table>
+<div class="timeline" ng-controller="TimelineCtrl" timeline-scroll>
+  <h2>Filters</h2><hr>
+  <div class="timeline-filter">
+    <label for="tlf-project">Project: <input id="tlf-project" type="text" ng-model="search.projectName"></label>
+  </div>
+  <div class="timeline-filter">
+    <label for="tlf-user">User: <input id="tlf-user" type="text" ng-model="search.user"></label>
+  </div>
+  <div class="timeline-filter">
+    <label for="tlf-user-type">
+      <select id="tlf-user-type" ng-model="userType" ng-options="option for option in userTypes">
+        <option value="">All</option>
+      </select>
+    </label>
+  </div>
+  <div class="timeline-filter">
+    <label for="tlf-prod">Stage:
+      <select id="tlf-prod" ng-model="stageType" ng-options="value as key for (key, value) in stageTypes">
+        <option value="">All</option>
+      </select>
+    </label>
+  </div>
+  <%= render partial: "timeline_entry" %>
+  <%# if there is not enough height for scrolling %>
+  <div ng-if="shortWindow()">
+    <hr>
+    <span class="btn btn-default" ng-click="timelineDeploys.loadMore()">Load More .. {{timelineDeploys.page}}</span>
+  </div>
+</div>

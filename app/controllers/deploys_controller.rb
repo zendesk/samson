@@ -17,7 +17,12 @@ class DeploysController < ApplicationController
   end
 
   def recent
-    @deploys = Deploy.includes(:stage, job: :user).limit(15)
+    respond_to do |format|
+      format.html
+      format.json do
+        @deploys = Deploy.includes(:stage, job: :user).page(params[:page])
+      end
+    end
   end
 
   def new

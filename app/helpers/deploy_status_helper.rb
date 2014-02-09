@@ -1,15 +1,20 @@
 module DeployStatusHelper
 
   STATUS_MAPPING = {
-    "running" => "label-primary",
-    "succeeded" => "label-success",
-    "failed" => "label-danger",
-    "pending" => "label-default",
-    "cancelling" => "label-warning",
-    "cancelled" => "label-danger"
+    "running" => "primary",
+    "succeeded" => "success",
+    "failed" => "danger",
+    "pending" => "default",
+    "cancelling" => "warning",
+    "cancelled" => "danger"
   }
 
-  def deploy_status_for_label(key)
-    STATUS_MAPPING.fetch(key, "label-info")
+  def deploy_status(key, prefix = nil)
+    status = STATUS_MAPPING.fetch(key, "info")
+    if prefix
+      prefix + "-" + status
+    else
+      status
+    end
   end
 end

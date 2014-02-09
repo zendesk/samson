@@ -1,6 +1,10 @@
 before_script:
   - cp config/database.travis.yml config/database.yml
   - bundle exec rake db:create
+  - npm install karma
+script:
+  - npm test
+  - rake
 language: ruby
 cache: bundler
 env:

@@ -1,0 +1,118 @@
+$pusherDark: #333;
+$pusherGrey: lighten($pusherDark, 70%);
+$primary: #428bca;
+$success: #5cb85c;
+$warning: #f0ad4e;
+$danger: #d9534f;
+$info: #5bc0de;
+$scale: 25%;
+$lightPrimary: lighten(#428bca, $scale);
+$lightSuccess: lighten(#5cb85c, $scale);
+$lightWarning: lighten(#f0ad4e, $scale);
+$lightDanger: lighten(#d9534f, $scale);
+$lightInfo: lighten(#5bc0de, $scale);
+
+.timeline a {
+  color: inherit;
+}
+
+.timeline a:hover {
+  text-decoration: none;
+  color: inherit;
+}
+
+.timeline h3 {
+  border-bottom: 1px solid $pusherGrey;
+  padding-bottom: 10px;
+  margin: 20px 0 15px;
+}
+
+.timeline-filter {
+  display: inline-block;
+  margin-right: 10px;
+}
+
+.timeline-entry {
+  position: relative;
+  border-bottom: 1px solid $pusherGrey;
+  padding: 15px 0;
+}
+
+.timeline-entry-main {
+  display: flex;
+  align-items: center;
+}
+
+.timeline-icon,
+.timeline-project,
+.timeline-content {
+  float: left;
+}
+
+.timeline-project,
+.timeline-content {
+  color: $pusherDark;
+}
+
+.timeline-project {
+  background-color: $pusherGrey;
+  border-radius: 3px;
+  display: block;
+  text-align: center;
+  line-height: 30px;
+  margin: 0 30px 0;
+  padding: 2px 10px;
+  width: 150px;
+}
+
+.timeline-gravatar {
+  height: 20px;
+  float: left;
+}
+
+.timeline-icon {
+  font-size: 4rem;
+  line-height: 40px;
+  height: 40px;
+}
+
+.timeline-icon > .primary {
+  color: $primary;
+}
+
+.timeline-icon > .success {
+  color: $success;
+}
+
+.timeline-icon > .warning {
+  color: $warning;
+}
+
+.timeline-icon > .danger {
+  color: $danger;
+}
+
+.timeline-icon > .info {
+  color: $info;
+}
+
+.timeline-date {
+  margin-top: 10px;
+  font-weight: bold;
+}
+
+.timeline-summary {
+  font-weight: bold;
+  font-size: 16px;
+  line-height: 16px;
+  margin-bottom: 8px;
+}
+
+.timeline-who {
+  float: left;
+  padding-left: 5px;
+}
+
+.timeline-time {
+  color: #999;
+}
