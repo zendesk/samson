@@ -19,7 +19,7 @@ class StreamsController < ApplicationController
       when :finished
         execution.viewers.delete(current_user) if execution
 
-        ActiveRecord::Base.with_connection do |connection|
+        ActiveRecord::Base.connection_pool.with_connection do |connection|
           connection.verify!
 
           job.reload

@@ -1,6 +1,5 @@
 require 'thread_safe'
 require 'airbrake'
-require 'terminal_executor'
 
 class JobExecution
   # Whether or not execution is enabled. This allows completely disabling job
