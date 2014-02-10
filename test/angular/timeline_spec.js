@@ -13,23 +13,28 @@ describe("Timeline", function() {
         deploys = [
           {
             user: "abc",
-            stageType: false
+            stageType: false,
+            status: "succeeded"
           },
           {
             user: "boss",
-            stageType: true
+            stageType: true,
+            status: "failed"
           },
           {
             user: "travis",
-            stageType: false
+            stageType: false,
+            status: "cancelled"
           },
           {
             user: "semaphore",
-            stageType: false
+            stageType: false,
+            status: "pending"
           },
           {
             user: "admin",
-            stageType: true
+            stageType: true,
+            status: "errored"
           }
         ];
       });
@@ -39,8 +44,16 @@ describe("Timeline", function() {
           filter = $filter("userFilter");
         }));
 
-        it("filters deploys by user type", function() {
+        it("does not filter if nothing is selected", function() {
+          expect(filter(deploys, null).length).toBe(5);
+          expect(filter(deploys, undefined).length).toBe(5);
+        });
+
+        it("finds human deploys", function() {
           expect(filter(deploys, "Human").length).toBe(3);
+        });
+
+        it("finds robot deploys", function() {
           expect(filter(deploys, "Robot").length).toBe(2);
         });
       });
@@ -50,10 +63,41 @@ describe("Timeline", function() {
           filter = $filter("stageFilter");
         }));
 
-        it("filters deploys by stage type", function() {
+        it("does not filter if nothing is selected", function() {
+          expect(filter(deploys, null).length).toBe(5);
+          expect(filter(deploys, undefined).length).toBe(5);
+        });
+
+        it("finds non-production deploys", function() {
           expect(filter(deploys, false).length).toBe(3);
+        });
+
+        it("finds production deploys", function() {
           expect(filter(deploys, true).length).toBe(2);
-        })
+        });
+      });
+
+      describe("status filter", function() {
+        beforeEach(inject(function($filter) {
+          filter = $filter("statusFilter");
+        }));
+
+        it("does not filter if nothing is selected", function() {
+          expect(filter(deploys, null).length).toBe(5);
+          expect(filter(deploys, undefined).length).toBe(5);
+        });
+
+        it("finds successful deploys", function() {
+          expect(filter(deploys, "Successful").length).toBe(1);
+        });
+
+        it("finds non-successful deploys", function() {
+          expect(filter(deploys, "Non-successful").length).toBe(3);
+        });
+
+        it("finds not finished deploys", function() {
+          expect(filter(deploys, "Not finished").length).toBe(1);
+        });
       });
     });
 
