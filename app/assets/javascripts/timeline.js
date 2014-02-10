@@ -34,7 +34,8 @@ pusher.constant('STATUS_MAPPING',
     "failed": "remove-sign danger",
     "pending": "minus-sign info",
     "cancelling": "exclamation-sign warning",
-    "cancelled": "ban-circle danger"
+    "cancelled": "ban-circle danger",
+    "errored": "question-sign danger"
   }
 );
 
