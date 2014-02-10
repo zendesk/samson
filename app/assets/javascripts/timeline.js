@@ -75,13 +75,14 @@ pusher.filter("statusFilter",
             return deploys.filter(function(deploy) {
               return deploy.status === "running" || deploy.status === "pending";
             });
-          case "Success":
+          case "Successful":
             return deploys.filter(function(deploy) {
               return deploy.status === "succeeded";
             });
-          case "Non-success":
+          case "Non-successful":
             return deploys.filter(function(deploy) {
-              return deploy.status === "cancelled" ||
+              return deploy.status === "failed" ||
+                deploy.status === "cancelled" ||
                 deploy.status === "cancelling" ||
                 deploy.status === "errored";
             });
@@ -174,7 +175,7 @@ pusher.controller("TimelineCtrl", ["$scope", "$window", "Deploys",
 function($scope, $window, Deploys) {
   $scope.userTypes = ["Human", "Robot"];
   $scope.stageTypes = { "Production": true, "Non-production": false };
-  $scope.deployStatuses = ["Success", "Non-success", "Not finished"];
+  $scope.deployStatuses = ["Successful", "Non-successful", "Not finished"];
 
   $scope.isSameDate = function(previous, current) {
     if (previous) {

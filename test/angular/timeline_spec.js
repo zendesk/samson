@@ -13,23 +13,28 @@ describe("Timeline", function() {
         deploys = [
           {
             user: "abc",
-            stageType: false
+            stageType: false,
+            status: "succeeded"
           },
           {
             user: "boss",
-            stageType: true
+            stageType: true,
+            status: "failed"
           },
           {
             user: "travis",
-            stageType: false
+            stageType: false,
+            status: "cancelled"
           },
           {
             user: "semaphore",
-            stageType: false
+            stageType: false,
+            status: "pending"
           },
           {
             user: "admin",
-            stageType: true
+            stageType: true,
+            status: "errored"
           }
         ];
       });
@@ -53,7 +58,19 @@ describe("Timeline", function() {
         it("filters deploys by stage type", function() {
           expect(filter(deploys, false).length).toBe(3);
           expect(filter(deploys, true).length).toBe(2);
-        })
+        });
+      });
+
+      describe("status filter", function() {
+        beforeEach(inject(function($filter) {
+          filter = $filter("statusFilter");
+        }));
+
+        it("filters deploys by status", function() {
+          expect(filter(deploys, "Successful").length).toBe(1);
+          expect(filter(deploys, "Non-successful").length).toBe(3);
+          expect(filter(deploys, "Not finished").length).toBe(1);
+        });
       });
     });
 
