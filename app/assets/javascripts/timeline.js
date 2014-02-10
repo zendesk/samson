@@ -67,31 +67,6 @@ pusher.filter("stageFilter",
   }
 );
 
-pusher.filter("summary",
-  [function() {
-    return function(deploy) {
-      switch (deploy.status) {
-        case "succeeded":
-          return deploy.reference + " was deployed to " + deploy.stageName;
-        case "failed":
-          return deploy.reference + " failed to deploy to " + deploy.stageName;
-        case "running":
-          return deploy.reference + " is being deployed to " + deploy.stageName;
-        case "pending":
-          return deploy.reference + " deploy to " + deploy.stageName + " is pending";
-        case "cancelling":
-          return deploy.reference + " deploy to " + deploy.stageName + " is cancelling";
-        case "cancelled":
-          return deploy.reference + " deploy to " + deploy.stageName + " was cancelled";
-        case "errored":
-          return deploy.reference + " deploy to " + deploy.stageName + "encountered an error";
-        default:
-          return "Error";
-      }
-    };
-  }]
-);
-
 pusher.filter("statusToIcon",
   ["STATUS_MAPPING", function(STATUS_MAPPING) {
     return function(status) {

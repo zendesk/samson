@@ -13,7 +13,7 @@
     <a class="timeline-project" ng-href="/projects/{{deploy.projectURLParam}}">{{deploy.projectName}}</a>
 
     <a class="timeline-content clearfix" ng-href="/projects/{{deploy.projectURLParam}}/deploys/{{deploy.deployId}}">
-      <div class="timeline-summary">{{deploy | summary}}</div>
+      <div class="timeline-summary">{{deploy.summary}}</div>
       <div class="clearfix">
         <img class="timeline-gravatar img-circle" ng-src="{{deploy.gravatarURL}}" title="{{deploy.user}}" alt="Gravatar">
         <div class="timeline-who">

@@ -20,6 +20,10 @@ class Deploy < ActiveRecord::Base
     "#{job.user.name} #{summary_action} #{short_reference} to #{stage.name}"
   end
 
+  def summary_for_timeline
+    "#{short_reference}#{job.succeeded? ? ' was ' : ' '}#{summary_action} to #{stage.name}"
+  end
+
   def summary_for_email
     "#{job.user.name} #{summary_action} #{project.name} to #{stage.name} (#{reference})"
   end
