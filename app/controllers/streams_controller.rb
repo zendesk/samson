@@ -19,10 +19,14 @@ class StreamsController < ApplicationController
       when :finished
         execution.viewers.delete(current_user) if execution
 
-        job.reload
+        ActiveRecord::Base.connection_pool.with_connection do |connection|
+          connection.verify!
 
-        @project = job.project
-        @deploy = job.deploy
+          job.reload
+
+          @project = job.project
+          @deploy = job.deploy.reload
+        end
 
         JSON.dump(html: render_to_string(partial: 'deploys/header', formats: :html))
       else

@@ -34,7 +34,8 @@ pusher.constant('STATUS_MAPPING',
     "failed": "remove-sign danger",
     "pending": "minus-sign info",
     "cancelling": "exclamation-sign warning",
-    "cancelled": "ban-circle danger"
+    "cancelled": "ban-circle danger",
+    "errored": "question-sign danger"
   }
 );
 
@@ -60,6 +61,33 @@ pusher.filter("stageFilter",
         return deploys.filter(function(deploy) {
           return deploy.stageType == stageType;
         });
+      }
+      return deploys;
+    };
+  }
+);
+
+pusher.filter("statusFilter",
+  function() {
+    return function(deploys, status) {
+      if (status !== undefined && status !== null) {
+        switch (status) {
+          case "Not finished":
+            return deploys.filter(function(deploy) {
+              return deploy.status === "running" || deploy.status === "pending";
+            });
+          case "Successful":
+            return deploys.filter(function(deploy) {
+              return deploy.status === "succeeded";
+            });
+          case "Non-successful":
+            return deploys.filter(function(deploy) {
+              return deploy.status === "failed" ||
+                deploy.status === "cancelled" ||
+                deploy.status === "cancelling" ||
+                deploy.status === "errored";
+            });
+        }
       }
       return deploys;
     };
@@ -148,7 +176,7 @@ pusher.controller("TimelineCtrl", ["$scope", "$window", "Deploys",
 function($scope, $window, Deploys) {
   $scope.userTypes = ["Human", "Robot"];
   $scope.stageTypes = { "Production": true, "Non-production": false };
-
+  $scope.deployStatuses = ["Successful", "Non-successful", "Not finished"];
 
   $scope.isSameDate = function(previous, current) {
     if (previous) {
@@ -163,11 +191,14 @@ function($scope, $window, Deploys) {
 
   $scope.timelineDeploys.loadMore();
 
-  angular.element($window).on("scroll", function() {
-    if ($window.scrollY >= $window.scrollMaxY - 100 && !$scope.timelineDeploys.loading) {
-      $scope.$apply($scope.timelineDeploys.loadMore);
-    }
-  });
+  angular.element($window).on("scroll", (function() {
+    var html = document.querySelector("html");
+    return function() {
+      if ($window.scrollY >= html.scrollHeight - $window.innerHeight - 100 && !$scope.timelineDeploys.loading) {
+        $scope.$apply($scope.timelineDeploys.loadMore);
+      }
+    };
+  })());
 
   $scope.shortWindow = function() {
     return !$scope.timelineDeploys.theEnd && $window.scrollMaxY === 0;
