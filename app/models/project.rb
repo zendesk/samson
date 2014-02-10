@@ -15,19 +15,15 @@ class Project < ActiveRecord::Base
   scope :alphabetical, -> { order('name') }
 
   def make_mutex!
-    self.with_lock do
-      self.update_attributes(:repo_lock => false)
-      self.save!
-    end
+    self.update_attributes!(:repo_lock => false)
   end
 
-  def take_mutex
+  def take_mutex!
     self.with_lock do
       if repo_locked?
         result = :failure
       else
-        self.update_attributes(:repo_lock => true)
-        self.save!
+        self.update_attributes!(:repo_lock => true)
         result = :success
       end
     end

@@ -124,8 +124,8 @@ class JobExecution
       "cd #{dir}",
       "git checkout --quiet #{@reference}"
     ]
-    our_lock = wait_for_lock
-    if our_lock == :success
+    our_lock = grab_lock
+    if our_lock
       @executor.execute!(*commands).tap do |status|
         if status
           commit = `cd #{repo_cache_dir} && git rev-parse #{@reference}`.chomp
@@ -134,6 +134,9 @@ class JobExecution
       end
       release_lock
     end
+  else
+    @executor.execute!('echo "Could not get exclusive lock on repo. Maybe another stage is being deployed."')
+    return false
   end
 
   def repo_cache_dir
@@ -144,18 +147,18 @@ class JobExecution
     File.join(repo_cache_dir, "artifacts")
   end
 
-  def wait_for_lock
+  def grab_lock
     start_time = Time::now
     end_time = start_time + 10.minutes
     lock = :failure
     until (lock == :success || Time::now > end_time) do
       sleep 1
-      lock = @job.project.take_mutex
+      lock = @job.project.take_mutex!
     end
     if lock == :success
-      :success
+      true
     else
-      :failure
+      false
     end
   end
 
