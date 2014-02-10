@@ -124,6 +124,7 @@ class JobExecution
       "cd #{dir}",
       "git checkout --quiet #{@reference}"
     ]
+    @executor.execute!('echo "Attempting to lock repository..."')
     our_lock = grab_lock
     if our_lock
       @executor.execute!(*commands).tap do |status|
@@ -149,10 +150,16 @@ class JobExecution
 
   def grab_lock
     start_time = Time::now
+    i = 0
     end_time = start_time + 10.minutes
     lock = :failure
     until (lock == :success || Time::now > end_time) do
       sleep 1
+      i += 1
+      i = i % 10
+      if i == 0
+        @executor.execute!('echo "Waiting for repository..."')
+      end
       lock = @job.project.take_mutex!
     end
     if lock == :success
