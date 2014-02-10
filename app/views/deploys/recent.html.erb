@@ -20,6 +20,13 @@
       </select>
     </label>
   </div>
+  <div class="timeline-filter">
+    <label for="tlf-status">Status:
+      <select id="tlf-status" ng-model="deployStatus" ng-options="status for status in deployStatuses">
+        <option value="">All</option>
+      </select>
+    </label>
+  </div>
   <%= render partial: "timeline_entry" %>
   <%# if there is not enough height for scrolling %>
   <div ng-if="shortWindow()">

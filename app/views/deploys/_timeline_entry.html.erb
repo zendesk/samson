@@ -1,5 +1,5 @@
 <div class="timeline-entry clearfix"
-  ng-repeat="deploy in (deploys = (timelineDeploys.entries | filter:search | userFilter:userType | stageFilter:stageType))">
+  ng-repeat="deploy in (deploys = (timelineDeploys.entries | filter:search | userFilter:userType | stageFilter:stageType | statusFilter:deployStatus))">
 
   <div ng-hide="isSameDate(deploys[$index - 1].time, deploy.time)">
     <h3 class="timeline-date">{{deploy.time | fullDate}}</h3>

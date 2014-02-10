@@ -66,6 +66,32 @@ pusher.filter("stageFilter",
   }
 );
 
+pusher.filter("statusFilter",
+  function() {
+    return function(deploys, status) {
+      if (status !== undefined && status !== null) {
+        switch (status) {
+          case "Not finished":
+            return deploys.filter(function(deploy) {
+              return deploy.status === "running" || deploy.status === "pending";
+            });
+          case "Success":
+            return deploys.filter(function(deploy) {
+              return deploy.status === "succeeded";
+            });
+          case "Non-success":
+            return deploys.filter(function(deploy) {
+              return deploy.status === "cancelled" ||
+                deploy.status === "cancelling" ||
+                deploy.status === "errored";
+            });
+        }
+      }
+      return deploys;
+    };
+  }
+);
+
 pusher.filter("statusToIcon",
   ["STATUS_MAPPING", function(STATUS_MAPPING) {
     return function(status) {
@@ -148,7 +174,7 @@ pusher.controller("TimelineCtrl", ["$scope", "$window", "Deploys",
 function($scope, $window, Deploys) {
   $scope.userTypes = ["Human", "Robot"];
   $scope.stageTypes = { "Production": true, "Non-production": false };
-
+  $scope.deployStatuses = ["Success", "Non-success", "Not finished"];
 
   $scope.isSameDate = function(previous, current) {
     if (previous) {
