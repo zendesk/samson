@@ -10,11 +10,32 @@ class Project < ActiveRecord::Base
   has_many :webhooks
   has_many :commands
 
-  attr_accessor :repo_lock
-
   accepts_nested_attributes_for :stages
 
   scope :alphabetical, -> { order('name') }
+
+  def make_mutex!
+    self.with_lock do
+      self.update_attributes(:repo_lock => false)
+      self.save!
+    end
+  end
+
+  def take_mutex
+    self.with_lock do
+      if repo_locked?
+        result = :failure
+      else
+        self.update_attributes(:repo_lock => true)
+        self.save!
+        result = :success
+      end
+    end
+  end
+
+  def repo_locked?
+    self.repo_lock
+  end
 
   def to_param
     "#{id}-#{name.parameterize}"

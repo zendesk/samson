@@ -110,9 +110,7 @@ class JobExecution
   end
 
   def setup!(dir)
-    @job.project.repo_lock ||= Mutex.new
     repo_url = @job.project.repository_url
-    logger.debug "MUTEX: " + @job.project.repo_lock
 
     commands = [
       <<-SHELL,
@@ -126,14 +124,16 @@ class JobExecution
       "cd #{dir}",
       "git checkout --quiet #{@reference}"
     ]
-    @job.project.repo_lock.synchronize {
+    our_lock = wait_for_lock
+    if our_lock == :success
       @executor.execute!(*commands).tap do |status|
         if status
           commit = `cd #{repo_cache_dir} && git rev-parse #{@reference}`.chomp
           @job.update_commit!(commit)
         end
       end
-    }
+      release_lock
+    end
   end
 
   def repo_cache_dir
@@ -142,6 +142,25 @@ class JobExecution
 
   def artifact_cache_dir
     File.join(repo_cache_dir, "artifacts")
+  end
+
+  def wait_for_lock
+    start_time = Time::now
+    end_time = start_time + 10.minutes
+    lock = :failure
+    until (lock == :success || Time::now > end_time) do
+      sleep 1
+      lock = @job.project.take_mutex
+    end
+    if lock == :success
+      :success
+    else
+      :failure
+    end
+  end
+
+  def release_lock
+    @job.project.make_mutex!
   end
 
   class << self

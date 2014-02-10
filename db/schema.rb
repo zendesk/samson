@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20140203155241) do
+ActiveRecord::Schema.define(version: 20140210013431) do
 
   create_table "commands", force: true do |t|
     t.text     "command",    limit: 16777215
@@ -71,6 +71,7 @@ ActiveRecord::Schema.define(version: 20140203155241) do
     t.datetime "created_at"
     t.datetime "updated_at"
     t.string   "token"
+    t.boolean  "repo_lock"
   end
 
   add_index "projects", ["token"], name: "index_projects_on_token", using: :btree
