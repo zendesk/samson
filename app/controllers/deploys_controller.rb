@@ -59,7 +59,7 @@ class DeploysController < ApplicationController
       format.html
       format.text do
         send_data @deploy.output,
-          filename: "#{@project.repo_name}-#{@deploy.stage.name}-#{@deploy.id}.log",
+          filename: "#{@project.repo_name}-#{@deploy.stage.name}-#{@deploy.id}-#{@deploy.updated_at}.log",
           type: 'text/plain'
       end
     end
