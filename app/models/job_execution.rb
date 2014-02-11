@@ -126,6 +126,7 @@ class JobExecution
     @executor.execute!('echo "Attempting to lock repository..."')
     our_lock = grab_lock
     if our_lock
+      @executor.execute!('echo "Repo locked."')
       @executor.execute!(*commands).tap do |status|
         if status
           commit = `cd #{repo_cache_dir} && git rev-parse #{@reference}`.chomp
@@ -133,10 +134,11 @@ class JobExecution
         end
       end
       release_lock
+      true
+    else
+      @executor.execute!('echo "Could not get exclusive lock on repo. Maybe another stage is being deployed."')
+      false
     end
-  else
-    @executor.execute!('echo "Could not get exclusive lock on repo. Maybe another stage is being deployed."')
-    return false
   end
 
   def repo_cache_dir
@@ -169,7 +171,7 @@ class JobExecution
   end
 
   def release_lock
-    @job.project.make_mutex!
+    @job.project.release_mutex!
   end
 
   class << self

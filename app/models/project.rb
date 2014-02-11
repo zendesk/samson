@@ -15,18 +15,24 @@ class Project < ActiveRecord::Base
   scope :alphabetical, -> { order('name') }
 
   def make_mutex!
-    self.update_attributes!(:repo_lock => false)
+    Thread.main[:repo_locks][self.id] = Mutex.new
+  end
+
+  def release_mutex!
+    Thread.main[:repo_locks][self.id].unlock
   end
 
   def take_mutex!
-    self.with_lock do
-      if repo_locked?
-        result = :failure
-      else
-        self.update_attributes!(:repo_lock => true)
-        result = :success
-      end
+    mutex.try_lock
+    if mutex.owned?
+      result = :success
+    else
+      result = :failure
     end
+  end
+
+  def mutex
+    Thread.main[:repo_locks][self.id]
   end
 
   def repo_locked?
