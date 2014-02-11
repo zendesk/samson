@@ -68,9 +68,12 @@ describe DeploysController do
       describe "with format .text" do
         setup { get :show, format: :text, project_id: project.id, id: deploy.to_param }
 
-        it "responds with a .log plain text file" do
-          assert_response :success
+        it "responds with a plain text file" do
           assert_equal response.content_type, "text/plain"
+        end
+
+        it "responds with a .log file" do
+          assert response.header["Content-Disposition"] =~ /\.log"$/
         end
       end
     end
