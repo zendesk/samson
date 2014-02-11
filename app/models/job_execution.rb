@@ -88,6 +88,9 @@ class JobExecution
 
   def execute!(dir)
     unless setup!(dir)
+      if @job.project.repo_lock.owned?
+        @job.project.repo_lock.unlock
+      end
       @job.error!
       return
     end
@@ -153,7 +156,7 @@ class JobExecution
     start_time = Time::now
     i = 0
     end_time = start_time + 10.minutes
-    lock = :failure
+    lock = @job.project.take_mutex!
     until (lock == :success || Time::now > end_time) do
       sleep 1
       i += 1

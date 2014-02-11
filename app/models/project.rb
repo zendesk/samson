@@ -23,15 +23,15 @@ class Project < ActiveRecord::Base
   end
 
   def take_mutex!
-    mutex.try_lock
-    if mutex.owned?
+    repo_lock.try_lock
+    if repo_lock.owned?
       result = :success
     else
       result = :failure
     end
   end
 
-  def mutex
+  def repo_lock
     Thread.main[:repo_locks][self.id]
   end
 
