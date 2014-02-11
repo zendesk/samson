@@ -15,6 +15,7 @@ class Project < ActiveRecord::Base
   scope :alphabetical, -> { order('name') }
 
   def make_mutex!
+    Thread.main[:repo_locks] ||= {}
     Thread.main[:repo_locks][self.id] = Mutex.new
   end
 
@@ -32,7 +33,7 @@ class Project < ActiveRecord::Base
   end
 
   def repo_lock
-    Thread.main[:repo_locks][self.id]
+    Thread.main[:repo_locks][self.id] ||= make_mutex!
   end
 
   def repo_locked?
