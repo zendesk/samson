@@ -64,6 +64,15 @@ describe DeploysController do
           request.flash[:error].wont_be_nil
         end
       end
+
+      describe "with format .text" do
+        setup { get :show, format: :text, project_id: project.id, id: deploy.to_param }
+
+        it "responds with a .log plain text file" do
+          assert_response :success
+          assert_equal response.content_type, "text/plain"
+        end
+      end
     end
 
     unauthorized :post, :create, project_id: 1
