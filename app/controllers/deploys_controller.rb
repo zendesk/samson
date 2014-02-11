@@ -60,7 +60,7 @@ class DeploysController < ApplicationController
       format.text do
         datetime = @deploy.updated_at.strftime "%Y%m%d_%H%M%Z"
         send_data @deploy.output,
-          filename: "#{@project.repo_name}-#{@deploy.stage.name}-#{@deploy.id}-#{datetime}.log",
+          filename: "#{@project.repo_name}-#{@deploy.stage.name.parameterize}-#{@deploy.id}-#{datetime}.log",
           type: 'text/plain'
       end
     end
