@@ -52,8 +52,6 @@ class JobExecution
       execute!(dir)
     end
 
-    @output.close
-
     ActiveRecord::Base.connection_pool.with_connection do |connection|
       connection.verify!
 
@@ -62,6 +60,8 @@ class JobExecution
       else
         @job.fail!
       end
+
+      @output.close
 
       @job.update_output!(output_aggregator.to_s)
 
