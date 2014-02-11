@@ -4,6 +4,10 @@ class Job < ActiveRecord::Base
 
   has_one :deploy
 
+  after_update do
+    deploy.touch if deploy.present?
+  end
+
   def self.pending
     where(status: 'pending')
   end
