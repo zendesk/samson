@@ -74,6 +74,10 @@ class DeploysController < ApplicationController
     end
   end
 
+  def download
+    send_data @deploy.output, filename: "#{@project.repo_name}-#{@deploy.stage.name}-#{@deploy.id}.txt", type: 'text/plain'
+  end
+
   protected
 
   def deploy_params
