@@ -26,18 +26,14 @@ class Project < ActiveRecord::Base
   def take_mutex!
     repo_lock.try_lock
     if repo_lock.owned?
-      result = :success
+      :success
     else
-      result = :failure
+      :failure
     end
   end
 
   def repo_lock
     Thread.main[:repo_locks][self.id] ||= make_mutex!
-  end
-
-  def repo_locked?
-    self.repo_lock
   end
 
   def to_param
