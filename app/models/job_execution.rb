@@ -159,8 +159,7 @@ class JobExecution
     until (lock == :success || Time::now > end_time) do
       sleep 1
       i += 1
-      i = i % 10
-      if i == 0
+      if i % 10 == 0
         @executor.execute!('echo "Waiting for repository..."')
       end
       lock = @job.project.take_mutex!
