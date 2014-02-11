@@ -165,11 +165,7 @@ class JobExecution
       end
       lock = @job.project.take_mutex!
     end
-    if lock == :success
-      true
-    else
-      false
-    end
+    lock == :success
   end
 
   def release_lock
