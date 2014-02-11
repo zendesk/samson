@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20140211010610) do
+ActiveRecord::Schema.define(version: 20140203155241) do
 
   create_table "commands", force: true do |t|
     t.text     "command",    limit: 16777215
