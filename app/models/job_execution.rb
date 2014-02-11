@@ -127,8 +127,7 @@ class JobExecution
       "git checkout --quiet #{@reference}"
     ]
     @executor.execute!('echo "Attempting to lock repository..."')
-    our_lock = grab_lock
-    if our_lock
+    if grab_lock
       @executor.execute!('echo "Repo locked."')
       @executor.execute!(*commands).tap do |status|
         if status
