@@ -88,8 +88,8 @@ class JobExecution
 
   def execute!(dir)
     unless setup!(dir)
-      if @job.project.repo_lock.owned?
-        @job.project.repo_lock.unlock
+      if project_lock.owned?
+        project_lock.unlock
       end
       @job.error!
       return
@@ -132,11 +132,9 @@ class JobExecution
       @executor.execute!(*commands).tap do |status|
         if status
           commit = `cd #{repo_cache_dir} && git rev-parse #{@reference}`.chomp
-          @job.update_commit!(commit)
+          @job.update_commit!(commit) && project_lock.unlock
         end
       end
-      release_lock
-      true
     else
       @executor.execute!('echo "Could not get exclusive lock on repo. Maybe another stage is being deployed."')
       false
@@ -152,23 +150,23 @@ class JobExecution
   end
 
   def grab_lock
+    lock = false
     start_time = Time::now
     i = 0
     end_time = start_time + 10.minutes
-    lock = @job.project.take_mutex!
-    until (lock == :success || Time::now > end_time) do
+    until (lock || Time::now > end_time) do
       sleep 1
       i += 1
-      if i % 10 == 0
+      if (i % 10 == 0)
         @executor.execute!('echo "Waiting for repository..."')
       end
-      lock = @job.project.take_mutex!
+      lock ||= project_lock.try_lock
     end
-    lock == :success
+    lock
   end
 
-  def release_lock
-    @job.project.release_mutex!
+  def project_lock
+    @job.project.repo_lock
   end
 
   class << self

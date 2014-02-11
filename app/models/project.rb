@@ -19,21 +19,8 @@ class Project < ActiveRecord::Base
     Thread.main[:repo_locks][self.id] = Mutex.new
   end
 
-  def release_mutex!
-    Thread.main[:repo_locks][self.id].unlock
-  end
-
-  def take_mutex!
-    repo_lock.try_lock
-    if repo_lock.owned?
-      :success
-    else
-      :failure
-    end
-  end
-
   def repo_lock
-    Thread.main[:repo_locks][self.id] ||= make_mutex!
+    Thread.main[:repo_locks][self.id]
   end
 
   def to_param
