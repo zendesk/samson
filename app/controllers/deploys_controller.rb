@@ -55,6 +55,14 @@ class DeploysController < ApplicationController
   end
 
   def show
+    respond_to do |format|
+      format.html
+      format.text do
+        send_data @deploy.output,
+          filename: "#{@project.repo_name}-#{@deploy.stage.name}-#{@deploy.id}.txt",
+          type: 'text/plain'
+      end
+    end
   end
 
   def changeset
@@ -72,10 +80,6 @@ class DeploysController < ApplicationController
     else
       head :forbidden
     end
-  end
-
-  def download
-    send_data @deploy.output, filename: "#{@project.repo_name}-#{@deploy.stage.name}-#{@deploy.id}.txt", type: 'text/plain'
   end
 
   protected

@@ -71,7 +71,7 @@
 </div>
 
 <% unless active? %>
-  <%= link_to "Download log", download_project_deploy_path(@project, @deploy), class: "btn btn-primary pull-right" %>
+  <%= link_to "Download log", project_deploy_path(@project, @deploy, format: :text), class: "btn btn-primary pull-right" %>
 <% end %>
 
 <% if active? %>

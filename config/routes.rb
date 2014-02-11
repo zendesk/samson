@@ -5,7 +5,6 @@ ZendeskPusher::Application.routes.draw do
     resources :deploys, only: [:index, :new, :create, :show, :destroy] do
       member do
         get :changeset
-        get :download
       end
     end
 
