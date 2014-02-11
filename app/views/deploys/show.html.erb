@@ -70,6 +70,10 @@
 <% end %>
 </div>
 
+<% unless active? %>
+  <%= link_to "Download log", project_deploy_path(@project, @deploy, format: :text), class: "btn btn-primary pull-right" %>
+<% end %>
+
 <% if active? %>
   <%= javascript_tag do %>
     startDeployStream();
