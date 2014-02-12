@@ -89,7 +89,7 @@ class JobExecution
   def execute!(dir)
     unless setup!(dir)
       if ProjectLock.owned?(@job.project)
-        ProjectLock.grab(@job.project)
+        ProjectLock.release(@job.project)
       end
       @job.error!
       return
@@ -160,7 +160,7 @@ class JobExecution
       if (i % 10 == 0)
         @executor.execute!('echo "Waiting for repository..."')
       end
-      lock ||= ProjectLock.grab(@job.project)
+      lock ||= ProjectLock.grab(@job.project, @job.deploy.stage)
     end
     lock
   end
