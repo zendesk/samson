@@ -25,7 +25,7 @@ class StreamsController < ApplicationController
           job.reload
 
           @project = job.project
-          @deploy = job.deploy.reload
+          @deploy = job.deploy
         end
 
         JSON.dump(html: render_to_string(partial: 'deploys/header', formats: :html))

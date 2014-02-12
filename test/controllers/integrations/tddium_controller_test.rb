@@ -32,48 +32,58 @@ describe Integrations::TddiumController do
   end
 
   before do
-    stub_github_api("repos/repo_name/commits/dc395381e650f3bac18457909880829fc20e34ba", commit: {message: "hi"})
-
     @webhook = project.webhooks.create!(stage: stages(:test_staging), branch: "production")
   end
 
-  it "triggers a deploy if there's a webhook mapping for the branch" do
-    post :create, payload.merge(token: project.token)
+  describe 'regular commit' do
+    before do
+      stub_github_api("repos/organization_name/repo_name/commits/dc395381e650f3bac18457909880829fc20e34ba", commit: {message: "hi"})
+    end
 
-    deploy = project.deploys.last
-    deploy.commit.must_equal commit
-  end
+    it "triggers a deploy if there's a webhook mapping for the branch" do
+      post :create, payload.merge(token: project.token)
 
-  it "doesn't trigger a deploy if there's no webhook mapping for the branch" do
-    post :create, payload.merge(token: project.token, branch: "foobar")
+      deploy = project.deploys.last
+      deploy.commit.must_equal commit
+    end
 
-    project.deploys.must_equal []
-  end
+    it "doesn't trigger a deploy if there's no webhook mapping for the branch" do
+      post :create, payload.merge(token: project.token, branch: "foobar")
 
-  it "doesn't trigger a deploy if the build did not pass" do
-    post :create, payload.merge(token: project.token, status: "failed")
+      project.deploys.must_equal []
+    end
 
-    project.deploys.must_equal []
-  end
+    it "doesn't trigger a deploy if the build did not pass" do
+      post :create, payload.merge(token: project.token, status: "failed")
 
-  it "deploys as the Tddium user" do
-    user = User.create!(name: "Tddium", email: "deploy+tddium@zendesk.com")
+      project.deploys.must_equal []
+    end
 
-    post :create, payload.merge(token: project.token)
+    it "deploys as the Tddium user" do
+      user = User.create!(name: "Tddium", email: "deploy+tddium@zendesk.com")
 
-    project.deploys.last.user.must_equal user
-  end
+      post :create, payload.merge(token: project.token)
 
-  it "creates the Tddium user if it does not exist" do
-    post :create, payload.merge(token: project.token)
+      project.deploys.last.user.must_equal user
+    end
 
-    User.find_by_name("Tddium").wont_be_nil
-  end
+    it "creates the Tddium user if it does not exist" do
+      post :create, payload.merge(token: project.token)
 
-  it "responds with 200 OK if the request is valid" do
-    post :create, payload.merge(token: project.token)
+      User.find_by_name("Tddium").wont_be_nil
+    end
 
-    response.status.must_equal 200
+    it "responds with 200 OK if the request is valid" do
+      post :create, payload.merge(token: project.token)
+
+      response.status.must_equal 200
+    end
+
+    it "responds with 404 Not Found if the token is invalid" do
+      post :create, payload.merge(token: "foobar")
+
+      response.status.must_equal 404
+    end
   end
 
   it "responds with 200 OK if the token is valid but the repository url is invalid" do
@@ -84,16 +94,10 @@ describe Integrations::TddiumController do
     response.status.must_equal 200
   end
 
-  it "responds with 404 Not Found if the token is invalid" do
-    post :create, payload.merge(token: "foobar")
-
-    response.status.must_equal 404
-  end
-
   it "doesn't trigger a deploy if the commit message contains [deploy skip]" do
     @webhook.destroy!
 
-    stub_github_api("repos/repo_name/commits/dc395381e650f3bac18457909880829fc20e34ba", commit: {message: "hi[deploy skip]"})
+    stub_github_api("repos/organization_name/repo_name/commits/dc395381e650f3bac18457909880829fc20e34ba", commit: {message: "hi[deploy skip]"})
 
     project.webhooks.create!(stage: stages(:test_staging), branch: "production")
     post :create, payload.merge(token: project.token)

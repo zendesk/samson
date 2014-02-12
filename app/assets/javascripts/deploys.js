@@ -1,5 +1,5 @@
 //= require typeahead
-
+var following = true;
 $(function () {
   var changesetLoaded = false;
 
@@ -146,6 +146,28 @@ $(function () {
 
     event.preventDefault();
   });
+
+  $("#output-follow").click(function(event) {
+    var $messages = $("#messages");
+    following = true;
+    $messages.scrollTop($messages.prop("scrollHeight"));
+    $messages.css("max-height", 550);
+    $("#output-options > button").removeClass("active");
+    $(this).addClass("active");
+  });
+
+  $("#output-grow").click(function(event) {
+    $("#messages").css("max-height", "none");
+    $("#output-options > button").removeClass("active");
+    $(this).addClass("active");
+  });
+
+  $("#output-steady").click(function(event) {
+    following = false;
+    $("#messages").css("max-height", 550);
+    $("#output-options > button").removeClass("active");
+    $(this).addClass("active");
+  });
 });
 
 function startDeployStream() {
@@ -157,7 +179,9 @@ function startDeployStream() {
     var addLine = function(data) {
       var msg = JSON.parse(data).msg;
       messages.append(msg);
-      messages.scrollTop(messages[0].scrollHeight);
+      if (following) {
+        messages.scrollTop(messages[0].scrollHeight);
+      }
     }
 
     source.addEventListener('append', function(e) {
@@ -187,7 +211,7 @@ function startDeployStream() {
 
     source.addEventListener('finished', function(e) {
       $('#header').html(JSON.parse(e.data).html);
-      $('#deploy_stop').hide();
+      $('.only-active').hide();
       source.close();
     }, false);
   });

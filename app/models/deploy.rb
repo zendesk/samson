@@ -1,5 +1,5 @@
 class Deploy < ActiveRecord::Base
-  belongs_to :stage
+  belongs_to :stage, touch: true
   belongs_to :job
 
   default_scope { order(created_at: :desc, id: :desc) }

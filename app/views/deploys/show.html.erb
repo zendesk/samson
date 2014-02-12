@@ -36,7 +36,24 @@
 
 <div class="tab-content deploy-details">
   <div class="tab-pane active" id="output" data-stream-url="<%= deploy_stream_path(@deploy.job) %>">
+    <% if active? %>
+    <div class="row">
+    <div class="btn-toolbar col-md-4 col-md-offset-7 pull-right only-active">
+      <div id="output-options" class="btn-group">
+        <button class="btn btn-default active" id="output-follow">Follow</button>
+        <button class="btn btn-default" id="output-steady">Don't Follow</button>
+        <button class="btn btn-default" id="output-grow">Expand</button>
+        </div>
+        <% if current_user.is_deployer? %>
+        <%= link_to "Stop", project_deploy_path(@project, @deploy), remote: true, method: :delete, class: "btn btn-danger pull-right", id: "deploy_stop" %>
+      <% end %>
+      </div>
+      </div>
+    <% end %>
     <%= render 'deploys/output', deploy: @deploy %>
+    <% unless active? %>
+      <%= link_to "Download log", project_deploy_path(@project, @deploy, format: :text), class: "btn btn-primary pull-right" %>
+    <% end %>
   </div>
 
   <% %w(files commits pulls risks).each do |pane| %>
@@ -47,7 +64,7 @@
 
 <% if active? %>
   <div class="tab-pane" id="viewers">
-    No ther viewers.
+    No other viewers.
   </div>
 
   <% if NewRelicApi.api_key.present? %>
@@ -75,9 +92,6 @@
     startDeployStream();
   <% end %>
 
-  <% if current_user.is_deployer? %>
-    <%= link_to "Stop", project_deploy_path(@project, @deploy), remote: true, method: :delete, class: "btn btn-danger pull-right", id: "deploy_stop" %>
-  <% end %>
 <% elsif !@deploy.finished? %>
   <div class="alert alert-info">
     Pusher is currently restarting, your deploy has been queued and will be resumed shortly.
