@@ -1,5 +1,5 @@
 //= require typeahead
-
+var following = true;
 $(function () {
   var changesetLoaded = false;
 
@@ -146,6 +146,10 @@ $(function () {
 
     event.preventDefault();
   });
+
+  $("#follow").click(function(event) {
+    following = event.currentTarget.checked;
+  });
 });
 
 function startDeployStream() {
@@ -157,7 +161,9 @@ function startDeployStream() {
     var addLine = function(data) {
       var msg = JSON.parse(data).msg;
       messages.append(msg);
-      messages.scrollTop(messages[0].scrollHeight);
+      if (following) {
+        messages.scrollTop(messages[0].scrollHeight);
+      }
     }
 
     source.addEventListener('append', function(e) {
