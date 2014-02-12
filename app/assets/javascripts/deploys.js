@@ -147,8 +147,25 @@ $(function () {
     event.preventDefault();
   });
 
-  $("#follow").click(function(event) {
-    following = event.currentTarget.checked;
+  $("#output-follow").click(function(event) {
+    following = true;
+    $("#messages").scrollTop($("#messages").prop("scrollHeight"));
+    $("#messages").css("max-height", 550);
+    $("#output-options > button").removeClass("active");
+    $(this).addClass("active");
+  });
+
+  $("#output-grow").click(function(event) {
+    $("#messages").css("max-height", "none");
+    $("#output-options > button").removeClass("active");
+    $(this).addClass("active");
+  });
+
+  $("#output-steady").click(function(event) {
+    following = false;
+    $("#messages").css("max-height", 550);
+    $("#output-options > button").removeClass("active");
+    $(this).addClass("active");
   });
 });
 
