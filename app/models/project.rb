@@ -14,15 +14,6 @@ class Project < ActiveRecord::Base
 
   scope :alphabetical, -> { order('name') }
 
-  def make_mutex!
-    Thread.main[:repo_locks] ||= {}
-    Thread.main[:repo_locks][self.id] = Mutex.new
-  end
-
-  def repo_lock
-    Thread.main[:repo_locks][self.id]
-  end
-
   def to_param
     "#{id}-#{name.parameterize}"
   end

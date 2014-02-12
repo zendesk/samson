@@ -88,8 +88,8 @@ class JobExecution
 
   def execute!(dir)
     unless setup!(dir)
-      if project_lock.owned?
-        project_lock.unlock
+      if ProjectLock.owned?(@job.project)
+        ProjectLock.grab(@job.project)
       end
       @job.error!
       return
@@ -132,7 +132,7 @@ class JobExecution
       @executor.execute!(*commands).tap do |status|
         if status
           commit = `cd #{repo_cache_dir} && git rev-parse #{@reference}`.chomp
-          @job.update_commit!(commit) && project_lock.unlock
+          @job.update_commit!(commit) && ProjectLock.release(@job.project)
         end
       end
     else
@@ -160,13 +160,9 @@ class JobExecution
       if (i % 10 == 0)
         @executor.execute!('echo "Waiting for repository..."')
       end
-      lock ||= project_lock.try_lock
+      lock ||= ProjectLock.grab(@job.project)
     end
     lock
-  end
-
-  def project_lock
-    @job.project.repo_lock
   end
 
   class << self
