@@ -210,7 +210,7 @@ function startDeployStream() {
 
     source.addEventListener('finished', function(e) {
       $('#header').html(JSON.parse(e.data).html);
-      $('#deploy_stop').hide();
+      $('#output-options').hide();
       source.close();
     }, false);
   });
