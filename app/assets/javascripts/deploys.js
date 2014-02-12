@@ -148,9 +148,10 @@ $(function () {
   });
 
   $("#output-follow").click(function(event) {
+    var $messages = $("#messages");
     following = true;
-    $("#messages").scrollTop($("#messages").prop("scrollHeight"));
-    $("#messages").css("max-height", 550);
+    $messages.scrollTop($messages.prop("scrollHeight"));
+    $messages.css("max-height", 550);
     $("#output-options > button").removeClass("active");
     $(this).addClass("active");
   });
@@ -210,7 +211,7 @@ function startDeployStream() {
 
     source.addEventListener('finished', function(e) {
       $('#header').html(JSON.parse(e.data).html);
-      $('#output-options').hide();
+      $('.only-active').hide();
       source.close();
     }, false);
   });
