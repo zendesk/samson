@@ -88,6 +88,9 @@ class JobExecution
 
   def execute!(dir)
     unless setup!(dir)
+      if ProjectLock.owned?(@job.project)
+        ProjectLock.release(@job.project)
+      end
       @job.error!
       return
     end
@@ -123,12 +126,18 @@ class JobExecution
       "cd #{dir}",
       "git checkout --quiet #{@reference}"
     ]
-
-    @executor.execute!(*commands).tap do |status|
-      if status
-        commit = `cd #{repo_cache_dir} && git rev-parse #{@reference}`.chomp
-        @job.update_commit!(commit)
+    @executor.execute!('echo "Attempting to lock repository..."')
+    if grab_lock
+      @executor.execute!('echo "Repo locked, starting to clone..."')
+      @executor.execute!(*commands).tap do |status|
+        if status
+          commit = `cd #{repo_cache_dir} && git rev-parse #{@reference}`.chomp
+          @job.update_commit!(commit) && ProjectLock.release(@job.project)
+        end
       end
+    else
+      @executor.execute!('echo "Could not get exclusive lock on repo. Maybe another stage is being deployed."')
+      false
     end
   end
 
@@ -138,6 +147,22 @@ class JobExecution
 
   def artifact_cache_dir
     File.join(repo_cache_dir, "artifacts")
+  end
+
+  def grab_lock
+    lock = false
+    start_time = Time::now
+    i = 0
+    end_time = start_time + 10.minutes
+    until (lock || Time::now > end_time) do
+      sleep 1
+      i += 1
+      if (i % 10 == 0)
+        @executor.execute!('echo "Waiting for repository while cloning for: ' + ProjectLock.owner(@job.project) + '"')
+      end
+      lock ||= ProjectLock.grab(@job.project, @job.deploy.stage)
+    end
+    lock
   end
 
   class << self
