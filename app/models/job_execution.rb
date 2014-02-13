@@ -128,7 +128,7 @@ class JobExecution
     ]
     @executor.execute!('echo "Attempting to lock repository..."')
     if grab_lock
-      @executor.execute!('echo "Repo locked."')
+      @executor.execute!('echo "Repo locked, starting to clone..."')
       @executor.execute!(*commands).tap do |status|
         if status
           commit = `cd #{repo_cache_dir} && git rev-parse #{@reference}`.chomp
@@ -158,7 +158,7 @@ class JobExecution
       sleep 1
       i += 1
       if (i % 10 == 0)
-        @executor.execute!('echo "Waiting for repository..."')
+        @executor.execute!('echo "Waiting for repository while cloning for: ' + ProjectLock.owner(@job.project) + '"')
       end
       lock ||= ProjectLock.grab(@job.project, @job.deploy.stage)
     end

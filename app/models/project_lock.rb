@@ -1,17 +1,21 @@
 class ProjectLock
   def self.grab(project, stage)
     if locks[project.id].try_lock
-      locks[project.id][:held_by] = stage.name
+      locks[project.id].held_by = stage.name
+      return true
     end
   end
 
   def self.release(project)
     locks[project.id].unlock
-    locks[project.id][:held_by] = nil
   end
 
   def self.owned?(project)
     locks[project.id].owned?
+  end
+
+  def self.owner(project)
+    locks[project.id].held_by
   end
 
   private
