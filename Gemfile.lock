@@ -1,18 +1,11 @@
 GIT
   remote: git@github.com:zendesk/zendesk_deployment.git
-  revision: 84e1882958b5fe3c57840adeb1f0552bb6d85128
-  ref: v1.6.0
+  revision: dec86d72a2b5f1602f8505a3616b1ba47bdc4284
+  ref: v1.7.1
   specs:
-    zendesk_deployment (1.6.0)
+    zendesk_deployment (1.7.1)
       capistrano (< 3.0.0)
       deep_merge
-
-GIT
-  remote: https://github.com/9peso/net-ssh-shell.git
-  revision: 2be155d3e1e2bcc416ef70717ed9467db46f8a65
-  specs:
-    net-ssh-shell (0.3.0.dev)
-      net-ssh (~> 2.0)
 
 GIT
   remote: https://github.com/dasch/sawyer.git
@@ -88,7 +81,7 @@ GEM
       safe_yaml (~> 0.9.0)
     dalli (2.7.0)
     debug_inspector (0.0.2)
-    deep_merge (1.0.0)
+    deep_merge (1.0.1)
     docile (1.1.2)
     dogapi (1.9.1)
       json (>= 1.5.1)
@@ -276,8 +269,6 @@ DEPENDENCIES
   kaminari
   minitest-rails (~> 0.9)
   mysql2 (~> 0.3)
-  net-ssh (~> 2.1)
-  net-ssh-shell (~> 0.2)!
   newrelic_api
   newrelic_rpm (>= 3.7.1)
   octokit (~> 2.7.0)

@@ -57,9 +57,6 @@ group :no_preload do
 
   gem 'state_machine', '~> 1.2'
 
-  gem 'net-ssh', '~> 2.1'
-  gem 'net-ssh-shell', '~> 0.2', :git => 'https://github.com/9peso/net-ssh-shell.git'
-
   gem 'active_hash', '~> 1.0'
 
   gem 'ansible'
@@ -78,10 +75,10 @@ end
 group :test do
   gem 'minitest-rails', '~> 0.9'
   gem 'bourne'
-  gem 'webmock', :require => false
-  gem 'simplecov', :require => false
+  gem 'webmock', require: false
+  gem 'simplecov', require: false
 end
 
 group :deployment do
-  gem 'zendesk_deployment', :git => 'git@github.com:zendesk/zendesk_deployment.git', :ref => 'v1.6.0'
+  gem 'zendesk_deployment', git: 'git@github.com:zendesk/zendesk_deployment.git', ref: 'v1.7.1'
 end

@@ -1,13 +1,14 @@
 ENV["RAILS_ENV"] ||= "test"
-require_relative '../config/environment'
-require 'rails/test_help'
-require 'minitest/rails'
-require 'webmock/minitest'
 
 if ENV['COVERAGE']
   require 'simplecov'
   SimpleCov.start 'rails'
 end
+
+require_relative '../config/environment'
+require 'rails/test_help'
+require 'minitest/rails'
+require 'webmock/minitest'
 
 class ActiveSupport::TestCase
   include Warden::Test::Helpers
