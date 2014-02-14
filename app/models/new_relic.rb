@@ -8,34 +8,44 @@ module NewRelic
     end
 
     def metrics(application_names, initial = false)
-      values = application_names.inject({}) do |map, app_name|
-        app = NewRelic.applications[app_name]
-        map[app_name] = { id: app.id }
-
-        if initial
-          map[app_name].merge!(
-            historic_response_time: app.historic_response_time.map(&:last),
-            historic_throughput: app.historic_throughput.map(&:last)
-          )
-        else
-          map[app_name].merge!(response_time: app.response_time, throughput: app.throughput)
-        end
-
-        map
-      end
-
-      metrics = { applications: values, count: values.size }
-
       if initial
-        metrics.merge!(historic_times: historic_times)
+        response(historic_metrics(application_names)).merge(historic_times: historic_times)
       else
-        metrics.merge!(time: Time.now.utc.to_i)
+        response(live_metrics(application_names)).merge(time: Time.now.utc.to_i)
       end
-
-      metrics
     end
 
     private
+
+    def historic_metrics(application_names)
+      application_map(application_names) do |app|
+        {
+          historic_response_time: app.historic_response_time.map(&:last),
+          historic_throughput: app.historic_throughput.map(&:last)
+        }
+      end
+    end
+
+    def live_metrics(application_names)
+      application_map(application_names) do |app|
+        {
+          response_time: app.response_time,
+          throughput: app.throughput
+        }
+      end
+    end
+
+    def response(values)
+      { applications: values, count: values.size }
+    end
+
+    def application_map(application_names)
+      application_names.inject({}) do |map, app_name|
+        app = NewRelic.applications[app_name]
+        map[app_name] = (yield app).merge(id: app.id)
+        map
+      end
+    end
 
     def historic_times
       time = Time.now.utc.to_i
@@ -79,7 +89,7 @@ module NewRelic
       doc = JSON.parse(response.body)
 
       doc.select {|m| m['name'] == metric}.map do |m|
-        stamp = Time.parse(m['begin']).to_i
+        stamp = Time.at(m['begin'].to_i).to_i
         value = m[field]
         [stamp, value]
       end
