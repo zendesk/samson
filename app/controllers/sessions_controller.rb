@@ -1,6 +1,8 @@
 require 'omniauth/github_authorization'
 
 class SessionsController < ApplicationController
+  before_filter :restrict_end_users, only: :zendesk
+
   skip_before_filter :login_users
 
   def new
@@ -10,47 +12,11 @@ class SessionsController < ApplicationController
   end
 
   def github
-    user = User.create_or_update_from_hash(
-      name: auth_hash.info.name,
-      email: auth_hash.info.email,
-      role_id: github_authorization.role_id
-    )
-
-    if user
-      self.current_user = user
-      flash[:notice] = "You have been logged in."
-    else
-      flash[:error] = "Could not log you in."
-    end
-
-    redirect_to_origin_or_default
+    login_user(role_id: github_authorization.role_id)
   end
 
   def zendesk
-    if auth_hash.info.role == 'end-user' || auth_hash.info.email.blank?
-      flash[:error] = 'You are unauthorized.'
-    else
-      role_id = if auth_hash.info.role == 'admin'
-        Role::ADMIN.id
-      else
-        Role::VIEWER.id
-      end
-
-      user = User.create_or_update_from_hash(
-        name: auth_hash.info.name,
-        email: auth_hash.info.email,
-        role_id: role_id,
-      )
-
-      if user
-        self.current_user = user
-        flash[:notice] = "You have been logged in."
-      else
-        flash[:error] = "Could not log you in."
-      end
-    end
-
-    redirect_to_origin_or_default
+    login_user(role_id: role_name_to_id(auth_hash.info.role))
   end
 
   def failure
@@ -84,5 +50,36 @@ class SessionsController < ApplicationController
 
   def redirect_to_origin_or_default
     redirect_to request.env['omniauth.origin'] || root_path
+  end
+
+  def restrict_end_users
+    if auth_hash.info.role == 'end-user' || auth_hash.info.email.blank?
+      flash[:error] = 'You are unauthorized.'
+      redirect_to login_path
+    end
+  end
+
+  def role_name_to_id(role)
+    if role == 'admin'
+      Role::ADMIN.id
+    else
+      Role::VIEWER.id
+    end
+  end
+
+  def login_user(options = {})
+    user = User.create_or_update_from_hash(options.merge(
+      name: auth_hash.info.name,
+      email: auth_hash.info.email
+    ))
+
+    if user
+      self.current_user = user
+      flash[:notice] = "You have been logged in."
+    else
+      flash[:error] = "Could not log you in."
+    end
+
+    redirect_to_origin_or_default
   end
 end

@@ -108,7 +108,7 @@ describe SessionsController do
       let(:email) { '' }
 
       it 'redirects' do
-        assert_redirected_to root_path
+        assert_redirected_to login_path
       end
 
       it 'does not log the user in' do
@@ -120,7 +120,7 @@ describe SessionsController do
       let(:role) { 'end-user' }
 
       it 'redirects' do
-        assert_redirected_to root_path
+        assert_redirected_to login_path
       end
 
       it 'does not log the user in' do
