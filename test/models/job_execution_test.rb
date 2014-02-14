@@ -1,6 +1,6 @@
 require_relative '../test_helper'
 
-describe JobExecution do
+class JobExecutionTest < ActiveSupport::TestCase
   let(:repository_url) { Dir.mktmpdir }
   let(:base_dir) { Dir.mktmpdir }
   let(:project) { Project.create!(name: "duck", repository_url: repository_url) }

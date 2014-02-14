@@ -26,6 +26,8 @@ class JobExecution
   end
 
   def start!
+    ActiveRecord::Base.clear_active_connections!
+
     @thread = Thread.new do
       begin
         run!
@@ -91,7 +93,9 @@ class JobExecution
       if ProjectLock.owned?(@job.project)
         ProjectLock.release(@job.project)
       end
+
       @job.error!
+
       return
     end
 
@@ -126,17 +130,22 @@ class JobExecution
       "cd #{dir}",
       "git checkout --quiet #{@reference}"
     ]
-    @executor.execute!('echo "Attempting to lock repository..."')
+
+    @output.write("Attempting to lock repository...\n")
+
     if grab_lock
-      @executor.execute!('echo "Repo locked, starting to clone..."')
+      @output.write("Repo locked, starting to clone...\n")
+
       @executor.execute!(*commands).tap do |status|
         if status
           commit = `cd #{repo_cache_dir} && git rev-parse #{@reference}`.chomp
-          @job.update_commit!(commit) && ProjectLock.release(@job.project)
+          @job.update_commit!(commit)
+          ProjectLock.release(@job.project)
         end
       end
     else
-      @executor.execute!('echo "Could not get exclusive lock on repo. Maybe another stage is being deployed."')
+      @output.write("Could not get exclusive lock on repo. Maybe another stage is being deployed.\n")
+
       false
     end
   end
@@ -158,7 +167,7 @@ class JobExecution
       sleep 1
       i += 1
       if (i % 10 == 0)
-        @executor.execute!('echo "Waiting for repository while cloning for: ' + ProjectLock.owner(@job.project) + '"')
+        @output.write("Waiting for repository while cloning for: #{ProjectLock.owner(@job.project)}\n")
       end
       lock ||= ProjectLock.grab(@job.project, @job.deploy.stage)
     end
