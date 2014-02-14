@@ -6,7 +6,7 @@ require 'rails/all'
 # you've limited to :test, :development, or :production.
 Bundler.require(:default, :assets, Rails.env)
 
-module ZendeskPusher
+module ZendeskSamson
   class Application < Rails::Application
     # Settings in config/environments/* take precedence over those specified here.
     # Application configuration should go into files in config/initializers
@@ -27,25 +27,25 @@ module ZendeskPusher
     config.preload_frameworks = true
     config.allow_concurrency = true
 
-    # Used for all Pusher specific configuration.
-    config.pusher = ActiveSupport::OrderedOptions.new
+    # Used for all Samson specific configuration.
+    config.samson = ActiveSupport::OrderedOptions.new
 
     # Email prefix e.g. [PREFIX] Someone deployed PROJECT to STAGE (REF)
-    config.pusher.email_prefix = "ZD DEPLOY"
+    config.samson.email_prefix = "ZD DEPLOY"
 
     # Whether or not jobs are actually executed.
-    config.pusher.enable_job_execution = true
+    config.samson.enable_job_execution = true
 
     # Tired of the i18n deprecation warning
     config.i18n.enforce_available_locales = true
 
     # The directory in which repositories should be cached.
-    config.pusher.cached_repos_dir = Rails.root.join("cached_repos")
+    config.samson.cached_repos_dir = Rails.root.join("cached_repos")
 
     # The Github teams and organizations used for permissions
-    config.pusher.github = ActiveSupport::OrderedOptions.new
-    config.pusher.github.organization = 'zendesk'
-    config.pusher.github.admin_team = 'owners'
-    config.pusher.github.deploy_team = 'engineering'
+    config.samson.github = ActiveSupport::OrderedOptions.new
+    config.samson.github.organization = 'zendesk'
+    config.samson.github.admin_team = 'owners'
+    config.samson.github.deploy_team = 'engineering'
   end
 end

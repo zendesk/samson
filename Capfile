@@ -2,30 +2,30 @@ require 'zendesk/deployment'
 require 'zendesk/deployment/migrations'
 require 'zendesk/deployment/airbrake'
 
-set :application, 'pusher'
-set :repository,  'git@github.com:zendesk/pusher'
+set :application, 'samson'
+set :repository,  'git@github.com:zendesk/samson'
 set :environments, [:staging, :pod3]
 set :ruby_version, '2.0.0'
 set :require_tag?, false
-set :email_notification, ['deploys@zendesk.com', 'pusher@zendesk.flowdock.com', 'epahl@zendesk.com']
+set :email_notification, ['deploys@zendesk.com', 'samson@zendesk.flowdock.com', 'epahl@zendesk.com']
 set :user, 'deploy'
 set :check_for_pending_migrations?, false
 
 namespace :deploy do
   task :restart do
-    sudo "/etc/init.d/puma.pusher restart"
+    sudo "/etc/init.d/puma.samson restart"
   end
 
   task :start do
-    sudo "/etc/init.d/puma.pusher start"
+    sudo "/etc/init.d/puma.samson start"
   end
 
   task :stop do
-    sudo "/etc/init.d/puma.pusher stop"
+    sudo "/etc/init.d/puma.samson stop"
   end
 end
 
-namespace :pusher do
+namespace :samson do
   set :config_files, %w( database.yml )
 
   task :update_symlinks do
@@ -46,8 +46,8 @@ namespace :pusher do
 end
 
 # Need to use before, or else this won't run in time.
-before 'deploy:finalize_update', 'pusher:update_symlinks'
-after "deploy:update_code", "pusher:assets:precompile"
+before 'deploy:finalize_update', 'samson:update_symlinks'
+after "deploy:update_code", "samson:assets:precompile"
 
 def role_mapping(n)
   super.tap do |mapping|

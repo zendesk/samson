@@ -5,12 +5,12 @@ class JobExecution
   # Whether or not execution is enabled. This allows completely disabling job
   # execution for testing purposes.
   cattr_accessor(:enabled, instance_reader: true) do
-    Rails.application.config.pusher.enable_job_execution
+    Rails.application.config.samson.enable_job_execution
   end
 
   # The directory in which repositories should be cached.
   cattr_accessor(:cached_repos_dir, instance_reader: true) do
-    Rails.application.config.pusher.cached_repos_dir
+    Rails.application.config.samson.cached_repos_dir
   end
 
   attr_reader :output

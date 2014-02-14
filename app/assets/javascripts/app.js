@@ -1,1 +1,1 @@
-var pusher = angular.module("pusher", []);
+var samson = angular.module("samson", []);

@@ -1,5 +1,5 @@
-$pusherDark: #333;
-$pusherGrey: lighten($pusherDark, 70%);
+$samsonDark: #333;
+$samsonGrey: lighten($samsonDark, 70%);
 $primary: #428bca;
 $success: #5cb85c;
 $warning: #f0ad4e;
@@ -22,7 +22,7 @@ $lightInfo: lighten(#5bc0de, $scale);
 }
 
 .timeline h3 {
-  border-bottom: 1px solid $pusherGrey;
+  border-bottom: 1px solid $samsonGrey;
   padding-bottom: 10px;
   margin: 20px 0 15px;
 }
@@ -34,7 +34,7 @@ $lightInfo: lighten(#5bc0de, $scale);
 
 .timeline-entry {
   position: relative;
-  border-bottom: 1px solid $pusherGrey;
+  border-bottom: 1px solid $samsonGrey;
   padding: 15px 0;
 }
 
@@ -53,11 +53,11 @@ $lightInfo: lighten(#5bc0de, $scale);
 
 .timeline-project,
 .timeline-content {
-  color: $pusherDark;
+  color: $samsonDark;
 }
 
 .timeline-project {
-  background-color: $pusherGrey;
+  background-color: $samsonGrey;
   border-radius: 3px;
   display: block;
   text-align: center;

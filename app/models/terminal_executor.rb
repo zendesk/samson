@@ -27,7 +27,7 @@ class TerminalExecutor
 
     payload = {}
 
-    ActiveSupport::Notifications.instrument("execute_shell.pusher", payload) do
+    ActiveSupport::Notifications.instrument("execute_shell.samson", payload) do
       payload[:success] = execute_command!(command)
     end
   end

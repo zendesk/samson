@@ -1,4 +1,4 @@
-pusher.constant("MONTHS",
+samson.constant("MONTHS",
   [
     "January",
     "February",
@@ -15,7 +15,7 @@ pusher.constant("MONTHS",
   ]
 );
 
-pusher.constant("DAYS",
+samson.constant("DAYS",
   [
     "Sunday",
     "Monday",
@@ -27,7 +27,7 @@ pusher.constant("DAYS",
   ]
 );
 
-pusher.constant('STATUS_MAPPING',
+samson.constant('STATUS_MAPPING',
   {
     "running": "plus-sign primary",
     "succeeded": "ok-sign success",
@@ -39,7 +39,7 @@ pusher.constant('STATUS_MAPPING',
   }
 );
 
-pusher.filter("userFilter",
+samson.filter("userFilter",
   function() {
     var hookSources = /^(?:travis|tddium|semaphore)$/i;
 
@@ -54,7 +54,7 @@ pusher.filter("userFilter",
   }
 );
 
-pusher.filter("stageFilter",
+samson.filter("stageFilter",
   function() {
     return function(deploys, stageType) {
       if (stageType !== undefined && stageType !== null) {
@@ -67,7 +67,7 @@ pusher.filter("stageFilter",
   }
 );
 
-pusher.filter("statusFilter",
+samson.filter("statusFilter",
   function() {
     return function(deploys, status) {
       if (status !== undefined && status !== null) {
@@ -94,7 +94,7 @@ pusher.filter("statusFilter",
   }
 );
 
-pusher.filter("statusToIcon",
+samson.filter("statusToIcon",
   ["STATUS_MAPPING", function(STATUS_MAPPING) {
     return function(status) {
       return STATUS_MAPPING[status];
@@ -102,7 +102,7 @@ pusher.filter("statusToIcon",
   }]
 );
 
-pusher.filter("fullDate",
+samson.filter("fullDate",
   function() {
     return function(local) {
       return local.day + ", " + local.date + " " + local.month + " " + local.year;
@@ -110,7 +110,7 @@ pusher.filter("fullDate",
   }
 );
 
-pusher.filter("localize",
+samson.filter("localize",
   ["DAYS", "MONTHS", function(DAYS, MONTHS) {
     return function(ms) {
       var localDate = new Date(parseInt(ms));
@@ -130,7 +130,7 @@ pusher.filter("localize",
   }]
 );
 
-pusher.factory("Deploys",
+samson.factory("Deploys",
   ["$filter", "$http", "$timeout", function($filter, $http, $timeout) {
     var localize = $filter("localize");
 
@@ -172,7 +172,7 @@ pusher.factory("Deploys",
   }]
 );
 
-pusher.controller("TimelineCtrl", ["$scope", "$window", "Deploys",
+samson.controller("TimelineCtrl", ["$scope", "$window", "Deploys",
 function($scope, $window, Deploys) {
   $scope.userTypes = ["Human", "Robot"];
   $scope.stageTypes = { "Production": true, "Non-production": false };

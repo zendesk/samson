@@ -3,7 +3,7 @@ require 'omniauth/github_authorization'
 
 describe GithubAuthorization do
   let(:teams) {[]}
-  let(:config) { Rails.application.config.pusher.github }
+  let(:config) { Rails.application.config.samson.github }
   let(:authorization) { GithubAuthorization.new('test.user', '123') }
 
   before do

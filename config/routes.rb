@@ -1,4 +1,4 @@
-ZendeskPusher::Application.routes.draw do
+ZendeskSamson::Application.routes.draw do
   get 'streams/show'
 
   resources :projects, except: [:index] do

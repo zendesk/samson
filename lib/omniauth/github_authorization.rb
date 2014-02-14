@@ -29,6 +29,6 @@ class GithubAuthorization
   end
 
   def config
-    Rails.application.config.pusher.github
+    Rails.application.config.samson.github
   end
 end
