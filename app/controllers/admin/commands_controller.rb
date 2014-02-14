@@ -33,14 +33,7 @@ class Admin::CommandsController < ApplicationController
     @command = Command.find(params[:id])
 
     if @command.update_attributes(command_params)
-      respond_to do |format|
-        format.html do
-          flash[:notice] = 'Command updated.'
-          redirect_to admin_commands_path
-        end
-
-        format.json { render json: {} }
-      end
+      successful_response('Command updated.')
     else
       respond_to do |format|
         format.html do
@@ -56,19 +49,23 @@ class Admin::CommandsController < ApplicationController
   def destroy
     Command.destroy(params[:id])
 
-    respond_to do |format|
-      format.html do
-        flash[:notice] = 'Command removed.'
-        redirect_to admin_commands_path
-      end
-
-      format.json { render json: {} }
-    end
+    successful_response('Command removed.')
   end
 
   private
 
   def command_params
     params.require(:command).permit(:command, :project_id)
+  end
+
+  def successful_response(notice)
+    respond_to do |format|
+      format.html do
+        flash[:notice] = notice
+        redirect_to admin_commands_path
+      end
+
+      format.json { render json: {} }
+    end
   end
 end

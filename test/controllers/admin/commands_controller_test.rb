@@ -63,24 +63,48 @@ describe Admin::CommandsController do
     describe 'PATCH to #update' do
       before do
         patch :update, id: commands(:echo).id,
-          command: attributes
+          command: attributes, format: format
       end
 
       describe 'invalid' do
         let(:attributes) {{ command: nil }}
 
-        it 'renders and sets the flash' do
-          flash[:error].wont_be_nil
-          assert_template :edit
+        describe 'html' do
+          let(:format) { 'html' }
+
+          it 'renders and sets the flash' do
+            flash[:error].wont_be_nil
+            assert_template :edit
+          end
+        end
+
+        describe 'json' do
+          let(:format) { 'json' }
+
+          it 'responds unprocessable' do
+            assert_response :unprocessable_entity
+          end
         end
       end
 
       describe 'valid' do
         let(:attributes) {{ command: 'echo hi' }}
 
-        it 'redirects and sets the flash' do
-          flash[:notice].wont_be_nil
-          assert_redirected_to admin_commands_path
+        describe 'html' do
+          let(:format) { 'html' }
+
+          it 'redirects and sets the flash' do
+            flash[:notice].wont_be_nil
+            assert_redirected_to admin_commands_path
+          end
+        end
+
+        describe 'json' do
+          let(:format) { 'json' }
+
+          it 'responds ok' do
+            assert_response :ok
+          end
         end
       end
     end
@@ -95,15 +119,27 @@ describe Admin::CommandsController do
       end
 
       describe 'valid' do
-        before { delete :destroy, id: commands(:echo).id }
+        before { delete :destroy, id: commands(:echo).id, format: format }
 
-        it 'redirects' do
-          flash[:notice].wont_be_nil
-          assert_redirected_to admin_commands_path
+        describe 'html' do
+          let(:format) { 'html' }
+
+          it 'redirects' do
+            flash[:notice].wont_be_nil
+            assert_redirected_to admin_commands_path
+          end
+
+          it 'removes the command' do
+            Command.exists?(commands(:echo).id).must_equal(false)
+          end
         end
 
-        it 'removes the command' do
-          Command.exists?(commands(:echo).id).must_equal(false)
+        describe 'json' do
+          let(:format) { 'json' }
+
+          it 'responds ok' do
+            assert_response :ok
+          end
         end
       end
     end
