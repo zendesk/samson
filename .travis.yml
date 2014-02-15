@@ -1,7 +1,7 @@
 before_script:
   - cp config/database.travis.yml config/database.yml
   - bundle exec rake db:create
-  - npm install karma
+  - npm install
 script:
   - npm test
   - rake
