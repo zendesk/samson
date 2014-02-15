@@ -89,7 +89,7 @@ $(function () {
       clearTimeout(timeout);
     }
 
-    if(ref != "") {
+    if(ref !== "") {
       timeout = setTimeout(function() { check_status(ref); }, 200);
     }
   });
@@ -182,7 +182,7 @@ function startDeployStream() {
       if (following) {
         messages.scrollTop(messages[0].scrollHeight);
       }
-    }
+    };
 
     source.addEventListener('append', function(e) {
       addLine(e.data);

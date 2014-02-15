@@ -1,8 +1,19 @@
 {
+  "name": "Samson",
+  "author": "Zendesk",
+  "version": "0.1.0",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/zendesk/samson.git"
+  },
   "devDependencies": {
-    "karma": "~0.10"
+    "karma": "~0.10",
+    "gulp-util": "~2.2.14",
+    "gulp": "~3.5.2",
+    "gulp-karma": "0.0.2",
+    "gulp-jshint": "~1.4.2"
   },
   "scripts": {
-     "test": "./node_modules/.bin/karma start --single-run --browsers PhantomJS pusher.conf.js"
+    "test": "./node_modules/.bin/gulp test"
   }
 }
