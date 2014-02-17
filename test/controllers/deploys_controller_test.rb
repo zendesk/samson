@@ -41,7 +41,7 @@ describe DeploysController do
 
     describe "a GET to :show" do
       setup do
-        changeset = stub_everything(files: [], commits: [], pull_requests: [])
+        changeset = stub_everything(files: [], commits: [], pull_requests: [], jira_issues: [])
         Changeset.stubs(:find).returns(changeset)
       end
 
@@ -105,7 +105,7 @@ describe DeploysController do
     end
 
     describe "a POST to :confirm" do
-      let(:changeset) { stub_everything(commits: [], files: [], pull_requests: []) }
+      let(:changeset) { stub_everything(commits: [], files: [], pull_requests: [], jira_issues: []) }
 
       setup do
         Changeset.stubs(:find).with(project.github_repo, nil, 'master').returns(changeset)
