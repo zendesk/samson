@@ -32,7 +32,7 @@ $(function() {
         reorderCtrl.messageFadeOutTimeout = setTimeout(function() {
           $messages.fadeOut(300);
         }, 2000);
-      })
+      });
     }
   };
 

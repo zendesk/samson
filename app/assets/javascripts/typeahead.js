@@ -1,3 +1,5 @@
+/* jshint ignore:start */
+
 /*!
  * typeahead.js 0.9.3
  * https://github.com/twitter/typeahead.js

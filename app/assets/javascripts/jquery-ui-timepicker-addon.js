@@ -1,3 +1,5 @@
+/* jshint ignore:start */
+
 /*! jQuery Timepicker Addon - v1.4 - 2013-08-11
 * http://trentrichardson.com/examples/timepicker
 * Copyright (c) 2013 Trent Richardson; Licensed MIT */
