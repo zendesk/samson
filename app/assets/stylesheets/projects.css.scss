@@ -1,9 +1,11 @@
 .dashboard {
-  -webkit-display: flex;
-  display: flex;
+  @media (min-width: 768px) {
+    -webkit-display: flex;
+    display: flex;
 
-  -webkit-flex-wrap: wrap;
-  flex-wrap: wrap;
+    -webkit-flex-wrap: wrap;
+    flex-wrap: wrap;
+  }
 }
 
 .project-tile {
@@ -11,9 +13,13 @@
   min-height: 200px;
   padding: 15px;
   position: relative;
-  margin: 1%;;
-  width: 31%;
   box-sizing: border-box;
+  margin-top: 20px;
+
+  @media (min-width: 768px) {
+    margin: 1%;
+    width: 31%;
+  }
 
   &:hover {
     text-decoration: none;
