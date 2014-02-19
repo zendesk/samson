@@ -1,11 +1,11 @@
 <div class="login-wrapper fade-in">
   <h1>Pusher</h1>
   <p>Understand what is being deployed.</p>
-  <p>Please authenticate with Github if you intend on being a deployer.</p>
   <div class="login">
     <%= link_to omniauth_path('github'), class: "action github" do %>
       <%= image_tag image_url('github.png') %> Login with Github
     <% end %>
+    <p class="no-github">Don't have a Github login? <a href="#zendesk">Login with Zendesk</a></p>
     <%= link_to omniauth_path('zendesk'), class: "action zendesk" do %>
       <%= image_tag image_url('zendesk.png') %> Login with Zendesk
     <% end %>
