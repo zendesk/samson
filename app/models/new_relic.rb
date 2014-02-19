@@ -83,6 +83,7 @@ module NewRelic
       }
 
       response = Faraday.get(url, query) do |request|
+        request.options.open_timeout = 2
         request.headers['X-Api-Key'] = NewRelicApi.api_key
       end
 
