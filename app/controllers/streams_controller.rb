@@ -46,6 +46,6 @@ class StreamsController < ApplicationController
       @deploy = @job.deploy
     end
 
-    JSON.dump(html: render_to_string(partial: 'deploys/header', formats: :html))
+    JSON.dump(html: render_to_body(partial: 'deploys/header', formats: :html))
   end
 end
