@@ -5,7 +5,7 @@ class DeploysController < ApplicationController
   end
 
   before_filter :authorize_deployer!, only: [:new, :create, :confirm, :update, :destroy]
-  before_filter :find_project, except: [:active]
+  before_filter :find_project, except: [:recent]
   before_filter :find_deploy, except: [:index, :recent, :active, :new, :create, :confirm]
 
   def index
