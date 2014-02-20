@@ -21,7 +21,7 @@ class Deploy < ActiveRecord::Base
   end
 
   def summary_for_timeline
-    "#{short_reference} #{'was' if job.succeeded?} #{summary_action} to #{stage.name}"
+    "#{short_reference}#{' was' if job.succeeded?} #{summary_action} to #{stage.name}"
   end
 
   def summary_for_email
