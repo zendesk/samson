@@ -36,7 +36,7 @@
       <% end %>
     </ul>
 
-    <div class="navbar-btn pull-right">
+    <div class="navbar-btn pull-right logout-btn">
       <% if logged_in? %>
         <%= link_to "Logout", logout_path, title: "Logged in as #{current_user.name}", class: "btn btn-default" %>
       <% end %>

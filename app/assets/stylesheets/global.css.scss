@@ -59,6 +59,13 @@ h3 {
 
   .navbar-brand {
     color: #FFF;
+
+    @media (max-width: 768px) {
+      float: none;
+      display: block;
+      padding: 15px 0;
+    }
+
     &:hover {
       color: #EEE;
     }
@@ -95,6 +102,14 @@ h3 {
 
 .nav-tabs {
   margin-bottom: 20px;
+}
+
+.logout-btn {
+  @media (max-width: 768px) {
+    position: absolute;
+    top: 0;
+    right: 0;
+  }
 }
 
 
