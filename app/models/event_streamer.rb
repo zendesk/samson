@@ -25,6 +25,9 @@
 #
 class EventStreamer
   def initialize(stream, &block)
+    @finished = false
+    @mutex = Mutex.new
+
     @stream = stream
     @handler = block || proc {|_, x|
       if x.present?
@@ -44,11 +47,12 @@ class EventStreamer
   rescue IOError
     # Raised on stream close
   ensure
-    stop_heartbeat!
     finished
   end
 
   def finished
+    finished!
+
     emit_event('finished', @handler.call(:finished, ''))
   rescue IOError
     # Raised on stream close
@@ -64,9 +68,9 @@ class EventStreamer
   end
 
   def start_heartbeat!
-    @heartbeat = Thread.new do
+    Thread.new do
       begin
-        while true
+        while !finished?
           @stream.write("data: \n\n")
           sleep(5) # Timeout of 5 seconds
         end
@@ -76,7 +80,11 @@ class EventStreamer
     end
   end
 
-  def stop_heartbeat!
-    @heartbeat.try(:kill)
+  def finished?
+    @mutex.synchronize { @finished == true }
+  end
+
+  def finished!
+    @mutex.synchronize { @finished = true }
   end
 end
