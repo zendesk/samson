@@ -34,7 +34,7 @@ class DeploysController < ApplicationController
     respond_to do |format|
       format.html
       format.json do
-        @deploys = Deploy.includes(:stage, job: :user).page(params[:page])
+        render json: Deploy.includes(:stage, job: :user).page(params[:page])
       end
     end
   end
