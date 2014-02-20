@@ -13,20 +13,17 @@ class DeploysController < ApplicationController
 
     respond_to do |format|
       format.html
-      format.json do
-        render json: @deploys
-      end
+      format.json { render json: @deploys }
     end
   end
 
   def active
-    @deploys = (@project.try(:deploys) || Deploy).includes(:stage, job: :user).active.page(params[:page])
+    scope = @project ? @project.deploys : Deploy
+    @deploys = scope.includes(:stage, job: :user).active.page(params[:page])
 
     respond_to do |format|
       format.html
-      format.json do
-        render json: @deploys
-      end
+      format.json { render json: @deploys }
     end
   end
 

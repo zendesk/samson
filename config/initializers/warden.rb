@@ -13,9 +13,5 @@ require 'warden/strategies/session_strategy'
 
 Rails.application.config.middleware.insert_after(ActionDispatch::Flash, Warden::Manager) do |manager|
   manager.default_strategies :basic, :session
-  manager.failure_app = Class.new do
-    def self.call(env)
-      [401, {}, StringIO.new]
-    end
-  end
+  manager.failure_app = UnauthorizedController
 end

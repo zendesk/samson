@@ -2,6 +2,8 @@ module CurrentUser
   extend ActiveSupport::Concern
 
   included do
+    include Authorization
+
     helper_method :logged_in?
     helper_method :current_user
     prepend_before_filter :login_users

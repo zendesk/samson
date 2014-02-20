@@ -49,8 +49,7 @@ class ActionController::TestCase
         before { send(method, action, params) }
 
         it 'is unauthorized' do
-          flash[:error].must_equal('You are not authorized to view this page.')
-          assert_redirected_to root_url
+          assert_equal true, @unauthorized
         end
       end
     end
@@ -68,7 +67,7 @@ class ActionController::TestCase
   setup do
     middleware = Rails.application.config.middleware.detect {|m| m.name == 'Warden::Manager'}
     manager = Warden::Manager.new(nil, &middleware.block)
-    request.env['warden'] = Warden::Proxy.new(@request.env, manager)
+    request.env['warden'] = Warden::Proxy.new(request.env, manager)
   end
 
   teardown do
@@ -81,8 +80,10 @@ class ActionController::TestCase
 
   def process_with_catch_warden(*args)
     catch(:warden) do
-      process_without_catch_warden(*args)
+      return process_without_catch_warden(*args)
     end
+
+    @unauthorized = true
   end
 
   alias_method_chain :process, :catch_warden
