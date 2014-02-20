@@ -5,7 +5,7 @@ class DeploysController < ApplicationController
   end
 
   before_filter :authorize_deployer!, only: [:new, :create, :confirm, :update, :destroy]
-  before_filter :find_project, except: [:recent]
+  before_filter :find_project
   before_filter :find_deploy, except: [:index, :recent, :active, :new, :create, :confirm]
 
   def index
@@ -18,8 +18,8 @@ class DeploysController < ApplicationController
   end
 
   def active
-    scope = @project ? @project.deploys : Deploy
-    @deploys = scope.includes(:stage, job: :user).active.page(params[:page])
+    scope = @project ? @project.deploys : Deploy.includes(:stage)
+    @deploys = scope.active.includes(job: :user).page(params[:page])
 
     respond_to do |format|
       format.html
