@@ -16,7 +16,7 @@ class ProjectsController < ApplicationController
       end
 
       format.json do
-        render json: Project.all.as_json(only: [:id, :name])
+        render json: Project.all
       end
     end
   end
