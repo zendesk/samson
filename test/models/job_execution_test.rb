@@ -30,7 +30,7 @@ class JobExecutionTest < ActiveSupport::TestCase
 
   it "clones the project's repository if it's not already cloned" do
     execution.run!
-    repo_dir = File.join(Rails.application.config.pusher.cached_repos_dir, project.id.to_s)
+    repo_dir = File.join(Rails.application.config.samson.cached_repos_dir, project.id.to_s)
 
     assert File.directory?(repo_dir)
   end

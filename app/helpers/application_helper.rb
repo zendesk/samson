@@ -36,7 +36,7 @@ module ApplicationHelper
   end
 
   def revision
-    Rails.application.config.pusher.revision.presence
+    Rails.application.config.samson.revision.presence
   end
 
   def global_lock?

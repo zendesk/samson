@@ -1,4 +1,4 @@
-## Zendesk Pusher
+## Samson
 
 ### What?
 
@@ -16,12 +16,12 @@ This project used to use JRuby, now it is on MRI 2.0.0, but there is some remnan
 
 Upgrade your manifest:
 ```Puppet
-include projects::pusher
+include projects::samson
 ```
 
 #### Config:
 
-1. We need to add a database configuration yaml file with your credentials. 
+1. We need to add a database configuration yaml file with your credentials.
 2. Set up an authentication method in `.env` - at least one of Zendesk (`CLIENT_SECRET` and `ZENDESK_URL`)and GitHub (`GITHUB_CLIENT_ID` and `GITHUB_CLIENT_SECRET`).
 
 
@@ -71,19 +71,19 @@ to change it to your own for testing.
 
 #### CI support
 
-Pusher can be integrated with CI services through webhooks.
+Samson can be integrated with CI services through webhooks.
 You can find a link to webhook on every project page.
 There are links on webhook pages that you will want to add to your project settings on your CI service.
 Set up your webhooks and the deployment process can be automated.
 
 ##### Process
 
--> Push to branch(e.g. master)  
--> CI validation  
--> CI makes webhook call  
--> Pusher receives webhook call  
--> Pusher checks if validation is passed  
--> Deploy if passed / do nothing if failed  
+-> Push to branch(e.g. master)
+-> CI validation
+-> CI makes webhook call
+-> Samson receives webhook call
+-> Samson checks if validation is passed
+-> Deploy if passed / do nothing if failed
 
 ##### Supported services
 
@@ -96,13 +96,13 @@ Set up your webhooks and the deployment process can be automated.
     * Tddium only has webhook per organisation setting
     * However you can have multiple webhooks per organisation
     * Add all webhooks to your organisation
-    * Pusher will match url to see if the webhook call is for the correct project
+    * Samson will match url to see if the webhook call is for the correct project
 
 Skip a deploy:
 
-Add "[deploy skip]" to your commit message, and pusher will ignore the webhook
+Add "[deploy skip]" to your commit message, and Samson will ignore the webhook
 from CI.
 
 ### Team
 
-Core team is Steven D (SF), Daniel S (CPH), Jason S (MEL), Elliot P (MEL), Po C (MEL) & Roman S (MEL).
+Core team is @steved555, @dasch, @jwswj, @halcyonCorsair, @princemaple & @sandlerr.

@@ -1,5 +1,5 @@
 describe("Timeline", function() {
-  beforeEach(module("pusher"));
+  beforeEach(module("samson"));
 
   var scope;
 

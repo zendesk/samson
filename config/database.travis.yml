@@ -2,4 +2,4 @@ test:
   adapter: mysql2
   username: travis
   encoding: utf8
-  database: pusher_test
+  database: samson_test

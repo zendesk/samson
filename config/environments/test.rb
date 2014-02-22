@@ -1,4 +1,4 @@
-ZendeskPusher::Application.configure do
+ZendeskSamson::Application.configure do
   # Settings specified here will take precedence over those in config/application.rb.
 
   # The test environment is used exclusively to run your application's
@@ -41,12 +41,12 @@ ZendeskPusher::Application.configure do
 
   # By default, we don't want to actually execute jobs when testing. However,
   # this setting can be enabled on a per-test basis.
-  config.pusher.enable_job_execution = false
+  config.samson.enable_job_execution = false
 
   # We don't want to persist the repository cache between test runs.
-  config.pusher.cached_repos_dir = Dir.mktmpdir
+  config.samson.cached_repos_dir = Dir.mktmpdir
 
-  config.pusher.github.organization = 'test_org'
-  config.pusher.github.admin_team = 'admins'
-  config.pusher.github.deploy_team = 'deployers'
+  config.samson.github.organization = 'test_org'
+  config.samson.github.admin_team = 'admins'
+  config.samson.github.deploy_team = 'deployers'
 end

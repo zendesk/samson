@@ -16,7 +16,7 @@ class DatadogNotification
       event_type: "deploy",
       event_object: Digest::MD5.hexdigest("#{Time.new}|#{rand}"),
       alert_type: status,
-      source_type_name: "pusher",
+      source_type_name: "samson",
       date_happened: @deploy.updated_at,
       tags: @stage.datadog_tags + ["deploy"]
     )

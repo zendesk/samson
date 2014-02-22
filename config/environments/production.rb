@@ -1,4 +1,4 @@
-ZendeskPusher::Application.configure do
+ZendeskSamson::Application.configure do
   # Settings specified here will take precedence over those in config/application.rb.
 
   # Code is not reloaded between requests.
@@ -78,5 +78,5 @@ ZendeskPusher::Application.configure do
   # Use default logging formatter so that PID and timestamp are not suppressed.
   config.log_formatter = ::Logger::Formatter.new
 
-  self.default_url_options = { host: 'pusher.zende.sk', protocol: 'https' }
+  self.default_url_options = { host: 'samson.zende.sk', protocol: 'https' }
 end

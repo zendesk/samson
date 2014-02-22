@@ -10,4 +10,4 @@ cp database.mysql.yml.example config/database.yml || true
 
 bundle exec rake db:setup
 
-echo '[\033[32mNOTE\033[0m] To use GitHub, you have to configure \033[32mpusher/.env\033[0m'
+echo '[\033[32mNOTE\033[0m] To use GitHub, you have to configure \033[32msamson/.env\033[0m'
