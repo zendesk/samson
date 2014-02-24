@@ -16,26 +16,107 @@ describe DeploysController do
 
   as_a_viewer do
     describe "a GET to :index" do
-      setup { get :index, project_id: project.id }
+      setup { get :index, project_id: project.id, format: format }
 
-      it "renders the template" do
-        assert_template :index
+      describe "as html" do
+        let(:format) { :html }
+
+        it "renders the template" do
+          assert_template :index
+        end
+      end
+
+      describe "as json" do
+        let(:format) { :json }
+
+        it "renders json" do
+          assert_equal "application/json", @response.content_type
+          assert_response :ok
+        end
       end
     end
 
     describe "a GET to :recent" do
-      setup { get :recent, project_id: project.id }
+      setup { get :recent, format: format }
 
-      it "renders the template" do
-        assert_template :recent
+      describe "as html" do
+        let(:format) { :html }
+
+        it "renders the template" do
+          assert_template :recent
+        end
+      end
+
+      describe "as json" do
+        let(:format) { :json }
+
+        it "renders json" do
+          assert_equal "application/json", @response.content_type
+          assert_response :ok
+        end
+      end
+    end
+
+    describe "a GET to :recent with a project_id" do
+      setup { get :recent, project_id: project.id, format: format }
+
+      describe "as html" do
+        let(:format) { :html }
+
+        it "renders the template" do
+          assert_template :recent
+        end
+      end
+
+      describe "as json" do
+        let(:format) { :json }
+
+        it "renders json" do
+          assert_equal "application/json", @response.content_type
+          assert_response :ok
+        end
       end
     end
 
     describe "a GET to :active" do
-      setup { get :active, project_id: project.id }
+      setup { get :active, format: format }
 
-      it "renders the template" do
-        assert_template :active
+      describe "as html" do
+        let(:format) { :html }
+
+        it "renders the template" do
+          assert_template :active
+        end
+      end
+
+      describe "as json" do
+        let(:format) { :json }
+
+        it "renders json" do
+          assert_equal "application/json", @response.content_type
+          assert_response :ok
+        end
+      end
+    end
+
+    describe "a GET to :active with a project_id" do
+      setup { get :active, project_id: project.id, format: format }
+
+      describe "as html" do
+        let(:format) { :html }
+
+        it "renders the template" do
+          assert_template :active
+        end
+      end
+
+      describe "as json" do
+        let(:format) { :json }
+
+        it "renders json" do
+          assert_equal "application/json", @response.content_type
+          assert_response :ok
+        end
       end
     end
 
@@ -85,7 +166,7 @@ describe DeploysController do
   as_a_deployer do
     describe "a POST to :create" do
       setup do
-        post :create, params.merge(project_id: project.id)
+        post :create, params.merge(project_id: project.id, format: format)
       end
 
       let(:params) {{ deploy: {
@@ -93,13 +174,31 @@ describe DeploysController do
         reference: "master"
       }}}
 
-      it "redirects to the job path" do
-        assert_redirected_to project_deploy_path(project, deploy)
+      describe "as html" do
+        let(:format) { :html }
+
+        it "redirects to the job path" do
+          assert_redirected_to project_deploy_path(project, deploy)
+        end
+
+        it "creates a deploy" do
+          assert_received(deploy_service, :deploy!) do |expect|
+            expect.with stage, "master"
+          end
+        end
       end
 
-      it "creates a deploy" do
-        assert_received(deploy_service, :deploy!) do |expect|
-          expect.with stage, "master"
+      describe "as json" do
+        let(:format) { :json }
+
+        it "responds ok" do
+          assert_response :ok
+        end
+
+        it "creates a deploy" do
+          assert_received(deploy_service, :deploy!) do |expect|
+            expect.with stage, "master"
+          end
         end
       end
     end

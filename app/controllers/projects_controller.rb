@@ -10,7 +10,15 @@ class ProjectsController < ApplicationController
   end
 
   def index
-    @projects = Project.alphabetical.includes(stages: [:current_deploy, :last_deploy, { lock: :user }])
+    respond_to do |format|
+      format.html do
+        @projects = Project.alphabetical.includes(stages: [:current_deploy, :last_deploy, { lock: :user }])
+      end
+
+      format.json do
+        render json: Project.all
+      end
+    end
   end
 
   def new

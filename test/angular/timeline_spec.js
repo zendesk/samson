@@ -12,28 +12,28 @@ describe("Timeline", function() {
       beforeEach(function() {
         deploys = [
           {
-            user: "abc",
-            stageType: false,
+            user: { name: "abc" },
+            production: false,
             status: "succeeded"
           },
           {
-            user: "boss",
-            stageType: true,
+            user: { name: "boss" },
+            production: true,
             status: "failed"
           },
           {
-            user: "travis",
-            stageType: false,
+            user: { name: "travis" },
+            production: false,
             status: "cancelled"
           },
           {
-            user: "semaphore",
-            stageType: false,
+            user: { name: "semaphore" },
+            production: false,
             status: "pending"
           },
           {
-            user: "admin",
-            stageType: true,
+            user: { name: "admin" },
+            production: true,
             status: "errored"
           }
         ];

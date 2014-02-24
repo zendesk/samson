@@ -1,8 +1,8 @@
 <div class="timeline-entry clearfix"
   ng-repeat="deploy in (deploys = (timelineDeploys.entries | filter:search | userFilter:userType | stageFilter:stageType | statusFilter:deployStatus))">
 
-  <div ng-hide="isSameDate(deploys[$index - 1].time, deploy.time)">
-    <h3 class="timeline-date">{{deploy.time | fullDate}}</h3>
+  <div ng-hide="isSameDate(deploys[$index - 1].updated_at, deploy.updated_at)">
+    <h3 class="timeline-date">{{deploy.updated_at | fullDate}}</h3>
   </div>
 
   <div class="timeline-entry-main">
@@ -10,14 +10,14 @@
       <i class="glyphicon glyphicon-{{deploy.status | statusToIcon}}"></i>
     </div>
 
-    <a class="timeline-project" ng-href="/projects/{{deploy.projectURLParam}}">{{deploy.projectName}}</a>
+    <a class="timeline-project" ng-href="{{deploy.project.url}}">{{deploy.project.name}}</a>
 
-    <a class="timeline-content clearfix" ng-href="/projects/{{deploy.projectURLParam}}/deploys/{{deploy.deployId}}">
+    <a class="timeline-content clearfix" ng-href="{{deploy.url}}">
       <div class="timeline-summary">{{deploy.summary}}</div>
       <div class="clearfix">
-        <img class="timeline-gravatar img-circle" ng-src="{{deploy.gravatarURL}}" title="{{deploy.user}}" alt="Gravatar">
+        <img class="timeline-gravatar img-circle" ng-src="{{deploy.user.gravatar_url}}" title="{{deploy.user.name}}" alt="Gravatar">
         <div class="timeline-who">
-          {{deploy.user}} <span class="timeline-time">{{deploy.timeAgo}} ago</span>
+          {{deploy.user.name}} <span class="timeline-time">{{deploy.updated_at_ago}} ago</span>
         </div>
       </div>
     </a>

@@ -46,7 +46,7 @@ samson.filter("userFilter",
     return function(deploys, userType) {
       if (userType !== undefined && userType !== null) {
         return deploys.filter(function(deploy) {
-          return (deploy.user.match(hookSources) !== null) === (userType === "Robot");
+          return (deploy.user.name.match(hookSources) !== null) === (userType === "Robot");
         });
       }
       return deploys;
@@ -59,7 +59,7 @@ samson.filter("stageFilter",
     return function(deploys, stageType) {
       if (stageType !== undefined && stageType !== null) {
         return deploys.filter(function(deploy) {
-          return deploy.stageType == stageType;
+          return deploy.production == stageType;
         });
       }
       return deploys;
@@ -147,16 +147,18 @@ samson.factory("Deploys",
 
         $http.get("/deploys/recent.json", { params: { page: Deploys.page } }).
           success(function(data) {
-            if (data && data.length) {
+            var deploys = data.deploys;
+
+            if (deploys && deploys.length) {
               this.page += 1;
-            } else if (data.length === 0) {
+            } else if (deploys.length === 0) {
               this.theEnd = true;
               return;
             }
 
-            for (var i = 0; i < data.length; i++) {
-              data[i].time = localize(data[i].time);
-              this.entries.push(data[i]);
+            for (var i = 0; i < deploys.length; i++) {
+              deploys[i].updated_at = localize(deploys[i].updated_at);
+              this.entries.push(deploys[i]);
             }
           }.bind(Deploys)).
           error(function() {
@@ -175,8 +177,8 @@ samson.factory("Deploys",
 samson.controller("TimelineCtrl", ["$scope", "$window", "Deploys",
 function($scope, $window, Deploys) {
   $scope.userTypes = ["Human", "Robot"];
-  $scope.stageTypes = { "Production": true, "Non-production": false };
-  $scope.deployStatuses = ["Successful", "Non-successful", "Not finished"];
+  $scope.stageTypes = { "Production": true, "Non-Production": false };
+  $scope.deployStatuses = ["Successful", "Unsuccessful", "Unfinished"];
 
   $scope.isSameDate = function(previous, current) {
     if (previous) {

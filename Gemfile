@@ -8,13 +8,9 @@ gem 'sqlite3'
 gem 'mysql2', '~> 0.3'
 
 gem 'kaminari'
-gem 'dogapi', '~> 1.9.1'
 gem 'soft_deletion', '~> 0.4'
 gem 'dalli', '~> 2.7.0'
-gem 'coderay', '~> 1.1.0', require: false
-
-gem 'angularjs-rails'
-gem 'jbuilder'
+gem 'active_model_serializers', '~> 0.8.0'
 
 # We need this specific version of Sawyer (which Octokit uses) because it supports
 # marshalling resources, which we use when caching responses. Once that's been released
@@ -41,6 +37,8 @@ group :assets do
   gem 'bootstrap-x-editable-rails'
 
   gem 'rickshaw_rails'
+
+  gem 'angularjs-rails'
 end
 
 group :no_preload do
@@ -65,6 +63,10 @@ group :no_preload do
 
   gem 'newrelic_api'
   gem 'activeresource'
+
+  gem 'coderay', '~> 1.1.0'
+
+  gem 'dogapi', '~> 1.9.1'
 end
 
 group :development do

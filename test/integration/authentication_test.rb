@@ -5,8 +5,10 @@ describe 'Authentication Integration' do
   let(:user) { users(:admin) }
 
   describe 'basic authentication' do
+    let(:path) { '/' }
+
     setup do
-      get '/', {}, 'HTTP_AUTHORIZATION' => authorization
+      get path, {}, 'HTTP_AUTHORIZATION' => authorization
     end
 
     describe 'successful' do
@@ -29,7 +31,15 @@ describe 'Authentication Integration' do
       end
 
       it 'is unauthorized' do
-        response.status.must_equal(401)
+        response.status.must_equal(302)
+      end
+
+      describe 'json' do
+        let(:path) { '/projects.json' }
+
+        it 'is not found' do
+          response.status.must_equal(404)
+        end
       end
     end
 
