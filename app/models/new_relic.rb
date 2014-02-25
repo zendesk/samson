@@ -28,6 +28,8 @@ module NewRelic
 
     def live_metrics(application_names)
       application_map(application_names) do |app|
+        app.reload
+
         {
           response_time: app.response_time,
           throughput: app.throughput
@@ -106,6 +108,10 @@ module NewRelic
 
     def historic_throughput(time = Time.now.utc, count = 0)
       get_metric('HttpDispatcher', 'requests_per_minute', time)
+    end
+
+    def reload
+      @thresholds = nil
     end
 
     def thresholds
