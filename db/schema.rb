@@ -91,7 +91,7 @@ ActiveRecord::Schema.define(version: 20140203155241) do
     t.string   "notify_email_address"
     t.integer  "order"
     t.datetime "deleted_at"
-    t.boolean  "confirm"
+    t.boolean  "confirm",              default: true
     t.string   "datadog_tags"
   end
 
