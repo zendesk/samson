@@ -2,7 +2,7 @@ require 'coderay'
 
 module DeploysHelper
   def active?
-    @deploy.active? && JobExecution.enabled
+    @deploy.active? && JobExecution.find_by_id(@deploy.job_id)
   end
 
   def file_status_label(status)

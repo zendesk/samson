@@ -13,7 +13,7 @@ class StreamsController < ApplicationController
 
     streamer = EventStreamer.new(response.stream, &method(:event_handler))
 
-    return streamer.finished unless @job.active? && @execution
+    return response.stream.closed unless @job.active? && !@execution
 
     @execution.viewers.push(current_user)
     ActiveRecord::Base.clear_active_connections!
