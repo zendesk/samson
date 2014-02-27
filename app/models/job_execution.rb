@@ -32,17 +32,27 @@ class JobExecution
       begin
         run!
       rescue => e
-        Airbrake.notify(e,
-          error_message: "JobExecution failed: #{e.message}",
-          parameters: {
-            job_id: @job.id
-          }
-        )
+        error!(e)
       ensure
+        @output.close unless @output.closed?
         ActiveRecord::Base.clear_active_connections!
         JobExecution.finished_job(@job)
       end
     end
+  end
+
+  def error!(exception)
+    message = "JobExecution failed: #{exception.message}"
+
+    Airbrake.notify(exception,
+      error_message: message,
+      parameters: {
+        job_id: @job.id
+      }
+    )
+
+    @output.write(message + "\n")
+    @job.error! if @job.active?
   end
 
   def run!
