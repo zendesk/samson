@@ -1,7 +1,7 @@
 require_relative '../../test_helper'
 
 describe Integrations::TravisController do
-  let(:commit) { "123abc" }
+  let(:sha) { "123abc" }
   let(:project) { projects(:test) }
   let(:stage) { stages(:test_staging) }
 
@@ -31,12 +31,11 @@ describe Integrations::TravisController do
       end
     end
 
-=begin
     describe "with no authorization" do
       setup { post :create, token: project.token }
 
-      it "renders 400" do
-        response.status.must_equal(400)
+      it "renders ok" do
+        response.status.must_equal(200)
       end
     end
 
@@ -44,11 +43,10 @@ describe Integrations::TravisController do
       let(:authorization) { "BLAHBLAH" }
       setup { post :create, token: project.token }
 
-      it "renders 400" do
-        response.status.must_equal(400)
+      it "renders ok" do
+        response.status.must_equal(200)
       end
     end
-=end
 
     describe "proper authorization" do
       let(:authorization) do
@@ -73,46 +71,40 @@ describe Integrations::TravisController do
       end
 
       describe "with the master branch" do
-        describe "with an existing user" do
-          let(:user) { users(:deployer) }
+        let(:user) { users(:deployer) }
+        let(:status_message) { 'Passed' }
+        let(:commit_message) { 'A change' }
 
-          let(:payload) {{
-            status_message: 'Passed',
-            branch: 'master',
-            message: 'A change',
-            committer_email: user.email,
-            commit: '123abc',
-            type: 'push'
-          }}
+        let(:payload) {{
+          status_message: status_message,
+          branch: 'master',
+          message: commit_message,
+          committer_email: user.email,
+          commit: sha,
+          type: 'push'
+        }}
 
+        describe "with status_message 'Passed'" do
           it "creates a deploy" do
-            response.status.must_equal(200)
-
-            post :create, payload.merge(token: project.token)
-
             deploy = project.deploys.last
-            deploy.try(:commit).must_equal commit
+            deploy.try(:commit).must_equal(sha)
           end
         end
-      end
-      describe "with the master branch" do
-        describe "with an existing user and [deploy skip] in the message" do
-          let(:user) { users(:deployer) }
 
-          let(:payload) {{
-            status_message: 'Passed',
-            branch: 'master',
-            message: 'A change but this time [deploy skip] is included',
-            committer_email: user.email,
-            commit: '123abc',
-            type: 'push'
-          }}
+        describe "with status_message 'Fixed'" do
+          let(:status_message) { 'Fixed' }
+
+          it "creates a deploy" do
+            deploy = project.deploys.last
+            deploy.try(:commit).must_equal(sha)
+          end
+        end
+
+        describe "with [deploy skip] in the message" do
+          let(:commit_message) { 'A change but this time [deploy skip] is included' }
 
           it "doesn't deploy" do
-            response.status.must_equal(200)
-            post :create, payload.merge(token: project.token)
-
-            project.deploys.must_equal []
+            project.deploys.must_equal([])
           end
         end
       end
