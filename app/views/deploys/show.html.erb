@@ -52,7 +52,7 @@
       </div>
     <% end %>
     <%= render 'deploys/output', deploy: @deploy %>
-    <% unless active? %>
+    <% if @deploy.finished? %>
       <%= link_to "Download log", project_deploy_path(@project, @deploy, format: :text), class: "btn btn-primary pull-right" %>
     <% end %>
   </div>
