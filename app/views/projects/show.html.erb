@@ -1,42 +1,44 @@
 <% content_for :page_title, project.name %>
 
-<h1 class="project-title">
-  <%= project.name %>
-  <%= render partial: "shared/github_link", locals: { project: project } %>
-</h1>
+<% cache project do %>
+  <h1 class="project-title">
+    <%= project.name %>
+    <%= render partial: "shared/github_link", locals: { project: project } %>
+  </h1>
 
-<%= render partial: "shared/project_tabs",
-           locals: { active: "overview" } %>
+  <%= render partial: "shared/project_tabs",
+             locals: { active: "overview" } %>
 
-<div class="col-md-6">
-  <h2>Stages</h2>
-    <table class="project-stages table table-condensed table-striped">
-      <thead>
-        <tr>
-          <th>Name</th>
-          <th>Last Deploy By</th>
-          <th>Release</th>
-          <th></th>
-        </tr>
-      </thead>
-      <tbody>
-        <%= render partial: "stage", collection: @stages %>
-      </tbody>
-  </table>
-</div>
+  <div class="col-md-6">
+    <h2>Stages</h2>
+      <table class="project-stages table table-condensed table-striped">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Last Deploy By</th>
+            <th>Release</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <%= render partial: "stage", collection: @stages %>
+        </tbody>
+    </table>
+  </div>
 
-<div class="col-md-6">
-  <h2>Recent deploys</h2>
-    <table class="table table-condensed table-striped recent-deploys">
-      <thead>
-        <tr>
-          <th>When</th>
-          <th>Who</th>
-          <th>Status</th>
-        </tr>
-      </thead>
-      <tbody>
-        <%= render partial: "deploy", collection: @deploys %>
-      </tbody>
-  </table>
-</div>
+  <div class="col-md-6">
+    <h2>Recent deploys</h2>
+      <table class="table table-condensed table-striped recent-deploys">
+        <thead>
+          <tr>
+            <th>When</th>
+            <th>Who</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <%= render partial: "deploy", collection: @deploys %>
+        </tbody>
+    </table>
+  </div>
+<% end %>
