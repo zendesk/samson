@@ -70,5 +70,7 @@ ZendeskSamson::Application.routes.draw do
     post "/tddium/:token" => "tddium#create", as: :tddium_deploy
   end
 
+  get '/ping', to: 'ping#show'
+
   root to: 'projects#index'
 end
