@@ -5,11 +5,20 @@ class Changeset::PullRequest
   # Matches URLs to JIRA issues.
   JIRA_ISSUE = %r[https://\w+\.atlassian\.net/browse/[\w-]+]
 
+  # Finds the pull request with the given number.
+  #
+  # repo   - The String repository name, e.g. "zendesk/samson".
+  # number - The Integer pull request number.
+  #
+  # Returns a ChangeSet::PullRequest describing the PR or nil if it couldn't
+  #   be found.
   def self.find(repo, number)
     github = Octokit::Client.new(access_token: ENV['GITHUB_TOKEN'])
     data = github.pull_request(repo, number)
 
     new(repo, data)
+  rescue Octokit::NotFound
+    nil
   end
 
   attr_reader :repo

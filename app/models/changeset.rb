@@ -55,7 +55,7 @@ class Changeset
 
   def find_pull_requests
     numbers = commits.map(&:pull_request_number).compact
-    numbers.map {|num| PullRequest.find(repo, num) }
+    numbers.map {|num| PullRequest.find(repo, num) }.compact
   end
 
   class NullComparison
