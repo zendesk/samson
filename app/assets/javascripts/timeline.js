@@ -39,6 +39,31 @@ samson.constant('STATUS_MAPPING',
   }
 );
 
+samson.constant("StatusFilterMapping",
+  {
+    Successful: function(deploys) {
+      return deploys.filter(function(deploy) {
+        return deploy.status === "succeeded";
+      });
+    },
+
+    Unsuccessful: function(deploys) {
+      return deploys.filter(function(deploy) {
+        return deploy.status === "failed" ||
+          deploy.status === "cancelled" ||
+          deploy.status === "cancelling" ||
+          deploy.status === "errored";
+      });
+    },
+
+    Unfinished: function(deploys) {
+      return deploys.filter(function(deploy) {
+        return deploy.status === "running" || deploy.status === "pending";
+      });
+    }
+  }
+);
+
 samson.filter("userFilter",
   function() {
     var hookSources = /^(?:travis|tddium|semaphore)$/i;
@@ -68,30 +93,14 @@ samson.filter("stageFilter",
 );
 
 samson.filter("statusFilter",
-  function() {
+  ["StatusFilterMapping", function(StatusFilterMapping) {
     return function(deploys, status) {
       if (status !== undefined && status !== null) {
-        switch (status) {
-          case "Unfinished":
-            return deploys.filter(function(deploy) {
-              return deploy.status === "running" || deploy.status === "pending";
-            });
-          case "Successful":
-            return deploys.filter(function(deploy) {
-              return deploy.status === "succeeded";
-            });
-          case "Unsuccessful":
-            return deploys.filter(function(deploy) {
-              return deploy.status === "failed" ||
-                deploy.status === "cancelled" ||
-                deploy.status === "cancelling" ||
-                deploy.status === "errored";
-            });
-        }
+        return StatusFilterMapping[status](deploys);
       }
       return deploys;
     };
-  }
+  }]
 );
 
 samson.filter("statusToIcon",
@@ -174,11 +183,11 @@ samson.factory("Deploys",
   }]
 );
 
-samson.controller("TimelineCtrl", ["$scope", "$window", "Deploys",
-function($scope, $window, Deploys) {
+samson.controller("TimelineCtrl", ["$scope", "$window", "Deploys", "StatusFilterMapping",
+function($scope, $window, Deploys, StatusFilterMapping) {
   $scope.userTypes = ["Human", "Robot"];
   $scope.stageTypes = { "Production": true, "Non-Production": false };
-  $scope.deployStatuses = ["Successful", "Unsuccessful", "Unfinished"];
+  $scope.deployStatuses = Object.keys(StatusFilterMapping);
 
   $scope.isSameDate = function(previous, current) {
     if (previous) {
