@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20140203155241) do
+ActiveRecord::Schema.define(version: 20140227211403) do
 
   create_table "commands", force: true do |t|
     t.text     "command",    limit: 16777215
@@ -91,8 +91,9 @@ ActiveRecord::Schema.define(version: 20140203155241) do
     t.string   "notify_email_address"
     t.integer  "order"
     t.datetime "deleted_at"
-    t.boolean  "confirm"
+    t.boolean  "confirm",              default: true
     t.string   "datadog_tags"
+    t.boolean  "deployment",           default: true
   end
 
   create_table "users", force: true do |t|
