@@ -92,11 +92,11 @@ describe("Timeline", function() {
         });
 
         it("finds non-successful deploys", function() {
-          expect(filter(deploys, "Non-successful").length).toBe(3);
+          expect(filter(deploys, "Unsuccessful").length).toBe(3);
         });
 
         it("finds not finished deploys", function() {
-          expect(filter(deploys, "Not finished").length).toBe(1);
+          expect(filter(deploys, "Unfinished").length).toBe(1);
         });
       });
     });
