@@ -72,7 +72,7 @@ samson.filter("statusFilter",
     return function(deploys, status) {
       if (status !== undefined && status !== null) {
         switch (status) {
-          case "Not finished":
+          case "Unfinished":
             return deploys.filter(function(deploy) {
               return deploy.status === "running" || deploy.status === "pending";
             });
@@ -80,7 +80,7 @@ samson.filter("statusFilter",
             return deploys.filter(function(deploy) {
               return deploy.status === "succeeded";
             });
-          case "Non-successful":
+          case "Unsuccessful":
             return deploys.filter(function(deploy) {
               return deploy.status === "failed" ||
                 deploy.status === "cancelled" ||
