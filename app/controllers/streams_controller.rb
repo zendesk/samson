@@ -15,6 +15,7 @@ class StreamsController < ApplicationController
 
     return response.stream.close unless @job.active? && @execution
 
+    Rails.logger.info("Opening stream for #{response.stream.object_id}")
     @execution.viewers.push(current_user)
     ActiveRecord::Base.clear_active_connections!
     streamer.start(@execution.output)

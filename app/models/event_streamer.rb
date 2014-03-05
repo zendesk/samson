@@ -71,6 +71,7 @@ class EventStreamer
     Thread.new do
       begin
         while !finished?
+          Rails.logger.info("Stream for #{@stream.object_id} still open")
           @stream.write("data: \n\n")
           sleep(5) # Timeout of 5 seconds
         end
