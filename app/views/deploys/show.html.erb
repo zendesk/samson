@@ -98,7 +98,6 @@
   <%= javascript_tag do %>
     startDeployStream();
   <% end %>
-
 <% elsif !@deploy.finished? %>
   <div class="alert alert-info">
     Samson is currently restarting, your deploy has been queued and will be resumed shortly.

@@ -108,6 +108,7 @@ class JobExecution
     end
 
     FileUtils.mkdir_p(artifact_cache_dir)
+    @output.write("Executing deploy\n")
 
     commands = [
       "export DEPLOYER=#{@job.user.email}",
@@ -125,6 +126,7 @@ class JobExecution
 
   def setup!(dir)
     repo_url = @job.project.repository_url
+    @output.write("Beginning git repo setup\n")
 
     commands = [
       <<-SHELL,
@@ -168,17 +170,18 @@ class JobExecution
 
   def grab_lock
     lock = false
-    start_time = Time::now
-    i = 0
-    end_time = start_time + 10.minutes
-    until (lock || Time::now > end_time) do
+    end_time = Time.now + 10.minutes
+
+    until lock || Time.now > end_time
       sleep 1
-      i += 1
-      if (i % 10 == 0)
+
+      if Time.now.to_i % 10 == 0
         @output.write("Waiting for repository while cloning for: #{ProjectLock.owner(@job.project)}\n")
       end
+
       lock ||= ProjectLock.grab(@job.project, @job.deploy.stage)
     end
+
     lock
   end
 
