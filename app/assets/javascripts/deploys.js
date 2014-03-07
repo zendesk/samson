@@ -147,24 +147,48 @@ $(function () {
     event.preventDefault();
   });
 
+  function shrinkOutput() {
+    $("#messages").css("max-height", 550);
+  }
+
   $("#output-follow").click(function(event) {
-    var $messages = $("#messages");
     following = true;
-    $messages.scrollTop($messages.prop("scrollHeight"));
-    $messages.css("max-height", 550);
+
+    shrinkOutput();
+    $("#messages").scrollTop($messages.prop("scrollHeight"));
+
     $("#output-options > button").removeClass("active");
     $(this).addClass("active");
   });
 
-  $("#output-grow").click(function(event) {
+  function growOutput() {
     $("#messages").css("max-height", "none");
+  }
+
+  $("#output-grow-toggle").click(function(event) {
+    $self = $(this);
+
+    if($self.hasClass("active")) {
+      shrinkOutput();
+      $self.removeClass("active");
+    } else {
+      growOutput();
+      $self.addClass("active");
+    }
+  });
+
+  $("#output-grow").click(function(event) {
+    growOutput();
+
     $("#output-options > button").removeClass("active");
     $(this).addClass("active");
   });
 
   $("#output-steady").click(function(event) {
     following = false;
-    $("#messages").css("max-height", 550);
+
+    shrinkOutput();
+
     $("#output-options > button").removeClass("active");
     $(this).addClass("active");
   });
