@@ -1,4 +1,6 @@
 class GithubAuthorization
+  attr_reader :login
+
   def initialize(login, token)
     @login = login
     @github = Octokit::Client.new(access_token: token)
@@ -25,7 +27,7 @@ class GithubAuthorization
   end
 
   def team_member?(team)
-    team && @github.team_member?(team.id, @login)
+    team && @github.team_member?(team.id, login)
   end
 
   def config

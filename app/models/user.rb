@@ -18,12 +18,11 @@ class User < ActiveRecord::Base
 
     if role_id && (user.new_record? || role_id >= user.role_id)
       user.role_id = role_id
+    elsif !User.exists?
+      user.role_id = Role::ADMIN.id
     end
 
     user.attributes = hash
-    unless User.exists?
-      user.role_id = Role::ADMIN.id
-    end
     user.tap(&:save)
   end
 

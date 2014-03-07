@@ -50,6 +50,27 @@ describe User do
       end
     end
 
+    describe 'with no other users' do
+      let(:hash) {{
+        :name => "Test User",
+        :email => "test@example.org"
+      }}
+
+      setup { User.destroy_all }
+
+      it "creates a new user" do
+        user.persisted?.must_equal(true)
+      end
+
+      it "sets the current token" do
+        user.current_token.must_match(/[a-z0-9]+/)
+      end
+
+      it "sets the role_id" do
+        user.role_id.must_equal(Role::ADMIN.id)
+      end
+    end
+
     describe "with an existing user" do
       let(:hash) {{
         :name => "Test User",

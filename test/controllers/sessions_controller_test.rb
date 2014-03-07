@@ -31,13 +31,13 @@ describe SessionsController do
       Hashie::Mash.new(
         info: Hashie::Mash.new(
           name: user.name,
-          email: user.email
+          email: 'hello'
         )
       )
     end
 
     setup do
-      @controller.stubs(github_authorization: stub(role_id: Role::VIEWER.id))
+      @controller.stubs(github_authorization: stub(login: user.email, role_id: Role::VIEWER.id))
 
       @request.env.merge!(env)
       @request.env.merge!('omniauth.auth' => auth_hash)
