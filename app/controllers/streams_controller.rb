@@ -38,14 +38,14 @@ class StreamsController < ApplicationController
   def finished_response
     @execution.viewers.delete(current_user) if @execution
 
-    ActiveRecord::Base.connection_pool.with_connection do |connection|
-      connection.verify!
+    ActiveRecord::Base.connection.verify!
 
-      @job.reload
+    @job.reload
 
-      @project = @job.project
-      @deploy = @job.deploy
-    end
+    @project = @job.project
+    @deploy = @job.deploy
+
+    ActiveRecord::Base.clear_active_connections!
 
     JSON.dump(html: render_to_body(partial: 'deploys/header', formats: :html))
   end

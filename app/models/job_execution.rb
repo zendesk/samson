@@ -64,22 +64,20 @@ class JobExecution
       execute!(dir)
     end
 
-    ActiveRecord::Base.connection_pool.with_connection do |connection|
-      connection.verify!
+    ActiveRecord::Base.connection.verify!
 
-      if result
-        @job.success!
-      else
-        @job.fail!
-      end
+    if result
+      @job.success!
+    else
+      @job.fail!
+    end
 
-      @output.close
+    @output.close
 
-      @job.update_output!(output_aggregator.to_s)
+    @job.update_output!(output_aggregator.to_s)
 
-      @subscribers.each do |subscriber|
-        subscriber.call(@job)
-      end
+    @subscribers.each do |subscriber|
+      subscriber.call(@job)
     end
   end
 
