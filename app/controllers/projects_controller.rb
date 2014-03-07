@@ -54,7 +54,7 @@ class ProjectsController < ApplicationController
   def releases
     @releases = ReleaseList.latest_releases_for(project.github_repo)
 
-    render json: @releases
+    render json: @releases.to_json
   end
 
   def update
