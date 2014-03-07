@@ -5,7 +5,6 @@ require 'zendesk/deployment/airbrake'
 set :application, 'samson'
 set :repository,  'git@github.com:zendesk/samson'
 set :environments, [:staging, :pod3]
-set :ruby_version, '2.0.0'
 set :require_tag?, false
 set :email_notification, ['deploys@zendesk.com', 'samson@zendesk.flowdock.com', 'epahl@zendesk.com']
 set :user, 'deploy'
