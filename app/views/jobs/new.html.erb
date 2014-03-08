@@ -40,12 +40,12 @@
           </div>
         </div>
       <% end %>
-
-      <hr />
-
-      <p>Add commands which are specific to your job</p>
-      <%= form.text_area :command, class: "form-control", rows: 4, value: nil, placeholder: 'cap production deploy:switch' %>
     </div>
+
+    <hr />
+
+    <p>Add commands which are specific to your job</p>
+    <%= form.text_area :command, class: "form-control", rows: 4, value: nil, placeholder: 'cap production deploy:switch' %>
   </fieldset>
 
   <%= javascript_tag do %>
