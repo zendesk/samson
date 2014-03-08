@@ -1,7 +1,7 @@
 require 'coderay'
 
 module DeploysHelper
-  def active?
+  def deploy_active?
     @deploy.active? && (JobExecution.find_by_id(@deploy.job_id) || JobExecution.enabled)
   end
 

@@ -6,7 +6,7 @@
 
 <%= render 'header' %>
 
-<% if active? %>
+<% if job_active? %>
   <div class="row" id="output" data-stream-url="<%= deploy_stream_path(@job) %>">
     <div class="btn-toolbar col-md-4 col-md-offset-7 pull-right only-active">
       <div id="output-options" class="btn-group">
@@ -37,7 +37,7 @@
   </div>
 <% end %>
 
-<% if active? %>
+<% if job_active? %>
   <%= javascript_tag do %>
     startDeployStream();
   <% end %>

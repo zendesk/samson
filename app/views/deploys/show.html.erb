@@ -19,7 +19,7 @@
   <li><a href="#risks" data-type="github" data-toggle="tab">Risks</a></li>
   <li><a href="#jira-issues" data-type="jira" data-toggle="tab">JIRA Issues</a></li>
 
-<% if active? %>
+<% if deploy_active? %>
   <li><a href="#viewers" data-toggle="tab" id="viewers-link">Viewers <span class="badge">0</span></a></li>
 
   <% if NewRelicApi.api_key.present? %>
@@ -66,7 +66,7 @@
       </div>
     <% end %>
 
-  <% if active? %>
+  <% if deploy_active? %>
     <div class="tab-pane" id="viewers">
       No other viewers.
     </div>
@@ -91,7 +91,7 @@
   <% end %>
   </div>
 
-  <% if active? %>
+  <% if deploy_active? %>
     <%= javascript_tag do %>
       toggleOutputToolbar();
       startDeployStream();
