@@ -13,7 +13,7 @@
     <% @commands.each do |command| %>
       <tr>
         <td>
-          <pre class="pre-command pre-scrollable"><%= command.command %></pre>
+          <pre class="pre-command admin-command pre-scrollable"><%= command.command %></pre>
         </td>
         <td><%= command.project.try(:name) ? command.project.name : "Global" %></td>
         <td>

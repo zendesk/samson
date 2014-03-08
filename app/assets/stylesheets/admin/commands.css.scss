@@ -3,8 +3,11 @@
 }
 
 .pre-command {
-  max-width: 1000px;
   background-color: #222222;
   border-color: #090909;
   color: white;
+}
+
+.pre-command.admin-command {
+  max-width: 1000px;
 }
