@@ -155,7 +155,9 @@ $(function () {
     following = true;
 
     shrinkOutput();
-    $("#messages").scrollTop($messages.prop("scrollHeight"));
+
+    var $messages = $("#messages");
+    $messages.scrollTop($messages.prop("scrollHeight"));
 
     $("#output-options > button").removeClass("active");
     $(this).addClass("active");
@@ -166,7 +168,7 @@ $(function () {
   }
 
   $("#output-grow-toggle").click(function(event) {
-    $self = $(this);
+    var $self = $(this);
 
     if($self.hasClass("active")) {
       shrinkOutput();
