@@ -10,17 +10,26 @@ if !Rails.env.test? && Job.table_exists?
   end
 
   Signal.trap('SIGUSR1') do
-    # Disable new job execution
-    JobExecution.enabled = false
+    if JobExecution.enabled
+      # Disable new job execution
+      JobExecution.enabled = false
 
-    until JobExecution.all.empty?
-      puts "Waiting for jobs: #{JobExecution.all.map {|je| je.job.id}}"
-      sleep(5)
+      until JobExecution.all.empty?
+        puts "Waiting for jobs: #{JobExecution.all.map {|je| je.job.id}}"
+        sleep(5)
+      end
+
+      puts "Passing SIGUSR2 on."
+
+      # Pass USR2 to the underlying server
+      Process.kill('SIGUSR2', $$)
+    else
+      puts "Received USR1 at #{Time.now}. Dumping threads:"
+      Thread.list.each do |t|
+        trace = t.backtrace.join("\n")
+        puts trace
+        puts "---"
+      end
     end
-
-    puts "Passing SIGUSR2 on."
-
-    # Pass USR2 to the underlying server
-    Process.kill('SIGUSR2', $$)
   end
 end
