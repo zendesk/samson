@@ -12,7 +12,7 @@ class SessionsController < ApplicationController
   end
 
   def github
-    login_user(email: github_authorization.login, role_id: github_authorization.role_id)
+    login_user(role_id: github_authorization.role_id)
   end
 
   def zendesk
@@ -70,7 +70,7 @@ class SessionsController < ApplicationController
   def login_user(options = {})
     user = User.create_or_update_from_hash(options.merge(
       name: auth_hash.info.name,
-      email: options.delete(:email) || auth_hash.info.email
+      email: auth_hash.info.email
     ))
 
     if user
