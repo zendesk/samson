@@ -76,6 +76,8 @@ class EventStreamer
         end
       rescue IOError
         finished
+      ensure
+        ActiveRecord::Base.clear_active_connections!
       end
     end
   end
