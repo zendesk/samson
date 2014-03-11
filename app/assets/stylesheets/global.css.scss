@@ -5,6 +5,10 @@ body {
   height: 100%;
 }
 
+body {
+  background: #e2e2e2;
+}
+
 a {
   color: #358cce;
 }
@@ -21,23 +25,26 @@ h5 {
 }
 
 h1 {
-  font-size: 28px;
-  line-height: 28px;
-  margin-bottom: 10px;
-  margin-top: 36px;
+  color: #666;
+  font-size: 20px;
+  font-weight: normal;
+  line-height: 20px;
+  margin-bottom: 30px;
+  margin-top: 30px;
   padding-bottom: 10px;
+  border-bottom: 1px solid #c5c5c5;
 }
 
 h2 {
   margin-top: 30px;
-  font-size: 23px;
-  line-height: 23px;
+  font-size: 18px;
+  line-height: 18px;
 }
 
 h3 {
   margin-top: 30px;
-  font-size: 18px;
-  line-height: 28px;
+  font-size: 16px;
+  line-height:16px;
 }
 
 
@@ -49,6 +56,17 @@ h3 {
   height: 100%;
   margin: 0 auto -60px;
   padding-bottom: 80px;
+}
+
+.container section {
+  background: #FFF;
+  border-radius: 3px;
+  padding: 20px;
+  margin-top: 20px;
+
+  h2:first-child {
+    margin-top: 0;
+  }
 }
 
 
@@ -74,6 +92,8 @@ h3 {
 }
 
 .navbar-inverse {
+  background-color: #333;
+  border-color: #333;
 
   .btn-default {
     background: #585858;
@@ -112,6 +132,43 @@ h3 {
   }
 }
 
+/* Labels */
+.label {
+  padding: .3em 0.65em .35em;
+  border-radius: .2em;
+}
+
+.label-success {
+  background-color: #00a704;
+}
+
+/* Buttons */
+
+.btn .btn-primary .disabled {
+  background: #333;
+}
+
+/* Tables */
+
+.table {
+  thead {
+    tr {
+      th {
+        border-bottom: 1px solid #DDD;
+        text-transform: uppercase;
+        padding: 15px 20px;
+      }
+    }
+  }
+  tbody {
+    tr {
+      td {
+        padding: 15px 20px;
+        border-bottom: 1px solid #f5f5f5;
+      }
+    }
+  }
+}
 
 /* Footer */
 

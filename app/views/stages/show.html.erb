@@ -10,9 +10,11 @@
  <div class="alert alert-warning">Deployments to this stage were locked by <%= @stage.lock.user.name %> <%= time_ago_in_words(@stage.lock.created_at) %> ago.</div>
 <% end %>
 
-<h1>
-  <%= @stage.name %>
-  <div class="pull-right">
+<h1><%= @stage.name %></h1>
+
+<section>
+  <h2>Actions</h2>
+  <div>
     <%= deploy_link @project, @stage %>
     <% if @stage.locked? %>
       <%= link_to project_stage_lock_path(@project, @stage), class: 'btn btn-default', method: :delete do %>
@@ -28,22 +30,22 @@
       <i class="glyphicon glyphicon-remove"></i> Delete
     <% end %>
   </div>
-</h1>
 
-<h3>Command</h3>
-<pre class="pre-command"><%= @stage.command %></pre>
+  <h2>Command</h2>
+  <pre class="pre-command"><%= @stage.command %></pre>
 
-<h3>Recent deploys</h3>
-<table class="table table-striped">
-  <thead>
-    <tr>
-      <th>When</th>
-      <th>Who</th>
-      <th>Status</th>
-    </tr>
-  </thead>
-  <tbody>
-    <%= render partial: "/projects/deploy", collection: @deploys %>
-  </tbody>
-</table>
-<%= paginate @deploys %>
+  <h2>Recent deploys</h2>
+  <table class="table">
+    <thead>
+      <tr>
+        <th>When</th>
+        <th>Who</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      <%= render partial: "/projects/deploy", collection: @deploys %>
+    </tbody>
+  </table>
+  <%= paginate @deploys %>
+</section>
