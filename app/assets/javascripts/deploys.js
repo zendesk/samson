@@ -237,7 +237,7 @@ function startDeployStream() {
 
     source.addEventListener('finished', function(e) {
       $('#header').html(JSON.parse(e.data).html);
-      $('.only-active').hide();
+      $('.only-active, .only-finished').toggle();
       source.close();
     }, false);
   });
