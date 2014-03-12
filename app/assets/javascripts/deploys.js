@@ -160,7 +160,7 @@ $(function () {
     var $messages = $("#messages");
     $messages.scrollTop($messages.prop("scrollHeight"));
 
-    $("#output-options > button").removeClass("active");
+    $("#output-options > button, #output-grow-toggle").removeClass("active");
     $(this).addClass("active");
   });
 
@@ -185,6 +185,7 @@ $(function () {
 
     $("#output-options > button").removeClass("active");
     $(this).addClass("active");
+    $("#output-grow-toggle").addClass("active");
   });
 
   $("#output-steady").click(function(event) {
