@@ -13,6 +13,7 @@
 //= require jquery
 //= require jquery_ujs
 //= require angular
+//= require moment
 //= require bootstrap/alert
 //= require bootstrap/dropdown
 //= require bootstrap/tab

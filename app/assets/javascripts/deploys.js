@@ -44,6 +44,7 @@ $(function () {
         localDate = new Date(parseInt(utcms));
 
     this.title = localDate.toString();
+    this.innerHTML = moment(localDate).fromNow();
   });
 
   var prefetchUrl = $("#deploy_reference").data("prefetchUrl");
