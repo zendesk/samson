@@ -132,6 +132,8 @@ GEM
       rails (>= 3.0)
     mocha (0.14.0)
       metaclass (~> 0.0.1)
+    momentjs-rails (2.5.1)
+      railties (>= 3.1)
     multi_json (1.8.4)
     multi_xml (0.5.5)
     multipart-post (2.0.0)
@@ -265,6 +267,7 @@ DEPENDENCIES
   jquery-ui-rails
   kaminari
   minitest-rails (~> 0.9)
+  momentjs-rails
   mysql2 (~> 0.3)
   newrelic_api
   newrelic_rpm (>= 3.7.1)

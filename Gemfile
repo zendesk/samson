@@ -39,6 +39,8 @@ group :assets do
   gem 'rickshaw_rails'
 
   gem 'angularjs-rails'
+
+  gem 'momentjs-rails'
 end
 
 group :no_preload do
