@@ -92,7 +92,7 @@
 
 <% if active? %>
   <%= javascript_tag do %>
-    $('.only-active, .only-finished').toggle();
+    toggleOutputToolbar();
     startDeployStream();
   <% end %>
 <% elsif !@deploy.finished? %>

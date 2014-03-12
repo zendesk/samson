@@ -196,6 +196,10 @@ $(function () {
   });
 });
 
+function toggleOutputToolbar() {
+  $('.only-active, .only-finished').toggle();
+}
+
 function startDeployStream() {
   $(document).ready(function() {
     var messages = $("#messages");
@@ -237,7 +241,7 @@ function startDeployStream() {
 
     source.addEventListener('finished', function(e) {
       $('#header').html(JSON.parse(e.data).html);
-      $('.only-active, .only-finished').toggle();
+      toggleOutputToolbar();
       source.close();
     }, false);
   });
