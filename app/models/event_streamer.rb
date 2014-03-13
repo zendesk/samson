@@ -25,7 +25,6 @@
 #
 class EventStreamer
   def initialize(stream, &block)
-    @finished = false
     @mutex = Mutex.new
 
     @stream = stream
@@ -51,8 +50,6 @@ class EventStreamer
   end
 
   def finished
-    finished!
-
     emit_event('finished', @handler.call(:finished, ''))
   rescue IOError
     # Raised on stream close
@@ -70,7 +67,7 @@ class EventStreamer
   def start_heartbeat!
     Thread.new do
       begin
-        while !finished?
+        until @stream.closed?
           @mutex.synchronize { @stream.write("data: \n\n") }
           sleep(5) # Timeout of 5 seconds
         end
@@ -80,13 +77,5 @@ class EventStreamer
         ActiveRecord::Base.clear_active_connections!
       end
     end
-  end
-
-  def finished?
-    @finished == true
-  end
-
-  def finished!
-    @finished = true
   end
 end
