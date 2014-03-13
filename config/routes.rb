@@ -1,6 +1,4 @@
 ZendeskSamson::Application.routes.draw do
-  get 'streams/show'
-
   resources :projects do
     resources :deploys, only: [:index, :new, :create, :show, :destroy] do
       collection do

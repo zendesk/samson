@@ -57,21 +57,21 @@ class EventStreamer
   rescue IOError
     # Raised on stream close
   ensure
-    @stream.close
+    @mutex.synchronize { @stream.close }
   end
 
   private
 
   def emit_event(name, data = "")
     Rails.logger.debug("#{name}: #{data.inspect}")
-    @stream.write("event: #{name}\ndata: #{data}\n\n")
+    @mutex.synchronize { @stream.write("event: #{name}\ndata: #{data}\n\n") }
   end
 
   def start_heartbeat!
     Thread.new do
       begin
         while !finished?
-          @stream.write("data: \n\n")
+          @mutex.synchronize { @stream.write("data: \n\n") }
           sleep(5) # Timeout of 5 seconds
         end
       rescue IOError
@@ -83,10 +83,10 @@ class EventStreamer
   end
 
   def finished?
-    @mutex.synchronize { @finished == true }
+    @finished == true
   end
 
   def finished!
-    @mutex.synchronize { @finished = true }
+    @finished = true
   end
 end
