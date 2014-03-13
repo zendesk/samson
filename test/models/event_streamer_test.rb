@@ -6,6 +6,7 @@ describe EventStreamer do
 
     def initialize
       @lines = []
+      @buf = Queue.new
     end
 
     def write(data)

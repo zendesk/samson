@@ -25,8 +25,6 @@
 #
 class EventStreamer
   def initialize(stream, &block)
-    @mutex = Mutex.new
-
     @stream = stream
     @handler = block || proc {|_, x|
       if x.present?
@@ -54,21 +52,28 @@ class EventStreamer
   rescue IOError
     # Raised on stream close
   ensure
-    @mutex.synchronize { @stream.close }
+    # Hackity-hack: clear out the buffer since
+    # the heartbeat thread may be blocked waiting
+    # to get into the queue or vice-versa
+    buffer = @stream.instance_variable_get(:@buf)
+    buffer.pop(true) while buffer.num_waiting > 0
+
+    @stream.close
   end
 
   private
 
   def emit_event(name, data = "")
     Rails.logger.debug("#{name}: #{data.inspect}")
-    @mutex.synchronize { @stream.write("event: #{name}\ndata: #{data}\n\n") }
+    @stream.write("event: #{name}\ndata: #{data}\n\n")
   end
 
   def start_heartbeat!
     Thread.new do
       begin
         until @stream.closed?
-          @mutex.synchronize { @stream.write("data: \n\n") }
+          Rails.logger.debug("writing heartbeat")
+          @stream.write("data: \n\n")
           sleep(5) # Timeout of 5 seconds
         end
       rescue IOError
