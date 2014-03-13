@@ -56,7 +56,7 @@ class EventStreamer
     # the heartbeat thread may be blocked waiting
     # to get into the queue or vice-versa
     buffer = @stream.instance_variable_get(:@buf)
-    buffer.pop(true) while buffer.num_waiting > 0
+    buffer.clear
 
     @stream.close
   end
