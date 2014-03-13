@@ -54,14 +54,15 @@ class EventStreamer
   ensure
     ActiveRecord::Base.clear_active_connections!
 
-    @stream.close
-
     # Hackity-hack: clear out the buffer since
     # the heartbeat thread may be blocked waiting
     # to get into the queue or vice-versa
     sleep(2)
+
     buffer = @stream.instance_variable_get(:@buf)
     buffer.clear
+
+    @stream.close
   end
 
   private
