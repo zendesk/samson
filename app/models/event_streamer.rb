@@ -71,8 +71,7 @@ class EventStreamer
   def start_heartbeat!
     Thread.new do
       begin
-        until @stream.closed?
-          Rails.logger.debug("writing heartbeat")
+        while true
           @stream.write("data: \n\n")
           sleep(5) # Timeout of 5 seconds
         end
