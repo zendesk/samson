@@ -52,6 +52,8 @@ class EventStreamer
   rescue IOError
     # Raised on stream close
   ensure
+    ActiveRecord::Base.clear_active_connections!
+
     # Hackity-hack: clear out the buffer since
     # the heartbeat thread may be blocked waiting
     # to get into the queue or vice-versa
@@ -77,8 +79,6 @@ class EventStreamer
         end
       rescue IOError
         finished
-      ensure
-        ActiveRecord::Base.clear_active_connections!
       end
     end
   end

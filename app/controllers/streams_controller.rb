@@ -44,8 +44,6 @@ class StreamsController < ApplicationController
     @project = @job.project
     @deploy = @job.deploy
 
-    ActiveRecord::Base.clear_active_connections!
-
     JSON.dump(html: render_to_body(partial: 'deploys/header', formats: :html))
   end
 end
