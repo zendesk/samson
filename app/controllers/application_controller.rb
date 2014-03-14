@@ -1,4 +1,6 @@
 class ApplicationController < ActionController::Base
+  before_filter :pass_request
+
   rescue_from ActionController::ParameterMissing do
     redirect_to root_path
   end
@@ -19,4 +21,9 @@ class ApplicationController < ActionController::Base
   def verified_request?
     warden.winning_strategy || super
   end
+
+  def pass_request
+    $request = request
+  end
+
 end
