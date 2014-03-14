@@ -1,8 +1,8 @@
 <div class="timeline-entry clearfix"
   ng-repeat="deploy in (deploys = (timelineDeploys.entries | filter:search | userFilter:userType | stageFilter:stageType | statusFilter:deployStatus))">
 
-  <div ng-hide="isSameDate(deploys[$index - 1].updated_at, deploy.updated_at)">
-    <h3 class="timeline-date">{{deploy.updated_at | fullDate}}</h3>
+  <div ng-hide="isSameDate(deploys[$index - 1].localized_updated_at, deploy.localized_updated_at)">
+    <h3 class="timeline-date">{{deploy.localized_updated_at | fullDate}}</h3>
   </div>
 
   <div class="timeline-entry-main">
@@ -17,7 +17,7 @@
       <div class="clearfix">
         <img class="timeline-gravatar img-circle" ng-src="{{deploy.user.gravatar_url}}" title="{{deploy.user.name}}" alt="Gravatar">
         <div class="timeline-who">
-          {{deploy.user.name}} <span class="timeline-time">{{deploy.updated_at_ago}} ago</span>
+          {{deploy.user.name}} <span data-time="{{deploy.updated_at}}" class="timeline-time">{{deploy.updated_at_ago}}</span>
         </div>
       </div>
     </a>

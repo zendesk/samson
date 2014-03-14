@@ -166,7 +166,8 @@ samson.factory("Deploys",
             }
 
             for (var i = 0; i < deploys.length; i++) {
-              deploys[i].updated_at = localize(deploys[i].updated_at);
+              deploys[i].localized_updated_at = localize(deploys[i].updated_at);
+              deploys[i].updated_at_ago = moment(deploys[i].updated_at).fromNow();
               this.entries.push(deploys[i]);
             }
           }.bind(Deploys)).
