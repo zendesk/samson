@@ -1,7 +1,7 @@
 source 'https://rubygems.org'
 
 gem 'dotenv-rails', '~> 0.9.0'
-gem 'rails', '4.0.3'
+gem 'rails', '4.0.4'
 gem 'puma'
 
 gem 'sqlite3'
