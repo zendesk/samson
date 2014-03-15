@@ -13,6 +13,11 @@ a {
   color: #358cce;
 }
 
+dt,
+dd {
+  line-height: 1.6;
+}
+
 
 /* Headers */
 
@@ -66,6 +71,11 @@ h3 {
 
   h2:first-child {
     margin-top: 0;
+  }
+
+  &.tabs {
+    margin-top: 0;
+    border-radius-top-left: 0;
   }
 }
 
@@ -121,7 +131,17 @@ h3 {
 }
 
 .nav-tabs {
-  margin-bottom: 20px;
+  border-bottom: none;
+
+  > li,
+  > li.active {
+    margin-bottom: 0px;
+
+    a,
+    a:hover {
+      border: none;
+    }
+  }
 }
 
 .logout-btn {
