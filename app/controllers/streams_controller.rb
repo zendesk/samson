@@ -13,7 +13,7 @@ class StreamsController < ApplicationController
 
     streamer = EventStreamer.new(response.stream, &method(:event_handler))
 
-    return streamer.finished unless @job.active? && @execution
+    return response.stream.close unless @job.active? && @execution
 
     @execution.viewers.push(current_user)
     ActiveRecord::Base.clear_active_connections!
@@ -37,14 +37,12 @@ class StreamsController < ApplicationController
   def finished_response
     @execution.viewers.delete(current_user) if @execution
 
-    ActiveRecord::Base.connection_pool.with_connection do |connection|
-      connection.verify!
+    ActiveRecord::Base.connection.verify!
 
-      @job.reload
+    @job.reload
 
-      @project = @job.project
-      @deploy = @job.deploy
-    end
+    @project = @job.project
+    @deploy = @job.deploy
 
     JSON.dump(html: render_to_body(partial: 'deploys/header', formats: :html))
   end

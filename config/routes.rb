@@ -1,6 +1,4 @@
 ZendeskSamson::Application.routes.draw do
-  get 'streams/show'
-
   resources :projects do
     resources :deploys, only: [:index, :new, :create, :show, :destroy] do
       collection do
@@ -69,6 +67,8 @@ ZendeskSamson::Application.routes.draw do
     post "/semaphore/:token" => "semaphore#create", as: :semaphore_deploy
     post "/tddium/:token" => "tddium#create", as: :tddium_deploy
   end
+
+  get '/ping', to: 'ping#show'
 
   root to: 'projects#index'
 end

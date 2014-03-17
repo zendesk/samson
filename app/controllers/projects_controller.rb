@@ -12,7 +12,7 @@ class ProjectsController < ApplicationController
   def index
     respond_to do |format|
       format.html do
-        @projects = Project.alphabetical.includes(stages: [:current_deploy, :last_deploy, { lock: :user }])
+        @projects = Project.alphabetical.includes(stages: [:current_deploy, { lock: :user }])
       end
 
       format.json do
@@ -54,7 +54,7 @@ class ProjectsController < ApplicationController
   def releases
     @releases = ReleaseList.latest_releases_for(project.github_repo)
 
-    render json: @releases
+    render json: @releases.to_json
   end
 
   def update

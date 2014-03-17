@@ -7,6 +7,31 @@ describe Changeset::PullRequest do
   let(:merged_by) { stub(login: "bar") }
   let(:body) { "" }
 
+  describe ".find" do
+    let(:octokit) { stub("octokit") }
+
+    before do
+      Octokit::Client.stubs(:new).returns(octokit)
+    end
+
+    it "finds the pull request" do
+      octokit.stubs(:pull_request).with("foo/bar", 42).returns(data)
+      data.stubs(:title).returns("Make it bigger!")
+
+      pr = Changeset::PullRequest.find("foo/bar", 42)
+
+      pr.title.must_equal "Make it bigger!"
+    end
+
+    it "returns nil if the pull request could not be found" do
+      octokit.stubs(:pull_request).with("foo/bar", 42).raises(Octokit::NotFound)
+
+      pr = Changeset::PullRequest.find("foo/bar", 42)
+
+      pr.must_be_nil
+    end
+  end
+
   describe "#users" do
     it "returns the users associated with the pull request" do
       pr.users.map(&:login).must_equal ["foo", "bar"]

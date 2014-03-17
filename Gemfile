@@ -1,7 +1,7 @@
 source 'https://rubygems.org'
 
 gem 'dotenv-rails', '~> 0.9.0'
-gem 'rails', '4.0.3'
+gem 'rails', '4.0.4'
 gem 'puma'
 
 gem 'sqlite3'
@@ -39,6 +39,8 @@ group :assets do
   gem 'rickshaw_rails'
 
   gem 'angularjs-rails'
+
+  gem 'momentjs-rails'
 end
 
 group :no_preload do
@@ -82,5 +84,5 @@ group :test do
 end
 
 group :deployment do
-  gem 'zendesk_deployment', git: 'git@github.com:zendesk/zendesk_deployment.git', ref: 'v1.8.1'
+  gem 'zendesk_deployment', git: 'git@github.com:zendesk/zendesk_deployment.git', ref: 'v1.9.4'
 end

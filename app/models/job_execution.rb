@@ -32,17 +32,27 @@ class JobExecution
       begin
         run!
       rescue => e
-        Airbrake.notify(e,
-          error_message: "JobExecution failed: #{e.message}",
-          parameters: {
-            job_id: @job.id
-          }
-        )
+        error!(e)
       ensure
+        @output.close unless @output.closed?
         ActiveRecord::Base.clear_active_connections!
         JobExecution.finished_job(@job)
       end
     end
+  end
+
+  def error!(exception)
+    message = "JobExecution failed: #{exception.message}"
+
+    Airbrake.notify(exception,
+      error_message: message,
+      parameters: {
+        job_id: @job.id
+      }
+    )
+
+    @output.write(message + "\n")
+    @job.error! if @job.active?
   end
 
   def run!
@@ -54,22 +64,20 @@ class JobExecution
       execute!(dir)
     end
 
-    ActiveRecord::Base.connection_pool.with_connection do |connection|
-      connection.verify!
+    ActiveRecord::Base.connection.verify!
 
-      if result
-        @job.success!
-      else
-        @job.fail!
-      end
+    if result
+      @job.success!
+    else
+      @job.fail!
+    end
 
-      @output.close
+    @output.close
 
-      @job.update_output!(output_aggregator.to_s)
+    @job.update_output!(output_aggregator.to_s)
 
-      @subscribers.each do |subscriber|
-        subscriber.call(@job)
-      end
+    @subscribers.each do |subscriber|
+      subscriber.call(@job)
     end
   end
 
@@ -100,6 +108,7 @@ class JobExecution
     end
 
     FileUtils.mkdir_p(artifact_cache_dir)
+    @output.write("Executing deploy\n")
 
     commands = [
       "export DEPLOYER=#{@job.user.email}",
@@ -117,13 +126,14 @@ class JobExecution
 
   def setup!(dir)
     repo_url = @job.project.repository_url
+    @output.write("Beginning git repo setup\n")
 
     commands = [
       <<-SHELL,
         if [ -d #{repo_cache_dir} ]
           then cd #{repo_cache_dir} && git fetch -ap
         else
-          git clone --mirror #{repo_url} #{repo_cache_dir}
+          git -c core.askpass=true clone --mirror #{repo_url} #{repo_cache_dir}
         fi
       SHELL
       "git clone #{repo_cache_dir} #{dir}",
@@ -160,17 +170,18 @@ class JobExecution
 
   def grab_lock
     lock = false
-    start_time = Time::now
-    i = 0
-    end_time = start_time + 10.minutes
-    until (lock || Time::now > end_time) do
+    end_time = Time.now + 10.minutes
+
+    until lock || Time.now > end_time
       sleep 1
-      i += 1
-      if (i % 10 == 0)
+
+      if Time.now.to_i % 10 == 0
         @output.write("Waiting for repository while cloning for: #{ProjectLock.owner(@job.project)}\n")
       end
+
       lock ||= ProjectLock.grab(@job.project, @job.deploy.stage)
     end
+
     lock
   end
 

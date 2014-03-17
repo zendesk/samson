@@ -45,6 +45,10 @@ class OutputBuffer
     write(nil, :close)
   end
 
+  def closed?
+    @closed
+  end
+
   def each(&block)
     # If the buffer is closed, there's no reason to block the listening
     # thread - just yield all the buffered chunks and return.

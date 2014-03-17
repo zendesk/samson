@@ -25,9 +25,6 @@
 #
 class EventStreamer
   def initialize(stream, &block)
-    @finished = false
-    @mutex = Mutex.new
-
     @stream = stream
     @handler = block || proc {|_, x|
       if x.present?
@@ -51,12 +48,20 @@ class EventStreamer
   end
 
   def finished
-    finished!
-
     emit_event('finished', @handler.call(:finished, ''))
   rescue IOError
     # Raised on stream close
   ensure
+    ActiveRecord::Base.clear_active_connections!
+
+    # Hackity-hack: clear out the buffer since
+    # the heartbeat thread may be blocked waiting
+    # to get into the queue or vice-versa
+    sleep(2)
+
+    buffer = @stream.instance_variable_get(:@buf)
+    buffer.clear
+
     @stream.close
   end
 
@@ -70,7 +75,7 @@ class EventStreamer
   def start_heartbeat!
     Thread.new do
       begin
-        while !finished?
+        while true
           @stream.write("data: \n\n")
           sleep(5) # Timeout of 5 seconds
         end
@@ -78,13 +83,5 @@ class EventStreamer
         finished
       end
     end
-  end
-
-  def finished?
-    @mutex.synchronize { @finished == true }
-  end
-
-  def finished!
-    @mutex.synchronize { @finished = true }
   end
 end

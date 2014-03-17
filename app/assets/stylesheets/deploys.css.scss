@@ -111,10 +111,14 @@
   margin-bottom: 25px;
 }
 
-#output-options {
+#output-toolbar {
   margin-bottom: 10px;
 }
 
 td.status {
   text-align: right;
+}
+
+.only-active {
+  display: none;
 }

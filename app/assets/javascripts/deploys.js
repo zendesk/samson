@@ -44,6 +44,7 @@ $(function () {
         localDate = new Date(parseInt(utcms));
 
     this.title = localDate.toString();
+    this.innerHTML = moment(localDate).fromNow();
   });
 
   var prefetchUrl = $("#deploy_reference").data("prefetchUrl");
@@ -147,28 +148,59 @@ $(function () {
     event.preventDefault();
   });
 
+  function shrinkOutput() {
+    $("#messages").css("max-height", 550);
+  }
+
   $("#output-follow").click(function(event) {
-    var $messages = $("#messages");
     following = true;
+
+    shrinkOutput();
+
+    var $messages = $("#messages");
     $messages.scrollTop($messages.prop("scrollHeight"));
-    $messages.css("max-height", 550);
-    $("#output-options > button").removeClass("active");
+
+    $("#output-options > button, #output-grow-toggle").removeClass("active");
     $(this).addClass("active");
   });
 
-  $("#output-grow").click(function(event) {
+  function growOutput() {
     $("#messages").css("max-height", "none");
+  }
+
+  $("#output-grow-toggle").click(function(event) {
+    var $self = $(this);
+
+    if($self.hasClass("active")) {
+      shrinkOutput();
+      $self.removeClass("active");
+    } else {
+      growOutput();
+      $self.addClass("active");
+    }
+  });
+
+  $("#output-grow").click(function(event) {
+    growOutput();
+
     $("#output-options > button").removeClass("active");
     $(this).addClass("active");
+    $("#output-grow-toggle").addClass("active");
   });
 
   $("#output-steady").click(function(event) {
     following = false;
-    $("#messages").css("max-height", 550);
+
+    shrinkOutput();
+
     $("#output-options > button").removeClass("active");
     $(this).addClass("active");
   });
 });
+
+function toggleOutputToolbar() {
+  $('.only-active, .only-finished').toggle();
+}
 
 function startDeployStream() {
   $(document).ready(function() {
@@ -211,7 +243,7 @@ function startDeployStream() {
 
     source.addEventListener('finished', function(e) {
       $('#header').html(JSON.parse(e.data).html);
-      $('.only-active').hide();
+      toggleOutputToolbar();
       source.close();
     }, false);
   });
