@@ -50,6 +50,8 @@ class DeployService
   end
 
   def send_github_notification(stage, deploy)
-    GithubNotification.new(stage, deploy).deliver
+    if stage.send_github_notifications?
+      GithubNotification.new(stage, deploy).deliver
+    end
   end
 end

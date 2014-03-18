@@ -106,6 +106,16 @@
   </div>
 </fieldset>
 
+<fieldset>
+  <legend>Github</legend>
+    <div class="col-lg-6 checkbox">
+      <%= form.label :update_pr do %>
+        <%= form.check_box :update_pr %>
+        Update Pull Request after deployment
+      <% end %>
+  </div>
+</fieldset>
+
 <%= javascript_tag do %>
   $(document).ready(function() {
     $('#commands').sortable();

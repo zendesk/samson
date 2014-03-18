@@ -87,6 +87,7 @@ class StagesController < ApplicationController
       :name, :command, :confirm,
       :notify_email_address,
       :datadog_tags,
+      :update_pr,
       command_ids: [],
       flowdock_flows_attributes: [:id, :name, :token, :_destroy],
       new_relic_applications_attributes: [:id, :name, :_destroy]
