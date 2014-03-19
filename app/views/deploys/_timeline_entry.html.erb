@@ -1,10 +1,6 @@
 <div class="timeline-entry clearfix"
   ng-repeat="deploy in (deploys = (timelineDeploys.entries | filter:search | userFilter:userType | stageFilter:stageType | statusFilter:deployStatus))">
 
-  <div ng-hide="isSameDate(deploys[$index - 1].localized_updated_at, deploy.localized_updated_at)">
-    <h3 class="timeline-date">{{deploy.localized_updated_at | fullDate}}</h3>
-  </div>
-
   <div class="timeline-entry-main">
     <div class="timeline-icon">
       <i class="glyphicon glyphicon-{{deploy.status | statusToIcon}}"></i>

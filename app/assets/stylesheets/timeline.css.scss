@@ -27,9 +27,16 @@ $lightInfo: lighten(#5bc0de, $scale);
   margin: 20px 0 15px;
 }
 
-.timeline-filter {
-  display: inline-block;
-  margin-right: 10px;
+.timeline-filter:first-child {
+  padding-left: 0;
+}
+
+.timeline-filter:last-child {
+  padding-right: 0;
+}
+
+.timeline-content {
+  width: 100%;
 }
 
 .timeline-entry {
