@@ -15,7 +15,7 @@ describe GithubNotification do
     it "adds a comment" do
       comment = stub_request(:post, endpoint).
                   with(:body => "{\"body\":\"This PR was deployed to staging. Reference: 7e6c415\"}",
-                     :headers => {'Accept'=>'application/vnd.github.beta+json', 'Accept-Encoding'=>'gzip;q=1.0,deflate;q=0.6,identity;q=0.3', 'User-Agent'=>'Octokit Ruby Gem 2.7.0'}).
+                     :headers => {'Accept'=>'application/vnd.github.beta+json', 'Accept-Encoding'=>'gzip;q=1.0,deflate;q=0.6,identity;q=0.3', 'User-Agent'=>'Octokit Ruby Gem 2.7.2'}).
                   to_return(:status => 201, :body => "", :headers => {})
       notification.deliver
 

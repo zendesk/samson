@@ -47,7 +47,7 @@ class GithubNotification
     data = data.dup
     (0...threads).to_a.map do
       Thread.new do
-        while slice = data.shift
+        while slice = Thread.exclusive { data.shift }
           yield slice
         end
       end
