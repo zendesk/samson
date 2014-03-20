@@ -1,5 +1,6 @@
 $samsonDark: #333;
 $samsonGrey: lighten($samsonDark, 70%);
+$samsonLight: lighten($samsonDark, 75%);
 $primary: #2094dd;
 $success: #00a704;
 $warning: #f0ad4e;
@@ -12,22 +13,35 @@ $lightWarning: lighten(#f0ad4e, $scale);
 $lightDanger: lighten(#d9534f, $scale);
 $lightInfo: lighten(#5bc0de, $scale);
 
-.timeline a {
-  color: inherit;
-}
-
 .timeline a:hover {
   text-decoration: none;
-  color: inherit;
 }
 
-.timeline h3 {
+.timeline label,
+.timeline th {
+  font-weight: normal;
+}
+
+.timeline tr:hover:not(:first-child) {
+  background-color: $samsonLight;
+}
+
+.timeline td,
+.timeline th {
+  padding: 5px 15px;
+}
+
+.timeline td {
+  cursor: pointer;
+  border-bottom: 1px solid $samsonLight;
+}
+
+.timeline th {
+  padding: 0 15px 10px;
   border-bottom: 1px solid $samsonGrey;
-  padding-bottom: 10px;
-  margin: 20px 0 15px;
 }
 
-.timeline-filter:first-child {
+.timeline-filter {
   padding-left: 0;
 }
 
@@ -39,12 +53,6 @@ $lightInfo: lighten(#5bc0de, $scale);
   width: 100%;
 }
 
-.timeline-entry {
-  position: relative;
-  border-bottom: 1px solid $samsonGrey;
-  padding: 15px 0;
-}
-
 .timeline-entry-main {
   display: -webkit-flex;
   display: flex;
@@ -52,37 +60,14 @@ $lightInfo: lighten(#5bc0de, $scale);
   align-items: center;
 }
 
-.timeline-icon,
-.timeline-project,
-.timeline-content {
-  float: left;
-}
-
-.timeline-project,
 .timeline-content {
   color: $samsonDark;
 }
 
 .timeline-project {
-  background-color: $samsonGrey;
-  border-radius: 3px;
-  display: block;
   text-align: center;
   line-height: 30px;
-  margin: 0 30px 0;
   padding: 2px 10px;
-  width: 150px;
-}
-
-.timeline-gravatar {
-  height: 20px;
-  float: left;
-}
-
-.timeline-icon {
-  font-size: 4rem;
-  line-height: 40px;
-  height: 40px;
 }
 
 .timeline-icon > .primary {
@@ -105,23 +90,15 @@ $lightInfo: lighten(#5bc0de, $scale);
   color: $info;
 }
 
-.timeline-date {
-  margin-top: 10px;
-  font-weight: bold;
-}
-
+.timeline-time,
 .timeline-summary {
-  font-weight: bold;
-  font-size: 16px;
-  line-height: 16px;
-  margin-bottom: 8px;
-}
-
-.timeline-who {
-  float: left;
-  padding-left: 5px;
-}
-
-.timeline-time {
   color: #999;
+}
+
+.timeline-show-more {
+  margin-top: 20px;
+}
+
+.timeline-deploy-status {
+  text-transform: capitalize;
 }

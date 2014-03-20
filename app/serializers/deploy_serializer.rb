@@ -8,7 +8,7 @@ class DeploySerializer < ActiveModel::Serializer
   has_one :user
 
   def url
-    project_deploy_path(object.project, object)
+    project_deploy_url(object.project, object)
   end
 
   def production

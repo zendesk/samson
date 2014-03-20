@@ -26,9 +26,19 @@
     </div>
   </div>
   <section class="timeline-content clearfix">
-    <%= render partial: "timeline_entry" %>
+    <table class="timeline-content">
+      <tr>
+        <th>PROJECT</th>
+        <th>USER</th>
+        <th>DEPLOY</th>
+        <th>LAST UPDATE</th>
+        <th>STATUS</th>
+        <th></th>
+      </tr>
+      <%= render partial: "timeline_entry" %>
+    </table>
     <%# if there is not enough height for scrolling %>
-    <div ng-if="shortWindow()">
+    <div ng-if="shortWindow()" class="timeline-show-more">
       <span class="btn btn-default" ng-click="timelineDeploys.loadMore()">Load More .. {{timelineDeploys.page}}</span>
     </div>
   </section>
