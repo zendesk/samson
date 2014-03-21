@@ -140,6 +140,7 @@ h3 {
     a,
     a:hover {
       border: none;
+      padding: 15px 20px;
     }
   }
 }
@@ -150,6 +151,12 @@ h3 {
     top: 0;
     right: 0;
   }
+}
+
+.breadcrumb {
+  padding: 8px 0;
+  background: none;
+  border-radius: 0;
 }
 
 /* Labels */
