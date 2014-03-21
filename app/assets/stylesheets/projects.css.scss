@@ -7,12 +7,13 @@
 }
 
 .project-tile {
-  background: #333;
+  background: #FFF;
   min-height: 200px;
-  padding: 15px;
+  padding: 20px;
   position: relative;
   box-sizing: border-box;
   margin-top: 20px;
+  border-radius: 3px;
   -webkit-flex: 1 0 100%;
   flex: 1 0 100%;
 
@@ -27,19 +28,23 @@
   }
 
   h2 {
-    color: #FFF;
-    margin: 0;
+    color: #333;
+    margin: 0 0 15px 0;
     padding-bottom: 15px;
-    font-size: 18px;
+    font-size: 14px;
+    border-bottom: 1px solid #DDD;
+    text-transform: uppercase;
 
     a {
-      color: #FFF;
+      color: #333;
     }
 
     .github {
       position: absolute;
-      right: 15px;
-      top: 15px;
+      right: 20px;
+      top: 18px;
+      color: #666;
+      font-size: 25px;
     }
   }
 
@@ -51,17 +56,31 @@
     list-style: none;
     margin-top: 6px;
     padding-bottom: 6px;
-    color: #FFF;
-    border-bottom: 1px dotted #444;
+    color: #333;
+    font-size: 15px;
   }
 
   .stage-link {
-    color: #FFF;
+    color: #333;
+  }
+
+  .locked {
+    .stage-link {
+      font-weight: bold;
+    }
+    .status {
+      background: #333;
+    }
   }
 
   .status {
     font-size: 14px;
     font-weight: normal;
+  }
+
+  .fa-lock {
+    padding-left: 10px;
+    color: #757575;
   }
 }
 

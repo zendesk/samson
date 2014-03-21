@@ -29,13 +29,13 @@ samson.constant("DAYS",
 
 samson.constant('STATUS_MAPPING',
   {
-    "running": "plus-sign primary",
-    "succeeded": "ok-sign success",
-    "failed": "remove-sign danger",
-    "pending": "minus-sign info",
-    "cancelling": "exclamation-sign warning",
-    "cancelled": "ban-circle danger",
-    "errored": "question-sign danger"
+    "running": "primary",
+    "succeeded": "success",
+    "failed": "danger",
+    "pending": "info",
+    "cancelling": "warning",
+    "cancelled": "danger",
+    "errored": "danger"
   }
 );
 
@@ -103,7 +103,7 @@ samson.filter("statusFilter",
   }]
 );
 
-samson.filter("statusToIcon",
+samson.filter("visualizeStatus",
   ["STATUS_MAPPING", function(STATUS_MAPPING) {
     return function(status) {
       return STATUS_MAPPING[status];
@@ -190,13 +190,8 @@ function($scope, $window, Deploys, StatusFilterMapping) {
   $scope.stageTypes = { "Production": true, "Non-Production": false };
   $scope.deployStatuses = Object.keys(StatusFilterMapping);
 
-  $scope.isSameDate = function(previous, current) {
-    if (previous) {
-      return previous.date === current.date &&
-        previous.month === current.month &&
-        previous.year === current.year;
-    }
-    return false;
+  $scope.jumpTo = function(event) {
+    $window.location.href = angular.element(event.currentTarget).data("url");
   };
 
   $scope.timelineDeploys = Deploys;

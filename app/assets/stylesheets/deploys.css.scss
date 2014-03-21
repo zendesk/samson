@@ -115,6 +115,15 @@
   margin-bottom: 10px;
 }
 
+td.status {
+  text-align: right;
+}
+
 .only-active {
   display: none;
+}
+
+.deploys.show #header .pull-right {
+  position: relative;
+  top: -10px;
 }

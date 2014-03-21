@@ -46,7 +46,7 @@
   }
 
   .pre-command.local {
-    @include box-shadow(0 0 15px rgba(94, 184, 92, 1));
+    @include box-shadow(0 0 5px #2094dd);
   }
 
   .command-checkbox {

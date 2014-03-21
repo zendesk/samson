@@ -10,59 +10,61 @@
   </div>
 <% end %>
 
-<%= form_for [@project, @deploy], html: { class: "form-horizontal" }, data: { 'commit-status-url' => project_commit_statuses_path(@project), 'confirm-url' => confirm_project_deploys_path(@project) } do |form| %>
-  <fieldset>
-    <% if @deploy.errors.any? %>
-      <div class="row">
-        <div class="col-lg-5 col-lg-offset-1 alert alert-warning">
-          <p><strong>Ooops!</strong> There was an error while trying to start the deploy:</p>
-          <ul>
-            <% @deploy.errors.full_messages.each do |message| %>
-              <li><%= message %></li>
-            <% end %>
-          </ul>
+<section>
+  <%= form_for [@project, @deploy], html: { class: "form-horizontal" }, data: { 'commit-status-url' => project_commit_statuses_path(@project), 'confirm-url' => confirm_project_deploys_path(@project) } do |form| %>
+    <fieldset>
+      <% if @deploy.errors.any? %>
+        <div class="row">
+          <div class="col-lg-5 col-lg-offset-1 alert alert-warning">
+            <p><strong>Ooops!</strong> There was an error while trying to start the deploy:</p>
+            <ul>
+              <% @deploy.errors.full_messages.each do |message| %>
+                <li><%= message %></li>
+              <% end %>
+            </ul>
+          </div>
+        </div>
+      <% end %>
+
+      <div class="form-group">
+        <%= form.label :reference, "Tag or SHA", class: "col-lg-2 control-label" %>
+        <div class="col-lg-4">
+          <%= form.text_field :reference, class: "form-control", autofocus: true, placeholder: "e.g. v2.1.43, master, fa0b4671", data: { prefetch_url: releases_project_path(@project) } %>
         </div>
       </div>
-    <% end %>
-
-    <div class="form-group">
-      <%= form.label :reference, "Tag or SHA", class: "col-lg-2 control-label" %>
-      <div class="col-lg-4">
-        <%= form.text_field :reference, class: "form-control", autofocus: true, placeholder: "e.g. v2.1.43, master, fa0b4671", data: { prefetch_url: releases_project_path(@project) } %>
+      <div class="form-group">
+        <%= form.label :stage_id, "Stage", class: "col-lg-2 control-label" %>
+        <div class="col-lg-4">
+          <%= form.select :stage_id, stages_select_options, {}, class: "form-control" %>
+        </div>
       </div>
-    </div>
-    <div class="form-group">
-      <%= form.label :stage_id, "Stage", class: "col-lg-2 control-label" %>
-      <div class="col-lg-4">
-        <%= form.select :stage_id, stages_select_options, {}, class: "form-control" %>
-      </div>
-    </div>
-    <div class="form-group" id="new-deploy-buttons">
-      <div class="col-lg-offset-2 col-lg-10">
-        <button type="submit" class="btn btn-primary" <%= 'disabled="disabled"' if global_lock? %>>
-          <span id="deploy-button-text">Deploy!</span>
-          <span style="display: none;" id="confirm-button-text">Confirm!</span>
-        </button>
+      <div class="form-group" id="new-deploy-buttons">
+        <div class="col-lg-offset-2 col-lg-10">
+          <button type="submit" class="btn btn-primary" <%= 'disabled="disabled"' if global_lock? %>>
+            <span id="deploy-button-text">Deploy!</span>
+            <span style="display: none;" id="confirm-button-text">Confirm!</span>
+          </button>
 
-        <%= link_to "cancel", '#', class: 'btn btn-default', data: { url: project_path(@project) }, id: 'new-deploy-cancel' %>
+          <%= link_to "cancel", '#', class: 'btn btn-default', data: { url: project_path(@project) }, id: 'new-deploy-cancel' %>
+        </div>
       </div>
-    </div>
 
-    <div id="deploy-confirmation">
-      <ul class="nav nav-tabs">
-        <li><a href="#files" data-toggle="tab">Files</a></li>
-        <li><a href="#commits" data-toggle="tab">Commits</a></li>
-        <li><a href="#pulls" data-toggle="tab">Pull Requests</a></li>
-        <li><a href="#risks" data-toggle="tab">Risks</a></li>
-      </ul>
+      <div id="deploy-confirmation">
+        <ul class="nav nav-tabs">
+          <li><a href="#files" data-toggle="tab">Files</a></li>
+          <li><a href="#commits" data-toggle="tab">Commits</a></li>
+          <li><a href="#pulls" data-toggle="tab">Pull Requests</a></li>
+          <li><a href="#risks" data-toggle="tab">Risks</a></li>
+        </ul>
 
-      <div class="tab-content deploy-details">
-        <% %w(files commits pulls risks).each_with_index do |pane, i| %>
-          <div class="tab-pane changeset-placeholder" id="<%= pane %>">
-            <p>Loading...</p>
-          </div>
-        <% end %>
+        <div class="tab-content deploy-details">
+          <% %w(files commits pulls risks).each_with_index do |pane, i| %>
+            <div class="tab-pane changeset-placeholder" id="<%= pane %>">
+              <p>Loading...</p>
+            </div>
+          <% end %>
+        </div>
       </div>
-    </div>
-  </fieldset>
-<% end %>
+    </fieldset>
+  <% end %>
+</section>

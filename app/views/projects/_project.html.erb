@@ -7,10 +7,10 @@
     <ul>
       <% project.stages.each do |stage| %>
         <% cache [stage, stage.last_deploy, stage.locked?, stage.currently_deploying?] do %>
-          <li>
+          <li class="<%= 'locked' if stage.locked? %>">
             <%= link_to stage.name, project_stage_path(project, stage), class: "stage-link" %>
             <%= content_tag :span, "Deploying", class: "label label-primary" if stage.currently_deploying? %>
-            <%= content_tag :span, "Locked", class: "label label-warning", title: stage.lock.summary if stage.locked? %>
+            <%= content_tag :i, "", class: "fa fa-lock", title: stage.lock.summary if stage.locked? %>
 
             <%= link_to stage.last_deploy.short_reference,
                       project_deploy_path(project, stage.last_deploy),

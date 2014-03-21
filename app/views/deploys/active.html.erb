@@ -1,16 +1,18 @@
 <h1>Current Deploys</h1>
 
-<table class="table table-striped">
-  <thead>
-    <tr>
-      <th>Project</th>
-      <th>Who</th>
-      <th>Status</th>
-      <th></th>
-    </tr>
-  </thead>
-  <tbody>
-    <%= render partial: "deploy", collection: @deploys.compact %>
-  </tbody>
-</table>
-<%= paginate @deploys %>
+<section>
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Project</th>
+        <th>Who</th>
+        <th>Status</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      <%= render partial: "deploy", collection: @deploys.compact %>
+    </tbody>
+  </table>
+  <%= paginate @deploys %>
+</section>

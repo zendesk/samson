@@ -144,16 +144,17 @@ describe("Timeline", function() {
     describe("utility filters", function() {
       describe("statusToIcon filter", function() {
         beforeEach(inject(function($filter) {
-          filter = $filter("statusToIcon");
+          filter = $filter("visualizeStatus");
         }));
 
         it("transforms deploy status to visual status", function() {
-          expect(filter("running")).toEqual("plus-sign primary");
-          expect(filter("succeeded")).toEqual("ok-sign success");
-          expect(filter("failed")).toEqual("remove-sign danger");
-          expect(filter("pending")).toEqual("minus-sign info");
-          expect(filter("cancelling")).toEqual("exclamation-sign warning");
-          expect(filter("cancelled")).toEqual("ban-circle danger");
+          expect(filter("running")).toEqual("primary");
+          expect(filter("succeeded")).toEqual("success");
+          expect(filter("failed")).toEqual("danger");
+          expect(filter("pending")).toEqual("info");
+          expect(filter("cancelling")).toEqual("warning");
+          expect(filter("cancelled")).toEqual("danger");
+          expect(filter("errored")).toEqual("danger");
         });
       });
     });
