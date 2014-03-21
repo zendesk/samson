@@ -122,3 +122,8 @@ td.status {
 .only-active {
   display: none;
 }
+
+.deploys.show #header .pull-right {
+  position: relative;
+  top: -10px;
+}
