@@ -45,7 +45,6 @@ class ProjectsController < ApplicationController
 
   def show
     @stages = project.stages.includes(:last_deploy, :lock)
-    @deploys = project.deploys.includes(:stage, job: :user).limit(10)
   end
 
   def edit
