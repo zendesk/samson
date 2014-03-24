@@ -42,11 +42,26 @@ module DeploysHelper
 
     if deploy.finished?
       content = "#{deploy.summary} #{time_ago_in_words(deploy.created_at)} ago"
+      content += ", it took #{duration_text(deploy)}"
     else
       content = deploy.summary
     end
 
     content_tag :div, content, class: "alert alert-#{status}"
+  end
+
+  def duration_text(deploy)
+    seconds  = (deploy.updated_at - deploy.created_at).to_i
+    duration = ""
+
+    if seconds > 60
+      minutes = seconds / 60
+      seconds = seconds - minutes * 60
+
+      duration += "#{minutes} minute".pluralize(minutes)
+    end
+
+    duration += (seconds > 0 || duration.size == 0 ? " #{seconds} second".pluralize(seconds) : "")
   end
 
   def syntax_highlight(code, language = :ruby)
