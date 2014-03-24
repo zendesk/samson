@@ -10,6 +10,7 @@
  *
  *= require_self
  *= require bootstrap
+ *= require bootstrap-select
  *= require font-awesome
  *= require jquery.ui.all
  *= require bootstrap3-editable/bootstrap-editable

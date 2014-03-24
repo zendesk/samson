@@ -102,3 +102,9 @@ $lightInfo: lighten(#5bc0de, $scale);
 .timeline-deploy-status {
   text-transform: capitalize;
 }
+
+.dropdown-toggle:focus,
+.bootstrap-select .btn:focus,
+.bootstrap-select a:focus {
+  outline: none !important;
+}
