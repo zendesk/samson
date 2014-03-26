@@ -184,8 +184,8 @@ samson.factory("Deploys",
   }]
 );
 
-samson.controller("TimelineCtrl", ["$scope", "$window", "Deploys", "StatusFilterMapping",
-function($scope, $window, Deploys, StatusFilterMapping) {
+samson.controller("TimelineCtrl", ["$scope", "$window", "$timeout", "Deploys", "StatusFilterMapping",
+function($scope, $window, $timeout, Deploys, StatusFilterMapping) {
   $scope.userTypes = ["Human", "Robot"];
   $scope.stageTypes = { "Production": true, "Non-Production": false };
   $scope.deployStatuses = Object.keys(StatusFilterMapping);
@@ -206,6 +206,10 @@ function($scope, $window, Deploys, StatusFilterMapping) {
       }
     };
   })());
+
+  $timeout(function() {
+    $('select').selectpicker();
+  });
 
   $scope.shortWindow = function() {
     return !$scope.timelineDeploys.theEnd && $window.scrollMaxY === 0;
