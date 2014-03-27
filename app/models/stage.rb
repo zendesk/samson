@@ -111,7 +111,7 @@ class Stage < ActiveRecord::Base
   end
 
   def send_github_notifications?
-    update_pr
+    update_github_pull_requests
   end
 
   private
