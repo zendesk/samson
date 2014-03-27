@@ -15,7 +15,7 @@ class Integrations::TddiumController < Integrations::BaseController
     repo_name = "#{params[:repository][:org_name]}/#{params[:repository][:name]}"
     data = github.commit(repo_name, params[:commit_id])
     data.commit.message.include?("[deploy skip]")
-  rescue Octokit::Error
+  rescue Faraday::Error::ClientError
     # We'll assume that if we don't hear back, don't skip
     false
   end
