@@ -1,7 +1,5 @@
 class AddGithubConfirmationToStages < ActiveRecord::Migration
   def change
-    change_table :stages do |t|
-      t.boolean :update_pr
-    end
+    add_column :stages, :update_github_pull_requests, :boolean
   end
 end
