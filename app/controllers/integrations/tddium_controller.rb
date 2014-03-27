@@ -15,8 +15,7 @@ class Integrations::TddiumController < Integrations::BaseController
     repo_name = "#{params[:repository][:org_name]}/#{params[:repository][:name]}"
     data = github.commit(repo_name, params[:commit_id])
     data.commit.message.include?("[deploy skip]")
-  rescue Octokit::Error => e
-    Rails.logger.info("Error trying to grab commit: #{e.message}")
+  rescue Octokit::Error
     # We'll assume that if we don't hear back, don't skip
     false
   end
