@@ -1,4 +1,4 @@
-<% content_for :page_title, "#{@deploy.stage.name} deploy (#{@deploy.status}) - #{@project.name}" %>
+<% content_for :page_title, deploy_page_title %>
 
 <ol class="breadcrumb">
   <li><%= link_to "Home", root_path %></li>

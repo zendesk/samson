@@ -242,7 +242,11 @@ function startDeployStream() {
     }, false);
 
     source.addEventListener('finished', function(e) {
-      $('#header').html(JSON.parse(e.data).html);
+      var data = JSON.parse(e.data);
+
+      $('#header').html(data.html);
+      window.document.title = data.title;
+
       toggleOutputToolbar();
       source.close();
     }, false);

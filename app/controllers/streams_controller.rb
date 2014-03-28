@@ -3,6 +3,7 @@ class StreamsController < ApplicationController
 
   include ActionController::Live
   include ApplicationHelper
+  include DeploysHelper
 
   def show
     response.headers['Content-Type'] = 'text/event-stream'
@@ -44,6 +45,9 @@ class StreamsController < ApplicationController
     @project = @job.project
     @deploy = @job.deploy
 
-    JSON.dump(html: render_to_body(partial: 'deploys/header', formats: :html))
+    JSON.dump(
+      title: deploy_page_title,
+      html: render_to_body(partial: 'deploys/header', formats: :html)
+    )
   end
 end

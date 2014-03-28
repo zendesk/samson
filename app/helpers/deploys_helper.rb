@@ -5,6 +5,10 @@ module DeploysHelper
     @deploy.active? && (JobExecution.find_by_id(@deploy.job_id) || JobExecution.enabled)
   end
 
+  def deploy_page_title
+    "#{@deploy.stage.name} deploy (#{@deploy.status}) - #{@project.name}"
+  end
+
   def file_status_label(status)
     mapping = {
       "added"    => "success",
