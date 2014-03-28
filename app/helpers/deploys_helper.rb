@@ -45,13 +45,14 @@ module DeploysHelper
     status = mapping.fetch(deploy.status, "info")
 
     if deploy.finished?
-      content = "#{deploy.summary} #{time_ago_in_words(deploy.created_at)} ago"
-      content += ", it took #{duration_text(deploy)}"
+      content = "#{deploy.summary} "
+      content << content_tag(:span, deploy.created_at.rfc822, data: { time: datetime_to_js_ms(deploy.created_at) }, class: 'mouseover')
+      content << ", it took #{duration_text(deploy)}"
     else
       content = deploy.summary
     end
 
-    content_tag :div, content, class: "alert alert-#{status}"
+    content_tag :div, content.html_safe, class: "alert alert-#{status}"
   end
 
   def duration_text(deploy)

@@ -3,7 +3,7 @@
     <% if @job.errors.any? %>
       <div class="row">
         <div class="col-lg-5 col-lg-offset-1 alert alert-warning">
-          <p><strong>Ooops!</strong> There was an error while trying to start the deploy:</p>
+          <p><strong>Ooops!</strong> There was an error while trying to start the job:</p>
           <ul>
             <% @job.errors.full_messages.each do |message| %>
               <li><%= message %></li>
@@ -58,7 +58,8 @@
 
   <div class="form-group">
     <div class="col-lg-offset-2 col-lg-10">
-      <button type="submit" class="btn btn-default">Run</button>
+      <button type="submit" class="btn btn-primary">Execute!</button>
+      <%= link_to "cancel", project_jobs_path(@project), class: 'btn btn-default' %>
     </div>
   </div>
 <% end %>

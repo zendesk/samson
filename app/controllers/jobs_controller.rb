@@ -1,23 +1,21 @@
 class JobsController < ApplicationController
-  before_filter :find_project, only: [:new, :create, :show]
+  before_filter :find_project, except: [:enabled]
+
+  def index
+    @jobs = @project.jobs.includes(:deploy).where(deploys: { id: nil }).page(params[:page])
+  end
 
   def new
     @job = Job.new
   end
 
   def create
-    reference = job_params[:commit].strip
+    job_service = JobService.new(@project, current_user)
+    command_ids = command_params[:ids].select(&:present?)
 
-    command = command_params[:ids].select(&:present?).map do |command_id|
-      Command.find(command_id).command
-    end
-
-    command << job_params[:command].strip
-
-    @job = @project.jobs.create(
-      user: current_user,
-      command: command.join("\n"),
-      commit: reference
+    @job = job_service.execute!(
+      job_params[:commit].strip, command_ids,
+      job_params[:command].strip.presence
     )
 
     if @job.persisted?
@@ -30,6 +28,15 @@ class JobsController < ApplicationController
 
   def show
     @job = Job.find(params[:id])
+    respond_to do |format|
+      format.html
+      format.text do
+        datetime = @job.updated_at.strftime("%Y%m%d_%H%M%Z")
+        send_data @job.output,
+          type: 'text/plain',
+          filename: "#{@project.repo_name}-#{@job.id}-#{datetime}.log"
+      end
+    end
   end
 
   def enabled

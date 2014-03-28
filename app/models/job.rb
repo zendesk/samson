@@ -4,12 +4,16 @@ class Job < ActiveRecord::Base
 
   has_one :deploy
 
-  after_update do
-    deploy.touch if deploy.present?
-  end
+  validates :command, presence: true
+
+  after_update { deploy.touch if deploy }
 
   def self.pending
     where(status: 'pending')
+  end
+
+  def summary
+    "#{user.name} #{summary_action} against #{short_reference}"
   end
 
   def started_by?(user)
@@ -76,5 +80,31 @@ class Job < ActiveRecord::Base
 
   def status!(status)
     update_attribute(:status, status)
+  end
+
+  def summary_action
+    if pending?
+      "is about to execute"
+    elsif running?
+      "is executing"
+    elsif cancelling?
+      "is cancelling a execute"
+    elsif cancelled?
+      "cancelled a execute"
+    elsif succeeded?
+      "executed"
+    elsif failed?
+      "failed to execute"
+    elsif errored?
+      "encountered an error executing"
+    end
+  end
+
+  def short_reference
+    if commit =~ /\A[0-9a-f]{40}\Z/
+      commit[0...7]
+    else
+      commit
+    end
   end
 end

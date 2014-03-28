@@ -1,6 +1,6 @@
 ZendeskSamson::Application.routes.draw do
   resources :projects do
-    resources :jobs, only: [:new, :create, :show]
+    resources :jobs, only: [:index, :new, :create, :show]
 
     resources :deploys, only: [:index, :new, :create, :show, :destroy] do
       collection do
@@ -40,9 +40,9 @@ ZendeskSamson::Application.routes.draw do
     resource  :commit_statuses, only: [:show]
   end
 
-  resources :deploys, only: [] do
-    resource :stream, only: [:show]
+  resources :streams, only: [:show]
 
+  resources :deploys, only: [] do
     collection do
       get :active
       get :recent

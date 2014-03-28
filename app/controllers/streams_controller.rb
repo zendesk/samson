@@ -10,7 +10,7 @@ class StreamsController < ApplicationController
     response.headers['Content-Type'] = 'text/event-stream'
     response.headers['Cache-Control'] = 'no-cache'
 
-    @job = Job.find(params[:deploy_id])
+    @job = Job.find(params[:id])
     @execution = JobExecution.find_by_id(@job.id)
 
     streamer = EventStreamer.new(response.stream, &method(:event_handler))

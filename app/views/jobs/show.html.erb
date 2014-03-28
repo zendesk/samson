@@ -1,26 +1,33 @@
+<% content_for :page_title, job_page_title %>
+
 <ol class="breadcrumb">
   <li><%= link_to "Home", root_path %></li>
   <li><%= link_to @project.name, project_path(@project) %></li>
   <li class="active">Job #<%= @job.id %></li>
 </ol>
 
-<%= render 'header' %>
+<div id="header">
+  <%= render 'header' %>
+</div>
 
-<% if job_active? %>
-  <div class="row" id="output" data-stream-url="<%= deploy_stream_path(@job) %>">
-    <div class="btn-toolbar col-md-4 col-md-offset-7 pull-right only-active">
-      <div id="output-options" class="btn-group">
-        <button class="btn btn-default active" id="output-follow">Follow</button>
-        <button class="btn btn-default" id="output-steady">Don't Follow</button>
-        <button class="btn btn-default" id="output-grow">Expand</button>
-      </div>
-
-      <% if current_user.is_deployer? %>
-        <%= link_to "Stop", project_job_path(@project, @job), remote: true, method: :delete, class: "btn btn-danger pull-right", id: "deploy_stop" %>
-      <% end %>
+<div class="row" id="output" data-stream-url="<%= stream_path(@job) %>">
+  <div class="btn-toolbar col-md-4 col-md-offset-7 pull-right" id="output-toolbar">
+    <div id="output-options" class="btn-group only-active">
+      <button class="btn btn-default active" id="output-follow">Follow</button>
+      <button class="btn btn-default" id="output-steady">Don't Follow</button>
+      <button class="btn btn-default" id="output-grow">Expand</button>
     </div>
+
+    <div class="pull-right only-finished">
+      <button class="btn btn-default" id="output-grow-toggle">Expand</button>
+      <%= link_to "Download log", project_job_path(@project, @job, format: :text), class: "btn btn-primary" %>
+    </div>
+
+    <% if current_user.is_deployer? %>
+      <%= link_to "Stop", project_job_path(@project, @job), remote: true, method: :delete, class: "btn btn-danger pull-right only-active" %>
+    <% end %>
   </div>
-<% end %>
+</div>
 
 <pre id="messages" class="pre-scrollable log">
   <% unless @job.active? %>
@@ -30,20 +37,14 @@
   <% end %>
 </pre>
 
-<% if @job.finished? %>
-  <div class="pull-right">
-    <button class="btn btn-default" id="output-grow-toggle">Expand</button>
-    <%= link_to "Download log", project_job_path(@project, @job, format: :text), class: "btn btn-primary" %>
-  </div>
-<% end %>
-
 <% if job_active? %>
   <%= javascript_tag do %>
-    startDeployStream();
+    toggleOutputToolbar();
+    startStream();
   <% end %>
 <% elsif !@job.finished? %>
   <div class="alert alert-info">
-    Samson is currently restarting, your deploy has been queued and will be resumed shortly.
+    Samson is currently restarting, your job has been queued and will be resumed shortly.
   </div>
 
   <%= javascript_tag do %>
