@@ -42,7 +42,7 @@
   <p>Select the commands you want to run when executing this stage. Double click to edit commands local (indicated with blue) to this project.</p>
 
   <div id="commands">
-    <%= form.collection_check_boxes(:command_ids, form.object.all_commands, :id, :command) do |b| %>
+    <%= form.collection_check_boxes(:command_ids, @stage.all_commands, :id, :command) do |b| %>
       <div class="row stage-bar bar">
         <div data-id="<%= b.value %>" class="col-lg-offset-2 col-lg-2 command-checkbox">
           <%= b.check_box %>
