@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20140227211403) do
+ActiveRecord::Schema.define(version: 20140319001623) do
 
   create_table "commands", force: true do |t|
     t.text     "command",    limit: 16777215
@@ -84,16 +84,17 @@ ActiveRecord::Schema.define(version: 20140227211403) do
   end
 
   create_table "stages", force: true do |t|
-    t.string   "name",                 null: false
-    t.integer  "project_id",           null: false
+    t.string   "name",                                       null: false
+    t.integer  "project_id",                                 null: false
     t.datetime "created_at"
     t.datetime "updated_at"
     t.string   "notify_email_address"
     t.integer  "order"
     t.datetime "deleted_at"
-    t.boolean  "confirm",              default: true
+    t.boolean  "confirm",                     default: true
     t.string   "datadog_tags"
-    t.boolean  "deployment",           default: true
+    t.boolean  "deployment",                  default: true
+    t.boolean  "update_github_pull_requests"
   end
 
   create_table "users", force: true do |t|

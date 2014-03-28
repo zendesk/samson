@@ -110,6 +110,10 @@ class Stage < ActiveRecord::Base
     datadog_tags.any?
   end
 
+  def send_github_notifications?
+    update_github_pull_requests
+  end
+
   private
 
   def build_new_project_command
