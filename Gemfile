@@ -83,5 +83,5 @@ group :test do
 end
 
 group :deployment do
-  gem 'zendesk_deployment', git: 'git@github.com:zendesk/zendesk_deployment.git', ref: 'v1.9.4'
+  gem 'zendesk_deployment', git: 'git@github.com:zendesk/zendesk_deployment.git', ref: 'v1.10.2'
 end
