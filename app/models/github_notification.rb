@@ -3,6 +3,7 @@ class GithubNotification
 
   def initialize(stage, deploy)
     @stage, @deploy = stage, deploy
+    @project = @stage.project
   end
 
   def deliver
@@ -14,7 +15,7 @@ class GithubNotification
       in_multiple_threads(pull_requests) do |pull_request|
 
         pull_id = pull_request.number
-        status = github.add_comment(@deploy.project.github_repo, pull_id, body)
+        status = github.add_comment(@project.github_repo, pull_id, body)
 
         if status == "201"
           Rails.logger.info "Updated Github PR: #{pull_id}"
@@ -33,13 +34,9 @@ class GithubNotification
   end
 
   def body
-    if $request
-      host_with_protocol = "#{$request.protocol}#{$request.host_with_port}"
-      short_reference_link = "<a href='#{host_with_protocol}/projects/#{@deploy.project.to_param}/deploys/#{@deploy.id}' target='_blank'>#{@deploy.short_reference}</a>"
-      "This PR was deployed to #{@stage.name}. Reference: #{short_reference_link}"
-    else
-      "This PR was deployed to #{@stage.name}. Reference: #{@deploy.short_reference}"
-    end
+    url = url_helpers.project_deploy_url(@project, @deploy)
+    short_reference_link = "<a href='#{url}' target='_blank'>#{@deploy.short_reference}</a>"
+    "This PR was deployed to #{@stage.name}. Reference: #{short_reference_link}"
   end
 
   def in_multiple_threads(data)
@@ -52,6 +49,10 @@ class GithubNotification
         end
       end
     end.each(&:join)
+  end
+
+  def url_helpers
+    Rails.application.routes.url_helpers
   end
 
 end
