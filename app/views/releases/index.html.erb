@@ -11,7 +11,7 @@
     <table class="table table-condensed">
       <% @releases.each do |release| %>
         <tr>
-          <td><%= release.version %></td>
+          <td><%= link_to release.version, project_release_path(@project, release) %></td>
           <td><%= release.author.name %></td>
         </tr>
       <% end %>

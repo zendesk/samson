@@ -1,6 +1,10 @@
 class ReleasesController < ApplicationController
   before_filter :find_project
 
+  def show
+    @release = @project.releases.find(params[:id])
+  end
+
   def index
     @releases = @project.releases.sort_by_newest
   end
@@ -12,7 +16,7 @@ class ReleasesController < ApplicationController
   def create
     @release = @project.create_release(release_params)
 
-    redirect_to project_path(@project)
+    redirect_to project_release_path(@project, @release)
   end
 
   private
