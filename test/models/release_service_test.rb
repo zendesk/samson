@@ -43,6 +43,9 @@ class ReleaseServiceTest < ActiveSupport::TestCase
     stage = project.stages.create!(name: "production", deploy_on_release: true)
     release = service.create_release(commit: sha, author: author)
 
+    # Make sure the deploy has taken place.
+    JobExecution.all.each(&:wait!)
+
     assert_equal release.version, stage.deploys.last.reference
   end
 
