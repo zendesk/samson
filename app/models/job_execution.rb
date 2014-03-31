@@ -143,14 +143,14 @@ class JobExecution
 
     @output.write("Attempting to lock repository...\n")
 
-    if grab_lock
+    if lock_free_execution? || grab_lock
       @output.write("Repo locked, starting to clone...\n")
 
       @executor.execute!(*commands).tap do |status|
         if status
           commit = `cd #{repo_cache_dir} && git rev-parse #{@reference}`.chomp
           @job.update_commit!(commit)
-          ProjectLock.release(@job.project)
+          ProjectLock.release(@job.project) unless lock_free_execution?
         end
       end
     else
@@ -166,6 +166,10 @@ class JobExecution
 
   def artifact_cache_dir
     File.join(repo_cache_dir, "artifacts")
+  end
+
+  def lock_free_execution?
+    @job.deploy.nil?
   end
 
   def grab_lock
