@@ -3,6 +3,15 @@ class ReleasesController < ApplicationController
 
   def show
     @release = @project.releases.find(params[:id])
+    previous_release_number = @release.number - 1;
+
+    if previous_release_number > 0
+      @previous_release = @project.releases.find_by number: previous_release_number
+    else
+      @previous_release = @release
+    end
+
+    @changeset = Changeset.find(@project.github_repo, @release.commit, @previous_release.commit)
   end
 
   def index
