@@ -33,6 +33,10 @@ class Project < ActiveRecord::Base
     releases.create(attrs.merge(number: release_number))
   end
 
+  def auto_release_stages
+    stages.deployed_on_release
+  end
+
   # The user/repo part of the repository URL.
   def github_repo
     repository_url.scan(/:(\w+\/\w+)\.git$/).join

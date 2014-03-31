@@ -80,6 +80,7 @@ class ProjectsController < ApplicationController
       :repository_url,
       stages_attributes: [
         :name, :confirm, :command,
+        :deploy_on_release,
         :notify_email_address,
         :datadog_tags,
         :update_github_pull_requests,
