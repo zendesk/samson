@@ -6,6 +6,30 @@ describe Project do
     project.token.wont_be_nil
   end
 
+  describe "#create_release" do
+    let(:project) { projects(:test) }
+    let(:author) { users(:deployer) }
+
+    it "creates a new release" do
+      release = project.create_release(commit: "foo", author: author)
+
+      assert release.persisted?
+    end
+
+    it "defaults to release number 1" do
+      release = project.create_release(commit: "foo", author: author)
+
+      assert_equal 1, release.number
+    end
+
+    it "increments the release number" do
+      project.releases.create!(author: author, commit: "bar", number: 41)
+      release = project.create_release(commit: "foo", author: author)
+
+      assert_equal 42, release.number
+    end
+  end
+
   describe "#webhook_stages_for_branch" do
     let(:project) { projects(:test) }
 

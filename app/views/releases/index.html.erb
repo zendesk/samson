@@ -2,4 +2,22 @@
 
 <%= render partial: "shared/project_tabs", locals: { project: @project, active: "releases" } %>
 <section class="clearfix tabs">
+
+  <p>
+    <%= link_to "Add release manually", new_project_release_path(@project), class: "btn btn-default" %>
+  </p>
+
+  <% if @releases.any? %>
+    <table class="table table-condensed">
+      <% @releases.each do |release| %>
+        <tr>
+          <td><%= release.version %></td>
+          <td><%= release.author.name %></td>
+        </tr>
+      <% end %>
+    </table>
+  <% else %>
+    <p>There haven't been made any releases yet.</p>
+  <% end %>
+
 </section>

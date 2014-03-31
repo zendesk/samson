@@ -4,6 +4,7 @@ class Project < ActiveRecord::Base
   validates :name, :repository_url, presence: true
   before_create :generate_token
 
+  has_many :releases
   has_many :stages
   has_many :deploys, through: :stages
   has_many :jobs, -> { order('created_at DESC') }
@@ -20,6 +21,16 @@ class Project < ActiveRecord::Base
 
   def repo_name
     name.parameterize("_")
+  end
+
+  # Creates a new Release, incrementing the release number. If the Release
+  # fails to save, `#persisted?` will be false.
+  #
+  # Returns the Release.
+  def create_release(attrs = {})
+    latest_release_number = releases.last.try(:number) || 0
+    release_number = latest_release_number + 1
+    releases.create(attrs.merge(number: release_number))
   end
 
   # The user/repo part of the repository URL.
