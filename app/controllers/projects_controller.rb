@@ -26,6 +26,7 @@ class ProjectsController < ApplicationController
 
     stage = @project.stages.build(name: "Production")
     stage.flowdock_flows.build
+    stage.new_relic_applications.build
   end
 
   def create
