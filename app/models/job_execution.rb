@@ -143,14 +143,14 @@ class JobExecution
 
     @output.write("Attempting to lock repository...\n")
 
-    if lock_free_execution? || grab_lock
+    if grab_lock
       @output.write("Repo locked, starting to clone...\n")
 
       @executor.execute!(*commands).tap do |status|
         if status
           commit = `cd #{repo_cache_dir} && git rev-parse #{@reference}`.chomp
           @job.update_commit!(commit)
-          ProjectLock.release(@job.project) unless lock_free_execution?
+          ProjectLock.release(@job.project)
         end
       end
     else
@@ -168,13 +168,10 @@ class JobExecution
     File.join(repo_cache_dir, "artifacts")
   end
 
-  def lock_free_execution?
-    @job.deploy.nil?
-  end
-
   def grab_lock
     lock = false
     end_time = Time.now + 10.minutes
+    holder = @job.deploy ? @job.deploy.stage.name : @job.user.name
 
     until lock || Time.now > end_time
       sleep 1
@@ -183,7 +180,7 @@ class JobExecution
         @output.write("Waiting for repository while cloning for: #{ProjectLock.owner(@job.project)}\n")
       end
 
-      lock ||= ProjectLock.grab(@job.project, @job.deploy.stage)
+      lock ||= ProjectLock.grab(@job.project, holder)
     end
 
     lock

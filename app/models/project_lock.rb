@@ -1,7 +1,7 @@
 class ProjectLock
-  def self.grab(project, stage)
+  def self.grab(project, holder)
     if locks[project.id].try_lock
-      locks[project.id].held_by = stage.name
+      locks[project.id].held_by = holder
       return true
     end
   end
