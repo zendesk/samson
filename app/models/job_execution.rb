@@ -171,7 +171,7 @@ class JobExecution
   def grab_lock
     lock = false
     end_time = Time.now + 10.minutes
-    holder = @job.deploy ? @job.deploy.stage : @job.user.name
+    holder = @job.deploy ? @job.deploy.stage.name : @job.user.name
 
     until lock || Time.now > end_time
       sleep 1
