@@ -1,14 +1,14 @@
 function timeAgoFormat() {
   $("span[data-time]").each(function() {
     var utcms     = this.dataset.time,
-  localDate = new Date(parseInt(utcms));
+    localDate = new Date(parseInt(utcms, 10));
 
-  this.title = localDate.toString();
-  this.innerHTML = moment(localDate).fromNow();
+    this.title = localDate.toString();
+    this.innerHTML = moment(localDate).fromNow();
   });
 }
 
-$(document).ready(timeAgoFormat)
+$(document).ready(timeAgoFormat);
 
 function startStream() {
   $(document).ready(function() {
