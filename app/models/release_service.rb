@@ -31,7 +31,7 @@ class ReleaseService
     deploy_service = DeployService.new(@project, release.author)
 
     @project.auto_release_stages.each do |stage|
-      deploy_service.deploy!(stage, release.commit)
+      deploy_service.deploy!(stage, release.version)
     end
   end
 end

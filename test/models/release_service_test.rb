@@ -41,10 +41,9 @@ class ReleaseServiceTest < ActiveSupport::TestCase
 
   it "deploys the commit to stages if they're configured to" do
     stage = project.stages.create!(name: "production", deploy_on_release: true)
-    
-    service.create_release(commit: sha, author: author)
+    release = service.create_release(commit: sha, author: author)
 
-    assert_equal sha, stage.deploys.last.commit
+    assert_equal release.version, stage.deploys.last.reference
   end
 
   def execute_on_remote_repo(cmds)
