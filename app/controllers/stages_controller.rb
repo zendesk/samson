@@ -86,6 +86,7 @@ class StagesController < ApplicationController
     params.require(:stage).permit(
       :name, :command, :confirm,
       :notify_email_address,
+      :deploy_on_release,
       :datadog_tags,
       :update_github_pull_requests,
       command_ids: [],

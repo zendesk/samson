@@ -39,6 +39,14 @@ class ReleaseServiceTest < ActiveSupport::TestCase
     assert_equal sha, execute_on_remote_repo("git rev-parse #{release.version}").strip 
   end
 
+  it "deploys the commit to stages if they're configured to" do
+    stage = project.stages.create!(name: "production", deploy_on_release: true)
+    
+    service.create_release(commit: sha, author: author)
+
+    assert_equal sha, stage.deploys.last.commit
+  end
+
   def execute_on_remote_repo(cmds)
     `exec 2> /dev/null; cd #{repository_url}; #{cmds}`.tap do
       raise "command failed" unless $?.success?

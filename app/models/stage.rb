@@ -43,6 +43,10 @@ class Stage < ActiveRecord::Base
           locks.stage_id = stages.id")
   end
 
+  def self.deployed_on_release
+    where(deploy_on_release: true)
+  end
+
   def locked?
     lock.present?
   end
