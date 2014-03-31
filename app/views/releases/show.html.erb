@@ -1,5 +1,12 @@
 <% content_for :page_title, "#{@project.name} #{@release.version}" %>
 
+<ol class="breadcrumb">
+  <li><%= link_to "Home", root_path %></li>
+  <li><%= link_to @project.name, project_path(@project) %></li>
+  <li><%= link_to "Releases", project_releases_path(@project) %></li>
+  <li class="active">Release <%= @release.version %></li>
+</ol>
+
 <section class="clearfix tabs">
 <p>Created by <%= @release.author.name %>.</p>
 </section>
