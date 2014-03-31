@@ -39,7 +39,7 @@
 
 <fieldset>
   <legend>Commands</legend>
-  <p>Select the commands you want to run when executing this stage. Double click to edit commands local (indicated with green) to this project.</p>
+  <p>Select the commands you want to run when executing this stage. Double click to edit commands local (indicated with blue) to this project.</p>
 
   <div id="commands">
     <%= form.collection_check_boxes(:command_ids, form.object.all_commands, :id, :command) do |b| %>
