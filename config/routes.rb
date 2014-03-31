@@ -10,6 +10,8 @@ ZendeskSamson::Application.routes.draw do
       end
     end
 
+    resources :releases, only: [:index]
+
     resources :stages do
       resource :lock, only: [:create, :destroy]
 
