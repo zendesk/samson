@@ -2,7 +2,7 @@ class JobsController < ApplicationController
   before_filter :find_project, except: [:enabled]
 
   def index
-    @jobs = @project.jobs.includes(:deploy).where(deploys: { id: nil }).page(params[:page])
+    @jobs = @project.jobs.non_deploy.page(params[:page])
   end
 
   def new

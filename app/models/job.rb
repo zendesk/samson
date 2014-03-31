@@ -8,6 +8,10 @@ class Job < ActiveRecord::Base
 
   after_update { deploy.touch if deploy }
 
+  def self.non_deploy
+    includes(:deploy).where(deploys: { id: nil })
+  end
+
   def self.pending
     where(status: 'pending')
   end
