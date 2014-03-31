@@ -4,7 +4,7 @@
     <%= markdown pr.risks %>
   <% end %>
 <% else %>
-  <p>There are no risks described in any pull request in this deploy. If you want Samson to pick up and display
+  <p>There are no risks described in any pull request in this <%= type %>. If you want Samson to pick up and display
   any risks associated with your pull request, add a heading called "Risks" as the <em>last thing</em> in your
   pull request description. Anything following that heading will be considered part of the risks section.</p>
 <% end %>
