@@ -35,9 +35,7 @@ class OutputBuffer
   end
 
   def to_s
-    chunks.select do |event, data|
-      event == :message
-    end.join("\n")
+    chunks.select { |event, data| event == :message }.map { |event, data| data }.join
   end
 
   def close
