@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20140319001623) do
+ActiveRecord::Schema.define(version: 20140331081549) do
 
   create_table "commands", force: true do |t|
     t.text     "command",    limit: 16777215
@@ -74,6 +74,18 @@ ActiveRecord::Schema.define(version: 20140319001623) do
   end
 
   add_index "projects", ["token"], name: "index_projects_on_token", using: :btree
+
+  create_table "releases", force: true do |t|
+    t.integer  "project_id",              null: false
+    t.string   "commit",                  null: false
+    t.integer  "number",      default: 1
+    t.integer  "author_id",               null: false
+    t.string   "author_type",             null: false
+    t.datetime "created_at"
+    t.datetime "updated_at"
+  end
+
+  add_index "releases", ["project_id", "number"], name: "index_releases_on_project_id_and_number", unique: true, using: :btree
 
   create_table "stage_commands", force: true do |t|
     t.integer  "stage_id"

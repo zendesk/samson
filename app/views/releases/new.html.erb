@@ -1,0 +1,20 @@
+<%= form_for([@project, @release], html: { class: "form-horizontal" }) do |form| %>
+  <section>
+    <fieldset>
+      <legend>Add release of <%= @project.name %></legend>
+
+      <div class="form-group">
+        <%= form.label :commit, "SHA", class: "col-lg-2 control-label" %>
+        <div class="col-lg-4">
+          <%= form.text_field :commit, class: "form-control" %>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <div class="col-lg-offset-2 col-lg-10">
+          <button type="submit" class="btn btn-default">Create release</button>
+        </div>
+      </div>
+    </fieldset>
+  </section>
+<% end %>

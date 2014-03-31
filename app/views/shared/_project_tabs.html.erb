@@ -2,6 +2,9 @@
   <li class="<%= 'active' if active == 'overview'%>">
     <%= link_to "Overview", project_path(project) %>
   </li>
+  <li class="<%= 'active' if active == 'releases'%>">
+    <%= link_to "Releases", project_releases_path(project) %>
+  </li>
   <li class="<%= 'active' if active == 'deploys'%>">
     <%= link_to "Deploys", project_deploys_path(project) %>
   </li>
