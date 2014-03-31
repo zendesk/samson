@@ -7,7 +7,7 @@
   <li class="active">Deploy #<%= @deploy.id %></li>
 </ol>
 
-<div id="header">
+<div id="header" class="stream-header">
   <%= render 'header' %>
 </div>
 
@@ -19,7 +19,7 @@
   <li><a href="#risks" data-type="github" data-toggle="tab">Risks</a></li>
   <li><a href="#jira-issues" data-type="jira" data-toggle="tab">JIRA Issues</a></li>
 
-<% if active? %>
+<% if deploy_active? %>
   <li><a href="#viewers" data-toggle="tab" id="viewers-link">Viewers <span class="badge">0</span></a></li>
 
   <% if NewRelicApi.api_key.present? %>
@@ -37,7 +37,7 @@
 
 <section class="clearfix tabs">
   <div class="tab-content deploy-details">
-    <div class="tab-pane active" id="output" data-stream-url="<%= deploy_stream_path(@deploy.job) %>">
+    <div class="tab-pane active" id="output" data-stream-url="<%= stream_path(@deploy.job) %>">
       <div class="row">
         <div class="btn-toolbar col-md-4 col-md-offset-7 pull-right" id="output-toolbar">
           <div id="output-options" class="btn-group only-active">
@@ -52,7 +52,7 @@
           </div>
 
           <% if current_user.is_deployer? %>
-            <%= link_to "Stop", project_deploy_path(@project, @deploy), remote: true, method: :delete, class: "btn btn-danger pull-right only-active", id: "deploy_stop" %>
+            <%= link_to "Stop", project_deploy_path(@project, @deploy), remote: true, method: :delete, class: "btn btn-danger pull-right only-active" %>
           <% end %>
         </div>
       </div>
@@ -66,7 +66,7 @@
       </div>
     <% end %>
 
-  <% if active? %>
+  <% if deploy_active? %>
     <div class="tab-pane" id="viewers">
       No other viewers.
     </div>
@@ -91,10 +91,10 @@
   <% end %>
   </div>
 
-  <% if active? %>
+  <% if deploy_active? %>
     <%= javascript_tag do %>
       toggleOutputToolbar();
-      startDeployStream();
+      startStream();
     <% end %>
   <% elsif !@deploy.finished? %>
     <div class="alert alert-info">

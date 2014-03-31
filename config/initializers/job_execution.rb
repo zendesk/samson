@@ -5,7 +5,7 @@ if !Rails.env.test? && Job.table_exists?
 
   Rails.application.config.after_initialize do
     Job.pending.each do |job|
-      JobExecution.start_job(job.deploy.reference, job)
+      JobExecution.start_job(job.deploy.try(:reference) || job.commit, job)
     end
   end
 

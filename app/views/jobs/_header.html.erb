@@ -1,0 +1,8 @@
+<h1>
+  <%= @project.name %>
+  <div class="pull-right">
+    <%= link_to "Back", project_jobs_path(@project), class: "btn btn-default" %>
+  </div>
+</h1>
+
+<%= job_status_panel @job %>
