@@ -90,9 +90,9 @@ class Job < ActiveRecord::Base
     elsif running?
       "is executing"
     elsif cancelling?
-      "is cancelling a execute"
+      "is cancelling an execution"
     elsif cancelled?
-      "cancelled a execute"
+      "cancelled an execution"
     elsif succeeded?
       "executed"
     elsif failed?
