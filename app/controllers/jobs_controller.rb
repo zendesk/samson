@@ -1,5 +1,13 @@
 class JobsController < ApplicationController
+  rescue_from ActiveRecord::RecordNotFound do |error|
+    flash[:error] = "Job not found."
+    redirect_to root_path
+  end
+
+  before_filter :authorize_deployer!, only: [:new, :create, :destroy]
+
   before_filter :find_project, except: [:enabled]
+  before_filter :find_job, only: [:show, :destroy]
 
   def index
     @jobs = @project.jobs.non_deploy.page(params[:page])
@@ -27,7 +35,6 @@ class JobsController < ApplicationController
   end
 
   def show
-    @job = Job.find(params[:id])
     respond_to do |format|
       format.html
       format.text do
@@ -47,6 +54,16 @@ class JobsController < ApplicationController
     end
   end
 
+  def destroy
+    if @job.started_by?(current_user) || current_user.is_admin?
+      @job.stop!
+
+      head :ok
+    else
+      head :forbidden
+    end
+  end
+
   private
 
   def job_params
@@ -59,5 +76,9 @@ class JobsController < ApplicationController
 
   def find_project
     @project = Project.find(params[:project_id])
+  end
+
+  def find_job
+    @job = @project.jobs.find(params[:id])
   end
 end

@@ -1,6 +1,6 @@
 ZendeskSamson::Application.routes.draw do
   resources :projects do
-    resources :jobs, only: [:index, :new, :create, :show]
+    resources :jobs, only: [:index, :new, :create, :show, :destroy]
 
     resources :deploys, only: [:index, :new, :create, :show, :destroy] do
       collection do
