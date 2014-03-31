@@ -4,8 +4,6 @@ class Job < ActiveRecord::Base
 
   has_one :deploy
 
-  validates :command, presence: true
-
   after_update { deploy.touch if deploy }
 
   def self.non_deploy
