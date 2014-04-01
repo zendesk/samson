@@ -43,6 +43,34 @@ describe Stage do
     end
   end
 
+  describe "#current_release?" do
+    let(:project) { projects(:test) }
+    let(:stage) { stages(:test_staging) }
+    let(:author) { users(:deployer) }
+    let(:job) { project.jobs.create!(user: author, commit: "x", command: "echo", status: "succeeded") }
+
+    let(:previous_release) { project.releases.create!(number: 3, author: author, commit: "A") }
+    let(:last_release) { project.releases.create!(number: 4, author: author, commit: "B") }
+    let(:undeployed_release) { project.releases.create!(number: 5, author: author, commit: "C") }
+
+    before do
+      stage.deploys.create!(reference: "v3", job: job)
+      stage.deploys.create!(reference: "v4", job: job)
+    end
+
+    it "returns true if the release was the last thing deployed to the stage" do
+      assert stage.current_release?(last_release)
+    end
+
+    it "returns false if the release is not the last thing deployed to the stage" do
+      refute stage.current_release?(previous_release)
+    end
+
+    it "returns false if the release has never been deployed to the stage" do
+      refute stage.current_release?(undeployed_release)
+    end
+  end
+
   describe "#create_deploy" do
     let(:user) { users(:deployer) }
 
