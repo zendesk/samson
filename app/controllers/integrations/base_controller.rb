@@ -7,8 +7,10 @@ class Integrations::BaseController < ApplicationController
   end
 
   def create
-    create_new_release
-    deploy_to_stages
+    if deploy?
+      create_new_release
+      deploy_to_stages
+    end
 
     head :ok
   end
@@ -23,13 +25,11 @@ class Integrations::BaseController < ApplicationController
   end
 
   def deploy_to_stages
-    if deploy?
-      stages = project.webhook_stages_for_branch(branch)
-      deploy_service = DeployService.new(project, user)
+    stages = project.webhook_stages_for_branch(branch)
+    deploy_service = DeployService.new(project, user)
 
-      stages.each do |stage|
-        deploy_service.deploy!(stage, commit)
-      end
+    stages.each do |stage|
+      deploy_service.deploy!(stage, commit)
     end
   end
 
