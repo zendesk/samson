@@ -13,24 +13,25 @@
   <% if @changeset.empty? %>
     <p>This release contains no changes.</p>
   <% else %>
-    <legend>Pull requests</legend>
-
-    <%= render 'changeset/pulls', changeset: @changeset %>
+    <% if @changeset.pull_requests.any? %>
+      <legend>Pull requests</legend>
+      <%= render 'changeset/pulls', changeset: @changeset %>
+    <% end %>
 
     <legend>Commits</legend>
-
     <%= render 'changeset/commits', changeset: @changeset %>
 
     <legend>Files</legend>
-
     <%= render 'changeset/files', changeset: @changeset %>
 
-    <legend>Risks</legend>
+    <% if @changeset.risks? %>
+      <legend>Risks</legend>
+      <%= render 'changeset/risks', pull_requests: @changeset.risky_pull_requests, type: "release" %>
+    <% end %>
 
-    <%= render 'changeset/risks', pull_requests: @changeset.risky_pull_requests, type: "release" %>
-
-    <legend>Jira issues</legend>
-
-    <%= render 'changeset/jira_issues', jira_issues: @changeset.jira_issues, type: "release" %>
+    <% if @changeset.jira_issues.any? %>
+      <legend>Jira issues</legend>
+      <%= render 'changeset/jira_issues', jira_issues: @changeset.jira_issues, type: "release" %>
+    <% end %>
   <% end %>
 </section>
