@@ -131,7 +131,7 @@ class JobExecution
     commands = [
       <<-SHELL,
         if [ -d #{repo_cache_dir} ]
-          then cd #{repo_cache_dir} && git fetch -ap
+          then cd #{repo_cache_dir} && git fetch -ap && git reset --hard origin/master
         else
           git -c core.askpass=true clone --mirror #{repo_url} #{repo_cache_dir}
         fi
