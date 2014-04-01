@@ -43,8 +43,12 @@ class Changeset
     @pull_requests ||= find_pull_requests
   end
 
+  def risks?
+    risky_pull_requests.any?
+  end
+
   def risky_pull_requests
-    pull_requests.select(&:risky?)
+    @risky_pull_requests ||= pull_requests.select(&:risky?)
   end
 
   def jira_issues
