@@ -30,6 +30,29 @@ describe Project do
     end
   end
 
+  describe "#changeset_for_release" do
+    let(:project) { projects(:test) }
+    let(:author) { users(:deployer) }
+    Changeset = MiniTest::Mock.new
+
+    it "returns changeset" do
+      project.releases.create!(author: author, commit: "bar", number: 50)
+      release = project.create_release(commit: "foo", author: author)
+
+      Changeset.expect :find, 1, [ "bar/foo", "bar", "foo"]
+
+      refute_nil project.changeset_for_release(release)
+    end
+
+    it "returns empty changeset" do
+      release = project.releases.create!(author: author, commit: "bar", number: 50)
+
+      Changeset.expect :find, 1, [ "bar/foo", nil, "bar"]
+
+      refute_nil project.changeset_for_release(release)
+    end
+  end
+
   describe "#webhook_stages_for_branch" do
     let(:project) { projects(:test) }
 

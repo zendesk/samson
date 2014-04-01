@@ -1,9 +1,9 @@
 .releases {
-  h2 {
-    margin: 30px 0px;
-  }
-
   .table > tbody > tr > td {
     border-top: none;
+  }
+
+  .table > tbody > tr:last-child > td {
+    border-bottom: none;
   }
 }

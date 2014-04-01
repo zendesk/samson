@@ -11,7 +11,7 @@
 </div>
 
 <div class="tab-pane" id="risks">
-  <%= render 'changeset/risks', pull_requests: @changeset.pull_requests.select(&:risky?), type: "deploy" %>
+  <%= render 'changeset/risks', pull_requests: @changeset.risky_pull_requests, type: "deploy" %>
 </div>
 
 <div class="tab-pane" id="jira-issues">
