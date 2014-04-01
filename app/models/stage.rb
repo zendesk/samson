@@ -51,6 +51,10 @@ class Stage < ActiveRecord::Base
     lock.present?
   end
 
+  def current_release?(release)
+    last_deploy && last_deploy.reference == release.version
+  end
+
   def create_deploy(options = {})
     user = options.fetch(:user)
     reference = options.fetch(:reference)

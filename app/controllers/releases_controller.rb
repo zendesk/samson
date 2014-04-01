@@ -7,6 +7,7 @@ class ReleasesController < ApplicationController
   end
 
   def index
+    @stages = @project.stages
     @releases = @project.releases.sort_by_newest
   end
 
