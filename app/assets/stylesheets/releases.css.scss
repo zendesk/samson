@@ -1,9 +1,27 @@
-.releases {
+.release {
   .table > tbody > tr > td {
     border-top: none;
   }
 
   .table > tbody > tr:last-child > td {
     border-bottom: none;
+  }
+}
+
+.release-list {
+  tbody > tr > td {
+    border-top: none;
+  }
+
+  tr:last-child > td {
+    border-bottom: none;
+  }
+
+  td:first-child {
+    width: 100px;
+  }
+
+  td:last-child {
+    width: 80px;
   }
 }
