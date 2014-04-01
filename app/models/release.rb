@@ -6,6 +6,10 @@ class Release < ActiveRecord::Base
     order("created_at DESC")
   end
 
+  def deployed_stages
+    @deployed_stages ||= project.stages.select {|stage| stage.current_release?(self) }
+  end
+
   def version
     "v#{number}"
   end
