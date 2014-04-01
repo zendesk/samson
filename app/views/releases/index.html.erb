@@ -10,18 +10,28 @@
   </p>
 
   <% if @releases.any? %>
-    <table class="table table-condensed">
-      <% @releases.each do |release| %>
+    <table class="table">
+      <thead>
         <tr>
-          <td><%= link_to release.version, project_release_path(@project, release) %></td>
-          <td><%= release.author.name %></td>
-          <td>
-            <% @stages.select {|stage| stage.current_release?(release) }.each do |stage| %>
-              <span class="label label-primary" title="Currently deployed to <%= stage.name.upcase %>"><%= stage.name.upcase %></span>
-            <% end %>
-          </td>
+          <th>Release</th>
+          <th>Author</th>
+          <th>Currently deployed to</th>
         </tr>
-      <% end %>
+      </thead>
+
+      <tbody>
+        <% @releases.each do |release| %>
+          <tr>
+            <td><%= link_to release.version, project_release_path(@project, release) %></td>
+            <td><%= release.author.name %></td>
+            <td>
+              <% @stages.select {|stage| stage.current_release?(release) }.each do |stage| %>
+                <span class="label label-primary" title="Currently deployed to <%= stage.name.upcase %>"><%= stage.name.upcase %></span>
+              <% end %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
     </table>
   <% else %>
     <p>There haven't been made any releases yet.</p>
