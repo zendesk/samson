@@ -7,15 +7,15 @@
 
   <div class="tab-content">
     <div class="tab-pane active" id="files">
-      <%= render 'deploys/files', changeset: @changeset %>
+      <%= render 'changeset/files', changeset: @changeset %>
     </div>
 
     <div class="tab-pane" id="commits">
-      <%= render 'deploys/commits', changeset: @changeset %>
+      <%= render 'changeset/commits', changeset: @changeset %>
     </div>
 
     <div class="tab-pane" id="pulls">
-      <%= render 'deploys/pulls', changeset: @changeset %>
+      <%= render 'changeset/pulls', changeset: @changeset %>
     </div>
   </div>
 </div>

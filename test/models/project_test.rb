@@ -30,6 +30,29 @@ describe Project do
     end
   end
 
+  describe "#changeset_for_release" do
+    let(:project) { projects(:test) }
+    let(:author) { users(:deployer) }
+
+
+    it "returns changeset" do
+      changeset = Changeset.new("url", "foo/bar", "a", "b")
+      project.releases.create!(author: author, commit: "bar", number: 50)
+      release = project.create_release(commit: "foo", author: author)
+
+      Changeset.stubs(:find).with("bar/foo", "bar", "foo").returns(changeset)
+      assert_equal changeset, project.changeset_for_release(release)
+    end
+
+    it "returns empty changeset" do
+      changeset = Changeset.new("url", "foo/bar", "a", "a")
+      release = project.releases.create!(author: author, commit: "bar", number: 50)
+
+      Changeset.stubs(:find).with("bar/foo", nil, "bar").returns(changeset)
+      assert_equal changeset, project.changeset_for_release(release)
+    end
+  end
+
   describe "#webhook_stages_for_branch" do
     let(:project) { projects(:test) }
 

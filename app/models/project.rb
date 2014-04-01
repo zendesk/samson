@@ -46,6 +46,12 @@ class Project < ActiveRecord::Base
     release_branch == branch
   end
 
+  def changeset_for_release(release)
+    prior_release = release_prior_to(release)
+    prior_commit = prior_release && prior_release.commit
+    Changeset.find(github_repo, prior_commit, release.commit)
+  end
+
   # The user/repo part of the repository URL.
   def github_repo
     repository_url.scan(/:(\w+\/\w+)\.git$/).join
@@ -63,5 +69,9 @@ class Project < ActiveRecord::Base
 
   def generate_token
     self.token = SecureRandom.hex
+  end
+
+  def release_prior_to(release)
+    releases.where("number < ?", release.number).order(:number).last
   end
 end

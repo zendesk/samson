@@ -7,6 +7,33 @@
   <li class="active">Release <%= @release.version %></li>
 </ol>
 
-<section class="clearfix tabs">
-<p>Created by <%= @release.author.name %>.</p>
+<h1>Release <%= @release.version %></h1>
+
+<section class="clearfix tabs releases">
+
+  <p>Created by <%= @release.author.name %> at <%= @release.created_at %>.</p>
+
+  <% if @changeset.empty? %>
+    <p>This is the first release, no detailed information available.
+  <% else %>
+    <legend>Pull requests</legend>
+
+    <%= render 'changeset/pulls', changeset: @changeset %>
+
+    <legend>Commits</legend>
+
+    <%= render 'changeset/commits', changeset: @changeset %>
+
+    <legend>Files</legend>
+
+    <%= render 'changeset/files', changeset: @changeset %>
+
+    <legend>Risks</legend>
+
+    <%= render 'changeset/risks', pull_requests: @changeset.risky_pull_requests, type: "release" %>
+
+    <legend>Jira issues</legend>
+
+    <%= render 'changeset/jira_issues', jira_issues: @changeset.jira_issues, type: "release" %>
+  <% end %>
 </section>

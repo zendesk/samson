@@ -43,12 +43,20 @@ class Changeset
     @pull_requests ||= find_pull_requests
   end
 
+  def risky_pull_requests
+    pull_requests.select(&:risky?)
+  end
+
   def jira_issues
     @jira_issues ||= pull_requests.map(&:jira_issues).flatten
   end
 
   def authors
     commits.map(&:author_name).uniq
+  end
+
+  def empty?
+    @previous_commit == @commit
   end
 
   private
