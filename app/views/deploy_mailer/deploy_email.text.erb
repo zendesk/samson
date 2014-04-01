@@ -3,7 +3,7 @@
 Deploy details: <%= project_deploy_url(@project, @deploy) %>
 
 Risks:
-<% if (risks = @changeset.pull_requests.select(&:risky?)) && risks.any? %>
+<% if (risks = @changeset.risky_pull_requests) %>
   <% risks.each do |pr| %>
     #<%= pr.number %> <%= pr.title %> <%= pr.url %>
       <%= pr.risks %>

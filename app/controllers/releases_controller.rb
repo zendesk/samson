@@ -3,6 +3,7 @@ class ReleasesController < ApplicationController
 
   def show
     @release = @project.releases.find(params[:id])
+    @changeset = @project.changeset_for_release(@release)
   end
 
   def index

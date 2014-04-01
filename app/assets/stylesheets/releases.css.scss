@@ -1,0 +1,9 @@
+.releases {
+  .table > tbody > tr > td {
+    border-top: none;
+  }
+
+  .table > tbody > tr:last-child > td {
+    border-bottom: none;
+  }
+}
