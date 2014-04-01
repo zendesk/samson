@@ -59,7 +59,7 @@ class ProjectsController < ApplicationController
 
   def update
     if project.update_attributes(project_params)
-      redirect_to root_path
+      redirect_to project_path(project)
     else
       flash[:error] = project.errors.full_messages
       render :edit
@@ -79,6 +79,7 @@ class ProjectsController < ApplicationController
     params.require(:project).permit(
       :name,
       :repository_url,
+      :release_branch,
       stages_attributes: [
         :name, :confirm, :command,
         :deploy_on_release,

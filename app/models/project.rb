@@ -37,6 +37,15 @@ class Project < ActiveRecord::Base
     stages.deployed_on_release
   end
 
+  # Whether to create new releases when the branch is updated.
+  #
+  # branch - The String name of the branch in question.
+  #
+  # Returns true if new releases should be created, false otherwise.
+  def create_releases_for_branch?(branch)
+    release_branch == branch
+  end
+
   # The user/repo part of the repository URL.
   def github_repo
     repository_url.scan(/:(\w+\/\w+)\.git$/).join

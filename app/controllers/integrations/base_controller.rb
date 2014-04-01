@@ -7,19 +7,31 @@ class Integrations::BaseController < ApplicationController
   end
 
   def create
-    return head(:ok) unless deploy?
-
-    stages = project.webhook_stages_for_branch(branch)
-    deploy_service = DeployService.new(project, user)
-
-    stages.each do |stage|
-      deploy_service.deploy!(stage, commit)
-    end
+    create_new_release
+    deploy_to_stages
 
     head :ok
   end
 
   protected
+
+  def create_new_release
+    if project.create_releases_for_branch?(branch)
+      release_service = ReleaseService.new(project)
+      release_service.create_release(commit: commit, author: user)
+    end
+  end
+
+  def deploy_to_stages
+    if deploy?
+      stages = project.webhook_stages_for_branch(branch)
+      deploy_service = DeployService.new(project, user)
+
+      stages.each do |stage|
+        deploy_service.deploy!(stage, commit)
+      end
+    end
+  end
 
   def project
     @project ||= Project.find_by_token!(params[:token])

@@ -114,7 +114,7 @@ describe ProjectsController do
         let(:params) { { :project => { :name => "Hi-yo" } } }
 
         it "redirects to root url" do
-          assert_redirected_to root_path
+          assert_redirected_to project_path(project.reload)
         end
 
         it "creates a new project" do

@@ -71,6 +71,7 @@ ActiveRecord::Schema.define(version: 20140331121039) do
     t.datetime "created_at"
     t.datetime "updated_at"
     t.string   "token"
+    t.string   "release_branch"
   end
 
   add_index "projects", ["token"], name: "index_projects_on_token", using: :btree
