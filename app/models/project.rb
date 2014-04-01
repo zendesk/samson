@@ -48,7 +48,7 @@ class Project < ActiveRecord::Base
 
   def changeset_for_release(release)
     prior_release = release_prior_to(release)
-    prior_commit = prior_release.nil? ? nil : prior_release.commit
+    prior_commit = prior_release && prior_release.commit
     Changeset.find(github_repo, prior_commit, release.commit)
   end
 

@@ -33,23 +33,23 @@ describe Project do
   describe "#changeset_for_release" do
     let(:project) { projects(:test) }
     let(:author) { users(:deployer) }
-    Changeset = MiniTest::Mock.new
+
 
     it "returns changeset" do
+      changeset = Changeset.new("url", "foo/bar", "a", "b")
       project.releases.create!(author: author, commit: "bar", number: 50)
       release = project.create_release(commit: "foo", author: author)
 
-      Changeset.expect :find, 1, [ "bar/foo", "bar", "foo"]
-
-      refute_nil project.changeset_for_release(release)
+      Changeset.stubs(:find).with("bar/foo", "bar", "foo").returns(changeset)
+      assert_equal changeset, project.changeset_for_release(release)
     end
 
     it "returns empty changeset" do
+      changeset = Changeset.new("url", "foo/bar", "a", "a")
       release = project.releases.create!(author: author, commit: "bar", number: 50)
 
-      Changeset.expect :find, 1, [ "bar/foo", nil, "bar"]
-
-      refute_nil project.changeset_for_release(release)
+      Changeset.stubs(:find).with("bar/foo", nil, "bar").returns(changeset)
+      assert_equal changeset, project.changeset_for_release(release)
     end
   end
 
