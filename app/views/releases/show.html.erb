@@ -9,7 +9,7 @@
 
 <h1>Release <%= @release.version %></h1>
 
-<section class="clearfix tabs releases">
+<section class="clearfix tabs release">
   <div class="pull-right">
     <%= link_to "Deploy", new_project_deploy_path(@project, reference: @release.version), role: "button", class: "btn btn-primary" %>
   </div>

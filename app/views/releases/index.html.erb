@@ -10,12 +10,13 @@
   </p>
 
   <% if @releases.any? %>
-    <table class="table">
+    <table class="table release-list">
       <thead>
         <tr>
           <th>Release</th>
           <th>Author</th>
           <th>Currently deployed to</th>
+          <th></th>
         </tr>
       </thead>
 
@@ -28,6 +29,20 @@
               <% @stages.select {|stage| stage.current_release?(release) }.each do |stage| %>
                 <span class="label label-primary" title="Currently deployed to <%= stage.name.upcase %>"><%= stage.name.upcase %></span>
               <% end %>
+            </td>
+            <td>
+              <div class="btn-group">
+                <button type="button" class="btn btn-default btn-primary dropdown-toggle" data-toggle="dropdown">
+                  Deploy to <span class="caret"></span>
+                </button>
+                <ul class="dropdown-menu" role="menu">
+                  <% @stages.each do |stage| %>
+                    <li>
+                      <%= link_to stage.name, new_project_deploy_path(@project, reference: release.version, stage_id: stage.id) %>
+                    </li>
+                    <% end %>
+                </ul>
+              </div>
             </td>
           </tr>
         <% end %>
