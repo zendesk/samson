@@ -9,6 +9,11 @@ class ReleasesController < ApplicationController
   def index
     @stages = @project.stages
     @releases = @project.releases.sort_by_newest
+
+    respond_to do |format|
+      format.json { render json: @releases.map(&:version), root: false }
+      format.html
+    end
   end
 
   def new
