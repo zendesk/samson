@@ -18,7 +18,7 @@ class ReleaseService
 
   def push_tag_to_git_repository(release)
     command = <<-SH
-      git tag -f #{release.version} #{release.commit}
+      git tag -f -a #{release.version} #{release.commit}
       git push #{@project.repository_url} #{release.version}
     SH
 
