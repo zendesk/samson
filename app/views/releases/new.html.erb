@@ -1,8 +1,7 @@
+<h1>Add release of <%= @project.name %></h1>
 <%= form_for([@project, @release], html: { class: "form-horizontal" }) do |form| %>
   <section>
     <fieldset>
-      <legend>Add release of <%= @project.name %></legend>
-
       <div class="form-group">
         <%= form.label :commit, "SHA", class: "col-lg-2 control-label" %>
         <div class="col-lg-4">
