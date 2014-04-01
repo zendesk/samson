@@ -1,4 +1,6 @@
 //= require typeahead
+//= require changesets
+
 var following = true;
 $(function () {
   var changesetLoaded = false;
@@ -30,13 +32,6 @@ $(function () {
           }
         });
       }
-  });
-
-  $(".deploy-details").on("click", ".file-summary", function (e) {
-    var row = $(this);
-    var patch = row.next();
-
-    patch.toggle();
   });
 
   var prefetchUrl = $("#deploy_reference").data("prefetchUrl");
