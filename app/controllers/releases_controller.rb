@@ -17,7 +17,7 @@ class ReleasesController < ApplicationController
   end
 
   def new
-    @release = @project.releases.build
+    @release = @project.build_release
   end
 
   def create

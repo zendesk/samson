@@ -6,6 +6,7 @@
         <%= form.label :commit, "SHA", class: "col-lg-2 control-label" %>
         <div class="col-lg-4">
           <%= form.text_field :commit, class: "form-control" %>
+          <p class="help-block">This commit will be tagged with the version number <%= @release.version %>.</p>
         </div>
       </div>
 
