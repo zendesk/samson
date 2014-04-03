@@ -23,11 +23,11 @@
       <tbody>
         <% @releases.each do |release| %>
           <tr>
-            <td><%= link_to release.version, project_release_path(@project, release) %></td>
+            <td><%= link_to release.version, project_release_path(@project, release) , class: "release-label label label-success"%></td>
             <td><%= release.author.name %></td>
             <td>
               <% @stages.select {|stage| stage.current_release?(release) }.each do |stage| %>
-                <span class="label label-primary" title="Currently deployed to <%= stage.name.upcase %>"><%= stage.name.upcase %></span>
+                <span class="release-label release-stage label label-primary" title="Currently deployed to <%= stage.name.upcase %>"><%= stage.name.upcase %></span>
               <% end %>
             </td>
             <td>
