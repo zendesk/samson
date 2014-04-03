@@ -37,6 +37,10 @@ class Project < ActiveRecord::Base
     stages.deployed_on_release
   end
 
+  def manage_releases?
+    releases.any?
+  end
+
   # Whether to create new releases when the branch is updated.
   #
   # branch - The String name of the branch in question.
