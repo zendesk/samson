@@ -103,6 +103,18 @@ Skip a deploy:
 Add "[deploy skip]" to your commit message, and Samson will ignore the webhook
 from CI.
 
+#### Continuous Delivery & Releases
+
+In addition to automatically deploying passing commits to various stages, you
+can also create an automated continuous delivery pipeline. By setting a *release
+branch*, each new passing commit on that branch will cause a new release, with a
+automatically incrementing version number. The commit will be tagged with the
+version number, e.g. `v42`, and the release will appear in Samson.
+
+Any stage can be configured to automatically deploy new releases. For instance,
+you might want each new release to be deployed to your staging environment
+automatically.
+
 ### Team
 
 Core team is @steved555, @dasch, @jwswj, @halcyonCorsair, @princemaple & @sandlerr.
