@@ -35,6 +35,7 @@ class DeployService
     send_flowdock_notification(stage, deploy)
     send_datadog_notification(stage, deploy)
     send_github_notification(stage, deploy)
+    send_zendesk_notification(stage, deploy)
   end
 
   def send_flowdock_notification(stage, deploy)
@@ -52,6 +53,12 @@ class DeployService
   def send_github_notification(stage, deploy)
     if stage.send_github_notifications?
       GithubNotification.new(stage, deploy).deliver
+    end
+  end
+
+  def send_zendesk_notification(stage, deploy)
+    if stage.name == "Production"
+      ZendeskNotification.new(stage, deploy).deliver
     end
   end
 end

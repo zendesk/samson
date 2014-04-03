@@ -51,6 +51,10 @@ class Changeset
     commits.map(&:author_name).uniq
   end
 
+  def zendesk_tickets
+    @zendesk_tickets ||= commits.map(&:zendesk_tickets).compact.uniq
+  end
+
   private
 
   def find_pull_requests

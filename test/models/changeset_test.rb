@@ -33,4 +33,25 @@ describe Changeset do
       changeset.pull_requests.must_equal []
     end
   end
+
+  describe "#zendesk_tickets" do
+    let(:comparison) { stub("comparison") }
+
+    it "returns a list of Zendesk tickets mentioned in commit messages" do
+      c1 = stub("commit1", commit: stub(message: "ZD#123 this fixes a very bad bug"))
+      c2 = stub("commit2", commit: stub(message: "ZD456 Fix typo"))
+      comparison.stubs(:commits).returns([c1, c2])
+
+      changeset = Changeset.new(comparison, "foo/bar", "a", "b")
+      changeset.zendesk_tickets.must_equal [123, 456]
+    end
+
+    it "returns an empty array if there are no ticket references" do
+      commit = stub("commit", commit: stub(message: "Fix build error"))
+      comparison.stubs(:commits).returns([commit])
+
+      changeset = Changeset.new(comparison, "foo/bar", "a", "b")
+      changeset.zendesk_tickets.must_equal []
+    end
+  end
 end

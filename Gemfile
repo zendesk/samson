@@ -68,6 +68,8 @@ group :no_preload do
   gem 'coderay', '~> 1.1.0'
 
   gem 'dogapi', '~> 1.9.1'
+
+  gem 'zendesk_api'
 end
 
 group :development do
