@@ -55,6 +55,10 @@ class Stage < ActiveRecord::Base
     last_deploy && last_deploy.reference == release.version
   end
 
+  def confirm_before_deploying?
+    confirm
+  end
+
   def create_deploy(options = {})
     user = options.fetch(:user)
     reference = options.fetch(:reference)

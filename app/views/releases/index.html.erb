@@ -38,7 +38,7 @@
                 <ul class="dropdown-menu" role="menu">
                   <% @stages.each do |stage| %>
                     <li>
-                      <%= link_to stage.name, new_project_deploy_path(@project, reference: release.version, stage_id: stage.id) %>
+                      <%= link_to_deploy_stage(stage, release) %>
                     </li>
                     <% end %>
                 </ul>
