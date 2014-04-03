@@ -2,7 +2,7 @@ class ReleasesController < ApplicationController
   before_filter :find_project
 
   def show
-    @release = @project.releases.find(params[:id])
+    @release = @project.releases.find_by_version(params[:id])
     @changeset = @project.changeset_for_release(@release)
   end
 

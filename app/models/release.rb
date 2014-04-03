@@ -6,6 +6,10 @@ class Release < ActiveRecord::Base
     order(number: :desc)
   end
 
+  def to_param
+    version
+  end
+
   def deployed_stages
     @deployed_stages ||= project.stages.select {|stage| stage.current_release?(self) }
   end
@@ -13,4 +17,11 @@ class Release < ActiveRecord::Base
   def version
     "v#{number}"
   end
+
+  def self.find_by_version(version)
+   if version =~ /\Av(\d+)\Z/
+     number = $1.to_i
+     find_by_number(number)
+   end
+ end
 end
