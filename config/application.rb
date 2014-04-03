@@ -21,7 +21,7 @@ module ZendeskSamson
     # config.i18n.default_locale = :de
     #
 
-    config.cache_store = :dalli_store
+    config.cache_store = :dalli_store, { value_max_bytes: 3000000, compress: true }
 
     # Allow streaming
     config.preload_frameworks = true
