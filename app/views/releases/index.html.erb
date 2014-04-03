@@ -5,7 +5,7 @@
 <%= render partial: "shared/project_tabs", locals: { project: @project, active: "releases" } %>
 <section class="clearfix tabs">
 
-  <p>
+  <p class="pull-right">
     <%= link_to "Create release manually", new_project_release_path(@project), class: "btn btn-default" %>
   </p>
 
