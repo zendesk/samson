@@ -55,6 +55,10 @@ class Changeset
     @jira_issues ||= pull_requests.map(&:jira_issues).flatten
   end
 
+  def authors
+    commits.map(&:author).uniq
+  end
+
   def author_names
     commits.map(&:author_name).uniq
   end

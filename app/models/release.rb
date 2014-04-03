@@ -14,6 +14,14 @@ class Release < ActiveRecord::Base
     @deployed_stages ||= project.stages.select {|stage| stage.current_release?(self) }
   end
 
+  def changeset
+    @changeset ||= Changeset.find(project.github_repo, previous_release.try(:commit), commit)
+  end
+
+  def previous_release
+    project.release_prior_to(self)
+  end
+
   def version
     "v#{number}"
   end
