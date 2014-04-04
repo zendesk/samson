@@ -1,4 +1,24 @@
 module ReleasesHelper
+  def release_label(project, release)
+    path = project_release_path(project, release)
+    classes = %w(release-label label)
+
+    if release.changeset.hotfix?
+      classes << "label-warning"
+    else
+      classes << "label-success"
+    end
+
+    content = link_to(release.version, path, class: classes.join(" "))
+
+    if release.changeset.hotfix?
+      warning = content_tag(:span, "", class: "glyphicon glyphicon-exclamation-sign", title: "Hotfix!")
+      content + " " + warning
+    else
+      content
+    end
+  end
+
   def link_to_deploy_stage(stage, release)
     deploy_params = { reference: release.version, stage_id: stage.id }
 

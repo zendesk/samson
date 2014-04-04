@@ -1,6 +1,6 @@
-<tr class="<%= "warning" if release.changeset.hotfix? %>">
+<tr>
   <td>
-    <%= link_to release.version, project_release_path(@project, release), class: "release-label label label-success" %>
+    <%= release_label(@project, release) %>
   </td>
   <td>
     <% release.changeset.authors.each do |author| %>
