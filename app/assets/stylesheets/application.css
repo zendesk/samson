@@ -42,3 +42,8 @@
 .navbar .navbar-btn.pull-right {
   margin-right: 15px;
 }
+
+.label-hotfix {
+  background-color: #f0ad4e;
+  text-transform: uppercase;
+}

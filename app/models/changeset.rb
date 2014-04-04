@@ -27,6 +27,10 @@ class Changeset
     "https://github.com/#{repo}/compare/#{commit_range}"
   end
 
+  def hotfix?
+    commits.any?(&:hotfix?)
+  end
+
   def commit_range
     "#{previous_commit}...#{commit}"
   end
