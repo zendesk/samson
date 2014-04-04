@@ -15,7 +15,7 @@
               <% end %>
               </li>
             <% end %>
-            <% (Project.alphabetical.all - current_user.starred_projects).each do |project| %>
+            <% (Project.alphabetical.to_a - current_user.starred_projects).each do |project| %>
               <li>
               <%= link_to project_path(project) do %>
                 <span class="glyphicon">&nbsp;</span> <%= project.name %>
