@@ -1,8 +1,7 @@
 <% content_for :page_title, "#{@project.name} releases" %>
 
-<h1><%= @project.name %></h1>
+<%= render 'projects/header', project: @project, tab: "releases" %>
 
-<%= render partial: "shared/project_tabs", locals: { project: @project, active: "releases" } %>
 <section class="clearfix tabs">
 
   <p class="pull-right">

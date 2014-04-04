@@ -1,7 +1,4 @@
-<h1><%= @project.name %></h1>
-
-<%= render partial: "shared/project_tabs",
-           locals: { project: @project, active: "webhooks" } %>
+<%= render 'projects/header', project: @project, tab: "webhooks" %>
 
 <section class="tabs">
   <p>In order to automatically trigger a deploy to a stage, add a branch &rarr; stage mapping below

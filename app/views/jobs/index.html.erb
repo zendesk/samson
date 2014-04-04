@@ -1,9 +1,4 @@
-<h1><%= @project.name %></h1>
-
-<% if current_user.is_deployer? %>
-  <%= render partial: "shared/project_tabs",
-    locals: { project: @project, active: "jobs" } %>
-<% end %>
+<%= render 'projects/header', project: @project, tab: "jobs" %>
 
 <section class="tabs">
   <table class="table">

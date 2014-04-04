@@ -1,15 +1,8 @@
 <% content_for :page_title, project.name %>
 
+<%= render 'projects/header', project: project, tab: "overview" %>
+
 <% cache project do %>
-  <h1 class="project-title">
-    <%= star_for_project(project) %>
-    <%= project.name %>
-    <%= render partial: "shared/github_link", locals: { project: project } %>
-  </h1>
-
-  <%= render partial: "shared/project_tabs",
-             locals: { active: "overview" } %>
-
   <section class="clearfix tabs">
     <table class="project-stages table table-condensed">
       <thead>
