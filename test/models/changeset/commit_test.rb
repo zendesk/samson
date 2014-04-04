@@ -28,4 +28,16 @@ describe Changeset::Commit do
       commit.pull_request_number.must_be_nil
     end
   end
+
+  describe "#hotfix?" do
+    it "returns true if the commit message starts with HOTFIX" do
+      commit_data.stubs(:message).returns("HOTFIX: DANCE!")
+      assert commit.hotfix?
+    end
+
+    it "returns false if the commit message does not start with HOTFIX" do
+      commit_data.stubs(:message).returns("JUST DANCE!")
+      assert !commit.hotfix?
+    end
+  end
 end
