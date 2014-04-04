@@ -1,7 +1,4 @@
-<h1><%= @project.name %></h1>
-
-<%= render partial: "shared/project_tabs",
-           locals: { project: @project, active: "stages" } %>
+<%= render 'projects/header', project: @project, tab: "stages" %>
 
 <section class="tabs">
   <ul id="stages" data-url="<%= reorder_project_stages_path(@project) %>" data-sortable="<%= current_user.is_admin? %>">
