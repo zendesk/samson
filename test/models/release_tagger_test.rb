@@ -33,6 +33,22 @@ class ReleaseTaggerTest < ActiveSupport::TestCase
     assert_equal sha, remote_sha
   end
 
+  it "raises InvalidCommit if the commit was not a valid reference" do
+    release = project.releases.create!(author: author, number: 12, commit: "nanana")
+
+    assert_raises ReleaseTagger::InvalidCommit do
+      release_tagger.tag_release!(release)
+    end
+  end
+
+  it "raises Error if the tagging failed for any reason" do
+    system("rm -fr #{repository_url}")
+
+    assert_raises ReleaseTagger::Error do
+      release_tagger.tag_release!(release)
+    end
+  end
+
   def execute_on_remote_repo(cmds)
     `exec 2> /dev/null; cd #{repository_url}; #{cmds}`.tap do
       raise "command failed" unless $?.success?
