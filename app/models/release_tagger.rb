@@ -8,7 +8,7 @@ class ReleaseTagger
 
   def tag_release!(release)
     command = <<-SH
-      test -f /home/deploy/bin/create_ssh_environment.sh && source /home/deploy/bin/create_ssh_environment.sh
+      test -f /home/deploy/bin/create_ssh_environment.sh && source /home/deploy/bin/create_ssh_environment.sh || true
 
       git tag -f #{release.version} #{release.commit}
       git push #{@project.repository_url} #{release.version}
