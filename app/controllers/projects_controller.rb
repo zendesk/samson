@@ -12,7 +12,7 @@ class ProjectsController < ApplicationController
   def index
     respond_to do |format|
       format.html do
-        @projects = Project.alphabetical.includes(stages: [:current_deploy, { lock: :user }])
+        @projects = projects_for_user.alphabetical.includes(stages: [:current_deploy, { lock: :user }])
       end
 
       format.json do
@@ -93,6 +93,14 @@ class ProjectsController < ApplicationController
   def redirect_viewers!
     unless current_user.is_deployer?
       redirect_to project_deploys_path(project)
+    end
+  end
+
+  def projects_for_user
+    if current_user.starred_projects.any?
+      current_user.starred_projects
+    else
+      Project
     end
   end
 end

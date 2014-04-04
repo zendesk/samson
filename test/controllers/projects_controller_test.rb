@@ -1,17 +1,36 @@
 require_relative '../test_helper'
 
 describe ProjectsController do
+  let(:project) { projects(:test) }
+  let(:user) { users(:admin) }
+
   setup do
-    request.env['warden'].set_user(users(:admin))
+    request.env['warden'].set_user(user)
   end
 
   describe "a GET to #index" do
-    setup do
+    it "renders a template" do
       get :index
+      assert_template :index
     end
 
-    it "renders a template" do
-      assert_template :index
+    it "assigns the user's starred projects to @projects" do
+      unstarred_project = projects(:test)
+      starred_project = Project.create!(name: "a", repository_url: "a")
+
+      user.stars.create!(project: starred_project)
+
+      get :index
+
+      assert_equal [starred_project], assigns(:projects)
+    end
+
+    it "assigns all projects to @projects if the user has no starred projects" do
+      project = projects(:test)
+
+      get :index
+
+      assert_equal [project], assigns(:projects)
     end
   end
 
@@ -76,8 +95,6 @@ describe ProjectsController do
   end
 
   describe "a DELETE to #destroy" do
-    let(:project) { projects(:test) }
-
     describe "as an admin" do
       setup do
         delete :destroy, :id => project.id
@@ -103,8 +120,6 @@ describe ProjectsController do
   end
 
   describe "a PUT to #update" do
-    let(:project) { projects(:test) }
-
     describe "as an admin" do
       setup do
         put :update, params.merge(:id => project.id)
@@ -164,8 +179,6 @@ describe ProjectsController do
   end
 
   describe "a GET to #edit" do
-    let(:project) { projects(:test) }
-
     describe "as an admin" do
       setup do
         get :edit, :id => project.id
@@ -197,8 +210,6 @@ describe ProjectsController do
   end
 
   describe "a GET to #show" do
-    let(:project) { projects(:test) }
-
     as_a_deployer do
       setup do
         get :show, :id => project.id

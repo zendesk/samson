@@ -5,10 +5,16 @@ class User < ActiveRecord::Base
   has_soft_deletion default_scope: true
 
   has_many :commands
+  has_many :stars
+  has_many :starred_projects, through: :stars, source: :project
 
   validates :role_id, inclusion: { in: Role.all.map(&:id) }
 
   before_create :set_current_token
+
+  def starred_project?(project)
+    starred_projects.include?(project)
+  end
 
   def self.create_or_update_from_hash(hash)
     user = User.where(email: hash[:email]).first

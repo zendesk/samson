@@ -2,6 +2,7 @@
 
 <% cache project do %>
   <h1 class="project-title">
+    <%= star_for_project(project) %>
     <%= project.name %>
     <%= render partial: "shared/github_link", locals: { project: project } %>
   </h1>
