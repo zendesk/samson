@@ -75,13 +75,13 @@ class Project < ActiveRecord::Base
     webhooks.for_branch(branch).map(&:stage)
   end
 
+  def release_prior_to(release)
+    releases.where("number < ?", release.number).order(:number).last
+  end
+
   private
 
   def generate_token
     self.token = SecureRandom.hex
-  end
-
-  def release_prior_to(release)
-    releases.where("number < ?", release.number).order(:number).last
   end
 end

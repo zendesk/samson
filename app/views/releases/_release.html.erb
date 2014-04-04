@@ -1,0 +1,27 @@
+<tr>
+  <td><%= link_to release.version, project_release_path(@project, release) %></td>
+  <td>
+    <% release.changeset.authors.each do |author| %>
+      <%= github_user_avatar(author) %>
+    <% end %>
+  </td>
+  <td>
+    <% @stages.select {|stage| stage.current_release?(release) }.each do |stage| %>
+      <span class="release-label release-stage label label-primary" title="Currently deployed to <%= stage.name.upcase %>"><%= stage.name.upcase %></span>
+    <% end %>
+  </td>
+  <td>
+    <div class="btn-group">
+      <button type="button" class="btn btn-default btn-primary dropdown-toggle" data-toggle="dropdown">
+        Deploy to <span class="caret"></span>
+      </button>
+      <ul class="dropdown-menu" role="menu">
+        <% @stages.each do |stage| %>
+          <li>
+            <%= link_to_deploy_stage(stage, release) %>
+          </li>
+        <% end %>
+      </ul>
+    </div>
+  </td>
+</tr>

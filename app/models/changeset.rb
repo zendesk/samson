@@ -56,6 +56,10 @@ class Changeset
   end
 
   def authors
+    commits.map(&:author).uniq
+  end
+
+  def author_names
     commits.map(&:author_name).uniq
   end
 
