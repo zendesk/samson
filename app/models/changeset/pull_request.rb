@@ -14,7 +14,10 @@ class Changeset::PullRequest
   #   be found.
   def self.find(repo, number)
     github = Octokit::Client.new(access_token: ENV['GITHUB_TOKEN'])
-    data = github.pull_request(repo, number)
+
+    data = Rails.cache.fetch([self, repo, number].join("-")) do
+      github.pull_request(repo, number)
+    end
 
     new(repo, data)
   rescue Octokit::NotFound
@@ -31,6 +34,10 @@ class Changeset::PullRequest
 
   def url
     "https://github.com/#{repo}/pull/#{number}"
+  end
+
+  def reference
+    "##{number}"
   end
 
   def users

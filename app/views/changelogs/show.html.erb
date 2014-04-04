@@ -1,0 +1,32 @@
+<% content_for :page_title, "#{@project.name} changelog" %>
+
+<h1><%= @project.name %> changelog</h1>
+
+<section>
+  <p>Changes made since <%= @start_date.to_s(:long) %>.</p>
+
+  <% @changeset.pull_requests.each do |pr| %>
+    <div>
+      <strong><%= link_to pr.reference, pr.url %></strong>
+
+      <% if pr.jira_issues.any? %>
+        <% pr.jira_issues.each do |issue| %>
+          / <%= link_to issue.reference, issue.url %>
+        <% end %>
+      <% end %>
+
+      <%= pr.title %>
+
+      (<%= pr.users.map(&:identifier).join(", ") %>)
+
+      <% if pr.risky? %>
+        <ul>
+          <li>
+            <strong>Risks</strong><br>
+            <%= markdown(pr.risks) %>
+          </li>
+        </ul>
+      <% end %>
+    </div>
+  <% end %>
+</section>

@@ -26,6 +26,8 @@ ZendeskSamson::Application.routes.draw do
       end
     end
 
+    resource :changelog, only: [:show]
+
     resources :deploys, only: [:index, :new, :create, :show, :destroy] do
       collection do
         post :confirm
