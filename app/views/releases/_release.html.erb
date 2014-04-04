@@ -1,5 +1,5 @@
 <tr>
-  <td><%= link_to release.version, project_release_path(@project, release) %></td>
+  <td><%= link_to release.version, project_release_path(@project, release), class: "release-label label label-success" %></td>
   <td>
     <% release.changeset.authors.each do |author| %>
       <%= github_user_avatar(author) %>
