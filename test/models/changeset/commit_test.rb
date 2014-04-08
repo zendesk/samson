@@ -29,15 +29,15 @@ describe Changeset::Commit do
     end
   end
 
-  describe "#zendesk_tickets" do
+  describe "#zendesk_ticket" do
     it "returns the zendesk ticket number in a commit message" do
       commit_data.stubs(:message).returns("ZD#123 this fixes a very bad bug")
-      commit.zendesk_tickets.must_equal 123
+      commit.zendesk_ticket.must_equal 123
     end
 
     it "returns nil if the commit message has no reference to ticket" do
       commit_data.stubs(:message).returns("PR review comments")
-      commit.zendesk_tickets.must_be_nil
+      commit.zendesk_ticket.must_be_nil
     end
   end
 end

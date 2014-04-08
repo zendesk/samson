@@ -52,7 +52,7 @@ class Changeset
   end
 
   def zendesk_tickets
-    @zendesk_tickets ||= commits.map(&:zendesk_tickets).compact.uniq
+    @zendesk_tickets ||= commits.map(&:zendesk_ticket).flatten.uniq
   end
 
   private

@@ -31,7 +31,7 @@ class ZendeskNotification
   private
 
   def zendesk_client
-    @zendesk_client ||=ZendeskAPI::Client.new do |config|
+    @zendesk_client ||= ZendeskAPI::Client.new do |config|
       config.token = token
       config.url = "#{zendesk_url}/api/v2"
       config.username = zendesk_user
