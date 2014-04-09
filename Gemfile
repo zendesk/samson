@@ -1,6 +1,6 @@
 source 'https://rubygems.org'
 
-gem 'dotenv-rails', '~> 0.9.0'
+gem 'dotenv-rails', '~> 0.9'
 gem 'rails', '4.0.4'
 gem 'puma'
 
@@ -49,12 +49,11 @@ group :no_preload do
   gem 'omniauth-github', '~> 1.1'
 
   gem 'octokit', '~> 2.7.0'
+  gem 'faraday-http-cache', '~> 0.4'
 
   gem 'warden', '~> 1.2'
 
   gem 'flowdock', '~> 0.3.1'
-
-  gem 'state_machine', '~> 1.2'
 
   gem 'active_hash', '~> 1.0'
 
