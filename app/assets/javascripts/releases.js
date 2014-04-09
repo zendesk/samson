@@ -1,19 +1,19 @@
 //= require changesets
 
 $(function() {
-  var $previous_select = null;
+  var $previousSelect;
 
   $('.release-list .release-summary').click(function() {
     var $this = $(this);
 
-    if ($previous_select && $this[0] !== $previous_select[0]) {
-      $previous_select.removeClass('active');
-      $previous_select.next().addClass('collapse');
+    if ($previousSelect && $this.get(0) !== $previousSelect.get(0)) {
+      $previousSelect.removeClass('active');
+      $previousSelect.next().addClass('collapse');
     }
 
     $this.toggleClass('active');
     $this.next().toggleClass('collapse');
 
-    $previous_select = $this;
+    $previousSelect = $this;
   });
 });
