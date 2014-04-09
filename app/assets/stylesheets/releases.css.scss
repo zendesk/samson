@@ -24,6 +24,23 @@
   td:last-child {
     width: 80px;
   }
+
+  .collapse {
+    display: none;
+  }
+
+  .release-summary {
+    cursor: pointer;
+  }
+
+  .release-info {
+    background-color: #f5f5f5;
+  }
+
+  .tab-content {
+    padding: 20px;
+    background-color: #fff;
+  }
 }
 
 .release-label {

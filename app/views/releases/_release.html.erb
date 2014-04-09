@@ -1,4 +1,4 @@
-<tr>
+<tr class="release-summary">
   <td>
     <%= release_label(@project, release) %>
   </td>
@@ -25,5 +25,11 @@
         <% end %>
       </ul>
     </div>
+  </td>
+</tr>
+<tr class="release-info collapse">
+  <td></td>
+  <td colspan="3">
+  <%= render "info", release: release, changeset: release.changeset %>
   </td>
 </tr>

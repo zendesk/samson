@@ -9,7 +9,7 @@
   </p>
 
   <% if @releases.any? %>
-    <table class="table release-list">
+    <table class="table table-hover release-list">
       <thead>
         <tr>
           <th></th>
@@ -26,7 +26,7 @@
 
     <%= paginate @releases %>
   <% else %>
-    <p>There haven't been made any releases yet.</p>
+    <p>There haven't been any releases yet.</p>
   <% end %>
 
 </section>
