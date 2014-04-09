@@ -198,6 +198,16 @@ h3 {
   }
 }
 
+.table-hover > tbody > tr {
+  > td.active:hover,
+  > th.active:hover,
+  &.active:hover > td,
+  &.active:hover > th {
+    background-color: #f5f5f5;
+  }
+
+}
+
 /* Footer */
 
 .footer {
