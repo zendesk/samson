@@ -31,8 +31,8 @@ describe Changeset::Commit do
 
   describe "#zendesk_ticket" do
     it "returns the zendesk ticket number in a commit message" do
-      commit_data.stubs(:message).returns("ZD#123 this fixes a very bad bug")
-      commit.zendesk_ticket.must_equal 123
+      commit_data.stubs(:message).returns("ZD#1234 this fixes a very bad bug")
+      commit.zendesk_ticket.must_equal 1234
     end
 
     it "returns nil if the commit message has no reference to ticket" do

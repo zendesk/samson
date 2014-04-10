@@ -38,12 +38,12 @@ describe Changeset do
     let(:comparison) { stub("comparison") }
 
     it "returns a list of Zendesk tickets mentioned in commit messages" do
-      c1 = stub("commit1", commit: stub(message: "ZD#123 this fixes a very bad bug"))
-      c2 = stub("commit2", commit: stub(message: "ZD456 Fix typo"))
+      c1 = stub("commit1", commit: stub(message: "ZD#1234 this fixes a very bad bug"))
+      c2 = stub("commit2", commit: stub(message: "ZD4567 Fix typo"))
       comparison.stubs(:commits).returns([c1, c2])
 
       changeset = Changeset.new(comparison, "foo/bar", "a", "b")
-      changeset.zendesk_tickets.must_equal [123, 456]
+      changeset.zendesk_tickets.must_equal [1234, 4567]
     end
 
     it "returns an empty array if there are no ticket references" do
@@ -51,7 +51,7 @@ describe Changeset do
       comparison.stubs(:commits).returns([commit])
 
       changeset = Changeset.new(comparison, "foo/bar", "a", "b")
-      changeset.zendesk_tickets.must_equal []
+      changeset.zendesk_tickets.must_equal [nil]
     end
   end
 end
