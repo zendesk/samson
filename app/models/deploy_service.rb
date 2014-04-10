@@ -57,7 +57,7 @@ class DeployService
   end
 
   def send_zendesk_notification(stage, deploy)
-    if stage.name == "Production"
+    if stage.comment_on_zendesk_tickets?
       ZendeskNotification.new(stage, deploy).deliver
     end
   end

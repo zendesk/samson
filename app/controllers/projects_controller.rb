@@ -85,6 +85,7 @@ class ProjectsController < ApplicationController
         :notify_email_address,
         :datadog_tags,
         :update_github_pull_requests,
+        :comment_on_zendesk_tickets,
         :command_ids => [],
         flowdock_flows_attributes: [:name, :token]
       ]

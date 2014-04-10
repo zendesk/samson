@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20140331121039) do
+ActiveRecord::Schema.define(version: 20140410213058) do
 
   create_table "commands", force: true do |t|
     t.text     "command",    limit: 16777215
@@ -108,6 +108,7 @@ ActiveRecord::Schema.define(version: 20140331121039) do
     t.boolean  "deployment",                  default: true
     t.boolean  "update_github_pull_requests"
     t.boolean  "deploy_on_release",           default: false
+    t.boolean  "comment_on_zendesk_tickets"
   end
 
   create_table "users", force: true do |t|

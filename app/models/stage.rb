@@ -118,6 +118,10 @@ class Stage < ActiveRecord::Base
     update_github_pull_requests
   end
 
+  def comment_on_zendesk_tickets?
+    comment_on_zendesk_tickets
+  end
+
   private
 
   def build_new_project_command
