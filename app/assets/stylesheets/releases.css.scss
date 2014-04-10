@@ -18,7 +18,7 @@
   }
 
   td:first-child {
-    width: 100px;
+    width: 130px;
   }
 
   td:last-child {
@@ -46,6 +46,8 @@
 .release-label {
   font-size: 14px;
   font-weight: normal;
+  display: inline-block;
+  margin-bottom: 4px;
 }
 
 .release-stage {
