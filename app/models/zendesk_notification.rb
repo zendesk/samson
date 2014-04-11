@@ -21,7 +21,7 @@ class ZendeskNotification
       if zendesk_client.tickets.update(attributes)
         Rails.logger.info "Updated Zendesk ticket: #{ticket_id} with a comment"
       else
-        Rails.logger.warn("Failed to modify ticket with GitHub update: #{ticket.errors}")
+        Rails.logger.warn "Failed to modify ticket with GitHub update: #{ticket.errors}"
       end
     end
   end
