@@ -1,8 +1,8 @@
 require 'zendesk_api'
 
 class ZendeskNotification
-  cattr_accessor(:token) { ENV['CLIENT_SECRET']}
-  cattr_accessor(:zendesk_url) { ENV['ZENDESK_URL']}
+  cattr_accessor(:token) { ENV['CLIENT_SECRET'] }
+  cattr_accessor(:zendesk_url) { ENV['ZENDESK_URL'] }
 
   def initialize(stage, deploy)
     @stage, @deploy = stage, deploy
