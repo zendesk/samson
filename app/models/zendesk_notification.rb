@@ -15,7 +15,7 @@ class ZendeskNotification
       attributes = {
         :id => ticket_id,
         :status => "open",
-        :comment => {:value => content(ticket_id), :public => false }
+        :comment => { :value => content(ticket_id), :public => false }
       }
 
       if zendesk_client.tickets.update(attributes)
