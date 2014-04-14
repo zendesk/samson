@@ -3,7 +3,7 @@ class Lock < ActiveRecord::Base
 
   has_soft_deletion default_scope: true
 
-  belongs_to :stage
+  belongs_to :stage, touch: true
   belongs_to :user
 
   validates :user_id, presence: true
