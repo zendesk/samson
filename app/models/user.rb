@@ -9,6 +9,7 @@ class User < ActiveRecord::Base
   has_many :starred_projects, through: :stars, source: :project
 
   validates :role_id, inclusion: { in: Role.all.map(&:id) }
+  validates :email, presence: true
 
   before_create :set_current_token
 
