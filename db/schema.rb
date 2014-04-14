@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20140331121039) do
+ActiveRecord::Schema.define(version: 20140414123939) do
 
   create_table "commands", force: true do |t|
     t.text     "command",    limit: 16777215
@@ -118,15 +118,15 @@ ActiveRecord::Schema.define(version: 20140331121039) do
     t.datetime "updated_at"
   end
 
-  add_index "stars", ["user_id", "project_id"], name: "index_stars_on_user_id_and_project_id", unique: true, using: :btree
+  add_index "stars", ["user_id", "project_id"], name: "index_stars_on_user_id_and_project_id", unique: true
 
   create_table "users", force: true do |t|
     t.string   "name"
     t.string   "email"
     t.datetime "created_at"
     t.datetime "updated_at"
-    t.integer  "role_id",       default: 0, null: false
-    t.string   "current_token"
+    t.integer  "role_id",    default: 0, null: false
+    t.string   "token"
     t.datetime "deleted_at"
   end
 

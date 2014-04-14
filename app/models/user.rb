@@ -11,7 +11,7 @@ class User < ActiveRecord::Base
   validates :role_id, inclusion: { in: Role.all.map(&:id) }
   validates :email, presence: true
 
-  before_create :set_current_token
+  before_create :set_token
 
   def starred_project?(project)
     starred_projects.include?(project)
@@ -51,7 +51,7 @@ class User < ActiveRecord::Base
 
   private
 
-  def set_current_token
-    self.current_token = SecureRandom.hex
+  def set_token
+    self.token = SecureRandom.hex
   end
 end
