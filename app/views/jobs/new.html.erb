@@ -30,7 +30,7 @@
     <p>Select the commands you want to run when executing this job.
 
     <div id="commands">
-      <%= collection_check_boxes(:commands, :ids, Command.global, :id, :command) do |b| %>
+      <%= collection_check_boxes(:commands, :ids, Command.global + Command.for_project(@project), :id, :command) do |b| %>
         <div class="row stage-bar bar">
           <div data-id="<%= b.value %>" class="col-lg-offset-2 col-lg-2 command-checkbox">
             <%= b.check_box %>
