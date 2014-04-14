@@ -6,7 +6,7 @@
     </h2>
     <ul>
       <% project.stages.each do |stage| %>
-        <% cache [stage, stage.last_deploy, stage.locked?, stage.currently_deploying?] do %>
+        <% cache [stage, stage.last_deploy, stage.lock, stage.currently_deploying?] do %>
           <li class="<%= 'locked' if stage.locked? %>">
             <%= link_to stage.name, project_stage_path(project, stage), class: "stage-link" %>
             <%= content_tag :span, "Deploying", class: "label label-primary" if stage.currently_deploying? %>
