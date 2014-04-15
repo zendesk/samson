@@ -1,5 +1,4 @@
 class ProfilesController < ApplicationController
-
   def update
     @user = current_user
 
@@ -17,9 +16,6 @@ class ProfilesController < ApplicationController
   protected
 
   def user_params
-    params.require(:user).permit(
-      :name
-    )
+    params.require(:user).permit(:name, :email)
   end
-
 end

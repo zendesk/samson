@@ -17,7 +17,7 @@ class User < ActiveRecord::Base
   end
 
   def self.create_or_update_from_hash(hash)
-    user = User.where(external_id: hash[:external_id], type: hash[:type]).first
+    user = User.where(external_id: hash[:external_id]).first
 
     role_id = hash.delete(:role_id)
     user ||= User.new(hash)

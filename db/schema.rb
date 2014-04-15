@@ -131,6 +131,8 @@ ActiveRecord::Schema.define(version: 20140415011020) do
     t.integer  "external_id"
   end
 
+  add_index "users", ["external_id"], name: "index_users_on_external_id", unique: true, using: :btree
+
   create_table "webhooks", force: true do |t|
     t.integer  "project_id", null: false
     t.integer  "stage_id",   null: false
