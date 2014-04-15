@@ -47,7 +47,7 @@ ZendeskSamson::Application.routes.draw do
     end
   end
 
-  resource :profile, only: [:show, :update]
+  resource :profile, only: [:show]
 
   get '/auth/zendesk/callback', to: 'sessions#zendesk'
   get '/auth/github/callback', to: 'sessions#github'
