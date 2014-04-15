@@ -11,7 +11,7 @@ class Admin::UsersController < ApplicationController
 
       users.each do |user|
         role = user_params[user.id.to_s][:role]
-        user.update_attributes!(:role_id => role)
+        user.update_attributes!(role_id: role)
       end
     end
 

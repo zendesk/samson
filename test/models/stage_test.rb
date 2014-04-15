@@ -7,7 +7,7 @@ describe Stage do
     describe 'adding a built command' do
       before do
         subject.stage_commands.build(command:
-          Command.new(:command => 'test')
+          Command.new(command: 'test')
         )
 
         subject.command_ids = [commands(:echo).id]

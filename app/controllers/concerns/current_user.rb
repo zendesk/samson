@@ -13,7 +13,7 @@ module CurrentUser
 
   # Called from SessionsController for OmniAuth
   def current_user=(user)
-    warden.set_user(user, :event => :authentication)
+    warden.set_user(user, event: :authentication)
   end
 
   def logout!

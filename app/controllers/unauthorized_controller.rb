@@ -9,7 +9,7 @@ class UnauthorizedController < ActionController::Metal
 
   include Rails.application.routes.url_helpers
 
-  delegate :flash, :to => :request
+  delegate :flash, to: :request
 
   def self.call(env)
     action(:respond).call(env)
