@@ -3,11 +3,14 @@ admin:
   email: "admin@example.com"
   role_id: <%= Role::ADMIN.id %>
   token: abc123
+  external_id: 1
 deployer:
   name: "Deployer"
   email: "deployer@example.com"
   role_id: <%= Role::DEPLOYER.id %>
+  external_id: 2
 viewer:
   name: "Viewer"
   email: "viewer@example.com"
   role_id: <%= Role::VIEWER.id %>
+  external_id: 3
