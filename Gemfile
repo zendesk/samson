@@ -19,6 +19,10 @@ gem 'active_model_serializers', '~> 0.8.0'
 # we can use a normal gem version again.
 gem 'sawyer', git: 'https://github.com/dasch/sawyer.git', branch: 'dasch/fix-marshal-problem'
 
+# Logging
+gem 'lograge'
+gem 'logstash-event'
+
 group :production, :staging do
   gem 'rails_12factor'
   gem 'airbrake'

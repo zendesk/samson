@@ -76,7 +76,13 @@ Samson::Application.configure do
   # config.autoflush_log = false
 
   # Use default logging formatter so that PID and timestamp are not suppressed.
-  config.log_formatter = ::Logger::Formatter.new
+  #config.log_formatter = ::Logger::Formatter.new
 
   self.default_url_options = { host: 'samson.zende.sk', protocol: 'https' }
+
+  require 'syslog/logger'
+  config.logger = Syslog::Logger.new('samson')
+
+  config.lograge.enabled = true
+  config.lograge.formatter = Lograge::Formatters::Logstash.new
 end

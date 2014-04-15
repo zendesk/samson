@@ -31,4 +31,11 @@ Samson::Application.configure do
   # This option may cause significant delays in view rendering with a large
   # number of complex assets.
   config.assets.debug = false
+
+  require 'syslog/logger'
+  config.logger = Syslog::Logger.new('samson')
+  # config.logger = ActiveSupport::TaggedLogging.new(SyslogLogger.new)
+
+  config.lograge.enabled = true
+  config.lograge.formatter = Lograge::Formatters::Logstash.new
 end

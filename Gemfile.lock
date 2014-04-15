@@ -122,6 +122,11 @@ GEM
     kaminari (0.15.1)
       actionpack (>= 3.0.0)
       activesupport (>= 3.0.0)
+    lograge (0.3.0)
+      actionpack (>= 3)
+      activesupport (>= 3)
+      railties (>= 3)
+    logstash-event (1.2.02)
     mail (2.5.4)
       mime-types (~> 1.16)
       treetop (~> 1.4.8)
@@ -268,6 +273,8 @@ DEPENDENCIES
   jquery-rails
   jquery-ui-rails
   kaminari
+  lograge
+  logstash-event
   minitest-rails (~> 2.0.0.beta1)
   momentjs-rails
   mysql2 (~> 0.3)
