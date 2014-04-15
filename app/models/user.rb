@@ -32,7 +32,7 @@ class User < ActiveRecord::Base
           old
         end
       else
-        old || new
+        old.presence || new
       end
     end
 
