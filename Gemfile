@@ -1,7 +1,7 @@
 source 'https://rubygems.org'
 
 gem 'dotenv-rails', '~> 0.9'
-gem 'rails', '4.0.4'
+gem 'rails', '4.1.0'
 gem 'puma'
 
 gem 'sqlite3'
@@ -46,9 +46,9 @@ end
 group :no_preload do
   gem 'omniauth', '~> 1.1'
   gem 'omniauth-oauth2', '~> 1.1'
-  gem 'omniauth-github', '~> 1.1'
+  gem 'omniauth-github', '= 1.1.1'
 
-  gem 'octokit', '~> 2.7.0'
+  gem 'octokit', '~> 3.0.0'
   gem 'faraday-http-cache', '~> 0.4'
 
   gem 'warden', '~> 1.2'
@@ -75,7 +75,7 @@ group :development do
 end
 
 group :test do
-  gem 'minitest-rails', '~> 0.9'
+  gem 'minitest-rails', '~> 2.0.0.beta1'
   gem 'bourne'
   gem 'webmock', require: false
   gem 'simplecov', require: false

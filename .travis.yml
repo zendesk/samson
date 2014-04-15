@@ -4,7 +4,7 @@ before_script:
   - npm install
 script:
   - npm test
-  - rake
+  - bundle exec rake
 language: ruby
 cache:
   bundler: true
