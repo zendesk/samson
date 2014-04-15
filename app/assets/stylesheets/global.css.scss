@@ -99,6 +99,22 @@ h3 {
     }
   }
 
+  .profile {
+
+    .dropdown-toggle {
+      padding-left: 50px;
+    }
+
+    .gravatar {
+      height: 30px;
+      width: 30px;
+      border-radius: 30px;
+      position: absolute;
+      left: 10px;
+      top: 10px;
+    }
+  }
+
 }
 
 .navbar-inverse {

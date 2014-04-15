@@ -41,8 +41,8 @@ describe User do
         user.persisted?.must_equal(true)
       end
 
-      it "sets the current token" do
-        user.current_token.must_match(/[a-z0-9]+/)
+      it "sets the token" do
+        user.token.must_match(/[a-z0-9]+/)
       end
 
       it "sets the role_id" do
@@ -54,7 +54,7 @@ describe User do
       let(:hash) {{
         :name => "Test User",
         :email => "test@example.org",
-        :current_token => "abc123"
+        :token => "abc123"
       }}
 
       let(:existing_user) do
@@ -72,7 +72,7 @@ describe User do
       end
 
       it "sets the current token" do
-        user.current_token.must_equal("abc123")
+        user.token.must_equal("abc123")
       end
 
       describe "with a higher role_id" do
