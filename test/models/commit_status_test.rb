@@ -17,8 +17,8 @@ describe CommitStatus do
 
     describe 'with multiple statuses' do
       let(:statuses) {[
-        { :state => 'success' },
-        { :state => 'pending' }
+        { state: 'success' },
+        { state: 'pending' }
       ]}
 
       it 'is the first status' do

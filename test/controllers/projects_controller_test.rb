@@ -57,19 +57,19 @@ describe ProjectsController do
       end
 
       describe "with valid parameters" do
-        let(:params) { { :project => { :name => "Hello", :repository_url => "git://foo.com/bar" } } }
+        let(:params) { { project: { name: "Hello", repository_url: "git://foo.com/bar" } } }
 
         it "redirects to root url" do
           assert_redirected_to root_path
         end
 
         it "creates a new project" do
-          Project.where(:name => "Hello").first.wont_be_nil
+          Project.where(name: "Hello").first.wont_be_nil
         end
       end
 
       describe "with invalid parameters" do
-        let(:params) { { :project => { :name => "" } } }
+        let(:params) { { project: { name: "" } } }
 
         it "sets the flash error" do
           request.flash[:error].wont_be_nil
@@ -97,7 +97,7 @@ describe ProjectsController do
   describe "a DELETE to #destroy" do
     describe "as an admin" do
       setup do
-        delete :destroy, :id => project.id
+        delete :destroy, id: project.id
       end
 
       it "redirects to root url" do
@@ -122,23 +122,23 @@ describe ProjectsController do
   describe "a PUT to #update" do
     describe "as an admin" do
       setup do
-        put :update, params.merge(:id => project.id)
+        put :update, params.merge(id: project.id)
       end
 
       describe "with valid parameters" do
-        let(:params) { { :project => { :name => "Hi-yo" } } }
+        let(:params) { { project: { name: "Hi-yo" } } }
 
         it "redirects to root url" do
           assert_redirected_to project_path(project.reload)
         end
 
         it "creates a new project" do
-          Project.where(:name => "Hi-yo").first.wont_be_nil
+          Project.where(name: "Hi-yo").first.wont_be_nil
         end
       end
 
       describe "with invalid parameters" do
-        let(:params) { { :project => { :name => "" } } }
+        let(:params) { { project: { name: "" } } }
 
         it "sets the flash error" do
           request.flash[:error].wont_be_nil
@@ -161,7 +161,7 @@ describe ProjectsController do
     describe "non-existant" do
       setup do
         project.soft_delete!
-        put :update, :id => project.id
+        put :update, id: project.id
       end
 
       it "sets the flash error" do
@@ -181,7 +181,7 @@ describe ProjectsController do
   describe "a GET to #edit" do
     describe "as an admin" do
       setup do
-        get :edit, :id => project.id
+        get :edit, id: project.id
       end
 
       it "renders a template" do
@@ -192,7 +192,7 @@ describe ProjectsController do
     describe "non-existant" do
       setup do
         project.soft_delete!
-        get :edit, :id => project.id
+        get :edit, id: project.id
       end
 
       it "sets the flash error" do
@@ -212,7 +212,7 @@ describe ProjectsController do
   describe "a GET to #show" do
     as_a_deployer do
       setup do
-        get :show, :id => project.id
+        get :show, id: project.id
       end
 
       it "renders a template" do
@@ -223,7 +223,7 @@ describe ProjectsController do
     describe "non-existant" do
       setup do
         project.soft_delete!
-        get :edit, :id => project.id
+        get :edit, id: project.id
       end
 
       it "sets the flash error" do
@@ -237,7 +237,7 @@ describe ProjectsController do
 
     as_a_viewer do
       setup do
-        get :show, :id => project.id
+        get :show, id: project.id
       end
 
       it "redirects to the deploys page" do

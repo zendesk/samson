@@ -1,7 +1,6 @@
 require_relative '../test_helper'
 
 describe User do
-
   describe "#name" do
     let(:user) { User.new(name: name, email: 'test@test.com') }
 
@@ -32,9 +31,9 @@ describe User do
 
     describe "with a new user" do
       let(:hash) {{
-        :name => "Test User",
-        :email => "test@example.org",
-        :role_id => Role::ADMIN.id,
+        name: "Test User",
+        email: "test@example.org",
+        role_id: Role::ADMIN.id,
       }}
 
       it "creates a new user" do
@@ -52,13 +51,13 @@ describe User do
 
     describe "with an existing user" do
       let(:hash) {{
-        :name => "Test User",
-        :email => "test@example.org",
-        :token => "abc123"
+        name: "Test User",
+        email: "test@example.org",
+        token: "abc123",
       }}
 
       let(:existing_user) do
-        User.create!(:name => "Test", :email => "test@example.org")
+        User.create!(name: "Test", email: "test@example.org")
       end
 
       setup { existing_user }
@@ -77,13 +76,13 @@ describe User do
 
       describe "with a higher role_id" do
         let(:hash) {{
-          :name => "Test User",
-          :email => "test@example.org",
-          :role_id => Role::ADMIN.id
+          name: "Test User",
+          email: "test@example.org",
+          role_id: Role::ADMIN.id
         }}
 
         setup do
-          existing_user.update_attributes!(:role_id => Role::VIEWER.id)
+          existing_user.update_attributes!(role_id: Role::VIEWER.id)
         end
 
         it "is overwritten" do
@@ -93,9 +92,9 @@ describe User do
 
       describe "with a lower role_id" do
         let(:hash) {{
-          :name => "Test User",
-          :email => "test@example.org",
-          :role_id => Role::VIEWER.id
+          name: "Test User",
+          email: "test@example.org",
+          role_id: Role::VIEWER.id
         }}
 
         setup do

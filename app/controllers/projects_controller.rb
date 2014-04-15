@@ -80,7 +80,7 @@ class ProjectsController < ApplicationController
         :notify_email_address,
         :datadog_tags,
         :update_github_pull_requests,
-        :command_ids => [],
+        command_ids: [],
         flowdock_flows_attributes: [:name, :token]
       ]
     )
