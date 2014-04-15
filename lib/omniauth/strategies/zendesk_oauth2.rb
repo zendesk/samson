@@ -11,7 +11,7 @@ module OmniAuth
         site: ENV["ZENDESK_URL"] || "http://dev.localhost",
         ssl: { verify: !Rails.env.development? }
 
-      uid { raw_info['id'] }
+      uid { "z-#{raw_info['id']}" }
 
       info do
         {

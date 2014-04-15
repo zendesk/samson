@@ -17,20 +17,19 @@ class User < ActiveRecord::Base
   end
 
   def self.create_or_update_from_hash(hash)
-    user = User.where(email: hash[:email]).first
-    user ||= User.new
+    user = User.where(external_id: hash[:external_id], type: hash[:type]).first
 
     role_id = hash.delete(:role_id)
+    user ||= User.new(hash)
 
-    if role_id && (user.new_record? || role_id >= user.role_id)
+    if !User.exists?
+      user.role_id = Role::ADMIN.id
+    elsif role_id && (user.new_record? || role_id >= user.role_id)
       user.role_id = role_id
     end
 
-    user.attributes = hash
-    unless User.exists?
-      user.role_id = Role::ADMIN.id
-    end
-    user.tap(&:save)
+    user.save
+    user
   end
 
   def name
