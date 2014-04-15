@@ -14,6 +14,7 @@
 
 # Ignore all logfiles and tempfiles.
 /log/*.log
+/log/*.log.json
 /tmp
 
 # Ignore config
@@ -27,3 +28,6 @@
 /cached_repos/
 .gitkeep
 /coverage/
+
+# Ignore editor files
+*.sw[oap]
