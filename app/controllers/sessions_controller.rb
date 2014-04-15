@@ -69,7 +69,7 @@ class SessionsController < ApplicationController
 
   def login_user(options = {})
     user = User.create_or_update_from_hash(options.merge(
-      external_id: auth_hash.uid,
+      external_id: "#{strategy.name}-#{auth_hash.uid}",
       name: auth_hash.info.name,
       email: auth_hash.info.email
     ))

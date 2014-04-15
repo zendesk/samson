@@ -128,7 +128,7 @@ ActiveRecord::Schema.define(version: 20140415011020) do
     t.integer  "role_id",     default: 0, null: false
     t.string   "token"
     t.datetime "deleted_at"
-    t.integer  "external_id"
+    t.string   "external_id"
   end
 
   add_index "users", ["external_id"], name: "index_users_on_external_id", unique: true, using: :btree
