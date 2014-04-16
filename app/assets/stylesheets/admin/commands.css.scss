@@ -8,6 +8,12 @@
   color: white;
 }
 
-.pre-command.admin-command {
-  max-width: 930px;
+.commands.index {
+  .table {
+    table-layout: fixed;
+
+    tr:first-of-type, th:first-of-type {
+      width: 50%;
+    }
+  }
 }
