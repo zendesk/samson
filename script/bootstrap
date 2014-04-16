@@ -12,7 +12,7 @@ else
 fi
 
 if [ ! -f config/database.yml ]; then
-  cp database.mysql.yml.example config/database.yml || true
+  cp config/database.mysql.yml.example config/database.yml || true
 else
   echo 'config/database.yml file exists, not overwriting.'
 fi

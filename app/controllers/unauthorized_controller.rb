@@ -2,6 +2,7 @@ class UnauthorizedController < ActionController::Metal
   include ActionController::UrlFor
   include ActionController::Redirecting
 
+  include AbstractController::Rendering
   include ActionController::Rendering
   include ActionController::Renderers::All
   include ActionController::ConditionalGet
