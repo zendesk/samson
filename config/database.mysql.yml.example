@@ -3,7 +3,7 @@ common: &common
   adapter: mysql2
   port: 3306
   username: root
-  password: password
+  password:
   host: 127.0.0.1
 
 development:
