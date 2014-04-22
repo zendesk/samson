@@ -45,7 +45,7 @@ module ZendeskSamson
     # The Github teams and organizations used for permissions
     config.samson.github = ActiveSupport::OrderedOptions.new
     config.samson.github.organization = 'zendesk'
-    config.samson.github.admin_team = 'owners'
-    config.samson.github.deploy_team = 'engineering'
+    config.samson.github.admin_team = ''
+    config.samson.github.deploy_team = ''
   end
 end
