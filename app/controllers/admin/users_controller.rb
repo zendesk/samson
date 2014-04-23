@@ -1,8 +1,9 @@
 class Admin::UsersController < ApplicationController
   before_filter :authorize_admin!
+  helper_method :sort_column, :sort_direction
 
   def show
-    @users = User.page(params[:page])
+    @users = User.order(sort_column + ' ' + sort_direction).page(params[:page])
   end
 
   def update
@@ -32,5 +33,15 @@ class Admin::UsersController < ApplicationController
 
   def user_params
     params.require(:users).permit!
+  end
+
+  private
+
+  def sort_column
+    User.column_names.include?(params[:sort]) ? params[:sort] : "created_at"
+  end
+
+  def sort_direction
+    %w[asc desc].include?(params[:direction]) ? params[:direction] : "asc"
   end
 end
