@@ -28,13 +28,17 @@ class User < ActiveRecord::Base
 
     user.attributes = hash
     unless User.exists?
-      user.role_id = Role::ADMIN.id
+      user.role_id = Role::SUPER_ADMIN.id
     end
     user.tap(&:save)
   end
 
   def name
     super.presence || email
+  end
+
+  def name_and_email
+    "#{name} (#{email})"
   end
 
   def gravatar_url
