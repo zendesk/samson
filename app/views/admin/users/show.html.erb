@@ -7,6 +7,7 @@
           <th><%= sortable "name" %></th>
           <th><%= sortable "email" %></th>
           <th><%= sortable "role_id", "Role" %></th>
+          <th></th>
         </tr>
       </thead>
 
@@ -29,7 +30,7 @@
 
     <div class="admin-actions">
       <div class="pull-right">
-        <button type="submit" class="btn btn-default">Save Changes</button>
+        <%= button_tag "Save Changes", class: "btn btn-default" if can_modify_roles? %>
       </div>
 
       <%= paginate @users %>
