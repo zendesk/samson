@@ -26,13 +26,12 @@ describe ZendeskNotification do
   private
 
   def stub_api_request(method, path)
-    token = ENV['CLIENT_SECRET']
-    url = ENV['ZENDESK_URL'].split('//')[1]
-    user = "#{deploy.user.email}"
+    authorization = 'Bearer ' + ENV['ZENDESK_ACCESS_TOKEN']
+    url = ENV['ZENDESK_URL']
     body = '{ "ticket": { "id": 18, "comment": {"value": "Comment body", "public": true }, "status": "open"}}'
 
-    stub_request(method, "https://#{user}%2Ftoken:#{token}@#{url}/#{path}").
-      with(:headers => {'Accept'=>'application/json', 'Accept-Encoding'=>'gzip;q=1.0,deflate;q=0.6,identity;q=0.3', 'User-Agent'=>'ZendeskAPI API 1.3.4'}).
+    stub_request(method, "#{url}/#{path}").
+      with(:headers => {'Authorization'=> "#{authorization}", 'Accept'=>'application/json', 'Accept-Encoding'=>'gzip;q=1.0,deflate;q=0.6,identity;q=0.3', 'User-Agent'=>'ZendeskAPI API 1.3.4'}).
       to_return(api_response_headers.merge(:status => 200, :body => body))
   end
 end

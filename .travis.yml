@@ -2,6 +2,8 @@ before_script:
   - cp config/database.travis.yml config/database.yml
   - bundle exec rake db:create
   - npm install
+  - export ZENDESK_ACCESS_TOKEN="c30398e3275532c5602bdf00cb153b806c000e4e46fac2f3acc0783822b8f6d3"
+  - export ZENDESK_URL="https://test.support.zendesk"
 script:
   - npm test
   - rake
@@ -12,7 +14,6 @@ cache:
     - node_modules
 env:
   - SECRET_TOKEN="d6054cf90db212c8fbc070c896c30398e3275532c5602bdf00cb153b806c000e4e46fac2f3acc0783822b8f6d30b5913b6fbcfdd24914553e745b8aa8ddfa5a4"
-  - ZENDESK_URL="https://test.support.zendesk"
 rvm:
   - ruby-2.1.1
   - ruby-2.0.0

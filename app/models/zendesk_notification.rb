@@ -1,8 +1,8 @@
 require 'zendesk_api'
 
 class ZendeskNotification
-  cattr_accessor(:token) { ENV['CLIENT_SECRET'] }
   cattr_accessor(:zendesk_url) { ENV['ZENDESK_URL'] }
+  cattr_accessor(:access_token) { ENV['ZENDESK_ACCESS_TOKEN'] }
 
   def initialize(stage, deploy)
     @stage, @deploy = stage, deploy
@@ -11,18 +11,22 @@ class ZendeskNotification
   def deliver
     zendesk_tickets = @deploy.changeset.zendesk_tickets
 
-    zendesk_tickets.each do |ticket_id|
-      attributes = {
-        :id => ticket_id,
-        :status => "open",
-        :comment => { :value => content(ticket_id), :public => false }
-      }
+    if zendesk_tickets.any?
+      zendesk_tickets.each do |ticket_id|
+        attributes = {
+          :id => ticket_id,
+          :status => "open",
+          :comment => { :value => content(ticket_id), :public => false }
+        }
 
-      if zendesk_client.tickets.update(attributes)
-        Rails.logger.info "Updated Zendesk ticket: #{ticket_id} with a comment"
-      else
-        Rails.logger.warn "Failed to modify ticket with GitHub update: #{ticket.errors}"
+        if zendesk_client.tickets.update(attributes)
+          Rails.logger.info "Updated Zendesk ticket: #{ticket_id} with a comment"
+        else
+          Rails.logger.warn "Failed to modify ticket with GitHub update: #{ticket.errors}"
+        end
       end
+    else
+      Rails.logger.info "There are no tickets to update in this deploy. Reference: #{@deploy.short_reference}"
     end
   end
 
@@ -30,9 +34,8 @@ class ZendeskNotification
 
   def zendesk_client
     @zendesk_client ||= ZendeskAPI::Client.new do |config|
-      config.token = token
       config.url = "#{zendesk_url}/api/v2"
-      config.username = "#{@deploy.user.email}"
+      config.access_token = access_token
     end
   end
 
