@@ -32,7 +32,7 @@ class Stage < ActiveRecord::Base
 
   def self.reorder(new_order)
     transaction do
-      new_order.each.with_index { |stage_id, index| Stage.update stage_id.to_i, order: index }
+      new_order.each.with_index { |stage_id, index| Stage.update stage_id.to_i, order: index.to_i }
     end
   end
 
