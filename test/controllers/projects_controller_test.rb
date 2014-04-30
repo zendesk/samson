@@ -58,13 +58,14 @@ describe ProjectsController do
 
       describe "with valid parameters" do
         let(:params) { { project: { name: "Hello", repository_url: "git://foo.com/bar" } } }
+        let(:project) { Project.where(name: "Hello").first }
 
-        it "redirects to root url" do
-          assert_redirected_to root_path
+        it "redirects to the new project's page" do
+          assert_redirected_to project_path(project)
         end
 
         it "creates a new project" do
-          Project.where(name: "Hello").first.wont_be_nil
+          project.wont_be_nil
         end
       end
 
