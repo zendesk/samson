@@ -43,7 +43,7 @@ class User < ActiveRecord::Base
 
   def gravatar_url
     md5 = Digest::MD5.hexdigest(email)
-    "http://www.gravatar.com/avatar/#{md5}"
+    "https://www.gravatar.com/avatar/#{md5}"
   end
 
   Role.all.each do |role|
