@@ -12,15 +12,6 @@ It ensures the repository is up-to-date, and then executes the commands associat
 
 Streaming is done through a [controller](app/controllers/streams_controller.rb) that allows both web access and curl access. A [subscriber thread](config/initializers/instrumentation.rb) is created on startup.
 
-This project used to use JRuby, now it is on MRI 2.0.0, but there is some remnant JRuby code in the codebase. Tests are also run on 2.1.0.
-
-#### Got boxen?
-
-Upgrade your manifest:
-```Puppet
-include projects::samson
-```
-
 #### Config:
 
 1. We need to add a database configuration yaml file with your credentials.
@@ -32,21 +23,29 @@ cp config/database.<MS_ACCESS>.yml.example config/database.yml # replace <MS_ACC
 subl config/database.yml # put your credentials in
 script/bootstrap
 
-# fill in .env with a couple variables
+# fill in .env with a few variables
 # [SESSION]
+
+#
+# [REQUIRED]
 # SECRET_TOKEN for rails, can be generated with `bundle exec rake secret`.
 #
-# [AUTH]
+# GITHUB_ORGANIZATION (eg. zendesk)
 # GITHUB_CLIENT_ID and GITHUB_CLIENT_SECRET are for GitHub auth
 # and can be obtained by creating a new Github Application
 # See: https://github.com/settings/applications
 # https://developer.github.com/v3/oauth/
-#
-# You can currently auth through your Zendesk, in that case set your Zendesk token to CLIENT_SECRET and your URL to ZENDESK_URL in .env.
-# Make one at https://<YOU>.zendesk.com/agent/#/admin/api -> OAuth clients. Set the UID to 'deployment' and the redirect URL to http://localhost:9080/auth/zendesk/callback
-# [OPTIONAL]
-# You also can fill in your personal GitHub token. You can generate a new
+# GITHUB_TOKEN is a personal GitHub token. You can generate a new
 # at https://github.com/settings/applications - it gets assigned to GITHUB_TOKEN.
+#
+# [OPTIONAL]
+# GITHUB_ADMIN_TEAM (team members automatically become Samson admins)
+# GITHUB_DEPLOY_TEAM (team members automatically become Samson deployers)
+#
+# Authentication is also possible using Zendesk, in that case set your
+# Zendesk token to CLIENT_SECRET and your URL to ZENDESK_URL in .env.
+# Make one at https://<subdomain>.zendesk.com/agent/#/admin/api -> OAuth clients.
+# Set the UID to 'deployment' and the redirect URL to http://localhost:9080/auth/zendesk/callback
 #
 # You may fill in NEWRELIC_API_KEY using the instructions below if you would like a dynamic chart of response time and throughput during deploys.
 # https://docs.newrelic.com/docs/features/getting-started-with-the-new-relic-rest-api#setup
