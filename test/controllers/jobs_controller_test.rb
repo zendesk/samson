@@ -3,13 +3,13 @@ require_relative '../test_helper'
 describe JobsController do
   let(:project) { projects(:test) }
   let(:stage) { stages(:test_staging) }
-  let(:deployer) { users(:deployer) }
+  let(:admin) { users(:admin) }
   let(:command) { "echo hello" }
-  let(:job) { Job.create!(command: command, project: project, user: deployer) }
+  let(:job) { Job.create!(command: command, project: project, user: admin) }
   let(:job_service) { stub(execute!: nil) }
 
   setup do
-    JobService.stubs(:new).with(project, deployer).returns(job_service)
+    JobService.stubs(:new).with(project, admin).returns(job_service)
     job_service.stubs(:execute!).returns(job)
   end
 
@@ -61,6 +61,11 @@ describe JobsController do
   end
 
   as_a_deployer do
+    unauthorized :post, :create, project_id: 1
+    unauthorized :delete, :destroy, project_id: 1, id: 1
+  end
+
+  as_a_admin do
     describe "a POST to :create" do
       setup do
         post :create, commands: { ids: [] }, job: {
@@ -81,9 +86,8 @@ describe JobsController do
         end
       end
     end
-
     describe "a DELETE to :destroy" do
-      describe "with a job owned by the deployer" do
+      describe "with a job owned by the admin" do
         setup do
           Job.any_instance.stubs(:started_by?).returns(true)
 
@@ -94,24 +98,6 @@ describe JobsController do
           response.status.must_equal(200)
         end
       end
-
-      describe "with a job not owned by the deployer" do
-        setup do
-          Job.any_instance.stubs(:started_by?).returns(false)
-          User.any_instance.stubs(:is_admin?).returns(false)
-
-          delete :destroy, project_id: project.id, id: job
-        end
-
-        it "responds with 403" do
-          response.status.must_equal(403)
-        end
-      end
-    end
-  end
-
-  as_a_admin do
-    describe "a DELETE to :destroy" do
       describe "with a valid job" do
         setup do
           delete :destroy, project_id: project.id, id: job
