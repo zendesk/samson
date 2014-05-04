@@ -8,7 +8,7 @@ A web interface for deployments.
 
 ### How?
 
-It ensures a git repository is up-to-date, and then executes the commands associated with that project and stage.
+Samson works by ensuring a git repository for a project is up-to-date, and then executes the commands associated with a stage. If you want to find out exactly what's going on, have a read through the [JobExecution](app/models/job_execution.rb).
 
 Streaming is done through a [controller](app/controllers/streams_controller.rb) that allows both web access and curl access. A [subscriber thread](config/initializers/instrumentation.rb) is created on startup.
 
