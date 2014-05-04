@@ -3,4 +3,4 @@
 
 require File.expand_path('../config/application', __FILE__)
 
-ZendeskSamson::Application.load_tasks
+Samson::Application.load_tasks
