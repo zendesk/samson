@@ -50,7 +50,7 @@ script/bootstrap
 bundle exec puma -C config/puma.rb
 ```
 
-The website runs at `http://localhost:9080/` by default.
+The website runs at [http://localhost:9080/](http://localhost:9080) by default.
 
 #### User roles
 
@@ -61,7 +61,7 @@ Deployer | Viewer + ability to deploy projects.
 Admin | Deployer + can setup and configure projects.
 Super Admin | Admin + management of user roles.
 
-The first user the logs into Samson will automatically become a super admin.
+The first user that logs into Samson will automatically become a super admin.
 
 #### CI support
 
