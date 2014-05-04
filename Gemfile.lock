@@ -137,7 +137,6 @@ GEM
     multi_json (1.9.2)
     multi_xml (0.5.5)
     multipart-post (2.0.0)
-    mysql2 (0.3.15)
     net-scp (1.2.0)
       net-ssh (>= 2.6.5)
     net-sftp (2.1.2)
@@ -269,7 +268,6 @@ DEPENDENCIES
   kaminari
   minitest-rails (~> 2.0.0.beta1)
   momentjs-rails
-  mysql2 (~> 0.3)
   newrelic_api
   newrelic_rpm (>= 3.7.1)
   octokit (~> 3.0.0)
