@@ -2,19 +2,54 @@
 
 set -e
 
-bundle install --local
+heading() {
+  echo "$1... \c";
+}
 
-if [ ! -f .env ]; then
-  cp .env.example .env
-  echo '[\033[32mNOTE\033[0m] To use GitHub, you have to configure \033[32msamson/.env\033[0m'
-else
-  echo '.env file exists, not overwriting.'
-fi
+bold() {
+  echo "\033[1m$1\033[0m"
+}
 
-if [ ! -f config/database.yml ]; then
-  cp config/database.mysql.yml.example config/database.yml || true
-else
-  echo 'config/database.yml file exists, not overwriting.'
-fi
+pass() {
+  bold "DONE"
+}
 
-bundle exec rake db:setup
+fail() {
+  bold "FAIL"
+  echo
+}
+
+fail_and_exit() {
+  fail
+  exit -1
+}
+
+install_gem() {
+  if ! gem list $1 -i > /dev/null
+  then
+    echo gem install $1
+    gem install $1
+  fi
+}
+
+try() {
+  heading "$1"
+  if eval "$2"
+  then
+    pass
+  else
+    fail_and_exit
+  fi
+}
+
+try "Installing bundler" "install_gem bundler"
+try "Bundling" "bundle check > /dev/null || bundle --local --quiet "
+
+echo
+bold "Copying example files"
+try "Creating .env" "test -e .env || cp .env.example .env"
+try "Creating config/database.yml" "test -e config/database.yml || cp config/database.sqlite.yml.example config/database.yml"
+try "Creating databases" "bundle exec rake db:setup > /dev/null"
+
+echo
+bold "Success!"
