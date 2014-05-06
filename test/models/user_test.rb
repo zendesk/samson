@@ -49,6 +49,26 @@ describe User do
       end
     end
 
+    describe "backfilling external_id" do
+      let(:auth_hash) {{
+        name: "Test User",
+        email: "test@example.org",
+        external_id: 9,
+        token: "abc123",
+      }}
+
+      let(:existing_user) do
+        User.create!(name: "Test", email: "test@example.org")
+      end
+
+      setup { existing_user }
+
+      it "should backfill user external_id" do
+        assert_equal user, existing_user
+        assert_equal 9, user.external_id
+      end
+    end
+
     describe "with an existing user" do
       let(:auth_hash) {{
         name: "Test User",
