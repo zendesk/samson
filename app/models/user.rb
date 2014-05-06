@@ -18,7 +18,7 @@ class User < ActiveRecord::Base
 
   def self.create_or_update_from_hash(hash)
     user = User.where(external_id: hash[:external_id]).first
-    user ||= User.where(external_id: hash[:email]).first
+    user ||= User.where(email: hash[:email]).first
     user ||= User.new
 
     # attributes are always a string hash
