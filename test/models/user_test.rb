@@ -45,7 +45,7 @@ describe User do
       end
 
       it "sets the role_id" do
-        user.role_id.must_equal(Role::ADMIN.id)
+        user.role_id.must_equal(Role::SUPER_ADMIN.id)
       end
     end
 
