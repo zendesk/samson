@@ -1,4 +1,4 @@
-ZendeskSamson::Application.routes.draw do
+Samson::Application.routes.draw do
   resources :projects do
     resources :jobs, only: [:index, :new, :create, :show, :destroy]
 
