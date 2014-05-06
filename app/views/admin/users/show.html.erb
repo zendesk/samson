@@ -3,10 +3,11 @@
     <table class="table table-hover table-condensed">
       <thead>
         <tr>
-          <th>#</th>
-          <th>Name</th>
-          <th>Email</th>
-          <th>Role</th>
+          <th><%= sortable "id" %></th>
+          <th><%= sortable "name" %></th>
+          <th><%= sortable "email" %></th>
+          <th><%= sortable "role_id", "Role" %></th>
+          <th></th>
         </tr>
       </thead>
 
@@ -17,15 +18,10 @@
             <td><%= user.name %></td>
             <td><%= user.email %></td>
             <td>
-              <% Role.all.each do |role| %>
-              <label class="radio-inline">
-                <%= radio_button_tag "users[#{user.id}][role]", role.id, user.role_id == role.id %>
-                <%= role.name %>
-              </label>
-              <% end %>
+              <%= render partial: "roles", locals: { user: user } %>
             </td>
             <td>
-              <%= link_to "Delete", admin_user_path(user.id), method: :delete, data: { confirm: "Delete ##{user.id} #{user.name} #{user.email} ?" }, class: "btn btn-danger" %>
+              <%= link_to "Delete", admin_user_path(user.id), method: :delete, data: { confirm: "Delete ##{user.id} #{user.name} #{user.email} ?" }, class: "btn btn-danger" if can_modify_roles? %>
             </td>
           </tr>
         <% end %>
@@ -34,7 +30,7 @@
 
     <div class="admin-actions">
       <div class="pull-right">
-        <button type="submit" class="btn btn-default">Save Changes</button>
+        <%= button_tag "Save Changes", class: "btn btn-default" if can_modify_roles? %>
       </div>
 
       <%= paginate @users %>

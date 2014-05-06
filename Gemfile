@@ -4,8 +4,10 @@ gem 'dotenv-rails', '~> 0.9'
 gem 'rails', '4.1.0'
 gem 'puma'
 
+# Database (use one of these)
 gem 'sqlite3'
 gem 'mysql2', '~> 0.3'
+# gem 'pg', '~>0.13.2'
 
 gem 'kaminari'
 gem 'soft_deletion', '~> 0.4'
@@ -25,21 +27,14 @@ end
 
 group :assets do
   gem 'sass-rails', '~> 4.0.0'
-
   gem 'uglifier', '>= 1.3.0'
-
   gem 'jquery-rails'
   gem 'jquery-ui-rails'
-
   gem 'bootstrap-sass'
   gem 'font-awesome-sass'
-
   gem 'bootstrap-x-editable-rails'
-
   gem 'rickshaw_rails'
-
   gem 'angularjs-rails'
-
   gem 'momentjs-rails'
 end
 
@@ -47,25 +42,16 @@ group :no_preload do
   gem 'omniauth', '~> 1.1'
   gem 'omniauth-oauth2', '~> 1.1'
   gem 'omniauth-github', '= 1.1.1'
-
   gem 'octokit', '~> 3.0.0'
   gem 'faraday-http-cache', '~> 0.4'
-
   gem 'warden', '~> 1.2'
-
   gem 'flowdock', '~> 0.3.1'
-
   gem 'active_hash', '~> 1.0'
-
   gem 'ansible'
-
   gem 'github-markdown', '~> 0.6.3'
-
   gem 'newrelic_api'
   gem 'activeresource'
-
   gem 'coderay', '~> 1.1.0'
-
   gem 'dogapi', '~> 1.9.1'
 end
 

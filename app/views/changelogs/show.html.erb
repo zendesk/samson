@@ -3,7 +3,13 @@
 <h1><%= @project.name %> changelog</h1>
 
 <section>
-  <p>Changes made since <%= @start_date.to_s(:long) %>.</p>
+
+  <form id="date-chooser">
+    <p>Changes made between <input type="text" value="<%= @start_date.to_s %>"  name="start_date" id="start-date"> and
+      <input type="text" value="<%= @end_date.to_s %>" name="end_date" id="end-date">
+      <span id="status-message"></span>
+    </p>
+  </form>
 
   <% @changeset.pull_requests.each do |pr| %>
     <div>

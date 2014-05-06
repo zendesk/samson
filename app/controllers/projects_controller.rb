@@ -33,7 +33,7 @@ class ProjectsController < ApplicationController
     @project = Project.new(project_params)
 
     if @project.save
-      redirect_to root_path
+      redirect_to project_path(@project)
     else
       stage = @project.stages.last
       stage ||= @project.stages.build

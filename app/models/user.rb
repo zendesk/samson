@@ -25,7 +25,7 @@ class User < ActiveRecord::Base
     attributes = user.attributes.merge(hash.stringify_keys) do |key, old, new|
       if key == 'role_id'
         if !User.exists?
-          Role::ADMIN.id
+          Role::SUPER_ADMIN.id
         elsif new && (user.new_record? || new >= old)
           new
         else
@@ -45,9 +45,13 @@ class User < ActiveRecord::Base
     super.presence || email
   end
 
+  def name_and_email
+    "#{name} (#{email})"
+  end
+
   def gravatar_url
     md5 = Digest::MD5.hexdigest(email)
-    "http://www.gravatar.com/avatar/#{md5}"
+    "https://www.gravatar.com/avatar/#{md5}"
   end
 
   Role.all.each do |role|

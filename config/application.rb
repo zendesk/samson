@@ -6,7 +6,7 @@ require 'rails/all'
 # you've limited to :test, :development, or :production.
 Bundler.require(:default, :assets, Rails.env)
 
-module ZendeskSamson
+module Samson
   class Application < Rails::Application
     # Settings in config/environments/* take precedence over those specified here.
     # Application configuration should go into files in config/initializers
@@ -44,8 +44,8 @@ module ZendeskSamson
 
     # The Github teams and organizations used for permissions
     config.samson.github = ActiveSupport::OrderedOptions.new
-    config.samson.github.organization = 'zendesk'
-    config.samson.github.admin_team = 'owners'
-    config.samson.github.deploy_team = 'engineering'
+    config.samson.github.organization = ENV["GITHUB_ORGANIZATION"]
+    config.samson.github.admin_team = ENV["GITHUB_ADMIN_TEAM"]
+    config.samson.github.deploy_team = ENV["GITHUB_DEPLOY_TEAM"]
   end
 end
