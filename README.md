@@ -10,7 +10,7 @@ A web interface for deployments.
 
 Samson works by ensuring a git repository for a project is up-to-date, and then executes the commands associated with a stage. If you want to find out exactly what's going on, have a read through the [JobExecution](app/models/job_execution.rb).
 
-Streaming is done through a [controller](app/controllers/streams_controller.rb) that allows both web access and curl access. A [subscriber thread](config/initializers/instrumentation.rb) is created on startup.
+Streaming is done through a [controller](app/controllers/streams_controller.rb) that uses [server-sent events](https://en.wikipedia.org/wiki/Server-sent_events) to display to the client.
 
 #### Config
 
@@ -109,13 +109,6 @@ version number, e.g. `v42`, and the release will appear in Samson.
 Any stage can be configured to automatically deploy new releases. For instance,
 you might want each new release to be deployed to your staging environment
 automatically.
-
-#### Notes
-
-\* Currently `deploy` is hardcoded as the deploy user, you will want
-to change it to your own for testing.
-
-[1]: https://github.com/rails/rails/issues/10989
 
 ### Contributing
 
