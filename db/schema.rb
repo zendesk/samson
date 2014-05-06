@@ -128,10 +128,13 @@ ActiveRecord::Schema.define(version: 20140416194907) do
     t.string   "email"
     t.datetime "created_at"
     t.datetime "updated_at"
-    t.integer  "role_id",    default: 0, null: false
+    t.integer  "role_id",     default: 0, null: false
     t.string   "token"
     t.datetime "deleted_at"
+    t.string   "external_id"
   end
+
+  add_index "users", ["external_id"], name: "index_users_on_external_id", unique: true, using: :btree
 
   create_table "webhooks", force: true do |t|
     t.integer  "project_id", null: false

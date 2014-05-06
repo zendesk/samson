@@ -45,7 +45,7 @@ describe User do
       end
 
       it "sets the role_id" do
-        user.role_id.must_equal(Role::ADMIN.id)
+        user.role_id.must_equal(Role::SUPER_ADMIN.id)
       end
     end
 
@@ -53,31 +53,34 @@ describe User do
       let(:auth_hash) {{
         name: "Test User",
         email: "test@example.org",
+        external_id: 9,
         token: "abc123",
       }}
 
       let(:existing_user) do
-        User.create!(name: "Test", email: "test@example.org")
+        User.create!(:name => "Test", :external_id => 9)
       end
 
       setup { existing_user }
 
-      it "updates the user" do
-        user.name.must_equal("Test User")
+      it "does not update the user" do
+        user.name.must_equal("Test")
+        user.token.wont_equal("abc123")
+      end
+
+      it "does update nil fields" do
+        user.email.must_equal("test@example.org")
       end
 
       it "is the same user" do
         existing_user.id.must_equal(user.id)
       end
 
-      it "sets the current token" do
-        user.token.must_equal("abc123")
-      end
-
       describe "with a higher role_id" do
         let(:auth_hash) {{
           name: "Test User",
           email: "test@example.org",
+          external_id: 9,
           role_id: Role::ADMIN.id
         }}
 
@@ -94,6 +97,7 @@ describe User do
         let(:auth_hash) {{
           name: "Test User",
           email: "test@example.org",
+          external_id: 9,
           role_id: Role::VIEWER.id
         }}
 
