@@ -34,6 +34,7 @@ class ProjectsController < ApplicationController
 
     if @project.save
       redirect_to project_path(@project)
+      Rails.logger.info("#{@current_user.name_and_email} created a new project #{@project.to_param}")
     else
       stage = @project.stages.last
       stage ||= @project.stages.build
