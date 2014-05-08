@@ -2,31 +2,33 @@
 
 <%= render 'projects/header', project: @project, tab: "releases" %>
 
-<section class="clearfix tabs">
+<% cache @project do %>
+  <section class="clearfix tabs">
 
-  <p class="pull-right">
-    <%= link_to "Create release manually", new_project_release_path(@project), class: "btn btn-default" %>
-  </p>
+    <p class="pull-right">
+      <%= link_to "Create release manually", new_project_release_path(@project), class: "btn btn-default" %>
+    </p>
 
-  <% if @releases.any? %>
-    <table class="table table-hover release-list">
-      <thead>
-        <tr>
-          <th></th>
-          <th>Authors</th>
-          <th>Currently deployed to</th>
-          <th></th>
-        </tr>
-      </thead>
+    <% if @releases.any? %>
+      <table class="table table-hover release-list">
+        <thead>
+          <tr>
+            <th></th>
+            <th>Authors</th>
+            <th>Currently deployed to</th>
+            <th></th>
+          </tr>
+        </thead>
 
-      <tbody>
-        <%= render @releases %>
-      </tbody>
-    </table>
+        <tbody>
+          <%= render @releases %>
+        </tbody>
+      </table>
 
-    <%= paginate @releases %>
-  <% else %>
-    <p>There haven't been any releases yet.</p>
-  <% end %>
+      <%= paginate @releases %>
+    <% else %>
+      <p>There haven't been any releases yet.</p>
+    <% end %>
 
-</section>
+  </section>
+<% end %>
