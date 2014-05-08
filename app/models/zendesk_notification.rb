@@ -37,7 +37,7 @@ class ZendeskNotification
     @zendesk_client ||= ZendeskAPI::Client.new do |config|
       config.url = "#{zendesk_url}/api/v2"
       config.access_token = access_token
-      config.adapter = :net_http
+      config.adapter = :net_http_persistent
     end
   end
 
