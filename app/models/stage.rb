@@ -22,7 +22,7 @@ class Stage < ActiveRecord::Base
 
   default_scope { order(:order) }
 
-  validates :name, presence: true, uniqueness: { scope: :project }
+  validates :name, presence: true, uniqueness: { scope: [:project, :deleted_at] }
 
   accepts_nested_attributes_for :flowdock_flows, allow_destroy: true, reject_if: :no_flowdock_token?
   accepts_nested_attributes_for :new_relic_applications, allow_destroy: true, reject_if: :no_newrelic_name?
