@@ -2,7 +2,7 @@ class Changeset::Commit
   PULL_REQUEST_MERGE_MESSAGE = /\AMerge pull request #(\d+)/
 
   # Matches Zendesk ticket number in commit messages
-  ZENDESK_TICKET = /zd#?(\d{4,8})/i
+  ZENDESK_TICKET = /zd#?(\d+)/i
 
   def initialize(repo, data)
     @repo, @data = repo, data

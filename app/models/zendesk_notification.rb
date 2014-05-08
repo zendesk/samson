@@ -1,4 +1,5 @@
 require 'zendesk_api'
+require 'net/http/persistent'
 
 class ZendeskNotification
   cattr_accessor(:zendesk_url) { ENV['ZENDESK_URL'] }
@@ -36,6 +37,7 @@ class ZendeskNotification
     @zendesk_client ||= ZendeskAPI::Client.new do |config|
       config.url = "#{zendesk_url}/api/v2"
       config.access_token = access_token
+      config.adapter = :net_http
     end
   end
 
