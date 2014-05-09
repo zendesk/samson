@@ -8,14 +8,8 @@ describe Changeset::PullRequest do
   let(:body) { "" }
 
   describe ".find" do
-    let(:octokit) { stub("octokit") }
-
-    before do
-      Octokit::Client.stubs(:new).returns(octokit)
-    end
-
     it "finds the pull request" do
-      octokit.stubs(:pull_request).with("foo/bar", 42).returns(data)
+      GITHUB.stubs(:pull_request).with("foo/bar", 42).returns(data)
       data.stubs(:title).returns("Make it bigger!")
 
       pr = Changeset::PullRequest.find("foo/bar", 42)
@@ -24,7 +18,7 @@ describe Changeset::PullRequest do
     end
 
     it "returns nil if the pull request could not be found" do
-      octokit.stubs(:pull_request).with("foo/bar", 42).raises(Octokit::NotFound)
+      GITHUB.stubs(:pull_request).with("foo/bar", 42).raises(Octokit::NotFound)
 
       pr = Changeset::PullRequest.find("foo/bar", 42)
 
