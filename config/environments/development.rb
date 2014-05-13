@@ -32,10 +32,12 @@ Samson::Application.configure do
   # number of complex assets.
   config.assets.debug = false
 
-  require 'syslog/logger'
-  config.logger = Syslog::Logger.new('samson')
-  # config.logger = ActiveSupport::TaggedLogging.new(SyslogLogger.new)
+  # Lograge
+  # For testing purposes, you need to have something like this in your asl.conf (Mac OS X):
+  # ? [= Sender samson] file /Users/myuser/Code/samson/log/samson.log mode=0644
+  # require 'syslog/logger'
+  # config.logger = Syslog::Logger.new('samson')
 
-  config.lograge.enabled = true
-  config.lograge.formatter = Lograge::Formatters::Logstash.new
+  # config.lograge.enabled = true
+  # config.lograge.formatter = Lograge::Formatters::Logstash.new
 end
