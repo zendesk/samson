@@ -17,8 +17,8 @@ Samson::Application.configure do
   config.action_mailer.raise_delivery_errors = false
 
   self.default_url_options = {
-    host: "localhost",
-    port: "9080"
+    host: URI( ENV["SAMSON_URL"] ).host,
+    port: URI( ENV["SAMSON_URL"] ).port
   }
 
   # Print deprecation notices to the Rails logger.
