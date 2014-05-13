@@ -13,10 +13,8 @@ class Changeset::PullRequest
   # Returns a ChangeSet::PullRequest describing the PR or nil if it couldn't
   #   be found.
   def self.find(repo, number)
-    github = Octokit::Client.new(access_token: ENV['GITHUB_TOKEN'])
-
     data = Rails.cache.fetch([self, repo, number].join("-")) do
-      github.pull_request(repo, number)
+      GITHUB.pull_request(repo, number)
     end
 
     new(repo, data)

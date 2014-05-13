@@ -21,6 +21,9 @@ class ActiveSupport::TestCase
   # -- they do not yet inherit this setting
   fixtures :all
 
+  before do
+    Rails.cache.clear
+  end
 end
 
 module StubGithubAPI
