@@ -80,9 +80,18 @@ Samson::Application.configure do
 
   self.default_url_options = { host: 'samson.zende.sk', protocol: 'https' }
 
-  require 'syslog/logger'
-  config.logger = Syslog::Logger.new('samson')
-
+  # Lograge
   config.lograge.enabled = true
+
+  # custom_options can be a lambda or hash
+  # if it's a lambda then it must return a hash
+  config.lograge.custom_options = lambda do |event|
+    unwanted_keys = %w[format action controller]
+    params = event.payload[:params].reject { |key,_| unwanted_keys.include? key }
+
+    # capture some specific timing values you are interested in
+    { :params => params }
+  end
+
   config.lograge.formatter = Lograge::Formatters::Logstash.new
 end
