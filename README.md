@@ -12,6 +12,12 @@ Samson works by ensuring a git repository for a project is up-to-date, and then 
 
 Streaming is done through a [controller](app/controllers/streams_controller.rb) that uses [server-sent events](https://en.wikipedia.org/wiki/Server-sent_events) to display to the client.
 
+#### Requirements
+
+* MySQL
+* Memcache
+* Ruby (currently 2.1.1)
+
 #### Config
 
 ```bash
@@ -97,6 +103,14 @@ Skip a deploy:
 
 Add "[deploy skip]" to your commit message, and Samson will ignore the webhook
 from CI.
+
+##### Other
+
+* JIRA
+* Datadog
+* New Relic
+* Flowdock
+* Github
 
 #### Continuous Delivery & Releases
 
