@@ -19,4 +19,10 @@ class ApplicationController < ActionController::Base
   def verified_request?
     warden.winning_strategy || super
   end
+
+  # Get parameters for lograge
+  def append_info_to_payload(payload)
+    super
+    payload["params"] = request.params
+  end
 end
