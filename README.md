@@ -14,7 +14,7 @@ Streaming is done through a [controller](app/controllers/streams_controller.rb) 
 
 #### Requirements
 
-* MySQL
+* MySQL [Postgresql, SQLite] (We only develop/test against MySQL)
 * Memcache
 * Ruby (currently 2.1.1)
 
