@@ -7,7 +7,7 @@
 </ol>
 
 <% if @stage.locked? %>
- <div class="alert alert-warning">Deployments to this stage were locked by <%= @stage.lock.user.name %> <%= time_ago_in_words(@stage.lock.created_at) %> ago.</div>
+ <div class="alert alert-warning">Deployments to this stage were locked by <%= @stage.lock.user.name %> <%= time_ago_in_words(@stage.lock.created_at) %> ago. <%= @stage.lock.reason %></div>
 <% end %>
 
 <h1><%= @stage.name %></h1>
@@ -21,8 +21,10 @@
         <i class="glyphicon glyphicon-lock"></i> Unlock
       <% end %>
     <% else %>
-      <%= link_to project_stage_lock_path(@project, @stage), class: 'btn btn-default', method: :post do %>
-        <i class="glyphicon glyphicon-lock"></i> Lock
+      <button class="btn btn-default want-lock"><i class="glyphicon glyphicon-lock"></i> Lock</button>
+      <%= form_tag project_stage_lock_path(@project, @stage), method: :post, class: 'before-lock' do %>
+        <input type="text" name="description" class="lock-description" placeholder="Description">
+        <input type="submit" class="do-lock btn btn-warning" value="sudo lock">
       <% end %>
     <% end %>
     <%= link_to "Edit stage", edit_project_stage_path(@project, @stage), class: "btn btn-default" %>

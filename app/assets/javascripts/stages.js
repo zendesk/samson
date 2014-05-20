@@ -36,7 +36,7 @@ $(function() {
     }
   };
 
-  if($stagesBox.data('sortable')) {
+  if($stagesBox.data("sortable")) {
     $stagesBox.sortable({
       update: function() {
         if (reorderCtrl.sending) {
@@ -48,4 +48,13 @@ $(function() {
       }
     });
   }
+
+  var $wantLock    = $(".want-lock"),
+      $beforeLock  = $(".before-lock"),
+      $description = $(".lock-description");
+
+  $wantLock.click(function() {
+    $beforeLock.toggleClass("active");
+    $description.select();
+  });
 });

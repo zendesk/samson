@@ -21,6 +21,11 @@ class Lock < ActiveRecord::Base
     "Locked by #{self.user.name} #{time_ago_in_words(self.created_at)} ago"
   end
 
+  def reason
+    return "Description not given." if description.empty?
+    description.capitalize
+  end
+
   private
 
   def unique_global_lock
