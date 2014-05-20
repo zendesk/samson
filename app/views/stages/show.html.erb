@@ -24,7 +24,7 @@
       <button class="btn btn-default want-lock"><i class="glyphicon glyphicon-lock"></i> Lock</button>
       <%= form_tag project_stage_lock_path(@project, @stage), method: :post, class: 'before-lock' do %>
         <input type="text" name="description" class="lock-description" placeholder="Description">
-        <input type="submit" class="do-lock btn btn-warning" value="sudo lock">
+        <input type="submit" class="do-lock btn btn-warning" value="Lock">
       <% end %>
     <% end %>
     <%= link_to "Edit stage", edit_project_stage_path(@project, @stage), class: "btn btn-default" %>
