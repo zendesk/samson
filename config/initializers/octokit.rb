@@ -9,3 +9,11 @@ Octokit.middleware = Faraday::RackBuilder.new do |builder|
 end
 
 Octokit.connection_options[:request] = { open_timeout: 2 }
+
+token = ENV['GITHUB_TOKEN']
+
+unless Rails.env.test?
+  raise "No GitHub token available" if token.blank?
+end
+
+GITHUB = Octokit::Client.new(access_token: token)

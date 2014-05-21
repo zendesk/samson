@@ -14,11 +14,7 @@ class CommitStatus
 
   private
 
-  def github
-    @github ||= Octokit::Client.new(access_token: token)
-  end
-
   def statuses
-    @statuses ||= github.statuses(@repo, @sha)
+    @statuses ||= GITHUB.statuses(@repo, @sha)
   end
 end

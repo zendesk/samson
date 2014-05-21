@@ -1,6 +1,4 @@
 class GithubNotification
-  cattr_accessor(:token) { ENV['GITHUB_TOKEN'] }
-
   def initialize(stage, deploy)
     @stage, @deploy = stage, deploy
     @project = @stage.project
@@ -15,7 +13,7 @@ class GithubNotification
       in_multiple_threads(pull_requests) do |pull_request|
 
         pull_id = pull_request.number
-        status = github.add_comment(@project.github_repo, pull_id, body)
+        status = GITHUB.add_comment(@project.github_repo, pull_id, body)
 
         if status == "201"
           Rails.logger.info "Updated Github PR: #{pull_id}"
@@ -28,10 +26,6 @@ class GithubNotification
   end
 
   private
-
-  def github
-    @github ||= Octokit::Client.new(access_token: token)
-  end
 
   def body
     url = url_helpers.project_deploy_url(@project, @deploy)

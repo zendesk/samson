@@ -1,8 +1,6 @@
 class Changeset
   attr_reader :comparison, :repo, :previous_commit, :commit
 
-  cattr_accessor(:token) { ENV['GITHUB_TOKEN'] }
-
   def initialize(comparison, repo, previous_commit, commit)
     @comparison, @repo = comparison, repo
     @previous_commit, @commit = previous_commit, commit
@@ -14,8 +12,7 @@ class Changeset
     previous_commit ||= commit
 
     comparison = Rails.cache.fetch([self, repo, previous_commit, commit].join("-")) do
-      github = Octokit::Client.new(access_token: token)
-      github.compare(repo, previous_commit, commit)
+      GITHUB.compare(repo, previous_commit, commit)
     end
 
     new(comparison, repo, previous_commit, commit)
