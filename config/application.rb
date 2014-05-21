@@ -48,7 +48,7 @@ module Samson
     config.samson.github.admin_team = ENV["GITHUB_ADMIN_TEAM"]
     config.samson.github.deploy_team = ENV["GITHUB_DEPLOY_TEAM"]
 
-    config.samson.uri = URI( ENV["SAMSON_URL"] )
+    config.samson.uri = URI( ENV["DEFAULT_URL"] )
     self.default_url_options = {
       host: config.samson.uri.host,
       protocol: config.samson.uri.scheme
