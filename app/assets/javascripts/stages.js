@@ -54,6 +54,7 @@ $(function() {
       $description = $(".lock-description");
 
   $wantLock.click(function() {
+    $wantLock.toggleClass("active");
     $beforeLock.toggleClass("active");
     $description.select();
   });
