@@ -1,6 +1,5 @@
 source 'https://rubygems.org'
 
-gem 'dotenv-rails', '~> 0.9'
 gem 'rails', '~> 4.1.0'
 gem 'puma'
 
