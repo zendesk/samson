@@ -28,6 +28,7 @@ class DeployServiceTest < ActiveSupport::TestCase
     before do
       stage.stubs(:create_deploy).returns(deploy)
       deploy.stubs(:persisted?).returns(true)
+      job_execution.stubs(:execute!)
 
       JobExecution.stubs(:start_job).with(reference, deploy.job).returns(job_execution)
     end
