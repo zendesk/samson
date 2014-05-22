@@ -16,10 +16,7 @@ Samson::Application.configure do
   # Don't care if the mailer can't send.
   config.action_mailer.raise_delivery_errors = false
 
-  self.default_url_options = {
-    host: "localhost",
-    port: "9080"
-  }
+  self.default_url_options.merge!( port: config.samson.uri.port )
 
   # Print deprecation notices to the Rails logger.
   config.active_support.deprecation = :log

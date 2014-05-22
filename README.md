@@ -27,7 +27,7 @@ script/bootstrap
 # Fill in .env with a few variables
 # [REQUIRED]
 # SECRET_TOKEN for Rails, can be generated with `bundle exec rake secret`.
-#
+# DEFAULT_URL (eg. http://localhost:9080)
 # GITHUB_ORGANIZATION (eg. zendesk)
 # GITHUB_CLIENT_ID and GITHUB_CLIENT_SECRET are for GitHub auth
 # and can be obtained by creating a new Github Application
