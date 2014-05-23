@@ -80,6 +80,11 @@ class StagesController < ApplicationController
     head :ok
   end
 
+  def clone
+    @stage = Stage.make_clone(@stage)
+    render :new
+  end
+
   private
 
   def stage_params
