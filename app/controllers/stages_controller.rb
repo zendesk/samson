@@ -3,7 +3,7 @@ class StagesController < ApplicationController
   before_filter :authorize_deployer!
 
   before_filter :find_project
-  before_filter :find_stage, only: [:show, :edit, :update, :lock, :unlock, :destroy]
+  before_filter :find_stage, except: [:index, :new, :create, :reorder]
 
   rescue_from ActiveRecord::RecordNotFound do
     if @project
