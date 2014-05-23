@@ -10,7 +10,7 @@ class LocksController < ApplicationController
   end
 
   def create
-    stage.create_lock(user: current_user)
+    stage.create_lock(user: current_user, description: params[:description])
     redirect_to project_stage_path(project, stage)
   end
 
