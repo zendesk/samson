@@ -2,6 +2,7 @@ source 'https://rubygems.org'
 
 gem 'rails', '~> 4.1.0'
 gem 'puma'
+gem 'dotenv-rails', '~> 0.9'
 
 # Database (use one of these)
 gem 'sqlite3'
@@ -61,7 +62,6 @@ end
 group :development do
   gem 'better_errors'
   gem 'binding_of_caller'
-  gem 'dotenv-rails', '~> 0.9'
 end
 
 group :test do
