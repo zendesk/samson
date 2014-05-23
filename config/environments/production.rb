@@ -91,5 +91,7 @@ Samson::Application.configure do
     { :params => params }
   end
 
+  require 'syslog/logger'
+  config.logger = Syslog::Logger.new('samson')
   config.lograge.formatter = Lograge::Formatters::Logstash.new
 end

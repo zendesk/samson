@@ -3,7 +3,7 @@ require 'faraday-http-cache'
 
 Octokit.middleware = Faraday::RackBuilder.new do |builder|
   builder.use Faraday::HttpCache, shared_cache: false, store: Rails.cache, serializer: Marshal
-  builder.response :logger
+  builder.response :logger, Rails.logger
   builder.use Octokit::Response::RaiseError
   builder.adapter Faraday.default_adapter
 end
