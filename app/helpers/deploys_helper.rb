@@ -9,6 +9,16 @@ module DeploysHelper
     "#{@deploy.stage.name} deploy (#{@deploy.status}) - #{@project.name}"
   end
 
+  def link_to_deploy_next_stage(deploy)
+    if deploy.succeeded? && next_stage = deploy.stage.next_stage
+      unless next_stage.locked?
+        title = "Deploy #{deploy.short_reference} to #{next_stage.name}"
+        path = new_project_deploy_path(deploy.project, reference: deploy.short_reference, stage_id: next_stage.id)
+        link_to title, path, class: "btn btn-primary"
+      end
+    end
+  end
+
   def file_status_label(status)
     mapping = {
       "added"    => "success",
