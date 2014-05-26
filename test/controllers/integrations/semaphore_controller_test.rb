@@ -97,7 +97,16 @@ describe Integrations::SemaphoreController do
       }.with_indifferent_access
     end
 
-    it "doesn't trigger a deploy if we want to skip" do
+    it "doesn't trigger a deploy if we want to skip with [deploy skip]" do
+      payload["commit"]["message"] = "[deploy skip]"
+      project.webhooks.create!(stage: stages(:test_staging), branch: "master")
+      post :create, payload.merge(token: project.token)
+
+      project.deploys.must_equal []
+    end
+
+    it "doesn't trigger a deploy if we want to skip with [skip deploy]" do
+      payload["commit"]["message"] = "[skip deploy]"
       project.webhooks.create!(stage: stages(:test_staging), branch: "master")
       post :create, payload.merge(token: project.token)
 
