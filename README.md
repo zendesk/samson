@@ -135,4 +135,4 @@ screenshots (if UI is changing)
 
 ### Team
 
-Core team is @steved555, @dasch, @jwswj, @halcyonCorsair, @princemaple & @sandlerr.
+Core team is [@steved555](https://github.com/steved555), [@dasch](https://github.com/dasch), [@jwswj](https://github.com/jwswj), [@halcyonCorsair](https://github.com/halcyonCorsair), [@princemaple](https://github.com/princemaple).
