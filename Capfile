@@ -1,3 +1,10 @@
+require 'bundler/setup'
+
+# Disable zendesk_deployment features
+disable_deploy_features = [:dual_git_releases]
+set :disable_deploy_features, disable_deploy_features
+
+require 'zendesk/deployment/shared_git_releases'
 require 'zendesk/deployment'
 require 'zendesk/deployment/migrations'
 require 'zendesk/deployment/airbrake'
