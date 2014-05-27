@@ -1,9 +1,9 @@
 GIT
   remote: git@github.com:zendesk/zendesk_deployment.git
-  revision: d8a07b3b03bfe01bdf695dc941ac50c5bc8b8fc0
-  ref: v1.10.4
+  revision: c8a8ce30e3dde7868f13282f4adc436679a6e8ac
+  ref: v1.10.13
   specs:
-    zendesk_deployment (1.10.4)
+    zendesk_deployment (1.10.13)
       capistrano (< 3.0.0)
       deep_merge
 
@@ -149,7 +149,7 @@ GEM
       net-ssh (>= 2.6.5)
     net-sftp (2.1.2)
       net-ssh (>= 2.6.5)
-    net-ssh (2.9.0)
+    net-ssh (2.9.1)
     net-ssh-gateway (1.2.0)
       net-ssh (>= 2.6.5)
     newrelic_api (1.2.4)
