@@ -13,7 +13,11 @@ class Integrations::TddiumController < Integrations::BaseController
     # Tddium doesn't send commit message, so we have to get creative
     repo_name = "#{params[:repository][:org_name]}/#{params[:repository][:name]}"
     data = GITHUB.commit(repo_name, params[:commit_id])
-    data.commit.message.include?("[deploy skip]")
+
+    ["[deploy skip]", "[skip deploy]"].any? do |token|
+      data.commit.message.include?(token)
+    end
+
   rescue Octokit::Error => e
     Rails.logger.info("Error trying to grab commit: #{e.message}")
     # We'll assume that if we don't hear back, don't skip
