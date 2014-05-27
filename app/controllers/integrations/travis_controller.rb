@@ -19,9 +19,7 @@ class Integrations::TravisController < Integrations::BaseController
   end
 
   def skip?
-    ["[deploy skip]", "[skip deploy]"].any? do |token|
-      payload['message'].include?(token)
-    end
+    contains_skip_token?(payload['message'])
   end
 
   def branch
