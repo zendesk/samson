@@ -6,6 +6,18 @@
 
 A web interface for deployments.
 
+**View the current status of all your projects:**
+
+![](http://f.cl.ly/items/3n0f0m3j2Q242Y1k311O/Samson.png)
+
+**Allow anyone to watch deploys as they happen:**
+
+![](http://cl.ly/image/1m0Q1k2r1M32/Master_deploy__succeeded_.png)
+
+**View all recent deploys across all projects:**
+
+![](http://cl.ly/image/270l1e3s2e1p/Samson.png)
+
 ### How?
 
 Samson works by ensuring a git repository for a project is up-to-date, and then executes the commands associated with a stage. If you want to find out exactly what's going on, have a read through the [JobExecution](app/models/job_execution.rb).
