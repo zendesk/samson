@@ -104,4 +104,15 @@ describe Integrations::TddiumController do
 
     project.deploys.must_equal []
   end
+
+  it "doesn't trigger a deploy if the commit message contains [skip deploy]" do
+    @webhook.destroy!
+
+    stub_github_api("repos/organization_name/repo_name/commits/dc395381e650f3bac18457909880829fc20e34ba", commit: {message: "hi[skip deploy]"})
+
+    project.webhooks.create!(stage: stages(:test_staging), branch: "production")
+    post :create, payload.merge(token: project.token)
+
+    project.deploys.must_equal []
+  end
 end

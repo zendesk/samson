@@ -36,4 +36,10 @@ class Integrations::BaseController < ApplicationController
   def project
     @project ||= Project.find_by_token!(params[:token])
   end
+
+  def contains_skip_token?(message)
+    ["[deploy skip]", "[skip deploy]"].any? do |token|
+      message.include?(token)
+    end
+  end
 end
