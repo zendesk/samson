@@ -27,7 +27,6 @@ script/bootstrap
 # Fill in .env with a few variables
 # [REQUIRED]
 # SECRET_TOKEN for Rails, can be generated with `bundle exec rake secret`.
-# DEFAULT_URL (eg. http://localhost:9080)
 # GITHUB_ORGANIZATION (eg. zendesk)
 # GITHUB_CLIENT_ID and GITHUB_CLIENT_SECRET are for GitHub auth
 # and can be obtained by creating a new Github Application
@@ -39,6 +38,7 @@ script/bootstrap
 # [OPTIONAL]
 # GITHUB_ADMIN_TEAM (team members automatically become Samson admins)
 # GITHUB_DEPLOY_TEAM (team members automatically become Samson deployers)
+# DEFAULT_URL (URL used by the mailer)
 #
 # Authentication is also possible using Zendesk, in that case set your
 # Zendesk token to CLIENT_SECRET and your URL to ZENDESK_URL in .env.
