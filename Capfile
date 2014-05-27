@@ -10,7 +10,7 @@ require 'zendesk/deployment/migrations'
 require 'zendesk/deployment/airbrake'
 
 set :application, 'samson'
-set :repository,  'git@github.com:zendesk/samson'
+set :repository,  'git@github.com:zendesk/zendesk_samson.git'
 set :environments, [:staging, :pod3]
 set :require_tag?, false
 set :email_notification, ['deploys@zendesk.com', 'samson@zendesk.flowdock.com', 'epahl@zendesk.com']
