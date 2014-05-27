@@ -7,9 +7,9 @@ class Integrations::SemaphoreController < Integrations::BaseController
   end
 
   def skip?
-    ["[deploy skip]", "[skip deploy]"].any? { |token|
+    ["[deploy skip]", "[skip deploy]"].any? do |token|
       params[:commit][:message].include?(token)
-    }
+    end
   end
 
   def commit
