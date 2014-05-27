@@ -1,0 +1,27 @@
+<ul class="nav nav-tabs">
+  <li class="<%= 'active' if active == 'overview' %>">
+    <%= link_to "Overview", project_path(project) %>
+  </li>
+  <% if project.manage_releases? %>
+    <li class="<%= 'active' if active == 'releases' %>">
+      <%= link_to "Releases", project_releases_path(project) %>
+    </li>
+  <% end %>
+  <li class="<%= 'active' if active == 'deploys' %>">
+    <%= link_to "Deploys", project_deploys_path(project) %>
+  </li>
+  <li class="<%= 'active' if active == 'jobs' %>">
+    <%= link_to "Jobs", project_jobs_path(project) %>
+  </li>
+  <li class="<%= 'active' if active == 'stages' %>">
+    <%= link_to "Stages", project_stages_path(project) %>
+  </li>
+  <li class="<%= 'active' if active == 'webhooks' %>">
+    <%= link_to "Webhooks", project_webhooks_path(project) %>
+  </li>
+<% if current_user.is_admin? %>
+  <li class="<%= 'active' if active == 'settings' %>">
+    <%= link_to "Settings", edit_project_path(project) %>
+  </li>
+<% end %>
+</ul>

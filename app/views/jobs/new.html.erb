@@ -1,0 +1,65 @@
+<%= form_for [@project, @job], html: { class: "form-horizontal" } do |form| %>
+  <fieldset>
+    <% if @job.errors.any? %>
+      <div class="row">
+        <div class="col-lg-5 col-lg-offset-1 alert alert-warning">
+          <p><strong>Ooops!</strong> There was an error while trying to start the job:</p>
+          <ul>
+            <% @job.errors.full_messages.each do |message| %>
+              <li><%= message %></li>
+            <% end %>
+          </ul>
+        </div>
+      </div>
+    <% end %>
+  </fieldset>
+
+  <fieldset>
+    <legend>Reference</legend>
+
+    <div class="form-group">
+      <%= form.label :commit, "Tag or SHA", class: "col-lg-2 control-label" %>
+      <div class="col-lg-4">
+        <%= form.text_field :commit, class: "form-control", autofocus: true, placeholder: "e.g. v2.1.43, master, fa0b4671" %>
+      </div>
+    </div>
+  </fieldset>
+
+  <fieldset>
+    <legend>Commands</legend>
+    <p>Select the commands you want to run when executing this job.
+
+    <div id="commands">
+      <%= collection_check_boxes(:commands, :ids, Command.for_project(@project), :id, :command) do |b| %>
+        <div class="row stage-bar bar">
+          <div data-id="<%= b.value %>" class="col-lg-offset-2 col-lg-2 command-checkbox">
+            <%= b.check_box %>
+          </div>
+          <div class="col-lg-8">
+            <pre data-type="textarea" class="pre-command pre-inline"><%= b.text %></pre>
+          </div>
+        </div>
+      <% end %>
+    </div>
+
+    <hr />
+
+    <p>Add commands which are specific to your job</p>
+    <%= form.text_area :command, class: "form-control", rows: 4, value: nil, placeholder: 'cap production deploy:switch' %>
+  </fieldset>
+
+  <%= javascript_tag do %>
+    $(document).ready(function() {
+      $('#commands').sortable();
+    });
+  <% end %>
+
+  <hr>
+
+  <div class="form-group">
+    <div class="col-lg-offset-2 col-lg-10">
+      <button type="submit" class="btn btn-primary">Execute!</button>
+      <%= link_to "cancel", project_jobs_path(@project), class: 'btn btn-default' %>
+    </div>
+  </div>
+<% end %>

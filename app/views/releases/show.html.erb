@@ -1,0 +1,50 @@
+<% content_for :page_title, "#{@project.name} #{@release.version}" %>
+
+<ol class="breadcrumb">
+  <li><%= link_to "Home", root_path %></li>
+  <li><%= link_to @project.name, project_path(@project) %></li>
+  <li><%= link_to "Releases", project_releases_path(@project) %></li>
+  <li class="active">Release <%= @release.version %></li>
+</ol>
+
+<h1>Release <%= @release.version %>: <code><%= @release.commit %></code></h1>
+
+<section class="clearfix tabs release">
+  <div class="pull-right">
+    <%= link_to "Deploy", new_project_deploy_path(@project, reference: @release.version), role: "button", class: "btn btn-primary" %>
+  </div>
+
+  <% if @release.deployed_stages.any? %>
+    <p>
+      Deployed to:
+      <% @release.deployed_stages.each do |stage| %>
+        <%= link_to stage.name, project_stage_path(@project, stage) %>
+      <% end %>
+    </p>
+  <% end %>
+
+  <% if @changeset.empty? %>
+    <p>This release contains no changes.</p>
+  <% else %>
+    <% if @changeset.pull_requests.any? %>
+      <legend>Pull requests</legend>
+      <%= render 'changeset/pulls', changeset: @changeset %>
+    <% end %>
+
+    <legend>Commits</legend>
+    <%= render 'changeset/commits', changeset: @changeset %>
+
+    <legend>Files</legend>
+    <%= render 'changeset/files', changeset: @changeset %>
+
+    <% if @changeset.risks? %>
+      <legend>Risks</legend>
+      <%= render 'changeset/risks', pull_requests: @changeset.risky_pull_requests, type: "release" %>
+    <% end %>
+
+    <% if @changeset.jira_issues.any? %>
+      <legend>Jira issues</legend>
+      <%= render 'changeset/jira_issues', jira_issues: @changeset.jira_issues, type: "release" %>
+    <% end %>
+  <% end %>
+</section>

@@ -1,0 +1,3 @@
+test_staging:
+  name: Staging
+  project: test

@@ -1,0 +1,45 @@
+<% if global_lock? %>
+  <div class="alert alert-warning">
+    All deploys locked until further notice! Contact <%= global_lock.user.name %> for details.
+  </div>
+<% end %>
+
+<section class="clearfix">
+  <% if @projects.empty? %>
+    <div class="alert alert-warning alert-dismissable">
+      <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+      You currently don't have any projects setup.
+    </div>
+  <% else %>
+    <table class="table table-hover table-condensed">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Name</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        <%= render partial: "project", collection: @projects %>
+      </tbody>
+    </table>
+  <% end %>
+
+  <div class="admin-actions">
+    <div class="pull-right">
+      <% if Lock.global.exists? %>
+        <%= link_to admin_lock_path, class: "btn btn-default", method: :delete do %>
+          <i class="glyphicon glyphicon-lock"></i> Unlock all projects
+        <% end %>
+      <% else %>
+        <%= link_to admin_lock_path, class: "btn btn-default", method: :post, data: { confirm: "Are you sure you want to lock deploys on ALL projects?" } do %>
+          <i class="glyphicon glyphicon-lock"></i> Lock all projects
+        <% end %>
+      <% end %>
+
+      <%= link_to "Add a new project", new_project_path, class: "btn btn-default" %>
+    </div>
+    <%= paginate @projects %>
+  </div>
+</section>

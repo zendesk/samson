@@ -1,0 +1,39 @@
+<%= form_for project, html: { class: "form-horizontal" } do |form| %>
+  <fieldset>
+    <div class="form-group">
+      <%= form.label :name, class: "col-lg-2 control-label" %>
+      <div class="col-lg-4">
+        <%= form.text_field :name, class: "form-control" %>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <%= form.label :repository_url, class: "col-lg-2 control-label" %>
+      <div class="col-lg-4">
+        <%= form.text_field :repository_url, class: "form-control" %>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <%= form.label :release_branch, class: "col-lg-2 control-label" %>
+      <div class="col-lg-4">
+        <%= form.text_field :release_branch, class: "form-control" %>
+        <p class="help-block">New commits on this branch will cause a release.</p>
+      </div>
+    </div>
+
+    <% unless project.persisted? %>
+      <%= form.fields_for :stages do |stage_fields| %>
+        <%= render 'stages/fields', form: stage_fields %>
+      <% end %>
+    <% end %>
+
+    <hr>
+
+    <div class="form-group">
+      <div class="col-lg-offset-2 col-lg-10">
+        <button type="submit" class="btn btn-default">Save</button>
+      </div>
+    </div>
+  </fieldset>
+<% end %>

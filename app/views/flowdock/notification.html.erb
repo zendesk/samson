@@ -1,0 +1,15 @@
+<p><%= pluralize changeset.commits.count, "commit" %> by <%= changeset.author_names.to_sentence %>.</p>
+
+<p><strong>Files changed</strong></p>
+<ul>
+  <% changeset.files.each do |file| %>
+    <li><strong><%= file.status[0].upcase %></strong> <%= file.filename %></li>
+  <% end %>
+</ul>
+
+<p><strong>Commits</strong></p>
+<ul>
+  <% changeset.commits.each do |commit| %>
+    <li><%= link_to commit.summary, commit.url %> (<%= commit.author_name %>)</li>
+  <% end %>
+</ul>

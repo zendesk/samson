@@ -1,0 +1,18 @@
+<% cache stage do %>
+  <tr>
+    <td>
+      <%= link_to stage.name, project_stage_path(project, stage) %>
+      <% if stage.locked? %>
+        <span class="label label-warning" title="<%= stage.lock.summary %>"><i class="glyphicon glyphicon-lock"></i> Locked</span>
+      <% end %>
+    </td>
+    <% if stage.last_deploy.nil? %>
+      <td>-</td>
+      <td>-</td>
+    <% else %>
+      <td><%= stage.last_deploy.user.name %></td>
+      <td><%= link_to stage.last_deploy.short_reference, project_deploy_path(project, stage.last_deploy), title: stage.last_deploy.reference %></td>
+    <% end %>
+    <td align="right"><%= deploy_link @project, stage %></td>
+  </tr>
+<% end %>

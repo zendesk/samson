@@ -1,0 +1,66 @@
+<div class="navbar navbar-inverse">
+
+  <div class="container">
+    <%= link_to "Samson", root_path, class: "navbar-brand" %>
+
+    <ul class="nav navbar-nav">
+      <% if current_user %>
+        <li class="dropdown <%= 'active' if request.path.starts_with?('/projects') %>">
+          <a href="#" class="dropdown-toggle" data-toggle="dropdown">Projects <b class="caret"></b></a>
+          <ul class="dropdown-menu">
+            <% current_user.starred_projects.alphabetical.each do |project| %>
+              <li>
+              <%= link_to project_path(project) do %>
+                <span class="glyphicon glyphicon-star"></span> <%= project.name %>
+              <% end %>
+              </li>
+            <% end %>
+            <% (Project.alphabetical.to_a - current_user.starred_projects).each do |project| %>
+              <li>
+              <%= link_to project_path(project) do %>
+                <span class="glyphicon">&nbsp;</span> <%= project.name %>
+              <% end %>
+              </li>
+            <% end %>
+          </ul>
+        </li>
+        <li class="<%= 'active' if current_page?(controller: '/deploys', action: 'recent') %>">
+          <%= link_to "Recent Deploys", recent_deploys_path %>
+        </li>
+        <li class="<%= 'active' if current_page?(controller: '/deploys', action: 'active') %>">
+          <%= link_to active_deploys_path do %>
+            Current Deploys
+            <%= content_tag(:span, Deploy.active.count, class: "badge") unless Deploy.active.count.zero? %>
+          <% end %>
+        </li>
+      <% end %>
+
+      <% if current_user.try(:is_admin?) %>
+        <li class="dropdown <%= 'active' if request.path.starts_with?('/admin') %>">
+          <a href="#" class="dropdown-toggle" data-toggle="dropdown">Admin <b class="caret"></b></a>
+          <ul class="dropdown-menu">
+            <li><%= link_to "Projects", admin_projects_path %></li>
+            <li><%= link_to "Commands", admin_commands_path %></li>
+            <li><%= link_to "Users", admin_users_path %></li>
+          </ul>
+        </li>
+      <% end %>
+    </ul>
+
+    <ul class="nav navbar-nav pull-right">
+      <% if logged_in? %>
+        <li class="dropdown profile">
+          <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+            <%= image_tag current_user.gravatar_url, class: "gravatar" %>
+            <%= current_user.name %>
+            <b class="caret"></b>
+          </a>
+          <ul class="dropdown-menu">
+            <li><%= link_to "Profile", profile_path %></li>
+            <li><%= link_to "Logout", logout_path %></li>
+          </ul>
+        </li>
+      <% end %>
+    </ul>
+  </div>
+</div>

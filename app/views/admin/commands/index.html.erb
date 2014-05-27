@@ -1,0 +1,37 @@
+<section class="clearfix">
+  <table class="table table-hover table-condensed">
+    <thead>
+      <tr>
+        <th>Command</th>
+        <th>Project</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+
+    <tbody>
+      <% @commands.each do |command| %>
+        <tr>
+          <td>
+            <pre class="pre-command pre-scrollable"><%= command.command %></pre>
+          </td>
+          <td><%= command.project.try(:name) ? command.project.name : "Global" %></td>
+          <td>
+            <%= link_to "Edit", edit_admin_command_path(command) %>
+            |
+            <%= link_to "Delete", admin_command_path(command), method: :delete, data: { confirm: "Are you sure?" } %>
+          </td>
+        </tr>
+
+      <% end %>
+    </tbody>
+  </table>
+
+
+  <div class="admin-actions">
+    <div class="pull-right">
+      <%= link_to "New command", new_admin_command_path, class: "btn btn-default" %>
+    </div>
+
+    <%= paginate @commands %>
+  </div>
+</section>

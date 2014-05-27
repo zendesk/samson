@@ -1,0 +1,1 @@
+<%= link_to page, url, { remote: remote, rel: page.next? ? 'next' : page.prev? ? 'prev' : nil, class: "btn btn-default page" + (page.current? ? ' active' : '')} %>

@@ -1,0 +1,5 @@
+echo:
+  command: echo hello
+  project: test
+global_command:
+  command: true

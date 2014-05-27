@@ -1,0 +1,123 @@
+<% content_for :page_title, deploy_page_title %>
+
+<ol class="breadcrumb">
+  <li><%= link_to "Home", root_path %></li>
+  <li><%= link_to @project.name, project_path(@project) %></li>
+  <li><%= link_to @deploy.stage.name, project_stage_path(@project, @deploy.stage) %></li>
+  <li class="active">Deploy #<%= @deploy.id %></li>
+</ol>
+
+<div id="header" class="stream-header">
+  <%= render 'header' %>
+</div>
+
+<ul id="deploy-tabs" class="nav nav-tabs" data-changeset-url="<%= changeset_project_deploy_url(@project, @deploy) %>">
+  <li class="active"><a href="#output" data-toggle="tab">Output</a></li>
+  <li><a href="#files" data-type="github" data-toggle="tab">Files</a></li>
+  <li><a href="#commits" data-type="github" data-toggle="tab">Commits</a></li>
+  <li><a href="#pulls" data-type="github" data-toggle="tab">Pull Requests</a></li>
+  <li><a href="#risks" data-type="github" data-toggle="tab">Risks</a></li>
+  <li><a href="#jira-issues" data-type="jira" data-toggle="tab">JIRA Issues</a></li>
+
+<% if deploy_active? %>
+  <li><a href="#viewers" data-toggle="tab" id="viewers-link">Viewers <span class="badge">0</span></a></li>
+
+  <% if NewRelicApi.api_key.present? %>
+    <li>
+      <a href="#newrelic" id="newrelic-tab"
+        data-enabled="<%= @deploy.stage.new_relic_applications.any? %>"
+        data-url="<%= new_relic_project_stage_path(@project, @deploy.stage, format: :json) %>"
+        data-interval="60000" data-toggle="tab">
+      New Relic
+      </a>
+    </li>
+  <% end %>
+<% end %>
+</ul>
+
+<section class="clearfix tabs">
+  <div class="tab-content deploy-details">
+    <div class="tab-pane active" id="output" data-stream-url="<%= stream_path(@deploy.job) %>">
+      <div class="row">
+        <div class="btn-toolbar col-md-4 col-md-offset-7 pull-right" id="output-toolbar">
+          <div id="output-options" class="btn-group only-active">
+            <button class="btn btn-default active" id="output-follow">Follow</button>
+            <button class="btn btn-default" id="output-steady">Don't Follow</button>
+            <button class="btn btn-default" id="output-grow">Expand</button>
+          </div>
+
+          <div class="pull-right only-finished">
+            <button class="btn btn-default" id="output-grow-toggle">Expand</button>
+            <%= link_to "Download log", project_deploy_path(@project, @deploy, format: :text), class: "btn btn-primary" %>
+          </div>
+
+          <% if current_user.is_deployer? %>
+            <%= link_to "Stop", project_deploy_path(@project, @deploy), remote: true, method: :delete, class: "btn btn-danger pull-right only-active" %>
+          <% end %>
+        </div>
+      </div>
+
+      <%= render 'deploys/output', deploy: @deploy %>
+    </div>
+
+    <% %w(files commits pulls risks jira-issues).each do |pane| %>
+      <div class="tab-pane changeset-placeholder" id="<%= pane %>">
+        <p>Loading...</p>
+      </div>
+    <% end %>
+
+  <% if deploy_active? %>
+    <div class="tab-pane" id="viewers">
+      No other viewers.
+    </div>
+
+    <% if NewRelicApi.api_key.present? %>
+      <div class="tab-pane" id="newrelic">
+        <% if @deploy.stage.new_relic_applications.any? %>
+          <div class="chart">
+            <h2>Response Time</h2>
+            <div id="newrelic-response-time"></div>
+          </div>
+
+          <div class="chart">
+            <h2>Throughput</h2>
+            <div id="newrelic-throughput"></div>
+          </div>
+        <% else %>
+          No New Relic applications configured.
+        <% end %>
+      </div>
+    <% end %>
+  <% end %>
+  </div>
+
+  <% if deploy_active? %>
+    <%= javascript_tag do %>
+      toggleOutputToolbar();
+      startStream();
+    <% end %>
+  <% elsif !@deploy.finished? %>
+    <div class="alert alert-info">
+      Samson is currently restarting, your deploy has been queued and will be resumed shortly.
+    </div>
+
+    <%= javascript_tag do %>
+      function check_enabled() {
+        $.ajax({
+          url: "<%= enabled_jobs_path %>",
+          success: function(data, status, xhr) {
+            if(xhr.status == 204) {
+              window.location.reload()
+            }
+          }
+        });
+
+        setTimeout(check_enabled, 5000);
+      }
+
+      $(document).ready(function() {
+        check_enabled();
+      });
+    <% end %>
+  <% end %>
+</section>

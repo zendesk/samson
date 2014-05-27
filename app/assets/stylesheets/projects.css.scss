@@ -1,0 +1,136 @@
+.dashboard {
+  -webkit-display: flex;
+  display: flex;
+
+  -webkit-flex-wrap: wrap;
+  flex-wrap: wrap;
+}
+
+.project-tile {
+  background: #FFF;
+  min-height: 200px;
+  padding: 20px;
+  position: relative;
+  box-sizing: border-box;
+  margin-top: 20px;
+  border-radius: 3px;
+  -webkit-flex: 1 0 100%;
+  flex: 1 0 100%;
+
+  @media (min-width: 768px) {
+    -webkit-flex: 1 0 calc(33% - 20px);
+    flex: 1 0 calc(33% - 20px);
+    margin: 10px;
+  }
+
+  &:hover {
+    text-decoration: none;
+  }
+
+  h2 {
+    color: #333;
+    margin: 0 0 15px 0;
+    padding-bottom: 15px;
+    font-size: 14px;
+    border-bottom: 1px solid #DDD;
+    text-transform: uppercase;
+
+    a {
+      color: #333;
+    }
+
+    .github {
+      position: absolute;
+      right: 20px;
+      top: 18px;
+      color: #666;
+      font-size: 25px;
+    }
+  }
+
+  ul {
+    padding-left: 0;
+  }
+
+  li {
+    list-style: none;
+    margin-top: 6px;
+    padding-bottom: 6px;
+    color: #333;
+    font-size: 15px;
+  }
+
+  .stage-link {
+    color: #333;
+  }
+
+  .locked {
+    .stage-link {
+      font-weight: bold;
+    }
+    .status {
+      background: #333;
+    }
+  }
+
+  .status {
+    font-size: 14px;
+    font-weight: normal;
+  }
+
+  .fa-lock {
+    padding-left: 10px;
+    color: #757575;
+  }
+}
+
+.job-history {
+  padding-left: 15px;
+}
+
+.job-history li {
+  list-style-type: none;
+}
+
+.job-history li.success > a {
+  color: green;
+}
+
+.job-history li.failed > a {
+  color: red;
+}
+
+#commands .checkbox {
+  float: right;
+}
+
+pre.pre-inline {
+  display: inline-block;
+  white-space: pre;
+}
+
+.recent-deploys .label {
+  font-size: 90%;
+  font-weight: normal;
+}
+
+.project-stages > tbody > tr > td {
+  line-height: 37px;
+}
+
+.project-title {
+  position: relative;
+
+  .github {
+    color: #333;
+    position: absolute;
+    right: 0;
+    top: 0;
+  }
+}
+
+.star a {
+  color: #333;
+  text-decoration: none;
+  font-size: 18px;
+}

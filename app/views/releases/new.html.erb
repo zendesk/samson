@@ -1,0 +1,24 @@
+<h1>Create <%= @project.name %> release</h1>
+<%= form_for([@project, @release], html: { class: "form-horizontal" }) do |form| %>
+  <section>
+    <fieldset>
+      <div class="row">
+        <p class="col-lg-offset-2 col-lg-4">Manual releases should only be created when your CI service is down, and you need to release a new version regardless. The commit will tagged as <%= @release.version %>, which will be pushed to the Git repository.</p>
+      </div>
+
+      <div class="form-group">
+        <%= form.label :commit, "SHA", class: "col-lg-2 control-label" %>
+        <div class="col-lg-4">
+          <%= form.text_field :commit, class: "form-control" %>
+          <p class="help-block">This commit will be tagged with the version number <%= @release.version %>.</p>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <div class="col-lg-offset-2 col-lg-10">
+          <button type="submit" class="btn btn-default">Create release</button>
+        </div>
+      </div>
+    </fieldset>
+  </section>
+<% end %>

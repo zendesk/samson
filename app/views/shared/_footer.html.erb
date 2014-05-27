@@ -1,0 +1,22 @@
+<div class="footer">
+  <div class="container">
+    <div class="links">
+
+      <div class="pull-left">
+        Built by Zendesk
+      </div>
+
+      <div class="pull-right">
+      <% if revision %>
+        <span class="sha">
+          <%= link_to "https://github.com/zendesk/samson/commit/#{revision}", title: "Samson release commit", class: "sha" do %>
+            <%= revision[0..7] %>
+            <i class="glyphicon glyphicon-circle-arrow-right"></i>
+          <% end %>
+        </span>
+      <% end %>
+      </div>
+
+    </div>
+  </div>
+</div>

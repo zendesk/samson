@@ -1,0 +1,21 @@
+<div class="col-lg-offset-2 col-lg-6" id="deploy_confirmation">
+  <ul id="deploy-tabs" class="nav nav-tabs">
+    <li class="active"><a href="#files" data-toggle="tab">Files</a></li>
+    <li><a href="#commits" data-toggle="tab">Commits</a></li>
+    <li><a href="#pulls" data-toggle="tab">Pull Requests</a></li>
+  </ul>
+
+  <div class="tab-content">
+    <div class="tab-pane active" id="files">
+      <%= render 'changeset/files', changeset: @changeset %>
+    </div>
+
+    <div class="tab-pane" id="commits">
+      <%= render 'changeset/commits', changeset: @changeset %>
+    </div>
+
+    <div class="tab-pane" id="pulls">
+      <%= render 'changeset/pulls', changeset: @changeset %>
+    </div>
+  </div>
+</div>

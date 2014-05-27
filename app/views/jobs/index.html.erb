@@ -1,0 +1,20 @@
+<%= render 'projects/header', project: @project, tab: "jobs" %>
+
+<section class="tabs">
+  <table class="table">
+    <thead>
+      <tr>
+        <th>When</th>
+        <th>Who</th>
+        <th>Status</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      <%= render @jobs %>
+    </tbody>
+  </table>
+
+  <%= link_to "Execute", new_project_job_path(@project), class: "btn btn-primary" %>
+  <%= paginate @jobs %>
+</section>

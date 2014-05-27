@@ -1,0 +1,20 @@
+<% content_for :page_title, project.name %>
+
+<%= render 'projects/header', project: project, tab: "overview" %>
+
+<% cache project do %>
+  <section class="clearfix tabs">
+    <table class="project-stages table table-condensed">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Deployer</th>
+          <th>Release</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <%= render partial: "stage", collection: @stages %>
+      </tbody>
+  </table>
+<% end %>

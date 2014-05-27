@@ -1,0 +1,10 @@
+<% if jira_issues.any? %>
+  <p>The following JIRA issues were mentioned in the pull request bodies in this deploy:</p>
+  <ul>
+    <% jira_issues.each do |issue| %>
+      <li><%= link_to issue.reference, issue.url %></li>
+    <% end %>
+  </ul>
+<% else %>
+  <p>No JIRA issues were referenced in this <%= type %>.</p>
+<% end %>
