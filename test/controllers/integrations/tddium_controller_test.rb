@@ -60,7 +60,7 @@ describe Integrations::TddiumController do
     end
 
     it "deploys as the Tddium user" do
-      user = User.create!(name: "Tddium", email: "deploy+tddium@zendesk.com")
+      user = User.create!(name: "Tddium", email: "deploy+tddium@samson-deployment.com")
 
       post :create, payload.merge(token: project.token)
 
