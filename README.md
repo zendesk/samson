@@ -46,6 +46,11 @@ script/bootstrap
 # and can be obtained by creating a new Github Application
 # See: https://github.com/settings/applications
 # https://developer.github.com/v3/oauth/
+#
+# The authorization callback URL to use within the Github Application settings is:
+#   http://localhost:9080/auth/github/callback
+#
+#
 # GITHUB_TOKEN is a personal GitHub token. You can generate a new
 # at https://github.com/settings/applications - it gets assigned to GITHUB_TOKEN.
 #
