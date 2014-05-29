@@ -79,7 +79,7 @@ Samson can use an organisation's teams to provide default roles to users authent
 
 *GITHUB_DEPLOY_TEAM* members of this team automatically become Samson deployers, e.g. deployers
 
-##### GitHub URLs (options)
+##### GitHub URLs (optional)
 
 Samson can use custom GitHub endpoints if, for example, you are using GitHub enterprise.
 
