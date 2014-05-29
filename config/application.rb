@@ -47,6 +47,7 @@ module Samson
     config.samson.github.organization = ENV["GITHUB_ORGANIZATION"]
     config.samson.github.admin_team = ENV["GITHUB_ADMIN_TEAM"]
     config.samson.github.deploy_team = ENV["GITHUB_DEPLOY_TEAM"]
+    config.samson.github.use_identicons = ENV["GITHUB_USE_IDENTICONS"].present?
 
     config.samson.uri = URI( ENV["DEFAULT_URL"] || 'http://localhost:9080' )
     self.default_url_options = {
