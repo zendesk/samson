@@ -26,7 +26,7 @@ describe ZendeskNotification do
   private
 
   def stub_api_request(method, path)
-    authorization = 'Bearer ' + ENV['ZENDESK_ACCESS_TOKEN']
+    authorization = 'Bearer ' + ENV['ZENDESK_TOKEN']
     url = ENV['ZENDESK_URL']
     body = '{ "ticket": { "id": 18, "comment": {"value": "Comment body", "public": true }, "status": "open"}}'
 
