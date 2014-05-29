@@ -49,9 +49,21 @@ class User < ActiveRecord::Base
     "#{name} (#{email})"
   end
 
-  def gravatar_url
-    github_username = email.split('@').first
+  def avatar_url
+    if Rails.application.config.samson.github.use_identicons
+      identicon_url
+    else
+      gravatar_url
+    end
+  end
 
+  def gravatar_url
+    md5 = Digest::MD5.hexdigest(email)
+    "https://www.gravatar.com/avatar/#{md5}"
+  end
+
+  def identicon_url
+    github_username = email.split('@').first
     "https://#{Rails.application.config.samson.github.web_url}/identicons/#{github_username}.png"
   end
 

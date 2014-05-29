@@ -4,6 +4,18 @@ class Changeset::GithubUser
   end
 
   def avatar_url
+    if Rails.application.config.samson.github.use_identicons
+      identicon_url
+    else
+      gravatar_url
+    end
+  end
+
+  def gravatar_url
+    "https://www.gravatar.com/avatar/#{@data.gravatar_id}?s=20"
+  end
+
+  def identicon_url
     "https://#{Rails.application.config.samson.github.web_url}/identicons/#{login}.png"
   end
 
