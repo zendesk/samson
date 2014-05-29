@@ -54,7 +54,7 @@ class ActionController::TestCase
       end
     end
 
-    %w{admin deployer viewer}.each do |user|
+    %w{super_admin admin deployer viewer}.each do |user|
       define_method "as_a_#{user}" do |&block|
         describe "as a #{user}" do
           setup { request.env['warden'].set_user(users(user)) }

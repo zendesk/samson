@@ -37,6 +37,10 @@ class Changeset::Commit
     @data.sha[0...7]
   end
 
+  def hotfix?
+    @data.commit.message.start_with?("HOTFIX")
+  end
+
   def pull_request_number
     if summary =~ PULL_REQUEST_MERGE_MESSAGE
       Integer($1)

@@ -1,0 +1,42 @@
+<ul class="nav nav-tabs">
+  <li><a href="#info-<%= release.version %>" data-toggle="tab">Info</a></li>
+  <li><a href="#pulls-<%= release.version %>" data-toggle="tab">Pull Requests</a></li>
+  <li class="active"><a href="#commits-<%= release.version %>" data-toggle="tab">Commits</a></li>
+  <li><a href="#files-<%= release.version %>" data-toggle="tab">Files</a></li>
+  <li><a href="#risks-<%= release.version %>" data-toggle="tab">Risks</a></li>
+  <li><a href="#jira-issues-<%= release.version %>" data-toggle="tab">JIRA Issues</a></li>
+</ul>
+
+<div class="tab-content">
+  <div class="tab-pane" id="info-<%= release.version %>">
+    Commit: <code><%= release.commit %></code>
+    <p>Author: <%= release.author.name %>
+
+    <% if release.deployed_stages.any? %>
+      <p>Deployed to:
+      <% release.deployed_stages.each do |stage| %>
+        <%= link_to stage.name, project_stage_path(@project, stage) %>
+      <% end %>
+    <% end %>
+  </div>
+
+  <div class="tab-pane" id="pulls-<%= release.version %>">
+    <%= render 'changeset/pulls', changeset: changeset %>
+  </div>
+
+  <div class="tab-pane active" id="commits-<%= release.version %>">
+    <%= render 'changeset/commits', changeset: changeset %>
+  </div>
+
+  <div class="tab-pane" id="files-<%= release.version %>">
+    <%= render 'changeset/files', changeset: changeset %>
+  </div>
+
+  <div class="tab-pane" id="risks-<%= release.version %>">
+    <%= render 'changeset/risks', pull_requests: changeset.risky_pull_requests, type: "release" %>
+  </div>
+
+  <div class="tab-pane" id="jira-issues-<%= release.version %>">
+    <%= render 'changeset/jira_issues', jira_issues: changeset.jira_issues, type: "release" %>
+  </div>
+</div>

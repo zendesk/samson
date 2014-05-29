@@ -149,6 +149,7 @@ class JobExecution
       @executor.execute!(*commands).tap do |status|
         if status
           commit = `cd #{repo_cache_dir} && git rev-parse #{@reference}`.chomp
+          ActiveRecord::Base.connection.verify!
           @job.update_commit!(commit)
           ProjectLock.release(@job.project)
         end

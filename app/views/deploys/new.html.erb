@@ -29,7 +29,7 @@
       <div class="form-group">
         <%= form.label :reference, "Tag or SHA", class: "col-lg-2 control-label" %>
         <div class="col-lg-4">
-          <%= form.text_field :reference, class: "form-control", autofocus: true, placeholder: "e.g. v2.1.43, master, fa0b4671", data: { prefetch_url: releases_project_path(@project) } %>
+          <%= form.text_field :reference, class: "form-control", autofocus: true, placeholder: "e.g. v2.1.43, master, fa0b4671", data: { prefetch_url: project_releases_path(@project, format: "json") } %>
         </div>
       </div>
 

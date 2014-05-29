@@ -19,5 +19,4 @@ class ApplicationController < ActionController::Base
   def verified_request?
     warden.winning_strategy || super
   end
-
 end

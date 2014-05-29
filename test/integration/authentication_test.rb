@@ -13,7 +13,7 @@ describe 'Authentication Integration' do
 
     describe 'successful' do
       let(:authorization) do
-        "Basic #{Base64.encode64(user.email + ':' + user.current_token)}"
+        "Basic #{Base64.encode64(user.email + ':' + user.token)}"
       end
 
       it 'is successful' do
@@ -27,7 +27,7 @@ describe 'Authentication Integration' do
 
     describe 'unsuccessful' do
       let(:authorization) do
-        "Basic #{Base64.encode64(user.email + ':123' + user.current_token)}"
+        "Basic #{Base64.encode64(user.email + ':123' + user.token)}"
       end
 
       it 'is unauthorized' do
@@ -45,7 +45,7 @@ describe 'Authentication Integration' do
 
     describe 'not Basic' do
       let(:authorization) do
-        "Bearer #{Base64.encode64(user.email + ':123' + user.current_token)}"
+        "Bearer #{Base64.encode64(user.email + ':123' + user.token)}"
       end
 
       it 'redirects' do

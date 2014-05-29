@@ -28,13 +28,38 @@ class Project < ActiveRecord::Base
   #
   # Returns the Release.
   def create_release(attrs = {})
+    release = build_release(attrs)
+    release.save
+    release
+  end
+
+  def build_release(attrs = {})
     latest_release_number = releases.last.try(:number) || 0
     release_number = latest_release_number + 1
-    releases.create(attrs.merge(number: release_number))
+    releases.build(attrs.merge(number: release_number))
   end
 
   def auto_release_stages
     stages.deployed_on_release
+  end
+
+  def manage_releases?
+    releases.any?
+  end
+
+  # Whether to create new releases when the branch is updated.
+  #
+  # branch - The String name of the branch in question.
+  #
+  # Returns true if new releases should be created, false otherwise.
+  def create_releases_for_branch?(branch)
+    release_branch == branch
+  end
+
+  def changeset_for_release(release)
+    prior_release = release_prior_to(release)
+    prior_commit = prior_release && prior_release.commit
+    Changeset.find(github_repo, prior_commit, release.commit)
   end
 
   # The user/repo part of the repository URL.
@@ -48,6 +73,10 @@ class Project < ActiveRecord::Base
 
   def webhook_stages_for_branch(branch)
     webhooks.for_branch(branch).map(&:stage)
+  end
+
+  def release_prior_to(release)
+    releases.where("number < ?", release.number).order(:number).last
   end
 
   private

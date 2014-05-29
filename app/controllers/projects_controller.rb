@@ -12,7 +12,7 @@ class ProjectsController < ApplicationController
   def index
     respond_to do |format|
       format.html do
-        @projects = Project.alphabetical.includes(stages: [:current_deploy, { lock: :user }])
+        @projects = projects_for_user.alphabetical.includes(stages: [:current_deploy, { lock: :user }])
       end
 
       format.json do
@@ -33,7 +33,7 @@ class ProjectsController < ApplicationController
     @project = Project.new(project_params)
 
     if @project.save
-      redirect_to root_path
+      redirect_to project_path(@project)
     else
       stage = @project.stages.last
       stage ||= @project.stages.build
@@ -51,15 +51,9 @@ class ProjectsController < ApplicationController
   def edit
   end
 
-  def releases
-    @releases = ReleaseList.latest_releases_for(project.github_repo)
-
-    render json: @releases.to_json
-  end
-
   def update
     if project.update_attributes(project_params)
-      redirect_to root_path
+      redirect_to project_path(project)
     else
       flash[:error] = project.errors.full_messages
       render :edit
@@ -79,6 +73,7 @@ class ProjectsController < ApplicationController
     params.require(:project).permit(
       :name,
       :repository_url,
+      :release_branch,
       stages_attributes: [
         :name, :confirm, :command,
         :deploy_on_release,
@@ -99,6 +94,14 @@ class ProjectsController < ApplicationController
   def redirect_viewers!
     unless current_user.is_deployer?
       redirect_to project_deploys_path(project)
+    end
+  end
+
+  def projects_for_user
+    if current_user.starred_projects.any?
+      current_user.starred_projects
+    else
+      Project
     end
   end
 end

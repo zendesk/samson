@@ -27,6 +27,10 @@ class Changeset
     "https://github.com/#{repo}/compare/#{commit_range}"
   end
 
+  def hotfix?
+    commits.any?(&:hotfix?)
+  end
+
   def commit_range
     "#{previous_commit}...#{commit}"
   end
@@ -43,16 +47,32 @@ class Changeset
     @pull_requests ||= find_pull_requests
   end
 
+  def risks?
+    risky_pull_requests.any?
+  end
+
+  def risky_pull_requests
+    @risky_pull_requests ||= pull_requests.select(&:risky?)
+  end
+
   def jira_issues
     @jira_issues ||= pull_requests.map(&:jira_issues).flatten
   end
 
   def authors
+    commits.map(&:author).uniq
+  end
+
+  def author_names
     commits.map(&:author_name).uniq
   end
 
   def zendesk_tickets
     @zendesk_tickets ||= commits.map(&:zendesk_ticket).flatten.uniq
+  end
+
+  def empty?
+    @previous_commit == @commit
   end
 
   private

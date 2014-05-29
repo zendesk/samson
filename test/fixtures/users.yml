@@ -1,13 +1,31 @@
+super_admin:
+  name: "Super Admin"
+  email: "super-admin@example.com"
+  role_id: <%= Role::SUPER_ADMIN.id %>
+  token: abc123
 admin:
   name: "Admin"
   email: "admin@example.com"
   role_id: <%= Role::ADMIN.id %>
-  current_token: abc123
+  token: abc123
+  external_id: 'test-1'
 deployer:
   name: "Deployer"
   email: "deployer@example.com"
   role_id: <%= Role::DEPLOYER.id %>
+  external_id: 'test-2'
 viewer:
   name: "Viewer"
   email: "viewer@example.com"
   role_id: <%= Role::VIEWER.id %>
+  external_id: 'test-3'
+zendesk_viewer:
+  name: "Zendesk Viewer"
+  email: "zd+viewer@example.com"
+  role_id: <%= Role::VIEWER.id %>
+  external_id: 'zendesk-3'
+github_viewer:
+  name: "Github Viewer"
+  email: "gh+viewer@example.com"
+  role_id: <%= Role::VIEWER.id %>
+  external_id: 'github-3'

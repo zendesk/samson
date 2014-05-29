@@ -26,9 +26,11 @@ describe SessionsController do
 
   describe "a POST to #github" do
     let(:env) {{}}
-    let(:user) { users(:viewer) }
+    let(:user) { users(:github_viewer) }
+    let(:strategy) { stub(name: 'github') }
     let(:auth_hash) do
       Hashie::Mash.new(
+        uid: '3',
         info: Hashie::Mash.new(
           name: user.name,
           email: user.email
@@ -41,6 +43,7 @@ describe SessionsController do
 
       @request.env.merge!(env)
       @request.env.merge!('omniauth.auth' => auth_hash)
+      @request.env.merge!('omniauth.strategy' => strategy)
 
       post :github
     end
@@ -64,11 +67,13 @@ describe SessionsController do
 
   describe 'a POST to #zendesk' do
     let(:env) {{}}
-    let(:user) { users(:viewer) }
+    let(:user) { users(:zendesk_viewer) }
     let(:email) { user.email }
     let(:role) { 'admin' }
+    let(:strategy) { stub(name: 'zendesk') }
     let(:auth_hash) do
       Hashie::Mash.new(
+        uid: 3,
         info: Hashie::Mash.new(
           name: user.name,
           email: email,
@@ -80,6 +85,7 @@ describe SessionsController do
     setup do
       @request.env.merge!(env)
       @request.env.merge!('omniauth.auth' => auth_hash)
+      @request.env.merge!('omniauth.strategy' => strategy)
 
       post :zendesk
     end

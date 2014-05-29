@@ -12,6 +12,8 @@ describe DeploysController do
   setup do
     DeployService.stubs(:new).with(project, deployer).returns(deploy_service)
     deploy_service.stubs(:deploy!).returns(deploy)
+
+    Changeset.stubs(:find).returns(stub(hotfix?: false))
   end
 
   as_a_viewer do

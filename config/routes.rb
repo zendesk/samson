@@ -1,4 +1,4 @@
-ZendeskSamson::Application.routes.draw do
+Samson::Application.routes.draw do
   resources :projects do
     resources :jobs, only: [:index, :new, :create, :show, :destroy]
 
@@ -26,9 +26,7 @@ ZendeskSamson::Application.routes.draw do
       end
     end
 
-    member do
-      get :releases
-    end
+    resource :changelog, only: [:show]
 
     resources :deploys, only: [:index, :new, :create, :show, :destroy] do
       collection do
@@ -49,6 +47,8 @@ ZendeskSamson::Application.routes.draw do
     end
   end
 
+  resource :profile, only: [:show, :update]
+
   get '/auth/zendesk/callback', to: 'sessions#zendesk'
   get '/auth/github/callback', to: 'sessions#github'
   get '/auth/failure', to: 'sessions#failure'
@@ -57,6 +57,8 @@ ZendeskSamson::Application.routes.draw do
 
   get '/login', to: 'sessions#new'
   get '/logout', to: 'sessions#destroy'
+
+  resources :stars, only: [:create, :destroy]
 
   namespace :admin do
     resource :users, only: [:show, :update]

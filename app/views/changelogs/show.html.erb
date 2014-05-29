@@ -1,0 +1,38 @@
+<% content_for :page_title, "#{@project.name} changelog" %>
+
+<h1><%= @project.name %> changelog</h1>
+
+<section>
+
+  <form id="date-chooser">
+    <p>Changes made between <input type="text" value="<%= @start_date.to_s %>"  name="start_date" id="start-date"> and
+      <input type="text" value="<%= @end_date.to_s %>" name="end_date" id="end-date">
+      <span id="status-message"></span>
+    </p>
+  </form>
+
+  <% @changeset.pull_requests.each do |pr| %>
+    <div>
+      <strong><%= link_to pr.reference, pr.url %></strong>
+
+      <% if pr.jira_issues.any? %>
+        <% pr.jira_issues.each do |issue| %>
+          / <%= link_to issue.reference, issue.url %>
+        <% end %>
+      <% end %>
+
+      <%= pr.title %>
+
+      (<%= pr.users.map(&:identifier).join(", ") %>)
+
+      <% if pr.risky? %>
+        <ul>
+          <li>
+            <strong>Risks</strong><br>
+            <%= markdown(pr.risks) %>
+          </li>
+        </ul>
+      <% end %>
+    </div>
+  <% end %>
+</section>

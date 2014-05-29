@@ -5,35 +5,53 @@ class User < ActiveRecord::Base
   has_soft_deletion default_scope: true
 
   has_many :commands
+  has_many :stars
+  has_many :starred_projects, through: :stars, source: :project
 
   validates :role_id, inclusion: { in: Role.all.map(&:id) }
 
-  before_create :set_current_token
+  before_create :set_token
+
+  def starred_project?(project)
+    starred_projects.include?(project)
+  end
 
   def self.create_or_update_from_hash(hash)
-    user = User.where(email: hash[:email]).first
+    user = User.where(external_id: hash[:external_id]).first
+    user ||= User.where(external_id: hash[:email]).first
     user ||= User.new
 
-    role_id = hash.delete(:role_id)
-
-    if role_id && (user.new_record? || role_id >= user.role_id)
-      user.role_id = role_id
+    # attributes are always a string hash
+    attributes = user.attributes.merge(hash.stringify_keys) do |key, old, new|
+      if key == 'role_id'
+        if !User.exists?
+          Role::SUPER_ADMIN.id
+        elsif new && (user.new_record? || new >= old)
+          new
+        else
+          old
+        end
+      else
+        old.presence || new
+      end
     end
 
-    user.attributes = hash
-    unless User.exists?
-      user.role_id = Role::ADMIN.id
-    end
-    user.tap(&:save)
+    user.attributes = attributes
+    user.save
+    user
   end
 
   def name
     super.presence || email
   end
 
+  def name_and_email
+    "#{name} (#{email})"
+  end
+
   def gravatar_url
     md5 = Digest::MD5.hexdigest(email)
-    "http://www.gravatar.com/avatar/#{md5}"
+    "https://www.gravatar.com/avatar/#{md5}"
   end
 
   Role.all.each do |role|
@@ -44,7 +62,7 @@ class User < ActiveRecord::Base
 
   private
 
-  def set_current_token
-    self.current_token = SecureRandom.hex
+  def set_token
+    self.token = SecureRandom.hex
   end
 end

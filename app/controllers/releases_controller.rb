@@ -2,15 +2,22 @@ class ReleasesController < ApplicationController
   before_filter :find_project
 
   def show
-    @release = @project.releases.find(params[:id])
+    @release = @project.releases.find_by_version(params[:id])
+    @changeset = @project.changeset_for_release(@release)
   end
 
   def index
-    @releases = @project.releases.sort_by_newest
+    @stages = @project.stages
+    @releases = @project.releases.sort_by_version.page(params[:page])
+
+    respond_to do |format|
+      format.json { render json: @releases.map(&:version), root: false }
+      format.html
+    end
   end
 
   def new
-    @release = @project.releases.build
+    @release = @project.build_release
   end
 
   def create

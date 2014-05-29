@@ -15,6 +15,10 @@ class Changeset::GithubUser
     @data.login
   end
 
+  def identifier
+    "@#{login}"
+  end
+
   def eql?(other)
     login == other.login
   end

@@ -1,2 +1,1 @@
-require 'dotenv'
-Dotenv.load
+Dotenv.overload(Bundler.root.join('.env'))

@@ -7,7 +7,7 @@ describe FlowdockNotificationRenderer do
 
     author1 = "author1"
     author2 = "author2"
-    changeset.stubs(:authors).returns([author1, author2])
+    changeset.stubs(:author_names).returns([author1, author2])
 
     commit1 = stub("commit1", url: "#", author_name: "author1", summary: "Introduce bug")
     commit2 = stub("commit2", url: "#", author_name: "author2", summary: "Fix bug")

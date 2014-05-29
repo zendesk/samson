@@ -8,8 +8,19 @@
         <li class="dropdown <%= 'active' if request.path.starts_with?('/projects') %>">
           <a href="#" class="dropdown-toggle" data-toggle="dropdown">Projects <b class="caret"></b></a>
           <ul class="dropdown-menu">
-            <% Project.alphabetical.each do |project| %>
-              <li><%= link_to project.name, project_path(project) %></li>
+            <% current_user.starred_projects.alphabetical.each do |project| %>
+              <li>
+              <%= link_to project_path(project) do %>
+                <span class="glyphicon glyphicon-star"></span> <%= project.name %>
+              <% end %>
+              </li>
+            <% end %>
+            <% (Project.alphabetical.to_a - current_user.starred_projects).each do |project| %>
+              <li>
+              <%= link_to project_path(project) do %>
+                <span class="glyphicon">&nbsp;</span> <%= project.name %>
+              <% end %>
+              </li>
             <% end %>
           </ul>
         </li>
@@ -36,10 +47,20 @@
       <% end %>
     </ul>
 
-    <div class="navbar-btn pull-right logout-btn">
+    <ul class="nav navbar-nav pull-right">
       <% if logged_in? %>
-        <%= link_to "Logout", logout_path, title: "Logged in as #{current_user.name}", class: "btn btn-default" %>
+        <li class="dropdown profile">
+          <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+            <%= image_tag current_user.gravatar_url, class: "gravatar" %>
+            <%= current_user.name %>
+            <b class="caret"></b>
+          </a>
+          <ul class="dropdown-menu">
+            <li><%= link_to "Profile", profile_path %></li>
+            <li><%= link_to "Logout", logout_path %></li>
+          </ul>
+        </li>
       <% end %>
-    </div>
+    </ul>
   </div>
 </div>

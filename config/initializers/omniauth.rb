@@ -14,5 +14,5 @@ Rails.application.config.middleware.use OmniAuth::Builder do
   provider OmniAuth::Strategies::ZendeskOAuth2,
     "deployment",
     ENV["CLIENT_SECRET"],
-    :scope => "users:read"
+    scope: "users:read"
 end

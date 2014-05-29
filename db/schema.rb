@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20140410213058) do
+ActiveRecord::Schema.define(version: 20140520043144) do
 
   create_table "commands", force: true do |t|
     t.text     "command",    limit: 16777215
@@ -29,6 +29,7 @@ ActiveRecord::Schema.define(version: 20140410213058) do
   end
 
   add_index "deploys", ["created_at"], name: "index_deploys_on_created_at", using: :btree
+  add_index "deploys", ["job_id"], name: "index_deploys_on_job_id", using: :btree
 
   create_table "flowdock_flows", force: true do |t|
     t.string   "name",       null: false
@@ -48,6 +49,8 @@ ActiveRecord::Schema.define(version: 20140410213058) do
     t.datetime "updated_at"
     t.string   "commit"
   end
+
+  add_index "jobs", ["project_id"], name: "index_jobs_on_project_id", using: :btree
 
   create_table "locks", force: true do |t|
     t.integer  "stage_id"
@@ -71,6 +74,7 @@ ActiveRecord::Schema.define(version: 20140410213058) do
     t.datetime "created_at"
     t.datetime "updated_at"
     t.string   "token"
+    t.string   "release_branch"
   end
 
   add_index "projects", ["token"], name: "index_projects_on_token", using: :btree
@@ -111,15 +115,27 @@ ActiveRecord::Schema.define(version: 20140410213058) do
     t.boolean  "comment_on_zendesk_tickets"
   end
 
+  create_table "stars", force: true do |t|
+    t.integer  "user_id",    null: false
+    t.integer  "project_id", null: false
+    t.datetime "created_at"
+    t.datetime "updated_at"
+  end
+
+  add_index "stars", ["user_id", "project_id"], name: "index_stars_on_user_id_and_project_id", unique: true, using: :btree
+
   create_table "users", force: true do |t|
     t.string   "name"
     t.string   "email"
     t.datetime "created_at"
     t.datetime "updated_at"
-    t.integer  "role_id",       default: 0, null: false
-    t.string   "current_token"
+    t.integer  "role_id",     default: 0, null: false
+    t.string   "token"
     t.datetime "deleted_at"
+    t.string   "external_id"
   end
+
+  add_index "users", ["external_id"], name: "index_users_on_external_id", unique: true, using: :btree
 
   create_table "webhooks", force: true do |t|
     t.integer  "project_id", null: false

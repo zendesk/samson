@@ -1,11 +1,13 @@
 source 'https://rubygems.org'
 
-gem 'dotenv-rails', '~> 0.9.0'
-gem 'rails', '4.0.4'
+gem 'dotenv-rails', '~> 0.9'
+gem 'rails', '4.1.0'
 gem 'puma'
 
+# Database (use one of these)
 gem 'sqlite3'
 gem 'mysql2', '~> 0.3'
+# gem 'pg', '~>0.13.2'
 
 gem 'kaminari'
 gem 'soft_deletion', '~> 0.4'
@@ -25,48 +27,31 @@ end
 
 group :assets do
   gem 'sass-rails', '~> 4.0.0'
-
   gem 'uglifier', '>= 1.3.0'
-
   gem 'jquery-rails'
   gem 'jquery-ui-rails'
-
   gem 'bootstrap-sass'
   gem 'font-awesome-sass'
-
   gem 'bootstrap-x-editable-rails'
-
   gem 'rickshaw_rails'
-
   gem 'angularjs-rails'
-
   gem 'momentjs-rails'
 end
 
 group :no_preload do
   gem 'omniauth', '~> 1.1'
   gem 'omniauth-oauth2', '~> 1.1'
-  gem 'omniauth-github', '~> 1.1'
-
-  gem 'octokit', '~> 2.7.0'
-
+  gem 'omniauth-github', '= 1.1.1'
+  gem 'octokit', '~> 3.0.0'
+  gem 'faraday-http-cache', '~> 0.4'
   gem 'warden', '~> 1.2'
-
   gem 'flowdock', '~> 0.3.1'
-
-  gem 'state_machine', '~> 1.2'
-
   gem 'active_hash', '~> 1.0'
-
   gem 'ansible'
-
   gem 'github-markdown', '~> 0.6.3'
-
   gem 'newrelic_api'
   gem 'activeresource'
-
   gem 'coderay', '~> 1.1.0'
-
   gem 'dogapi', '~> 1.9.1'
 
   gem 'zendesk_api'
@@ -80,12 +65,12 @@ group :development do
 end
 
 group :test do
-  gem 'minitest-rails', '~> 0.9'
+  gem 'minitest-rails', '~> 2.0.0.beta1'
   gem 'bourne'
   gem 'webmock', require: false
   gem 'simplecov', require: false
 end
 
 group :deployment do
-  gem 'zendesk_deployment', git: 'git@github.com:zendesk/zendesk_deployment.git', ref: 'v1.10.2'
+  gem 'zendesk_deployment', git: 'git@github.com:zendesk/zendesk_deployment.git', ref: 'v1.10.4'
 end

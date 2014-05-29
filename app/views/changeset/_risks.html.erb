@@ -1,0 +1,10 @@
+<% if pull_requests.nil? || pull_requests.empty? %>
+  <p>There are no risks described in any pull request in this <%= type %>. If you want Samson to pick up and display
+  any risks associated with your pull request, add a heading called "Risks" as the <em>last thing</em> in your
+  pull request description. Anything following that heading will be considered part of the risks section.</p>
+<% else %>
+  <% pull_requests.each do |pr| %>
+    <h5><strong>#<%= pr.number %></strong> <%= link_to pr.title, pr.url %> <%= github_users(pr.users) %></h5>
+    <%= markdown pr.risks %>
+  <% end %>
+<% end %>

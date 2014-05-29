@@ -1,89 +1,91 @@
 require_relative '../test_helper'
 
 describe User do
-
   describe "#name" do
-    let(:user) { User.new(name: name, email: 'test@test.com') }
+    let(:user) { User.new(name: username, email: 'test@test.com') }
 
     describe 'nil name' do
-      let(:name) { nil }
+      let(:username) { nil }
       it 'falls back to the email' do
         user.name.must_equal('test@test.com')
       end
     end
 
     describe 'blank name' do
-      let(:name) { '' }
+      let(:username) { '' }
       it 'falls back to the email' do
         user.name.must_equal('test@test.com')
       end
     end
 
     describe 'real name' do
-      let(:name) { 'Hello' }
+      let(:username) { 'Hello' }
       it 'uses the name' do
-        user.name.must_equal(name)
+        user.name.must_equal(username)
       end
     end
   end
 
   describe ".create_or_update_from_hash" do
-    let(:user) { User.create_or_update_from_hash(hash) }
+    let(:user) { User.create_or_update_from_hash(auth_hash) }
 
     describe "with a new user" do
-      let(:hash) {{
-        :name => "Test User",
-        :email => "test@example.org",
-        :role_id => Role::ADMIN.id,
+      let(:auth_hash) {{
+        name: "Test User",
+        email: "test@example.org",
+        role_id: Role::ADMIN.id,
       }}
 
       it "creates a new user" do
         user.persisted?.must_equal(true)
       end
 
-      it "sets the current token" do
-        user.current_token.must_match(/[a-z0-9]+/)
+      it "sets the token" do
+        user.token.must_match(/[a-z0-9]+/)
       end
 
       it "sets the role_id" do
-        user.role_id.must_equal(Role::ADMIN.id)
+        user.role_id.must_equal(Role::SUPER_ADMIN.id)
       end
     end
 
     describe "with an existing user" do
-      let(:hash) {{
-        :name => "Test User",
-        :email => "test@example.org",
-        :current_token => "abc123"
+      let(:auth_hash) {{
+        name: "Test User",
+        email: "test@example.org",
+        external_id: 9,
+        token: "abc123",
       }}
 
       let(:existing_user) do
-        User.create!(:name => "Test", :email => "test@example.org")
+        User.create!(:name => "Test", :external_id => 9)
       end
 
       setup { existing_user }
 
-      it "updates the user" do
-        user.name.must_equal("Test User")
+      it "does not update the user" do
+        user.name.must_equal("Test")
+        user.token.wont_equal("abc123")
+      end
+
+      it "does update nil fields" do
+        user.email.must_equal("test@example.org")
       end
 
       it "is the same user" do
         existing_user.id.must_equal(user.id)
       end
 
-      it "sets the current token" do
-        user.current_token.must_equal("abc123")
-      end
-
       describe "with a higher role_id" do
-        let(:hash) {{
-          :name => "Test User",
-          :email => "test@example.org",
-          :role_id => Role::ADMIN.id
+        let(:auth_hash) {{
+          name: "Test User",
+          email: "test@example.org",
+          external_id: 9,
+          role_id: Role::ADMIN.id
         }}
 
         setup do
-          existing_user.update_attributes!(:role_id => Role::VIEWER.id)
+          existing_user.update_attributes!(role_id: Role::VIEWER.id)
         end
 
         it "is overwritten" do
@@ -92,10 +94,11 @@ describe User do
       end
 
       describe "with a lower role_id" do
-        let(:hash) {{
-          :name => "Test User",
-          :email => "test@example.org",
-          :role_id => Role::VIEWER.id
+        let(:auth_hash) {{
+          name: "Test User",
+          email: "test@example.org",
+          external_id: 9,
+          role_id: Role::VIEWER.id
         }}
 
         setup do

@@ -2,6 +2,7 @@ class UnauthorizedController < ActionController::Metal
   include ActionController::UrlFor
   include ActionController::Redirecting
 
+  include AbstractController::Rendering
   include ActionController::Rendering
   include ActionController::Renderers::All
   include ActionController::ConditionalGet
@@ -9,7 +10,7 @@ class UnauthorizedController < ActionController::Metal
 
   include Rails.application.routes.url_helpers
 
-  delegate :flash, :to => :request
+  delegate :flash, to: :request
 
   def self.call(env)
     action(:respond).call(env)
