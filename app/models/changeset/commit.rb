@@ -45,6 +45,6 @@ class Changeset::Commit
   end
 
   def url
-    "https://github.com/#{@repo}/commit/#{sha}"
+    "https://#{Rails.application.config.samson.github.web_url}/#{@repo}/commit/#{sha}"
   end
 end

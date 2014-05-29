@@ -16,4 +16,7 @@ unless Rails.env.test?
   raise "No GitHub token available" if token.blank?
 end
 
+Octokit.api_endpoint = "https://#{Rails.application.config.samson.github.api_url}"
+Octokit.web_endpoint = "https://#{Rails.application.config.samson.github.web_url}"
+
 GITHUB = Octokit::Client.new(access_token: token)
