@@ -4,7 +4,7 @@ class Changeset::GithubUser
   end
 
   def avatar_url
-    "https://www.gravatar.com/avatar/#{@data.gravatar_id}?s=20"
+    "https://#{Rails.application.config.samson.github.web_url}/identicons/#{login}.png"
   end
 
   def url

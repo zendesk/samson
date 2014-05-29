@@ -50,8 +50,9 @@ class User < ActiveRecord::Base
   end
 
   def gravatar_url
-    md5 = Digest::MD5.hexdigest(email)
-    "https://www.gravatar.com/avatar/#{md5}"
+    github_username = email.split('@').first
+
+    "https://#{Rails.application.config.samson.github.web_url}/identicons/#{github_username}.png"
   end
 
   Role.all.each do |role|
