@@ -2,7 +2,7 @@ $(function() {
 
   $('.no-github a').click(function(){
     $(this).parent().hide();
-    $('.action.zendesk').css('display', 'block');
+    $('.more-login-actions').css('display', 'block');
     return false;
   });
 
