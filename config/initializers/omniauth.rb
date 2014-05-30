@@ -11,9 +11,9 @@ Rails.application.config.middleware.use OmniAuth::Builder do
     ENV["GITHUB_SECRET"],
     :scope => "user:email",
     :client_options => {
-      :site          => "https://#{ENV["GITHUB_API_URL"]}",
-      :authorize_url => "https://#{ENV["GITHUB_WEB_URL"]}/login/oauth/authorize",
-      :token_url     => "https://#{ENV["GITHUB_WEB_URL"]}/login/oauth/access_token",
+      :site          => "https://#{Rails.application.config.samson.github.api_url}",
+      :authorize_url => "https://#{Rails.application.config.samson.github.web_url}/login/oauth/authorize",
+      :token_url     => "https://#{Rails.application.config.samson.github.web_url}/login/oauth/access_token",
     }
 
   provider OmniAuth::Strategies::GoogleOauth2,
