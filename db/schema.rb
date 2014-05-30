@@ -112,6 +112,7 @@ ActiveRecord::Schema.define(version: 20140520043144) do
     t.string   "datadog_tags"
     t.boolean  "update_github_pull_requests"
     t.boolean  "deploy_on_release",           default: false
+    t.boolean  "comment_on_zendesk_tickets"
   end
 
   create_table "stars", force: true do |t|

@@ -64,6 +64,10 @@ class Changeset
     commits.map(&:author_name).uniq
   end
 
+  def zendesk_tickets
+    @zendesk_tickets ||= commits.map(&:zendesk_ticket).flatten.uniq
+  end
+
   def empty?
     @previous_commit == @commit
   end
