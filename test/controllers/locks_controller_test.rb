@@ -39,6 +39,24 @@ describe LocksController do
             assert_redirected_to project_stage_path(project, stage)
           end
         end
+
+        describe 'with a description' do
+          let(:description) { 'helloworld' }
+
+          before { post :create, project_id: project.id, stage_id: stage.id, description: description }
+
+          it 'creates the lock with a description' do
+            assert_equal stage.reload.lock.description, description
+          end
+        end
+
+        describe 'without a description' do
+          before { post :create, project_id: project.id, stage_id: stage.id }
+
+          it 'creates the lock with description equals to nil' do
+            assert_nil stage.reload.lock.description
+          end
+        end
       end
     end
 

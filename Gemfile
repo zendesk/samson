@@ -1,8 +1,8 @@
 source 'https://rubygems.org'
 
-gem 'dotenv-rails', '~> 0.9'
-gem 'rails', '4.1.0'
+gem 'rails', '~> 4.1.0'
 gem 'puma'
+gem 'dotenv-rails', '~> 0.9'
 
 # Database (use one of these)
 gem 'sqlite3'
@@ -18,6 +18,10 @@ gem 'active_model_serializers', '~> 0.8.0'
 # marshalling resources, which we use when caching responses. Once that's been released
 # we can use a normal gem version again.
 gem 'sawyer', git: 'https://github.com/dasch/sawyer.git', branch: 'dasch/fix-marshal-problem'
+
+# Logging
+gem 'lograge'
+gem 'logstash-event'
 
 group :production, :staging do
   gem 'rails_12factor'
@@ -72,5 +76,5 @@ group :test do
 end
 
 group :deployment do
-  gem 'zendesk_deployment', git: 'git@github.com:zendesk/zendesk_deployment.git', ref: 'v1.10.4'
+  gem 'zendesk_deployment', git: 'git@github.com:zendesk/zendesk_deployment.git', ref: 'v1.10.13'
 end

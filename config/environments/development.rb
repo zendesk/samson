@@ -16,10 +16,7 @@ Samson::Application.configure do
   # Don't care if the mailer can't send.
   config.action_mailer.raise_delivery_errors = false
 
-  self.default_url_options = {
-    host: "localhost",
-    port: "9080"
-  }
+  self.default_url_options.merge!( port: config.samson.uri.port )
 
   # Print deprecation notices to the Rails logger.
   config.active_support.deprecation = :log
@@ -31,4 +28,13 @@ Samson::Application.configure do
   # This option may cause significant delays in view rendering with a large
   # number of complex assets.
   config.assets.debug = false
+
+  # Lograge
+  # For testing purposes, you need to have something like this in your asl.conf (Mac OS X):
+  # ? [= Sender samson] file /Users/myuser/Code/samson/log/samson.log mode=0644
+  # require 'syslog/logger'
+  # config.logger = Syslog::Logger.new('samson')
+
+  # config.lograge.enabled = true
+  # config.lograge.formatter = Lograge::Formatters::Logstash.new
 end

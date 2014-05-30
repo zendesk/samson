@@ -31,7 +31,7 @@ module Samson
     config.samson = ActiveSupport::OrderedOptions.new
 
     # Email prefix e.g. [PREFIX] Someone deployed PROJECT to STAGE (REF)
-    config.samson.email_prefix = "ZD DEPLOY"
+    config.samson.email_prefix = ENV["EMAIL_PREFIX"] || "DEPLOY"
 
     # Whether or not jobs are actually executed.
     config.samson.enable_job_execution = true
@@ -47,5 +47,11 @@ module Samson
     config.samson.github.organization = ENV["GITHUB_ORGANIZATION"]
     config.samson.github.admin_team = ENV["GITHUB_ADMIN_TEAM"]
     config.samson.github.deploy_team = ENV["GITHUB_DEPLOY_TEAM"]
+
+    config.samson.uri = URI( ENV["DEFAULT_URL"] || 'http://localhost:9080' )
+    self.default_url_options = {
+      host: config.samson.uri.host,
+      protocol: config.samson.uri.scheme
+    }
   end
 end

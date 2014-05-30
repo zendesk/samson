@@ -11,10 +11,11 @@ class Integrations::TddiumController < Integrations::BaseController
 
   def skip?
     # Tddium doesn't send commit message, so we have to get creative
-    github = Octokit::Client.new(access_token: ENV['GITHUB_TOKEN'])
     repo_name = "#{params[:repository][:org_name]}/#{params[:repository][:name]}"
-    data = github.commit(repo_name, params[:commit_id])
-    data.commit.message.include?("[deploy skip]")
+    data = GITHUB.commit(repo_name, params[:commit_id])
+
+    contains_skip_token?(data.commit.message)
+
   rescue Octokit::Error => e
     Rails.logger.info("Error trying to grab commit: #{e.message}")
     # We'll assume that if we don't hear back, don't skip

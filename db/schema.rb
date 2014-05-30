@@ -58,6 +58,7 @@ ActiveRecord::Schema.define(version: 20140520043144) do
     t.datetime "created_at"
     t.datetime "updated_at"
     t.datetime "deleted_at"
+    t.string   "description"
   end
 
   create_table "new_relic_applications", force: true do |t|
@@ -109,7 +110,6 @@ ActiveRecord::Schema.define(version: 20140520043144) do
     t.datetime "deleted_at"
     t.boolean  "confirm",                     default: true
     t.string   "datadog_tags"
-    t.boolean  "deployment",                  default: true
     t.boolean  "update_github_pull_requests"
     t.boolean  "deploy_on_release",           default: false
     t.boolean  "comment_on_zendesk_tickets"

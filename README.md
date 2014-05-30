@@ -12,6 +12,12 @@ Samson works by ensuring a git repository for a project is up-to-date, and then 
 
 Streaming is done through a [controller](app/controllers/streams_controller.rb) that uses [server-sent events](https://en.wikipedia.org/wiki/Server-sent_events) to display to the client.
 
+#### Requirements
+
+* MySQL, Postgresql, or SQLite
+* Memcache
+* Ruby (currently 2.1.1)
+
 #### Config
 
 ```bash
@@ -21,7 +27,6 @@ script/bootstrap
 # Fill in .env with a few variables
 # [REQUIRED]
 # SECRET_TOKEN for Rails, can be generated with `bundle exec rake secret`.
-#
 # GITHUB_ORGANIZATION (eg. zendesk)
 # GITHUB_CLIENT_ID and GITHUB_CLIENT_SECRET are for GitHub auth
 # and can be obtained by creating a new Github Application
@@ -33,6 +38,7 @@ script/bootstrap
 # [OPTIONAL]
 # GITHUB_ADMIN_TEAM (team members automatically become Samson admins)
 # GITHUB_DEPLOY_TEAM (team members automatically become Samson deployers)
+# DEFAULT_URL (URL used by the mailer)
 #
 # Authentication is also possible using Zendesk, in that case set your
 # Zendesk token to CLIENT_SECRET and your URL to ZENDESK_URL in .env.
@@ -97,6 +103,14 @@ Skip a deploy:
 
 Add "[deploy skip]" to your commit message, and Samson will ignore the webhook
 from CI.
+
+##### Other
+
+* JIRA
+* Datadog
+* New Relic
+* Flowdock
+* Github
 
 #### Continuous Delivery & Releases
 
