@@ -64,7 +64,9 @@ class Project < ActiveRecord::Base
 
   # The user/repo part of the repository URL.
   def github_repo
-    repository_url.scan(/:(\w+\/\w+)\.git$/).join
+    # GitHub allows underscores, hyphens and dots in repo names
+    # but only hyphens in user/organisation names (as well as alphanumeric).
+    repository_url.scan(/:([A-Za-z0-9-]+\/[\w.-]+)\.git$/).join
   end
 
   def repository_homepage
