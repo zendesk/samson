@@ -44,7 +44,9 @@ Edit the .env file, providing at least the following mandatory values.
 
 ##### General app (mandatory)
 
-*SECRET_TOKEN* for Rails (generated with `bundle exec rake secret`)
+*SECRET_TOKEN* for Rails, generated during script/bootstrap.
+
+##### General app (optional)
 
 *DEFAULT_URL* absolute url to samson (used by the mailer), e.g. http://localhost:9080
 
