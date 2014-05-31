@@ -52,11 +52,18 @@
 
 	.zendesk {
     background: #78A300;
-    display: none;
+  }
+
+  .google {
+    background: #F00;
   }
 
   .no-github {
     padding-top: 10px;
+  }
+
+  .more-login-actions {
+    display: none;
   }
 
 }

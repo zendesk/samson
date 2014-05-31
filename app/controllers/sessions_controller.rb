@@ -19,6 +19,10 @@ class SessionsController < ApplicationController
     login_user(role_id: role_name_to_id(auth_hash.info.role))
   end
 
+  def google
+    login_user(role_id: Role::VIEWER.id)
+  end
+
   def failure
     flash[:error] = "Could not log you in."
     redirect_to root_path

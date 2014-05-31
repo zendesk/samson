@@ -34,40 +34,84 @@ Streaming is done through a [controller](app/controllers/streams_controller.rb) 
 
 #### Config
 
-```bash
-# Bundle and copy example files into place.
-script/bootstrap
+Run the bootstrap script to create an initial set of config files.
 
-# Fill in .env with a few variables
-# [REQUIRED]
-# SECRET_TOKEN for Rails, can be generated with `bundle exec rake secret`.
-# GITHUB_ORGANIZATION (eg. zendesk)
-# GITHUB_CLIENT_ID and GITHUB_CLIENT_SECRET are for GitHub auth
-# and can be obtained by creating a new Github Application
-# See: https://github.com/settings/applications
-# https://developer.github.com/v3/oauth/
-#
-# The authorization callback URL to use within the Github Application settings is:
-#   http://localhost:9080/auth/github/callback
-#
-#
-# GITHUB_TOKEN is a personal GitHub token. You can generate a new
-# at https://github.com/settings/applications - it gets assigned to GITHUB_TOKEN.
-#
-# [OPTIONAL]
-# GITHUB_ADMIN_TEAM (team members automatically become Samson admins)
-# GITHUB_DEPLOY_TEAM (team members automatically become Samson deployers)
-# DEFAULT_URL (URL used by the mailer)
-#
-# Authentication is also possible using Zendesk, in that case set your
-# Zendesk token to CLIENT_SECRET and your URL to ZENDESK_URL in .env.
-# Make one at https://<subdomain>.zendesk.com/agent/#/admin/api -> OAuth clients.
-# Set the UID to 'deployment' and the redirect URL to http://localhost:9080/auth/zendesk/callback
-#
-# You may fill in NEWRELIC_API_KEY using the instructions below if you would
-# like a dynamic chart of response time and throughput during deploys.
-# https://docs.newrelic.com/docs/features/getting-started-with-the-new-relic-rest-api#setup
+```bash
+script/bootstrap
 ```
+
+Edit the .env file, providing at least the following mandatory values.
+
+##### General app (mandatory)
+
+*SECRET_TOKEN* for Rails, generated during script/bootstrap.
+
+##### General app (optional)
+
+*DEFAULT_URL* absolute url to samson (used by the mailer), e.g. http://localhost:9080
+
+##### GitHub token (mandatory)
+
+*GITHUB_TOKEN*
+
+This is a personal access token that Samson uses to access project repositories, commits, files and pull requests.
+
+* Navigate to [https://github.com/settings/applications](https://github.com/settings/applications) and generate a new token
+* Choose scope including repo, read:org, user and then generate the token
+* You should now have a personal access token to populate the .env file with
+
+##### GitHub OAuth (mandatory)
+
+*GITHUB_CLIENT_ID* and *GITHUB_CLIENT_SECRET*
+
+* Navigate to [https://github.com/settings/applications](https://github.com/settings/applications) and register a new Github application
+* Set the Homepage URL to http://localhost:9080
+* Set the Authorization callback URL to http://localhost:9080/auth/github/callback
+* You should now have Client ID and Client Secret values to populate the .env file with
+
+##### GitHub organisation and teams (optional)
+
+Samson can use an organisation's teams to provide default roles to users authenticating with GitHub.
+
+*GITHUB_ORGANIZATION* name of the organisation to read teams from, e.g. zendesk
+
+*GITHUB_ADMIN_TEAM* members of this team automatically become Samson admins, e.g. owners
+
+*GITHUB_DEPLOY_TEAM* members of this team automatically become Samson deployers, e.g. deployers
+
+##### Google OAuth (optional)
+
+*GOOGLE_CLIENT_ID* and *GOOGLE_CLIENT_SECRET*
+
+* Navigate to https://console.developers.google.com/project and create a new project
+* Enter a name and a unique project id
+* Once the project is provisioned, click APIs & auth
+* Turn on Contacts API and Google+ API (they are needed by Samson to get email and avatar)
+* Click the Credentials link and then create a new Client ID
+* Set the Authorized JavaScript Origins to http://localhost:9080
+* Set the Authorized Redirect URI to http://localhost:9080/auth/google/callback
+* Create the Client ID
+* You should now have Client ID and Client secret values to populate the .env file with
+
+##### Zendesk OAuth (optional)
+
+*ZENDESK_URL* Zendesk url, e.g. https://<subdomain>.zendesk.com
+
+*CLIENT_SECRET*
+
+* Navigate to https://<subdomain>.zendesk.com/agent/#/admin/api
+* Click the OAuth Clients tab and add a client
+* Enter a name and a unique identifier (e.g. "Samson" and "deployment")
+* Set the redirect URLs to http://localhost:9080/auth/zendesk/callback
+* You should now have a Secret value to populate the .env file with
+
+##### New Relic integration (optional)
+
+*NEWRELIC_API_KEY*
+
+You may fill in using the instructions below if you would
+like a dynamic chart of response time and throughput during deploys.
+[https://docs.newrelic.com/docs/features/getting-started-with-the-new-relic-rest-api#setup](https://docs.newrelic.com/docs/features/getting-started-with-the-new-relic-rest-api#setup)
 
 #### To run
 

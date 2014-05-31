@@ -144,6 +144,9 @@ GEM
     omniauth-github (1.1.1)
       omniauth (~> 1.0)
       omniauth-oauth2 (~> 1.1)
+    omniauth-google-oauth2 (0.2.4)
+      omniauth (~> 1.0)
+      omniauth-oauth2 (~> 1.1)
     omniauth-oauth2 (1.1.2)
       faraday (>= 0.8, < 0.10)
       multi_json (~> 1.3)
@@ -260,6 +263,7 @@ DEPENDENCIES
   octokit (~> 3.0.0)
   omniauth (~> 1.1)
   omniauth-github (= 1.1.1)
+  omniauth-google-oauth2 (~> 0.2.4)
   omniauth-oauth2 (~> 1.1)
   puma
   rails (~> 4.1.0)
