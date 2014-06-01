@@ -5,9 +5,14 @@
     <%= link_to omniauth_path('github'), class: "action github" do %>
       <%= image_tag image_url('github.png') %> Login with Github
     <% end %>
-    <p class="no-github">Don't have a Github login? <a href="#zendesk">Login with Zendesk</a></p>
-    <%= link_to omniauth_path('zendesk'), class: "action zendesk" do %>
-      <%= image_tag image_url('zendesk.png') %> Login with Zendesk
-    <% end %>
+    <p class="no-github">Don't have a Github login? <a href="#">Show more login options</a></p>
+    <div class="more-login-actions">
+      <%= link_to omniauth_path('google'), class: "action google" do %>
+        <%= image_tag image_url('google.png') %> Login with Google
+      <% end %>
+      <%= link_to omniauth_path('zendesk'), class: "action zendesk" do %>
+        <%= image_tag image_url('zendesk.png') %> Login with Zendesk
+      <% end %>
+    </div>
   </div>
 </div>

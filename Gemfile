@@ -46,6 +46,7 @@ group :no_preload do
   gem 'omniauth', '~> 1.1'
   gem 'omniauth-oauth2', '~> 1.1'
   gem 'omniauth-github', '= 1.1.1'
+  gem 'omniauth-google-oauth2', '~> 0.2.4'
   gem 'octokit', '~> 3.0.0'
   gem 'faraday-http-cache', '~> 0.4'
   gem 'warden', '~> 1.2'
@@ -57,9 +58,7 @@ group :no_preload do
   gem 'activeresource'
   gem 'coderay', '~> 1.1.0'
   gem 'dogapi', '~> 1.9.1'
-
   gem 'zendesk_api'
-
   gem 'net-http-persistent'
 end
 

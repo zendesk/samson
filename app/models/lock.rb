@@ -22,7 +22,7 @@ class Lock < ActiveRecord::Base
   end
 
   def reason
-    return "Description not given." if description.blank?
+    return "Description not given." if description.empty?
     description.capitalize
   end
 
