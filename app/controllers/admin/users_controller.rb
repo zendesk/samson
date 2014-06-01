@@ -3,7 +3,7 @@ class Admin::UsersController < ApplicationController
   before_filter :authorize_super_admin!, only: [ :update, :destroy ]
   helper_method :sort_column, :sort_direction
 
-  def show
+  def index
     @users = User.order(sort_column + ' ' + sort_direction).page(params[:page])
   end
 
