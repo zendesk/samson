@@ -4,10 +4,7 @@ OmniAuth.config.logger = Rails.logger
 
 require 'omniauth/strategies/zendesk_oauth2'
 require 'omniauth-github'
-<<<<<<< HEAD
-=======
 require 'omniauth-google-oauth2'
->>>>>>> upstream/master
 
 Rails.application.config.middleware.use OmniAuth::Builder do
   provider :github,
@@ -19,8 +16,6 @@ Rails.application.config.middleware.use OmniAuth::Builder do
     "deployment",
     ENV["CLIENT_SECRET"],
     scope: "users:read"
-<<<<<<< HEAD
-=======
 
   provider OmniAuth::Strategies::GoogleOauth2,
     ENV["GOOGLE_CLIENT_ID"],
@@ -31,5 +26,4 @@ Rails.application.config.middleware.use OmniAuth::Builder do
       :prompt => "select_account",
     }
 
->>>>>>> upstream/master
 end
