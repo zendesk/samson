@@ -33,9 +33,8 @@ class TerminalExecutor
   end
 
   def stop!
-    # Need pkill because we want all
-    # children of the parent process dead
-    `pkill -INT -P #{pid}` if pid
+    # kill parent children of the parent process dead
+    `kill -INT -#{pid}` if pid
   end
 
   private
@@ -55,7 +54,7 @@ class TerminalExecutor
 
     input.close
 
-    return status.success?
+    !!status.success?
   end
 
   def wrap_command(command)
