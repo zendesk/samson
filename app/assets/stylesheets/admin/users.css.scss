@@ -1,0 +1,25 @@
+@import 'constants';
+
+.popup {
+  border-radius: 4px;
+  padding: 20px;
+  color: #fff;
+  font-size: 48px;
+  opacity: 0.4;
+}
+
+.success {
+  background-color: $success;
+}
+
+.failure {
+  background-color: $danger;
+}
+
+.fixed-center {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  -webkit-transform: translate(-50%, -50%);
+  transform: translate(-50%, -50%);
+}
