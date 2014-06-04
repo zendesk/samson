@@ -74,8 +74,8 @@ class JobExecutionTest < ActiveSupport::TestCase
       git checkout master
     SHELL
 
-    master = File.join(repository_url, ".git", "refs", "heads", "mantis_shrimp")
-    commit = File.read(master).strip
+    branch = File.join(repository_url, ".git", "refs", "heads", "mantis_shrimp")
+    commit = File.read(branch).strip
 
     execute_job "annotated_tag"
 
