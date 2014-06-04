@@ -22,7 +22,7 @@ A web interface for deployments.
 
 ### How?
 
-Samson works by ensuring a git repository for a project is up-to-date, and then executes the commands associated with a stage. If you want to find out exactly what's going on, have a read through the [JobExecution](app/models/job_execution.rb).
+Samson works by ensuring a git repository for a project is up-to-date, and then executes the commands associated with a stage. If you want to find out exactly what's going on, have a read through [JobExecution](app/models/job_execution.rb).
 
 Streaming is done through a [controller](app/controllers/streams_controller.rb) that uses [server-sent events](https://en.wikipedia.org/wiki/Server-sent_events) to display to the client.
 
@@ -177,7 +177,7 @@ automatically.
 
 ### Contributing
 
-Improvments are always welcome. Please follow the following steps to contribute
+Improvements are always welcome. Please follow these steps to contribute
 
 1. Submit a Pull Request with a detailed explaination of changes and
 screenshots (if UI is changing)
