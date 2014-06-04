@@ -163,7 +163,7 @@ class JobExecution
 
   def commit_from_ref(repo_dir, ref)
     description = Dir.chdir(repo_dir) do
-      `git describe --long --tags --all #{ref}`
+      `git describe --long --tags --all #{ref}`.strip
     end
 
     description.split("-").last.sub(/^g/, "")

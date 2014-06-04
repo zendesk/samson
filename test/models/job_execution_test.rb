@@ -78,7 +78,7 @@ class JobExecutionTest < ActiveSupport::TestCase
     execute_job "annotated_tag"
 
     assert_equal "mantis shrimp", last_line_of_output
-    assert_match /^#{commit[0,7]}/, job.commit
+    assert_match /#{job.commit}/, commit
   end
 
   it "updates the branch to match what's in the remote repository" do
