@@ -66,19 +66,22 @@ class JobExecutionTest < ActiveSupport::TestCase
 
   it "records the commit properly when given an annotated tag" do
     execute_on_remote_repo <<-SHELL
+      git checkout -b mantis_shrimp
       echo mantis shrimp > foo
       git add foo
       git commit -m "commit"
       git tag -a annotated_tag -m "annotation"
+      git checkout master
     SHELL
 
-    master = File.join(repository_url, ".git", "refs", "heads", "master")
-    commit = File.read(master).strip
+    branch = File.join(repository_url, ".git", "refs", "heads", "mantis_shrimp")
+    commit = File.read(branch).strip
 
     execute_job "annotated_tag"
 
     assert_equal "mantis shrimp", last_line_of_output
-    assert_match /#{job.commit}/, commit
+    assert job.commit.present?, "Expected #{job} to record the commit"
+    assert commit.include?(job.commit), "Expected #{commit} to contain #{job.commit}"
   end
 
   it "updates the branch to match what's in the remote repository" do
