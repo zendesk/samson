@@ -2,7 +2,7 @@ samson.controller("UsersCtrl",
 ["$scope", "$http", "$timeout",
 function($scope, $http, $timeout) {
   $scope.updateUser = function($event) {
-    var userId = angular.element($event.target).closest("tr").data("id"),
+    var userId = A.$($event.target).closest("tr").data("id"),
         roleId;
 
     if ($event.target.type === "radio") {
