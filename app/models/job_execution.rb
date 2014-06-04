@@ -148,7 +148,7 @@ class JobExecution
 
       @executor.execute!(*commands).tap do |status|
         if status
-          commit = `cd #{repo_cache_dir} && git rev-parse #{@reference}`.chomp
+          commit = commit_from_ref(repo_cache_dir, @reference)
           ActiveRecord::Base.connection.verify!
           @job.update_commit!(commit)
           ProjectLock.release(@job.project)
@@ -159,6 +159,14 @@ class JobExecution
 
       false
     end
+  end
+
+  def commit_from_ref(repo_dir, ref)
+    description = Dir.chdir(repo_dir) do
+      `git describe --long --tags --all #{ref}`
+    end
+
+    description.split("-").last.sub(/^g/, "")
   end
 
   def repo_cache_dir
