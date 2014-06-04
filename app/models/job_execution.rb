@@ -166,7 +166,7 @@ class JobExecution
       `git describe --long --tags --all #{ref}`
     end
 
-    description.split("-").last.sub(/^g/, "")
+    description.split("-").last.sub(/^g/, "").strip
   end
 
   def repo_cache_dir
