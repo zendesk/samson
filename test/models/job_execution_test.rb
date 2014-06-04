@@ -64,6 +64,23 @@ class JobExecutionTest < ActiveSupport::TestCase
     assert_equal "lion", last_line_of_output
   end
 
+  it "records the commit properly when given an annotated tag" do
+    execute_on_remote_repo <<-SHELL
+      echo mantis shrimp > foo
+      git add foo
+      git commit -m "commit"
+      git tag -a annotated_tag -m "annotation"
+    SHELL
+
+    master = File.join(repository_url, ".git", "refs", "heads", "master")
+    commit = File.read(master).strip
+
+    execute_job "annotated_tag"
+
+    assert_equal "mantis shrimp", last_line_of_output
+    assert_match /^#{commit[0,7]}/, job.commit
+  end
+
   it "updates the branch to match what's in the remote repository" do
     execute_on_remote_repo <<-SHELL
       git checkout -b safari
