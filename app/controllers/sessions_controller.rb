@@ -15,10 +15,6 @@ class SessionsController < ApplicationController
     login_user(role_id: github_authorization.role_id)
   end
 
-  def zendesk
-    login_user(role_id: role_name_to_id(auth_hash.info.role))
-  end
-
   def google
     login_user(role_id: Role::VIEWER.id)
   end

@@ -93,18 +93,6 @@ Samson can use an organisation's teams to provide default roles to users authent
 * Create the Client ID
 * You should now have Client ID and Client secret values to populate the .env file with
 
-##### Zendesk OAuth (optional)
-
-*ZENDESK_URL* Zendesk url, e.g. https://<subdomain>.zendesk.com
-
-*CLIENT_SECRET*
-
-* Navigate to https://<subdomain>.zendesk.com/agent/#/admin/api
-* Click the OAuth Clients tab and add a client
-* Enter a name and a unique identifier (e.g. "Samson" and "deployment")
-* Set the redirect URLs to http://localhost:9080/auth/zendesk/callback
-* You should now have a Secret value to populate the .env file with
-
 ##### New Relic integration (optional)
 
 *NEWRELIC_API_KEY*
