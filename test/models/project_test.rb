@@ -73,6 +73,19 @@ describe Project do
       project = Project.new(repository_url: "git@github.com:foo/bar.git")
       project.github_repo.must_equal "foo/bar"
     end
+
+    it "handles user, organisation and repository names with hyphens" do
+      project = Project.new(repository_url: "git@github.com:inlight-media/lighthouse-ios.git")
+      project.github_repo.must_equal "inlight-media/lighthouse-ios"
+    end
+
+    it "handles repository names with dashes or dots" do
+      project = Project.new(repository_url: "git@github.com:angular/angular.js.git")
+      project.github_repo.must_equal "angular/angular.js"
+
+      project = Project.new(repository_url: "git@github.com:zendesk/demo_apps.git")
+      project.github_repo.must_equal "zendesk/demo_apps"
+    end
   end
 
   describe "nested stages attributes" do
