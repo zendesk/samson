@@ -207,7 +207,7 @@ describe Stage do
     end
   end
 
-  describe ".make_clone" do
+  describe ".build_clone" do
     before do
       subject.notify_email_address = "test@test.ttt"
       subject.flowdock_flows = [FlowdockFlow.new(name: "test", token: "abcxyz", stage_id: subject.id)]
@@ -215,7 +215,7 @@ describe Stage do
       subject.new_relic_applications = [NewRelicApplication.new(name: "test", stage_id: subject.id)]
       subject.save
 
-      @clone = Stage.make_clone(subject)
+      @clone = Stage.build_clone(subject)
     end
 
     it "returns an unsaved copy of the given stage with exactly the same everything except id" do

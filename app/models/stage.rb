@@ -36,7 +36,7 @@ class Stage < ActiveRecord::Base
     end
   end
 
-  def self.make_clone(old_stage)
+  def self.build_clone(old_stage)
     new(old_stage.attributes).tap do |new_stage|
       new_stage.flowdock_flows.build(old_stage.flowdock_flows.map(&:attributes))
       new_stage.new_relic_applications.build(old_stage.new_relic_applications.map(&:attributes))

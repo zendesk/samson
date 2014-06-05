@@ -3,7 +3,7 @@ class StagesController < ApplicationController
   before_filter :authorize_deployer!
 
   before_filter :find_project
-  before_filter :find_stage, except: [:index, :new, :create, :reorder]
+  before_filter :find_stage, only: [:show, :edit, :update, :destroy]
 
   rescue_from ActiveRecord::RecordNotFound do
     if @project
@@ -81,7 +81,7 @@ class StagesController < ApplicationController
   end
 
   def clone
-    @stage = Stage.make_clone(@stage)
+    @stage = Stage.build_clone(@stage)
     render :new
   end
 
