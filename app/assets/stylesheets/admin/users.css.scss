@@ -1,25 +1,28 @@
 @import 'constants';
 
-.popup {
-  border-radius: 4px;
-  padding: 20px;
-  color: #fff;
-  font-size: 48px;
-  opacity: 0.4;
+.relative-wrapper {
+  width: 100%;
+  height: 100%;
+  position: relative;
 }
 
-.success {
-  background-color: $success;
+.save-success,
+.save-failure {
+  position: absolute;
+  top: -15px;
+  bottom: -15px;
+  left: 0;
+  right: 0;
+  background-color: rgba(255, 255, 255, 0.9);
+  text-align: center;
+  line-height: 52px;
+  font-weight: 600;
 }
 
-.failure {
-  background-color: $danger;
+.save-success {
+  color: $success;
 }
 
-.fixed-center {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  -webkit-transform: translate(-50%, -50%);
-  transform: translate(-50%, -50%);
+.save-failure {
+  color: $danger;
 }

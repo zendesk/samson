@@ -12,15 +12,17 @@
 
     <tbody>
       <% @users.each do |user| %>
-        <tr data-id="<%= user.id %>">
+        <tr>
           <td><%= user.id %></td>
           <td><%= user.name %></td>
           <td><%= user.email %></td>
-          <td>
-            <%= render partial: "roles", locals: { user: user } %>
+          <td class="role" data-user-id="<%= user.id %>">
+            <div class="relative-wrapper">
+              <%= render partial: "roles", locals: { user: user } %>
+            </div>
           </td>
           <td>
-            <%= link_to "Delete", admin_user_path(user.id), method: :delete, data: { confirm: "Delete ##{user.id} #{user.name} #{user.email} ?" }, class: "btn btn-danger" if can_modify_roles? %>
+            <%= link_to "Delete", admin_user_path(user.id), method: :delete, data: { confirm: "Delete ##{user.id} #{user.name} #{user.email} ?" }, class: "btn-sm btn-danger" if can_modify_roles? %>
           </td>
         </tr>
       <% end %>
@@ -28,7 +30,4 @@
   </table>
 
   <%= paginate @users %>
-
-  <div class="success popup fixed-center" ng-show="saveSuccess">Saved</div>
-  <div class="failure popup fixed-center" ng-show="saveFailure">Failed to save</div>
 </section>
