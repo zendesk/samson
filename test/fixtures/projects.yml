@@ -2,3 +2,6 @@ test:
   name: Project
   repository_url: ssh://git@example.com:bar/foo.git
   token: kanyewest
+  release_branch: master
+  versioning_schema: v{number}
+  version_bump_component: number

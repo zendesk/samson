@@ -34,9 +34,8 @@ class Project < ActiveRecord::Base
   end
 
   def build_release(attrs = {})
-    latest_release_number = releases.last.try(:number) || 0
-    release_number = latest_release_number + 1
-    releases.build(attrs.merge(number: release_number))
+    attrs[:version] ||= Release.next_version_for(self)
+    releases.build(attrs)
   end
 
   def auto_release_stages
@@ -78,7 +77,7 @@ class Project < ActiveRecord::Base
   end
 
   def release_prior_to(release)
-    releases.where("number < ?", release.number).order(:number).last
+    releases.where("version < ?", release.version).order(:version).last
   end
 
   private

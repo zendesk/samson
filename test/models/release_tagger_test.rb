@@ -6,7 +6,7 @@ class ReleaseTaggerTest < ActiveSupport::TestCase
   let(:author) { users(:deployer) }
   let(:release_tagger) { ReleaseTagger.new(project) }
   let(:sha) { execute_on_remote_repo("git rev-parse HEAD").strip }
-  let(:release) { project.releases.create!(author: author, number: 22, commit: sha) }
+  let(:release) { project.releases.create!(author: author, version: "v22", commit: sha) }
 
   before do
     JobExecution.enabled = true
@@ -29,12 +29,12 @@ class ReleaseTaggerTest < ActiveSupport::TestCase
   it "creates and pushes a git tag on the commit" do
     release_tagger.tag_release!(release)
 
-    remote_sha = execute_on_remote_repo("git rev-parse #{release.version}").strip 
+    remote_sha = execute_on_remote_repo("git rev-parse #{release.version}").strip
     assert_equal sha, remote_sha
   end
 
   it "raises InvalidCommit if the commit was not a valid reference" do
-    release = project.releases.create!(author: author, number: 12, commit: "nanana")
+    release = project.releases.create!(author: author, version: "v12", commit: "nanana")
 
     assert_raises ReleaseTagger::InvalidCommit do
       release_tagger.tag_release!(release)

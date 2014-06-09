@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20140520043144) do
+ActiveRecord::Schema.define(version: 20140610215613) do
 
   create_table "commands", force: true do |t|
     t.text     "command",    limit: 16777215
@@ -69,28 +69,30 @@ ActiveRecord::Schema.define(version: 20140520043144) do
   add_index "new_relic_applications", ["stage_id", "name"], name: "index_new_relic_applications_on_stage_id_and_name", unique: true, using: :btree
 
   create_table "projects", force: true do |t|
-    t.string   "name",           null: false
-    t.string   "repository_url", null: false
+    t.string   "name",                   null: false
+    t.string   "repository_url",         null: false
     t.datetime "deleted_at"
     t.datetime "created_at"
     t.datetime "updated_at"
     t.string   "token"
     t.string   "release_branch"
+    t.string   "versioning_schema"
+    t.string   "version_bump_component"
   end
 
   add_index "projects", ["token"], name: "index_projects_on_token", using: :btree
 
   create_table "releases", force: true do |t|
-    t.integer  "project_id",              null: false
-    t.string   "commit",                  null: false
-    t.integer  "number",      default: 1
-    t.integer  "author_id",               null: false
-    t.string   "author_type",             null: false
+    t.integer  "project_id",                null: false
+    t.string   "commit",                    null: false
+    t.string   "version",     default: "1", null: false
+    t.integer  "author_id",                 null: false
+    t.string   "author_type",               null: false
     t.datetime "created_at"
     t.datetime "updated_at"
   end
 
-  add_index "releases", ["project_id", "number"], name: "index_releases_on_project_id_and_number", unique: true, using: :btree
+  add_index "releases", ["project_id", "version"], name: "index_releases_on_project_id_and_version", unique: true, using: :btree
 
   create_table "stage_commands", force: true do |t|
     t.integer  "stage_id"

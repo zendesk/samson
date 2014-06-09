@@ -75,6 +75,8 @@ class ProjectsController < ApplicationController
       :name,
       :repository_url,
       :release_branch,
+      :versioning_schema,
+      :version_bump_component,
       stages_attributes: [
         :name, :confirm, :command,
         :deploy_on_release,
