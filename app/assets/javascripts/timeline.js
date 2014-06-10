@@ -191,7 +191,7 @@ function($scope, $window, $timeout, Deploys, StatusFilterMapping) {
   $scope.deployStatuses = Object.keys(StatusFilterMapping);
 
   $scope.jumpTo = function(event) {
-    $window.location.href = angular.element(event.currentTarget).data("url");
+    $window.location.href = A.$(event.currentTarget).data("url");
   };
 
   $scope.timelineDeploys = Deploys;

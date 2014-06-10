@@ -3,29 +3,18 @@ class Admin::UsersController < ApplicationController
   before_filter :authorize_super_admin!, only: [ :update, :destroy ]
   helper_method :sort_column, :sort_direction
 
-  def show
+  def index
     @users = User.order(sort_column + ' ' + sort_direction).page(params[:page])
   end
 
   def update
-    User.transaction do
-      users = User.where(id: user_params.keys)
-
-      users.each do |user|
-        role = user_params[user.id.to_s][:role]
-        user.role_id = role
-        if user.changed?
-          user.update_attributes!(role_id: role)
-          Rails.logger.info("#{current_user.name_and_email} changed the role of #{user.name_and_email} to #{Role.find(role).name}")
-        end
-      end
+    if user.update_attributes(user_params)
+      role = Role.find(user_params[:role_id]).name
+      Rails.logger.info("#{current_user.name_and_email} changed the role of #{user.name_and_email} to #{role}")
+      head :ok
+    else
+      head :bad_request
     end
-
-    flash[:notice] = "Successfully updated users."
-  rescue ActiveRecord::RecordInvalid, ActiveRecord::RecordNotFound
-    flash[:error] = "Could not update users."
-  ensure
-    redirect_to admin_users_path
   end
 
   def destroy
@@ -35,13 +24,15 @@ class Admin::UsersController < ApplicationController
     redirect_to admin_users_path
   end
 
-  protected
+  private
 
   def user_params
-    params.require(:users).permit!
+    params.permit(:id, :role_id)
   end
 
-  private
+  def user
+    @user ||= User.find(params[:id])
+  end
 
   def sort_column
     User.column_names.include?(params[:sort]) ? params[:sort] : "created_at"

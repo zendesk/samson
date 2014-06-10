@@ -36,7 +36,7 @@ $(function() {
     }
   };
 
-  if($stagesBox.data("sortable")) {
+  if ($stagesBox.data("sortable")) {
     $stagesBox.sortable({
       update: function() {
         if (reorderCtrl.sending) {

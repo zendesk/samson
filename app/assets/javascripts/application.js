@@ -23,4 +23,5 @@
 //= require jquery.ui.all
 //= require bootstrap3-editable/bootstrap-editable
 //= require rickshaw_with_d3
+//= require app.js
 //= require_tree .

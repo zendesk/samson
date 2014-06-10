@@ -1,17 +1,4 @@
-$samsonDark: #333;
-$samsonGrey: lighten($samsonDark, 70%);
-$samsonLight: lighten($samsonDark, 75%);
-$primary: #2094dd;
-$success: #00a704;
-$warning: #f0ad4e;
-$danger: #d91809;
-$info: #5bc0de;
-$scale: 25%;
-$lightPrimary: lighten(#428bca, $scale);
-$lightSuccess: lighten(#5cb85c, $scale);
-$lightWarning: lighten(#f0ad4e, $scale);
-$lightDanger: lighten(#d9534f, $scale);
-$lightInfo: lighten(#5bc0de, $scale);
+@import 'constants';
 
 .timeline a:hover {
   text-decoration: none;
@@ -68,26 +55,6 @@ $lightInfo: lighten(#5bc0de, $scale);
   text-align: center;
   line-height: 30px;
   padding: 2px 10px;
-}
-
-.timeline-icon > .primary {
-  color: $primary;
-}
-
-.timeline-icon > .success {
-  color: $success;
-}
-
-.timeline-icon > .warning {
-  color: $warning;
-}
-
-.timeline-icon > .danger {
-  color: $danger;
-}
-
-.timeline-icon > .info {
-  color: $info;
 }
 
 .timeline-time,
