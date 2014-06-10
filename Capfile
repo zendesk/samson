@@ -37,6 +37,7 @@ namespace :samson do
     # deploy_to defaults to /data/#{application}
     run "ln -nfs #{deploy_to}/config/database.yml #{release_path}/config/database.yml"
     run "ln -nfs #{deploy_to}/config/.env #{release_path}/.env"
+    run "ln -nfs #{deploy_to}/config/env #{release_path}/env"
     run "(test -e #{deploy_to}/config/newrelic.yml && ln -nfs #{deploy_to}/config/newrelic.yml #{release_path}/config/) || true"
 
     run "cd #{release_path} && rm -rf log && ln -s #{deploy_to}/log log"
