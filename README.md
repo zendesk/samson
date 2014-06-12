@@ -83,7 +83,7 @@ Samson can use an organisation's teams to provide default roles to users authent
 
 Samson can use custom GitHub endpoints if, for example, you are using GitHub enterprise.
 
-*GITHUB_WEB_URL* used for GitHub interface links, i.e. compare screens
+*GITHUB_WEB_URL* used for GitHub interface links, e.g. compare screens, OAuth authorization
 
 *GITHUB_API_URL* used for GitHub API access
 
