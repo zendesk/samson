@@ -1,15 +1,31 @@
 require_relative '../test_helper'
 
 describe Project do
+  let(:project) { projects(:test) }
+  let(:author) { users(:deployer) }
+
   it "generates a secure token when created" do
     project = Project.create!(name: "hello", repository_url: "world")
     project.token.wont_be_nil
   end
 
-  describe "#create_release" do
-    let(:project) { projects(:test) }
-    let(:author) { users(:deployer) }
+  describe "#last_released_with_commit?" do
+    it "returns true if the last release had that commit" do
+      project.releases.create!(commit: "XYZ", author: author)
+      assert project.last_released_with_commit?("XYZ")
+    end
 
+    it "returns false if the last release had a different commit" do
+      project.releases.create!(commit: "123", author: author)
+      assert !project.last_released_with_commit?("XYZ")
+    end
+
+    it "returns false if there have been no releases" do
+      assert !project.last_released_with_commit?("XYZ")
+    end
+  end
+
+  describe "#create_release" do
     it "creates a new release" do
       release = project.create_release(commit: "foo", author: author)
 
@@ -31,10 +47,6 @@ describe Project do
   end
 
   describe "#changeset_for_release" do
-    let(:project) { projects(:test) }
-    let(:author) { users(:deployer) }
-
-
     it "returns changeset" do
       changeset = Changeset.new("url", "foo/bar", "a", "b")
       project.releases.create!(author: author, commit: "bar", number: 50)
@@ -54,8 +66,6 @@ describe Project do
   end
 
   describe "#webhook_stages_for_branch" do
-    let(:project) { projects(:test) }
-
     it "returns the stages with mappings for the branch" do
       master_stage = project.stages.create!(name: "master_stage")
       production_stage = project.stages.create!(name: "production_stage")
