@@ -1,6 +1,6 @@
 <%= render 'projects/header', project: @project, tab: "deploys" %>
 
-<% cache @project do %>
+<% cache [@project, @page] do %>
   <section class="tabs">
     <table class="table">
       <thead>
