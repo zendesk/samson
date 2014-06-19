@@ -1,5 +1,7 @@
 source 'https://rubygems.org'
 
+gem 'bundler'
+
 gem 'rails', '~> 4.1.0'
 gem 'puma'
 gem 'dotenv-rails', '~> 0.9'
