@@ -10,7 +10,7 @@ var testFiles = [
   'vendor/assets/javascripts/angular-mocks.js',
   'app/assets/javascripts/app.js',
   'app/assets/javascripts/timeline.js',
-  'test/angular/*'
+  'test/angular/*_spec.js'
 ];
 
 gulp.task('jshint', function() {

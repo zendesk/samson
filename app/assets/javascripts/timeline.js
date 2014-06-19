@@ -51,14 +51,15 @@ samson.constant("StatusFilterMapping",
       return deploys.filter(function(deploy) {
         return deploy.status === "failed" ||
           deploy.status === "cancelled" ||
-          deploy.status === "cancelling" ||
           deploy.status === "errored";
       });
     },
 
     Unfinished: function(deploys) {
       return deploys.filter(function(deploy) {
-        return deploy.status === "running" || deploy.status === "pending";
+        return deploy.status === "cancelling" ||
+          deploy.status === "running" ||
+          deploy.status === "pending";
       });
     }
   }
