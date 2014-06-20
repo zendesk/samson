@@ -236,5 +236,13 @@ describe StagesController do
       end
 
     end
+
+    describe 'GET to #clone' do
+      before { get :clone, project_id: subject.project.id, id: subject.id }
+
+      it 'renders :new' do
+        assert_template :new
+      end
+    end
   end
 end

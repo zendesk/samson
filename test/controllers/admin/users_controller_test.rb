@@ -3,17 +3,17 @@ require 'test_helper'
 describe Admin::UsersController do
   describe 'a GET to #show' do
     before do
-      get :show
+      get :index
     end
 
     as_a_admin do
       it 'succeeds' do
-        assert_template :show
+        assert_template :index
       end
     end
 
     as_a_deployer do
-      unauthorized :get, :show
+      unauthorized :get, :index
     end
   end
 

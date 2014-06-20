@@ -1,0 +1,14 @@
+$samsonDark: #333;
+$samsonGrey: lighten($samsonDark, 70%);
+$samsonLight: lighten($samsonDark, 75%);
+$primary: #2094dd;
+$success: #00a704;
+$warning: #f0ad4e;
+$danger: #d91809;
+$info: #5bc0de;
+$lightScale: 25%;
+$lightPrimary: lighten(#428bca, $lightScale);
+$lightSuccess: lighten(#5cb85c, $lightScale);
+$lightWarning: lighten(#f0ad4e, $lightScale);
+$lightDanger: lighten(#d9534f, $lightScale);
+$lightInfo: lighten(#5bc0de, $lightScale);

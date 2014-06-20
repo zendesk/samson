@@ -31,7 +31,7 @@ class Changeset::PullRequest
   delegate :number, :title, :additions, :deletions, to: :@data
 
   def url
-    "https://github.com/#{repo}/pull/#{number}"
+    "https://#{Rails.application.config.samson.github.web_url}/#{repo}/pull/#{number}"
   end
 
   def reference

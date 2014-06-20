@@ -75,7 +75,7 @@ class Project < ActiveRecord::Base
   end
 
   def repository_homepage
-    "//github.com/#{github_repo}"
+    "//#{Rails.application.config.samson.github.web_url}/#{github_repo}"
   end
 
   def webhook_stages_for_branch(branch)
