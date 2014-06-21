@@ -35,6 +35,16 @@ describe("Timeline", function() {
             user: { name: "admin" },
             production: true,
             status: "errored"
+          },
+          {
+            user: { name: "tddium" },
+            production: false,
+            status: "cancelling"
+          },
+          {
+            user: { name: "someone" },
+            production: false,
+            status: "running"
           }
         ];
       });
@@ -45,16 +55,16 @@ describe("Timeline", function() {
         }));
 
         it("does not filter if nothing is selected", function() {
-          expect(filter(deploys, null).length).toBe(5);
-          expect(filter(deploys, undefined).length).toBe(5);
+          expect(filter(deploys, null).length).toBe(deploys.length);
+          expect(filter(deploys, undefined).length).toBe(deploys.length);
         });
 
         it("finds human deploys", function() {
-          expect(filter(deploys, "Human").length).toBe(3);
+          expect(filter(deploys, "Human").length).toBe(4);
         });
 
         it("finds robot deploys", function() {
-          expect(filter(deploys, "Robot").length).toBe(2);
+          expect(filter(deploys, "Robot").length).toBe(3);
         });
       });
 
@@ -64,12 +74,12 @@ describe("Timeline", function() {
         }));
 
         it("does not filter if nothing is selected", function() {
-          expect(filter(deploys, null).length).toBe(5);
-          expect(filter(deploys, undefined).length).toBe(5);
+          expect(filter(deploys, null).length).toBe(deploys.length);
+          expect(filter(deploys, undefined).length).toBe(deploys.length);
         });
 
         it("finds non-production deploys", function() {
-          expect(filter(deploys, false).length).toBe(3);
+          expect(filter(deploys, false).length).toBe(5);
         });
 
         it("finds production deploys", function() {
@@ -83,8 +93,8 @@ describe("Timeline", function() {
         }));
 
         it("does not filter if nothing is selected", function() {
-          expect(filter(deploys, null).length).toBe(5);
-          expect(filter(deploys, undefined).length).toBe(5);
+          expect(filter(deploys, null).length).toBe(deploys.length);
+          expect(filter(deploys, undefined).length).toBe(deploys.length);
         });
 
         it("finds successful deploys", function() {
@@ -96,7 +106,7 @@ describe("Timeline", function() {
         });
 
         it("finds not finished deploys", function() {
-          expect(filter(deploys, "Unfinished").length).toBe(1);
+          expect(filter(deploys, "Unfinished").length).toBe(3);
         });
       });
     });
