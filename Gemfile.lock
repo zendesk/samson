@@ -243,6 +243,7 @@ DEPENDENCIES
   bootstrap-sass
   bootstrap-x-editable-rails
   bourne
+  bundler
   coderay (~> 1.1.0)
   dalli (~> 2.7.0)
   dogapi (~> 1.9.1)
