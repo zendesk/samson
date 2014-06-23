@@ -1,5 +1,20 @@
-test:
+sqlite: &sqlite
+  adapter: sqlite3
+  database: ":memory:"
+
+mysql: &mysql
   adapter: mysql2
   username: travis
+
+postgresql: &postgresql
+  adapter: postgresql
+  username: postgres
+
+defaults: &defaults
+  pool: 5
   encoding: utf8
+  <<: *<%= ENV['DB'] || "sqlite" %>
+
+test:
   database: samson_test
+  <<: *defaults
