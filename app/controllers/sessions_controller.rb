@@ -44,7 +44,10 @@ class SessionsController < ApplicationController
   def github_authorization
     GithubAuthorization.new(
       auth_hash.extra.raw_info.login,
-      strategy.access_token.token
+      # Use a global token that can query the org groups. No need to use
+      # the logged in user's token here since GithubAuthorization is only
+      # doing a lookup and checking group membership.
+      ENV['GITHUB_TOKEN']
     )
   end
 

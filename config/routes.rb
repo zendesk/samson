@@ -23,6 +23,7 @@ Samson::Application.routes.draw do
 
       member do
         get :new_relic, to: 'new_relic#show'
+        get :clone, to: 'stages#clone'
       end
     end
 
@@ -62,8 +63,7 @@ Samson::Application.routes.draw do
   resources :stars, only: [:create, :destroy]
 
   namespace :admin do
-    resource :users, only: [:show, :update]
-    resources :users, only: [:destroy]
+    resources :users, only: [:index, :update, :destroy]
     resource :projects, only: [:show]
     resources :commands, except: [:show]
     resource :lock, only: [:create, :destroy]

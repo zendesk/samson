@@ -21,7 +21,7 @@ class Changeset
   end
 
   def github_url
-    "https://github.com/#{repo}/compare/#{commit_range}"
+    "https://#{Rails.application.config.samson.github.web_url}/#{repo}/compare/#{commit_range}"
   end
 
   def hotfix?

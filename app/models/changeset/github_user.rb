@@ -8,7 +8,7 @@ class Changeset::GithubUser
   end
 
   def url
-    "https://github.com/#{login}"
+    "https://#{Rails.application.config.samson.github.web_url}/#{login}"
   end
 
   def login

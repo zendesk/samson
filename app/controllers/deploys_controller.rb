@@ -9,7 +9,8 @@ class DeploysController < ApplicationController
   before_filter :find_deploy, except: [:index, :recent, :active, :new, :create, :confirm]
 
   def index
-    @deploys = @project.deploys.includes(:stage, job: :user).page(params[:page])
+    @page = params[:page]
+    @deploys = @project.deploys.includes(:stage, job: :user).page(@page)
 
     respond_to do |format|
       format.html

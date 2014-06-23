@@ -9,6 +9,9 @@
           <span class="label label-warning" title="<%= stage.lock.summary %>"><i class="glyphicon glyphicon-lock"></i> Locked</span>
         <% end %>
         <div class="btn-group pull-right">
+          <% if current_user.is_admin? %>
+            <%= link_to "Clone", clone_project_stage_path(@project, stage), class: "btn btn-default" %>
+          <% end %>
           <%= deploy_link @project, stage %>
         </div>
       </li>
