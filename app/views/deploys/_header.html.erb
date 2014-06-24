@@ -5,11 +5,7 @@
       <%= link_to "Redeploy", project_deploys_path(@project, deploy: { reference: @deploy.reference, stage_id: @deploy.stage_id }), method: :post, class: "btn btn-danger" %>
     <% end %>
 
-    <% if @deploy.succeeded? && next_stage = @deploy.stage.next_stage %>
-      <% unless next_stage.locked? %>
-        <%= link_to "Deploy #{@deploy.short_reference} to #{next_stage.name}", new_project_deploy_path(@project, reference: @deploy.short_reference, stage_id: next_stage.id), class: "btn btn-primary" %>
-      <% end %>
-    <% end %>
+    <%= link_to_deploy_next_stage(@deploy) %>
 
     <%= link_to "Back", project_path(@project), class: "btn btn-default" %>
   </div>
