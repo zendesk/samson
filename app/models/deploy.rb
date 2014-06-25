@@ -53,7 +53,7 @@ class Deploy < ActiveRecord::Base
   end
 
   def self.active
-    includes(:job).where(jobs: { status: %w[pending running] })
+    includes(:job).where(jobs: { status: %w[pending running pending] })
   end
 
   def self.running
