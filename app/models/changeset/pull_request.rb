@@ -58,7 +58,7 @@ class Changeset::PullRequest
   private
 
   def parse_risks!
-    parts = @data.body.split(RISKS_SECTION, 2)
+    parts = @data.body.to_s.split(RISKS_SECTION, 2)
 
     if parts.size == 1
       nil
