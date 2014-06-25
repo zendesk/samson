@@ -4,7 +4,7 @@ class DeploysController < ApplicationController
     redirect_to root_path
   end
 
-  before_filter :authorize_deployer!, only: [:new, :create, :confirm, :update, :destroy]
+  before_filter :authorize_deployer!, only: [:new, :create, :confirm, :update, :destroy, :buddy_check]
   before_filter :find_project
   before_filter :find_deploy, except: [:index, :recent, :active, :new, :create, :confirm]
 
@@ -72,6 +72,12 @@ class DeploysController < ApplicationController
     @changeset = Changeset.find(@project.github_repo, previous_commit, reference)
 
     render 'changeset', layout: false
+  end
+
+  def buddy_check
+    @deploy.update_attribute(:buddy, current_user.name)
+    DeployService.new(@project, current_user).confirm_deploy!(@deploy, @deploy.stage, @deploy.reference)
+    redirect_to project_deploy_path(@project, @deploy)
   end
 
   def show
