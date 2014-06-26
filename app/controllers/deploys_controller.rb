@@ -76,7 +76,6 @@ class DeploysController < ApplicationController
 
   def buddy_check
     @deploy.confirm_buddy!(current_user)
-    DeployService.new(@project, current_user).confirm_deploy!(@deploy, @deploy.stage, @deploy.reference)
     redirect_to project_deploy_path(@project, @deploy)
   end
 

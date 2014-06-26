@@ -53,8 +53,9 @@ class Deploy < ActiveRecord::Base
     @changeset ||= Changeset.find(project.github_repo, previous_commit, commit)
   end
 
-  def confirm_buddy!(user)
-    update_attribute(:buddy, user)
+  def confirm_buddy!(buddy)
+    update_attribute(:buddy, buddy)
+    DeployService.new(project, user).confirm_deploy!(self, stage, reference)
   end
 
   def self.active
