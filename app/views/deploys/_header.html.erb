@@ -1,16 +1,10 @@
 <h1>
   <%= @project.name %>
   <div class="pull-right">
-    <% if @deploy.buddy %>
-      <span class="label label-info">This deploy is approved by <%= @deploy.buddy.name %></span>
-    <% end %>
+    <%= buddy_check_button(@project, @deploy) %>
+
     <% unless @deploy.succeeded? || @deploy.active? %>
       <%= link_to "Redeploy", project_deploys_path(@project, deploy: { reference: @deploy.reference, stage_id: @deploy.stage_id }), method: :post, class: "btn btn-danger" %>
-    <% end %>
-
-    <% if @deploy.pending? && @deploy.stage.confirm_before_deploying? %>
-      <%= link_to "Buddy Check", buddy_check_project_deploy_path(@project, @deploy),
-        method: :post, class: "btn btn-primary" %>
     <% end %>
 
     <% if @deploy.succeeded? && next_stage = @deploy.stage.next_stage %>

@@ -39,20 +39,44 @@ module DeploysHelper
     mapping = {
       "succeeded" => "success",
       "failed"    => "danger",
-      "errored"   => "warning"
+      "errored"   => "warning",
+      "cancelled" => "danger"
     }
 
     status = mapping.fetch(deploy.status, "info")
 
     if deploy.finished?
       content = "#{deploy.summary} "
-      content << content_tag(:span, deploy.created_at.rfc822, data: { time: datetime_to_js_ms(deploy.created_at) }, class: 'mouseover')
-      content << ", it took #{duration_text(deploy)}"
+      content << content_tag(:span, deploy.created_at.rfc822, data: { time: datetime_to_js_ms(deploy.created_at) })
+      content << ", it took #{duration_text(deploy)}."
+      content << (deploy.buddy == deploy.user ?
+        " This deploy was bypassed." :
+        " This deploy was approved by #{deploy.buddy}.") if deploy.buddy
+    elsif deploy.waiting_for_buddy?
+      status = "warning"
+      content = "This deploy requires a deploy buddy, "
+      content << "please have another engineer with deploy rights visit this URL to kick off the deploy."
     else
       content = deploy.summary
     end
 
     content_tag :div, content.html_safe, class: "alert alert-#{status}"
+  end
+
+  def buddy_check_button(project, deploy)
+    return nil unless deploy.waiting_for_buddy?
+
+    button_class = ['btn']
+
+    if @deploy.started_by?(current_user)
+      button_text = 'Bypass'
+      button_class << 'btn-danger'
+    else
+      button_text = 'Approve'
+      button_class << 'btn-primary'
+    end
+
+    link_to button_text, buddy_check_project_deploy_path(@project, @deploy), method: :post, class: button_class.join(' ')
   end
 
   def duration_text(deploy)

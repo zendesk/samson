@@ -58,6 +58,10 @@ class Deploy < ActiveRecord::Base
     DeployService.new(project, user).confirm_deploy!(self, stage, reference)
   end
 
+  def waiting_for_buddy?
+    pending? && stage.confirm_before_deploying?
+  end
+
   def self.active
     includes(:job).where(jobs: { status: %w[pending running pending] })
   end
