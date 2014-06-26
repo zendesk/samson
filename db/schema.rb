@@ -26,7 +26,7 @@ ActiveRecord::Schema.define(version: 20140625070348) do
     t.string   "reference",  null: false
     t.datetime "created_at"
     t.datetime "updated_at"
-    t.string   "buddy"
+    t.integer  "buddy_id"
   end
 
   add_index "deploys", ["created_at"], name: "index_deploys_on_created_at", using: :btree

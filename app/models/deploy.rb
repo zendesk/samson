@@ -1,6 +1,7 @@
 class Deploy < ActiveRecord::Base
   belongs_to :stage, touch: true
   belongs_to :job
+  belongs_to :buddy, class_name: 'User'
 
   default_scope { order(created_at: :desc, id: :desc) }
 
@@ -50,6 +51,10 @@ class Deploy < ActiveRecord::Base
 
   def changeset
     @changeset ||= Changeset.find(project.github_repo, previous_commit, commit)
+  end
+
+  def confirm_buddy!(user)
+    update_attribute(:buddy, user)
   end
 
   def self.active
