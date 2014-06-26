@@ -51,7 +51,7 @@
             <%= link_to "Download log", project_deploy_path(@project, @deploy, format: :text), class: "btn btn-primary" %>
           </div>
 
-          <% if current_user.is_deployer? %>
+          <% if can_stop_deploy? %>
             <%= link_to "Stop", project_deploy_path(@project, @deploy), remote: true, method: :delete, class: "btn btn-danger pull-right only-active" %>
           <% end %>
         </div>
