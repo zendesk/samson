@@ -58,7 +58,7 @@ class Changeset::PullRequest
   private
 
   def parse_risks!
-    parts = @data.body.to_s.split(RISKS_SECTION, 2)
+    parts = body.split(RISKS_SECTION, 2)
 
     if parts.size == 1
       nil
@@ -68,8 +68,12 @@ class Changeset::PullRequest
   end
 
   def parse_jira_issues!
-    @data.body.scan(JIRA_ISSUE).map do |match|
+    body.scan(JIRA_ISSUE).map do |match|
       Changeset::JiraIssue.new(match)
     end
+  end
+
+  def body
+    @data.body.to_s
   end
 end

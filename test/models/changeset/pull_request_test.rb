@@ -38,6 +38,9 @@ describe Changeset::PullRequest do
   end
 
   describe "#jira_issues" do
+    let(:data_nil_body) { stub("data", user: user, body: nil) }
+    let(:pr_no_body) { Changeset::PullRequest.new("xxx", data_nil_body) }
+
     it "returns a list of JIRA issues referenced in the PR body" do
       body.replace(<<-BODY)
         Fixes https://foobar.atlassian.net/browse/XY-123 and
@@ -52,6 +55,10 @@ describe Changeset::PullRequest do
 
     it "returns an empty array if there are no JIRA references" do
       pr.jira_issues.must_equal []
+    end
+
+    it "returns an empty array if body is missing" do
+      pr_no_body.jira_issues.must_equal []
     end
   end
 end
