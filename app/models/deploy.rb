@@ -55,7 +55,7 @@ class Deploy < ActiveRecord::Base
 
   def confirm_buddy!(buddy)
     update_attribute(:buddy, buddy)
-    DeployService.new(project, user).confirm_deploy!(self, stage, reference)
+    DeployService.new(project, user).confirm_deploy!(self, stage, reference, buddy)
   end
 
   def waiting_for_buddy?

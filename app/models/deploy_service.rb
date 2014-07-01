@@ -15,8 +15,8 @@ class DeployService
     deploy
   end
 
-  def confirm_deploy!(deploy, stage, reference)
-    send_before_notifications(stage, deploy)
+  def confirm_deploy!(deploy, stage, reference, buddy = nil)
+    send_before_notifications(stage, deploy, buddy)
 
     job_execution = JobExecution.start_job(reference, deploy.job)
 
@@ -27,8 +27,12 @@ class DeployService
 
   private
 
-  def send_before_notifications(stage, deploy)
+  def send_before_notifications(stage, deploy, buddy)
     send_flowdock_notification(stage, deploy)
+
+    if buddy && buddy == deploy.user
+      DeployMailer.bypass_alert(stage, deploy).deliver
+    end
   end
 
   def send_after_notifications(stage, deploy)
