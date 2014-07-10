@@ -1,7 +1,7 @@
 class Deploy < ActiveRecord::Base
   belongs_to :stage, touch: true
   belongs_to :job
-  belongs_to :buddy, class_name: 'User' if ("1" == ENV["BUDDY_CHECK_FEATURE"])
+  belongs_to :buddy, class_name: 'User'
 
   default_scope { order(created_at: :desc, id: :desc) }
 
