@@ -12,13 +12,14 @@ class DeployMailer < ActionMailer::Base
     mail(to: stage.notify_email_addresses, subject: subject)
   end
 
+  # Called only when "1" == ENV["BUDDY_CHECK_FEATURE"]
   def bypass_alert(stage, deploy)
     prepare_mail(stage, deploy)
 
     subject = "[BYPASS][#{Rails.application.config.samson.email_prefix}] #{deploy.summary_for_email}"
 
     # the receiver is to be changed, and should be always present, where notify_email
-    mail(to: stage.notify_email_addresses, subject: subject)
+    mail(to: ENV["DEPLOY_EMAIL"], subject: subject)
   end
 
   private
