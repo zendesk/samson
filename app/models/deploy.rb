@@ -1,7 +1,7 @@
 class Deploy < ActiveRecord::Base
   belongs_to :stage, touch: true
   belongs_to :job
-  belongs_to :buddy, class_name: 'User'
+  belongs_to :buddy, class_name: 'User' if ("1" == ENV["BUDDY_CHECK_FEATURE"])
 
   default_scope { order(created_at: :desc, id: :desc) }
 
@@ -55,6 +55,9 @@ class Deploy < ActiveRecord::Base
 
   def confirm_buddy!(buddy)
     update_attribute(:buddy, buddy)
+
+    # Offset time by -1 so that short jobs last at least 1 second
+    update_column('started_at', Time.now - 1)
     DeployService.new(project, user).confirm_deploy!(self, stage, reference, buddy)
   end
 
@@ -63,7 +66,11 @@ class Deploy < ActiveRecord::Base
   end
 
   def self.active
-    includes(:job).where(jobs: { status: %w[pending running pending] })
+    if ("1" == ENV["BUDDY_CHECK_FEATURE"])
+      includes(:job).where(jobs: { status: %w[pending running pending] })
+    else
+      includes(:job).where(jobs: { status: %w[pending running] })
+    end
   end
 
   def self.running
