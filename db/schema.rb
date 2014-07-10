@@ -46,7 +46,7 @@ ActiveRecord::Schema.define(version: 20140707225625) do
     t.integer  "user_id",                                           null: false
     t.integer  "project_id",                                        null: false
     t.string   "status",                        default: "pending"
-    t.text     "output",     limit: 1073741823
+    t.text     "output",     limit: 2147483647
     t.datetime "created_at"
     t.datetime "updated_at"
     t.string   "commit"
