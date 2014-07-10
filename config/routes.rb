@@ -34,8 +34,10 @@ Samson::Application.routes.draw do
         post :confirm
       end
 
-      member do
-        post :buddy_check
+      if ("1" == ENV["BUDDY_CHECK_FEATURE"])
+        member do
+          post :buddy_check
+        end
       end
     end
 
