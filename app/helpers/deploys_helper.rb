@@ -36,31 +36,11 @@ module DeploysHelper
   end
 
   def deploy_status_panel(deploy)
-    mapping = {
-      "succeeded" => "success",
-      "failed"    => "danger",
-      "errored"   => "warning",
-      "cancelled" => "danger"
-    }
-
-    status = mapping.fetch(deploy.status, "info")
-
-    if deploy.finished?
-      content = "#{deploy.summary} "
-      content << content_tag(:span, deploy.created_at.rfc822, data: { time: datetime_to_js_ms(deploy.created_at) })
-      content << ", it took #{duration_text(deploy)}."
-      content << (deploy.buddy == deploy.user ?
-        " This deploy was bypassed." :
-        " This deploy was approved by #{deploy.buddy}.") if deploy.buddy
-    elsif deploy.waiting_for_buddy?
-      status = "warning"
-      content = "This deploy requires a deploy buddy, "
-      content << "please have another engineer with deploy rights visit this URL to kick off the deploy."
+    if ("1" == ENV["BUDDY_CHECK_FEATURE"])
+      deploy_status_panel_buddy_check(deploy)
     else
-      content = deploy.summary
+      deploy_status_panel_no_buddy_check(deploy)
     end
-
-    content_tag :div, content.html_safe, class: "alert alert-#{status}"
   end
 
   def buddy_check_button(project, deploy)
@@ -80,7 +60,12 @@ module DeploysHelper
   end
 
   def duration_text(deploy)
-    seconds  = (deploy.updated_at - deploy.created_at).to_i
+    seconds = 0
+    if ("1" == ENV["BUDDY_CHECK_FEATURE"])
+      seconds  = deploy.started_at ? (deploy.updated_at - deploy.started_at).to_i : 0
+    else
+      seconds  = (deploy.updated_at - deploy.created_at).to_i
+    end
     duration = ""
 
     if seconds > 60
@@ -102,4 +87,57 @@ module DeploysHelper
       [stage.name, stage.id, 'data-confirmation' => stage.confirm?]
     end
   end
+
+  private
+
+    # Use this when ENV["BUDDY_CHECK_FEATURE"] == 1
+    def deploy_status_panel_buddy_check(deploy)
+      mapping = {
+        "succeeded" => "success",
+        "failed"    => "danger",
+        "errored"   => "warning",
+        "cancelled" => "danger"
+      }
+
+      status = mapping.fetch(deploy.status, "info")
+
+      if deploy.finished?
+        content = "#{deploy.summary} "
+        content << content_tag(:span, deploy.created_at.rfc822, data: { time: datetime_to_js_ms(deploy.created_at) })
+        content << ", it took #{duration_text(deploy)}." if deploy.started_at
+        content << (deploy.buddy == deploy.user ?
+          " This deploy was bypassed." :
+          " This deploy was approved by #{deploy.buddy}.") if deploy.buddy
+      elsif deploy.waiting_for_buddy?
+        status = "warning"
+        content = "This deploy requires a deploy buddy, "
+        content << "please have another engineer with deploy rights visit this URL to kick off the deploy."
+      else
+        content = deploy.summary
+      end
+
+      content_tag :div, content.html_safe, class: "alert alert-#{status}"
+    end
+
+    # Use this when ENV["BUDDY_CHECK_FEATURE"] == 0
+    def deploy_status_panel_no_buddy_check(deploy)
+      mapping = {
+        "succeeded" => "success",
+        "failed"    => "danger",
+        "errored"   => "warning",
+      }
+
+      status = mapping.fetch(deploy.status, "info")
+
+      if deploy.finished?
+        content = "#{deploy.summary} "
+        content << content_tag(:span, deploy.created_at.rfc822, data: { time: datetime_to_js_ms(deploy.created_at) })
+        content << ", it took #{duration_text(deploy)}."
+      else
+        content = deploy.summary
+      end
+
+      content_tag :div, content.html_safe, class: "alert alert-#{status}"
+    end
+
 end
