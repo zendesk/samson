@@ -12,7 +12,6 @@ class DeployMailer < ActionMailer::Base
     mail(to: stage.notify_email_addresses, subject: subject)
   end
 
-  # Called only when "1" == ENV["BUDDY_CHECK_FEATURE"]
   def bypass_alert(stage, deploy)
     prepare_mail(stage, deploy)
 

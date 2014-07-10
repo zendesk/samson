@@ -8,7 +8,7 @@ class DeployService
   def deploy!(stage, reference)
     deploy = stage.create_deploy(reference: reference, user: user)
 
-    if ("1" == ENV["BUDDY_CHECK_FEATURE"])
+    if BuddyCheck.enabled?
       confirm_deploy!(deploy, stage, reference) if deploy.persisted? && !stage.confirm_before_deploying?
     else
       confirm_deploy!(deploy, stage, reference) if deploy.persisted?
@@ -32,7 +32,7 @@ class DeployService
   def send_before_notifications(stage, deploy, buddy)
     send_flowdock_notification(stage, deploy)
 
-    if ("1" == ENV["BUDDY_CHECK_FEATURE"])
+    if BuddyCheck.enabled?
       if buddy && buddy == deploy.user
         DeployMailer.bypass_alert(stage, deploy).deliver
       end

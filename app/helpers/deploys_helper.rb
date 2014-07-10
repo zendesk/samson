@@ -36,7 +36,7 @@ module DeploysHelper
   end
 
   def deploy_status_panel(deploy)
-    if ("1" == ENV["BUDDY_CHECK_FEATURE"])
+    if BuddyCheck.enabled?
       deploy_status_panel_buddy_check(deploy)
     else
       deploy_status_panel_no_buddy_check(deploy)
@@ -61,7 +61,7 @@ module DeploysHelper
 
   def duration_text(deploy)
     seconds = 0
-    if ("1" == ENV["BUDDY_CHECK_FEATURE"])
+    if BuddyCheck.enabled?
       seconds  = deploy.started_at ? (deploy.updated_at - deploy.started_at).to_i : 0
     else
       seconds  = (deploy.updated_at - deploy.created_at).to_i
@@ -90,7 +90,7 @@ module DeploysHelper
 
   private
 
-    # Use this when ENV["BUDDY_CHECK_FEATURE"] == 1
+    # Use when BuddyCheck.enabled? is true
     def deploy_status_panel_buddy_check(deploy)
       mapping = {
         "succeeded" => "success",
@@ -119,7 +119,7 @@ module DeploysHelper
       content_tag :div, content.html_safe, class: "alert alert-#{status}"
     end
 
-    # Use this when ENV["BUDDY_CHECK_FEATURE"] == 0
+    # Use when BuddyCheck.enabled? is false
     def deploy_status_panel_no_buddy_check(deploy)
       mapping = {
         "succeeded" => "success",

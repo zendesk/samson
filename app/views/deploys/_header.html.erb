@@ -1,7 +1,7 @@
 <h1>
   <%= @project.name %>
   <div class="pull-right">
-    <%= buddy_check_button(@project, @deploy) if ("1" == ENV["BUDDY_CHECK_FEATURE"]) %>
+    <%= buddy_check_button(@project, @deploy) if BuddyCheck.enabled? %>
 
     <% unless @deploy.succeeded? || @deploy.active? %>
       <%= link_to "Redeploy", project_deploys_path(@project, deploy: { reference: @deploy.reference, stage_id: @deploy.stage_id }), method: :post, class: "btn btn-danger" %>

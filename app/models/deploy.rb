@@ -13,6 +13,8 @@ class Deploy < ActiveRecord::Base
   delegate :finished?, :errored?, :failed?, to: :job
   delegate :project, to: :stage
 
+  #require UtilityHelper
+
   def cache_key
     [self, commit]
   end
@@ -66,7 +68,7 @@ class Deploy < ActiveRecord::Base
   end
 
   def self.active
-    if ("1" == ENV["BUDDY_CHECK_FEATURE"])
+    if BuddyCheck.enabled?
       includes(:job).where(jobs: { status: %w[pending running pending] })
     else
       includes(:job).where(jobs: { status: %w[pending running] })
