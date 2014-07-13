@@ -13,8 +13,6 @@ class Deploy < ActiveRecord::Base
   delegate :finished?, :errored?, :failed?, to: :job
   delegate :project, to: :stage
 
-  #require UtilityHelper
-
   def cache_key
     [self, commit]
   end
@@ -56,10 +54,7 @@ class Deploy < ActiveRecord::Base
   end
 
   def confirm_buddy!(buddy)
-    update_attribute(:buddy, buddy)
-
-    # Offset time by -1 so that short jobs last at least 1 second
-    update_column('started_at', Time.now - 1)
+    update_attributes(buddy: buddy, started_at: Time.now)
     DeployService.new(project, user).confirm_deploy!(self, stage, reference, buddy)
   end
 
@@ -68,11 +63,7 @@ class Deploy < ActiveRecord::Base
   end
 
   def self.active
-    if BuddyCheck.enabled?
-      includes(:job).where(jobs: { status: %w[pending running pending] })
-    else
-      includes(:job).where(jobs: { status: %w[pending running] })
-    end
+    includes(:job).where(jobs: { status: %w[pending running cancelling] })
   end
 
   def self.running

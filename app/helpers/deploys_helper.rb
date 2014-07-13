@@ -36,11 +36,7 @@ module DeploysHelper
   end
 
   def deploy_status_panel(deploy)
-    if BuddyCheck.enabled?
-      deploy_status_panel_buddy_check(deploy)
-    else
-      deploy_status_panel_no_buddy_check(deploy)
-    end
+    deploy_status_panel_common(deploy, BuddyCheck.enabled?)
   end
 
   def buddy_check_button(project, deploy)
@@ -60,12 +56,9 @@ module DeploysHelper
   end
 
   def duration_text(deploy)
-    seconds = 0
-    if BuddyCheck.enabled?
-      seconds  = deploy.started_at ? (deploy.updated_at - deploy.started_at).to_i : 0
-    else
-      seconds  = (deploy.updated_at - deploy.created_at).to_i
-    end
+    dt_start = BuddyCheck.enabled? ? deploy.started_at || deploy.updated_at : deploy.created_at
+    seconds  = (deploy.updated_at - dt_start).to_i
+
     duration = ""
 
     if seconds > 60
@@ -90,17 +83,26 @@ module DeploysHelper
 
   private
 
-    # Use when BuddyCheck.enabled? is true
-    def deploy_status_panel_buddy_check(deploy)
-      mapping = {
-        "succeeded" => "success",
-        "failed"    => "danger",
-        "errored"   => "warning",
-        "cancelled" => "danger"
-      }
+    $mapping_panel = {
+      "succeeded" => "success",
+      "failed"    => "danger",
+      "errored"   => "warning",
+    }
 
-      status = mapping.fetch(deploy.status, "info")
+    def deploy_status_panel_common(deploy, enabled, 
+                                    map = $mapping_panel, hash = { "cancelled" => "danger" } )
+      mapping = enabled ? map.merge(hash) : map
 
+      content, status = enabled ? content_buddy_check(deploy) : content_no_buddy_check(deploy)
+
+      content ||= deploy.summary
+      status ||= mapping.fetch(deploy.status, "info")
+
+      content_tag :div, content.html_safe, class: "alert alert-#{status}"
+    end
+
+    def content_buddy_check(deploy)
+      status = nil
       if deploy.finished?
         content = "#{deploy.summary} "
         content << content_tag(:span, deploy.created_at.rfc822, data: { time: datetime_to_js_ms(deploy.created_at) })
@@ -112,32 +114,17 @@ module DeploysHelper
         status = "warning"
         content = "This deploy requires a deploy buddy, "
         content << "please have another engineer with deploy rights visit this URL to kick off the deploy."
-      else
-        content = deploy.summary
       end
 
-      content_tag :div, content.html_safe, class: "alert alert-#{status}"
+      return content, status
     end
 
-    # Use when BuddyCheck.enabled? is false
-    def deploy_status_panel_no_buddy_check(deploy)
-      mapping = {
-        "succeeded" => "success",
-        "failed"    => "danger",
-        "errored"   => "warning",
-      }
-
-      status = mapping.fetch(deploy.status, "info")
-
+    def content_no_buddy_check(deploy)
       if deploy.finished?
         content = "#{deploy.summary} "
         content << content_tag(:span, deploy.created_at.rfc822, data: { time: datetime_to_js_ms(deploy.created_at) })
         content << ", it took #{duration_text(deploy)}."
-      else
-        content = deploy.summary
       end
-
-      content_tag :div, content.html_safe, class: "alert alert-#{status}"
     end
 
 end
