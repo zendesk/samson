@@ -10,10 +10,6 @@ class DeployServiceTest < ActiveSupport::TestCase
   let(:deploy) { stub(user: user, job: job, changeset: "changeset") }
   let(:job_execution) { JobExecution.new(reference, job) }
 
-  setup do
-    stage.confirm = false
-  end
-
   it "creates a new deploy" do
     count = Deploy.count
     service.deploy!(stage, reference)
