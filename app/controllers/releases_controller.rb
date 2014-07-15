@@ -1,5 +1,6 @@
 class ReleasesController < ApplicationController
   before_filter :find_project
+  before_filter :authorize_deployer!, except: [:show, :index]
 
   def show
     @release = @project.releases.find_by_version(params[:id])
