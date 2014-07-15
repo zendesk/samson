@@ -18,11 +18,7 @@ class Deploy < ActiveRecord::Base
   end
 
   def summary
-    summary_msg
-  end
-
-  def summary_bypass
-    "[BYPASS][DEPLOY] " + summary_msg
+    "#{job.user.name} #{summary_action} #{short_reference} to #{stage.name}"
   end
 
   def summary_for_timeline
@@ -30,11 +26,7 @@ class Deploy < ActiveRecord::Base
   end
 
   def summary_for_email
-    summary_for_email_msg
-  end
-
-  def summary_for_bypass_email
-    "[BYPASS][DEPLOY] " + summary_for_email_msg
+    "#{job.user.name} #{summary_action} #{project.name} to #{stage.name} (#{reference})"
   end
 
   def commit
@@ -111,13 +103,4 @@ class Deploy < ActiveRecord::Base
       errors.add(:stage, 'is locked')
     end
   end
-
-  def summary_msg
-    "#{job.user.name} #{summary_action} #{short_reference} to #{stage.name}"
-  end
-
-  def summary_for_email_msg
-    "#{job.user.name} #{summary_action} #{project.name} to #{stage.name} (#{reference})"
-  end
-
 end
