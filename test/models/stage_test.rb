@@ -49,9 +49,9 @@ describe Stage do
     let(:author) { users(:deployer) }
     let(:job) { project.jobs.create!(user: author, commit: "x", command: "echo", status: "succeeded") }
 
-    let(:previous_release) { project.releases.create!(number: 3, author: author, commit: "A") }
-    let(:last_release) { project.releases.create!(number: 4, author: author, commit: "B") }
-    let(:undeployed_release) { project.releases.create!(number: 5, author: author, commit: "C") }
+    let(:previous_release) { project.releases.create!(version: "v3", author: author, commit: "A") }
+    let(:last_release) { project.releases.create!(version: "v4", author: author, commit: "B") }
+    let(:undeployed_release) { project.releases.create!(version: "v5", author: author, commit: "C") }
 
     before do
       stage.deploys.create!(reference: "v3", job: job)

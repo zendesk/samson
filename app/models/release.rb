@@ -1,9 +1,22 @@
 class Release < ActiveRecord::Base
+
   belongs_to :project, touch: true
   belongs_to :author, polymorphic: true
 
+  validates :version, presence: true, uniqueness: { scope: :project_id }
+
   def self.sort_by_version
-    order(number: :desc)
+    order(version: :desc)
+  end
+
+  def self.next_version_for(project, bump_type = 'default')
+    latest_version = project.releases.last.try(:version)
+
+    if latest_version
+      Version.new(project.versioning_schema, latest_version).bump.to_s
+    else
+      Version.new(project.versioning_schema).to_s
+    end
   end
 
   def to_param
@@ -22,14 +35,4 @@ class Release < ActiveRecord::Base
     project.release_prior_to(self)
   end
 
-  def version
-    "v#{number}"
-  end
-
-  def self.find_by_version(version)
-   if version =~ /\Av(\d+)\Z/
-     number = $1.to_i
-     find_by_number(number)
-   end
- end
 end

@@ -34,6 +34,6 @@ class ReleasesController < ApplicationController
   end
 
   def release_params
-    params.require(:release).permit(:commit).merge(author: current_user)
+    params.require(:release).permit(:commit, :version).merge(author: current_user)
   end
 end

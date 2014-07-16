@@ -16,17 +16,16 @@ describe Project do
       assert release.persisted?
     end
 
-    it "defaults to release number 1" do
+    it "defaults to release version v1" do
       release = project.create_release(commit: "foo", author: author)
 
-      assert_equal 1, release.number
+      assert_equal "v1", release.version
     end
 
-    it "increments the release number" do
-      project.releases.create!(author: author, commit: "bar", number: 41)
+    it "increments the release version" do
+      first_release = project.releases.create!(author: author, commit: "bar", version: "v41")
       release = project.create_release(commit: "foo", author: author)
-
-      assert_equal 42, release.number
+      assert_equal "v42", release.version
     end
   end
 
@@ -37,7 +36,7 @@ describe Project do
 
     it "returns changeset" do
       changeset = Changeset.new("url", "foo/bar", "a", "b")
-      project.releases.create!(author: author, commit: "bar", number: 50)
+      project.releases.create!(author: author, commit: "bar", version: "v50")
       release = project.create_release(commit: "foo", author: author)
 
       Changeset.stubs(:find).with("bar/foo", "bar", "foo").returns(changeset)
@@ -46,7 +45,7 @@ describe Project do
 
     it "returns empty changeset" do
       changeset = Changeset.new("url", "foo/bar", "a", "a")
-      release = project.releases.create!(author: author, commit: "bar", number: 50)
+      release = project.releases.create!(author: author, commit: "bar", version: "v50")
 
       Changeset.stubs(:find).with("bar/foo", nil, "bar").returns(changeset)
       assert_equal changeset, project.changeset_for_release(release)
