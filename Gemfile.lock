@@ -63,11 +63,16 @@ GEM
     bourne (1.5.0)
       mocha (>= 0.13.2, < 0.15)
     builder (3.2.2)
+    byebug (3.1.2)
+      columnize (~> 0.8)
+      debugger-linecache (~> 1.2)
     coderay (1.1.0)
+    columnize (0.8.9)
     crack (0.4.2)
       safe_yaml (~> 1.0.0)
     dalli (2.7.1)
     debug_inspector (0.0.2)
+    debugger-linecache (1.2.0)
     docile (1.1.3)
     dogapi (1.9.2)
       json (>= 1.5.1)
@@ -244,6 +249,7 @@ DEPENDENCIES
   bootstrap-x-editable-rails
   bourne
   bundler
+  byebug
   coderay (~> 1.1.0)
   dalli (~> 2.7.0)
   dogapi (~> 1.9.1)
