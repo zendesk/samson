@@ -8,7 +8,7 @@ class DeployService
   def deploy!(stage, reference)
     deploy = stage.create_deploy(reference: reference, user: user)
 
-    if deploy.persisted? && !(BuddyCheck.enabled? && stage.confirm_before_deploying?)
+    if deploy.persisted? && !(BuddyCheck.enabled? && stage.production?)
       confirm_deploy!(deploy, stage, reference)
     end
 

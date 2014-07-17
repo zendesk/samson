@@ -59,7 +59,7 @@ class Deploy < ActiveRecord::Base
   end
 
   def waiting_for_buddy?
-    pending? && stage.confirm_before_deploying?
+    pending? && stage.production?
   end
 
   def self.active

@@ -19,7 +19,7 @@ class DeployServiceTest < ActiveSupport::TestCase
   it "doesn't really deploy if buddy check is needed" do
     BuddyCheck.stubs(:enabled?).returns(true)
 
-    stage.confirm = true
+    stage.production = true
     service.expects(:confirm_deploy!).never
 
     service.deploy!(stage, reference)

@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20140707225625) do
+ActiveRecord::Schema.define(version: 20140717013754) do
 
   create_table "commands", force: true do |t|
     t.text     "command",    limit: 16777215
@@ -114,6 +114,8 @@ ActiveRecord::Schema.define(version: 20140707225625) do
     t.string   "datadog_tags"
     t.boolean  "update_github_pull_requests"
     t.boolean  "deploy_on_release",           default: false
+    t.boolean  "comment_on_zendesk_tickets"
+    t.boolean  "production"
   end
 
   create_table "stars", force: true do |t|
