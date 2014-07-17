@@ -11,10 +11,6 @@ class DeploySerializer < ActiveModel::Serializer
     project_deploy_url(object.project, object)
   end
 
-  def production
-    object.stage.confirm?
-  end
-
   def summary
     object.summary_for_timeline
   end
