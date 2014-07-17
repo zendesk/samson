@@ -1,0 +1,7 @@
+<pre id="messages" class="pre-scrollable log">
+  <% unless deploy.active? %>
+    <% deploy.output.split("\n").each do |line| %>
+<%= render_log(line) %>
+    <% end %>
+  <% end %>
+</pre>

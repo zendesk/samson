@@ -89,34 +89,16 @@ module DeploysHelper
       "errored"   => "warning",
     }
 
-    def deploy_status_panel_common(deploy, enabled, 
+    def deploy_status_panel_common(deploy, enabled,
                                     map = $mapping_panel, hash = { "cancelled" => "danger" } )
       mapping = enabled ? map.merge(hash) : map
 
-      content, status = enabled ? content_buddy_check(deploy) : content_no_buddy_check(deploy)
+      content, status = content_no_buddy_check(deploy)
 
       content ||= deploy.summary
       status ||= mapping.fetch(deploy.status, "info")
 
       content_tag :div, content.html_safe, class: "alert alert-#{status}"
-    end
-
-    def content_buddy_check(deploy)
-      status = nil
-      if deploy.finished?
-        content = "#{deploy.summary} "
-        content << content_tag(:span, deploy.created_at.rfc822, data: { time: datetime_to_js_ms(deploy.created_at) })
-        content << ", it took #{duration_text(deploy)}." if deploy.started_at
-        content << (deploy.buddy == deploy.user ?
-          " This deploy was bypassed." :
-          " This deploy was approved by #{deploy.buddy}.") if deploy.buddy
-      elsif deploy.waiting_for_buddy?
-        status = "warning"
-        content = "This deploy requires a deploy buddy, "
-        content << "please have another engineer with deploy rights visit this URL to kick off the deploy."
-      end
-
-      return content, status
     end
 
     def content_no_buddy_check(deploy)

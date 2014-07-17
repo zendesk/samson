@@ -183,6 +183,15 @@ $(function () {
     $("#output-options > button").removeClass("active");
     $(this).addClass("active");
   });
+
+  // If there are messages being streamed, then show the output and hide buddy check
+  $('#messages').bind('contentchanged', function(){
+    $output = $('#output');
+    if ($output.find('.output').hasClass("hidden") ){
+      $output.find('.output').removeClass('hidden');
+      $output.find('.buddy-check').hide();
+    }
+  });
 });
 
 function toggleOutputToolbar() {

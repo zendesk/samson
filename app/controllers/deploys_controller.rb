@@ -101,11 +101,11 @@ class DeploysController < ApplicationController
   def destroy
     if @deploy.started_by?(current_user) || current_user.is_admin?
       @deploy.stop!
-
-      head :ok
+      flash[:notice] = "Deploy stopped."
     else
-      head :forbidden
+      flash[:notice] = "You do not have privileges to stop this deploy."
     end
+    redirect_to project_deploy_path(@project, @deploy)
   end
 
   protected

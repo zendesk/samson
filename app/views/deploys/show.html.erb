@@ -38,26 +38,8 @@
 <section class="clearfix tabs">
   <div class="tab-content deploy-details">
     <div class="tab-pane active" id="output" data-stream-url="<%= stream_path(@deploy.job) %>">
-      <div class="row">
-        <div class="btn-toolbar col-md-4 pull-right" id="output-toolbar">
-          <div id="output-options" class="btn-group only-active">
-            <button class="btn btn-default active" id="output-follow">Follow</button>
-            <button class="btn btn-default" id="output-steady">Don't Follow</button>
-            <button class="btn btn-default" id="output-grow">Expand</button>
-          </div>
-
-          <div class="pull-right only-finished">
-            <button class="btn btn-default" id="output-grow-toggle">Expand</button>
-            <%= link_to "Download log", project_deploy_path(@project, @deploy, format: :text), class: "btn btn-primary" %>
-          </div>
-
-          <% if current_user.is_deployer? %>
-            <%= link_to "Stop", project_deploy_path(@project, @deploy), remote: true, method: :delete, class: "btn btn-danger pull-right only-active" %>
-          <% end %>
-        </div>
-      </div>
-
-      <%= render 'deploys/output', deploy: @deploy %>
+      <%= render 'buddy_check', deploy: @deploy if @deploy.waiting_for_buddy? %>
+      <%= render 'output', deploy: @deploy, project: @project %>
     </div>
 
     <% %w(files commits pulls risks jira-issues).each do |pane| %>
