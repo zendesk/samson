@@ -12,6 +12,10 @@ class User < ActiveRecord::Base
 
   before_create :set_token
 
+  def self.name_for_id(user_id)
+    User.find(user_id).name if user_id
+  end
+
   def starred_project?(project)
     starred_projects.include?(project)
   end
