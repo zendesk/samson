@@ -25,6 +25,17 @@
     </div>
   </div>
 
+  <div class="form-group">
+    <div class="col-sm-offset-2 col-sm-10">
+      <div class="checkbox">
+        <%= form.label :production do %>
+          <%= form.check_box :production %>
+          Does this stage impact production servers?
+        <% end %>
+      </div>
+    </div>
+  </div>
+
   <% if @project.manage_releases? %>
     <div class="form-group">
       <div class="col-sm-offset-2 col-sm-10">
