@@ -1,6 +1,6 @@
 <div class="output <%= 'hidden' if @deploy.waiting_for_buddy? %>">
   <div class="row">
-    <div class="btn-toolbar col-md-4 pull-right" id="output-toolbar">
+    <div class="btn-toolbar col-md-4 col-md-offset-7 pull-right" id="output-toolbar">
       <div id="output-options" class="btn-group only-active">
         <button class="btn btn-default active" id="output-follow">Follow</button>
         <button class="btn btn-default" id="output-steady">Don't Follow</button>
@@ -12,9 +12,9 @@
         <%= link_to "Download log", project_deploy_path(@project, @deploy, format: :text), class: "btn btn-primary" %>
       </div>
 
-      <% if current_user.is_deployer? %>
-        <%= link_to "Stop", project_deploy_path(@project, @deploy), method: :delete, class: "btn btn-danger pull-right only-active" %>
-      <% end %>
+      <% if can_stop_deploy? %>
+      <%= link_to "Stop", project_deploy_path(@project, @deploy), method: :delete, class: "btn btn-danger pull-right only-active" %>
+    <% end %>
     </div>
   </div>
 
