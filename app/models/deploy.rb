@@ -17,19 +17,8 @@ class Deploy < ActiveRecord::Base
     [self, commit]
   end
 
-  def deploy_user_name
-    user_name = ""
-    if (buddy_id && buddy_id == job.user.id)
-      user_name = job.user.name + " (via bypass)"
-    elsif (buddy_id && buddy_id != job.user.id)
-      user_name = User.name_for_id(buddy_id) + " (as buddy)"
-    else
-      user_name = job.user.name
-    end
-  end
-
   def summary
-    "#{deploy_user_name} #{summary_action} #{short_reference} to #{stage.name}"
+    "#{job.user.name} #{summary_action} #{short_reference} to #{stage.name}"
   end
 
   def summary_for_timeline
@@ -37,7 +26,7 @@ class Deploy < ActiveRecord::Base
   end
 
   def summary_for_email
-    "#{deploy_user_name} #{summary_action} #{project.name} to #{stage.name} (#{reference})"
+    "#{job.user.name} #{summary_action} #{project.name} to #{stage.name} (#{reference})"
   end
 
   def commit
