@@ -83,15 +83,14 @@ module DeploysHelper
 
   private
 
-    $mapping_panel = {
-      "succeeded" => "success",
-      "failed"    => "danger",
-      "errored"   => "warning",
-    }
+    def deploy_status_panel_common(deploy, enabled, hash = { "cancelled" => "danger" } )
+      mapping = {
+        "succeeded" => "success",
+        "failed"    => "danger",
+        "errored"   => "warning",
+      }
 
-    def deploy_status_panel_common(deploy, enabled,
-                                    map = $mapping_panel, hash = { "cancelled" => "danger" } )
-      mapping = enabled ? map.merge(hash) : map
+      mapping = mapping.merge(hash) if enabled
 
       content, status = content_no_buddy_check(deploy)
 
