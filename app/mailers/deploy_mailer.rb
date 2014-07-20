@@ -18,7 +18,8 @@ class DeployMailer < ActionMailer::Base
     subject = "[BYPASS][#{Rails.application.config.samson.email_prefix}] #{deploy.summary_for_email}"
 
     # the receiver is to be changed, and should be always present, where notify_email
-    mail(to: ENV["BYPASS_EMAIL"], subject: subject)
+
+    mail(to: BuddyCheck.bypass_email_address, subject: subject)
   end
 
   private

@@ -13,7 +13,7 @@ describe DeployMailer do
   let(:buddy_is_other) { users(:deployer_buddy) }
 
   before do
-    stage.update_attributes!(notify_email_address: 'test@test.com')
+    BuddyCheck.stubs(:bypass_email_address).returns("test@test.com")
 
     changeset = stub_everything(files: [], commits: [], pull_requests: [])
     Changeset.stubs(:find).returns(changeset)
@@ -32,7 +32,7 @@ describe DeployMailer do
       subject.from.must_equal(['deploys@samson-deployment.com'])
     end
 
-    it 'sends to notify_email_address' do
+    it 'sends to bypass_email_address' do
       subject.to.must_equal(['test@test.com'])
     end
 
