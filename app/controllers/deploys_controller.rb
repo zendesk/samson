@@ -77,7 +77,9 @@ class DeploysController < ApplicationController
   end
 
   def buddy_check
-    @deploy.confirm_buddy!(current_user)
+    if @deploy.pending?
+      @deploy.confirm_buddy!(current_user)
+    end
     redirect_to project_deploy_path(@project, @deploy)
   end
 
