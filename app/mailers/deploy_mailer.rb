@@ -12,7 +12,7 @@ class DeployMailer < ActionMailer::Base
     mail(to: stage.notify_email_addresses, subject: subject)
   end
 
-  def bypass_alert(stage, deploy)
+  def bypass_email(stage, deploy)
     prepare_mail(stage, deploy)
 
     subject = "[BYPASS][#{Rails.application.config.samson.email_prefix}] #{deploy.summary_for_email}"

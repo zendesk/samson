@@ -59,7 +59,7 @@ class BuddyCheckDeployServiceTest < ActiveSupport::TestCase
 
     describe "for buddy same" do
       it "sends bypass alert email notification" do
-        DeployMailer.expects(:bypass_alert).returns( stub("DeployMailer", :deliver => true) )
+        DeployMailer.expects(:bypass_email).returns( stub("DeployMailer", :deliver => true) )
 
         service.confirm_deploy!(deploy, stage, reference, buddy_same)
         job_execution.run!
@@ -69,7 +69,7 @@ class BuddyCheckDeployServiceTest < ActiveSupport::TestCase
     describe "for buddy different" do
       it "does not send bypass alert email notification" do
 
-        DeployMailer.expects(:bypass_alert).never
+        DeployMailer.expects(:bypass_email).never
 
         service.confirm_deploy!(deploy, stage, reference, buddy_other)
         job_execution.run!
@@ -87,7 +87,7 @@ class BuddyCheckDeployServiceTest < ActiveSupport::TestCase
 
     describe "for buddy same" do
       it "sends bypass alert email notification" do
-        DeployMailer.expects(:bypass_alert).never
+        DeployMailer.expects(:bypass_email).never
 
         service.confirm_deploy!(deploy, stage, reference, buddy_same)
         job_execution.run!
@@ -97,7 +97,7 @@ class BuddyCheckDeployServiceTest < ActiveSupport::TestCase
     describe "for buddy different" do
       it "does not send bypass alert email notification" do
 
-        DeployMailer.expects(:bypass_alert).never
+        DeployMailer.expects(:bypass_email).never
 
         service.confirm_deploy!(deploy, stage, reference, buddy_other)
         job_execution.run!

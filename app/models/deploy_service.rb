@@ -31,7 +31,7 @@ class DeployService
     send_flowdock_notification(stage, deploy)
 
     if BuddyCheck.enabled? && buddy == deploy.user
-      DeployMailer.bypass_alert(stage, deploy).deliver
+      DeployMailer.bypass_email(stage, deploy).deliver
     end
   end
 

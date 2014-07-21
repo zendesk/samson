@@ -16,15 +16,6 @@ class DeployServiceTest < ActiveSupport::TestCase
     assert_equal count + 1, Deploy.count
   end
 
-  it "doesn't really deploy if buddy check is needed" do
-    BuddyCheck.stubs(:enabled?).returns(true)
-
-    stage.production = true
-    service.expects(:confirm_deploy!).never
-
-    service.deploy!(stage, reference)
-  end
-
   describe "before notifications" do
     it "sends flowdock notifications if the stage has flows" do
       stage.stubs(:send_flowdock_notifications?).returns(true)
