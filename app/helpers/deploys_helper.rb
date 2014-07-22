@@ -47,6 +47,8 @@ module DeploysHelper
   end
 
   def github_user_avatar(user)
+    return if user.nil?
+
     link_to user.url, title: user.login do
       image_tag user.avatar_url, width: 20, height: 20
     end
