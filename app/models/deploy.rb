@@ -82,6 +82,11 @@ class Deploy < ActiveRecord::Base
     where("#{table_name}.id < ?", deploy.id)
   end
 
+  def self.expired
+    threshold = Time.at(Time.now.to_i - BuddyCheck.deploy_max_minutes_pending.to_i * 60)
+    joins(:job).where(jobs: { status: 'pending'} ).where("jobs.created_at < ?", threshold)
+  end
+
   private
 
   def summary_action
