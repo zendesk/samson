@@ -34,3 +34,6 @@
 
 # Ignore tags/ctags file
 /tags
+
+# Ignore temp devel files
+/routes.txt

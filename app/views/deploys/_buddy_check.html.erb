@@ -1,4 +1,4 @@
-<div class="row buddy-check">
+<div class="row check">
   <% if @deploy.started_by?(current_user) %>
     <p>This deploy hits production, so requires a deploy buddy. Please have another engineer with deploy rights visit this URL to kick off the deploy.</p>
     <div class="deployer-stop">

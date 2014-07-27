@@ -189,7 +189,7 @@ $(function () {
     $output = $('#output');
     if ($output.find('.output').hasClass("hidden") ){
       $output.find('.output').removeClass('hidden');
-      $output.find('.buddy-check').hide();
+      $output.find('.check').hide();
     }
   });
 });

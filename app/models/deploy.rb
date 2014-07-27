@@ -11,7 +11,7 @@ class Deploy < ActiveRecord::Base
   delegate :started_by?, :stop!, :status, :user, :output, to: :job
   delegate :active?, :pending?, :running?, :cancelling?, :cancelled?, :succeeded?, to: :job
   delegate :finished?, :errored?, :failed?, to: :job
-  delegate :project, to: :stage
+  delegate :production?, :project, to: :stage
 
   def cache_key
     [self, commit]
@@ -62,8 +62,21 @@ class Deploy < ActiveRecord::Base
     DeployService.new(project, user).confirm_deploy!(self, stage, reference, buddy)
   end
 
+  def pending_non_production?
+    pending? && !stage.production?
+  end
+
+  def pending_start!()
+    update_attributes(updated_at: Time.now)       # hack: refresh is immediate with update
+    DeployService.new(project, user).confirm_deploy!(self, stage, reference, buddy)
+  end
+
   def waiting_for_buddy?
     pending? && stage.production?
+  end
+
+  def can_stop_deploy?(user)
+    started_by?(user) || user.is_admin?
   end
 
   def self.active

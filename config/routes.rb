@@ -37,6 +37,10 @@ Samson::Application.routes.draw do
       member do
         post :buddy_check
       end
+
+      member do
+        post :pending_start
+      end
     end
 
     resources :webhooks, only: [:index, :create, :destroy]

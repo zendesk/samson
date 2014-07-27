@@ -4,11 +4,9 @@ class DeploysController < ApplicationController
     redirect_to root_path
   end
 
-  before_filter :authorize_deployer!, only: [:new, :create, :confirm, :update, :destroy, :buddy_check]
+  before_filter :authorize_deployer!, only: [:new, :create, :confirm, :update, :destroy, :buddy_check, :pending_start]
   before_filter :find_project
   before_filter :find_deploy, except: [:index, :recent, :active, :new, :create, :confirm]
-
-  helper_method :can_stop_deploy?
 
   def index
     @page = params[:page]
@@ -83,6 +81,13 @@ class DeploysController < ApplicationController
     redirect_to project_deploy_path(@project, @deploy)
   end
 
+  def pending_start
+    if @deploy.pending_non_production?
+      @deploy.pending_start!()
+    end
+    redirect_to project_deploy_path(@project, @deploy)
+  end
+
   def show
     respond_to do |format|
       format.html
@@ -103,7 +108,7 @@ class DeploysController < ApplicationController
   end
 
   def destroy
-    if can_stop_deploy?
+    if @deploy.can_stop_deploy?(current_user)
       @deploy.stop!
     else
       flash[:error] = "You do not have privileges to stop this deploy."
@@ -125,7 +130,4 @@ class DeploysController < ApplicationController
     @deploy = Deploy.includes(stage: [:new_relic_applications]).find(params[:id])
   end
 
-  def can_stop_deploy?
-    @deploy.started_by?(current_user) || current_user.is_admin?
-  end
 end
