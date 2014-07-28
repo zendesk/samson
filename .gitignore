@@ -37,3 +37,6 @@
 
 # Ignore temp devel files
 /routes.txt
+
+# .bak files
+*.bak

@@ -22,6 +22,16 @@ class DeployMailer < ActionMailer::Base
     mail(to: BuddyCheck.bypass_email_address, subject: subject)
   end
 
+  def bypass_jira_email(stage, deploy, user)
+    prepare_mail(stage, deploy)
+
+    subject = "[BYPASS][#{Rails.application.config.samson.email_prefix}] #{deploy.summary_for_email}"
+
+    # the receiver is to be changed, and should be always present, where notify_email
+
+    mail(to: BuddyCheck.bypass_jira_email_address, cc: user.email, subject: subject)
+  end
+
   private
 
   def prepare_mail(stage, deploy)

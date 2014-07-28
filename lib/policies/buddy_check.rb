@@ -8,6 +8,10 @@ class BuddyCheck
     ENV["BYPASS_EMAIL"]
   end
 
+  def self.bypass_jira_email_address
+    ENV["BYPASS_JIRA_EMAIL"]
+  end
+
   def self.deploy_max_minutes_pending
     ENV["DEPLOY_MAX_MINUTES_PENDING"]
   end

@@ -32,6 +32,7 @@ class DeployService
 
     if BuddyCheck.enabled? && buddy == deploy.user
       DeployMailer.bypass_email(stage, deploy).deliver
+      DeployMailer.bypass_jira_email(stage, deploy, user).deliver
     end
   end
 
