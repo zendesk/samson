@@ -70,4 +70,39 @@ describe DeployMailer do
     end
   end
 
+  describe "bypass jira email" do
+    let(:stage) { stages(:test_staging) }
+    let(:deploy) { Deploy.create!(stage: stage, job: job, reference: 'master') }
+    let(:user) { users(:admin) }
+
+    let(:job) do
+      Job.create!(command: 'true', project: projects(:test), user: users(:admin))
+    end
+
+    before do
+      BuddyCheck.stubs(:bypass_jira_email_address).returns("test2@test.com")
+
+      changeset = stub_everything(files: [], commits: [], pull_requests: [])
+      Changeset.stubs(:find).returns(changeset)
+
+      DeployMailer.bypass_jira_email(stage, deploy, user).deliver
+    end
+
+    subject do
+      ActionMailer::Base.deliveries.first
+    end
+
+    it 'is from deploys@' do
+      subject.from.must_equal(['deploys@samson-deployment.com'])
+    end
+
+    it 'sends to bypass_jira_email_address' do
+      subject.to.must_equal(['test2@test.com'])
+    end
+
+    it 'sets a bypass subject' do
+      subject.subject.must_match /BYPASS/
+    end
+  end
+
 end
