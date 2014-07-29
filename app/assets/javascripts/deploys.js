@@ -186,10 +186,10 @@ $(function () {
 
   // If there are messages being streamed, then show the output and hide buddy check
   $('#messages').bind('contentchanged', function(){
-    $output = $('#output');
+    var $output = $('#output');
     if ($output.find('.output').hasClass("hidden") ){
       $output.find('.output').removeClass('hidden');
-      $output.find('.check').hide();
+      $output.find('.deploy-check').hide();
     }
   });
 });

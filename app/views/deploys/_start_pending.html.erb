@@ -1,4 +1,4 @@
-<div class="row check">
+<div class="row deploy-check">
   <% if @deploy.can_stop_deploy?(current_user) %>
       <p>This deploy does not hit production. At this point, you can either Start or Stop the pending deploy.</p>
       <div class="pending-start">
