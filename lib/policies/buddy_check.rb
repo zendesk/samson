@@ -13,7 +13,7 @@ class BuddyCheck
   end
 
   def self.deploy_max_minutes_pending
-    ENV["DEPLOY_MAX_MINUTES_PENDING"]
+    ENV["DEPLOY_MAX_MINUTES_PENDING"].to_i
   end
 
   def self.stop_expired_deploys
