@@ -75,7 +75,7 @@ class Deploy < ActiveRecord::Base
     pending? && stage.production?
   end
 
-  def can_stop_deploy?(user)
+  def can_be_stopped_by?(user)
     started_by?(user) || user.is_admin?
   end
 
