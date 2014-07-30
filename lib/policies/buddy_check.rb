@@ -4,6 +4,10 @@ class BuddyCheck
     "1" == ENV["BUDDY_CHECK_FEATURE"]
   end
 
+  def self.jira_email_required?
+    "1" == ENV["JIRA_EMAIL_REQUIRED"]
+  end
+
   def self.bypass_email_address
     ENV["BYPASS_EMAIL"]
   end
