@@ -39,6 +39,7 @@ describe DeployMailer do
   describe "bypass email" do
     let(:stage) { stages(:test_staging) }
     let(:deploy) { Deploy.create!(stage: stage, job: job, reference: 'master') }
+    let(:user) { users(:admin) }
 
     let(:job) do
       Job.create!(command: 'true', project: projects(:test), user: users(:admin))
@@ -46,11 +47,12 @@ describe DeployMailer do
 
     before do
       BuddyCheck.stubs(:bypass_email_address).returns("test1@test.com")
+      BuddyCheck.stubs(:bypass_jira_email_address).returns("test3@test.com")
 
       changeset = stub_everything(files: [], commits: [], pull_requests: [])
       Changeset.stubs(:find).returns(changeset)
 
-      DeployMailer.bypass_email(stage, deploy).deliver
+      DeployMailer.bypass_email(stage, deploy, user).deliver
     end
 
     subject do
@@ -62,42 +64,8 @@ describe DeployMailer do
     end
 
     it 'sends to bypass_email_address' do
-      subject.to.must_equal(['test1@test.com'])
-    end
-
-    it 'sets a bypass subject' do
-      subject.subject.must_match /BYPASS/
-    end
-  end
-
-  describe "bypass jira email" do
-    let(:stage) { stages(:test_staging) }
-    let(:deploy) { Deploy.create!(stage: stage, job: job, reference: 'master') }
-    let(:user) { users(:admin) }
-
-    let(:job) do
-      Job.create!(command: 'true', project: projects(:test), user: users(:admin))
-    end
-
-    before do
-      BuddyCheck.stubs(:bypass_jira_email_address).returns("test2@test.com")
-
-      changeset = stub_everything(files: [], commits: [], pull_requests: [])
-      Changeset.stubs(:find).returns(changeset)
-
-      DeployMailer.bypass_jira_email(stage, deploy, user).deliver
-    end
-
-    subject do
-      ActionMailer::Base.deliveries.first
-    end
-
-    it 'is from deploys@' do
-      subject.from.must_equal(['deploys@samson-deployment.com'])
-    end
-
-    it 'sends to bypass_jira_email_address' do
-      subject.to.must_equal(['test2@test.com'])
+      subject.to.to_s.must_match /test1@test.com/
+      subject.to.to_s.must_match /test3@test.com/
     end
 
     it 'sets a bypass subject' do
