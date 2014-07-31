@@ -1,13 +1,22 @@
 source 'https://rubygems.org'
 
+gem 'bundler'
+
 gem 'rails', '~> 4.1.0'
 gem 'puma'
 gem 'dotenv-rails', '~> 0.9'
 
-# Database (use one of these)
-gem 'sqlite3'
-gem 'mysql2', '~> 0.3'
-# gem 'pg', '~>0.13.2'
+group :mysql2 do
+  gem 'mysql2', '~> 0.3'
+end
+
+group :postgres do
+  gem 'pg', '~>0.13.2'
+end
+
+group :sqlite do
+  gem "sqlite3"
+end
 
 gem 'kaminari'
 gem 'soft_deletion', '~> 0.4'

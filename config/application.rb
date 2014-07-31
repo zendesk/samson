@@ -21,6 +21,8 @@ module Samson
     # config.i18n.default_locale = :de
     #
 
+    config.autoload_paths += Dir["#{config.root}/lib/**/"]
+
     config.cache_store = :dalli_store, { value_max_bytes: 3000000, compress: true }
 
     # Allow streaming
@@ -47,6 +49,8 @@ module Samson
     config.samson.github.organization = ENV["GITHUB_ORGANIZATION"]
     config.samson.github.admin_team = ENV["GITHUB_ADMIN_TEAM"]
     config.samson.github.deploy_team = ENV["GITHUB_DEPLOY_TEAM"]
+    config.samson.github.web_url = ENV["GITHUB_WEB_URL"].presence || 'github.com'
+    config.samson.github.api_url = ENV["GITHUB_API_URL"].presence || 'api.github.com'
 
     config.samson.uri = URI( ENV["DEFAULT_URL"] || 'http://localhost:9080' )
     self.default_url_options = {

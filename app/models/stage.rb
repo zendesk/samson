@@ -36,6 +36,14 @@ class Stage < ActiveRecord::Base
     end
   end
 
+  def self.build_clone(old_stage)
+    new(old_stage.attributes).tap do |new_stage|
+      new_stage.flowdock_flows.build(old_stage.flowdock_flows.map(&:attributes))
+      new_stage.new_relic_applications.build(old_stage.new_relic_applications.map(&:attributes))
+      new_stage.command_ids = old_stage.command_ids
+    end
+  end
+
   def self.unlocked
     where(locks: { id: nil }).
     joins("LEFT OUTER JOIN locks ON \

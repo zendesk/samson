@@ -27,9 +27,12 @@
         <button type="submit" class="do-lock btn btn-warning">Lock</button>
       <% end %>
     <% end %>
-    <%= link_to "Edit stage", edit_project_stage_path(@project, @stage), class: "btn btn-default" %>
-    <%= link_to project_stage_path(@project, @stage), class: 'btn btn-danger', method: :delete, data: { confirm: "Are you sure?" } do %>
-      <i class="glyphicon glyphicon-remove"></i> Delete
+
+    <% if current_user.is_admin? %>
+      <%= link_to "Edit stage", edit_project_stage_path(@project, @stage), class: "btn btn-default" %>
+      <%= link_to project_stage_path(@project, @stage), class: 'btn btn-danger', method: :delete, data: { confirm: "Are you sure?" } do %>
+        <i class="glyphicon glyphicon-remove"></i> Delete
+      <% end %>
     <% end %>
   </div>
 

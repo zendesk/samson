@@ -31,7 +31,7 @@ class Changeset::PullRequest
   delegate :number, :title, :additions, :deletions, to: :@data
 
   def url
-    "https://github.com/#{repo}/pull/#{number}"
+    "https://#{Rails.application.config.samson.github.web_url}/#{repo}/pull/#{number}"
   end
 
   def reference
@@ -58,7 +58,7 @@ class Changeset::PullRequest
   private
 
   def parse_risks!
-    parts = @data.body.split(RISKS_SECTION, 2)
+    parts = @data.body.to_s.split(RISKS_SECTION, 2)
 
     if parts.size == 1
       nil

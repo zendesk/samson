@@ -59,7 +59,7 @@ class Job < ActiveRecord::Base
   end
 
   def active?
-    pending? || running?
+    pending? || running? || cancelling?
   end
 
   def output

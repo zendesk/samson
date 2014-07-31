@@ -3,7 +3,7 @@ class StagesController < ApplicationController
   before_filter :authorize_deployer!
 
   before_filter :find_project
-  before_filter :find_stage, only: [:show, :edit, :update, :lock, :unlock, :destroy]
+  before_filter :find_stage, only: [:show, :edit, :update, :destroy, :clone]
 
   rescue_from ActiveRecord::RecordNotFound do
     if @project
@@ -80,11 +80,17 @@ class StagesController < ApplicationController
     head :ok
   end
 
+  def clone
+    @stage = Stage.build_clone(@stage)
+    render :new
+  end
+
   private
 
   def stage_params
     params.require(:stage).permit(
       :name, :command, :confirm,
+      :production,
       :notify_email_address,
       :deploy_on_release,
       :datadog_tags,

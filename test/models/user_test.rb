@@ -34,6 +34,7 @@ describe User do
         name: "Test User",
         email: "test@example.org",
         role_id: Role::ADMIN.id,
+        external_id: 'strange-bug',
       }}
 
       it "creates a new user" do
@@ -45,7 +46,7 @@ describe User do
       end
 
       it "sets the role_id" do
-        user.role_id.must_equal(Role::SUPER_ADMIN.id)
+        user.role_id.must_equal(Role::ADMIN.id)
       end
     end
 

@@ -1,7 +1,7 @@
 <% if can_modify_roles? %>
 
   <% Role.all.each do |role| %>
-    <label class="radio-inline">
+    <label class="radio-inline" ng-click="updateUser($event)">
       <%= radio_button_tag "users[#{user.id}][role]", role.id, user.role_id == role.id %>
       <%= role.name %>
     </label>

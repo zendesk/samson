@@ -206,4 +206,28 @@ describe Stage do
       subject.send_datadog_notifications?.must_equal false
     end
   end
+
+  describe ".build_clone" do
+    before do
+      subject.notify_email_address = "test@test.ttt"
+      subject.flowdock_flows = [FlowdockFlow.new(name: "test", token: "abcxyz", stage_id: subject.id)]
+      subject.datadog_tags = "xyz:abc"
+      subject.new_relic_applications = [NewRelicApplication.new(name: "test", stage_id: subject.id)]
+      subject.save
+
+      @clone = Stage.build_clone(subject)
+    end
+
+    it "returns an unsaved copy of the given stage with exactly the same everything except id" do
+      assert_equal @clone.attributes, subject.attributes
+    end
+
+    it "copies over the flowdock flows" do
+      assert_equal @clone.flowdock_flows.map(&:attributes), subject.flowdock_flows.map(&:attributes)
+    end
+
+    it "copies over the new relic applications" do
+      assert_equal @clone.new_relic_applications.map(&:attributes), subject.new_relic_applications.map(&:attributes)
+    end
+  end
 end
