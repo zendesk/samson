@@ -104,22 +104,10 @@ describe DeployMailer do
       ActionMailer::Base.deliveries.first
     end
 
-    it 'is from deploys@' do
-      subject.from.must_equal(['deploys@samson-deployment.com'])
-    end
-
     it 'sends to bypass_email_address, jira_email_address' do
-      subject.to.to_s.must_match /test1@test.com/
-      subject.to.to_s.must_match /test3@test.com/
+      subject.to.must_equal(['test1@test.com', 'test3@test.com'])
     end
 
-    it 'CCs user email' do
-      subject.cc.must_equal(['user_email@test.com'])
-    end
-
-    it 'sets a bypass subject' do
-      subject.subject.must_match /BYPASS/
-    end
   end
 
 end
