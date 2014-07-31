@@ -18,7 +18,7 @@ class DeployMailer < ActionMailer::Base
     subject = "[BYPASS][#{Rails.application.config.samson.email_prefix}] #{deploy.summary_for_email}"
 
     to_email = [BuddyCheck.bypass_email_address]
-    to_email << BuddyCheck.bypass_jira_email_address if BuddyCheck.jira_email_required?
+    to_email << BuddyCheck.bypass_jira_email_address if BuddyCheck.bypass_jira_email_address
 
     mail(to: to_email, cc: user.email, subject: subject)
   end

@@ -47,7 +47,6 @@ describe DeployMailer do
 
     before do
       BuddyCheck.stubs(:bypass_email_address).returns("test1@test.com")
-      BuddyCheck.stubs(:jira_email_required?).returns(false)
 
       user.update_attributes!(email: 'user_email@test.com')
 
@@ -90,7 +89,6 @@ describe DeployMailer do
     before do
       BuddyCheck.stubs(:bypass_email_address).returns("test1@test.com")
       BuddyCheck.stubs(:bypass_jira_email_address).returns("test3@test.com")
-      BuddyCheck.stubs(:jira_email_required?).returns(true)
 
       user.update_attributes!(email: 'user_email@test.com')
 
