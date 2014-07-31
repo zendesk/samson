@@ -1,6 +1,7 @@
 class Deploy < ActiveRecord::Base
   belongs_to :stage, touch: true
   belongs_to :job
+  belongs_to :buddy, class_name: 'User'
 
   default_scope { order(created_at: :desc, id: :desc) }
 
@@ -10,7 +11,7 @@ class Deploy < ActiveRecord::Base
   delegate :started_by?, :stop!, :status, :user, :output, to: :job
   delegate :active?, :pending?, :running?, :cancelling?, :cancelled?, :succeeded?, to: :job
   delegate :finished?, :errored?, :failed?, to: :job
-  delegate :project, to: :stage
+  delegate :production?, :project, to: :stage
 
   def cache_key
     [self, commit]
@@ -52,8 +53,34 @@ class Deploy < ActiveRecord::Base
     @changeset ||= Changeset.find(project.github_repo, previous_commit, commit)
   end
 
+  def production
+    stage.production?
+  end
+
+  def confirm_buddy!(buddy)
+    update_attributes(buddy: buddy, started_at: Time.now)
+    DeployService.new(project, user).confirm_deploy!(self, stage, reference, buddy)
+  end
+
+  def pending_non_production?
+    pending? && !stage.production?
+  end
+
+  def pending_start!()
+    update_attributes(updated_at: Time.now)       # hack: refresh is immediate with update
+    DeployService.new(project, user).confirm_deploy!(self, stage, reference, buddy)
+  end
+
+  def waiting_for_buddy?
+    pending? && stage.production?
+  end
+
+  def can_be_stopped_by?(user)
+    started_by?(user) || user.is_admin?
+  end
+
   def self.active
-    includes(:job).where(jobs: { status: %w[pending running] })
+    includes(:job).where(jobs: { status: %w[pending running cancelling] })
   end
 
   def self.running
@@ -66,6 +93,11 @@ class Deploy < ActiveRecord::Base
 
   def self.prior_to(deploy)
     where("#{table_name}.id < ?", deploy.id)
+  end
+
+  def self.expired
+    threshold = BuddyCheck.deploy_max_minutes_pending.minutes.ago
+    joins(:job).where(jobs: { status: 'pending'} ).where("jobs.created_at < ?", threshold)
   end
 
   private

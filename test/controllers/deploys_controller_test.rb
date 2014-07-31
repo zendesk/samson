@@ -230,8 +230,8 @@ describe DeploysController do
           delete :destroy, project_id: project.id, id: deploy.to_param
         end
 
-        it "responds with 200" do
-          response.status.must_equal(200)
+        it "cancels a deploy" do
+          flash[:error].must_be_nil
         end
       end
 
@@ -243,8 +243,8 @@ describe DeploysController do
           delete :destroy, project_id: project.id, id: deploy.to_param
         end
 
-        it "responds with 403" do
-          response.status.must_equal(403)
+        it "doesn't cancel the deloy" do
+          flash[:error].wont_be_nil
         end
       end
     end
@@ -258,8 +258,8 @@ describe DeploysController do
           delete :destroy, project_id: project.id, id: deploy.to_param
         end
 
-        it "responds ok" do
-          response.status.must_equal(200)
+        it "cancels the deploy" do
+          flash[:error].must_be_nil
         end
       end
     end

@@ -1,0 +1,17 @@
+<div class="row deploy-check">
+  <% if @deploy.started_by?(current_user) %>
+    <p>This deploy hits production, so requires a deploy buddy. Please have another engineer with deploy rights visit this URL to kick off the deploy.</p>
+    <div class="deployer-stop">
+      <%= link_to "Stop", project_deploy_path(@project, @deploy), method: :delete, class: "btn btn-danger btn-xl" %>
+      or
+      <%= link_to "Bypass", buddy_check_project_deploy_path(@project, @deploy), method: :post, class: "btn btn-danger" %>
+    </div>
+  <% elsif current_user.is_deployer? %>
+    <p>This deploy hits production, so requires a deploy buddy. Could that be you?</p>
+    <div class="buddy-approval">
+      <%= link_to "Approve", buddy_check_project_deploy_path(@project, @deploy), method: :post, class: "btn btn-primary btn-xl" %>
+    </div>
+  <% else %>
+    <p>This deploy hits production, so requires a deploy buddy. (Someone with deploy rights or greater.)</p>
+  <% end %>
+</div>

@@ -3,12 +3,6 @@ JobExecution.setup
 if !Rails.env.test? && Job.table_exists?
   JobExecution.enabled = true
 
-  Rails.application.config.after_initialize do
-    Job.pending.each do |job|
-      JobExecution.start_job(job.deploy.try(:reference) || job.commit, job)
-    end
-  end
-
   Signal.trap('SIGUSR1') do
     if JobExecution.enabled
       # Disable new job execution

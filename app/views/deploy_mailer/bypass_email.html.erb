@@ -1,0 +1,13 @@
+<h1>
+  Deploy buddy system bypassed by <%= @deploy.user.name %>
+</h1>
+
+<p>The deploy buddy system has just been bypassed by <%= @deploy.user.name %>.</p>
+
+<p>The deploy can be viewed <%= link_to 'here', project_deploy_url(@project, @deploy) %></p>
+
+<h3>Risk</h3>
+<%= render 'changeset/risks', pull_requests: @changeset.risky_pull_requests, type: "deploy" %>
+
+<h3>Commits</h3>
+<%= render 'changeset/commits', changeset: @changeset %>

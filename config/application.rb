@@ -21,6 +21,8 @@ module Samson
     # config.i18n.default_locale = :de
     #
 
+    config.autoload_paths += Dir["#{config.root}/lib/**/"]
+
     config.cache_store = :dalli_store, { value_max_bytes: 3000000, compress: true }
 
     # Allow streaming

@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20140520043144) do
+ActiveRecord::Schema.define(version: 20140717013754) do
 
   create_table "commands", force: true do |t|
     t.text     "command",    limit: 16777215
@@ -26,6 +26,8 @@ ActiveRecord::Schema.define(version: 20140520043144) do
     t.string   "reference",  null: false
     t.datetime "created_at"
     t.datetime "updated_at"
+    t.integer  "buddy_id"
+    t.datetime "started_at"
   end
 
   add_index "deploys", ["created_at"], name: "index_deploys_on_created_at", using: :btree
@@ -112,6 +114,7 @@ ActiveRecord::Schema.define(version: 20140520043144) do
     t.string   "datadog_tags"
     t.boolean  "update_github_pull_requests"
     t.boolean  "deploy_on_release",           default: false
+    t.boolean  "production",                  default: false
   end
 
   create_table "stars", force: true do |t|
