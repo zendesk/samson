@@ -9,6 +9,23 @@ module DeploysHelper
     "#{@deploy.stage.name} deploy (#{@deploy.status}) - #{@project.name}"
   end
 
+  def link_to_deploy_next_stage(deploy)
+    if deploy.succeeded? && next_stage = deploy.stage.next_stage
+      unless next_stage.locked?
+        title = "Deploy #{deploy.short_reference} to #{next_stage.name}"
+        deploy_params = { reference: deploy.short_reference, stage_id: next_stage.id }
+
+        if next_stage.confirm_before_deploying?
+          path = new_project_deploy_path(deploy.project, deploy_params)
+          link_to title, path, class: "btn btn-primary"
+        else
+          path = project_deploys_path(deploy.project, deploy: deploy_params)
+          link_to title, path, method: :post, class: "btn btn-primary"
+        end
+      end
+    end
+  end
+
   def file_status_label(status)
     mapping = {
       "added"    => "success",
@@ -30,6 +47,8 @@ module DeploysHelper
   end
 
   def github_user_avatar(user)
+    return if user.nil?
+
     link_to user.url, title: user.login do
       image_tag user.avatar_url, width: 20, height: 20
     end

@@ -10,9 +10,9 @@ group :mysql2 do
   gem 'mysql2', '~> 0.3'
 end
 
-group :postgres do
-  gem 'pg', '~>0.13.2'
-end
+# group :postgres do
+#   gem 'pg', '~>0.13.2'
+# end
 
 group :sqlite do
   gem "sqlite3"

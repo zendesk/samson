@@ -8,6 +8,8 @@ class DeploysController < ApplicationController
   before_filter :find_project
   before_filter :find_deploy, except: [:index, :recent, :active, :new, :create, :confirm]
 
+  helper_method :can_stop_deploy?
+
   def index
     @page = params[:page]
     @deploys = @project.deploys.includes(:stage, job: :user).page(@page)
@@ -108,7 +110,7 @@ class DeploysController < ApplicationController
   end
 
   def destroy
-    if @deploy.can_be_stopped_by?(current_user)
+    if can_stop_deploy?
       @deploy.stop!
     else
       flash[:error] = "You do not have privileges to stop this deploy."
@@ -128,6 +130,10 @@ class DeploysController < ApplicationController
 
   def find_deploy
     @deploy = Deploy.includes(stage: [:new_relic_applications]).find(params[:id])
+  end
+
+  def can_stop_deploy?
+    @deploy.started_by?(current_user) || current_user.is_admin?
   end
 
 end
