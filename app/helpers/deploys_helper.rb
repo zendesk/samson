@@ -55,27 +55,29 @@ module DeploysHelper
   end
 
   def deploy_status_panel(deploy)
-    mapping = {
-      "succeeded" => "success",
-      "failed"    => "danger",
-      "errored"   => "warning"
-    }
+    deploy_status_panel_common(deploy, BuddyCheck.enabled?)
+  end
 
-    status = mapping.fetch(deploy.status, "info")
+  def buddy_check_button(project, deploy)
+    return nil unless deploy.waiting_for_buddy?
 
-    if deploy.finished?
-      content = "#{deploy.summary} "
-      content << content_tag(:span, deploy.created_at.rfc822, data: { time: datetime_to_js_ms(deploy.created_at) }, class: 'mouseover')
-      content << ", it took #{duration_text(deploy)}"
+    button_class = ['btn']
+
+    if @deploy.started_by?(current_user)
+      button_text = 'Bypass'
+      button_class << 'btn-danger'
     else
-      content = deploy.summary
+      button_text = 'Approve'
+      button_class << 'btn-primary'
     end
 
-    content_tag :div, content.html_safe, class: "alert alert-#{status}"
+    link_to button_text, buddy_check_project_deploy_path(@project, @deploy), method: :post, class: button_class.join(' ')
   end
 
   def duration_text(deploy)
-    seconds  = (deploy.updated_at - deploy.created_at).to_i
+    dt_start = BuddyCheck.enabled? ? deploy.started_at || deploy.updated_at : deploy.created_at
+    seconds  = (deploy.updated_at - dt_start).to_i
+
     duration = ""
 
     if seconds > 60
@@ -97,4 +99,32 @@ module DeploysHelper
       [stage.name, stage.id, 'data-confirmation' => stage.confirm?]
     end
   end
+
+  private
+
+    def deploy_status_panel_common(deploy, enabled, hash = { "cancelled" => "danger" } )
+      mapping = {
+        "succeeded" => "success",
+        "failed"    => "danger",
+        "errored"   => "warning",
+      }
+
+      mapping = mapping.merge(hash) if enabled
+
+      content, status = content_no_buddy_check(deploy)
+
+      content ||= deploy.summary
+      status ||= mapping.fetch(deploy.status, "info")
+
+      content_tag :div, content.html_safe, class: "alert alert-#{status}"
+    end
+
+    def content_no_buddy_check(deploy)
+      if deploy.finished?
+        content = "#{deploy.summary} "
+        content << content_tag(:span, deploy.created_at.rfc822, data: { time: datetime_to_js_ms(deploy.created_at) })
+        content << ", it took #{duration_text(deploy)}."
+      end
+    end
+
 end

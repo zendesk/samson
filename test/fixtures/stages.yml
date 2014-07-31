@@ -1,3 +1,4 @@
 test_staging:
   name: Staging
   project: test
+  confirm: false

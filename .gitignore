@@ -31,3 +31,12 @@
 
 # Ignore editor files
 *.sw[oap]
+
+# Ignore tags/ctags file
+/tags
+
+# Ignore temp devel files
+/routes.txt
+
+# .bak files
+*.bak

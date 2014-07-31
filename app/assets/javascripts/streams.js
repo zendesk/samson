@@ -12,26 +12,27 @@ $(document).ready(timeAgoFormat);
 
 function startStream() {
   $(document).ready(function() {
-    var messages = $("#messages");
+    var $messages = $("#messages");
     var streamUrl = $("#output").data("streamUrl");
     var source = new EventSource(streamUrl);
 
     var addLine = function(data) {
       var msg = JSON.parse(data).msg;
-      messages.append(msg);
+      $messages.append(msg);
       if (following) {
-        messages.scrollTop(messages[0].scrollHeight);
+        $messages.scrollTop($messages[0].scrollHeight);
       }
     };
 
     source.addEventListener('append', function(e) {
+      $messages.trigger('contentchanged');
       addLine(e.data);
     }, false);
 
     source.addEventListener('viewers', function(e) {
       var users = JSON.parse(e.data);
 
-      if(users.length > 0) {
+      if (users.length > 0) {
         var viewers = $.map(users, function(user) {
           return user.name;
         }).join(', ') + '.';
@@ -45,7 +46,7 @@ function startStream() {
     }, false);
 
     source.addEventListener('replace', function(e) {
-      messages.children().last().remove();
+      $messages.children().last().remove();
       addLine(e.data);
     }, false);
 

@@ -1,0 +1,38 @@
+#
+# The following crontab removes all deploys that are in a pending state longer
+# than N minutes.  (N is configurable in the .env file; see .env.example for more
+# information.)
+#
+# As you can see, the cron runs every 5 minutes; on each run, the rake task stops
+# deploys that have been in a pending state for > N minutes.  A suggested value
+# for N is 20.
+#
+# An explanation (and examples) of the components that make up the crontab are
+# given below.
+#
+# part_1: setting up the environment for rbenv or rvm
+# - example: part_1 = < . /opt/boxen/env.sh >
+#
+# part_2: your samson directory
+# - example: < /Users/username/git/samson >
+#
+# part_3: rake command for production environment
+# - example: < bundle exec rake RAIL_ENV=production deploys:stop_expired_deploys >
+#
+# part_3: rake command for development environment
+# - example: < bundle exec rake RAIL_ENV=development deploys:stop_expired_deploys >
+#
+# Note: rake task name is < deploys:stop_expired_deploys >
+#
+#
+# general form of the crontab
+#
+# */5 * * * * /bin/bash -c 'part_1 ; cd part_2 ; part_3'
+#
+# full example:
+#
+# */5 * * * * /bin/bash -c '. /opt/boxen/env.sh; cd /Users/username/git/samson; bundle exec rake RAILS_ENV=production deploys:stop_expired_deploys'
+#
+# When you want to dump the output of the cron
+# */5 * * * * /bin/bash -c '. /opt/boxen/env.sh; cd /Users/username/git/samson; bundle exec rake RAILS_ENV=production deploys:stop_expired_deploys >> /tmp/samson_cron.log 2>&1'
+

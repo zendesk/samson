@@ -1,7 +1,8 @@
 <h1>
   <%= @project.name %>
   <div class="pull-right">
-    <% unless @deploy.succeeded? || @deploy.running? %>
+
+    <% unless @deploy.succeeded? || @deploy.active? %>
       <%= link_to "Redeploy", project_deploys_path(@project, deploy: { reference: @deploy.reference, stage_id: @deploy.stage_id }), method: :post, class: "btn btn-danger" %>
     <% end %>
 

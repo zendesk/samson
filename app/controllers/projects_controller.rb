@@ -77,6 +77,7 @@ class ProjectsController < ApplicationController
       :release_branch,
       stages_attributes: [
         :name, :confirm, :command,
+        :production,
         :deploy_on_release,
         :notify_email_address,
         :datadog_tags,

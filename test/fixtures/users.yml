@@ -14,6 +14,11 @@ deployer:
   email: "deployer@example.com"
   role_id: <%= Role::DEPLOYER.id %>
   external_id: 'test-2'
+deployer_buddy:
+  name: "DeployerBuddy"
+  email: "deployerbuddy@example.com"
+  role_id: <%= Role::DEPLOYER.id %>
+  external_id: 'test-21'
 viewer:
   name: "Viewer"
   email: "viewer@example.com"
