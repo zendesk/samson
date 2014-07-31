@@ -1,6 +1,6 @@
 before_script:
   - cp config/database.travis.yml config/database.yml
-  - bundle exec rake db:create
+  - sh -c "if [ '$DB' != 'sqlite' ]; then bundle exec rake db:create; fi"
   - npm install
 env:
   matrix:
