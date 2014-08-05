@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20140717013754) do
+ActiveRecord::Schema.define(version: 20140804204455) do
 
   create_table "commands", force: true do |t|
     t.text     "command",    limit: 16777215
@@ -28,6 +28,7 @@ ActiveRecord::Schema.define(version: 20140717013754) do
     t.datetime "updated_at"
     t.integer  "buddy_id"
     t.datetime "started_at"
+    t.datetime "deleted_at"
   end
 
   add_index "deploys", ["created_at"], name: "index_deploys_on_created_at", using: :btree
