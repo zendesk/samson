@@ -7,7 +7,7 @@ gem 'puma'
 gem 'dotenv-rails', '~> 0.9'
 
 group :mysql2 do
-  gem 'mysql2', '~> 0.3'
+  gem 'mysql2', '~> 0.3', :git => 'git@github.com:brianmario/mysql2.git'
 end
 
 # group :postgres do

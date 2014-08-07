@@ -1,4 +1,10 @@
 GIT
+  remote: git@github.com:brianmario/mysql2.git
+  revision: 3f93699b43bb5882e1b3efc6e0c896a295567f67
+  specs:
+    mysql2 (0.3.16)
+
+GIT
   remote: git@github.com:zendesk/zendesk_deployment.git
   revision: c8a8ce30e3dde7868f13282f4adc436679a6e8ac
   ref: v1.10.13
@@ -145,7 +151,6 @@ GEM
     multi_json (1.10.0)
     multi_xml (0.5.5)
     multipart-post (2.0.0)
-    mysql2 (0.3.15)
     net-http-persistent (2.9.4)
     net-scp (1.2.1)
       net-ssh (>= 2.6.5)
@@ -291,7 +296,7 @@ DEPENDENCIES
   logstash-event
   minitest-rails (~> 2.0.0.beta1)
   momentjs-rails
-  mysql2 (~> 0.3)
+  mysql2 (~> 0.3)!
   net-http-persistent
   newrelic_api
   newrelic_rpm (>= 3.7.1)
