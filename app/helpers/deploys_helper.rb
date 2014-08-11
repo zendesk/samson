@@ -38,7 +38,7 @@ module DeploysHelper
   end
 
   def deploy_status_panel(deploy)
-    deploy_status_panel_common(deploy, BuddyCheck.enabled?)
+    sanitize deploy_status_panel_common(deploy, BuddyCheck.enabled?)
   end
 
   def buddy_check_button(project, deploy)
