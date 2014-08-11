@@ -114,7 +114,6 @@ class JobExecutionTest < ActiveSupport::TestCase
 
   it "maintains a cache of build artifacts between runs" do
     job.command = "echo hello > $CACHE_DIR/foo"
-
     execute_job
 
     job.command = "cat $CACHE_DIR/foo"
