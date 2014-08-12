@@ -64,7 +64,7 @@ class TerminalExecutor
 RETVAL=$?
 if [ "$RETVAL" != "0" ];
 then
-echo '#{error(command)}' >&2
+echo #{error(command)} >&2
 exit $RETVAL
 fi
     G
