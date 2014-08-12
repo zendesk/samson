@@ -16,14 +16,13 @@ module JobsHelper
 
     status = mapping.fetch(job.status, "info")
 
-    content = job.summary
+    content = h job.summary
 
     if job.finished?
       content << " "
       content << content_tag(:span, job.created_at.rfc822, data: { time: datetime_to_js_ms(job.created_at) }, class: 'mouseover')
     end
 
-    content = sanitize content
     content_tag :div, content.html_safe, class: "alert alert-#{status}"
   end
 end

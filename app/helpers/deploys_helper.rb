@@ -38,7 +38,7 @@ module DeploysHelper
   end
 
   def deploy_status_panel(deploy)
-    sanitize deploy_status_panel_common(deploy, BuddyCheck.enabled?)
+    deploy_status_panel_common(deploy, BuddyCheck.enabled?)
   end
 
   def buddy_check_button(project, deploy)
@@ -96,7 +96,7 @@ module DeploysHelper
 
       content, status = content_no_buddy_check(deploy)
 
-      content ||= deploy.summary
+      content ||= h deploy.summary
       status ||= mapping.fetch(deploy.status, "info")
 
       content_tag :div, content.html_safe, class: "alert alert-#{status}"
@@ -104,7 +104,7 @@ module DeploysHelper
 
     def content_no_buddy_check(deploy)
       if deploy.finished?
-        content = "#{deploy.summary} "
+        content = h "#{deploy.summary} "
         content << content_tag(:span, deploy.created_at.rfc822, data: { time: datetime_to_js_ms(deploy.created_at) })
         content << ", it took #{duration_text(deploy)}."
       end

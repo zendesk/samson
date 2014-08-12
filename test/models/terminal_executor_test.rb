@@ -30,7 +30,7 @@ describe TerminalExecutor do
     end
 
     it 'does not execute the other commands' do
-      output.string.must_equal("Failed to execute \"false\"\r\n")
+      output.string.must_equal("Failed to execute false\r\n")
     end
   end
 

@@ -114,7 +114,7 @@ class JobExecution
     commands = [
       "export DEPLOYER=#{@job.user.email.shellescape}",
       "export DEPLOYER_EMAIL=#{@job.user.email.shellescape}",
-      "export DEPLOYER_NAME=\"#{@job.user.name.shellescape}\"",
+      "export DEPLOYER_NAME=#{@job.user.name.shellescape}",
       "export REVISION=#{@reference.shellescape}",
       "export CACHE_DIR=#{artifact_cache_dir}",
       "cd #{dir}",
