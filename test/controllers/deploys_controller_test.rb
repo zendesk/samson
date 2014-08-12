@@ -238,13 +238,12 @@ describe DeploysController do
       describe "with a deploy not owned by the deployer" do
         setup do
           Deploy.any_instance.stubs(:started_by?).returns(false)
-          User.any_instance.stubs(:is_admin?).returns(false)
 
           delete :destroy, project_id: project.id, id: deploy.to_param
         end
 
-        it "doesn't cancel the deloy" do
-          flash[:error].wont_be_nil
+        it "cancels a deploy" do
+          flash[:error].must_be_nil
         end
       end
     end

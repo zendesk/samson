@@ -10,6 +10,8 @@
     <p>This deploy hits production, so requires a deploy buddy. Could that be you?</p>
     <div class="buddy-approval">
       <%= link_to "Approve", buddy_check_project_deploy_path(@project, @deploy), method: :post, class: "btn btn-primary btn-xl" %>
+      or
+      <%= link_to "Stop", project_deploy_path(@project, @deploy), method: :delete, class: "btn btn-danger btn-xl" %>
     </div>
   <% else %>
     <p>This deploy hits production, so requires a deploy buddy. (Someone with deploy rights or greater.)</p>
