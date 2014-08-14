@@ -1,5 +1,6 @@
 require 'thread_safe'
 require 'airbrake'
+require 'shellwords'
 
 class JobExecution
   # Whether or not execution is enabled. This allows completely disabling job
@@ -111,10 +112,10 @@ class JobExecution
     @output.write("Executing deploy\n")
 
     commands = [
-      "export DEPLOYER=#{@job.user.email}",
-      "export DEPLOYER_EMAIL=#{@job.user.email}",
-      "export DEPLOYER_NAME=\"#{@job.user.name}\"",
-      "export REVISION=#{@reference}",
+      "export DEPLOYER=#{@job.user.email.shellescape}",
+      "export DEPLOYER_EMAIL=#{@job.user.email.shellescape}",
+      "export DEPLOYER_NAME=#{@job.user.name.shellescape}",
+      "export REVISION=#{@reference.shellescape}",
       "export CACHE_DIR=#{artifact_cache_dir}",
       "cd #{dir}",
       *@job.commands
@@ -125,7 +126,7 @@ class JobExecution
   end
 
   def setup!(dir)
-    repo_url = @job.project.repository_url
+    repo_url = @job.project.repository_url.shellescape
     @output.write("Beginning git repo setup\n")
 
     commands = [
@@ -138,7 +139,7 @@ class JobExecution
       SHELL
       "git clone #{repo_cache_dir} #{dir}",
       "cd #{dir}",
-      "git checkout --quiet #{@reference}"
+      "git checkout --quiet #{@reference.shellescape}"
     ]
 
     @output.write("Attempting to lock repository...\n")
