@@ -1,3 +1,5 @@
+require 'shellwords'
+
 class ReleaseTagger
   Error = Class.new(StandardError)
   InvalidCommit = Class.new(Error)
@@ -10,8 +12,8 @@ class ReleaseTagger
     command = <<-SH
       test -f /home/deploy/bin/create_ssh_environment.sh && source /home/deploy/bin/create_ssh_environment.sh || true
 
-      git tag -f #{release.version} #{release.commit}
-      git push #{@project.repository_url} #{release.version}
+      git tag -f #{release.version} #{release.commit.shellescape}
+      git push #{@project.repository_url.shellescape} #{release.version}
     SH
 
     job = @project.jobs.create!(user: release.author, command: command)
