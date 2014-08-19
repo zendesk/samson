@@ -11,6 +11,8 @@ class JobExecutionTest < ActiveSupport::TestCase
   let(:execution) { JobExecution.new("master", job) }
 
   before do
+    user.name = "John Doe"
+    user.email = "jdoe@test.com"
     deploy = Deploy.create!(stage: stage, job: job, reference: "masterCADF")
     JobExecution.enabled = true
     execute_on_remote_repo <<-SHELL

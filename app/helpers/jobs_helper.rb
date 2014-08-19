@@ -16,7 +16,7 @@ module JobsHelper
 
     status = mapping.fetch(job.status, "info")
 
-    content = job.summary
+    content = h job.summary
 
     if job.finished?
       content << " "
