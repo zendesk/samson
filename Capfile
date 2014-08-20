@@ -25,6 +25,15 @@ namespace :deploy do
     check_services_failure = " || echo 'Failure ignored'" if allow_check_services_failure
     run "sudo /usr/local/bin/check_services #{application}#{check_services_failure}"
   end
+
+  task :force_restart, :except => { :no_release => true } do
+    logger.info "Restarting #{application}"
+    run "sudo sv force-restart /etc/service/#{application}"
+
+    logger.info "Checking #{application}"
+    check_services_failure = " || echo 'Failure ignored'" if allow_check_services_failure
+    run "sudo /usr/local/bin/check_services #{application}#{check_services_failure}"
+  end
 end
 
 namespace :samson do
