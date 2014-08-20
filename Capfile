@@ -17,16 +17,22 @@ set :user, 'deploy'
 set :check_for_pending_migrations?, false
 
 namespace :deploy do
-  task :restart do
-    sudo "/etc/init.d/puma.samson restart"
+  task :restart, :except => { :no_release => true } do
+    logger.info "Restarting #{application}"
+    run "sudo sv 1 /etc/service/#{application}"
+
+    logger.info "Checking #{application}"
+    check_services_failure = " || echo 'Failure ignored'" if allow_check_services_failure
+    run "sudo /usr/local/bin/check_services #{application}#{check_services_failure}"
   end
 
-  task :start do
-    sudo "/etc/init.d/puma.samson start"
-  end
+  task :force_restart, :except => { :no_release => true } do
+    logger.info "Restarting #{application}"
+    run "sudo sv force-restart /etc/service/#{application}"
 
-  task :stop do
-    sudo "/etc/init.d/puma.samson stop"
+    logger.info "Checking #{application}"
+    check_services_failure = " || echo 'Failure ignored'" if allow_check_services_failure
+    run "sudo /usr/local/bin/check_services #{application}#{check_services_failure}"
   end
 end
 
