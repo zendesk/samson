@@ -62,7 +62,7 @@ This is a personal access token that Samson uses to access project repositories,
 
 ##### GitHub OAuth (mandatory)
 
-*GITHUB_CLIENT_ID* and *GITHUB_CLIENT_SECRET*
+*GITHUB_CLIENT_ID* and *GITHUB_SECRET*
 
 * Navigate to [https://github.com/settings/applications](https://github.com/settings/applications) and register a new Github application
 * Set the Homepage URL to http://localhost:9080
