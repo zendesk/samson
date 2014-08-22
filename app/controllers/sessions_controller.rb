@@ -16,6 +16,13 @@ class SessionsController < ApplicationController
   end
 
   def google
+    unless allowed_to_login
+      logout!
+
+      flash[:error] = "Only #{ENV["RESTRICT_EMAIL_DOMAIN"]} users are allowed to login"
+      render :new 
+      return false
+    end
     login_user(role_id: Role::VIEWER.id)
   end
 
@@ -32,6 +39,14 @@ class SessionsController < ApplicationController
   end
 
   protected
+
+  def allowed_to_login
+    return false if request.env["omniauth.auth"].nil?
+    if ENV["RESTRICT_EMAIL_DOMAIN"] 
+      return request.env["omniauth.auth"]["info"]["email"].end_with?(ENV["RESTRICT_EMAIL_DOMAIN"])
+    end
+    return true
+  end
 
   def auth_hash
     request.env['omniauth.auth']
