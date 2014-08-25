@@ -1,4 +1,5 @@
 require 'pty'
+require 'shellwords'
 
 # Executes commands in a fake terminal. The output will be streamed to a
 # specified IO-like object.
@@ -64,7 +65,7 @@ class TerminalExecutor
 RETVAL=$?
 if [ "$RETVAL" != "0" ];
 then
-echo #{error(command)} >&2
+echo #{error(command.shellescape)} >&2
 exit $RETVAL
 fi
     G
