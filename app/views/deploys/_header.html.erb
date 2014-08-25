@@ -2,13 +2,15 @@
   <%= @project.name %>
   <div class="pull-right">
 
-    <% unless @deploy.succeeded? || @deploy.active? %>
-      <%= link_to "Redeploy", project_deploys_path(@project, deploy: { reference: @deploy.reference, stage_id: @deploy.stage_id }), method: :post, class: "btn btn-danger" %>
-    <% end %>
+    <% unless current_user.is_viewer? %>
+      <% unless @deploy.succeeded? || @deploy.active? %>
+        <%= link_to "Redeploy", project_deploys_path(@project, deploy: { reference: @deploy.reference, stage_id: @deploy.stage_id }), method: :post, class: "btn btn-danger" %>
+      <% end %>
 
-    <% if @deploy.succeeded? && next_stage = @deploy.stage.next_stage %>
-      <% unless next_stage.locked? %>
-        <%= link_to "Deploy #{@deploy.short_reference} to #{next_stage.name}", new_project_deploy_path(@project, reference: @deploy.short_reference, stage_id: next_stage.id), class: "btn btn-primary" %>
+      <% if @deploy.succeeded? && next_stage = @deploy.stage.next_stage %>
+        <% unless next_stage.locked? %>
+          <%= link_to "Deploy #{@deploy.short_reference} to #{next_stage.name}", new_project_deploy_path(@project, reference: @deploy.short_reference, stage_id: next_stage.id), class: "btn btn-primary" %>
+        <% end %>
       <% end %>
     <% end %>
 
