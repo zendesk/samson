@@ -1,7 +1,7 @@
 GIT
   remote: https://github.com/dasch/sawyer.git
-  revision: d71998f5829007ccd911adf17cf695d604d13619
-  branch: dasch/fix-marshal-problem
+  revision: 5f21bf1b4dbbcee76ad2f1cdfd184b3a14995faf
+  tag: v0.5.3
   specs:
     sawyer (0.5.3)
       addressable (~> 2.3.5)
