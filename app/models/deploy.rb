@@ -78,7 +78,7 @@ class Deploy < ActiveRecord::Base
   end
 
   def can_be_stopped_by?(user)
-    started_by?(user) || user.is_admin? || user.is_deployer?
+    started_by?(user) || user.is_admin? || (waiting_for_buddy? && user.is_deployer?)
   end
 
   def self.active
