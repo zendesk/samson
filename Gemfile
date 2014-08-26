@@ -23,7 +23,7 @@ gem 'soft_deletion', '~> 0.4'
 gem 'dalli', '~> 2.7.0'
 gem 'active_model_serializers', '~> 0.8.0'
 
-gem 'sawyer', '~>0.5.5'
+gem 'sawyer', '~> 0.5.5'
 
 # Logging
 gem 'lograge'
