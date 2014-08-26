@@ -23,10 +23,7 @@ gem 'soft_deletion', '~> 0.4'
 gem 'dalli', '~> 2.7.0'
 gem 'active_model_serializers', '~> 0.8.0'
 
-# We need this specific version of Sawyer (which Octokit uses) because it supports
-# marshalling resources, which we use when caching responses. Once that's been released
-# we can use a normal gem version again.
-gem 'sawyer', '>= 0.5.5'
+gem 'sawyer', '~> 0.5.5'
 
 # Logging
 gem 'lograge'
