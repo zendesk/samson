@@ -267,7 +267,7 @@ DEPENDENCIES
   rails_12factor
   rickshaw_rails
   sass-rails (~> 4.0.0)
-  sawyer (>= 0.5.5)
+  sawyer (~> 0.5.5)
   simplecov
   soft_deletion (~> 0.4)
   sqlite3
