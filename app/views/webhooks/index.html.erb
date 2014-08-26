@@ -8,6 +8,7 @@
     <dt>Semaphore:</dt><dd><%= link_to integrations_semaphore_deploy_url(@project.token) %></dd>
     <dt>Tddium:</dt><dd><%= link_to integrations_tddium_deploy_url(@project.token) %></dd>
     <dt>Travis:</dt><dd><%= link_to integrations_travis_deploy_url(@project.token) %></dd>
+    <dt>Jenkins:</dt><dd><%= link_to integrations_jenkins_deploy_url(@project.token) %></dd>
   </dl>
 
   <% if @webhooks.any? %>
