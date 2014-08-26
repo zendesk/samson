@@ -7,11 +7,11 @@ describe Integrations::JenkinsController do
   let(:payload) do
     {
       build: {
-          status: "SUCCESS",
-          scm: {
-              commit: 'dc395381e650f3bac18457909880829fc20e34ba',
-              branch: 'origin/dev'
-          }
+        status: "SUCCESS",
+        scm: {
+          commit: 'dc395381e650f3bac18457909880829fc20e34ba',
+          branch: 'origin/dev'
+        }
       }
     }.with_indifferent_access
   end
@@ -40,14 +40,14 @@ describe Integrations::JenkinsController do
       project.deploys.must_equal []
     end
 
-    it "deploys as the Semaphore user" do
+    it "deploys as the Jenkins user" do
       post :create, payload.merge(token: project.token)
 
       user = project.deploys.last.user
       user.name.must_equal "Jenkins"
     end
 
-    it "creates the Semaphore user if it does not exist" do
+    it "creates the Jenkins user if it does not exist" do
       post :create, payload.merge(token: project.token)
 
       User.find_by_name("Jenkins").wont_be_nil
