@@ -20,11 +20,11 @@ class Deploy < ActiveRecord::Base
   end
 
   def summary
-    "#{job.user.name} #{summary_action} #{short_reference} to #{stage.name}"
+    "#{job.user.name} #{summary_action} #{short_reference} to #{stage.name} #{buddy_info}"
   end
 
   def summary_for_timeline
-    "#{short_reference}#{' was' if job.succeeded?} #{summary_action} to #{stage.name}"
+    "#{short_reference}#{' was' if job.succeeded?} #{summary_action} to #{stage.name} #{buddy_info}"
   end
 
   def summary_for_email
@@ -62,6 +62,10 @@ class Deploy < ActiveRecord::Base
   def confirm_buddy!(buddy)
     update_attributes(buddy: buddy, started_at: Time.now)
     DeployService.new(project, user).confirm_deploy!(self, stage, reference, buddy)
+  end
+
+  def canceled_by_buddy!(buddy)
+    update_attributes(buddy: buddy)
   end
 
   def pending_non_production?
@@ -119,6 +123,12 @@ class Deploy < ActiveRecord::Base
       "failed to deploy"
     elsif errored?
       "encountered an error deploying"
+    end
+  end
+
+  def buddy_info
+    if self.buddy
+      "(vetted by #{self.buddy.name})"
     end
   end
 
