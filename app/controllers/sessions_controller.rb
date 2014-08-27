@@ -1,4 +1,5 @@
 require 'omniauth/github_authorization'
+require 'byebug'
 
 class SessionsController < ApplicationController
   before_filter :restrict_end_users, only: :zendesk
