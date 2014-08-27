@@ -17,6 +17,30 @@ describe Admin::UsersController do
     end
   end
 
+  describe 'a json GET to #show' do
+    before do
+      get :index, :format => :json
+    end
+
+    as_a_admin do
+      it 'succeeds' do
+        response.success?.must_equal true
+        json_response = JSON.parse response.body
+        user_list = json_response['users']
+        assert_not_nil user_list
+        user_list.each  do | u |
+          user_info = User.find_by(name: u['name'])
+          assert_not_nil user_info
+          assert_equal user_info.email, u['email']
+        end
+      end
+    end
+
+    as_a_deployer do
+      unauthorized :get, :index, :format => :json
+    end
+  end
+
   describe 'a DELETE to #destroy' do
 
     let(:user) { users(:viewer) }
