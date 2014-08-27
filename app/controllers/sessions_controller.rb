@@ -16,6 +16,7 @@ class SessionsController < ApplicationController
   end
 
   def google
+    return show_login_restriction unless allowed_to_login
     login_user(role_id: Role::VIEWER.id)
   end
 
@@ -33,8 +34,28 @@ class SessionsController < ApplicationController
 
   protected
 
+  def show_login_restriction
+    logout!
+
+    flash[:error] = "Only #{restricted_email_domain} users are allowed to login"
+    render :new 
+    return false
+  end
+
+  def allowed_to_login
+    return false if request.env["omniauth.auth"].nil?
+    if restricted_email_domain
+      return request.env["omniauth.auth"]["info"]["email"].end_with?(restricted_email_domain)
+    end
+    return true
+  end
+
   def auth_hash
     request.env['omniauth.auth']
+  end
+
+  def restricted_email_domain
+    ENV["RESTRICT_EMAIL_DOMAIN"]
   end
 
   def strategy
