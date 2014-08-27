@@ -157,6 +157,8 @@ Set up your webhooks and the deployment process can be automated.
     * However you can have multiple webhooks per organisation
     * Add all webhooks to your organisation
     * Samson will match url to see if the webhook call is for the correct project
+* Jenkins
+    * Setup using the [Notification Plugin](https://wiki.jenkins-ci.org/display/JENKINS/Notification+Plugin)
 
 Skip a deploy:
 
