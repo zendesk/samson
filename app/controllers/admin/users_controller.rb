@@ -5,6 +5,10 @@ class Admin::UsersController < ApplicationController
 
   def index
     @users = User.order(sort_column + ' ' + sort_direction).page(params[:page])
+    respond_to do |format|
+      format.html
+      format.json { render json: @users }
+    end
   end
 
   def update
