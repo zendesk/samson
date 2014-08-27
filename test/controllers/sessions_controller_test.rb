@@ -1,5 +1,4 @@
 require_relative '../test_helper'
-require 'byebug'
 
 describe SessionsController do
   describe "a GET to #new" do
