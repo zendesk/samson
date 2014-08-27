@@ -12,7 +12,6 @@ class SessionsController < ApplicationController
   end
 
   def github
-    return show_login_restriction unless allowed_to_login
     login_user(role_id: github_authorization.role_id)
   end
 
@@ -56,7 +55,7 @@ class SessionsController < ApplicationController
   end
 
   def restricted_email_domain
-    ENV["RESTRICT_EMAIL_DOMAIN"]
+    ENV["GOOGLE_DOMAIN"]
   end
 
   def strategy

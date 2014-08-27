@@ -40,7 +40,6 @@ describe SessionsController do
 
     setup do
       @controller.stubs(github_authorization: stub(role_id: Role::VIEWER.id))
-      @controller.stubs(:restricted_email_domain).returns(nil) 
 
       @request.env.merge!(env)
       @request.env.merge!('omniauth.auth' => auth_hash)
@@ -66,13 +65,13 @@ describe SessionsController do
     end
   end
 
-  describe "a POST to #github with email restriction" do
+  describe "a POST to #google" do
     let(:env) {{}}
-    let(:user) { users(:github_viewer) }
-    let(:strategy) { stub(name: 'github') }
+    let(:user) { users(:zendesk_viewer) }
+    let(:strategy) { stub(name: 'google') }
     let(:auth_hash) do
       Hashie::Mash.new(
-        uid: '3',
+        uid: '4',
         info: Hashie::Mash.new(
           name: user.name,
           email: user.email
@@ -81,14 +80,54 @@ describe SessionsController do
     end
 
     setup do
-      @controller.stubs(github_authorization: stub(role_id: Role::VIEWER.id))
+      @controller.stubs(:restricted_email_domain).returns(nil) 
+
+      @request.env.merge!(env)
+      @request.env.merge!('omniauth.auth' => auth_hash)
+      @request.env.merge!('omniauth.strategy' => strategy)
+
+      post :google
+    end
+
+    it 'logs the user in' do
+      @controller.current_user.must_equal(user)
+    end
+
+    it 'redirects to the root path' do
+      assert_redirected_to root_path
+    end
+
+    describe 'with an origin' do
+      let(:env) {{ 'omniauth.origin' => '/hello' }}
+
+      it 'redirects to /hello' do
+        assert_redirected_to '/hello'
+      end
+    end
+  end
+
+  describe "a POST to #google with email restriction" do
+    let(:env) {{}}
+    let(:user) { users(:zendesk_viewer) }
+    let(:strategy) { stub(name: 'google') }
+    let(:auth_hash) do
+      Hashie::Mash.new(
+        uid: '5',
+        info: Hashie::Mash.new(
+          name: user.name,
+          email: user.email
+        )
+      )
+    end
+
+    setup do
       @controller.stubs(:restricted_email_domain).returns("@uniqlo.com") 
 
       @request.env.merge!(env)
       @request.env.merge!('omniauth.auth' => auth_hash)
       @request.env.merge!('omniauth.strategy' => strategy)
 
-      post :github
+      post :google
     end
 
     it 'does not log the user in' do
