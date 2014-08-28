@@ -1,4 +1,4 @@
-<% flash_mapping.each do |type, klass| %>
+<% flash.each do |type, klass| %>
   <% if flash.key?(type) %>
     <% Array.wrap(flash[type]).each do |message| %>
       <div class="alert alert-<%= klass %>">

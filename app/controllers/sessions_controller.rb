@@ -39,7 +39,6 @@ class SessionsController < ApplicationController
 
     flash[:error] = "Only #{restricted_email_domain} users are allowed to login"
     render :new 
-    return false
   end
 
   def allowed_to_login
