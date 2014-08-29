@@ -3,6 +3,12 @@ JobExecution.setup
 if !Rails.env.test? && Job.table_exists?
   JobExecution.enabled = true
 
+  Rails.application.config.after_initialize do
+    Job.running.each do |job|
+      job.stop!
+    end
+  end
+
   Signal.trap('SIGUSR1') do
     if JobExecution.enabled
       # Disable new job execution
