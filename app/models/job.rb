@@ -14,6 +14,10 @@ class Job < ActiveRecord::Base
     where(status: 'pending')
   end
 
+  def self.running
+    where(status: 'running')
+  end
+
   def summary
     "#{user.name} #{summary_action} against #{short_reference}"
   end
