@@ -38,8 +38,8 @@ Run the bootstrap script to use the test credentials.
 
 ```bash
 script/bootstrap
-bundle exec puma -C config/puma.rb
-open http://localhost:9080
+rails s
+open http://localhost:3000
 ```
 
 For a real setup, use your own config in the .env file:
@@ -50,7 +50,7 @@ For a real setup, use your own config in the .env file:
 
 ##### General app (optional)
 
-*DEFAULT_URL* absolute url to samson (used by the mailer), e.g. http://localhost:9080
+*DEFAULT_URL* absolute url to samson (used by the mailer), e.g. http://localhost:3000
 
 ##### GitHub token (mandatory)
 
@@ -67,8 +67,8 @@ This is a personal access token that Samson uses to access project repositories,
 *GITHUB_CLIENT_ID* and *GITHUB_SECRET*
 
 * Navigate to [https://github.com/settings/applications](https://github.com/settings/applications) and register a new Github application
-* Set the Homepage URL to http://localhost:9080
-* Set the Authorization callback URL to http://localhost:9080/auth/github/callback
+* Set the Homepage URL to http://localhost:3000
+* Set the Authorization callback URL to http://localhost:3000/auth/github/callback
 * You should now have Client ID and Client Secret values to populate the .env file with
 
 ##### GitHub organisation and teams (optional)
@@ -98,8 +98,8 @@ Samson can use custom GitHub endpoints if, for example, you are using GitHub ent
 * Once the project is provisioned, click APIs & auth
 * Turn on Contacts API and Google+ API (they are needed by Samson to get email and avatar)
 * Click the Credentials link and then create a new Client ID
-* Set the Authorized JavaScript Origins to http://localhost:9080
-* Set the Authorized Redirect URI to http://localhost:9080/auth/google/callback
+* Set the Authorized JavaScript Origins to http://localhost:3000
+* Set the Authorized Redirect URI to http://localhost:3000/auth/google/callback
 * Create the Client ID
 * You should now have Client ID and Client secret values to populate the .env file with
 

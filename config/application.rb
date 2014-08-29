@@ -52,7 +52,7 @@ module Samson
     config.samson.github.web_url = ENV["GITHUB_WEB_URL"].presence || 'github.com'
     config.samson.github.api_url = ENV["GITHUB_API_URL"].presence || 'api.github.com'
 
-    config.samson.uri = URI( ENV["DEFAULT_URL"] || 'http://localhost:9080' )
+    config.samson.uri = URI( ENV["DEFAULT_URL"] || 'http://localhost:3000' )
     self.default_url_options = {
       host: config.samson.uri.host,
       protocol: config.samson.uri.scheme
