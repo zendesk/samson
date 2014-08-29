@@ -15,19 +15,15 @@ module ApplicationHelper
 
   def deploy_link(project, stage)
     if stage.currently_deploying?
-      content_tag :a, class: "btn btn-primary disabled", disabled: true do
-        "Deploying #{stage.current_deploy.short_reference}..."
-      end
+      deploy = stage.current_deploy
+      link_to "Deploying #{deploy.short_reference}...",
+        project_deploy_path(project, deploy),
+        class: "btn btn-primary"
     elsif stage.locked?
-      content_tag :a, class: "btn btn-primary disabled", disabled: true do
-        "Locked"
-      end
+      content_tag :a, "Locked", class: "btn btn-primary disabled", disabled: true
     else
       path = new_project_deploy_path(project, stage_id: stage.id)
-
-      link_to path, role: "button", class: "btn btn-primary" do
-        "Deploy"
-      end
+      link_to "Deploy", path, role: "button", class: "btn btn-primary"
     end
   end
 
