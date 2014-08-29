@@ -42,6 +42,11 @@ rails s
 open http://localhost:3000
 ```
 
+ - Add a new project http://localhost:3000/projects/new
+ - name: example-project url: git@github.com:samson-test-org/example-project.git
+ - Create a Stage
+ - Deploy!
+
 For a real setup, use your own config in the .env file:
 
 ##### General app (mandatory)
