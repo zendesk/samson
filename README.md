@@ -32,15 +32,17 @@ Streaming is done through a [controller](app/controllers/streams_controller.rb) 
 * Memcache
 * Ruby (currently 2.1.1)
 
-#### Config
+#### Setup
 
-Run the bootstrap script to create an initial set of config files.
+Run the bootstrap script to use the test credentials.
 
 ```bash
 script/bootstrap
+bundle exec puma -C config/puma.rb
+open http://localhost:9080
 ```
 
-Edit the .env file, providing at least the following mandatory values.
+For a real setup, use your own config in the .env file:
 
 ##### General app (mandatory)
 
@@ -108,14 +110,6 @@ Samson can use custom GitHub endpoints if, for example, you are using GitHub ent
 You may fill in using the instructions below if you would
 like a dynamic chart of response time and throughput during deploys.
 [https://docs.newrelic.com/docs/features/getting-started-with-the-new-relic-rest-api#setup](https://docs.newrelic.com/docs/features/getting-started-with-the-new-relic-rest-api#setup)
-
-#### To run
-
-```bash
-bundle exec puma -C config/puma.rb
-```
-
-The website runs at [http://localhost:9080/](http://localhost:9080) by default.
 
 #### User roles
 
