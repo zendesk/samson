@@ -17,4 +17,14 @@ module DeployStatusHelper
       status
     end
   end
+
+  def deploy_status_icon(status)
+    icon = {
+      "succeeded" => "check",
+      "failed" => "fire",
+      "errored" => "exclamation-sign",
+      "cancelled" => "remove",
+    }[status]
+    tag :span, class: "glyphicon glyphicon-#{icon}", title: status if icon
+  end
 end
