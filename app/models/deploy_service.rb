@@ -9,6 +9,8 @@ class DeployService
     deploy = stage.create_deploy(reference: reference, user: user)
 
     if deploy.persisted? && !(BuddyCheck.enabled? && stage.production?)
+      deploy.started_at = Time.new
+      deploy.save
       confirm_deploy!(deploy, stage, reference)
     end
 
