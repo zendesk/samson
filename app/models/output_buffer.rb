@@ -28,10 +28,14 @@ class OutputBuffer
     @chunks = ThreadSafe::Array.new
     @closed = false
   end
+  
+  def add_write_callback(&block)
+    @listeners << block
+  end
 
   def write(data, event = :message)
     @chunks << [event, data] unless event == :close
-    @listeners.each {|listener| listener.push([event, data]) }
+    @listeners.each {|listener| listener.respond_to?(:push) ? listener.push([event, data]) : listener.call([event,data]) }
   end
 
   def to_s
@@ -45,6 +49,10 @@ class OutputBuffer
 
   def closed?
     @closed
+  end
+  
+  def to_a
+    Array.new(@chunks)
   end
 
   def each(&block)

@@ -32,6 +32,19 @@ describe OutputBuffer do
 
     build_listener.value.must_equal ["hello"]
   end
+  
+  it "issues write callbacks" do
+    
+    issued = false
+    buffer.add_write_callback do |event|
+      issued = true
+      assert event[1], "hello"
+    end
+    
+    buffer.write("hello")
+    
+    assert issued
+  end
 
   def build_listener
     Thread.new do
