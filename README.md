@@ -32,15 +32,22 @@ Streaming is done through a [controller](app/controllers/streams_controller.rb) 
 * Memcache
 * Ruby (currently 2.1.1)
 
-#### Config
+#### Setup
 
-Run the bootstrap script to create an initial set of config files.
+Run the bootstrap script to use the test credentials.
 
 ```bash
 script/bootstrap
+rails s
+open http://localhost:3000
 ```
 
-Edit the .env file, providing at least the following mandatory values.
+ - Add a new project http://localhost:3000/projects/new
+ - name: example-project url: git@github.com:samson-test-org/example-project.git
+ - Create a Stage
+ - Deploy!
+
+For a real setup, use your own config in the .env file:
 
 ##### General app (mandatory)
 
@@ -48,7 +55,7 @@ Edit the .env file, providing at least the following mandatory values.
 
 ##### General app (optional)
 
-*DEFAULT_URL* absolute url to samson (used by the mailer), e.g. http://localhost:9080
+*DEFAULT_URL* absolute url to samson (used by the mailer), e.g. http://localhost:3000
 
 ##### GitHub token (mandatory)
 
@@ -65,8 +72,8 @@ This is a personal access token that Samson uses to access project repositories,
 *GITHUB_CLIENT_ID* and *GITHUB_SECRET*
 
 * Navigate to [https://github.com/settings/applications](https://github.com/settings/applications) and register a new Github application
-* Set the Homepage URL to http://localhost:9080
-* Set the Authorization callback URL to http://localhost:9080/auth/github/callback
+* Set the Homepage URL to http://localhost:3000
+* Set the Authorization callback URL to http://localhost:3000/auth/github/callback
 * You should now have Client ID and Client Secret values to populate the .env file with
 
 ##### GitHub organisation and teams (optional)
@@ -96,8 +103,8 @@ Samson can use custom GitHub endpoints if, for example, you are using GitHub ent
 * Once the project is provisioned, click APIs & auth
 * Turn on Contacts API and Google+ API (they are needed by Samson to get email and avatar)
 * Click the Credentials link and then create a new Client ID
-* Set the Authorized JavaScript Origins to http://localhost:9080
-* Set the Authorized Redirect URI to http://localhost:9080/auth/google/callback
+* Set the Authorized JavaScript Origins to http://localhost:3000
+* Set the Authorized Redirect URI to http://localhost:3000/auth/google/callback
 * Create the Client ID
 * You should now have Client ID and Client secret values to populate the .env file with
 
@@ -108,14 +115,6 @@ Samson can use custom GitHub endpoints if, for example, you are using GitHub ent
 You may fill in using the instructions below if you would
 like a dynamic chart of response time and throughput during deploys.
 [https://docs.newrelic.com/docs/features/getting-started-with-the-new-relic-rest-api#setup](https://docs.newrelic.com/docs/features/getting-started-with-the-new-relic-rest-api#setup)
-
-#### To run
-
-```bash
-bundle exec puma -C config/puma.rb
-```
-
-The website runs at [http://localhost:9080/](http://localhost:9080) by default.
 
 #### User roles
 
