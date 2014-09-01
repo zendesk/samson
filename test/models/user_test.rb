@@ -32,7 +32,7 @@ describe User do
     describe 'real email' do
       let(:email) { 'test@test.com' }
       it 'returns proper gravatar url' do
-        email_digest =  Digest::MD5.hexdigest('test@test.com')
+        email_digest = Digest::MD5.hexdigest('test@test.com')
         user.gravatar_url.must_equal("https://www.gravatar.com/avatar/#{email_digest}")
       end
     end
