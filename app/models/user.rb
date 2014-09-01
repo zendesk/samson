@@ -50,7 +50,7 @@ class User < ActiveRecord::Base
   end
 
   def gravatar_url
-    md5 = Digest::MD5.hexdigest(email)
+    md5 = email.blank? ? "default" : Digest::MD5.hexdigest(email)
     "https://www.gravatar.com/avatar/#{md5}"
   end
 
