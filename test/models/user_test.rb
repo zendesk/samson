@@ -24,6 +24,30 @@ describe User do
         user.name.must_equal(username)
       end
     end
+
+  end
+
+  describe "#gravatar url" do
+    let(:user) { User.new(name: "User Name", email: email) }
+    describe 'real email' do
+      let(:email) { 'test@test.com' }
+      it 'returns proper gravatar url' do
+        email_digest =  Digest::MD5.hexdigest('test@test.com')
+        user.gravatar_url.must_equal("https://www.gravatar.com/avatar/#{email_digest}")
+      end
+    end
+    describe 'nil email' do
+      let(:email) { nil }
+      it 'falls back to the default gravatar' do
+        user.gravatar_url.must_equal('https://www.gravatar.com/avatar/default')
+      end
+    end
+    describe 'empty email' do
+      let(:email) { "" }
+      it 'falls back to the default gravatar' do
+        user.gravatar_url.must_equal('https://www.gravatar.com/avatar/default')
+      end
+    end
   end
 
   describe ".create_or_update_from_hash" do
