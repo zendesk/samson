@@ -3,14 +3,24 @@ require 'omniauth/github_authorization'
 
 describe GithubAuthorization do
   let(:teams) {[]}
+  let(:organization_member) { true }
   let(:config) { Rails.application.config.samson.github }
   let(:authorization) { GithubAuthorization.new('test.user', '123') }
 
   before do
     stub_github_api("orgs/#{config.organization}/teams", teams)
+    stub_github_api("orgs/#{config.organization}/members/test.user", {}, organization_member ? 204 : 404)
 
     teams.each do |team|
       stub_github_api("teams/#{team[:id]}/members/test.user", {}, team[:member] ? 204 : 404)
+    end
+  end
+
+  describe 'when not part of the organization' do
+    let(:organization_member) { false }
+
+    it 'is not allowed to view' do
+      authorization.role_id.must_equal(nil)
     end
   end
 

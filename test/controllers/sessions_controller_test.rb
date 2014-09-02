@@ -37,9 +37,10 @@ describe SessionsController do
         )
       )
     end
+    let(:role_id) { Role::VIEWER.id }
 
     setup do
-      @controller.stubs(github_authorization: stub(role_id: Role::VIEWER.id))
+      @controller.stubs(github_authorization: stub(role_id: role_id))
 
       @request.env.merge!(env)
       @request.env.merge!('omniauth.auth' => auth_hash)
@@ -63,9 +64,19 @@ describe SessionsController do
         assert_redirected_to '/hello'
       end
     end
+
+    describe 'without organization access' do
+      let(:role_id) { nil }
+
+      it 'is not allowed to view anything' do
+        @controller.current_user.must_be_nil
+        assert_template :new
+        request.flash[:error].wont_be_nil
+      end
+    end
   end
 
-  describe "Google Login" do
+  describe "a POST to #google" do
     let(:env) {{}}
     let(:user) { users(:zendesk_viewer) }
     let(:strategy) { stub(name: 'google') }
@@ -86,7 +97,7 @@ describe SessionsController do
 
     end
 
-    describe 'a POST to #google' do
+    describe 'without email restriction' do
       setup do
         @controller.stubs(:restricted_email_domain).returns(nil)
         post :google
@@ -109,8 +120,7 @@ describe SessionsController do
       end
     end
 
-    describe "a POST to #google with email restriction" do
-
+    describe "with email restriction" do
       setup do
         @controller.stubs(:restricted_email_domain).returns("@uniqlo.com")
         post :google
@@ -127,9 +137,7 @@ describe SessionsController do
       it "sets a flash error" do
         request.flash[:error].wont_be_nil
       end
-
     end
-
   end
 
   describe "a GET to #failure" do
