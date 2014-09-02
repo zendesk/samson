@@ -111,6 +111,8 @@ GEM
     minitest-rails (2.0.1)
       minitest (>= 5.3.3, < 6.0)
       railties (~> 4.1)
+    minitest-rg (5.1.0)
+      minitest (~> 5.0)
     mocha (0.14.0)
       metaclass (~> 0.0.1)
     momentjs-rails (2.6.0)
@@ -252,6 +254,7 @@ DEPENDENCIES
   lograge
   logstash-event
   minitest-rails (~> 2.0.0.beta1)
+  minitest-rg
   momentjs-rails
   mysql2 (~> 0.3)
   newrelic_api
