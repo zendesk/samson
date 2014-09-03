@@ -9,16 +9,20 @@ class GithubAuthorization
     owner_team = find_team(teams, config.admin_team)
     deploy_team = find_team(teams, config.deploy_team)
 
-    role = if team_member?(owner_team)
+    if team_member?(owner_team)
       Role::ADMIN.id
     elsif team_member?(deploy_team)
       Role::DEPLOYER.id
-    else
+    elsif organization_member?
       Role::VIEWER.id
     end
   end
 
   private
+
+  def organization_member?
+    @github.organization_member?(config.organization, @login)
+  end
 
   def find_team(teams, slug)
     teams.find {|t| t.slug == slug}

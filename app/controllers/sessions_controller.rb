@@ -12,7 +12,8 @@ class SessionsController < ApplicationController
   end
 
   def github
-    login_user(role_id: github_authorization.role_id)
+    return show_login_restriction unless role_id = github_authorization.role_id
+    login_user(role_id: role_id)
   end
 
   def google
