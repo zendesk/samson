@@ -8,27 +8,27 @@ admin:
   email: "admin@example.com"
   role_id: <%= Role::ADMIN.id %>
   token: abc123
-  external_id: 'test-1'
+  external_id: 'google-1'
 deployer:
   name: "Deployer"
   email: "deployer@example.com"
   role_id: <%= Role::DEPLOYER.id %>
-  external_id: 'test-2'
+  external_id: 'google-2'
 deployer_buddy:
   name: "DeployerBuddy"
   email: "deployerbuddy@example.com"
   role_id: <%= Role::DEPLOYER.id %>
-  external_id: 'test-21'
+  external_id: 'google-21'
 viewer:
   name: "Viewer"
   email: "viewer@example.com"
   role_id: <%= Role::VIEWER.id %>
-  external_id: 'test-3'
+  external_id: 'google-3'
 zendesk_viewer:
   name: "Zendesk Viewer"
   email: "zd+viewer@example.com"
   role_id: <%= Role::VIEWER.id %>
-  external_id: 'zendesk-3'
+  external_id: 'google-4'
 github_viewer:
   name: "Github Viewer"
   email: "gh+viewer@example.com"

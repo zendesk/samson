@@ -24,11 +24,11 @@ describe User do
         user.name.must_equal(username)
       end
     end
-
   end
 
   describe "#gravatar url" do
     let(:user) { User.new(name: "User Name", email: email) }
+
     describe 'real email' do
       let(:email) { 'test@test.com' }
       it 'returns proper gravatar url' do
@@ -36,12 +36,14 @@ describe User do
         user.gravatar_url.must_equal("https://www.gravatar.com/avatar/#{email_digest}")
       end
     end
+
     describe 'nil email' do
       let(:email) { nil }
       it 'falls back to the default gravatar' do
         user.gravatar_url.must_equal('https://www.gravatar.com/avatar/default')
       end
     end
+
     describe 'empty email' do
       let(:email) { "" }
       it 'falls back to the default gravatar' do
@@ -71,26 +73,6 @@ describe User do
 
       it "sets the role_id" do
         user.role_id.must_equal(Role::ADMIN.id)
-      end
-    end
-
-    describe "backfilling external_id" do
-      let(:auth_hash) {{
-        name: "Test User",
-        email: "test@example.org",
-        external_id: 9,
-        token: "abc123",
-      }}
-
-      let(:existing_user) do
-        User.create!(name: "Test", email: "test@example.org")
-      end
-
-      setup { existing_user }
-
-      it "should backfill user external_id" do
-        assert_equal user, existing_user
-        assert_equal 9, user.external_id
       end
     end
 
