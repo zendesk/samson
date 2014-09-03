@@ -83,7 +83,6 @@ describe SessionsController do
       @request.env.merge!(env)
       @request.env.merge!('omniauth.auth' => auth_hash)
       @request.env.merge!('omniauth.strategy' => strategy)
-      user.update_column(:external_id, "#{strategy.name}-#{auth_hash.uid}")
     end
 
     describe 'a POST to #google' do
