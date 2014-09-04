@@ -235,15 +235,27 @@ describe DeploysController do
         end
       end
 
-      describe "with a deploy not owned by the deployer" do
+      describe "with a pending deploy not owned by the deployer" do
         setup do
           Deploy.any_instance.stubs(:started_by?).returns(false)
-          User.any_instance.stubs(:is_admin?).returns(false)
+          Deploy.any_instance.stubs(:waiting_for_buddy?).returns(true)
 
           delete :destroy, project_id: project.id, id: deploy.to_param
         end
 
-        it "doesn't cancel the deloy" do
+        it "cancels a deploy" do
+          flash[:error].must_be_nil
+        end
+      end
+
+      describe "with a deploy not owned by the deployer" do
+        setup do
+          Deploy.any_instance.stubs(:started_by?).returns(false)
+
+          delete :destroy, project_id: project.id, id: deploy.to_param
+        end
+
+        it "cancels a deploy" do
           flash[:error].wont_be_nil
         end
       end
