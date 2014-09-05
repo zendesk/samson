@@ -46,9 +46,9 @@ module Samson
 
     # The Github teams and organizations used for permissions
     config.samson.github = ActiveSupport::OrderedOptions.new
-    config.samson.github.organization = ENV["GITHUB_ORGANIZATION"]
-    config.samson.github.admin_team = ENV["GITHUB_ADMIN_TEAM"]
-    config.samson.github.deploy_team = ENV["GITHUB_DEPLOY_TEAM"]
+    config.samson.github.organization = ENV["GITHUB_ORGANIZATION"].presence
+    config.samson.github.admin_team = ENV["GITHUB_ADMIN_TEAM"].presence
+    config.samson.github.deploy_team = ENV["GITHUB_DEPLOY_TEAM"].presence
     config.samson.github.web_url = ENV["GITHUB_WEB_URL"].presence || 'github.com'
     config.samson.github.api_url = ENV["GITHUB_API_URL"].presence || 'api.github.com'
 
