@@ -64,6 +64,10 @@ class Deploy < ActiveRecord::Base
     DeployService.new(project, user).confirm_deploy!(self, stage, reference, buddy)
   end
 
+  def start_time
+    BuddyCheck.enabled? ? started_at || updated_at : created_at
+  end
+
   def pending_non_production?
     pending? && !stage.production?
   end
