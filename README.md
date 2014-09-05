@@ -53,17 +53,13 @@ For a real setup, use your own config in the .env file:
 
 *SECRET_TOKEN* for Rails, generated during script/bootstrap.
 
-##### General app (optional)
-
-*DEFAULT_URL* absolute url to samson (used by the mailer), e.g. http://localhost:3000
-
 ##### GitHub token (mandatory)
 
 *GITHUB_TOKEN*
 
 This is a personal access token that Samson uses to access project repositories, commits, files and pull requests.
 
-* Navigate to [https://github.com/settings/applications](https://github.com/settings/applications) and generate a new token
+* Navigate to [https://github.com/settings/tokens/new](https://github.com/settings/tokens/new) to generate a new personal access token
 * Choose scope including repo, read:org, user and then generate the token
 * You should now have a personal access token to populate the .env file with
 
@@ -71,10 +67,14 @@ This is a personal access token that Samson uses to access project repositories,
 
 *GITHUB_CLIENT_ID* and *GITHUB_SECRET*
 
-* Navigate to [https://github.com/settings/applications](https://github.com/settings/applications) and register a new Github application
+* Navigate to [https://github.com/settings/applications/new](https://github.com/settings/applications/new) and register a new OAuth application
 * Set the Homepage URL to http://localhost:3000
 * Set the Authorization callback URL to http://localhost:3000/auth/github/callback
 * You should now have Client ID and Client Secret values to populate the .env file with
+
+##### General app (optional)
+
+*DEFAULT_URL* absolute url to samson (used by the mailer), e.g. http://localhost:3000
 
 ##### GitHub organisation and teams (optional)
 
