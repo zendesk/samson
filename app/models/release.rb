@@ -10,6 +10,10 @@ class Release < ActiveRecord::Base
     version
   end
 
+  def currently_deploying_stages
+    project.stages.where_reference_being_deployed(version)
+  end
+
   def deployed_stages
     @deployed_stages ||= project.stages.select {|stage| stage.current_release?(self) }
   end

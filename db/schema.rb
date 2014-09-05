@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20140804204455) do
+ActiveRecord::Schema.define(version: 20140902105205) do
 
   create_table "commands", force: true do |t|
     t.text     "command",    limit: 16777215
@@ -33,6 +33,7 @@ ActiveRecord::Schema.define(version: 20140804204455) do
 
   add_index "deploys", ["created_at"], name: "index_deploys_on_created_at", using: :btree
   add_index "deploys", ["job_id"], name: "index_deploys_on_job_id", using: :btree
+  add_index "deploys", ["stage_id"], name: "index_deploys_on_stage_id", using: :btree
 
   create_table "flowdock_flows", force: true do |t|
     t.string   "name",       null: false

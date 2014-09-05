@@ -2,7 +2,7 @@
 
 <%= render 'projects/header', project: @project, tab: "releases" %>
 
-<% cache @project do %>
+<% cache [@project, @releases.current_page] do %>
   <section class="clearfix tabs">
 
     <p class="pull-right">
