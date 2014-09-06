@@ -1,6 +1,6 @@
 <% cache deploy do %>
   <tr>
-    <td><span class="mouseover" data-time="<%= datetime_to_js_ms(deploy.created_at) %>"><%= deploy.created_at.rfc822 %></span></td>
+    <td><%= deploy_time deploy %></td>
     <td>
       <%= content_tag :span, "Hotfix!", class: "label label-hotfix" if deploy.changeset.hotfix? %>
       <%= link_to "#{deploy.summary}", project_deploy_path(@project || deploy.project, deploy) %>
