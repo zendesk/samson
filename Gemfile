@@ -6,6 +6,8 @@ gem 'rails', '~> 4.1.5'
 gem 'puma'
 gem 'dotenv-rails', '~> 0.9'
 
+gem 'dogstatsd-ruby', '~> 1.4.0', require: 'statsd'
+
 group :mysql2 do
   gem 'mysql2', '~> 0.3'
 end
