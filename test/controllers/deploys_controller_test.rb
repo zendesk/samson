@@ -8,10 +8,11 @@ describe DeploysController do
   let(:job) { Job.create!(command: command, project: project, user: deployer) }
   let(:deploy) { Deploy.create!(stage: stage, job: job, reference: "foo") }
   let(:deploy_service) { stub(deploy!: nil) }
+  let(:deploy_called) { [] }
 
   setup do
     DeployService.stubs(:new).with(project, deployer).returns(deploy_service)
-    deploy_service.stubs(:deploy!).returns(deploy)
+    deploy_service.stubs(:deploy!).capture(deploy_called).returns(deploy)
 
     Changeset.stubs(:find).returns(stub(hotfix?: false))
   end
@@ -184,9 +185,7 @@ describe DeploysController do
         end
 
         it "creates a deploy" do
-          assert_received(deploy_service, :deploy!) do |expect|
-            expect.with stage, "master"
-          end
+          assert_equal [[stage, "master"]], deploy_called
         end
       end
 
@@ -198,9 +197,7 @@ describe DeploysController do
         end
 
         it "creates a deploy" do
-          assert_received(deploy_service, :deploy!) do |expect|
-            expect.with stage, "master"
-          end
+          assert_equal [[stage, "master"]], deploy_called
         end
       end
     end

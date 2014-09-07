@@ -51,8 +51,6 @@ GEM
       sass (~> 3.2)
     bootstrap-x-editable-rails (1.5.1.1)
       railties (>= 3.0)
-    bourne (1.5.0)
-      mocha (>= 0.13.2, < 0.15)
     builder (3.2.2)
     coderay (1.1.0)
     crack (0.4.2)
@@ -238,7 +236,6 @@ DEPENDENCIES
   binding_of_caller
   bootstrap-sass
   bootstrap-x-editable-rails
-  bourne
   bundler
   coderay (~> 1.1.0)
   dalli (~> 2.7.0)
@@ -255,6 +252,7 @@ DEPENDENCIES
   logstash-event
   minitest-rails (~> 2.0.0.beta1)
   minitest-rg
+  mocha
   momentjs-rails
   mysql2 (~> 0.3)
   newrelic_api

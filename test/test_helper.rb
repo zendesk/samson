@@ -43,6 +43,12 @@ class MiniTest::Spec
   include StubGithubAPI
 end
 
+Mocha::Expectation.class_eval do
+  def capture(into)
+    with { |*args| into << args }
+  end
+end
+
 class ActionController::TestCase
   include StubGithubAPI
 
