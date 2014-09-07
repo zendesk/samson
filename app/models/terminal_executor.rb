@@ -57,6 +57,8 @@ class TerminalExecutor
     input.close
 
     return status.success?
+  rescue Interrupt
+    false
   end
 
   def wrap_command(command)
