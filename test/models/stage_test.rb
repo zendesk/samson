@@ -3,6 +3,19 @@ require_relative '../test_helper'
 describe Stage do
   subject { stages(:test_staging) }
 
+  describe ".where_reference_being_deployed" do
+    it "returns stages where the reference is currently being deployed" do
+      project = projects(:test)
+      stage = stages(:test_staging)
+      author = users(:deployer)
+
+      job = project.jobs.create!(user: author, commit: "a", command: "yes", status: "running")
+      stage.deploys.create!(reference: "xyz", job: job)
+
+      assert_equal [stage], Stage.where_reference_being_deployed("xyz")
+    end
+  end
+
   describe '#command' do
     describe 'adding a built command' do
       before do
@@ -40,6 +53,17 @@ describe Stage do
       it 'is empty' do
         subject.command.must_be_empty
       end
+    end
+  end
+
+  describe "#last_deploy" do
+    let(:project) { projects(:test) }
+    let(:stage) { stages(:test_staging) }
+
+    it "returns the last deploy for the stage" do
+      job = project.jobs.create!(command: "cat foo", user: users(:deployer), status: 'succeeded')
+      deploy = stage.deploys.create!(reference: "master", job: job)
+      assert_equal deploy, stage.last_deploy
     end
   end
 
