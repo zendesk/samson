@@ -47,7 +47,7 @@ try "Bundling" "bundle check > /dev/null || bundle --local --quiet "
 
 echo
 bold "Copying example files"
-try "Creating .env" "test -e .env || cp .env.test .env"
+try "Creating .env" "test -e .env || cp .env.bootstrap .env"
 try "Generating a Rails secret" 'secret=`bundle exec rake secret` && sed -i "" -e "s/{bundle exec rake secret}/$secret/" .env'
 try "Creating config/database.yml" "test -e config/database.yml || cp config/database.mysql.yml.example config/database.yml"
 try "Creating databases" "bundle exec rake db:setup > /dev/null"
