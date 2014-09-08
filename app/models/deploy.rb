@@ -20,7 +20,7 @@ class Deploy < ActiveRecord::Base
   end
 
   def summary
-    "#{job.user.name} #{summary_action} #{short_reference} to #{stage.name}"
+    "#{job.user.name} #{deploy_buddy} #{summary_action} #{short_reference} to #{stage.name}"
   end
 
   def summary_for_timeline
@@ -130,5 +130,10 @@ class Deploy < ActiveRecord::Base
     if stage.locked? || Lock.global.exists?
       errors.add(:stage, 'is locked')
     end
+  end
+
+  def deploy_buddy
+    return if ( BuddyCheck.enabled? || buddy.nil? )
+    user.id == buddy.id ? "(without a buddy)" : "(along with #{buddy.name})"
   end
 end
