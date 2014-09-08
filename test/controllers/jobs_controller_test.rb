@@ -15,7 +15,7 @@ describe JobsController do
 
   as_a_viewer do
     describe "a GET to :index" do
-      setup { get :index, project_id: project.id }
+      setup { get :index, project_id: project.to_param }
 
       it "renders the template" do
         assert_template :index
@@ -24,7 +24,7 @@ describe JobsController do
 
     describe "a GET to :show" do
       describe 'with a job' do
-        setup { get :show, project_id: project.id, id: job }
+        setup { get :show, project_id: project.to_param, id: job }
 
         it "renders the template" do
           assert_template :show
@@ -32,7 +32,7 @@ describe JobsController do
       end
 
       describe "with no job" do
-        setup { get :show, project_id: project.id, id: "job:nope" }
+        setup { get :show, project_id: project.to_param, id: "job:nope" }
 
         it "redirects to the root page" do
           assert_redirected_to root_path
@@ -44,7 +44,7 @@ describe JobsController do
       end
 
       describe "with format .text" do
-        setup { get :show, format: :text, project_id: project.id, id: job }
+        setup { get :show, format: :text, project_id: project.to_param, id: job }
 
         it "responds with a plain text file" do
           assert_equal response.content_type, "text/plain"
@@ -66,7 +66,7 @@ describe JobsController do
         post :create, commands: { ids: [] }, job: {
           command: command,
           commit: "master"
-        }, project_id: project.id
+        }, project_id: project.to_param
       end
 
       let(:params) 
@@ -87,7 +87,7 @@ describe JobsController do
         setup do
           Job.any_instance.stubs(:started_by?).returns(true)
 
-          delete :destroy, project_id: project.id, id: job
+          delete :destroy, project_id: project.to_param, id: job
         end
 
         it "responds with 200" do
@@ -100,7 +100,7 @@ describe JobsController do
           Job.any_instance.stubs(:started_by?).returns(false)
           User.any_instance.stubs(:is_admin?).returns(false)
 
-          delete :destroy, project_id: project.id, id: job
+          delete :destroy, project_id: project.to_param, id: job
         end
 
         it "responds with 403" do
@@ -114,7 +114,7 @@ describe JobsController do
     describe "a DELETE to :destroy" do
       describe "with a valid job" do
         setup do
-          delete :destroy, project_id: project.id, id: job
+          delete :destroy, project_id: project.to_param, id: job
         end
 
         it "responds ok" do

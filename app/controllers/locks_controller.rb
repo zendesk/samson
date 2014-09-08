@@ -2,7 +2,7 @@ class LocksController < ApplicationController
   before_filter :authorize_deployer!
 
   rescue_from ActiveRecord::RecordNotFound do
-    if Project.exists?(params[:project_id])
+    if Project.where(permalink: params[:project_id]).exists?
       redirect_to project_path(project)
     else
       redirect_to root_path
@@ -22,7 +22,7 @@ class LocksController < ApplicationController
   protected
 
   def project
-    @project ||= Project.find(params[:project_id])
+    @project ||= Project.find_by_param!(params[:project_id])
   end
 
   def stage

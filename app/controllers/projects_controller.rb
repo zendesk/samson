@@ -89,7 +89,7 @@ class ProjectsController < ApplicationController
   end
 
   def project
-    @project ||= Project.find(params[:id])
+    @project ||= Project.find_by_param!(params[:id])
   end
 
   def redirect_viewers!

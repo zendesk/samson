@@ -7,7 +7,7 @@ describe StagesController do
     describe 'GET to :show' do
       describe 'valid' do
         before do
-          get :show, project_id: subject.project_id,
+          get :show, project_id: subject.project.to_param,
             id: subject.id
         end
 
@@ -29,7 +29,7 @@ describe StagesController do
 
       describe 'invalid stage' do
         before do
-          get :show, project_id: subject.project_id,
+          get :show, project_id: subject.project.to_param,
             id: 123123
         end
 
@@ -49,7 +49,7 @@ describe StagesController do
   as_a_admin do
     describe 'GET to #new' do
       describe 'valid' do
-        before { get :new, project_id: subject.project_id }
+        before { get :new, project_id: subject.project.to_param }
 
         it 'renders' do
           assert_template :new
@@ -80,7 +80,7 @@ describe StagesController do
             command: 'test2 command'
           )
 
-          post :create, project_id: project.id, stage: {
+          post :create, project_id: project.to_param, stage: {
             name: 'test',
             command: 'test command',
             command_ids: [commands(:echo).id, new_command.id]
@@ -103,7 +103,7 @@ describe StagesController do
 
       describe 'invalid attributes' do
         before do
-          post :create, project_id: project.id, stage: {
+          post :create, project_id: project.to_param, stage: {
             name: nil
           }
         end
@@ -126,7 +126,7 @@ describe StagesController do
 
     describe 'GET to #edit' do
       describe 'valid' do
-        before { get :edit, project_id: subject.project_id, id: subject.id }
+        before { get :edit, project_id: subject.project.to_param, id: subject.id }
 
         it 'renders' do
           assert_template :edit
@@ -142,7 +142,7 @@ describe StagesController do
       end
 
       describe 'invalid id' do
-        before { get :edit, project_id: subject.project_id, id: 123123 }
+        before { get :edit, project_id: subject.project.to_param, id: 123123 }
 
         it 'redirects' do
           assert_redirected_to project_path(subject.project)
@@ -153,7 +153,7 @@ describe StagesController do
     describe 'PATCH to #update' do
       describe 'valid id' do
         before do
-          patch :update, project_id: subject.project_id, id: subject.id,
+          patch :update, project_id: subject.project.to_param, id: subject.id,
             stage: attributes
 
           subject.reload
@@ -197,7 +197,7 @@ describe StagesController do
       end
 
       describe 'invalid id' do
-        before { patch :update, project_id: subject.project_id, id: 123123 }
+        before { patch :update, project_id: subject.project.to_param, id: 123123 }
 
         it 'redirects' do
           assert_redirected_to project_path(subject.project)
@@ -207,7 +207,7 @@ describe StagesController do
 
     describe 'DELETE to #destroy' do
       describe 'valid' do
-        before { delete :destroy, project_id: subject.project_id, id: subject.id }
+        before { delete :destroy, project_id: subject.project.to_param, id: subject.id }
 
         it 'redirects' do
           assert_redirected_to project_path(subject.project)
@@ -228,7 +228,7 @@ describe StagesController do
       end
 
       describe 'invalid id' do
-        before { delete :destroy, project_id: subject.project_id, id: 123123 }
+        before { delete :destroy, project_id: subject.project.to_param, id: 123123 }
 
         it 'redirects' do
           assert_redirected_to project_path(subject.project)
@@ -238,7 +238,7 @@ describe StagesController do
     end
 
     describe 'GET to #clone' do
-      before { get :clone, project_id: subject.project.id, id: subject.id }
+      before { get :clone, project_id: subject.project.to_param, id: subject.id }
 
       it 'renders :new' do
         assert_template :new

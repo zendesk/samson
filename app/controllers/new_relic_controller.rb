@@ -16,7 +16,7 @@ class NewRelicController < ApplicationController
   end
 
   def stage
-    Stage.where(project_id: params[:project_id]).find(params[:id])
+    Stage.where(project_id: Project.find_by_param!(params[:project_id])).find(params[:id])
   end
 
   def not_found

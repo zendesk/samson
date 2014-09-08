@@ -80,8 +80,10 @@ ActiveRecord::Schema.define(version: 20140910113325) do
     t.datetime "updated_at"
     t.string   "token"
     t.string   "release_branch"
+    t.string   "permalink",      null: false
   end
 
+  add_index "projects", ["permalink"], name: "index_projects_on_permalink", unique: true, using: :btree
   add_index "projects", ["token"], name: "index_projects_on_token", using: :btree
 
   create_table "releases", force: true do |t|

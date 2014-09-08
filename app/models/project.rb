@@ -3,6 +3,7 @@ class Project < ActiveRecord::Base
 
   validates :name, :repository_url, presence: true
   before_create :generate_token
+  before_create :generate_permalink
 
   has_many :releases
   has_many :stages, dependent: :destroy
@@ -16,7 +17,11 @@ class Project < ActiveRecord::Base
   scope :alphabetical, -> { order('name') }
 
   def to_param
-    "#{id}-#{name.parameterize}"
+    permalink
+  end
+
+  def self.find_by_param!(param)
+    find_by_permalink!(param)
   end
 
   def repo_name
@@ -82,6 +87,14 @@ class Project < ActiveRecord::Base
   end
 
   private
+
+  def generate_permalink
+    repo_name = repository_url.split("/").last.sub(/\.git/, "")
+    self.permalink = repo_name
+    if self.class.where(permalink: permalink).exists?
+      self.permalink = "#{repo_name}-#{SecureRandom.hex(4)}"
+    end
+  end
 
   def generate_token
     self.token = SecureRandom.hex
