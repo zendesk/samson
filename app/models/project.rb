@@ -2,6 +2,7 @@ class Project < ActiveRecord::Base
   has_soft_deletion default_scope: true
 
   validates :name, :repository_url, presence: true
+  validates :permalink, uniqueness: true
   before_create :generate_token
   before_create :generate_permalink
 
