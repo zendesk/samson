@@ -17,6 +17,6 @@ class ProfilesController < ApplicationController
   protected
 
   def user_params
-    params.require(:user).permit(:name, :email)
+    params.require(:user).permit(:name, :email, :desktop_notify)
   end
 end

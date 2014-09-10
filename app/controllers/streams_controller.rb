@@ -49,6 +49,7 @@ class StreamsController < ApplicationController
     if @deploy
       JSON.dump(
         title: deploy_page_title,
+        notification: deploy_notification,
         html: render_to_body(partial: 'deploys/header', formats: :html)
       )
     else
