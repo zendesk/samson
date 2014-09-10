@@ -20,7 +20,7 @@ class Deploy < ActiveRecord::Base
   end
 
   def summary
-    "#{job.user.name} #{summary_action} #{short_reference} to #{stage.name}"
+    "#{job.user.name} #{deploy_buddy} #{summary_action} #{short_reference} to #{stage.name}"
   end
 
   def summary_for_timeline
@@ -64,6 +64,10 @@ class Deploy < ActiveRecord::Base
     DeployService.new(project, user).confirm_deploy!(self, stage, reference, buddy)
   end
 
+  def start_time
+    BuddyCheck.enabled? ? started_at || updated_at : created_at
+  end
+
   def pending_non_production?
     pending? && !stage.production?
   end
@@ -82,7 +86,7 @@ class Deploy < ActiveRecord::Base
   end
 
   def self.active
-    includes(:job).where(jobs: { status: %w[pending running cancelling] })
+    includes(:job).where(jobs: { status: Job::ACTIVE_STATUSES })
   end
 
   def self.running
@@ -126,5 +130,10 @@ class Deploy < ActiveRecord::Base
     if stage.locked? || Lock.global.exists?
       errors.add(:stage, 'is locked')
     end
+  end
+
+  def deploy_buddy
+    return if ( BuddyCheck.enabled? || buddy.nil? )
+    user.id == buddy.id ? "(without a buddy)" : "(along with #{buddy.name})"
   end
 end

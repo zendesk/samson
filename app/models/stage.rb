@@ -12,14 +12,6 @@ class Stage < ActiveRecord::Base
     -> { order('stage_commands.position ASC') },
     through: :stage_commands
 
-  has_one :last_deploy, -> {
-    Deploy.successful
-  }, class_name: 'Deploy'
-
-  has_one :current_deploy, -> {
-    Deploy.running
-  }, class_name: 'Deploy'
-
   default_scope { order(:order) }
 
   validates :name, presence: true, uniqueness: { scope: [:project, :deleted_at] }
@@ -53,6 +45,21 @@ class Stage < ActiveRecord::Base
 
   def self.deployed_on_release
     where(deploy_on_release: true)
+  end
+
+  def self.where_reference_being_deployed(reference)
+    joins(deploys: :job).where(
+      deploys: { reference: reference },
+      jobs: { status: Job::ACTIVE_STATUSES }
+    )
+  end
+
+  def current_deploy
+    @current_deploy ||= deploys.running.first
+  end
+
+  def last_deploy
+    @last_deploy ||= deploys.successful.first
   end
 
   def locked?

@@ -12,7 +12,7 @@ class ProjectsController < ApplicationController
   def index
     respond_to do |format|
       format.html do
-        @projects = projects_for_user.alphabetical.includes(stages: [:current_deploy, { lock: :user }])
+        @projects = projects_for_user.alphabetical.includes(stages: { lock: :user })
       end
 
       format.json do
@@ -46,7 +46,7 @@ class ProjectsController < ApplicationController
   end
 
   def show
-    @stages = project.stages.includes(:last_deploy, :lock)
+    @stages = project.stages.includes(:lock)
   end
 
   def edit

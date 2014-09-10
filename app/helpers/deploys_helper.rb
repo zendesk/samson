@@ -62,8 +62,7 @@ module DeploysHelper
   end
 
   def duration_text(deploy)
-    dt_start = BuddyCheck.enabled? ? deploy.started_at || deploy.updated_at : deploy.created_at
-    seconds  = (deploy.updated_at - dt_start).to_i
+    seconds  = (deploy.updated_at - deploy.start_time).to_i
 
     duration = ""
 
@@ -71,10 +70,10 @@ module DeploysHelper
       minutes = seconds / 60
       seconds = seconds - minutes * 60
 
-      duration += "#{minutes} minute".pluralize(minutes)
+      duration << "#{minutes} minute".pluralize(minutes)
     end
 
-    duration += (seconds > 0 || duration.size == 0 ? " #{seconds} second".pluralize(seconds) : "")
+    duration << (seconds > 0 || duration.size == 0 ? " #{seconds} second".pluralize(seconds) : "")
   end
 
   def syntax_highlight(code, language = :ruby)
@@ -109,9 +108,13 @@ module DeploysHelper
     def content_no_buddy_check(deploy)
       if deploy.finished?
         content = h "#{deploy.summary} "
-        content << content_tag(:span, deploy.created_at.rfc822, data: { time: datetime_to_js_ms(deploy.created_at) })
+        content << deploy_time(deploy)
         content << ", it took #{duration_text(deploy)}."
       end
     end
 
+    def deploy_time(deploy)
+      time = deploy.start_time
+      content_tag(:span, time.rfc822, data: { time: datetime_to_js_ms(time) }, class: "mouseover")
+    end
 end

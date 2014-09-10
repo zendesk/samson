@@ -6,6 +6,8 @@ class Job < ActiveRecord::Base
 
   after_update { deploy.touch if deploy }
 
+  ACTIVE_STATUSES = %w[pending running cancelling].freeze
+
   def self.non_deploy
     includes(:deploy).where(deploys: { id: nil })
   end

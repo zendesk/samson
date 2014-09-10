@@ -47,7 +47,7 @@ class TerminalExecutor
     end
 
     begin
-      output.each(3) {|line| @output.write(line) }
+      output.each(56) {|line| @output.write(line) }
     rescue Errno::EIO
       # The IO has been closed.
     end
