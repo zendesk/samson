@@ -14,6 +14,7 @@ function startStream() {
   $(document).ready(function() {
     var $messages = $("#messages");
     var streamUrl = $("#output").data("streamUrl");
+    var doNotify  = $("#output").data("desktopNotify");
     var source = new EventSource(streamUrl);
 
     var addLine = function(data) {
@@ -55,6 +56,10 @@ function startStream() {
 
       $('#header').html(data.html);
       window.document.title = data.title;
+
+      if ( doNotify ) {
+        new Notification(data.notification);
+      }
 
       toggleOutputToolbar();
       timeAgoFormat();
