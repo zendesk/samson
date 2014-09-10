@@ -58,7 +58,7 @@ function startStream() {
       window.document.title = data.title;
 
       if ( doNotify ) {
-        new Notification(data.notification);
+        new Notification(data.notification, {icon: '/favicon.ico'});
       }
 
       toggleOutputToolbar();
