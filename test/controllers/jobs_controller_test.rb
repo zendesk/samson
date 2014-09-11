@@ -7,10 +7,11 @@ describe JobsController do
   let(:command) { "echo hello" }
   let(:job) { Job.create!(command: command, project: project, user: deployer) }
   let(:job_service) { stub(execute!: nil) }
+  let(:execute_called) { [] }
 
   setup do
     JobService.stubs(:new).with(project, deployer).returns(job_service)
-    job_service.stubs(:execute!).returns(job)
+    job_service.stubs(:execute!).capture(execute_called).returns(job)
   end
 
   as_a_viewer do
@@ -76,9 +77,7 @@ describe JobsController do
       end
 
       it "creates a job" do
-        assert_received(job_service, :execute!) do |expect|
-          expect.with "master", [], command
-        end
+        assert_equal [["master", [], command]], execute_called
       end
     end
 

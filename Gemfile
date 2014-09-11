@@ -74,7 +74,7 @@ end
 group :test do
   gem 'minitest-rails', '~> 2.0.0.beta1'
   gem 'minitest-rg'
-  gem 'bourne'
+  gem 'mocha', require: false
   gem 'webmock', require: false
   gem 'simplecov', require: false
 end
