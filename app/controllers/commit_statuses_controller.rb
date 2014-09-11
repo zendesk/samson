@@ -14,6 +14,6 @@ class CommitStatusesController < ApplicationController
   end
 
   def project
-    @project ||= Project.find(params[:project_id])
+    @project ||= Project.find_by_param!(params[:project_id])
   end
 end

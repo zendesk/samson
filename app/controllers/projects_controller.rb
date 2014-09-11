@@ -74,6 +74,7 @@ class ProjectsController < ApplicationController
     params.require(:project).permit(
       :name,
       :repository_url,
+      :permalink,
       :release_branch,
       stages_attributes: [
         :name, :confirm, :command,
@@ -89,7 +90,7 @@ class ProjectsController < ApplicationController
   end
 
   def project
-    @project ||= Project.find(params[:id])
+    @project ||= Project.find_by_param!(params[:id])
   end
 
   def redirect_viewers!
