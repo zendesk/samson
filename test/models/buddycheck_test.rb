@@ -13,6 +13,19 @@ class BuddyCheckDeployServiceTest < ActiveSupport::TestCase
   let(:buddy_same) { user }
   let(:buddy_other) { users(:deployer_buddy) }
 
+  it "start_time is set for buddy_checked deploy" do
+    deploy_rtn = stage.create_deploy(reference: reference, user: user)
+    deploy_rtn.confirm_buddy!(buddy_other)
+
+    assert_equal true, deploy_rtn.start_time.to_i > 0
+  end
+
+  it "start_time is set for non-buddy_checked deploy" do
+    deploy_rtn = stage.create_deploy(reference: reference, user: user)
+
+    assert_equal true, deploy_rtn.start_time.to_i > 0
+  end
+
   it "does not deploy production if buddy check is enabled" do
     BuddyCheck.stubs(:enabled?).returns(true)
 
