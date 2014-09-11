@@ -5,6 +5,51 @@ describe Deploy do
   let(:user) { users(:deployer) }
   let(:stage) { stages(:test_staging) }
 
+  describe "#deploy_buddy" do
+    setup { @deploy = create_deploy! }
+
+    describe "no buddy message at all" do
+      it "returns no buddy name when BuddyCheck is not enabled" do
+        BuddyCheck.stubs(:enabled?).returns(false)
+        @deploy.summary.must_match(/#{user.name}  deployed/)
+      end
+
+      it "returns no buddy if we are not deploying to production" do
+        @deploy.stubs(:production?).returns(false)
+        @deploy.summary.must_match(/#{user.name}  deployed/)
+      end
+    end
+
+    describe "when a buddy message should be included" do
+      setup do
+        BuddyCheck.stubs(:enabled?).returns(true)
+        stage.stubs(:production?).returns(true)
+        @deploy.stubs(:stage).returns(stage)
+      end
+
+      it "returns 'waiting for a buddy' when waiting for a buddy" do
+        stage.stubs(:pending?).returns(true)
+        @deploy.summary.must_match(/waiting for a buddy/)
+      end
+
+      it "returns 'without a buddy' when bypassed" do
+        stage.stubs(:pending?).returns(false)
+        @deploy.stubs(:buddy).returns(user)
+        @deploy.summary.must_match(/without a buddy/)
+
+        @deploy.stubs(:buddy).returns(nil)
+        @deploy.summary.must_match(/without a buddy/)
+      end
+
+      it "should return the name of the buddy when not bypassed" do
+        stage.stubs(:pending?).returns(false)
+        other_user = users(:deployer_buddy)
+        @deploy.stubs(:buddy).returns(other_user)
+        @deploy.summary.must_match(/#{other_user.name}/)
+      end
+    end
+  end
+
   describe "#previous_deploy" do
     it "returns the deploy prior to that deploy" do
       deploy1 = create_deploy!
