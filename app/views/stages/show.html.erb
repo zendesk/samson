@@ -10,7 +10,10 @@
  <div class="alert alert-warning">Deployments to this stage were locked by <%= @stage.lock.user.name %> <%= time_ago_in_words(@stage.lock.created_at) %> ago. <%= @stage.lock.reason %></div>
 <% end %>
 
-<h1><%= @stage.name %></h1>
+<h1>
+  <%= @stage.name %>
+  <%= image_tag project_stage_path(@project, @stage, format: :svg, token: Rails.application.config.samson.badge_token), title: "Deploy badge" %>
+</h1>
 
 <section>
   <h2>Actions</h2>
