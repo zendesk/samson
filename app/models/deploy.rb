@@ -133,7 +133,14 @@ class Deploy < ActiveRecord::Base
   end
 
   def deploy_buddy
-    return if ( BuddyCheck.enabled? || buddy.nil? )
-    user.id == buddy.id ? "(without a buddy)" : "(along with #{buddy.name})"
+    return unless (BuddyCheck.enabled? && stage.production?)
+
+    if buddy.nil? && stage.pending?
+      "(waiting for a buddy)"
+    elsif (buddy.nil? || (user.id == buddy.id))
+      "(without a buddy)"
+    else
+      "(along with #{buddy.name})"
+    end
   end
 end
