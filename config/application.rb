@@ -57,5 +57,10 @@ module Samson
       host: config.samson.uri.host,
       protocol: config.samson.uri.scheme
     }
+
+    config.after_initialize do
+      # Token used to request badges
+      config.samson.badge_token = Digest::MD5.hexdigest('badge_token' << Samson::Application.config.secret_key_base)
+    end
   end
 end

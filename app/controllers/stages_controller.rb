@@ -1,7 +1,8 @@
 class StagesController < ApplicationController
+  skip_before_filter :login_users, if: :badge?
   before_filter :authorize_admin!, except: [:index, :show]
-  before_filter :authorize_deployer!
-
+  before_filter :authorize_deployer!, unless: :badge?
+  before_filter :check_token, if: :badge?
   before_filter :find_project
   before_filter :find_stage, only: [:show, :edit, :update, :destroy, :clone]
 
@@ -25,7 +26,24 @@ class StagesController < ApplicationController
   end
 
   def show
-    @deploys = @stage.deploys.includes(:stage, job: :user).page(params[:page])
+    respond_to do |format|
+      format.html do
+        @deploys = @stage.deploys.includes(:stage, job: :user).page(params[:page])
+      end
+      format.svg do
+        badge = if deploy = @stage.last_deploy
+          "#{@stage.name}-#{deploy.short_reference}-green"
+        else
+          "#{@stage.name}-None-red"
+        end
+
+        if stale?(etag: badge)
+          expires_in 1.minute, :public => true
+          image = open("http://img.shields.io/badge/#{badge}.svg").read
+          render text: image, content_type: Mime::SVG
+        end
+      end
+    end
   end
 
   def new
@@ -86,6 +104,16 @@ class StagesController < ApplicationController
   end
 
   private
+
+  def check_token
+    unless params[:token] == Rails.application.config.samson.badge_token
+      raise ActiveRecord::RecordNotFound
+    end
+  end
+
+  def badge?
+    action_name == 'show' && request.format == Mime::SVG
+  end
 
   def stage_params
     params.require(:stage).permit(

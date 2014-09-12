@@ -3,6 +3,41 @@ require_relative '../test_helper'
 describe StagesController do
   subject { stages(:test_staging) }
 
+  unauthorized :get, :show, project_id: 1, id: 1, token: Rails.application.config.samson.badge_token
+  unauthorized :get, :index, project_id: 1, token: Rails.application.config.samson.badge_token, format: :svg
+
+  describe 'GET to :show with svg' do
+    let(:valid_params) {{
+      project_id: subject.project.to_param,
+      id: subject.id,
+      format: :svg,
+      token: Rails.application.config.samson.badge_token
+    }}
+    let(:job) { Job.create!(command: "", project: projects(:test), user: users(:deployer), status: 'succeeded') }
+    let(:deploy) { Deploy.create!(stage: subject, job: job, reference: "foo") }
+    before { deploy }
+
+    it "renders" do
+      stub_request(:get, "http://img.shields.io/badge/Staging-foo-green.svg")
+      get :show, valid_params
+      assert_response :success
+      response.content_type.must_equal Mime::SVG
+    end
+
+    it "fails with invalid token" do
+      get :show, valid_params.merge(token: 'invalid')
+      assert_redirected_to "/"
+    end
+
+    it "renders none without deploy" do
+      deploy.destroy!
+      stub_request(:get, "http://img.shields.io/badge/Staging-None-red.svg")
+      get :show, valid_params
+      assert_response :success
+      response.content_type.must_equal Mime::SVG
+    end
+  end
+
   as_a_deployer do
     describe 'GET to :show' do
       describe 'valid' do
