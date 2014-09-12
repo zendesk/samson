@@ -135,7 +135,7 @@ class Stage < ActiveRecord::Base
   end
 
   def first_successful_deploy?
-    Deploy.successful.where(stage: self).limit(2).count == 1
+    deploys.successful.limit(2).count == 1
   end
 
   private
