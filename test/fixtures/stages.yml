@@ -6,4 +6,4 @@ test_production:
   name: Production
   project: test
   confirm: false
-  production: 1
+  production: true
