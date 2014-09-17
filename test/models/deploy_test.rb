@@ -28,12 +28,11 @@ describe Deploy do
       end
 
       it "returns 'waiting for a buddy' when waiting for a buddy" do
-        stage.stubs(:pending?).returns(true)
+        @deploy.stubs(:pending?).returns(true)
         @deploy.summary.must_match(/waiting for a buddy/)
       end
 
       it "returns 'without a buddy' when bypassed" do
-        stage.stubs(:pending?).returns(false)
         @deploy.stubs(:buddy).returns(user)
         @deploy.summary.must_match(/without a buddy/)
 
@@ -42,7 +41,6 @@ describe Deploy do
       end
 
       it "should return the name of the buddy when not bypassed" do
-        stage.stubs(:pending?).returns(false)
         other_user = users(:deployer_buddy)
         @deploy.stubs(:buddy).returns(other_user)
         @deploy.summary.must_match(/#{other_user.name}/)

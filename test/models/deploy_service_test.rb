@@ -10,6 +10,9 @@ class DeployServiceTest < ActiveSupport::TestCase
   let(:deploy) { stub(user: user, job: job, changeset: "changeset") }
   let(:job_execution) { JobExecution.new(reference, job) }
 
+  let(:stage_production) { stages(:test_production) }
+  let(:job_production) { project.jobs.create!(user: user, command: "foo", status: "succeeded") }
+
   it "creates a new deploy" do
     count = Deploy.count
     service.deploy!(stage, reference)
@@ -21,6 +24,15 @@ class DeployServiceTest < ActiveSupport::TestCase
       stage.stubs(:send_flowdock_notifications?).returns(true)
       FlowdockNotification.any_instance.expects(:deliver)
       service.deploy!(stage, reference)
+    end
+  end
+
+  describe "buddy request notifications" do
+    it "sends flowedock chat notifications for production stages" do
+      stage_production.stubs(:send_flowdock_notifications?).returns(true)
+      BuddyCheck.stubs(:enabled?).returns(true)
+      FlowdockNotification.any_instance.expects(:buddy_request)
+      service.deploy!(stage_production, reference)
     end
   end
 
