@@ -81,7 +81,7 @@ module DeploysHelper
   end
 
   def stages_select_options
-    @project.stages.unlocked.map do |stage|
+    @project.stages.unlocked_to(current_user).map do |stage|
       [stage.name, stage.id, 'data-confirmation' => stage.confirm?]
     end
   end

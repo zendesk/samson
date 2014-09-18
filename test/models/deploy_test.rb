@@ -3,6 +3,7 @@ require_relative '../test_helper'
 describe Deploy do
   let(:project) { projects(:test) }
   let(:user) { users(:deployer) }
+  let(:user2) { users(:admin) }
   let(:stage) { stages(:test_staging) }
 
   describe "#deploy_buddy" do
@@ -95,15 +96,24 @@ describe Deploy do
       stage.create_lock!(user: user)
     end
 
-    it 'fails' do
-      lambda { create_deploy! }.must_raise(ActiveRecord::RecordInvalid)
+    describe 'stage locked by someone else' do
+      it 'fails' do
+        lambda { create_deploy!(job_attributes: { user: user2 }) }.must_raise(ActiveRecord::RecordInvalid)
+      end
+    end
+
+    describe 'stage locked by the current user' do
+      it 'works' do
+        create_deploy!(job_attributes: { user: user })
+        Deploy.all.wont_be_empty
+      end
     end
   end
 
   def create_deploy!(attrs = {})
     default_attrs = {
       reference: "baz",
-      job: create_job!
+      job: create_job!(attrs.delete(:job_attributes) || {})
     }
 
     stage.deploys.create!(default_attrs.merge(attrs))

@@ -5,6 +5,7 @@ describe ApplicationHelper do
     let(:project) { projects(:test) }
     let(:stage) { stages(:test_staging) }
     let(:link) { deploy_link(project, stage) }
+    let(:current_user) { users(:admin) }
 
     it "starts a deploy" do
       assert_includes link, ">Deploy<"
@@ -12,7 +13,7 @@ describe ApplicationHelper do
     end
 
     it "shows locked" do
-      stage.stubs(locked?: true)
+      stage.stubs(locked_to?: true)
       assert_includes link, ">Locked<"
     end
 
