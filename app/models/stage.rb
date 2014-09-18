@@ -36,7 +36,7 @@ class Stage < ActiveRecord::Base
     end
   end
 
-  def self.unlocked_to(user)
+  def self.unlocked_for(user)
     where("locks.id IS NULL OR locks.user_id = ?", user.id).
     joins("LEFT OUTER JOIN locks ON \
           locks.deleted_at IS NULL AND \
@@ -66,7 +66,7 @@ class Stage < ActiveRecord::Base
     lock.present?
   end
 
-  def locked_to?(user)
+  def locked_for?(user)
     locked? && lock.user != user
   end
 

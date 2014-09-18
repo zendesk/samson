@@ -127,7 +127,7 @@ class Deploy < ActiveRecord::Base
   end
 
   def stage_is_deployable
-    if stage.locked? && stage.locked_to?(user) || Lock.global.exists?
+    if stage.locked? && stage.locked_for?(user) || Lock.global.exists?
       errors.add(:stage, 'is locked')
     end
   end

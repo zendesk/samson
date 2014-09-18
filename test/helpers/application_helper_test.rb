@@ -13,7 +13,7 @@ describe ApplicationHelper do
     end
 
     it "shows locked" do
-      stage.stubs(locked_to?: true)
+      stage.stubs(locked_for?: true)
       assert_includes link, ">Locked<"
     end
 

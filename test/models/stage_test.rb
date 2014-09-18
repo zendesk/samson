@@ -151,14 +151,14 @@ describe Stage do
     end
   end
 
-  describe 'unlocked_to/locked?/locked_to?' do
+  describe 'unlocked_for/locked?/locked_for?' do
     describe 'with a lock' do
       before do
         subject.create_lock!(user: users(:deployer))
       end
 
       it 'is not included' do
-        Stage.unlocked_to(users(:admin)).wont_include(subject)
+        Stage.unlocked_for(users(:admin)).wont_include(subject)
       end
 
       it 'is locked?' do
@@ -166,11 +166,11 @@ describe Stage do
       end
 
       it 'locks other users out' do
-        subject.reload.locked_to?(users(:admin)).must_equal true
+        subject.reload.locked_for?(users(:admin)).must_equal true
       end
 
       it 'does not lock out the user who puts up the lock' do
-        subject.reload.locked_to?(users(:deployer)).must_equal false
+        subject.reload.locked_for?(users(:deployer)).must_equal false
       end
     end
 
@@ -180,7 +180,7 @@ describe Stage do
       end
 
       it 'is not empty' do
-        Stage.unlocked_to(users(:admin)).wont_be_empty
+        Stage.unlocked_for(users(:admin)).wont_be_empty
       end
 
       it 'is not locked' do
@@ -189,7 +189,7 @@ describe Stage do
     end
 
     it 'includes unlocked stage' do
-      Stage.unlocked_to(users(:deployer)).must_include(subject)
+      Stage.unlocked_for(users(:deployer)).must_include(subject)
     end
 
     it 'is not locked' do
