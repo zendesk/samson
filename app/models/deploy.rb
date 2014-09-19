@@ -8,7 +8,7 @@ class Deploy < ActiveRecord::Base
   default_scope { order(created_at: :desc, id: :desc) }
 
   validates_presence_of :reference
-  validate :stage_is_unlocked
+  validate :stage_is_deployable
 
   delegate :started_by?, :stop!, :status, :user, :output, to: :job
   delegate :active?, :pending?, :running?, :cancelling?, :cancelled?, :succeeded?, to: :job
@@ -126,8 +126,8 @@ class Deploy < ActiveRecord::Base
     end
   end
 
-  def stage_is_unlocked
-    if stage.locked? || Lock.global.exists?
+  def stage_is_deployable
+    if stage.locked_for?(user) || Lock.global.exists?
       errors.add(:stage, 'is locked')
     end
   end

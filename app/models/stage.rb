@@ -36,8 +36,8 @@ class Stage < ActiveRecord::Base
     end
   end
 
-  def self.unlocked
-    where(locks: { id: nil }).
+  def self.unlocked_for(user)
+    where("locks.id IS NULL OR locks.user_id = ?", user.id).
     joins("LEFT OUTER JOIN locks ON \
           locks.deleted_at IS NULL AND \
           locks.stage_id = stages.id")
@@ -64,6 +64,10 @@ class Stage < ActiveRecord::Base
 
   def locked?
     lock.present?
+  end
+
+  def locked_for?(user)
+    locked? && lock.user != user
   end
 
   def current_release?(release)
