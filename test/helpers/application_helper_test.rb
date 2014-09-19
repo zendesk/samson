@@ -18,7 +18,10 @@ describe ApplicationHelper do
     end
 
     it "shows running deploy" do
-      deploy = stage.deploys.create!(reference: 'master', job_id: 1)
+      deploy = stage.deploys.create!(
+        reference: 'master',
+        job: Job.create(user: current_user, command: '', project: project)
+      )
       stage.stubs(current_deploy: deploy)
       assert_includes link, ">Deploying master...<"
       assert_includes link, %{href="/projects/#{project.to_param}/deploys/#{deploy.id}"}
