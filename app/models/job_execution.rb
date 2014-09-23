@@ -122,7 +122,14 @@ class JobExecution
     ]
 
     ActiveRecord::Base.clear_active_connections!
-    @executor.execute!(*commands)
+    payload = { stage: "none", project: "none", command: commands.join("\n")}
+    unless @job.deploy.nil?
+      payload[:stage] = @job.deploy.stage.name
+      payload[:project] = @job.deploy.project.name
+    end
+    ActiveSupport::Notifications.instrument("execute_shell.samson", payload) do
+      payload[:success] = @executor.execute!(*commands)
+    end
   end
 
   def setup!(dir)
@@ -215,7 +222,10 @@ class JobExecution
 
     def start_job(reference, job)
       new(reference, job).tap do |job_execution|
-        registry[job.id] = job_execution.tap(&:start!) if enabled
+        if enabled
+          registry[job.id] = job_execution.tap(&:start!) 
+          ActiveSupport::Notifications.instrument "job.threads", :thread_count => registry.length
+        end
       end
     end
 
@@ -225,6 +235,7 @@ class JobExecution
 
     def finished_job(job)
       registry.delete(job.id)
+      ActiveSupport::Notifications.instrument "job.threads", :thread_count => registry.length
     end
 
     private

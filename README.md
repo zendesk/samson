@@ -184,6 +184,12 @@ Any stage can be configured to automatically deploy new releases. For instance,
 you might want each new release to be deployed to your staging environment
 automatically.
 
+### Instrumentation
+
+Samson sends StatsD basic web request metrics and metrics about deploys and threads 
+in use. Statsd silently disables itself if no agent is running on the host. All 
+metrics collected are prepending with 'samson.app'.
+
 ### Contributing
 
 Improvements are always welcome. Please follow these steps to contribute
