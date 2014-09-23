@@ -65,7 +65,7 @@ class Deploy < ActiveRecord::Base
   end
 
   def start_time
-    BuddyCheck.enabled? ? started_at || updated_at : created_at
+    started_at || created_at
   end
 
   def pending_non_production?
