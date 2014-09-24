@@ -36,6 +36,14 @@ describe StagesController do
       assert_response :success
       response.content_type.must_equal Mime::SVG
     end
+
+    it "renders strange characters" do
+      subject.update_column(:name, 'Foo & Bar 1-4')
+      stub_request(:get, "http://img.shields.io/badge/Foo%20&amp;%20Bar%201&mdash;4-foo-green.svg")
+      get :show, valid_params
+      assert_response :success
+      response.content_type.must_equal Mime::SVG
+    end
   end
 
   as_a_deployer do
