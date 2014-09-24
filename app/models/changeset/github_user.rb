@@ -1,10 +1,19 @@
+require 'uri'
+
 class Changeset::GithubUser
   def initialize(data)
     @data = data
   end
 
   def avatar_url
-    "https://www.gravatar.com/avatar/#{@data.gravatar_id}?s=20"
+    uri = URI(@data.avatar_url)
+    params = URI.decode_www_form(uri.query || [])
+
+    # The `s` parameter controls the size of the avatar.
+    params << ["s", "20"]
+
+    uri.query = URI.encode_www_form(params)
+    uri.to_s
   end
 
   def url
