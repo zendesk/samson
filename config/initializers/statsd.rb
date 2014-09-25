@@ -11,7 +11,7 @@ raise "No Statsd configuration for Rails env #{Rails.env}" unless config_for_env
 $statsd = Statsd.new(config_for_environment['host'], config_for_environment['port'])
 $statsd.namespace = "samson.app"
 
-unless defined?(Rails::Console)
+if ENV['SERVER_MODE']
   $statsd.event "Startup", "Samson startup"
 end
 
