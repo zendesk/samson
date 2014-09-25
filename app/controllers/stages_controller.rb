@@ -32,9 +32,9 @@ class StagesController < ApplicationController
       end
       format.svg do
         badge = if deploy = @stage.last_deploy
-          "#{@stage.name}-#{deploy.short_reference}-green"
+          "#{badge_safe(@stage.name)}-#{badge_safe(deploy.short_reference)}-green"
         else
-          "#{@stage.name}-None-red"
+          "#{badge_safe(@stage.name)}-None-red"
         end
 
         if stale?(etag: badge)
@@ -104,6 +104,10 @@ class StagesController < ApplicationController
   end
 
   private
+
+  def badge_safe(string)
+    CGI.escape(string.gsub('&', '&amp;')).gsub('-', '&mdash;').gsub('+','%20')
+  end
 
   def check_token
     unless params[:token] == Rails.application.config.samson.badge_token
