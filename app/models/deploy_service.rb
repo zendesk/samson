@@ -32,7 +32,9 @@ class DeployService
   def send_before_notifications(stage, deploy, buddy)
     send_flowdock_notification(stage, deploy)
 
-    flowdock_buddy_request_completed(stage, deploy, buddy) if (BuddyCheck.enabled? && stage.production?)
+    if BuddyCheck.enabled? && stage.production?
+      flowdock_buddy_request_completed(stage, deploy, buddy)
+    end
 
     if BuddyCheck.enabled? && buddy == deploy.user
       DeployMailer.bypass_email(stage, deploy, user).deliver
@@ -54,6 +56,7 @@ class DeployService
       FlowdockNotification.new(stage, deploy).buddy_request_completed(buddy)
     end
   end
+
   def flowdock_buddy_request(stage, deploy)
     if stage.send_flowdock_notifications?
       FlowdockNotification.new(stage, deploy).buddy_request

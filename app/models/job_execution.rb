@@ -122,11 +122,14 @@ class JobExecution
     ]
 
     ActiveRecord::Base.clear_active_connections!
+
     payload = { stage: "none", project: "none", command: commands.join("\n")}
+
     unless @job.deploy.nil?
       payload[:stage] = @job.deploy.stage.name
       payload[:project] = @job.deploy.project.name
     end
+
     ActiveSupport::Notifications.instrument("execute_shell.samson", payload) do
       payload[:success] = @executor.execute!(*commands)
     end
@@ -223,7 +226,7 @@ class JobExecution
     def start_job(reference, job)
       new(reference, job).tap do |job_execution|
         if enabled
-          registry[job.id] = job_execution.tap(&:start!) 
+          registry[job.id] = job_execution.tap(&:start!)
           ActiveSupport::Notifications.instrument "job.threads", :thread_count => registry.length
         end
       end

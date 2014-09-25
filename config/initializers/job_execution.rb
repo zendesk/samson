@@ -1,6 +1,6 @@
 JobExecution.setup
 
-if !Rails.env.test? && !defined?(Rails::Console) && Job.table_exists?
+if !Rails.env.test? && Job.table_exists?
   JobExecution.enabled = true
 
   Rails.application.config.after_initialize do

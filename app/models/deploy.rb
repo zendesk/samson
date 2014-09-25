@@ -72,7 +72,7 @@ class Deploy < ActiveRecord::Base
     pending? && !stage.production?
   end
 
-  def pending_start!()
+  def pending_start!
     update_attributes(updated_at: Time.now)       # hack: refresh is immediate with update
     DeployService.new(project, user).confirm_deploy!(self, stage, reference, buddy)
   end
@@ -133,11 +133,11 @@ class Deploy < ActiveRecord::Base
   end
 
   def deploy_buddy
-    return unless (BuddyCheck.enabled? && stage.production?)
+    return unless BuddyCheck.enabled? && stage.production?
 
     if buddy.nil? && pending?
       "(waiting for a buddy)"
-    elsif (buddy.nil? || (user.id == buddy.id))
+    elsif buddy.nil? || (user.id == buddy.id)
       "(without a buddy)"
     else
       "(along with #{buddy.name})"
