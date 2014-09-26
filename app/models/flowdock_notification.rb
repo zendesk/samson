@@ -23,13 +23,14 @@ class FlowdockNotification
       :external_user_name => 'Samson'
     )
 
+    text = @user.name
     if @user == buddy
-      text = @user.name + " bypassed"
+      text += " bypassed"
     else
-      text = buddy.name + (approved ? " approved" : " stopped")
+      text +=  " " + buddy.name + (approved ? " approved" : " stopped")
     end
 
-    buddy_request_content = @user.name + " " + text + " deploy " + url_helpers.project_deploy_url(@project, @deploy)
+    buddy_request_content = text + " deploy " + url_helpers.project_deploy_url(@project, @deploy)
     chat_flow.push_to_chat(:content => buddy_request_content, :tags => ["buddy-request", "completed"])
   end
 
