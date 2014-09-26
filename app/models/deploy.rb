@@ -140,7 +140,7 @@ class Deploy < ActiveRecord::Base
     elsif buddy.nil? || (user.id == buddy.id)
       "(without a buddy)"
     else
-      "(along with #{buddy.name})"
+      "(with #{buddy.name})"
     end
   end
 end
