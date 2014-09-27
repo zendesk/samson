@@ -38,5 +38,12 @@
 # Ignore temp devel files
 /routes.txt
 
+# Ignore Vagrantfile
+/Vagrantfile
+
+# Ignore puppet
+/puppet/
+
+
 # .bak files
 *.bak
