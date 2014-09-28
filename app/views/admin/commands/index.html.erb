@@ -1,19 +1,21 @@
 <section class="clearfix">
   <table class="table table-hover table-condensed">
     <thead>
-      <tr>
-        <th>Command</th>
-        <th>Project</th>
-        <th>Actions</th>
-      </tr>
+    <tr>
+      <th>Command</th>
+      <th>Name</th>
+      <th>Project</th>
+      <th>Actions</th>
+    </tr>
     </thead>
 
     <tbody>
-      <% @commands.each do |command| %>
+    <% @commands.each do |command| %>
         <tr>
           <td>
             <pre class="pre-command pre-scrollable"><%= command.command %></pre>
           </td>
+          <td><%= command.name %></td>
           <td><%= command.project.try(:name) ? command.project.name : "Global" %></td>
           <td>
             <%= link_to "Edit", edit_admin_command_path(command) %>
@@ -22,7 +24,7 @@
           </td>
         </tr>
 
-      <% end %>
+    <% end %>
     </tbody>
   </table>
 
