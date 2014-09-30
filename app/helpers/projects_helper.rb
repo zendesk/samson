@@ -2,7 +2,7 @@ module ProjectsHelper
   def star_for_project(project)
     content_tag :span, class: "star" do
       if current_user.starred_project?(project)
-        path = star_path(project.id)
+        path = star_path(id: project)
         options = {
           class: "glyphicon glyphicon-star",
           method: :delete,
