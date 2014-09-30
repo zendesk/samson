@@ -26,6 +26,8 @@ class StreamsController < ApplicationController
 
   def event_handler(event, data)
     case event
+    when :started
+      started_response
     when :viewers
       viewers = data.uniq.reject {|user| user == current_user}
       viewers.to_json(only: [:id, :name])
@@ -33,6 +35,29 @@ class StreamsController < ApplicationController
       finished_response
     else
       JSON.dump(msg: render_log(data))
+    end
+  end
+
+  # Primarily used for updating the originating requestor's browser page when a buddy
+  # approved their deploy.
+  def started_response
+    ActiveRecord::Base.connection.verify!
+    @job.reload
+    @project = @job.project
+    @deploy = @job.deploy
+
+    Rails.logger.debug("started_response(#{current_user.id}): deploy status = " + @deploy.summary)
+
+    if @deploy
+      JSON.dump(
+          title: deploy_page_title,
+          html: render_to_body(partial: 'deploys/header', formats: :html)
+      )
+    else
+      JSON.dump(
+          title: job_page_title,
+          html: render_to_body(partial: 'jobs/header', formats: :html)
+      )
     end
   end
 
@@ -45,6 +70,7 @@ class StreamsController < ApplicationController
 
     @project = @job.project
     @deploy = @job.deploy
+    Rails.logger.debug("#{current_user.id}: finished_response: deploy status = " + @deploy.summary)
 
     if @deploy
       JSON.dump(
