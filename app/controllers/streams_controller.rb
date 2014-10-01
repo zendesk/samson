@@ -46,8 +46,6 @@ class StreamsController < ApplicationController
     @project = @job.project
     @deploy = @job.deploy
 
-    Rails.logger.debug("started_response(#{current_user.id}): deploy status = " + @deploy.summary)
-
     if @deploy
       JSON.dump(
           title: deploy_page_title,
@@ -62,13 +60,19 @@ class StreamsController < ApplicationController
   end
 
   def finished_response
+    Rails.logger.warn("Thread #{Thread.current.object_id}-#{current_user.id}: Emitting Finished SSE")
     @execution.viewers.delete(current_user) if @execution
 
-    @job.reload
+    ActiveRecord::Base.connection.verify!
+
+    ActiveRecord::Base.uncached do
+      Rails.logger.warn("Thread #{Thread.current.object_id}-#{current_user.id}: RELOADING: job '#{@job.id}' status '#{@job.status}'.")
+      @job.reload
+      Rails.logger.warn("Thread #{Thread.current.object_id}-#{current_user.id}: RELOADED: job '#{@job.id}' status '#{@job.status}'.")
+    end
 
     @project = @job.project
     @deploy = @job.deploy
-    Rails.logger.debug("#{current_user.id}: finished_response: deploy status = " + @deploy.summary)
 
     if @deploy
       JSON.dump(
