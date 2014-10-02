@@ -142,11 +142,17 @@
 
 <fieldset>
   <legend>Github</legend>
-    <div class="col-lg-6 checkbox">
-      <%= form.label :update_github_pull_requests do %>
-        <%= form.check_box :update_github_pull_requests %>
-        Update Pull Request after deployment
-      <% end %>
+  <div class="col-lg-6 checkbox">
+    <%= form.label :update_github_pull_requests do %>
+      <%= form.check_box :update_github_pull_requests %>
+      Update Pull Request after deployment
+    <% end %>
+  </div>
+  <div class="col-lg-6 checkbox">
+    <%= form.label :use_github_deployment_api do %>
+      <%= form.check_box :use_github_deployment_api %>
+      Use GitHub Deployment API [beta]
+    <% end %>
   </div>
 </fieldset>
 
