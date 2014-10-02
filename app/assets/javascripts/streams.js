@@ -26,13 +26,11 @@ function startStream() {
     };
 
     source.addEventListener('append', function(e) {
-      console.log("Event: append - " + e.data);
       $messages.trigger('contentchanged');
       addLine(e.data);
     }, false);
 
     source.addEventListener('viewers', function(e) {
-      console.log("Event: viewers - " + e.data);
       var users = JSON.parse(e.data);
 
       if (users.length > 0) {
@@ -49,13 +47,11 @@ function startStream() {
     }, false);
 
     source.addEventListener('replace', function(e) {
-      console.log("Event: replace - " + e.data);
       $messages.children().last().remove();
       addLine(e.data);
     }, false);
 
     source.addEventListener('started', function(e) {
-      console.log("Event: started - " + e.data);
       var data = JSON.parse(e.data);
 
       $('#header').html(data.html);
@@ -63,7 +59,6 @@ function startStream() {
     }, false);
 
     source.addEventListener('finished', function(e) {
-      console.log("Event: finished - " + e.data);
       var data = JSON.parse(e.data);
 
       $('#header').html(data.html);

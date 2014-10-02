@@ -72,11 +72,8 @@ class JobExecution
     else
       @job.fail!
     end
-    Rails.logger.warn("Thread #{Thread.current.object_id}: Updated job '#{@job}' state to #{@job.status}.")
 
     @output.close
-    Rails.logger.warn("Thread #{Thread.current.object_id}: Closed output channel!")
-
     @job.update_output!(output_aggregator.to_s)
 
     @subscribers.each do |subscriber|
