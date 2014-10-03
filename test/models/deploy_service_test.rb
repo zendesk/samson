@@ -31,7 +31,7 @@ class DeployServiceTest < ActiveSupport::TestCase
     it "sends flowedock chat notifications for production stages" do
       stage_production.stubs(:send_flowdock_notifications?).returns(true)
       BuddyCheck.stubs(:enabled?).returns(true)
-      FlowdockNotification.any_instance.expects(:buddy_request)
+      FlowdockNotification.any_instance.expects(:buddy_request).never
       service.deploy!(stage_production, reference)
     end
   end

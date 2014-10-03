@@ -52,12 +52,14 @@ class DeployService
   end
 
   def flowdock_buddy_request_completed(stage, deploy, buddy)
+    return #TODO: Disable for now, configurable changes coming in soon
     if stage.send_flowdock_notifications?
       FlowdockNotification.new(stage, deploy).buddy_request_completed(buddy)
     end
   end
 
   def flowdock_buddy_request(stage, deploy)
+    return #TODO: Disable for now, configurable changes coming in soon
     if stage.send_flowdock_notifications?
       FlowdockNotification.new(stage, deploy).buddy_request
     end
