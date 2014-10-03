@@ -56,17 +56,17 @@
 
   <div id="commands">
     <%= form.collection_check_boxes(:command_ids, form.object.all_commands, :id, :command) do |b| %>
-        <div class="row stage-bar bar">
-          <div class="col-lg-offset-1 col-lg-1">
-            <%= b.object.name %>
-          </div>
-          <div data-id="<%= b.value %>" class="col-lg-1 command-checkbox">
-            <%= b.check_box %>
-          </div>
-          <div class="col-lg-8">
-            <pre data-type="textarea" data-url="<%= admin_command_path(b.value, format: :json) %>" class="pre-command pre-inline<%= ' local' unless b.object.global? %>"><%= b.text %></pre>
-          </div>
+      <div class="row stage-bar bar">
+        <div class="col-lg-offset-1 col-lg-1">
+          <%= b.object.name %>
         </div>
+        <div data-id="<%= b.value %>" class="col-lg-1 command-checkbox">
+          <%= b.check_box %>
+        </div>
+        <div class="col-lg-8">
+          <pre data-type="textarea" data-url="<%= admin_command_path(b.value, format: :json) %>" class="pre-command pre-inline<%= ' local' unless b.object.global? %>"><%= b.text %></pre>
+        </div>
+      </div>
     <% end %>
   </div>
 

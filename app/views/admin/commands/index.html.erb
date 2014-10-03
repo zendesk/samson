@@ -10,7 +10,7 @@
     </thead>
 
     <tbody>
-    <% @commands.each do |command| %>
+     <% @commands.each do |command| %>
         <tr>
           <td>
             <pre class="pre-command pre-scrollable"><%= command.command %></pre>
@@ -23,7 +23,6 @@
             <%= link_to "Delete", admin_command_path(command), method: :delete, data: { confirm: "Are you sure?" } %>
           </td>
         </tr>
-
     <% end %>
     </tbody>
   </table>
