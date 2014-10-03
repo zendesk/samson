@@ -21,7 +21,15 @@ class Job < ActiveRecord::Base
   end
 
   def summary
-    "#{user.name} #{summary_action} against #{short_reference}"
+    "#{username} #{summary_action} against #{short_reference}"
+  end
+
+  def username
+    if self.user.nil? then
+      "Deleted User"
+    else
+      self.user.name
+    end
   end
 
   def started_by?(user)

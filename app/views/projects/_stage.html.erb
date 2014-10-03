@@ -10,7 +10,7 @@
       <td>-</td>
       <td>-</td>
     <% else %>
-      <td><%= stage.last_deploy.user.name %></td>
+      <td><%= stage.last_deploy.username %></td>
       <td><%= link_to stage.last_deploy.short_reference, project_deploy_path(project, stage.last_deploy), title: stage.last_deploy.reference %></td>
     <% end %>
     <td align="right"><%= deploy_link @project, stage %></td>

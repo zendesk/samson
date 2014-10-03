@@ -20,7 +20,7 @@ class Deploy < ActiveRecord::Base
   end
 
   def summary
-    "#{job.user.name} #{deploy_buddy} #{summary_action} #{short_reference} to #{stage.name}"
+    "#{job.username} #{deploy_buddy} #{summary_action} #{short_reference} to #{stage.name}"
   end
 
   def summary_for_timeline
@@ -28,11 +28,19 @@ class Deploy < ActiveRecord::Base
   end
 
   def summary_for_email
-    "#{job.user.name} #{summary_action} #{project.name} to #{stage.name} (#{reference})"
+    "#{job.username} #{summary_action} #{project.name} to #{stage.name} (#{reference})"
   end
 
   def commit
     job.try(:commit).presence || reference
+  end
+
+  def username
+    if self.user.nil? then
+      "Deleted User"
+    else
+      self.user.name
+    end
   end
 
   def short_reference

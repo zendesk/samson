@@ -31,9 +31,16 @@ class Release < ActiveRecord::Base
   end
 
   def self.find_by_version(version)
-   if version =~ /\Av(\d+)\Z/
-     number = $1.to_i
-     find_by_number(number)
-   end
- end
+    if version =~ /\Av(\d+)\Z/
+      number = $1.to_i
+      find_by_number(number)
+    end
+  end
+  def authorname
+    if self.author.nil? then
+      "Deleted User"
+    else
+      self.author.name
+    end
+  end
 end
