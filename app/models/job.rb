@@ -24,6 +24,10 @@ class Job < ActiveRecord::Base
     "#{user.name} #{summary_action} against #{short_reference}"
   end
 
+  def user
+    super || NullUser.new
+  end
+
   def started_by?(user)
     self.user == user
   end
