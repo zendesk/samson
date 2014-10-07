@@ -42,7 +42,11 @@ describe TerminalExecutor do
       end
 
       Timeout.timeout(5) do
-        subject.execute!('sleep 100').must_equal(false)
+        begin
+          subject.execute!('sleep 100').must_equal(false)
+        rescue Interrupt
+          raise "Interrupted"
+        end
       end
 
       thr.join
