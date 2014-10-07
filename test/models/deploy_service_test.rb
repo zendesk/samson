@@ -1,22 +1,24 @@
 require_relative '../test_helper'
 
 class DeployServiceTest < ActiveSupport::TestCase
-  let(:project) { projects(:test) }
-  let(:user) { users(:deployer) }
+  let(:project) { deploy.project }
+  let(:user) { job.user }
   let(:service) { DeployService.new(project, user) }
-  let(:stage) { stages(:test_staging) }
-  let(:reference) { "staging" }
-  let(:job) { project.jobs.create!(user: user, command: "foo", status: "succeeded") }
-  let(:deploy) { stub(user: user, job: job, changeset: "changeset") }
+  let(:stage) { deploy.stage }
+  let(:job) { jobs(:succeeded_test) }
+  let(:deploy) { deploys(:succeeded_test) }
+  let(:reference) { deploy.reference }
   let(:job_execution) { JobExecution.new(reference, job) }
 
   let(:stage_production) { stages(:test_production) }
   let(:job_production) { project.jobs.create!(user: user, command: "foo", status: "succeeded") }
 
   it "creates a new deploy" do
-    count = Deploy.count
-    service.deploy!(stage, reference)
-    assert_equal count + 1, Deploy.count
+    assert_difference "Job.count", +1 do
+      assert_difference "Deploy.count", +1 do
+        service.deploy!(stage, reference)
+      end
+    end
   end
 
   describe "before notifications" do

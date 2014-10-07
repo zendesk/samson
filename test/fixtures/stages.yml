@@ -2,6 +2,7 @@ test_staging:
   name: Staging
   project: test
   confirm: false
+
 test_production:
   name: Production
   project: test

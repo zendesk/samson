@@ -1,12 +1,12 @@
 require_relative '../test_helper'
 
 describe DeploysController do
-  let(:project) { projects(:test) }
-  let(:stage) { stages(:test_staging) }
+  let(:project) { job.project }
+  let(:stage) { deploy.stage }
   let(:deployer) { users(:deployer) }
-  let(:command) { "echo hello" }
-  let(:job) { Job.create!(command: command, project: project, user: deployer) }
-  let(:deploy) { Deploy.create!(stage: stage, job: job, reference: "foo") }
+  let(:command) { job.command }
+  let(:job) { jobs(:succeeded_test) }
+  let(:deploy) { deploys(:succeeded_test) }
   let(:deploy_service) { stub(deploy!: nil) }
   let(:deploy_called) { [] }
 
@@ -206,6 +206,7 @@ describe DeploysController do
       let(:changeset) { stub_everything(commits: [], files: [], pull_requests: [], jira_issues: []) }
 
       setup do
+        Deploy.delete_all # triggers more callbacks
         Changeset.stubs(:find).with(project.github_repo, nil, 'master').returns(changeset)
 
         post :confirm, project_id: project.to_param, deploy: {

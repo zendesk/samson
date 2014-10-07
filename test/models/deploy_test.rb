@@ -71,6 +71,7 @@ describe Deploy do
 
   describe ".prior_to" do
     it "scopes the records to deploys prior to the one passed in" do
+      Deploy.delete_all
       deploy1 = create_deploy!
       deploy2 = create_deploy!
       deploy3 = create_deploy!
