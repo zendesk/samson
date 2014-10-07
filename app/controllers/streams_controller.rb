@@ -40,7 +40,6 @@ class StreamsController < ApplicationController
     end
   end
 
-
   def status_response(event)
     if @execution and event == :started
       @execution.viewers.delete(current_user)
