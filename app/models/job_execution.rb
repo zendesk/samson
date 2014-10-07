@@ -99,12 +99,7 @@ class JobExecution
 
   def execute!(dir)
     unless setup!(dir)
-      if ProjectLock.owned?(@job.project)
-        ProjectLock.release(@job.project)
-      end
-
       @job.error!
-
       return
     end
 
@@ -152,22 +147,17 @@ class JobExecution
       "git checkout --quiet #{@reference.shellescape}"
     ]
 
-    @output.write("Attempting to lock repository...\n")
+    locked = lock_project do
+      return false unless @executor.execute!(*commands)
+      commit = commit_from_ref(repo_cache_dir, @reference)
+      ActiveRecord::Base.connection.verify!
+      @job.update_commit!(commit)
+    end
 
-    if grab_lock
-      @output.write("Repo locked, starting to clone...\n")
-
-      @executor.execute!(*commands).tap do |status|
-        if status
-          commit = commit_from_ref(repo_cache_dir, @reference)
-          ActiveRecord::Base.connection.verify!
-          @job.update_commit!(commit)
-          ProjectLock.release(@job.project)
-        end
-      end
+    if locked
+      true
     else
       @output.write("Could not get exclusive lock on repo. Maybe another stage is being deployed.\n")
-
       false
     end
   end
@@ -192,22 +182,20 @@ class JobExecution
     File.join(repo_cache_dir, "artifacts")
   end
 
-  def grab_lock
-    lock = false
-    end_time = Time.now + 10.minutes
-    holder = @job.deploy ? @job.deploy.stage.name : @job.user.name
-
-    until lock || Time.now > end_time
-      sleep 1
-
+  def lock_project(&block)
+    holder = (@job.deploy ? @job.deploy.stage.name : @job.user.name)
+    failed_to_lock = lambda do
       if Time.now.to_i % 10 == 0
-        @output.write("Waiting for repository while cloning for: #{ProjectLock.owner(@job.project)}\n")
+        @output.write("Waiting for repository while cloning for: #{MultiLock.owner(@job.project_id)}\n")
       end
-
-      lock ||= ProjectLock.grab(@job.project, holder)
     end
 
-    lock
+    MultiLock.lock(@job.project_id, holder, timeout: lock_timeout, failed_to_lock: failed_to_lock, &block)
+  end
+
+  # make testable
+  def lock_timeout
+    10.minutes
   end
 
   class << self

@@ -6,6 +6,7 @@ class JobExecutionTest < ActiveSupport::TestCase
   let(:project) { Project.create!(name: "duck", repository_url: repository_url) }
   let(:stage) { Stage.create!(name: "stage4", project: project) }
   let(:cached_repo_dir) { "#{base_dir}/cached_repos/#{project.id}" }
+  let(:repo_dir) { File.join(Rails.application.config.samson.cached_repos_dir, project.id.to_s) }
   let(:user) { User.create! }
   let(:job) { project.jobs.create!(command: "cat foo", user: user, project: project) }
   let(:execution) { JobExecution.new("master", job) }
@@ -13,7 +14,7 @@ class JobExecutionTest < ActiveSupport::TestCase
   before do
     user.name = "John Doe"
     user.email = "jdoe@test.com"
-    deploy = Deploy.create!(stage: stage, job: job, reference: "masterCADF")
+    Deploy.create!(stage: stage, job: job, reference: "masterCADF")
     JobExecution.enabled = true
     execute_on_remote_repo <<-SHELL
       git init
@@ -36,8 +37,6 @@ class JobExecutionTest < ActiveSupport::TestCase
 
     assert File.directory?(repo_dir)
   end
-
-  it "clones the cached repository into a temporary repository"
 
   it "checks out the specified commit" do
     execute_on_remote_repo <<-SHELL
@@ -131,7 +130,17 @@ class JobExecutionTest < ActiveSupport::TestCase
     JobExecution.find_by_job(job).must_be_nil
   end
 
-  it "runs the commands specified by the job"
+  it "cannot clone if project is locked" do
+    JobExecution.any_instance.stubs(:lock_timeout => 0.5) # 2 runs in the loop
+    refute File.directory?(repo_dir)
+    begin
+      MultiLock.send(:try_lock, project.id, "me")
+      execution.run!
+    ensure
+      MultiLock.send(:unlock, project.id)
+    end
+    refute File.directory?(repo_dir)
+  end
 
   describe "when JobExecution is disabled" do
     before do
