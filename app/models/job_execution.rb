@@ -5,18 +5,19 @@ require 'shellwords'
 class JobExecution
   # Whether or not execution is enabled. This allows completely disabling job
   # execution for testing purposes.
-  cattr_accessor(:enabled, instance_reader: true) do
+  cattr_accessor(:enabled, instance_writer: false) do
     Rails.application.config.samson.enable_job_execution
   end
 
   # The directory in which repositories should be cached.
-  cattr_accessor(:cached_repos_dir, instance_reader: true) do
+  cattr_accessor(:cached_repos_dir, instance_writer: false) do
     Rails.application.config.samson.cached_repos_dir
   end
 
-  attr_reader :output
-  attr_reader :job
-  attr_reader :viewers
+  cattr_reader(:registry, instance_accessor: false) { {} }
+  private_class_method :registry
+
+  attr_reader :output, :job, :viewers
 
   def initialize(reference, job)
     @output = OutputBuffer.new
@@ -197,10 +198,6 @@ class JobExecution
   end
 
   class << self
-    def setup
-      Thread.main[:job_executions] = ThreadSafe::Hash.new
-    end
-
     def find_by_job(job)
       find_by_id(job.id)
     end
@@ -225,12 +222,6 @@ class JobExecution
     def finished_job(job)
       registry.delete(job.id)
       ActiveSupport::Notifications.instrument "job.threads", :thread_count => registry.length
-    end
-
-    private
-
-    def registry
-      Thread.main[:job_executions]
     end
   end
 end
