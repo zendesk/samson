@@ -42,8 +42,8 @@ class JobExecution
     end
   end
 
-  def error!(exception)
-    message = "JobExecution failed: #{exception.message}"
+  def error!(exception, failed=true)
+   message = "JobExecution #{ failed ? 'failed' : 'errored' }: #{exception.message}"
 
     Airbrake.notify(exception,
       error_message: message,
@@ -53,13 +53,23 @@ class JobExecution
     )
 
     @output.write(message + "\n")
-    @job.error! if @job.active?
+    @job.error! if failed && @job.active?
   end
 
   def run!
     @job.run!
 
     output_aggregator = OutputAggregator.new(@output)
+    
+    @output.add_write_callback do
+      begin
+        # we can't wait for the stream to complete
+        oa = OutputAggregator.new(@output.to_a)
+        @job.update_output!(oa.to_s)
+      rescue Exception => e
+        error!(e,false)
+      end
+    end
 
     result = Dir.mktmpdir do |dir|
       execute!(dir)
