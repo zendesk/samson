@@ -32,6 +32,13 @@ describe Release do
       assert_equal [], release.currently_deploying_stages
     end
 
+    it "handles deleted author" do
+      create_deploy!(reference: "v666", status: "succeeded")
+      author.soft_delete!
+      release.reload
+      assert_equal NullUser.new.name, release.author.name
+    end
+
     def create_deploy!(reference:, status:)
       job = project.jobs.create!(user: author, commit: "x", command: "yes", status: status)
       stage.deploys.create!(reference: reference, job: job)
