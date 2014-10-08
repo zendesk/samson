@@ -6,9 +6,8 @@ class MultiLock
     def lock(id, holder, options)
       locked = false
       end_time = Time.now + options.fetch(:timeout)
-      loop do
-        locked = try_lock(id, holder)
-        break if locked || Time.now > end_time
+      until Time.now > end_time
+        break if locked = try_lock(id, holder)
         options.fetch(:failed_to_lock).call
         sleep 1
       end
