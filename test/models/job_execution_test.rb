@@ -123,11 +123,11 @@ class JobExecutionTest < ActiveSupport::TestCase
   it "removes the job from the registry" do
     execution = JobExecution.start_job("master", job)
 
-    JobExecution.find_by_job(job).wont_be_nil
+    JobExecution.find_by_id(job.id).wont_be_nil
 
     execution.wait!
 
-    JobExecution.find_by_job(job).must_be_nil
+    JobExecution.find_by_id(job.id).must_be_nil
   end
 
   it "cannot clone if project is locked" do
@@ -150,7 +150,7 @@ class JobExecutionTest < ActiveSupport::TestCase
     it "does not add the job to the registry" do
       job_execution = JobExecution.start_job('master', job)
       job_execution.wont_be_nil
-      JobExecution.find_by_job(job).must_be_nil
+      JobExecution.find_by_id(job.id).must_be_nil
     end
   end
 

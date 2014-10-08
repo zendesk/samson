@@ -198,10 +198,6 @@ class JobExecution
   end
 
   class << self
-    def find_by_job(job)
-      find_by_id(job.id)
-    end
-
     def find_by_id(id)
       registry[id.to_i]
     end
