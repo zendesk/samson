@@ -117,11 +117,10 @@ class JobExecution
 
     ActiveRecord::Base.clear_active_connections!
 
-    payload = { stage: "none", project: "none", command: commands.join("\n")}
+    payload = { stage: "none", project: @job.project.name, command: commands.join("\n")}
 
     unless @job.deploy.nil?
       payload[:stage] = @job.deploy.stage.name
-      payload[:project] = @job.deploy.project.name
     end
 
     ActiveSupport::Notifications.instrument("execute_shell.samson", payload) do
