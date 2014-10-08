@@ -17,7 +17,7 @@ class JobExecution
   cattr_reader(:registry, instance_accessor: false) { {} }
   private_class_method :registry
 
-  attr_reader :output, :job, :viewers
+  attr_reader :output, :job, :viewers, :stage
 
   def initialize(reference, job)
     @output = OutputBuffer.new
@@ -25,6 +25,7 @@ class JobExecution
     @viewers = JobViewers.new(@output)
     @subscribers = []
     @job, @reference = job, reference
+    @stage = @job.deploy.try(:stage)
   end
 
   def start!
@@ -117,11 +118,11 @@ class JobExecution
 
     ActiveRecord::Base.clear_active_connections!
 
-    payload = { stage: "none", project: @job.project.name, command: commands.join("\n")}
-
-    unless @job.deploy.nil?
-      payload[:stage] = @job.deploy.stage.name
-    end
+    payload = {
+      stage: (stage.try(:name) || "none"),
+      project: @job.project.name,
+      command: commands.join("\n")
+    }
 
     ActiveSupport::Notifications.instrument("execute_shell.samson", payload) do
       payload[:success] = @executor.execute!(*commands)
@@ -181,7 +182,7 @@ class JobExecution
   end
 
   def lock_project(&block)
-    holder = (@job.deploy ? @job.deploy.stage.name : @job.user.name)
+    holder = (stage.try(:name) || @job.user.name)
     failed_to_lock = lambda do
       if Time.now.to_i % 10 == 0
         @output.write("Waiting for repository while cloning for: #{MultiLock.owner(@job.project_id)}\n")
