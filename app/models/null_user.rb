@@ -5,7 +5,7 @@ class NullUser
   attr_accessor :name
 
   def attributes
-        {'name' => 'Deleted User'}
+    {'name' => 'Deleted User'}
   end
 
   def name
