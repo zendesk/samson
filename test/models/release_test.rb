@@ -39,9 +39,9 @@ describe Release do
       assert_equal NullUser.new.name, release.author.name
     end
 
-    def create_deploy!(reference:, status:)
-      job = project.jobs.create!(user: author, commit: "x", command: "yes", status: status)
-      stage.deploys.create!(reference: reference, job: job)
+    def create_deploy!(options)
+      job = project.jobs.create!(user: author, commit: "x", command: "yes", status: options.fetch(:status))
+      stage.deploys.create!(reference: options.fetch(:reference), job: job)
     end
   end
 end
