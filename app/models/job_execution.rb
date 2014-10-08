@@ -175,7 +175,7 @@ class JobExecution
   end
 
   def repo_cache_dir
-    File.join(cached_repos_dir, @job.project_id.to_s)
+    File.join(cached_repos_dir, @job.project.repository_directory)
   end
 
   def artifact_cache_dir

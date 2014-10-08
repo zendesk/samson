@@ -75,6 +75,10 @@ class Project < ActiveRecord::Base
     repository_url.scan(/:([A-Za-z0-9-]+\/[\w.-]+)\.git$/).join
   end
 
+  def repository_directory
+    @repository_directory ||= Digest::MD5.hexdigest([repository_url, id]).join
+  end
+
   def repository_homepage
     "//#{Rails.application.config.samson.github.web_url}/#{github_repo}"
   end
