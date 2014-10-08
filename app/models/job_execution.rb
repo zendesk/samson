@@ -165,11 +165,10 @@ class JobExecution
 
   def commit_from_ref(repo_dir, ref)
     description = Dir.chdir(repo_dir) do
-      Tempfile.create("ref-description") do |file|
-        system("git", "describe", "--long", "--tags", "--all", ref, out: file.fileno)
-        file.rewind
-        file.read.strip
-      end
+      file = Tempfile.new("ref-description")
+      system(*%W[git describe --long --tags --all #{ref}], out: file.fileno)
+      file.rewind
+      file.read.strip
     end
 
     description.split("-").last.sub(/^g/, "")
