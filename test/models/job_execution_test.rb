@@ -154,6 +154,22 @@ class JobExecutionTest < ActiveSupport::TestCase
     end
   end
 
+  it "stops while within locking setup" do
+    refute File.directory?(repo_dir)
+
+    Timeout.timeout(5) do
+      begin
+        MultiLock.send(:try_lock, project.id, "me")
+        execution.start!
+        execution.stop!
+      ensure
+        MultiLock.send(:unlock, project.id)
+      end
+    end
+
+    refute File.directory?(repo_dir)
+  end
+
   def execute_job(branch = "master")
     execution = JobExecution.new(branch, job)
     execution.send(:run!)
