@@ -36,7 +36,7 @@ GEM
       thread_safe (~> 0.1)
       tzinfo (~> 1.1)
     addressable (2.3.6)
-    airbrake (3.1.16)
+    airbrake (4.1.0)
       builder
       multi_json
     angularjs-rails (1.2.16)
@@ -230,7 +230,7 @@ DEPENDENCIES
   active_hash (~> 1.0)
   active_model_serializers (~> 0.8.0)
   activeresource
-  airbrake
+  airbrake (~> 4.1.0)
   angularjs-rails
   ansible
   better_errors
