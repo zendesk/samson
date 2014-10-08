@@ -76,7 +76,7 @@ class Project < ActiveRecord::Base
   end
 
   def repository_directory
-    @repository_directory ||= Digest::MD5.hexdigest([repository_url, id]).join
+    @repository_directory ||= Digest::MD5.hexdigest([repository_url, id].join)
   end
 
   def repository_homepage
