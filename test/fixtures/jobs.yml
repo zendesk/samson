@@ -1,0 +1,7 @@
+succeeded_test:
+  command: cap staging deploy
+  user: super_admin
+  project: test
+  status: succeeded
+  output: This worked!
+  commit: staging

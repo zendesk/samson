@@ -13,12 +13,11 @@ describe StagesController do
       format: :svg,
       token: Rails.application.config.samson.badge_token
     }}
-    let(:job) { Job.create!(command: "", project: projects(:test), user: users(:deployer), status: 'succeeded') }
-    let(:deploy) { Deploy.create!(stage: subject, job: job, reference: "foo") }
-    before { deploy }
+    let(:job) { jobs(:succeeded_test) }
+    let(:deploy) { deploys(:succeeded_test) }
 
     it "renders" do
-      stub_request(:get, "http://img.shields.io/badge/Staging-foo-green.svg")
+      stub_request(:get, "http://img.shields.io/badge/Staging-staging-green.svg")
       get :show, valid_params
       assert_response :success
       response.content_type.must_equal Mime::SVG
@@ -39,7 +38,7 @@ describe StagesController do
 
     it "renders strange characters" do
       subject.update_column(:name, 'Foo & Bar 1-4')
-      stub_request(:get, "http://img.shields.io/badge/Foo%20&amp;%20Bar%201&mdash;4-foo-green.svg")
+      stub_request(:get, "http://img.shields.io/badge/Foo%20&amp;%20Bar%201&mdash;4-staging-green.svg")
       get :show, valid_params
       assert_response :success
       response.content_type.must_equal Mime::SVG
@@ -50,8 +49,8 @@ describe StagesController do
     describe 'GET to :show' do
       describe 'valid' do
         before do
-          get :show, project_id: subject.project.to_param,
-            id: subject.id
+          Deploy.delete_all # triggers more github requests
+          get :show, project_id: subject.project.to_param, id: subject.id
         end
 
         it 'renders the template' do

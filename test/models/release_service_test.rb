@@ -30,6 +30,6 @@ class ReleaseServiceTest < ActiveSupport::TestCase
     stage = project.stages.create!(name: "production", deploy_on_release: true)
     release = service.create_release(commit: commit, author: author)
 
-    assert_equal release.version, stage.deploys.last.reference
+    assert_equal release.version, stage.deploys.first.reference
   end
 end

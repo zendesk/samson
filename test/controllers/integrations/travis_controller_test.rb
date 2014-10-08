@@ -7,6 +7,7 @@ describe Integrations::TravisController do
   let(:release_service) { stub("release_service") }
 
   setup do
+    Deploy.delete_all
     @orig_token, ENV["TRAVIS_TOKEN"] = ENV["TRAVIS_TOKEN"], "TOKEN"
     project.webhooks.create!(stage: stages(:test_staging), branch: "master")
     ReleaseService.stubs(:new).returns(release_service)
@@ -89,7 +90,7 @@ describe Integrations::TravisController do
 
         describe "with status_message 'Passed'" do
           it "creates a deploy" do
-            deploy = project.deploys.last
+            deploy = project.deploys.first
             deploy.try(:commit).must_equal(sha)
           end
         end
@@ -98,7 +99,7 @@ describe Integrations::TravisController do
           let(:status_message) { 'Fixed' }
 
           it "creates a deploy" do
-            deploy = project.deploys.last
+            deploy = project.deploys.first
             deploy.try(:commit).must_equal(sha)
           end
         end

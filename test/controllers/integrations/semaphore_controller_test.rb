@@ -3,7 +3,6 @@ require_relative '../../test_helper'
 describe Integrations::SemaphoreController do
   let(:commit) { "dc395381e650f3bac18457909880829fc20e34ba" }
   let(:project) { projects(:test) }
-
   let(:payload) do
     {
       "branch_name" => "master",
@@ -25,6 +24,8 @@ describe Integrations::SemaphoreController do
     }.with_indifferent_access
   end
 
+  before { Deploy.delete_all }
+
   describe "normal" do
     before do
       project.webhooks.create!(stage: stages(:test_staging), branch: "master")
@@ -33,7 +34,7 @@ describe Integrations::SemaphoreController do
     it "triggers a deploy if there's a webhook mapping for the branch" do
       post :create, payload.merge(token: project.token)
 
-      deploy = project.deploys.last
+      deploy = project.deploys.first
       deploy.commit.must_equal commit
     end
 
@@ -52,7 +53,7 @@ describe Integrations::SemaphoreController do
     it "deploys as the Semaphore user" do
       post :create, payload.merge(token: project.token)
 
-      user = project.deploys.last.user
+      user = project.deploys.first.user
       user.name.must_equal "Semaphore"
     end
 
@@ -112,7 +113,6 @@ describe Integrations::SemaphoreController do
 
       project.deploys.must_equal []
     end
-
   end
 end
 

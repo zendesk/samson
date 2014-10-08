@@ -32,6 +32,7 @@ describe Integrations::TddiumController do
   end
 
   before do
+    Deploy.delete_all
     @webhook = project.webhooks.create!(stage: stages(:test_staging), branch: "production")
   end
 
@@ -43,7 +44,7 @@ describe Integrations::TddiumController do
     it "triggers a deploy if there's a webhook mapping for the branch" do
       post :create, payload.merge(token: project.token)
 
-      deploy = project.deploys.last
+      deploy = project.deploys.first
       deploy.commit.must_equal commit
     end
 
@@ -64,7 +65,7 @@ describe Integrations::TddiumController do
 
       post :create, payload.merge(token: project.token)
 
-      project.deploys.last.user.must_equal user
+      project.deploys.first.user.must_equal user
     end
 
     it "creates the Tddium user if it does not exist" do
