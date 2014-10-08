@@ -115,6 +115,22 @@ describe Stage do
     end
   end
 
+  describe "#current_deploy" do
+    it "is nil when not deploying" do
+      subject.current_deploy.must_equal nil
+    end
+
+    it "is there when deploying" do
+      subject.deploys.first.job.update_column(:status, 'running')
+      subject.current_deploy.must_equal subject.deploys.first
+    end
+
+    it "is there when waiting for buddy" do
+      subject.deploys.first.job.update_column(:status, 'pending')
+      subject.current_deploy.must_equal subject.deploys.first
+    end
+  end
+
   describe "#notify_email_addresses" do
     it "returns email addresses separated by a semicolon" do
       stage = Stage.new(notify_email_address: "a@foo.com; b@foo.com")
