@@ -20,7 +20,7 @@
 //= require bootstrap/tooltip
 //= require bootstrap/popover
 //= require bootstrap-select
-//= require jquery.ui.all
+//= require jquery-ui
 //= require bootstrap3-editable/bootstrap-editable
 //= require rickshaw_with_d3
 //= require app.js
