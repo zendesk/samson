@@ -14,6 +14,8 @@ class JobExecution
     Rails.application.config.samson.cached_repos_dir
   end
 
+  cattr_accessor(:lock_timeout, instance_writer: false) { 10.minutes }
+
   cattr_reader(:registry, instance_accessor: false) { {} }
   private_class_method :registry
 
@@ -183,18 +185,13 @@ class JobExecution
 
   def lock_project(&block)
     holder = (stage.try(:name) || @job.user.name)
-    failed_to_lock = lambda do
+    failed_to_lock = lambda do |owner|
       if Time.now.to_i % 10 == 0
-        @output.write("Waiting for repository while cloning for: #{MultiLock.owner(@job.project_id)}\n")
+        @output.write("Waiting for repository while cloning for: #{owner}\n")
       end
     end
 
     MultiLock.lock(@job.project_id, holder, timeout: lock_timeout, failed_to_lock: failed_to_lock, &block)
-  end
-
-  # make testable
-  def lock_timeout
-    10.minutes
   end
 
   class << self

@@ -1,15 +1,14 @@
 class MultiLock
-  class << self
-    @@mutex = Mutex.new
-    @@locks = {}
+  cattr_accessor(:mutex) { Mutex.new }
+  cattr_accessor(:locks) { {} }
 
+  class << self
     def lock(id, holder, options)
       locked = false
       end_time = Time.now + options.fetch(:timeout)
-      loop do
-        locked = try_lock(id, holder)
-        break if locked || Time.now > end_time
-        options.fetch(:failed_to_lock).call
+      until Time.now > end_time
+        break if locked = try_lock(id, holder)
+        options.fetch(:failed_to_lock).call(locks[id])
         sleep 1
       end
       yield if locked
@@ -18,26 +17,22 @@ class MultiLock
       unlock(id) if locked
     end
 
-    def owner(id)
-      @@locks[id]
-    end
-
     private
 
     def try_lock(id, holder)
-      @@mutex.synchronize do
-        if @@locks[id]
+      mutex.synchronize do
+        if locks[id]
           false
         else
-          @@locks[id] = holder
+          locks[id] = holder
           true
         end
       end
     end
 
     def unlock(id)
-      @@mutex.synchronize do
-        @@locks.delete(id)
+      mutex.synchronize do
+        locks.delete(id)
       end
     end
   end
