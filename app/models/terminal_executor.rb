@@ -68,6 +68,6 @@ fi
   end
 
   def error(command)
-    "Failed to execute \"#{command}\""
+    "Failed to execute #{command}"
   end
 end

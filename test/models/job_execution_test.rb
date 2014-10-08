@@ -2,11 +2,10 @@ require_relative '../test_helper'
 
 class JobExecutionTest < ActiveSupport::TestCase
   let(:repository_url) { Dir.mktmpdir }
-  let(:base_dir) { Dir.mktmpdir }
+  let(:repo_dir) { File.join(JobExecution.cached_repos_dir, project.id.to_s) }
+
   let(:project) { Project.create!(name: "duck", repository_url: repository_url) }
   let(:stage) { Stage.create!(name: "stage4", project: project) }
-  let(:cached_repo_dir) { "#{base_dir}/cached_repos/#{project.id}" }
-  let(:repo_dir) { File.join(Rails.application.config.samson.cached_repos_dir, project.id.to_s) }
   let(:user) { User.create! }
   let(:job) { project.jobs.create!(command: "cat foo", user: user, project: project) }
   let(:execution) { JobExecution.new("master", job) }
@@ -27,7 +26,9 @@ class JobExecutionTest < ActiveSupport::TestCase
   end
 
   after do
-    system("rm -fr #{repository_url}")
+    FileUtils.rm_rf(repository_url)
+    FileUtils.rm_rf(repo_dir)
+
     JobExecution.enabled = false
   end
 
