@@ -32,7 +32,7 @@ class JobExecutionTest < ActiveSupport::TestCase
   end
 
   it "clones the project's repository if it's not already cloned" do
-    execution.run!
+    execution.send(:run!)
     repo_dir = File.join(Rails.application.config.samson.cached_repos_dir, project.id.to_s)
 
     assert File.directory?(repo_dir)
@@ -123,11 +123,11 @@ class JobExecutionTest < ActiveSupport::TestCase
   it "removes the job from the registry" do
     execution = JobExecution.start_job("master", job)
 
-    JobExecution.find_by_job(job).wont_be_nil
+    JobExecution.find_by_id(job.id).wont_be_nil
 
     execution.wait!
 
-    JobExecution.find_by_job(job).must_be_nil
+    JobExecution.find_by_id(job.id).must_be_nil
   end
 
   it "cannot clone if project is locked" do
@@ -135,7 +135,7 @@ class JobExecutionTest < ActiveSupport::TestCase
     refute File.directory?(repo_dir)
     begin
       MultiLock.send(:try_lock, project.id, "me")
-      execution.run!
+      execution.send(:run!)
     ensure
       MultiLock.send(:unlock, project.id)
     end
@@ -150,13 +150,13 @@ class JobExecutionTest < ActiveSupport::TestCase
     it "does not add the job to the registry" do
       job_execution = JobExecution.start_job('master', job)
       job_execution.wont_be_nil
-      JobExecution.find_by_job(job).must_be_nil
+      JobExecution.find_by_id(job.id).must_be_nil
     end
   end
 
   def execute_job(branch = "master")
     execution = JobExecution.new(branch, job)
-    execution.run!
+    execution.send(:run!)
   end
 
   def execute_on_remote_repo(cmds)

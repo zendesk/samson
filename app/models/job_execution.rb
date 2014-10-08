@@ -5,18 +5,19 @@ require 'shellwords'
 class JobExecution
   # Whether or not execution is enabled. This allows completely disabling job
   # execution for testing purposes.
-  cattr_accessor(:enabled, instance_reader: true) do
+  cattr_accessor(:enabled, instance_writer: false) do
     Rails.application.config.samson.enable_job_execution
   end
 
   # The directory in which repositories should be cached.
-  cattr_accessor(:cached_repos_dir, instance_reader: true) do
+  cattr_accessor(:cached_repos_dir, instance_writer: false) do
     Rails.application.config.samson.cached_repos_dir
   end
 
-  attr_reader :output
-  attr_reader :job
-  attr_reader :viewers
+  cattr_reader(:registry, instance_accessor: false) { {} }
+  private_class_method :registry
+
+  attr_reader :output, :job, :viewers, :stage
 
   def initialize(reference, job)
     @output = OutputBuffer.new
@@ -24,6 +25,7 @@ class JobExecution
     @viewers = JobViewers.new(@output)
     @subscribers = []
     @job, @reference = job, reference
+    @stage = @job.deploy.try(:stage)
   end
 
   def start!
@@ -41,6 +43,21 @@ class JobExecution
       end
     end
   end
+
+  def wait!
+    @thread.try(:join)
+  end
+
+  def stop!
+    @executor.stop!
+    wait!
+  end
+
+  def subscribe(&block)
+    @subscribers << block
+  end
+
+  private
 
   def error!(exception)
     message = "JobExecution failed: #{exception.message}"
@@ -77,25 +94,8 @@ class JobExecution
 
     @job.update_output!(output_aggregator.to_s)
 
-    @subscribers.each do |subscriber|
-      subscriber.call(@job)
-    end
+    @subscribers.each(&:call)
   end
-
-  def wait!
-    @thread.try(:join)
-  end
-
-  def stop!
-    @executor.stop!
-    wait!
-  end
-
-  def subscribe(&block)
-    @subscribers << block
-  end
-
-  private
 
   def execute!(dir)
     unless setup!(dir)
@@ -118,12 +118,11 @@ class JobExecution
 
     ActiveRecord::Base.clear_active_connections!
 
-    payload = { stage: "none", project: "none", command: commands.join("\n")}
-
-    unless @job.deploy.nil?
-      payload[:stage] = @job.deploy.stage.name
-      payload[:project] = @job.deploy.project.name
-    end
+    payload = {
+      stage: (stage.try(:name) || "none"),
+      project: @job.project.name,
+      command: commands.join("\n")
+    }
 
     ActiveSupport::Notifications.instrument("execute_shell.samson", payload) do
       payload[:success] = @executor.execute!(*commands)
@@ -183,7 +182,7 @@ class JobExecution
   end
 
   def lock_project(&block)
-    holder = (@job.deploy ? @job.deploy.stage.name : @job.user.name)
+    holder = (stage.try(:name) || @job.user.name)
     failed_to_lock = lambda do
       if Time.now.to_i % 10 == 0
         @output.write("Waiting for repository while cloning for: #{MultiLock.owner(@job.project_id)}\n")
@@ -199,14 +198,6 @@ class JobExecution
   end
 
   class << self
-    def setup
-      Thread.main[:job_executions] = ThreadSafe::Hash.new
-    end
-
-    def find_by_job(job)
-      find_by_id(job.id)
-    end
-
     def find_by_id(id)
       registry[id.to_i]
     end
@@ -227,12 +218,6 @@ class JobExecution
     def finished_job(job)
       registry.delete(job.id)
       ActiveSupport::Notifications.instrument "job.threads", :thread_count => registry.length
-    end
-
-    private
-
-    def registry
-      Thread.main[:job_executions]
     end
   end
 end

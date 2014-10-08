@@ -44,7 +44,7 @@ class DeployServiceTest < ActiveSupport::TestCase
       DeployMailer.expects(:deploy_email).returns( stub("DeployMailer", :deliver => true) )
 
       service.deploy!(stage, reference)
-      job_execution.run!
+      job_execution.send(:run!)
     end
 
     it "sends flowdock notifications if the stage has flows" do
@@ -53,7 +53,7 @@ class DeployServiceTest < ActiveSupport::TestCase
       FlowdockNotification.any_instance.expects(:deliver).at_least_once
 
       service.deploy!(stage, reference)
-      job_execution.run!
+      job_execution.send(:run!)
     end
 
     it "sends datadog notifications if the stage has datadog tags" do
@@ -62,7 +62,7 @@ class DeployServiceTest < ActiveSupport::TestCase
       DatadogNotification.any_instance.expects(:deliver)
 
       service.deploy!(stage, reference)
-      job_execution.run!
+      job_execution.send(:run!)
     end
 
     it "sends github notifications if the stage has it enabled and deploy succeeded" do
@@ -72,7 +72,7 @@ class DeployServiceTest < ActiveSupport::TestCase
       GithubNotification.any_instance.expects(:deliver)
 
       service.deploy!(stage, reference)
-      job_execution.run!
+      job_execution.send(:run!)
     end
 
     it "does not send github notifications if the stage has it enabled and deploy failed" do
@@ -82,7 +82,7 @@ class DeployServiceTest < ActiveSupport::TestCase
       GithubNotification.any_instance.expects(:deliver).never
 
       service.deploy!(stage, reference)
-      job_execution.run!
+      job_execution.send(:run!)
     end
   end
 end

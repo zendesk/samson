@@ -87,7 +87,7 @@ class Job < ActiveRecord::Base
   private
 
   def execution
-    JobExecution.find_by_job(self)
+    JobExecution.find_by_id(id)
   end
 
   def status!(status)

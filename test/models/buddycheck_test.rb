@@ -77,7 +77,7 @@ class BuddyCheckDeployServiceTest < ActiveSupport::TestCase
         DeployMailer.expects(:bypass_email).returns( stub("DeployMailer", :deliver => true) )
 
         service.confirm_deploy!(deploy, stage, reference, user)
-        job_execution.run!
+        job_execution.send(:run!)
       end
     end
 
@@ -86,7 +86,7 @@ class BuddyCheckDeployServiceTest < ActiveSupport::TestCase
         DeployMailer.expects(:bypass_email).never
 
         service.confirm_deploy!(deploy, stage, reference, other_user)
-        job_execution.run!
+        job_execution.send(:run!)
       end
     end
   end
@@ -104,7 +104,7 @@ class BuddyCheckDeployServiceTest < ActiveSupport::TestCase
         DeployMailer.expects(:bypass_email).never
 
         service.confirm_deploy!(deploy, stage, reference, user)
-        job_execution.run!
+        job_execution.send(:run!)
       end
     end
 
@@ -114,7 +114,7 @@ class BuddyCheckDeployServiceTest < ActiveSupport::TestCase
         DeployMailer.expects(:bypass_email).never
 
         service.confirm_deploy!(deploy, stage, reference, other_user)
-        job_execution.run!
+        job_execution.send(:run!)
       end
     end
   end

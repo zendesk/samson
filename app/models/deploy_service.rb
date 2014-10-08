@@ -20,7 +20,7 @@ class DeployService
 
     job_execution = JobExecution.start_job(reference, deploy.job)
 
-    job_execution.subscribe do |_|
+    job_execution.subscribe do
       send_after_notifications(stage, deploy)
     end
   end

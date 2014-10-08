@@ -1,4 +1,4 @@
-JobExecution.setup
+require 'job_execution'
 
 if !Rails.env.test? && Job.table_exists?
   JobExecution.enabled = true
