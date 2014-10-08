@@ -150,10 +150,6 @@ class Stage < ActiveRecord::Base
     update_github_pull_requests
   end
 
-  def use_github_deployment_api?
-    use_github_deployment_api
-  end
-
   private
 
   def build_new_project_command

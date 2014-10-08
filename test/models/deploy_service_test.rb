@@ -66,6 +66,12 @@ class DeployServiceTest < ActiveSupport::TestCase
       FlowdockNotification.any_instance.expects(:deliver)
       service.deploy!(stage, reference)
     end
+
+    it "creates a github deployment" do
+      stage.stubs(:use_github_deployment_api?).returns(true)
+      GithubDeployment.any_instance.expects(:create_github_deployment)
+      service.deploy!(stage, reference)
+    end
   end
 
   describe "after notifications" do
@@ -119,6 +125,18 @@ class DeployServiceTest < ActiveSupport::TestCase
       deploy.stubs(:status).returns("failed")
 
       GithubNotification.any_instance.expects(:deliver).never
+
+      service.deploy!(stage, reference)
+      job_execution.send(:run!)
+    end
+
+    it "updates a github deployment status" do
+      deployment = stub()
+
+      stage.stubs(:use_github_deployment_api?).returns(true)
+      GithubDeployment.any_instance.stubs(:create_github_deployment).returns(deployment)
+
+      GithubDeployment.any_instance.expects(:update_github_deployment_status)
 
       service.deploy!(stage, reference)
       job_execution.send(:run!)

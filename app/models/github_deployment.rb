@@ -1,4 +1,7 @@
 class GithubDeployment
+  DEPLOYMENTS_PREVIEW_MEDIA_TYPE = "application/vnd.github.cannonball-preview+json".freeze
+
+
   def initialize(stage, deploy)
     @stage, @deploy = stage, deploy
     @project = @stage.project
@@ -20,9 +23,10 @@ class GithubDeployment
 
   def deployment_options
     {
+      accept: DEPLOYMENTS_PREVIEW_MEDIA_TYPE,
       force: true,
       payload: {deployer: @deploy.user.name}.to_json,
-      environment: @stage.name
+      environment: @stage.name,
       description: @deploy.summary
     }
   end
@@ -42,6 +46,7 @@ class GithubDeployment
 
   def deployment_status_options
     {
+      accept: DEPLOYMENTS_PREVIEW_MEDIA_TYPE,
       target_url: url,
       description: @deploy.summary
     }
