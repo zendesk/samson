@@ -14,6 +14,8 @@ class JobExecution
     Rails.application.config.samson.cached_repos_dir
   end
 
+  cattr_accessor(:lock_timeout, instance_writer: false) { 10.minutes }
+
   cattr_reader(:registry, instance_accessor: false) { {} }
   private_class_method :registry
 
@@ -190,11 +192,6 @@ class JobExecution
     end
 
     MultiLock.lock(@job.project_id, holder, timeout: lock_timeout, failed_to_lock: failed_to_lock, &block)
-  end
-
-  # make testable
-  def lock_timeout
-    10.minutes
   end
 
   class << self
