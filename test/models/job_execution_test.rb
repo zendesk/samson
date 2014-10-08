@@ -32,7 +32,7 @@ class JobExecutionTest < ActiveSupport::TestCase
   end
 
   it "clones the project's repository if it's not already cloned" do
-    execution.run!
+    execution.send(:run!)
     repo_dir = File.join(Rails.application.config.samson.cached_repos_dir, project.id.to_s)
 
     assert File.directory?(repo_dir)
@@ -135,7 +135,7 @@ class JobExecutionTest < ActiveSupport::TestCase
     refute File.directory?(repo_dir)
     begin
       MultiLock.send(:try_lock, project.id, "me")
-      execution.run!
+      execution.send(:run!)
     ensure
       MultiLock.send(:unlock, project.id)
     end
@@ -156,7 +156,7 @@ class JobExecutionTest < ActiveSupport::TestCase
 
   def execute_job(branch = "master")
     execution = JobExecution.new(branch, job)
-    execution.run!
+    execution.send(:run!)
   end
 
   def execute_on_remote_repo(cmds)

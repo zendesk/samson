@@ -42,6 +42,21 @@ class JobExecution
     end
   end
 
+  def wait!
+    @thread.try(:join)
+  end
+
+  def stop!
+    @executor.stop!
+    wait!
+  end
+
+  def subscribe(&block)
+    @subscribers << block
+  end
+
+  private
+
   def error!(exception)
     message = "JobExecution failed: #{exception.message}"
 
@@ -77,25 +92,8 @@ class JobExecution
 
     @job.update_output!(output_aggregator.to_s)
 
-    @subscribers.each do |subscriber|
-      subscriber.call(@job)
-    end
+    @subscribers.each(&:call)
   end
-
-  def wait!
-    @thread.try(:join)
-  end
-
-  def stop!
-    @executor.stop!
-    wait!
-  end
-
-  def subscribe(&block)
-    @subscribers << block
-  end
-
-  private
 
   def execute!(dir)
     unless setup!(dir)
