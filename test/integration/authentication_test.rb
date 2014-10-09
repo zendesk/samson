@@ -2,12 +2,17 @@ require_relative '../test_helper'
 
 # need integration in the name for minitest-spec-rails
 describe 'Authentication Integration' do
+  before do
+    status_url = 'https://' + Rails.application.config.samson.github.status_url + '/api/status.json'
+    stub_request(:get, status_url).to_timeout
+  end
+
   let(:user) { users(:admin) }
 
   describe 'basic authentication' do
     let(:path) { '/' }
 
-    setup do
+    before do
       get path, {}, 'HTTP_AUTHORIZATION' => authorization
     end
 
@@ -56,7 +61,7 @@ describe 'Authentication Integration' do
 
   describe 'session request' do
     describe 'successful' do
-      setup do
+      before do
         login_as(user)
         get '/'
       end
@@ -71,7 +76,7 @@ describe 'Authentication Integration' do
     end
 
     describe 'unsuccessful' do
-      setup do
+      before do
         get '/'
       end
 
