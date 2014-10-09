@@ -28,6 +28,13 @@ describe Deploy do
         @deploy.stubs(:stage).returns(stage)
       end
 
+      it "returns 'Deleted User if buddy is deleted" do
+        @deploy.confirm_buddy!(user2)
+        user2.soft_delete!
+        @deploy.reload
+        @deploy.summary.must_include(NullUser.new.name)
+      end
+
       it "returns 'waiting for a buddy' when waiting for a buddy" do
         @deploy.stubs(:pending?).returns(true)
         @deploy.summary.must_match(/waiting for a buddy/)

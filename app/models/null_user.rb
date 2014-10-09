@@ -8,6 +8,10 @@ class NullUser
     {'name' => 'Deleted User'}
   end
 
+  def id
+    0
+  end
+
   def name
     'Deleted User'
   end
