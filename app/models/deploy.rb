@@ -93,10 +93,6 @@ class Deploy < ActiveRecord::Base
     includes(:job).where(jobs: { status: 'running' })
   end
 
-  def self.active
-    includes(:job).where(jobs: { status: ['running', 'pending'] })
-  end
-
   def self.successful
     includes(:job).where(jobs: { status: 'succeeded' })
   end
