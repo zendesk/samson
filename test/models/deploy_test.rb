@@ -92,22 +92,26 @@ describe Deploy do
     end
   end
 
-  describe 'deploy locked stage' do
-    before do
+  describe "#validate_stage_is_deployable" do
+    def deploy!
+      create_deploy!(job_attributes: { user: user })
+    end
+
+    it("can deploy") { deploy! }
+
+    it "can deploy when locked by myself" do
       stage.create_lock!(user: user)
+      deploy!
     end
 
-    describe 'stage locked by someone else' do
-      it 'fails' do
-        lambda { create_deploy!(job_attributes: { user: user2 }) }.must_raise(ActiveRecord::RecordInvalid)
-      end
+    it "cannot deploy when locked by someone else" do
+      stage.create_lock!(user: user2)
+      assert_raise(ActiveRecord::RecordInvalid) { deploy! }
     end
 
-    describe 'stage locked by the current user' do
-      it 'works' do
-        create_deploy!(job_attributes: { user: user })
-        Deploy.all.wont_be_empty
-      end
+    it "cannot deploy when already deploying" do
+      create_deploy!(job_attributes: { user: user, status: "running" })
+      assert_raise(ActiveRecord::RecordInvalid) { deploy! }
     end
   end
 
