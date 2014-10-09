@@ -1,4 +1,3 @@
-
 require 'statsd'
 
 config_file = Rails.root.join('config/statsd.yml')
