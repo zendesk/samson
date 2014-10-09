@@ -28,9 +28,16 @@ describe Deploy do
         @deploy.stubs(:stage).returns(stage)
       end
 
-      it "returns 'Deleted User if buddy is deleted" do
+      it "returns user name if buddy is soft deleted" do
         @deploy.confirm_buddy!(user2)
         user2.soft_delete!
+        @deploy.reload
+        @deploy.summary.must_include(user2.name)
+      end
+
+      it "returns 'Deleted User' if buddy is hard deleted" do
+        @deploy.confirm_buddy!(user2)
+        user2.destroy!
         @deploy.reload
         @deploy.summary.must_include(NullUser.new.name)
       end

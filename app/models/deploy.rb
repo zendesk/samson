@@ -60,8 +60,8 @@ class Deploy < ActiveRecord::Base
   end
 
   def buddy
-    if (self.buddy_id != nil) then
-      super || NullUser.new
+    if buddy_id then
+      super || NullUser.new(buddy_id)
     else
       nil
     end

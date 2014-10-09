@@ -25,7 +25,7 @@ class Job < ActiveRecord::Base
   end
 
   def user
-    super || NullUser.new
+    super || NullUser.new(user_id)
   end
 
   def started_by?(user)
