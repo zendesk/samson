@@ -21,6 +21,24 @@ class DeployServiceTest < ActiveSupport::TestCase
     end
   end
 
+  describe "needs buddy check" do
+    before do
+      service.stubs(:auto_confirm?).returns(false)
+    end
+
+    it "does not start the deploy" do
+      service.expects(:confirm_deploy!).never
+      service.deploy!(stage, reference)
+    end
+  end
+
+  describe "confirm_deploy!" do
+    it "starts a job execution" do
+      JobExecution.expects(:start_job).returns(mock(subscribe: true)).once
+      service.confirm_deploy!(deploy, stage, reference)
+    end
+  end
+
   describe "before notifications" do
     it "sends flowdock notifications if the stage has flows" do
       stage.stubs(:send_flowdock_notifications?).returns(true)
