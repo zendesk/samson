@@ -83,7 +83,7 @@ class JobExecutionTest < ActiveSupport::TestCase
 
     assert_equal "mantis shrimp", last_line_of_output
     assert job.commit.present?, "Expected #{job} to record the commit"
-    assert commit.include?(job.commit), "Expected #{commit} to contain #{job.commit}"
+    assert_includes commit, job.commit
   end
 
   it "updates the branch to match what's in the remote repository" do
