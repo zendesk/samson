@@ -60,7 +60,7 @@ class Deploy < ActiveRecord::Base
   end
 
   def buddy
-    if buddy_id then
+    if buddy_id
       super || NullUser.new(buddy_id)
     else
       nil

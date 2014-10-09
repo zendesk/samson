@@ -4,7 +4,7 @@ class NullUser
 
   attr_accessor :name, :id
 
-  def initialize (uid=0)
+  def initialize(uid=0)
     self.id = uid
   end
 
@@ -12,15 +12,13 @@ class NullUser
     {'name' => name}
   end
 
+  def user
+    return @user if defined?(@user)
+    @user = User.with_deleted { User.where(id: id).first }
+  end
+
   def name
-    User.with_deleted do
-      begin
-        u = User.find(id)
-        u ?  u.name : 'Deleted User'
-      rescue ActiveRecord::RecordNotFound => e
-        u = 'Deleted User'
-      end
-    end
+    user.try(:name) || 'Deleted User'
   end
 
 end
