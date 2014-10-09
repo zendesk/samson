@@ -14,8 +14,7 @@ module ApplicationHelper
   end
 
   def deploy_link(project, stage)
-    if stage.currently_deploying?
-      deploy = stage.current_deploy
+    if deploy = stage.current_deploy
       link_to "Deploying #{deploy.short_reference}...",
         project_deploy_path(project, deploy),
         class: "btn btn-primary"

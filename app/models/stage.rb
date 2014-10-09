@@ -58,7 +58,7 @@ class Stage < ActiveRecord::Base
   end
 
   def current_deploy
-    @current_deploy ||= deploys.running.first
+    @current_deploy ||= deploys.active.first
   end
 
   def last_deploy

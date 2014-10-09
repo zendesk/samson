@@ -61,6 +61,13 @@ describe Integrations::JenkinsController do
       response.status.must_equal 200
     end
 
+    it "responds with 422 OK if deploy cannot be started" do
+      post :create, payload.merge(token: project.token)
+      post :create, payload.merge(token: project.token)
+
+      response.status.must_equal 422
+    end
+
     it "responds with 404 Not Found if the token is invalid" do
       post :create, payload.merge(token: "foobar")
 
