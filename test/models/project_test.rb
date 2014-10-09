@@ -8,6 +8,14 @@ describe Project do
     project.token.wont_be_nil
   end
 
+  it "has separate repository_directories for same project but different url" do
+    project = projects(:test)
+    other_project = Project.find(project.id)
+    other_project.repository_url = 'git://hello'
+
+    assert_not_equal project.repository_directory, other_project.repository_directory
+  end
+
   describe "#create_release" do
     let(:project) { projects(:test) }
     let(:author) { users(:deployer) }
