@@ -132,12 +132,23 @@
 
 <fieldset>
   <legend>Github</legend>
-    <div class="col-lg-6 checkbox">
-      <%= form.label :update_github_pull_requests do %>
-        <%= form.check_box :update_github_pull_requests %>
-        Update Pull Request after deployment
-      <% end %>
-  </div>
+    <div class="form-group">
+      <div class="col-lg-6 checkbox">
+        <%= form.label :update_github_pull_requests do %>
+          <%= form.check_box :update_github_pull_requests %>
+          Update Pull Request after deployment
+        <% end %>
+      </div>
+    </div>
+    <div class="form-group">
+      <div class="col-lg-6 checkbox">
+        <%= form.label :update_github_pull_requests_on_failure do %>
+          <%= form.check_box :update_github_pull_requests_on_failure %>
+          Update Pull Request if CI deployment fails
+        <% end %>
+      </div>
+    </div>
+
 </fieldset>
 
 <%= javascript_tag do %>

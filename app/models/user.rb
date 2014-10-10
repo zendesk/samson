@@ -58,6 +58,10 @@ class User < ActiveRecord::Base
     end
   end
 
+  def ci_user?
+    /deploy\+\w+@samson-deployment.com/.match?(email)
+  end
+
   private
 
   def set_token
