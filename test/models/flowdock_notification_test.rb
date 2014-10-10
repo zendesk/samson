@@ -7,9 +7,17 @@ describe FlowdockNotification do
   let(:deploy) { stub(summary: "hello world!", user: user) }
   let(:notification) { FlowdockNotification.new(stage, deploy) }
   let(:endpoint) { "https://api.flowdock.com/v1/messages/team_inbox/x123yx" }
+  let(:chat_endpoint) { "https://api.flowdock.com/v1/messages/chat/x123yx" }
 
   before do
     FlowdockNotificationRenderer.stubs(:render).returns("foo")
+  end
+
+  it "sends a buddy request for all Flowdock flows configured for the stage" do
+    delivery = stub_request(:post, chat_endpoint)
+    notification.buddy_request
+
+    assert_requested delivery
   end
 
   it "notifies all Flowdock flows configured for the stage" do

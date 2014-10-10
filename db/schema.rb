@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20140804204455) do
+ActiveRecord::Schema.define(version: 20140910113325) do
 
   create_table "commands", force: true do |t|
     t.text     "command",    limit: 16777215
@@ -33,6 +33,7 @@ ActiveRecord::Schema.define(version: 20140804204455) do
 
   add_index "deploys", ["created_at"], name: "index_deploys_on_created_at", using: :btree
   add_index "deploys", ["job_id"], name: "index_deploys_on_job_id", using: :btree
+  add_index "deploys", ["stage_id"], name: "index_deploys_on_stage_id", using: :btree
 
   create_table "flowdock_flows", force: true do |t|
     t.string   "name",       null: false
@@ -79,8 +80,10 @@ ActiveRecord::Schema.define(version: 20140804204455) do
     t.datetime "updated_at"
     t.string   "token"
     t.string   "release_branch"
+    t.string   "permalink",      null: false
   end
 
+  add_index "projects", ["permalink"], name: "index_projects_on_permalink", unique: true, using: :btree
   add_index "projects", ["token"], name: "index_projects_on_token", using: :btree
 
   create_table "releases", force: true do |t|
@@ -132,10 +135,11 @@ ActiveRecord::Schema.define(version: 20140804204455) do
     t.string   "email"
     t.datetime "created_at"
     t.datetime "updated_at"
-    t.integer  "role_id",     default: 0, null: false
+    t.integer  "role_id",        default: 0,     null: false
     t.string   "token"
     t.datetime "deleted_at"
     t.string   "external_id"
+    t.boolean  "desktop_notify", default: false
   end
 
   add_index "users", ["external_id"], name: "index_users_on_external_id", unique: true, using: :btree

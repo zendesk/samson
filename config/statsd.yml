@@ -1,0 +1,12 @@
+development: &development
+  host: localhost
+  port: 8125
+
+test:
+  <<: *development
+
+staging:
+  <<: *development
+
+production:
+  <<: *development

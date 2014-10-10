@@ -4,7 +4,7 @@ before_script:
   - npm install
 env:
   matrix:
-    # - DB=sqlite BUNDLE_WITHOUT=mysql2:postgresql
+    - DB=sqlite BUNDLE_WITHOUT=mysql2:postgresql
     - DB=mysql BUNDLE_WITHOUT=sqlite:postgresql
     - DB=postgresql BUNDLE_WITHOUT=sqlite:mysql2
   global:
@@ -18,4 +18,4 @@ cache:
   bundler: true
   directories:
     - node_modules
-rvm: 2.1.1
+rvm: 2.1.2

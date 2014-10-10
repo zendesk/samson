@@ -2,23 +2,18 @@ class Stage < ActiveRecord::Base
   has_soft_deletion default_scope: true
 
   belongs_to :project, touch: true
+
   has_many :deploys, dependent: :destroy
+  has_many :webhooks, dependent: :destroy
   has_many :flowdock_flows
   has_many :new_relic_applications
+
   has_one :lock
 
   has_many :stage_commands, autosave: true
   has_many :commands,
     -> { order('stage_commands.position ASC') },
     through: :stage_commands
-
-  has_one :last_deploy, -> {
-    Deploy.successful
-  }, class_name: 'Deploy'
-
-  has_one :current_deploy, -> {
-    Deploy.running
-  }, class_name: 'Deploy'
 
   default_scope { order(:order) }
 
@@ -44,8 +39,8 @@ class Stage < ActiveRecord::Base
     end
   end
 
-  def self.unlocked
-    where(locks: { id: nil }).
+  def self.unlocked_for(user)
+    where("locks.id IS NULL OR locks.user_id = ?", user.id).
     joins("LEFT OUTER JOIN locks ON \
           locks.deleted_at IS NULL AND \
           locks.stage_id = stages.id")
@@ -55,8 +50,27 @@ class Stage < ActiveRecord::Base
     where(deploy_on_release: true)
   end
 
+  def self.where_reference_being_deployed(reference)
+    joins(deploys: :job).where(
+      deploys: { reference: reference },
+      jobs: { status: Job::ACTIVE_STATUSES }
+    )
+  end
+
+  def current_deploy
+    @current_deploy ||= deploys.active.first
+  end
+
+  def last_deploy
+    @last_deploy ||= deploys.successful.first
+  end
+
   def locked?
     lock.present?
+  end
+
+  def locked_for?(user)
+    locked? && lock.user != user
   end
 
   def current_release?(release)

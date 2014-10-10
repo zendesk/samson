@@ -16,6 +16,8 @@ describe Integrations::JenkinsController do
     }.with_indifferent_access
   end
 
+  before { Deploy.delete_all }
+
   describe "normal" do
     before do
       project.webhooks.create!(stage: stages(:test_staging), branch: "origin/dev")
@@ -24,7 +26,7 @@ describe Integrations::JenkinsController do
     it "triggers a deploy if there's a webhook mapping for the branch" do
       post :create, payload.merge(token: project.token)
 
-      deploy = project.deploys.last
+      deploy = project.deploys.first
       deploy.commit.must_equal commit
     end
 
@@ -43,7 +45,7 @@ describe Integrations::JenkinsController do
     it "deploys as the Jenkins user" do
       post :create, payload.merge(token: project.token)
 
-      user = project.deploys.last.user
+      user = project.deploys.first.user
       user.name.must_equal "Jenkins"
     end
 
@@ -57,6 +59,13 @@ describe Integrations::JenkinsController do
       post :create, payload.merge(token: project.token)
 
       response.status.must_equal 200
+    end
+
+    it "responds with 422 OK if deploy cannot be started" do
+      post :create, payload.merge(token: project.token)
+      post :create, payload.merge(token: project.token)
+
+      response.status.must_equal 422
     end
 
     it "responds with 404 Not Found if the token is invalid" do

@@ -3,7 +3,51 @@ require_relative '../test_helper'
 describe Deploy do
   let(:project) { projects(:test) }
   let(:user) { users(:deployer) }
+  let(:user2) { users(:admin) }
   let(:stage) { stages(:test_staging) }
+
+  describe "#deploy_buddy" do
+    setup { @deploy = create_deploy! }
+
+    describe "no buddy message at all" do
+      it "returns no buddy name when BuddyCheck is not enabled" do
+        BuddyCheck.stubs(:enabled?).returns(false)
+        @deploy.summary.must_match(/#{user.name}  deployed/)
+      end
+
+      it "returns no buddy if we are not deploying to production" do
+        @deploy.stubs(:production?).returns(false)
+        @deploy.summary.must_match(/#{user.name}  deployed/)
+      end
+    end
+
+    describe "when a buddy message should be included" do
+      setup do
+        BuddyCheck.stubs(:enabled?).returns(true)
+        stage.stubs(:production?).returns(true)
+        @deploy.stubs(:stage).returns(stage)
+      end
+
+      it "returns 'waiting for a buddy' when waiting for a buddy" do
+        @deploy.stubs(:pending?).returns(true)
+        @deploy.summary.must_match(/waiting for a buddy/)
+      end
+
+      it "returns 'without a buddy' when bypassed" do
+        @deploy.stubs(:buddy).returns(user)
+        @deploy.summary.must_match(/without a buddy/)
+
+        @deploy.stubs(:buddy).returns(nil)
+        @deploy.summary.must_match(/without a buddy/)
+      end
+
+      it "should return the name of the buddy when not bypassed" do
+        other_user = users(:deployer_buddy)
+        @deploy.stubs(:buddy).returns(other_user)
+        @deploy.summary.must_match(/#{other_user.name}/)
+      end
+    end
+  end
 
   describe "#previous_deploy" do
     it "returns the deploy prior to that deploy" do
@@ -27,6 +71,7 @@ describe Deploy do
 
   describe ".prior_to" do
     it "scopes the records to deploys prior to the one passed in" do
+      Deploy.delete_all
       deploy1 = create_deploy!
       deploy2 = create_deploy!
       deploy3 = create_deploy!
@@ -47,20 +92,33 @@ describe Deploy do
     end
   end
 
-  describe 'deploy locked stage' do
-    before do
-      stage.create_lock!(user: user)
+  describe "#validate_stage_is_deployable" do
+    def deploy!
+      create_deploy!(job_attributes: { user: user })
     end
 
-    it 'fails' do
-      lambda { create_deploy! }.must_raise(ActiveRecord::RecordInvalid)
+    it("can deploy") { deploy! }
+
+    it "can deploy when locked by myself" do
+      stage.create_lock!(user: user)
+      deploy!
+    end
+
+    it "cannot deploy when locked by someone else" do
+      stage.create_lock!(user: user2)
+      assert_raise(ActiveRecord::RecordInvalid) { deploy! }
+    end
+
+    it "cannot deploy when already deploying" do
+      create_deploy!(job_attributes: { user: user, status: "running" })
+      assert_raise(ActiveRecord::RecordInvalid) { deploy! }
     end
   end
 
   def create_deploy!(attrs = {})
     default_attrs = {
       reference: "baz",
-      job: create_job!
+      job: create_job!(attrs.delete(:job_attributes) || {})
     }
 
     stage.deploys.create!(default_attrs.merge(attrs))

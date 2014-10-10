@@ -14,6 +14,15 @@
       </div>
     </div>
 
+    <% if project.persisted? %>
+      <div class="form-group">
+        <%= form.label :permalink, class: "col-lg-2 control-label" %>
+        <div class="col-lg-4">
+          <%= form.text_field :permalink, class: "form-control" %>
+        </div>
+      </div>
+    <% end %>
+
     <div class="form-group">
       <%= form.label :release_branch, class: "col-lg-2 control-label" %>
       <div class="col-lg-4">

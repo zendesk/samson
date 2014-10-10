@@ -17,6 +17,6 @@ class StarsController < ApplicationController
   private
 
   def find_project
-    @project = Project.find(params[:id])
+    @project = Project.find_by_param!(params[:id])
   end
 end

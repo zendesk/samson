@@ -8,7 +8,7 @@ class DeployService
   def deploy!(stage, reference)
     deploy = stage.create_deploy(reference: reference, user: user)
 
-    if deploy.persisted? && !(BuddyCheck.enabled? && stage.production?)
+    if deploy.persisted? && auto_confirm?(stage)
       confirm_deploy!(deploy, stage, reference)
     end
 
@@ -20,17 +20,21 @@ class DeployService
 
     job_execution = JobExecution.start_job(reference, deploy.job)
 
-    job_execution.subscribe do |_|
+    job_execution.subscribe do
       send_after_notifications(stage, deploy)
     end
   end
 
   private
 
+  def auto_confirm?(stage)
+    !BuddyCheck.enabled? || !stage.production?
+  end
+
   def send_before_notifications(stage, deploy, buddy)
     send_flowdock_notification(stage, deploy)
 
-    if BuddyCheck.enabled? && buddy == deploy.user
+    if !auto_confirm?(stage) && buddy == deploy.user
       DeployMailer.bypass_email(stage, deploy, user).deliver
     end
   end

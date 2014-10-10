@@ -5,14 +5,18 @@ class GithubAuthorization
   end
 
   def role_id
-    teams = @github.organization_teams(config.organization)
-    owner_team = find_team(teams, config.admin_team)
-    deploy_team = find_team(teams, config.deploy_team)
+    if config.organization
+      teams = @github.organization_teams(config.organization)
+      owner_team = find_team(teams, config.admin_team)
+      deploy_team = find_team(teams, config.deploy_team)
 
-    role = if team_member?(owner_team)
-      Role::ADMIN.id
-    elsif team_member?(deploy_team)
-      Role::DEPLOYER.id
+      if team_member?(owner_team)
+        Role::ADMIN.id
+      elsif team_member?(deploy_team)
+        Role::DEPLOYER.id
+      elsif organization_member?
+        Role::VIEWER.id
+      end
     else
       Role::VIEWER.id
     end
@@ -20,8 +24,12 @@ class GithubAuthorization
 
   private
 
+  def organization_member?
+    @github.organization_member?(config.organization, @login)
+  end
+
   def find_team(teams, slug)
-    teams.find {|t| t.slug == slug}
+    teams.find {|t| t.slug == slug }
   end
 
   def team_member?(team)

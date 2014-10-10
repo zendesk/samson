@@ -26,11 +26,7 @@ class TerminalExecutor
       command = %Q{/bin/sh -c "#{command.gsub(/"/, '\\"')}"}
     end
 
-    payload = {}
-
-    ActiveSupport::Notifications.instrument("execute_shell.samson", payload) do
-      payload[:success] = execute_command!(command)
-    end
+    execute_command!(command)
   end
 
   def stop!
@@ -47,7 +43,7 @@ class TerminalExecutor
     end
 
     begin
-      output.each(3) {|line| @output.write(line) }
+      output.each(56) {|line| @output.write(line) }
     rescue Errno::EIO
       # The IO has been closed.
     end
@@ -72,6 +68,6 @@ fi
   end
 
   def error(command)
-    "Failed to execute \"#{command}\""
+    "Failed to execute #{command}"
   end
 end

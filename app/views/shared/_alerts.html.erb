@@ -1,6 +1,6 @@
 <% flash_mapping.each do |type, klass| %>
-  <% if flash.key?(type) %>
-    <% Array.wrap(flash[type]).each do |message| %>
+  <% if messages = flash[type] %>
+    <% Array.wrap(messages).each do |message| %>
       <div class="alert alert-<%= klass %>">
         <button type="button" class="close" data-dismiss="alert">&times;</button>
         <%= message %>

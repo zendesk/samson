@@ -5,18 +5,21 @@ require 'shellwords'
 class JobExecution
   # Whether or not execution is enabled. This allows completely disabling job
   # execution for testing purposes.
-  cattr_accessor(:enabled, instance_reader: true) do
+  cattr_accessor(:enabled, instance_writer: false) do
     Rails.application.config.samson.enable_job_execution
   end
 
   # The directory in which repositories should be cached.
-  cattr_accessor(:cached_repos_dir, instance_reader: true) do
+  cattr_accessor(:cached_repos_dir, instance_writer: false) do
     Rails.application.config.samson.cached_repos_dir
   end
 
-  attr_reader :output
-  attr_reader :job
-  attr_reader :viewers
+  cattr_accessor(:lock_timeout, instance_writer: false) { 10.minutes }
+
+  cattr_reader(:registry, instance_accessor: false) { {} }
+  private_class_method :registry
+
+  attr_reader :output, :job, :viewers, :stage
 
   def initialize(reference, job)
     @output = OutputBuffer.new
@@ -24,6 +27,7 @@ class JobExecution
     @viewers = JobViewers.new(@output)
     @subscribers = []
     @job, @reference = job, reference
+    @stage = @job.deploy.try(:stage)
   end
 
   def start!
@@ -41,6 +45,21 @@ class JobExecution
       end
     end
   end
+
+  def wait!
+    @thread.try(:join)
+  end
+
+  def stop!
+    @executor.stop!
+    wait!
+  end
+
+  def subscribe(&block)
+    @subscribers << block
+  end
+
+  private
 
   def error!(exception)
     message = "JobExecution failed: #{exception.message}"
@@ -77,34 +96,12 @@ class JobExecution
 
     @job.update_output!(output_aggregator.to_s)
 
-    @subscribers.each do |subscriber|
-      subscriber.call(@job)
-    end
+    @subscribers.each(&:call)
   end
-
-  def wait!
-    @thread.try(:join)
-  end
-
-  def stop!
-    @executor.stop!
-    wait!
-  end
-
-  def subscribe(&block)
-    @subscribers << block
-  end
-
-  private
 
   def execute!(dir)
     unless setup!(dir)
-      if ProjectLock.owned?(@job.project)
-        ProjectLock.release(@job.project)
-      end
-
       @job.error!
-
       return
     end
 
@@ -122,7 +119,16 @@ class JobExecution
     ]
 
     ActiveRecord::Base.clear_active_connections!
-    @executor.execute!(*commands)
+
+    payload = {
+      stage: (stage.try(:name) || "none"),
+      project: @job.project.name,
+      command: commands.join("\n")
+    }
+
+    ActiveSupport::Notifications.instrument("execute_shell.samson", payload) do
+      payload[:success] = @executor.execute!(*commands)
+    end
   end
 
   def setup!(dir)
@@ -142,33 +148,24 @@ class JobExecution
       "git checkout --quiet #{@reference.shellescape}"
     ]
 
-    @output.write("Attempting to lock repository...\n")
+    locked = lock_project do
+      return false unless @executor.execute!(*commands)
+      commit = commit_from_ref(repo_cache_dir, @reference)
+      ActiveRecord::Base.connection.verify!
+      @job.update_commit!(commit)
+    end
 
-    if grab_lock
-      @output.write("Repo locked, starting to clone...\n")
-
-      @executor.execute!(*commands).tap do |status|
-        if status
-          commit = commit_from_ref(repo_cache_dir, @reference)
-          ActiveRecord::Base.connection.verify!
-          @job.update_commit!(commit)
-          ProjectLock.release(@job.project)
-        end
-      end
+    if locked
+      true
     else
       @output.write("Could not get exclusive lock on repo. Maybe another stage is being deployed.\n")
-
       false
     end
   end
 
   def commit_from_ref(repo_dir, ref)
     description = Dir.chdir(repo_dir) do
-      Tempfile.create("ref-description") do |file|
-        system("git", "describe", "--long", "--tags", "--all", ref, out: file.fileno)
-        file.rewind
-        file.read.strip
-      end
+      IO.popen(["git", "describe", "--long", "--tags", "--all", ref]).read.strip
     end
 
     description.split("-").last.sub(/^g/, "")
@@ -182,40 +179,28 @@ class JobExecution
     File.join(repo_cache_dir, "artifacts")
   end
 
-  def grab_lock
-    lock = false
-    end_time = Time.now + 10.minutes
-    holder = @job.deploy ? @job.deploy.stage.name : @job.user.name
-
-    until lock || Time.now > end_time
-      sleep 1
-
+  def lock_project(&block)
+    holder = (stage.try(:name) || @job.user.name)
+    failed_to_lock = lambda do |owner|
       if Time.now.to_i % 10 == 0
-        @output.write("Waiting for repository while cloning for: #{ProjectLock.owner(@job.project)}\n")
+        @output.write("Waiting for repository while cloning for: #{owner}\n")
       end
-
-      lock ||= ProjectLock.grab(@job.project, holder)
     end
 
-    lock
+    MultiLock.lock(@job.project_id, holder, timeout: lock_timeout, failed_to_lock: failed_to_lock, &block)
   end
 
   class << self
-    def setup
-      Thread.main[:job_executions] = ThreadSafe::Hash.new
-    end
-
-    def find_by_job(job)
-      find_by_id(job.id)
-    end
-
     def find_by_id(id)
       registry[id.to_i]
     end
 
     def start_job(reference, job)
       new(reference, job).tap do |job_execution|
-        registry[job.id] = job_execution.tap(&:start!) if enabled
+        if enabled
+          registry[job.id] = job_execution.tap(&:start!)
+          ActiveSupport::Notifications.instrument "job.threads", :thread_count => registry.length
+        end
       end
     end
 
@@ -225,12 +210,7 @@ class JobExecution
 
     def finished_job(job)
       registry.delete(job.id)
-    end
-
-    private
-
-    def registry
-      Thread.main[:job_executions]
+      ActiveSupport::Notifications.instrument "job.threads", :thread_count => registry.length
     end
   end
 end

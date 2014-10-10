@@ -1,17 +1,29 @@
 require_relative '../test_helper'
 
 class BuddyCheckDeployServiceTest < ActiveSupport::TestCase
-  let(:project) { projects(:test) }
-  let(:user) { users(:deployer) }
+  let(:project) { job.project }
+  let(:user) { job.user }
   let(:service) { DeployService.new(project, user) }
-  let(:stage) { stages(:test_staging) }
-  let(:reference) { "staging" }
-  let(:job) { project.jobs.create!(user: user, command: "foo", status: "succeeded") }
-  let(:deploy) { stub(user: user, job: job, changeset: "changeset") }
+  let(:stage) { deploy.stage }
+  let(:reference) { deploy.reference }
+  let(:job) { jobs(:succeeded_test) }
+  let(:deploy) { deploys(:succeeded_test) }
   let(:job_execution) { JobExecution.new(reference, job) }
 
-  let(:buddy_same) { user }
-  let(:buddy_other) { users(:deployer_buddy) }
+  let(:other_user) { users(:deployer_buddy) }
+
+  it "start_time is set for buddy_checked deploy" do
+    deploy_rtn = stage.create_deploy(reference: reference, user: user)
+    deploy_rtn.confirm_buddy!(other_user)
+
+    assert_equal true, deploy_rtn.start_time.to_i > 0
+  end
+
+  it "start_time is set for non-buddy_checked deploy" do
+    deploy_rtn = stage.create_deploy(reference: reference, user: user)
+
+    assert_equal true, deploy_rtn.start_time.to_i > 0
+  end
 
   it "does not deploy production if buddy check is enabled" do
     BuddyCheck.stubs(:enabled?).returns(true)
@@ -51,6 +63,7 @@ class BuddyCheckDeployServiceTest < ActiveSupport::TestCase
 
   describe "before notifications, buddycheck enabled" do
     before do
+      stage.update_attribute(:production, true)
       job_execution.stubs(:execute!)
       JobExecution.stubs(:start_job).with(reference, deploy.job).returns(job_execution)
 
@@ -63,18 +76,17 @@ class BuddyCheckDeployServiceTest < ActiveSupport::TestCase
 
         DeployMailer.expects(:bypass_email).returns( stub("DeployMailer", :deliver => true) )
 
-        service.confirm_deploy!(deploy, stage, reference, buddy_same)
-        job_execution.run!
+        service.confirm_deploy!(deploy, stage, reference, user)
+        job_execution.send(:run!)
       end
     end
 
     describe "for buddy different" do
       it "does not send bypass alert email notification" do
-
         DeployMailer.expects(:bypass_email).never
 
-        service.confirm_deploy!(deploy, stage, reference, buddy_other)
-        job_execution.run!
+        service.confirm_deploy!(deploy, stage, reference, other_user)
+        job_execution.send(:run!)
       end
     end
   end
@@ -91,8 +103,8 @@ class BuddyCheckDeployServiceTest < ActiveSupport::TestCase
       it "sends bypass alert email notification" do
         DeployMailer.expects(:bypass_email).never
 
-        service.confirm_deploy!(deploy, stage, reference, buddy_same)
-        job_execution.run!
+        service.confirm_deploy!(deploy, stage, reference, user)
+        job_execution.send(:run!)
       end
     end
 
@@ -101,10 +113,9 @@ class BuddyCheckDeployServiceTest < ActiveSupport::TestCase
 
         DeployMailer.expects(:bypass_email).never
 
-        service.confirm_deploy!(deploy, stage, reference, buddy_other)
-        job_execution.run!
+        service.confirm_deploy!(deploy, stage, reference, other_user)
+        job_execution.send(:run!)
       end
     end
   end
-
 end

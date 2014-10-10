@@ -22,14 +22,15 @@ class ReleaseTaggerTest < ActiveSupport::TestCase
   end
 
   after do
-    system("rm -fr #{repository_url}")
+    FileUtils.rm_rf(repository_url)
+    FileUtils.rm_rf(File.join(JobExecution.cached_repos_dir, project.id.to_s))
     JobExecution.enabled = false
   end
 
   it "creates and pushes a git tag on the commit" do
     release_tagger.tag_release!(release)
 
-    remote_sha = execute_on_remote_repo("git rev-parse #{release.version}").strip 
+    remote_sha = execute_on_remote_repo("git rev-parse #{release.version}").strip
     assert_equal sha, remote_sha
   end
 

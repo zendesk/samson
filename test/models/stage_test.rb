@@ -3,6 +3,19 @@ require_relative '../test_helper'
 describe Stage do
   subject { stages(:test_staging) }
 
+  describe ".where_reference_being_deployed" do
+    it "returns stages where the reference is currently being deployed" do
+      project = projects(:test)
+      stage = stages(:test_staging)
+      author = users(:deployer)
+
+      job = project.jobs.create!(user: author, commit: "a", command: "yes", status: "running")
+      stage.deploys.create!(reference: "xyz", job: job)
+
+      assert_equal [stage], Stage.where_reference_being_deployed("xyz")
+    end
+  end
+
   describe '#command' do
     describe 'adding a built command' do
       before do
@@ -40,6 +53,17 @@ describe Stage do
       it 'is empty' do
         subject.command.must_be_empty
       end
+    end
+  end
+
+  describe "#last_deploy" do
+    let(:project) { projects(:test) }
+    let(:stage) { stages(:test_staging) }
+
+    it "returns the last deploy for the stage" do
+      job = project.jobs.create!(command: "cat foo", user: users(:deployer), status: 'succeeded')
+      deploy = stage.deploys.create!(reference: "master", job: job)
+      assert_equal deploy, stage.last_deploy
     end
   end
 
@@ -91,6 +115,22 @@ describe Stage do
     end
   end
 
+  describe "#current_deploy" do
+    it "is nil when not deploying" do
+      subject.current_deploy.must_equal nil
+    end
+
+    it "is there when deploying" do
+      subject.deploys.first.job.update_column(:status, 'running')
+      subject.current_deploy.must_equal subject.deploys.first
+    end
+
+    it "is there when waiting for buddy" do
+      subject.deploys.first.job.update_column(:status, 'pending')
+      subject.current_deploy.must_equal subject.deploys.first
+    end
+  end
+
   describe "#notify_email_addresses" do
     it "returns email addresses separated by a semicolon" do
       stage = Stage.new(notify_email_address: "a@foo.com; b@foo.com")
@@ -127,18 +167,26 @@ describe Stage do
     end
   end
 
-  describe 'unlocked/locked?' do
+  describe 'unlocked_for/locked?/locked_for?' do
     describe 'with a lock' do
       before do
         subject.create_lock!(user: users(:deployer))
       end
 
       it 'is not included' do
-        Stage.unlocked.wont_include(subject)
+        Stage.unlocked_for(users(:admin)).wont_include(subject)
       end
 
       it 'is locked?' do
         subject.reload.must_be(:locked?)
+      end
+
+      it 'locks other users out' do
+        subject.reload.locked_for?(users(:admin)).must_equal true
+      end
+
+      it 'does not lock out the user who puts up the lock' do
+        subject.reload.locked_for?(users(:deployer)).must_equal false
       end
     end
 
@@ -148,7 +196,7 @@ describe Stage do
       end
 
       it 'is not empty' do
-        Stage.unlocked.wont_be_empty
+        Stage.unlocked_for(users(:admin)).wont_be_empty
       end
 
       it 'is not locked' do
@@ -157,7 +205,7 @@ describe Stage do
     end
 
     it 'includes unlocked stage' do
-      Stage.unlocked.must_include(subject)
+      Stage.unlocked_for(users(:deployer)).must_include(subject)
     end
 
     it 'is not locked' do

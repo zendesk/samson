@@ -1,8 +1,10 @@
 require_relative '../test_helper'
 
 describe Project do
+  let(:url) { "git://foo.com:hello/world.git" }
+
   it "generates a secure token when created" do
-    project = Project.create!(name: "hello", repository_url: "world")
+    project = Project.create!(name: "hello", repository_url: url)
     project.token.wont_be_nil
   end
 
@@ -88,10 +90,23 @@ describe Project do
     end
   end
 
+  describe "#generate_permalink" do
+    it "generates a unique link" do
+      project = Project.create!(name: "hello", repository_url: url)
+      project.permalink.must_equal "world"
+    end
+
+    it "generates with id when not unique" do
+      Project.create!(name: "hello", repository_url: url)
+      project = Project.create!(name: "hello", repository_url: url)
+      project.permalink.must_match /\Aworld-[a-f\d]+\Z/
+    end
+  end
+
   describe "nested stages attributes" do
     let(:params) {{
       name: "Hello",
-      repository_url: "git://foo.com/bar",
+      repository_url: url,
       stages_attributes: {
         '0' => {
           name: 'Production',

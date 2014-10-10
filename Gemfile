@@ -6,6 +6,8 @@ gem 'rails', '~> 4.1.5'
 gem 'puma'
 gem 'dotenv-rails', '~> 0.9'
 
+gem 'dogstatsd-ruby', '~> 1.4.0', require: 'statsd'
+
 group :mysql2 do
   gem 'mysql2', '~> 0.3'
 end
@@ -31,7 +33,7 @@ gem 'logstash-event'
 
 group :production, :staging do
   gem 'rails_12factor'
-  gem 'airbrake'
+  gem 'airbrake', '~> 4.1.0'
   gem 'newrelic_rpm', '>= 3.7.1'
 end
 
@@ -74,7 +76,8 @@ end
 
 group :test do
   gem 'minitest-rails', '~> 2.0.0.beta1'
-  gem 'bourne'
+  gem 'minitest-rg'
+  gem 'mocha', require: false
   gem 'webmock', require: false
   gem 'simplecov', require: false
 end

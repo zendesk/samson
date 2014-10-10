@@ -98,7 +98,7 @@ describe ProjectsController do
   describe "a DELETE to #destroy" do
     describe "as an admin" do
       setup do
-        delete :destroy, id: project.id
+        delete :destroy, id: project.to_param
       end
 
       it "redirects to root url" do
@@ -123,7 +123,7 @@ describe ProjectsController do
   describe "a PUT to #update" do
     describe "as an admin" do
       setup do
-        put :update, params.merge(id: project.id)
+        put :update, params.merge(id: project.to_param)
       end
 
       describe "with valid parameters" do
@@ -162,7 +162,7 @@ describe ProjectsController do
     describe "non-existant" do
       setup do
         project.soft_delete!
-        put :update, id: project.id
+        put :update, id: project.to_param
       end
 
       it "sets the flash error" do
@@ -182,7 +182,7 @@ describe ProjectsController do
   describe "a GET to #edit" do
     describe "as an admin" do
       setup do
-        get :edit, id: project.id
+        get :edit, id: project.to_param
       end
 
       it "renders a template" do
@@ -193,7 +193,7 @@ describe ProjectsController do
     describe "non-existant" do
       setup do
         project.soft_delete!
-        get :edit, id: project.id
+        get :edit, id: project.to_param
       end
 
       it "sets the flash error" do
@@ -213,7 +213,7 @@ describe ProjectsController do
   describe "a GET to #show" do
     as_a_deployer do
       setup do
-        get :show, id: project.id
+        get :show, id: project.to_param
       end
 
       it "renders a template" do
@@ -224,7 +224,7 @@ describe ProjectsController do
     describe "non-existant" do
       setup do
         project.soft_delete!
-        get :edit, id: project.id
+        get :edit, id: project.to_param
       end
 
       it "sets the flash error" do
@@ -238,7 +238,7 @@ describe ProjectsController do
 
     as_a_viewer do
       setup do
-        get :show, id: project.id
+        get :show, id: project.to_param
       end
 
       it "redirects to the deploys page" do

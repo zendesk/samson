@@ -6,6 +6,8 @@ class Job < ActiveRecord::Base
 
   after_update { deploy.touch if deploy }
 
+  ACTIVE_STATUSES = %w[pending running cancelling].freeze
+
   def self.non_deploy
     includes(:deploy).where(deploys: { id: nil })
   end
@@ -14,8 +16,16 @@ class Job < ActiveRecord::Base
     where(status: 'pending')
   end
 
+  def self.running
+    where(status: 'running')
+  end
+
   def summary
     "#{user.name} #{summary_action} against #{short_reference}"
+  end
+
+  def user
+    super || NullUser.new
   end
 
   def started_by?(user)
@@ -77,7 +87,7 @@ class Job < ActiveRecord::Base
   private
 
   def execution
-    JobExecution.find_by_job(self)
+    JobExecution.find_by_id(id)
   end
 
   def status!(status)

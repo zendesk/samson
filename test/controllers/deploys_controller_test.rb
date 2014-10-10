@@ -1,24 +1,25 @@
 require_relative '../test_helper'
 
 describe DeploysController do
-  let(:project) { projects(:test) }
-  let(:stage) { stages(:test_staging) }
+  let(:project) { job.project }
+  let(:stage) { deploy.stage }
   let(:deployer) { users(:deployer) }
-  let(:command) { "echo hello" }
-  let(:job) { Job.create!(command: command, project: project, user: deployer) }
-  let(:deploy) { Deploy.create!(stage: stage, job: job, reference: "foo") }
+  let(:command) { job.command }
+  let(:job) { jobs(:succeeded_test) }
+  let(:deploy) { deploys(:succeeded_test) }
   let(:deploy_service) { stub(deploy!: nil) }
+  let(:deploy_called) { [] }
 
   setup do
     DeployService.stubs(:new).with(project, deployer).returns(deploy_service)
-    deploy_service.stubs(:deploy!).returns(deploy)
+    deploy_service.stubs(:deploy!).capture(deploy_called).returns(deploy)
 
     Changeset.stubs(:find).returns(stub(hotfix?: false))
   end
 
   as_a_viewer do
     describe "a GET to :index" do
-      setup { get :index, project_id: project.id, format: format }
+      setup { get :index, project_id: project.to_param, format: format }
 
       describe "as html" do
         let(:format) { :html }
@@ -60,7 +61,7 @@ describe DeploysController do
     end
 
     describe "a GET to :recent with a project_id" do
-      setup { get :recent, project_id: project.id, format: format }
+      setup { get :recent, project_id: project.to_param, format: format }
 
       describe "as html" do
         let(:format) { :html }
@@ -102,7 +103,7 @@ describe DeploysController do
     end
 
     describe "a GET to :active with a project_id" do
-      setup { get :active, project_id: project.id, format: format }
+      setup { get :active, project_id: project.to_param, format: format }
 
       describe "as html" do
         let(:format) { :html }
@@ -129,7 +130,7 @@ describe DeploysController do
       end
 
       describe "with a valid deploy" do
-        setup { get :show, project_id: project.id, id: deploy.to_param }
+        setup { get :show, project_id: project.to_param, id: deploy.to_param }
 
         it "renders the template" do
           assert_template :show
@@ -137,7 +138,7 @@ describe DeploysController do
       end
 
       describe "with no deploy" do
-        setup { get :show, project_id: project.id, id: "deploy:nope" }
+        setup { get :show, project_id: project.to_param, id: "deploy:nope" }
 
         it "redirects to the root page" do
           assert_redirected_to root_path
@@ -149,7 +150,7 @@ describe DeploysController do
       end
 
       describe "with format .text" do
-        setup { get :show, format: :text, project_id: project.id, id: deploy.to_param }
+        setup { get :show, format: :text, project_id: project.to_param, id: deploy.to_param }
 
         it "responds with a plain text file" do
           assert_equal response.content_type, "text/plain"
@@ -168,7 +169,7 @@ describe DeploysController do
   as_a_deployer do
     describe "a POST to :create" do
       setup do
-        post :create, params.merge(project_id: project.id, format: format)
+        post :create, params.merge(project_id: project.to_param, format: format)
       end
 
       let(:params) {{ deploy: {
@@ -184,9 +185,7 @@ describe DeploysController do
         end
 
         it "creates a deploy" do
-          assert_received(deploy_service, :deploy!) do |expect|
-            expect.with stage, "master"
-          end
+          assert_equal [[stage, "master"]], deploy_called
         end
       end
 
@@ -198,9 +197,7 @@ describe DeploysController do
         end
 
         it "creates a deploy" do
-          assert_received(deploy_service, :deploy!) do |expect|
-            expect.with stage, "master"
-          end
+          assert_equal [[stage, "master"]], deploy_called
         end
       end
     end
@@ -209,9 +206,10 @@ describe DeploysController do
       let(:changeset) { stub_everything(commits: [], files: [], pull_requests: [], jira_issues: []) }
 
       setup do
+        Deploy.delete_all # triggers more callbacks
         Changeset.stubs(:find).with(project.github_repo, nil, 'master').returns(changeset)
 
-        post :confirm, project_id: project.id, deploy: {
+        post :confirm, project_id: project.to_param, deploy: {
           stage_id: stage.id,
           reference: "master",
         }
@@ -227,7 +225,7 @@ describe DeploysController do
         setup do
           Deploy.any_instance.stubs(:started_by?).returns(true)
 
-          delete :destroy, project_id: project.id, id: deploy.to_param
+          delete :destroy, project_id: project.to_param, id: deploy.to_param
         end
 
         it "cancels a deploy" do
@@ -240,7 +238,7 @@ describe DeploysController do
           Deploy.any_instance.stubs(:started_by?).returns(false)
           User.any_instance.stubs(:is_admin?).returns(false)
 
-          delete :destroy, project_id: project.id, id: deploy.to_param
+          delete :destroy, project_id: project.to_param, id: deploy.to_param
         end
 
         it "doesn't cancel the deloy" do
@@ -255,7 +253,7 @@ describe DeploysController do
     describe "a DELETE to :destroy" do
       describe "with a valid deploy" do
         setup do
-          delete :destroy, project_id: project.id, id: deploy.to_param
+          delete :destroy, project_id: project.to_param, id: deploy.to_param
         end
 
         it "cancels the deploy" do

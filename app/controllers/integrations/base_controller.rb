@@ -9,7 +9,10 @@ class Integrations::BaseController < ApplicationController
   def create
     if deploy?
       create_new_release
-      deploy_to_stages
+      unless deploy_to_stages
+        head :unprocessable_entity
+        return
+      end
     end
 
     head :ok
@@ -28,8 +31,8 @@ class Integrations::BaseController < ApplicationController
     stages = project.webhook_stages_for_branch(branch)
     deploy_service = DeployService.new(project, user)
 
-    stages.each do |stage|
-      deploy_service.deploy!(stage, commit)
+    stages.all? do |stage|
+      deploy_service.deploy!(stage, commit).persisted?
     end
   end
 

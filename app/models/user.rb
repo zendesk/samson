@@ -17,9 +17,7 @@ class User < ActiveRecord::Base
   end
 
   def self.create_or_update_from_hash(hash)
-    user = User.where(external_id: hash[:external_id].to_s).first
-    user ||= User.where(email: hash[:email]).first
-    user ||= User.new
+    user = User.where(external_id: hash[:external_id].to_s).first || User.new
 
     # attributes are always a string hash
     attributes = user.attributes.merge(hash.stringify_keys) do |key, old, new|
@@ -50,7 +48,7 @@ class User < ActiveRecord::Base
   end
 
   def gravatar_url
-    md5 = Digest::MD5.hexdigest(email)
+    md5 = email.blank? ? "default" : Digest::MD5.hexdigest(email)
     "https://www.gravatar.com/avatar/#{md5}"
   end
 

@@ -8,7 +8,7 @@ class Deploy < ActiveRecord::Base
   default_scope { order(created_at: :desc, id: :desc) }
 
   validates_presence_of :reference
-  validate :stage_is_unlocked
+  validate :validate_stage_is_deployable
 
   delegate :started_by?, :stop!, :status, :user, :output, to: :job
   delegate :active?, :pending?, :running?, :cancelling?, :cancelled?, :succeeded?, to: :job
@@ -20,7 +20,7 @@ class Deploy < ActiveRecord::Base
   end
 
   def summary
-    "#{job.user.name} #{summary_action} #{short_reference} to #{stage.name}"
+    "#{job.user.name} #{deploy_buddy} #{summary_action} #{short_reference} to #{stage.name}"
   end
 
   def summary_for_timeline
@@ -64,11 +64,15 @@ class Deploy < ActiveRecord::Base
     DeployService.new(project, user).confirm_deploy!(self, stage, reference, buddy)
   end
 
+  def start_time
+    started_at || created_at
+  end
+
   def pending_non_production?
     pending? && !stage.production?
   end
 
-  def pending_start!()
+  def pending_start!
     update_attributes(updated_at: Time.now)       # hack: refresh is immediate with update
     DeployService.new(project, user).confirm_deploy!(self, stage, reference, buddy)
   end
@@ -82,7 +86,7 @@ class Deploy < ActiveRecord::Base
   end
 
   def self.active
-    includes(:job).where(jobs: { status: %w[pending running cancelling] })
+    includes(:job).where(jobs: { status: Job::ACTIVE_STATUSES })
   end
 
   def self.running
@@ -122,9 +126,23 @@ class Deploy < ActiveRecord::Base
     end
   end
 
-  def stage_is_unlocked
-    if stage.locked? || Lock.global.exists?
+  def validate_stage_is_deployable
+    if stage.locked_for?(user) || Lock.global.exists?
       errors.add(:stage, 'is locked')
+    elsif deploy = stage.current_deploy
+      errors.add(:stage, "is being deployed by #{deploy.job.user.name} with #{deploy.short_reference}")
+    end
+  end
+
+  def deploy_buddy
+    return unless BuddyCheck.enabled? && stage.production?
+
+    if buddy.nil? && pending?
+      "(waiting for a buddy)"
+    elsif buddy.nil? || (user.id == buddy.id)
+      "(without a buddy)"
+    else
+      "(with #{buddy.name})"
     end
   end
 end
