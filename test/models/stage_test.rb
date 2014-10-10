@@ -278,4 +278,42 @@ describe Stage do
       assert_equal @clone.new_relic_applications.map(&:attributes), subject.new_relic_applications.map(&:attributes)
     end
   end
+
+  describe "#send_github_notifications?" do
+
+    describe "when set to comment on PRs" do
+      before do
+        subject.update_github_pull_requests = true
+      end
+
+      describe "if there is one successful deploy" do
+
+        it "doesn't send notifications" do
+          assert_equal subject.deploys.successful.count, 1
+          assert_equal subject.send_github_notifications?, false
+        end
+
+        describe "and one failed deploy" do
+          before do
+            failed_job = Job.create!(project: subject.project, status: "failed", user: users(:super_admin), command: ":(){ :|:& };:", output: "This is borked!")
+            failed_deploy = subject.deploys.create!(reference: "me", job: failed_job)
+          end
+          it "doesn't send notifications" do
+            assert_equal subject.deploys.successful.count, 1
+            assert_equal subject.deploys.count, 2
+            assert_equal subject.send_github_notifications?, false
+          end
+
+          describe "and another successful deploy" do
+            before do
+              second_deploy = subject.deploys.create!(reference: "you", job: jobs(:succeeded_test))
+            end
+            it "sends notifications" do
+              assert_equal subject.send_github_notifications?, true
+            end
+          end
+        end
+      end
+    end
+  end
 end
