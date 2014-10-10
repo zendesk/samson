@@ -97,3 +97,5 @@ class ActionController::TestCase
 
   alias_method_chain :process, :catch_warden
 end
+
+Dir["test/support/*"].each { |f| require File.expand_path(f) }
