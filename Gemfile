@@ -75,7 +75,7 @@ group :development do
 end
 
 group :test do
-  gem 'minitest-rails', '~> 2.0.0.beta1'
+  gem 'minitest-rails', '~> 2.0'
   gem 'minitest-rg'
   gem 'mocha', require: false
   gem 'webmock', require: false

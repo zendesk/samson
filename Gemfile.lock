@@ -112,8 +112,8 @@ GEM
     metaclass (0.0.4)
     mime-types (2.4.1)
     minitest (5.4.2)
-    minitest-rails (2.0.3)
-      minitest (>= 5.3.3, < 6.0)
+    minitest-rails (2.1.0)
+      minitest (~> 5.4)
       railties (~> 4.1)
     minitest-rg (5.1.0)
       minitest (~> 5.0)
@@ -255,7 +255,7 @@ DEPENDENCIES
   kaminari
   lograge
   logstash-event
-  minitest-rails (~> 2.0.0.beta1)
+  minitest-rails (~> 2.0)
   minitest-rg
   mocha
   momentjs-rails
