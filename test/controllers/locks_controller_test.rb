@@ -29,7 +29,7 @@ describe LocksController do
         end
 
         describe 'with a stage' do
-          before { post :create, project_id: project.to_param, stage_id: stage.id }
+          before { post :create, project_id: project.to_param, stage_id: stage.to_param }
 
           it 'creates a lock' do
             stage.reload.locked?.must_equal(true)
@@ -43,7 +43,7 @@ describe LocksController do
         describe 'with a description' do
           let(:description) { 'helloworld' }
 
-          before { post :create, project_id: project.to_param, stage_id: stage.id, description: description }
+          before { post :create, project_id: project.to_param, stage_id: stage.to_param, description: description }
 
           it 'creates the lock with a description' do
             assert_equal stage.reload.lock.description, description
@@ -51,7 +51,7 @@ describe LocksController do
         end
 
         describe 'without a description' do
-          before { post :create, project_id: project.to_param, stage_id: stage.id }
+          before { post :create, project_id: project.to_param, stage_id: stage.to_param }
 
           it 'creates the lock with description equals to nil' do
             assert_nil stage.reload.lock.description
@@ -80,7 +80,7 @@ describe LocksController do
 
         describe 'with a stage' do
           describe 'without a lock' do
-            before { delete :destroy, project_id: project.to_param, stage_id: stage.id }
+            before { delete :destroy, project_id: project.to_param, stage_id: stage.to_param }
 
             it 'redirects' do
               assert_redirected_to project_stage_path(project, stage)
@@ -90,7 +90,7 @@ describe LocksController do
           describe 'with a lock' do
             before do
               stage.create_lock!(user: users(:deployer))
-              delete :destroy, project_id: project.to_param, stage_id: stage.id
+              delete :destroy, project_id: project.to_param, stage_id: stage.to_param
             end
 
             it 'removes the lock' do

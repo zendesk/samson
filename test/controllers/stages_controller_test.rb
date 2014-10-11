@@ -9,7 +9,7 @@ describe StagesController do
   describe 'GET to :show with svg' do
     let(:valid_params) {{
       project_id: subject.project.to_param,
-      id: subject.id,
+      id: subject.to_param,
       format: :svg,
       token: Rails.application.config.samson.badge_token
     }}
@@ -50,7 +50,7 @@ describe StagesController do
       describe 'valid' do
         before do
           Deploy.delete_all # triggers more github requests
-          get :show, project_id: subject.project.to_param, id: subject.id
+          get :show, project_id: subject.project.to_param, id: subject.to_param
         end
 
         it 'renders the template' do
@@ -61,7 +61,7 @@ describe StagesController do
       describe 'invalid project' do
         before do
           get :show, project_id: 123123,
-            id: subject.id
+            id: subject.to_param
         end
 
         it 'redirects' do
@@ -168,7 +168,7 @@ describe StagesController do
 
     describe 'GET to #edit' do
       describe 'valid' do
-        before { get :edit, project_id: subject.project.to_param, id: subject.id }
+        before { get :edit, project_id: subject.project.to_param, id: subject.to_param }
 
         it 'renders' do
           assert_template :edit
@@ -195,7 +195,7 @@ describe StagesController do
     describe 'PATCH to #update' do
       describe 'valid id' do
         before do
-          patch :update, project_id: subject.project.to_param, id: subject.id,
+          patch :update, project_id: subject.project.to_param, id: subject.to_param,
             stage: attributes
 
           subject.reload
@@ -249,7 +249,7 @@ describe StagesController do
 
     describe 'DELETE to #destroy' do
       describe 'valid' do
-        before { delete :destroy, project_id: subject.project.to_param, id: subject.id }
+        before { delete :destroy, project_id: subject.project.to_param, id: subject.to_param }
 
         it 'redirects' do
           assert_redirected_to project_path(subject.project)
@@ -280,7 +280,7 @@ describe StagesController do
     end
 
     describe 'GET to #clone' do
-      before { get :clone, project_id: subject.project.to_param, id: subject.id }
+      before { get :clone, project_id: subject.project.to_param, id: subject.to_param }
 
       it 'renders :new' do
         assert_template :new
