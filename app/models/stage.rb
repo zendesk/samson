@@ -6,6 +6,7 @@ class Stage < ActiveRecord::Base
   has_many :flowdock_flows
   has_many :new_relic_applications
   has_one :lock
+  has_many :webhooks, dependent: :destroy
 
   has_many :stage_commands, autosave: true
   has_many :commands,
