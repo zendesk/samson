@@ -36,6 +36,13 @@ describe Release do
       create_deploy!(reference: "v666", status: "succeeded")
       author.soft_delete!
       release.reload
+      assert_equal author.name, release.author.name
+    end
+
+    it "handles deleted author" do
+      create_deploy!(reference: "v666", status: "succeeded")
+      author.destroy!
+      release.reload
       assert_equal NullUser.new.name, release.author.name
     end
 

@@ -31,7 +31,7 @@ class Release < ActiveRecord::Base
   end
 
   def author
-    super || NullUser.new
+    super || NullUser.new(author_id)
   end
 
   def self.find_by_version(version)

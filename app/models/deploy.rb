@@ -59,6 +59,14 @@ class Deploy < ActiveRecord::Base
     stage.production?
   end
 
+  def buddy
+    if buddy_id
+      super || NullUser.new(buddy_id)
+    else
+      nil
+    end
+  end
+
   def confirm_buddy!(buddy)
     update_attributes(buddy: buddy, started_at: Time.now)
     DeployService.new(project, user).confirm_deploy!(self, stage, reference, buddy)
