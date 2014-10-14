@@ -61,7 +61,7 @@
 
 <fieldset>
   <legend>Commands</legend>
-  <p>Select the commands you want to run when executing this stage. Double click to edit commands local (indicated with blue) to this project.</p>
+  <p>Select the commands you want to run when executing this stage. Double click to edit commands.</p>
 
   <div id="commands">
     <%= form.collection_check_boxes(:command_ids, form.object.all_commands, :id, :command) do |b| %>
@@ -70,8 +70,9 @@
           <%= b.check_box %>
         </div>
         <div class="col-lg-8">
-          <pre data-type="textarea" data-url="<%= admin_command_path(b.value, format: :json) %>" class="pre-command pre-inline<%= ' local' unless b.object.global? %>"><%= b.text %></pre>
+          <pre data-type="textarea" data-url="<%= admin_command_path(b.value, format: :json) %>" class="pre-command pre-inline <%= b.object.global? ? 'global' : 'local' %>"><%= b.text %></pre>
         </div>
+        <%= edit_command_link(b.object) %>
       </div>
     <% end %>
   </div>
@@ -149,7 +150,7 @@
   </div>
 </fieldset>
 
-<%= javascript_tag do %>
+<script>
   $(document).ready(function() {
     $('#commands').sortable();
     $.fn.editableform.buttons = <%= render('commands/buttons').inspect.html_safe %>;
@@ -166,6 +167,13 @@
         type: 'PATCH',
         dataType: 'json'
       }
+    });
+
+    $('#commands pre.global').dblclick(function(){
+      var $warning = $('<div class="cannot-edit">Global commands cannot be edited inline, use the Admin UI.</div>')
+      $(this).after($warning);
+      $warning.fadeOut(3000);
+      return false;
     });
 
     $('#commands').on('click', '.editable-destroy', function(event) {
@@ -185,4 +193,4 @@
       event.preventDefault();
     });
   });
-<% end %>
+</script>
