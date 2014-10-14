@@ -35,6 +35,14 @@ describe Changeset::PullRequest do
       merged_by.stubs(:login).returns("foo")
       pr.users.map(&:login).must_equal ["foo"]
     end
+
+    describe 'nil users' do
+      let(:merged_by) { nil }
+
+      it 'excludes nil users' do
+        pr.users.map(&:login).must_equal ['foo']
+      end
+    end
   end
 
   describe "#jira_issues" do

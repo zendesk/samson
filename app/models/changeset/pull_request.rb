@@ -40,7 +40,7 @@ class Changeset::PullRequest
 
   def users
     users = [@data.user, @data.merged_by]
-    users.map {|user| Changeset::GithubUser.new(user) }.uniq
+    users.compact.map {|user| Changeset::GithubUser.new(user) }.uniq
   end
 
   def risky?
