@@ -45,8 +45,19 @@
     width: 100%;
   }
 
-  .pre-command.local {
-    @include box-shadow(0 0 5px #2094dd);
+  .cannot-edit{
+    position: absolute;
+    top: 10px;
+    color: white;
+    background: red;
+    border-radius: 5px;
+    padding: 5px 10px;
+    margin: 0 0 0 150px;
+    text-align: center;
+  }
+
+  .edit-command {
+    padding-top: 14px;
   }
 
   .command-checkbox {
@@ -69,7 +80,7 @@
     width: 100%;
 
     .editable-input, .form-control, .form-group {
-      width: 100%;
+      width: 615px; /* 100% - 80px for edit buttons */
     }
 
     .form-group {
