@@ -1,10 +1,10 @@
 class Project < ActiveRecord::Base
+  include Permalinkable
+
   has_soft_deletion default_scope: true
 
   validates :name, :repository_url, presence: true
-  validates :permalink, uniqueness: true
   before_create :generate_token
-  before_create :generate_permalink
 
   has_many :releases
   has_many :stages, dependent: :destroy
@@ -16,14 +16,6 @@ class Project < ActiveRecord::Base
   accepts_nested_attributes_for :stages
 
   scope :alphabetical, -> { order('name') }
-
-  def to_param
-    permalink
-  end
-
-  def self.find_by_param!(param)
-    find_by_permalink!(param)
-  end
 
   def repo_name
     name.parameterize("_")
@@ -93,12 +85,8 @@ class Project < ActiveRecord::Base
 
   private
 
-  def generate_permalink
-    repo_name = repository_url.split("/").last.sub(/\.git/, "")
-    self.permalink = repo_name
-    if self.class.where(permalink: permalink).exists?
-      self.permalink = "#{repo_name}-#{SecureRandom.hex(4)}"
-    end
+  def permalink_base
+    repository_url.split("/").last.sub(/\.git/, "")
   end
 
   def generate_token

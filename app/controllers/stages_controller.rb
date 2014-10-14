@@ -121,7 +121,7 @@ class StagesController < ApplicationController
 
   def stage_params
     params.require(:stage).permit(
-      :name, :command, :confirm,
+      :name, :command, :confirm, :permalink,
       :production,
       :notify_email_address,
       :deploy_on_release,
@@ -138,6 +138,6 @@ class StagesController < ApplicationController
   end
 
   def find_stage
-    @stage = @project.stages.find(params[:id])
+    @stage = @project.stages.find_by_param!(params[:id])
   end
 end

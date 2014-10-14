@@ -26,6 +26,6 @@ class LocksController < ApplicationController
   end
 
   def stage
-    @stage ||= project.stages.find(params[:stage_id])
+    @stage ||= project.stages.find_by_param!(params[:stage_id])
   end
 end

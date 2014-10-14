@@ -2,9 +2,11 @@ test_staging:
   name: Staging
   project: test
   confirm: false
+  permalink: staging
 
 test_production:
   name: Production
   project: test
   confirm: false
   production: true
+  permalink: production

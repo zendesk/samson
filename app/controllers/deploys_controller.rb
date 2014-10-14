@@ -129,5 +129,4 @@ class DeploysController < ApplicationController
   def find_deploy
     @deploy = Deploy.includes(stage: [:new_relic_applications]).find(params[:id])
   end
-
 end

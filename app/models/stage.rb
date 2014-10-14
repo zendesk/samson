@@ -1,4 +1,6 @@
 class Stage < ActiveRecord::Base
+  include Permalinkable
+
   has_soft_deletion default_scope: true
 
   belongs_to :project, touch: true
@@ -174,5 +176,9 @@ class Stage < ActiveRecord::Base
 
   def no_newrelic_name?(newrelic_attrs)
     newrelic_attrs['name'].blank?
+  end
+
+  def permalink_base
+    name
   end
 end
