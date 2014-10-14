@@ -47,6 +47,7 @@ class DeployService
     send_flowdock_notification(stage, deploy)
     send_datadog_notification(stage, deploy)
     send_github_notification(stage, deploy)
+    send_github_failure_notification(stage, deploy)
   end
 
   def send_flowdock_notification(stage, deploy)
@@ -64,6 +65,12 @@ class DeployService
   def send_github_notification(stage, deploy)
     if stage.send_github_notifications? && deploy.status == "succeeded"
       GithubNotification.new(stage, deploy).deliver
+    end
+  end
+
+  def send_github_failure_notification(stage, deploy)
+    if stage.send_github_failure_notifications? && ["failed", "errored"].include?(deploy.status) && deploy.user.ci_user?
+      GithubNotification.new(stage, deploy, false).deliver
     end
   end
 end

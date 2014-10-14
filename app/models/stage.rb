@@ -148,6 +148,10 @@ class Stage < ActiveRecord::Base
     update_github_pull_requests
   end
 
+  def send_github_failure_notifications?
+    update_github_pull_requests_on_failure
+  end
+
   private
 
   def build_new_project_command

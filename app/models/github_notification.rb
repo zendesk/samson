@@ -1,6 +1,6 @@
 class GithubNotification
-  def initialize(stage, deploy)
-    @stage, @deploy = stage, deploy
+  def initialize(stage, deploy, success = true)
+    @stage, @deploy, @success = stage, deploy, success
     @project = @stage.project
   end
 
@@ -30,7 +30,7 @@ class GithubNotification
   def body
     url = url_helpers.project_deploy_url(@project, @deploy)
     short_reference_link = "<a href='#{url}' target='_blank'>#{@deploy.short_reference}</a>"
-    "This PR was deployed to #{@stage.name}. Reference: #{short_reference_link}"
+    "This PR #{@success ? "was deployed" : "failed to deploy"} to #{@stage.name}. Reference: #{short_reference_link}"
   end
 
   def in_multiple_threads(data)
