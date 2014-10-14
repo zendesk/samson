@@ -68,7 +68,8 @@ class Deploy < ActiveRecord::Base
   end
 
   def confirm_buddy!(buddy)
-    update_attributes(buddy: buddy, started_at: Time.now)
+    update_attribute(:buddy, buddy)
+    update_attribute(:started_at, Time.now)
     DeployService.new(project, user).confirm_deploy!(self, stage, reference, buddy)
   end
 
