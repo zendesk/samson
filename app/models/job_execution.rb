@@ -84,8 +84,6 @@ class JobExecution
       execute!(dir)
     end
 
-    ActiveRecord::Base.connection.verify!
-
     if result
       @job.success!
     else
@@ -151,7 +149,6 @@ class JobExecution
     locked = lock_project do
       return false unless @executor.execute!(*commands)
       commit = commit_from_ref(repo_cache_dir, @reference)
-      ActiveRecord::Base.connection.verify!
       @job.update_commit!(commit)
     end
 

@@ -39,8 +39,6 @@ class StreamsController < ApplicationController
   def finished_response
     @execution.viewers.delete(current_user) if @execution
 
-    ActiveRecord::Base.connection.verify!
-
     @job.reload
 
     @project = @job.project
