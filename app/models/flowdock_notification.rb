@@ -17,7 +17,7 @@ class FlowdockNotification
     chat_flow.push_to_chat(:content => buddy_request_content, :tags => ["buddy-request"])
   end
 
-  def buddy_request_completed (buddy, approved = true)
+  def buddy_request_completed(buddy, approved = true)
     chat_flow = Flowdock::Flow.new(
       :api_token => @stage.flowdock_tokens,
       :external_user_name => 'Samson'

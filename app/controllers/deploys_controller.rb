@@ -78,13 +78,15 @@ class DeploysController < ApplicationController
     if @deploy.pending?
       @deploy.confirm_buddy!(current_user)
     end
+
     redirect_to project_deploy_path(@project, @deploy)
   end
 
   def pending_start
     if @deploy.pending_non_production?
-      @deploy.pending_start!()
+      @deploy.pending_start!
     end
+
     redirect_to project_deploy_path(@project, @deploy)
   end
 
