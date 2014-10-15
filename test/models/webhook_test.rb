@@ -1,9 +1,9 @@
 require_relative '../test_helper'
 
 describe Webhook do
-  let(:webhook_params) { { :branch => 'master', :stage_id => 1, :project_id => 1} }
+  let(:webhook_attributes) { { :branch => 'master', :stage_id => 1, :project_id => 1} }
 
-  describe 'creation' do
+  describe '#create' do
     it 'creates the webhook' do
       assert_difference  'Webhook.count', +1 do
         Webhook.create!(webhook_params)
@@ -11,7 +11,7 @@ describe Webhook do
     end
   end
 
-  describe 'deletion' do
+  describe '#soft_delete!' do
     let(:webhook) { Webhook.create!(webhook_params) }
 
     before { webhook }

@@ -28,7 +28,6 @@ describe WebhooksController do
       end
     end
 
-
     describe 'handles stage deletion' do
       setup do
         stage.soft_delete!
@@ -40,6 +39,5 @@ describe WebhooksController do
         assert_template :index
       end
     end
-
   end
 end
