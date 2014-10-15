@@ -42,9 +42,6 @@ class DeploysController < ApplicationController
   end
 
   def create
-    stage = @project.stages.find(deploy_params[:stage_id])
-    reference = deploy_params[:reference].strip
-
     deploy_service = DeployService.new(@project, current_user)
     @deploy = deploy_service.deploy!(stage, reference)
 
@@ -64,11 +61,7 @@ class DeploysController < ApplicationController
   end
 
   def confirm
-    reference = deploy_params[:reference]
-
-    stage = @project.stages.find(deploy_params[:stage_id])
     previous_commit = stage.last_deploy.try(:commit)
-
     @changeset = Changeset.find(@project.github_repo, previous_commit, reference)
 
     render 'changeset', layout: false
@@ -119,6 +112,14 @@ class DeploysController < ApplicationController
   end
 
   protected
+
+  def reference
+    deploy_params[:reference].strip
+  end
+
+  def stage
+    @stage ||= @project.stages.find(deploy_params[:stage_id])
+  end
 
   def deploy_params
     params.require(:deploy).permit(:reference, :stage_id)

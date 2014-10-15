@@ -162,11 +162,25 @@ describe DeploysController do
       end
     end
 
+    unauthorized :get, :new, project_id: 1
     unauthorized :post, :create, project_id: 1
     unauthorized :delete, :destroy, project_id: 1, id: 1
   end
 
   as_a_deployer do
+    describe "a GET to :new" do
+      it "renders" do
+        get :new, project_id: project.to_param
+      end
+
+      it "sets stage and reference" do
+        get :new, project_id: project.to_param, stage_id: stage.id, reference: "abcd"
+        deploy = assigns(:deploy)
+        deploy.stage_id.must_equal stage.id
+        deploy.reference.must_equal "abcd"
+      end
+    end
+
     describe "a POST to :create" do
       setup do
         post :create, params.merge(project_id: project.to_param, format: format)
@@ -246,7 +260,6 @@ describe DeploysController do
         end
       end
     end
-
   end
 
   as_a_admin do
