@@ -164,6 +164,7 @@ describe DeploysController do
 
     unauthorized :get, :new, project_id: 1
     unauthorized :post, :create, project_id: 1
+    unauthorized :post, :buddy_check, project_id: 1, id: 1
     unauthorized :delete, :destroy, project_id: 1, id: 1
   end
 
@@ -231,6 +232,22 @@ describe DeploysController do
 
       it "renders the template" do
         assert_template :changeset
+      end
+    end
+
+    describe "a POST to :buddy_check" do
+      let(:deploy) { deploys(:succeeded_test) }
+      before { deploy.job.update_column(:status, 'pending') }
+
+      it "confirms and redirects to the deploy" do
+        DeployService.stubs(:new).with(project, deploy.user).returns(deploy_service)
+        deploy_service.expects(:confirm_deploy!)
+        refute deploy.buddy
+
+        post :buddy_check, project_id: project.to_param, id: deploy.id
+
+        assert_redirected_to project_deploy_path(project, deploy)
+        deploy.reload.buddy.must_equal deployer
       end
     end
 

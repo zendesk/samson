@@ -34,9 +34,13 @@ class DeployService
   def send_before_notifications(stage, deploy, buddy)
     send_flowdock_notification(stage, deploy)
 
-    if !auto_confirm?(stage) && buddy == deploy.user
+    if bypassed?(stage, deploy, buddy)
       DeployMailer.bypass_email(stage, deploy, user).deliver
     end
+  end
+
+  def bypassed?(stage, deploy, buddy)
+    !auto_confirm?(stage) && buddy == deploy.user
   end
 
   def send_after_notifications(stage, deploy)
