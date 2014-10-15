@@ -127,6 +127,11 @@ describe Deploy do
       create_deploy!(job_attributes: { user: user, status: "running" })
       assert_raise(ActiveRecord::RecordInvalid) { deploy! }
     end
+
+    it "can update a deploy while something else is deployed" do
+      create_deploy!(job_attributes: { user: user, status: "running" })
+      deploys(:succeeded_test).update_attributes!(buddy_id: 123)
+    end
   end
 
   def create_deploy!(attrs = {})

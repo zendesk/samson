@@ -8,7 +8,7 @@ class Deploy < ActiveRecord::Base
   default_scope { order(created_at: :desc, id: :desc) }
 
   validates_presence_of :reference
-  validate :validate_stage_is_deployable
+  validate :validate_stage_is_deployable, on: :create
 
   delegate :started_by?, :stop!, :status, :user, :output, to: :job
   delegate :active?, :pending?, :running?, :cancelling?, :cancelled?, :succeeded?, to: :job
@@ -68,7 +68,7 @@ class Deploy < ActiveRecord::Base
   end
 
   def confirm_buddy!(buddy)
-    update_attributes(buddy: buddy, started_at: Time.now)
+    update_attributes!(buddy: buddy, started_at: Time.now)
     DeployService.new(project, user).confirm_deploy!(self, stage, reference, buddy)
   end
 
