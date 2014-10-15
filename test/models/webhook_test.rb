@@ -6,13 +6,13 @@ describe Webhook do
   describe '#create' do
     it 'creates the webhook' do
       assert_difference  'Webhook.count', +1 do
-        Webhook.create!(webhook_params)
+        Webhook.create!(webhook_attributes)
       end
     end
   end
 
   describe '#soft_delete!' do
-    let(:webhook) { Webhook.create!(webhook_params) }
+    let(:webhook) { Webhook.create!(webhook_attributes) }
 
     before { webhook }
 
