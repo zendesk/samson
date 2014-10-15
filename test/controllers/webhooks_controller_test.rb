@@ -26,32 +26,15 @@ describe WebhooksController do
       it 'redirects to :index' do
         assert_redirected_to project_webhooks_path(project)
       end
-      it 'creates a webhook' do
-        project.reload
-        assert project.webhooks.count, 1
-        webhook = project.webhooks.first
-        assert webhook.branch, params[:branch]
-        assert webhook.stage, stage.name
-      end
     end
 
-    describe 'POST :delete' do
-      setup do
-        project.reload
-        post :destroy, project_id: project.to_param, id: project.webhooks.first.id
-        project.reload
-      end
-      it 'deletes the webhook' do
-        assert project.webhooks.count, 0
-      end
-    end
 
     describe 'handles stage deletion' do
       setup do
-        project.reload
         stage.soft_delete!
         project.reload
       end
+
       it "renders :index" do
         get :index, project_id: project.to_param
         assert_template :index
