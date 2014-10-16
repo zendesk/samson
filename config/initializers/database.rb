@@ -1,4 +1,8 @@
 Rails.application.config.after_initialize do
+  if ActiveRecord::Base.connection.class.name == "ActiveRecord::ConnectionAdapters::Mysql2Adapter"
+    require 'mysql_stay_connected'
+  end
+
   ActiveRecord::Base.connection_pool.disconnect!
 
   ActiveSupport.on_load(:active_record) do

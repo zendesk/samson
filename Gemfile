@@ -10,6 +10,7 @@ gem 'dogstatsd-ruby', '~> 1.4.0', require: 'statsd'
 
 group :mysql2 do
   gem 'mysql2', '~> 0.3'
+  gem 'mysql_stay_connected'
 end
 
 group :postgres do

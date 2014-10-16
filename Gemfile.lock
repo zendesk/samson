@@ -119,6 +119,8 @@ GEM
     multi_xml (0.5.5)
     multipart-post (2.0.0)
     mysql2 (0.3.16)
+    mysql_stay_connected (0.0.1)
+      activerecord (>= 2.3.5)
     newrelic_api (1.2.4)
     newrelic_rpm (3.9.5.251)
     oauth2 (1.0.0)
@@ -252,6 +254,7 @@ DEPENDENCIES
   mocha
   momentjs-rails
   mysql2 (~> 0.3)
+  mysql_stay_connected
   newrelic_api
   newrelic_rpm (>= 3.7.1)
   octokit (~> 3.0.0)
