@@ -162,7 +162,9 @@ class JobExecution
 
   def commit_from_ref(repo_dir, ref)
     description = Dir.chdir(repo_dir) do
-      IO.popen(["git", "describe", "--long", "--tags", "--all", ref]).read.strip
+      IO.popen(["git", "describe", "--long", "--tags", "--all", ref]) do |io|
+        io.read.strip
+      end
     end
 
     description.split("-").last.sub(/^g/, "")
