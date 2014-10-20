@@ -21,7 +21,7 @@ describe ProjectsHelper do
   end
 
   describe "#github_ok?" do
-    let(:status_url) { 'https://' + Rails.application.config.samson.github.status_url + '/api/status.json' }
+    let(:status_url) { "https://#{Rails.application.config.samson.github.status_url}/api/status.json" }
 
     describe "with an OK response" do
       before do
@@ -31,7 +31,7 @@ describe ProjectsHelper do
         )
       end
 
-      it 'returns ok' do
+      it 'returns ok and caches' do
         assert_equal true, github_ok?
         assert_equal true, Rails.cache.read(github_status_cache_key)
       end
@@ -45,7 +45,7 @@ describe ProjectsHelper do
         )
       end
 
-      it 'returns false' do
+      it 'returns false and does not cache' do
         assert_equal false, github_ok?
         assert_nil Rails.cache.read(github_status_cache_key)
       end
@@ -56,7 +56,7 @@ describe ProjectsHelper do
         stub_request(:get, status_url).to_return(:status => 400)
       end
 
-      it 'returns false' do
+      it 'returns false and does not cache' do
         assert_equal false, github_ok?
         assert_nil Rails.cache.read(github_status_cache_key)
       end
@@ -67,7 +67,7 @@ describe ProjectsHelper do
         stub_request(:get, status_url).to_timeout
       end
 
-      it 'returns false' do
+      it 'returns false and does not cache' do
         assert_equal false, github_ok?
         assert_nil Rails.cache.read(github_status_cache_key)
       end

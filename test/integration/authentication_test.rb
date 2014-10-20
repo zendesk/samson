@@ -3,7 +3,7 @@ require_relative '../test_helper'
 # need integration in the name for minitest-spec-rails
 describe 'Authentication Integration' do
   before do
-    status_url = 'https://' + Rails.application.config.samson.github.status_url + '/api/status.json'
+    status_url = "https://#{Rails.application.config.samson.github.status_url}/api/status.json"
     stub_request(:get, status_url).to_timeout
   end
 
