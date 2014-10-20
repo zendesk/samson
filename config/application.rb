@@ -51,6 +51,7 @@ module Samson
     config.samson.github.deploy_team = ENV["GITHUB_DEPLOY_TEAM"].presence
     config.samson.github.web_url = ENV["GITHUB_WEB_URL"].presence || 'github.com'
     config.samson.github.api_url = ENV["GITHUB_API_URL"].presence || 'api.github.com'
+    config.samson.github.status_url = ENV["GITHUB_STATUS_URL"].presence || 'status.github.com'
 
     config.samson.uri = URI( ENV["DEFAULT_URL"] || 'http://localhost:3000' )
     self.default_url_options = {

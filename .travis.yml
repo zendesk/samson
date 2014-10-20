@@ -1,3 +1,5 @@
+services:
+  - memcached
 before_script:
   - cp config/database.travis.yml config/database.yml
   - sh -c "if [ '$DB' != 'sqlite' ]; then bundle exec rake db:create; fi"
