@@ -46,7 +46,7 @@ describe ProjectsHelper do
       end
 
       it 'returns false and does not cache' do
-        assert_equal false, github_ok?
+        assert_equal nil, github_ok?
         assert_nil Rails.cache.read(github_status_cache_key)
       end
     end
@@ -57,7 +57,7 @@ describe ProjectsHelper do
       end
 
       it 'returns false and does not cache' do
-        assert_equal false, github_ok?
+        assert_equal nil, github_ok?
         assert_nil Rails.cache.read(github_status_cache_key)
       end
     end

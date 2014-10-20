@@ -33,15 +33,13 @@ module ProjectsHelper
 
   def github_ok?
     status_url = Rails.application.config.samson.github.status_url
-    github_ok = false
 
     Rails.cache.fetch(github_status_cache_key, expires_in: 5.minutes) do
       response = Faraday.get("https://#{status_url}/api/status.json")
-      github_ok = response.status == 200 && JSON.parse(response.body)['status'] == 'good'
-      github_ok || nil # don't cache non-good responses
-    end
 
-    github_ok
+      # don't cache bad responses
+      (response.status == 200 && JSON.parse(response.body)['status'] == 'good') || nil
+    end
   rescue Faraday::ClientError
     false
   end
