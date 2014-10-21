@@ -19,7 +19,7 @@ module Permalinkable
   private
 
   def generate_permalink
-    base = permalink_base.downcase
+    base = permalink_base.parameterize
     self.permalink = base
     if self.class.where(permalink: permalink).exists?
       self.permalink = "#{base}-#{SecureRandom.hex(4)}"

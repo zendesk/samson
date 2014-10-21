@@ -98,19 +98,6 @@ describe Project do
     end
   end
 
-  describe "#generate_permalink" do
-    it "generates a unique link" do
-      project = Project.create!(name: "hello", repository_url: url)
-      project.permalink.must_equal "world"
-    end
-
-    it "generates with id when not unique" do
-      Project.create!(name: "hello", repository_url: url)
-      project = Project.create!(name: "hello", repository_url: url)
-      project.permalink.must_match /\Aworld-[a-f\d]+\Z/
-    end
-  end
-
   describe "nested stages attributes" do
     let(:params) {{
       name: "Hello",
