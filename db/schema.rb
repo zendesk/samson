@@ -119,6 +119,7 @@ ActiveRecord::Schema.define(version: 20141014165353) do
     t.boolean  "update_github_pull_requests"
     t.boolean  "deploy_on_release",           default: false
     t.boolean  "production",                  default: false
+    t.boolean  "use_github_deployment_api"
     t.string   "permalink",                                   null: false
   end
 
