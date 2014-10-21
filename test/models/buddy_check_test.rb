@@ -1,6 +1,6 @@
 require_relative '../test_helper'
 
-class BuddyCheckDeployServiceTest < ActiveSupport::TestCase
+describe BuddyCheck, :model do
   let(:project) { job.project }
   let(:user) { job.user }
   let(:service) { DeployService.new(project, user) }
