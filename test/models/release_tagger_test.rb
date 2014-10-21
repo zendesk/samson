@@ -1,6 +1,6 @@
 require_relative '../test_helper'
 
-class ReleaseTaggerTest < ActiveSupport::TestCase
+describe ReleaseTagger, :model do
   let(:repository_url) { Dir.mktmpdir }
   let(:project) { Project.create!(name: "duck", repository_url: repository_url) }
   let(:author) { users(:deployer) }

@@ -1,6 +1,6 @@
 require_relative '../test_helper'
 
-class ReleaseServiceTest < ActiveSupport::TestCase
+describe ReleaseService, :model do
   let(:project) { projects(:test) }
   let(:author) { users(:deployer) }
   let(:service) { ReleaseService.new(project) }

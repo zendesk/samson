@@ -1,6 +1,6 @@
 require_relative '../test_helper'
 
-class JobExecutionTest < ActiveSupport::TestCase
+describe JobExecution, :model do
   let(:repository_url) { Dir.mktmpdir }
   let(:repo_dir) { File.join(JobExecution.cached_repos_dir, project.repository_directory) }
 
