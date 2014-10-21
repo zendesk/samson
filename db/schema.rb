@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20141021202831) do
+ActiveRecord::Schema.define(version: 20141021204733) do
 
   create_table "commands", force: true do |t|
     t.text     "command",    limit: 16777215
@@ -122,7 +122,7 @@ ActiveRecord::Schema.define(version: 20141021202831) do
     t.string   "permalink",                                   null: false
   end
 
-  add_index "stages", ["permalink"], name: "index_stages_on_permalink", unique: true, using: :btree
+  add_index "stages", ["project_id", "permalink"], name: "index_stages_on_project_id_and_permalink", unique: true, using: :btree
 
   create_table "stars", force: true do |t|
     t.integer  "user_id",    null: false

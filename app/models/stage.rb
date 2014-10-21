@@ -181,4 +181,8 @@ class Stage < ActiveRecord::Base
   def permalink_base
     name
   end
+
+  def permalink_scope
+    project.stages
+  end
 end

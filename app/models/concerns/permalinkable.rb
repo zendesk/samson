@@ -18,10 +18,14 @@ module Permalinkable
 
   private
 
+  def permalink_scope
+    self.class
+  end
+
   def generate_permalink
     base = permalink_base.parameterize
     self.permalink = base
-    if self.class.where(permalink: permalink).exists?
+    if permalink_scope.where(permalink: permalink).exists?
       self.permalink = "#{base}-#{SecureRandom.hex(4)}"
     end
   end
