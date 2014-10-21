@@ -1,7 +1,6 @@
 class GithubDeployment
   DEPLOYMENTS_PREVIEW_MEDIA_TYPE = "application/vnd.github.cannonball-preview+json".freeze
 
-
   def initialize(stage, deploy)
     @stage, @deploy = stage, deploy
     @project = @stage.project
@@ -32,12 +31,11 @@ class GithubDeployment
   end
 
   def state
-    case
-    when @deploy.succeeded?
+    if @deploy.succeeded?
       'success'
-    when @deploy.errored?
+    elsif @deploy.errored?
       'error'
-    when @deploy.failed?
+    elsif @deploy.failed?
       'failure'
     else
       'pending'
@@ -59,5 +57,4 @@ class GithubDeployment
   def url_helpers
     Rails.application.routes.url_helpers
   end
-
 end

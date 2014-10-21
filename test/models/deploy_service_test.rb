@@ -131,12 +131,12 @@ class DeployServiceTest < ActiveSupport::TestCase
     end
 
     it "updates a github deployment status" do
-      deployment = stub()
+      deployment = stub(:create_github_deployment => deployment)
 
       stage.stubs(:use_github_deployment_api?).returns(true)
-      GithubDeployment.any_instance.stubs(:create_github_deployment).returns(deployment)
 
-      GithubDeployment.any_instance.expects(:update_github_deployment_status)
+      GithubDeployment.stubs(:new => deployment)
+      deployment.expects(:update_github_deployment_status)
 
       service.deploy!(stage, reference)
       job_execution.send(:run!)
