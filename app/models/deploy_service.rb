@@ -38,7 +38,7 @@ class DeployService
       DeployMailer.bypass_email(stage, deploy, user).deliver
     end
 
-    @deployment = create_github_deployment(stage, deploy)
+    create_github_deployment(stage, deploy)
   end
 
   def bypassed?(stage, deploy, buddy)
@@ -53,7 +53,7 @@ class DeployService
     send_flowdock_notification(stage, deploy)
     send_datadog_notification(stage, deploy)
     send_github_notification(stage, deploy)
-    update_github_deployment_status(stage, deploy, @deployment)
+    update_github_deployment_status(stage, deploy)
   end
 
   def send_flowdock_notification(stage, deploy)
@@ -76,13 +76,13 @@ class DeployService
 
   def create_github_deployment(stage, deploy)
     if stage.use_github_deployment_api?
-      GithubDeployment.new(stage, deploy).create_github_deployment
+      @deployment = GithubDeployment.new(stage, deploy).create_github_deployment
     end
   end
 
-  def update_github_deployment_status(stage, deploy, deployment)
+  def update_github_deployment_status(stage, deploy)
     if stage.use_github_deployment_api?
-      GithubDeployment.new(stage, deploy).update_github_deployment_status(deployment)
+      GithubDeployment.new(stage, deploy).update_github_deployment_status(@deployment)
     end
   end
 end

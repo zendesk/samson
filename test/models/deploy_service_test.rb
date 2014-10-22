@@ -68,8 +68,13 @@ class DeployServiceTest < ActiveSupport::TestCase
     end
 
     it "creates a github deployment" do
+      deployment = stub
+
       stage.stubs(:use_github_deployment_api?).returns(true)
-      GithubDeployment.any_instance.expects(:create_github_deployment)
+
+      GithubDeployment.stubs(:new => deployment)
+      deployment.expects(:create_github_deployment)
+
       service.deploy!(stage, reference)
     end
   end
