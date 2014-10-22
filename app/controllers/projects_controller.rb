@@ -83,6 +83,7 @@ class ProjectsController < ApplicationController
         :notify_email_address,
         :datadog_tags,
         :update_github_pull_requests,
+        :use_github_deployment_api,
         command_ids: [],
         flowdock_flows_attributes: [:name, :token]
       ]
