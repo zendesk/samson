@@ -26,28 +26,23 @@ class StreamsController < ApplicationController
 
   def event_handler(event, data)
     case event
-    when :started
-      # Primarily used for updating the originating requestor's browser page when a buddy
-      # approved their deploy.
+    when :started, :finished
       status_response(event)
     when :viewers
       viewers = data.uniq.reject {|user| user == current_user}
       viewers.to_json(only: [:id, :name])
-    when :finished
-      status_response(event)
     else
       JSON.dump(msg: render_log(data))
     end
   end
 
   def status_response(event)
-    if @execution and event == :started
+    if @execution and event == :finished
       @execution.viewers.delete(current_user)
     end
 
     # Need to reload data, as background thread updated the records on a separate DB connection,
     # and .reload() doesn't bypass QueryCache'ing.
-    ActiveRecord::Base.connection.verify!
     ActiveRecord::Base.uncached do
       @job.reload
       @project = @job.project
@@ -55,22 +50,16 @@ class StreamsController < ApplicationController
     end
 
     if @deploy
-      if event == :started
-        JSON.dump(
-            title: deploy_page_title,
-            html: render_to_body(partial: 'deploys/header', formats: :html)
-        )
-      else
-        JSON.dump(
-            title: deploy_page_title,
-            notification: deploy_notification,
-            html: render_to_body(partial: 'deploys/header', formats: :html)
-        )
-      end
+      params = {
+        title: deploy_page_title,
+        html: render_to_body(partial: 'deploys/header', formats: :html)
+      }
+      params[:notification] = deploy_notification if event == :finished
+      JSON.dump(params)
     else
       JSON.dump(
-          title: job_page_title,
-          html: render_to_body(partial: 'jobs/header', formats: :html)
+        title: job_page_title,
+        html: render_to_body(partial: 'jobs/header', formats: :html)
       )
     end
   end

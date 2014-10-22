@@ -35,41 +35,6 @@ describe StreamsController do
         assert lines.grep(/finished\ndata:/)
       end
     end
-
-
-    describe "a reload on job" do
-      it "should pick up new job status" do
-
-        skip("Mysql Test DB fails 90% of time on this test due to connection/transaction/hanging errors.")
-
-        # Override the job retrieval in the streams controller. This way we don't have
-        # to stub out all the rest of the JobExecution setup/execute/... flow.
-        @fake_execution = JobExecution.new("foo", job)
-        JobExecution.expects(:find_by_id).returns(@fake_execution)
-
-        # Get the :show page to open the SSE stream
-        get :show, id: job.id
-
-        # Write some msgs to our fake TerminalExecutor stream
-        @fake_execution.output.write("Hello there!\n")
-
-        # update job status in a fake background way, to ensure 'reload' worked.
-        ActiveRecord::Base.uncached do
-          job.success!
-        end
-
-        # Close the stream to denote the job finishing, which will trigger sending the :finished SSE
-        @fake_execution.output.close
-        response.status.must_equal(200)
-
-        # Collect the output from the ActiveController::Live::Buffer stream
-        lines = []
-        response.stream.each { |l| lines << l }
-
-        # Ensure we have at least the :started and :finished SSE msgs
-        assert lines.grep(/succeeded/)
-      end
-    end
   end
 
 end
