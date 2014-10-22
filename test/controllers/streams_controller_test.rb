@@ -1,7 +1,6 @@
 require_relative '../test_helper'
 
 describe StreamsController do
-
   let(:project) { projects(:test) }
   let(:stage) { stages(:test_staging) }
   let(:deployer) { users(:deployer) }
