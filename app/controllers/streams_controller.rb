@@ -58,8 +58,8 @@ class StreamsController < ApplicationController
       JSON.dump(params)
     else
       JSON.dump(
-        title: job_page_title,
-        html: render_to_body(partial: 'jobs/header', formats: :html)
+          title: job_page_title,
+          html: render_to_body(partial: 'jobs/header', formats: :html)
       )
     end
   end
