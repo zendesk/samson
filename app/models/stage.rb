@@ -147,7 +147,11 @@ class Stage < ActiveRecord::Base
   end
 
   def send_github_notifications?
-    update_github_pull_requests
+    update_github_pull_requests && !first_successful_deploy?
+  end
+
+  def first_successful_deploy?
+    deploys.successful.limit(2).count == 1
   end
 
   private

@@ -71,10 +71,11 @@ end
 group :development do
   gem 'better_errors'
   gem 'binding_of_caller'
+  gem 'byebug'
 end
 
 group :test do
-  gem 'minitest-rails', '~> 2.0.0.beta1'
+  gem 'minitest-rails', '~> 2.0'
   gem 'minitest-rg'
   gem 'mocha', require: false
   gem 'webmock', require: false
