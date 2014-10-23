@@ -1,0 +1,22 @@
+<% cache stage do %>
+  <li class="<%= 'locked' if stage.locked? %>">
+    <% if stage.has_children? %>
+    <a data-target="#stage_<%= stage.id %>_children" data-toggle="collapse" class="collapse-toggle collapsed">
+      <%= content_tag :i, "", class: "fa fa-chevron-right collapsed", title: "Expand" %>
+      <%= content_tag :i, "", class: "fa fa-chevron-down expanded", title: "Collapse" %>
+    </a>
+    <% end %>
+    <%= link_to stage.name, project_stage_path(stage.project, stage), class: "stage-link" %>
+    <%= content_tag :span, "Deploying", class: "label label-primary" if stage.currently_deploying? %>
+    <%= content_tag :i, "", class: "fa fa-lock", title: stage.lock.summary if stage.locked? %>
+
+    <%= link_to stage.last_deploy.short_reference,
+                project_deploy_path(stage.project, stage.last_deploy),
+                class: "status pull-right label #{deploy_status(stage.last_deploy.status, 'label')}" if stage.last_deploy %>
+    <% if stage.has_children? %>
+      <ul id="stage_<%= stage.id %>_children" class="panel-collapse collapse">
+        <%= render partial: "stage_summary", as: :stage, collection: stage.children %>
+      </ul>
+    <% end %>
+  </li>
+<% end %>

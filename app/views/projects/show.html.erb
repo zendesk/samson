@@ -14,7 +14,7 @@
         </tr>
       </thead>
       <tbody>
-        <%= render partial: "stage", collection: @stages %>
+        <%= render partial: "stage", collection: @stages.roots, locals: { depth_offset: 0 } %>
       </tbody>
   </table>
 <% end %>

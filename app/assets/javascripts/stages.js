@@ -1,5 +1,5 @@
 $(function() {
-  var $stagesBox = $("#stages"),
+  var $stagesBox = $("ul.stages"),
       $messages  = $(".messages"),
       $successs  = $("#success_message"),
       $error     = $("#error_message");
@@ -12,7 +12,9 @@ $(function() {
     reorder: function() {
       $.ajax({
         url:  $stagesBox.data("url"),
-        data: $stagesBox.sortable("serialize", { attribute: "data-id" }),
+        data: {
+          stage_id: $('.stages .stage-bar').map(function(){ return $(this).data('id'); }).toArray()
+        },
         type: "PATCH",
       }).done(function(data) {
         clearTimeout(reorderCtrl.messageFadeOutTimeout);

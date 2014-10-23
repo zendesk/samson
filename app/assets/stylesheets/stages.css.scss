@@ -1,7 +1,14 @@
 @import "bootstrap/mixins";
 
-#stages {
+.stages {
   padding: 0;
+}
+
+.stage-bar .stages {
+  background: #fff;
+  padding: 5px 5px 1px 5px;
+  margin-top: 4px;
+  border-radius: 3px;
 }
 
 .stage-bar {

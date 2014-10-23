@@ -1,9 +1,10 @@
 class Stage < ActiveRecord::Base
   include Permalinkable
 
+  has_ancestry touch: true
   has_soft_deletion default_scope: true
 
-  belongs_to :project, touch: true
+  belongs_to :project, touch: true, inverse_of: :stages
 
   has_many :deploys, dependent: :destroy
   has_many :webhooks, dependent: :destroy
@@ -27,7 +28,7 @@ class Stage < ActiveRecord::Base
   attr_writer :command
   before_save :build_new_project_command
 
-  def self.reorder(new_order)
+  def self.reorder_position(new_order)
     transaction do
       new_order.each.with_index { |stage_id, index| Stage.update stage_id.to_i, order: index.to_i }
     end
@@ -119,23 +120,55 @@ class Stage < ActiveRecord::Base
   end
 
   def command
-    commands.map(&:command).join("\n")
+    (before_nested_commands + nested_stage_commands + after_nested_commands).map(&:command).join("\n")
   end
 
   def command_ids=(new_command_ids)
-    super.tap do
-      reorder_commands(new_command_ids.reject(&:blank?).map(&:to_i))
+    new_command_ids = new_command_ids.reject(&:blank?).map(&:to_i)
+    filtered_new_commands = new_command_ids.select { |i| i >= 0 }
+    super(filtered_new_commands).tap do
+      before_command_ids = []
+      after_command_ids = []
+      append_after = false
+
+      new_command_ids.each do |id|
+        if id < 0
+          append_after = true
+        else
+          if append_after
+            after_command_ids << id
+          else
+            before_command_ids << id
+          end
+        end
+      end
+
+      reorder_commands(after_command_ids, before_command_ids)
     end
   end
 
-  def all_commands
+  def before_nested_commands
+    commands.where('position < 0')
+  end
+
+  def after_nested_commands
+    commands.where('position >= 0')
+  end
+
+  def nested_stage_commands
+    children.map do |stage|
+      OpenStruct.new(stage: stage, command: "# Execute #{stage.name} commands")
+    end
+  end
+
+  def other_commands
     command_scope = project ? Command.for_project(project) : Command.global
 
     if command_ids.any?
       command_scope = command_scope.where(['id NOT in (?)', command_ids])
     end
 
-    commands + command_scope
+    command_scope
   end
 
   def datadog_tags
@@ -161,10 +194,14 @@ class Stage < ActiveRecord::Base
     end
   end
 
-  def reorder_commands(command_ids = self.command_ids)
+  def reorder_commands(after_command_ids = self.command_ids, before_command_ids = [])
     stage_commands.each do |stage_command|
-      pos = command_ids.index(stage_command.command_id) ||
-        stage_commands.length
+      reverse_before_index = before_command_ids.reverse.index(stage_command.command_id)
+      if reverse_before_index.present?
+        pos = (-1 * reverse_before_index) - 1
+      else
+        pos = after_command_ids.index(stage_command.command_id) || stage_commands.length
+      end
 
       stage_command.position = pos
     end

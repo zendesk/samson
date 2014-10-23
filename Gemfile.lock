@@ -39,6 +39,8 @@ GEM
     airbrake (4.1.0)
       builder
       multi_json
+    ancestry (2.1.0)
+      activerecord (>= 3.0.0)
     angularjs-rails (1.2.25)
     ansible (0.2.0)
     arel (5.0.1.20140414130214)
@@ -226,6 +228,7 @@ DEPENDENCIES
   active_model_serializers (~> 0.8.0)
   activeresource
   airbrake (~> 4.1.0)
+  ancestry (~> 2.1.0)
   angularjs-rails
   ansible
   better_errors

@@ -13,4 +13,16 @@ module StagesHelper
       link_to "", edit_url, title: "Edit in admin UI", class: "edit-command glyphicon glyphicon-edit"
     end
   end
+
+  def parent_stage_options
+    @project.stages
+            .select { |stage| stage.persisted? }
+            .map { |stage| [ build_nested_stage_name(stage), stage.id] }
+  end
+
+  private
+
+  def build_nested_stage_name(stage)
+    stage.path.map { |stage| stage.name }.join(' > ')
+  end
 end

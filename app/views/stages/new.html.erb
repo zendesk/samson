@@ -1,4 +1,4 @@
-<h1>Add a stage to <%= @project.name %></h1>
+<h1>Add a <%= @stage.parent.present? ? 'nested' : '' %> stage to <%= @project.name %></h1>
 
 <section>
   <%= render 'form', project: @project, stage: @stage %>
