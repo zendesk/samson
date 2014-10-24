@@ -8,7 +8,7 @@ class DeployService
   def deploy!(stage, reference)
     deploy = stage.create_deploy(reference: reference, user: user)
 
-    if deploy.persisted? && auto_confirm?(stage)
+    if deploy.persisted? && auto_confirm?(stage) && deploy.is_root?
       confirm_deploy!(deploy, stage, reference)
     end
 

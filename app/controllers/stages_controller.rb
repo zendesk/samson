@@ -28,7 +28,7 @@ class StagesController < ApplicationController
   def show
     respond_to do |format|
       format.html do
-        @deploys = @stage.deploys.includes(:stage, job: :user).page(params[:page])
+        @deploys = Deploy.where(stage: @stage.subtree).includes(:stage, job: :user).page(params[:page])
       end
       format.svg do
         badge = if deploy = @stage.last_deploy
@@ -128,6 +128,7 @@ class StagesController < ApplicationController
       :deploy_on_release,
       :datadog_tags,
       :update_github_pull_requests,
+      :nested_stages_type,
       command_ids: [],
       flowdock_flows_attributes: [:id, :name, :token, :_destroy],
       new_relic_applications_attributes: [:id, :name, :_destroy]

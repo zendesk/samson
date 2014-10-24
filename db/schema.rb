@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20141023092026) do
+ActiveRecord::Schema.define(version: 20141107040548) do
 
   create_table "commands", force: true do |t|
     t.text     "command",    limit: 16777215
@@ -29,8 +29,10 @@ ActiveRecord::Schema.define(version: 20141023092026) do
     t.integer  "buddy_id"
     t.datetime "started_at"
     t.datetime "deleted_at"
+    t.string   "ancestry"
   end
 
+  add_index "deploys", ["ancestry"], name: "index_deploys_on_ancestry", using: :btree
   add_index "deploys", ["created_at"], name: "index_deploys_on_created_at", using: :btree
   add_index "deploys", ["job_id"], name: "index_deploys_on_job_id", using: :btree
   add_index "deploys", ["stage_id"], name: "index_deploys_on_stage_id", using: :btree
@@ -122,6 +124,7 @@ ActiveRecord::Schema.define(version: 20141023092026) do
     t.boolean  "use_github_deployment_api"
     t.string   "permalink",                                   null: false
     t.string   "ancestry"
+    t.string   "nested_stages_type"
   end
 
   add_index "stages", ["ancestry"], name: "index_stages_on_ancestry", using: :btree

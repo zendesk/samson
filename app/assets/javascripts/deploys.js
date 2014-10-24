@@ -136,7 +136,7 @@ $(function () {
   });
 
   function shrinkOutput() {
-    $("#messages").css("max-height", 550);
+    $(".output-messages").css("max-height", 550);
   }
 
   $("#output-follow").click(function(event) {
@@ -144,7 +144,7 @@ $(function () {
 
     shrinkOutput();
 
-    var $messages = $("#messages");
+    var $messages = $(".output-messages");
     $messages.scrollTop($messages.prop("scrollHeight"));
 
     $("#output-options > button, #output-grow-toggle").removeClass("active");
@@ -152,7 +152,7 @@ $(function () {
   });
 
   function growOutput() {
-    $("#messages").css("max-height", "none");
+    $(".output-messages").css("max-height", "none");
   }
 
   $("#output-grow-toggle").click(function(event) {
@@ -185,7 +185,7 @@ $(function () {
   });
 
   // If there are messages being streamed, then show the output and hide buddy check
-  $('#messages').bind('contentchanged', function(){
+  $('.output-messages').bind('contentchanged', function(){
     var $output = $('#output');
     if ($output.find('.output').hasClass("hidden") ){
       $output.find('.output').removeClass('hidden');

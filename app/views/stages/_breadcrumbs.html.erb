@@ -5,7 +5,7 @@
     <% if stage_node == stage %>
       <li class="active"><%= stage_node.name %></li>
     <% else %>
-      <li><%= link_to stage.name, project_stage_path(project, stage_node) %></li>
+      <li><%= link_to stage_node.name, project_stage_path(project, stage_node) %></li>
     <% end %>
   <% end %>
 </ol>

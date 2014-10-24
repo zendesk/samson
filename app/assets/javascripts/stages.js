@@ -1,6 +1,6 @@
 $(function() {
   var $stagesBox = $("ul.stages"),
-      $messages  = $(".messages"),
+      $messages  = $(".output-messages"),
       $successs  = $("#success_message"),
       $error     = $("#error_message");
 
