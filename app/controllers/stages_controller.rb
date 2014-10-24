@@ -28,7 +28,7 @@ class StagesController < ApplicationController
   def show
     respond_to do |format|
       format.html do
-        @deploys = @stage.deploys.includes(:stage, job: :user).page(params[:page])
+        @deploys = Deploy.where(stage: @stage.subtree).includes(:stage, job: :user).page(params[:page])
       end
       format.svg do
         badge = if deploy = @stage.last_deploy

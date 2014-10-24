@@ -66,6 +66,71 @@
   <% end %>
 </fieldset>
 
+<% if @stage.persisted? && @stage.has_children? %>
+  <fieldset>
+    <legend>Nested Stages</legend>
+    <p>Select the options for how you would like nested stages to run.</p>
+    <%= form.fields_for :nested_stages do |nested_stage_fields| %>
+      <div class="form-group">
+        <%= form.label :nested_stages_type, "Deploy Type", class: "col-lg-2 control-label" %>
+        <div class="col-sm-10">
+          <div class="radio">
+            <%= form.label :nested_stages_type_sequential do %>
+              <%= form.radio_button :nested_stages_type, :sequential %>
+              Sequential
+            <% end %>
+          </div>
+          <div class="help-block">Deploy nested stages one after another</div>
+          <div class="radio">
+            <%= form.label :nested_stages_type_parallel do %>
+              <%= form.radio_button :nested_stages_type, :parallel %>
+              Parallel
+            <% end %>
+          </div>
+          <div class="help-block">Deploy all nested stages at once</div>
+          <div class="radio">
+            <%= form.label :nested_stages_type_sequential do %>
+              <%= form.radio_button :nested_stages_type, :manual %>
+              Manual
+            <% end %>
+          </div>
+          <div class="help-block">Queue up nested stages for manually started deploys</div>
+        </div>
+      </div>
+      <div class="form-group">
+        <%= form.label :nested_stages_failure, "Failure Handling Type", class: "col-lg-2 control-label" %>
+        <div class="col-sm-10">
+          <div class="radio">
+            <%= form.label :nested_stages_failure_continue do %>
+              <%= form.radio_button :nested_stages_failure, :continue %>
+              Continue
+            <% end %>
+          </div>
+          <div class="help-block">Continue deploying to other nested stages on failure</div>
+          <div class="radio">
+            <%= form.label :nested_stages_failure_abort do %>
+              <%= form.radio_button :nested_stages_failure, :abort %>
+              Abort
+            <% end %>
+          </div>
+          <div class="help-block">Abort on failure</div>
+        </div>
+      </div>
+      <div class="form-group">
+        <%= form.label :nested_stages_buddy, "Buddy Approval", class: "col-lg-2 control-label" %>
+        <div class="col-sm-10">
+          <div class="checkbox">
+            <%= form.label :nested_stages_buddy do %>
+              <%= form.check_box :nested_stages_buddy %>
+              Require buddy approval for each nested stage
+            <% end %>
+          </div>
+        </div>
+      </div>
+    <% end %>
+  </fieldset>
+<% end %>
+
 <fieldset>
   <legend>Commands</legend>
   <p>Select the commands you want to run when executing this stage. Double click to edit commands.</p>

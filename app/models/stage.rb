@@ -60,6 +60,18 @@ class Stage < ActiveRecord::Base
     )
   end
 
+  def nested_stages_type
+
+  end
+
+  def nested_stages_buddy
+
+  end
+
+  def nested_stages_failure
+
+  end
+
   def current_deploy
     @current_deploy ||= deploys.active.first
   end
@@ -87,10 +99,20 @@ class Stage < ActiveRecord::Base
   def create_deploy(options = {})
     user = options.fetch(:user)
     reference = options.fetch(:reference)
+    parent = options[:parent]
 
-    deploys.create(reference: reference) do |deploy|
+    deploy = deploys.create(reference: reference, parent: parent) do |deploy|
       deploy.build_job(project: project, user: user, command: command)
     end
+
+    if has_children? && deploy.persisted?
+      children.each do |stage|
+        stage.create_deploy(options.merge(parent: deploy))
+      end
+      deploy.job.update_attributes(command: command(deploy))
+    end
+
+    deploy
   end
 
   def currently_deploying?
@@ -99,7 +121,7 @@ class Stage < ActiveRecord::Base
 
   # The next stage for the project. If this is the last stage, returns nil.
   def next_stage
-    stages = project.stages.to_a
+    stages = siblings.to_a
     stages[stages.index(self) + 1]
   end
 
@@ -119,8 +141,8 @@ class Stage < ActiveRecord::Base
     flowdock_flows.map(&:token)
   end
 
-  def command
-    (before_nested_commands + nested_stage_commands + after_nested_commands).map(&:command).join("\n")
+  def command(deploy = nil)
+    (before_nested_commands + nested_stage_commands(deploy) + after_nested_commands).map(&:command).join("\n")
   end
 
   def command_ids=(new_command_ids)
@@ -155,9 +177,13 @@ class Stage < ActiveRecord::Base
     commands.where('position >= 0')
   end
 
-  def nested_stage_commands
+  def nested_stage_commands(deploy = nil)
     children.map do |stage|
-      OpenStruct.new(stage: stage, command: "# Execute #{stage.name} commands")
+      if deploy.present? && deploy.has_children?
+        child_deploy = deploy.children.find_by(stage: stage)
+        start_pending_deploy = "$SAMSON_ROOT/bin/rake -f \"$SAMSON_ROOT/Rakefile\" deploys:start_pending_deploy DEPLOY_ID=#{child_deploy.id}"
+      end
+      OpenStruct.new(stage: stage, command: "#{start_pending_deploy} # Execute #{stage.name} commands".strip)
     end
   end
 

@@ -1,11 +1,6 @@
 <% content_for :page_title, deploy_page_title %>
 
-<ol class="breadcrumb">
-  <li><%= link_to "Home", root_path %></li>
-  <li><%= link_to @project.name, project_path(@project) %></li>
-  <li><%= link_to @deploy.stage.name, project_stage_path(@project, @deploy.stage) %></li>
-  <li class="active">Deploy #<%= @deploy.id %></li>
-</ol>
+<%= render partial: 'breadcrumbs', locals: { deploy: @deploy, project: @project } %>
 
 <div id="header" class="stream-header">
   <%= render 'header' %>

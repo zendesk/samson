@@ -1,0 +1,8 @@
+<ol class="breadcrumb">
+  <li><%= link_to "Home", root_path %></li>
+  <li><%= link_to project.name, project_path(project) %></li>
+  <% deploy.stage.path.each do |stage_node| %>
+    <li><%= link_to stage_node.name, project_stage_path(project, stage_node) %></li>
+  <% end %>
+  <li class="active">Deploy #<%= deploy.id %></li>
+</ol>
