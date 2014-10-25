@@ -8,6 +8,7 @@ end
 require_relative '../config/environment'
 require 'rails/test_help'
 require 'minitest/rails'
+require 'maxitest/autorun'
 require 'webmock/minitest'
 
 class ActiveSupport::TestCase
