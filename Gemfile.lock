@@ -53,11 +53,17 @@ GEM
     bootstrap-x-editable-rails (1.5.1.1)
       railties (>= 3.0)
     builder (3.2.2)
+    byebug (3.5.1)
+      columnize (~> 0.8)
+      debugger-linecache (~> 1.2)
+      slop (~> 3.6)
     coderay (1.1.0)
+    columnize (0.8.9)
     crack (0.4.2)
       safe_yaml (~> 1.0.0)
     dalli (2.7.2)
     debug_inspector (0.0.2)
+    debugger-linecache (1.2.0)
     docile (1.1.5)
     dogapi (1.9.2)
       json (>= 1.5.1)
@@ -191,6 +197,7 @@ GEM
       multi_json (~> 1.0)
       simplecov-html (~> 0.8.0)
     simplecov-html (0.8.0)
+    slop (3.6.0)
     soft_deletion (0.5.6)
     sprockets (2.11.0)
       hike (~> 1.2)
@@ -233,6 +240,7 @@ DEPENDENCIES
   bootstrap-sass
   bootstrap-x-editable-rails
   bundler
+  byebug
   coderay (~> 1.1.0)
   dalli (~> 2.7.0)
   dogapi (~> 1.9.1)
