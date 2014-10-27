@@ -1,4 +1,4 @@
-require 'test_helper'
+require_relative '../../test_helper'
 
 describe Changeset::PullRequest do
   let(:data) { stub("data", user: user, merged_by: merged_by, body: body) }

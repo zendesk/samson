@@ -1,4 +1,4 @@
-require 'test_helper'
+require_relative '../test_helper'
 
 describe GithubNotification do
   let(:project) { stub(name: "Glitter", github_repo: "glitter", to_param: "3-glitter") }

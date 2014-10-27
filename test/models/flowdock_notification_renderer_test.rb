@@ -1,4 +1,4 @@
-require 'test_helper'
+require_relative '../test_helper'
 
 describe FlowdockNotificationRenderer do
   it "renders a nicely formatted notification" do
