@@ -1,4 +1,4 @@
-require 'test_helper'
+require_relative '../../test_helper'
 
 describe Changeset::GithubUser do
   describe "#avatar_url" do

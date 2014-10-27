@@ -1,4 +1,4 @@
-require 'test_helper'
+require_relative '../test_helper'
 
 describe FlowdockNotification do
   let(:project) { stub(name: "Glitter") }
