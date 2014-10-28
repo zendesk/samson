@@ -31,8 +31,6 @@ class JobExecution
   end
 
   def start!
-    ActiveRecord::Base.clear_active_connections!
-
     @thread = Thread.new do
       begin
         run!
@@ -116,13 +114,13 @@ class JobExecution
       *@job.commands
     ]
 
-    ActiveRecord::Base.clear_active_connections!
-
     payload = {
       stage: (stage.try(:name) || "none"),
       project: @job.project.name,
       command: commands.join("\n")
     }
+
+    ActiveRecord::Base.clear_active_connections!
 
     ActiveSupport::Notifications.instrument("execute_shell.samson", payload) do
       payload[:success] = @executor.execute!(*commands)
