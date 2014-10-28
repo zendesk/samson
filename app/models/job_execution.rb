@@ -31,6 +31,8 @@ class JobExecution
   end
 
   def start!
+    ActiveRecord::Base.clear_active_connections!
+
     @thread = Thread.new do
       begin
         run!
