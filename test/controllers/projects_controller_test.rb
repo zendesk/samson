@@ -5,9 +5,6 @@ describe ProjectsController do
   let(:user) { users(:admin) }
 
   setup do
-    status_url = "https://#{Rails.application.config.samson.github.status_url}/api/status.json"
-    stub_request(:get, status_url).to_timeout
-
     request.env['warden'].set_user(user)
   end
 

@@ -78,6 +78,8 @@ class ActionController::TestCase
     middleware = Rails.application.config.middleware.detect {|m| m.name == 'Warden::Manager'}
     manager = Warden::Manager.new(nil, &middleware.block)
     request.env['warden'] = Warden::Proxy.new(request.env, manager)
+
+    stub_request(:get, "https://#{Rails.application.config.samson.github.status_url}/api/status.json").to_timeout
   end
 
   teardown do

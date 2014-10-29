@@ -4,6 +4,8 @@ require 'github/markdown'
 module ApplicationHelper
   include Ansible
 
+  cattr_reader(:github_status_cache_key) { 'github-status-ok' }
+
   def render_log(str)
     escaped = ERB::Util.html_escape(str)
     ansi_escaped(escaped).gsub(/\[([A-Z]|[0-9]+)m?/, '').html_safe
@@ -51,5 +53,20 @@ module ApplicationHelper
     title ||= column.titleize
     direction = (column == sort_column && sort_direction == "asc") ? "desc" : "asc"
     link_to title, :sort => column, :direction => direction
+  end
+
+  def github_ok?
+    status_url = Rails.application.config.samson.github.status_url
+
+    Rails.cache.fetch(github_status_cache_key, expires_in: 5.minutes) do
+      response = Faraday.get("https://#{status_url}/api/status.json") do |req|
+        req.options.timeout = req.options.open_timeout = 1
+      end
+
+      # don't cache bad responses
+      (response.status == 200 && JSON.parse(response.body)['status'] == 'good') || nil
+    end
+  rescue Faraday::ClientError
+    false
   end
 end
