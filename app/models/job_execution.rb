@@ -91,7 +91,6 @@ class JobExecution
     end
 
     @output.close
-
     @job.update_output!(output_aggregator.to_s)
 
     @subscribers.each(&:call)

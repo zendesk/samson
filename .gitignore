@@ -31,6 +31,7 @@
 
 # Ignore editor files
 *.sw[oap]
+.idea
 
 # Ignore tags/ctags file
 /tags
