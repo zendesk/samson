@@ -25,6 +25,16 @@ function startStream() {
       }
     };
 
+    var updateStatusAndTitle = function(e) {
+      var data = JSON.parse(e.data);
+
+      $('#header').html(data.html);
+      window.document.title = data.title;
+      if ( doNotify && data.notification != undefined) {
+        new Notification(data.notification, {icon: '/favicon.ico'});
+      }
+    };
+
     source.addEventListener('append', function(e) {
       $messages.trigger('contentchanged');
       addLine(e.data);
@@ -52,22 +62,11 @@ function startStream() {
     }, false);
 
     source.addEventListener('started', function(e) {
-      var data = JSON.parse(e.data);
-
-      $('#header').html(data.html);
-      window.document.title = data.title;
+      updateStatusAndTitle(e);
     }, false);
 
     source.addEventListener('finished', function(e) {
-      var data = JSON.parse(e.data);
-
-      $('#header').html(data.html);
-      window.document.title = data.title;
-
-      if ( doNotify ) {
-        new Notification(data.notification, {icon: '/favicon.ico'});
-      }
-
+      updateStatusAndTitle(e);
       toggleOutputToolbar();
       timeAgoFormat();
 
