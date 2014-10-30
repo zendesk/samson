@@ -7,7 +7,7 @@ class Project < ActiveRecord::Base
   before_create :generate_token
 
   has_many :releases
-  has_many :stages, dependent: :destroy
+  has_many :stages, dependent: :destroy, inverse_of: :project
   has_many :deploys, through: :stages
   has_many :jobs, -> { order(created_at: :desc) }
   has_many :webhooks

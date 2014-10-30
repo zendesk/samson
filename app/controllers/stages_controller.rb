@@ -28,7 +28,7 @@ class StagesController < ApplicationController
   def show
     respond_to do |format|
       format.html do
-        @deploys = @stage.deploys.includes(:stage, job: :user).page(params[:page])
+        @deploys = Deploy.where(stage: @stage.subtree).includes(:stage, job: :user).page(params[:page])
       end
       format.svg do
         badge = if deploy = @stage.last_deploy
@@ -48,6 +48,7 @@ class StagesController < ApplicationController
 
   def new
     @stage = @project.stages.build(command_ids: Command.global.pluck(:id))
+    @stage.parent = @project.stages.find_by_param!(params[:stage_id]) if params[:stage_id].present?
     @stage.flowdock_flows.build
     @stage.new_relic_applications.build
   end
@@ -93,7 +94,7 @@ class StagesController < ApplicationController
   end
 
   def reorder
-    Stage.reorder(params[:stage_id])
+    Stage.reorder_position(params[:stage_id])
 
     head :ok
   end
@@ -121,7 +122,7 @@ class StagesController < ApplicationController
 
   def stage_params
     params.require(:stage).permit(
-      :name, :command, :confirm, :permalink,
+      :name, :command, :confirm, :permalink, :parent_id,
       :production,
       :notify_email_address,
       :deploy_on_release,

@@ -49,6 +49,12 @@
   }
 
   ul {
+    padding-top: 6px;
+    padding-left: 16px;
+  }
+
+  & > ul {
+    padding-top: 0;
     padding-left: 0;
   }
 
@@ -58,6 +64,27 @@
     padding-bottom: 6px;
     color: #333;
     font-size: 15px;
+    position: relative;
+  }
+
+  .collapse-toggle {
+    position: absolute;
+    left: -18px;
+    text-decoration: none;
+
+    &.collapsed {
+      left: -14px;
+    }
+
+    .expanded,
+    &.collapsed .collapsed {
+      display: inline-block;
+    }
+
+    .collapsed,
+    &.collapsed .expanded {
+      display: none;
+    }
   }
 
   .stage-link {
@@ -114,8 +141,17 @@ pre.pre-inline {
   font-weight: normal;
 }
 
-.project-stages > tbody > tr > td {
-  line-height: 37px;
+.project-stages > tbody > tr {
+  &.depth-1 td:first-child {
+    padding-left: 35px;
+  }
+  &.depth-2 td:first-child {
+    padding-left: 50px;
+  }
+
+  & > td {
+    line-height: 37px;
+  }
 }
 
 .project-title {

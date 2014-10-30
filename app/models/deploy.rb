@@ -1,4 +1,5 @@
 class Deploy < ActiveRecord::Base
+  has_ancestry touch: true
   has_soft_deletion default_scope: true
 
   belongs_to :stage, touch: true
@@ -20,7 +21,7 @@ class Deploy < ActiveRecord::Base
   end
 
   def summary
-    "#{job.user.name} #{deploy_buddy} #{summary_action} #{short_reference} to #{stage.name}"
+    "#{job.user.name} #{deploy_buddy} #{summary_action} #{short_reference} to #{stage.name} #{nested_deploy_summary}"
   end
 
   def summary_for_timeline
@@ -29,6 +30,10 @@ class Deploy < ActiveRecord::Base
 
   def summary_for_email
     "#{job.user.name} #{summary_action} #{project.name} to #{stage.name} (#{reference})"
+  end
+
+  def nested_deploy_summary
+    "(as part of a deploy to #{parent.stage.name})" if parent.present?
   end
 
   def commit

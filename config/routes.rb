@@ -19,6 +19,7 @@ Samson::Application.routes.draw do
 
     resources :stages do
       resource :lock, only: [:create, :destroy]
+      resource :stages, only: [:new], path: ''
 
       collection do
         patch :reorder

@@ -21,6 +21,7 @@ group :sqlite do
 end
 
 gem 'kaminari'
+gem 'ancestry', '~> 2.1.0'
 gem 'soft_deletion', '~> 0.4'
 gem 'dalli', '~> 2.7.0'
 gem 'active_model_serializers', '~> 0.8.0'

@@ -1,0 +1,19 @@
+<li class="stage-bar bar list-unstyled clearfix<%= ' sortable' if current_user.is_admin? %>" data-id="<%= stage.id %>">
+  <%= link_to stage.name, project_stage_path(@project, stage) %>
+  <% if stage.locked? %>
+    <span class="label label-warning" title="<%= stage.lock.summary %>"><i class="glyphicon glyphicon-lock"></i> Locked</span>
+  <% end %>
+  <div class="btn-group pull-right">
+    <% if current_user.is_admin? %>
+      <%= link_to "Add Stage", new_project_stage_stages_path(@project, stage), class: "btn btn-default" %>
+      <%= link_to "Clone", clone_project_stage_path(@project, stage), class: "btn btn-default" %>
+    <% end %>
+    <%= deploy_link @project, stage %>
+  </div>
+
+  <% if stage.has_children? %>
+    <ul class="stages" data-sortable="<%= current_user.is_admin? %>">
+      <%= render partial: 'stage_bar', as: :stage, collection: stage.children %>
+    </ul>
+  <% end %>
+</li>

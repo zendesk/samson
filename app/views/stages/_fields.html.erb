@@ -1,5 +1,12 @@
 <fieldset>
   <div class="form-group">
+    <%= form.label :parent_id, "Parent Stage", class: "col-lg-2 control-label" %>
+    <div class="col-lg-4">
+      <%= form.select :parent_id, parent_stage_options, { include_blank: "(root stage)" }, class: "form-control" %>
+    </div>
+  </div>
+
+  <div class="form-group">
     <%= form.label :name, "Name", class: "col-lg-2 control-label" %>
     <div class="col-lg-4">
       <%= form.text_field :name, class: "form-control" %>
@@ -59,12 +66,112 @@
   <% end %>
 </fieldset>
 
+<% if @stage.persisted? && @stage.has_children? %>
+  <fieldset>
+    <legend>Nested Stages</legend>
+    <p>Select the options for how you would like nested stages to run.</p>
+    <%= form.fields_for :nested_stages do |nested_stage_fields| %>
+      <div class="form-group">
+        <%= form.label :nested_stages_type, "Deploy Type", class: "col-lg-2 control-label" %>
+        <div class="col-sm-10">
+          <div class="radio">
+            <%= form.label :nested_stages_type_sequential do %>
+              <%= form.radio_button :nested_stages_type, :sequential %>
+              Sequential
+            <% end %>
+          </div>
+          <div class="help-block">Deploy nested stages one after another</div>
+          <div class="radio">
+            <%= form.label :nested_stages_type_parallel do %>
+              <%= form.radio_button :nested_stages_type, :parallel %>
+              Parallel
+            <% end %>
+          </div>
+          <div class="help-block">Deploy all nested stages at once</div>
+          <div class="radio">
+            <%= form.label :nested_stages_type_sequential do %>
+              <%= form.radio_button :nested_stages_type, :manual %>
+              Manual
+            <% end %>
+          </div>
+          <div class="help-block">Queue up nested stages for manually started deploys</div>
+        </div>
+      </div>
+      <div class="form-group">
+        <%= form.label :nested_stages_failure, "Failure Handling Type", class: "col-lg-2 control-label" %>
+        <div class="col-sm-10">
+          <div class="radio">
+            <%= form.label :nested_stages_failure_continue do %>
+              <%= form.radio_button :nested_stages_failure, :continue %>
+              Continue
+            <% end %>
+          </div>
+          <div class="help-block">Continue deploying to other nested stages on failure</div>
+          <div class="radio">
+            <%= form.label :nested_stages_failure_abort do %>
+              <%= form.radio_button :nested_stages_failure, :abort %>
+              Abort
+            <% end %>
+          </div>
+          <div class="help-block">Abort on failure</div>
+        </div>
+      </div>
+      <div class="form-group">
+        <%= form.label :nested_stages_buddy, "Buddy Approval", class: "col-lg-2 control-label" %>
+        <div class="col-sm-10">
+          <div class="checkbox">
+            <%= form.label :nested_stages_buddy do %>
+              <%= form.check_box :nested_stages_buddy %>
+              Require buddy approval for each nested stage
+            <% end %>
+          </div>
+        </div>
+      </div>
+    <% end %>
+  </fieldset>
+<% end %>
+
 <fieldset>
   <legend>Commands</legend>
   <p>Select the commands you want to run when executing this stage. Double click to edit commands.</p>
 
   <div id="commands">
-    <%= form.collection_check_boxes(:command_ids, form.object.all_commands, :id, :command) do |b| %>
+    <%= form.collection_check_boxes(:command_ids, form.object.before_nested_commands, :id, :command) do |b| %>
+      <div class="row stage-bar bar">
+        <div data-id="<%= b.value %>" class="col-lg-offset-2 col-lg-2 command-checkbox">
+          <%= b.check_box %>
+        </div>
+        <div class="col-lg-8">
+          <pre data-type="textarea" data-url="<%= admin_command_path(b.value, format: :json) %>" class="pre-command pre-inline <%= b.object.global? ? 'global' : 'local' %>"><%= b.text %></pre>
+        </div>
+        <%= edit_command_link(b.object) %>
+      </div>
+    <% end %>
+    <div class="ui-state-disabled">
+      <% @stage.nested_stage_commands.each do |command| %>
+      <div class="row stage-bar bar">
+        <div class="col-lg-offset-2 col-lg-2 command-checkbox">
+          <input checked="checked" name="stage[command_ids][]" type="checkbox" value="-1" />
+        </div>
+        <div class="col-lg-8">
+          <pre class="pre-command pre-inline"><%= command.command %></pre>
+        </div>
+        <%= link_to "", edit_project_stage_path(@project, command.stage), title: "Edit Stage", class: "edit-command glyphicon glyphicon-edit" %>
+      </div>
+      <% end %>
+    </div>
+    <%= form.collection_check_boxes(:command_ids, form.object.after_nested_commands, :id, :command) do |b| %>
+      <div class="row stage-bar bar">
+        <div data-id="<%= b.value %>" class="col-lg-offset-2 col-lg-2 command-checkbox">
+          <%= b.check_box %>
+        </div>
+        <div class="col-lg-8">
+          <pre data-type="textarea" data-url="<%= admin_command_path(b.value, format: :json) %>" class="pre-command pre-inline <%= b.object.global? ? 'global' : 'local' %>"><%= b.text %></pre>
+        </div>
+        <%= edit_command_link(b.object) %>
+      </div>
+    <% end %>
+    <%= form.collection_check_boxes(:command_ids, form.object.other_commands, :id, :command) do |b| %>
       <div class="row stage-bar bar">
         <div data-id="<%= b.value %>" class="col-lg-offset-2 col-lg-2 command-checkbox">
           <%= b.check_box %>
@@ -158,7 +265,9 @@
 
 <script>
   $(document).ready(function() {
-    $('#commands').sortable();
+    $('#commands').sortable({
+      cancel: ".ui-state-disabled"
+    });
     $.fn.editableform.buttons = <%= render('commands/buttons').inspect.html_safe %>;
 
     $('#commands pre.local').editable({

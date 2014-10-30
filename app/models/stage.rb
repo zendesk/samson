@@ -1,9 +1,10 @@
 class Stage < ActiveRecord::Base
   include Permalinkable
 
+  has_ancestry touch: true
   has_soft_deletion default_scope: true
 
-  belongs_to :project, touch: true
+  belongs_to :project, touch: true, inverse_of: :stages
 
   has_many :deploys, dependent: :destroy
   has_many :webhooks, dependent: :destroy
@@ -27,7 +28,7 @@ class Stage < ActiveRecord::Base
   attr_writer :command
   before_save :build_new_project_command
 
-  def self.reorder(new_order)
+  def self.reorder_position(new_order)
     transaction do
       new_order.each.with_index { |stage_id, index| Stage.update stage_id.to_i, order: index.to_i }
     end
@@ -59,6 +60,18 @@ class Stage < ActiveRecord::Base
     )
   end
 
+  def nested_stages_type
+
+  end
+
+  def nested_stages_buddy
+
+  end
+
+  def nested_stages_failure
+
+  end
+
   def current_deploy
     @current_deploy ||= deploys.active.first
   end
@@ -86,10 +99,20 @@ class Stage < ActiveRecord::Base
   def create_deploy(options = {})
     user = options.fetch(:user)
     reference = options.fetch(:reference)
+    parent = options[:parent]
 
-    deploys.create(reference: reference) do |deploy|
+    deploy = deploys.create(reference: reference, parent: parent) do |deploy|
       deploy.build_job(project: project, user: user, command: command)
     end
+
+    if has_children? && deploy.persisted?
+      children.each do |stage|
+        stage.create_deploy(options.merge(parent: deploy))
+      end
+      deploy.job.update_attributes(command: command(deploy))
+    end
+
+    deploy
   end
 
   def currently_deploying?
@@ -98,7 +121,7 @@ class Stage < ActiveRecord::Base
 
   # The next stage for the project. If this is the last stage, returns nil.
   def next_stage
-    stages = project.stages.to_a
+    stages = siblings.to_a
     stages[stages.index(self) + 1]
   end
 
@@ -118,24 +141,60 @@ class Stage < ActiveRecord::Base
     flowdock_flows.map(&:token)
   end
 
-  def command
-    commands.map(&:command).join("\n")
+  def command(deploy = nil)
+    (before_nested_commands + nested_stage_commands(deploy) + after_nested_commands).map(&:command).join("\n")
   end
 
   def command_ids=(new_command_ids)
-    super.tap do
-      reorder_commands(new_command_ids.reject(&:blank?).map(&:to_i))
+    new_command_ids = new_command_ids.reject(&:blank?).map(&:to_i)
+    filtered_new_commands = new_command_ids.select { |i| i >= 0 }
+    super(filtered_new_commands).tap do
+      before_command_ids = []
+      after_command_ids = []
+      append_after = false
+
+      new_command_ids.each do |id|
+        if id < 0
+          append_after = true
+        else
+          if append_after
+            after_command_ids << id
+          else
+            before_command_ids << id
+          end
+        end
+      end
+
+      reorder_commands(after_command_ids, before_command_ids)
     end
   end
 
-  def all_commands
+  def before_nested_commands
+    commands.where('position < 0')
+  end
+
+  def after_nested_commands
+    commands.where('position >= 0')
+  end
+
+  def nested_stage_commands(deploy = nil)
+    children.map do |stage|
+      if deploy.present? && deploy.has_children?
+        child_deploy = deploy.children.find_by(stage: stage)
+        start_pending_deploy = "$SAMSON_ROOT/bin/rake -f \"$SAMSON_ROOT/Rakefile\" deploys:start_pending_deploy DEPLOY_ID=#{child_deploy.id}"
+      end
+      OpenStruct.new(stage: stage, command: "#{start_pending_deploy} # Execute #{stage.name} commands".strip)
+    end
+  end
+
+  def other_commands
     command_scope = project ? Command.for_project(project) : Command.global
 
     if command_ids.any?
       command_scope = command_scope.where(['id NOT in (?)', command_ids])
     end
 
-    commands + command_scope
+    command_scope
   end
 
   def datadog_tags
@@ -161,10 +220,14 @@ class Stage < ActiveRecord::Base
     end
   end
 
-  def reorder_commands(command_ids = self.command_ids)
+  def reorder_commands(after_command_ids = self.command_ids, before_command_ids = [])
     stage_commands.each do |stage_command|
-      pos = command_ids.index(stage_command.command_id) ||
-        stage_commands.length
+      reverse_before_index = before_command_ids.reverse.index(stage_command.command_id)
+      if reverse_before_index.present?
+        pos = (-1 * reverse_before_index) - 1
+      else
+        pos = after_command_ids.index(stage_command.command_id) || stage_commands.length
+      end
 
       stage_command.position = pos
     end

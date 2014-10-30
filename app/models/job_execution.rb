@@ -105,12 +105,16 @@ class JobExecution
     FileUtils.mkdir_p(artifact_cache_dir)
     @output.write("Executing deploy\n")
 
-    commands = [
-      "export DEPLOYER=#{@job.user.email.shellescape}",
-      "export DEPLOYER_EMAIL=#{@job.user.email.shellescape}",
-      "export DEPLOYER_NAME=#{@job.user.name.shellescape}",
-      "export REVISION=#{@reference.shellescape}",
-      "export CACHE_DIR=#{artifact_cache_dir}",
+    env_vars = {
+      "SAMSON_ROOT" => Rails.application.root,
+      "DEPLOYER" => @job.user.email.shellescape,
+      "DEPLOYER_EMAIL" => @job.user.email.shellescape,
+      "DEPLOYER_NAME" => @job.user.name.shellescape,
+      "REVISION" => @reference.shellescape,
+      "CACHE_DIR" => artifact_cache_dir
+    }
+
+    commands = env_vars.map { |k, v| "export #{k}=\"#{v}\"" } + [
       "cd #{dir}",
       *@job.commands
     ]
@@ -125,6 +129,12 @@ class JobExecution
 
     ActiveSupport::Notifications.instrument("execute_shell.samson", payload) do
       payload[:success] = @executor.execute!(*commands)
+    end
+
+    if @job.deploy.try(:has_children?)
+      @job.deploy.children.each do |deploy|
+        deploy.cancel! unless deploy.finished?
+      end
     end
   end
 

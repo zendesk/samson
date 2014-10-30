@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20141021204733) do
+ActiveRecord::Schema.define(version: 20141024033122) do
 
   create_table "commands", force: true do |t|
     t.text     "command",    limit: 16777215
@@ -29,8 +29,10 @@ ActiveRecord::Schema.define(version: 20141021204733) do
     t.integer  "buddy_id"
     t.datetime "started_at"
     t.datetime "deleted_at"
+    t.string   "ancestry"
   end
 
+  add_index "deploys", ["ancestry"], name: "index_deploys_on_ancestry", using: :btree
   add_index "deploys", ["created_at"], name: "index_deploys_on_created_at", using: :btree
   add_index "deploys", ["job_id"], name: "index_deploys_on_job_id", using: :btree
   add_index "deploys", ["stage_id"], name: "index_deploys_on_stage_id", using: :btree
@@ -48,7 +50,7 @@ ActiveRecord::Schema.define(version: 20141021204733) do
     t.integer  "user_id",                                           null: false
     t.integer  "project_id",                                        null: false
     t.string   "status",                        default: "pending"
-    t.text     "output",     limit: 1073741823
+    t.text     "output",     limit: 2147483647
     t.datetime "created_at"
     t.datetime "updated_at"
     t.string   "commit"
@@ -121,8 +123,10 @@ ActiveRecord::Schema.define(version: 20141021204733) do
     t.boolean  "production",                  default: false
     t.boolean  "use_github_deployment_api"
     t.string   "permalink",                                   null: false
+    t.string   "ancestry"
   end
 
+  add_index "stages", ["ancestry"], name: "index_stages_on_ancestry", using: :btree
   add_index "stages", ["project_id", "permalink"], name: "index_stages_on_project_id_and_permalink", unique: true, using: :btree
 
   create_table "stars", force: true do |t|

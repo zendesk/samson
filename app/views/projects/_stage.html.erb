@@ -1,5 +1,5 @@
 <% cache stage do %>
-  <tr>
+  <tr class="depth-<%= stage.depth - depth_offset %>">
     <td>
       <%= link_to stage.name, project_stage_path(project, stage) %>
       <% if stage.locked? %>
@@ -15,4 +15,7 @@
     <% end %>
     <td align="right"><%= deploy_link @project, stage %></td>
   </tr>
+  <% if stage.has_children? %>
+  <%= render partial: "projects/stage", collection: stage.children, locals: { depth_offset: depth_offset } %>
+  <% end %>
 <% end %>

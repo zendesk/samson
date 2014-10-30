@@ -1,10 +1,6 @@
 <% content_for :page_title, "#{@stage.name} - #{@project.name}" %>
 
-<ol class="breadcrumb">
-  <li><%= link_to "Home", root_path %></li>
-  <li><%= link_to @project.name, project_path(@project) %></li>
-  <li class="active"><%= @stage.name %></li>
-</ol>
+<%= render partial: 'breadcrumbs', locals: { project: @project, stage: @stage } %>
 
 <% if @stage.locked? %>
  <div class="alert alert-warning">Deployments to this stage were locked by <%= @stage.lock.user.name %> <%= time_ago_in_words(@stage.lock.created_at) %> ago. <%= @stage.lock.reason %></div>
@@ -41,6 +37,23 @@
 
   <h2>Command</h2>
   <pre class="pre-command"><%= @stage.command %></pre>
+
+  <% if @stage.has_children? %>
+  <h2>Deploys to</h2>
+  <table class="project-stages table table-condensed">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Deployer</th>
+        <th>Release</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      <%= render partial: "projects/stage", collection: @stage.children, locals: { project: @project, depth_offset: @stage.depth + 1 } %>
+    </tbody>
+  </table>
+  <% end %>
 
   <h2>Recent deploys</h2>
   <table class="table">

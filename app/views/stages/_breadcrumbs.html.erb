@@ -1,0 +1,11 @@
+<ol class="breadcrumb">
+  <li><%= link_to "Home", root_path %></li>
+  <li><%= link_to project.name, project_path(project) %></li>
+  <% stage.path.each do |stage_node| %>
+    <% if stage_node == stage %>
+      <li class="active"><%= stage_node.name %></li>
+    <% else %>
+      <li><%= link_to stage_node.name, project_stage_path(project, stage_node) %></li>
+    <% end %>
+  <% end %>
+</ol>

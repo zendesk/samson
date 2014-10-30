@@ -76,7 +76,7 @@ class DeploysController < ApplicationController
   end
 
   def pending_start
-    if @deploy.pending_non_production?
+    if @deploy.pending_non_production? && @deploy.is_root?
       @deploy.pending_start!
     end
 
@@ -103,7 +103,9 @@ class DeploysController < ApplicationController
   end
 
   def destroy
-    if @deploy.can_be_stopped_by?(current_user)
+    if @deploy.pending? && !@deploy.is_root?
+      flash[:error] = "This deploy is part of a larger deploy and cannot be stopped manually."
+    elsif @deploy.can_be_stopped_by?(current_user)
       @deploy.stop!
     else
       flash[:error] = "You do not have privileges to stop this deploy."
