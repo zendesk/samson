@@ -1,6 +1,9 @@
 <div class="row deploy-check">
   <% if @deploy.started_by?(current_user) %>
     <p>This deploy hits production, so requires a deploy buddy. Please have another engineer with deploy rights visit this URL to kick off the deploy.</p>
+    <% if details = ENV["BYPASS_DETAILS"].presence %>
+      <p><%= details %></p>
+    <% end %>
     <div class="deployer-stop">
       <%= link_to "Stop", project_deploy_path(@project, @deploy), method: :delete, class: "btn btn-danger btn-xl" %>
       or
