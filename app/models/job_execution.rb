@@ -1,5 +1,4 @@
 require 'thread_safe'
-require 'airbrake'
 require 'shellwords'
 
 class JobExecution
