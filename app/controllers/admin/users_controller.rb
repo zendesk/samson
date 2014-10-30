@@ -1,10 +1,15 @@
 class Admin::UsersController < ApplicationController
   before_filter :authorize_admin!
   before_filter :authorize_super_admin!, only: [ :update, :destroy ]
-  helper_method :sort_column, :sort_direction
+  helper_method :sort_column, :sort_direction, :search_query
 
   def index
-    @users = User.order(sort_column + ' ' + sort_direction).page(params[:page])
+    @users = if search_query
+      User.search(search_query).order(sort_column + ' ' + sort_direction).page(params[:page])
+    else
+      User.all.order(sort_column + ' ' + sort_direction).page(params[:page])
+    end
+
     respond_to do |format|
       format.html
       format.json { render json: @users }
@@ -45,4 +50,9 @@ class Admin::UsersController < ApplicationController
   def sort_direction
     %w[asc desc].include?(params[:direction]) ? params[:direction] : "asc"
   end
+
+  def search_query
+    params[:search]
+  end
+
 end

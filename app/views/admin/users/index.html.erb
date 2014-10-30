@@ -1,4 +1,7 @@
 <section class="clearfix" ng-controller="UsersCtrl">
+
+  <%= render partial: "search_bar", locals: { query: search_query } %>
+
   <table class="table table-hover table-condensed">
     <thead>
       <tr>
@@ -11,6 +14,7 @@
     </thead>
 
     <tbody>
+    <%- unless @users.empty? %>
       <% @users.each do |user| %>
         <tr>
           <td><%= user.id %></td>
@@ -26,8 +30,14 @@
           </td>
         </tr>
       <% end %>
+    <% else %>
+        <tr>
+          <td>No user was found!</td>
+        </tr>
+    <% end %>
     </tbody>
   </table>
 
   <%= paginate @users %>
+
 </section>

@@ -176,4 +176,72 @@ describe User do
       User.new.is_viewer?.must_equal(true)
     end
   end
+
+  describe "search_for scope" do
+
+    let(:a_singular_user) do
+      User.create!(name: "FindMe", email: "find.me@example.org")
+    end
+
+    let(:some_similar_users) do
+      (1..10).inject([]) do |users, index|
+        test_user = User.create!(name: "TestUser#{index}", email: "some_email#{index}@example.org")
+        users << test_user
+      end
+    end
+
+    setup do
+      a_singular_user()
+      @test_users = some_similar_users
+    end
+
+    teardown do
+      @test_users.each { |user| user.destroy! }
+    end
+
+    it 'finds a single user' do
+      search_result = User.search("FindMe")
+      search_result.size.must_equal(1)
+      search_result.first.name.must_equal("FindMe")
+      search_result.first.email.must_equal("find.me@example.org")
+    end
+
+    it 'finds a single user using the email as query' do
+      search_result = User.search("find.me@example.org")
+      search_result.size.must_equal(1)
+      search_result.first.name.must_equal("FindMe")
+      search_result.first.email.must_equal("find.me@example.org")
+    end
+
+    it 'finds a single user using a partial match query' do
+      search_result = User.search("find")
+      search_result.size.must_equal(1)
+      search_result.first.name.must_equal("FindMe")
+      search_result.first.email.must_equal("find.me@example.org")
+    end
+
+    it 'finds multiple results using a partial match query' do
+      search_result = User.search("TestUser")
+      search_result.size.must_equal(10)
+    end
+
+    it 'fails to find any result' do
+      search_result = User.search("does not exist")
+      search_result.size.must_equal(0)
+    end
+
+    it 'must return all results with an empty query' do
+      total_records = User.all.size
+      search_result = User.search("")
+      search_result.size.must_equal(total_records)
+    end
+
+    it 'must return all results with a nil query' do
+      total_records = User.all.size
+      search_result = User.search(nil)
+      search_result.size.must_equal(total_records)
+    end
+
+  end
+
 end

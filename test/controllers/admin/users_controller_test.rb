@@ -8,7 +8,7 @@ describe Admin::UsersController do
 
     as_a_admin do
       it 'succeeds' do
-        assert_template :index
+        assert_template :index, partial: '_search_bar'
       end
     end
 
@@ -30,8 +30,8 @@ describe Admin::UsersController do
         assert_not_nil user_list
         user_list.each  do | u |
           user_info = User.find_by(name: u['name'])
-          assert_not_nil user_info
-          assert_equal user_info.email, u['email']
+          user_info.wont_be_nil
+          user_info.email.must_equal u['email']
         end
       end
     end
@@ -39,6 +39,68 @@ describe Admin::UsersController do
     as_a_deployer do
       unauthorized :get, :index, :format => :json
     end
+  end
+
+  describe 'a json get to #show with a search string' do
+
+    as_a_admin do
+
+      it 'succeeds and fetches a single user' do
+        get :index, search: 'Super Admin' , :format => :json
+
+        response.success?.must_equal true
+        json_response = JSON.parse response.body
+        user_list = json_response['users']
+        user_list.wont_be_nil
+        user_list.size.must_equal 1
+        user_info = user_list[0]
+        user_info['name'].must_equal 'Super Admin'
+        user_info['email'].must_equal 'super-admin@example.com'
+        user_info['role_id'].must_equal Role::SUPER_ADMIN.id
+      end
+
+      it 'succeeds and with search as empty fetches all users' do
+        get :index, search: '' , :format => :json
+
+        response.success?.must_equal true
+        json_response = JSON.parse response.body
+        user_list = json_response['users']
+        user_list.wont_be_nil
+        user_list.size.must_equal 7
+
+        user_list.each  do | u |
+          user_info = User.find_by(name: u['name'])
+          user_info.wont_be_nil
+          user_info.email.must_equal u['email']
+        end
+      end
+
+      it 'index page should render with search partial and search box should be empty' do
+        get :index
+
+        assert_template :index, partial: '_search_bar'
+        input = css_select('#search')
+        input.size.must_equal 1
+        expected = '<input class="form-control" id="search" name="search" placeholder="Search" type="text" />'
+        input[0].to_s.must_equal expected
+      end
+
+      it 'index page search box should contain the query' do
+        get :index, search: 'Super Admin'
+
+        assert_template :index,  partial: '_search_bar'
+        assert_select '#search[value=?]', 'Super Admin'
+        assert_select 'tbody' do
+          assert_select 'tr', 1
+        end
+      end
+
+    end
+
+    as_a_deployer do
+      unauthorized :get, :index, search: 'Super Admin', :format => :json
+    end
+
   end
 
   describe 'a DELETE to #destroy' do
