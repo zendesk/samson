@@ -30,6 +30,31 @@ class DeployServiceTest < ActiveSupport::TestCase
         service.expects(:confirm_deploy!).never
         service.deploy!(stage, reference)
       end
+      describe "if release is approved" do
+        before { service.stubs(:release_approved?).returns(true) }
+        it "starts the deploy" do
+          service.expects(:confirm_deploy!).once
+          service.deploy!(stage, reference)
+        end
+      end
+      describe "if similar deploy was bypassed" do
+        before { service.stubs(:bypassed?).returns(true) }
+        it "does not start the deploy" do
+          service.expects(:release_approved?).once
+          service.expects(:confirm_deploy!).never
+          service.deploy!(stage, reference)
+        end
+      end
+      describe "if similar deploy was approved" do
+        before do
+          service.stubs(:bypassed?).returns(false)
+          service.stubs(:latest_approved_deploy).returns(Deploy.new(id:22, buddy:other_user) )
+        end
+        it "it starts the deploy" do
+          service.expects(:confirm_deploy!).once
+          service.deploy!(stage, reference)
+        end
+      end
     end
   end
 
