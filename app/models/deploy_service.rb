@@ -32,7 +32,7 @@ class DeployService
   end
 
   def latest_approved_deploy(deploy)
-    Deploy.where('reference = ? AND buddy_id is NOT NULL AND started_at > DATE_SUB(now(), INTERVAL \'?\' HOUR)', deploy.reference, BuddyCheck.grace_period)
+    Deploy.where('reference = ? AND buddy_id is NOT NULL AND started_at > ?', deploy.reference, (Time.now - (BuddyCheck.grace_period*60*60)))
       .order(started_at: :asc)
       .includes(:stage)
       .where(stages: {project_id: deploy.stage.project, production: 1})
