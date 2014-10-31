@@ -9,7 +9,7 @@ module BuddyCheck
     ENV["BYPASS_EMAIL"]
   end
 
-  def grace_period
+  def period
     (ENV["BUDDY_CHECK_GRACE_PERIOD"].presence || "4").to_i
   end
 

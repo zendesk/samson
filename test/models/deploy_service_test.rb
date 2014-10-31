@@ -11,8 +11,10 @@ class DeployServiceTest < ActiveSupport::TestCase
   let(:reference) { deploy.reference }
   let(:job_execution) { JobExecution.new(reference, job) }
 
-  let(:stage_production) { stages(:test_production) }
-  let(:job_production) { project.jobs.create!(user: user, command: "foo", status: "succeeded") }
+  let(:stage_production_1) { stages(:test_production) }
+  let(:stage_production_2) { stages(:test_production_pod) }
+
+  let (:ref1) { "v1" }
 
   describe "#deploy!" do
     it "starts a deploy" do
@@ -30,13 +32,30 @@ class DeployServiceTest < ActiveSupport::TestCase
         service.expects(:confirm_deploy!).never
         service.deploy!(stage, reference)
       end
+
       describe "if release is approved" do
-        before { service.stubs(:release_approved?).returns(true) }
-        it "starts the deploy" do
-          service.expects(:confirm_deploy!).once
-          service.deploy!(stage, reference)
+        before do
+          job_1 = project.jobs.create!(user: user, command: "foo", status: "succeeded")
+          deploy_1 = Deploy.new(id: 101, job: job_1, reference: ref1, stage: stage_production_1)
+          deploy_1.buddy = other_user
+          deploy_1.started_at = Time.now
+          deploy_1.save!
         end
+
+        it "starts the deploy, if in grace period" do
+          service.expects(:confirm_deploy!).once
+          service.deploy!(stage_production_2, ref1)
+        end
+
+        it "does not start the deploy, if past grace period" do
+          service.expects(:confirm_deploy!).never
+          travel (BuddyCheck.period).hour do
+            service.deploy!(stage_production_2, ref1)
+          end
+        end
+
       end
+
       describe "if similar deploy was bypassed" do
         before { service.stubs(:bypassed?).returns(true) }
         it "does not start the deploy" do
@@ -45,6 +64,7 @@ class DeployServiceTest < ActiveSupport::TestCase
           service.deploy!(stage, reference)
         end
       end
+
       describe "if similar deploy was approved" do
         before do
           service.stubs(:bypassed?).returns(false)

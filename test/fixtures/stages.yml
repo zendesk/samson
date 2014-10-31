@@ -10,3 +10,10 @@ test_production:
   confirm: false
   production: true
   permalink: production
+
+test_production_pod:
+  name: Production Pod
+  project: test
+  confirm: false
+  production: true
+  permalink: production-pod
