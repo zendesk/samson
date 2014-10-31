@@ -16,10 +16,12 @@ module IntegrationsControllerTestHelper
         project.deploys.must_equal []
       end
 
-      it "doesn't trigger a deploy if the build did not pass" do
-        post :create, payload.merge(token: project.token).merge(options.fetch(:failed))
+      if failed = options[:failed]
+        it "doesn't trigger a deploy if the build did not pass" do
+          post :create, payload.merge(token: project.token).merge(failed)
 
-        project.deploys.must_equal []
+          project.deploys.must_equal []
+        end
       end
 
       it "deploys as the correct user" do
