@@ -70,6 +70,7 @@ Samson::Application.routes.draw do
     post "/semaphore/:token" => "semaphore#create", as: :semaphore_deploy
     post "/tddium/:token" => "tddium#create", as: :tddium_deploy
     post "/jenkins/:token" => "jenkins#create", as: :jenkins_deploy
+    post "/github/:token" => "github#create", as: :github_deploy
   end
 
   get '/ping', to: 'ping#show'

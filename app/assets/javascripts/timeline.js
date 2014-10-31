@@ -67,7 +67,7 @@ samson.constant("StatusFilterMapping",
 
 samson.filter("userFilter",
   function() {
-    var hookSources = /^(?:travis|tddium|semaphore|jenkins)$/i;
+    var hookSources = /^(?:travis|tddium|semaphore|jenkins|github)$/i;
 
     return function(deploys, userType) {
       if (userType !== undefined && userType !== null) {

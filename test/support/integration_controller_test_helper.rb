@@ -1,7 +1,7 @@
 module IntegrationsControllerTestHelper
   def test_regular_commit(user_name, options, &block)
     describe "normal" do
-      before(&block)
+      before(&block) if block
 
       it "triggers a deploy if there's a webhook mapping for the branch" do
         post :create, payload.merge(token: project.token)
@@ -16,10 +16,12 @@ module IntegrationsControllerTestHelper
         project.deploys.must_equal []
       end
 
-      it "doesn't trigger a deploy if the build did not pass" do
-        post :create, payload.merge(token: project.token).merge(options.fetch(:failed))
+      if failed = options[:failed]
+        it "doesn't trigger a deploy if the build did not pass" do
+          post :create, payload.merge(token: project.token).merge(failed)
 
-        project.deploys.must_equal []
+          project.deploys.must_equal []
+        end
       end
 
       it "deploys as the correct user" do
