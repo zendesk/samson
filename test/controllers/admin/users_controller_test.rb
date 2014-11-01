@@ -45,13 +45,7 @@ describe Admin::UsersController do
         get :index, search: 'Super Admin' , :format => :json
 
         response.success?.must_equal true
-        user_list = assigns(:users)
-        user_list.wont_be_nil
-        user_list.size.must_equal 1
-        user_info = user_list[0]
-        user_info['name'].must_equal 'Super Admin'
-        user_info['email'].must_equal 'super-admin@example.com'
-        user_info['role_id'].must_equal Role::SUPER_ADMIN.id
+        assigns(:users).must_equal [users(:super_admin)]
       end
 
       it 'succeeds and with search as empty fetches all users' do

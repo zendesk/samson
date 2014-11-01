@@ -179,17 +179,12 @@ describe User do
 
   describe "search_for scope" do
 
-    let(:a_singular_user) do
+    let!(:a_singular_user) do
       User.create!(name: 'FindMe', email: 'find.me@example.org')
     end
 
-    let(:some_similar_users) do
-      (1..10).map { |index| User.create!(name: "TestUser#{index}", email: "some_email#{index}@example.org") }
-    end
-
-    setup do
-      a_singular_user()
-      @test_users = some_similar_users
+    let!(:some_similar_users) do
+      (1..3).map { |index| User.create!(name: "TestUser#{index}", email: "some_email#{index}@example.org") }
     end
 
     it 'finds a single user' do
@@ -205,7 +200,7 @@ describe User do
     end
 
     it 'finds multiple results using a partial match query' do
-      User.search('TestUser').count.must_equal(10)
+      User.search('TestUser').count.must_equal(3)
     end
 
     it 'fails to find any result' do

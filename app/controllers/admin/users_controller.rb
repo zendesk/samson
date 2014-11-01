@@ -1,7 +1,7 @@
 class Admin::UsersController < ApplicationController
   before_filter :authorize_admin!
   before_filter :authorize_super_admin!, only: [ :update, :destroy ]
-  helper_method :sort_column, :sort_direction, :search_query
+  helper_method :sort_column, :sort_direction
 
   def index
     scope = User
