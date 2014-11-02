@@ -1,5 +1,5 @@
-<div id="user-search-bar" class="col-sm-5 col-md-5 col-lg-5 row pull-right">
-  <%= form_tag admin_users_path, method: 'get', class: 'form-horizontal pull-right' do %>
+<div id="user-search-bar" class="col-md-5 row pull-right">
+  <%= form_tag admin_users_path, method: 'get', class: 'form-horizontal' do %>
     <%= label_tag :search, 'Search:', class: 'control-label sr-only' %>
     <div class="input-group">
       <%= text_field_tag :search, query, class: 'form-control', placeholder: 'Search' %>
@@ -11,3 +11,4 @@
     </div>
   <% end %>
 </div>
+
