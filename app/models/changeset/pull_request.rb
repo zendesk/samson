@@ -48,7 +48,10 @@ class Changeset::PullRequest
   end
 
   def risks
-    @risks ||= parse_risks!
+    return @risks if defined?(@risks)
+    @risks = @data.body.to_s.split(RISKS_SECTION, 2)[1].to_s.strip.presence
+    @risks = nil if @risks =~ /\A\s*\-?\s*None\Z/i
+    @risks
   end
 
   def jira_issues
@@ -56,16 +59,6 @@ class Changeset::PullRequest
   end
 
   private
-
-  def parse_risks!
-    parts = @data.body.to_s.split(RISKS_SECTION, 2)
-
-    if parts.size == 1
-      nil
-    else
-      parts[1] && parts[1].strip
-    end
-  end
 
   def parse_jira_issues!
     @data.body.scan(JIRA_ISSUE).map do |match|
