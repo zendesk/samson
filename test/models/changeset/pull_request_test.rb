@@ -62,4 +62,45 @@ describe Changeset::PullRequest do
       pr.jira_issues.must_equal []
     end
   end
+
+  describe "#risks" do
+    def add_risks
+      body.replace(<<-BODY.strip_heredoc)
+        # Risks
+         - Explosions
+      BODY
+    end
+
+    def no_risks
+      body.replace(<<-BODY.strip_heredoc)
+        Not that risky ...
+      BODY
+    end
+
+    before { add_risks }
+
+    it "finds risks" do
+      pr.risks.must_equal "- Explosions"
+    end
+
+    it "caches risks" do
+      pr.risks
+      no_risks
+      pr.risks.must_equal "- Explosions"
+    end
+
+    context "with nothing risky" do
+      before { no_risks }
+
+      it "finds nothing" do
+        pr.risks.must_equal nil
+      end
+
+      it "caches nothing" do
+        pr.risks
+        add_risks
+        pr.risks.must_equal nil
+      end
+    end
+  end
 end
