@@ -1,4 +1,6 @@
 class Integrations::GithubController < Integrations::BaseController
+  cattr_accessor(:github_hook_secret) { ENV['GITHUB_HOOK_SECRET'] }
+
   HMAC_DIGEST = OpenSSL::Digest.new('sha1')
 
   protected
@@ -10,7 +12,7 @@ class Integrations::GithubController < Integrations::BaseController
   def valid_signature?
     hmac = OpenSSL::HMAC.hexdigest(
       HMAC_DIGEST,
-      ENV['GITHUB_SECRET'],
+      github_hook_secret,
       request.body.tap(&:rewind).read
     )
 
