@@ -1,4 +1,7 @@
 <section class="clearfix" ng-controller="UsersCtrl">
+
+  <%= render partial: "search_bar", locals: { query: params[:search] } %>
+
   <table class="table table-hover table-condensed">
     <thead>
       <tr>
@@ -11,23 +14,16 @@
     </thead>
 
     <tbody>
-      <% @users.each do |user| %>
-        <tr>
-          <td><%= user.id %></td>
-          <td><%= user.name %></td>
-          <td><%= user.email %></td>
-          <td class="role" data-user-id="<%= user.id %>">
-            <div class="relative-wrapper">
-              <%= render partial: "roles", locals: { user: user } %>
-            </div>
-          </td>
-          <td>
-            <%= link_to "Delete", admin_user_path(user.id), method: :delete, data: { confirm: "Delete ##{user.id} #{user.name} #{user.email} ?" }, class: "btn-sm btn-danger" if can_modify_roles? %>
-          </td>
-        </tr>
-      <% end %>
+    <% if @users.empty? %>
+      <tr>
+        <td>No user was found!</td>
+      </tr>
+    <% else %>
+        <%= render @users %>
+    <% end %>
     </tbody>
   </table>
 
   <%= paginate @users %>
+
 </section>

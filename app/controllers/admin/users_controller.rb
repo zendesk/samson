@@ -4,7 +4,10 @@ class Admin::UsersController < ApplicationController
   helper_method :sort_column, :sort_direction
 
   def index
-    @users = User.order(sort_column + ' ' + sort_direction).page(params[:page])
+    scope = User
+    scope = scope.search(params[:search]) if params[:search]
+    @users = scope.order(sort_column + ' ' + sort_direction).page(params[:page])
+
     respond_to do |format|
       format.html
       format.json { render json: @users }
@@ -45,4 +48,5 @@ class Admin::UsersController < ApplicationController
   def sort_direction
     %w[asc desc].include?(params[:direction]) ? params[:direction] : "asc"
   end
+
 end

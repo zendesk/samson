@@ -176,4 +176,45 @@ describe User do
       User.new.is_viewer?.must_equal(true)
     end
   end
+
+  describe "search_for scope" do
+
+    let!(:a_singular_user) do
+      User.create!(name: 'FindMe', email: 'find.me@example.org')
+    end
+
+    let!(:some_similar_users) do
+      (1..3).map { |index| User.create!(name: "TestUser#{index}", email: "some_email#{index}@example.org") }
+    end
+
+    it 'finds a single user' do
+      User.search('FindMe').must_equal [a_singular_user]
+    end
+
+    it 'finds a single user using the email as query' do
+      User.search('find.me@example.org').must_equal [a_singular_user]
+    end
+
+    it 'finds a single user using a partial match query' do
+      User.search('find').must_equal [a_singular_user]
+    end
+
+    it 'finds multiple results using a partial match query' do
+      User.search('TestUser').count.must_equal(3)
+    end
+
+    it 'fails to find any result' do
+      User.search('does not exist').count.must_equal(0)
+    end
+
+    it 'must return all results with an empty query' do
+      User.search('').count.must_equal(User.count)
+    end
+
+    it 'must return all results with a nil query' do
+      User.search(nil).count.must_equal(User.count)
+    end
+
+  end
+
 end

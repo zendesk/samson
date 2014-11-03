@@ -12,6 +12,8 @@ class User < ActiveRecord::Base
 
   before_create :set_token
 
+  scope :search, ->(query) { where("name like '%#{query}%' or email like '%#{query}%'") }
+
   def starred_project?(project)
     starred_projects.include?(project)
   end
