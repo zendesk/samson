@@ -89,6 +89,22 @@ describe Changeset::PullRequest do
       pr.risks.must_equal "- Explosions"
     end
 
+    it "does not find - None" do
+      body.replace(<<-BODY.strip_heredoc)
+        # Risks
+         - None
+      BODY
+      pr.risks.must_equal nil
+    end
+
+    it "does not find None" do
+      body.replace(<<-BODY.strip_heredoc)
+        # Risks
+        None
+      BODY
+      pr.risks.must_equal nil
+    end
+
     context "with nothing risky" do
       before { no_risks }
 

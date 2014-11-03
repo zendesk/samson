@@ -49,7 +49,9 @@ class Changeset::PullRequest
 
   def risks
     return @risks if defined?(@risks)
-    @risks ||= @data.body.to_s.split(RISKS_SECTION, 2)[1].to_s.strip.presence
+    @risks = @data.body.to_s.split(RISKS_SECTION, 2)[1].to_s.strip.presence
+    @risks = nil if @risks =~ /\A\s*\-?\s*None\Z/i
+    @risks
   end
 
   def jira_issues
