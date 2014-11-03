@@ -8,8 +8,8 @@ class DeployService
   def deploy!(stage, reference)
     deploy = stage.create_deploy(reference: reference, user: user)
 
-    if deploy.persisted? && auto_confirm?(stage)
-      confirm_deploy!(deploy, stage, reference)
+    if deploy.persisted? && (auto_confirm?(stage) || release_approved?(deploy))
+      confirm_deploy!(deploy, stage, reference, deploy.buddy)
     end
 
     deploy
@@ -29,6 +29,30 @@ class DeployService
 
   def auto_confirm?(stage)
     !BuddyCheck.enabled? || !stage.production?
+  end
+
+  def latest_approved_deploy(reference, project)
+    deploy = nil
+    Deploy.where(reference: reference).where(' buddy_id is NOT NULL AND started_at > ?', BuddyCheck.period.hours.ago)
+      .includes(:stage)
+      .where(stages: {project_id: project, production: true})
+      .each do |d|
+        next if bypassed?(d.stage, d, d.buddy)
+        deploy = d
+        break
+      end
+      deploy
+  end
+
+  def release_approved?(deploy)
+    last_d = latest_approved_deploy(deploy.reference, deploy.stage.project)
+
+    return false if !last_d
+
+    deploy.buddy = (last_d.buddy == @user ? last_d.job.user : last_d.buddy)
+    deploy.update_attributes!({started_at: Time.now, buddy_id: deploy.buddy.id})
+
+    return true
   end
 
   def send_before_notifications(stage, deploy, buddy)

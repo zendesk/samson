@@ -9,6 +9,10 @@ module BuddyCheck
     ENV["BYPASS_EMAIL"]
   end
 
+  def period
+    (ENV["BUDDY_CHECK_GRACE_PERIOD"].presence || "4").to_i
+  end
+
   def bypass_jira_email_address
     ENV["BYPASS_JIRA_EMAIL"]
   end
