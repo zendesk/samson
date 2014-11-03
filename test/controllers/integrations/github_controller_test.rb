@@ -16,6 +16,8 @@ describe Integrations::GithubController do
   before do
     Deploy.delete_all
 
+    Integrations::GithubController.github_hook_secret = 'test'
+
     project.webhooks.create!(stage: stages(:test_staging), branch: "origin/dev")
   end
 
@@ -32,7 +34,7 @@ describe Integrations::GithubController do
   it 'does not deploy if event is invalid' do
     request.headers['X-Github-Event'] = 'event'
 
-    hmac = OpenSSL::HMAC.hexdigest(OpenSSL::Digest.new('sha1'), ENV['GITHUB_SECRET'], payload.to_param)
+    hmac = OpenSSL::HMAC.hexdigest(OpenSSL::Digest.new('sha1'), 'test', payload.to_param)
     request.headers['X-Hub-Signature'] = "sha1=#{hmac}"
 
     post :create, payload.merge(token: project.token)
@@ -47,7 +49,7 @@ describe Integrations::GithubController do
     before do
       request.headers['X-Github-Event'] = 'push'
 
-      hmac = OpenSSL::HMAC.hexdigest(OpenSSL::Digest.new('sha1'), ENV['GITHUB_SECRET'], payload.to_param)
+      hmac = OpenSSL::HMAC.hexdigest(OpenSSL::Digest.new('sha1'), 'test', payload.to_param)
       request.headers['X-Hub-Signature'] = "sha1=#{hmac}"
     end
 
