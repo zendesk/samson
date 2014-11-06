@@ -1,8 +1,10 @@
 if !Rails.env.test? && Job.table_exists?
   JobExecution.enabled = true
 
-  Rails.application.config.after_initialize do
-    Job.running.each(&:stop!) if ENV['SERVER_MODE']
+  if ENV['SERVER_MODE']
+    Rails.application.config.after_initialize do
+      Job.running.each(&:stop!)
+    end
   end
 
   Signal.trap('SIGUSR1') do
@@ -19,13 +21,6 @@ if !Rails.env.test? && Job.table_exists?
 
       # Pass USR2 to the underlying server
       Process.kill('SIGUSR2', $$)
-    else
-      puts "Received USR1 at #{Time.now}. Dumping threads:"
-      Thread.list.each do |t|
-        trace = t.backtrace.join("\n")
-        puts trace
-        puts "---"
-      end
     end
   end
 end
