@@ -18,7 +18,7 @@ describe Integrations::GithubController do
 
     Integrations::GithubController.github_hook_secret = 'test'
 
-    project.webhooks.create!(stage: stages(:test_staging), branch: "origin/dev")
+    project.webhooks.create!(stage: stages(:test_staging), branch: "refs/heads/origin/dev")
   end
 
   it 'does not deploy if signature is invalid' do
