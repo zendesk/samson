@@ -29,7 +29,7 @@ class Integrations::GithubController < Integrations::BaseController
 
   def branch
     # Github returns full ref e.g. refs/heads/...
-    params[:ref].sub(%r{refs/(heads|tags)/}, '')
+    params[:ref]
   end
 
   def user
