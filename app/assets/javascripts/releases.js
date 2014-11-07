@@ -3,6 +3,9 @@
 $(function() {
   var $previousSelect;
 
+  $("#from").datepicker({ dateFormat: "yy-mm-dd"});
+  $("#to").datepicker({ dateFormat: "yy-mm-dd"});
+
   $('.release-list .release-summary').click(function(e) {
     var $this = $(this);
     var $target = $(e.target);

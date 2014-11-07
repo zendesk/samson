@@ -9,7 +9,12 @@ class ReleasesController < ApplicationController
 
   def index
     @stages = @project.stages
-    @releases = @project.releases.sort_by_version.page(params[:page])
+
+    if searching_by_date?
+      @releases = releases_by_date.page(params[:page])
+    else
+      @releases = releases.page(params[:page])
+    end
 
     respond_to do |format|
       format.json { render json: @releases.map(&:version), root: false }
@@ -28,6 +33,28 @@ class ReleasesController < ApplicationController
   end
 
   private
+
+  def searching_by_date?
+    @searching_by_date ||= from.present? && to.present?
+  end
+
+  def from
+    @from ||= params[:from]
+  end
+
+  def to
+    @to ||= params[:to]
+  end
+
+  def releases
+    @project.releases.sort_by_version
+  end
+
+  def releases_by_date
+    from = Time.parse(params[:from])
+    to = Time.parse(params[:to])
+    @project.releases.where('created_at BETWEEN ? AND ?', from, to).sort_by_version
+  end
 
   def find_project
     @project = Project.find_by_param!(params[:project_id])

@@ -25,10 +25,12 @@
         </tbody>
       </table>
 
-      <%= paginate @releases %>
+      <%= paginate @releases, params: { from: @from, to: @to }  %>
+    <% elsif @searching_by_date %>
+      <p>No releases found in this date range.</p>
     <% else %>
       <p>There haven't been any releases yet.</p>
     <% end %>
-
   </section>
+  <%= render "search" %>
 <% end %>
