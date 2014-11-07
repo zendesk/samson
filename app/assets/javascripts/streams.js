@@ -31,7 +31,8 @@ function startStream() {
       $('#header').html(data.html);
       window.document.title = data.title;
       if ( doNotify && data.notification != undefined) {
-        new Notification(data.notification, {icon: '/favicon.ico'});
+        var notification = new Notification(data.notification, {icon: '/favicon.ico'});
+        notification.onclick = function() { window.focus(); };
       }
     };
 
