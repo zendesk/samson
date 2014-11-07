@@ -24,7 +24,7 @@ class Integrations::GithubController < Integrations::BaseController
   end
 
   def commit
-    params[:head]
+    params[:after]
   end
 
   def branch
