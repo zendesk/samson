@@ -9,7 +9,7 @@ describe Integrations::GithubController do
   let(:payload) do
     {
       ref: 'refs/heads/origin/dev',
-      head: commit
+      after: commit
     }.with_indifferent_access
   end
 
