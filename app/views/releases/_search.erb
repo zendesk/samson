@@ -1,0 +1,7 @@
+<section class="clearfix tabs">
+  <%= form_tag(project_releases_path(@project), method: "get", class: "form-inline") do %>
+    <%= text_field_tag(:from, (@from.present? ? @from : ""), placeholder: "From", class: "form-control") %>
+    <%= text_field_tag(:to, (@to.present? ? @to : ""), placeholder: "To", class: "form-control") %>
+    <%= submit_tag("Search by Date", class: "btn btn-default") %>
+  <% end %>
+</section>
