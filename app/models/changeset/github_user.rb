@@ -5,12 +5,12 @@ class Changeset::GithubUser
     @data = data
   end
 
-  def avatar_url
+  def avatar_url(size = 20)
     uri = URI(@data.avatar_url)
     params = URI.decode_www_form(uri.query || [])
 
     # The `s` parameter controls the size of the avatar.
-    params << ["s", "20"]
+    params << ["s", size.to_s]
 
     uri.query = URI.encode_www_form(params)
     uri.to_s
