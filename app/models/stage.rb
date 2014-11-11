@@ -183,6 +183,6 @@ class Stage < ActiveRecord::Base
   end
 
   def permalink_scope
-    project.stages
+    Stage.unscoped.where(project_id: project_id)
   end
 end

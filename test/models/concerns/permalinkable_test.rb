@@ -54,4 +54,57 @@ describe Permalinkable, :model do
       other_project.stages.find_by_permalink!(stage.permalink).must_equal other_stage
     end
   end
+
+  describe "validations" do
+    context "unscoped" do
+      let(:record) { projects(:test) }
+
+      it "is valid when unique" do
+        assert_valid record
+      end
+
+      it "is invalid when not unique" do
+        other = record.dup
+        refute_valid other
+        assert_equal ["Permalink has already been taken"], other.errors.full_messages
+      end
+
+      it "is invalid when not unique on deleted" do
+        other = record.dup
+        record.update_column(:deleted_at, Time.now)
+        refute_valid other
+        assert_equal ["Permalink has already been taken"], other.errors.full_messages
+      end
+    end
+
+    context "scoped" do
+      let(:record) { stages(:test_staging) }
+
+      it "is valid when unique" do
+        assert_valid record
+      end
+
+      it "is valid when unique in scope" do
+        other_project = projects(:test).dup
+        other_project.repository_url.sub!(".git", "x.git")
+
+        other = record.dup
+        other.project = other_project
+        assert_valid other
+      end
+
+      it "is invalid when not unique in scope" do
+        other = record.dup
+        refute_valid other
+        assert_equal ["Permalink has already been taken", "Name has already been taken"], other.errors.full_messages
+      end
+
+      it "is invalid when not unique in scope on deleted" do
+        other = record.dup
+        record.update_column(:deleted_at, Time.now)
+        refute_valid other
+        assert_equal ["Permalink has already been taken"], other.errors.full_messages # FYI: atm name validation does not include deleted
+      end
+    end
+  end
 end
