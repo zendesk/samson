@@ -5,6 +5,9 @@ class Changeset::PullRequest
   # Matches URLs to JIRA issues.
   JIRA_ISSUE = %r[https://\w+\.atlassian\.net/browse/[\w-]+]
 
+  # Matches "VOICE-1234" or "[VOICE-1234]"
+  JIRA_CODE = %r[(\[)*([a-zA-Z]+)-((\d)+)(\])*]
+
   # Finds the pull request with the given number.
   #
   # repo   - The String repository name, e.g. "zendesk/samson".
@@ -29,6 +32,10 @@ class Changeset::PullRequest
   end
 
   delegate :number, :title, :additions, :deletions, to: :@data
+
+  def title_without_jira
+    title.gsub(JIRA_CODE, "").strip
+  end
 
   def url
     "https://#{Rails.application.config.samson.github.web_url}/#{repo}/pull/#{number}"

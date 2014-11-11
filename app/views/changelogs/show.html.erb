@@ -17,9 +17,9 @@
     <thead>
       <tr>
         <th>PR</th>
+        <th>Contributers</th>
         <th>JIRA</th>
         <th>Title</th>
-        <th>Contributers</th>
         <th>Risks</th>
       </tr>
     </thead>
@@ -28,18 +28,18 @@
         <tr>
           <td><%= link_to pr.reference, pr.url %></td>
           <td>
+            <% pr.users.each do |user| %>
+              <img class="circular" title="<%= user.identifier %>" src="<%= user.avatar_url(50) %>" />
+            <% end %>
+          </td>
+          <td>
             <% if pr.jira_issues.any? %>
               <% pr.jira_issues.each_with_index do |issue, i| %>
                 <%= link_to (issue.reference + (i > 0 ? "<br/>" : "")), issue.url %>
               <% end %>
             <% end %>
           </td>
-          <td><%= pr.title %></td>
-          <td>
-            <% pr.users.each do |user| %>
-              <img class="circular" title="<%= user.identifier %>" src="<%= user.avatar_url(50) %>" />
-            <% end %>
-          </td>
+          <td><%= markdown(pr.title_without_jira) %></td>
           <td>
             <% if pr.risky? %>
               <%= markdown(pr.risks) %>
