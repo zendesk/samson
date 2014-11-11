@@ -45,6 +45,23 @@ describe Changeset::PullRequest do
     end
   end
 
+  describe "#title_without_jira" do
+    before do
+      GITHUB.stubs(:pull_request).with("foo/bar", 42).returns(data)
+      pr = Changeset::PullRequest.find("foo/bar", 42)
+    end
+
+    it "scrubs the JIRA from the PR title (with square brackets)" do
+      data.stubs(:title).returns("[VOICE-1233] Make it bigger!")
+      pr.title_without_jira.must_equal "Make it bigger!"
+    end
+
+    it "scrubs the JIRA from the PR title (without square brackets)" do
+      data.stubs(:title).returns("VOICE-123 Make it bigger!")
+      pr.title_without_jira.must_equal "Make it bigger!"
+    end
+  end
+
   describe "#jira_issues" do
     it "returns a list of JIRA issues referenced in the PR body" do
       body.replace(<<-BODY)
