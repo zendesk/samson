@@ -59,46 +59,6 @@
   padding: 0 50px;
 }
 
-.twitter-typeahead {
-  width: 100%;
-
-  .tt-dropdown-menu {
-    width: 100%;
-    padding: 8px 0;
-  }
-
-  .tt-dataset-releases {
-    width: 100%;
-    background-color: white;
-    border: 1px solid #ccc;
-    border-radius: 6px;
-    -webkit-box-shadow: 0 5px 10px rgba(0,0,0,0.2);
-    box-shadow: 0 5px 10px rgba(0,0,0,0.2);
-  }
-
-  .tt-suggestions {
-    padding: 8px 0;
-  }
-
-  .tt-hint {
-    display: none;
-  }
-
-  .tt-suggestion {
-    padding: 3px 20px;
-    line-height: 24px;
-    font-size: 14px;
-
-    p {
-      margin: 0;
-    }
-  }
-
-  .tt-is-under-cursor {
-    background-color: #e7e7e7;
-  }
-}
-
 #deploy-confirmation {
   display: none;
 
@@ -135,4 +95,9 @@ td.status {
 .stream-header .pull-right {
   position: relative;
   top: -10px;
+}
+
+#scrollable-dropdown-menu .tt-dropdown-menu {
+  max-height: 180px;
+  overflow-y: auto;
 }

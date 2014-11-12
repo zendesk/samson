@@ -23,7 +23,7 @@ describe ReleaseTagger, :model do
 
   after do
     FileUtils.rm_rf(repository_url)
-    FileUtils.rm_rf(File.join(JobExecution.cached_repos_dir, project.repository_directory))
+    FileUtils.rm_rf(File.join(GitRepository.cached_repos_dir, project.repository_directory))
     JobExecution.enabled = false
   end
 

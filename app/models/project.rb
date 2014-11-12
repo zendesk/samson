@@ -83,6 +83,10 @@ class Project < ActiveRecord::Base
     releases.where("number < ?", release.number).order(:number).last
   end
 
+  def repository
+    GitRepository.new(repository_url, repository_directory)
+  end
+
   private
 
   def permalink_base
