@@ -2,8 +2,8 @@ module Permalinkable
   extend ActiveSupport::Concern
 
   included do
-    validates :permalink, uniqueness: true
     before_create :generate_permalink
+    validate :validate_unique_permalink
   end
 
   module ClassMethods
@@ -19,14 +19,24 @@ module Permalinkable
   private
 
   def permalink_scope
-    self.class
+    self.class.unscoped
   end
 
   def generate_permalink
     base = permalink_base.parameterize
     self.permalink = base
-    if permalink_scope.where(permalink: permalink).exists?
+    if permalink_taken?
       self.permalink = "#{base}-#{SecureRandom.hex(4)}"
     end
+  end
+
+  def permalink_taken?
+    scope = permalink_scope.where(permalink: permalink)
+    scope = scope.where("id <> ?", id) if persisted?
+    scope.exists?
+  end
+
+  def validate_unique_permalink
+    errors.add(:permalink, :taken) if permalink_taken?
   end
 end

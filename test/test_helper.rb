@@ -25,6 +25,14 @@ class ActiveSupport::TestCase
   before do
     Rails.cache.clear
   end
+
+  def assert_valid(record)
+    assert record.valid?, record.errors.full_messages
+  end
+
+  def refute_valid(record)
+    refute record.valid?
+  end
 end
 
 module StubGithubAPI
