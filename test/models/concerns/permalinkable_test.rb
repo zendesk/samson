@@ -56,6 +56,14 @@ describe Permalinkable, :model do
   end
 
   describe "validations" do
+    let(:duplicate) { record.dup }
+
+    it "does not allow blank because that could never be reached" do
+      project.permalink = ''
+      refute_valid project
+      assert_equal ["Permalink can't be blank"], project.errors.full_messages
+    end
+
     context "unscoped" do
       let(:record) { projects(:test) }
 
@@ -63,17 +71,22 @@ describe Permalinkable, :model do
         assert_valid record
       end
 
-      it "is invalid when not unique" do
-        other = record.dup
-        refute_valid other
-        assert_equal ["Permalink has already been taken"], other.errors.full_messages
-      end
+      describe "with duplicate" do
+        setup do
+          duplicate.save!
+          duplicate.permalink = record.permalink
+        end
 
-      it "is invalid when not unique on deleted" do
-        other = record.dup
-        record.update_column(:deleted_at, Time.now)
-        refute_valid other
-        assert_equal ["Permalink has already been taken"], other.errors.full_messages
+        it "is invalid when not unique" do
+          refute_valid duplicate
+          assert_equal ["Permalink has already been taken"], duplicate.errors.full_messages
+        end
+
+        it "is invalid when not unique on deleted" do
+          record.update_column(:deleted_at, Time.now)
+          refute_valid duplicate
+          assert_equal ["Permalink has already been taken"], duplicate.errors.full_messages
+        end
       end
     end
 
@@ -93,17 +106,23 @@ describe Permalinkable, :model do
         assert_valid other
       end
 
-      it "is invalid when not unique in scope" do
-        other = record.dup
-        refute_valid other
-        assert_equal ["Permalink has already been taken", "Name has already been taken"], other.errors.full_messages
-      end
+      describe "with duplicate" do
+        setup do
+          duplicate.name = 'dup'
+          duplicate.save!
+          duplicate.permalink = record.permalink
+        end
 
-      it "is invalid when not unique in scope on deleted" do
-        other = record.dup
-        record.update_column(:deleted_at, Time.now)
-        refute_valid other
-        assert_equal ["Permalink has already been taken"], other.errors.full_messages # FYI: atm name validation does not include deleted
+        it "is invalid when not unique in scope" do
+          refute_valid duplicate
+          assert_equal ["Permalink has already been taken"], duplicate.errors.full_messages
+        end
+
+        it "is invalid when not unique in scope on deleted" do
+          record.update_column(:deleted_at, Time.now)
+          refute_valid duplicate
+          assert_equal ["Permalink has already been taken"], duplicate.errors.full_messages # FYI: atm name validation does not include deleted
+        end
       end
     end
   end

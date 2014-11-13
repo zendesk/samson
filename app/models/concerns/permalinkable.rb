@@ -2,7 +2,8 @@ module Permalinkable
   extend ActiveSupport::Concern
 
   included do
-    before_create :generate_permalink
+    before_validation :generate_permalink, on: :create
+    validates :permalink, presence: true
     validate :validate_unique_permalink
   end
 
@@ -23,7 +24,7 @@ module Permalinkable
   end
 
   def generate_permalink
-    base = permalink_base.parameterize
+    base = permalink_base.to_s.parameterize
     self.permalink = base
     if permalink_taken?
       self.permalink = "#{base}-#{SecureRandom.hex(4)}"
