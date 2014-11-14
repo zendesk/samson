@@ -38,9 +38,7 @@ end
 module StubGithubAPI
   def stub_github_api(url, response = {}, status = 200)
     url = 'https://api.github.com/' + url
-    stub_request(:get, url).with(
-      'Authorization' => 'token 123'
-    ).to_return(
+    stub_request(:get, url).to_return(
       status: status,
       body: JSON.dump(response),
       headers: { 'Content-Type' => 'application/json' }
