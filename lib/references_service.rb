@@ -25,11 +25,11 @@ class ReferencesService
   end
 
   def references_ttl
-    Rails.application.config.samson.references_cache_ttl || 30.minutes
+    Rails.application.config.samson.references_cache_ttl
   end
 
   def references_hit_threshold
-    Rails.application.config.samson.references_hit_threshold || 5
+    Rails.application.config.samson.references_hit_threshold
   end
 
   def get_references_from_cached_repo
