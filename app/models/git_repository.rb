@@ -74,7 +74,7 @@ class GitRepository
     output = StringIO.new
     executor = TerminalExecutor.new(output)
     executor.execute!("git ls-remote --tags #{repository_url} | awk '{print $2}'")
-    result = output.string.lines.sort_by { |i| [i.length, i] }.map { |i| i.sub('refs/tags/', '').chomp }
+    result = output.string.lines.sort.reverse!.map { |i| i.sub('refs/tags/', '').chomp }
     Set.new(result.slice(0, 200))
   end
 
