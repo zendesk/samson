@@ -57,3 +57,8 @@ span.twitter-typeahead {
 .input-group.input-group-sm span.twitter-typeahead .tt-dropdown-menu {
     top: 28px !important;
 }
+
+#scrollable-dropdown-menu .tt-dropdown-menu {
+  max-height: 180px;
+  overflow-y: auto;
+}

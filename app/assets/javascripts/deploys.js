@@ -211,11 +211,6 @@ $(function () {
     }
   });
 
-  $('.tag-suggestion').click(function(event) {
-    var tag = $(this).text();
-    $('#deploy_reference').val('tag');
-  });
-
 });
 
 function toggleOutputToolbar() {
