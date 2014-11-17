@@ -9,6 +9,7 @@ class DeployService
 
   def deploy!(stage, reference)
     deploy = stage.create_deploy(reference: reference, user: user)
+    RadarDeployNotifier.send_deploy_status(deploy, :created)
 
     if deploy.persisted? && (auto_confirm?(stage) || release_approved?(deploy))
       confirm_deploy!(deploy, stage, reference, deploy.buddy)
@@ -58,7 +59,7 @@ class DeployService
   end
 
   def send_before_notifications(stage, deploy, buddy)
-    RadarDeployNotifier.started(deploy)
+    RadarDeployNotifier.send_deploy_status(deploy, :started)
     send_flowdock_notification(stage, deploy)
 
     if bypassed?(stage, deploy, buddy)
@@ -77,7 +78,7 @@ class DeployService
       DeployMailer.deploy_email(stage, deploy).deliver
     end
 
-    RadarDeployNotifier.finished(deploy)
+    RadarDeployNotifier.send_deploy_status(deploy, :finished)
     send_flowdock_notification(stage, deploy)
     send_datadog_notification(stage, deploy)
     send_github_notification(stage, deploy)

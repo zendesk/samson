@@ -12,7 +12,6 @@ samson.factory('DeployHelper', ['$window', '$log', 'Deploys', function($window, 
     },
 
     jumpTo: function(url) {
-      $log.info("Jumpto Called: " + url);
       $window.location.href = url;
     },
 

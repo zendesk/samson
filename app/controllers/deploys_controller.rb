@@ -31,12 +31,8 @@ class DeploysController < ApplicationController
   end
 
   def active_count
-    # @count = Rails.cache.fetch(:deploy_active_count, expires_in: 5.seconds) do
-      scope = @project ? @project.deploys : Deploy.includes(:stage)
-      @count = scope.active.count
-      # Rails.logger.info("Cache miss: #{:deploys_ping_path} - #{@count}")
-    #   @count
-    # end
+    scope = @project ? @project.deploys : Deploy.includes(:stage)
+    @count = scope.active.count
 
     respond_to do |format|
       format.json { render json: {count: @count} }
@@ -121,6 +117,7 @@ class DeploysController < ApplicationController
   def destroy
     if @deploy.can_be_stopped_by?(current_user)
       @deploy.stop!
+      RadarDeployNotifier.send_deploy_status(@deploy, :finished)
     else
       flash[:error] = "You do not have privileges to stop this deploy."
     end

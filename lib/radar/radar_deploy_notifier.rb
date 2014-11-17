@@ -2,16 +2,18 @@ require 'radar_client_rb'
 
 class RadarDeployNotifier
 
-  def self.started(deploy)
-    client.status('DeployStarted').set(deploy.id, deploy) if enabled?
-    Rails.logger.info("Sent DeployStarted Radar msg for #{deploy.id}")
-  rescue => ex
-    Rails.logger.error("Failed to send Radar notification: #{ex.message}")
-  end
-
-  def self.finished(deploy)
-    client.status('DeployFinished').set(deploy.id, deploy) if enabled?
-    Rails.logger.info("Sent DeployFinished Radar msg for #{deploy.id}")
+  def self.send_deploy_status(deploy, status)
+    message_type = case status
+                     when :started
+                       'DeployStarted'
+                     when :created
+                       'DeployCreated'
+                     when :finished
+                       'DeployFinished'
+                     else
+                       status.to_s
+                   end
+    client.status(message_type).set(deploy.id, deploy) if enabled?
   rescue => ex
     Rails.logger.error("Failed to send Radar notification: #{ex.message}")
   end
