@@ -1,0 +1,21 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Test</title>
+    <script src="/radar_client.js"></script>
+    <script>
+      Minilog.enable();
+      RadarClient.configure({
+        host: window.location.hostname,
+        port: 8000,
+
+        userId: Math.floor(Math.random()*100),
+        userType: 0,
+        accountName: 'dev'
+      });
+    </script>
+  </head>
+  <body>
+    <p>Open the developer console...</p>
+  </body>
+</html>

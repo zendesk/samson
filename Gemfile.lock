@@ -1,3 +1,10 @@
+GIT
+  remote: git@github.com:zendesk/radar_client_rb.git
+  revision: 9aae7caea7d0143621d5bf68d79e6d81d19ddfdd
+  specs:
+    radar_client_rb (0.1.7)
+      redis
+
 GEM
   remote: https://rubygems.org/
   specs:
@@ -270,7 +277,9 @@ DEPENDENCIES
   pg (~> 0.13.2)
   puma
   rails (~> 4.1.8)
+  radar_client_rb!
   rails_12factor
+  redis
   rickshaw_rails
   sass-rails (~> 4.0.0)
   sawyer (~> 0.5.5)

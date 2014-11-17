@@ -7,14 +7,14 @@
       </div>
 
       <div class="pull-right">
-      <% if revision %>
+        <% if revision %>
         <span class="sha">
           <%= link_to "https://github.com/zendesk/samson/commit/#{revision}", title: "Samson release commit", class: "sha" do %>
             <%= revision[0..7] %>
             <i class="glyphicon glyphicon-circle-arrow-right"></i>
           <% end %>
         </span>
-      <% end %>
+        <% end %>
       </div>
 
     </div>

@@ -1,3 +1,5 @@
+require 'radar/radar_deploy_notifier'
+
 class DeployService
   attr_reader :project, :user
 
@@ -56,6 +58,7 @@ class DeployService
   end
 
   def send_before_notifications(stage, deploy, buddy)
+    RadarDeployNotifier.started(deploy)
     send_flowdock_notification(stage, deploy)
 
     if bypassed?(stage, deploy, buddy)
@@ -74,6 +77,7 @@ class DeployService
       DeployMailer.deploy_email(stage, deploy).deliver
     end
 
+    RadarDeployNotifier.finished(deploy)
     send_flowdock_notification(stage, deploy)
     send_datadog_notification(stage, deploy)
     send_github_notification(stage, deploy)

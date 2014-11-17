@@ -26,4 +26,18 @@
     </div>
     <%= render "shared/footer" %>
   </body>
+
+  <% if ENV.has_key?('ENABLE_RADAR') %>
+  <script>
+    // register for the radar updates as well.
+    RadarClient.configure({
+      host: window.location.hostname,
+      port: <%= ENV['RADAR_PORT'] %>,
+      userId: Math.floor(Math.random()*100),
+      userType: 0,
+      accountName: 'samson'
+    });
+  </script>
+<% end %>
+
 </html>

@@ -41,11 +41,13 @@ Samson::Application.routes.draw do
     collection do
       get :active
       get :recent
+      get :active_count
     end
   end
 
   resource :profile, only: [:show, :update]
 
+  get '/deploys/ping', to: 'deploys#ping'
   get '/auth/zendesk/callback', to: 'sessions#zendesk'
   get '/auth/github/callback', to: 'sessions#github'
   get '/auth/google/callback', to: 'sessions#google'

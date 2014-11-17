@@ -5,8 +5,8 @@ class DeploysController < ApplicationController
   end
 
   before_filter :authorize_deployer!, only: [:new, :create, :confirm, :update, :destroy, :buddy_check, :pending_start]
-  before_filter :find_project
-  before_filter :find_deploy, except: [:index, :recent, :active, :new, :create, :confirm]
+  before_filter :find_project, except: [:active_count]
+  before_filter :find_deploy, except: [:index, :recent, :active, :new, :create, :confirm, :active_count]
 
   def index
     @page = params[:page]
@@ -18,19 +18,35 @@ class DeploysController < ApplicationController
     end
   end
 
+
   def active
     scope = @project ? @project.deploys : Deploy.includes(:stage)
     @deploys = scope.active.includes(job: :user).page(params[:page])
 
+    render_params = { :controller => 'CurrentDeploysCtrl', :template => '/templates/deploys/list.tmpl.html' }
     respond_to do |format|
-      format.html
+      format.html { render "shared/angular_wrapper", :locals => render_params }
       format.json { render json: @deploys }
     end
   end
 
-  def recent
+  def active_count
+    # @count = Rails.cache.fetch(:deploy_active_count, expires_in: 5.seconds) do
+      scope = @project ? @project.deploys : Deploy.includes(:stage)
+      @count = scope.active.count
+      # Rails.logger.info("Cache miss: #{:deploys_ping_path} - #{@count}")
+    #   @count
+    # end
+
     respond_to do |format|
-      format.html
+      format.json { render json: {count: @count} }
+    end
+  end
+
+  def recent
+    render_params = { :controller => 'RecentDeploysCtrl', :template => '/templates/deploys/list.tmpl.html' }
+    respond_to do |format|
+      format.html { render "shared/angular_wrapper", :locals => render_params }
       format.json do
         render json: Deploy.includes(:stage, job: :user).page(params[:page]).per(30)
       end
