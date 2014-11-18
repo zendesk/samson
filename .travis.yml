@@ -2,7 +2,7 @@ services:
   - memcached
 before_script:
   - cp config/database.travis.yml config/database.yml
-  - sh -c "if [ '$DB' != 'sqlite' ]; then bundle exec rake db:create; fi"
+  - bundle exec rake db:create
   - npm install
 env:
   matrix:
@@ -20,4 +20,4 @@ cache:
   bundler: true
   directories:
     - node_modules
-rvm: 2.1.4
+rvm: 2.1.5
