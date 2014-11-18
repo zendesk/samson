@@ -55,7 +55,7 @@ class Admin::CommandsController < ApplicationController
   private
 
   def command_params
-    params.require(:command).permit(:command, :project_id)
+    params.require(:command).permit(:command, :project_id, :name)
   end
 
   def successful_response(notice)

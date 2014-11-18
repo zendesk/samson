@@ -66,7 +66,10 @@
   <div id="commands">
     <%= form.collection_check_boxes(:command_ids, form.object.all_commands, :id, :command) do |b| %>
       <div class="row stage-bar bar">
-        <div data-id="<%= b.value %>" class="col-lg-offset-2 col-lg-2 command-checkbox">
+        <div class="col-lg-offset-1 col-lg-1">
+          <%= b.object.name %>
+        </div>
+        <div data-id="<%= b.value %>" class="col-lg-1 command-checkbox">
           <%= b.check_box %>
         </div>
         <div class="col-lg-8">
