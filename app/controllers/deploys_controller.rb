@@ -23,7 +23,7 @@ class DeploysController < ApplicationController
     scope = @project ? @project.deploys : Deploy.includes(:stage)
     @deploys = scope.active.includes(job: :user).page(params[:page])
 
-    render_params = { :controller => 'CurrentDeploysCtrl', :template => '/templates/deploys/list.tmpl.html' }
+    render_params = { :controller => 'CurrentDeploysCtrl', :template => 'deploys/list.tmpl.html' }
     respond_to do |format|
       format.html { render "shared/angular_wrapper", :locals => render_params }
       format.json { render json: @deploys }
@@ -38,7 +38,7 @@ class DeploysController < ApplicationController
   end
 
   def recent
-    render_params = { :controller => 'RecentDeploysCtrl', :template => '/templates/deploys/list.tmpl.html' }
+    render_params = { :controller => 'RecentDeploysCtrl', :template => 'deploys/list.tmpl.html' }
     respond_to do |format|
       format.html { render "shared/angular_wrapper", :locals => render_params }
       format.json do
