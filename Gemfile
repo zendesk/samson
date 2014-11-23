@@ -28,6 +28,8 @@ gem 'active_model_serializers', '~> 0.8.0'
 gem 'sawyer', '~> 0.5.5'
 gem "redis"
 gem "radar_client_rb", :git => 'git@github.com:zendesk/radar_client_rb.git'
+gem 'ngannotate-rails'
+gem 'angular-rails-templates'
 
 # Logging
 gem 'lograge'

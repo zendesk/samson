@@ -1,4 +1,4 @@
-samson.factory('DeployHelper', ['$window', '$log', 'Deploys', function($window, $log, Deploys) {
+samson.factory('DeployHelper', function($window, $log, Deploys) {
   var helper = {
     registerScrollHelpers: function(scope) {
       angular.element($window).on("scroll", (function() {
@@ -21,5 +21,5 @@ samson.factory('DeployHelper', ['$window', '$log', 'Deploys', function($window, 
   }
 
   return helper;
-}]);
+});
 

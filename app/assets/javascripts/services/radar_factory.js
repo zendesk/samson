@@ -1,4 +1,4 @@
-samson.factory('Radar', ['$log', '$rootScope', function($log, $rootScope) {
+samson.factory('Radar', function($log, $rootScope) {
   var radar = {
     init: function() {
       RadarClient.alloc('deployListeners', function() {
@@ -20,4 +20,4 @@ samson.factory('Radar', ['$log', '$rootScope', function($log, $rootScope) {
 
   radar.init();
   return radar;
-}]);
+});

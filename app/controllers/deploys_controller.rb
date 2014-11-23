@@ -34,9 +34,7 @@ class DeploysController < ApplicationController
     scope = @project ? @project.deploys : Deploy.includes(:stage)
     @count = scope.active.count
 
-    respond_to do |format|
-      format.json { render json: {count: @count} }
-    end
+    render json: {count: @count}
   end
 
   def recent

@@ -1,11 +1,16 @@
-samson.controller('CurrentBadgeCtrl', ['$log', '$scope', '$http', 'Radar', function($log, $scope, $http, Radar) {
+samson.controller('CurrentBadgeCtrl', function($log, $scope, $http, Radar) {
   $scope.count = 0;
 
   $scope.getActiveCount = function() {
     $http.get('/deploys/active_count.json').
       success(function(data) {
-        if (data != undefined && !isNaN(data.count)) {
+        if (data != undefined && !isNaN(data.count) && data.count > 0) {
           $scope.count = data.count;
+          A.$('.badge').removeClass('hidden');
+        }
+        else {
+          $scope.count = 0;
+          A.$('.badge').addClass('hidden');
         }
       }).
       error(function() {
@@ -26,4 +31,4 @@ samson.controller('CurrentBadgeCtrl', ['$log', '$scope', '$http', 'Radar', funct
   });
 
   $scope.getActiveCount();
-}]);
+});

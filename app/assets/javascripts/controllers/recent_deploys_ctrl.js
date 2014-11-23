@@ -1,4 +1,4 @@
-samson.controller("RecentDeploysCtrl", ["$scope", "$timeout", "Deploys", "DeployHelper", "StatusFilterMapping",
+samson.controller("RecentDeploysCtrl",
   function($scope, $timeout, Deploys, DeployHelper, StatusFilterMapping) {
     $scope.userTypes = ["Human", "Robot"];
     $scope.stageTypes = { "Production": true, "Non-Production": false };
@@ -16,5 +16,4 @@ samson.controller("RecentDeploysCtrl", ["$scope", "$timeout", "Deploys", "Deploy
     $timeout(function() {
       $('select').selectpicker();
     });
-
-  }]);
+  });
