@@ -8,6 +8,8 @@ class GitRepository
   end
 
   def initialize(repository_url, repository_directory)
+    raise 'Invalid repository url!' if repository_url.nil?
+    raise 'Invalid repository directory!' if repository_directory.nil?
     @repository_url = repository_url
     @repository_directory = repository_directory
   end
@@ -37,8 +39,7 @@ class GitRepository
           "git checkout --quiet #{git_reference.shellescape}"
       ]
     end
-    result = executor.execute!(*commands)
-    result
+    executor.execute!(*commands)
   end
 
   def commit_from_ref(git_reference)
