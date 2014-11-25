@@ -136,3 +136,8 @@ td.status {
   position: relative;
   top: -10px;
 }
+
+.deployment-alert {
+  padding-top: 4px;
+  color: $brand-warning;
+}

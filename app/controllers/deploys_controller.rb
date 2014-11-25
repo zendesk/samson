@@ -61,7 +61,7 @@ class DeploysController < ApplicationController
   end
 
   def confirm
-    previous_commit = stage.last_deploy.try(:commit)
+    previous_commit = stage.last_successful_deploy.try(:commit)
     @changeset = Changeset.find(@project.github_repo, previous_commit, reference)
 
     render 'changeset', layout: false

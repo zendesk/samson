@@ -63,7 +63,7 @@ describe Stage do
     it "returns the last deploy for the stage" do
       job = project.jobs.create!(command: "cat foo", user: users(:deployer), status: 'succeeded')
       deploy = stage.deploys.create!(reference: "master", job: job)
-      assert_equal deploy, stage.last_deploy
+      assert_equal deploy, stage.last_successful_deploy
     end
   end
 
