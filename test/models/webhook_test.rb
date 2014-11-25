@@ -57,10 +57,7 @@ describe Webhook do
 
       webhook2 = Webhook.create!(webhook_attributes)
       assert_difference  'Webhook.count', -1 do
-        # the unique validation includes the deletion time.
-        Timecop.travel(1.second) do
-          webhook2.soft_delete!
-        end
+        webhook2.soft_delete!
       end
     end
   end
