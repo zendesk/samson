@@ -140,4 +140,9 @@ td.status {
 .deployment-alert {
   padding-top: 4px;
   color: $brand-warning;
+  cursor: pointer;
+}
+
+.deployment-alert-popover {
+  max-width: 340px;
 }

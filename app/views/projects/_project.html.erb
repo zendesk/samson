@@ -14,8 +14,7 @@
 
             <% if stage.last_deploy and stage.last_deploy.failed? %>
               <%= content_tag :i, '', class: 'fa fa-exclamation-triangle deployment-alert pull-right',
-                              data: { url: project_deploy_path(project, stage.last_deploy),
-                                      reference: stage.last_deploy.short_reference } %>
+                              data: deployment_alert_data(project, stage) %>
             <% end %>
 
             <% if stage.last_successful_deploy %>

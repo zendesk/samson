@@ -4,21 +4,25 @@ $(function() {
     window.location.reload();
   });
 
-  $('.deployment-alert').mouseover(function(e) {
+  $('.deployment-alert').each(function(e) {
+    var url, html, reference, timestamp, user;
+    url = $(this).data('url');
+    reference = $(this).data('reference');
+    timestamp = $(this).data('timestamp');;
+    user = $(this).data('user');
+    html = '<div class="container">' +
+             '<div class="span4">' +
+               '<a href="' + url + '" class="label label-warning"> ' + reference + '</a>' +
+              '<small> at ' + timestamp + ' by ' + user + ' </small>' +
+             '</div>' +
+           '</div>';
 
-    $(this).tooltip()
+    $(this).popover({
+        html: true,
+        content: html,
+        template: '<div class="popover deployment-alert-popover"><div class="arrow"></div><div class="popover-inner"><h3 class="popover-title"></h3><div class="popover-content"><p></p></div></div></div>'
+
+    });
   });
 
-});
-
-
-
-
-samson.directive('myPane', function() {
-    return {
-        restrict: 'E',
-        transclude: true,
-        templateUrl: 'my-dialog.html'
-
-    };
 });
