@@ -213,7 +213,6 @@ GEM
     thread_safe (0.3.4)
     thread_safe (0.3.4-java)
     tilt (1.4.1)
-    timecop (0.7.1)
     tzinfo (1.2.2)
       thread_safe (~> 0.1)
     uglifier (2.5.3)
@@ -278,7 +277,6 @@ DEPENDENCIES
   simplecov
   soft_deletion (~> 0.4)
   sqlite3
-  timecop
   uglifier (>= 1.3.0)
   warden (~> 1.2)
   webmock

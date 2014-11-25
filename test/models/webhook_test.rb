@@ -1,5 +1,4 @@
 require_relative '../test_helper'
-require 'timecop'
 
 describe Webhook do
   let(:webhook_attributes) { { :branch => 'master', :stage_id => 1, :project_id => 1} }
