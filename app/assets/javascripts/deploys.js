@@ -57,7 +57,6 @@ $(function () {
     engine.initialize();
 
     $("#deploy_reference").typeahead(null, {
-      displayKey: 'value', // if not set, will default to 'value',
       source: engine.ttAdapter()
     });
   }

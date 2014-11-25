@@ -13,11 +13,8 @@ describe ReferencesController do
       as_a_deployer do
         it 'renders json' do
           get :index, project_id: projects(:test).to_param, format: :json
-          assert_response :ok
-          assert_equal 'application/json', response.content_type
-          json_response = JSON.parse response.body
-          json_response.size.must_equal 2
-          json_response.must_equal %w(master test_user/test_branch)
+          response.content_type.must_equal 'application/json'
+          assigns(:references).must_equal %w(master test_user/test_branch)
         end
       end
     end
