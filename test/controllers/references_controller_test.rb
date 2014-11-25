@@ -11,11 +11,13 @@ describe ReferencesController do
   describe 'a GET to :index' do
     describe 'as json' do
       as_a_deployer do
-        it 'renders json' do
+
+        it 'returns the git references for the project test' do
           get :index, project_id: projects(:test).to_param, format: :json
           response.content_type.must_equal 'application/json'
           assigns(:references).must_equal %w(master test_user/test_branch)
         end
+
       end
     end
   end
