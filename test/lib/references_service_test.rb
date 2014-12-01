@@ -37,6 +37,14 @@ describe ReferencesService, :model do
     ReferencesService.new(project).get_references_from_ls_remote.must_equal %w(v1 master test_user/test_branch )
   end
 
+  it 'the ttl and hit threshold should always return an integer' do
+    Rails.application.config.samson.stubs(:references_cache_ttl).returns('10')
+    Rails.application.config.samson.stubs(:references_hit_threshold).returns('2')
+    references_service = ReferencesService.new(project)
+    references_service.references_hit_threshold.must_equal 2
+    references_service.references_ttl.must_equal 10
+  end
+
   def execute_on_remote_repo(cmds)
     `exec 2> /dev/null; cd #{repository_url}; #{cmds}`
   end
