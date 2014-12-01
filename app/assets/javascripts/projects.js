@@ -12,7 +12,7 @@ $(function() {
     user = $(this).data('user');
     html = '<div class="container">' +
              '<div class="span4">' +
-               '<a href="' + url + '" class="label label-warning"> ' + reference + '</a>' +
+               '<a href="' + url + '" class="label label-danger"> ' + reference + '</a>' +
               '<small> at ' + timestamp + ' by ' + user + ' </small>' +
              '</div>' +
            '</div>';
