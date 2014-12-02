@@ -13,8 +13,10 @@
             <%= content_tag :i, '', class: 'fa fa-lock', title: stage.lock.summary if stage.locked? %>
 
             <% if stage.last_deploy and stage.last_deploy.failed? %>
-              <%= content_tag :i, '', class: 'fa fa-exclamation-triangle deployment-alert pull-right',
+                <%= link_to project_deploy_path(project, stage.last_deploy) do %>
+                    <%= content_tag :i, '', class: 'fa fa-exclamation-triangle deployment-alert pull-right',
                               data: deployment_alert_data(project, stage) %>
+                <% end %>
             <% end %>
 
             <% if stage.last_successful_deploy %>
