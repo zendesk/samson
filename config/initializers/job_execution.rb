@@ -2,10 +2,9 @@ if !Rails.env.test? && Job.table_exists?
   if ENV['SERVER_MODE']
     Rails.application.config.after_initialize do
       Job.running.each(&:stop!)
+      JobExecution.enabled = true
     end
   end
-
-  JobExecution.enabled = true
 
   Signal.trap('SIGUSR1') do
     if JobExecution.enabled
