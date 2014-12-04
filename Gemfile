@@ -45,6 +45,7 @@ group :assets do
   gem 'bootstrap-sass'
   gem 'font-awesome-sass'
   gem 'bootstrap-x-editable-rails'
+  gem 'bootstrap-select-rails'
   gem 'rickshaw_rails'
   gem 'angularjs-rails'
   gem 'momentjs-rails'

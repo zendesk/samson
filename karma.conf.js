@@ -24,7 +24,8 @@ module.exports = function(config) {
       "bootstrap-x-editable-rails": ["app/assets/javascripts"],
       "angularjs-rails": ["vendor/assets/javascripts"],
       "momentjs-rails": ["vendor/assets/javascripts"],
-      "rickshaw_rails": ["app/assets/javascripts"]
+      "rickshaw_rails": ["app/assets/javascripts"],
+      "bootstrap-select-rails": ["vendor/assets/javascripts"]
     },
     files: [
       'test/angular/*_spec.js'
