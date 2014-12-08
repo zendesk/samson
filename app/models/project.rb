@@ -84,7 +84,7 @@ class Project < ActiveRecord::Base
   end
 
   def repository
-    GitRepository.new(repository_url, repository_directory)
+    GitRepository.new(repository_url: repository_url, repository_dir: repository_directory)
   end
 
   private

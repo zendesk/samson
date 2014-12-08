@@ -7,9 +7,9 @@ describe GitRepository, :model do
   let(:repo_dir) { File.join(GitRepository.cached_repos_dir, project.repository_directory) }
 
   it 'validates that the parameters are valid when creating a repository' do
-    err = -> { GitRepository.new(nil, repo_dir) }.must_raise RuntimeError
+    err = -> { GitRepository.new(repository_url: nil, repository_dir: repo_dir) }.must_raise RuntimeError
     err.message.must_equal 'Invalid repository url!'
-    err = -> { GitRepository.new(repository_url, nil) }.must_raise RuntimeError
+    err = -> { GitRepository.new(repository_url: repository_url, repository_dir: nil) }.must_raise RuntimeError
     err.message.must_equal 'Invalid repository directory!'
   end
 

@@ -1,30 +1,30 @@
 class GitRepository
 
-  attr_accessor :repository_url, :repository_directory
+  attr_reader :repository_url, :repository_directory
 
   # The directory in which repositories should be cached.
   cattr_accessor(:cached_repos_dir, instance_writer: false) do
     Rails.application.config.samson.cached_repos_dir
   end
 
-  def initialize(repository_url, repository_directory)
-    raise 'Invalid repository url!' if repository_url.nil?
-    raise 'Invalid repository directory!' if repository_directory.nil?
+  def initialize(repository_url:, repository_dir:)
+    raise 'Invalid repository url!' unless repository_url
+    raise 'Invalid repository directory!' unless repository_dir
     @repository_url = repository_url
-    @repository_directory = repository_directory
+    @repository_directory = repository_dir
   end
 
   def setup!(output, executor, temp_dir=nil, git_reference=nil)
     output.write("Beginning git repo setup\n")
 
     commands = [
-        <<-SHELL
+      <<-SHELL
         if [ -d #{repo_cache_dir} ]
           then cd #{repo_cache_dir} && git fetch -ap
         else
           git -c core.askpass=true clone --mirror #{@repository_url} #{repo_cache_dir}
         fi
-        SHELL
+      SHELL
     ]
 
     if git_reference and !temp_dir
@@ -34,9 +34,9 @@ class GitRepository
 
     if git_reference
       commands += [
-          "git clone #{repo_cache_dir} #{temp_dir}",
-          "cd #{temp_dir}",
-          "git checkout --quiet #{git_reference.shellescape}"
+        "git clone #{repo_cache_dir} #{temp_dir}",
+        "cd #{temp_dir}",
+        "git checkout --quiet #{git_reference.shellescape}"
       ]
     end
     executor.execute!(*commands)

@@ -22,6 +22,7 @@ class JobExecution
     @subscribers = []
     @job, @reference = job, reference
     @stage = @job.deploy.try(:stage)
+    @repository = @job.project.repository
   end
 
   def start!
@@ -123,11 +124,9 @@ class JobExecution
   end
 
   def setup!(dir)
-    repository = @job.project.repository
-
     locked = lock_project do
-      return false unless repository.setup!(@output, @executor, dir, @reference)
-      commit = repository.commit_from_ref(@reference)
+      return false unless @repository.setup!(@output, @executor, dir, @reference)
+      commit = @repository.commit_from_ref(@reference)
       @job.update_commit!(commit)
     end
 
@@ -140,7 +139,7 @@ class JobExecution
   end
 
   def artifact_cache_dir
-    File.join(@job.project.repository.repo_cache_dir, "artifacts")
+    File.join(@repository.repo_cache_dir, "artifacts")
   end
 
   def lock_project(&block)
