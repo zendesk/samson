@@ -1,6 +1,11 @@
 require_relative '../../test_helper'
 
 describe Permalinkable, :model do
+
+  before(:all) do
+    Project.any_instance.stubs(:setup_repository).returns(true)
+  end
+
   let(:project) { projects(:test) }
   let(:project_url) { "git://foo.com:hello/world.git" }
   let(:other_project) { Project.create!(name: "hello", repository_url: project_url) }

@@ -3,7 +3,7 @@ require_relative '../test_helper'
 describe GitRepository, :model do
 
   let(:repository_url) { Dir.mktmpdir }
-  let(:project) { Project.create!(name: 'test_project', repository_url: repository_url) }
+  let(:project) { Project.new(id: 99999, name: 'test_project', repository_url: repository_url) }
   let(:repo_dir) { File.join(GitRepository.cached_repos_dir, project.repository_directory) }
 
   it 'validates that the parameters are valid when creating a repository' do
@@ -59,7 +59,7 @@ describe GitRepository, :model do
     executor = TerminalExecutor.new(output)
     repository = project.repository
     temp_dir = Dir.mktmpdir
-    repository.setup!(output, executor, temp_dir, 'test_user/test_branch').must_equal true
+    repository.setup!(output, executor, temp_dir, 'test_user/test_branch').must_equal(true)
     Dir.chdir(temp_dir) do
       `git rev-parse --abbrev-ref HEAD`.strip.must_equal 'test_user/test_branch'
     end

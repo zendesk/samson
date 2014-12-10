@@ -25,6 +25,17 @@ class ActiveSupport::TestCase
   before do
     Rails.cache.clear
   end
+
+  def wait(time, increment = 0.5, elapsed_time = 0, &block)
+    begin
+      yield
+    rescue Exception => e
+      raise e if elapsed_time >= time
+      sleep increment
+      wait(time, increment, elapsed_time + increment, &block)
+    end
+  end
+
 end
 
 module StubGithubAPI

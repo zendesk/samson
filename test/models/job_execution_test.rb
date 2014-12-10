@@ -1,6 +1,7 @@
 require_relative '../test_helper'
 
 describe JobExecution, :model do
+
   let(:repository_url) { Dir.mktmpdir }
   let(:repo_dir) { File.join(GitRepository.cached_repos_dir, project.repository_directory) }
 
@@ -11,6 +12,7 @@ describe JobExecution, :model do
   let(:execution) { JobExecution.new("master", job) }
 
   before do
+    Project.any_instance.stubs(:setup_repository).returns(true)
     user.name = "John Doe"
     user.email = "jdoe@test.com"
     Deploy.create!(stage: stage, job: job, reference: "masterCADF")

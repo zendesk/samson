@@ -1,6 +1,11 @@
 require_relative '../test_helper'
 
 describe ReleaseTagger, :model do
+
+  before(:all) do
+    Project.any_instance.stubs(:setup_repository).returns(true)
+  end
+
   let(:repository_url) { Dir.mktmpdir }
   let(:project) { Project.create!(name: "duck", repository_url: repository_url) }
   let(:author) { users(:deployer) }

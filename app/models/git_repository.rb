@@ -71,22 +71,6 @@ class GitRepository
     end
   end
 
-  def ls_remote_tags
-    output = StringIO.new
-    executor = TerminalExecutor.new(output)
-    executor.execute!("git ls-remote --tags #{repository_url} | awk '{print $2}'")
-    result = output.string.lines.sort.reverse!.map { |i| i.sub('refs/tags/', '').chomp }
-    Set.new(result.slice(0, 200))
-  end
-
-  def ls_remote_branches
-    output = StringIO.new
-    executor = TerminalExecutor.new(output)
-    executor.execute!("git ls-remote --heads #{repository_url} | awk '{print $2}'")
-    result = output.string.lines.sort_by { |i| [i.length, i] }.map { |i| i.sub('refs/heads/', '').chomp }
-    Set.new(result.slice(0, 200))
-  end
-
   def branches
     Dir.chdir(repo_cache_dir) do
       output = StringIO.new
@@ -94,6 +78,10 @@ class GitRepository
       executor.execute!('git branch --no-color')
       SortedSet.new(output.string.lines.map { |line| line.sub('*', '').chomp.strip })
     end
+  end
+
+  def clean!
+    FileUtils.rm_rf(repo_cache_dir)
   end
 
 end

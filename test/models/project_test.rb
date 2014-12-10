@@ -4,7 +4,9 @@ describe Project do
   let(:url) { "git://foo.com:hello/world.git" }
 
   it "generates a secure token when created" do
-    project = Project.create!(name: "hello", repository_url: url)
+    project = Project.new(name: "hello", repository_url: url)
+    project.repository.stubs(:setup!).returns(:true)
+    project.save!
     project.token.wont_be_nil
   end
 
@@ -112,10 +114,121 @@ describe Project do
     }}
 
     it 'creates a new project and stage'do
-      project = Project.create!(params)
+      project = Project.new(params)
+      project.repository.stubs(:setup!).returns(true)
+      project.save!
       stage = project.stages.where(name: 'Production').first
       stage.wont_be_nil
       stage.command.must_equal("echo hello\ntest command")
     end
   end
+
+  describe 'project repository initialization' do
+
+    let(:repository_url) { 'git@github.com:zendesk/demo_apps.git' }
+
+    it 'invokes the setup repository callback after creation' do
+      project = Project.new(name: 'demo_apps', repository_url: repository_url)
+      project.expects(:setup_repository).once
+      project.save
+    end
+
+    it 'removes the cached repository after the project has been deleted' do
+      project = Project.new(name: 'demo_apps', repository_url: repository_url)
+      project.expects(:setup_repository).once
+      project.repository.expects(:clean!).once
+      project.save
+      project.destroy
+    end
+
+    it 'removes the old repository and sets up the new repository if the repository_url is updated' do
+      project = Project.new(name: 'demo_apps', repository_url: repository_url)
+      project.expects(:setup_repository).twice
+      project.expects(:clean_repository).once
+      project.save!
+      project.update!(repository_url: 'git@github.com:angular/angular.js.git')
+    end
+
+    it 'does not reset the repository if the repository_url is not changed' do
+      project = Project.new(name: 'demo_apps', repository_url: repository_url)
+      project.expects(:setup_repository).twice
+      project.expects(:clean_repository).once
+      project.save!
+      project.update!(name: 'new_name')
+    end
+
+    it 'sets the git repository on disk' do
+      repository = mock()
+      repository.expects(:setup!).once
+      project = Project.new(id: 9999, name: 'demo_apps', repository_url: repository_url)
+      project.stubs(:repository).returns(repository)
+      project.send(:setup_repository).join
+    end
+
+    it 'fails to setup the repository and logs the error' do
+      repository = mock()
+      repository.expects(:setup!).returns(false).once
+      project = Project.new(id: 9999, name: 'demo_apps', repository_url: repository_url)
+      project.stubs(:repository).returns(repository)
+      expected_message = "Could not setup git repository #{project.repository_url} for project #{project.name} - "
+      Rails.logger.expects(:error).with(expected_message)
+      project.send(:setup_repository).join
+    end
+
+    it 'logs that it could not setup the repository when there is an unexpected error' do
+      error = 'Unexpected error while setting up the repository'
+      repository = mock()
+      repository.expects(:setup!).raises(error)
+      project = Project.new(id: 9999, name: 'demo_apps', repository_url: repository_url)
+      project.stubs(:repository).returns(repository)
+      expected_message = "Could not setup git repository #{project.repository_url} for project #{project.name} - #{error}"
+      Rails.logger.expects(:error).with(expected_message)
+      project.send(:setup_repository).join
+    end
+
+  end
+
+  describe 'lock project' do
+
+    let(:repository_url) { 'git@github.com:zendesk/demo_apps.git' }
+    let(:project_id) { 999999 }
+
+    after(:each) do
+      MultiLock.locks = {}
+    end
+
+    it 'locks the project' do
+      project = Project.new(id: project_id, name: 'demo_apps', repository_url: repository_url)
+      output = StringIO.new
+      MultiLock.locks[project_id].must_be_nil
+      project.lock_me(output: output, owner: 'test', timeout: 2.seconds) do
+        MultiLock.locks[project_id].wont_be_nil
+      end
+      MultiLock.locks[project_id].must_be_nil
+    end
+
+    it 'fails to aquire a lock if there is a lock already there' do
+      MultiLock.locks = { project_id => 'test' }
+      MultiLock.locks[project_id].wont_be_nil
+      project = Project.new(id: project_id, name: 'demo_apps', repository_url: repository_url)
+      output = StringIO.new
+      project.lock_me(output: output, owner: 'test', timeout: 1.seconds) { output.puts("Can't get here") }
+      output.string.must_equal('')
+    end
+
+    it 'executes the provided error callback if cannot aquire the lock' do
+      MultiLock.locks = { project_id => 'test' }
+      MultiLock.locks[project_id].wont_be_nil
+      project = Project.new(id: project_id, name: 'demo_apps', repository_url: repository_url)
+      output = StringIO.new
+      callback = Proc.new { output << 'using the error callback' }
+      project.lock_me(output: output, owner: 'test', error_callback: callback, timeout: 1.seconds) do
+        output.puts("Can't get here")
+      end
+      MultiLock.locks[project_id].wont_be_nil
+      output.string.must_equal('using the error callback')
+    end
+
+  end
+
 end

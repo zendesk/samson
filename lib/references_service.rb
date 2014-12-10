@@ -10,9 +10,8 @@ class ReferencesService
 
   def find_git_references
     return [] if @project.nil?
-    ExpirableMaxHitCache.instance.fetch(cache_key, references_ttl, references_hit_threshold) do
-      return get_references_from_cached_repo if repository.is_locally_cached?
-      get_references_from_ls_remote
+    Rails.cache.fetch(cache_key, :expires_in => references_ttl) do
+      get_references_from_cached_repo
     end
   end
 
@@ -39,10 +38,6 @@ class ReferencesService
       git_references = repository.branches.merge(repository.tags).sort_by { |ref| [ref.length, ref] }
     end
     git_references
-  end
-
-  def get_references_from_ls_remote
-    repository.ls_remote_branches.merge(repository.ls_remote_tags).sort_by { |ref| [ref.length, ref] }
   end
 
   def lock_project(&block)

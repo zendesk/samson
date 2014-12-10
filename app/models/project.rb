@@ -5,6 +5,9 @@ class Project < ActiveRecord::Base
 
   validates :name, :repository_url, presence: true
   before_create :generate_token
+  after_create :setup_repository
+  before_update :reset_repository
+  after_destroy :clean_repository
 
   has_many :releases
   has_many :stages, dependent: :destroy
@@ -84,7 +87,16 @@ class Project < ActiveRecord::Base
   end
 
   def repository
-    GitRepository.new(repository_url: repository_url, repository_dir: repository_directory)
+    @repository ||= GitRepository.new(repository_url: repository_url, repository_dir: repository_directory)
+  end
+
+  def lock_me(output: StringIO.new, owner: , error_callback: nil, timeout: 10.minutes, &block)
+    callback = if error_callback.nil?
+                 Proc.new { output.write("Waiting for repository while cloning for #{owner}\n") if Time.now.to_i % 10 == 0 }
+               else
+                 error_callback
+               end
+    MultiLock.lock(self.id, 'Repository Initial Setup', timeout: timeout, failed_to_lock: callback, &block)
   end
 
   private
@@ -96,4 +108,37 @@ class Project < ActiveRecord::Base
   def generate_token
     self.token = SecureRandom.hex
   end
+
+  def setup_repository
+    Thread.new do
+      begin
+      output = StringIO.new
+      lock_me(output: output, owner: 'Initial Repository Setup') do
+        is_setup = repository.setup!(output, TerminalExecutor.new(output))
+        unless is_setup
+          Rails.logger.error("Could not setup git repository #{self.repository_url} for project #{self.name} - #{output.string}")
+        end
+      end
+      rescue => e
+        Rails.logger.error("Could not setup git repository #{self.repository_url} for project #{self.name} - #{e.message}")
+      end
+    end
+  end
+
+  def reset_repository
+    return unless valid?
+    project = Project.find_by(self.id)
+    if project.repository_url != self.repository_url
+      clean_repository
+      @repository = nil
+      setup_repository
+    end
+  rescue ActiveRecord::RecordNotFound
+    Rails.logger.error("Could not reset git repository for #{self.name}. Project might have been deleted!")
+  end
+
+  def clean_repository
+    repository.clean!
+  end
+
 end
