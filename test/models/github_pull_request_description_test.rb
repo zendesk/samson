@@ -1,36 +1,32 @@
 require_relative '../test_helper'
 
-describe GithubPullRequestDescription do
-  let(:project) { stub(name: "Foo", github_repo: "foo", to_param: "42-foo") }
-  let(:stage) { stub(name: "bar", project: project) }
-  let(:pull_request) { stub(number: 9) }
-  let(:changeset) { stub_everything(commits: [], files: [], pull_requests: [pull_request]) }
-  let(:deploy) { stub(changeset: changeset, short_reference: "7e6c415", id: 18) }
+describe GithubPullRequestDescription, :model do
+  include StubGithubAPI
 
-  let(:github_description) { GithubPullRequestDescription.new(stage, deploy) }
+  let(:changeset) {  }
 
-  context 'when there are pull requests' do
-    describe "#update_deploy_status" do
-      it "inserts samson deploy status" do
-        owner = "lorem"
-        repo = "foo"
+  describe "#update_deploy_status" do
+    it "inserts samson deploy status" do
+      project = projects(:test)
+      stage = stages(:test_staging)
+      deploy = deploys(:succeeded_test)
+      pull_request = stub(number: 9)
+      changeset = stub_everything(commits: [], files: [], pull_requests: [pull_request])
+      deploy.stubs(changeset: changeset)
 
-        get_url = "repos/#{repo}/pulls/#{pull_request.number}"
-        patch_url = "https://api.github.com/repos/#{owner}/#{repo}/pulls/#{pull_request.number}"
+      subject = GithubPullRequestDescription.new(stage, deploy)
 
-        #get_pr_request = stub_request(:get, get_url).to_return(
-          #body: json_response.to_json,
-          #headers: {'Content-Type' => 'application/json'}
-        #)
+      get_url = "repos/bar/foo/pulls/#{pull_request.number}"
+      stub_github_api(get_url, { body: "Lorem ipsum dolor sit amet" })
 
-        stub_github_api(get_url, { body: "Lorem ipsum dolor sit amet" })
+      patch_url = "repos/bar/foo/pulls/#{pull_request.number}"
+      update_pr_request = stub_request(:patch, patch_url)
 
-        update_pr_request = stub_request(:patch, patch_url)
+      stub_github_api("repos/bar/foo/compare/staging...staging")
 
-        github_description.update_deploy_status
+      subject.update_deploy_status
 
-        assert_requested comment
-      end
+      assert_requested update_pr_request
     end
   end
 end
