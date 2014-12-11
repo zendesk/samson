@@ -14,18 +14,8 @@ class GithubPullRequestDescription
 
       pull_requests.each do |pull_request|
         pull_id = pull_request.number
-        repo = @project.github_repo
 
-        pull_request = GITHUB.pull_request(repo, pull_id)
-
-        body = pull_request.body
-
-        if index = body.index(/^#### SAMSON/)
-          new_body = body[0...index] + new_status
-        else
-          new_body = body + new_status
-        end
-
+        new_body = pr_body_without_deploy_message(pull_id) + new_status
         status = GITHUB.update_pull_request(repo, pull_id, body: new_body)
 
         if status == "200"
@@ -39,6 +29,16 @@ class GithubPullRequestDescription
   end
 
   private
+
+  def repo
+    @project.github_repo
+  end
+
+  def pr_body_without_deploy_message(pull_id)
+    pull_request = GITHUB.pull_request(repo, pull_id)
+
+    pull_request.body.partition(/\n\n##### SAMSON/).first
+  end
 
   def new_status
     <<-STATUS.strip_heredoc
