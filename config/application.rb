@@ -52,8 +52,7 @@ module Samson
     config.samson.github.web_url = ENV["GITHUB_WEB_URL"].presence || 'github.com'
     config.samson.github.api_url = ENV["GITHUB_API_URL"].presence || 'api.github.com'
     config.samson.github.status_url = ENV["GITHUB_STATUS_URL"].presence || 'status.github.com'
-    config.samson.references_cache_ttl = ENV['REFERENCES_CACHE_TTL'].presence || 30.minutes
-    config.samson.references_hit_threshold = ENV['REFERENCES_CACHE_HIT_THRESHOLD'].presence || 5
+    config.samson.references_cache_ttl = ENV['REFERENCES_CACHE_TTL'].presence || 10.minutes
 
     config.samson.uri = URI( ENV["DEFAULT_URL"] || 'http://localhost:3000' )
     self.default_url_options = {

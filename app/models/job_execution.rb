@@ -144,13 +144,7 @@ class JobExecution
 
   def lock_project(&block)
     holder = (stage.try(:name) || @job.user.name)
-    failed_to_lock = lambda do |owner|
-      if Time.now.to_i % 10 == 0
-        @output.write("Waiting for repository while cloning for: #{owner}\n")
-      end
-    end
-
-    MultiLock.lock(@job.project_id, holder, timeout: lock_timeout, failed_to_lock: failed_to_lock, &block)
+    @job.project.with_lock(output: @output, holder: holder, timeout: lock_timeout, &block)
   end
 
   class << self

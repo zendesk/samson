@@ -90,13 +90,13 @@ class Project < ActiveRecord::Base
     @repository ||= GitRepository.new(repository_url: repository_url, repository_dir: repository_directory)
   end
 
-  def lock_me(output: StringIO.new, owner: , error_callback: nil, timeout: 10.minutes, &block)
+  def with_lock(output: StringIO.new, holder: , error_callback: nil, timeout: 10.minutes, &block)
     callback = if error_callback.nil?
-                 Proc.new { output.write("Waiting for repository while cloning for #{owner}\n") if Time.now.to_i % 10 == 0 }
+                 lambda  { |owner| output.write("Waiting for repository while cloning for #{owner}\n") if Time.now.to_i % 10 == 0 }
                else
                  error_callback
                end
-    MultiLock.lock(self.id, 'Repository Initial Setup', timeout: timeout, failed_to_lock: callback, &block)
+    MultiLock.lock(self.id, holder, timeout: timeout, failed_to_lock: callback, &block)
   end
 
   private
@@ -113,7 +113,7 @@ class Project < ActiveRecord::Base
     Thread.new do
       begin
       output = StringIO.new
-      lock_me(output: output, owner: 'Initial Repository Setup') do
+      with_lock(output: output, holder: 'Initial Repository Setup') do
         is_setup = repository.setup!(output, TerminalExecutor.new(output))
         unless is_setup
           Rails.logger.error("Could not setup git repository #{self.repository_url} for project #{self.name} - #{output.string}")

@@ -201,7 +201,7 @@ describe Project do
       project = Project.new(id: project_id, name: 'demo_apps', repository_url: repository_url)
       output = StringIO.new
       MultiLock.locks[project_id].must_be_nil
-      project.lock_me(output: output, owner: 'test', timeout: 2.seconds) do
+      project.with_lock(output: output, holder: 'test', timeout: 2.seconds) do
         MultiLock.locks[project_id].wont_be_nil
       end
       MultiLock.locks[project_id].must_be_nil
@@ -212,7 +212,7 @@ describe Project do
       MultiLock.locks[project_id].wont_be_nil
       project = Project.new(id: project_id, name: 'demo_apps', repository_url: repository_url)
       output = StringIO.new
-      project.lock_me(output: output, owner: 'test', timeout: 1.seconds) { output.puts("Can't get here") }
+      project.with_lock(output: output, holder: 'test', timeout: 1.seconds) { output.puts("Can't get here") }
       output.string.must_equal('')
     end
 
@@ -222,7 +222,7 @@ describe Project do
       project = Project.new(id: project_id, name: 'demo_apps', repository_url: repository_url)
       output = StringIO.new
       callback = Proc.new { output << 'using the error callback' }
-      project.lock_me(output: output, owner: 'test', error_callback: callback, timeout: 1.seconds) do
+      project.with_lock(output: output, holder: 'test', error_callback: callback, timeout: 1.seconds) do
         output.puts("Can't get here")
       end
       MultiLock.locks[project_id].wont_be_nil
