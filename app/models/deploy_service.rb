@@ -76,6 +76,7 @@ class DeployService
 
     send_flowdock_notification(stage, deploy)
     send_datadog_notification(stage, deploy)
+    update_github_pull_request_description(stage, deploy)
     send_github_notification(stage, deploy)
     update_github_deployment_status(stage, deploy)
   end
@@ -93,8 +94,10 @@ class DeployService
   end
 
   def send_github_notification(stage, deploy)
-    if stage.send_github_notifications? && deploy.status == "succeeded"
-      GithubNotification.new(stage, deploy).deliver
+    if stage.send_github_notifications?
+      if deploy.status == "succeeded"
+        GithubNotification.new(stage, deploy).deliver
+      end
     end
   end
 
@@ -108,5 +111,9 @@ class DeployService
     if stage.use_github_deployment_api?
       GithubDeployment.new(stage, deploy).update_github_deployment_status(@deployment)
     end
+  end
+
+  def update_github_pull_request_description(stage, deploy)
+    GithubPullRequestDescription.new(stage, deploy).update_deploy_status
   end
 end

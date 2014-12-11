@@ -1,5 +1,5 @@
 class Integrations::GithubController < Integrations::BaseController
-  cattr_accessor(:github_hook_secret) { ENV['GITHUB_HOOK_SECRET'] }
+  cattr_accessor(:github_hook_secret) { ENV['GITHUB_SECRET'] }
 
   HMAC_DIGEST = OpenSSL::Digest.new('sha1')
 
