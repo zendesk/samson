@@ -151,8 +151,8 @@ describe Project do
 
     it 'does not reset the repository if the repository_url is not changed' do
       project = Project.new(name: 'demo_apps', repository_url: repository_url)
-      project.expects(:setup_repository).twice
-      project.expects(:clean_repository).once
+      project.expects(:setup_repository).once
+      project.expects(:clean_repository).never
       project.save!
       project.update!(name: 'new_name')
     end
