@@ -58,12 +58,11 @@ class GithubPullRequestDescription
   end
 
   def deploy_status_mark(deploy)
-    case deploy.status
-    when 'succeeded'
+    if deploy.succeeded?
       ':heavy_check_mark:'
-    when 'running'
+    elsif deploy.running?
       ':arrows_clockwise:'
-    else 'failed'
+    elsif deploy.failed? || deploy.errored?
       ':heavy_multiplication_x:'
     end
   end
