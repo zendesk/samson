@@ -112,6 +112,8 @@ class DeployService
   end
 
   def update_github_pull_request_description(stage, deploy)
-    GithubPullRequestDescription.new(stage, deploy).update_deploy_status
+    if stage.update_github_pull_requests?
+      GithubPullRequestDescription.new(stage, deploy).update_deploy_status
+    end
   end
 end

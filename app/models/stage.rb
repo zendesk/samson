@@ -150,6 +150,12 @@ class Stage < ActiveRecord::Base
     update_github_pull_requests
   end
 
+  # Note: Updating pull requests and posting github notifications are based on
+  # the same boolean attribute.
+  def update_github_pull_requests?
+    update_github_pull_requests
+  end
+
   private
 
   def build_new_project_command
