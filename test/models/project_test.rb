@@ -213,10 +213,10 @@ describe Project do
       project = Project.new(id: project_id, name: 'demo_apps', repository_url: repository_url)
       output = StringIO.new
       project.with_lock(output: output, holder: 'test', timeout: 1.seconds) { output.puts("Can't get here") }
-      output.string.must_equal('')
+      output.string.include?("Can't get here").must_equal(false)
     end
 
-    it 'executes the provided error callback if cannot aquire the lock' do
+    it 'executes the provided error callback if cannot acquire the lock' do
       MultiLock.locks = { project_id => 'test' }
       MultiLock.locks[project_id].wont_be_nil
       project = Project.new(id: project_id, name: 'demo_apps', repository_url: repository_url)
@@ -226,7 +226,8 @@ describe Project do
         output.puts("Can't get here")
       end
       MultiLock.locks[project_id].wont_be_nil
-      output.string.must_equal('using the error callback')
+      output.string.include?('using the error callback').must_equal(true)
+      output.string.include?("Can't get here").must_equal(false)
     end
 
   end
