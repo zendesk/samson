@@ -20,14 +20,6 @@ class GithubPullRequestDescription
 
         body = pull_request.body
 
-        new_status = <<-STATUS.gsub(/^ +/, "")
-
-          #### SAMSON
-          Deploying version #{@deploy.short_reference}
-
-          #{deploy_statuses}
-        STATUS
-
         if index = body.index(/^#### SAMSON/)
           new_body = body[0...index] + new_status
         else
@@ -47,6 +39,16 @@ class GithubPullRequestDescription
   end
 
   private
+
+  def new_status
+    <<-STATUS.strip_heredoc
+
+      ##### SAMSON
+      Deploying version #{@deploy.short_reference}
+
+      #{deploy_statuses}
+    STATUS
+  end
 
   def deploy_statuses
     @project.stages.map do |stage|
