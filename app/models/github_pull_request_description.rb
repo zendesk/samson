@@ -50,21 +50,13 @@ class GithubPullRequestDescription
   end
 
   def deploy_statuses
-    @project.stages.map do |stage|
-      deploy = stage.deploys.where(reference: @deploy.reference).last
-
-      "- #{stage.name} #{deploy_status_mark(deploy)}"
-    end.join("\n")
-  end
-
-  def deploy_status_mark(deploy)
-    if deploy.succeeded?
-      ':heavy_check_mark:'
-    elsif deploy.running?
-      ':arrows_clockwise:'
-    elsif deploy.failed? || deploy.errored?
-      ':heavy_multiplication_x:'
+    deploys_on_all_stages = @project.stages.map do |stage|
+      stage.deploys.where(reference: @deploy.reference).last
     end
+
+    badges = DeploymentBadges.new(deploys_on_all_stages)
+
+    badges.to_s
   end
 
   def in_multiple_threads(data)
@@ -77,5 +69,78 @@ class GithubPullRequestDescription
         end
       end
     end.each(&:join)
+  end
+
+  class DeploymentBadges
+    def initialize(deploys = [])
+      @deploys = deploys
+    end
+
+    def to_s
+      badges.map(&:to_markdown).join(" ")
+    end
+
+    def badges
+      success_badge = SuccessBadge.new
+      running_badge = RunningBadge.new
+      failure_badge = FailureBadge.new
+
+      deploys.each do |deploy|
+        if deploy.succeeded?
+          success_badge << deploy.stage
+        elsif deploy.running?
+          running_badge << deploy.stage
+        elsif deploy.failed? || deploy.errored?
+          failure_badge << deploy.stage
+        end
+      end
+
+      [success_badge, running_badge, failure_badge].reject(&:empty?)
+    end
+
+    private
+
+    attr_reader :deploys
+
+    class Badge
+      def initialize
+        @stages = []
+      end
+
+      def <<(stage)
+        @stages << stage
+      end
+
+      def empty?
+        stages.none?
+      end
+
+      def to_markdown
+        "![](http://img.shields.io/badge/#{title}-#{stage_names.join(', ')}-#{color}.svg)"
+      end
+
+      private
+
+      attr_reader :stages
+
+      def stage_names
+        stages.map(&:name).sort
+      end
+    end
+
+    class SuccessBadge < Badge
+      def title ; "Deployed" ; end
+      def color ; "green"    ; end
+    end
+
+    class RunningBadge < Badge
+      def title ; "Running" ; end
+      def color ; "yellow"  ; end
+    end
+
+    class FailureBadge < Badge
+      def title ; "Failed" ; end
+      def color ; "red"    ; end
+    end
   end
 end
