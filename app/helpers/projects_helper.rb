@@ -21,15 +21,11 @@ module ProjectsHelper
     end
   end
 
-  def deployment_alert_data(project, stage)
-    { url: project_deploy_path(project, stage.last_deploy),
-      reference: stage.last_deploy.short_reference,
-      title: 'Last deployment failed!',
-      timestamp: stage.last_deploy.updated_at.strftime('%m/%d/%Y %H:%M:%S'),
-      user: stage.last_deploy.user.name,
-      placement: 'bottom',
-      trigger: 'hover'
-    }
+  def deployment_alert_title(deploy)
+    failed_at = deploy.updated_at.strftime('%Y/%m/%d %H:%M:%S')
+    reference = deploy.short_reference
+    username = deploy.user.name
+    "#{failed_at} Last deployment failed! #{username} failed to deploy '#{reference}'"
   end
 
   def job_state_class(job)

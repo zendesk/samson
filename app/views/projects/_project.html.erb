@@ -16,7 +16,7 @@
               <div class="pull-right">
                 <%= link_to project_deploy_path(project, stage.last_deploy) do %>
                   <%= content_tag :i, '', class: 'fa fa-exclamation-triangle deployment-alert',
-                                  data: deployment_alert_data(project, stage) %>
+                                  title: deployment_alert_title(stage.last_deploy) %>
                 <% end %>
               </div>
             <% end %>

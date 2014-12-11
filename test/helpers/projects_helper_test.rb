@@ -23,12 +23,8 @@ describe ProjectsHelper do
     it 'returns the deployment alert data' do
       job = project.jobs.create!(command: 'cat foo', user: users(:deployer), status: 'failed')
       deploy = stage.deploys.create!(reference: 'master', job: job)
-      data = deployment_alert_data(project, stage)
-      data[:url].must_equal project_deploy_path(project, deploy)
-      data[:reference].must_equal deploy.reference
-      data[:timestamp].must_equal deploy.updated_at.strftime('%m/%d/%Y %H:%M:%S')
-      data[:user].must_equal deploy.user.name
+      expected_title = "#{deploy.updated_at.strftime('%Y/%m/%d %H:%M:%S')} Last deployment failed! #{deploy.user.name} failed to deploy '#{deploy.reference}'"
+      deployment_alert_title(stage.last_deploy).must_equal(expected_title)
     end
-
   end
 end
