@@ -1,6 +1,6 @@
 class DeploysIndexDeletedAt < ActiveRecord::Migration
   def change
-    add_index :deploys, [:deleted_at, :created_at]
+    add_index :deploys, [:deleted_at]
     add_index :deploys, [:job_id, :deleted_at]
     add_index :deploys, [:stage_id, :deleted_at]
 

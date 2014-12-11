@@ -31,7 +31,7 @@ ActiveRecord::Schema.define(version: 20141211010825) do
     t.datetime "deleted_at"
   end
 
-  add_index "deploys", ["deleted_at", "created_at"], name: "index_deploys_on_deleted_at_and_created_at", using: :btree
+  add_index "deploys", ["deleted_at"], name: "index_deploys_on_deleted_at", using: :btree
   add_index "deploys", ["job_id", "deleted_at"], name: "index_deploys_on_job_id_and_deleted_at", using: :btree
   add_index "deploys", ["stage_id", "deleted_at"], name: "index_deploys_on_stage_id_and_deleted_at", using: :btree
 
