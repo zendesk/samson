@@ -25,13 +25,8 @@ class GithubPullRequestDescription
           #### SAMSON
           Deploying version #{@deploy.short_reference}
 
+          #{deploy_statuses}
         STATUS
-
-        @project.stages.each do |stage|
-          deploy = stage.deploys.where(reference: @deploy.reference).last
-
-          new_status << "- #{stage.name} #{deploy_status_mark(deploy)}\n"
-        end
 
         if index = body.index(/^#### SAMSON/)
           new_body = body[0...index] + new_status
@@ -52,6 +47,14 @@ class GithubPullRequestDescription
   end
 
   private
+
+  def deploy_statuses
+    @project.stages.map do |stage|
+      deploy = stage.deploys.where(reference: @deploy.reference).last
+
+      "- #{stage.name} #{deploy_status_mark(deploy)}"
+    end.join("\n")
+  end
 
   def deploy_status_mark(deploy)
     case deploy.status
