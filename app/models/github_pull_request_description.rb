@@ -116,7 +116,7 @@ class GithubPullRequestDescription
       end
 
       def to_markdown
-        "![](http://img.shields.io/badge/#{title}-#{stage_names.join(', ')}-#{color}.svg)"
+        "![](http://img.shields.io/badge/#{title}-#{stage_names.join(', ')}-#{color}.svg?style-flat)"
       end
 
       private
