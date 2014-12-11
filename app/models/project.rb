@@ -92,10 +92,10 @@ class Project < ActiveRecord::Base
 
   def with_lock(output: StringIO.new, holder: , error_callback: nil, timeout: 10.minutes, &block)
     callback = if error_callback.nil?
-                 lambda  { |owner| output.write("Waiting for repository while cloning for #{owner}\n") if Time.now.to_i % 10 == 0 }
-               else
-                 error_callback
-               end
+      lambda { |owner| output.write("Waiting for repository while cloning for #{owner}\n") if Time.now.to_i % 10 == 0 }
+    else
+      error_callback
+    end
     MultiLock.lock(self.id, holder, timeout: timeout, failed_to_lock: callback, &block)
   end
 

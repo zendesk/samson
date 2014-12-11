@@ -1,7 +1,7 @@
 class ReferencesService
 
   attr_accessor :project, :output
-  cattr_accessor(:lock_timeout, instance_writer: false) { 10.minutes }
+  cattr_accessor(:lock_timeout, instance_writer: false) { 2.minutes }
 
   def initialize(project)
     @project = project
