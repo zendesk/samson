@@ -127,7 +127,7 @@ class Project < ActiveRecord::Base
 
   def reset_repository
     return unless valid?
-    project = Project.find_by(self.id)
+    project = Project.find(self.id)
     if project.repository_url != self.repository_url
       clean_repository
       @repository = nil
