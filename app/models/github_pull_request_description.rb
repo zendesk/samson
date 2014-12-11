@@ -15,8 +15,8 @@ class GithubPullRequestDescription
       pull_requests.each do |pull_request|
         pull_id = pull_request.number
 
-        new_body = pr_body_without_deploy_message(pull_id) + new_status
-        status = GITHUB.update_pull_request(repo, pull_id, body: new_body)
+        new_pr_body = pr_body_without_deploy_message(pull_id) + deploy_message
+        status = GITHUB.update_pull_request(repo, pull_id, body: new_pr_body)
 
         if status == "200"
           Rails.logger.info "Updated Github PR: #{pull_id}"
@@ -40,7 +40,7 @@ class GithubPullRequestDescription
     pull_request.body.partition(/\n\n##### Samson is deploying/).first
   end
 
-  def new_status
+  def deploy_message
     <<-STATUS.strip_heredoc
 
       ##### Samson is deploying #{@deploy.short_reference}
