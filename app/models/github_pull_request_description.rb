@@ -23,23 +23,14 @@ class GithubPullRequestDescription
         new_status = <<-STATUS.gsub(/^ +/, "")
 
           #### SAMSON
-          Deploying version #{@deploy.short_reference} 
+          Deploying version #{@deploy.short_reference}
 
         STATUS
 
         @project.stages.each do |stage|
           deploy = stage.deploys.where(reference: @deploy.reference).last
 
-          case deploy.status
-          when 'succeeded'
-            mark = ':heavy_check_mark:' 
-          when 'running'
-            mark = ':arrows_clockwise:'
-          else 'failed'
-            mark = ':heavy_multiplication_x:'
-          end
-
-          new_status << "- #{stage.name} #{mark}\n"
+          new_status << "- #{stage.name} #{deploy_status_mark(deploy)}\n"
         end
 
         if index = body.index(/^#### SAMSON/)
@@ -60,7 +51,18 @@ class GithubPullRequestDescription
     #end
   end
 
-  private 
+  private
+
+  def deploy_status_mark(deploy)
+    case deploy.status
+    when 'succeeded'
+      ':heavy_check_mark:'
+    when 'running'
+      ':arrows_clockwise:'
+    else 'failed'
+      ':heavy_multiplication_x:'
+    end
+  end
 
   def in_multiple_threads(data)
     threads = [10, data.size].min
