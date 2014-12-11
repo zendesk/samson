@@ -37,14 +37,13 @@ class GithubPullRequestDescription
   def pr_body_without_deploy_message(pull_id)
     pull_request = GITHUB.pull_request(repo, pull_id)
 
-    pull_request.body.partition(/\n\n##### SAMSON/).first
+    pull_request.body.partition(/\n\n##### Samson is deploying/).first
   end
 
   def new_status
     <<-STATUS.strip_heredoc
 
-      ##### SAMSON
-      Deploying version #{@deploy.short_reference}
+      ##### Samson is deploying #{@deploy.short_reference}
 
       #{deploy_statuses}
     STATUS
