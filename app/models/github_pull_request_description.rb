@@ -9,10 +9,9 @@ class GithubPullRequestDescription
 
     pull_requests = @deploy.changeset.pull_requests
 
-    #if pull_requests.any?
-      #in_multiple_threads(pull_requests) do |pull_request|
+    if pull_requests.any?
+      in_multiple_threads(pull_requests) do |pull_request|
 
-      pull_requests.each do |pull_request|
         pull_id = pull_request.number
 
         new_pr_body = pr_body_without_deploy_message(pull_id) + deploy_message
@@ -25,7 +24,7 @@ class GithubPullRequestDescription
         end
       end
 
-    #end
+    end
   end
 
   private

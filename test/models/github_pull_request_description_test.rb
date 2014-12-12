@@ -16,17 +16,21 @@ describe GithubPullRequestDescription, :model do
 
       subject = GithubPullRequestDescription.new(stage, deploy)
 
+      stub_github_api("repos/bar/foo/compare/staging...staging")
+
       get_url = "repos/bar/foo/pulls/#{pull_request.number}"
       stub_github_api(get_url, { body: "Lorem ipsum dolor sit amet" })
 
-      patch_url = "repos/bar/foo/pulls/#{pull_request.number}"
-      update_pr_request = stub_request(:patch, patch_url)
-
-      stub_github_api("repos/bar/foo/compare/staging...staging")
+      patch_url = "https://api.github.com/repos/bar/foo/pulls/#{pull_request.number}"
+      stub_request(:patch, patch_url)
 
       subject.update_deploy_status
 
-      assert_requested update_pr_request
+      expected_body = %Q({"body":"Lorem ipsum dolor sit amet\n      ##### Samson is deploying staging\n\n      \n\n- Staging :heavy_check_mark:\n"})
+
+      assert_requested(:path, patch_url) do |req|
+        true
+      end
     end
   end
 end

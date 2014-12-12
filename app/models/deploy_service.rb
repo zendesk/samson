@@ -62,6 +62,8 @@ class DeployService
       DeployMailer.bypass_email(stage, deploy, user).deliver
     end
 
+    byebug
+
     create_github_deployment(stage, deploy)
   end
 
@@ -77,7 +79,7 @@ class DeployService
     send_flowdock_notification(stage, deploy)
     send_datadog_notification(stage, deploy)
     update_github_pull_request_description(stage, deploy)
-    send_github_notification(stage, deploy)
+    #send_github_notification(stage, deploy)
     update_github_deployment_status(stage, deploy)
   end
 
