@@ -69,4 +69,29 @@ module ApplicationHelper
   rescue Faraday::ClientError
     false
   end
+
+  def breadcrumb(*items)
+    items = items.map do |item|
+      case item
+      when Project then [item.name, project_path(item)]
+      when Stage then
+        name = item.name
+        name = lock_icon + " " + name if item.locked?
+        [name, project_stage_path(@project, item)]
+      when String then [item, nil]
+      else
+        raise "Unsupported breadcrumb for #{item}"
+      end
+    end
+
+    items.unshift ["Home", root_path]
+    items.last << true # mark last as active
+
+    content_tag :ul, class: "breadcrumb" do
+      items.each.map do |name, url, active|
+        content = (active ? name : link_to(name, url))
+        content_tag :li, content, class: (active ? "active" : "")
+      end.join.html_safe
+    end
+  end
 end

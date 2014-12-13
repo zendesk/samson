@@ -1,8 +1,4 @@
-<ol class="breadcrumb">
-  <li><%= link_to "Home", root_path %></li>
-  <li><%= link_to @project.name, project_path(@project) %></li>
-  <li class="active">Deploy</li>
-</ol>
+<%= breadcrumb @project, "Deploy" %>
 
 <% if global_lock? %>
   <div class="alert alert-warning">

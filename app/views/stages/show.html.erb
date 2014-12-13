@@ -1,10 +1,6 @@
 <% content_for :page_title, "#{@stage.name} - #{@project.name}" %>
 
-<ol class="breadcrumb">
-  <li><%= link_to "Home", root_path %></li>
-  <li><%= link_to @project.name, project_path(@project) %></li>
-  <li class="active"><%= @stage.name %></li>
-</ol>
+<%= breadcrumb @project, @stage %>
 
 <% if @stage.locked? %>
  <div class="alert alert-warning">Deployments to this stage were locked by <%= @stage.lock.user.name %> <%= time_ago_in_words(@stage.lock.created_at) %> ago. <%= @stage.lock.reason %></div>
