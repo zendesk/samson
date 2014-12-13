@@ -30,11 +30,11 @@
     <div class="pull-right">
       <% if Lock.global.exists? %>
         <%= link_to admin_lock_path, class: "btn btn-default", method: :delete do %>
-          <i class="glyphicon glyphicon-lock"></i> Unlock all projects
+          <%= lock_icon %> Unlock all projects
         <% end %>
       <% else %>
         <%= link_to admin_lock_path, class: "btn btn-default", method: :post, data: { confirm: "Are you sure you want to lock deploys on ALL projects?" } do %>
-          <i class="glyphicon glyphicon-lock"></i> Lock all projects
+          <%= lock_icon %> Lock all projects
         <% end %>
       <% end %>
 

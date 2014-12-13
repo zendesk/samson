@@ -17,10 +17,10 @@
     <%= deploy_link @project, @stage %>
     <% if @stage.locked? %>
       <%= link_to project_stage_lock_path(@project, @stage), class: 'btn btn-default', method: :delete do %>
-        <i class="glyphicon glyphicon-lock"></i> Unlock
+        <%= lock_icon %> Unlock
       <% end %>
     <% else %>
-      <button class="btn btn-default want-lock"><i class="glyphicon glyphicon-lock"></i> Lock</button>
+      <button class="btn btn-default want-lock"><%= lock_icon %> Lock</button>
       <%= form_tag project_stage_lock_path(@project, @stage), method: :post, class: 'before-lock' do %>
         <input type="text" name="description" class="lock-description" placeholder="Description">
         <button type="submit" class="do-lock btn btn-warning">Lock</button>

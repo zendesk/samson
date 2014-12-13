@@ -94,4 +94,8 @@ module ApplicationHelper
       end.join.html_safe
     end
   end
+
+  def lock_icon
+    content_tag :i, '', class: "glyphicon glyphicon-lock"
+  end
 end
