@@ -1,4 +1,6 @@
 samson.factory('Deploys', function($filter, $http, $timeout, $log) {
+  'use strict';
+
   var localize = $filter("localize");
 
   var Deploys = {
@@ -18,7 +20,6 @@ samson.factory('Deploys', function($filter, $http, $timeout, $log) {
     loadMore: function() {
       if (this.theEnd) { return; }
 
-      $log.warn('Loading more from: ' + this.url);
       this.loading = true;
 
       $http.get(this.url, { params: { page: this.page } }).

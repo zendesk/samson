@@ -1,4 +1,6 @@
 samson.controller('CurrentBadgeCtrl', function($log, $scope, $http, Radar) {
+  'use strict';
+
   $scope.count = 0;
 
   $scope.getActiveCount = function() {

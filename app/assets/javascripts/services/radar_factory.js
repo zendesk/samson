@@ -1,4 +1,6 @@
 samson.factory('Radar', function($log, $rootScope) {
+  'use strict';
+
   var radar = {
     init: function() {
       RadarClient.alloc('deployListeners', function() {

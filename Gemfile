@@ -79,6 +79,8 @@ end
 
 group :development, :test do
   gem 'byebug'
+  gem 'debase'
+  gem 'pry'
 end
 
 group :test do
@@ -87,4 +89,8 @@ group :test do
   gem 'mocha', require: false
   gem 'webmock', require: false
   gem 'simplecov', require: false
+  gem 'capybara'
+  gem 'capybara_minitest_spec'
+  gem 'poltergeist'
+  gem 'launchy'
 end

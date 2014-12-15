@@ -1,4 +1,6 @@
 samson.factory('DeployHelper', function($window, $log, Deploys) {
+  'use strict';
+
   var helper = {
     registerScrollHelpers: function(scope) {
       angular.element($window).on("scroll", (function() {

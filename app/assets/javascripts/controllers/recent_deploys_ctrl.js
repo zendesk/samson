@@ -1,5 +1,7 @@
 samson.controller("RecentDeploysCtrl",
   function($scope, $timeout, Deploys, DeployHelper, StatusFilterMapping) {
+    'use strict';
+
     $scope.userTypes = ["Human", "Robot"];
     $scope.stageTypes = { "Production": true, "Non-Production": false };
     $scope.deployStatuses = Object.keys(StatusFilterMapping);

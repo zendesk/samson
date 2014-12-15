@@ -1,4 +1,6 @@
 samson.controller("CurrentDeploysCtrl", function($scope, $log, DeployHelper, Deploys) {
+  'use strict';
+
   $scope.helpers = DeployHelper;
   $scope.helpers.registerScrollHelpers($scope);
 
