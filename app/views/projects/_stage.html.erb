@@ -3,7 +3,7 @@
     <td>
       <%= link_to stage.name, project_stage_path(project, stage) %>
       <% if stage.locked? %>
-        <span class="label label-warning" title="<%= stage.lock.summary %>"><i class="glyphicon glyphicon-lock"></i> Locked</span>
+        <span class="label label-warning" title="<%= stage.lock.summary %>"><%= lock_icon %> Locked</span>
       <% end %>
     </td>
     <% if stage.last_deploy.nil? %>

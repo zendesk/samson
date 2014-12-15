@@ -81,4 +81,42 @@ describe ApplicationHelper do
       end
     end
   end
+
+  describe "#breadcrumb" do
+    before do
+      @project = projects(:test)
+    end
+
+    it "renders strings" do
+      breadcrumb("Foobar").must_equal "<ul class=\"breadcrumb\"><li class=\"\"><a href=\"/\">Home</a></li><li class=\"active\">Foobar</li></ul>"
+    end
+
+    it "renders empty" do
+      breadcrumb.must_equal "<ul class=\"breadcrumb\"><li class=\"active\">Home</li></ul>"
+    end
+
+    it "renders stage" do
+      breadcrumb(stages(:test_staging)).must_equal "<ul class=\"breadcrumb\"><li class=\"\"><a href=\"/\">Home</a></li><li class=\"active\">Staging</li></ul>"
+    end
+
+    it "renders locked stage" do
+      stage = stages(:test_staging)
+      stage.stubs(lock: Lock.new)
+      breadcrumb(stage).must_equal "<ul class=\"breadcrumb\"><li class=\"\"><a href=\"/\">Home</a></li><li class=\"active\"><i class=\"glyphicon glyphicon-lock\"></i> Staging</li></ul>"
+    end
+
+    it "renders project" do
+      breadcrumb(@project).must_equal "<ul class=\"breadcrumb\"><li class=\"\"><a href=\"/\">Home</a></li><li class=\"active\">Project</li></ul>"
+    end
+
+    it "refuses to render unknown" do
+      assert_raises(RuntimeError) { breadcrumb(111) }
+    end
+
+    it "does not allow html injection" do
+      stage = stages(:test_staging)
+      stage.name = "<script>alert(1)</script>"
+      breadcrumb(stage).must_equal "<ul class=\"breadcrumb\"><li class=\"\"><a href=\"/\">Home</a></li><li class=\"active\">&lt;script&gt;alert(1)&lt;/script&gt;</li></ul>"
+    end
+  end
 end
