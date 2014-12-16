@@ -9,7 +9,7 @@ succeeded_test:
 pending_job_test:
   command: cap staging deploy
   user: super_admin
-  project: test
+  project: test_project
   status: pending
   output: 
-  commit: staging
+  commit: madeupsha

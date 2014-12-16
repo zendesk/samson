@@ -30,9 +30,9 @@ class AngularTest < ActionDispatch::IntegrationTest
     visit('/deploys/recent')
     current_path.must_equal '/deploys/recent'
     all('tr').count.must_equal 3
-    all('tr')[1].all('td')[0].text.must_equal 'Project'
+    all('tr')[1].all('td')[0].text.must_equal 'TestProject'
     all('tr')[1].all('td')[1].text.must_equal 'Super Admin'
-    all('tr')[1].all('td')[2].text.must_equal 'staging is about to deploy to Staging'
+    all('tr')[1].all('td')[2].text.must_equal 'madeupsha1 is about to deploy to Pod 666'
     all('tr')[1].all('td')[4].text.must_equal 'pending'
 
     all('tr')[2].all('td')[0].text.must_equal 'Project'
@@ -45,9 +45,9 @@ class AngularTest < ActionDispatch::IntegrationTest
     visit('/deploys/active')
     current_path.must_equal '/deploys/active'
     all('tr').count.must_equal 2
-    all('tr')[1].all('td')[0].text.must_equal 'Project'
+    all('tr')[1].all('td')[0].text.must_equal 'TestProject'
     all('tr')[1].all('td')[1].text.must_equal 'Super Admin'
-    all('tr')[1].all('td')[2].text.must_equal 'staging is about to deploy to Staging'
+    all('tr')[1].all('td')[2].text.must_equal 'madeupsha1 is about to deploy to Pod 666'
     all('tr')[1].all('td')[4].text.must_equal 'pending'
   end
 end

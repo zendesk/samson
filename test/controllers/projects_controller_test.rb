@@ -26,11 +26,11 @@ describe ProjectsController do
     end
 
     it "assigns all projects to @projects if the user has no starred projects" do
-      project = projects(:test)
+      expected_projects = [projects(:test), projects(:test_project)]
 
       get :index
 
-      assert_equal [project], assigns(:projects)
+      assert_equal expected_projects, assigns(:projects)
     end
   end
 

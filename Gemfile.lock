@@ -1,6 +1,6 @@
 GIT
   remote: git@github.com:zendesk/radar_client_rb.git
-  revision: 9aae7caea7d0143621d5bf68d79e6d81d19ddfdd
+  revision: 6ec0c7c6c4efd76b74b8f6ce48c219621811cea6
   specs:
     radar_client_rb (0.1.7)
       redis
@@ -23,7 +23,7 @@ GEM
       erubis (~> 2.7.0)
     active_hash (1.4.0)
       activesupport (>= 2.2.2)
-    active_model_serializers (0.8.2)
+    active_model_serializers (0.8.3)
       activemodel (>= 3.0)
     activemodel (4.1.8)
       activesupport (= 4.1.8)
@@ -50,7 +50,7 @@ GEM
       railties (>= 3.1)
       sprockets
       tilt
-    angularjs-rails (1.3.4)
+    angularjs-rails (1.3.36)
     ansible (0.2.0)
     arel (5.0.1.20140414130214)
     better_errors (2.0.0)
@@ -79,7 +79,7 @@ GEM
       minitest (>= 4)
     cliver (0.3.2)
     coderay (1.1.0)
-    columnize (0.8.9)
+    columnize (0.9.0)
     crack (0.4.2)
       safe_yaml (~> 1.0.0)
     dalli (2.7.2)
@@ -109,7 +109,7 @@ GEM
       multi_json
     font-awesome-sass (4.2.2)
       sass (~> 3.2)
-    github-markdown (0.6.7)
+    github-markdown (0.6.8)
     hashie (3.3.2)
     hike (1.2.3)
     httparty (0.13.3)
@@ -139,8 +139,8 @@ GEM
     logstash-event (1.2.02)
     mail (2.6.3)
       mime-types (>= 1.16, < 3)
-    maxitest (1.0.3)
-      minitest (>= 5.0.0, < 5.5.0)
+    maxitest (0.0.1)
+      minitest (~> 5.4.2)
     metaclass (0.0.4)
     method_source (0.8.2)
     mime-types (2.4.3)
@@ -159,7 +159,7 @@ GEM
     mysql2 (0.3.17)
     newrelic_api (1.2.4)
     newrelic_rpm (3.9.8.273)
-    ngannotate-rails (0.12.1)
+    ngannotate-rails (0.14.1)
       execjs
       rails (>= 3.1)
     nokogiri (1.6.5)
@@ -197,6 +197,11 @@ GEM
       coderay (~> 1.1.0)
       method_source (~> 0.8.1)
       slop (~> 3.4)
+    pry (0.10.1-java)
+      coderay (~> 1.1.0)
+      method_source (~> 0.8.1)
+      slop (~> 3.4)
+      spoon (~> 0.0)
     puma (2.10.2)
       rack (>= 1.1, < 2.0)
     puma (2.10.2-java)
@@ -227,6 +232,7 @@ GEM
       rake (>= 0.8.7)
       thor (>= 0.18.1, < 2.0)
     rake (10.4.2)
+    redis (3.2.0)
     rickshaw_rails (1.4.5)
       railties (>= 3.1.0)
     safe_yaml (1.0.4)
@@ -264,7 +270,7 @@ GEM
     tilt (1.4.1)
     tzinfo (1.2.2)
       thread_safe (~> 0.1)
-    uglifier (2.5.3)
+    uglifier (2.6.0)
       execjs (>= 0.3.0)
       json (>= 1.8.0)
     warden (1.2.3)
@@ -272,8 +278,11 @@ GEM
     webmock (1.20.4)
       addressable (>= 2.3.6)
       crack (>= 0.3.2)
-    websocket-driver (0.4.0)
-    websocket-driver (0.4.0-java)
+    websocket-driver (0.5.0)
+      websocket-extensions (>= 0.1.0)
+    websocket-driver (0.5.0-java)
+      websocket-extensions (>= 0.1.0)
+    websocket-extensions (0.1.1)
     xpath (2.0.0)
       nokogiri (~> 1.3)
 
