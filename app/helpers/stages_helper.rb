@@ -8,9 +8,9 @@ module StagesHelper
       else
         ["Global command, can only be edited via Admin UI", "#"]
       end
-      link_to "", url, title: title, class: "edit-command glyphicon glyphicon-globe"
+      link_to "", url, title: title, class: "edit-command glyphicon glyphicon-globe no-hover"
     elsif admin
-      link_to "", edit_url, title: "Edit in admin UI", class: "edit-command glyphicon glyphicon-edit"
+      link_to "", edit_url, title: "Edit in admin UI", class: "edit-command glyphicon glyphicon-edit no-hover"
     end
   end
 end

@@ -12,21 +12,20 @@
             <%= content_tag :span, 'Deploying', class: 'label label-primary' if stage.currently_deploying? %>
             <%= content_tag :i, '', class: 'fa fa-lock', title: stage.lock.summary if stage.locked? %>
 
-            <% if stage.last_successful_deploy %>
-              <%= link_to stage.last_successful_deploy.short_reference,
-                          project_deploy_path(project, stage.last_successful_deploy),
-                          class: "status pull-right label #{deploy_status(stage.last_successful_deploy.status, 'label')}" %>
-            <% end %>
-
-            <% if stage.last_deploy.try(:failed?) %>
-              <div class="pull-right">
-                <%= link_to project_deploy_path(project, stage.last_deploy) do %>
+            <div class="pull-right">
+              <% if stage.last_deploy.try(:failed?) %>
+                <%= link_to project_deploy_path(project, stage.last_deploy), class: 'no-hover' do %>
                   <%= content_tag :i, '', class: 'fa fa-exclamation-triangle deployment-alert',
                                   title: deployment_alert_title(stage.last_deploy) %>
                 <% end %>
-              </div>
-            <% end %>
+              <% end %>
 
+              <% if stage.last_successful_deploy %>
+                <%= link_to stage.last_successful_deploy.short_reference,
+                            project_deploy_path(project, stage.last_successful_deploy),
+                            class: "status label #{deploy_status(stage.last_successful_deploy.status, 'label')}" %>
+              <% end %>
+            </div>
           </li>
         <% end %>
       <% end %>
