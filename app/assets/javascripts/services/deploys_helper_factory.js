@@ -24,4 +24,3 @@ samson.factory('DeployHelper', function($window, $log, Deploys) {
 
   return helper;
 });
-
