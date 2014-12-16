@@ -3,3 +3,9 @@ test:
   repository_url: ssh://git@example.com:bar/foo.git
   token: kanyewest
   permalink: foo
+
+test_project:
+  name: TestProject
+  repository_url: ssh://git@example.com:foo/barbaz.git
+  token: mindyourownbusiness
+  permalink: baz

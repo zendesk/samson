@@ -5,8 +5,8 @@ class DeploysController < ApplicationController
   end
 
   before_filter :authorize_deployer!, only: [:new, :create, :confirm, :update, :destroy, :buddy_check, :pending_start]
-  before_filter :find_project
-  before_filter :find_deploy, except: [:index, :recent, :active, :new, :create, :confirm]
+  before_filter :find_project, except: [:active_count]
+  before_filter :find_deploy, except: [:index, :recent, :active, :new, :create, :confirm, :active_count]
 
   def index
     @page = params[:page]
@@ -18,19 +18,27 @@ class DeploysController < ApplicationController
     end
   end
 
+
   def active
     scope = @project ? @project.deploys : Deploy.includes(:stage)
     @deploys = scope.active.includes(job: :user).page(params[:page])
 
     respond_to do |format|
-      format.html
+      format.html { render_angular(ctrl: 'CurrentDeploysCtrl', template: 'deploys/list.tmpl.html') }
       format.json { render json: @deploys }
     end
   end
 
+  def active_count
+    scope = @project ? @project.deploys : Deploy.includes(:stage)
+    @count = scope.active.count
+
+    render json: {count: @count}
+  end
+
   def recent
     respond_to do |format|
-      format.html
+      format.html { render_angular(ctrl: 'RecentDeploysCtrl', template: 'deploys/list.tmpl.html') }
       format.json do
         render json: Deploy.includes(:stage, job: :user).page(params[:page]).per(30)
       end
@@ -105,6 +113,7 @@ class DeploysController < ApplicationController
   def destroy
     if @deploy.can_be_stopped_by?(current_user)
       @deploy.stop!
+      RadarDeployNotifier.send_deploy_status(@deploy, :finished)
     else
       flash[:error] = "You do not have privileges to stop this deploy."
     end

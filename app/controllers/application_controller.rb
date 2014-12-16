@@ -25,4 +25,8 @@ class ApplicationController < ActionController::Base
     super
     payload["params"] = request.params
   end
+
+  def render_angular(ctrl: '', template: '')
+    render 'shared/angular_wrapper', :locals =>  { controller: ctrl, template: template }
+  end
 end

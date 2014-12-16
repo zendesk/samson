@@ -41,3 +41,6 @@
 
 # .bak files
 *.bak
+
+# ignore npm packages
+/radar/node_modules

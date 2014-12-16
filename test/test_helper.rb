@@ -10,6 +10,8 @@ require 'rails/test_help'
 require 'minitest/rails'
 require 'maxitest/autorun'
 require 'webmock/minitest'
+require 'capybara/rails'
+require 'capybara/poltergeist'
 
 class ActiveSupport::TestCase
   include Warden::Test::Helpers
@@ -43,6 +45,26 @@ module StubGithubAPI
       body: JSON.dump(response),
       headers: { 'Content-Type' => 'application/json' }
     )
+  end
+end
+
+class ActionDispatch::IntegrationTest
+  include Capybara::DSL
+
+  before(:each) do
+    Capybara.javascript_driver = :poltergeist
+    Capybara.current_driver = :poltergeist
+    Capybara.exact = true
+
+    WebMock.disable_net_connect!(:allow => [/127\.0\.0\.1/, /localhost/])
+  end
+
+  after(:each) do
+    Capybara.reset_sessions!
+  end
+
+  def login_as_user(user)
+    page.driver.add_header('AUTHORIZATION', "Basic #{Base64.encode64(user.email + ':' + user.token)}", permanent: true)
   end
 end
 

@@ -27,10 +27,10 @@
         <li class="<%= 'active' if current_page?(controller: '/deploys', action: 'recent') %>">
           <%= link_to "Recent Deploys", recent_deploys_path %>
         </li>
-        <li class="<%= 'active' if current_page?(controller: '/deploys', action: 'active') %>">
+        <li class="<%= 'active' if current_page?(controller: '/deploys', action: 'active') %>" ng-controller="CurrentBadgeCtrl">
           <%= link_to active_deploys_path do %>
             Current Deploys
-            <%= content_tag(:span, Deploy.active.count, class: "badge") unless Deploy.active.count.zero? %>
+            <span class="badge" ng-model="count" >{{count}}</span>
           <% end %>
         </li>
       <% end %>

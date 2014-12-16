@@ -17,3 +17,9 @@ test_production_pod:
   confirm: false
   production: true
   permalink: production-pod
+
+test_project_pod666:
+  name: Pod 666
+  project: test_project
+  confirm: false
+  permalink: pod-666

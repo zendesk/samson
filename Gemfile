@@ -26,6 +26,10 @@ gem 'dalli', '~> 2.7.0'
 gem 'active_model_serializers', '~> 0.8.0'
 
 gem 'sawyer', '~> 0.5.5'
+gem 'redis'
+gem 'radar_client_rb', :git => 'git@github.com:zendesk/radar_client_rb.git'
+gem 'ngannotate-rails'
+gem 'angular-rails-templates'
 
 # Logging
 gem 'lograge'
@@ -75,6 +79,8 @@ end
 
 group :development, :test do
   gem 'byebug'
+  gem 'debase'
+  gem 'pry'
 end
 
 group :test do
@@ -83,4 +89,8 @@ group :test do
   gem 'mocha', require: false
   gem 'webmock', require: false
   gem 'simplecov', require: false
+  gem 'capybara'
+  gem 'capybara_minitest_spec'
+  gem 'poltergeist'
+  gem 'launchy'
 end

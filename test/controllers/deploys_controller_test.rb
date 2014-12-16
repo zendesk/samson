@@ -46,7 +46,7 @@ describe DeploysController do
         let(:format) { :html }
 
         it "renders the template" do
-          assert_template :recent
+          assert_template "shared/angular_wrapper"
         end
       end
 
@@ -67,7 +67,7 @@ describe DeploysController do
         let(:format) { :html }
 
         it "renders the template" do
-          assert_template :recent
+          assert_template "shared/angular_wrapper"
         end
       end
 
@@ -88,7 +88,7 @@ describe DeploysController do
         let(:format) { :html }
 
         it "renders the template" do
-          assert_template :active
+          assert_template "shared/angular_wrapper"
         end
       end
 
@@ -109,7 +109,7 @@ describe DeploysController do
         let(:format) { :html }
 
         it "renders the template" do
-          assert_template :active
+          assert_template "shared/angular_wrapper"
         end
       end
 
