@@ -7,12 +7,12 @@ describe StagesHelper do
 
       it "links to global edit" do
         html = edit_command_link(commands(:global_command))
-        html.must_equal "<a class=\"edit-command glyphicon glyphicon-globe\" href=\"/admin/commands/625879608/edit\" title=\"Edit global command\"></a>"
+        html.must_equal "<a class=\"edit-command glyphicon glyphicon-globe no-hover\" href=\"/admin/commands/625879608/edit\" title=\"Edit global command\"></a>"
       end
 
       it "links to local edit" do
         html = edit_command_link(commands(:echo))
-        html.must_equal "<a class=\"edit-command glyphicon glyphicon-edit\" href=\"/admin/commands/386150450/edit\" title=\"Edit in admin UI\"></a>"
+        html.must_equal "<a class=\"edit-command glyphicon glyphicon-edit no-hover\" href=\"/admin/commands/386150450/edit\" title=\"Edit in admin UI\"></a>"
       end
     end
 
@@ -21,7 +21,7 @@ describe StagesHelper do
 
       it "explains global commands" do
         html = edit_command_link(commands(:global_command))
-        html.must_equal "<a class=\"edit-command glyphicon glyphicon-globe\" href=\"#\" title=\"Global command, can only be edited via Admin UI\"></a>"
+        html.must_equal "<a class=\"edit-command glyphicon glyphicon-globe no-hover\" href=\"#\" title=\"Global command, can only be edited via Admin UI\"></a>"
       end
 
       it "does not show local edit" do
