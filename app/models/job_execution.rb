@@ -18,7 +18,7 @@ class JobExecution
   cattr_reader(:registry, instance_accessor: false) { {} }
   private_class_method :registry
 
-  attr_reader :output, :job, :viewers, :stage
+  attr_reader :output, :job, :viewers, :stage, :stopped
 
   def initialize(reference, job)
     @output = OutputBuffer.new
@@ -27,6 +27,7 @@ class JobExecution
     @subscribers = []
     @job, @reference = job, reference
     @stage = @job.deploy.try(:stage)
+    @stopped = false
   end
 
   def start!
@@ -50,6 +51,7 @@ class JobExecution
   end
 
   def stop!
+    @stopped = true
     @executor.stop!
     wait!
   end
@@ -179,8 +181,12 @@ class JobExecution
   def lock_project(&block)
     holder = (stage.try(:name) || @job.user.name)
     failed_to_lock = lambda do |owner|
-      if Time.now.to_i % 10 == 0
+      if stopped
+        false
+      elsif Time.now.to_i % 10 == 0
         @output.write("Waiting for repository while cloning for: #{owner}\n")
+
+        true
       end
     end
 
