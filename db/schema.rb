@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20141211010825) do
+ActiveRecord::Schema.define(version: 20141218225050) do
 
   create_table "commands", force: true do |t|
     t.text     "command",    limit: 16777215
@@ -67,6 +67,24 @@ ActiveRecord::Schema.define(version: 20141211010825) do
   end
 
   add_index "locks", ["stage_id", "deleted_at", "user_id"], name: "index_locks_on_stage_id_and_deleted_at_and_user_id", using: :btree
+
+  create_table "macro_commands", force: true do |t|
+    t.integer  "macro_id"
+    t.integer  "command_id"
+    t.integer  "position",   default: 0, null: false
+    t.datetime "created_at"
+    t.datetime "updated_at"
+  end
+
+  create_table "macros", force: true do |t|
+    t.string   "name",       null: false
+    t.string   "reference",  null: false
+    t.text     "command",    null: false
+    t.integer  "project_id"
+    t.integer  "user_id"
+    t.datetime "created_at"
+    t.datetime "updated_at"
+  end
 
   create_table "new_relic_applications", force: true do |t|
     t.string  "name"
