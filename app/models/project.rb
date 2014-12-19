@@ -12,6 +12,7 @@ class Project < ActiveRecord::Base
   has_many :jobs, -> { order(created_at: :desc) }
   has_many :webhooks
   has_many :commands
+  has_many :macros
 
   accepts_nested_attributes_for :stages
 

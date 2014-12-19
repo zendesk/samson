@@ -1,0 +1,11 @@
+<%= render 'projects/header', project: @project, tab: "macros" %>
+
+<section class="tabs">
+  <ul id="macros">
+    <%= render @macros %>
+  </ul>
+
+  <% if current_user.is_admin? %>
+    <%= link_to "Add Macro", new_project_macro_path(@project), class: "btn btn-default" %>
+  <% end %>
+</section>

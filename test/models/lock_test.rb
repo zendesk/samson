@@ -42,7 +42,7 @@ describe Lock do
     end
   end
 
-  describe 'indiviual locks' do
+  describe 'individual locks' do
     let(:user_lock) { Lock.create!(user: users(:deployer), stage: stages(:test_staging)) }
 
     it 'says who created the lock' do
