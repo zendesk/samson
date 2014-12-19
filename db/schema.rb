@@ -82,9 +82,12 @@ ActiveRecord::Schema.define(version: 20141218225050) do
     t.text     "command",    null: false
     t.integer  "project_id"
     t.integer  "user_id"
+    t.datetime "deleted_at"
     t.datetime "created_at"
     t.datetime "updated_at"
   end
+
+  add_index "macros", ["project_id", "deleted_at"], name: "index_macros_on_project_id_and_deleted_at", using: :btree
 
   create_table "new_relic_applications", force: true do |t|
     t.string  "name"

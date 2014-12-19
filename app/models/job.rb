@@ -6,6 +6,8 @@ class Job < ActiveRecord::Base
 
   after_update { deploy.touch if deploy }
 
+  validate :globally_unlocked?
+
   ACTIVE_STATUSES = %w[pending running cancelling].freeze
 
   def self.non_deploy
@@ -85,6 +87,12 @@ class Job < ActiveRecord::Base
   end
 
   private
+
+  def globally_unlocked?
+    if Lock.global.exists?
+      errors.add(:project, 'is locked')
+    end
+  end
 
   def execution
     JobExecution.find_by_id(id)

@@ -13,6 +13,9 @@
   <li class="<%= 'active' if active == 'jobs' %>">
     <%= link_to "Jobs", project_jobs_path(project) %>
   </li>
+  <li class="<%= 'active' if active == 'macros' %>">
+    <%= link_to "Macros", project_macros_path(project) %>
+  </li>
   <li class="<%= 'active' if active == 'stages' %>">
     <%= link_to "Stages", project_stages_path(project) %>
   </li>

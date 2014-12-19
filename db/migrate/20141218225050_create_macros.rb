@@ -5,8 +5,11 @@ class CreateMacros < ActiveRecord::Migration
       t.string :reference, null: false
       t.text :command, null: false
       t.belongs_to :project, :user
+      t.datetime :deleted_at
       t.timestamps
     end
+
+    add_index :macros, [:project_id, :deleted_at]
 
     create_table :macro_commands do |t|
       t.belongs_to :macro, :command

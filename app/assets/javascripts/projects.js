@@ -3,5 +3,4 @@ $(function() {
   $('.star a').bind('ajax:complete', function() {
     window.location.reload();
   });
-
 });

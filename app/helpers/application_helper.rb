@@ -78,6 +78,8 @@ module ApplicationHelper
         name = item.name
         name = lock_icon + " " + name if item.locked?
         [name, project_stage_path(@project, item)]
+      when Macro then
+        [item.name, project_macro_path(@project, item)]
       when String then [item, nil]
       else
         raise "Unsupported breadcrumb for #{item}"
