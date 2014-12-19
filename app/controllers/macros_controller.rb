@@ -22,7 +22,7 @@ class MacrosController < ApplicationController
     @macro = @project.macros.build(macro_params)
 
     if @macro.save
-      redirect_to project_jobs_path(@project)
+      redirect_to project_macros_path(@project)
     else
       render :new
     end
@@ -33,9 +33,9 @@ class MacrosController < ApplicationController
 
   def update
     if @macro.update_attributes(macro_params)
-      redirect_to project_jbos_path(@project)
+      redirect_to project_macros_path(@project)
     else
-      render :new
+      render :edit
     end
   end
 
@@ -47,16 +47,16 @@ class MacrosController < ApplicationController
       JobExecution.start_job(job.commit, job)
       redirect_to project_job_path(@project, job)
     else
-      redirect_to project_jobs_path(@project)
+      redirect_to project_macros_path(@project)
     end
   end
 
   def destroy
     if @macro.user == current_user || current_user.is_super_admin?
       @macro.soft_delete!
-      head :ok
+      redirect_to project_macros_path(@project)
     else
-      head :forbidden
+      head :unauthorized
     end
   end
 

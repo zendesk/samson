@@ -18,6 +18,12 @@ class Macro < ActiveRecord::Base
       join("\n")
   end
 
+  def command_ids=(new_command_ids)
+    super.tap do
+      reorder_commands(new_command_ids.reject(&:blank?).map(&:to_i))
+    end
+  end
+
   def all_commands
     command_scope = Command.for_project(project)
 
@@ -26,5 +32,14 @@ class Macro < ActiveRecord::Base
     end
 
     commands + command_scope
+  end
+
+  private
+
+  def reorder_commands(command_ids = self.command_ids)
+    macro_commands.each do |macro_command|
+      macro_command.position = command_ids.index(macro_command.command_id) ||
+        macro_commands.length
+    end
   end
 end
