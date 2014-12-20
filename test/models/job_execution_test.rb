@@ -120,6 +120,8 @@ describe JobExecution, :model do
   end
 
   it 'deletes all tmp files after run' do
+    # Travis doesn't set tmpdir?
+    ENV['TMPDIR'] ||= File.join(Rails.root, 'tmp')
     job.command = 'echo hello > $TMPDIR/foo'
     execute_job
     assert_equal false, File.exists?(File.join(ENV['TMPDIR'], 'foo'))
