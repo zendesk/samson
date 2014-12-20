@@ -96,7 +96,9 @@ class JobExecution
   end
 
   def execute!(dir)
-    unless setup!(dir)
+    repo_dir = Dir.mktmpdir(nil, dir)
+
+    unless setup!(repo_dir)
       @job.error!
       return
     end
@@ -105,12 +107,13 @@ class JobExecution
     @output.write("Executing deploy\n")
 
     commands = [
+      "export TMPDIR=#{dir}",
       "export DEPLOYER=#{@job.user.email.shellescape}",
       "export DEPLOYER_EMAIL=#{@job.user.email.shellescape}",
       "export DEPLOYER_NAME=#{@job.user.name.shellescape}",
       "export REVISION=#{@reference.shellescape}",
       "export CACHE_DIR=#{artifact_cache_dir}",
-      "cd #{dir}",
+      "cd #{repo_dir}",
       *@job.commands
     ]
 
