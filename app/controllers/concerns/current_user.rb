@@ -4,7 +4,7 @@ module CurrentUser
   included do
     helper_method :logged_in?
     helper_method :current_user
-    prepend_before_filter :login_users
+    prepend_before_action :login_users
   end
 
   def current_user

@@ -4,9 +4,9 @@ class DeploysController < ApplicationController
     redirect_to root_path
   end
 
-  before_filter :authorize_deployer!, only: [:new, :create, :confirm, :update, :destroy, :buddy_check, :pending_start]
-  before_filter :find_project
-  before_filter :find_deploy, except: [:index, :recent, :active, :new, :create, :confirm]
+  before_action :authorize_deployer!, only: [:new, :create, :confirm, :update, :destroy, :buddy_check, :pending_start]
+  before_action :find_project
+  before_action :find_deploy, except: [:index, :recent, :active, :new, :create, :confirm]
 
   def index
     @page = params[:page]

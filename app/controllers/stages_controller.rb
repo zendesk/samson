@@ -1,10 +1,10 @@
 class StagesController < ApplicationController
-  skip_before_filter :login_users, if: :badge?
-  before_filter :authorize_admin!, except: [:index, :show]
-  before_filter :authorize_deployer!, unless: :badge?
-  before_filter :check_token, if: :badge?
-  before_filter :find_project
-  before_filter :find_stage, only: [:show, :edit, :update, :destroy, :clone]
+  skip_before_action :login_users, if: :badge?
+  before_action :authorize_admin!, except: [:index, :show]
+  before_action :authorize_deployer!, unless: :badge?
+  before_action :check_token, if: :badge?
+  before_action :find_project
+  before_action :find_stage, only: [:show, :edit, :update, :destroy, :clone]
 
   rescue_from ActiveRecord::RecordNotFound do
     if @project

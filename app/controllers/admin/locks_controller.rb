@@ -1,5 +1,5 @@
 class Admin::LocksController < ApplicationController
-  before_filter :authorize_admin!
+  before_action :authorize_admin!
 
   def create
     Lock.create(user: current_user)

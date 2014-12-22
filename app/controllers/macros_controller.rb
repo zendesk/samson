@@ -4,11 +4,11 @@ class MacrosController < ApplicationController
     redirect_to root_path
   end
 
-  before_filter :authorize_deployer!
-  before_filter :authorize_admin!, only: [:new, :create, :edit, :update, :destroy]
+  before_action :authorize_deployer!
+  before_action :authorize_admin!, only: [:new, :create, :edit, :update, :destroy]
 
-  before_filter :find_project
-  before_filter :find_macro, only: [:edit, :update, :execute, :destroy]
+  before_action :find_project
+  before_action :find_macro, only: [:edit, :update, :execute, :destroy]
 
   def index
     @macros = @project.macros.page(params[:page])

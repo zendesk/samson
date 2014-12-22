@@ -1,5 +1,5 @@
 class ChangelogsController < ApplicationController
-  before_filter :check_params
+  before_action :check_params
 
   def show
     @start_date = Date.strptime(params[:start_date], '%Y-%m-%d')
