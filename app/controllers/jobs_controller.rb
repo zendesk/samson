@@ -4,10 +4,10 @@ class JobsController < ApplicationController
     redirect_to root_path
   end
 
-  before_filter :authorize_deployer!, only: [:new, :create, :destroy]
+  before_action :authorize_deployer!, only: [:new, :create, :destroy]
 
-  before_filter :find_project, except: [:enabled]
-  before_filter :find_job, only: [:show, :destroy]
+  before_action :find_project, except: [:enabled]
+  before_action :find_job, only: [:show, :destroy]
 
   def index
     @jobs = @project.jobs.non_deploy.page(params[:page])

@@ -1,5 +1,5 @@
 class StarsController < ApplicationController
-  before_filter :find_project
+  before_action :find_project
 
   def create
     current_user.stars.create!(project: @project)
