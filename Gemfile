@@ -68,6 +68,10 @@ group :no_preload do
   gem 'dogapi', '~> 1.9'
 end
 
+group :development do
+  gem 'web-console'
+end
+
 group :development, :test do
   gem 'byebug'
 end
