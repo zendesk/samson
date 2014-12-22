@@ -16,7 +16,7 @@ describe DeployMailer do
       changeset = stub_everything(files: [], commits: [], pull_requests: [])
       Changeset.stubs(:find).returns(changeset)
 
-      DeployMailer.deploy_email(stage, deploy).deliver
+      DeployMailer.deploy_email(stage, deploy).deliver_now
     end
 
     subject do
@@ -54,7 +54,7 @@ describe DeployMailer do
       changeset = stub_everything(files: [], commits: [], pull_requests: [])
       Changeset.stubs(:find).returns(changeset)
 
-      DeployMailer.bypass_email(stage, deploy, user).deliver
+      DeployMailer.bypass_email(stage, deploy, user).deliver_now
     end
 
     subject do
@@ -96,7 +96,7 @@ describe DeployMailer do
       changeset = stub_everything(files: [], commits: [], pull_requests: [])
       Changeset.stubs(:find).returns(changeset)
 
-      DeployMailer.bypass_email(stage, deploy, user).deliver
+      DeployMailer.bypass_email(stage, deploy, user).deliver_now
     end
 
     subject do

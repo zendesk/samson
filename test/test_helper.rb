@@ -10,6 +10,7 @@ require 'rails/test_help'
 require 'minitest/rails'
 require 'maxitest/autorun'
 require 'webmock/minitest'
+require 'mocha/setup'
 
 class ActiveSupport::TestCase
   include Warden::Test::Helpers

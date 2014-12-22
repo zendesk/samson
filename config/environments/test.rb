@@ -13,7 +13,7 @@ Samson::Application.configure do
   config.eager_load = false
 
   # Configure static asset server for tests with Cache-Control for performance.
-  config.serve_static_assets  = true
+  config.serve_static_files  = true
   config.static_cache_control = "public, max-age=3600"
 
   # Show full error reports and disable caching.
@@ -44,4 +44,6 @@ Samson::Application.configure do
   config.samson.github.organization = 'test_org'
   config.samson.github.admin_team = 'admins'
   config.samson.github.deploy_team = 'deployers'
+
+  config.active_support.test_order = :random
 end

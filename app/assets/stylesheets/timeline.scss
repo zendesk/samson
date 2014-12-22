@@ -1,0 +1,77 @@
+@import 'constants';
+
+.timeline a:hover {
+  text-decoration: none;
+}
+
+.timeline label,
+.timeline th {
+  font-weight: normal;
+}
+
+.timeline tr:hover:not(:first-child) {
+  background-color: $samsonLight;
+}
+
+.timeline td,
+.timeline th {
+  padding: 5px 15px;
+}
+
+.timeline td {
+  cursor: pointer;
+  border-bottom: 1px solid $samsonLight;
+}
+
+.timeline th {
+  padding: 0 15px 10px;
+  border-bottom: 1px solid $samsonGrey;
+}
+
+.timeline-filter {
+  padding-left: 0;
+}
+
+.timeline-filter:last-child {
+  padding-right: 0;
+}
+
+.timeline-content {
+  width: 100%;
+}
+
+.timeline-entry-main {
+  display: -webkit-flex;
+  display: flex;
+  -webkit-align-items: center;
+  align-items: center;
+}
+
+.timeline-content {
+  color: $samsonDark;
+}
+
+.timeline-project {
+  text-align: center;
+  line-height: 30px;
+  padding: 2px 10px;
+}
+
+.timeline-time,
+.timeline-summary {
+  color: #999;
+}
+
+.timeline-show-more {
+  margin-top: 20px;
+}
+
+.timeline-deploy-status {
+  text-transform: capitalize;
+}
+
+.dropdown-toggle:focus,
+.bootstrap-select .btn:focus,
+.bootstrap-select a:focus {
+  outline: none !important;
+}
