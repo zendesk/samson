@@ -21,3 +21,4 @@ cache:
   directories:
     - node_modules
 rvm: 2.1.5
+sudo: false
