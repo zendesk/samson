@@ -6,13 +6,17 @@ describe StagesHelper do
       let(:current_user) { users(:admin) }
 
       it "links to global edit" do
-        html = edit_command_link(commands(:global_command))
-        html.must_equal "<a class=\"edit-command glyphicon glyphicon-globe no-hover\" href=\"/admin/commands/625879608/edit\" title=\"Edit global command\"></a>"
+        html = Nokogiri::HTML(edit_command_link(commands(:global_command)))
+        assert_select html, 'a.edit-command.no-hover.glyphicon.glyphicon-globe'
+        assert_select html, 'a[href="/admin/commands/625879608/edit"]'
+        assert_select html, 'a[title="Edit global command"]'
       end
 
       it "links to local edit" do
-        html = edit_command_link(commands(:echo))
-        html.must_equal "<a class=\"edit-command glyphicon glyphicon-edit no-hover\" href=\"/admin/commands/386150450/edit\" title=\"Edit in admin UI\"></a>"
+        html = Nokogiri::HTML(edit_command_link(commands(:echo)))
+        assert_select html, 'a.edit-command.no-hover.glyphicon.glyphicon-edit'
+        assert_select html, 'a[href="/admin/commands/386150450/edit"]'
+        assert_select html, 'a[title="Edit in admin UI"]'
       end
     end
 
@@ -20,8 +24,10 @@ describe StagesHelper do
       let(:current_user) { users(:deployer) }
 
       it "explains global commands" do
-        html = edit_command_link(commands(:global_command))
-        html.must_equal "<a class=\"edit-command glyphicon glyphicon-globe no-hover\" href=\"#\" title=\"Global command, can only be edited via Admin UI\"></a>"
+        html = Nokogiri::HTML(edit_command_link(commands(:global_command)))
+        assert_select html, 'a.edit-command.no-hover.glyphicon.glyphicon-globe'
+        assert_select html, 'a[href="#"]'
+        assert_select html, 'a[title^="Global command"]'
       end
 
       it "does not show local edit" do
