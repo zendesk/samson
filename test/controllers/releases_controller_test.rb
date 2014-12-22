@@ -15,8 +15,13 @@ describe ReleasesController do
     end
 
     as_a_deployer do
+      setup do
+        GITHUB.stubs(:create_release)
+      end
+
       it "creates a new release" do
         count = Release.count
+
         post :create, project_id: project.to_param, release: release_params
         assert_equal count + 1, Release.count
       end

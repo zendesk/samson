@@ -96,3 +96,13 @@ td.status {
   position: relative;
   top: -10px;
 }
+
+.deployment-alert {
+  padding: 4px 3px 0;
+  color: $brand-danger;
+  cursor: pointer;
+}
+
+.deployment-alert-popover {
+  max-width: 340px;
+}

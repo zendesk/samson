@@ -125,7 +125,7 @@ class JobExecution
 
   def setup!(dir)
     locked = lock_project do
-      return false unless @repository.setup!(@output, @executor, dir, @reference)
+      return false unless @repository.setup!(@executor, dir, @reference)
       commit = @repository.commit_from_ref(@reference)
       @job.update_commit!(commit)
     end

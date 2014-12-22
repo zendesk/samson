@@ -3,11 +3,9 @@ require_relative '../test_helper'
 describe Project do
   let(:url) { "git://foo.com:hello/world.git" }
 
+
   it "generates a secure token when created" do
-    project = Project.new(name: "hello", repository_url: url)
-    project.repository.stubs(:setup!).returns(:true)
-    project.save!
-    project.token.wont_be_nil
+    Project.create!(name: "hello", repository_url: url).token.wont_be_nil
   end
 
   it "has separate repository_directories for same project but different url" do
@@ -114,9 +112,7 @@ describe Project do
     }}
 
     it 'creates a new project and stage'do
-      project = Project.new(params)
-      project.repository.stubs(:setup!).returns(true)
-      project.save!
+      project = Project.create!(params)
       stage = project.stages.where(name: 'Production').first
       stage.wont_be_nil
       stage.command.must_equal("echo hello\ntest command")
@@ -125,25 +121,25 @@ describe Project do
 
   describe 'project repository initialization' do
 
+    before(:each) { unstub_project_callbacks }
     let(:repository_url) { 'git@github.com:zendesk/demo_apps.git' }
 
     it 'invokes the setup repository callback after creation' do
       project = Project.new(name: 'demo_apps', repository_url: repository_url)
-      project.expects(:setup_repository).once
+      project.expects(:clone_repository).once
       project.save
     end
 
     it 'removes the cached repository after the project has been deleted' do
       project = Project.new(name: 'demo_apps', repository_url: repository_url)
-      project.expects(:setup_repository).once
-      project.repository.expects(:clean!).once
+      project.expects(:clone_repository).once
       project.save
       project.destroy
     end
 
     it 'removes the old repository and sets up the new repository if the repository_url is updated' do
       project = Project.new(name: 'demo_apps', repository_url: repository_url)
-      project.expects(:setup_repository).twice
+      project.expects(:clone_repository).twice
       project.expects(:clean_repository).once
       project.save!
       project.update!(repository_url: 'git@github.com:angular/angular.js.git')
@@ -151,7 +147,7 @@ describe Project do
 
     it 'does not reset the repository if the repository_url is not changed' do
       project = Project.new(name: 'demo_apps', repository_url: repository_url)
-      project.expects(:setup_repository).once
+      project.expects(:clone_repository).once
       project.expects(:clean_repository).never
       project.save!
       project.update!(name: 'new_name')
@@ -159,31 +155,31 @@ describe Project do
 
     it 'sets the git repository on disk' do
       repository = mock()
-      repository.expects(:setup!).once
+      repository.expects(:clone!).once
       project = Project.new(id: 9999, name: 'demo_apps', repository_url: repository_url)
       project.stubs(:repository).returns(repository)
-      project.send(:setup_repository).join
+      project.send(:clone_repository).join
     end
 
-    it 'fails to setup the repository and logs the error' do
+    it 'fails to clone the repository and logs the error' do
       repository = mock()
-      repository.expects(:setup!).returns(false).once
+      repository.expects(:clone!).returns(false).once
       project = Project.new(id: 9999, name: 'demo_apps', repository_url: repository_url)
       project.stubs(:repository).returns(repository)
-      expected_message = "Could not setup git repository #{project.repository_url} for project #{project.name} - "
+      expected_message = "Could not clone git repository #{project.repository_url} for project #{project.name} - "
       Rails.logger.expects(:error).with(expected_message)
-      project.send(:setup_repository).join
+      project.send(:clone_repository).join
     end
 
-    it 'logs that it could not setup the repository when there is an unexpected error' do
-      error = 'Unexpected error while setting up the repository'
+    it 'logs that it could not clone the repository when there is an unexpected error' do
+      error = 'Unexpected error while cloning the repository'
       repository = mock()
-      repository.expects(:setup!).raises(error)
+      repository.expects(:clone!).raises(error)
       project = Project.new(id: 9999, name: 'demo_apps', repository_url: repository_url)
       project.stubs(:repository).returns(repository)
-      expected_message = "Could not setup git repository #{project.repository_url} for project #{project.name} - #{error}"
+      expected_message = "Could not clone git repository #{project.repository_url} for project #{project.name} - #{error}"
       Rails.logger.expects(:error).with(expected_message)
-      project.send(:setup_repository).join
+      project.send(:clone_repository).join
     end
 
   end

@@ -1,0 +1,43 @@
+<fieldset>
+  <div class="form-group">
+    <%= form.label :name, "Name", class: "col-lg-2 control-label" %>
+    <div class="col-lg-4">
+      <%= form.text_field :name, class: "form-control" %>
+    </div>
+  </div>
+
+  <div class="form-group">
+    <%= form.label :reference, "Tag or SHA", class: "col-lg-2 control-label" %>
+    <div class="col-lg-4">
+      <%= form.text_field :reference, class: "form-control", placeholder: "e.g. v2.1.43, master, fa0b4671" %>
+    </div>
+  </div>
+</fieldset>
+
+<fieldset>
+  <legend>Commands</legend>
+
+  <div id="commands">
+    <%= form.collection_check_boxes(:command_ids, form.object.all_commands, :id, :command) do |b| %>
+      <div class="row stage-bar bar">
+        <div data-id="<%= b.value %>" class="col-lg-offset-2 col-lg-2 command-checkbox">
+          <%= b.check_box %>
+        </div>
+        <div class="col-lg-8">
+          <pre data-type="textarea" class="pre-command pre-inline"><%= b.text %></pre>
+        </div>
+      </div>
+    <% end %>
+  </div>
+
+  <hr />
+
+  <p>Add a command which is specific to your macro</p>
+  <%= form.text_area :command, class: "form-control", rows: 4, placeholder: 'cap production deploy' %>
+</fieldset>
+
+<%= javascript_tag do %>
+  $(document).ready(function() {
+    $('#commands').sortable();
+  });
+<% end %>

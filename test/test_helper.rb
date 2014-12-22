@@ -22,8 +22,9 @@ class ActiveSupport::TestCase
   # -- they do not yet inherit this setting
   fixtures :all
 
-  before do
+  before(:each) do
     Rails.cache.clear
+    stubs_project_callbacks
   end
 
   def wait(time, increment = 0.5, elapsed_time = 0, &block)
@@ -36,14 +37,31 @@ class ActiveSupport::TestCase
     end
   end
 
+
+  def assert_valid(record)
+    assert record.valid?, record.errors.full_messages
+  end
+
+  def refute_valid(record)
+    refute record.valid?
+  end
+
+  def stubs_project_callbacks
+    Project.any_instance.stubs(:clone_repository).returns(true)
+    Project.any_instance.stubs(:clean_repository).returns(true)
+  end
+
+  def unstub_project_callbacks
+    Project.any_instance.unstub(:clone_repository)
+    Project.any_instance.unstub(:clean_repository)
+  end
+
 end
 
 module StubGithubAPI
   def stub_github_api(url, response = {}, status = 200)
     url = 'https://api.github.com/' + url
-    stub_request(:get, url).with(
-      'Authorization' => 'token 123'
-    ).to_return(
+    stub_request(:get, url).to_return(
       status: status,
       body: JSON.dump(response),
       headers: { 'Content-Type' => 'application/json' }

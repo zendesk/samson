@@ -14,32 +14,29 @@ class GitRepository
     @repository_directory = repository_dir
   end
 
-  def setup!(output, executor, temp_dir=nil, git_reference=nil)
-    output.write("Beginning git repo setup\n")
+  def setup!(executor, temp_dir, git_reference)
+    executor.output.write("Beginning git repo setup\n")
+    return false unless update!(executor: executor)
+    return false unless clone!(executor: executor, from: repo_cache_dir, to: temp_dir)
+    return false unless checkout!(executor: executor, pwd: temp_dir, git_reference: git_reference.shellescape)
+    true
+  end
 
-    commands = [
-      <<-SHELL
-        if [ -d #{repo_cache_dir} ]
-          then cd #{repo_cache_dir} && git fetch -ap
-        else
-          git -c core.askpass=true clone --mirror #{@repository_url} #{repo_cache_dir}
-        fi
-      SHELL
-    ]
+  def clone!(executor: TerminalExecutor.new(StringIO.new), from: repository_url, to: repo_cache_dir, mirror: false)
+    executor.output.write("Beginning git repo setup\n")
+    return executor.execute!("git -c core.askpass=true clone --mirror #{from} #{to}") if mirror
+    return executor.execute!("git clone #{from} #{to}")
+  end
 
-    if git_reference and !temp_dir
-      output.write("Cannot setup the repository to git reference as temporary directory was not provided\n")
-      return false
-    end
+  def update!(executor: TerminalExecutor.new(StringIO.new), pwd: repo_cache_dir)
+    fail "Could not find any git repository in #{pwd}!" unless git_dir?(pwd)
+    executor.output.write("Updating git repo\n")
+    Dir.chdir(pwd) { executor.execute!('git fetch -ap') }
+  end
 
-    if git_reference
-      commands += [
-        "git clone #{repo_cache_dir} #{temp_dir}",
-        "cd #{temp_dir}",
-        "git checkout --quiet #{git_reference.shellescape}"
-      ]
-    end
-    executor.execute!(*commands)
+  def checkout!(executor: TerminalExecutor.new(StringIO.new), pwd: repo_cache_dir, git_reference:)
+    executor.output.write("Checking out #{git_reference}\n")
+    Dir.chdir(pwd) { executor.execute!("git checkout #{git_reference}") }
   end
 
   def commit_from_ref(git_reference)
@@ -61,27 +58,33 @@ class GitRepository
   end
 
   def tags
-    Dir.chdir(repo_cache_dir) do
-      output = StringIO.new
-      executor = TerminalExecutor.new(output)
-      command = 'git describe --tags --abbrev=0 `git rev-list --tags --max-count=600`'
-      success = executor.execute!(command)
-      return [] unless success
-      SortedSet.new(output.string.lines.map { |line| line.chomp.strip })
-    end
+    cmd = 'git describe --tags --abbrev=0 `git rev-list --tags --max-count=600`'
+    run_single_command(cmd) { |line| line.strip }
   end
 
   def branches
-    Dir.chdir(repo_cache_dir) do
-      output = StringIO.new
-      executor = TerminalExecutor.new(output)
-      executor.execute!('git branch --no-color')
-      SortedSet.new(output.string.lines.map { |line| line.sub('*', '').chomp.strip })
-    end
+    cmd = 'git branch --no-color --list'
+    run_single_command(cmd) { |line| line.sub('*', '').strip }
   end
 
   def clean!
     FileUtils.rm_rf(repo_cache_dir)
+  end
+
+  def git_dir?(repo_dir)
+    Dir.exist?("#{repo_dir}/.git") || File.exist?("#{repo_dir}/HEAD")
+  end
+
+  private
+
+  def run_single_command(command, pwd: repo_cache_dir)
+    Dir.chdir(pwd) do
+      output = StringIO.new
+      executor = TerminalExecutor.new(output)
+      success = executor.execute!(command)
+      return [] unless success
+      SortedSet.new(output.string.lines.map { |line| yield line if block_given? })
+    end
   end
 
 end

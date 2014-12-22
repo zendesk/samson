@@ -1,0 +1,9 @@
+<% content_for(:page_title, "Editing #{@macro.name} (#{@project.name})") %>
+
+<%= breadcrumb @project, @macro %>
+
+<h1>Edit macro</h1>
+
+<section>
+  <%= render 'form', project: @project, macro: @macro %>
+</section>

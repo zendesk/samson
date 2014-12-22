@@ -1,10 +1,6 @@
 <% content_for :page_title, job_page_title %>
 
-<ol class="breadcrumb">
-  <li><%= link_to "Home", root_path %></li>
-  <li><%= link_to @project.name, project_path(@project) %></li>
-  <li class="active">Job #<%= @job.id %></li>
-</ol>
+<%= breadcrumb @project, "Job ##{@job.id}" %>
 
 <div id="header" class="stream-header">
   <%= render 'header' %>

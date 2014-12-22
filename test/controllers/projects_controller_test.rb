@@ -3,7 +3,7 @@ require_relative '../test_helper'
 describe ProjectsController do
 
   before do
-    Project.any_instance.stubs(:setup_repository).returns(true)
+    Project.any_instance.stubs(:clone_repository).returns(true)
   end
 
   let(:project) { projects(:test) }
@@ -59,7 +59,7 @@ describe ProjectsController do
   describe "a POST to #create" do
     describe "as an admin" do
       setup do
-        Project.any_instance.stubs(:setup_repository).returns(true)
+        Project.any_instance.stubs(:clone_repository).returns(true)
         post :create, params
       end
 

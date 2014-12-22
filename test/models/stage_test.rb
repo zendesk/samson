@@ -56,15 +56,26 @@ describe Stage do
     end
   end
 
-  describe "#last_deploy" do
+  describe '#last_deploy' do
     let(:project) { projects(:test) }
     let(:stage) { stages(:test_staging) }
 
-    it "returns the last deploy for the stage" do
-      job = project.jobs.create!(command: "cat foo", user: users(:deployer), status: 'succeeded')
-      deploy = stage.deploys.create!(reference: "master", job: job)
+    it 'returns the last successful deploy for the stage' do
+      successful_job = project.jobs.create!(command: 'cat foo', user: users(:deployer), status: 'succeeded')
+      stage.deploys.create!(reference: 'master', job: successful_job)
+      job = project.jobs.create!(command: 'cat foo', user: users(:deployer), status: 'failed')
+      deploy = stage.deploys.create!(reference: 'master', job: successful_job)
+      assert_equal deploy, stage.last_successful_deploy
+    end
+
+    it 'returns the last deploy for the stage' do
+      job = project.jobs.create!(command: 'cat foo', user: users(:deployer), status: 'succeeded')
+      stage.deploys.create!(reference: 'master', job: job)
+      job = project.jobs.create!(command: 'cat foo', user: users(:deployer), status: 'failed')
+      deploy = stage.deploys.create!(reference: 'master', job: job)
       assert_equal deploy, stage.last_deploy
     end
+
   end
 
   describe "#current_release?" do

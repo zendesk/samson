@@ -1,0 +1,3 @@
+test_macro_echo:
+  macro: test_macro
+  command: echo

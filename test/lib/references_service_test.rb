@@ -2,6 +2,8 @@ require_relative '../test_helper'
 
 describe ReferencesService, :model do
 
+  before { unstub_project_callbacks }
+
   let!(:repository_url) do
     tmp = Dir.mktmpdir
     cmds = <<-SHELL
@@ -19,7 +21,6 @@ describe ReferencesService, :model do
   end
 
   let!(:project) { Project.create!(name: 'test_project', repository_url: repository_url) }
-  let!(:repo_dir) { File.join(GitRepository.cached_repos_dir, project.repository_directory) }
 
   it 'returns a sorted set of tags and branches' do
     ReferencesService.new(project).find_git_references.must_equal %w(v1 master test_user/test_branch )
@@ -41,8 +42,7 @@ describe ReferencesService, :model do
 
   after(:each) do
     FileUtils.rm_rf(repository_url)
-    FileUtils.rm_rf(repo_dir)
-    FileUtils.rm_rf(project.repository.repo_cache_dir)
+    FileUtils.rm_rf(project.repository.clean!)
   end
 
 end

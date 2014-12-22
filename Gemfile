@@ -2,7 +2,7 @@ source 'https://rubygems.org'
 
 gem 'bundler'
 
-gem 'rails', '~> 4.1.5'
+gem 'rails', '~> 4.1.8'
 gem 'puma'
 gem 'dotenv-rails', '~> 0.9'
 
@@ -13,7 +13,7 @@ group :mysql2 do
 end
 
 group :postgres do
-  gem 'pg', '~>0.13.2'
+  gem 'pg', '~> 0.13.2'
 end
 
 group :sqlite do
@@ -78,7 +78,7 @@ group :development, :test do
 end
 
 group :test do
-  gem 'minitest-rails', '~> 2.0.0.beta1'
+  gem 'minitest-rails'
   gem 'maxitest'
   gem 'mocha', require: false
   gem 'webmock', require: false

@@ -28,49 +28,29 @@ describe GitRepository, :model do
 
   it 'returns the tags repository' do
     create_repo_with_tags
-    output = StringIO.new
-    executor = TerminalExecutor.new(output)
-    repository = project.repository
-    repository.setup!(output, executor)
-    repository.tags.to_a.must_equal %w(v1 )
+    project.repository.clone!(executor: TerminalExecutor.new(StringIO.new), mirror: true)
+    project.repository.tags.to_a.must_equal %w(v1 )
   end
 
   it 'returns an empty set of tags' do
     create_repo_without_tags
-    output = StringIO.new
-    executor = TerminalExecutor.new(output)
-    repository = project.repository
-    repository.setup!(output, executor)
-    repository.tags.must_equal []
+    project.repository.clone!(executor: TerminalExecutor.new(StringIO.new), mirror: true)
+    project.repository.tags.must_equal []
   end
 
   it 'returns the branches of the repository' do
     create_repo_with_an_additional_branch
-    output = StringIO.new
-    executor = TerminalExecutor.new(output)
-    repository = project.repository
-    repository.setup!(output, executor)
-    repository.branches.to_a.must_equal %w(master test_user/test_branch)
+    project.repository.clone!(executor: TerminalExecutor.new(StringIO.new), mirror: true)
+    project.repository.branches.to_a.must_equal %w(master test_user/test_branch)
   end
 
   it 'sets the repository to the provided git reference' do
     create_repo_with_an_additional_branch
-    output = StringIO.new
-    executor = TerminalExecutor.new(output)
-    repository = project.repository
+    executor = TerminalExecutor.new(StringIO.new)
     temp_dir = Dir.mktmpdir
-    repository.setup!(output, executor, temp_dir, 'test_user/test_branch').must_equal(true)
-    Dir.chdir(temp_dir) do
-      `git rev-parse --abbrev-ref HEAD`.strip.must_equal 'test_user/test_branch'
-    end
-  end
-
-  it 'returns false if we try to setup the repository to a particular git reference and no temp_dir is given' do
-    create_repo_with_an_additional_branch
-    output = StringIO.new
-    executor = TerminalExecutor.new(output)
-    repository = project.repository
-    repository.setup!(output, executor, nil, 'master').must_equal false
+    project.repository.clone!(executor: executor, mirror: true)
+    project.repository.setup!(executor, temp_dir, 'test_user/test_branch').must_equal(true)
+    Dir.chdir(temp_dir) { `git rev-parse --abbrev-ref HEAD`.strip.must_equal 'test_user/test_branch' }
   end
 
   def execute_on_remote_repo(cmds)
@@ -108,7 +88,12 @@ describe GitRepository, :model do
       echo monkey > foo
       git add foo
       git commit -m "initial commit"
+
       git checkout -b test_user/test_branch
+      echo monkey > foo2
+      git add foo2
+      git commit -m "branch commit"
+      git checkout master
     SHELL
   end
 

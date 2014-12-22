@@ -13,7 +13,7 @@ require 'shellwords'
 #   output.string #=> "hello\r\nworld\r\n"
 #
 class TerminalExecutor
-  attr_reader :pid
+  attr_reader :pid, :output
 
   def initialize(output)
     @output = output
