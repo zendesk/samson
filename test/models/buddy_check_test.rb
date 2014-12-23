@@ -74,7 +74,7 @@ describe BuddyCheck, :model do
       it "sends bypass alert email notification" do
         DeployMailer.stubs(:prepare_mail)
 
-        DeployMailer.expects(:bypass_email).returns( stub("DeployMailer", :deliver => true) )
+        DeployMailer.expects(:bypass_email).returns( stub("DeployMailer", :deliver_now => true) )
 
         service.confirm_deploy!(deploy, stage, reference, user)
         job_execution.send(:run!)
