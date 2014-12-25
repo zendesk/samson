@@ -3,7 +3,6 @@ require_relative '../test_helper'
 describe Project do
   let(:url) { "git://foo.com:hello/world.git" }
 
-
   it "generates a secure token when created" do
     Project.create!(name: "hello", repository_url: url).token.wont_be_nil
   end
@@ -43,7 +42,6 @@ describe Project do
   describe "#changeset_for_release" do
     let(:project) { projects(:test) }
     let(:author) { users(:deployer) }
-
 
     it "returns changeset" do
       changeset = Changeset.new("url", "foo/bar", "a", "b")
@@ -99,17 +97,19 @@ describe Project do
   end
 
   describe "nested stages attributes" do
-    let(:params) {{
-      name: "Hello",
-      repository_url: url,
-      stages_attributes: {
-        '0' => {
-          name: 'Production',
-          command: 'test command',
-          command_ids: [commands(:echo).id]
+    let(:params) do
+      {
+        name: "Hello",
+        repository_url: url,
+        stages_attributes: {
+          '0' => {
+            name: 'Production',
+            command: 'test command',
+            command_ids: [commands(:echo).id]
+          }
         }
       }
-    }}
+    end
 
     it 'creates a new project and stage'do
       project = Project.create!(params)
@@ -217,7 +217,7 @@ describe Project do
       MultiLock.locks[project_id].wont_be_nil
       project = Project.new(id: project_id, name: 'demo_apps', repository_url: repository_url)
       output = StringIO.new
-      callback = Proc.new { output << 'using the error callback' }
+      callback = proc { output << 'using the error callback' }
       project.with_lock(output: output, holder: 'test', error_callback: callback, timeout: 1.seconds) do
         output.puts("Can't get here")
       end

@@ -15,7 +15,7 @@ describe GitRepository, :model do
 
   it 'checks that the project repository is pointing to the correct url and directory' do
     repo = project.repository
-    repo.kind_of? GitRepository
+    repo.is_a? GitRepository
     repo.repository_url.must_equal project.repository_url
     repo.repository_directory.must_equal project.repository_directory
   end
@@ -143,5 +143,3 @@ describe GitRepository, :model do
   end
 
 end
-
-

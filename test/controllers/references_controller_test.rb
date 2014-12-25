@@ -22,4 +22,3 @@ describe ReferencesController do
     end
   end
 end
-

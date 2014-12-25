@@ -8,7 +8,7 @@ class ReferencesService
   end
 
   def find_git_references
-    Rails.cache.fetch(cache_key, :expires_in => references_ttl) { get_references_from_cached_repo }
+    Rails.cache.fetch(cache_key, :expires_in => references_ttl) { references_from_cached_repo }
   end
 
   def repository
@@ -23,7 +23,7 @@ class ReferencesService
     Rails.application.config.samson.references_cache_ttl.to_i
   end
 
-  def get_references_from_cached_repo
+  def references_from_cached_repo
     git_references = nil
     lock_project do
       return unless repository.update!

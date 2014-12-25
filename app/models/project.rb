@@ -90,13 +90,13 @@ class Project < ActiveRecord::Base
     @repository ||= GitRepository.new(repository_url: repository_url, repository_dir: repository_directory)
   end
 
-  def with_lock(output: StringIO.new, holder: , error_callback: nil, timeout: 10.minutes, &block)
+  def with_lock(output: StringIO.new, holder:, error_callback: nil, timeout: 10.minutes, &block)
     callback = if error_callback.nil?
-      lambda { |owner| output.write("Waiting for repository while cloning for #{owner}\n") if Time.now.to_i % 10 == 0 }
+      proc { |owner| output.write("Waiting for repository while cloning for #{owner}\n") if Time.now.to_i % 10 == 0 }
     else
       error_callback
     end
-    MultiLock.lock(self.id, holder, timeout: timeout, failed_to_lock: callback, &block)
+    MultiLock.lock(id, holder, timeout: timeout, failed_to_lock: callback, &block)
   end
 
   private
@@ -115,9 +115,7 @@ class Project < ActiveRecord::Base
         output = StringIO.new
         with_lock(output: output, holder: 'Initial Repository Setup') do
           is_cloned = repository.clone!(executor: TerminalExecutor.new(output), from: repository_url, mirror: true)
-          unless is_cloned
-            log.error("Could not clone git repository #{repository_url} for project #{name} - #{output.string}")
-          end
+          log.error("Could not clone git repository #{repository_url} for project #{name} - #{output.string}") unless is_cloned
         end
       rescue => e
         log.error("Could not clone git repository #{repository_url} for project #{name} - #{e.message}")

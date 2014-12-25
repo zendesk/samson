@@ -8,8 +8,8 @@ class GitRepository
   end
 
   def initialize(repository_url:, repository_dir:)
-    raise 'Invalid repository url!' unless repository_url
-    raise 'Invalid repository directory!' unless repository_dir
+    fail 'Invalid repository url!' unless repository_url
+    fail 'Invalid repository directory!' unless repository_dir
     @repository_url = repository_url
     @repository_directory = repository_dir
   end
@@ -24,7 +24,7 @@ class GitRepository
 
   def clone!(executor: TerminalExecutor.new(StringIO.new), from: repository_url, to: repo_cache_dir, mirror: false)
     return executor.execute!("git -c core.askpass=true clone --mirror #{from} #{to}") if mirror
-    return executor.execute!("git clone #{from} #{to}")
+    executor.execute!("git clone #{from} #{to}")
   end
 
   def update!(executor: TerminalExecutor.new(StringIO.new), pwd: repo_cache_dir)
@@ -50,7 +50,7 @@ class GitRepository
     File.join(cached_repos_dir, @repository_directory)
   end
 
-  def is_locally_cached?
+  def locally_cached?
     Dir.exist?(repo_cache_dir)
   end
 

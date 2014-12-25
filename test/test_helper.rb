@@ -36,16 +36,6 @@ class ActiveSupport::TestCase
     refute record.valid?
   end
 
-  def wait(time, increment = 0.5, elapsed_time = 0, &block)
-    begin
-      yield
-    rescue Exception => e
-      raise e if elapsed_time >= time
-      sleep increment
-      wait(time, increment, elapsed_time + increment, &block)
-    end
-  end
-
   def stubs_project_callbacks
     Project.any_instance.stubs(:clone_repository).returns(true)
     Project.any_instance.stubs(:clean_repository).returns(true)

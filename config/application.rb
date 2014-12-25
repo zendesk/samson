@@ -54,7 +54,7 @@ module Samson
     config.samson.github.status_url = ENV["GITHUB_STATUS_URL"].presence || 'status.github.com'
     config.samson.references_cache_ttl = ENV['REFERENCES_CACHE_TTL'].presence || 10.minutes
 
-    config.samson.uri = URI( ENV["DEFAULT_URL"] || 'http://localhost:3000' )
+    config.samson.uri = URI(ENV["DEFAULT_URL"] || 'http://localhost:3000')
     self.default_url_options = {
       host: config.samson.uri.host,
       protocol: config.samson.uri.scheme
