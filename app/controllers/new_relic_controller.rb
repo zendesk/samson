@@ -1,8 +1,8 @@
 class NewRelicController < ApplicationController
-  before_filter :authorize_deployer!
+  before_action :authorize_deployer!
 
   rescue_from ActiveRecord::RecordNotFound, with: :not_found
-  before_filter :not_found, unless: -> { NewRelicApi.api_key.present? }
+  before_action :not_found, unless: -> { NewRelicApi.api_key.present? }
 
   def show
     applications = stage.new_relic_applications.map(&:name)

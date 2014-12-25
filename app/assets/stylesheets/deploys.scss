@@ -1,0 +1,108 @@
+// Place all the styles related to the jobs controller here.
+// They will automatically be included in application.css.
+// You can use Sass (SCSS) here: http://sass-lang.com/
+
+.panel {
+  .failed {
+    border-color: red;
+  }
+
+  .running, .started {
+    border-color: blue;
+  }
+
+  .successful {
+    border-color: green;
+  }
+}
+
+.log {
+  display: block;
+}
+
+.file-summary {
+  cursor: pointer;
+}
+
+.table .file-diff > td {
+  border: 0;
+}
+
+.mouseover {
+  border-bottom: 1px dotted #999999;
+  cursor: help;
+}
+
+.file-diff {
+  pre {
+    background-color: #fff;
+  }
+
+  .line {
+    display: inline-block;
+  }
+
+  .change {
+    color: #777;
+  }
+
+  .line.delete {
+    background-color: #fdd;
+  }
+
+  .line.insert {
+    background-color: #dfd;
+  }
+}
+
+.deploy-details {
+  padding: 0 50px;
+}
+
+#deploy-confirmation {
+  display: none;
+
+  .deploy-details {
+    padding: 0;
+  }
+}
+
+.deploy-check {
+  margin-top: 20px;
+  text-align: center;
+
+  > div {
+    margin: 30px 0;
+  }
+}
+
+.chart:first {
+  margin-bottom: 25px;
+}
+
+#output-toolbar {
+  margin-bottom: 10px;
+}
+
+td.status {
+  text-align: right;
+}
+
+.only-active {
+  display: none;
+}
+
+.stream-header .pull-right {
+  position: relative;
+  top: -10px;
+}
+
+.deployment-alert {
+  padding: 4px 3px 0;
+  color: $brand-danger;
+  cursor: pointer;
+}
+
+.deployment-alert-popover {
+  max-width: 340px;
+}

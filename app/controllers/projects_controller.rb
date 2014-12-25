@@ -1,6 +1,6 @@
 class ProjectsController < ApplicationController
-  before_filter :authorize_admin!, except: [:show, :index]
-  before_filter :redirect_viewers!, only: [:show]
+  before_action :authorize_admin!, except: [:show, :index]
+  before_action :redirect_viewers!, only: [:show]
 
   helper_method :project
 

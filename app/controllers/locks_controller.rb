@@ -1,5 +1,5 @@
 class LocksController < ApplicationController
-  before_filter :authorize_deployer!
+  before_action :authorize_deployer!
 
   rescue_from ActiveRecord::RecordNotFound do
     if Project.where(permalink: params[:project_id]).exists?

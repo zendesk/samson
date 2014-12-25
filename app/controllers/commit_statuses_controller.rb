@@ -1,7 +1,7 @@
 class CommitStatusesController < ApplicationController
   rescue_from(ActiveRecord::RecordNotFound) { head :not_found }
 
-  before_filter :authorize_deployer!
+  before_action :authorize_deployer!
 
   def show
     render json: { status: commit_status.status }

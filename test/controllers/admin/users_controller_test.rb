@@ -38,9 +38,7 @@ describe Admin::UsersController do
   end
 
   describe 'a json get to #show with a search string' do
-
     as_a_admin do
-
       it 'succeeds and fetches a single user' do
         get :index, search: 'Super Admin' , :format => :json
 
@@ -63,10 +61,10 @@ describe Admin::UsersController do
 
         assert_template :index, partial: '_search_bar'
         assert_select '#search' do
-          assert_select '[name=?]', 'search'
-          assert_select '[type=?]', 'text'
-          assert_select '[class=?]', 'form-control'
-          assert_select ':not([value=?])'
+          assert_select '[name="search"]'
+          assert_select '[type="text"]'
+          assert_select '[class="form-control"]'
+          assert_select ':not([value])'
         end
       end
 
@@ -75,22 +73,19 @@ describe Admin::UsersController do
 
         assert_template :index,  partial: '_search_bar'
         assert_select '#search' do
-          assert_select '[name=?]', 'search'
-          assert_select '[type=?]', 'text'
-          assert_select '[class=?]', 'form-control'
-          assert_select '[value=?]', 'Super Admin'
+          assert_select '[name="search"]'
+          assert_select '[type="text"]'
+          assert_select '[class="form-control"]'
+          assert_select '[value="Super Admin"]'
         end
         assert_select 'tbody' do
           assert_select 'tr', 1
         end
       end
-
     end
-
   end
 
   describe 'a DELETE to #destroy' do
-
     let(:user) { users(:viewer) }
 
     as_a_deployer do
@@ -114,7 +109,5 @@ describe Admin::UsersController do
         assert_redirected_to admin_users_path
       end
     end
-
   end
-
 end

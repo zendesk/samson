@@ -1,0 +1,29 @@
+span.twitter-typeahead {
+  width: 100%;
+
+  .tt-dropdown-menu {
+    @extend .dropdown-menu;
+    width: 100%;
+  }
+
+  .tt-suggestion {
+    &.tt-cursor {
+      background-color: $dropdown-link-hover-bg;
+    }
+
+    > p {
+      padding: 8px 15px;
+      line-height: $line-height-base;
+      color: $dropdown-link-color;
+    }
+  }
+}
+
+#scrollable-dropdown-menu {
+
+  .tt-dropdown-menu {
+    max-height: 180px;
+    overflow-y: auto;
+  }
+
+}

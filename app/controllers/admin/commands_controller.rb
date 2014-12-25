@@ -1,5 +1,5 @@
 class Admin::CommandsController < ApplicationController
-  before_filter :authorize_admin!
+  before_action :authorize_admin!
 
   rescue_from ActiveRecord::RecordNotFound do
     redirect_to admin_commands_path

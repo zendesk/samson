@@ -1,0 +1,57 @@
+.release {
+  .table > tbody > tr > td {
+    border-top: none;
+  }
+
+  .table > tbody > tr:last-child > td {
+    border-bottom: none;
+  }
+}
+
+.release-list {
+  tbody > tr > td {
+    border-top: none;
+  }
+
+  tr:last-child > td {
+    border-bottom: none;
+  }
+
+  td:first-child {
+    width: 130px;
+  }
+
+  td:last-child {
+    width: 80px;
+  }
+
+  .collapse {
+    display: none;
+  }
+
+  .release-summary {
+    cursor: pointer;
+  }
+
+  .release-info {
+    background-color: #f5f5f5;
+  }
+
+  .tab-content {
+    padding: 20px;
+    background-color: #fff;
+  }
+}
+
+.release-label {
+  font-size: 14px;
+  font-weight: normal;
+  display: inline-block;
+  margin-bottom: 4px;
+}
+
+.release-stage {
+  margin-bottom: 3px;
+  display: inline-block;
+  font-size: 80%;
+}

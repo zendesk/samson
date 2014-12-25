@@ -49,7 +49,7 @@ class DeployServiceTest < ActiveSupport::TestCase
 
         it "does not start the deploy, if past grace period" do
           service.expects(:confirm_deploy!).never
-          travel (BuddyCheck.period).hour do
+          travel (BuddyCheck.period).hour + 1.minute do
             service.deploy!(stage_production_2, ref1)
           end
         end
@@ -99,7 +99,7 @@ class DeployServiceTest < ActiveSupport::TestCase
       it "reports bypass via mail" do
         stub_request(:get, "https://api.github.com/repos/bar/foo/compare/staging...staging")
         JobExecution.expects(:start_job).returns(mock(subscribe: true)).once
-        DeployMailer.expects(bypass_email: stub(deliver: true))
+        DeployMailer.expects(bypass_email: stub(deliver_now: true))
         service.confirm_deploy!(deploy, stage, reference, user)
       end
     end
@@ -108,7 +108,7 @@ class DeployServiceTest < ActiveSupport::TestCase
   describe "before notifications" do
     it "sends flowdock notifications if the stage has flows" do
       stage.stubs(:send_flowdock_notifications?).returns(true)
-      FlowdockNotification.any_instance.expects(:deliver)
+      FlowdockNotification.any_instance.expects(:deliver_now)
       service.deploy!(stage, reference)
     end
 
@@ -136,7 +136,7 @@ class DeployServiceTest < ActiveSupport::TestCase
     it "sends email notifications if the stage has email addresses" do
       stage.stubs(:send_email_notifications?).returns(true)
 
-      DeployMailer.expects(:deploy_email).returns( stub("DeployMailer", :deliver => true) )
+      DeployMailer.expects(:deploy_email).returns( stub("DeployMailer", :deliver_now => true) )
 
       service.deploy!(stage, reference)
       job_execution.send(:run!)
@@ -145,7 +145,7 @@ class DeployServiceTest < ActiveSupport::TestCase
     it "sends flowdock notifications if the stage has flows" do
       stage.stubs(:send_flowdock_notifications?).returns(true)
 
-      FlowdockNotification.any_instance.expects(:deliver).at_least_once
+      FlowdockNotification.any_instance.expects(:deliver_now).at_least_once
 
       service.deploy!(stage, reference)
       job_execution.send(:run!)
@@ -154,7 +154,7 @@ class DeployServiceTest < ActiveSupport::TestCase
     it "sends datadog notifications if the stage has datadog tags" do
       stage.stubs(:send_datadog_notifications?).returns(true)
 
-      DatadogNotification.any_instance.expects(:deliver)
+      DatadogNotification.any_instance.expects(:deliver_now)
 
       service.deploy!(stage, reference)
       job_execution.send(:run!)
@@ -164,7 +164,7 @@ class DeployServiceTest < ActiveSupport::TestCase
       stage.stubs(:send_github_notifications?).returns(true)
       deploy.stubs(:status).returns("succeeded")
 
-      GithubNotification.any_instance.expects(:deliver)
+      GithubNotification.any_instance.expects(:deliver_now)
 
       service.deploy!(stage, reference)
       job_execution.send(:run!)
@@ -174,7 +174,7 @@ class DeployServiceTest < ActiveSupport::TestCase
       stage.stubs(:send_github_notifications?).returns(true)
       deploy.stubs(:status).returns("failed")
 
-      GithubNotification.any_instance.expects(:deliver).never
+      GithubNotification.any_instance.expects(:deliver_now).never
 
       service.deploy!(stage, reference)
       job_execution.send(:run!)

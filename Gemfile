@@ -2,7 +2,7 @@ source 'https://rubygems.org'
 
 gem 'bundler'
 
-gem 'rails', '~> 4.1.8'
+gem 'rails', '~> 4.2.0'
 gem 'puma'
 gem 'dotenv-rails', '~> 0.9'
 
@@ -13,7 +13,7 @@ group :mysql2 do
 end
 
 group :postgres do
-  gem 'pg', '~> 0.13.2'
+  gem 'pg', '~> 0.13'
 end
 
 group :sqlite do
@@ -25,7 +25,7 @@ gem 'soft_deletion', '~> 0.4'
 gem 'dalli', '~> 2.7.0'
 gem 'active_model_serializers', '~> 0.8.0'
 
-gem 'sawyer', '~> 0.5.5'
+gem 'sawyer', '~> 0.5'
 
 # Logging
 gem 'lograge'
@@ -38,7 +38,7 @@ group :production, :staging do
 end
 
 group :assets do
-  gem 'sass-rails', '~> 4.0.0'
+  gem 'sass-rails', '~> 5.0'
   gem 'uglifier', '>= 1.3.0'
   gem 'jquery-rails'
   gem 'jquery-ui-rails'
@@ -55,7 +55,7 @@ group :no_preload do
   gem 'omniauth-oauth2', '~> 1.1'
   gem 'omniauth-github', '= 1.1.1'
   gem 'omniauth-google-oauth2', '~> 0.2.4'
-  gem 'octokit', '~> 3.0.0'
+  gem 'octokit', '~> 3.0'
   gem 'faraday-http-cache', '~> 0.4'
   gem 'warden', '~> 1.2'
   gem 'flowdock', '~> 0.3.1'
@@ -65,12 +65,11 @@ group :no_preload do
   gem 'newrelic_api'
   gem 'activeresource'
   gem 'coderay', '~> 1.1.0'
-  gem 'dogapi', '~> 1.9.1'
+  gem 'dogapi', '~> 1.9'
 end
 
 group :development do
-  gem 'better_errors'
-  gem 'binding_of_caller'
+  gem 'web-console'
 end
 
 group :development, :test do

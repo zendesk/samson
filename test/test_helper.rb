@@ -10,6 +10,7 @@ require 'rails/test_help'
 require 'minitest/rails'
 require 'maxitest/autorun'
 require 'webmock/minitest'
+require 'mocha/setup'
 
 class ActiveSupport::TestCase
   include Warden::Test::Helpers
@@ -22,9 +23,17 @@ class ActiveSupport::TestCase
   # -- they do not yet inherit this setting
   fixtures :all
 
-  before(:each) do
+  before do
     Rails.cache.clear
     stubs_project_callbacks
+  end
+
+  def assert_valid(record)
+    assert record.valid?, record.errors.full_messages
+  end
+
+  def refute_valid(record)
+    refute record.valid?
   end
 
   def wait(time, increment = 0.5, elapsed_time = 0, &block)
@@ -35,15 +44,6 @@ class ActiveSupport::TestCase
       sleep increment
       wait(time, increment, elapsed_time + increment, &block)
     end
-  end
-
-
-  def assert_valid(record)
-    assert record.valid?, record.errors.full_messages
-  end
-
-  def refute_valid(record)
-    refute record.valid?
   end
 
   def stubs_project_callbacks

@@ -1,0 +1,11 @@
+#macros {
+  .stage-bar {
+    padding-left: 5px;
+  }
+
+  .stage-bar > span:first-child {
+    line-height: 34px;
+  }
+
+  padding: 0;
+}

@@ -1,0 +1,44 @@
+@import "bootstrap-sprockets";
+@import "bootstrap";
+@import "bootstrap-select";
+@import "font-awesome-sprockets";
+@import "font-awesome";
+@import "jquery-ui";
+@import "bootstrap3-editable/bootstrap-editable";
+@import "rickshaw";
+@import "admin/*";
+@import "*";
+
+.ansible_30 {
+  background-color: white;
+  color: black;
+}
+
+.ansible_31    { color: red; }
+.ansible_32    { color: limegreen; }
+.ansible_33    { color: yellow;}
+.ansible_34    { color: blue; }
+.ansible_35    { color: magenta; }
+.ansible_36    { color: cyan; }
+.ansible_37    { color: white; }
+.ansible_90    { color: white; }
+.ansible_none  { color: white; }
+
+.pre-scrollable.log {
+  background-color: black;
+  color: white;
+  max-height: 550px;
+}
+
+.navbar .navbar-btn.pull-right {
+  margin-right: 15px;
+}
+
+.label-hotfix {
+  background-color: #f0ad4e;
+  text-transform: uppercase;
+}
+
+a.no-hover:hover {
+  text-decoration: none;
+}
