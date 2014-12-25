@@ -27,7 +27,7 @@ describe ReferencesService, :model do
   end
 
   it 'returns a sorted set of tags and branches from cached repo' do
-    ReferencesService.new(project).get_references_from_cached_repo.must_equal %w(v1 master test_user/test_branch )
+    ReferencesService.new(project).get_references_from_cached_repo.must_equal %w(v1 master test_user/test_branch)
   end
 
   it 'the ttl threshold should always return an integer' do

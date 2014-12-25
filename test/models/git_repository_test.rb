@@ -26,6 +26,39 @@ describe GitRepository, :model do
     FileUtils.rm_rf(project.repository.repo_cache_dir)
   end
 
+  it 'should clone a repository' do
+    Dir.mktmpdir do |dir|
+      create_repo_with_tags
+      project.repository.clone!(from: repository_url, to: dir)
+      Dir.exist?(dir).must_equal true
+    end
+  end
+
+  it 'should update the repository' do
+    create_repo_with_tags
+    project.repository.clone!.must_equal(true)
+    Dir.chdir(project.repository.repo_cache_dir) { number_of_commits.must_equal(1) }
+    execute_on_remote_repo <<-SHELL
+      echo monkey > foo2
+      git add foo2
+      git commit -m "second commit"
+    SHELL
+    project.repository.update!.must_equal(true)
+    Dir.chdir(project.repository.repo_cache_dir) do
+      update_workspace
+      number_of_commits.must_equal(2)
+    end
+  end
+
+  it 'should switch to a different branch' do
+    create_repo_with_an_additional_branch
+    project.repository.clone!.must_equal(true)
+    project.repository.checkout!(git_reference: 'master').must_equal(true)
+    Dir.chdir(project.repository.repo_cache_dir) { current_branch.must_equal('master') }
+    project.repository.checkout!(git_reference: 'test_user/test_branch').must_equal(true)
+    Dir.chdir(project.repository.repo_cache_dir) { current_branch.must_equal('test_user/test_branch') }
+  end
+
   it 'returns the tags repository' do
     create_repo_with_tags
     project.repository.clone!(executor: TerminalExecutor.new(StringIO.new), mirror: true)
@@ -50,7 +83,7 @@ describe GitRepository, :model do
     temp_dir = Dir.mktmpdir
     project.repository.clone!(executor: executor, mirror: true)
     project.repository.setup!(executor, temp_dir, 'test_user/test_branch').must_equal(true)
-    Dir.chdir(temp_dir) { `git rev-parse --abbrev-ref HEAD`.strip.must_equal 'test_user/test_branch' }
+    Dir.chdir(temp_dir) { current_branch.must_equal('test_user/test_branch') }
   end
 
   def execute_on_remote_repo(cmds)
@@ -97,5 +130,18 @@ describe GitRepository, :model do
     SHELL
   end
 
+  def current_branch
+    `git rev-parse --abbrev-ref HEAD`.strip
+  end
+
+  def number_of_commits
+    `git rev-list HEAD --count`.strip.to_i
+  end
+
+  def update_workspace
+    `git pull`.strip
+  end
+
 end
+
 
