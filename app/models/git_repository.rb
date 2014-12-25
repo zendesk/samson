@@ -23,19 +23,16 @@ class GitRepository
   end
 
   def clone!(executor: TerminalExecutor.new(StringIO.new), from: repository_url, to: repo_cache_dir, mirror: false)
-    executor.output.write("Beginning git repo setup\n")
     return executor.execute!("git -c core.askpass=true clone --mirror #{from} #{to}") if mirror
     return executor.execute!("git clone #{from} #{to}")
   end
 
   def update!(executor: TerminalExecutor.new(StringIO.new), pwd: repo_cache_dir)
     fail "Could not find any git repository in #{pwd}!" unless git_dir?(pwd)
-    executor.output.write("Updating git repo\n")
     Dir.chdir(pwd) { executor.execute!('git fetch -ap') }
   end
 
   def checkout!(executor: TerminalExecutor.new(StringIO.new), pwd: repo_cache_dir, git_reference:)
-    executor.output.write("Checking out #{git_reference}\n")
     Dir.chdir(pwd) { executor.execute!("git checkout #{git_reference}") }
   end
 
