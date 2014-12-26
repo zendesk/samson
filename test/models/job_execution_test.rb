@@ -119,6 +119,12 @@ describe JobExecution, :model do
     assert_equal "hello", last_line_of_output
   end
 
+  it 'deletes all tmp files after run' do
+    job.command = 'echo hello > $TMPDIR/foo'
+    execute_job
+    refute File.exists?(File.join(ENV['TMPDIR'], 'foo'))
+  end
+
   it "removes the job from the registry" do
     execution = JobExecution.start_job("master", job)
 
@@ -156,6 +162,7 @@ describe JobExecution, :model do
   def execute_job(branch = "master")
     execution = JobExecution.new(branch, job)
     execution.send(:run!)
+    assert job.succeeded?
   end
 
   def execute_on_remote_repo(cmds)
