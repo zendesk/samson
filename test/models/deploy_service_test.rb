@@ -108,7 +108,7 @@ class DeployServiceTest < ActiveSupport::TestCase
   describe "before notifications" do
     it "sends flowdock notifications if the stage has flows" do
       stage.stubs(:send_flowdock_notifications?).returns(true)
-      FlowdockNotification.any_instance.expects(:deliver_now)
+      FlowdockNotification.any_instance.expects(:deliver)
       service.deploy!(stage, reference)
     end
 
@@ -145,7 +145,7 @@ class DeployServiceTest < ActiveSupport::TestCase
     it "sends flowdock notifications if the stage has flows" do
       stage.stubs(:send_flowdock_notifications?).returns(true)
 
-      FlowdockNotification.any_instance.expects(:deliver_now).at_least_once
+      FlowdockNotification.any_instance.expects(:deliver).at_least_once
 
       service.deploy!(stage, reference)
       job_execution.send(:run!)
@@ -154,7 +154,7 @@ class DeployServiceTest < ActiveSupport::TestCase
     it "sends datadog notifications if the stage has datadog tags" do
       stage.stubs(:send_datadog_notifications?).returns(true)
 
-      DatadogNotification.any_instance.expects(:deliver_now)
+      DatadogNotification.any_instance.expects(:deliver)
 
       service.deploy!(stage, reference)
       job_execution.send(:run!)
@@ -164,7 +164,7 @@ class DeployServiceTest < ActiveSupport::TestCase
       stage.stubs(:send_github_notifications?).returns(true)
       deploy.stubs(:status).returns("succeeded")
 
-      GithubNotification.any_instance.expects(:deliver_now)
+      GithubNotification.any_instance.expects(:deliver)
 
       service.deploy!(stage, reference)
       job_execution.send(:run!)
@@ -174,7 +174,7 @@ class DeployServiceTest < ActiveSupport::TestCase
       stage.stubs(:send_github_notifications?).returns(true)
       deploy.stubs(:status).returns("failed")
 
-      GithubNotification.any_instance.expects(:deliver_now).never
+      GithubNotification.any_instance.expects(:deliver).never
 
       service.deploy!(stage, reference)
       job_execution.send(:run!)
