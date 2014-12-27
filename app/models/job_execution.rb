@@ -144,7 +144,8 @@ class JobExecution
 
   def lock_project(&block)
     holder = (stage.try(:name) || @job.user.name)
-    @job.project.with_lock(output: @output, holder: holder, timeout: lock_timeout, &block)
+    callback = proc { |owner| output.write("Waiting for repository while setting it up for #{owner}\n") if Time.now.to_i % 10 == 0 }
+    @job.project.with_lock(output: @output, holder: holder, error_callback: callback, timeout: lock_timeout, &block)
   end
 
   class << self

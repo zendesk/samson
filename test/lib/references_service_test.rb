@@ -40,7 +40,7 @@ describe ReferencesService, :model do
     `exec 2> /dev/null; cd #{directory}; #{cmds}`
   end
 
-  after(:each) do
+  after do
     FileUtils.rm_rf(repository_url)
     FileUtils.rm_rf(project.repository.clean!)
   end

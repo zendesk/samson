@@ -8,7 +8,7 @@ class ReferencesService
   end
 
   def find_git_references
-    Rails.cache.fetch(cache_key, :expires_in => references_ttl) { references_from_cached_repo }
+    Rails.cache.fetch(cache_key, :expires_in => references_ttl) { references_from_cached_repo } || []
   end
 
   def repository
@@ -27,17 +27,14 @@ class ReferencesService
     git_references = nil
     lock_project do
       return unless repository.update!
-      git_references = repository.branches.merge(repository.tags).sort_by { |ref| [-ref.length, ref] }.reverse
+      tags = repository.tags
+      git_references = repository.branches.push(*tags).sort_by { |ref| [-ref.length, ref] }.reverse
     end
     git_references
   end
 
   def lock_project(&block)
     project.with_lock(holder: 'autocomplete', timeout: lock_timeout, &block)
-  end
-
-  def output
-    @output ||= StringIO.new
   end
 
 end

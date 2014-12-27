@@ -7,6 +7,7 @@ class Project < ActiveRecord::Base
   before_create :generate_token
   after_save :clone_repository, if: :repository_url_changed?
   before_update :clean_repository, if: :repository_url_changed?
+  after_destroy :clean_repository
 
   has_many :releases
   has_many :stages, dependent: :destroy
@@ -118,7 +119,7 @@ class Project < ActiveRecord::Base
           log.error("Could not clone git repository #{repository_url} for project #{name} - #{output.string}") unless is_cloned
         end
       rescue => e
-        log.error("Could not clone git repository #{repository_url} for project #{name} - #{e.message}")
+       alert_clone_error!(e)
       end
     end
   end
@@ -127,8 +128,23 @@ class Project < ActiveRecord::Base
     repository.clean!
   end
 
+  private
+
   def log
     Rails.logger
+  end
+
+  def alert_clone_error!(exception)
+    message = "Could not clone git repository #{repository_url} for project #{name}"
+    log.error("#{message} - #{exception.message}")
+    if defined?(Airbrake)
+      Airbrake.notify(exception,
+        error_message: message,
+        parameters: {
+          project_id: id
+        }
+      )
+    end
   end
 
 end

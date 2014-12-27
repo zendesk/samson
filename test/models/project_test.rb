@@ -133,6 +133,7 @@ describe Project do
     it 'removes the cached repository after the project has been deleted' do
       project = Project.new(name: 'demo_apps', repository_url: repository_url)
       project.expects(:clone_repository).once
+      project.expects(:clean_repository).once
       project.save
       project.destroy
     end

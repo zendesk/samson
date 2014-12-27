@@ -8,8 +8,6 @@ class GitRepository
   end
 
   def initialize(repository_url:, repository_dir:)
-    fail 'Invalid repository url!' unless repository_url
-    fail 'Invalid repository directory!' unless repository_dir
     @repository_url = repository_url
     @repository_directory = repository_dir
   end
@@ -28,7 +26,6 @@ class GitRepository
   end
 
   def update!(executor: TerminalExecutor.new(StringIO.new), pwd: repo_cache_dir)
-    fail "Could not find any git repository in #{pwd}!" unless git_dir?(pwd)
     Dir.chdir(pwd) { executor.execute!('git fetch -ap') }
   end
 
@@ -80,7 +77,7 @@ class GitRepository
       executor = TerminalExecutor.new(output)
       success = executor.execute!(command)
       return [] unless success
-      SortedSet.new(output.string.lines.map { |line| yield line if block_given? })
+      output.string.lines.map { |line| yield line if block_given? }.uniq.sort
     end
   end
 

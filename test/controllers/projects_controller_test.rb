@@ -2,10 +2,6 @@ require_relative '../test_helper'
 
 describe ProjectsController do
 
-  before do
-    Project.any_instance.stubs(:clone_repository).returns(true)
-  end
-
   let(:project) { projects(:test) }
   let(:user) { users(:admin) }
 
