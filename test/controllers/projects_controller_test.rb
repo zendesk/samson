@@ -6,6 +6,7 @@ describe ProjectsController do
   let(:user) { users(:admin) }
 
   setup do
+    Project.any_instance.stubs(:clone_repository).returns(true)
     request.env['warden'].set_user(user)
   end
 
@@ -55,7 +56,6 @@ describe ProjectsController do
   describe "a POST to #create" do
     describe "as an admin" do
       setup do
-        Project.any_instance.stubs(:clone_repository).returns(true)
         post :create, params
       end
 
