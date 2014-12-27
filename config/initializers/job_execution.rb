@@ -11,7 +11,7 @@ if !Rails.env.test? && Job.table_exists?
       # Disable new job execution
       JobExecution.enabled = false
 
-      until JobExecution.all.empty?
+      until JobExecution.all.empty? && MultiLock.locks.empty?
         puts "Waiting for jobs: #{JobExecution.all.map {|je| je.job.id}}"
         sleep(5)
       end
