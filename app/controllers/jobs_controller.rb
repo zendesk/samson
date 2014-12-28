@@ -4,7 +4,7 @@ class JobsController < ApplicationController
     redirect_to root_path
   end
 
-  before_action :authorize_deployer!, only: [:new, :create, :destroy]
+  before_filter :authorize_admin!, only: [:new, :create, :destroy]
 
   before_action :find_project, except: [:enabled]
   before_action :find_job, only: [:show, :destroy]

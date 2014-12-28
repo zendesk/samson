@@ -32,7 +32,7 @@ class Integrations::TravisController < Integrations::BaseController
 
   def user
     name = "Travis"
-    email = "deploy+travis@samson-deployment.com"
+    email = "deploy+travis@zendesk.com"
 
     User.create_with(name: name).find_or_create_by(email: email)
   end

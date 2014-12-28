@@ -33,7 +33,9 @@ module Samson
     config.samson = ActiveSupport::OrderedOptions.new
 
     # Email prefix e.g. [PREFIX] Someone deployed PROJECT to STAGE (REF)
-    config.samson.email_prefix = ENV["EMAIL_PREFIX"] || "DEPLOY"
+    config.samson.email = ActiveSupport::OrderedOptions.new
+    config.samson.email.prefix = ENV["EMAIL_PREFIX"] || "DEPLOY"
+    config.samson.email.sender_domain = ENV["EMAIL_SENDER_DOMAIN"] || "samson-deployment.com"
 
     # Whether or not jobs are actually executed.
     config.samson.enable_job_execution = true
