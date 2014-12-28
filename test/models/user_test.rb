@@ -85,6 +85,7 @@ describe User do
       }}
 
       let(:existing_user) do
+        # finding the user by matching external_id
         User.create!(:name => "Test", :external_id => 9)
       end
 
@@ -136,6 +137,25 @@ describe User do
           user.role_id.must_equal(Role::ADMIN.id)
         end
       end
+
+      describe "with different external_id, same email" do
+        let(:auth_hash) {{
+          name: "Test User",
+          email: "test@example.org",
+          external_id: 7,
+          role_id: Role::VIEWER.id
+        }}
+
+        let(:existing_user) do
+          User.create!(:name => "Test", :email => "test@example.org", :external_id => 8)
+        end
+
+        it "updates the external_id" do
+          user.must_equal(existing_user)
+          user.external_id.must_equal("7")
+        end
+      end
+
     end
   end
 

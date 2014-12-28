@@ -31,6 +31,8 @@ class User < ActiveRecord::Base
         else
           old
         end
+      elsif key == 'external_id'
+        new
       else
         old.presence || new
       end

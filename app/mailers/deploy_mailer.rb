@@ -1,5 +1,5 @@
 class DeployMailer < ActionMailer::Base
-  default from: "deploys@samson-deployment.com"
+  default from: "deploys@#{Rails.application.config.samson.email.sender_domain}"
 
   add_template_helper(DeploysHelper)
   add_template_helper(ApplicationHelper)
@@ -7,7 +7,7 @@ class DeployMailer < ActionMailer::Base
   def deploy_email(stage, deploy)
     prepare_mail(stage, deploy)
 
-    subject =  "[#{Rails.application.config.samson.email_prefix}] #{deploy.summary_for_email}"
+    subject =  "[#{Rails.application.config.samson.email.prefix}] #{deploy.summary_for_email}"
 
     mail(to: stage.notify_email_addresses, subject: subject)
   end
