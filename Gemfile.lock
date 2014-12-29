@@ -292,7 +292,6 @@ DEPENDENCIES
   lograge
   logstash-event
   maxitest
-  mime-types (~> 2.0)
   minitest-rails
   mocha
   momentjs-rails
