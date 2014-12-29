@@ -2,12 +2,12 @@
   <h1 class="login-brand">Samson</h1>
   <p>Understand what is being deployed.</p>
   <div class="login">
-    <% if Rails.application.config.samson.auth.github_enabled %>
+    <% if Rails.application.config.samson.auth.github %>
       <%= link_to omniauth_path('github'), class: "action github" do %>
         <%= image_tag image_url('github.png') %> Login with Github
       <% end %>
     <% end %>
-    <% if Rails.application.config.samson.auth.google_enabled %>
+    <% if Rails.application.config.samson.auth.google %>
       <%= link_to omniauth_path('google'), class: "action google" do %>
         <%= image_tag image_url('google.png') %> Login with Google
       <% end %>

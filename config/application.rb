@@ -56,8 +56,8 @@ module Samson
     config.samson.github.status_url = ENV["GITHUB_STATUS_URL"].presence || 'status.github.com'
 
     config.samson.auth = ActiveSupport::OrderedOptions.new
-    config.samson.auth.google_enabled = ENV["GOOGLE_CLIENT_ID"].present? && ENV["GOOGLE_CLIENT_SECRET"].present?
-    config.samson.auth.github_enabled = ENV["GITHUB_CLIENT_ID"].present? && ENV["GITHUB_SECRET"].present?
+    config.samson.auth.github = ENV["AUTH_GITHUB"] || true
+    config.samson.auth.google = ENV["AUTH_GOOGLE"] || true
 
     config.samson.uri = URI( ENV["DEFAULT_URL"] || 'http://localhost:3000' )
     self.default_url_options = {
