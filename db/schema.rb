@@ -142,6 +142,7 @@ ActiveRecord::Schema.define(version: 20141218225050) do
     t.string   "datadog_tags"
     t.boolean  "update_github_pull_requests"
     t.boolean  "deploy_on_release",           default: false
+    t.boolean  "comment_on_zendesk_tickets"
     t.boolean  "production",                  default: false
     t.boolean  "use_github_deployment_api"
     t.string   "permalink",                                   null: false

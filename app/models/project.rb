@@ -25,6 +25,11 @@ class Project < ActiveRecord::Base
     name.parameterize('_')
   end
 
+  def last_released_with_commit?(commit)
+    last_release = releases.order(:id).last
+    last_release && last_release.commit == commit
+  end
+
   # Creates a new Release, incrementing the release number. If the Release
   # fails to save, `#persisted?` will be false.
   #

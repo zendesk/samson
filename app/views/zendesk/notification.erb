@@ -1,0 +1,10 @@
+A fix to <%= deploy.project.name %> for this issue has been deployed to <%= deploy.stage.name %>. Deploy details: [<%= deploy.short_reference %>] (<%= url %>)
+
+**Related Commits:**
+
+<% commits.each do |commit| %>
+  <% if commit.summary.match(/ZD#?#{ticket_id}/i) %>
+  * [<%= commit.summary %>] (<%= commit.url %>) (<%= commit.author_name %>)
+  <% end %>
+<% end %>
+

@@ -20,7 +20,7 @@ class Integrations::SemaphoreController < Integrations::BaseController
 
   def user
     name = "Semaphore"
-    email = "deploy+semaphore@samson-deployment.com"
+    email = "deploy+semaphore@#{Rails.application.config.samson.email.sender_domain}"
 
     User.create_with(name: name).find_or_create_by(email: email)
   end

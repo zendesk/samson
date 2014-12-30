@@ -33,7 +33,9 @@ module Samson
     config.samson = ActiveSupport::OrderedOptions.new
 
     # Email prefix e.g. [PREFIX] Someone deployed PROJECT to STAGE (REF)
-    config.samson.email_prefix = ENV["EMAIL_PREFIX"] || "DEPLOY"
+    config.samson.email = ActiveSupport::OrderedOptions.new
+    config.samson.email.prefix = ENV["EMAIL_PREFIX"].presence || "DEPLOY"
+    config.samson.email.sender_domain = ENV["EMAIL_SENDER_DOMAIN"].presence || "samson-deployment.com"
 
     # Whether or not jobs are actually executed.
     config.samson.enable_job_execution = true
@@ -54,7 +56,11 @@ module Samson
     config.samson.github.status_url = ENV["GITHUB_STATUS_URL"].presence || 'status.github.com'
     config.samson.references_cache_ttl = ENV['REFERENCES_CACHE_TTL'].presence || 10.minutes
 
-    config.samson.uri = URI(ENV["DEFAULT_URL"] || 'http://localhost:3000')
+    config.samson.auth = ActiveSupport::OrderedOptions.new
+    config.samson.auth.github = ENV["AUTH_GITHUB"] == "0" ? false : true
+    config.samson.auth.google = ENV["AUTH_GOOGLE"] == "0" ? false : true
+
+    config.samson.uri = URI( ENV["DEFAULT_URL"] || 'http://localhost:3000' )
     self.default_url_options = {
       host: config.samson.uri.host,
       protocol: config.samson.uri.scheme
