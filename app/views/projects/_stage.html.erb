@@ -1,4 +1,4 @@
-<% cache [project, stage] do %>
+<% cache [project.to_param, stage] do %>
   <tr>
     <td>
       <%= link_to stage.name, project_stage_path(project, stage) %>
