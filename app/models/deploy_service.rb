@@ -77,6 +77,7 @@ class DeployService
     send_flowdock_notification(stage, deploy)
     send_datadog_notification(stage, deploy)
     send_github_notification(stage, deploy)
+    send_zendesk_notification(stage, deploy)
     update_github_deployment_status(stage, deploy)
   end
 
@@ -95,6 +96,12 @@ class DeployService
   def send_github_notification(stage, deploy)
     if stage.send_github_notifications? && deploy.status == "succeeded"
       GithubNotification.new(stage, deploy).deliver
+    end
+  end
+
+  def send_zendesk_notification(stage, deploy)
+    if stage.comment_on_zendesk_tickets?
+      ZendeskNotification.new(stage, deploy).deliver_now
     end
   end
 

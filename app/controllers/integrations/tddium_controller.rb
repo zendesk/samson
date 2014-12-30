@@ -32,7 +32,7 @@ class Integrations::TddiumController < Integrations::BaseController
 
   def user
     name = "Tddium"
-    email = "deploy+tddium@samson-deployment.com"
+    email = "deploy+tddium@#{Rails.application.config.samson.email.sender_domain}"
 
     User.create_with(name: name).find_or_create_by(email: email)
   end

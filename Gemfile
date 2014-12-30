@@ -66,6 +66,8 @@ group :no_preload do
   gem 'activeresource'
   gem 'coderay', '~> 1.1.0'
   gem 'dogapi', '~> 1.9'
+  gem 'zendesk_api'
+  gem 'net-http-persistent'
 end
 
 group :development do

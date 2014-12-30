@@ -68,8 +68,12 @@ class Changeset::PullRequest
   private
 
   def parse_jira_issues!
-    @data.body.scan(JIRA_ISSUE).map do |match|
+    body.scan(JIRA_ISSUE).map do |match|
       Changeset::JiraIssue.new(match)
     end
+  end
+
+  def body
+    @data.body.to_s
   end
 end

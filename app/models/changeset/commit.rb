@@ -1,6 +1,9 @@
 class Changeset::Commit
   PULL_REQUEST_MERGE_MESSAGE = /\AMerge pull request #(\d+)/
 
+  # Matches Zendesk ticket number in commit messages
+  ZENDESK_TICKET = /zd#?(\d+)/i
+
   def initialize(repo, data)
     @repo, @data = repo, data
   end
@@ -46,5 +49,11 @@ class Changeset::Commit
 
   def url
     "https://#{Rails.application.config.samson.github.web_url}/#{@repo}/commit/#{sha}"
+  end
+
+  def zendesk_ticket
+    if id = summary[ZENDESK_TICKET, 1]
+      Integer(id)
+    end
   end
 end

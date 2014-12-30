@@ -34,7 +34,7 @@ class Integrations::GithubController < Integrations::BaseController
 
   def user
     name = "Github"
-    email = "deploy+github@samson-deployment.com"
+    email = "deploy+github@#{Rails.application.config.samson.email.sender_domain}"
 
     User.create_with(name: name).find_or_create_by(email: email)
   end
