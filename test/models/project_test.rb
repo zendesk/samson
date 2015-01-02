@@ -154,7 +154,7 @@ describe Project do
       project.expects(:clone_repository).once
       project.expects(:clean_repository).once
       project.save
-      project.destroy
+      project.soft_delete!
     end
 
     it 'removes the old repository and sets up the new repository if the repository_url is updated' do

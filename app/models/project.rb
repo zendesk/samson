@@ -6,8 +6,8 @@ class Project < ActiveRecord::Base
   validates :name, :repository_url, presence: true
   before_create :generate_token
   after_save :clone_repository, if: :repository_url_changed?
-  before_update :clean_repository, if: :repository_url_changed?
-  after_destroy :clean_repository
+  before_update :clean_repository, if: proc { persisted? && repository_url_changed? }
+  after_soft_delete :clean_repository
 
   has_many :releases
   has_many :stages, dependent: :destroy
