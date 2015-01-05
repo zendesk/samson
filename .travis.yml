@@ -24,6 +24,6 @@ cache:
     - node_modules
 notifications:
   webhooks:
-    secure: "kTQxdTP7M+GpR/eaYbUJm+p/+TCAf+cQbeGDzw8C4qzThBDqn602i3seUUuTEmvY6tsNDqCrN7ggWEzQ/pbkhxun5oI4qoI1F//fQmMLYmGBJSiP3RdoGkiwuoqqo/iNxWcxGlub/E5AQhKR0fR2NrO+nv6a2QqKAo2qpWmfUFs="
+    secure: "ZMzriGIyx94xb4skBpeXD+sEnl+hoeZ8f76Y7Wxo/bUJfVP2oThBhA6L49vZxRHqsjXYoBk3zX/IuPw+HOgvJBHP5oZZn0ndkGKSDYddtnzpc68GQJmfCJIcrn6OtLNYt5uPTWmeaA3UJXTYvLPBPmPhOcm7aTdeIn8C7nzCMz0="
 rvm: 2.1.5
 sudo: false
