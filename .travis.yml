@@ -22,5 +22,7 @@ cache:
   bundler: true
   directories:
     - node_modules
+notifications:
+  webhooks: "kTQxdTP7M+GpR/eaYbUJm+p/+TCAf+cQbeGDzw8C4qzThBDqn602i3seUUuTEmvY6tsNDqCrN7ggWEzQ/pbkhxun5oI4qoI1F//fQmMLYmGBJSiP3RdoGkiwuoqqo/iNxWcxGlub/E5AQhKR0fR2NrO+nv6a2QqKAo2qpWmfUFs="
 rvm: 2.1.5
 sudo: false
