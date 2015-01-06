@@ -131,6 +131,7 @@ class Project < ActiveRecord::Base
 
   def clean_repository
     repository.clean!
+    @repository, @repository_directory = nil
   end
 
   private

@@ -158,11 +158,13 @@ describe Project do
     end
 
     it 'removes the old repository and sets up the new repository if the repository_url is updated' do
-      project = Project.new(name: 'demo_apps', repository_url: repository_url)
-      project.expects(:clone_repository).twice
-      project.expects(:clean_repository).once
-      project.save!
-      project.update!(repository_url: 'git@github.com:angular/angular.js.git')
+      new_repository_url = 'git@github.com:angular/angular.js.git'
+      project = Project.create(name: 'demo_apps', repository_url: repository_url)
+      project.expects(:clone_repository).once
+      original_repo_dir = project.repository.repo_cache_dir
+      FileUtils.expects(:rm_rf).with(original_repo_dir).once
+      project.update!(repository_url: new_repository_url)
+      refute_equal(original_repo_dir, project.repository.repo_cache_dir)
     end
 
     it 'does not reset the repository if the repository_url is not changed' do
