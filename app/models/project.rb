@@ -6,7 +6,7 @@ class Project < ActiveRecord::Base
   validates :name, :repository_url, presence: true
   before_create :generate_token
   after_save :clone_repository, if: :repository_url_changed?
-  before_update :clean_repository, if: proc { persisted? && repository_url_changed? }
+  before_update :clean_old_repository, if: proc { persisted? && repository_url_changed? }
   after_soft_delete :clean_repository
 
   has_many :releases
@@ -131,13 +131,18 @@ class Project < ActiveRecord::Base
 
   def clean_repository
     repository.clean!
-    @repository, @repository_directory = nil
   end
 
   private
 
   def log
     Rails.logger
+  end
+
+  def clean_old_repository
+    old_repo_dir = Digest::MD5.hexdigest([repository_url_was, id].join)
+    GitRepository.new(repository_url: repository_url_was, repository_dir: old_repo_dir).clean!
+    @repository, @repository_directory = nil
   end
 
   def alert_clone_error!(exception)
