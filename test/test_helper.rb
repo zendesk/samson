@@ -1,5 +1,7 @@
 ENV["RAILS_ENV"] ||= "test"
 
+ENV['PROJECT_CREATED_NOTIFY_ADDRESS'] = 'blah@example.com'
+
 if ENV['COVERAGE']
   require 'simplecov'
   SimpleCov.start 'rails'
