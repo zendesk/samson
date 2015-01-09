@@ -74,6 +74,8 @@ class ProjectsController < ApplicationController
     params.require(:project).permit(
       :name,
       :repository_url,
+      :description,
+      :owner,
       :permalink,
       :release_branch,
       stages_attributes: [

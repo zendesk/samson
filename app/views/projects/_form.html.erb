@@ -8,6 +8,22 @@
     </div>
 
     <div class="form-group">
+      <%= form.label :description, class: "col-lg-2 control-label" %>
+      <div class="col-lg-4">
+        <%= form.text_area :description, class: "form-control" %>
+        <p class="help-block">How would you explain the project to someone new?</p>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <%= form.label :Contact, class: "col-lg-2 control-label" %>
+      <div class="col-lg-4">
+        <%= form.text_field :owner, class: "form-control" %>
+        <p class="help-block">An email or group to contact with questions.</p>
+      </div>
+    </div>
+
+    <div class="form-group">
       <%= form.label :repository_url, class: "col-lg-2 control-label" %>
       <div class="col-lg-4">
         <%= form.text_field :repository_url, class: "form-control" %>
