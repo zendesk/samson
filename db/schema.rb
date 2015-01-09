@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20141218225050) do
+ActiveRecord::Schema.define(version: 20150109005441) do
 
   create_table "commands", force: true do |t|
     t.text     "command",    limit: 16777215
@@ -105,6 +105,8 @@ ActiveRecord::Schema.define(version: 20141218225050) do
     t.string   "token"
     t.string   "release_branch"
     t.string   "permalink",      null: false
+    t.text     "description",    limit: 65535
+    t.string   "owner",          limit: 255
   end
 
   add_index "projects", ["permalink", "deleted_at"], name: "index_projects_on_permalink_and_deleted_at", using: :btree
