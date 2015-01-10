@@ -1,8 +1,8 @@
 <% content_for :page_title, "#{@project.name} changelog" %>
 
-<h1><%= @project.name %> Changelog</h1>
+<%= render 'projects/header', project: @project, tab: "changelog" %>
 
-<section class="table-responsive">
+<section class="tabs table-responsive">
   <form id="date-chooser">
     <p class="form-inline">
       Changes made between
