@@ -143,6 +143,12 @@ describe Project do
     before(:each) { unstub_project_callbacks }
     let(:repository_url) { 'git@github.com:zendesk/demo_apps.git' }
 
+    it 'should not clean the project when the project is created' do
+      project = Project.new(name: 'demo_apps', repository_url: repository_url)
+      project.expects(:clean_old_repository).never
+      project.save
+    end
+
     it 'invokes the setup repository callback after creation' do
       project = Project.new(name: 'demo_apps', repository_url: repository_url)
       project.expects(:clone_repository).once
@@ -170,7 +176,7 @@ describe Project do
     it 'does not reset the repository if the repository_url is not changed' do
       project = Project.new(name: 'demo_apps', repository_url: repository_url)
       project.expects(:clone_repository).once
-      project.expects(:clean_repository).never
+      project.expects(:clean_old_repository).never
       project.save!
       project.update!(name: 'new_name')
     end
