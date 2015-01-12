@@ -6,8 +6,7 @@ describe Project do
   let(:url) { "git://foo.com:hello/world.git" }
 
   it "generates a secure token when created" do
-    project = Project.create!(name: "hello", repository_url: url)
-    project.token.wont_be_nil
+    Project.create!(name: "hello", repository_url: url).token.wont_be_nil
   end
 
   describe "#last_released_with_commit?" do
@@ -61,6 +60,10 @@ describe Project do
   end
 
   describe "#changeset_for_release" do
+    let(:project) { projects(:test) }
+    let(:author) { users(:deployer) }
+
+
     it "returns changeset" do
       changeset = Changeset.new("url", "foo/bar", "a", "b")
       project.releases.create!(author: author, commit: "bar", number: 50)
@@ -113,17 +116,19 @@ describe Project do
   end
 
   describe "nested stages attributes" do
-    let(:params) {{
-      name: "Hello",
-      repository_url: url,
-      stages_attributes: {
-        '0' => {
-          name: 'Production',
-          command: 'test command',
-          command_ids: [commands(:echo).id]
+    let(:params) do
+      {
+        name: "Hello",
+        repository_url: url,
+        stages_attributes: {
+          '0' => {
+            name: 'Production',
+            command: 'test command',
+            command_ids: [commands(:echo).id]
+          }
         }
       }
-    }}
+    end
 
     it 'creates a new project and stage'do
       project = Project.create!(params)
@@ -132,4 +137,123 @@ describe Project do
       stage.command.must_equal("echo hello\ntest command")
     end
   end
+
+  describe 'project repository initialization' do
+
+    before(:each) { unstub_project_callbacks }
+    let(:repository_url) { 'git@github.com:zendesk/demo_apps.git' }
+
+    it 'should not clean the project when the project is created' do
+      project = Project.new(name: 'demo_apps', repository_url: repository_url)
+      project.expects(:clean_old_repository).never
+      project.save
+    end
+
+    it 'invokes the setup repository callback after creation' do
+      project = Project.new(name: 'demo_apps', repository_url: repository_url)
+      project.expects(:clone_repository).once
+      project.save
+    end
+
+    it 'removes the cached repository after the project has been deleted' do
+      project = Project.new(name: 'demo_apps', repository_url: repository_url)
+      project.expects(:clone_repository).once
+      project.expects(:clean_repository).once
+      project.save
+      project.soft_delete!
+    end
+
+    it 'removes the old repository and sets up the new repository if the repository_url is updated' do
+      new_repository_url = 'git@github.com:angular/angular.js.git'
+      project = Project.create(name: 'demo_apps', repository_url: repository_url)
+      project.expects(:clone_repository).once
+      original_repo_dir = project.repository.repo_cache_dir
+      FileUtils.expects(:rm_rf).with(original_repo_dir).once
+      project.update!(repository_url: new_repository_url)
+      refute_equal(original_repo_dir, project.repository.repo_cache_dir)
+    end
+
+    it 'does not reset the repository if the repository_url is not changed' do
+      project = Project.new(name: 'demo_apps', repository_url: repository_url)
+      project.expects(:clone_repository).once
+      project.expects(:clean_old_repository).never
+      project.save!
+      project.update!(name: 'new_name')
+    end
+
+    it 'sets the git repository on disk' do
+      repository = mock()
+      repository.expects(:clone!).once
+      project = Project.new(id: 9999, name: 'demo_apps', repository_url: repository_url)
+      project.stubs(:repository).returns(repository)
+      project.send(:clone_repository).join
+    end
+
+    it 'fails to clone the repository and logs the error' do
+      repository = mock()
+      repository.expects(:clone!).returns(false).once
+      project = Project.new(id: 9999, name: 'demo_apps', repository_url: repository_url)
+      project.stubs(:repository).returns(repository)
+      expected_message = "Could not clone git repository #{project.repository_url} for project #{project.name} - "
+      Rails.logger.expects(:error).with(expected_message)
+      project.send(:clone_repository).join
+    end
+
+    it 'logs that it could not clone the repository when there is an unexpected error' do
+      error = 'Unexpected error while cloning the repository'
+      repository = mock()
+      repository.expects(:clone!).raises(error)
+      project = Project.new(id: 9999, name: 'demo_apps', repository_url: repository_url)
+      project.stubs(:repository).returns(repository)
+      expected_message = "Could not clone git repository #{project.repository_url} for project #{project.name} - #{error}"
+      Rails.logger.expects(:error).with(expected_message)
+      project.send(:clone_repository).join
+    end
+
+  end
+
+  describe 'lock project' do
+
+    let(:repository_url) { 'git@github.com:zendesk/demo_apps.git' }
+    let(:project_id) { 999999 }
+
+    after(:each) do
+      MultiLock.locks = {}
+    end
+
+    it 'locks the project' do
+      project = Project.new(id: project_id, name: 'demo_apps', repository_url: repository_url)
+      output = StringIO.new
+      MultiLock.locks[project_id].must_be_nil
+      project.with_lock(output: output, holder: 'test', timeout: 2.seconds) do
+        MultiLock.locks[project_id].wont_be_nil
+      end
+      MultiLock.locks[project_id].must_be_nil
+    end
+
+    it 'fails to aquire a lock if there is a lock already there' do
+      MultiLock.locks = { project_id => 'test' }
+      MultiLock.locks[project_id].wont_be_nil
+      project = Project.new(id: project_id, name: 'demo_apps', repository_url: repository_url)
+      output = StringIO.new
+      project.with_lock(output: output, holder: 'test', timeout: 1.seconds) { output.puts("Can't get here") }
+      output.string.include?("Can't get here").must_equal(false)
+    end
+
+    it 'executes the provided error callback if cannot acquire the lock' do
+      MultiLock.locks = { project_id => 'test' }
+      MultiLock.locks[project_id].wont_be_nil
+      project = Project.new(id: project_id, name: 'demo_apps', repository_url: repository_url)
+      output = StringIO.new
+      callback = proc { output << 'using the error callback' }
+      project.with_lock(output: output, holder: 'test', error_callback: callback, timeout: 1.seconds) do
+        output.puts("Can't get here")
+      end
+      MultiLock.locks[project_id].wont_be_nil
+      output.string.include?('using the error callback').must_equal(true)
+      output.string.include?("Can't get here").must_equal(false)
+    end
+
+  end
+
 end

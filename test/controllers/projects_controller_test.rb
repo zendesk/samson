@@ -1,14 +1,17 @@
 require_relative '../test_helper'
 
 describe ProjectsController do
+
   let(:project) { projects(:test) }
   let(:user) { users(:admin) }
 
   setup do
+    Project.any_instance.stubs(:clone_repository).returns(true)
     request.env['warden'].set_user(user)
   end
 
   describe "a GET to #index" do
+
     it "renders a template" do
       get :index
       assert_template :index

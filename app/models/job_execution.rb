@@ -8,11 +8,6 @@ class JobExecution
     Rails.application.config.samson.enable_job_execution
   end
 
-  # The directory in which repositories should be cached.
-  cattr_accessor(:cached_repos_dir, instance_writer: false) do
-    Rails.application.config.samson.cached_repos_dir
-  end
-
   cattr_accessor(:lock_timeout, instance_writer: false) { 10.minutes }
 
   cattr_reader(:registry, instance_accessor: false) { {} }
@@ -27,6 +22,7 @@ class JobExecution
     @subscribers = []
     @job, @reference = job, reference
     @stage = @job.deploy.try(:stage)
+    @repository = @job.project.repository
   end
 
   def start!
@@ -128,25 +124,9 @@ class JobExecution
   end
 
   def setup!(dir)
-    repo_url = @job.project.repository_url.shellescape
-    @output.write("Beginning git repo setup\n")
-
-    commands = [
-      <<-SHELL,
-        if [ -d #{repo_cache_dir} ]
-          then cd #{repo_cache_dir} && git fetch -ap
-        else
-          git -c core.askpass=true clone --mirror #{repo_url} #{repo_cache_dir}
-        fi
-      SHELL
-      "git clone #{repo_cache_dir} #{dir}",
-      "cd #{dir}",
-      "git checkout --quiet #{@reference.shellescape}"
-    ]
-
     locked = lock_project do
-      return false unless @executor.execute!(*commands)
-      commit = commit_from_ref(repo_cache_dir, @reference)
+      return false unless @repository.setup!(@executor, dir, @reference)
+      commit = @repository.commit_from_ref(@reference)
       @job.update_commit!(commit)
     end
 
@@ -158,33 +138,14 @@ class JobExecution
     end
   end
 
-  def commit_from_ref(repo_dir, ref)
-    description = Dir.chdir(repo_dir) do
-      IO.popen(["git", "describe", "--long", "--tags", "--all", ref]) do |io|
-        io.read.strip
-      end
-    end
-
-    description.split("-").last.sub(/^g/, "")
-  end
-
-  def repo_cache_dir
-    File.join(cached_repos_dir, @job.project.repository_directory)
-  end
-
   def artifact_cache_dir
-    File.join(repo_cache_dir, "artifacts")
+    File.join(@repository.repo_cache_dir, "artifacts")
   end
 
   def lock_project(&block)
     holder = (stage.try(:name) || @job.user.name)
-    failed_to_lock = lambda do |owner|
-      if Time.now.to_i % 10 == 0
-        @output.write("Waiting for repository while cloning for: #{owner}\n")
-      end
-    end
-
-    MultiLock.lock(@job.project_id, holder, timeout: lock_timeout, failed_to_lock: failed_to_lock, &block)
+    callback = proc { |owner| output.write("Waiting for repository while setting it up for #{owner}\n") if Time.now.to_i % 10 == 0 }
+    @job.project.with_lock(output: @output, holder: holder, error_callback: callback, timeout: lock_timeout, &block)
   end
 
   class << self

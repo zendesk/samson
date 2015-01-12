@@ -25,6 +25,7 @@ class ActiveSupport::TestCase
 
   before do
     Rails.cache.clear
+    stubs_project_callbacks
   end
 
   def assert_valid(record)
@@ -34,6 +35,17 @@ class ActiveSupport::TestCase
   def refute_valid(record)
     refute record.valid?
   end
+
+  def stubs_project_callbacks
+    Project.any_instance.stubs(:clone_repository).returns(true)
+    Project.any_instance.stubs(:clean_repository).returns(true)
+  end
+
+  def unstub_project_callbacks
+    Project.any_instance.unstub(:clone_repository)
+    Project.any_instance.unstub(:clean_repository)
+  end
+
 end
 
 module StubGithubAPI

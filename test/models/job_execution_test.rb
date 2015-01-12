@@ -1,20 +1,17 @@
 require_relative '../test_helper'
 
 describe JobExecution, :model do
-  let(:repository_url) { Dir.mktmpdir }
-  let(:repo_dir) { File.join(JobExecution.cached_repos_dir, project.repository_directory) }
 
-  let(:project) { Project.create!(name: "duck", repository_url: repository_url) }
-  let(:stage) { Stage.create!(name: "stage4", project: project) }
+  let(:repository_url) { Dir.mktmpdir }
+  let(:repo_dir) { File.join(GitRepository.cached_repos_dir, project.repository_directory) }
+  let(:project) { Project.create!(name: 'duck', repository_url: repository_url) }
+  let(:stage) { Stage.create!(name: 'stage4', project: project) }
   let(:user) { User.create! }
-  let(:job) { project.jobs.create!(command: "cat foo", user: user, project: project) }
-  let(:execution) { JobExecution.new("master", job) }
+  let(:job) { project.jobs.create!(command: 'cat foo', user: user, project: project) }
+  let(:execution) { JobExecution.new('master', job) }
+  let(:deploy) { Deploy.create!(stage: stage, job: job, reference: 'masterCADF') }
 
   before do
-    user.name = "John Doe"
-    user.email = "jdoe@test.com"
-    Deploy.create!(stage: stage, job: job, reference: "masterCADF")
-    JobExecution.enabled = true
     execute_on_remote_repo <<-SHELL
       git init
       git config user.email "test@example.com"
@@ -23,12 +20,16 @@ describe JobExecution, :model do
       git add foo
       git commit -m "initial commit"
     SHELL
+    user.name = 'John Doe'
+    user.email = 'jdoe@test.com'
+    project.repository.clone!(mirror: true)
+    JobExecution.enabled = true
   end
 
   after do
     FileUtils.rm_rf(repository_url)
     FileUtils.rm_rf(repo_dir)
-
+    project.repository.clean!
     JobExecution.enabled = false
   end
 
@@ -37,7 +38,7 @@ describe JobExecution, :model do
     assert File.directory?(repo_dir)
   end
 
-  it "checks out the specified commit" do
+  it 'checks out the specified commit' do
     execute_on_remote_repo <<-SHELL
       git tag foobar
       echo giraffe > foo
@@ -45,12 +46,12 @@ describe JobExecution, :model do
       git commit -m "second commit"
     SHELL
 
-    execute_job "foobar"
+    execute_job 'foobar'
 
-    assert_equal "monkey", last_line_of_output
+    assert_equal 'monkey', last_line_of_output
   end
 
-  it "checks out the specified remote branch" do
+  it 'checks out the specified remote branch' do
     execute_on_remote_repo <<-SHELL
       git checkout -b armageddon
       echo lion > foo
@@ -59,12 +60,12 @@ describe JobExecution, :model do
       git checkout master
     SHELL
 
-    execute_job "armageddon"
+    execute_job 'armageddon'
 
-    assert_equal "lion", last_line_of_output
+    assert_equal 'lion', last_line_of_output
   end
 
-  it "records the commit properly when given an annotated tag" do
+  it 'records the commit properly when given an annotated tag' do
     execute_on_remote_repo <<-SHELL
       git checkout -b mantis_shrimp
       echo mantis shrimp > foo
@@ -74,12 +75,12 @@ describe JobExecution, :model do
       git checkout master
     SHELL
 
-    branch = File.join(repository_url, ".git", "refs", "heads", "mantis_shrimp")
+    branch = File.join(repository_url, '.git', 'refs', 'heads', 'mantis_shrimp')
     commit = File.read(branch).strip
 
-    execute_job "annotated_tag"
+    execute_job 'annotated_tag'
 
-    assert_equal "mantis shrimp", last_line_of_output
+    assert_equal 'mantis shrimp', last_line_of_output
     assert job.commit.present?, "Expected #{job} to record the commit"
     assert_includes commit, job.commit
   end
@@ -93,9 +94,9 @@ describe JobExecution, :model do
       git checkout master
     SHELL
 
-    execute_job "safari"
+    execute_job 'safari'
 
-    assert_equal "tiger", last_line_of_output
+    assert_equal 'tiger', last_line_of_output
 
     execute_on_remote_repo <<-SHELL
       git checkout safari
@@ -105,22 +106,22 @@ describe JobExecution, :model do
       git checkout master
     SHELL
 
-    execute_job "safari"
+    execute_job 'safari'
 
-    assert_equal "zebra", last_line_of_output
+    assert_equal 'zebra', last_line_of_output
   end
 
-  it "maintains a cache of build artifacts between runs" do
-    job.command = "echo hello > $CACHE_DIR/foo"
+  it 'maintains a cache of build artifacts between runs' do
+    job.command = 'echo hello > $CACHE_DIR/foo'
     execute_job
 
-    job.command = "cat $CACHE_DIR/foo"
+    job.command = 'cat $CACHE_DIR/foo'
     execute_job
-    assert_equal "hello", last_line_of_output
+    assert_equal 'hello', last_line_of_output
   end
 
-  it "removes the job from the registry" do
-    execution = JobExecution.start_job("master", job)
+  it 'removes the job from the registry' do
+    execution = JobExecution.start_job('master', job)
 
     JobExecution.find_by_id(job.id).wont_be_nil
 
@@ -129,31 +130,30 @@ describe JobExecution, :model do
     JobExecution.find_by_id(job.id).must_be_nil
   end
 
-  it "cannot clone if project is locked" do
+  it 'cannot setup project if project is locked' do
     JobExecution.any_instance.stubs(:lock_timeout => 0.5) # 2 runs in the loop
-    refute File.directory?(repo_dir)
+    project.repository.expects(:setup!).never
     begin
-      MultiLock.send(:try_lock, project.id, "me")
+      MultiLock.send(:try_lock, project.id, 'me')
       execution.send(:run!)
     ensure
       MultiLock.send(:unlock, project.id)
     end
-    refute File.directory?(repo_dir)
   end
 
-  describe "when JobExecution is disabled" do
+  describe 'when JobExecution is disabled' do
     before do
       JobExecution.enabled = false
     end
 
-    it "does not add the job to the registry" do
+    it 'does not add the job to the registry' do
       job_execution = JobExecution.start_job('master', job)
       job_execution.wont_be_nil
       JobExecution.find_by_id(job.id).must_be_nil
     end
   end
 
-  def execute_job(branch = "master")
+  def execute_job(branch = 'master')
     execution = JobExecution.new(branch, job)
     execution.send(:run!)
   end

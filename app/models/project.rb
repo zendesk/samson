@@ -5,6 +5,9 @@ class Project < ActiveRecord::Base
 
   validates :name, :repository_url, presence: true
   before_create :generate_token
+  after_save :clone_repository, if: :repository_url_changed?
+  before_update :clean_old_repository, if: :repository_url_changed?
+  after_soft_delete :clean_repository
 
   has_many :releases
   has_many :stages, dependent: :destroy
@@ -19,7 +22,7 @@ class Project < ActiveRecord::Base
   scope :alphabetical, -> { order('name') }
 
   def repo_name
-    name.parameterize("_")
+    name.parameterize('_')
   end
 
   def last_released_with_commit?(commit)
@@ -86,16 +89,76 @@ class Project < ActiveRecord::Base
   end
 
   def release_prior_to(release)
-    releases.where("number < ?", release.number).order(:number).last
+    releases.where('number < ?', release.number).order(:number).last
+  end
+
+  def repository
+    @repository ||= GitRepository.new(repository_url: repository_url, repository_dir: repository_directory)
+  end
+
+  def with_lock(output: StringIO.new, holder:, error_callback: nil, timeout: 10.minutes, &block)
+    callback = if error_callback.nil?
+      proc { |owner| output.write("Waiting for repository while cloning for #{owner}\n") if Time.now.to_i % 10 == 0 }
+    else
+      error_callback
+    end
+    MultiLock.lock(id, holder, timeout: timeout, failed_to_lock: callback, &block)
   end
 
   private
 
   def permalink_base
-    repository_url.to_s.split("/").last.to_s.sub(/\.git/, "")
+    repository_url.to_s.split('/').last.to_s.sub(/\.git/, '')
   end
 
   def generate_token
     self.token = SecureRandom.hex
   end
+
+  def clone_repository
+    Thread.new do
+      begin
+        output = StringIO.new
+        with_lock(output: output, holder: 'Initial Repository Setup') do
+          is_cloned = repository.clone!(executor: TerminalExecutor.new(output), from: repository_url, mirror: true)
+          log.error("Could not clone git repository #{repository_url} for project #{name} - #{output.string}") unless is_cloned
+        end
+      rescue => e
+       alert_clone_error!(e)
+      end
+    end
+  end
+
+  def clean_repository
+    repository.clean!
+  end
+
+  private
+
+  def log
+    Rails.logger
+  end
+
+  def clean_old_repository
+    GitRepository.new(repository_url: repository_url_was, repository_dir: old_repository_dir).clean!
+    @repository, @repository_directory = nil
+  end
+
+  def old_repository_dir
+    Digest::MD5.hexdigest([repository_url_was, id].join)
+  end
+
+  def alert_clone_error!(exception)
+    message = "Could not clone git repository #{repository_url} for project #{name}"
+    log.error("#{message} - #{exception.message}")
+    if defined?(Airbrake)
+      Airbrake.notify(exception,
+        error_message: message,
+        parameters: {
+          project_id: id
+        }
+      )
+    end
+  end
+
 end

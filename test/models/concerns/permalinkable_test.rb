@@ -56,7 +56,12 @@ describe Permalinkable, :model do
   end
 
   describe "validations" do
-    let(:duplicate) { record.dup }
+    let(:duplicate) do
+      duplicate = record.dup
+      duplicate.stubs(:clone_repository).returns(true)
+      duplicate.stubs(:clean_repository).returns(true)
+      duplicate
+    end
 
     it "does not allow blank because that could never be reached" do
       project.permalink = ''

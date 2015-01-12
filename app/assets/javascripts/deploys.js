@@ -36,13 +36,30 @@ $(function () {
 
   var prefetchUrl = $("#deploy_reference").data("prefetchUrl");
 
-  $("#deploy_reference").typeahead({
-    name: "releases",
-    prefetch: {
-      url: prefetchUrl,
-      ttl: 30000 // 30 seconds
-    }
-  });
+  if (prefetchUrl) {
+    var engine = new Bloodhound({
+      datumTokenizer: function (d) {
+        return Bloodhound.tokenizers.whitespace(d.value);
+      },
+      queryTokenizer: Bloodhound.tokenizers.whitespace,
+      limit: 100,
+      prefetch: {
+        url: prefetchUrl,
+        ttl: 30000,
+        filter: function (references) {
+          return $.map(references, function (reference) {
+            return {value: reference};
+          });
+        }
+      }
+    });
+
+    engine.initialize();
+
+    $("#deploy_reference").typeahead(null, {
+      source: engine.ttAdapter()
+    });
+  }
 
   // The typeahead plugin removes the focus from the input - restore it
   // after initialization.
@@ -192,6 +209,7 @@ $(function () {
       $output.find('.deploy-check').hide();
     }
   });
+
 });
 
 function toggleOutputToolbar() {
