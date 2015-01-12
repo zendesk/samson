@@ -1,6 +1,4 @@
 class ProjectMailer < ApplicationMailer
-  layout 'mailer'
-
   def created_email(user, project)
     address = ENV['PROJECT_CREATED_NOTIFY_ADDRESS']
     subject = "Samson Project Created: #{project.name}"
