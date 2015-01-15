@@ -38,7 +38,7 @@ describe StagesController do
 
     it "renders strange characters" do
       subject.update_column(:name, 'Foo & Bar 1-4')
-      stub_request(:get, "http://img.shields.io/badge/Foo%20&amp;%20Bar%201--4-staging-green.svg")
+      stub_request(:get, "http://img.shields.io/badge/Foo%20%26%20Bar%201--4-staging-green.svg")
       get :show, valid_params
       assert_response :success
       response.content_type.must_equal Mime::SVG
