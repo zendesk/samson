@@ -108,9 +108,7 @@ class StagesController < ApplicationController
   def badge_safe(string)
     CGI.escape(string.gsub('&', '&amp;'))
       .gsub('+','%20')
-      .gsub /([^-])(--)*-([^-])/ do |r|
-        "#{$1}--#{$3}"
-      end
+      .gsub(/-+/,'--')
   end
 
   def check_token
