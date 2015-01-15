@@ -106,7 +106,7 @@ class StagesController < ApplicationController
   private
 
   def badge_safe(string)
-    CGI.escape(string.gsub('&', '&amp;'))
+    CGI.escape(string.gsub('&', '%26'))
       .gsub('+','%20')
       .gsub(/-+/,'--')
   end
