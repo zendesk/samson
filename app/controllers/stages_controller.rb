@@ -1,3 +1,5 @@
+require 'open-uri' # needed to fetch from img.shields.io using open()
+
 class StagesController < ApplicationController
   skip_before_action :login_users, if: :badge?
   before_action :authorize_admin!, except: [:index, :show]
