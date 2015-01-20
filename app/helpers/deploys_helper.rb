@@ -86,6 +86,10 @@ module DeploysHelper
     end
   end
 
+  def default_flowdock_message
+    ':pray: ' + current_user.name + ' is requesting approval for deploy ' + project_deploy_url(@project, @deploy)
+  end
+
   private
 
     def deploy_status_panel_common(deploy, enabled, hash = { "cancelled" => "danger" } )
@@ -117,4 +121,5 @@ module DeploysHelper
       time = deploy.start_time
       content_tag(:span, time.rfc822, data: { time: datetime_to_js_ms(time) }, class: "mouseover")
     end
+
 end

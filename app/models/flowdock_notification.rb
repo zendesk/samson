@@ -7,14 +7,14 @@ class FlowdockNotification
     @user = @deploy.user
   end
 
-  def buddy_request
-    chat_flow = Flowdock::Flow.new(
-      :api_token => @stage.flowdock_tokens,
-      :external_user_name => 'Samson'
-    )
-
-    buddy_request_content = ":pray: " + @user.name + " is requesting approval for deploy " + url_helpers.project_deploy_url(@project, @deploy)
+  def buddy_request(buddy_request_message)
+    chat_flow = Flowdock::Flow.new(api_token: @stage.flowdock_tokens, external_user_name: 'Samson')
+    buddy_request_content = buddy_request_message || default_notification_content
     chat_flow.push_to_chat(:content => buddy_request_content, :tags => ["buddy-request"])
+  end
+
+  def default_notification_content
+    ':pray: ' + @user.name + ' is requesting approval for deploy ' + url_helpers.project_deploy_url(@project, @deploy)
   end
 
   def buddy_request_completed(buddy, approved = true)

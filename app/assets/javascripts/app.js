@@ -1,4 +1,4 @@
-var samson = angular.module("samson", []);
+var samson = angular.module("samson", ['templates']);
 
 var A = angular;
 

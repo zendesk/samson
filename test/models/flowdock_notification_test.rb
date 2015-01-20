@@ -15,7 +15,7 @@ describe FlowdockNotification do
 
   it "sends a buddy request for all Flowdock flows configured for the stage" do
     delivery = stub_request(:post, chat_endpoint)
-    notification.buddy_request
+    notification.buddy_request('This is the message displayed in the flows')
 
     assert_requested delivery
   end

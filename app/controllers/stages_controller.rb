@@ -129,7 +129,7 @@ class StagesController < ApplicationController
       :update_github_pull_requests,
       :comment_on_zendesk_tickets,
       command_ids: [],
-      flowdock_flows_attributes: [:id, :name, :token, :_destroy],
+      flowdock_flows_attributes: [:id, :name, :token, :enable_notifications, :_destroy],
       new_relic_applications_attributes: [:id, :name, :_destroy]
     )
   end
