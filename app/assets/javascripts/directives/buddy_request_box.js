@@ -1,15 +1,16 @@
-var MentionsBox = function(users) {
+'use strict';
+var MentionsBox = function (users) {
   var self = this;
   self.id = '#buddy_request_box';
   self.users = users;
 
-  self.filteredData = function(query) {
+  self.filteredData = function (query) {
     return _.filter(self.users, function (item) {
-      return item.name.toLowerCase().indexOf(query.toLowerCase()) > -1
+      return item.name.toLowerCase().indexOf(query.toLowerCase()) > -1;
     });
   };
 
-  self.markupData = function(callback) {
+  self.markupData = function (callback) {
     $(self.id).mentionsInput('val', function(text) {
       text = text.replace(/@\[([^\\]+?)\]\(([^)]+?)\)/g, "@$1");
       callback(text);
@@ -29,32 +30,32 @@ var MentionsBox = function(users) {
   }
 };
 
-samson.factory('Flowdock', ['$rootScope','$http', function($rootScope, $http) {
+samson.factory('Flowdock', ['$rootScope','$http', function ($rootScope, $http) {
   var self = this;
 
   self.users = function () {
     var users = [];
     var promise = $http.get('/integrations/flowdock/users');
 
-    promise.success(function(data) {
+    promise.success(function (data) {
       users.push.apply(users, data.users);
       $rootScope.$emit('flowdock_users', users);
     });
 
-    promise.error(function(){
-      console.log('Could not fetch the flowdock users!')
+    promise.error(function () {
+      console.log('Could not fetch the flowdock users!');
     });
 
     return users;
   };
 
   self.buddyRequest = function (deploy, message) {
-    var promise = $http.post('/integrations/flowdock/notify', { deploy_id: deploy, message: message })
-    promise.success(function(data) {
+    var promise = $http.post('/integrations/flowdock/notify', { deploy_id: deploy, message: message });
+    promise.success(function (data) {
         $('#buddyRequestInfoBox').html('<div class="alert alert-success"><a class="close" data-dismiss="alert">×</a><span>'+ data.message + '</span></div>');
         console.log(data.message);
     });
-    promise.error(function() {
+    promise.error(function () {
       $('#buddyRequestInfoBox').html('<div class="alert alert-danger"><a class="close" data-dismiss="alert">×</a>' +
       '<span>Error! Could not send buddy request!</span></div>');
       console.log('Could not notify flows!');
@@ -72,10 +73,6 @@ samson.controller('BuddyNotificationsCtrl', ['$scope','$rootScope', '$injector',
   var self = this;
   $scope.users = flowdock.users();
   $scope.title = 'Request a buddy!';
-
-  self.error_getting_users = function (e) {
-    console.log('Could not get users from server!');
-  };
 
   self.initMentionsBox = function () {
     $scope.notificationBox = new MentionsBox($scope.users);
