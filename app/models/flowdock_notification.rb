@@ -7,9 +7,9 @@ class FlowdockNotification
     @user = @deploy.user
   end
 
-  def buddy_request(buddy_request_message)
+  def buddy_request(message)
+    buddy_request_content = message.nil? || message.empty? ? default_notification_content : message
     chat_flow = Flowdock::Flow.new(api_token: @stage.flowdock_tokens, external_user_name: 'Samson')
-    buddy_request_content = buddy_request_message || default_notification_content
     chat_flow.push_to_chat(:content => buddy_request_content, :tags => ["buddy-request"])
   end
 

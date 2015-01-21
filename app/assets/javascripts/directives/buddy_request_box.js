@@ -17,6 +17,7 @@ var MentionsBox = function(users) {
   };
 
   $(self.id).mentionsInput({
+    elastic: false,
     useCurrentVal: true,
     onDataRequest:function (mode, query, callback) {
       callback.call(this, self.filteredData(query));
@@ -50,9 +51,12 @@ samson.factory('Flowdock', ['$rootScope','$http', function($rootScope, $http) {
   self.buddyRequest = function (deploy, message) {
     var promise = $http.post('/integrations/flowdock/notify', { deploy_id: deploy, message: message })
     promise.success(function(data) {
+        $('#buddyRequestInfoBox').html('<div class="alert alert-success"><a class="close" data-dismiss="alert">×</a><span>'+ data.message + '</span></div>');
         console.log(data.message);
     });
     promise.error(function() {
+      $('#buddyRequestInfoBox').html('<div class="alert alert-danger"><a class="close" data-dismiss="alert">×</a>' +
+      '<span>Error! Could not send buddy request!</span></div>');
       console.log('Could not notify flows!');
     });
   };

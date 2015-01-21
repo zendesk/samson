@@ -27,8 +27,6 @@
 //= require rickshaw_with_d3
 //= require app.js
 //= require config.js
-//= require jquery_mentions_input/jquery.elastic
-//= require jquery_mentions_input/jquery.events.input
 //= require jquery_mentions_input/jquery.mentionsInput
 //= require_directory ./directives
 //= require_tree ../templates

@@ -87,7 +87,7 @@ module DeploysHelper
   end
 
   def default_flowdock_message
-    ':pray: ' + current_user.name + ' is requesting approval for deploy ' + project_deploy_url(@project, @deploy)
+    FlowdockNotification.new(@deploy.stage, @deploy).default_notification_content
   end
 
   private
