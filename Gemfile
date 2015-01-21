@@ -26,7 +26,6 @@ gem 'dalli', '~> 2.7.0'
 gem 'active_model_serializers', '~> 0.8.0'
 
 gem 'sawyer', '~> 0.5'
-gem 'underscore-rails'
 
 # Logging
 gem 'lograge'
@@ -50,6 +49,7 @@ group :assets do
   gem 'angularjs-rails'
   gem 'angular-rails-templates'
   gem 'momentjs-rails'
+  gem 'underscore-rails'
 end
 
 group :no_preload do

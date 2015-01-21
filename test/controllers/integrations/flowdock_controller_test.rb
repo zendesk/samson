@@ -7,12 +7,18 @@ describe Integrations::FlowdockController do
   before(:all) do
     ENV['FLOWDOCK_API_TOKEN'] = token
   end
-  let(:users_endpoint) { "https://#{ENV['FLOWDOCK_API_TOKEN']}:@api.flowdock.com/v1/users"}
+  let(:users_endpoint) { "https://#{ENV['FLOWDOCK_API_TOKEN']}:@api.flowdock.com/v1/users" }
 
   it 'should return the list of flowdock users' do
     delivery = stub_request(:get, users_endpoint)
     get :users
     assert_requested delivery
+  end
+
+  it 'should send a buddy request' do
+    FlowdockNotification.any_instance.expects(:buddy_request).once
+    post :notify, { deploy_id: deploys(:succeeded_test).id, message: 'Test' }
+    assert_response :success
   end
 
 end

@@ -269,7 +269,7 @@ describe Stage do
   describe ".build_clone" do
     before do
       subject.notify_email_address = "test@test.ttt"
-      subject.flowdock_flows = [FlowdockFlow.new(name: "test", token: "abcxyz", stage_id: subject.id)]
+      subject.flowdock_flows = [FlowdockFlow.new(name: "test", token: "abcxyz", stage_id: subject.id, enable_notifications: true)]
       subject.datadog_tags = "xyz:abc"
       subject.new_relic_applications = [NewRelicApplication.new(name: "test", stage_id: subject.id)]
       subject.save
