@@ -269,7 +269,7 @@ describe Stage do
   describe ".build_clone" do
     before do
       subject.notify_email_address = "test@test.ttt"
-      subject.flowdock_flows = [FlowdockFlow.new(name: "test", token: "abcxyz", stage_id: subject.id, enable_notifications: true)]
+      subject.flowdock_flows = [FlowdockFlow.new(name: "test", token: "abcxyz", stage_id: subject.id, enable_notifications: false)]
       subject.datadog_tags = "xyz:abc"
       subject.new_relic_applications = [NewRelicApplication.new(name: "test", stage_id: subject.id)]
       subject.save
@@ -288,5 +288,15 @@ describe Stage do
     it "copies over the new relic applications" do
       assert_equal @clone.new_relic_applications.map(&:attributes), subject.new_relic_applications.map(&:attributes)
     end
+
+    it 'should return that there are no flows with enabled notifications' do
+      subject.send_flowdock_notifications?.must_equal(false)
+    end
+
+    it 'should return that there are flows with enabled notifications' do
+      subject.flowdock_flows.first.update!(enable_notifications: true)
+      subject.send_flowdock_notifications?.must_equal(true)
+    end
+
   end
 end
