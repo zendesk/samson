@@ -72,8 +72,9 @@ describe ProjectsController do
         end
 
         it "notifies about creation" do
-          ActionMailer::Base.deliveries.last.subject.include?("Samson Project Created")
-          ActionMailer::Base.deliveries.last.subject.include?(project.name)
+          mail = ActionMailer::Base.deliveries.last
+          mail.subject.include?("Samson Project Created")
+          mail.subject.include?(project.name)
         end
       end
 

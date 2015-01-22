@@ -1,4 +1,4 @@
-require 'test_helper'
+require_relative '../test_helper'
 
 class ProjectMailerTest < ActionMailer::TestCase
   let(:user) { users(:admin) }
@@ -6,7 +6,7 @@ class ProjectMailerTest < ActionMailer::TestCase
 
   it "contains user and project name" do
     ProjectMailer.created_email(user, project).deliver_now
-    mail_sent = ActionMailer::Base.deliveries.first
+    mail_sent = ActionMailer::Base.deliveries.last
     assert mail_sent.subject.include?('Project')
     assert mail_sent.body.include?('Admin')
     assert mail_sent.body.include?('Project')
