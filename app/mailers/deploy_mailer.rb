@@ -1,5 +1,4 @@
-class DeployMailer < ActionMailer::Base
-  default from: "deploys@#{Rails.application.config.samson.email.sender_domain}"
+class DeployMailer < ApplicationMailer
 
   add_template_helper(DeploysHelper)
   add_template_helper(ApplicationHelper)

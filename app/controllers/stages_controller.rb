@@ -1,3 +1,5 @@
+require 'open-uri' # needed to fetch from img.shields.io using open()
+
 class StagesController < ApplicationController
   skip_before_action :login_users, if: :badge?
   before_action :authorize_admin!, except: [:index, :show]
@@ -106,7 +108,9 @@ class StagesController < ApplicationController
   private
 
   def badge_safe(string)
-    CGI.escape(string.gsub('&', '&amp;')).gsub('-', '&mdash;').gsub('+','%20')
+    CGI.escape(string)
+      .gsub('+','%20')
+      .gsub(/-+/,'--')
   end
 
   def check_token

@@ -48,7 +48,7 @@ ActiveRecord::Schema.define(version: 20150115134401) do
     t.text     "command",                                           null: false
     t.integer  "user_id",                                           null: false
     t.integer  "project_id",                                        null: false
-    t.string   "status",     default: "pending"
+    t.string   "status",                        default: "pending"
     t.text     "output",     limit: 1073741823
     t.datetime "created_at"
     t.datetime "updated_at"
@@ -106,6 +106,8 @@ ActiveRecord::Schema.define(version: 20150115134401) do
     t.string   "token"
     t.string   "release_branch"
     t.string   "permalink",      null: false
+    t.text     "description",    limit: 65535
+    t.string   "owner",          limit: 255
   end
 
   add_index "projects", ["permalink", "deleted_at"], name: "index_projects_on_permalink_and_deleted_at", using: :btree
@@ -147,7 +149,6 @@ ActiveRecord::Schema.define(version: 20150115134401) do
     t.boolean  "production",                  default: false
     t.boolean  "use_github_deployment_api"
     t.string   "permalink",                                   null: false
-    t.boolean  "comment_on_zendesk_tickets"
   end
 
   add_index "stages", ["project_id", "permalink", "deleted_at"], name: "index_stages_on_project_id_and_permalink_and_deleted_at", using: :btree

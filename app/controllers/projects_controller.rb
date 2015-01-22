@@ -33,6 +33,9 @@ class ProjectsController < ApplicationController
     @project = Project.new(project_params)
 
     if @project.save
+      if ENV['PROJECT_CREATED_NOTIFY_ADDRESS']
+        ProjectMailer.created_email(@current_user,@project).deliver_later
+      end
       redirect_to project_path(@project)
       Rails.logger.info("#{@current_user.name_and_email} created a new project #{@project.to_param}")
     else
@@ -74,6 +77,8 @@ class ProjectsController < ApplicationController
     params.require(:project).permit(
       :name,
       :repository_url,
+      :description,
+      :owner,
       :permalink,
       :release_branch,
       stages_attributes: [

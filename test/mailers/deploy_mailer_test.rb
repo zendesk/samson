@@ -20,7 +20,7 @@ describe DeployMailer do
     end
 
     subject do
-      ActionMailer::Base.deliveries.first
+      ActionMailer::Base.deliveries.last
     end
 
     it 'is from deploys@' do
@@ -58,7 +58,7 @@ describe DeployMailer do
     end
 
     subject do
-      ActionMailer::Base.deliveries.first
+      ActionMailer::Base.deliveries.last
     end
 
     it 'is from deploys@' do
@@ -100,7 +100,7 @@ describe DeployMailer do
     end
 
     subject do
-      ActionMailer::Base.deliveries.first
+      ActionMailer::Base.deliveries.last
     end
 
     it 'sends to bypass_email_address, jira_email_address' do

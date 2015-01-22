@@ -70,6 +70,11 @@ describe ProjectsController do
         it "creates a new project" do
           project.wont_be_nil
         end
+
+        it "notifies about creation" do
+          ActionMailer::Base.deliveries.last.subject.include?("Samson Project Created")
+          ActionMailer::Base.deliveries.last.subject.include?(project.name)
+        end
       end
 
       describe "with invalid parameters" do
