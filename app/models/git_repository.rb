@@ -26,11 +26,11 @@ class GitRepository
   end
 
   def update!(executor: TerminalExecutor.new(StringIO.new), pwd: repo_cache_dir)
-    Dir.chdir(pwd) { executor.execute!('git fetch -ap') }
+    executor.execute!("cd #{pwd}",'git fetch -ap')
   end
 
   def checkout!(executor: TerminalExecutor.new(StringIO.new), pwd: repo_cache_dir, git_reference:)
-    Dir.chdir(pwd) { executor.execute!("git checkout #{git_reference}") }
+    executor.execute!("cd #{pwd}", "git checkout #{git_reference}")
   end
 
   def commit_from_ref(git_reference)
@@ -72,13 +72,11 @@ class GitRepository
   private
 
   def run_single_command(command, pwd: repo_cache_dir)
-    Dir.chdir(pwd) do
       output = StringIO.new
       executor = TerminalExecutor.new(output)
-      success = executor.execute!(command)
+      success = executor.execute!("cd #{pwd}", command)
       return [] unless success
       output.string.lines.map { |line| yield line if block_given? }.uniq.sort
-    end
   end
 
 end
