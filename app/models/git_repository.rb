@@ -26,7 +26,7 @@ class GitRepository
   end
 
   def update!(executor: TerminalExecutor.new(StringIO.new), pwd: repo_cache_dir)
-    executor.execute!("cd #{pwd}",'git fetch -ap')
+    executor.execute!("cd #{pwd}", 'git fetch -ap')
   end
 
   def checkout!(executor: TerminalExecutor.new(StringIO.new), pwd: repo_cache_dir, git_reference:)
