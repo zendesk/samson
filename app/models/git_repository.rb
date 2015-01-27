@@ -70,7 +70,7 @@ class GitRepository
   end
 
   def valid_url?
-    cmd = "GIT_ASKPASS='true' git ls-remote -h #{repository_url}"
+    cmd = "git -c core.askpass=true ls-remote -h #{repository_url}"
     output = StringIO.new
     executor = TerminalExecutor.new(output)
     return true if executor.execute!(cmd)
