@@ -163,7 +163,7 @@ class Project < ActiveRecord::Base
   end
 
   def valid_repository_url
-    unless GitRepository.new(repository_url: repository_url, repository_dir: '').valid_url?
+    unless repository.valid_url?
       errors.add(:repository_url, "is not valid or accessible")
     end
   end
