@@ -5,6 +5,8 @@ describe Permalinkable, :model do
   let(:project_url) { "git://foo.com:hello/world.git" }
   let(:other_project) { Project.create!(name: "hello", repository_url: project_url) }
 
+  before { Project.any_instance.stubs(:valid_repository_url).returns(true) }
+
   describe "#to_param" do
     it "is permalink" do
       project.to_param.must_equal "foo"
@@ -77,7 +79,8 @@ describe Permalinkable, :model do
       end
 
       describe "with duplicate" do
-        setup do
+        before do
+          Project.any_instance.stubs(:valid_repository_url).returns(true)
           duplicate.save!
           duplicate.permalink = record.permalink
         end
@@ -112,7 +115,8 @@ describe Permalinkable, :model do
       end
 
       describe "with duplicate" do
-        setup do
+        before do
+          # Project.any_instance.stubs(:valid_repository_url).returns(true)
           duplicate.name = 'dup'
           duplicate.save!
           duplicate.permalink = record.permalink

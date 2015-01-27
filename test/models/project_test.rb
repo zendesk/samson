@@ -5,6 +5,8 @@ describe Project do
   let(:author) { users(:deployer) }
   let(:url) { "git://foo.com:hello/world.git" }
 
+  before { Project.any_instance.stubs(:valid_repository_url).returns(true) }
+
   it "generates a secure token when created" do
     Project.create!(name: "hello", repository_url: url).token.wont_be_nil
   end

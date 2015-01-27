@@ -69,6 +69,15 @@ class GitRepository
     Dir.exist?("#{repo_dir}/.git") || File.exist?("#{repo_dir}/HEAD")
   end
 
+  def valid_url?
+    cmd = "GIT_ASKPASS='true' git ls-remote -h #{repository_url}"
+    output = StringIO.new
+    executor = TerminalExecutor.new(output)
+    return true if executor.execute!(cmd)
+    Rails.logger.error("#{repository_url} is invalid: #{output.string}")
+    false
+  end
+
   private
 
   def run_single_command(command, pwd: repo_cache_dir)

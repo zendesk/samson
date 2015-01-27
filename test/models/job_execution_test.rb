@@ -12,6 +12,7 @@ describe JobExecution, :model do
   let(:deploy) { Deploy.create!(stage: stage, job: job, reference: 'masterCADF') }
 
   before do
+    Project.any_instance.stubs(:valid_repository_url).returns(true)
     execute_on_remote_repo <<-SHELL
       git init
       git config user.email "test@example.com"
