@@ -53,12 +53,14 @@ class GitRepository
 
   def tags
     cmd = 'git describe --tags --abbrev=0 `git rev-list --tags --max-count=600`'
-    run_single_command(cmd) { |line| line.strip }
+    success, output = run_single_command(cmd) { |line| line.strip }
+    success ? output : []
   end
 
   def branches
     cmd = 'git branch --no-color --list'
-    run_single_command(cmd) { |line| line.sub('*', '').strip }
+    success, output = run_single_command(cmd) { |line| line.sub('*', '').strip }
+    success ? output : []
   end
 
   def clean!
@@ -71,21 +73,19 @@ class GitRepository
 
   def valid_url?
     cmd = "git -c core.askpass=true ls-remote -h #{repository_url}"
-    output = StringIO.new
-    executor = TerminalExecutor.new(output)
-    return true if executor.execute!(cmd)
-    Rails.logger.error("#{repository_url} is invalid: #{output.string}")
-    false
+    valid, output = run_single_command(cmd, pwd: '.')
+    Rails.logger.error("Repository Path '#{repository_url}' is invalid: #{output}") unless valid
+    valid
   end
 
   private
 
   def run_single_command(command, pwd: repo_cache_dir)
-      output = StringIO.new
-      executor = TerminalExecutor.new(output)
-      success = executor.execute!("cd #{pwd}", command)
-      return [] unless success
-      output.string.lines.map { |line| yield line if block_given? }.uniq.sort
+    output = StringIO.new
+    executor = TerminalExecutor.new(output)
+    success = executor.execute!("cd #{pwd}", command)
+    result = output.string.lines.map { |line| yield line if block_given? }.uniq.sort
+    [success, result]
   end
 
 end

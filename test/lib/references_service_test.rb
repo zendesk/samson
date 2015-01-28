@@ -21,7 +21,6 @@ describe ReferencesService, :model do
   let!(:project) { Project.create!(name: 'test_project', repository_url: repository_url) }
 
   before do
-    Project.any_instance.stubs(:valid_repository_url).returns(true)
     project.repository.clone!(mirror: true)
   end
 
