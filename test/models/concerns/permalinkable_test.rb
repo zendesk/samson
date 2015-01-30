@@ -80,7 +80,6 @@ describe Permalinkable, :model do
 
       describe "with duplicate" do
         before do
-          Project.any_instance.stubs(:valid_repository_url).returns(true)
           duplicate.save!
           duplicate.permalink = record.permalink
         end
@@ -116,7 +115,6 @@ describe Permalinkable, :model do
 
       describe "with duplicate" do
         before do
-          # Project.any_instance.stubs(:valid_repository_url).returns(true)
           duplicate.name = 'dup'
           duplicate.save!
           duplicate.permalink = record.permalink
