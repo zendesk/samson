@@ -79,6 +79,15 @@ describe GitRepository, :model do
     Dir.chdir(temp_dir) { current_branch.must_equal('test_user/test_branch') }
   end
 
+  it 'validates the repo url' do
+    create_repo_without_tags
+    project.repository.valid_url?.must_equal true
+  end
+
+  it 'invalidates the repo url without repo' do
+    project.repository.valid_url?.must_equal false
+  end
+
   def execute_on_remote_repo(cmds)
     `exec 2> /dev/null; cd #{repository_url}; #{cmds}`
   end

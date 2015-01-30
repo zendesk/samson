@@ -7,6 +7,7 @@ describe ProjectsController do
 
   setup do
     Project.any_instance.stubs(:clone_repository).returns(true)
+    Project.any_instance.stubs(:valid_repository_url).returns(true)
     request.env['warden'].set_user(user)
   end
 
