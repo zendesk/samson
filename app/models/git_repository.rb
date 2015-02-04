@@ -30,7 +30,7 @@ class GitRepository
   end
 
   def checkout!(executor: TerminalExecutor.new(StringIO.new), pwd: repo_cache_dir, git_reference:)
-    executor.execute!("cd #{pwd}", "git checkout #{git_reference}")
+    executor.execute!("cd #{pwd}", "git checkout --quiet #{git_reference}")
   end
 
   def commit_from_ref(git_reference)
