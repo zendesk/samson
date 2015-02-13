@@ -35,6 +35,14 @@
     <div class="tab-pane active" id="output" data-stream-url="<%= stream_path(@deploy.job) %>" data-desktop-notify="<%= current_user.desktop_notify? %>">
       <%= render 'start_pending', deploy: @deploy if @deploy.pending_non_production? %>
       <%= render 'buddy_check', deploy: @deploy if @deploy.waiting_for_buddy? %>
+      <div class="row">
+        <div class="embed-responsive embed-responsive-16by9">
+          <% PluginManager.instance.stage_config_plugins.each do |plugin| %>
+            <iframe src="<%= send("plugins_#{plugin.plugin_name}_ui_path".to_sym) %>?deploy_id=<%= @deploy.id %>"
+                    class="embed-responsive-item" ></iframe>
+          <% end %>
+        </div>
+      </div>
       <%= render 'output', deploy: @deploy, project: @project %>
     </div>
 

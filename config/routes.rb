@@ -81,4 +81,11 @@ Samson::Application.routes.draw do
   get '/ping', to: 'ping#show'
 
   root to: 'projects#index'
+
+  namespace :plugins do
+    PluginManager.instance.routes.each do |route|
+      send(route[:verb], route[:url], to: route[:to], as: route[:as])
+    end
+  end
+
 end

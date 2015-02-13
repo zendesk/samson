@@ -58,7 +58,6 @@ group :no_preload do
   gem 'octokit', '~> 3.0'
   gem 'faraday-http-cache', '~> 0.4'
   gem 'warden', '~> 1.2'
-  gem 'flowdock', '~> 0.3.1'
   gem 'active_hash', '~> 1.0'
   gem 'ansible'
   gem 'github-markdown', '~> 0.6.3'
@@ -85,3 +84,14 @@ group :test do
   gem 'webmock', require: false
   gem 'simplecov', require: false
 end
+
+group :plugins do
+  require 'yaml'
+  YAML.load_file('plugins.yml')['plugins'].each do |plugin|
+    gem plugin['name'], "~> #{plugin['version']}", path: File.join(File.dirname(__FILE__), "tmp/plugins/#{plugin['name']}-#{plugin['version']}")
+  end
+end
+
+gem 'samson_sdk', '0.0.1', path: '/Users/fneves/Code/zendesk/samson_sdk'
+
+

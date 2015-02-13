@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title><%= content_for(:page_title) || 'Samson Plugins' %></title>
+    <%= stylesheet_link_tag    'plugins/plugins', media: 'all' %>
+    <%= javascript_include_tag "application" %>
+    <%= csrf_meta_tags %>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  </head>
+  <body>
+    <%= yield %>
+  </body>
+</html>

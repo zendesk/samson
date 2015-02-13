@@ -1,0 +1,4 @@
+plugins:
+  - name: flowdock_plugin
+    version: 0.0.1
+    require: flowdock_plugin.rb
