@@ -16,7 +16,7 @@ class Deploy < ActiveRecord::Base
   delegate :production?, :project, to: :stage
 
   def cache_key
-    [self, commit]
+    [super, commit]
   end
 
   def summary
