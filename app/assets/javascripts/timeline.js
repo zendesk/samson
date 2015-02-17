@@ -65,6 +65,20 @@ samson.constant("StatusFilterMapping",
   }
 );
 
+samson.filter("projectUserFilter",
+  function() {
+    return function(deploys, search) {
+      if (search !== undefined && search !== null && search.length) {
+        var searchRegExp = new RegExp(search, 'i');
+        return deploys.filter(function(deploy) {
+          return (deploy.project.name.match(searchRegExp) || deploy.user.name.match(searchRegExp));
+        });
+      }
+      return deploys;
+    };
+  }
+);
+
 samson.filter("userFilter",
   function() {
     var hookSources = /^(?:travis|tddium|semaphore|jenkins|github)$/i;
