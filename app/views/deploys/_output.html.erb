@@ -1,6 +1,6 @@
 <div class="output <%= 'hidden' if @deploy.waiting_for_buddy? || @deploy.pending_non_production? %>">
-  <div class="row">
-    <div class="btn-toolbar col-md-4 col-md-offset-7 pull-right" id="output-toolbar">
+  <div class="clearfix">
+    <div class="btn-toolbar pull-right" id="output-toolbar">
       <div id="output-options" class="btn-group only-active">
         <button class="btn btn-default active" id="output-follow">Follow</button>
         <button class="btn btn-default" id="output-steady">Don't Follow</button>
