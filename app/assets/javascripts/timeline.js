@@ -68,10 +68,12 @@ samson.constant("StatusFilterMapping",
 samson.filter("projectUserFilter",
   function() {
     return function(deploys, search) {
-      if (search !== undefined && search !== null && search.length) {
-        var searchRegExp = new RegExp(search, 'i');
+      if (typeof search == 'string' && search.length) {
+        var lowerCaseSearch =  search.toLowerCase();
+
         return deploys.filter(function(deploy) {
-          return (deploy.project.name.match(searchRegExp) || deploy.user.name.match(searchRegExp));
+          return (deploy.project.name.toLowerCase().indexOf(lowerCaseSearch) > -1 ||
+              deploy.user.name.toLowerCase().indexOf(lowerCaseSearch) > -1);
         });
       }
       return deploys;
