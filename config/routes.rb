@@ -68,6 +68,7 @@ Samson::Application.routes.draw do
     resource :projects, only: [:show]
     resources :commands, except: [:show]
     resource :lock, only: [:create, :destroy]
+    resource :environments, only: [:create, :index, :show]
   end
 
   namespace :integrations do
@@ -76,6 +77,9 @@ Samson::Application.routes.draw do
     post "/tddium/:token" => "tddium#create", as: :tddium_deploy
     post "/jenkins/:token" => "jenkins#create", as: :jenkins_deploy
     post "/github/:token" => "github#create", as: :github_deploy
+  end
+
+  resources :environments do
   end
 
   get '/ping', to: 'ping#show'

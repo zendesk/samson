@@ -24,22 +24,18 @@
   </div>
 
   <div class="form-group">
-    <div class="col-sm-offset-2 col-sm-10">
-      <div class="checkbox">
-        <%= form.label :confirm do %>
-          <%= form.check_box :confirm %>
-          Confirm before deployment
-        <% end %>
-      </div>
+    <%= form.label :name, 'Environment', class: 'col-lg-2 control-label' %>
+    <div class="col-lg-2">
+      <%= select_tag(:env_id, options_for_select([['Production', 1], ['Staging', 2], ['Master', 3]]), class: "form-control") %>
     </div>
   </div>
 
   <div class="form-group">
     <div class="col-sm-offset-2 col-sm-10">
       <div class="checkbox">
-        <%= form.label :production do %>
-          <%= form.check_box :production %>
-          Does this stage impact production servers?
+        <%= form.label :confirm do %>
+          <%= form.check_box :confirm %>
+          Confirm before deployment
         <% end %>
       </div>
     </div>
