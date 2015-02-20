@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20150109005441) do
+ActiveRecord::Schema.define(version: 20150220193142) do
 
   create_table "commands", force: true do |t|
     t.text     "command",    limit: 16777215
@@ -148,6 +148,7 @@ ActiveRecord::Schema.define(version: 20150109005441) do
     t.boolean  "production",                  default: false
     t.boolean  "use_github_deployment_api"
     t.string   "permalink",                                   null: false
+    t.text     "dashboard",                   limit: 65535
   end
 
   add_index "stages", ["project_id", "permalink", "deleted_at"], name: "index_stages_on_project_id_and_permalink_and_deleted_at", using: :btree

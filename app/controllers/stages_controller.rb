@@ -125,7 +125,7 @@ class StagesController < ApplicationController
 
   def stage_params
     params.require(:stage).permit(
-      :name, :command, :confirm, :permalink,
+      :name, :command, :confirm, :permalink, :dashboard,
       :production,
       :notify_email_address,
       :deploy_on_release,
