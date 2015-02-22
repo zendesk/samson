@@ -101,7 +101,7 @@ class DeployService
 
   def send_zendesk_notification(stage, deploy)
     if stage.comment_on_zendesk_tickets?
-      ZendeskNotification.new(stage, deploy).deliver_now
+      ZendeskNotification.new(stage, deploy).deliver
     end
   end
 
