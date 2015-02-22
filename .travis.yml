@@ -1,9 +1,14 @@
+language: ruby
+cache:
+  bundler: true
+  directories:
+    - node_modules
+rvm: 2.1.5
+sudo: false
 services:
   - memcached
-before_script:
-  - cp config/database.travis.yml config/database.yml
-  - bundle exec rake db:create
-  - npm install
+branches:
+  only: [master]
 env:
   matrix:
     - DB=sqlite BUNDLE_WITHOUT=mysql2:postgresql
@@ -14,13 +19,10 @@ env:
     - DEFAULT_URL=http://www.test-url.com
     - ZENDESK_TOKEN=c30398e3275532c5602bdf00cb153b806c000e4e46fac2f3acc0783822b8f6d3
     - ZENDESK_URL=https://test.support.zendesk
+before_script:
+  - cp config/database.travis.yml config/database.yml
+  - bundle exec rake db:create
+  - npm install
 script:
   - npm test
   - bundle exec rake
-language: ruby
-cache:
-  bundler: true
-  directories:
-    - node_modules
-rvm: 2.1.5
-sudo: false
