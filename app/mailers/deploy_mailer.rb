@@ -27,6 +27,6 @@ class DeployMailer < ApplicationMailer
   def prepare_mail(stage, deploy)
     @project = stage.project
     @deploy = deploy
-    @changeset = Changeset.find(@project.github_repo, @deploy.previous_commit, @deploy.commit)
+    @changeset = @deploy.changeset
   end
 end
