@@ -47,12 +47,8 @@ class Deploy < ActiveRecord::Base
     stage.deploys.successful.prior_to(self).first
   end
 
-  def previous_commit
-    previous_deploy.try(:commit)
-  end
-
   def changeset
-    @changeset ||= Changeset.find(project.github_repo, previous_commit, commit)
+    @changeset ||= Changeset.find(project.github_repo, previous_deploy.try(:commit), commit)
   end
 
   def production
