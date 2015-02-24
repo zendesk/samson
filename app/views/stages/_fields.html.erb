@@ -84,6 +84,13 @@
 </fieldset>
 
 <fieldset>
+  <legend>Dashboard</legend>
+  <p>HTML that should be displayed on the stage page. No Javascript allowed.</p>
+
+  <%= form.text_area :dashboard, class: "form-control", rows: 4 %>
+</fieldset>
+
+<fieldset>
   <legend>Flowdock</legend>
   <p>Add the name and API token of the Flowdock flow which should be notified of deploys.</p>
 

@@ -35,6 +35,11 @@
     <% end %>
   </div>
 
+  <% if @stage.dashboard.present? %>
+    <h2>Dashboard</h2>
+    <div><%= sanitize @stage.dashboard, tags: Loofah::HTML5::WhiteList::ACCEPTABLE_ELEMENTS + %w[iframe] %></div>
+  <% end %>
+
   <h2>Command</h2>
   <pre class="pre-command"><%= @stage.command %></pre>
 
