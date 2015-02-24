@@ -70,15 +70,23 @@ class DeployService
   end
 
   def send_after_notifications(stage, deploy)
-    if stage.send_email_notifications?
-      DeployMailer.deploy_email(stage, deploy).deliver_now
-    end
-
+    send_deploy_email(stage, deploy)
+    send_failed_deploy_email(stage, deploy)
     send_flowdock_notification(stage, deploy)
     send_datadog_notification(stage, deploy)
     send_github_notification(stage, deploy)
     send_zendesk_notification(stage, deploy)
     update_github_deployment_status(stage, deploy)
+  end
+
+  def send_deploy_email(stage, deploy)
+    return unless stage.send_email_notifications?
+    DeployMailer.deploy_email(stage, deploy).deliver_now
+  end
+
+  def send_failed_deploy_email(stage, deploy)
+    return unless emails = stage.automated_failure_emails(deploy)
+    DeployMailer.deploy_failed_email(stage, deploy, emails).deliver_now
   end
 
   def send_flowdock_notification(stage, deploy)

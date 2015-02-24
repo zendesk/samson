@@ -91,6 +91,27 @@
 </fieldset>
 
 <fieldset>
+  <legend>Email on automated deploy failure</legend>
+  <p>When an automated deploy initially fails, send a email to:</p>
+
+  <div class="form-group">
+    <div class="col-lg-6 checkbox">
+      <%= form.label :email_committers_on_automated_deploy_failure do %>
+        <%= form.check_box :email_committers_on_automated_deploy_failure %>
+        Committers in the diff to last successful deploy
+      <% end %>
+    </div>
+  </div>
+
+  <div class="form-group">
+    <div class="col-lg-6">
+      <p>Addresses (comma separated):</p>
+      <%= form.text_field :static_emails_on_automated_deploy_failure, class: "form-control" %>
+    </div>
+  </div>
+</fieldset>
+
+<fieldset>
   <legend>Flowdock</legend>
   <p>Add the name and API token of the Flowdock flow which should be notified of deploys.</p>
 

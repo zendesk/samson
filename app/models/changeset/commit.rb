@@ -12,6 +12,10 @@ class Changeset::Commit
     @data.commit.author.name
   end
 
+  def author_email
+    @data.commit.author.email
+  end
+
   def author
     @author ||= Changeset::GithubUser.new(@data.author) if @data.author
   end

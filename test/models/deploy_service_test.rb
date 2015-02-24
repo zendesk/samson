@@ -200,5 +200,14 @@ class DeployServiceTest < ActiveSupport::TestCase
       service.deploy!(stage, reference)
       job_execution.send(:run!)
     end
+
+    it "email notification for failed deploys" do
+      stage.stubs(:automated_failure_emails).returns(["foo@bar.com"])
+
+      DeployMailer.expects(:deploy_failed_email).returns( stub("DeployMailer", :deliver_now => true) )
+
+      service.deploy!(stage, reference)
+      job_execution.send(:run!)
+    end
   end
 end
