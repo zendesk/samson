@@ -149,7 +149,7 @@ ActiveRecord::Schema.define(version: 20150224031239) do
     t.boolean  "use_github_deployment_api"
     t.string   "permalink",                                   null: false
     t.text     "dashboard",                   limit: 65535
-    t.boolean  "email_committers_on_automated_deploy_failure",         limit: 1,     default: false, null: false
+    t.boolean  "email_committers_on_automated_deploy_failure",         default: false, null: false
     t.string   "static_emails_on_automated_deploy_failure", limit: 255
   end
 
@@ -174,7 +174,7 @@ ActiveRecord::Schema.define(version: 20150224031239) do
     t.datetime "deleted_at"
     t.string   "external_id"
     t.boolean  "desktop_notify", default: false
-    t.boolean  "integration",    limit: 1,   default: false, null: false
+    t.boolean  "integration",    default: false, null: false
   end
 
   add_index "users", ["external_id", "deleted_at"], name: "index_users_on_external_id_and_deleted_at", using: :btree
