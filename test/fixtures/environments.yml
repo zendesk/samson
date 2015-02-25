@@ -1,0 +1,9 @@
+# Read about fixtures at http://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+production_env:
+  name: Production
+  is_production: true
+
+staging_env:
+  name: Staging
+  is_production: false

@@ -3,6 +3,7 @@ test_staging:
   project: test
   confirm: false
   permalink: staging
+  deploy_groups: [ deploy_group_pod1 ]
 
 test_production:
   name: Production
@@ -10,6 +11,7 @@ test_production:
   confirm: false
   production: true
   permalink: production
+  deploy_groups: [ deploy_group_pod1, deploy_group_pod1 ]
 
 test_production_pod:
   name: Production Pod
@@ -17,3 +19,4 @@ test_production_pod:
   confirm: false
   production: true
   permalink: production-pod
+  deploy_groups: [ deploy_group_pod1 ]

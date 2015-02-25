@@ -17,6 +17,8 @@ class Stage < ActiveRecord::Base
     -> { order('stage_commands.position ASC') },
     through: :stage_commands
 
+  has_and_belongs_to_many :deploy_groups
+
   default_scope { order(:order) }
 
   validates :name, presence: true, uniqueness: { scope: [:project, :deleted_at] }
