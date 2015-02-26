@@ -1,31 +1,32 @@
 class LocksController < ApplicationController
   before_action :authorize_deployer!
-
-  rescue_from ActiveRecord::RecordNotFound do
-    if Project.where(permalink: params[:project_id]).exists?
-      redirect_to project_path(project)
-    else
-      redirect_to root_path
-    end
-  end
+  before_action :authorize_admin!, if: :for_global_lock?
 
   def create
-    stage.create_lock(user: current_user, description: params[:description])
-    redirect_to project_stage_path(project, stage)
+    attributes = params.require(:lock).
+      permit(:description, :stage_id).
+      merge(user: current_user)
+    Lock.create!(attributes)
+    redirect_to :back, notice: "Locked"
   end
 
   def destroy
-    stage.lock.try(:soft_delete)
-    redirect_to project_stage_path(project, stage)
+    lock.try(:soft_delete)
+    redirect_to :back, notice: "Unlocked"
   end
 
   protected
 
-  def project
-    @project ||= Project.find_by_param!(params[:project_id])
+  def for_global_lock?
+    case action_name
+    when "create" then !params[:lock].try(:[], :stage_id)
+    when "destroy" then !lock.stage_id
+    else
+      raise "Unsupported action"
+    end
   end
 
-  def stage
-    @stage ||= project.stages.find_by_param!(params[:stage_id])
+  def lock
+    @lock ||= Lock.find(params[:id])
   end
 end
