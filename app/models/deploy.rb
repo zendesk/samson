@@ -48,7 +48,11 @@ class Deploy < ActiveRecord::Base
   end
 
   def changeset
-    @changeset ||= Changeset.find(project.github_repo, previous_deploy.try(:commit), commit)
+    @changeset ||= changeset_to(previous_deploy)
+  end
+
+  def changeset_to(other)
+    Changeset.find(project.github_repo, other.try(:commit), commit)
   end
 
   def production
@@ -99,6 +103,10 @@ class Deploy < ActiveRecord::Base
 
   def self.successful
     includes(:job).where(jobs: { status: 'succeeded' })
+  end
+
+  def self.finished_naturally
+    includes(:job).where(jobs: { status: ['succeeded', 'failed'] })
   end
 
   def self.prior_to(deploy)

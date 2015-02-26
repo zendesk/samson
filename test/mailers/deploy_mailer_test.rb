@@ -1,26 +1,21 @@
 require_relative '../test_helper'
 
 describe DeployMailer do
+  let(:stage) { stages(:test_staging) }
+  let(:deploy) { deploys(:succeeded_test) }
+  let(:user) { users(:admin) }
+  subject { ActionMailer::Base.deliveries.last }
 
-  describe "deploy email" do
-    let(:stage) { stages(:test_staging) }
-    let(:deploy) { Deploy.create!(stage: stage, job: job, reference: 'master') }
+  def stub_empty_changeset
+    changeset = stub_everything(files: [], commits: [], pull_requests: [])
+    Changeset.stubs(:find).returns(changeset)
+  end
 
-    let(:job) do
-      Job.create!(command: 'true', project: projects(:test), user: users(:admin))
-    end
-
+  describe "#deploy_email" do
     before do
       stage.update_attributes!(notify_email_address: 'test@test.com')
-
-      changeset = stub_everything(files: [], commits: [], pull_requests: [])
-      Changeset.stubs(:find).returns(changeset)
-
+      stub_empty_changeset
       DeployMailer.deploy_email(stage, deploy).deliver_now
-    end
-
-    subject do
-      ActionMailer::Base.deliveries.last
     end
 
     it 'is from deploys@' do
@@ -36,29 +31,18 @@ describe DeployMailer do
     end
   end
 
-  describe "bypass email" do
-    let(:stage) { stages(:test_staging) }
-    let(:deploy) { Deploy.create!(stage: stage, job: job, reference: 'master') }
-    let(:user) { users(:admin) }
-
-    let(:job) do
-      Job.create!(command: 'true', project: projects(:test), user: users(:admin))
-    end
+  describe "#bypass_email" do
+    let(:jira_address) { "" }
 
     before do
       BuddyCheck.stubs(:bypass_email_address).returns("test1@test.com")
-      BuddyCheck.stubs(:bypass_jira_email_address).returns("")
+      BuddyCheck.stubs(:bypass_jira_email_address).returns(jira_address)
 
       user.update_attributes!(email: 'user_email@test.com')
 
-      changeset = stub_everything(files: [], commits: [], pull_requests: [])
-      Changeset.stubs(:find).returns(changeset)
+      stub_empty_changeset
 
       DeployMailer.bypass_email(stage, deploy, user).deliver_now
-    end
-
-    subject do
-      ActionMailer::Base.deliveries.last
     end
 
     it 'is from deploys@' do
@@ -76,37 +60,21 @@ describe DeployMailer do
     it 'sets a bypass subject' do
       subject.subject.must_match /BYPASS/
     end
+
+    describe "with jira address" do
+      let(:jira_address) { "test3@test.com" }
+
+      it 'sends to bypass_email_address, jira_email_address' do
+        subject.to.must_equal(['test1@test.com', 'test3@test.com'])
+      end
+    end
   end
 
-  describe "bypass email, jira email" do
-    let(:stage) { stages(:test_staging) }
-    let(:deploy) { Deploy.create!(stage: stage, job: job, reference: 'master') }
-    let(:user) { users(:admin) }
-
-    let(:job) do
-      Job.create!(command: 'true', project: projects(:test), user: users(:admin))
+  describe "#deploy_failed_email" do
+    it "sends" do
+      stub_empty_changeset
+      DeployMailer.deploy_failed_email(stage, deploy, ["foo@bar.com"]).deliver_now
+      subject.subject.must_equal "[AUTO-DEPLOY][DEPLOY] Super Admin deployed Project to Staging (staging)"
     end
-
-    before do
-      BuddyCheck.stubs(:bypass_email_address).returns("test1@test.com")
-      BuddyCheck.stubs(:bypass_jira_email_address).returns("test3@test.com")
-
-      user.update_attributes!(email: 'user_email@test.com')
-
-      changeset = stub_everything(files: [], commits: [], pull_requests: [])
-      Changeset.stubs(:find).returns(changeset)
-
-      DeployMailer.bypass_email(stage, deploy, user).deliver_now
-    end
-
-    subject do
-      ActionMailer::Base.deliveries.last
-    end
-
-    it 'sends to bypass_email_address, jira_email_address' do
-      subject.to.must_equal(['test1@test.com', 'test3@test.com'])
-    end
-
   end
-
 end
