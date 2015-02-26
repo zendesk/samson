@@ -289,4 +289,22 @@ describe Stage do
       assert_equal @clone.new_relic_applications.map(&:attributes), subject.new_relic_applications.map(&:attributes)
     end
   end
+
+  describe 'production flag' do
+    before { ENV['DEPLOY_GROUP_FEATURE'] = '1' }
+    after { ENV['DEPLOY_GROUP_FEATURE'] = nil }
+
+    it 'should be true for stage with production deploy_group' do
+      stage = stages(:test_production)
+      stage.update!(production: false)
+      stage.production?.must_equal true
+    end
+
+    it 'should be false for stage with no deploy_group' do
+      stage = stages(:test_production)
+      stage.update!(production: false)
+      stage.deploy_groups = []
+      stage.production?.must_equal false
+    end
+  end
 end

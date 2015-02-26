@@ -156,6 +156,15 @@ class Stage < ActiveRecord::Base
     update_github_pull_requests
   end
 
+  def production?
+    if ENV['DEPLOY_GROUP_FEATURE']
+      deploy_groups.each { |deploy_group| return true if deploy_group.environment.is_production }
+      false
+    else
+      super
+    end
+  end
+
   private
 
   def build_new_project_command

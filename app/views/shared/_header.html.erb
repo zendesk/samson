@@ -39,8 +39,10 @@
           <li class="dropdown <%= 'active' if request.path.starts_with?('/admin') %>">
             <a href="#" class="dropdown-toggle" data-toggle="dropdown">Admin <b class="caret"></b></a>
             <ul class="dropdown-menu">
-              <li><%= link_to "Environments", admin_environments_path %></li>
-              <li><%= link_to "Deploy Groups", admin_deploy_groups_path %></li>
+              <% if ENV['DEPLOY_GROUP_FEATURE'] %>
+                <li><%= link_to "Environments", admin_environments_path %></li>
+                <li><%= link_to "Deploy Groups", admin_deploy_groups_path %></li>
+              <% end %>
               <li><%= link_to "Projects", admin_projects_path %></li>
               <li><%= link_to "Commands", admin_commands_path %></li>
               <li><%= link_to "Users", admin_users_path %></li>
