@@ -5,10 +5,16 @@
     <%= stylesheet_link_tag    'plugins/plugins', media: 'all' %>
     <%= javascript_include_tag "application" %>
     <%= csrf_meta_tags %>
-
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <% PluginManager.instance.stylesheets_assets.each do |css| %>
+      <%= stylesheet_link_tag asset_path(css) %>
+    <% end %>
+
+    <% PluginManager.instance.javascript_assets.each do |javascript| %>
+      <%= javascript_include_tag asset_path(javascript) %>
+    <% end %>
   </head>
-  <body>
+  <body ng-app="samson">
     <%= yield %>
   </body>
 </html>

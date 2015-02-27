@@ -25,4 +25,5 @@ class ApplicationController < ActionController::Base
     super
     payload["params"] = request.params
   end
+
 end

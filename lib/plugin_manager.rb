@@ -3,14 +3,42 @@ class PluginManager
 
   def initialize
     FileUtils.mkpath(extracted_plugins_dir)
-    installed_plugins.each do |item|
-      $:.unshift "#{extracted_plugins_dir}/#{item['name']}-#{item['version']}/lib"
-      require "#{item['require']}"
+    load_plugins
+  end
+
+  def load_plugins
+    installed_plugins.each do |plugin_details|
+      $:.unshift(plugin_lib_dir(plugin_details))
+      require "#{plugin_details['require']}"
+      load_assets_paths(plugin_details)
     end
+  end
+
+  def load_assets_paths(plugin_details)
+    Rails.application.config.assets.paths << "#{plugin_assets_path(plugin_details)}/js"
+    Rails.application.config.assets.paths << "#{plugin_assets_path(plugin_details)}/stylesheets"
+    Rails.application.config.assets.paths << "#{plugin_assets_path(plugin_details)}/css"
+    Rails.application.config.assets.paths << "#{plugin_assets_path(plugin_details)}/images"
+  end
+
+  def plugin_lib_dir(plugin_details)
+    "#{extracted_plugins_dir}/#{plugin_details['name']}-#{plugin_details['version']}/lib"
   end
 
   def installed_plugins
     YAML.load_file(Rails.root.join('plugins.yml'))['plugins']
+  end
+
+  def plugin_path(plugin_details)
+    Rails.root.join('tmp', 'plugins', "#{plugin_details['name']}-#{plugin_details['version']}").to_s
+  end
+
+  def plugin_assets_path(plugin_details)
+    File.join(plugin_path(plugin_details), 'assets')
+  end
+
+  def plugin_views_path(plugin_details)
+    File.join(plugin_path(plugin_details), 'views')
   end
 
   def routes
@@ -21,8 +49,13 @@ class PluginManager
     SamsonSdk::Plugins::stage_config_plugins
   end
 
-  def extract_all_gems
-    plugin_gems.each { |plugin_gem| unpack_gem(plugin_gem) unless extracted?(plugin_name(plugin_gem)) }
+  def javascript_assets
+    SamsonSdk::Plugins::WebPlugin.all.map { |plugin| plugin.javascript_assets }.flatten
+  end
+
+
+  def stylesheets_assets
+    SamsonSdk::Plugins::WebPlugin.all.map{ |plugin| plugin.stylesheet_assets }.flatten
   end
 
   def plugin_gems
@@ -40,13 +73,6 @@ class PluginManager
 
   def extracted_plugins_dir
     Rails.root.join('tmp/plugins')
-  end
-
-  def extracted?(plugin_name)
-    Dir.exist?(File.join(extracted_plugins_dir, plugin_name))
-  end
-
-  def unpack_gem(plugin_gem)
   end
 
 end

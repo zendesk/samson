@@ -100,4 +100,5 @@ module ApplicationHelper
   def lock_icon
     content_tag :i, '', class: "glyphicon glyphicon-lock"
   end
+
 end

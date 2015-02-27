@@ -90,11 +90,14 @@ end
 
 group :plugins do
   require 'yaml'
-  YAML.load_file('plugins.yml')['plugins'].each do |plugin|
-    gem plugin['name'], "~> #{plugin['version']}", path: File.join(File.dirname(__FILE__), "tmp/plugins/#{plugin['name']}-#{plugin['version']}")
+  plugins_file = File.join(File.dirname(__FILE__), 'plugins.yml')
+  YAML.load_file(plugins_file)['plugins'].each do |plugin|
+    gem plugin['name'],
+        "~> #{plugin['version']}",
+        path: File.join(File.dirname(__FILE__), "tmp/plugins/#{plugin['name']}-#{plugin['version']}")
   end
 end
 
-gem 'samson_sdk', '0.0.1', path: '/Users/fneves/Code/zendesk/samson_sdk'
+gem 'samson_sdk', '0.0.1', path: File.join(File.dirname(__FILE__), '..','samson_sdk')
 
 
