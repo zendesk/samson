@@ -1,0 +1,17 @@
+<div id="buddyRequestInfoBox"></div>
+<div class="panel panel-info" ng-controller="BuddyNotificationsCtrl as buddyCtrl">
+  <div class="panel-heading">
+    <h3 class="panel-title">{{ title }}</h3>
+  </div>
+  <div class="panel-body">
+    <div class="col-sm-10">
+      <div class="mentions-input-box">
+        <textarea id="buddy_request_box">{{ defaultBuddyRequestMessage }}</textarea>
+      </div>
+      <em>This will send a buddy request to the <strong>{{ flowdockFlows }}</strong> flows.</em>
+    </div>
+    <div class="col-sm-2">
+      <button class="btn btn-primary" data-ng-click="buddyCtrl.notifyFlowDock()">Request for Buddy!</button>
+    </div>
+  </div>
+</div>
