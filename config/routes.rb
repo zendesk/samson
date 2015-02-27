@@ -76,8 +76,8 @@ Samson::Application.routes.draw do
     post "/tddium/:token" => "tddium#create", as: :tddium_deploy
     post "/jenkins/:token" => "jenkins#create", as: :jenkins_deploy
     post "/github/:token" => "github#create", as: :github_deploy
-    get '/flowdock/users' => 'flowdock#users', as: :flowdock_users
-    post '/flowdock/notify' => 'flowdock#notify', as: :flowdock_notify
+    # get '/flowdock/users' => 'flowdock#users', as: :flowdock_users
+    # post '/flowdock/notify' => 'flowdock#notify', as: :flowdock_notify
   end
 
   get '/ping', to: 'ping#show'
