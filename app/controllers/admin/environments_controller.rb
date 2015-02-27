@@ -1,15 +1,7 @@
 class Admin::EnvironmentsController < ApplicationController
   before_action :authorize_admin!
   before_action :authorize_super_admin!, only: [ :create, :new, :edit, :update, :destroy ]
-
-  rescue_from ActiveRecord::RecordNotFound do |error|
-    flash[:error] = "Environment not found."
-    redirect_to admin_environment_path
-  end
-
-  def edit
-    @environment = Environment.find(params[:id])
-  end
+  before_action :environment, only: [:edit, :update, :destroy]
 
   def index
     @environments = Environment.all
@@ -20,28 +12,27 @@ class Admin::EnvironmentsController < ApplicationController
   end
 
   def create
-    env = Environment.create!(env_params)
-    Rails.logger.info("#{current_user.name_and_email} created the environment #{env.name}")
-    redirect_to action: 'index'
-  rescue => ex
-    flash[:error] = "Failed to create environment: #{ex.message}"
-    redirect_to :back
+    new_env = Environment.create(env_params)
+    if new_env.persisted?
+      redirect_to action: 'index'
+    else
+      flash[:error] = "Failed to create environment: #{new_env.errors.full_messages}"
+      redirect_to action: :new
+    end
   end
 
   def update
-    env = Environment.find(params[:id])
-    env.update_attributes!(env_params)
-    Rails.logger.info("#{current_user.name_and_email} changed the environment #{env.name}")
-    redirect_to action: 'index'
-  rescue => ex
-    flash[:error] = "Failed to update environment: #{ex.message}"
-    redirect_to :back
+    if environment.update_attributes(env_params)
+      redirect_to action: 'index'
+    else
+      flash[:error] = "Failed to update environment: #{environment.errors.full_messages}"
+      redirect_to :back
+    end
   end
 
   def destroy
-    env = Environment.find(params[:id])
-    env.destroy!
-    flash[:notice] = "Successfully deleted environment: #{env.name}"
+    environment.soft_delete!
+    flash[:notice] = "Successfully deleted environment: #{environment.name}"
     redirect_to action: 'index'
   end
 
@@ -49,5 +40,12 @@ class Admin::EnvironmentsController < ApplicationController
 
   def env_params
     params.require(:environment).permit(:name, :is_production)
+  end
+
+  def environment
+    @environment ||= Environment.find(params[:id])
+  rescue
+    flash[:error] = "Failed to find the environment: #{params[:id]}"
+    redirect_to action: 'index'
   end
 end

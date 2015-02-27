@@ -158,8 +158,7 @@ class Stage < ActiveRecord::Base
 
   def production?
     if ENV['DEPLOY_GROUP_FEATURE']
-      deploy_groups.each { |deploy_group| return true if deploy_group.environment.is_production }
-      false
+      deploy_groups.any? { |deploy_group| deploy_group.environment.is_production? }
     else
       super
     end

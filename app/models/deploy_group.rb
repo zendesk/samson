@@ -1,4 +1,6 @@
 class DeployGroup < ActiveRecord::Base
+  has_soft_deletion default_scope: true
+
   belongs_to :environment
   has_and_belongs_to_many :stages
 

@@ -148,8 +148,7 @@ class StagesController < ApplicationController
 
   def update_deploy_groups
     # http://stackoverflow.com/questions/8929230/why-is-the-first-element-always-blank-in-my-rails-multi-select-using-an-embedde
-    deploy_group_ids = params[:stage].fetch(:deploy_groups, []).select { |id| !id.empty? }
-    Rails.logger.info("Setting Deploy Groups to #{deploy_group_ids} from #{params[:stage][:deploy_groups]}")
+    deploy_group_ids = params[:stage].fetch(:deploy_groups, []).reject(&:empty?)
     @stage.deploy_groups = DeployGroup.find(deploy_group_ids)
   end
 end

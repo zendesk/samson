@@ -2,7 +2,8 @@ class CreateDeployGroups < ActiveRecord::Migration
   def change
     create_table :environments do |t|
       t.string :name, null: false
-      t.boolean :is_production, default: false
+      t.boolean :is_production, default: false, null: false
+      t.timestamp :deleted_at
 
       t.timestamps null: false
     end
@@ -10,6 +11,7 @@ class CreateDeployGroups < ActiveRecord::Migration
     create_table :deploy_groups do |t|
       t.string :name, null: false
       t.references :environment, index: true, null: false
+      t.timestamp :deleted_at
 
       t.timestamps null: false
     end
