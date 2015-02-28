@@ -1,0 +1,7 @@
+<button class="btn btn-default want-lock" <%= "disabled" if disabled %>><%= icon %> <%= text %></button>
+<%= form_for Lock.new(stage: @stage, warning: warning), html: {class: 'before-lock'} do |f| %>
+  <%= f.hidden_field :stage_id %>
+  <%= f.hidden_field :warning %>
+  <%= f.text_field :description, class: "lock-description", placeholder: "Description", required: warning %>
+  <%= f.submit text, class: "do-lock btn btn-warning" %>
+<% end %>
