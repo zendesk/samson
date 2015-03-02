@@ -13,40 +13,75 @@ describe("Timeline", function() {
         deploys = [
           {
             user: { name: "abc" },
+            project: { name: "big project" },
             production: false,
             status: "succeeded"
           },
           {
             user: { name: "boss" },
+            project: { name: "big project" },
             production: true,
             status: "failed"
           },
           {
             user: { name: "travis" },
+            project: { name: "big project" },
             production: false,
             status: "cancelled"
           },
           {
             user: { name: "semaphore" },
+            project: { name: "bigger project" },
             production: false,
             status: "pending"
           },
           {
             user: { name: "admin" },
+            project: { name: "awesome app" },
             production: true,
             status: "errored"
           },
           {
             user: { name: "tddium" },
+            project: { name: "awesome app" },
             production: false,
             status: "cancelling"
           },
           {
             user: { name: "someone" },
+            project: { name: "super tool" },
             production: false,
             status: "running"
           }
         ];
+      });
+
+      describe("project and user filter", function() {
+        beforeEach(inject(function($filter) {
+          filter = $filter("projectUserFilter");
+        }));
+
+        it("does not filter if nothing is entered", function() {
+          expect(filter(deploys, null).length).toBe(deploys.length);
+          expect(filter(deploys, undefined).length).toBe(deploys.length);
+          expect(filter(deploys, "").length).toBe(deploys.length);
+        });
+
+        it("finds project names", function() {
+          expect(filter(deploys, "big project").length).toBe(3);
+        });
+
+        it("finds user name", function() {
+          expect(filter(deploys, "boss").length).toBe(1);
+        });
+
+        it("ignores case", function() {
+          expect(filter(deploys, "BOSS").length).toBe(1);
+        });
+
+        it("finds partial matches", function (){
+          expect(filter(deploys, "some").length).toBe(3);
+        });
       });
 
       describe("user filter", function() {

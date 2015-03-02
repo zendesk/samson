@@ -50,11 +50,22 @@ describe StagesController do
       describe 'valid' do
         before do
           Deploy.delete_all # triggers more github requests
-          get :show, project_id: subject.project.to_param, id: subject.to_param
         end
 
         it 'renders the template' do
+          get :show, project_id: subject.project.to_param, id: subject.to_param
           assert_template :show
+        end
+
+        it 'displays a sanitized dashboard' do
+          subject.update_attribute :dashboard,
+            'START_OF_TEXT<p>PARAGRAPH_TEXT</p><img src="foo.jpg"/><iframe src="http://localhost/foo.txt"></iframe><script>alert("hi there");</script>END_OF_TEXT'
+
+          get :show, project_id: subject.project.to_param, id: subject.to_param
+
+          response.body.to_s[/START_OF_TEXT.*END_OF_TEXT/].must_equal(
+            'START_OF_TEXT<p>PARAGRAPH_TEXT</p><img src="foo.jpg"><iframe src="http://localhost/foo.txt"></iframe>alert("hi there");END_OF_TEXT'
+          )
         end
       end
 
@@ -204,7 +215,8 @@ describe StagesController do
         describe 'valid attributes' do
           let(:attributes) {{
             command: 'test command',
-            name: 'Hello'
+            name: 'Hello',
+            dashboard: '<p>Some text</p>'
           }}
 
           it 'updates name' do
@@ -218,6 +230,10 @@ describe StagesController do
           it 'adds a command' do
             command = subject.commands.reload.last
             command.command.must_equal('test command')
+          end
+
+          it 'updates the dashboard' do
+            subject.dashboard.must_equal '<p>Some text</p>'
           end
         end
 
