@@ -1,4 +1,3 @@
-'use strict';
 var MentionsBox = function (users) {
   var self = this;
   self.id = '#buddy_request_box';
@@ -50,16 +49,7 @@ samson.factory('Flowdock', ['$rootScope','$http', function ($rootScope, $http) {
   };
 
   self.buddyRequest = function (deploy, message) {
-    var promise = $http.post('/integrations/flowdock/notify', { deploy_id: deploy, message: message });
-    promise.success(function (data) {
-        $('#buddyRequestInfoBox').html('<div class="alert alert-success"><a class="close" data-dismiss="alert">×</a><span>'+ data.message + '</span></div>');
-        console.log(data.message);
-    });
-    promise.error(function () {
-      $('#buddyRequestInfoBox').html('<div class="alert alert-danger"><a class="close" data-dismiss="alert">×</a>' +
-      '<span>Error! Could not send buddy request!</span></div>');
-      console.log('Could not notify flows!');
-    });
+    return $http.post('/integrations/flowdock/notify', { deploy_id: deploy, message: message });
   };
 
   return {
@@ -70,21 +60,34 @@ samson.factory('Flowdock', ['$rootScope','$http', function ($rootScope, $http) {
 
 samson.controller('BuddyNotificationsCtrl', ['$scope','$rootScope', '$injector', 'Flowdock',
   function($scope, $rootScope, $injector, flowdock) {
-  var self = this;
   $scope.users = flowdock.users();
   $scope.title = 'Request a buddy!';
+  $scope.message = null;
+  $scope.successful = false;
 
-  self.initMentionsBox = function () {
+  $scope.shouldDisplayFeedback = function() {
+    return $scope.message != null;
+  };
+
+  $scope.initMentionsBox = function () {
     $scope.notificationBox = new MentionsBox($scope.users);
   };
 
   $rootScope.$on('flowdock_users', function () {
-    self.initMentionsBox();
+    $scope.initMentionsBox();
   });
 
-  self.notifyFlowDock = function () {
+  $scope.notifyFlowDock = function () {
     $scope.notificationBox.message(function (message) {
-      flowdock.buddyRequest($scope.deploy, message);
+      var result = flowdock.buddyRequest($scope.deploy, message);
+      result.success(function (data) {
+        $scope.message = data.message;
+        $scope.successful = true
+      });
+      result.error(function (data) {
+        $scope.message = 'Error! Could not send buddy request!';
+        $scope.successful = false
+      });
     });
   };
 
@@ -92,6 +95,7 @@ samson.controller('BuddyNotificationsCtrl', ['$scope','$rootScope', '$injector',
   return {
     restrict: 'E',
     templateUrl: 'directives/buddy_request_box.html',
+    controller: 'BuddyNotificationsCtrl',
     scope: {
       defaultBuddyRequestMessage: '@',
       flowdockFlows: '@',
