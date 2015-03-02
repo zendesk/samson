@@ -4,6 +4,7 @@ class Project < ActiveRecord::Base
   has_soft_deletion default_scope: true
 
   validates :name, :repository_url, presence: true
+  validate :valid_repository_url
   before_create :generate_token
   after_save :clone_repository, if: :repository_url_changed?
   before_update :clean_old_repository, if: :repository_url_changed?
@@ -161,4 +162,9 @@ class Project < ActiveRecord::Base
     end
   end
 
+  def valid_repository_url
+    unless repository.valid_url?
+      errors.add(:repository_url, "is not valid or accessible")
+    end
+  end
 end

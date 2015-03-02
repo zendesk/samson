@@ -23,7 +23,7 @@ module Samson
 
     config.autoload_paths += Dir["#{config.root}/lib/**/"]
 
-    config.cache_store = :dalli_store, { value_max_bytes: 3000000, compress: true }
+    config.cache_store = :dalli_store, { value_max_bytes: 3000000, compress: true, expires_in: 1.day }
 
     # Allow streaming
     config.preload_frameworks = true

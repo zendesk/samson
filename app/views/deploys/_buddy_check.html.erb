@@ -7,7 +7,7 @@
 </div>
 <div class="row deploy-check">
   <% if @deploy.started_by?(current_user) %>
-    <p>This deploy hits production, so requires a deploy buddy. Please have another engineer with deploy rights visit this URL to kick off the deploy.</p>
+    <p>This deploy requires a buddy since it is going to production. Please have another engineer with deploy rights visit this URL to kick off the deploy.</p>
     <% if details = ENV["BYPASS_DETAILS"].presence %>
       <p><%= details.html_safe %></p>
     <% end %>
@@ -17,7 +17,7 @@
       <%= link_to "Bypass", buddy_check_project_deploy_path(@project, @deploy), method: :post, class: "btn btn-danger" %>
     </div>
   <% elsif current_user.is_deployer? %>
-    <p>This deploy hits production, so requires a deploy buddy. Could that be you?</p>
+    <p>This deploy requires a buddy.</p>
     <div class="buddy-approval">
       <%= link_to "Approve", buddy_check_project_deploy_path(@project, @deploy), method: :post, class: "btn btn-primary btn-xl" %>
       <% if @deploy.can_be_stopped_by?(current_user) %>
@@ -26,6 +26,6 @@
       <% end %>
     </div>
   <% else %>
-    <p>This deploy hits production, so requires a deploy buddy. (Someone with deploy rights or greater.)</p>
+    <p>This deploy requires a buddy since it is going to production. (Someone with deploy rights or greater.)</p>
   <% end %>
 </div>

@@ -26,11 +26,11 @@ class GitRepository
   end
 
   def update!(executor: TerminalExecutor.new(StringIO.new), pwd: repo_cache_dir)
-    Dir.chdir(pwd) { executor.execute!('git fetch -ap') }
+    executor.execute!("cd #{pwd}", 'git fetch -ap')
   end
 
   def checkout!(executor: TerminalExecutor.new(StringIO.new), pwd: repo_cache_dir, git_reference:)
-    Dir.chdir(pwd) { executor.execute!("git checkout #{git_reference}") }
+    executor.execute!("cd #{pwd}", "git checkout --quiet #{git_reference}")
   end
 
   def commit_from_ref(git_reference)
@@ -53,12 +53,14 @@ class GitRepository
 
   def tags
     cmd = 'git describe --tags --abbrev=0 `git rev-list --tags --max-count=600`'
-    run_single_command(cmd) { |line| line.strip }
+    success, output = run_single_command(cmd) { |line| line.strip }
+    success ? output : []
   end
 
   def branches
     cmd = 'git branch --no-color --list'
-    run_single_command(cmd) { |line| line.sub('*', '').strip }
+    success, output = run_single_command(cmd) { |line| line.sub('*', '').strip }
+    success ? output : []
   end
 
   def clean!
@@ -69,16 +71,21 @@ class GitRepository
     Dir.exist?("#{repo_dir}/.git") || File.exist?("#{repo_dir}/HEAD")
   end
 
+  def valid_url?
+    cmd = "git -c core.askpass=true ls-remote -h #{repository_url}"
+    valid, output = run_single_command(cmd, pwd: '.')
+    Rails.logger.error("Repository Path '#{repository_url}' is invalid: #{output}") unless valid
+    valid
+  end
+
   private
 
   def run_single_command(command, pwd: repo_cache_dir)
-    Dir.chdir(pwd) do
-      output = StringIO.new
-      executor = TerminalExecutor.new(output)
-      success = executor.execute!(command)
-      return [] unless success
-      output.string.lines.map { |line| yield line if block_given? }.uniq.sort
-    end
+    output = StringIO.new
+    executor = TerminalExecutor.new(output)
+    success = executor.execute!("cd #{pwd}", command)
+    result = output.string.lines.map { |line| yield line if block_given? }.uniq.sort
+    [success, result]
   end
 
 end

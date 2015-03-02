@@ -31,11 +31,4 @@ class Integrations::GithubController < Integrations::BaseController
     # Github returns full ref e.g. refs/heads/...
     params[:ref]
   end
-
-  def user
-    name = "Github"
-    email = "deploy+github@#{Rails.application.config.samson.email.sender_domain}"
-
-    User.create_with(name: name).find_or_create_by(email: email)
-  end
 end

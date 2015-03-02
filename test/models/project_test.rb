@@ -5,6 +5,8 @@ describe Project do
   let(:author) { users(:deployer) }
   let(:url) { "git://foo.com:hello/world.git" }
 
+  before { Project.any_instance.stubs(:valid_repository_url).returns(true) }
+
   it "generates a secure token when created" do
     Project.create!(name: "hello", repository_url: url).token.wont_be_nil
   end
@@ -210,6 +212,12 @@ describe Project do
       project.send(:clone_repository).join
     end
 
+    it 'does not validate with a bad repo url' do
+      Project.any_instance.unstub(:valid_repository_url)
+      project = Project.new(id: 9999, name: 'demo_apps', repository_url: 'my_bad_url')
+      project.valid?.must_equal false
+      project.errors.messages.must_equal repository_url: ["is not valid or accessible"]
+    end
   end
 
   describe 'lock project' do

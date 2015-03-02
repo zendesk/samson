@@ -20,7 +20,9 @@ describe ReferencesService, :model do
 
   let!(:project) { Project.create!(name: 'test_project', repository_url: repository_url) }
 
-  before { project.repository.clone!(mirror: true) }
+  before do
+    project.repository.clone!(mirror: true)
+  end
 
   it 'returns a sorted set of tags and branches' do
     ReferencesService.new(project).find_git_references.must_equal %w(v1 master test_user/test_branch )
