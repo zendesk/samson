@@ -12,7 +12,7 @@ describe Admin::DeployGroupsController do
   as_a_admin do
     it 'get index succeeds' do
       get :index
-      response.success?.must_equal true
+      assert_response :success
       assigns(:deploy_groups).count.must_equal 3
     end
 
@@ -25,7 +25,7 @@ describe Admin::DeployGroupsController do
   as_a_super_admin do
     it 'get :index succeeds' do
       get :index
-      response.success?.must_equal true
+      assert_response :success
       assigns(:deploy_groups).count.must_equal 3
       deploy_groups = assigns(:deploy_groups)
       deploy_groups.include?(deploy_groups(:deploy_group_pod1)).must_equal true
@@ -35,7 +35,7 @@ describe Admin::DeployGroupsController do
 
     it 'get :new succeeds' do
       get :new
-      response.success?.must_equal true
+      assert_response :success
       assigns(:deploy_group).wont_be_nil
     end
 

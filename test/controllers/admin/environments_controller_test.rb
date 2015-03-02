@@ -32,7 +32,7 @@ describe Admin::EnvironmentsController do
     it 'get :new succeeds' do
       get :new
       assert_response :success
-      assigns(:environments).wont_be_nil
+      assigns(:environment).wont_be_nil
     end
 
     describe '#create' do
