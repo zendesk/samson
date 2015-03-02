@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20150224031239) do
+ActiveRecord::Schema.define(version: 20150302060555) do
 
   create_table "commands", force: true do |t|
     t.text     "command",    limit: 16777215
@@ -59,7 +59,7 @@ ActiveRecord::Schema.define(version: 20150224031239) do
 
   create_table "locks", force: true do |t|
     t.integer  "stage_id"
-    t.integer  "user_id"
+    t.integer  "user_id",     null: false
     t.datetime "created_at"
     t.datetime "updated_at"
     t.datetime "deleted_at"

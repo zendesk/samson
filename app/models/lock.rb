@@ -18,7 +18,7 @@ class Lock < ActiveRecord::Base
   end
 
   def summary
-    "Locked by #{user.try(:name) || 'UNKNOWN USER'} #{time_ago_in_words(created_at)} ago"
+    "Locked by #{user.name} #{time_ago_in_words(created_at)} ago"
   end
 
   def reason
