@@ -115,11 +115,15 @@ class Stage < ActiveRecord::Base
   end
 
   def send_flowdock_notifications?
-    flowdock_flows.any?
+    flowdock_flows.notifications_enabled.any?
   end
 
   def flowdock_tokens
     flowdock_flows.map(&:token)
+  end
+
+  def enabled_flows_names
+    flowdock_flows.notifications_enabled.map(&:name)
   end
 
   def command

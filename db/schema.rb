@@ -41,6 +41,7 @@ ActiveRecord::Schema.define(version: 20150302060555) do
     t.integer  "stage_id",   null: false
     t.datetime "created_at"
     t.datetime "updated_at"
+    t.boolean  "notifications", default: false
   end
 
   create_table "jobs", force: true do |t|

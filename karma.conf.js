@@ -16,9 +16,14 @@ module.exports = function(config) {
     files: [
       'vendor/assets/javascripts/angular.min.js',
       'vendor/assets/javascripts/angular-mocks.js',
+      'vendor/assets/javascripts/underscore-min.js',
+      'vendor/assets/javascripts/jquery.min.js',
+      'vendor/assets/javascripts/jquery_mentions_input/jquery.mentionsInput.js',
       'app/assets/javascripts/app.js',
       'app/assets/javascripts/timeline.js',
-      'test/angular/timeline_spec.js'
+      'app/assets/javascripts/directives/buddy_request_box.js',
+      'test/angular/angular-rails-templates.js',
+      'test/angular/*_spec.js'
     ],
 
 

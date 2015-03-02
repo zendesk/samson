@@ -13,7 +13,9 @@
 //= require jquery
 //= require jquery_ujs
 //= require angular
+//= require angular-rails-templates
 //= require moment
+//= require underscore
 //= require bootstrap/alert
 //= require bootstrap/dropdown
 //= require bootstrap/tab
@@ -25,4 +27,7 @@
 //= require rickshaw_with_d3
 //= require app.js
 //= require config.js
+//= require jquery_mentions_input/jquery.mentionsInput
+//= require_directory ./directives
+//= require_tree ../templates
 //= require_tree .
