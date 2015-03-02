@@ -23,6 +23,18 @@ describe Admin::EnvironmentsController do
   end
 
   as_a_super_admin do
+    it 'get :index succeeds' do
+      get :index
+      response.success?.must_equal true
+      assigns(:environments).count.must_equal 3
+    end
+
+    it 'get :new succeeds' do
+      get :new
+      response.success?.must_equal true
+      assigns(:deploy_group).wont_be_nil
+    end
+
     describe '#create' do
       it 'valid environment' do
         post :create, environment: {name: 'gamma', is_production: true}

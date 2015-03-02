@@ -27,6 +27,10 @@ describe Admin::DeployGroupsController do
       get :index
       response.success?.must_equal true
       assigns(:deploy_groups).count.must_equal 3
+      deploy_groups = assigns(:deploy_groups)
+      deploy_groups.include?(deploy_groups(:deploy_group_pod1)).must_equal true
+      deploy_groups.include?(deploy_groups(:deploy_group_pod2)).must_equal true
+      deploy_groups.include?(deploy_groups(:deploy_group_pod100)).must_equal true
     end
 
     it 'get :new succeeds' do

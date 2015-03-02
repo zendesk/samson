@@ -1,5 +1,3 @@
-# Read about fixtures at http://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
-
 deploy_group_pod1:
   name: Pod1
   environment: production_env

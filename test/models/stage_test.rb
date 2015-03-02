@@ -291,18 +291,23 @@ describe Stage do
   end
 
   describe 'production flag' do
+    let(:stage) { stages(:test_production) }
     before { ENV['DEPLOY_GROUP_FEATURE'] = '1' }
     after { ENV['DEPLOY_GROUP_FEATURE'] = nil }
 
     it 'should be true for stage with production deploy_group' do
-      stage = stages(:test_production)
       stage.update!(production: false)
       stage.production?.must_equal true
     end
 
-    it 'should be false for stage with no deploy_group' do
-      stage = stages(:test_production)
+    it 'false for stage with no deploy_group' do
       stage.update!(production: false)
+      stage.deploy_groups = []
+      stage.production?.must_equal false
+    end
+
+    it 'false for stage with no deploy_group still' do
+      stage.update!(production: true)
       stage.deploy_groups = []
       stage.production?.must_equal false
     end
