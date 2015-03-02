@@ -47,9 +47,7 @@ group :assets do
   gem 'bootstrap-x-editable-rails'
   gem 'rickshaw_rails'
   gem 'angularjs-rails'
-  gem 'angular-rails-templates'
   gem 'momentjs-rails'
-  gem 'underscore-rails'
 end
 
 group :no_preload do
@@ -60,7 +58,6 @@ group :no_preload do
   gem 'octokit', '~> 3.0'
   gem 'faraday-http-cache', '~> 0.4'
   gem 'warden', '~> 1.2'
-  gem 'flowdock', '~> 0.5.0'
   gem 'active_hash', '~> 1.0'
   gem 'ansible'
   gem 'github-markdown', '~> 0.6.3'
