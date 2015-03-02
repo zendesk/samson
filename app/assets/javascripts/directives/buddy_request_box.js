@@ -1,7 +1,6 @@
-var MentionsBox = function (users) {
+samson.factory('Mentionsbox', ['$rootScope', 'Flowdock', function ($rootScope, $flowdock) {
   var self = this;
-  self.id = '#buddy_request_box';
-  self.users = users;
+  self.users = $flowdock.users();
 
   self.filteredData = function (query) {
     return _.filter(self.users, function (item) {
@@ -10,24 +9,39 @@ var MentionsBox = function (users) {
   };
 
   self.markupData = function (callback) {
-    $(self.id).mentionsInput('val', function(text) {
+    $(self.mentionsId).mentionsInput('val', function(text) {
       text = text.replace(/@\[([^\\]+?)\]\(([^)]+?)\)/g, "@$1");
       callback(text);
     });
   };
 
-  $(self.id).mentionsInput({
-    elastic: false,
-    useCurrentVal: true,
-    onDataRequest:function (mode, query, callback) {
-      callback.call(this, self.filteredData(query));
-    }
+  $rootScope.$on('flowdock_users', function () {
+    self.draw();
   });
 
+  self.draw = function() {
+    $(self.mentionsId).mentionsInput({
+      elastic: false,
+      defaultValue: self.defaultMessage,
+      onDataRequest:function (mode, query, callback) {
+        callback.call(this, self.filteredData(query));
+      }
+    });
+  };
+
+  self.init = function(id, defaultMessage) {
+    self.mentionsId = id;
+    self.defaultMessage = defaultMessage;
+    self.draw();
+    return {
+      message: self.markupData
+    }
+  };
+
   return {
-    message: self.markupData
+    init: self.init
   }
-};
+}]);
 
 samson.factory('Flowdock', ['$rootScope','$http', function ($rootScope, $http) {
   var self = this;
@@ -58,40 +72,31 @@ samson.factory('Flowdock', ['$rootScope','$http', function ($rootScope, $http) {
   }
 }]);
 
-samson.controller('BuddyNotificationsCtrl', ['$scope','$rootScope', '$injector', 'Flowdock',
-  function($scope, $rootScope, $injector, flowdock) {
-  $scope.users = flowdock.users();
-  $scope.title = 'Request a buddy!';
-  $scope.message = null;
-  $scope.successful = false;
+samson.controller('BuddyNotificationsCtrl', ['$scope','$rootScope', '$injector', 'Flowdock', 'Mentionsbox',
+  function($scope, $rootScope, $injector, flowdock, mentionsBox) {
+    $scope.title = 'Request a buddy!';
+    $scope.message = null;
+    $scope.successful = false;
+    $scope.notificationBox = mentionsBox.init('#buddy_request_box', $scope.defaultBuddyRequestMessage);
 
-  $scope.shouldDisplayFeedback = function() {
-    return $scope.message != null;
-  };
+    $scope.shouldDisplayFeedback = function() {
+      return $scope.message != null;
+    };
 
-  $scope.initMentionsBox = function () {
-    $scope.notificationBox = new MentionsBox($scope.users);
-  };
-
-  $rootScope.$on('flowdock_users', function () {
-    $scope.initMentionsBox();
-  });
-
-  $scope.notifyFlowDock = function () {
-    $scope.notificationBox.message(function (message) {
-      var result = flowdock.buddyRequest($scope.deploy, message);
-      result.success(function (data) {
-        $scope.message = data.message;
-        $scope.successful = true
+    $scope.notifyFlowDock = function () {
+      $scope.notificationBox.message(function (message) {
+        var result = flowdock.buddyRequest($scope.deploy, message);
+        result.success(function (data) {
+          $scope.message = data.message;
+          $scope.successful = true
+        });
+        result.error(function (data) {
+          $scope.message = 'Error! Could not send buddy request!';
+          $scope.successful = false
+        });
       });
-      result.error(function (data) {
-        $scope.message = 'Error! Could not send buddy request!';
-        $scope.successful = false
-      });
-    });
-  };
-
-}]).directive('buddyRequestBox', function () {
+    };
+  }]).directive('buddyRequestBox', function () {
   return {
     restrict: 'E',
     templateUrl: 'directives/buddy_request_box.html',

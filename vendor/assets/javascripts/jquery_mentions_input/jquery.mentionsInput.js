@@ -21,7 +21,7 @@
     allowRepeat   : false, //Allow repeat mentions
     showAvatars   : true, //Show the avatars
     elastic       : true, //Grow the textarea automatically
-    useCurrentVal : false,
+    defaultValue : false,
     onCaret       : false,
     classes       : {
       autoCompleteItemActive : "active" //Classes to apply in each item
@@ -496,8 +496,8 @@
         initTextarea();
         initAutocomplete();
         initMentionsOverlay();
-        if(settings.useCurrentVal){
-          resetInput(getInputBoxValue());
+        if(settings.defaultValue){
+          resetInput(settings.defaultValue);
         }
         else{
           resetInput();
