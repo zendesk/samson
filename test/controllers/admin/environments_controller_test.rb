@@ -25,14 +25,14 @@ describe Admin::EnvironmentsController do
   as_a_super_admin do
     it 'get :index succeeds' do
       get :index
-      response.success?.must_equal true
-      assigns(:environments).count.must_equal 3
+      assert_response :success
+      assigns(:environments).count.must_equal 2
     end
 
     it 'get :new succeeds' do
       get :new
-      response.success?.must_equal true
-      assigns(:deploy_group).wont_be_nil
+      assert_response :success
+      assigns(:environments).wont_be_nil
     end
 
     describe '#create' do
