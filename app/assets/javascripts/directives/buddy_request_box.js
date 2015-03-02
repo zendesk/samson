@@ -1,4 +1,4 @@
-samson.factory('Mentionsbox', ['$rootScope', 'Flowdock', function ($rootScope, $flowdock) {
+samson.factory('Mentionbox', ['$rootScope', 'Flowdock', function ($rootScope, $flowdock) {
   var self = this;
   self.users = $flowdock.users();
 
@@ -10,9 +10,13 @@ samson.factory('Mentionsbox', ['$rootScope', 'Flowdock', function ($rootScope, $
 
   self.markupData = function (callback) {
     $(self.mentionsId).mentionsInput('val', function(text) {
-      text = text.replace(/@\[([^\\]+?)\]\(([^)]+?)\)/g, "@$1");
+      text = self.reformatMessage(text);
       callback(text);
     });
+  };
+
+  self.reformatMessage = function(text) {
+    return text.replace(/@\[([^\\]+?)\]\(([^)]+?)\)/g, "@$1");
   };
 
   $rootScope.$on('flowdock_users', function () {
@@ -38,9 +42,7 @@ samson.factory('Mentionsbox', ['$rootScope', 'Flowdock', function ($rootScope, $
     }
   };
 
-  return {
-    init: self.init
-  }
+  return self;
 }]);
 
 samson.factory('Flowdock', ['$rootScope','$http', function ($rootScope, $http) {
@@ -72,8 +74,8 @@ samson.factory('Flowdock', ['$rootScope','$http', function ($rootScope, $http) {
   }
 }]);
 
-samson.controller('BuddyNotificationsCtrl', ['$scope','$rootScope', '$injector', 'Flowdock', 'Mentionsbox',
-  function($scope, $rootScope, $injector, flowdock, mentionsBox) {
+samson.controller('BuddyNotificationsCtrl', ['$scope','$rootScope', 'Flowdock', 'Mentionbox',
+  function($scope, $rootScope, flowdock, mentionsBox) {
     $scope.title = 'Request a buddy!';
     $scope.message = null;
     $scope.successful = false;
@@ -90,7 +92,7 @@ samson.controller('BuddyNotificationsCtrl', ['$scope','$rootScope', '$injector',
           $scope.message = data.message;
           $scope.successful = true
         });
-        result.error(function (data) {
+        result.error(function () {
           $scope.message = 'Error! Could not send buddy request!';
           $scope.successful = false
         });

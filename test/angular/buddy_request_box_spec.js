@@ -1,5 +1,56 @@
 describe('Buddy requests notifications', function () {
 
+  describe("factory: Mentionbox", function () {
+    var flowdock;
+    var rootScope;
+    var mentionBox;
+    var users;
+
+    beforeEach(module("samson"));
+
+    // Setup the mock service in an anonymous module.
+    beforeEach(function () {
+      inject(function ($injector) {
+        users = [
+          { id:1, name: 'test', avatar: 'fake', type: 'contact' },
+          { id: 2, name: 'another_name', avatar: 'fake', type: 'contact' }
+        ];
+        rootScope = $injector.get('$rootScope');
+        flowdock = $injector.get('Flowdock');
+        flowdock.users = function () {
+          rootScope.$emit('flowdock_users', users);
+          return users
+        };
+        mentionBox = $injector.get('Mentionbox');
+      });
+    });
+
+    it('returns the data filtered', function () {
+      expect(mentionBox).toBeDefined();
+      expect(mentionBox.filteredData('te')).toEqual(users.slice(0, 1));
+    });
+
+    it('inits the JQuery mention box plugin', function() {
+      var instance = mentionBox.init('#test_id', 'This is the default message');
+      expect(mentionBox.mentionsId).toEqual('#test_id');
+      expect(mentionBox.defaultMessage).toEqual('This is the default message');
+      expect(instance.message).toBeDefined();
+    });
+
+    it('draws a mentions box after the root scope emits flowdock_users event', function () {
+      spyOn(mentionBox, 'draw');
+      rootScope.$emit('flowdock_users', []);
+      expect(mentionBox.draw).toHaveBeenCalled();
+    });
+
+    it('formats the data in the expected format by flowdock', function () {
+      var mentions = 'Some text the @[test](test user name) has inserted mentioning @[test2](test2 user name)';
+      var expected = 'Some text the @test has inserted mentioning @test2';
+      expect(mentionBox.reformatMessage(mentions)).toEqual(expected);
+    });
+
+  });
+
   describe("factory: Flowdock", function () {
     var flowdock;
     var $httpBackend;
@@ -68,14 +119,6 @@ describe('Buddy requests notifications', function () {
       dependencies = { $scope: scope, $rootScope: rootScope, Flowdock: flowdock };
       buddyNotificationsCtrl = $controller('BuddyNotificationsCtrl', dependencies);
     }));
-
-    it('should initialize a mentions box after the root scope emits flowdock_users', function () {
-      expect(scope.users).toBeDefined();
-      expect(scope.users).toEqual([{ id:1, name: 'test', avatar: 'fake', type: 'contact' }]);
-      setTimeout(function () {
-        expect(scope.notificationBox).toBeDefined();
-      }, 100);
-    });
 
     it('should send a buddy_request notification', function () {
       setTimeout(function () {
