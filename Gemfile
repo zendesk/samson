@@ -57,6 +57,7 @@ group :no_preload do
   gem 'omniauth-google-oauth2', '~> 0.2.4'
   gem 'octokit', '~> 3.0'
   gem 'faraday-http-cache', '~> 0.4'
+  gem 'flowdock', '~> 0.5.0'
   gem 'warden', '~> 1.2'
   gem 'active_hash', '~> 1.0'
   gem 'ansible'

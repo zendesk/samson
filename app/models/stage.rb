@@ -114,6 +114,10 @@ class Stage < ActiveRecord::Base
     notify_email_address.present?
   end
 
+  def send_flowdock_notifications?
+    flowdock_flows.any?
+  end
+
   def flowdock_tokens
     flowdock_flows.map(&:token)
   end
@@ -148,6 +152,27 @@ class Stage < ActiveRecord::Base
 
   def send_github_notifications?
     update_github_pull_requests
+  end
+
+  def automated_failure_emails(deploy)
+    return if !email_committers_on_automated_deploy_failure? && static_emails_on_automated_deploy_failure.blank?
+    return unless deploy.failed?
+    return unless deploy.user.integration?
+    last_deploy = deploys.finished_naturally.prior_to(deploy).first
+    return if last_deploy.try(:failed?)
+
+    emails = []
+
+    # static notification
+    emails.concat static_emails_on_automated_deploy_failure.to_s.split(/, ?/)
+
+    # authors of commits after last successful deploy
+    if email_committers_on_automated_deploy_failure?
+      changeset = deploy.changeset_to(last_deploy)
+      emails.concat changeset.commits.map(&:author_email).compact
+    end
+
+    emails.uniq.presence
   end
 
   private

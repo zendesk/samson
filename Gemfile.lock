@@ -299,6 +299,7 @@ DEPENDENCIES
   dogstatsd-ruby (~> 1.4.0)
   dotenv-rails (~> 0.9)
   faraday-http-cache (~> 0.4)
+  flowdock (~> 0.5.0)
   flowdock_plugin (~> 0.0.1)!
   font-awesome-sass
   github-markdown (~> 0.6.3)

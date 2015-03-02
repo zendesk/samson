@@ -17,11 +17,4 @@ class Integrations::SemaphoreController < Integrations::BaseController
   def branch
     params[:branch_name]
   end
-
-  def user
-    name = "Semaphore"
-    email = "deploy+semaphore@#{Rails.application.config.samson.email.sender_domain}"
-
-    User.create_with(name: name).find_or_create_by(email: email)
-  end
 end

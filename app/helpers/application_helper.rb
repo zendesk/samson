@@ -36,13 +36,13 @@ module ApplicationHelper
     Rails.application.config.samson.revision.presence
   end
 
-  def global_lock?
-    global_lock.present?
-  end
-
   def global_lock
     return @global_lock if defined?(@global_lock)
     @global_lock = Lock.global.first
+  end
+
+  def render_global_lock
+    render '/locks/lock', lock: global_lock if global_lock
   end
 
   def datetime_to_js_ms(utc_string)

@@ -13,31 +13,11 @@ describe FlowdockNotification do
     FlowdockNotificationRenderer.stubs(:render).returns("foo")
   end
 
-  it 'should render the default notification ' do
-    notification.default_notification_content.must_include(":pray: #{deploy.user.name}")
-  end
+  it "sends a buddy request for all Flowdock flows configured for the stage" do
+    delivery = stub_request(:post, chat_endpoint)
+    notification.buddy_request
 
-  describe 'buddy request' do
-    it 'sends a buddy request for all Flowdock flows configured for the stage' do
-      delivery = stub_request(:post, chat_endpoint)
-      FlowdockNotification.any_instance.expects(:default_notification_content).never
-      notification.buddy_request('This is the message displayed in the flows')
-      assert_requested delivery
-    end
-
-    it 'should send the default notification message as a buddy request message if no message is provided' do
-      delivery = stub_request(:post, chat_endpoint)
-      FlowdockNotification.any_instance.expects(:default_notification_content).once.returns('message')
-      notification.buddy_request(nil)
-      assert_requested delivery
-    end
-
-    it 'should send the default notification message as a buddy request message if an empty message is provided' do
-      delivery = stub_request(:post, chat_endpoint)
-      FlowdockNotification.any_instance.expects(:default_notification_content).once.returns('message')
-      notification.buddy_request('')
-      assert_requested delivery
-    end
+    assert_requested delivery
   end
 
   it "notifies all Flowdock flows configured for the stage" do

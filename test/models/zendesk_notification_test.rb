@@ -26,10 +26,9 @@ describe ZendeskNotification do
   private
 
   def stub_api_request(method, path)
-    authorization = "Bearer #{ENV['ZENDESK_TOKEN']}"
     url = ENV['ZENDESK_URL']
     body = '{ "ticket": { "id": 18, "comment": {"value": "Comment body", "public": true }, "status": "open"}}'
 
-    stub_request(method, "#{url}/#{path}"). to_return(api_response_headers.merge(:status => 200, :body => body))
+    stub_request(method, "#{url}/#{path}").to_return(api_response_headers.merge(:status => 200, :body => body))
   end
 end

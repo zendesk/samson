@@ -75,7 +75,6 @@ describe Stage do
       deploy = stage.deploys.create!(reference: 'master', job: job)
       assert_equal deploy, stage.last_deploy
     end
-
   end
 
   describe "#current_release?" do
@@ -266,10 +265,70 @@ describe Stage do
     end
   end
 
+  describe "#automated_failure_emails" do
+    let(:user) { users(:super_admin) }
+    let(:deploy) do
+      deploy = subject.create_deploy(user: user, reference: "commita")
+      deploy.job.fail!
+      deploy
+    end
+    let(:previous_deploy) { deploys(:succeeded_test) }
+    let(:emails) { subject.automated_failure_emails(deploy) }
+    let(:simple_response) { Hashie::Mash.new(commits: [{commit: {author: {email: "pete@example.com"}}}]) }
+
+    before do
+      user.update_attribute(:integration, true)
+      subject.update_column(:static_emails_on_automated_deploy_failure, "static@example.com")
+      subject.update_column(:email_committers_on_automated_deploy_failure, true)
+    end
+
+    it "includes static emails and committer emails" do
+      GITHUB.expects(:compare).with(anything, previous_deploy.reference, "commita").returns simple_response
+      emails.must_equal ["static@example.com", "pete@example.com"]
+    end
+
+    it "is empty when deploy was a success" do
+      deploy.job.success!
+      emails.must_equal nil
+    end
+
+    it "is empty when last deploy was also a failure" do
+      previous_deploy.job.fail!
+      emails.must_equal nil
+    end
+
+    it "is empty when user was human" do
+      user.update_attribute(:integration, false)
+      emails.must_equal nil
+    end
+
+    it "includes committers when there is no previous deploy" do
+      previous_deploy.delete
+      GITHUB.expects(:compare).with(anything, "commita", "commita").returns simple_response
+      emails.must_equal ["static@example.com", "pete@example.com"]
+    end
+
+    it "does not include commiiters if the author did not have a email" do
+      GITHUB.expects(:compare).returns Hashie::Mash.new(commits: [{commit: {author: {}}}])
+      emails.must_equal ["static@example.com"]
+    end
+
+    it "does not include commiiters when email_committers_on_automated_deploy_failure? if off" do
+      subject.update_column(:email_committers_on_automated_deploy_failure, false)
+      emails.must_equal ["static@example.com"]
+    end
+
+    it "does not have static when static is empty" do
+      subject.update_column(:static_emails_on_automated_deploy_failure, "")
+      GITHUB.expects(:compare).returns simple_response
+      emails.must_equal ["pete@example.com"]
+    end
+  end
+
   describe ".build_clone" do
     before do
       subject.notify_email_address = "test@test.ttt"
-      subject.flowdock_flows = [FlowdockFlow.new(name: "test", token: "abcxyz", stage_id: subject.id, notifications: false)]
+      subject.flowdock_flows = [FlowdockFlow.new(name: "test", token: "abcxyz", stage_id: subject.id)]
       subject.datadog_tags = "xyz:abc"
       subject.new_relic_applications = [NewRelicApplication.new(name: "test", stage_id: subject.id)]
       subject.save
@@ -288,15 +347,5 @@ describe Stage do
     it "copies over the new relic applications" do
       assert_equal @clone.new_relic_applications.map(&:attributes), subject.new_relic_applications.map(&:attributes)
     end
-
-    it 'should return that there are no flows with enabled notifications' do
-      subject.send_flowdock_notifications?.must_equal(false)
-    end
-
-    it 'should return that there are flows with enabled notifications' do
-      subject.flowdock_flows.first.update!(notifications: true)
-      subject.send_flowdock_notifications?.must_equal(true)
-    end
-
   end
 end
