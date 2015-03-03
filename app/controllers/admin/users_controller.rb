@@ -1,6 +1,7 @@
 class Admin::UsersController < ApplicationController
   before_action :authorize_admin!
   before_action :authorize_super_admin!, only: [ :update, :destroy ]
+  after_action :remove_user_locks, only: [:destroy]
   helper_method :sort_column, :sort_direction
 
   def index
@@ -25,7 +26,6 @@ class Admin::UsersController < ApplicationController
   end
 
   def destroy
-    user = User.find(params[:id])
     user.soft_delete!
     Rails.logger.info("#{current_user.name_and_email} just deleted #{user.name_and_email})")
     redirect_to admin_users_path
@@ -49,4 +49,7 @@ class Admin::UsersController < ApplicationController
     %w[asc desc].include?(params[:direction]) ? params[:direction] : "asc"
   end
 
+  def remove_user_locks
+    Lock.where(user: @user).map(&:soft_delete!)
+  end
 end
