@@ -295,7 +295,7 @@ describe Stage do
     before { ENV['DEPLOY_GROUP_FEATURE'] = '1' }
     after { ENV['DEPLOY_GROUP_FEATURE'] = nil }
 
-    it 'should be true for stage with production deploy_group' do
+    it 'is true for stage with production deploy_group' do
       stage.update!(production: false)
       stage.production?.must_equal true
     end

@@ -2,7 +2,7 @@ require_relative '../test_helper'
 
 describe Environment do
   describe '.new' do
-    it 'save' do
+    it 'saves' do
       env = Environment.new(name: 'test deploy name', is_production: true)
       assert_valid(env)
       env.save.must_equal true

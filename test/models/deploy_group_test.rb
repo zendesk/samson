@@ -4,7 +4,7 @@ describe DeployGroup do
   let(:prod_env) { environments(:production_env) }
 
   describe '.new' do
-    it 'saved with valid name/env' do
+    it 'saves' do
       deploy_group = DeployGroup.new(name: 'test deploy name', environment: prod_env)
       assert_valid(deploy_group)
     end

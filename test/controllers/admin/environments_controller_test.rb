@@ -3,6 +3,7 @@ require_relative '../../test_helper'
 describe Admin::EnvironmentsController do
   as_a_deployer do
     unauthorized :get, :index
+    unauthorized :get, :new
     unauthorized :post, :create
     unauthorized :delete, :destroy, id: 1
     unauthorized :post, :update, id: 1
@@ -18,25 +19,27 @@ describe Admin::EnvironmentsController do
     end
 
     unauthorized :post, :create
+    unauthorized :get, :new
     unauthorized :delete, :destroy, id: 1
     unauthorized :post, :update, id: 1
+    unauthorized :put, :update, id: 1
   end
 
   as_a_super_admin do
     it 'get :index succeeds' do
       get :index
       assert_response :success
-      assigns(:environments).count.must_equal 2
+      assert_select('tbody tr').count.must_equal Environment.count
     end
 
     it 'get :new succeeds' do
       get :new
       assert_response :success
-      assigns(:environment).wont_be_nil
+      assert assigns(:environment)
     end
 
     describe '#create' do
-      it 'valid environment' do
+      it 'creates an environment' do
         post :create, environment: {name: 'gamma', is_production: true}
         assert_redirected_to admin_environments_path
         Environment.where(name: 'gamma').count.must_equal 1
@@ -45,14 +48,14 @@ describe Admin::EnvironmentsController do
       it 'should not create an environment with blank name' do
         env_count = Environment.count
         post :create, environment: {name: nil, is_production: true}
-        assert_redirected_to new_admin_environment_path
+        assert_template :new
         flash[:error].must_equal 'Failed to create environment: ["Name can\'t be blank"]'
         Environment.count.must_equal env_count
       end
     end
 
     describe '#delete' do
-      it 'success' do
+      it 'succeeds' do
         id = environments(:production_env).id
         delete :destroy, id: id
         assert_redirected_to admin_environments_path
@@ -66,22 +69,22 @@ describe Admin::EnvironmentsController do
       end
     end
 
-    describe '#edit' do
+    describe '#update' do
+      let(:environment){ environments(:production_env) }
+
       before { request.env["HTTP_REFERER"] = admin_environments_url }
 
       it 'save' do
-        id = environments(:production_env).id
-        post :update, environment: {name: 'Test Update', is_production: false}, id: id
+        post :update, environment: {name: 'Test Update', is_production: false}, id: environment.id
         assert_redirected_to admin_environments_path
-        Environment.find(id).name.must_equal 'Test Update'
+        Environment.find(environment.id).name.must_equal 'Test Update'
       end
 
       it 'fail to edit with blank name' do
-        id = environments(:production_env).id
-        post :update, environment: {name: '', is_production: false}, id: id
-        assert_redirected_to admin_environments_path
+        post :update, environment: {name: '', is_production: false}, id: environment.id
+        assert_template :edit
         flash[:error].must_equal 'Failed to update environment: ["Name can\'t be blank"]'
-        Environment.find(id).name.must_equal 'Production'
+        Environment.find(environment.id).name.must_equal 'Production'
       end
     end
   end

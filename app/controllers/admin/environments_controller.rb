@@ -12,21 +12,22 @@ class Admin::EnvironmentsController < ApplicationController
   end
 
   def create
-    new_env = Environment.create(env_params)
-    if new_env.persisted?
+    @environment = Environment.create(env_params)
+    if @environment.persisted?
       redirect_to action: 'index'
     else
-      flash[:error] = "Failed to create environment: #{new_env.errors.full_messages}"
-      redirect_to action: :new
+      flash[:error] = "Failed to create environment: #{@environment.errors.full_messages}"
+      render 'new'
     end
   end
 
   def update
     if environment.update_attributes(env_params)
+      flash[:notice] = "Successfully saved environment: #{environment.name}"
       redirect_to action: 'index'
     else
       flash[:error] = "Failed to update environment: #{environment.errors.full_messages}"
-      redirect_to :back
+      render 'edit'
     end
   end
 
@@ -44,7 +45,7 @@ class Admin::EnvironmentsController < ApplicationController
 
   def environment
     @environment ||= Environment.find(params[:id])
-  rescue
+  rescue ActiveRecord::RecordNotFound
     flash[:error] = "Failed to find the environment: #{params[:id]}"
     redirect_to action: 'index'
   end
