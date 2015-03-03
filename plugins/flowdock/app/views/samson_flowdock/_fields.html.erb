@@ -1,0 +1,26 @@
+<fieldset>
+  <legend>Flowdock</legend>
+  <p>Add the name and API token of the Flowdock flow which should be notified of deploys.</p>
+
+  <% stage = form.object %>
+  <% stage.flowdock_flows.build if stage.flowdock_flows.last.try(:name).blank? %>
+
+  <%= form.fields_for :flowdock_flows do |flow_fields| %>
+    <div class="form-group">
+      <div class="col-lg-2 col-lg-offset-2">
+        <%= flow_fields.text_field :name, class: "form-control", placeholder: "Flow name" %>
+      </div>
+
+      <div class="col-lg-4">
+        <%= flow_fields.text_field :token, class: "form-control", placeholder: "Token" %>
+      </div>
+
+      <% if flow_fields.object.persisted? %>
+        <div class="col-lg-1 checkbox">
+          <%= flow_fields.check_box :_destroy if flow_fields.object.persisted? %>
+          <%= flow_fields.label :_destroy, "Delete" %>
+        </div>
+      <% end %>
+    </div>
+  <% end %>
+</fieldset>

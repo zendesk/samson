@@ -72,3 +72,5 @@ module Samson
     end
   end
 end
+
+require "samson/hooks"

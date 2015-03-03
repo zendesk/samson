@@ -50,7 +50,6 @@ class StagesController < ApplicationController
 
   def new
     @stage = @project.stages.build(command_ids: Command.global.pluck(:id))
-    @stage.flowdock_flows.build
     @stage.new_relic_applications.build
   end
 
@@ -64,7 +63,6 @@ class StagesController < ApplicationController
     else
       flash[:error] = @stage.errors.full_messages
 
-      @stage.flowdock_flows.build
       @stage.new_relic_applications.build
 
       render :new
@@ -72,7 +70,6 @@ class StagesController < ApplicationController
   end
 
   def edit
-    @stage.flowdock_flows.build
     @stage.new_relic_applications.build
   end
 
@@ -82,7 +79,6 @@ class StagesController < ApplicationController
     else
       flash[:error] = @stage.errors.full_messages
 
-      @stage.flowdock_flows.build
       @stage.new_relic_applications.build
 
       render :edit
@@ -124,7 +120,7 @@ class StagesController < ApplicationController
   end
 
   def stage_params
-    params.require(:stage).permit(
+    params.require(:stage).permit([
       :name, :command, :confirm, :permalink, :dashboard,
       :production,
       :notify_email_address,
@@ -136,9 +132,8 @@ class StagesController < ApplicationController
       :static_emails_on_automated_deploy_failure,
       deploy_group_ids: [],
       command_ids: [],
-      flowdock_flows_attributes: [:id, :name, :token, :_destroy],
-      new_relic_applications_attributes: [:id, :name, :_destroy],
-    )
+      new_relic_applications_attributes: [:id, :name, :_destroy]
+    ] + Samson::Hooks.fire(:stage_permitted_params))
   end
 
   def find_project

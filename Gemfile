@@ -58,7 +58,6 @@ group :no_preload do
   gem 'octokit', '~> 3.0'
   gem 'faraday-http-cache', '~> 0.4'
   gem 'warden', '~> 1.2'
-  gem 'flowdock', '~> 0.3.1'
   gem 'active_hash', '~> 1.0'
   gem 'ansible'
   gem 'github-markdown', '~> 0.6.3'
@@ -68,6 +67,7 @@ group :no_preload do
   gem 'dogapi', '~> 1.9'
   gem 'zendesk_api'
   gem 'net-http-persistent'
+  Dir["plugins/*"].each { |f| gemspec path: f } # treat included plugins like gems
 end
 
 group :development do
