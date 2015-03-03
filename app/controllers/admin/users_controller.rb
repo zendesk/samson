@@ -1,7 +1,7 @@
 class Admin::UsersController < ApplicationController
+  include DependentLocks
   before_action :authorize_admin!
   before_action :authorize_super_admin!, only: [ :update, :destroy ]
-  after_action :remove_user_locks, only: [:destroy]
   helper_method :sort_column, :sort_direction
 
   def index
@@ -47,9 +47,5 @@ class Admin::UsersController < ApplicationController
 
   def sort_direction
     %w[asc desc].include?(params[:direction]) ? params[:direction] : "asc"
-  end
-
-  def remove_user_locks
-    Lock.where(user: @user).map(&:soft_delete!)
   end
 end

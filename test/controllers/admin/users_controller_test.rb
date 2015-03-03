@@ -87,7 +87,11 @@ describe Admin::UsersController do
 
   describe 'a DELETE to #destroy' do
     let(:user) { users(:viewer) }
-    let!(:locks) { Array.new(2, Lock.create!(user: users(:viewer), stage: stages(:test_staging))) }
+    let!(:locks) do
+      %i(test_staging test_production).map do |stage|
+        Lock.create!(user: users(:viewer), stage: stages(stage))
+      end
+    end
 
     as_a_deployer do
       unauthorized :delete, :destroy, project_id: 1, id: 1
