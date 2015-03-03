@@ -3,7 +3,7 @@ test_staging:
   project: test
   confirm: false
   permalink: staging
-  deploy_groups: [ deploy_group_pod1 ]
+  deploy_groups: [ deploy_group_pod100 ]
 
 test_production:
   name: Production

@@ -300,15 +300,22 @@ describe Stage do
       stage.production?.must_equal true
     end
 
+    it 'is false for stage with non-production deploy_group' do
+      stage = stages(:test_staging)
+      stage.production?.must_equal false
+    end
+
     it 'false for stage with no deploy_group' do
       stage.update!(production: false)
       stage.deploy_groups = []
       stage.production?.must_equal false
     end
 
-    it 'false for stage with no deploy_group still' do
+    it 'fallbacks to production field for stage with no deploy groups' do
       stage.update!(production: true)
       stage.deploy_groups = []
+      stage.production?.must_equal true
+      stage.update!(production: false)
       stage.production?.must_equal false
     end
   end
