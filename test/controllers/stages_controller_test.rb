@@ -216,11 +216,16 @@ describe StagesController do
           let(:attributes) {{
             command: 'test command',
             name: 'Hello',
-            dashboard: '<p>Some text</p>'
+            dashboard: '<p>Some text</p>',
+            email_committers_on_automated_deploy_failure: true,
+            static_emails_on_automated_deploy_failure: "static@example.com",
           }}
 
-          it 'updates name' do
+          it 'updates attributes' do
             subject.name.must_equal('Hello')
+            subject.dashboard.must_equal '<p>Some text</p>'
+            subject.email_committers_on_automated_deploy_failure?.must_equal true
+            subject.static_emails_on_automated_deploy_failure.must_equal "static@example.com"
           end
 
           it 'redirects' do
@@ -230,10 +235,6 @@ describe StagesController do
           it 'adds a command' do
             command = subject.commands.reload.last
             command.command.must_equal('test command')
-          end
-
-          it 'updates the dashboard' do
-            subject.dashboard.must_equal '<p>Some text</p>'
           end
         end
 
