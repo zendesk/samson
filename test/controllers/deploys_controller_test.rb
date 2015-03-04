@@ -137,15 +137,9 @@ describe DeploysController do
         end
       end
 
-      describe "with no deploy" do
-        setup { get :show, project_id: project.to_param, id: "deploy:nope" }
-
-        it "redirects to the root page" do
-          assert_redirected_to root_path
-        end
-
-        it "sets the flash error" do
-          request.flash[:error].wont_be_nil
+      it "fails with unknown deploy" do
+        assert_raises ActiveRecord::RecordNotFound do
+          get :show, project_id: project.to_param, id: "deploy:nope"
         end
       end
 

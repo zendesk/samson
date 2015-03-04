@@ -151,8 +151,9 @@ describe ProjectsController do
     as_a_admin do
       it "does not find soft deleted" do
         project.soft_delete!
-        put :update, id: project.to_param
-        assert_redirected_to "/"
+        assert_raises ActiveRecord::RecordNotFound do
+          put :update, id: project.to_param
+        end
       end
 
       describe "common" do
@@ -204,8 +205,9 @@ describe ProjectsController do
 
       it "does not find soft deleted" do
         project.soft_delete!
-        get :edit, id: project.to_param
-        assert_redirected_to "/"
+        assert_raises ActiveRecord::RecordNotFound do
+          get :edit, id: project.to_param
+        end
       end
     end
   end
@@ -226,8 +228,9 @@ describe ProjectsController do
 
       it "does not find soft deleted" do
         project.soft_delete!
-        get :show, id: project.to_param
-        assert_redirected_to "/"
+        assert_raises ActiveRecord::RecordNotFound do
+          get :show, id: project.to_param
+        end
       end
     end
   end

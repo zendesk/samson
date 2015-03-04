@@ -1,6 +1,4 @@
 class CommitStatusesController < ApplicationController
-  rescue_from(ActiveRecord::RecordNotFound) { head :not_found }
-
   before_action :authorize_deployer!
 
   def show

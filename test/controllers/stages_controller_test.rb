@@ -24,8 +24,9 @@ describe StagesController do
     end
 
     it "fails with invalid token" do
-      get :show, valid_params.merge(token: 'invalid')
-      assert_redirected_to "/"
+      assert_raises ActiveRecord::RecordNotFound do
+        get :show, valid_params.merge(token: 'invalid')
+      end
     end
 
     it "renders none without deploy" do
@@ -69,25 +70,15 @@ describe StagesController do
         end
       end
 
-      describe 'invalid project' do
-        before do
-          get :show, project_id: 123123,
-            id: subject.to_param
-        end
-
-        it 'redirects' do
-          assert_redirected_to root_path
+      it "fails with invalid stage" do
+        assert_raises ActiveRecord::RecordNotFound do
+          get :show, project_id: 123123, id: subject.to_param
         end
       end
 
-      describe 'invalid stage' do
-        before do
-          get :show, project_id: subject.project.to_param,
-            id: 123123
-        end
-
-        it 'redirects' do
-          assert_redirected_to project_path(subject.project)
+      it "fails with invalid stage" do
+        assert_raises ActiveRecord::RecordNotFound do
+          get :show, project_id: subject.project.to_param, id: 123123
         end
       end
     end
@@ -113,11 +104,9 @@ describe StagesController do
         end
       end
 
-      describe 'invalid project_id' do
-        before { get :new, project_id: 123123 }
-
-        it 'redirects' do
-          assert_redirected_to root_path
+      it 'fails for non-existent project' do
+        assert_raises ActiveRecord::RecordNotFound do
+          get :new, project_id: 123123
         end
       end
     end
@@ -166,13 +155,9 @@ describe StagesController do
         end
       end
 
-      describe 'invalid project id' do
-        before do
+      it "fails with unknown project" do
+        assert_raises ActiveRecord::RecordNotFound do
           post :create, project_id: 123123
-        end
-
-        it 'redirects' do
-          assert_redirected_to root_path
         end
       end
     end
@@ -186,19 +171,15 @@ describe StagesController do
         end
       end
 
-      describe 'invalid project_id' do
-        before { get :edit, project_id: 123123, id: 1 }
-
-        it 'redirects' do
-          assert_redirected_to root_path
+      it "fails with unknown project" do
+        assert_raises ActiveRecord::RecordNotFound do
+          get :edit, project_id: 123123, id: 1
         end
       end
 
-      describe 'invalid id' do
-        before { get :edit, project_id: subject.project.to_param, id: 123123 }
-
-        it 'redirects' do
-          assert_redirected_to project_path(subject.project)
+      it "fails with unknown stage" do
+        assert_raises ActiveRecord::RecordNotFound do
+          get :edit, project_id: subject.project.to_param, id: 123123
         end
       end
     end
@@ -247,19 +228,15 @@ describe StagesController do
         end
       end
 
-      describe 'invalid project_id' do
-        before { patch :update, project_id: 123123, id: 1 }
-
-        it 'redirects' do
-          assert_redirected_to root_path
+      it "does not find with invalid project_id" do
+        assert_raises ActiveRecord::RecordNotFound do
+          patch :update, project_id: 123123, id: 1
         end
       end
 
-      describe 'invalid id' do
-        before { patch :update, project_id: subject.project.to_param, id: 123123 }
-
-        it 'redirects' do
-          assert_redirected_to project_path(subject.project)
+      it "does not find with invalid id" do
+        assert_raises ActiveRecord::RecordNotFound do
+          patch :update, project_id: subject.project.to_param, id: 123123
         end
       end
     end
@@ -278,22 +255,17 @@ describe StagesController do
         end
       end
 
-      describe 'invalid project_id' do
-        before { delete :destroy, project_id: 123123, id: 1 }
-
-        it 'redirects' do
-          assert_redirected_to root_path
+      it "fails with invalid project" do
+        assert_raises ActiveRecord::RecordNotFound do
+          delete :destroy, project_id: 123123, id: 1
         end
       end
 
-      describe 'invalid id' do
-        before { delete :destroy, project_id: subject.project.to_param, id: 123123 }
-
-        it 'redirects' do
-          assert_redirected_to project_path(subject.project)
+      it "fails with invalid stage" do
+        assert_raises ActiveRecord::RecordNotFound do
+          delete :destroy, project_id: subject.project.to_param, id: 123123
         end
       end
-
     end
 
     describe 'GET to #clone' do

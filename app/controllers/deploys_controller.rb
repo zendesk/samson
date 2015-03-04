@@ -1,9 +1,4 @@
 class DeploysController < ApplicationController
-  rescue_from ActiveRecord::RecordNotFound do |error|
-    flash[:error] = "Deploy not found."
-    redirect_to root_path
-  end
-
   before_action :authorize_deployer!, only: [:new, :create, :confirm, :update, :destroy, :buddy_check, :pending_start]
   before_action :find_project
   before_action :find_deploy, except: [:index, :recent, :active, :new, :create, :confirm]
