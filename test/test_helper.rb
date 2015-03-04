@@ -76,12 +76,9 @@ class ActionController::TestCase
 
   class << self
     def unauthorized(method, action, params = {})
-      describe "a #{method} to #{action} with #{params}" do
-        before { send(method, action, params) }
-
-        it 'is unauthorized' do
-          assert_equal true, @unauthorized
-        end
+      it "is unauthorized when doing a #{method} to #{action} with #{params}" do
+        send(method, action, params)
+        @unauthorized.must_equal true, "Request was not marked unauthorized"
       end
     end
 
