@@ -1,0 +1,13 @@
+<h1><%= @environment.new_record? ? 'New' : 'Edit' %> Environment</h1>
+
+<%= form_for [:admin, @environment], html: { class: "form-horizontal" } do |form| %>
+  <%= render 'admin/environments/fields', form: form %>
+
+  <hr>
+
+  <div class="form-group">
+    <div class="col-lg-offset-2 col-lg-10">
+      <%= form.submit "Save", class: 'btn btn-default' %>
+    </div>
+  </div>
+<% end %>

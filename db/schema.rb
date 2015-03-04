@@ -20,6 +20,24 @@ ActiveRecord::Schema.define(version: 20150302060555) do
     t.integer  "project_id"
   end
 
+  create_table "deploy_groups", force: :cascade do |t|
+    t.string   "name",           null: false
+    t.integer  "environment_id", null: false
+    t.datetime "deleted_at"
+    t.datetime "created_at",     null: false
+    t.datetime "updated_at",     null: false
+  end
+
+  add_index "deploy_groups", ["environment_id"], name: "index_deploy_groups_on_environment_id"
+
+  create_table "deploy_groups_stages", id: false, force: :cascade do |t|
+    t.integer "deploy_group_id"
+    t.integer "stage_id"
+  end
+
+  add_index "deploy_groups_stages", ["deploy_group_id"], name: "index_deploy_groups_stages_on_deploy_group_id"
+  add_index "deploy_groups_stages", ["stage_id"], name: "index_deploy_groups_stages_on_stage_id"
+
   create_table "deploys", force: true do |t|
     t.integer  "stage_id",   null: false
     t.integer  "job_id",     null: false
@@ -34,6 +52,14 @@ ActiveRecord::Schema.define(version: 20150302060555) do
   add_index "deploys", ["deleted_at"], name: "index_deploys_on_deleted_at", using: :btree
   add_index "deploys", ["job_id", "deleted_at"], name: "index_deploys_on_job_id_and_deleted_at", using: :btree
   add_index "deploys", ["stage_id", "deleted_at"], name: "index_deploys_on_stage_id_and_deleted_at", using: :btree
+
+  create_table "environments", force: :cascade do |t|
+    t.string   "name",                          null: false
+    t.boolean  "is_production", default: false, null: false
+    t.datetime "deleted_at"
+    t.datetime "created_at",                    null: false
+    t.datetime "updated_at",                    null: false
+  end
 
   create_table "flowdock_flows", force: true do |t|
     t.string   "name",       null: false

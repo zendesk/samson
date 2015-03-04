@@ -1,0 +1,37 @@
+<h1>Environments</h1>
+
+<section class="clearfix tabs">
+  <div class="table table-hover table-condensed">
+    <table class="table">
+      <thead>
+      <tr>
+        <th>ID</th>
+        <th>Name</th>
+        <th>Affects Production?</th>
+        <th></th>
+      </tr>
+      </thead>
+
+      <tbody>
+        <% @environments.each do |env| %>
+          <tr>
+            <td><%= env.id%></td>
+            <td><%= env.name%></td>
+            <td><%= env.is_production ? 'Yes' : 'No' %></td>
+            <td>
+              <%= link_to "Edit", edit_admin_environment_path(env) %>
+              |
+              <%= link_to "Delete", admin_environment_path(env), method: :delete, data: { confirm: "Are you sure?" } %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+  <div class="admin-actions">
+    <div class="pull-right">
+      <%= link_to "New", new_admin_environment_path, class: "btn btn-default" %>
+    </div>
+  </div>
+
+</section>

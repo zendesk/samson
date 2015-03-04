@@ -1,0 +1,11 @@
+deploy_group_pod1:
+  name: Pod1
+  environment: production_env
+
+deploy_group_pod2:
+  name: Pod2
+  environment: production_env
+
+deploy_group_pod100:
+  name: Pod 100
+  environment: staging_env

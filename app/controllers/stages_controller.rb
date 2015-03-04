@@ -134,6 +134,7 @@ class StagesController < ApplicationController
       :comment_on_zendesk_tickets,
       :email_committers_on_automated_deploy_failure,
       :static_emails_on_automated_deploy_failure,
+      deploy_group_ids: [],
       command_ids: [],
       flowdock_flows_attributes: [:id, :name, :token, :_destroy],
       new_relic_applications_attributes: [:id, :name, :_destroy],

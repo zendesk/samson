@@ -23,23 +23,45 @@
     </div>
   </div>
 
+  <% if ENV['DEPLOY_GROUP_FEATURE'] %>
+    <div class="form-group">
+      <%= form.label :name, 'Deploy Groups', class: 'col-lg-2 control-label' %>
+      <div class="col-lg-4">
+        <%= form.collection_select(
+          :deploy_group_ids, DeployGroup.all, :id, :name,
+          {
+            selected: (@stage.deploy_group_ids if @stage && @stage.deploy_groups),
+            include_blank: false,
+            include_hidden: false
+          },
+          {
+            multiple: 'true',
+            class: 'form-control',
+            include_hidden: true,
+            required: true
+          }
+        ) %>
+      </div>
+    </div>
+  <% else %>
+    <div class="form-group">
+      <div class="col-sm-offset-2 col-sm-10">
+        <div class="checkbox">
+          <%= form.label :production do %>
+            <%= form.check_box :production %>
+            Does this stage impact production servers?
+          <% end %>
+        </div>
+      </div>
+    </div>
+  <% end %>
+
   <div class="form-group">
     <div class="col-sm-offset-2 col-sm-10">
       <div class="checkbox">
         <%= form.label :confirm do %>
           <%= form.check_box :confirm %>
           Confirm before deployment
-        <% end %>
-      </div>
-    </div>
-  </div>
-
-  <div class="form-group">
-    <div class="col-sm-offset-2 col-sm-10">
-      <div class="checkbox">
-        <%= form.label :production do %>
-          <%= form.check_box :production %>
-          Does this stage impact production servers?
         <% end %>
       </div>
     </div>

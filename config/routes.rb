@@ -66,6 +66,8 @@ Samson::Application.routes.draw do
     resources :users, only: [:index, :update, :destroy]
     resource :projects, only: [:show]
     resources :commands, except: [:show]
+    resources :environments, except: [:show]
+    resources :deploy_groups, except: [:show]
   end
 
   namespace :integrations do

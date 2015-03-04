@@ -17,6 +17,8 @@ class Stage < ActiveRecord::Base
     -> { order('stage_commands.position ASC') },
     through: :stage_commands
 
+  has_and_belongs_to_many :deploy_groups
+
   default_scope { order(:order) }
 
   validates :name, presence: true, uniqueness: { scope: [:project, :deleted_at] }
@@ -156,6 +158,14 @@ class Stage < ActiveRecord::Base
 
   def send_github_notifications?
     update_github_pull_requests
+  end
+
+  def production?
+    if ENV['DEPLOY_GROUP_FEATURE']
+      deploy_groups.empty? ? super : deploy_groups.any? { |deploy_group| deploy_group.environment.is_production? }
+    else
+      super
+    end
   end
 
   def automated_failure_emails(deploy)

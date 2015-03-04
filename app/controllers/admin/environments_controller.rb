@@ -1,0 +1,56 @@
+class Admin::EnvironmentsController < ApplicationController
+  before_action :authorize_admin!
+  before_action :authorize_super_admin!, only: [ :create, :new, :edit, :update, :destroy ]
+  before_action :environment, only: [:edit, :update, :destroy]
+
+  rescue_from ActiveRecord::RecordNotFound do
+    flash[:error] = "Environment not found."
+    redirect_to admin_environments_path
+  end
+
+  def index
+    @environments = Environment.all
+  end
+
+  def new
+    @environment = Environment.new
+    render 'edit'
+  end
+
+  def create
+    @environment = Environment.create(env_params)
+    if @environment.persisted?
+      flash[:notice] = "Successfully saved environment: #{@environment.name}"
+      redirect_to action: 'index'
+    else
+      flash[:error] = @environment.errors.full_messages
+      render 'edit'
+    end
+  end
+
+  def update
+    if environment.update_attributes(env_params)
+      flash[:notice] = "Successfully saved environment: #{environment.name}"
+      redirect_to action: 'index'
+    else
+      flash[:error] = environment.errors.full_messages
+      render 'edit'
+    end
+  end
+
+  def destroy
+    environment.soft_delete!
+    flash[:notice] = "Successfully deleted environment: #{environment.name}"
+    redirect_to action: 'index'
+  end
+
+  private
+
+  def env_params
+    params.require(:environment).permit(:name, :is_production)
+  end
+
+  def environment
+    @environment ||= Environment.find(params[:id])
+  end
+end
