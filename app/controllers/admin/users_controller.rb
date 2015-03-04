@@ -1,5 +1,4 @@
 class Admin::UsersController < ApplicationController
-  include DependentLocks
   before_action :authorize_admin!
   before_action :authorize_super_admin!, only: [ :update, :destroy ]
   helper_method :sort_column, :sort_direction

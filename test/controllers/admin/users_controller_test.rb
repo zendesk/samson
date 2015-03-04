@@ -87,11 +87,6 @@ describe Admin::UsersController do
 
   describe 'a DELETE to #destroy' do
     let(:user) { users(:viewer) }
-    let!(:locks) do
-      %i(test_staging test_production).map do |stage|
-        Lock.create!(user: users(:viewer), stage: stages(stage))
-      end
-    end
 
     as_a_deployer do
       unauthorized :delete, :destroy, project_id: 1, id: 1
@@ -106,7 +101,6 @@ describe Admin::UsersController do
       it 'soft delete the user and all the locks he was associated with' do
         delete :destroy, id: user.id
         user.reload.deleted_at.wont_be_nil
-        locks.each { |lock| lock.reload.deleted_at.wont_be_nil }
         assert_redirected_to admin_users_path
       end
     end
