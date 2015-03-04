@@ -7,6 +7,7 @@ class User < ActiveRecord::Base
   has_many :commands
   has_many :stars
   has_many :starred_projects, through: :stars, source: :project
+  has_many :locks, dependent: :destroy
 
   validates :role_id, inclusion: { in: Role.all.map(&:id) }
 

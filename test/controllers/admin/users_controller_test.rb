@@ -97,15 +97,10 @@ describe Admin::UsersController do
     end
 
     as_a_super_admin do
-      setup do
-        delete :destroy, id: user.id
-      end
 
       it 'soft delete the user' do
+        delete :destroy, id: user.id
         user.reload.deleted_at.wont_be_nil
-      end
-
-      it 'redirects to admin users page' do
         assert_redirected_to admin_users_path
       end
     end

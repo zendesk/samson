@@ -49,13 +49,10 @@ $(function() {
     });
   }
 
-  var $wantLock    = $(".want-lock"),
-      $beforeLock  = $(".before-lock"),
-      $description = $(".lock-description");
-
-  $wantLock.click(function() {
-    $wantLock.toggleClass("active");
-    $beforeLock.toggleClass("active");
-    $description.select();
+  $(".want-lock").not(":disabled").click(function() {
+    var $form = $(this).next();
+    $(this).toggleClass("active");
+    $form.toggleClass("active");
+    $form.find(".lock-description").select();
   });
 });

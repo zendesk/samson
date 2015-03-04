@@ -47,4 +47,11 @@ class Integrations::BaseController < ApplicationController
       message.include?(token)
     end
   end
+
+  def user
+    name = self.class.name.split("::").last.sub("Controller", "")
+    email = "deploy+#{name.underscore}@#{Rails.application.config.samson.email.sender_domain}"
+
+    User.create_with(name: name, integration: true).find_or_create_by(email: email)
+  end
 end

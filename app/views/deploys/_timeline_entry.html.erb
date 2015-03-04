@@ -1,6 +1,6 @@
 <tr class="timeline-entry"
   data-url="{{deploy.url}}" ng-click="jumpTo($event)"
-  ng-repeat="deploy in (deploys = (timelineDeploys.entries | filter:search | userFilter:userType | stageFilter:stageType | statusFilter:deployStatus))">
+  ng-repeat="deploy in (deploys = (timelineDeploys.entries | projectUserFilter:search | userFilter:userType | stageFilter:stageType | statusFilter:deployStatus))">
   <td>
     <a class="timeline-project" ng-href="{{deploy.project.url}}">{{deploy.project.name}}</a>
   </td>

@@ -29,11 +29,4 @@ class Integrations::TddiumController < Integrations::BaseController
   def commit
     params[:commit_id]
   end
-
-  def user
-    name = "Tddium"
-    email = "deploy+tddium@#{Rails.application.config.samson.email.sender_domain}"
-
-    User.create_with(name: name).find_or_create_by(email: email)
-  end
 end

@@ -25,7 +25,6 @@ class Admin::UsersController < ApplicationController
   end
 
   def destroy
-    user = User.find(params[:id])
     user.soft_delete!
     Rails.logger.info("#{current_user.name_and_email} just deleted #{user.name_and_email})")
     redirect_to admin_users_path
@@ -48,5 +47,4 @@ class Admin::UsersController < ApplicationController
   def sort_direction
     %w[asc desc].include?(params[:direction]) ? params[:direction] : "asc"
   end
-
 end

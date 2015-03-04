@@ -36,13 +36,13 @@ module ApplicationHelper
     Rails.application.config.samson.revision.presence
   end
 
-  def global_lock?
-    global_lock.present?
-  end
-
   def global_lock
     return @global_lock if defined?(@global_lock)
     @global_lock = Lock.global.first
+  end
+
+  def render_global_lock
+    render '/locks/lock', lock: global_lock if global_lock
   end
 
   def datetime_to_js_ms(utc_string)
@@ -76,7 +76,7 @@ module ApplicationHelper
       when Project then [item.name, project_path(item)]
       when Stage then
         name = item.name
-        name = lock_icon + " " + name if item.locked?
+        name = (item.lock.warning? ? warning_icon : lock_icon) + " " + name if item.lock
         [name, project_stage_path(@project, item)]
       when Macro then
         [item.name, project_macro_path(@project, item)]
@@ -98,6 +98,14 @@ module ApplicationHelper
   end
 
   def lock_icon
-    content_tag :i, '', class: "glyphicon glyphicon-lock"
+    icon_tag "lock"
+  end
+
+  def warning_icon
+    icon_tag "warning-sign"
+  end
+
+  def icon_tag(type)
+    content_tag :i, '', class: "glyphicon glyphicon-#{type}"
   end
 end

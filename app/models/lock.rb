@@ -7,6 +7,7 @@ class Lock < ActiveRecord::Base
   belongs_to :user
 
   validates :user_id, presence: true
+  validates :description, presence: true, if: :warning?
   validate :unique_global_lock, on: :create
 
   def self.global
@@ -18,7 +19,7 @@ class Lock < ActiveRecord::Base
   end
 
   def summary
-    "Locked by #{user.name} #{time_ago_in_words(created_at)} ago"
+    "Locked by #{user.try(:name) || 'Unknown user'} #{time_ago_in_words(created_at)} ago"
   end
 
   def reason

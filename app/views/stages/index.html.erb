@@ -5,9 +5,7 @@
     <% @stages.each.with_index do |stage, index| %>
       <li class="stage-bar bar list-unstyled clearfix<%= ' sortable' if current_user.is_admin? %>" data-id="stage_id_<%= stage.id %>">
         <%= link_to stage.name, project_stage_path(@project, stage) %>
-        <% if stage.locked? %>
-          <span class="label label-warning" title="<%= stage.lock.summary %>"><%= lock_icon %> Locked</span>
-        <% end %>
+        <%= stage_lock_icon stage %>
         <div class="btn-group pull-right">
           <% if current_user.is_admin? %>
             <%= link_to "Clone", clone_project_stage_path(@project, stage), class: "btn btn-default" %>

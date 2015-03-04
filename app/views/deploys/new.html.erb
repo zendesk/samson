@@ -1,10 +1,6 @@
 <%= breadcrumb @project, "Deploy" %>
 
-<% if global_lock? %>
-  <div class="alert alert-warning">
-    All deploys locked until further notice! Contact <%= global_lock.user.name %> for details.
-  </div>
-<% end %>
+<%= render_global_lock %>
 
 <section>
   <%= form_for [@project, @deploy], html: { class: "form-horizontal" }, data: { 'commit-status-url' => project_commit_statuses_path(@project), 'confirm-url' => confirm_project_deploys_path(@project) } do |form| %>
@@ -38,7 +34,7 @@
 
       <div class="form-group" id="new-deploy-buttons">
         <div class="col-lg-offset-2 col-lg-10">
-          <button type="submit" class="btn btn-primary" <%= 'disabled="disabled"' if global_lock? %>>
+          <button type="submit" class="btn btn-primary" <%= 'disabled="disabled"' if global_lock %>>
             <span id="deploy-button-text">Deploy!</span>
             <span style="display: none;" id="confirm-button-text">Confirm!</span>
           </button>

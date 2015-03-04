@@ -22,8 +22,6 @@ Samson::Application.routes.draw do
     resources :releases, only: [:show, :index, :new, :create]
 
     resources :stages do
-      resource :lock, only: [:create, :destroy]
-
       collection do
         patch :reorder
       end
@@ -41,6 +39,7 @@ Samson::Application.routes.draw do
   end
 
   resources :streams, only: [:show]
+  resources :locks, only: [:create, :destroy]
 
   resources :deploys, only: [] do
     collection do
@@ -67,7 +66,6 @@ Samson::Application.routes.draw do
     resources :users, only: [:index, :update, :destroy]
     resource :projects, only: [:show]
     resources :commands, except: [:show]
-    resource :lock, only: [:create, :destroy]
     resources :environments, except: [:show]
     resources :deploy_groups, except: [:show]
   end

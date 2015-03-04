@@ -29,11 +29,4 @@ class Integrations::TravisController < Integrations::BaseController
   def commit
     payload['commit']
   end
-
-  def user
-    name = "Travis"
-    email = "deploy+travis@#{Rails.application.config.samson.email.sender_domain}"
-
-    User.create_with(name: name).find_or_create_by(email: email)
-  end
 end

@@ -1,103 +1,84 @@
 require_relative '../test_helper'
 
 describe LocksController do
+  let(:global_lock) { Lock.create! user: users(:deployer) }
+
+  before { request.headers['HTTP_REFERER'] = '/back' }
+
   as_a_viewer do
-    unauthorized :post, :create, project_id: 1, stage_id: 1
-    unauthorized :delete, :destroy, project_id: 1, stage_id: 1, id: 1
+    unauthorized :post, :create
+    unauthorized :post, :create, lock: {stage_id: 1}
+    unauthorized :delete, :destroy, id: 1
   end
 
   as_a_deployer do
-    let(:project) { stage.project }
+    unauthorized :post, :create
+    it("unauthorized") { post :create, id: global_lock.id }
+
     let(:stage) { stages(:test_staging) }
 
     describe 'POST to #create' do
-      describe 'without a project' do
-        before { post :create, project_id: 123123, stage_id: 1 }
+      it "creates a lock" do
+        post :create, lock: {stage_id: stage.id, description: "DESC"}
+        assert_redirected_to "/back"
+        assert flash[:notice]
 
-        it 'redirects' do
-          assert_redirected_to root_path
-        end
+        stage.reload
+
+        stage.warning?.must_equal(false)
+        stage.locked?.must_equal(true)
+        stage.lock.description.must_equal "DESC"
       end
 
-      describe 'with a project' do
-        describe' without a stage' do
-          before { post :create, project_id: project.to_param, stage_id: 1 }
+      it "creates a warning" do
+        post :create, lock: {stage_id: stage.id, description: "DESC", warning: true}
+        assert_redirected_to "/back"
+        assert flash[:notice]
 
-          it 'redirects' do
-            assert_redirected_to project_path(project)
-          end
-        end
+        stage.reload
 
-        describe 'with a stage' do
-          before { post :create, project_id: project.to_param, stage_id: stage.to_param }
-
-          it 'creates a lock' do
-            stage.reload.locked?.must_equal(true)
-          end
-
-          it 'redirects' do
-            assert_redirected_to project_stage_path(project, stage)
-          end
-        end
-
-        describe 'with a description' do
-          let(:description) { 'helloworld' }
-
-          before { post :create, project_id: project.to_param, stage_id: stage.to_param, description: description }
-
-          it 'creates the lock with a description' do
-            assert_equal stage.reload.lock.description, description
-          end
-        end
-
-        describe 'without a description' do
-          before { post :create, project_id: project.to_param, stage_id: stage.to_param }
-
-          it 'creates the lock with description equals to nil' do
-            assert_nil stage.reload.lock.description
-          end
-        end
+        stage.warning?.must_equal(true)
+        stage.locked?.must_equal(false)
+        stage.lock.description.must_equal "DESC"
       end
     end
 
     describe 'DELETE to #destroy' do
-      describe 'without a project' do
-        before { delete :destroy, project_id: 123123, stage_id: 1 }
+      it "destroys the lock" do
+        lock = stage.create_lock!(user: users(:deployer))
+        delete :destroy, id: lock.id
 
-        it 'redirects' do
-          assert_redirected_to root_path
-        end
+        assert_redirected_to "/back"
+        assert flash[:notice]
+
+        stage.reload
+
+        stage.locked?.must_equal(false)
+        Lock.count.must_equal 0
       end
+    end
+  end
 
-      describe 'with a project' do
-        describe' without a stage' do
-          before { delete :destroy, project_id: project, stage_id: 1 }
+  as_a_admin do
+    describe 'POST to #create' do
+      it "creates a global lock" do
+        post :create, lock: {description: "DESC"}
+        assert_redirected_to "/back"
+        assert flash[:notice]
 
-          it 'redirects' do
-            assert_redirected_to project_path(project)
-          end
-        end
+        lock = Lock.global.first
+        lock.description.must_equal "DESC"
+      end
+    end
 
-        describe 'with a stage' do
-          describe 'without a lock' do
-            before { delete :destroy, project_id: project.to_param, stage_id: stage.to_param }
+    describe 'DELETE to #destroy' do
+      it "destroys a global lock" do
+        delete :destroy, id: global_lock.id
 
-            it 'redirects' do
-              assert_redirected_to project_stage_path(project, stage)
-            end
-          end
+        assert_redirected_to "/back"
+        assert flash[:notice]
 
-          describe 'with a lock' do
-            before do
-              stage.create_lock!(user: users(:deployer))
-              delete :destroy, project_id: project.to_param, stage_id: stage.to_param
-            end
-
-            it 'removes the lock' do
-              stage.reload.locked?.must_equal(false)
-            end
-          end
-        end
+        Lock.count.must_equal 0
       end
     end
   end

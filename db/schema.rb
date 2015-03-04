@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20150223135916) do
+ActiveRecord::Schema.define(version: 20150302060555) do
 
   create_table "commands", force: true do |t|
     t.text     "command",    limit: 16777215
@@ -85,11 +85,12 @@ ActiveRecord::Schema.define(version: 20150223135916) do
 
   create_table "locks", force: true do |t|
     t.integer  "stage_id"
-    t.integer  "user_id"
+    t.integer  "user_id",     null: false
     t.datetime "created_at"
     t.datetime "updated_at"
     t.datetime "deleted_at"
     t.string   "description"
+    t.boolean  "warning",     default: false, null: false
   end
 
   add_index "locks", ["stage_id", "deleted_at", "user_id"], name: "index_locks_on_stage_id_and_deleted_at_and_user_id", using: :btree
@@ -174,6 +175,9 @@ ActiveRecord::Schema.define(version: 20150223135916) do
     t.boolean  "production",                  default: false
     t.boolean  "use_github_deployment_api"
     t.string   "permalink",                                   null: false
+    t.text     "dashboard",                   limit: 65535
+    t.boolean  "email_committers_on_automated_deploy_failure",         default: false, null: false
+    t.string   "static_emails_on_automated_deploy_failure", limit: 255
   end
 
   add_index "stages", ["project_id", "permalink", "deleted_at"], name: "index_stages_on_project_id_and_permalink_and_deleted_at", using: :btree
@@ -197,6 +201,7 @@ ActiveRecord::Schema.define(version: 20150223135916) do
     t.datetime "deleted_at"
     t.string   "external_id"
     t.boolean  "desktop_notify", default: false
+    t.boolean  "integration",    default: false, null: false
   end
 
   add_index "users", ["external_id", "deleted_at"], name: "index_users_on_external_id_and_deleted_at", using: :btree
