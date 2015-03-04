@@ -64,6 +64,7 @@ ActiveRecord::Schema.define(version: 20150302060555) do
     t.datetime "updated_at"
     t.datetime "deleted_at"
     t.string   "description"
+    t.boolean  "warning",     default: false, null: false
   end
 
   add_index "locks", ["stage_id", "deleted_at", "user_id"], name: "index_locks_on_stage_id_and_deleted_at_and_user_id", using: :btree

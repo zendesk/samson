@@ -72,7 +72,11 @@ class Stage < ActiveRecord::Base
   end
 
   def locked?
-    lock.present?
+    !!lock && !lock.warning?
+  end
+
+  def warning?
+    !!lock && lock.warning?
   end
 
   def locked_for?(user)

@@ -1,12 +1,18 @@
+<% warning = {warning: true, icon: warning_icon, text: "Warn", disabled: false} %>
+<% locking = {warning: false, icon: lock_icon, text: "Lock", disabled: false} %>
 <% if lock %>
-  <%= link_to lock, class: 'btn btn-default', method: :delete do %>
-    <%= lock_icon %> Unlock
+  <% if lock.warning? %>
+    <%= link_to lock, class: 'btn btn-default', method: :delete do %>
+      <%= warning_icon %> Resolve
+    <% end %>
+    <%= render '/locks/lock_button', locking.merge(disabled: true) %>
+  <% else %>
+    <%= render '/locks/lock_button', warning.merge(disabled: true) %>
+    <%= link_to lock, class: 'btn btn-default', method: :delete do %>
+      <%= lock_icon %> Unlock
+    <% end %>
   <% end %>
 <% else %>
-  <button class="btn btn-default want-lock"><%= lock_icon %> Lock</button>
-  <%= form_for Lock.new(stage: @stage), html: {class: 'before-lock'} do |f| %>
-    <%= f.hidden_field :stage_id %>
-    <%= f.text_field :description, class: "lock-description", placeholder: "Description" %>
-    <%= f.submit "Lock", class: "do-lock btn btn-warning" %>
-  <% end %>
+  <%= render '/locks/lock_button', warning %>
+  <%= render '/locks/lock_button', locking %>
 <% end %>

@@ -1,5 +1,8 @@
 <div class="alert alert-warning">
-  Deployments to <%= lock.global? ? "ALL STAGES" : "this stage" %>
-  were locked by <%= lock.user.name %> <%= time_ago_in_words(lock.created_at) %> ago.
-  <%= lock.reason %>
+  <% if lock.warning? %>
+    <%= warning_icon %> Warning:
+  <% else %>
+    <%= lock_icon %> Deployments to <%= lock.global? ? "ALL STAGES" : "this stage" %> were locked
+  <% end %>
+  <%= lock.reason %> by <%= lock.user.name %> <%= time_ago_in_words(lock.created_at) %> ago.
 </div>

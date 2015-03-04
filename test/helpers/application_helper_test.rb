@@ -105,6 +105,12 @@ describe ApplicationHelper do
       breadcrumb(stage).must_equal "<ul class=\"breadcrumb\"><li class=\"\"><a href=\"/\">Home</a></li><li class=\"active\"><i class=\"glyphicon glyphicon-lock\"></i> Staging</li></ul>"
     end
 
+    it "renders warning stage" do
+      stage = stages(:test_staging)
+      stage.stubs(lock: Lock.new(warning: true))
+      breadcrumb(stage).must_equal "<ul class=\"breadcrumb\"><li class=\"\"><a href=\"/\">Home</a></li><li class=\"active\"><i class=\"glyphicon glyphicon-warning-sign\"></i> Staging</li></ul>"
+    end
+
     it "renders project" do
       breadcrumb(@project).must_equal "<ul class=\"breadcrumb\"><li class=\"\"><a href=\"/\">Home</a></li><li class=\"active\">Project</li></ul>"
     end

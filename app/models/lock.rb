@@ -7,6 +7,7 @@ class Lock < ActiveRecord::Base
   belongs_to :user
 
   validates :user_id, presence: true
+  validates :description, presence: true, if: :warning?
   validate :unique_global_lock, on: :create
 
   def self.global

@@ -13,4 +13,14 @@ module StagesHelper
       link_to "", edit_url, title: "Edit in admin UI", class: "edit-command glyphicon glyphicon-edit no-hover"
     end
   end
+
+  def stage_lock_icon(stage)
+    return unless stage.lock
+    text = if stage.lock.warning?
+      "#{warning_icon} Warning"
+    else
+      "#{lock_icon} Locked"
+    end
+    content_tag :span, text.html_safe, class: "label label-warning", title: stage.lock.summary
+  end
 end
