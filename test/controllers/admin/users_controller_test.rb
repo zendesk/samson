@@ -98,7 +98,7 @@ describe Admin::UsersController do
 
     as_a_super_admin do
 
-      it 'soft delete the user and all the locks he was associated with' do
+      it 'soft delete the user' do
         delete :destroy, id: user.id
         user.reload.deleted_at.wont_be_nil
         assert_redirected_to admin_users_path
