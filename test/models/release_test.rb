@@ -51,4 +51,26 @@ describe Release do
       stage.deploys.create!(reference: options.fetch(:reference), job: job)
     end
   end
+
+  describe "#changeset" do
+    let(:project) { projects(:test) }
+    let(:author) { users(:deployer) }
+
+    it "returns changeset" do
+      changeset = Changeset.new("url", "foo/bar", "a", "b")
+      project.releases.create!(author: author, commit: "bar", number: 50)
+      release = project.create_release(commit: "foo", author: author)
+
+      Changeset.stubs(:find).with("bar/foo", "bar", "foo").returns(changeset)
+      assert_equal changeset, release.changeset
+    end
+
+    it "returns empty changeset" do
+      changeset = Changeset.new("url", "foo/bar", "a", "a")
+      release = project.releases.create!(author: author, commit: "bar", number: 50)
+
+      Changeset.stubs(:find).with("bar/foo", nil, "bar").returns(changeset)
+      assert_equal changeset, release.changeset
+    end
+  end
 end

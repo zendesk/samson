@@ -64,12 +64,6 @@ class Project < ActiveRecord::Base
     release_branch == branch
   end
 
-  def changeset_for_release(release)
-    prior_release = release_prior_to(release)
-    prior_commit = prior_release && prior_release.commit
-    Changeset.find(github_repo, prior_commit, release.commit)
-  end
-
   # The user/repo part of the repository URL.
   def github_repo
     # GitHub allows underscores, hyphens and dots in repo names
