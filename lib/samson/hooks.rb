@@ -47,5 +47,10 @@ end
 Dir["plugins/*/lib"].each { |f| $LOAD_PATH << f } # treat included plugins like gems
 
 Gem.find_files("*/samson_plugin.rb").each do |plugin_path|
+  # load the plugin
   require plugin_path
+
+  # make migrations available to db:migrate
+  migrations = File.expand_path("../../../db/migrate", plugin_path)
+  Rails.application.config.paths["db/migrate"] << migrations if Dir.exist?(migrations)
 end
