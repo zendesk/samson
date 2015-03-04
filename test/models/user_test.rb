@@ -217,4 +217,15 @@ describe User do
 
   end
 
+  describe 'soft delete!' do
+    let(:user) { User.create!(name: 'to_delete', email: 'to_delete@test.com') }
+    let!(:locks) do
+      %i(test_staging test_production).map { |stage| user.locks.create!(stage: stages(stage)) }
+    end
+
+    it 'soft deletes all the user locks when the user is soft deleted' do
+      user.soft_delete!
+      locks.each { |lock| lock.reload.deleted_at.wont_be_nil }
+    end
+  end
 end
