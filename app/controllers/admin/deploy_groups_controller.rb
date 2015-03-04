@@ -3,21 +3,28 @@ class Admin::DeployGroupsController < ApplicationController
   before_action :authorize_super_admin!, only: [ :create, :new, :update, :destroy ]
   before_action :deploy_group, only: [:edit, :update, :destroy]
 
+  rescue_from ActiveRecord::RecordNotFound do
+    flash[:error] = "Deploy Group not found."
+    redirect_to admin_deploy_groups_path
+  end
+
   def index
     @deploy_groups = DeployGroup.all
   end
 
   def new
     @deploy_group = DeployGroup.new
+    render 'edit'
   end
 
   def create
     @deploy_group = DeployGroup.create(deploy_group_params)
     if @deploy_group.persisted?
+      flash[:notice] = "Successfully created deploy group: #{@deploy_group.name}"
       redirect_to action: 'index'
     else
-      flash[:error] = "Failed to create deploy group: #{@deploy_group.errors.full_messages}"
-      render 'new'
+      flash[:error] = @deploy_group.errors.full_messages
+      render 'edit'
     end
   end
 
@@ -26,7 +33,7 @@ class Admin::DeployGroupsController < ApplicationController
       flash[:notice] = "Successfully saved deploy group: #{deploy_group.name}"
       redirect_to action: 'index'
     else
-      flash[:error] = "Failed to update deploy group: #{deploy_group.errors.full_messages}"
+      flash[:error] = deploy_group.errors.full_messages
       render 'edit'
     end
   end
@@ -45,8 +52,5 @@ class Admin::DeployGroupsController < ApplicationController
 
   def deploy_group
     @deploy_group ||= DeployGroup.find(params[:id])
-  rescue ActiveRecord::RecordNotFound
-    flash[:error] = "Failed to find the deploy group: #{params[:id]}"
-    redirect_to action: 'index'
   end
 end

@@ -1,6 +1,14 @@
 require_relative '../../test_helper'
 
 describe Admin::EnvironmentsController do
+  def self.it_renders_index
+    it 'get :index succeeds' do
+      get :index
+      assert_response :success
+      assert_select('tbody tr').count.must_equal Environment.count
+    end
+  end
+
   as_a_deployer do
     unauthorized :get, :index
     unauthorized :get, :new
@@ -10,14 +18,7 @@ describe Admin::EnvironmentsController do
   end
 
   as_a_admin do
-    it 'get index as admin succeeds' do
-      get :index
-      assert_response :success
-      envs = assigns(:environments)
-      envs.include?(environments(:production_env)).must_equal true
-      envs.include?(environments(:staging_env)).must_equal true
-    end
-
+    it_renders_index
     unauthorized :post, :create
     unauthorized :get, :new
     unauthorized :delete, :destroy, id: 1
@@ -26,11 +27,7 @@ describe Admin::EnvironmentsController do
   end
 
   as_a_super_admin do
-    it 'get :index succeeds' do
-      get :index
-      assert_response :success
-      assert_select('tbody tr').count.must_equal Environment.count
-    end
+    it_renders_index
 
     it 'get :new succeeds' do
       get :new
@@ -40,16 +37,17 @@ describe Admin::EnvironmentsController do
 
     describe '#create' do
       it 'creates an environment' do
-        post :create, environment: {name: 'gamma', is_production: true}
-        assert_redirected_to admin_environments_path
-        Environment.where(name: 'gamma').count.must_equal 1
+        assert_difference 'Environment.count', +1 do
+          post :create, environment: {name: 'gamma', is_production: true}
+          assert_redirected_to admin_environments_path
+        end
       end
 
       it 'should not create an environment with blank name' do
         env_count = Environment.count
         post :create, environment: {name: nil, is_production: true}
-        assert_template :new
-        flash[:error].must_equal 'Failed to create environment: ["Name can\'t be blank"]'
+        assert_template :edit
+        flash[:error].must_equal ["Name can't be blank"]
         Environment.count.must_equal env_count
       end
     end
@@ -65,7 +63,7 @@ describe Admin::EnvironmentsController do
       it 'fail for non-existent environment' do
         delete :destroy, id: -1
         assert_redirected_to admin_environments_path
-        flash[:error].must_equal 'Failed to find the environment: -1'
+        flash[:error].must_equal 'Environment not found.'
       end
     end
 
@@ -83,7 +81,7 @@ describe Admin::EnvironmentsController do
       it 'fail to edit with blank name' do
         post :update, environment: {name: '', is_production: false}, id: environment.id
         assert_template :edit
-        flash[:error].must_equal 'Failed to update environment: ["Name can\'t be blank"]'
+        flash[:error].must_equal ["Name can't be blank"]
         Environment.find(environment.id).name.must_equal 'Production'
       end
     end

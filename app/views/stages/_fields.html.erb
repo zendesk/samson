@@ -28,16 +28,17 @@
       <%= form.label :name, 'Deploy Groups', class: 'col-lg-2 control-label' %>
       <div class="col-lg-4">
         <%= form.collection_select(
-          :deploy_groups, DeployGroup.all, :id, :name,
+          :deploy_group_ids, DeployGroup.all, :id, :name,
           {
-            selected: (@stage.deploy_groups.ids if @stage && @stage.deploy_groups),
+            selected: (@stage.deploy_group_ids if @stage && @stage.deploy_groups),
             include_blank: false,
             include_hidden: false
           },
           {
             multiple: 'true',
             class: 'form-control',
-            include_hidden: true
+            include_hidden: true,
+            required: true
           }
         ) %>
       </div>

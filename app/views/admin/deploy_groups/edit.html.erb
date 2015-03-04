@@ -1,4 +1,4 @@
-<h1>Edit Deploy Group</h1>
+<h1><%= @deploy_group.new_record? ? 'New' : 'Edit' %> Deploy Group</h1>
 
 <%= form_for [:admin, @deploy_group], html: { class: "form-horizontal" } do |form| %>
   <%= render 'admin/deploy_groups/fields', form: form %>

@@ -77,7 +77,7 @@ class StagesController < ApplicationController
   end
 
   def update
-    if @stage.update_attributes(stage_params) && update_deploy_groups
+    if @stage.update_attributes(stage_params)
       redirect_to project_stage_path(@project, @stage)
     else
       flash[:error] = @stage.errors.full_messages
@@ -132,6 +132,7 @@ class StagesController < ApplicationController
       :datadog_tags,
       :update_github_pull_requests,
       :comment_on_zendesk_tickets,
+      deploy_group_ids: [],
       command_ids: [],
       flowdock_flows_attributes: [:id, :name, :token, :_destroy],
       new_relic_applications_attributes: [:id, :name, :_destroy]
@@ -144,11 +145,5 @@ class StagesController < ApplicationController
 
   def find_stage
     @stage = @project.stages.find_by_param!(params[:id])
-  end
-
-  def update_deploy_groups
-    # http://stackoverflow.com/questions/8929230/why-is-the-first-element-always-blank-in-my-rails-multi-select-using-an-embedde
-    deploy_group_ids = params[:stage].fetch(:deploy_groups, []).reject(&:empty?)
-    @stage.deploy_groups = DeployGroup.find(deploy_group_ids)
   end
 end

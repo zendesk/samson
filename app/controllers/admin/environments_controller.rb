@@ -3,21 +3,28 @@ class Admin::EnvironmentsController < ApplicationController
   before_action :authorize_super_admin!, only: [ :create, :new, :edit, :update, :destroy ]
   before_action :environment, only: [:edit, :update, :destroy]
 
+  rescue_from ActiveRecord::RecordNotFound do
+    flash[:error] = "Environment not found."
+    redirect_to admin_environments_path
+  end
+
   def index
     @environments = Environment.all
   end
 
   def new
     @environment = Environment.new
+    render 'edit'
   end
 
   def create
     @environment = Environment.create(env_params)
     if @environment.persisted?
+      flash[:notice] = "Successfully saved environment: #{@environment.name}"
       redirect_to action: 'index'
     else
-      flash[:error] = "Failed to create environment: #{@environment.errors.full_messages}"
-      render 'new'
+      flash[:error] = @environment.errors.full_messages
+      render 'edit'
     end
   end
 
@@ -26,7 +33,7 @@ class Admin::EnvironmentsController < ApplicationController
       flash[:notice] = "Successfully saved environment: #{environment.name}"
       redirect_to action: 'index'
     else
-      flash[:error] = "Failed to update environment: #{environment.errors.full_messages}"
+      flash[:error] = environment.errors.full_messages
       render 'edit'
     end
   end
@@ -45,8 +52,5 @@ class Admin::EnvironmentsController < ApplicationController
 
   def environment
     @environment ||= Environment.find(params[:id])
-  rescue ActiveRecord::RecordNotFound
-    flash[:error] = "Failed to find the environment: #{params[:id]}"
-    redirect_to action: 'index'
   end
 end

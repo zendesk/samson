@@ -1,6 +1,15 @@
 require_relative '../../test_helper'
 
 describe Admin::DeployGroupsController do
+  def self.it_renders_index
+    it 'get :index succeeds' do
+      get :index
+      assert_response :success
+      assert_template :index
+      assert_select('tbody tr').count.must_equal DeployGroup.count
+    end
+  end
+
   as_a_deployer do
     unauthorized :get, :index
     unauthorized :post, :create
@@ -10,12 +19,7 @@ describe Admin::DeployGroupsController do
   end
 
   as_a_admin do
-    it 'get index succeeds' do
-      get :index
-      assert_response :success
-      assigns(:deploy_groups).count.must_equal 3
-    end
-
+    it_renders_index
     unauthorized :post, :create
     unauthorized :delete, :destroy, id: 1
     unauthorized :post, :update, id: 1
@@ -23,12 +27,7 @@ describe Admin::DeployGroupsController do
   end
 
   as_a_super_admin do
-    it 'get :index succeeds' do
-      get :index
-      assert_response :success
-      assert_template :index
-      assert_select('tbody tr').count.must_equal DeployGroup.count
-    end
+    it_renders_index
 
     it 'get :new succeeds' do
       get :new
@@ -38,18 +37,17 @@ describe Admin::DeployGroupsController do
 
     describe '#create' do
       it 'creates a deploy group' do
-        post :create, deploy_group: {name: 'pod666', environment_id: environments(:staging_env).id}
-        assert_redirected_to admin_deploy_groups_path
-        deploy_groups = DeployGroup.where(name: 'pod666')
-        deploy_groups.count.must_equal 1
-        deploy_groups.first.environment.name.must_equal 'Staging'
+        assert_difference 'DeployGroup.count', +1 do
+          post :create, deploy_group: {name: 'pod666', environment_id: environments(:staging_env).id}
+          assert_redirected_to admin_deploy_groups_path
+        end
       end
 
       it 'fails with blank name' do
         deploy_group_count = DeployGroup.count
         post :create, deploy_group: {name: nil}
-        assert_template :new
-        flash[:error].must_equal 'Failed to create deploy group: ["Name can\'t be blank", "Environment can\'t be blank"]'
+        assert_template :edit
+        flash[:error].must_equal ["Name can't be blank", "Environment can't be blank"]
         DeployGroup.count.must_equal deploy_group_count
       end
     end
@@ -65,7 +63,7 @@ describe Admin::DeployGroupsController do
       it 'fails for non-existent deploy_group' do
         delete :destroy, id: -1
         assert_redirected_to admin_deploy_groups_path
-        flash[:error].must_equal 'Failed to find the deploy group: -1'
+        flash[:error].must_equal 'Deploy Group not found.'
       end
     end
 
@@ -83,7 +81,7 @@ describe Admin::DeployGroupsController do
       it 'fail to edit with blank name' do
         post :update, deploy_group: {name: ''}, id: deploy_group.id
         assert_template :edit
-        flash[:error].must_equal 'Failed to update deploy group: ["Name can\'t be blank"]'
+        flash[:error].must_equal ["Name can't be blank"]
         DeployGroup.find(deploy_group.id).name.must_equal 'Pod 100'
       end
     end
