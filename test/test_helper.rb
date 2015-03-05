@@ -14,8 +14,23 @@ require 'maxitest/autorun'
 require 'webmock/minitest'
 require 'mocha/setup'
 
+# Use ActiveSupport::TestCase for everything that was not matched before
+MiniTest::Spec::DSL::TYPES[-1] = [//, ActiveSupport::TestCase]
+
+module StubGithubAPI
+  def stub_github_api(url, response = {}, status = 200)
+    url = 'https://api.github.com/' + url
+    stub_request(:get, url).to_return(
+      status: status,
+      body: JSON.dump(response),
+      headers: { 'Content-Type' => 'application/json' }
+    )
+  end
+end
+
 class ActiveSupport::TestCase
   include Warden::Test::Helpers
+  include StubGithubAPI
 
   ActiveRecord::Migration.check_pending!
 
@@ -47,22 +62,6 @@ class ActiveSupport::TestCase
     Project.any_instance.unstub(:clone_repository)
     Project.any_instance.unstub(:clean_repository)
   end
-
-end
-
-module StubGithubAPI
-  def stub_github_api(url, response = {}, status = 200)
-    url = 'https://api.github.com/' + url
-    stub_request(:get, url).to_return(
-      status: status,
-      body: JSON.dump(response),
-      headers: { 'Content-Type' => 'application/json' }
-    )
-  end
-end
-
-class MiniTest::Spec
-  include StubGithubAPI
 end
 
 Mocha::Expectation.class_eval do
