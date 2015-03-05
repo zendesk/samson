@@ -55,21 +55,20 @@ describe Release do
   describe "#changeset" do
     let(:project) { projects(:test) }
     let(:author) { users(:deployer) }
+    let(:changeset) { Changeset.new("url", "foo/bar", "a", "b") }
 
     it "returns changeset" do
-      changeset = Changeset.new("url", "foo/bar", "a", "b")
-      project.releases.create!(author: author, commit: "bar", number: 50)
-      release = project.create_release(commit: "foo", author: author)
+      release_1 = project.create_release(commit: "bar", author: author, number: 50)
+      release_2 = project.create_release(commit: "foo", author: author)
 
-      Changeset.stubs(:find).with("bar/foo", "bar", "foo").returns(changeset)
-      assert_equal changeset, release.changeset
+      Changeset.expects(:find).with("bar/foo", "bar", "foo").returns(changeset)
+      assert_equal changeset, release_2.changeset
     end
 
-    it "returns empty changeset" do
-      changeset = Changeset.new("url", "foo/bar", "a", "a")
+    it 'returns empty changeset when there is no prior release' do
       release = project.releases.create!(author: author, commit: "bar", number: 50)
 
-      Changeset.stubs(:find).with("bar/foo", nil, "bar").returns(changeset)
+      Changeset.expects(:find).with("bar/foo", nil, "bar").returns(changeset)
       assert_equal changeset, release.changeset
     end
   end
