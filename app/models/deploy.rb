@@ -110,7 +110,7 @@ class Deploy < ActiveRecord::Base
   end
 
   def self.prior_to(deploy)
-    where("#{table_name}.id < ?", deploy.id)
+    deploy.persisted? ? where("#{table_name}.id < ?", deploy.id) : self
   end
 
   def self.expired
