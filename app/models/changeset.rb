@@ -16,8 +16,14 @@ class Changeset
     end
 
     new(comparison, repo, previous_commit, commit)
-  rescue Octokit::NotFound, Octokit::InternalServerError
-    new(NullComparison, repo, previous_commit, commit)
+  rescue Octokit::NotFound, Octokit::InternalServerError => e
+    message = case e
+    when Octokit::NotFound then "Commit not found"
+    when Octokit::InternalServerError then "Internal error #{e.message}"
+    else
+      "Unknown error"
+    end
+    new(NullComparison.new(message), repo, previous_commit, commit)
   end
 
   def github_url
@@ -72,6 +78,10 @@ class Changeset
     @previous_commit == @commit
   end
 
+  def error
+    comparison.error if comparison.respond_to?(:error)
+  end
+
   private
 
   def find_pull_requests
@@ -80,11 +90,17 @@ class Changeset
   end
 
   class NullComparison
-    def self.commits
+    attr_reader :error
+
+    def initialize(error)
+      @error = error
+    end
+
+    def commits
       []
     end
 
-    def self.files
+    def files
       []
     end
   end

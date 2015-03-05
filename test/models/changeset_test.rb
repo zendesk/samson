@@ -1,6 +1,26 @@
 require_relative '../test_helper'
 
 describe Changeset do
+  describe ".find" do
+    it "builds a new changeset" do
+      stub_github_api("repos/foo/bar/compare/a...b", "x" => "y")
+      Changeset.find("foo/bar", "a", "b").comparison.to_h.must_equal :x => "y"
+    end
+
+    it "caches" do
+      stub_github_api("repos/foo/bar/compare/a...b", "x" => "y")
+      Changeset.find("foo/bar", "a", "b").comparison.to_h.must_equal :x => "y"
+      stub_github_api("repos/foo/bar/compare/a...b", "x" => "z")
+      Changeset.find("foo/bar", "a", "b").comparison.to_h.must_equal :x => "y"
+    end
+
+    it "catches exceptions" do
+      GITHUB.expects(:compare).raises(Octokit::NotFound)
+      comparison = Changeset.find("foo/bar", "a", "b").comparison
+      comparison.error.must_equal "Commit not found"
+    end
+  end
+
   describe "#github_url" do
     it "returns a URL to a GitHub comparison page" do
       comparison = stub("comparison")
