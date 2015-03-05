@@ -61,9 +61,9 @@ describe Admin::EnvironmentsController do
       end
 
       it 'fail for non-existent environment' do
-        delete :destroy, id: -1
-        assert_redirected_to admin_environments_path
-        flash[:error].must_equal 'Environment not found.'
+        assert_raises(ActiveRecord::RecordNotFound) do
+          delete :destroy, id: -1
+        end
       end
     end
 

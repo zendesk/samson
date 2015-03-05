@@ -7,13 +7,9 @@ describe CommitStatusesController do
 
   as_a_deployer do
     describe 'a GET to #show' do
-      describe 'with an invalid project_id' do
-        setup do
+      it "fails with unknown project" do
+        assert_raises ActiveRecord::RecordNotFound do
           get :show, project_id: 123123, id: 'test/test'
-        end
-
-        it 'responds 404' do
-          response.status.must_equal(404)
         end
       end
 

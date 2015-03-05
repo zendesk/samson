@@ -8,14 +8,6 @@ class StagesController < ApplicationController
   before_action :find_project
   before_action :find_stage, only: [:show, :edit, :update, :destroy, :clone]
 
-  rescue_from ActiveRecord::RecordNotFound do
-    if @project
-      redirect_to project_path(@project)
-    else
-      redirect_to root_path
-    end
-  end
-
   def index
     @stages = @project.stages
 

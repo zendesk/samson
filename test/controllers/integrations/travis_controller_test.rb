@@ -27,11 +27,9 @@ describe Integrations::TravisController do
       end
     end
 
-    describe "with an invalid project" do
-      setup { post :create, token: 'abc123' }
-
-      it "renders 404" do
-        response.status.must_equal(404)
+    it "fails with unknown project" do
+      assert_raises ActiveRecord::RecordNotFound do
+        post :create, token: 'abc123'
       end
     end
 

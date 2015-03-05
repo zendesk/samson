@@ -61,9 +61,9 @@ describe Admin::DeployGroupsController do
       end
 
       it 'fails for non-existent deploy_group' do
-        delete :destroy, id: -1
-        assert_redirected_to admin_deploy_groups_path
-        flash[:error].must_equal 'Deploy Group not found.'
+        assert_raises ActiveRecord::RecordNotFound do
+          delete :destroy, id: -1
+        end
       end
     end
 

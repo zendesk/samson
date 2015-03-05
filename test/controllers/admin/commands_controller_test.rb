@@ -43,19 +43,14 @@ describe Admin::CommandsController do
     end
 
     describe 'GET to #edit' do
-      describe 'invalid command' do
-        before { get :edit, id: 123123 }
-
-        it 'redirects' do
-          assert_redirected_to admin_commands_path
-        end
+      it "renders" do
+        get :edit, id: commands(:echo).id
+        assert_template :edit
       end
 
-      describe 'valid command' do
-        before { get :edit, id: commands(:echo).id }
-
-        it 'renders the template' do
-          assert_template :edit
+      it 'fails for non-existent command' do
+        assert_raises ActiveRecord::RecordNotFound do
+          get :edit, id: 123123
         end
       end
     end
@@ -110,11 +105,9 @@ describe Admin::CommandsController do
     end
 
     describe 'DELETE to #destroy' do
-      describe 'invalid' do
-        before { delete :destroy, id: 123123 }
-
-        it 'redirects' do
-          assert_redirected_to admin_commands_path
+      it "fails with unknown id" do
+        assert_raises ActiveRecord::RecordNotFound do
+          delete :destroy, id: 123123
         end
       end
 

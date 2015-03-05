@@ -3,11 +3,6 @@ class Admin::DeployGroupsController < ApplicationController
   before_action :authorize_super_admin!, only: [ :create, :new, :update, :destroy ]
   before_action :deploy_group, only: [:edit, :update, :destroy]
 
-  rescue_from ActiveRecord::RecordNotFound do
-    flash[:error] = "Deploy Group not found."
-    redirect_to admin_deploy_groups_path
-  end
-
   def index
     @deploy_groups = DeployGroup.all
   end

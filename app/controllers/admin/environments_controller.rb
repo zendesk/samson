@@ -3,11 +3,6 @@ class Admin::EnvironmentsController < ApplicationController
   before_action :authorize_super_admin!, only: [ :create, :new, :edit, :update, :destroy ]
   before_action :environment, only: [:edit, :update, :destroy]
 
-  rescue_from ActiveRecord::RecordNotFound do
-    flash[:error] = "Environment not found."
-    redirect_to admin_environments_path
-  end
-
   def index
     @environments = Environment.all
   end

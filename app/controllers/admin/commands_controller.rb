@@ -1,10 +1,6 @@
 class Admin::CommandsController < ApplicationController
   before_action :authorize_admin!
 
-  rescue_from ActiveRecord::RecordNotFound do
-    redirect_to admin_commands_path
-  end
-
   def index
     @commands = Command.order('project_id').page(params[:page])
   end

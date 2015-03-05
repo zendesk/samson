@@ -1,13 +1,9 @@
 class ProjectsController < ApplicationController
   before_action :authorize_admin!, except: [:show, :index]
   before_action :redirect_viewers!, only: [:show]
+  before_action :project, only: [:show, :edit, :update]
 
   helper_method :project
-
-  rescue_from ActiveRecord::RecordNotFound do
-    flash[:error] = "Project not found."
-    redirect_to root_path
-  end
 
   def index
     respond_to do |format|
