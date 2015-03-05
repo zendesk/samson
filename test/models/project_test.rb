@@ -92,6 +92,11 @@ describe Project do
       project = Project.new(repository_url: "git@github.com:zendesk/demo_apps.git")
       project.github_repo.must_equal "zendesk/demo_apps"
     end
+
+    it "handles https urls" do
+      project = Project.new(repository_url: "https://github.com/foo/bar.git")
+      project.github_repo.must_equal "foo/bar"
+    end
   end
 
   describe "nested stages attributes" do

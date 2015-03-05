@@ -84,13 +84,18 @@ describe Deploy do
   end
 
   describe ".prior_to" do
-    it "scopes the records to deploys prior to the one passed in" do
+    let(:deploys) { Array.new(3).map { create_deploy! } }
+    before do
       Deploy.delete_all
-      deploy1 = create_deploy!
-      deploy2 = create_deploy!
-      deploy3 = create_deploy!
+      deploys
+    end
 
-      stage.deploys.prior_to(deploy2).must_equal [deploy1]
+    it "scopes the records to deploys prior to the one passed in" do
+      stage.deploys.prior_to(deploys[1]).first.must_equal deploys[0]
+    end
+
+    it "does not scope for new deploys" do
+      stage.deploys.prior_to(Deploy.new).first.must_equal deploys[2]
     end
   end
 
