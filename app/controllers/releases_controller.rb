@@ -4,7 +4,7 @@ class ReleasesController < ApplicationController
 
   def show
     @release = @project.releases.find_by_version(params[:id])
-    @changeset = @project.changeset_for_release(@release)
+    @changeset = @release.changeset
   end
 
   def index
