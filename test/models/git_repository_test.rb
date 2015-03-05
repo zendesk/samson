@@ -1,91 +1,126 @@
 require_relative '../test_helper'
 
 describe GitRepository, :model do
-
   let(:repository_url) { Dir.mktmpdir }
   let(:project) { Project.new(id: 99999, name: 'test_project', repository_url: repository_url) }
+  let(:repository) { project.repository }
+  let(:executor) { TerminalExecutor.new(StringIO.new) }
   let(:repo_dir) { File.join(GitRepository.cached_repos_dir, project.repository_directory) }
 
-  it 'checks that the project repository is pointing to the correct url and directory' do
-    repo = project.repository
-    repo.is_a? GitRepository
-    repo.repository_url.must_equal project.repository_url
-    repo.repository_directory.must_equal project.repository_directory
-  end
-
-  after(:each) do
+  after do
     FileUtils.rm_rf(repository_url)
     FileUtils.rm_rf(repo_dir)
-    FileUtils.rm_rf(project.repository.repo_cache_dir)
+    FileUtils.rm_rf(repository.repo_cache_dir)
+  end
+
+  it 'checks that the project repository is pointing to the correct url and directory' do
+    repository.is_a? GitRepository
+    repository.repository_url.must_equal project.repository_url
+    repository.repository_directory.must_equal project.repository_directory
   end
 
   it 'should clone a repository' do
     Dir.mktmpdir do |dir|
       create_repo_with_tags
-      project.repository.clone!(from: repository_url, to: dir)
+      repository.clone!(from: repository_url, to: dir)
       Dir.exist?(dir).must_equal true
     end
   end
 
-  it 'should update the repository' do
-    create_repo_with_tags
-    project.repository.clone!.must_equal(true)
-    Dir.chdir(project.repository.repo_cache_dir) { number_of_commits.must_equal(1) }
-    execute_on_remote_repo <<-SHELL
-      echo monkey > foo2
-      git add foo2
-      git commit -m "second commit"
-    SHELL
-    project.repository.update!.must_equal(true)
-    Dir.chdir(project.repository.repo_cache_dir) do
-      update_workspace
-      number_of_commits.must_equal(2)
+  describe "#update!" do
+    it 'updates the repository' do
+      create_repo_with_tags
+      repository.clone!.must_equal(true)
+      Dir.chdir(repository.repo_cache_dir) { number_of_commits.must_equal(1) }
+      execute_on_remote_repo <<-SHELL
+        echo monkey > foo2
+        git add foo2
+        git commit -m "second commit"
+      SHELL
+      repository.update!.must_equal(true)
+      Dir.chdir(repository.repo_cache_dir) do
+        update_workspace
+        number_of_commits.must_equal(2)
+      end
+    end
+
+    it 'fails when its cache was removed' do
+      create_repo_with_tags
+      repository.update!.must_equal(false)
     end
   end
 
   it 'should switch to a different branch' do
     create_repo_with_an_additional_branch
-    project.repository.clone!.must_equal(true)
-    project.repository.checkout!(git_reference: 'master').must_equal(true)
-    Dir.chdir(project.repository.repo_cache_dir) { current_branch.must_equal('master') }
-    project.repository.checkout!(git_reference: 'test_user/test_branch').must_equal(true)
-    Dir.chdir(project.repository.repo_cache_dir) { current_branch.must_equal('test_user/test_branch') }
+    repository.clone!.must_equal(true)
+    repository.send(:checkout!, git_reference: 'master').must_equal(true)
+    Dir.chdir(repository.repo_cache_dir) { current_branch.must_equal('master') }
+    repository.send(:checkout!, git_reference: 'test_user/test_branch').must_equal(true)
+    Dir.chdir(repository.repo_cache_dir) { current_branch.must_equal('test_user/test_branch') }
   end
 
   it 'returns the tags repository' do
     create_repo_with_tags
-    project.repository.clone!(executor: TerminalExecutor.new(StringIO.new), mirror: true)
-    project.repository.tags.to_a.must_equal %w(v1 )
+    repository.clone!(executor: TerminalExecutor.new(StringIO.new), mirror: true)
+    repository.tags.to_a.must_equal %w(v1 )
   end
 
   it 'returns an empty set of tags' do
     create_repo_without_tags
-    project.repository.clone!(executor: TerminalExecutor.new(StringIO.new), mirror: true)
-    project.repository.tags.must_equal []
+    repository.clone!(executor: TerminalExecutor.new(StringIO.new), mirror: true)
+    repository.tags.must_equal []
   end
 
   it 'returns the branches of the repository' do
     create_repo_with_an_additional_branch
-    project.repository.clone!(executor: TerminalExecutor.new(StringIO.new), mirror: true)
-    project.repository.branches.to_a.must_equal %w(master test_user/test_branch)
+    repository.clone!(executor: TerminalExecutor.new(StringIO.new), mirror: true)
+    repository.branches.to_a.must_equal %w(master test_user/test_branch)
   end
 
-  it 'sets the repository to the provided git reference' do
-    create_repo_with_an_additional_branch
-    executor = TerminalExecutor.new(StringIO.new)
-    temp_dir = Dir.mktmpdir
-    project.repository.clone!(executor: executor, mirror: true)
-    project.repository.setup!(executor, temp_dir, 'test_user/test_branch').must_equal(true)
-    Dir.chdir(temp_dir) { current_branch.must_equal('test_user/test_branch') }
+  describe "#valid_url?" do
+    it 'validates the repo url' do
+      create_repo_without_tags
+      repository.valid_url?.must_equal true
+    end
+
+    it 'invalidates the repo url without repo' do
+      repository.valid_url?.must_equal false
+    end
   end
 
-  it 'validates the repo url' do
-    create_repo_without_tags
-    project.repository.valid_url?.must_equal true
+  describe "#setup!" do
+    it 'creates a repository' do
+      create_repo_with_an_additional_branch
+      Dir.mktmpdir do |temp_dir|
+        assert repository.setup!(executor, temp_dir, 'test_user/test_branch')
+        Dir.chdir(temp_dir) { current_branch.must_equal('test_user/test_branch') }
+      end
+    end
+
+    it 'updates an existing repository to a branch' do
+      create_repo_with_an_additional_branch
+      Dir.mktmpdir do |temp_dir|
+        repository.send(:clone!, executor: executor, mirror: true)
+        assert repository.setup!(executor, temp_dir, 'test_user/test_branch')
+        Dir.chdir(temp_dir) { current_branch.must_equal('test_user/test_branch') }
+      end
+    end
   end
 
-  it 'invalidates the repo url without repo' do
-    project.repository.valid_url?.must_equal false
+  describe "#clean!" do
+    it 'removes a repository' do
+      create_repo_without_tags
+      Dir.mktmpdir do |temp_dir|
+        assert repository.setup!(executor, temp_dir, 'master')
+        Dir.exist?(repository.repo_cache_dir).must_equal true
+        repository.clean!
+        Dir.exist?(repository.repo_cache_dir).must_equal false
+      end
+    end
+
+    it 'does not fail when repo is missing' do
+      repository.clean!
+    end
   end
 
   def execute_on_remote_repo(cmds)
@@ -143,5 +178,4 @@ describe GitRepository, :model do
   def update_workspace
     `git pull`.strip
   end
-
 end
