@@ -2,7 +2,7 @@
   <tr>
     <td><%= deploy_time deploy %></td>
     <td>
-      <%= content_tag :span, "Hotfix!", class: "label label-hotfix" if deploy.changeset.hotfix? %>
+      <%= content_tag :span, "Hotfix!", class: "label label-hotfix" if deploy.hotfix? %>
       <%= link_to "#{deploy.summary}", project_deploy_path(@project || deploy.project, deploy) %>
     </td>
     <td><span class="label <%= deploy_status(deploy.status, 'label') %>"><%= deploy.status.titleize %></span></td>

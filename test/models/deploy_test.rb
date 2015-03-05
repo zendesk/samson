@@ -63,15 +63,15 @@ describe Deploy do
     end
   end
 
-  describe "#previous_deploy" do
+  describe "#previous" do
     it "returns the deploy prior to that deploy" do
       deploy1 = create_deploy!
       deploy2 = create_deploy!
       deploy3 = create_deploy!
 
 
-      deploy2.previous_deploy.must_equal deploy1
-      deploy3.previous_deploy.must_equal deploy2
+      deploy2.previous.must_equal deploy1
+      deploy3.previous.must_equal deploy2
     end
 
     it "excludes non-successful deploys" do
@@ -79,7 +79,7 @@ describe Deploy do
       deploy2 = create_deploy!(job: create_job!(status: "errored"))
       deploy3 = create_deploy!
 
-      deploy3.previous_deploy.must_equal deploy1
+      deploy3.previous.must_equal deploy1
     end
   end
 

@@ -3,7 +3,7 @@ module ReleasesHelper
     path = project_release_path(project, release)
     classes = %w(release-label label)
 
-    if release.changeset.hotfix?
+    if release.hotfix?
       classes << "label-warning"
     else
       classes << "label-success"
@@ -11,7 +11,7 @@ module ReleasesHelper
 
     content = link_to(release.version, path, class: classes.join(" "))
 
-    if release.changeset.hotfix?
+    if release.hotfix?
       warning = content_tag(:span, "", class: "glyphicon glyphicon-exclamation-sign", title: "Hotfix!")
       content + " " + warning
     else
