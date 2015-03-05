@@ -67,7 +67,7 @@ group :no_preload do
   gem 'dogapi', '~> 1.9'
   gem 'zendesk_api'
   gem 'net-http-persistent'
-  Dir["plugins/*"].each { |f| gemspec path: f } # treat included plugins like gems
+  Dir["plugins/*/"].each { |f| gemspec path: f } # treat included plugins like gems
 end
 
 group :development do
