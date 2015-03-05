@@ -15,7 +15,7 @@ describe ZendeskNotification do
 
     it "comments on the ticket" do
       comment = stub_api_request(:put, "api/v2/tickets/18").
-                  with(:body => "{\"ticket\":{\"status\":\"open\",\"comment\":{\"value\":\"A fix to project has been deployed to Production. Deploy details: v2.14\",\"public\":false}}}")
+        with(:body => "{\"ticket\":{\"status\":\"open\",\"comment\":{\"value\":\"A fix to project has been deployed to Production. Deploy details: v2.14\",\"public\":false}}}")
 
       notification.deliver
 
