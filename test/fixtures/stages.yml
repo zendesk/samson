@@ -11,7 +11,7 @@ test_production:
   confirm: false
   production: true
   permalink: production
-  deploy_groups: [ deploy_group_pod1, deploy_group_pod1 ]
+  deploy_groups: [ deploy_group_pod1, deploy_group_pod2 ]
 
 test_production_pod:
   name: Production Pod

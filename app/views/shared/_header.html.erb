@@ -24,18 +24,20 @@
             <% end %>
           </ul>
         </li>
-        <li class="dropdown <%= 'active' if request.path.starts_with?('/dashboards') %>">
-          <a href="#" class="dropdown-toggle" data-toggle="dropdown">Environments <b class="caret"></b></a>
-          <ul class="dropdown-menu">
-            <% Environment.all.each do |env| %>
-              <li>
-                <%= link_to dashboard_path(env) do %>
-                  <span class="glyphicon">&nbsp;</span> <%= env.name %>
-                <% end %>
-              </li>
-            <% end %>
-          </ul>
-        </li>
+        <% if ENV['DEPLOY_GROUP_FEATURE'] %>
+          <li class="dropdown <%= 'active' if request.path.starts_with?('/dashboards') %>">
+            <a href="#" class="dropdown-toggle" data-toggle="dropdown">Environments <b class="caret"></b></a>
+            <ul class="dropdown-menu">
+              <% Environment.all.each do |env| %>
+                <li>
+                  <%= link_to dashboard_path(env) do %>
+                    <span class="glyphicon">&nbsp;</span> <%= env.name %>
+                  <% end %>
+                </li>
+              <% end %>
+            </ul>
+          </li>
+        <% end %>
         <li class="<%= 'active' if current_page?(controller: '/deploys', action: 'recent') %>">
           <%= link_to "Recent Deploys", recent_deploys_path %>
         </li>
