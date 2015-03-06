@@ -5,6 +5,11 @@ describe Project do
   let(:author) { users(:deployer) }
   let(:url) { "git://foo.com:hello/world.git" }
 
+  def clone_repository(project)
+    Project.any_instance.unstub(:clone_repository)
+    project.send(:clone_repository).join
+  end
+
   before { Project.any_instance.stubs(:valid_repository_url).returns(true) }
 
   it "generates a secure token when created" do
@@ -123,8 +128,6 @@ describe Project do
   end
 
   describe 'project repository initialization' do
-
-    before(:each) { unstub_project_callbacks }
     let(:repository_url) { 'git@github.com:zendesk/demo_apps.git' }
 
     it 'should not clean the project when the project is created' do
@@ -170,7 +173,7 @@ describe Project do
       repository.expects(:clone!).once
       project = Project.new(id: 9999, name: 'demo_apps', repository_url: repository_url)
       project.stubs(:repository).returns(repository)
-      project.send(:clone_repository).join
+      clone_repository(project)
     end
 
     it 'fails to clone the repository and logs the error' do
@@ -180,7 +183,7 @@ describe Project do
       project.stubs(:repository).returns(repository)
       expected_message = "Could not clone git repository #{project.repository_url} for project #{project.name} - "
       Rails.logger.expects(:error).with(expected_message)
-      project.send(:clone_repository).join
+      clone_repository(project)
     end
 
     it 'logs that it could not clone the repository when there is an unexpected error' do
@@ -191,7 +194,7 @@ describe Project do
       project.stubs(:repository).returns(repository)
       expected_message = "Could not clone git repository #{project.repository_url} for project #{project.name} - #{error}"
       Rails.logger.expects(:error).with(expected_message)
-      project.send(:clone_repository).join
+      clone_repository(project)
     end
 
     it 'does not validate with a bad repo url' do
