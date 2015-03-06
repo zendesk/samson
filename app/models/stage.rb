@@ -60,15 +60,18 @@ class Stage < ActiveRecord::Base
   end
 
   def current_deploy
-    @current_deploy ||= deploys.active.first
+    return @current_deploy if defined?(@current_deploy)
+    @current_deploy = deploys.active.first
   end
 
   def last_deploy
-    @last_deploy ||= deploys.first
+    return @last_deploy if defined?(@last_deploy)
+    @last_deploy = deploys.first
   end
 
   def last_successful_deploy
-    @last_successful_deploy ||= deploys.successful.first
+    return @last_successful_deploy if defined?(@last_successful_deploy)
+    @last_successful_deploy = deploys.successful.first
   end
 
   def locked?
