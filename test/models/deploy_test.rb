@@ -151,7 +151,9 @@ describe Deploy do
       job: create_job!(attrs.delete(:job_attributes) || {})
     }
 
-    stage.deploys.create!(default_attrs.merge(attrs))
+    deploy = stage.deploys.create!(default_attrs.merge(attrs))
+    stage.remove_instance_variable(:@current_deploy) # pretend we are in a new request after creating a deploy
+    deploy
   end
 
   def create_job!(attrs = {})
