@@ -47,3 +47,8 @@ Samson::Application.configure do
 
   config.active_support.test_order = :random
 end
+
+ENV['ZENDESK_URL'] = 'https://test.support.zendesk'
+ENV['SECRET_TOKEN'] = 'd6054cf90db212c8fbc070c896c30398e3275532c5602bdf00cb153b806c000e4e46fac2f3acc0783822b8f6d30b5913b6fbcfdd24914553e745b8aa8ddfa5a4'
+ENV['DEFAULT_URL'] = 'http://www.test-url.com'
+ENV['ZENDESK_TOKEN'] = 'c30398e3275532c5602bdf00cb153b806c000e4e46fac2f3acc0783822b8f6d3'
