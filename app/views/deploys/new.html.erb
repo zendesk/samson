@@ -29,8 +29,8 @@
       <div class="form-group" id="new-deploy-buttons">
         <div class="col-lg-offset-2 col-lg-10">
           <button type="submit" class="btn btn-primary" <%= 'disabled="disabled"' if global_lock %>>
-            <span id="deploy-button-text">Deploy!</span>
-            <span style="display: none;" id="confirm-button-text">Confirm!</span>
+            <span id="deploy-button-text"><%= @stage.confirm? ? 'Review' : 'Deploy!' %></span>
+            <span style="display: none;" id="confirm-button-text">Deploy!</span>
           </button>
 
           <%= link_to "cancel", '#', class: 'btn btn-default', data: { url: project_path(@project) }, id: 'new-deploy-cancel' %>
