@@ -9,12 +9,13 @@ describe DeploysController do
   let(:deploy) { deploys(:succeeded_test) }
   let(:deploy_service) { stub(deploy!: nil) }
   let(:deploy_called) { [] }
+  let(:changeset) { stub_everything(commits: [], files: [], pull_requests: [], jira_issues: []) }
 
   setup do
     DeployService.stubs(:new).with(project, deployer).returns(deploy_service)
     deploy_service.stubs(:deploy!).capture(deploy_called).returns(deploy)
 
-    Changeset.stubs(:find).returns(stub(hotfix?: false))
+    Deploy.any_instance.stubs(:changeset).returns(changeset)
   end
 
   as_a_viewer do
@@ -124,11 +125,6 @@ describe DeploysController do
     end
 
     describe "a GET to :show" do
-      setup do
-        changeset = stub_everything(files: [], commits: [], pull_requests: [], jira_issues: [])
-        Changeset.stubs(:find).returns(changeset)
-      end
-
       describe "with a valid deploy" do
         setup { get :show, project_id: project.to_param, id: deploy.to_param }
 
@@ -212,11 +208,8 @@ describe DeploysController do
     end
 
     describe "a POST to :confirm" do
-      let(:changeset) { stub_everything(commits: [], files: [], pull_requests: [], jira_issues: []) }
-
       setup do
         Deploy.delete_all # triggers more callbacks
-        Changeset.stubs(:find).with(project.github_repo, nil, 'master').returns(changeset)
 
         post :confirm, project_id: project.to_param, deploy: {
           stage_id: stage.id,

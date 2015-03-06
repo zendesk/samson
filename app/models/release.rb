@@ -19,7 +19,7 @@ class Release < ActiveRecord::Base
   end
 
   def changeset
-    @changeset ||= Changeset.find(project.github_repo, previous_release.try(:commit), commit)
+    @changeset ||= Changeset.new(project.github_repo, previous_release.try(:commit), commit)
   end
 
   def previous_release

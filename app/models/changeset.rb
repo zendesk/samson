@@ -1,29 +1,9 @@
 class Changeset
-  attr_reader :comparison, :repo, :previous_commit, :commit
+  attr_reader :repo, :previous_commit, :commit
 
-  def initialize(comparison, repo, previous_commit, commit)
-    @comparison, @repo = comparison, repo
-    @previous_commit, @commit = previous_commit, commit
-  end
-
-  def self.find(repo, previous_commit, commit)
-    # If there's no previous commit, there's no basis no perform a comparison
-    # on. Just show an empty changeset then.
-    previous_commit ||= commit
-
-    comparison = Rails.cache.fetch([self, repo, previous_commit, commit].join("-")) do
-      GITHUB.compare(repo, previous_commit, commit)
-    end
-
-    new(comparison, repo, previous_commit, commit)
-  rescue Octokit::NotFound, Octokit::InternalServerError => e
-    message = case e
-    when Octokit::NotFound then "Commit not found"
-    when Octokit::InternalServerError then "Internal error #{e.message}"
-    else
-      "Unknown error"
-    end
-    new(NullComparison.new(message), repo, previous_commit, commit)
+  def initialize(repo, previous_commit, commit)
+    @repo, @commit = repo, commit
+    @previous_commit = previous_commit || @commit
   end
 
   def github_url
@@ -31,11 +11,17 @@ class Changeset
   end
 
   def hotfix?
-    commits.any?(&:hotfix?)
+    Rails.cache.fetch("#{cache_key}-hotfix", expires_in: 1.year) do
+      commits.any?(&:hotfix?)
+    end
   end
 
   def commit_range
     "#{previous_commit}...#{commit}"
+  end
+
+  def comparison
+    @comparison ||= find_comparison
   end
 
   def commits
@@ -84,9 +70,31 @@ class Changeset
 
   private
 
+  def find_comparison
+    if empty?
+      NullComparison.new(nil)
+    else
+      Rails.cache.fetch(cache_key) do
+        GITHUB.compare(repo, previous_commit, commit)
+      end
+    end
+  rescue Octokit::NotFound, Octokit::InternalServerError => e
+    error_msg = case e
+    when Octokit::NotFound then "Commit not found"
+    when Octokit::InternalServerError then "Internal error #{e.message}"
+    else
+      "Unknown error"
+    end
+    NullComparison.new(error_msg)
+  end
+
   def find_pull_requests
     numbers = commits.map(&:pull_request_number).compact
     numbers.map {|num| PullRequest.find(repo, num) }.compact
+  end
+
+  def cache_key
+    [self.class, repo, previous_commit, commit].join('-')
   end
 
   class NullComparison
