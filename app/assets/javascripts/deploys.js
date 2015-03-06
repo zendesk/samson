@@ -108,7 +108,7 @@ $(function () {
     var $selected_stage = $("#deploy_stage_id option:selected"),
         $this = $(this);
 
-    if(!confirmed && $selected_stage.data("confirmation")) {
+    if(!confirmed && $this.data('confirm')) {
       $("#confirm-button-text").show();
       $("#deploy-button-text").hide();
       $("#deploy-confirmation").show();

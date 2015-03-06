@@ -30,6 +30,8 @@ Samson::Application.routes.draw do
         get :new_relic, to: 'new_relic#show'
         get :clone, to: 'stages#clone'
       end
+
+      resources :deploys, only: :new
     end
 
     resource :changelog, only: [:show]

@@ -18,6 +18,10 @@ describe DeploysController do
     Deploy.any_instance.stubs(:changeset).returns(changeset)
   end
 
+  it "routes" do
+    assert_routing "/projects/1/stages/2/deploys/new", controller: "deploys", action: "new", project_id: "1", stage_id: "2"
+  end
+
   as_a_viewer do
     describe "a GET to :index" do
       setup { get :index, project_id: project.to_param, format: format }
