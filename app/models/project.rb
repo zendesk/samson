@@ -100,6 +100,16 @@ class Project < ActiveRecord::Base
     MultiLock.lock(id, holder, timeout: timeout, failed_to_lock: callback, &block)
   end
 
+  def releases_by_deploy_group
+    result = stages.each_with_object({}) do |stage, result|
+      stage.deploy_groups.each do |deploy_group|
+        result[deploy_group.id] ||= []
+        result[deploy_group.id] << stage.last_successful_deploy
+      end
+    end
+    result.each { |k, deploys| result[k] = deploys.sort_by { |deploy| deploy.updated_at }.reverse.first }
+  end
+
   private
 
   def permalink_base
