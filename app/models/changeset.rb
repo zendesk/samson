@@ -72,7 +72,7 @@ class Changeset
 
   def find_comparison
     if empty?
-      NullComparison.new('Start and end commits are the same')
+      NullComparison.new(nil)
     else
       Rails.cache.fetch(cache_key) do
         GITHUB.compare(repo, previous_commit, commit)
@@ -80,10 +80,10 @@ class Changeset
     end
   rescue Octokit::NotFound, Octokit::InternalServerError => e
     error_msg = case e
-      when Octokit::NotFound then "Commit not found"
-      when Octokit::InternalServerError then "Internal error #{e.message}"
-      else
-        "Unknown error"
+    when Octokit::NotFound then "Commit not found"
+    when Octokit::InternalServerError then "Internal error #{e.message}"
+    else
+      "Unknown error"
     end
     NullComparison.new(error_msg)
   end
