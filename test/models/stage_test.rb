@@ -304,8 +304,7 @@ describe Stage do
 
     it "includes committers when there is no previous deploy" do
       previous_deploy.delete
-      GITHUB.expects(:compare).with(anything, "commita", "commita").returns simple_response
-      emails.must_equal ["static@example.com", "pete@example.com"]
+      emails.must_equal ["static@example.com"]
     end
 
     it "does not include commiiters if the author did not have a email" do
