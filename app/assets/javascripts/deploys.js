@@ -102,21 +102,30 @@ $(function () {
   // Shows confirmation dropdown using Github comparison
   var confirmed = false,
       $container = $(".deploy-details"),
-      $placeholderPanes = $container.find(".changeset-placeholder");
+      $placeholderPanes = $container.find(".changeset-placeholder"),
+      $form = $("#new_deploy"),
+      $submit = $form.find('button[type=submit]'),
+      $cancel = $("#new-deploy-cancel");
 
-  $("#new_deploy").submit(function(event) {
+  function changeDeployState() {
+    $submit.text(!confirmed && $form.data('confirm') ? 'Review' : 'Deploy!');
+    $cancel.text(confirmed ? 'Edit' : 'Cancel');
+  }
+  changeDeployState();
+
+  $form.submit(function(event) {
     var $selected_stage = $("#deploy_stage_id option:selected"),
-        $this = $(this);
+        $this = $(this),
+        $submit = $this.find('button[type=submit]');
 
     if(!confirmed && $this.data('confirm')) {
-      $("#confirm-button-text").show();
-      $("#deploy-button-text").hide();
+      confirmed = true;
+      changeDeployState();
       $("#deploy-confirmation").show();
       $("#deploy-confirmation .nav-tabs a:first").tab("show");
       $container.empty();
       $container.append($placeholderPanes);
 
-      confirmed = true;
 
       $.ajax({
         method: "POST",
@@ -137,14 +146,12 @@ $(function () {
     }
   });
 
-  $("#new-deploy-cancel").click(function(event) {
+  $cancel.click(function(event) {
     if(confirmed) {
       $("#deploy-confirmation").hide();
 
-      $("#confirm-button-text").hide();
-      $("#deploy-button-text").show();
-
       confirmed = false;
+      changeDeployState();
     } else {
       window.location = $(this).data("url");
     }
