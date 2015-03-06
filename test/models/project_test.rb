@@ -238,7 +238,27 @@ describe Project do
       output.string.include?('using the error callback').must_equal(true)
       output.string.include?("Can't get here").must_equal(false)
     end
-
   end
 
+  describe 'deploy group releases' do
+    let(:deploy_group_pod1) { deploy_groups(:deploy_group_pod1) }
+    let(:deploy_group_pod2) { deploy_groups(:deploy_group_pod2) }
+    let(:deploy_group_pod100) { deploy_groups(:deploy_group_pod100) }
+    let(:prod_deploy) { deploys(:succeeded_production_test) }
+    let(:staging_deploy) { deploys(:succeeded_test) }
+
+    it 'contains releases per deploy group' do
+      project.last_release_by_deploy_group[deploy_group_pod1.id].must_equal prod_deploy
+      project.last_release_by_deploy_group[deploy_group_pod2.id].must_equal prod_deploy
+      project.last_release_by_deploy_group[deploy_group_pod100.id].must_equal staging_deploy
+    end
+
+    it 'contains no releases per deploy group' do
+      project = Project.create!(name: 'blank_new_project', repository_url: url)
+
+      project.last_release_by_deploy_group[deploy_group_pod1.id].must_be_nil
+      project.last_release_by_deploy_group[deploy_group_pod2.id].must_be_nil
+      project.last_release_by_deploy_group[deploy_group_pod100.id].must_be_nil
+    end
+  end
 end
