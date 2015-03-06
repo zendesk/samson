@@ -1,7 +1,7 @@
 class FlowdockNotificationRenderer
   def self.render(deploy)
     controller = ActionController::Base.new
-    view = ActionView::Base.new(Rails.root.join('app/views/flowdock'), {}, controller)
+    view = ActionView::Base.new(File.expand_path("../../views/samson_flowdock", __FILE__), {}, controller)
     locals = { deploy: deploy, changeset: deploy.changeset }
     view.render(template: 'notification', locals: locals).chomp
   end

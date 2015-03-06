@@ -56,7 +56,7 @@ class DeployService
   end
 
   def send_before_notifications(stage, deploy, buddy)
-    send_flowdock_notification(stage, deploy)
+    Samson::Hooks.fire(:before_deploy, stage, deploy, buddy)
 
     if bypassed?(stage, deploy, buddy)
       DeployMailer.bypass_email(stage, deploy, user).deliver_now
@@ -70,9 +70,9 @@ class DeployService
   end
 
   def send_after_notifications(stage, deploy)
+    Samson::Hooks.fire(:after_deploy, stage, deploy, deploy.buddy)
     send_deploy_email(stage, deploy)
     send_failed_deploy_email(stage, deploy)
-    send_flowdock_notification(stage, deploy)
     send_datadog_notification(stage, deploy)
     send_github_notification(stage, deploy)
     send_zendesk_notification(stage, deploy)
@@ -87,12 +87,6 @@ class DeployService
   def send_failed_deploy_email(stage, deploy)
     return unless emails = stage.automated_failure_emails(deploy)
     DeployMailer.deploy_failed_email(stage, deploy, emails).deliver_now
-  end
-
-  def send_flowdock_notification(stage, deploy)
-    if stage.send_flowdock_notifications?
-      FlowdockNotification.new(stage, deploy).deliver
-    end
   end
 
   def send_datadog_notification(stage, deploy)

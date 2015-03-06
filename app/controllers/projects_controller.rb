@@ -19,9 +19,7 @@ class ProjectsController < ApplicationController
 
   def new
     @project = Project.new
-
     stage = @project.stages.build(name: "Production")
-    stage.flowdock_flows.build
     stage.new_relic_applications.build
   end
 
@@ -35,10 +33,6 @@ class ProjectsController < ApplicationController
       redirect_to project_path(@project)
       Rails.logger.info("#{@current_user.name_and_email} created a new project #{@project.to_param}")
     else
-      stage = @project.stages.last
-      stage ||= @project.stages.build
-      stage.flowdock_flows.build if stage.flowdock_flows.empty?
-
       flash[:error] = @project.errors.full_messages
       render :new
     end
@@ -87,8 +81,7 @@ class ProjectsController < ApplicationController
         :comment_on_zendesk_tickets,
         :use_github_deployment_api,
         command_ids: [],
-        flowdock_flows_attributes: [:name, :token]
-      ]
+      ] + Samson::Hooks.fire(:stage_permitted_params)
     )
   end
 
