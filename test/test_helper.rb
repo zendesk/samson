@@ -86,6 +86,13 @@ class ActiveSupport::TestCase
       assert_equal count, new
     end
   end
+
+  # record hook and their arguments called during a given block
+  def record_hooks(callback, &block)
+    called = []
+    Samson::Hooks.with_callback(callback, lambda{ |*args| called << args }, &block)
+    called
+  end
 end
 
 Mocha::Expectation.class_eval do

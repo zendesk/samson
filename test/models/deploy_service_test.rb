@@ -106,10 +106,10 @@ class DeployServiceTest < ActiveSupport::TestCase
   end
 
   describe "before notifications" do
-    it "sends flowdock notifications if the stage has flows" do
-      stage.stubs(:send_flowdock_notifications?).returns(true)
-      FlowdockNotification.any_instance.expects(:deliver)
-      service.deploy!(stage, reference)
+    it "sends before_deploy hook" do
+      record_hooks(:before_deploy) do
+        service.deploy!(stage, reference)
+      end.must_equal [[stage, Deploy.first, nil]]
     end
 
     it "creates a github deployment" do
@@ -142,13 +142,11 @@ class DeployServiceTest < ActiveSupport::TestCase
       job_execution.send(:run!)
     end
 
-    it "sends flowdock notifications if the stage has flows" do
-      stage.stubs(:send_flowdock_notifications?).returns(true)
-
-      FlowdockNotification.any_instance.expects(:deliver).at_least_once
-
-      service.deploy!(stage, reference)
-      job_execution.send(:run!)
+    it "sends after_deploy hook" do
+      record_hooks(:after_deploy) do
+        service.deploy!(stage, reference)
+        job_execution.send(:run!)
+      end.must_equal [[stage, deploy, nil]]
     end
 
     it "sends datadog notifications if the stage has datadog tags" do

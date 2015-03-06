@@ -4,3 +4,14 @@
 require File.expand_path('../config/application', __FILE__)
 
 Samson::Application.load_tasks
+
+Rake::Task["default"].clear
+Rails::TestTask.new(:default) do |t|
+  t.pattern = "{test,plugins/*/test}/**/*_test.rb"
+end
+
+namespace :plugins do
+  Rails::TestTask.new(:test) do |t|
+    t.pattern = "plugins/*/test/**/*_test.rb"
+  end
+end
