@@ -1,4 +1,5 @@
 class Deploy < ActiveRecord::Base
+  include HasChangeset
   has_soft_deletion default_scope: true
 
   belongs_to :stage, touch: true
@@ -43,16 +44,8 @@ class Deploy < ActiveRecord::Base
     end
   end
 
-  def previous_deploy
+  def previous
     stage.deploys.successful.prior_to(self).first
-  end
-
-  def changeset
-    @changeset ||= changeset_to(previous_deploy)
-  end
-
-  def changeset_to(other)
-    Changeset.find(project.github_repo, other.try(:commit), commit)
   end
 
   def production

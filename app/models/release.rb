@@ -1,4 +1,5 @@
 class Release < ActiveRecord::Base
+  include HasChangeset
   belongs_to :project, touch: true
   belongs_to :author, polymorphic: true
 
@@ -18,11 +19,7 @@ class Release < ActiveRecord::Base
     @deployed_stages ||= project.stages.select {|stage| stage.current_release?(self) }
   end
 
-  def changeset
-    @changeset ||= Changeset.find(project.github_repo, previous_release.try(:commit), commit)
-  end
-
-  def previous_release
+  def previous
     project.release_prior_to(self)
   end
 
