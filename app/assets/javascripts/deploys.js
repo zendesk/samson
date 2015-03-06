@@ -3,7 +3,15 @@
 
 var following = true;
 $(function () {
-  var changesetLoaded = false;
+  // Shows confirmation dropdown using Github comparison
+  var changesetLoaded = false,
+      confirmed = true,
+      $container = $(".deploy-details"),
+      $placeholderPanes = $container.find(".changeset-placeholder"),
+      $form = $("#new_deploy"),
+      $submit = $form.find('button[type=submit]'),
+      $cancel = $("#new-deploy-cancel"),
+      $reference = $("#deploy_reference");
 
   $("#deploy-tabs a[data-type=github]").click(function (e) {
       e.preventDefault();
@@ -34,7 +42,7 @@ $(function () {
       }
   });
 
-  var prefetchUrl = $("#deploy_reference").data("prefetchUrl");
+  var prefetchUrl = $reference.data("prefetchUrl");
 
   if (prefetchUrl) {
     var engine = new Bloodhound({
@@ -56,18 +64,18 @@ $(function () {
 
     engine.initialize();
 
-    $("#deploy_reference").typeahead(null, {
+    $reference.typeahead(null, {
       source: engine.ttAdapter()
     });
   }
 
   // The typeahead plugin removes the focus from the input - restore it
   // after initialization.
-  $("#deploy_reference").focus();
+  $reference.focus();
 
   // Shows commit status from Github as border color
   var timeout = null;
-  var tag_form_group = $("#deploy_reference").parent();
+  var tag_form_group = $reference.parent();
 
   function check_status(ref) {
     $.ajax({
@@ -85,7 +93,17 @@ $(function () {
     });
   }
 
-  $("#deploy_reference").keyup(function() {
+  function toggleConfirmed() {
+    confirmed = !confirmed;
+    $submit.text(!confirmed && $form.data('confirm') ? 'Review' : 'Deploy!');
+    $cancel.text(confirmed ? 'Edit' : 'Cancel');
+    if (!confirmed) {
+      $("#deploy-confirmation").hide();
+    }
+  }
+  toggleConfirmed();
+
+  $reference.keyup(function(e) {
     tag_form_group.removeClass("has-success has-warning has-error");
 
     var ref = $(this).val();
@@ -97,21 +115,11 @@ $(function () {
     if(ref !== "") {
       timeout = setTimeout(function() { check_status(ref); }, 200);
     }
+
+    if (confirmed && e.keyCode !== 13) {
+      toggleConfirmed();
+    }
   });
-
-  // Shows confirmation dropdown using Github comparison
-  var confirmed = false,
-      $container = $(".deploy-details"),
-      $placeholderPanes = $container.find(".changeset-placeholder"),
-      $form = $("#new_deploy"),
-      $submit = $form.find('button[type=submit]'),
-      $cancel = $("#new-deploy-cancel");
-
-  function changeDeployState() {
-    $submit.text(!confirmed && $form.data('confirm') ? 'Review' : 'Deploy!');
-    $cancel.text(confirmed ? 'Edit' : 'Cancel');
-  }
-  changeDeployState();
 
   $form.submit(function(event) {
     var $selected_stage = $("#deploy_stage_id option:selected"),
@@ -119,8 +127,7 @@ $(function () {
         $submit = $this.find('button[type=submit]');
 
     if(!confirmed && $this.data('confirm')) {
-      confirmed = true;
-      changeDeployState();
+      toggleConfirmed();
       $("#deploy-confirmation").show();
       $("#deploy-confirmation .nav-tabs a:first").tab("show");
       $container.empty();
@@ -148,10 +155,7 @@ $(function () {
 
   $cancel.click(function(event) {
     if(confirmed) {
-      $("#deploy-confirmation").hide();
-
-      confirmed = false;
-      changeDeployState();
+      toggleConfirmed();
     } else {
       window.location = $(this).data("url");
     }
