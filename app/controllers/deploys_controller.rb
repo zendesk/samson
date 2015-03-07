@@ -2,6 +2,7 @@ class DeploysController < ApplicationController
   before_action :authorize_deployer!, only: [:new, :create, :confirm, :update, :destroy, :buddy_check, :pending_start]
   before_action :find_project
   before_action :find_deploy, except: [:index, :recent, :active, :new, :create, :confirm]
+  before_action :stage, only: :new
 
   def index
     @page = params[:page]
@@ -111,7 +112,7 @@ class DeploysController < ApplicationController
   end
 
   def stage
-    @stage ||= @project.stages.find(deploy_params[:stage_id])
+    @stage ||= @project.stages.find_by_param!(params[:stage_id])
   end
 
   def deploy_params

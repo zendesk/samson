@@ -9,7 +9,7 @@ describe ApplicationHelper do
 
     it "starts a deploy" do
       assert_includes link, ">Deploy<"
-      assert_includes link, %{href="/projects/#{project.to_param}/deploys/new?stage_id=#{stage.id}"}
+      assert_includes link, %{href="/projects/#{project.to_param}/stages/#{stage.to_param}/deploys/new"}
     end
 
     it "shows locked" do
