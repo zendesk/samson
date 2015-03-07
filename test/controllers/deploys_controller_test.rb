@@ -167,16 +167,15 @@ describe DeploysController do
   as_a_deployer do
     describe "a GET to :new" do
       it "sets stage and reference" do
-        get :new, project_id: project.to_param, stage_id: stage.id, reference: "abcd"
+        get :new, project_id: project.to_param, stage_id: stage.to_param, reference: "abcd"
         deploy = assigns(:deploy)
-        deploy.stage_id.must_equal stage.id
         deploy.reference.must_equal "abcd"
       end
     end
 
     describe "a POST to :create" do
       setup do
-        post :create, params.merge(project_id: project.to_param, stage_id: stage.id, format: format)
+        post :create, params.merge(project_id: project.to_param, stage_id: stage.to_param, format: format)
       end
 
       let(:params) {{ deploy: { reference: "master" }}}
@@ -210,7 +209,7 @@ describe DeploysController do
       setup do
         Deploy.delete_all # triggers more callbacks
 
-        post :confirm, project_id: project.to_param, stage_id: stage.id, deploy: { reference: "master" }
+        post :confirm, project_id: project.to_param, stage_id: stage.to_param, deploy: { reference: "master" }
       end
 
       it "renders the template" do
