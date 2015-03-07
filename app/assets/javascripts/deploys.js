@@ -9,8 +9,7 @@ $(function () {
       $container = $(".deploy-details"),
       $placeholderPanes = $container.find(".changeset-placeholder"),
       $form = $("#new_deploy"),
-      $submit = $form.find('button[type=submit]'),
-      $cancel = $("#new-deploy-cancel"),
+      $submit = $form.find('input[type=submit]'),
       $reference = $("#deploy_reference");
 
   $("#deploy-tabs a[data-type=github]").click(function (e) {
@@ -95,8 +94,7 @@ $(function () {
 
   function toggleConfirmed() {
     confirmed = !confirmed;
-    $submit.text(!confirmed && $form.data('confirm') ? 'Review' : 'Deploy!');
-    $cancel.text(confirmed ? 'Edit' : 'Cancel');
+    $submit.val(!confirmed && $form.data('confirm') ? 'Review' : 'Deploy!');
     if (!confirmed) {
       $("#deploy-confirmation").hide();
     }
@@ -151,16 +149,6 @@ $(function () {
 
       event.preventDefault();
     }
-  });
-
-  $cancel.click(function(event) {
-    if(confirmed) {
-      toggleConfirmed();
-    } else {
-      window.location = $(this).data("url");
-    }
-
-    event.preventDefault();
   });
 
   function shrinkOutput() {

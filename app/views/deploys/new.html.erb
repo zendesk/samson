@@ -27,9 +27,8 @@
 
       <div class="form-group" id="new-deploy-buttons">
         <div class="col-lg-offset-2 col-lg-10">
-          <button type="submit" class="btn btn-primary" <%= 'disabled="disabled"' if global_lock %> />
-
-          <%= link_to "", '#', class: 'btn btn-default', data: { url: project_path(@project) }, id: 'new-deploy-cancel' %>
+          <%= form.submit "", class: "btn btn-primary", disabled: global_lock %>
+          <%= link_to "Cancel", :back, class: 'btn btn-default' %>
         </div>
       </div>
 
