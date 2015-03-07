@@ -20,6 +20,8 @@ describe DeploysController do
 
   it "routes" do
     assert_routing "/projects/1/stages/2/deploys/new", controller: "deploys", action: "new", project_id: "1", stage_id: "2"
+    assert_routing({ method: "post", path: "/projects/1/stages/2/deploys" },
+      controller: "deploys", action: "create", project_id: "1", stage_id: "2")
   end
 
   as_a_viewer do
@@ -156,18 +158,14 @@ describe DeploysController do
       end
     end
 
-    unauthorized :get, :new, project_id: 1
-    unauthorized :post, :create, project_id: 1
+    unauthorized :get, :new, project_id: 1, stage_id: 2
+    unauthorized :post, :create, project_id: 1, stage_id: 2
     unauthorized :post, :buddy_check, project_id: 1, id: 1
     unauthorized :delete, :destroy, project_id: 1, id: 1
   end
 
   as_a_deployer do
     describe "a GET to :new" do
-      it "renders" do
-        get :new, project_id: project.to_param
-      end
-
       it "sets stage and reference" do
         get :new, project_id: project.to_param, stage_id: stage.id, reference: "abcd"
         deploy = assigns(:deploy)
@@ -178,13 +176,10 @@ describe DeploysController do
 
     describe "a POST to :create" do
       setup do
-        post :create, params.merge(project_id: project.to_param, format: format)
+        post :create, params.merge(project_id: project.to_param, stage_id: stage.id, format: format)
       end
 
-      let(:params) {{ deploy: {
-        stage_id: stage.id,
-        reference: "master"
-      }}}
+      let(:params) {{ deploy: { reference: "master" }}}
 
       describe "as html" do
         let(:format) { :html }
@@ -215,10 +210,7 @@ describe DeploysController do
       setup do
         Deploy.delete_all # triggers more callbacks
 
-        post :confirm, project_id: project.to_param, deploy: {
-          stage_id: stage.id,
-          reference: "master",
-        }
+        post :confirm, project_id: project.to_param, stage_id: stage.id, deploy: { reference: "master" }
       end
 
       it "renders the template" do

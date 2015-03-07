@@ -6,9 +6,8 @@ Samson::Application.routes.draw do
       member { post :execute }
     end
 
-    resources :deploys, only: [:index, :new, :create, :show, :destroy] do
+    resources :deploys, only: [:index, :show, :destroy] do
       collection do
-        post :confirm
         get :active
       end
 
@@ -31,7 +30,11 @@ Samson::Application.routes.draw do
         get :clone, to: 'stages#clone'
       end
 
-      resources :deploys, only: :new
+      resources :deploys, only: [:new, :create] do
+        collection do
+          post :confirm
+        end
+      end
     end
 
     resource :changelog, only: [:show]
