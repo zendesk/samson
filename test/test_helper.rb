@@ -45,6 +45,15 @@ class ActiveSupport::TestCase
     stubs_project_callbacks
   end
 
+  after { sleep 0.1 while extra_threads.present? }
+
+  def extra_threads
+    normal = ENV['CI'] ? 2 : 3 # there are always 3 threads hanging around, 2 unknown and 1 from the test timeout helper code
+    threads = (Thread.list - [Thread.current])
+    raise "too low threads, adjust minimum" if threads.size < normal
+    threads.sort_by(&:object_id)[normal..-1] # always kill the newest threads (run event_streamer_test.rb + stage_test.rb to make it blow up)
+  end
+
   def assert_valid(record)
     assert record.valid?, record.errors.full_messages
   end
