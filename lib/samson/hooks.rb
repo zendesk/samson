@@ -48,6 +48,14 @@ module Samson
         hooks(name) << partial
       end
 
+      # temporarily add a hook for testing
+      def with_callback(name, hook_block)
+        hooks(name) << hook_block
+        yield
+      ensure
+        hooks(name).pop
+      end
+
       # use
       def fire(name, *args)
         hooks(name).map { |hook| hook.call(*args) }
