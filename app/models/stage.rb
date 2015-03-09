@@ -7,7 +7,6 @@ class Stage < ActiveRecord::Base
 
   has_many :deploys, dependent: :destroy
   has_many :webhooks, dependent: :destroy
-  has_many :flowdock_flows
   has_many :new_relic_applications
 
   has_one :lock
@@ -23,7 +22,6 @@ class Stage < ActiveRecord::Base
 
   validates :name, presence: true, uniqueness: { scope: [:project, :deleted_at] }
 
-  accepts_nested_attributes_for :flowdock_flows, allow_destroy: true, reject_if: :no_flowdock_token?
   accepts_nested_attributes_for :new_relic_applications, allow_destroy: true, reject_if: :no_newrelic_name?
 
   attr_writer :command
@@ -37,7 +35,7 @@ class Stage < ActiveRecord::Base
 
   def self.build_clone(old_stage)
     new(old_stage.attributes).tap do |new_stage|
-      new_stage.flowdock_flows.build(old_stage.flowdock_flows.map(&:attributes))
+      Samson::Hooks.fire(:stage_clone, old_stage, new_stage)
       new_stage.new_relic_applications.build(old_stage.new_relic_applications.map(&:attributes))
       new_stage.command_ids = old_stage.command_ids
     end
@@ -62,15 +60,18 @@ class Stage < ActiveRecord::Base
   end
 
   def current_deploy
-    @current_deploy ||= deploys.active.first
+    return @current_deploy if defined?(@current_deploy)
+    @current_deploy = deploys.active.first
   end
 
   def last_deploy
-    @last_deploy ||= deploys.first
+    return @last_deploy if defined?(@last_deploy)
+    @last_deploy = deploys.first
   end
 
   def last_successful_deploy
-    @last_successful_deploy ||= deploys.successful.first
+    return @last_successful_deploy if defined?(@last_successful_deploy)
+    @last_successful_deploy = deploys.successful.first
   end
 
   def locked?
@@ -118,14 +119,6 @@ class Stage < ActiveRecord::Base
 
   def send_email_notifications?
     notify_email_address.present?
-  end
-
-  def send_flowdock_notifications?
-    flowdock_flows.any?
-  end
-
-  def flowdock_tokens
-    flowdock_flows.map(&:token)
   end
 
   def command
@@ -209,10 +202,6 @@ class Stage < ActiveRecord::Base
     end
   end
 
-  def no_flowdock_token?(flowdock_attrs)
-    flowdock_attrs['token'].blank?
-  end
-
   def no_newrelic_name?(newrelic_attrs)
     newrelic_attrs['name'].blank?
   end
@@ -225,3 +214,5 @@ class Stage < ActiveRecord::Base
     Stage.unscoped.where(project_id: project_id)
   end
 end
+
+Samson::Hooks.fire(:stage_defined)

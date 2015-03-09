@@ -1,9 +1,4 @@
 class JobsController < ApplicationController
-  rescue_from ActiveRecord::RecordNotFound do |error|
-    flash[:error] = "Job not found."
-    redirect_to root_path
-  end
-
   before_filter :authorize_admin!, only: [:new, :create, :destroy]
 
   before_action :find_project, except: [:enabled]

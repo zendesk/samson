@@ -9,12 +9,19 @@ describe DeploysController do
   let(:deploy) { deploys(:succeeded_test) }
   let(:deploy_service) { stub(deploy!: nil) }
   let(:deploy_called) { [] }
+  let(:changeset) { stub_everything(commits: [], files: [], pull_requests: [], jira_issues: []) }
 
   setup do
     DeployService.stubs(:new).with(project, deployer).returns(deploy_service)
     deploy_service.stubs(:deploy!).capture(deploy_called).returns(deploy)
 
-    Changeset.stubs(:find).returns(stub(hotfix?: false))
+    Deploy.any_instance.stubs(:changeset).returns(changeset)
+  end
+
+  it "routes" do
+    assert_routing "/projects/1/stages/2/deploys/new", controller: "deploys", action: "new", project_id: "1", stage_id: "2"
+    assert_routing({ method: "post", path: "/projects/1/stages/2/deploys" },
+      controller: "deploys", action: "create", project_id: "1", stage_id: "2")
   end
 
   as_a_viewer do
@@ -124,11 +131,6 @@ describe DeploysController do
     end
 
     describe "a GET to :show" do
-      setup do
-        changeset = stub_everything(files: [], commits: [], pull_requests: [], jira_issues: [])
-        Changeset.stubs(:find).returns(changeset)
-      end
-
       describe "with a valid deploy" do
         setup { get :show, project_id: project.to_param, id: deploy.to_param }
 
@@ -137,15 +139,9 @@ describe DeploysController do
         end
       end
 
-      describe "with no deploy" do
-        setup { get :show, project_id: project.to_param, id: "deploy:nope" }
-
-        it "redirects to the root page" do
-          assert_redirected_to root_path
-        end
-
-        it "sets the flash error" do
-          request.flash[:error].wont_be_nil
+      it "fails with unknown deploy" do
+        assert_raises ActiveRecord::RecordNotFound do
+          get :show, project_id: project.to_param, id: "deploy:nope"
         end
       end
 
@@ -162,35 +158,27 @@ describe DeploysController do
       end
     end
 
-    unauthorized :get, :new, project_id: 1
-    unauthorized :post, :create, project_id: 1
+    unauthorized :get, :new, project_id: 1, stage_id: 2
+    unauthorized :post, :create, project_id: 1, stage_id: 2
     unauthorized :post, :buddy_check, project_id: 1, id: 1
     unauthorized :delete, :destroy, project_id: 1, id: 1
   end
 
   as_a_deployer do
     describe "a GET to :new" do
-      it "renders" do
-        get :new, project_id: project.to_param
-      end
-
       it "sets stage and reference" do
-        get :new, project_id: project.to_param, stage_id: stage.id, reference: "abcd"
+        get :new, project_id: project.to_param, stage_id: stage.to_param, reference: "abcd"
         deploy = assigns(:deploy)
-        deploy.stage_id.must_equal stage.id
         deploy.reference.must_equal "abcd"
       end
     end
 
     describe "a POST to :create" do
       setup do
-        post :create, params.merge(project_id: project.to_param, format: format)
+        post :create, params.merge(project_id: project.to_param, stage_id: stage.to_param, format: format)
       end
 
-      let(:params) {{ deploy: {
-        stage_id: stage.id,
-        reference: "master"
-      }}}
+      let(:params) {{ deploy: { reference: "master" }}}
 
       describe "as html" do
         let(:format) { :html }
@@ -218,16 +206,10 @@ describe DeploysController do
     end
 
     describe "a POST to :confirm" do
-      let(:changeset) { stub_everything(commits: [], files: [], pull_requests: [], jira_issues: []) }
-
       setup do
         Deploy.delete_all # triggers more callbacks
-        Changeset.stubs(:find).with(project.github_repo, nil, 'master').returns(changeset)
 
-        post :confirm, project_id: project.to_param, deploy: {
-          stage_id: stage.id,
-          reference: "master",
-        }
+        post :confirm, project_id: project.to_param, stage_id: stage.to_param, deploy: { reference: "master" }
       end
 
       it "renders the template" do

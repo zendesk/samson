@@ -35,7 +35,7 @@ describe TerminalExecutor do
   end
 
   describe '#stop!' do
-    it 'properly kills the execution' do
+    xit 'properly kills the execution' do
       thr = Thread.new(subject) do |shell|
         sleep(0.1) until shell.pid
         shell.stop!

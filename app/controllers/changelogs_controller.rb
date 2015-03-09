@@ -6,7 +6,7 @@ class ChangelogsController < ApplicationController
     @end_date = Date.strptime(params[:end_date], '%Y-%m-%d')
 
     @project = Project.find_by_param!(params[:project_id])
-    @changeset = Changeset.find(@project.github_repo, "master@{#{@start_date}}", "master@{#{@end_date}}")
+    @changeset = Changeset.new(@project.github_repo, "master@{#{@start_date}}", "master@{#{@end_date}}")
   end
 
   private

@@ -1,3 +1,9 @@
+PATH
+  remote: plugins/flowdock
+  specs:
+    samson_flowdock (0.0.0)
+      flowdock (~> 0.3.1)
+
 GEM
   remote: https://rubygems.org/
   specs:
@@ -284,7 +290,6 @@ DEPENDENCIES
   dogstatsd-ruby (~> 1.4.0)
   dotenv-rails (~> 0.9)
   faraday-http-cache (~> 0.4)
-  flowdock (~> 0.3.1)
   font-awesome-sass
   github-markdown (~> 0.6.3)
   jquery-rails
@@ -311,6 +316,7 @@ DEPENDENCIES
   rails (~> 4.2.0)
   rails_12factor
   rickshaw_rails
+  samson_flowdock!
   sass-rails (~> 5.0)
   sawyer (~> 0.5)
   simplecov

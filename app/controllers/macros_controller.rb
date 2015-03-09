@@ -1,9 +1,4 @@
 class MacrosController < ApplicationController
-  rescue_from ActiveRecord::RecordNotFound do |error|
-    flash[:error] = "Macro not found."
-    redirect_to root_path
-  end
-
   before_action :authorize_deployer!
   before_action :authorize_admin!, only: [:new, :create, :edit, :update, :destroy]
 

@@ -1,9 +1,9 @@
-<%= breadcrumb @project, "Deploy" %>
+<%= breadcrumb @project, @stage, "Deploy" %>
 
 <%= render_global_lock %>
 
 <section>
-  <%= form_for [@project, @deploy], html: { class: "form-horizontal" }, data: { 'commit-status-url' => project_commit_statuses_path(@project), 'confirm-url' => confirm_project_deploys_path(@project) } do |form| %>
+  <%= form_for [@project, @stage, @deploy], html: { class: "form-horizontal" }, data: { 'commit-status-url' => project_commit_statuses_path(@project), 'confirm-url' => confirm_project_stage_deploys_path(@project, @stage), 'confirm' => @stage.confirm? } do |form| %>
     <fieldset>
       <% if @deploy.errors.any? %>
         <div class="row">
@@ -25,21 +25,10 @@
         </div>
       </div>
 
-      <div class="form-group">
-        <%= form.label :stage_id, "Stage", class: "col-lg-2 control-label" %>
-        <div class="col-lg-4">
-          <%= form.select :stage_id, stages_select_options, {}, class: "form-control" %>
-        </div>
-      </div>
-
       <div class="form-group" id="new-deploy-buttons">
         <div class="col-lg-offset-2 col-lg-10">
-          <button type="submit" class="btn btn-primary" <%= 'disabled="disabled"' if global_lock %>>
-            <span id="deploy-button-text">Deploy!</span>
-            <span style="display: none;" id="confirm-button-text">Confirm!</span>
-          </button>
-
-          <%= link_to "cancel", '#', class: 'btn btn-default', data: { url: project_path(@project) }, id: 'new-deploy-cancel' %>
+          <%= form.submit "", class: "btn btn-primary", disabled: global_lock %>
+          <%= link_to "Cancel", :back, class: 'btn btn-default' %>
         </div>
       </div>
 

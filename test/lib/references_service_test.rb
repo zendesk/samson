@@ -29,13 +29,13 @@ describe ReferencesService, :model do
   end
 
   it 'returns a sorted set of tags and branches from cached repo' do
-    ReferencesService.new(project).references_from_cached_repo.must_equal %w(v1 master test_user/test_branch)
+    ReferencesService.new(project).send(:references_from_cached_repo).must_equal %w(v1 master test_user/test_branch)
   end
 
   it 'the ttl threshold should always return an integer' do
     Rails.application.config.samson.stubs(:references_cache_ttl).returns('10')
     references_service = ReferencesService.new(project)
-    references_service.references_ttl.must_equal 10
+    references_service.send(:references_ttl).must_equal 10
   end
 
   def execute_on_remote_repo(directory, cmds)

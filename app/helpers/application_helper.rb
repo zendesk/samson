@@ -23,7 +23,7 @@ module ApplicationHelper
     elsif stage.locked_for?(current_user)
       content_tag :a, "Locked", class: "btn btn-primary disabled", disabled: true
     else
-      path = new_project_deploy_path(project, stage_id: stage.id)
+      path = new_project_stage_deploy_path(project, stage)
       link_to "Deploy", path, role: "button", class: "btn btn-primary"
     end
   end

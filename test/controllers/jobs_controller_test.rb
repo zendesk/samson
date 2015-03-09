@@ -32,15 +32,9 @@ describe JobsController do
         end
       end
 
-      describe "with no job" do
-        setup { get :show, project_id: project.to_param, id: "job:nope" }
-
-        it "redirects to the root page" do
-          assert_redirected_to root_path
-        end
-
-        it "sets the flash error" do
-          request.flash[:error].wont_be_nil
+      it "fails with unknown job" do
+        assert_raises ActiveRecord::RecordNotFound do
+          get :show, project_id: project.to_param, id: "job:nope"
         end
       end
 
@@ -77,7 +71,7 @@ describe JobsController do
         }, project_id: project.to_param
       end
 
-      let(:params) 
+      let(:params)
 
       it "redirects to the job path" do
         assert_redirected_to project_job_path(project, job)
@@ -87,6 +81,7 @@ describe JobsController do
         assert_equal [["master", [], command]], execute_called
       end
     end
+
     describe "a DELETE to :destroy" do
       describe "with a job owned by the admin" do
         setup do
@@ -99,7 +94,6 @@ describe JobsController do
           response.status.must_equal(200)
         end
       end
-
     end
   end
 

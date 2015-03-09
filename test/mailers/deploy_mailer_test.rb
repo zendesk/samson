@@ -8,7 +8,7 @@ describe DeployMailer do
 
   def stub_empty_changeset
     changeset = stub_everything(files: [], commits: [], pull_requests: [])
-    Changeset.stubs(:find).returns(changeset)
+    Deploy.any_instance.stubs(:changeset).returns(changeset)
   end
 
   describe "#deploy_email" do

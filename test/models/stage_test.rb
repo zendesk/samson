@@ -2,6 +2,7 @@ require_relative '../test_helper'
 
 describe Stage do
   subject { stages(:test_staging) }
+  let(:stage) { subject }
 
   describe ".where_reference_being_deployed" do
     it "returns stages where the reference is currently being deployed" do
@@ -60,12 +61,12 @@ describe Stage do
     let(:project) { projects(:test) }
     let(:stage) { stages(:test_staging) }
 
-    it 'returns the last successful deploy for the stage' do
-      successful_job = project.jobs.create!(command: 'cat foo', user: users(:deployer), status: 'succeeded')
-      stage.deploys.create!(reference: 'master', job: successful_job)
-      job = project.jobs.create!(command: 'cat foo', user: users(:deployer), status: 'failed')
-      deploy = stage.deploys.create!(reference: 'master', job: successful_job)
-      assert_equal deploy, stage.last_successful_deploy
+    it 'caches nil' do
+      stage
+      ActiveRecord::Relation.any_instance.expects(:first).returns nil
+      stage.last_deploy.must_equal nil
+      ActiveRecord::Relation.any_instance.expects(:first).never
+      stage.last_deploy.must_equal nil
     end
 
     it 'returns the last deploy for the stage' do
@@ -74,6 +75,26 @@ describe Stage do
       job = project.jobs.create!(command: 'cat foo', user: users(:deployer), status: 'failed')
       deploy = stage.deploys.create!(reference: 'master', job: job)
       assert_equal deploy, stage.last_deploy
+    end
+  end
+
+  describe '#last_successful_deploy' do
+    let(:project) { projects(:test) }
+
+    it 'caches nil' do
+      subject
+      ActiveRecord::Relation.any_instance.expects(:first).returns nil
+      stage.last_successful_deploy.must_equal nil
+      ActiveRecord::Relation.any_instance.expects(:first).never
+      stage.last_successful_deploy.must_equal nil
+    end
+
+    it 'returns the last successful deploy for the stage' do
+      successful_job = project.jobs.create!(command: 'cat foo', user: users(:deployer), status: 'succeeded')
+      stage.deploys.create!(reference: 'master', job: successful_job)
+      job = project.jobs.create!(command: 'cat foo', user: users(:deployer), status: 'failed')
+      deploy = stage.deploys.create!(reference: 'master', job: successful_job)
+      assert_equal deploy, stage.last_successful_deploy
     end
   end
 
@@ -127,6 +148,14 @@ describe Stage do
 
   describe "#current_deploy" do
     it "is nil when not deploying" do
+      subject.current_deploy.must_equal nil
+    end
+
+    it 'caches nil' do
+      subject
+      ActiveRecord::Relation.any_instance.expects(:first).returns nil
+      subject.current_deploy.must_equal nil
+      ActiveRecord::Relation.any_instance.expects(:first).never
       subject.current_deploy.must_equal nil
     end
 
@@ -304,8 +333,7 @@ describe Stage do
 
     it "includes committers when there is no previous deploy" do
       previous_deploy.delete
-      GITHUB.expects(:compare).with(anything, "commita", "commita").returns simple_response
-      emails.must_equal ["static@example.com", "pete@example.com"]
+      emails.must_equal ["static@example.com"]
     end
 
     it "does not include commiiters if the author did not have a email" do

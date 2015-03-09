@@ -48,14 +48,9 @@ describe MacrosController do
         end
       end
 
-      describe 'without a macro' do
-        setup do
+      it 'fails for non-existent macro' do
+        assert_raises ActiveRecord::RecordNotFound do
           post :execute, project_id: project.to_param, id: 123123123
-        end
-
-        it 'responds with a redirect' do
-          flash[:error].wont_be_nil
-          assert_redirected_to root_path
         end
       end
     end
@@ -87,14 +82,9 @@ describe MacrosController do
         end
       end
 
-      describe 'without a macro' do
-        setup do
+      it 'fails for non-existent macro' do
+        assert_raises ActiveRecord::RecordNotFound do
           get :edit, project_id: project.to_param, id: 123123
-        end
-
-        it 'redirects and adds a flash' do
-          flash[:error].wont_be_nil
-          assert_redirected_to root_path
         end
       end
     end

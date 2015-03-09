@@ -2,10 +2,6 @@ class Integrations::BaseController < ApplicationController
   skip_before_action :login_users
   skip_before_action :verify_authenticity_token
 
-  rescue_from ActiveRecord::RecordNotFound do
-    head :not_found
-  end
-
   def create
     if deploy?
       create_new_release

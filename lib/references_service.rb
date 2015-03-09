@@ -11,6 +11,8 @@ class ReferencesService
     Rails.cache.fetch(cache_key, :expires_in => references_ttl) { references_from_cached_repo } || []
   end
 
+  private
+
   def repository
     project.repository
   end
@@ -36,5 +38,4 @@ class ReferencesService
   def lock_project(&block)
     project.with_lock(holder: 'autocomplete', timeout: lock_timeout, &block)
   end
-
 end

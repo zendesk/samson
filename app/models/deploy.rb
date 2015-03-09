@@ -52,7 +52,7 @@ class Deploy < ActiveRecord::Base
   end
 
   def changeset_to(other)
-    Changeset.find(project.github_repo, other.try(:commit), commit)
+    Changeset.new(project.github_repo, other.try(:commit), commit)
   end
 
   def production
@@ -110,7 +110,7 @@ class Deploy < ActiveRecord::Base
   end
 
   def self.prior_to(deploy)
-    where("#{table_name}.id < ?", deploy.id)
+    deploy.persisted? ? where("#{table_name}.id < ?", deploy.id) : self
   end
 
   def self.expired

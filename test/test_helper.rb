@@ -14,8 +14,23 @@ require 'maxitest/autorun'
 require 'webmock/minitest'
 require 'mocha/setup'
 
+# Use ActiveSupport::TestCase for everything that was not matched before
+MiniTest::Spec::DSL::TYPES[-1] = [//, ActiveSupport::TestCase]
+
+module StubGithubAPI
+  def stub_github_api(url, response = {}, status = 200)
+    url = 'https://api.github.com/' + url
+    stub_request(:get, url).to_return(
+      status: status,
+      body: JSON.dump(response),
+      headers: { 'Content-Type' => 'application/json' }
+    )
+  end
+end
+
 class ActiveSupport::TestCase
   include Warden::Test::Helpers
+  include StubGithubAPI
 
   ActiveRecord::Migration.check_pending!
 
@@ -28,6 +43,15 @@ class ActiveSupport::TestCase
   before do
     Rails.cache.clear
     stubs_project_callbacks
+  end
+
+  after { sleep 0.1 while extra_threads.present? }
+
+  def extra_threads
+    normal = ENV['CI'] ? 2 : 3 # there are always 3 threads hanging around, 2 unknown and 1 from the test timeout helper code
+    threads = (Thread.list - [Thread.current])
+    raise "too low threads, adjust minimum" if threads.size < normal
+    threads.sort_by(&:object_id)[normal..-1] # always kill the newest threads (run event_streamer_test.rb + stage_test.rb to make it blow up)
   end
 
   def assert_valid(record)
@@ -62,21 +86,6 @@ class ActiveSupport::TestCase
       assert_equal count, new
     end
   end
-end
-
-module StubGithubAPI
-  def stub_github_api(url, response = {}, status = 200)
-    url = 'https://api.github.com/' + url
-    stub_request(:get, url).to_return(
-      status: status,
-      body: JSON.dump(response),
-      headers: { 'Content-Type' => 'application/json' }
-    )
-  end
-end
-
-class MiniTest::Spec
-  include StubGithubAPI
 end
 
 Mocha::Expectation.class_eval do
