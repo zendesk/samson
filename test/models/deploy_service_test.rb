@@ -158,15 +158,6 @@ class DeployServiceTest < ActiveSupport::TestCase
       job_execution.send(:run!)
     end
 
-    it "sends Zendesk notifications if the stage has them enabled" do
-      stage.stubs(:comment_on_zendesk_tickets?).returns(true)
-
-      ZendeskNotification.any_instance.expects(:deliver)
-
-      service.deploy!(stage, reference)
-      job_execution.send(:run!)
-    end
-
     it "sends github notifications if the stage has it enabled and deploy succeeded" do
       stage.stubs(:send_github_notifications?).returns(true)
       deploy.stubs(:status).returns("succeeded")

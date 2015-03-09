@@ -184,16 +184,6 @@
   </div>
 </fieldset>
 
-<fieldset>
-  <legend>Zendesk</legend>
-    <div class="col-lg-6 checkbox">
-      <%= form.label :comment_on_zendesk_tickets do %>
-        <%= form.check_box :comment_on_zendesk_tickets %>
-        Add comment on a Zendesk ticket after deployment
-      <% end %>
-  </div>
-</fieldset>
-
 <script>
   $(document).ready(function() {
     $('#commands').sortable();

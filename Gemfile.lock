@@ -4,6 +4,12 @@ PATH
     samson_flowdock (0.0.0)
       flowdock (~> 0.3.1)
 
+PATH
+  remote: plugins/zendesk/
+  specs:
+    samson_zendesk (0.0.0)
+      zendesk_api
+
 GEM
   remote: https://rubygems.org/
   specs:
@@ -261,11 +267,11 @@ GEM
     webmock (1.20.4)
       addressable (>= 2.3.6)
       crack (>= 0.3.2)
-    zendesk_api (1.4.6)
+    zendesk_api (1.6.0)
       faraday (~> 0.9)
       hashie (>= 1.2, < 4.0)
       inflection
-      mime-types (~> 2.0)
+      mime-types
       multi_json
       multipart-post (~> 2.0)
 
@@ -317,6 +323,7 @@ DEPENDENCIES
   rails_12factor
   rickshaw_rails
   samson_flowdock!
+  samson_zendesk!
   sass-rails (~> 5.0)
   sawyer (~> 0.5)
   simplecov
@@ -326,4 +333,3 @@ DEPENDENCIES
   warden (~> 1.2)
   web-console
   webmock
-  zendesk_api

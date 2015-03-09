@@ -10,7 +10,7 @@ class ZendeskNotification
   end
 
   def deliver
-    zendesk_tickets = @deploy.changeset.zendesk_tickets
+    zendesk_tickets = zendesk_tickets(@deploy.changeset.commits)
 
     if zendesk_tickets.any?
       zendesk_tickets.each do |ticket_id|
@@ -32,6 +32,11 @@ class ZendeskNotification
   end
 
   private
+
+  # Matches Zendesk ticket number in commit messages 
+  def zendesk_tickets(commits)
+    commits.map { |c| c.summary[/zd#?(\d+)/i, 1] }.compact.map!(&:to_i).uniq
+  end
 
   def zendesk_client
     @zendesk_client ||= ZendeskAPI::Client.new do |config|

@@ -78,7 +78,7 @@ describe SessionsController do
 
   describe "a POST to #google" do
     let(:env) {{}}
-    let(:user) { users(:zendesk_viewer) }
+    let(:user) { users(:viewer) }
     let(:strategy) { stub(name: 'google') }
     let(:auth_hash) do
       Hashie::Mash.new(

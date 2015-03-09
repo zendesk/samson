@@ -78,7 +78,6 @@ class ProjectsController < ApplicationController
         :notify_email_address,
         :datadog_tags,
         :update_github_pull_requests,
-        :comment_on_zendesk_tickets,
         :use_github_deployment_api,
         command_ids: [],
       ] + Samson::Hooks.fire(:stage_permitted_params)

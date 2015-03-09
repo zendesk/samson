@@ -119,7 +119,6 @@ class StagesController < ApplicationController
       :deploy_on_release,
       :datadog_tags,
       :update_github_pull_requests,
-      :comment_on_zendesk_tickets,
       :email_committers_on_automated_deploy_failure,
       :static_emails_on_automated_deploy_failure,
       deploy_group_ids: [],

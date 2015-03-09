@@ -1,9 +1,13 @@
 require_relative '../test_helper'
 
 describe ZendeskNotification do
+  def commit(message)
+    Changeset::Commit.new(nil, Hashie::Mash.new(commit: {message: message}))
+  end
+
   let(:stage) { stub(name: "Production")}
   let(:user) { stub(email: "deploys@example.org")}
-  let(:changeset) { stub(commits: "ZD#18 this fixes a very bad bug", zendesk_tickets: [18]) }
+  let(:changeset) { stub("changeset", commits: [commit("ZD#18 this fixes a very bad bug")]) }
   let(:deploy) { stub(changeset: changeset, user: user) }
   let(:notification) { ZendeskNotification.new(stage, deploy) }
   let(:api_response_headers) { {:headers => {:content_type => "application/json"}} }
@@ -20,6 +24,23 @@ describe ZendeskNotification do
       notification.deliver
 
       assert_requested comment
+    end
+  end
+
+  describe "#zendesk_tickets" do
+    let(:notification) { ZendeskNotification.new(nil, nil) }
+
+    it "returns a list of Zendesk tickets mentioned in commit messages" do
+      commits = [
+        commit("ZD#1234 this fixes a very bad bug"),
+        commit("ZD4567 Fix typo")
+      ]
+      notification.send(:zendesk_tickets, commits).must_equal [1234, 4567]
+    end
+
+    it "returns an empty array if there are no ticket references" do
+      commit = commit("Fix build error")
+      notification.send(:zendesk_tickets, [commit]).must_equal []
     end
   end
 
