@@ -29,12 +29,6 @@ viewer:
   role_id: <%= Role::VIEWER.id %>
   external_id: 'google-3'
 
-zendesk_viewer:
-  name: "Zendesk Viewer"
-  email: "zd+viewer@example.com"
-  role_id: <%= Role::VIEWER.id %>
-  external_id: 'google-4'
-
 github_viewer:
   name: "Github Viewer"
   email: "gh+viewer@example.com"

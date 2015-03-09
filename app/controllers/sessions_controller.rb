@@ -1,8 +1,6 @@
 require 'omniauth/github_authorization'
 
 class SessionsController < ApplicationController
-  before_action :restrict_end_users, only: :zendesk
-
   skip_before_action :login_users
 
   def new
