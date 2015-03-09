@@ -4,7 +4,7 @@ describe DashboardsController do
   let(:production) { environments(:production_env) }
 
   def self.it_renders_show
-    it 'get :show succeeds' do
+    it 'renders show' do
       get :show, id: production.to_param
       assert_template :show, partial: '_project'
       assert_select('tbody tr').count.must_equal Project.count

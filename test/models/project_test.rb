@@ -240,7 +240,7 @@ describe Project do
     end
   end
 
-  describe 'deploy group releases' do
+  describe '.last_deploy_by_group' do
     let(:deploy_group_pod1) { deploy_groups(:deploy_group_pod1) }
     let(:deploy_group_pod2) { deploy_groups(:deploy_group_pod2) }
     let(:deploy_group_pod100) { deploy_groups(:deploy_group_pod100) }
@@ -248,17 +248,17 @@ describe Project do
     let(:staging_deploy) { deploys(:succeeded_test) }
 
     it 'contains releases per deploy group' do
-      project.last_release_by_deploy_group[deploy_group_pod1.id].must_equal prod_deploy
-      project.last_release_by_deploy_group[deploy_group_pod2.id].must_equal prod_deploy
-      project.last_release_by_deploy_group[deploy_group_pod100.id].must_equal staging_deploy
+      project.last_deploy_by_group[deploy_group_pod1.id].must_equal prod_deploy
+      project.last_deploy_by_group[deploy_group_pod2.id].must_equal prod_deploy
+      project.last_deploy_by_group[deploy_group_pod100.id].must_equal staging_deploy
     end
 
-    it 'contains no releases per deploy group' do
+    it 'contains no releases for undeployed projects' do
       project = Project.create!(name: 'blank_new_project', repository_url: url)
 
-      project.last_release_by_deploy_group[deploy_group_pod1.id].must_be_nil
-      project.last_release_by_deploy_group[deploy_group_pod2.id].must_be_nil
-      project.last_release_by_deploy_group[deploy_group_pod100.id].must_be_nil
+      project.last_deploy_by_group[deploy_group_pod1.id].must_be_nil
+      project.last_deploy_by_group[deploy_group_pod2.id].must_be_nil
+      project.last_deploy_by_group[deploy_group_pod100.id].must_be_nil
     end
   end
 end

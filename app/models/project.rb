@@ -100,14 +100,14 @@ class Project < ActiveRecord::Base
     MultiLock.lock(id, holder, timeout: timeout, failed_to_lock: callback, &block)
   end
 
-  def last_release_by_deploy_group
-    releases = releases_by_deploy_group
+  def last_deploy_by_group
+    releases = deploys_by_group
     releases.map { |k, deploys| [ k, deploys.sort_by { |deploy| deploy.updated_at }.reverse.first ] }.to_h
   end
 
   private
 
-  def releases_by_deploy_group
+  def deploys_by_group
     stages.each_with_object({}) do |stage, result|
       stage.deploy_groups.each do |deploy_group|
         result[deploy_group.id] ||= []
