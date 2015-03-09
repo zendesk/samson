@@ -1,5 +1,4 @@
 class GitRepository
-
   attr_reader :repository_url, :repository_directory
 
   # The directory in which repositories should be cached.
@@ -14,6 +13,7 @@ class GitRepository
 
   def setup!(executor, temp_dir, git_reference)
     executor.output.write("Beginning git repo setup\n")
+    return false unless clone!(executor: executor, from: repository_url, to: repo_cache_dir, mirror: true) unless locally_cached?
     return false unless update!(executor: executor)
     return false unless clone!(executor: executor, from: repo_cache_dir, to: temp_dir)
     return false unless checkout!(executor: executor, pwd: temp_dir, git_reference: git_reference.shellescape)
@@ -25,12 +25,8 @@ class GitRepository
     executor.execute!("git clone #{from} #{to}")
   end
 
-  def update!(executor: TerminalExecutor.new(StringIO.new), pwd: repo_cache_dir)
-    executor.execute!("cd #{pwd}", 'git fetch -ap')
-  end
-
-  def checkout!(executor: TerminalExecutor.new(StringIO.new), pwd: repo_cache_dir, git_reference:)
-    executor.execute!("cd #{pwd}", "git checkout --quiet #{git_reference}")
+  def update!(executor: TerminalExecutor.new(StringIO.new))
+    executor.execute!("cd #{repo_cache_dir}", 'git fetch -ap')
   end
 
   def commit_from_ref(git_reference)
@@ -45,10 +41,6 @@ class GitRepository
 
   def repo_cache_dir
     File.join(cached_repos_dir, @repository_directory)
-  end
-
-  def locally_cached?
-    Dir.exist?(repo_cache_dir)
   end
 
   def tags
@@ -67,10 +59,6 @@ class GitRepository
     FileUtils.rm_rf(repo_cache_dir)
   end
 
-  def git_dir?(repo_dir)
-    Dir.exist?("#{repo_dir}/.git") || File.exist?("#{repo_dir}/HEAD")
-  end
-
   def valid_url?
     cmd = "git -c core.askpass=true ls-remote -h #{repository_url}"
     valid, output = run_single_command(cmd, pwd: '.')
@@ -80,6 +68,14 @@ class GitRepository
 
   private
 
+  def checkout!(executor: TerminalExecutor.new(StringIO.new), pwd: repo_cache_dir, git_reference:)
+    executor.execute!("cd #{pwd}", "git checkout --quiet #{git_reference}")
+  end
+
+  def locally_cached?
+    Dir.exist?(repo_cache_dir)
+  end
+
   def run_single_command(command, pwd: repo_cache_dir)
     output = StringIO.new
     executor = TerminalExecutor.new(output)
@@ -87,5 +83,4 @@ class GitRepository
     result = output.string.lines.map { |line| yield line if block_given? }.uniq.sort
     [success, result]
   end
-
 end
