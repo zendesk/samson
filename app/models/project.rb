@@ -21,6 +21,7 @@ class Project < ActiveRecord::Base
   accepts_nested_attributes_for :stages
 
   scope :alphabetical, -> { order('name') }
+  scope :with_deploy_groups, -> { includes(stages: [:deploy_groups]) }
 
   def repo_name
     name.parameterize('_')
@@ -141,8 +142,6 @@ class Project < ActiveRecord::Base
   def clean_repository
     repository.clean!
   end
-
-  private
 
   def log
     Rails.logger

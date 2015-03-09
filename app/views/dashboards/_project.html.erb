@@ -2,7 +2,9 @@
   <td><%= link_to project.name, project %></td>
   <% @environment.deploy_groups.each do |deploy_group| %>
     <td>
-      <%= link_to deploy_group_versions[deploy_group.id].reference, project_deploy_path(project, deploy_group_versions[deploy_group.id]) if deploy_group_versions[deploy_group.id] %>
+      <% if deploy = deploy_group_versions[deploy_group.id] %>
+        <%= link_to deploy.reference, project_deploy_path(project, deploy) %>
+      <% end %>
     </td>
   <% end %>
 </tr>
