@@ -7,7 +7,7 @@ describe BuddyCheck, :model do
   let(:stage) { deploy.stage }
   let(:reference) { deploy.reference }
   let(:job) { jobs(:succeeded_test) }
-  let(:deploy) { deploys(:succeeded_test) }
+  let(:deploy) { deploys(:succeeded_production_test) }
   let(:job_execution) { JobExecution.new(reference, job) }
 
   let(:other_user) { users(:deployer_buddy) }

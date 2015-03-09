@@ -21,6 +21,7 @@ class Project < ActiveRecord::Base
   accepts_nested_attributes_for :stages
 
   scope :alphabetical, -> { order('name') }
+  scope :with_deploy_groups, -> { includes(stages: [:deploy_groups]) }
 
   def repo_name
     name.parameterize('_')
@@ -100,7 +101,21 @@ class Project < ActiveRecord::Base
     MultiLock.lock(id, holder, timeout: timeout, failed_to_lock: callback, &block)
   end
 
+  def last_deploy_by_group
+    releases = deploys_by_group
+    releases.map { |group_id, deploys| [ group_id, deploys.sort_by(&:updated_at).last ] }.to_h
+  end
+
   private
+
+  def deploys_by_group
+    stages.each_with_object({}) do |stage, result|
+      stage.deploy_groups.each do |deploy_group|
+        result[deploy_group.id] ||= []
+        result[deploy_group.id] << stage.last_successful_deploy if stage.last_successful_deploy
+      end
+    end
+  end
 
   def permalink_base
     repository_url.to_s.split('/').last.to_s.sub(/\.git/, '')
@@ -127,8 +142,6 @@ class Project < ActiveRecord::Base
   def clean_repository
     repository.clean!
   end
-
-  private
 
   def log
     Rails.logger

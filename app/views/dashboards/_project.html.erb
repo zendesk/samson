@@ -1,0 +1,10 @@
+<tr class="<%= 'warning' if deploy_group_versions.values.uniq.count > 1 %>">
+  <td><%= link_to project.name, project %></td>
+  <% @environment.deploy_groups.each do |deploy_group| %>
+    <td>
+      <% if deploy = deploy_group_versions[deploy_group.id] %>
+        <%= link_to deploy.reference, project_deploy_path(project, deploy) %>
+      <% end %>
+    </td>
+  <% end %>
+</tr>

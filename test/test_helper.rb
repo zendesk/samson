@@ -71,6 +71,21 @@ class ActiveSupport::TestCase
     Project.any_instance.unstub(:clone_repository)
     Project.any_instance.unstub(:clean_repository)
   end
+
+  def map_ar_queries
+    QueryDiet::Logger.queries.map(&:first) - ["select 1"]
+  end
+
+  def assert_sql_queries(count, &block)
+    old = map_ar_queries.size
+    yield
+    new = map_ar_queries.size - old
+    if count.is_a?(Range)
+      assert_includes count, new
+    else
+      assert_equal count, new
+    end
+  end
 end
 
 Mocha::Expectation.class_eval do

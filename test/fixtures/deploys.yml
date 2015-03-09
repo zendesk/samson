@@ -5,3 +5,11 @@ succeeded_test:
   started_at: 2014-01-02 20:00:00
   updated_at: 2014-01-02 20:10:00
   created_at: 2014-01-02 19:50:00
+
+succeeded_production_test:
+  stage: test_production
+  job: succeeded_test
+  reference: v1.0
+  started_at: 2014-01-02 20:00:00
+  updated_at: 2014-01-02 20:10:00
+  created_at: 2014-01-02 19:50:00

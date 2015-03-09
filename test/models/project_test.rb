@@ -246,7 +246,36 @@ describe Project do
       output.string.include?('using the error callback').must_equal(true)
       output.string.include?("Can't get here").must_equal(false)
     end
-
   end
 
+  describe '#last_deploy_by_group' do
+    let(:deploy_group_pod1) { deploy_groups(:deploy_group_pod1) }
+    let(:deploy_group_pod2) { deploy_groups(:deploy_group_pod2) }
+    let(:deploy_group_pod100) { deploy_groups(:deploy_group_pod100) }
+    let(:prod_deploy) { deploys(:succeeded_production_test) }
+    let(:staging_deploy) { deploys(:succeeded_test) }
+
+    it 'contains releases per deploy group' do
+      project.last_deploy_by_group[deploy_group_pod1.id].must_equal prod_deploy
+      project.last_deploy_by_group[deploy_group_pod2.id].must_equal prod_deploy
+      project.last_deploy_by_group[deploy_group_pod100.id].must_equal staging_deploy
+    end
+
+    it 'contains no releases for undeployed projects' do
+      project = Project.create!(name: 'blank_new_project', repository_url: url)
+
+      project.last_deploy_by_group[deploy_group_pod1.id].must_be_nil
+      project.last_deploy_by_group[deploy_group_pod2.id].must_be_nil
+      project.last_deploy_by_group[deploy_group_pod100.id].must_be_nil
+    end
+
+    it 'performs minimal number of queries' do
+      Project.create!(name: 'blank_new_project', repository_url: url)
+      assert_sql_queries 7 do
+        Project.alphabetical.with_deploy_groups.each do |p|
+          p.last_deploy_by_group
+        end
+      end
+    end
+  end
 end

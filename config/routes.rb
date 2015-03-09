@@ -66,6 +66,7 @@ Samson::Application.routes.draw do
   get '/logout', to: 'sessions#destroy'
 
   resources :stars, only: [:create, :destroy]
+  resources :dashboards, only: [:show]
 
   namespace :admin do
     resources :users, only: [:index, :update, :destroy]

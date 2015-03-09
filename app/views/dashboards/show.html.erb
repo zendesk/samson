@@ -1,0 +1,20 @@
+<h1><%= @environment.name %></h1>
+
+<section>
+  <table class="table">
+    <thead>
+    <tr>
+      <th></th>
+      <% @environment.deploy_groups.each do |deploy_group| %>
+        <th><%= deploy_group.name %></th>
+      <% end %>
+    </tr>
+    </thead>
+    <tbody>
+    <% @deploys.each do |project, deploy_group_versions| %>
+      <%= render partial: 'project', object: project,
+                 locals: { deploy_group_versions: deploy_group_versions } %>
+    <% end %>
+    </tbody>
+  </table>
+</section>
