@@ -103,7 +103,7 @@ class Project < ActiveRecord::Base
 
   def last_deploy_by_group
     releases = deploys_by_group
-    releases.map { |k, deploys| [ k, deploys.sort_by { |deploy| deploy.updated_at }.reverse.first ] }.to_h
+    releases.map { |group_id, deploys| [ group_id, deploys.sort_by(&:updated_at).last ] }.to_h
   end
 
   private

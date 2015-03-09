@@ -240,7 +240,7 @@ describe Project do
     end
   end
 
-  describe '.last_deploy_by_group' do
+  describe '#last_deploy_by_group' do
     let(:deploy_group_pod1) { deploy_groups(:deploy_group_pod1) }
     let(:deploy_group_pod2) { deploy_groups(:deploy_group_pod2) }
     let(:deploy_group_pod100) { deploy_groups(:deploy_group_pod100) }
@@ -264,8 +264,8 @@ describe Project do
     it 'performs minimal number of queries' do
       Project.create!(name: 'blank_new_project', repository_url: url)
       assert_sql_queries 7 do
-        Project.alphabetical.with_deploy_groups.each_with_object({}) do |p, hash|
-          hash[p] = p.last_deploy_by_group
+        Project.alphabetical.with_deploy_groups.each do |p|
+          p.last_deploy_by_group
         end
       end
     end

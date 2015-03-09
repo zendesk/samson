@@ -28,7 +28,6 @@ class ActiveSupport::TestCase
   before do
     Rails.cache.clear
     stubs_project_callbacks
-    QueryDiet::Logger.reset
   end
 
   def assert_valid(record)
@@ -53,22 +52,14 @@ class ActiveSupport::TestCase
     QueryDiet::Logger.queries.map(&:first) - ["select 1"]
   end
 
-  def ar_queries
-    map_ar_queries.size
-  end
-
-  def actual_ar_queries
-    map_ar_queries.join("\n")
-  end
-
   def assert_sql_queries(count, &block)
-    old = ar_queries
+    old = map_ar_queries.size
     yield
-    new = ar_queries - old
+    new = map_ar_queries.size - old
     if count.is_a?(Range)
-      assert_includes count, new, actual_ar_queries
+      assert_includes count, new
     else
-      assert_equal count, new, actual_ar_queries
+      assert_equal count, new
     end
   end
 end
