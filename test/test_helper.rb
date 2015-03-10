@@ -152,4 +152,6 @@ class ActionController::TestCase
   alias_method_chain :process, :catch_warden
 end
 
+WebMock.disable_net_connect!(allow: 'codeclimate.com')
+
 Dir["test/support/*"].each { |f| require File.expand_path(f) }
