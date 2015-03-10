@@ -2,6 +2,8 @@ class Release < ActiveRecord::Base
   belongs_to :project, touch: true
   belongs_to :author, polymorphic: true
 
+  before_create :assign_release_number
+
   def self.sort_by_version
     order(number: :desc)
   end
@@ -36,5 +38,12 @@ class Release < ActiveRecord::Base
 
   def self.find_by_version!(version)
     find_by_number!(version[/\Av(\d+)\Z/, 1].to_i)
+  end
+
+  private
+
+  def assign_release_number
+    latest_release_number = project.releases.last.try(:number) || 0
+    self.number = latest_release_number + 1
   end
 end
