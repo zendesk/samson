@@ -21,7 +21,7 @@ describe ReleaseService, :model do
 
   it "tags the release" do
     release = service.create_release(commit: commit, author: author)
-    assert_equal [[project.github_repo, 'v1', target_commitish: commit]], release_params_used
+    assert_equal [[project.github_repo, 'v124', target_commitish: commit]], release_params_used
   end
 
   it "deploys the commit to stages if they're configured to" do
