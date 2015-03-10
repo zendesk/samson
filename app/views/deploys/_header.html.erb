@@ -9,7 +9,7 @@
 
       <% if @deploy.succeeded? && next_stage = @deploy.stage.next_stage %>
         <% unless next_stage.locked? %>
-          <%= link_to "Deploy #{@deploy.short_reference} to #{next_stage.name}", new_project_deploy_path(@project, reference: @deploy.short_reference, stage_id: next_stage.id), class: "btn btn-primary" %>
+          <%= link_to "Deploy #{@deploy.short_reference} to #{next_stage.name}", new_project_stage_deploy_path(@project, next_stage, reference: @deploy.short_reference), class: "btn btn-primary" %>
         <% end %>
       <% end %>
     <% end %>
