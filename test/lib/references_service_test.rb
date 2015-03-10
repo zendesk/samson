@@ -1,7 +1,6 @@
 require_relative '../test_helper'
 
-describe ReferencesService, :model do
-
+describe ReferencesService do
   let!(:repository_url) do
     tmp = Dir.mktmpdir
     cmds = <<-SHELL
@@ -46,5 +45,4 @@ describe ReferencesService, :model do
     FileUtils.rm_rf(repository_url)
     FileUtils.rm_rf(project.repository.clean!)
   end
-
 end

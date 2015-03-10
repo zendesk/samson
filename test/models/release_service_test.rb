@@ -1,6 +1,6 @@
 require_relative '../test_helper'
 
-describe ReleaseService, :model do
+describe ReleaseService do
   let(:project) { projects(:test) }
   let(:author) { users(:deployer) }
   let(:service) { ReleaseService.new(project) }
