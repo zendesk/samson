@@ -19,3 +19,9 @@ project.stages.create!(
   name: "Production",
   deploy_groups: [prod]
 )
+
+project.releases.create!(
+  commit: "123456",
+  author_id: 1,
+  author_type: "User"
+)

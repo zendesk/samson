@@ -1,0 +1,12 @@
+<div class="btn-group">
+  <button type="button" class="btn btn-default btn-primary dropdown-toggle" data-toggle="dropdown">
+    Deploy to <span class="caret"></span>
+  </button>
+  <ul class="dropdown-menu" role="menu">
+    <% stages.each do |stage| %>
+      <li>
+        <%= link_to_deploy_stage(stage, release) %>
+      </li>
+    <% end %>
+  </ul>
+</div>

@@ -6,7 +6,7 @@
 
 <section class="clearfix tabs release">
   <div class="pull-right">
-    <%= link_to "Deploy", new_project_deploy_path(@project, reference: @release.version), role: "button", class: "btn btn-primary" %>
+    <%= render 'deploy_to_button', release: @release, stages: @project.stages %>
   </div>
 
   <% if @release.deployed_stages.any? %>
