@@ -74,14 +74,8 @@ class Changeset
         GITHUB.compare(repo, previous_commit, commit)
       end
     end
-  rescue Octokit::NotFound, Octokit::InternalServerError => e
-    error_msg = case e
-    when Octokit::NotFound then "Commit not found"
-    when Octokit::InternalServerError then "Internal error #{e.message}"
-    else
-      "Unknown error"
-    end
-    NullComparison.new(error_msg)
+  rescue Octokit::Error => e
+    NullComparison.new("Github: #{e.message.sub("Octokit::", "").underscore.humanize}")
   end
 
   def find_pull_requests
