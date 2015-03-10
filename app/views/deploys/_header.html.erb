@@ -4,7 +4,7 @@
 
     <% if current_user.is_deployer? %>
       <% unless @deploy.succeeded? || @deploy.active? %>
-        <%= link_to "Redeploy", project_deploys_path(@project, deploy: { reference: @deploy.reference, stage_id: @deploy.stage_id }), method: :post, class: "btn btn-danger" %>
+        <%= link_to "Redeploy", project_stage_deploys_path(@project, @deploy.stage, deploy: { reference: @deploy.reference }), method: :post, class: "btn btn-danger" %>
       <% end %>
 
       <% if @deploy.succeeded? && next_stage = @deploy.stage.next_stage %>
