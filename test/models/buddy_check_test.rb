@@ -1,6 +1,6 @@
 require_relative '../test_helper'
 
-describe BuddyCheck, :model do
+describe BuddyCheck do
   let(:project) { job.project }
   let(:user) { job.user }
   let(:service) { DeployService.new(project, user) }

@@ -1,6 +1,6 @@
 require_relative '../test_helper'
 
-describe MacroService, :model do
+describe MacroService do
   let(:macro) { macros(:test_macro) }
   let(:user) { users(:deployer) }
   let(:project) { projects(:test) }
