@@ -94,7 +94,7 @@ $(function () {
 
   function toggleConfirmed() {
     confirmed = !confirmed;
-    $submit.val(!confirmed && $form.data('confirm') ? 'Review' : 'Deploy!');
+    $submit.val(!confirmed && $form.data('confirmation') ? 'Review' : 'Deploy!');
     if (!confirmed) {
       $("#deploy-confirmation").hide();
     }
@@ -124,7 +124,7 @@ $(function () {
         $this = $(this),
         $submit = $this.find('button[type=submit]');
 
-    if(!confirmed && $this.data('confirm')) {
+    if(!confirmed && $this.data('confirmation')) {
       toggleConfirmed();
       $("#deploy-confirmation").show();
       $("#deploy-confirmation .nav-tabs a:first").tab("show");
