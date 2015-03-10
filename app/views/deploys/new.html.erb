@@ -3,7 +3,7 @@
 <%= render_global_lock %>
 
 <section>
-  <%= form_for [@project, @stage, @deploy], html: { class: "form-horizontal" }, data: { 'commit-status-url' => project_commit_statuses_path(@project), 'confirm-url' => confirm_project_stage_deploys_path(@project, @stage), 'confirm' => @stage.confirm? } do |form| %>
+  <%= form_for [@project, @stage, @deploy], html: { class: "form-horizontal" }, data: { 'commit-status-url' => project_commit_statuses_path(@project), 'confirm-url' => confirm_project_stage_deploys_path(@project, @stage), 'confirmation' => @stage.confirm? } do |form| %>
     <fieldset>
       <% if @deploy.errors.any? %>
         <div class="row">
