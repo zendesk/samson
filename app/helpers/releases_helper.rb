@@ -25,7 +25,7 @@ module ReleasesHelper
     if stage.confirm_before_deploying?
       link_to stage.name, new_project_stage_deploy_path(@project, stage, deploy_params)
     else
-      link_to stage.name, project_deploys_path(@project, deploy: deploy_params), method: :post
+      link_to stage.name, project_stage_deploys_path(@project, stage, deploy: deploy_params), method: :post
     end
   end
 end

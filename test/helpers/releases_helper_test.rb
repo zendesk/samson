@@ -12,7 +12,7 @@ describe ReleasesHelper do
     end
 
     it "links creating a deploy when it does not needs to be confirmed" do
-      link_to_deploy_stage(stage, release).must_include "/projects/foo/deploys?"
+      link_to_deploy_stage(stage, release).must_include "/projects/foo/stages/staging/deploys?"
     end
   end
 end
