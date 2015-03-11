@@ -72,18 +72,20 @@ class ActiveSupport::TestCase
     Project.any_instance.unstub(:clean_repository)
   end
 
-  def map_ar_queries
+  def ar_queries
     QueryDiet::Logger.queries.map(&:first) - ["select 1"]
   end
 
   def assert_sql_queries(count, &block)
-    old = map_ar_queries.size
+    old = ar_queries
     yield
-    new = map_ar_queries.size - old
+    new = ar_queries
+    new_count = new.size - old.size
+    message = new[old.size..-1].join("\n")
     if count.is_a?(Range)
-      assert_includes count, new
+      assert_includes count, new_count, message
     else
-      assert_equal count, new
+      assert_equal count, new_count, message
     end
   end
 

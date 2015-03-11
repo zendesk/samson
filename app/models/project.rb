@@ -101,18 +101,20 @@ class Project < ActiveRecord::Base
     MultiLock.lock(id, holder, timeout: timeout, failed_to_lock: callback, &block)
   end
 
-  def last_deploy_by_group
-    releases = deploys_by_group
+  def last_deploy_by_group(before)
+    releases = deploys_by_group(before)
     releases.map { |group_id, deploys| [ group_id, deploys.sort_by(&:updated_at).last ] }.to_h
   end
 
   private
 
-  def deploys_by_group
+  def deploys_by_group(before)
     stages.each_with_object({}) do |stage, result|
-      stage.deploy_groups.each do |deploy_group|
-        result[deploy_group.id] ||= []
-        result[deploy_group.id] << stage.last_successful_deploy if stage.last_successful_deploy
+      if deploy = stage.deploys.successful.where("deploys.updated_at <= ?", before).first
+        stage.deploy_groups.each do |deploy_group|
+          result[deploy_group.id] ||= []
+          result[deploy_group.id] << deploy
+        end
       end
     end
   end
