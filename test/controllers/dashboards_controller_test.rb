@@ -3,7 +3,6 @@ require 'test_helper'
 describe DashboardsController do
   let(:production) { environments(:production_env) }
 
-  before { Project.any_instance.stubs(:valid_repository_url).returns(true) }
   def self.it_renders_show
     it 'renders show' do
       get :show, id: production.name
@@ -21,6 +20,8 @@ describe DashboardsController do
     as_a_super_admin { it_renders_show }
 
     as_a_admin do
+      before { Project.any_instance.stubs(:valid_repository_url).returns(true) }
+
       it 'renders starred projects first' do
         new_project1 = Project.create!(name: 'z1', repository_url: 'z1')
         new_project2 = Project.create!(name: 'z2', repository_url: 'z2')
