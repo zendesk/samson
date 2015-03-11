@@ -52,10 +52,10 @@ describe Project do
       assert release.persisted?
     end
 
-    it "defaults to release number 1" do
+    it "increments release number" do
       release = project.create_release(commit: "foo", author: author)
 
-      assert_equal 1, release.number
+      assert_equal 124, release.number
     end
 
     it "increments the release number" do

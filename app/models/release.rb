@@ -34,10 +34,7 @@ class Release < ActiveRecord::Base
     super || NullUser.new(author_id)
   end
 
-  def self.find_by_version(version)
-   if version =~ /\Av(\d+)\Z/
-     number = $1.to_i
-     find_by_number(number)
-   end
- end
+  def self.find_by_version!(version)
+    find_by_number!(version[/\Av(\d+)\Z/, 1].to_i)
+  end
 end
