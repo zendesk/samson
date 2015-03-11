@@ -7,7 +7,7 @@ describe DashboardsHelper do
                                    '2' => { reference: 'v1.0' },
                                    '3' => { reference: 'v1.0' }
                                  })
-      project_multi_deploys?(deploys).must_equal false
+      project_has_different_deploys?(deploys).must_equal false
     end
 
     it 'has warnings for different deploy across all deploy groups' do
@@ -15,7 +15,7 @@ describe DashboardsHelper do
                                    '2' => { reference: 'v1.1' },
                                    '3' => { reference: 'v1.0' }
                                  })
-      project_multi_deploys?(deploys).must_equal true
+      project_has_different_deploys?(deploys).must_equal true
     end
   end
 end
