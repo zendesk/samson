@@ -74,6 +74,8 @@ GEM
       columnize (~> 0.8)
       debugger-linecache (~> 1.2)
       slop (~> 3.6)
+    codeclimate-test-reporter (0.4.7)
+      simplecov (>= 0.7.1, < 1.0.0)
     coderay (1.1.0)
     columnize (0.9.0)
     crack (0.4.2)
@@ -290,6 +292,7 @@ DEPENDENCIES
   bootstrap-x-editable-rails
   bundler
   byebug
+  codeclimate-test-reporter
   coderay (~> 1.1.0)
   dalli (~> 2.7.0)
   dogapi (~> 1.9)

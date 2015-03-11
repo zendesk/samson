@@ -2,7 +2,10 @@ ENV["RAILS_ENV"] ||= "test"
 
 ENV['PROJECT_CREATED_NOTIFY_ADDRESS'] = 'blah@example.com'
 
-if ENV['COVERAGE']
+if ENV['CODECLIMATE_REPO_TOKEN']
+  require 'codeclimate-test-reporter'
+  CodeClimate::TestReporter.start
+elsif ENV['COVERAGE']
   require 'simplecov'
   SimpleCov.start 'rails'
 end
@@ -148,5 +151,7 @@ class ActionController::TestCase
 
   alias_method_chain :process, :catch_warden
 end
+
+WebMock.disable_net_connect!(allow: 'codeclimate.com')
 
 Dir["test/support/*"].each { |f| require File.expand_path(f) }
