@@ -22,7 +22,7 @@ class StagesController < ApplicationController
   def show
     respond_to do |format|
       format.html do
-        @deploys = @stage.deploys.includes(:stage, job: :user).page(params[:page])
+        @deploys = @stage.deploys.page(params[:page])
       end
       format.svg do
         badge = if deploy = @stage.last_successful_deploy
