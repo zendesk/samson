@@ -13,7 +13,9 @@ Samson::Application.configure do
   config.eager_load = false
 
   # Configure static asset server for tests with Cache-Control for performance.
-  config.serve_static_files  = true
+  # We don't need assets in test, so no need to compile/serve them
+  config.serve_static_files  = false
+  config.assets.compile = false
   config.static_cache_control = "public, max-age=3600"
 
   # Show full error reports and disable caching.

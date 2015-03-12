@@ -85,9 +85,13 @@ describe Deploy do
 
   describe ".prior_to" do
     let(:deploys) { Array.new(3).map { create_deploy! } }
+    let(:prod_stage) { stages(:test_production) }
+    let(:prod_deploy) { create_deploy!(stage: prod_stage) }
+
     before do
       Deploy.delete_all
       deploys
+      prod_deploy
     end
 
     it "scopes the records to deploys prior to the one passed in" do
@@ -96,6 +100,10 @@ describe Deploy do
 
     it "does not scope for new deploys" do
       stage.deploys.prior_to(Deploy.new).first.must_equal deploys[2]
+    end
+
+    it "properly scopes new deploys to the correct stage" do
+      prod_stage.deploys.prior_to(Deploy.new).first.must_equal prod_deploy
     end
   end
 
@@ -151,8 +159,10 @@ describe Deploy do
       job: create_job!(attrs.delete(:job_attributes) || {})
     }
 
-    deploy = stage.deploys.create!(default_attrs.merge(attrs))
-    stage.remove_instance_variable(:@current_deploy) # pretend we are in a new request after creating a deploy
+    deploy_stage = attrs.delete(:stage) || stage
+
+    deploy = deploy_stage.deploys.create!(default_attrs.merge(attrs))
+    deploy_stage.remove_instance_variable(:@current_deploy) # pretend we are in a new request after creating a deploy
     deploy
   end
 

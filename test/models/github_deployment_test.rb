@@ -1,6 +1,6 @@
 require_relative '../test_helper'
 
-describe GithubDeployment, :model do
+describe GithubDeployment do
   include StubGithubAPI
 
   let(:user) { users(:deployer) }

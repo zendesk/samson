@@ -1,6 +1,6 @@
 require_relative '../test_helper'
 
-class DeployServiceTest < ActiveSupport::TestCase
+describe DeployService do
   let(:project) { deploy.project }
   let(:user) { job.user }
   let(:other_user) { users(:deployer) }

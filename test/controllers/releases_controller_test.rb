@@ -2,28 +2,50 @@ require_relative '../test_helper'
 
 describe ReleasesController do
   let(:project) { projects(:test) }
+  let(:release) { releases(:test) }
 
-  describe "#create" do
-    let(:release_params) { { commit: "abcd" } }
+  as_a_viewer do
+    unauthorized :get, :new, project_id: 1
+    unauthorized :post, :create, project_id: 1
 
-    as_a_viewer do
-      it "doesn't creates a new release" do
-        count = Release.count
-        post :create, project_id: project.to_param, release: release_params
-        assert_equal count, Release.count
+    describe "#show" do
+      it "renders" do
+        get :show, project_id: project.to_param, id: release.version
+        assert_response :success
+      end
+
+      it "fails to render unknown release" do
+        assert_raises ActiveRecord::RecordNotFound do
+          get :show, project_id: project.to_param, id: 123
+        end
       end
     end
 
-    as_a_deployer do
-      setup do
-        GITHUB.stubs(:create_release)
+    describe "#index" do
+      it "renders" do
+        get :index, project_id: project.to_param
+        assert_response :success
       end
+    end
+  end
+
+  as_a_deployer do
+    describe "#create" do
+      let(:release_params) { { commit: "abcd" } }
+      before { GITHUB.stubs(:create_release) }
 
       it "creates a new release" do
-        count = Release.count
+        assert_difference "Release.count", +1 do
+          post :create, project_id: project.to_param, release: release_params
+          assert_redirected_to "/projects/foo/releases/v124"
+        end
+      end
+    end
 
-        post :create, project_id: project.to_param, release: release_params
-        assert_equal count + 1, Release.count
+    describe "#new" do
+      it "renders" do
+        get :new, project_id: project.to_param
+        assert_response :success
       end
     end
   end

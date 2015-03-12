@@ -1,6 +1,6 @@
 require_relative '../test_helper'
 
-describe GitRepository, :model do
+describe GitRepository do
   let(:repository_url) { Dir.mktmpdir }
   let(:project) { Project.new(id: 99999, name: 'test_project', repository_url: repository_url) }
   let(:repository) { project.repository }
