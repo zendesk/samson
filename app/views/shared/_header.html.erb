@@ -8,17 +8,13 @@
         <li class="dropdown <%= 'active' if request.path.starts_with?('/projects') %>">
           <a href="#" class="dropdown-toggle" data-toggle="dropdown">Projects <b class="caret"></b></a>
           <ul class="dropdown-menu">
-            <% current_user.starred_projects.alphabetical.each do |project| %>
+            <% Project.ordered_for_user(current_user).each do |project| %>
               <li>
                 <%= link_to project_path(project) do %>
-                  <span class="glyphicon glyphicon-star"></span> <%= project.name %>
-                <% end %>
-              </li>
-            <% end %>
-            <% (Project.alphabetical.to_a - current_user.starred_projects).each do |project| %>
-              <li>
-                <%= link_to project_path(project) do %>
-                  <span class="glyphicon">&nbsp;</span> <%= project.name %>
+                  <span class="glyphicon <%= 'glyphicon-star' if current_user.starred_project?(project) %>">
+                    <%= '&nbsp;'.html_safe unless current_user.starred_project?(project) %>
+                  </span>
+                  <%= project.name %>
                 <% end %>
               </li>
             <% end %>
@@ -30,7 +26,7 @@
             <ul class="dropdown-menu">
               <% Environment.all.each do |env| %>
                 <li>
-                  <%= link_to dashboard_path(env.name) do %>
+                  <%= link_to dashboard_path(env) do %>
                     <span class="glyphicon">&nbsp;</span> <%= env.name %>
                   <% end %>
                 </li>

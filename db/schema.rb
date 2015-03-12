@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20150302060555) do
+ActiveRecord::Schema.define(version: 20150312110723) do
 
   create_table "commands", force: true do |t|
     t.text     "command",    limit: 16777215
@@ -59,7 +59,10 @@ ActiveRecord::Schema.define(version: 20150302060555) do
     t.datetime "deleted_at"
     t.datetime "created_at",                    null: false
     t.datetime "updated_at",                    null: false
+    t.string   "permalink",                     null: false
   end
+
+  add_index "environments", ["permalink"], name: "index_environments_on_permalink", unique: true
 
   create_table "flowdock_flows", force: true do |t|
     t.string   "name",       null: false

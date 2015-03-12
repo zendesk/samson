@@ -5,7 +5,7 @@ describe DashboardsController do
 
   def self.it_renders_show
     it 'renders show' do
-      get :show, id: production.name
+      get :show, id: production
       assert_response :success
       assert_template :show, partial: '_project'
       assert_select('tbody tr').count.must_equal Project.count
@@ -28,7 +28,7 @@ describe DashboardsController do
         users(:admin).stars.create!(project: new_project1)
         users(:deployer).stars.create!(project: new_project2)
 
-        get :show, id: production.name
+        get :show, id: production
         assert_response :success
         assigns(:deploys).keys.map(&:name).must_equal ['z1', 'Project', 'z2']
       end
