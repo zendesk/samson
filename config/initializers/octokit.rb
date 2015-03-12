@@ -12,7 +12,7 @@ Octokit.connection_options[:request] = { open_timeout: 2 }
 
 token = ENV['GITHUB_TOKEN']
 
-unless Rails.env.test?
+unless Rails.env.test? || ENV['PRECOMPILE']
   raise "No GitHub token available" if token.blank?
 end
 
