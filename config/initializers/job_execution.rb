@@ -1,4 +1,4 @@
-if !Rails.env.test?
+if !Rails.env.test? && !ENV['PRECOMPILE']
   if ENV['SERVER_MODE']
     Rails.application.config.after_initialize do
       Job.running.each(&:stop!) if Job.table_exists?

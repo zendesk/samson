@@ -1,0 +1,7 @@
+.git
+.env
+tmp
+log
+test
+.bundle
+config/database.yml
