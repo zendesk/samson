@@ -256,24 +256,33 @@ describe Project do
     let(:staging_deploy) { deploys(:succeeded_test) }
 
     it 'contains releases per deploy group' do
-      project.last_deploy_by_group[deploy_group_pod1.id].must_equal prod_deploy
-      project.last_deploy_by_group[deploy_group_pod2.id].must_equal prod_deploy
-      project.last_deploy_by_group[deploy_group_pod100.id].must_equal staging_deploy
+      deploys = project.last_deploy_by_group(Time.now)
+      deploys[deploy_group_pod1.id].must_equal prod_deploy
+      deploys[deploy_group_pod2.id].must_equal prod_deploy
+      deploys[deploy_group_pod100.id].must_equal staging_deploy
+    end
+
+    it "does not contain releases after requested time" do
+      staging_deploy.update_column(:updated_at, prod_deploy.updated_at - 2.days)
+      deploys = project.last_deploy_by_group(prod_deploy.updated_at - 1.day)
+      deploys[deploy_group_pod1.id].must_equal nil
+      deploys[deploy_group_pod2.id].must_equal nil
+      deploys[deploy_group_pod100.id].must_equal staging_deploy
     end
 
     it 'contains no releases for undeployed projects' do
       project = Project.create!(name: 'blank_new_project', repository_url: url)
-
-      project.last_deploy_by_group[deploy_group_pod1.id].must_be_nil
-      project.last_deploy_by_group[deploy_group_pod2.id].must_be_nil
-      project.last_deploy_by_group[deploy_group_pod100.id].must_be_nil
+      deploys = project.last_deploy_by_group(Time.now)
+      deploys[deploy_group_pod1.id].must_be_nil
+      deploys[deploy_group_pod2.id].must_be_nil
+      deploys[deploy_group_pod100.id].must_be_nil
     end
 
     it 'performs minimal number of queries' do
       Project.create!(name: 'blank_new_project', repository_url: url)
       assert_sql_queries 7 do
         Project.alphabetical.with_deploy_groups.each do |p|
-          p.last_deploy_by_group
+          p.last_deploy_by_group(Time.now)
         end
       end
     end

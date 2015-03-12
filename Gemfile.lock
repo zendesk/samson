@@ -1,5 +1,5 @@
 PATH
-  remote: plugins/flowdock
+  remote: plugins/flowdock/
   specs:
     samson_flowdock (0.0.0)
       flowdock (~> 0.3.1)
