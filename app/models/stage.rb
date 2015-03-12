@@ -14,7 +14,7 @@ class Stage < ActiveRecord::Base
   has_many :stage_commands, autosave: true
   has_many :commands,
     -> { order('stage_commands.position ASC') },
-    through: :stage_commands
+    through: :stage_commands, auto_include: false
 
   has_and_belongs_to_many :deploy_groups
 
