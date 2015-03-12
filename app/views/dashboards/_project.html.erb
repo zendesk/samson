@@ -1,4 +1,4 @@
-<tr class="<%= 'warning' if deploy_group_versions.values.uniq.count > 1 %>">
+<tr class="<%= 'warning' if project_has_different_deploys?(deploy_group_versions) %>">
   <td><%= link_to project.name, project %></td>
   <% @environment.deploy_groups.each do |deploy_group| %>
     <td>

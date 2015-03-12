@@ -7,8 +7,11 @@ describe DashboardsController do
     describe '#show' do
       let(:deploy) { deploys(:succeeded_production_test) }
 
+      before { Project.any_instance.stubs(:valid_repository_url).returns(true) }
+
       it 'renders show' do
-        get :show, id: production.to_param
+        get :show, id: production
+        assert_response :success
         assert_template :show, partial: '_project'
         assert_select('tbody tr').count.must_equal Project.count
         assert_select('thead th').count.must_equal DeployGroup.count
@@ -26,6 +29,17 @@ describe DashboardsController do
         get :show, id: production.to_param, before: time.to_s(:db)
         response.body.wont_include ">#{deploy.reference}<"
         response.body.must_include ">#{old.reference}<"
+      end
+
+      it 'renders starred projects first' do
+        new_project1 = Project.create!(name: 'z1', repository_url: 'z1')
+        new_project2 = Project.create!(name: 'z2', repository_url: 'z2')
+        users(:viewer).stars.create!(project: new_project1)
+        users(:deployer).stars.create!(project: new_project2)
+
+        get :show, id: production
+        assert_response :success
+        assigns(:deploys).keys.map(&:name).must_equal ['z1', 'Project', 'z2']
       end
     end
   end

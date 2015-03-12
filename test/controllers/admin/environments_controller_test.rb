@@ -47,17 +47,17 @@ describe Admin::EnvironmentsController do
         env_count = Environment.count
         post :create, environment: {name: nil, is_production: true}
         assert_template :edit
-        flash[:error].must_equal ["Name can't be blank"]
+        flash[:error].must_equal ["Permalink can't be blank", "Name can't be blank"]
         Environment.count.must_equal env_count
       end
     end
 
     describe '#delete' do
       it 'succeeds' do
-        id = environments(:production_env).id
-        delete :destroy, id: id
+        env = environments(:production_env)
+        delete :destroy, id: env
         assert_redirected_to admin_environments_path
-        Environment.where(id: id).must_equal []
+        Environment.where(id: env.id).must_equal []
       end
 
       it 'fail for non-existent environment' do
@@ -73,13 +73,13 @@ describe Admin::EnvironmentsController do
       before { request.env["HTTP_REFERER"] = admin_environments_url }
 
       it 'save' do
-        post :update, environment: {name: 'Test Update', is_production: false}, id: environment.id
+        post :update, environment: {name: 'Test Update', is_production: false}, id: environment
         assert_redirected_to admin_environments_path
         Environment.find(environment.id).name.must_equal 'Test Update'
       end
 
       it 'fail to edit with blank name' do
-        post :update, environment: {name: '', is_production: false}, id: environment.id
+        post :update, environment: {name: '', is_production: false}, id: environment
         assert_template :edit
         flash[:error].must_equal ["Name can't be blank"]
         Environment.find(environment.id).name.must_equal 'Production'

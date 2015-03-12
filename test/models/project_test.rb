@@ -228,6 +228,7 @@ describe Project do
     let(:deploy_group_pod100) { deploy_groups(:deploy_group_pod100) }
     let(:prod_deploy) { deploys(:succeeded_production_test) }
     let(:staging_deploy) { deploys(:succeeded_test) }
+    let!(:user) { users(:deployer) }
 
     it 'contains releases per deploy group' do
       deploys = project.last_deploy_by_group(Time.now)
@@ -255,10 +256,25 @@ describe Project do
     it 'performs minimal number of queries' do
       Project.create!(name: 'blank_new_project', repository_url: url)
       assert_sql_queries 7 do
-        Project.alphabetical.with_deploy_groups.each do |p|
+        Project.ordered_for_user(user).with_deploy_groups.each do |p|
           p.last_deploy_by_group(Time.now)
         end
       end
+    end
+  end
+
+  describe '#ordered_for_user' do
+    it 'returns unstarred projects in alphabetical order' do
+      Project.create!(name: 'A', repository_url: url)
+      Project.create!(name: 'Z', repository_url: url)
+      Project.ordered_for_user(author).map(&:name).must_equal ['A', 'Project', 'Z']
+    end
+
+    it 'returns starred projects in alphabetical order' do
+      Project.create!(name: 'A', repository_url: url)
+      z = Project.create!(name: 'Z', repository_url: url)
+      author.stars.create!(project: z)
+      Project.ordered_for_user(author).map(&:name).must_equal ['Z', 'A', 'Project']
     end
   end
 end

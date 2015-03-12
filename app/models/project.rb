@@ -23,6 +23,14 @@ class Project < ActiveRecord::Base
   scope :alphabetical, -> { order('name') }
   scope :with_deploy_groups, -> { includes(stages: [:deploy_groups]) }
 
+  scope :ordered_for_user, ->(user) {
+    select('projects.*, count(stars.id) as star_count').
+      joins("left outer join stars on stars.user_id = #{sanitize(user.id)} and stars.project_id = projects.id").
+      group('projects.id').
+      order('star_count desc').
+      alphabetical
+  }
+
   def repo_name
     name.parameterize('_')
   end

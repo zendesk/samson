@@ -46,6 +46,6 @@ class Admin::EnvironmentsController < ApplicationController
   end
 
   def environment
-    @environment ||= Environment.find(params[:id])
+    @environment ||= Environment.find_by_param!(params[:id])
   end
 end
