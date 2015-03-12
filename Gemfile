@@ -71,6 +71,7 @@ end
 
 group :development do
   gem 'web-console'
+  gem 'rack-mini-profiler'
 end
 
 group :development, :test do
