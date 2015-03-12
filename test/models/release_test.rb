@@ -1,11 +1,33 @@
 require_relative '../test_helper'
 
 describe Release do
+  describe "create" do
+    let(:project) { projects(:test) }
+    let(:author) { users(:deployer) }
+    let(:commit) { "abcd" }
+
+    it "creates a new release" do
+      release = project.releases.create!(commit: commit, author: author)
+      assert_equal 124, release.number
+    end
+
+    it "increments the release number" do
+      release = project.releases.create!(author: author, commit: "bar")
+      release.update_column(:number, 41)
+      release = project.releases.create!(commit: "foo", author: author)
+      assert_equal 42, release.number
+    end
+  end
+
   describe "#currently_deploying_stages" do
     let(:project) { projects(:test) }
     let(:author) { users(:deployer) }
     let(:stage) { project.stages.create!(name: "One") }
-    let(:release) { project.releases.create!(number: 42, author: author, commit: "xyz") }
+    let(:release) do
+      release = project.releases.create!(author: author, commit: "xyz")
+      release.update_column(:number, 42)
+      release
+    end
 
     it "returns stages where the release is pending deploy" do
       create_deploy!(reference: "v42", status: "pending")
@@ -57,14 +79,13 @@ describe Release do
     let(:author) { users(:deployer) }
 
     it "returns changeset" do
-      release_1 = project.create_release(commit: "bar", author: author, number: 50)
-      release_2 = project.create_release(commit: "foo", author: author)
-
-      assert_equal 'bar...foo', release_2.changeset.commit_range
+      release = project.releases.create!(commit: "foo", author: author)
+      assert_equal 'abc...foo', release.changeset.commit_range
     end
 
     it 'returns empty changeset when there is no prior release' do
-      release = project.releases.create!(author: author, commit: "bar", number: 50)
+      Release.delete_all
+      release = project.releases.create!(author: author, commit: "bar")
 
       assert_equal 'bar...bar', release.changeset.commit_range
       assert_equal [], release.changeset.commits

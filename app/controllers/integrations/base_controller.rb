@@ -20,7 +20,7 @@ class Integrations::BaseController < ApplicationController
     if project.create_releases_for_branch?(branch)
       unless project.last_released_with_commit?(commit)
         release_service = ReleaseService.new(project)
-        release_service.create_release(commit: commit, author: user)
+        release_service.create_release!(commit: commit, author: user)
       end
     end
   end

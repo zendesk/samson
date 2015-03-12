@@ -103,26 +103,23 @@ describe Stage do
     let(:stage) { stages(:test_staging) }
     let(:author) { users(:deployer) }
     let(:job) { project.jobs.create!(user: author, commit: "x", command: "echo", status: "succeeded") }
-
-    let(:previous_release) { project.releases.create!(number: 3, author: author, commit: "A") }
-    let(:last_release) { project.releases.create!(number: 4, author: author, commit: "B") }
-    let(:undeployed_release) { project.releases.create!(number: 5, author: author, commit: "C") }
+    let(:releases) { Array.new(3).map { project.releases.create!(author: author, commit: "A") } }
 
     before do
-      stage.deploys.create!(reference: "v3", job: job)
-      stage.deploys.create!(reference: "v4", job: job)
+      stage.deploys.create!(reference: "v124", job: job)
+      stage.deploys.create!(reference: "v125", job: job)
     end
 
     it "returns true if the release was the last thing deployed to the stage" do
-      assert stage.current_release?(last_release)
+      assert stage.current_release?(releases[1])
     end
 
     it "returns false if the release is not the last thing deployed to the stage" do
-      refute stage.current_release?(previous_release)
+      refute stage.current_release?(releases[0])
     end
 
     it "returns false if the release has never been deployed to the stage" do
-      refute stage.current_release?(undeployed_release)
+      refute stage.current_release?(releases[2])
     end
   end
 

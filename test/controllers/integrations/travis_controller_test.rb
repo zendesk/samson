@@ -10,8 +10,7 @@ describe Integrations::TravisController do
     Deploy.delete_all
     @orig_token, ENV["TRAVIS_TOKEN"] = ENV["TRAVIS_TOKEN"], "TOKEN"
     project.webhooks.create!(stage: stages(:test_staging), branch: "master")
-    ReleaseService.stubs(:new).returns(release_service)
-    release_service.stubs(:create_release)
+    Project.any_instance.stubs(releases: stub("releases", create!: nil))
   end
 
   teardown do

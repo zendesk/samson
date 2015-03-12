@@ -32,22 +32,6 @@ class Project < ActiveRecord::Base
     last_release && last_release.commit == commit
   end
 
-  # Creates a new Release, incrementing the release number. If the Release
-  # fails to save, `#persisted?` will be false.
-  #
-  # Returns the Release.
-  def create_release(attrs = {})
-    release = build_release(attrs)
-    release.save
-    release
-  end
-
-  def build_release(attrs = {})
-    latest_release_number = releases.last.try(:number) || 0
-    release_number = latest_release_number + 1
-    releases.build(attrs.merge(number: release_number))
-  end
-
   def auto_release_stages
     stages.deployed_on_release
   end
