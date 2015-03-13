@@ -54,7 +54,7 @@ describe Admin::EnvironmentsController do
 
     describe '#delete' do
       it 'succeeds' do
-        env = environments(:production_env)
+        env = environments(:production)
         delete :destroy, id: env
         assert_redirected_to admin_environments_path
         Environment.where(id: env.id).must_equal []
@@ -68,7 +68,7 @@ describe Admin::EnvironmentsController do
     end
 
     describe '#update' do
-      let(:environment){ environments(:production_env) }
+      let(:environment){ environments(:production) }
 
       before { request.env["HTTP_REFERER"] = admin_environments_url }
 

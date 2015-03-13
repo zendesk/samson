@@ -1,7 +1,7 @@
 require_relative '../test_helper'
 
 describe DeployGroup do
-  let(:prod_env) { environments(:production_env) }
+  let(:prod_env) { environments(:production) }
 
   describe '.new' do
     it 'saves' do

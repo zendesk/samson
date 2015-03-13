@@ -1,4 +1,4 @@
-test_macro:
+test:
   name: Test Macro
   project: test
   reference: master
