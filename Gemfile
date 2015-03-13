@@ -75,7 +75,7 @@ group :development do
 end
 
 group :development, :test do
-  gem 'byebug'
+  gem 'byebug', require: false
 end
 
 group :test do
