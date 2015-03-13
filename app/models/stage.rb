@@ -182,6 +182,10 @@ class Stage < ActiveRecord::Base
     emails.uniq.presence
   end
 
+  def datadog_monitors
+    datadog_monitor_ids.to_s.split(/, ?/).map { |id| DatadogMonitor.new(id) }
+  end
+
   private
 
   def build_new_project_command

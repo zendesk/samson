@@ -98,6 +98,13 @@ class ActiveSupport::TestCase
     Samson::Hooks.with_callback(callback, lambda{ |*args| called << args }, &block)
     called
   end
+
+  def silence_stderr
+    old, $VERBOSE = $VERBOSE, nil
+    yield
+  ensure
+    $VERBOSE = old
+  end
 end
 
 Mocha::Expectation.class_eval do

@@ -166,6 +166,13 @@
       <span class="help-block">Enter the tags that should be used on deploy events, separated by <code>;</code></span>
     </div>
   </div>
+
+  <p>Datadog monitor ids (comma separated)</p>
+  <div class="form-group">
+    <div class="col-lg-6 col-lg-offset-2">
+      <%= form.text_field :datadog_monitor_ids, class: "form-control", placeholder: "Datadog Monitor Ids" %>
+    </div>
+  </div>
 </fieldset>
 
 <fieldset>
