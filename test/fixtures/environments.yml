@@ -1,9 +1,9 @@
-production_env:
+production:
   name: Production
   is_production: true
   permalink: production
 
-staging_env:
+staging:
   name: Staging
   is_production: false
   permalink: staging

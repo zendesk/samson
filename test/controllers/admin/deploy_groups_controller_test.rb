@@ -38,7 +38,7 @@ describe Admin::DeployGroupsController do
     describe '#create' do
       it 'creates a deploy group' do
         assert_difference 'DeployGroup.count', +1 do
-          post :create, deploy_group: {name: 'pod666', environment_id: environments(:staging_env).id}
+          post :create, deploy_group: {name: 'pod666', environment_id: environments(:staging).id}
           assert_redirected_to admin_deploy_groups_path
         end
       end
@@ -54,7 +54,7 @@ describe Admin::DeployGroupsController do
 
     describe '#delete' do
       it 'succeeds' do
-        id = deploy_groups(:deploy_group_pod100).id
+        id = deploy_groups(:pod100).id
         delete :destroy, id: id
         assert_redirected_to admin_deploy_groups_path
         DeployGroup.where(id: id).must_equal []
@@ -68,12 +68,12 @@ describe Admin::DeployGroupsController do
     end
 
     describe '#update' do
-      let(:deploy_group) { deploy_groups(:deploy_group_pod100) }
+      let(:deploy_group) { deploy_groups(:pod100) }
 
       before { request.env["HTTP_REFERER"] = admin_deploy_groups_url }
 
       it 'save' do
-        post :update, deploy_group: {name: 'Test Update', environment_id: environments(:production_env)}, id: deploy_group.id
+        post :update, deploy_group: {name: 'Test Update', environment_id: environments(:production)}, id: deploy_group.id
         assert_redirected_to admin_deploy_groups_path
         DeployGroup.find(deploy_group.id).name.must_equal 'Test Update'
       end

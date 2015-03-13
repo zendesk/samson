@@ -1,7 +1,7 @@
 require_relative '../test_helper'
 
 describe DashboardsController do
-  let(:production) { environments(:production_env) }
+  let(:production) { environments(:production) }
 
   as_a_viewer do
     describe '#show' do

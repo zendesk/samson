@@ -3,7 +3,7 @@ require_relative '../test_helper'
 describe MacrosController do
   let(:project) { projects(:test) }
   let(:deployer) { users(:deployer) }
-  let(:macro) { macros(:test_macro) }
+  let(:macro) { macros(:test) }
   let(:macro_service) { stub(execute!: nil) }
   let(:execute_called) { [] }
   let(:job) { Job.create!(commit: macro.reference, command: macro.command, project: project, user: deployer) }

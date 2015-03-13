@@ -1,7 +1,7 @@
 require_relative '../test_helper'
 
 describe Macro do
-  subject { macros(:test_macro) }
+  subject { macros(:test) }
 
   describe '#command' do
     describe 'adding + sorting a command' do
