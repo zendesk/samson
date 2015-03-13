@@ -26,23 +26,15 @@ describe DeploysController do
 
   as_a_viewer do
     describe "a GET to :index" do
-      setup { get :index, project_id: project.to_param, format: format }
-
-      describe "as html" do
-        let(:format) { :html }
-
-        it "renders the template" do
-          assert_template :index
-        end
+      it "renders html" do
+        get :index, project_id: project
+        assert_template :index
       end
 
-      describe "as json" do
-        let(:format) { :json }
-
-        it "renders json" do
-          assert_equal "application/json", @response.content_type
-          assert_response :ok
-        end
+      it "renders json" do
+        get :index, project_id: project, format: "json"
+        assert_response :ok
+        assert_equal "application/json", @response.content_type
       end
     end
 

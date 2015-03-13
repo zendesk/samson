@@ -53,6 +53,8 @@ Samson::Application.routes.draw do
     end
   end
 
+  resources :deploy_groups, only: [:show]
+
   resource :profile, only: [:show, :update]
 
   get '/auth/github/callback', to: 'sessions#github'

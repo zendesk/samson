@@ -1,5 +1,8 @@
-<% cache deploy do %>
+<% cache [@project, deploy] do %>
   <tr>
+    <% unless @project %>
+      <td><%= link_to deploy.project.name, deploy.project %></td>
+    <% end %>
     <td><%= deploy_time deploy %></td>
     <td>
       <%= content_tag :span, "Hotfix!", class: "label label-hotfix" if deploy.changeset.hotfix? %>

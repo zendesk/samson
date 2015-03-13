@@ -6,4 +6,8 @@ class DeployGroup < ActiveRecord::Base
 
   validates_presence_of :name, :environment_id
   validates_uniqueness_of :name
+
+  def deploys
+    Deploy.where(stage: stage_ids)
+  end
 end
