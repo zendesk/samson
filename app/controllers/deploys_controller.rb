@@ -6,7 +6,7 @@ class DeploysController < ApplicationController
 
   def index
     @page = params[:page]
-    @deploys = @project.deploys.includes(:stage, job: :user).page(@page)
+    @deploys = @project.deploys.page(@page)
 
     respond_to do |format|
       format.html
@@ -15,8 +15,8 @@ class DeploysController < ApplicationController
   end
 
   def active
-    scope = @project ? @project.deploys : Deploy.includes(:stage)
-    @deploys = scope.active.includes(job: :user).page(params[:page])
+    scope = (@project ? @project.deploys : Deploy)
+    @deploys = scope.active.page(params[:page])
 
     respond_to do |format|
       format.html
@@ -28,7 +28,7 @@ class DeploysController < ApplicationController
     respond_to do |format|
       format.html
       format.json do
-        render json: Deploy.includes(:stage, job: :user).page(params[:page]).per(30)
+        render json: Deploy.page(params[:page]).per(30)
       end
     end
   end
@@ -124,6 +124,6 @@ class DeploysController < ApplicationController
   end
 
   def find_deploy
-    @deploy = Deploy.includes(stage: [:new_relic_applications]).find(params[:id])
+    @deploy = Deploy.find(params[:id])
   end
 end

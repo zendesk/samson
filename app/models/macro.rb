@@ -7,7 +7,7 @@ class Macro < ActiveRecord::Base
   has_many :macro_commands, autosave: true
   has_many :commands,
     -> { order('macro_commands.position ASC') },
-    through: :macro_commands
+    through: :macro_commands, auto_include: false
 
   validates :name, presence: true, uniqueness: { scope: [:project, :deleted_at] }
   validates :reference, :command, presence: true
