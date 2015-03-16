@@ -1,13 +1,11 @@
-<% cache [@project, deploy] do %>
-  <tr>
-    <% unless @project %>
-      <td><%= link_to deploy.project.name, deploy.project %></td>
-    <% end %>
-    <td><%= deploy_time deploy %></td>
-    <td>
-      <%= content_tag :span, "Hotfix!", class: "label label-hotfix" if deploy.changeset.hotfix? %>
-      <%= link_to "#{deploy.summary}", project_deploy_path(@project || deploy.project, deploy) %>
-    </td>
-    <td><span class="label <%= deploy_status(deploy.status, 'label') %>"><%= deploy.status.titleize %></span></td>
-  </tr>
-<% end %>
+<tr>
+  <% unless @project %>
+    <td><%= link_to deploy.project.name, deploy.project %></td>
+  <% end %>
+  <td><%= deploy_time deploy %></td>
+  <td>
+    <%= content_tag :span, "Hotfix!", class: "label label-hotfix" if deploy.hotfix? %>
+    <%= link_to "#{deploy.summary}", project_deploy_path(@project || deploy.project, deploy) %>
+  </td>
+  <td><span class="label <%= deploy_status(deploy.status, 'label') %>"><%= deploy.status.titleize %></span></td>
+</tr>
