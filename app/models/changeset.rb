@@ -11,9 +11,7 @@ class Changeset
   end
 
   def hotfix?
-    Rails.cache.fetch("#{cache_key}-hotfix", expires_in: 1.year) do
-      commits.any?(&:hotfix?)
-    end
+    commits.any?(&:hotfix?)
   end
 
   def commit_range

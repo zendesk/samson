@@ -55,6 +55,12 @@ class Deploy < ActiveRecord::Base
     Changeset.new(project.github_repo, other.try(:commit), commit)
   end
 
+  def hotfix?
+    Rails.cache.fetch("#{cache_key}-hotfix", expires_in: 1.year) do
+      changeset.hotfix?
+    end
+  end
+
   def production
     stage.production?
   end
