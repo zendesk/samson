@@ -31,6 +31,11 @@ describe DashboardsController do
         response.body.must_include ">#{old.reference}<"
       end
 
+      it 'renders a super old timestamp' do
+        get :show, id: production.to_param, before: Time.at(0).to_s(:db)
+        assert_response :success
+      end
+
       it 'renders starred projects first' do
         new_project1 = Project.create!(name: 'z1', repository_url: 'z1')
         new_project2 = Project.create!(name: 'z2', repository_url: 'z2')
