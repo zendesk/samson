@@ -1,0 +1,20 @@
+<section class="tabs">
+  <table class="table">
+    <thead>
+    <tr>
+      <% unless @project %>
+        <th>Project</th>
+      <% end %>
+      <th>When</th>
+      <th>Who</th>
+      <th>Status</th>
+      <th></th>
+    </tr>
+    </thead>
+    <tbody>
+    <%= render partial: "/projects/deploy", collection: @deploys %>
+    </tbody>
+  </table>
+
+  <%= paginate @deploys %>
+</section>

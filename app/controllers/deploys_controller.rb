@@ -5,8 +5,7 @@ class DeploysController < ApplicationController
   before_action :stage, only: :new
 
   def index
-    @page = params[:page]
-    @deploys = @project.deploys.page(@page)
+    @deploys = @project.deploys.page(params[:page])
 
     respond_to do |format|
       format.html

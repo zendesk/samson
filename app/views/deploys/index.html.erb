@@ -1,21 +1,3 @@
 <%= render 'projects/header', project: @project, tab: "deploys" %>
 
-<% cache [@project, @page] do %>
-  <section class="tabs">
-    <table class="table">
-      <thead>
-        <tr>
-          <th>When</th>
-          <th>Who</th>
-          <th>Status</th>
-          <th></th>
-        </tr>
-      </thead>
-      <tbody>
-        <%= render partial: "/projects/deploy", collection: @deploys %>
-      </tbody>
-    </table>
-
-    <%= paginate @deploys %>
-  </section>
-<% end %>
+<%= render 'shared/deploys_table' %>
