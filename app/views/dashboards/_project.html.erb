@@ -1,4 +1,9 @@
-<tr class="<%= 'warning' if project_has_different_deploys?(deploy_group_versions) %>">
+<%
+   row_classes = []
+   row_classes << 'warning' if project_has_different_deploys?(deploy_group_versions)
+   row_classes << 'no-elements hidden' if deploy_group_versions.slice(*@environment.deploy_group_ids).empty?
+%>
+<tr class="<%= row_classes.join(' ') %>">
   <td><%= link_to project.name, project %></td>
   <% @environment.deploy_groups.each do |deploy_group| %>
     <td>
