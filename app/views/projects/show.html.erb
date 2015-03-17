@@ -7,9 +7,11 @@
     <table class="project-stages table table-condensed">
       <thead>
         <tr>
-          <th>Name</th>
-          <th>Deployer</th>
-          <th>Release</th>
+          <th>Stage Name</th>
+          <% if ENV['DEPLOY_GROUP_FEATURE'] %>
+            <th>Deploy Groups</th>
+          <% end %>
+          <th>Last Deploy</th>
           <th></th>
         </tr>
       </thead>

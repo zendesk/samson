@@ -4,11 +4,16 @@
       <%= link_to stage.name, project_stage_path(project, stage) %>
       <%= stage_lock_icon stage %>
     </td>
-    <% if stage.last_successful_deploy %>
-      <td><%= stage.last_successful_deploy.user.name %></td>
-      <td><%= link_to stage.last_successful_deploy.short_reference, project_deploy_path(project, stage.last_successful_deploy), title: "#{stage.last_successful_deploy.reference} at #{stage.last_successful_deploy.updated_at.to_s(:db)}" %></td>
+    <% if ENV['DEPLOY_GROUP_FEATURE'] %>
+      <td><%= stage.deploy_groups.map(&:name).join(', ') %></td>
+    <% end %>
+    <% if (deploy = stage.last_successful_deploy) %>
+      <td>
+        <%= link_to deploy.short_reference, project_deploy_path(project, deploy), title: "#{deploy.reference} at #{deploy.updated_at.to_s(:db)}" %>
+        by
+        <%= deploy.user.name %>
+      </td>
     <% else %>
-      <td>-</td>
       <td>-</td>
     <% end %>
     <td align="right"><%= deploy_link @project, stage %></td>
