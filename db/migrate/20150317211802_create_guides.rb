@@ -5,5 +5,6 @@ class CreateGuides < ActiveRecord::Migration
       t.text    :body
       t.timestamps
     end
+    add_index :guides, :project_id
   end
 end
