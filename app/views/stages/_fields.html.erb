@@ -28,7 +28,7 @@
       <%= form.label :name, 'Deploy Groups', class: 'col-lg-2 control-label' %>
       <div class="col-lg-4">
         <%= form.collection_select(
-          :deploy_group_ids, DeployGroup.all, :id, :name,
+          :deploy_group_ids, @deploy_groups, :id, :long_name,
           {
             selected: (@stage.deploy_group_ids if @stage && @stage.deploy_groups),
             include_blank: false,

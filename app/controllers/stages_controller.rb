@@ -7,6 +7,7 @@ class StagesController < ApplicationController
   before_action :check_token, if: :badge?
   before_action :find_project
   before_action :find_stage, only: [:show, :edit, :update, :destroy, :clone]
+  before_action :find_deploy_groups, only: [:edit], if: ENV['DEPLOY_GROUP_FEATURE']
 
   def index
     @stages = @project.stages
@@ -134,5 +135,9 @@ class StagesController < ApplicationController
 
   def find_stage
     @stage = @project.stages.find_by_param!(params[:id])
+  end
+
+  def find_deploy_groups
+    @deploy_groups = DeployGroup.includes(:environment).order(:environment_id, :name).all
   end
 end

@@ -10,4 +10,8 @@ class DeployGroup < ActiveRecord::Base
   def deploys
     Deploy.where(stage: stage_ids)
   end
+
+  def long_name
+    "#{name} (#{environment.name})"
+  end
 end
