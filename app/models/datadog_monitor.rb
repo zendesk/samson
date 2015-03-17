@@ -2,7 +2,7 @@ require 'dogapi'
 
 class DatadogMonitor
   API_KEY = ENV["DATADOG_API_KEY"]
-  APP_KEY = ENV["DATADOG_APP_KEY"]
+  APP_KEY = ENV["DATADOG_APPLICATION_KEY"]
 
   attr_reader :id
 
