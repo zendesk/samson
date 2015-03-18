@@ -1,9 +1,13 @@
 <%
-   row_classes = []
-   row_classes << 'warning' if project_has_different_deploys?(deploy_group_versions)
-   row_classes << 'no-elements hidden' if deploy_group_versions.slice(*@environment.deploy_group_ids).empty?
+   row_attr = {}
+   if deploy_group_versions.slice(*@environment.deploy_group_ids).empty?
+     row_attr[:class] = 'no-deploys'
+     row_attr[:style] = 'display: none;'
+   elsif project_has_different_deploys?(deploy_group_versions)
+     row_attr[:class] = 'warning'
+   end
 %>
-<tr class="<%= row_classes.join(' ') %>">
+<%= content_tag(:tr, row_attr) do -%>
   <td><%= link_to project.name, project %></td>
   <% @environment.deploy_groups.each do |deploy_group| %>
     <td>
@@ -12,4 +16,4 @@
       <% end %>
     </td>
   <% end %>
-</tr>
+<% end -%>
