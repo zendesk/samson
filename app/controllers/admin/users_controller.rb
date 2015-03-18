@@ -16,8 +16,7 @@ class Admin::UsersController < ApplicationController
 
   def update
     if user.update_attributes(user_params)
-      role = Role.find(user_params[:role_id]).name
-      Rails.logger.info("#{current_user.name_and_email} changed the role of #{user.name_and_email} to #{role}")
+      Rails.logger.info("#{current_user.name_and_email} changed the role of #{user.name_and_email} to #{user.role.name}")
       head :ok
     else
       head :bad_request
@@ -32,12 +31,12 @@ class Admin::UsersController < ApplicationController
 
   private
 
-  def user_params
-    params.permit(:id, :role_id)
-  end
-
   def user
     @user ||= User.find(params[:id])
+  end
+
+  def user_params
+    params.require(:user).permit(:role_id)
   end
 
   def sort_column

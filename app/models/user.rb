@@ -61,6 +61,10 @@ class User < ActiveRecord::Base
     end
   end
 
+  def role
+    Role.find(role_id)
+  end
+
   private
 
   def set_token

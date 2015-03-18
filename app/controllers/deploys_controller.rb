@@ -33,7 +33,7 @@ class DeploysController < ApplicationController
   end
 
   def new
-    @deploy = @project.deploys.build(params.permit(:stage_id, :reference))
+    @deploy = @project.deploys.build(params.except(:project_id).permit(:stage_id, :reference))
   end
 
   def create
