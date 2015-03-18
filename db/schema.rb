@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20150312110723) do
+ActiveRecord::Schema.define(version: 20150317205551) do
 
   create_table "commands", force: true do |t|
     t.text     "command",    limit: 16777215
@@ -81,6 +81,7 @@ ActiveRecord::Schema.define(version: 20150312110723) do
     t.datetime "created_at"
     t.datetime "updated_at"
     t.string   "commit"
+    t.string   "tag",        limit: 255
   end
 
   add_index "jobs", ["project_id"], name: "index_jobs_on_project_id", using: :btree

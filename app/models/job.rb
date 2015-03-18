@@ -82,8 +82,8 @@ class Job < ActiveRecord::Base
     update_attribute(:output, output)
   end
 
-  def update_commit!(commit)
-    update_attribute(:commit, commit)
+  def update_git_references!(commit:, tag:)
+    update_columns(commit: commit, tag: tag)
   end
 
   private
