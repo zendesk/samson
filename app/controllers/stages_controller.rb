@@ -122,6 +122,7 @@ class StagesController < ApplicationController
       :update_github_pull_requests,
       :email_committers_on_automated_deploy_failure,
       :static_emails_on_automated_deploy_failure,
+      :use_github_deployment_api,
       deploy_group_ids: [],
       command_ids: [],
       new_relic_applications_attributes: [:id, :name, :_destroy]
