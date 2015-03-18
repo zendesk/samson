@@ -1,6 +1,10 @@
 <h1><%= @environment.name %></h1>
 
 <section>
+  <p style="float: right;">
+    <a class="toggle" data-target="tr.no-deploys" href="#">Toggle Projects without Deploys</a>
+  </p>
+
   <p>
     <%= form_tag "", method: :get do %>
       Status at <%= datetime_local_field_tag :before, @before.strftime("%Y-%m-%dT%H:%M:%S") %>
