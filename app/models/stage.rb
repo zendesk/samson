@@ -187,7 +187,6 @@ class Stage < ActiveRecord::Base
   end
 
   def jenkins_jobs
-    # puts Jenkins.new().build("rdhanoa_test_project")
     jenkins_job_names.to_s.split(/, ?/).map { |job_name| Jenkins.new(job_name) }
   end
 

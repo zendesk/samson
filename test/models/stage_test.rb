@@ -418,7 +418,6 @@ describe Stage do
   describe '#jenkins_jobs' do
     let(:stage) { stages(:test_production) }
     it "is empty by default" do
-      puts stage.jenkins_jobs
       stage.jenkins_jobs.must_equal []
     end
 
