@@ -175,6 +175,18 @@
 </fieldset>
 
 <fieldset>
+  <legend>Jenkins</legend>
+  <p>Add Jenkins jobs for browser tests that should run after this stage gets deployed.</p>
+
+  <div class="form-group">
+    <div class="col-lg-6 col-lg-offset-2">
+      <%= form.text_field :jenkins_job_names, class: "form-control", placeholder: "Jenkins jobs" %>
+      <span class="help-block">Enter Jenkins jobs that should run on deploy events, separated by <code>,</code></span>
+    </div>
+  </div>
+</fieldset>
+
+<fieldset>
   <legend>Github</legend>
   <div class="col-lg-6 checkbox">
     <%= form.label :update_github_pull_requests do %>

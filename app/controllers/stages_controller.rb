@@ -119,6 +119,7 @@ class StagesController < ApplicationController
       :deploy_on_release,
       :datadog_tags,
       :datadog_monitor_ids,
+      :jenkins_job_names,
       :update_github_pull_requests,
       :email_committers_on_automated_deploy_failure,
       :static_emails_on_automated_deploy_failure,
