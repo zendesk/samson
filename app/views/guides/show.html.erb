@@ -1,0 +1,25 @@
+<% content_for :page_title, "#{project.name} Guide" %>
+
+<%= breadcrumb project, "Guide" %>
+
+<%= render 'projects/header', project: project, tab: "guide" %>
+
+<% cache [project, guide] do %>
+  <section class="clearfix tabs">
+    <%- if guide.body.present? %>
+      <p class="text-right">
+        <%= link_to "Edit Page", edit_project_guide_path(project) %>
+      </p>
+      <div>
+        <%= markdown guide.body.to_s %>
+      </div>
+    <%- else %>
+      <div>
+        No guide available.
+        <% if current_user.is_admin? %>
+          <%= link_to 'Create one', edit_project_guide_path(project) %>
+        <% end %>
+      </div>
+    <%- end %>
+  </section>
+<% end %>

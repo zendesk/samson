@@ -37,7 +37,9 @@ Samson::Application.routes.draw do
       end
     end
 
+    resource :guide, only: [:show, :edit, :create, :update]
     resource :changelog, only: [:show]
+
     resources :webhooks, only: [:index, :create, :destroy]
     resource :commit_statuses, only: [:show]
     resources :references, only: [:index]

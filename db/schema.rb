@@ -72,6 +72,15 @@ ActiveRecord::Schema.define(version: 20150312110723) do
     t.datetime "updated_at"
   end
 
+  create_table "guides", force: :cascade do |t|
+    t.integer  "project_id", limit: 4
+    t.text     "body",       limit: 65535
+    t.datetime "created_at"
+    t.datetime "updated_at"
+  end
+
+  add_index "guides", ["project_id"], name: "index_guides_on_project_id", using: :btree
+
   create_table "jobs", force: true do |t|
     t.text     "command",                                           null: false
     t.integer  "user_id",                                           null: false
