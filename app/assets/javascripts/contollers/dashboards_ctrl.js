@@ -5,7 +5,7 @@ samson.controller("DashboardsCtrl", function($scope, $http, $location) {
 
   function init() {
     $http.get($location.path() + '/deploy_groups').then(function(result) {
-      $scope.deploy_groups = result.data.dashboards;
+      $scope.deploy_groups = result.data.deploy_groups;
       getProjects();
     });
   }
