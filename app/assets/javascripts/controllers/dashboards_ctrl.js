@@ -1,4 +1,4 @@
-samson.controller("DashboardsCtrl", function($scope, $http, $location) {
+samson.controller("DashboardsCtrl", function DashboardsCtrl($scope, $http, $location) {
   'use strict';
 
   $scope.projects = [];
