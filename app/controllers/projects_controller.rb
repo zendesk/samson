@@ -1,7 +1,7 @@
 class ProjectsController < ApplicationController
-  before_action :authorize_admin!, except: [:show, :index]
+  before_action :authorize_admin!, except: [:show, :index, :deploy_group_versions]
   before_action :redirect_viewers!, only: [:show]
-  before_action :project, only: [:show, :edit, :update]
+  before_action :project, only: [:show, :edit, :update, :deploy_group_versions]
 
   helper_method :project
 
@@ -12,7 +12,7 @@ class ProjectsController < ApplicationController
       end
 
       format.json do
-        render json: Project.all
+        render json: Project.ordered_for_user(current_user).all
       end
     end
   end
@@ -59,6 +59,14 @@ class ProjectsController < ApplicationController
 
     flash[:notice] = "Project removed."
     redirect_to admin_projects_path
+  end
+
+  def deploy_group_versions
+    before = params[:before] ? Time.parse(params[:before]).to_s(:db) : Time.now.to_s(:db)
+    deploy_group_versions = project.last_deploy_by_group(before).each_with_object({}) do |(id, deploy), hash|
+      hash[id] = deploy.as_json.merge({ url: project_deploy_path(project, deploy) })
+    end
+    render json: deploy_group_versions
   end
 
   protected

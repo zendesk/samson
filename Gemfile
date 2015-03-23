@@ -8,6 +8,9 @@ gem 'dotenv-rails', '~> 0.9'
 
 gem 'dogstatsd-ruby', '~> 1.4.0', require: 'statsd'
 gem 'goldiloader'
+gem 'ngannotate-rails'
+gem 'angular-rails-templates'
+gem 'underscore-rails'
 
 group :mysql2 do
   gem 'mysql2', '~> 0.3'
