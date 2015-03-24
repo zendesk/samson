@@ -51,6 +51,7 @@ group :assets do
   gem 'momentjs-rails'
   gem 'ngannotate-rails'
   gem 'angular-rails-templates'
+  gem 'underscore-rails'
 end
 
 group :no_preload do

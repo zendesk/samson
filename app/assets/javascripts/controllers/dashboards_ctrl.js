@@ -4,8 +4,8 @@ samson.controller("DashboardsCtrl", function DashboardsCtrl($scope, $http, $loca
   $scope.projects = [];
 
   function init() {
-    $http.get($location.path() + '/deploy_groups').then(function(result) {
-      $scope.deploy_groups = result.data.deploy_groups;
+    $http.get($location.path() + '/deploy_groups').success(function(result) {
+      $scope.deploy_groups = result.deploy_groups;
       getProjects();
     });
   }
@@ -13,12 +13,12 @@ samson.controller("DashboardsCtrl", function DashboardsCtrl($scope, $http, $loca
   function getProjects() {
     var deploy_groups_ids = _.pluck($scope.deploy_groups, 'id');
 
-    $http.get('/projects.json').then(function(projects_result) {
-      projects_result.data.projects.forEach(function(project) {
+    $http.get('/projects.json').success(function(projects_result) {
+      projects_result.projects.forEach(function(project) {
         $scope.projects.push(project);
         $http.get(project.url + '/deploy_group_versions.json', { params: { before: $location.search().before } })
-          .then(function (deploys_result) {
-            project.deploy_group_versions = _.pick(deploys_result.data, deploy_groups_ids);
+          .success(function (deploys_result) {
+            project.deploy_group_versions = _.pick(deploys_result, deploy_groups_ids);
             project.css = getProjectCss(project);
           })
       });
