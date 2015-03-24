@@ -34,9 +34,9 @@ samson.controller("DashboardsCtrl", function DashboardsCtrl($scope, $http, $loca
     })).length;
 
     if (num_versions > 1) {
-      css.class = "warning";
+      css.tr_class = "warning";
     } else if (num_versions == 0) {
-      css.class = "no-deploys";
+      css.tr_class = "no-deploys";
       css.style = "display: none;";
     }
     return css;

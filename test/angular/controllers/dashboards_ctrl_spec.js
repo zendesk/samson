@@ -96,21 +96,21 @@ describe('DashboardsCtrl', function() {
       $httpBackend.expectGET('/projects/p0/deploy_group_versions.json').respond({"1":{reference:"v1"}, "2":{reference:"v1"}});
       createController();
       $httpBackend.flush();
-      expect($scope.projects[0].css.class).toBeUndefined();
+      expect($scope.projects[0].css.tr_class).toBeUndefined();
     });
 
     it('has warning class for different versions', function() {
       $httpBackend.expectGET('/projects/p0/deploy_group_versions.json').respond({"1":{reference:"v1"}, "2":{reference:"v2"}});
       createController();
       $httpBackend.flush();
-      expect($scope.projects[0].css.class).toEqual('warning');
+      expect($scope.projects[0].css.tr_class).toEqual('warning');
     });
 
     it('has no-deploys and display-none for project without versions', function() {
       $httpBackend.expectGET('/projects/p0/deploy_group_versions.json').respond({});
       createController();
       $httpBackend.flush();
-      expect($scope.projects[0].css.class).toEqual('no-deploys');
+      expect($scope.projects[0].css.tr_class).toEqual('no-deploys');
       expect($scope.projects[0].css.style).toEqual('display: none;');
     });
   });
