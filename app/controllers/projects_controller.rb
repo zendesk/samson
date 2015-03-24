@@ -62,7 +62,7 @@ class ProjectsController < ApplicationController
   end
 
   def deploy_group_versions
-    before = params[:before] ? Time.parse(params[:before]).to_s(:db) : Time.now.to_s(:db)
+    before = params[:before] ? Time.parse(params[:before]) : Time.now
     deploy_group_versions = project.last_deploy_by_group(before).each_with_object({}) do |(id, deploy), hash|
       hash[id] = deploy.as_json.merge({ url: project_deploy_path(project, deploy) })
     end
