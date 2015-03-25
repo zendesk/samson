@@ -41,6 +41,10 @@ Samson::Application.routes.draw do
     resources :webhooks, only: [:index, :create, :destroy]
     resource :commit_statuses, only: [:show]
     resources :references, only: [:index]
+
+    member do
+      get :deploy_group_versions
+    end
   end
 
   resources :streams, only: [:show]
@@ -67,7 +71,11 @@ Samson::Application.routes.draw do
   get '/logout', to: 'sessions#destroy'
 
   resources :stars, only: [:create, :destroy]
-  resources :dashboards, only: [:show]
+  resources :dashboards, only: [:show] do
+    member do
+      get :deploy_groups
+    end
+  end
 
   namespace :admin do
     resources :users, only: [:index, :update, :destroy]
