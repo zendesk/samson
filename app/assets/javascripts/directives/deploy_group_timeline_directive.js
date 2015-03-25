@@ -5,12 +5,13 @@ samson.directive('deployGroupTimeline', function() {
       var options = {
         minHeight: '400px',
         max: new Date(),
-        end: new Date()
+        end: new Date(),
+        showMajorLabels: false
       };
 
       $scope.timeline = new vis.Timeline($element[0])
 
-      options.template = function (item) {
+      options.template = function(item) {
         return item.project.name + '<br>' + item.reference;
       };
 

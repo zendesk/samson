@@ -9,6 +9,7 @@ var testFiles = [
   'vendor/assets/javascripts/angular.min.js',
   'vendor/assets/javascripts/angular-mocks.js',
   'vendor/assets/javascripts/underscore.min.js',
+  'vendor/assets/javascripts/vis.js',
   'test/angular/test_helper.js',
   'app/assets/javascripts/app.js',
   'app/assets/javascripts/controllers/**/*.js',
