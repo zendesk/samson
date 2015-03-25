@@ -23,6 +23,7 @@
 //= require jquery-ui
 //= require bootstrap3-editable/bootstrap-editable
 //= require rickshaw_with_d3
+//= require vis
 //= require app.js
 //= require config.js
 //= require_tree .
