@@ -2,11 +2,13 @@ samson.directive('deployGroupTimeline', function() {
   return {
     restrict: 'E',
     link: function($scope, $element) {
-      var options = {
+      var endDate = new Date(_.now() + 1*1000*60*60*24),
+        options = {
         minHeight: '400px',
-        max: new Date(),
-        end: new Date(),
-        showMajorLabels: false
+        max: endDate,
+        end: endDate,
+        showMajorLabels: false,
+        showCurrentTime: false
       };
 
       $scope.timeline = new vis.Timeline($element[0])

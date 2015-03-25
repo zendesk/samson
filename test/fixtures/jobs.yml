@@ -5,3 +5,11 @@ succeeded_test:
   status: succeeded
   output: This worked!
   commit: staging
+
+failed_test:
+  command: cap staging deploy
+  user: super_admin
+  project: test
+  status: failed
+  output: Error
+  commit: staging

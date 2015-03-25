@@ -57,11 +57,7 @@ Samson::Application.routes.draw do
     end
   end
 
-  resources :deploy_groups, only: [:show] do
-    member do
-      get :deploys
-    end
-  end
+  resources :deploy_groups, only: [:show]
 
   resource :profile, only: [:show, :update]
 
