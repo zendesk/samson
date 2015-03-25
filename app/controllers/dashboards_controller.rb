@@ -3,10 +3,10 @@ class DashboardsController < ApplicationController
 
   def show
     @before = Time.parse(params[:before] || Time.now.to_s(:db))
-    @deploys = ordered_projects.each_with_object({}) do |project, hash|
-      hash[project] = project.last_deploy_by_group(@before)
-      hash[project].select! { |id, _v| @environment.deploy_group_ids.include?(id) }
-    end
+  end
+
+  def deploy_groups
+    render json: { 'deploy_groups' => @environment.deploy_groups }
   end
 
   private
