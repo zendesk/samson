@@ -39,6 +39,16 @@ class GitRepository
     description.split('-').last.sub(/^g/, '')
   end
 
+  def tag_from_ref(git_reference)
+    Dir.chdir(repo_cache_dir) do
+      tag = IO.popen(['git', 'describe', '--tags', git_reference], err: [:child, :out]) do |io|
+        io.read.strip
+      end
+
+      tag if $?.success?
+    end
+  end
+
   def repo_cache_dir
     File.join(cached_repos_dir, @repository_directory)
   end

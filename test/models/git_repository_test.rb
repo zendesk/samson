@@ -59,22 +59,53 @@ describe GitRepository do
     Dir.chdir(repository.repo_cache_dir) { current_branch.must_equal('test_user/test_branch') }
   end
 
-  it 'returns the tags repository' do
-    create_repo_with_tags
-    repository.clone!(executor: TerminalExecutor.new(StringIO.new), mirror: true)
-    repository.tags.to_a.must_equal %w(v1 )
+  describe "#commit_from_ref" do
+    it 'returns the short commit id' do
+      create_repo_with_tags
+      repository.clone!
+      repository.commit_from_ref('master').must_match /^[0-9a-f]{7}$/
+    end
   end
 
-  it 'returns an empty set of tags' do
-    create_repo_without_tags
-    repository.clone!(executor: TerminalExecutor.new(StringIO.new), mirror: true)
-    repository.tags.must_equal []
+  describe "#tag_from_ref" do
+    it 'returns nil when repo has no tags' do
+      create_repo_without_tags
+      repository.clone!
+      repository.tag_from_ref('master').must_be_nil
+    end
+
+    it 'returns the closest matching tag' do
+      create_repo_with_tags
+      execute_on_remote_repo <<-SHELL
+        echo update > foo
+        git commit -a -m 'untagged commit'
+      SHELL
+      repository.clone!
+      repository.tag_from_ref('master~').must_equal 'v1'
+      repository.tag_from_ref('master').must_match /^v1-1-g[0-9a-f]{7}$/
+    end
   end
 
-  it 'returns the branches of the repository' do
-    create_repo_with_an_additional_branch
-    repository.clone!(executor: TerminalExecutor.new(StringIO.new), mirror: true)
-    repository.branches.to_a.must_equal %w(master test_user/test_branch)
+  describe "#tags" do
+    it 'returns the tags repository' do
+      create_repo_with_tags
+      repository.clone!(executor: TerminalExecutor.new(StringIO.new), mirror: true)
+      repository.tags.to_a.must_equal %w(v1 )
+    end
+
+    it 'returns an empty set of tags' do
+      create_repo_without_tags
+      repository.clone!(executor: TerminalExecutor.new(StringIO.new), mirror: true)
+      repository.tags.must_equal []
+    end
+  end
+
+  describe "#branches" do
+    it 'returns the branches of the repository' do
+      create_repo_with_an_additional_branch
+      repository.clone!(executor: TerminalExecutor.new(StringIO.new), mirror: true)
+      repository.branches.to_a.must_equal %w(master test_user/test_branch)
+    end
   end
 
   describe "#valid_url?" do
