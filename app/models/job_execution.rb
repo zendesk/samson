@@ -128,6 +128,7 @@ class JobExecution
     locked = lock_project do
       return false unless @repository.setup!(@executor, dir, @reference)
       commit = @repository.commit_from_ref(@reference)
+      raise "No commit for reference '#{@reference}'" if commit.blank?
       tag = @repository.tag_from_ref(@reference)
       @job.update_git_references!(commit: commit, tag: tag)
     end

@@ -63,7 +63,13 @@ describe GitRepository do
     it 'returns the short commit id' do
       create_repo_with_tags
       repository.clone!
-      repository.commit_from_ref('master').must_match /^[0-9a-f]{7}$/
+      repository.commit_from_ref('v1').must_be_a_short_sha
+    end
+
+    it 'returns nil for an invalid tag' do
+      create_repo_with_tags
+      repository.clone!
+      repository.commit_from_ref('NOT_A_VALID_TAG').must_be_nil
     end
   end
 
