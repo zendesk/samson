@@ -79,12 +79,12 @@ class ProjectsController < ApplicationController
       :owner,
       :permalink,
       :release_branch,
-      :dashboard,
-      :email_committers_on_automated_deploy_failure,
-      :static_emails_on_automated_deploy_failure,
-      :new_relic_applications_attributes,
-      :datadog_monitor_ids,
       stages_attributes: [
+        :dashboard,
+        :email_committers_on_automated_deploy_failure,
+        :static_emails_on_automated_deploy_failure,
+        :datadog_monitor_ids,
+        :deploy_group_ids,
         :name, :confirm, :command,
         :production,
         :deploy_on_release,
@@ -93,6 +93,9 @@ class ProjectsController < ApplicationController
         :update_github_pull_requests,
         :use_github_deployment_api,
         command_ids: [],
+        new_relic_applications_attributes: [
+          :name
+        ]
       ] + Samson::Hooks.fire(:stage_permitted_params)
     )
   end
