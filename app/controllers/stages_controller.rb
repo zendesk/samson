@@ -1,6 +1,8 @@
 require 'open-uri' # needed to fetch from img.shields.io using open()
 
 class StagesController < ApplicationController
+  include StagePermittedParams
+
   skip_before_action :login_users, if: :badge?
   before_action :authorize_admin!, except: [:index, :show]
   before_action :authorize_deployer!, unless: :badge?
@@ -112,21 +114,7 @@ class StagesController < ApplicationController
   end
 
   def stage_params
-    params.require(:stage).permit([
-      :name, :command, :confirm, :permalink, :dashboard,
-      :production,
-      :notify_email_address,
-      :deploy_on_release,
-      :datadog_tags,
-      :datadog_monitor_ids,
-      :update_github_pull_requests,
-      :email_committers_on_automated_deploy_failure,
-      :static_emails_on_automated_deploy_failure,
-      :use_github_deployment_api,
-      deploy_group_ids: [],
-      command_ids: [],
-      new_relic_applications_attributes: [:id, :name, :_destroy]
-    ] + Samson::Hooks.fire(:stage_permitted_params))
+    params.require(:stage).permit(stage_permitted_params)
   end
 
   def find_project
