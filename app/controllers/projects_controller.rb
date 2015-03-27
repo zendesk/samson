@@ -79,6 +79,11 @@ class ProjectsController < ApplicationController
       :owner,
       :permalink,
       :release_branch,
+      :dashboard,
+      :email_committers_on_automated_deploy_failure,
+      :static_emails_on_automated_deploy_failure,
+      :new_relic_applications_attributes,
+      :datadog_monitor_ids,
       stages_attributes: [
         :name, :confirm, :command,
         :production,
