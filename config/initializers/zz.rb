@@ -4,7 +4,7 @@ if Rails.env.development? && !ENV['SERVER_MODE']
     [
       ActiveRecord::Base.send(:descendants).map(&:name),
       ActionController::Base.descendants,
-      (File.basename($0) != "rake" && defined?(Rake) && "rake"),
+      (File.basename($0) != "rake" ? (defined?(Rake) && "rake") : nil),
       (defined?(Mocha) && "mocha"),
     ].compact.flatten.each { |c| raise "#{c} should not be loaded" }
   end
