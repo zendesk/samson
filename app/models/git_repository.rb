@@ -54,7 +54,7 @@ class GitRepository
   end
 
   def tags
-    cmd = 'git describe --tags --abbrev=0 `git rev-list --tags --max-count=600`'
+    cmd = "git for-each-ref refs/tags --sort=-authordate --format='%(refname)' --count=600 | sed 's/refs\\/tags\\///g'"
     success, output = run_single_command(cmd) { |line| line.strip }
     success ? output : []
   end
