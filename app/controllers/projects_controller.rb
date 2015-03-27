@@ -1,4 +1,6 @@
 class ProjectsController < ApplicationController
+  include StagePermittedParams
+
   before_action :authorize_admin!, except: [:show, :index, :deploy_group_versions]
   before_action :redirect_viewers!, only: [:show]
   before_action :project, only: [:show, :edit, :update, :deploy_group_versions]
@@ -79,21 +81,7 @@ class ProjectsController < ApplicationController
       :owner,
       :permalink,
       :release_branch,
-      :dashboard,
-      :email_committers_on_automated_deploy_failure,
-      :static_emails_on_automated_deploy_failure,
-      :new_relic_applications_attributes,
-      :datadog_monitor_ids,
-      stages_attributes: [
-        :name, :confirm, :command,
-        :production,
-        :deploy_on_release,
-        :notify_email_address,
-        :datadog_tags,
-        :update_github_pull_requests,
-        :use_github_deployment_api,
-        command_ids: [],
-      ] + Samson::Hooks.fire(:stage_permitted_params)
+      stages_attributes: stage_permitted_params
     )
   end
 
