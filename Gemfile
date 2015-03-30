@@ -80,8 +80,6 @@ end
 
 group :development, :test do
   gem 'byebug', require: false
-  gem 'pry', require: true
-  gem 'pry-byebug'
 end
 
 group :test do

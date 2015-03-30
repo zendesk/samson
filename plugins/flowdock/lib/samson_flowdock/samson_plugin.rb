@@ -49,7 +49,7 @@ Samson::Hooks.callback :deploy_defined do
 end
 
 Samson::Hooks.view :stage_form, "samson_flowdock/fields"
-Samson::Hooks.view :deploy_shown, 'samson_flowdock/notify_buddy_box'
+Samson::Hooks.view :deploy_view, 'samson_flowdock/notify_buddy_box'
 
 Samson::Hooks.callback :stage_clone do |old_stage, new_stage|
   new_stage.flowdock_flows.build(old_stage.flowdock_flows.map(&:attributes))

@@ -1,4 +1,4 @@
-<% if @deploy.stage.send_flowdock_notifications? %>
+<% if @deploy.waiting_for_buddy? && @deploy.stage.send_flowdock_notifications? %>
   <buddy-request-box default-buddy-request-message = "<%= @deploy.default_flowdock_message(current_user) %>"
                      flowdock-flows = "<%= @deploy.stage.enabled_flows_names.join(', ') %>"
                      deploy = "<%= @deploy.id %>" ></buddy-request-box>
@@ -21,7 +21,7 @@
           <em>This will send a buddy request to the <strong>{{ flowdockFlows }}</strong> flows.</em>
         </div>
         <div class="col-sm-2">
-          <button class="btn btn-primary" data-ng-click="notifyFlowDock()">Request for Buddy!</button>
+          <button class="btn btn-primary" data-ng-click="notifyFlowDock()">Request a Buddy!</button>
         </div>
       </div>
     </div>

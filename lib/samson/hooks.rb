@@ -7,7 +7,7 @@ module Samson
       :stage_clone,
       :stage_permitted_params,
       :before_deploy,
-      :deploy_shown,
+      :deploy_view,
       :after_deploy
     ]
 
