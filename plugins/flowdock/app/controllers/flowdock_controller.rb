@@ -1,6 +1,10 @@
 class FlowdockController < ApplicationController
   before_action :find_deploy, only: [:notify]
 
+  rescue_from ActiveRecord::RecordNotFound do
+    render status: 404, json: { message: 'Could not find deploy!' }
+  end
+
   def users
     users = Rails.cache.fetch(:flowdock_users, expires_in: 5.minutes, race_condition_ttl: 5) do
       flowdock_service.users
@@ -9,7 +13,7 @@ class FlowdockController < ApplicationController
   end
 
   def notify
-    flowdock_service.notify(@deploy, params[:message])
+    FlowdockNotification.new(@deploy).buddy_request(params[:message])
     render json: { message: 'Successfully sent a buddy request to the flows!' }
   end
 
@@ -20,8 +24,6 @@ class FlowdockController < ApplicationController
   end
 
   def flowdock_service
-    ::SamsonFlowdock::FlowdockService.new
-  rescue ActiveRecord::RecordNotFound
-    render status: 404, json: { message: 'Could not find deploy!' }
+    SamsonFlowdock::FlowdockService.new(@deploy)
   end
 end
