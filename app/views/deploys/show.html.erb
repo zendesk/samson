@@ -36,6 +36,7 @@
       <%= render 'start_pending', deploy: @deploy if @deploy.pending_non_production? %>
       <%= render 'buddy_check', deploy: @deploy if @deploy.waiting_for_buddy? %>
       <%= render 'output', deploy: @deploy, project: @project %>
+      <%= Samson::Hooks.render_views(:deploy_shown, self, deploy: @deploy, project: @project) %>
     </div>
 
     <% %w(files commits pulls risks jira-issues).each do |pane| %>
