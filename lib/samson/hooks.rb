@@ -1,11 +1,11 @@
 module Samson
   module Hooks
     KNOWN = [
-      :stage_defined,
       :stage_form,
       :stage_clone,
       :stage_permitted_params,
       :before_deploy,
+      :deploy_shown,
       :after_deploy
     ]
 
@@ -14,8 +14,8 @@ module Samson
     class Plugin
       def initialize(path)
         @path = path
-        @folder = File.expand_path("../../../", @path)
-        @name = File.dirname(@folder)
+        @folder = File.expand_path('../../../', @path)
+        @name = File.basename(@folder)
       end
 
       def active?
@@ -24,6 +24,34 @@ module Samson
 
       def require
         super @path
+      end
+
+      def add_migrations
+        migrations = File.join(@folder, "db/migrate")
+        Rails.application.config.paths["db/migrate"] << migrations if Dir.exist?(migrations)
+      end
+
+      def javascripts
+        assets(:javascripts, :js)
+      end
+
+      def stylesheets
+        assets(:stylesheets, :scss, :css)
+      end
+
+      private
+
+      def assets(type, *exts)
+        scripts_dir_name = engine.paths['app/assets'].existent.detect { |item| item.include?(type.to_s) }
+        return [] if scripts_dir_name.nil?
+        scripts = exts.map do |ext|
+          Dir.glob("#{scripts_dir_name}/**/*.#{ext}").map { |script| Pathname.new(script) }
+        end.flatten
+        scripts.map { |script| script.relative_path_from(Pathname.new(scripts_dir_name)) }.map(&:to_s)
+      end
+
+      def engine
+        Kernel.const_get("::Samson#{@name.capitalize}::Engine")
       end
     end
 
@@ -76,4 +104,5 @@ end
 Dir["plugins/*/lib"].each { |f| $LOAD_PATH << f } # treat included plugins like gems
 
 Samson::Hooks.plugins.
-  each(&:require)
+  each(&:require).
+  each(&:add_migrations)

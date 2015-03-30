@@ -3,7 +3,16 @@
   <head>
     <title><%= content_for(:page_title) || "Samson" %></title>
     <%= stylesheet_link_tag    "application", media: "all" %>
+
+    <% Samson::Hooks.plugins.map(&:stylesheets).flatten.each do |css| %>
+      <%= stylesheet_link_tag asset_path(css) %>
+    <% end %>
+
     <%= javascript_include_tag "application" %>
+    <% Samson::Hooks.plugins.map(&:javascripts).flatten.each do |javascript| %>
+      <%= javascript_include_tag asset_path(javascript) %>
+    <% end %>
+
     <%= csrf_meta_tags %>
 
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
