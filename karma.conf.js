@@ -24,7 +24,10 @@ module.exports = function(config) {
       'app/assets/javascripts/directives/**/*.js',
       'app/assets/javascripts/services/**/*.js',
       'app/assets/javascripts/timeline.js',
-      'test/angular/**/*_spec.js'
+      'test/angular/**/*_spec.js',
+      'plugins/*/test/angular/**/require/*.js',
+      'plugins/**/assets/javascripts/**/*.js',
+      'plugins/*/test/angular/**/*_spec.js'
     ],
 
 
