@@ -48,7 +48,6 @@ describe('Buddy requests notifications', function () {
       var expected = 'Some text the @test has inserted mentioning @test2';
       expect(mentionBox.reformatMessage(mentions)).toEqual(expected);
     });
-
   });
 
   describe("factory: Flowdock", function () {
