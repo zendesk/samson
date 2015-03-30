@@ -11,7 +11,7 @@ Samson::Hooks.callback :stage_defined do
     accepts_nested_attributes_for :flowdock_flows, allow_destroy: true, reject_if: :no_flowdock_token?
 
     def send_flowdock_notifications?
-      flowdock_flows.notifications_enabled.any?
+      flowdock_flows.enabled.any?
     end
 
     def flowdock_tokens
@@ -23,7 +23,7 @@ Samson::Hooks.callback :stage_defined do
     end
 
     def enabled_flows_names
-      flowdock_flows.notifications_enabled.map(&:name)
+      flowdock_flows.enabled.map(&:name)
     end
   end
 end
@@ -56,12 +56,12 @@ Samson::Hooks.callback :stage_clone do |old_stage, new_stage|
 end
 
 Samson::Hooks.callback :stage_permitted_params do
-  { flowdock_flows_attributes: [:id, :name, :token, :_destroy] }
+  { flowdock_flows_attributes: [:id, :name, :token, :_destroy, :enabled] }
 end
 
 notify = -> (stage, deploy, _buddy) do
   if stage.send_flowdock_notifications?
-    FlowdockNotification.new(stage, deploy).deliver
+    FlowdockNotification.new(deploy).deliver
   end
 end
 
