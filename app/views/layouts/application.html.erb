@@ -3,7 +3,6 @@
   <head>
     <title><%= content_for(:page_title) || "Samson" %></title>
     <%= stylesheet_link_tag    "application", media: "all" %>
-
     <% Samson::Hooks.plugins.map(&:stylesheets).flatten.each do |css| %>
       <%= stylesheet_link_tag asset_path(css) %>
     <% end %>
