@@ -1,0 +1,5 @@
+---
+- hosts: all
+  sudo: yes
+  roles:
+    - znzj.github-users

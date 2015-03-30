@@ -1,0 +1,21 @@
+- name: create samson launch config
+  ec2_lc:
+    name: "{{ launch_id }}"
+    image_id: "{{ samson_ami }}"
+    key_name: "{{ keyname }}"
+    region: "{{ region }}"
+    security_groups: "{{ samson_app_sg }}"
+    instance_type: "{{ instance_size }}"
+    assign_public_ip: "{{ assign_pulbic_ip }}"
+
+- name: create samson asg
+- ec2_asg:
+    name: samson_asg
+    launch_config_name: "{{ launch_id }}"
+    health_check_period: 60
+    health_check_type: ELB
+    replace_all_instances: yes
+    min_size: "{{ samson_asg_min }}"
+    max_size: "{{ samson_asg_max }}"
+    desired_capacity: "{{ samson_asg_capacity }}"
+    region: "{{ region }}"

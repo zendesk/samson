@@ -1,0 +1,8 @@
+#!/usr/bin/env ruby
+#^syntax detection
+
+site "https://galaxy.ansible.com/api/v1"
+
+role "znzj.github-users"
+role "ANXS.nginx"
+role "EDITD.supervisor_task"

@@ -1,0 +1,15 @@
+- name: create samson elasticcache
+  elasticache:
+    name: "samson-elasticcache"
+    state: present
+    engine: memcached
+    cache_engine_version: 1.4.14
+    node_type: cache.t2.small
+    num_nodes: 2
+    cache_port: 11211
+    cache_security_groups: []
+#     - "{{ samson_elc_sg.group_id }}"
+    security_group_ids:
+     - "{{ samson_elc_sg.group_id }}"
+    zone: "{{ zone2 }}"
+    region: "{{ region }}"

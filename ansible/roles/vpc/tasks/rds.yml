@@ -1,0 +1,25 @@
+- name: Create multi-zone Postgres on RDS in a VPC
+  local_action:
+    module: rds
+    command: create
+    instance_name: "{{ rds_instance_name }}"
+    region: "{{ region }}"
+    size: "{{ db_size }}"
+    instance_type: "{{ db_instance_type }}"
+    db_engine: "{{ db_engine }}"
+    # Use default (latest) DB engine (e.g., 9.3.x)
+    # engine_version: "{{ engine_version }}"
+#    subnet: "{{ samson_vpc.subnets[1].id }}"
+    # Use default db parameter group
+    # parameter_group: "{{ parameter_group }}"
+    multi_zone: no
+    port: 5432
+    db_name: "{{ db_name }}"
+    username: "{{ db_username }}"
+    password: "{{ postgresql_db_password }}"
+#    vpc_security_groups: "{{ samson_rds_sg.group_id }}"
+    iops: "{{ db_iops }}"
+    maint_window: "{{ db_maint_window }}"
+    backup_window: "{{ db_backup_window }}"
+    backup_retention: "{{ db_backup_retention }}"
+    zone: "{{ zone1 }}"

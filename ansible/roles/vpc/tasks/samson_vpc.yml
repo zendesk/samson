@@ -1,0 +1,29 @@
+- name: create samson vpc
+  local_action:
+    module: ec2_vpc
+    state: present
+    aws_access_key: "{{ aws_access_key }}"
+    aws_secret_key: "{{ aws_secret_key }}"
+    cidr_block: 192.168.0.0/24
+    resource_tags: { "Name": "Samson Autodeployment", "Owner": "{{ owner }}", "Environment": "{{ envato_environment }}" }
+    subnets:
+      - cidr: 192.168.0.0/25
+        az: "{{ zone1 }}"
+        resource_tags: { "Name": "Samson E", "Environment":"{{ envato_environment }}", "Tier" : "web", "Side": "green" }
+      - cidr: 192.168.0.128/25
+        az: "{{ zone2 }}"
+        resource_tags: { "Name": "Samson D", "Environment":"{{ envato_environment }}", "Tier" : "web", "Side": "blue" }
+    internet_gateway: True
+    route_tables:
+      - subnets:
+          - 192.168.0.0/25
+          - 192.168.0.128/25
+        routes:
+          - dest: 0.0.0.0/0
+            gw: igw
+    region: "{{ region }}"
+    dns_hostnames: yes
+    dns_support: yes
+    wait: yes
+  register: samson_vpc
+
