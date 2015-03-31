@@ -1,6 +1,6 @@
 <fieldset>
   <legend>Slack</legend>
-  <p>Add the name channel which should be notified of deploys.</p>
+  <p>Add the name of the slack channel which should be notified of deploys.</p>
 
   <% stage = form.object %>
   <% stage.slack_channels.build if stage.slack_channels.last.try(:name).blank? %>
