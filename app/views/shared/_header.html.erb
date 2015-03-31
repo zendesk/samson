@@ -6,10 +6,16 @@
     <ul class="nav navbar-nav">
       <% if current_user %>
         <li class="dropdown <%= 'active' if request.path.starts_with?('/projects') %>">
-          <a href="#" class="dropdown-toggle" data-toggle="dropdown">Projects <b class="caret"></b></a>
+          <a href="#" class="dropdown-toggle" data-toggle="dropdown" focus-on="{ click: '#project_search' }">Projects <b class="caret"></b></a>
           <ul class="dropdown-menu">
+            <li>
+              <a class="padding-sm">
+                <input id="project_search" type="search" ng-model="projectSearchQuery" ng-trim="false" handle-dropdown-selection class="form-control input-block" placeholder="Search projects">
+              </a>
+            </li>
+            <li class="divider"></li>
             <% Project.ordered_for_user(current_user).each do |project| %>
-              <li>
+              <li filter-by="projectSearchQuery">
                 <%= link_to project_path(project) do %>
                   <span class="glyphicon <%= 'glyphicon-star' if current_user.starred_project?(project) %>">
                     <%= '&nbsp;'.html_safe unless current_user.starred_project?(project) %>
