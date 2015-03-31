@@ -4,7 +4,7 @@ describe FlowdockNotification do
   let(:project) { stub(name: "Glitter") }
   let(:user) { stub(name: "John Wu", email: "wu@rocks.com") }
   let(:stage) { stub(name: "staging", flowdock_tokens: ["x123yx"], project: project) }
-  let(:deploy) { stub(summary: "hello world!", user: user, stage: stage) }
+  let(:deploy) { stub(summary: "hello world!", user: user, stage: stage, deploy_url: 'test_url') }
   let(:notification) { FlowdockNotification.new(deploy) }
   let(:endpoint) { "https://api.flowdock.com/v1/messages/team_inbox/x123yx" }
   let(:chat_endpoint) { "https://api.flowdock.com/v1/messages/chat/x123yx" }
