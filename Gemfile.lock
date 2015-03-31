@@ -5,6 +5,12 @@ PATH
       flowdock (~> 0.3.1)
 
 PATH
+  remote: plugins/slack/
+  specs:
+    samson_slack (0.0.0)
+      slack-api (~> 1.1.0)
+
+PATH
   remote: plugins/zendesk/
   specs:
     samson_zendesk (0.0.0)
@@ -97,11 +103,18 @@ GEM
     dotenv-rails (0.11.1)
       dotenv (= 0.11.1)
     erubis (2.7.0)
+    eventmachine (1.0.7)
+    eventmachine (1.0.7-java)
     execjs (2.2.2)
     faraday (0.9.0)
       multipart-post (>= 1.2, < 3)
     faraday-http-cache (0.4.2)
       faraday (~> 0.8)
+    faraday_middleware (0.9.1)
+      faraday (>= 0.7.4, < 0.10)
+    faye-websocket (0.9.2)
+      eventmachine (>= 0.12.0)
+      websocket-driver (>= 0.5.1)
     flowdock (0.3.1)
       httparty (~> 0.7)
       multi_json
@@ -250,6 +263,11 @@ GEM
       multi_json (~> 1.0)
       simplecov-html (~> 0.8.0)
     simplecov-html (0.8.0)
+    slack-api (1.1.0)
+      faraday (>= 0.7, <= 0.9)
+      faraday_middleware (~> 0.8)
+      faye-websocket (~> 0.9.2)
+      multi_json (~> 1.0, >= 1.0.3)
     slop (3.6.0)
     soft_deletion (0.5.6)
     sprockets (2.12.3)
@@ -282,6 +300,11 @@ GEM
     webmock (1.20.4)
       addressable (>= 2.3.6)
       crack (>= 0.3.2)
+    websocket-driver (0.5.4)
+      websocket-extensions (>= 0.1.0)
+    websocket-driver (0.5.4-java)
+      websocket-extensions (>= 0.1.0)
+    websocket-extensions (0.1.2)
     zendesk_api (1.6.0)
       faraday (~> 0.9)
       hashie (>= 1.2, < 4.0)
@@ -343,6 +366,7 @@ DEPENDENCIES
   rails_12factor
   rickshaw_rails
   samson_flowdock!
+  samson_slack!
   samson_zendesk!
   sass-rails (~> 5.0)
   sawyer (~> 0.5)
