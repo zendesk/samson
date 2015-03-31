@@ -172,6 +172,7 @@ from CI.
 * Datadog
 * New Relic
 * Flowdock
+* Slack
 * Github
 
 #### Continuous Delivery & Releases
