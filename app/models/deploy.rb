@@ -162,5 +162,3 @@ class Deploy < ActiveRecord::Base
     end
   end
 end
-
-Samson::Hooks.fire(:deploy_defined)

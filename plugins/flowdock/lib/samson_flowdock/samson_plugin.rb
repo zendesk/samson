@@ -1,49 +1,5 @@
 module SamsonFlowdock
   class Engine < Rails::Engine
-    config.autoload_paths += Dir["#{config.root}/lib/**/"]
-  end
-end
-
-Samson::Hooks.callback :stage_defined do
-  Stage.class_eval do
-    has_many :flowdock_flows
-
-    accepts_nested_attributes_for :flowdock_flows, allow_destroy: true, reject_if: :no_flowdock_token?
-
-    def send_flowdock_notifications?
-      flowdock_flows.enabled.any?
-    end
-
-    def flowdock_tokens
-      flowdock_flows.map(&:token)
-    end
-
-    def no_flowdock_token?(flowdock_attrs)
-      flowdock_attrs['token'].blank?
-    end
-
-    def enabled_flows_names
-      flowdock_flows.enabled.map(&:name)
-    end
-  end
-end
-
-Samson::Hooks.callback :deploy_defined do
-  Deploy.class_eval do
-
-    def default_flowdock_message(user)
-      ":pray: #{user_tag(user)} is requesting approval for deploy #{deploy_url}"
-    end
-
-    def deploy_url
-      Rails.application.routes.url_helpers.project_deploy_url(self.stage.project, self)
-    end
-
-    private
-
-    def user_tag(user)
-      "@#{user.email.match(/(.*)@/)[1]}"
-    end
   end
 end
 
