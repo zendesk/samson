@@ -42,7 +42,7 @@ module SamsonFlowdock
     end
 
     def deploy_url
-      url_helpers.project_deploy_url(stage.project, @deploy)
+      Rails.application.routes.url_helpers.project_deploy_url(stage.project, @deploy)
     end
 
     def project
@@ -63,10 +63,6 @@ module SamsonFlowdock
 
     def tokens
       @deploy.stage.flowdock_tokens
-    end
-
-    def url_helpers
-      Rails.application.routes.url_helpers
     end
   end
 end
