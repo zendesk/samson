@@ -54,12 +54,19 @@ module Samson
       private
 
       def assets(type, *exts)
-        scripts_dir_name = engine.paths['app/assets'].existent.detect { |item| item.include?(type.to_s) }
-        return [] if scripts_dir_name.nil?
-        scripts = exts.map do |ext|
-          Dir.glob("#{scripts_dir_name}/**/*.#{ext}").map { |script| Pathname.new(script) }
+        basedir = assets_root(type)
+        return [] if basedir.nil?
+        find_assets(basedir, exts).map { |script| script.relative_path_from(Pathname.new(basedir)) }.map(&:to_s)
+      end
+
+      def find_assets(basedir, exts)
+        exts.map do |ext|
+          Dir.glob("#{basedir}/**/*.#{ext}").map { |asset| Pathname.new(asset) }
         end.flatten
-        scripts.map { |script| script.relative_path_from(Pathname.new(scripts_dir_name)) }.map(&:to_s)
+      end
+
+      def assets_root(type)
+        engine.paths['app/assets'].existent.detect { |item| item.include?(type.to_s) }
       end
 
       def engine
