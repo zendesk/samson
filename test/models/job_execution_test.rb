@@ -6,7 +6,7 @@ describe JobExecution do
   let(:repo_dir) { File.join(GitRepository.cached_repos_dir, project.repository_directory) }
   let(:project) { Project.create!(name: 'duck', repository_url: repository_url) }
   let(:stage) { Stage.create!(name: 'stage4', project: project) }
-  let(:user) { User.create! }
+  let(:user) { User.create!(name: 'test') }
   let(:job) { project.jobs.create!(command: 'cat foo', user: user, project: project) }
   let(:execution) { JobExecution.new('master', job) }
   let(:deploy) { Deploy.create!(stage: stage, job: job, reference: 'masterCADF') }
