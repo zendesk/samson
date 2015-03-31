@@ -218,5 +218,3 @@ class Stage < ActiveRecord::Base
     Stage.unscoped.where(project_id: project_id)
   end
 end
-
-Samson::Hooks.fire(:stage_defined)

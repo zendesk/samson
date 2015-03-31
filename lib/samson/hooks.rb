@@ -31,6 +31,18 @@ module Samson
         Rails.application.config.paths["db/migrate"] << migrations if Dir.exist?(migrations)
       end
 
+      def add_lib_path
+        engine.config.autoload_paths += Dir["#{engine.config.root}/lib/**/"]
+      end
+
+      def add_decorators
+        engine.config.after_initialize do
+          Dir.glob(engine.config.root.join('app/decorators/**/*_decorator.rb')).each do |c|
+            require_dependency(c)
+          end
+        end
+      end
+
       def javascripts
         assets(:javascripts, :js)
       end
@@ -51,7 +63,7 @@ module Samson
       end
 
       def engine
-        Kernel.const_get("::Samson#{@name.capitalize}::Engine")
+        @engine ||= Kernel.const_get("::Samson#{@name.capitalize}::Engine")
       end
     end
 
@@ -105,4 +117,6 @@ Dir["plugins/*/lib"].each { |f| $LOAD_PATH << f } # treat included plugins like 
 
 Samson::Hooks.plugins.
   each(&:require).
-  each(&:add_migrations)
+  each(&:add_migrations).
+  each(&:add_lib_path).
+  each(&:add_decorators)
