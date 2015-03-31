@@ -28,7 +28,7 @@ module SamsonFlowdock
 
     def notify_inbox(subject, message)
       tags = ["deploy", stage.name.downcase]
-      inbox_flow.push_to_team_inbox(subject: subject, content: message, tags: tags, link: deploy_url)
+      inbox_flow.push_to_team_inbox(subject: subject, content: message, tags: tags, link: @deploy.deploy_url)
     end
 
     private
@@ -39,10 +39,6 @@ module SamsonFlowdock
         source: "samson",
         from: { name: user.name, address: user.email }
       )
-    end
-
-    def deploy_url
-      Rails.application.routes.url_helpers.project_deploy_url(stage.project, @deploy)
     end
 
     def project
