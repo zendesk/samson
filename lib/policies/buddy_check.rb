@@ -9,6 +9,10 @@ module BuddyCheck
     ENV["BYPASS_EMAIL"]
   end
 
+  def bypass_retroactive_approval_email
+    ENV["BYPASS_RETROACTIVE_APPROVAL_EMAIL"]
+  end
+
   def period
     (ENV["BUDDY_CHECK_GRACE_PERIOD"].presence || "4").to_i
   end

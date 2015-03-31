@@ -17,7 +17,8 @@ class DeployMailer < ApplicationMailer
     to_email = [BuddyCheck.bypass_email_address]
     to_email << BuddyCheck.bypass_jira_email_address if BuddyCheck.bypass_jira_email_address
 
-    mail(to: to_email, cc: user.email, subject: subject)
+    cc_email = [user.email, BuddyCheck.bypass_retroactive_approval_email]
+    mail(to: to_email, cc: cc_email, subject: subject)
   end
 
   def deploy_failed_email(stage, deploy, emails)
