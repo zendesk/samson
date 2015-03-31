@@ -58,6 +58,7 @@ module Samson
     config.samson.github.api_url = ENV["GITHUB_API_URL"].presence || 'api.github.com'
     config.samson.github.status_url = ENV["GITHUB_STATUS_URL"].presence || 'status.github.com'
     config.samson.references_cache_ttl = ENV['REFERENCES_CACHE_TTL'].presence || 10.minutes
+    config.samson.webhook_secret = ENV['WEBHOOK_SECRET'].presence
 
     config.samson.auth = ActiveSupport::OrderedOptions.new
     config.samson.auth.github = ENV["AUTH_GITHUB"] == "0" ? false : true
