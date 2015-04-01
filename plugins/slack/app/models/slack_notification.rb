@@ -22,7 +22,4 @@ class SlackNotification
     @content ||= SlackNotificationRenderer.render(@deploy, subject)
   end
 
-  def url_helpers
-    Rails.application.routes.url_helpers
-  end
 end
