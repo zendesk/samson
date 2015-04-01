@@ -24,7 +24,7 @@ module Samson
     config.autoload_paths += Dir["#{config.root}/lib/**/"]
 
     # Add DB migrations from plugins
-    config.paths["db/migrate"] << File.join(config.root, 'plugins/**/db/migrate')
+    config.paths["db/migrate"] << config.root.join('plugins/**/db/migrate')
 
     config.cache_store = :dalli_store, { value_max_bytes: 3000000, compress: true, expires_in: 1.day }
 

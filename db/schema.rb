@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20150317205551) do
+ActiveRecord::Schema.define(version: 20150331084621) do
 
   create_table "commands", force: :cascade do |t|
     t.text     "command",    limit: 10485760
@@ -81,7 +81,7 @@ ActiveRecord::Schema.define(version: 20150317205551) do
     t.datetime "created_at"
     t.datetime "updated_at"
     t.string   "commit"
-    t.string   "tag",        limit: 255
+    t.string   "tag"
   end
 
   add_index "jobs", ["project_id"], name: "index_jobs_on_project_id"
@@ -155,6 +155,16 @@ ActiveRecord::Schema.define(version: 20150317205551) do
 
   add_index "releases", ["project_id", "number"], name: "index_releases_on_project_id_and_number", unique: true
 
+  create_table "slack_channels", force: :cascade do |t|
+    t.string   "name",       null: false
+    t.string   "channel_id", null: false
+    t.integer  "stage_id",   null: false
+    t.datetime "created_at"
+    t.datetime "updated_at"
+  end
+
+  add_index "slack_channels", ["stage_id"], name: "index_slack_channels_on_stage_id"
+
   create_table "stage_commands", force: :cascade do |t|
     t.integer  "stage_id"
     t.integer  "command_id"
@@ -222,15 +232,5 @@ ActiveRecord::Schema.define(version: 20150317205551) do
 
   add_index "webhooks", ["project_id", "branch"], name: "index_webhooks_on_project_id_and_branch"
   add_index "webhooks", ["stage_id", "branch"], name: "index_webhooks_on_stage_id_and_branch"
-
-  create_table "slack_channels", force: :cascade do |t|
-    t.string   "name",       limit: 255, null: false
-    t.string   "channel_id", limit: 255, null: false
-    t.integer  "stage_id",   limit: 4,   null: false
-    t.datetime "created_at"
-    t.datetime "updated_at"
-  end
-
-  add_index "slack_channels", ["stage_id"], name: "index_slack_channels_on_stage_id", using: :btree
 
 end
