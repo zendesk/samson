@@ -41,7 +41,7 @@
         ) %>
       </div>
     </div>
-  <% else %>
+  <% elsif BuddyCheck.enabled? %>
     <div class="form-group">
       <div class="col-sm-offset-2 col-sm-10">
         <div class="checkbox">
@@ -54,16 +54,18 @@
     </div>
   <% end %>
 
-  <div class="form-group">
-    <div class="col-sm-offset-2 col-sm-10">
-      <div class="checkbox">
-        <%= form.label :confirm do %>
-          <%= form.check_box :confirm %>
-          Confirm before deployment
-        <% end %>
+  <% if BuddyCheck.enabled? %>
+    <div class="form-group">
+      <div class="col-sm-offset-2 col-sm-10">
+        <div class="checkbox">
+          <%= form.label :confirm do %>
+            <%= form.check_box :confirm %>
+            Confirm before deployment
+          <% end %>
+        </div>
       </div>
     </div>
-  </div>
+  <% end %>
 
   <% if @project.manage_releases? %>
     <div class="form-group">
