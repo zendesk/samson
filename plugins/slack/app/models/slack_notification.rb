@@ -12,7 +12,8 @@ class SlackNotification
       text: content,
       parse: "full")
 
-  rescue Slack::Error
+  rescue Slack::Error => e
+    Rails.logger.error("Could not deliver slack message: #{e.message}")
   end
 
   private
