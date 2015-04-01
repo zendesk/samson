@@ -47,8 +47,6 @@ Samson::Application.configure do
   config.samson.github.admin_team = 'admins'
   config.samson.github.deploy_team = 'deployers'
 
-  config.cache_store = :memory_store, { size: 64.megabytes }
-
   config.active_support.test_order = :random
 end
 
