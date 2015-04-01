@@ -4,6 +4,7 @@ class ProjectsController < ApplicationController
   before_action :authorize_admin!, except: [:show, :index, :deploy_group_versions]
   before_action :redirect_viewers!, only: [:show]
   before_action :project, only: [:show, :edit, :update, :deploy_group_versions]
+  before_action :get_environments, only: [:new, :create]
 
   helper_method :project
 
@@ -101,5 +102,9 @@ class ProjectsController < ApplicationController
     else
       Project
     end
+  end
+
+  def get_environments
+    @environments = Environment.all
   end
 end
