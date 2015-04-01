@@ -28,6 +28,17 @@ class Changeset
     @commits ||= comparison.commits.map {|data| Commit.new(repo, data) }
   end
 
+  def last_commit_status
+    if comparison.commits.nil? || comparison.commits.empty?
+      nil
+    else
+      ref = comparison.commits.last["sha"]
+      Rails.cache.fetch(status_cache_key) do
+        GITHUB.combined_status(repo, ref)[:state]
+      end
+    end
+  end
+
   def files
     comparison.files
   end
@@ -85,6 +96,10 @@ class Changeset
 
   def cache_key
     [self.class, repo, previous_commit, commit].join('-')
+  end
+
+  def status_cache_key
+    [self.class, "status", repo, commit].join('-')
   end
 
   class NullComparison
