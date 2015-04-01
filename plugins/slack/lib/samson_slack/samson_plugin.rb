@@ -7,6 +7,9 @@ end
 
 Samson::Hooks.callback :stage_defined do
   Stage.class_eval do
+
+    cattr_reader(:slack_channels_cache_key) { 'slack-channels-list' }
+
     has_many :slack_channels
     accepts_nested_attributes_for :slack_channels, allow_destroy: true, reject_if: :no_channel_name?
     validate :channel_exists?
@@ -39,7 +42,9 @@ Samson::Hooks.callback :stage_defined do
     def channel_for(name)
       return nil unless name
 
-      response = Slack.channels_list(exclude_archived: 1)
+      response = Rails.cache.fetch(slack_channels_cache_key, expires_in: 5.minutes) do
+        Slack.channels_list(exclude_archived: 1)
+      end
       response['channels'].select { |c| c['name'] == name }.first
     end
   end
