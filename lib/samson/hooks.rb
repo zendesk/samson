@@ -26,11 +26,6 @@ module Samson
         super @path
       end
 
-      def add_migrations
-        migrations = File.join(@folder, "db/migrate")
-        Rails.application.config.paths["db/migrate"] << migrations if Dir.exist?(migrations)
-      end
-
       def add_lib_path
         engine.config.autoload_paths += Dir["#{engine.config.root}/lib/**/"]
       end
@@ -118,9 +113,8 @@ module Samson
       def plugin_setup
         Samson::Hooks.plugins.
           each(&:require).
-          each(&:add_migrations).
-          each(&:add_lib_path).
           each(&:precompile_assets).
+          each(&:add_lib_path).
           each(&:add_decorators)
       end
 
@@ -155,5 +149,5 @@ end
 Dir["plugins/*/lib"].each { |f| $LOAD_PATH << f } # treat included plugins like gems
 
 Samson::Hooks.plugin_setup
-ActionDispatch::Reloader.to_prepare { Samson::Hooks.plugin_setup }
+ActionDispatch::Reloader.to_prepare { Samson::Hooks.plugins.map(&:add_decorators) }
 
