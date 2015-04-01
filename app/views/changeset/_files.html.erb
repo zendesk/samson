@@ -3,9 +3,9 @@
   <p class="alert alert-warning"><%= changeset.error %></p>
 <% end %>
 
-<% if changeset.last_commit_status == "pending" %>
+<% if changeset.last_commit_status.state == "pending" %>
   <p class="alert alert-warning">No status information available for the last commit.</p>
-<% elsif changeset.last_commit_status != "success" %>
+<% elsif changeset.last_commit_status.state && changeset.last_commit_status.state != "success" %>
   <p class="alert alert-warning">Warning. Status of the last commit status is: <%= changeset.last_commit_status %></p>
 <% end %>
 

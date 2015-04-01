@@ -39,7 +39,7 @@ describe Changeset do
     end
 
     it "returns the status of the last commit message according to github" do
-      last_status = Changeset.new("foo/bar", "a", "b").last_commit_status
+      last_status = Changeset.new("foo/bar", "a", "b").last_commit_status.state
       last_status.must_equal "success"
     end
 
@@ -48,7 +48,7 @@ describe Changeset do
       change_set.last_commit_status
       GITHUB.stubs(:combined_status).with("foo/bar", "b").returns({:state => "failure"})
       last_status = change_set.last_commit_status
-      last_status.must_equal "success"
+      last_status.state.must_equal "success"
     end
 
     {
@@ -59,7 +59,7 @@ describe Changeset do
       it "catches #{exception} exceptions" do
         GITHUB.expects(:combined_status).raises(exception)
         last_commit_status = Changeset.new("foo/bar", "a", "b").last_commit_status
-        last_commit_status.must_equal message
+        last_commit_status.error.must_equal message
       end
     end
   end

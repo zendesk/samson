@@ -30,15 +30,16 @@ class Changeset
 
   def last_commit_status
     if comparison.commits.nil? || comparison.commits.empty?
-      nil
+      StatusResult.null_result
     else
       ref = comparison.commits.last["sha"]
-      Rails.cache.fetch(status_cache_key) do
+      state = Rails.cache.fetch(status_cache_key) do
         GITHUB.combined_status(repo, ref)[:state]
       end
+      StatusResult.new(state, nil)
     end
   rescue Octokit::Error => e
-    "Unable to retrieve commit status. #{humanize_exception(e)}"
+    StatusResult.new(nil, "Unable to retrieve commit status. #{humanize_exception(e)}")
   end
 
   def files
@@ -74,7 +75,14 @@ class Changeset
   end
 
   def error
-    comparison.error if comparison.respond_to?(:error)
+    (comparison.error if comparison.respond_to?(:error)) ||
+      last_commit_status.error
+  end
+
+  class StatusResult < Struct.new(:state, :error)
+    def self.null_result
+      new(nil, nil)
+    end
   end
 
   private
