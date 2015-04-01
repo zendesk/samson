@@ -37,6 +37,8 @@ class Changeset
         GITHUB.combined_status(repo, ref)[:state]
       end
     end
+  rescue Octokit::Error => e
+    "Unable to retrieve commit status. #{humanize_exception(e)}"
   end
 
   def files
@@ -86,7 +88,11 @@ class Changeset
       end
     end
   rescue Octokit::Error => e
-    NullComparison.new("Github: #{e.message.sub("Octokit::", "").underscore.humanize}")
+    NullComparison.new(humanize_exception(e))
+  end
+
+  def humanize_exception(e)
+    "Github: #{e.message.sub("Octokit::", "").underscore.humanize}"
   end
 
   def find_pull_requests
@@ -99,7 +105,7 @@ class Changeset
   end
 
   def status_cache_key
-    [self.class, "status", repo, commit].join('-')
+    [self.class, "status", repo, previous_commit, commit].join('-')
   end
 
   class NullComparison
