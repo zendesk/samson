@@ -43,6 +43,11 @@ module Samson
         end
       end
 
+      def precompile_assets
+        assets = javascripts + stylesheets
+        engine.config.assets.precompile << assets
+      end
+
       def javascripts
         assets(:javascripts, :js)
       end
@@ -110,6 +115,33 @@ module Samson
         nil
       end
 
+      def plugin_setup
+        Samson::Hooks.plugins.
+          each(&:require).
+          each(&:add_migrations).
+          each(&:add_lib_path).
+          each(&:precompile_assets).
+          each(&:add_decorators)
+      end
+
+      def render_javascripts(view)
+        Samson::Hooks.plugins.map(&:javascripts).flatten.each do |script|
+          view.instance_exec do
+            concat view.javascript_include_tag(view.asset_path(script))
+          end
+        end
+        nil
+      end
+
+      def render_stylesheets(view)
+        Samson::Hooks.plugins.map(&:stylesheets).flatten.each do |stylesheet|
+          view.instance_exec do
+            concat view.stylesheet_link_tag(view.asset_path(stylesheet))
+          end
+        end
+        nil
+      end
+
       private
 
       def hooks(name)
@@ -122,8 +154,6 @@ end
 
 Dir["plugins/*/lib"].each { |f| $LOAD_PATH << f } # treat included plugins like gems
 
-Samson::Hooks.plugins.
-  each(&:require).
-  each(&:add_migrations).
-  each(&:add_lib_path).
-  each(&:add_decorators)
+Samson::Hooks.plugin_setup
+ActionDispatch::Reloader.to_prepare { Samson::Hooks.plugin_setup }
+
