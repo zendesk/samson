@@ -39,7 +39,7 @@ Samson::Hooks.callback :stage_defined do
     def channel_for(name)
       return nil unless name
 
-      response = Slack.channels_list(exlcude_archived: 1)
+      response = Slack.channels_list(exclude_archived: 1)
       response['channels'].select { |c| c['name'] == name }.first
     end
   end
