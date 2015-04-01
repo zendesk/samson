@@ -83,7 +83,7 @@ samson.filter("projectUserFilter",
 
 samson.filter("userFilter",
   function() {
-    var hookSources = /^(?:travis|tddium|semaphore|jenkins|github)$/i;
+    var hookSources = /^(?:travis|tddium|semaphore|jenkins|github|webhook)$/i;
 
     return function(deploys, userType) {
       if (userType !== undefined && userType !== null) {
