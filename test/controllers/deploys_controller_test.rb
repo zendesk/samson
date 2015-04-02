@@ -9,7 +9,7 @@ describe DeploysController do
   let(:deploy) { deploys(:succeeded_test) }
   let(:deploy_service) { stub(deploy!: nil) }
   let(:deploy_called) { [] }
-  let(:changeset) { stub_everything(commits: [], files: [], pull_requests: [], jira_issues: []) }
+  let(:changeset) { stub_everything(commits: [], files: [], pull_requests: [], jira_issues: [], last_commit_status: stub(error: nil, state: nil)) }
 
   setup do
     DeployService.stubs(:new).with(project, deployer).returns(deploy_service)

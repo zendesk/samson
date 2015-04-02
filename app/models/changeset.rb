@@ -28,6 +28,20 @@ class Changeset
     @commits ||= comparison.commits.map {|data| Commit.new(repo, data) }
   end
 
+  def last_commit_status
+    if comparison.blank?
+      StatusResult.null_result
+    else
+      ref = comparison.commits.last["sha"]
+      state = Rails.cache.fetch(status_cache_key, expires_in: 1.minute)  do
+        GITHUB.combined_status(repo, ref)[:state]
+      end
+      StatusResult.new(state, nil)
+    end
+  rescue Octokit::Error => e
+    StatusResult.new(nil, "Unable to retrieve commit status. #{humanize_exception(e)}")
+  end
+
   def files
     comparison.files
   end
@@ -61,7 +75,8 @@ class Changeset
   end
 
   def error
-    comparison.error if comparison.respond_to?(:error)
+    (comparison.error if comparison.respond_to?(:error)) ||
+      last_commit_status.error
   end
 
   private
@@ -75,7 +90,11 @@ class Changeset
       end
     end
   rescue Octokit::Error => e
-    NullComparison.new("Github: #{e.message.sub("Octokit::", "").underscore.humanize}")
+    NullComparison.new(humanize_exception(e))
+  end
+
+  def humanize_exception(e)
+    "Github: #{e.message.sub("Octokit::", "").underscore.humanize}"
   end
 
   def find_pull_requests
@@ -85,6 +104,10 @@ class Changeset
 
   def cache_key
     [self.class, repo, previous_commit, commit].join('-')
+  end
+
+  def status_cache_key
+    [self.class, "status", repo, commit].join('-')
   end
 
   class NullComparison
@@ -100,6 +123,10 @@ class Changeset
 
     def files
       []
+    end
+
+    def blank?
+      true
     end
   end
 end
