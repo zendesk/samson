@@ -29,11 +29,11 @@ class Changeset
   end
 
   def last_commit_status
-    if comparison.commits.nil? || comparison.commits.empty?
+    if comparison.blank?
       StatusResult.null_result
     else
       ref = comparison.commits.last["sha"]
-      state = Rails.cache.fetch(status_cache_key) do
+      state = Rails.cache.fetch(status_cache_key, expires_in: 1.minute)  do
         GITHUB.combined_status(repo, ref)[:state]
       end
       StatusResult.new(state, nil)
