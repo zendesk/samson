@@ -50,14 +50,11 @@ samson.factory('Flowdock', function ($rootScope, $http) {
 
   self.users = function () {
     var users = [];
-    var promise = $http.get('/flowdock/users');
 
-    promise.success(function (data) {
+    $http.get('/flowdock/users').success(function (data) {
       users.push.apply(users, data.users);
       $rootScope.$emit('flowdock_users', users);
-    });
-
-    promise.error(function () {
+    }).error(function () {
       console.log('Could not fetch the flowdock users!');
     });
 
