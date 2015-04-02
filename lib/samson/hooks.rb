@@ -149,5 +149,8 @@ end
 Dir["plugins/*/lib"].each { |f| $LOAD_PATH << f } # treat included plugins like gems
 
 Samson::Hooks.plugin_setup
+
+# This next line is just to make rails reload the decorators whenever we change code inside a plugin.
+# Without it we would have to restart the server every code change.
 ActionDispatch::Reloader.to_prepare { Samson::Hooks.plugins.map(&:add_decorators) }
 

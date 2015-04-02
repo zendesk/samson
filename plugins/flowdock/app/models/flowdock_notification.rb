@@ -36,9 +36,9 @@ class FlowdockNotification
 
   def buddy_request_completed_message(approved, buddy)
     if @user == buddy
-       "#{@user.name} bypassed deploy #{deploy_url}"
+       "#{@user.name} bypassed deploy #{@deploy.url}"
      else
-       "#{@user.name} #{buddy.name} #{approved ? 'approved' : 'stopped' } deploy #{deploy_url}"
+       "#{@user.name} #{buddy.name} #{approved ? 'approved' : 'stopped' } deploy #{@deploy.url}"
      end
   end
 
