@@ -107,7 +107,7 @@ class Changeset
   end
 
   def status_cache_key
-    [self.class, "status", repo, previous_commit, commit].join('-')
+    [self.class, "status", repo, commit].join('-')
   end
 
   class NullComparison
