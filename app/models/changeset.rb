@@ -130,5 +130,9 @@ class Changeset
     def files
       []
     end
+
+    def blank?
+      true
+    end
   end
 end
