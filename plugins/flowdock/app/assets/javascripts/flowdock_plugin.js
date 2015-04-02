@@ -1,6 +1,6 @@
-samson.factory('Mentionbox', ['$rootScope', 'Flowdock', function ($rootScope, $flowdock) {
+samson.factory('Mentionbox', function ($rootScope, Flowdock) {
   var self = this;
-  self.users = $flowdock.users();
+  self.users = Flowdock.users();
 
   self.filteredData = function (query) {
     return _.filter(self.users, function (item) {
@@ -43,9 +43,9 @@ samson.factory('Mentionbox', ['$rootScope', 'Flowdock', function ($rootScope, $f
   };
 
   return self;
-}]);
+});
 
-samson.factory('Flowdock', ['$rootScope','$http', function ($rootScope, $http) {
+samson.factory('Flowdock', function ($rootScope, $http) {
   var self = this;
 
   self.users = function () {
@@ -72,14 +72,13 @@ samson.factory('Flowdock', ['$rootScope','$http', function ($rootScope, $http) {
     users: self.users,
     buddyRequest: self.buddyRequest
   }
-}]);
+});
 
-samson.controller('BuddyNotificationsCtrl', ['$scope','$rootScope', 'Flowdock', 'Mentionbox',
-  function($scope, $rootScope, flowdock, mentionsBox) {
+samson.controller('BuddyNotificationsCtrl', function($scope, $rootScope, Flowdock, Mentionbox) {
     $scope.title = 'Request a buddy!';
     $scope.message = null;
     $scope.successful = false;
-    $scope.notificationBox = mentionsBox.init('#buddy_request_box', $scope.defaultBuddyRequestMessage);
+    $scope.notificationBox = Mentionbox.init('#buddy_request_box', $scope.defaultBuddyRequestMessage);
 
     $scope.shouldDisplayFeedback = function() {
       return $scope.message != null;
@@ -87,7 +86,7 @@ samson.controller('BuddyNotificationsCtrl', ['$scope','$rootScope', 'Flowdock', 
 
     $scope.notifyFlowDock = function () {
       $scope.notificationBox.message(function (message) {
-        var result = flowdock.buddyRequest($scope.deploy, message);
+        var result = Flowdock.buddyRequest($scope.deploy, message);
         result.success(function (data) {
           $scope.message = data.message;
           $scope.successful = true
@@ -98,7 +97,7 @@ samson.controller('BuddyNotificationsCtrl', ['$scope','$rootScope', 'Flowdock', 
         });
       });
     };
-  }]).directive('buddyRequestBox', function () {
+  }).directive('buddyRequestBox', function () {
   return {
     restrict: 'E',
     templateUrl: 'templates/buddy_request_box',
