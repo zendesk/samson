@@ -79,12 +79,6 @@ class Changeset
       last_commit_status.error
   end
 
-  class StatusResult < Struct.new(:state, :error)
-    def self.null_result
-      new(nil, nil)
-    end
-  end
-
   private
 
   def find_comparison
