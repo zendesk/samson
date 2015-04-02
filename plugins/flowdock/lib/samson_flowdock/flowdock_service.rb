@@ -28,7 +28,7 @@ module SamsonFlowdock
 
     def notify_inbox(subject, message)
       tags = ["deploy", stage.name.downcase]
-      inbox_flow.push_to_team_inbox(subject: subject, content: message, tags: tags, link: @deploy.deploy_url)
+      inbox_flow.push_to_team_inbox(subject: subject, content: message, tags: tags, link: @deploy.url)
     end
 
     private
