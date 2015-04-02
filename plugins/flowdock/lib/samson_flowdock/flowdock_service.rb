@@ -2,6 +2,7 @@ require 'flowdock'
 
 module SamsonFlowdock
   class FlowdockService
+    delegate :stage, :user, to: :@deploy
 
     def initialize(deploy)
       @deploy = deploy
@@ -39,18 +40,6 @@ module SamsonFlowdock
         source: "samson",
         from: { name: user.name, address: user.email }
       )
-    end
-
-    def project
-      @project ||= stage.project
-    end
-
-    def stage
-      @stage ||= @deploy.stage
-    end
-
-    def user
-      @user ||= @deploy.user
     end
 
     def chat_flow
