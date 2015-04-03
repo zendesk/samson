@@ -55,4 +55,32 @@ $(function() {
     $form.toggleClass("active");
     $form.find(".lock-description").select();
   });
+
+  $(".env-toggle-all").each(function() {
+    $(this).change(function(toggleBox) {
+      $($(this).data('target')).each(function(index, checkBox) {
+        checkBox.checked = toggleBox.target.checked;
+      });
+    });
+
+    // Update top-level checkboxes if user selects subset of deploygroups
+    $($(this).data('target')).each(function() {
+      $(this).change(function() {
+        setEnvironmentCheckBox($(this).attr('class'));
+      });
+    });
+
+    setEnvironmentCheckBox(this.id);
+  });
+
+  function setEnvironmentCheckBox(envClass) {
+    var envCheckbox = $('#' + envClass),
+        checks = _.uniq(_.pluck($("." + envClass), 'checked'));
+    if (checks.length > 1) {
+      envCheckbox.prop('indeterminate', true);
+    } else if (checks.length > 0) {
+      envCheckbox.prop('checked', checks[0]);
+      envCheckbox.prop('indeterminate', false);
+    }
+  }
 });

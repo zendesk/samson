@@ -106,3 +106,24 @@
   vertical-align: bottom;
   width: 200px;
 }
+
+.deploy-groups {
+  thead {
+    tr {
+      th {
+        padding: 2px 20px;
+      }
+    }
+  }
+  tbody {
+    tr {
+      td {
+        padding: 2px 20px;
+        label {
+          font-weight: normal;
+          margin-bottom: 0px;
+        }
+      }
+    }
+  }
+}
