@@ -11,6 +11,7 @@ $(function () {
       $form = $("#new_deploy"),
       $submit = $form.find('input[type=submit]'),
       $reference = $("#deploy_reference");
+      $ref_status_label = $("#ref-problem-warning");
 
   $("#deploy-tabs a[data-type=github]").click(function (e) {
       e.preventDefault();
@@ -82,10 +83,13 @@ $(function () {
       data: { ref: ref },
       success: function(data, status, xhr) {
         if(data.status == "pending") {
+          $ref_status_label.addClass("hidden");
           tag_form_group.addClass("has-warning");
         } else if(data.status == "success") {
+          $ref_status_label.addClass("hidden");
           tag_form_group.addClass("has-success");
         } else if(data.status == "failure" || data.status == "error") {
+          $ref_status_label.removeClass("hidden");
           tag_form_group.addClass("has-error");
         }
       }
@@ -102,6 +106,7 @@ $(function () {
   toggleConfirmed();
 
   $reference.keyup(function(e) {
+    $ref_status_label.addClass("hidden");
     tag_form_group.removeClass("has-success has-warning has-error");
 
     var ref = $(this).val();

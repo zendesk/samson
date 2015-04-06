@@ -24,6 +24,11 @@
           <%= form.text_field :reference, class: "form-control", autofocus: true, placeholder: "e.g. v2.1.43, master, fa0b4671", data: { prefetch_url: project_references_path(@project, format: "json") } %>
         </div>
       </div>
+      <div>
+        <div id="ref-problem-warning" class="col-lg-5 col-lg-offset-2 alert alert-warning hidden">
+          There is currently a problem registered for this Tag or SHA. Are you sure you wish to deploy?
+        </div>
+      </div>
 
       <div class="form-group" id="new-deploy-buttons">
         <div class="col-lg-offset-2 col-lg-10">

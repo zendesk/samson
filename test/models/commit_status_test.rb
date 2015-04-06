@@ -12,22 +12,19 @@ describe CommitStatus do
 
   describe 'with a proper sha' do
     before do
-      stub_github_api('repos/' + repo + '/statuses/' + sha, statuses)
+      stub_github_api("repos/#{repo}/commits/#{sha}/status", statuses)
     end
 
-    describe 'with multiple statuses' do
-      let(:statuses) {[
-        { state: 'success' },
-        { state: 'pending' }
-      ]}
+    describe 'with combined status' do
+      let(:statuses) { { :state => "success" }}
 
       it 'is the first status' do
         subject.status.must_equal('success')
       end
     end
 
-    describe 'with no statuses' do
-      let(:statuses) {[]}
+    describe 'with no status' do
+      let(:statuses) { { :state => nil } }
 
       it 'is nil' do
         subject.status.must_be_nil
@@ -37,7 +34,7 @@ describe CommitStatus do
 
   describe 'when API cannot find the sha' do
     before do
-      stub_github_api('repos/' + repo + '/statuses/' + sha, nil, 404)
+      stub_github_api('repos/' + repo + '/commits/' + sha + "/status", nil, 404)
     end
 
     it 'is nil' do
