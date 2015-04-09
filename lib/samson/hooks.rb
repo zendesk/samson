@@ -15,11 +15,11 @@ module Samson
       def initialize(path)
         @path = path
         @folder = File.expand_path("../../../", @path)
-        @name = File.dirname(@folder)
+        @name = File.basename(@folder)
       end
 
       def active?
-        Rails.env.test? || ENV["PLUGINS"] == "all" || ENV["PLUGINS"].to_s.split(",").include?(@name)
+        Rails.env.test? || ENV["PLUGINS"] == "all" || ENV["PLUGINS"].to_s.split(',').map(&:strip).include?(@name)
       end
 
       def require
