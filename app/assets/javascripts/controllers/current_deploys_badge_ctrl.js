@@ -1,4 +1,6 @@
 samson.controller('currentDeployBadgeCtrl', function($scope, Websocket) {
+  $scope.currentActiveDeploys = 0;
+
   Websocket.on('deploys', 'new', function() {
     $scope.currentActiveDeploys += 1;
     updateBadge();
@@ -10,7 +12,6 @@ samson.controller('currentDeployBadgeCtrl', function($scope, Websocket) {
   });
 
   function updateBadge() {
-    console.log('current count: ', $scope.currentActiveDeploys);
     if ($scope.currentActiveDeploys > 0) {
       $('#current_deploys_badge').show();
     }

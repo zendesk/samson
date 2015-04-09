@@ -46,7 +46,7 @@
         <li class="<%= 'active' if current_page?(controller: '/deploys', action: 'active') %>" ng-controller="currentDeployBadgeCtrl" ng-init="init(<%= Deploy.active.count %>)">
           <%= link_to active_deploys_path do %>
             Current Deploys
-            <%= content_tag(:span, "{{ currentActiveDeploys }}", class: "badge badge-deploys", id: 'current_deploys_badge') %>
+            <span class="badge badge-deploys" style="display: none;" id="current_deploys_badge">{{ currentActiveDeploys }}</span>
           <% end %>
         </li>
       <% end %>
