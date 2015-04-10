@@ -1,7 +1,6 @@
 var gulp = require('gulp');
 
 // include plug-ins
-var gutil = require('gulp-util');
 var karma = require('gulp-karma');
 var jshint = require('gulp-jshint');
 
