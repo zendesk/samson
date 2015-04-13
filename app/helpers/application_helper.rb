@@ -111,11 +111,11 @@ module ApplicationHelper
     content_tag :i, '', class: "glyphicon glyphicon-#{type}"
   end
 
-  def link_to_delete(path, body = 'Delete')
-    link_to body, path, class: 'btn btn-danger', method: :delete, data: { confirm: "Are you sure?" }
+  def link_to_delete(path, body = 'Delete', options={})
+    link_to body, path, options.merge({ method: :delete, data: { confirm: "Are you sure?" } })
   end
 
   def link_to_delete_button(path)
-    link_to_delete(path, icon_tag('remove'))
+    link_to_delete(path, icon_tag('remove') + ' Delete', class: 'btn btn-danger')
   end
 end
