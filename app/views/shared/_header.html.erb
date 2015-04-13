@@ -46,7 +46,7 @@
         <li class="current-deploys <%= 'active' if current_page?(controller: '/deploys', action: 'active') %>">
           <%= link_to active_deploys_path do %>
             Current Deploys
-            <%= content_tag(:span, Deploy.active.count, class: "badge badge-deploys hide", data: { refresh_url: active_deploys_url(format: 'json') })  %>
+            <%= content_tag(:span, Deploy.active.count, class: "badge badge-deploys", style: "display: none", data: { refresh_url: active_deploys_url(format: 'json') })  %>
           <% end %>
         </li>
       <% end %>
