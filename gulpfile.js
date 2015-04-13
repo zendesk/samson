@@ -19,9 +19,10 @@ var testFiles = [
 ];
 
 gulp.task('jshint', function() {
-  gulp.src('./app/assets/javascripts/**/*.js')
+  return gulp.src('./app/assets/javascripts/**/*.js')
     .pipe(jshint())
-    .pipe(jshint.reporter('default'));
+    .pipe(jshint.reporter('default'))
+    .pipe(jshint.reporter('fail'));
 });
 
 gulp.task('test', function() {
