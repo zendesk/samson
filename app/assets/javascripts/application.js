@@ -28,5 +28,6 @@
 //= require vis
 //= require app.js
 //= require config.js
+//= require websocket_rails/main
 //= require_tree .
 //= require_tree ../templates

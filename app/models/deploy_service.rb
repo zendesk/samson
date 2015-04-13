@@ -7,6 +7,7 @@ class DeployService
 
   def deploy!(stage, reference)
     deploy = stage.create_deploy(reference: reference, user: user)
+    WebsocketRails[:deploys].trigger 'new', deploy
 
     if deploy.persisted? && (auto_confirm?(stage) || release_approved?(deploy))
       confirm_deploy!(deploy, stage, reference, deploy.buddy)
@@ -57,6 +58,7 @@ class DeployService
 
   def send_before_notifications(stage, deploy, buddy)
     Samson::Hooks.fire(:before_deploy, stage, deploy, buddy)
+    WebsocketRails[:deploys].trigger 'start', deploy
 
     if bypassed?(stage, deploy, buddy)
       DeployMailer.bypass_email(stage, deploy, user).deliver_now
@@ -71,6 +73,7 @@ class DeployService
 
   def send_after_notifications(stage, deploy)
     Samson::Hooks.fire(:after_deploy, stage, deploy, deploy.buddy)
+    WebsocketRails[:deploys].trigger 'finish', deploy
     send_deploy_email(stage, deploy)
     send_failed_deploy_email(stage, deploy)
     send_datadog_notification(stage, deploy)
