@@ -1,11 +1,11 @@
 module Samson
   module Hooks
     KNOWN = [
-      :stage_defined,
       :stage_form,
       :stage_clone,
       :stage_permitted_params,
       :before_deploy,
+      :deploy_view,
       :after_deploy
     ]
 
@@ -14,7 +14,7 @@ module Samson
     class Plugin
       def initialize(path)
         @path = path
-        @folder = File.expand_path("../../../", @path)
+        @folder = File.expand_path('../../../', @path)
         @name = File.basename(@folder)
       end
 
@@ -24,6 +24,53 @@ module Samson
 
       def require
         super @path
+      end
+
+      def add_lib_path
+        engine.config.autoload_paths += Dir["#{engine.config.root}/lib/**/"]
+      end
+
+      def add_decorators
+        engine.config.after_initialize do
+          Dir.glob(engine.config.root.join('app/decorators/**/*_decorator.rb')).each do |c|
+            require_dependency(c)
+          end
+        end
+      end
+
+      def precompile_assets
+        assets = javascripts + stylesheets
+        engine.config.assets.precompile << assets
+      end
+
+      def javascripts
+        assets(:javascripts, :js)
+      end
+
+      def stylesheets
+        assets(:stylesheets, :scss, :css)
+      end
+
+      private
+
+      def assets(type, *exts)
+        basedir = assets_root(type)
+        return [] if basedir.nil?
+        find_assets(basedir, exts).map { |script| script.relative_path_from(Pathname.new(basedir)) }.map(&:to_s)
+      end
+
+      def find_assets(basedir, exts)
+        exts.map do |ext|
+          Dir.glob("#{basedir}/**/*.#{ext}").map { |asset| Pathname.new(asset) }
+        end.flatten
+      end
+
+      def assets_root(type)
+        engine.paths['app/assets'].existent.detect { |item| item.include?(type.to_s) }
+      end
+
+      def engine
+        @engine ||= Kernel.const_get("::Samson#{@name.capitalize}::Engine")
       end
     end
 
@@ -63,6 +110,32 @@ module Samson
         nil
       end
 
+      def plugin_setup
+        Samson::Hooks.plugins.
+          each(&:require).
+          each(&:precompile_assets).
+          each(&:add_lib_path).
+          each(&:add_decorators)
+      end
+
+      def render_javascripts(view)
+        Samson::Hooks.plugins.map(&:javascripts).flatten.each do |script|
+          view.instance_exec do
+            concat view.javascript_include_tag(view.asset_path(script))
+          end
+        end
+        nil
+      end
+
+      def render_stylesheets(view)
+        Samson::Hooks.plugins.map(&:stylesheets).flatten.each do |stylesheet|
+          view.instance_exec do
+            concat view.stylesheet_link_tag(view.asset_path(stylesheet))
+          end
+        end
+        nil
+      end
+
       private
 
       def hooks(name)
@@ -75,5 +148,9 @@ end
 
 Dir["plugins/*/lib"].each { |f| $LOAD_PATH << f } # treat included plugins like gems
 
-Samson::Hooks.plugins.
-  each(&:require)
+Samson::Hooks.plugin_setup
+
+# This next line is just to make rails reload the decorators whenever we change code inside a plugin.
+# Without it we would have to restart the server every code change.
+ActionDispatch::Reloader.to_prepare { Samson::Hooks.plugins.map(&:add_decorators) }
+
