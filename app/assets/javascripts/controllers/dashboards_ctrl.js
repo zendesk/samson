@@ -20,7 +20,7 @@ samson.controller("DashboardsCtrl", function DashboardsCtrl($scope, $http, $loca
           .success(function (deploys_result) {
             project.deploy_group_versions = _.pick(deploys_result, deploy_groups_ids);
             project.css = getProjectCss(project);
-          })
+          });
       });
     });
   }
@@ -35,7 +35,7 @@ samson.controller("DashboardsCtrl", function DashboardsCtrl($scope, $http, $loca
 
     if (num_versions > 1) {
       css.tr_class = "warning";
-    } else if (num_versions == 0) {
+    } else if (num_versions === 0) {
       css.tr_class = "no-deploys";
       css.style = "display: none;";
     }
