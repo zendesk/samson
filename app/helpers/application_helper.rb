@@ -110,4 +110,12 @@ module ApplicationHelper
   def icon_tag(type)
     content_tag :i, '', class: "glyphicon glyphicon-#{type}"
   end
+
+  def link_to_delete(path, body = 'Delete')
+    link_to body, path, class: 'btn btn-danger', method: :delete, data: { confirm: "Are you sure?" }
+  end
+
+  def link_to_delete_button(path)
+    link_to_delete(path, icon_tag('remove'))
+  end
 end

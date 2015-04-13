@@ -8,11 +8,9 @@
   <div class="row">
     <div class="col-lg-2 button-label">Actions</div>
     <div class="col-lg-6">
-      <%= link_to 'Execute', execute_project_macro_path(@project, @macro), method: :post, class: 'btn btn-primary', 'data-confirm' => "Are you sure you have no unsaved changes and would like to execute '#{@macro.name}'?" %>
+      <%= link_to 'Execute', execute_project_macro_path(@project, @macro), method: :post, class: 'btn btn-primary', data: { confirm: "Are you sure you have no unsaved changes and would like to execute '#{@macro.name}'?" } %>
       <% if current_user.is_admin? %>
-        <%= link_to project_macro_path(@project, @macro), class: 'btn btn-danger', method: :delete, data: { confirm: "Are you sure?" } do %>
-          <i class="glyphicon glyphicon-remove"></i> Delete
-        <% end %>
+        <%= link_to_delete_button([@project, @macro]) %>
       <% end %>
     </div>
   </div>
