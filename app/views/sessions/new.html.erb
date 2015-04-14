@@ -12,5 +12,10 @@
         <%= image_tag image_url('google.png') %> Login with Google
       <% end %>
     <% end %>
+    <% if Rails.application.config.samson.auth.gitlab %>
+      <%= link_to omniauth_path('gitlab'), class: "action gitlab" do %>
+        <%= image_tag image_url('gitlab.png') %> Login with Gitlab
+      <% end %>
+    <% end %>
   </div>
 </div>

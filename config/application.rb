@@ -62,6 +62,7 @@ module Samson
     config.samson.auth = ActiveSupport::OrderedOptions.new
     config.samson.auth.github = ENV["AUTH_GITHUB"] == "0" ? false : true
     config.samson.auth.google = ENV["AUTH_GOOGLE"] == "0" ? false : true
+    config.samson.auth.gitlab = ENV["AUTH_GITLAB"] == "0" ? false : true
 
     config.samson.uri = URI( ENV["DEFAULT_URL"] || 'http://localhost:3000' )
     self.default_url_options = {

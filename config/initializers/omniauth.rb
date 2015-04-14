@@ -4,6 +4,7 @@ OmniAuth.config.logger = Rails.logger
 
 require 'omniauth-github'
 require 'omniauth-google-oauth2'
+require 'omniauth-gitlab'
 
 Rails.application.config.middleware.use OmniAuth::Builder do
   provider :github,
@@ -24,5 +25,14 @@ Rails.application.config.middleware.use OmniAuth::Builder do
       :scope => "email,profile",
       :prompt => "select_account",
     }
+  provider :gitlab,
+    ENV["GITLAB_KEY"],
+    ENV["GITLAB_SECRET"], 
+    client_options: {
+       site: ENV["GITLAB_SITE"],
+       authorize_url: '/oauth/authorize',
+       token_url: '/oauth/token'
+     }      
+
 
 end
