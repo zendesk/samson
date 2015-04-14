@@ -25,6 +25,11 @@ class SessionsController < ApplicationController
     login_user(role_id: Role::VIEWER.id)
   end
 
+  def gitlab
+    return show_login_restriction unless allowed_to_login
+    login_user(role_id: Role::VIEWER.id)
+  end
+
   def failure
     flash[:error] = "Could not log you in."
     redirect_to root_path

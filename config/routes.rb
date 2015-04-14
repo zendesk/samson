@@ -75,6 +75,7 @@ Samson::Application.routes.draw do
   get '/auth/github/callback', to: 'sessions#github'
   get '/auth/google/callback', to: 'sessions#google'
   post '/auth/ldap/callback', to: 'sessions#ldap'
+  get '/auth/gitlab/callback', to: 'sessions#gitlab'
   get '/auth/failure', to: 'sessions#failure'
 
   get '/jobs/enabled', to: 'jobs#enabled', as: :enabled_jobs
