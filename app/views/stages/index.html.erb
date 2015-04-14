@@ -4,7 +4,7 @@
   <ul id="stages" data-url="<%= reorder_project_stages_path(@project) %>" data-sortable="<%= current_user.is_admin? %>">
     <% @stages.each.with_index do |stage, index| %>
       <li class="stage-bar bar list-unstyled clearfix<%= ' sortable' if current_user.is_admin? %>" data-id="stage_id_<%= stage.id %>">
-        <%= link_to stage.name, project_stage_path(@project, stage) %>
+        <%= link_to stage.name, [@project, stage] %>
         <%= stage_lock_icon stage %>
         <div class="btn-group pull-right">
           <% if current_user.is_admin? %>

@@ -1,7 +1,7 @@
 <% cache [project.to_param, stage] do %>
   <tr>
     <td>
-      <%= link_to stage.name, project_stage_path(project, stage) %>
+      <%= link_to stage.name, [project, stage] %>
       <%= stage_lock_icon stage %>
     </td>
     <% if ENV['DEPLOY_GROUP_FEATURE'] %>
@@ -9,7 +9,7 @@
     <% end %>
     <% if (deploy = stage.last_successful_deploy) %>
       <td>
-        <%= link_to deploy.short_reference, project_deploy_path(project, deploy), title: "#{deploy.reference} at #{deploy.updated_at.to_s(:db)}" %>
+        <%= link_to deploy.short_reference, [project, deploy], title: "#{deploy.reference} at #{deploy.updated_at.to_s(:db)}" %>
         by
         <%= deploy.user.name %>
       </td>

@@ -54,7 +54,7 @@ class StagesController < ApplicationController
     @stage.attributes = stage_params
 
     if @stage.save
-      redirect_to project_stage_path(@project, @stage)
+      redirect_to [@project, @stage]
     else
       flash[:error] = @stage.errors.full_messages
 
@@ -70,7 +70,7 @@ class StagesController < ApplicationController
 
   def update
     if @stage.update_attributes(stage_params)
-      redirect_to project_stage_path(@project, @stage)
+      redirect_to [@project, @stage]
     else
       flash[:error] = @stage.errors.full_messages
 
@@ -82,7 +82,7 @@ class StagesController < ApplicationController
 
   def destroy
     @stage.soft_delete!
-    redirect_to project_path(@project)
+    redirect_to @project
   end
 
   def reorder

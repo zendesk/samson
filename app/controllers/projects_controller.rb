@@ -33,7 +33,7 @@ class ProjectsController < ApplicationController
       if ENV['PROJECT_CREATED_NOTIFY_ADDRESS']
         ProjectMailer.created_email(@current_user,@project).deliver_later
       end
-      redirect_to project_path(@project)
+      redirect_to @project
       Rails.logger.info("#{@current_user.name_and_email} created a new project #{@project.to_param}")
     else
       flash[:error] = @project.errors.full_messages
@@ -50,7 +50,7 @@ class ProjectsController < ApplicationController
 
   def update
     if project.update_attributes(project_params)
-      redirect_to project_path(project)
+      redirect_to project
     else
       flash[:error] = project.errors.full_messages
       render :edit

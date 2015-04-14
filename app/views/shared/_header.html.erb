@@ -16,7 +16,7 @@
             <li class="divider"></li>
             <% Project.ordered_for_user(current_user).each do |project| %>
               <li filter-by="projectSearchQuery">
-                <%= link_to project_path(project) do %>
+                <%= link_to project do %>
                   <span class="glyphicon <%= 'glyphicon-star' if current_user.starred_project?(project) %>">
                     <%= '&nbsp;'.html_safe unless current_user.starred_project?(project) %>
                   </span>

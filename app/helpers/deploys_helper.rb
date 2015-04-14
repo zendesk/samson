@@ -86,6 +86,10 @@ module DeploysHelper
     end
   end
 
+  def stop_button(classes = 'btn btn-danger btn-xl')
+    link_to "Stop", [@project, @deploy], method: :delete, class: classes
+  end
+
   private
 
     def deploy_status_panel_common(deploy, enabled, hash = { "cancelled" => "danger" } )

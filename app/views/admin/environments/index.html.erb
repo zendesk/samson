@@ -21,7 +21,7 @@
             <td>
               <%= link_to "Edit", edit_admin_environment_path(env) %>
               |
-              <%= link_to_delete(admin_environment_path(env)) %>
+              <%= link_to_delete([:admin, env]) %>
             </td>
           </tr>
         <% end %>
