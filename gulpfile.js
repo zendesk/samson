@@ -1,22 +1,7 @@
 var gulp = require('gulp');
 
 // include plug-ins
-var karma = require('gulp-karma');
 var jshint = require('gulp-jshint');
-
-var testFiles = [
-  'vendor/assets/javascripts/angular.min.js',
-  'vendor/assets/javascripts/angular-mocks.js',
-  'vendor/assets/javascripts/underscore.min.js',
-  'vendor/assets/javascripts/vis.js',
-  'test/angular/test_helper.js',
-  'app/assets/javascripts/app.js',
-  'app/assets/javascripts/controllers/**/*.js',
-  'app/assets/javascripts/directives/**/*.js',
-  'app/assets/javascripts/services/**/*.js',
-  'app/assets/javascripts/timeline.js',
-  'test/angular/**/*_spec.js'
-];
 
 gulp.task('jshint', function() {
   return gulp.src('./app/assets/javascripts/**/*.js')
@@ -25,14 +10,5 @@ gulp.task('jshint', function() {
     .pipe(jshint.reporter('fail'));
 });
 
-gulp.task('test', function() {
-  // Be sure to return the stream
-  return gulp.src(testFiles)
-    .pipe(karma({
-      configFile: 'karma.conf.js',
-      action: 'run'
-    }));
-});
-
-gulp.task('default', ['jshint', 'test'], function() {
+gulp.task('default', ['jshint'], function() {
 });
