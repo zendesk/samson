@@ -103,6 +103,18 @@ class Project < ActiveRecord::Base
     webhooks.for_source(service_type, service_name).for_branch(branch).map(&:stage)
   end
 
+  def repository_homepage_gitlab
+    "//#{ENV['GITLAB_URL']}/#{github_repo}"
+  end
+
+  def github?
+    repository_url.include?('github.com')
+  end
+
+  def gitlab?
+    repository_url.include?(ENV["GITLAB_URL"])
+  end
+
   def release_prior_to(release)
     releases.where('number < ?', release.number).order(:number).last
   end
