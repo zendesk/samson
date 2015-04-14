@@ -59,6 +59,7 @@ group :no_preload do
   gem 'omniauth-oauth2', '~> 1.1'
   gem 'omniauth-github', '= 1.1.1'
   gem 'omniauth-google-oauth2', '~> 0.2.4'
+  gem 'omniauth-gitlab', '~> 1.0.0'
   gem 'octokit', '~> 3.0'
   gem 'faraday-http-cache', '~> 0.4'
   gem 'warden', '~> 1.2'
