@@ -72,6 +72,18 @@ class Project < ActiveRecord::Base
     "//#{Rails.application.config.samson.github.web_url}/#{github_repo}"
   end
 
+  def repository_homepage_gitlab
+    "//#{ENV['GITLAB_URL']}/#{github_repo}"
+  end
+
+  def github?
+    repository_url.include?('github.com')
+  end
+
+  def gitlab?
+    repository_url.include?(ENV["GITLAB_URL"])
+  end
+
   def webhook_stages_for_branch(branch)
     webhooks.for_branch(branch).map(&:stage)
   end
