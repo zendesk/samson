@@ -1,0 +1,33 @@
+module SamsonJenkins
+  class Engine < Rails::Engine
+  end
+end
+
+Samson::Hooks.view :stage_form, "samson_jenkins/fields"
+Samson::Hooks.view :deploys_header, "samson_jenkins/deploys_header"
+
+Samson::Hooks.callback :stage_permitted_params do
+  :jenkins_job_names
+end
+
+Samson::Hooks.callback :deploy_defined do
+  Deploy.class_eval do
+    has_many :jenkins_job
+  end
+end
+
+Samson::Hooks.callback :after_deploy do |stage, deploy|
+  if deploy.status == 'succeeded' && stage.jenkins_job_names?
+    stage.jenkins_job_names.to_s.split(/, ?/).map do |job_name|
+      job_id = Jenkins.new(job_name, deploy).build
+      attributes = {name: job_name, deploy_id: deploy.id}
+      if job_id.is_a?(Fixnum)
+        attributes[:jenkins_job_id] = job_id
+      else
+        attributes[:jenkins_job_status] = "CANCELED"
+        attributes[:jenkins_job_error] = job_id
+      end
+      JenkinsJob.create!(attributes)
+    end
+  end
+end

@@ -186,10 +186,6 @@ class Stage < ActiveRecord::Base
     datadog_monitor_ids.to_s.split(/, ?/).map { |id| DatadogMonitor.new(id) }
   end
 
-  def jenkins_jobs
-    jenkins_job_names.to_s.split(/, ?/).map { |job_name| Jenkins.new(job_name) }
-  end
-
   private
 
   def build_new_project_command

@@ -54,3 +54,6 @@ ENV['SECRET_TOKEN'] = 'd6054cf90db212c8fbc070c896c30398e3275532c5602bdf00cb153b8
 ENV['DEFAULT_URL'] = 'http://www.test-url.com'
 ENV['DATADOG_API_KEY'] = 'dapikey'
 ENV['DATADOG_APPLICATION_KEY'] = 'dappkey'
+ENV['JENKINS_URL']='http://www.test-url.com'
+ENV['JENKINS_USERNAME']='user@test.com'
+ENV['JENKINS_API_KEY']='japikey'

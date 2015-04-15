@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20150318215604) do
+ActiveRecord::Schema.define(version: 20150331084621) do
 
   create_table "commands", force: true do |t|
     t.text     "command",    limit: 16777215
@@ -71,6 +71,19 @@ ActiveRecord::Schema.define(version: 20150318215604) do
     t.datetime "created_at"
     t.datetime "updated_at"
   end
+
+  create_table "jenkins_jobs", force: :cascade do |t|
+    t.integer  "jenkins_job_id",     limit: 4
+    t.string   "name",               limit: 255, null: false
+    t.string   "jenkins_job_status", limit: 255
+    t.string   "jenkins_job_error",  limit: 255
+    t.integer  "deploy_id",          limit: 4
+    t.datetime "created_at",                     null: false
+    t.datetime "updated_at",                     null: false
+  end
+
+  add_index "jenkins_jobs", ["deploy_id"], name: "index_jenkins_jobs_on_deploy_id", using: :btree
+  add_index "jenkins_jobs", ["jenkins_job_id"], name: "index_jenkins_jobs_on_jenkins_job_id", using: :btree
 
   create_table "jobs", force: true do |t|
     t.text     "command",                                           null: false

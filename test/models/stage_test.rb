@@ -415,15 +415,4 @@ describe Stage do
     end
   end
 
-  describe '#jenkins_jobs' do
-    let(:stage) { stages(:test_production) }
-    it "is empty by default" do
-      stage.jenkins_jobs.must_equal []
-    end
-
-    it "builds multiple jobs" do
-      stage.jenkins_job_names = "name1, name2, name3"
-      stage.jenkins_jobs .map(&:job_name).must_equal ['name1', 'name2', 'name3']
-    end
-  end
 end

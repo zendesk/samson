@@ -19,3 +19,4 @@
 </h1>
 
 <%= deploy_status_panel @deploy %>
+<%= Samson::Hooks.render_views(:deploys_header, self) %>

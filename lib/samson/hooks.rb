@@ -6,7 +6,9 @@ module Samson
       :stage_clone,
       :stage_permitted_params,
       :before_deploy,
-      :after_deploy
+      :after_deploy,
+      :deploys_header,
+      :deploy_defined
     ]
 
     @@hooks = {}
