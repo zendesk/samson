@@ -6,6 +6,6 @@
       <%= link_to "Edit", edit_project_macro_path(@project, macro), class: "btn btn-default" %>
     <% end %>
 
-    <%= link_to 'Execute', execute_project_macro_path(@project, macro), method: :post, class: 'btn btn-primary', 'data-confirm' => "Are you sure you would like to execute '#{macro.name}'?" %>
+    <%= link_to 'Execute', execute_project_macro_path(@project, macro), method: :post, class: 'btn btn-primary', data: { confirm: "Are you sure you would like to execute '#{macro.name}'?" } %>
   </div>
 </li>

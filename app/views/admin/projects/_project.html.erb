@@ -1,9 +1,9 @@
 <tr>
   <td><%= project.id %></td>
-  <td><%= link_to project.name, project_path(project) %></td>
+  <td><%= link_to project.name, project %></td>
   <td>
     <%= link_to "Edit", edit_project_path(project) %>
     |
-    <%= link_to "Delete", project_path(project), method: :delete, data: { confirm: "Are you sure?" } %>
+    <%= link_to_delete project %>
   </td>
 </tr>

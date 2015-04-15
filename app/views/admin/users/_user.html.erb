@@ -8,6 +8,6 @@
     </div>
   </td>
   <td>
-    <%= link_to "Delete", admin_user_path(user.id), method: :delete, data: { confirm: "Delete ##{user.id} #{user.name} #{user.email} ?" }, class: "btn-sm btn-danger" if can_modify_roles? %>
+    <%= link_to "Delete", [:admin, user], method: :delete, data: { confirm: "Delete ##{user.id} #{user.name} #{user.email} ?" }, class: "btn-sm btn-danger" if can_modify_roles? %>
   </td>
 </tr>

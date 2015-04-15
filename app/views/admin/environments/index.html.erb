@@ -21,7 +21,7 @@
             <td>
               <%= link_to "Edit", edit_admin_environment_path(env) %>
               |
-              <%= link_to "Delete", admin_environment_path(env), method: :delete, data: { confirm: "Are you sure?" } %>
+              <%= link_to_delete([:admin, env]) %>
             </td>
           </tr>
         <% end %>

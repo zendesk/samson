@@ -1,7 +1,7 @@
 <tr>
-  <td><%= link_to deploy.project.name, project_path(deploy.project) %></td>
-  <td><%= link_to "#{deploy.summary}", project_deploy_path(deploy.project, deploy) %></td>
+  <td><%= link_to deploy.project.name, deploy.project %></td>
+  <td><%= link_to "#{deploy.summary}", [deploy.project, deploy] %></td>
   <td><%= deploy_time(deploy) %></td>
   <td><span class="label <%= deploy_status(deploy.status, 'label') %>"><%= deploy.status.titleize %></span></td>
-  <td><%= link_to "View", project_deploy_path(deploy.project, deploy), class: "btn btn-default btn-xs" %></td>
+  <td><%= link_to "View", [deploy.project, deploy], class: "btn btn-default btn-xs" %></td>
 </tr>
