@@ -7,12 +7,12 @@ _<%= pluralize changeset.commits.count, "commit" %> by <%= changeset.author_name
 *Files changed*
 
 <% changeset.files.each do |file| %>
->>> <%= file.status[0].upcase %></strong> <%= file.filename %>
+> <%= file.status[0].upcase %> <%= file.filename %>
 <% end %>
 
 *Commits*
 
 <% changeset.commits.each do |commit| %>
->>> <%= link_to commit.summary, commit.url %> (<%= commit.author_name %>)
+> <<%= commit.url + '|' + commit.summary %>> (<%= commit.author_name %>)
 <% end %>
 <% end %>
