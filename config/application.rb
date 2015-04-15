@@ -59,6 +59,9 @@ module Samson
     config.samson.github.status_url = ENV["GITHUB_STATUS_URL"].presence || 'status.github.com'
     config.samson.references_cache_ttl = ENV['REFERENCES_CACHE_TTL'].presence || 10.minutes
 
+    config.samson.gitlab = ActiveSupport::OrderedOptions.new
+    config.samson.gitlab.web_url = ENV["GITLAB_URL"].presence || 'gitlab.com'
+
     config.samson.auth = ActiveSupport::OrderedOptions.new
     config.samson.auth.github = ENV["AUTH_GITHUB"] == "0" ? false : true
     config.samson.auth.google = ENV["AUTH_GOOGLE"] == "0" ? false : true
