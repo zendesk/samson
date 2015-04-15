@@ -21,6 +21,5 @@ before_script:
   - npm install
 script:
   - npm run-script jshint
-  - npm test
   - bundle exec rake test:js
   - bundle exec rake

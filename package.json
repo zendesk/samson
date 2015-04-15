@@ -8,13 +8,12 @@
   },
   "devDependencies": {
     "karma": "~0.12",
-    "gulp": "~3.8",
-    "gulp-jshint": "~1.10",
     "karma-jasmine": "~0.2.0",
-    "karma-phantomjs-launcher": "~0.1.4"
+    "karma-phantomjs-launcher": "~0.1.4",
+    "jshint": "~2.7.0"
   },
   "scripts": {
-    "test": "./node_modules/.bin/gulp test",
-    "jshint": "./node_modules/.bin/gulp jshint"
+    "test": "bundle exec rake test:js",
+    "jshint": "./node_modules/.bin/jshint app/assets/javascripts/*"
   }
 }
