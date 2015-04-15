@@ -86,8 +86,8 @@ module DeploysHelper
     end
   end
 
-  def stop_button(classes = 'btn btn-danger btn-xl')
-    link_to "Stop", [@project, @deploy], method: :delete, class: classes
+  def stop_button(options = {})
+    link_to "Stop", [@project, @deploy], options.merge({ method: :delete, class: options.fetch(:class, 'btn btn-danger btn-xl') })
   end
 
   private
