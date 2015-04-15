@@ -66,6 +66,9 @@ module Samson
     config.samson.ldap.bind_dn = ENV["LDAP_BINDDN"].presence
     config.samson.ldap.password = ENV["LDAP_PASSWORD"].presence
 
+    config.samson.gitlab = ActiveSupport::OrderedOptions.new
+    config.samson.gitlab.web_url = ENV["GITLAB_URL"].presence || 'gitlab.com'
+
     config.samson.auth = ActiveSupport::OrderedOptions.new
     config.samson.auth.github = ENV["AUTH_GITHUB"] != "0"
     config.samson.auth.google = ENV["AUTH_GOOGLE"] != "0"
