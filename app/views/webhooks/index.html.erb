@@ -9,6 +9,7 @@
     <dt>Tddium:</dt><dd><%= link_to_url integrations_tddium_deploy_url(@project.token) %></dd>
     <dt>Travis:</dt><dd><%= link_to_url integrations_travis_deploy_url(@project.token) %></dd>
     <dt>Jenkins:</dt><dd><%= link_to_url integrations_jenkins_deploy_url(@project.token) %></dd>
+    <dt>Buildkite:</dt><dd><%= link_to_url integrations_buildkite_deploy_url(@project.token) %></dd>
     <dt>Github Push:</dt><dd><%= link_to_url integrations_github_deploy_url(@project.token) %></dd>
   </dl>
 
@@ -16,7 +17,7 @@
     <h2>Webhooks mappings</h2>
     <ul>
       <% @webhooks.each do |webhook| %>
-        <li><strong><%= webhook.branch %></strong> branch &rarr; <strong><%= webhook.stage.name %></strong> stage (<%= link_to "remove", project_webhook_path(@project, webhook), method: :delete %>)</li>
+        <li><strong><%= webhook.branch %></strong> branch &rarr; <strong><%= webhook.stage.name %></strong> stage (<%= link_to "remove", [@project, webhook], method: :delete %>)</li>
       <% end %>
     </ul>
   <% end %>

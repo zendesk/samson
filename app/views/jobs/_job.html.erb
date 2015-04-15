@@ -2,7 +2,7 @@
   <tr>
     <td><span class="mouseover" data-time="<%= datetime_to_js_ms(job.created_at) %>"><%= job.created_at.rfc822 %></span></td>
     <td>
-      <%= link_to "#{job.user.name} executed:", project_job_path(@project, job) %>
+      <%= link_to "#{job.user.name} executed:", [@project, job] %>
       <pre class="pre-command"><%= job.command %></pre>
     </td>
     <td><span class="label <%= deploy_status(job.status, 'label') %>"><%= job.status.titleize %></span></td>

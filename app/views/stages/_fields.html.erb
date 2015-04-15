@@ -26,20 +26,50 @@
   <% if ENV['DEPLOY_GROUP_FEATURE'] %>
     <div class="form-group">
       <%= form.label :name, 'Deploy Groups', class: 'col-lg-2 control-label' %>
-      <div class="col-lg-4">
-        <%= form.collection_select(
-          :deploy_group_ids, DeployGroup.order(:environment_id, :name).all, :id, :long_name,
-          {
-            selected: (@stage.deploy_group_ids if @stage && @stage.deploy_groups),
-            include_blank: false,
-            include_hidden: false
-          },
-          {
-            multiple: 'true',
-            class: 'form-control',
-            include_hidden: true
-          }
-        ) %>
+      <div class="col-lg-5">
+        <% if @environments.count > 0 %>
+          <%= hidden_field_tag "stage[deploy_group_ids][]" %>
+          <table class="table table-condensed text-left deploy-groups">
+            <thead>
+              <tr>
+                <% @environments.each do |environment| %>
+                  <th>
+                    <%= label_tag do %>
+                      <%= check_box_tag('', nil, false, { id: "#{environment.name}_checkbox", class: "env-toggle-all", data: {target: ".#{environment.name}_checkbox" } }) %>
+                      <%= environment.name %>
+                    <% end %>
+                  </th>
+                <% end %>
+              </tr>
+            </thead>
+            <tbody>
+              <% @environments.map {|e| e.deploy_groups.count }.max.to_i.times do |index| %>
+                <tr>
+                  <% @environments.each do |environment| %>
+                    <% if environment.deploy_groups[index] %>
+                      <td>
+                        <%= label_tag do %>
+                          <%= check_box_tag(
+                            "stage[deploy_group_ids][]",
+                            environment.deploy_groups[index].id,
+                            (@stage && @stage.deploy_group_ids.include?(environment.deploy_groups[index].id)),
+                            class: "#{environment.name}_checkbox"
+                            )
+                          %>
+                          <%= environment.deploy_groups[index].name %>
+                        <% end %>
+                      </td>
+                    <% else %>
+                      <td></td>
+                    <% end %>
+                  <% end %>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        <% else %>
+          <p>-- No Deploy Groups configured --</p>
+        <% end %>
       </div>
     </div>
   <% else %>

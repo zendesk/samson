@@ -49,6 +49,9 @@ group :assets do
   gem 'rickshaw_rails'
   gem 'angularjs-rails'
   gem 'momentjs-rails'
+  gem 'ngannotate-rails'
+  gem 'angular-rails-templates'
+  gem 'underscore-rails'
 end
 
 group :no_preload do

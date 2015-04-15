@@ -6,6 +6,7 @@
 @import "jquery-ui";
 @import "bootstrap3-editable/bootstrap-editable";
 @import "rickshaw";
+@import "vis";
 @import "admin/*";
 @import "*";
 
@@ -41,4 +42,14 @@
 
 a.no-hover:hover {
   text-decoration: none;
+}
+
+.dropdown-menu > li > a.padding-sm {
+  padding: 3px 10px;
+}
+
+.dropdown-menu > li.selected > a {
+  text-decoration: none;
+  color: #262626;
+  background-color: #f5f5f5;
 }

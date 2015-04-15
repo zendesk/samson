@@ -1,6 +1,6 @@
 <h1><%= @environment.name %></h1>
 
-<section>
+<section ng-controller="DashboardsCtrl">
   <p style="float: right;">
     <a class="toggle" data-target="tr.no-deploys" href="#">Toggle Projects without Deploys</a>
   </p>
@@ -22,10 +22,7 @@
     </tr>
     </thead>
     <tbody>
-    <% @deploys.each do |project, deploy_group_versions| %>
-      <%= render partial: 'project', object: project,
-                 locals: { deploy_group_versions: deploy_group_versions } %>
-    <% end %>
+      <tr ng-repeat="project in projects" class="{{ project.css.tr_class }}" style="{{ project.css.style }}" project_deploy_groups/>
     </tbody>
   </table>
 </section>

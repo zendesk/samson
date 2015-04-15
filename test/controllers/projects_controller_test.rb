@@ -43,6 +43,23 @@ describe ProjectsController do
 
         assert_equal [projects(:test)], assigns(:projects)
       end
+
+      it "responds to json requests" do
+        get :index, format: 'json'
+        result = JSON.parse(response.body)
+        result['projects'].map(&:symbolize_keys!).map { |obj| obj[:name] }.must_equal ['Project']
+      end
+
+      it 'renders starred projects first for json' do
+        starred_project1 = Project.create!(name: 'Z', repository_url: 'Z')
+        starred_project2 = Project.create!(name: 'A', repository_url: 'A')
+        users(:admin).stars.create!(project: starred_project1)
+        users(:admin).stars.create!(project: starred_project2)
+
+        get :index, format: 'json'
+        result = JSON.parse(response.body)
+        result['projects'].map { |obj| obj['name'] }.must_equal ['A', 'Z', 'Project']
+      end
     end
   end
 
@@ -57,6 +74,12 @@ describe ProjectsController do
 
     as_a_admin do
       it "renders" do
+        get :new
+        assert_template :new
+      end
+
+      it "renders with no environments" do
+        Environment.destroy_all
         get :new
         assert_template :new
       end
@@ -231,6 +254,32 @@ describe ProjectsController do
         assert_raises ActiveRecord::RecordNotFound do
           get :show, id: project.to_param
         end
+      end
+    end
+  end
+
+  describe 'a GET to #deploy_group_versions' do
+    let(:deploy) { deploys(:succeeded_production_test) }
+
+    as_a_viewer do
+      it 'renders' do
+        get :deploy_group_versions, id: project.to_param, format: 'json'
+        result = JSON.parse(response.body)
+        result.keys.sort.must_equal DeployGroup.all.ids.map(&:to_s).sort
+      end
+
+      it 'renders a custom timestamp' do
+        time = deploy.updated_at - 1.day
+        old = Deploy.create!(
+          stage: stages(:test_production),
+          job: deploy.job,
+          reference: "new",
+          updated_at: time - 1.day
+        )
+        get :deploy_group_versions, id: project.to_param, before: time.to_s
+        deploy_ids = JSON.parse(response.body).map { |_id, deploy| deploy['id'] }
+        deploy_ids.include?(deploy.id).must_equal false
+        deploy_ids.include?(old.id).must_equal true
       end
     end
   end

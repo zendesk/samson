@@ -19,8 +19,8 @@ function($scope, $http, $timeout) {
       roleId = $event.target.value;
 
       $http.put("/admin/users/" + userId, { user: { role_id: roleId } })
-        .success(function() { showStatus(SUCCESS) })
-        .error(function() { showStatus(FAILURE) })
+        .success(function() { showStatus(SUCCESS); })
+        .error(function() { showStatus(FAILURE); });
     }
   };
 }]);

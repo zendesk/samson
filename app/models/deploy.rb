@@ -118,6 +118,10 @@ class Deploy < ActiveRecord::Base
     joins(:job).where(jobs: { status: 'pending'} ).where("jobs.created_at < ?", threshold)
   end
 
+  def url
+    Rails.application.routes.url_helpers.project_deploy_path(project, self)
+  end
+
   private
 
   def summary_action

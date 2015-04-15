@@ -5,7 +5,7 @@ Warden::Manager.serialize_into_session do |user|
 end
 
 Warden::Manager.serialize_from_session do |id|
-  User.where(id: id).first
+  User.where(id: id).includes(:starred_projects).first
 end
 
 require 'warden/strategies/basic_strategy'

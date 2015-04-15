@@ -41,6 +41,10 @@ Samson::Application.routes.draw do
     resources :webhooks, only: [:index, :create, :destroy]
     resource :commit_statuses, only: [:show]
     resources :references, only: [:index]
+
+    member do
+      get :deploy_group_versions
+    end
   end
 
   resources :streams, only: [:show]
@@ -67,7 +71,11 @@ Samson::Application.routes.draw do
   get '/logout', to: 'sessions#destroy'
 
   resources :stars, only: [:create, :destroy]
-  resources :dashboards, only: [:show]
+  resources :dashboards, only: [:show] do
+    member do
+      get :deploy_groups
+    end
+  end
 
   namespace :admin do
     resources :users, only: [:index, :update, :destroy]
@@ -82,6 +90,7 @@ Samson::Application.routes.draw do
     post "/semaphore/:token" => "semaphore#create", as: :semaphore_deploy
     post "/tddium/:token" => "tddium#create", as: :tddium_deploy
     post "/jenkins/:token" => "jenkins#create", as: :jenkins_deploy
+    post "/buildkite/:token" => "buildkite#create", as: :buildkite_deploy
     post "/github/:token" => "github#create", as: :github_deploy
   end
 

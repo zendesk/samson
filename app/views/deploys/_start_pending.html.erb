@@ -4,7 +4,7 @@
     <div class="pending-start">
       <%= link_to "Start", pending_start_project_deploy_path(@project, @deploy), method: :post, class: "btn btn-primary btn-xl" %>
       or
-      <%= link_to "Stop", project_deploy_path(@project, @deploy), method: :delete, class: "btn btn-danger btn-xl" %>
+      <%= stop_button %>
     </div>
   <% else %>
     <p>This deploy does not hit production, and needs to be started. (Someone with deploy rights or greater.)</p>

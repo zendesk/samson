@@ -105,6 +105,7 @@ class JobExecution
       "export DEPLOYER_EMAIL=#{@job.user.email.shellescape}",
       "export DEPLOYER_NAME=#{@job.user.name.shellescape}",
       "export REVISION=#{@reference.shellescape}",
+      "export TAG=#{(@job.tag || @job.commit).to_s.shellescape}",
       "export CACHE_DIR=#{artifact_cache_dir}",
       "cd #{dir}",
       *@job.commands
@@ -127,7 +128,8 @@ class JobExecution
     locked = lock_project do
       return false unless @repository.setup!(@executor, dir, @reference)
       commit = @repository.commit_from_ref(@reference)
-      @job.update_commit!(commit)
+      tag = @repository.tag_from_ref(@reference)
+      @job.update_git_references!(commit: commit, tag: tag)
     end
 
     if locked

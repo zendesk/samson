@@ -40,7 +40,7 @@ class MacrosController < ApplicationController
 
     if job.persisted?
       JobExecution.start_job(job.commit, job)
-      redirect_to project_job_path(@project, job)
+      redirect_to [@project, job]
     else
       redirect_to project_macros_path(@project)
     end

@@ -15,7 +15,7 @@ class Warden::Strategies::BasicStrategy < Warden::Strategies::Base
     # This + store? change stops the Set-Cookie header from being sent
     request.session_options[:skip] = true
 
-    if (user = User.where(email: email).where(token: token).first)
+    if (user = User.where(email: email).where(token: token).includes(:starred_projects).first)
       success!(user)
     else
       halt!

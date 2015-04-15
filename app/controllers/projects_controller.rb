@@ -1,7 +1,10 @@
 class ProjectsController < ApplicationController
-  before_action :authorize_admin!, except: [:show, :index]
+  include StagePermittedParams
+
+  before_action :authorize_admin!, except: [:show, :index, :deploy_group_versions]
   before_action :redirect_viewers!, only: [:show]
-  before_action :project, only: [:show, :edit, :update]
+  before_action :project, only: [:show, :edit, :update, :deploy_group_versions]
+  before_action :get_environments, only: [:new, :create]
 
   helper_method :project
 
@@ -12,7 +15,7 @@ class ProjectsController < ApplicationController
       end
 
       format.json do
-        render json: Project.all
+        render json: Project.ordered_for_user(current_user).all
       end
     end
   end
@@ -30,7 +33,7 @@ class ProjectsController < ApplicationController
       if ENV['PROJECT_CREATED_NOTIFY_ADDRESS']
         ProjectMailer.created_email(@current_user,@project).deliver_later
       end
-      redirect_to project_path(@project)
+      redirect_to @project
       Rails.logger.info("#{@current_user.name_and_email} created a new project #{@project.to_param}")
     else
       flash[:error] = @project.errors.full_messages
@@ -47,7 +50,7 @@ class ProjectsController < ApplicationController
 
   def update
     if project.update_attributes(project_params)
-      redirect_to project_path(project)
+      redirect_to project
     else
       flash[:error] = project.errors.full_messages
       render :edit
@@ -61,6 +64,14 @@ class ProjectsController < ApplicationController
     redirect_to admin_projects_path
   end
 
+  def deploy_group_versions
+    before = params[:before] ? Time.parse(params[:before]) : Time.now
+    deploy_group_versions = project.last_deploy_by_group(before).each_with_object({}) do |(id, deploy), hash|
+      hash[id] = deploy.as_json(methods: :url)
+    end
+    render json: deploy_group_versions
+  end
+
   protected
 
   def project_params
@@ -71,16 +82,7 @@ class ProjectsController < ApplicationController
       :owner,
       :permalink,
       :release_branch,
-      stages_attributes: [
-        :name, :confirm, :command,
-        :production,
-        :deploy_on_release,
-        :notify_email_address,
-        :datadog_tags,
-        :update_github_pull_requests,
-        :use_github_deployment_api,
-        command_ids: [],
-      ] + Samson::Hooks.fire(:stage_permitted_params)
+      stages_attributes: stage_permitted_params
     )
   end
 
@@ -100,5 +102,9 @@ class ProjectsController < ApplicationController
     else
       Project
     end
+  end
+
+  def get_environments
+    @environments = Environment.all
   end
 end

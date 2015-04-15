@@ -6,7 +6,7 @@ describe JobExecution do
   let(:repo_dir) { File.join(GitRepository.cached_repos_dir, project.repository_directory) }
   let(:project) { Project.create!(name: 'duck', repository_url: repository_url) }
   let(:stage) { Stage.create!(name: 'stage4', project: project) }
-  let(:user) { User.create! }
+  let(:user) { User.create!(name: 'test') }
   let(:job) { project.jobs.create!(command: 'cat foo', user: user, project: project) }
   let(:execution) { JobExecution.new('master', job) }
   let(:deploy) { Deploy.create!(stage: stage, job: job, reference: 'masterCADF') }
@@ -20,6 +20,7 @@ describe JobExecution do
       echo monkey > foo
       git add foo
       git commit -m "initial commit"
+      git tag v1
     SHELL
     user.name = 'John Doe'
     user.email = 'jdoe@test.com'
@@ -84,6 +85,7 @@ describe JobExecution do
     assert_equal 'mantis shrimp', last_line_of_output
     assert job.commit.present?, "Expected #{job} to record the commit"
     assert_includes commit, job.commit
+    assert_includes 'annotated_tag', job.tag
   end
 
   it "updates the branch to match what's in the remote repository" do
@@ -110,6 +112,17 @@ describe JobExecution do
     execute_job 'safari'
 
     assert_equal 'zebra', last_line_of_output
+  end
+
+  it "exports deploy information as environment variables" do
+    job.update(command: 'env')
+    execute_job
+    lines = job.output.split "\n"
+    lines.must_include "DEPLOYER=jdoe@test.com"
+    lines.must_include "DEPLOYER_EMAIL=jdoe@test.com"
+    lines.must_include "DEPLOYER_NAME=John Doe"
+    lines.must_include "REVISION=master"
+    lines.must_include "TAG=v1"
   end
 
   it 'maintains a cache of build artifacts between runs' do

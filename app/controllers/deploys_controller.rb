@@ -43,7 +43,7 @@ class DeploysController < ApplicationController
     respond_to do |format|
       format.html do
         if @deploy.persisted?
-          redirect_to project_deploy_path(@project, @deploy)
+          redirect_to [@project, @deploy]
         else
           render :new
         end
@@ -65,7 +65,7 @@ class DeploysController < ApplicationController
       @deploy.confirm_buddy!(current_user)
     end
 
-    redirect_to project_deploy_path(@project, @deploy)
+    redirect_to [@project, @deploy]
   end
 
   def pending_start
@@ -73,7 +73,7 @@ class DeploysController < ApplicationController
       @deploy.pending_start!
     end
 
-    redirect_to project_deploy_path(@project, @deploy)
+    redirect_to [@project, @deploy]
   end
 
   def show
@@ -101,7 +101,7 @@ class DeploysController < ApplicationController
     else
       flash[:error] = "You do not have privileges to stop this deploy."
     end
-    redirect_to project_deploy_path(@project, @deploy)
+    redirect_to [@project, @deploy]
   end
 
   protected

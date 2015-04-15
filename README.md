@@ -158,6 +158,9 @@ Set up your webhooks and the deployment process can be automated.
     * Samson will match url to see if the webhook call is for the correct project
 * Jenkins
     * Setup using the [Notification Plugin](https://wiki.jenkins-ci.org/display/JENKINS/Notification+Plugin)
+* Buildkite
+    * You can add a webhook per project under settings/notifications
+    * You can add any value to the 'Token' field, as it is not used
 * Github
     * You may add a webhook for push events
 
@@ -172,6 +175,7 @@ from CI.
 * Datadog
 * New Relic
 * Flowdock
+* Slack
 * Github
 
 #### Continuous Delivery & Releases

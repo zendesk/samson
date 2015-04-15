@@ -1,0 +1,22 @@
+<fieldset>
+  <legend>Slack</legend>
+  <p>Add the name of the slack channel which should be notified of deploys.</p>
+
+  <% stage = form.object %>
+  <% stage.slack_channels.build if stage.slack_channels.last.try(:name).blank? %>
+
+  <%= form.fields_for :slack_channels do |slack_fields| %>
+    <div class="form-group">
+      <div class="col-lg-2 col-lg-offset-2">
+        <%= slack_fields.text_field :name, class: "form-control", placeholder: "Channel name" %>
+      </div>
+
+      <% if slack_fields.object.persisted? %>
+        <div class="col-lg-1 checkbox">
+          <%= slack_fields.check_box :_destroy if slack_fields.object.persisted? %>
+          <%= slack_fields.label :_destroy, "Delete" %>
+        </div>
+      <% end %>
+    </div>
+  <% end %>
+</fieldset>

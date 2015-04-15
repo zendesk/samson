@@ -20,7 +20,7 @@
             <td>
               <%= link_to "Edit", edit_admin_deploy_group_path(deploy_group) %>
               |
-              <%= link_to "Delete", admin_deploy_group_path(deploy_group), method: :delete, data: { confirm: "Are you sure?" } %>
+              <%= link_to_delete([:admin, deploy_group]) %>
             </td>
           </tr>
         <% end %>
