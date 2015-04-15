@@ -25,6 +25,11 @@ module Samson
       def require
         super @path
       end
+
+      def add_migrations
+        migrations = File.join(@folder, "db/migrate")
+        Rails.application.config.paths["db/migrate"] << migrations if Dir.exist?(migrations)
+      end
     end
 
     class << self
@@ -76,4 +81,5 @@ end
 Dir["plugins/*/lib"].each { |f| $LOAD_PATH << f } # treat included plugins like gems
 
 Samson::Hooks.plugins.
-  each(&:require)
+  each(&:require).
+  each(&:add_migrations)
