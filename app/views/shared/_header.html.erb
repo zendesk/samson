@@ -26,7 +26,7 @@
             <% end %>
           </ul>
         </li>
-        <% if ENV['DEPLOY_GROUP_FEATURE'] %>
+        <% if DeployGroup.enabled? %>
           <li class="dropdown <%= 'active' if request.path.starts_with?('/dashboards') %>">
             <a href="#" class="dropdown-toggle" data-toggle="dropdown">Environments <b class="caret"></b></a>
             <ul class="dropdown-menu">
@@ -55,7 +55,7 @@
         <li class="dropdown <%= 'active' if request.path.starts_with?('/admin') %>">
           <a href="#" class="dropdown-toggle" data-toggle="dropdown">Admin <b class="caret"></b></a>
           <ul class="dropdown-menu">
-            <% if ENV['DEPLOY_GROUP_FEATURE'] %>
+            <% if DeployGroup.enabled? %>
               <li><%= link_to "Environments", admin_environments_path %></li>
               <li><%= link_to "Deploy Groups", admin_deploy_groups_path %></li>
             <% end %>

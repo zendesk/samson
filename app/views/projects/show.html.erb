@@ -8,7 +8,7 @@
       <thead>
         <tr>
           <th>Stage Name</th>
-          <% if ENV['DEPLOY_GROUP_FEATURE'] %>
+          <% if DeployGroup.enabled? %>
             <th>Deploy Groups</th>
           <% end %>
           <th>Last Deploy</th>
