@@ -134,6 +134,10 @@ class ActionController::TestCase
     end
   end
 
+  def unauthorized(*args)
+    self.class.unauthorized(*args)
+  end
+
   setup do
     middleware = Rails.application.config.middleware.detect {|m| m.name == 'Warden::Manager'}
     manager = Warden::Manager.new(nil, &middleware.block)

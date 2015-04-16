@@ -1,20 +1,19 @@
 class Admin::DeployGroupsController < ApplicationController
-  before_action :authorize_admin!
-  before_action :authorize_super_admin!, only: [ :create, :new, :update, :destroy ]
-  before_action :deploy_group, only: [:edit, :update, :destroy]
+  load_and_authorize_resource class: DeployGroup
+  skip_authorize_resource only: :index
+  skip_load_resource only: :index
 
   def index
+    authorize! :admin_read, DeployGroup
     @deploy_groups = DeployGroup.all
   end
 
   def new
-    @deploy_group = DeployGroup.new
     render 'edit'
   end
 
   def create
-    @deploy_group = DeployGroup.create(deploy_group_params)
-    if @deploy_group.persisted?
+    if @deploy_group.save
       flash[:notice] = "Successfully created deploy group: #{@deploy_group.name}"
       redirect_to action: 'index'
     else
@@ -24,28 +23,28 @@ class Admin::DeployGroupsController < ApplicationController
   end
 
   def update
-    if deploy_group.update_attributes(deploy_group_params)
-      flash[:notice] = "Successfully saved deploy group: #{deploy_group.name}"
+    if @deploy_group.update_attributes(update_params)
+      flash[:notice] = "Successfully saved deploy group: #{@deploy_group.name}"
       redirect_to action: 'index'
     else
-      flash[:error] = deploy_group.errors.full_messages
+      flash[:error] = @deploy_group.errors.full_messages
       render 'edit'
     end
   end
 
   def destroy
-    deploy_group.soft_delete!
-    flash[:notice] = "Successfully deleted deploy group: #{deploy_group.name}"
+    @deploy_group.soft_delete!
+    flash[:notice] = "Successfully deleted deploy group: #{@deploy_group.name}"
     redirect_to action: 'index'
   end
 
   private
 
-  def deploy_group_params
+  def create_params
     params.require(:deploy_group).permit(:name, :environment_id)
   end
 
-  def deploy_group
-    @deploy_group ||= DeployGroup.find(params[:id])
+  def update_params
+    params.require(:deploy_group).permit(:name, :environment_id, :id)
   end
 end

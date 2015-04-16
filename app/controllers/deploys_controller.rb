@@ -1,8 +1,9 @@
 class DeploysController < ApplicationController
-  before_action :authorize_deployer!, only: [:new, :create, :confirm, :update, :destroy, :buddy_check, :pending_start]
-  before_action :find_project
-  before_action :find_deploy, except: [:index, :recent, :active, :new, :create, :confirm]
-  before_action :stage, only: :new
+  load_resource :project, find_by: :param, except: [ :recent ]
+  load_resource :stage, find_by: :param, only: :new
+  load_resource except: [ :index, :recent, :active, :new, :create, :confirm ]
+  authorize_resource only: [ :new, :create, :destroy ]
+  before_action :authorize_as_create, only: [ :confirm, :pending_start, :buddy_check ]
 
   def index
     @deploys = @project.deploys.page(params[:page])
@@ -14,6 +15,7 @@ class DeploysController < ApplicationController
   end
 
   def active
+    @project = Project.find_by_param!(params[:project_id]) if params[:project_id]
     scope = (@project ? @project.deploys : Deploy)
     @deploys = scope.active.page(params[:page])
 
@@ -96,11 +98,7 @@ class DeploysController < ApplicationController
   end
 
   def destroy
-    if @deploy.can_be_stopped_by?(current_user)
-      @deploy.stop!
-    else
-      flash[:error] = "You do not have privileges to stop this deploy."
-    end
+    @deploy.stop!
     redirect_to [@project, @deploy]
   end
 
@@ -118,11 +116,7 @@ class DeploysController < ApplicationController
     params.require(:deploy).permit(:reference, :stage_id)
   end
 
-  def find_project
-    @project = Project.find_by_param!(params[:project_id]) if params[:project_id]
-  end
-
-  def find_deploy
-    @deploy = Deploy.find(params[:id])
+  def authorize_as_create
+    authorize! :create, Deploy
   end
 end

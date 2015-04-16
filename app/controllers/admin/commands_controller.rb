@@ -1,16 +1,16 @@
 class Admin::CommandsController < ApplicationController
-  before_action :authorize_admin!
+  load_and_authorize_resource class: Command
+  skip_load_resource only: :index
 
   def index
     @commands = Command.order('project_id').page(params[:page])
   end
 
   def new
-    @command = Command.new
   end
 
   def create
-    @command = Command.create(command_params)
+    @command.save
 
     if @command.persisted?
       flash[:notice] = 'Command created.'
@@ -22,12 +22,9 @@ class Admin::CommandsController < ApplicationController
   end
 
   def edit
-    @command = Command.find(params[:id])
   end
 
   def update
-    @command = Command.find(params[:id])
-
     if @command.update_attributes(command_params)
       successful_response('Command updated.')
     else
@@ -43,7 +40,7 @@ class Admin::CommandsController < ApplicationController
   end
 
   def destroy
-    Command.destroy(params[:id])
+    @command.destroy
 
     successful_response('Command removed.')
   end

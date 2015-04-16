@@ -4,16 +4,14 @@ class StagesController < ApplicationController
   include StagePermittedParams
 
   skip_before_action :login_users, if: :badge?
-  before_action :authorize_admin!, except: [:index, :show]
-  before_action :authorize_deployer!, unless: :badge?
   before_action :check_token, if: :badge?
-  before_action :find_project
-  before_action :find_stage, only: [:show, :edit, :update, :destroy, :clone]
   before_action :get_environments, only: [:new, :create, :edit, :update, :clone]
 
-  def index
-    @stages = @project.stages
+  load_resource :project, find_by: :param
+  load_resource through: :project, find_by: :param, only: [ :show, :edit, :update, :create, :destroy, :clone ]
+  authorize_resource except: :show
 
+  def index
     respond_to do |format|
       format.html
       format.json do
@@ -25,6 +23,7 @@ class StagesController < ApplicationController
   def show
     respond_to do |format|
       format.html do
+        authorize! :read, @stage
         @deploys = @stage.deploys.page(params[:page])
       end
       format.svg do
@@ -49,10 +48,6 @@ class StagesController < ApplicationController
   end
 
   def create
-    # Need to ensure project is already associated
-    @stage = @project.stages.build
-    @stage.attributes = stage_params
-
     if @stage.save
       redirect_to [@project, @stage]
     else
@@ -116,10 +111,6 @@ class StagesController < ApplicationController
 
   def stage_params
     params.require(:stage).permit(stage_permitted_params)
-  end
-
-  def find_project
-    @project = Project.find_by_param!(params[:project_id])
   end
 
   def find_stage

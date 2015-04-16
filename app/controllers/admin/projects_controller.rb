@@ -1,7 +1,7 @@
 class Admin::ProjectsController < ApplicationController
-  before_action :authorize_admin!
 
   def show
+    authorize! :admin_read, Project
     @projects = Project.page(params[:page])
   end
 end

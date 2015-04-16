@@ -89,11 +89,15 @@ describe Admin::UsersController do
     let(:user) { users(:viewer) }
 
     as_a_deployer do
-      unauthorized :delete, :destroy, project_id: 1, id: 1
+      it 'doesn\'t work for deployers' do
+        unauthorized :delete, :destroy, id: user.id
+      end
     end
 
     as_a_admin do
-      unauthorized :delete, :destroy, project_id: 1, id: 1
+      it 'doesn\'t work for admins' do
+        unauthorized :delete, :destroy, id: user.id
+      end
     end
 
     as_a_super_admin do

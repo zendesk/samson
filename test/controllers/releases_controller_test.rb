@@ -5,8 +5,10 @@ describe ReleasesController do
   let(:release) { releases(:test) }
 
   as_a_viewer do
-    unauthorized :get, :new, project_id: 1
-    unauthorized :post, :create, project_id: 1
+    it 'authorizes correctly' do
+      unauthorized :get, :new, project_id: project.to_param
+      unauthorized :post, :create, project_id: project.to_param
+    end
 
     describe "#show" do
       it "renders" do

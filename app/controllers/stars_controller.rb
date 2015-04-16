@@ -1,5 +1,5 @@
 class StarsController < ApplicationController
-  before_action :find_project
+  load_resource :project, find_by: :param
 
   def create
     current_user.stars.create!(project: @project)
@@ -12,11 +12,5 @@ class StarsController < ApplicationController
     star && star.destroy
 
     head :ok
-  end
-
-  private
-
-  def find_project
-    @project = Project.find_by_param!(params[:id])
   end
 end

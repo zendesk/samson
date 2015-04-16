@@ -1,6 +1,6 @@
 class NewRelicController < ApplicationController
-  before_action :authorize_deployer!
   before_action :ensure_new_reclic_api_key
+  authorize_resource
 
   def show
     applications = stage.new_relic_applications.map(&:name)

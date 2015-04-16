@@ -1,5 +1,5 @@
 class DeployGroupsController < ApplicationController
-  before_action :find_deploy_group
+  load_resource
 
   def show
     respond_to do |format|
@@ -10,11 +10,5 @@ class DeployGroupsController < ApplicationController
         render json: { deploys: @deploy_group.deploys.successful.page(params[:page]).as_json(include: :project, methods: :url) }
       end
     end
-  end
-
-  private
-
-  def find_deploy_group
-    @deploy_group = DeployGroup.find(params[:id])
   end
 end
