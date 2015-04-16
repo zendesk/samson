@@ -9,6 +9,10 @@ class DeployGroup < ActiveRecord::Base
 
   default_scope { order(:name) }
 
+  def self.enabled?
+    ENV['DEPLOY_GROUP_FEATURE'].present?
+  end
+
   def deploys
     Deploy.where(stage: stage_ids)
   end

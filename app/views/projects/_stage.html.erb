@@ -4,7 +4,7 @@
       <%= link_to stage.name, [project, stage] %>
       <%= stage_lock_icon stage %>
     </td>
-    <% if ENV['DEPLOY_GROUP_FEATURE'] %>
+    <% if DeployGroup.enabled? %>
       <td><%= stage.deploy_groups.map(&:name).join(', ') %></td>
     <% end %>
     <% if (deploy = stage.last_successful_deploy) %>

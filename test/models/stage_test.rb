@@ -376,8 +376,7 @@ describe Stage do
 
   describe 'production flag' do
     let(:stage) { stages(:test_production) }
-    before { ENV['DEPLOY_GROUP_FEATURE'] = '1' }
-    after { ENV['DEPLOY_GROUP_FEATURE'] = nil }
+    before { DeployGroup.stubs(:enabled?).returns(true) }
 
     it 'is true for stage with production deploy_group' do
       stage.update!(production: false)
