@@ -88,11 +88,11 @@ describe ProjectsController do
 
   describe "a POST to #create" do
     as_a_viewer do
-      unauthorized :post, :create
+      unauthorized :post, :create, project: { name: 'a' }
     end
 
     as_a_deployer do
-      unauthorized :post, :create
+      unauthorized :post, :create, project: { name: 'b' }
     end
 
     as_a_admin do
@@ -135,11 +135,15 @@ describe ProjectsController do
 
   describe "a DELETE to #destroy" do
     as_a_viewer do
-      unauthorized :delete, :destroy, id: 1
+      it 'authorizes correctly' do
+        unauthorized :delete, :destroy, id: project.id
+      end
     end
 
     as_a_deployer do
-      unauthorized :delete, :destroy, id: 1
+      it 'authorizes correctly' do
+        unauthorized :delete, :destroy, id: project.id
+      end
     end
 
     as_a_admin do
@@ -164,11 +168,15 @@ describe ProjectsController do
 
   describe "a PUT to #update" do
     as_a_viewer do
-      unauthorized :put, :update, id: 1
+      it 'authorizes correctly' do
+        unauthorized :put, :update, id: project.to_param
+      end
     end
 
     as_a_deployer do
-      unauthorized :put, :update, id: 1
+      it 'authorizes correctly' do
+        unauthorized :put, :update, id: project.to_param
+      end
     end
 
     as_a_admin do
@@ -213,11 +221,15 @@ describe ProjectsController do
 
   describe "a GET to #edit" do
     as_a_viewer do
-      unauthorized :get, :edit, id: 1
+      it 'authorizes correctly' do
+        unauthorized :get, :edit, id: project.to_param
+      end
     end
 
     as_a_deployer do
-      unauthorized :get, :edit, id: 1
+      it 'authorizes correctly' do
+        unauthorized :get, :edit, id: project.to_param
+      end
     end
 
     as_a_admin do

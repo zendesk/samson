@@ -2,18 +2,24 @@ require_relative '../test_helper'
 
 describe LocksController do
   let(:global_lock) { Lock.create! user: users(:deployer) }
+  let(:lock) { Lock.create! user: users(:deployer), stage: stage }
+  let(:stage) { stages(:test_staging) }
 
   before { request.headers['HTTP_REFERER'] = '/back' }
 
   as_a_viewer do
-    unauthorized :post, :create
-    unauthorized :post, :create, lock: {stage_id: 1}
-    unauthorized :delete, :destroy, id: 1
+    it 'authorizes correctly' do
+      unauthorized :post, :create, lock: { description: 'not blank' }
+      unauthorized :post, :create, lock: { stage_id: stage.id }
+      unauthorized :delete, :destroy, id: lock.id
+    end
   end
 
   as_a_deployer do
-    unauthorized :post, :create
-    it("unauthorized") { post :create, id: global_lock.id }
+    it 'authorizes correctly' do
+      unauthorized :post, :create
+      unauthorized :post, :create, id: global_lock.id
+    end
 
     let(:stage) { stages(:test_staging) }
 

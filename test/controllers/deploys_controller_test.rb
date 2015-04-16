@@ -150,10 +150,12 @@ describe DeploysController do
       end
     end
 
-    unauthorized :get, :new, project_id: 1, stage_id: 2
-    unauthorized :post, :create, project_id: 1, stage_id: 2
-    unauthorized :post, :buddy_check, project_id: 1, id: 1
-    unauthorized :delete, :destroy, project_id: 1, id: 1
+    it 'authorizes' do
+      unauthorized :get, :new, project_id: project.to_param, stage_id: stage.to_param
+      unauthorized :post, :create, project_id:  project.to_param, stage_id: stage.to_param
+      unauthorized :post, :buddy_check, project_id: project.to_param, id: deploy.id
+      unauthorized :delete, :destroy, project_id: project.permalink, id: deploy.id
+    end
   end
 
   as_a_deployer do
@@ -242,12 +244,12 @@ describe DeploysController do
         setup do
           Deploy.any_instance.stubs(:started_by?).returns(false)
           User.any_instance.stubs(:is_admin?).returns(false)
-
-          delete :destroy, project_id: project.to_param, id: deploy.to_param
         end
 
-        it "doesn't cancel the deloy" do
-          flash[:error].wont_be_nil
+        as_a_deployer do
+          it 'doesn\'t allow to delete' do
+            unauthorized :delete, :destroy, project_id: project.to_param, id: deploy.to_param
+          end
         end
       end
     end

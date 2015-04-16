@@ -1,6 +1,6 @@
 class ReleasesController < ApplicationController
-  before_action :authorize_deployer!, except: [:show, :index]
-  before_action :find_project
+  load_resource :project, find_by: :param
+  authorize_resource except: [ :show, :index ]
 
   def show
     @release = @project.releases.find_by_version!(params[:id])
@@ -22,10 +22,6 @@ class ReleasesController < ApplicationController
   end
 
   private
-
-  def find_project
-    @project = Project.find_by_param!(params[:project_id])
-  end
 
   def release_params
     params.require(:release).permit(:commit).merge(author: current_user)

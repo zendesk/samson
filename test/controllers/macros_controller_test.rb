@@ -14,13 +14,15 @@ describe MacrosController do
   end
 
   as_a_viewer do
-    unauthorized :get, :index, project_id: 1
-    unauthorized :get, :new, project_id: 1
-    unauthorized :get, :edit, project_id: 1, id: 1
-    unauthorized :post, :create, project_id: 1
-    unauthorized :post, :execute, project_id: 1, id: 1
-    unauthorized :put, :update, project_id: 1, id: 1
-    unauthorized :delete, :destroy, project_id: 1, id: 1
+    it 'authorizes correctly' do
+      unauthorized :get, :index, project_id: project.id
+      unauthorized :get, :new, project_id: project.id
+      unauthorized :get, :edit, project_id: project.id, id: 1
+      unauthorized :post, :create, project_id: project.id
+      unauthorized :post, :execute, project_id: project.id, id: 1
+      unauthorized :put, :update, project_id: project.id, id: 1
+      unauthorized :delete, :destroy, project_id: project.id, id: 1
+    end
   end
 
   as_a_deployer do
@@ -55,11 +57,13 @@ describe MacrosController do
       end
     end
 
-    unauthorized :get, :new, project_id: 1
-    unauthorized :get, :edit, project_id: 1, id: 1
-    unauthorized :post, :create, project_id: 1
-    unauthorized :put, :update, project_id: 1, id: 1
-    unauthorized :delete, :destroy, project_id: 1, id: 1
+    it 'authorizes correctly' do
+      unauthorized :get, :new, project_id: project.id
+      unauthorized :get, :edit, project_id: project.id, id: 1
+      unauthorized :post, :create, project_id: project.id
+      unauthorized :put, :update, project_id: project.id, id: 1
+      unauthorized :delete, :destroy, project_id: project.id, id: 1
+    end
   end
 
   as_a_admin do
@@ -166,11 +170,10 @@ describe MacrosController do
       describe 'as someone else' do
         setup do
           macro.update_attributes!(user: users(:deployer))
-          delete :destroy, project_id: project.to_param, id: macro.id
         end
 
         it 'is unauthorized' do
-          assert_response :unauthorized
+          unauthorized :delete, :destroy, project_id: project.to_param, id: macro.id
         end
       end
     end

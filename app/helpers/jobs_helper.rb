@@ -25,9 +25,4 @@ module JobsHelper
 
     content_tag :div, content.html_safe, class: "alert alert-#{status}"
   end
-
-  def can_create_job?
-    current_user.is_super_admin? || current_user.is_admin?
-  end
-
 end

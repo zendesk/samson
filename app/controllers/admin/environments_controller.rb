@@ -1,20 +1,17 @@
 class Admin::EnvironmentsController < ApplicationController
-  before_action :authorize_admin!
-  before_action :authorize_super_admin!, only: [ :create, :new, :edit, :update, :destroy ]
-  before_action :environment, only: [:edit, :update, :destroy]
+  load_and_authorize_resource class: Environment, find_by: :param, except: :index
 
   def index
+    authorize! :admin_read, DeployGroup
     @environments = Environment.all
   end
 
   def new
-    @environment = Environment.new
     render 'edit'
   end
 
   def create
-    @environment = Environment.create(env_params)
-    if @environment.persisted?
+    if @environment.save
       flash[:notice] = "Successfully saved environment: #{@environment.name}"
       redirect_to action: 'index'
     else
@@ -24,28 +21,28 @@ class Admin::EnvironmentsController < ApplicationController
   end
 
   def update
-    if environment.update_attributes(env_params)
-      flash[:notice] = "Successfully saved environment: #{environment.name}"
+    if @environment.update_attributes(update_params)
+      flash[:notice] = "Successfully saved environment: #{@environment.name}"
       redirect_to action: 'index'
     else
-      flash[:error] = environment.errors.full_messages
+      flash[:error] = @environment.errors.full_messages
       render 'edit'
     end
   end
 
   def destroy
-    environment.soft_delete!
-    flash[:notice] = "Successfully deleted environment: #{environment.name}"
+    @environment.soft_delete!
+    flash[:notice] = "Successfully deleted environment: #{@environment.name}"
     redirect_to action: 'index'
   end
 
   private
 
-  def env_params
+  def create_params
     params.require(:environment).permit(:name, :is_production)
   end
 
-  def environment
-    @environment ||= Environment.find_by_param!(params[:id])
+  def update_params
+    params.require(:environment).permit(:name, :is_production, :id)
   end
 end

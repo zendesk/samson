@@ -3,7 +3,9 @@ require_relative '../test_helper'
 describe StagesHelper do
   describe "#edit_command_link" do
     describe "as admin" do
-      let(:current_user) { users(:admin) }
+      before do
+        self.stubs(:can?).returns(true)
+      end
 
       it "links to global edit" do
         command = commands(:global)
@@ -19,7 +21,9 @@ describe StagesHelper do
     end
 
     describe "as other user" do
-      let(:current_user) { users(:deployer) }
+      before do
+        self.stubs(:can?).returns(false)
+      end
 
       it "explains global commands" do
         html = edit_command_link(commands(:global))

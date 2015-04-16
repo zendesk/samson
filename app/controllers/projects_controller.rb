@@ -1,12 +1,13 @@
 class ProjectsController < ApplicationController
   include StagePermittedParams
 
-  before_action :authorize_admin!, except: [:show, :index, :deploy_group_versions]
-  before_action :redirect_viewers!, only: [:show]
-  before_action :project, only: [:show, :edit, :update, :deploy_group_versions]
+  load_resource find_by: :param, except: :index
+  before_action :redirect_viewers, only: :show
+  authorize_resource only: [ :new, :create, :update, :destroy ]
   before_action :get_environments, only: [:new, :create]
 
   helper_method :project
+  attr_reader :project
 
   def index
     respond_to do |format|
@@ -21,14 +22,11 @@ class ProjectsController < ApplicationController
   end
 
   def new
-    @project = Project.new
     stage = @project.stages.build(name: "Production")
     stage.new_relic_applications.build
   end
 
   def create
-    @project = Project.new(project_params)
-
     if @project.save
       if ENV['PROJECT_CREATED_NOTIFY_ADDRESS']
         ProjectMailer.created_email(@current_user,@project).deliver_later
@@ -86,14 +84,10 @@ class ProjectsController < ApplicationController
     )
   end
 
-  def project
-    @project ||= Project.find_by_param!(params[:id])
-  end
-
-  def redirect_viewers!
-    unless current_user.is_deployer?
-      redirect_to project_deploys_path(project)
-    end
+  def redirect_viewers
+    authorize! :read, project
+  rescue CanCan::AccessDenied
+    redirect_to project_deploys_path(project)
   end
 
   def projects_for_user

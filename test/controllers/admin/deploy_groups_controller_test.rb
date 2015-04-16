@@ -10,20 +10,30 @@ describe Admin::DeployGroupsController do
     end
   end
 
-  as_a_deployer do
-    unauthorized :get, :index
-    unauthorized :post, :create
-    unauthorized :delete, :destroy, id: 1
-    unauthorized :post, :update, id: 1
-    unauthorized :get, :new
-  end
+  describe 'authorization' do
+    let(:deploy_group) do
+      DeployGroup.create(id: 1, environment_id: Environment.first.id, name: 'b')
+    end
+    as_a_deployer do
+      it 'authorizes correctly' do
+        unauthorized :get, :index
+        unauthorized :post, :create, deploy_group: { name: deploy_group.name }
+        unauthorized :delete, :destroy, id: 1
+        unauthorized :post, :update, id: 1
+        unauthorized :get, :new
+      end
+    end
 
-  as_a_admin do
-    it_renders_index
-    unauthorized :post, :create
-    unauthorized :delete, :destroy, id: 1
-    unauthorized :post, :update, id: 1
-    unauthorized :get, :new
+    as_a_admin do
+      it_renders_index
+
+      it 'authorizes correctly' do
+        unauthorized :post, :create, deploy_group: { name: deploy_group.name }
+        unauthorized :delete, :destroy, id: 1
+        unauthorized :post, :update, id: 1
+        unauthorized :get, :new
+      end
+    end
   end
 
   as_a_super_admin do

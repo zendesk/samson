@@ -1,4 +1,4 @@
-<% if can_modify_roles? %>
+<% if can? :update, user %>
 
   <% Role.all.each do |role| %>
     <label class="radio-inline" ng-click="updateUser($event)">

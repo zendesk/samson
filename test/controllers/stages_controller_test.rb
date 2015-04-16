@@ -83,11 +83,13 @@ describe StagesController do
       end
     end
 
-    unauthorized :get, :new, project_id: 1
-    unauthorized :post, :create, project_id: 1
-    unauthorized :get, :edit, project_id: 1, id: 1
-    unauthorized :patch, :update, project_id: 1, id: 1
-    unauthorized :delete, :destroy, project_id: 1, id: 1
+    it 'authorizes correctly' do
+      unauthorized :get, :new, project_id: subject.project.to_param
+      unauthorized :post, :create, project_id: subject.project.to_param
+      unauthorized :get, :edit, project_id: subject.project.to_param, id: 1
+      unauthorized :patch, :update, project_id: subject.project.to_param, id: 1
+      unauthorized :delete, :destroy, project_id: subject.project.to_param, id: 1
+    end
   end
 
   as_a_admin do

@@ -1,15 +1,14 @@
 class JobsController < ApplicationController
-  before_filter :authorize_admin!, only: [:new, :create, :destroy]
+  load_resource :project, find_by: :param, except: :enabled
+  load_resource through: :project, only: [ :show, :destroy ]
+  authorize_resource only: [ :new, :create, :destroy ]
 
-  before_action :find_project, except: [:enabled]
-  before_action :find_job, only: [:show, :destroy]
 
   def index
     @jobs = @project.jobs.non_deploy.page(params[:page])
   end
 
   def new
-    @job = Job.new
   end
 
   def create
@@ -50,13 +49,8 @@ class JobsController < ApplicationController
   end
 
   def destroy
-    if @job.started_by?(current_user) || current_user.is_admin?
-      @job.stop!
-
-      head :ok
-    else
-      head :forbidden
-    end
+    @job.stop!
+    head :ok
   end
 
   private
@@ -67,13 +61,5 @@ class JobsController < ApplicationController
 
   def command_params
     params.require(:commands).permit(ids: [])
-  end
-
-  def find_project
-    @project = Project.find_by_param!(params[:project_id])
-  end
-
-  def find_job
-    @job = @project.jobs.find(params[:id])
   end
 end

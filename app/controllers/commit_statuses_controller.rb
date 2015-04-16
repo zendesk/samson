@@ -1,7 +1,7 @@
 class CommitStatusesController < ApplicationController
-  before_action :authorize_deployer!
 
   def show
+    authorize! :read, commit_status
     render json: { status: commit_status.status }
   end
 

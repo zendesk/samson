@@ -2,7 +2,9 @@ require_relative '../test_helper'
 
 describe CommitStatusesController do
   as_a_viewer do
-    unauthorized :get, :show, project_id: 1, id: 'test/test'
+    it 'authorizes correctly' do
+      unauthorized :get, :show, project_id: projects(:test).to_param, id: 'test/test'
+    end
   end
 
   as_a_deployer do
@@ -15,7 +17,7 @@ describe CommitStatusesController do
 
       describe 'valid' do
         setup do
-          CommitStatus.stubs(new: stub(status: 'pending'))
+          CommitStatus.stubs(new: stub(status: 'pending', class: CommitStatus))
           get :show, project_id: projects(:test), id: 'test/test'
         end
 

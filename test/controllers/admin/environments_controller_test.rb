@@ -9,21 +9,25 @@ describe Admin::EnvironmentsController do
     end
   end
 
-  as_a_deployer do
-    unauthorized :get, :index
-    unauthorized :get, :new
-    unauthorized :post, :create
-    unauthorized :delete, :destroy, id: 1
-    unauthorized :post, :update, id: 1
-  end
+  describe 'authorization' do
+    before do
+      Environment.create(id: 'production', name: 'b')
+    end
+    as_a_deployer do
+      unauthorized :get, :index
+      unauthorized :get, :new
+      unauthorized :post, :create, environment: { name: 'a' }
+      unauthorized :delete, :destroy, id: 'production'
+      unauthorized :put, :update, id: 'production'
+    end
 
-  as_a_admin do
-    it_renders_index
-    unauthorized :post, :create
-    unauthorized :get, :new
-    unauthorized :delete, :destroy, id: 1
-    unauthorized :post, :update, id: 1
-    unauthorized :put, :update, id: 1
+    as_a_admin do
+      it_renders_index
+      unauthorized :post, :create, environment: { name: 'a' }
+      unauthorized :get, :new
+      unauthorized :delete, :destroy, id: 'production'
+      unauthorized :put, :update, id: 'production'
+    end
   end
 
   as_a_super_admin do
@@ -73,13 +77,13 @@ describe Admin::EnvironmentsController do
       before { request.env["HTTP_REFERER"] = admin_environments_url }
 
       it 'save' do
-        post :update, environment: {name: 'Test Update', is_production: false}, id: environment
+        put :update, environment: {name: 'Test Update', is_production: false}, id: environment
         assert_redirected_to admin_environments_path
         Environment.find(environment.id).name.must_equal 'Test Update'
       end
 
       it 'fail to edit with blank name' do
-        post :update, environment: {name: '', is_production: false}, id: environment
+        put :update, environment: {name: '', is_production: false}, id: environment
         assert_template :edit
         flash[:error].must_equal ["Name can't be blank"]
         Environment.find(environment.id).name.must_equal 'Production'

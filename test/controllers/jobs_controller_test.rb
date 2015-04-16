@@ -51,13 +51,17 @@ describe JobsController do
       end
     end
 
-    unauthorized :post, :create, project_id: 1
-    unauthorized :delete, :destroy, project_id: 1, id: 1
+    it 'authorizes correctly' do
+      unauthorized :post, :create, project_id: project.id
+      unauthorized :delete, :destroy, project_id: project.id, id: job.id
+    end
   end
 
   as_a_deployer do
-    unauthorized :post, :create, project_id: 1
-    unauthorized :delete, :destroy, project_id: 1, id: 1
+    it 'authorizes correctly' do
+      unauthorized :post, :create, project_id: project.id
+      unauthorized :delete, :destroy, project_id: project.id, id: job.id
+    end
   end
 
   as_a_admin do
