@@ -36,14 +36,6 @@ module Samson
         engine.config.autoload_paths += Dir["#{engine.config.root}/lib/**/"]
       end
 
-      def add_decorators
-        engine.config.after_initialize do
-          Dir.glob(engine.config.root.join('app/decorators/**/*_decorator.rb')).each do |c|
-            require_dependency(c)
-          end
-        end
-      end
-
       def add_decorator(klass_name)
         return if klass_name.nil?
         decorator_file = engine.config.root.join("app/decorators/#{klass_name.downcase}_decorator.rb")
