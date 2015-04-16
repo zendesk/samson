@@ -1,6 +1,6 @@
 <ul class="nav nav-tabs">
   <li class="<%= 'active' if active == 'overview' %>">
-    <%= link_to "Overview", project_path(project) %>
+    <%= link_to "Overview", project %>
   </li>
   <% if project.manage_releases? %>
     <li class="<%= 'active' if active == 'releases' %>">

@@ -6,15 +6,13 @@ class CommitStatus
   end
 
   def status
-    if statuses.any?
-      statuses.first.state
-    end
+    combined_status.state
   rescue Octokit::NotFound
   end
 
   private
 
-  def statuses
-    @statuses ||= GITHUB.statuses(@repo, @sha)
+  def combined_status
+    @combined_status ||= GITHUB.combined_status(@repo, @sha)
   end
 end

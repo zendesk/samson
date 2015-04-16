@@ -20,7 +20,7 @@
           <td>
             <%= link_to "Edit", edit_admin_command_path(command) %>
             |
-            <%= link_to "Delete", admin_command_path(command), method: :delete, data: { confirm: "Are you sure?" } %>
+            <%= link_to_delete([:admin, command]) %>
           </td>
         </tr>
 

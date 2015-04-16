@@ -20,5 +20,6 @@ before_script:
   - bundle exec rake db:create
   - npm install
 script:
+  - npm run-script jshint
   - npm test
   - bundle exec rake

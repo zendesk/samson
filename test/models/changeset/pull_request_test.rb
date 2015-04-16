@@ -1,16 +1,19 @@
 require_relative '../../test_helper'
 
 describe Changeset::PullRequest do
-  let(:data) { stub("data", user: user, merged_by: merged_by, body: body) }
+  DataStruct = Struct.new(:user, :merged_by, :body, :title)
+  UserStruct = Struct.new(:login)
+
+  let(:data) { DataStruct.new(user, merged_by, body) }
   let(:pr) { Changeset::PullRequest.new("xxx", data) }
-  let(:user) { stub(login: "foo") }
-  let(:merged_by) { stub(login: "bar") }
+  let(:user) { UserStruct.new("foo") }
+  let(:merged_by) { UserStruct.new("bar") }
   let(:body) { "" }
 
   describe ".find" do
     it "finds the pull request" do
       GITHUB.stubs(:pull_request).with("foo/bar", 42).returns(data)
-      data.stubs(:title).returns("Make it bigger!")
+      data.title = "Make it bigger!"
 
       pr = Changeset::PullRequest.find("foo/bar", 42)
 

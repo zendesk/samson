@@ -1,6 +1,6 @@
 module ReleasesHelper
   def release_label(project, release)
-    path = project_release_path(project, release)
+    path = [project, release]
     classes = %w(release-label label)
 
     if release.changeset.hotfix?

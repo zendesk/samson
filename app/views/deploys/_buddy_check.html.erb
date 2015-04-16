@@ -5,7 +5,7 @@
       <p><%= details.html_safe %></p>
     <% end %>
     <div class="deployer-stop">
-      <%= link_to "Stop", project_deploy_path(@project, @deploy), method: :delete, class: "btn btn-danger btn-xl" %>
+      <%= stop_button %>
       or
       <%= link_to "Bypass", buddy_check_project_deploy_path(@project, @deploy), method: :post, class: "btn btn-danger" %>
     </div>
@@ -15,7 +15,7 @@
       <%= link_to "Approve", buddy_check_project_deploy_path(@project, @deploy), method: :post, class: "btn btn-primary btn-xl" %>
       <% if @deploy.can_be_stopped_by?(current_user) %>
         or
-        <%= link_to "Stop", project_deploy_path(@project, @deploy), method: :delete, class: "btn btn-danger btn-xl" %>
+        <%= stop_button %>
       <% end %>
     </div>
   <% else %>

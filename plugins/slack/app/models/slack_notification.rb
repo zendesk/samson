@@ -9,8 +9,7 @@ class SlackNotification
     Slack.chat_postMessage(
       token: ENV['SLACK_TOKEN'],
       channel: @stage.slack_channels.first.channel_id,
-      text: content,
-      parse: "full")
+      text: content)
 
   rescue Slack::Error => e
     Rails.logger.error("Could not deliver slack message: #{e.message}")

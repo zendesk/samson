@@ -1,6 +1,10 @@
 require_relative '../test_helper'
 
 describe Changeset do
+  ComparisonStruct = Struct.new(:commits)
+  CommitStruct = Struct.new(:commit)
+  MessageStruct = Struct.new(:message)
+
   describe "#comparison" do
     it "builds a new changeset" do
       stub_github_api("repos/foo/bar/compare/a...b", "x" => "y")
@@ -35,13 +39,11 @@ describe Changeset do
   end
 
   describe "#pull_requests" do
-    let(:comparison) { stub("comparison") }
-
     it "finds pull requests mentioned in merge commits" do
-      c1 = stub("commit1", commit: stub(message: "Merge pull request #42"))
-      c2 = stub("commit2", commit: stub(message: "Fix typo"))
-      comparison.stubs(:commits).returns([c1, c2])
-      GITHUB.stubs(:compare).with("foo/bar", "a", "b").returns(comparison)
+      c1 = CommitStruct.new(MessageStruct.new("Merge pull request #42"))
+      c2 = CommitStruct.new(MessageStruct.new("Fix typo"))
+
+      GITHUB.stubs(:compare).with("foo/bar", "a", "b").returns(ComparisonStruct.new([c1, c2]))
 
       Changeset::PullRequest.stubs(:find).with("foo/bar", 42).returns("yeah!")
       changeset = Changeset.new("foo/bar", "a", "b")
@@ -49,9 +51,8 @@ describe Changeset do
     end
 
     it "ignores invalid pull request numbers" do
-      commit = stub("commit", commit: stub(message: "Merge pull request #42"))
-      comparison.stubs(:commits).returns([commit])
-      GITHUB.stubs(:compare).with("foo/bar", "a", "b").returns(comparison)
+      commit = CommitStruct.new(MessageStruct.new("Merge pull request #42"))
+      GITHUB.stubs(:compare).with("foo/bar", "a", "b").returns(ComparisonStruct.new([commit]))
 
       Changeset::PullRequest.stubs(:find).with("foo/bar", 42).returns(nil)
       changeset = Changeset.new("foo/bar", "a", "b")

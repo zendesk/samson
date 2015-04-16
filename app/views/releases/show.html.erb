@@ -13,7 +13,7 @@
     <p>
       Deployed to:
       <% @release.deployed_stages.each do |stage| %>
-        <%= link_to stage.name, project_stage_path(@project, stage) %>
+        <%= link_to stage.name, [@project, stage] %>
       <% end %>
     </p>
   <% end %>

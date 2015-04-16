@@ -28,7 +28,7 @@ describe BuddyCheck do
   it "does not deploy production if buddy check is enabled" do
     BuddyCheck.stubs(:enabled?).returns(true)
 
-    stage.production = true
+    stage.expects(:production?).returns(true)
     service.expects(:confirm_deploy!).never
 
     service.deploy!(stage, reference)
@@ -37,7 +37,7 @@ describe BuddyCheck do
   it "does deploy production if buddy check is not enabled" do
     BuddyCheck.stubs(:enabled?).returns(false)
 
-    stage.production = true
+    stage.stubs(:production?).returns(true)
     service.expects(:confirm_deploy!).once
 
     service.deploy!(stage, reference)
@@ -46,7 +46,7 @@ describe BuddyCheck do
   it "does deploy non-production if buddy check is enabled" do
     BuddyCheck.stubs(:enabled?).returns(true)
 
-    stage.production = false
+    stage.expects(:production?).returns(false)
     service.expects(:confirm_deploy!).once
 
     service.deploy!(stage, reference)
@@ -55,7 +55,7 @@ describe BuddyCheck do
   it "does deploy non-production if buddy check is not enabled" do
     BuddyCheck.stubs(:enabled?).returns(false)
 
-    stage.production = false
+    stage.stubs(:production?).returns(false)
     service.expects(:confirm_deploy!).once
 
     service.deploy!(stage, reference)

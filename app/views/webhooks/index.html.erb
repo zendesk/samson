@@ -17,7 +17,7 @@
     <h2>Webhooks mappings</h2>
     <ul>
       <% @webhooks.each do |webhook| %>
-        <li><strong><%= webhook.branch %></strong> branch &rarr; <strong><%= webhook.stage.name %></strong> stage (<%= link_to "remove", project_webhook_path(@project, webhook), method: :delete %>)</li>
+        <li><strong><%= webhook.branch %></strong> branch &rarr; <strong><%= webhook.stage.name %></strong> stage (<%= link_to "remove", [@project, webhook], method: :delete %>)</li>
       <% end %>
     </ul>
   <% end %>

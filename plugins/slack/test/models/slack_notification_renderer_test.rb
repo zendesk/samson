@@ -27,13 +27,13 @@ _2 commits by author1 and author2._
 
 *Files changed*
 
->>> A</strong> foo.rb
->>> M</strong> bar.rb
+> A foo.rb
+> M bar.rb
 
 *Commits*
 
->>> <a href=\"#\">Introduce bug</a> (author1)
->>> <a href=\"#\">Fix bug</a> (author2)
+> <#|Introduce bug> (author1)
+> <#|Fix bug> (author2)
     RESULT
   end
 end
