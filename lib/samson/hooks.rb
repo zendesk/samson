@@ -26,6 +26,11 @@ module Samson
         super @path
       end
 
+      def add_migrations
+        migrations = File.join(@folder, "db/migrate")
+        Rails.application.config.paths["db/migrate"] << migrations if Dir.exist?(migrations)
+      end
+
       def add_lib_path
         engine.config.autoload_paths += Dir["#{engine.config.root}/lib/**/"]
       end
@@ -38,7 +43,7 @@ module Samson
         end
       end
 
-      def precompile_assets
+      def add_assets_to_precompile
         assets = javascripts + stylesheets
         engine.config.assets.precompile << assets
       end
@@ -113,7 +118,8 @@ module Samson
       def plugin_setup
         Samson::Hooks.plugins.
           each(&:require).
-          each(&:precompile_assets).
+          each(&:add_migrations).
+          each(&:add_assets_to_precompile).
           each(&:add_lib_path).
           each(&:add_decorators)
       end

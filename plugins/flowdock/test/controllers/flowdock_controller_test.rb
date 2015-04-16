@@ -29,9 +29,6 @@ describe FlowdockController do
         end
       end
     end
-  end
-
-  as_a_viewer do
 
     describe 'buddy request notifications' do
       before do
