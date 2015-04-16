@@ -1,7 +1,7 @@
 require_relative '../../test_helper'
 
 describe Samson::Hooks do
-  let(:number_of_plugins) { 3 }
+  let(:number_of_plugins) { 4 }
   let(:plugins) { 'nope' }
 
   describe '.plugins' do
