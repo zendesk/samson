@@ -1,6 +1,6 @@
 module StagesHelper
   def edit_command_link(command)
-    admin = current_user.is_admin?
+    admin = can? :update, command
     edit_url = edit_admin_command_path(command)
     if command.global?
       title, url = if admin
