@@ -20,7 +20,7 @@
         <%= link_to "Download log", project_job_path(@project, @job, format: :text), class: "btn btn-primary" %>
       </div>
 
-      <% if current_user.is_deployer? %>
+      <% if can? :destroy, @job %>
         <%= link_to "Stop", [@project, @job], remote: true, method: :delete, class: "btn btn-danger pull-right only-active" %>
       <% end %>
     </div>

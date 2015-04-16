@@ -89,10 +89,6 @@ class Deploy < ActiveRecord::Base
     pending? && stage.production?
   end
 
-  def can_be_stopped_by?(user)
-    started_by?(user) || user.is_admin?
-  end
-
   def self.active
     includes(:job).where(jobs: { status: Job::ACTIVE_STATUSES })
   end
