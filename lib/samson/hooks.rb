@@ -44,8 +44,14 @@ module Samson
         end
       end
 
+      def add_decorator(klass_name)
+        return if klass_name.nil?
+        decorator_file = engine.config.root.join("app/decorators/#{klass_name.downcase}_decorator.rb")
+        require_dependency(decorator_file) if File.exists?(decorator_file)
+      end
+
       def add_assets_to_precompile
-        engine.config.assets.precompile += %W(#{name}.scss #{name}.js)
+        engine.config.assets.precompile += %W(#{name}/application.css #{name}/application.js)
       end
 
       private
@@ -96,8 +102,7 @@ module Samson
           each(&:require).
           each(&:add_migrations).
           each(&:add_assets_to_precompile).
-          each(&:add_lib_path).
-          each(&:add_decorators)
+          each(&:add_lib_path)
       end
 
       def render_javascripts(view)
@@ -126,9 +131,12 @@ end
 
 Dir["plugins/*/lib"].each { |f| $LOAD_PATH << f } # treat included plugins like gems
 
+module LoadDecorators
+  def inherited(subclass)
+    Samson::Hooks.plugins.each { |plugin| plugin.add_decorator(subclass.name) }
+    super
+  end
+end
+
+ActiveRecord::Base.extend LoadDecorators
 Samson::Hooks.plugin_setup
-
-# This next line is just to make rails reload the decorators whenever we change code inside a plugin.
-# Without it we would have to restart the server every code change.
-ActionDispatch::Reloader.to_prepare { Samson::Hooks.plugins.map(&:add_decorators) }
-

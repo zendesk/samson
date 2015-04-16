@@ -70,7 +70,7 @@ ActiveRecord::Schema.define(version: 20150331084621) do
     t.integer  "stage_id",   null: false
     t.datetime "created_at"
     t.datetime "updated_at"
-    t.boolean  "enabled",    default: false
+    t.boolean  "enabled",    default: true
   end
 
   create_table "jobs", force: :cascade do |t|
