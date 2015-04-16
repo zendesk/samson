@@ -14,10 +14,10 @@ module.exports = function(config) {
 
     // list of files / patterns to load in the browser
     files: [
-      '<%= resolve_asset('vis.js') %>',
-      'vendor/assets/javascripts/angular.min.js',
-      'vendor/assets/javascripts/angular-mocks.js',
-      'vendor/assets/javascripts/underscore.min.js',
+      '<%= resolve_asset("vis.js") %>',
+      '<%= resolve_asset("angular.js") %>',
+      '<%= resolve_asset("angular-mocks.js") %>',
+      '<%= resolve_asset("underscore.js") %>',
       'test/angular/test_helper.js',
       'app/assets/javascripts/app.js',
       'app/assets/javascripts/controllers/**/*.js',
