@@ -1,4 +1,5 @@
 source 'https://rubygems.org'
+source 'https://rails-assets.org'
 
 gem 'bundler'
 
@@ -52,6 +53,7 @@ group :assets do
   gem 'ngannotate-rails'
   gem 'angular-rails-templates'
   gem 'underscore-rails'
+  gem 'rails-assets-vis'
 end
 
 group :no_preload do

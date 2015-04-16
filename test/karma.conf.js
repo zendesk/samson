@@ -5,7 +5,7 @@ module.exports = function(config) {
   config.set({
 
     // base path, that will be used to resolve files and exclude
-    basePath: '.',
+    basePath: '<%= Bundler.root %>',
 
 
     // frameworks to use
@@ -14,15 +14,14 @@ module.exports = function(config) {
 
     // list of files / patterns to load in the browser
     files: [
+      '<%= resolve_asset('vis.js') %>',
       'vendor/assets/javascripts/angular.min.js',
       'vendor/assets/javascripts/angular-mocks.js',
       'vendor/assets/javascripts/underscore.min.js',
-      'vendor/assets/javascripts/vis.js',
       'test/angular/test_helper.js',
       'app/assets/javascripts/app.js',
       'app/assets/javascripts/controllers/**/*.js',
       'app/assets/javascripts/directives/**/*.js',
-      'app/assets/javascripts/services/**/*.js',
       'app/assets/javascripts/timeline.js',
       'test/angular/**/*_spec.js'
     ],
