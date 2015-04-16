@@ -12,6 +12,7 @@ module Samson
     @@hooks = {}
 
     class Plugin
+      attr_reader :name
       def initialize(path)
         @path = path
         @folder = File.expand_path('../../../', @path)
@@ -44,35 +45,10 @@ module Samson
       end
 
       def add_assets_to_precompile
-        assets = javascripts + stylesheets
-        engine.config.assets.precompile << assets
-      end
-
-      def javascripts
-        assets(:javascripts, :js)
-      end
-
-      def stylesheets
-        assets(:stylesheets, :scss, :css)
+        engine.config.assets.precompile += %W(#{name}.scss #{name}.js)
       end
 
       private
-
-      def assets(type, *exts)
-        basedir = assets_root(type)
-        return [] if basedir.nil?
-        find_assets(basedir, exts).map { |script| script.relative_path_from(Pathname.new(basedir)) }.map(&:to_s)
-      end
-
-      def find_assets(basedir, exts)
-        exts.map do |ext|
-          Dir.glob("#{basedir}/**/*.#{ext}").map { |asset| Pathname.new(asset) }
-        end.flatten
-      end
-
-      def assets_root(type)
-        engine.paths['app/assets'].existent.detect { |item| item.include?(type.to_s) }
-      end
 
       def engine
         @engine ||= Kernel.const_get("::Samson#{@name.capitalize}::Engine")
@@ -125,19 +101,15 @@ module Samson
       end
 
       def render_javascripts(view)
-        Samson::Hooks.plugins.map(&:javascripts).flatten.each do |script|
-          view.instance_exec do
-            concat view.javascript_include_tag(view.asset_path(script))
-          end
+        Samson::Hooks.plugins.each do |plugin|
+          view.concat(view.javascript_include_tag("#{plugin.name}/application.js"))
         end
         nil
       end
 
       def render_stylesheets(view)
-        Samson::Hooks.plugins.map(&:stylesheets).flatten.each do |stylesheet|
-          view.instance_exec do
-            concat view.stylesheet_link_tag(view.asset_path(stylesheet))
-          end
+        Samson::Hooks.plugins.each do |plugin|
+          view.concat(view.stylesheet_link_tag("#{plugin.name}/application.css"))
         end
         nil
       end

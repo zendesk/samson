@@ -10,12 +10,12 @@ describe Stage do
     subject.save
   end
 
-  describe 'flowdock notifications' do
-    it 'should return that there are no flows with enabled notifications' do
+  describe '#send_flowdock_notifications?' do
+    it 'returns that there are no flows with enabled notifications' do
       subject.send_flowdock_notifications?.must_equal(false)
     end
 
-    it 'should return that there are flows with enabled notifications' do
+    it 'returns that there are flows with enabled notifications' do
       subject.flowdock_flows.first.update!(enabled: true)
       subject.send_flowdock_notifications?.must_equal(true)
     end

@@ -1,3 +1,5 @@
+//= require ./jquery_mentions_input/jquery.mentionsInput.js
+
 samson.factory('Mentionbox', function ($rootScope, Flowdock) {
   var self = this;
   self.users = Flowdock.users();
@@ -72,29 +74,29 @@ samson.factory('Flowdock', function ($rootScope, $http) {
 });
 
 samson.controller('BuddyNotificationsCtrl', function($scope, $rootScope, Flowdock, Mentionbox) {
-    $scope.title = 'Request a buddy!';
-    $scope.message = null;
-    $scope.successful = false;
-    $scope.notificationBox = Mentionbox.init('#buddy_request_box', $scope.defaultBuddyRequestMessage);
+  $scope.title = 'Request a buddy!';
+  $scope.message = null;
+  $scope.successful = false;
+  $scope.notificationBox = Mentionbox.init('#buddy_request_box', $scope.defaultBuddyRequestMessage);
 
-    $scope.shouldDisplayFeedback = function() {
-      return $scope.message != null;
-    };
+  $scope.shouldDisplayFeedback = function() {
+    return $scope.message != null;
+  };
 
-    $scope.notifyFlowDock = function () {
-      $scope.notificationBox.message(function (message) {
-        var result = Flowdock.buddyRequest($scope.deploy, message);
-        result.success(function (data) {
-          $scope.message = data.message;
-          $scope.successful = true
-        });
-        result.error(function () {
-          $scope.message = 'Error! Could not send buddy request!';
-          $scope.successful = false
-        });
+  $scope.notifyFlowDock = function () {
+    $scope.notificationBox.message(function (message) {
+      var result = Flowdock.buddyRequest($scope.deploy, message);
+      result.success(function (data) {
+        $scope.message = data.message;
+        $scope.successful = true
       });
-    };
-  }).directive('buddyRequestBox', function () {
+      result.error(function () {
+        $scope.message = 'Error! Could not send buddy request!';
+        $scope.successful = false
+      });
+    });
+  };
+}).directive('buddyRequestBox', function () {
   return {
     restrict: 'E',
     templateUrl: 'templates/buddy_request_box',

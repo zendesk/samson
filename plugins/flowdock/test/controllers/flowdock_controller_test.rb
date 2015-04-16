@@ -10,7 +10,6 @@ describe FlowdockController do
 
   as_a_viewer do
     describe 'users' do
-
       let(:flowdock_users) do
         1.upto(3).map { |i| flowdock_user(i) }
       end
@@ -20,7 +19,7 @@ describe FlowdockController do
         get :users
       end
 
-      it 'should return the list of flowdock users' do
+      it 'returns the list of flowdock users' do
         assert_response :success
         fetched_users = JSON.parse(response.body)['users']
         fetched_users.size.must_equal(3)
