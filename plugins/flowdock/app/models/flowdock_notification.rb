@@ -28,7 +28,7 @@ class FlowdockNotification
 
   def flow
     @flow ||= Flowdock::Flow.new(
-      api_token: project.flowdock_tokens,
+      api_token: stage.flowdock_tokens,
       source: "samson",
       from: { name: user.name, address: user.email }
     )
