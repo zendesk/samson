@@ -5,19 +5,16 @@
   and paste in the project's webhook URL to your CI service of choice.</p>
 
   <dl>
-    <dt>Semaphore:</dt><dd><%= link_to_url integrations_semaphore_deploy_url(@project.token) %></dd>
-    <dt>Tddium:</dt><dd><%= link_to_url integrations_tddium_deploy_url(@project.token) %></dd>
-    <dt>Travis:</dt><dd><%= link_to_url integrations_travis_deploy_url(@project.token) %></dd>
-    <dt>Jenkins:</dt><dd><%= link_to_url integrations_jenkins_deploy_url(@project.token) %></dd>
-    <dt>Buildkite:</dt><dd><%= link_to_url integrations_buildkite_deploy_url(@project.token) %></dd>
-    <dt>Github Push:</dt><dd><%= link_to_url integrations_github_deploy_url(@project.token) %></dd>
+    <% Webhook::SOURCES.each do |source| %>
+    <dt><%= source.titleize %>:</dt><dd><%= link_to_url(send("integrations_#{source}_deploy_url", @project.token)) %></dd>
+    <% end %>
   </dl>
 
   <% if @webhooks.any? %>
     <h2>Webhooks mappings</h2>
     <ul>
       <% @webhooks.each do |webhook| %>
-        <li><strong><%= webhook.branch %></strong> branch &rarr; <strong><%= webhook.stage.name %></strong> stage (<%= link_to "remove", [@project, webhook], method: :delete %>)</li>
+        <li><strong><%= webhook.branch %></strong> branch &rarr; <strong><%= webhook.stage.name %></strong> stage for: <%= webhook.source.humanize %> (<%= link_to "remove", [@project, webhook], method: :delete %>)</li>
       <% end %>
     </ul>
   <% end %>
@@ -32,6 +29,11 @@
 
     <div class="form-group">
       <%= form.collection_select :stage_id, @project.stages, :id, :name, {}, class: "form-control" %>
+    </div>
+
+    <div class="form-group">
+      <%= form.select :source, [['Any CI', 'any_ci'], ['Any code push', 'any_code'], ['Any', 'any']] +
+        Webhook::SOURCES.map {|source| [ source.titleize, source ]}, {}, class: "form-control" %>
     </div>
 
     <%= form.submit "Add webhook", class: "btn btn-primary" %>

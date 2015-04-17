@@ -31,4 +31,10 @@ class Integrations::GithubController < Integrations::BaseController
     # Github returns full ref e.g. refs/heads/...
     params[:ref][/refs\/heads\/(.+)/, 1]
   end
+
+  private
+
+  def service_type
+    'code'
+  end
 end

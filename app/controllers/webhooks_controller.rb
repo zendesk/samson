@@ -34,7 +34,7 @@ class WebhooksController < ApplicationController
   end
 
   def webhook_params
-    params.require(:webhook).permit(:branch, :stage_id)
+    params.require(:webhook).permit(:branch, :stage_id, :source)
   end
 
 end

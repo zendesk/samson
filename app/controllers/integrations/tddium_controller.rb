@@ -29,4 +29,10 @@ class Integrations::TddiumController < Integrations::BaseController
   def commit
     params[:commit_id]
   end
+
+  private
+
+  def service_type
+    'ci'
+  end
 end
