@@ -47,8 +47,6 @@ module Samson
         engine.config.assets.precompile += %W(#{name}/application.css #{name}/application.js)
       end
 
-      private
-
       def engine
         @engine ||= Kernel.const_get("::Samson#{@name.capitalize}::Engine")
       end
@@ -100,6 +98,7 @@ module Samson
 
       def render_javascripts(view)
         Samson::Hooks.plugins.each do |plugin|
+          next unless File.exists?(plugin.engine.config.root.join("app/assets/javascripts/#{plugin.name}/application.js"))
           view.concat(view.javascript_include_tag("#{plugin.name}/application.js"))
         end
         nil
@@ -107,6 +106,7 @@ module Samson
 
       def render_stylesheets(view)
         Samson::Hooks.plugins.each do |plugin|
+          next unless File.exists?(plugin.engine.config.root.join("app/assets/stylesheets/#{plugin.name}/application.css"))
           view.concat(view.stylesheet_link_tag("#{plugin.name}/application.css"))
         end
         nil
