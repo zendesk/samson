@@ -26,14 +26,6 @@ class FlowdockNotification
 
   private
 
-  def flow
-    @flow ||= Flowdock::Flow.new(
-      api_token: stage.flowdock_tokens,
-      source: "samson",
-      from: { name: user.name, address: user.email }
-    )
-  end
-
   def buddy_request_completed_message(approved, buddy)
     if user == buddy
        "#{user.name} bypassed deploy #{deploy_url}"
