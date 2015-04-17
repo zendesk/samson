@@ -1,6 +1,7 @@
 module Samson
   module Hooks
     KNOWN = [
+      :model_defined,
       :stage_form,
       :stage_clone,
       :stage_permitted_params,
@@ -125,9 +126,13 @@ Dir["plugins/*/lib"].each { |f| $LOAD_PATH << f } # treat included plugins like 
 
 module LoadDecorators
   def inherited(subclass)
-    Samson::Hooks.plugins.each { |plugin| plugin.add_decorator(subclass.name) }
+    Samson::Hooks.fire(:model_defined, subclass)
     super
   end
+end
+
+Samson::Hooks.callback :model_defined do |model_class|
+  Samson::Hooks.plugins.each { |plugin| plugin.add_decorator(model_class.name) }
 end
 
 ActiveRecord::Base.extend LoadDecorators

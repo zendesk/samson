@@ -1,5 +1,5 @@
 <% if @deploy.waiting_for_buddy? && @deploy.stage.send_flowdock_notifications? %>
-  <buddy-request-box default-buddy-request-message="<%= @deploy.default_flowdock_message(current_user) %>"
+  <buddy-request-box default-buddy-request-message="<%= default_flowdock_message(@deploy) %>"
                      flowdock-flows="<%= @deploy.stage.enabled_flows_names.join(', ') %>"
                      deploy="<%= @deploy.id %>" ></buddy-request-box>
 

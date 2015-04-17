@@ -27,9 +27,9 @@ module SamsonFlowdock
       chat_flow.push_to_chat(content: message, tags: tags)
     end
 
-    def notify_inbox(subject, message)
+    def notify_inbox(subject, message, link)
       tags = ["deploy", stage.name.downcase]
-      inbox_flow.push_to_team_inbox(subject: subject, content: message, tags: tags, link: @deploy.url)
+      inbox_flow.push_to_team_inbox(subject: subject, content: message, tags: tags, link: link)
     end
 
     private

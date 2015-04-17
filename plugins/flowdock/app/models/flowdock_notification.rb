@@ -2,6 +2,7 @@ require 'flowdock'
 
 class FlowdockNotification
   delegate :project, :stage, :user, to: :@deploy
+  delegate :project_deploy_url, to: 'Rails.application.routes.url_helpers'
 
   def initialize(deploy)
     @deploy = deploy
@@ -18,7 +19,7 @@ class FlowdockNotification
 
   def deliver
     subject = "[#{project.name}] #{@deploy.summary}"
-    flowdock_service.notify_inbox(subject, content)
+    flowdock_service.notify_inbox(subject, content, deploy_url)
   rescue Flowdock::ApiError => e
     Rails.logger.error("Could not deliver flowdock message: #{e.message}")
   end
@@ -35,9 +36,9 @@ class FlowdockNotification
 
   def buddy_request_completed_message(approved, buddy)
     if user == buddy
-       "#{user.name} bypassed deploy #{@deploy.url}"
+       "#{user.name} bypassed deploy #{deploy_url}"
      else
-       "#{user.name} #{buddy.name} #{approved ? 'approved' : 'stopped' } deploy #{@deploy.url}"
+       "#{user.name} #{buddy.name} #{approved ? 'approved' : 'stopped' } deploy #{deploy_url}"
      end
   end
 
@@ -47,5 +48,9 @@ class FlowdockNotification
 
   def flowdock_service
     @flowdock_service ||= SamsonFlowdock::FlowdockService.new(@deploy)
+  end
+
+  def deploy_url
+    project_deploy_url(@deploy.project, @deploy)
   end
 end
