@@ -11,6 +11,7 @@ module Samson
     ]
 
     @@hooks = {}
+    @@decorators = {}
 
     class Plugin
       attr_reader :name
@@ -37,10 +38,16 @@ module Samson
         engine.config.autoload_paths += Dir["#{engine.config.root}/lib/**/"]
       end
 
-      def add_decorator(klass_name)
-        return if klass_name.nil?
-        decorator_file = engine.config.root.join("app/decorators/#{klass_name.downcase}_decorator.rb")
-        require_dependency(decorator_file) if File.exists?(decorator_file)
+      def add_decorators
+        Dir[decorators_root.join('**/*_decorator.rb')].each do |path|
+          relative_path = Pathname.new(path).relative_path_from(decorators_root).to_s
+          klass_name = relative_path.sub('_decorator.rb', '').split('/').map(&:classify).join('::')
+          Samson::Hooks.decorator(klass_name, path)
+        end
+      end
+
+      def decorators_root
+        @decorators_root ||= Pathname.new(engine.config.root.join('app/decorators'))
       end
 
       def add_assets_to_precompile
@@ -88,12 +95,21 @@ module Samson
         nil
       end
 
+      def decorator(klass_name, path)
+        decorators(klass_name) << path
+      end
+
+      def load_decorators(klass)
+        decorators(klass.name).each { |decorator| require_dependency(decorator) }
+      end
+
       def plugin_setup
         Samson::Hooks.plugins.
           each(&:require).
           each(&:add_migrations).
           each(&:add_assets_to_precompile).
-          each(&:add_lib_path)
+          each(&:add_lib_path).
+          each(&:add_decorators)
       end
 
       def render_javascripts(view)
@@ -114,6 +130,10 @@ module Samson
 
       private
 
+      def decorators(name)
+        @@decorators[name] ||= []
+      end
+
       def hooks(name)
         raise "Using unsupported hook #{name.inspect}" unless KNOWN.include?(name)
         (@@hooks[name] ||= [])
@@ -132,8 +152,8 @@ module Samson::LoadDecorators
 end
 
 Samson::Hooks.callback :model_defined do |model_class|
-  Samson::Hooks.plugins.each { |plugin| plugin.add_decorator(model_class.name) }
+  Samson::Hooks.load_decorators(model_class)
 end
 
-ActiveRecord::Base.extend Samson::LoadDecorators
 Samson::Hooks.plugin_setup
+ActiveRecord::Base.extend Samson::LoadDecorators
