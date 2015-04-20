@@ -36,7 +36,7 @@ describe FlowdockController do
         post :notify,  deploy_id: deploy_id, message: 'Test'
       end
 
-      it 'should send a buddy request' do
+      it 'sends a buddy request' do
         assert_response :success
       end
     end

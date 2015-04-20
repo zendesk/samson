@@ -21,4 +21,3 @@ describe Stage do
     end
   end
 end
-
