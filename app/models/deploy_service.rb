@@ -7,6 +7,7 @@ class DeployService
 
   def deploy!(stage, reference)
     deploy = stage.create_deploy(reference: reference, user: user)
+    SseRailsEngine.send_event('deploys', { type: 'new' })
 
     if deploy.persisted? && (auto_confirm?(stage) || release_approved?(deploy))
       confirm_deploy!(deploy, stage, reference, deploy.buddy)
@@ -54,6 +55,7 @@ class DeployService
 
   def send_before_notifications(stage, deploy, buddy)
     Samson::Hooks.fire(:before_deploy, stage, deploy, buddy)
+    SseRailsEngine.send_event('deploys', { type: 'start' })
 
     if bypassed?(stage, deploy, buddy)
       DeployMailer.bypass_email(stage, deploy, user).deliver_now
@@ -68,6 +70,8 @@ class DeployService
 
   def send_after_notifications(stage, deploy)
     Samson::Hooks.fire(:after_deploy, stage, deploy, deploy.buddy)
+    SseRailsEngine.send_event('deploys', { type: 'finish' })
+
     send_deploy_email(stage, deploy)
     send_failed_deploy_email(stage, deploy)
     send_datadog_notification(stage, deploy)

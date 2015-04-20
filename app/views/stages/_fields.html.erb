@@ -26,7 +26,7 @@
   <% if DeployGroup.enabled? %>
     <div class="form-group">
       <%= form.label :name, 'Deploy Groups', class: 'col-lg-2 control-label' %>
-      <div class="col-lg-5">
+      <div class="col-lg-6">
         <% if @environments.count > 0 %>
           <%= hidden_field_tag "stage[deploy_group_ids][]" %>
           <table class="table table-condensed text-left deploy-groups">

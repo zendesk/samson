@@ -98,6 +98,7 @@ class DeploysController < ApplicationController
   def destroy
     if @deploy.can_be_stopped_by?(current_user)
       @deploy.stop!
+      SseRailsEngine.send_event('deploys', { type: 'finish' })
     else
       flash[:error] = "You do not have privileges to stop this deploy."
     end
