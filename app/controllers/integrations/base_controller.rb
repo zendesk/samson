@@ -54,7 +54,7 @@ class Integrations::BaseController < ApplicationController
   private
 
   def service_type
-    raise 'Implement this in a subclass'
+    'ci'
   end
 
   def service_name

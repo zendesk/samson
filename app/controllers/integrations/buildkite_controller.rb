@@ -24,10 +24,4 @@ class Integrations::BuildkiteController < Integrations::BaseController
   def build_param
     @build_param ||= params.fetch(:build, { })
   end
-
-  private
-
-  def service_type
-    'ci'
-  end
 end

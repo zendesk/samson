@@ -29,10 +29,4 @@ class Integrations::TravisController < Integrations::BaseController
   def commit
     payload['commit']
   end
-
-  private
-
-  def service_type
-    'ci'
-  end
 end

@@ -5,7 +5,9 @@ class Webhook < ActiveRecord::Base
   belongs_to :project
   belongs_to :stage
 
-  SOURCES = %w[semaphore tddium travis jenkins buildkite github].freeze
+  SOURCES = Rails.root.join('app','controllers', 'integrations').children(false).map do |controller_path|
+    controller_path.to_s[/\A(?!base)(\w+)_controller.rb\z/, 1]
+  end.compact.freeze
 
   def self.for_branch(branch)
     where(branch: branch)
