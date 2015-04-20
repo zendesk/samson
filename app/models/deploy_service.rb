@@ -32,16 +32,13 @@ class DeployService
   end
 
   def latest_approved_deploy(reference, project)
-    deploy = nil
-    Deploy.where(reference: reference).where(' buddy_id is NOT NULL AND started_at > ?', BuddyCheck.period.hours.ago)
+    Deploy.where(reference: reference).where('buddy_id is NOT NULL AND started_at > ?', BuddyCheck.period.hours.ago)
       .includes(:stage)
-      .where(stages: {project_id: project, production: true})
+      .where(stages: {project_id: project})
       .each do |d|
-        next if bypassed?(d.stage, d, d.buddy)
-        deploy = d
-        break
+        return d if d.production? && !bypassed?(d.stage, d, d.buddy)
       end
-      deploy
+    nil
   end
 
   def release_approved?(deploy)

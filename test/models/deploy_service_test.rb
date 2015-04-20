@@ -26,7 +26,13 @@ describe DeployService do
     end
 
     describe "when buddy check is needed" do
-      before { service.stubs(:auto_confirm?).returns(false) }
+      before { BuddyCheck.stubs(:enabled?).returns(true) }
+      let(:deploy) { deploys(:succeeded_production_test) }
+
+      def create_previous_deploy(ref, stage, successful: true)
+        job = project.jobs.create!(user: user, command: "foo", status: successful ? "succeeded" : 'failed')
+        Deploy.create!(job: job, reference: ref, stage: stage, buddy: other_user, started_at: Time.now)
+      end
 
       it "does not start the deploy" do
         service.expects(:confirm_deploy!).never
@@ -34,13 +40,7 @@ describe DeployService do
       end
 
       describe "if release is approved" do
-        before do
-          job_1 = project.jobs.create!(user: user, command: "foo", status: "succeeded")
-          deploy_1 = Deploy.new(id: 101, job: job_1, reference: ref1, stage: stage_production_1)
-          deploy_1.buddy = other_user
-          deploy_1.started_at = Time.now
-          deploy_1.save!
-        end
+        before { create_previous_deploy(ref1, stage_production_1) }
 
         it "starts the deploy, if in grace period" do
           service.expects(:confirm_deploy!).once
@@ -73,6 +73,25 @@ describe DeployService do
         it "it starts the deploy" do
           service.expects(:confirm_deploy!).once
           service.deploy!(stage, reference)
+        end
+      end
+
+      describe "if deploy groups are enabled" do
+        before do
+          DeployGroup.stubs(:enabled?).returns(true)
+          stage.update_attribute(:production, false)
+        end
+
+        it 'should deploy because of prod deploy groups' do
+          create_previous_deploy(ref1, stage_production_1)
+          service.expects(:confirm_deploy!).once
+          service.deploy!(stage_production_2, ref1)
+        end
+
+        it 'should not deploy if previous deploy was not on prod' do
+          create_previous_deploy(ref1, stages(:test_staging))
+          service.expects(:confirm_deploy!).never
+          service.deploy!(stage_production_2, ref1)
         end
       end
     end

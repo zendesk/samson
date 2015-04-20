@@ -23,7 +23,7 @@
     </div>
   </div>
 
-  <% if ENV['DEPLOY_GROUP_FEATURE'] %>
+  <% if DeployGroup.enabled? %>
     <div class="form-group">
       <%= form.label :name, 'Deploy Groups', class: 'col-lg-2 control-label' %>
       <div class="col-lg-5">

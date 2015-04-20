@@ -53,6 +53,11 @@ group :assets do
   gem 'ngannotate-rails'
   gem 'angular-rails-templates'
   gem 'underscore-rails'
+  gem 'rails-assets-angular'
+  gem 'rails-assets-angular-mocks'
+  gem 'rails-assets-angular-scenario'
+  gem 'rails-assets-bootstrap-select'
+  gem 'rails-assets-typeahead.js'
   gem 'rails-assets-vis'
 end
 
