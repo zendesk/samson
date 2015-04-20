@@ -20,9 +20,9 @@ class FlowdockNotification
   def deliver
     subject = "[#{project.name}] #{@deploy.summary}"
     flowdock_service.notify_inbox(subject, content, deploy_url)
-  rescue Flowdock::ApiError => e
-    Rails.logger.error("Could not deliver flowdock message: #{e.message}")
-    Airbrake.notify(exception, error_message: 'Could not deliver flowdock message')
+  rescue Flowdock::ApiError => error
+    Rails.logger.error("Could not deliver flowdock message: #{error.message}")
+    Airbrake.notify(error, error_message: 'Could not deliver flowdock message')
   end
 
   private
