@@ -8,7 +8,7 @@ describe Integrations::GithubController do
 
   let(:payload) do
     {
-      ref: 'refs/heads/origin/dev',
+      ref: 'refs/heads/dev',
       after: commit
     }.with_indifferent_access
   end
@@ -18,7 +18,7 @@ describe Integrations::GithubController do
 
     Integrations::GithubController.github_hook_secret = 'test'
 
-    project.webhooks.create!(stage: stages(:test_staging), branch: "refs/heads/origin/dev")
+    project.webhooks.create!(stage: stages(:test_staging), branch: "dev", source: 'github')
   end
 
   it 'does not deploy if signature is invalid' do
@@ -53,6 +53,6 @@ describe Integrations::GithubController do
       request.headers['X-Hub-Signature'] = "sha1=#{hmac}"
     end
 
-    test_regular_commit "Github", no_mapping: { ref: 'refs/heads/origin/foobar' }, failed: false
+    test_regular_commit "Github", no_mapping: { ref: 'refs/heads/foobar' }, failed: false
   end
 end
