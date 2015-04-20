@@ -124,7 +124,7 @@ end
 
 Dir["plugins/*/lib"].each { |f| $LOAD_PATH << f } # treat included plugins like gems
 
-module LoadDecorators
+module Samson::LoadDecorators
   def inherited(subclass)
     Samson::Hooks.fire(:model_defined, subclass)
     super
@@ -135,5 +135,5 @@ Samson::Hooks.callback :model_defined do |model_class|
   Samson::Hooks.plugins.each { |plugin| plugin.add_decorator(model_class.name) }
 end
 
-ActiveRecord::Base.extend LoadDecorators
+ActiveRecord::Base.extend Samson::LoadDecorators
 Samson::Hooks.plugin_setup

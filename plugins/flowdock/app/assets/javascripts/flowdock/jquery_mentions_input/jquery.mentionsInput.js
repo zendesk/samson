@@ -21,7 +21,7 @@
     allowRepeat   : false, //Allow repeat mentions
     showAvatars   : true, //Show the avatars
     elastic       : true, //Grow the textarea automatically
-    useCurrentVal : false,
+    defaultValue  : '',
     onCaret       : false,
     classes       : {
       autoCompleteItemActive : "active" //Classes to apply in each item
@@ -48,7 +48,6 @@
     regexpEncode     : function (str) {
       return str.replace(/([.*+?^=!:${}()|\[\]\/\\])/g, "\\$1");
     },
-    //
     highlightTerm    : function (value, term) {
       if (!term && !term.length) {
         return value;
@@ -159,7 +158,7 @@
       });
 
       mentionText = mentionText.replace(/\n/g, '<br />'); //Replace the escape character for <br />
-      mentionText = mentionText.replace(/ {2}/g, '&nbsp; '); //Replace the 2 preceding token to &nbsp; 
+      mentionText = mentionText.replace(/ {2}/g, '&nbsp; '); //Replace the 2 preceding token to &nbsp;
 
       elmInputBox.data('messageText', syntaxMessage); //Save the messageText to elmInputBox
       elmInputBox.trigger('updated');
@@ -257,7 +256,6 @@
         //subtracts body distance to handle fixed headers
         $(window).scrollTop(elmDistanceFromTop - bodyDistanceFromTop);
       }
-
     }
 
     //Takes the click event when the user select a item of the dropdown
@@ -266,9 +264,7 @@
       var mention = autocompleteItemCollection[elmTarget.attr('data-uid')]; //Obtains the mention
 
       addMention(mention);
-
       scrollToInput();
-
       return false;
     }
 
@@ -291,7 +287,6 @@
       if (triggerCharIndex > -1) { //If the triggerChar is present in the inputBuffer array
         currentDataQuery = inputBuffer.slice(triggerCharIndex + 1).join(''); //Gets the currentDataQuery
         currentDataQuery = utils.rtrim(currentDataQuery); //Deletes the whitespaces
-
         _.defer(_.bind(doSearch, this, currentDataQuery)); //Invoking the function doSearch ( Bind the function to this)
       }
     }
@@ -338,7 +333,7 @@
         case KEY.DOWN:
           var elmCurrentAutoCompleteItem = null;
           if (e.keyCode === KEY.DOWN) { //If the key pressed was DOWN
-            if (elmActiveAutoCompleteItem && elmActiveAutoCompleteItem.length) { //If elmActiveAutoCompleteItem exits 
+            if (elmActiveAutoCompleteItem && elmActiveAutoCompleteItem.length) { //If elmActiveAutoCompleteItem exits
               elmCurrentAutoCompleteItem = elmActiveAutoCompleteItem.next(); //Gets the next li element in the list
             } else {
               elmCurrentAutoCompleteItem = elmAutocompleteList.find('li').first(); //Gets the first li element found
@@ -346,20 +341,16 @@
           } else {
             elmCurrentAutoCompleteItem = $(elmActiveAutoCompleteItem).prev(); //The key pressed was UP and gets the previous li element
           }
-
           if (elmCurrentAutoCompleteItem.length) {
             selectAutoCompleteItem(elmCurrentAutoCompleteItem);
           }
-
           return false;
-
         case KEY.RETURN: //If the key pressed was RETURN or TAB
         case KEY.TAB:
           if (elmActiveAutoCompleteItem && elmActiveAutoCompleteItem.length) { //If the elmActiveAutoCompleteItem exists
             elmActiveAutoCompleteItem.trigger('mousedown'); //Calls the mousedown event
             return false;
           }
-
           break;
       }
 
@@ -458,33 +449,28 @@
       elmAutocompleteList.css('width', '15em'); // Sort of a guess
       elmAutocompleteList.css('left', position.left);
       elmAutocompleteList.css('top', lineHeight + position.top);
+
+      //check if the right position of auto complete is larger than the right position of the input
+      //if yes, reset the left of auto complete list to make it fit the input
+      var elmInputBoxRight = elmInputBox.offset().left + elmInputBox.width(),
+        elmAutocompleteListRight = elmAutocompleteList.offset().left + elmAutocompleteList.width();
+      if (elmInputBoxRight <= elmAutocompleteListRight) {
+        elmAutocompleteList.css('left', Math.abs(elmAutocompleteList.position().left - (elmAutocompleteListRight - elmInputBoxRight)));
+      }
     }
 
     //Resets the text area
     function resetInput(currentVal) {
-      if (currentVal) {
-        mentionsCollection = [];
-        var mentionText = utils.htmlEncode(currentVal);
-        var regex = new RegExp("(" + settings.triggerChar + ")\\[(.*?)\\]\\((.*?):(.*?)\\)", "gi");
-        var match;
-        var newMentionText = mentionText;
-        while ((match = regex.exec(mentionText)) != null) {    // Find all matches in a string
-          newMentionText = newMentionText.replace(match[0], match[1] + match[2]);
-          mentionsCollection.push({   // Btw: match[0] is the complete match
-            'id': match[4],
-            'type': match[3],
-            'value': match[2],
-            'trigger': match[1]
-          });
-        }
-        elmInputBox.val(newMentionText);
-        updateValues();
+      mentionsCollection = [];
+      var mentionText = utils.htmlEncode(currentVal);
+      var regex = new RegExp("(" + settings.triggerChar + ")\\[(.*?)\\]\\((.*?):(.*?)\\)", "gi");
+      var match, newMentionText = mentionText;
+      while ((match = regex.exec(mentionText)) != null) {
+        newMentionText = newMentionText.replace(match[0], match[1] + match[2]);
+        mentionsCollection.push({ 'id': match[4], 'type': match[3], 'value': match[2], 'trigger': match[1] });
       }
-      else {
-        elmInputBox.val('');
-        mentionsCollection = [];
-        updateValues();
-      }
+      elmInputBox.val(newMentionText);
+      updateValues();
     }
     // Public methods
     return {
@@ -496,18 +482,12 @@
         initTextarea();
         initAutocomplete();
         initMentionsOverlay();
-        if(settings.defaultValue){
-          resetInput(settings.defaultValue);
-        }
-        else{
-          resetInput();
-        }
+        resetInput(settings.defaultValue);
 
         //If the autocomplete list has prefill mentions
         if( settings.prefillMention ) {
           addMention( settings.prefillMention );
         }
-
       },
 
       //An async method which accepts a callback function and returns a value of the input field (including markup) as a first parameter of this function. This is the value you want to send to your server.
@@ -515,7 +495,6 @@
         if (!_.isFunction(callback)) {
           return;
         }
-
         callback.call(this, mentionsCollection.length ? elmInputBox.data('messageText') : getInputBoxValue());
       },
 
@@ -529,7 +508,6 @@
         if (!_.isFunction(callback)) {
           return;
         }
-
         callback.call(this, mentionsCollection);
       }
     };
@@ -539,7 +517,6 @@
   $.fn.mentionsInput = function (method, settings) {
 
     var outerArguments = arguments; //Gets the arguments
-
     //If method is not a function
     if (typeof method === 'object' || !method) {
       settings = method;
@@ -550,14 +527,11 @@
 
       if (_.isFunction(instance[method])) {
         return instance[method].apply(this, Array.prototype.slice.call(outerArguments, 1));
-
       } else if (typeof method === 'object' || !method) {
         return instance.init.call(this, this);
-
       } else {
         $.error('Method ' + method + ' does not exist');
       }
-
     });
   };
 
