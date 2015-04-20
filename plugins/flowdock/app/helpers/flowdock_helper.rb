@@ -4,6 +4,6 @@ module FlowdockHelper
   end
 
   def user_tag(user)
-    "@#{user.email.match(/(.*)@/)[1]}"
+    "@#{user.email.split('@').first}"
   end
 end
