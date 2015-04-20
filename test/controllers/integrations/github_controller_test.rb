@@ -55,4 +55,29 @@ describe Integrations::GithubController do
 
     test_regular_commit "Github", no_mapping: { ref: 'refs/heads/foobar' }, failed: false
   end
+
+  describe 'security' do
+    let(:user_name) { 'Github' }
+
+    before do
+      project.webhooks.each(&:soft_delete!)
+      request.headers['X-Github-Event'] = 'push'
+      @payload = payload.deep_merge(token: project.token)
+      @hmac = OpenSSL::HMAC.hexdigest(OpenSSL::Digest.new('sha1'), 'test', payload.to_param)
+    end
+
+    it 'is timing safe' do
+      request.headers['X-Github-Event'] == 'invalid'
+      request.headers['X-Hub-Signature'] = "sha1=#{@hmac}"
+      time_success = Benchmark.measure do
+        1000.times { post :create, @payload }
+      end.total
+      request.headers['X-Hub-Signature'] = "sha1=#{@hmac.sub(/[0-8a-f]/, '9')}"
+      time_fail = Benchmark.measure do
+        1000.times { post :create, @payload }
+      end.total
+      time_difference = (time_success - time_fail).abs
+      pending { assert time_difference < 0.002 }
+    end
+  end
 end

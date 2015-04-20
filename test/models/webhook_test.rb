@@ -1,7 +1,7 @@
 require_relative '../test_helper'
 
 describe Webhook do
-  let(:webhook_attributes) { { :branch => 'master', :stage_id => 1, :project_id => 1} }
+  let(:webhook_attributes) { { :branch => 'master', :stage_id => 1, :project_id => 1, source: 'any_ci'} }
 
   describe '#create' do
     it 'creates the webhook' do
