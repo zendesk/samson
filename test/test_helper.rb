@@ -31,9 +31,24 @@ module StubGithubAPI
   end
 end
 
+module DefaultStubs
+  def create_default_stubs
+    SseRailsEngine.stubs(:send_event).returns(true)
+    Project.any_instance.stubs(:clone_repository).returns(true)
+    Project.any_instance.stubs(:clean_repository).returns(true)
+  end
+
+  def undo_default_stubs
+    Project.any_instance.unstub(:clone_repository)
+    Project.any_instance.unstub(:clean_repository)
+    SseRailsEngine.unstub(:send_event)
+  end
+end
+
 class ActiveSupport::TestCase
   include Warden::Test::Helpers
   include StubGithubAPI
+  include DefaultStubs
 
   ActiveRecord::Migration.check_pending!
 
@@ -45,7 +60,7 @@ class ActiveSupport::TestCase
 
   before do
     Rails.cache.clear
-    stubs_project_callbacks
+    create_default_stubs
   end
 
   after { sleep 0.1 while extra_threads.present? }
@@ -63,16 +78,6 @@ class ActiveSupport::TestCase
 
   def refute_valid(record)
     refute record.valid?
-  end
-
-  def stubs_project_callbacks
-    Project.any_instance.stubs(:clone_repository).returns(true)
-    Project.any_instance.stubs(:clean_repository).returns(true)
-  end
-
-  def unstub_project_callbacks
-    Project.any_instance.unstub(:clone_repository)
-    Project.any_instance.unstub(:clean_repository)
   end
 
   def ar_queries
@@ -115,6 +120,7 @@ end
 
 class ActionController::TestCase
   include StubGithubAPI
+  include DefaultStubs
 
   class << self
     def unauthorized(method, action, params = {})
@@ -140,6 +146,7 @@ class ActionController::TestCase
     request.env['warden'] = Warden::Proxy.new(request.env, manager)
 
     stub_request(:get, "https://#{Rails.application.config.samson.github.status_url}/api/status.json").to_timeout
+    create_default_stubs
   end
 
   teardown do
