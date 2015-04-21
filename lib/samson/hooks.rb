@@ -11,7 +11,6 @@ module Samson
     ]
 
     @@hooks = {}
-    @@decorators = {}
 
     class Plugin
       attr_reader :name
@@ -40,9 +39,9 @@ module Samson
 
       def add_decorators
         Dir[decorators_root.join('**/*_decorator.rb')].each do |path|
-          relative_path = Pathname.new(path).relative_path_from(decorators_root).to_s
-          klass_name = relative_path.sub('_decorator.rb', '').split('/').map(&:classify).join('::')
-          Samson::Hooks.decorator(klass_name, path)
+          Samson::Hooks.callback(:model_defined) do |model_klass_name|
+            require_dependency(path) if decorator_class(path) == model_klass_name
+          end
         end
       end
 
@@ -56,6 +55,13 @@ module Samson
 
       def engine
         @engine ||= Kernel.const_get("::Samson#{@name.capitalize}::Engine")
+      end
+
+      private
+
+      def decorator_class(path)
+        relative_path = Pathname.new(path).relative_path_from(decorators_root).to_s
+        relative_path.sub('_decorator.rb', '').split('/').map(&:classify).join('::')
       end
     end
 
@@ -95,14 +101,6 @@ module Samson
         nil
       end
 
-      def decorator(klass_name, path)
-        decorators(klass_name) << path
-      end
-
-      def load_decorators(klass_name)
-        decorators(klass_name).each { |decorator| require_dependency(decorator) }
-      end
-
       def plugin_setup
         Samson::Hooks.plugins.
           each(&:require).
@@ -130,10 +128,6 @@ module Samson
 
       private
 
-      def decorators(name)
-        @@decorators[name] ||= []
-      end
-
       def hooks(name)
         raise "Using unsupported hook #{name.inspect}" unless KNOWN.include?(name)
         (@@hooks[name] ||= [])
@@ -149,10 +143,6 @@ module Samson::LoadDecorators
     Samson::Hooks.fire(:model_defined, subclass.name)
     super
   end
-end
-
-Samson::Hooks.callback :model_defined do |klass_name|
-  Samson::Hooks.load_decorators(klass_name)
 end
 
 Samson::Hooks.plugin_setup
