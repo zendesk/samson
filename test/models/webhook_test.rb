@@ -61,4 +61,17 @@ describe Webhook do
       end
     end
   end
+
+  describe '.for_source' do
+    before do
+      %w[any_ci any_code github travis tddium any].each_with_index do |source, index|
+        Webhook.create(branch: 'master', stage_id: index, project_id: 1, source: source)
+      end
+    end
+
+    it 'filters correctly' do
+      assert_equal Webhook.for_source('ci', 'travis').pluck(:source), ['any_ci', 'travis', 'any']
+      assert_equal Webhook.for_source('code', 'github').pluck(:source), ['any_code', 'github', 'any']
+    end
+  end
 end
