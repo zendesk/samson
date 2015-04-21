@@ -1,8 +1,8 @@
 require_relative "../test_helper"
 
 describe JenkinsHelper do
-  def stub_jenkins_job_with_status(jenkins_job_status)
-    JenkinsJob.create!(name: "test_job", deploy_id: 11, jenkins_job_id: 111, jenkins_job_status: jenkins_job_status)
+  def stub_jenkins_job_with_status(status)
+    JenkinsJob.create!(name: "test_job", deploy_id: 11, jenkins_job_id: 111, status: status)
   end
 
   def stub_jenkins_job_without_status
