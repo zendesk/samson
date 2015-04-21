@@ -380,8 +380,8 @@ DEPENDENCIES
   rails_12factor
   rickshaw_rails
   samson_flowdock!
-  samson_slack!
   samson_jenkins!
+  samson_slack!
   samson_zendesk!
   sass-rails (~> 5.0)
   sawyer (~> 0.5)

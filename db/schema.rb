@@ -73,11 +73,11 @@ ActiveRecord::Schema.define(version: 20150331084621) do
   end
 
   create_table "jenkins_jobs", force: :cascade do |t|
-    t.integer  "jenkins_job_id",     limit: 4
+    t.integer  "jenkins_job_id",     limit: 4,   null: false
     t.string   "name",               limit: 255, null: false
     t.string   "jenkins_job_status", limit: 255
     t.string   "jenkins_job_error",  limit: 255
-    t.integer  "deploy_id",          limit: 4
+    t.integer  "deploy_id",          limit: 4,   null: false
     t.datetime "created_at",                     null: false
     t.datetime "updated_at",                     null: false
   end

@@ -12,14 +12,14 @@ end
 
 Samson::Hooks.callback :deploy_defined do
   Deploy.class_eval do
-    has_many :jenkins_job
+    has_many :jenkins_jobs
   end
 end
 
 Samson::Hooks.callback :after_deploy do |stage, deploy|
   if deploy.status == 'succeeded' && stage.jenkins_job_names?
     stage.jenkins_job_names.to_s.split(/, ?/).map do |job_name|
-      job_id = Jenkins.new(job_name, deploy).build
+      job_id = Samson::Jenkins.new(job_name, deploy).build
       attributes = {name: job_name, deploy_id: deploy.id}
       if job_id.is_a?(Fixnum)
         attributes[:jenkins_job_id] = job_id
