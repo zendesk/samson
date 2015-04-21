@@ -40,6 +40,7 @@ group :production, :staging do
 end
 
 group :assets do
+  gem 'ngannotate-rails'
   gem 'sass-rails', '~> 5.0'
   gem 'uglifier', '>= 1.3.0'
   gem 'angular-rails-templates'
@@ -54,7 +55,6 @@ group :assets do
   gem 'rails-assets-jquery-ui'
   gem 'rails-assets-jquery-ujs'
   gem 'rails-assets-moment'
-  gem 'rails-assets-olov--ng-annotate'
   gem 'rails-assets-rickshaw'
   gem 'rails-assets-typeahead.js'
   gem 'rails-assets-underscore'

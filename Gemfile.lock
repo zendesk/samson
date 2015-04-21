@@ -159,6 +159,9 @@ GEM
     net-http-persistent (2.9.4)
     newrelic_api (1.2.4)
     newrelic_rpm (3.9.8.273)
+    ngannotate-rails (0.15.4)
+      execjs
+      rails (>= 3.1)
     nokogiri (1.6.5)
       mini_portile (~> 0.6.0)
     nokogiri (1.6.5-java)
@@ -220,7 +223,6 @@ GEM
     rails-assets-jquery-ujs (1.0.3)
       rails-assets-jquery (> 1.8)
     rails-assets-moment (2.10.2)
-    rails-assets-olov--ng-annotate (0.15.4)
     rails-assets-rickshaw (1.5.1)
     rails-assets-typeahead.js (0.10.5)
       rails-assets-jquery (>= 1.7)
@@ -346,6 +348,7 @@ DEPENDENCIES
   net-http-persistent
   newrelic_api
   newrelic_rpm (>= 3.7.1)
+  ngannotate-rails
   octokit (~> 3.0)
   omniauth (~> 1.1)
   omniauth-github (= 1.1.1)
@@ -365,7 +368,6 @@ DEPENDENCIES
   rails-assets-jquery-ui
   rails-assets-jquery-ujs
   rails-assets-moment
-  rails-assets-olov--ng-annotate
   rails-assets-rickshaw
   rails-assets-typeahead.js
   rails-assets-underscore
