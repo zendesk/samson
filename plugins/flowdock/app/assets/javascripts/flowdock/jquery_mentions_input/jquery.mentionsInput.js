@@ -1,4 +1,7 @@
 /*
+ * TODO use gem 'rails-assets-jquery-mentions-input' once
+ * https://github.com/podio/jquery-mentions-input/pull/131 is released
+ *
  * Mentions Input
  * Version 1.0.2
  * Written by: Kenneth Auchenberg (Podio)
