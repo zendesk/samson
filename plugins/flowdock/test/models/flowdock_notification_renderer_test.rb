@@ -3,7 +3,7 @@ require_relative '../test_helper'
 describe FlowdockNotificationRenderer do
   it "renders a nicely formatted notification" do
     changeset = stub("changeset")
-    deploy = stub("deploy", short_reference: "xyz", changeset: changeset)
+    deploy = stub("deploy", short_reference: "xyz", changeset: changeset, url: 'test_url')
 
     author1 = "author1"
     author2 = "author2"

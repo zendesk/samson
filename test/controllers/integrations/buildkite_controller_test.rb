@@ -36,8 +36,6 @@ describe Integrations::BuildkiteController do
   before { Deploy.delete_all }
 
   context 'when buildkite passes a build event' do
-    before { request.headers['X-Buildkite-Event'] = 'build' }
-
     test_regular_commit 'Buildkite', failed: { build: { state: 'failed' }}, no_mapping: { build: { branch: 'non-existent-branch' } } do
       project.webhooks.create!(stage: stages(:test_staging), branch: 'master')
     end

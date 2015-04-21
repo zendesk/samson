@@ -41,25 +41,26 @@ group :production, :staging do
 end
 
 group :assets do
+  gem 'ngannotate-rails'
   gem 'sass-rails', '~> 5.0'
   gem 'uglifier', '>= 1.3.0'
-  gem 'jquery-rails'
-  gem 'jquery-ui-rails'
-  gem 'bootstrap-sass'
-  gem 'font-awesome-sass'
-  gem 'bootstrap-x-editable-rails'
-  gem 'rickshaw_rails'
-  gem 'angularjs-rails'
-  gem 'momentjs-rails'
-  gem 'ngannotate-rails'
   gem 'angular-rails-templates'
-  gem 'underscore-rails'
+  gem 'bootstrap-sass'
+
   gem 'rails-assets-angular'
   gem 'rails-assets-angular-mocks'
   gem 'rails-assets-angular-scenario'
   gem 'rails-assets-bootstrap-select'
+  gem 'rails-assets-font-awesome'
+  gem 'rails-assets-jquery'
+  gem 'rails-assets-jquery-ui'
+  gem 'rails-assets-jquery-ujs'
+  gem 'rails-assets-moment'
+  gem 'rails-assets-rickshaw'
   gem 'rails-assets-typeahead.js'
+  gem 'rails-assets-underscore'
   gem 'rails-assets-vis'
+  gem 'rails-assets-x-editable'
 end
 
 group :no_preload do

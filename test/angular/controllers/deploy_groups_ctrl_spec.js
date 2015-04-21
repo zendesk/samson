@@ -9,7 +9,7 @@ describe('DeployGroupsCtrl', function() {
     createController;
 
   beforeEach(inject(function(_$controller_, _$httpBackend_, _$location_, _$rootScope_) {
-    $rootScope = _$rootScope_
+    $rootScope = _$rootScope_;
     $scope = $rootScope.$new();
     $scope.timeline = jasmine.createSpyObj('timeline', ['setOptions', 'getVisibleItems']);
     $scope.timeline.getVisibleItems.and.returnValue([]);
