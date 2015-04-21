@@ -54,7 +54,7 @@ group :assets do
   gem 'rails-assets-jquery-ui'
   gem 'rails-assets-jquery-ujs'
   gem 'rails-assets-moment'
-  gem 'rails-assets-olov--ng-annotate'
+  gem 'ngannotate-rails'
   gem 'rails-assets-rickshaw'
   gem 'rails-assets-typeahead.js'
   gem 'rails-assets-underscore'
