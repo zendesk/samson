@@ -1,68 +1,49 @@
 require 'flowdock'
 
 class FlowdockNotification
-  def initialize(stage, deploy)
-    @stage, @deploy = stage, deploy
-    @project = @stage.project
-    @user = @deploy.user
+  delegate :project, :stage, :user, to: :@deploy
+  delegate :project_deploy_url, to: 'Rails.application.routes.url_helpers'
+
+  def initialize(deploy)
+    @deploy = deploy
   end
 
-  def buddy_request
-    chat_flow = Flowdock::Flow.new(
-      :api_token => @stage.flowdock_tokens,
-      :external_user_name => 'Samson'
-    )
-
-    buddy_request_content = ":pray: " + @user.name + " is requesting approval for deploy " + url_helpers.project_deploy_url(@project, @deploy)
-    chat_flow.push_to_chat(:content => buddy_request_content, :tags => ["buddy-request"])
+  def buddy_request(message)
+    flowdock_service.notify_chat(message, ['buddy-request'])
   end
 
   def buddy_request_completed(buddy, approved = true)
-    chat_flow = Flowdock::Flow.new(
-      :api_token => @stage.flowdock_tokens,
-      :external_user_name => 'Samson'
-    )
-
-    text = @user.name
-    if @user == buddy
-      text += " bypassed"
-    else
-      text +=  " " + buddy.name + (approved ? " approved" : " stopped")
-    end
-
-    buddy_request_content = text + " deploy " + url_helpers.project_deploy_url(@project, @deploy)
-    chat_flow.push_to_chat(:content => buddy_request_content, :tags => ["buddy-request", "completed"])
+    buddy_request_content = buddy_request_completed_message(approved, buddy)
+    flowdock_service.notify_chat(buddy_request_content, %w(buddy-request completed))
   end
 
   def deliver
-    subject = "[#{@project.name}] #{@deploy.summary}"
-    url = url_helpers.project_deploy_url(@project, @deploy)
-
-    flow.push_to_team_inbox(
-      subject: subject,
-      content: content,
-      tags: ["deploy", @stage.name.downcase],
-      link: url
-    )
-  rescue Flowdock::Flow::ApiError
-    # Invalid token or something.
+    subject = "[#{project.name}] #{@deploy.summary}"
+    flowdock_service.notify_inbox(subject, content, deploy_url)
+  rescue Flowdock::ApiError => error
+    Rails.logger.error("Could not deliver flowdock message: #{error.message}")
+    Airbrake.notify(error, error_message: 'Could not deliver flowdock message')
   end
 
   private
 
-  def flow
-    @flow ||= Flowdock::Flow.new(
-      api_token: @stage.flowdock_tokens,
-      source: "samson",
-      from: { name: @user.name, address: @user.email }
-    )
+  def buddy_request_completed_message(approved, buddy)
+    if user == buddy
+       "#{user.name} bypassed deploy #{deploy_url}"
+     else
+       "#{user.name} #{buddy.name} #{approved ? 'approved' : 'stopped' } deploy #{deploy_url}"
+     end
   end
 
   def content
     @content ||= FlowdockNotificationRenderer.render(@deploy)
   end
 
-  def url_helpers
-    Rails.application.routes.url_helpers
+  def flowdock_service
+    @flowdock_service ||= SamsonFlowdock::FlowdockService.new(@deploy)
+  end
+
+  def deploy_url
+    project_deploy_url(@deploy.project, @deploy)
   end
 end
