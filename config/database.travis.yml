@@ -10,11 +10,12 @@ postgresql: &postgresql
   adapter: postgresql
   username: postgres
 
-defaults: &defaults
+test: &test
+  database: samson_test
   pool: 5
   encoding: utf8
   <<: *<%= ENV['DB'] || "sqlite" %>
 
-test:
-  database: samson_test
-  <<: *defaults
+# for asset compilation test
+production:
+  <<: *test
