@@ -99,8 +99,8 @@ module Samson
         decorators(klass_name) << path
       end
 
-      def load_decorators(klass)
-        decorators(klass.name).each { |decorator| require_dependency(decorator) }
+      def load_decorators(klass_name)
+        decorators(klass_name).each { |decorator| require_dependency(decorator) }
       end
 
       def plugin_setup
@@ -151,8 +151,8 @@ module Samson::LoadDecorators
   end
 end
 
-Samson::Hooks.callback :model_defined do |model_class|
-  Samson::Hooks.load_decorators(model_class)
+Samson::Hooks.callback :model_defined do |subclass|
+  Samson::Hooks.load_decorators(subclass.name)
 end
 
 Samson::Hooks.plugin_setup

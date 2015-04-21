@@ -1,3 +1,4 @@
+//= require ./jquery_mentions_input/jquery.elastic.source.js
 //= require ./jquery_mentions_input/jquery.mentionsInput.js
 
 samson.factory('Mentionbox', function ($rootScope, Flowdock) {
@@ -27,7 +28,6 @@ samson.factory('Mentionbox', function ($rootScope, Flowdock) {
 
   self.draw = function() {
     $(self.mentionsId).mentionsInput({
-      elastic: false,
       defaultValue: self.defaultMessage,
       onDataRequest:function (mode, query, callback) {
         callback.call(this, self.filteredData(query));
