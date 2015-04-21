@@ -1,1 +1,1 @@
-load(File.expand_path("../production.rb"))
+load(File.join(File.dirname(__FILE__), 'production.rb'))
