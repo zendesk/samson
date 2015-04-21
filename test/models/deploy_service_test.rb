@@ -18,6 +18,7 @@ describe DeployService do
 
   describe "#deploy!" do
     it "starts a deploy" do
+      SseRailsEngine.expects(:send_event).with('deploys', { type: 'new' }).once
       assert_difference "Job.count", +1 do
         assert_difference "Deploy.count", +1 do
           service.deploy!(stage, reference)
@@ -145,6 +146,7 @@ describe DeployService do
 
   describe "after notifications" do
     before do
+      SseRailsEngine.expects(:send_event).with('deploys', { type: 'finish' }).never
       stage.stubs(:create_deploy).returns(deploy)
       deploy.stubs(:persisted?).returns(true)
       job_execution.stubs(:execute!)

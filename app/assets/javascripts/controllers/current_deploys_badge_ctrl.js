@@ -1,4 +1,6 @@
 samson.controller('currentDeployBadgeCtrl', function($scope, $http, SseFactory) {
+  'use strict';
+
   $scope.currentActiveDeploys = 0;
 
   SseFactory.on('deploys', function(msg) {
@@ -11,6 +13,7 @@ samson.controller('currentDeployBadgeCtrl', function($scope, $http, SseFactory) 
   });
 
   function updateBadge() {
+    _.defer(function() { $scope.$apply(); });
     if ($scope.currentActiveDeploys > 0) {
       $('#currentDeploysBadge').show();
     } else {

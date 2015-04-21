@@ -1,11 +1,11 @@
-samson.factory('SseFactory', function($location) {
+samson.factory('SseFactory', function() {
   'use strict';
 
   var sse = {
     connection: null,
 
     init: function() {
-      this.connection = new EventSource($location.protocol() + '://' + $location.host() + ':' + $location.port() + '/sse');
+      this.connection = new EventSource(window.location.origin + '/sse');
     },
 
     on: function(event, callback) {

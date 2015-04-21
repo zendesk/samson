@@ -26,6 +26,11 @@ class DeployService
     end
   end
 
+  def stop!(deploy)
+    deploy.stop!
+    SseRailsEngine.send_event('deploys', { type: 'finish' })
+  end
+
   private
 
   def auto_confirm?(stage)
@@ -55,7 +60,6 @@ class DeployService
 
   def send_before_notifications(stage, deploy, buddy)
     Samson::Hooks.fire(:before_deploy, stage, deploy, buddy)
-    SseRailsEngine.send_event('deploys', { type: 'start' })
 
     if bypassed?(stage, deploy, buddy)
       DeployMailer.bypass_email(stage, deploy, user).deliver_now
