@@ -146,13 +146,13 @@ Dir["plugins/*/lib"].each { |f| $LOAD_PATH << f } # treat included plugins like 
 
 module Samson::LoadDecorators
   def inherited(subclass)
-    Samson::Hooks.fire(:model_defined, subclass)
+    Samson::Hooks.fire(:model_defined, subclass.name)
     super
   end
 end
 
-Samson::Hooks.callback :model_defined do |subclass|
-  Samson::Hooks.load_decorators(subclass.name)
+Samson::Hooks.callback :model_defined do |klass_name|
+  Samson::Hooks.load_decorators(klass_name)
 end
 
 Samson::Hooks.plugin_setup
