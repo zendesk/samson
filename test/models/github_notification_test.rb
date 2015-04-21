@@ -4,8 +4,8 @@ describe GithubNotification do
   let(:project) { stub(name: "Glitter", github_repo: "glitter/glitter", to_param: "3-glitter") }
   let(:stage) { stub(name: "staging", project: project) }
   let(:changeset) { stub_everything(commits: [], files: [], pull_requests: [pull_requests]) }
-  let(:deploy) { stub(changeset: changeset, short_reference: "7e6c415", id: 18) }
-  let(:notification) { GithubNotification.new(stage, deploy) }
+  let(:deploy) { stub(changeset: changeset, short_reference: "7e6c415", id: 18, stage: stage) }
+  let(:notification) { GithubNotification.new(deploy) }
   let(:endpoint) { "https://api.github.com/repos/glitter/glitter/issues/9/comments" }
 
   describe 'when there are pull requests' do

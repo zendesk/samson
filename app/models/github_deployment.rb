@@ -1,8 +1,9 @@
 class GithubDeployment
   DEPLOYMENTS_PREVIEW_MEDIA_TYPE = "application/vnd.github.cannonball-preview+json".freeze
 
-  def initialize(stage, deploy)
-    @stage, @deploy = stage, deploy
+  def initialize(deploy)
+    @deploy = deploy
+    @stage = @deploy.stage
     @project = @stage.project
   end
 

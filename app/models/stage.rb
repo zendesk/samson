@@ -161,6 +161,10 @@ class Stage < ActiveRecord::Base
     end
   end
 
+  def deploy_requires_approval?
+    BuddyCheck.enabled? && production?
+  end
+
   def automated_failure_emails(deploy)
     return if !email_committers_on_automated_deploy_failure? && static_emails_on_automated_deploy_failure.blank?
     return unless deploy.failed?

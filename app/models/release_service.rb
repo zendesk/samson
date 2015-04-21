@@ -17,7 +17,7 @@ class ReleaseService
   end
 
   def start_deploys(release)
-    deploy_service = DeployService.new(@project, release.author)
+    deploy_service = DeployService.new(release.author)
 
     @project.auto_release_stages.each do |stage|
       deploy_service.deploy!(stage, release.version)
