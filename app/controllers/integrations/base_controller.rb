@@ -27,7 +27,7 @@ class Integrations::BaseController < ApplicationController
 
   def deploy_to_stages
     stages = project.webhook_stages_for_branch(branch)
-    deploy_service = DeployService.new(project, user)
+    deploy_service = DeployService.new(user)
 
     stages.all? do |stage|
       deploy_service.deploy!(stage, commit).persisted?

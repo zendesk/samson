@@ -14,9 +14,9 @@ Samson::Hooks.callback :stage_permitted_params do
   { slack_channels_attributes: [:id, :name, :token, :_destroy] }
 end
 
-notify = -> (stage, deploy, _buddy) do
-  if stage.send_slack_notifications?
-    SlackNotification.new(stage, deploy).deliver
+notify = -> (deploy, _buddy) do
+  if deploy.stage.send_slack_notifications?
+    SlackNotification.new(deploy).deliver
   end
 end
 

@@ -15,7 +15,7 @@ describe DeployMailer do
     before do
       stage.update_attributes!(notify_email_address: 'test@test.com')
       stub_empty_changeset
-      DeployMailer.deploy_email(stage, deploy).deliver_now
+      DeployMailer.deploy_email(deploy).deliver_now
     end
 
     it 'is from deploys@' do
@@ -42,7 +42,7 @@ describe DeployMailer do
 
       stub_empty_changeset
 
-      DeployMailer.bypass_email(stage, deploy, user).deliver_now
+      DeployMailer.bypass_email(deploy, user).deliver_now
     end
 
     it 'is from deploys@' do
@@ -73,7 +73,7 @@ describe DeployMailer do
   describe "#deploy_failed_email" do
     it "sends" do
       stub_empty_changeset
-      DeployMailer.deploy_failed_email(stage, deploy, ["foo@bar.com"]).deliver_now
+      DeployMailer.deploy_failed_email(deploy, ["foo@bar.com"]).deliver_now
       subject.subject.must_equal "[AUTO-DEPLOY][DEPLOY] Super Admin deployed Project to Staging (staging)"
     end
   end

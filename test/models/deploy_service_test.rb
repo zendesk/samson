@@ -4,7 +4,7 @@ describe DeployService do
   let(:project) { deploy.project }
   let(:user) { job.user }
   let(:other_user) { users(:deployer) }
-  let(:service) { DeployService.new(project, user) }
+  let(:service) { DeployService.new(user) }
   let(:stage) { deploy.stage }
   let(:job) { jobs(:succeeded_test) }
   let(:deploy) { deploys(:succeeded_test) }
@@ -100,26 +100,28 @@ describe DeployService do
   describe "#confirm_deploy!" do
     it "starts a job execution" do
       JobExecution.expects(:start_job).returns(mock(subscribe: true)).once
-      service.confirm_deploy!(deploy, stage, reference)
+      service.confirm_deploy!(deploy)
     end
 
     describe "when buddy check is needed" do
       before do
-        service.stubs(:auto_confirm?).returns(false)
+        stage.stubs(:deploy_requires_approval?).returns(true)
       end
 
       it "starts a job execution" do
         stub_request(:get, "https://api.github.com/repos/bar/foo/compare/staging...staging")
         JobExecution.expects(:start_job).returns(mock(subscribe: true)).once
         DeployMailer.expects(:bypass_email).never
-        service.confirm_deploy!(deploy, stage, reference, other_user)
+        deploy.buddy = other_user
+        service.confirm_deploy!(deploy)
       end
 
       it "reports bypass via mail" do
         stub_request(:get, "https://api.github.com/repos/bar/foo/compare/staging...staging")
         JobExecution.expects(:start_job).returns(mock(subscribe: true)).once
         DeployMailer.expects(bypass_email: stub(deliver_now: true))
-        service.confirm_deploy!(deploy, stage, reference, user)
+        deploy.buddy = user
+        service.confirm_deploy!(deploy)
       end
     end
   end
@@ -128,7 +130,7 @@ describe DeployService do
     it "sends before_deploy hook" do
       record_hooks(:before_deploy) do
         service.deploy!(stage, reference)
-      end.must_equal [[stage, Deploy.first, nil]]
+      end.must_equal [[Deploy.first, nil]]
     end
 
     it "creates a github deployment" do
@@ -165,7 +167,7 @@ describe DeployService do
       record_hooks(:after_deploy) do
         service.deploy!(stage, reference)
         job_execution.send(:run!)
-      end.must_equal [[stage, deploy, nil]]
+      end.must_equal [[deploy, nil]]
     end
 
     it "sends datadog notifications if the stage has datadog tags" do

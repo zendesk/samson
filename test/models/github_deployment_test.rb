@@ -8,7 +8,7 @@ describe GithubDeployment do
   let(:stage) { stages(:test_staging) }
   let(:job) { Job.new(status: 'succeeded', project: project, user: user) }
   let(:deploy) { Deploy.new(id: 1, job: job, reference: "0dfa439", stage: stage) }
-  let(:github_deployment) { GithubDeployment.new(stage, deploy) }
+  let(:github_deployment) { GithubDeployment.new(deploy) }
 
   describe "#create_github_deployment" do
     let(:endpoint) { "https://api.github.com/repos/bar/foo/deployments" }
