@@ -6,7 +6,7 @@ class WebhooksController < ApplicationController
 
   def index
     @webhooks = @project.webhooks
-    @sources = Samson::Integration
+    @sources = Samson::Integration.sources
   end
 
   def new
