@@ -229,7 +229,7 @@ ActiveRecord::Schema.define(version: 20150416231106) do
     t.datetime "created_at"
     t.datetime "updated_at"
     t.datetime "deleted_at"
-    t.string   "source",     limit: 255, default: "any_ci"
+    t.string   "source",     limit: 255, null: false
   end
 
   add_index "webhooks", ["project_id", "branch"], name: "index_webhooks_on_project_id_and_branch"

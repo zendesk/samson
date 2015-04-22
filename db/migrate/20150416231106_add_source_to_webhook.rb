@@ -1,6 +1,12 @@
 class AddSourceToWebhook < ActiveRecord::Migration
-  def change
-    add_column :webhooks, :source, :string, default: 'any_ci'
-    Webhook.update_all source: 'any_ci'
+  def up
+    add_column :webhooks, :source, :string, null: false, default: 'any_ci'
+    change_column_default :webhooks, :source, nil
+  end
+
+  def down
+    change_table :webhooks do |t|
+      t.remove :source
+    end
   end
 end
