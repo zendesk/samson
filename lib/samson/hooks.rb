@@ -7,7 +7,8 @@ module Samson
       :stage_permitted_params,
       :before_deploy,
       :deploy_view,
-      :after_deploy
+      :after_deploy,
+      :deploys_header
     ]
 
     @@hooks = {}

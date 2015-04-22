@@ -408,9 +408,10 @@ describe Stage do
       stage.datadog_monitors.must_equal []
     end
 
-    it "builds  multiple monitors" do
+    it "builds multiple monitors" do
       stage.datadog_monitor_ids = "1,2, 4"
       stage.datadog_monitors  .map(&:id).must_equal [1,2,4]
     end
   end
+
 end

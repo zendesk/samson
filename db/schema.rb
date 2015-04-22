@@ -73,6 +73,19 @@ ActiveRecord::Schema.define(version: 20150331084621) do
     t.boolean  "enabled",    default: true
   end
 
+  create_table "jenkins_jobs", force: :cascade do |t|
+    t.integer  "jenkins_job_id", limit: 4,   null: false
+    t.string   "name",           limit: 255, null: false
+    t.string   "status",         limit: 255
+    t.string   "error",          limit: 255
+    t.integer  "deploy_id",      limit: 4,   null: false
+    t.datetime "created_at",                 null: false
+    t.datetime "updated_at",                 null: false
+  end
+
+  add_index "jenkins_jobs", ["deploy_id"], name: "index_jenkins_jobs_on_deploy_id", using: :btree
+  add_index "jenkins_jobs", ["jenkins_job_id"], name: "index_jenkins_jobs_on_jenkins_job_id", using: :btree
+
   create_table "jobs", force: :cascade do |t|
     t.text     "command",                                           null: false
     t.integer  "user_id",                                           null: false
@@ -194,6 +207,7 @@ ActiveRecord::Schema.define(version: 20150331084621) do
     t.boolean  "email_committers_on_automated_deploy_failure",               default: false, null: false
     t.string   "static_emails_on_automated_deploy_failure",    limit: 255
     t.string   "datadog_monitor_ids",                          limit: 255
+    t.string   "jenkins_job_names",                            limit: 255
   end
 
   add_index "stages", ["project_id", "permalink", "deleted_at"], name: "index_stages_on_project_id_and_permalink_and_deleted_at"

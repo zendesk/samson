@@ -1,0 +1,11 @@
+<fieldset>
+  <legend>Jenkins</legend>
+  <p>Jenkins jobs that should run after this stage gets deployed.</p>
+
+  <div class="form-group">
+    <div class="col-lg-6 col-lg-offset-2">
+      <%= form.text_field :jenkins_job_names, class: "form-control", placeholder: "Jenkins jobs" %>
+      <span class="help-block">Run these jobs on deploy events (comma separated)</span>
+    </div>
+  </div>
+</fieldset>
