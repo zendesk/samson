@@ -35,7 +35,7 @@ describe Integrations::TddiumController do
 
   before do
     Deploy.delete_all
-    @webhook = project.webhooks.create!(stage: stages(:test_staging), branch: "production")
+    @webhook = project.webhooks.create!(stage: stages(:test_staging), branch: "production", source: 'tddium')
   end
 
   test_regular_commit "Tddium", no_mapping: {branch: "foobar"}, failed: {status: "failed"} do

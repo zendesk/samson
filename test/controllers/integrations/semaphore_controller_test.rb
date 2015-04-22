@@ -29,7 +29,7 @@ describe Integrations::SemaphoreController do
   before { Deploy.delete_all }
 
   test_regular_commit "Semaphore", failed: {result: "failed"}, no_mapping: {branch_name: "foobar"} do
-    project.webhooks.create!(stage: stages(:test_staging), branch: "master")
+    project.webhooks.create!(stage: stages(:test_staging), branch: "master", source: 'semaphore')
   end
 
   describe "skipping" do
