@@ -37,7 +37,7 @@ class DeploysController < ApplicationController
   end
 
   def create
-    deploy_service = DeployService.new(@project, current_user)
+    deploy_service = DeployService.new(current_user)
     @deploy = deploy_service.deploy!(stage, reference)
 
     respond_to do |format|

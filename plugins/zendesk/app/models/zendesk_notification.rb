@@ -5,8 +5,9 @@ class ZendeskNotification
   cattr_accessor(:zendesk_url) { ENV['ZENDESK_URL'] }
   cattr_accessor(:access_token) { ENV['ZENDESK_TOKEN'] }
 
-  def initialize(stage, deploy)
-    @stage, @deploy = stage, deploy
+  def initialize(deploy)
+    @deploy = deploy
+    @stage = deploy.stage
   end
 
   def deliver

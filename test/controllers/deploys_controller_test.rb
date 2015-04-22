@@ -13,7 +13,7 @@ describe DeploysController do
   let(:changeset) { stub_everything(commits: [], files: [], pull_requests: [], jira_issues: []) }
 
   setup do
-    DeployService.stubs(:new).with(project, deployer).returns(deploy_service)
+    DeployService.stubs(:new).with(deployer).returns(deploy_service)
     deploy_service.stubs(:deploy!).capture(deploy_called).returns(deploy)
 
     Deploy.any_instance.stubs(:changeset).returns(changeset)
@@ -215,7 +215,7 @@ describe DeploysController do
       before { deploy.job.update_column(:status, 'pending') }
 
       it "confirms and redirects to the deploy" do
-        DeployService.stubs(:new).with(project, deploy.user).returns(deploy_service)
+        DeployService.stubs(:new).with(deploy.user).returns(deploy_service)
         deploy_service.expects(:confirm_deploy!)
         refute deploy.buddy
 

@@ -4,8 +4,8 @@ describe SlackNotification do
   let(:project) { stub(name: "Glitter") }
   let(:user) { stub(name: "John Wu", email: "wu@rocks.com") }
   let(:stage) { stub(name: "staging", slack_channels: [stub(channel_id: "x123yx")], project: project) }
-  let(:deploy) { stub(summary: "hello world!", user: user) }
-  let(:notification) { SlackNotification.new(stage, deploy) }
+  let(:deploy) { stub(summary: "hello world!", user: user, stage: stage) }
+  let(:notification) { SlackNotification.new(deploy) }
   let(:endpoint) { "https://slack.com/api/chat.postMessage" }
 
   before do

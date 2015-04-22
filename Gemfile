@@ -82,7 +82,7 @@ group :no_preload do
   Dir["plugins/*/"].each { |f| gemspec path: f } # treat included plugins like gems
 end
 
-group :development do
+group :development, :staging do
   gem 'web-console'
   gem 'rack-mini-profiler'
 end

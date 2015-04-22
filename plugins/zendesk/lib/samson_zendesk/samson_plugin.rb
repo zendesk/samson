@@ -9,9 +9,9 @@ Samson::Hooks.callback :stage_permitted_params do
   :comment_on_zendesk_tickets
 end
 
-Samson::Hooks.callback :after_deploy do |stage, deploy, _buddy|
-  if stage.comment_on_zendesk_tickets?
-    ZendeskNotification.new(stage, deploy).deliver
+Samson::Hooks.callback :after_deploy do |deploy, _buddy|
+  if deploy.stage.comment_on_zendesk_tickets?
+    ZendeskNotification.new(deploy).deliver
   end
 end
 
