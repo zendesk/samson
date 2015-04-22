@@ -6,11 +6,11 @@ module Samson
     end.compact
 
     def self.method_missing(*args)
-      @@integrations.send(args)
+      @@integrations.send(*args)
     end
 
     def respond_to?(*args)
-      super(args) || @@integrations.respond_to?(args)
+      super(*args) || @@integrations.respond_to?(*args)
     end
   end
 end
