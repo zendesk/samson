@@ -1,9 +1,12 @@
+require 'samson/integration'
+
 class WebhooksController < ApplicationController
   before_action :authorize_deployer!
   before_action :find_project
 
   def index
     @webhooks = @project.webhooks
+    @sources = Samson::Integration
   end
 
   def new

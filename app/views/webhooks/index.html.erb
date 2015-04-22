@@ -5,7 +5,7 @@
   and paste in the project's webhook URL to your CI service of choice.</p>
 
   <dl>
-    <% Webhook::SOURCES.each do |source| %>
+    <% @sources.each do |source| %>
     <dt><%= source.titleize %>:</dt><dd><%= link_to_url(send("integrations_#{source}_deploy_url", @project.token)) %></dd>
     <% end %>
   </dl>
@@ -33,7 +33,7 @@
 
     <div class="form-group">
       <%= form.select :source, [['Any CI', 'any_ci'], ['Any code push', 'any_code'], ['Any', 'any']] +
-        Webhook::SOURCES.map {|source| [ source.titleize, source ]}, {}, class: "form-control" %>
+        @sources.map {|source| [ source.titleize, source ]}, {}, class: "form-control" %>
     </div>
 
     <%= form.submit "Add webhook", class: "btn btn-primary" %>
