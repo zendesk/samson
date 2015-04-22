@@ -78,7 +78,9 @@ module Samson
       end
 
       def view(name, partial)
-        hooks(name) << partial
+        hooks(name) do |view, *args|
+          view.instance_exec { concat render(partial, *args) }
+        end
       end
 
       def decorator(model_name, file)
@@ -99,9 +101,7 @@ module Samson
       end
 
       def render_views(name, view, *args)
-        hooks(name).each do |partial|
-          view.instance_exec { concat render(partial, *args) }
-        end
+        fire(name, view, *args)
         nil
       end
 
