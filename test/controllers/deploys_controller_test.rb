@@ -229,7 +229,9 @@ describe DeploysController do
     describe "a DELETE to :destroy" do
       describe "with a deploy owned by the deployer" do
         setup do
+          DeployService.stubs(:new).with(project, deployer).returns(deploy_service)
           Deploy.any_instance.stubs(:started_by?).returns(true)
+          deploy_service.expects(:stop!).once
 
           delete :destroy, project_id: project.to_param, id: deploy.to_param
         end
