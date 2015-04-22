@@ -154,11 +154,15 @@ class Stage < ActiveRecord::Base
   end
 
   def production?
-    if ENV['DEPLOY_GROUP_FEATURE']
+    if DeployGroup.enabled?
       deploy_groups.empty? ? super : deploy_groups.any? { |deploy_group| deploy_group.environment.is_production? }
     else
       super
     end
+  end
+
+  def deploy_requires_approval?
+    BuddyCheck.enabled? && production?
   end
 
   def automated_failure_emails(deploy)
@@ -218,5 +222,3 @@ class Stage < ActiveRecord::Base
     Stage.unscoped.where(project_id: project_id)
   end
 end
-
-Samson::Hooks.fire(:stage_defined)

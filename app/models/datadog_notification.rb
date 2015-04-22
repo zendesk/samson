@@ -2,8 +2,9 @@ require 'dogapi'
 require 'digest/md5'
 
 class DatadogNotification
-  def initialize(stage, deploy)
-    @stage, @deploy = stage, deploy
+  def initialize(deploy)
+    @deploy = deploy
+    @stage = @deploy.stage
   end
 
   def deliver

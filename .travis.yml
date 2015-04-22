@@ -21,5 +21,6 @@ before_script:
   - npm install
 script:
   - npm run-script jshint
-  - npm test
+  - bundle exec rake test:js
+  - SECRET_TOKEN=foo GITHUB_TOKEN=foo RAILS_ENV=production bundle exec rake assets:precompile
   - bundle exec rake

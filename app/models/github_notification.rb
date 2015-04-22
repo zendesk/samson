@@ -1,6 +1,7 @@
 class GithubNotification
-  def initialize(stage, deploy)
-    @stage, @deploy = stage, deploy
+  def initialize(deploy)
+    @deploy = deploy
+    @stage = @deploy.stage
     @project = @stage.project
   end
 

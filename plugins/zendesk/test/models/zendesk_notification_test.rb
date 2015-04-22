@@ -8,8 +8,8 @@ describe ZendeskNotification do
   let(:stage) { stub(name: "Production")}
   let(:user) { stub(email: "deploys@example.org")}
   let(:changeset) { stub("changeset", commits: [commit("ZD#18 this fixes a very bad bug")]) }
-  let(:deploy) { stub(changeset: changeset, user: user) }
-  let(:notification) { ZendeskNotification.new(stage, deploy) }
+  let(:deploy) { stub(changeset: changeset, user: user, stage: stage) }
+  let(:notification) { ZendeskNotification.new(deploy) }
   let(:api_response_headers) { {:headers => {:content_type => "application/json"}} }
 
   describe 'when commit messages include Zendesk tickets' do
@@ -28,7 +28,7 @@ describe ZendeskNotification do
   end
 
   describe "#zendesk_tickets" do
-    let(:notification) { ZendeskNotification.new(nil, nil) }
+    let(:notification) { ZendeskNotification.new(deploy) }
 
     it "returns a list of Zendesk tickets mentioned in commit messages" do
       commits = [

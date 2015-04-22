@@ -33,6 +33,7 @@
 <section class="clearfix tabs">
   <div class="tab-content deploy-details">
     <div class="tab-pane active" id="output" data-stream-url="<%= stream_path(@deploy.job) %>" data-desktop-notify="<%= current_user.desktop_notify? %>">
+      <%= Samson::Hooks.render_views(:deploy_view, self, deploy: @deploy, project: @project) %>
       <%= render 'start_pending', deploy: @deploy if @deploy.pending_non_production? %>
       <%= render 'buddy_check', deploy: @deploy if @deploy.waiting_for_buddy? %>
       <%= render 'output', deploy: @deploy, project: @project %>

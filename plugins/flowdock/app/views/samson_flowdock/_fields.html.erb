@@ -15,6 +15,13 @@
         <%= flow_fields.text_field :token, class: "form-control", placeholder: "Token" %>
       </div>
 
+      <div class="col-lg-2 checkbox">
+        <%= flow_fields.label :enabled do %>
+          <%= flow_fields.check_box :enabled %>
+          Enabled
+        <% end %>
+      </div>
+
       <% if flow_fields.object.persisted? %>
         <div class="col-lg-1 checkbox">
           <%= flow_fields.check_box :_destroy if flow_fields.object.persisted? %>

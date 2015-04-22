@@ -1,21 +1,19 @@
 require_relative '../test_helper'
 
 describe FlowdockNotification do
-  let(:project) { stub(name: "Glitter") }
-  let(:user) { stub(name: "John Wu", email: "wu@rocks.com") }
-  let(:stage) { stub(name: "staging", flowdock_tokens: ["x123yx"], project: project) }
-  let(:deploy) { stub(summary: "hello world!", user: user) }
-  let(:notification) { FlowdockNotification.new(stage, deploy) }
+  let(:deploy) { deploys(:succeeded_test) }
+  let(:notification) { FlowdockNotification.new(deploy) }
   let(:endpoint) { "https://api.flowdock.com/v1/messages/team_inbox/x123yx" }
   let(:chat_endpoint) { "https://api.flowdock.com/v1/messages/chat/x123yx" }
 
   before do
+    deploy.stage.stubs(:flowdock_tokens).returns(["x123yx"])
     FlowdockNotificationRenderer.stubs(:render).returns("foo")
   end
 
   it "sends a buddy request for all Flowdock flows configured for the stage" do
     delivery = stub_request(:post, chat_endpoint)
-    notification.buddy_request
+    notification.buddy_request('test message')
 
     assert_requested delivery
   end

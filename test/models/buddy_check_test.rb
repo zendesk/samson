@@ -3,7 +3,7 @@ require_relative '../test_helper'
 describe BuddyCheck do
   let(:project) { job.project }
   let(:user) { job.user }
-  let(:service) { DeployService.new(project, user) }
+  let(:service) { DeployService.new(user) }
   let(:stage) { deploy.stage }
   let(:reference) { deploy.reference }
   let(:job) { jobs(:succeeded_test) }
@@ -76,7 +76,8 @@ describe BuddyCheck do
 
         DeployMailer.expects(:bypass_email).returns( stub("DeployMailer", :deliver_now => true) )
 
-        service.confirm_deploy!(deploy, stage, reference, user)
+        deploy.buddy = user
+        service.confirm_deploy!(deploy)
         job_execution.send(:run!)
       end
     end
@@ -85,7 +86,8 @@ describe BuddyCheck do
       it "does not send bypass alert email notification" do
         DeployMailer.expects(:bypass_email).never
 
-        service.confirm_deploy!(deploy, stage, reference, other_user)
+        deploy.buddy = other_user
+        service.confirm_deploy!(deploy)
         job_execution.send(:run!)
       end
     end
@@ -103,7 +105,8 @@ describe BuddyCheck do
       it "sends bypass alert email notification" do
         DeployMailer.expects(:bypass_email).never
 
-        service.confirm_deploy!(deploy, stage, reference, user)
+        deploy.buddy = user
+        service.confirm_deploy!(deploy)
         job_execution.send(:run!)
       end
     end
@@ -113,7 +116,8 @@ describe BuddyCheck do
 
         DeployMailer.expects(:bypass_email).never
 
-        service.confirm_deploy!(deploy, stage, reference, other_user)
+        deploy.buddy = other_user
+        service.confirm_deploy!(deploy)
         job_execution.send(:run!)
       end
     end
