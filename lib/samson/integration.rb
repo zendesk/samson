@@ -6,7 +6,7 @@ module Samson
     end.compact
 
     def self.method_missing(*args)
-      @@integrations.send(*args)
+      @@integrations.public_send(*args)
     end
 
     def respond_to?(*args)
