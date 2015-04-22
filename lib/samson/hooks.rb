@@ -40,14 +40,8 @@ module Samson
 
       def add_decorators
         Dir[decorators_root.join('**/*_decorator.rb')].each do |path|
-          Samson::Hooks.callback(:model_defined) do |model_klass_name|
-            require_dependency(path) if decorator_class(path) == model_klass_name
-          end
+          Samson::Hooks.decorator(decorator_class(path), path)
         end
-      end
-
-      def decorators_root
-        @decorators_root ||= Pathname.new(engine.config.root.join('app/decorators'))
       end
 
       def add_assets_to_precompile
@@ -60,6 +54,12 @@ module Samson
 
       private
 
+      def decorators_root
+        @decorators_root ||= engine.config.root.join("app/decorators")
+      end
+
+      # {root}/xyz_decorator.rb -> Xyz
+      # {root}/xy/z_decorator.rb -> Xy::Z
       def decorator_class(path)
         relative_path = Pathname.new(path).relative_path_from(decorators_root).to_s
         relative_path.sub('_decorator.rb', '').split('/').map(&:classify).join('::')
@@ -82,6 +82,10 @@ module Samson
         hooks(name) << partial
       end
 
+      def decorator(model_name, file)
+        hooks(:model_defined, model_name) << file
+      end
+
       # temporarily add a hook for testing
       def with_callback(name, hook_block)
         hooks(name) << hook_block
@@ -100,6 +104,10 @@ module Samson
           view.instance_exec { concat render(partial, *args) }
         end
         nil
+      end
+
+      def load_decorators(model_name)
+        hooks(:model_defined, model_name).each { |path| require_dependency(path) }
       end
 
       def plugin_setup
@@ -129,9 +137,9 @@ module Samson
 
       private
 
-      def hooks(name)
-        raise "Using unsupported hook #{name.inspect}" unless KNOWN.include?(name)
-        (@@hooks[name] ||= [])
+      def hooks(*args)
+        raise "Using unsupported hook #{args.inspect}" unless KNOWN.include?(args.first)
+        (@@hooks[args] ||= [])
       end
     end
   end
@@ -141,7 +149,7 @@ Dir["plugins/*/lib"].each { |f| $LOAD_PATH << f } # treat included plugins like 
 
 module Samson::LoadDecorators
   def inherited(subclass)
-    Samson::Hooks.fire(:model_defined, subclass.name)
+    Samson::Hooks.load_decorators(subclass.name)
     super
   end
 end

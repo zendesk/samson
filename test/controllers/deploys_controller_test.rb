@@ -3,11 +3,12 @@ require_relative '../test_helper'
 describe DeploysController do
   let(:project) { job.project }
   let(:stage) { deploy.stage }
+  let(:admin) { users(:admin) }
   let(:deployer) { users(:deployer) }
   let(:command) { job.command }
   let(:job) { jobs(:succeeded_test) }
   let(:deploy) { deploys(:succeeded_test) }
-  let(:deploy_service) { stub(deploy!: nil) }
+  let(:deploy_service) { stub(deploy!: nil, stop!: nil) }
   let(:deploy_called) { [] }
   let(:changeset) { stub_everything(commits: [], files: [], pull_requests: [], jira_issues: []) }
 
@@ -228,7 +229,9 @@ describe DeploysController do
     describe "a DELETE to :destroy" do
       describe "with a deploy owned by the deployer" do
         setup do
+          DeployService.stubs(:new).with(deployer).returns(deploy_service)
           Deploy.any_instance.stubs(:started_by?).returns(true)
+          deploy_service.expects(:stop!).once
 
           delete :destroy, project_id: project.to_param, id: deploy.to_param
         end
@@ -240,6 +243,7 @@ describe DeploysController do
 
       describe "with a deploy not owned by the deployer" do
         setup do
+          deploy_service.expects(:stop!).never
           Deploy.any_instance.stubs(:started_by?).returns(false)
           User.any_instance.stubs(:is_admin?).returns(false)
 
@@ -257,6 +261,8 @@ describe DeploysController do
     describe "a DELETE to :destroy" do
       describe "with a valid deploy" do
         setup do
+          DeployService.stubs(:new).with(admin).returns(deploy_service)
+          deploy_service.expects(:stop!).once
           delete :destroy, project_id: project.to_param, id: deploy.to_param
         end
 

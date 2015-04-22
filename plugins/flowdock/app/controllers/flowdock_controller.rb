@@ -1,3 +1,5 @@
+require 'flowdock'
+
 class FlowdockController < ApplicationController
   rescue_from ActiveRecord::RecordNotFound do |error|
     render status: 404, json: { message: error.message }
@@ -8,6 +10,9 @@ class FlowdockController < ApplicationController
       flowdock_service.users
     end
     render json: { users: users }
+  rescue Flowdock::InvalidParameterError
+    Rails.logger.error('Could not fetch flowdock users! Please set the FLOWDOCK_API_TOKEN env variable')
+    render json: { error: 'Could not get the users from flowdock' }, status: 404
   end
 
   def notify

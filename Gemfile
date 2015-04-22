@@ -28,6 +28,7 @@ gem 'dalli', '~> 2.7.0'
 gem 'active_model_serializers', '~> 0.8.0'
 
 gem 'sawyer', '~> 0.5'
+gem 'sse-rails-engine'
 
 # Logging
 gem 'lograge'
@@ -81,7 +82,7 @@ group :no_preload do
   Dir["plugins/*/"].each { |f| gemspec path: f } # treat included plugins like gems
 end
 
-group :development do
+group :development, :staging do
   gem 'web-console'
   gem 'rack-mini-profiler'
 end

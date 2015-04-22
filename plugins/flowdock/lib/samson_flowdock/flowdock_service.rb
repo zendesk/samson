@@ -20,7 +20,7 @@ module SamsonFlowdock
     end
 
     def flowdock_client
-      @flowdock_client ||= Flowdock::Client.new(api_token: ENV['FLOWDOCK_API_TOKEN'])
+      @flowdock_client ||= Flowdock::Client.new(api_token: flowdock_api_token)
     end
 
     def notify_chat(message, tags)
@@ -48,6 +48,10 @@ module SamsonFlowdock
 
     def tokens
       @deploy.stage.flowdock_tokens
+    end
+
+    def flowdock_api_token
+      ENV['FLOWDOCK_API_TOKEN']
     end
   end
 end
