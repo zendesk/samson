@@ -97,7 +97,7 @@ class DeploysController < ApplicationController
 
   def destroy
     if @deploy.can_be_stopped_by?(current_user)
-      @deploy.stop!
+      DeployService.new(current_user).stop!(@deploy)
     else
       flash[:error] = "You do not have privileges to stop this deploy."
     end

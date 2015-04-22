@@ -7,6 +7,7 @@ class DeployService
 
   def deploy!(stage, reference)
     deploy = stage.create_deploy(reference: reference, user: user)
+    SseRailsEngine.send_event('deploys', { type: 'new' })
 
     if deploy.persisted? && (!stage.deploy_requires_approval? || release_approved?(deploy))
       confirm_deploy!(deploy)
@@ -23,6 +24,11 @@ class DeployService
     job_execution.subscribe do
       send_after_notifications(deploy)
     end
+  end
+
+  def stop!(deploy)
+    deploy.stop!
+    SseRailsEngine.send_event('deploys', { type: 'finish' })
   end
 
   private
@@ -58,6 +64,7 @@ class DeployService
 
   def send_after_notifications(deploy)
     Samson::Hooks.fire(:after_deploy, deploy, deploy.buddy)
+    SseRailsEngine.send_event('deploys', { type: 'finish' })
     send_deploy_email(deploy)
     send_failed_deploy_email(deploy)
     send_datadog_notification(deploy)
