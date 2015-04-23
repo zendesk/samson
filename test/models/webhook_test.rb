@@ -1,7 +1,7 @@
 require_relative '../test_helper'
 
 describe Webhook do
-  let(:webhook_attributes) { { :branch => 'master', :stage_id => 1, :project_id => 1} }
+  let(:webhook_attributes) { { :branch => 'master', :stage_id => 1, :project_id => 1, source: 'any_ci'} }
 
   describe '#create' do
     it 'creates the webhook' do
@@ -59,6 +59,19 @@ describe Webhook do
       assert_difference  'Webhook.count', -1 do
         webhook2.soft_delete!
       end
+    end
+  end
+
+  describe '.for_source' do
+    before do
+      %w[any_ci any_code github travis tddium any].each_with_index do |source, index|
+        Webhook.create(branch: 'master', stage_id: index, project_id: 1, source: source)
+      end
+    end
+
+    it 'filters correctly' do
+      assert_equal Webhook.for_source('ci', 'travis').pluck(:source), ['any_ci', 'travis', 'any']
+      assert_equal Webhook.for_source('code', 'github').pluck(:source), ['any_code', 'github', 'any']
     end
   end
 end

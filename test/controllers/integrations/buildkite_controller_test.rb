@@ -37,14 +37,14 @@ describe Integrations::BuildkiteController do
 
   context 'when buildkite passes a build event' do
     test_regular_commit 'Buildkite', failed: { build: { state: 'failed' }}, no_mapping: { build: { branch: 'non-existent-branch' } } do
-      project.webhooks.create!(stage: stages(:test_staging), branch: 'master')
+      project.webhooks.create!(stage: stages(:test_staging), branch: 'master', source: 'buildkite')
     end
 
     context 'when the commit message contains the skip message' do
       let(:commit_message) { 'I like to [deploy skip]' }
 
       it 'does not trigger a deploy' do
-        project.webhooks.create!(stage: stages(:test_staging), branch: 'master')
+        project.webhooks.create!(stage: stages(:test_staging), branch: 'master', source: 'buildkite')
         post :create, payload.merge(token: project.token)
 
         project.deploys.must_equal []

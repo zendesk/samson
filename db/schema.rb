@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20150331084621) do
+ActiveRecord::Schema.define(version: 20150416231106) do
 
   create_table "commands", force: :cascade do |t|
     t.text     "command",    limit: 10485760
@@ -243,6 +243,7 @@ ActiveRecord::Schema.define(version: 20150331084621) do
     t.datetime "created_at"
     t.datetime "updated_at"
     t.datetime "deleted_at"
+    t.string   "source",     limit: 255, null: false
   end
 
   add_index "webhooks", ["project_id", "branch"], name: "index_webhooks_on_project_id_and_branch"

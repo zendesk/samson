@@ -35,7 +35,7 @@ describe Integrations::TddiumController do
 
   before do
     Deploy.delete_all
-    @webhook = project.webhooks.create!(stage: stages(:test_staging), branch: "production")
+    @webhook = project.webhooks.create!(stage: stages(:test_staging), branch: "production", source: 'tddium')
   end
 
   test_regular_commit "Tddium", no_mapping: {branch: "foobar"}, failed: {status: "failed"} do
@@ -55,7 +55,7 @@ describe Integrations::TddiumController do
 
     stub_github_api("repos/organization_name/repo_name/commits/dc395381e650f3bac18457909880829fc20e34ba", commit: {message: "hi[deploy skip]"})
 
-    project.webhooks.create!(stage: stages(:test_staging), branch: "production")
+    project.webhooks.create!(stage: stages(:test_staging), branch: "production", source: 'tddium')
     post :create, payload.merge(token: project.token)
 
     project.deploys.must_equal []
@@ -66,7 +66,7 @@ describe Integrations::TddiumController do
 
     stub_github_api("repos/organization_name/repo_name/commits/dc395381e650f3bac18457909880829fc20e34ba", commit: {message: "hi[skip deploy]"})
 
-    project.webhooks.create!(stage: stages(:test_staging), branch: "production")
+    project.webhooks.create!(stage: stages(:test_staging), branch: "production", source: 'tddium')
     post :create, payload.merge(token: project.token)
 
     project.deploys.must_equal []

@@ -40,16 +40,16 @@ describe Project do
     assert_not_equal project.repository_directory, other_project.repository_directory
   end
 
-  describe "#webhook_stages_for_branch" do
+  describe "#webhook_stages_for" do
     it "returns the stages with mappings for the branch" do
       master_stage = project.stages.create!(name: "master_stage")
       production_stage = project.stages.create!(name: "production_stage")
 
-      project.webhooks.create!(branch: "master", stage: master_stage)
-      project.webhooks.create!(branch: "production", stage: production_stage)
+      project.webhooks.create!(branch: "master", stage: master_stage, source: 'any')
+      project.webhooks.create!(branch: "production", stage: production_stage, source: 'travis')
 
-      project.webhook_stages_for_branch("master").must_equal [master_stage]
-      project.webhook_stages_for_branch("production").must_equal [production_stage]
+      project.webhook_stages_for("master", "ci", "jenkins").must_equal [master_stage]
+      project.webhook_stages_for("production", "ci", "travis").must_equal [production_stage]
     end
   end
 

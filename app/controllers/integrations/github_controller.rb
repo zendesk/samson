@@ -16,7 +16,7 @@ class Integrations::GithubController < Integrations::BaseController
       request.body.tap(&:rewind).read
     )
 
-    request.headers['X-Hub-Signature'] == "sha1=#{hmac}"
+    Rack::Utils.secure_compare(request.headers['X-Hub-Signature'], "sha1=#{hmac}")
   end
 
   def valid_payload?
@@ -29,6 +29,12 @@ class Integrations::GithubController < Integrations::BaseController
 
   def branch
     # Github returns full ref e.g. refs/heads/...
-    params[:ref]
+    params[:ref][/refs\/heads\/(.+)/, 1]
+  end
+
+  private
+
+  def service_type
+    'code'
   end
 end
