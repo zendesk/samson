@@ -6,11 +6,5 @@ module Samson
     end.compact
 
     cattr_reader :sources
-
-    def self.register_source(source)
-      source = source.to_s
-      raise 'Source already registered' if @@sources.includes? source
-      @@sources << source
-    end
   end
 end
