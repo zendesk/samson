@@ -47,7 +47,19 @@ open http://localhost:3000
  - Create a Stage
  - Deploy!
 
-For a real setup, use your own config in the .env file:
+For a real setup:
+
+#### Database
+
+Set up a production block in database.yml with the settings to connect to your DB then run `RAILS_ENV=production bundle exec rake db:setup`
+
+#### Webserver
+
+Configure `config/puma.rb` as you need. See [puma's documentation](https://github.com/puma/puma/) for details. You can start the server using this file by doing `puma -C config/puma.rb`.
+
+#### Environment
+
+Set the following config in your `.env` file:
 
 ##### General app (mandatory)
 
@@ -192,8 +204,8 @@ automatically.
 
 ### Instrumentation
 
-Samson sends StatsD basic web request metrics and metrics about deploys and threads 
-in use. Statsd silently disables itself if no agent is running on the host. All 
+Samson sends StatsD basic web request metrics and metrics about deploys and threads
+in use. Statsd silently disables itself if no agent is running on the host. All
 metrics collected are prepending with 'samson.app'.
 
 ### Contributing
@@ -207,4 +219,4 @@ screenshots (if UI is changing)
 
 ### Team
 
-Core team is [@steved555](https://github.com/steved555), [@dasch](https://github.com/dasch), [@jwswj](https://github.com/jwswj), [@halcyonCorsair](https://github.com/halcyonCorsair), [@princemaple](https://github.com/princemaple), [@bolddane](https://github.com/bolddane), [@pswadi-zendesk](https://github.com/pswadi-zendesk).
+Core team is [@steved](https://github.com/steved), [@dasch](https://github.com/dasch), [@jwswj](https://github.com/jwswj), [@halcyonCorsair](https://github.com/halcyonCorsair), [@princemaple](https://github.com/princemaple), [@bolddane](https://github.com/bolddane), [@pswadi-zendesk](https://github.com/pswadi-zendesk).
