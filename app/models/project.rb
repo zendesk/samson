@@ -35,9 +35,9 @@ class Project < ActiveRecord::Base
     name.parameterize('_')
   end
 
-  def last_released_with_commit?(commit)
+  def last_release_contains_commit?(commit)
     last_release = releases.order(:id).last
-    last_release && last_release.commit == commit
+    last_release && repository.downstream_commit?(last_release.commit, commit)
   end
 
   def auto_release_stages
