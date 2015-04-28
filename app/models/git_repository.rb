@@ -76,6 +76,12 @@ class GitRepository
     valid
   end
 
+  def downstream_commit?(old_commit, new_commit)
+    cmd = "git rev-list --boundary #{old_commit}..#{new_commit}"
+    success, output = run_single_command(cmd) { |line| line.strip }
+    success ? output.blank? : false
+  end
+
   private
 
   def checkout!(executor: TerminalExecutor.new(StringIO.new), pwd: repo_cache_dir, git_reference:)

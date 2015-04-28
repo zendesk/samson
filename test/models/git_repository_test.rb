@@ -119,6 +119,29 @@ describe GitRepository do
     end
   end
 
+  describe "#downstream_commit?" do
+    before do
+      create_repo_with_second_commit
+      repository.clone!
+    end
+
+    it 'returns true when the commit is downstream' do
+      repository.downstream_commit?('HEAD', 'HEAD~1').must_equal true
+    end
+
+    it 'returns true when the commit is the same' do
+      repository.downstream_commit?('HEAD', 'HEAD').must_equal true
+    end
+
+    it 'returns false when the commit is upstream' do
+      repository.downstream_commit?('HEAD~1', 'HEAD').must_equal false
+    end
+
+    it 'returns false when the commit does not exist' do
+      repository.downstream_commit?('HEAD', 'non-existent').must_equal false
+    end
+  end
+
   describe "#setup!" do
     it 'creates a repository' do
       create_repo_with_an_additional_branch
@@ -195,6 +218,20 @@ describe GitRepository do
       git add foo2
       git commit -m "branch commit"
       git checkout master
+    SHELL
+  end
+
+  def create_repo_with_second_commit
+    execute_on_remote_repo <<-SHELL
+      git init
+      git config user.email "test@example.com"
+      git config user.name "Test User"
+      echo monkey > foo
+      git add foo
+      git commit -m "initial commit"
+      echo more-monkey >> foo
+      git add foo
+      git commit -m "added more monkey"
     SHELL
   end
 

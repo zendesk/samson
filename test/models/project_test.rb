@@ -16,19 +16,22 @@ describe Project do
     Project.create!(name: "hello", repository_url: url).token.wont_be_nil
   end
 
-  describe "#last_released_with_commit?" do
-    it "returns true if the last release had that commit" do
-      project.releases.create!(commit: "XYZ", author: author)
-      assert project.last_released_with_commit?("XYZ")
+  describe "#last_release_contains_commit?" do
+    let(:repository) { mock() }
+
+    before do
+      project.stubs(:repository).returns(repository)
+      repository.stubs(:downstream_commit?).with('LAST', 'NEW').returns(true)
     end
 
-    it "returns false if the last release had a different commit" do
-      project.releases.create!(commit: "123", author: author)
-      assert !project.last_released_with_commit?("XYZ")
+    it "returns true if the last release contains that commit" do
+      project.releases.create!(commit: "LAST", author: author)
+      assert project.last_release_contains_commit?("NEW")
     end
 
     it "returns false if there have been no releases" do
-      refute project.last_released_with_commit?("XYZ")
+      project.releases.destroy_all
+      refute project.last_release_contains_commit?("NEW")
     end
   end
 
