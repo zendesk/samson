@@ -13,7 +13,7 @@ class ChangelogsController < ApplicationController
 
   def check_params
     if params[:start_date].blank? || params[:end_date].blank?
-      redirect_to :start_date => (Date.today.beginning_of_week - 3.days).to_s, :end_date => Date.today.to_s
+      redirect_to start_date: (Date.today.beginning_of_week - 3.days).to_s, end_date: Date.today.to_s
     end
   end
 end

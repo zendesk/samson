@@ -145,7 +145,7 @@ describe JobExecution do
   end
 
   it 'cannot setup project if project is locked' do
-    JobExecution.any_instance.stubs(:lock_timeout => 0.5) # 2 runs in the loop
+    JobExecution.any_instance.stubs(lock_timeout: 0.5) # 2 runs in the loop
     project.repository.expects(:setup!).never
     begin
       MultiLock.send(:try_lock, project.id, 'me')

@@ -29,7 +29,7 @@ module Samson
     private
 
     def client
-      @@client ||= JenkinsApi::Client.new(:server_url => URL, :username => USERNAME, :password => API_KEY)
+      @@client ||= JenkinsApi::Client.new(server_url: URL, username: USERNAME, password: API_KEY)
     end
   end
 end

@@ -16,9 +16,9 @@ class ZendeskNotification
     if zendesk_tickets.any?
       zendesk_tickets.each do |ticket_id|
         attributes = {
-          :id => ticket_id,
-          :status => "open",
-          :comment => { :value => content(ticket_id), :public => false }
+          id:      ticket_id,
+          status:  "open",
+          comment: {value: content(ticket_id), public: false}
         }
 
         if zendesk_client.tickets.update(attributes)

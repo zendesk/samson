@@ -34,8 +34,8 @@ describe ApplicationHelper do
     describe "with an OK response" do
       before do
         stub_request(:get, status_url).to_return(
-          :headers => { :content_type => 'application/json' },
-          :body => JSON.dump(:status => 'good')
+          headers: { content_type: 'application/json' },
+          body: JSON.dump(status: 'good')
         )
       end
 
@@ -48,8 +48,8 @@ describe ApplicationHelper do
     describe "with a bad response" do
       before do
         stub_request(:get, status_url).to_return(
-          :headers => { :content_type => 'application/json' },
-          :body => JSON.dump(:status => 'bad')
+          headers: { content_type: 'application/json' },
+          body: JSON.dump(status: 'bad')
         )
       end
 
@@ -61,7 +61,7 @@ describe ApplicationHelper do
 
     describe "with an invalid response" do
       before do
-        stub_request(:get, status_url).to_return(:status => 400)
+        stub_request(:get, status_url).to_return(status: 400)
       end
 
       it 'returns false and does not cache' do

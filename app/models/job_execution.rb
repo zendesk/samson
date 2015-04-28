@@ -159,7 +159,7 @@ class JobExecution
       new(reference, job).tap do |job_execution|
         if enabled
           registry[job.id] = job_execution.tap(&:start!)
-          ActiveSupport::Notifications.instrument "job.threads", :thread_count => registry.length
+          ActiveSupport::Notifications.instrument "job.threads", thread_count: registry.length
         end
       end
     end
@@ -170,7 +170,7 @@ class JobExecution
 
     def finished_job(job)
       registry.delete(job.id)
-      ActiveSupport::Notifications.instrument "job.threads", :thread_count => registry.length
+      ActiveSupport::Notifications.instrument "job.threads", thread_count: registry.length
     end
   end
 end

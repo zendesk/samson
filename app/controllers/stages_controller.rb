@@ -35,7 +35,7 @@ class StagesController < ApplicationController
         end
 
         if stale?(etag: badge)
-          expires_in 1.minute, :public => true
+          expires_in 1.minute, public: true
           image = open("http://img.shields.io/badge/#{badge}.svg").read
           render text: image, content_type: Mime::SVG
         end

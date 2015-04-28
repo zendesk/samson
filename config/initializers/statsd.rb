@@ -19,9 +19,9 @@ ActiveSupport::Notifications.subscribe("execute_shell.samson") do |*args|
 
   tags = [event.payload[:project], event.payload[:stage]]
 
-  $statsd.histogram "execute_shell.time", event.duration, :tags => tags
-  $statsd.event "Executed shell command", event.payload[:command], :tags => tags
-  $statsd.increment "execute_shells", :tags => tags
+  $statsd.histogram "execute_shell.time", event.duration, tags: tags
+  $statsd.event "Executed shell command", event.payload[:command], tags: tags
+  $statsd.increment "execute_shells", tags: tags
 
   Rails.logger.debug("Executed shell command in %.2fms" % event.duration)
 end
@@ -41,8 +41,8 @@ ActiveSupport::Notifications.subscribe /process_action.action_controller/ do |*a
   status = event.payload[:status]
   tags = [controller, action, format]
 
-  $statsd.histogram "web.request.time", event.duration, :tags => tags
-  $statsd.histogram "web.db_query.time", event.payload[:db_runtime], :tags => tags
-  $statsd.histogram "web.view.time", event.payload[:view_runtime], :tags => tags
-  $statsd.increment "web.request.status.#{status}", :tags => tags
+  $statsd.histogram "web.request.time", event.duration, tags: tags
+  $statsd.histogram "web.db_query.time", event.payload[:db_runtime], tags: tags
+  $statsd.histogram "web.view.time", event.payload[:view_runtime], tags: tags
+  $statsd.increment "web.request.status.#{status}", tags: tags
 end

@@ -16,7 +16,7 @@ describe CommitStatus do
     end
 
     describe 'with combined status' do
-      let(:statuses) { { :state => "success" }}
+      let(:statuses) { { state: "success" }}
 
       it 'is the first status' do
         subject.status.must_equal('success')
@@ -24,7 +24,7 @@ describe CommitStatus do
     end
 
     describe 'with no status' do
-      let(:statuses) { { :state => nil } }
+      let(:statuses) { { state: nil } }
 
       it 'is nil' do
         subject.status.must_be_nil

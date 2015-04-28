@@ -139,7 +139,7 @@ describe DeployService do
 
       stage.stubs(:use_github_deployment_api?).returns(true)
 
-      GithubDeployment.stubs(:new => deployment)
+      GithubDeployment.stubs(new: deployment)
       deployment.expects(:create_github_deployment)
 
       service.deploy!(stage, reference)
@@ -159,7 +159,7 @@ describe DeployService do
     it "sends email notifications if the stage has email addresses" do
       stage.stubs(:send_email_notifications?).returns(true)
 
-      DeployMailer.expects(:deploy_email).returns( stub("DeployMailer", :deliver_now => true) )
+      DeployMailer.expects(:deploy_email).returns( stub("DeployMailer", deliver_now: true) )
 
       service.deploy!(stage, reference)
       job_execution.send(:run!)
@@ -202,11 +202,11 @@ describe DeployService do
     end
 
     it "updates a github deployment status" do
-      deployment = stub(:create_github_deployment => deployment)
+      deployment = stub(create_github_deployment: deployment)
 
       stage.stubs(:use_github_deployment_api?).returns(true)
 
-      GithubDeployment.stubs(:new => deployment)
+      GithubDeployment.stubs(new: deployment)
       deployment.expects(:update_github_deployment_status)
 
       service.deploy!(stage, reference)
@@ -216,7 +216,7 @@ describe DeployService do
     it "email notification for failed deploys" do
       stage.stubs(:automated_failure_emails).returns(["foo@bar.com"])
 
-      DeployMailer.expects(:deploy_failed_email).returns( stub("DeployMailer", :deliver_now => true) )
+      DeployMailer.expects(:deploy_failed_email).returns( stub("DeployMailer", deliver_now: true) )
 
       service.deploy!(stage, reference)
       job_execution.send(:run!)

@@ -85,7 +85,7 @@ describe User do
       }}
 
       let(:existing_user) do
-        User.create!(:name => "Test", :external_id => 9)
+        User.create!(name: "Test", external_id: 9)
       end
 
       setup { existing_user }

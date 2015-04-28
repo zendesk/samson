@@ -19,7 +19,7 @@ describe Admin::UsersController do
 
   describe 'a json GET to #show' do
     before do
-      get :index, :format => :json
+      get :index, format: :json
     end
 
     as_a_admin do
@@ -40,7 +40,7 @@ describe Admin::UsersController do
   describe 'a json get to #show with a search string' do
     as_a_admin do
       it 'succeeds and fetches a single user' do
-        get :index, search: 'Super Admin' , :format => :json
+        get :index, search: 'Super Admin' , format: :json
 
         response.success?.must_equal true
         assigns(:users).must_equal [users(:super_admin)]
