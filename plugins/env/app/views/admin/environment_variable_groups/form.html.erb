@@ -1,0 +1,32 @@
+<% title = (@group.new_record? ? "New group" : "Edit group #{@group.name}") %>
+<% content_for(:page_title, title) %>
+
+<%= manual_breadcrumb([["Environment variables", [:admin, EnvironmentVariableGroup]], [title, nil]]) %>
+
+<h1><%= title %></h1>
+
+<section>
+  <%= form_for [:admin, @group], html: { class: "form-horizontal" } do |form| %>
+    <fieldset>
+      <legend>Group name</legend>
+      <div class="form-group">
+        <div class="col-lg-2">
+          <%= form.text_field :name, class: "form-control", placeholder: "Name" %>
+        </div>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Environment variables</legend>
+      <%= render "samson_env/environment_variables", form: form %>
+
+      <hr>
+
+      <div class="form-group">
+        <div class="col-lg-10">
+          <button type="submit" class="btn btn-default">Save</button>
+        </div>
+      </div>
+    </fieldset>
+  <% end %>
+</section>

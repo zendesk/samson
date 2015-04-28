@@ -87,7 +87,10 @@ module ApplicationHelper
         raise "Unsupported breadcrumb for #{item}"
       end
     end
+    manual_breadcrumb(items)
+  end
 
+  def manual_breadcrumb(items)
     items.unshift ["Home", root_path]
     items.last << true # mark last as active
 

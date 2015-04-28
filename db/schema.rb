@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20150520210103) do
+ActiveRecord::Schema.define(version: 20150530010900) do
 
   create_table "build_statuses", force: :cascade do |t|
     t.integer  "build_id",   null: false
@@ -81,6 +81,22 @@ ActiveRecord::Schema.define(version: 20150520210103) do
   add_index "deploys", ["deleted_at"], name: "index_deploys_on_deleted_at"
   add_index "deploys", ["job_id", "deleted_at"], name: "index_deploys_on_job_id_and_deleted_at"
   add_index "deploys", ["stage_id", "deleted_at"], name: "index_deploys_on_stage_id_and_deleted_at"
+
+  create_table "environment_variable_groups", force: :cascade do |t|
+    t.string "name", limit: 255, null: false
+  end
+
+  add_index "environment_variable_groups", ["name"], name: "index_environment_variable_groups_on_name", unique: true, using: :btree
+
+  create_table "environment_variables", force: :cascade do |t|
+    t.string  "name",            limit: 255, null: false
+    t.string  "value",           limit: 255, null: false
+    t.integer "parent_id",       limit: 4,   null: false
+    t.string  "parent_type",     limit: 255, null: false
+    t.integer "deploy_group_id", limit: 4
+  end
+
+  add_index "environment_variables", ["parent_id", "parent_type", "name", "deploy_group_id"], name: "environment_variables_unique_deploy_group_id", unique: true, using: :btree
 
   create_table "environments", force: :cascade do |t|
     t.string   "name",                          null: false
@@ -218,6 +234,14 @@ ActiveRecord::Schema.define(version: 20150520210103) do
     t.datetime "created_at"
     t.datetime "updated_at"
   end
+
+  create_table "stage_environment_variable_groups", force: :cascade do |t|
+    t.integer "stage_id",                      limit: 4, null: false
+    t.integer "environment_variable_group_id", limit: 4, null: false
+  end
+
+  add_index "stage_environment_variable_groups", ["environment_variable_group_id"], name: "stage_environment_variable_groups_group_id", using: :btree
+  add_index "stage_environment_variable_groups", ["stage_id", "environment_variable_group_id"], name: "stage_environment_variable_groups_unique_group_id", unique: true, using: :btree
 
   create_table "stages", force: :cascade do |t|
     t.string   "name",                                                                       null: false

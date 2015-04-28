@@ -1,4 +1,10 @@
 PATH
+  remote: plugins/env/
+  specs:
+    samson_env (0.0.0)
+      dotenv
+
+PATH
   remote: plugins/flowdock/
   specs:
     samson_flowdock (0.0.0)
@@ -392,6 +398,7 @@ DEPENDENCIES
   rails-assets-vis
   rails-assets-x-editable
   rails_12factor
+  samson_env!
   samson_flowdock!
   samson_jenkins!
   samson_slack!
