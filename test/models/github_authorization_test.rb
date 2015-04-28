@@ -17,7 +17,7 @@ describe GithubAuthorization do
         stub_github_api("teams/#{team[:id]}/members/test.user", {}, team[:member] ? 204 : 404)
       end
     else
-      config.stubs(:organization => nil)
+      config.stubs(organization: nil)
     end
   end
 

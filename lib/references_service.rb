@@ -8,7 +8,7 @@ class ReferencesService
   end
 
   def find_git_references
-    Rails.cache.fetch(cache_key, :expires_in => references_ttl) { references_from_cached_repo } || []
+    Rails.cache.fetch(cache_key, expires_in: references_ttl) { references_from_cached_repo } || []
   end
 
   private

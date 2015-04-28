@@ -10,7 +10,7 @@ describe ZendeskNotification do
   let(:changeset) { stub("changeset", commits: [commit("ZD#18 this fixes a very bad bug")]) }
   let(:deploy) { stub(changeset: changeset, user: user, stage: stage) }
   let(:notification) { ZendeskNotification.new(deploy) }
-  let(:api_response_headers) { {:headers => {:content_type => "application/json"}} }
+  let(:api_response_headers) { {headers: {content_type: "application/json"}} }
 
   describe 'when commit messages include Zendesk tickets' do
     before do
@@ -19,7 +19,7 @@ describe ZendeskNotification do
 
     it "comments on the ticket" do
       comment = stub_api_request(:put, "api/v2/tickets/18").
-        with(:body => "{\"ticket\":{\"status\":\"open\",\"comment\":{\"value\":\"A fix to project has been deployed to Production. Deploy details: v2.14\",\"public\":false}}}")
+        with(body: "{\"ticket\":{\"status\":\"open\",\"comment\":{\"value\":\"A fix to project has been deployed to Production. Deploy details: v2.14\",\"public\":false}}}")
 
       notification.deliver
 
@@ -50,6 +50,6 @@ describe ZendeskNotification do
     url = ENV['ZENDESK_URL']
     body = '{ "ticket": { "id": 18, "comment": {"value": "Comment body", "public": true }, "status": "open"}}'
 
-    stub_request(method, "#{url}/#{path}").to_return(api_response_headers.merge(:status => 200, :body => body))
+    stub_request(method, "#{url}/#{path}").to_return(api_response_headers.merge(status: 200, body: body))
   end
 end

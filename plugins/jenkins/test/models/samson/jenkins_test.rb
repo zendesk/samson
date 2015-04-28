@@ -3,24 +3,24 @@ require_relative '../../test_helper'
 describe Samson::Jenkins do
   def stub_crumb
     stub_request(:get, "http://user%40test.com:japikey@www.test-url.com/api/json?tree=useCrumbs").
-      to_return(:body => '{"crumb": "fb171d526b9cc9e25afe80b356e12cb7", "crumbRequestField": ".crumb"}')
+      to_return(body: '{"crumb": "fb171d526b9cc9e25afe80b356e12cb7", "crumbRequestField": ".crumb"}')
   end
 
   def stub_job_detail
     stub_request(:get, "http://user%40test.com:japikey@www.test-url.com/job/test_job/api/json").
-      to_return(:status => 200, :body => json_response)
+      to_return(status: 200, body: json_response)
   end
 
   def stub_build_with_parameters
     stub_request(:post, "http://user%40test.com:japikey@www.test-url.com/job/test_job/buildWithParameters").
-      with(:body => {"buildStartedBy"=>"Super Admin", "originatedFrom"=>"Staging"}).
-      to_return(:status => 200, :body => "", :headers => {}).to_timeout
+      with(body: {"buildStartedBy"=>"Super Admin", "originatedFrom"=>"Staging"}).
+      to_return(status: 200, body: "", headers: {}).to_timeout
   end
 
   # avoid polling logic
   def stub_build_detail(result)
     stub_request(:get, "http://user%40test.com:japikey@www.test-url.com/job/test_job/96//api/json").
-      to_return(:status => 200, :body => build_detail_response.merge("result" => result).to_json, :headers => {}).to_timeout
+      to_return(status: 200, body: build_detail_response.merge("result" => result).to_json, headers: {}).to_timeout
   end
 
   def stub_get_build_id_from_queue(build_id)
@@ -36,7 +36,7 @@ describe Samson::Jenkins do
   before do
     # trigger initial request that does a version check (stub with a version that signals we support queueing)
     stub_request(:get, "http://user%40test.com:japikey@www.test-url.com/").
-      to_return(:headers => {"X-Jenkins" => "1.600"})
+      to_return(headers: {"X-Jenkins" => "1.600"})
     Samson::Jenkins.new(nil, nil).send(:client).get_root
   end
 
