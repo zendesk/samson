@@ -1,4 +1,7 @@
-FROM ruby:2.2.1
+FROM ruby:2.2.2
+
+RUN apt-get update
+RUN apt-get install -y nodejs
 
 RUN mkdir /app
 WORKDIR /app
@@ -9,7 +12,7 @@ ADD Rakefile /app/
 ADD bin /app/bin
 ADD public /app/public
 ADD db /app/db
-ADD vendor/assets /app/vendor/assets
+ADD .env.bootstrap /app/.env
 
 # Gems
 ADD Gemfile /app/
@@ -31,4 +34,4 @@ RUN DATABASE_URL=mysql2://user:pass@127.0.0.1/null RAILS_ENV=development PRECOMP
 
 EXPOSE 3000
 
-CMD ["bundle", "exec", "rails", "server", "--binding=0.0.0.0"]
+CMD ["DATABASE_URL=mysql2://root@127.0.0.1:3306/samson_development" "bundle", "exec", "rails", "server", "--binding=0.0.0.0"]

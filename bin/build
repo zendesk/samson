@@ -1,0 +1,8 @@
+#!/bin/sh
+
+APP_NAME=${PWD##*/}
+echo "Attempting to build: $APP_NAME"
+
+bundle package --all --quiet
+git -C . log -1 --pretty=%H > REVISION
+docker build -t $APP_NAME .
