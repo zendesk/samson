@@ -18,17 +18,17 @@ class DeploysController < ApplicationController
   end
 
   def active
-    @deploys = active_deploy_scope.page(params[:page])
+    @deploys = active_deploy_scope
 
     respond_to do |format|
-      format.html
+      format.html { render 'recent', locals: { title: 'Current Deploys', show_filters: false, controller: 'currentDeploysCtrl' } }
       format.json { render json: @deploys }
     end
   end
 
   def recent
     respond_to do |format|
-      format.html
+      format.html { render 'recent', locals: { title: 'Recent Deploys', show_filters: true, controller: 'TimelineCtrl' } }
       format.json do
         render json: Deploy.page(params[:page]).per(30)
       end

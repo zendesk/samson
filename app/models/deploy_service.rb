@@ -7,7 +7,7 @@ class DeployService
 
   def deploy!(stage, reference)
     deploy = stage.create_deploy(reference: reference, user: user)
-    SseRailsEngine.send_event('deploys', { type: 'new' })
+    send_sse_deploy_update('new', deploy)
 
     if deploy.persisted? && (!stage.deploy_requires_approval? || release_approved?(deploy))
       confirm_deploy!(deploy)
@@ -20,6 +20,7 @@ class DeployService
     send_before_notifications(deploy)
 
     job_execution = JobExecution.start_job(deploy.reference, deploy.job)
+    send_sse_deploy_update('start', deploy)
 
     job_execution.subscribe do
       send_after_notifications(deploy)
@@ -28,7 +29,7 @@ class DeployService
 
   def stop!(deploy)
     deploy.stop!
-    SseRailsEngine.send_event('deploys', { type: 'finish' })
+    send_sse_deploy_update('finish', deploy)
   end
 
   private
@@ -64,7 +65,7 @@ class DeployService
 
   def send_after_notifications(deploy)
     Samson::Hooks.fire(:after_deploy, deploy, deploy.buddy)
-    SseRailsEngine.send_event('deploys', { type: 'finish' })
+    send_sse_deploy_update('finish', deploy)
     send_deploy_email(deploy)
     send_failed_deploy_email(deploy)
     send_datadog_notification(deploy)
@@ -107,5 +108,10 @@ class DeployService
     if deploy.stage.use_github_deployment_api?
       GithubDeployment.new(deploy).update_github_deployment_status(@deployment)
     end
+  end
+
+  def send_sse_deploy_update(type, deploy)
+    return unless deploy.persisted?
+    SseRailsEngine.send_event('deploys', { type: type, deploy: DeploySerializer.new(deploy, root: nil) })
   end
 end
