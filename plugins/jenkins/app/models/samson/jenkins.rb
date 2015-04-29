@@ -29,7 +29,9 @@ module Samson
     private
 
     def client
-      @@client ||= JenkinsApi::Client.new(server_url: URL, username: USERNAME, password: API_KEY)
+      @@client ||= JenkinsApi::Client.new(server_url: URL, username: USERNAME, password: API_KEY).tap do |cli|
+        cli.logger = Rails.logger
+      end
     end
   end
 end
