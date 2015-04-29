@@ -1,31 +1,29 @@
 require 'statsd'
 
-module StatsdLoader
-  def self.create
-    config = config_from_env || config_from_file
-    raise('Could not initialize statsd by file or by ENV') if config.nil?
-    Statsd.new(config[:host], config[:port])
-  end
-
-  def self.config_from_env
-    if ENV['STATSD_HOST'] && ENV['STATSD_PORT']
-      {
-        host: ENV['STATSD_HOST'],
-        port: ENV['STATSD_PORT'].to_i
-      }
+module Samson::StatsdLoader
+  class << self
+    def create
+      config = config_from_env || config_from_file
+      Statsd.new(config.fetch(:host), config.fetch(:port))
     end
-  end
 
-  def self.config_from_file
-    config_file = Rails.root.join('config/statsd.yml')
-    if File.exist?(config_file)
-      config = YAML.load(File.read(config_file))[Rails.env]
-      config.symbolize_keys if config
+    private
+
+    def config_from_env
+      return unless host = ENV['STATSD_HOST']
+      return unless port = ENV['STATSD_PORT']
+      {host: host, port: port.to_i}
+    end
+
+    def config_from_file
+      YAML.load_file('config/statsd.yml').
+        fetch(Rails.env).
+        symbolize_keys
     end
   end
 end
 
-$statsd = StatsdLoader.create
+$statsd = Samson::StatsdLoader.create
 $statsd.namespace = "samson.app"
 
 if ENV['SERVER_MODE']
