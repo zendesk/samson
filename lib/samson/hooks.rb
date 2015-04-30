@@ -25,17 +25,16 @@ module Samson
         Rails.env.test? || ENV["PLUGINS"] == "all" || ENV["PLUGINS"].to_s.split(',').map(&:strip).include?(@name)
       end
 
-      def require
-        super @path
+      def load
+        lib = "#{@folder}/lib"
+        $LOAD_PATH << lib
+        require @path
+        engine.config.autoload_paths << lib
       end
 
       def add_migrations
         migrations = File.join(@folder, "db/migrate")
         Rails.application.config.paths["db/migrate"] << migrations if Dir.exist?(migrations)
-      end
-
-      def add_lib_path
-        engine.config.autoload_paths += Dir["#{engine.config.root}/lib"]
       end
 
       def add_decorators
@@ -100,10 +99,9 @@ module Samson
       end
 
       def render_views(name, view, *args)
-        hooks(name).each do |partial|
-          view.instance_exec { concat render(partial, *args) }
+        hooks(name).each_with_object("".html_safe) do |partial, html|
+          html << view.render(partial, *args)
         end
-        nil
       end
 
       def load_decorators(model_name)
@@ -112,10 +110,9 @@ module Samson
 
       def plugin_setup
         Samson::Hooks.plugins.
-          each(&:require).
+          each(&:load).
           each(&:add_migrations).
           each(&:add_assets_to_precompile).
-          each(&:add_lib_path).
           each(&:add_decorators)
       end
 
@@ -144,8 +141,6 @@ module Samson
     end
   end
 end
-
-Dir["plugins/*/lib"].each { |f| $LOAD_PATH << f } # treat included plugins like gems
 
 module Samson::LoadDecorators
   def inherited(subclass)
