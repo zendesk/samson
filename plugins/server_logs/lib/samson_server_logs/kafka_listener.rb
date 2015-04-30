@@ -1,11 +1,11 @@
 require 'poseidon'
+require 'open-uri'
+require 'json'
 
 module SamsonServerLogs
   class KafkaListener
     cattr_accessor(:total_timeout, instance_accessor: false) { 30.minute }
     cattr_accessor(:deploy_timeout, instance_accessor: false) { 10.minute }
-    KAFKA_HOST = ENV["KAFKA_HOST"] || "localhost"
-    KAFKA_PORT = ENV.fetch("KAFKA_PORT", 9092).to_i
     KAFKA_TOPIC = ENV["KAFKA_TOPIC"] || "samson_deploy"
 
     def initialize(deploy_id, output)
@@ -13,8 +13,7 @@ module SamsonServerLogs
       @output = output
       @consumer = Poseidon::PartitionConsumer.new(
         "samson_deploy_listener",
-        KAFKA_HOST, KAFKA_PORT,
-        KAFKA_TOPIC, 0, :latest_offset
+        *kafka_url_and_port, KAFKA_TOPIC, 0, :latest_offset
       )
       @timeout = self.class.total_timeout.from_now
       @waiting_for_servers = nil
@@ -113,6 +112,17 @@ module SamsonServerLogs
       received.select! { |m| m["deploy"] == @deploy_id }
       messages.concat received
       received
+    end
+
+    def kafka_url_and_port
+      @kafka_url_and_port ||= if host = ENV["KAFKA_HOST"]
+        [host, ENV.fetch("KAFKA_PORT", 9092).to_i]
+      else
+        consul = ENV.fetch("CONSUL_URL", "http://localhost:8500")
+        url = "#{consul}/v1/health/service/#{ENV.fetch("KAFKA_SERVICE_NAME", "kafka")}?passing=1"
+        server = JSON.load(open(url).read).first
+        ["#{server.fetch("Node").fetch("Node")}", server.fetch("Service").fetch("Port")]
+      end
     end
   end
 end
