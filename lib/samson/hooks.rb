@@ -35,7 +35,7 @@ module Samson
       end
 
       def add_lib_path
-        engine.config.autoload_paths += Dir["#{engine.config.root}/lib/**/"]
+        engine.config.autoload_paths += Dir["#{engine.config.root}/lib"]
       end
 
       def add_decorators
@@ -49,7 +49,7 @@ module Samson
       end
 
       def engine
-        @engine ||= Kernel.const_get("::Samson#{@name.capitalize}::Engine")
+        @engine ||= Kernel.const_get("::Samson#{@name.camelize}::Engine")
       end
 
       private
