@@ -79,7 +79,7 @@ group :no_preload do
   gem 'coderay', '~> 1.1.0'
   gem 'dogapi', '~> 1.9'
   gem 'net-http-persistent'
-  Dir["plugins/*/"].each { |f| gemspec path: f } # treat included plugins like gems
+  Dir["plugins/*/"].each { |f| gemspec path: f, require: false } # treat included plugins like gems
 end
 
 group :development, :staging do
