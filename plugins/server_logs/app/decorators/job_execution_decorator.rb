@@ -4,7 +4,8 @@ JobExecution.prepend(Module.new do
 
   def execute_commands!(commands)
     if stage.try(:wait_for_server_logs)
-      KafkaListener.new(@job.deploy_id, @output).listen { super }
+      deply_id = @job.project.github_repo.split("/").last # TODO pass a real id to meatballs
+      KafkaListener.new(deply_id, @output).listen { super }
     else
       super
     end
