@@ -6,7 +6,7 @@ module SamsonServerLogs
   class KafkaListener
     cattr_accessor(:total_timeout, instance_accessor: false) { 30.minute }
     cattr_accessor(:deploy_timeout, instance_accessor: false) { 10.minute }
-    KAFKA_TOPIC = ENV["KAFKA_TOPIC"] || "samson_deploy"
+    KAFKA_TOPIC = ENV["KAFKA_TOPIC"]
 
     def initialize(deploy_id, output)
       @deploy_id = deploy_id
