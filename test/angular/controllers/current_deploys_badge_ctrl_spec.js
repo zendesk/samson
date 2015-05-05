@@ -15,7 +15,6 @@ describe('currentDeployBadgeCtrl', function() {
     $httpBackend = _$httpBackend_;
     SseFactory = _SseFactory_;
     fakeBadgeElement = {
-      data: function() { return '/deploys/active.json'; },
       show: jasmine.createSpy('show'),
       hide: jasmine.createSpy('hide')
     };
@@ -34,14 +33,14 @@ describe('currentDeployBadgeCtrl', function() {
 
   describe('init', function() {
     it('gets current active deploys', function() {
-      $httpBackend.expectGET('/deploys/active.json').respond({ "deploys": [{ "id": 1 }, { "id": 2 }] });
+      $httpBackend.expectGET('/deploys/active_count.json').respond('{"deploy_count":2}');
       createController();
       expect($scope.currentActiveDeploys).toEqual(2);
       expect(fakeBadgeElement.show).toHaveBeenCalled();
     });
 
     it('hides badge if there are no deploys', function() {
-      $httpBackend.expectGET('/deploys/active.json').respond({ "deploys": [] });
+      $httpBackend.expectGET('/deploys/active_count.json').respond('{"deploy_count":0}');
       createController();
       expect($scope.currentActiveDeploys).toEqual(0);
       expect(fakeBadgeElement.hide).toHaveBeenCalled();
