@@ -1,30 +1,32 @@
-<h1>Recent Deploys</h1>
+<h1><%= title %></h1>
 
-<div class="timeline" ng-controller="TimelineCtrl">
-  <div class="timeline-filters clearfix">
-    <div class="timeline-filter col-sm-6">
-      <label for="tlf-project-user">SEARCH</label>
-      <input id="tlf-project-user" class="form-control" type="text" ng-model="search" placeholder="Search project or user">
+<div class="timeline" ng-controller="<%= controller %>">
+  <% if show_filters %>
+    <div class="timeline-filters clearfix">
+      <div class="timeline-filter col-sm-6">
+        <label for="tlf-project-user">SEARCH</label>
+        <input id="tlf-project-user" class="form-control" type="text" ng-model="search" placeholder="Search project or user">
+      </div>
+      <div class="timeline-filter col-sm-2">
+        <label for="tlf-user-type">USER TYPE</label>
+        <select id="tlf-user-type" class="form-control" ng-model="userType" ng-options="option for option in userTypes">
+          <option value="">All</option>
+        </select>
+      </div>
+      <div class="timeline-filter col-sm-2">
+        <label for="tlf-prod">STAGE</label>
+        <select id="tlf-prod" class="form-control" ng-model="stageType" ng-options="value as key for (key, value) in stageTypes">
+          <option value="">All</option>
+        </select>
+      </div>
+      <div class="timeline-filter col-sm-2">
+        <label for="tlf-status">STATUS</label>
+        <select id="tlf-status" class="form-control" ng-model="deployStatus" ng-options="status for status in deployStatuses">
+          <option value="">All</option>
+        </select>
+      </div>
     </div>
-    <div class="timeline-filter col-sm-2">
-      <label for="tlf-user-type">USER TYPE</label>
-      <select id="tlf-user-type" class="form-control" ng-model="userType" ng-options="option for option in userTypes">
-        <option value="">All</option>
-      </select>
-    </div>
-    <div class="timeline-filter col-sm-2">
-      <label for="tlf-prod">STAGE</label>
-      <select id="tlf-prod" class="form-control" ng-model="stageType" ng-options="value as key for (key, value) in stageTypes">
-        <option value="">All</option>
-      </select>
-    </div>
-    <div class="timeline-filter col-sm-2">
-      <label for="tlf-status">STATUS</label>
-      <select id="tlf-status" class="form-control" ng-model="deployStatus" ng-options="status for status in deployStatuses">
-        <option value="">All</option>
-      </select>
-    </div>
-  </div>
+  <% end %>
   <section class="timeline-content clearfix">
     <table class="timeline-content">
       <tr>
@@ -35,10 +37,10 @@
         <th>STATUS</th>
         <th></th>
       </tr>
-      <%= render partial: "timeline_entry" %>
+      <tr deploy-details ng-repeat="deploy in deploys | projectUserFilter:search | userFilter:userType | stageFilter:stageType | statusFilter:deployStatus"></tr>
     </table>
     <%# if there is not enough height for scrolling %>
-    <div ng-if="shortWindow()" class="timeline-show-more">
+    <div ng-if="timelineDeploys && helper.shortWindow()" class="timeline-show-more">
       <span class="btn btn-default" ng-click="timelineDeploys.loadMore()">Load More .. {{timelineDeploys.page}}</span>
     </div>
   </section>

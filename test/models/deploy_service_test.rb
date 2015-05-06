@@ -18,7 +18,7 @@ describe DeployService do
 
   describe "#deploy!" do
     it "starts a deploy" do
-      SseRailsEngine.expects(:send_event).with('deploys', { type: 'new' }).once
+      SseRailsEngine.expects(:send_event).twice
       assert_difference "Job.count", +1 do
         assert_difference "Deploy.count", +1 do
           service.deploy!(stage, reference)
