@@ -12,7 +12,7 @@ class GitRepository
   end
 
   def setup!(executor, temp_dir, git_reference)
-    executor.output.write("Beginning git repo setup\n")
+    executor.output.write("# Beginning git repo setup\n")
     return false unless clone!(executor: executor, from: repository_url, to: repo_cache_dir, mirror: true) unless locally_cached?
     return false unless update!(executor: executor)
     return false unless clone!(executor: executor, from: repo_cache_dir, to: temp_dir)

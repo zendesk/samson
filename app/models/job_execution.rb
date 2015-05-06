@@ -17,7 +17,7 @@ class JobExecution
 
   def initialize(reference, job)
     @output = OutputBuffer.new
-    @executor = TerminalExecutor.new(@output)
+    @executor = TerminalExecutor.new(@output, verbose: true)
     @viewers = JobViewers.new(@output)
     @subscribers = []
     @job, @reference = job, reference
@@ -100,7 +100,7 @@ class JobExecution
     end
 
     FileUtils.mkdir_p(artifact_cache_dir)
-    @output.write("Executing deploy\n")
+    @output.write("\n# Executing deploy\n")
 
     commands = [
       "export DEPLOYER=#{@job.user.email.shellescape}",
