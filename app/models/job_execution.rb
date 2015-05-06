@@ -59,12 +59,14 @@ class JobExecution
   def error!(exception)
     message = "JobExecution failed: #{exception.message}"
 
-    Airbrake.notify(exception,
-      error_message: message,
-      parameters: {
-        job_id: @job.id
-      }
-    )
+    if defined?(Airbrake)
+      Airbrake.notify(exception,
+        error_message: message,
+        parameters: {
+          job_id: @job.id
+        }
+      )
+    end
 
     @output.write(message + "\n")
     @job.error! if @job.active?
