@@ -9,6 +9,7 @@ Samson::Application.routes.draw do
     resources :deploys, only: [:index, :show, :destroy] do
       collection do
         get :active
+        get :active_count
       end
 
       member do
@@ -53,6 +54,7 @@ Samson::Application.routes.draw do
   resources :deploys, only: [] do
     collection do
       get :active
+      get :active_count
       get :recent
     end
   end

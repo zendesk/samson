@@ -1,7 +1,7 @@
 class DeploysController < ApplicationController
   before_action :authorize_deployer!, only: [:new, :create, :confirm, :update, :destroy, :buddy_check, :pending_start]
   before_action :find_project
-  before_action :find_deploy, except: [:index, :recent, :active, :new, :create, :confirm]
+  before_action :find_deploy, except: [:index, :recent, :active, :active_count, :new, :create, :confirm]
   before_action :stage, only: :new
 
   def index
@@ -13,9 +13,12 @@ class DeploysController < ApplicationController
     end
   end
 
+  def active_count
+    render json: { deploy_count: active_deploy_scope.count }
+  end
+
   def active
-    scope = (@project ? @project.deploys : Deploy)
-    @deploys = scope.active.page(params[:page])
+    @deploys = active_deploy_scope.page(params[:page])
 
     respond_to do |format|
       format.html
@@ -124,5 +127,9 @@ class DeploysController < ApplicationController
 
   def find_deploy
     @deploy = Deploy.find(params[:id])
+  end
+
+  def active_deploy_scope
+    @project ? @project.deploys.active : Deploy.active
   end
 end

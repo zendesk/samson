@@ -123,6 +123,24 @@ describe DeploysController do
       end
     end
 
+    describe "#active_count" do
+      before { stage.create_deploy(reference: 'reference', user: admin) }
+
+      it "renders json" do
+        get :active_count
+        assert_equal "application/json", @response.content_type
+        assert_response :ok
+        @response.body.must_equal "{\"deploy_count\":1}"
+      end
+
+      it "renders json" do
+        get :active_count, project_id: project.to_param
+        assert_equal "application/json", @response.content_type
+        assert_response :ok
+        @response.body.must_equal "{\"deploy_count\":1}"
+      end
+    end
+
     describe "a GET to :show" do
       describe "with a valid deploy" do
         setup { get :show, project_id: project.to_param, id: deploy.to_param }
