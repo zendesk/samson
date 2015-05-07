@@ -10,8 +10,8 @@ require 'thread_safe'
 #
 #   buffer = OutputBuffer.new
 #
-#   listener1 = Thread.new { c = ""; buffer.each {|chunk| c << chunk }; c }
-#   listener2 = Thread.new { c = ""; buffer.each {|chunk| c << chunk }; c }
+#   listener1 = Thread.new { c = ""; buffer.each {|event, data| c << data }; c }
+#   listener2 = Thread.new { c = ""; buffer.each {|event, data| c << data }; c }
 #
 #   buffer.write("hello ")
 #   buffer.write("world!")
@@ -21,21 +21,19 @@ require 'thread_safe'
 #   listener2.value #=> "hello world!"
 #
 class OutputBuffer
-  attr_reader :chunks
-
   def initialize
     @listeners = ThreadSafe::Array.new
-    @chunks = ThreadSafe::Array.new
+    @previous = ThreadSafe::Array.new
     @closed = false
   end
 
   def write(data, event = :message)
-    @chunks << [event, data] unless event == :close
+    @previous << [event, data] unless event == :close
     @listeners.each {|listener| listener.push([event, data]) }
   end
 
   def to_s
-    chunks.select { |event, data| event == :message }.map { |event, data| data }.join
+    @previous.select { |event, _data| event == :message }.map(&:last).join
   end
 
   def close
@@ -50,17 +48,19 @@ class OutputBuffer
   def each(&block)
     # If the buffer is closed, there's no reason to block the listening
     # thread - just yield all the buffered chunks and return.
-    return @chunks.each(&block) if @closed
+    return @previous.each(&block) if closed?
 
-    queue = Queue.new
-    @listeners << queue
+    begin
+      queue = Queue.new
+      @listeners << queue
 
-    @chunks.each {|chunk| yield chunk }
+      @previous.each(&block) # race condition: possibly duplicate messages when message comes in between adding listener and this
 
-    while (chunk = queue.pop) && chunk.first != :close
-      yield chunk
+      while (chunk = queue.pop) && chunk.first != :close
+        yield chunk
+      end
+    ensure
+      @listeners.delete(queue)
     end
-  ensure
-    @listeners.delete(queue)
   end
 end
