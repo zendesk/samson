@@ -1,4 +1,4 @@
-<tr class="timeline-entry" data-url="{{deploy.url}}" ng-click="helper.jumpTo(deploy.url)">
+<tr class="timeline-entry">
   <td>
     <a class="timeline-project" ng-href="{{deploy.project.url}}">{{deploy.project.name}}</a>
   </td>
@@ -6,15 +6,12 @@
     {{deploy.user.name}}
   </td>
   <td class="timeline-summary">
-    {{deploy.summary}}
+    <a ng-href="{{deploy.url}}">{{deploy.summary}}</a>
   </td>
   <td>
     <span data-time="{{deploy.updated_at}}" class="timeline-time">{{deploy.updated_at_ago}}</span>
   </td>
   <td>
     <span class="label label-{{deploy.status | visualizeStatus}} timeline-deploy-status">{{deploy.status}}</span>
-  </td>
-  <td>
-    <i class="glyphicon glyphicon-log-out"></i>
   </td>
 </tr>

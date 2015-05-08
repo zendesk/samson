@@ -35,7 +35,6 @@
         <th>DEPLOY</th>
         <th>LAST UPDATE</th>
         <th>STATUS</th>
-        <th></th>
       </tr>
       <tr deploy-details ng-repeat="deploy in deploys | projectUserFilter:search | userFilter:userType | stageFilter:stageType | statusFilter:deployStatus"></tr>
     </table>
