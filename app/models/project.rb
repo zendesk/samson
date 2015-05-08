@@ -10,6 +10,7 @@ class Project < ActiveRecord::Base
   before_update :clean_old_repository, if: :repository_url_changed?
   after_soft_delete :clean_repository
 
+  has_many :builds
   has_many :releases
   has_many :stages, dependent: :destroy
   has_many :deploys, through: :stages
