@@ -15,12 +15,16 @@ require 'shellwords'
 class TerminalExecutor
   attr_reader :pid, :output
 
-  def initialize(output)
+  def initialize(output, verbose: false)
     @output = output
+    @verbose = verbose
   end
 
   def execute!(*commands)
-    command = commands.map {|command| wrap_command(command) }.join("\n")
+    commands.map! { |c| "echo » #{c.shellescape}\n#{c}" } if @verbose
+    commands.unshift("set -e")
+
+    command = commands.join("\n")
 
     if RUBY_ENGINE == 'jruby'
       command = %Q{/bin/sh -c "#{command.gsub(/"/, '\\"')}"}
@@ -53,21 +57,5 @@ class TerminalExecutor
     input.close
 
     return status.success?
-  end
-
-  def wrap_command(command)
-    <<-G
-#{command}
-RETVAL=$?
-if [ "$RETVAL" != "0" ];
-then
-echo #{error(command.shellescape)} >&2
-exit $RETVAL
-fi
-    G
-  end
-
-  def error(command)
-    "Failed to execute #{command}"
   end
 end
