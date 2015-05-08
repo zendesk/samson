@@ -4,12 +4,15 @@ describe JobExecution do
 
   let(:repository_url) { Dir.mktmpdir }
   let(:repo_dir) { File.join(GitRepository.cached_repos_dir, project.repository_directory) }
+  let(:pod1) { deploy_groups(:pod1) }
+  let(:pod2) { deploy_groups(:pod2) }
+  let(:deploy_group_hack) { DeployGroup.create!(name: ';|sudo make-sandwich /', environment: pod1.environment) }
   let(:project) { Project.create!(name: 'duck', repository_url: repository_url) }
-  let(:stage) { Stage.create!(name: 'stage4', project: project) }
+  let(:stage) { Stage.create!(name: 'stage4', project: project, deploy_groups: [pod1, pod2, deploy_group_hack]) }
   let(:user) { User.create!(name: 'test') }
   let(:job) { project.jobs.create!(command: 'cat foo', user: user, project: project) }
   let(:execution) { JobExecution.new('master', job) }
-  let(:deploy) { Deploy.create!(stage: stage, job: job, reference: 'masterCADF') }
+  let(:deploy) { Deploy.create!(stage: stage, job: job, reference: 'master') }
 
   before do
     Project.any_instance.stubs(:valid_repository_url).returns(true)
@@ -115,7 +118,7 @@ describe JobExecution do
   end
 
   it "exports deploy information as environment variables" do
-    job.update(command: 'env')
+    job.update(command: 'env | sort')
     execute_job
     lines = job.output.split "\n"
     lines.must_include "DEPLOYER=jdoe@test.com"
@@ -123,6 +126,21 @@ describe JobExecution do
     lines.must_include "DEPLOYER_NAME=John Doe"
     lines.must_include "REVISION=master"
     lines.must_include "TAG=v1"
+  end
+
+  it 'exports deploy_group information if deploy groups present' do
+    job.update(command: 'env | sort')
+    job.deploy = deploy
+    execute_job
+    lines = job.output.split "\n"
+    lines.must_include "# Deploy URL: #{deploy.url}"
+    lines.must_include 'DEPLOY_GROUPS=\;\|sudo\ make-sandwich\ / Pod1 Pod2'
+  end
+
+  it 'does not export deploy_group information if no deploy groups present' do
+    job.update(command: 'env | sort')
+    execute_job
+    job.output.wont_include "DEPLOY_GROUPS"
   end
 
   it 'maintains a cache of build artifacts between runs' do
