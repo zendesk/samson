@@ -122,8 +122,12 @@ class JobExecution
     ActiveRecord::Base.clear_active_connections!
 
     ActiveSupport::Notifications.instrument("execute_shell.samson", payload) do
-      payload[:success] = @executor.execute!(*commands)
+      payload[:success] = execute_commands!(commands)
     end
+  end
+
+  def execute_commands!(commands)
+    @executor.execute!(*commands)
   end
 
   def setup!(dir)
@@ -176,3 +180,5 @@ class JobExecution
     end
   end
 end
+
+Samson::Hooks.load_decorators("JobExecution") # TODO this is loaded before hooks are set up -> mark as already loaded and then instantly load
