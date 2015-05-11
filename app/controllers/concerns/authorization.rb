@@ -13,11 +13,11 @@ module Authorization
   end
 
   def authorize_admin!
-    unauthorized! unless current_user.is_admin?
+    unauthorized! unless current_user.admin_for?(current_project)
   end
 
   def authorize_deployer!
-    unauthorized! unless current_user.is_deployer?
+    unauthorized! unless current_user.deployer_for?(current_project)
   end
 
   def unauthorized!
