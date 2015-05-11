@@ -65,7 +65,9 @@ class ActiveSupport::TestCase
     create_default_stubs
   end
 
-  after { fail_if_dangling_threads }
+  unless ENV['SKIP_TIMEOUT']
+    after { fail_if_dangling_threads }
+  end
 
   def fail_if_dangling_threads
     max_threads = ENV['CI'] ? 0 : 1
