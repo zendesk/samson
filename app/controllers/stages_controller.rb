@@ -118,10 +118,6 @@ class StagesController < ApplicationController
     params.require(:stage).permit(stage_permitted_params)
   end
 
-  def find_project
-    @project = Project.find_by_param!(params[:project_id])
-  end
-
   def find_stage
     @stage = @project.stages.find_by_param!(params[:id])
   end
