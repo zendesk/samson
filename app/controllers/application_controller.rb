@@ -9,6 +9,7 @@ class ApplicationController < ActionController::Base
   # CurrentUser must be after protect_from_forgery,
   # so that authenticate! is called
   include CurrentUser
+  include CurrentProject
   include Authorization
 
   helper :flash

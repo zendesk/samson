@@ -1,6 +1,6 @@
 class DeploysController < ApplicationController
   before_action :authorize_deployer!, only: [:new, :create, :confirm, :update, :destroy, :buddy_check, :pending_start]
-  before_action :find_project
+  before_action :find_project, except: [:active, :active_count, :recent, :changeset]
   before_action :find_deploy, except: [:index, :recent, :active, :active_count, :new, :create, :confirm]
   before_action :stage, only: :new
 
@@ -124,10 +124,6 @@ class DeploysController < ApplicationController
 
   def deploy_params
     params.require(:deploy).permit(deploy_permitted_params)
-  end
-
-  def find_project
-    @project = Project.find_by_param!(params[:project_id]) if params[:project_id]
   end
 
   def find_deploy

@@ -13,10 +13,4 @@ class StarsController < ApplicationController
 
     head :ok
   end
-
-  private
-
-  def find_project
-    @project = Project.find_by_param!(params[:id])
-  end
 end
