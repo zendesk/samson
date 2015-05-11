@@ -1,10 +1,8 @@
 class JobsController < ApplicationController
-  include CurrentProject
   include ProjectLevelAuthorization
 
-  before_action except: [:enabled] do
-    find_project(params[:project_id])
-  end
+  skip_before_action :require_project, only: [:enabled]
+
   before_action :authorize_project_admin!, only: [:new, :create, :destroy]
   before_action :find_job, only: [:show, :destroy]
 
@@ -74,6 +72,6 @@ class JobsController < ApplicationController
   end
 
   def find_job
-    @job = @project.jobs.find(params[:id])
+    @job = current_project.jobs.find(params[:id])
   end
 end

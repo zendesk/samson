@@ -1,10 +1,5 @@
 class CommitStatusesController < ApplicationController
-  include CurrentProject
   include ProjectLevelAuthorization
-
-  before_action do
-    find_project(params[:project_id])
-  end
 
   before_action :authorize_project_deployer!
 
@@ -15,6 +10,6 @@ class CommitStatusesController < ApplicationController
   private
 
   def commit_status
-    @commit_status ||= CommitStatus.new(@project.github_repo, params[:ref])
+    @commit_status ||= CommitStatus.new(current_project.github_repo, params[:ref])
   end
 end

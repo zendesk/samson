@@ -1,17 +1,12 @@
 class BuildsController < ApplicationController
-  include CurrentProject
   include ProjectLevelAuthorization
-
-  before_action do
-    find_project(params[:project_id])
-  end
 
   before_action :authorize_project_deployer!
 
   before_action :find_build, only: [:show, :build_docker_image, :edit, :update]
 
   def index
-    @builds = @project.builds.order('id desc').page(params[:page])
+    @builds = current_project.builds.order('id desc').page(params[:page])
 
     respond_to do |format|
       format.html
@@ -20,7 +15,7 @@ class BuildsController < ApplicationController
   end
 
   def new
-    @build = @project.builds.build
+    @build = current_project.builds.build
   end
 
   def create
@@ -33,7 +28,7 @@ class BuildsController < ApplicationController
     respond_to do |format|
       format.html do
         if @build.persisted?
-          redirect_to [@project, @build]
+          redirect_to [current_project, @build]
         else
           render :new, status: 422
         end
@@ -57,7 +52,7 @@ class BuildsController < ApplicationController
     respond_to do |format|
       format.html do
         if success
-          redirect_to [@project, @build]
+          redirect_to [current_project, @build]
         else
           render :edit, status: 422
         end
@@ -74,7 +69,7 @@ class BuildsController < ApplicationController
 
     respond_to do |format|
       format.html do
-        redirect_to [@project, @build]
+        redirect_to [current_project, @build]
       end
 
       format.json do
@@ -102,15 +97,15 @@ class BuildsController < ApplicationController
   end
 
   def create_build
-    if old_build = @project.builds.where(git_sha: git_sha).last
+    if old_build = current_project.builds.where(git_sha: git_sha).last
       old_build.update_attributes(new_build_params)
       old_build
     else
-      @project.builds.build(new_build_params)
+      current_project.builds.build(new_build_params)
     end
   end
 
   def git_sha
-    @project.repository.commit_from_ref(new_build_params[:git_ref], length: nil)
+    current_project.repository.commit_from_ref(new_build_params[:git_ref], length: nil)
   end
 end

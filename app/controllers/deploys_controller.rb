@@ -1,19 +1,14 @@
 class DeploysController < ApplicationController
-  include CurrentProject
   include ProjectLevelAuthorization
 
-
-  before_action except: [:active, :active_count, :recent, :changeset] do
-    find_project(params[:project_id])
-  end
+  skip_before_action :require_project, only: [:active, :active_count, :recent, :changeset]
 
   before_action :authorize_project_deployer!, only: [:new, :create, :confirm, :buddy_check, :pending_start, :destroy]
-
   before_action :find_deploy, except: [:index, :recent, :active, :active_count, :new, :create, :confirm]
   before_action :stage, only: :new
 
   def index
-    @deploys = @project.deploys.page(params[:page])
+    @deploys = current_project.deploys.page(params[:page])
 
     respond_to do |format|
       format.html
@@ -44,7 +39,7 @@ class DeploysController < ApplicationController
   end
 
   def new
-    @deploy = @project.deploys.build(params.except(:project_id).permit(:stage_id, :reference))
+    @deploy = current_project.deploys.build(params.except(:project_id).permit(:stage_id, :reference))
   end
 
   def create
@@ -54,7 +49,7 @@ class DeploysController < ApplicationController
     respond_to do |format|
       format.html do
         if @deploy.persisted?
-          redirect_to [@project, @deploy]
+          redirect_to [current_project, @deploy]
         else
           render :new
         end
@@ -76,7 +71,7 @@ class DeploysController < ApplicationController
       @deploy.confirm_buddy!(current_user)
     end
 
-    redirect_to [@project, @deploy]
+    redirect_to [current_project, @deploy]
   end
 
   def pending_start
@@ -84,7 +79,7 @@ class DeploysController < ApplicationController
       @deploy.pending_start!
     end
 
-    redirect_to [@project, @deploy]
+    redirect_to [current_project, @deploy]
   end
 
   def show
@@ -93,7 +88,7 @@ class DeploysController < ApplicationController
       format.text do
         datetime = @deploy.updated_at.strftime "%Y%m%d_%H%M%Z"
         send_data @deploy.output,
-          filename: "#{@project.repo_name}-#{@deploy.stage.name.parameterize}-#{@deploy.id}-#{datetime}.log",
+          filename: "#{current_project.repo_name}-#{@deploy.stage.name.parameterize}-#{@deploy.id}-#{datetime}.log",
           type: 'text/plain'
       end
     end
@@ -113,7 +108,7 @@ class DeploysController < ApplicationController
       flash[:error] = "You do not have privileges to stop this deploy."
     end
 
-    redirect_to [@project, @deploy]
+    redirect_to [current_project, @deploy]
   end
 
   protected
@@ -127,7 +122,7 @@ class DeploysController < ApplicationController
   end
 
   def stage
-    @stage ||= @project.stages.find_by_param!(params[:stage_id])
+    @stage ||= current_project.stages.find_by_param!(params[:stage_id])
   end
 
   def deploy_params
@@ -139,6 +134,6 @@ class DeploysController < ApplicationController
   end
 
   def active_deploy_scope
-    @project ? @project.deploys.active : Deploy.active
+    current_project ? current_project.deploys.active : Deploy.active
   end
 end
