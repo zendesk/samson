@@ -16,7 +16,7 @@ class Integrations::GithubController < Integrations::BaseController
       request.body.tap(&:rewind).read
     )
 
-    Rack::Utils.secure_compare(request.headers['X-Hub-Signature'], "sha1=#{hmac}")
+    Rack::Utils.secure_compare(request.headers['X-Hub-Signature'].to_s, "sha1=#{hmac}")
   end
 
   def valid_payload?
