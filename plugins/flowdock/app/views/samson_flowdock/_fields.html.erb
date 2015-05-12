@@ -1,6 +1,6 @@
 <fieldset>
   <legend>Flowdock</legend>
-  <p>Add the name and API token of the Flowdock flow which should be notified of deploys.</p>
+  <p class="col-lg-offset-2">Name and API token of the Flowdock flow which should be notified of deploys.</p>
 
   <% stage = form.object %>
   <% stage.flowdock_flows.build if stage.flowdock_flows.last.try(:name).blank? %>
