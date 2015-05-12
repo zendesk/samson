@@ -2,7 +2,7 @@ require 'flowdock'
 
 class FlowdockNotification
   delegate :project, :stage, :user, to: :@deploy
-  delegate :project_deploy_url, to: 'Rails.application.routes.url_helpers'
+  delegate :project_deploy_url, to: 'AppRoutes.url_helpers'
 
   def initialize(deploy)
     @deploy = deploy

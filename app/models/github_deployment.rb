@@ -52,10 +52,6 @@ class GithubDeployment
   end
 
   def url
-    url_helpers.project_deploy_url(@project, @deploy)
-  end
-
-  def url_helpers
-    Rails.application.routes.url_helpers
+    AppRoutes.url_helpers.project_deploy_url(@project, @deploy)
   end
 end

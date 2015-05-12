@@ -123,7 +123,7 @@ class Deploy < ActiveRecord::Base
   end
 
   def url
-    Rails.application.routes.url_helpers.project_deploy_path(project, self)
+    AppRoutes.url_helpers.project_deploy_path(project, self)
   end
 
   private

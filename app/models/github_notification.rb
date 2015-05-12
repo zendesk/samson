@@ -29,7 +29,7 @@ class GithubNotification
   private
 
   def body
-    url = url_helpers.project_deploy_url(@project, @deploy)
+    url = AppRoutes.url_helpers.project_deploy_url(@project, @deploy)
     short_reference_link = "<a href='#{url}' target='_blank'>#{@deploy.short_reference}</a>"
     "This PR was deployed to #{@stage.name}. Reference: #{short_reference_link}"
   end
@@ -45,9 +45,4 @@ class GithubNotification
       end
     end.each(&:join)
   end
-
-  def url_helpers
-    Rails.application.routes.url_helpers
-  end
-
 end
