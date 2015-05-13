@@ -2,7 +2,7 @@ class CommitStatusesController < ApplicationController
   before_action :authorize_deployer!
 
   def show
-    render json: { status: commit_status.status }
+    render json: { status: commit_status.status, status_list: commit_status.status_list }
   end
 
   private
