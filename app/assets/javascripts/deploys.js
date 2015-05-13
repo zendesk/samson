@@ -106,7 +106,7 @@ $(function () {
           case "failure":
           case "error":
             $ref_status_label.removeClass("hidden");
-            tag_form_group.addClass("has-error");
+            $tag_form_group.addClass("has-error");
             show_status_problems(data.status_list);
             break;
         }
