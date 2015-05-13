@@ -10,7 +10,8 @@ $(function () {
       $placeholderPanes = $container.find(".changeset-placeholder"),
       $form = $("#new_deploy"),
       $submit = $form.find('input[type=submit]'),
-      $reference = $("#deploy_reference");
+      $reference = $("#deploy_reference"),
+      $ref_problem_list = $("#ref-problem-list"),
       $ref_status_label = $("#ref-problem-warning");
 
   $("#deploy-tabs a[data-type=github]").click(function (e) {
@@ -75,22 +76,39 @@ $(function () {
 
   // Shows commit status from Github as border color
   var timeout = null;
-  var tag_form_group = $reference.parent();
+  var $tag_form_group = $reference.parent();
+
+  function show_status_problems(status_list) {
+    $ref_status_label.removeClass("hidden");
+    $ref_problem_list.empty();
+    $.each(status_list, function(idx, status) {
+      if (status.state != "success") {
+        $ref_problem_list.append($("<li>").text(status.state + ": " + status.description));
+      }
+    });
+  }
 
   function check_status(ref) {
     $.ajax({
       url: $("#new_deploy").data("commit-status-url"),
       data: { ref: ref },
       success: function(data, status, xhr) {
-        if(data.status == "pending") {
-          $ref_status_label.addClass("hidden");
-          tag_form_group.addClass("has-warning");
-        } else if(data.status == "success") {
-          $ref_status_label.addClass("hidden");
-          tag_form_group.addClass("has-success");
-        } else if(data.status == "failure" || data.status == "error") {
-          $ref_status_label.removeClass("hidden");
-          tag_form_group.addClass("has-error");
+        switch(data.status) {
+          case "success":
+            $ref_status_label.addClass("hidden");
+            $tag_form_group.addClass("has-success");
+            break;
+          case "pending":
+            $ref_status_label.removeClass("hidden");
+            $tag_form_group.addClass("has-warning");
+            show_status_problems(data.status_list);
+            break;
+          case "failure":
+          case "error":
+            $ref_status_label.removeClass("hidden");
+            $tag_form_group.addClass("has-error");
+            show_status_problems(data.status_list);
+            break;
         }
       }
     });
@@ -107,7 +125,7 @@ $(function () {
 
   $reference.keyup(function(e) {
     $ref_status_label.addClass("hidden");
-    tag_form_group.removeClass("has-success has-warning has-error");
+    $tag_form_group.removeClass("has-success has-warning has-error");
 
     var ref = $(this).val();
 

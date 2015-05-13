@@ -14,8 +14,14 @@ describe CommitStatusesController do
       end
 
       describe 'valid' do
+        let(:commit_status_data) {
+          {
+            status: 'pending',
+            status_list: [{ status: 'pending', description: 'the Travis build is still running' }]
+          }
+        }
         setup do
-          CommitStatus.stubs(new: stub(status: 'pending'))
+          CommitStatus.stubs(new: stub(commit_status_data))
           get :show, project_id: projects(:test), id: 'test/test'
         end
 
@@ -24,7 +30,7 @@ describe CommitStatusesController do
         end
 
         it 'responds with the status' do
-          response.body.must_equal(JSON.dump(status: 'pending'))
+          response.body.must_equal(JSON.dump(commit_status_data))
         end
       end
     end

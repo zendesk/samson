@@ -6,13 +6,22 @@ class CommitStatus
   end
 
   def status
-    combined_status.state
-  rescue Octokit::NotFound
+    combined_status[:state]
+  end
+
+  def status_list
+    (combined_status[:statuses] || []).map(&:to_h)
+  end
+
+  def combined_status
+    @combined_status ||= load_status
   end
 
   private
 
-  def combined_status
-    @combined_status ||= GITHUB.combined_status(@repo, @sha)
+  def load_status
+    GITHUB.combined_status(@repo, @sha)
+  rescue Octokit::NotFound
+    {}
   end
 end
