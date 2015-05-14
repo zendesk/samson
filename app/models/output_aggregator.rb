@@ -4,7 +4,7 @@ class OutputAggregator
     @output = output
   end
 
-  def to_s
+  def each
     scanner = TerminalOutputScanner.new(@output)
     log = []
 
@@ -13,8 +13,7 @@ class OutputAggregator
 
       log.pop if event == :replace
       log.push(data)
+      yield log.join
     end
-
-    log.join
   end
 end

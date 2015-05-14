@@ -75,7 +75,11 @@ class JobExecution
   def run!
     @job.run!
 
-    output_aggregator = OutputAggregator.new(@output)
+    Thread.new do
+      OutputAggregator.new(@output).each do |log|
+        @job.update_output!(log)
+      end
+    end
 
     result = Dir.mktmpdir do |dir|
       execute!(dir)
@@ -88,8 +92,6 @@ class JobExecution
     end
 
     @output.close
-    @job.update_output!(output_aggregator.to_s)
-
     @subscribers.each(&:call)
   end
 
