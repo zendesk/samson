@@ -30,7 +30,8 @@ module JenkinsHelper
     status_message = result.fetch(jenkins_job_status)
 
     content = "Jenkins build #{jenkins_job.name} for #{deploy.stage.name} #{status_message}."
-    div = content_tag :div, content.html_safe, class: "alert alert-#{status}"
-    content_tag :a, div, href: jenkins_job_url, target: "_blank"
+    content_tag :a, href: jenkins_job_url, target: "_blank" do
+      content_tag :div, content.html_safe, class: "alert alert-#{status}"
+    end
   end
 end
