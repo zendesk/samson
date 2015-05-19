@@ -15,7 +15,7 @@ module Samson
 
     def build
       opts = {'build_start_timeout' => 60}
-      client.job.build(job_name, {'buildStartedBy' => deploy.user.name, 'originatedFrom' => deploy.stage.name}, opts).to_i
+      client.job.build(job_name, {'buildStartedBy' => deploy.user.name, 'originatedFrom' => deploy.project.name + '_' + deploy.stage.name + '_' + deploy.reference}, opts).to_i
     rescue Timeout::Error => e
       "Jenkins '#{job_name}' build failed to start in a timely manner.  #{e.class} #{e}"
     rescue JenkinsApi::Exceptions::ApiException => e
@@ -23,10 +23,18 @@ module Samson
     end
 
     def job_status(jenkins_job_id)
-      client.job.get_build_details(job_name, jenkins_job_id)['result']
+      response(jenkins_job_id)['result']
+    end
+
+    def job_url(jenkins_job_id)
+      response(jenkins_job_id)['url']
     end
 
     private
+
+    def response(jenkins_job_id)
+      @response ||= client.job.get_build_details(job_name, jenkins_job_id)
+    end
 
     def client
       @@client ||= JenkinsApi::Client.new(server_url: URL, username: USERNAME, password: API_KEY).tap do |cli|

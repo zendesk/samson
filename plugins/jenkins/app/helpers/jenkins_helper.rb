@@ -17,15 +17,20 @@ module JenkinsHelper
     }
 
     jenkins_job_status = jenkins_job.status
+    jenkins_job_url = jenkins_job.url
     if !jenkins_job_status
-      jenkins_job_status = Samson::Jenkins.new(jenkins_job.name, deploy).job_status(jenkins_job.jenkins_job_id)
-      jenkins_job.update_attributes!(status: jenkins_job_status)
+      jenkins = Samson::Jenkins.new(jenkins_job.name, deploy)
+      jenkins_job_status = jenkins.job_status(jenkins_job.jenkins_job_id)
+      jenkins_job_url = jenkins.job_url(jenkins_job.jenkins_job_id)
+      attributes = {status: jenkins_job_status, url: jenkins_job_url}
+      jenkins_job.update_attributes!(attributes)
     end
 
     status = mapping.fetch(jenkins_job_status)
     status_message = result.fetch(jenkins_job_status)
 
     content = "Jenkins build #{jenkins_job.name} for #{deploy.stage.name} #{status_message}."
-    content_tag :div, content.html_safe, class: "alert alert-#{status}"
+    div = content_tag :div, content.html_safe, class: "alert alert-#{status}"
+    content_tag :a, div, href: jenkins_job_url, target: "_blank"
   end
 end
