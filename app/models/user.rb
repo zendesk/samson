@@ -2,12 +2,15 @@ require 'soft_deletion'
 require 'digest/md5'
 
 class User < ActiveRecord::Base
+  include HasRole
+
   has_soft_deletion default_scope: true
 
   has_many :commands
   has_many :stars
   has_many :starred_projects, through: :stars, source: :project
   has_many :locks, dependent: :destroy
+  has_many :project_roles
 
   validates :role_id, inclusion: { in: Role.all.map(&:id) }
 
@@ -55,14 +58,12 @@ class User < ActiveRecord::Base
     "https://www.gravatar.com/avatar/#{md5}"
   end
 
-  Role.all.each do |role|
-    define_method "is_#{role.name}?" do
-      role_id >= role.id
-    end
+  def admin_for?(project)
+    is_admin? || project_roles.where(project: project).try(:is_admin?)
   end
 
-  def role
-    Role.find(role_id)
+  def deployer_for?(project)
+    is_deployer? || project_roles.where(project: project).try(:is_deployer?)
   end
 
   private

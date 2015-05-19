@@ -1,11 +1,11 @@
 class ChangelogsController < ApplicationController
   before_action :check_params
+  before_action :find_project
 
   def show
     @start_date = Date.strptime(params[:start_date], '%Y-%m-%d')
     @end_date = Date.strptime(params[:end_date], '%Y-%m-%d')
 
-    @project = Project.find_by_param!(params[:project_id])
     @changeset = Changeset.new(@project.github_repo, "master@{#{@start_date}}", "master@{#{@end_date}}")
   end
 

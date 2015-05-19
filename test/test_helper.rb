@@ -63,7 +63,9 @@ class ActiveSupport::TestCase
     create_default_stubs
   end
 
-  after { sleep 0.1 while extra_threads.present? }
+  unless ENV['SKIP_TIMEOUT']
+    after { sleep 0.1 while extra_threads.present? }
+  end
 
   def extra_threads
     normal = ENV['CI'] ? 3 : 4 # there are always 4 threads hanging around, 2 unknown, 1 from SSE Engine, and 1 from the test timeout helper code

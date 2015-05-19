@@ -68,10 +68,6 @@ class MacrosController < ApplicationController
     params.require(:commands).permit(ids: [])
   end
 
-  def find_project
-    @project = Project.find_by_param!(params[:project_id])
-  end
-
   def find_macro
     @macro = @project.macros.find(params[:id])
   end

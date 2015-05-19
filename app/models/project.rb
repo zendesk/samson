@@ -17,6 +17,7 @@ class Project < ActiveRecord::Base
   has_many :webhooks
   has_many :commands
   has_many :macros
+  has_many :project_roles
 
   accepts_nested_attributes_for :stages
 

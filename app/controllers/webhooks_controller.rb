@@ -32,10 +32,6 @@ class WebhooksController < ApplicationController
 
   private
 
-  def find_project
-    @project = Project.find_by_param!(params[:project_id])
-  end
-
   def webhook_params
     params.require(:webhook).permit(:branch, :stage_id, :source)
   end

@@ -23,10 +23,6 @@ class ReleasesController < ApplicationController
 
   private
 
-  def find_project
-    @project = Project.find_by_param!(params[:project_id])
-  end
-
   def release_params
     params.require(:release).permit(:commit).merge(author: current_user)
   end

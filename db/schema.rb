@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20150416231106) do
+ActiveRecord::Schema.define(version: 20150511231229) do
 
   create_table "commands", force: :cascade do |t|
     t.text     "command",    limit: 10485760
@@ -140,6 +140,17 @@ ActiveRecord::Schema.define(version: 20150416231106) do
   end
 
   add_index "new_relic_applications", ["stage_id", "name"], name: "index_new_relic_applications_on_stage_id_and_name", unique: true
+
+  create_table "project_roles", force: :cascade do |t|
+    t.integer  "project_id", null: false
+    t.integer  "user_id",    null: false
+    t.integer  "role_id",    null: false
+    t.datetime "created_at"
+    t.datetime "updated_at"
+  end
+
+  add_index "project_roles", ["project_id"], name: "index_project_roles_on_project_id", using: :btree
+  add_index "project_roles", ["user_id"], name: "index_project_roles_on_user_id", using: :btree
 
   create_table "projects", force: :cascade do |t|
     t.string   "name",                         null: false
