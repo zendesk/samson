@@ -13,7 +13,7 @@ describe Samson::Jenkins do
 
   def stub_build_with_parameters
     stub_request(:post, "http://user%40test.com:japikey@www.test-url.com/job/test_job/buildWithParameters").
-      with(body: {"buildStartedBy"=>"Super Admin", "originatedFrom"=>"Staging"}).
+      with(body: {"buildStartedBy"=>"Super Admin", "originatedFrom"=>"Project_Staging_staging"}).
       to_return(status: 200, body: "", headers: {}).to_timeout
   end
 
