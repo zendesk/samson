@@ -1,8 +1,8 @@
 require_relative "../test_helper"
 
 describe JenkinsHelper do
-  def stub_jenkins_job_with_status(status)
-    JenkinsJob.create!(name: "test_job", deploy_id: 11, jenkins_job_id: 111, status: status)
+  def stub_jenkins_job(status, url)
+    JenkinsJob.create!(name: "test_job", deploy_id: 11, jenkins_job_id: 111, status: status, url: url)
   end
 
   def stub_jenkins_job_without_status
@@ -20,29 +20,29 @@ describe JenkinsHelper do
 
   describe "jenkins_status_panel" do
     it "shows Passed message when build status in database is PASSED" do
-      jenkins_job = stub_jenkins_job_with_status("SUCCESS")
+      jenkins_job = stub_jenkins_job("SUCCESS", "https://jenkins.zende.sk/job/rdhanoa_test_project/110/")
       html = jenkins_status_panel(deploy, jenkins_job)
-      html.must_equal "<div class=\"alert alert-success\">Jenkins build test_job for Staging has Passed.</div>"
+      html.must_equal "<a href=\"https://jenkins.zende.sk/job/rdhanoa_test_project/110/\" target=\"_blank\"><div class=\"alert alert-success\">Jenkins build test_job for Staging has Passed.</div></a>"
     end
 
     it "shows Failed message when build status in database is FAILED" do
-      jenkins_job = stub_jenkins_job_with_status("FAILURE")
+      jenkins_job = stub_jenkins_job("FAILURE", "https://jenkins.zende.sk/job/rdhanoa_test_project/110/")
       html = jenkins_status_panel(deploy, jenkins_job)
-      html.must_equal "<div class=\"alert alert-danger\">Jenkins build test_job for Staging has Failed.</div>"
+      html.must_equal "<a href=\"https://jenkins.zende.sk/job/rdhanoa_test_project/110/\" target=\"_blank\"><div class=\"alert alert-danger\">Jenkins build test_job for Staging has Failed.</div></a>"
     end
 
     it "shows Passed from jenkins when build starts" do
       jenkins_job = stub_jenkins_job_without_status
       stub_build_detail("SUCCESS")
       html = jenkins_status_panel(deploy, jenkins_job)
-      html.must_equal "<div class=\"alert alert-success\">Jenkins build test_job for Staging has Passed.</div>"
+      html.must_equal "<a href=\"https://jenkins.zende.sk/job/rdhanoa_test_project/110/\" target=\"_blank\"><div class=\"alert alert-success\">Jenkins build test_job for Staging has Passed.</div></a>"
     end
 
     it "shows Failed status from jenkins when build fails" do
       jenkins_job = stub_jenkins_job_without_status
       stub_build_detail("FAILURE")
       html = jenkins_status_panel(deploy, jenkins_job)
-      html.must_equal "<div class=\"alert alert-danger\">Jenkins build test_job for Staging has Failed.</div>"
+      html.must_equal "<a href=\"https://jenkins.zende.sk/job/rdhanoa_test_project/110/\" target=\"_blank\"><div class=\"alert alert-danger\">Jenkins build test_job for Staging has Failed.</div></a>"
     end
   end
 end

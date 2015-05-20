@@ -13,7 +13,7 @@ describe Samson::Jenkins do
 
   def stub_build_with_parameters
     stub_request(:post, "http://user%40test.com:japikey@www.test-url.com/job/test_job/buildWithParameters").
-      with(body: {"buildStartedBy"=>"Super Admin", "originatedFrom"=>"Staging"}).
+      with(body: {"buildStartedBy"=>"Super Admin", "originatedFrom"=>"Project_Staging_staging"}).
       to_return(status: 200, body: "", headers: {}).to_timeout
   end
 
@@ -21,6 +21,11 @@ describe Samson::Jenkins do
   def stub_build_detail(result)
     stub_request(:get, "http://user%40test.com:japikey@www.test-url.com/job/test_job/96//api/json").
       to_return(status: 200, body: build_detail_response.merge("result" => result).to_json, headers: {}).to_timeout
+  end
+
+  def stub_build_url(url)
+    stub_request(:get, "http://user%40test.com:japikey@www.test-url.com/job/test_job/96//api/json").
+      to_return(status: 200, body: build_detail_response.merge("url" => url).to_json, headers: {}).to_timeout
   end
 
   def stub_get_build_id_from_queue(build_id)
@@ -61,6 +66,13 @@ describe Samson::Jenkins do
     it "returns FAILURE when jenkins build fails" do
       stub_build_detail("FAILURE")
       jenkins.job_status(96).must_equal "FAILURE"
+    end
+  end
+
+  describe "#job_url" do
+    it "should return a jenkins job url" do
+      stub_build_url("https://jenkins.zende.sk/job/rdhanoa_test_project/96/")
+      jenkins.job_url(96).must_equal "https://jenkins.zende.sk/job/rdhanoa_test_project/96/"
     end
   end
 end
