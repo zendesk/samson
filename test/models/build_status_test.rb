@@ -8,12 +8,12 @@ describe BuildStatus do
   end
 
   describe 'validations' do
-    it 'should validate presence of build' do
+    it 'validates presence of build' do
       assert_valid(valid_build_status)
       refute_valid(valid_build_status(build: nil))
     end
 
-    it 'should validate the status' do
+    it 'validates the status' do
       BuildStatus::VALID_STATUSES.each do |s|
         assert_valid(valid_build_status(status: s))
       end
@@ -24,14 +24,14 @@ describe BuildStatus do
   end
 
   describe 'status helpers' do
-    it 'should have inquriry methods defined' do
+    it 'has inquriry methods defined' do
       status = valid_build_status
       BuildStatus::VALID_STATUSES.each do |s|
         assert_respond_to(status, "#{s}?")
       end
     end
 
-    it 'should work for each status' do
+    it 'works for each status' do
       assert valid_build_status(status: 'pending').pending?
       refute valid_build_status(status: 'pending').successful?
       refute valid_build_status(status: 'pending').failed?

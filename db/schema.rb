@@ -13,6 +13,19 @@
 
 ActiveRecord::Schema.define(version: 20150520210103) do
 
+  create_table "build_statuses", force: :cascade do |t|
+    t.integer  "build_id",   null: false
+    t.string   "source"
+    t.string   "status",     null: false, default: "pending"
+    t.string   "url"
+    t.string   "summary",    limit: 512
+    t.text     "data"
+    t.datetime "created_at"
+    t.datetime "updated_at"
+  end
+
+  add_index "build_statuses", ["build_id"], name: "index_build_statuses_on_build_id", using: :btree
+
   create_table "builds", force: :cascade do |t|
     t.integer "project_id",    null: false
     t.string  "git_sha"
@@ -24,21 +37,8 @@ ActiveRecord::Schema.define(version: 20150520210103) do
   end
 
   add_index "builds", ["container_sha"], name: "index_builds_on_container_sha", using: :btree
-  add_index "builds", ["git_sha"], name: "index_builds_on_git_sha", using: :btree
+  add_index "builds", ["git_sha"], name: "index_builds_on_git_sha", unique: true, using: :btree
   add_index "builds", ["project_id"], name: "index_builds_on_project_id", using: :btree
-
-  create_table "build_statuses", force: :cascade do |t|
-    t.integer  "build_id",   null: false
-    t.string   "type",
-    t.string   "status",     null: false, default: "pending"
-    t.string   "url"
-    t.string   "summary",    limit: 512
-    t.text     "data"
-    t.datetime "created_at"
-    t.datetime "updated_at"
-  end
-
-  add_index "build_statuses", ["build_id"], name: "index_build_statuses_on_build_id", using: :btree
 
   create_table "commands", force: :cascade do |t|
     t.text     "command",    limit: 10485760
