@@ -1,7 +1,10 @@
 FROM ruby:2.2.2
 
 RUN apt-get update
-RUN apt-get install -y nodejs
+RUN apt-get install -y wget apt-transport-https
+RUN wget -qO- https://deb.nodesource.com/gpgkey/nodesource.gpg.key | apt-key add -
+RUN echo 'deb https://deb.nodesource.com/node_0.12 trusty main' > /etc/apt/sources.list.d/nodesource.list
+RUN apt-get update && apt-get install -y nodejs
 
 RUN mkdir /app
 WORKDIR /app
@@ -18,10 +21,13 @@ ADD .env.bootstrap /app/.env
 ADD Gemfile /app/
 ADD Gemfile.lock /app/
 ADD vendor/cache /app/vendor/cache
+ADD package.json /app/package.json
 
 # Plugins need to be added before bundling
 # because they're loaded as gems
 ADD plugins /app/plugins
+
+RUN npm install
 
 RUN bundle install --without test sqlite postgres --quiet --local --jobs 4 || bundle check
 
@@ -34,4 +40,4 @@ RUN DATABASE_URL=mysql2://user:pass@127.0.0.1/null RAILS_ENV=development PRECOMP
 
 EXPOSE 3000
 
-CMD ["DATABASE_URL=mysql2://root@127.0.0.1:3306/samson_development" "bundle", "exec", "rails", "server", "--binding=0.0.0.0"]
+CMD DATABASE_URL=$MYSQL_URL bundle exec rails server --binding=0.0.0.0
