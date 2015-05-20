@@ -377,20 +377,20 @@ DEPENDENCIES
   query_diet
   rack-mini-profiler
   rails (~> 4.2.0)
-  rails-assets-angular
-  rails-assets-angular-mocks
-  rails-assets-angular-scenario
-  rails-assets-bootstrap-select
-  rails-assets-font-awesome
-  rails-assets-jquery
-  rails-assets-jquery-ui
-  rails-assets-jquery-ujs
-  rails-assets-moment
-  rails-assets-rickshaw
-  rails-assets-typeahead.js
-  rails-assets-underscore
-  rails-assets-vis
-  rails-assets-x-editable
+  rails-assets-angular!
+  rails-assets-angular-mocks!
+  rails-assets-angular-scenario!
+  rails-assets-bootstrap-select!
+  rails-assets-font-awesome!
+  rails-assets-jquery!
+  rails-assets-jquery-ui!
+  rails-assets-jquery-ujs!
+  rails-assets-moment!
+  rails-assets-rickshaw!
+  rails-assets-typeahead.js!
+  rails-assets-underscore!
+  rails-assets-vis!
+  rails-assets-x-editable!
   rails_12factor
   samson_flowdock!
   samson_jenkins!
