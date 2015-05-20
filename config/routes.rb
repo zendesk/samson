@@ -1,5 +1,5 @@
 Samson::Application.routes.draw do
-  resources :projects, constraints: { id: /[^\/]+/ } do
+  resources :projects do
     resources :jobs, only: [:index, :new, :create, :show, :destroy]
 
     resources :macros, only: [:index, :new, :create, :edit, :update, :destroy] do
