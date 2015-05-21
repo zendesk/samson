@@ -11,7 +11,34 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20150519000042) do
+ActiveRecord::Schema.define(version: 20150520210103) do
+
+  create_table "build_statuses", force: :cascade do |t|
+    t.integer  "build_id",   null: false
+    t.string   "source"
+    t.string   "status",     null: false, default: "pending"
+    t.string   "url"
+    t.string   "summary",    limit: 512
+    t.text     "data"
+    t.datetime "created_at"
+    t.datetime "updated_at"
+  end
+
+  add_index "build_statuses", ["build_id"], name: "index_build_statuses_on_build_id", using: :btree
+
+  create_table "builds", force: :cascade do |t|
+    t.integer "project_id",    null: false
+    t.string  "git_sha"
+    t.string  "git_ref"
+    t.string  "container_sha"
+    t.string  "container_ref"
+    t.datetime "created_at",   null: false
+    t.datetime "updated_at",   null: false
+  end
+
+  add_index "builds", ["container_sha"], name: "index_builds_on_container_sha", using: :btree
+  add_index "builds", ["git_sha"], name: "index_builds_on_git_sha", unique: true, using: :btree
+  add_index "builds", ["project_id"], name: "index_builds_on_project_id", using: :btree
 
   create_table "commands", force: :cascade do |t|
     t.text     "command",    limit: 10485760
@@ -47,8 +74,10 @@ ActiveRecord::Schema.define(version: 20150519000042) do
     t.integer  "buddy_id"
     t.datetime "started_at"
     t.datetime "deleted_at"
+    t.integer  "build_id"
   end
 
+  add_index "deploys", ["build_id"], name: "index_deploys_on_build_id", using: :btree
   add_index "deploys", ["deleted_at"], name: "index_deploys_on_deleted_at"
   add_index "deploys", ["job_id", "deleted_at"], name: "index_deploys_on_job_id_and_deleted_at"
   add_index "deploys", ["stage_id", "deleted_at"], name: "index_deploys_on_stage_id_and_deleted_at"
@@ -166,8 +195,10 @@ ActiveRecord::Schema.define(version: 20150519000042) do
     t.string   "author_type",             null: false
     t.datetime "created_at"
     t.datetime "updated_at"
+    t.integer  "build_id"
   end
 
+  add_index "releases", ["build_id"], name: "index_releases_on_build_id", using: :btree
   add_index "releases", ["project_id", "number"], name: "index_releases_on_project_id_and_number", unique: true
 
   create_table "slack_channels", force: :cascade do |t|

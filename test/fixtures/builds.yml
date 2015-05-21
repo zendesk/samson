@@ -1,0 +1,16 @@
+staging:
+  project: test
+  git_sha: 'da39a3ee5e6b4b0d3255bfef95601890afd80709'
+  git_ref: 'staging'
+
+v1_tag:
+  project: test
+  git_sha: '0fbc33a0bfe9dcb5a17e26b9c319cce9d86ede14'
+  git_ref: 'v1.0'
+
+docker_build:
+  project: test
+  git_sha: '1a6f551a2ffa6d88e15eef5461384da0bfb1c194'
+  git_ref: 'v123'
+  container_sha: '7e46d621322a5601274228f1f7b0c03d216ba790'
+  container_ref: 'v123'

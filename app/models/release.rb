@@ -1,6 +1,7 @@
 class Release < ActiveRecord::Base
   belongs_to :project, touch: true
   belongs_to :author, polymorphic: true
+  belongs_to :build
 
   before_create :assign_release_number
 

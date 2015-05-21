@@ -2,6 +2,7 @@ class Deploy < ActiveRecord::Base
   has_soft_deletion default_scope: true
 
   belongs_to :stage, touch: true
+  belongs_to :build
   belongs_to :job
   belongs_to :buddy, class_name: 'User'
 
