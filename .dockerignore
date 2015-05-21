@@ -1,0 +1,11 @@
+.git
+.env
+tmp
+log
+test
+.bundle
+config/database.yml
+cached_repos
+node_modules
+
+public/assets
