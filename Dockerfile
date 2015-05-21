@@ -39,4 +39,4 @@ RUN DATABASE_URL=mysql2://user:pass@127.0.0.1/null RAILS_ENV=development PRECOMP
 
 EXPOSE 3000
 
-CMD DATABASE_URL=$MYSQL_URL bundle exec rails server --binding=0.0.0.0
+CMD DATABASE_URL=$MYSQL_URL bundle exec puma -C ./config/puma.rb
