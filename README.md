@@ -189,6 +189,7 @@ from CI.
 * Flowdock
 * Slack
 * Github
+* [Hipchat](https://github.com/listia/samson_hipchat): Clone of Slack plugin
 
 #### Continuous Delivery & Releases
 
