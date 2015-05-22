@@ -18,7 +18,7 @@ module Samson
       def initialize(path)
         @path = path
         @folder = File.expand_path('../../../', @path)
-        @name = File.basename(@folder)
+        @name = realname(File.basename(@folder))
       end
 
       def active?
@@ -52,6 +52,10 @@ module Samson
       end
 
       private
+
+      def realname(gemname)
+        gemname.sub(/-[^-]*\z/, '').sub(/\Asamson_/, "")
+      end
 
       def decorators_root
         @decorators_root ||= engine.config.root.join("app/decorators")

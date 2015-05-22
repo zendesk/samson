@@ -46,6 +46,26 @@ describe Samson::Hooks do
         end
       end
     end
+
+    context 'when load via local plugin' do
+      let(:env) { 'other' }
+      let(:plugins) { 'all' }
+      let (:path) { '/path/to/samson/plugins/zendesk/lib/samson_zendesk/samson_plugin.rb' }
+
+      it 'return correct plugin name from folder' do
+        Samson::Hooks::Plugin.new(path).name.must_equal 'zendesk'
+      end
+    end
+
+    context 'when load via gem plugin' do
+      let(:env) { 'other' }
+      let(:plugins) { 'all' }
+      let (:path) { '/path/to/gems/ruby-2.2.2/gems/samson_hipchat-0.0.0/lib/samson_hipchat/samson_plugin.rb' }
+
+      it 'return correct plugin name from Gem' do
+        Samson::Hooks::Plugin.new(path).name.must_equal 'hipchat'
+      end
+    end
   end
 end
 
