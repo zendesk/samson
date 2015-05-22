@@ -111,7 +111,8 @@
 </fieldset>
 
 <fieldset>
-  <legend>Commands</legend>
+  <legend>Commands &nbsp;<%= form.select(:command_type, Samson::JobInterpreters.instance.select_options) %></legend>
+
   <p>Select the commands you want to run when executing this stage. Double click to edit commands.</p>
 
   <div id="commands">

@@ -17,12 +17,12 @@ class JobExecution
 
   def initialize(reference, job)
     @output = OutputBuffer.new
-    @executor = TerminalExecutor.new(@output, verbose: true)
     @viewers = JobViewers.new(@output)
     @subscribers = []
     @job, @reference = job, reference
     @stage = @job.deploy.try(:stage)
     @repository = @job.project.repository
+    @executor = Samson::ShellScript.new(@output, verbose: true)
   end
 
   def start!
@@ -46,7 +46,7 @@ class JobExecution
   end
 
   def stop!
-    @executor.stop!
+    executor.stop!
     wait!
   end
 
@@ -102,28 +102,21 @@ class JobExecution
     FileUtils.mkdir_p(artifact_cache_dir)
     @output.write("\n# Executing deploy\n")
 
-    commands = [
-      "export DEPLOYER=#{@job.user.email.shellescape}",
-      "export DEPLOYER_EMAIL=#{@job.user.email.shellescape}",
-      "export DEPLOYER_NAME=#{@job.user.name.shellescape}",
-      "export REVISION=#{@reference.shellescape}",
-      "export TAG=#{(@job.tag || @job.commit).to_s.shellescape}",
-      "export CACHE_DIR=#{artifact_cache_dir}",
-      "cd #{dir}",
-      *@job.commands
-    ]
+    script = job_executor.new(job, @reference, artifact_cache_dir, dir, @output)
 
     payload = {
       stage: (stage.try(:name) || "none"),
       project: @job.project.name,
-      command: commands.join("\n")
+      command: script.commands.join("\n")
     }
 
     ActiveRecord::Base.clear_active_connections!
 
     ActiveSupport::Notifications.instrument("execute_shell.samson", payload) do
-      payload[:success] = @executor.execute!(*commands)
+      payload[:success] = script.execute!
     end
+  rescue => ex
+    Rails.logger.warn ex
   end
 
   def setup!(dir)
@@ -150,6 +143,10 @@ class JobExecution
     holder = (stage.try(:name) || @job.user.name)
     callback = proc { |owner| output.write("Waiting for repository while setting it up for #{owner}\n") if Time.now.to_i % 10 == 0 }
     @job.project.with_lock(output: @output, holder: holder, error_callback: callback, timeout: lock_timeout, &block)
+  end
+
+  def job_executor
+    @job_executor ||= @stage && @stage.command_type.present? ? @stage.command_type.constantize : Samson::JobShellScript
   end
 
   class << self

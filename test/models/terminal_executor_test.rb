@@ -4,42 +4,35 @@ describe TerminalExecutor do
   let(:output) { StringIO.new }
   subject { TerminalExecutor.new(output) }
 
-  describe '#execute!' do
+  describe '#execute_command!' do
     it 'records stdout' do
-      subject.execute!('echo "hi"', 'echo "hello"')
-      output.string.must_equal("hi\r\nhello\r\n")
+      subject.execute_command!('echo "hi"')
+      subject.pid.wont_be_nil
+      output.string.must_equal("hi\r\n")
     end
 
     it 'records stderr' do
-      subject.execute!('echo "hi" >&2', 'echo "hello" >&2')
+      subject.execute_command!('echo "hi" >&2;echo "hello" >&2')
       output.string.must_equal("hi\r\nhello\r\n")
     end
 
     it 'stops on failure' do
-      subject.execute!('echo "hi"', 'false', 'echo "ho"')
+      subject.execute_command!('set -e;echo "hi";false;echo "ho"')
       output.string.must_equal("hi\r\n")
     end
 
     it 'returns error value' do
-      subject.execute!('blah').must_equal(false)
+      subject.execute_command!('set -e;blah').must_equal(false)
+    end
+
+    it 'throws exception if set -e cmd not set' do
+      assert_raises Errno::ENOENT do
+        subject.execute_command!('blah')
+      end
     end
 
     it 'returns success value' do
-      subject.execute!('echo "hi"').must_equal(true)
-    end
-
-    describe 'in verbose mode' do
-      subject { TerminalExecutor.new(output, verbose: true) }
-
-      it 'records commands' do
-        subject.execute!('echo "hi"', 'echo "hell o"')
-        output.string.must_equal(%{» echo "hi"\r\nhi\r\n» echo "hell o"\r\nhell o\r\n})
-      end
-
-      it 'does not print subcommands' do
-        subject.execute!('sh -c "echo 111"')
-        output.string.must_equal("» sh -c \"echo 111\"\r\n111\r\n")
-      end
+      subject.execute_command!('echo "hi"').must_equal(true)
     end
   end
 
@@ -52,7 +45,7 @@ describe TerminalExecutor do
 
       Timeout.timeout(5) do
         begin
-          subject.execute!('sleep 100').must_equal(false)
+          subject.execute_command!('sleep 100').must_equal(false)
         rescue Interrupt
           raise "Interrupted"
         end

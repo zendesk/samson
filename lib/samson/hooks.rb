@@ -1,6 +1,7 @@
 module Samson
   module Hooks
     KNOWN = [
+      :initialization,
       :model_defined,
       :stage_form,
       :stage_clone,
