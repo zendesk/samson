@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20150520210103) do
+ActiveRecord::Schema.define(version: 20150522121048) do
 
   create_table "build_statuses", force: :cascade do |t|
     t.integer  "build_id",   null: false
@@ -240,6 +240,7 @@ ActiveRecord::Schema.define(version: 20150520210103) do
     t.string   "static_emails_on_automated_deploy_failure",    limit: 255
     t.string   "datadog_monitor_ids",                          limit: 255
     t.string   "jenkins_job_names",                            limit: 255
+    t.string   "command_type"
   end
 
   add_index "stages", ["project_id", "permalink", "deleted_at"], name: "index_stages_on_project_id_and_permalink_and_deleted_at"

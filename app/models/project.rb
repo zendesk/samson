@@ -125,7 +125,7 @@ class Project < ActiveRecord::Base
       begin
         output = StringIO.new
         with_lock(output: output, holder: 'Initial Repository Setup') do
-          is_cloned = repository.clone!(executor: TerminalExecutor.new(output), from: repository_url, mirror: true)
+          is_cloned = repository.clone!(executor: Samson::ShellScript.new(output), from: repository_url, mirror: true)
           log.error("Could not clone git repository #{repository_url} for project #{name} - #{output.string}") unless is_cloned
         end
       rescue => e

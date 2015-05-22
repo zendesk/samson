@@ -4,7 +4,7 @@ describe GitRepository do
   let(:repository_url) { Dir.mktmpdir }
   let(:project) { Project.new(id: 99999, name: 'test_project', repository_url: repository_url) }
   let(:repository) { project.repository }
-  let(:executor) { TerminalExecutor.new(StringIO.new) }
+  let(:executor) { Samson::ShellScript.new(StringIO.new) }
   let(:repo_dir) { File.join(GitRepository.cached_repos_dir, project.repository_directory) }
 
   after do
@@ -89,13 +89,13 @@ describe GitRepository do
   describe "#tags" do
     it 'returns the tags repository' do
       create_repo_with_tags
-      repository.clone!(executor: TerminalExecutor.new(StringIO.new), mirror: true)
+      repository.clone!(executor: executor, mirror: true)
       repository.tags.to_a.must_equal %w(v1 )
     end
 
     it 'returns an empty set of tags' do
       create_repo_without_tags
-      repository.clone!(executor: TerminalExecutor.new(StringIO.new), mirror: true)
+      repository.clone!(executor: executor, mirror: true)
       repository.tags.must_equal []
     end
   end
@@ -103,7 +103,7 @@ describe GitRepository do
   describe "#branches" do
     it 'returns the branches of the repository' do
       create_repo_with_an_additional_branch
-      repository.clone!(executor: TerminalExecutor.new(StringIO.new), mirror: true)
+      repository.clone!(executor: executor, mirror: true)
       repository.branches.to_a.must_equal %w(master test_user/test_branch)
     end
   end

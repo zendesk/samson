@@ -20,12 +20,12 @@ class GitRepository
     true
   end
 
-  def clone!(executor: TerminalExecutor.new(StringIO.new), from: repository_url, to: repo_cache_dir, mirror: false)
+  def clone!(executor: Samson::ShellScript.new(StringIO.new), from: repository_url, to: repo_cache_dir, mirror: false)
     return executor.execute!("git -c core.askpass=true clone --mirror #{from} #{to}") if mirror
     executor.execute!("git clone #{from} #{to}")
   end
 
-  def update!(executor: TerminalExecutor.new(StringIO.new))
+  def update!(executor: Samson::ShellScript.new(StringIO.new))
     executor.execute!("cd #{repo_cache_dir}", 'git fetch -ap')
   end
 
@@ -85,7 +85,7 @@ class GitRepository
 
   private
 
-  def checkout!(executor: TerminalExecutor.new(StringIO.new), pwd: repo_cache_dir, git_reference:)
+  def checkout!(executor: Samson::ShellScript.new(StringIO.new), pwd: repo_cache_dir, git_reference:)
     executor.execute!("cd #{pwd}", "git checkout --quiet #{git_reference}")
   end
 
@@ -95,7 +95,7 @@ class GitRepository
 
   def run_single_command(command, pwd: repo_cache_dir)
     output = StringIO.new
-    executor = TerminalExecutor.new(output)
+    executor = Samson::ShellScript.new(output)
     success = executor.execute!("cd #{pwd}", command)
     result = output.string.lines.map { |line| yield line if block_given? }.uniq.sort
     [success, result]
