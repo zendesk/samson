@@ -30,13 +30,10 @@ class GitRepository
   end
 
   def commit_from_ref(git_reference)
-    description = Dir.chdir(repo_cache_dir) do
-      IO.popen(['git', 'describe', '--long', '--tags', '--all', git_reference]) do |io|
-        io.read.strip
-      end
-    end
+    cmd = "git describe --long --tags --all #{git_reference}"
+    success, output = run_single_command(cmd) { |line| line.strip }
 
-    description.split('-').last.sub(/^g/, '')
+    output.last.split('-').last.sub(/^g/, '') if success && output.present?
   end
 
   def tag_from_ref(git_reference)
