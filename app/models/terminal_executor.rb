@@ -8,29 +8,15 @@ require 'shellwords'
 #
 #   output = StringIO.new
 #   terminal = TerminalExecutor.new(output)
-#   terminal.execute!("echo hello", "echo world")
+#   terminal.execute_command!("echo hello", "echo world")
 #
 #   output.string #=> "hello\r\nworld\r\n"
 #
 class TerminalExecutor
   attr_reader :pid, :output
 
-  def initialize(output, verbose: false)
+  def initialize(output)
     @output = output
-    @verbose = verbose
-  end
-
-  def execute!(*commands)
-    commands.map! { |c| "echo » #{c.shellescape}\n#{c}" } if @verbose
-    commands.unshift("set -e")
-
-    command = commands.join("\n")
-
-    if RUBY_ENGINE == 'jruby'
-      command = %Q{/bin/sh -c "#{command.gsub(/"/, '\\"')}"}
-    end
-
-    execute_command!(command)
   end
 
   def stop!
@@ -38,8 +24,6 @@ class TerminalExecutor
     # children of the parent process dead
     `pkill -INT -P #{pid}` if pid
   end
-
-  private
 
   def execute_command!(command)
     output, input, @pid = Bundler.with_clean_env do
