@@ -37,6 +37,6 @@ ADD lib /app/lib
 
 RUN DATABASE_URL=mysql2://user:pass@127.0.0.1/null RAILS_ENV=development PRECOMPILE=1 bundle exec rake --trace assets:precompile
 
-EXPOSE 3000
+EXPOSE 9080
 
 CMD DATABASE_URL=$MYSQL_URL bundle exec puma -C ./config/puma.rb
