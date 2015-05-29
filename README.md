@@ -209,6 +209,19 @@ Samson sends StatsD basic web request metrics and metrics about deploys and thre
 in use. Statsd silently disables itself if no agent is running on the host. All
 metrics collected are prepending with 'samson.app'.
 
+### Plugins
+
+Samson now supports writing plugins to add functionality to the core app keeping the core isolated and simpler. You can
+thus add UI elements to pages that support it, and hook into events such as before and after deploys.
+
+To get started execute the following and follow the on-screen instructions:
+```
+rails generate plugin MyCoolNewPlugin
+```
+
+Also feel free to browse the existing plugins in the 'plugins' directory to get a feel. They follow the structure of a 
+Rails Engine.
+
 ### Contributing
 
 Improvements are always welcome. Please follow these steps to contribute

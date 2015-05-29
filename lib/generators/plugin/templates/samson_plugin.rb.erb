@@ -1,0 +1,20 @@
+module Samson<%= class_name %>
+  class Engine < Rails::Engine
+  end
+end
+
+# To add in your own UI for a hook, e.g., for the stage edit page:
+# - Create app/views/samson_<%= file_name %>/_my_fields.html.erb
+# - Add this line to this file, note the lack of leading underscore and extension:
+#   Samson::Hooks.view :stage_form, 'samson_<%= file_name %>/my_fields'
+
+<% Samson::Hooks::VIEW_HOOKS.each do |hook| %>
+#Samson::Hooks.view :<%= hook %>, '<view path>'
+<% end %>
+
+# Possible callbacks are listed below, delete any unused ones.
+<% Samson::Hooks::EVENT_HOOKS.each do |hook| %>
+#Samson::Hooks.callback :<%= hook %> do
+  # Do stuff in here
+#end
+<% end %>

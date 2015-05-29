@@ -1,17 +1,23 @@
 module Samson
   module Hooks
-    KNOWN = [
-      :model_defined,
+    VIEW_HOOKS = [
       :stage_form,
+      :deploys_header,
+      :deploy_view,
+      :admin_menu
+    ].freeze
+
+    EVENT_HOOKS = [
       :stage_clone,
       :stage_permitted_params,
-      :deploy_view,
       :before_deploy,
       :after_deploy_setup,
       :after_deploy,
-      :deploys_header,
-      :admin_menu
-    ]
+    ].freeze
+
+    INTERNAL_HOOKS = [ :model_defined ]
+
+    KNOWN = VIEW_HOOKS + EVENT_HOOKS + INTERNAL_HOOKS
 
     @@hooks = {}
 
