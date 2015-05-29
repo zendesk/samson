@@ -1,0 +1,23 @@
+<fieldset>
+  <legend>Pipelining</legend>
+  <p class="col-lg-offset-2">Set the stage that will get automatically deployed after this one.</p>
+  <div class="col-lg-4 col-lg-offset-2">
+    <table>
+      <% (@project.stages - [@stage]).each do |next_stage| %>
+        <tr>
+          <td>
+            <%= label_tag do %>
+              <%= check_box_tag(
+                    'stage[next_stage_ids][]',
+                    next_stage.id,
+                    (@stage && @stage.next_stage_ids.include?(next_stage.id.to_s))
+                  )
+              %>
+              <%= next_stage.name %>
+            <% end %>
+          </td>
+        </tr>
+      <% end %>
+    </table>
+  </div>
+</fieldset>

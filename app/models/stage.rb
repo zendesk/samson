@@ -1,6 +1,8 @@
 class Stage < ActiveRecord::Base
   include Permalinkable
 
+  puts "**** Stage Class is being eval'd"
+
   has_soft_deletion default_scope: true
 
   belongs_to :project, touch: true

@@ -23,6 +23,11 @@ PATH
       jenkins_api_client (~> 1.3)
 
 PATH
+  remote: plugins/pipelines/
+  specs:
+    samson_pipelines (0.0.0)
+
+PATH
   remote: plugins/slack/
   specs:
     samson_slack (0.0.0)
@@ -415,6 +420,7 @@ DEPENDENCIES
   samson_env!
   samson_flowdock!
   samson_jenkins!
+  samson_pipelines!
   samson_slack!
   samson_zendesk!
   sass-rails (~> 5.0)
