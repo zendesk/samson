@@ -17,7 +17,7 @@ describe Samson::Hooks do
       let(:env) { 'test' }
 
       it 'returns all the plugins regardless of the PLUGINS env variable' do
-        Samson::Hooks.plugins.size.must_equal number_of_plugins
+        Samson::Hooks.plugins.size.must_be :>, number_of_plugins
       end
     end
 
@@ -34,7 +34,7 @@ describe Samson::Hooks do
         let(:plugins) { 'all' }
 
         it 'returns all the plugins' do
-          Samson::Hooks.plugins.size.must_equal number_of_plugins
+          Samson::Hooks.plugins.size.must_be :>, number_of_plugins
         end
       end
 

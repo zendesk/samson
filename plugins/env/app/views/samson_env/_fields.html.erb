@@ -1,0 +1,19 @@
+<fieldset>
+  <legend>Env variables written to .env before deploy</legend>
+  <%= render "samson_env/environment_variables", form: form %>
+
+  <h4>Groups</h4>
+  <% stage = form.object %>
+  <% ids = stage.environment_variable_group_ids + [nil, nil] %>
+  <% environment_variable_groups = EnvironmentVariableGroup.all.map { |g| [g.name, g.id] } %>
+  <% if environment_variable_groups.any? %>
+    <% ids.each do |id| %>
+      <div class="form-group">
+        <div class="col-lg-2 col-lg-offset-2">
+          <%= select_tag "stage[environment_variable_group_ids][]", options_for_select([[nil, nil]] + environment_variable_groups, id), class: "form-control", placeholder: "Name" %>
+        </div>
+      </div>
+    <% end %>
+  <% end %>
+  <%= link_to "Group overview", [:admin, EnvironmentVariableGroup] %>
+</fieldset>

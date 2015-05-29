@@ -1,0 +1,26 @@
+<% deploy_groups = [["All", nil]] + DeployGroup.all.map{ |dg| [dg.name, dg.id] } %>
+<% [deploy_groups.size, 2].max.times { form.object.environment_variables.build } %>
+<%= form.fields_for :environment_variables do |fields| %>
+  <div class="form-group">
+    <div class="col-lg-2">
+      <%= fields.text_field :name, class: "form-control", placeholder: "Name" %>
+    </div>
+
+    <div class="col-lg-4">
+      <%= fields.text_field :value, class: "form-control", placeholder: "Value" %>
+    </div>
+
+    <% if DeployGroup.enabled? %>
+      <div class="col-lg-2">
+        <%= fields.select :deploy_group_id, deploy_groups, class: "form-control", placeholder: "Deploy group" %>
+      </div>
+    <% end %>
+
+    <% if fields.object.persisted? %>
+      <div class="col-lg-1 checkbox">
+        <%= fields.check_box :_destroy if fields.object.persisted? %>
+        <%= fields.label :_destroy, "Delete" %>
+      </div>
+    <% end %>
+  </div>
+<% end %>

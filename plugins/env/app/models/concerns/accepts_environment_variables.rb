@@ -1,0 +1,10 @@
+module AcceptsEnvironmentVariables
+  ASSIGNABLE_ATTRIBUTES = {environment_variables_attributes: [:name, :value, :deploy_group_id, :_destroy, :id]}
+
+  def self.included(base)
+    base.class_eval do
+      has_many :environment_variables, as: :parent
+      accepts_nested_attributes_for :environment_variables, allow_destroy: true, reject_if: -> (a) { a[:name].blank? }
+    end
+  end
+end
