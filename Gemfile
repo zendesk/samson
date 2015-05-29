@@ -1,5 +1,4 @@
 source 'https://rubygems.org'
-source 'https://rails-assets.org'
 
 gem 'bundler'
 
@@ -47,20 +46,22 @@ group :assets do
   gem 'angular-rails-templates'
   gem 'bootstrap-sass'
 
-  gem 'rails-assets-angular'
-  gem 'rails-assets-angular-mocks'
-  gem 'rails-assets-angular-scenario'
-  gem 'rails-assets-bootstrap-select'
-  gem 'rails-assets-font-awesome'
-  gem 'rails-assets-jquery'
-  gem 'rails-assets-jquery-ui'
-  gem 'rails-assets-jquery-ujs'
-  gem 'rails-assets-moment'
-  gem 'rails-assets-rickshaw'
-  gem 'rails-assets-typeahead.js'
-  gem 'rails-assets-underscore'
-  gem 'rails-assets-vis'
-  gem 'rails-assets-x-editable'
+  source 'https://rails-assets.org' do
+    gem 'rails-assets-angular'
+    gem 'rails-assets-angular-mocks'
+    gem 'rails-assets-angular-scenario'
+    gem 'rails-assets-bootstrap-select'
+    gem 'rails-assets-font-awesome'
+    gem 'rails-assets-jquery'
+    gem 'rails-assets-jquery-ui'
+    gem 'rails-assets-jquery-ujs'
+    gem 'rails-assets-moment'
+    gem 'rails-assets-rickshaw'
+    gem 'rails-assets-typeahead.js'
+    gem 'rails-assets-underscore'
+    gem 'rails-assets-vis'
+    gem 'rails-assets-x-editable'
+  end
 end
 
 group :no_preload do
