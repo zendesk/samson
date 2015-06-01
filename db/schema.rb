@@ -28,9 +28,9 @@ ActiveRecord::Schema.define(version: 20150530010900) do
 
   create_table "builds", force: :cascade do |t|
     t.integer "project_id",    null: false
-    t.string  "git_sha"
+    t.string  "git_sha",       limit: 128
     t.string  "git_ref"
-    t.string  "container_sha"
+    t.string  "container_sha", limit: 128
     t.string  "container_ref"
     t.datetime "created_at",   null: false
     t.datetime "updated_at",   null: false
