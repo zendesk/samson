@@ -56,7 +56,7 @@ describe Project do
     end
   end
 
-  describe "#github_project" do
+  describe "#github_repo" do
     it "returns the user/repo part of the repository URL" do
       project = Project.new(repository_url: "git@github.com:foo/bar.git")
       project.github_repo.must_equal "foo/bar"
@@ -77,6 +77,11 @@ describe Project do
 
     it "handles https urls" do
       project = Project.new(repository_url: "https://github.com/foo/bar.git")
+      project.github_repo.must_equal "foo/bar"
+    end
+
+    it "works if '.git' is not at the end" do
+      project = Project.new(repository_url: "https://github.com/foo/bar")
       project.github_repo.must_equal "foo/bar"
     end
   end
