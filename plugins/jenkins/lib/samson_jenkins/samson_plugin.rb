@@ -18,7 +18,7 @@ Samson::Hooks.callback :after_deploy do |deploy|
       if job_id.is_a?(Fixnum)
         attributes[:jenkins_job_id] = job_id
       else
-        attributes[:status] = "CANCELED"
+        attributes[:status] = "STARTUP_ERROR"
         attributes[:error] = job_id
       end
       JenkinsJob.create!(attributes)

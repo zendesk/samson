@@ -103,7 +103,7 @@ ActiveRecord::Schema.define(version: 20150520210103) do
   end
 
   create_table "jenkins_jobs", force: :cascade do |t|
-    t.integer  "jenkins_job_id", limit: 4,   null: false
+    t.integer  "jenkins_job_id", limit: 4
     t.string   "name",           limit: 255, null: false
     t.string   "status",         limit: 255
     t.string   "error",          limit: 255
