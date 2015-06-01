@@ -26,7 +26,7 @@ class GitRepository
   end
 
   def update!(executor: TerminalExecutor.new(StringIO.new))
-    executor.execute!("cd #{repo_cache_dir}", 'git fetch -ap')
+    executor.execute!("cd #{repo_cache_dir}", 'git fetch -p')
   end
 
   def commit_from_ref(git_reference)
