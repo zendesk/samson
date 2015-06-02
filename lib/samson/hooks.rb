@@ -4,7 +4,8 @@ module Samson
       :stage_form,
       :deploys_header,
       :deploy_view,
-      :admin_menu
+      :admin_menu,
+      :project_tabs_view
     ].freeze
 
     EVENT_HOOKS = [
