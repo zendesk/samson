@@ -1,0 +1,15 @@
+Description:
+  This generator creates a skeleton structure for a Samson Plugin
+
+Example:
+  rails generate plugin Thing
+
+  This will create:
+    plugins/thing/app/assets/javascript/
+    plugins/thing/app/assets/stylesheets/
+    plugins/thing/app/models/
+    plugins/thing/db/migrate
+    plugins/thing/lib/samson_plugin.rb
+    plugins/thing/test/test_helper.rb
+    plugins/thing/samson_thing.gemspec
+
