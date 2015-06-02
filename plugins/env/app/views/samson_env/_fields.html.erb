@@ -4,7 +4,7 @@
 
   <h4>Groups</h4>
   <% stage = form.object %>
-  <% ids = stage.environment_variable_group_ids + [nil, nil] %>
+  <% ids = stage.environment_variable_group_ids + [nil] %>
   <% environment_variable_groups = EnvironmentVariableGroup.all.map { |g| [g.name, g.id] } %>
   <% if environment_variable_groups.any? %>
     <% ids.each do |id| %>
@@ -15,5 +15,6 @@
       </div>
     <% end %>
   <% end %>
+  <%= link_to "Add row", "#", class: "duplicate_previous_row" %> |
   <%= link_to "Group overview", [:admin, EnvironmentVariableGroup] %>
 </fieldset>

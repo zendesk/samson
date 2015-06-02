@@ -1,5 +1,5 @@
 <% deploy_groups = [["All", nil]] + DeployGroup.all.map{ |dg| [dg.name, dg.id] } %>
-<% [deploy_groups.size, 2].max.times { form.object.environment_variables.build } %>
+<% form.object.environment_variables.build %>
 <%= form.fields_for :environment_variables do |fields| %>
   <div class="form-group">
     <div class="col-lg-2">
@@ -24,3 +24,4 @@
     <% end %>
   </div>
 <% end %>
+<%= link_to "Add row", "#", class: "duplicate_previous_row" %>
