@@ -5,13 +5,15 @@ module JenkinsHelper
       "FAILURE"  => "danger",
       "CANCELED" => "warning",
       "ABORTED"  => "warning",
+      "STARTUP_ERROR"  => "warning",
       nil        => "info"
     }
 
     result = {
       "SUCCESS"  => "has Passed",
       "FAILURE"  => "has Failed",
-      "CANCELED" => "failed to start, Please check Jenkins job to see what went wrong",
+      "CANCELED" => "was canceled, Please check Jenkins job for more details",
+      "STARTUP_ERROR" => "failed to start, Please check Jenkins job to see what went wrong",
       "ABORTED"  => "was aborted, Please go to Jenkins job to start it manually",
       nil => "is running. This can take a few minutes to finish, Please reload this page to check latest status"
     }
