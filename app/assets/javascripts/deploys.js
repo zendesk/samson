@@ -66,6 +66,7 @@ $(function () {
     engine.initialize();
 
     $reference.typeahead(null, {
+      display: 'value',
       source: engine.ttAdapter()
     });
   }
