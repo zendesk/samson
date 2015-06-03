@@ -88,6 +88,10 @@ GEM
     autoprefixer-rails (5.1.11)
       execjs
       json
+    better_errors (2.1.0)
+      coderay (>= 1.0.0)
+      erubis (>= 2.6.6)
+      rack (>= 0.9.0)
     binding_of_caller (0.7.2)
       debug_inspector (>= 0.0.1)
     bootstrap-sass (3.3.4.1)
@@ -318,11 +322,6 @@ GEM
       json (>= 1.8.0)
     warden (1.2.3)
       rack (>= 1.0)
-    web-console (2.1.2)
-      activemodel (>= 4.0)
-      binding_of_caller (>= 0.7.2)
-      railties (>= 4.0)
-      sprockets-rails (>= 2.0, < 4.0)
     webmock (1.21.0)
       addressable (>= 2.3.6)
       crack (>= 0.3.2)
@@ -350,6 +349,8 @@ DEPENDENCIES
   airbrake (~> 4.1.0)
   angular-rails-templates
   ansible
+  better_errors
+  binding_of_caller
   bootstrap-sass
   bundler
   byebug
@@ -411,7 +412,6 @@ DEPENDENCIES
   sse-rails-engine
   uglifier (>= 1.3.0)
   warden (~> 1.2)
-  web-console
   webmock
 
 BUNDLED WITH
