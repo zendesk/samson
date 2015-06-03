@@ -7,12 +7,12 @@ class AddEnvironmentVariables < ActiveRecord::Migration
       t.string :parent_type, null: false
       t.integer :deploy_group_id
     end
-    add_index :environment_variables, [:parent_id, :parent_type, :name, :deploy_group_id], unique: true, name: "environment_variables_unique_deploy_group_id"
+    add_index :environment_variables, [:parent_id, :parent_type, :name, :deploy_group_id], unique: true, name: "environment_variables_unique_deploy_group_id", length: { name: 191, parent_type: 191 }
 
     create_table :environment_variable_groups do |t|
       t.string :name, null: false
     end
-    add_index :environment_variable_groups, :name, unique: true
+    add_index :environment_variable_groups, :name, unique: true, length: 191
 
     create_table :stage_environment_variable_groups do |t|
       t.integer :stage_id, :environment_variable_group_id, null: false

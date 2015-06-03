@@ -1,7 +1,7 @@
 class AddPermalinkToStages < ActiveRecord::Migration
   def change
     add_column :stages, :permalink, :string
-    add_index :stages, :permalink, unique: true
+    add_index :stages, :permalink, unique: true, length: 191
 
     Stage.reset_column_information
 
