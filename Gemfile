@@ -33,6 +33,9 @@ gem 'sse-rails-engine'
 gem 'lograge'
 gem 'logstash-event'
 
+# Docker
+gem 'docker-api'
+
 group :production, :staging do
   gem 'rails_12factor'
   gem 'airbrake', '~> 4.1.0'
