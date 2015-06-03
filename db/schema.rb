@@ -100,7 +100,7 @@ ActiveRecord::Schema.define(version: 20150529162928) do
 
   create_table "environments", force: :cascade do |t|
     t.string   "name",          limit: 255,                 null: false
-    t.boolean  "is_production", limit: 1,   default: false, null: false
+    t.boolean  "is_production", default: false, null: false
     t.datetime "deleted_at"
     t.datetime "created_at",                                null: false
     t.datetime "updated_at",                                null: false
@@ -115,7 +115,7 @@ ActiveRecord::Schema.define(version: 20150529162928) do
     t.integer  "stage_id",   limit: 4,                  null: false
     t.datetime "created_at"
     t.datetime "updated_at"
-    t.boolean  "enabled",    limit: 1,   default: true
+    t.boolean  "enabled",    default: true
   end
 
   create_table "jenkins_jobs", force: :cascade do |t|
@@ -154,7 +154,7 @@ ActiveRecord::Schema.define(version: 20150529162928) do
     t.datetime "updated_at"
     t.datetime "deleted_at"
     t.string   "description", limit: 255
-    t.boolean  "warning",     limit: 1,   default: false, null: false
+    t.boolean  "warning",     default: false, null: false
   end
 
   add_index "locks", ["stage_id", "deleted_at", "user_id"], name: "index_locks_on_stage_id_and_deleted_at_and_user_id", using: :btree
@@ -251,16 +251,16 @@ ActiveRecord::Schema.define(version: 20150529162928) do
     t.string   "notify_email_address",                         limit: 255
     t.integer  "order",                                        limit: 4
     t.datetime "deleted_at"
-    t.boolean  "confirm",                                      limit: 1,     default: true
+    t.boolean  "confirm",                                      default: true
     t.string   "datadog_tags",                                 limit: 255
-    t.boolean  "update_github_pull_requests",                  limit: 1
-    t.boolean  "deploy_on_release",                            limit: 1,     default: false
-    t.boolean  "comment_on_zendesk_tickets",                   limit: 1
-    t.boolean  "production",                                   limit: 1,     default: false
-    t.boolean  "use_github_deployment_api",                    limit: 1
+    t.boolean  "update_github_pull_requests"
+    t.boolean  "deploy_on_release",                            default: false
+    t.boolean  "comment_on_zendesk_tickets"
+    t.boolean  "production",                                   default: false
+    t.boolean  "use_github_deployment_api"
     t.string   "permalink",                                    limit: 255,                   null: false
     t.text     "dashboard",                                    limit: 65535
-    t.boolean  "email_committers_on_automated_deploy_failure", limit: 1,     default: false, null: false
+    t.boolean  "email_committers_on_automated_deploy_failure", default: false, null: false
     t.string   "static_emails_on_automated_deploy_failure",    limit: 255
     t.string   "datadog_monitor_ids",                          limit: 255
     t.string   "jenkins_job_names",                            limit: 255
@@ -286,8 +286,8 @@ ActiveRecord::Schema.define(version: 20150529162928) do
     t.string   "token",          limit: 255
     t.datetime "deleted_at"
     t.string   "external_id",    limit: 255
-    t.boolean  "desktop_notify", limit: 1,   default: false
-    t.boolean  "integration",    limit: 1,   default: false, null: false
+    t.boolean  "desktop_notify", default: false
+    t.boolean  "integration",    default: false, null: false
   end
 
   add_index "users", ["external_id", "deleted_at"], name: "index_users_on_external_id_and_deleted_at", length: {"external_id"=>191, "deleted_at"=>nil}, using: :btree
