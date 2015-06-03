@@ -13,7 +13,7 @@ module Admin
     end
 
     def create
-      group = EnvironmentVariableGroup.create!(attributes)
+      EnvironmentVariableGroup.create!(attributes)
       redirect_to action: :index
     end
 

@@ -77,8 +77,8 @@ describe "env hooks" do
             "0" => {name: "HELLO", value: "Y"}, # overwritten by stage setting
             "1" => {name: "OTHER", value: "A"},
             "2" => {name: "MORE", value: "A"}, # overwritten by specific setting
-            "3" => {name: "MORE", value: "B", deploy_group: deploy_groups(:pod100)},
-            "4" => {name: "MORE", value: "C", deploy_group: deploy_groups(:pod1)}
+            "3" => {name: "MORE", value: "B", scope: deploy_groups(:pod100)},
+            "4" => {name: "MORE", value: "C", scope: deploy_groups(:pod1)}
           },
           name: "G1"
         )

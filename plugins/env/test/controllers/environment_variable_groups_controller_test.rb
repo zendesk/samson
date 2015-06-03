@@ -78,13 +78,14 @@ describe Admin::EnvironmentVariableGroupsController do
         refute_difference "EnvironmentVariable.count" do
           put :update, id: env_group.id, environment_variable_group: {
             environment_variables_attributes: {
-              "0" => {name: "N1", value: "V2", id: variable.id},
+              "0" => {name: "N1", value: "V2", scope_type_and_id: "DeployGroup-#{deploy_group.id}", id: variable.id},
             },
           }
         end
 
         assert_redirected_to "/admin/environment_variable_groups"
         variable.reload.value.must_equal "V2"
+        variable.reload.scope.must_equal deploy_group
       end
 
       it "destoys variables" do

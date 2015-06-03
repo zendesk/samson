@@ -1,4 +1,4 @@
-<% deploy_groups = [["All", nil]] + DeployGroup.all.map{ |dg| [dg.name, dg.id] } %>
+<% scopes = [["All", nil]] + Environment.all.map{ |dg| [dg.name, "Environment-#{dg.id}"] } + [["----", nil]] + DeployGroup.all.map{ |dg| [dg.name, "DeployGroup-#{dg.id}"] } %>
 <% form.object.environment_variables.build %>
 <%= form.fields_for :environment_variables do |fields| %>
   <div class="form-group">
@@ -12,7 +12,7 @@
 
     <% if DeployGroup.enabled? %>
       <div class="col-lg-1">
-        <%= fields.select :deploy_group_id, deploy_groups, class: "form-control", placeholder: "Deploy group" %>
+        <%= fields.select :scope_type_and_id, scopes, class: "form-control", placeholder: "Deploy group" %>
       </div>
     <% end %>
 
