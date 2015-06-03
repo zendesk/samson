@@ -5,6 +5,8 @@ sqlite: &sqlite
 mysql: &mysql
   adapter: mysql2
   username: travis
+  encoding: utf8mb4
+  collation: utf8mb4_bin
 
 postgresql: &postgresql
   adapter: postgresql
