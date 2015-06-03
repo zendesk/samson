@@ -41,7 +41,7 @@ ActiveRecord::Schema.define(version: 20150529162928) do
   add_index "builds", ["project_id"], name: "index_builds_on_project_id", using: :btree
 
   create_table "commands", force: :cascade do |t|
-    t.text     "command",    limit: 16777215
+    t.text     "command",    limit: 10485760
     t.datetime "created_at"
     t.datetime "updated_at"
     t.integer  "project_id", limit: 4
@@ -137,7 +137,7 @@ ActiveRecord::Schema.define(version: 20150529162928) do
     t.integer  "user_id",    limit: 4,                              null: false
     t.integer  "project_id", limit: 4,                              null: false
     t.string   "status",     limit: 255,        default: "pending"
-    t.text     "output",     limit: 4294967295
+    t.text     "output",     limit: 1073741823
     t.datetime "created_at"
     t.datetime "updated_at"
     t.string   "commit",     limit: 255
