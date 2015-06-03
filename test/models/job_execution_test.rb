@@ -9,6 +9,7 @@ describe JobExecution do
   let(:deploy_group_hack) { DeployGroup.create!(name: ';|sudo make-sandwich /', environment: pod1.environment) }
   let(:project) { Project.create!(name: 'duck', repository_url: repository_url) }
   let(:stage) { Stage.create!(name: 'stage4', project: project, deploy_groups: [pod1, pod2, deploy_group_hack]) }
+  let(:stage_no_groups) { Stage.create!(name: 'stage_no_groups', project: project, deploy_groups: []) }
   let(:user) { User.create!(name: 'test') }
   let(:job) { project.jobs.create!(command: 'cat foo', user: user, project: project) }
   let(:execution) { JobExecution.new('master', job) }
@@ -28,6 +29,7 @@ describe JobExecution do
     user.name = 'John Doe'
     user.email = 'jdoe@test.com'
     project.repository.clone!(mirror: true)
+    job.deploy = deploy
     JobExecution.enabled = true
   end
 
@@ -121,6 +123,7 @@ describe JobExecution do
     job.update(command: 'env | sort')
     execute_job
     lines = job.output.split "\n"
+    lines.must_include "DEPLOY_URL=#{deploy.full_url}"
     lines.must_include "DEPLOYER=jdoe@test.com"
     lines.must_include "DEPLOYER_EMAIL=jdoe@test.com"
     lines.must_include "DEPLOYER_NAME=John Doe"
@@ -130,7 +133,6 @@ describe JobExecution do
 
   it 'exports deploy_group information if deploy groups present' do
     job.update(command: 'env | sort')
-    job.deploy = deploy
     execute_job
     lines = job.output.split "\n"
     lines.must_include "# Deploy URL: #{deploy.url}"
@@ -139,8 +141,10 @@ describe JobExecution do
 
   it 'does not export deploy_group information if no deploy groups present' do
     job.update(command: 'env | sort')
-    execute_job
-    job.output.wont_include "DEPLOY_GROUPS"
+    deploy.stub :stage, stage_no_groups do
+      execute_job
+      job.output.wont_include "DEPLOY_GROUPS"
+    end
   end
 
   it 'maintains a cache of build artifacts between runs' do
