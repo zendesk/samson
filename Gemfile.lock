@@ -105,6 +105,9 @@ GEM
     dalli (2.7.4)
     debug_inspector (0.0.2)
     docile (1.1.5)
+    docker-api (1.21.4)
+      excon (>= 0.38.0)
+      json
     dogapi (1.17.0)
       multi_json
     dogstatsd-ruby (1.4.1)
@@ -116,6 +119,7 @@ GEM
     erubis (2.7.0)
     eventmachine (1.0.7)
     eventmachine (1.0.7-java)
+    excon (0.45.3)
     execjs (2.5.2)
     faraday (0.9.1)
       multipart-post (>= 1.2, < 3)
@@ -356,6 +360,7 @@ DEPENDENCIES
   codeclimate-test-reporter
   coderay (~> 1.1.0)
   dalli (~> 2.7.0)
+  docker-api
   dogapi (~> 1.9)
   dogstatsd-ruby (~> 1.4.0)
   dotenv-rails (~> 0.9)
