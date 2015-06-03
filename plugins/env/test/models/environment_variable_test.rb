@@ -53,6 +53,12 @@ describe EnvironmentVariable do
           groups.each { |deploy_group| EnvironmentVariable.env(stage, deploy_group.id) }
         end
       end
+
+      it "can resolve references" do
+        stage.environment_variables.last.update_column(:value, "STAGE--$POD_ID--$POD_ID_NOT--${POD_ID}")
+        stage.environment_variables.create!(name: "POD_ID", value: "1")
+        EnvironmentVariable.env(stage, nil).must_equal("STAGE"=>"STAGE--1--$POD_ID_NOT--1", "POD_ID"=>"1", "X"=>"Y", "Y"=>"Z")
+      end
     end
   end
 end
