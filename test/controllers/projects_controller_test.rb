@@ -79,6 +79,7 @@ describe ProjectsController do
       end
 
       it "renders with no environments" do
+        DeployGroup.destroy_all
         Environment.destroy_all
         get :new
         assert_template :new

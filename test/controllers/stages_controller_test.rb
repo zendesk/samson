@@ -172,6 +172,7 @@ describe StagesController do
         end
 
         it 'renders with no environments configured' do
+          DeployGroup.destroy_all
           Environment.destroy_all
           assert_template :edit
         end
