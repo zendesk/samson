@@ -413,3 +413,6 @@ DEPENDENCIES
   warden (~> 1.2)
   web-console
   webmock
+
+BUNDLED WITH
+   1.10.2

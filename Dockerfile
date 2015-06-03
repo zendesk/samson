@@ -5,6 +5,10 @@ RUN wget -qO- https://deb.nodesource.com/gpgkey/nodesource.gpg.key | apt-key add
 RUN echo 'deb https://deb.nodesource.com/node_0.12 jessie main' > /etc/apt/sources.list.d/nodesource.list
 RUN apt-get update && apt-get install -y nodejs
 
+ENV GEM_HOME=/bundle
+RUN gem update --system
+RUN gem install bundler
+
 RUN mkdir /app
 WORKDIR /app
 
@@ -34,8 +38,6 @@ RUN bundle install --without test sqlite postgres --quiet --local --jobs 4 || bu
 ADD config /app/config
 ADD app /app/app
 ADD lib /app/lib
-
-RUN DATABASE_URL=mysql2://user:pass@127.0.0.1/null RAILS_ENV=development PRECOMPILE=1 bundle exec rake --trace assets:precompile
 
 EXPOSE 9080
 
