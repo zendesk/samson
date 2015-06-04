@@ -9,7 +9,6 @@ if Gem.loaded_specs.has_key? 'mysql2'
     module ConnectionAdapters
       class Mysql2Adapter < defined?(AbstractMysqlAdapter) ? AbstractMysqlAdapter : AbstractAdapter
         def create_table(table_name, options = {}) #:nodoc:
-          puts "creating #{table_name} with dynamic and #{options.inspect}"
           super(table_name, options.reverse_merge(options: "ROW_FORMAT=DYNAMIC ENGINE=InnoDB"))
         end
       end
