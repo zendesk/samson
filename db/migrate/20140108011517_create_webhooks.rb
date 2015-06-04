@@ -7,8 +7,8 @@ class CreateWebhooks < ActiveRecord::Migration
 
       t.timestamps
 
-      t.index [:project_id, :branch]
-      t.index [:stage_id, :branch], unique: true
+      t.index [:project_id, :branch], length: { branch: 191 }
+      t.index [:stage_id, :branch], unique: true, length: { branch: 191 }
     end
   end
 end

@@ -1,7 +1,7 @@
 class AddPermalinkToProjects < ActiveRecord::Migration
   def change
     add_column :projects, :permalink, :string
-    add_index :projects, :permalink, unique: true
+    add_index :projects, :permalink, unique: true, length: 191
 
     Project.reset_column_information
 

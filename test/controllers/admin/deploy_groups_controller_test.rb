@@ -73,7 +73,7 @@ describe Admin::DeployGroupsController do
       before { request.env["HTTP_REFERER"] = admin_deploy_groups_url }
 
       it 'save' do
-        post :update, deploy_group: {name: 'Test Update', environment_id: environments(:production)}, id: deploy_group.id
+        post :update, deploy_group: {name: 'Test Update', environment_id: environments(:production).id}, id: deploy_group.id
         assert_redirected_to admin_deploy_groups_path
         DeployGroup.find(deploy_group.id).name.must_equal 'Test Update'
       end

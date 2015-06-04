@@ -1,7 +1,7 @@
 class AddPermalinkToEnvironments < ActiveRecord::Migration
   def change
     add_column :environments, :permalink, :string
-    add_index :environments, :permalink, unique: true
+    add_index :environments, :permalink, unique: true, length: 191
 
     Environment.reset_column_information
 

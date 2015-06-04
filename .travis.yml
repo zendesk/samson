@@ -16,6 +16,9 @@ env:
     - DB=postgresql BUNDLE_WITHOUT=sqlite:mysql2
 
 before_script:
+  - mysql -u root -e "set GLOBAL innodb_large_prefix = true" || true
+  - mysql -u root -e "set GLOBAL innodb_file_per_table = true" || true
+  - mysql -u root -e "set GLOBAL innodb_file_format = 'barracuda'" || true
   - cp config/database.travis.yml config/database.yml
   - bundle exec rake db:create
   - npm install

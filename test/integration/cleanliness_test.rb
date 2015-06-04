@@ -11,4 +11,14 @@ describe "cleanliness" do
     # if it is not avoidable see http://stackoverflow.com/questions/7163264
     File.read('Gemfile.lock').wont_include 'rails-assets-bootstrap '
   end
+
+  if ActiveRecord::Base.connection.adapter_name == "Mysql2"
+    it "uses the right row format in mysql" do
+      status = ActiveRecord::Base.connection.execute('show table status').to_a
+      refute_empty status
+      status.each do |table|
+        table[3].must_equal "Dynamic"
+      end
+    end
+  end
 end
