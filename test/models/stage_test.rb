@@ -267,15 +267,20 @@ describe Stage do
     end
   end
 
-  describe "#datadog_tags" do
+  describe "#datadog_tags_as_array" do
     it "returns an array of the tags" do
       subject.datadog_tags = " foo; bar; baz "
-      subject.datadog_tags.must_equal ["foo", "bar", "baz"]
+      subject.datadog_tags_as_array.must_equal ["foo", "bar", "baz"]
+    end
+
+    it "uses only semicolon as separate" do
+      subject.datadog_tags = " foo bar: baz "
+      subject.datadog_tags_as_array.must_equal ["foo bar: baz"]
     end
 
     it "returns an empty array if no tags have been configured" do
       subject.datadog_tags = nil
-      subject.datadog_tags.must_equal []
+      subject.datadog_tags_as_array.must_equal []
     end
   end
 
