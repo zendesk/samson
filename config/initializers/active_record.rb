@@ -2,7 +2,7 @@
 # We also want our mysql databases to use utf8_mb4 encoding (the real unicode)
 # This monkey patch is from the following Github comment:
 # https://github.com/rails/rails/issues/9855#issuecomment-57665404
-if Gem.loaded_specs.has_key? :mysql2
+if Gem.loaded_specs.has_key? 'mysql2'
   require 'active_record/connection_adapters/mysql2_adapter'
 
   module ActiveRecord
