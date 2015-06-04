@@ -16,6 +16,7 @@ env:
     - DB=postgresql BUNDLE_WITHOUT=sqlite:mysql2
 
 before_script:
+  - mysql -u travis -e 'SHOW VARIABLES LIKE "%version%";'
   - cp config/database.travis.yml config/database.yml
   - bundle exec rake db:create
   - npm install
