@@ -63,6 +63,7 @@ describe Admin::EnvironmentVariableGroupsController do
         assert_difference "EnvironmentVariable.count", +1 do
           put :update, id: env_group.id, environment_variable_group: {
             name: "G2",
+            comment: "COOMMMENT",
             environment_variables_attributes: {
               "0" => {name: "N1", value: "V1"},
             },
@@ -70,7 +71,9 @@ describe Admin::EnvironmentVariableGroupsController do
         end
 
         assert_redirected_to "/admin/environment_variable_groups"
-        env_group.reload.name.must_equal "G2"
+        env_group.reload
+        env_group.name.must_equal "G2"
+        env_group.comment.must_equal "COOMMMENT"
       end
 
       it "updates" do
