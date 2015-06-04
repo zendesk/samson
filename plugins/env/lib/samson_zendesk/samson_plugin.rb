@@ -14,6 +14,7 @@ module SamsonEnv
     # writes .env file for each deploy group
     def write_dotenv_file(base_file, groups)
       required_keys = parse_dotenv(base_file).keys if File.exist?(base_file)
+      File.unlink(base_file) if File.exist?(base_file)
       groups.each do |suffix, data|
         generated_file = "#{base_file}#{suffix}"
         data = extract_required_keys(generated_file, required_keys, data) if required_keys
@@ -25,6 +26,7 @@ module SamsonEnv
     def write_manifest_file(manifest, groups)
       return unless File.exist?(manifest)
       json = JSON.load(File.read(manifest))
+      File.unlink(manifest)
       required_keys = json.fetch("env").keys
       groups.each do |suffix, data|
         generated_file = manifest.sub(".json", "#{suffix}.json")
@@ -43,13 +45,17 @@ module SamsonEnv
     end
 
     def env_groups(stage)
-      groups = stage.deploy_groups.map do |deploy_group|
-        [
-          ".#{deploy_group.name.parameterize}",
-          EnvironmentVariable.env(stage, deploy_group.id)
-        ]
+      deploy_groups = stage.deploy_groups.to_a
+      groups = if deploy_groups.any?
+        deploy_groups.map do |deploy_group|
+          [
+            ".#{deploy_group.name.parameterize}",
+            EnvironmentVariable.env(stage, deploy_group.id)
+          ]
+        end
+      else
+        [["", EnvironmentVariable.env(stage, nil)]]
       end
-      groups.unshift ["", EnvironmentVariable.env(stage, nil)]
       return groups if groups.any? { |_, data| data.present? }
     end
 

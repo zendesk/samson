@@ -13,26 +13,38 @@ describe "env hooks" do
     end
 
     describe ".env" do
-      it "does not modify when no variables were specified" do
-        EnvironmentVariable.delete_all
-        File.exist?(".env").must_equal false
-      end
+      describe "without groups" do
+        before { stage.deploy_groups.delete_all }
 
-      it "writes to .env" do
-        Samson::Hooks.fire(:after_deploy_setup, Dir.pwd, stage)
-        File.read(".env").must_equal "HELLO=\"world\"\nWORLD=\"hello\"\n"
-      end
+        it "does not modify when no variables were specified" do
+          EnvironmentVariable.delete_all
+          File.exist?(".env").must_equal false
+        end
 
-      it "overwrites .env by ignoring not required" do
-        File.write(".env", "# a comment ...\nHELLO=foo")
-        Samson::Hooks.fire(:after_deploy_setup, Dir.pwd, stage)
-        File.read(".env").must_equal "HELLO=\"world\"\n"
-      end
-
-      it "fails when .env has an unsatisfied required key" do
-        File.write(".env", "FOO=foo")
-        assert_raises KeyError do
+        it "writes to .env" do
           Samson::Hooks.fire(:after_deploy_setup, Dir.pwd, stage)
+          File.read(".env").must_equal "HELLO=\"world\"\nWORLD=\"hello\"\n"
+        end
+
+        it "overwrites .env by ignoring not required" do
+          File.write(".env", "# a comment ...\nHELLO=foo")
+          Samson::Hooks.fire(:after_deploy_setup, Dir.pwd, stage)
+          File.read(".env").must_equal "HELLO=\"world\"\n"
+        end
+
+        it "fails when .env has an unsatisfied required key" do
+          File.write(".env", "FOO=foo")
+          assert_raises KeyError do
+            Samson::Hooks.fire(:after_deploy_setup, Dir.pwd, stage)
+          end
+        end
+      end
+
+      describe "with deploy groups" do
+        it "deletes the base file" do
+          Samson::Hooks.fire(:after_deploy_setup, Dir.pwd, stage)
+          File.read(".env.pod-100").must_equal "HELLO=\"world\"\nWORLD=\"hello\"\n"
+          refute File.exist?(".env")
         end
       end
     end
@@ -74,14 +86,7 @@ describe "env hooks" do
 
         fire
 
-        File.read("ENV.json").must_equal "{
-  \"env\": {
-    \"HELLO\": \"world\",
-    \"OTHER\": \"A\",
-    \"MORE\": \"A\"
-  },
-  \"other\": true
-}"
+        refute File.exist?("ENV.json")
 
         File.read("ENV.pod-100.json").must_equal "{
   \"env\": {
