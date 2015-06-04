@@ -12,6 +12,8 @@ RUN gem install bundler
 RUN mkdir /app
 WORKDIR /app
 
+ADD REVISION /REVISION
+
 # Mostly static
 ADD config.ru /app/
 ADD Rakefile /app/
