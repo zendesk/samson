@@ -50,7 +50,7 @@ module SamsonEnv
         deploy_groups.map do |deploy_group|
           [
             ".#{deploy_group.name.parameterize}",
-            EnvironmentVariable.env(stage, deploy_group.id)
+            EnvironmentVariable.env(stage, deploy_group)
           ]
         end
       else

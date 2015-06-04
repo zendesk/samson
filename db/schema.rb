@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20150529162928) do
+ActiveRecord::Schema.define(version: 20150603211116) do
 
   create_table "build_statuses", force: :cascade do |t|
     t.integer  "build_id",   limit: 4,                         null: false
@@ -84,19 +84,21 @@ ActiveRecord::Schema.define(version: 20150529162928) do
 
   create_table "environment_variable_groups", force: :cascade do |t|
     t.string "name", limit: 255, null: false
+    t.text   "comment", limit: 65535
   end
 
   add_index "environment_variable_groups", ["name"], name: "index_environment_variable_groups_on_name", unique: true, length: {"name"=>191}, using: :btree
 
   create_table "environment_variables", force: :cascade do |t|
-    t.string  "name",            limit: 255, null: false
-    t.string  "value",           limit: 255, null: false
-    t.integer "parent_id",       limit: 4,   null: false
-    t.string  "parent_type",     limit: 255, null: false
-    t.integer "deploy_group_id", limit: 4
+    t.string  "name",        limit: 255, null: false
+    t.string  "value",       limit: 255, null: false
+    t.integer "parent_id",   limit: 4,   null: false
+    t.string  "parent_type", limit: 255, null: false
+    t.integer "scope_id",    limit: 4
+    t.string  "scope_type",  limit: 255
   end
 
-  add_index "environment_variables", ["parent_id", "parent_type", "name", "deploy_group_id"], name: "environment_variables_unique_deploy_group_id", unique: true, length: {"parent_id"=>nil, "parent_type"=>191, "name"=>191, "deploy_group_id"=>nil}, using: :btree
+  add_index "environment_variables", ["parent_id", "parent_type", "name", "scope_type", "scope_id"], name: "environment_variables_unique_scope", unique: true, length: {"parent_id"=>nil, "parent_type"=>191, "name"=>191, "scope_type"=>191, "scope_id"=>nil}, using: :btree
 
   create_table "environments", force: :cascade do |t|
     t.string   "name",          limit: 255,                 null: false

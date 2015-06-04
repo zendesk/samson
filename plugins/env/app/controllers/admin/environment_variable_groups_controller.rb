@@ -13,7 +13,7 @@ module Admin
     end
 
     def create
-      group = EnvironmentVariableGroup.create!(attributes)
+      EnvironmentVariableGroup.create!(attributes)
       redirect_to action: :index
     end
 
@@ -38,7 +38,11 @@ module Admin
     end
 
     def attributes
-      params.require(:environment_variable_group).permit(:name, AcceptsEnvironmentVariables::ASSIGNABLE_ATTRIBUTES)
+      params.require(:environment_variable_group).permit(
+        :name,
+        :comment,
+        AcceptsEnvironmentVariables::ASSIGNABLE_ATTRIBUTES
+      )
     end
   end
 end

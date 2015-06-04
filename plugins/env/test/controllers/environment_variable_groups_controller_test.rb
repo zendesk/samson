@@ -63,6 +63,7 @@ describe Admin::EnvironmentVariableGroupsController do
         assert_difference "EnvironmentVariable.count", +1 do
           put :update, id: env_group.id, environment_variable_group: {
             name: "G2",
+            comment: "COOMMMENT",
             environment_variables_attributes: {
               "0" => {name: "N1", value: "V1"},
             },
@@ -70,7 +71,9 @@ describe Admin::EnvironmentVariableGroupsController do
         end
 
         assert_redirected_to "/admin/environment_variable_groups"
-        env_group.reload.name.must_equal "G2"
+        env_group.reload
+        env_group.name.must_equal "G2"
+        env_group.comment.must_equal "COOMMMENT"
       end
 
       it "updates" do
@@ -78,13 +81,14 @@ describe Admin::EnvironmentVariableGroupsController do
         refute_difference "EnvironmentVariable.count" do
           put :update, id: env_group.id, environment_variable_group: {
             environment_variables_attributes: {
-              "0" => {name: "N1", value: "V2", id: variable.id},
+              "0" => {name: "N1", value: "V2", scope_type_and_id: "DeployGroup-#{deploy_group.id}", id: variable.id},
             },
           }
         end
 
         assert_redirected_to "/admin/environment_variable_groups"
         variable.reload.value.must_equal "V2"
+        variable.reload.scope.must_equal deploy_group
       end
 
       it "destoys variables" do
