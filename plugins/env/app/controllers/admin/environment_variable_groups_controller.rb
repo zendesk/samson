@@ -1,7 +1,7 @@
 module Admin
   class EnvironmentVariableGroupsController < ApplicationController
-    before_action :authorize_admin!, except: [:index]
-    before_action :group, only: [:show, :edit]
+    before_action :authorize_admin!, except: [:index, :show]
+    before_action :group, only: [:show]
 
     def index
       @groups = EnvironmentVariableGroup.all

@@ -30,13 +30,15 @@
       </legend>
       <%= render "samson_env/environment_variables", form: form %>
 
-      <hr>
+      <% if current_user.admin? %>
+        <hr>
 
-      <div class="form-group">
-        <div class="col-lg-10">
-          <button type="submit" class="btn btn-default">Save</button>
+        <div class="form-group">
+          <div class="col-lg-10">
+            <button type="submit" class="btn btn-default">Save</button>
+          </div>
         </div>
-      </div>
+      <% end %>
     </fieldset>
   <% end %>
 </section>
