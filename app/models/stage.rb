@@ -141,12 +141,12 @@ class Stage < ActiveRecord::Base
     commands + command_scope
   end
 
-  def datadog_tags
-    super.to_s.split(";").map(&:strip)
+  def datadog_tags_as_array
+    datadog_tags.to_s.split(";").map(&:strip)
   end
 
   def send_datadog_notifications?
-    datadog_tags.any?
+    datadog_tags_as_array.any?
   end
 
   def send_github_notifications?
