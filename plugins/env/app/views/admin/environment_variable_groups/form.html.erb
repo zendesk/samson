@@ -17,7 +17,10 @@
     </fieldset>
 
     <fieldset>
-      <legend>Environment variables</legend>
+      <legend>
+        Environment variables
+        <i class="glyphicon glyphicon-info-sign" title="$VAR / ${VAR} replacements supported&#13;Priority is DeployGroup, Environment, All"></i>
+      </legend>
       <%= render "samson_env/environment_variables", form: form %>
 
       <hr>

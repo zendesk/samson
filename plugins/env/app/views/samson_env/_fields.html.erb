@@ -1,5 +1,8 @@
 <fieldset>
-  <legend>Env variables written to .env before deploy</legend>
+  <legend>
+    Env variables written to .env before deploy
+    <i class="glyphicon glyphicon-info-sign" title="$VAR / ${VAR} replacements supported&#13;Priority is Stage,EnvironmentGroup then DeployGroup, Environment, All"></i>
+  </legend>
   <%= render "samson_env/environment_variables", form: form %>
 
   <h4>Groups</h4>
