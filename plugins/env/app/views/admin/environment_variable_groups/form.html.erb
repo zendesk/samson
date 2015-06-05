@@ -1,7 +1,12 @@
-<% title = (@group.new_record? ? "New group" : "Edit group #{@group.name}") %>
+<% title = (@group.new_record? ? "New group" : "Edit #{@group.name}") %>
 <% content_for(:page_title, title) %>
 
-<%= manual_breadcrumb([["Environment variables", [:admin, EnvironmentVariableGroup]], [title, nil]]) %>
+<% crumbs = [["Environment variables", [:admin, EnvironmentVariableGroup]]] %>
+<% if @group.new_record? %>
+  <%= manual_breadcrumb(crumbs + [[title, nil]]) %>
+<% else %>
+  <%= manual_breadcrumb(crumbs + [[@group.name, [:admin, @group]], ["Edit", nil]]) %>
+<% end %>
 
 <h1><%= title %></h1>
 
@@ -28,9 +33,10 @@
         Environment variables
         <i class="glyphicon glyphicon-info-sign" title="$VAR / ${VAR} replacements supported&#13;Priority is DeployGroup, Environment, All"></i>
       </legend>
-      <%= render "samson_env/environment_variables", form: form %>
+      <%= render "samson_env/environment_variables", form: form %> |
+      <%= link_to "Preview", preview_admin_environment_variable_groups_path(group_id: @group.id) %>
 
-      <% if current_user.admin? %>
+      <% if current_user.is_admin? %>
         <hr>
 
         <div class="form-group">
@@ -42,3 +48,4 @@
     </fieldset>
   <% end %>
 </section>
+

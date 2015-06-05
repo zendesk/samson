@@ -1,6 +1,6 @@
 module Admin
   class EnvironmentVariableGroupsController < ApplicationController
-    before_action :authorize_admin!, except: [:index, :show]
+    before_action :authorize_admin!, except: [:index, :show, :preview]
     before_action :group, only: [:show]
 
     def index
@@ -29,6 +29,16 @@ module Admin
     def destroy
       group.destroy!
       redirect_to action: :index
+    end
+
+    def preview
+      @groups = if params[:group_id]
+        @group = EnvironmentVariableGroup.find(params[:group_id])
+        SamsonEnv.env_groups(Stage.new(environment_variable_groups: [@group], deploy_groups: DeployGroup.all))
+      else
+        @stage = Stage.find(params[:stage_id])
+        SamsonEnv.env_groups(@stage)
+      end
     end
 
     private

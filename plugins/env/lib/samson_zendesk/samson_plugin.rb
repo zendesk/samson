@@ -9,6 +9,21 @@ module SamsonEnv
         write_dotenv_file("#{dir}/.env", groups)
     end
 
+    def env_groups(stage)
+      deploy_groups = stage.deploy_groups.to_a
+      groups = if deploy_groups.any?
+        deploy_groups.map do |deploy_group|
+          [
+            ".#{deploy_group.name.parameterize}",
+            EnvironmentVariable.env(stage, deploy_group)
+          ]
+        end
+      else
+        [["", EnvironmentVariable.env(stage, nil)]]
+      end
+      return groups if groups.any? { |_, data| data.present? }
+    end
+
     private
 
     # writes .env file for each deploy group
@@ -42,21 +57,6 @@ module SamsonEnv
     # https://github.com/bkeepers/dotenv/pull/188
     def generate_dotenv(data)
       data.map { |k, v| "#{k}=#{v.inspect.gsub("$", "\\$")}" }.join("\n") << "\n"
-    end
-
-    def env_groups(stage)
-      deploy_groups = stage.deploy_groups.to_a
-      groups = if deploy_groups.any?
-        deploy_groups.map do |deploy_group|
-          [
-            ".#{deploy_group.name.parameterize}",
-            EnvironmentVariable.env(stage, deploy_group)
-          ]
-        end
-      else
-        [["", EnvironmentVariable.env(stage, nil)]]
-      end
-      return groups if groups.any? { |_, data| data.present? }
     end
 
     def extract_required_keys(file, required, data)
