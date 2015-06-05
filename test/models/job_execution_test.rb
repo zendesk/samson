@@ -1,6 +1,7 @@
 require_relative '../test_helper'
 
 describe JobExecution do
+  include GitRepoTestHelper
 
   let(:repository_url) { Dir.mktmpdir }
   let(:repo_dir) { File.join(GitRepository.cached_repos_dir, project.repository_directory) }
@@ -17,15 +18,7 @@ describe JobExecution do
 
   before do
     Project.any_instance.stubs(:valid_repository_url).returns(true)
-    execute_on_remote_repo <<-SHELL
-      git init
-      git config user.email "test@example.com"
-      git config user.name "Test User"
-      echo monkey > foo
-      git add foo
-      git commit -m "initial commit"
-      git tag v1
-    SHELL
+    create_repo_with_tags('v1')
     user.name = 'John Doe'
     user.email = 'jdoe@test.com'
     project.repository.clone!(mirror: true)

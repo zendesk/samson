@@ -29,14 +29,16 @@ class GitRepository
     executor.execute!("cd #{repo_cache_dir}", 'git fetch -p')
   end
 
-  def commit_from_ref(git_reference)
-    description = Dir.chdir(repo_cache_dir) do
-      IO.popen(['git', 'describe', '--long', '--tags', '--all', git_reference]) do |io|
+  def commit_from_ref(git_reference, length: 7)
+    Dir.chdir(repo_cache_dir) do
+      description = IO.popen(['git', 'describe', '--long', '--tags', '--all', "--abbrev=#{length || 40}", git_reference], err: [:child, :out]) do |io|
         io.read.strip
       end
-    end
 
-    description.split('-').last.sub(/^g/, '')
+      return nil unless $?.success?
+
+      description.split('-').last.sub(/^g/, '')
+    end
   end
 
   def tag_from_ref(git_reference)

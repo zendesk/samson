@@ -1,14 +1,15 @@
 require_relative '../test_helper'
 
 describe GitRepository do
-  let(:repository_url) { Dir.mktmpdir }
-  let(:project) { Project.new(id: 99999, name: 'test_project', repository_url: repository_url) }
+  include GitRepoTestHelper
+
+  let(:project) { Project.new(id: 99999, name: 'test_project', repository_url: repo_temp_dir) }
   let(:repository) { project.repository }
   let(:executor) { TerminalExecutor.new(StringIO.new) }
   let(:repo_dir) { File.join(GitRepository.cached_repos_dir, project.repository_directory) }
 
   after do
-    FileUtils.rm_rf(repository_url)
+    FileUtils.rm_rf(repo_temp_dir)
     FileUtils.rm_rf(repo_dir)
     FileUtils.rm_rf(repository.repo_cache_dir)
   end
@@ -22,7 +23,7 @@ describe GitRepository do
   it 'should clone a repository' do
     Dir.mktmpdir do |dir|
       create_repo_with_tags
-      repository.clone!(from: repository_url, to: dir)
+      repository.clone!(from: repo_temp_dir, to: dir)
       Dir.exist?(dir).must_equal true
     end
   end
@@ -64,6 +65,48 @@ describe GitRepository do
       create_repo_with_tags
       repository.clone!
       repository.commit_from_ref('master').must_match /^[0-9a-f]{7}$/
+    end
+
+    it 'returns the full commit id with nil length' do
+      create_repo_with_tags
+      repository.clone!
+      repository.commit_from_ref('master', length: nil).must_match /^[0-9a-f]{40}$/
+    end
+
+    it 'returns nil if ref does not exist' do
+      create_repo_with_tags
+      repository.clone!
+      repository.commit_from_ref('NOT A VALID REF', length: nil).must_be_nil
+    end
+
+    it 'returns the commit of a branch' do
+      create_repo_with_an_additional_branch('my_branch')
+      repository.clone!(mirror: true)
+      repository.commit_from_ref('my_branch').must_match /^[0-9a-f]{7}$/
+    end
+
+    it 'returns the commit of a named tag' do
+      create_repo_with_an_additional_branch('test_branch')
+      execute_on_remote_repo <<-SHELL
+        git checkout test_branch
+        echo "blah blah" >> bar.txt
+        git add bar
+        git commit -m "created bar.txt"
+        git tag -a annotated_tag -m "This is really worth tagging"
+        git checkout master
+      SHELL
+
+      repository.clone!(mirror: true)
+      sha = repository.commit_from_ref('annotated_tag', length: 40)
+      sha.must_match /^[0-9a-f]{40}$/
+      repository.commit_from_ref('test_branch', length: 40).must_equal(sha)
+    end
+
+    it 'prevents script insertion attacks' do
+      create_repo_without_tags
+      repository.clone!
+      repository.commit_from_ref('master ; rm foo', length: nil).must_be_nil
+      assert File.exists?(File.join(repository.repo_cache_dir, 'foo'))
     end
   end
 
@@ -177,73 +220,4 @@ describe GitRepository do
     end
   end
 
-  def execute_on_remote_repo(cmds)
-    `exec 2> /dev/null; cd #{repository_url}; #{cmds}`
-  end
-
-  def create_repo_with_tags
-    execute_on_remote_repo <<-SHELL
-      git init
-      git config user.email "test@example.com"
-      git config user.name "Test User"
-      echo monkey > foo
-      git add foo
-      git commit -m "initial commit"
-      git tag v1
-    SHELL
-  end
-
-  def create_repo_without_tags
-    execute_on_remote_repo <<-SHELL
-      git init
-      git config user.email "test@example.com"
-      git config user.name "Test User"
-      echo monkey > foo
-      git add foo
-      git commit -m "initial commit"
-    SHELL
-  end
-
-  def create_repo_with_an_additional_branch
-    execute_on_remote_repo <<-SHELL
-      git init
-      git config user.email "test@example.com"
-      git config user.name "Test User"
-      echo monkey > foo
-      git add foo
-      git commit -m "initial commit"
-
-      git checkout -b test_user/test_branch
-      echo monkey > foo2
-      git add foo2
-      git commit -m "branch commit"
-      git checkout master
-    SHELL
-  end
-
-  def create_repo_with_second_commit
-    execute_on_remote_repo <<-SHELL
-      git init
-      git config user.email "test@example.com"
-      git config user.name "Test User"
-      echo monkey > foo
-      git add foo
-      git commit -m "initial commit"
-      echo more-monkey >> foo
-      git add foo
-      git commit -m "added more monkey"
-    SHELL
-  end
-
-  def current_branch
-    `git rev-parse --abbrev-ref HEAD`.strip
-  end
-
-  def number_of_commits
-    `git rev-list HEAD --count`.strip.to_i
-  end
-
-  def update_workspace
-    `git pull`.strip
-  end
 end
