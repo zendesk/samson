@@ -1,0 +1,25 @@
+<% title = "Preview environment" %>
+<% content_for(:page_title, title) %>
+
+<% if @group %>
+  <%= manual_breadcrumb([
+      ["Environment variables", [:admin, EnvironmentVariableGroup]],
+      [@group.name, [:admin, @group]],
+      [title, nil]
+    ]) %>
+<% else %>
+  <%= breadcrumb(@stage.project, @stage, title) %>
+<% end %>
+
+<h1><%= title %></h1>
+
+<% if @groups %>
+  <% @groups.each do |deploy_group_name, env| %>
+    <h2>Scope: <%= deploy_group_name.presence || "All" %></h2>
+    <pre>
+<%= JSON.pretty_generate(env) %>
+  </pre>
+  <% end %>
+<% else %>
+  No environment variables defined.
+<% end %>

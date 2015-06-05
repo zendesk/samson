@@ -20,7 +20,26 @@ describe Admin::EnvironmentVariableGroupsController do
         assert_response :success
       end
     end
-    unauthorized :get, :show, id: 1
+
+    describe "#show" do
+      it "renders" do
+        get :show, id: env_group.id
+        assert_response :success
+      end
+    end
+
+    describe "#preview" do
+      it "renders for groups" do
+        get :preview, group_id: env_group.id
+        assert_response :success
+      end
+
+      it "renders for stages" do
+        get :preview, stage_id: stage.id
+        assert_response :success
+      end
+    end
+
     unauthorized :post, :create
     unauthorized :delete, :destroy, id: 1
     unauthorized :post, :update, id: 1
@@ -46,13 +65,6 @@ describe Admin::EnvironmentVariableGroupsController do
           end
         end
         assert_redirected_to "/admin/environment_variable_groups"
-      end
-    end
-
-    describe "#show" do
-      it "renders" do
-        get :show, id: env_group.id
-        assert_response :success
       end
     end
 

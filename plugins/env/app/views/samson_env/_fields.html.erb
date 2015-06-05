@@ -19,5 +19,6 @@
     <% end %>
   <% end %>
   <%= link_to "Add row", "#", class: "duplicate_previous_row" %> |
-  <%= link_to "Group overview", [:admin, EnvironmentVariableGroup] %>
+  <%= link_to "Group overview", [:admin, EnvironmentVariableGroup] %> |
+  <%= link_to "Preview", preview_admin_environment_variable_groups_path(stage_id: form.object.id) %>
 </fieldset>
