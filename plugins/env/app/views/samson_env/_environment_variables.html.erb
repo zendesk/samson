@@ -6,12 +6,12 @@
       <%= fields.text_field :name, class: "form-control", placeholder: "Name" %>
     </div>
 
-    <div class="col-lg-7">
+    <div class="col-lg-6">
       <%= fields.text_area :value, class: "form-control", placeholder: "Value", rows: 1 %>
     </div>
 
     <% if DeployGroup.enabled? %>
-      <div class="col-lg-1">
+      <div class="col-lg-2">
         <%= fields.select :scope_type_and_id, scopes, class: "form-control", placeholder: "Deploy group" %>
       </div>
     <% end %>
