@@ -3,12 +3,11 @@ require_relative '../test_helper'
 describe JobExecution do
   include GitRepoTestHelper
 
-  let(:repository_url) { Dir.mktmpdir }
   let(:repo_dir) { File.join(GitRepository.cached_repos_dir, project.repository_directory) }
   let(:pod1) { deploy_groups(:pod1) }
   let(:pod2) { deploy_groups(:pod2) }
   let(:deploy_group_hack) { DeployGroup.create!(name: ';|sudo make-sandwich /', environment: pod1.environment) }
-  let(:project) { Project.create!(name: 'duck', repository_url: repository_url) }
+  let(:project) { Project.create!(name: 'duck', repository_url: repo_temp_dir) }
   let(:stage) { Stage.create!(name: 'stage4', project: project, deploy_groups: [pod1, pod2, deploy_group_hack]) }
   let(:stage_no_groups) { Stage.create!(name: 'stage_no_groups', project: project, deploy_groups: []) }
   let(:user) { User.create!(name: 'test') }
@@ -27,7 +26,7 @@ describe JobExecution do
   end
 
   after do
-    FileUtils.rm_rf(repository_url)
+    FileUtils.rm_rf(repo_temp_dir)
     FileUtils.rm_rf(repo_dir)
     project.repository.clean!
     JobExecution.enabled = false
@@ -62,6 +61,7 @@ describe JobExecution do
 
     execute_job 'armageddon'
 
+    assert job.succeeded?
     assert_equal 'lion', last_line_of_output
   end
 
@@ -75,11 +75,12 @@ describe JobExecution do
       git checkout master
     SHELL
 
-    branch = File.join(repository_url, '.git', 'refs', 'heads', 'mantis_shrimp')
+    branch = File.join(repo_temp_dir, '.git', 'refs', 'heads', 'mantis_shrimp')
     commit = File.read(branch).strip
 
     execute_job 'annotated_tag'
 
+    assert job.succeeded?
     assert_equal 'mantis shrimp', last_line_of_output
     assert job.commit.present?, "Expected #{job} to record the commit"
     assert_includes commit, job.commit
@@ -185,10 +186,6 @@ describe JobExecution do
   def execute_job(branch = 'master')
     execution = JobExecution.new(branch, job)
     execution.send(:run!)
-  end
-
-  def execute_on_remote_repo(cmds)
-    `exec 2> /dev/null; cd #{repository_url}; #{cmds}`
   end
 
   def last_line_of_output

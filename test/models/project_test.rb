@@ -151,18 +151,14 @@ describe Project do
     end
 
     it 'sets the git repository on disk' do
-      repository = mock()
-      repository.expects(:clone!).once
       project = Project.new(id: 9999, name: 'demo_apps', repository_url: repository_url)
-      project.stubs(:repository).returns(repository)
+      project.repository.expects(:clone!).once
       clone_repository(project)
     end
 
     it 'fails to clone the repository and logs the error' do
-      repository = mock()
-      repository.expects(:clone!).returns(false).once
       project = Project.new(id: 9999, name: 'demo_apps', repository_url: repository_url)
-      project.stubs(:repository).returns(repository)
+      project.repository.expects(:clone!).returns(false).once
       expected_message = "Could not clone git repository #{project.repository_url} for project #{project.name} - "
       Rails.logger.expects(:error).with(expected_message)
       clone_repository(project)
@@ -170,10 +166,8 @@ describe Project do
 
     it 'logs that it could not clone the repository when there is an unexpected error' do
       error = 'Unexpected error while cloning the repository'
-      repository = mock()
-      repository.expects(:clone!).raises(error)
       project = Project.new(id: 9999, name: 'demo_apps', repository_url: repository_url)
-      project.stubs(:repository).returns(repository)
+      project.repository.expects(:clone!).raises(error)
       expected_message = "Could not clone git repository #{project.repository_url} for project #{project.name} - #{error}"
       Rails.logger.expects(:error).with(expected_message)
       clone_repository(project)
