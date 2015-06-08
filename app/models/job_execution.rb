@@ -137,7 +137,7 @@ class JobExecution
 
   def commands(dir)
     commands = [
-      "export DEPLOY_URL=#{@job.deploy.full_url.shellescape}",
+      "export DEPLOY_URL=#{@job.full_url.shellescape}",
       "export DEPLOYER=#{@job.user.email.shellescape}",
       "export DEPLOYER_EMAIL=#{@job.user.email.shellescape}",
       "export DEPLOYER_NAME=#{@job.user.name.shellescape}",
