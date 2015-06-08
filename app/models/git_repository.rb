@@ -1,31 +1,43 @@
 class GitRepository
   attr_reader :repository_url, :repository_directory
+  attr_accessor :executor
 
   # The directory in which repositories should be cached.
   cattr_accessor(:cached_repos_dir, instance_writer: false) do
     Rails.application.config.samson.cached_repos_dir
   end
 
-  def initialize(repository_url:, repository_dir:)
+  def initialize(repository_url:, repository_dir:, executor: nil)
     @repository_url = repository_url
     @repository_directory = repository_dir
+    @executor = executor
   end
 
-  def setup!(executor, temp_dir, git_reference)
+  def setup!(temp_dir, git_reference)
     executor.output.write("# Beginning git repo setup\n")
-    return false unless clone!(executor: executor, from: repository_url, to: repo_cache_dir, mirror: true) unless locally_cached?
-    return false unless update!(executor: executor)
-    return false unless clone!(executor: executor, from: repo_cache_dir, to: temp_dir)
-    return false unless checkout!(executor: executor, pwd: temp_dir, git_reference: git_reference.shellescape)
+    return false unless setup_local_cache!
+    return false unless clone!(from: repo_cache_dir, to: temp_dir)
+    return false unless checkout!(git_reference, pwd: temp_dir)
     true
   end
 
-  def clone!(executor: TerminalExecutor.new(StringIO.new), from: repository_url, to: repo_cache_dir, mirror: false)
-    return executor.execute!("git -c core.askpass=true clone --mirror #{from} #{to}") if mirror
-    executor.execute!("git clone #{from} #{to}")
+  def setup_local_cache!
+    if locally_cached?
+      update!
+    else
+      clone!(from: repository_url, to: repo_cache_dir, mirror: true)
+    end
   end
 
-  def update!(executor: TerminalExecutor.new(StringIO.new))
+  def clone!(from: repository_url, to: repo_cache_dir, mirror: false)
+    if mirror
+      executor.execute!("git -c core.askpass=true clone --mirror #{from} #{to}")
+    else
+      executor.execute!("git clone #{from} #{to}")
+    end
+  end
+
+  def update!
     executor.execute!("cd #{repo_cache_dir}", 'git fetch -p')
   end
 
@@ -72,6 +84,8 @@ class GitRepository
   end
 
   def valid_url?
+    return false if repository_url.blank?
+
     cmd = "git -c core.askpass=true ls-remote -h #{repository_url}"
     valid, output = run_single_command(cmd, pwd: '.')
     Rails.logger.error("Repository Path '#{repository_url}' is invalid: #{output}") unless valid
@@ -85,10 +99,14 @@ class GitRepository
     $?.exitstatus == 1
   end
 
+  def executor
+    @executor ||= TerminalExecutor.new(StringIO.new)
+  end
+
   private
 
-  def checkout!(executor: TerminalExecutor.new(StringIO.new), pwd: repo_cache_dir, git_reference:)
-    executor.execute!("cd #{pwd}", "git checkout --quiet #{git_reference}")
+  def checkout!(git_reference, pwd: repo_cache_dir)
+    executor.execute!("cd #{pwd}", "git checkout --quiet #{git_reference.shellescape}")
   end
 
   def locally_cached?
@@ -96,10 +114,9 @@ class GitRepository
   end
 
   def run_single_command(command, pwd: repo_cache_dir)
-    output = StringIO.new
-    executor = TerminalExecutor.new(output)
-    success = executor.execute!("cd #{pwd}", command)
-    result = output.string.lines.map { |line| yield line if block_given? }.uniq.sort
+    tmp_executor = TerminalExecutor.new(StringIO.new)
+    success = tmp_executor.execute!("cd #{pwd}", command)
+    result = tmp_executor.output.string.lines.map { |line| yield line if block_given? }.uniq.sort
     [success, result]
   end
 end

@@ -5,13 +5,12 @@ describe GitRepository do
 
   let(:project) { Project.new(id: 99999, name: 'test_project', repository_url: repo_temp_dir) }
   let(:repository) { project.repository }
-  let(:executor) { TerminalExecutor.new(StringIO.new) }
   let(:repo_dir) { File.join(GitRepository.cached_repos_dir, project.repository_directory) }
 
   after do
     FileUtils.rm_rf(repo_temp_dir)
     FileUtils.rm_rf(repo_dir)
-    FileUtils.rm_rf(repository.repo_cache_dir)
+    repository.clean!
   end
 
   it 'checks that the project repository is pointing to the correct url and directory' do
@@ -54,9 +53,9 @@ describe GitRepository do
   it 'should switch to a different branch' do
     create_repo_with_an_additional_branch
     repository.clone!.must_equal(true)
-    repository.send(:checkout!, git_reference: 'master').must_equal(true)
+    repository.send(:checkout!, 'master').must_equal(true)
     Dir.chdir(repository.repo_cache_dir) { current_branch.must_equal('master') }
-    repository.send(:checkout!, git_reference: 'test_user/test_branch').must_equal(true)
+    repository.send(:checkout!, 'test_user/test_branch').must_equal(true)
     Dir.chdir(repository.repo_cache_dir) { current_branch.must_equal('test_user/test_branch') }
   end
 
@@ -132,13 +131,13 @@ describe GitRepository do
   describe "#tags" do
     it 'returns the tags repository' do
       create_repo_with_tags
-      repository.clone!(executor: TerminalExecutor.new(StringIO.new), mirror: true)
+      repository.clone!(mirror: true)
       repository.tags.to_a.must_equal %w(v1 )
     end
 
     it 'returns an empty set of tags' do
       create_repo_without_tags
-      repository.clone!(executor: TerminalExecutor.new(StringIO.new), mirror: true)
+      repository.clone!(mirror: true)
       repository.tags.must_equal []
     end
   end
@@ -146,7 +145,7 @@ describe GitRepository do
   describe "#branches" do
     it 'returns the branches of the repository' do
       create_repo_with_an_additional_branch
-      repository.clone!(executor: TerminalExecutor.new(StringIO.new), mirror: true)
+      repository.clone!(mirror: true)
       repository.branches.to_a.must_equal %w(master test_user/test_branch)
     end
   end
@@ -189,7 +188,7 @@ describe GitRepository do
     it 'creates a repository' do
       create_repo_with_an_additional_branch
       Dir.mktmpdir do |temp_dir|
-        assert repository.setup!(executor, temp_dir, 'test_user/test_branch')
+        assert repository.setup!(temp_dir, 'test_user/test_branch')
         Dir.chdir(temp_dir) { current_branch.must_equal('test_user/test_branch') }
       end
     end
@@ -197,8 +196,8 @@ describe GitRepository do
     it 'updates an existing repository to a branch' do
       create_repo_with_an_additional_branch
       Dir.mktmpdir do |temp_dir|
-        repository.send(:clone!, executor: executor, mirror: true)
-        assert repository.setup!(executor, temp_dir, 'test_user/test_branch')
+        repository.send(:clone!, mirror: true)
+        assert repository.setup!(temp_dir, 'test_user/test_branch')
         Dir.chdir(temp_dir) { current_branch.must_equal('test_user/test_branch') }
       end
     end
@@ -208,7 +207,7 @@ describe GitRepository do
     it 'removes a repository' do
       create_repo_without_tags
       Dir.mktmpdir do |temp_dir|
-        assert repository.setup!(executor, temp_dir, 'master')
+        assert repository.setup!(temp_dir, 'master')
         Dir.exist?(repository.repo_cache_dir).must_equal true
         repository.clean!
         Dir.exist?(repository.repo_cache_dir).must_equal false

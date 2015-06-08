@@ -23,6 +23,7 @@ class JobExecution
     @job, @reference = job, reference
     @stage = @job.deploy.try(:stage)
     @repository = @job.project.repository
+    @repository.executor = @executor
   end
 
   def start!
@@ -121,7 +122,7 @@ class JobExecution
 
   def setup!(dir)
     locked = lock_project do
-      return false unless @repository.setup!(@executor, dir, @reference)
+      return false unless @repository.setup!(dir, @reference)
       commit = @repository.commit_from_ref(@reference)
       tag = @repository.tag_from_ref(@reference)
       @job.update_git_references!(commit: commit, tag: tag)
