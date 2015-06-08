@@ -38,6 +38,7 @@ RUN bundle install --without test sqlite postgres --quiet --local --jobs 4 || bu
 
 # Code
 ADD config /app/config
+ADD config/database.docker.yml /app/config/database.yml
 ADD app /app/app
 ADD lib /app/lib
 
