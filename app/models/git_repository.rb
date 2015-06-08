@@ -18,19 +18,26 @@ class GitRepository
 
   def setup!(temp_dir, git_reference)
     executor.output.write("# Beginning git repo setup\n")
-    if locally_cached?
-      return false unless update!
-    else
-      return false unless clone!(from: repository_url, to: repo_cache_dir, mirror: true)
-    end
+    return false unless setup_local_cache!
     return false unless clone!(from: repo_cache_dir, to: temp_dir)
     return false unless checkout!(git_reference, pwd: temp_dir)
     true
   end
 
+  def setup_local_cache!
+    if locally_cached?
+      update!
+    else
+      clone!(from: repository_url, to: repo_cache_dir, mirror: true)
+    end
+  end
+
   def clone!(from: repository_url, to: repo_cache_dir, mirror: false)
-    return executor.execute!("git -c core.askpass=true clone --mirror #{from} #{to}") if mirror
-    executor.execute!("git clone #{from} #{to}")
+    if mirror
+      executor.execute!("git -c core.askpass=true clone --mirror #{from} #{to}")
+    else
+      executor.execute!("git clone #{from} #{to}")
+    end
   end
 
   def update!
