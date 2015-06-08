@@ -4,9 +4,9 @@ class EnvironmentVariable < ActiveRecord::Base
   validates :name, presence: true
   validates :scope_type, inclusion: ["Environment", "DeployGroup", nil]
 
-  def self.env(stage, deploy_group)
-    variables = stage.environment_variables + stage.environment_variable_groups.flat_map(&:environment_variables)
-    variables.sort_by! { |ev| [ev.parent_type == "Stage" ? 1 : 0, ev.send(:priority)] }
+  def self.env(project, deploy_group)
+    variables = project.environment_variables + project.environment_variable_groups.flat_map(&:environment_variables)
+    variables.sort_by! { |ev| [ev.parent_type == "Project" ? 1 : 0, ev.send(:priority)] } # TODO move into priority
     env = variables.each_with_object({}) do |ev, all|
       match = (
         !ev.scope_id || # for all

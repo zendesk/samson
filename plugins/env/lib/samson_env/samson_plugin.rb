@@ -4,22 +4,21 @@ module SamsonEnv
 
   class << self
     def write_env_files(dir, stage)
-      return unless groups = env_groups(stage)
+      return unless groups = env_groups(stage.project, stage.deploy_groups.to_a)
       write_manifest_file("#{dir}/ENV.json", groups) ||
         write_dotenv_file("#{dir}/.env", groups)
     end
 
-    def env_groups(stage)
-      deploy_groups = stage.deploy_groups.to_a
+    def env_groups(project, deploy_groups)
       groups = if deploy_groups.any?
         deploy_groups.map do |deploy_group|
           [
             ".#{deploy_group.name.parameterize}",
-            EnvironmentVariable.env(stage, deploy_group)
+            EnvironmentVariable.env(project, deploy_group)
           ]
         end
       else
-        [["", EnvironmentVariable.env(stage, nil)]]
+        [["", EnvironmentVariable.env(project, nil)]]
       end
       return groups if groups.any? { |_, data| data.present? }
     end
@@ -71,10 +70,10 @@ module SamsonEnv
   end
 end
 
-Samson::Hooks.view :stage_form, "samson_env/fields"
+Samson::Hooks.view :project_form, "samson_env/fields"
 Samson::Hooks.view :admin_menu, "samson_env/admin_menu"
 
-Samson::Hooks.callback :stage_permitted_params do
+Samson::Hooks.callback :project_permitted_params do
   AcceptsEnvironmentVariables::ASSIGNABLE_ATTRIBUTES.merge(environment_variable_group_ids: [])
 end
 

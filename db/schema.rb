@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20150603211116) do
+ActiveRecord::Schema.define(version: 20150608214904) do
 
   create_table "build_statuses", force: :cascade do |t|
     t.integer  "build_id",   limit: 4,                         null: false
@@ -189,6 +189,14 @@ ActiveRecord::Schema.define(version: 20150603211116) do
 
   add_index "new_relic_applications", ["stage_id", "name"], name: "index_new_relic_applications_on_stage_id_and_name", unique: true, length: {"stage_id"=>nil, "name"=>191}, using: :btree
 
+  create_table "project_environment_variable_groups", force: :cascade do |t|
+    t.integer "project_id",                    limit: 4, null: false
+    t.integer "environment_variable_group_id", limit: 4, null: false
+  end
+
+  add_index "project_environment_variable_groups", ["environment_variable_group_id"], name: "project_environment_variable_groups_group_id", using: :btree
+  add_index "project_environment_variable_groups", ["project_id", "environment_variable_group_id"], name: "project_environment_variable_groups_unique_group_id", unique: true, using: :btree
+
   create_table "projects", force: :cascade do |t|
     t.string   "name",           limit: 255,   null: false
     t.string   "repository_url", limit: 255,   null: false
@@ -236,14 +244,6 @@ ActiveRecord::Schema.define(version: 20150603211116) do
     t.datetime "created_at"
     t.datetime "updated_at"
   end
-
-  create_table "stage_environment_variable_groups", force: :cascade do |t|
-    t.integer "stage_id",                      limit: 4, null: false
-    t.integer "environment_variable_group_id", limit: 4, null: false
-  end
-
-  add_index "stage_environment_variable_groups", ["environment_variable_group_id"], name: "stage_environment_variable_groups_group_id", using: :btree
-  add_index "stage_environment_variable_groups", ["stage_id", "environment_variable_group_id"], name: "stage_environment_variable_groups_unique_group_id", unique: true, using: :btree
 
   create_table "stages", force: :cascade do |t|
     t.string   "name",                                         limit: 255,                   null: false

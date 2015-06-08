@@ -47,6 +47,8 @@
       </div>
     </div>
 
+    <%= Samson::Hooks.render_views(:project_form, self, form: form) %>
+
     <% unless project.persisted? %>
       <%= form.fields_for :stages do |stage_fields| %>
         <%= render 'stages/fields', form: stage_fields %>

@@ -76,13 +76,15 @@ class ProjectsController < ApplicationController
 
   def project_params
     params.require(:project).permit(
-      :name,
-      :repository_url,
-      :description,
-      :owner,
-      :permalink,
-      :release_branch,
-      stages_attributes: stage_permitted_params
+      *[
+        :name,
+        :repository_url,
+        :description,
+        :owner,
+        :permalink,
+        :release_branch,
+        stages_attributes: stage_permitted_params
+      ] + Samson::Hooks.fire(:project_permitted_params)
     )
   end
 
