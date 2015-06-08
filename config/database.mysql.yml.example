@@ -1,14 +1,19 @@
+<%
+  mysql    = URI(ENV['MYSQL_URL'] || 'mysql://root@127.0.0.1:3306/samson_development')
+  database = mysql.path.gsub(%r(^/), "")
+%>
+
 # Mysql
 common: &common
   adapter: mysql2
-  port: 3306
-  username: root
-  password:
-  host: 127.0.0.1
+  port: <%= mysql.port %>
+  username: <%= mysql.user %>
+  password: <%= mysql.password %>
+  host: <%= mysql.host %>
 
 development:
   <<: *common
-  database: samson_development
+  database: <%= database %>
 
 # Warning: The database defined as "test" will be erased and
 # re-generated from your development database when you run "rake".
