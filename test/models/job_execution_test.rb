@@ -124,6 +124,14 @@ describe JobExecution do
     lines.must_include "TAG=v1"
   end
 
+  it 'works without a deploy' do
+    job_without_deploy = project.jobs.build(command: 'cat foo', user: user, project: project)
+    execution = JobExecution.new('master', job_without_deploy)
+    execution.send(:run!)
+    # if you like, pretend there's a wont_raise assertion here
+    # this is to make sure we don't add a hard dependency on having a deploy
+  end
+
   it 'exports deploy_group information if deploy groups present' do
     job.update(command: 'env | sort')
     execute_job

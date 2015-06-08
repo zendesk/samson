@@ -86,6 +86,10 @@ class Job < ActiveRecord::Base
     update_columns(commit: commit, tag: tag)
   end
 
+  def full_url
+    deploy.try(:full_url) || AppRoutes.url_helpers.project_job_url(project, self)
+  end
+
   private
 
   def validate_globally_unlocked
