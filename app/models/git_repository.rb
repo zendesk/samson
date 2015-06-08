@@ -7,10 +7,7 @@ class GitRepository
     Rails.application.config.samson.cached_repos_dir
   end
 
-  def initialize(repository_url: nil, repository_dir: nil, executor: nil)
-    raise ArgumentError.new("GitRepository.new: repository_url is required") if repository_url.blank?
-    raise ArgumentError.new("GitRepository.new: repository_dir is required") if repository_dir.blank?
-
+  def initialize(repository_url:, repository_dir:, executor: nil)
     @repository_url = repository_url
     @repository_directory = repository_dir
     @executor = executor
