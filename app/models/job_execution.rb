@@ -13,7 +13,7 @@ class JobExecution
   cattr_reader(:registry, instance_accessor: false) { {} }
   private_class_method :registry
 
-  attr_reader :output, :job, :viewers, :stage
+  attr_reader :output, :job, :viewers, :stage, :executor
 
   def initialize(reference, job)
     @output = OutputBuffer.new
@@ -26,7 +26,7 @@ class JobExecution
     @repository.executor = @executor
   end
 
-  def start!
+  def start!(&block)
     ActiveRecord::Base.clear_active_connections!
 
     @thread = Thread.new { run! }
@@ -63,11 +63,16 @@ class JobExecution
     @job.error! if @job.active?
   end
 
-  def run!
+  def run!(&block)
     @job.run!
 
     success = Dir.mktmpdir do |dir|
-      execute!(dir)
+      if block_given?
+        Rails.logger.info "Running job #{job.id} in temp dir #{dir}"
+        block.call(self, dir)
+      else
+        execute!(dir)
+      end
     end
 
     if success
@@ -161,10 +166,11 @@ class JobExecution
       registry[id.to_i]
     end
 
-    def start_job(reference, job)
+    def start_job(reference, job, &block)
       new(reference, job).tap do |job_execution|
         if enabled
-          registry[job.id] = job_execution.tap(&:start!)
+          registry[job.id] = job_execution
+          job_execution.start!(&block)
           ActiveSupport::Notifications.instrument "job.threads", thread_count: registry.length
         end
       end
