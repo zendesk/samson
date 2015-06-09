@@ -13,7 +13,7 @@
   <tr>
     <th>Name</th>
     <th>Variables</th>
-    <th>Stages</th>
+    <th>Projects</th>
   </tr>
   <% @groups.each do |group| %>
     <tr>
@@ -27,16 +27,13 @@
       </td>
       <td>
         <ul>
-          <% group.stages.sort_by { |stage| [stage.project.name, stage.name] }.each do |stage| %>
-            <li>
-              <%= link_to stage.name, [stage.project, stage] %>
-              (<%= link_to stage.project.name, stage.project %>)
-            </li>
+          <% group.projects.sort_by(&:name).each do |project| %>
+            <li><%= link_to project.name, project %></li>
           <% end %>
         </ul>
       </td>
       <td>
-        <% if group.stages.any? %>
+        <% if group.projects.any? %>
           <%= link_to "Delete", "#", data: {confirm: "Cannot be deleted when still in use."} %>
         <% else %>
           <%= link_to "Delete", [:admin, group], data: {method: :delete, confirm: "Delete #{group.name} ?"} %>

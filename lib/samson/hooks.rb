@@ -2,6 +2,7 @@ module Samson
   module Hooks
     VIEW_HOOKS = [
       :stage_form,
+      :project_form,
       :deploys_header,
       :deploy_view,
       :admin_menu,
@@ -11,6 +12,7 @@ module Samson
     EVENT_HOOKS = [
       :stage_clone,
       :stage_permitted_params,
+      :project_permitted_params,
       :before_deploy,
       :after_deploy_setup,
       :after_deploy,

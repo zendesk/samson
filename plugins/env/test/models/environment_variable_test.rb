@@ -1,6 +1,7 @@
 require_relative "../test_helper"
 
 describe EnvironmentVariable do
+  let(:project) { stage.project }
   let(:stage) { stages(:test_staging) }
   let(:deploy_group) { stage.deploy_groups.first }
   let(:environment) { deploy_group.environment }
@@ -25,55 +26,55 @@ describe EnvironmentVariable do
     end
 
     it "is empty for nothing" do
-      EnvironmentVariable.env(Stage.new, nil).must_equal({})
-      EnvironmentVariable.env(Stage.new, 123).must_equal({})
+      EnvironmentVariable.env(Project.new, nil).must_equal({})
+      EnvironmentVariable.env(Project.new, 123).must_equal({})
     end
 
     describe "with an assigned group and variables" do
       before do
-        stage.environment_variable_groups = EnvironmentVariableGroup.all
-        stage.environment_variables.create!(name: "STAGE", value: "DEPLOY", scope: deploy_group)
-        stage.environment_variables.create!(name: "STAGE", value: "STAGE")
+        project.environment_variable_groups = EnvironmentVariableGroup.all
+        project.environment_variables.create!(name: "PROJECT", value: "DEPLOY", scope: deploy_group)
+        project.environment_variables.create!(name: "PROJECT", value: "PROJECT")
       end
 
       it "includes only common for common groups" do
-        EnvironmentVariable.env(stage, nil).must_equal("X"=>"Y", "Y" => "Z", "STAGE" => "STAGE")
+        EnvironmentVariable.env(project, nil).must_equal("X"=>"Y", "Y" => "Z", "PROJECT" => "PROJECT")
       end
 
       it "includes common for scoped groups" do
-        EnvironmentVariable.env(stage, deploy_group).must_equal("STAGE"=>"DEPLOY", "X"=>"Y", "Z"=>"A", "Y"=>"Z")
+        EnvironmentVariable.env(project, deploy_group).must_equal("PROJECT"=>"DEPLOY", "X"=>"Y", "Z"=>"A", "Y"=>"Z")
       end
 
-      it "overwrites environment groups with stage variables" do
-        stage.environment_variables.create!(name: "X", value: "OVER")
-        EnvironmentVariable.env(stage, nil).must_equal("X"=>"OVER", "Y" => "Z", "STAGE" => "STAGE")
+      it "overwrites environment groups with project variables" do
+        project.environment_variables.create!(name: "X", value: "OVER")
+        EnvironmentVariable.env(project, nil).must_equal("X"=>"OVER", "Y" => "Z", "PROJECT" => "PROJECT")
       end
 
       it "keeps correct order for different priorities" do
-        stage.environment_variables.create!(name: "STAGE", value: "ENV", scope: environment)
+        project.environment_variables.create!(name: "PROJECT", value: "ENV", scope: environment)
 
-        stage.environment_variables.create!(name: "X", value: "ALL")
-        stage.environment_variables.create!(name: "X", value: "ENV", scope: environment)
-        stage.environment_variables.create!(name: "X", value: "GROUP", scope: deploy_group)
+        project.environment_variables.create!(name: "X", value: "ALL")
+        project.environment_variables.create!(name: "X", value: "ENV", scope: environment)
+        project.environment_variables.create!(name: "X", value: "GROUP", scope: deploy_group)
 
-        stage.environment_variables.create!(name: "Y", value: "ENV", scope: environment)
-        stage.environment_variables.create!(name: "Y", value: "ALL")
+        project.environment_variables.create!(name: "Y", value: "ENV", scope: environment)
+        project.environment_variables.create!(name: "Y", value: "ALL")
 
-        EnvironmentVariable.env(stage, deploy_group).must_equal("X"=>"GROUP", "Y" => "ENV", "STAGE" => "DEPLOY", "Z" => "A")
+        EnvironmentVariable.env(project, deploy_group).must_equal("X"=>"GROUP", "Y" => "ENV", "PROJECT" => "DEPLOY", "Z" => "A")
       end
 
       it "produces few queries when doing multiple versions as the env builder does" do
         groups = DeployGroup.all.to_a
         assert_sql_queries 2 do
-          EnvironmentVariable.env(stage, nil)
-          groups.each { |deploy_group| EnvironmentVariable.env(stage, deploy_group) }
+          EnvironmentVariable.env(project, nil)
+          groups.each { |deploy_group| EnvironmentVariable.env(project, deploy_group) }
         end
       end
 
       it "can resolve references" do
-        stage.environment_variables.last.update_column(:value, "STAGE--$POD_ID--$POD_ID_NOT--${POD_ID}")
-        stage.environment_variables.create!(name: "POD_ID", value: "1")
-        EnvironmentVariable.env(stage, nil).must_equal("STAGE"=>"STAGE--1--$POD_ID_NOT--1", "POD_ID"=>"1", "X"=>"Y", "Y"=>"Z")
+        project.environment_variables.last.update_column(:value, "PROJECT--$POD_ID--$POD_ID_NOT--${POD_ID}")
+        project.environment_variables.create!(name: "POD_ID", value: "1")
+        EnvironmentVariable.env(project, nil).must_equal("PROJECT"=>"PROJECT--1--$POD_ID_NOT--1", "POD_ID"=>"1", "X"=>"Y", "Y"=>"Z")
       end
     end
   end
@@ -87,7 +88,7 @@ describe EnvironmentVariable do
     end
 
     it "is invalid with wrong type" do
-      environment_variable.scope_type_and_id = "Stage-#{stage.id}"
+      environment_variable.scope_type_and_id = "Stage-#{project.id}"
       refute_valid environment_variable
     end
   end

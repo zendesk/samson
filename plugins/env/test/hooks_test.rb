@@ -3,13 +3,14 @@ require_relative 'test_helper'
 describe "env hooks" do
   let(:deploy) { deploys(:succeeded_test) }
   let(:stage) { deploy.stage }
+  let(:project) { stage.project }
 
   describe :after_deploy_setup do
     around { |test| Dir.mktmpdir { |dir| Dir.chdir(dir) { test.call } } }
 
     before do
-      stage.environment_variables.create!(name: "HELLO", value: "world")
-      stage.environment_variables.create!(name: "WORLD", value: "hello")
+      project.environment_variables.create!(name: "HELLO", value: "world")
+      project.environment_variables.create!(name: "WORLD", value: "hello")
     end
 
     describe ".env" do
@@ -82,7 +83,7 @@ describe "env hooks" do
           },
           name: "G1"
         )
-        stage.environment_variable_groups << env_group
+        project.environment_variable_groups << env_group
 
         fire
 

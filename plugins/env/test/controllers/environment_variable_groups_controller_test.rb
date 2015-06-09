@@ -2,8 +2,9 @@ require_relative "../test_helper"
 
 describe Admin::EnvironmentVariableGroupsController do
   let(:stage) { stages(:test_staging) }
+  let(:project) { stage.project }
   let(:deploy_group) { stage.deploy_groups.first }
-  let(:env_group) do
+  let!(:env_group) do
     EnvironmentVariableGroup.create!(
       name: "G1",
       environment_variables_attributes: {
@@ -34,8 +35,8 @@ describe Admin::EnvironmentVariableGroupsController do
         assert_response :success
       end
 
-      it "renders for stages" do
-        get :preview, stage_id: stage.id
+      it "renders for projects" do
+        get :preview, project_id: project.id
         assert_response :success
       end
     end
@@ -60,7 +61,7 @@ describe Admin::EnvironmentVariableGroupsController do
           assert_difference "EnvironmentVariableGroup.count", +1 do
             post :create, environment_variable_group: {
               environment_variables_attributes: {"0" => {name: "N1", value: "V1"}},
-              name: "G1"
+              name: "G2"
             }
           end
         end
