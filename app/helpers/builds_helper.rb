@@ -12,7 +12,7 @@ module BuildsHelper
     "#{value.first(7)}..." if value
   end
 
-  def git_ref_and_sha_for build, make_link: fase
+  def git_ref_and_sha_for build, make_link: false
     sha_text = short_sha(build.git_sha)
     sha_text = link_to(sha_text, build.commit_url) if make_link
 

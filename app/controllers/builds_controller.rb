@@ -1,7 +1,7 @@
 class BuildsController < ApplicationController
   before_action :authorize_deployer!
   before_action :find_project
-  before_action :find_build, only: [:show, :build_docker_image]
+  before_action :find_build, only: [:show, :build_docker_image, :edit, :update]
 
   def index
     @builds = @project.builds.order('id desc').page(params[:page])
@@ -41,6 +41,27 @@ class BuildsController < ApplicationController
   def show
   end
 
+  def edit
+  end
+
+  def update
+    success = @build.update_attributes(edit_build_params)
+
+    respond_to do |format|
+      format.html do
+        if success
+          redirect_to [@project, @build]
+        else
+          render :edit
+        end
+      end
+
+      format.json do
+        render json: {}, status: success ? 200 : 422
+      end
+    end
+  end
+
   def build_docker_image
     start_docker_build
 
@@ -59,8 +80,6 @@ class BuildsController < ApplicationController
 
   def find_project
     @project = Project.find_by_param!(params[:project_id])
-  rescue ActiveRecord::RecordNotFound
-    redirect_to root_path
   end
 
   def find_build
@@ -69,6 +88,10 @@ class BuildsController < ApplicationController
 
   def new_build_params
     params.require(:build).permit(:git_ref, :label, :description)
+  end
+
+  def edit_build_params
+    params.require(:build).permit(:label, :description)
   end
 
   def start_docker_build
