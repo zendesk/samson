@@ -37,4 +37,6 @@ Samson::Application.configure do
 
   # config.lograge.enabled = true
   # config.lograge.formatter = Lograge::Formatters::Logstash.new
+
+  BetterErrors::Middleware.allow_ip! ENV['TRUSTED_IP'] if ENV['TRUSTED_IP']
 end
