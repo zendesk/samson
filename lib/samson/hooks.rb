@@ -16,6 +16,7 @@ module Samson
       :before_deploy,
       :after_deploy_setup,
       :after_deploy,
+      :after_docker_build,
     ].freeze
 
     INTERNAL_HOOKS = [ :model_defined ]
