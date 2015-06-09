@@ -6,6 +6,12 @@ Samson::Application.routes.draw do
       member { post :execute }
     end
 
+    resources :builds, only: [:show, :index, :new, :create] do
+      member do
+        post :build_docker_image
+      end
+    end
+
     resources :deploys, only: [:index, :show, :destroy] do
       collection do
         get :active

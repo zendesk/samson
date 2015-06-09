@@ -27,16 +27,22 @@ ActiveRecord::Schema.define(version: 20150608214904) do
   add_index "build_statuses", ["build_id"], name: "index_build_statuses_on_build_id", using: :btree
 
   create_table "builds", force: :cascade do |t|
-    t.integer  "project_id",    limit: 4,   null: false
-    t.string   "git_sha",       limit: 128
-    t.string   "git_ref",       limit: 255
-    t.string   "container_sha", limit: 128
-    t.string   "container_ref", limit: 255
+    t.integer  "project_id",          limit: 4,    null: false
+    t.string   "git_sha",             limit: 128
+    t.string   "git_ref",             limit: 255
+    t.string   "docker_sha",          limit: 128
+    t.string   "docker_ref",          limit: 255
+    t.string   "docker_image_url",    limit: 255
+    t.integer  "docker_build_job_id"
+    t.string   "label",               limit: 255
+    t.string   "description",         limit: 1024
+    t.integer  "created_by"
     t.datetime "created_at"
     t.datetime "updated_at"
   end
 
-  add_index "builds", ["container_sha"], name: "index_builds_on_container_sha", using: :btree
+  add_index "builds", ["created_by"], name: "index_builds_on_created_by", using: :btree
+  add_index "builds", ["docker_sha"], name: "index_builds_on_docker_sha", using: :btree
   add_index "builds", ["git_sha"], name: "index_builds_on_git_sha", unique: true, using: :btree
   add_index "builds", ["project_id"], name: "index_builds_on_project_id", using: :btree
 

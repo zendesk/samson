@@ -83,6 +83,8 @@ module ApplicationHelper
       when Macro then
         [item.name, project_macro_path(item.project, item)]
       when String then [item, nil]
+      when Build then [item.nice_name, project_build_path(item)]
+      when Array then item
       else
         raise "Unsupported breadcrumb for #{item}"
       end
