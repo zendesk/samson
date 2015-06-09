@@ -34,6 +34,10 @@ class Job < ActiveRecord::Base
     self.user == user
   end
 
+  def can_be_stopped_by?(user)
+    started_by?(user) || user.is_admin?
+  end
+
   def commands
     command.split(/\r?\n|\r/)
   end

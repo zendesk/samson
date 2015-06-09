@@ -11,7 +11,7 @@ class Deploy < ActiveRecord::Base
   validates_presence_of :reference
   validate :validate_stage_is_deployable, on: :create
 
-  delegate :started_by?, :stop!, :status, :user, :output, to: :job
+  delegate :started_by?, :can_be_stopped_by?, :stop!, :status, :user, :output, to: :job
   delegate :active?, :pending?, :running?, :cancelling?, :cancelled?, :succeeded?, to: :job
   delegate :finished?, :errored?, :failed?, to: :job
   delegate :production?, :project, to: :stage
@@ -92,10 +92,6 @@ class Deploy < ActiveRecord::Base
 
   def waiting_for_buddy?
     pending? && stage.production?
-  end
-
-  def can_be_stopped_by?(user)
-    started_by?(user) || user.is_admin?
   end
 
   def self.active
