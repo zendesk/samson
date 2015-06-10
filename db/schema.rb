@@ -43,7 +43,7 @@ ActiveRecord::Schema.define(version: 20150608214904) do
 
   add_index "builds", ["created_by"], name: "index_builds_on_created_by", using: :btree
   add_index "builds", ["docker_sha"], name: "index_builds_on_docker_sha", using: :btree
-  add_index "builds", ["git_sha"], name: "index_builds_on_git_sha", unique: true, using: :btree
+  add_index "builds", ["git_sha"], name: "index_builds_on_git_sha", using: :btree
   add_index "builds", ["project_id"], name: "index_builds_on_project_id", using: :btree
 
   create_table "commands", force: :cascade do |t|
