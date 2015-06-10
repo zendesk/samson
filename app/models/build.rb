@@ -38,6 +38,16 @@ class Build < ActiveRecord::Base
     end
   end
 
+  def create_docker_job
+    create_docker_build_job(
+      project: project,
+      user_id: created_by || NullUser.new.id,
+      command: '# Build docker image',
+      commit:  git_sha,
+      tag:     git_ref
+    )
+  end
+
   private
 
   def validate_git_reference
