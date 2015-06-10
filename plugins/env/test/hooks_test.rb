@@ -52,7 +52,15 @@ describe "env hooks" do
 
     describe "with ENV.json" do
       before do
-        File.write("ENV.json", JSON.dump("env" => {"HELLO" => 1, "OTHER" => 1, "MORE" => 1}, "other" => true))
+        File.write("ENV.json", JSON.dump("other" => true))
+        File.write("manifest.json", JSON.dump(
+          "settings" => {
+            "HELLO" => {},
+            "OTHER" => {},
+            "MORE" => {"required" => true},
+            "OPTIONAL" => {"required" => false}
+          }
+        ))
       end
 
       def fire
@@ -61,7 +69,7 @@ describe "env hooks" do
 
       it "does not modify when no variables were specified" do
         EnvironmentVariable.delete_all
-        File.read("ENV.json").must_equal "{\"env\":{\"HELLO\":1,\"OTHER\":1,\"MORE\":1},\"other\":true}"
+        File.read("ENV.json").must_equal "{\"other\":true}"
       end
 
       it "fails when missing required keys" do
@@ -79,7 +87,8 @@ describe "env hooks" do
             "1" => {name: "OTHER", value: "A"},
             "2" => {name: "MORE", value: "A"}, # overwritten by specific setting
             "3" => {name: "MORE", value: "B", scope: deploy_groups(:pod100)},
-            "4" => {name: "MORE", value: "C", scope: deploy_groups(:pod1)}
+            "4" => {name: "MORE", value: "C", scope: deploy_groups(:pod1)},
+            "5" => {name: "OPTIONAL", value: "A"},
           },
           name: "G1"
         )
@@ -90,20 +99,22 @@ describe "env hooks" do
         refute File.exist?("ENV.json")
 
         File.read("ENV.pod-100.json").must_equal "{
+  \"other\": true,
   \"env\": {
     \"HELLO\": \"world\",
     \"OTHER\": \"A\",
-    \"MORE\": \"B\"
-  },
-  \"other\": true
+    \"MORE\": \"B\",
+    \"OPTIONAL\": \"A\"
+  }
 }"
         File.read("ENV.pod1.json").must_equal "{
+  \"other\": true,
   \"env\": {
     \"HELLO\": \"world\",
     \"OTHER\": \"A\",
-    \"MORE\": \"C\"
-  },
-  \"other\": true
+    \"MORE\": \"C\",
+    \"OPTIONAL\": \"A\"
+  }
 }"
       end
     end
