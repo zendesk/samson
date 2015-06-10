@@ -8,7 +8,7 @@ class CreateBuilds < ActiveRecord::Migration
       t.string :container_ref
       t.timestamps
 
-      t.index :git_sha, unique: true
+      t.index :git_sha
     end
   end
 end
