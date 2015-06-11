@@ -21,7 +21,7 @@ class DockerBuilderService
       end
     end
 
-    job_execution.subscribe do
+    job_execution.on_complete do
       send_after_notifications
     end
   end
@@ -79,6 +79,6 @@ class DockerBuilderService
 
   def send_after_notifications
     Samson::Hooks.fire(:after_docker_build, build)
-    SseRailsEngine.send_event('builds', { type: type, build: BuildSerializer.new(build, root: nil) })
+    SseRailsEngine.send_event('builds', { type: 'finish', build: BuildSerializer.new(build, root: nil) })
   end
 end
