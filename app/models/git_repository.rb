@@ -14,6 +14,8 @@ class GitRepository
   end
 
   def setup!(temp_dir, git_reference)
+    raise ArgumentError.new("git_reference is required") if git_reference.blank?
+
     executor.output.write("# Beginning git repo setup\n")
     return false unless setup_local_cache!
     return false unless clone!(from: repo_cache_dir, to: temp_dir)
