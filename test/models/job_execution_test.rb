@@ -191,6 +191,25 @@ describe JobExecution do
     end
   end
 
+  describe "#start!" do
+    let(:execution) { JobExecution.new('master', job) }
+
+    it "runs a job" do
+      execution.start!
+      execution.wait!
+      execution.output.to_s.must_include "cat foo"
+      job.reload.output.must_include "cat foo"
+    end
+
+    it "records exceptions" do
+      job.expects(:run!).raises("Oh boy")
+      execution.start!
+      execution.wait!
+      execution.output.to_s.must_include "JobExecution failed: Oh boy"
+      job.reload.output.must_include "JobExecution failed: Oh boy"
+    end
+  end
+
   def execute_job(branch = 'master')
     execution = JobExecution.new(branch, job)
     execution.send(:run!)

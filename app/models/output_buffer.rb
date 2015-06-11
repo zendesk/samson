@@ -37,6 +37,7 @@ class OutputBuffer
   end
 
   def close
+    return if closed?
     @closed = true
     write(nil, :close)
   end
