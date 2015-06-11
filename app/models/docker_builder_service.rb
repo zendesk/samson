@@ -30,33 +30,34 @@ class DockerBuilderService
 
     File.open("#{tmp_dir}/REVISION", 'w') { |f| f.write build.git_sha }
 
-    execution.output.write("### Running Docker build")
+    execution.output.write("### Running Docker build\n")
 
     @image = Docker::Image.build_from_dir(tmp_dir) do |output_chunk|
       execution.output.write(parse_output_chunk(output_chunk))
     end
 
-    build.docker_sha = @image.json['Id']
-    build.docker_ref = image_name || build.label || 'latest'
-    build.docker_image_url = "#{docker_registry_url}/#{build.project.docker_repo_name}@sha256:#{build.docker_sha}"
+    build.update_docker_image_attributes(digest: @image.json['Id'], tag: image_name)
     build.save!
 
     @image.tag(repo: build.project.docker_repo_name, tag: build.docker_ref, force: true)
 
     if push
-      # TODO: authenticate with the Docker registry
-      execution.output.write "### Pushing Docker image to #{build.project.docker_repo_name}/#{build.docker_ref}"
+      execution.output.write "### Pushing Docker image to #{image_name_with_tag}\n"
       @image.push do |output_chunk|
         execution.output.write(parse_output_chunk(output_chunk))
       end
     end
 
     @image
+  rescue Docker::Error::DockerError => e
+    # If a docker error is raised, consider that a "failed" job instead of an "errored" job
+    message = "Docker build failed: #{e.message}"
+    @output.write(message + "\n")
+    nil
   end
 
-  def docker_registry_url
-    # TODO: update this with an ENV var
-    'docker-registry.zende.sk'
+  def image_name_with_tag
+    "#{Rails.application.config.samson.docker.registry}/#{build.project.docker_repo_name}:#{build.docker_ref}"
   end
 
   def parse_output_chunk(chunk)
