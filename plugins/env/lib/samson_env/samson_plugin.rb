@@ -5,7 +5,7 @@ module SamsonEnv
   class << self
     def write_env_files(dir, stage)
       return unless groups = env_groups(stage.project, stage.deploy_groups.to_a)
-      write_manifest_file("#{dir}/ENV.json", groups) ||
+      write_env_json_file("#{dir}/ENV.json", "#{dir}/manifest.json", groups) ||
         write_dotenv_file("#{dir}/.env", groups)
     end
 
@@ -31,20 +31,26 @@ module SamsonEnv
       File.unlink(base_file) if File.exist?(base_file)
       groups.each do |suffix, data|
         generated_file = "#{base_file}#{suffix}"
-        data = extract_required_keys(generated_file, required_keys, data) if required_keys
+        data = extract_keys(generated_file, required_keys, [], data) if required_keys
         File.write(generated_file, generate_dotenv(data))
       end
     end
 
     # writes a proprietary .json file with a env hash for each deploy group
-    def write_manifest_file(manifest, groups)
-      return unless File.exist?(manifest)
-      json = JSON.load(File.read(manifest))
-      File.unlink(manifest)
-      required_keys = json.fetch("env").keys
+    def write_env_json_file(env_json, manifest_json, groups)
+      return unless File.exist?(env_json)
+      json = JSON.load(File.read(env_json))
+      File.unlink(env_json)
+
+      # manifest.json includes required keys
+      settings = JSON.load(File.read(manifest_json)).fetch("settings")
+      required_keys, optional_keys = settings.keys.partition do |key|
+        settings[key].fetch("required", true)
+      end
+
       groups.each do |suffix, data|
-        generated_file = manifest.sub(".json", "#{suffix}.json")
-        data = extract_required_keys(generated_file, required_keys, data)
+        generated_file = env_json.sub(".json", "#{suffix}.json")
+        data = extract_keys(generated_file, required_keys, optional_keys, data)
         File.write(generated_file, JSON.pretty_generate(json.merge("env" => data)))
       end
     end
@@ -58,14 +64,15 @@ module SamsonEnv
       data.map { |k, v| "#{k}=#{v.inspect.gsub("$", "\\$")}" }.join("\n") << "\n"
     end
 
-    def extract_required_keys(file, required, data)
+    def extract_keys(file, required, optional, data)
+      all = required + optional
       file = File.basename(file)
       keys = data.keys
       missing = required - keys
       raise KeyError, "Missing env keys #{missing.join(", ")} for #{file}" if missing.any?
-      ignored = keys - required
+      ignored = keys - all
       Rails.logger.warn("Ignoring env keys #{ignored.join(", ")} for #{file}") if ignored.any?
-      data.slice(*required)
+      data.slice(*all)
     end
   end
 end
