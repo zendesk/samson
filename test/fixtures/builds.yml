@@ -12,5 +12,6 @@ docker_build:
   project: test
   git_sha: '1a6f551a2ffa6d88e15eef5461384da0bfb1c194'
   git_ref: 'v123'
-  docker_sha: '7e46d621322a5601274228f1f7b0c03d216ba790'
+  docker_image_id: '7e46d621322a5601274228f1f7b0c03d216ba790'
   docker_ref: 'v123'
+  docker_repo_digest: 'docker-registry.example.com/test@sha256:5f1d7c7381b2e45ca73216d7b06004fdb0908ed7bb8786b62f2cdfa5035fde2c

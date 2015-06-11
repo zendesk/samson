@@ -11,7 +11,7 @@ class Build < ActiveRecord::Base
 
   validates :project, presence: true
   validates :git_sha, format: SHA1_REGEX, allow_nil: true
-  validates :docker_sha, format: SHA256_REGEX, allow_nil: true
+  validates :docker_image_id, format: SHA256_REGEX, allow_nil: true
 
   validate :validate_git_reference, on: :create
 
@@ -49,14 +49,13 @@ class Build < ActiveRecord::Base
     )
   end
 
-  def update_docker_image_attributes(digest:, tag: nil)
-    self.docker_sha = digest
-    self.docker_ref = tag || label.try(:parameterize) || 'latest'
-    self.docker_image_url = "#{Rails.application.config.samson.docker.registry}/#{project.docker_repo_name}@sha256:#{docker_sha}"
+  def docker_image
+    @docker_image ||= Docker::Image.get(docker_image_id) if docker_image_id
   end
 
-  def docker_image
-    Docker::Image.get(docker_sha) if docker_sha
+  def docker_image=(image)
+    self.docker_image_id = image ? image.json['Id'] : nil
+    @docker_image = image
   end
 
   private

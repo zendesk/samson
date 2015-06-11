@@ -11,10 +11,10 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20150608214904) do
+ActiveRecord::Schema.define(version: 20150611013506) do
 
   create_table "build_statuses", force: :cascade do |t|
-    t.integer  "build_id",   limit: 4,                         null: false
+    t.integer  "build_id",                                     null: false
     t.string   "source",     limit: 255
     t.string   "status",     limit: 255,   default: "pending", null: false
     t.string   "url",        limit: 255
@@ -27,12 +27,12 @@ ActiveRecord::Schema.define(version: 20150608214904) do
   add_index "build_statuses", ["build_id"], name: "index_build_statuses_on_build_id", using: :btree
 
   create_table "builds", force: :cascade do |t|
-    t.integer  "project_id",          limit: 4,    null: false
-    t.string   "git_sha",             limit: 128
+    t.integer  "project_id",                       null: false
+    t.string   "git_sha",             limit: 255
     t.string   "git_ref",             limit: 255
-    t.string   "docker_sha",          limit: 128
+    t.string   "docker_image_id",     limit: 255
     t.string   "docker_ref",          limit: 255
-    t.string   "docker_image_url",    limit: 255
+    t.string   "docker_repo_digest",  limit: 255
     t.integer  "docker_build_job_id"
     t.string   "label",               limit: 255
     t.string   "description",         limit: 1024
@@ -42,7 +42,6 @@ ActiveRecord::Schema.define(version: 20150608214904) do
   end
 
   add_index "builds", ["created_by"], name: "index_builds_on_created_by", using: :btree
-  add_index "builds", ["docker_sha"], name: "index_builds_on_docker_sha", using: :btree
   add_index "builds", ["git_sha"], name: "index_builds_on_git_sha", unique: true, using: :btree
   add_index "builds", ["project_id"], name: "index_builds_on_project_id", using: :btree
 

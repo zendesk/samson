@@ -1,6 +1,8 @@
 require 'docker'
 
 class DockerBuilderService
+  DIGEST_SHA_REGEX = /Digest:.*(sha256:[0-9a-f]+)/i
+
   attr_reader :build, :image
 
   def initialize(build)
@@ -14,7 +16,9 @@ class DockerBuilderService
     build.save!
 
     job_execution = JobExecution.start_job(build.git_sha, job) do |execution, tmp_dir|
-      build_image(execution, tmp_dir, image_name, push)
+      if build_image(execution, tmp_dir) && push
+        push_image(execution.output, image_name)
+      end
     end
 
     job_execution.subscribe do
@@ -22,52 +26,55 @@ class DockerBuilderService
     end
   end
 
+  def push_image(output_buffer, tag)
+    build.docker_ref = tag || build.label.try(:parameterize) || 'latest'
+    build.docker_image.tag(repo: project.docker_repo, tag: build.docker_ref, force: true)
+
+    output_buffer.puts("### Pushing Docker image to #{project.docker_repo}:#{build.docker_ref}")
+
+    build.docker_image.push do |output_chunk|
+      output_buffer.puts(output_chunk)
+
+      status = JSON.parse(output_chunk).fetch('status', '')
+      if (matches = DIGEST_SHA_REGEX.match(status))
+        build.docker_repo_digest = "#{project.docker_repo}@#{matches[1]}"
+      end
+    end
+
+    build.save!
+
+    build
+  rescue Docker::Error::DockerError => e
+    output_buffer.puts("Docker push failed: #{e.message}\n")
+    nil
+  end
+
+
   private
 
-  def build_image(execution, tmp_dir, image_name, push)
+  def build_image(execution, tmp_dir)
     repository.executor = execution.executor
     repository.setup!(tmp_dir, build.git_sha)
 
     File.open("#{tmp_dir}/REVISION", 'w') { |f| f.write build.git_sha }
 
-    execution.output.write("### Running Docker build\n")
+    execution.output.puts("### Running Docker build")
 
-    @image = Docker::Image.build_from_dir(tmp_dir) do |output_chunk|
-      execution.output.write(parse_output_chunk(output_chunk))
+    build.docker_image = Docker::Image.build_from_dir(tmp_dir) do |output_chunk|
+      execution.output.puts(output_chunk)
     end
-
-    build.update_docker_image_attributes(digest: @image.json['Id'], tag: image_name)
-    build.save!
-
-    @image.tag(repo: build.project.docker_repo_name, tag: build.docker_ref, force: true)
-
-    if push
-      execution.output.write "### Pushing Docker image to #{image_name_with_tag}\n"
-      @image.push do |output_chunk|
-        execution.output.write(parse_output_chunk(output_chunk))
-      end
-    end
-
-    @image
   rescue Docker::Error::DockerError => e
     # If a docker error is raised, consider that a "failed" job instead of an "errored" job
-    message = "Docker build failed: #{e.message}"
-    @output.write(message + "\n")
+    execution.output.puts("Docker build failed: #{e.message}")
     nil
   end
 
-  def image_name_with_tag
-    "#{Rails.application.config.samson.docker.registry}/#{build.project.docker_repo_name}:#{build.docker_ref}"
-  end
-
-  def parse_output_chunk(chunk)
-    JSON.parse(chunk)['stream']
-  rescue JSON::ParserError
-    chunk
-  end
-
   def repository
-    @repository ||= @build.project.repository
+    @repository ||= project.repository
+  end
+
+  def project
+    @build.project
   end
 
   def send_after_notifications

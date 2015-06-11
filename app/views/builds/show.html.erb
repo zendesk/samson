@@ -31,8 +31,14 @@
     <dt>Git Ref</dt>
     <dd><%= git_ref_and_sha_for(@build, make_link: true).html_safe  %></dd>
 
-    <dt>Container Image</dt>
-    <dd><%= @build.docker_image_url || 'None' %></dd>
+    <dt>Docker Job Status</dt>
+    <dd><%= @build.docker_status %></dd>
+
+    <dt>Docker Image Id</dt>
+    <dd><%= short_sha(@build.docker_image_id, length: 12) %></dd>
+
+    <dt>Docker Digest</dt>
+    <dd><%= @build.docker_repo_digest %></dd>
   </dl>
 
   <hr/>

@@ -96,6 +96,6 @@ class BuildsController < ApplicationController
 
   def start_docker_build
     builder = DockerBuilderService.new(@build)
-    builder.build!(push: false)
+    builder.build!(push: true)
   end
 end

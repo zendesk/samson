@@ -35,9 +35,9 @@ describe Build do
     end
 
     it 'should validate container sha' do
-      assert_valid(valid_build(docker_sha: sha_digest))
-      refute_valid(valid_build(docker_sha: 'This is a string of 64 characters...............................'))
-      refute_valid(valid_build(docker_sha: 'abc'))
+      assert_valid(valid_build(docker_image_id: sha_digest))
+      refute_valid(valid_build(docker_image_id: 'This is a string of 64 characters...............................'))
+      refute_valid(valid_build(docker_image_id: 'abc'))
     end
 
     it 'should validate git_ref' do
@@ -78,9 +78,9 @@ describe Build do
 
     it 'sets the expected attributes' do
       build.update_docker_image_attributes(digest: sha_digest, tag: 'v123')
-      assert_equal(sha_digest, build.docker_sha)
+      assert_equal(sha_digest, build.docker_image_id)
       assert_equal('v123', build.docker_ref)
-      assert_match(/[a-z.-]+\/#{project.name}@sha256:#{sha_digest}/, build.docker_image_url)
+      assert_match(/[a-z.-]+\/#{project.name}@sha256:#{sha_digest}/, build.docker_repo_digest)
     end
 
     it 'defaults ref to the label' do
