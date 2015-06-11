@@ -8,8 +8,8 @@ module BuildsHelper
     "Build #{build.label || build.id}"
   end
 
-  def short_sha value
-    "#{value.first(7)}..." if value
+  def short_sha value, length: 7
+    "#{value.first(length)}" if value
   end
 
   def git_ref_and_sha_for build, make_link: false

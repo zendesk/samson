@@ -36,8 +36,8 @@ class Project < ActiveRecord::Base
     name.parameterize('_')
   end
 
-  def docker_repo_name
-    repo_name
+  def docker_repo
+    "#{Rails.application.config.samson.docker.registry}/samson/#{repo_name}"
   end
 
   def last_release_contains_commit?(commit)
