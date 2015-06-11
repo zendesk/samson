@@ -22,7 +22,7 @@ class DeployService
     job_execution = JobExecution.start_job(deploy.reference, deploy.job)
     send_sse_deploy_update('start', deploy)
 
-    job_execution.subscribe do
+    job_execution.on_complete do
       send_after_notifications(deploy)
     end
   end

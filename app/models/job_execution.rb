@@ -29,17 +29,7 @@ class JobExecution
   def start!(&block)
     ActiveRecord::Base.clear_active_connections!
 
-    @thread = Thread.new do
-      begin
-        run!(&block)
-      rescue => e
-        error!(e)
-      ensure
-        @output.close unless @output.closed?
-        ActiveRecord::Base.clear_active_connections!
-        JobExecution.finished_job(@job)
-      end
-    end
+    @thread = Thread.new { run!(&block) }
   end
 
   def wait!
@@ -51,7 +41,7 @@ class JobExecution
     wait!
   end
 
-  def subscribe(&block)
+  def on_complete(&block)
     @subscribers << block
   end
 
@@ -76,27 +66,28 @@ class JobExecution
   def run!(&block)
     @job.run!
 
-    output_aggregator = OutputAggregator.new(@output)
-
-    result = Dir.mktmpdir do |dir|
+    success = Dir.mktmpdir do |dir|
       if block_given?
-        Rails.logger.info "Running job #{job.id} in temp dir #{dir}"
         block.call(self, dir)
       else
         execute!(dir)
       end
     end
 
-    if result
+    if success
       @job.success!
     else
       @job.fail!
     end
 
-    @output.close
-    @job.update_output!(output_aggregator.to_s)
-
     @subscribers.each(&:call)
+  rescue => e
+    error!(e)
+  ensure
+    @output.close
+    @job.update_output!(OutputAggregator.new(@output).to_s)
+    ActiveRecord::Base.clear_active_connections!
+    JobExecution.finished_job(@job)
   end
 
   def execute!(dir)

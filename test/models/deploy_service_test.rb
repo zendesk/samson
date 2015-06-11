@@ -100,7 +100,7 @@ describe DeployService do
 
   describe "#confirm_deploy!" do
     it "starts a job execution" do
-      JobExecution.expects(:start_job).returns(mock(subscribe: true)).once
+      JobExecution.expects(:start_job).returns(mock(on_complete:true)).once
       service.confirm_deploy!(deploy)
     end
 
@@ -111,7 +111,7 @@ describe DeployService do
 
       it "starts a job execution" do
         stub_request(:get, "https://api.github.com/repos/bar/foo/compare/staging...staging")
-        JobExecution.expects(:start_job).returns(mock(subscribe: true)).once
+        JobExecution.expects(:start_job).returns(mock(on_complete:true)).once
         DeployMailer.expects(:bypass_email).never
         deploy.buddy = other_user
         service.confirm_deploy!(deploy)
@@ -119,7 +119,7 @@ describe DeployService do
 
       it "reports bypass via mail" do
         stub_request(:get, "https://api.github.com/repos/bar/foo/compare/staging...staging")
-        JobExecution.expects(:start_job).returns(mock(subscribe: true)).once
+        JobExecution.expects(:start_job).returns(mock(on_complete:true)).once
         DeployMailer.expects(bypass_email: stub(deliver_now: true))
         deploy.buddy = user
         service.confirm_deploy!(deploy)
