@@ -47,6 +47,8 @@ Samson::Application.configure do
   config.samson.github.admin_team = 'admins'
   config.samson.github.deploy_team = 'deployers'
 
+  config.samson.docker.registry = 'docker-registry.example.com'
+
   config.active_support.test_order = :random
 end
 
