@@ -413,6 +413,3 @@ DEPENDENCIES
   uglifier (>= 1.3.0)
   warden (~> 1.2)
   webmock
-
-BUNDLED WITH
-   1.10.3
