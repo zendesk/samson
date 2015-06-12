@@ -3,21 +3,23 @@ require 'docker'
 class DockerBuilderService
   DIGEST_SHA_REGEX = /Digest:.*(sha256:[0-9a-f]+)/i
 
-  attr_reader :build, :image
+  attr_reader :build, :execution
 
   def initialize(build)
     @build = build
   end
 
-  def build!(image_name: nil, push: false)
-    # TODO: check if there's already a docker build
-
+  def run!(image_name: nil, push: false)
     job = build.create_docker_job
     build.save!
 
     job_execution = JobExecution.start_job(build.git_sha, job) do |execution, tmp_dir|
-      if build_image(execution, tmp_dir) && push
-        push_image(execution.output, image_name)
+      @execution = execution
+      @output_buffer = execution.output
+      repository.executor = execution.executor
+
+      if build_image(tmp_dir) && push
+        push_image(image_name)
       end
     end
 
@@ -26,7 +28,23 @@ class DockerBuilderService
     end
   end
 
-  def push_image(output_buffer, tag)
+  def build_image(tmp_dir)
+    repository.setup!(tmp_dir, build.git_sha)
+
+    File.open("#{tmp_dir}/REVISION", 'w') { |f| f.write build.git_sha }
+
+    output_buffer.puts("### Running Docker build")
+
+    build.docker_image = Docker::Image.build_from_dir(tmp_dir) do |output_chunk|
+      output_buffer.puts(output_chunk)
+    end
+  rescue Docker::Error::DockerError => e
+    # If a docker error is raised, consider that a "failed" job instead of an "errored" job
+    output_buffer.puts("Docker build failed: #{e.message}")
+    nil
+  end
+
+  def push_image(tag)
     build.docker_ref = tag || build.label.try(:parameterize) || 'latest'
     build.docker_image.tag(repo: project.docker_repo, tag: build.docker_ref, force: true)
 
@@ -49,25 +67,11 @@ class DockerBuilderService
     nil
   end
 
+  def output_buffer
+    @output_buffer ||= OutputBuffer.new
+  end
 
   private
-
-  def build_image(execution, tmp_dir)
-    repository.executor = execution.executor
-    repository.setup!(tmp_dir, build.git_sha)
-
-    File.open("#{tmp_dir}/REVISION", 'w') { |f| f.write build.git_sha }
-
-    execution.output.puts("### Running Docker build")
-
-    build.docker_image = Docker::Image.build_from_dir(tmp_dir) do |output_chunk|
-      execution.output.puts(output_chunk)
-    end
-  rescue Docker::Error::DockerError => e
-    # If a docker error is raised, consider that a "failed" job instead of an "errored" job
-    execution.output.puts("Docker build failed: #{e.message}")
-    nil
-  end
 
   def repository
     @repository ||= project.repository
