@@ -5,7 +5,7 @@ module BuildsHelper
   end
 
   def build_title build
-    "Build #{build.label || build.id}"
+    build.label.presence || "Build #{build.id}"
   end
 
   def short_sha value, length: 7
@@ -13,6 +13,8 @@ module BuildsHelper
   end
 
   def git_ref_and_sha_for build, make_link: false
+    return nil if build.git_ref.blank? && build.git_sha.blank?
+
     sha_text = short_sha(build.git_sha)
     sha_text = link_to(sha_text, build.commit_url) if make_link
 
@@ -23,8 +25,8 @@ module BuildsHelper
     end
   end
 
-  def creator_for build
-    build.creator.try(:name_and_email) || 'System'
+  def creator_for build, method: :name_and_email
+    build.creator.try(method) || 'Trigger'
   end
 
   def docker_build_running? build

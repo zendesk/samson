@@ -66,6 +66,8 @@ class Build < ActiveRecord::Base
       return
     end
 
+    return if errors.include?(:git_ref) || errors.include?(:git_sha)
+
     project.repository.setup_local_cache!
 
     if git_ref.present?

@@ -112,13 +112,8 @@ module DeploysHelper
     def content_no_buddy_check(deploy)
       if deploy.finished?
         content = h "#{deploy.summary} "
-        content << deploy_time(deploy)
+        content << relative_time(deploy.start_time)
         content << ", it took #{duration_text(deploy)}."
       end
-    end
-
-    def deploy_time(deploy)
-      time = deploy.start_time
-      content_tag(:span, time.rfc822, data: { time: datetime_to_js_ms(time) }, class: "mouseover")
     end
 end

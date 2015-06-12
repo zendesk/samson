@@ -45,6 +45,10 @@ module ApplicationHelper
     render '/locks/lock', lock: global_lock if global_lock
   end
 
+  def relative_time(time)
+    content_tag(:span, time.rfc822, data: { time: datetime_to_js_ms(time) }, class: "mouseover")
+  end
+
   def datetime_to_js_ms(utc_string)
     utc_string.to_i * 1000
   end

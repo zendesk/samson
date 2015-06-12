@@ -28,7 +28,7 @@ class BuildsController < ApplicationController
         if @build.persisted?
           redirect_to [@project, @build]
         else
-          render :new
+          render :new, status: 422
         end
       end
 
@@ -52,7 +52,7 @@ class BuildsController < ApplicationController
         if success
           redirect_to [@project, @build]
         else
-          render :edit
+          render :edit, status: 422
         end
       end
 
