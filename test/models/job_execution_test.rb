@@ -210,6 +210,28 @@ describe JobExecution do
     end
   end
 
+  describe "#stop!" do
+    let(:execution) { JobExecution.new('master', job) }
+
+    it "stops the execution with interrupt" do
+      execution.start!
+      TerminalExecutor.any_instance.expects(:stop!).with('INT')
+      execution.stop!
+    end
+
+    it "stops the execution with kill if job has already been interrupted" do
+      begin
+        old, JobExecution.stop_timeout = JobExecution.stop_timeout, 1
+        execution.start!
+        TerminalExecutor.any_instance.expects(:stop!).with('INT')
+        TerminalExecutor.any_instance.expects(:stop!).with('KILL')
+        execution.stop!
+      ensure
+        JobExecution.stop_timeout = old
+      end
+    end
+  end
+
   def execute_job(branch = 'master')
     execution = JobExecution.new(branch, job)
     execution.send(:run!)
