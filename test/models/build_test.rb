@@ -73,26 +73,20 @@ describe Build do
     end
   end
 
-  describe '#update_docker_image_attributes' do
+  describe '#docker_image=' do
     let(:build) { valid_build }
-
-    it 'sets the expected attributes' do
-      build.update_docker_image_attributes(digest: sha_digest, tag: 'v123')
-      assert_equal(sha_digest, build.docker_image_id)
-      assert_equal('v123', build.docker_ref)
-      assert_match(/[a-z.-]+\/#{project.name}@sha256:#{sha_digest}/, build.docker_repo_digest)
+    let(:docker_image_id) { '2d2b0b3204b0166435c3d96d0b27d0ad2083e5e040192632c58eeb9491d6bfaa' }
+    let(:docker_image_json) do
+      {
+        'Id' => docker_image_id
+      }
     end
+    let(:mock_docker_image) { stub(json: docker_image_json) }
 
-    it 'defaults ref to the label' do
-      build.label = 'Created by Jon'
-      build.update_docker_image_attributes(digest: sha_digest)
-      assert_equal('created-by-jon', build.docker_ref)
-    end
-
-    it 'defaults ref to "latest" if no label' do
-      build.label = nil
-      build.update_docker_image_attributes(digest: sha_digest)
-      assert_equal('latest', build.docker_ref)
+    it 'updates the docker_image_id' do
+      build.docker_image = mock_docker_image
+      assert_equal(docker_image_id, build.docker_image_id)
+      assert_equal(mock_docker_image, build.docker_image)
     end
   end
 end
