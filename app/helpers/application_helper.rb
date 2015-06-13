@@ -45,6 +45,10 @@ module ApplicationHelper
     render '/locks/lock', lock: global_lock if global_lock
   end
 
+  def relative_time(time)
+    content_tag(:span, time.rfc822, data: { time: datetime_to_js_ms(time) }, class: "mouseover")
+  end
+
   def datetime_to_js_ms(utc_string)
     utc_string.to_i * 1000
   end
@@ -83,6 +87,8 @@ module ApplicationHelper
       when Macro then
         [item.name, project_macro_path(item.project, item)]
       when String then [item, nil]
+      when Build then [item.nice_name, project_build_path(item)]
+      when Array then item
       else
         raise "Unsupported breadcrumb for #{item}"
       end

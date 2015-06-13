@@ -1,0 +1,64 @@
+<% content_for :page_title, build_page_title %>
+
+<%= breadcrumb @project, ['Builds', project_builds_path(@project)], build_title(@build) %>
+
+<h1><%= build_title(@build) %></h1>
+
+<section class="clearfix tabs">
+
+  <div class="admin-actions">
+    <div class="pull-right">
+      <%= link_to "Edit", edit_project_build_path, class: "btn btn-default" %>
+    </div>
+  </div>
+
+  <dl class="dl-horizontal">
+    <dt>Id</dt>
+    <dd><%= @build.id  %></dd>
+
+    <dt>Created</dt>
+    <dd><%= @build.created_at  %></dd>
+
+    <dt>Created By</dt>
+    <dd><%= creator_for @build %></dd>
+
+    <dt>Label</dt>
+    <dd><%= @build.label  %></dd>
+
+    <dt>Description</dt>
+    <dd><%= @build.description  %></dd>
+
+    <dt>Git Ref</dt>
+    <dd><%= git_ref_and_sha_for(@build, make_link: true).html_safe  %></dd>
+
+    <dt>Docker Job Status</dt>
+    <dd><%= @build.docker_status %></dd>
+
+    <dt>Docker Image Id</dt>
+    <dd><%= short_sha(@build.docker_image_id, length: 12) %></dd>
+
+    <dt>Docker Digest</dt>
+    <dd><%= @build.docker_repo_digest %></dd>
+  </dl>
+
+  <hr/>
+
+  <% job = @build.docker_build_job %>
+  <% if job %>
+    <h2>Docker Build Output</h2>
+
+    <div id="output" data-stream-url="<%= stream_path(job) %>" data-desktop-notify="<%= current_user.desktop_notify? %>">
+      <%= render partial: 'jobs/output', locals: { job: job } %>
+      <% if docker_build_running? @build %>
+        <%= javascript_tag do %>
+          toggleOutputToolbar();
+          startStream();
+        <% end %>
+      <% end %>
+    </div>
+  <% else %>
+    <%= form_for :build, url: build_docker_image_project_build_path(@build.project, @build), html: { class: "form-inline" } do |form| %>
+      <%= form.submit 'Build Docker Image', class: "btn btn-primary" %>
+    <% end %>
+  <% end %>
+</section>

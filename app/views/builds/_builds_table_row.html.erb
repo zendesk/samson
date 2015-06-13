@@ -1,0 +1,10 @@
+<tr>
+  <td><%= link_to build_title(build), project_build_path(build.project, build) %></td>
+  <% unless @project %>
+      <td><%= link_to build.project.name, build.project %></td>
+  <% end %>
+  <td><%= relative_time(build.created_at) %></td>
+  <td><%= creator_for(build, method: :name) %></td>
+  <td><%= git_ref_and_sha_for(build) %></td>
+  <td><%= build.docker_status %></td>
+</tr>

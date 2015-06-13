@@ -36,6 +36,10 @@ class Project < ActiveRecord::Base
     name.parameterize('_')
   end
 
+  def docker_repo
+    "#{Rails.application.config.samson.docker.registry}/samson/#{repo_name}"
+  end
+
   def last_release_contains_commit?(commit)
     last_release = releases.order(:id).last
     last_release && repository.downstream_commit?(last_release.commit, commit)

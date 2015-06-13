@@ -27,6 +27,10 @@ class OutputBuffer
     @closed = false
   end
 
+  def puts(line)
+    write(line.rstrip + "\n")
+  end
+
   def write(data, event = :message)
     @previous << [event, data] unless event == :close
     @listeners.each {|listener| listener.push([event, data]) }

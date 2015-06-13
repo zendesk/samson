@@ -25,5 +25,5 @@ before_script:
 script:
   - npm run-script jshint
   - bundle exec rake test:js
-  - SECRET_TOKEN=foo GITHUB_TOKEN=foo RAILS_ENV=production bundle exec rake assets:precompile
+  - SECRET_TOKEN=foo GITHUB_TOKEN=foo PRECOMPILE=1 RAILS_ENV=production bundle exec rake assets:precompile
   - bundle exec rake

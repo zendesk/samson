@@ -1,0 +1,26 @@
+<section class="tabs">
+  <p class="pull-right">
+    <%= link_to "Create Build", new_project_build_path(@project), class: "btn btn-default" %>
+  </p>
+
+  <table class="table">
+    <thead>
+    <tr>
+      <th>Build</th>
+      <% unless @project %>
+          <th>Project</th>
+      <% end %>
+      <th>Created</th>
+      <th>Created By</th>
+      <th>Git Ref</th>
+      <th>Docker Build</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    <%= render partial: "builds/builds_table_row", collection: @builds, as: :build %>
+    </tbody>
+  </table>
+
+  <%= paginate @builds %>
+</section>

@@ -1,4 +1,4 @@
-<div class="output <%= 'hidden' if @deploy.waiting_for_buddy? || @deploy.pending_non_production? %>">
+<div class="output">
   <div class="clearfix">
     <div class="btn-toolbar pull-right" id="output-toolbar">
       <div id="output-options" class="btn-group only-active">
@@ -9,13 +9,13 @@
 
       <div class="pull-right only-finished">
         <button class="btn btn-default" id="output-grow-toggle">Expand</button>
-        <%= link_to "Download log", project_deploy_path(@project, @deploy, format: :text), class: "btn btn-primary" %>
+        <%= link_to "Download log", project_job_path(@project, job, format: :text), class: "btn btn-primary" %>
       </div>
-      <% if @deploy.can_be_stopped_by?(current_user) %>
+      <% if job.can_be_stopped_by?(current_user) %>
         <%= stop_button(class: "btn btn-danger pull-right only-active") %>
       <% end %>
     </div>
   </div>
 
-  <%= render partial: "jobs/log", locals: { job: @deploy.job } %>
+  <%= render partial: "jobs/log", locals: { job: job } %>
 </div>
