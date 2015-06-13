@@ -28,11 +28,7 @@ class OutputBuffer
   end
 
   def puts(line)
-    if line.ends_with?("\n")
-      write(line)
-    else
-      write(line + "\n")
-    end
+    write(line.rstrip + "\n")
   end
 
   def write(data, event = :message)

@@ -2,68 +2,68 @@
 
 <section>
   <%= form_for [@project, @build], html: { class: "form-horizontal" } do |form| %>
-      <fieldset>
-        <% if @build.errors.any? %>
-            <div class="row">
-              <div class="col-lg-5 col-lg-offset-1 alert alert-warning">
-                <p><strong>Ooops!</strong> There was an error:</p>
-                <ul>
-                  <% @build.errors.full_messages.each do |message| %>
-                      <li><%= message %></li>
-                  <% end %>
-                </ul>
-              </div>
-            </div>
-        <% end %>
-
-        <div class="form-group">
-          <%= form.label :id, "Id", class: "col-lg-2 control-label" %>
-          <div class="col-lg-4">
-            <%= @build.id %>
+    <fieldset>
+      <% if @build.errors.any? %>
+        <div class="row">
+          <div class="col-lg-5 col-lg-offset-1 alert alert-warning">
+            <p><strong>Ooops!</strong> There was an error:</p>
+            <ul>
+              <% @build.errors.full_messages.each do |message| %>
+                <li><%= message %></li>
+              <% end %>
+            </ul>
           </div>
         </div>
+      <% end %>
 
-        <div class="form-group">
-          <%= form.label :created, "Created", class: "col-lg-2 control-label" %>
-          <div class="col-lg-4">
-            <%= @build.created_at.to_s %>
-          </div>
+      <div class="form-group">
+        <%= form.label :id, "Id", class: "col-lg-2 control-label" %>
+        <div class="col-lg-4">
+          <%= @build.id %>
         </div>
+      </div>
 
-        <div class="form-group">
-          <%= form.label :label, "Label", class: "col-lg-2 control-label" %>
-          <div class="col-lg-4">
-            <%= form.text_field :label, class: "form-control" %>
-          </div>
+      <div class="form-group">
+        <%= form.label :created, "Created", class: "col-lg-2 control-label" %>
+        <div class="col-lg-4">
+          <%= @build.created_at.to_s %>
         </div>
+      </div>
 
-        <div class="form-group">
-          <%= form.label :description, "Description", class: "col-lg-2 control-label" %>
-          <div class="col-lg-4">
-            <%= form.text_area :description, rows: 3, class: "form-control" %>
-          </div>
+      <div class="form-group">
+        <%= form.label :label, "Label", class: "col-lg-2 control-label" %>
+        <div class="col-lg-4">
+          <%= form.text_field :label, class: "form-control" %>
         </div>
+      </div>
 
-        <div class="form-group">
-          <%= form.label :git_ref, "Git Reference", class: "col-lg-2 control-label" %>
-          <div class="col-lg-4">
-            <%= git_ref_and_sha_for(@build, make_link: false).html_safe %>
-          </div>
+      <div class="form-group">
+        <%= form.label :description, "Description", class: "col-lg-2 control-label" %>
+        <div class="col-lg-4">
+          <%= form.text_area :description, rows: 3, class: "form-control" %>
         </div>
+      </div>
 
-        <div class="form-group">
-          <%= form.label :docker_image, "Docker Repo Digest", class: "col-lg-2 control-label" %>
-          <div class="col-lg-4">
-            <%= @build.docker_repo_digest %>
-          </div>
+      <div class="form-group">
+        <%= form.label :git_ref, "Git Reference", class: "col-lg-2 control-label" %>
+        <div class="col-lg-4">
+          <%= git_ref_and_sha_for(@build, make_link: false).html_safe %>
         </div>
+      </div>
 
-        <div class="form-group">
-          <div class="col-lg-offset-2 col-lg-10">
-            <%= form.submit "Save", class: "btn btn-primary" %>
-            <%= link_to "Cancel", :back, class: 'btn btn-default' %>
-          </div>
+      <div class="form-group">
+        <%= form.label :docker_image, "Docker Repo Digest", class: "col-lg-2 control-label" %>
+        <div class="col-lg-4">
+          <%= @build.docker_repo_digest %>
         </div>
-      </fieldset>
+      </div>
+
+      <div class="form-group">
+        <div class="col-lg-offset-2 col-lg-10">
+          <%= form.submit "Save", class: "btn btn-primary" %>
+          <%= link_to "Cancel", :back, class: 'btn btn-default' %>
+        </div>
+      </div>
+    </fieldset>
   <% end %>
 </section>

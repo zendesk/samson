@@ -31,7 +31,7 @@ class DockerBuilderService
   def build_image(tmp_dir)
     repository.setup!(tmp_dir, build.git_sha)
 
-    File.open("#{tmp_dir}/REVISION", 'w') { |f| f.write build.git_sha }
+    File.write("#{tmp_dir}/REVISION", build.git_sha)
 
     output_buffer.puts("### Running Docker build")
 

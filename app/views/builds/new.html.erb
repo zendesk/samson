@@ -2,62 +2,62 @@
 
 <section>
   <%= form_for [@project, @build], html: { class: "form-horizontal" } do |form| %>
-      <fieldset>
-        <% if @build.errors.any? %>
-            <div class="row">
-              <div class="col-lg-5 col-lg-offset-1 alert alert-warning">
-                <p><strong>Ooops!</strong> There was an error:</p>
-                <ul>
-                  <% @build.errors.full_messages.each do |message| %>
-                      <li><%= message %></li>
-                  <% end %>
-                </ul>
-              </div>
-            </div>
-        <% end %>
-
-        <div class="form-group">
-          <%= form.label :git_ref, "Git Reference", class: "col-lg-2 control-label" %>
-          <div id="scrollable-dropdown-menu" class="col-lg-4">
-            <%= form.text_field :git_ref, class: "form-control", autofocus: true, placeholder: "e.g. v2.1.43, master, fa0b4671", data: { prefetch_url: project_references_path(@project, format: "json") } %>
+    <fieldset>
+      <% if @build.errors.any? %>
+        <div class="row">
+          <div class="col-lg-5 col-lg-offset-1 alert alert-warning">
+            <p><strong>Ooops!</strong> There was an error:</p>
+            <ul>
+              <% @build.errors.full_messages.each do |message| %>
+                <li><%= message %></li>
+              <% end %>
+            </ul>
           </div>
         </div>
+      <% end %>
 
-        <div>
-          <div id="ref-problem-warning" class="col-lg-5 col-lg-offset-2 alert alert-warning hidden">
-            <p>There is currently a problem registered for this Tag or SHA. Are you sure you wish to create a build?</p>
-            <ul id="ref-problem-list"></ul>
-          </div>
+      <div class="form-group">
+        <%= form.label :git_ref, "Git Reference", class: "col-lg-2 control-label" %>
+        <div id="scrollable-dropdown-menu" class="col-lg-4">
+          <%= form.text_field :git_ref, class: "form-control", autofocus: true, placeholder: "e.g. v2.1.43, master, fa0b4671", data: { prefetch_url: project_references_path(@project, format: "json") } %>
         </div>
+      </div>
 
-        <div class="form-group">
-          <%= form.label :label, "Label", class: "col-lg-2 control-label" %>
-          <div class="col-lg-4">
-            <%= form.text_field :label, class: "form-control" %>
-          </div>
+      <div>
+        <div id="ref-problem-warning" class="col-lg-5 col-lg-offset-2 alert alert-warning hidden">
+          <p>There is currently a problem registered for this Tag or SHA. Are you sure you wish to create a build?</p>
+          <ul id="ref-problem-list"></ul>
         </div>
+      </div>
 
-        <div class="form-group">
-          <%= form.label :description, "Description", class: "col-lg-2 control-label" %>
-          <div class="col-lg-4">
-            <%= form.text_area :description, rows: 3, class: "form-control" %>
-          </div>
+      <div class="form-group">
+        <%= form.label :label, "Label", class: "col-lg-2 control-label" %>
+        <div class="col-lg-4">
+          <%= form.text_field :label, class: "form-control" %>
         </div>
+      </div>
 
-        <div class="form-group">
-          <%= form.label :build_image, "Build Docker Image?", class: "col-lg-2 control-label" %>
-          <div class="col-lg-4">
-            <%= check_box_tag :build_image %>
-          </div>
+      <div class="form-group">
+        <%= form.label :description, "Description", class: "col-lg-2 control-label" %>
+        <div class="col-lg-4">
+          <%= form.text_area :description, rows: 3, class: "form-control" %>
         </div>
+      </div>
 
-        <div class="form-group">
-          <div class="col-lg-offset-2 col-lg-10">
-            <%= form.submit "Create", class: "btn btn-primary" %>
-            <%= link_to "Cancel", :back, class: 'btn btn-default' %>
-          </div>
+      <div class="form-group">
+        <%= form.label :build_image, "Build Docker Image?", class: "col-lg-2 control-label" %>
+        <div class="col-lg-4">
+          <%= check_box_tag :build_image %>
         </div>
+      </div>
 
-      </fieldset>
+      <div class="form-group">
+        <div class="col-lg-offset-2 col-lg-10">
+          <%= form.submit "Create", class: "btn btn-primary" %>
+          <%= link_to "Cancel", :back, class: 'btn btn-default' %>
+        </div>
+      </div>
+
+    </fieldset>
   <% end %>
 </section>

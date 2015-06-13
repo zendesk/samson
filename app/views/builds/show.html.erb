@@ -51,8 +51,8 @@
       <%= render partial: 'jobs/output', locals: { job: job } %>
       <% if docker_build_running? @build %>
         <%= javascript_tag do %>
-            toggleOutputToolbar();
-            startStream();
+          toggleOutputToolbar();
+          startStream();
         <% end %>
       <% end %>
     </div>
