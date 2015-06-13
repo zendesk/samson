@@ -36,7 +36,7 @@ class DockerBuilderService
     output_buffer.puts("### Running Docker build")
 
     build.docker_image = Docker::Image.build_from_dir(tmp_dir) do |output_chunk|
-      output_buffer.puts(output_chunk)
+      handle_output_chunk(output_chunk)
     end
   rescue Docker::Error::DockerError => e
     # If a docker error is raised, consider that a "failed" job instead of an "errored" job
@@ -51,9 +51,9 @@ class DockerBuilderService
     output_buffer.puts("### Pushing Docker image to #{project.docker_repo}:#{build.docker_ref}")
 
     build.docker_image.push do |output_chunk|
-      output_buffer.puts(output_chunk)
+      parsed_chunk = handle_output_chunk(output_chunk)
 
-      status = JSON.parse(output_chunk).fetch('status', '')
+      status = parsed_chunk.fetch('status', '')
       if (matches = DIGEST_SHA_REGEX.match(status))
         build.docker_repo_digest = "#{project.docker_repo}@#{matches[1]}"
       end
@@ -79,6 +79,16 @@ class DockerBuilderService
 
   def project
     @build.project
+  end
+
+  def handle_output_chunk(chunk)
+    parsed_chunk = JSON.parse(chunk)
+    values = parsed_chunk.each_with_object([]) do |(k,v), arr|
+      arr << "#{k}: #{v}" if v.present?
+    end
+
+    output_buffer.puts values.join(' | ')
+    parsed_chunk
   end
 
   def send_after_notifications
