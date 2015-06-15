@@ -7,5 +7,6 @@ test
 config/database.yml
 cached_repos
 node_modules
+vendor/bundle
 
 public/assets
