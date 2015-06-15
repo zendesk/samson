@@ -12,8 +12,6 @@ RUN gem install bundler
 RUN mkdir /app
 WORKDIR /app
 
-ADD REVISION /REVISION
-
 # Mostly static
 ADD config.ru /app/
 ADD Rakefile /app/
@@ -22,18 +20,15 @@ ADD public /app/public
 ADD db /app/db
 ADD .env.bootstrap /app/.env
 
+# NPM
+ADD package.json /app/package.json
+RUN npm install
+
 # Gems
 ADD Gemfile /app/
 ADD Gemfile.lock /app/
 ADD vendor/cache /app/vendor/cache
-ADD package.json /app/package.json
-
-# Plugins need to be added before bundling
-# because they're loaded as gems
 ADD plugins /app/plugins
-
-RUN npm install
-
 RUN bundle install --without test sqlite postgres --quiet --local --jobs 4 || bundle check
 
 # Code
@@ -41,6 +36,9 @@ ADD config /app/config
 ADD config/database.mysql.yml.example /app/config/database.yml
 ADD app /app/app
 ADD lib /app/lib
+
+ADD REVISION /
+ADD REVISION /app/
 
 EXPOSE 9080
 
