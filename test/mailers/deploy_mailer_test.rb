@@ -37,6 +37,7 @@ describe DeployMailer do
     before do
       BuddyCheck.stubs(:bypass_email_address).returns("test1@test.com")
       BuddyCheck.stubs(:bypass_jira_email_address).returns(jira_address)
+      BuddyCheck.stubs(:bypass_retroactive_approval_email).returns("foo@bar.com")
 
       user.update_attributes!(email: 'user_email@test.com')
 
@@ -53,8 +54,8 @@ describe DeployMailer do
       subject.to.must_equal(['test1@test.com'])
     end
 
-    it 'CCs user email' do
-      subject.cc.must_equal(['user_email@test.com'])
+    it 'CCs user email and bypass_retroactive_approval_email' do
+      subject.cc.must_equal(['user_email@test.com', 'foo@bar.com'])
     end
 
     it 'sets a bypass subject' do
