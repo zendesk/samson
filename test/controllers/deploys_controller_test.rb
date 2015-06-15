@@ -124,7 +124,7 @@ describe DeploysController do
     end
 
     describe "#active_count" do
-      before { stage.create_deploy(reference: 'reference', user: admin) }
+      before { stage.create_deploy(admin, { reference: 'reference' }) }
 
       it "renders json" do
         get :active_count
@@ -199,7 +199,7 @@ describe DeploysController do
         end
 
         it "creates a deploy" do
-          assert_equal [[stage, "master"]], deploy_called
+          assert_equal [[stage, {"reference" => "master"}]], deploy_called
         end
       end
 
@@ -211,7 +211,7 @@ describe DeploysController do
         end
 
         it "creates a deploy" do
-          assert_equal [[stage, "master"]], deploy_called
+          assert_equal [[stage, {"reference" => "master"}]], deploy_called
         end
       end
     end

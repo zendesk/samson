@@ -31,6 +31,8 @@
         </div>
       </div>
 
+      <%= Samson::Hooks.render_views(:deploy_form, self, project: @project, form: form) %>
+
       <div class="form-group" id="new-deploy-buttons">
         <div class="col-lg-offset-2 col-lg-10">
           <%= form.submit "", class: "btn btn-primary", disabled: global_lock %>

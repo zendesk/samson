@@ -8,6 +8,7 @@ module Samson
       :project_form,
       :deploys_header,
       :deploy_view,
+      :deploy_form, # for external plugin, so they can add extra form fields
       :admin_menu,
       :project_tabs_view
     ].freeze
@@ -15,6 +16,7 @@ module Samson
     EVENT_HOOKS = [
       :stage_clone,
       :stage_permitted_params,
+      :deploy_permitted_params, # for external plugin
       :project_permitted_params,
       :before_deploy,
       :after_deploy_setup,

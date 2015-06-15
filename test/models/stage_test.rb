@@ -127,18 +127,18 @@ describe Stage do
     let(:user) { users(:deployer) }
 
     it "creates a new deploy" do
-      deploy = subject.create_deploy(reference: "foo", user: user)
+      deploy = subject.create_deploy(user, {reference: "foo"})
       deploy.reference.must_equal "foo"
     end
 
     it "creates a new job" do
-      deploy = subject.create_deploy(reference: "foo", user: user)
+      deploy = subject.create_deploy(user, {reference: "foo"})
       deploy.job.user.must_equal user
     end
 
     it "creates neither job nor deploy if one fails to save" do
       assert_no_difference "Deploy.count + Job.count" do
-        subject.create_deploy(reference: "", user: user)
+        subject.create_deploy(user, {reference: ""})
       end
     end
   end
@@ -299,7 +299,7 @@ describe Stage do
   describe "#automated_failure_emails" do
     let(:user) { users(:super_admin) }
     let(:deploy) do
-      deploy = subject.create_deploy(user: user, reference: "commita")
+      deploy = subject.create_deploy(user, {reference: "commita"})
       deploy.job.fail!
       deploy
     end

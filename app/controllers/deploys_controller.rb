@@ -41,7 +41,7 @@ class DeploysController < ApplicationController
 
   def create
     deploy_service = DeployService.new(current_user)
-    @deploy = deploy_service.deploy!(stage, reference)
+    @deploy = deploy_service.deploy!(stage, deploy_params)
 
     respond_to do |format|
       format.html do
@@ -109,6 +109,10 @@ class DeploysController < ApplicationController
 
   protected
 
+  def deploy_permitted_params
+    [ :reference, :stage_id ] + Samson::Hooks.fire(:deploy_permitted_params)
+  end
+
   def reference
     deploy_params[:reference].strip
   end
@@ -118,7 +122,7 @@ class DeploysController < ApplicationController
   end
 
   def deploy_params
-    params.require(:deploy).permit(:reference, :stage_id)
+    params.require(:deploy).permit(deploy_permitted_params)
   end
 
   def find_project
