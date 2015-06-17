@@ -1,5 +1,8 @@
 module Samson
   module Hooks
+    class UserError < StandardError
+    end
+
     VIEW_HOOKS = [
       :stage_form,
       :project_form,
