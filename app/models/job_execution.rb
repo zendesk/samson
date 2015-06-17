@@ -86,12 +86,12 @@ class JobExecution
       @job.fail!
     end
 
-    @subscribers.each(&:call)
   rescue => e
     error!(e)
   ensure
     @output.close
     @job.update_output!(OutputAggregator.new(@output).to_s)
+    @subscribers.each(&:call)
     ActiveRecord::Base.clear_active_connections!
     JobExecution.finished_job(@job)
   end
