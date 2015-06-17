@@ -35,7 +35,7 @@ describe "env hooks" do
 
         it "fails when .env has an unsatisfied required key" do
           File.write(".env", "FOO=foo")
-          assert_raises KeyError do
+          assert_raises Samson::Hooks::UserError do
             Samson::Hooks.fire(:after_deploy_setup, Dir.pwd, stage)
           end
         end
@@ -73,7 +73,7 @@ describe "env hooks" do
       end
 
       it "fails when missing required keys" do
-        assert_raises KeyError do
+        assert_raises Samson::Hooks::UserError do
           fire
         end
       end

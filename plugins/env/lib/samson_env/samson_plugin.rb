@@ -69,7 +69,7 @@ module SamsonEnv
       file = File.basename(file)
       keys = data.keys
       missing = required - keys
-      raise KeyError, "Missing env keys #{missing.join(", ")} for #{file}" if missing.any?
+      raise Samson::Hooks::UserError, "Missing env keys #{missing.join(", ")} for #{file}" if missing.any?
       ignored = keys - all
       Rails.logger.warn("Ignoring env keys #{ignored.join(", ")} for #{file}") if ignored.any?
       data.slice(*all)
