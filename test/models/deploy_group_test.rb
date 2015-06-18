@@ -34,4 +34,14 @@ describe DeployGroup do
     DeployGroup.create!(name: 'Pod668', environment: prod_env)
     env.deploy_groups.must_equal [dg1, dg2]
   end
+
+  describe "#initialize_env_value" do
+    it 'prefils env_value' do
+      DeployGroup.create!(name: 'Pod666 - the best', environment: prod_env).env_value.must_equal 'Pod666 - the best'
+    end
+
+    it 'can set env_value' do
+      DeployGroup.create!(name: 'Pod666 - the best', env_value: 'pod:666', environment: prod_env).env_value.must_equal 'pod:666'
+    end
+  end
 end

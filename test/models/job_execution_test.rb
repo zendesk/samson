@@ -138,7 +138,7 @@ describe JobExecution do
     execute_job
     lines = job.output.split "\n"
     lines.must_include "# Deploy URL: #{deploy.url}"
-    lines.must_include 'DEPLOY_GROUPS=\;\|sudo\ make-sandwich\ / Pod1 Pod2'
+    lines.must_include 'DEPLOY_GROUPS=\;\|sudo\ make-sandwich\ / pod1 pod2'
   end
 
   it 'does not export deploy_group information if no deploy groups present' do
