@@ -50,7 +50,7 @@ describe "env hooks" do
       end
     end
 
-    describe "with ENV.json" do
+    describe "with manifest.json" do
       before do
         File.write("ENV.json", JSON.dump("other" => true))
         File.write("manifest.json", JSON.dump(
@@ -59,12 +59,23 @@ describe "env hooks" do
             "OTHER" => {},
             "MORE" => {"required" => true},
             "OPTIONAL" => {"required" => false}
+          },
+          "roles" => {
+            "some" => "thing"
           }
         ))
       end
 
       def fire
         Samson::Hooks.fire(:after_deploy_setup, Dir.pwd, stage)
+      end
+
+      it "works without ENV.json" do
+        File.unlink("ENV.json")
+        project.environment_variables.create!(name: "OTHER", value: "Y")
+        project.environment_variables.create!(name: "MORE", value: "Y")
+        fire
+        assert File.exist?("ENV.pod-100.json")
       end
 
       it "does not modify when no variables were specified" do
@@ -100,6 +111,9 @@ describe "env hooks" do
 
         File.read("ENV.pod-100.json").must_equal "{
   \"other\": true,
+  \"roles\": {
+    \"some\": \"thing\"
+  },
   \"env\": {
     \"HELLO\": \"world\",
     \"OTHER\": \"A\",
@@ -109,6 +123,9 @@ describe "env hooks" do
 }"
         File.read("ENV.pod1.json").must_equal "{
   \"other\": true,
+  \"roles\": {
+    \"some\": \"thing\"
+  },
   \"env\": {
     \"HELLO\": \"world\",
     \"OTHER\": \"A\",

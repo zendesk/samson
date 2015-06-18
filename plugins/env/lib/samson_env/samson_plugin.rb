@@ -38,12 +38,17 @@ module SamsonEnv
 
     # writes a proprietary .json file with a env hash for each deploy group
     def write_env_json_file(env_json, manifest_json, groups)
-      return unless File.exist?(env_json)
-      json = JSON.load(File.read(env_json))
-      File.unlink(env_json)
+      return unless File.exist?(manifest_json)
+      json = if File.exist?(env_json)
+        JSON.load(File.read(env_json)).tap { File.unlink(env_json) }
+      else
+        {}
+      end
 
-      # manifest.json includes required keys
-      settings = JSON.load(File.read(manifest_json)).fetch("settings")
+      # manifest.json includes required keys and other things we copy
+      manifest = JSON.load(File.read(manifest_json))
+      settings = manifest.delete("settings")
+      json.reverse_merge!(manifest)
       required_keys, optional_keys = settings.keys.partition do |key|
         settings[key].fetch("required", true)
       end
