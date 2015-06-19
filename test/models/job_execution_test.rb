@@ -168,6 +168,18 @@ describe JobExecution do
     JobExecution.find_by_id(job.id).must_be_nil
   end
 
+  it 'calls subscribers after finishing' do
+    called_subscriber = false
+    execute_job { called_subscriber = true }
+    assert_equal true, called_subscriber
+  end
+
+  it 'saves job output before calling subscriber' do
+    output = nil
+    execute_job { output = job.output }
+    assert_equal 'monkey', output.split("\n").last.strip
+  end
+
   it 'cannot setup project if project is locked' do
     JobExecution.any_instance.stubs(lock_timeout: 0.5) # 2 runs in the loop
     project.repository.expects(:setup!).never
@@ -234,6 +246,7 @@ describe JobExecution do
 
   def execute_job(branch = 'master')
     execution = JobExecution.new(branch, job)
+    execution.on_complete { yield } if block_given?
     execution.send(:run!)
   end
 
