@@ -214,7 +214,7 @@ ActiveRecord::Schema.define(version: 20150619170905) do
     t.string   "permalink",          limit: 255,                   null: false
     t.text     "description",        limit: 65535
     t.string   "owner",              limit: 255
-    t.boolean  "deploy_with_docker", limit: 1,     default: false, null: false
+    t.boolean  "deploy_with_docker",               default: false, null: false
   end
 
   add_index "projects", ["permalink", "deleted_at"], name: "index_projects_on_permalink_and_deleted_at", length: {"permalink"=>191, "deleted_at"=>nil}, using: :btree
