@@ -1,4 +1,10 @@
 PATH
+  remote: plugins/dockerb/
+  specs:
+    samson_dockerb (0.0.0)
+      dockerb
+
+PATH
   remote: plugins/env/
   specs:
     samson_env (0.0.0)
@@ -112,6 +118,7 @@ GEM
     docker-api (1.21.4)
       excon (>= 0.38.0)
       json
+    dockerb (0.2.3)
     dogapi (1.17.0)
       multi_json
     dogstatsd-ruby (1.4.1)
@@ -404,6 +411,7 @@ DEPENDENCIES
   rails-assets-vis!
   rails-assets-x-editable!
   rails_12factor
+  samson_dockerb!
   samson_env!
   samson_flowdock!
   samson_jenkins!
