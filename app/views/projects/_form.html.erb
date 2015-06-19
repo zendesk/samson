@@ -47,6 +47,17 @@
       </div>
     </div>
 
+    <% if ENV['DOCKER_FEATURE'] %>
+    <div class="form-group">
+      <div class="col-sm-offset-2 col-sm-10">
+        <div class="checkbox">
+          <%= form.check_box :deploy_with_docker %>
+          <%= form.label :deploy_with_docker, 'Deploy with Docker' %>
+        </div>
+      </div>
+    </div>
+    <% end %>
+
     <%= Samson::Hooks.render_views(:project_form, self, form: form) %>
 
     <% unless project.persisted? %>
