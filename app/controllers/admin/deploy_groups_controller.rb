@@ -42,7 +42,7 @@ class Admin::DeployGroupsController < ApplicationController
   private
 
   def deploy_group_params
-    params.require(:deploy_group).permit(:name, :environment_id)
+    params.require(:deploy_group).permit(:name, :environment_id, :env_value)
   end
 
   def deploy_group
