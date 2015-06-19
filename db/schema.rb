@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20150618182108) do
+ActiveRecord::Schema.define(version: 20150619170905) do
 
   create_table "build_statuses", force: :cascade do |t|
     t.integer  "build_id",                                     null: false
@@ -204,16 +204,17 @@ ActiveRecord::Schema.define(version: 20150618182108) do
   add_index "project_environment_variable_groups", ["project_id", "environment_variable_group_id"], name: "project_environment_variable_groups_unique_group_id", unique: true, using: :btree
 
   create_table "projects", force: :cascade do |t|
-    t.string   "name",           limit: 255,   null: false
-    t.string   "repository_url", limit: 255,   null: false
+    t.string   "name",               limit: 255,                   null: false
+    t.string   "repository_url",     limit: 255,                   null: false
     t.datetime "deleted_at"
     t.datetime "created_at"
     t.datetime "updated_at"
-    t.string   "token",          limit: 255
-    t.string   "release_branch", limit: 255
-    t.string   "permalink",      limit: 255,   null: false
-    t.text     "description",    limit: 65535
-    t.string   "owner",          limit: 255
+    t.string   "token",              limit: 255
+    t.string   "release_branch",     limit: 255
+    t.string   "permalink",          limit: 255,                   null: false
+    t.text     "description",        limit: 65535
+    t.string   "owner",              limit: 255
+    t.boolean  "deploy_with_docker", limit: 1,     default: false, null: false
   end
 
   add_index "projects", ["permalink", "deleted_at"], name: "index_projects_on_permalink_and_deleted_at", length: {"permalink"=>191, "deleted_at"=>nil}, using: :btree
