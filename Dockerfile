@@ -9,7 +9,7 @@ ENV GEM_HOME=/bundle
 RUN gem update --system
 RUN gem install bundler
 
-RUN mkdir /app
+RUN mkdir /app && touch -t 201501010000 /app
 WORKDIR /app
 
 # Mostly static
