@@ -30,7 +30,7 @@ class Integrations::BaseController < ApplicationController
     deploy_service = DeployService.new(user)
 
     stages.all? do |stage|
-      deploy_service.deploy!(stage, commit).persisted?
+      deploy_service.deploy!(stage, reference: commit).persisted?
     end
   end
 

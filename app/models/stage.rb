@@ -94,11 +94,8 @@ class Stage < ActiveRecord::Base
     confirm
   end
 
-  def create_deploy(options = {})
-    user = options.fetch(:user)
-    reference = options.fetch(:reference)
-
-    deploys.create(reference: reference) do |deploy|
+  def create_deploy(user, attributes = {})
+    deploys.create(attributes) do |deploy|
       deploy.build_job(project: project, user: user, command: command)
     end
   end

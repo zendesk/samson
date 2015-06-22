@@ -13,14 +13,14 @@ describe BuddyCheck do
   let(:other_user) { users(:deployer_buddy) }
 
   it "start_time is set for buddy_checked deploy" do
-    deploy_rtn = stage.create_deploy(reference: reference, user: user)
+    deploy_rtn = stage.create_deploy(user, { reference: reference })
     deploy_rtn.confirm_buddy!(other_user)
 
     assert_equal true, deploy_rtn.start_time.to_i > 0
   end
 
   it "start_time is set for non-buddy_checked deploy" do
-    deploy_rtn = stage.create_deploy(reference: reference, user: user)
+    deploy_rtn = stage.create_deploy(user, { reference: reference })
 
     assert_equal true, deploy_rtn.start_time.to_i > 0
   end
@@ -31,7 +31,7 @@ describe BuddyCheck do
     stage.expects(:production?).returns(true)
     service.expects(:confirm_deploy!).never
 
-    service.deploy!(stage, reference)
+    service.deploy!(stage, reference: reference)
   end
 
   it "does deploy production if buddy check is not enabled" do
@@ -40,7 +40,7 @@ describe BuddyCheck do
     stage.stubs(:production?).returns(true)
     service.expects(:confirm_deploy!).once
 
-    service.deploy!(stage, reference)
+    service.deploy!(stage, reference: reference)
   end
 
   it "does deploy non-production if buddy check is enabled" do
@@ -49,7 +49,7 @@ describe BuddyCheck do
     stage.expects(:production?).returns(false)
     service.expects(:confirm_deploy!).once
 
-    service.deploy!(stage, reference)
+    service.deploy!(stage, reference: reference)
   end
 
   it "does deploy non-production if buddy check is not enabled" do
@@ -58,7 +58,7 @@ describe BuddyCheck do
     stage.stubs(:production?).returns(false)
     service.expects(:confirm_deploy!).once
 
-    service.deploy!(stage, reference)
+    service.deploy!(stage, reference: reference)
   end
 
   describe "before notifications, buddycheck enabled" do

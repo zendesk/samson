@@ -5,8 +5,8 @@ class DeployService
     @user = user
   end
 
-  def deploy!(stage, reference)
-    deploy = stage.create_deploy(reference: reference, user: user)
+  def deploy!(stage, attributes)
+    deploy = stage.create_deploy(user, attributes)
     send_sse_deploy_update('new', deploy)
 
     if deploy.persisted? && (!stage.deploy_requires_approval? || release_approved?(deploy))

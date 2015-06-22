@@ -21,7 +21,7 @@ describe DeployService do
       SseRailsEngine.expects(:send_event).twice
       assert_difference "Job.count", +1 do
         assert_difference "Deploy.count", +1 do
-          service.deploy!(stage, reference)
+          service.deploy!(stage, reference: reference)
         end
       end
     end
@@ -37,7 +37,7 @@ describe DeployService do
 
       it "does not start the deploy" do
         service.expects(:confirm_deploy!).never
-        service.deploy!(stage, reference)
+        service.deploy!(stage, reference: reference)
       end
 
       describe "if release is approved" do
@@ -45,13 +45,13 @@ describe DeployService do
 
         it "starts the deploy, if in grace period" do
           service.expects(:confirm_deploy!).once
-          service.deploy!(stage_production_2, ref1)
+          service.deploy!(stage_production_2, reference: ref1)
         end
 
         it "does not start the deploy, if past grace period" do
           service.expects(:confirm_deploy!).never
           travel (BuddyCheck.period).hour + 1.minute do
-            service.deploy!(stage_production_2, ref1)
+            service.deploy!(stage_production_2, reference: ref1)
           end
         end
 
@@ -62,7 +62,7 @@ describe DeployService do
         it "does not start the deploy" do
           service.expects(:release_approved?).once
           service.expects(:confirm_deploy!).never
-          service.deploy!(stage, reference)
+          service.deploy!(stage, reference: reference)
         end
       end
 
@@ -73,7 +73,7 @@ describe DeployService do
         end
         it "it starts the deploy" do
           service.expects(:confirm_deploy!).once
-          service.deploy!(stage, reference)
+          service.deploy!(stage, reference: reference)
         end
       end
 
@@ -86,13 +86,13 @@ describe DeployService do
         it 'should deploy because of prod deploy groups' do
           create_previous_deploy(ref1, stage_production_1)
           service.expects(:confirm_deploy!).once
-          service.deploy!(stage_production_2, ref1)
+          service.deploy!(stage_production_2, reference: ref1)
         end
 
         it 'should not deploy if previous deploy was not on prod' do
           create_previous_deploy(ref1, stages(:test_staging))
           service.expects(:confirm_deploy!).never
-          service.deploy!(stage_production_2, ref1)
+          service.deploy!(stage_production_2, reference: ref1)
         end
       end
     end
@@ -130,7 +130,7 @@ describe DeployService do
   describe "before notifications" do
     it "sends before_deploy hook" do
       record_hooks(:before_deploy) do
-        service.deploy!(stage, reference)
+        service.deploy!(stage, reference: reference)
       end.must_equal [[Deploy.first, nil]]
     end
 
@@ -142,7 +142,7 @@ describe DeployService do
       GithubDeployment.stubs(new: deployment)
       deployment.expects(:create_github_deployment)
 
-      service.deploy!(stage, reference)
+      service.deploy!(stage, reference: reference)
     end
   end
 
@@ -161,13 +161,13 @@ describe DeployService do
 
       DeployMailer.expects(:deploy_email).returns( stub("DeployMailer", deliver_now: true) )
 
-      service.deploy!(stage, reference)
+      service.deploy!(stage, reference: reference)
       job_execution.send(:run!)
     end
 
     it "sends after_deploy hook" do
       record_hooks(:after_deploy) do
-        service.deploy!(stage, reference)
+        service.deploy!(stage, reference: reference)
         job_execution.send(:run!)
       end.must_equal [[deploy, nil]]
     end
@@ -177,7 +177,7 @@ describe DeployService do
 
       DatadogNotification.any_instance.expects(:deliver)
 
-      service.deploy!(stage, reference)
+      service.deploy!(stage, reference: reference)
       job_execution.send(:run!)
     end
 
@@ -187,7 +187,7 @@ describe DeployService do
 
       GithubNotification.any_instance.expects(:deliver)
 
-      service.deploy!(stage, reference)
+      service.deploy!(stage, reference: reference)
       job_execution.send(:run!)
     end
 
@@ -197,7 +197,7 @@ describe DeployService do
 
       GithubNotification.any_instance.expects(:deliver).never
 
-      service.deploy!(stage, reference)
+      service.deploy!(stage, reference: reference)
       job_execution.send(:run!)
     end
 
@@ -209,7 +209,7 @@ describe DeployService do
       GithubDeployment.stubs(new: deployment)
       deployment.expects(:update_github_deployment_status)
 
-      service.deploy!(stage, reference)
+      service.deploy!(stage, reference: reference)
       job_execution.send(:run!)
     end
 
@@ -218,7 +218,7 @@ describe DeployService do
 
       DeployMailer.expects(:deploy_failed_email).returns( stub("DeployMailer", deliver_now: true) )
 
-      service.deploy!(stage, reference)
+      service.deploy!(stage, reference: reference)
       job_execution.send(:run!)
     end
   end
