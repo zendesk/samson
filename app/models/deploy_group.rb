@@ -10,6 +10,9 @@ class DeployGroup < ActiveRecord::Base
 
   default_scope { order(:name) }
 
+  before_destroy :touch_stages
+  after_save :touch_stages
+
   def self.enabled?
     ENV['DEPLOY_GROUP_FEATURE'].present?
   end
@@ -23,6 +26,10 @@ class DeployGroup < ActiveRecord::Base
   end
 
   private
+
+  def touch_stages
+    stages.update_all(updated_at: Time.now)
+  end
 
   def initialize_env_value
     self.env_value = name if env_value.blank?
