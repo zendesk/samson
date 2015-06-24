@@ -23,6 +23,7 @@
         <div id="scrollable-dropdown-menu" class="col-lg-4">
           <%= form.text_field :reference, class: "form-control", autofocus: true, placeholder: "e.g. v2.1.43, master, fa0b4671", data: { prefetch_url: project_references_path(@project, format: "json") } %>
         </div>
+
       </div>
       <div>
         <div id="ref-problem-warning" class="col-lg-5 col-lg-offset-2 alert alert-warning hidden">
@@ -35,6 +36,21 @@
 
       <div class="form-group" id="new-deploy-buttons">
         <div class="col-lg-offset-2 col-lg-10">
+
+          <a href="#" onclick="document.getElementById('commands').setAttribute('style', 'display: block')">Or Run task</a>
+          <div id="commands" style="display: none">
+            <%= form.collection_radio_buttons(:id, Command.for_project(@project), :id, :name_alias, {}, {:name => "deploy[command_id]"}) do |b| %>
+              <div class="row bar">
+                <div data-id="<%= b.value %>" class="col-lg-offset-2 col-lg-2 command-checkbox">
+                  <%= b.radio_button %>
+                </div>
+                <div class="col-lg-8">
+                  <pre data-type="textarea" class="pre-command pre-inline"><%= b.text %></pre>
+                </div>
+              </div>
+            <% end %>
+          </div>
+
           <%= form.submit "", class: "btn btn-primary", disabled: global_lock %>
           <%= link_to "Cancel", :back, class: 'btn btn-default' %>
         </div>

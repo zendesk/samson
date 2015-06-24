@@ -166,4 +166,5 @@ class Deploy < ActiveRecord::Base
       "(with #{buddy.name})"
     end
   end
+
 end

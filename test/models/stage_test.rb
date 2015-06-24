@@ -141,6 +141,12 @@ describe Stage do
         subject.create_deploy(user, {reference: ""})
       end
     end
+
+    it "creates a new deploy with custom command" do
+      command = Command.create!(command: 'custom command')
+      deploy = subject.create_deploy(user, {reference: "foo", command_id: command.id})
+      deploy.job.command.must_equal command.command
+    end
   end
 
   describe "#current_deploy" do

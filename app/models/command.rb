@@ -16,4 +16,9 @@ class Command < ActiveRecord::Base
   def global?
     project_id.nil?
   end
+
+  def name_alias
+    name || command
+  end
+
 end

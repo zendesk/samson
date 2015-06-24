@@ -95,8 +95,13 @@ class Stage < ActiveRecord::Base
   end
 
   def create_deploy(user, attributes = {})
-    deploys.create(attributes) do |deploy|
-      deploy.build_job(project: project, user: user, command: command)
+    attributes = attributes.symbolize_keys
+    deploy_command = command
+    if attributes[:command_id]
+      deploy_command = Command.find(attributes[:command_id]).try(:command) rescue command
+    end
+    deploys.create(attributes.except(:command_id)) do |deploy|
+      deploy.build_job(project: project, user: user, command: deploy_command)
     end
   end
 
