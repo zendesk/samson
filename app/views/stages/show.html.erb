@@ -1,4 +1,4 @@
-<% content_for :page_title, "#{@stage.name} - #{@project.name}" %>
+<% content_for :page_title, @stage.global_name %>
 
 <%= breadcrumb @project, @stage %>
 
@@ -17,7 +17,7 @@
     <%= render "locks/button", lock: @stage.lock %>
 
     <% if current_user.is_admin? %>
-      <%= link_to "Edit stage", edit_project_stage_path(@project, @stage), class: "btn btn-default" %>
+      <%= link_to "Edit", edit_project_stage_path(@project, @stage), class: "btn btn-default" %>
       <%= link_to_delete_button([@project, @stage]) %>
     <% end %>
   </div>
