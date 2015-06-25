@@ -69,14 +69,19 @@
 
   <div id="commands">
     <%= form.collection_check_boxes(:command_ids, form.object.all_commands, :id, :command) do |b| %>
+      <% command = b.object %>
+      <% others = (command.stages - [@stage]).map(&:name) %>
+      <% others_warning = "#{others.size} other stages: #{others.join(", ")}" if others.any? %>
       <div class="row stage-bar bar">
         <div data-id="<%= b.value %>" class="col-lg-offset-2 col-lg-2 command-checkbox">
           <%= b.check_box %>
         </div>
         <div class="col-lg-8">
-          <pre data-type="textarea" data-url="<%= admin_command_path(b.value, format: :json) %>" class="pre-command pre-inline <%= b.object.global? ? 'global' : 'local' %>"><%= b.text %></pre>
+          <% klass = "pre-command pre-inline #{command.global? ? 'global' : 'local'} #{'others' if others_warning}" %>
+          <pre data-type="textarea" data-others-warning="<%= others_warning %>" data-url="<%= admin_command_path(b.value, format: :json) %>" class="<%= klass %>"><%= b.text %></pre>
         </div>
-        <%= edit_command_link(b.object) %>
+        <%= edit_command_link command %>
+        <%= content_tag :span, others.size, title: others_warning + " use this.", class: 'glyphicon glyphicon-lock' if others_warning %>
       </div>
     <% end %>
   </div>
@@ -182,10 +187,12 @@
 
 <script>
   $(document).ready(function() {
-    $('#commands').sortable();
+    var $localCommands = $('#commands pre.local');
+
+    $localCommands.sortable();
     $.fn.editableform.buttons = <%= render('commands/buttons').inspect.html_safe %>;
 
-    $('#commands pre.local').editable({
+    $localCommands.editable({
       mode: 'inline',
       send: 'always',
       toggle: 'dblclick',
@@ -197,6 +204,10 @@
         type: 'PATCH',
         dataType: 'json'
       }
+    });
+
+    $localCommands.filter(".others").dblclick(function(){
+      alert("Editing for " + $(this).data('others-warning') + ". If you do not want this, make a copy.");
     });
 
     $('#commands pre.global').dblclick(function(){
