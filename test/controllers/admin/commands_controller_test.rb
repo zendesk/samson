@@ -14,7 +14,7 @@ describe Admin::CommandsController do
       before { get :new }
 
       it 'renders template' do
-        assert_template :new
+        assert_template :edit
       end
     end
 
@@ -28,7 +28,7 @@ describe Admin::CommandsController do
 
         it 'renders and sets the flash' do
           flash[:error].wont_be_nil
-          assert_template :new
+          assert_template :edit
         end
       end
 
