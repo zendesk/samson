@@ -20,8 +20,8 @@
       <div class="form-group">
         <div class="col-lg-offset-2 col-lg-10">
           <button type="submit" class="btn btn-default">Save</button>
-          <% if stages = @command.stages.to_a.presence %>
-            <%= "Used by #{stages.map { |s| link_to s.global_name, project_stage_path(s.project, s) }.join(", ") }".html_safe %>
+          <% if usages = @command.usages.presence %>
+            <%= "Used by #{usages.map { |s| link_to "#{s.class}: #{s.project.name} - #{s.name}", [s.project, s, action: :edit] }.join(", ") }".html_safe %>
           <% else %>
             <%= link_to_delete([:admin, @command]) %>
           <% end %>

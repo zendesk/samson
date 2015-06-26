@@ -68,12 +68,15 @@
   <p>Select the commands you want to run when executing this stage. Double click to edit commands.</p>
 
   <div id="commands">
+    <% usage_ids = Command.usage_ids %>
     <%= form.collection_check_boxes(:command_ids, form.object.all_commands, :id, :command) do |b| %>
       <% command = b.object %>
-      <% others = (command.stages - [@stage]).map(&:name) %>
-      <% others_warning = "#{others.size} other stages: #{others.join(", ")}" if others.any? %>
+      <% checked = b.value %>
+      <% others = usage_ids.count(command.id) - (checked ? 1 : 0) %>
+      <% others_warning = "#{others} others" if others > 0 %>
+
       <div class="row stage-bar bar">
-        <div data-id="<%= b.value %>" class="col-lg-offset-2 col-lg-2 command-checkbox">
+        <div data-id="<%= checked %>" class="col-lg-offset-2 col-lg-2 command-checkbox">
           <%= b.check_box %>
         </div>
         <div class="col-lg-8">
@@ -81,7 +84,7 @@
           <pre data-type="textarea" data-others-warning="<%= others_warning %>" data-url="<%= admin_command_path(b.value, format: :json) %>" class="<%= klass %>"><%= b.text %></pre>
         </div>
         <%= edit_command_link command %>
-        <%= content_tag :span, others.size, title: others_warning + " use this.", class: 'glyphicon glyphicon-lock' if others_warning %>
+        <%= content_tag :span, others, title: others_warning + " use this. Click edit for details.", class: 'glyphicon glyphicon-lock' if others_warning %>
       </div>
     <% end %>
   </div>
