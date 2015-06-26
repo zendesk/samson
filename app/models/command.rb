@@ -17,8 +17,12 @@ class Command < ActiveRecord::Base
     project_id.nil?
   end
 
-  def name_alias
-    name || command
+  def name
+    lines = command.split("\n")
+    if /^#.+/ =~ lines.first
+      lines.first.slice(1, lines.first.length)
+    else
+      command
+    end
   end
-
 end

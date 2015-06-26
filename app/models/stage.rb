@@ -96,12 +96,9 @@ class Stage < ActiveRecord::Base
 
   def create_deploy(user, attributes = {})
     attributes = attributes.symbolize_keys
-    deploy_command = command
-    if attributes[:command_id]
-      deploy_command = Command.find(attributes[:command_id]).try(:command) rescue command
-    end
+
     deploys.create(attributes.except(:command_id)) do |deploy|
-      deploy.build_job(project: project, user: user, command: deploy_command)
+      deploy.build_job(project: project, user: user, command: build_custom_stage_command(attributes[:command_id]))
     end
   end
 
@@ -222,5 +219,16 @@ class Stage < ActiveRecord::Base
 
   def permalink_scope
     Stage.unscoped.where(project_id: project_id)
+  end
+
+  def build_custom_stage_command(custom_command_id)
+    if custom_command_id
+      custom_command = Command.find(custom_command_id).try(:command)
+      deploy_command = commands.map(&:command)
+      deploy_command.pop
+      (deploy_command << custom_command).join("\n")
+    else
+      command
+    end
   end
 end

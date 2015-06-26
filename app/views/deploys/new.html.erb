@@ -39,7 +39,7 @@
 
           <a href="#" onclick="document.getElementById('commands').setAttribute('style', 'display: block')">Or Run task</a>
           <div id="commands" style="display: none">
-            <%= form.collection_radio_buttons(:id, Command.for_project(@project), :id, :name_alias, {}, {:name => "deploy[command_id]"}) do |b| %>
+            <%= form.collection_radio_buttons(:id, Command.for_project(@project), :id, :name, {}, {:name => "deploy[command_id]"}) do |b| %>
               <div class="row bar">
                 <div data-id="<%= b.value %>" class="col-lg-offset-2 col-lg-2 command-checkbox">
                   <%= b.radio_button %>

@@ -142,10 +142,15 @@ describe Stage do
       end
     end
 
-    it "creates a new deploy with custom command" do
+    it "creates a new deploy with custom command replace last command of stage" do
+      namecmd = commands(:namecmd)
+      echocmd = commands(:echo)
+      subject.commands << namecmd
+
       command = Command.create!(command: 'custom command')
       deploy = subject.create_deploy(user, {reference: "foo", command_id: command.id})
-      deploy.job.command.must_equal command.command
+      deploy.job.command.must_equal [echocmd.command, command.command].join("\n")
+      subject.commands.last.delete
     end
   end
 
