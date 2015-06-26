@@ -31,7 +31,7 @@ module Samson
     @@hooks = {}
 
     class Plugin
-      attr_reader :name
+      attr_reader :name, :folder
       def initialize(path)
         @path = path
         @folder = File.expand_path('../../../', @path)
@@ -135,6 +135,19 @@ module Samson
           each(&:add_migrations).
           each(&:add_assets_to_precompile).
           each(&:add_decorators)
+      end
+
+      def plugin_test_setup
+        fixture_path = ActiveSupport::TestCase.fixture_path
+        plugins.each do |plugin|
+          fixtures = Dir.glob(File.join(plugin.folder, 'test', 'fixtures', '*.yml'))
+          fixtures.each do |fixture|
+            yml_filename = fixture[/\w+\.yml\z/]
+            new_path = File.join(fixture_path, yml_filename)
+            File.symlink(fixture, new_path)
+            Minitest.after_run { File.delete(new_path) }
+          end
+        end
       end
 
       def render_javascripts(view)

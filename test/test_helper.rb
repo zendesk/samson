@@ -56,6 +56,7 @@ class ActiveSupport::TestCase
   #
   # Note: You'll currently still have to declare fixtures explicitly in integration tests
   # -- they do not yet inherit this setting
+  Samson::Hooks.plugin_test_setup
   fixtures :all
 
   before do
