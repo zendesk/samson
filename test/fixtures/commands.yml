@@ -2,5 +2,8 @@ echo:
   command: echo hello
   project: test
 
+namecmd:
+  command: "#name cmd\n echo command"
+
 global:
   command: true

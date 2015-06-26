@@ -110,7 +110,7 @@ class DeploysController < ApplicationController
   protected
 
   def deploy_permitted_params
-    [ :reference, :stage_id ] + Samson::Hooks.fire(:deploy_permitted_params)
+    [ :reference, :stage_id, :command_id ] + Samson::Hooks.fire(:deploy_permitted_params)
   end
 
   def reference
@@ -123,6 +123,10 @@ class DeploysController < ApplicationController
 
   def deploy_params
     params.require(:deploy).permit(deploy_permitted_params)
+  end
+
+  def command_params
+    params.permit(:command)
   end
 
   def find_project
