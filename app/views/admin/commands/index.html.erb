@@ -20,10 +20,13 @@
           <td>
             <%= link_to "Edit", edit_admin_command_path(command) %>
             |
-            <%= link_to_delete([:admin, command]) %>
+            <% if stages = command.stages.to_a.presence %>
+              <%= content_tag :span, "Used by #{pluralize stages.size, 'stage'}", title: "Click Edit to see usage details" %>
+            <% else %>
+              <%= link_to_delete([:admin, command]) %>
+            <% end %>
           </td>
         </tr>
-
       <% end %>
     </tbody>
   </table>

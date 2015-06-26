@@ -7,6 +7,7 @@ class Admin::CommandsController < ApplicationController
 
   def new
     @command = Command.new
+    render :edit
   end
 
   def create
@@ -17,7 +18,7 @@ class Admin::CommandsController < ApplicationController
       redirect_to admin_commands_path
     else
       flash[:error] = 'Command failure.'
-      render :new
+      render :edit
     end
   end
 

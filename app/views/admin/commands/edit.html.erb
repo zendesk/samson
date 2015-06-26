@@ -1,3 +1,32 @@
 <section>
-  <%= render "form" %>
+  <%= form_for [:admin, @command], html: { class: "form-horizontal" } do |form| %>
+    <fieldset>
+      <legend><%= command_form_legend %></legend>
+
+      <div class="form-group">
+        <%= form.label :command, class: "col-lg-2 control-label" %>
+        <div class="col-lg-6">
+          <%= form.text_area :command, class: "form-control", rows: 10 %>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <%= form.label :project_id, value: "Project", class: "col-lg-2 control-label" %>
+        <div class="col-lg-4">
+          <%= form.select :project_id, Project.all.map {|p| [p.name, p.id]}, { include_blank: "Global" }, class: "form-control" %>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <div class="col-lg-offset-2 col-lg-10">
+          <button type="submit" class="btn btn-default">Save</button>
+          <% if stages = @command.stages.to_a.presence %>
+            <%= "Used by #{stages.map { |s| link_to s.global_name, project_stage_path(s.project, s) }.join(", ") }".html_safe %>
+          <% else %>
+            <%= link_to_delete([:admin, @command]) %>
+          <% end %>
+        </div>
+      </div>
+    </fieldset>
+  <% end %>
 </section>

@@ -118,6 +118,10 @@ class Stage < ActiveRecord::Base
     notify_email_address.present?
   end
 
+  def global_name
+    "#{name} - #{project.name}"
+  end
+
   def command
     commands.map(&:command).join("\n")
   end
