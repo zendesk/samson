@@ -11,19 +11,9 @@ branches:
   only: [master]
 env:
   matrix:
-    - DB=sqlite BUNDLE_WITHOUT=mysql2:postgresql
-    - DB=mysql BUNDLE_WITHOUT=sqlite:postgresql
-    - DB=postgresql BUNDLE_WITHOUT=sqlite:mysql2
-
-before_script:
-  - mysql -u root -e "set GLOBAL innodb_large_prefix = true" || true
-  - mysql -u root -e "set GLOBAL innodb_file_per_table = true" || true
-  - mysql -u root -e "set GLOBAL innodb_file_format = 'barracuda'" || true
-  - cp config/database.travis.yml config/database.yml
-  - bundle exec rake db:create
-  - npm install
-script:
-  - npm run-script jshint
-  - bundle exec rake test:js
-  - SECRET_TOKEN=foo GITHUB_TOKEN=foo PRECOMPILE=1 RAILS_ENV=production bundle exec rake assets:precompile
-  - bundle exec rake
+    - DB=mysql TASK=rake
+    - DB=mysql TASK=js
+    - DB=mysql TASK=precompile
+    - DB=postgresql TASK=rake
+    - DB=sqlite TASK=rake
+script: script/ci.rb
