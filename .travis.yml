@@ -15,9 +15,5 @@ env:
     - DB=mysql TASK=js
     - DB=mysql TASK=precompile
     - DB=postgresql TASK=rake
-    - DB=postgresql TASK=js
-    - DB=postgresql TASK=precompile
     - DB=sqlite TASK=rake
-    - DB=sqlite TASK=js
-    - DB=sqlite TASK=precompile
 script: script/ci.rb
