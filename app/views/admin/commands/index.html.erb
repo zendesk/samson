@@ -11,6 +11,7 @@
     </thead>
 
     <tbody>
+      <% usage_ids = Command.usage_ids %>
       <% @commands.each do |command| %>
         <tr>
           <td>
@@ -20,8 +21,9 @@
           <td>
             <%= link_to "Edit", edit_admin_command_path(command) %>
             |
-            <% if stages = command.stages.to_a.presence %>
-              <%= content_tag :span, "Used by #{pluralize stages.size, 'stage'}", title: "Click Edit to see usage details" %>
+            <% others = usage_ids.count(command.id) - 1 %>
+            <% if others > 0 %>
+              <%= content_tag :span, "Used by #{pluralize others, 'other'}", title: "Click Edit to see usage details" %>
             <% else %>
               <%= link_to_delete([:admin, command]) %>
             <% end %>
