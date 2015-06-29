@@ -37,7 +37,16 @@ class Project < ActiveRecord::Base
   end
 
   def docker_repo
-    "#{Rails.application.config.samson.docker.registry}/samson/#{repo_name}"
+    @docker_repo ||= begin
+      registry = Rails.application.config.samson.docker.registry
+      if Rails.env.production?
+        registry
+      else
+        host, namespace = registry.split '/'
+        namespace ||= 'samson'
+        "#{host}/#{namespace}_non_prod"
+      end
+    end
   end
 
   def last_release_contains_commit?(commit)
