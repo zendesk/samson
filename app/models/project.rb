@@ -19,6 +19,9 @@ class Project < ActiveRecord::Base
   has_many :commands
   has_many :macros
 
+  # For permission checks on callbacks. Currently used in private plugins.
+  attr_accessor :current_user
+
   accepts_nested_attributes_for :stages
 
   scope :alphabetical, -> { order('name') }
