@@ -22,12 +22,14 @@ class ProjectsController < ApplicationController
 
   def new
     @project = Project.new
+    @project.current_user = current_user
     stage = @project.stages.build(name: "Production")
     stage.new_relic_applications.build
   end
 
   def create
     @project = Project.new(project_params)
+    @project.current_user = current_user
 
     if @project.save
       if ENV['PROJECT_CREATED_NOTIFY_ADDRESS']
@@ -90,7 +92,9 @@ class ProjectsController < ApplicationController
   end
 
   def project
-    @project ||= Project.find_by_param!(params[:id])
+    @project ||= Project.find_by_param!(params[:id]).tap do |project|
+      project.current_user = current_user
+    end
   end
 
   def redirect_viewers!
