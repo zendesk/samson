@@ -71,12 +71,11 @@
     <% usage_ids = Command.usage_ids %>
     <%= form.collection_check_boxes(:command_ids, form.object.all_commands, :id, :command) do |b| %>
       <% command = b.object %>
-      <% checked = b.check_box.include? 'checked' %>
-      <% others = usage_ids.count(command.id) - (checked ? 1 : 0) %>
+      <% others = usage_ids.count(command.id) - (b.check_box.include?('checked') ? 1 : 0) %>
       <% others_warning = "#{others} others" if others > 0 %>
 
       <div class="row stage-bar bar">
-        <div data-id="<%= checked %>" class="col-lg-offset-2 col-lg-2 command-checkbox">
+        <div data-id="<%= b.value %>" class="col-lg-offset-2 col-lg-2 command-checkbox">
           <%= b.check_box %>
         </div>
         <div class="col-lg-8">
