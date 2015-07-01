@@ -71,7 +71,7 @@
     <% usage_ids = Command.usage_ids %>
     <%= form.collection_check_boxes(:command_ids, form.object.all_commands, :id, :command) do |b| %>
       <% command = b.object %>
-      <% checked = b.value %>
+      <% checked = b.check_box.include? 'checked' %>
       <% others = usage_ids.count(command.id) - (checked ? 1 : 0) %>
       <% others_warning = "#{others} others" if others > 0 %>
 
