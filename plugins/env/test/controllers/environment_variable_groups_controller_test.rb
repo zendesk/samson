@@ -39,6 +39,12 @@ describe Admin::EnvironmentVariableGroupsController do
         get :preview, project_id: project.id
         assert_response :success
       end
+
+      it "calls env with preview" do
+        EnvironmentVariable.expects(:env).with(anything, anything, preview: true).times(3)
+        get :preview, group_id: env_group.id
+        assert_response :success
+      end
     end
 
     unauthorized :post, :create
