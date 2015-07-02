@@ -6,6 +6,10 @@ describe "env hooks" do
   let(:project) { stage.project }
 
   describe :after_deploy_setup do
+    def fire
+      Samson::Hooks.fire(:after_deploy_setup, Dir.pwd, stage)
+    end
+
     around { |test| Dir.mktmpdir { |dir| Dir.chdir(dir) { test.call } } }
 
     before do
@@ -19,25 +23,25 @@ describe "env hooks" do
 
         it "does not modify when no variables were specified" do
           EnvironmentVariable.delete_all
+          project.environment_variables(:reload)
+          fire
           File.exist?(".env").must_equal false
         end
 
         it "writes to .env" do
-          Samson::Hooks.fire(:after_deploy_setup, Dir.pwd, stage)
+          fire
           File.read(".env").must_equal "HELLO=\"world\"\nWORLD=\"hello\"\n"
         end
 
         it "overwrites .env by ignoring not required" do
           File.write(".env", "# a comment ...\nHELLO=foo")
-          Samson::Hooks.fire(:after_deploy_setup, Dir.pwd, stage)
+          fire
           File.read(".env").must_equal "HELLO=\"world\"\n"
         end
 
         it "fails when .env has an unsatisfied required key" do
           File.write(".env", "FOO=foo")
-          assert_raises Samson::Hooks::UserError do
-            Samson::Hooks.fire(:after_deploy_setup, Dir.pwd, stage)
-          end
+          assert_raises(Samson::Hooks::UserError) { fire }
         end
       end
 
@@ -64,10 +68,6 @@ describe "env hooks" do
             "some" => "thing"
           }
         ))
-      end
-
-      def fire
-        Samson::Hooks.fire(:after_deploy_setup, Dir.pwd, stage)
       end
 
       it "works without ENV.json" do

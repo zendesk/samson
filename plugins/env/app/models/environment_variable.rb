@@ -5,7 +5,9 @@ class EnvironmentVariable < ActiveRecord::Base
   validates :scope_type, inclusion: ["Environment", "DeployGroup", nil]
 
   class << self
-    def env(project, deploy_group)
+    # preview parameter can be used to not raise an error,
+    # but return a value with a helpful message
+    def env(project, deploy_group, preview: false)
       variables = project.environment_variables + project.environment_variable_groups.flat_map(&:environment_variables)
       variables.sort_by! { |ev| ev.send :priority }
       env = variables.each_with_object({}) do |ev, all|
