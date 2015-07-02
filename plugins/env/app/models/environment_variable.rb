@@ -15,7 +15,7 @@ class EnvironmentVariable < ActiveRecord::Base
       resolve_dollar_variables(env)
     end
 
-    def env_deploygroup_array(include_all: true)
+    def env_deploygroup_array(include_all: true) # used by private plugin
       all = include_all ? [["All", nil]] : []
       envs = Environment.all.map { |env| [env.name, "Environment-#{env.id}"] }
       separator = [["----", nil]]
