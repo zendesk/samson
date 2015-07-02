@@ -6,7 +6,7 @@ to add views/assets/models to Samson.
 This plugin acts mostly like a Rails Engine, so it can contain controllers/
 models/routes/migrations/etc...
 
-Amend core models by defining app/models/decorators/{model}_decorator.rb, it
+Amend core models by defining app/decorators/{model}_decorator.rb, it
 will be auto-loaded when the underlying model is loaded.
 
 Remember to run 'bundle install' now to get it loaded into Samson for testing!

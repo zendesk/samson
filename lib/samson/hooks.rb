@@ -24,7 +24,7 @@ module Samson
       :after_docker_build,
     ].freeze
 
-    INTERNAL_HOOKS = [ :model_defined ]
+    INTERNAL_HOOKS = [ :class_defined ]
 
     KNOWN = VIEW_HOOKS + EVENT_HOOKS + INTERNAL_HOOKS
 
@@ -102,8 +102,8 @@ module Samson
         hooks(name) << partial
       end
 
-      def decorator(model_name, file)
-        hooks(:model_defined, model_name) << file
+      def decorator(class_name, file)
+        hooks(:class_defined, class_name) << file
       end
 
       # temporarily add a hook for testing
@@ -125,8 +125,8 @@ module Samson
         end
       end
 
-      def load_decorators(model_name)
-        hooks(:model_defined, model_name).each { |path| require_dependency(path) }
+      def load_decorators(class_name)
+        hooks(:class_defined, class_name).each { |path| require_dependency(path) }
       end
 
       def plugin_setup
@@ -185,3 +185,4 @@ end
 
 Samson::Hooks.plugin_setup
 ActiveRecord::Base.extend Samson::LoadDecorators
+ActionController::Base.extend Samson::LoadDecorators
