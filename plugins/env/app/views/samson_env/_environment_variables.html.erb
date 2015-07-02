@@ -1,4 +1,4 @@
-<% scopes = [["All", nil]] + Environment.all.map{ |dg| [dg.name, "Environment-#{dg.id}"] } + [["----", nil]] + DeployGroup.all.map{ |dg| [dg.name, "DeployGroup-#{dg.id}"] } %>
+<% scopes = env_deploygroup_array %>
 <% form.object.environment_variables.build %>
 <%= form.fields_for :environment_variables do |fields| %>
   <div class="form-group">
