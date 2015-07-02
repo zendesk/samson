@@ -9,8 +9,9 @@ module BuddyCheck
     ENV["BYPASS_EMAIL"]
   end
 
-  def period
-    (ENV["BUDDY_CHECK_GRACE_PERIOD"].presence || "4").to_i
+  # how long can the same commit be deployed ?
+  def grace_period
+    (ENV["BUDDY_CHECK_GRACE_PERIOD"].presence || "4").to_i.hours
   end
 
   def bypass_jira_email_address
