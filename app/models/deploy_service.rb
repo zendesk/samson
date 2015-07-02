@@ -35,7 +35,7 @@ class DeployService
   private
 
   def latest_approved_deploy(reference, project)
-    Deploy.where(reference: reference).where('buddy_id is NOT NULL AND started_at > ?', BuddyCheck.period.hours.ago)
+    Deploy.where(reference: reference).where('buddy_id is NOT NULL AND started_at > ?', BuddyCheck.grace_period.ago)
       .includes(:stage)
       .where(stages: {project_id: project})
       .detect { |d| d.production? && !d.bypassed_approval? }

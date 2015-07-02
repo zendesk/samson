@@ -50,11 +50,10 @@ describe DeployService do
 
         it "does not start the deploy, if past grace period" do
           service.expects(:confirm_deploy!).never
-          travel (BuddyCheck.period).hour + 1.minute do
+          travel BuddyCheck.grace_period + 1.minute do
             service.deploy!(stage_production_2, reference: ref1)
           end
         end
-
       end
 
       describe "if similar deploy was bypassed" do
