@@ -38,7 +38,7 @@ gem 'docker-api'
 
 group :production, :staging do
   gem 'rails_12factor'
-  gem 'airbrake', '~> 4.1.0'
+  gem 'airbrake', '~> 4.3.0'
   gem 'newrelic_rpm', '>= 3.7.1'
 end
 
