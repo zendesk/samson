@@ -191,7 +191,7 @@
   $(document).ready(function() {
     var $localCommands = $('#commands pre.local');
 
-    $localCommands.sortable();
+    $('#commands').sortable({cancel: '.global'});
     $.fn.editableform.buttons = <%= render('commands/buttons').inspect.html_safe %>;
 
     $localCommands.editable({
