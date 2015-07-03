@@ -31,6 +31,7 @@ Streaming is done through a [controller](app/controllers/streams_controller.rb) 
 * MySQL, Postgresql, or SQLite
 * Memcache
 * Ruby (currently 2.1.1)
+* Git (Over 1.7.2)
 
 #### Setup
 
