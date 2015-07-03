@@ -144,8 +144,8 @@ module Samson
           fixtures.each do |fixture|
             yml_filename = fixture[/\w+\.yml\z/]
             new_path = File.join(fixture_path, yml_filename)
-            File.symlink(fixture, new_path)
-            Minitest.after_run { File.delete(new_path) }
+            File.symlink(fixture, new_path) unless File.exist?(new_path)
+            Minitest.after_run { File.delete(new_path) if File.symlink?(new_path) }
           end
         end
       end
