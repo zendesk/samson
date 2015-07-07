@@ -6,7 +6,7 @@ gem 'rails', '~> 4.2.0'
 gem 'puma'
 gem 'dotenv-rails', '~> 0.9'
 
-gem 'dogstatsd-ruby', '~> 1.4.0', require: 'statsd'
+gem 'dogstatsd-ruby', '~> 1.5.0', require: 'statsd'
 gem 'goldiloader'
 
 group :mysql2 do
@@ -38,7 +38,7 @@ gem 'docker-api'
 
 group :production, :staging do
   gem 'rails_12factor'
-  gem 'airbrake', '~> 4.1.0'
+  gem 'airbrake', '~> 4.3.0'
   gem 'newrelic_rpm', '>= 3.7.1'
 end
 
@@ -72,8 +72,8 @@ group :no_preload do
   gem 'omniauth-oauth2', '~> 1.1'
   gem 'omniauth-github', '= 1.1.1'
   gem 'omniauth-google-oauth2', '~> 0.2.4'
-  gem 'octokit', '~> 3.0'
-  gem 'faraday-http-cache', '~> 0.4'
+  gem 'octokit', '~> 4.0'
+  gem 'faraday-http-cache', '~> 1.1'
   gem 'warden', '~> 1.2'
   gem 'active_hash', '~> 1.0'
   gem 'ansible'
