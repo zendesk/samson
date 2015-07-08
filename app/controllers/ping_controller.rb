@@ -4,4 +4,9 @@ class PingController < ApplicationController
   def show
     head :ok
   end
+
+  private
+  def force_ssl?
+    false
+  end
 end
