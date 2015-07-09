@@ -2,7 +2,8 @@ class DeployGroup < ActiveRecord::Base
   has_soft_deletion default_scope: true
 
   belongs_to :environment
-  has_and_belongs_to_many :stages
+  has_many :deploy_groups_stages
+  has_many :stages, through: :deploy_groups_stages
 
   validates_presence_of :name, :environment_id
   validates_uniqueness_of :name, :env_value

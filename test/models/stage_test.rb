@@ -419,4 +419,14 @@ describe Stage do
     end
   end
 
+  describe '#save' do
+    it 'touches the stage and project when only changing deploy_groups for cache invalidation' do
+      stage_updated_at = stage.updated_at
+      project_updated_at = stage.project.updated_at
+      stage.deploy_groups << deploy_groups(:pod1)
+      stage.save
+      stage_updated_at.wont_equal stage.updated_at
+      project_updated_at.wont_equal stage.project.updated_at
+    end
+  end
 end
