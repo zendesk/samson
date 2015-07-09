@@ -1,5 +1,6 @@
 class Changeset
   attr_reader :repo, :previous_commit, :commit
+  BRANCH_TAGS = ["master", "develop"]
 
   def initialize(repo, previous_commit, commit)
     @repo, @commit = repo, commit
@@ -70,6 +71,11 @@ class Changeset
     if empty?
       NullComparison.new(nil)
     else
+      # for branches that need review we make sure to always get the correct cache, others might get an outdated changeset if they are reviewed with different shas
+      if BRANCH_TAGS.include?(commit)
+        @commit = GITHUB.branch(repo, commit).commit[:sha]
+      end
+
       Rails.cache.fetch(cache_key) do
         GITHUB.compare(repo, previous_commit, commit)
       end
