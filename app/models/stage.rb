@@ -16,10 +16,8 @@ class Stage < ActiveRecord::Base
     -> { order('stage_commands.position ASC') },
     through: :stage_commands, auto_include: false
 
-  # Force a dirty stage even if only the deploy_groups have changed.
-  has_and_belongs_to_many :deploy_groups,
-                          after_add: ->(stage, _) { stage.updated_at = Time.now },
-                          after_remove: ->(stage, _) { stage.updated_at = Time.now }
+  has_many :deploy_groups_stages
+  has_many :deploy_groups, through: :deploy_groups_stages
 
   default_scope { order(:order) }
 
