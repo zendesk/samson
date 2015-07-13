@@ -11,11 +11,25 @@ describe Changeset do
       Changeset.new("foo/bar", "a", "b").comparison.to_h.must_equal :x => "y"
     end
 
-    it "caches" do
-      stub_github_api("repos/foo/bar/compare/a...b", "x" => "y")
-      Changeset.new("foo/bar", "a", "b").comparison.to_h.must_equal :x => "y"
-      stub_github_api("repos/foo/bar/compare/a...b", "x" => "z")
-      Changeset.new("foo/bar", "a", "b").comparison.to_h.must_equal :x => "y"
+    describe "with a specificed SHA" do
+      it "caches" do
+        stub_github_api("repos/foo/bar/compare/a...b", "x" => "y")
+        Changeset.new("foo/bar", "a", "b").comparison.to_h.must_equal :x => "y"
+        stub_github_api("repos/foo/bar/compare/a...b", "x" => "z")
+        Changeset.new("foo/bar", "a", "b").comparison.to_h.must_equal :x => "y"
+      end
+    end
+
+    describe "with master" do
+      it "doesn't cache" do
+        stub_github_api("repos/foo/bar/branches/master", {:commit => { sha: "foo"}})
+        stub_github_api("repos/foo/bar/compare/a...foo", "x" => "y")
+        Changeset.new("foo/bar", "a", "master").comparison.to_h.must_equal :x => "y"
+
+        stub_github_api("repos/foo/bar/branches/master", {:commit => { sha: "bar"}})
+        stub_github_api("repos/foo/bar/compare/a...bar", "x" => "z")
+        Changeset.new("foo/bar", "a", "master").comparison.to_h.must_equal :x => "z"
+      end
     end
 
     {
