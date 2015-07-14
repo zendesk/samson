@@ -29,6 +29,8 @@ gem 'active_model_serializers', '~> 0.8.0'
 gem 'sawyer', '~> 0.5'
 gem 'sse-rails-engine'
 
+gem 'stackprof'
+
 # Logging
 gem 'lograge'
 gem 'logstash-event'
