@@ -3,25 +3,20 @@ class Integrations::BaseController < ApplicationController
   skip_before_action :verify_authenticity_token
 
   def create
-    if deploy?
-      create_new_release
-      unless deploy_to_stages
-        head :unprocessable_entity
-        return
-      end
+    return head(:ok) if !deploy?
+    if project.create_releases_for_branch?(branch)
+      create_build_record
+      create_docker_image if project.deploy_with_docker? && project.auto_release_docker_image?
     end
-
-    head :ok
+    deploy_to_stages ? head(:ok) : head(:unprocessable_entity, message: "Failed to start all deploys")
   end
 
   protected
 
   def create_new_release
-    if project.create_releases_for_branch?(branch)
-      unless project.last_release_contains_commit?(commit)
-        release_service = ReleaseService.new(project)
-        release_service.create_release!(commit: commit, author: user)
-      end
+    unless project.last_release_contains_commit?(commit)
+      release_service = ReleaseService.new(project)
+      release_service.create_release!(commit: commit, author: user)
     end
   end
 
@@ -45,10 +40,16 @@ class Integrations::BaseController < ApplicationController
   end
 
   def user
-    name = self.class.name.split("::").last.sub("Controller", "")
-    email = "deploy+#{name.underscore}@#{Rails.application.config.samson.email.sender_domain}"
+    @user ||= begin
+      name = self.class.name.split("::").last.sub("Controller", "")
+      email = "deploy+#{name.underscore}@#{Rails.application.config.samson.email.sender_domain}"
 
-    User.create_with(name: name, integration: true).find_or_create_by(email: email)
+      User.create_with(name: name, integration: true).find_or_create_by(email: email)
+    end
+  end
+
+  def message
+    ''
   end
 
   private
@@ -59,5 +60,24 @@ class Integrations::BaseController < ApplicationController
 
   def service_name
     @service_name ||= self.class.name.demodulize.sub('Controller', '').downcase
+  end
+
+  def create_build_record
+    release = create_new_release || latest_release
+    @build = project.builds.where(git_sha: commit).last || project.builds.create!(
+      git_ref: branch,
+      git_sha: commit,
+      description: message,
+      creator: user,
+      label: release.version,
+      releases: [release])
+  end
+
+  def create_docker_image
+    DockerBuilderService.new(@build).run!(push: true)
+  end
+
+  def latest_release
+    project.releases.order(:id).last
   end
 end

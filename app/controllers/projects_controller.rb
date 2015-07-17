@@ -86,6 +86,7 @@ class ProjectsController < ApplicationController
         :permalink,
         :release_branch,
         :deploy_with_docker,
+        :auto_release_docker_image,
         stages_attributes: stage_permitted_params
       ] + Samson::Hooks.fire(:project_permitted_params)
     )

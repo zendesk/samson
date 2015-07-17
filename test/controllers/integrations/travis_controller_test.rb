@@ -4,13 +4,11 @@ describe Integrations::TravisController do
   let(:sha) { "123abc" }
   let(:project) { projects(:test) }
   let(:stage) { stages(:test_staging) }
-  let(:release_service) { stub("release_service") }
 
   setup do
     Deploy.delete_all
     @orig_token, ENV["TRAVIS_TOKEN"] = ENV["TRAVIS_TOKEN"], "TOKEN"
     project.webhooks.create!(stage: stages(:test_staging), branch: "master", source: 'travis')
-    Project.any_instance.stubs(releases: stub("releases", create!: nil))
   end
 
   teardown do
