@@ -7,9 +7,11 @@
       <%= link_to "Releases", project_releases_path(project) %>
     </li>
   <% end %>
-  <li class="<%= 'active' if active == 'builds' %>">
-    <%= link_to "Builds", project_builds_path(project) %>
-  </li>
+  <% if project.deploy_with_docker? %>
+    <li class="<%= 'active' if active == 'builds' %>">
+      <%= link_to "Builds", project_builds_path(project) %>
+    </li>
+  <% end %>
   <li class="<%= 'active' if active == 'deploys' %>">
     <%= link_to "Deploys", project_deploys_path(project) %>
   </li>
