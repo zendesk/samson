@@ -150,8 +150,10 @@ class JobExecution
       "cd #{dir}",
       *@job.commands
     ]
-    if @stage && group_names = @stage.deploy_groups.pluck(:env_value).sort.map!(&:shellescape).join(" ")
+    if @stage
+      group_names = @stage.deploy_groups.pluck(:env_value).sort.map!(&:shellescape).join(" ")
       commands.unshift("export DEPLOY_GROUPS='#{group_names}'") if group_names.presence
+      commands.unshift("export STAGE='#{@stage.permalink.shellescape}'")
     end
     commands
   end
