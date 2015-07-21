@@ -147,6 +147,7 @@ class JobExecution
       "export REVISION=#{@reference.shellescape}",
       "export TAG=#{(@job.tag || @job.commit).to_s.shellescape}",
       "export CACHE_DIR=#{artifact_cache_dir}",
+      "export STAGE=#{@stage.permalink.shellescape}",
       "cd #{dir}",
       *@job.commands
     ]

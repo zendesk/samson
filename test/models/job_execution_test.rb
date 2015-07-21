@@ -122,6 +122,7 @@ describe JobExecution do
     lines.must_include "DEPLOYER_EMAIL=jdoe@test.com"
     lines.must_include "DEPLOYER_NAME=John Doe"
     lines.must_include "REVISION=master"
+    lines.must_include "STAGE=stage4"
     lines.must_include "TAG=v1"
   end
 
