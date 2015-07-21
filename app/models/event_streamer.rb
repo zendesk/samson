@@ -42,7 +42,7 @@ class EventStreamer
     emit_event('started', @handler.call(:started, ''))
     @scanner = TerminalOutputScanner.new(output)
     @scanner.each {|event, data| emit_event(event, @handler.call(event, data)) }
-  rescue IOError
+  rescue IOError, ActionController::Live::ClientDisconnected
     # Raised on stream close
   ensure
     finished
@@ -50,7 +50,7 @@ class EventStreamer
 
   def finished
     emit_event('finished', @handler.call(:finished, ''))
-  rescue IOError
+  rescue IOError, ActionController::Live::ClientDisconnected
     # Raised on stream close
   ensure
     ActiveRecord::Base.clear_active_connections!
@@ -80,7 +80,7 @@ class EventStreamer
           @stream.write("data: \n\n")
           sleep(5) # Timeout of 5 seconds
         end
-      rescue IOError
+      rescue IOError, ActionController::Live::ClientDisconnected
         finished
       end
     end
