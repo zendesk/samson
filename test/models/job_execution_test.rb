@@ -123,6 +123,7 @@ describe JobExecution do
     lines.must_include "DEPLOYER_NAME=John Doe"
     lines.must_include "REVISION=master"
     lines.must_include "TAG=v1"
+    lines.must_include "STAGE=stage4"
   end
 
   it 'works without a deploy' do
