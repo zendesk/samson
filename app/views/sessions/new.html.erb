@@ -15,6 +15,7 @@
     <% if Rails.application.config.samson.auth.ldap %>
       <%= link_to omniauth_path('ldap'), class: "action ldap" do %>
         <%= image_tag image_url('ldap.png') %> Login with LDAP
+      <% end %>
     <% end %>
     <% if Rails.application.config.samson.auth.gitlab %>
       <%= link_to omniauth_path('gitlab'), class: "action gitlab" do %>

@@ -85,7 +85,7 @@ class Project < ActiveRecord::Base
   end
 
   # The user/repo part of the repository URL.
-  def repo_name
+  def github_repo
     # GitHub allows underscores, hyphens and dots in repo names
     # but only hyphens in user/organisation names (as well as alphanumeric).
     repository_url.scan(/[:\/]([A-Za-z0-9-]+\/[\w.-]+?)(?:\.git)?$/).join
@@ -96,7 +96,7 @@ class Project < ActiveRecord::Base
   end
 
   def repository_homepage
-    "//#{Rails.application.config.samson.github.web_url}/#{repo_name}"
+    "//#{Rails.application.config.samson.github.web_url}/#{github_repo}"
   end
 
   def webhook_stages_for(branch, service_type, service_name)

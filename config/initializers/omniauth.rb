@@ -30,15 +30,15 @@ Rails.application.config.middleware.use OmniAuth::Builder do
         prompt: "select_account",
       }
   end
-  
+
   provider :gitlab,
-    ENV["GITLAB_KEY"],
-    ENV["GITLAB_SECRET"], 
+    ENV["GITLAB_APPLICATION_ID"],
+    ENV["GITLAB_SECRET"],
     client_options: {
-       site: "https://#{ENV['GITLAB_URL']}",
+       site: ENV["GITLAB_URL"],
        authorize_url: '/oauth/authorize',
        token_url: '/oauth/token'
-     }      
+     }
 
   if Rails.application.config.samson.auth.ldap
     provider OmniAuth::Strategies::LDAP,
