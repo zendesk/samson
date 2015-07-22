@@ -8,7 +8,7 @@ Stage.class_eval do
     stages[stages.index(self) + 1]
   end
 
-  # alias_method :old_production?, :production? if defined?(:production?)
+  alias_method :old_production?, :production?
   # Return true if any stages in the pipeline are marked production
   def production?
     return old_production? if next_stage_ids.empty?
