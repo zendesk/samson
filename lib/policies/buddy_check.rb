@@ -18,7 +18,7 @@ module BuddyCheck
     ENV["BYPASS_JIRA_EMAIL"]
   end
 
-  def deploy_max_minutes_pending
+  def time_limit
     ENV.fetch("BUDDY_CHECK_TIME_LIMIT", ENV.fetch("DEPLOY_MAX_MINUTES_PENDING", 20)).to_i
   end
 
