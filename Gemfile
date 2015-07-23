@@ -94,6 +94,7 @@ end
 
 group :development, :test do
   gem 'byebug', require: false
+  # gem 'pry-rails'
 end
 
 group :test do
