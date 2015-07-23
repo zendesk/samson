@@ -22,7 +22,7 @@ module Samson
       :after_deploy_setup,
       :after_deploy,
       :after_docker_build,
-      :before_execute_finish_msg
+      :after_job_execution
     ].freeze
 
     INTERNAL_HOOKS = [ :class_defined ]

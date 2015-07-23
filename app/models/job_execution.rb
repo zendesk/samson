@@ -120,7 +120,8 @@ class JobExecution
     ActiveSupport::Notifications.instrument("execute_shell.samson", payload) do
       payload[:success] = @executor.execute!(*cmds)
     end
-    Samson::Hooks.fire(:before_execute_finish_msg, @job, @output)
+    Samson::Hooks.fire(:after_job_execution, @job, payload[:success], @output)
+    payload[:success]
   end
 
   def setup!(dir)
