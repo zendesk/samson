@@ -3,10 +3,9 @@ class KuberDeployService
 
   delegate :client, to: Kubernetes
 
-  def initialize(build, user, app_name: nil, namespace: 'default', port: 4242, env: {})
-    @build, @user, @namespace, @port, @env = build, user, namespace, port, env
+  def initialize(build, user, namespace: 'default', env: {})
+    @build, @user, @namespace, @env = build, user, namespace, env
 
-    @app_name = app_name || @build.project.name.parameterize('-')
     @env = {} unless @env.is_a? Hash
   end
 
@@ -19,23 +18,23 @@ class KuberDeployService
   end
 
   def service_exists?
-    client.get_services(label_selector: "name=#{app_name}-frontend").count > 0
+    client.get_services(label_selector: "name=#{build.service_name}").count > 0
   end
 
   def replication_controller(replicas: 1)
     @rc ||= Kubeclient::ReplicationController.new({
       metadata: {
-        name: "#{app_name}-controller",
+        name: build.controller_name,
         namespace: namespace,
         labels: {
-          project: app_name,
+          project: build.project_name,
           component: 'app-server'
         }
       },
       spec: {
         replicas: replicas,
         selector: {
-          app: app_name
+          release: build.version_label
         },
         template: pod_template
       }
@@ -45,19 +44,19 @@ class KuberDeployService
   def service
     @service ||= Kubeclient::Service.new({
       metadata: {
-        name: "#{app_name}-frontend",
+        name: build.service_name,
         namespace: namespace,
         labels: {
-          name: "#{app_name}-frontend",
-          project: app_name,
+          name: build.service_name,
+          project: build.project_name,
           component: 'app-server'
         }
       },
       spec: {
         ports: [
           {
-            port: 80,
-            targetPort: port
+            port: build.service_port,
+            targetPort: build.container_port
           }
         ],
       }
@@ -66,33 +65,40 @@ class KuberDeployService
 
   private
 
-  def pod_template
+  def pod_template(namespace: 'default')
     {
       metadata: {
-        name: app_name,
+        name: build.pod_name,
         namespace: namespace,
         labels: {
-          app: app_name,
-          project: app_name,
+          app: build.pod_name,
+          project: build.project_name,
+          release: build.release_label,
           component: 'app-server'
         }
       },
       spec: {
-        containers: [project_container]
+        containers: [project_container],
+        volumes: volumes,
+        restartPolicy: 'Always',
+        dnsPolicy: 'Always'
       }
     }
   end
 
   def project_container
     {
-      name: app_name,
+      name: build.pod_name,
       image: build.docker_repo_digest,
+      imagePullPolicy: 'Always',
       ports: [
         {
-          containerPort: port
+          containerPort: build.container_port,
+          protocol: 'TCP'
         }
       ],
-      env: env_as_list
+      env: env_as_list,
+      volumeMounts: volume_mounts
     }
   end
 
@@ -100,5 +106,14 @@ class KuberDeployService
     env.each_with_object([]) do |(k,v), list|
       list << { name: k, value: v.to_s }
     end
+  end
+
+  def volumes
+    []
+  end
+
+  def volume_mounts
+    # TODO: will need to use this if we mount secrets
+    []
   end
 end
