@@ -80,4 +80,15 @@ module Samson
   end
 end
 
+module Samson::NewTimeouts
+  def database_configuration
+    x = super.each_value { |config| config.merge!(read_timeout: 5, write_timeout: 5, connect_timeout: 5) }
+    puts x
+    x
+  end
+end
+
+Rails::Application::Configuration.prepend Samson::NewTimeouts
+
+
 require "samson/hooks"
