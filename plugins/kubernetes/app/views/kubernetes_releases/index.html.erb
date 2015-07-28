@@ -1,0 +1,5 @@
+<%= render 'projects/header', project: @project, tab: 'kubernetes' %>
+
+<section class="tabs">
+  <%= render partial: 'kubernetes_releases/kuber_release_table', locals: { release_list: @kuber_release_list } %>
+</section>

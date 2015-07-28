@@ -11,6 +11,9 @@
     <li class="<%= 'active' if active == 'builds' %>">
       <%= link_to "Builds", project_builds_path(project) %>
     </li>
+    <li class="<%= 'active' if active == 'kubernetes' %>">
+      <%= link_to "Kubernetes", project_kubernetes_releases_path(project) %>
+    </li>
   <% end %>
   <li class="<%= 'active' if active == 'deploys' %>">
     <%= link_to "Deploys", project_deploys_path(project) %>

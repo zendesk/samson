@@ -1,7 +1,8 @@
 class BuildsController < ApplicationController
   before_action :authorize_deployer!
   before_action :find_project
-  before_action :find_build, only: [:show, :build_docker_image, :edit, :update]
+  before_action :find_build, only: [:show, :build_docker_image, :edit, :update, :kubernetes_releases]
+  before_action :find_kuber_releases, only: [:show, :kubernetes_releases]
 
   def index
     @builds = @project.builds.order('id desc').page(params[:page])
@@ -76,6 +77,9 @@ class BuildsController < ApplicationController
     end
   end
 
+  def kubernetes_releases
+  end
+
   private
 
   def find_project
@@ -96,5 +100,11 @@ class BuildsController < ApplicationController
 
   def start_docker_build
     DockerBuilderService.new(@build).run!(push: true)
+  end
+
+  def find_kuber_releases
+    if @build.respond_to?(:kubernetes_releases)
+      @kuber_release_list = @build.kubernetes_releases.order('id desc')
+    end
   end
 end
