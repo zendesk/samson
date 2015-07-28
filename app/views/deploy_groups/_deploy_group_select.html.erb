@@ -1,8 +1,9 @@
+<% hidden_field ||= 'stage' %>
 <div class="form-group">
   <%= form.label :name, 'Deploy Groups', class: 'col-lg-2 control-label' %>
   <div class=<%= "col-lg-#{2 + @environments.count}" %> >
     <% if @environments.count > 0 %>
-      <%= hidden_field_tag "stage[deploy_group_ids][]" %>
+      <%= hidden_field_tag "#{hidden_field}[deploy_group_ids][]" %>
       <table class="table table-condensed text-left deploy-groups">
         <thead>
         <tr>
@@ -24,7 +25,7 @@
                 <td>
                   <%= label_tag do %>
                     <%= check_box_tag(
-                          "stage[deploy_group_ids][]",
+                          "#{hidden_field}[deploy_group_ids][]",
                           environment.deploy_groups[index].id,
                           form.object.deploy_group_ids.include?(environment.deploy_groups[index].id),
                           class: "#{environment.name}_checkbox"
