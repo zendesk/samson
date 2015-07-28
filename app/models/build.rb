@@ -58,6 +58,15 @@ class Build < ActiveRecord::Base
     @docker_image = image
   end
 
+  def file_from_repo(path, ttl: 1.hour)
+    Rails.cache.fetch([self, path], expire_in: ttl) do
+      data = GITHUB.contents(project.github_repo, path: path, ref: git_sha)
+      Base64.decode64(data[:content])
+    end
+  rescue Octokit::NotFound
+    nil
+  end
+
   private
 
   def validate_git_reference
