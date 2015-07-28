@@ -94,7 +94,8 @@ end
 
 group :development, :test do
   gem 'byebug', require: false
-  # gem 'pry-rails'
+  gem 'pry-rails'
+  gem 'awesome_print'
 end
 
 group :test do

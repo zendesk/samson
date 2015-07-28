@@ -100,6 +100,7 @@ GEM
     autoprefixer-rails (5.2.1)
       execjs
       json
+    awesome_print (1.6.1)
     better_errors (2.1.1)
       coderay (>= 1.0.0)
       erubis (>= 2.6.6)
@@ -196,6 +197,7 @@ GEM
     maxitest (1.5.1)
       minitest (>= 5.0.0, < 5.8.0)
     metaclass (0.0.4)
+    method_source (0.8.2)
     mime-types (2.6.1)
     mini_portile (0.6.2)
     minitest (5.7.0)
@@ -240,6 +242,12 @@ GEM
       oauth2 (~> 1.0)
       omniauth (~> 1.2)
     pg (0.18.2)
+    pry (0.10.1)
+      coderay (~> 1.1.0)
+      method_source (~> 0.8.1)
+      slop (~> 3.4)
+    pry-rails (0.3.4)
+      pry (>= 0.9.10)
     puma (2.11.3)
       rack (>= 1.1, < 2.0)
     puma (2.11.3-java)
@@ -329,6 +337,7 @@ GEM
       faraday_middleware (~> 0.8)
       faye-websocket (~> 0.9.2)
       multi_json (~> 1.0, >= 1.0.3)
+    slop (3.6.0)
     soft_deletion (0.5.6)
     sprockets (2.12.4)
       hike (~> 1.2)
@@ -354,7 +363,6 @@ GEM
       json (>= 1.8.0)
     unf (0.1.4)
       unf_ext
-    unf (0.1.4-java)
     unf_ext (0.0.7.1)
     warden (1.2.3)
       rack (>= 1.0)
@@ -385,6 +393,7 @@ DEPENDENCIES
   airbrake (~> 4.3.0)
   angular-rails-templates
   ansible
+  awesome_print
   better_errors
   binding_of_caller
   bootstrap-sass
@@ -417,6 +426,7 @@ DEPENDENCIES
   omniauth-google-oauth2 (~> 0.2.4)
   omniauth-oauth2 (~> 1.1)
   pg (~> 0.13)
+  pry-rails
   puma
   query_diet
   rack-mini-profiler
