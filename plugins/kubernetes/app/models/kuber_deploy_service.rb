@@ -1,119 +1,42 @@
 class KuberDeployService
-  attr_reader :build, :user, :app_name, :namespace, :port, :env
+  attr_reader :kuber_release
 
   delegate :client, to: Kubernetes
+  delegate :build, to: :kuber_release
 
-  def initialize(build, user, namespace: 'default', env: {})
-    @build, @user, @namespace, @env = build, user, namespace, env
-
-    @env = {} unless @env.is_a? Hash
+  def initialize(kuber_release)
+    @kuber_release = kuber_release
   end
 
-  def create_replication_controller(replicas: 1)
-    client.create_replication_controller(replication_controller(replicas: replicas))
+  def deploy!
+    create_replication_controller!
+    create_service! unless service_exists?
   end
 
-  def create_service
+  def create_replication_controller!
+    rc = Kubeclient::ReplicationController.new(kuber_release.rc_hash)
+    client.create_replication_controller(rc)
+  end
+
+  def create_service!
+    service = Kubeclient::Service.new(kuber_release.service_hash)
     client.create_service(service)
   end
 
-  def service_exists?
-    client.get_services(label_selector: "name=#{build.service_name}").count > 0
-  end
-
-  def replication_controller(replicas: 1)
-    @rc ||= Kubeclient::ReplicationController.new({
-      metadata: {
-        name: build.controller_name,
-        namespace: namespace,
-        labels: {
-          project: build.project_name,
-          component: 'app-server'
-        }
-      },
-      spec: {
-        replicas: replicas,
-        selector: {
-          release: build.version_label
-        },
-        template: pod_template
-      }
-    })
-  end
-
-  def service
-    @service ||= Kubeclient::Service.new({
-      metadata: {
-        name: build.service_name,
-        namespace: namespace,
-        labels: {
-          name: build.service_name,
-          project: build.project_name,
-          component: 'app-server'
-        }
-      },
-      spec: {
-        ports: [
-          {
-            port: build.service_port,
-            targetPort: build.container_port
-          }
-        ],
-      }
-    })
-  end
-
-  private
-
-  def pod_template(namespace: 'default')
-    {
-      metadata: {
-        name: build.pod_name,
-        namespace: namespace,
-        labels: {
-          app: build.pod_name,
-          project: build.project_name,
-          release: build.release_label,
-          component: 'app-server'
-        }
-      },
-      spec: {
-        containers: [project_container],
-        volumes: volumes,
-        restartPolicy: 'Always',
-        dnsPolicy: 'Always'
-      }
-    }
-  end
-
-  def project_container
-    {
-      name: build.pod_name,
-      image: build.docker_repo_digest,
-      imagePullPolicy: 'Always',
-      ports: [
-        {
-          containerPort: build.container_port,
-          protocol: 'TCP'
-        }
-      ],
-      env: env_as_list,
-      volumeMounts: volume_mounts
-    }
-  end
-
-  def env_as_list
-    env.each_with_object([]) do |(k,v), list|
-      list << { name: k, value: v.to_s }
+  def other_repl_controllers
+    @prev_repl_controller ||= begin
+      client.get_replication_controllers(label_selector: "project=#{build.project_name},component=app-server").
+          select { |rc| rc.metadata.labels.build != kuber_release.build_label }.
+          first
     end
   end
 
-  def volumes
-    []
+  def services
+    # TODO: only return services in the same namespace
+    client.get_services(label_selector: "name=#{build.service_name}")
   end
 
-  def volume_mounts
-    # TODO: will need to use this if we mount secrets
-    []
+  def service_exists?
+    services.any?
   end
 end

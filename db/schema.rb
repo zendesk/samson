@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20150619170905) do
+ActiveRecord::Schema.define(version: 20150725010056) do
 
   create_table "build_statuses", force: :cascade do |t|
     t.integer  "build_id",                                     null: false
@@ -154,6 +154,23 @@ ActiveRecord::Schema.define(version: 20150619170905) do
 
   add_index "jobs", ["project_id"], name: "index_jobs_on_project_id", using: :btree
   add_index "jobs", ["status"], name: "index_jobs_on_status", length: {"status"=>191}, using: :btree
+
+  create_table "kubernetes_releases", force: :cascade do |t|
+    t.integer  "build_id",                   limit: 4,     null: false
+    t.integer  "user_id",                    limit: 4,     null: false
+    t.integer  "deploy_group_id",            limit: 4,     null: false
+    t.string   "role",                       limit: 255,   null: false
+    t.integer  "replicas",                   limit: 4,     null: false
+    t.text     "replication_controller_doc", limit: 65535
+    t.string   "status",                     limit: 255
+    t.datetime "created_at"
+    t.datetime "updated_at"
+    t.datetime "deploy_finished_at"
+    t.datetime "destroyed_at"
+  end
+
+  add_index "kubernetes_releases", ["build_id"], name: "index_kubernetes_releases_on_build_id", using: :btree
+  add_index "kubernetes_releases", ["deploy_group_id"], name: "index_kubernetes_releases_on_deploy_group_id", using: :btree
 
   create_table "locks", force: :cascade do |t|
     t.integer  "stage_id",    limit: 4
