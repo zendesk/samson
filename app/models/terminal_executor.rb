@@ -33,10 +33,10 @@ class TerminalExecutor
     execute_command!(command)
   end
 
-  def stop!
+  def stop!(signal)
     # Need pkill because we want all
     # children of the parent process dead
-    `pkill -INT -P #{pid}` if pid
+    `pkill -#{signal} -P #{pid}` if pid
   end
 
   private

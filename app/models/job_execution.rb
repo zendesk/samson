@@ -9,6 +9,7 @@ class JobExecution
   end
 
   cattr_accessor(:lock_timeout, instance_writer: false) { 10.minutes }
+  cattr_accessor(:stop_timeout, instance_accessor: false) { 15.seconds }
 
   cattr_reader(:registry, instance_accessor: false) { {} }
   private_class_method :registry
@@ -37,7 +38,12 @@ class JobExecution
   end
 
   def stop!
-    @executor.stop!
+    @executor.stop! 'INT'
+    self.class.stop_timeout.times do
+      return unless @thread.alive?
+      sleep 1
+    end
+    @executor.stop! 'KILL'
     wait!
   end
 
