@@ -39,7 +39,7 @@ class JobExecution
 
   def stop!
     @executor.stop! 'INT'
-    self.class.stop_timeout.times do
+    self.class.stop_timeout.to_i.times do
       return unless @thread.alive?
       sleep 1
     end
