@@ -3,7 +3,7 @@ class Integrations::BaseController < ApplicationController
   skip_before_action :verify_authenticity_token
 
   def create
-    return head(:ok) if !deploy?
+    return head(:ok) unless deploy?
     if project.create_releases_for_branch?(branch)
       create_build_record
       create_docker_image if project.deploy_with_docker? && project.auto_release_docker_image?
