@@ -170,6 +170,7 @@ describe Project do
       project.repository.expects(:clone!).raises(error)
       expected_message = "Could not clone git repository #{project.repository_url} for project #{project.name} - #{error}"
       Rails.logger.expects(:error).with(expected_message)
+      Airbrake.expects(:notify).once
       clone_repository(project)
     end
 
