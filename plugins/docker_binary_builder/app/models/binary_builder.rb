@@ -1,0 +1,132 @@
+class BinaryBuilder
+  DOCKER_FILE = 'Dockerfile.build'.freeze
+  BUILD_SCRIPT = '/app/build.sh'.freeze
+  ARTIFACTS_FILE = 'artifacts.tar'.freeze
+  ARTIFACTS_FILE_PATH = "/app/#{ARTIFACTS_FILE}".freeze
+  DOCKER_HOST_CACHE_DIR = '/opt/samson_build_cache'.freeze
+  CONTAINER_CACHE_DIR = '/build/cache'.freeze
+
+  def initialize(dir, project, reference, output)
+    @dir = dir
+    @project = project
+    @git_reference = reference
+    @output_stream = output
+  end
+
+  def build
+    return unless @project.try(:deploy_with_docker?) && File.exists?(File.join(@dir, DOCKER_FILE))
+    @output_stream.puts "Connecting to Docker host with Api version: #{docker_api_version} ..."
+
+    @image = create_image
+    @container = Docker::Container.create(create_container_options)
+
+    start_build_script
+    retrieve_binaries
+
+    @output_stream.puts 'Continuing docker build...'
+  ensure
+    @output_stream.puts 'Cleaning up docker build image and container...'
+    @container.delete(force: true) if @container
+    @image.remove(force: true) if @image
+  end
+
+  private
+
+  def start_build_script
+    @output_stream.puts 'Now starting Build container...'
+    @container.tap(&:start).attach { |_stream, chunk| @output_stream.write chunk }
+  rescue => ex
+    @output_stream.puts "Failed to run the build script '#{BUILD_SCRIPT}' inside container."
+    raise ex
+  end
+
+  def retrieve_binaries
+    @output_stream.puts "Grabbing '#{ARTIFACTS_FILE_PATH}' from build container..."
+    artifacts_tar = Tempfile.new(['artifacts', '.tar'], @dir)
+    artifacts_tar.binmode
+    @container.copy(ARTIFACTS_FILE_PATH) { |chunk| artifacts_tar.write chunk }
+    artifacts_tar.close
+
+    untar(artifacts_tar.path)
+    untar(File.join(@dir, ARTIFACTS_FILE))
+  end
+
+  def untar(file_path)
+    @output_stream.puts "About to untar: #{file_path}"
+
+    File.open(file_path, 'rb') do |io|
+      Gem::Package::TarReader.new io do |tar|
+        tar.each do |tarfile|
+          destination_file = File.join @dir, tarfile.full_name
+          @output_stream.puts "    > #{tarfile.full_name}"
+
+          if tarfile.directory?
+            FileUtils.mkdir_p destination_file
+          else
+            destination_directory = File.dirname(destination_file)
+            FileUtils.mkdir_p destination_directory unless File.directory?(destination_directory)
+            File.open destination_file, "wb" do |f|
+              f.print tarfile.read
+            end
+          end
+        end
+      end
+    end
+  end
+
+  def create_container_options
+    options = {
+      'Cmd' => [BUILD_SCRIPT],
+      'Image' => "#{@project.send(:permalink_base)}_build:#{@git_reference}"
+    }
+
+    # Mount a cache directory for sharing .m2, .ivy2, .bundler directories between build containers.
+    api_version_major, api_version_minor = docker_api_version.scan(/(\d+)\.(\d+)/).flatten.map(&:to_i)
+    if api_version_major == 0 || (api_version_major == 1 && api_version_minor <= 14)
+      fail "Unsupported Docker api version '#{docker_api_version}', use at least v1.15"
+    elsif api_version_major == 1 && api_version_minor <= 19
+      options.merge!(
+        {
+          'Volumes' => {
+            '/opt/samson_build_cache' => {}
+          },
+          'HostConfig' => {
+            'Binds' => ["#{DOCKER_HOST_CACHE_DIR}:#{CONTAINER_CACHE_DIR}"],
+            'NetworkMode' => 'host'
+          }
+        }
+      )
+    else
+      options.merge!(
+        {
+          'Mounts' => [
+            {
+              'Source' => DOCKER_HOST_CACHE_DIR,
+              'Destination' => CONTAINER_CACHE_DIR,
+              'Mode' => 'rw,Z',
+              'RW' => true
+            }
+          ],
+          'HostConfig' => {
+            'NetworkMode' => 'host'
+          }
+        }
+      )
+    end
+  end
+
+  def create_image
+    @output_stream.puts 'Now building the build container...'
+    Docker::Image.build_from_dir(
+      @dir,
+      {
+        'dockerfile' => DOCKER_FILE,
+        't' => "#{@project.send(:permalink_base)}_build:#{@git_reference}"
+      }
+    )
+  end
+
+  def docker_api_version
+    @docker_api_version ||= Docker.version['ApiVersion']
+  end
+end

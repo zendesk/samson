@@ -98,7 +98,7 @@ class JobExecution
 
   def execute!(dir)
     if setup!(dir)
-      Samson::Hooks.fire(:after_deploy_setup, dir, stage) if stage
+      Samson::Hooks.fire(:after_deploy_setup, dir, stage, @output, @reference) if stage
     else
       @job.error!
       return
