@@ -1,0 +1,60 @@
+<%= form_for [@project, @project_role], html: { class: "form-horizontal" } do |form| %>
+  <fieldset>
+    <div class="form-group">
+      <%= form.label :name, class: "col-lg-2 control-label" %>
+      <div class="col-lg-4">
+        <%= form.text_field :name, class: "form-control" %>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <%= form.label :config_file, class: "col-lg-2 control-label" %>
+      <div class="col-lg-4">
+        <%= form.text_field :config_file, class: "form-control" %>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <%= form.label :service_name, class: "col-lg-2 control-label" %>
+      <div class="col-lg-4">
+        <%= form.text_field :service_name, class: "form-control" %>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <%= form.label :ram, class: "col-lg-2 control-label" %>
+      <div class="col-lg-2">
+        <div class="input-group">
+          <%= form.text_field :ram, class: "form-control" %>
+          <span class="input-group-addon">MB</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <%= form.label :cpu, class: "col-lg-2 control-label" %>
+      <div class="col-lg-2">
+        <div class="input-group">
+          <%= form.text_field :cpu, class: "form-control" %>
+          <span class="input-group-addon">cores</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <%= form.label :replicas, class: "col-lg-2 control-label" %>
+      <div class="col-lg-1">
+        <%= form.text_field :replicas, class: "form-control" %>
+      </div>
+    </div>
+
+
+    <div class="form-group">
+      <div class="col-lg-offset-2 col-lg-10">
+        <%= form.submit "Create", class: "btn btn-primary" %>
+        <%= link_to "Cancel", :back, class: 'btn btn-default' %>
+      </div>
+    </div>
+
+  </fieldset>
+<% end %>

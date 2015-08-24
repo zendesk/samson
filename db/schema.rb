@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20150725010056) do
+ActiveRecord::Schema.define(version: 20150819235959) do
 
   create_table "build_statuses", force: :cascade do |t|
     t.integer  "build_id",                                     null: false
@@ -219,6 +219,21 @@ ActiveRecord::Schema.define(version: 20150725010056) do
 
   add_index "project_environment_variable_groups", ["environment_variable_group_id"], name: "project_environment_variable_groups_group_id", using: :btree
   add_index "project_environment_variable_groups", ["project_id", "environment_variable_group_id"], name: "project_environment_variable_groups_unique_group_id", unique: true, using: :btree
+
+  create_table "project_roles", force: :cascade do |t|
+    t.integer  "project_id",      limit: 4,                           null: false
+    t.string   "name",            limit: 255,                         null: false
+    t.string   "config_file",     limit: 255
+    t.integer  "replicas",        limit: 4,                           null: false
+    t.integer  "ram",             limit: 4,                           null: false
+    t.decimal  "cpu",                         precision: 4, scale: 2, null: false
+    t.string   "service_name",    limit: 255
+    t.string   "deploy_strategy", limit: 255,                         null: false
+    t.datetime "created_at",                                          null: false
+    t.datetime "updated_at",                                          null: false
+  end
+
+  add_index "project_roles", ["project_id"], name: "index_project_roles_on_project_id", using: :btree
 
   create_table "projects", force: :cascade do |t|
     t.string   "name",               limit: 255,                   null: false

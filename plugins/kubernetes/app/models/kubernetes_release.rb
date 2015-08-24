@@ -3,7 +3,10 @@ class KubernetesRelease < ActiveRecord::Base
   belongs_to :build
   belongs_to :deploy_group
 
-  validates :replicas, numericality: { greater_than: 0 }
+  validates :build, presence: true
+  validates :deploy_group, presence: true
+  validates :replicas, presence: true, numericality: { greater_than: 0 }
+  validates :role, presence: true
 
   before_create :serialize_rc_doc!, :set_default_status
 
