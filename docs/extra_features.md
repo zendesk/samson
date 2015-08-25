@@ -25,3 +25,11 @@ Admin screens  | Dashboard screens
 ------------- | -------------
 <img src="/docs/images/deploy_group_admin2.png?raw=true" width="300" /> | <img src="/docs/images/deploy_group_dash1.png?raw=true" width="300" />
 <img src="/docs/images/deploy_group_admin.png?raw=true" width="300"> | <img src="/docs/images/deploy_group_dash2.png?raw=true" width="300">
+
+## Auto JIRA issue key detection
+
+Enable by setting JIRA_BASE_URL to a default JIRA instance e.g., `JIRA_BASE_URL=http://jira.example.com/browse/`
+
+This would enable the auto-detection of JIRA issue keys (e.g., KEY-123, SAMSON-456) in the titles and bodies of the pull requests associated with a deploy. The auto-detected JIRA issues will be displayed and linked in the "JIRA Issues" tab of a deploy.
+
+Full absolute JIRA URLs will still be detected when JIRA_BASE_URL is set, and they will take precedence over generated ones (i.e., if JIRA_BASE_URL is https://a.atlassian.net/browse/ and both "KEY-123" and "http://z.atlassian.net/browse/KEY-123" appear in a pull request's title and body, only "http://z.atlassian.net/browse/KEY-123" would appear in the "JIRA Issues" tab). Use full URLs if you need to reference issues of non-default JIRA instances.
