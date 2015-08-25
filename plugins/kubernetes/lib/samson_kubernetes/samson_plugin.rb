@@ -1,3 +1,5 @@
+require_relative 'hash_kuber_selector'
+
 module SamsonKubernetes
   class Engine < Rails::Engine
   end
