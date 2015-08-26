@@ -17,3 +17,8 @@ env:
     - DB=postgresql TASK=rake
     - DB=sqlite TASK=rake
 script: script/ci.rb
+notifications:
+  webhooks:
+    urls:
+      - $SAMSON_WEBHOOK
+    on_failure: never
