@@ -1,5 +1,7 @@
 DeployGroup.class_eval do
-  def namespace
-    name.parameterize('-')
+  belongs_to :kubernetes_cluster, class_name: 'Kubernetes::Cluster'
+
+  def kubernetes_namespace
+    super || name.parameterize('-')
   end
 end

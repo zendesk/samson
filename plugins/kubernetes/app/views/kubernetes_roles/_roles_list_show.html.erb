@@ -24,7 +24,7 @@
       <td><%= role.ram %>MB</td>
       <td><%= role.cpu.to_s %> cores</td>
       <td><%= role.replicas %></td>
-      <td>Edit</td>
+      <td><%= link_to "Edit", edit_project_kubernetes_role_path(@project, role) %></td>
     </tr>
   <% end %>
   </tbody>

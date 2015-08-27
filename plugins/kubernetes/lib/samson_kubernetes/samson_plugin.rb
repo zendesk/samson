@@ -6,3 +6,4 @@ module SamsonKubernetes
 end
 
 Samson::Hooks.view :project_tabs_view, 'kubernetes_project/project_tab'
+Samson::Hooks.view :admin_menu, 'kubernetes_project/admin_menu'

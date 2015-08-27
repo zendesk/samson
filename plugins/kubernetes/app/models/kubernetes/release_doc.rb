@@ -92,6 +92,8 @@ module Kubernetes
       @rc_hash[:metadata][:labels].merge!(pod_labels)
       @rc_hash[:spec][:selector].merge!(pod_labels)
 
+      @rc_hash[:metadata][:namespace] = kubernetes_release.deploy_group.kubernetes_namespace
+
       # Set the Docker image to be deployed in the pod.
       # NOTE: This logic assumes that if there are multiple containers defined
       # in the pod, the container that should run the image from this project

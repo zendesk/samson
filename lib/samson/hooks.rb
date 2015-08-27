@@ -93,6 +93,10 @@ module Samson
         end
       end
 
+      def active_plugin?(plugin_name)
+        plugins.map(&:name).include?(plugin_name)
+      end
+
       # configure
       def callback(name, &block)
         hooks(name) << block

@@ -1,7 +1,7 @@
 class Admin::DeployGroupsController < ApplicationController
   before_action :authorize_admin!
   before_action :authorize_super_admin!, only: [ :create, :new, :update, :destroy ]
-  before_action :deploy_group, only: [:edit, :update, :destroy]
+  before_action :deploy_group, only: [:show, :edit, :update, :destroy]
 
   def index
     @deploy_groups = DeployGroup.all
@@ -42,7 +42,7 @@ class Admin::DeployGroupsController < ApplicationController
   private
 
   def deploy_group_params
-    params.require(:deploy_group).permit(:name, :environment_id, :env_value)
+    params.require(:deploy_group).permit(:name, :environment_id, :env_value, :kubernetes_cluster_id, :kubernetes_namespace)
   end
 
   def deploy_group

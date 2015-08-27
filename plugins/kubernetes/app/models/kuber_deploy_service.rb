@@ -27,7 +27,6 @@ class KuberDeployService
   private
 
   def client
-    # TODO: get the correct client based on the release's DeployGroup
-    @client ||= Kubernetes.client
+    kuber_release.deploy_group.kubernetes_cluster.client
   end
 end
