@@ -4,18 +4,24 @@ class KubernetesReleasesController < ApplicationController
   before_action :project
   before_action :authorize_deployer!
 
+  # This create method actually creates 1+ Kubernetes::Release objects,
+  # because it creates one for each DeployGroup the user wants to deploy to.
   def create
     @kuber_release_list = []
 
-    deploy_groups.each do |deploy_group|
-      params[:replicas].each do |role_name, replica_count|
-        next if replica_count.blank?
-        @kuber_release_list << KubernetesRelease.new(create_params.merge(deploy_group: deploy_group, role: role_name, replicas: replica_count, user: current_user))
+    # TODO: create a model that represents N releases
+    selected_deploy_groups.each do |deploy_group|
+      release = Kubernetes::Release.new(create_params.merge(deploy_group: deploy_group, user: current_user))
+
+      params[:replicas].each do |role_id, replica_count|
+        release.release_docs.build(kubernetes_role_id: role_id, replica_count: replica_count.to_i)
       end
+      @kuber_release_list << release
     end
 
+    # TODO: check for any role where replica_count == 0
+
     unless @kuber_release_list.map(&:valid?).all?
-      binding.pry
       @kubernetes_release = @kuber_release_list.first
       render :new and return
     end
@@ -34,11 +40,11 @@ class KubernetesReleasesController < ApplicationController
 
   def new
     @environments = Environment.all
-    @kubernetes_release = KubernetesRelease.new(user: current_user, build_id: params[:build_id])
+    @kubernetes_release = Kubernetes::Release.new(user: current_user, build_id: params[:build_id])
   end
 
   def show
-    @kubernetes_release = KubernetesRelease.find(params[:id])
+    @kubernetes_release = Kubernetes::Release.find(params[:id])
   end
 
   def build
@@ -61,7 +67,7 @@ class KubernetesReleasesController < ApplicationController
     params.require(:kubernetes_release).permit(:build_id)
   end
 
-  def deploy_groups
-    @deploy_groups ||= DeployGroup.where(id: params[:pods][:deploy_group_ids])
+  def selected_deploy_groups
+    @selected_deploy_groups ||= DeployGroup.where(id: params[:pods][:deploy_group_ids])
   end
 end

@@ -1,5 +1,5 @@
 <p class="pull-right">
-  <%= link_to "Create New Role", new_project_project_role_path(@project), class: "btn btn-default" %>
+  <%= link_to "Create New Role", new_project_kubernetes_role_path(@project), class: "btn btn-default" %>
 </p>
 
 <table class="table table-condensed">
@@ -16,7 +16,7 @@
   </thead>
 
   <tbody>
-  <% @project_role_list.each do |role| %>
+  <% @kubernetes_role_list.each do |role| %>
     <tr>
       <td><%= role.name %></td>
       <td><%= role.config_file %></td>

@@ -11,10 +11,10 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20150819235959) do
+ActiveRecord::Schema.define(version: 20150824234709) do
 
   create_table "build_statuses", force: :cascade do |t|
-    t.integer  "build_id",                                     null: false
+    t.integer  "build_id",   limit: 4,                         null: false
     t.string   "source",     limit: 255
     t.string   "status",     limit: 255,   default: "pending", null: false
     t.string   "url",        limit: 255
@@ -27,16 +27,16 @@ ActiveRecord::Schema.define(version: 20150819235959) do
   add_index "build_statuses", ["build_id"], name: "index_build_statuses_on_build_id", using: :btree
 
   create_table "builds", force: :cascade do |t|
-    t.integer  "project_id",                       null: false
-    t.string   "git_sha",             limit: 255
+    t.integer  "project_id",          limit: 4,    null: false
+    t.string   "git_sha",             limit: 128
     t.string   "git_ref",             limit: 255
-    t.string   "docker_image_id",     limit: 255
+    t.string   "docker_image_id",     limit: 128
     t.string   "docker_ref",          limit: 255
     t.string   "docker_repo_digest",  limit: 255
-    t.integer  "docker_build_job_id"
+    t.integer  "docker_build_job_id", limit: 4
     t.string   "label",               limit: 255
     t.string   "description",         limit: 1024
-    t.integer  "created_by"
+    t.integer  "created_by",          limit: 4
     t.datetime "created_at"
     t.datetime "updated_at"
   end
@@ -46,7 +46,7 @@ ActiveRecord::Schema.define(version: 20150819235959) do
   add_index "builds", ["project_id"], name: "index_builds_on_project_id", using: :btree
 
   create_table "commands", force: :cascade do |t|
-    t.text     "command",    limit: 10485760
+    t.text     "command",    limit: 16777215
     t.datetime "created_at"
     t.datetime "updated_at"
     t.integer  "project_id", limit: 4
@@ -89,7 +89,7 @@ ActiveRecord::Schema.define(version: 20150819235959) do
   add_index "deploys", ["stage_id", "deleted_at"], name: "index_deploys_on_stage_id_and_deleted_at", using: :btree
 
   create_table "environment_variable_groups", force: :cascade do |t|
-    t.string "name", limit: 255, null: false
+    t.string "name",    limit: 255,   null: false
     t.text   "comment", limit: 65535
   end
 
@@ -108,7 +108,7 @@ ActiveRecord::Schema.define(version: 20150819235959) do
 
   create_table "environments", force: :cascade do |t|
     t.string   "name",          limit: 255,                 null: false
-    t.boolean  "is_production", default: false, null: false
+    t.boolean  "is_production",             default: false, null: false
     t.datetime "deleted_at"
     t.datetime "created_at",                                null: false
     t.datetime "updated_at",                                null: false
@@ -123,7 +123,7 @@ ActiveRecord::Schema.define(version: 20150819235959) do
     t.integer  "stage_id",   limit: 4,                  null: false
     t.datetime "created_at"
     t.datetime "updated_at"
-    t.boolean  "enabled",    default: true
+    t.boolean  "enabled",                default: true
   end
 
   create_table "jenkins_jobs", force: :cascade do |t|
@@ -145,7 +145,7 @@ ActiveRecord::Schema.define(version: 20150819235959) do
     t.integer  "user_id",    limit: 4,                              null: false
     t.integer  "project_id", limit: 4,                              null: false
     t.string   "status",     limit: 255,        default: "pending"
-    t.text     "output",     limit: 1073741823
+    t.text     "output",     limit: 4294967295
     t.datetime "created_at"
     t.datetime "updated_at"
     t.string   "commit",     limit: 255
@@ -155,22 +155,48 @@ ActiveRecord::Schema.define(version: 20150819235959) do
   add_index "jobs", ["project_id"], name: "index_jobs_on_project_id", using: :btree
   add_index "jobs", ["status"], name: "index_jobs_on_status", length: {"status"=>191}, using: :btree
 
-  create_table "kubernetes_releases", force: :cascade do |t|
-    t.integer  "build_id",                   limit: 4,     null: false
-    t.integer  "user_id",                    limit: 4,     null: false
-    t.integer  "deploy_group_id",            limit: 4,     null: false
-    t.string   "role",                       limit: 255,   null: false
-    t.integer  "replicas",                   limit: 4,     null: false
-    t.text     "replication_controller_doc", limit: 65535
-    t.string   "status",                     limit: 255
+  create_table "kubernetes_release_docs", force: :cascade do |t|
+    t.integer  "kubernetes_role_id",          limit: 4,     null: false
+    t.integer  "kubernetes_release_id",       limit: 4,     null: false
+    t.integer  "replica_count",               limit: 4,     null: false
+    t.string   "replication_controller_name", limit: 255
+    t.text     "replication_controller_doc",  limit: 65535
+    t.string   "status",                      limit: 255
     t.datetime "created_at"
     t.datetime "updated_at"
+  end
+
+  add_index "kubernetes_release_docs", ["kubernetes_release_id"], name: "index_kubernetes_release_docs_on_kubernetes_release_id", using: :btree
+  add_index "kubernetes_release_docs", ["kubernetes_role_id"], name: "index_kubernetes_release_docs_on_kubernetes_role_id", using: :btree
+
+  create_table "kubernetes_releases", force: :cascade do |t|
+    t.integer  "build_id",           limit: 4,   null: false
+    t.integer  "user_id",            limit: 4
+    t.integer  "deploy_group_id",    limit: 4,   null: false
+    t.string   "status",             limit: 255
     t.datetime "deploy_finished_at"
     t.datetime "destroyed_at"
+    t.datetime "created_at"
+    t.datetime "updated_at"
   end
 
   add_index "kubernetes_releases", ["build_id"], name: "index_kubernetes_releases_on_build_id", using: :btree
   add_index "kubernetes_releases", ["deploy_group_id"], name: "index_kubernetes_releases_on_deploy_group_id", using: :btree
+
+  create_table "kubernetes_roles", force: :cascade do |t|
+    t.integer  "project_id",      limit: 4,                           null: false
+    t.string   "name",            limit: 255,                         null: false
+    t.string   "config_file",     limit: 255
+    t.integer  "replicas",        limit: 4,                           null: false
+    t.integer  "ram",             limit: 4,                           null: false
+    t.decimal  "cpu",                         precision: 4, scale: 2, null: false
+    t.string   "service_name",    limit: 255
+    t.string   "deploy_strategy", limit: 255,                         null: false
+    t.datetime "created_at",                                          null: false
+    t.datetime "updated_at",                                          null: false
+  end
+
+  add_index "kubernetes_roles", ["project_id"], name: "index_kubernetes_roles_on_project_id", using: :btree
 
   create_table "locks", force: :cascade do |t|
     t.integer  "stage_id",    limit: 4
@@ -179,7 +205,7 @@ ActiveRecord::Schema.define(version: 20150819235959) do
     t.datetime "updated_at"
     t.datetime "deleted_at"
     t.string   "description", limit: 255
-    t.boolean  "warning",     default: false, null: false
+    t.boolean  "warning",                 default: false, null: false
   end
 
   add_index "locks", ["stage_id", "deleted_at", "user_id"], name: "index_locks_on_stage_id_and_deleted_at_and_user_id", using: :btree
@@ -219,21 +245,6 @@ ActiveRecord::Schema.define(version: 20150819235959) do
 
   add_index "project_environment_variable_groups", ["environment_variable_group_id"], name: "project_environment_variable_groups_group_id", using: :btree
   add_index "project_environment_variable_groups", ["project_id", "environment_variable_group_id"], name: "project_environment_variable_groups_unique_group_id", unique: true, using: :btree
-
-  create_table "project_roles", force: :cascade do |t|
-    t.integer  "project_id",      limit: 4,                           null: false
-    t.string   "name",            limit: 255,                         null: false
-    t.string   "config_file",     limit: 255
-    t.integer  "replicas",        limit: 4,                           null: false
-    t.integer  "ram",             limit: 4,                           null: false
-    t.decimal  "cpu",                         precision: 4, scale: 2, null: false
-    t.string   "service_name",    limit: 255
-    t.string   "deploy_strategy", limit: 255,                         null: false
-    t.datetime "created_at",                                          null: false
-    t.datetime "updated_at",                                          null: false
-  end
-
-  add_index "project_roles", ["project_id"], name: "index_project_roles_on_project_id", using: :btree
 
   create_table "projects", force: :cascade do |t|
     t.string   "name",               limit: 255,                   null: false
@@ -292,16 +303,16 @@ ActiveRecord::Schema.define(version: 20150819235959) do
     t.string   "notify_email_address",                         limit: 255
     t.integer  "order",                                        limit: 4
     t.datetime "deleted_at"
-    t.boolean  "confirm",                                      default: true
+    t.boolean  "confirm",                                                    default: true
     t.string   "datadog_tags",                                 limit: 255
     t.boolean  "update_github_pull_requests"
-    t.boolean  "deploy_on_release",                            default: false
+    t.boolean  "deploy_on_release",                                          default: false
     t.boolean  "comment_on_zendesk_tickets"
-    t.boolean  "production",                                   default: false
+    t.boolean  "production",                                                 default: false
     t.boolean  "use_github_deployment_api"
     t.string   "permalink",                                    limit: 255,                   null: false
     t.text     "dashboard",                                    limit: 65535
-    t.boolean  "email_committers_on_automated_deploy_failure", default: false, null: false
+    t.boolean  "email_committers_on_automated_deploy_failure",               default: false, null: false
     t.string   "static_emails_on_automated_deploy_failure",    limit: 255
     t.string   "datadog_monitor_ids",                          limit: 255
     t.string   "jenkins_job_names",                            limit: 255
@@ -327,8 +338,8 @@ ActiveRecord::Schema.define(version: 20150819235959) do
     t.string   "token",          limit: 255
     t.datetime "deleted_at"
     t.string   "external_id",    limit: 255
-    t.boolean  "desktop_notify", default: false
-    t.boolean  "integration",    default: false, null: false
+    t.boolean  "desktop_notify",             default: false
+    t.boolean  "integration",                default: false, null: false
   end
 
   add_index "users", ["external_id", "deleted_at"], name: "index_users_on_external_id_and_deleted_at", length: {"external_id"=>191, "deleted_at"=>nil}, using: :btree

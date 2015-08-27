@@ -1,7 +1,6 @@
 require 'kubeclient'
 
-class Kubernetes
-
+module Kubernetes
   # NOTE: At the moment, this client assumes that a config file exists at
   # ~/.kube/config, which gets created if you're running kubernetes with
   # Vagrant.  We'll need to update this logic to allow passing in the
@@ -9,6 +8,7 @@ class Kubernetes
   def self.client
     @current ||= begin
       Kubeclient::Client.new("#{config_file[:clusters].first[:cluster][:server]}/api/", 'v1', ssl_options: ssl_options)
+      # Kubeclient::Client.new("http://localhost:9999/api/", 'v1')    # TEMP for debugging
     end
   end
 

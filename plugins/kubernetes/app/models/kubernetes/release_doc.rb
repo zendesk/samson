@@ -1,0 +1,125 @@
+module Kubernetes
+  class ReleaseDoc < ActiveRecord::Base
+    self.table_name = 'kubernetes_release_docs'
+    belongs_to :kubernetes_role
+    belongs_to :kubernetes_release
+
+    validates :kubernetes_role, presence: true
+    validates :kubernetes_release, presence: true
+    validates :replica_count, presence: true, numericality: { greater_than: 0 }
+    validate :docker_image_in_registry?, on: :create
+
+    after_create :save_rc_info    # do this after create, so id has been generated
+
+    delegate :build, to: :kubernetes_release
+
+    # Definition of the ReplicationController, based on the rc_template, but
+    # updated with the image and metadata for this deploy.
+    #
+    # This hash can be passed to the Kubernetes API to create a ReplicationController.
+    def rc_hash
+      return @rc_hash if instance_variable_defined?(:@rc_hash)
+
+      if replication_controller_doc.present?
+        @rc_hash = JSON.parse(replication_controller_doc).with_indifferent_access
+      else
+        build_rc_hash
+      end
+    end
+
+    # The raw template defining the ReplicationController, taken from the config
+    # file in the project's repo.
+    def rc_template
+      @rc_template ||= begin
+        # It's possible for the file to contain more than one definition,
+        # like a ReplicationController and a Service.
+        Array.wrap(parsed_config_file).detect { |doc| doc['kind'] == 'ReplicationController' }.freeze
+      end
+    end
+
+    def service_template
+      @service_template ||= begin
+        # It's possible for the file to contain more than one definition,
+        # like a ReplicationController and a Service.
+        hash = Array.wrap(parsed_config_file).detect { |doc| doc['kind'] == 'Service' }
+        (hash || {}).freeze
+      end
+    end
+
+    def pretty_rc_doc(format: :json)
+      case format
+        when :json
+          JSON.pretty_generate(rc_hash)
+        when :yaml, :yml
+          rc_hash.to_yaml
+        else
+          rc_hash.to_s
+      end
+    end
+
+    private
+
+    # These labels will be attached to the Pod and the ReplicationController
+    def pod_labels
+      {
+        build: build.id
+      }
+    end
+
+    def save_rc_info
+      build_rc_hash
+
+      # Create a unique name for the ReplicationController, that won't collide
+      # with other RCs.  We do this by appending the id of the ReleaseDoc, so
+      # they will be different for each of the Roles deployed for this Build.
+      rc_name = @rc_hash[:metadata][:name] || "#{build.project_name}-#{kubernetes_role.label_name}"
+      self.replication_controller_name = "#{rc_name}-#{id}"
+      @rc_hash[:metadata][:name] = replication_controller_name
+
+      self.replication_controller_doc = @rc_hash.to_json
+
+      save!
+    end
+
+    def build_rc_hash
+      @rc_hash = rc_template.dup.with_indifferent_access
+      @rc_hash[:spec][:replicas] = replica_count
+
+      pod_hash = @rc_hash[:spec][:template]
+
+      # Add the identifier of this particular build to the metadata
+      pod_hash[:metadata][:labels].merge!(pod_labels)
+      @rc_hash[:metadata][:labels].merge!(pod_labels)
+      @rc_hash[:spec][:selector].merge!(pod_labels)
+
+      # Set the Docker image to be deployed in the pod.
+      # NOTE: This logic assumes that if there are multiple containers defined
+      # in the pod, the container that should run the image from this project
+      # is the first container defined.
+      container_hash = pod_hash[:spec][:containers].first
+      container_hash[:image] = build.docker_repo_digest
+
+      @rc_hash
+    end
+
+    def parsed_config_file
+      Kubernetes::Util.parse_file(config_template, kubernetes_role.config_file)
+    end
+
+    def config_template
+      @config_template ||= build.file_from_repo(kubernetes_role.config_file)
+    end
+
+    def docker_image_in_registry?
+      if build && build.docker_repo_digest.blank?
+        errors.add(:kubernetes_release, 'Docker image was not pushed to registry')
+      end
+    end
+
+    def env_as_list
+      build.env_for(kubernetes_release.deploy_group).each_with_object([]) do |(k,v), list|
+        list << { name: k, value: v.to_s }
+      end
+    end
+  end
+end

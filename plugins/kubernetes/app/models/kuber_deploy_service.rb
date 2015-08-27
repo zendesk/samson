@@ -1,7 +1,6 @@
 class KuberDeployService
   attr_reader :kuber_release
 
-  delegate :client, to: Kubernetes
   delegate :build, to: :kuber_release
 
   def initialize(kuber_release)
@@ -9,34 +8,26 @@ class KuberDeployService
   end
 
   def deploy!
-    create_replication_controller!
-    create_service! unless service_exists?
+    # TODO: handling different deploy strategies (rolling updates, etc.)
+    create_replication_controllers!
+    create_services!
   end
 
-  def create_replication_controller!
-    rc = Kubeclient::ReplicationController.new(kuber_release.rc_hash)
-    client.create_replication_controller(rc)
-  end
-
-  def create_service!
-    service = Kubeclient::Service.new(kuber_release.service_hash)
-    client.create_service(service)
-  end
-
-  def other_repl_controllers
-    @prev_repl_controller ||= begin
-      client.get_replication_controllers(label_selector: "project=#{build.project_name},component=app-server").
-          select { |rc| rc.metadata.labels.build != kuber_release.build_label }.
-          first
+  def create_replication_controllers!
+    kuber_release.role_releases.each do |krr|
+      rc = Kubeclient::ReplicationController.new(krr.rc_hash)
+      client.create_replication_controller(rc)
     end
   end
 
-  def services
-    # TODO: only return services in the same namespace
-    client.get_services(label_selector: "name=#{build.service_name}")
+  def create_services!
+    # TODO: implement this
   end
 
-  def service_exists?
-    services.any?
+  private
+
+  def client
+    # TODO: get the correct client based on the release's DeployGroup
+    @client ||= Kubernetes.client
   end
 end

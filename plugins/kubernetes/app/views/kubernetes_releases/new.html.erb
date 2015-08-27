@@ -1,6 +1,7 @@
 <%
    build ||= @kubernetes_release.build
-   build_roles = build.try(:manifest_roles).present? ? build.manifest_roles : { 'server' => {} }
+   build_roles = @project.roles
+   can_deploy = @project.builds.any? && build_roles.any?
 %>
 
 <%= breadcrumb @project,
@@ -17,8 +18,10 @@
           <% if build %>
             <%= form.hidden_field :build_id, value: build.id %>
             <%= build.project.name %> - <%= build.label %>
-          <% else %>
+          <% elsif @project.builds.any? %>
             <%= form.select :build_id, @project.builds.order('id desc').limit(20).map { |b| [b.label, b.id] } %>
+          <% else %>
+            You must create a <%= link_to 'Build', new_project_build_path(@project) %> before deploying.
           <% end %>
         </div>
       </div>
@@ -27,12 +30,17 @@
 
       <div class="form-group">
         <%= form.label :replicas, "Num Replicas", class: "col-lg-2 control-label" %>
-        <% build_roles.each do |role, role_hash| %>
+        <% build_roles.each do |role| %>
           <div class="col-lg-1">
-            <%= number_field_tag "replicas[#{role}]", 1, class: "form-control", min: 0 %>
+            <%= number_field_tag "replicas[#{role.id}]", 1, class: "form-control", min: 0 %>
           </div>
-          <div class="col-lg-1">
-            (<%= role %>)
+          <div class="col-lg-2">
+            <%= role.name %>
+          </div>
+        <% end %>
+        <% if build_roles.empty? %>
+          <div class="col-lg-4">
+            You must have at least one <%= link_to 'Role', new_project_kubernetes_role_path(@project)  %> to deploy
           </div>
         <% end %>
 
@@ -40,7 +48,9 @@
 
       <div class="form-group">
         <div class="col-lg-offset-2 col-lg-10">
-          <%= form.submit "Create", class: "btn btn-primary" %>
+          <% if can_deploy %>
+            <%= form.submit "Create", class: "btn btn-primary" %>
+          <% end %>
           <%= link_to "Cancel", :back, class: 'btn btn-default' %>
         </div>
       </div>

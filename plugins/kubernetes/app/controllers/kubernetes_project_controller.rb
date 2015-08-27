@@ -4,7 +4,7 @@ class KubernetesProjectController < ApplicationController
 
   def show
     @kuber_release_list = project.kubernetes_releases.order('id desc')
-    @project_role_list = project.roles.order('id desc')
+    @kubernetes_role_list = project.roles.order('id desc')
   end
 
   private

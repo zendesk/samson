@@ -1,6 +1,6 @@
-class CreateProjectRoles < ActiveRecord::Migration
+class CreateKubernetesRoles < ActiveRecord::Migration
   def change
-    create_table :project_roles do |t|
+    create_table :kubernetes_roles do |t|
       t.references :project, null: false, index: true
       t.string :name, null: false
       t.string :config_file
