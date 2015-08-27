@@ -60,17 +60,26 @@ class ActiveSupport::TestCase
   fixtures :all
 
   before do
+    @before_threads = Thread.list
     Rails.cache.clear
     create_default_stubs
   end
 
-  after { sleep 0.1 while extra_threads.present? }
+  after { fail_if_dangling_threads }
+
+  def fail_if_dangling_threads
+    max_threads = ENV['CI'] ? 0 : 1
+    raise "Test left dangling threads: #{extra_threads}" if extra_threads.count > max_threads
+  ensure
+    kill_extra_threads
+  end
+
+  def kill_extra_threads
+    extra_threads.map(&:kill).map(&:join)
+  end
 
   def extra_threads
-    normal = ENV['CI'] ? 3 : 4 # there are always 4 threads hanging around, 2 unknown, 1 from SSE Engine, and 1 from the test timeout helper code
-    threads = (Thread.list - [Thread.current])
-    raise "too low threads, adjust minimum" if threads.size < normal
-    threads.sort_by(&:object_id)[normal..-1] # always kill the newest threads (run event_streamer_test.rb + stage_test.rb to make it blow up)
+    Thread.list - @before_threads
   end
 
   def assert_valid(record)
