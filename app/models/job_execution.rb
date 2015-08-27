@@ -39,7 +39,7 @@ class JobExecution
 
   def stop!
     @executor.stop! 'INT'
-    self.class.stop_timeout.times do
+    self.class.stop_timeout.to_i.times do
       return unless @thread.alive?
       sleep 1
     end
@@ -56,7 +56,7 @@ class JobExecution
   def error!(exception)
     message = "JobExecution failed: #{exception.message}"
 
-    if defined?(Airbrake) && !exception.is_a?(Samson::Hooks::UserError)
+    if !exception.is_a?(Samson::Hooks::UserError)
       Airbrake.notify(exception,
         error_message: message,
         parameters: {
@@ -120,6 +120,8 @@ class JobExecution
     ActiveSupport::Notifications.instrument("execute_shell.samson", payload) do
       payload[:success] = @executor.execute!(*cmds)
     end
+    Samson::Hooks.fire(:after_job_execution, @job, payload[:success], @output)
+    payload[:success]
   end
 
   def setup!(dir)

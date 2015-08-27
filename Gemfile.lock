@@ -29,6 +29,11 @@ PATH
       kubeclient
 
 PATH
+  remote: plugins/pipelines/
+  specs:
+    samson_pipelines (0.0.0)
+
+PATH
   remote: plugins/slack/
   specs:
     samson_slack (0.0.0)
@@ -451,6 +456,7 @@ DEPENDENCIES
   samson_flowdock!
   samson_jenkins!
   samson_kubernetes!
+  samson_pipelines!
   samson_slack!
   samson_zendesk!
   sass-rails (~> 5.0)

@@ -1,4 +1,6 @@
 class GitRepository
+  include ::NewRelic::Agent::MethodTracer
+
   attr_reader :repository_url, :repository_directory
   attr_accessor :executor
 
@@ -38,10 +40,12 @@ class GitRepository
       executor.execute!("git clone #{from} #{to}")
     end
   end
+  add_method_tracer :clone!
 
   def update!
     executor.execute!("cd #{repo_cache_dir}", 'git fetch -p')
   end
+  add_method_tracer :update!
 
   def commit_from_ref(git_reference, length: 7)
     Dir.chdir(repo_cache_dir) do
@@ -84,6 +88,7 @@ class GitRepository
   def clean!
     FileUtils.rm_rf(repo_cache_dir)
   end
+  add_method_tracer :clean!
 
   def valid_url?
     return false if repository_url.blank?

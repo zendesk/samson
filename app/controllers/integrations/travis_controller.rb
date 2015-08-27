@@ -19,7 +19,7 @@ class Integrations::TravisController < Integrations::BaseController
   end
 
   def skip?
-    contains_skip_token?(payload['message'])
+    contains_skip_token?(message)
   end
 
   def branch
@@ -28,5 +28,9 @@ class Integrations::TravisController < Integrations::BaseController
 
   def commit
     payload['commit']
+  end
+
+  def message
+    payload['message']
   end
 end

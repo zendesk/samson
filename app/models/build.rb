@@ -10,7 +10,7 @@ class Build < ActiveRecord::Base
   has_many :releases
 
   validates :project, presence: true
-  validates :git_sha, format: SHA1_REGEX, allow_nil: true
+  validates :git_sha, format: SHA1_REGEX, allow_nil: true, uniqueness: true
   validates :docker_image_id, format: SHA256_REGEX, allow_nil: true
 
   validate :validate_git_reference, on: :create
@@ -82,7 +82,7 @@ class Build < ActiveRecord::Base
     if git_ref.present?
       commit = project.repository.commit_from_ref(git_ref, length: nil)
       if commit
-        self.git_sha = commit
+        self.git_sha = commit unless git_sha.present?
       else
         errors.add(:git_ref, 'is not a valid reference')
       end

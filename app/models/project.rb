@@ -43,11 +43,11 @@ class Project < ActiveRecord::Base
     @docker_repo ||= begin
       registry = Rails.application.config.samson.docker.registry
       if Rails.env.production?
-        registry
+        "#{registry}/#{permalink_base}"
       else
         host, namespace = registry.split '/'
         namespace ||= 'samson'
-        "#{host}/#{namespace}_non_prod"
+        "#{host}/#{namespace}_non_prod/#{permalink_base}"
       end
     end
   end
@@ -170,14 +170,12 @@ class Project < ActiveRecord::Base
   def alert_clone_error!(exception)
     message = "Could not clone git repository #{repository_url} for project #{name}"
     log.error("#{message} - #{exception.message}")
-    if defined?(Airbrake)
-      Airbrake.notify(exception,
-        error_message: message,
-        parameters: {
-          project_id: id
-        }
-      )
-    end
+    Airbrake.notify(exception,
+      error_message: message,
+      parameters: {
+        project_id: id
+      }
+    )
   end
 
   def valid_repository_url

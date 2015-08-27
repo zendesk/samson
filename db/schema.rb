@@ -14,7 +14,7 @@
 ActiveRecord::Schema.define(version: 20150827183314) do
 
   create_table "build_statuses", force: :cascade do |t|
-    t.integer  "build_id",   limit: 4,                         null: false
+    t.integer  "build_id",                                     null: false
     t.string   "source",     limit: 255
     t.string   "status",     limit: 255,   default: "pending", null: false
     t.string   "url",        limit: 255
@@ -27,16 +27,16 @@ ActiveRecord::Schema.define(version: 20150827183314) do
   add_index "build_statuses", ["build_id"], name: "index_build_statuses_on_build_id", using: :btree
 
   create_table "builds", force: :cascade do |t|
-    t.integer  "project_id",          limit: 4,    null: false
-    t.string   "git_sha",             limit: 128
+    t.integer  "project_id",                       null: false
+    t.string   "git_sha",             limit: 255
     t.string   "git_ref",             limit: 255
-    t.string   "docker_image_id",     limit: 128
+    t.string   "docker_image_id",     limit: 255
     t.string   "docker_ref",          limit: 255
     t.string   "docker_repo_digest",  limit: 255
-    t.integer  "docker_build_job_id", limit: 4
+    t.integer  "docker_build_job_id"
     t.string   "label",               limit: 255
     t.string   "description",         limit: 1024
-    t.integer  "created_by",          limit: 4
+    t.integer  "created_by"
     t.datetime "created_at"
     t.datetime "updated_at"
   end
@@ -46,7 +46,7 @@ ActiveRecord::Schema.define(version: 20150827183314) do
   add_index "builds", ["project_id"], name: "index_builds_on_project_id", using: :btree
 
   create_table "commands", force: :cascade do |t|
-    t.text     "command",    limit: 16777215
+    t.text     "command",    limit: 10485760
     t.datetime "created_at"
     t.datetime "updated_at"
     t.integer  "project_id", limit: 4
@@ -91,7 +91,7 @@ ActiveRecord::Schema.define(version: 20150827183314) do
   add_index "deploys", ["stage_id", "deleted_at"], name: "index_deploys_on_stage_id_and_deleted_at", using: :btree
 
   create_table "environment_variable_groups", force: :cascade do |t|
-    t.string "name",    limit: 255,   null: false
+    t.string "name", limit: 255, null: false
     t.text   "comment", limit: 65535
   end
 
@@ -110,7 +110,7 @@ ActiveRecord::Schema.define(version: 20150827183314) do
 
   create_table "environments", force: :cascade do |t|
     t.string   "name",          limit: 255,                 null: false
-    t.boolean  "is_production",             default: false, null: false
+    t.boolean  "is_production", default: false, null: false
     t.datetime "deleted_at"
     t.datetime "created_at",                                null: false
     t.datetime "updated_at",                                null: false
@@ -125,7 +125,7 @@ ActiveRecord::Schema.define(version: 20150827183314) do
     t.integer  "stage_id",   limit: 4,                  null: false
     t.datetime "created_at"
     t.datetime "updated_at"
-    t.boolean  "enabled",                default: true
+    t.boolean  "enabled",    default: true
   end
 
   create_table "jenkins_jobs", force: :cascade do |t|
@@ -147,7 +147,7 @@ ActiveRecord::Schema.define(version: 20150827183314) do
     t.integer  "user_id",    limit: 4,                              null: false
     t.integer  "project_id", limit: 4,                              null: false
     t.string   "status",     limit: 255,        default: "pending"
-    t.text     "output",     limit: 4294967295
+    t.text     "output",     limit: 1073741823
     t.datetime "created_at"
     t.datetime "updated_at"
     t.string   "commit",     limit: 255
@@ -218,7 +218,7 @@ ActiveRecord::Schema.define(version: 20150827183314) do
     t.datetime "updated_at"
     t.datetime "deleted_at"
     t.string   "description", limit: 255
-    t.boolean  "warning",                 default: false, null: false
+    t.boolean  "warning",     default: false, null: false
   end
 
   add_index "locks", ["stage_id", "deleted_at", "user_id"], name: "index_locks_on_stage_id_and_deleted_at_and_user_id", using: :btree
@@ -271,6 +271,7 @@ ActiveRecord::Schema.define(version: 20150827183314) do
     t.text     "description",        limit: 65535
     t.string   "owner",              limit: 255
     t.boolean  "deploy_with_docker",               default: false, null: false
+    t.boolean  "auto_release_docker_image",        default: false, null: false
   end
 
   add_index "projects", ["permalink", "deleted_at"], name: "index_projects_on_permalink_and_deleted_at", length: {"permalink"=>191, "deleted_at"=>nil}, using: :btree
@@ -316,19 +317,20 @@ ActiveRecord::Schema.define(version: 20150827183314) do
     t.string   "notify_email_address",                         limit: 255
     t.integer  "order",                                        limit: 4
     t.datetime "deleted_at"
-    t.boolean  "confirm",                                                    default: true
+    t.boolean  "confirm",                                      default: true
     t.string   "datadog_tags",                                 limit: 255
     t.boolean  "update_github_pull_requests"
-    t.boolean  "deploy_on_release",                                          default: false
+    t.boolean  "deploy_on_release",                            default: false
     t.boolean  "comment_on_zendesk_tickets"
-    t.boolean  "production",                                                 default: false
+    t.boolean  "production",                                   default: false
     t.boolean  "use_github_deployment_api"
     t.string   "permalink",                                    limit: 255,                   null: false
     t.text     "dashboard",                                    limit: 65535
-    t.boolean  "email_committers_on_automated_deploy_failure",               default: false, null: false
+    t.boolean  "email_committers_on_automated_deploy_failure", default: false, null: false
     t.string   "static_emails_on_automated_deploy_failure",    limit: 255
     t.string   "datadog_monitor_ids",                          limit: 255
     t.string   "jenkins_job_names",                            limit: 255
+    t.string   "next_stage_ids"
   end
 
   add_index "stages", ["project_id", "permalink", "deleted_at"], name: "index_stages_on_project_id_and_permalink_and_deleted_at", length: {"project_id"=>nil, "permalink"=>191, "deleted_at"=>nil}, using: :btree
@@ -351,8 +353,8 @@ ActiveRecord::Schema.define(version: 20150827183314) do
     t.string   "token",          limit: 255
     t.datetime "deleted_at"
     t.string   "external_id",    limit: 255
-    t.boolean  "desktop_notify",             default: false
-    t.boolean  "integration",                default: false, null: false
+    t.boolean  "desktop_notify", default: false
+    t.boolean  "integration",    default: false, null: false
   end
 
   add_index "users", ["external_id", "deleted_at"], name: "index_users_on_external_id_and_deleted_at", length: {"external_id"=>191, "deleted_at"=>nil}, using: :btree
