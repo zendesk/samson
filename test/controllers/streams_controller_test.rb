@@ -6,6 +6,8 @@ describe StreamsController do
   let(:deployer) { users(:deployer) }
   let(:job) { jobs(:succeeded_test) }
 
+  after { kill_extra_threads } # SSE heartbeat never finishes
+
   as_a_deployer do
     describe "a GET to :show" do
       it "should have an initial :started SSE and a :finished SSE" do
