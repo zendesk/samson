@@ -170,14 +170,12 @@ class Project < ActiveRecord::Base
   def alert_clone_error!(exception)
     message = "Could not clone git repository #{repository_url} for project #{name}"
     log.error("#{message} - #{exception.message}")
-    if defined?(Airbrake)
-      Airbrake.notify(exception,
-        error_message: message,
-        parameters: {
-          project_id: id
-        }
-      )
-    end
+    Airbrake.notify(exception,
+      error_message: message,
+      parameters: {
+        project_id: id
+      }
+    )
   end
 
   def valid_repository_url
