@@ -3,12 +3,16 @@ class Integrations::BaseController < ApplicationController
   skip_before_action :verify_authenticity_token
 
   def create
-    return head(:ok) unless deploy?
+    return head(:accepted, message: 'Ignoring this request') unless deploy?
     if project.create_releases_for_branch?(branch)
       create_build_record
       create_docker_image if project.deploy_with_docker? && project.auto_release_docker_image?
     end
-    deploy_to_stages ? head(:ok) : head(:unprocessable_entity, message: "Failed to start all deploys")
+    deploy_to_stages ? head(:created) : head(:unprocessable_entity, message: "Failed to start all deploys")
+  rescue Integrations::IntegrationException => ex
+    # head(ex.code, message: ex.message)
+    Rails.logger.warn "Rendering integration exception: #{ex}"
+    render status: ex.code, plain: ex.message
   end
 
   protected

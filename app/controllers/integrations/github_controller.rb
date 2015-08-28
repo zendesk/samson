@@ -6,7 +6,8 @@ class Integrations::GithubController < Integrations::BaseController
   protected
 
   def deploy?
-    valid_signature? && valid_payload?
+    raise Integrations::IntegrationException.new(:unauthorized, 'X-Hub-Signature was invalid') unless valid_signature?
+    valid_payload?
   end
 
   def valid_signature?
