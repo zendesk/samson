@@ -94,6 +94,7 @@ end
 
 group :development, :test do
   gem 'byebug', require: false
+  gem 'bootscale', require: false
 end
 
 group :test do
