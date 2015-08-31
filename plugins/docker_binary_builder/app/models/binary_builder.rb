@@ -1,5 +1,5 @@
 class BinaryBuilder
-  DOCKER_FILE = 'Dockerfile.build'.freeze
+  DOCKER_BUILD_FILE = 'Dockerfile.build'.freeze
   BUILD_SCRIPT = '/app/build.sh'.freeze
   ARTIFACTS_FILE = 'artifacts.tar'.freeze
   ARTIFACTS_FILE_PATH = "/app/#{ARTIFACTS_FILE}".freeze
@@ -14,10 +14,10 @@ class BinaryBuilder
   end
 
   def build
-    return unless @project.try(:deploy_with_docker?) && File.exists?(File.join(@dir, DOCKER_FILE))
+    return unless @project.try(:deploy_with_docker?) && File.exists?(File.join(@dir, DOCKER_BUILD_FILE))
     @output_stream.puts "Connecting to Docker host with Api version: #{docker_api_version} ..."
 
-    @image = create_image
+    @image = create_build_image
     @container = Docker::Container.create(create_container_options)
 
     start_build_script
@@ -77,7 +77,7 @@ class BinaryBuilder
   def create_container_options
     options = {
       'Cmd' => [BUILD_SCRIPT],
-      'Image' => "#{@project.send(:permalink_base)}_build:#{@git_reference}"
+      'Image' => image_name
     }
 
     # Mount a cache directory for sharing .m2, .ivy2, .bundler directories between build containers.
@@ -88,7 +88,7 @@ class BinaryBuilder
       options.merge!(
         {
           'Volumes' => {
-            '/opt/samson_build_cache' => {}
+            DOCKER_HOST_CACHE_DIR => {}
           },
           'HostConfig' => {
             'Binds' => ["#{DOCKER_HOST_CACHE_DIR}:#{CONTAINER_CACHE_DIR}"],
@@ -115,13 +115,17 @@ class BinaryBuilder
     end
   end
 
-  def create_image
+  def image_name
+    "#{@project.send(:permalink_base)}_build:#{@git_reference}"
+  end
+
+  def create_build_image
     @output_stream.puts 'Now building the build container...'
     Docker::Image.build_from_dir(
       @dir,
       {
-        'dockerfile' => DOCKER_FILE,
-        't' => "#{@project.send(:permalink_base)}_build:#{@git_reference}"
+        'dockerfile' => DOCKER_BUILD_FILE,
+        't' => image_name
       }
     )
   end

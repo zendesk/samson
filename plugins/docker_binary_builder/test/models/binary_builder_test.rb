@@ -18,19 +18,19 @@ describe BinaryBuilder do
     end
 
     it 'does nothing if docker flag is not set for project' do
-      builder.expects(:create_image).never
+      builder.expects(:create_build_image).never
       builder.build
     end
 
     it 'does nothing if docker flag is set for project but no dockerfile.build exists' do
-      File.expects(:exists?).with(File.join(dir, BinaryBuilder::DOCKER_FILE)).returns(false)
+      File.expects(:exists?).with(File.join(dir, BinaryBuilder::DOCKER_BUILD_FILE)).returns(false)
       project.update_attributes(deploy_with_docker: true)
-      builder.expects(:create_image).never
+      builder.expects(:create_build_image).never
       builder.build
     end
 
     it 'builds image if docker flag is set for project and dockerfile.build exists' do
-      File.expects(:exists?).with(File.join(dir, BinaryBuilder::DOCKER_FILE)).returns(true)
+      File.expects(:exists?).with(File.join(dir, BinaryBuilder::DOCKER_BUILD_FILE)).returns(true)
       project.update_attributes(deploy_with_docker: true)
       builder.build
       output.string.must_equal [
