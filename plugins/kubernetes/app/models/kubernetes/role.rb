@@ -15,5 +15,9 @@ module Kubernetes
     def label_name
       name.parameterize('-')
     end
+
+    def ram_with_units
+      "#{ram}MB" if ram.present?
+    end
   end
 end
