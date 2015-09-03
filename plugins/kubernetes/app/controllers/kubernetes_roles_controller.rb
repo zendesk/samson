@@ -1,7 +1,7 @@
 class KubernetesRolesController < ApplicationController
   before_action :authorize_deployer!
   before_action :project
-  before_action :find_role, only: [:show, :edit]
+  before_action :find_role, only: [:show, :edit, :update]
 
   def new
     @kubernetes_role = Kubernetes::Role.new(project: project, ram: 512, cpu: 0.2, replicas: 1)
@@ -36,7 +36,25 @@ class KubernetesRolesController < ApplicationController
   end
 
   def edit
-    # TODO
+  end
+
+  def update
+    @kubernetes_role.assign_attributes(new_role_params)
+    success = @kubernetes_role.save
+
+    respond_to do |format|
+      format.html do
+        if success
+          redirect_to project_kubernetes_roles_paths
+        else
+          render :edit, status: 422
+        end
+      end
+
+      format.json do
+        render json: {}, status: success ? 200 : 422
+      end
+    end
   end
 
   private

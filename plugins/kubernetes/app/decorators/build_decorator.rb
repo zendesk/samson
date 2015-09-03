@@ -1,7 +1,7 @@
 Build.class_eval do
 
-  has_many :kubernetes_releases
-  attr_writer :project_name, :container_port
+  has_many :kubernetes_release_groups, class_name: 'Kubernetes::ReleaseGroup'
+  attr_writer :project_name
   attr_accessor :env
 
   def project_name

@@ -17,7 +17,7 @@ module Kubernetes
     end
 
     def ram_with_units
-      "#{ram}MB" if ram.present?
+      "#{ram}Mi" if ram.present?
     end
   end
 end

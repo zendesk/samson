@@ -3,7 +3,7 @@ class KubernetesProjectController < ApplicationController
   before_action :project
 
   def show
-    @kuber_release_list = project.kubernetes_releases.order('id desc')
+    @release_group_list = project.kubernetes_release_groups.order('id desc')
     @kubernetes_role_list = project.roles.order('id desc')
   end
 

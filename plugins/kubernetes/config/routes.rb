@@ -1,7 +1,8 @@
 Samson::Application.routes.draw do
   resources :projects do
-    resources :kubernetes_releases, only: [:new, :create, :index, :show]
-    resources :kubernetes_roles, only: [:new, :create, :index, :show, :edit]
+    resources :kubernetes_release_groups, only: [:new, :create, :index, :show]
+    resources :kubernetes_releases, only: [:index, :show]
+    resources :kubernetes_roles, only: [:new, :create, :index, :show, :edit, :update]
 
     member do
       get :kubernetes, to: 'kubernetes_project#show'

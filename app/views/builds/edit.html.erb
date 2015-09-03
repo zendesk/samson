@@ -19,14 +19,14 @@
       <div class="form-group">
         <%= form.label :id, "Id", class: "col-lg-2 control-label" %>
         <div class="col-lg-4">
-          <%= @build.id %>
+          <p class="form-control-static"><%= @build.id %></p>
         </div>
       </div>
 
       <div class="form-group">
         <%= form.label :created, "Created", class: "col-lg-2 control-label" %>
         <div class="col-lg-4">
-          <%= @build.created_at.to_s %>
+          <p class="form-control-static"><%= @build.created_at.to_s %></p>
         </div>
       </div>
 
@@ -47,14 +47,14 @@
       <div class="form-group">
         <%= form.label :git_ref, "Git Reference", class: "col-lg-2 control-label" %>
         <div class="col-lg-4">
-          <%= git_ref_and_sha_for(@build, make_link: false).html_safe %>
+          <p class="form-control-static"><%= git_ref_and_sha_for(@build, make_link: false).html_safe %></p>
         </div>
       </div>
 
       <div class="form-group">
         <%= form.label :docker_image, "Docker Repo Digest", class: "col-lg-2 control-label" %>
         <div class="col-lg-4">
-          <%= @build.docker_repo_digest %>
+          <p class="form-control-static"><%= @build.docker_repo_digest %></p>
         </div>
       </div>
 

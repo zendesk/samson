@@ -17,7 +17,7 @@
           <td><%= cluster.description %></td>
           <td>
             <% cluster.deploy_groups.each do |dg| %>
-              <%= link_to dg.name, deploy_group_path(dg)  %>
+              <%= link_to dg.name, admin_deploy_group_path(dg)  %>
               (ns: <%= dg.kubernetes_namespace %>)
               <br/>
             <% end %>

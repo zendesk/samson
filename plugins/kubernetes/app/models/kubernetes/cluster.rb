@@ -48,6 +48,12 @@ module Kubernetes
       deploy_group_ids
     end
 
+    def namespace_exists?(namespace)
+      client.get_namespace(namespace).present?
+    rescue KubeException
+      false
+    end
+
     def self.config_file
       @config_file ||= begin
         config_file = ENV['KUBE_CONFIG_FILE'].presence || "#{ENV.fetch('HOME')}/.kube/config"

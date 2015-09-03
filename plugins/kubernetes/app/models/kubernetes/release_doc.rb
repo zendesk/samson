@@ -1,17 +1,15 @@
 module Kubernetes
   class ReleaseDoc < ActiveRecord::Base
     self.table_name = 'kubernetes_release_docs'
-    belongs_to :kubernetes_role
-    belongs_to :kubernetes_release
+    belongs_to :kubernetes_role, class_name: 'Kubernetes::Role'
+    belongs_to :kubernetes_release, class_name: 'Kubernetes::Release'
 
     validates :kubernetes_role, presence: true
     validates :kubernetes_release, presence: true
     validates :replica_count, presence: true, numericality: { greater_than: 0 }
-    validate :docker_image_in_registry?, on: :create
+    validate :validate_config_file, on: :create
 
     after_create :save_rc_info    # do this after create, so id has been generated
-
-    delegate :build, to: :kubernetes_release
 
     # Definition of the ReplicationController, based on the rc_template, but
     # updated with the image and metadata for this deploy.
@@ -57,12 +55,16 @@ module Kubernetes
       end
     end
 
+    def build
+      kubernetes_release.release_group.build
+    end
+
     private
 
     # These labels will be attached to the Pod and the ReplicationController
     def pod_labels
       {
-        build: build.id
+        build: build.id.to_s
       }
     end
 
@@ -101,6 +103,10 @@ module Kubernetes
       container_hash = pod_hash[:spec][:containers].first
       container_hash[:image] = build.docker_repo_digest
 
+      container_hash[:resources] = {
+        limits: { cpu: kubernetes_role.cpu, memory: kubernetes_role.ram_with_units }
+      }
+
       @rc_hash
     end
 
@@ -112,9 +118,9 @@ module Kubernetes
       @config_template ||= build.file_from_repo(kubernetes_role.config_file)
     end
 
-    def docker_image_in_registry?
-      if build && build.docker_repo_digest.blank?
-        errors.add(:kubernetes_release, 'Docker image was not pushed to registry')
+    def validate_config_file
+      if build && kubernetes_role && config_template.blank?
+        errors.add(:build, "does not contain config file '#{kubernetes_role.config_file}'")
       end
     end
 

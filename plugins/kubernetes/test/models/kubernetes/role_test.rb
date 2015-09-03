@@ -34,7 +34,7 @@ describe Kubernetes::Role do
   describe '#ram_with_units' do
     it 'works' do
       role.ram = 512
-      role.ram_with_units.must_equal '512MB'
+      role.ram_with_units.must_equal '512Mi'
     end
   end
 end
