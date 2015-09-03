@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20150720121725) do
+ActiveRecord::Schema.define(version: 20150903201829) do
 
   create_table "build_statuses", force: :cascade do |t|
     t.integer  "build_id",                                     null: false
@@ -28,6 +28,7 @@ ActiveRecord::Schema.define(version: 20150720121725) do
 
   create_table "builds", force: :cascade do |t|
     t.integer  "project_id",                       null: false
+    t.integer  "number",              limit: 4
     t.string   "git_sha",             limit: 255
     t.string   "git_ref",             limit: 255
     t.string   "docker_image_id",     limit: 255
