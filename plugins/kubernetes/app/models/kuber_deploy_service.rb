@@ -33,7 +33,7 @@ class KuberDeployService
   end
 
   def project
-    @project ||= kuber_release.release_group
+    @project ||= kuber_release.release_group.project
   end
 
   private

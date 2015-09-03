@@ -3,7 +3,7 @@ DeployGroup.class_eval do
   validate :validate_kubernetes_namespace
 
   def kubernetes_namespace
-    super || name.parameterize('-')
+    super || name.try(:parameterize, '-')
   end
 
   private
