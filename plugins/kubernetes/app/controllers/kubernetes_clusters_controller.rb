@@ -3,7 +3,7 @@ class KubernetesClustersController < ApplicationController
   before_action :authorize_super_admin!, only: [ :create, :new, :update ]
 
   before_action :find_cluster, only: [:show, :edit, :update]
-  before_action :load_environments, only: [:new, :edit]
+  before_action :load_environments, only: [:new, :edit, :update]
 
   def new
     @cluster = Kubernetes::Cluster.new(api_version: 'v1')
