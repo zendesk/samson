@@ -10,7 +10,7 @@ describe Samson::Hooks do
       ENV['PLUGINS'] = plugins
 
       # Clear cached plugins
-      Samson::Hooks.instance_variable_set('@plugins', nil)
+      Samson::Hooks.reset_plugins!
     end
 
     context 'when in the test environment' do
@@ -38,11 +38,25 @@ describe Samson::Hooks do
         end
       end
 
+       context 'when the plugins env is set to all' do
+        let(:plugins) { 'all,-slack,-zendesk' }
+
+        it 'returns the plugins that were not disabled' do
+          Samson::Hooks.plugins.size.must_equal (number_of_plugins - 2)
+          refute Samson::Hooks.active_plugin?('slack')
+          refute Samson::Hooks.active_plugin?('zendesk')
+          assert Samson::Hooks.active_plugin?('env')
+        end
+      end
+
       context 'when the plugins env is set to include some plugins' do
         let(:plugins) { 'slack, zendesk' }
 
         it 'only returns those plugins' do
           Samson::Hooks.plugins.size.must_equal 2
+          assert Samson::Hooks.active_plugin?('slack')
+          assert Samson::Hooks.active_plugin?('zendesk')
+          refute Samson::Hooks.active_plugin?('env')
         end
       end
     end
