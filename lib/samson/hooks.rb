@@ -40,7 +40,7 @@ module Samson
       end
 
       def active?
-        Rails.env.test? || ENV["PLUGINS"] == "all" || ENV["PLUGINS"].to_s.split(',').map(&:strip).include?(@name)
+        Hooks.active_plugin?(@name)
       end
 
       def load
@@ -95,7 +95,13 @@ module Samson
       end
 
       def active_plugin?(plugin_name)
-        plugins.map(&:name).include?(plugin_name)
+        if Rails.env.test?
+          true
+        elsif @all_plugins_enabled
+          !@disabled_plugins.include?(plugin_name)
+        else
+          @enabled_plugins.include?(plugin_name)
+        end
       end
 
       # configure
@@ -135,6 +141,7 @@ module Samson
       end
 
       def plugin_setup
+        parse_env_var
         Samson::Hooks.plugins.
           each(&:load).
           each(&:add_migrations).
@@ -171,11 +178,35 @@ module Samson
         nil
       end
 
+      def reset_plugins!
+        @plugins = nil
+        parse_env_var
+      end
+
       private
 
       def hooks(*args)
         raise "Using unsupported hook #{args.inspect}" unless KNOWN.include?(args.first)
         (@@hooks[args] ||= [])
+      end
+
+      # Loads the PLUGINS environment variable. See docs/plugins.md for more info.
+      def parse_env_var
+        @enabled_plugins = []
+        @disabled_plugins = []
+        @all_plugins_enabled = false
+
+        values = (ENV['PLUGINS'] || '').split(',').map(&:strip)
+
+        @all_plugins_enabled = true if values.delete('all')
+
+        values.each do |v|
+          if v.starts_with?('-')
+            @disabled_plugins << v[1..-1]
+          else
+            @enabled_plugins << v
+          end
+        end
       end
     end
   end

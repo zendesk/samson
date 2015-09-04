@@ -94,6 +94,7 @@ end
 
 group :development, :test do
   gem 'byebug', require: false
+  gem 'bootscale', require: false
   gem 'pry-rails'
   gem 'awesome_print'
 end
