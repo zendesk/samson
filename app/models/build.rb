@@ -15,8 +15,6 @@ class Build < ActiveRecord::Base
 
   validate :validate_git_reference, on: :create
 
-  before_create :assign_number
-
   def nice_name
     "Build #{label.presence || id}"
   end
@@ -86,10 +84,5 @@ class Build < ActiveRecord::Base
         errors.add(:git_sha, 'is not a valid SHA for this project')
       end
     end
-  end
-
-  def assign_number
-    biggest_number = project.builds.maximum(:number) || 0
-    self.number = biggest_number + 1
   end
 end

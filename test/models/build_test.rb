@@ -51,22 +51,6 @@ describe Build do
     end
   end
 
-  describe 'create' do
-    let(:project) { projects(:test) }
-
-    before do
-      create_repo_without_tags
-      project.repository_url = repo_temp_dir
-    end
-
-    it 'increments the build number' do
-      biggest_build_num = project.builds.maximum(:number) || 0
-      build = project.builds.create!(git_ref: 'master')
-      assert_valid(build)
-      assert_equal(biggest_build_num + 1, build.number)
-    end
-  end
-
   describe 'successful?' do
     let(:build) { builds(:staging) }
 
