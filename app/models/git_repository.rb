@@ -110,6 +110,10 @@ class GitRepository
     @executor ||= TerminalExecutor.new(StringIO.new)
   end
 
+  def file_changed?(sha1, sha2, file)
+    executor.execute!("cd #{pwd}", "git diff --quiet --name-only #{sha1}..#{sha2} #{file}")
+  end
+
   private
 
   def checkout!(git_reference, pwd: repo_cache_dir)
