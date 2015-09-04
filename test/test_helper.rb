@@ -86,8 +86,12 @@ class ActiveSupport::TestCase
     assert record.valid?, record.errors.full_messages
   end
 
-  def refute_valid(record)
-    refute record.valid?
+  def refute_valid(record, error_keys = nil)
+    refute record.valid?, "Expected record of type #{record.class.name} to be invalid"
+
+    Array.wrap(error_keys).compact.each do |key|
+      record.errors.keys.must_include key
+    end
   end
 
   def ar_queries

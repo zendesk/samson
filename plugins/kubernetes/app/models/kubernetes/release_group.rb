@@ -21,9 +21,16 @@ module Kubernetes
     end
 
     def deploy_group_ids=(id_list)
+      id_list = id_list.map(&:to_i).select(&:present?)
+
+      ids_to_delete = (deploy_group_ids - id_list)
+
+      releases.each do |rel|
+        releases.delete(rel) if ids_to_delete.include?(rel.deploy_group_id)
+      end if ids_to_delete.any?
+
       (id_list - deploy_group_ids).each do |deploy_group_id|
-        next if deploy_group_id.blank?
-        self.releases.build(deploy_group_id: deploy_group_id)
+        releases.build(deploy_group_id: deploy_group_id)
       end
     end
 
