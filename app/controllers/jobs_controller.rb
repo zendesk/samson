@@ -1,7 +1,11 @@
 class JobsController < ApplicationController
-  before_filter :authorize_admin!, only: [:new, :create, :destroy]
+  include CurrentProject
+  include ProjectLevelAuthorization
 
-  before_action :find_project, except: [:enabled]
+  before_action except: [:enabled] do
+    find_project(params[:project_id])
+  end
+  before_action :authorize_project_admin!, only: [:new, :create, :destroy]
   before_action :find_job, only: [:show, :destroy]
 
   def index

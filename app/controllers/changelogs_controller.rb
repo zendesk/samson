@@ -1,6 +1,10 @@
 class ChangelogsController < ApplicationController
+  include CurrentProject
+
   before_action :check_params
-  before_action :find_project
+  before_action do
+    find_project(params[:project_id])
+  end
 
   def show
     @start_date = Date.strptime(params[:start_date], '%Y-%m-%d')

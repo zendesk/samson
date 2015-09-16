@@ -1,8 +1,12 @@
 class ProjectsController < ApplicationController
+  include CurrentProject
+  include ProjectLevelAuthorization
   include StagePermittedParams
 
-  before_action :authorize_admin!, except: [:show, :index, :deploy_group_versions]
-  before_action :project, only: [:show, :edit, :update, :deploy_group_versions]
+  before_action only: [:show, :edit, :update, :deploy_group_versions] do
+    find_project(params[:id])
+  end
+  before_action :authorize_project_admin!, except: [:show, :index, :deploy_group_versions]
   before_action :get_environments, only: [:new, :create]
 
   helper_method :project
@@ -92,9 +96,7 @@ class ProjectsController < ApplicationController
   end
 
   def project
-    @project ||= Project.find_by_param!(params[:id]).tap do |project|
-      project.current_user = current_user
-    end
+    @project
   end
 
   def projects_for_user

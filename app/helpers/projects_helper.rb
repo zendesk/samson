@@ -35,4 +35,8 @@ module ProjectsHelper
       'failed'
     end
   end
+
+  def is_user_admin_for_project?
+    current_user.is_admin? || current_user.is_project_admin_for?(@project)
+  end
 end

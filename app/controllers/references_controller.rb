@@ -1,6 +1,10 @@
 class ReferencesController < ApplicationController
-  before_filter :find_project
-  before_filter :authorize_deployer!
+  include CurrentProject
+
+  before_action :authorize_deployer!
+  before_action do
+    find_project(params[:project_id])
+  end
 
   def index
     @references = ReferencesService.new(@project).find_git_references

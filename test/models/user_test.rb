@@ -139,37 +139,49 @@ describe User do
     end
   end
 
-  describe "#admin?" do
-    it "is true for an admin" do
-      users(:admin).must_be(:is_admin?)
+  describe "#super_admin?" do
+    it "is true for a super admin" do
+      users(:super_admin).must_be(:is_super_admin?)
     end
 
-    it "is false for a deployer" do
-      users(:deployer).wont_be(:is_admin?)
+    it "is false for an admin" do
+      users(:admin).wont_be(:is_super_admin?)
     end
 
-    it "is false for an viewer" do
-      User.new.wont_be(:is_admin?)
+    it "is false for deployer" do
+      users(:deployer).wont_be(:is_super_admin?)
+    end
+
+    it "is false for a viewer" do
+      User.new.wont_be(:is_super_admin?)
     end
   end
 
   describe "#deployer?" do
+    it "is true for a super_admin" do
+      users(:super_admin).is_deployer?.must_equal(true)
+    end
+
     it "is true for an admin" do
-      users(:admin).is_deployer?.must_equal(true)
+      users(:admin).is_admin?.must_equal(true)
     end
 
-    it "is true for a deployer" do
-      users(:deployer).is_deployer?.must_equal(true)
-    end
-
-    it "is false for an viewer" do
-      User.new.is_deployer?.wont_equal(true)
+    it "is false for a viewer" do
+      User.new.wont_be(:is_deployer?)
     end
   end
 
   describe "#viewer?" do
+    it "is true for a super_admin" do
+      users(:super_admin).is_viewer?.must_equal(true)
+    end
+
+    it "is true for an admin" do
+      users(:admin).is_viewer?.must_equal(true)
+    end
+
     it "is true for a deployer" do
-      users(:deployer).is_deployer?.must_equal(true)
+      users(:deployer).is_viewer?.must_equal(true)
     end
 
     it "is true for everyone else and by default" do

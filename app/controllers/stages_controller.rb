@@ -1,13 +1,18 @@
 require 'open-uri' # needed to fetch from img.shields.io using open()
 
 class StagesController < ApplicationController
+  include CurrentProject
+  include ProjectLevelAuthorization
   include StagePermittedParams
 
   skip_before_action :login_users, if: :badge?
-  before_action :authorize_admin!, except: [:index, :show]
+
   before_action :authorize_deployer!, unless: :badge?
+  before_action do
+    find_project(params[:project_id])
+  end
+  before_action :authorize_project_admin!, except: [:index, :show]
   before_action :check_token, if: :badge?
-  before_action :find_project
   before_action :find_stage, only: [:show, :edit, :update, :destroy, :clone]
   before_action :get_environments, only: [:new, :create, :edit, :update, :clone]
 

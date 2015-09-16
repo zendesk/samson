@@ -2,7 +2,7 @@
   <span><%= macro.name %></span>
 
   <div class="btn-group pull-right">
-    <% if current_user.is_admin? %>
+    <% if is_user_admin_for_project? %>
       <%= link_to "Edit", edit_project_macro_path(@project, macro), class: "btn btn-default" %>
     <% end %>
 
