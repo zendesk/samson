@@ -9,7 +9,7 @@
     <div class="col-lg-2 button-label">Actions</div>
     <div class="col-lg-6">
       <%= link_to 'Execute', execute_project_macro_path(@project, @macro), method: :post, class: 'btn btn-primary', data: { confirm: "Are you sure you have no unsaved changes and would like to execute '#{@macro.name}'?" } %>
-      <% if current_user.is_admin? %>
+      <% if is_user_admin_for_project? %>
         <%= link_to_delete_button([@project, @macro]) %>
       <% end %>
     </div>

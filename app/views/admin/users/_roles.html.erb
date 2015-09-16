@@ -1,12 +1,12 @@
-<% if can_modify_roles? %>
+<% if current_user.is_super_admin? %>
 
   <% Role.all.each do |role| %>
     <label class="radio-inline" ng-click="updateUser($event)">
       <%= radio_button_tag "users[#{user.id}][role]", role.id, user.role_id == role.id %>
-      <%= role.name %>
+      <%= role.display_name %>
     </label>
   <% end %>
 
 <% else %>
-  <%= Role.find(user.role_id).name.capitalize %>
+  <%= Role.find(user.role_id).display_name %>
 <% end %>

@@ -9,5 +9,9 @@ module HasRole
     define_method "is_#{role.name}?" do
       role_id >= role.id
     end
+
+    define_method "is_not_#{role.name}?" do
+      role_id < role.id
+    end
   end
 end

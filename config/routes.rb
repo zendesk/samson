@@ -87,11 +87,16 @@ Samson::Application.routes.draw do
   end
 
   namespace :admin do
-    resources :users, only: [:index, :update, :destroy]
+    resources :users, only: [:index, :show, :update, :destroy] do
+      resources :user_projects_roles, only: [:create, :update]
+    end
+
     resource :projects, only: [:show]
     resources :commands, except: [:show]
     resources :environments, except: [:show]
     resources :deploy_groups
+
+    get '/:action', to: 'admin#:action', :defaults => { :format => 'json' }
   end
 
   namespace :integrations do

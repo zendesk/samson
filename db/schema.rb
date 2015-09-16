@@ -361,6 +361,17 @@ ActiveRecord::Schema.define(version: 20151013181500) do
 
   add_index "stars", ["user_id", "project_id"], name: "index_stars_on_user_id_and_project_id", unique: true, using: :btree
 
+  create_table "user_project_roles", force: :cascade do |t|
+    t.integer  "project_id", limit: 4, null: false
+    t.integer  "user_id",    limit: 4, null: false
+    t.integer  "role_id",    limit: 4, null: false
+    t.datetime "created_at"
+    t.datetime "updated_at"
+  end
+
+  add_index "user_project_roles", ["project_id"], name: "index_user_project_roles_on_project_id"
+  add_index "user_project_roles", ["user_id"], name: "index_user_project_roles_on_user_id"
+
   create_table "users", force: :cascade do |t|
     t.string   "name",           limit: 255,                 null: false
     t.string   "email",          limit: 255

@@ -1,6 +1,10 @@
 class ReleasesController < ApplicationController
+  include CurrentProject
+
   before_action :authorize_deployer!, except: [:show, :index]
-  before_action :find_project
+  before_action do
+    find_project(params[:project_id])
+  end
 
   def show
     @release = @project.releases.find_by_version!(params[:id])

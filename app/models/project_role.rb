@@ -1,8 +1,12 @@
-class ProjectRole < ActiveRecord::Base
-  include HasRole
-  belongs_to :project
-  belongs_to :user
+require 'active_hash'
 
-  validates_presence_of :project, :user
-  validates :role_id, inclusion: { in: [1,2] }   # either "Deployer" or "Admin"
+class ProjectRole < ActiveHash::Base
+  include ActiveHash::Enum
+
+  self.data = [
+    { id: 0, name: "deployer", display_name: "Deployer" },
+    { id: 1, name: "admin", display_name: "Admin" }
+  ]
+
+  enum_accessor :name
 end

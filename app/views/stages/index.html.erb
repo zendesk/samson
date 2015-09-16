@@ -1,13 +1,13 @@
 <%= render 'projects/header', project: @project, tab: "stages" %>
 
 <section class="tabs">
-  <ul id="stages" data-url="<%= reorder_project_stages_path(@project) %>" data-sortable="<%= current_user.is_admin? %>">
+  <ul id="stages" data-url="<%= reorder_project_stages_path(@project) %>" data-sortable="<%= is_user_admin_for_project? %>">
     <% @stages.each.with_index do |stage, index| %>
-      <li class="stage-bar bar list-unstyled clearfix<%= ' sortable' if current_user.is_admin? %>" data-id="stage_id_<%= stage.id %>">
+      <li class="stage-bar bar list-unstyled clearfix<%= ' sortable' if is_user_admin_for_project? %>" data-id="stage_id_<%= stage.id %>">
         <%= link_to stage.name, [@project, stage] %>
         <%= stage_lock_icon stage %>
         <div class="btn-group pull-right">
-          <% if current_user.is_admin? %>
+          <% if current_user.is_project_admin_for?(@project) %>
             <%= link_to "Clone", clone_project_stage_path(@project, stage), class: "btn btn-default" %>
           <% end %>
           <%= deploy_link @project, stage %>
@@ -16,7 +16,7 @@
     <% end %>
   </ul>
 
-  <% if current_user.is_admin? %>
+  <% if is_user_admin_for_project? %>
     <%= link_to "Add Stage", new_project_stage_path(@project), class: "btn btn-default" %>
   <% end %>
 

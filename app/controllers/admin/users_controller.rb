@@ -14,6 +14,11 @@ class Admin::UsersController < ApplicationController
     end
   end
 
+  def show
+    @user = User.find(params[:id])
+    @projects = Project.all.order("#{sort_column} #{sort_direction}").page(params[:page])
+  end
+
   def update
     if user.update_attributes(user_params)
       Rails.logger.info("#{current_user.name_and_email} changed the role of #{user.name_and_email} to #{user.role.name}")

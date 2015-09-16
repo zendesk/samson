@@ -1,6 +1,10 @@
 class DeploysController < ApplicationController
+  include CurrentProject
+
   before_action :authorize_deployer!, only: [:new, :create, :confirm, :update, :destroy, :buddy_check, :pending_start]
-  before_action :find_project, except: [:active, :active_count, :recent, :changeset]
+  before_action except: [:active, :active_count, :recent, :changeset] do
+    find_project(params[:project_id])
+  end
   before_action :find_deploy, except: [:index, :recent, :active, :active_count, :new, :create, :confirm]
   before_action :stage, only: :new
 

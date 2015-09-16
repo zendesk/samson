@@ -87,14 +87,6 @@ class SessionsController < ApplicationController
     end
   end
 
-  def role_name_to_id(role)
-    if role == 'admin'
-      Role::ADMIN.id
-    else
-      Role::VIEWER.id
-    end
-  end
-
   def login_user(options = {})
     user = User.create_or_update_from_hash(options.merge(
       external_id: "#{strategy.name}-#{auth_hash.uid}",
