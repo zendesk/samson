@@ -1,5 +1,12 @@
 class CommitStatusesController < ApplicationController
-  before_action :authorize_deployer!
+  include CurrentProject
+  include ProjectLevelAuthorization
+
+  before_action do
+    find_project(params[:project_id])
+  end
+
+  before_action :authorize_project_deployer!
 
   def show
     render json: { status: commit_status.status, status_list: commit_status.status_list }
@@ -8,10 +15,6 @@ class CommitStatusesController < ApplicationController
   private
 
   def commit_status
-    @commit_status ||= CommitStatus.new(project.github_repo, params[:ref])
-  end
-
-  def project
-    @project ||= Project.find_by_param!(params[:project_id])
+    @commit_status ||= CommitStatus.new(@project.github_repo, params[:ref])
   end
 end

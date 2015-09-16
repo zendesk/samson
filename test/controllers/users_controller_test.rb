@@ -48,7 +48,7 @@ describe UsersController do
       end
     end
 
-    as_a_deployer_project_admin do
+    as_a_project_admin do
       it 'responds successfully' do
         get :index, project_id: project.to_param
         users = User.all

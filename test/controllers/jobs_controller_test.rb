@@ -109,8 +109,8 @@ describe JobsController do
     end
   end
 
-  as_a_deployer_project_admin do
-    let(:project_admin) { users(:deployer_project_admin) }
+  as_a_project_admin do
+    let(:project_admin) { users(:project_admin) }
     let(:job) { Job.create!(command: command, project: project, user: project_admin) }
 
     setup do

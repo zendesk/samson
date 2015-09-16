@@ -64,7 +64,7 @@ describe ProjectRolesController do
       end
     end
 
-    as_a_deployer_project_admin do
+    as_a_project_admin do
       let(:new_admin) { users(:deployer) }
 
       it 'creates new project role' do
@@ -101,7 +101,7 @@ describe ProjectRolesController do
   end
 
   describe "a PUT to #update" do
-    let(:current_project_admin) { users(:deployer_project_admin) }
+    let(:current_project_admin) { users(:project_admin) }
     let(:current_project_admin_role) { user_project_roles(:project_admin) }
 
     as_a_viewer do
@@ -145,7 +145,7 @@ describe ProjectRolesController do
       end
     end
 
-    as_a_deployer_project_admin do
+    as_a_project_admin do
       it 'updates the project role' do
         put :update, project_id: project.id, id: current_project_admin_role.id, project_role: { role_id: ProjectRole::DEPLOYER.id }, format: 'json'
 
