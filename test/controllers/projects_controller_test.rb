@@ -238,9 +238,9 @@ describe ProjectsController do
 
   describe "a GET to #show" do
     as_a_viewer do
-      it "redirects to the deploys page" do
+      it "does not redirect to the deploys page" do
         get :show, id: project.to_param
-        assert_redirected_to project_deploys_path(project)
+        assert_response :success
       end
     end
 
