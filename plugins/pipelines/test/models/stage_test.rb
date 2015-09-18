@@ -58,6 +58,12 @@ describe Stage do
       stage1.valid?.must_equal true
     end
 
+    it 'validates an empty params submission' do
+      stage1.next_stage_ids = ['']
+      stage1.valid?.must_equal true
+      stage1.next_stage_ids.empty?.must_equal true
+    end
+
     it 'validates a valid pipeline' do
       stage1.update!(next_stage_ids: [ stage3.id, stage2.id ])
       stage1.valid?.must_equal true
