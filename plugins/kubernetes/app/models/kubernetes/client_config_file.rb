@@ -14,10 +14,19 @@ module Kubernetes
       config_file.present?
     end
 
+    def current_client
+      client_for(@current_context)
+    end
+
+    def client_for(context_name)
+      contexts[context_name].try(:client)
+    end
+
     private
 
     def parse_file
-      @api_version = config_file[:apiVerison]
+      @api_version = config_file[:apiVersion]
+      @current_context = config_file[:'current-context']
       parse_clusters
       parse_users
       parse_contexts
@@ -58,6 +67,7 @@ module Kubernetes
       config_file[:contexts].each do |context_hash|
         context = Context.new
         context.name = context_hash[:name]
+        context.api_version = api_version
         context.cluster = @clusters.fetch(context_hash[:context][:cluster])
         context.user = @users.fetch(context_hash[:context][:user]) if context_hash[:context][:user].present?
         @contexts[context.name] = context
@@ -88,9 +98,19 @@ module Kubernetes
     end
 
     class Context
-      attr_accessor :name, :cluster, :user
+      attr_accessor :name, :cluster, :user, :api_version
+
+      def client
+        Kubeclient::Client.new(cluster.url, api_version, ssl_options: ssl_options)
+      end
+
+      def use_ssl?
+        cluster.ca_data.present? && user.client_cert.present?
+      end
 
       def ssl_options
+        return {} unless use_ssl?
+
         {
           client_cert: user.client_cert,
           client_key:  user.client_key,
