@@ -20,6 +20,7 @@ module SamsonPipelines::StageConcern
   #   stageA saved with pipelines to stageB and stageC
   #   stageC saved with pipeline to stageA   => will validate if stageA above hasn't been written to DB yet
   def valid_pipeline?(origin_id = id)
+    next_stage_ids.select!(&:presence)
     if next_stage_ids.any? { |next_id| next_id.to_i == origin_id.to_i }
       errors[:base] << "Stage #{name} causes a circular pipeline with this stage"
       return false
