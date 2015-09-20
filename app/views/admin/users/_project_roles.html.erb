@@ -1,0 +1,23 @@
+<tr>
+  <td><%= project.id %></td>
+  <td><%= project.name %></td>
+  <td class="editable-role">
+    <div ng-controller="ProjectRolesCtrl">
+      <a href="#"
+         data-id="<%= project_role_unique_id(user, project) %>"
+         data-user-id="<%= user.id %>"
+         data-project-id="<%= project.id %>"
+         data-role-id="<%= role_id_for(user, project) %>"
+         buttons="no"
+         e-ng-options="role.id as role.display_name for role in roles"
+         ng-init="initModel()"
+         editable-radiolist="project_role.role_id"
+         onbeforesave="submit($data)"
+         ng-cloack>{{ role_name || 'Add Role' }}</a>
+    </div>
+  </td>
+</tr>
+
+
+
+

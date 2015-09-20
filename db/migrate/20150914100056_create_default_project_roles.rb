@@ -6,9 +6,9 @@ class CreateDefaultProjectRoles < ActiveRecord::Migration
       Project.find_each { |project|
 
         if !UserProjectRole.exists?(project: project, user: user)
-          if user.role_id == 2 || user.role_id == 3 #super admin or admin
+          if user.role_id == Role::ADMIN.id
             UserProjectRole.create!(project: project, user: user, role_id: ProjectRole::ADMIN.id)
-          elsif user.role_id == 1 #deployer
+          elsif user.role_id == Role::DEPLOYER.id
             UserProjectRole.create!(project: project, user: user, role_id: ProjectRole::DEPLOYER.id)
           end
         end

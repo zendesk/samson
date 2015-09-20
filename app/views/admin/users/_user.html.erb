@@ -1,6 +1,6 @@
 <tr>
   <td><%= user.id %></td>
-  <td><%= user.name %></td>
+  <td><%= link_to user.name, admin_user_path(user) %></td>
   <td><%= user.email %></td>
   <td class="role" data-user-id="<%= user.id %>">
     <div class="relative-wrapper">
@@ -8,6 +8,6 @@
     </div>
   </td>
   <td>
-    <%= link_to "Delete", [:admin, user], method: :delete, data: { confirm: "Delete ##{user.id} #{user.name} #{user.email} ?" }, class: "btn-sm btn-danger" if can_modify_roles? %>
+    <%= link_to "Delete", [:admin, user], method: :delete, data: { confirm: "Delete ##{user.id} #{user.name} #{user.email} ?" }, class: "btn-sm btn-danger" if current_user.is_super_admin? %>
   </td>
 </tr>

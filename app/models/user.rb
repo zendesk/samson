@@ -10,7 +10,7 @@ class User < ActiveRecord::Base
   has_many :stars
   has_many :starred_projects, through: :stars, source: :project
   has_many :locks, dependent: :destroy
-  has_many :project_roles
+  has_many :user_project_roles, dependent: :destroy
 
   validates :role_id, inclusion: { in: Role.all.map(&:id) }
 
@@ -58,12 +58,24 @@ class User < ActiveRecord::Base
     "https://www.gravatar.com/avatar/#{md5}"
   end
 
-  def admin_for?(project)
-    is_admin? || project_roles.where(project: project).try(:is_admin?)
+  def is_project_admin_for?(project)
+    user_project_roles.find_by(project: project).try(:is_project_admin?)
   end
 
-  def deployer_for?(project)
-    is_deployer? || project_roles.where(project: project).try(:is_deployer?)
+  def is_project_deployer_for?(project)
+    user_project_roles.find_by(project: project).try(:is_project_deployer?)
+  end
+
+  def has_role?(project, role)
+    user_project_roles.where(project: project, role_id: role.role_id).any?
+  end
+
+  def has_any_role_for?(project)
+    user_project_roles.where(project: project).any?
+  end
+
+  def project_role_for(project)
+    user_project_roles.find_by(project: project)
   end
 
   private
