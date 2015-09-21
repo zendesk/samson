@@ -2,7 +2,6 @@ class ProjectsController < ApplicationController
   include StagePermittedParams
 
   before_action :authorize_admin!, except: [:show, :index, :deploy_group_versions]
-  before_action :redirect_viewers!, only: [:show]
   before_action :project, only: [:show, :edit, :update, :deploy_group_versions]
   before_action :get_environments, only: [:new, :create]
 
@@ -95,12 +94,6 @@ class ProjectsController < ApplicationController
   def project
     @project ||= Project.find_by_param!(params[:id]).tap do |project|
       project.current_user = current_user
-    end
-  end
-
-  def redirect_viewers!
-    unless current_user.is_deployer?
-      redirect_to project_deploys_path(project)
     end
   end
 

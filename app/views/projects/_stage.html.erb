@@ -16,6 +16,10 @@
     <% else %>
       <td>-</td>
     <% end %>
-    <td align="right"><%= deploy_link @project, stage %></td>
+    <td align="right">
+      <% if current_user.is_deployer? %>
+        <%= deploy_link @project, stage %>
+      <% end %>
+    </td>
   </tr>
 <% end %>

@@ -20,7 +20,9 @@
     <% end %>
   </td>
   <td>
-    <%= render 'deploy_to_button', release: release, stages: @stages %>
+    <% if current_user.is_deployer? %>
+      <%= render 'deploy_to_button', release: release, stages: @stages %>
+    <% end %>
   </td>
 </tr>
 <tr class="release-info collapse">
