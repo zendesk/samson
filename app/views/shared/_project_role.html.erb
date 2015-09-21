@@ -1,0 +1,20 @@
+<form class="editable-controls"
+      data-id="<%= project_role_unique_id(user, project) %>"
+      data-user-id="<%= user.id %>"
+      data-user-name="<%= user.name %>"
+      data-project-id="<%= project.id %>"
+      data-project-name="<%= project.name %>"
+      data-role-id="<%= role_id_for(user, project) %>"
+      ng-controller="ProjectRolesCtrl"
+      ng-init="initModel()"
+      ng-cloak>
+
+    <span class="editable-input">
+        <label ng-repeat="role in roles">
+          <input type="radio" ng-model="project_role.role_id" ng-value="role.id"/>
+          <span ng-bind="role.display_name"></span>
+        </label>
+    </span>
+
+</form>
+

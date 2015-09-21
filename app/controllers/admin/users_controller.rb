@@ -16,7 +16,10 @@ class Admin::UsersController < ApplicationController
 
   def show
     @user = User.find(params[:id])
-    @projects = Project.all.order("#{sort_column} #{sort_direction}").page(params[:page])
+
+    scope = Project
+    scope = scope.search(params[:search]) if params[:search]
+    @projects = scope.order("#{sort_column} #{sort_direction}").page(params[:page])
   end
 
   def update

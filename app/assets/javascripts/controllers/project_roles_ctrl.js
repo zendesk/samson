@@ -1,39 +1,26 @@
 samson.controller('ProjectRolesCtrl', function ($scope, $element, $filter, $http, $q, projectRolesService, messageCenterService) {
     $scope.project_role = {};
-    $scope.role_name = '';
     $scope.roles = [];
 
     $scope.initModel = function () {
-        var toggle = $element[0].querySelector('a');
-
         $scope.project_role = {
-            id: toggle.getAttribute('data-id'),
-            user_id: toggle.getAttribute('data-user-id'),
-            project_id: toggle.getAttribute('data-project-id'),
-            role_id: toggle.getAttribute('data-role-id')
+            id: getUniqueId(),
+            user_id: getUserId(),
+            project_id: getProjectId(),
+            role_id: getRoleId()
         };
 
         loadProjectRoles();
     };
 
-    $scope.submit = function (data) {
-        if ($scope.project_role.id.length) {
-            return updateProjectRole($scope.project_role, data);
-        }
-        else {
-            return createProjectRole($scope.project_role, data);
-        }
-    };
-
-    $scope.$watch('roles', function (newValue, oldValue) {
-        if (newValue !== oldValue) {
-            updateRoleName();
-        }
-    });
-
-    $scope.$watch('project_role.role_id', function (newValue, oldValue) {
-        if (newValue !== oldValue) {
-            updateRoleName();
+    $scope.$watch('project_role.role_id', function (new_role_value, old_role_value) {
+        if (new_role_value !== old_role_value) {
+            if (exists($scope.project_role)) {
+                return updateProjectRole($scope.project_role, new_role_value);
+            }
+            else {
+                return createProjectRole($scope.project_role, new_role_value);
+            }
         }
     });
 
@@ -45,12 +32,83 @@ samson.controller('ProjectRolesCtrl', function ($scope, $element, $filter, $http
         );
     }
 
-    function scopeHasRoles() {
-        return $scope.roles && $scope.roles.length;
+    function exists(project_role) {
+        return project_role.id;
     }
 
-    function scopeHasProjectRole() {
-        return $scope.project_role && $scope.project_role.role_id && $scope.project_role.role_id.length;
+    function createProjectRole(project_role, new_role_value) {
+        projectRolesService.createProjectRole(project_role, new_role_value).then(
+            function (response) {
+                var message = 'User ' + getUserName() + ' has been granted the role ' + roleNameFor(new_role_value) + ' for project ' + getProjectName();
+                showSuccessMessage(message);
+                setProjectRoleId(project_role, response.data.project_role.id);
+            },
+            function () {
+                var message = "Failed to assign role '" + roleNameFor(new_role_value) + "' to User " + getUserName() + " on project " + getProjectName();
+                showErrorMessage(message);
+            }
+        );
+    }
+
+    function updateProjectRole(project_role, new_role_value) {
+        projectRolesService.updateProjectRole(project_role, new_role_value).then(
+            function () {
+                var message = 'User ' + getUserName() + ' has been granted the role ' + roleNameFor(new_role_value) + ' for project ' + getProjectName();
+                showSuccessMessage(message);
+            },
+            function () {
+                var message = "Failed to assign role '" + roleNameFor(new_role_value) + "' to User " + getUserName() + " on project " + getProjectName();
+                showErrorMessage(message);
+            }
+        );
+    }
+
+    function getUniqueId()
+    {
+        return getAttributeAsInt('data-id');
+    }
+
+    function getUserId()
+    {
+        return getAttributeAsInt('data-user-id');
+    }
+
+    function getUserName()
+    {
+        return getAttributeAsString('data-user-name');
+    }
+
+    function getProjectId()
+    {
+        return getAttributeAsInt('data-project-id');
+    }
+
+    function getProjectName()
+    {
+        return getAttributeAsString('data-project-name');
+    }
+
+    function getRoleId()
+    {
+        return getAttributeAsInt('data-role-id');
+    }
+
+    function getAttributeAsInt(attr_name) {
+        var attr = getAttribute(attr_name);
+        return attr.length ? parseInt(attr) : undefined;
+    }
+
+    function getAttributeAsString(attr_name) {
+        var attr = getAttribute(attr_name);
+        return attr.length ? attr : undefined;
+    }
+
+    function getAttribute(attr_name) {
+        return getElement().getAttribute(attr_name);
+    }
+
+    function getElement() {
+        return $element[0];
     }
 
     function roleNameFor(role_id) {
@@ -58,51 +116,8 @@ samson.controller('ProjectRolesCtrl', function ($scope, $element, $filter, $http
         return filtered ? filtered[0].display_name : '';
     }
 
-    function updateRoleName() {
-        if (scopeHasRoles() && scopeHasProjectRole()) {
-            $scope.role_name = roleNameFor($scope.project_role.role_id);
-        }
-    }
-
-    function setProjectRole(project_role) {
-        $scope.project_role.id = project_role.id.toString();
-    }
-
-    function createProjectRole(project_role, new_role_id) {
-        var d = $q.defer();
-        projectRolesService.createProjectRole(project_role, new_role_id).then(
-            function (response) {
-                var message = 'User has been granted the role ' + roleNameFor(new_role_id) + ' for project ID: ' + project_role.project_id;
-                showSuccessMessage(message);
-                setProjectRole(response.data.project_role);
-                d.resolve();
-            },
-            function (response) {
-                showErrorMessage(response.data);
-                //needs to reject promise with a string to force error handling
-                //however, error is reported by message service instead of being displayed next to the field
-                d.reject("");
-            }
-        );
-        return d.promise;
-    }
-
-    function updateProjectRole(project_role, new_role_id) {
-        var d = $q.defer();
-        projectRolesService.updateProjectRole(project_role, new_role_id).then(
-            function (response) {
-                var message = 'User has been granted the role ' + roleNameFor(new_role_id) + ' for project ID: ' + project_role.project_id;
-                showSuccessMessage(message);
-                d.resolve();
-            },
-            function (response) {
-                showErrorMessage(response.data);
-                //needs to reject promise with a string to force error handling
-                //however, error is reported by message service instead of being displayed next to the field
-                d.reject("");
-            }
-        );
-        return d.promise;
+    function setProjectRoleId(project_role, id) {
+        project_role.id = id;
     }
 
     function showSuccessMessage(message) {

@@ -49,6 +49,10 @@ Samson::Application.routes.draw do
     resource :commit_statuses, only: [:show]
     resources :references, only: [:index]
 
+    resources :users, only: [:index, :update]
+
+    resources :project_roles, only: [:create, :update]
+
     member do
       get :deploy_group_versions
     end
@@ -86,16 +90,11 @@ Samson::Application.routes.draw do
   end
 
   namespace :admin do
-    resources :users, only: [:index, :show, :update, :destroy] do
-      resources :user_projects_roles, only: [:create, :update]
-    end
-
+    resources :users, only: [:index, :show, :update, :destroy]
     resource :projects, only: [:show]
     resources :commands, except: [:show]
     resources :environments, except: [:show]
     resources :deploy_groups, except: [:show]
-
-    get '/:action', to: 'admin#:action', :defaults => { :format => 'json' }
   end
 
   namespace :integrations do
@@ -108,6 +107,8 @@ Samson::Application.routes.draw do
   end
 
   get '/ping', to: 'ping#show'
+
+  get '/project_roles', to: 'project_roles#index'
 
   mount SseRailsEngine::Engine, at: '/streaming'
 
