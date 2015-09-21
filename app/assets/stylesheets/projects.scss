@@ -134,3 +134,44 @@ pre.pre-inline {
   text-decoration: none;
   font-size: 18px;
 }
+
+
+//Project level roles
+
+#user-project-roles {
+  position: relative;
+}
+
+#user-project-roles h2.section-subtitle {
+  color: #333;
+  margin: 0 0 15px 0;
+  padding-bottom: 15px;
+  font-size: 14px;
+  border-bottom: 1px solid #DDD;
+  text-transform: uppercase;
+}
+
+#user-project-roles #search-bar {
+  position: absolute;
+  top: 12px;
+  right: 20px;
+}
+
+.editable-role {
+  width: 300px;
+}
+
+.editable-role .editable-controls {
+  display: table;
+  width: auto;
+}
+
+.editable-role .editable-input {
+  display: table-cell;
+  vertical-align: middle;
+}
+
+.editable-role .editable-input label {
+  padding: 0;
+  margin: 0 15px 0 0;
+}

@@ -1,15 +1,5 @@
 @import 'constants';
 
-@mixin table {
-  display: table;
-  width: auto;
-}
-
-@mixin table-cell {
-  display: table-cell;
-  vertical-align: middle;
-}
-
 #user-description {
   margin-bottom: 0;
 }
@@ -52,35 +42,4 @@
 
 .save-failure {
   color: $danger;
-}
-
-.editable-role {
-  width: 300px;
-}
-
-.editable-role .editable-controls {
-  @include table
-}
-
-.editable-role .editable-input {
-  @include table-cell
-}
-
-$editable-role-button-size: 28px;
-
-.editable-role .editable-input label {
-  padding: 0;
-  margin: 0;
-  line-height: $editable-role-button-size;
-}
-
-.editable-role .editable-buttons {
-  @include table-cell
-}
-
-.editable-role .editable-buttons button {
-  height: $editable-role-button-size;
-  width: $editable-role-button-size;
-  padding: 4px 0;
-  margin: 0 4px;
 }

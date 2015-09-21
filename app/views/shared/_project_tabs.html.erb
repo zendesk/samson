@@ -34,6 +34,9 @@
   <li class="<%= 'active' if active == 'settings' %>">
     <%= link_to "Settings", edit_project_path(project) %>
   </li>
+  <li class="<%= 'active' if active == 'users' %>">
+    <%= link_to "Users", project_users_path(project) %>
+  </li>
   <%= Samson::Hooks.render_views(:project_tabs_view, self, { project: @project, active: active }) %>
 <% end %>
 </ul>

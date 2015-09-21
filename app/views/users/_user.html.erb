@@ -1,0 +1,8 @@
+<tr>
+  <td><%= user.id %></td>
+  <td><%= user.name %></td>
+  <td><%= user.email %></td>
+  <td class="editable-role">
+    <%= render partial: 'shared/project_role', locals: {user: user, project: current_project} %>
+  </td>
+</tr>

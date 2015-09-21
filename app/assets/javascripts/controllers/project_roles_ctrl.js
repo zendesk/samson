@@ -1,115 +1,101 @@
-samson.controller('ProjectRolesCtrl', function ($scope, $element, $filter, $http, $q, projectRolesService, messageCenterService) {
-    $scope.project_role = {};
-    $scope.role_name = '';
-    $scope.roles = [];
+samson.controller('ProjectRolesCtrl', function($scope, $element, $filter, projectRolesService, messageCenterService) {
+  $scope.project_role = {};
+  $scope.roles = [];
 
-    $scope.initModel = function () {
-        var toggle = $element[0].querySelector('a');
-
-        $scope.project_role = {
-            id: toggle.getAttribute('data-id'),
-            user_id: toggle.getAttribute('data-user-id'),
-            project_id: toggle.getAttribute('data-project-id'),
-            role_id: toggle.getAttribute('data-role-id')
-        };
-
-        loadProjectRoles();
+  $scope.initModel = function() {
+    $scope.project_role = {
+      id: getAttributeAsInt('data-id'),
+      user_id: getAttributeAsInt('data-user-id'),
+      project_id: getAttributeAsInt('data-project-id'),
+      role_id: getAttributeAsInt('data-role-id')
     };
 
-    $scope.submit = function (data) {
-        if ($scope.project_role.id.length) {
-            return updateProjectRole($scope.project_role, data);
-        }
-        else {
-            return createProjectRole($scope.project_role, data);
-        }
-    };
+    loadProjectRoles();
+  };
 
-    $scope.$watch('roles', function (newValue, oldValue) {
-        if (newValue !== oldValue) {
-            updateRoleName();
-        }
-    });
-
-    $scope.$watch('project_role.role_id', function (newValue, oldValue) {
-        if (newValue !== oldValue) {
-            updateRoleName();
-        }
-    });
-
-    function loadProjectRoles() {
-        projectRolesService.loadProjectRoles().then(
-            function (response) {
-                $scope.roles = response.data;
-            }
-        );
+  $scope.$watch('project_role.role_id', function(new_role_value, old_role_value) {
+    if (new_role_value !== old_role_value) {
+      if (exists($scope.project_role)) {
+        return updateProjectRole($scope.project_role, new_role_value);
+      }
+      else {
+        return createProjectRole($scope.project_role, new_role_value);
+      }
     }
+  });
 
-    function scopeHasRoles() {
-        return $scope.roles && $scope.roles.length;
-    }
+  function loadProjectRoles() {
+    projectRolesService.loadProjectRoles().then(
+      function(response) {
+        $scope.roles = response.data;
+      }
+    );
+  }
 
-    function scopeHasProjectRole() {
-        return $scope.project_role && $scope.project_role.role_id && $scope.project_role.role_id.length;
-    }
+  function exists(project_role) {
+    return project_role.id;
+  }
 
-    function roleNameFor(role_id) {
-        var filtered = $filter('filter')($scope.roles, {id: role_id});
-        return filtered ? filtered[0].display_name : '';
-    }
+  function createProjectRole(project_role) {
+    projectRolesService.createProjectRole(project_role).then(
+      function(response) {
+        var message = 'User ' + getUserName() + ' has been granted the role ' + roleNameFor(project_role.role_id) + ' for project ' + getProjectName();
+        showSuccessMessage(message);
+        project_role.id = response.data.project_role.id;
+      },
+      function() {
+        var message = "Failed to assign role '" + roleNameFor(project_role.role_id) + "' to User " + getUserName() + " on project " + getProjectName();
+        showErrorMessage(message);
+      }
+    );
+  }
 
-    function updateRoleName() {
-        if (scopeHasRoles() && scopeHasProjectRole()) {
-            $scope.role_name = roleNameFor($scope.project_role.role_id);
-        }
-    }
+  function updateProjectRole(project_role) {
+    projectRolesService.updateProjectRole(project_role).then(
+      function() {
+        var message = 'User ' + getUserName() + ' has been granted the role ' + roleNameFor(project_role.role_id) + ' for project ' + getProjectName();
+        showSuccessMessage(message);
+      },
+      function() {
+        var message = "Failed to assign role '" + roleNameFor(project_role.role_id) + "' to User " + getUserName() + " on project " + getProjectName();
+        showErrorMessage(message);
+      }
+    );
+  }
 
-    function setProjectRole(project_role) {
-        $scope.project_role.id = project_role.id.toString();
-    }
 
-    function createProjectRole(project_role, new_role_id) {
-        var d = $q.defer();
-        projectRolesService.createProjectRole(project_role, new_role_id).then(
-            function (response) {
-                var message = 'User has been granted the role ' + roleNameFor(new_role_id) + ' for project ID: ' + project_role.project_id;
-                showSuccessMessage(message);
-                setProjectRole(response.data.project_role);
-                d.resolve();
-            },
-            function (response) {
-                showErrorMessage(response.data);
-                //needs to reject promise with a string to force error handling
-                //however, error is reported by message service instead of being displayed next to the field
-                d.reject("");
-            }
-        );
-        return d.promise;
-    }
+  function getUserName() {
+    return getAttributeAsString('data-user-name');
+  }
 
-    function updateProjectRole(project_role, new_role_id) {
-        var d = $q.defer();
-        projectRolesService.updateProjectRole(project_role, new_role_id).then(
-            function (response) {
-                var message = 'User has been granted the role ' + roleNameFor(new_role_id) + ' for project ID: ' + project_role.project_id;
-                showSuccessMessage(message);
-                d.resolve();
-            },
-            function (response) {
-                showErrorMessage(response.data);
-                //needs to reject promise with a string to force error handling
-                //however, error is reported by message service instead of being displayed next to the field
-                d.reject("");
-            }
-        );
-        return d.promise;
-    }
+  function getProjectName() {
+    return getAttributeAsString('data-project-name');
+  }
 
-    function showSuccessMessage(message) {
-        messageCenterService.add('success', message);
-    }
+  function getAttributeAsInt(attr_name) {
+    var attr = getAttribute(attr_name);
+    return attr.length ? parseInt(attr) : undefined;
+  }
 
-    function showErrorMessage(message) {
-        messageCenterService.add('danger', message);
-    }
+  function getAttributeAsString(attr_name) {
+    var attr = getAttribute(attr_name);
+    return attr.length ? attr : undefined;
+  }
+
+  function getAttribute(attr_name) {
+    return $element[0].getAttribute(attr_name);
+  }
+
+  function roleNameFor(role_id) {
+    var filtered = $filter('filter')($scope.roles, {id: role_id});
+    return filtered ? filtered[0].display_name : '';
+  }
+
+  function showSuccessMessage(message) {
+    messageCenterService.add('success', message);
+  }
+
+  function showErrorMessage(message) {
+    messageCenterService.add('danger', message);
+  }
 });

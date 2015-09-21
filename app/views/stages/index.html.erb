@@ -7,7 +7,7 @@
         <%= link_to stage.name, [@project, stage] %>
         <%= stage_lock_icon stage %>
         <div class="btn-group pull-right">
-          <% if current_user.is_project_admin_for?(@project) %>
+          <% if is_user_admin_for_project? %>
             <%= link_to "Clone", clone_project_stage_path(@project, stage), class: "btn btn-default" %>
           <% end %>
           <%= deploy_link @project, stage %>

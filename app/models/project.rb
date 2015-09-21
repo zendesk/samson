@@ -43,6 +43,8 @@ class Project < ActiveRecord::Base
     })
   }
 
+  scope :search, ->(query) { where("name like ?", "%#{query}%") }
+
   def repo_name
     name.parameterize('_')
   end

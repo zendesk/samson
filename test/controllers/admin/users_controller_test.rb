@@ -4,27 +4,21 @@ describe Admin::UsersController do
 
   as_a_viewer do
     unauthorized :get, :index
-    unauthorized :get, :show
-    unauthorized :post, :create
+    unauthorized :get, :show, id: 1
     unauthorized :delete, :destroy, project_id: 1, id: 1
-    unauthorized :post, :update, id: 1
-    unauthorized :get, :new
+    unauthorized :put, :update, id: 1
   end
 
   as_a_deployer do
     unauthorized :get, :index
-    unauthorized :get, :show
-    unauthorized :post, :create
+    unauthorized :get, :show, id: 1
     unauthorized :delete, :destroy, id: 1
-    unauthorized :post, :update, id: 1
-    unauthorized :get, :new
+    unauthorized :put, :update, id: 1
   end
 
   as_a_admin do
-    unauthorized :post, :create
     unauthorized :delete, :destroy, id: 1
-    unauthorized :post, :update, id: 1
-    unauthorized :get, :new
+    unauthorized :put, :update, id: 1
   end
 
   as_a_admin do
@@ -101,9 +95,31 @@ describe Admin::UsersController do
         end
       end
     end
+
+    describe 'a GET to #show' do
+      let(:user) { users(:viewer) }
+
+      before do
+        get :show, id: user.id
+      end
+
+      it 'succeeds' do
+        assert_template :show, partial: '_project', locals: { user: user }
+      end
+    end
   end
 
   as_a_super_admin do
+    describe 'a PUT to #update' do
+      let(:user) { users(:viewer) }
+
+      it 'updates the user role' do
+        put :update, id: user.id, user: {role_id: 2}
+        user.reload.role_id.must_equal 2
+        assert_response :success
+      end
+    end
+
     describe 'a DELETE to #destroy' do
       let(:user) { users(:viewer) }
 
