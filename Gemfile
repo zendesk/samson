@@ -36,6 +36,9 @@ gem 'logstash-event'
 # Docker
 gem 'docker-api'
 
+# JIRA API
+gem 'jira-ruby', :require => 'jira'
+
 group :production, :staging do
   gem 'rails_12factor'
   gem 'airbrake', '~> 4.3.0'

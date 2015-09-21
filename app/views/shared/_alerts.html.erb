@@ -4,6 +4,9 @@
       <div class="alert alert-<%= klass %>">
         <button type="button" class="close" data-dismiss="alert">&times;</button>
         <%= message %>
+        <% if type == :authorization_error %>
+          <%= link_to 'Request access.', jira_requests_ticket_path %>
+        <% end %>
       </div>
     <% end %>
   <% end %>

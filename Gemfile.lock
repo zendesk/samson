@@ -174,6 +174,9 @@ GEM
       nokogiri (~> 1.6.0)
       terminal-table (>= 1.4.0)
       thor (>= 0.16.0)
+    jira-ruby (0.1.14)
+      activesupport
+      oauth (~> 0.4.7)
     json (1.8.3)
     json (1.8.3-java)
     jwt (1.5.1)
@@ -214,6 +217,7 @@ GEM
     nokogiri (1.6.6.2)
       mini_portile (~> 0.6.0)
     nokogiri (1.6.6.2-java)
+    oauth (0.4.7)
     oauth2 (1.0.0)
       faraday (>= 0.8, < 0.10)
       jwt (~> 1.0)
@@ -387,6 +391,7 @@ DEPENDENCIES
   faraday-http-cache (~> 1.1)
   github-markdown (~> 0.6.3)
   goldiloader
+  jira-ruby
   kaminari
   lograge
   logstash-event

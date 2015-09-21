@@ -104,6 +104,10 @@ Samson::Application.routes.draw do
 
   get '/ping', to: 'ping#show'
 
+  get '/jira_requests/ticket', to: 'jira_requests#ticket'
+  get '/jira_requests/authorize', to: 'jira_requests#authorize'
+  get '/jira_requests/callback', to: 'jira_requests#callback'
+
   mount SseRailsEngine::Engine, at: '/streaming'
 
   root to: 'projects#index'
