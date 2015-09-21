@@ -17,7 +17,7 @@ describe 'Unauthorized' do
 
       it 'sets the flash' do
         flash = last_request.env['action_dispatch.request.flash_hash']
-        flash[:error].must_equal('You are not authorized to view this page.')
+        flash[:authorization_error].must_equal('You are not authorized to view this page.')
       end
 
       describe 'without a referer' do
