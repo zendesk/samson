@@ -102,7 +102,23 @@ describe ProjectsController do
       end
 
       describe "with valid parameters" do
-        let(:params) { { project: { name: "Hello", repository_url: "git://foo.com/bar" } } }
+        let(:stage_params) do
+          {
+            '0': {
+              name: 'foobar',
+              deploy_group_ids: [DeployGroup.all.first.id]
+            }
+          }
+        end
+        let(:params) do
+          {
+            project: {
+              name: "Hello",
+              repository_url: "git://foo.com/bar",
+              stages_attributes: stage_params
+            }
+          }
+        end
         let(:project) { Project.where(name: "Hello").first }
 
         it "redirects to the new project's page" do
@@ -111,6 +127,9 @@ describe ProjectsController do
 
         it "creates a new project" do
           project.wont_be_nil
+          project.stages.wont_be_empty
+          project.stages.first.name.must_equal 'foobar'
+          project.stages.first.deploy_group_ids.must_equal [DeployGroup.all.first.id]
         end
 
         it "notifies about creation" do
