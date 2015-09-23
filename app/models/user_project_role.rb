@@ -8,7 +8,7 @@ class UserProjectRole < ActiveRecord::Base
   validates_uniqueness_of :project_id, scope: :user_id
 
   def self.update_user_role(id, attributes)
-    project_role = UserProjectRole.find(id)
+    project_role = find(id)
     project_role.update(attributes)
     project_role
   end

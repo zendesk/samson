@@ -13,7 +13,7 @@ class ProjectRolesController < ApplicationController
   end
 
   def create
-    new_role = Project.create_user_role(current_project, create_params)
+    new_role = UserProjectRole.create(create_params)
 
     if new_role.persisted?
       user = User.find(create_params[:user_id])

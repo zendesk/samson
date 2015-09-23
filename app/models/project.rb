@@ -125,11 +125,6 @@ class Project < ActiveRecord::Base
     releases.map { |group_id, deploys| [ group_id, deploys.sort_by(&:updated_at).last ] }.to_h
   end
 
-  def self.create_user_role(project, attributes)
-    project_role = project.user_project_roles.create(attributes)
-    project_role
-  end
-
   private
 
   def deploys_by_group(before)

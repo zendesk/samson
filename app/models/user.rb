@@ -59,19 +59,13 @@ class User < ActiveRecord::Base
   end
 
   def is_admin_for?(project)
-    user_project_roles.find_by(project: project).try(:is_project_admin?)
+    project_role = user_project_roles.find_by(project: project)
+    project_role.nil? ? false : project_role.try(:is_project_admin?)
   end
 
   def is_deployer_for?(project)
-    user_project_roles.find_by(project: project).try(:is_project_deployer?)
-  end
-
-  def has_role?(project, role)
-    user_project_roles.where(project: project, role_id: role.role_id).any?
-  end
-
-  def has_any_role_for?(project)
-    user_project_roles.where(project: project).any?
+    project_role = user_project_roles.find_by(project: project)
+    project_role.nil? ? false : project_role.try(:is_project_deployer?)
   end
 
   def project_role_for(project)
