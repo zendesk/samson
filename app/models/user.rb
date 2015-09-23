@@ -58,11 +58,11 @@ class User < ActiveRecord::Base
     "https://www.gravatar.com/avatar/#{md5}"
   end
 
-  def is_project_admin_for?(project)
+  def is_admin_for?(project)
     user_project_roles.find_by(project: project).try(:is_project_admin?)
   end
 
-  def is_project_deployer_for?(project)
+  def is_deployer_for?(project)
     user_project_roles.find_by(project: project).try(:is_project_deployer?)
   end
 

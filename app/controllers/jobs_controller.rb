@@ -54,7 +54,7 @@ class JobsController < ApplicationController
   end
 
   def destroy
-    if @job.started_by?(current_user) || current_user.is_admin?
+    if @job.started_by?(current_user) || current_user.is_admin_for?(current_project)
       @job.stop!
 
       head :ok

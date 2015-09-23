@@ -10,10 +10,10 @@ module ProjectLevelAuthorization
   end
 
   def authorize_project_deployer!
-    unauthorized! unless current_user.is_deployer? || current_user.is_project_deployer_for?(current_project)
+    unauthorized! unless current_user.is_deployer? || current_user.is_deployer_for?(current_project)
   end
 
   def authorize_project_admin!
-    unauthorized! unless current_user.is_admin? || current_user.is_project_admin_for?(current_project)
+    unauthorized! unless current_user.is_admin? || current_user.is_admin_for?(current_project)
   end
 end
