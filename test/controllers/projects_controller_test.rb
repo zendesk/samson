@@ -85,6 +85,10 @@ describe ProjectsController do
         assert_template :new
       end
     end
+
+    as_a_deployer_project_admin do
+      unauthorized :get, :new
+    end
   end
 
   describe "a POST to #create" do
@@ -151,15 +155,19 @@ describe ProjectsController do
         end
       end
     end
+
+    as_a_deployer_project_admin do
+      unauthorized :post, :create
+    end
   end
 
   describe "a DELETE to #destroy" do
     as_a_viewer do
-      unauthorized :delete, :destroy, id: 1
+        unauthorized :delete, :destroy, id: :foo
     end
 
     as_a_deployer do
-      unauthorized :delete, :destroy, id: 1
+      unauthorized :delete, :destroy, id: :foo
     end
 
     as_a_admin do
@@ -180,18 +188,61 @@ describe ProjectsController do
         request.flash[:notice].wont_be_nil
       end
     end
+
+    as_a_deployer_project_admin do
+      unauthorized :delete, :destroy, id: :foo
+    end
   end
 
   describe "a PUT to #update" do
     as_a_viewer do
-      unauthorized :put, :update, id: 1
+      unauthorized :put, :update, id: :foo
     end
 
     as_a_deployer do
-      unauthorized :put, :update, id: 1
+      unauthorized :put, :update, id: :foo
     end
 
     as_a_admin do
+      it "does not find soft deleted" do
+        project.soft_delete!
+        assert_raises ActiveRecord::RecordNotFound do
+          put :update, id: project.to_param
+        end
+      end
+
+      describe "common" do
+        setup do
+          put :update, params.merge(id: project.to_param)
+        end
+
+        describe "with valid parameters" do
+          let(:params) { { project: { name: "Hi-yo" } } }
+
+          it "redirects to root url" do
+            assert_redirected_to project_path(project.reload)
+          end
+
+          it "creates a new project" do
+            Project.where(name: "Hi-yo").first.wont_be_nil
+          end
+        end
+
+        describe "with invalid parameters" do
+          let(:params) { { project: { name: "" } } }
+
+          it "sets the flash error" do
+            request.flash[:error].wont_be_nil
+          end
+
+          it "renders edit template" do
+            assert_template :edit
+          end
+        end
+      end
+    end
+
+    as_a_deployer_project_admin do
       it "does not find soft deleted" do
         project.soft_delete!
         assert_raises ActiveRecord::RecordNotFound do
@@ -233,14 +284,28 @@ describe ProjectsController do
 
   describe "a GET to #edit" do
     as_a_viewer do
-      unauthorized :get, :edit, id: 1
+      unauthorized :get, :edit, id: :foo
     end
 
     as_a_deployer do
-      unauthorized :get, :edit, id: 1
+      unauthorized :get, :edit, id: :foo
     end
 
     as_a_admin do
+      it "renders" do
+        get :edit, id: project.to_param
+        assert_template :edit
+      end
+
+      it "does not find soft deleted" do
+        project.soft_delete!
+        assert_raises ActiveRecord::RecordNotFound do
+          get :edit, id: project.to_param
+        end
+      end
+    end
+
+    as_a_deployer_project_admin do
       it "renders" do
         get :edit, id: project.to_param
         assert_template :edit

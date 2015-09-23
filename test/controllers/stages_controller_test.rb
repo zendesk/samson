@@ -3,8 +3,8 @@ require_relative '../test_helper'
 describe StagesController do
   subject { stages(:test_staging) }
 
-  unauthorized :get, :show, project_id: 1, id: 1, token: Rails.application.config.samson.badge_token
-  unauthorized :get, :index, project_id: 1, token: Rails.application.config.samson.badge_token, format: :svg
+  unauthorized :get, :show, project_id: :foo, id: 1, token: Rails.application.config.samson.badge_token
+  unauthorized :get, :index, project_id: :foo, token: Rails.application.config.samson.badge_token, format: :svg
 
   describe 'GET to :show with svg' do
     let(:valid_params) {{
@@ -72,7 +72,7 @@ describe StagesController do
 
       it "fails with invalid stage" do
         assert_raises ActiveRecord::RecordNotFound do
-          get :show, project_id: 123123, id: subject.to_param
+          get :show, project_id: :foo23123, id: subject.to_param
         end
       end
 
@@ -83,11 +83,13 @@ describe StagesController do
       end
     end
 
-    unauthorized :get, :new, project_id: 1
-    unauthorized :post, :create, project_id: 1
-    unauthorized :get, :edit, project_id: 1, id: 1
-    unauthorized :patch, :update, project_id: 1, id: 1
-    unauthorized :delete, :destroy, project_id: 1, id: 1
+    unauthorized :get, :new, project_id: :foo
+    unauthorized :post, :create, project_id: :foo
+    unauthorized :get, :edit, project_id: :foo, id: 1
+    unauthorized :patch, :update, project_id: :foo, id: 1
+    unauthorized :delete, :destroy, project_id: :foo, id: 1
+    unauthorized :patch, :reorder, project_id: :foo, id: 1
+    unauthorized :get, :clone, project_id: :foo, id: 1
   end
 
   as_a_admin do
@@ -106,7 +108,7 @@ describe StagesController do
 
       it 'fails for non-existent project' do
         assert_raises ActiveRecord::RecordNotFound do
-          get :new, project_id: 123123
+          get :new, project_id: :foo23123
         end
       end
     end
@@ -157,7 +159,7 @@ describe StagesController do
 
       it "fails with unknown project" do
         assert_raises ActiveRecord::RecordNotFound do
-          post :create, project_id: 123123
+          post :create, project_id: :foo23123
         end
       end
     end
@@ -180,7 +182,7 @@ describe StagesController do
 
       it "fails with unknown project" do
         assert_raises ActiveRecord::RecordNotFound do
-          get :edit, project_id: 123123, id: 1
+          get :edit, project_id: :foo23123, id: 1
         end
       end
 
@@ -237,7 +239,7 @@ describe StagesController do
 
       it "does not find with invalid project_id" do
         assert_raises ActiveRecord::RecordNotFound do
-          patch :update, project_id: 123123, id: 1
+          patch :update, project_id: :foo23123, id: 1
         end
       end
 
@@ -264,7 +266,7 @@ describe StagesController do
 
       it "fails with invalid project" do
         assert_raises ActiveRecord::RecordNotFound do
-          delete :destroy, project_id: 123123, id: 1
+          delete :destroy, project_id: :foo23123, id: 1
         end
       end
 
@@ -280,6 +282,215 @@ describe StagesController do
 
       it 'renders :new' do
         assert_template :new
+      end
+    end
+
+    describe 'PATCH to #reorder' do
+      before { patch :reorder, project_id: subject.project.to_param, stage_id: [subject.id] }
+
+      it 'succeeds' do
+        assert_response :success
+      end
+    end
+  end
+
+  as_a_deployer_project_admin do
+    describe 'GET to #new' do
+      describe 'valid' do
+        before { get :new, project_id: subject.project.to_param }
+
+        it 'renders' do
+          assert_template :new
+        end
+
+        it 'adds global commands by default' do
+          assigns(:stage).command_ids.wont_be_empty
+        end
+      end
+
+      it 'fails for non-existent project' do
+        assert_raises ActiveRecord::RecordNotFound do
+          get :new, project_id: :foo23123
+        end
+      end
+    end
+
+    describe 'POST to #create' do
+      let(:project) { projects(:test) }
+
+      describe 'valid' do
+        subject { assigns(:stage) }
+
+        before do
+          new_command = Command.create!(
+              command: 'test2 command'
+          )
+
+          post :create, project_id: project.to_param, stage: {
+                          name: 'test',
+                          command: 'test command',
+                          command_ids: [commands(:echo).id, new_command.id]
+                      }
+
+          subject.reload
+          subject.commands.reload
+        end
+
+        it 'is created' do
+          subject.persisted?.must_equal(true)
+          subject.command_ids.must_include(commands(:echo).id)
+          subject.command.must_equal(commands(:echo).command + "\ntest2 command\ntest command")
+        end
+
+        it 'redirects' do
+          assert_redirected_to project_stage_path(project, assigns(:stage))
+        end
+      end
+
+      describe 'invalid attributes' do
+        before do
+          post :create, project_id: project.to_param, stage: {
+                          name: nil
+                      }
+        end
+
+        it 'renders' do
+          assert_template :new
+        end
+      end
+
+      it "fails with unknown project" do
+        assert_raises ActiveRecord::RecordNotFound do
+          post :create, project_id: :foo23123
+        end
+      end
+    end
+
+    describe 'GET to #edit' do
+      describe 'valid' do
+        before { get :edit, project_id: subject.project.to_param, id: subject.to_param }
+
+        it 'renders' do
+          assert_template :edit
+          assigns(:environments).wont_be_nil
+        end
+
+        it 'renders with no environments configured' do
+          Environment.destroy_all
+          assert_template :edit
+        end
+      end
+
+      it "fails with unknown project" do
+        assert_raises ActiveRecord::RecordNotFound do
+          get :edit, project_id: :foo23123, id: 1
+        end
+      end
+
+      it "fails with unknown stage" do
+        assert_raises ActiveRecord::RecordNotFound do
+          get :edit, project_id: subject.project.to_param, id: 123123
+        end
+      end
+    end
+
+    describe 'PATCH to #update' do
+      describe 'valid id' do
+        before do
+          patch :update, project_id: subject.project.to_param, id: subject.to_param,
+                stage: attributes
+
+          subject.reload
+        end
+
+        describe 'valid attributes' do
+          let(:attributes) {{
+              command: 'test command',
+              name: 'Hello',
+              dashboard: '<p>Some text</p>',
+              email_committers_on_automated_deploy_failure: true,
+              static_emails_on_automated_deploy_failure: "static@example.com",
+          }}
+
+          it 'updates attributes' do
+            subject.name.must_equal('Hello')
+            subject.dashboard.must_equal '<p>Some text</p>'
+            subject.email_committers_on_automated_deploy_failure?.must_equal true
+            subject.static_emails_on_automated_deploy_failure.must_equal "static@example.com"
+          end
+
+          it 'redirects' do
+            assert_redirected_to project_stage_path(subject.project, subject)
+          end
+
+          it 'adds a command' do
+            command = subject.commands.reload.last
+            command.command.must_equal('test command')
+          end
+        end
+
+        describe 'invalid attributes' do
+          let(:attributes) {{ name: nil }}
+
+          it 'renders' do
+            assert_template :edit
+          end
+        end
+      end
+
+      it "does not find with invalid project_id" do
+        assert_raises ActiveRecord::RecordNotFound do
+          patch :update, project_id: :foo23123, id: 1
+        end
+      end
+
+      it "does not find with invalid id" do
+        assert_raises ActiveRecord::RecordNotFound do
+          patch :update, project_id: subject.project.to_param, id: 123123
+        end
+      end
+    end
+
+    describe 'DELETE to #destroy' do
+      describe 'valid' do
+        before { delete :destroy, project_id: subject.project.to_param, id: subject.to_param }
+
+        it 'redirects' do
+          assert_redirected_to project_path(subject.project)
+        end
+
+        it 'removes stage' do
+          subject.reload
+          subject.deleted_at.wont_be_nil
+        end
+      end
+
+      it "fails with invalid project" do
+        assert_raises ActiveRecord::RecordNotFound do
+          delete :destroy, project_id: :foo23123, id: 1
+        end
+      end
+
+      it "fails with invalid stage" do
+        assert_raises ActiveRecord::RecordNotFound do
+          delete :destroy, project_id: subject.project.to_param, id: 123123
+        end
+      end
+    end
+
+    describe 'GET to #clone' do
+      before { get :clone, project_id: subject.project.to_param, id: subject.to_param }
+
+      it 'renders :new' do
+        assert_template :new
+      end
+    end
+
+    describe 'PATCH to #reorder' do
+      before { patch :reorder, project_id: subject.project.to_param, stage_id: [subject.id] }
+
+      it 'succeeds' do
+        assert_response :success
       end
     end
   end

@@ -1,0 +1,4 @@
+project_admin:
+  user: deployer_project_admin
+  project: test
+  role_id: <%= ProjectRole::ADMIN.id %>
