@@ -3,9 +3,10 @@ class ProjectsController < ApplicationController
   include ProjectLevelAuthorization
   include StagePermittedParams
 
-  before_action only: [:show, :edit, :update, :deploy_group_versions] do
+  before_action except: [:index, :new, :create] do
     find_project(params[:id])
   end
+  before_action :authorize_admin!, only: [:new, :create, :destroy]
   before_action :authorize_project_admin!, except: [:show, :index, :deploy_group_versions]
   before_action :get_environments, only: [:new, :create]
 
