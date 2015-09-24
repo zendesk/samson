@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20150914095046) do
+ActiveRecord::Schema.define(version: 20150924082915) do
 
   create_table "build_statuses", force: :cascade do |t|
     t.integer  "build_id",                                     null: false
@@ -290,9 +290,9 @@ ActiveRecord::Schema.define(version: 20150914095046) do
   add_index "stars", ["user_id", "project_id"], name: "index_stars_on_user_id_and_project_id", unique: true, using: :btree
 
   create_table "user_project_roles", force: :cascade do |t|
-    t.integer  "project_id", limit: 4, null: false
-    t.integer  "user_id",    limit: 4, null: false
-    t.integer  "role_id",    limit: 4, null: false
+    t.integer  "project_id", null: false
+    t.integer  "user_id",    null: false
+    t.integer  "role_id",    null: false
     t.datetime "created_at"
     t.datetime "updated_at"
   end
