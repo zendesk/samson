@@ -1,4 +1,4 @@
-samson.controller('ProjectRolesCtrl', function ($scope, $element, $filter, $http, $q, projectRolesService, messageCenterService) {
+samson.controller('ProjectRolesCtrl', function ($scope, $element, $filter, projectRolesService, messageCenterService) {
     $scope.project_role = {};
     $scope.roles = [];
 
