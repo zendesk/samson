@@ -39,3 +39,6 @@
 
 # .bak files
 *.bak
+
+# Ignore crypto keys
+*.pem
