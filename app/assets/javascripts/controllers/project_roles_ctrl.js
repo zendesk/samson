@@ -36,28 +36,28 @@ samson.controller('ProjectRolesCtrl', function ($scope, $element, $filter, proje
         return project_role.id;
     }
 
-    function createProjectRole(project_role, new_role_value) {
-        projectRolesService.createProjectRole(project_role, new_role_value).then(
+    function createProjectRole(project_role) {
+        projectRolesService.createProjectRole(project_role).then(
             function (response) {
-                var message = 'User ' + getUserName() + ' has been granted the role ' + roleNameFor(new_role_value) + ' for project ' + getProjectName();
+                var message = 'User ' + getUserName() + ' has been granted the role ' + roleNameFor(project_role.role_id) + ' for project ' + getProjectName();
                 showSuccessMessage(message);
-                setProjectRoleId(project_role, response.data.project_role.id);
+                project_role.id = response.data.project_role.id;
             },
             function () {
-                var message = "Failed to assign role '" + roleNameFor(new_role_value) + "' to User " + getUserName() + " on project " + getProjectName();
+                var message = "Failed to assign role '" + roleNameFor(project_role.role_id) + "' to User " + getUserName() + " on project " + getProjectName();
                 showErrorMessage(message);
             }
         );
     }
 
-    function updateProjectRole(project_role, new_role_value) {
-        projectRolesService.updateProjectRole(project_role, new_role_value).then(
+    function updateProjectRole(project_role) {
+        projectRolesService.updateProjectRole(project_role).then(
             function () {
-                var message = 'User ' + getUserName() + ' has been granted the role ' + roleNameFor(new_role_value) + ' for project ' + getProjectName();
+                var message = 'User ' + getUserName() + ' has been granted the role ' + roleNameFor(project_role.role_id) + ' for project ' + getProjectName();
                 showSuccessMessage(message);
             },
             function () {
-                var message = "Failed to assign role '" + roleNameFor(new_role_value) + "' to User " + getUserName() + " on project " + getProjectName();
+                var message = "Failed to assign role '" + roleNameFor(project_role.role_id) + "' to User " + getUserName() + " on project " + getProjectName();
                 showErrorMessage(message);
             }
         );
@@ -114,10 +114,6 @@ samson.controller('ProjectRolesCtrl', function ($scope, $element, $filter, proje
     function roleNameFor(role_id) {
         var filtered = $filter('filter')($scope.roles, {id: role_id});
         return filtered ? filtered[0].display_name : '';
-    }
-
-    function setProjectRoleId(project_role, id) {
-        project_role.id = id;
     }
 
     function showSuccessMessage(message) {
