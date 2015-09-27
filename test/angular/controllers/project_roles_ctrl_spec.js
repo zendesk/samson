@@ -1,19 +1,17 @@
 'use strict';
 
 describe("Controller: ProjectRolesCtrl", function () {
+
+    var scope, controller;
+
     beforeEach(function () {
         module("samson");
     });
 
-    var rootScope,
-        scope,
-        element,
-        controller;
-
     beforeEach(inject(function ($controller, $rootScope) {
-        rootScope = $rootScope;
         scope = $rootScope.$new();
-        element = angular.element('<form data-id="" data-user-id="1" data-user-name="Some user" data-project-id="2" data-project-name="Some project" data-role-id="0"></form>');
+
+        var element = angular.element('<form data-id="" data-user-id="1" data-user-name="Some user" data-project-id="2" data-project-name="Some project" data-role-id="0"></form>');
 
         controller = $controller('ProjectRolesCtrl', {
             $scope: scope,
@@ -41,7 +39,7 @@ describe("Controller: ProjectRolesCtrl", function () {
             scope.$digest();
 
             expect(projectRolesService.loadProjectRoles).toHaveBeenCalled();
-            expect(expected.data).toEqual(scope.roles);
+            expect(scope.roles).toEqual(expected.data);
         }));
     });
 
@@ -65,9 +63,9 @@ describe("Controller: ProjectRolesCtrl", function () {
             scope.project_role.role_id = 1;
             scope.$digest();
 
-            expect(projectRolesService.createProjectRole).toHaveBeenCalledWith(scope.project_role, 1);
+            expect(projectRolesService.createProjectRole).toHaveBeenCalledWith(scope.project_role);
             expect(messageCenterService.add).toHaveBeenCalledWith('success', 'User Some user has been granted the role Admin for project Some project');
-            expect(expected.data.project_role.id).toEqual(scope.project_role.id);
+            expect(scope.project_role.id).toEqual(expected.data.project_role.id);
         }));
 
         it('should try to update an existing project role when the role_id changes', inject(function ($q, projectRolesService, messageCenterService) {
@@ -84,9 +82,9 @@ describe("Controller: ProjectRolesCtrl", function () {
             scope.project_role.role_id = 1;
             scope.$digest();
 
-            expect(projectRolesService.updateProjectRole).toHaveBeenCalledWith(scope.project_role, 1);
+            expect(projectRolesService.updateProjectRole).toHaveBeenCalledWith(scope.project_role);
             expect(messageCenterService.add).toHaveBeenCalledWith('success', 'User Some user has been granted the role Admin for project Some project');
-            expect(expected.data.project_role.id).toEqual(scope.project_role.id);
+            expect(scope.project_role.id).toEqual(expected.data.project_role.id);
         }));
 
         it('should display an error message when errors occur while trying to create a new project role', inject(function ($q, projectRolesService, messageCenterService) {
@@ -99,7 +97,7 @@ describe("Controller: ProjectRolesCtrl", function () {
             scope.project_role.role_id = 1;
             scope.$digest();
 
-            expect(projectRolesService.createProjectRole).toHaveBeenCalledWith(scope.project_role, 1);
+            expect(projectRolesService.createProjectRole).toHaveBeenCalledWith(scope.project_role);
             expect(messageCenterService.add).toHaveBeenCalledWith('danger', "Failed to assign role 'Admin' to User Some user on project Some project");
         }));
 
@@ -115,7 +113,7 @@ describe("Controller: ProjectRolesCtrl", function () {
             scope.project_role.role_id = 1;
             scope.$digest();
 
-            expect(projectRolesService.updateProjectRole).toHaveBeenCalledWith(scope.project_role, 1);
+            expect(projectRolesService.updateProjectRole).toHaveBeenCalledWith(scope.project_role);
             expect(messageCenterService.add).toHaveBeenCalledWith('danger', "Failed to assign role 'Admin' to User Some user on project Some project");
         }));
     });
