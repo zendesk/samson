@@ -18,13 +18,14 @@ class JiraRequestsController < ApplicationController
     session[:jira_back_to] ||= request.referer
 
     issue = @jira_client.Issue.build
-    status = issue.save({'fields' => {
-                            'summary' => ENV['JIRA_ISSUE_SUMMARY'],
-                            'description' => ENV['JIRA_ISSUE_DESCRIPTION'],
-                            'project' => {'id' => ENV['JIRA_ISSUE_PROJECT_ID']},
-                            'issuetype' => {'id' => ENV['JIRA_ISSUE_TYPE']},
-                            'priority' => {'id' => ENV['JIRA_ISSUE_PRIORITY']}
-                        }})
+    fields = {
+        'summary' => ENV['JIRA_ISSUE_SUMMARY'],
+        'description' => ENV['JIRA_ISSUE_DESCRIPTION'],
+        'project' => {'id' => ENV['JIRA_ISSUE_PROJECT_ID']},
+        'issuetype' => {'id' => ENV['JIRA_ISSUE_TYPE']},
+        'priority' => {'id' => ENV['JIRA_ISSUE_PRIORITY']}
+    }
+    status = issue.save({'fields' => drop_nil_values(fields)})
 
     status ? ticket_success : ticket_fail
     redirect_to session.delete(:jira_back_to)
@@ -58,14 +59,11 @@ class JiraRequestsController < ApplicationController
         private_key_file: ENV['JIRA_PRIVATE_KEY_FILE'],
         consumer_key: ENV['JIRA_CONSUMER_KEY']
     }
-    @jira_client = JIRA::Client.new(options)
+    @jira_client = JIRA::Client.new(drop_nil_values(options))
 
     # reuse access token if authorised previously.
     if session[:jira_auth]
-      @jira_client.set_access_token(
-          session[:jira_auth][:access_token],
-          session[:jira_auth][:access_key]
-      )
+      @jira_client.set_access_token(session[:jira_auth][:access_token], session[:jira_auth][:access_key])
     end
   end
 
@@ -75,5 +73,10 @@ class JiraRequestsController < ApplicationController
 
   def ticket_fail
     flash[:error] = 'Could not create JIRA ticket.'
+  end
+
+  def drop_nil_values(hash)
+    # helper for ignoring missing config in ENV
+    hash.select { |_, value| value.is_a?(Hash) ? value['id'] : value }
   end
 end
