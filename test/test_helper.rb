@@ -151,7 +151,7 @@ class ActionController::TestCase
       end
     end
 
-    %w{deployer_project_admin}.each do |user|
+    %w{deployer_project_admin viewer_project_deployer}.each do |user|
       define_method "as_a_#{user}" do |&block|
         describe "as a #{user}" do
           setup { request.env['warden'].set_user(users(user)) }

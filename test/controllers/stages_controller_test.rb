@@ -294,6 +294,52 @@ describe StagesController do
     end
   end
 
+  as_a_viewer_project_deployer do
+    describe 'GET to :show' do
+      describe 'valid' do
+        before do
+          Deploy.delete_all # triggers more github requests
+        end
+
+        it 'renders the template' do
+          get :show, project_id: subject.project.to_param, id: subject.to_param
+          assert_template :show
+        end
+
+        it 'displays a sanitized dashboard' do
+          subject.update_attribute :dashboard,
+                                   'START_OF_TEXT<p>PARAGRAPH_TEXT</p><img src="foo.jpg"/><iframe src="http://localhost/foo.txt"></iframe><script>alert("hi there");</script>END_OF_TEXT'
+
+          get :show, project_id: subject.project.to_param, id: subject.to_param
+
+          response.body.to_s[/START_OF_TEXT.*END_OF_TEXT/].must_equal(
+              'START_OF_TEXT<p>PARAGRAPH_TEXT</p><img src="foo.jpg"><iframe src="http://localhost/foo.txt"></iframe>alert("hi there");END_OF_TEXT'
+          )
+        end
+      end
+
+      it "fails with invalid stage" do
+        assert_raises ActiveRecord::RecordNotFound do
+          get :show, project_id: 123123, id: subject.to_param
+        end
+      end
+
+      it "fails with invalid stage" do
+        assert_raises ActiveRecord::RecordNotFound do
+          get :show, project_id: subject.project.to_param, id: 123123
+        end
+      end
+    end
+
+    unauthorized :get, :new, project_id: :foo
+    unauthorized :post, :create, project_id: :foo
+    unauthorized :get, :edit, project_id: :foo, id: 1
+    unauthorized :patch, :update, project_id: :foo, id: 1
+    unauthorized :delete, :destroy, project_id: :foo, id: 1
+    unauthorized :patch, :reorder, project_id: :foo, id: 1
+    unauthorized :get, :clone, project_id: :foo, id: 1
+  end
+
   as_a_deployer_project_admin do
     describe 'GET to #new' do
       describe 'valid' do

@@ -1,6 +1,13 @@
 class BuildsController < ApplicationController
-  before_action :authorize_deployer!
-  before_action :find_project
+  include CurrentProject
+  include ProjectLevelAuthorization
+
+  before_action do
+    find_project(params[:project_id])
+  end
+
+  before_action :authorize_project_deployer!
+
   before_action :find_build, only: [:show, :build_docker_image, :edit, :update]
 
   def index
@@ -77,10 +84,6 @@ class BuildsController < ApplicationController
   end
 
   private
-
-  def find_project
-    @project = Project.find_by_param!(params[:project_id])
-  end
 
   def find_build
     @build = Build.find(params[:id])

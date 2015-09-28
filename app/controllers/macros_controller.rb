@@ -2,10 +2,10 @@ class MacrosController < ApplicationController
   include CurrentProject
   include ProjectLevelAuthorization
 
-  before_action :authorize_deployer!
   before_action do
     find_project(params[:project_id])
   end
+  before_action :authorize_project_deployer!
   before_action :authorize_project_admin!, only: [:new, :create, :edit, :update, :destroy]
   before_action :find_macro, only: [:edit, :update, :execute, :destroy]
 

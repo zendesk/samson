@@ -5,9 +5,12 @@ module HasProjectRole
     ProjectRole.find(role_id)
   end
 
-  ProjectRole.all.each do |role|
-    define_method "is_project_#{role.name}?" do
-      role_id >= role.id
-    end
+  def is_deployer?
+    role_id >= ProjectRole::DEPLOYER.id
   end
+
+  def is_admin?
+    role_id >= ProjectRole::ADMIN.id
+  end
+
 end

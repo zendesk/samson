@@ -2,11 +2,13 @@ require 'samson/integration'
 
 class WebhooksController < ApplicationController
   include CurrentProject
+  include ProjectLevelAuthorization
 
-  before_action :authorize_deployer!
   before_action do
     find_project(params[:project_id])
   end
+
+  before_action :authorize_project_deployer!
 
   def index
     @webhooks = @project.webhooks
