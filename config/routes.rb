@@ -104,6 +104,8 @@ Samson::Application.routes.draw do
 
   get '/ping', to: 'ping#show'
 
+  get '/request_access', to: 'request_access#send_email'
+
   mount SseRailsEngine::Engine, at: '/streaming'
 
   root to: 'projects#index'
