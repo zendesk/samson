@@ -1,6 +1,7 @@
 class RequestAccessController < ApplicationController
   def send_email
-    flash[:notice] = 'About to send email.'
+    RequestAccessMailer.request_access_email(request.base_url, current_user).deliver_now
+    flash[:success] = 'Access request email sent.'
     redirect_to :back
   end
 end
