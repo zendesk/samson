@@ -4,7 +4,7 @@
       <div class="alert alert-<%= klass %>">
         <button type="button" class="close" data-dismiss="alert">&times;</button>
         <%= message %>
-        <% if type == :authorization_error %>
+        <% if type == :authorization_error && ENV['REQUEST_ACCESS_FEATURE'].present? %>
           <%= link_to 'Request access.', request_access_path %>
         <% end %>
       </div>
