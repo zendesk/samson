@@ -1,5 +1,5 @@
-class RequestAccessController < ApplicationController
-  def send_email
+class AccessRequestsController < ApplicationController
+  def new
     if ENV['REQUEST_ACCESS_FEATURE'].present?
       RequestAccessMailer.request_access_email(request.base_url, current_user).deliver_now
       flash[:success] = 'Access request email sent.'
@@ -7,5 +7,8 @@ class RequestAccessController < ApplicationController
     else
       raise ActionController::RoutingError.new('Not Found')
     end
+  end
+
+  def create
   end
 end
