@@ -44,7 +44,7 @@ class Stage < ActiveRecord::Base
 
   def self.unlocked_for(user)
     where("locks.id IS NULL OR locks.user_id = ?", user.id).
-    joins("LEFT OUTER JOIN locks ON \
+      joins("LEFT OUTER JOIN locks ON \
           locks.deleted_at IS NULL AND \
           locks.stage_id = stages.id")
   end
@@ -190,6 +190,14 @@ class Stage < ActiveRecord::Base
 
   def datadog_monitors
     datadog_monitor_ids.to_s.split(/, ?/).map { |id| DatadogMonitor.new(id) }
+  end
+
+  def to_auditable_json
+    to_json(only: [:id, :name, :project_id, :webhooks],
+      include: [
+        { commands: { only: [:id, :command, :project_id] } },
+        { stage_commands: { only: [:id, :command_id] } }
+      ])
   end
 
   private

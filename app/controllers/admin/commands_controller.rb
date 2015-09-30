@@ -1,5 +1,15 @@
 class Admin::CommandsController < ApplicationController
+  include SamsonAudit
+
   before_action :authorize_admin!
+
+  #Audit
+  before_action only: :update do
+    prepare_audit(command)
+  end
+  after_action only: [:create, :destroy, :update] do
+    audit(command)
+  end
 
   def index
     @commands = Command.order('project_id').page(params[:page])
@@ -27,9 +37,8 @@ class Admin::CommandsController < ApplicationController
   end
 
   def update
-    @command = Command.find(params[:id])
 
-    if @command.update_attributes(command_params)
+    if command.update_attributes(command_params)
       successful_response('Command updated.')
     else
       respond_to do |format|
@@ -44,12 +53,15 @@ class Admin::CommandsController < ApplicationController
   end
 
   def destroy
-    Command.destroy(params[:id])
-
+    command.destroy
     successful_response('Command removed.')
   end
 
   private
+
+  def command
+    @command ||= Command.find(params[:id])
+  end
 
   def command_params
     params.require(:command).permit(:command, :project_id)

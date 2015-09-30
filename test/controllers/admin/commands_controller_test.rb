@@ -20,6 +20,8 @@ describe Admin::CommandsController do
 
     describe 'POST to #create' do
       before do
+        @controller.expects(:audit).times(1)
+
         post :create, command: attributes
       end
 
@@ -57,6 +59,9 @@ describe Admin::CommandsController do
 
     describe 'PATCH to #update' do
       before do
+        @controller.expects(:prepare_audit).times(1)
+        @controller.expects(:audit).times(1)
+
         patch :update, id: commands(:echo).id,
           command: attributes, format: format
       end
@@ -105,6 +110,8 @@ describe Admin::CommandsController do
     end
 
     describe 'DELETE to #destroy' do
+
+
       it "fails with unknown id" do
         assert_raises ActiveRecord::RecordNotFound do
           delete :destroy, id: 123123
@@ -112,7 +119,11 @@ describe Admin::CommandsController do
       end
 
       describe 'valid' do
-        before { delete :destroy, id: commands(:echo).id, format: format }
+        before do
+          @controller.expects(:audit).times(1)
+
+          delete :destroy, id: commands(:echo).id, format: format
+        end
 
         describe 'html' do
           let(:format) { 'html' }

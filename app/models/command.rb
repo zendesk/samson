@@ -27,4 +27,12 @@ class Command < ActiveRecord::Base
   def self.usage_ids
     MacroCommand.pluck(:command_id) + StageCommand.pluck(:command_id)
   end
+
+  def to_auditable_json
+    to_json(
+      only: [:id, :command, :project_id],
+      include: [
+        stages: { only: [:id] }
+      ])
+  end
 end
