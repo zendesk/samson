@@ -17,7 +17,7 @@ class BuildsController < ApplicationController
   end
 
   def create
-    @build = @project.builds.build(new_build_params)
+    @build = create_build
     @build.creator = current_user
     @build.save
 
@@ -96,5 +96,18 @@ class BuildsController < ApplicationController
 
   def start_docker_build
     DockerBuilderService.new(@build).run!(push: true)
+  end
+
+  def create_build
+    if old_build = @project.builds.where(git_sha: git_sha).last
+      old_build.update_attributes(new_build_params)
+      old_build
+    else
+      @project.builds.build(new_build_params)
+    end
+  end
+
+  def git_sha
+    @project.repository.commit_from_ref(new_build_params[:git_ref], length: nil)
   end
 end
