@@ -5,7 +5,7 @@
     <%= render @macros %>
   </ul>
 
-  <% if current_user.is_admin? %>
+  <% if is_user_admin_for_project? %>
     <%= link_to "Add Macro", new_project_macro_path(@project), class: "btn btn-default" %>
   <% end %>
 </section>

@@ -17,6 +17,15 @@ describe ReferencesController do
           response.content_type.must_equal 'application/json'
           assigns(:references).must_equal %w(master test_user/test_branch)
         end
+      end
+
+      as_a_viewer_project_deployer do
+
+        it 'returns the git references for the project test' do
+          get :index, project_id: projects(:test).to_param, format: :json
+          response.content_type.must_equal 'application/json'
+          assigns(:references).must_equal %w(master test_user/test_branch)
+        end
 
       end
     end

@@ -1,8 +1,12 @@
 class MacrosController < ApplicationController
-  before_action :authorize_deployer!
-  before_action :authorize_admin!, only: [:new, :create, :edit, :update, :destroy]
+  include CurrentProject
+  include ProjectLevelAuthorization
 
-  before_action :find_project
+  before_action do
+    find_project(params[:project_id])
+  end
+  before_action :authorize_project_deployer!
+  before_action :authorize_project_admin!, only: [:new, :create, :edit, :update, :destroy]
   before_action :find_macro, only: [:edit, :update, :execute, :destroy]
 
   def index
@@ -66,10 +70,6 @@ class MacrosController < ApplicationController
 
   def command_params
     params.require(:commands).permit(ids: [])
-  end
-
-  def find_project
-    @project = Project.find_by_param!(params[:project_id])
   end
 
   def find_macro

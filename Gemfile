@@ -64,6 +64,7 @@ group :assets do
     gem 'rails-assets-underscore'
     gem 'rails-assets-vis'
     gem 'rails-assets-x-editable'
+    gem 'rails-assets-message-center'
   end
 end
 

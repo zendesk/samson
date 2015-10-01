@@ -16,7 +16,7 @@
 
     <%= render "locks/button", lock: @stage.lock %>
 
-    <% if current_user.is_admin? %>
+    <% if is_user_admin_for_project? %>
       <%= link_to "Edit", edit_project_stage_path(@project, @stage), class: "btn btn-default" %>
       <%= link_to_delete_button([@project, @stage]) %>
     <% end %>

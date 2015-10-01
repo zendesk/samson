@@ -1,7 +1,11 @@
 class JobsController < ApplicationController
-  before_filter :authorize_admin!, only: [:new, :create, :destroy]
+  include CurrentProject
+  include ProjectLevelAuthorization
 
-  before_action :find_project, except: [:enabled]
+  before_action except: [:enabled] do
+    find_project(params[:project_id])
+  end
+  before_action :authorize_project_admin!, only: [:new, :create, :destroy]
   before_action :find_job, only: [:show, :destroy]
 
   def index
@@ -50,7 +54,7 @@ class JobsController < ApplicationController
   end
 
   def destroy
-    if @job.started_by?(current_user) || current_user.is_admin?
+    if @job.started_by?(current_user) || current_user.is_admin_for?(current_project)
       @job.stop!
 
       head :ok
@@ -67,10 +71,6 @@ class JobsController < ApplicationController
 
   def command_params
     params.require(:commands).permit(ids: [])
-  end
-
-  def find_project
-    @project = Project.find_by_param!(params[:project_id])
   end
 
   def find_job

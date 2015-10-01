@@ -18,6 +18,7 @@ class Project < ActiveRecord::Base
   has_many :webhooks
   has_many :commands
   has_many :macros
+  has_many :user_project_roles
 
   # For permission checks on callbacks. Currently used in private plugins.
   attr_accessor :current_user
@@ -34,6 +35,15 @@ class Project < ActiveRecord::Base
       order('star_count desc').
       alphabetical
   }
+
+  scope :where_user_is_admin, ->(user) {
+    joins(:user_project_roles).where(user_project_roles: {
+        user_id: sanitize(user.id),
+        role_id: ProjectRole::ADMIN.id
+    })
+  }
+
+  scope :search, ->(query) { where("name like ?", "%#{query}%") }
 
   def repo_name
     name.parameterize('_')
@@ -113,6 +123,20 @@ class Project < ActiveRecord::Base
   def last_deploy_by_group(before_time)
     releases = deploys_by_group(before_time)
     releases.map { |group_id, deploys| [ group_id, deploys.sort_by(&:updated_at).last ] }.to_h
+  end
+
+  def self.search_by_criteria(criteria)
+    scope = Project
+    scope = scope.search(criteria[:search]) if criteria[:search]
+    scope.order("#{sort_column(criteria[:sort])} #{sort_direction(criteria[:direction])}").page(criteria[:page])
+  end
+
+  def self.sort_column(column)
+    column_names.include?(column) ? column : "created_at"
+  end
+
+  def self.sort_direction(direction)
+    %w[asc desc].include?(direction) ? direction : "asc"
   end
 
   private
