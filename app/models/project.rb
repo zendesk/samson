@@ -19,6 +19,7 @@ class Project < ActiveRecord::Base
   has_many :commands
   has_many :macros
   has_many :user_project_roles
+  has_many :users, through: :user_project_roles
 
   # For permission checks on callbacks. Currently used in private plugins.
   attr_accessor :current_user
@@ -38,12 +39,12 @@ class Project < ActiveRecord::Base
 
   scope :where_user_is_admin, ->(user) {
     joins(:user_project_roles).where(user_project_roles: {
-        user_id: sanitize(user.id),
+        user_id: user.id,
         role_id: ProjectRole::ADMIN.id
     })
   }
 
-  scope :search, ->(query) { where("name like ?", "%#{query}%") }
+  scope :search, ->(name) { where("name like ?", "%#{name}%") }
 
   def repo_name
     name.parameterize('_')

@@ -43,12 +43,12 @@ describe ProjectRolesController do
         user_project_role.role_id.must_equal ProjectRole::ADMIN.id
 
         result = JSON.parse(response.body)
-        result['project_role'].wont_be_nil
-        result['project_role']['id'].wont_be_nil
-        result['project_role']['id'].must_equal user_project_role.id
-        result['project_role']['user_id'].must_equal user_project_role.user_id
-        result['project_role']['project_id'].must_equal user_project_role.project_id
-        result['project_role']['role_id'].must_equal user_project_role.role_id
+        result.wont_be_nil
+        result['id'].wont_be_nil
+        result['id'].must_equal user_project_role.id
+        result['user_id'].must_equal user_project_role.user_id
+        result['project_id'].must_equal user_project_role.project_id
+        result['role_id'].must_equal user_project_role.role_id
       end
 
       it 'fails to create new project role' do
@@ -78,12 +78,12 @@ describe ProjectRolesController do
         user_project_role.role_id.must_equal ProjectRole::ADMIN.id
 
         result = JSON.parse(response.body)
-        result['project_role'].wont_be_nil
-        result['project_role']['id'].wont_be_nil
-        result['project_role']['id'].must_equal user_project_role.id
-        result['project_role']['user_id'].must_equal user_project_role.user_id
-        result['project_role']['project_id'].must_equal user_project_role.project_id
-        result['project_role']['role_id'].must_equal user_project_role.role_id
+        result.wont_be_nil
+        result['id'].wont_be_nil
+        result['id'].must_equal user_project_role.id
+        result['user_id'].must_equal user_project_role.user_id
+        result['project_id'].must_equal user_project_role.project_id
+        result['role_id'].must_equal user_project_role.role_id
       end
 
       it 'fails to create new project role' do
@@ -123,12 +123,12 @@ describe ProjectRolesController do
         user_project_role.role_id.must_equal ProjectRole::DEPLOYER.id
 
         result = JSON.parse(response.body)
-        result['project_role'].wont_be_nil
-        result['project_role']['id'].wont_be_nil
-        result['project_role']['id'].must_equal user_project_role.id
-        result['project_role']['user_id'].must_equal user_project_role.user_id
-        result['project_role']['project_id'].must_equal user_project_role.project_id
-        result['project_role']['role_id'].must_equal user_project_role.role_id
+        result.wont_be_nil
+        result['id'].wont_be_nil
+        result['id'].must_equal user_project_role.id
+        result['user_id'].must_equal user_project_role.user_id
+        result['project_id'].must_equal user_project_role.project_id
+        result['role_id'].must_equal user_project_role.role_id
       end
 
       it 'fails to update project role' do
@@ -156,12 +156,12 @@ describe ProjectRolesController do
         user_project_role.role_id.must_equal ProjectRole::DEPLOYER.id
 
         result = JSON.parse(response.body)
-        result['project_role'].wont_be_nil
-        result['project_role']['id'].wont_be_nil
-        result['project_role']['id'].must_equal user_project_role.id
-        result['project_role']['user_id'].must_equal user_project_role.user_id
-        result['project_role']['project_id'].must_equal user_project_role.project_id
-        result['project_role']['role_id'].must_equal user_project_role.role_id
+        result.wont_be_nil
+        result['id'].wont_be_nil
+        result['id'].must_equal user_project_role.id
+        result['user_id'].must_equal user_project_role.user_id
+        result['project_id'].must_equal user_project_role.project_id
+        result['role_id'].must_equal user_project_role.role_id
       end
 
       it 'fails to update project role' do

@@ -3,6 +3,8 @@ class ProjectsController < ApplicationController
   include ProjectLevelAuthorization
   include StagePermittedParams
 
+  attr_reader :project
+
   before_action except: [:index, :new, :create] do
     find_project(params[:id])
   end
@@ -94,10 +96,6 @@ class ProjectsController < ApplicationController
         stages_attributes: stage_permitted_params
       ] + Samson::Hooks.fire(:project_permitted_params)
     )
-  end
-
-  def project
-    @project
   end
 
   def projects_for_user

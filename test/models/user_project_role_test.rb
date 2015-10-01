@@ -43,30 +43,34 @@ describe UserProjectRole do
   end
 
   describe "updates an existing project role" do
-    let(:updated_role) { UserProjectRole.update_user_role(project_role.id, {role_id: ProjectRole::DEPLOYER.id}) }
+    setup do
+      project_role.update({role_id: ProjectRole::DEPLOYER.id})
+    end
 
     it "does not update the user" do
-      updated_role.user.must_equal user
+      project_role.user.must_equal user
     end
 
     it "does not update the project" do
-      updated_role.project.must_equal project
+      project_role.project.must_equal project
     end
 
     it "updated the role" do
-      updated_role.role_id.must_equal ProjectRole::DEPLOYER.id
+      project_role.role_id.must_equal ProjectRole::DEPLOYER.id
     end
   end
 
   describe "fails to update a project role with an invalid role" do
-    let(:invalid_role) { UserProjectRole.update_user_role(project_role.id, {role_id: 3}) }
+    setup do
+      project_role.update({role_id: 3})
+    end
 
     it "is persisted" do
-      invalid_role.persisted?.must_equal(true)
+      project_role.persisted?.must_equal(true)
     end
 
     it "contains errors" do
-      invalid_role.errors.wont_be_empty
+      project_role.errors.wont_be_empty
     end
   end
 

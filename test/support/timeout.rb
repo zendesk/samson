@@ -15,5 +15,4 @@ module TimeoutEveryTestCase
     end
   end
 end
-
-Minitest::Test.prepend TimeoutEveryTestCase unless ENV['SKIP_TIMEOUT']
+Minitest::Test.prepend TimeoutEveryTestCase

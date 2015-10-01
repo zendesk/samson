@@ -13,7 +13,7 @@ class UsersController < ApplicationController
   def index
     scope = User
     scope = scope.search(params[:search]) if params[:search]
-    @users = scope.order(sort_column + ' ' + sort_direction).page(params[:page])
+    @users = scope.order("#{sort_column} #{sort_direction}").page(params[:page])
 
     respond_to do |format|
       format.html

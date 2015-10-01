@@ -11,6 +11,7 @@ class User < ActiveRecord::Base
   has_many :starred_projects, through: :stars, source: :project
   has_many :locks, dependent: :destroy
   has_many :user_project_roles, dependent: :destroy
+  has_many :projects, through: :user_project_roles
 
   validates :role_id, inclusion: { in: Role.all.map(&:id) }
 
@@ -59,13 +60,11 @@ class User < ActiveRecord::Base
   end
 
   def is_admin_for?(project)
-    project_role = user_project_roles.find_by(project: project)
-    project_role.nil? ? false : project_role.try(:is_project_admin?)
+    project_role_for(project).try(:is_project_admin?)
   end
 
   def is_deployer_for?(project)
-    project_role = user_project_roles.find_by(project: project)
-    project_role.nil? ? false : project_role.try(:is_project_deployer?)
+    project_role_for(project).try(:is_project_deployer?)
   end
 
   def project_role_for(project)

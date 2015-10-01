@@ -2,21 +2,21 @@
 
 describe("Service: projectRolesService", function() {
 
-  var projectRolesService, httpBackend;
+  var projectRolesService, httpBackend, userProjectRoleFactory;
 
   beforeEach(function() {
     module("samson");
   });
 
-  beforeEach(inject(function(_projectRolesService_, $httpBackend) {
+  beforeEach(inject(function(_projectRolesService_, $httpBackend, _userProjectRoleFactory_) {
     projectRolesService = _projectRolesService_;
     httpBackend = $httpBackend;
+    userProjectRoleFactory = _userProjectRoleFactory_;
   }));
 
   afterEach(function() {
     httpBackend.verifyNoOutstandingExpectation();
     httpBackend.verifyNoOutstandingRequest();
-    //httpBackend.resetExpectations();
   });
 
 
@@ -36,17 +36,18 @@ describe("Service: projectRolesService", function() {
     var user_id = 1;
     var project_id = 2;
     var role_id = 0;
+    var element = angular.element('<form data-id="" data-user-id="' + user_id + '" data-user-name="Some user" data-project-id="' + project_id + '" data-project-name="Some project" data-role-id="' + role_id  + '"></form>');
 
-    var project_role = {user_id: user_id, project_id: project_id, role_id: role_id};
-    var post_data = {project_role: project_role};
+    var project_role = userProjectRoleFactory.build(element[0]);
+    var expected_post_data = JSON.stringify(project_role, ['user_id', 'project_id', 'role_id']);
     var expected_response = {id: 0, user_id: user_id, project_id: project_id, role_id: role_id};
 
-    //id should not be sent to the backend, as it should be generated
-    httpBackend.expectPOST('/projects/' + project_role.project_id + '/project_roles', post_data)
+    httpBackend.expectPOST('/projects/' + project_role.project_id + '/project_roles', expected_post_data)
       .respond(expected_response);
 
-    projectRolesService.createProjectRole(project_role).then(function(response) {
-      expect(response.data).toEqual(expected_response)
+    projectRolesService.createProjectRole(project_role).then(function() {
+      //Id should have bene updated by the service
+      expect(project_role.id).toBe(0);
     });
 
     httpBackend.flush();
@@ -57,17 +58,21 @@ describe("Service: projectRolesService", function() {
     var user_id = 1;
     var project_id = 2;
     var role_id = 0;
+    var element = angular.element('<form data-id="' + id + '" data-user-id="' + user_id + '" data-user-name="Some user" data-project-id="' + project_id + '" data-project-name="Some project" data-role-id="' + role_id  + '"></form>');
 
-    var project_role = {id: id, user_id: user_id, project_id: project_id, role_id: role_id};
-    var post_data = {project_role: {role_id: project_role.role_id}};
+    var project_role = userProjectRoleFactory.build(element[0]);
+    var post_data = JSON.stringify(project_role, ['role_id']);
     var expected_response = {id: id, user_id: user_id, project_id: project_id, role_id: role_id};
 
-    //id should not be sent to the backend, as it should be generated
     httpBackend.expectPUT('/projects/' + project_role.project_id + '/project_roles/' + project_role.id, post_data)
       .respond(expected_response);
 
-    projectRolesService.updateProjectRole(project_role).then(function(response) {
-      expect(response.data).toEqual(expected_response)
+    projectRolesService.updateProjectRole(project_role).then(function() {
+      //Nothing should have been changed on the service
+      expect(project_role.id).toBe(id);
+      expect(project_role.user_id).toBe(user_id);
+      expect(project_role.project_id).toBe(project_id);
+      expect(project_role.role_id).toBe(role_id);
     });
 
     httpBackend.flush();

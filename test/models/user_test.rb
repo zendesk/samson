@@ -247,10 +247,10 @@ describe User do
     end
 
     it "is false for users that have not been granted the role of project admin" do
-      users(:viewer).is_admin_for?(projects(:test)).must_equal(false)
-      users(:deployer).is_admin_for?(projects(:test)).must_equal(false)
-      users(:admin).is_admin_for?(projects(:test)).must_equal(false)
-      users(:super_admin).is_admin_for?(projects(:test)).must_equal(false)
+      users(:viewer).is_admin_for?(projects(:test)).wont_equal(true)
+      users(:deployer).is_admin_for?(projects(:test)).wont_equal(true)
+      users(:admin).is_admin_for?(projects(:test)).wont_equal(true)
+      users(:super_admin).is_admin_for?(projects(:test)).wont_equal(true)
     end
   end
 
@@ -264,10 +264,10 @@ describe User do
     end
 
     it "is false for users that have not been granted the roles of project deployer or project admin" do
-      users(:viewer).is_deployer_for?(projects(:test)).must_equal(false)
-      users(:deployer).is_deployer_for?(projects(:test)).must_equal(false)
-      users(:admin).is_deployer_for?(projects(:test)).must_equal(false)
-      users(:super_admin).is_deployer_for?(projects(:test)).must_equal(false)
+      users(:viewer).is_deployer_for?(projects(:test)).wont_equal(true)
+      users(:deployer).is_deployer_for?(projects(:test)).wont_equal(true)
+      users(:admin).is_deployer_for?(projects(:test)).wont_equal(true)
+      users(:super_admin).is_deployer_for?(projects(:test)).wont_equal(true)
     end
   end
 
