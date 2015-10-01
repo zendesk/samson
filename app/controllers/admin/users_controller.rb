@@ -36,7 +36,8 @@ class Admin::UsersController < ApplicationController
   end
 
   def user_params
-    params.require(:user).permit(:role_id)
+    # also reset pending access request, so the user can request further access rights
+    params.require(:user).permit(:role_id).merge(access_request_pending: false)
   end
 
   def sort_column
