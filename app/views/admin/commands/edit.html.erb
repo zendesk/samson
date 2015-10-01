@@ -1,8 +1,8 @@
+<h1><%= command_form_legend %></h1>
+
 <section>
   <%= form_for [:admin, @command], html: { class: "form-horizontal" } do |form| %>
     <fieldset>
-      <legend><%= command_form_legend %></legend>
-
       <div class="form-group">
         <%= form.label :command, class: "col-lg-2 control-label" %>
         <div class="col-lg-6">
