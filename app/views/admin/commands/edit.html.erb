@@ -23,7 +23,7 @@
           <% if usages = @command.usages.presence %>
             <%= "Used by #{usages.map { |s| link_to "#{s.class}: #{s.project.name} - #{s.name}", [s.project, s, action: :edit] }.join(", ") }".html_safe %>
           <% else %>
-            <%= link_to_delete([:admin, @command]) %>
+            <%= link_to_delete([:admin, @command]) unless @command.new_record? %>
           <% end %>
         </div>
       </div>
