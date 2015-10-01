@@ -1,14 +1,20 @@
 class AccessRequestsController < ApplicationController
+  before_action :check_if_enabled
+
   def new
-    if ENV['REQUEST_ACCESS_FEATURE'].present?
-      RequestAccessMailer.request_access_email(request.base_url, current_user).deliver_now
-      flash[:success] = 'Access request email sent.'
-      redirect_to :back
-    else
-      raise ActionController::RoutingError.new('Not Found')
-    end
+    session[:access_request_back_to] ||= request.referer
   end
 
   def create
+    RequestAccessMailer.request_access_email(
+        request.base_url, current_user, params[:manager_email], params[:reason]).deliver_now
+    flash[:success] = 'Access request email sent.'
+    redirect_to session.delete(:access_request_back_to)
+  end
+
+  private
+
+  def check_if_enabled
+    raise ActionController::RoutingError.new('Not Found') unless ENV['REQUEST_ACCESS_FEATURE'].present?
   end
 end
