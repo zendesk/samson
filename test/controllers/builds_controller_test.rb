@@ -46,13 +46,14 @@ describe BuildsController do
     end
 
     describe 'creating a new build' do
+      let(:git_sha) { '0123456789012345678901234567890123456789' }
+
       it 'displays the #new page' do
         get :new, project_id: project.to_param
         assert_response :ok
       end
 
       it 'can create a build' do
-        git_sha = '0123456789012345678901234567890123456789'
         stub_git_reference_check(returns: git_sha)
 
         post :create, project_id: project.to_param, build: { label: 'Test creation', git_ref: 'master', description: 'hi there' }
@@ -62,6 +63,18 @@ describe BuildsController do
         assert_equal('Test creation', new_build.label)
         assert_equal(git_sha, new_build.git_sha)
         assert_redirected_to project_build_path(project, new_build)
+      end
+
+      it 'can create a build with same git_ref as previous' do
+        Build.destroy_all
+        stub_git_reference_check(returns: git_sha)
+
+        post :create, project_id: project.to_param, build: { label: 'Test creation', git_ref: 'master', description: 'hi there' }
+        Build.count.must_equal 1
+        Build.all.last.label.must_equal 'Test creation'
+        post :create, project_id: project.to_param, build: { label: 'Test creation 2', git_ref: 'master', description: 'hi there' }
+        Build.count.must_equal 1
+        Build.all.last.label.must_equal 'Test creation 2'
       end
 
       it 'handles errors' do
