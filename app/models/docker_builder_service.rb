@@ -29,7 +29,9 @@ class DockerBuilderService
   end
 
   def build_image(tmp_dir)
+    output_buffer.puts("### Cloning Repo to #{tmp_dir} for #{build.git_sha}")
     repository.setup!(tmp_dir, build.git_sha)
+    sleep 20
     Samson::Hooks.fire(:before_docker_build, tmp_dir, build, output_buffer)
 
     File.write("#{tmp_dir}/REVISION", build.git_sha)
