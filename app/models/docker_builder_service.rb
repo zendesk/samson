@@ -90,6 +90,9 @@ class DockerBuilderService
 
     output_buffer.puts values.join(' | ')
     parsed_chunk
+  rescue
+    output_buffer.puts "Raw Log: #{chunk}"
+    {}
   end
 
   def send_after_notifications
