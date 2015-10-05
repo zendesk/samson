@@ -68,7 +68,7 @@ module Samson
     config.samson.auth = ActiveSupport::OrderedOptions.new
     config.samson.auth.github = ENV["AUTH_GITHUB"] != "0"
     config.samson.auth.google = ENV["AUTH_GOOGLE"] != "0"
-    config.samson.auth.ldap = ENV["AUTH_LDAP"] != "0"
+    config.samson.auth.ldap = ENV["AUTH_LDAP"] == "1"
 
     config.samson.docker = ActiveSupport::OrderedOptions.new
     config.samson.docker.registry = ENV['DOCKER_REGISTRY'].presence
