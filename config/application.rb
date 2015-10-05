@@ -56,19 +56,19 @@ module Samson
     config.samson.github.status_url = ENV["GITHUB_STATUS_URL"].presence || 'status.github.com'
     config.samson.references_cache_ttl = ENV['REFERENCES_CACHE_TTL'].presence || 10.minutes
 
-    #Configuration for LDAP
-    config.samson.ldap  = ActiveSupport::OrderedOptions.new
-    config.samson.ldap.title    = ENV["LDAP_TITLE"].presence
-    config.samson.ldap.host     = ENV["LDAP_HOST"].presence
-    config.samson.ldap.port     = ENV["LDAP_PORT"].presence
-    config.samson.ldap.base     = ENV["LDAP_BASE"].presence
-    config.samson.ldap.uid      = ENV["LDAP_UID"].presence
+    # Configuration for LDAP
+    config.samson.ldap = ActiveSupport::OrderedOptions.new
+    config.samson.ldap.title = ENV["LDAP_TITLE"].presence
+    config.samson.ldap.host = ENV["LDAP_HOST"].presence
+    config.samson.ldap.port = ENV["LDAP_PORT"].presence
+    config.samson.ldap.base = ENV["LDAP_BASE"].presence
+    config.samson.ldap.uid = ENV["LDAP_UID"].presence
     config.samson.ldap.password = ENV["LDAP_PASSWORD"].presence
 
     config.samson.auth = ActiveSupport::OrderedOptions.new
     config.samson.auth.github = ENV["AUTH_GITHUB"] != "0"
     config.samson.auth.google = ENV["AUTH_GOOGLE"] != "0"
-    config.samson.auth.ldap   = ENV["AUTH_LDAP"]   != "0"
+    config.samson.auth.ldap = ENV["AUTH_LDAP"] != "0"
 
     config.samson.docker = ActiveSupport::OrderedOptions.new
     config.samson.docker.registry = ENV['DOCKER_REGISTRY'].presence

@@ -34,5 +34,4 @@ Rails.application.config.middleware.use OmniAuth::Builder do
     base: Rails.application.config.samson.ldap.base,
     uid: Rails.application.config.samson.ldap.uid,
     password: Rails.application.config.samson.ldap.password
-
 end
