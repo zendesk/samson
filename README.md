@@ -24,7 +24,7 @@ A web interface for deployments.
 
 ### How?
 
-Samson works by ensuring a git repository for a project is up-to-date, and then executes the commands associated with a stage. If you want to find out exactly what's going on, have a read through [JobExecution](app/models/job_execution.rb).
+Samson works by ensuring a git repository for a project is up-to-date, and then executes the commands associated with a stage. If you want to find out exactly what's going on, have a read through [JobExecution](https://github.com/zendesk/samson/blob/master/app/models/job_execution.rb).
 
 Streaming is done through a [controller](app/controllers/streams_controller.rb) that uses [server-sent events](https://en.wikipedia.org/wiki/Server-sent_events) to display to the client.
 
@@ -37,12 +37,12 @@ Streaming is done through a [controller](app/controllers/streams_controller.rb) 
 
 ### Documentation
 
-* [Getting started](docs/setup.md)
-* [Permissions](docs/permissions.md)
-* [Continuous Integration](docs/ci.md)
-* [Extra features](docs/extra_features.md)
-* [Plugins](docs/plugins.md)
-* [Getting statistics](docs/stats.md)
+* [Getting started](https://github.com/zendesk/samson/blob/master/docs/setup.md)
+* [Permissions](https://github.com/zendesk/samson/blob/master/docs/permissions.md)
+* [Continuous Integration](https://github.com/zendesk/samson/blob/master/docs/ci.md)
+* [Extra features](https://github.com/zendesk/samson/blob/master/docs/extra_features.md)
+* [Plugins](https://github.com/zendesk/samson/blob/master/docs/plugins.md)
+* [Getting statistics](https://github.com/zendesk/samson/blob/master/docs/stats.md)
 
 ### Contributing
 
