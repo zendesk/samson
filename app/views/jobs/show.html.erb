@@ -7,7 +7,9 @@
 </div>
 
 <section>
-  <%= render 'jobs/output', locals: { job: @job } %>
+  <div class="row" id="output" data-stream-url="<%= stream_path(@job) %>">
+    <%= render partial: 'jobs/output', locals: { job: @job } %>
+  </div>
 </section>
 
 <% if job_active? %>
