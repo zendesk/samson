@@ -34,9 +34,14 @@ Stage.class_eval do
   def channel_for(name)
     return nil unless name
 
-    response = Rails.cache.fetch(slack_channels_cache_key, expires_in: 5.minutes) do
-      Slack.channels_list(exclude_archived: 1)
+    response = Rails.cache.read(slack_channels_cache_key) || Slack.channels_list(exclude_archived: 1)
+
+    if response['ok']
+      Rails.cache.write(slack_channels_cache_key, response, expires_in: 5.minutes)
+      response['channels'].select { |c| c['name'] == name }.first
+    else
+      Rails.logger.error("Slack API error: #{response.inspect}")
+      nil
     end
-    response['channels'].select { |c| c['name'] == name }.first
   end
 end
