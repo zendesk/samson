@@ -32,9 +32,6 @@ ADD config/database.mysql.yml.example /app/config/database.yml
 ADD app /app/app
 ADD lib /app/lib
 
-ADD REVISION /
-ADD REVISION /app/
-
 EXPOSE 9080
 
 CMD DATABASE_URL=$MYSQL_URL bundle exec puma -C ./config/puma.rb
