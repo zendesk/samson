@@ -4,6 +4,7 @@ OmniAuth.config.logger = Rails.logger
 
 require 'omniauth-github'
 require 'omniauth-google-oauth2'
+require 'omniauth-ldap'
 
 Rails.application.config.middleware.use OmniAuth::Builder do
   provider :github,
@@ -24,5 +25,14 @@ Rails.application.config.middleware.use OmniAuth::Builder do
       scope:  "email,profile",
       prompt: "select_account",
     }
+
+  provider OmniAuth::Strategies::LDAP,
+    title: Rails.application.config.samson.ldap.title,
+    host: Rails.application.config.samson.ldap.host,
+    port: Rails.application.config.samson.ldap.port,
+    method: 'plain',
+    base: Rails.application.config.samson.ldap.base,
+    uid: Rails.application.config.samson.ldap.uid,
+    password: Rails.application.config.samson.ldap.password
 
 end

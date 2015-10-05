@@ -2,6 +2,7 @@ require 'omniauth/github_authorization'
 
 class SessionsController < ApplicationController
   skip_before_action :login_users
+  skip_before_action :verify_authenticity_token, only: [ :ldap ]
 
   def new
     if logged_in?
@@ -15,6 +16,11 @@ class SessionsController < ApplicationController
   end
 
   def google
+    return show_login_restriction unless allowed_to_login
+    login_user(role_id: Role::VIEWER.id)
+  end
+
+  def ldap
     return show_login_restriction unless allowed_to_login
     login_user(role_id: Role::VIEWER.id)
   end
