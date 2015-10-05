@@ -1,4 +1,4 @@
-FROM ruby:2.2.2
+FROM ruby:2.2.3
 
 RUN apt-get update && apt-get install -y wget apt-transport-https
 RUN wget -qO- https://deb.nodesource.com/gpgkey/nodesource.gpg.key | apt-key add -
@@ -24,14 +24,13 @@ ADD Gemfile /app/
 ADD Gemfile.lock /app/
 ADD vendor/cache /app/vendor/cache
 ADD plugins /app/plugins
-RUN bundle install --without test sqlite postgres --quiet --local --jobs 4 || bundle check
+RUN bundle install --quiet --local --jobs 4 || bundle check
 
 # Code
 ADD config /app/config
-ADD config/database.mysql.yml.example /app/config/database.yml
 ADD app /app/app
 ADD lib /app/lib
 
 EXPOSE 9080
 
-CMD DATABASE_URL=$MYSQL_URL bundle exec puma -C ./config/puma.rb
+CMD ["bundle", "exec", "puma", "-C", "./config/puma.rb"]
