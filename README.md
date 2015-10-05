@@ -4,6 +4,8 @@
 
 [![Build Status](https://travis-ci.org/zendesk/samson.svg?branch=master)](https://travis-ci.org/zendesk/samson)
 
+[![DockerHub Status](https://dockeri.co/image/zendesk/samson)](https://hub.docker.com/r/zendesk/samson)
+
 ### What?
 
 A web interface for deployments.
