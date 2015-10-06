@@ -16,3 +16,7 @@ env:
     - DATABASE_URL=postgresql://postgres@127.0.0.1/samson_test TASK=rake
     - DATABASE_URL=sqlite3://null$PWD/db/test.sqlite3 TASK=rake
 script: script/ci
+before_script:
+  - mysql -u root -e 'set GLOBAL innodb_large_prefix = true'
+  - mysql -u root -e 'set GLOBAL innodb_file_per_table = true'
+  - mysql -u root -e 'set GLOBAL innodb_file_format = "barracuda"'
