@@ -1,8 +1,11 @@
 class BuildsController < ApplicationController
   before_action :authorize_deployer!
   before_action :find_project
-  before_action :find_build, only: [:show, :build_docker_image, :edit, :update, :kubernetes_releases]
-  before_action :find_kuber_releases, only: [:show, :kubernetes_releases]
+  before_action :find_build, only: [:show, :build_docker_image, :edit, :update]
+
+  if Samson::Hooks.active_plugin?('kubernetes')
+    before_action :find_kuber_releases, only: [:show, :kubernetes_releases]
+  end
 
   def index
     @builds = @project.builds.order('id desc').page(params[:page])
@@ -78,6 +81,7 @@ class BuildsController < ApplicationController
   end
 
   def kubernetes_releases
+    find_build
   end
 
   private
