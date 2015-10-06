@@ -1,5 +1,5 @@
-class RequestAccessMailer < ApplicationMailer
-  def request_access_email(host, user, manager_email, reason)
+class AccessRequestMailer < ApplicationMailer
+  def access_request_email(host, user, manager_email, reason)
     @host = host
     @user = user
     @manager_email = manager_email

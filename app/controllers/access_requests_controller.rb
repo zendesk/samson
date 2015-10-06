@@ -6,7 +6,7 @@ class AccessRequestsController < ApplicationController
   end
 
   def create
-    RequestAccessMailer.request_access_email(
+    AccessRequestMailer.access_request_email(
         request.base_url, current_user, params[:manager_email], params[:reason]).deliver_now
     current_user.update!(access_request_pending: true)
     flash[:success] = 'Access request email sent.'
