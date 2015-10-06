@@ -50,13 +50,13 @@ class JobsController < ApplicationController
   end
 
   def destroy
-    if @job.started_by?(current_user) || current_user.is_admin?
+    if @job.can_be_stopped_by?(current_user)
       @job.stop!
-
-      head :ok
     else
-      head :forbidden
+      flash[:error] = "You do not have privileges to stop this job."
     end
+
+    redirect_to [@project, @job]
   end
 
   private
