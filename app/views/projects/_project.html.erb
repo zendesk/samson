@@ -4,6 +4,7 @@
       <%= link_to project.name, project %>
       <%= render partial: 'shared/github_link', locals: { project: project } %>
     </h2>
+
     <ul>
       <% project.stages.each do |stage| %>
         <% cache [project.to_param, stage] do %>
@@ -23,7 +24,7 @@
               <% if stage.last_successful_deploy %>
                 <%= link_to stage.last_successful_deploy.short_reference,
                             [project, stage.last_successful_deploy],
-                            class: "status label #{deploy_status(stage.last_successful_deploy.status, 'label')}" %>
+                            class: "status label #{status_label(stage.last_successful_deploy.status)}" %>
               <% end %>
             </div>
           </li>

@@ -41,10 +41,6 @@ module DeploysHelper
     end
   end
 
-  def deploy_status_panel(deploy)
-    deploy_status_panel_common(deploy, BuddyCheck.enabled?)
-  end
-
   def buddy_check_button(project, deploy)
     return nil unless deploy.waiting_for_buddy?
 
@@ -61,21 +57,6 @@ module DeploysHelper
     link_to button_text, buddy_check_project_deploy_path(@project, @deploy), method: :post, class: button_class.join(' ')
   end
 
-  def duration_text(deploy)
-    seconds  = (deploy.updated_at - deploy.start_time).to_i
-
-    duration = ""
-
-    if seconds > 60
-      minutes = seconds / 60
-      seconds = seconds - minutes * 60
-
-      duration << "#{minutes} minute".pluralize(minutes)
-    end
-
-    duration << (seconds > 0 || duration.size == 0 ? " #{seconds} second".pluralize(seconds) : "")
-  end
-
   def syntax_highlight(code, language = :ruby)
     CodeRay.scan(code, language).html.html_safe
   end
@@ -90,31 +71,4 @@ module DeploysHelper
     return unless @project && deploy
     link_to 'Stop', [@project, deploy], options.merge(method: :delete, class: options.fetch(:class, 'btn btn-danger btn-xl'))
   end
-
-  private
-
-    def deploy_status_panel_common(deploy, enabled, hash = { "cancelled" => "danger" } )
-      mapping = {
-        "succeeded" => "success",
-        "failed"    => "danger",
-        "errored"   => "warning",
-      }
-
-      mapping = mapping.merge(hash) if enabled
-
-      content, status = content_no_buddy_check(deploy)
-
-      content ||= h deploy.summary
-      status ||= mapping.fetch(deploy.status, "info")
-
-      content_tag :div, content.html_safe, class: "alert alert-#{status}"
-    end
-
-    def content_no_buddy_check(deploy)
-      if deploy.finished?
-        content = h "#{deploy.summary} "
-        content << relative_time(deploy.start_time)
-        content << ", it took #{duration_text(deploy)}."
-      end
-    end
 end
