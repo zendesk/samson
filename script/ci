@@ -4,7 +4,7 @@ case $TASK in
 js)
   npm install
   npm run-script jshint
-  bundle exec rake test:js
+  DATABASE_URL=mysql2://none@none/none bundle exec rake test:js
   ;;
 precompile)
   export SECRET_TOKEN=foo
