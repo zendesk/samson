@@ -3,10 +3,8 @@ class CreateKubernetesCluster < ActiveRecord::Migration
     create_table :kubernetes_clusters do |t|
       t.string :name
       t.string :description
-      t.string :api_version
-      t.string :url, null: false
-      t.boolean :use_ssl
-      t.string :username
+      t.string :config_filepath
+      t.string :config_context
       t.timestamps
     end
   end

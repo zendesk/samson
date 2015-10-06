@@ -15,30 +15,20 @@
     </div>
 
     <div class="form-group">
-      <%= form.label :api_version, 'API Version', class: "col-lg-2 control-label" %>
-      <div class="col-lg-1">
-        <%= form.text_field :api_version, class: "form-control" %>
-      </div>
-    </div>
-
-    <div class="form-group">
-      <%= form.label :url, 'URL', class: "col-lg-2 control-label" %>
+      <%= form.label :config_filepath, 'Config File path', class: "col-lg-2 control-label" %>
       <div class="col-lg-4">
-        <%= form.text_field :url, class: "form-control" %>
+        <%= form.text_field :config_filepath, class: "form-control" %>
       </div>
     </div>
 
     <div class="form-group">
-      <%= form.label :use_ssl, 'Use SSL?', class: "col-lg-2 control-label" %>
-      <div class="col-lg-4">
-        <%= form.check_box :use_ssl %>
-      </div>
-    </div>
-
-    <div class="form-group">
-      <%= form.label :username, class: "col-lg-2 control-label" %>
+      <%= form.label :config_context, 'Context', class: "col-lg-2 control-label" %>
       <div class="col-lg-2">
-        <%= form.text_field :username, class: "form-control" %>
+        <% if @context_options.any? %>
+          <%= form.select :config_context, @context_options %>
+        <% else %>
+          <%= form.text_field :config_context, class: "form-control" %>
+        <% end %>
       </div>
     </div>
 

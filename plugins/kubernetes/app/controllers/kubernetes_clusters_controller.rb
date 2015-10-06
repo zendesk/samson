@@ -4,9 +4,10 @@ class KubernetesClustersController < ApplicationController
 
   before_action :find_cluster, only: [:show, :edit, :update]
   before_action :load_environments, only: [:new, :edit, :update]
+  before_action :load_default_config_file, only: [:new, :edit, :update]
 
   def new
-    @cluster = Kubernetes::Cluster.new(api_version: 'v1')
+    @cluster = Kubernetes::Cluster.new(config_filepath: @config_file.try(:filepath))
   end
 
   def create
@@ -68,6 +69,11 @@ class KubernetesClustersController < ApplicationController
   end
 
   def new_cluster_params
-    params.require(:kubernetes_cluster).permit(:name, :username, :url, :use_ssl, :api_version, :description, { deploy_group_ids: [] })
+    params.require(:kubernetes_cluster).permit(:name, :config_filepath, :config_context, :description, { deploy_group_ids: [] })
+  end
+
+  def load_default_config_file
+    @config_file = Kubernetes::ClientConfigFile.new
+    @context_options = @config_file.context_names || []
   end
 end

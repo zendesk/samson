@@ -6,12 +6,16 @@ module Kubernetes
     has_many :deploy_groups, inverse_of: 'kubernetes_cluster', foreign_key: 'kubernetes_cluster_id'
 
     validates :name, presence: true, uniqueness: true
-    validates :url, presence: true
-    validates :api_version, presence: true
+    validates :config_filepath, presence: true
+    validates :config_context, presence: true
     validate :test_client_connection
 
     def client
-      @client ||= Kubeclient::Client.new(url, api_version)
+      @client ||= config_file.client_for(config_context)
+    end
+
+    def config_file
+      @config_file ||= Kubernetes::ClientConfigFile.new(config_filepath)
     end
 
     def connection_valid?
@@ -21,7 +25,7 @@ module Kubernetes
     end
 
     def namespace_exists?(namespace)
-      client.get_namespace(namespace).present?
+      connection_valid? && client.get_namespace(namespace).present?
     rescue KubeException
       false
     end
@@ -29,7 +33,11 @@ module Kubernetes
     private
 
     def test_client_connection
-      errors.add(:url, "Could not connect to API Server") unless connection_valid?
+      if File.exists?(config_filepath)
+        errors.add(:config_context, "Could not connect to API Server") unless connection_valid?
+      else
+        errors.add(:config_filepath, "File does not exist")
+      end
     end
   end
 end

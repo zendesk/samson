@@ -1,13 +1,12 @@
 module Kubernetes
   class ClientConfigFile
-    attr_reader :config_file, :api_version, :clusters, :users, :contexts
+    attr_reader :filepath, :api_version, :clusters, :users, :contexts
 
     def initialize(filepath = ENV['KUBE_CONFIG_FILE'])
-      filepath ||= "#{ENV.fetch('HOME')}/.kube/config"
-      if File.exists?(filepath)
-        @config_file = YAML.load_file(filepath).with_indifferent_access
-        parse_file
-      end
+      raise ArgumentError("File #{filepath} does not exist") unless File.exists?(filepath)
+      @filepath = filepath
+      @config_file = YAML.load_file(filepath).with_indifferent_access
+      parse_file
     end
 
     def exists?
@@ -22,11 +21,15 @@ module Kubernetes
       contexts[context_name].try(:client)
     end
 
+    def context_names
+      contexts.keys
+    end
+
     private
 
     def parse_file
-      @api_version = config_file[:apiVersion]
-      @current_context = config_file[:'current-context']
+      @api_version = @config_file[:apiVersion]
+      @current_context = @config_file[:'current-context']
       parse_clusters
       parse_users
       parse_contexts
@@ -34,7 +37,7 @@ module Kubernetes
 
     def parse_clusters
       @clusters = {}
-      config_file[:clusters].each do |cluster_hash|
+      @config_file[:clusters].each do |cluster_hash|
         cluster = Cluster.new
         cluster.name = cluster_hash[:name]
         cluster.server = cluster_hash[:cluster][:server]
@@ -45,7 +48,7 @@ module Kubernetes
 
     def parse_users
       @users = {}
-      config_file[:users].each do |user_hash|
+      @config_file[:users].each do |user_hash|
         user = User.new
         user.name = user_hash[:name]
         user.username = user_hash[:user][:username]
@@ -64,7 +67,7 @@ module Kubernetes
 
     def parse_contexts
       @contexts = {}
-      config_file[:contexts].each do |context_hash|
+      @config_file[:contexts].each do |context_hash|
         context = Context.new
         context.name = context_hash[:name]
         context.api_version = api_version
