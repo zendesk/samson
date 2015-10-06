@@ -11,9 +11,9 @@ branches:
   only: [master]
 env:
   matrix:
-    - DB=mysql TASK=rake
-    - DB=mysql TASK=js
-    - DB=mysql TASK=precompile
-    - DB=postgresql TASK=rake
-    - DB=sqlite TASK=rake
-script: script/ci.rb
+    - TASK=js
+    - TASK=precompile
+    - DATABASE_URL=mysql2://travis@127.0.0.1/samson_test TASK=rake
+    - DATABASE_URL=postgresql://postgres@127.0.0.1/samson_test TASK=rake
+    - DATABASE_URL=sqlite3://db/test.sqlite3 TASK=rake
+script: script/ci
