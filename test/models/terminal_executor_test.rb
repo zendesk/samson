@@ -46,26 +46,21 @@ describe TerminalExecutor do
   describe '#stop!' do
     def execute_and_stop(command, signal)
       thread = Thread.new(subject) do |shell|
-        sleep(0.1) until shell.pid
-        shell.stop! signal
+        sleep(0.1) until shell.pgid
+        shell.stop!(signal)
       end
 
       result = subject.execute!(command)
-
       thread.join
       result
     end
 
-    # does not kill properly on OSX with default pkill, and causes interrupts
-    # with homebrew pkill 0.4.pre1
-    before { skip if RbConfig::CONFIG["target_os"].start_with? "darwin" }
-
     it 'properly kills the execution' do
-      execute_and_stop('sleep 100', 'INT').must_equal(false)
+      execute_and_stop('sleep 100', 'INT').must_equal(nil)
     end
 
     it 'terminates hanging processes with -9' do
-      execute_and_stop('trap "sleep 100" 2; sleep 100', 'KILL').must_equal(false)
+      execute_and_stop('trap "sleep 100" 2; sleep 100', 'KILL').must_equal(nil)
     end
   end
 end

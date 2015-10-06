@@ -9,7 +9,7 @@ class JobExecution
   end
 
   cattr_accessor(:lock_timeout, instance_writer: false) { 10.minutes }
-  cattr_accessor(:stop_timeout, instance_accessor: false) { 15.seconds }
+  cattr_accessor(:stop_timeout, instance_writer: false) { 15.seconds }
 
   cattr_reader(:registry, instance_accessor: false) { {} }
   private_class_method :registry
@@ -39,11 +39,13 @@ class JobExecution
 
   def stop!
     @executor.stop! 'INT'
-    self.class.stop_timeout.to_i.times do
-      return unless @thread.alive?
-      sleep 1
+
+    stop_timeout.times do
+      return if @thread.join(1)
     end
+
     @executor.stop! 'KILL'
+
     wait!
   end
 
@@ -120,7 +122,9 @@ class JobExecution
     ActiveSupport::Notifications.instrument("execute_shell.samson", payload) do
       payload[:success] = @executor.execute!(*cmds)
     end
+
     Samson::Hooks.fire(:after_job_execution, @job, payload[:success], @output)
+
     payload[:success]
   end
 
@@ -136,6 +140,7 @@ class JobExecution
       true
     else
       @output.write("Could not get exclusive lock on repo. Maybe another stage is being deployed.\n")
+
       false
     end
   end
@@ -152,11 +157,13 @@ class JobExecution
       "cd #{dir}",
       *@job.commands
     ]
+
     if @stage
-      group_names = @stage.deploy_groups.pluck(:env_value).sort.map!(&:shellescape).join(" ")
-      commands.unshift("export DEPLOY_GROUPS='#{group_names}'") if group_names.presence
-      commands.unshift("export STAGE='#{@stage.permalink.shellescape}'")
+      group_names = @stage.deploy_groups.pluck(:env_value).sort.join(" ")
+      commands.unshift("export DEPLOY_GROUPS=#{group_names.shellescape}") if group_names.present?
+      commands.unshift("export STAGE=#{@stage.permalink.shellescape}")
     end
+
     commands
   end
 

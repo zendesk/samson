@@ -13,7 +13,7 @@ require 'shellwords'
 #   output.string #=> "hello\r\nworld\r\n"
 #
 class TerminalExecutor
-  attr_reader :pid, :output
+  attr_reader :pid, :pgid, :output
 
   def initialize(output, verbose: false)
     @output = output
@@ -24,27 +24,21 @@ class TerminalExecutor
     commands.map! { |c| "echo » #{c.shellescape}\n#{c}" } if @verbose
     commands.unshift("set -e")
 
-    command = commands.join("\n")
-
-    if RUBY_ENGINE == 'jruby'
-      command = %Q{/bin/sh -c "#{command.gsub(/"/, '\\"')}"}
-    end
-
-    execute_command!(command)
+    execute_command!(commands.join("\n"))
   end
 
   def stop!(signal)
-    # Need pkill because we want all
-    # children of the parent process dead
-    system "pkill", "-#{signal}", "-P", pid.to_s if pid
+    system('kill', "-#{signal}", "-#{pgid}")
   end
 
   private
 
   def execute_command!(command)
     output, input, @pid = Bundler.with_clean_env do
-      PTY.spawn(command, in: "/dev/null")
+      PTY.spawn(command, in: '/dev/null')
     end
+
+    @pgid = Process.getpgid(pid)
 
     begin
       output.each(56) {|line| @output.write(line) }
@@ -52,7 +46,7 @@ class TerminalExecutor
       # The IO has been closed.
     end
 
-    _, status = Process.wait2(@pid)
+    _, status = Process.wait2(pid)
 
     input.close
 
