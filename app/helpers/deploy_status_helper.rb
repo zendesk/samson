@@ -1,5 +1,4 @@
 module DeployStatusHelper
-
   STATUS_MAPPING = {
     "running" => "primary",
     "succeeded" => "success",
