@@ -3,5 +3,7 @@ Gem::Specification.new "samson_kubernetes", "0.0.1" do |s|
   s.description = "TBD"
   s.authors = ["Jon Moter"]
   s.email = "jmoter@zendesk.com"
-  s.add_runtime_dependency "kubeclient"
+
+  # Temporarily remove this until gem is updated with our changes
+  # s.add_runtime_dependency "kubeclient"
 end

@@ -3,7 +3,7 @@ require 'kubeclient'
 class KuberDeployService
   attr_reader :kuber_release
 
-  delegate :build, to: :kuber_release
+  delegate :build, :client, to: :kuber_release
 
   def initialize(kuber_release)
     @kuber_release = kuber_release
@@ -11,21 +11,29 @@ class KuberDeployService
 
   def deploy!
     # TODO: handling different deploy strategies (rolling updates, etc.)
-    Rails.logger.info "Deploying Kubernetes::Release #{kuber_release.id}, project '#{project.name}' to DeployGroup #{kuber_release.deploy_group.name}"
+    log 'starting deploy'
 
     create_replication_controllers!
     create_services!
 
-    Rails.logger.info "Deploying complete for Kubernetes::Release #{kuber_release.id}, project '#{project.name}' to DeployGroup #{kuber_release.deploy_group.name}"
+    log 'API requests complete'
   end
 
   def create_replication_controllers!
     kuber_release.release_docs.each do |release_doc|
-      Rails.logger.info "Creating ReplicationController for Kubernetes::Release #{kuber_release.id}, role: #{release_doc.kubernetes_role.name}"
+      log 'creating ReplicationController', role: release_doc.kubernetes_role.name
 
       rc = Kubeclient::ReplicationController.new(release_doc.rc_hash)
       client.create_replication_controller(rc)
     end
+
+    # Doing this for now to force the loading of these constants.
+    # I was getting a circular dependency error otherwise
+    Watchers::PodWatcher ; Watchers::ReplicationControllerWatcher ; Watchers::EventWatcher
+
+    Thread.new { kuber_release.watch_pods }
+    Thread.new { kuber_release.watch_rcs }
+    Thread.new { sleep(5) ; kuber_release.watch_pod_events }
   end
 
   def create_services!
@@ -38,7 +46,13 @@ class KuberDeployService
 
   private
 
-  def client
-    kuber_release.deploy_group.kubernetes_cluster.client
+  def log(msg, extra_info = {})
+    extra_info.merge!(
+      release: kuber_release.id,
+      project: project.name,
+      group: kuber_release.deploy_group.name
+    )
+
+    Kubernetes::Util.log msg, extra_info
   end
 end

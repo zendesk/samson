@@ -15,13 +15,69 @@ module Kubernetes
     after_initialize :set_default_status, on: :create
 
     def namespace
-      deploy_group.namespace
+      deploy_group.kubernetes_namespace
+    end
+
+    def pod_labels
+      {
+        project: release_group.build.project_name,
+        release_id: id.to_s
+      }
     end
 
     # TODO: define state machine for 'status' field
 
     def nested_error_messages
-      errors.full_messages + release_groups.map(&:nested_error_messages).flatten
+      errors.full_messages + release_docs.map(&:nested_error_messages).flatten
+    end
+
+    def watch_pods(&block)
+      @pod_watcher = Watchers::PodWatcher.new(client, namespace,
+                                              label_selector: pod_labels.to_kuber_selector,
+                                              log: true)
+      @pod_watcher.start_watching(&block)
+    end
+
+    def watch_rcs(&block)
+      @rc_watcher = Watchers::ReplicationControllerWatcher.new(client, namespace,
+                                                               label_selector: pod_labels.to_kuber_selector,
+                                                               log: true)
+
+      @rc_watcher.start_watching(&block)
+    end
+
+    def watch_pod_events(&block)
+      pod_names = @pod_watcher.try(:pod_names).presence || find_pod_names
+
+      if pod_names.empty?
+        Kubernetes::Util.log 'No pods to watch', release_id: id
+        return
+      end
+
+      @event_watcher = Watchers::EventWatcher.new(client, namespace,
+                                                  object_kind: 'Pod',
+                                                  object_names: pod_names,
+                                                  log: true)
+      @event_watcher.start_watching(&block)
+    end
+
+    def find_pod_names
+      if @pod_watcher
+        @pod_watcher.pod_names
+      else
+        pods = client.get_pods(namespace: namespace, label_selector: pod_labels.to_kuber_selector)
+        pods.map { |p| p.metadata.name }
+      end
+    end
+
+    def stop_watching
+      [@pod_watcher, @rc_watcher].each do |watcher|
+        watcher.stop_watching if watcher
+      end
+    end
+
+    def client
+      deploy_group.kubernetes_cluster.client
     end
 
     private

@@ -59,14 +59,27 @@ module Kubernetes
       kubernetes_release.release_group.build
     end
 
-    private
-
     # These labels will be attached to the Pod and the ReplicationController
     def pod_labels
-      {
-        build: build.id.to_s
-      }
+      kubernetes_release.pod_labels.merge(role: kubernetes_role.label_name)
     end
+
+    def nested_error_messages
+      errors.full_messages
+    end
+
+    def watch_controller(&block)
+      @watcher = Watchers::ReplicationControllerWatcher.new(client, namespace,
+                                                            name: replication_controller_name,
+                                                            log: true)
+      @watcher.start_watching(&block)
+    end
+
+    def stop_watching
+      @watcher.stop_watching if @watcher
+    end
+
+    private
 
     def save_rc_info
       build_rc_hash

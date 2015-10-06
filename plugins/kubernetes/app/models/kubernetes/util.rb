@@ -12,5 +12,13 @@ module Kubernetes
         fail "Unknown file type: #{filename}"
       end
     end
+
+    def self.log(message, extra_info = {})
+      @output_file ||= File.open(ENV['KUBER_LOGFILE'] || File.join(Rails.root, 'log', 'kubernetes.log'), 'a')
+
+      @output_file.write({ message: message }.merge(extra_info).to_json + "\n")
+      @output_file.flush
+      message
+    end
   end
 end
