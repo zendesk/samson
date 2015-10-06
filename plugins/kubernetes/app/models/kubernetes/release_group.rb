@@ -21,7 +21,7 @@ module Kubernetes
     end
 
     def deploy_group_ids=(id_list)
-      id_list = id_list.map(&:to_i).select(&:present?)
+      id_list = id_list.select(&:present?).map(&:to_i)
 
       ids_to_delete = (deploy_group_ids - id_list)
 

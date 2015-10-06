@@ -31,5 +31,14 @@ describe Kubernetes::ReleaseGroup do
       release_group.deploy_group_ids = []
       release_group.releases.to_a.count.must_equal 0
     end
+
+    it 'ignores empty strings' do
+      group_params = group_list.map(&:id).map(&:to_s)
+      group_params << ''
+
+      release_group.deploy_group_ids = group_params
+      release_group.releases.to_a.count.must_equal 2
+      release_group.deploy_group_ids.must_equal group_list.map(&:id)
+    end
   end
 end

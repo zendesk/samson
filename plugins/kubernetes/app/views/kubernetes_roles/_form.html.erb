@@ -51,7 +51,7 @@
 
     <div class="form-group">
       <div class="col-lg-offset-2 col-lg-10">
-        <%= form.submit "Create", class: "btn btn-primary" %>
+        <%= form.submit @kubernetes_role.persisted? ? "Save" : "Create", class: "btn btn-primary" %>
         <%= link_to "Cancel", :back, class: 'btn btn-default' %>
       </div>
     </div>

@@ -45,7 +45,7 @@ class KubernetesRolesController < ApplicationController
     respond_to do |format|
       format.html do
         if success
-          redirect_to project_kubernetes_roles_paths
+          redirect_to project_kubernetes_roles_path(@project)
         else
           render :edit, status: 422
         end
