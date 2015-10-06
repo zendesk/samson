@@ -42,10 +42,7 @@ module DeploysHelper
   end
 
   def deploy_status_panel(deploy)
-    content = content_no_buddy_check(deploy)
-    content ||= h deploy.summary
-
-    content_tag :div, content.html_safe, class: "alert #{deploy_status(deploy.status, 'alert')}"
+    deploy_status_panel_common(deploy, BuddyCheck.enabled?)
   end
 
   def buddy_check_button(project, deploy)
@@ -96,11 +93,28 @@ module DeploysHelper
 
   private
 
-  def content_no_buddy_check(deploy)
-    if deploy.finished?
-      content = h "#{deploy.summary} "
-      content << relative_time(deploy.start_time)
-      content << ", it took #{duration_text(deploy)}."
+    def deploy_status_panel_common(deploy, enabled, hash = { "cancelled" => "danger" } )
+      mapping = {
+        "succeeded" => "success",
+        "failed"    => "danger",
+        "errored"   => "warning",
+      }
+
+      mapping = mapping.merge(hash) if enabled
+
+      content, status = content_no_buddy_check(deploy)
+
+      content ||= h deploy.summary
+      status ||= mapping.fetch(deploy.status, "info")
+
+      content_tag :div, content.html_safe, class: "alert alert-#{status}"
     end
-  end
+
+    def content_no_buddy_check(deploy)
+      if deploy.finished?
+        content = h "#{deploy.summary} "
+        content << relative_time(deploy.start_time)
+        content << ", it took #{duration_text(deploy)}."
+      end
+    end
 end
