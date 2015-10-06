@@ -3,7 +3,6 @@ cache:
   bundler: true
   directories:
     - node_modules
-rvm: 2.2.2
 sudo: false
 services:
   - memcached
