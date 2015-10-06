@@ -4,6 +4,8 @@
 
 [![Build Status](https://travis-ci.org/zendesk/samson.svg?branch=master)](https://travis-ci.org/zendesk/samson)
 
+[![DockerHub Status](https://dockeri.co/image/zendesk/samson)](https://hub.docker.com/r/zendesk/samson)
+
 ### What?
 
 A web interface for deployments.
@@ -22,7 +24,7 @@ A web interface for deployments.
 
 ### How?
 
-Samson works by ensuring a git repository for a project is up-to-date, and then executes the commands associated with a stage. If you want to find out exactly what's going on, have a read through [JobExecution](app/models/job_execution.rb).
+Samson works by ensuring a git repository for a project is up-to-date, and then executes the commands associated with a stage. If you want to find out exactly what's going on, have a read through [JobExecution](https://github.com/zendesk/samson/blob/master/app/models/job_execution.rb).
 
 Streaming is done through a [controller](app/controllers/streams_controller.rb) that uses [server-sent events](https://en.wikipedia.org/wiki/Server-sent_events) to display to the client.
 
@@ -35,12 +37,12 @@ Streaming is done through a [controller](app/controllers/streams_controller.rb) 
 
 ### Documentation
 
-* [Getting started](docs/setup.md)
-* [Permissions](docs/permissions.md)
-* [Continuous Integration](docs/ci.md)
-* [Extra features](docs/extra_features.md)
-* [Plugins](docs/plugins.md)
-* [Getting statistics](docs/stats.md)
+* [Getting started](https://github.com/zendesk/samson/blob/master/docs/setup.md)
+* [Permissions](https://github.com/zendesk/samson/blob/master/docs/permissions.md)
+* [Continuous Integration](https://github.com/zendesk/samson/blob/master/docs/ci.md)
+* [Extra features](https://github.com/zendesk/samson/blob/master/docs/extra_features.md)
+* [Plugins](https://github.com/zendesk/samson/blob/master/docs/plugins.md)
+* [Getting statistics](https://github.com/zendesk/samson/blob/master/docs/stats.md)
 
 ### Contributing
 
@@ -52,4 +54,4 @@ Improvements are always welcome. Please follow these steps to contribute
 
 ### Team
 
-Core team is [@steved](https://github.com/steved), [@dasch](https://github.com/dasch), [@jwswj](https://github.com/jwswj), [@halcyonCorsair](https://github.com/halcyonCorsair), [@princemaple](https://github.com/princemaple), [@bolddane](https://github.com/bolddane), [@pswadi-zendesk](https://github.com/pswadi-zendesk), [@henders](https://github.com/henders).
+Core team is [@steved](https://github.com/steved), [@dasch](https://github.com/dasch), [@jwswj](https://github.com/jwswj), [@bolddane](https://github.com/bolddane), [@pswadi-zendesk](https://github.com/pswadi-zendesk), [@henders](https://github.com/henders).

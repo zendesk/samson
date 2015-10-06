@@ -49,7 +49,7 @@ Set the following variables in your `.env` file or set them as environment varia
       <td>Yes</td>
       <td>This is a personal access token that Samson uses to access project repositories, commits, files and pull requests.
           <ul>
-            <li> Navigate to [https://github.com/settings/tokens/new](https://github.com/settings/tokens/new) to generate a new personal access token</li>
+            <li> Navigate to https://github.com/settings/tokens/new to generate a new personal access token</li>
             <li> Choose scope including repo, read:org, user and then generate the token</li>
             <li> You should now have a personal access token to populate the .env file with</li>
           </ul>
@@ -115,7 +115,7 @@ Set the following variables in your `.env` file or set them as environment varia
       <td>NEWRELIC_API_KEY</td>
       <td></td>
       <td>You may fill in using the instructions below if you would like a dynamic chart of response time and throughput during deploys.
-          [https://docs.newrelic.com/docs/features/getting-started-with-the-new-relic-rest-api#setup](https://docs.newrelic.com/docs/features/getting-started-with-the-new-relic-rest-api#setup)</td>
+          https://docs.newrelic.com/docs/features/getting-started-with-the-new-relic-rest-api#setup</td>
     </tr>
   </tbody>
 </table>

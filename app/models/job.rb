@@ -4,6 +4,9 @@ class Job < ActiveRecord::Base
 
   has_one :deploy
 
+  # Used by status_panel
+  alias_attribute :start_time, :created_at
+
   after_update { deploy.touch if deploy }
 
   validate :validate_globally_unlocked

@@ -12,5 +12,10 @@
         <%= image_tag image_url('google.png') %> Login with Google
       <% end %>
     <% end %>
+    <% if Rails.application.config.samson.auth.ldap %>
+      <%= link_to omniauth_path('ldap'), class: "action ldap" do %>
+        <%= image_tag image_url('ldap.png') %> Login with LDAP
+      <% end %>
+    <% end %>
   </div>
 </div>

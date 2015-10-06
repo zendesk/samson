@@ -1,8 +1,8 @@
+<h1><%= command_form_legend %></h1>
+
 <section>
   <%= form_for [:admin, @command], html: { class: "form-horizontal" } do |form| %>
     <fieldset>
-      <legend><%= command_form_legend %></legend>
-
       <div class="form-group">
         <%= form.label :command, class: "col-lg-2 control-label" %>
         <div class="col-lg-6">
@@ -23,7 +23,7 @@
           <% if usages = @command.usages.presence %>
             <%= "Used by #{usages.map { |s| link_to "#{s.class}: #{s.project.name} - #{s.name}", [s.project, s, action: :edit] }.join(", ") }".html_safe %>
           <% else %>
-            <%= link_to_delete([:admin, @command]) %>
+            <%= link_to_delete([:admin, @command]) unless @command.new_record? %>
           <% end %>
         </div>
       </div>

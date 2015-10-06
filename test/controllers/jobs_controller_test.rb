@@ -85,13 +85,13 @@ describe JobsController do
     describe "a DELETE to :destroy" do
       describe "with a job owned by the admin" do
         setup do
-          Job.any_instance.stubs(:started_by?).returns(true)
+          Job.any_instance.stubs(:can_be_stopped_by?).returns(true)
 
           delete :destroy, project_id: project.to_param, id: job
         end
 
-        it "responds with 200" do
-          response.status.must_equal(200)
+        it "responds with 302" do
+          response.status.must_equal(302)
         end
       end
     end
@@ -104,8 +104,8 @@ describe JobsController do
           delete :destroy, project_id: project.to_param, id: job
         end
 
-        it "responds ok" do
-          response.status.must_equal(200)
+        it "responds with 302" do
+          response.status.must_equal(302)
         end
       end
     end

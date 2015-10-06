@@ -104,6 +104,7 @@ class DeploysController < ApplicationController
     else
       flash[:error] = "You do not have privileges to stop this deploy."
     end
+
     redirect_to [@project, @deploy]
   end
 

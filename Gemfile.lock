@@ -10,6 +10,11 @@ GIT
       rest-client
 
 PATH
+  remote: plugins/docker_binary_builder/
+  specs:
+    samson_docker_binary_builder (0.0.0)
+
+PATH
   remote: plugins/dockerb/
   specs:
     samson_dockerb (0.0.0)
@@ -225,6 +230,7 @@ GEM
     mysql2 (0.3.18)
     net-http-persistent (2.9.4)
     netrc (0.10.3)
+    net-ldap (0.3.1)
     newrelic_api (1.2.4)
     newrelic_rpm (3.12.1.298)
     ngannotate-rails (1.0.2)
@@ -250,6 +256,11 @@ GEM
     omniauth-google-oauth2 (0.2.6)
       omniauth (> 1.0)
       omniauth-oauth2 (~> 1.1)
+    omniauth-ldap (1.0.4)
+      net-ldap (~> 0.3.1)
+      omniauth (~> 1.0)
+      pyu-ruby-sasl (~> 0.0.3.1)
+      rubyntlm (~> 0.1.1)
     omniauth-oauth2 (1.3.1)
       oauth2 (~> 1.0)
       omniauth (~> 1.2)
@@ -269,6 +280,7 @@ GEM
       rack (>= 1.1, < 2.0)
     puma (2.11.3-java)
       rack (>= 1.1, < 2.0)
+    pyu-ruby-sasl (0.0.3.3)
     query_diet (0.5.3)
     rack (1.6.4)
     rack-mini-profiler (0.9.3)
@@ -333,6 +345,7 @@ GEM
       http-cookie (>= 1.0.2, < 2.0)
       mime-types (>= 1.16, < 3.0)
       netrc (~> 0.7)
+    rubyntlm (0.1.1)
     safe_yaml (1.0.4)
     sass (3.4.15)
     sass-rails (5.0.3)
@@ -446,6 +459,7 @@ DEPENDENCIES
   omniauth (~> 1.1)
   omniauth-github (= 1.1.1)
   omniauth-google-oauth2 (~> 0.2.4)
+  omniauth-ldap (~> 1.0.4)
   omniauth-oauth2 (~> 1.1)
   pg (~> 0.13)
   pry-rails
@@ -468,6 +482,7 @@ DEPENDENCIES
   rails-assets-vis!
   rails-assets-x-editable!
   rails_12factor
+  samson_docker_binary_builder!
   samson_dockerb!
   samson_env!
   samson_flowdock!

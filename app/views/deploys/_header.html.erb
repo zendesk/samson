@@ -1,7 +1,7 @@
 <h1>
   <%= @project.name %>
-  <div class="pull-right">
 
+  <div class="pull-right">
     <% if current_user.is_deployer? %>
       <% unless @deploy.succeeded? || @deploy.active? %>
         <%= link_to "Redeploy", project_stage_deploys_path(@project, @deploy.stage, deploy: { reference: @deploy.reference }), method: :post, class: "btn btn-danger" %>
@@ -18,5 +18,5 @@
   </div>
 </h1>
 
-<%= deploy_status_panel @deploy %>
+<%= status_panel @deploy %>
 <%= Samson::Hooks.render_views(:deploys_header, self) %>
