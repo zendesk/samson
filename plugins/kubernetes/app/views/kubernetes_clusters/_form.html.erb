@@ -32,9 +32,6 @@
       </div>
     </div>
 
-    <%= render 'deploy_groups/deploy_group_select', form: form, hidden_field: 'kubernetes_cluster' %>
-
-
     <div class="form-group">
       <div class="col-lg-offset-2 col-lg-10">
         <%= form.submit @cluster.persisted? ? 'Save' : 'Create', class: "btn btn-primary" %>

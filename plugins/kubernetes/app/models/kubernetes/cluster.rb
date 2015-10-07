@@ -11,11 +11,19 @@ module Kubernetes
     validate :test_client_connection
 
     def client
-      @client ||= config_file.client_for(config_context)
+      @client ||= kubeconfig.client_for(config_context)
     end
 
-    def config_file
-      @config_file ||= Kubernetes::ClientConfigFile.new(config_filepath)
+    def context
+      @context ||= kubeconfig.contexts[config_context]
+    end
+
+    def username
+      context.user.try(:username)
+    end
+
+    def namespaces
+      client.get_namespaces.map { |ns| ns.metadata.name } - %w[kube-system]
     end
 
     def connection_valid?
@@ -25,12 +33,16 @@ module Kubernetes
     end
 
     def namespace_exists?(namespace)
-      connection_valid? && client.get_namespace(namespace).present?
+      connection_valid? && namespaces.include?(namespace)
     rescue KubeException
       false
     end
 
     private
+
+    def kubeconfig
+      @config_file ||= Kubernetes::ClientConfigFile.new(config_filepath)
+    end
 
     def test_client_connection
       if File.exists?(config_filepath)
