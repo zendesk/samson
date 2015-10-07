@@ -269,7 +269,7 @@ GEM
       rails-assets-angular (= 1.4.7)
     rails-assets-bootstrap-select (1.7.4)
       rails-assets-jquery (>= 1.8)
-    rails-assets-font-awesome (4.4.0)
+    rails-assets-font-awesome (4.3.0)
     rails-assets-jquery (2.1.4)
     rails-assets-jquery-ui (1.11.4)
       rails-assets-jquery (>= 1.6)
@@ -422,7 +422,7 @@ DEPENDENCIES
   rails-assets-angular-mocks!
   rails-assets-angular-scenario!
   rails-assets-bootstrap-select!
-  rails-assets-font-awesome!
+  rails-assets-font-awesome (~> 4.3.0)!
   rails-assets-jquery!
   rails-assets-jquery-ui!
   rails-assets-jquery-ujs!

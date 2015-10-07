@@ -54,7 +54,7 @@ group :assets do
     gem 'rails-assets-angular-mocks'
     gem 'rails-assets-angular-scenario'
     gem 'rails-assets-bootstrap-select'
-    gem 'rails-assets-font-awesome'
+    gem 'rails-assets-font-awesome', '~> 4.3.0'
     gem 'rails-assets-jquery'
     gem 'rails-assets-jquery-ui'
     gem 'rails-assets-jquery-ujs'
