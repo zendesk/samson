@@ -105,4 +105,18 @@ describe Admin::UsersController do
       end
     end
   end
+
+  describe 'a PATCH to #update' do
+    let(:user) { users(:viewer) }
+
+    as_a_super_admin do
+      it 'clears the access request pending flag' do
+        user.update!(access_request_pending: true)
+        assert(user.access_request_pending)
+        patch :update, {id: user.id, user: {role_id: Role::DEPLOYER.id}}
+        user.reload
+        refute(user.access_request_pending)
+      end
+    end
+  end
 end
