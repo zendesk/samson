@@ -9,7 +9,10 @@
                "Kubernetes Release"
 %>
 
+
 <section>
+  <h1>Deploy <%= @project.name %> to Kubernetes</h1>
+
   <%= form_for [@project, @release_group], html: { class: "form-horizontal" } do |form| %>
     <fieldset>
       <% if @release_group.errors.any? %>
@@ -47,24 +50,25 @@
 
       <div class="form-group">
         <%= form.label :replicas, "Num Replicas", class: "col-lg-2 control-label" %>
-        <% build_roles.each do |role| %>
-          <div class="col-lg-1">
-            <%= number_field_tag "replicas[#{role.id}]", role.replicas, class: "form-control", min: 0 %>
-          </div>
-          <div class="col-lg-2">
-            <p class="form-control-static">
-              <%= role.name %>
-            </p>
-          </div>
-        <% end %>
-        <% if build_roles.empty? %>
-          <div class="col-lg-4">
+        <div class="col-lg-4">
+          <% build_roles.each do |role| %>
+            <div class="row">
+              <div class="col-lg-3">
+                <%= number_field_tag "replicas[#{role.id}]", role.replicas, class: "form-control", min: 0 %>
+              </div>
+              <div class="col-lg-9">
+                <p class="form-control-static">
+                  <%= role.name %>
+                </p>
+              </div>
+            </div>
+          <% end %>
+          <% if build_roles.empty? %>
             <p class="form-control-static">
               You must have at least one <%= link_to 'Role', new_project_kubernetes_role_path(@project)  %> to deploy
             </p>
-          </div>
-        <% end %>
-
+          <% end %>
+        </div>
       </div>
 
       <div class="form-group">
