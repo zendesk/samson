@@ -28,7 +28,7 @@ class TerminalExecutor
   end
 
   def stop!(signal)
-    system('kill', "-#{signal}", "-#{pgid}")
+    system('kill', "-#{signal}", "-#{pgid}") if pgid
   end
 
   private
@@ -38,7 +38,11 @@ class TerminalExecutor
       PTY.spawn(command, in: '/dev/null')
     end
 
-    @pgid = Process.getpgid(pid)
+    @pgid = begin
+      Process.getpgid(pid)
+    rescue Errno::ESRCH
+      nil
+    end
 
     begin
       output.each(56) {|line| @output.write(line) }
