@@ -3,6 +3,7 @@ require_relative '../test_helper'
 describe AccessRequestMailer do
   describe 'sends email' do
     let(:user) { users(:viewer) }
+    let(:project) { projects(:test) }
     let(:address_list) { 'jira@example.com watchers@example.com' }
     let(:prefix) { 'SAMSON ACCESS' }
     let(:hostname) { 'localhost' }
@@ -16,7 +17,7 @@ describe AccessRequestMailer do
       ENV['REQUEST_ACCESS_EMAIL_ADDRESS_LIST'] = address_list
       ENV['REQUEST_ACCESS_EMAIL_PREFIX'] = prefix
 
-      AccessRequestMailer.access_request_email(hostname, user, manager_email, reason).deliver_now
+      AccessRequestMailer.access_request_email(hostname, user, manager_email, reason, project.id).deliver_now
     end
 
     after do
@@ -55,6 +56,10 @@ describe AccessRequestMailer do
 
     it 'includes reason in body' do
       subject.body.to_s.must_match /#{reason}/
+    end
+
+    it 'includes target project in body' do
+      subject.body.to_s.must_match /#{project.name}/
     end
   end
 end
