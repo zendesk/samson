@@ -25,6 +25,10 @@ class Job < ActiveRecord::Base
     where(status: 'running')
   end
 
+  def self.active
+    where(status: ACTIVE_STATUSES)
+  end
+
   def summary
     "#{user.name} #{summary_action} against #{short_reference}"
   end
@@ -74,11 +78,11 @@ class Job < ActiveRecord::Base
   end
 
   def finished?
-    succeeded? || failed? || errored? || cancelled?
+    !ACTIVE_STATUSES.include?(status)
   end
 
   def active?
-    pending? || running? || cancelling?
+    ACTIVE_STATUSES.include?(status)
   end
 
   def output

@@ -65,7 +65,7 @@ describe BuddyCheck do
     before do
       stage.update_attribute(:production, true)
       job_execution.stubs(:execute!)
-      JobExecution.stubs(:start_job).with(reference, deploy.job).returns(job_execution)
+      JobExecution.expects(:start_job).returns(job_execution)
 
       BuddyCheck.stubs(:enabled?).returns(true)
     end
@@ -96,7 +96,7 @@ describe BuddyCheck do
   describe "before notifications, buddycheck disabled" do
     before do
       job_execution.stubs(:execute!)
-      JobExecution.stubs(:start_job).with(reference, deploy.job).returns(job_execution)
+      JobExecution.expects(:start_job).returns(job_execution)
 
       BuddyCheck.stubs(:enabled?).returns(false)
     end

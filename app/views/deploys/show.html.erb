@@ -3,9 +3,7 @@
 <%= breadcrumb @project, @deploy.stage, "Deploy ##{@deploy.id}" %>
 
 <div id="header" class="stream-header">
-  <%= render 'header' %>
-
-  <% if !deploy_active? && !@deploy.finished? %>
+  <% if !deploy_active? && !deploy_queued? && !@deploy.finished? %>
     <div class="alert alert-info">
       Samson is currently restarting, your deploy has been queued and will be resumed shortly.
     </div>
@@ -13,6 +11,8 @@
     <%= javascript_tag do %>
       waitUntilEnabled("<%= enabled_jobs_path %>");
     <% end %>
+  <% else %>
+    <%= render 'header' %>
   <% end %>
 </div>
 
@@ -41,7 +41,15 @@
   <div class="tab-content deploy-details">
     <div class="tab-pane active" id="output" data-stream-url="<%= stream_path(@deploy.job) %>" data-desktop-notify="<%= current_user.desktop_notify? %>">
       <%= Samson::Hooks.render_views(:deploy_view, self, deploy: @deploy, project: @project) %>
-      <%= render 'start_pending', deploy: @deploy if @deploy.pending_non_production? %>
+
+      <div class="row deploy-check">
+        <% if deploy_queued? %>
+          <%= render 'queued' %>
+        <% elsif @deploy.pending_non_production? %>
+          <%= render 'start_pending', deploy: @deploy %>
+        <% end %>
+      </div>
+
       <%= render 'buddy_check', deploy: @deploy if @deploy.waiting_for_buddy? %>
       <%= render 'output', deploy: @deploy, project: @project %>
     </div>
@@ -72,7 +80,7 @@
   </div>
 </section>
 
-<% if deploy_active? %>
+<% if deploy_active? || deploy_queued? %>
   <%= javascript_tag do %>
     toggleOutputToolbar();
     startStream();

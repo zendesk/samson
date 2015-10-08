@@ -152,7 +152,7 @@ describe DeployService do
       deploy.stubs(:persisted?).returns(true)
       job_execution.stubs(:execute!)
 
-      JobExecution.stubs(:start_job).with(reference, deploy.job).returns(job_execution)
+      JobExecution.expects(:start_job).returns(job_execution)
     end
 
     it "sends email notifications if the stage has email addresses" do

@@ -10,19 +10,28 @@ class StreamsController < ApplicationController
     response.headers['Content-Type'] = 'text/event-stream'
     response.headers['Cache-Control'] = 'no-cache'
 
-    @job = Job.find(params[:id])
-    @execution = JobExecution.find_by_id(@job.id)
+    return response.stream.close unless job.active? && execution
 
-    streamer = EventStreamer.new(response.stream, &method(:event_handler))
-
-    return response.stream.close unless @job.active? && @execution
-
-    @execution.viewers.push(current_user)
+    execution.viewers.push(current_user)
     ActiveRecord::Base.clear_active_connections!
-    streamer.start(@execution.output)
+
+    sleep(0.1) until execution.active?
+    streamer.start(execution.output)
   end
 
   private
+
+  def job
+    @job ||= Job.find(params[:id])
+  end
+
+  def execution
+    @execution ||= JobExecution.find_by_id(job.id)
+  end
+
+  def streamer
+    @streamer ||= EventStreamer.new(response.stream, &method(:event_handler))
+  end
 
   def event_handler(event, data)
     case event

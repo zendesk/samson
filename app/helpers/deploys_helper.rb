@@ -2,7 +2,11 @@ require 'coderay'
 
 module DeploysHelper
   def deploy_active?
-    @deploy.active? && (JobExecution.find_by_id(@deploy.job_id) || JobExecution.enabled)
+    @deploy.active? && JobExecution.active?(@deploy.job_id, key: @deploy.stage_id)
+  end
+
+  def deploy_queued?
+    @deploy.pending? && JobExecution.queued?(@deploy.job_id, key: @deploy.stage_id) && JobExecution.enabled
   end
 
   def newrelic_enabled_for_deploy?

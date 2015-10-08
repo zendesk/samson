@@ -3,8 +3,6 @@
 <%= breadcrumb @project, "Job ##{@job.id}" %>
 
 <div id="header" class="stream-header">
-  <%= render 'header' %>
-
   <% if !job_active? && !@job.finished? %>
     <div class="alert alert-info">
       Samson is currently restarting, your job has been queued and will be resumed shortly.
@@ -13,6 +11,8 @@
     <%= javascript_tag do %>
       waitUntilEnabled("<%= enabled_jobs_path %>");
     <% end %>
+  <% else %>
+    <%= render 'header' %>
   <% end %>
 </div>
 

@@ -44,9 +44,8 @@ module IntegrationsControllerTestHelper
       end
 
       it "responds with 422 OK if deploy cannot be started" do
+        DeployService.stubs(new: stub(deploy!: stub(persisted?: false)))
         post :create, payload.deep_merge(token: project.token)
-        post :create, payload.deep_merge(token: project.token)
-
         response.status.must_equal 422
       end
 

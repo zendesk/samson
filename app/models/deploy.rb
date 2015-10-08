@@ -86,7 +86,7 @@ class Deploy < ActiveRecord::Base
   end
 
   def pending_start!
-    update_attributes(updated_at: Time.now)       # hack: refresh is immediate with update
+    touch # hack: refresh is immediate with update
     DeployService.new(user).confirm_deploy!(self)
   end
 

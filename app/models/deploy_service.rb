@@ -19,7 +19,13 @@ class DeployService
   def confirm_deploy!(deploy)
     send_before_notifications(deploy)
 
-    job_execution = JobExecution.start_job(deploy.reference, deploy.job)
+    stage = deploy.stage
+
+    job_execution = JobExecution.start_job(
+      deploy.reference, deploy.job,
+      construct_env(stage).merge(key: stage.id)
+    )
+
     send_sse_deploy_update('start', deploy)
 
     job_execution.on_complete do
@@ -33,6 +39,13 @@ class DeployService
   end
 
   private
+
+  def construct_env(stage)
+    { STAGE: stage.permalink }.tap do |env|
+      group_names = stage.deploy_groups.pluck(:env_value).sort.join(" ")
+      env[:DEPLOY_GROUPS] = group_names if group_names.present?
+    end
+  end
 
   def latest_approved_deploy(reference, project)
     Deploy.where(reference: reference).where('buddy_id is NOT NULL AND started_at > ?', BuddyCheck.grace_period.ago)
