@@ -5,6 +5,7 @@ describe AccessRequestMailer do
 
   describe 'sends email' do
     let(:user) { users(:viewer) }
+    let(:project) { projects(:test) }
     let(:address_list) { 'jira@example.com watchers@example.com' }
     let(:prefix) { 'SAMSON ACCESS' }
     let(:hostname) { 'localhost' }
@@ -14,7 +15,7 @@ describe AccessRequestMailer do
 
     before do
       enable_access_request(address_list, prefix)
-      AccessRequestMailer.access_request_email(hostname, user, manager_email, reason).deliver_now
+      AccessRequestMailer.access_request_email(hostname, user, manager_email, reason, project.id).deliver_now
     end
 
     after { restore_access_request_settings }
@@ -53,6 +54,10 @@ describe AccessRequestMailer do
 
     it 'includes reason in body' do
       subject.body.to_s.must_match /#{reason}/
+    end
+
+    it 'includes target project in body' do
+      subject.body.to_s.must_match /#{project.name}/
     end
 
     describe 'no subject prefix' do

@@ -4,8 +4,8 @@ class AccessRequestMailerPreview < ActionMailer::Preview
   include AccessRequestTestSupport
   def access_request_email
     enable_access_request
-    user = User.new(name: 'Dummy User', email: 'dummy@example.com', )
-    email = AccessRequestMailer.access_request_email('localhost', user, 'manager@example.com', 'Dummy reason.')
+    email = AccessRequestMailer.access_request_email(
+        'localhost', User.first, 'manager@example.com', 'Dummy reason.', Project.first.id)
     restore_access_request_settings
     email
   end
