@@ -12,7 +12,7 @@ describe "cleanliness" do
     File.read('Gemfile.lock').wont_include 'rails-assets-bootstrap '
   end
 
-  if ActiveRecord::Base.connection.adapter_name == "Mysql2"
+  if ENV['USE_UTF8MB4'] && ActiveRecord::Base.connection.adapter_name == "Mysql2"
     it "uses the right row format in mysql" do
       status = ActiveRecord::Base.connection.execute('show table status').to_a
       refute_empty status
