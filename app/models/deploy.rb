@@ -150,8 +150,6 @@ class Deploy < ActiveRecord::Base
   def validate_stage_is_deployable
     if stage.locked_for?(user) || Lock.global.exists?
       errors.add(:stage, 'is locked')
-    elsif deploy = stage.current_deploy
-      errors.add(:stage, "is being deployed by #{deploy.job.user.name} with #{deploy.short_reference}")
     end
   end
 
