@@ -4,6 +4,16 @@
 
 <div id="header" class="stream-header">
   <%= render 'header' %>
+
+  <% if !job_active? && !@job.finished? %>
+    <div class="alert alert-info">
+      Samson is currently restarting, your job has been queued and will be resumed shortly.
+    </div>
+
+    <%= javascript_tag do %>
+      waitUntilEnabled("<%= enabled_jobs_path %>");
+    <% end %>
+  <% end %>
 </div>
 
 <section>
@@ -16,28 +26,5 @@
   <%= javascript_tag do %>
     toggleOutputToolbar();
     startStream();
-  <% end %>
-<% elsif !@job.finished? %>
-  <div class="alert alert-info">
-    Samson is currently restarting, your job has been queued and will be resumed shortly.
-  </div>
-
-  <%= javascript_tag do %>
-    function check_enabled() {
-      $.ajax({
-        url: "<%= enabled_jobs_path %>",
-        success: function(data, status, xhr) {
-          if(xhr.status == 204) {
-            window.location.reload()
-          }
-        }
-      });
-
-      setTimeout(check_enabled, 5000);
-    }
-
-    $(document).ready(function() {
-      check_enabled();
-    });
   <% end %>
 <% end %>

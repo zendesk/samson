@@ -238,3 +238,16 @@ $(function () {
 function toggleOutputToolbar() {
   $('.only-active, .only-finished').toggle();
 }
+
+function waitUntilEnabled(path) {
+  $.ajax({
+    url: path,
+    success: function(data, status, xhr) {
+      if(xhr.status == 204) {
+        window.location.reload()
+      }
+    }
+  });
+
+  setTimeout(function() { waitUntilEnabled(path) }, 5000);
+}

@@ -80,8 +80,7 @@ class DeployService
   end
 
   def send_failed_deploy_email(deploy)
-    emails = deploy.stage.automated_failure_emails(deploy)
-    if emails
+    if emails = deploy.stage.automated_failure_emails(deploy)
       DeployMailer.deploy_failed_email(deploy, emails).deliver_now
     end
   end

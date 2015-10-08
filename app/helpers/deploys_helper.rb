@@ -5,6 +5,10 @@ module DeploysHelper
     @deploy.active? && (JobExecution.find_by_id(@deploy.job_id) || JobExecution.enabled)
   end
 
+  def newrelic_enabled_for_deploy?
+    NewRelicApi.api_key.present? && @deploy.stage.new_relic_applications.any?
+  end
+
   def deploy_page_title
     "#{@deploy.stage.name} deploy (#{@deploy.status}) - #{@project.name}"
   end
