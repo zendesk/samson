@@ -1,9 +1,10 @@
 class AccessRequestMailer < ApplicationMailer
-  def access_request_email(host, user, manager_email, reason)
+  def access_request_email(host, user, manager_email, reason, project_ids)
     @host = host
     @user = user
     @manager_email = manager_email
     @reason = reason
+    @projects = Project.order(:name).find(project_ids)
     mail(to: build_recipients, subject: build_subject, body: build_body)
   end
 
@@ -18,10 +19,18 @@ class AccessRequestMailer < ApplicationMailer
   end
 
   def build_body
-    "Please bump access rights to #{desired_role} on #{@host} for #{@user.name_and_email}\n\nReason:\n#{@reason}"
+    message = []
+    message << "Please bump access rights for user #{@user.name_and_email} on #{@host}."
+    message << ''
+    message << "Desired role: #{desired_role}"
+    message << 'Target projects:'
+    @projects.each { |project| message << "  - #{project.name}" }
+    message << ''
+    message << "Reason: #{@reason}"
+    message.join "\n"
   end
 
   def desired_role
-    Role.find(@user.role_id + 1).name
+    @user.is_super_admin? ? Role::SUPER_ADMIN.name : Role.find(@user.role_id + 1).name
   end
 end
