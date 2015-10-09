@@ -9,6 +9,8 @@ class StreamsController < ApplicationController
   def show
     response.headers['Content-Type'] = 'text/event-stream'
     response.headers['Cache-Control'] = 'no-cache'
+    response.headers['Access-Control-Allow-Origin'] = Rails.application.config.samson.uri.to_s
+    response.headers['Access-Control-Allow-Credentials'] = true
 
     @job = Job.find(params[:id])
     @execution = JobExecution.find_by_id(@job.id)

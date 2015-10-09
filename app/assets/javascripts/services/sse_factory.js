@@ -4,8 +4,8 @@ samson.factory('SseFactory', function() {
   var sse = {
     connection: null,
 
-    init: function() {
-      this.connection = new EventSource(window.location.origin + '/streaming');
+    init: function(origin) {
+      this.connection = new EventSource(origin + '/streaming');
     },
 
     on: function(event, callback) {
@@ -15,6 +15,9 @@ samson.factory('SseFactory', function() {
     }
   };
 
-  sse.init();
+  var origin = $('meta[name=stream-origin]').first().attr('content');
+
+  sse.init(origin);
+
   return sse;
 });

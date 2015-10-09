@@ -2,14 +2,17 @@
 <html lang="en">
   <head>
     <title><%= content_for(:page_title) || "Samson" %></title>
-    <%= stylesheet_link_tag    "application", media: "all" %>
+    <%= stylesheet_link_tag "application", media: "all" %>
     <%= Samson::Hooks.render_stylesheets(self) %>
     <%= javascript_include_tag "application" %>
     <%= Samson::Hooks.render_javascripts(self) %>
     <%= csrf_meta_tags %>
 
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="stream-origin" content="<%= Rails.application.config.samson.stream_origin %>">
+    <meta name="deploy-origin" content="<%= Rails.application.config.samson.deploy_origin %>">
   </head>
+
   <body class="<%= controller_action %>" ng-app="samson">
     <div class="wrap">
       <%= render "shared/header" %>
