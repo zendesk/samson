@@ -10,13 +10,22 @@ class StreamsController < ApplicationController
     response.headers['Content-Type'] = 'text/event-stream'
     response.headers['Cache-Control'] = 'no-cache'
 
-    return response.stream.close unless job.active? && execution
+    return unless job.active? && execution
 
     execution.viewers.push(current_user)
     ActiveRecord::Base.clear_active_connections!
 
-    sleep(0.1) until execution.active?
+    until execution.active?
+      if JobExecution.enabled
+        sleep(0.1)
+      else
+        return
+      end
+    end
+
     streamer.start(execution.output)
+  ensure
+    response.stream.close
   end
 
   private

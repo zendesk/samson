@@ -62,8 +62,6 @@ class EventStreamer
 
     buffer = @stream.instance_variable_get(:@buf)
     buffer.clear
-
-    @stream.close
   end
 
   private
