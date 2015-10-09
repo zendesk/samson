@@ -9,6 +9,8 @@ services:
 branches:
   only: [master]
 env:
+  global:
+    - CI=1
   matrix:
     - TASK=js
     - TASK=precompile
