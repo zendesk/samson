@@ -3,7 +3,7 @@ class AccessRequestMailerPreview < ActionMailer::Preview
   def access_request_email
     before
     email = AccessRequestMailer.access_request_email(
-        'localhost', User.first, 'manager@example.com', 'Dummy reason.', Project.first.id)
+        'localhost', User.first, 'manager@example.com', 'Dummy reason.', Project.all.map(&:id))
     after
     email
   end

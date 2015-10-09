@@ -53,7 +53,7 @@ describe AccessRequestsController do
       describe 'enabled' do
         let(:manager_email) { 'manager@example.com' }
         let(:reason) { 'Dummy reason.' }
-        let(:request_params) { {manager_email: manager_email, reason: reason, project_id: projects(:test).id} }
+        let(:request_params) { {manager_email: manager_email, reason: reason, project_ids: Project.all.map(&:id)} }
         let(:session_params) { {access_request_back_to: root_path} }
         describe 'environment and user' do
           before { post :create, request_params, session_params }
@@ -83,7 +83,7 @@ describe AccessRequestsController do
             access_request_email = ActionMailer::Base.deliveries.last
             access_request_email.to.must_include manager_email
             access_request_email.body.to_s.must_match /#{reason}/
-            access_request_email.body.to_s.must_match /#{projects(:test).name}/
+            Project.all.each { |project| access_request_email.body.to_s.must_match /#{project.name}/ }
           end
         end
       end
