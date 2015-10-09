@@ -1,5 +1,5 @@
 GIT
-  remote: https://github.com/zendesk/kubeclient.git
+  remote: git://github.com/zendesk/kubeclient.git
   revision: 08ad13f1a7fa9fc5cc204f47f40787cc58cd9509
   branch: samson-gem-branch
   specs:
