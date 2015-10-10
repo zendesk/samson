@@ -26,6 +26,11 @@ class JobExecution
     @repository = @job.project.repository
     @repository.executor = @executor
     @env = env
+
+    on_complete do
+      @output.close
+      @job.update_output!(OutputAggregator.new(@output).to_s)
+    end
   end
 
   def id
@@ -60,7 +65,7 @@ class JobExecution
   end
 
   def on_complete(&block)
-    @subscribers << block
+    @subscribers << JobExecutionSubscriber.new(job, block)
   end
 
   private
@@ -100,18 +105,18 @@ class JobExecution
   rescue => e
     error!(e)
   ensure
-    @output.close
-    @job.update_output!(OutputAggregator.new(@output).to_s)
     @subscribers.each(&:call)
     ActiveRecord::Base.clear_active_connections!
   end
 
   def execute!(dir)
-    if setup!(dir)
-      Samson::Hooks.fire(:after_deploy_setup, dir, stage, @output, @reference) if stage
-    else
-      @job.error!
-      return
+    unless setup!(dir)
+      return @job.error!
+    end
+
+    # TODO
+    if stage
+      Samson::Hooks.fire(:after_deploy_setup, dir, stage, @output, @reference)
     end
 
     FileUtils.mkdir_p(artifact_cache_dir)
