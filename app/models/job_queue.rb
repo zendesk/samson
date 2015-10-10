@@ -27,8 +27,9 @@ class JobQueue
     @registry[id.to_i]
   end
 
-  def add(key, *args, &block)
-    job_execution = JobExecution.new(*args, &block)
+  def add(key, reference, job, on_complete: nil, **env, &block)
+    job_execution = JobExecution.new(reference, job, env, &block)
+    job_execution.on_complete(&on_complete) if on_complete
     job_execution.on_complete do
       pop(key)
     end

@@ -1,4 +1,3 @@
-require 'thread_safe'
 require 'shellwords'
 
 class JobExecution
@@ -14,27 +13,28 @@ class JobExecution
   cattr_reader(:registry, instance_accessor: false) { JobQueue.new }
   private_class_method :registry
 
-  attr_reader :output, :job, :viewers, :stage, :executor
+  attr_reader :output, :job, :viewers, :executor
 
-  def initialize(reference, job, **env, &block)
-    @execution_block = block
+  delegate :id, to: :job
+
+  def initialize(reference, job, env, &block)
     @output = OutputBuffer.new
     @executor = TerminalExecutor.new(@output, verbose: true)
     @viewers = JobViewers.new(@output)
+
     @subscribers = []
-    @job, @reference = job, reference
+    @env = env
+    @job = job
+    @reference = reference
+    @execution_block = block
+
     @repository = @job.project.repository
     @repository.executor = @executor
-    @env = env
 
     on_complete do
       @output.close
       @job.update_output!(OutputAggregator.new(@output).to_s)
     end
-  end
-
-  def id
-    job.id
   end
 
   def active?
@@ -69,6 +69,11 @@ class JobExecution
   end
 
   private
+
+  def stage
+    # TODO -- this class should not know about stages
+    @job.deploy.try(:stage)
+  end
 
   def error!(exception)
     message = "JobExecution failed: #{exception.message}"
@@ -114,10 +119,7 @@ class JobExecution
       return @job.error!
     end
 
-    # TODO
-    if stage
-      Samson::Hooks.fire(:after_deploy_setup, dir, stage, @output, @reference)
-    end
+    Samson::Hooks.fire(:after_deploy_setup, dir, @job, @output, @reference)
 
     FileUtils.mkdir_p(artifact_cache_dir)
     @output.write("\n# Executing deploy\n")
@@ -152,7 +154,7 @@ class JobExecution
     if locked
       true
     else
-      @output.write("Could not get exclusive lock on repo. Maybe another stage is being deployed.\n")
+      @output.write("Could not get exclusive lock on repo.\n")
 
       false
     end
@@ -174,7 +176,7 @@ class JobExecution
     end
 
     commands << "cd #{dir}"
-    commands += @job.commands
+    commands.concat(@job.commands)
     commands
   end
 

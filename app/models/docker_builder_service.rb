@@ -13,20 +13,24 @@ class DockerBuilderService
     job = build.create_docker_job
     build.save!
 
-    job_execution = JobExecution.start_job(build.git_sha, job) do |execution, tmp_dir|
-      @execution = execution
-      @output_buffer = execution.output
-      repository.executor = execution.executor
+    job_execution = JobExecution.start_job(
+      build.git_sha, job,
+      on_complete: method(:send_after_notifications),
+      &method(:execute)
+    )
+  end
 
-      if build_image(tmp_dir) && push
-        push_image(image_name)
-      end
-    end
+  def execute(execution, tmp_dir)
+    @execution = execution
+    @output_buffer = execution.output
+    repository.executor = execution.executor
 
-    job_execution.on_complete do
-      send_after_notifications
+    if build_image(tmp_dir) && push
+      push_image(image_name)
     end
   end
+
+  private
 
   def build_image(tmp_dir)
     repository.setup!(tmp_dir, build.git_sha)
@@ -71,8 +75,6 @@ class DockerBuilderService
   def output_buffer
     @output_buffer ||= OutputBuffer.new
   end
-
-  private
 
   def repository
     @repository ||= project.repository
