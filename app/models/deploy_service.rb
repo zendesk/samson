@@ -7,10 +7,13 @@ class DeployService
 
   def deploy!(stage, attributes)
     deploy = stage.create_deploy(user, attributes)
-    send_sse_deploy_update('new', deploy)
 
-    if deploy.persisted? && (!stage.deploy_requires_approval? || release_approved?(deploy))
-      confirm_deploy!(deploy)
+    if deploy.persisted?
+      send_sse_deploy_update('new', deploy)
+
+      if !stage.deploy_requires_approval? || release_approved?(deploy)
+        confirm_deploy!(deploy)
+      end
     end
 
     deploy
@@ -25,7 +28,7 @@ class DeployService
 
     stage = deploy.stage
 
-    job_execution = JobExecution.start_job(
+    JobExecution.start_job(
       deploy.reference, deploy.job,
       construct_env(stage).merge(
         key: stage.id,
@@ -125,7 +128,6 @@ class DeployService
   end
 
   def send_sse_deploy_update(type, deploy)
-    return unless deploy.persisted?
     SseRailsEngine.send_event('deploys', { type: type, deploy: DeploySerializer.new(deploy, root: nil) })
   end
 end

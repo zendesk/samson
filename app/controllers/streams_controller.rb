@@ -10,37 +10,20 @@ class StreamsController < ApplicationController
     response.headers['Content-Type'] = 'text/event-stream'
     response.headers['Cache-Control'] = 'no-cache'
 
-    return unless job.active? && execution
+    @job = Job.find(params[:id])
+    @execution = JobExecution.find_by_id(@job.id)
 
-    execution.viewers.push(current_user)
+    return response.stream.close unless @job.active? && @execution
+
+    @execution.viewers.push(current_user)
+
     ActiveRecord::Base.clear_active_connections!
 
-    until execution.active?
-      if JobExecution.enabled
-        sleep(0.1)
-      else
-        return
-      end
-    end
-
-    streamer.start(execution.output)
-  ensure
-    response.stream.close
+    EventStreamer.new(response.stream, &method(:event_handler)).
+      start(@execution.output)
   end
 
   private
-
-  def job
-    @job ||= Job.find(params[:id])
-  end
-
-  def execution
-    @execution ||= JobExecution.find_by_id(job.id)
-  end
-
-  def streamer
-    @streamer ||= EventStreamer.new(response.stream, &method(:event_handler))
-  end
 
   def event_handler(event, data)
     case event
@@ -55,9 +38,7 @@ class StreamsController < ApplicationController
   end
 
   def status_response(event)
-    if @execution && event == :finished
-      @execution.viewers.delete(current_user)
-    end
+    @execution.viewers.delete(current_user) if event == :finished
 
     # Need to reload data, as background thread updated the records on a separate DB connection,
     # and .reload() doesn't bypass QueryCache'ing.

@@ -7,13 +7,9 @@ class JobExecutionSubscriber
   def call
     @block.call
   rescue => e
-    message = "JobExecutionSubscriber failed: #{exception.message}"
-
     Airbrake.notify(exception,
-      error_message: message,
-      parameters: {
-        job_id: @job.id
-      }
+      error_message: "JobExecutionSubscriber failed: #{exception.message}",
+      parameters: { job_id: @job.id }
     )
   end
 end

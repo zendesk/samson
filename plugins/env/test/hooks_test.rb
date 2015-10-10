@@ -7,7 +7,8 @@ describe "env hooks" do
 
   describe :after_deploy_setup do
     def fire
-      Samson::Hooks.fire(:after_deploy_setup, Dir.pwd, stage, StringIO.new, 'abc')
+      job = stub(deploy: deploy, project: project)
+      Samson::Hooks.fire(:after_deploy_setup, Dir.pwd, job, StringIO.new, 'abc')
     end
 
     around { |test| Dir.mktmpdir { |dir| Dir.chdir(dir) { test.call } } }
@@ -47,7 +48,8 @@ describe "env hooks" do
 
       describe "with deploy groups" do
         it "deletes the base file" do
-          Samson::Hooks.fire(:after_deploy_setup, Dir.pwd, stage, StringIO.new, 'abc')
+          fire
+
           File.read(".env.pod-100").must_equal "HELLO=\"world\"\nWORLD=\"hello\"\n"
           refute File.exist?(".env")
         end

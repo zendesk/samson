@@ -39,7 +39,6 @@ class EventStreamer
     # Heartbeat thread until puma/puma#389 is solved
     start_heartbeat!
 
-    emit_event('started', @handler.call(:started, ''))
     @scanner = TerminalOutputScanner.new(output)
     @scanner.each {|event, data| emit_event(event, @handler.call(event, data)) }
   rescue IOError, ActionController::Live::ClientDisconnected
@@ -62,6 +61,8 @@ class EventStreamer
 
     buffer = @stream.instance_variable_get(:@buf)
     buffer.clear
+
+    @stream.close
   end
 
   private

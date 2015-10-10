@@ -99,7 +99,7 @@ describe DeployService do
 
   describe "#confirm_deploy!" do
     it "starts a job execution" do
-      JobExecution.expects(:start_job).returns(mock(on_complete:true)).once
+      JobExecution.expects(:start_job).returns(mock).once
       service.confirm_deploy!(deploy)
     end
 
@@ -110,7 +110,7 @@ describe DeployService do
 
       it "starts a job execution" do
         stub_request(:get, "https://api.github.com/repos/bar/foo/compare/staging...staging")
-        JobExecution.expects(:start_job).returns(mock(on_complete:true)).once
+        JobExecution.expects(:start_job).returns(mock).once
         DeployMailer.expects(:bypass_email).never
         deploy.buddy = other_user
         service.confirm_deploy!(deploy)
@@ -118,7 +118,7 @@ describe DeployService do
 
       it "reports bypass via mail" do
         stub_request(:get, "https://api.github.com/repos/bar/foo/compare/staging...staging")
-        JobExecution.expects(:start_job).returns(mock(on_complete:true)).once
+        JobExecution.expects(:start_job).returns(mock).once
         DeployMailer.expects(bypass_email: stub(deliver_now: true))
         deploy.buddy = user
         service.confirm_deploy!(deploy)
@@ -152,7 +152,7 @@ describe DeployService do
       deploy.stubs(:persisted?).returns(true)
       job_execution.stubs(:execute!)
 
-      JobExecution.expects(:start_job).returns(job_execution)
+      JobExecution.stubs(:new).returns(job_execution)
     end
 
     it "sends email notifications if the stage has email addresses" do

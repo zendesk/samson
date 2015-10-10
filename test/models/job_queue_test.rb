@@ -20,7 +20,7 @@ describe JobQueue do
     job_execution.expects(:start!)
 
     enable_job_execution do
-      subject.add(:x)
+      subject.add(:x, stub, stub)
     end
 
     subject.active?(:x, 1).must_equal(true)
@@ -32,13 +32,13 @@ describe JobQueue do
     job_execution.stubs(:start!)
 
     enable_job_execution do
-      subject.add(:x)
+      subject.add(:x, stub, stub)
     end
 
     queued_job_execution.expects(:start!).never
 
     enable_job_execution do
-      subject.add(:x)
+      subject.add(:x, stub, stub)
     end
 
     subject.active?(:x, 2).must_equal(false)
@@ -50,7 +50,7 @@ describe JobQueue do
     job_execution.expects(:start!)
 
     enable_job_execution do
-      subject.add(:x)
+      subject.add(:x, stub, stub)
     end
 
     subject.active?(:x, 1).must_equal(true)
@@ -58,7 +58,7 @@ describe JobQueue do
     queued_job_execution.expects(:start!)
 
     enable_job_execution do
-      subject.add(:y)
+      subject.add(:y, stub, stub)
     end
 
     subject.active?(:y, 2).must_equal(true)
@@ -67,7 +67,7 @@ describe JobQueue do
   it 'does not queue a job if job execution is disabled' do
     job_execution.expects(:start!).never
 
-    subject.add(:x)
+    subject.add(:x, stub, stub)
 
     subject.active?(:x, 1).must_equal(false)
     subject.queued?(:x, 1).must_equal(false)
@@ -79,8 +79,8 @@ describe JobQueue do
       job_execution.stubs(:start!)
 
       enable_job_execution do
-        subject.add(:x)
-        subject.add(:x)
+        subject.add(:x, stub, stub)
+        subject.add(:x, stub, stub)
       end
     end
 

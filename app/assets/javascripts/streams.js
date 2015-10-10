@@ -41,6 +41,10 @@ function startStream() {
       addLine(e.data);
     }, false);
 
+    source.addEventListener('reloaded', function(e) {
+      setTimeout(function() { window.location.reload(); }, 5000);
+    }, false);
+
     source.addEventListener('viewers', function(e) {
       var users = JSON.parse(e.data);
 

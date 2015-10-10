@@ -30,8 +30,6 @@ class DockerBuilderService
     end
   end
 
-  private
-
   def build_image(tmp_dir)
     repository.setup!(tmp_dir, build.git_sha)
     Samson::Hooks.fire(:before_docker_build, tmp_dir, build, output_buffer)
@@ -75,6 +73,8 @@ class DockerBuilderService
   def output_buffer
     @output_buffer ||= OutputBuffer.new
   end
+
+  private
 
   def repository
     @repository ||= project.repository

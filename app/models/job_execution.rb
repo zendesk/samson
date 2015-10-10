@@ -17,7 +17,7 @@ class JobExecution
 
   delegate :id, to: :job
 
-  def initialize(reference, job, env, &block)
+  def initialize(reference, job, env = {}, &block)
     @output = OutputBuffer.new
     @executor = TerminalExecutor.new(@output, verbose: true)
     @viewers = JobViewers.new(@output)
@@ -48,6 +48,13 @@ class JobExecution
 
   def wait!
     @thread.join if active?
+  end
+
+  # Used on queued jobs when shutting down
+  # so that the stream sockets are closed
+  def close
+    @output.write('', :reloaded)
+    @output.close
   end
 
   def stop!
@@ -92,6 +99,8 @@ class JobExecution
   end
 
   def run!
+    @output.write('', :started)
+
     @job.run!
 
     success = Dir.mktmpdir do |dir|
