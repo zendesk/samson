@@ -25,10 +25,6 @@ class Job < ActiveRecord::Base
     where(status: 'running')
   end
 
-  def self.active
-    where(status: ACTIVE_STATUSES)
-  end
-
   def summary
     "#{user.name} #{summary_action} against #{short_reference}"
   end
