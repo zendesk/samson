@@ -22,19 +22,14 @@ class DeployService
   def confirm_deploy!(deploy)
     send_before_notifications(deploy)
 
-    on_complete = lambda do
+    stage = deploy.stage
+
+    job_execution = JobExecution.new(deploy.reference, deploy.job, construct_env(stage))
+    job_execution.on_complete do
       send_after_notifications(deploy)
     end
 
-    stage = deploy.stage
-
-    JobExecution.start_job(
-      deploy.reference, deploy.job,
-      construct_env(stage).merge(
-        key: stage.id,
-        on_complete: on_complete
-      )
-    )
+    JobExecution.start_job(job_execution, key: stage.id)
 
     send_sse_deploy_update('start', deploy)
   end

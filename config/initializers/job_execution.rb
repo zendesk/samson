@@ -7,7 +7,7 @@ if !Rails.env.test? && !ENV['PRECOMPILE']
         Job.running.each(&:stop!)
 
         Job.non_deploy.pending.each do |job|
-          JobExecution.start_job(job.commit, job)
+          JobExecution.start_job(JobExecution.new(job.commit, job))
         end
       end
 

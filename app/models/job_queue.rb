@@ -37,12 +37,8 @@ class JobQueue
     @registry[id.to_i]
   end
 
-  def add(key, reference, job, on_complete: nil, **env, &block)
-    job_execution = JobExecution.new(reference, job, env, &block)
-    job_execution.on_complete(&on_complete) if on_complete
-    job_execution.on_complete do
-      pop(key)
-    end
+  def add(key, job_execution)
+    job_execution.on_complete { pop(key) }
 
     LOCK.synchronize do
       @registry[job_execution.id] = job_execution

@@ -153,7 +153,7 @@ describe JobExecution do
   end
 
   it 'removes the job from the registry' do
-    execution = JobExecution.start_job('master', job)
+    execution = JobExecution.start_job(JobExecution.new('master', job))
 
     JobExecution.find_by_id(job.id).wont_be_nil
 
@@ -191,7 +191,7 @@ describe JobExecution do
     end
 
     it 'does not add the job to the registry' do
-      job_execution = JobExecution.start_job('master', job)
+      job_execution = JobExecution.start_job(JobExecution.new('master', job))
       job_execution.wont_be_nil
 
       JobExecution.find_by_id(job.id).must_equal(job_execution)

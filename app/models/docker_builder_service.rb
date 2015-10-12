@@ -13,11 +13,10 @@ class DockerBuilderService
     job = build.create_docker_job
     build.save!
 
-    job_execution = JobExecution.start_job(
-      build.git_sha, job,
-      on_complete: method(:send_after_notifications),
-      &method(:execute)
-    )
+    job_execution = JobExecution.new(build.git_sha, job, &method(:execute))
+    job_execution.on_complete { send_after_notifications }
+
+    JobExecution.start_job(job_execution)
   end
 
   def execute(execution, tmp_dir)

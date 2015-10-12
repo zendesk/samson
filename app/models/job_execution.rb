@@ -212,8 +212,8 @@ class JobExecution
       registry.queued?(key, id)
     end
 
-    def start_job(reference, job, key: job.id, **options, &block)
-      registry.add(key, reference, job, options, &block)
+    def start_job(job_execution, key: job_execution.id)
+      registry.add(key, job_execution)
     end
 
     def active
