@@ -37,17 +37,13 @@ class JobExecution
     end
   end
 
-  def active?
-    !!@thread
-  end
-
   def start!
     ActiveRecord::Base.clear_active_connections!
     @thread = Thread.new { run! }
   end
 
   def wait!
-    @thread.join if active?
+    @thread.try(:join)
   end
 
   # Used on queued jobs when shutting down
@@ -58,7 +54,7 @@ class JobExecution
   end
 
   def stop!
-    return unless active?
+    return unless @thread
 
     @executor.stop! 'INT'
 
