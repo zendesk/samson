@@ -45,12 +45,13 @@
       <div class="row deploy-check">
         <% if deploy_queued? %>
           <%= render 'queued' %>
+        <% elsif @deploy.waiting_for_buddy? %>
+          <%= render 'buddy_check', deploy: @deploy %>
         <% elsif @deploy.pending_non_production? %>
           <%= render 'start_pending', deploy: @deploy %>
         <% end %>
       </div>
 
-      <%= render 'buddy_check', deploy: @deploy if @deploy.waiting_for_buddy? %>
       <%= render 'output', deploy: @deploy, project: @project %>
     </div>
 

@@ -54,7 +54,7 @@ module DeploysHelper
   end
 
   def buddy_check_button(project, deploy)
-    return nil unless deploy.waiting_for_buddy?
+    return unless deploy.waiting_for_buddy?
 
     button_class = ['btn']
 
