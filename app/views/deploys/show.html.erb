@@ -3,7 +3,7 @@
 <%= breadcrumb @project, @deploy.stage, "Deploy ##{@deploy.id}" %>
 
 <div id="header" class="stream-header">
-  <% if !deploy_active? && !deploy_queued? && !@deploy.finished? %>
+  <% if !deploy_active? && !@deploy.finished? %>
     <div class="alert alert-info">
       Samson is currently restarting, your deploy has been queued and will be resumed shortly.
     </div>
@@ -80,7 +80,7 @@
   </div>
 </section>
 
-<% if deploy_active? || deploy_queued? %>
+<% if deploy_active? %>
   <%= javascript_tag do %>
     toggleOutputToolbar();
     startStream();

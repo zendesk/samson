@@ -2,6 +2,10 @@ require 'coderay'
 
 module DeploysHelper
   def deploy_active?
+    @deploy.waiting_for_buddy? || deploy_running? || deploy_queued?
+  end
+
+  def deploy_running?
     @deploy.active? && JobExecution.active?(@deploy.job_id, key: @deploy.stage_id)
   end
 
