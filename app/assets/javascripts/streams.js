@@ -42,7 +42,7 @@ function startStream() {
     }, false);
 
     source.addEventListener('reloaded', function(e) {
-      setTimeout(function() { window.location.reload(); }, 5000);
+      waitUntilEnabled('/jobs/enabled');
     }, false);
 
     source.addEventListener('viewers', function(e) {
