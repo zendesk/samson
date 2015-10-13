@@ -1,25 +1,24 @@
 if !Rails.env.test? && !ENV['PRECOMPILE']
   if ENV['SERVER_MODE']
     Rails.application.config.after_initialize do
-      Job.running.each(&:stop!) if Job.table_exists?
       JobExecution.enabled = true
-    end
-  end
 
-  Signal.trap('SIGUSR1') do
-    if JobExecution.enabled
-      # Disable new job execution
-      JobExecution.enabled = false
+      if Job.table_exists?
+        Job.running.each(&:stop!)
 
-      until JobExecution.all.empty? && MultiLock.locks.empty?
-        puts "Waiting for jobs: #{JobExecution.all.map {|je| je.job.id}}"
-        sleep(5)
+        Job.non_deploy.pending.each do |job|
+          JobExecution.start_job(JobExecution.new(job.commit, job))
+        end
       end
 
-      puts "Passing SIGUSR2 on."
-
-      # Pass USR2 to the underlying server
-      Process.kill('SIGUSR2', $$)
+      if Deploy.table_exists?
+        Deploy.active.each do |deploy|
+          deploy.pending_start! if deploy.pending_non_production?
+        end
+      end
     end
   end
+
+  handler = SignalHandler.new
+  Signal.trap('SIGUSR1') { handler.signal }
 end

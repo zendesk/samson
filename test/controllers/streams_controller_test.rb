@@ -4,7 +4,7 @@ describe StreamsController do
   let(:project) { projects(:test) }
   let(:stage) { stages(:test_staging) }
   let(:deployer) { users(:deployer) }
-  let(:job) { jobs(:succeeded_test) }
+  let(:job) { jobs(:running_test) }
 
   after { kill_extra_threads } # SSE heartbeat never finishes
 

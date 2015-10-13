@@ -155,7 +155,6 @@ $(function () {
       $container.empty();
       $container.append($placeholderPanes);
 
-
       $.ajax({
         method: "POST",
         url: $this.data("confirm-url"),
@@ -225,16 +224,28 @@ $(function () {
   });
 
   // If there are messages being streamed, then show the output and hide buddy check
-  $('#messages').bind('contentchanged', function(){
+  $('#messages').bind('contentchanged', function() {
     var $output = $('#output');
     if ($output.find('.output').hasClass("hidden") ){
       $output.find('.output').removeClass('hidden');
       $output.find('.deploy-check').hide();
     }
   });
-
 });
 
 function toggleOutputToolbar() {
   $('.only-active, .only-finished').toggle();
+}
+
+function waitUntilEnabled(path) {
+  $.ajax({
+    url: path,
+    success: function(data, status, xhr) {
+      if(xhr.status == 204) {
+        window.location.reload()
+      }
+    }
+  });
+
+  setTimeout(function() { waitUntilEnabled(path) }, 5000);
 }

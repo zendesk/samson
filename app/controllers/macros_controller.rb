@@ -39,7 +39,7 @@ class MacrosController < ApplicationController
     job = macro_service.execute!(@macro)
 
     if job.persisted?
-      JobExecution.start_job(job.commit, job)
+      JobExecution.start_job(JobExecution.new(job.commit, job))
       redirect_to [@project, job]
     else
       redirect_to project_macros_path(@project)

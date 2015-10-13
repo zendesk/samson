@@ -2,7 +2,19 @@ require 'coderay'
 
 module DeploysHelper
   def deploy_active?
-    @deploy.active? && (JobExecution.find_by_id(@deploy.job_id) || JobExecution.enabled)
+    @deploy.waiting_for_buddy? || deploy_running? || deploy_queued?
+  end
+
+  def deploy_running?
+    @deploy.active? && JobExecution.active?(@deploy.job_id, key: @deploy.stage_id)
+  end
+
+  def deploy_queued?
+    @deploy.pending? && JobExecution.queued?(@deploy.job_id, key: @deploy.stage_id) && JobExecution.enabled
+  end
+
+  def newrelic_enabled_for_deploy?
+    NewRelicApi.api_key.present? && @deploy.stage.new_relic_applications.any?
   end
 
   def deploy_page_title
@@ -42,7 +54,7 @@ module DeploysHelper
   end
 
   def buddy_check_button(project, deploy)
-    return nil unless deploy.waiting_for_buddy?
+    return unless deploy.waiting_for_buddy?
 
     button_class = ['btn']
 

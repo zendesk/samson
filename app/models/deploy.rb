@@ -86,7 +86,7 @@ class Deploy < ActiveRecord::Base
   end
 
   def pending_start!
-    update_attributes(updated_at: Time.now)       # hack: refresh is immediate with update
+    touch # hack: refresh is immediate with update
     DeployService.new(user).confirm_deploy!(self)
   end
 
@@ -150,8 +150,6 @@ class Deploy < ActiveRecord::Base
   def validate_stage_is_deployable
     if stage.locked_for?(user) || Lock.global.exists?
       errors.add(:stage, 'is locked')
-    elsif deploy = stage.current_deploy
-      errors.add(:stage, "is being deployed by #{deploy.job.user.name} with #{deploy.short_reference}")
     end
   end
 

@@ -7,10 +7,13 @@ class DeployService
 
   def deploy!(stage, attributes)
     deploy = stage.create_deploy(user, attributes)
-    send_sse_deploy_update('new', deploy)
 
-    if deploy.persisted? && (!stage.deploy_requires_approval? || release_approved?(deploy))
-      confirm_deploy!(deploy)
+    if deploy.persisted?
+      send_sse_deploy_update('new', deploy)
+
+      if !stage.deploy_requires_approval? || release_approved?(deploy)
+        confirm_deploy!(deploy)
+      end
     end
 
     deploy
@@ -19,20 +22,30 @@ class DeployService
   def confirm_deploy!(deploy)
     send_before_notifications(deploy)
 
-    job_execution = JobExecution.start_job(deploy.reference, deploy.job)
-    send_sse_deploy_update('start', deploy)
+    stage = deploy.stage
 
+    job_execution = JobExecution.new(deploy.reference, deploy.job, construct_env(stage))
     job_execution.on_complete do
       send_after_notifications(deploy)
     end
+
+    JobExecution.start_job(job_execution, key: stage.id)
+
+    send_sse_deploy_update('start', deploy)
   end
 
   def stop!(deploy)
     deploy.stop!
-    send_sse_deploy_update('finish', deploy)
   end
 
   private
+
+  def construct_env(stage)
+    { STAGE: stage.permalink }.tap do |env|
+      group_names = stage.deploy_groups.pluck(:env_value).sort.join(" ")
+      env[:DEPLOY_GROUPS] = group_names if group_names.present?
+    end
+  end
 
   def latest_approved_deploy(reference, project)
     Deploy.where(reference: reference).where('buddy_id is NOT NULL AND started_at > ?', BuddyCheck.grace_period.ago)
@@ -80,8 +93,7 @@ class DeployService
   end
 
   def send_failed_deploy_email(deploy)
-    emails = deploy.stage.automated_failure_emails(deploy)
-    if emails
+    if emails = deploy.stage.automated_failure_emails(deploy)
       DeployMailer.deploy_failed_email(deploy, emails).deliver_now
     end
   end
@@ -111,7 +123,6 @@ class DeployService
   end
 
   def send_sse_deploy_update(type, deploy)
-    return unless deploy.persisted?
     SseRailsEngine.send_event('deploys', { type: type, deploy: DeploySerializer.new(deploy, root: nil) })
   end
 end

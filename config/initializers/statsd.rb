@@ -16,7 +16,7 @@ module Samson::StatsdLoader
     end
 
     def config_from_file
-      YAML.load_file('config/statsd.yml').
+      YAML.load_file(Rails.root + 'config/statsd.yml').
         fetch(Rails.env).
         symbolize_keys
     end

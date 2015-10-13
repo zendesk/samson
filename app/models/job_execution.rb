@@ -1,4 +1,3 @@
-require 'thread_safe'
 require 'shellwords'
 
 class JobExecution
@@ -11,33 +10,52 @@ class JobExecution
   cattr_accessor(:lock_timeout, instance_writer: false) { 10.minutes }
   cattr_accessor(:stop_timeout, instance_writer: false) { 15.seconds }
 
-  cattr_reader(:registry, instance_accessor: false) { {} }
+  cattr_reader(:registry, instance_accessor: false) { JobQueue.new }
   private_class_method :registry
 
-  attr_reader :output, :job, :viewers, :stage, :executor
+  attr_reader :output, :job, :viewers, :executor
 
-  def initialize(reference, job)
+  delegate :id, to: :job
+
+  def initialize(reference, job, env = {}, &block)
     @output = OutputBuffer.new
     @executor = TerminalExecutor.new(@output, verbose: true)
     @viewers = JobViewers.new(@output)
+
     @subscribers = []
-    @job, @reference = job, reference
-    @stage = @job.deploy.try(:stage)
+    @env = env
+    @job = job
+    @reference = reference
+    @execution_block = block
+
     @repository = @job.project.repository
     @repository.executor = @executor
+
+    on_complete do
+      @output.close
+      @job.update_output!(OutputAggregator.new(@output).to_s)
+    end
   end
 
-  def start!(&block)
+  def start!
     ActiveRecord::Base.clear_active_connections!
-
-    @thread = Thread.new { run!(&block) }
+    @thread = Thread.new { run! }
   end
 
   def wait!
     @thread.try(:join)
   end
 
+  # Used on queued jobs when shutting down
+  # so that the stream sockets are closed
+  def close
+    @output.write('', :reloaded)
+    @output.close
+  end
+
   def stop!
+    return unless @thread
+
     @executor.stop! 'INT'
 
     stop_timeout.times do
@@ -50,10 +68,15 @@ class JobExecution
   end
 
   def on_complete(&block)
-    @subscribers << block
+    @subscribers << JobExecutionSubscriber.new(job, block)
   end
 
   private
+
+  def stage
+    # TODO -- this class should not know about stages
+    @job.deploy.try(:stage)
+  end
 
   def error!(exception)
     message = "JobExecution failed: #{exception.message}"
@@ -71,12 +94,14 @@ class JobExecution
     @job.error! if @job.active?
   end
 
-  def run!(&block)
+  def run!
+    @output.write('', :started)
+
     @job.run!
 
     success = Dir.mktmpdir do |dir|
-      if block_given?
-        block.call(self, dir)
+      if @execution_block
+        @execution_block.call(self, dir)
       else
         execute!(dir)
       end
@@ -87,24 +112,19 @@ class JobExecution
     else
       @job.fail!
     end
-
   rescue => e
     error!(e)
   ensure
-    @output.close
-    @job.update_output!(OutputAggregator.new(@output).to_s)
     @subscribers.each(&:call)
     ActiveRecord::Base.clear_active_connections!
-    JobExecution.finished_job(@job)
   end
 
   def execute!(dir)
-    if setup!(dir)
-      Samson::Hooks.fire(:after_deploy_setup, dir, stage, @output, @reference) if stage
-    else
-      @job.error!
-      return
+    unless setup!(dir)
+      return @job.error!
     end
+
+    Samson::Hooks.fire(:after_deploy_setup, dir, @job, @output, @reference)
 
     FileUtils.mkdir_p(artifact_cache_dir)
     @output.write("\n# Executing deploy\n")
@@ -139,31 +159,29 @@ class JobExecution
     if locked
       true
     else
-      @output.write("Could not get exclusive lock on repo. Maybe another stage is being deployed.\n")
+      @output.write("Could not get exclusive lock on repo.\n")
 
       false
     end
   end
 
   def commands(dir)
-    commands = [
-      "export DEPLOY_URL=#{@job.full_url.shellescape}",
-      "export DEPLOYER=#{@job.user.email.shellescape}",
-      "export DEPLOYER_EMAIL=#{@job.user.email.shellescape}",
-      "export DEPLOYER_NAME=#{@job.user.name.shellescape}",
-      "export REVISION=#{@reference.shellescape}",
-      "export TAG=#{(@job.tag || @job.commit).to_s.shellescape}",
-      "export CACHE_DIR=#{artifact_cache_dir}",
-      "cd #{dir}",
-      *@job.commands
-    ]
+    env = {
+      DEPLOY_URL: @job.full_url,
+      DEPLOYER: @job.user.email,
+      DEPLOYER_EMAIL: @job.user.email,
+      DEPLOYER_NAME: @job.user.name,
+      REVISION: @reference,
+      TAG: (@job.tag || @job.commit).to_s,
+      CACHE_DIR: artifact_cache_dir
+    }.merge(@env)
 
-    if @stage
-      group_names = @stage.deploy_groups.pluck(:env_value).sort.join(" ")
-      commands.unshift("export DEPLOY_GROUPS=#{group_names.shellescape}") if group_names.present?
-      commands.unshift("export STAGE=#{@stage.permalink.shellescape}")
+    commands = env.map do |key, value|
+      "export #{key}=#{value.shellescape}"
     end
 
+    commands << "cd #{dir}"
+    commands.concat(@job.commands)
     commands
   end
 
@@ -179,26 +197,27 @@ class JobExecution
 
   class << self
     def find_by_id(id)
-      registry[id.to_i]
+      registry.find(id)
     end
 
-    def start_job(reference, job, &block)
-      new(reference, job).tap do |job_execution|
-        if enabled
-          registry[job.id] = job_execution
-          job_execution.start!(&block)
-          ActiveSupport::Notifications.instrument "job.threads", thread_count: registry.length
-        end
-      end
+    def active?(id, key: id)
+      registry.active?(key, id)
     end
 
-    def all
-      registry.values
+    def queued?(id, key: id)
+      registry.queued?(key, id)
     end
 
-    def finished_job(job)
-      registry.delete(job.id)
-      ActiveSupport::Notifications.instrument "job.threads", thread_count: registry.length
+    def start_job(job_execution, key: job_execution.id)
+      registry.add(key, job_execution)
+    end
+
+    def active
+      registry.active
+    end
+
+    def clear_registry
+      registry.clear
     end
   end
 end

@@ -3,7 +3,8 @@ module SamsonEnv
   end
 
   class << self
-    def write_env_files(dir, stage)
+    def write_env_files(dir, job)
+      return unless (stage = job.deploy.try(:stage))
       return unless groups = env_groups(stage.project, stage.deploy_groups.to_a)
       write_env_json_file("#{dir}/ENV.json", "#{dir}/manifest.json", groups) ||
         write_dotenv_file("#{dir}/.env", groups)

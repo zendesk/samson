@@ -74,11 +74,11 @@ class Job < ActiveRecord::Base
   end
 
   def finished?
-    succeeded? || failed? || errored? || cancelled?
+    !ACTIVE_STATUSES.include?(status)
   end
 
   def active?
-    pending? || running? || cancelling?
+    ACTIVE_STATUSES.include?(status)
   end
 
   def output
