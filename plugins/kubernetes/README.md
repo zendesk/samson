@@ -3,6 +3,12 @@
 This plugin allows integration between Samson and [Kubernetes](kubernetes.io),
 an orchestration framework for Docker images.
 
+### Warning: Plugin Incomplete
+
+**The Kubernetes plugin is still under active development, and not feature
+complete. Be aware that the code may change, and there is still functionality
+pending.**
+
 ## Overview
 
 The plugin works by communicating with one or more Kubernetes clusters via 
