@@ -16,7 +16,7 @@ module Kubernetes
     #
     # This hash can be passed to the Kubernetes API to create a ReplicationController.
     def rc_hash
-      return @rc_hash if instance_variable_defined?(:@rc_hash)
+      return @rc_hash if defined?(@rc_hash)
 
       if replication_controller_doc.present?
         @rc_hash = JSON.parse(replication_controller_doc).with_indifferent_access
@@ -138,7 +138,8 @@ module Kubernetes
     end
 
     def env_as_list
-      build.env_for(kubernetes_release.deploy_group).each_with_object([]) do |(k,v), list|
+      env = EnvironmentVariable.env(build.project, kubernetes_release.deploy_group)
+      env.each_with_object([]) do |(k,v), list|
         list << { name: k, value: v.to_s }
       end
     end

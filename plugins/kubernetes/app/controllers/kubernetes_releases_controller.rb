@@ -37,10 +37,6 @@ class KubernetesReleasesController < ApplicationController
     params.require(:kubernetes_release).permit(:build_id)
   end
 
-  def selected_deploy_groups
-    @selected_deploy_groups ||= DeployGroup.where(id: params[:pods][:deploy_group_ids])
-  end
-
   def load_environments
     @environments = Environment.all
   end

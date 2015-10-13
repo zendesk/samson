@@ -35,7 +35,7 @@ module Kubernetes
     end
 
     def nested_error_messages
-      errors.full_messages + releases.map(&:nested_error_messages).flatten
+      errors.full_messages + releases.flat_map(&:nested_error_messages)
     end
 
     private

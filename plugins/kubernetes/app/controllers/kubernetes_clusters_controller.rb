@@ -1,6 +1,6 @@
 class KubernetesClustersController < ApplicationController
   before_action :authorize_admin!
-  before_action :authorize_super_admin!, only: [ :create, :new, :update ]
+  before_action :authorize_super_admin!, only: [ :create, :new, :update, :edit ]
 
   before_action :find_cluster, only: [:show, :edit, :update]
   before_action :load_environments, only: [:new, :edit, :update]
@@ -73,7 +73,9 @@ class KubernetesClustersController < ApplicationController
   end
 
   def load_default_config_file
-    @config_file = Kubernetes::ClientConfigFile.new
+    filepath = ENV['KUBE_CONFIG_FILE']
+
+    @config_file = File.exists?(filepath) ? Kubernetes::ClientConfigFile.new(filepath) : nil
     @context_options = @config_file.context_names || []
   end
 end

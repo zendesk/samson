@@ -28,7 +28,7 @@ module Kubernetes
     # TODO: define state machine for 'status' field
 
     def nested_error_messages
-      errors.full_messages + release_docs.map(&:nested_error_messages).flatten
+      errors.full_messages + release_docs.flat_map(&:nested_error_messages)
     end
 
     def watch_pods(&block)

@@ -2,7 +2,7 @@ module Kubernetes
   class ClientConfigFile
     attr_reader :filepath, :api_version, :clusters, :users, :contexts
 
-    def initialize(filepath = ENV['KUBE_CONFIG_FILE'])
+    def initialize(filepath)
       raise ArgumentError("File #{filepath} does not exist") unless File.exists?(filepath)
       @filepath = filepath
       @config_file = YAML.load_file(filepath).with_indifferent_access

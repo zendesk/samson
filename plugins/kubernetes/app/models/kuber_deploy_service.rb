@@ -27,13 +27,7 @@ class KuberDeployService
       client.create_replication_controller(rc)
     end
 
-    # Doing this for now to force the loading of these constants.
-    # I was getting a circular dependency error otherwise
-    Watchers::PodWatcher ; Watchers::ReplicationControllerWatcher ; Watchers::EventWatcher
-
-    Thread.new { kuber_release.watch_pods }
-    Thread.new { kuber_release.watch_rcs }
-    Thread.new { sleep(5) ; kuber_release.watch_pod_events }
+    watch_deployment
   end
 
   def create_services!
@@ -42,6 +36,18 @@ class KuberDeployService
 
   def project
     @project ||= kuber_release.release_group.project
+  end
+
+  def watch_deployment
+    # Doing this for now to force the loading of these constants.
+    # I was getting a circular dependency error otherwise
+    # TODO: hunt down this issue and fix it properly
+    Watchers::PodWatcher ; Watchers::ReplicationControllerWatcher ; Watchers::EventWatcher
+
+    # Commented out for now, to avoid creating threads without ever destroying them
+    # Thread.new { kuber_release.watch_pods }
+    # Thread.new { kuber_release.watch_rcs }
+    # Thread.new { sleep(5) ; kuber_release.watch_pod_events }
   end
 
   private
