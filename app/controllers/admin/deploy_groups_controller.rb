@@ -3,16 +3,13 @@ class Admin::DeployGroupsController < ApplicationController
   before_action :authorize_super_admin!, only: [ :create, :new, :update, :destroy ]
   before_action :deploy_group, only: [:show, :edit, :update, :destroy]
 
-  if Samson::Hooks.active_plugin?('kubernetes')
-    before_action :build_kuber_cluster, only: [:create, :new, :edit, :update]
-  end
-
   def index
     @deploy_groups = DeployGroup.all
   end
 
   def new
     @deploy_group = DeployGroup.new
+    @deploy_group.build_cluster_deploy_group
     render 'edit'
   end
 
@@ -24,6 +21,12 @@ class Admin::DeployGroupsController < ApplicationController
     else
       flash[:error] = @deploy_group.errors.full_messages
       render 'edit'
+    end
+  end
+
+  def edit
+    if allow_cluster_assignment?
+      @deploy_group.build_cluster_deploy_group unless @deploy_group.cluster_deploy_group
     end
   end
 
@@ -47,10 +50,16 @@ class Admin::DeployGroupsController < ApplicationController
 
   def deploy_group_params
     allowed_params = [:name, :environment_id, :env_value]
-    if Samson::Hooks.active_plugin?('kubernetes')
+    if allow_cluster_assignment?
       allowed_params << { cluster_deploy_group_attributes: [:id, :kubernetes_cluster_id, :namespace] }
     end
-    params.require(:deploy_group).permit(*allowed_params)
+    dg_params = params.require(:deploy_group).permit(*allowed_params)
+    if allow_cluster_assignment?
+      if dg_params[:cluster_deploy_group_attributes] && dg_params[:cluster_deploy_group_attributes][:kubernetes_cluster_id].blank?
+        dg_params[:cluster_deploy_group_attributes]['_destroy'] = '1'
+      end
+    end
+    dg_params
   end
 
   def deploy_group
@@ -59,5 +68,9 @@ class Admin::DeployGroupsController < ApplicationController
 
   def build_kuber_cluster
     @deploy_group.build_cluster_deploy_group unless @deploy_group.cluster_deploy_group
+  end
+
+  def allow_cluster_assignment?
+    @deploy_group.respond_to?(:cluster_deploy_group)
   end
 end
