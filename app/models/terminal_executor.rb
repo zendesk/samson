@@ -34,9 +34,8 @@ class TerminalExecutor
   private
 
   def execute_command!(command)
-    output, input, @pid = Bundler.with_clean_env do
-      PTY.spawn(command, in: '/dev/null')
-    end
+    output, input = PTY.open
+    @pid = spawn(command, unsetenv_others: true, out: input, in: '/dev/null')
 
     @pgid = begin
       Process.getpgid(pid)
