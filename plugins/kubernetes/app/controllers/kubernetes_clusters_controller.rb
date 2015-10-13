@@ -73,9 +73,7 @@ class KubernetesClustersController < ApplicationController
   end
 
   def load_default_config_file
-    filepath = ENV['KUBE_CONFIG_FILE']
-
-    @config_file = File.exists?(filepath) ? Kubernetes::ClientConfigFile.new(filepath) : nil
-    @context_options = @config_file.context_names || []
+    @config_file = File.exists?(ENV['KUBE_CONFIG_FILE']) ? Kubernetes::ClientConfigFile.new(ENV['KUBE_CONFIG_FILE']) : nil
+    @context_options = @config_file.try(:context_names) || []
   end
 end
