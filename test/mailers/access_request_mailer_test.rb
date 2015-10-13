@@ -1,6 +1,8 @@
 require_relative '../test_helper'
 
 describe AccessRequestMailer do
+  include AccessRequestTestSupport
+
   describe 'sends email' do
     let(:user) { users(:viewer) }
     let(:address_list) { 'jira@example.com watchers@example.com' }
@@ -11,18 +13,11 @@ describe AccessRequestMailer do
     subject { ActionMailer::Base.deliveries.last }
 
     before do
-      @original_address_list = ENV['REQUEST_ACCESS_EMAIL_ADDRESS_LIST']
-      @original_prefix = ENV['REQUEST_ACCESS_EMAIL_PREFIX']
-      ENV['REQUEST_ACCESS_EMAIL_ADDRESS_LIST'] = address_list
-      ENV['REQUEST_ACCESS_EMAIL_PREFIX'] = prefix
-
+      enable_access_request
       AccessRequestMailer.access_request_email(hostname, user, manager_email, reason).deliver_now
     end
 
-    after do
-      ENV['REQUEST_ACCESS_EMAIL_ADDRESS_LIST'] = @original_address_list
-      ENV['REQUEST_ACCESS_EMAIL_PREFIX'] = @original_prefix
-    end
+    after { restore_access_request_settings }
 
     it 'is from deploys@' do
       subject.from.must_equal ['deploys@samson-deployment.com']

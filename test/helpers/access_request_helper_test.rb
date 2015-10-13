@@ -1,13 +1,12 @@
 require_relative '../test_helper'
 
 describe AccessRequestHelper do
+  include AccessRequestTestSupport
   describe '#display_access_request_link?' do
-    before { @original_feature_flag = ENV['REQUEST_ACCESS_FEATURE'] }
-    after { ENV['REQUEST_ACCESS_FEATURE'] = @original_feature_flag }
+    before { enable_access_request }
+    after { restore_access_request_settings }
 
     describe 'feature enabled' do
-      before { ENV['REQUEST_ACCESS_FEATURE'] = '1' }
-
       it 'returns true for authorization_error' do
         assert(display_access_request_link? :authorization_error)
       end

@@ -1,6 +1,10 @@
 class AccessRequestsController < ApplicationController
   before_action :check_if_enabled
 
+  def self.feature_enabled?
+    ENV['REQUEST_ACCESS_FEATURE'].present?
+  end
+
   def new
     session[:access_request_back_to] ||= request.referer
   end
@@ -16,6 +20,6 @@ class AccessRequestsController < ApplicationController
   private
 
   def check_if_enabled
-    raise ActionController::RoutingError.new('Not Found') unless ENV['REQUEST_ACCESS_FEATURE'].present?
+    raise ActionController::RoutingError.new('Not Found') unless self.class.feature_enabled?
   end
 end

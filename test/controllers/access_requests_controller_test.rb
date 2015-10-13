@@ -1,22 +1,24 @@
 require_relative '../test_helper'
 
 describe AccessRequestsController do
+  include AccessRequestTestSupport
   as_a_viewer do
     before do
-      @original_feature_flag = ENV['REQUEST_ACCESS_FEATURE']
-      @original_address_list = ENV['REQUEST_ACCESS_EMAIL_ADDRESS_LIST']
-      @original_email_prefix = ENV['REQUEST_ACCESS_EMAIL_PREFIX']
-      ENV['REQUEST_ACCESS_FEATURE'] = '1'
-      ENV['REQUEST_ACCESS_EMAIL_ADDRESS_LIST'] = 'jira@example.com watchers@example.com'
-      ENV['REQUEST_ACCESS_EMAIL_PREFIX'] = 'SAMSON ACCESS'
-
+      enable_access_request
       @request.headers['HTTP_REFERER'] = root_path
     end
 
-    after do
-      ENV['REQUEST_ACCESS_FEATURE'] = @original_feature_flag
-      ENV['REQUEST_ACCESS_EMAIL_ADDRESS_LIST'] = @original_address_list
-      ENV['REQUEST_ACCESS_EMAIL_PREFIX'] = @original_email_prefix
+    after { restore_access_request_settings }
+
+    describe '#feature_enabled?' do
+      it 'returns true when enabled' do
+        assert AccessRequestsController.feature_enabled?
+      end
+
+      it 'returns false when disabled' do
+        ENV['REQUEST_ACCESS_FEATURE'] = nil
+        refute AccessRequestsController.feature_enabled?
+      end
     end
 
     describe 'GET to #new' do
@@ -59,7 +61,7 @@ describe AccessRequestsController do
           before { post :create, request_params, session_params }
 
           it 'sets the pending request flag' do
-            assert(@controller.current_user.access_request_pending)
+            assert @controller.current_user.access_request_pending
           end
 
           it 'sets the flash' do

@@ -1,24 +1,12 @@
-# Preview all emails at http://localhost:3000/rails/mailers/request_access_mailer
+# Preview all emails at http://localhost:3000/rails/mailers/access_request_mailer
+require_relative '../../support/access_request_test_support'
 class AccessRequestMailerPreview < ActionMailer::Preview
+  include AccessRequestTestSupport
   def access_request_email
-    before
+    enable_access_request
     user = User.new(name: 'Dummy User', email: 'dummy@example.com', )
     email = AccessRequestMailer.access_request_email('localhost', user, 'manager@example.com', 'Dummy reason.')
-    after
+    restore_access_request_settings
     email
-  end
-
-  private
-
-  def before
-    @original_address_list = ENV['REQUEST_ACCESS_EMAIL_ADDRESS_LIST']
-    @original_prefix = ENV['REQUEST_ACCESS_EMAIL_PREFIX']
-    ENV['REQUEST_ACCESS_EMAIL_ADDRESS_LIST'] = 'jira@example.com watchers@example.com'
-    ENV['REQUEST_ACCESS_EMAIL_PREFIX'] = 'SAMSON ACCESS'
-  end
-
-  def after
-    ENV['REQUEST_ACCESS_EMAIL_ADDRESS_LIST'] = @original_address_list
-    ENV['REQUEST_ACCESS_EMAIL_PREFIX'] = @original_prefix
   end
 end

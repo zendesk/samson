@@ -1,6 +1,6 @@
 module AccessRequestHelper
   def display_access_request_link?(flash_type)
-    flash_type == :authorization_error && ENV['REQUEST_ACCESS_FEATURE'].present?
+    flash_type == :authorization_error && AccessRequestsController.feature_enabled?
   end
 
   def link_to_request_access
