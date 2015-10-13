@@ -54,8 +54,8 @@ ActiveRecord::Schema.define(version: 20151013181500) do
   end
 
   create_table "deploy_groups", force: :cascade do |t|
-    t.string   "name",                  limit: 255, null: false
-    t.integer  "environment_id",        limit: 4,   null: false
+    t.string   "name",           limit: 255, null: false
+    t.integer  "environment_id", limit: 4,   null: false
     t.datetime "deleted_at"
     t.datetime "created_at",                 null: false
     t.datetime "updated_at",                 null: false
