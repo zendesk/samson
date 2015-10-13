@@ -3,7 +3,8 @@ require 'kubeclient'
 module Kubernetes
   class Cluster < ActiveRecord::Base
     self.table_name = 'kubernetes_clusters'
-    has_many :deploy_groups, inverse_of: 'kubernetes_cluster', foreign_key: 'kubernetes_cluster_id'
+    has_many :cluster_deploy_groups, class_name: 'Kubernetes::ClusterDeployGroup', foreign_key: :kubernetes_cluster_id
+    has_many :deploy_groups, through: :cluster_deploy_groups
 
     validates :name, presence: true, uniqueness: true
     validates :config_filepath, presence: true

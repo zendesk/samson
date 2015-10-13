@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20150903201829) do
+ActiveRecord::Schema.define(version: 20151013181500) do
 
   create_table "build_statuses", force: :cascade do |t|
     t.integer  "build_id",                                     null: false
@@ -57,11 +57,9 @@ ActiveRecord::Schema.define(version: 20150903201829) do
     t.string   "name",                  limit: 255, null: false
     t.integer  "environment_id",        limit: 4,   null: false
     t.datetime "deleted_at"
-    t.datetime "created_at",                        null: false
-    t.datetime "updated_at",                        null: false
-    t.string   "env_value",             limit: 255, null: false
-    t.integer  "kubernetes_cluster_id", limit: 4
-    t.string   "kubernetes_namespace",  limit: 255
+    t.datetime "created_at",                 null: false
+    t.datetime "updated_at",                 null: false
+    t.string   "env_value",      limit: 255, null: false
   end
 
   add_index "deploy_groups", ["environment_id"], name: "index_deploy_groups_on_environment_id", using: :btree
@@ -158,15 +156,24 @@ ActiveRecord::Schema.define(version: 20150903201829) do
   add_index "jobs", ["project_id"], name: "index_jobs_on_project_id", using: :btree
   add_index "jobs", ["status"], name: "index_jobs_on_status", length: {"status"=>191}, using: :btree
 
-  create_table "kubernetes_clusters", force: :cascade do |t|
-    t.string   "name",        limit: 255
-    t.string   "description", limit: 255
-    t.string   "api_version", limit: 255
-    t.string   "url",         limit: 255, null: false
-    t.boolean  "use_ssl"
-    t.string   "username",    limit: 255
+  create_table "kubernetes_cluster_deploy_groups", force: :cascade do |t|
+    t.integer  "kubernetes_cluster_id", limit: 4,   null: false
+    t.integer  "deploy_group_id",       limit: 4,   null: false
+    t.string   "namespace",             limit: 255, null: false
     t.datetime "created_at"
     t.datetime "updated_at"
+  end
+
+  add_index "kubernetes_cluster_deploy_groups", ["deploy_group_id"], name: "index_kubernetes_cluster_deploy_groups_on_deploy_group_id", using: :btree
+  add_index "kubernetes_cluster_deploy_groups", ["kubernetes_cluster_id"], name: "index_kubernetes_cluster_deploy_groups_on_kubernetes_cluster_id", using: :btree
+
+  create_table "kubernetes_clusters", force: :cascade do |t|
+    t.string   "name",            limit: 255
+    t.string   "description",     limit: 255
+    t.datetime "created_at"
+    t.datetime "updated_at"
+    t.string   "config_filepath", limit: 255
+    t.string   "config_context",  limit: 255
   end
 
   create_table "kubernetes_release_docs", force: :cascade do |t|

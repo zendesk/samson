@@ -3,6 +3,10 @@ class Admin::DeployGroupsController < ApplicationController
   before_action :authorize_super_admin!, only: [ :create, :new, :update, :destroy ]
   before_action :deploy_group, only: [:show, :edit, :update, :destroy]
 
+  if Samson::Hooks.active_plugin?('kubernetes')
+    before_action :build_kuber_cluster, only: [:create, :new, :edit, :update]
+  end
+
   def index
     @deploy_groups = DeployGroup.all
   end
@@ -42,10 +46,18 @@ class Admin::DeployGroupsController < ApplicationController
   private
 
   def deploy_group_params
-    params.require(:deploy_group).permit(:name, :environment_id, :env_value, :kubernetes_cluster_id, :kubernetes_namespace)
+    allowed_params = [:name, :environment_id, :env_value]
+    if Samson::Hooks.active_plugin?('kubernetes')
+      allowed_params << { cluster_deploy_group_attributes: [:id, :kubernetes_cluster_id, :namespace] }
+    end
+    params.require(:deploy_group).permit(*allowed_params)
   end
 
   def deploy_group
     @deploy_group ||= DeployGroup.find(params[:id])
+  end
+
+  def build_kuber_cluster
+    @deploy_group.build_cluster_deploy_group unless @deploy_group.cluster_deploy_group
   end
 end
