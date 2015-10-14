@@ -15,7 +15,10 @@ class AccessRequestMailer < ApplicationMailer
   end
 
   def build_subject
-    "[#{ENV['REQUEST_ACCESS_EMAIL_PREFIX']}] Grant #{desired_role} access rights to #{@user.name}"
+    subject = []
+    subject << "[#{ENV['REQUEST_ACCESS_EMAIL_PREFIX']}]" if ENV['REQUEST_ACCESS_EMAIL_PREFIX'].present?
+    subject << "Grant #{desired_role} access rights to #{@user.name}"
+    subject.join ' '
   end
 
   def build_body

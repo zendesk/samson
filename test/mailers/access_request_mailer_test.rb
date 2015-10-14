@@ -27,6 +27,10 @@ describe AccessRequestMailer do
       subject.to.must_equal(address_list.split << manager_email)
     end
 
+    it 'includes prefix in subject' do
+      subject.subject.must_match /\[#{prefix}\]/
+    end
+
     it 'includes name in subject' do
       subject.subject.must_match /#{user.name}/
     end
@@ -49,6 +53,13 @@ describe AccessRequestMailer do
 
     it 'includes reason in body' do
       subject.body.to_s.must_match /#{reason}/
+    end
+
+    describe 'no subject prefix' do
+      let(:prefix) { nil }
+      it 'does not include brackets if no prefix configured' do
+        subject.subject.wont_match /\[.*\]/
+      end
     end
 
     describe 'single address configured' do
