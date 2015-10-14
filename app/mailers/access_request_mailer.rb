@@ -10,7 +10,8 @@ class AccessRequestMailer < ApplicationMailer
   private
 
   def build_recipients
-    ENV['REQUEST_ACCESS_EMAIL_ADDRESS_LIST'].split << @manager_email
+    recipients = ENV['REQUEST_ACCESS_EMAIL_ADDRESS_LIST'].present? ? ENV['REQUEST_ACCESS_EMAIL_ADDRESS_LIST'].split : []
+    recipients << @manager_email
   end
 
   def build_subject
