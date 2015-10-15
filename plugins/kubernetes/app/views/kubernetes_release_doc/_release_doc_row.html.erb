@@ -6,16 +6,23 @@
 </div>
 
 <div class="form-group">
+  <label class="col-lg-2 control-label">Status</label>
+  <div class="col-lg-4">
+    <p class="form-control-static"><%= release_doc.status %></p>
+  </div>
+</div>
+
+<div class="form-group">
   <label class="col-lg-2 control-label">Num Replicas</label>
   <div class="col-lg-4">
-    <p class="form-control-static"><%= release_doc.replica_count %></p>
+    <p class="form-control-static"><%= release_doc.replicas_live %> / <%= release_doc.replica_target %></p>
   </div>
 </div>
 
 <div class="form-group">
   <label class="col-lg-2 control-label">Controller Doc</label>
   <div class="col-lg-10">
-    <pre><%= release_doc.pretty_rc_doc %></pre>
+    <pre style="height: 10pc; overflow-y: scroll;"><%= release_doc.pretty_rc_doc %></pre>
   </div>
 </div>
 

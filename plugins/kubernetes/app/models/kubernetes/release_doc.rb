@@ -6,7 +6,9 @@ module Kubernetes
 
     validates :kubernetes_role, presence: true
     validates :kubernetes_release, presence: true
-    validates :replica_count, presence: true, numericality: { greater_than: 0 }
+    validates :replica_target, presence: true, numericality: { greater_than: 0 }
+    validates :replicas_live, presence: true, numericality: { greater_than_or_equal_to: 0 }
+    validates :status, presence: true, inclusion: Kubernetes::Release::STATUSES
     validate :validate_config_file, on: :create
 
     after_create :save_rc_info    # do this after create, so id has been generated
@@ -79,6 +81,16 @@ module Kubernetes
       @watcher.stop_watching if @watcher
     end
 
+    def update_replica_count(new_count)
+      self.replicas_live = new_count
+
+      if replicas_live >= replica_target
+        self.status ='live'
+      elsif replicas_live > 0
+        self.status ='spinning_up'
+      end
+    end
+
     private
 
     def save_rc_info
@@ -98,7 +110,7 @@ module Kubernetes
 
     def build_rc_hash
       @rc_hash = rc_template.dup.with_indifferent_access
-      @rc_hash[:spec][:replicas] = replica_count
+      @rc_hash[:spec][:replicas] = replica_target
 
       pod_hash = @rc_hash[:spec][:template]
 

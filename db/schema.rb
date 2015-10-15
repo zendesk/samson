@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20151013181500) do
+ActiveRecord::Schema.define(version: 20151014205641) do
 
   create_table "build_statuses", force: :cascade do |t|
     t.integer  "build_id",                                     null: false
@@ -177,12 +177,13 @@ ActiveRecord::Schema.define(version: 20151013181500) do
   end
 
   create_table "kubernetes_release_docs", force: :cascade do |t|
-    t.integer  "kubernetes_role_id",          limit: 4,     null: false
-    t.integer  "kubernetes_release_id",       limit: 4,     null: false
-    t.integer  "replica_count",               limit: 4,     null: false
+    t.integer  "kubernetes_role_id",          limit: 4,                         null: false
+    t.integer  "kubernetes_release_id",       limit: 4,                         null: false
+    t.integer  "replica_target",              limit: 4,                         null: false
+    t.integer  "replicas_live",               limit: 4,     default: 0,         null: false
     t.string   "replication_controller_name", limit: 255
     t.text     "replication_controller_doc",  limit: 65535
-    t.string   "status",                      limit: 255
+    t.string   "status",                      limit: 255,   default: "created"
     t.datetime "created_at"
     t.datetime "updated_at"
   end
@@ -201,9 +202,9 @@ ActiveRecord::Schema.define(version: 20151013181500) do
   add_index "kubernetes_release_groups", ["build_id"], name: "index_kubernetes_release_groups_on_build_id", using: :btree
 
   create_table "kubernetes_releases", force: :cascade do |t|
-    t.integer  "kubernetes_release_group_id", limit: 4,   null: false
-    t.integer  "deploy_group_id",             limit: 4,   null: false
-    t.string   "status",                      limit: 255
+    t.integer  "kubernetes_release_group_id", limit: 4,                       null: false
+    t.integer  "deploy_group_id",             limit: 4,                       null: false
+    t.string   "status",                      limit: 255, default: "created"
     t.datetime "deploy_finished_at"
     t.datetime "destroyed_at"
     t.datetime "created_at"
