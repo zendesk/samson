@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20150903201829) do
+ActiveRecord::Schema.define(version: 20151001140703) do
 
   create_table "build_statuses", force: :cascade do |t|
     t.integer  "build_id",                                     null: false
@@ -300,6 +300,7 @@ ActiveRecord::Schema.define(version: 20150903201829) do
     t.string   "external_id",    limit: 255
     t.boolean  "desktop_notify", default: false
     t.boolean  "integration",    default: false, null: false
+    t.boolean  "access_request_pending",     default: false
   end
 
   add_index "users", ["external_id", "deleted_at"], name: "index_users_on_external_id_and_deleted_at", length: {"external_id"=>191, "deleted_at"=>nil}, using: :btree

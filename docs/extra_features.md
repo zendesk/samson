@@ -33,3 +33,19 @@ Enable by setting JIRA_BASE_URL to a default JIRA instance e.g., `JIRA_BASE_URL=
 This would enable the auto-detection of JIRA issue keys (e.g., KEY-123, SAMSON-456) in the titles and bodies of the pull requests associated with a deploy. The auto-detected JIRA issues will be displayed and linked in the "JIRA Issues" tab of a deploy.
 
 Full absolute JIRA URLs will still be detected when JIRA_BASE_URL is set, and they will take precedence over generated ones (i.e., if JIRA_BASE_URL is https://a.atlassian.net/browse/ and both "KEY-123" and "http://z.atlassian.net/browse/KEY-123" appear in a pull request's title and body, only "http://z.atlassian.net/browse/KEY-123" would appear in the "JIRA Issues" tab). Use full URLs if you need to reference issues of non-default JIRA instances.
+
+## Request additional access rights via email
+
+Add a link to the "You are not authorized..." popup which the user can use to request additional access rights.
+
+<img src="/docs/images/request_access_popup.png?raw=true" width="600" />
+
+The access request requires a manager email and a reason for the additional access rights.
+
+<img src="/docs/images/request_access_page.png?raw=true" width="600" />
+
+The recipients and subject prefix of the email are configurable, use REQUEST_ACCESS_EMAIL_ADDRESS_LIST and REQUEST_ACCESS_EMAIL_PREFIX environment variables to tweak the message.
+
+The receiving end can be a Samson admin distribution list, a JIRA email trigger which will automatically set up an access ticket, or whatever you fancy.
+
+The feature is enabled by setting REQUEST_ACCESS_FEATURE=1
