@@ -63,7 +63,7 @@ describe JobsController do
   as_a_admin do
     describe "a POST to :create" do
       setup do
-        JobExecution.stubs(:start_job).with('master', job)
+        JobExecution.stubs(:start_job)
 
         post :create, commands: { ids: [] }, job: {
           command: command,

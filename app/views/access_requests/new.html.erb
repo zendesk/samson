@@ -1,0 +1,30 @@
+<h1>Request access</h1>
+
+<section>
+  <%= form_tag access_requests_path, class: 'form-horizontal' do %>
+    <fieldset>
+      <div class="form-group">
+        <label class="col-lg-2 control-label">Manager's email</label>
+        <div class="col-lg-3">
+          <%= email_field_tag :manager_email, nil, class: 'form-control',
+                              placeholder: 'name@example.com', required: 'required' %>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="col-lg-2 control-label">Reason</label>
+        <div class="col-lg-6">
+          <%= text_area_tag :reason, nil, class: 'form-control', rows: 4, required: 'required' %>
+        </div>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <div class="form-group">
+        <div class="col-lg-offset-2 col-lg-10">
+          <button type="submit" class="btn btn-default">Send</button>
+        </div>
+      </div>
+    </fieldset>
+  <% end %>
+</section>

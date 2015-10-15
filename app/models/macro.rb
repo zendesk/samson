@@ -12,9 +12,9 @@ class Macro < ActiveRecord::Base
   validates :name, presence: true, uniqueness: { scope: [:project, :deleted_at] }
   validates :reference, :command, presence: true
 
-  def command
+  def macro_command
     commands.map(&:command).
-      push(read_attribute(:command)).
+      push(command).
       join("\n")
   end
 

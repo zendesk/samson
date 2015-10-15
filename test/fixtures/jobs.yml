@@ -6,6 +6,14 @@ succeeded_test:
   output: This worked!
   commit: staging
 
+running_test:
+  command: cap staging deploy
+  user: super_admin
+  project: test
+  status: running
+  output: This worked!
+  commit: staging
+
 failed_test:
   command: cap staging deploy
   user: super_admin

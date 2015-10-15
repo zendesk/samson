@@ -16,6 +16,8 @@ class Deploy < ActiveRecord::Base
   delegate :finished?, :errored?, :failed?, to: :job
   delegate :production?, :project, to: :stage
 
+  before_validation :trim_reference
+
   def cache_key
     [super, commit]
   end
@@ -86,7 +88,7 @@ class Deploy < ActiveRecord::Base
   end
 
   def pending_start!
-    update_attributes(updated_at: Time.now)       # hack: refresh is immediate with update
+    touch # hack: refresh is immediate with update
     DeployService.new(user).confirm_deploy!(self)
   end
 
@@ -150,8 +152,6 @@ class Deploy < ActiveRecord::Base
   def validate_stage_is_deployable
     if stage.locked_for?(user) || Lock.global.exists?
       errors.add(:stage, 'is locked')
-    elsif deploy = stage.current_deploy
-      errors.add(:stage, "is being deployed by #{deploy.job.user.name} with #{deploy.short_reference}")
     end
   end
 
@@ -165,5 +165,9 @@ class Deploy < ActiveRecord::Base
     else
       "(with #{buddy.name})"
     end
+  end
+
+  def trim_reference
+    self.reference.strip! if self.reference.presence
   end
 end

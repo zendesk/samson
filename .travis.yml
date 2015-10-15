@@ -9,10 +9,12 @@ services:
 branches:
   only: [master]
 env:
+  global:
+    - CI=1
   matrix:
     - TASK=js
     - TASK=precompile
-    - DATABASE_URL=mysql2://travis@127.0.0.1/samson_test TASK=rake
+    - DATABASE_URL=mysql2://travis@127.0.0.1/samson_test USE_UTF8MB4=1 TASK=rake
     - DATABASE_URL=postgresql://postgres@127.0.0.1/samson_test TASK=rake
     - DATABASE_URL=sqlite3://null$PWD/db/test.sqlite3 TASK=rake
 script: script/ci

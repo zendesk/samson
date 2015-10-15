@@ -5,7 +5,8 @@ describe "env hooks" do
 
   describe :after_deploy_setup do
     def fire
-      Samson::Hooks.fire(:after_deploy_setup, "repo", stage, StringIO.new, 'abc')
+      job = stub(deploy: stub(stage: stage), project: stage.project)
+      Samson::Hooks.fire(:after_deploy_setup, "repo", job, StringIO.new, 'abc')
     end
 
     around { |test| Dir.mktmpdir { |dir| Dir.chdir(dir) { test.call } } }

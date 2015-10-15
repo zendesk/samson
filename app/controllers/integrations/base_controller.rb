@@ -4,11 +4,20 @@ class Integrations::BaseController < ApplicationController
 
   def create
     return head(:ok) unless deploy?
+
     if project.create_releases_for_branch?(branch)
       create_build_record
-      create_docker_image if project.deploy_with_docker? && project.auto_release_docker_image?
+
+      if project.deploy_with_docker? && project.auto_release_docker_image?
+        create_docker_image
+      end
     end
-    deploy_to_stages ? head(:ok) : head(:unprocessable_entity, message: "Failed to start all deploys")
+
+    if deploy_to_stages
+      head(:ok)
+    else
+      head(:unprocessable_entity, message: 'Failed to start all deploys')
+    end
   end
 
   protected

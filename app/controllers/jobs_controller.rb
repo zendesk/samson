@@ -22,7 +22,7 @@ class JobsController < ApplicationController
     )
 
     if @job.persisted?
-      JobExecution.start_job(job_params[:commit].strip, @job)
+      JobExecution.start_job(JobExecution.new(@job.commit, @job))
       redirect_to [@project, @job]
     else
       render :new

@@ -14,15 +14,15 @@ describe Macro do
       end
 
       it 'joins all commands based on position' do
-        subject.command.must_equal("test\n#{commands(:echo).command}\nseq 1 5")
+        subject.macro_command.must_equal("test\n#{commands(:echo).command}\nseq 1 5")
       end
     end
 
     describe 'no commands' do
-      before { subject.commands.clear }
+      before { subject.macro_commands.clear }
 
       it 'is only the macro command' do
-        subject.command.must_equal('seq 1 5')
+        subject.macro_command.must_equal('seq 1 5')
       end
     end
   end

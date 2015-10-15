@@ -136,11 +136,6 @@ describe Deploy do
       assert_raise(ActiveRecord::RecordInvalid) { deploy! }
     end
 
-    it "cannot deploy when already deploying" do
-      create_deploy!(job_attributes: { user: user, status: "running" })
-      assert_raise(ActiveRecord::RecordInvalid) { deploy! }
-    end
-
     it "can update a deploy while something else is deployed" do
       create_deploy!(job_attributes: { user: user, status: "running" })
       deploys(:succeeded_test).update_attributes!(buddy_id: 123)
@@ -153,6 +148,13 @@ describe Deploy do
     end
   end
 
+  describe "trim_reference" do
+    it "trims the Git reference" do
+      deploy = create_deploy!({reference: " master "})
+      deploy.reference.must_equal "master"
+    end
+  end
+
   def create_deploy!(attrs = {})
     default_attrs = {
       reference: "baz",
@@ -161,9 +163,7 @@ describe Deploy do
 
     deploy_stage = attrs.delete(:stage) || stage
 
-    deploy = deploy_stage.deploys.create!(default_attrs.merge(attrs))
-    deploy_stage.remove_instance_variable(:@current_deploy) # pretend we are in a new request after creating a deploy
-    deploy
+    deploy_stage.deploys.create!(default_attrs.merge(attrs))
   end
 
   def create_job!(attrs = {})

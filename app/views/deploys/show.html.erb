@@ -3,7 +3,17 @@
 <%= breadcrumb @project, @deploy.stage, "Deploy ##{@deploy.id}" %>
 
 <div id="header" class="stream-header">
-  <%= render 'header' %>
+  <% if !deploy_active? && !@deploy.finished? %>
+    <div class="alert alert-info">
+      Samson is currently restarting, your deploy has been queued and will be resumed shortly.
+    </div>
+
+    <%= javascript_tag do %>
+      waitUntilEnabled("<%= enabled_jobs_path %>");
+    <% end %>
+  <% else %>
+    <%= render 'header' %>
+  <% end %>
 </div>
 
 <ul id="deploy-tabs" class="nav nav-tabs" data-changeset-url="<%= changeset_project_deploy_url(@project, @deploy) %>">
@@ -13,11 +23,9 @@
   <li><a href="#pulls" data-type="github" data-toggle="tab">Pull Requests</a></li>
   <li><a href="#risks" data-type="github" data-toggle="tab">Risks</a></li>
   <li><a href="#jira-issues" data-type="github" data-toggle="tab">JIRA Issues</a></li>
-
-<% if deploy_active? %>
   <li><a href="#viewers" data-toggle="tab" id="viewers-link">Viewers <span class="badge">0</span></a></li>
 
-  <% if NewRelicApi.api_key.present? %>
+  <% if newrelic_enabled_for_deploy? %>
     <li>
       <a href="#newrelic" id="newrelic-tab"
         data-enabled="<%= @deploy.stage.new_relic_applications.any? %>"
@@ -27,15 +35,23 @@
       </a>
     </li>
   <% end %>
-<% end %>
 </ul>
 
 <section class="clearfix tabs">
   <div class="tab-content deploy-details">
     <div class="tab-pane active" id="output" data-stream-url="<%= stream_path(@deploy.job) %>" data-desktop-notify="<%= current_user.desktop_notify? %>">
       <%= Samson::Hooks.render_views(:deploy_view, self, deploy: @deploy, project: @project) %>
-      <%= render 'start_pending', deploy: @deploy if @deploy.pending_non_production? %>
-      <%= render 'buddy_check', deploy: @deploy if @deploy.waiting_for_buddy? %>
+
+      <div class="row deploy-check">
+        <% if deploy_queued? %>
+          <%= render 'queued' %>
+        <% elsif @deploy.waiting_for_buddy? %>
+          <%= render 'buddy_check', deploy: @deploy %>
+        <% elsif @deploy.pending_non_production? %>
+          <%= render 'start_pending', deploy: @deploy %>
+        <% end %>
+      </div>
+
       <%= render 'output', deploy: @deploy, project: @project %>
     </div>
 
@@ -45,58 +61,29 @@
       </div>
     <% end %>
 
-  <% if deploy_active? %>
     <div class="tab-pane" id="viewers">
       No other viewers.
     </div>
 
-    <% if NewRelicApi.api_key.present? %>
+    <% if newrelic_enabled_for_deploy? %>
       <div class="tab-pane" id="newrelic">
-        <% if @deploy.stage.new_relic_applications.any? %>
-          <div class="chart">
-            <h2>Response Time</h2>
-            <div id="newrelic-response-time"></div>
-          </div>
+        <div class="chart">
+          <h2>Response Time</h2>
+          <div id="newrelic-response-time"></div>
+        </div>
 
-          <div class="chart">
-            <h2>Throughput</h2>
-            <div id="newrelic-throughput"></div>
-          </div>
-        <% else %>
-          No New Relic applications configured.
-        <% end %>
+        <div class="chart">
+          <h2>Throughput</h2>
+          <div id="newrelic-throughput"></div>
+        </div>
       </div>
     <% end %>
-  <% end %>
   </div>
-
-  <% if deploy_active? %>
-    <%= javascript_tag do %>
-      toggleOutputToolbar();
-      startStream();
-    <% end %>
-  <% elsif !@deploy.finished? %>
-    <div class="alert alert-info">
-      Samson is currently restarting, your deploy has been queued and will be resumed shortly.
-    </div>
-
-    <%= javascript_tag do %>
-      function check_enabled() {
-        $.ajax({
-          url: "<%= enabled_jobs_path %>",
-          success: function(data, status, xhr) {
-            if(xhr.status == 204) {
-              window.location.reload()
-            }
-          }
-        });
-
-        setTimeout(check_enabled, 5000);
-      }
-
-      $(document).ready(function() {
-        check_enabled();
-      });
-    <% end %>
-  <% end %>
 </section>
+
+<% if deploy_active? %>
+  <%= javascript_tag do %>
+    toggleOutputToolbar();
+    startStream();
+  <% end %>
+<% end %>

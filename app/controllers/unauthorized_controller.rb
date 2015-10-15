@@ -19,7 +19,7 @@ class UnauthorizedController < ActionController::Metal
   def respond
     respond_to do |format|
       format.html do
-        flash[:error] = "You are not authorized to view this page."
+        flash[:authorization_error] = "You are not authorized to view this page."
         redirect_back_or(root_path)
       end
 

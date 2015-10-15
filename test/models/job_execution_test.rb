@@ -23,6 +23,7 @@ describe JobExecution do
     project.repository.clone!(mirror: true)
     job.deploy = deploy
     JobExecution.enabled = true
+    JobExecution.clear_registry
   end
 
   after do
@@ -115,7 +116,7 @@ describe JobExecution do
 
   it "exports deploy information as environment variables" do
     job.update(command: 'env | sort')
-    execute_job
+    execute_job('master', FOO: 'bar')
     lines = job.output.split "\n"
     lines.must_include "DEPLOY_URL=#{deploy.full_url}"
     lines.must_include "DEPLOYER=jdoe@test.com"
@@ -123,7 +124,7 @@ describe JobExecution do
     lines.must_include "DEPLOYER_NAME=John Doe"
     lines.must_include "REVISION=master"
     lines.must_include "TAG=v1"
-    lines.must_include "STAGE=stage4"
+    lines.must_include "FOO=bar"
   end
 
   it 'works without a deploy' do
@@ -132,14 +133,6 @@ describe JobExecution do
     execution.send(:run!)
     # if you like, pretend there's a wont_raise assertion here
     # this is to make sure we don't add a hard dependency on having a deploy
-  end
-
-  it 'exports deploy_group information if deploy groups present' do
-    job.update(command: 'env | sort')
-    execute_job
-    lines = job.output.split "\n"
-    lines.must_include "# Deploy URL: #{deploy.url}"
-    lines.must_include 'DEPLOY_GROUPS=;|sudo make-sandwich / pod1 pod2'
   end
 
   it 'does not export deploy_group information if no deploy groups present' do
@@ -160,7 +153,7 @@ describe JobExecution do
   end
 
   it 'removes the job from the registry' do
-    execution = JobExecution.start_job('master', job)
+    execution = JobExecution.start_job(JobExecution.new('master', job))
 
     JobExecution.find_by_id(job.id).wont_be_nil
 
@@ -198,9 +191,12 @@ describe JobExecution do
     end
 
     it 'does not add the job to the registry' do
-      job_execution = JobExecution.start_job('master', job)
+      job_execution = JobExecution.start_job(JobExecution.new('master', job))
       job_execution.wont_be_nil
-      JobExecution.find_by_id(job.id).must_be_nil
+
+      JobExecution.find_by_id(job.id).must_equal(job_execution)
+      JobExecution.queued?(job.id).must_equal(false)
+      JobExecution.active?(job.id).must_equal(false)
     end
   end
 
@@ -245,8 +241,8 @@ describe JobExecution do
     end
   end
 
-  def execute_job(branch = 'master')
-    execution = JobExecution.new(branch, job)
+  def execute_job(branch = 'master', **options)
+    execution = JobExecution.new(branch, job, options)
     execution.on_complete { yield } if block_given?
     execution.send(:run!)
   end

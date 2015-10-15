@@ -41,6 +41,10 @@ function startStream() {
       addLine(e.data);
     }, false);
 
+    source.addEventListener('reloaded', function(e) {
+      waitUntilEnabled('/jobs/enabled');
+    }, false);
+
     source.addEventListener('viewers', function(e) {
       var users = JSON.parse(e.data);
 
