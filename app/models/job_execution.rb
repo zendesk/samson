@@ -32,7 +32,9 @@ class JobExecution
     @repository.executor = @executor
 
     on_complete do
+      @output.write('', :finished)
       @output.close
+
       @job.update_output!(OutputAggregator.new(@output).to_s)
     end
   end
@@ -54,17 +56,20 @@ class JobExecution
   end
 
   def stop!
-    return unless @thread
+    if @thread
+      @executor.stop! 'INT'
 
-    @executor.stop! 'INT'
+      stop_timeout.times do
+        return if @thread.join(1)
+      end
 
-    stop_timeout.times do
-      return if @thread.join(1)
+      @executor.stop! 'KILL'
+
+      wait!
+    else
+      @job.cancelled!
+      finish
     end
-
-    @executor.stop! 'KILL'
-
-    wait!
   end
 
   def on_complete(&block)
@@ -115,8 +120,12 @@ class JobExecution
   rescue => e
     error!(e)
   ensure
-    @subscribers.each(&:call)
+    finish
     ActiveRecord::Base.clear_active_connections!
+  end
+
+  def finish
+    @subscribers.each(&:call)
   end
 
   def execute!(dir)

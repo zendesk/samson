@@ -30,7 +30,7 @@ function startStream() {
 
       $('#header').html(data.html);
       window.document.title = data.title;
-      if ( doNotify && data.notification !== undefined) {
+      if (doNotify && data.notification !== undefined) {
         var notification = new Notification(data.notification, {icon: '/favicon.ico'});
         notification.onclick = function() { window.focus(); };
       }
@@ -71,6 +71,8 @@ function startStream() {
     }, false);
 
     source.addEventListener('finished', function(e) {
+      $messages.trigger('contentchanged');
+
       updateStatusAndTitle(e);
       toggleOutputToolbar();
       timeAgoFormat();

@@ -46,9 +46,12 @@ class Job < ActiveRecord::Base
   end
 
   def stop!
-    status!("cancelling")
-    execution.try(:stop!)
-    status!("cancelled")
+    if execution
+      cancelling!
+      execution.stop!
+    else
+      cancelled!
+    end
   end
 
   %w{pending running succeeded cancelling cancelled failed errored}.each do |status|
@@ -71,6 +74,14 @@ class Job < ActiveRecord::Base
 
   def error!
     status!("errored")
+  end
+
+  def cancelling!
+    status!("cancelling")
+  end
+
+  def cancelled!
+    status!("cancelled")
   end
 
   def finished?

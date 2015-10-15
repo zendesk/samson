@@ -42,15 +42,13 @@
     <div class="tab-pane active" id="output" data-stream-url="<%= stream_path(@deploy.job) %>" data-desktop-notify="<%= current_user.desktop_notify? %>">
       <%= Samson::Hooks.render_views(:deploy_view, self, deploy: @deploy, project: @project) %>
 
-      <div class="row deploy-check">
-        <% if deploy_queued? %>
-          <%= render 'queued' %>
-        <% elsif @deploy.waiting_for_buddy? %>
-          <%= render 'buddy_check', deploy: @deploy %>
-        <% elsif @deploy.pending_non_production? %>
-          <%= render 'start_pending', deploy: @deploy %>
-        <% end %>
-      </div>
+      <% if deploy_queued? %>
+        <%= render 'queued' %>
+      <% elsif @deploy.waiting_for_buddy? %>
+        <%= render 'buddy_check', deploy: @deploy %>
+      <% elsif @deploy.pending_non_production? %>
+        <%= render 'start_pending', deploy: @deploy %>
+      <% end %>
 
       <%= render 'output', deploy: @deploy, project: @project %>
     </div>

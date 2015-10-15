@@ -38,7 +38,7 @@ class JobQueue
   end
 
   def add(key, job_execution)
-    job_execution.on_complete { pop(key) }
+    job_execution.on_complete { pop(key, job_execution) }
 
     LOCK.synchronize do
       @registry[job_execution.id] = job_execution
@@ -58,14 +58,19 @@ class JobQueue
     job_execution
   end
 
-  def pop(key)
+  def pop(key, job_execution)
     LOCK.synchronize do
-      job_execution = @active.delete(key)
-      @registry.delete(job_execution.id) if job_execution
+      @registry.delete(job_execution.id)
 
-      if JobExecution.enabled && (job_execution = @queue[key].shift)
-        @active[key] = job_execution
-        job_execution.start!
+      if @active[key] == job_execution
+        @active.delete(key)
+
+        if JobExecution.enabled && (job_execution = @queue[key].shift)
+          @active[key] = job_execution
+          job_execution.start!
+        end
+      else
+        @queue[key].delete(job_execution)
       end
     end
 

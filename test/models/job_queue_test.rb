@@ -92,7 +92,7 @@ describe JobQueue do
       queued_job_execution.expects(:start!)
 
       enable_job_execution do
-        subject.pop(:x)
+        subject.pop(:x, job_execution)
       end
 
       subject.find(1).must_equal(nil)
@@ -103,11 +103,23 @@ describe JobQueue do
     it 'does not start a job when job execution is disabled' do
       queued_job_execution.expects(:start!).never
 
-      subject.pop(:x)
+      subject.pop(:x, job_execution)
 
       subject.find(1).must_equal(nil)
       subject.active?(:x, 2).must_equal(false)
       subject.queued?(:x, 2).must_equal(true)
+    end
+
+    it 'pops the queued job execution off the stack' do
+      queued_job_execution.expects(:start!).never
+
+      subject.pop(:x, queued_job_execution)
+
+      subject.find(1).must_equal(job_execution)
+      subject.active?(:x, 1).must_equal(true)
+
+      subject.find(2).must_equal(nil)
+      subject.queued?(:x, 2).must_equal(false)
     end
   end
 end

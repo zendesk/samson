@@ -36,6 +36,10 @@ class OutputBuffer
     @listeners.each {|listener| listener.push([event, data]) }
   end
 
+  def include?(event, data)
+    @previous.include?([event, data])
+  end
+
   def to_s
     @previous.select { |event, _data| event == :message }.map(&:last).join
   end
