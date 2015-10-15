@@ -148,6 +148,13 @@ describe Deploy do
     end
   end
 
+  describe "trim_reference" do
+    it "trims the Git reference" do
+      deploy = create_deploy!({reference: " master "})
+      deploy.reference.must_equal "master"
+    end
+  end
+
   def create_deploy!(attrs = {})
     default_attrs = {
       reference: "baz",

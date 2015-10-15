@@ -16,6 +16,8 @@ class Deploy < ActiveRecord::Base
   delegate :finished?, :errored?, :failed?, to: :job
   delegate :production?, :project, to: :stage
 
+  before_validation :trim_reference
+
   def cache_key
     [super, commit]
   end
@@ -163,5 +165,9 @@ class Deploy < ActiveRecord::Base
     else
       "(with #{buddy.name})"
     end
+  end
+
+  def trim_reference
+    self.reference.strip! if self.reference.presence
   end
 end
