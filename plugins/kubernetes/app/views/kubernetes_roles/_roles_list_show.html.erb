@@ -1,0 +1,31 @@
+<p class="pull-right">
+  <%= link_to "Create New Role", new_project_kubernetes_role_path(@project), class: "btn btn-default" %>
+</p>
+
+<table class="table table-condensed">
+  <thead>
+  <tr>
+    <th>Role</th>
+    <th>Config File</th>
+    <th>Service Name</th>
+    <th>RAM</th>
+    <th>CPU</th>
+    <th>Replicas</th>
+    <th>Actions</th>
+  </tr>
+  </thead>
+
+  <tbody>
+  <% @kubernetes_role_list.each do |role| %>
+    <tr>
+      <td><%= role.name %></td>
+      <td><%= role.config_file %></td>
+      <td><%= role.service_name %></td>
+      <td><%= role.ram %>MB</td>
+      <td><%= role.cpu.to_s %> cores</td>
+      <td><%= role.replicas %></td>
+      <td><%= link_to "Edit", edit_project_kubernetes_role_path(@project, role) %></td>
+    </tr>
+  <% end %>
+  </tbody>
+</table>

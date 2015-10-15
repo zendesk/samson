@@ -81,7 +81,7 @@ describe Admin::DeployGroupsController do
       it 'fail to edit with blank name' do
         post :update, deploy_group: {name: ''}, id: deploy_group.id
         assert_template :edit
-        flash[:error].must_equal ["Name can't be blank"]
+        flash[:error].must_include "Name can't be blank"
         DeployGroup.find(deploy_group.id).name.must_equal 'Pod 100'
       end
     end

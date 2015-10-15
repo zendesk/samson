@@ -1,0 +1,22 @@
+<div class="form-group">
+  <label class="col-lg-2 control-label">Role</label>
+  <div class="col-lg-4">
+    <p class="form-control-static"><%= release_doc.kubernetes_role.name %></p>
+  </div>
+</div>
+
+<div class="form-group">
+  <label class="col-lg-2 control-label">Num Replicas</label>
+  <div class="col-lg-4">
+    <p class="form-control-static"><%= release_doc.replica_count %></p>
+  </div>
+</div>
+
+<div class="form-group">
+  <label class="col-lg-2 control-label">Controller Doc</label>
+  <div class="col-lg-10">
+    <pre><%= release_doc.pretty_rc_doc %></pre>
+  </div>
+</div>
+
+<hr/>

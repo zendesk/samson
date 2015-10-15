@@ -24,7 +24,7 @@
   </div>
 
   <% if DeployGroup.enabled? %>
-    <%= render 'stages/deploy_group_select', form: form %>
+    <%= render 'deploy_groups/deploy_group_select', form: form %>
   <% else %>
     <div class="form-group">
       <div class="col-sm-offset-2 col-sm-10">

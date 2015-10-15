@@ -1,0 +1,19 @@
+pending_release:
+  release_group: test_release
+  deploy_group: pod100
+  status: created
+
+live_release:
+  release_group: test_release
+  deploy_group: pod100
+  status: live
+  # created_at: <%= 2.hours.ago %>
+  # deploy_finished_at: <%= 118.minutes.ago %>
+
+old_release:
+  release_group: test_release
+  deploy_group: pod100
+  status: dead
+  # created_at: <%= 2.hours.ago %>
+  # deploy_finished_at: <%= 118.minutes.ago %>
+  # destroyed_at: <%= 10.minutes.ago %>

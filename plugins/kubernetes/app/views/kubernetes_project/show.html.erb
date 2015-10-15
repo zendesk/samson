@@ -1,0 +1,10 @@
+<%= render 'projects/header', project: @project, tab: 'kubernetes' %>
+
+
+<section class="tabs">
+  <h1>Project Roles</h1>
+  <%= render partial: 'kubernetes_roles/roles_list_show' %>
+
+  <h1>Kubernetes Releases</h1>
+  <%= render partial: 'kubernetes_release_groups/kuber_release_group_table' %>
+</section>

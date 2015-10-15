@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20151001140703) do
+ActiveRecord::Schema.define(version: 20151013181500) do
 
   create_table "build_statuses", force: :cascade do |t|
     t.integer  "build_id",                                     null: false
@@ -155,6 +155,78 @@ ActiveRecord::Schema.define(version: 20151001140703) do
 
   add_index "jobs", ["project_id"], name: "index_jobs_on_project_id", using: :btree
   add_index "jobs", ["status"], name: "index_jobs_on_status", length: {"status"=>191}, using: :btree
+
+  create_table "kubernetes_cluster_deploy_groups", force: :cascade do |t|
+    t.integer  "kubernetes_cluster_id", limit: 4,   null: false
+    t.integer  "deploy_group_id",       limit: 4,   null: false
+    t.string   "namespace",             limit: 255, null: false
+    t.datetime "created_at"
+    t.datetime "updated_at"
+  end
+
+  add_index "kubernetes_cluster_deploy_groups", ["deploy_group_id"], name: "index_kubernetes_cluster_deploy_groups_on_deploy_group_id", using: :btree
+  add_index "kubernetes_cluster_deploy_groups", ["kubernetes_cluster_id"], name: "index_kuber_cluster_deploy_groups_on_kuber_cluster_id", using: :btree
+
+  create_table "kubernetes_clusters", force: :cascade do |t|
+    t.string   "name",            limit: 255
+    t.string   "description",     limit: 255
+    t.datetime "created_at"
+    t.datetime "updated_at"
+    t.string   "config_filepath", limit: 255
+    t.string   "config_context",  limit: 255
+  end
+
+  create_table "kubernetes_release_docs", force: :cascade do |t|
+    t.integer  "kubernetes_role_id",          limit: 4,     null: false
+    t.integer  "kubernetes_release_id",       limit: 4,     null: false
+    t.integer  "replica_count",               limit: 4,     null: false
+    t.string   "replication_controller_name", limit: 255
+    t.text     "replication_controller_doc",  limit: 65535
+    t.string   "status",                      limit: 255
+    t.datetime "created_at"
+    t.datetime "updated_at"
+  end
+
+  add_index "kubernetes_release_docs", ["kubernetes_release_id"], name: "index_kubernetes_release_docs_on_kubernetes_release_id", using: :btree
+  add_index "kubernetes_release_docs", ["kubernetes_role_id"], name: "index_kubernetes_release_docs_on_kubernetes_role_id", using: :btree
+
+  create_table "kubernetes_release_groups", force: :cascade do |t|
+    t.integer  "build_id",   limit: 4,     null: false
+    t.integer  "user_id",    limit: 4
+    t.text     "comment",    limit: 65535
+    t.datetime "created_at"
+    t.datetime "updated_at"
+  end
+
+  add_index "kubernetes_release_groups", ["build_id"], name: "index_kubernetes_release_groups_on_build_id", using: :btree
+
+  create_table "kubernetes_releases", force: :cascade do |t|
+    t.integer  "kubernetes_release_group_id", limit: 4,   null: false
+    t.integer  "deploy_group_id",             limit: 4,   null: false
+    t.string   "status",                      limit: 255
+    t.datetime "deploy_finished_at"
+    t.datetime "destroyed_at"
+    t.datetime "created_at"
+    t.datetime "updated_at"
+  end
+
+  add_index "kubernetes_releases", ["deploy_group_id"], name: "index_kubernetes_releases_on_deploy_group_id", using: :btree
+  add_index "kubernetes_releases", ["kubernetes_release_group_id"], name: "index_kubernetes_releases_on_kubernetes_release_group_id", using: :btree
+
+  create_table "kubernetes_roles", force: :cascade do |t|
+    t.integer  "project_id",      limit: 4,                           null: false
+    t.string   "name",            limit: 255,                         null: false
+    t.string   "config_file",     limit: 255
+    t.integer  "replicas",        limit: 4,                           null: false
+    t.integer  "ram",             limit: 4,                           null: false
+    t.decimal  "cpu",                         precision: 4, scale: 2, null: false
+    t.string   "service_name",    limit: 255
+    t.string   "deploy_strategy", limit: 255,                         null: false
+    t.datetime "created_at",                                          null: false
+    t.datetime "updated_at",                                          null: false
+  end
+
+  add_index "kubernetes_roles", ["project_id"], name: "index_kubernetes_roles_on_project_id", using: :btree
 
   create_table "locks", force: :cascade do |t|
     t.integer  "stage_id",    limit: 4

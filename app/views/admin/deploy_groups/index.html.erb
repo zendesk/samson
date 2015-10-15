@@ -8,6 +8,10 @@
           <th>Name</th>
           <th>Environment</th>
           <th>$DEPLOY_GROUPS</th>
+          <% if Samson::Hooks.active_plugin?('kubernetes') %>
+            <th>Kubernetes Cluster</th>
+          <% end %>
+          <th>Actions</th>
         </tr>
       </thead>
 
@@ -17,7 +21,12 @@
             <td><%= deploy_group.name%></td>
             <td><%= deploy_group.environment.name %></td>
             <td><%= deploy_group.env_value %></td>
+            <% if Samson::Hooks.active_plugin?('kubernetes') %>
+              <td><%= link_to(deploy_group.kubernetes_cluster.name, kubernetes_cluster_path(deploy_group.kubernetes_cluster)) if deploy_group.kubernetes_cluster %></td>
+            <% end %>
             <td>
+              <%= link_to "Show", admin_deploy_group_path(deploy_group) %>
+              |
               <%= link_to "Edit", edit_admin_deploy_group_path(deploy_group) %>
               |
               <%= link_to_delete([:admin, deploy_group]) %>

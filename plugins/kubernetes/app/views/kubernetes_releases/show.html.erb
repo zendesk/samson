@@ -1,0 +1,33 @@
+
+<%
+   title = "Release #{@kubernetes_release.id}"
+   content_for :page_title, title
+%>
+
+<%= breadcrumb @project,
+               ['Kubernetes', project_kubernetes_releases_path(@project)],
+               title
+%>
+
+<h1><%= title %></h1>
+
+<section class="clearfix tabs">
+  <dl class="dl-horizontal">
+    <dt>Id</dt>
+    <dd><%= @kubernetes_release.id  %></dd>
+
+    <dt>Created</dt>
+    <dd><%= @kubernetes_release.created_at  %></dd>
+
+    <dt>Created By</dt>
+    <dd><%= @kubernetes_release.user.name_and_email %></dd>
+
+    <dt>Deploy Group</dt>
+    <dd><%= @kubernetes_release.deploy_group.name  %></dd>
+
+    <dt>Replication Controller</dt>
+    <dd><pre><%= @kubernetes_release.pretty_rc_doc(format: :yml) %></pre></dd>
+
+  </dl>
+
+</section>

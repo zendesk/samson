@@ -1,0 +1,35 @@
+<% build ||= nil %>
+
+<p class="pull-right">
+  <%= link_to "Create Release", new_project_kubernetes_release_group_path(@project, build_id: build.try(:id)), class: "btn btn-default" %>
+</p>
+
+<table class="table">
+  <tr>
+    <th>Id</th>
+    <% unless build %>
+      <th>Build</th>
+    <% end %>
+    <th>Deploy Groups</th>
+    <th>Created</th>
+    <th>Created By</th>
+  </tr>
+
+  <% if @release_group_list.any? %>
+    <% @release_group_list.each do |release_group| %>
+      <tr>
+        <td><%= link_to release_group.id, project_kubernetes_release_group_path(@project, release_group) %></td>
+        <% unless build %>
+          <td><%= link_to release_group.build.label, project_build_path(@project, release_group.build) %></td>
+        <% end %>
+        <td><%= release_group.releases.map { |r| r.deploy_group.name }.join(', ') %></td>
+        <td><%= release_group.created_at.to_s %></td>
+        <td><%= release_group.user.name %></td>
+      </tr>
+    <% end %>
+  <% else %>
+    <tr>
+      <td colspan="<%= build ? 4 : 5 %>">None</td>
+    </tr>
+  <% end %>
+</table>

@@ -91,7 +91,7 @@ Samson::Application.routes.draw do
     resource :projects, only: [:show]
     resources :commands, except: [:show]
     resources :environments, except: [:show]
-    resources :deploy_groups, except: [:show]
+    resources :deploy_groups
   end
 
   namespace :integrations do
