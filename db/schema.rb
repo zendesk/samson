@@ -165,7 +165,7 @@ ActiveRecord::Schema.define(version: 20151013181500) do
   end
 
   add_index "kubernetes_cluster_deploy_groups", ["deploy_group_id"], name: "index_kubernetes_cluster_deploy_groups_on_deploy_group_id", using: :btree
-  add_index "kubernetes_cluster_deploy_groups", ["kubernetes_cluster_id"], name: "index_kubernetes_cluster_deploy_groups_on_kubernetes_cluster_id", using: :btree
+  add_index "kubernetes_cluster_deploy_groups", ["kubernetes_cluster_id"], name: "index_kuber_cluster_deploy_groups_on_kuber_cluster_id", using: :btree
 
   create_table "kubernetes_clusters", force: :cascade do |t|
     t.string   "name",            limit: 255
