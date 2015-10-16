@@ -65,7 +65,9 @@ class ActiveSupport::TestCase
     create_default_stubs
   end
 
-  after { fail_if_dangling_threads }
+  unless ENV['SKIP_TIMEOUT']
+    after { fail_if_dangling_threads }
+  end
 
   def fail_if_dangling_threads
     max_threads = ENV['CI'] ? 0 : 1
@@ -149,6 +151,15 @@ class ActionController::TestCase
     end
 
     %w{super_admin admin deployer viewer}.each do |user|
+      define_method "as_a_#{user}" do |&block|
+        describe "as a #{user}" do
+          setup { request.env['warden'].set_user(users(user)) }
+          instance_eval(&block)
+        end
+      end
+    end
+
+    %w{deployer_project_admin}.each do |user|
       define_method "as_a_#{user}" do |&block|
         describe "as a #{user}" do
           setup { request.env['warden'].set_user(users(user)) }

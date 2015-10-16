@@ -300,6 +300,8 @@ GEM
     rails-assets-angular (1.4.7)
     rails-assets-angular-mocks (1.4.7)
       rails-assets-angular (= 1.4.7)
+    rails-assets-angular-route (1.4.7)
+      rails-assets-angular (= 1.4.7)
     rails-assets-angular-scenario (1.4.7)
       rails-assets-angular (= 1.4.7)
     rails-assets-bootstrap-select (1.7.4)
@@ -310,6 +312,9 @@ GEM
       rails-assets-jquery (>= 1.6)
     rails-assets-jquery-ujs (1.1.0)
       rails-assets-jquery (> 1.8)
+    rails-assets-message-center (1.2.5)
+      rails-assets-angular (>= 1.2.0, < 1.5.0)
+      rails-assets-angular-route (>= 1.2.0, < 1.5.0)
     rails-assets-moment (2.10.6)
     rails-assets-rickshaw (1.5.1)
     rails-assets-typeahead.js (0.11.1)
@@ -476,6 +481,7 @@ DEPENDENCIES
   rails-assets-jquery!
   rails-assets-jquery-ui!
   rails-assets-jquery-ujs!
+  rails-assets-message-center!
   rails-assets-moment!
   rails-assets-rickshaw!
   rails-assets-typeahead.js!

@@ -1,7 +1,11 @@
 module Admin::UsersHelper
 
-  def can_modify_roles?
-    current_user.is_super_admin?
+  def project_role_id_for(user, project)
+    user.project_role_for(project).try(:id)
+  end
+
+  def role_id_for(user, project)
+    user.project_role_for(project).try(:role_id)
   end
 
 end

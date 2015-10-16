@@ -1,28 +1,42 @@
 require_relative '../../test_helper'
 
 describe Admin::UsersController do
-  describe 'a GET to #show' do
-    before do
-      get :index
-    end
 
-    as_a_admin do
+  as_a_viewer do
+    unauthorized :get, :index
+    unauthorized :get, :show, id: 1
+    unauthorized :delete, :destroy, project_id: 1, id: 1
+    unauthorized :put, :update, id: 1
+  end
+
+  as_a_deployer do
+    unauthorized :get, :index
+    unauthorized :get, :show, id: 1
+    unauthorized :delete, :destroy, id: 1
+    unauthorized :put, :update, id: 1
+  end
+
+  as_a_admin do
+    unauthorized :delete, :destroy, id: 1
+    unauthorized :put, :update, id: 1
+  end
+
+  as_a_admin do
+    describe 'a GET to #index' do
+      before do
+        get :index
+      end
+
       it 'succeeds' do
         assert_template :index, partial: '_search_bar'
       end
     end
 
-    as_a_deployer do
-      unauthorized :get, :index
-    end
-  end
+    describe 'a json GET to #index' do
+      before do
+        get :index, format: :json
+      end
 
-  describe 'a json GET to #show' do
-    before do
-      get :index, format: :json
-    end
-
-    as_a_admin do
       it 'succeeds' do
         response.success?.must_equal true
         json_response = JSON.parse response.body
@@ -35,10 +49,8 @@ describe Admin::UsersController do
         end
       end
     end
-  end
 
-  describe 'a json get to #show with a search string' do
-    as_a_admin do
+    describe 'a json get to #index with a search string' do
       it 'succeeds and fetches a single user' do
         get :index, search: 'Super Admin' , format: :json
 
@@ -83,20 +95,33 @@ describe Admin::UsersController do
         end
       end
     end
+
+    describe 'a GET to #show' do
+      let(:user) { users(:viewer) }
+
+      before do
+        get :show, id: user.id
+      end
+
+      it 'succeeds' do
+        assert_template :show, partial: '_project', locals: { user: user }
+      end
+    end
   end
 
-  describe 'a DELETE to #destroy' do
-    let(:user) { users(:viewer) }
+  as_a_super_admin do
+    describe 'a PUT to #update' do
+      let(:user) { users(:viewer) }
 
-    as_a_deployer do
-      unauthorized :delete, :destroy, project_id: 1, id: 1
+      it 'updates the user role' do
+        put :update, id: user.id, user: {role_id: 2}
+        user.reload.role_id.must_equal 2
+        assert_response :success
+      end
     end
 
-    as_a_admin do
-      unauthorized :delete, :destroy, project_id: 1, id: 1
-    end
-
-    as_a_super_admin do
+    describe 'a DELETE to #destroy' do
+      let(:user) { users(:viewer) }
 
       it 'soft delete the user' do
         delete :destroy, id: user.id

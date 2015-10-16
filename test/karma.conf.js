@@ -20,6 +20,7 @@ module.exports = function(config) {
       '<%= resolve_asset("angular-mocks.js") %>',
       '<%= resolve_asset("underscore.js") %>',
       '<%= resolve_asset("moment.js") %>',
+      '<%= resolve_asset("message-center") %>',
       'test/angular/test_helper.js',
       'app/assets/javascripts/app.js',
       'app/assets/javascripts/controllers/**/*.js',

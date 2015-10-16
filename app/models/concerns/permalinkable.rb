@@ -9,7 +9,15 @@ module Permalinkable
 
   module ClassMethods
     def find_by_param!(param)
-      find_by_permalink!(param)
+      begin
+        find_by_permalink!(param)
+      rescue ActiveRecord::RecordNotFound
+        if param =~ /^\d+$/
+          find_by_id!(param)
+        else
+          raise
+        end
+      end
     end
   end
 

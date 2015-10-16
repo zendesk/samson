@@ -1,0 +1,35 @@
+<h1><%= @user.name %></h1>
+
+<section id="user-description" class="clearfix">
+  <dl class="dl-horizontal">
+    <dt>Name:</dt>
+    <dd><%= @user.name %></dd>
+    <dt>System Role:</dt>
+    <dd><%= Role.find(@user.role_id).display_name %></dd>
+  </dl>
+</section>
+<section id="user-project-roles" class="clearfix">
+  <h2 class="section-subtitle">Project Level Roles</h2>
+
+  <%= render partial: "shared/search_bar", locals: {url: admin_user_path, query: params[:search]} %>
+
+  <table id="users" class="table table-hover table-condensed">
+    <thead>
+    <tr>
+      <th><%= sortable "id" %></th>
+      <th><%= sortable "name" %></th>
+      <th>Role</th>
+    </tr>
+    </thead>
+    <tbody>
+    <% if @projects.empty? %>
+        <tr>
+          <td>No project was found!</td>
+        </tr>
+    <% else %>
+        <%= render partial: 'project', collection: @projects, as: :project, locals: {user: @user} %>
+    <% end %>
+    </tbody>
+  </table>
+  <%= paginate @projects %>
+</section>

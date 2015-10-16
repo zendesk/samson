@@ -24,6 +24,7 @@
 //= require bootstrap-select
 //= require jquery-ui
 //= require x-editable/dist/bootstrap3-editable/js/bootstrap-editable
+//= require message-center
 //= require rickshaw/vendor/d3.min
 //= require rickshaw
 //= require vis

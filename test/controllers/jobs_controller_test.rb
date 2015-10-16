@@ -9,11 +9,6 @@ describe JobsController do
   let(:job_service) { stub(execute!: nil) }
   let(:execute_called) { [] }
 
-  setup do
-    JobService.stubs(:new).with(project, admin).returns(job_service)
-    job_service.stubs(:execute!).capture(execute_called).returns(job)
-  end
-
   as_a_viewer do
     describe "a GET to :index" do
       setup { get :index, project_id: project.to_param }
@@ -51,24 +46,29 @@ describe JobsController do
       end
     end
 
-    unauthorized :post, :create, project_id: 1
-    unauthorized :delete, :destroy, project_id: 1, id: 1
+    unauthorized :post, :create, project_id: :foo
+    unauthorized :delete, :destroy, project_id: :foo, id: 1
   end
 
   as_a_deployer do
-    unauthorized :post, :create, project_id: 1
-    unauthorized :delete, :destroy, project_id: 1, id: 1
+    unauthorized :post, :create, project_id: :foo
+    unauthorized :delete, :destroy, project_id: :foo, id: 1
   end
 
   as_a_admin do
+    setup do
+      JobService.stubs(:new).with(project, admin).returns(job_service)
+      job_service.stubs(:execute!).capture(execute_called).returns(job)
+    end
+
     describe "a POST to :create" do
       setup do
         JobExecution.stubs(:start_job)
 
-        post :create, commands: { ids: [] }, job: {
-          command: command,
-          commit: "master"
-        }, project_id: project.to_param
+        post :create, commands: {ids: []}, job: {
+            command: command,
+            commit: "master"
+          }, project_id: project.to_param
       end
 
       let(:params)
@@ -85,29 +85,85 @@ describe JobsController do
     describe "a DELETE to :destroy" do
       describe "with a job owned by the admin" do
         setup do
-          Job.any_instance.stubs(:can_be_stopped_by?).returns(true)
-
           delete :destroy, project_id: project.to_param, id: job
         end
 
         it "responds with 302" do
           response.status.must_equal(302)
+          flash.must_be_empty
+        end
+      end
+
+      describe "with a job not owned by the admin" do
+        let(:another_job) { jobs(:succeeded_test) }
+
+        setup do
+          delete :destroy, project_id: project.to_param, id: another_job
+        end
+
+        it "responds with 302" do
+          response.status.must_equal(302)
+          flash.must_be_empty
         end
       end
     end
   end
 
-  as_a_admin do
+  as_a_deployer_project_admin do
+    let(:project_admin) { users(:deployer_project_admin) }
+    let(:job) { Job.create!(command: command, project: project, user: project_admin) }
+
+    setup do
+      JobService.stubs(:new).with(project, project_admin).returns(job_service)
+      job_service.stubs(:execute!).capture(execute_called).returns(job)
+    end
+
+    describe "a POST to :create" do
+      setup do
+        JobExecution.stubs(:start_job)
+
+        post :create, commands: {ids: []}, job: {
+            command: command,
+            commit: "master"
+          }, project_id: project.to_param
+      end
+
+      let(:params)
+
+      it "redirects to the job path" do
+        assert_redirected_to project_job_path(project, job)
+      end
+
+      it "creates a job" do
+        assert_equal [["master", [], command]], execute_called
+      end
+    end
+
     describe "a DELETE to :destroy" do
-      describe "with a valid job" do
+      describe "with a job owned by the project admin" do
         setup do
           delete :destroy, project_id: project.to_param, id: job
         end
 
         it "responds with 302" do
           response.status.must_equal(302)
+          flash.must_be_empty
+        end
+      end
+
+      describe "with a job not owned by the project admin" do
+        let(:another_job) { jobs(:succeeded_test) }
+
+        setup do
+          delete :destroy, project_id: project.to_param, id: another_job
+        end
+
+        it "responds with 302" do
+          response.status.must_equal(302)
+          flash.must_be_empty
         end
       end
     end
   end
 end
+
