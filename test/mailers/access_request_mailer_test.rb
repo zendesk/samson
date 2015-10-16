@@ -14,65 +14,67 @@ describe AccessRequestMailer do
 
     before do
       enable_access_request(address_list, prefix)
-      AccessRequestMailer.access_request_email(hostname, user, manager_email, reason).deliver_now
     end
 
     after { restore_access_request_settings }
 
-    it 'is from deploys@' do
-      subject.from.must_equal ['deploys@samson-deployment.com']
-    end
+    describe 'multiple projects' do
+      before do
+        Project.any_instance.stubs(:valid_repository_url).returns(true)
+        Project.create!(name: 'Second project', repository_url: 'git://foo.com:hello/world.git')
+        AccessRequestMailer.access_request_email(
+            hostname, user, manager_email, reason, Project.all.pluck(:id)).deliver_now
+      end
 
-    it 'sends to configured addresses' do
-      subject.to.must_equal(address_list.split << manager_email)
-    end
+      it 'is from deploys@' do
+        subject.from.must_equal ['deploys@samson-deployment.com']
+      end
 
-    it 'includes prefix in subject' do
-      subject.subject.must_match /\[#{prefix}\]/
-    end
+      it 'sends to configured addresses' do
+        subject.to.must_equal(address_list.split << manager_email)
+      end
 
-    it 'includes name in subject' do
-      subject.subject.must_match /#{user.name}/
-    end
+      it 'has a correct subject' do
+        subject.subject.must_match /#{user.name}/
+        subject.subject.must_match /#{Role.find(user.role_id + 1).name}/
+      end
 
-    it 'includes proper role in subject' do
-      subject.subject.must_match /#{Role.find(user.role_id + 1).name}/
-    end
+      it 'includes relevant information in body' do
+        subject.body.to_s.must_match /#{user.email}/
+        subject.body.to_s.must_match /#{Role.find(user.role_id + 1).name}/
+        subject.body.to_s.must_match /#{hostname}/
+        subject.body.to_s.must_match /#{reason}/
+        Project.all.each { |project| subject.body.to_s.must_match /#{project.name}/ }
+      end
 
-    it 'includes email in body' do
-      subject.body.to_s.must_match /#{user.email}/
-    end
+      describe 'no subject prefix' do
+        let(:prefix) { nil }
+        it 'does not include brackets if no prefix configured' do
+          subject.subject.wont_match /\[.*\]/
+        end
+      end
 
-    it 'includes proper role in body' do
-      subject.body.to_s.must_match /#{Role.find(user.role_id + 1).name}/
-    end
+      describe 'single address configured' do
+        let(:address_list) { 'jira@example.com' }
+        it 'handles single email address configured' do
+          subject.to.must_equal([address_list, manager_email])
+        end
+      end
 
-    it 'includes host in body' do
-      subject.body.to_s.must_match /#{hostname}/
-    end
-
-    it 'includes reason in body' do
-      subject.body.to_s.must_match /#{reason}/
-    end
-
-    describe 'no subject prefix' do
-      let(:prefix) { nil }
-      it 'does not include brackets if no prefix configured' do
-        subject.subject.wont_match /\[.*\]/
+      describe 'no address configured' do
+        let(:address_list) { nil }
+        it 'handles no configured email address' do
+          subject.to.must_equal([manager_email])
+        end
       end
     end
 
-    describe 'single address configured' do
-      let(:address_list) { 'jira@example.com' }
-      it 'handles single email address configured' do
-        subject.to.must_equal([address_list, manager_email])
-      end
-    end
+    describe 'single project' do
+      before { AccessRequestMailer.access_request_email(
+          hostname, user, manager_email, reason, [projects(:test).id]).deliver_now }
 
-    describe 'no address configured' do
-      let(:address_list) { nil }
-      it 'handles no configured email address' do
-        subject.to.must_equal([manager_email])
+      it 'includes target project name in body' do
+        subject.body.to_s.must_match /#{projects(:test).name}/
       end
     end
   end
