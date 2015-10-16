@@ -18,7 +18,8 @@ describe 'zendesk hooks' do
   describe :after_job_execution do
     it 'kicks off the next stages in the deploy' do
       stage.update!(next_stage_ids: next_stages.map(&:id))
-      DeployService.any_instance.expects(:deploy!).returns(next_deploy).twice
+      DeployService.any_instance.expects(:deploy!).with(stages(:test_production),     reference: 'staging')
+      DeployService.any_instance.expects(:deploy!).with(stages(:test_production_pod), reference: 'staging')
       Samson::Hooks.fire(:after_job_execution, job, true, output)
     end
 
