@@ -17,7 +17,7 @@ module SamsonPipelines
     private
 
     def start_next_stage(next_stage, current_job, deploy_service, output)
-      deploy = deploy_service.deploy!(next_stage, reference: current_job.deploy.commit)
+      deploy = deploy_service.deploy!(next_stage, reference: current_job.deploy.reference)
       if !deploy.persisted?
         output.puts "# Pipeline: Failed to start the next stage '#{next_stage.name}': #{deploy.errors.full_messages}\n"
       elsif next_stage.deploy_requires_approval?
