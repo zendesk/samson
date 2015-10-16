@@ -1,18 +1,16 @@
 class ProjectsController < ApplicationController
-  include CurrentProject
   include ProjectLevelAuthorization
   include StagePermittedParams
 
-  attr_reader :project
-  
-  before_action except: [:index, :new, :create] do
-    find_project(params[:id])
-  end
+  skip_before_action :require_project, only: [:index, :new, :create]
+
   before_action :authorize_admin!, only: [:new, :create, :destroy]
   before_action :authorize_project_admin!, except: [:show, :index, :deploy_group_versions]
   before_action :get_environments, only: [:new, :create]
 
   helper_method :project
+
+  alias_method :project, :current_project
 
   def index
     respond_to do |format|
@@ -108,5 +106,10 @@ class ProjectsController < ApplicationController
 
   def get_environments
     @environments = Environment.all
+  end
+
+  # Overriding require_project from CurrentProject
+  def require_project
+    @project = (Project.find_by_param!(params[:id]) if params[:id])
   end
 end
