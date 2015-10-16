@@ -13,17 +13,6 @@ describe Stage do
     project.stages = [stage1, stage2, stage3]
   end
 
-  describe '#next_stage' do
-    it 'returns next created stage if no pipeline set' do
-      stage2.next_stage.id.must_equal stage3.id
-    end
-
-    it 'returns next stage in pipeline if set' do
-      stage2.update!(next_stage_ids: [ stage1.id, stage3.id ])
-      stage2.next_stage.id.must_equal stage1.id
-    end
-  end
-
   describe '#production?' do
     it 'returns false if no pipeline set and not marked production' do
       stage1.deploy_groups = [ staging ]
