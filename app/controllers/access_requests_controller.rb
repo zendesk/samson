@@ -7,6 +7,7 @@ class AccessRequestsController < ApplicationController
 
   def new
     session[:access_request_back_to] ||= request.referer
+    @projects = Project.all.order(:name)
   end
 
   def create

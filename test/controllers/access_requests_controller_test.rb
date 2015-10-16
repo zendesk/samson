@@ -55,7 +55,7 @@ describe AccessRequestsController do
       describe 'enabled' do
         let(:manager_email) { 'manager@example.com' }
         let(:reason) { 'Dummy reason.' }
-        let(:request_params) { {manager_email: manager_email, reason: reason, project_ids: Project.all.map(&:id)} }
+        let(:request_params) { {manager_email: manager_email, reason: reason, project_ids: Project.all.pluck(:id)} }
         let(:session_params) { {access_request_back_to: root_path} }
         describe 'environment and user' do
           before { post :create, request_params, session_params }
