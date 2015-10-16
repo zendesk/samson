@@ -243,7 +243,7 @@ describe User do
 
   describe "#admin_for_project?" do
     it "is true for a user that has been granted the role of project admin" do
-      users(:deployer_project_admin).is_admin_for?(projects(:test)).must_equal(true)
+      users(:project_admin).is_admin_for?(projects(:test)).must_equal(true)
     end
 
     it "is false for users that have not been granted the role of project admin" do
@@ -256,11 +256,11 @@ describe User do
 
   describe "#deployer_for_project?" do
     it "is true for a user that has been granted the role of project deployer" do
-      users(:viewer_project_deployer).is_deployer_for?(projects(:test)).must_equal(true)
+      users(:project_deployer).is_deployer_for?(projects(:test)).must_equal(true)
     end
 
     it "is true for a user that has been granted the role of project admin" do
-      users(:deployer_project_admin).is_deployer_for?(projects(:test)).must_equal(true)
+      users(:project_admin).is_deployer_for?(projects(:test)).must_equal(true)
     end
 
     it "is false for users that have not been granted the roles of project deployer or project admin" do
@@ -273,7 +273,7 @@ describe User do
 
   describe "#project_role_for" do
     it "returns the project role for the given project" do
-      users(:deployer_project_admin).project_role_for(projects(:test)).must_equal user_project_roles(:project_admin)
+      users(:project_admin).project_role_for(projects(:test)).must_equal user_project_roles(:project_admin)
     end
   end
 end
