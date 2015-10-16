@@ -4,10 +4,6 @@ module SamsonPipelines::StageConcern
     super || next_stages.any?(&:production?)
   end
 
-  def next_stage
-    next_stage_ids.empty? ? super : Stage.find(next_stage_ids.first)
-  end
-
   def next_stages
     Stage.find(next_stage_ids)
   end
