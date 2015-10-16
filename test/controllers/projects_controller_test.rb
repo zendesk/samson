@@ -86,7 +86,7 @@ describe ProjectsController do
       end
     end
 
-    as_a_deployer_project_admin do
+    as_a_project_admin do
       unauthorized :get, :new
     end
   end
@@ -156,7 +156,7 @@ describe ProjectsController do
       end
     end
 
-    as_a_deployer_project_admin do
+    as_a_project_admin do
       unauthorized :post, :create
     end
   end
@@ -189,7 +189,7 @@ describe ProjectsController do
       end
     end
 
-    as_a_deployer_project_admin do
+    as_a_project_admin do
       unauthorized :delete, :destroy, id: :foo
     end
   end
@@ -242,7 +242,7 @@ describe ProjectsController do
       end
     end
 
-    as_a_deployer_project_admin do
+    as_a_project_admin do
       it "does not find soft deleted" do
         project.soft_delete!
         assert_raises ActiveRecord::RecordNotFound do
@@ -305,7 +305,7 @@ describe ProjectsController do
       end
     end
 
-    as_a_deployer_project_admin do
+    as_a_project_admin do
       it "renders" do
         get :edit, id: project.to_param
         assert_template :edit
