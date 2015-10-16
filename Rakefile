@@ -6,10 +6,7 @@ require File.expand_path('../config/application', __FILE__)
 Samson::Application.load_tasks
 
 Rake::Task["default"].clear
-
-Rails::TestTask.new(:default) do |t|
-  t.pattern = "{test,plugins/*/test}/**/*_test.rb"
-end
+task default: :test
 
 namespace :plugins do
   Rails::TestTask.new(:test) do |t|
@@ -18,6 +15,10 @@ namespace :plugins do
 end
 
 namespace :test do
+  Rails::TestTask.new(:default) do |t|
+    t.pattern = "{test,plugins/*/test}/**/*_test.rb"
+  end
+
   task js: :environment do
     with_tmp_karma_config do |config|
       sh "./node_modules/karma/bin/karma start #{config} --single-run"
