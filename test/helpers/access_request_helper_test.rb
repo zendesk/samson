@@ -7,12 +7,28 @@ describe AccessRequestHelper do
     after { restore_access_request_settings }
 
     describe 'feature enabled' do
-      it 'returns true for authorization_error' do
-        assert(display_access_request_link? :authorization_error)
+      describe 'viewer user' do
+        let(:current_user) { users(:viewer) }
+
+        it 'returns true for authorization_error' do
+          assert(display_access_request_link? :authorization_error)
+        end
+
+        it 'returns true for default params' do
+          assert display_access_request_link?
+        end
+
+        it 'returns false for other flash types' do
+          refute(display_access_request_link? :success)
+        end
       end
 
-      it 'returns false for other flash types' do
-        refute(display_access_request_link? :success)
+      describe 'super_admin user' do
+        let(:current_user) { users(:super_admin) }
+
+        it 'returns false for super_admin' do
+          refute display_access_request_link?
+        end
       end
     end
 
