@@ -23,11 +23,11 @@
     </thead>
     <tbody>
     <% if @projects.empty? %>
-        <tr>
-          <td>No project was found!</td>
-        </tr>
+      <tr>
+        <td>No project was found!</td>
+      </tr>
     <% else %>
-        <%= render partial: 'project', collection: @projects, as: :project, locals: {user: @user} %>
+      <%= render partial: 'project', collection: @projects, as: :project, locals: {user: @user} %>
     <% end %>
     </tbody>
   </table>

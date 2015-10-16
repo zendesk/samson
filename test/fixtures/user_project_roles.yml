@@ -1,9 +1,9 @@
 project_admin:
-  user: deployer_project_admin
+  user: project_admin
   project: test
   role_id: <%= ProjectRole::ADMIN.id %>
 
 project_deployer:
-  user: viewer_project_deployer
+  user: project_deployer
   project: test
   role_id: <%= ProjectRole::DEPLOYER.id %>

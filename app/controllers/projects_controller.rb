@@ -4,7 +4,7 @@ class ProjectsController < ApplicationController
   include StagePermittedParams
 
   attr_reader :project
-
+  
   before_action except: [:index, :new, :create] do
     find_project(params[:id])
   end
