@@ -1,8 +1,15 @@
 require 'samson/integration'
 
 class WebhooksController < ApplicationController
+  include SamsonAudit
+
   before_action :authorize_deployer!
   before_action :find_project
+
+  #Audit
+  after_action only: [:create, :destroy] do
+    audit(webhook)
+  end
 
   def index
     @webhooks = @project.webhooks
@@ -14,20 +21,17 @@ class WebhooksController < ApplicationController
   end
 
   def create
-    @project.webhooks.create!(webhook_params)
-
+    @webhook = @project.webhooks.create!(webhook_params)
     redirect_to project_webhooks_path(@project)
   end
 
   def destroy
-    webhook = @project.webhooks.find(params[:id])
     webhook.soft_delete!
-
     redirect_to project_webhooks_path(@project)
   end
 
   def show
-    @webhook = @project.webhooks.find(params[:id])
+    webhook
   end
 
   private
@@ -40,4 +44,7 @@ class WebhooksController < ApplicationController
     params.require(:webhook).permit(:branch, :stage_id, :source)
   end
 
+  def webhook
+    @webhook ||= @project.webhooks.find(params[:id])
+  end
 end

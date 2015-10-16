@@ -2,6 +2,7 @@ require 'open-uri' # needed to fetch from img.shields.io using open()
 
 class StagesController < ApplicationController
   include StagePermittedParams
+  include SamsonAudit
 
   skip_before_action :login_users, if: :badge?
   before_action :authorize_admin!, except: [:index, :show]
@@ -10,6 +11,14 @@ class StagesController < ApplicationController
   before_action :find_project
   before_action :find_stage, only: [:show, :edit, :update, :destroy, :clone]
   before_action :get_environments, only: [:new, :create, :edit, :update, :clone]
+
+  #Audit
+  before_action only: :update do
+    prepare_audit(@stage)
+  end
+  after_action only: :update do
+    audit(@stage)
+  end
 
   def index
     @stages = @project.stages

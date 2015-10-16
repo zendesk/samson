@@ -19,6 +19,8 @@ describe WebhooksController do
   describe 'POST :create' do
     let(:params) { { branch: "master", stage_id: stage.id, source: 'any' } }
     setup do
+      @controller.expects(:audit).times(1)
+
       post :create, project_id: project.to_param, webhook: params
     end
 

@@ -193,6 +193,11 @@ describe StagesController do
 
     describe 'PATCH to #update' do
       describe 'valid id' do
+        setup do
+          @controller.expects(:prepare_audit).times(1)
+          @controller.expects(:audit).times(1)
+        end
+
         before do
           patch :update, project_id: subject.project.to_param, id: subject.to_param,
             stage: attributes
