@@ -25,7 +25,7 @@
       <%= form.label :config_context, 'Context', class: "col-lg-2 control-label" %>
       <div class="col-lg-2">
         <% if @context_options.any? %>
-          <%= form.select :config_context, @context_options %>
+          <%= form.select :config_context, @context_options, {}, { class: 'form-control' } %>
         <% else %>
           <%= form.text_field :config_context, class: "form-control" %>
         <% end %>
