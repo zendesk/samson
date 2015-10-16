@@ -1,10 +1,6 @@
 class StarsController < ApplicationController
   include CurrentProject
 
-  before_action do
-    find_project(params[:project_id])
-  end
-
   def create
     current_user.stars.create!(project: @project)
 

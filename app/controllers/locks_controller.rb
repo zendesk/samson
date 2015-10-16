@@ -1,12 +1,10 @@
 class LocksController < ApplicationController
   include ProjectLevelAuthorization
 
-  before_action unless: :for_global_lock? do
-    find_project
-    authorize_project_deployer!
-  end
-
   before_action :authorize_admin!, if: :for_global_lock?
+
+  before_action :require_project, unless: :for_global_lock?
+  before_action :authorize_project_deployer!, unless: :for_global_lock?
 
   def create
     attributes = params.require(:lock).
@@ -38,7 +36,8 @@ class LocksController < ApplicationController
     @lock ||= Lock.find(params[:id])
   end
 
-  def find_project
+  #Overrides CurrentProject#require_project
+  def require_project
     case action_name
     when 'create' then
       @project = Stage.find(params[:lock][:stage_id]).project
