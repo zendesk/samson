@@ -185,6 +185,8 @@ class JobExecution
       CACHE_DIR: artifact_cache_dir
     }.merge(@env)
 
+    env.merge!(Hash[*Samson::Hooks.fire(:additional_exports, @job)])
+
     commands = env.map do |key, value|
       "export #{key}=#{value.shellescape}"
     end
