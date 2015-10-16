@@ -79,7 +79,11 @@ class ActiveSupport::TestCase
   end
 
   def extra_threads
-    Thread.list - @before_threads
+    if @before_threads
+      Thread.list - @before_threads
+    else
+      []
+    end
   end
 
   def assert_valid(record)
