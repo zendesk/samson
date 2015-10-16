@@ -44,14 +44,10 @@ class EventStreamer
   rescue IOError, ActionController::Live::ClientDisconnected
     # Raised on stream close
   ensure
-    finished
+    finish
   end
 
-  def finished
-    emit_event('finished', @handler.call(:finished, ''))
-  rescue IOError, ActionController::Live::ClientDisconnected
-    # Raised on stream close
-  ensure
+  def finish
     ActiveRecord::Base.clear_active_connections!
 
     # Hackity-hack: clear out the buffer since
@@ -80,7 +76,7 @@ class EventStreamer
           sleep(5) # Timeout of 5 seconds
         end
       rescue IOError, ActionController::Live::ClientDisconnected
-        finished
+        finish
       end
     end
   end

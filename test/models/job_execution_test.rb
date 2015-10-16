@@ -168,6 +168,26 @@ describe JobExecution do
     assert_equal true, called_subscriber
   end
 
+  it 'outputs start / stop events' do
+    execution = JobExecution.new('master', job)
+    output = execution.output
+    execution.send(:run!)
+
+    assert output.include?(:started, '')
+    assert output.include?(:finished, '')
+  end
+
+  it 'calls subscribers after queued stoppage' do
+    called_subscriber = false
+
+    execution = JobExecution.new('master', job)
+    execution.on_complete { called_subscriber = true }
+    execution.stop!
+
+    assert_equal true, called_subscriber
+    assert_equal 'cancelled', job.status
+  end
+
   it 'saves job output before calling subscriber' do
     output = nil
     execute_job { output = job.output }

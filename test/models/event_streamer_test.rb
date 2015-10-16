@@ -62,9 +62,4 @@ describe EventStreamer do
     streamer.start(output)
     assert stream.closed?
   end
-
-  it "writes a finished event" do
-    streamer.start(output)
-    stream.lines.must_include "event: finished\ndata: \n\n"
-  end
 end
