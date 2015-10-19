@@ -37,7 +37,7 @@ class StagesController < ApplicationController
 
         if stale?(etag: badge)
           expires_in 1.minute, public: true
-          image = open("http://img.shields.io/badge/#{badge}.svg").read
+          image = open("https://img.shields.io/badge/#{badge}.svg").read
           render text: image, content_type: Mime::SVG
         end
       end
