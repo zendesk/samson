@@ -3,8 +3,9 @@
 ## Samson
 
 [![Build Status](https://travis-ci.org/zendesk/samson.svg?branch=master)](https://travis-ci.org/zendesk/samson)
-
-[![DockerHub Status](https://dockeri.co/image/zendesk/samson)](https://hub.docker.com/r/zendesk/samson)
+[![Code Climate](https://codeclimate.com/repos/53340bef6956800b9000675c/badges/c7c44f80cff049aef8f7/gpa.svg)](https://codeclimate.com/repos/53340bef6956800b9000675c/feed)
+[![Test Coverage](https://codeclimate.com/repos/53340bef6956800b9000675c/badges/c7c44f80cff049aef8f7/coverage.svg)](https://codeclimate.com/repos/53340bef6956800b9000675c/coverage)
+[![DockerHub Status](https://img.shields.io/docker/stars/zendesk/samson.svg)](https://hub.docker.com/r/zendesk/samson)
 
 ### What?
 
