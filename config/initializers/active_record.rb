@@ -6,8 +6,8 @@ config = ActiveRecord::Base.configurations[Rails.env]
 
 if ENV['USE_UTF8MB4'] && config['adapter'] == 'mysql2'
   config.merge!(
-    'encoding': 'utf8mb4',
-    'collation': 'utf8mb4_bin'
+    'encoding' => 'utf8mb4',
+    'collation' => 'utf8mb4_bin'
   )
 
   module ActiveRecord
