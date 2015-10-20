@@ -29,7 +29,6 @@ class DockerBuilderService
   end
 
   def build_image(tmp_dir)
-    repository.setup!(tmp_dir, build.git_sha)
     Samson::Hooks.fire(:before_docker_build, tmp_dir, build, output_buffer)
 
     File.write("#{tmp_dir}/REVISION", build.git_sha)

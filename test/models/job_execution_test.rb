@@ -206,6 +206,11 @@ describe JobExecution do
     assert_equal 'monkey', output.split("\n").last.strip
   end
 
+  it 'errors if job setup fails' do
+    execute_job('nope')
+    assert_equal 'errored', job.status
+  end
+
   it 'cannot setup project if project is locked' do
     JobExecution.any_instance.stubs(lock_timeout: 0.5) # 2 runs in the loop
     project.repository.expects(:setup!).never
