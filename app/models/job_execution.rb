@@ -105,6 +105,8 @@ class JobExecution
     @job.run!
 
     success = Dir.mktmpdir do |dir|
+      return @job.error! unless setup!(dir)
+
       if @execution_block
         @execution_block.call(self, dir)
       else
@@ -129,10 +131,6 @@ class JobExecution
   end
 
   def execute!(dir)
-    unless setup!(dir)
-      return @job.error!
-    end
-
     Samson::Hooks.fire(:after_deploy_setup, dir, @job, @output, @reference)
 
     FileUtils.mkdir_p(artifact_cache_dir)
