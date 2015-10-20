@@ -2,6 +2,7 @@ module StatusHelper
   ALERT_STATUS_MAPPING = {
     "succeeded" => "success",
     "failed" => "danger",
+    "errored" => "danger",
     "cancelling" => "warning",
     "cancelled" => "danger"
   }
