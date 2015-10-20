@@ -117,7 +117,7 @@ describe JobExecution do
   it "tests additional exports hook" do
     job.update(command: 'env | sort')
 
-    Samson::Hooks.callback :additional_exports do |job|
+    Samson::Hooks.callback :job_additional_vars do |job|
       { ADDITIONAL_EXPORT: "yes" }
     end
 
