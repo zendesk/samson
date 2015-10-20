@@ -26,12 +26,10 @@ describe AccessRequestMailer do
             hostname, user, manager_email, reason, Project.all.pluck(:id)).deliver_now
       end
 
-      it 'is from deploys@' do
-        subject.from.must_equal ['deploys@samson-deployment.com']
-      end
-
-      it 'sends to configured addresses' do
-        subject.to.must_equal(address_list.split << manager_email)
+      it 'has correct sender and recipients' do
+        subject.from.must_equal [user.email]
+        subject.to.must_equal address_list.split
+        subject.cc.must_equal [manager_email]
       end
 
       it 'has a correct subject' do
@@ -57,14 +55,16 @@ describe AccessRequestMailer do
       describe 'single address configured' do
         let(:address_list) { 'jira@example.com' }
         it 'handles single email address configured' do
-          subject.to.must_equal([address_list, manager_email])
+          subject.to.must_equal [address_list]
+          subject.cc.must_equal [manager_email]
         end
       end
 
       describe 'no address configured' do
         let(:address_list) { nil }
         it 'handles no configured email address' do
-          subject.to.must_equal([manager_email])
+          subject.to.must_equal [manager_email]
+          subject.cc.must_be_empty
         end
       end
     end

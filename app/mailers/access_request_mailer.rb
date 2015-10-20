@@ -5,14 +5,18 @@ class AccessRequestMailer < ApplicationMailer
     @manager_email = manager_email
     @reason = reason
     @projects = Project.order(:name).find(project_ids)
-    mail(to: build_recipients, subject: build_subject, body: build_body)
+    mail(from: @user.email, to: build_to, cc: build_cc, subject: build_subject, body: build_body)
   end
 
   private
 
-  def build_recipients
-    recipients = ENV['REQUEST_ACCESS_EMAIL_ADDRESS_LIST'].present? ? ENV['REQUEST_ACCESS_EMAIL_ADDRESS_LIST'].split : []
-    recipients << @manager_email
+  def build_to
+    # send to manager if no primary recipients configured
+    ENV['REQUEST_ACCESS_EMAIL_ADDRESS_LIST'].present? ? ENV['REQUEST_ACCESS_EMAIL_ADDRESS_LIST'].split : @manager_email
+  end
+
+  def build_cc
+    ENV['REQUEST_ACCESS_EMAIL_ADDRESS_LIST'].present? ? @manager_email : nil
   end
 
   def build_subject
