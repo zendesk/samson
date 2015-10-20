@@ -13,8 +13,10 @@ class KuberDeployService
     # TODO: handling different deploy strategies (rolling updates, etc.)
     log 'starting deploy'
 
-    create_replication_controllers!
     create_services!
+    create_replication_controllers!
+
+    watch_deployment
 
     log 'API requests complete'
   end
@@ -26,12 +28,22 @@ class KuberDeployService
       rc = Kubeclient::ReplicationController.new(release_doc.rc_hash)
       client.create_replication_controller(rc)
     end
-
-    watch_deployment
   end
 
   def create_services!
-    # TODO: implement this
+    kuber_release.release_docs.each do |release_doc|
+      role = release_doc.kubernetes_role
+      service = release_doc.service
+
+      if service.nil?
+        log 'no Service defined', role: role.name
+      elsif service.running?
+        log 'Service already running', role: role.name, service_name: service.name
+      else
+        log 'creating Service', role: role.name, service_name: service.name
+        client.create_service(Kubeclient::Service.new(release_doc.service_hash))
+      end
+    end
   end
 
   def project
