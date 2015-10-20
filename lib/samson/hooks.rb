@@ -23,7 +23,8 @@ module Samson
       :after_deploy,
       :before_docker_build,
       :after_docker_build,
-      :after_job_execution
+      :after_job_execution,
+      :job_additional_vars
     ].freeze
 
     INTERNAL_HOOKS = [ :class_defined ]

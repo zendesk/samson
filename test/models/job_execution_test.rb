@@ -114,6 +114,18 @@ describe JobExecution do
     assert_equal 'zebra', last_line_of_output
   end
 
+  it "tests additional exports hook" do
+    job.update(command: 'env | sort')
+
+    Samson::Hooks.callback :job_additional_vars do |job|
+      { ADDITIONAL_EXPORT: "yes" }
+    end
+
+    execute_job
+    lines = job.output.split "\n"
+    lines.must_include "ADDITIONAL_EXPORT=yes"
+  end
+
   it "exports deploy information as environment variables" do
     job.update(command: 'env | sort')
     execute_job('master', FOO: 'bar')
