@@ -1,2 +1,2 @@
 require 'bundler/setup'
-require 'bootscale/setup' if [nil, 'test', 'development'].include?(ENV['RAILS_ENV'])
+require 'bootscale/setup' if ['development', 'test'].include?(ENV['RAILS_ENV'] || ENV['RACK_ENV'] || 'development')
