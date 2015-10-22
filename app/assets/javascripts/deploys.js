@@ -110,6 +110,11 @@ $(function () {
             $tag_form_group.addClass("has-error");
             show_status_problems(data.status_list);
             break;
+          case null:
+            $ref_status_label.removeClass("hidden");
+            $tag_form_group.addClass("has-error");
+            show_status_problems([{"state": "Tag or SHA", description: "'" + ref + "' does not exist"}])
+            break;
         }
       }
     });
