@@ -14,7 +14,7 @@ class ProjectRolesController < ApplicationController
 
     if new_role.persisted?
       Rails.logger.info("#{current_user.name_and_email} granted the role of #{new_role.role.display_name} to #{new_role.user.name} on project #{current_project.name}")
-      reset_access_request_flag(new_role.user_id)
+      reset_access_request_flag(new_role.user)
       render status: :created, json: new_role
     else
       render status: :bad_request, json: {errors: new_role.errors.full_messages}
@@ -25,7 +25,7 @@ class ProjectRolesController < ApplicationController
     project_role = UserProjectRole.find(params[:id])
     if project_role.update(update_params)
       Rails.logger.info("#{current_user.name_and_email} granted the role of #{project_role.role.display_name} to #{project_role.user.name} on project #{current_project.name}")
-      reset_access_request_flag(project_role.user_id)
+      reset_access_request_flag(project_role.user)
       render status: :ok, json: project_role
     else
       render status: :bad_request, json: {errors: project_role.errors.full_messages}
@@ -42,7 +42,7 @@ class ProjectRolesController < ApplicationController
     params.require(:project_role).permit(:role_id)
   end
 
-  def reset_access_request_flag(user_id)
-    User.find(user_id).update!(access_request_pending: false)
+  def reset_access_request_flag(user)
+    user.update!(access_request_pending: false)
   end
 end
