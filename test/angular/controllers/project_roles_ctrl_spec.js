@@ -36,7 +36,7 @@ describe("Controller: ProjectRolesCtrl", function() {
     });
 
     it('should invoke loadProjectRoles and load the results into the scope', inject(function($q, projectRolesService) {
-      var expected = {data: [{id: 0, display_name: 'Deployer'}, {id: 1, display_name: 'Admin'}]};
+      var expected = [{id: 0, display_name: 'Deployer'}, {id: 1, display_name: 'Admin'}];
 
       var deferred = $q.defer();
       deferred.resolve(expected);

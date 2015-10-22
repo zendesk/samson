@@ -25,8 +25,8 @@ describe("Service: projectRolesService", function() {
 
     httpBackend.expectGET('/project_roles').respond(expected);
 
-    projectRolesService.loadProjectRoles().then(function(response) {
-      expect(response.data).toEqual(expected)
+    projectRolesService.loadProjectRoles().then(function(data) {
+      expect(data).toEqual(expected)
     });
 
     httpBackend.flush();

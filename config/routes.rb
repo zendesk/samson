@@ -96,8 +96,6 @@ Samson::Application.routes.draw do
     resources :commands, except: [:show]
     resources :environments, except: [:show]
     resources :deploy_groups
-
-    get '/:action', to: 'admin#:action', :defaults => { :format => 'json' }
   end
 
   namespace :integrations do

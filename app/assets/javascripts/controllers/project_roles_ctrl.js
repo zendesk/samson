@@ -17,8 +17,8 @@ samson.controller('ProjectRolesCtrl', function($rootScope, $scope, $element, $fi
   };
 
   function loadProjectRoles() {
-    projectRolesService.loadProjectRoles().then(function(response) {
-        $scope.roles = response.data.map(function(item) {
+    projectRolesService.loadProjectRoles().then(function(data) {
+        $scope.roles = data.map(function(item) {
           return projectRoleFactory.buildFromJson(item);
         });
       }

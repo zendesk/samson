@@ -298,6 +298,8 @@ GEM
       railties (= 4.2.4)
       sprockets-rails
     rails-assets-angular (1.4.7)
+    rails-assets-angular-cache (4.4.2)
+      rails-assets-angular (>= 1)
     rails-assets-angular-mocks (1.4.7)
       rails-assets-angular (= 1.4.7)
     rails-assets-angular-route (1.4.7)
@@ -474,6 +476,7 @@ DEPENDENCIES
   rack-mini-profiler
   rails (~> 4.2.0)
   rails-assets-angular!
+  rails-assets-angular-cache!
   rails-assets-angular-mocks!
   rails-assets-angular-scenario!
   rails-assets-bootstrap-select!
