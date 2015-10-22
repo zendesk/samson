@@ -3,8 +3,11 @@ module Watchers
   # objects via their API.  Expects an instance of Kubeclient::Common::WatchStream
   # to be passed in.
   class BaseWatcher
+    attr_reader :start_time
+
     def initialize(watch_stream, log: true)
       @watch_stream, @log, = watch_stream, log
+      @start_time = Time.now
     end
 
     def start_watching(&block)
@@ -18,6 +21,10 @@ module Watchers
         @watch_stream.finish
         @watch_stream = nil
       end
+    end
+
+    def time_watching
+      Time.now - start_time
     end
 
     protected

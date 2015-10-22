@@ -10,18 +10,22 @@ module Watchers
       @rc_info = {}
     end
 
+    def rc_names
+      @rc_info.keys
+    end
+
     protected
 
     def handle_notice(notice, &block)
       return if handle_error(notice)
 
       notice.extend(RCWrapper)
-      yield(notice, self) if block_given?
 
       log "RC notice received", watcher: 'rc', notice_type: notice.type, rc_name: notice.rc_name, replicas: notice.replica_count
 
       # keep track of the state of all pods
       @rc_info[notice.rc_name] = notice
+      yield(notice, self) if block_given?
     end
 
     # Decorator class for the Replication Controller data that is returned

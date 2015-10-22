@@ -37,7 +37,7 @@
               <%= build.project.name %> - <%= build.label %>
             </p>
           <% elsif @project.builds.any? %>
-            <%= form.select :build_id, @project.builds.order('id desc').limit(20).map { |b| [b.label, b.id] } %>
+            <%= form.select :build_id, @project.builds.order('id desc').limit(20).map { |b| [b.label, b.id] }, {}, { class: 'form-control' } %>
           <% else %>
             <p class="form-control-static">
               You must create a <%= link_to 'Build', new_project_build_path(@project) %> before deploying.

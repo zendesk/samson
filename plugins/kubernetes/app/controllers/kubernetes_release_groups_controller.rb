@@ -11,7 +11,7 @@ class KubernetesReleaseGroupsController < ApplicationController
 
     @release_group.releases.each do |release|
       params[:replicas].each do |role_id, replica_count|
-        release.release_docs.build(kubernetes_role_id: role_id, replica_count: replica_count.to_i)
+        release.release_docs.build(kubernetes_role_id: role_id, replica_target: replica_count.to_i)
       end
     end
 

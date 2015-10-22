@@ -44,10 +44,11 @@ module Watchers
     def handle_notice(notice, &block)
       return if handle_error(notice)
       notice.extend(PWrapper)
-      yield(notice, self) if block_given?
 
       # keep track of the state of all pods
       @pod_info[notice.pod_name] = notice
+
+      yield(notice, self) if block_given?
 
       log "Received Pod notice", watcher: 'pod', notice_type: notice.type, phase: notice.phase, ready: notice.ready?, status_counts: status_counts
     end
