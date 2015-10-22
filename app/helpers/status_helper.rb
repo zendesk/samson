@@ -7,8 +7,7 @@ module StatusHelper
   }
 
   LABEL_STATUS_MAPPING = ALERT_STATUS_MAPPING.merge(
-    "running" => "primary",
-    "pending" => "default"
+    "running" => "primary"
   )
 
   def status_alert(key)
