@@ -71,12 +71,10 @@ class KuberDeployService
   end
 
   def update_release_status
-    statuses = kuber_release.release_docs.map(&:status)
-
-    if statuses.all? { |s| s == 'live' }
+    if kuber_release.release_docs.all?(&:live?)
       deploy_is_live
-    elsif statuses.include?('spinning_up')
-      kuber_release.update_attribute(:status, 'spinning_up') unless kuber_release.status == 'spinning_up'
+    elsif kuber_release.release_docs.any?(&:spinning_up?)
+      kuber_release.update_attribute(:status, 'spinning_up') unless kuber_release.spinning_up?
     end
   end
 

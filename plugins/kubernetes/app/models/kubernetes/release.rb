@@ -12,7 +12,9 @@ module Kubernetes
     validates :deploy_group, presence: true
     validates :status, inclusion: STATUSES
 
-    after_initialize :set_default_status, on: :create
+    STATUSES.each do |s|
+      define_method("#{s}?") { status == s }
+    end
 
     def release_is_live
       self.status = 'live'
@@ -29,8 +31,6 @@ module Kubernetes
         release_id: id.to_s
       }
     end
-
-    # TODO: define state machine for 'status' field
 
     def nested_error_messages
       errors.full_messages + release_docs.flat_map(&:nested_error_messages)
@@ -89,12 +89,6 @@ module Kubernetes
       @docs_by_role ||= release_docs.each_with_object({}) do |rel_doc, hash|
         hash[rel_doc.kubernetes_role.label_name] = rel_doc
       end
-    end
-
-    private
-
-    def set_default_status
-      self.status ||= 'created'
     end
   end
 end

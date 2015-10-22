@@ -13,6 +13,10 @@ module Kubernetes
 
     after_create :save_rc_info    # do this after create, so id has been generated
 
+    Kubernetes::Release::STATUSES.each do |s|
+      define_method("#{s}?") { status == s }
+    end
+
     # Definition of the ReplicationController, based on the rc_template, but
     # updated with the image and metadata for this deploy.
     #
