@@ -51,6 +51,13 @@ describe ProjectRolesController do
         result['role_id'].must_equal user_project_role.role_id
       end
 
+      it 'clears the access request pending flag' do
+        check_pending_request_flag(new_admin) do
+          post :create, project_id: project.id, project_role: { user_id: new_admin.id, project_id: project.id, role_id: ProjectRole::ADMIN.id }, format: 'json'
+          assert_response :created
+        end
+      end
+
       it 'fails to create new project role' do
         post :create, project_id: project.id, project_role: { user_id: new_admin.id, project_id: project.id, role_id: 3 }, format: 'json'
 
@@ -84,6 +91,13 @@ describe ProjectRolesController do
         result['user_id'].must_equal user_project_role.user_id
         result['project_id'].must_equal user_project_role.project_id
         result['role_id'].must_equal user_project_role.role_id
+      end
+
+      it 'clears the access request pending flag' do
+        check_pending_request_flag(new_admin) do
+          post :create, project_id: project.id, project_role: { user_id: new_admin.id, project_id: project.id, role_id: ProjectRole::ADMIN.id }, format: 'json'
+          assert_response :created
+        end
       end
 
       it 'fails to create new project role' do
@@ -131,6 +145,13 @@ describe ProjectRolesController do
         result['role_id'].must_equal user_project_role.role_id
       end
 
+      it 'clears the access request pending flag' do
+        check_pending_request_flag(current_project_admin) do
+          put :update, project_id: project.id, id: current_project_admin_role.id, project_role: { role_id: ProjectRole::DEPLOYER.id }, format: 'json'
+          assert_response :success
+        end
+      end
+
       it 'fails to update project role' do
         put :update, project_id: project.id, id: current_project_admin_role.id, project_role: { role_id: 3 }, format: 'json'
 
@@ -164,6 +185,13 @@ describe ProjectRolesController do
         result['role_id'].must_equal user_project_role.role_id
       end
 
+      it 'clears the access request pending flag' do
+        check_pending_request_flag(current_project_admin) do
+          put :update, project_id: project.id, id: current_project_admin_role.id, project_role: { role_id: ProjectRole::DEPLOYER.id }, format: 'json'
+          assert_response :success
+        end
+      end
+
       it 'fails to update project role' do
         put :update, project_id: project.id, id: current_project_admin_role.id, project_role: { role_id: 3 }, format: 'json'
 
@@ -177,5 +205,15 @@ describe ProjectRolesController do
         result['errors'].wont_be_nil
       end
     end
+  end
+
+  private
+
+  def check_pending_request_flag(user)
+    user.update!(access_request_pending: true)
+    assert(user.access_request_pending)
+    yield
+    user.reload
+    refute(user.access_request_pending)
   end
 end
