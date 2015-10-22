@@ -35,6 +35,14 @@ module Kubernetes
       end
     end
 
+    def has_service?
+      kubernetes_role.has_service? && service_template.present?
+    end
+
+    def service_hash
+      @service_hash || (build_service_hash if has_service?)
+    end
+
     def service_template
       @service_template ||= begin
         # It's possible for the file to contain more than one definition,
@@ -42,6 +50,10 @@ module Kubernetes
         hash = Array.wrap(parsed_config_file).detect { |doc| doc['kind'] == 'Service' }
         (hash || {}).freeze
       end
+    end
+
+    def service
+      kubernetes_role.service_for(kubernetes_release.deploy_group) if has_service?
     end
 
     def pretty_rc_doc(format: :json)
@@ -107,7 +119,7 @@ module Kubernetes
       @rc_hash[:metadata][:labels].merge!(pod_labels)
       @rc_hash[:spec][:selector].merge!(pod_labels)
 
-      @rc_hash[:metadata][:namespace] = kubernetes_release.deploy_group.kubernetes_namespace
+      @rc_hash[:metadata][:namespace] = kubernetes_release.namespace
 
       # Set the Docker image to be deployed in the pod.
       # NOTE: This logic assumes that if there are multiple containers defined
@@ -121,6 +133,20 @@ module Kubernetes
       }
 
       @rc_hash
+    end
+
+    def build_service_hash
+      @service_hash = service_template.dup.with_indifferent_access
+
+      @service_hash[:metadata][:name] = kubernetes_role.service_name
+      @service_hash[:metadata][:namespace] = kubernetes_release.namespace
+      @service_hash[:metadata][:labels] ||= pod_labels.except(:release_id)
+
+      # For now, create a NodePort for each service, so we can expose any
+      # apps running in the Kubernetes cluster to traffic outside the cluster.
+      @service_hash[:spec][:type] = 'NodePort'
+
+      @service_hash
     end
 
     def parsed_config_file

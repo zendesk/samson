@@ -19,5 +19,13 @@ module Kubernetes
     def ram_with_units
       "#{ram}Mi" if ram.present?
     end
+
+    def has_service?
+      service_name.present?
+    end
+
+    def service_for(deploy_group)
+      Kubernetes::Service.new(role: self, deploy_group: deploy_group) if has_service?
+    end
   end
 end
