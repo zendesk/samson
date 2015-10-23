@@ -210,8 +210,8 @@ describe DeploysController do
       describe "as json" do
         let(:format) { :json }
 
-        it "responds ok" do
-          assert_response :ok
+        it "responds created" do
+          assert_response :created
         end
 
         it "creates a deploy" do
@@ -340,8 +340,8 @@ describe DeploysController do
       describe "as json" do
         let(:format) { :json }
 
-        it "responds ok" do
-          assert_response :ok
+        it "responds created" do
+          assert_response :created
         end
 
         it "creates a deploy" do
