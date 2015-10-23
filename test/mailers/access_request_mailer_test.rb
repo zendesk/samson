@@ -10,6 +10,7 @@ describe AccessRequestMailer do
     let(:hostname) { 'localhost' }
     let(:manager_email) { 'manager@example.com' }
     let(:reason) { 'Dummy reason.' }
+    let(:role) { Role::DEPLOYER }
     subject { ActionMailer::Base.deliveries.last }
 
     before do
@@ -23,7 +24,7 @@ describe AccessRequestMailer do
         Project.any_instance.stubs(:valid_repository_url).returns(true)
         Project.create!(name: 'Second project', repository_url: 'git://foo.com:hello/world.git')
         AccessRequestMailer.access_request_email(
-            hostname, user, manager_email, reason, Project.all.pluck(:id)).deliver_now
+            hostname, user, manager_email, reason, Project.all.pluck(:id), role.id).deliver_now
       end
 
       it 'has correct sender and recipients' do
@@ -34,12 +35,12 @@ describe AccessRequestMailer do
 
       it 'has a correct subject' do
         subject.subject.must_match /#{user.name}/
-        subject.subject.must_match /#{Role.find(user.role_id + 1).name}/
+        subject.subject.must_match /#{role.display_name}/
       end
 
       it 'includes relevant information in body' do
         subject.body.to_s.must_match /#{user.email}/
-        subject.body.to_s.must_match /#{Role.find(user.role_id + 1).name}/
+        subject.body.to_s.must_match /#{role.display_name}/
         subject.body.to_s.must_match /#{hostname}/
         subject.body.to_s.must_match /#{reason}/
         Project.all.each { |project| subject.body.to_s.must_match /#{project.name}/ }
@@ -71,7 +72,7 @@ describe AccessRequestMailer do
 
     describe 'single project' do
       before { AccessRequestMailer.access_request_email(
-          hostname, user, manager_email, reason, [projects(:test).id]).deliver_now }
+          hostname, user, manager_email, reason, [projects(:test).id], role.id).deliver_now }
 
       it 'includes target project name in body' do
         subject.body.to_s.must_match /#{projects(:test).name}/
