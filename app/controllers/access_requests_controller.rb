@@ -8,7 +8,7 @@ class AccessRequestsController < ApplicationController
   def new
     session[:access_request_back_to] ||= request.referer
     @projects = Project.all.order(:name)
-    @roles = Role.all[1...-1] # ignore viewer (default) and super_admin (no such role per project)
+    @roles = ProjectRole.all
   end
 
   def create

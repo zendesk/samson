@@ -10,7 +10,7 @@ describe AccessRequestMailer do
     let(:hostname) { 'localhost' }
     let(:manager_email) { 'manager@example.com' }
     let(:reason) { 'Dummy reason.' }
-    let(:role) { Role::DEPLOYER }
+    let(:role) { ProjectRole::DEPLOYER }
     subject { ActionMailer::Base.deliveries.last }
 
     before do
