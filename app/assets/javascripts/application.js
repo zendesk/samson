@@ -14,7 +14,6 @@
 //= require jquery-ujs
 //= require angular
 //= require angular-rails-templates
-//= require angular-cache
 //= require underscore
 //= require moment
 //= require bootstrap/alert

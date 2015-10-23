@@ -18,7 +18,6 @@ module.exports = function(config) {
       '<%= resolve_asset("jquery.js") %>',
       '<%= resolve_asset("angular.js") %>',
       '<%= resolve_asset("angular-mocks.js") %>',
-      '<%= resolve_asset("angular-cache") %>',
       '<%= resolve_asset("underscore.js") %>',
       '<%= resolve_asset("moment.js") %>',
       '<%= resolve_asset("message-center") %>',

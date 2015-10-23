@@ -5,7 +5,7 @@
 
   <%= render partial: "shared/search_bar", locals: {url: project_users_path, query: params[:search]} %>
 
-  <table class="table table-hover table-condensed">
+  <table class="table table-hover table-condensed" ng-controller="ProjectRolesCtrl" ng-init="loadProjectRoles()">
     <thead>
     <tr>
       <th><%= sortable "id" %></th>
