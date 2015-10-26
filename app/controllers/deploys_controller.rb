@@ -56,7 +56,7 @@ class DeploysController < ApplicationController
       end
 
       format.json do
-        render json: {}, status: @deploy.persisted? ? 200 : 422
+        render json: @deploy.to_json, status: @deploy.persisted? ? :created : 422, location: [current_project, @deploy]
       end
     end
   end
