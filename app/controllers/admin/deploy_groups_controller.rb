@@ -9,9 +9,7 @@ class Admin::DeployGroupsController < ApplicationController
 
   def new
     @deploy_group = DeployGroup.new
-    if allow_kuber_cluster_assignment?
-      @deploy_group.build_cluster_deploy_group
-    end
+    @deploy_group.build_cluster_deploy_group if allow_kuber_cluster_assignment?
     render 'edit'
   end
 
@@ -27,9 +25,7 @@ class Admin::DeployGroupsController < ApplicationController
   end
 
   def edit
-    if allow_kuber_cluster_assignment?
       @deploy_group.build_cluster_deploy_group unless @deploy_group.cluster_deploy_group
-    end
   end
 
   def update
