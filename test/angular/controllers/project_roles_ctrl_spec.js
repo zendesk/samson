@@ -2,37 +2,36 @@
 
 describe("Controller: ProjectRolesCtrl", function() {
 
-  var scope, controller, element, userProjectRoleFactory, projectRoleFactory;
+  var scope, controller, element, userProjectRoleFactory, projectRoleFactory, projectRolesService;
 
   beforeEach(function() {
     module("samson");
   });
 
-  beforeEach(inject(function($controller, $rootScope, _userProjectRoleFactory_, _projectRoleFactory_) {
+  beforeEach(inject(function($controller, $rootScope, $q, _userProjectRoleFactory_, _projectRoleFactory_, _projectRolesService_) {
     scope = $rootScope.$new();
     userProjectRoleFactory = _userProjectRoleFactory_;
     projectRoleFactory = _projectRoleFactory_;
+    projectRolesService = _projectRolesService_;
 
     element = angular.element('<form data-id="" data-user-id="1" data-user-name="Some user" data-project-id="2" data-project-name="Some project" data-role-id="0"></form>');
+
+    var roles = [{id: 0, display_name: 'Deployer'}, {id: 1, display_name: 'Admin'}];
+    var deferred = $q.defer();
+    deferred.resolve(roles);
+    spyOn(projectRolesService, 'loadProjectRoles').and.returnValue(deferred.promise);
 
     controller = $controller('ProjectRolesCtrl', {
       $scope: scope,
       $element: element,
       userProjectRoleFactory: userProjectRoleFactory,
-      projectRoleFactory: projectRoleFactory
+      projectRoleFactory: projectRoleFactory,
+      projectRolesService: projectRolesService
     });
   }));
 
   describe('$scope.loadProjectRoles', function() {
-    it('should load the results into the scope', inject(function($q, projectRolesService) {
-      var expected = [{id: 0, display_name: 'Deployer'}, {id: 1, display_name: 'Admin'}];
-
-      var deferred = $q.defer();
-      deferred.resolve(expected);
-      spyOn(projectRolesService, 'loadProjectRoles').and.returnValue(deferred.promise);
-
-      scope.loadProjectRoles();
-
+    it('should load the results into the scope', function() {
       scope.$digest();
 
       expect(projectRolesService.loadProjectRoles).toHaveBeenCalled();
@@ -40,18 +39,10 @@ describe("Controller: ProjectRolesCtrl", function() {
       expect(scope.roles[0].display_name).toBe('Deployer');
       expect(scope.roles[1].id).toBe(1);
       expect(scope.roles[1].display_name).toBe('Admin');
-    }));
+    });
   });
 
   describe("$scope.roleChanged", function() {
-
-    beforeEach(function() {
-      scope.roles = [
-        projectRoleFactory.buildFromJson({id: 0, display_name: 'Deployer'}),
-        projectRoleFactory.buildFromJson({id: 1, display_name: 'Admin'})
-      ];
-    });
-
     it('should try to create a new project role when the role_id changes and id is undefined', inject(function($q, projectRolesService, messageCenterService) {
       var project_role = userProjectRoleFactory.build(element[0]);
 
