@@ -1,14 +1,14 @@
 samson.controller('ProjectRolesCtrl', function($rootScope, $scope, $element, $filter, projectRoleFactory, projectRolesService, messageCenterService) {
   $scope.roles = [];
 
-  $scope.loadProjectRoles = function() {
+  (function init() {
     projectRolesService.loadProjectRoles().then(function(data) {
         $scope.roles = data.map(function(item) {
           return projectRoleFactory.buildFromJson(item);
         });
       }
     );
-  };
+  })();
 
   $scope.roleChanged = function(project_role) {
     if (project_role.exists()) {
