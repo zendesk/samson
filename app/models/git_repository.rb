@@ -80,7 +80,7 @@ class GitRepository
   end
 
   def branches
-    cmd = 'git branch --no-color --list'
+    cmd = 'git branch --list --no-color --no-column'
     success, output = run_single_command(cmd) { |line| line.sub('*', '').strip }
     success ? output : []
   end
