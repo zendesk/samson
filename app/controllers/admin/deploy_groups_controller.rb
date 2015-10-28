@@ -25,7 +25,9 @@ class Admin::DeployGroupsController < ApplicationController
   end
 
   def edit
+    if allow_kuber_cluster_assignment?
       @deploy_group.build_cluster_deploy_group unless @deploy_group.cluster_deploy_group
+    end
   end
 
   def update
