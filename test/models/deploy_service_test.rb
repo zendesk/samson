@@ -151,6 +151,7 @@ describe DeployService do
       stage.stubs(:create_deploy).returns(deploy)
       deploy.stubs(:persisted?).returns(true)
       job_execution.stubs(:execute!)
+      job_execution.stubs(:setup!).returns(true)
 
       JobExecution.stubs(:new).returns(job_execution)
     end

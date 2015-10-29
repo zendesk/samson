@@ -65,6 +65,7 @@ describe BuddyCheck do
     before do
       stage.update_attribute(:production, true)
       job_execution.stubs(:execute!)
+      job_execution.stubs(:setup!).returns(true)
       JobExecution.expects(:start_job).returns(job_execution)
 
       BuddyCheck.stubs(:enabled?).returns(true)
@@ -97,6 +98,7 @@ describe BuddyCheck do
     before do
       job_execution.stubs(:execute!)
       JobExecution.expects(:start_job).returns(job_execution)
+      job_execution.stubs(:setup!).returns(true)
 
       BuddyCheck.stubs(:enabled?).returns(false)
     end
