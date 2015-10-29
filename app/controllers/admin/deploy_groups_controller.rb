@@ -66,10 +66,6 @@ class Admin::DeployGroupsController < ApplicationController
     @deploy_group ||= DeployGroup.find(params[:id])
   end
 
-  def build_kuber_cluster
-    @deploy_group.build_cluster_deploy_group unless @deploy_group.cluster_deploy_group
-  end
-
   def allow_kuber_cluster_assignment?
     Samson::Hooks.active_plugin?('kubernetes')
   end
