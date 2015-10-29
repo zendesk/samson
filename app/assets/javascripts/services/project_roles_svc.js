@@ -1,6 +1,13 @@
 samson.service('projectRolesService', function($http, $q) {
+
   this.loadProjectRoles = function() {
-    return $http.get('/project_roles');
+    var deferred = $q.defer();
+    $http.get('/project_roles').then(
+      function(response){
+        deferred.resolve(response.data);
+      }
+    );
+    return deferred.promise;
   };
 
   this.createProjectRole = function(project_role) {

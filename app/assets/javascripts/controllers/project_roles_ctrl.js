@@ -1,29 +1,23 @@
-samson.controller('ProjectRolesCtrl', function($rootScope, $scope, $element, $filter, userProjectRoleFactory, projectRoleFactory, projectRolesService, messageCenterService) {
-  $scope.project_role = {};
+samson.controller('ProjectRolesCtrl', function($rootScope, $scope, $element, $filter, projectRoleFactory, projectRolesService, messageCenterService) {
   $scope.roles = [];
 
-  $scope.initModel = function() {
-    $scope.project_role = userProjectRoleFactory.build($element[0]);
-    loadProjectRoles();
-  };
-
-  $scope.roleChanged = function() {
-    if ($scope.project_role.exists()) {
-      return updateProjectRole($scope.project_role);
-    }
-    else {
-      return createProjectRole($scope.project_role);
-    }
-  };
-
-  function loadProjectRoles() {
-    projectRolesService.loadProjectRoles().then(function(response) {
-        $scope.roles = response.data.map(function(item) {
+  (function init() {
+    projectRolesService.loadProjectRoles().then(function(data) {
+        $scope.roles = data.map(function(item) {
           return projectRoleFactory.buildFromJson(item);
         });
       }
     );
-  }
+  })();
+
+  $scope.roleChanged = function(project_role) {
+    if (project_role.exists()) {
+      return updateProjectRole(project_role);
+    }
+    else {
+      return createProjectRole(project_role);
+    }
+  };
 
   function createProjectRole(project_role) {
     projectRolesService.createProjectRole(project_role).then(
@@ -53,7 +47,7 @@ samson.controller('ProjectRolesCtrl', function($rootScope, $scope, $element, $fi
 
   function roleNameFor(role_id) {
     var role = _.findWhere($scope.roles, {id: role_id});
-    return _.isUndefined(role) ? '' :  role.display_name;
+    return _.isUndefined(role) ? '' : role.display_name;
   }
 
   function showSuccessMessage(project_role) {
