@@ -13,4 +13,11 @@ class StarsController < ApplicationController
 
     head :ok
   end
+
+  private
+
+  def require_project
+    # override from CurrentProject
+    @project = (Project.find_by_param!(params[:id]) if params[:id])
+  end
 end
