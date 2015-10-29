@@ -49,6 +49,10 @@ module SamsonEnv
       # manifest.json includes required keys and other things we copy
       manifest = JSON.load(File.read(manifest_json))
       settings = manifest.delete("settings")
+
+      # hackaround to support projects that have a manifest.json for
+      # a completely different purpose such as github.com/zendesk/mailchimp_activity_app
+      return false if settings.nil?
       json.reverse_merge!(manifest)
       required_keys, optional_keys = settings.keys.partition do |key|
         settings[key].fetch("required", true)
