@@ -9,7 +9,7 @@ class Admin::DeployGroupsController < ApplicationController
 
   def new
     @deploy_group = DeployGroup.new
-    @deploy_group.build_cluster_deploy_group if allow_kuber_cluster_assignment?
+    Samson::Hooks.fire(:edit_deploy_group, @deploy_group)
     render 'edit'
   end
 
@@ -25,9 +25,7 @@ class Admin::DeployGroupsController < ApplicationController
   end
 
   def edit
-    if allow_kuber_cluster_assignment?
-      @deploy_group.build_cluster_deploy_group unless @deploy_group.cluster_deploy_group
-    end
+    Samson::Hooks.fire(:edit_deploy_group, @deploy_group)
   end
 
   def update
@@ -49,24 +47,14 @@ class Admin::DeployGroupsController < ApplicationController
   private
 
   def deploy_group_params
-    allowed_params = [:name, :environment_id, :env_value]
-    if allow_kuber_cluster_assignment?
-      allowed_params << { cluster_deploy_group_attributes: [:id, :kubernetes_cluster_id, :namespace] }
-    end
-    dg_params = params.require(:deploy_group).permit(*allowed_params)
-    if allow_kuber_cluster_assignment?
-      if dg_params[:cluster_deploy_group_attributes] && dg_params[:cluster_deploy_group_attributes][:kubernetes_cluster_id].blank?
-        dg_params[:cluster_deploy_group_attributes]['_destroy'] = '1'
-      end
-    end
-    dg_params
+    params.require(:deploy_group).permit(*allowed_deploy_group_params)
+  end
+
+  def allowed_deploy_group_params
+    ([:name, :environment_id, :env_value] + Samson::Hooks.fire(:deploy_group_permitted_params)).freeze
   end
 
   def deploy_group
     @deploy_group ||= DeployGroup.find(params[:id])
-  end
-
-  def allow_kuber_cluster_assignment?
-    Samson::Hooks.active_plugin?('kubernetes')
   end
 end
