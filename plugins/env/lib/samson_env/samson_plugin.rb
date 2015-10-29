@@ -51,7 +51,7 @@ module SamsonEnv
       settings = manifest.delete("settings")
 
       # hackaround to support projects that have a manifest.json for
-      # a completely different purpose such as github.com/zendesk/mailchimp_activity_app
+      # a completely different purpose such as github.com/zendesk/timetracking_app
       return false if settings.nil?
       json.reverse_merge!(manifest)
       required_keys, optional_keys = settings.keys.partition do |key|
