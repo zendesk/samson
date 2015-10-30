@@ -1,17 +1,8 @@
 # tests sometimes hang locally or on ci and with this we can actually debug the cause instead of just hanging forever
 module TimeoutEveryTestCase
-  # travis randomly fails on some tests with this enabled
-  def timeout_for_test
-    ENV["CI"] ? false : 5
-  end
-
   def capture_exceptions(*args, &block)
-    if timeout_for_test == false
-      super
-    else
-      super do
-        Timeout.timeout(timeout_for_test, &block)
-      end
+    super do
+      Timeout.timeout(5, &block)
     end
   end
 end
