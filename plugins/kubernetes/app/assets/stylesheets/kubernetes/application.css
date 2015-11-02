@@ -7,10 +7,6 @@
   color: rgb(255,205,210);
 }
 
-/*.kubernetes .md-tabs {*/
-  /*transition: none;*/
-/*}*/
-
 .kubernetes [role="tabpanel"] {
   transition: none;
 }
