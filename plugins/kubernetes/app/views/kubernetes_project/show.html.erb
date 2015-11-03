@@ -7,24 +7,17 @@
         <!--
         Kubernetes Roles
         -->
-        <md-tab label="Kubernetes Roles" ui-sref="kubernetes.roles" md-active="$state.is('kubernetes.roles')">
-            <md-content class="md-padding">
-              <div ui-view="roles">
-                <%= render 'kubernetes_roles' %>
-              </div>
-            </md-content>
-        </md-tab>
+        <md-tab label="Kubernetes Roles" ui-sref="kubernetes.roles" md-active="$state.is('kubernetes.roles')"></md-tab>
         <!--
         Kubernetes Releases
         -->
-        <md-tab label="Kubernetes Releases" ui-sref="kubernetes.releases" md-active="$state.is('kubernetes.releases')">
-            <md-content class="md-padding">
-              <div ui-view="releases">
-                <%= render 'kubernetes_release_groups' %>
-              </div>
-            </md-content>
-        </md-tab>
+        <md-tab label="Kubernetes Releases" ui-sref="kubernetes.releases" md-active="$state.is('kubernetes.releases')"></md-tab>
       </md-tabs>
     </md-content>
+
+    <div id="content" ui-view="content"> </div>
   </div>
 </section>
+
+<%= render 'kubernetes_roles/roles_list' %>
+<%= render 'kubernetes_release_groups/release_groups_list' %>

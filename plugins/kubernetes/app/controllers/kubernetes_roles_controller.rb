@@ -1,74 +1,48 @@
 class KubernetesRolesController < ApplicationController
-  before_action :authorize_deployer!
-  before_action :project
-  before_action :find_role, only: [:show, :edit, :update]
+  include ProjectLevelAuthorization
 
-  def new
-    @kubernetes_role = Kubernetes::Role.new(project: project, ram: 512, cpu: 0.2, replicas: 1)
-  end
-
-  def create
-    @kubernetes_role = @project.roles.build(new_role_params)
-    @kubernetes_role.deploy_strategy = 'rolling_update'    # temporarily hardcoded
-    @kubernetes_role.save
-
-    respond_to do |format|
-      format.html do
-        if @kubernetes_role.persisted?
-          redirect_to project_kubernetes_roles_path(@project)
-        else
-          render :new, status: 422
-        end
-      end
-
-      format.json do
-        render json: {}, status: @kubernetes_role.persisted? ? 200 : 422
-      end
-    end
-  end
+  before_action :authorize_project_deployer!
 
   def index
-    @kubernetes_role_list = project.roles.order('id desc')
+    render json: current_project.roles.order('id desc'), root: false
   end
 
   def show
-    # TODO
-  end
-
-  def edit
+    render json: Kubernetes::Role.find(params[:id]), root: false
   end
 
   def update
-    @kubernetes_role.assign_attributes(new_role_params)
-    success = @kubernetes_role.save
+    role = Kubernetes::Role.find(params[:id])
+    if role.update(update_role_params)
+      render status: :ok, json: role
+    else
+      render status: :bad_request, json: {errors: role.errors.full_messages}
+    end
+  end
 
-    respond_to do |format|
-      format.html do
-        if success
-          redirect_to project_kubernetes_roles_path(@project)
-        else
-          render :edit, status: 422
-        end
-      end
+  def new
+    # TODO : READ DEFAULT VALUES FROM YAML FILE
+    render json: Kubernetes::Role.new(project: current_project, ram: 512, cpu: 0.2, replicas: 1, deploy_strategy: 'rolling_update'), root: false
+  end
 
-      format.json do
-        render json: {}, status: success ? 200 : 422
-      end
+  def create
+    role = current_project.roles.build(new_role_params)
+    role.save
+
+    if role.persisted?
+      render status: :created, json: role
+    else
+      render status: :bad_request, json: {errors: role.errors.full_messages}
     end
   end
 
   private
 
-  def project
-    @project ||= Project.find_by_param!(params[:project_id])
-  end
-  helper_method :project
-
-  def find_role
-    @kubernetes_role = project.roles.find(params[:id])
-  end
-
   def new_role_params
-    params.require(:kubernetes_role).permit(:name, :config_file, :service_name, :ram, :cpu, :replicas)
+    params.require(:kubernetes_role).permit(:name, :config_file, :service_name, :ram, :cpu, :replicas, :deploy_strategy)
+  end
+
+  def update_role_params
+    params.require(:kubernetes_role).permit(:id, :name, :config_file, :service_name, :ram, :cpu, :replicas, :deploy_strategy)
   end
 end
