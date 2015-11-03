@@ -5,31 +5,57 @@ angular.module('samson').config(function($stateProvider, $urlRouterProvider) {
   $stateProvider
     .state('kubernetes', {
       url: '/projects/:project_id/kubernetes',
-      template: '<ui-view/>',
       abstract: true
     })
+
+    /*
+       Kubernetes Roles
+     */
     .state('kubernetes.roles', {
       url: "/roles",
       data: {
         'selectedTab': 0
       },
       views: {
-        'roles@': {
+        'content@': {
           templateUrl: 'kubernetes/kubernetes_roles.tmpl.html',
           controller: 'KubernetesRolesCtrl'
         }
       }
     })
+    .state('kubernetes.roles.edit', {
+      url: "/:role_id/edit",
+      views: {
+        'content@': {
+          templateUrl: 'kubernetes/kubernetes_edit_role.tmpl.html',
+          controller: 'KubernetesEditRoleCtrl'
+        }
+      }
+    })
+    .state('kubernetes.roles.create', {
+      url: "/new",
+      views: {
+        'content@': {
+          templateUrl: 'kubernetes/kubernetes_create_role.tmpl.html',
+          controller: 'KubernetesCreateRoleCtrl'
+        }
+      }
+    })
+
+    /*
+      Kubernetes Releases
+     */
     .state('kubernetes.releases', {
       url: '/releases',
       data: {
         'selectedTab': 1
       },
       views: {
-        'releases@': {
+        'content@': {
           templateUrl: 'kubernetes/kubernetes_release_groups.tmpl.html',
           controller: 'KubernetesReleaseGroupsCtrl'
         }
       }
-    });
+    })
+  ;
 });
