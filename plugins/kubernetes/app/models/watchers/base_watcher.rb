@@ -8,19 +8,20 @@ module Watchers
     def initialize(watch_stream, log: true)
       @watch_stream, @log, = watch_stream, log
       @start_time = Time.now
+      @enabled = false
     end
 
     def start_watching(&block)
+      @enabled = true
       @watch_stream.each do |notice|
         handle_notice(notice, &block)
+        break if stop_watching?
       end
+      cleanup
     end
 
     def stop_watching
-      if @watch_stream
-        @watch_stream.finish
-        @watch_stream = nil
-      end
+      @enabled = false
     end
 
     def time_watching
@@ -45,6 +46,17 @@ module Watchers
 
     def log(msg, extra_info = {})
       Kubernetes::Util.log(msg, extra_info) if @log
+    end
+
+    def stop_watching?
+      not @enabled
+    end
+
+    def cleanup
+      if @watch_stream
+        @watch_stream.finish
+        @watch_stream = nil
+      end
     end
   end
 end
