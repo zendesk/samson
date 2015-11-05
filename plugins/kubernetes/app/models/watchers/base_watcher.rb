@@ -12,6 +12,7 @@ module Watchers
     end
 
     def start_watching(&block)
+      @original_thread_id = Thread.current.object_id
       @enabled = true
       @watch_stream.each do |notice|
         handle_notice(notice, &block)
@@ -21,7 +22,11 @@ module Watchers
     end
 
     def stop_watching
-      @enabled = false
+      if @enabled
+        @enabled = false
+        # close the socket and stop receiving updates if called from a different thread than the original
+        cleanup if Thread.current.object_id != @original_thread_id
+      end
     end
 
     def time_watching
@@ -57,6 +62,7 @@ module Watchers
         @watch_stream.finish
         @watch_stream = nil
       end
+      @original_thread_id = nil
     end
   end
 end
