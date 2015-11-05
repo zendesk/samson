@@ -27,7 +27,7 @@ gem 'dalli', '~> 2.7.0'
 gem 'active_model_serializers', '~> 0.8.0'
 
 gem 'sawyer', '~> 0.5'
-gem 'sse-rails-engine'
+gem 'sse-rails-engine', '~> 1.4'
 
 # Logging
 gem 'lograge'
