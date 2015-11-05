@@ -1,7 +1,8 @@
 class KubernetesRolesController < ApplicationController
   include ProjectLevelAuthorization
 
-  before_action :authorize_project_deployer!
+  before_action :authorize_project_deployer!, only: [:index]
+  before_action :authorize_project_admin!, only: [:show, :update, :new, :create]
 
   def index
     render json: current_project.roles.order('id desc'), root: false
@@ -13,7 +14,7 @@ class KubernetesRolesController < ApplicationController
 
   def update
     role = Kubernetes::Role.find(params[:id])
-    if role.update(update_role_params)
+    if role.update(role_params)
       render status: :ok, json: role
     else
       render status: :bad_request, json: {errors: role.errors.full_messages}
@@ -26,7 +27,7 @@ class KubernetesRolesController < ApplicationController
   end
 
   def create
-    role = current_project.roles.build(new_role_params)
+    role = current_project.roles.build(role_params)
     role.save
 
     if role.persisted?
@@ -38,11 +39,7 @@ class KubernetesRolesController < ApplicationController
 
   private
 
-  def new_role_params
+  def role_params
     params.require(:kubernetes_role).permit(:name, :config_file, :service_name, :ram, :cpu, :replicas, :deploy_strategy)
-  end
-
-  def update_role_params
-    params.require(:kubernetes_role).permit(:id, :name, :config_file, :service_name, :ram, :cpu, :replicas, :deploy_strategy)
   end
 end

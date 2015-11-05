@@ -3,14 +3,16 @@ samson.controller('KubernetesRolesCtrl', function($scope, $stateParams, kubernet
 
   $scope.roles = [];
 
-  (function loadKubernetesRoles() {
-    kubernetesService.loadKubernetesRoles($scope.project_id).then(function(data) {
+  function loadRoles() {
+    kubernetesService.loadRoles($scope.project_id).then(function(data) {
         $scope.roles = data.map(function(item) {
           return kubernetesRoleFactory.build(item);
         });
       }
     );
-  })();
+  }
+
+  loadRoles();
 });
 
 
