@@ -1,5 +1,15 @@
-samson.controller('KubernetesReleaseGroupsCtrl', function($state, $stateParams) {
+samson.controller('KubernetesReleaseGroupsCtrl', function($scope, $stateParams, kubernetesService, kubernetesReleaseGroupFactory) {
+  $scope.project_id = $stateParams.project_id;
 
-//TODO: Load release groups asynchronously
+  function loadKubernetesReleaseGroups() {
+    kubernetesService.loadKubernetesReleaseGroups($scope.project_id).then(function(data) {
+        $scope.release_groups = data.map(function(item) {
+          return kubernetesReleaseGroupFactory.build(item);
+        });
+      }
+    );
+  }
+
+  loadKubernetesReleaseGroups();
 
 });

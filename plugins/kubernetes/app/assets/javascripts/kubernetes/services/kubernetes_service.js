@@ -6,6 +6,10 @@ samson.service('kubernetesService', function($http, $q) {
     }
   };
 
+  /*********************************************************************
+    Kubernetes Roles
+   *********************************************************************/
+
   this.loadRoles = function(project_id) {
     var deferred = $q.defer();
 
@@ -71,6 +75,26 @@ samson.service('kubernetesService', function($http, $q) {
     );
     return deferred.promise;
   };
+
+  /*********************************************************************
+   Kubernetes Release Groups
+   *********************************************************************/
+
+  this.loadKubernetesReleaseGroups = function(project_id) {
+    var deferred = $q.defer();
+
+    $http.get('/projects/' + project_id + '/kubernetes_release_groups', config).then(
+      function(response) {
+        deferred.resolve(response.data);
+      }
+    );
+
+    return deferred.promise;
+  };
+
+  /*********************************************************************
+   Other functions
+   *********************************************************************/
 
   function handleError(response, deferred) {
     if (!_.isUndefined(response.data) && !_.isUndefined(response.data.errors)) {
