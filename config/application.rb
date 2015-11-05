@@ -63,6 +63,7 @@ module Samson
     config.samson.ldap.port = ENV["LDAP_PORT"].presence
     config.samson.ldap.base = ENV["LDAP_BASE"].presence
     config.samson.ldap.uid = ENV["LDAP_UID"].presence
+    config.samson.ldap.bind_dn = ENV["LDAP_BINDDN"].presence
     config.samson.ldap.password = ENV["LDAP_PASSWORD"].presence
 
     config.samson.auth = ActiveSupport::OrderedOptions.new
