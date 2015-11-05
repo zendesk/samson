@@ -15,7 +15,7 @@
 
       <tbody>
       <tr ng-show="!roles.length" ng-hide="roles.length">
-        <td>No project roles have been created yet.</td>
+        <td colspan="7">No project roles have been created yet.</td>
       </tr>
       <tr ng-repeat="role in roles" ng-show="roles.length" ng-hide="!roles.length">
         <td>{{role.name}}</td>

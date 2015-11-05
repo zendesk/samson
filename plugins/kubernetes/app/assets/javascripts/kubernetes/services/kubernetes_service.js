@@ -6,7 +6,7 @@ samson.service('kubernetesService', function($http, $q) {
     }
   };
 
-  this.loadKubernetesRoles = function(project_id) {
+  this.loadRoles = function(project_id) {
     var deferred = $q.defer();
 
     $http.get('/projects/' + project_id + '/kubernetes_roles', config).then(
@@ -18,7 +18,7 @@ samson.service('kubernetesService', function($http, $q) {
     return deferred.promise;
   };
 
-  this.loadKubernetesRole = function(project_id, role_id) {
+  this.loadRole = function(project_id, role_id) {
     var deferred = $q.defer();
 
     $http.get('/projects/' + project_id + '/kubernetes_roles/' + role_id, config).then(
@@ -30,7 +30,7 @@ samson.service('kubernetesService', function($http, $q) {
     return deferred.promise;
   };
 
-  this.loadKubernetesRoleDefaults = function(project_id) {
+  this.loadRoleDefaults = function(project_id) {
     var deferred = $q.defer();
 
     $http.get('/projects/' + project_id + '/kubernetes_roles/new', config).then(
@@ -42,8 +42,8 @@ samson.service('kubernetesService', function($http, $q) {
     return deferred.promise;
   };
 
-  this.updateKubernetesRole = function(project_id, role) {
-    var payload = JSON.stringify(role, _.without(Object.keys(role), 'project_id'));
+  this.updateRole = function(project_id, role) {
+    var payload = JSON.stringify(role, _.without(Object.keys(role), 'id', 'project_id'));
 
     var deferred = $q.defer();
     $http.put('/projects/' + project_id + '/kubernetes_roles/' + role.id, payload).then(
@@ -57,7 +57,7 @@ samson.service('kubernetesService', function($http, $q) {
     return deferred.promise;
   };
 
-  this.createKubernetesRole = function(project_id, role) {
+  this.createRole = function(project_id, role) {
     var payload = JSON.stringify(role, _.without(Object.keys(role), 'id', 'project_id'));
 
     var deferred = $q.defer();

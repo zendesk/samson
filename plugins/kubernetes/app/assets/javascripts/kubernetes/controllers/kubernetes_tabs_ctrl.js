@@ -1,4 +1,4 @@
-samson.controller('KubernetesTabsCtrl', function($rootScope, $scope, $stateParams) {
+samson.controller('KubernetesTabsCtrl', function($rootScope, $scope) {
 
   $rootScope.$on('$stateChangeSuccess', function(event, toState, toParams) {
     $scope.currentTab = toState.data.selectedTab;
