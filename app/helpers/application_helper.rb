@@ -3,6 +3,7 @@ require 'github/markdown'
 
 module ApplicationHelper
   include Ansible
+  include DateTimeHelper
 
   cattr_reader(:github_status_cache_key) { 'github-status-ok' }
 
@@ -47,10 +48,6 @@ module ApplicationHelper
 
   def relative_time(time)
     content_tag(:span, time.rfc822, data: { time: datetime_to_js_ms(time) }, class: "mouseover")
-  end
-
-  def datetime_to_js_ms(utc_string)
-    utc_string.to_i * 1000
   end
 
   def sortable(column, title = nil)
