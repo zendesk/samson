@@ -1,5 +1,5 @@
 GIT
-  remote: git://github.com/zendesk/kubeclient.git
+  remote: git@github.com:zendesk/kubeclient
   revision: 08ad13f1a7fa9fc5cc204f47f40787cc58cd9509
   branch: samson-gem-branch
   specs:
@@ -228,7 +228,7 @@ GEM
     mysql2 (0.3.20)
     net-http-persistent (2.9.4)
     net-ldap (0.3.1)
-    netrc (0.10.3)
+    netrc (0.11.0)
     newrelic_api (1.2.4)
     newrelic_rpm (3.13.2.302)
     ngannotate-rails (1.0.3)
@@ -401,7 +401,6 @@ GEM
       json (>= 1.8.0)
     unf (0.1.4)
       unf_ext
-    unf (0.1.4-java)
     unf_ext (0.0.7.1)
     warden (1.2.3)
       rack (>= 1.0)
