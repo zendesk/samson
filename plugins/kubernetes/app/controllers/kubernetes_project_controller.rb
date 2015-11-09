@@ -4,7 +4,6 @@ class KubernetesProjectController < ApplicationController
 
   def show
     @release_group_list = current_project.kubernetes_release_groups.order('id desc')
-    @kubernetes_role_list = current_project.roles.order('id desc')
   end
 
   private

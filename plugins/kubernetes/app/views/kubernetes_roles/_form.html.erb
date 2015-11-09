@@ -1,60 +1,65 @@
-<%= form_for [@project, @kubernetes_role], html: { class: "form-horizontal" } do |form| %>
-  <fieldset>
-    <div class="form-group">
-      <%= form.label :name, class: "col-lg-2 control-label" %>
-      <div class="col-lg-4">
-        <%= form.text_field :name, class: "form-control" %>
+<form ng-submit="submit($event)"  class="form-horizontal">
+  <field_tagset>
+    <div class='form-group'>
+      <%= label_tag :name, nil, class: 'col-lg-2 control-label' %>
+      <div class='col-lg-4'>
+        <%= text_field_tag :name, nil, class: 'form-control', 'ng-model': 'role.name' %>
       </div>
     </div>
 
-    <div class="form-group">
-      <%= form.label :config_file, class: "col-lg-2 control-label" %>
-      <div class="col-lg-4">
-        <%= form.text_field :config_file, class: "form-control" %>
+    <div class='form-group'>
+      <%= label_tag :config_file, nil, class: 'col-lg-2 control-label' %>
+      <div class='col-lg-4'>
+        <%= text_field_tag :config_file, nil, class: 'form-control', 'ng-model': 'role.config_file' %>
       </div>
     </div>
 
-    <div class="form-group">
-      <%= form.label :service_name, class: "col-lg-2 control-label" %>
-      <div class="col-lg-4">
-        <%= form.text_field :service_name, class: "form-control" %>
+    <div class='form-group'>
+      <%= label_tag :service_name, nil, class: 'col-lg-2 control-label' %>
+      <div class='col-lg-4'>
+        <%= text_field_tag :service_name, nil, class: 'form-control', 'ng-model': 'role.service_name' %>
       </div>
     </div>
 
-    <div class="form-group">
-      <%= form.label :ram, class: "col-lg-2 control-label" %>
-      <div class="col-lg-2">
-        <div class="input-group">
-          <%= form.text_field :ram, class: "form-control" %>
-          <span class="input-group-addon">MB</span>
+    <div class='form-group'>
+      <%= label_tag :ram, nil, class: 'col-lg-2 control-label' %>
+      <div class='col-lg-2'>
+        <div class='input-group'>
+          <%= text_field_tag :ram, nil, class: 'form-control', 'ng-model': 'role.ram' %>
+          <span class='input-group-addon'>MB</span>
         </div>
       </div>
     </div>
 
-    <div class="form-group">
-      <%= form.label :cpu, class: "col-lg-2 control-label" %>
-      <div class="col-lg-2">
-        <div class="input-group">
-          <%= form.text_field :cpu, class: "form-control" %>
-          <span class="input-group-addon">cores</span>
+    <div class='form-group'>
+      <%= label_tag :cpu, nil, class: 'col-lg-2 control-label' %>
+      <div class='col-lg-2'>
+        <div class='input-group'>
+          <%= text_field_tag :cpu, nil, class: 'form-control', 'ng-model': 'role.cpu' %>
+          <span class='input-group-addon'>cores</span>
         </div>
       </div>
     </div>
 
-    <div class="form-group">
-      <%= form.label :replicas, class: "col-lg-2 control-label" %>
-      <div class="col-lg-1">
-        <%= form.text_field :replicas, class: "form-control" %>
+    <div class='form-group'>
+      <%= label_tag :replicas, nil, class: 'col-lg-2 control-label' %>
+      <div class='col-lg-1'>
+        <%= text_field_tag :replicas, nil, class: 'form-control', 'ng-model': 'role.replicas' %>
       </div>
     </div>
 
-
-    <div class="form-group">
-      <div class="col-lg-offset-2 col-lg-10">
-        <%= form.submit @kubernetes_role.persisted? ? "Save" : "Create", class: "btn btn-primary" %>
-        <%= link_to "Cancel", :back, class: 'btn btn-default' %>
+    <div class='form-group'>
+      <%= label_tag :deploy_strategy, nil, class: 'col-lg-2 control-label' %>
+      <div class='col-lg-4'>
+        <%= text_field_tag :deploy_strategy, nil, class: 'form-control', 'ng-model': 'role.deploy_strategy' %>
       </div>
     </div>
 
-  </fieldset>
-<% end %>
+    <div class='form-group'>
+      <div class='col-lg-offset-2 col-lg-10'>
+        <%= submit_tag action, class: 'btn btn-primary' %>
+        <%= button_tag 'Cancel', class: 'btn btn-default', 'ng-click': 'cancel()' %>
+      </div>
+    </div>
+  </field_tagset>
+</form>
