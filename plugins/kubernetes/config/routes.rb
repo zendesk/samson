@@ -5,7 +5,13 @@ Samson::Application.routes.draw do
     resources :kubernetes_roles, only: [:new, :create, :index, :show, :edit, :update]
 
     member do
-      get :kubernetes, to: 'kubernetes_project#show'
+      get 'kubernetes', to: 'kubernetes_project#show'
+
+      get 'kubernetes/releases', to: 'kubernetes_project#show'
+
+      get 'kubernetes/roles', to: 'kubernetes_project#show'
+      get 'kubernetes/roles/:id/edit', to: 'kubernetes_project#show'
+      get 'kubernetes/roles/new', to: 'kubernetes_project#show'
     end
   end
 

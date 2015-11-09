@@ -1,0 +1,16 @@
+.kubernetes .md-tab {
+  color: #358cce;
+  text-transform: none;
+}
+
+.kubernetes .md-tab.md-active {
+  color: rgb(255,205,210);
+}
+
+.kubernetes [role="tabpanel"] {
+  transition: none;
+}
+
+.kubernetes [role="tablist"] {
+  transition: none;
+}

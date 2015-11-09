@@ -1,10 +1,23 @@
 <%= render 'projects/header', project: @project, tab: 'kubernetes' %>
 
+<section class="kubernetes tabs">
+  <div layout="column" ng-controller="KubernetesTabsCtrl">
+    <md-content class="md-padding">
+      <md-tabs md-stretch-tabs md-dynamic-height md-selected="currentTab" class="main-toolbar">
+        <!--
+        Kubernetes Roles
+        -->
+        <md-tab label="Kubernetes Roles" ui-sref="kubernetes.roles" md-active="$state.is('kubernetes.roles')"></md-tab>
+        <!--
+        Kubernetes Releases
+        -->
+        <md-tab label="Kubernetes Releases" ui-sref="kubernetes.releases" md-active="$state.is('kubernetes.releases')"></md-tab>
+      </md-tabs>
+    </md-content>
 
-<section class="tabs">
-  <h1>Project Roles</h1>
-  <%= render partial: 'kubernetes_roles/roles_list_show' %>
-
-  <h1>Kubernetes Releases</h1>
-  <%= render partial: 'kubernetes_release_groups/kuber_release_group_table' %>
+    <div id="content" ui-view="content"> </div>
+  </div>
 </section>
+
+<%= render 'kubernetes_roles/roles_list' %>
+<%= render 'kubernetes_release_groups/release_groups_list' %>

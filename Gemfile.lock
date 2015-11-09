@@ -293,12 +293,22 @@ GEM
       railties (= 4.2.4)
       sprockets-rails
     rails-assets-angular (1.4.7)
+    rails-assets-angular-animate (1.4.7)
+      rails-assets-angular (= 1.4.7)
+    rails-assets-angular-aria (1.4.7)
+      rails-assets-angular (= 1.4.7)
+    rails-assets-angular-material (0.11.4)
+      rails-assets-angular
+      rails-assets-angular-animate
+      rails-assets-angular-aria
     rails-assets-angular-mocks (1.4.7)
       rails-assets-angular (= 1.4.7)
     rails-assets-angular-route (1.4.7)
       rails-assets-angular (= 1.4.7)
     rails-assets-angular-scenario (1.4.7)
       rails-assets-angular (= 1.4.7)
+    rails-assets-angular-ui-router (0.2.15)
+      rails-assets-angular (>= 1.0.8)
     rails-assets-bootstrap-select (1.7.4)
       rails-assets-jquery (>= 1.8)
     rails-assets-font-awesome (4.3.0)
@@ -468,8 +478,12 @@ DEPENDENCIES
   rack-mini-profiler
   rails (~> 4.2.0)
   rails-assets-angular!
+  rails-assets-angular-animate!
+  rails-assets-angular-aria!
+  rails-assets-angular-material!
   rails-assets-angular-mocks!
   rails-assets-angular-scenario!
+  rails-assets-angular-ui-router!
   rails-assets-bootstrap-select!
   rails-assets-font-awesome (~> 4.3.0)!
   rails-assets-jquery!

@@ -65,6 +65,10 @@ group :assets do
     gem 'rails-assets-vis'
     gem 'rails-assets-x-editable'
     gem 'rails-assets-message-center'
+    gem 'rails-assets-angular-ui-router'
+    gem 'rails-assets-angular-aria'
+    gem 'rails-assets-angular-animate'
+    gem 'rails-assets-angular-material'
   end
 end
 

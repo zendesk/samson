@@ -1,0 +1,41 @@
+<script type="text/ng-template" id="kubernetes/kubernetes_roles.tmpl.html">
+  <div>
+    <table class="table table-condensed">
+      <thead>
+      <tr>
+        <th>Role</th>
+        <th>Config File</th>
+        <th>Service Name</th>
+        <th>RAM</th>
+        <th>CPU</th>
+        <th>Replicas</th>
+        <th>Actions</th>
+      </tr>
+      </thead>
+
+      <tbody>
+      <tr ng-show="!roles.length" ng-hide="roles.length">
+        <td colspan="7">No project roles have been created yet.</td>
+      </tr>
+      <tr ng-repeat="role in roles" ng-show="roles.length" ng-hide="!roles.length">
+        <td>{{role.name}}</td>
+        <td>{{role.config_file}}</td>
+        <td>{{role.service_name}}</td>
+        <td>{{role.ram}}MB</td>
+        <td>{{role.cpu.to_s}} cores</td>
+        <td>{{role.replicas}}</td>
+        <td>
+          <a ui-sref="kubernetes.roles.edit({ role_id: role.id })">Edit</a>
+        </td>
+      </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p class="pull-right">
+    <a ui-sref="kubernetes.roles.create" class="btn btn-default">Create New Role</a>
+  </p>
+</script>
+
+<%= render 'kubernetes_roles/role_create_form' %>
+<%= render 'kubernetes_roles/role_edit_form' %>
