@@ -49,27 +49,6 @@ class KubernetesReleaseGroupsController < ApplicationController
     redirect_to project_kubernetes_release_group_path(@project, @release_group)
   end
 
-  # def create
-  #   release_group = Kubernetes::ReleaseGroup.new(create_params)
-  #   release_group.user = current_user
-  #
-  #   release_group.releases.each do |release|
-  #     params[:replicas].each do |role_id, replica_count|
-  #       release.release_docs.build(kubernetes_role_id: role_id, replica_target: replica_count.to_i)
-  #     end
-  #   end
-  #
-  #   if release_group.save
-  #     release_group.releases.each do |release|
-  #       KuberDeployService.new(release).deploy!
-  #     end
-  #
-  #     render :created, json: release_group, root: false
-  #   else
-  #     render :bad_request, json: {errors: release_group.errors.full_messages}
-  #   end
-  # end
-
   private
 
   def create_params
