@@ -3,7 +3,7 @@ require 'kubeclient'
 class KuberDeployService
   attr_reader :kuber_release
 
-  delegate :build, :client, to: :kuber_release
+  delegate :release_group, :client, to: :kuber_release
 
   def initialize(kuber_release)
     @kuber_release = kuber_release
@@ -13,6 +13,7 @@ class KuberDeployService
     # TODO: handling different deploy strategies (rolling updates, etc.)
     log 'starting deploy'
 
+    delete_replication_controllers!
     create_services!
     create_replication_controllers!
 
@@ -42,6 +43,20 @@ class KuberDeployService
       else
         log 'creating Service', role: role.name, service_name: service.name
         client.create_service(Kubeclient::Service.new(release_doc.service_hash))
+      end
+    end
+  end
+
+  def delete_replication_controllers!
+    kuber_release.release_docs.each do |release_doc|
+      log 'deleting existing ReplicationControllers', role: release_doc.kubernetes_role.name
+      labels = {project: release_group.build.project_name, role: release_doc.kubernetes_role.label_name}
+      client.get_replication_controllers(
+          label_selector: labels.to_kuber_selector,
+          namespace: kuber_release.deploy_group.cluster_deploy_group.namespace).each do |rc|
+        rc.spec.replicas = 0
+        client.update_replication_controller rc
+        client.delete_replication_controller rc.metadata['name'], rc.metadata['namespace']
       end
     end
   end
