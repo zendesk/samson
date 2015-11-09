@@ -7,10 +7,31 @@
   color: rgb(255,205,210);
 }
 
-.kubernetes [role="tabpanel"] {
-  transition: none;
+.kubernetes [role="progressbar"] {
+  transform: scale(0.4) !important;
+  margin: 50px auto !important;
 }
 
-.kubernetes [role="tablist"] {
-  transition: none;
+.kubernetes [role="progressbar"]::after {
+  position: absolute;
+  font-size: 14px;
+  transform: scale(2) !important;
+  width: 150px;
+  text-align: center;
+  top: 140px;
+  left: -20px;
 }
+
+.kubernetes-roles [role="progressbar"]::after {
+  content: "Loading Kubernetes Roles";
+}
+
+.kubernetes-release-groups [role="progressbar"]::after {
+  content: "Loading Kubernetes Releases";
+}
+
+.kubernetes-release-groups span.label-info {
+  margin: 0 5px;
+}
+
+
