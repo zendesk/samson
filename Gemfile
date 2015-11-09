@@ -36,9 +36,6 @@ gem 'logstash-event'
 # Docker
 gem 'docker-api'
 
-# Temporary until kubeclient changes get merged into the upstream project
-gem 'kubeclient', github: 'zendesk/kubeclient', branch: 'samson-gem-branch'
-
 group :production, :staging do
   gem 'rails_12factor'
   gem 'airbrake', '~> 4.3.0'
