@@ -1,6 +1,9 @@
 require_relative '../../test_helper'
 
 describe Admin::DeployGroupsController do
+  let(:deploy_group) { deploy_groups(:pod100) }
+  let(:stage) { stages(:test_staging) }
+
   def self.it_renders_index
     it 'get :index succeeds' do
       get :index
@@ -16,6 +19,8 @@ describe Admin::DeployGroupsController do
     unauthorized :delete, :destroy, id: 1
     unauthorized :post, :update, id: 1
     unauthorized :get, :new
+    unauthorized :get, :deploy_all, id: 1
+    unauthorized :post, :deploy_all, id: 1
   end
 
   as_a_admin do
@@ -24,15 +29,18 @@ describe Admin::DeployGroupsController do
     unauthorized :delete, :destroy, id: 1
     unauthorized :post, :update, id: 1
     unauthorized :get, :new
+    unauthorized :get, :deploy_all, id: 1
+    unauthorized :post, :deploy_all, id: 1
   end
 
   as_a_super_admin do
     it_renders_index
 
-    it 'get :new succeeds' do
-      get :new
-      assert_response :success
-      assert assigns(:deploy_group)
+    describe "#new" do
+      it 'renders' do
+        get :new
+        assert_response :success
+      end
     end
 
     describe '#create' do
@@ -54,10 +62,9 @@ describe Admin::DeployGroupsController do
 
     describe '#delete' do
       it 'succeeds' do
-        id = deploy_groups(:pod100).id
-        delete :destroy, id: id
+        delete :destroy, id: deploy_group
         assert_redirected_to admin_deploy_groups_path
-        DeployGroup.where(id: id).must_equal []
+        DeployGroup.where(id: deploy_group.id).must_equal []
       end
 
       it 'fails for non-existent deploy_group' do
@@ -68,21 +75,83 @@ describe Admin::DeployGroupsController do
     end
 
     describe '#update' do
-      let(:deploy_group) { deploy_groups(:pod100) }
-
       before { request.env["HTTP_REFERER"] = admin_deploy_groups_url }
 
-      it 'save' do
+      it 'saves' do
         post :update, deploy_group: {name: 'Test Update', environment_id: environments(:production).id}, id: deploy_group.id
         assert_redirected_to admin_deploy_groups_path
         DeployGroup.find(deploy_group.id).name.must_equal 'Test Update'
       end
 
-      it 'fail to edit with blank name' do
-        post :update, deploy_group: {name: ''}, id: deploy_group.id
+      it 'fail to update with blank name' do
+        post :update, deploy_group: {name: ''}, id: deploy_group
         assert_template :edit
         flash[:error].must_include "Name can't be blank"
-        DeployGroup.find(deploy_group.id).name.must_equal 'Pod 100'
+        deploy_group.reload.name.must_equal 'Pod 100'
+      end
+    end
+
+    describe "#deploy_all" do
+      before do
+        stage.commands.first.update_attributes!(command: "cap $DEPLOY_GROUPS deploy")
+      end
+
+      it "renders" do
+        get :deploy_all, id: deploy_group
+        assert_response :success
+        assigns[:stages].must_equal [[stage, stage.deploys.first]]
+      end
+
+      it "ignores stages that do not have $DEPLOY_GROUPS" do
+        stage.commands.first.update_attributes!(command: "cap pod1 deploy")
+        get :deploy_all, id: deploy_group
+        assigns[:stages].must_equal []
+      end
+
+      it "also lists stages that have not been deployed since they might be our last failed deploy" do
+        Job.update_all(status: 'running')
+
+        other_stage = stages(:test_production)
+        other_stage.deploy_groups << deploy_group
+        other_stage.commands.create!(command: "cap $DEPLOY_GROUPS deploy")
+        other_stage.deploys.last.job.update_attribute(:status, 'succeeded')
+
+        get :deploy_all, id: deploy_group
+        assigns[:stages].must_equal [[stage, other_stage.deploys.first]]
+      end
+
+      it "ignores stages where the whole environment never got deployed" do
+        Job.update_all(status: 'running')
+        get :deploy_all, id: deploy_group
+        assigns[:stages].must_equal []
+      end
+
+      it "ignores stages that are on different environments" do
+        stage.deploy_groups.clear
+        get :deploy_all, id: deploy_group
+        assigns[:stages].must_equal []
+      end
+    end
+
+    describe "#deploy_all_now" do
+      it "deploys matching stages" do
+        stage.update_attributes!(name: deploy_group.name.upcase + '  ----')
+        assert_no_difference "Stage.count" do
+          post :deploy_all_now, id: deploy_group, stages: ["#{stage.id}-master"]
+        end
+        deploy = stage.deploys.order('created_at desc').first.id
+        assert_redirected_to "/deploys?ids%5B%5D=#{deploy}"
+      end
+
+      it "deploys to a new stage when it does not match" do
+        stage.deploy_groups << deploy_groups(:pod2)
+        assert_difference "Stage.count", +1 do
+          post :deploy_all_now, id: deploy_group, stages: ["#{stage.id}-master"]
+        end
+        deploy = Deploy.first
+        new_stage = deploy.stage
+        new_stage.wont_equal stage
+        assert_redirected_to "/deploys?ids%5B%5D=#{deploy.id}"
       end
     end
   end

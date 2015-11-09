@@ -61,7 +61,7 @@ Samson::Application.routes.draw do
   resources :streams, only: [:show]
   resources :locks, only: [:create, :destroy]
 
-  resources :deploys, only: [] do
+  resources :deploys, only: [:index] do
     collection do
       get :active
       get :active_count
@@ -95,7 +95,12 @@ Samson::Application.routes.draw do
     resource :projects, only: [:show]
     resources :commands, except: [:show]
     resources :environments, except: [:show]
-    resources :deploy_groups
+    resources :deploy_groups do
+      member do
+        get :deploy_all
+        post :deploy_all_now
+      end
+    end
   end
 
   namespace :integrations do
