@@ -1,0 +1,15 @@
+<div class="form-group col-lg-4 git-reference-control" ng-class="status">
+    <label for="reference" class="control-label">Tag or SHA:</label>
+    <div class="input-group">
+        <input id="reference" type="text" class="form-control" placeholder="e.g. v2.1.43, master, fa0b4671"
+               uib-typeahead="reference for reference in loadReferences($viewValue)" ng-model="reference"
+               ng-keyup="checkStatus()" ng-disabled="shouldDisableControl()">
+        <span class="input-group-btn">
+          <button class="btn btn-default" type="button" ng-click="selectedReference({reference:reference})" ng-disabled="shouldDisableButton()" >
+              <div class="glyphicon glyphicon-refresh spinning" ng-if="submitting"></div>
+              <div ng-if="!submitting">Go!</div>
+          </button>
+        </span>
+    </div>
+    <span class="help-block" ng-repeat="warning in warnings">{{warning.state}}: {{warning.description}}</span>
+</div>

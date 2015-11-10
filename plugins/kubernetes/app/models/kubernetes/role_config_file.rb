@@ -10,10 +10,11 @@ module Kubernetes
   # https://cloud.google.com/container-engine/docs/services/operations
   #
   class RoleConfigFile
-    attr_reader :replication_controller, :service
+    attr_reader :file_path, :replication_controller, :service
 
-    def initialize(contents, filepath)
-      @config_file = Kubernetes::Util.parse_file(contents, filepath)
+    def initialize(contents, file_path)
+      @file_path = file_path
+      @config_file = Kubernetes::Util.parse_file(contents, file_path)
       parse_file
     end
 
@@ -25,16 +26,19 @@ module Kubernetes
     end
 
     def parse_replication_controller
-      @replication_controller = ReplicationController.new(as_hash('ReplicationController'))
+      rc_hash = as_hash('ReplicationController')
+      raise 'ReplicationController missing in the configuration file.' if rc_hash.nil?
+      @replication_controller = ReplicationController.new(rc_hash)
     end
 
     def parse_service
-      @service = Service.new(as_hash('Service'))
+      service_hash = as_hash('Service')
+      @service = Service.new(service_hash) unless service_hash.nil?
     end
 
     def as_hash(type)
       hash = Array.wrap(@config_file).detect { |doc| doc['kind'] == type }.freeze
-      hash.dup.with_indifferent_access
+      hash.dup.with_indifferent_access unless hash.nil?
     end
 
     #
@@ -47,8 +51,8 @@ module Kubernetes
         @rc_hash = rc_hash
       end
 
-      def name
-        labels[:role]
+      def labels
+        metadata[:labels]
       end
 
       def replicas
@@ -60,7 +64,7 @@ module Kubernetes
       end
 
       def pod_template
-        PodTemplate.new(spec[:template])
+        @pod_template ||= PodTemplate.new(spec[:template])
       end
 
       def deploy_strategy
@@ -69,12 +73,12 @@ module Kubernetes
 
       private
 
-      def spec
-        @rc_hash[:spec]
+      def metadata
+        @rc_hash[:metadata]
       end
 
-      def labels
-        @rc_hash[:metadata][:labels]
+      def spec
+        @rc_hash[:spec]
       end
     end
 
@@ -84,14 +88,22 @@ module Kubernetes
         @pod_hash = pod_hash
       end
 
+      def labels
+        metadata[:labels]
+      end
+
       # NOTE: This logic assumes that if there are multiple containers defined
       # in the pod, the container that should run the image from this project
       # is the first container defined.
       def container
-        Container.new(spec[:containers].first)
+        @container ||= Container.new(spec[:containers].first)
       end
 
       private
+
+      def metadata
+        @pod_hash[:metadata]
+      end
 
       def spec
         @pod_hash[:spec]
@@ -105,13 +117,23 @@ module Kubernetes
       end
 
       def cpu
-        cpu = @container_hash.try(:[], :resources).try(:[], :limits).try(:[], :cpu) || '0.2' # TODO: remove defaults
+        cpu = limits.try(:[], :cpu) || '0.2' # TODO: remove defaults
         /(\d+(.\d+)?)/.match(cpu).to_s
       end
 
       def ram
-        ram = @container_hash.try(:[], :resources).try(:[], :limits).try(:[], :memory) || '512' # TODO: remove defaults
+        ram = limits.try(:[], :memory) || '512' # TODO: remove defaults
         /(\d+)/.match(ram).to_s
+      end
+
+      private
+
+      def resources
+        @container_hash[:resources]
+      end
+
+      def limits
+        resources.try(:[], :limits)
       end
 
     end
@@ -126,10 +148,26 @@ module Kubernetes
         metadata[:name]
       end
 
+      def labels
+        metadata[:labels]
+      end
+
+      def selector
+        spec[:selector]
+      end
+
+      def type
+        spec[:type]
+      end
+
       private
 
       def metadata
         @service_hash[:metadata]
+      end
+
+      def spec
+        @service_hash[:spec]
       end
     end
   end

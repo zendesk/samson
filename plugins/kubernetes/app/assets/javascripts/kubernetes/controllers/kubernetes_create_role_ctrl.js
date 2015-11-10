@@ -13,14 +13,6 @@ samson.controller('KubernetesCreateRoleCtrl', function($scope, $state, $statePar
         });
 
         $state.go('kubernetes.roles');
-      },
-      function(errors) {
-        if (_.isUndefined(errors)) {
-          notificationService.error('Role could not be updated. Please, try again later.');
-        }
-        else {
-          notificationService.errors(errors);
-        }
       }
     );
   };
