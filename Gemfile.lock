@@ -217,6 +217,8 @@ GEM
     mixlib-shellout (2.2.1)
     mocha (1.1.0)
       metaclass (~> 0.0.1)
+    msgpack (0.7.0)
+    msgpack (0.7.0-java)
     multi_json (1.11.2)
     multi_xml (0.5.5)
     multipart-post (2.0.0)
@@ -349,6 +351,10 @@ GEM
       rake (>= 0.8.7)
       thor (>= 0.18.1, < 2.0)
     rake (10.4.2)
+    rbtrace (0.4.7)
+      ffi (>= 1.0.6)
+      msgpack (>= 0.4.3)
+      trollop (>= 1.16.2)
     recursive-open-struct (0.6.1)
     rest-client (1.8.0)
       http-cookie (>= 1.0.2, < 2.0)
@@ -399,6 +405,7 @@ GEM
     thread_safe (0.3.5)
     thread_safe (0.3.5-java)
     tilt (1.4.1)
+    trollop (2.1.2)
     tzinfo (1.2.2)
       thread_safe (~> 0.1)
     uglifier (2.7.2)
@@ -497,6 +504,7 @@ DEPENDENCIES
   rails-assets-vis!
   rails-assets-x-editable!
   rails_12factor
+  rbtrace
   samson_docker_binary_builder!
   samson_dockerb!
   samson_env!

@@ -1,3 +1,5 @@
+require 'rbtrace'
+
 if !Rails.env.test? && !ENV['PRECOMPILE']
   if ENV['SERVER_MODE']
     Rails.application.config.after_initialize do
