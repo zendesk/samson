@@ -22,7 +22,7 @@ describe('Kubernetes ui-router config', function() {
     // We need add the template entry into the templateCache if we ever
     // specify a templateUrl
     $templateCache.put('kubernetes/kubernetes_roles.tmpl.html', '');
-    $templateCache.put('kubernetes/kubernetes_release_groups.tmpl.html', '');
+    $templateCache.put('kubernetes/kubernetes_releases.tmpl.html', '');
     $templateCache.put('kubernetes/kubernetes_edit_role.tmpl.html', '');
     $templateCache.put('kubernetes/kubernetes_create_role.tmpl.html', '');
   }));
@@ -138,8 +138,8 @@ describe('Kubernetes ui-router config', function() {
     });
 
     it('State views should reflect current state', function() {
-      expect($state.current.views['content@']['templateUrl']).toEqual('kubernetes/kubernetes_release_groups.tmpl.html');
-      expect($state.current.views['content@']['controller']).toEqual('KubernetesReleaseGroupsCtrl');
+      expect($state.current.views['content@']['templateUrl']).toEqual('kubernetes/kubernetes_releases.tmpl.html');
+      expect($state.current.views['content@']['controller']).toEqual('KubernetesReleasesCtrl');
     });
 
     it('State params should reflect current state', function() {
