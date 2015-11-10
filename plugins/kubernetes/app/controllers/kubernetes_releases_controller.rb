@@ -27,24 +27,18 @@ class KubernetesReleasesController < ApplicationController
   end
 
   def create
-    @release = Kubernetes::Release.create(create_params)
-    @release.user = current_user
+    @release = Kubernetes::Release.create!(create_params.merge(user: current_user))
 
     deploy_group_ids = params[:kubernetes_release][:deploy_group_ids].select(&:presence)
     DeployGroup.find(deploy_group_ids).each do |deploy_group|
       params[:replicas].each do |role_id, replica_count|
-        @release.release_docs.create(kubernetes_role_id: role_id, replica_target: replica_count.to_i, deploy_group: deploy_group)
+        @release.release_docs.create!(kubernetes_role_id: role_id, replica_target: replica_count.to_i, deploy_group: deploy_group)
       end
     end
-
-    unless @release.valid?
-      render :new and return
-    end
-
-    @release.save!
     KuberDeployService.new(@release).deploy!
-
     redirect_to project_kubernetes_release_path(current_project, @release)
+  rescue
+    render :new
   end
 
   private
