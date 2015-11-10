@@ -37,6 +37,10 @@ class KubernetesRolesController < ApplicationController
     end
   end
 
+  def import
+    render status: :ok, json: Build.find(params[:id]).import_kubernetes_roles, root: false
+  end
+
   private
 
   def role_params

@@ -114,6 +114,21 @@ class GitRepository
     executor.execute!("cd #{pwd}", "git diff --quiet --name-only #{sha1}..#{sha2} #{file}")
   end
 
+  def directory_contents(git_ref, path: '.')
+    cmd = "git ls-tree -r #{git_ref} --name-only --full-tree #{path}"
+    valid, output = run_single_command(cmd) { |line| line.chomp }
+    Rails.logger.error("Could not list the files in directory '#{path}'. Git Ref '#{git_ref}'") unless valid
+    output
+  end
+
+  def file_contents(git_ref, file_path)
+    #first command disables less as default pager
+    cmds = ["git config core.pager ''", "git show -q #{git_ref}:#{file_path}"]
+    valid, output = run_commands(cmds) { |line| line }
+    Rails.logger.error("Could not retrieve file contents for '#{file_path}'. Git Ref '#{git_ref}'") unless valid
+    output.join
+  end
+
   private
 
   def checkout!(git_reference, pwd: repo_cache_dir)
@@ -124,10 +139,28 @@ class GitRepository
     Dir.exist?(repo_cache_dir)
   end
 
+  # Runs a single command and gathers the output into an array of strings.
+  # Filters any duplicate entries on that array and executes a natural sort before returning the output.
   def run_single_command(command, pwd: repo_cache_dir)
     tmp_executor = TerminalExecutor.new(StringIO.new)
     success = tmp_executor.execute!("cd #{pwd}", command)
     result = tmp_executor.output.string.lines.map { |line| yield line if block_given? }.uniq.sort
     [success, result]
+  end
+
+  # Runs the provided list of commands.
+  # This method DOES NOT filter the output, neither does any sort of sorting.
+  def run_commands(*commands, pwd: repo_cache_dir)
+    tmp_executor = TerminalExecutor.new(StringIO.new)
+    success = tmp_executor.execute!("cd #{pwd}", commands)
+    result = tmp_executor.output.string.lines.map { |line| yield line if block_given? }
+    [success, result]
+  end
+
+  # The user/repo part of the repository URL.
+  def github_repo
+    # GitHub allows underscores, hyphens and dots in repo names
+    # but only hyphens in user/organisation names (as well as alphanumeric).
+    repository_url.scan(/[:\/]([A-Za-z0-9-]+\/[\w.-]+?)(?:\.git)?$/).join
   end
 end

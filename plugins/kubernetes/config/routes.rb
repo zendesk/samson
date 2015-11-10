@@ -3,6 +3,10 @@ Samson::Application.routes.draw do
     resources :kubernetes_releases, only: [:new, :create, :index, :show]
     resources :kubernetes_roles, only: [:new, :create, :index, :show, :edit, :update]
 
+    resources :builds, only: [] do
+      get 'kubernetes_roles/import', to: 'kubernetes_roles#import', on: :member
+    end
+
     member do
       get 'kubernetes', to: 'kubernetes_project#show'
 
