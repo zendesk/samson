@@ -3,7 +3,7 @@ require 'kubeclient'
 class KuberDeployService
   attr_reader :kuber_release
 
-  delegate :build, :client, to: :kuber_release
+  delegate :build, to: :kuber_release
 
   def initialize(kuber_release)
     @kuber_release = kuber_release
@@ -16,7 +16,7 @@ class KuberDeployService
     create_services!
     create_replication_controllers!
 
-    watch_deployment
+    # watch_deployment
 
     log 'API requests complete'
   end
@@ -26,7 +26,7 @@ class KuberDeployService
       log 'creating ReplicationController', role: release_doc.kubernetes_role.name
 
       rc = Kubeclient::ReplicationController.new(release_doc.rc_hash)
-      client.create_replication_controller(rc)
+      release_doc.client.create_replication_controller(rc)
     end
   end
 
@@ -41,13 +41,13 @@ class KuberDeployService
         log 'Service already running', role: role.name, service_name: service.name
       else
         log 'creating Service', role: role.name, service_name: service.name
-        client.create_service(Kubeclient::Service.new(release_doc.service_hash))
+        release_doc.client.create_service(Kubeclient::Service.new(release_doc.service_hash))
       end
     end
   end
 
   def project
-    @project ||= kuber_release.release_group.project
+    @project ||= kuber_release.project
   end
 
   def watch_deployment
@@ -100,8 +100,7 @@ class KuberDeployService
   def log(msg, extra_info = {})
     extra_info.merge!(
       release: kuber_release.id,
-      project: project.name,
-      group: kuber_release.deploy_group.name
+      project: project.name
     )
 
     Kubernetes::Util.log msg, extra_info

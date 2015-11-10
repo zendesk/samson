@@ -1,6 +1,6 @@
-samson.factory('kubernetesReleaseGroupFactory', function(buildFactory) {
+samson.factory('kubernetesReleaseFactory', function(buildFactory) {
 
-  function KubernetesReleaseGroup(id, created_at, created_by, build, deploy_groups) {
+  function KubernetesRelease(id, created_at, created_by, build, deploy_groups) {
     this.id = id;
     this.created_at = created_at;
     this.created_by = created_by;
@@ -8,14 +8,14 @@ samson.factory('kubernetesReleaseGroupFactory', function(buildFactory) {
     this.deploy_groups = deploy_groups;
   }
 
-  KubernetesReleaseGroup.build = function(data) {
+  KubernetesRelease.build = function(data) {
     var build = buildFactory.build(data.build);
 
     var deploy_groups = data.deploy_groups.map(function(deploy_group){
       return deploy_group.name;
     });
 
-    return new KubernetesReleaseGroup(
+    return new KubernetesRelease(
       data.id,
       data.created_at,
       data.user.name,
@@ -24,5 +24,5 @@ samson.factory('kubernetesReleaseGroupFactory', function(buildFactory) {
     );
   };
 
-  return KubernetesReleaseGroup;
+  return KubernetesRelease;
 });

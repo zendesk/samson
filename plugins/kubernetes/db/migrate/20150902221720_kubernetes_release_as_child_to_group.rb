@@ -3,7 +3,7 @@ class KubernetesReleaseAsChildToGroup < ActiveRecord::Migration
     change_table :kubernetes_releases do |t|
       t.remove :build_id
       t.remove :user_id
-      t.references :kubernetes_release_group, null: false, index: true, after: :id
+      t.references :kubernetes_release_group, index: true, after: :id
     end
   end
 

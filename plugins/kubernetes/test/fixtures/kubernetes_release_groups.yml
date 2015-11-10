@@ -1,3 +1,0 @@
-test_release:
-  user: deployer
-  build: docker_build

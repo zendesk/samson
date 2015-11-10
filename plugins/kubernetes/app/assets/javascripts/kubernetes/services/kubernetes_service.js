@@ -77,13 +77,13 @@ samson.service('kubernetesService', function($http, $q) {
   };
 
   /*********************************************************************
-   Kubernetes Release Groups
+   Kubernetes Releases
    *********************************************************************/
 
-  this.loadKubernetesReleaseGroups = function(project_id) {
+  this.loadKubernetesReleases = function(project_id) {
     var deferred = $q.defer();
 
-    $http.get('/projects/' + project_id + '/kubernetes_release_groups', config).then(
+    $http.get('/projects/' + project_id + '/kubernetes_releases', config).then(
       function(response) {
         deferred.resolve(response.data);
       }

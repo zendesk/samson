@@ -10,7 +10,7 @@
     <div class="pull-right">
       <%= link_to "Edit", edit_project_build_path, class: "btn btn-default" %>
       <% if Samson::Hooks.active_plugin?('kubernetes') %>
-        <%= link_to "Deploy to Kubernetes", new_project_kubernetes_release_group_path(@project, build_id: @build.id), class: "btn btn-default" %>
+        <%= link_to "Deploy to Kubernetes", new_project_kubernetes_release_path(@project, build_id: @build.id), class: "btn btn-default" %>
       <% end %>
     </div>
   </div>

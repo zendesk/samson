@@ -4,13 +4,15 @@ module Kubernetes
 
     STATUSES = %w[created spinning_up live spinning_down dead]
 
-    belongs_to :release_group, class_name: 'Kubernetes::ReleaseGroup', foreign_key: 'kubernetes_release_group_id', inverse_of: :releases
-    belongs_to :deploy_group
-    has_many :release_docs, class_name: 'Kubernetes::ReleaseDoc', foreign_key: 'kubernetes_release_id', inverse_of: :kubernetes_release
+    belongs_to :user
+    belongs_to :build
+    has_many :release_docs, class_name: 'Kubernetes::ReleaseDoc', foreign_key: 'kubernetes_release_id'
 
-    validates :release_group, presence: true
-    validates :deploy_group, presence: true
+    delegate :project, to: :build
+
+    validates :build, presence: true
     validates :status, inclusion: STATUSES
+    validate :docker_image_in_registry?, on: :create
 
     STATUSES.each do |s|
       define_method("#{s}?") { status == s }
@@ -21,15 +23,15 @@ module Kubernetes
       self.deploy_finished_at = Time.now
     end
 
-    def namespace
-      deploy_group.kubernetes_namespace
-    end
-
     def pod_labels
       {
-        project: release_group.build.project_name,
+        project: build.project_name,
         release_id: id.to_s
       }
+    end
+
+    def user
+      super || NullUser.new(user_id)
     end
 
     def nested_error_messages
@@ -81,13 +83,24 @@ module Kubernetes
       end
     end
 
-    def client
-      deploy_group.kubernetes_cluster.client
-    end
-
     def docs_by_role
       @docs_by_role ||= release_docs.each_with_object({}) do |rel_doc, hash|
         hash[rel_doc.kubernetes_role.label_name] = rel_doc
+      end
+    end
+
+    def deploy_group_ids
+      release_docs.map(&:deploy_group_id)
+    end
+
+    def deploy_group_ids=(id_list)
+    end
+
+    private
+
+    def docker_image_in_registry?
+      if build && build.docker_repo_digest.blank?
+        errors.add(:build, 'Docker image was not pushed to registry')
       end
     end
   end

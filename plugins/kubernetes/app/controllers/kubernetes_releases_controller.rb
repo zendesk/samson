@@ -1,40 +1,53 @@
 class KubernetesReleasesController < ApplicationController
-  helper ProjectsHelper
+  include ProjectLevelAuthorization
 
-  before_action :project
-  before_action :authorize_deployer!
+  before_action :authorize_project_deployer!
   before_action :load_environments, only: [:new, :create]
 
   def index
-    @kuber_release_list = project.kubernetes_releases.order('id desc')
-  end
-
-  def new
-    @kubernetes_release = Kubernetes::Release.new(user: current_user, build_id: params[:build_id])
+    render json: current_project.kubernetes_releases.order('id desc'), root: false
   end
 
   def show
-    @kubernetes_release = Kubernetes::Release.find(params[:id])
+    @release = Kubernetes::Release.find(params[:id])
+
+    respond_to do |format|
+      format.html
+      format.json { render @release, root:false }
+    end
   end
 
-  def build
-    @build = Build.find(params[:build_id])
-    @kuber_release_list = @build.kubernetes_releases.order('id desc')
+  def new
+    @release = Kubernetes::Release.new(user: current_user, build_id: params[:build_id])
+
+    respond_to do |format|
+      format.html
+      format.json {render @release, root:false }
+    end
+  end
+
+  def create
+    @release = Kubernetes::Release.create!(create_params.merge(user: current_user))
+    create_release_docs
+    KuberDeployService.new(@release).deploy!
+    redirect_to project_kubernetes_release_path(current_project, @release)
+  rescue
+    render :new
   end
 
   private
 
-  def project
-    @project ||= Project.find_by_param!(params[:project_id])
-  end
-  helper_method :project
-
-  def new_params
-    params.permit(:build_id)
-  end
-
   def create_params
-    params.require(:kubernetes_release).permit(:build_id)
+    params.require(:kubernetes_release).permit(:build_id, { deploy_group_ids: [] })
+  end
+
+  def create_release_docs
+    deploy_group_ids = params[:kubernetes_release][:deploy_group_ids].select(&:presence)
+    DeployGroup.find(deploy_group_ids).each do |deploy_group|
+      params[:replicas].each do |role_id, replica_count|
+        @release.release_docs.create!(kubernetes_role_id: role_id, replica_target: replica_count.to_i, deploy_group: deploy_group)
+      end
+    end
   end
 
   def load_environments
