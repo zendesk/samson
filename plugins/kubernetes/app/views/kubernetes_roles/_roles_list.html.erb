@@ -1,6 +1,6 @@
 <script type="text/ng-template" id="kubernetes/kubernetes_roles.tmpl.html">
   <div class="kubernetes-roles">
-    <md-progress-circular md-mode="indeterminate" ng-if="!roles"></md-progress-circular>
+    <us-spinner spinner-theme="async-data-loader" ng-if="!roles" spinner-on="!roles" class="kubernetes-roles-spinner"></us-spinner>
     <div ng-if="roles">
 
       <% if is_user_admin_for_project? %>

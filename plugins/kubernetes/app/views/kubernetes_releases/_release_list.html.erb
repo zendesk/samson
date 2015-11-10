@@ -1,7 +1,10 @@
 <script type="text/ng-template" id="kubernetes/kubernetes_releases.tmpl.html">
   <div class="kubernetes-release-groups">
-    <md-progress-circular md-mode="indeterminate" ng-if="!releases"></md-progress-circular>
+    <us-spinner spinner-theme="async-data-loader" ng-if="!releases" class="kubernetes-releases-spinner"></us-spinner>
     <div ng-if="releases">
+      <p class="pull-right">
+        <%= link_to 'Create Release', new_project_kubernetes_release_path(@project), class: "btn btn-default" %>
+      </p>
       <table class="table table-condensed">
         <thead>
         <tr>
@@ -30,8 +33,5 @@
         </tbody>
       </table>
     </div>
-    <p class="pull-right">
-      <%= link_to 'Create Release', new_project_kubernetes_release_path(@project), class: "btn btn-default" %>
-    </p>
   </div>
 </script>

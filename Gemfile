@@ -54,6 +54,8 @@ group :assets do
     gem 'rails-assets-angular-mocks'
     gem 'rails-assets-angular-scenario'
     gem 'rails-assets-angular-ui-bootstrap-bower'
+    gem 'rails-assets-spin'
+    gem 'rails-assets-angular-spinner'
     gem 'rails-assets-bootstrap-select'
     gem 'rails-assets-font-awesome', '~> 4.3.0'
     gem 'rails-assets-jquery'
@@ -67,9 +69,6 @@ group :assets do
     gem 'rails-assets-x-editable'
     gem 'rails-assets-message-center'
     gem 'rails-assets-angular-ui-router'
-    gem 'rails-assets-angular-aria'
-    gem 'rails-assets-angular-animate'
-    gem 'rails-assets-angular-material'
     gem 'rails-assets-angular-truncate-2'
   end
 end
