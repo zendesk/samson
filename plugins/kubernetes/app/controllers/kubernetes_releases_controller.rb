@@ -28,13 +28,7 @@ class KubernetesReleasesController < ApplicationController
 
   def create
     @release = Kubernetes::Release.create!(create_params.merge(user: current_user))
-
-    deploy_group_ids = params[:kubernetes_release][:deploy_group_ids].select(&:presence)
-    DeployGroup.find(deploy_group_ids).each do |deploy_group|
-      params[:replicas].each do |role_id, replica_count|
-        @release.release_docs.create!(kubernetes_role_id: role_id, replica_target: replica_count.to_i, deploy_group: deploy_group)
-      end
-    end
+    create_release_docs
     KuberDeployService.new(@release).deploy!
     redirect_to project_kubernetes_release_path(current_project, @release)
   rescue
@@ -45,6 +39,15 @@ class KubernetesReleasesController < ApplicationController
 
   def create_params
     params.require(:kubernetes_release).permit(:build_id, { deploy_group_ids: [] })
+  end
+
+  def create_release_docs
+    deploy_group_ids = params[:kubernetes_release][:deploy_group_ids].select(&:presence)
+    DeployGroup.find(deploy_group_ids).each do |deploy_group|
+      params[:replicas].each do |role_id, replica_count|
+        @release.release_docs.create!(kubernetes_role_id: role_id, replica_target: replica_count.to_i, deploy_group: deploy_group)
+      end
+    end
   end
 
   def load_environments
