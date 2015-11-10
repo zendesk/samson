@@ -3,7 +3,9 @@ module Kubernetes
     self.table_name = 'kubernetes_release_docs'
     belongs_to :kubernetes_role, class_name: 'Kubernetes::Role'
     belongs_to :kubernetes_release, class_name: 'Kubernetes::Release'
+    belongs_to :deploy_group
 
+    validates :deploy_group, presence: true
     validates :kubernetes_role, presence: true
     validates :kubernetes_release, presence: true
     validates :replica_target, presence: true, numericality: { greater_than: 0 }
@@ -59,7 +61,7 @@ module Kubernetes
     end
 
     def service
-      kubernetes_role.service_for(kubernetes_release.deploy_group) if has_service?
+      kubernetes_role.service_for(deploy_group) if has_service?
     end
 
     def pretty_rc_doc(format: :json)
@@ -74,7 +76,7 @@ module Kubernetes
     end
 
     def build
-      kubernetes_release.release_group.build
+      kubernetes_release.try(:build)
     end
 
     # These labels will be attached to the Pod and the ReplicationController
@@ -107,6 +109,10 @@ module Kubernetes
       end
     end
 
+    def client
+      deploy_group.kubernetes_cluster.client
+    end
+
     private
 
     def save_rc_info
@@ -135,7 +141,7 @@ module Kubernetes
       @rc_hash[:metadata][:labels].merge!(pod_labels)
       @rc_hash[:spec][:selector].merge!(pod_labels)
 
-      @rc_hash[:metadata][:namespace] = kubernetes_release.namespace
+      @rc_hash[:metadata][:namespace] = namespace
 
       # Set the Docker image to be deployed in the pod.
       # NOTE: This logic assumes that if there are multiple containers defined
@@ -155,7 +161,7 @@ module Kubernetes
       @service_hash = service_template.dup.with_indifferent_access
 
       @service_hash[:metadata][:name] = kubernetes_role.service_name
-      @service_hash[:metadata][:namespace] = kubernetes_release.namespace
+      @service_hash[:metadata][:namespace] = namespace
       @service_hash[:metadata][:labels] ||= pod_labels.except(:release_id)
 
       # For now, create a NodePort for each service, so we can expose any
@@ -180,10 +186,14 @@ module Kubernetes
     end
 
     def env_as_list
-      env = EnvironmentVariable.env(build.project, kubernetes_release.deploy_group)
+      env = EnvironmentVariable.env(build.project, deploy_group)
       env.each_with_object([]) do |(k,v), list|
         list << { name: k, value: v.to_s }
       end
+    end
+
+    def namespace
+      deploy_group.kubernetes_namespace
     end
   end
 end

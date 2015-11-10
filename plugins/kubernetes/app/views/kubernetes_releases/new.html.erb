@@ -1,26 +1,26 @@
 <%
-   build ||= @release_group.build
-   build_roles = @project.roles
-   can_deploy = @project.builds.any? && build_roles.any?
+   build ||= @release.build
+   build_roles = current_project.roles
+   can_deploy = current_project.builds.any? && build_roles.any?
 %>
 
-<%= breadcrumb @project,
-               ['Kubernetes', kubernetes_project_path(@project)],
+<%= breadcrumb current_project,
+               ['Kubernetes', kubernetes_project_path(current_project)],
                "Kubernetes Release"
 %>
 
 
 <section>
-  <h1>Deploy <%= @project.name %> to Kubernetes</h1>
+  <h1>Deploy <%= current_project.name %> to Kubernetes</h1>
 
-  <%= form_for [@project, @release_group], html: { class: "form-horizontal" } do |form| %>
+  <%= form_for [current_project, @release], html: { class: "form-horizontal" } do |form| %>
     <fieldset>
-      <% if @release_group.errors.any? %>
+      <% if @release.errors.any? %>
         <div class="row">
           <div class="col-lg-5 col-lg-offset-1 alert alert-warning">
             <p><strong>Ooops!</strong> There was an error:</p>
             <ul>
-              <% @release_group.nested_error_messages.each do |message| %>
+              <% @release.nested_error_messages.each do |message| %>
                 <li><%= message %></li>
               <% end %>
             </ul>
@@ -36,17 +36,17 @@
             <p class="form-control-static">
               <%= build.project.name %> - <%= build.label %>
             </p>
-          <% elsif @project.builds.any? %>
-            <%= form.select :build_id, @project.builds.order('id desc').limit(20).map { |b| [b.label, b.id] }, {}, { class: 'form-control' } %>
+          <% elsif current_project.builds.any? %>
+            <%= form.select :build_id, current_project.builds.order('id desc').limit(20).map { |b| [b.label, b.id] }, {}, { class: 'form-control' } %>
           <% else %>
             <p class="form-control-static">
-              You must create a <%= link_to 'Build', new_project_build_path(@project) %> before deploying.
+              You must create a <%= link_to 'Build', new_project_build_path(current_project) %> before deploying.
             </p>
           <% end %>
         </div>
       </div>
 
-      <%= render 'deploy_groups/deploy_group_select', form: form, hidden_field: 'kubernetes_release_group' %>
+      <%= render 'deploy_groups/deploy_group_select', form: form, hidden_field: 'kubernetes_release' %>
 
       <div class="form-group">
         <%= form.label :replicas, "Num Replicas", class: "col-lg-2 control-label" %>
@@ -65,7 +65,7 @@
           <% end %>
           <% if build_roles.empty? %>
             <p class="form-control-static">
-              You must have at least one <%= link_to 'Role', new_project_kubernetes_role_path(@project)  %> to deploy
+              You must have at least one <%= link_to 'Role', new_project_kubernetes_role_path(current_project)  %> to deploy
             </p>
           <% end %>
         </div>

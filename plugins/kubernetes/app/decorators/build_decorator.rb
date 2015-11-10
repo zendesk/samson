@@ -1,6 +1,6 @@
 Build.class_eval do
 
-  has_many :kubernetes_release_groups, class_name: 'Kubernetes::ReleaseGroup'
+  has_many :kubernetes_releases
 
   def project_name
     @project_name ||= project.name.parameterize('-')

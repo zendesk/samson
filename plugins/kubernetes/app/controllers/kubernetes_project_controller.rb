@@ -3,7 +3,7 @@ class KubernetesProjectController < ApplicationController
   before_action :authorize_project_deployer!
 
   def show
-    @release_group_list = current_project.kubernetes_release_groups.order('id desc')
+    @releases_list = current_project.kubernetes_releases.order('id desc')
   end
 
   private

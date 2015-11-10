@@ -52,8 +52,8 @@ angular.module('samson').config(function($stateProvider, $urlRouterProvider) {
       },
       views: {
         'content@': {
-          templateUrl: 'kubernetes/kubernetes_release_groups.tmpl.html',
-          controller: 'KubernetesReleaseGroupsCtrl'
+          templateUrl: 'kubernetes/kubernetes_releases.tmpl.html',
+          controller: 'KubernetesReleasesCtrl'
         }
       }
     })
