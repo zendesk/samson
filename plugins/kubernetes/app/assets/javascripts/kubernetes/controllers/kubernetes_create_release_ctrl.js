@@ -1,6 +1,6 @@
 samson.controller('KubernetesCreateReleaseCtrl',
-  function($scope, $window, $state, $stateParams, $q, $timeout, $uibModalInstance, buildsService, buildFactory,
-           environmentsService, kubernetesService, notificationService) {
+  function($scope, $window, $state, $stateParams, $q, $timeout, $uibModalInstance, buildsService, environmentsService,
+           kubernetesService, notificationService) {
 
     $scope.loadingBuilds = false;
     $scope.loadingRoles = false;
@@ -97,12 +97,12 @@ samson.controller('KubernetesCreateReleaseCtrl',
 
     $scope.validate = function(step) {
       var valid = true;
-      valid &= _.isDefined($scope.environment);
-      valid &= _.isDefined($scope.build);
-      valid &= _.isNotUndefinedOrEmpty($scope.roles);
+      valid = valid && _.isDefined($scope.environment);
+      valid = valid && _.isDefined($scope.build);
+      valid = valid && _.isNotUndefinedOrEmpty($scope.roles);
 
       if (step == 2) {
-        valid &= _.isNotUndefinedOrEmpty($scope.deploy_groups)
+        valid = valid && _.some($scope.deploy_groups, $scope.isSelected);
       }
 
       return valid;
@@ -133,7 +133,7 @@ samson.controller('KubernetesCreateReleaseCtrl',
       $scope.loadingBuilds = true;
       buildsService.loadBuilds($stateParams.project_id).then(
         function(builds) {
-          $scope.builds = builds.map(buildFactory.build);
+          $scope.builds = builds;
           $scope.loadingBuilds = false;
         },
         function(result) {
@@ -143,7 +143,7 @@ samson.controller('KubernetesCreateReleaseCtrl',
     }
 
     function loadRoles() {
-      $scope.roles = undefined;
+      $scope.roles = [];
       $scope.loadingRoles = true;
 
       var deferred = $q.defer();

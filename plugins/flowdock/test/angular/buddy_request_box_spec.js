@@ -126,7 +126,7 @@ describe('Buddy requests notifications', function () {
         };
         expect(flowdock.buddyRequest).toHaveBeenCalledWith('Some message');
         buddyNotificationsCtrl.notifyFlowDock();
-      }, 500); //if tests fail because of this, increase the delay
+      }, 1000); //if tests fail because of this, increase the delay
     });
   });
 });

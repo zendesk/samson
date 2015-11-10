@@ -1,4 +1,4 @@
-samson.controller('KubernetesReleasesCtrl', function($scope, $state, $stateParams, $uibModal, $timeout, kubernetesService, kubernetesReleaseFactory, notificationService) {
+samson.controller('KubernetesReleasesCtrl', function($scope, $state, $stateParams, $uibModal, kubernetesService, notificationService) {
   $scope.project_id = $stateParams.project_id;
 
   $scope.showCreateReleaseDialog = function() {
@@ -21,9 +21,12 @@ samson.controller('KubernetesReleasesCtrl', function($scope, $state, $stateParam
 
   function loadKubernetesReleases() {
     kubernetesService.loadKubernetesReleases($scope.project_id).then(
-      function(data) {
-        $scope.releases = data.map(function(item) {
-          return kubernetesReleaseFactory.build(item);
+      function(releases) {
+        $scope.releases = releases;
+      },
+      function(result) {
+        result.messages.map(function(message) {
+          notificationService.error(message);
         });
       }
     );

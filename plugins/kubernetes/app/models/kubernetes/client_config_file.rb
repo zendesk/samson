@@ -3,7 +3,7 @@ module Kubernetes
     attr_reader :filepath, :api_version, :clusters, :users, :contexts
 
     def initialize(filepath)
-      raise ArgumentError("File #{filepath} does not exist") unless File.exists?(filepath)
+      raise ArgumentError.new("File #{filepath} does not exist") unless File.exists?(filepath)
       @filepath = filepath
       @config_file = YAML.load_file(filepath).with_indifferent_access
       parse_file

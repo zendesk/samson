@@ -1,23 +1,23 @@
 samson.service('notificationService', function(messageCenterService) {
 
   this.info = function(message, options) {
-    showMessage('info', message, options);
+    showMessage('info', message, options || {});
   };
 
   this.warning = function(message, options) {
-    showMessage('warning', message, options);
+    showMessage('warning', message, options || {});
   };
 
   this.error = function(message, options) {
-    showMessage('danger', message, options);
+    showMessage('danger', message, options || {});
   };
 
   this.success = function(message, options) {
-    showMessage('success', message, options);
+    showMessage('success', message, options || {});
   };
 
   this.errors = function(messages, options) {
-    showMessages('danger', messages, options);
+    showMessages('danger', messages, options || {});
   };
 
   this.clear = function() {

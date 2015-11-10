@@ -18,9 +18,11 @@ samson.controller('KubernetesReleaseWizardCtrl', function($scope) {
     showStep($scope.currentStep - 1);
   };
 
-  function showStep(step) {
-    $scope.steps[step - 1].current = true;
-    $scope.currentStep = step;
+  function showStep(new_step) {
+    $scope.currentStep = new_step;
+    _.each($scope.steps, function(step) {
+      step.current = $scope.isCurrentStep(step.step);
+    });
   }
 
   $scope.isCurrentStep = function(step) {

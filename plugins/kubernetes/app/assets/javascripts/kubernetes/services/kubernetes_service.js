@@ -1,4 +1,4 @@
-samson.service('kubernetesService', function($http, $q, httpErrorService, kubernetesRoleFactory) {
+samson.service('kubernetesService', function($http, $q, httpErrorService, kubernetesRoleFactory, kubernetesReleaseFactory) {
 
   var config = {
     headers: {
@@ -85,7 +85,7 @@ samson.service('kubernetesService', function($http, $q, httpErrorService, kubern
 
     $http.get('/projects/' + project_id + '/kubernetes_releases', config).then(
       function(response) {
-        deferred.resolve(response.data);
+        deferred.resolve(response.data.map(kubernetesReleaseFactory.build));
       },
       function(response) {
         deferred.reject(httpErrorService.handleResponse(response));
