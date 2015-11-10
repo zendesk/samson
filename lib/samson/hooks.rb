@@ -232,3 +232,4 @@ end
 Samson::Hooks.plugin_setup
 ActiveRecord::Base.extend Samson::LoadDecorators
 ActionController::Base.extend Samson::LoadDecorators
+ActiveModel::Serializer.extend Samson::LoadDecorators

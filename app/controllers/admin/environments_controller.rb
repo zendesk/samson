@@ -1,10 +1,15 @@
 class Admin::EnvironmentsController < ApplicationController
-  before_action :authorize_admin!
-  before_action :authorize_super_admin!, only: [ :create, :new, :edit, :update, :destroy ]
+  before_action :authorize_admin!, except: [:index]
+  before_action :authorize_super_admin!, only: [:create, :new, :edit, :update, :destroy]
   before_action :environment, only: [:edit, :update, :destroy]
 
   def index
     @environments = Environment.all
+
+    respond_to do |format|
+      format.html
+      format.json { render json: @environments }
+    end
   end
 
   def new

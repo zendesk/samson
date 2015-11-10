@@ -117,13 +117,13 @@ module Kubernetes
       end
 
       def cpu
-        cpu = limits.try(:[], :cpu) || '0.2' # TODO: remove defaults
-        /(\d+(.\d+)?)/.match(cpu).to_s
+        cpu = limits.try(:[], :cpu) || '200m'
+        /(\d+)/.match(cpu).to_s.to_f.try(:/, 1000) #e.g. 0.2 cores
       end
 
       def ram
-        ram = limits.try(:[], :memory) || '512' # TODO: remove defaults
-        /(\d+)/.match(ram).to_s
+        ram = limits.try(:[], :memory) || '512Mi'
+        /(\d+)/.match(ram).to_s.to_i
       end
 
       private

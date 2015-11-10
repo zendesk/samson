@@ -1,0 +1,37 @@
+.dialog {
+  padding: 20px;
+
+  header {
+    padding: 30px 0;
+    border-bottom: 1px solid #dedede;
+
+    h2.title {
+      //line-height: 100px;
+      margin: 0;
+      display: inline-block;
+      text-transform: uppercase;
+      position: relative;
+      left: 30px;
+      color: #666;
+    }
+
+    span.step {
+      float: right;
+      position: relative;
+      right: 30px;
+      color: #3F51B5;
+    }
+  }
+
+  footer {
+    padding: 20px;
+
+    button {
+      margin: 6px 8px;
+    }
+  }
+
+  .content {
+    padding: 0 20px;
+  }
+}

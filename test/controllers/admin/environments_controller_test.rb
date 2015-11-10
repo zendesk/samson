@@ -10,7 +10,8 @@ describe Admin::EnvironmentsController do
   end
 
   as_a_deployer do
-    unauthorized :get, :index
+    it_renders_index
+
     unauthorized :get, :new
     unauthorized :post, :create
     unauthorized :delete, :destroy, id: 1
@@ -18,7 +19,6 @@ describe Admin::EnvironmentsController do
   end
 
   as_a_admin do
-    it_renders_index
     unauthorized :post, :create
     unauthorized :get, :new
     unauthorized :delete, :destroy, id: 1

@@ -5,8 +5,11 @@ var samson = angular.module("samson", [
     'ui.router',
     'ui.bootstrap',
     'truncate'])
-  .config(function($locationProvider, usSpinnerConfigProvider) {
+  .config(function($locationProvider, $httpProvider, usSpinnerConfigProvider) {
+
     $locationProvider.html5Mode({enabled: true, rewriteLinks: false, requireBase: false});
+
+    $httpProvider.defaults.headers.common['X-CSRF-Token'] = A.$('meta[name=csrf-token]').attr('content');
 
     // Theme configuration for the spinners
     // See: https://github.com/urish/angular-spinner
@@ -16,3 +19,5 @@ var samson = angular.module("samson", [
 var A = angular;
 
 A.$ = A.element;
+
+

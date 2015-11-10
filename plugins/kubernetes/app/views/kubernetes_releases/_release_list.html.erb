@@ -1,11 +1,11 @@
 <script type="text/ng-template" id="kubernetes/kubernetes_releases.tmpl.html">
-  <div class="kubernetes-release-groups">
-    <us-spinner spinner-theme="async-data-loader" ng-if="!releases" class="kubernetes-releases-spinner">
+  <div class="kubernetes-releases">
+    <us-spinner spinner-theme="async-data-loader" ng-if="!releases">
       <span class="spinner-label">Loading Kubernetes Releases</span>
     </us-spinner>
     <div ng-if="releases">
       <p class="pull-right">
-        <%= link_to 'Create Release', new_project_kubernetes_release_path(@project), class: "btn btn-default" %>
+        <a ng-click="showCreateReleaseDialog($event)" class="btn btn-default">Create Release</a>
       </p>
       <table class="table table-condensed">
         <thead>
@@ -37,3 +37,5 @@
     </div>
   </div>
 </script>
+
+<%= render 'kubernetes_releases/create_form' %>
