@@ -19,45 +19,12 @@ module Kubernetes
       define_method("#{s}?") { status == s }
     end
 
-    # Definition of the ReplicationController, based on the rc_template, but
-    # updated with the image and metadata for this deploy.
-    #
-    # This hash can be passed to the Kubernetes API to create a ReplicationController.
-    def rc_hash
-      return @rc_hash if defined?(@rc_hash)
-
-      if replication_controller_doc.present?
-        @rc_hash = JSON.parse(replication_controller_doc).with_indifferent_access
-      else
-        build_rc_hash
-      end
-    end
-
-    # The raw template defining the ReplicationController, taken from the config
-    # file in the project's repo.
-    def rc_template
-      @rc_template ||= begin
-        # It's possible for the file to contain more than one definition,
-        # like a ReplicationController and a Service.
-        Array.wrap(parsed_config_file).detect { |doc| doc['kind'] == 'ReplicationController' }.freeze
-      end
-    end
-
     def has_service?
       kubernetes_role.has_service? && service_template.present?
     end
 
     def service_hash
       @service_hash || (build_service_hash if has_service?)
-    end
-
-    def service_template
-      @service_template ||= begin
-        # It's possible for the file to contain more than one definition,
-        # like a ReplicationController and a Service.
-        hash = Array.wrap(parsed_config_file).detect { |doc| doc['kind'] == 'Service' }
-        (hash || {}).freeze
-      end
     end
 
     def service
@@ -77,11 +44,6 @@ module Kubernetes
 
     def build
       kubernetes_release.try(:build)
-    end
-
-    # These labels will be attached to the Pod and the ReplicationController
-    def pod_labels
-      kubernetes_release.pod_labels.merge(role: kubernetes_role.label_name)
     end
 
     def nested_error_messages
@@ -113,7 +75,41 @@ module Kubernetes
       deploy_group.kubernetes_cluster.client
     end
 
+    def deploy_to_kubernetes
+      rc = Kubeclient::ReplicationController.new(rc_hash)
+      client.create_replication_controller(rc)
+    end
+
     private
+
+    # These labels will be attached to the Pod and the ReplicationController
+    def pod_labels
+      kubernetes_release.pod_labels.merge(role: kubernetes_role.label_name)
+    end
+
+    # Definition of the ReplicationController, based on the rc_template, but
+    # updated with the image and metadata for this deploy.
+    #
+    # This hash can be passed to the Kubernetes API to create a ReplicationController.
+    def rc_hash
+      return @rc_hash if defined?(@rc_hash)
+
+      if replication_controller_doc.present?
+        @rc_hash = JSON.parse(replication_controller_doc).with_indifferent_access
+      else
+        build_rc_hash
+      end
+    end
+
+    # The raw template defining the ReplicationController, taken from the config
+    # file in the project's repo.
+    def rc_template
+      @rc_template ||= begin
+                         # It's possible for the file to contain more than one definition,
+                         # like a ReplicationController and a Service.
+        Array.wrap(parsed_config_file).detect { |doc| doc['kind'] == 'ReplicationController' }.freeze
+      end
+    end
 
     def save_rc_info
       build_rc_hash
@@ -138,6 +134,7 @@ module Kubernetes
 
       # Add the identifier of this particular build to the metadata
       pod_hash[:metadata][:labels].merge!(pod_labels)
+      pod_hash[:metadata][:generateName] = 'hellokitty'
       @rc_hash[:metadata][:labels].merge!(pod_labels)
       @rc_hash[:spec][:selector].merge!(pod_labels)
 
@@ -155,6 +152,15 @@ module Kubernetes
       }
 
       @rc_hash
+    end
+
+    def service_template
+      @service_template ||= begin
+                              # It's possible for the file to contain more than one definition,
+                              # like a ReplicationController and a Service.
+        hash = Array.wrap(parsed_config_file).detect { |doc| doc['kind'] == 'Service' }
+        (hash || {}).freeze
+      end
     end
 
     def build_service_hash

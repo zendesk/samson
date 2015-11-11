@@ -18,9 +18,10 @@ module Kubernetes
       define_method("#{s}?") { status == s }
     end
 
-    def release_is_live
-      self.status = 'live'
+    def release_is_live!
+      self.status = :live
       self.deploy_finished_at = Time.now
+      save!
     end
 
     def pod_labels
@@ -93,7 +94,7 @@ module Kubernetes
       release_docs.map(&:deploy_group_id)
     end
 
-    def deploy_group_ids=(id_list)
+    def deploy_group_ids=(_id_list)
     end
 
     private

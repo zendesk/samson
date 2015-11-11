@@ -16,17 +16,19 @@ class KuberDeployService
     create_services!
     create_replication_controllers!
 
-    # watch_deployment
+    Watchers::DeployWatcher.new(@kuber_release).async :watch
 
     log 'API requests complete'
+    publish_fake_updates
+  rescue => ex
+    Rails.logger.warn "*********** Couldn't deploy: #{ex.message}"
+    raise ex
   end
 
   def create_replication_controllers!
     kuber_release.release_docs.each do |release_doc|
       log 'creating ReplicationController', role: release_doc.kubernetes_role.name
-
-      rc = Kubeclient::ReplicationController.new(release_doc.rc_hash)
-      release_doc.client.create_replication_controller(rc)
+      release_doc.deploy_to_kubernetes
     end
   end
 
@@ -50,51 +52,27 @@ class KuberDeployService
     @project ||= kuber_release.project
   end
 
-  def watch_deployment
-    # Doing this for now to force the loading of these constants.
-    # I was getting a circular dependency error otherwise
-    # TODO: hunt down this issue and fix it properly
-    Watchers::PodWatcher ; Watchers::ReplicationControllerWatcher ; Watchers::EventWatcher
-
-    Thread.new do
-      kuber_release.watch_pods(&method(:handle_pod_notice))
-    end
-
-    # Thread.new { sleep(5) ; kuber_release.watch_pod_events }
-  end
-
   private
 
-  def handle_pod_notice(notice, watcher)
-    release_doc = kuber_release.docs_by_role[notice.role]
-
-    if release_doc.nil?
-      Kubernetes::Util.log "ERROR: could not find role", role: notice.role, available_roles: kuber_release.docs_by_role.keys
-      return
+  # TODO: Remove this dummy data when proper watchers created.
+  def publish_fake_updates
+    @kuber_release.release_docs.each do |release_doc|
+      sleep 2
+      Rails.logger.info "************ Send fake update for #{release_doc.replication_controller_name} - #{release_doc.kubernetes_role.name}"
+      Celluloid::Notifications.publish("#{release_doc.replication_controller_name}",
+              object: {
+                metadata: {
+                  name: release_doc.replication_controller_name,
+                },
+                spec: {
+                  replicas: release_doc.replica_target,
+                },
+                status: {
+                  replicas: release_doc.replica_target,
+                }
+              }
+      )
     end
-
-    ready_count = watcher.num_ready
-    if ready_count > release_doc.replicas_live
-      release_doc.update_replica_count(ready_count)
-      release_doc.save!
-      update_release_status
-      log 'Another replica is live', role: notice.role, count: ready_count, r_status: kuber_release.status, r_doc_status: release_doc.status
-    end
-  end
-
-  def update_release_status
-    if kuber_release.release_docs.all?(&:live?)
-      deploy_is_live
-    elsif kuber_release.release_docs.any?(&:spinning_up?)
-      kuber_release.update_attribute(:status, 'spinning_up') unless kuber_release.spinning_up?
-    end
-  end
-
-  def deploy_is_live
-    kuber_release.release_is_live
-    kuber_release.save!
-
-    kuber_release.stop_watching   # this should kill the #watch_pods Thread spawned above
   end
 
   def log(msg, extra_info = {})
