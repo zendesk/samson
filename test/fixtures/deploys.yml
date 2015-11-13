@@ -8,7 +8,7 @@ succeeded_test:
 
 succeeded_production_test:
   stage: test_production
-  job: succeeded_test
+  job: succeeded_production_test
   reference: v1.0
   started_at: 2014-01-02 20:00:00
   updated_at: 2014-01-02 20:10:00

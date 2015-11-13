@@ -35,9 +35,9 @@ class Stage < ActiveRecord::Base
   end
 
   def self.build_clone(old_stage)
-    new(old_stage.attributes).tap do |new_stage|
+    new(old_stage.attributes.except("id")).tap do |new_stage|
       Samson::Hooks.fire(:stage_clone, old_stage, new_stage)
-      new_stage.new_relic_applications.build(old_stage.new_relic_applications.map(&:attributes))
+      new_stage.new_relic_applications.build(old_stage.new_relic_applications.map { |app| app.attributes.except("id") })
       new_stage.command_ids = old_stage.command_ids
     end
   end
