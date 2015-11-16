@@ -307,6 +307,8 @@ GEM
       rails-assets-angular (= 1.4.7)
     rails-assets-angular-scenario (1.4.7)
       rails-assets-angular (= 1.4.7)
+    rails-assets-angular-truncate-2 (0.4.1)
+      rails-assets-angular (>= 1.2.0, < 2)
     rails-assets-angular-ui-router (0.2.15)
       rails-assets-angular (>= 1.0.8)
     rails-assets-bootstrap-select (1.7.4)
@@ -483,6 +485,7 @@ DEPENDENCIES
   rails-assets-angular-material!
   rails-assets-angular-mocks!
   rails-assets-angular-scenario!
+  rails-assets-angular-truncate-2!
   rails-assets-angular-ui-router!
   rails-assets-bootstrap-select!
   rails-assets-font-awesome (~> 4.3.0)!

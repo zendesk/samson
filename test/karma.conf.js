@@ -25,6 +25,7 @@ module.exports = function(config) {
       '<%= resolve_asset("angular-aria") %>',
       '<%= resolve_asset("angular-animate") %>',
       '<%= resolve_asset("angular-material") %>',
+      '<%= resolve_asset("angular-truncate-2") %>',
       'test/angular/test_helper.js',
       'app/assets/javascripts/app.js',
       'app/assets/javascripts/controllers/**/*.js',

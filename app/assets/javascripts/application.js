@@ -18,6 +18,7 @@
 //= require angular-aria
 //= require angular-animate
 //= require angular-material
+//= require angular-truncate-2
 //= require underscore
 //= require moment
 //= require bootstrap/alert
