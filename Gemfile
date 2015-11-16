@@ -69,6 +69,7 @@ group :assets do
     gem 'rails-assets-angular-aria'
     gem 'rails-assets-angular-animate'
     gem 'rails-assets-angular-material'
+    gem 'rails-assets-angular-truncate-2'
   end
 end
 
