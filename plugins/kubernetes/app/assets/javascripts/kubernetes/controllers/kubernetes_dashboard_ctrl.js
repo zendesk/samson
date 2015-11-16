@@ -1,6 +1,6 @@
 samson.controller('KubernetesDashboardCtrl', function($scope, $stateParams, SseFactory) {
   $scope.project_id = $stateParams.project_id;
-  $scope.messages = ['Hello there!'];
+  $scope.messages = [];
 
   function init() {
     // Subscribe to the SSE channel for K8s
