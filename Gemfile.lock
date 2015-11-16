@@ -32,6 +32,7 @@ PATH
   specs:
     samson_kubernetes (0.0.1)
       celluloid
+      hashie
       kubeclient (>= 0.9)
 
 PATH

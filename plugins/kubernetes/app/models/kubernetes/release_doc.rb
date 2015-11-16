@@ -120,6 +120,7 @@ module Kubernetes
       rc_name = @rc_hash[:metadata][:name] || "#{build.project_name}-#{kubernetes_role.label_name}"
       self.replication_controller_name = "#{rc_name}-#{id}"
       @rc_hash[:metadata][:name] = replication_controller_name
+      @rc_hash[:spec][:template][:metadata][:labels].merge!(replication_controller: replication_controller_name)
 
       self.replication_controller_doc = @rc_hash.to_json
 
@@ -134,7 +135,6 @@ module Kubernetes
 
       # Add the identifier of this particular build to the metadata
       pod_hash[:metadata][:labels].merge!(pod_labels)
-      pod_hash[:metadata][:generateName] = 'hellokitty'
       @rc_hash[:metadata][:labels].merge!(pod_labels)
       @rc_hash[:spec][:selector].merge!(pod_labels)
 

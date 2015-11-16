@@ -11,6 +11,8 @@ module Watchers
 
     def initialize(release)
       @release = release
+      @current_rcs = {}
+      Rails.logger.info "Start watching K8s deploy: #{@release}"
     end
 
     def watch
@@ -21,17 +23,14 @@ module Watchers
 
     def handle_update(topic, data)
       release_doc = release_doc_from_rc_name(topic)
-      update_replica_count(release_doc, data)
-      SseRailsEngine.send_event(
-        'k8s',
-        project: @release.project.id,
-        release: @release.id,
-        role: release_doc.kubernetes_role.name,
-        deploy_group: release_doc.deploy_group.name,
-        target_replicas: release_doc.replica_target,
-        live_replicas: release_doc.replicas_live
-      )
-      terminate if deploy_finished?
+      pod = Events::Pod.new(data)
+      return Rails.logger.error('invalid k8s pod event') unless pod.valid?
+      update_replica_count(release_doc, pod)
+      send_event(role: release_doc.kubernetes_role.name,
+                 deploy_group: release_doc.deploy_group.name,
+                 target_replicas: release_doc.replica_target,
+                 live_replicas: release_doc.replicas_live)
+      end_deploy if deploy_finished?
     end
 
     private
@@ -45,18 +44,40 @@ module Watchers
     end
 
     def on_termination
-      @release.release_is_live!
-      SseRailsEngine.send_event(
-        'k8s',
-        project: @release.project.id,
-        release: @release.id,
-        msg: 'Deploy has finished!'
-      )
+      send_event(msg: 'Finished Watching Deploy!')
     end
 
-    def update_replica_count(release_doc, rc)
-      release_doc.update_replica_count(rc[:object][:status][:replicas])
-      @release.update_columns(status: :spinning_up) if @release.status.to_sym == :created
+    def update_replica_count(release_doc, pod)
+      rc = rc_pods(release_doc.replication_controller_name)
+
+      if pod.deleted?
+        rc.delete(pod.name) if pod.deleted?
+      else
+        rc[pod.name] = pod
+      end
+
+      ready_count = rc.reduce(0) { |count, (_pod_name, pod)| count += 1 if pod.ready?; count }
+      release_doc.update_replica_count(ready_count) unless release_doc.replicas_live == ready_count
+      @release.update_columns(status: :spinning_up) if @release.created?
+    end
+
+    def end_deploy
+      @release.release_is_live!
+      send_event(msg: 'Deploy is live!')
+      terminate
+    end
+
+    def rc_pods(name)
+      @current_rcs[name] ||= {}
+      @current_rcs[name]
+    end
+
+    def send_event(options)
+      base = {
+        project: @release.project.id,
+        release: @release.id
+      }
+      SseRailsEngine.send_event('k8s', base.merge(options))
     end
   end
 end
