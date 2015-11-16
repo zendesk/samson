@@ -113,7 +113,7 @@ $(function () {
           case null:
             $ref_status_label.removeClass("hidden");
             $tag_form_group.addClass("has-error");
-            show_status_problems([{"state": "Tag or SHA", description: "'" + ref + "' does not exist"}])
+            show_status_problems([{"state": "Tag or SHA", description: "'" + ref + "' does not exist"}]);
             break;
         }
       }
@@ -247,10 +247,10 @@ function waitUntilEnabled(path) {
     url: path,
     success: function(data, status, xhr) {
       if(xhr.status == 204) {
-        window.location.reload()
+        window.location.reload();
       }
     }
   });
 
-  setTimeout(function() { waitUntilEnabled(path) }, 5000);
+  setTimeout(function() { waitUntilEnabled(path); }, 5000);
 }

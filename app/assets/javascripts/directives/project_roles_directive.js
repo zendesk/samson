@@ -9,5 +9,5 @@ samson.directive('projectRoles', function(userProjectRoleFactory) {
     link: function($scope, element) {
       $scope.project_role = userProjectRoleFactory.build(element[0]);
     }
-  }
+  };
 });
