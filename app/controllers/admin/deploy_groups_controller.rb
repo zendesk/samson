@@ -79,7 +79,8 @@ class Admin::DeployGroupsController < ApplicationController
   def new_stage_with_group(stage)
     stage = Stage.build_clone(stage)
     stage.deploy_groups << deploy_group
-    stage.name = deploy_group.name # so we can later find it in #deploy_all
+    stage.name = deploy_group.name
+    stage.name << " -- copy #{SecureRandom.hex(4)}" if stage.project.stages.where(name: stage.name).exists?
     stage.save!
     stage
   end

@@ -143,15 +143,25 @@ describe Admin::DeployGroupsController do
         assert_redirected_to "/deploys?ids%5B%5D=#{deploy}"
       end
 
-      it "deploys to a new stage when it does not match" do
-        stage.deploy_groups << deploy_groups(:pod2)
-        assert_difference "Stage.count", +1 do
-          post :deploy_all_now, id: deploy_group, stages: ["#{stage.id}-master"]
+      describe "when it does not match" do
+        before { stage.deploy_groups << deploy_groups(:pod2) }
+
+        it "deploys to a new stage" do
+          assert_difference "Stage.count", +1 do
+            post :deploy_all_now, id: deploy_group, stages: ["#{stage.id}-master"]
+          end
+          deploy = Deploy.first
+          new_stage = deploy.stage
+          new_stage.wont_equal stage
+          assert_redirected_to "/deploys?ids%5B%5D=#{deploy.id}"
         end
-        deploy = Deploy.first
-        new_stage = deploy.stage
-        new_stage.wont_equal stage
-        assert_redirected_to "/deploys?ids%5B%5D=#{deploy.id}"
+
+        it "deploys to a new stage when it does not match and a stage with the same name already exists" do
+          stage.update_attribute(:name, deploy_group.name)
+          assert_difference "Stage.count", +1 do
+            post :deploy_all_now, id: deploy_group, stages: ["#{stage.id}-master"]
+          end
+        end
       end
     end
   end
