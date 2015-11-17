@@ -11,13 +11,12 @@ module Watchers
     def initialize(release)
       @release = release
       @current_rcs = {}
-      @subscriptions = []
       Rails.logger.info "Start watching K8s deploy: #{@release}"
     end
 
     def watch
       @release.release_docs.each do |release_doc|
-        @subscriptions << subscribe("#{release_doc.replication_controller_name}", :handle_update)
+        subscribe("#{release_doc.replication_controller_name}", :handle_update)
       end
     end
 
@@ -44,7 +43,6 @@ module Watchers
     end
 
     def on_termination
-      @subscriptions.each { |sub| unsubscribe(sub) }
       send_event(msg: 'Finished Watching Deploy!')
     end
 
