@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -e
+
 case $TASK in
 js)
   npm install
