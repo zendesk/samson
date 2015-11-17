@@ -117,7 +117,7 @@ describe Admin::DeployGroupsController do
         other_stage.deploys.last.job.update_attribute(:status, 'succeeded')
 
         get :deploy_all, id: deploy_group
-        assigns[:stages].must_equal [[stage, other_stage.deploys.first]]
+        assigns[:stages].must_equal [[stage, other_stage.deploys.first], [other_stage, other_stage.deploys.first]]
       end
 
       it "ignores stages where the whole environment never got deployed" do
