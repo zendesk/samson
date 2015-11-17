@@ -1,5 +1,4 @@
-require 'celluloid'
-require 'celluloid/autostart'
+require 'celluloid/current'
 
 module Watchers
   # Instantiated when a Kubernetes deploy is created to watch the status
@@ -12,12 +11,13 @@ module Watchers
     def initialize(release)
       @release = release
       @current_rcs = {}
+      @subscriptions = []
       Rails.logger.info "Start watching K8s deploy: #{@release}"
     end
 
     def watch
       @release.release_docs.each do |release_doc|
-        subscribe "#{release_doc.replication_controller_name}", :handle_update
+        @subscriptions << subscribe("#{release_doc.replication_controller_name}", :handle_update)
       end
     end
 
@@ -44,6 +44,7 @@ module Watchers
     end
 
     def on_termination
+      @subscriptions.each { |sub| unsubscribe(sub) }
       send_event(msg: 'Finished Watching Deploy!')
     end
 
@@ -51,7 +52,7 @@ module Watchers
       rc = rc_pods(release_doc.replication_controller_name)
 
       if pod.deleted?
-        rc.delete(pod.name) if pod.deleted?
+        rc.delete(pod.name)
       else
         rc[pod.name] = pod
       end
