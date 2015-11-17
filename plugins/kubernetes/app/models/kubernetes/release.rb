@@ -46,7 +46,7 @@ module Kubernetes
     end
 
     def watch
-      Watchers::DeployWatcher.new(self).async :watch
+      Watchers::DeployWatcher.new(self)
     end
 
     def deploy_group_ids

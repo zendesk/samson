@@ -1,5 +1,3 @@
-require 'celluloid/current'
-
 module Watchers
   # Instantiated when a Kubernetes deploy is created to watch the status
   class DeployWatcher
@@ -12,6 +10,7 @@ module Watchers
       @release = release
       @current_rcs = {}
       Rails.logger.info "Start watching K8s deploy: #{@release}"
+      async :watch
     end
 
     def watch

@@ -1,4 +1,5 @@
 require_relative 'hash_kuber_selector'
+require 'celluloid/current'
 
 module SamsonKubernetes
   class Engine < Rails::Engine
