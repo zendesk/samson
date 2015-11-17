@@ -1,10 +1,17 @@
 # JobQueue locks a mutex, hence the need for a separate SignalHandler thread
 # Self-pipe is also best practice, since signal handlers can themselves be interrupted
-class SignalHandler
+class RestartSignalHandler
+  class << self
+    alias listen new
+  end
+
   def initialize
     @read, @write = IO.pipe
     Thread.new { run }
+    Signal.trap('SIGUSR1') { signal }
   end
+
+  private
 
   def signal
     @write.puts
