@@ -62,4 +62,4 @@ end
 Celluloid.logger = Rails.logger
 $CELLULOID_DEBUG = true
 
-Kubernetes::Cluster.all.each { |cluster| Kubernetes::Util::start_watcher(cluster) }
+Kubernetes::Cluster.all.each { |cluster| Kubernetes::Util::start_watcher(cluster) } if ENV['SERVER_MODE']
