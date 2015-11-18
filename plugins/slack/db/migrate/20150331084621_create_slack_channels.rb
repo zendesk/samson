@@ -9,6 +9,5 @@ class CreateSlackChannels < ActiveRecord::Migration
     end
 
     add_index :slack_channels, :stage_id
-
   end
 end

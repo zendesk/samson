@@ -371,11 +371,6 @@ describe Stage do
       @clone.id.wont_equal subject.id
     end
 
-    it "copies over the flowdock flows" do
-      assert_equal @clone.flowdock_flows.map { |f| f.attributes.except("stage_id") },
-        subject.flowdock_flows.map { |f| f.attributes.except("stage_id") }
-    end
-
     it "copies over the new relic applications" do
       assert_equal @clone.new_relic_applications.map { |n| n.attributes.except("stage_id", "id") },
         subject.new_relic_applications.map { |n| n.attributes.except("stage_id", "id") }
