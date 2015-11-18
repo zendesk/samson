@@ -37,9 +37,11 @@ module Kubeclient
       private
 
       def get_client
-        !@http_options[:use_ssl] && @http_options[:basic_auth_user] && @http_options[:basic_auth_password] ?
-            HTTP.basic_auth(user: @http_options[:basic_auth_user], pass: @http_options[:basic_auth_password]) :
-            HTTP::Client.new
+        if !@http_options[:use_ssl] && @http_options[:basic_auth_user] && @http_options[:basic_auth_password]
+          HTTP.basic_auth(user: @http_options[:basic_auth_user], pass: @http_options[:basic_auth_password])
+        else
+          HTTP::Client.new
+        end
       end
 
       def build_client_options

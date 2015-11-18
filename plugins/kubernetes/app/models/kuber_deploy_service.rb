@@ -18,7 +18,6 @@ class KuberDeployService
     create_replication_controllers!
 
     log 'API requests complete'
-    publish_fake_updates
   rescue => ex
     Rails.logger.warn "*********** Couldn't deploy: #{ex.message}"
     raise ex
