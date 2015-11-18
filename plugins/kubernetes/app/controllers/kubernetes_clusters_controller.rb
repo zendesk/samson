@@ -13,7 +13,7 @@ class KubernetesClustersController < ApplicationController
   def create
     @cluster = Kubernetes::Cluster.new(new_cluster_params)
     success = @cluster.save
-    Kubernetes::Util::start_watcher(@cluster) if success
+    Watchers::ClusterPodWatcher::start_watcher(@cluster) if success
 
     respond_to do |format|
       format.html do
@@ -43,7 +43,7 @@ class KubernetesClustersController < ApplicationController
   def update
     @cluster.assign_attributes(new_cluster_params)
     success = @cluster.save
-    Kubernetes::Util::restart_watcher(@cluster) if success
+    Watchers::ClusterPodWatcher::restart_watcher(@cluster) if success
 
     respond_to do |format|
       format.html do

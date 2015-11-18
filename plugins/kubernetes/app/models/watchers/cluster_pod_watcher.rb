@@ -34,6 +34,21 @@ module Watchers
       end
     end
 
+    def self.pod_watcher_symbol(cluster)
+      "cluster_pod_watcher_#{cluster.id}".to_sym
+    end
+
+    def self.start_watcher(cluster)
+      watcher_name = pod_watcher_symbol(cluster)
+      supervise as: watcher_name, args: [cluster.client]
+    end
+
+    def self.restart_watcher(cluster)
+      watcher = Actor[pod_watcher_symbol(cluster)]
+      watcher.terminate if watcher and watcher.alive?
+      start_watcher(cluster)
+    end
+
     private
 
     def handle_error(notice)
@@ -49,7 +64,7 @@ module Watchers
       debug notice.to_s
       return if handle_error(notice)
       rc_name = notice.object.metadata.labels['replication_controller']
-      publish rc_name, notice if rc_name
+      publish(rc_name, notice) if rc_name
     end
 
     %w{debug info warn error}.each do |level|
