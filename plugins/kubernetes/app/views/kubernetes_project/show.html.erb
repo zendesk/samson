@@ -4,14 +4,9 @@
   <div layout="column" ng-controller="KubernetesTabsCtrl">
     <md-content class="md-padding">
       <md-tabs md-stretch-tabs md-dynamic-height md-selected="currentTab" class="main-toolbar">
-        <!--
-        Kubernetes Roles
-        -->
-        <md-tab label="Kubernetes Roles" ui-sref="kubernetes.roles" md-active="$state.is('kubernetes.roles')"></md-tab>
-        <!--
-        Kubernetes Releases
-        -->
-        <md-tab label="Kubernetes Releases" ui-sref="kubernetes.releases" md-active="$state.is('kubernetes.releases')"></md-tab>
+        <md-tab label="Roles" ui-sref="kubernetes.roles" md-active="$state.is('kubernetes.roles')"></md-tab>
+        <md-tab label="Releases" ui-sref="kubernetes.releases" md-active="$state.is('kubernetes.releases')"></md-tab>
+        <md-tab label="Dashboard" ui-sref="kubernetes.dashboard" md-active="$state.is('kubernetes.dashboard')"></md-tab>
       </md-tabs>
     </md-content>
 
@@ -21,3 +16,4 @@
 
 <%= render 'kubernetes_roles/roles_list' %>
 <%= render 'kubernetes_releases/release_list' %>
+<%= render 'kubernetes_project/dashboard' %>

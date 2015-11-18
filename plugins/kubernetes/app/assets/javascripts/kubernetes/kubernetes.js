@@ -57,5 +57,18 @@ angular.module('samson').config(function($stateProvider, $urlRouterProvider) {
         }
       }
     })
+
+    .state('kubernetes.dashboard', {
+      url: '/dashboard',
+      data: {
+        'selectedTab': 2
+      },
+      views: {
+        'content@': {
+          templateUrl: 'kubernetes/dashboard.tmpl.html',
+          controller: 'KubernetesDashboardCtrl'
+        }
+      }
+    })
   ;
 });
