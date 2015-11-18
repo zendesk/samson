@@ -87,7 +87,7 @@ module Samson
 
     config.action_controller.action_on_unpermitted_parameters = :raise
 
-    if !Rails.env.test? && ENV['SERVER_MODE']
+    if !Rails.env.test? && ENV['SERVER_MODE'] && !ENV['PRECOMPILE']
       initializer :execute_job, after: :set_routes_reloader_hook do # flowdock uses routes: run after the routes are loaded
         JobExecution.enabled = true
         Job.running.each(&:stop!)
