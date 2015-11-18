@@ -9,22 +9,14 @@ require 'logger'
 module Kubeclient
   module Common
     class WatchStream
-      def each
+      def each(&block)
         @finished = false
-
         @http = get_client
         response = @http.request(:get, @uri, build_client_options)
         unless response.code < 300
           fail KubeException.new(response.code, response.reason, response)
         end
-
-        buffer = ''
-        response.body.each do |chunk|
-          buffer << chunk
-          while (line = buffer.slice!(/.+\n/))
-            yield @format == :json ? WatchNotice.new(JSON.parse(line)) : line.chomp
-          end
-        end
+        read_stream(response.body, &block)
       rescue Errno::EBADF
         raise unless @finished
       end
@@ -55,6 +47,16 @@ module Kubeclient
           { ssl_context: ctx, ssl_socket_class: Celluloid::IO::SSLSocket }
         else
           { socket_class: Celluloid::IO::TCPSocket }
+        end
+      end
+
+      def read_stream(response_body)
+        buffer = ''
+        response_body.each do |chunk|
+          buffer << chunk
+          while (line = buffer.slice!(/.+\n/))
+            yield @format == :json ? WatchNotice.new(JSON.parse(line)) : line.chomp
+          end
         end
       end
     end
