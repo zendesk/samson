@@ -32,7 +32,8 @@ PATH
   specs:
     samson_kubernetes (0.0.1)
       celluloid
-      hashie
+      celluloid-io
+      http
       kubeclient (>= 0.9)
 
 PATH
@@ -138,6 +139,10 @@ GEM
       timers (>= 4.1.1)
     celluloid-fsm (0.20.5)
       timers (>= 4.1.1)
+    celluloid-io (0.17.2)
+      celluloid (>= 0.17.2)
+      nio4r (>= 1.1)
+      timers (>= 4.1.1)
     celluloid-pool (0.20.5)
       timers (>= 4.1.1)
     celluloid-supervision (0.20.5)
@@ -191,8 +196,15 @@ GEM
     hashie (3.4.2)
     hike (1.2.3)
     hitimes (1.2.3)
+    http (0.9.8)
+      addressable (~> 2.3)
+      http-cookie (~> 1.0)
+      http-form_data (~> 1.0.1)
+      http_parser.rb (~> 0.6.0)
     http-cookie (1.0.2)
       domain_name (~> 0.5)
+    http-form_data (1.0.1)
+    http_parser.rb (0.6.0)
     httparty (0.13.7)
       json (~> 1.8)
       multi_xml (>= 0.5.2)
@@ -249,6 +261,7 @@ GEM
     ngannotate-rails (1.0.3)
       execjs
       rails (>= 3.1)
+    nio4r (1.1.1)
     nokogiri (1.6.6.2)
       mini_portile (~> 0.6.0)
     nokogiri (1.6.6.2-java)
