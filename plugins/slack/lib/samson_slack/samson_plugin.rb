@@ -7,7 +7,7 @@ end
 Samson::Hooks.view :stage_form, "samson_slack/fields"
 
 Samson::Hooks.callback :stage_clone do |old_stage, new_stage|
-  new_stage.slack_channels.build(old_stage.slack_channels.map(&:attributes))
+  new_stage.slack_channels.build(old_stage.slack_channels.map { |s| s.attributes.except("id", "created_at", "updated_at") })
 end
 
 Samson::Hooks.callback :stage_permitted_params do

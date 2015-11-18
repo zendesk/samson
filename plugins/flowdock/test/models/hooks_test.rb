@@ -29,4 +29,13 @@ describe "flowdock hooks" do
       Samson::Hooks.fire(:after_deploy, deploy, nil)
     end
   end
+
+  describe :stage_clone do
+    it "copies all attributes except id" do
+      stage.flowdock_flows << FlowdockFlow.new(name: "test", token: "abcxyz", enabled: false)
+      new_stage = Stage.new
+      Samson::Hooks.fire(:stage_clone, stage, new_stage)
+      new_stage.flowdock_flows.map(&:attributes).must_equal [{"id"=>nil, "name"=>"test", "token"=>"abcxyz", "stage_id"=>nil, "created_at"=>nil, "updated_at"=>nil, "enabled"=>false}]
+    end
+  end
 end
