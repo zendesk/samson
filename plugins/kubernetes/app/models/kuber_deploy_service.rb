@@ -1,5 +1,4 @@
 require 'kubeclient'
-require 'hashie/mash'
 
 class KuberDeployService
   attr_reader :kuber_release
@@ -19,7 +18,6 @@ class KuberDeployService
     create_replication_controllers!
 
     log 'API requests complete'
-    publish_fake_updates
   rescue => ex
     Rails.logger.warn "*********** Couldn't deploy: #{ex.message}"
     raise ex
@@ -53,31 +51,6 @@ class KuberDeployService
   end
 
   private
-
-  # TODO: Remove this dummy data when proper watchers created.
-  def publish_fake_updates
-    Thread.new do
-      @kuber_release.release_docs.each do |release_doc|
-        release_doc.replica_target.times do
-          sleep 2
-          Celluloid::Notifications.publish("#{release_doc.replication_controller_name}", fake_event)
-        end
-      end
-    end
-  end
-
-  # TODO: Remove this dummy data when proper watchers created.
-  def fake_event
-    notice = Hashie::Mash.new
-    notice.type = 'MODIFIED'
-    notice.object = {
-      kind: 'Pod',
-      metadata: { name: "#{rand(10000)}" },
-      status: { phase: 'Running',
-                conditions: [{ type: 'Ready', status: 'True' }]}
-    }
-    notice
-  end
 
   def log(msg, extra_info = {})
     extra_info.merge!(

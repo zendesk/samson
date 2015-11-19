@@ -12,11 +12,12 @@ class KubernetesClustersController < ApplicationController
 
   def create
     @cluster = Kubernetes::Cluster.new(new_cluster_params)
-    @cluster.save
+    success = @cluster.save
+    Watchers::ClusterPodWatcher::start_watcher(@cluster) if success
 
     respond_to do |format|
       format.html do
-        if @cluster.persisted?
+        if success
           redirect_to kubernetes_clusters_path(@cluster)
         else
           render :new, status: 422
@@ -24,7 +25,7 @@ class KubernetesClustersController < ApplicationController
       end
 
       format.json do
-        render json: {}, status: @cluster.persisted? ? 200 : 422
+        render json: {}, status: success ? 200 : 422
       end
     end
   end
@@ -42,6 +43,7 @@ class KubernetesClustersController < ApplicationController
   def update
     @cluster.assign_attributes(new_cluster_params)
     success = @cluster.save
+    Watchers::ClusterPodWatcher::restart_watcher(@cluster) if success
 
     respond_to do |format|
       format.html do

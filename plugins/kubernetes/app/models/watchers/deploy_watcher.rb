@@ -3,13 +3,14 @@ module Watchers
   class DeployWatcher
     include Celluloid
     include Celluloid::Notifications
+    include Celluloid::Internals::Logger
 
     finalizer :on_termination
 
     def initialize(release)
       @release = release
       @current_rcs = {}
-      Rails.logger.info "Start watching K8s deploy: #{@release}"
+      info "Start watching K8s deploy: #{@release}"
       async :watch
     end
 
@@ -22,7 +23,7 @@ module Watchers
     def handle_update(topic, data)
       release_doc = release_doc_from_rc_name(topic)
       pod = Events::Pod.new(data)
-      return Rails.logger.error('invalid k8s pod event') unless pod.valid?
+      return error('invalid k8s pod event') unless pod.valid?
       update_replica_count(release_doc, pod)
       send_event(role: release_doc.kubernetes_role.name,
                  deploy_group: release_doc.deploy_group.name,
