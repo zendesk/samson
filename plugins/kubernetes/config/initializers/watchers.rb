@@ -66,4 +66,6 @@ end
 Celluloid.logger = Rails.logger
 $CELLULOID_DEBUG = true
 
-Kubernetes::Cluster.all.each { |cluster| Watchers::ClusterPodWatcher::start_watcher(cluster) } if ENV['SERVER_MODE']
+if ENV['SERVER_MODE'] && !ENV['PRECOMPILE']
+  Kubernetes::Cluster.all.each { |cluster| Watchers::ClusterPodWatcher::start_watcher(cluster) }
+end
