@@ -27,6 +27,7 @@ ADD plugins /app/plugins
 RUN bundle install --quiet --local --jobs 4 || bundle check
 
 # Code
+ADD config/database.mysql.yml.example /app/config/database.yml
 ADD config /app/config
 ADD app /app/app
 ADD lib /app/lib
