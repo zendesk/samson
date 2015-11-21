@@ -149,9 +149,7 @@ $(function () {
   });
 
   $form.submit(function(event) {
-    var $selected_stage = $("#deploy_stage_id option:selected"),
-        $this = $(this),
-        $submit = $this.find('button[type=submit]');
+    var $this = $(this);
 
     if(!confirmed && $this.data('confirmation')) {
       toggleConfirmed();
@@ -164,7 +162,7 @@ $(function () {
         method: "POST",
         url: $this.data("confirm-url"),
         data: $this.serialize(),
-        success: function(data, status, xhr) {
+        success: function(data) {
           $placeholderPanes.detach();
           $container.append(data);
 
