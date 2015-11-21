@@ -148,13 +148,30 @@ $(function () {
     }
   });
 
+  function showDeployConfirmationTab($this) {
+    var $navTabs = $this.find("#deploy-confirmation .nav-tabs");
+
+    // We need to switch to another tab and then switch back in order for
+    // the plugin to detect that the DOM node has been replaced.
+    $navTabs.find("a").tab("show");
+
+    // If there is a risk defined, show risks pane
+    if ($this.find("#risks").data('risky')) {
+      $navTabs.find("a.risks").tab("show");
+    } else {
+      $navTabs.find("a:first").tab("show");
+    }
+  }
+
   $form.submit(function(event) {
     var $this = $(this);
 
     if(!confirmed && $this.data('confirmation')) {
       toggleConfirmed();
       $("#deploy-confirmation").show();
-      $("#deploy-confirmation .nav-tabs a:first").tab("show");
+
+      showDeployConfirmationTab($this);
+
       $container.empty();
       $container.append($placeholderPanes);
 
@@ -166,10 +183,7 @@ $(function () {
           $placeholderPanes.detach();
           $container.append(data);
 
-          // We need to switch to another tab and then switch back in order for
-          // the plugin to detect that the DOM node has been replaced.
-          $('#deploy-confirmation .nav-tabs a').tab("show");
-          $('#deploy-confirmation .nav-tabs a:first').tab("show");
+          showDeployConfirmationTab($this);
         }
       });
 
