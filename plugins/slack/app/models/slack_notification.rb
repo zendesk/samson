@@ -9,7 +9,7 @@ class SlackNotification
 
 
   def deliver
-    payload = {text: content, username: "Samson"}
+    payload = {text: content, username: "samson-bot"}
 
     if !@webhook.channel_name.blank?
       payload.merge! {channel: @webhook.channel_name}
