@@ -1,47 +1,18 @@
 Stage.class_eval do
 
-  cattr_reader(:slack_channels_cache_key) { 'slack-channels-list' }
-
-  has_many :slack_channels
-  accepts_nested_attributes_for :slack_channels, allow_destroy: true, reject_if: :no_channel_name?
-  validate :channel_exists?
-  before_save :update_channel_id
+  has_many :slack_webhooks
+  accepts_nested_attributes_for :slack_webhooks, allow_destroy: true, reject_if: :no_name_or_webhook_url?
 
   def send_slack_notifications?
-    slack_channels.any?
+    slack_webhooks.any?
   end
 
-  def channel_name
-    slack_channels.first.try(:name)
+  def webhook_url
+    slack_webhooks.first.try(:webhook_url)
   end
 
-  def no_channel_name?(slack_attrs)
-    slack_attrs['name'].blank?
+  def no_name_or_webhook_url?(slack_webhook_attrs)
+    slack_webhook_attrs['name'].blank? || slack_webhook_attrs['webhook_url'].blank?
   end
 
-  def update_channel_id
-    if channel_for(channel_name)
-      self.slack_channels.first.channel_id = channel_for(channel_name)['id']
-    end
-  end
-
-  def channel_exists?
-    if channel_name
-      errors.add(:slack_channels_name, "was not found") unless channel_for(channel_name)
-    end
-  end
-
-  def channel_for(name)
-    return nil unless name
-
-    response = Rails.cache.read(slack_channels_cache_key) || Slack.channels_list(exclude_archived: 1)
-
-    if response['ok']
-      Rails.cache.write(slack_channels_cache_key, response, expires_in: 5.minutes)
-      response['channels'].select { |c| c['name'] == name }.first
-    else
-      Rails.logger.error("Slack API error: #{response.inspect}")
-      nil
-    end
-  end
 end
