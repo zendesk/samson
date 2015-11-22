@@ -1,4 +1,4 @@
-require 'slack'
+require 'faraday'
 
 module SamsonSlack
   class Engine < Rails::Engine
@@ -11,7 +11,7 @@ Samson::Hooks.callback :stage_clone do |old_stage, new_stage|
 end
 
 Samson::Hooks.callback :stage_permitted_params do
-  { slack_channels_attributes: [:id, :name, :token, :_destroy] }
+  { slack_webhooks_attributes: [:id, :name, :webhook_url, :_destroy] }
 end
 
 notify = -> (deploy, _buddy) do
