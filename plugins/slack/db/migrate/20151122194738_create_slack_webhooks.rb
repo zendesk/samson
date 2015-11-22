@@ -1,6 +1,6 @@
-class CreateSlackWebhookUrls < ActiveRecord::Migration
+class CreateSlackWebhooks < ActiveRecord::Migration
   def change
-    create_table :slack_webhook_urls do |t|
+    create_table :slack_webhooks do |t|
       t.string :name, null: false
       t.text :webhook_url, null: false
       t.integer :stage_id, null: false
@@ -8,6 +8,6 @@ class CreateSlackWebhookUrls < ActiveRecord::Migration
       t.timestamps
     end
 
-    add_index :slack_webhook_urls, :stage_id
+    add_index :slack_webhooks, :stage_id
   end
 end
