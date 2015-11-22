@@ -3,7 +3,7 @@ require_relative '../test_helper'
 describe SlackNotification do
   let(:project) { stub(name: "Glitter") }
   let(:user) { stub(name: "John Wu", email: "wu@rocks.com") }
-  let(:stage) { stub(name: "staging", slack_channels: [stub(channel_id: "x123yx")], project: project) }
+  let(:stage) { stub(name: "staging", slack_webhooks: [stub(webhook_url: "http://example.com")], project: project) }
   let(:deploy) { stub(summary: "hello world!", user: user, stage: stage) }
   let(:notification) { SlackNotification.new(deploy) }
   let(:endpoint) { "https://slack.com/api/chat.postMessage" }

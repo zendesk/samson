@@ -32,10 +32,10 @@ describe "slack hooks" do
 
   describe :stage_clone do
     it "copies all attributes except id" do
-      stage.slack_channels << SlackChannel.new(channel_id: 1, name: 'channel1')
+      stage.slack_webhooks << SlackWebhook.new(webhook_url: 'http://example.com')
       new_stage = Stage.new
       Samson::Hooks.fire(:stage_clone, stage, new_stage)
-      new_stage.slack_channels.map(&:attributes).must_equal [{"id"=>nil, "name"=>"channel1", "channel_id"=>"1", "stage_id"=>nil, "created_at"=>nil, "updated_at"=>nil}]
+      new_stage.slack_webhooks.map(&:attributes).must_equal [{"id"=>nil, "webhook_url"=>"http://example.com", "stage_id"=>nil, "created_at"=>nil, "updated_at"=>nil}]
     end
   end
 end
