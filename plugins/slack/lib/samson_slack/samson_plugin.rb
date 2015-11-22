@@ -11,7 +11,7 @@ Samson::Hooks.callback :stage_clone do |old_stage, new_stage|
 end
 
 Samson::Hooks.callback :stage_permitted_params do
-  { slack_webhooks_attributes: [:id, :name, :webhook_url, :_destroy] }
+  { slack_webhooks_attributes: [:id, :webhook_url, :channel, :_destroy] }
 end
 
 notify = -> (deploy, _buddy) do
