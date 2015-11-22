@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20151109142022) do
+ActiveRecord::Schema.define(version: 20151122194738) do
 
   create_table "build_statuses", force: :cascade do |t|
     t.integer  "build_id",                                     null: false
@@ -299,15 +299,15 @@ ActiveRecord::Schema.define(version: 20151109142022) do
   add_index "releases", ["build_id"], name: "index_releases_on_build_id", using: :btree
   add_index "releases", ["project_id", "number"], name: "index_releases_on_project_id_and_number", unique: true, using: :btree
 
-  create_table "slack_channels", force: :cascade do |t|
-    t.string   "name",       limit: 255, null: false
-    t.string   "channel_id", limit: 255, null: false
-    t.integer  "stage_id",   limit: 4,   null: false
+  create_table "slack_webhooks", force: :cascade do |t|
+    t.text     "webhook_url", limit: 65535, null: false
+    t.string   "channel",     limit: 255
+    t.integer  "stage_id",    limit: 4,     null: false
     t.datetime "created_at"
     t.datetime "updated_at"
   end
 
-  add_index "slack_channels", ["stage_id"], name: "index_slack_channels_on_stage_id", using: :btree
+  add_index "slack_webhooks", ["stage_id"], name: "index_slack_webhooks_on_stage_id", using: :btree
 
   create_table "stage_commands", force: :cascade do |t|
     t.integer  "stage_id",   limit: 4
