@@ -1,5 +1,12 @@
 describe("currentDeploysCtrl", function() {
-  beforeEach(module("samson"));
+  beforeEach(module("samson", ['ngMockE2E','templates',
+    'MessageCenterModule',
+    'ui.router',
+    'ngAnimate',
+    'ngMaterial',
+    'ngAria',
+    'ui.bootstrap',
+    'truncate']));
 
   var $rootScope,
     $scope = {},
