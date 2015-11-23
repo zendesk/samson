@@ -1,3 +1,5 @@
+//= require_tree ../../app/assets/javascripts/
+
 describe('Buddy requests notifications', function () {
 
   describe("factory: Mentionbox", function () {
@@ -94,7 +96,7 @@ describe('Buddy requests notifications', function () {
   });
 
   describe('BuddyNotificationCtrl', function () {
-    var buddyNotificationsCtrl, scope, flowdock, rootScope;
+    var buddyNotificationsCtrl, scope, flowdock, rootScope, httpBackend;
 
     // Setup the mock service in an anonymous module.
     beforeEach(module("samson"));
@@ -102,12 +104,13 @@ describe('Buddy requests notifications', function () {
       inject(function ($injector) {
         flowdock = $injector.get('Flowdock');
         rootScope = $injector.get('$rootScope');
+        httpBackend = $injector.get('$httpBackend');
         flowdock.users = function () {
           var users = [{ id: 1, name: 'test', avatar: 'fake', type: 'contact' }];
           rootScope.$emit('flowdock_users', users);
           return users
         };
-        flowdock.buddyRequest = jasmine.createSpy('My Method');
+        spyOn(flowdock, "buddyRequest").and.callThrough();
       });
     });
 
@@ -117,16 +120,17 @@ describe('Buddy requests notifications', function () {
       scope.deploy = 1;
       dependencies = { $scope: scope, $rootScope: rootScope, Flowdock: flowdock };
       buddyNotificationsCtrl = $controller('BuddyNotificationsCtrl', dependencies);
+      rootScope.$apply();
     }));
 
     it('should send a buddy_request notification', function () {
-      setTimeout(function () {
-        buddyNotificationsCtrl.notificationBox.message = function (callback) {
-          callback.call('Some message');
-        };
-        expect(flowdock.buddyRequest).toHaveBeenCalledWith('Some message');
-        buddyNotificationsCtrl.notifyFlowDock();
-      }, 500); //if tests fail because of this, increase the delay
+      //httpBackend.expectPOST('/flowdock/notify').respond(201, {});
+      scope.notificationBox.message = function (callback) {
+        callback('Some message');
+      };
+      scope.notifyFlowDock();
+      //httpBackend.flush();
+      expect(flowdock.buddyRequest.calls.any()).toEqual(true);
     });
   });
 });

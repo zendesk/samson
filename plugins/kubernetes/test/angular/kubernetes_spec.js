@@ -1,3 +1,5 @@
+//= require_tree ../../app/assets/javascripts/
+
 'use strict';
 
 describe('Kubernetes ui-router config', function() {

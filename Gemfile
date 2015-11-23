@@ -105,6 +105,9 @@ group :development, :test do
   gem 'bootscale', require: false
   gem 'pry-rails'
   gem 'awesome_print'
+  gem 'teaspoon'
+  gem 'teaspoon-jasmine'
+  gem 'phantomjs'
 end
 
 group :test do
