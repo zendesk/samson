@@ -319,24 +319,19 @@ GEM
       railties (= 4.2.4)
       sprockets-rails
     rails-assets-angular (1.4.7)
-    rails-assets-angular-animate (1.4.7)
-      rails-assets-angular (= 1.4.7)
-    rails-assets-angular-aria (1.4.7)
-      rails-assets-angular (= 1.4.7)
-    rails-assets-angular-material (0.11.4)
-      rails-assets-angular
-      rails-assets-angular-animate
-      rails-assets-angular-aria
     rails-assets-angular-mocks (1.4.7)
       rails-assets-angular (= 1.4.7)
     rails-assets-angular-route (1.4.7)
       rails-assets-angular (= 1.4.7)
     rails-assets-angular-scenario (1.4.7)
       rails-assets-angular (= 1.4.7)
-    rails-assets-angular-ui-bootstrap-bower (0.14.3)
-      rails-assets-angular (>= 1.3.0)
+    rails-assets-angular-spinner (0.8.0)
+      rails-assets-angular (~> 1.0)
+      rails-assets-spin.js (~> 2.0)
     rails-assets-angular-truncate-2 (0.4.1)
       rails-assets-angular (>= 1.2.0, < 2)
+    rails-assets-angular-ui-bootstrap-bower (0.14.3)
+      rails-assets-angular (>= 1.3.0)
     rails-assets-angular-ui-router (0.2.15)
       rails-assets-angular (>= 1.0.8)
     rails-assets-bootstrap-select (1.7.4)
@@ -352,6 +347,9 @@ GEM
       rails-assets-angular-route (>= 1.2.0, < 1.5.0)
     rails-assets-moment (2.10.6)
     rails-assets-rickshaw (1.5.1)
+    rails-assets-spin (1.1.6)
+      rails-assets-jquery
+    rails-assets-spin.js (2.3.2)
     rails-assets-typeahead.js (0.11.1)
       rails-assets-jquery (>= 1.7)
     rails-assets-underscore (1.8.3)
@@ -499,13 +497,11 @@ DEPENDENCIES
   rack-mini-profiler
   rails (~> 4.2.0)
   rails-assets-angular!
-  rails-assets-angular-animate!
-  rails-assets-angular-aria!
-  rails-assets-angular-material!
   rails-assets-angular-mocks!
   rails-assets-angular-scenario!
-  rails-assets-angular-ui-bootstrap-bower!
+  rails-assets-angular-spinner!
   rails-assets-angular-truncate-2!
+  rails-assets-angular-ui-bootstrap-bower!
   rails-assets-angular-ui-router!
   rails-assets-bootstrap-select!
   rails-assets-font-awesome (~> 4.3.0)!
@@ -515,6 +511,7 @@ DEPENDENCIES
   rails-assets-message-center!
   rails-assets-moment!
   rails-assets-rickshaw!
+  rails-assets-spin!
   rails-assets-typeahead.js!
   rails-assets-underscore!
   rails-assets-vis!

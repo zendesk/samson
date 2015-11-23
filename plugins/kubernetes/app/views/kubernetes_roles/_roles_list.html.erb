@@ -1,8 +1,9 @@
 <script type="text/ng-template" id="kubernetes/kubernetes_roles.tmpl.html">
   <div class="kubernetes-roles">
-    <md-progress-circular md-mode="indeterminate" ng-if="!roles"></md-progress-circular>
+    <us-spinner spinner-theme="async-data-loader" ng-if="roles" class="kubernetes-roles-spinner">
+      <span class="spinner-label">Loading Kubernetes Roles</span>
+    </us-spinner>
     <div ng-if="roles">
-
       <% if is_user_admin_for_project? %>
         <git-references-typeahead selected-reference="refreshRoles(reference)"></git-references-typeahead>
       <% end %>
