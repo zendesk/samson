@@ -2,6 +2,11 @@
   <div class="kubernetes-roles">
     <md-progress-circular md-mode="indeterminate" ng-if="!roles"></md-progress-circular>
     <div ng-if="roles">
+
+      <% if is_user_admin_for_project? %>
+        <git-references-typeahead selected-reference="refreshRoles(reference)"></git-references-typeahead>
+      <% end %>
+
       <table class="table table-condensed">
         <thead>
           <tr>
@@ -31,12 +36,8 @@
           </tr>
         </tbody>
       </table>
-      <p class="pull-right">
-        <a ui-sref="kubernetes.roles.create" class="btn btn-default">Create New Role</a>
-      </p>
     </div>
   </div>
 </script>
 
-<%= render 'kubernetes_roles/role_create_form' %>
 <%= render 'kubernetes_roles/role_edit_form' %>

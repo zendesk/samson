@@ -1,4 +1,4 @@
-samson.service('kubernetesService', function($http, $q) {
+samson.service('kubernetesService', function($http, $q, httpErrorService, kubernetesRoleFactory) {
 
   var config = {
     headers: {
@@ -7,7 +7,7 @@ samson.service('kubernetesService', function($http, $q) {
   };
 
   /*********************************************************************
-    Kubernetes Roles
+   Kubernetes Roles
    *********************************************************************/
 
   this.loadRoles = function(project_id) {
@@ -15,7 +15,12 @@ samson.service('kubernetesService', function($http, $q) {
 
     $http.get('/projects/' + project_id + '/kubernetes_roles', config).then(
       function(response) {
-        deferred.resolve(response.data);
+        deferred.resolve(response.data.map(function(role) {
+          return kubernetesRoleFactory.build(role);
+        }));
+      },
+      function(response) {
+        deferred.reject(httpErrorService.handleResponse(response));
       }
     );
 
@@ -27,19 +32,10 @@ samson.service('kubernetesService', function($http, $q) {
 
     $http.get('/projects/' + project_id + '/kubernetes_roles/' + role_id, config).then(
       function(response) {
-        deferred.resolve(response.data);
-      }
-    );
-
-    return deferred.promise;
-  };
-
-  this.loadRoleDefaults = function(project_id) {
-    var deferred = $q.defer();
-
-    $http.get('/projects/' + project_id + '/kubernetes_roles/new', config).then(
+        deferred.resolve(kubernetesRoleFactory.build(response.data));
+      },
       function(response) {
-        deferred.resolve(response.data);
+        deferred.reject(httpErrorService.handleResponse(response));
       }
     );
 
@@ -51,28 +47,36 @@ samson.service('kubernetesService', function($http, $q) {
 
     var deferred = $q.defer();
     $http.put('/projects/' + project_id + '/kubernetes_roles/' + role.id, payload).then(
-      function(response) {
-        deferred.resolve(response.data);
+      function() {
+        deferred.resolve();
       },
       function(response) {
-        handleError(response, deferred);
+        deferred.reject(httpErrorService.handleResponse(response));
       }
     );
     return deferred.promise;
   };
 
-  this.createRole = function(project_id, role) {
-    var payload = JSON.stringify(role, _.without(Object.keys(role), 'id', 'project_id'));
-
+  this.refreshRoles = function(project_id, reference) {
     var deferred = $q.defer();
-    $http.post('/projects/' + project_id + '/kubernetes_roles', payload).then(
+
+    $http.get('/projects/' + project_id + '/kubernetes_roles/refresh?ref=' + reference, config).then(
       function(response) {
-        deferred.resolve(response.data);
+        deferred.resolve(response.data.map(function(role) {
+          return kubernetesRoleFactory.build(role);
+        }));
       },
       function(response) {
-        handleError(response, deferred);
+        switch (response.status) {
+          case 404:
+            deferred.reject(httpErrorService.createResultType('warning', 'No roles have been found for the given Git reference.'));
+            break;
+          default:
+            deferred.reject(httpErrorService.handleResponse(response));
+        }
       }
     );
+
     return deferred.promise;
   };
 
@@ -86,25 +90,12 @@ samson.service('kubernetesService', function($http, $q) {
     $http.get('/projects/' + project_id + '/kubernetes_releases', config).then(
       function(response) {
         deferred.resolve(response.data);
+      },
+      function(response) {
+        deferred.reject(handleFailure(response));
       }
     );
 
     return deferred.promise;
   };
-
-  /*********************************************************************
-   Other functions
-   *********************************************************************/
-
-  function handleError(response, deferred) {
-    if (!_.isUndefined(response.data) && !_.isUndefined(response.data.errors)) {
-      deferred.reject(response.data.errors.map(function(error) {
-        return error.message;
-      }));
-    }
-    else {
-      deferred.reject();
-    }
-  }
-
 });

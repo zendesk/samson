@@ -46,7 +46,7 @@ describe FlowdockController do
       before do
         FlowdockNotification.any_instance.expects(:buddy_request).once
         deploy_id = deploys(:succeeded_test).id
-        post :notify,  deploy_id: deploy_id, message: 'Test'
+        post :notify,  deploy_id: deploy_id, message: 'Test', authenticity_token:  set_form_authenticity_token
       end
 
       it 'sends a buddy request' do

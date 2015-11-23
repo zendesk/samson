@@ -128,6 +128,7 @@ class ActiveSupport::TestCase
   ensure
     $VERBOSE = old
   end
+
 end
 
 Mocha::Expectation.class_eval do
@@ -178,6 +179,10 @@ class ActionController::TestCase
 
   teardown do
     Warden.test_reset!
+  end
+
+  def set_form_authenticity_token
+    session[:_csrf_token] = SecureRandom.base64(32)
   end
 
   def warden

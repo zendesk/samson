@@ -101,29 +101,6 @@ describe('Kubernetes ui-router config', function() {
     });
   });
 
-  describe('Transition to kubernetes.roles.create state', function(){
-    beforeEach(inject(function(){
-      goTo('/projects/some_project/kubernetes/roles/new');
-    }));
-
-    it('State should have transitioned to kubernetes.roles.create', function() {
-      expect($state.current.name).toEqual('kubernetes.roles.create');
-    });
-
-    it('State data should reflect current state', function() {
-      expect($state.current.data['selectedTab']).toEqual(0);
-    });
-
-    it('State views should reflect current state', function() {
-      expect($state.current.views['content@']['templateUrl']).toEqual('kubernetes/kubernetes_create_role.tmpl.html');
-      expect($state.current.views['content@']['controller']).toEqual('KubernetesCreateRoleCtrl');
-    });
-
-    it('State params should reflect current state', function() {
-      expect($stateParams.project_id).toEqual('some_project');
-    });
-  });
-
   describe('Transition to kubernetes.releases state', function(){
     beforeEach(inject(function(){
       goTo('/projects/some_project/kubernetes/releases');
