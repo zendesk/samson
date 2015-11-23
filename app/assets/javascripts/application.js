@@ -15,10 +15,9 @@
 //= require angular
 //= require angular-rails-templates
 //= require angular-ui-router
-//= require angular-aria
-//= require angular-animate
-//= require angular-material
 //= require angular-ui-bootstrap-bower
+//= require spin
+//= require angular-spinner
 //= require angular-truncate-2
 //= require underscore
 //= require moment
