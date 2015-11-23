@@ -6,10 +6,6 @@ us-spinner.kubernetes-releases-spinner {
   padding: 100px 0;
 }
 
-us-spinner.kubernetes-releases-spinner [role="progressbar"]::after {
-  content: "Loading Kubernetes Releases";
-}
-
 .kubernetes-release-groups span.label-info {
   margin: 0 5px;
 }
@@ -19,10 +15,6 @@ us-spinner.kubernetes-releases-spinner [role="progressbar"]::after {
 */
 us-spinner.kubernetes-roles-spinner {
   padding: 100px 0;
-}
-
-us-spinner.kubernetes-roles-spinner [role="progressbar"]::after {
-  content: "Loading Kubernetes Roles";
 }
 
 .kubernetes-roles .git-reference-control {

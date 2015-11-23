@@ -1,19 +1,16 @@
-
 /*
   Spinner directive
 */
 us-spinner {
   position: relative;
   display: block;
+  text-align: center;
 
-  [role="progressbar"]::after {
-    content: 'Loading...';
-    position: absolute;
-    font-size: 14px;
-    width: 150px;
-    text-align: center;
-    top: 30px;
-    left: -70px;
+  span.spinner-label {
+    display: inline-block;
+    position: relative;
+    top: 50px;
+    width: 160px;
   }
 }
 

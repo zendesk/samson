@@ -10,7 +10,7 @@ var samson = angular.module("samson", [
 
     // Theme configuration for the spinners
     // See: https://github.com/urish/angular-spinner
-    usSpinnerConfigProvider.setTheme('async-data-loader', {color: '#333', radius: 10})
+    usSpinnerConfigProvider.setTheme('async-data-loader', {color: '#333', radius: 10});
   });
 
 var A = angular;
