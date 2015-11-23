@@ -1,4 +1,4 @@
-samson.controller('KubernetesEditRoleCtrl', function($scope, $state, $stateParams, kubernetesService, kubernetesRoleFactory, notificationService, $timeout) {
+samson.controller('KubernetesEditRoleCtrl', function($scope, $state, $stateParams, kubernetesService, notificationService, $timeout) {
 
   $scope.submit = function(e) {
     e.preventDefault(); //prevents default form submission
@@ -14,13 +14,8 @@ samson.controller('KubernetesEditRoleCtrl', function($scope, $state, $stateParam
 
         $state.go('kubernetes.roles');
       },
-      function(errors) {
-        if (_.isUndefined(errors)) {
-          notificationService.error('Role could not be updated. Please, try again later.');
-        }
-        else {
-          notificationService.errors(errors);
-        }
+      function(result) {
+        notificationService.errors(result.messages);
       }
     );
   };
@@ -30,12 +25,15 @@ samson.controller('KubernetesEditRoleCtrl', function($scope, $state, $stateParam
   };
 
   function loadRole() {
-    kubernetesService.loadRole($stateParams.project_id, $stateParams.role_id).then(function(data) {
-        $scope.role = kubernetesRoleFactory.build(data);
+    kubernetesService.loadRole($stateParams.project_id, $stateParams.role_id).then(
+      function(role) {
+        $scope.role = role;
+      },
+      function(result) {
+        notificationService.errors(result.messages);
       }
     );
   }
 
   loadRole();
-
 });

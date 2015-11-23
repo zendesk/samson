@@ -1,0 +1,15 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: some-project
+  labels:
+    project: some-project
+spec:
+  ports:
+  - port: 80
+    targetPort: some-role-port
+  selector:
+    project: some-project
+    role: some-role
+  type: LoadBalancer

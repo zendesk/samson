@@ -47,9 +47,21 @@ describe Admin::EnvironmentVariableGroupsController do
       end
     end
 
-    unauthorized :post, :create
-    unauthorized :delete, :destroy, id: 1
-    unauthorized :post, :update, id: 1
+    it 'responds with unauthorized' do
+      post :create, authenticity_token: set_form_authenticity_token
+      @unauthorized.must_equal true, 'Request should get unauthorized'
+    end
+
+    it 'responds with unauthorized' do
+      delete :destroy, id: 1, authenticity_token: set_form_authenticity_token
+      @unauthorized.must_equal true, 'Request should get unauthorized'
+    end
+
+    it 'responds with unauthorized' do
+      post :update, id: 1, authenticity_token: set_form_authenticity_token
+      @unauthorized.must_equal true, 'Request should get unauthorized'
+    end
+
     unauthorized :get, :new
   end
 
@@ -68,7 +80,7 @@ describe Admin::EnvironmentVariableGroupsController do
             post :create, environment_variable_group: {
               environment_variables_attributes: {"0" => {name: "N1", value: "V1"}},
               name: "G2"
-            }
+            }, authenticity_token:  set_form_authenticity_token
           end
         end
         assert_redirected_to "/admin/environment_variable_groups"
@@ -86,7 +98,7 @@ describe Admin::EnvironmentVariableGroupsController do
             environment_variables_attributes: {
               "0" => {name: "N1", value: "V1"},
             },
-          }
+          }, authenticity_token:  set_form_authenticity_token
         end
 
         assert_redirected_to "/admin/environment_variable_groups"
@@ -102,7 +114,7 @@ describe Admin::EnvironmentVariableGroupsController do
             environment_variables_attributes: {
               "0" => {name: "N1", value: "V2", scope_type_and_id: "DeployGroup-#{deploy_group.id}", id: variable.id},
             },
-          }
+          }, authenticity_token:  set_form_authenticity_token
         end
 
         assert_redirected_to "/admin/environment_variable_groups"
@@ -117,7 +129,7 @@ describe Admin::EnvironmentVariableGroupsController do
             environment_variables_attributes: {
               "0" => {name: "N1", value: "V2", id: variable.id, _destroy: true},
             },
-          }
+          }, authenticity_token:  set_form_authenticity_token
         end
 
         assert_redirected_to "/admin/environment_variable_groups"
@@ -128,7 +140,7 @@ describe Admin::EnvironmentVariableGroupsController do
       it "destroy" do
         env_group
         assert_difference "EnvironmentVariableGroup.count", -1 do
-          delete :destroy, id: env_group.id
+          delete :destroy, id: env_group.id, authenticity_token:  set_form_authenticity_token
         end
         assert_redirected_to "/admin/environment_variable_groups"
       end

@@ -2,7 +2,7 @@ class KubernetesRolesController < ApplicationController
   include ProjectLevelAuthorization
 
   before_action :authorize_project_deployer!, only: [:index]
-  before_action :authorize_project_admin!, only: [:show, :update, :new, :create]
+  before_action :authorize_project_admin!, only: [:show, :update, :refresh]
 
   def index
     render json: current_project.roles.order('id desc'), root: false
@@ -21,19 +21,12 @@ class KubernetesRolesController < ApplicationController
     end
   end
 
-  def new
-    # TODO : READ DEFAULT VALUES FROM YAML FILE
-    render json: Kubernetes::Role.new(project: current_project, ram: 512, cpu: 0.2, replicas: 1, deploy_strategy: 'rolling_update'), root: false
-  end
-
-  def create
-    role = current_project.roles.build(role_params)
-    role.save
-
-    if role.persisted?
-      render status: :created, json: role
+  def refresh
+    roles = current_project.refresh_kubernetes_roles!(refresh_params)
+    if roles.to_a.empty?
+      render status: :not_found, json: {}
     else
-      render status: :bad_request, json: {errors: role.errors.full_messages}
+      render status: :ok, json: roles, root: false
     end
   end
 
@@ -41,5 +34,9 @@ class KubernetesRolesController < ApplicationController
 
   def role_params
     params.require(:kubernetes_role).permit(:name, :config_file, :service_name, :ram, :cpu, :replicas, :deploy_strategy)
+  end
+
+  def refresh_params
+    params.require(:ref)
   end
 end

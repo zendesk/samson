@@ -1,6 +1,9 @@
 module Kubernetes
   class Role < ActiveRecord::Base
     self.table_name = 'kubernetes_roles'
+
+    has_soft_deletion default_scope: true
+
     belongs_to :project, inverse_of: :roles
 
     DEPLOY_STRATEGIES = ['rolling_update', 'kill_and_restart']

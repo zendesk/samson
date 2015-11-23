@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20151122194738) do
+ActiveRecord::Schema.define(version: 20151116174240) do
 
   create_table "build_statuses", force: :cascade do |t|
     t.integer  "build_id",                                     null: false
@@ -215,6 +215,7 @@ ActiveRecord::Schema.define(version: 20151122194738) do
     t.string   "deploy_strategy", limit: 255,                         null: false
     t.datetime "created_at",                                          null: false
     t.datetime "updated_at",                                          null: false
+    t.datetime "deleted_at"
   end
 
   add_index "kubernetes_roles", ["project_id"], name: "index_kubernetes_roles_on_project_id", using: :btree
