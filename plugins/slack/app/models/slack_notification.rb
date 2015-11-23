@@ -10,10 +10,7 @@ class SlackNotification
 
   def deliver
     payload = {text: content, username: "samson-bot"}
-
-    if !@webhook.channel.blank?
-      payload.merge!({channel: @webhook.channel})
-    end
+    payload.merge!({channel: @webhook.channel}) unless @webhook.channel.blank?
 
     Faraday.post @webhook.webhook_url, {payload: payload.to_json}
   rescue Faraday::ClientError => e
