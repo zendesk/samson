@@ -4,7 +4,7 @@ describe BinaryBuilder do
   describe '#build' do
     let(:project) { projects(:test) }
     let(:dir) { '/tmp' }
-    let(:reference) { 'abc' }
+    let(:reference) { 'aBc-19F' }
     let(:output) { StringIO.new }
     let(:builder) { BinaryBuilder.new(dir, project, reference, output) }
     let(:fake_image) { stub(remove: true) }
@@ -47,7 +47,7 @@ describe BinaryBuilder do
       builder.send(:create_container_options).must_equal(
         {
           'Cmd' => ['/app/build.sh'],
-          'Image' => 'foo_build:abc',
+          'Image' => 'foo_build:abc-19f',
           'Volumes' => { '/opt/samson_build_cache' => {} },
           'HostConfig' => {
             'Binds' => ['/opt/samson_build_cache:/build/cache'],
@@ -62,7 +62,7 @@ describe BinaryBuilder do
       builder.send(:create_container_options).must_equal(
         {
           'Cmd' => ['/app/build.sh'],
-          'Image' => 'foo_build:abc',
+          'Image' => 'foo_build:abc-19f',
           'Mounts' => [
             {
               'Source' => '/opt/samson_build_cache',
@@ -81,6 +81,11 @@ describe BinaryBuilder do
     it 'throws exception with api < 1.15' do
       Docker.stubs(:version).returns({ 'ApiVersion' => '1.14' })
       proc { builder.send(:create_container_options) }.must_raise RuntimeError
+    end
+
+    it 'downcases the image name' do
+      image_name = builder.send(:image_name)
+      image_name.must_equal(image_name.downcase)
     end
   end
 end
