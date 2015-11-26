@@ -10,7 +10,6 @@ module Watchers
     finalizer :stop_watching
 
     def initialize(client)
-      @started = false
       @client = client
       @watch_stream = nil
       async :start_watching
@@ -18,7 +17,6 @@ module Watchers
 
     def start_watching
       info 'watcher started'
-      @started = true
       @watch_stream = @client.watch_pods
       @watch_stream.each do |notice|
         handle_notice notice
@@ -27,7 +25,6 @@ module Watchers
 
     def stop_watching
       info 'watcher stopped'
-      @started = false
       if @watch_stream
         @watch_stream.finish
         @watch_stream = nil

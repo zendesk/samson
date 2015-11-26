@@ -17,7 +17,7 @@ module Kubeclient
           fail KubeException.new(response.code, response.reason, response)
         end
         read_stream(response.body, &block)
-      rescue Errno::EBADF
+      rescue IOError
         raise unless @finished
       end
 
