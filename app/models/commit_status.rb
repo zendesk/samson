@@ -1,8 +1,8 @@
 class CommitStatus
   cattr_accessor(:token) { ENV['GITHUB_TOKEN'] }
 
-  def initialize(repo, sha)
-    @repo, @sha = repo, sha
+  def initialize(repo, ref)
+    @repo, @ref = repo, ref
   end
 
   def status
@@ -17,10 +17,14 @@ class CommitStatus
     @combined_status ||= load_status
   end
 
+  def valid_ref?
+    GitRepository.valid_ref_format?(@ref)
+  end
+
   private
 
   def load_status
-    GITHUB.combined_status(@repo, @sha)
+    valid_ref? ? GITHUB.combined_status(@repo, @ref) : {}
   rescue Octokit::NotFound
     {}
   end
