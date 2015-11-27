@@ -2,6 +2,7 @@ require 'docker'
 
 class DockerBuilderService
   DIGEST_SHA_REGEX = /Digest:.*(sha256:[0-9a-f]+)/i
+  include ::NewRelic::Agent::MethodTracer
 
   attr_reader :build, :execution
 
@@ -43,6 +44,7 @@ class DockerBuilderService
     output_buffer.puts("Docker build failed: #{e.message}")
     nil
   end
+  add_method_tracer :build_image
 
   def push_image(tag)
     build.docker_ref = tag || build.label.try(:parameterize) || 'latest'
@@ -66,6 +68,7 @@ class DockerBuilderService
     output_buffer.puts("Docker push failed: #{e.message}\n")
     nil
   end
+  add_method_tracer :push_image
 
   def output_buffer
     @output_buffer ||= OutputBuffer.new

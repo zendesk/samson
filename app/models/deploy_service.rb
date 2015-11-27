@@ -1,4 +1,5 @@
 class DeployService
+  include ::NewRelic::Agent::MethodTracer
   attr_reader :user
 
   def initialize(user)
@@ -75,6 +76,7 @@ class DeployService
 
     create_github_deployment(deploy)
   end
+  add_method_tracer :send_before_notifications
 
   def send_after_notifications(deploy)
     Samson::Hooks.fire(:after_deploy, deploy, deploy.buddy)
@@ -85,6 +87,7 @@ class DeployService
     send_github_notification(deploy)
     update_github_deployment_status(deploy)
   end
+  add_method_tracer :send_after_notifications
 
   def send_deploy_email(deploy)
     if deploy.stage.send_email_notifications?
