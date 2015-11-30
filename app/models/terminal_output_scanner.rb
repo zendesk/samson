@@ -26,8 +26,10 @@ class TerminalOutputScanner
   private
 
   def write(data)
-    data.scan(/\r?[^\r]*/).each do |part|
-      next if part == ""
+    data
+      .encode('UTF-8', 'binary', invalid: :replace, undef: :replace, replace: '')
+      .scan(/\r?[^\r]*/).each do |part|
+        next if part == ''
       write_part(part)
     end
   end
