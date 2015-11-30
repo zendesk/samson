@@ -2,73 +2,6 @@ require_relative '../../test_helper'
 require 'celluloid/current'
 require 'kubeclient'
 
-class DummyClient
-  def initialize(stream)
-    @stream = stream
-  end
-
-  def watch_pods
-    @stream
-  end
-end
-
-class NoticeSubscriber
-  include Celluloid
-  include Celluloid::Notifications
-
-  attr_accessor :notices
-
-  def initialize(rc_name)
-    @notices = []
-    subscribe(rc_name, :handle_notice)
-  end
-
-  def handle_notice(_topic, data)
-    @notices << data
-  end
-end
-
-class ConditionedWatchStream
-  include Celluloid
-
-  finalizer :finish
-  attr_accessor :running, :waiting
-
-  def initialize
-    @condition = Celluloid::Condition.new
-    @running = false
-    @waiting = false
-  end
-
-  def each
-    @running = true
-    while @running do
-      @waiting = true
-      message = @condition.wait
-      @waiting = false
-      yield message if message
-    end
-  end
-
-  def finish
-    @running = false
-    @condition.signal if @waiting
-  end
-
-  def notice(message)
-    @condition.signal message
-  end
-end
-
-class BrokenNotice
-  class BrokenNoticeError < StandardError
-  end
-
-  def method_missing(method_id)
-    raise BrokenNoticeError.new method_id.id2name
-  end
-end
-
 describe Watchers::ClusterPodWatcher do
   describe 'using actors' do
     let(:rc_name) { 'test' }
@@ -185,6 +118,73 @@ describe Watchers::ClusterPodWatcher do
   end
 
   private
+
+  class DummyClient
+    def initialize(stream)
+      @stream = stream
+    end
+
+    def watch_pods
+      @stream
+    end
+  end
+
+  class NoticeSubscriber
+    include Celluloid
+    include Celluloid::Notifications
+
+    attr_accessor :notices
+
+    def initialize(rc_name)
+      @notices = []
+      subscribe(rc_name, :handle_notice)
+    end
+
+    def handle_notice(_topic, data)
+      @notices << data
+    end
+  end
+
+  class ConditionedWatchStream
+    include Celluloid
+
+    finalizer :finish
+    attr_accessor :running, :waiting
+
+    def initialize
+      @condition = Celluloid::Condition.new
+      @running = false
+      @waiting = false
+    end
+
+    def each
+      @running = true
+      while @running do
+        @waiting = true
+        message = @condition.wait
+        @waiting = false
+        yield message if message
+      end
+    end
+
+    def finish
+      @running = false
+      @condition.signal if @waiting
+    end
+
+    def notice(message)
+      @condition.signal message
+    end
+  end
+
+  class BrokenNotice
+    class BrokenNoticeError < StandardError
+    end
+
+    def method_missing(method_id)
+      raise BrokenNoticeError.new method_id.id2name
+    end
+  end
 
   def build_notice(rc_name, type)
     notice_str = %[{"type": "#{type}", "object": {"metadata": {"labels": {"replication_controller": "#{rc_name}"}}}}]
