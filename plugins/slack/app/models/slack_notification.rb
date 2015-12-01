@@ -17,7 +17,6 @@ class SlackNotification
     Rails.logger.error("Could not deliver slack message: #{e.message}")
   end
 
-
   private
 
   def content
