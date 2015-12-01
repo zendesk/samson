@@ -60,11 +60,11 @@ ActiveRecord::Schema.define(version: 20151201104205) do
     t.datetime "created_at",                 null: false
     t.datetime "updated_at",                 null: false
     t.string   "env_value",      limit: 255, null: false
-    t.string   "permalink",                  null: false
+    t.string   "permalink",      limit: 255, null: false
   end
 
   add_index "deploy_groups", ["environment_id"], name: "index_deploy_groups_on_environment_id", using: :btree
-  add_index "deploy_groups", ["permalink"], name: "index_deploy_groups_on_permalink", unique: true, length: {"permalink"=>191}
+  add_index "deploy_groups", ["permalink"], name: "index_deploy_groups_on_permalink", unique: true, length: {"permalink"=>191}, using: :btree
 
   create_table "deploy_groups_stages", id: false, force: :cascade do |t|
     t.integer "deploy_group_id", limit: 4

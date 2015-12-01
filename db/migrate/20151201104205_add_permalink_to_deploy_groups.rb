@@ -1,6 +1,6 @@
 class AddPermalinkToDeployGroups < ActiveRecord::Migration
   def change
-    add_column :deploy_groups, :permalink, :string
+    add_column :deploy_groups, :permalink, :string, length: 191
     add_index :deploy_groups, :permalink, unique: true, length: 191
 
     DeployGroup.reset_column_information
