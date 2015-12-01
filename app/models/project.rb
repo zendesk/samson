@@ -66,7 +66,8 @@ class Project < ActiveRecord::Base
 
   def last_release_contains_commit?(commit)
     last_release = releases.order(:id).last
-    last_release && repository.downstream_commit?(last_release.commit, commit)
+    # status values documented here: http://stackoverflow.com/questions/23943855/github-api-to-compare-commits-response-status-is-diverged
+    last_release && %w(behind identical).include?(GITHUB.compare(github_repo, last_release.commit, commit).status)
   end
 
   def auto_release_stages

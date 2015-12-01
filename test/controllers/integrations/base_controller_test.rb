@@ -36,6 +36,7 @@ describe Integrations::BaseController do
     end
 
     it 're-uses last release if commit already present' do
+      stub_github_api("repos/bar/foo/compare/#{sha}...#{sha}", { status: 'identical' })
       base_controller.expects(:head).with(:ok).twice
       base_controller.create
 
