@@ -10,9 +10,9 @@ class SlackNotification
 
   def deliver
     payload = {text: content, username: "samson-bot"}
-    payload.merge!({channel: @webhook.channel}) unless @webhook.channel.blank?
+    payload.merge!(channel: @webhook.channel) unless @webhook.channel.blank?
 
-    Faraday.post @webhook.webhook_url, {payload: payload.to_json}
+    Faraday.post(@webhook.webhook_url, payload: payload.to_json)
   rescue Faraday::ClientError => e
     Rails.logger.error("Could not deliver slack message: #{e.message}")
   end
