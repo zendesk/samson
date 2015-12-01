@@ -15,6 +15,6 @@ class DeployGroupsController < ApplicationController
   private
 
   def find_deploy_group
-    @deploy_group = DeployGroup.find_by_param!(params[:id])
+    @deploy_group = DeployGroup.find(params[:id])
   end
 end
