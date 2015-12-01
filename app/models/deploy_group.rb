@@ -1,4 +1,6 @@
 class DeployGroup < ActiveRecord::Base
+  include Permalinkable
+
   has_soft_deletion default_scope: true
 
   belongs_to :environment
@@ -27,6 +29,10 @@ class DeployGroup < ActiveRecord::Base
   end
 
   private
+
+  def permalink_base
+    name
+  end
 
   def touch_stages
     stages.update_all(updated_at: Time.now)

@@ -55,7 +55,7 @@ describe Admin::DeployGroupsController do
         deploy_group_count = DeployGroup.count
         post :create, deploy_group: {name: nil}
         assert_template :edit
-        flash[:error].must_equal ["Name can't be blank", "Environment can't be blank"]
+        flash[:error].must_equal ["Permalink can't be blank", "Name can't be blank", "Environment can't be blank"]
         DeployGroup.count.must_equal deploy_group_count
       end
     end
