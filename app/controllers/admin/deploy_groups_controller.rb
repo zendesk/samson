@@ -94,6 +94,6 @@ class Admin::DeployGroupsController < ApplicationController
   end
 
   def deploy_group
-    @deploy_group ||= DeployGroup.find(params[:id])
+    @deploy_group ||= DeployGroup.find_by_param!(params[:id])
   end
 end
