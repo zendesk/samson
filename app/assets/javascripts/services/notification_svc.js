@@ -1,6 +1,6 @@
 samson.service('notificationService', function(messageCenterService) {
-  this.info = function(message, options) {
 
+  this.info = function(message, options) {
     showMessage('info', message, options);
   };
 
@@ -20,18 +20,22 @@ samson.service('notificationService', function(messageCenterService) {
     showMessages('danger', messages, options);
   };
 
-  function showMessage(message_type, message, options) {
+  this.clear = function() {
     messageCenterService.markShown();
     messageCenterService.removeShown();
+  };
+
+  /*
+    Private methods
+   */
+
+  var showMessage = function(message_type, message, options) {
     messageCenterService.add(message_type, message, options);
-  }
+  };
 
-  function showMessages(message_type, messages, options) {
-    messageCenterService.markShown();
-    messageCenterService.removeShown();
-
+  var showMessages = function(message_type, messages, options) {
     messages.forEach(function(message) {
       messageCenterService.add(message_type, message, options);
     });
-  }
+  };
 });

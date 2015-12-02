@@ -58,6 +58,9 @@ angular.module('samson').config(function($stateProvider, $urlRouterProvider) {
       }
     })
 
+    /*
+      Kubernetes Dashboard
+     */
     .state('kubernetes.dashboard', {
       url: '/dashboard',
       data: {

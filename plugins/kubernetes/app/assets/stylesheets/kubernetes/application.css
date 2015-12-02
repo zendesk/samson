@@ -1,22 +1,32 @@
+/* Common Styles */
+
+a {
+  cursor: pointer;
+}
+
+select {
+  cursor: pointer;
+}
+
+.no-padding {
+  padding: 0;
+}
+
+.form-note {
+  color: grey;
+  font-size: 12px;
+}
 
 /*
     Kubernetes Releases
 */
-us-spinner.kubernetes-releases-spinner {
-  padding: 100px 0;
-}
-
-.kubernetes-release-groups span.label-info {
+.kubernetes-releases span.label-info {
   margin: 0 5px;
 }
 
 /*
   Kubernetes Roles
 */
-us-spinner.kubernetes-roles-spinner {
-  padding: 100px 0;
-}
-
 .kubernetes-roles .git-reference-control {
   margin: 20px 0 20px 15px;
   padding: 0;
@@ -33,6 +43,118 @@ us-spinner.kubernetes-roles-spinner {
   margin-bottom: 0;
 }
 
+/* Kubernetes Release Dialog */
 
+.kubernetes-release-dialog .nav-tabs {
+  display: none;
+}
 
+.kubernetes-release-dialog .no-builds-message {
+  padding: 50px 0;
+}
 
+.kubernetes-release-dialog .no-roles-message {
+  padding: 20px 0;
+}
+
+.kubernetes-release-dialog fieldset {
+  margin-top: 10px;
+}
+
+.kubernetes-release-dialog .btn .caret {
+  margin-left: 20px;
+}
+
+.kubernetes-release-dialog .form-group {
+  margin: 0;
+  padding: 20px 0;
+  border-bottom: 1px solid #dedede;
+}
+
+.kubernetes-release-dialog .form-group label {
+  display: block;
+}
+
+.kubernetes-release-dialog .form-group:last-child {
+  border-bottom: none;
+}
+
+.kubernetes-release-dialog table.roles-preview tr td {
+  border: none;
+  font-size: 12px;
+}
+
+.kubernetes-release-dialog .toggle-all-link {
+  text-align: right;
+  padding-right: 10px;
+}
+
+.kubernetes-release-dialog .deploy-group {
+  position: relative;
+  display: inline-block;
+  width: 260px;
+  height: 150px;
+  border: 1px solid #dedede;
+  border-radius: 4px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  margin: 5px 6px;
+}
+
+.kubernetes-release-dialog .deploy-group .overlay {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background-color: white;
+  opacity: 0.7;
+  z-index: 99;
+}
+
+.kubernetes-release-dialog .deploy-group.selected .overlay {
+  display: none;
+}
+
+.kubernetes-release-dialog .deploy-group:hover, .kubernetes-release-dialog .deploy-group.selected {
+  border: 1px solid #3F51B5;
+  cursor: pointer;
+}
+
+.kubernetes-release-dialog .deploy-group .name {
+  padding: 0;
+}
+
+.kubernetes-release-dialog .deploy-group .selected {
+  text-align: center;
+  padding: 0;
+}
+
+.kubernetes-release-dialog .deploy-group .deploy-group-specs {
+  margin: 30px 10px 10px 10px;
+}
+
+.kubernetes-release-dialog .deploy-group .deploy-group-specs table.roles {
+  font-size: 12px;
+  width: 100%;
+}
+
+.kubernetes-release-dialog .deploy-group .deploy-group-specs table.roles tr td {
+  padding: 4px 0;
+}
+
+.kubernetes-release-dialog .deploy-group .deploy-group-specs table.roles .editable-property:hover {
+  color: #3F51B5;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.kubernetes-release-dialog .deploy-group .deploy-group-specs table.roles .editable-property-control {
+  font-size: 11px;
+  height: auto;
+  width: 45px;
+  padding: 3px 5px;
+}
+
+.kubernetes-release-dialog .alert {
+  margin: 20px;
+}

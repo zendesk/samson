@@ -1,0 +1,115 @@
+<script type='text/ng-template' id='kubernetes/kubernetes_release_wizard_step_1.tmpl.html'>
+
+  <us-spinner spinner-theme="async-data-loader" ng-if="!wizardReady()">
+    <span class="spinner-label">Initializing wizard...</span>
+  </us-spinner>
+
+  <div ng-if="wizardReady() && empty(builds)">
+    <p class="no-builds-message text-warning">
+      You must create a build before creating a release.<br/>
+      Click <a ng-click="showProjectBuilds()">here</a> if you wish to create a build now.
+    </p>
+  </div>
+
+  <div ng-if="wizardReady()" class="form-container">
+    <form ng-submit="submit($event)">
+      <fieldset>
+        <div class="form-group clearfix">
+          <label for="build">
+            <span class="order">1.</span>
+            <span>Select the build:</span>
+          </label>
+
+          <div class="col-lg-4 no-padding">
+            <div id="environment-dropdown" class="btn-group" uib-dropdown uib-keyboard-nav>
+              <button type="button" class="btn btn-default" uib-dropdown-toggle>
+                {{ build.label || 'Choose build' }} <span class="caret"></span>
+              </button>
+              <ul class="uib-dropdown-menu" role="menu" aria-labelledby="environment-dropdown">
+                <li role="menuitem">
+                  <a ng-click="buildChanged()"></a>
+                </li>
+                <li role="menuitem" ng-repeat="build in builds">
+                  <a ng-click="buildChanged(build)">{{ build.label }}</a>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group clearfix">
+          <label for="environment">
+            <span class="order">2.</span>
+            <span>Select the environment:</span>
+          </label>
+
+          <div id="environment-dropdown" class="btn-group" uib-dropdown uib-keyboard-nav>
+            <button type="button" class="btn btn-default" uib-dropdown-toggle>
+              {{ environment.name || 'Choose environment' }} <span class="caret"></span>
+            </button>
+            <ul class="uib-dropdown-menu" role="menu" aria-labelledby="environment-dropdown">
+              <li role="menuitem">
+                <a ng-click="environmentChanged()"></a>
+              </li>
+              <li role="menuitem" ng-repeat="env in environments">
+                <a ng-click="environmentChanged(env)">{{ env.name }}</a>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="form-group" ng-if="environment">
+          <label class="control-label">
+            <span class="order">3.</span>
+            <span>Default specs for the selected environment:</span>
+          </label>
+
+          <us-spinner spinner-theme="async-data-loader" ng-if="loadingRoles">
+            <span class="spinner-label">Loading Kubernetes Roles</span>
+          </us-spinner>
+
+          <p class="no-roles-message text-warning" ng-if="!loadingRoles && empty(roles)">
+            You must create a role before creating a release.
+            Click <a ng-click="showKubernetesRoles()">here</a> if you wish to create a role now.
+          </p>
+
+          <div ng-if="notEmpty(roles)">
+            <span class="help-block">
+              The following table shows the current roles and corresponding specs that have been configured for the selected environment.<br>
+              This specs can be overridden in the next page, however, to manage the roles, please access <a ng-click="showKubernetesRoles()">this
+              page</a>.
+            </span>
+
+            <table class="roles-preview table table-condensed" ng-if="notEmpty(roles)">
+              <thead>
+              <tr>
+                <th>Role</th>
+                <th>Config File</th>
+                <th>Service Name</th>
+                <th>Replicas</th>
+                <th>CPU</th>
+                <th>Memory</th>
+              </tr>
+              </thead>
+              <tbody>
+              <tr ng-repeat="role in roles">
+                <td>{{role.name}}</td>
+                <td>{{role.config_file}}</td>
+                <td>{{role.service_name}}</td>
+                <td>{{role.replicas}}</td>
+                <td>{{role.cpu}} cores</td>
+                <td>{{role.ram}} Mi</td>
+              </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </fieldset>
+    </form>
+  </div>
+  <footer class="clearfix">
+    <button ng-click="cancel()" class="btn btn-default pull-right">Cancel</button>
+    <button ng-click="next()" class="btn btn-primary pull-right" style="margin-right: 20px;" ng-if="isCurrentStep(1)" ng-disabled="!validate(currentStep)">Next</button>
+  </footer>
+</script>
+
