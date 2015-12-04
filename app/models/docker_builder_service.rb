@@ -48,11 +48,12 @@ class DockerBuilderService
 
   def push_image(tag)
     build.docker_ref = tag || build.label.try(:parameterize) || 'latest'
+    build.docker_repo_digest = nil
     build.docker_image.tag(repo: project.docker_repo, tag: build.docker_ref, force: true)
 
     output_buffer.puts("### Pushing Docker image to #{project.docker_repo}:#{build.docker_ref}")
 
-    build.docker_image.push do |output_chunk|
+    result = build.docker_image.push do |output_chunk|
       parsed_chunk = handle_output_chunk(output_chunk)
 
       status = parsed_chunk.fetch('status', '')
@@ -60,6 +61,7 @@ class DockerBuilderService
         build.docker_repo_digest = "#{project.docker_repo}@#{matches[1]}"
       end
     end
+    build.docker_repo_digest ||= result.info['RepoTags'].first
 
     build.save!
 
