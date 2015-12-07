@@ -18,6 +18,7 @@ describe DeployService do
     }
   end
   let(:mock_docker_image) { stub(json: docker_image_json) }
+  let(:mock_docker_push) { stub(info: { 'RepoDigests' => [], 'RepoTags' => [] }) }
 
   before { create_repo_with_tags(git_tag) }
 
@@ -48,7 +49,7 @@ describe DeployService do
         [{ status: "Frobinating..." }.to_json],
         [{ status: "Digest: #{repo_digest}" }.to_json],
         [{ status: "Done" }.to_json]
-      )
+      ).returns(mock_docker_push)
       mock_docker_image.expects(:tag).returns(true)
       build.docker_image = mock_docker_image
     end
