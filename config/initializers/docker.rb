@@ -13,13 +13,4 @@ if !Rails.env.test? && !ENV['PRECOMPILE']
     puts '*** DOCKER_REGISTRY environment variable must be configured when DOCKER_FEATURE is enabled ***'
     exit(1)
   end
-
-  # Authenticate to the Docker registry if required
-  if %w(DOCKER_REGISTRY DOCKER_REGISTRY_USER DOCKER_REGISTRY_PASS DOCKER_REGISTRY_EMAIL).all? {|key| ENV[key].present? }
-    Docker.authenticate!(
-      username: ENV['DOCKER_REGISTRY_USER'],
-      password: ENV['DOCKER_REGISTRY_PASS'],
-      email: ENV['DOCKER_REGISTRY_EMAIL'])
-    puts "Authenticated for the Docker Registry #{ENV['DOCKER_REGISTRY']}"
-  end
 end
