@@ -61,7 +61,9 @@ class DockerBuilderService
         build.docker_repo_digest = "#{project.docker_repo}@#{matches[1]}"
       end
     end
-    build.docker_repo_digest ||= result.info['RepoTags'].first
+    # Fallbacks if registry did not send us back a digest
+    build.docker_repo_digest ||= result.info['RepoDigests'].first if result.info['RepoDigests']
+    build.docker_repo_digest ||= result.info['RepoTags'].first if result.info['RepoTags']
 
     build.save!
 
