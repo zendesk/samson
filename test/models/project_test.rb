@@ -21,12 +21,24 @@ describe Project do
 
     before do
       project.stubs(:repository).returns(repository)
-      repository.stubs(:downstream_commit?).with('LAST', 'NEW').returns(true)
     end
 
     it "returns true if the last release contains that commit" do
+      stub_github_api('repos/bar/foo/compare/LAST...NEW', { status: 'behind' })
       project.releases.create!(commit: "LAST", author: author)
       assert project.last_release_contains_commit?("NEW")
+    end
+
+    it "returns false if last release does not contain commit" do
+      stub_github_api('repos/bar/foo/compare/LAST...NEW', { status: 'ahead' })
+      project.releases.create!(commit: "LAST", author: author)
+      refute project.last_release_contains_commit?("NEW")
+    end
+
+    it "returns true if last release has the same commit" do
+      stub_github_api('repos/bar/foo/compare/LAST...LAST', { status: 'identical' })
+      project.releases.create!(commit: "LAST", author: author)
+      assert project.last_release_contains_commit?("LAST")
     end
 
     it "returns false if there have been no releases" do
