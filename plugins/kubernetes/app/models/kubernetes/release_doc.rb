@@ -84,7 +84,7 @@ module Kubernetes
 
     # These labels will be attached to the Pod and the ReplicationController
     def pod_labels
-      kubernetes_release.pod_labels.merge(role: kubernetes_role.label_name)
+      kubernetes_release.pod_labels.merge(role: kubernetes_role.label_name, role_id: kubernetes_role.id.to_s)
     end
 
     # Definition of the ReplicationController, based on the rc_template, but
