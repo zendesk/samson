@@ -46,13 +46,13 @@ module Watchers
       send_event(msg: 'Finished Watching Deploy!')
     end
 
-    def update_replica_count(release_doc, pod)
+    def update_replica_count(release_doc, pod_event)
       rc = rc_pods(release_doc.replication_controller_name)
 
-      if pod.deleted?
-        rc.delete(pod.name)
+      if pod_event.deleted?
+        rc.delete(pod_event.pod.name)
       else
-        rc[pod.name] = pod
+        rc[pod_event.pod.name] = pod_event.pod
       end
 
       ready_count = rc.reduce(0) { |count, (_pod_name, pod)| count += 1 if pod.ready?; count }

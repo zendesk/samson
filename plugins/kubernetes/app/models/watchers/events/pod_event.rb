@@ -1,13 +1,11 @@
 module Watchers
   module Events
     class PodEvent
+      attr_reader :pod
+
       def initialize(event)
         @event = event
-        @api_pod = Kubernetes::Api::Pod.new(event.object)
-      end
-
-      def ready?
-        @api_pod.ready?
+        @pod = Kubernetes::Api::Pod.new(event.object)
       end
 
       def deleted?
@@ -16,10 +14,6 @@ module Watchers
 
       def valid?
         @event.object.present? && @event.object.kind == 'Pod'
-      end
-
-      def name
-        @api_pod.name
       end
     end
   end

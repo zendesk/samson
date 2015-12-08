@@ -4,20 +4,25 @@ class KubernetesDashboardController < ApplicationController
   include CurrentProject
 
   def index
-    render json: format_pod_info(get_pod_info).to_json
+    render json: format_pod_info(pod_info).to_json
   end
 
   private
 
-  def get_pod_info
-    roles = hash_with(&default_role)
+  def pod_info
+    roles = {}
     Environment.find(params[:environment]).cluster_deploy_groups.each do |cluster_deploy_group|
       cluster_deploy_group.cluster.client.get_pods(
           namespace: cluster_deploy_group.namespace,
           label_selector: "project=#{current_project.name_for_label}").each do |pod|
         labels = pod.metadata.labels
-        release = roles[labels.role_id][:deploy_groups]\
-                      [cluster_deploy_group.id][:releases][labels.release_id]
+        roles[labels.role_id] ||= build_role(labels.role_id)
+        role = roles[labels.role_id]
+        deploy_group_id = cluster_deploy_group.deploy_group.id
+        role[:deploy_groups][deploy_group_id] ||= build_deploy_group(deploy_group_id)
+        deploy_group = role[:deploy_groups][deploy_group_id]
+        deploy_group[:releases][labels.release_id] ||= build_release(labels.release_id, labels.role_id)
+        release = deploy_group[:releases][labels.release_id]
         api_pod = Kubernetes::Api::Pod.new(pod)
         release[:live_replicas] += 1 if api_pod.ready?
       end
@@ -25,40 +30,43 @@ class KubernetesDashboardController < ApplicationController
     roles
   end
 
-  def hash_with(*optional_params)
-    Hash.new { |hash, key| hash[key] = yield(key, *optional_params) }
+  def build_role(role_id)
+    {
+        name: role_name(role_id),
+        deploy_groups: {}
+    }
   end
 
-  def default_role
-    lambda { |role_id| { name: get_role_name(role_id),
-                         deploy_groups: hash_with(role_id, &default_deploy_group) } }
+  def build_deploy_group(deploy_group_id)
+    {
+        name: deploy_group_name(deploy_group_id),
+        releases: {}
+    }
   end
 
-  def default_deploy_group
-    lambda { |deploy_group_id, role_id| { name: get_deploy_group_name(deploy_group_id),
-                                          releases: hash_with(role_id, &default_release) } }
+  def build_release(release_id, role_id)
+    {
+        id: release_id,
+        build: build_label(release_id),
+        target_replicas: target_replicas(release_id, role_id),
+        live_replicas: 0
+    }
   end
 
-  def default_release
-    lambda { |release_id, role_id| { id: release_id, build: get_build_label(release_id),
-                                     target_replicas: get_target_replicas(release_id, role_id),
-                                     live_replicas: 0 } }
-  end
-
-  def get_role_name(role_id)
+  def role_name(role_id)
     Kubernetes::Role.find(role_id).name
   end
 
-  def get_deploy_group_name(deploy_group_id)
-    Kubernetes::ClusterDeployGroup.find(deploy_group_id).deploy_group.name
+  def deploy_group_name(deploy_group_id)
+    DeployGroup.find(deploy_group_id).name
   end
 
-  def get_target_replicas(release_id, role_id)
+  def target_replicas(release_id, role_id)
     Kubernetes::ReleaseDoc.find_by(kubernetes_release_id: release_id,
                                    kubernetes_role_id: role_id).replica_target
   end
 
-  def get_build_label(release_id)
+  def build_label(release_id)
     Kubernetes::Release.find(release_id).build.label
   end
 
