@@ -17,10 +17,8 @@ describe StagesController do
     let(:deploy) { deploys(:succeeded_test) }
 
     it "renders" do
-      stub_request(:get, "https://img.shields.io/badge/Staging-staging-green.svg")
       get :show, valid_params
-      assert_response :success
-      response.content_type.must_equal Mime::SVG
+      assert_redirected_to "https://img.shields.io/badge/Staging-staging-green.svg"
     end
 
     it "fails with invalid token" do
@@ -31,18 +29,14 @@ describe StagesController do
 
     it "renders none without deploy" do
       deploy.destroy!
-      stub_request(:get, "https://img.shields.io/badge/Staging-None-red.svg")
       get :show, valid_params
-      assert_response :success
-      response.content_type.must_equal Mime::SVG
+      assert_redirected_to "https://img.shields.io/badge/Staging-None-red.svg"
     end
 
     it "renders strange characters" do
       subject.update_column(:name, 'Foo & Bar 1-4')
-      stub_request(:get, "https://img.shields.io/badge/Foo%20%26%20Bar%201--4-staging-green.svg")
       get :show, valid_params
-      assert_response :success
-      response.content_type.must_equal Mime::SVG
+      assert_redirected_to "https://img.shields.io/badge/Foo%20%26%20Bar%201--4-staging-green.svg"
     end
   end
 
