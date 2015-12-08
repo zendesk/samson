@@ -37,7 +37,7 @@ class GitRepository
     if mirror
       executor.execute!("git -c core.askpass=true clone --mirror #{from} #{to}")
     else
-      executor.execute!("git clone --shared #{from} #{to}")
+      executor.execute!("git clone #{from} #{to}")
     end
   end
   add_method_tracer :clone!
