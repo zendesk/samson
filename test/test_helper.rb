@@ -200,6 +200,17 @@ class ActionController::TestCase
   alias_method_chain :process, :catch_warden
 end
 
+# Forces all threads to share the same connection. E.g., Celluloid tests need to use the same transaction.
+class ActiveRecord::Base
+  mattr_accessor :shared_connection
+  @@shared_connection = nil
+
+  def self.connection
+    @@shared_connection || retrieve_connection
+  end
+end
+ActiveRecord::Base.shared_connection = ActiveRecord::Base.connection
+
 WebMock.disable_net_connect!(allow: 'codeclimate.com')
 
 Dir["test/support/*"].each { |f| require File.expand_path(f) }

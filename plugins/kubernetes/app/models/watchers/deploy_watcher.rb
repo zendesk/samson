@@ -10,11 +10,11 @@ module Watchers
     def initialize(release)
       @release = release
       @current_rcs = {}
-      info "Start watching K8s deploy: #{@release}"
-      async :watch
+      async :watch unless deploy_finished?
     end
 
     def watch
+      info "Start watching K8s deploy: #{@release}"
       @release.release_docs.each do |release_doc|
         subscribe("#{release_doc.replication_controller_name}", :handle_update)
       end
@@ -48,7 +48,6 @@ module Watchers
 
     def update_replica_count(release_doc, pod)
       rc = rc_pods(release_doc.replication_controller_name)
-
       if pod.deleted?
         rc.delete(pod.name)
       else
