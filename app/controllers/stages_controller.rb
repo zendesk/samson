@@ -1,5 +1,3 @@
-require 'open-uri' # needed to fetch from img.shields.io using open()
-
 class StagesController < ApplicationController
   include ProjectLevelAuthorization
   include StagePermittedParams
