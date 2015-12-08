@@ -44,6 +44,6 @@ describe TerminalOutputScanner do
 
   it 'can handle an invalid UTF-8 character' do
     output("invalid char\255\n")
-    tokens.must_equal [[:append, "invalid char\n"]]
+    tokens.must_equal [[:append, "invalid char�\n"]]
   end
 end
