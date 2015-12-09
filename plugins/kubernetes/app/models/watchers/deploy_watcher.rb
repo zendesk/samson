@@ -22,9 +22,9 @@ module Watchers
 
     def handle_update(topic, data)
       release_doc = release_doc_from_rc_name(topic)
-      pod = Events::Pod.new(data)
-      return error('invalid k8s pod event') unless pod.valid?
-      update_replica_count(release_doc, pod)
+      pod_event = Events::PodEvent.new(data)
+      return error('invalid k8s pod event') unless pod_event.valid?
+      update_replica_count(release_doc, pod_event)
       send_event(role: release_doc.kubernetes_role.name,
                  deploy_group: release_doc.deploy_group.name,
                  target_replicas: release_doc.replica_target,
@@ -46,13 +46,13 @@ module Watchers
       send_event(msg: 'Finished Watching Deploy!')
     end
 
-    def update_replica_count(release_doc, pod)
+    def update_replica_count(release_doc, pod_event)
       rc = rc_pods(release_doc.replication_controller_name)
 
-      if pod.deleted?
-        rc.delete(pod.name)
+      if pod_event.deleted?
+        rc.delete(pod_event.pod.name)
       else
-        rc[pod.name] = pod
+        rc[pod_event.pod.name] = pod_event.pod
       end
 
       ready_count = rc.reduce(0) { |count, (_pod_name, pod)| count += 1 if pod.ready?; count }

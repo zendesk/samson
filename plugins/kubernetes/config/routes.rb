@@ -4,6 +4,7 @@ Samson::Application.routes.draw do
 
     resources :kubernetes_releases, only: [:new, :create, :index, :show]
     resources :kubernetes_roles, only: [:index, :show, :update]
+    resources :kubernetes_dashboard, only: [:index]
 
 
     member do
