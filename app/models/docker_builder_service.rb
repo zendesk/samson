@@ -53,7 +53,7 @@ class DockerBuilderService
 
     output_buffer.puts("### Pushing Docker image to #{project.docker_repo}:#{build.docker_ref}")
 
-    result = build.docker_image.push(registry_credentials) do |output_chunk|
+    build.docker_image.push(registry_credentials) do |output_chunk|
       parsed_chunk = handle_output_chunk(output_chunk)
 
       status = parsed_chunk.fetch('status', '')
@@ -61,12 +61,8 @@ class DockerBuilderService
         build.docker_repo_digest = "#{project.docker_repo}@#{matches[1]}"
       end
     end
-    # Fallbacks if registry did not send us back a digest
-    build.docker_repo_digest ||= result.info['RepoDigests'].first if result.info['RepoDigests']
-    build.docker_repo_digest ||= result.info['RepoTags'].first if result.info['RepoTags']
 
     build.save!
-
     build
   rescue Docker::Error::DockerError => e
     output_buffer.puts("Docker push failed: #{e.message}\n")
