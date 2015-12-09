@@ -59,6 +59,6 @@ ActiveSupport::Notifications.subscribe /process_action.action_controller/ do |*a
 
   $statsd.histogram "web.request.time", event.duration, tags: tags
   $statsd.histogram "web.db_query.time", event.payload[:db_runtime], tags: tags
-  $statsd.histogram "web.view.time", event.payload[:view_runtime], tags: tags
+  $statsd.histogram "web.view.time", event.payload[:view_runtime].to_i, tags: tags
   $statsd.increment "web.request.status.#{status}", tags: tags
 end
