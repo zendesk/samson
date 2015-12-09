@@ -15,19 +15,25 @@ class KubernetesDashboardController < ApplicationController
       cluster_deploy_group.cluster.client.get_pods(
           namespace: cluster_deploy_group.namespace,
           label_selector: "project=#{current_project.name_for_label}").each do |pod|
-        labels = pod.metadata.labels
-        roles[labels.role_id] ||= build_role(labels.role_id)
-        role = roles[labels.role_id]
-        deploy_group_id = cluster_deploy_group.deploy_group.id
-        role[:deploy_groups][deploy_group_id] ||= build_deploy_group(deploy_group_id)
-        deploy_group = role[:deploy_groups][deploy_group_id]
-        deploy_group[:releases][labels.release_id] ||= build_release(labels.release_id, labels.role_id)
-        release = deploy_group[:releases][labels.release_id]
-        api_pod = Kubernetes::Api::Pod.new(pod)
-        release[:live_replicas] += 1 if api_pod.ready?
+        build_pod_info(roles, cluster_deploy_group.deploy_group.id, pod)
       end
     end
     roles
+  end
+
+  def build_pod_info(roles, deploy_group_id, pod)
+    labels = pod.metadata.labels
+
+    role = role(roles, labels.role_id)
+    deploy_group = deploy_group(role[:deploy_groups], deploy_group_id)
+    release = release(deploy_group[:releases], labels.release_id, labels.role_id)
+
+    api_pod = Kubernetes::Api::Pod.new(pod)
+    release[:live_replicas] += 1 if api_pod.ready?
+  end
+
+  def role(roles, role_id)
+    roles[role_id] ||= build_role(role_id)
   end
 
   def build_role(role_id)
@@ -37,11 +43,19 @@ class KubernetesDashboardController < ApplicationController
     }
   end
 
+  def deploy_group(deploy_groups, deploy_group_id)
+    deploy_groups[deploy_group_id] ||= build_deploy_group(deploy_group_id)
+  end
+
   def build_deploy_group(deploy_group_id)
     {
         name: deploy_group_name(deploy_group_id),
         releases: {}
     }
+  end
+
+  def release(releases, release_id, role_id)
+    releases[release_id] ||= build_release(release_id, role_id)
   end
 
   def build_release(release_id, role_id)
