@@ -1,4 +1,4 @@
-samson.service('buildsService', function($http, $q, httpErrorService) {
+samson.service('buildsService', function($http, $q, buildFactory, httpErrorService) {
   var config = {
     headers: {
       'Accept': 'application/json'
@@ -10,7 +10,7 @@ samson.service('buildsService', function($http, $q, httpErrorService) {
 
     $http.get('/projects/' + project_id + '/builds', config).then(
       function(response) {
-        deferred.resolve(response.data.builds);
+        deferred.resolve(response.data.builds.map(buildFactory.build));
       },
       function(response) {
         deferred.reject(httpErrorService.handleResponse(response));

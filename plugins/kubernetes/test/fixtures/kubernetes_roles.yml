@@ -6,6 +6,7 @@ app_server:
   replicas: 3
   ram: 1024
   cpu: 0.5
+  config_file: 'kubernetes/app_server.yml'
 
 resque_worker:
   project: test
@@ -14,3 +15,4 @@ resque_worker:
   replicas: 2
   ram: 512
   cpu: 1.0
+  config_file: 'kubernetes/resque_worker.yml'

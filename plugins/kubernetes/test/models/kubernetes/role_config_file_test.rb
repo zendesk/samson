@@ -26,8 +26,8 @@ describe Kubernetes::RoleConfigFile do
       config_file.replication_controller.pod_template.container.wont_be_nil
 
       # Container
-      config_file.replication_controller.pod_template.container.cpu.must_equal '0.5'
-      config_file.replication_controller.pod_template.container.ram.must_equal '100'
+      config_file.replication_controller.pod_template.container.cpu.must_equal 0.5
+      config_file.replication_controller.pod_template.container.ram.must_equal 100
     end
 
     it 'should load a service with its contents' do

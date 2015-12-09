@@ -7,15 +7,6 @@ class KubernetesReleasesController < ApplicationController
     render json: current_project.kubernetes_releases.order('id desc'), root: false
   end
 
-  def show
-    @release = Kubernetes::Release.find(params[:id])
-
-    respond_to do |format|
-      format.html
-      format.json { render @release, root: false }
-    end
-  end
-
   def create
     release = Kubernetes::Release.create_release(release_params)
     if release.persisted?
