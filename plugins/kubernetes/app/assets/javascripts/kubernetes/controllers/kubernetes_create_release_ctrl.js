@@ -96,16 +96,13 @@ samson.controller('KubernetesCreateReleaseCtrl',
     };
 
     $scope.validate = function(step) {
-      var valid = true;
-      valid = valid && _.isDefined($scope.environment);
-      valid = valid && _.isDefined($scope.build);
-      valid = valid && _.isNotUndefinedOrEmpty($scope.roles);
-
-      if (step == 2) {
-        valid = valid && _.some($scope.deploy_groups, $scope.isSelected);
-      }
-
-      return valid;
+      // Returns true if all the conditions are valid
+      return _.every([
+        _.isDefined($scope.environment),
+        _.isDefined($scope.build),
+        _.isNotUndefinedOrEmpty($scope.roles),
+        step == 1 || _.some($scope.deploy_groups, $scope.isSelected)
+      ]);
     };
 
     $scope.submit = function() {
