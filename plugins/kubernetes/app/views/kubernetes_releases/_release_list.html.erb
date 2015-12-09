@@ -3,7 +3,7 @@
     <us-spinner spinner-theme="async-data-loader" ng-if="!releases">
       <span class="spinner-label">Loading Kubernetes Releases</span>
     </us-spinner>
-    <div ng-if="releases">
+    <div ng-if="releases" class="releases-container">
       <p class="pull-right">
         <a ng-click="showCreateReleaseDialog($event)" class="btn btn-default">Create Release</a>
       </p>

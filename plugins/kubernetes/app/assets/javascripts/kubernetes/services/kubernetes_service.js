@@ -123,4 +123,20 @@ samson.service('kubernetesService', function($http, $q, httpErrorService, kubern
   function roleMapper(role) {
     return _.pick(role, 'id', 'replicas');
   }
+
+
+  this.loadDashboardData = function(project_id, environment) {
+    var deferred = $q.defer();
+
+    $http.get('/projects/' + project_id + '/kubernetes_dashboard?environment=' + environment.id, config).then(
+      function(response) {
+        deferred.resolve(response.data);
+      },
+      function(response) {
+        deferred.reject(httpErrorService.handleResponse(response));
+      }
+    );
+
+    return deferred.promise;
+  }
 });

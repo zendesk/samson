@@ -3,40 +3,44 @@
     <us-spinner spinner-theme="async-data-loader" ng-if="!roles" >
       <span class="spinner-label">Loading Kubernetes Roles</span>
     </us-spinner>
-    <div ng-if="roles">
+    <div ng-if="roles" class="roles-container">
       <% if is_user_admin_for_project? %>
-        <git-references-typeahead selected-reference="refreshRoles(reference)"></git-references-typeahead>
+        <div class="references-typeahead-container">
+          <git-references-typeahead selected-reference="refreshRoles(reference)"></git-references-typeahead>
+        </div>
       <% end %>
 
-      <table class="table table-condensed">
-        <thead>
-          <tr>
-            <th>Role</th>
-            <th>Config File</th>
-            <th>Service Name</th>
-            <th>RAM</th>
-            <th>CPU</th>
-            <th>Replicas</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr ng-show="!roles.length" ng-hide="roles.length">
-            <td colspan="7">No project roles have been created yet.</td>
-          </tr>
-          <tr ng-repeat="role in roles" ng-show="roles.length" ng-hide="!roles.length">
-            <td>{{role.name}}</td>
-            <td>{{role.config_file}}</td>
-            <td>{{role.service_name}}</td>
-            <td>{{role.ram}} Mi</td>
-            <td>{{role.cpu}} cores</td>
-            <td>{{role.replicas}}</td>
-            <td>
-              <a ui-sref="kubernetes.roles.edit({ role_id: role.id })">Edit</a>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+      <div class="roles-table-container">
+        <table class="table table-condensed">
+          <thead>
+            <tr>
+              <th>Role</th>
+              <th>Config File</th>
+              <th>Service Name</th>
+              <th>RAM</th>
+              <th>CPU</th>
+              <th>Replicas</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr ng-show="!roles.length" ng-hide="roles.length">
+              <td colspan="7">No project roles have been created yet.</td>
+            </tr>
+            <tr ng-repeat="role in roles" ng-show="roles.length" ng-hide="!roles.length">
+              <td>{{role.name}}</td>
+              <td>{{role.config_file}}</td>
+              <td>{{role.service_name}}</td>
+              <td>{{role.ram}} Mi</td>
+              <td>{{role.cpu}} cores</td>
+              <td>{{role.replicas}}</td>
+              <td>
+                <a ui-sref="kubernetes.roles.edit({ role_id: role.id })">Edit</a>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
   </div>
 </script>

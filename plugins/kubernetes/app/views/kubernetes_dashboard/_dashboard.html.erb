@@ -1,0 +1,40 @@
+<script type="text/ng-template" id="kubernetes/dashboard.tmpl.html">
+  <div class="kubernetes-dashboard">
+    <us-spinner spinner-theme="async-data-loader" ng-if="!dashboardReady()">
+      <span class="spinner-label">Loading dashboard data...</span>
+    </us-spinner>
+
+    <div class="dashboard-menu-container" ng-if="dashboardReady()">
+      <div id="environment-dropdown" class="btn-group environments-dropdown" uib-dropdown uib-keyboard-nav>
+        <button type="button" class="btn btn-default" uib-dropdown-toggle ng-cloak>
+          {{ environment.name | append:' dashboard' | default:'Choose an environment' }}
+          <span class="caret"></span>
+        </button>
+        <ul class="uib-dropdown-menu" role="menu" aria-labelledby="environment-dropdown">
+          <li role="menuitem" ng-repeat="env in environments">
+            <a ng-click="environmentChanged(env)">{{ env.name }}</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <div ng-if="dashboardReady()" class="dashboard-container">
+      <button type="button" class="btn btn-default pull-right" ng-click="reloadDashboardData()">
+        <span class="glyphicon glyphicon-refresh"></span>
+      </button>
+      <div ng-if="empty(dashboard_data)">
+        <p class="no-data-message text-warning">
+          The Kubernetes cluster did not return any data for the selected environment.
+        </p>
+      </div>
+      <div ng-if="notEmpty(dashboard_data)" ng-repeat="role in dashboard_data" class="role-container">
+        <p class="role-title">{{role.name}}</p>
+        <div class="deploy-groups-container">
+          <deploy-progress-widget ng-repeat="dg in role.deploy_groups" role="role" deploy-group="dg"></deploy-progress-widget>
+        </div>
+      </div>
+    </div>
+  </div>
+</script>
+
+<%= render 'kubernetes_dashboard/deploy_progress_widget' %>

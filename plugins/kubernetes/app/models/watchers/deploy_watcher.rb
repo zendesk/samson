@@ -43,7 +43,7 @@ module Watchers
     end
 
     def on_termination
-      send_event(msg: 'Finished Watching Deploy!')
+      Rails.logger.info('Finished Watching Deploy!')
     end
 
     def update_replica_count(release_doc, pod_event)
@@ -62,7 +62,7 @@ module Watchers
 
     def end_deploy
       @release.release_is_live!
-      send_event(msg: 'Deploy is live!')
+      Rails.logger.info('Deploy is live!')
       terminate
     end
 
@@ -74,8 +74,12 @@ module Watchers
     def send_event(options)
       base = {
         project: @release.project.id,
+        build: @release.build.label,
         release: @release.id
       }
+
+      Rails.logger.info("[SSE] Sending: #{base.merge(options)}")
+
       SseRailsEngine.send_event('k8s', base.merge(options))
     end
   end
