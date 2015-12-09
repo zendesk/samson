@@ -60,8 +60,8 @@ module Watchers
     def handle_notice(notice)
       debug notice.to_s
       return if handle_error(notice) || !notice.object.metadata.labels
-      rc_name = notice.object.metadata.labels['replication_controller']
-      publish(rc_name, notice) if rc_name
+      project = notice.object.metadata.labels['project']
+      publish(project, notice) if project
     end
 
     %w{debug info warn error}.each do |level|

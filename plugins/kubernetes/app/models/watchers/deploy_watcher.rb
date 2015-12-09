@@ -15,12 +15,11 @@ module Watchers
     end
 
     def watch
-      @release.release_docs.each do |release_doc|
-        subscribe("#{release_doc.replication_controller_name}", :handle_update)
-      end
+      subscribe("#{@release.build.project_name}", :handle_update)
     end
 
     def handle_update(topic, data)
+      info "Got Release Event: #{topic}"
       release_doc = release_doc_from_rc_name(topic)
       pod_event = Events::PodEvent.new(data)
       return error('invalid k8s pod event') unless pod_event.valid?

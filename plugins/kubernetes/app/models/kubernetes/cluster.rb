@@ -15,6 +15,10 @@ module Kubernetes
       @client ||= kubeconfig.client_for(config_context)
     end
 
+    def ext_client
+      @ext_client ||= kubeconfig.ext_client_for(config_context)
+    end
+
     def context
       @context ||= kubeconfig.contexts[config_context]
     end
