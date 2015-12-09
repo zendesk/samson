@@ -77,14 +77,14 @@ describe Webhook do
 
   describe '.for_branch' do
     before do
-      %w[any master staging production feature/branch].each_with_index do |branch, index|
+      ['', 'master', 'feature/branch'].each_with_index do |branch, index|
         Webhook.create(branch: branch, stage_id: index, project_id: 1, source: 'any_code')
       end
     end
 
     it 'filters correctly' do
-      assert_equal Webhook.for_branch('feature/branch').pluck(:branch), ['any', 'feature/branch']
-      assert_equal Webhook.for_branch('staging').pluck(:branch), ['any', 'staging']
+      assert_equal Webhook.for_branch('feature/branch').pluck(:branch), ['', 'feature/branch']
+      assert_equal Webhook.for_branch('master').pluck(:branch), ['', 'master']
     end
   end
 end
