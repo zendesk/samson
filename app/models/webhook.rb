@@ -6,7 +6,7 @@ class Webhook < ActiveRecord::Base
   belongs_to :stage
 
   def self.for_branch(branch)
-    where(branch: ['any', branch])
+    where(branch: ['', branch])
   end
 
   def self.for_source(service_type, service_name)
