@@ -16,10 +16,12 @@ module Kubernetes
       private
 
       def condition_ready?
-        @pod.status.conditions.present? &&
-            @pod.status.conditions
-                .select { |c| c['type'] == 'Ready' }
-                .all? { |c| c['status'] == 'True' }
+        if @pod.status.conditions.present?
+          ready = @pod.status.conditions.find { |c| c['type'] == 'Ready' }
+          ready && ready['status'] == 'True'
+        else
+          false
+        end
       end
     end
   end
