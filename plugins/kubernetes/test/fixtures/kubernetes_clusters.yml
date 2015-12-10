@@ -1,5 +1,4 @@
 test_cluster:
-  id: 1
   name: test
   description: test cluster
   config_filepath: /tmp/config
