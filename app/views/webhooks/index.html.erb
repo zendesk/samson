@@ -14,7 +14,14 @@
     <h2>Webhooks mappings</h2>
     <ul>
       <% @webhooks.each do |webhook| %>
-        <li><strong><%= webhook.branch %></strong> branch &rarr; <strong><%= webhook.stage.name %></strong> stage for: <%= webhook.source.humanize %> (<%= link_to "remove", [@project, webhook], method: :delete %>)</li>
+        <li>
+          <strong><%= webhook.branch.blank? ? 'Any' : webhook.branch %></strong>
+          branch &rarr;
+          <strong><%= webhook.stage.name %></strong>
+          stage for:
+          <%= webhook.source.humanize %>
+          (<%= link_to "remove", [@project, webhook], method: :delete %>)
+        </li>
       <% end %>
     </ul>
   <% end %>
@@ -22,7 +29,7 @@
   <h2>Add webhook mapping</h2>
   <%= form_for :webhook, url: project_webhooks_path(@project), html: { class: "form-inline" } do |form| %>
     <div class="form-group">
-      <%= form.text_field :branch, class: "form-control", placeholder: "Branch" %>
+      <%= form.text_field :branch, class: "form-control", placeholder: "Branch (Blank for any)" %>
     </div>
 
     &rarr;
