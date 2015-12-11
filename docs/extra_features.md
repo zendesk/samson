@@ -36,9 +36,13 @@ Full absolute JIRA URLs will still be detected when JIRA_BASE_URL is set, and th
 
 ## Request additional access rights via email
 
-Add a link to the "You are not authorized..." popup which the user can use to request additional access rights.
+Add a link to the "You are not authorized..." popup which the user can click to request additional access rights.
 
 <img src="/docs/images/request_access_popup.png?raw=true" width="600" />
+
+The link will also be available on the user's profile page.
+
+<img src="/docs/images/request_access_profile.png?raw=true" width="600" />
 
 The access request requires a manager email and a reason for the additional access rights.
 
