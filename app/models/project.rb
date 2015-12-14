@@ -54,13 +54,7 @@ class Project < ActiveRecord::Base
   def docker_repo
     @docker_repo ||= begin
       registry = Rails.application.config.samson.docker.registry
-      if Rails.env.production?
-        "#{registry}/#{permalink_base}"
-      else
-        host, namespace = registry.split '/'
-        namespace ||= 'samson'
-        "#{host}/#{namespace}_non_prod/#{permalink_base}"
-      end
+      "#{registry}/#{permalink_base}"
     end
   end
 

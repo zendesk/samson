@@ -48,11 +48,12 @@ class DockerBuilderService
 
   def push_image(tag)
     build.docker_ref = tag || build.label.try(:parameterize) || 'latest'
+    build.docker_repo_digest = nil
     build.docker_image.tag(repo: project.docker_repo, tag: build.docker_ref, force: true)
 
     output_buffer.puts("### Pushing Docker image to #{project.docker_repo}:#{build.docker_ref}")
 
-    build.docker_image.push do |output_chunk|
+    build.docker_image.push(registry_credentials) do |output_chunk|
       parsed_chunk = handle_output_chunk(output_chunk)
 
       status = parsed_chunk.fetch('status', '')
@@ -62,7 +63,6 @@ class DockerBuilderService
     end
 
     build.save!
-
     build
   rescue Docker::Error::DockerError => e
     output_buffer.puts("Docker push failed: #{e.message}\n")
@@ -97,5 +97,14 @@ class DockerBuilderService
   def send_after_notifications
     Samson::Hooks.fire(:after_docker_build, build)
     SseRailsEngine.send_event('builds', { type: 'finish', build: BuildSerializer.new(build, root: nil) })
+  end
+
+  def registry_credentials
+    return nil unless ENV['DOCKER_REGISTRY_USER'].present? || ENV['DOCKER_REGISTRY_EMAIL'].present?
+    {
+      username: ENV['DOCKER_REGISTRY_USER'],
+      password: ENV['DOCKER_REGISTRY_PASS'],
+      email: ENV['DOCKER_REGISTRY_EMAIL']
+    }
   end
 end
