@@ -1,0 +1,13 @@
+pod1_doc:
+  kubernetes_role: app_server
+  kubernetes_release: test_release
+  deploy_group: pod1
+  replica_target: 2
+  replicas_live: 1
+
+pod2_doc:
+  kubernetes_role: resque_worker
+  kubernetes_release: second_test_release
+  deploy_group: pod2
+  replica_target: 5
+  replicas_live: 1
