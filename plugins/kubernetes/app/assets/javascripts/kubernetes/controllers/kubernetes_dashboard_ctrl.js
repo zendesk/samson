@@ -151,7 +151,8 @@ samson.controller('KubernetesDashboardCtrl',
             id: msg.release,
             build: msg.build,
             live_replicas: msg.live_replicas,
-            target_replicas: msg.target_replicas
+            target_replicas: msg.target_replicas,
+            failed: msg.failed,
           };
           deploy_group.releases.push(release);
         }
@@ -161,6 +162,7 @@ samson.controller('KubernetesDashboardCtrl',
 
     function updateReleaseState(release, msg) {
       release.live_replicas = msg.live_replicas;
+      release.failed = msg.failed;
       $scope.$apply();
     }
 

@@ -10,6 +10,7 @@ module Watchers
     def initialize(release)
       @release = release
       @current_rcs = {}
+      @pod_timer = after(ENV.fetch('KUBERNETES_POD_TIMEOUT', 600)) { pod_timeout }
       info "Start watching K8s deploy: #{@release}"
       async :watch
     end
@@ -22,13 +23,24 @@ module Watchers
 
     def handle_update(topic, data)
       release_doc = release_doc_from_rc_name(topic)
-      pod_event = Events::PodEvent.new(data)
-      return error('invalid k8s pod event') unless pod_event.valid?
-      update_replica_count(release_doc, pod_event)
+      if data.object.kind == 'Event'
+        # only error events are published
+        release_doc.update_attribute(:status, :failed) unless release_doc.failed?
+      else
+        pod_event = Events::PodEvent.new(data)
+        if pod_event.valid?
+          update_replica_count(release_doc, pod_event)
+        else
+          error 'invalid k8s pod event'
+          return
+        end
+      end
+
       send_event(role: release_doc.kubernetes_role.name,
                  deploy_group: release_doc.deploy_group.name,
                  target_replicas: release_doc.replica_target,
-                 live_replicas: release_doc.replicas_live)
+                 live_replicas: release_doc.replicas_live,
+                 failed: release_doc.failed?)
       end_deploy if deploy_finished?
     end
 
@@ -43,7 +55,8 @@ module Watchers
     end
 
     def on_termination
-      Rails.logger.info('Finished Watching Deploy!')
+      info 'Finished Watching Deploy!'
+      @pod_timer.cancel
     end
 
     def update_replica_count(release_doc, pod_event)
@@ -53,6 +66,7 @@ module Watchers
         rc.delete(pod_event.pod.name)
       else
         rc[pod_event.pod.name] = pod_event.pod
+        @pod_timer.reset if pod_event.pod.ready? # new pod is ready, reset timeout
       end
 
       ready_count = rc.reduce(0) { |count, (_pod_name, pod)| count += 1 if pod.ready?; count }
@@ -62,7 +76,13 @@ module Watchers
 
     def end_deploy
       @release.release_is_live!
-      Rails.logger.info('Deploy is live!')
+      info 'Deploy is live!'
+      terminate
+    end
+
+    def pod_timeout
+      @release.release_failed!
+      warn 'Deploy failed!'
       terminate
     end
 
@@ -73,9 +93,9 @@ module Watchers
 
     def send_event(options)
       base = {
-        project: @release.project.id,
-        build: @release.build.label,
-        release: @release.id
+          project: @release.project.id,
+          build: @release.build.label,
+          release: @release.id
       }
 
       Rails.logger.info("[SSE] Sending: #{base.merge(options)}")

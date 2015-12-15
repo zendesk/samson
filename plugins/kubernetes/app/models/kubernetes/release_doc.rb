@@ -66,9 +66,10 @@ module Kubernetes
 
       if replicas_live >= replica_target
         self.status ='live'
-      elsif replicas_live > 0
+      elsif replicas_live > 0 && !failed?
         self.status ='spinning_up'
       end
+      save!
     end
 
     def client
