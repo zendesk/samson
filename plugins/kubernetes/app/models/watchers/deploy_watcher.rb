@@ -20,6 +20,7 @@ module Watchers
     end
 
     def handle_update(topic, data)
+      info "Got Release Event: #{topic}"
       release_doc = release_doc_from_rc_name(topic)
       release_updated = if data.object.kind == 'Event'
                         handle_event_update(release_doc)
