@@ -23,9 +23,10 @@ describe KubernetesDashboardController do
     end
 
     it 'passes correct params to client' do
-      Kubeclient::Client.any_instance.expects(:get_pods).with(
+      Kubeclient::Client.any_instance.expects(:get_pods).once.with(
           { namespace: 'test_namespace', label_selector: 'project=project' }).returns([])
-      Kubeclient::Client.any_instance.expects(:get_pods).with(
+      # expect this call at least once because we might have more deploy groups configured
+      Kubeclient::Client.any_instance.expects(:get_pods).at_least_once.with(
           { namespace: 'default', label_selector: 'project=project' }).returns([])
       get :index, project_id: :foo, environment: environments(:production).id, format: :json
       assert_response :success
