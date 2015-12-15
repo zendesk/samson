@@ -60,11 +60,13 @@ class KubernetesDashboardController < ApplicationController
   end
 
   def build_release(release_id, role_id)
+    release_doc = release_doc(release_id, role_id)
     {
         id: release_id,
         build: build_label(release_id),
-        target_replicas: target_replicas(release_id, role_id),
-        live_replicas: 0
+        target_replicas: release_doc.replica_target,
+        live_replicas: 0, # we don't know if the data in the DB is up to date, we'll recreate it from pod info
+        failed: release_doc.failed?
     }
   end
 
@@ -76,9 +78,9 @@ class KubernetesDashboardController < ApplicationController
     DeployGroup.find(deploy_group_id).name
   end
 
-  def target_replicas(release_id, role_id)
+  def release_doc(release_id, role_id)
     Kubernetes::ReleaseDoc.find_by(kubernetes_release_id: release_id,
-                                   kubernetes_role_id: role_id).replica_target
+                                   kubernetes_role_id: role_id)
   end
 
   def build_label(release_id)
