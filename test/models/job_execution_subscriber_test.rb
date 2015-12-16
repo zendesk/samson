@@ -6,4 +6,4 @@ describe JobExecutionSubscriber do
     execution = JobExecutionSubscriber.new(stub(id: 1), block)
     execution.call
   end
- end
+end
