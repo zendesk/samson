@@ -34,7 +34,7 @@ module Watchers
 
     def self.start_watcher(cluster)
       watcher_name = watcher_symbol(cluster)
-      supervise as: watcher_name, args: [cluster.client]
+      supervise as: watcher_name, args: [cluster]
     end
 
     def self.restart_watcher(cluster)
@@ -61,6 +61,11 @@ module Watchers
 
     def handle_notice(_notice)
       fail 'handle_notice not implemented!'
+    end
+
+    def message(event, options={})
+      base = { event: event }
+      OpenStruct.new(base.merge(options))
     end
 
     %w{debug info warn error}.each do |level|

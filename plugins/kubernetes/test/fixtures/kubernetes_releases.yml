@@ -1,7 +1,24 @@
 test_release:
   user: deployer
   build: docker_build
+  status: live
 
 second_test_release:
   user: deployer
   build: docker_build
+  status: live
+
+test_release_deploying:
+  user: deployer
+  build: docker_build
+  status: spinning_up
+
+test_prod_release_deploying:
+  user: deployer
+  build: docker_build
+  status: spinning_up
+
+test_release_complete:
+  user: deployer
+  build: docker_build
+  status: live

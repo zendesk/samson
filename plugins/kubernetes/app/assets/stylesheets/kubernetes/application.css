@@ -280,6 +280,15 @@ select {
   color: #009a19;
 }
 
+.deploy-group-widget.deploy-failed {
+  border: 1px solid rgb(169,68,66);
+  color: rgb(169,68,66);
+}
+
+.deploy-group-widget.deploy-failed .deploy-group-footer {
+  background-color: rgba(169,68,66, 0.1);
+}
+
 .deploy-group-widget .deploy-group-widget-content {
   display: flex;
   flex-flow: column nowrap;

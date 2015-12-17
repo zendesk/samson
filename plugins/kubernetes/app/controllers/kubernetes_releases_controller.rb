@@ -10,6 +10,7 @@ class KubernetesReleasesController < ApplicationController
   def create
     release = Kubernetes::Release.create_release(release_params)
     if release.persisted?
+      KuberDeployService.new(release).deploy!
       render status: :created, json: release
     else
       render status: :bad_request, json: { errors: release.errors.full_messages }

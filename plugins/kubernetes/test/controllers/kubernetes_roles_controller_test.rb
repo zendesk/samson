@@ -299,7 +299,7 @@ describe KubernetesRolesController do
       role.replicas.must_equal 2
       role.ram.must_equal 100
       role.cpu.must_equal 0.5
-      role.deploy_strategy.must_equal 'rolling_update'
+      role.deploy_strategy.must_equal 'RollingUpdate'
     end
 
     def assert_response_body(response_body)

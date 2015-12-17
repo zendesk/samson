@@ -1,12 +1,13 @@
 module Kubernetes
   class Release < ActiveRecord::Base
-    self.table_name = 'kubernetes_releases'
+    include Kubernetes::HasStatus
 
-    STATUSES = %w[created spinning_up live spinning_down dead failed]
+    self.table_name = 'kubernetes_releases'
 
     belongs_to :user
     belongs_to :build
     has_many :release_docs, class_name: 'Kubernetes::ReleaseDoc', foreign_key: 'kubernetes_release_id'
+    has_many :deploy_groups, through: :release_docs
 
     delegate :project, to: :build
 
@@ -14,21 +15,25 @@ module Kubernetes
     validates :status, inclusion: STATUSES
     validate :docker_image_in_registry?, on: :create
 
-    STATUSES.each do |s|
-      define_method("#{s}?") { status == s }
-    end
+    scope :not_dead, -> { where.not(status: :dead) }
+    scope :excluding, ->(ids) { where.not(id: ids) }
+    scope :with_not_dead_release_docs, -> { joins(:release_docs).where.not(Kubernetes::ReleaseDoc.table_name => { status: :dead }) }
 
     def release_is_live!
       finish_deploy(:live)
     end
 
-    def release_failed!
+    def fail!
       finish_deploy(:failed)
+      release_docs.each { |release_doc|
+        release_doc.fail! unless release_doc.live?
+      }
     end
 
-    def pod_labels
+    def release_metadata
       {
-        project: build.project_name
+        release_id: id.to_s,
+        project_id: build.project.id.to_s
       }
     end
 
@@ -46,19 +51,12 @@ module Kubernetes
       end
     end
 
-    def watch
-      Watchers::DeployWatcher.new(self)
-    end
-
-    # Creates a new Kubernetes Release and corresponding ReleaseDocs and starts the deploy
+    # Creates a new Kubernetes Release and corresponding ReleaseDocs
     def self.create_release(params)
       Kubernetes::Release.transaction do
         release = create(params.except(:deploy_groups))
         if release.persisted?
           release.create_release_docs(params)
-
-          # Starts rolling out the release into Kubernetes
-          KuberDeployService.new(release).deploy!
         end
         release
       end
@@ -74,6 +72,21 @@ module Kubernetes
       raise 'No Kubernetes::ReleaseDoc has been created' if release_docs.empty?
     end
 
+    def release_doc_for(deploy_group_id, role_id)
+      release_docs.find_by(deploy_group_id: deploy_group_id, kubernetes_role_id: role_id)
+    end
+
+    def update_status(release_doc)
+      case
+      when release_docs.all?(&:live?) then self.status = :live
+      when release_docs.all?(&:dead?) then self.status = :dead
+      when release_doc.spinning_up? then self.status = :spinning_up
+      when release_doc.spinning_down? then self.status = :spinning_down
+      when release_docs.any?(&:dead?) then self.status = :spinning_down
+      end
+      save!
+    end
+
     private
 
     def docker_image_in_registry?
@@ -83,9 +96,7 @@ module Kubernetes
     end
 
     def finish_deploy(status)
-      self.status = status
-      self.deploy_finished_at = Time.now
-      save!
+      update_attributes!(status: status, deploy_finished_at: Time.now)
     end
   end
 end

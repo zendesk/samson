@@ -12,7 +12,7 @@ class KuberDeployService
   def deploy!
     log 'starting deploy'
 
-    @kuber_release.watch
+    start_watching_cluster
 
     create_services!
     create_deployments!
@@ -59,5 +59,10 @@ class KuberDeployService
     )
 
     Kubernetes::Util.log msg, extra_info
+  end
+
+  # Restarts a deploy watcher, forcing it to get in synch with the cluster
+  def start_watching_cluster
+    Watchers::DeployWatcher.restart_watcher(project)
   end
 end

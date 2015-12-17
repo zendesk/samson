@@ -49,7 +49,7 @@ describe Project do
       expected.ram.must_equal 100
       expected.cpu.must_equal 0.5
       expected.replicas.must_equal 2
-      expected.deploy_strategy.must_equal 'rolling_update'
+      expected.deploy_strategy.must_equal 'RollingUpdate'
     end
 
     it 'saves the imported roles into the database' do

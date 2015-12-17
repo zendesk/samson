@@ -1,9 +1,9 @@
 pod1:
   deploy_group: pod1
   cluster: test_cluster
-  namespace: test_namespace
+  namespace: pod1
 
 pod2:
   deploy_group: pod2
   cluster: test_cluster
-  namespace: default
+  namespace: pod2
