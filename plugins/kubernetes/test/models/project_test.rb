@@ -68,11 +68,11 @@ describe Project do
 
       project.refresh_kubernetes_roles!('some_ref')
 
-      project.reload.roles.each { |role|
+      project.reload.roles.not_deleted.each { |role|
         role.deleted?.must_equal false
       }
 
-      project.roles.count.must_equal 1
+      project.roles.not_deleted.count.must_equal 1
 
       Kubernetes::Role.with_deleted do |scope|
         scope.where(project: project).count.must_equal original + 1

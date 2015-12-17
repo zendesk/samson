@@ -67,30 +67,30 @@ describe KubernetesDashboardController do
 
   def empty_list_template
     RecursiveOpenStruct.new({
-      'kind': 'PodList',
-      'apiVersion': 'v1',
-      'items': []
+      kind: 'PodList',
+      apiVersion: 'v1',
+      items: []
     })
   end
 
   def pod_list_item(project, release, role, cluster_deploy_group)
     {
-      'metadata': {
-        'name': 'pod-name',
-        'namespace': cluster_deploy_group.namespace,
-        'labels': {
-          'project_id': project.id,
-          'release_id': release.id,
-          'deploy_group_id': cluster_deploy_group.deploy_group.id,
-          'role_id': role.id
+      metadata: {
+        name: 'pod-name',
+        namespace: cluster_deploy_group.namespace,
+        labels: {
+          project_id: project.id,
+          release_id: release.id,
+          deploy_group_id: cluster_deploy_group.deploy_group.id,
+          role_id: role.id
         }
       },
-      'status': {
-        'phase': 'Running',
-        'conditions': [
+      status: {
+        phase: 'Running',
+        conditions: [
           {
-            'type': 'Ready',
-            'status': 'True'
+            type: 'Ready',
+            status: 'True'
           }
         ]
       }
@@ -133,26 +133,27 @@ describe KubernetesDashboardController do
 
   def role_template(role)
     RecursiveOpenStruct.new({
-      'id': role.id,
-      'name': role.name,
-      'deploy_groups': []
+      id: role.id,
+      name: role.name,
+      deploy_groups: []
     })
   end
 
   def deploy_group_template(deploy_group)
     RecursiveOpenStruct.new({
-      'id': deploy_group.id,
-      'name': deploy_group.name,
-      'releases': []
+      id: deploy_group.id,
+      name: deploy_group.name,
+      releases: []
     })
   end
 
   def release_template(release, release_doc)
     RecursiveOpenStruct.new({
-      'id': release.id,
-      'build': release.build.label,
-      'target_replicas': release_doc.replica_target,
-      'live_replicas': 1
+      id: release.id,
+      build: release.build.label,
+      target_replicas: release_doc.replica_target,
+      live_replicas: 1,
+      failed: false
     })
   end
 end
