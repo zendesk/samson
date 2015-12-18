@@ -3,7 +3,7 @@ class DeploysController < ApplicationController
 
   skip_before_action :require_project, only: [:active, :active_count, :recent, :changeset]
 
-  before_action :authorize_project_deployer!, only: [:new, :create, :confirm, :buddy_check, :pending_start, :destroy]
+  before_action :authorize_project_deployer!, only: [:new, :create, :confirm, :buddy_check, :destroy]
   before_action :find_deploy, except: [:index, :recent, :active, :active_count, :new, :create, :confirm]
   before_action :stage, only: :new
 
@@ -74,14 +74,6 @@ class DeploysController < ApplicationController
   def buddy_check
     if @deploy.pending?
       @deploy.confirm_buddy!(current_user)
-    end
-
-    redirect_to [current_project, @deploy]
-  end
-
-  def pending_start
-    if @deploy.pending_non_production?
-      @deploy.pending_start!
     end
 
     redirect_to [current_project, @deploy]
