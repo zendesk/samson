@@ -1,4 +1,4 @@
-<div class="output <%= 'hidden' if @deploy.waiting_for_buddy? || @deploy.pending_non_production? %>">
+<div class="output <%= 'hidden' if hide %>">
   <div class="clearfix">
     <div class="btn-toolbar pull-right" id="output-toolbar">
       <div id="output-options" class="btn-group only-active">

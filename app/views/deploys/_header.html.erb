@@ -1,22 +1,2 @@
-<h1>
-  <%= @project.name %>
-
-  <div class="pull-right">
-    <% if current_user.is_deployer? %>
-      <% unless @deploy.succeeded? || @deploy.active? %>
-        <%= link_to "Redeploy", project_stage_deploys_path(@project, @deploy.stage, deploy: { reference: @deploy.reference }), method: :post, class: "btn btn-danger" %>
-      <% end %>
-
-      <% if @deploy.succeeded? && next_stage = @deploy.stage.next_stage %>
-        <% unless next_stage.locked? %>
-          <%= link_to "Deploy #{@deploy.short_reference} to #{next_stage.name}", new_project_stage_deploy_path(@project, next_stage, reference: @deploy.short_reference), class: "btn btn-primary" %>
-        <% end %>
-      <% end %>
-    <% end %>
-
-    <%= link_to "Back", @project, class: "btn btn-default" %>
-  </div>
-</h1>
-
 <%= status_panel @deploy %>
 <%= Samson::Hooks.render_views(:deploys_header, self) %>

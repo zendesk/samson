@@ -2,8 +2,28 @@
 
 <%= breadcrumb @project, @deploy.stage, "Deploy ##{@deploy.id}" %>
 
-<div id="header" class="stream-header">
-  <% if !deploy_active? && !@deploy.finished? %>
+<h1 class="stream-header">
+  <%= @project.name %>
+
+  <div class="pull-right">
+    <% if current_user.is_deployer? %>
+      <% if @deploy.finished? && !@deploy.succeeded? %>
+        <%= link_to "Redeploy", project_stage_deploys_path(@project, @deploy.stage, deploy: { reference: @deploy.reference }), method: :post, class: "btn btn-danger" %>
+      <% end %>
+
+      <% if @deploy.succeeded? && (next_stage = @deploy.stage.next_stage) && !next_stage.locked? %>
+        <%= link_to "Deploy #{@deploy.short_reference} to #{next_stage.name}", new_project_stage_deploy_path(@project, next_stage, reference: @deploy.short_reference), class: "btn btn-primary" %>
+      <% end %>
+    <% end %>
+
+    <%= link_to "Back", @project, class: "btn btn-default" %>
+  </div>
+</h1>
+
+<div id="header">
+  <% if @deploy.finished? || JobExecution.enabled %>
+    <%= render 'header' %>
+  <% else %>
     <div class="alert alert-info">
       Samson is currently restarting, your deploy has been queued and will be resumed shortly.
     </div>
@@ -11,8 +31,6 @@
     <%= javascript_tag do %>
       waitUntilEnabled("<%= enabled_jobs_path %>");
     <% end %>
-  <% else %>
-    <%= render 'header' %>
   <% end %>
 </div>
 
@@ -40,17 +58,7 @@
 <section class="clearfix tabs">
   <div class="tab-content deploy-details">
     <div class="tab-pane active" id="output" data-stream-url="<%= stream_path(@deploy.job) %>" data-desktop-notify="<%= current_user.desktop_notify? %>">
-      <%= Samson::Hooks.render_views(:deploy_view, self, deploy: @deploy, project: @project) %>
-
-      <% if deploy_queued? %>
-        <%= render 'queued' %>
-      <% elsif @deploy.waiting_for_buddy? %>
-        <%= render 'buddy_check', deploy: @deploy %>
-      <% elsif @deploy.pending_non_production? %>
-        <%= render 'start_pending', deploy: @deploy %>
-      <% end %>
-
-      <%= render 'output', deploy: @deploy, project: @project %>
+      <%= deploy_output %>
     </div>
 
     <% %w(files commits pulls risks jira-issues).each do |pane| %>
@@ -79,7 +87,7 @@
   </div>
 </section>
 
-<% if deploy_active? %>
+<% if @deploy.active? && JobExecution.enabled %>
   <%= javascript_tag do %>
     toggleOutputToolbar();
     startStream();
