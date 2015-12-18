@@ -6,36 +6,36 @@ describe "slack hooks" do
 
   describe :before_deploy do
     it "sends notification on before hook" do
-      stage.stubs(:send_slack_notifications?).returns(true)
-      SlackNotification.any_instance.expects(:deliver)
+      stage.stubs(:send_slack_webhook_notifications?).returns(true)
+      SlackWebhookNotification.any_instance.expects(:deliver)
       Samson::Hooks.fire(:before_deploy, deploy, nil)
     end
 
     it "does not send notifications when disabled" do
-      SlackNotification.any_instance.expects(:deliver).never
+      SlackWebhookNotification.any_instance.expects(:deliver).never
       Samson::Hooks.fire(:before_deploy, deploy, nil)
     end
   end
 
   describe :after_deploy do
     it "sends notification on after hook" do
-      stage.stubs(:send_slack_notifications?).returns(true)
-      SlackNotification.any_instance.expects(:deliver)
+      stage.stubs(:send_slack_webhook_notifications?).returns(true)
+      SlackWebhookNotification.any_instance.expects(:deliver)
       Samson::Hooks.fire(:after_deploy, deploy, nil)
     end
 
     it "does not send notifications when disabled" do
-      SlackNotification.any_instance.expects(:deliver).never
+      SlackWebhookNotification.any_instance.expects(:deliver).never
       Samson::Hooks.fire(:after_deploy, deploy, nil)
     end
   end
 
   describe :stage_clone do
     it "copies all attributes except id" do
-      stage.slack_channels << SlackChannel.new(channel_id: 1, name: 'channel1')
+      stage.slack_webhooks << SlackWebhook.new(webhook_url: 'http://example.com')
       new_stage = Stage.new
       Samson::Hooks.fire(:stage_clone, stage, new_stage)
-      new_stage.slack_channels.map(&:attributes).must_equal [{"id"=>nil, "name"=>"channel1", "channel_id"=>"1", "stage_id"=>nil, "created_at"=>nil, "updated_at"=>nil}]
+      new_stage.slack_webhooks.map(&:attributes).must_equal [{"id"=>nil, "webhook_url"=>"http://example.com", "stage_id"=>nil, "created_at"=>nil, "updated_at"=>nil}]
     end
   end
 end

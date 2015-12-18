@@ -7,9 +7,13 @@ class SlackNotification
   end
 
   def deliver
-    @stage.slack_webhooks.each do |webhook|
-      _deliver(webhook)
-    end
+    Slack.chat_postMessage(
+      token: ENV['SLACK_TOKEN'],
+      channel: @stage.slack_channels.first.channel_id,
+      text: content)
+
+  rescue Slack::Error => e
+    Rails.logger.error("Could not deliver slack message: #{e.message}")
   end
 
   private
@@ -19,12 +23,4 @@ class SlackNotification
     @content ||= SlackNotificationRenderer.render(@deploy, subject)
   end
 
-  def _deliver(webhook)
-    payload = { text: content, username: 'samson-bot' }
-    payload.merge!(channel: webhook.channel) unless webhook.channel.blank?
-
-    Faraday.post(webhook.webhook_url, payload: payload.to_json)
-  rescue Faraday::ClientError => e
-    Rails.logger.error("Could not deliver slack message: #{e.message}")
-  end
 end

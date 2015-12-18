@@ -1,15 +1,15 @@
 require_relative '../test_helper'
 
-describe SlackNotification do
+describe SlackWebhookNotification do
   let(:project) { stub(name: "Glitter") }
   let(:user) { stub(name: "John Wu", email: "wu@rocks.com") }
-  let(:stage) { stub(name: "staging", slack_channels: [stub(channel_id: "x123yx")], project: project) }
+  let(:stage) { stub(name: "staging", slack_webhooks: [stub(webhook_url: "http://example.com")], project: project) }
   let(:deploy) { stub(summary: "hello world!", user: user, stage: stage) }
-  let(:notification) { SlackNotification.new(deploy) }
+  let(:notification) { SlackWebhookNotification.new(deploy) }
   let(:endpoint) { "https://slack.com/api/chat.postMessage" }
 
   before do
-    SlackNotificationRenderer.stubs(:render).returns("foo")
+    SlackWebhookNotificationRenderer.stubs(:render).returns("foo")
   end
 
   it "notifies slack channels configured for the stage" do
@@ -21,7 +21,7 @@ describe SlackNotification do
 
   it "renders a nicely formatted notification" do
     stub_request(:post, endpoint)
-    SlackNotificationRenderer.stubs(:render).returns("bar")
+    SlackWebhookNotificationRenderer.stubs(:render).returns("bar")
     notification.deliver
 
     content = nil
