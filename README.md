@@ -49,11 +49,13 @@ Streaming is done through a [controller](app/controllers/streams_controller.rb) 
 
 Improvements are always welcome. Please follow these steps to contribute
 
-1. Submit a Pull Request with a detailed explaination of changes and screenshots (if UI is changing)
+1. Submit a Pull Request with a detailed explanation of changes and screenshots (if UI is changing)
 1. Receive a :+1: from a core team member
 1. Core team will merge your changes
 
 ### Team
 
-Core team is [@steved](https://github.com/steved), [@dasch](https://github.com/dasch), [@jwswj](https://github.com/jwswj), [@henders](https://github.com/henders), 
+Core team is [@steved](https://github.com/steved), [@dasch](https://github.com/dasch), [@jwswj](https://github.com/jwswj), [@henders](https://github.com/henders),
 [@grosser](https://github.com/grosser), [@jonmoter](https://github.com/jonmoter), [@msufa](https://github.com/msufa), [@sbrnunes](https://github.com/sbrnunes).
+
+Support can be found on our [mailing list](https://groups.google.com/forum/#!forum/samson-users) `samson-users@googlegroups.com`.
