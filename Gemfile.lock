@@ -1,10 +1,4 @@
 PATH
-  remote: plugins/slack_webhooks
-  specs:
-    samson_slack_webhooks (0.0.0)
-      faraday
-
-PATH
   remote: plugins/docker_binary_builder/
   specs:
     samson_docker_binary_builder (0.0.0)
@@ -52,6 +46,12 @@ PATH
   specs:
     samson_slack (0.0.0)
       slack-api (~> 1.1.0)
+
+PATH
+  remote: plugins/slack_webhooks
+  specs:
+    samson_slack_webhooks (0.0.0)
+      faraday
 
 PATH
   remote: plugins/zendesk/
