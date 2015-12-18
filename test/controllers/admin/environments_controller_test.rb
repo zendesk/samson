@@ -9,8 +9,19 @@ describe Admin::EnvironmentsController do
     end
   end
 
+  def self.it_renders_index_with_json_format
+    it 'get :index with format json succeeds' do
+      get :index, format: 'json'
+      result = JSON.parse(response.body)
+      result.wont_be_nil
+      result['environments'].count.must_equal Environment.count
+    end
+  end
+
   as_a_deployer do
-    unauthorized :get, :index
+    it_renders_index
+    it_renders_index_with_json_format
+
     unauthorized :get, :new
     unauthorized :post, :create
     unauthorized :delete, :destroy, id: 1
@@ -18,7 +29,6 @@ describe Admin::EnvironmentsController do
   end
 
   as_a_admin do
-    it_renders_index
     unauthorized :post, :create
     unauthorized :get, :new
     unauthorized :delete, :destroy, id: 1

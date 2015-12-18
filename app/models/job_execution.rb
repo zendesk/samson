@@ -1,6 +1,8 @@
 require 'shellwords'
 
 class JobExecution
+  include ::NewRelic::Agent::Instrumentation::ControllerInstrumentation
+
   # Whether or not execution is enabled. This allows completely disabling job
   # execution for testing purposes.
   cattr_accessor(:enabled, instance_writer: false) do
@@ -13,7 +15,7 @@ class JobExecution
   cattr_reader(:registry, instance_accessor: false) { JobQueue.new }
   private_class_method :registry
 
-  attr_reader :output, :job, :viewers, :executor
+  attr_reader :output, :reference, :job, :viewers, :executor
 
   delegate :id, to: :job
 
@@ -125,6 +127,7 @@ class JobExecution
     finish
     ActiveRecord::Base.clear_active_connections!
   end
+  add_transaction_tracer :run!, category: :task, params: '{ job_id: id, project: job.project.try(:name), reference: reference }'
 
   def finish
     @subscribers.each(&:call)
@@ -158,7 +161,7 @@ class JobExecution
   def setup!(dir)
     locked = lock_project do
       return false unless @repository.setup!(dir, @reference)
-      commit = @repository.commit_from_ref(@reference)
+      commit = @repository.commit_from_ref(@reference, length: 40)
       tag = @repository.tag_from_ref(@reference)
       @job.update_git_references!(commit: commit, tag: tag)
     end

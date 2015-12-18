@@ -13,7 +13,7 @@ module Kubernetes
     end
 
     def deploy_groups
-      object.release_docs.map(&:deploy_group)
+      object.release_docs.map(&:deploy_group).uniq
     end
   end
 end

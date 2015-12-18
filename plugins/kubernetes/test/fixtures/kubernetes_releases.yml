@@ -1,3 +1,7 @@
 test_release:
   user: deployer
   build: docker_build
+
+second_test_release:
+  user: deployer
+  build: docker_build

@@ -20,6 +20,6 @@ samson.controller('KubernetesTabsCtrl', function($rootScope, $scope) {
 
   $rootScope.$on('$stateChangeSuccess', function(event, toState, toParams) {
     $scope.project_id = toParams.project_id;
-    _.findWhere($scope.tabs, {state: toState.name}).active = true;
+    _.findWhere($scope.tabs, {index: toState.data.selectedTab}).active = true;
   });
 });

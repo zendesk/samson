@@ -1,4 +1,4 @@
-samson.service('kubernetesService', function($http, $q, httpErrorService, kubernetesRoleFactory) {
+samson.service('kubernetesService', function($http, $q, httpErrorService, kubernetesRoleFactory, kubernetesReleaseFactory) {
 
   var config = {
     headers: {
@@ -15,9 +15,7 @@ samson.service('kubernetesService', function($http, $q, httpErrorService, kubern
 
     $http.get('/projects/' + project_id + '/kubernetes_roles', config).then(
       function(response) {
-        deferred.resolve(response.data.map(function(role) {
-          return kubernetesRoleFactory.build(role);
-        }));
+        deferred.resolve(response.data.map(kubernetesRoleFactory.build));
       },
       function(response) {
         deferred.reject(httpErrorService.handleResponse(response));
@@ -62,9 +60,7 @@ samson.service('kubernetesService', function($http, $q, httpErrorService, kubern
 
     $http.get('/projects/' + project_id + '/kubernetes_roles/refresh?ref=' + reference, config).then(
       function(response) {
-        deferred.resolve(response.data.map(function(role) {
-          return kubernetesRoleFactory.build(role);
-        }));
+        deferred.resolve(response.data.map(kubernetesRoleFactory.build));
       },
       function(response) {
         switch (response.status) {
@@ -89,13 +85,42 @@ samson.service('kubernetesService', function($http, $q, httpErrorService, kubern
 
     $http.get('/projects/' + project_id + '/kubernetes_releases', config).then(
       function(response) {
-        deferred.resolve(response.data);
+        deferred.resolve(response.data.map(kubernetesReleaseFactory.build));
       },
       function(response) {
-        deferred.reject(handleFailure(response));
+        deferred.reject(httpErrorService.handleResponse(response));
       }
     );
 
     return deferred.promise;
   };
+
+  this.createRelease = function(project_id, build_id, deploy_groups) {
+    var payload = {
+      build_id: build_id,
+      deploy_groups: deploy_groups.map(deployGroupMapper)
+    };
+
+    var deferred = $q.defer();
+    $http.post('/projects/' + project_id + '/kubernetes_releases', payload).then(
+      function(response) {
+        deferred.resolve(response.data);
+      },
+      function(response) {
+        deferred.reject(httpErrorService.handleResponse(response));
+      }
+    );
+    return deferred.promise;
+  };
+
+  function deployGroupMapper(deploy_group) {
+    return {
+      id: deploy_group.id,
+      roles: deploy_group.roles.map(roleMapper)
+    };
+  }
+
+  function roleMapper(role) {
+    return _.pick(role, 'id', 'replicas');
+  }
 });

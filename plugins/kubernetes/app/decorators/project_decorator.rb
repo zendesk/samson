@@ -50,6 +50,10 @@ Project.class_eval do
     end
   end
 
+  def name_for_label
+    name.parameterize('-')
+  end
+
   private
 
   # Given a list of kubernetes configuration files, retrieves the corresponding contents

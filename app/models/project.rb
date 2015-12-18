@@ -54,19 +54,17 @@ class Project < ActiveRecord::Base
   def docker_repo
     @docker_repo ||= begin
       registry = Rails.application.config.samson.docker.registry
-      if Rails.env.production?
-        "#{registry}/#{permalink_base}"
-      else
-        host, namespace = registry.split '/'
-        namespace ||= 'samson'
-        "#{host}/#{namespace}_non_prod/#{permalink_base}"
-      end
+      "#{registry}/#{permalink_base}"
     end
   end
 
   def last_release_contains_commit?(commit)
     last_release = releases.order(:id).last
-    last_release && repository.downstream_commit?(last_release.commit, commit)
+    # status values documented here: http://stackoverflow.com/questions/23943855/github-api-to-compare-commits-response-status-is-diverged
+    last_release && %w(behind identical).include?(GITHUB.compare(github_repo, last_release.commit, commit).status)
+  rescue Octokit::Error => e
+    Airbrake.notify(e, parameters: { github_repo: github_repo, last_commit: last_release.commit, commit: commit })
+    false # Err on side of caution and cause a new release to be created.
   end
 
   def auto_release_stages

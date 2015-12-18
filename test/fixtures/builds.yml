@@ -18,3 +18,4 @@ docker_build:
   docker_image_id: '2d2b0b3204b0166435c3d96d0b27d0ad2083e5e040192632c58eeb9491d6bfaa'
   docker_ref: 'v123'
   docker_repo_digest: 'docker-registry.example.com/test@sha256:5f1d7c7381b2e45ca73216d7b06004fdb0908ed7bb8786b62f2cdfa5035fde2c'
+  label: 'docker-build'

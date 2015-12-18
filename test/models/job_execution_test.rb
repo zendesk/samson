@@ -84,7 +84,7 @@ describe JobExecution do
     assert job.succeeded?
     assert_equal 'mantis shrimp', last_line_of_output
     assert job.commit.present?, "Expected #{job} to record the commit"
-    assert_includes commit, job.commit
+    assert_equal commit, job.commit
     assert_includes 'annotated_tag', job.tag
   end
 

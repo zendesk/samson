@@ -34,6 +34,6 @@
 //= require rickshaw
 //= require vis
 //= require app
-//= require config
+//= require underscore_mixins
 //= require_tree .
 //= require_tree ../templates

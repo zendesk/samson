@@ -1,0 +1,5 @@
+test_cluster:
+  name: test
+  description: test cluster
+  config_filepath: /tmp/config
+  config_context: test

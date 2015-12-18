@@ -23,7 +23,7 @@ spec:
         image: docker-registry.zende.sk/truth_service:latest
         resources:
           limits:
-            cpu: 0.5m
+            cpu: 500m
             memory: 100Mi
         ports:
         - name: some-role-port

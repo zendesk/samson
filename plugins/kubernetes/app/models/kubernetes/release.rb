@@ -49,11 +49,28 @@ module Kubernetes
       Watchers::DeployWatcher.new(self)
     end
 
-    def deploy_group_ids
-      release_docs.map(&:deploy_group_id)
+    # Creates a new Kubernetes Release and corresponding ReleaseDocs and starts the deploy
+    def self.create_release(params)
+      Kubernetes::Release.transaction do
+        release = create(params.except(:deploy_groups))
+        if release.persisted?
+          release.create_release_docs(params)
+
+          # Starts rolling out the release into Kubernetes
+          KuberDeployService.new(release).deploy!
+        end
+        release
+      end
     end
 
-    def deploy_group_ids=(_id_list)
+    # Creates a ReleaseDoc per each DeployGroup and Role combination.
+    def create_release_docs(params)
+      params[:deploy_groups].to_a.each do |dg|
+        dg[:roles].to_a.each do |role|
+          release_docs.create!(deploy_group_id: dg[:id], kubernetes_role_id: role[:id], replica_target: role[:replicas])
+        end
+      end
+      raise 'No Kubernetes::ReleaseDoc has been created' if release_docs.empty?
     end
 
     private

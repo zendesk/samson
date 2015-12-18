@@ -74,4 +74,17 @@ describe Webhook do
       assert_equal Webhook.for_source('code', 'github').pluck(:source), ['any_code', 'github', 'any']
     end
   end
+
+  describe '.for_branch' do
+    before do
+      ['', 'master', 'feature/branch'].each_with_index do |branch, index|
+        Webhook.create(branch: branch, stage_id: index, project_id: 1, source: 'any_code')
+      end
+    end
+
+    it 'filters correctly' do
+      assert_equal Webhook.for_branch('feature/branch').pluck(:branch), ['', 'feature/branch']
+      assert_equal Webhook.for_branch('master').pluck(:branch), ['', 'master']
+    end
+  end
 end

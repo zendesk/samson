@@ -1,0 +1,20 @@
+<script type='text/ng-template' id='kubernetes/kubernetes_release_wizard.tmpl.html'>
+  <div class="dialog kubernetes-release-dialog" ng-controller="KubernetesReleaseWizardCtrl">
+    <header>
+      <h2 class="title">Create a new release</h2>
+      <span class="step">Step {{currentStep}} of {{steps.length}}</span>
+    </header>
+    <mc-messages></mc-messages>
+    <uib-tabset class="content">
+      <uib-tab active="steps[0].current">
+        <tab-content template-url="kubernetes/kubernetes_release_wizard_step_1.tmpl.html"></tab-content>
+      </uib-tab>
+      <uib-tab active="steps[1].current">
+        <tab-content template-url="kubernetes/kubernetes_release_wizard_step_2.tmpl.html"></tab-content>
+      </uib-tab>
+    </uib-tabset>
+  </div>
+</script>
+
+<%= render 'kubernetes_releases/create_form_step_1' %>
+<%= render 'kubernetes_releases/create_form_step_2' %>
