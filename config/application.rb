@@ -97,8 +97,8 @@ module Samson
           JobExecution.start_job(JobExecution.new(job.commit, job))
         end
 
-        Deploy.active.each do |deploy|
-          deploy.pending_start! if deploy.pending_non_production?
+        Deploy.pending.each do |deploy|
+          deploy.pending_start! unless deploy.waiting_for_buddy?
         end
 
         RestartSignalHandler.listen
