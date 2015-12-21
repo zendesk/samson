@@ -1,6 +1,8 @@
 require_relative '../test_helper'
 
 describe StreamsController do
+  include OutputBufferSupport
+
   let(:project) { projects(:test) }
   let(:stage) { stages(:test_staging) }
   let(:deployer) { users(:deployer) }
@@ -19,11 +21,14 @@ describe StreamsController do
         # Get the :show page to open the SSE stream
         get :show, id: job.id
 
+        response.status.must_equal(200)
+
+        wait_for_listeners(fake_execution.output)
+
         # Write some msgs to our fake TerminalExecutor stream
         fake_execution.output.write("Hello there!\n")
         # Close the stream to denote the job finishing, which will trigger sending the :finished SSE
         fake_execution.output.close
-        response.status.must_equal(200)
 
         # Collect the output from the ActiveController::Live::Buffer stream
         lines = []

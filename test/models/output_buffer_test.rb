@@ -1,13 +1,15 @@
 require_relative '../test_helper'
 
 describe OutputBuffer do
+  include OutputBufferSupport
+
   let(:buffer) { OutputBuffer.new }
 
   it "allows writing chunks of data to multiple listeners" do
     listener1 = build_listener
     listener2 = build_listener
 
-    sleep(0.1) until buffer.listeners.size == 2
+    wait_for_listeners(buffer, 2)
 
     buffer.write("hello")
     buffer.write("world")
@@ -21,6 +23,9 @@ describe OutputBuffer do
     buffer.write("hello")
 
     listener = build_listener
+
+    wait_for_listeners(buffer)
+
     buffer.close
 
     listener.value.must_equal ["hello"]
