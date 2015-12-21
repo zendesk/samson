@@ -21,6 +21,8 @@ require 'thread_safe'
 #   listener2.value #=> "hello world!"
 #
 class OutputBuffer
+  attr_reader :listeners
+
   def initialize
     @listeners = ThreadSafe::Array.new
     @previous = ThreadSafe::Array.new

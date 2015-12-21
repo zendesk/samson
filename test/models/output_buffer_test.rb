@@ -7,7 +7,7 @@ describe OutputBuffer do
     listener1 = build_listener
     listener2 = build_listener
 
-    sleep 0.1
+    sleep(0.1) until buffer.listeners.size == 2
 
     buffer.write("hello")
     buffer.write("world")
