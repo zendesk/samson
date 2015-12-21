@@ -65,10 +65,12 @@ class ActiveSupport::TestCase
     create_default_stubs
   end
 
-  after { fail_if_dangling_threads }
+  unless ENV['SKIP_TIMEOUT']
+    after { fail_if_dangling_threads }
+  end
 
   def fail_if_dangling_threads
-    max_threads = 1 # Timeout.timeout adds a thread
+    max_threads = ENV['CI'] ? 0 : 1
     raise "Test left dangling threads: #{extra_threads}" if extra_threads.count > max_threads
   ensure
     kill_extra_threads
