@@ -17,6 +17,24 @@ select {
   font-size: 12px;
 }
 
+.btn .spinner {
+  display: none;
+  opacity: 0;
+  width: 0;
+
+  -webkit-transition: opacity 0.25s, width 0.25s;
+  -moz-transition: opacity 0.25s, width 0.25s;
+  -ms-transition: opacity 0.25s, width 0.25s;
+  transition: opacity 0.25s, width 0.25s;
+}
+
+.btn .spinner.visible {
+  display: inline-block;
+  width: 16px;
+  opacity: 1;
+  margin-right: 5px;
+}
+
 /*
     Kubernetes Releases
 */

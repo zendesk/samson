@@ -3,7 +3,7 @@
     <span class="spinner-label">Loading Deploy Groups</span>
   </us-spinner>
   <div ng-if="notEmpty(environment.deploy_groups)" class="form-container">
-    <fieldset>
+    <fieldset ng-disabled="submitting">
       <div class="form-group clearfix">
         <label>
           <span class="order">4.</span>
@@ -58,8 +58,13 @@
     </fieldset>
   </div>
   <footer class="clearfix">
-    <button ng-click="previous()" class="btn btn-default" style="margin-right: 20px;" ng-if="isCurrentStep(2)">Back</button>
-    <button ng-click="cancel()" class="btn btn-default pull-right">Cancel</button>
-    <button ng-click="submit()" class="btn btn-primary pull-right" ng-disabled="!validate(currentStep)">Deploy</button>
+    <button ng-click="previous()" class="btn btn-default" style="margin-right: 20px;" ng-if="isCurrentStep(2)" ng-disabled="submitting">Back</button>
+    <button ng-click="cancel()" class="btn btn-default pull-right" ng-disabled="submitting">Cancel</button>
+    <button ng-click="submit()" class="btn btn-primary pull-right" ng-disabled="!validate(currentStep) || submitting">
+      <span class="spinner" ng-class="{ 'visible': submitting }">
+        <i class="glyphicon glyphicon-refresh spinning"></i>
+      </span>
+      Deploy
+    </button>
   </footer>
 </script>
