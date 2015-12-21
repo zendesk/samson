@@ -6,6 +6,8 @@ describe OutputBuffer do
   let(:buffer) { OutputBuffer.new }
 
   it "allows writing chunks of data to multiple listeners" do
+    buffer # make sure the buffer is created before each listener
+
     listener1 = build_listener
     listener2 = build_listener
 
