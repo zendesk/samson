@@ -35,7 +35,7 @@ class OutputBuffer
 
   def write(data, event = :message)
     @previous << [event, data] unless event == :close
-    @listeners.each {|listener| listener.push([event, data]) }
+    @listeners.dup.each {|listener| listener.push([event, data]) }
   end
 
   def include?(event, data)
