@@ -1,12 +1,14 @@
-<% cache [project.to_param, stage] do %>
-  <tr>
+<tr>
+  <% cache stage do %>
     <td>
       <%= link_to stage.name, [project, stage] %>
       <%= stage_lock_icon stage %>
     </td>
+
     <% if DeployGroup.enabled? %>
       <td><%= stage.deploy_groups.map(&:name).join(', ') %></td>
     <% end %>
+
     <% if (deploy = stage.last_successful_deploy) %>
       <td>
         <%= link_to deploy.short_reference, [project, deploy], title: "#{deploy.reference} at #{deploy.updated_at.to_s(:db)}" %>
@@ -16,10 +18,11 @@
     <% else %>
       <td>-</td>
     <% end %>
-    <td align="right">
-      <% if current_user.is_deployer? %>
-        <%= deploy_link @project, stage %>
-      <% end %>
-    </td>
-  </tr>
-<% end %>
+  <% end %>
+
+  <td align="right">
+    <% if is_user_deployer_for_project? %>
+      <%= deploy_link @project, stage %>
+    <% end %>
+  </td>
+</tr>
