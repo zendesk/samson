@@ -1,5 +1,5 @@
-//= require ./jquery_mentions_input/jquery.elastic.source.js
-//= require ./jquery_mentions_input/jquery.mentionsInput.js
+//= require jquery_mentions_input/jquery.elastic.source.js
+//= require jquery_mentions_input/jquery.mentionsInput.js
 
 samson.factory('Mentionbox', function ($rootScope, Flowdock) {
   var self = this;
@@ -41,7 +41,7 @@ samson.factory('Mentionbox', function ($rootScope, Flowdock) {
     self.draw();
     return {
       message: self.markupData
-    }
+    };
   };
 
   return self;
@@ -70,7 +70,7 @@ samson.factory('Flowdock', function ($rootScope, $http) {
   return {
     users: self.users,
     buddyRequest: self.buddyRequest
-  }
+  };
 });
 
 samson.controller('BuddyNotificationsCtrl', function($scope, $rootScope, Flowdock, Mentionbox) {
@@ -80,19 +80,21 @@ samson.controller('BuddyNotificationsCtrl', function($scope, $rootScope, Flowdoc
   $scope.notificationBox = Mentionbox.init('#buddy_request_box', $scope.defaultBuddyRequestMessage);
 
   $scope.shouldDisplayFeedback = function() {
-    return $scope.message != null;
+    return $scope.message !== null;
   };
 
-  $scope.notifyFlowDock = function () {
-    $scope.notificationBox.message(function (message) {
+  $scope.notifyFlowDock = function() {
+    $scope.notificationBox.message(function(message) {
       var result = Flowdock.buddyRequest($scope.deploy, message);
-      result.success(function (data) {
-        $scope.message = data.message;
-        $scope.successful = true
+
+      result.then(function(response) {
+        $scope.message = response.data.message;
+        $scope.successful = true;
       });
-      result.error(function () {
+
+      result.catch(function() {
         $scope.message = 'Error! Could not send buddy request!';
-        $scope.successful = false
+        $scope.successful = false;
       });
     });
   };
@@ -106,5 +108,5 @@ samson.controller('BuddyNotificationsCtrl', function($scope, $rootScope, Flowdoc
       flowdockFlows: '@',
       deploy: '@'
     }
-  }
+  };
 });
