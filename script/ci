@@ -6,6 +6,7 @@ case $TASK in
 js)
   npm install
   npm run-script jshint
+  npm run-script jshint:plugins
   DATABASE_URL=mysql2://none@none/none bundle exec rake test:js
   ;;
 precompile)
