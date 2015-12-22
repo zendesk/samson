@@ -16,7 +16,8 @@ precompile)
   bundle exec rake assets:precompile
   ;;
 rake)
-  bundle exec rake db:create default
+  bundle exec rake db:create
+  bundle exec rake test -v
   ;;
 *)
   echo "Unknown task"
