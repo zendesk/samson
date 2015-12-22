@@ -93,40 +93,65 @@ describe('Buddy requests notifications', function () {
     });
   });
 
-  describe('BuddyNotificationCtrl', function () {
-    var buddyNotificationsCtrl, scope, flowdock, rootScope;
+  describe('BuddyNotificationCtrl', function() {
+    var buddyNotificationsCtrl, scope, flowdock, rootScope, deferred;
 
-    // Setup the mock service in an anonymous module.
     beforeEach(module("samson"));
-    beforeEach(function () {
-      inject(function ($injector) {
-        flowdock = $injector.get('Flowdock');
-        rootScope = $injector.get('$rootScope');
-        flowdock.users = function () {
-          var users = [{ id: 1, name: 'test', avatar: 'fake', type: 'contact' }];
-          rootScope.$emit('flowdock_users', users);
-          return users
-        };
-        flowdock.buddyRequest = jasmine.createSpy('My Method');
-      });
-    });
 
-    beforeEach(inject(function ($controller) {
-      var dependencies;
+    beforeEach(inject(function(_$controller_, _$rootScope_, _$q_, _Flowdock_) {
+      rootScope = _$rootScope_;
+      deferred = _$q_.defer();
+
+      flowdock = _Flowdock_;
+      spyOn(flowdock, 'buddyRequest').and.returnValue(deferred.promise);
+
       scope = rootScope.$new();
       scope.deploy = 1;
-      dependencies = { $scope: scope, $rootScope: rootScope, Flowdock: flowdock };
-      buddyNotificationsCtrl = $controller('BuddyNotificationsCtrl', dependencies);
+
+      var mentionBox = new Object();
+      mentionBox.init = function() {
+        return {
+          message: function(callback) {
+            callback('Some message');
+          }
+        };
+      };
+
+      buddyNotificationsCtrl = _$controller_('BuddyNotificationsCtrl', {
+        $scope: scope,
+        $rootScope: rootScope,
+        Flowdock: flowdock,
+        Mentionbox: mentionBox
+      });
     }));
 
-    it('should send a buddy_request notification', function () {
-      setTimeout(function () {
-        buddyNotificationsCtrl.notificationBox.message = function (callback) {
-          callback.call('Some message');
-        };
-        expect(flowdock.buddyRequest).toHaveBeenCalledWith('Some message');
-        buddyNotificationsCtrl.notifyFlowDock();
-      }, 1000); //if tests fail because of this, increase the delay
+    it('should send a buddy_request notification', function() {
+      scope.notifyFlowDock();
+
+      expect(flowdock.buddyRequest).toHaveBeenCalledWith(1, 'Some message');
+    });
+
+    it('properly handles a successful response', function() {
+      scope.notifyFlowDock();
+
+      deferred.resolve({
+        data: { message: 'Hello!' }
+      });
+
+      scope.$apply();
+
+      expect(scope.message).toEqual('Hello!');
+      expect(scope.successful).toEqual(true);
+    });
+
+    it('properly handles a failure response', function() {
+      scope.notifyFlowDock();
+
+      deferred.reject({});
+      scope.$apply();
+
+      expect(scope.message).toEqual('Error! Could not send buddy request!');
+      expect(scope.successful).toEqual(false);
     });
   });
 });

@@ -83,16 +83,18 @@ samson.controller('BuddyNotificationsCtrl', function($scope, $rootScope, Flowdoc
     return $scope.message != null;
   };
 
-  $scope.notifyFlowDock = function () {
-    $scope.notificationBox.message(function (message) {
+  $scope.notifyFlowDock = function() {
+    $scope.notificationBox.message(function(message) {
       var result = Flowdock.buddyRequest($scope.deploy, message);
-      result.success(function (data) {
-        $scope.message = data.message;
-        $scope.successful = true
+
+      result.then(function(response) {
+        $scope.message = response.data.message;
+        $scope.successful = true;
       });
-      result.error(function () {
+
+      result.catch(function() {
         $scope.message = 'Error! Could not send buddy request!';
-        $scope.successful = false
+        $scope.successful = false;
       });
     });
   };
