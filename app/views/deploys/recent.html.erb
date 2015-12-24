@@ -28,6 +28,9 @@
     </div>
   <% end %>
   <section class="timeline-content clearfix">
+    <div class="deploy-csv">
+    	<%= link_to "Download as CSV", recent_deploys_path(format: "csv") %>
+    </div>
     <table class="timeline-content">
       <tr>
         <th>PROJECT</th>

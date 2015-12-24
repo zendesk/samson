@@ -1,3 +1,5 @@
+require 'csv'
+
 class DeploysController < ApplicationController
   include ProjectLevelAuthorization
 
@@ -40,6 +42,7 @@ class DeploysController < ApplicationController
       format.json do
         render json: Deploy.page(params[:page]).per(30)
       end
+      format.csv { send_data Deploy.to_csv }
     end
   end
 
