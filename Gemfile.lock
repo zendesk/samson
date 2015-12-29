@@ -506,7 +506,6 @@ DEPENDENCIES
   newrelic_api
   newrelic_rpm (>= 3.7.1)
   ngannotate-rails
-  nokogiri (= 1.6.7.1)
   octokit (~> 4.0)
   omniauth (~> 1.1)
   omniauth-github (= 1.1.1)
