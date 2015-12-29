@@ -98,6 +98,7 @@ module Samson
           deploy.pending_start! if deploy.pending_non_production?
         end
         RestartSignalHandler.listen
+        Samson::Tasks::LockCleaner.start
       end
     end
 
