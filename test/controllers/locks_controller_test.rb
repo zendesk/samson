@@ -108,8 +108,11 @@ describe LocksController do
     end
 
     describe 'POST to #create' do
+      before { travel_to Time.now }
+      after { travel_back }
+
       it 'creates a lock' do
-        post :create, lock: {stage_id: stage.id, description: 'DESC'}
+        post :create, lock: {stage_id: stage.id, description: 'DESC', delete_in: 3600 }
         assert_redirected_to '/back'
         assert flash[:notice]
 
@@ -118,6 +121,7 @@ describe LocksController do
         stage.warning?.must_equal(false)
         stage.locked?.must_equal(true)
         stage.lock.description.must_equal 'DESC'
+        stage.lock.delete_at.must_equal(Time.now + 3600)
       end
 
       it 'creates a warning' do

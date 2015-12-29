@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20151201104205) do
+ActiveRecord::Schema.define(version: 20151211031950) do
 
   create_table "build_statuses", force: :cascade do |t|
     t.integer  "build_id",                                     null: false
@@ -229,7 +229,8 @@ ActiveRecord::Schema.define(version: 20151201104205) do
     t.datetime "updated_at"
     t.datetime "deleted_at"
     t.string   "description", limit: 255
-    t.boolean  "warning",     default: false, null: false
+    t.boolean  "warning",                 default: false, null: false
+    t.datetime "delete_at"
   end
 
   add_index "locks", ["stage_id", "deleted_at", "user_id"], name: "index_locks_on_stage_id_and_deleted_at_and_user_id", using: :btree
