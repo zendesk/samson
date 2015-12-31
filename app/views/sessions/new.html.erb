@@ -4,7 +4,7 @@
   <div class="login">
     <% if Rails.application.config.samson.auth.github %>
       <%= link_to omniauth_path('github'), class: "action github" do %>
-        <%= image_tag image_url('github.png') %> Login with Github
+        <%= image_tag image_url('github.png') %> Login with GitHub
       <% end %>
     <% end %>
     <% if Rails.application.config.samson.auth.google %>

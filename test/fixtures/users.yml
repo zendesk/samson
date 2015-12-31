@@ -30,7 +30,7 @@ viewer:
   external_id: 'google-3'
 
 github_viewer:
-  name: "Github Viewer"
+  name: "GitHub Viewer"
   email: "gh+viewer@example.com"
   role_id: <%= Role::VIEWER.id %>
   external_id: 'github-3'
