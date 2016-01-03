@@ -150,7 +150,7 @@ $(function () {
 
   function showDeployConfirmationTab($this) {
     var $navTabs = $this.find("#deploy-confirmation .nav-tabs"),
-        hasActivePane = $this.find(".tab-pane.active").length == 0;
+        hasActivePane = $this.find(".tab-pane.active").length === 0;
 
     // We need to switch to another tab and then switch back in order for
     // the plugin to detect that the DOM node has been replaced.
