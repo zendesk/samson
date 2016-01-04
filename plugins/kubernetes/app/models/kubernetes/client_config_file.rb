@@ -21,8 +21,8 @@ module Kubernetes
       contexts[context_name].try(:client)
     end
 
-    def ext_client_for(context_name)
-      contexts[context_name].try(:ext_client)
+    def extension_client_for_client_for(context_name)
+      contexts[context_name].try(:extension_client)
     end
 
     def context_names
@@ -111,7 +111,7 @@ module Kubernetes
         Kubeclient::Client.new(cluster.url, api_version, ssl_options: ssl_options)
       end
 
-      def ext_client
+      def extension_client
         Kubeclient::Client.new(cluster.server + '/apis', 'extensions/v1beta1', ssl_options: ssl_options)
       end
 
@@ -126,7 +126,7 @@ module Kubernetes
           client_cert: user.client_cert,
           client_key:  user.client_key,
           ca_file:     cluster.ca_filepath,
-          verify_ssl:  OpenSSL::SSL::VERIFY_NONE
+          verify_ssl:  OpenSSL::SSL::VERIFY_PEER
         }
       end
     end

@@ -68,18 +68,18 @@ module Kubernetes
     def deploy_to_kubernetes
       deployment = Kubeclient::Deployment.new(deployment_hash)
       # Create new client as 'Deployment' API is on different path then 'v1'
-      ext_client = deploy_group.kubernetes_cluster.ext_client
-      if previous_deploy?(ext_client, deployment)
-        ext_client.update_deployment(deployment)
+      extension_client = deploy_group.kubernetes_cluster.extension_client
+      if previous_deploy?(extension_client, deployment)
+        extension_client.update_deployment(deployment)
       else
-        ext_client.create_deployment(deployment)
+        extension_client.create_deployment(deployment)
       end
     end
 
     private
 
-    def previous_deploy?(ext_client, deployment)
-      ext_client.get_deployment(deployment.metadata.name, deployment.metadata.namespace)
+    def previous_deploy?(extension_client, deployment)
+      extension_client.get_deployment(deployment.metadata.name, deployment.metadata.namespace)
     rescue KubeException
       false
     end
