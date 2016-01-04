@@ -78,7 +78,6 @@ samson.controller('KubernetesDashboardCtrl',
       var deferred = $q.defer();
       kubernetesService.loadDashboardData($scope.project_id, $scope.environment).then(
         function(data) {
-          $scope.loadingClusterState = false;
           if (_.isNotUndefinedOrEmpty(data)) {
             $scope.dashboard_data = data;
             deferred.resolve();
@@ -86,6 +85,7 @@ samson.controller('KubernetesDashboardCtrl',
           else {
             deferred.reject();
           }
+          $scope.loadingClusterState = false;
         },
         function(result) {
           $scope.loadingClusterState = false;
@@ -123,36 +123,33 @@ samson.controller('KubernetesDashboardCtrl',
     }
 
     function findOrCreateDeployGroup(role, msg) {
-      if (_.isDefined(role)) {
-        var deploy_group = findDeployGroup(role, msg.deploy_group);
+      var deploy_group = findDeployGroup(role, msg.deploy_group);
 
-        if (_.isUndefined(deploy_group)) {
-          deploy_group = {
-            name: msg.deploy_group,
-            releases: []
-          };
-          role.deploy_groups.push(deploy_group);
-        }
-
-        return deploy_group;
+      if (_.isUndefined(deploy_group)) {
+        deploy_group = {
+          name: msg.deploy_group,
+          releases: []
+        };
+        role.deploy_groups.push(deploy_group);
       }
+
+      return deploy_group;
     }
 
     function findOrCreateRelease(deploy_group, msg) {
-      if (_.isDefined(deploy_group)) {
-        var release = findRelease(deploy_group, msg.release);
+      var release = findRelease(deploy_group, msg.release);
 
-        if (_.isUndefined(release)) {
-          release = {
-            id: msg.release,
-            build: msg.build,
-            live_replicas: msg.live_replicas,
-            target_replicas: msg.target_replicas
-          };
-          deploy_group.releases.push(release);
-        }
-        return release;
+      if (_.isUndefined(release)) {
+        release = {
+          id: msg.release,
+          build: msg.build,
+          live_replicas: msg.live_replicas,
+          target_replicas: msg.target_replicas
+        };
+        deploy_group.releases.push(release);
       }
+
+      return release;
     }
 
     function updateReleaseState(release, msg) {
