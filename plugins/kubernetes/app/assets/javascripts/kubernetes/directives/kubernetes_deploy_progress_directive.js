@@ -19,7 +19,7 @@ samson.directive('deployProgressWidget', function() {
 
       $scope.deployCompleted = function() {
         return _.every($scope.deployGroup.releases, function(release) {
-          return $scope.currentRelease(release) ? $scope.targetStateReached(release) : $scope.liveReplicas(release) == 0;
+          return $scope.currentRelease(release) ? $scope.targetStateReached(release) : $scope.liveReplicas(release) === 0;
         });
       };
 
@@ -58,5 +58,5 @@ samson.directive('deployProgressWidget', function() {
         return release.id;
       };
     }
-  }
+  };
 });

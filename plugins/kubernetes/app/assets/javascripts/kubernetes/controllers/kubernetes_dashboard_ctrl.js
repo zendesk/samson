@@ -33,7 +33,7 @@ samson.controller('KubernetesDashboardCtrl',
           }
         )
         .then(function() {
-            startListeningForUpdates()
+            startListeningForUpdates();
           }
         );
     }
