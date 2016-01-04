@@ -138,5 +138,5 @@ samson.service('kubernetesService', function($http, $q, httpErrorService, kubern
     );
 
     return deferred.promise;
-  }
+  };
 });
