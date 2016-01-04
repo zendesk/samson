@@ -33,9 +33,9 @@ describe Changeset do
     end
 
     {
-      Octokit::NotFound => "Github: Not found",
-      Octokit::Unauthorized => "Github: Unauthorized",
-      Octokit::InternalServerError => "Github: Internal server error",
+      Octokit::NotFound => "GitHub: Not found",
+      Octokit::Unauthorized => "GitHub: Unauthorized",
+      Octokit::InternalServerError => "GitHub: Internal server error",
     }.each do |exception, message|
       it "catches #{exception} exceptions" do
         GITHUB.expects(:compare).raises(exception)

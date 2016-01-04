@@ -1,20 +1,20 @@
 # Continuous Integration support
 
-Samson can be integrated with CI services through web-hooks. Web-hooks are just URLs that add to your 
+Samson can be integrated with CI services through web-hooks. Web-hooks are just URLs that add to your
 favourite CI service to allow it to tell Samson that a new release or deploy should be triggered.
 
 Each project has it's own set of web-hook URLs. You can find a list of them for the various CI services Samson supports on the
 'webhooks' tab when you navigate to your project within Samson.
 
 There are 2 uses of web-hooks in Samson:
-* Create a release for the project within Samson. I.e., Increment a version number, and tag the repo within Github so you can deploy tags instead of 'master'.
+* Create a release for the project within Samson. I.e., Increment a version number, and tag the repo within GitHub so you can deploy tags instead of 'master'.
 * Automatically trigger a deploy to your target hosts.
 
 You can combine those 2 above as well.
 
 ## Workflow Summary
 
--> Push a change to a branch in Github (e.g. master)
+-> Push a change to a branch in GitHub (e.g. master)
 -> CI validates the change
 -> CI makes webhook call back to Samson
 -> Samson receives webhook call
@@ -38,7 +38,7 @@ You can combine those 2 above as well.
 * Buildkite
     * You can add a webhook per project under settings/notifications
     * You can add any value to the 'Token' field, as it is not used
-* Github
+* GitHub
     * You may add a webhook for push events
 
 Note: to skip a deploy, add "[deploy skip]" to your commit message, and Samson will ignore the webhook from CI.

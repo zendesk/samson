@@ -6,7 +6,7 @@ class GithubNotification
   end
 
   def deliver
-    Rails.logger.info "Updating Github PR..."
+    Rails.logger.info "Updating GitHub PR..."
 
     pull_requests = @deploy.changeset.pull_requests
 
@@ -17,7 +17,7 @@ class GithubNotification
         status = GITHUB.add_comment(@project.github_repo, pull_id, body)
 
         if status == "201"
-          Rails.logger.info "Updated Github PR: #{pull_id}"
+          Rails.logger.info "Updated GitHub PR: #{pull_id}"
         else
           Rails.logger.info "Failed to update PR: #{pull_id}, status: #{status}"
         end
