@@ -8,10 +8,6 @@ samson.controller('KubernetesDashboardCtrl',
     $scope.loadingEnvironments = false;
     $scope.loadingClusterState = false;
 
-    $scope.reloadDashboardData = function() {
-      loadClusterState();
-    };
-
     $scope.environmentChanged = function(env) {
       $scope.environment = env;
       loadClusterState();

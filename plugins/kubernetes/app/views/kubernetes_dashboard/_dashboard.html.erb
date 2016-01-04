@@ -19,7 +19,7 @@
     </div>
 
     <div ng-if="dashboardReady()" class="dashboard-container">
-      <button type="button" class="btn btn-default pull-right" ng-click="reloadDashboardData()">
+      <button type="button" class="btn btn-default pull-right" ng-click="loadClusterState()">
         <span class="glyphicon glyphicon-refresh"></span>
       </button>
       <div ng-if="empty(dashboard_data)">
