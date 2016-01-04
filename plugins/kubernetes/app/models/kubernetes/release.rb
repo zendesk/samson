@@ -26,8 +26,7 @@ module Kubernetes
 
     def pod_labels
       {
-        project: build.project_name,
-        release_id: id.to_s
+        project: build.project_name
       }
     end
 
@@ -76,7 +75,7 @@ module Kubernetes
     private
 
     def docker_image_in_registry?
-      if build && build.docker_repo_digest.blank?
+      if build && build.docker_repo_digest.blank? && build.docker_ref.blank?
         errors.add(:build, 'Docker image was not pushed to registry')
       end
     end

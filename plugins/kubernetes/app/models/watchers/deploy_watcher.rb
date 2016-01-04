@@ -15,9 +15,7 @@ module Watchers
     end
 
     def watch
-      @release.release_docs.each do |release_doc|
-        subscribe("#{release_doc.replication_controller_name}", :handle_update)
-      end
+      subscribe("#{@release.build.project_name}", :handle_update)
     end
 
     def handle_update(topic, data)

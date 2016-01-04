@@ -35,12 +35,12 @@ Project.class_eval do
         kubernetes_config_files(config_files, git_ref) { |config_file|
           roles.create!(
             config_file: config_file.file_path,
-            name: config_file.replication_controller.labels[:role],
+            name: config_file.deployment.metadata.labels.role,
             service_name: config_file.service.name,
-            ram: config_file.replication_controller.pod_template.container.ram,
-            cpu: config_file.replication_controller.pod_template.container.cpu,
-            replicas: config_file.replication_controller.replicas,
-            deploy_strategy: config_file.replication_controller.deploy_strategy)
+            ram: config_file.deployment.ram_mi,
+            cpu: config_file.deployment.cpu_m,
+            replicas: config_file.deployment.spec.replicas,
+            deploy_strategy: config_file.deployment.strategy_type)
         }
 
         # Need to reload the project to refresh the association otherwise

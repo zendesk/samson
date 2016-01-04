@@ -10,7 +10,7 @@ module Kubernetes
   # https://cloud.google.com/container-engine/docs/services/operations
   #
   class RoleConfigFile
-    attr_reader :file_path, :replication_controller, :service
+    attr_reader :file_path, :deployment, :service
 
     def initialize(contents, file_path)
       @file_path = file_path
@@ -26,9 +26,12 @@ module Kubernetes
     end
 
     def parse_replication_controller
-      rc_hash = as_hash('ReplicationController')
-      raise 'ReplicationController missing in the configuration file.' if rc_hash.nil?
-      @replication_controller = ReplicationController.new(rc_hash)
+      deployment_hash = as_hash('Deployment')
+      raise 'Deployment specification missing in the configuration file.' if deployment_hash.nil?
+      @deployment = Deployment.new(deployment_hash, :recurse_over_arrays => true)
+    rescue => ex
+      Rails.logger.error "Deployment YAML '#{file_path}' invalid: #{ex.message}"
+      raise ex
     end
 
     def parse_service
@@ -44,98 +47,28 @@ module Kubernetes
     #
     # INNER CLASSES
     #
+    class Deployment < RecursiveOpenStruct
+      DEFAULT_RESOURCE_CPU = '99m'
+      DEFAULT_RESOURCE_RAM = '512Mi'
+      DEFAULT_ROLLOUT_STRATEGY = 'RollingUpdate'
 
-    class ReplicationController
-
-      def initialize(rc_hash)
-        @rc_hash = rc_hash
+      def cpu_m
+        val = first_container.try(:resources).try(:limits).try(:cpu) || DEFAULT_RESOURCE_CPU
+        /(\d+(.\d+)?)/.match(val).to_s.to_f.try(:/, 1000)
       end
 
-      def labels
-        metadata[:labels]
+      def ram_mi
+        val = first_container.try(:resources).try(:limits).try(:memory) || DEFAULT_RESOURCE_RAM
+        /(\d+)/.match(val).to_s.to_i
       end
 
-      def replicas
-        spec[:replicas]
+      def first_container
+        spec.template.spec.containers.first
       end
 
-      def selector
-        spec[:selector]
+      def strategy_type
+        spec.try(:strategy).try(:type) || DEFAULT_ROLLOUT_STRATEGY
       end
-
-      def pod_template
-        @pod_template ||= PodTemplate.new(spec[:template])
-      end
-
-      def deploy_strategy
-        'rolling_update' #TODO: NOT SUPPORTED THROUGH YAML FILE YET ?
-      end
-
-      private
-
-      def metadata
-        @rc_hash[:metadata]
-      end
-
-      def spec
-        @rc_hash[:spec]
-      end
-    end
-
-    class PodTemplate
-
-      def initialize(pod_hash)
-        @pod_hash = pod_hash
-      end
-
-      def labels
-        metadata[:labels]
-      end
-
-      # NOTE: This logic assumes that if there are multiple containers defined
-      # in the pod, the container that should run the image from this project
-      # is the first container defined.
-      def container
-        @container ||= Container.new(spec[:containers].first)
-      end
-
-      private
-
-      def metadata
-        @pod_hash[:metadata]
-      end
-
-      def spec
-        @pod_hash[:spec]
-      end
-    end
-
-    class Container
-
-      def initialize(container_hash)
-        @container_hash = container_hash
-      end
-
-      def cpu
-        cpu = limits.try(:[], :cpu) || '200m'
-        /(\d+)/.match(cpu).to_s.to_f.try(:/, 1000) #e.g. 0.2 cores
-      end
-
-      def ram
-        ram = limits.try(:[], :memory) || '512Mi'
-        /(\d+)/.match(ram).to_s.to_i
-      end
-
-      private
-
-      def resources
-        @container_hash[:resources]
-      end
-
-      def limits
-        resources.try(:[], :limits)
-      end
-
     end
 
     class Service

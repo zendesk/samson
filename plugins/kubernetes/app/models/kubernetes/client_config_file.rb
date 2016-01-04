@@ -21,6 +21,10 @@ module Kubernetes
       contexts[context_name].try(:client)
     end
 
+    def extension_client_for_client_for(context_name)
+      contexts[context_name].try(:extension_client)
+    end
+
     def context_names
       contexts.keys
     end
@@ -102,6 +106,10 @@ module Kubernetes
 
       def client
         Kubeclient::Client.new(cluster.url, api_version, ssl_options: ssl_options)
+      end
+
+      def extension_client
+        Kubeclient::Client.new(cluster.server + '/apis', 'extensions/v1beta1', ssl_options: ssl_options)
       end
 
       def use_ssl?
