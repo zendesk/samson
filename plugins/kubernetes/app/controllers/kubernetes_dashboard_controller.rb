@@ -38,6 +38,7 @@ class KubernetesDashboardController < ApplicationController
 
   def build_role(role_id)
     {
+        id: role_id,
         name: role_name(role_id),
         deploy_groups: {}
     }

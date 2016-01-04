@@ -1,0 +1,42 @@
+<script type="text/ng-template" id="kubernetes/deploy_progress_widget.tmpl.html">
+  <div class="deploy-group-widget" ng-class="{ 'deploy-completed': deployCompleted() }">
+    <div class="deploy-status" ng-if="deployCompleted()">
+      <span>
+        {{buildLabel(lastRelease())}}.{{releaseId(lastRelease())}}: {{liveReplicas(lastRelease())}} of {{replicasTotal(lastRelease())}} replicas running.
+      </span>
+    </div>
+    <div class="deploy-status" ng-if="deployFailed()">
+      <span>
+        An error occurred while deploying {{buildLabel(lastRelease())}}.{{releaseId(lastRelease())}}.
+      </span>
+    </div>
+    <div class="deploy-group-release" ng-class="{ 'current-release': currentRelease(release), 'target-reached': targetStateReached(release) }"
+         ng-repeat="release in deployGroup.releases | orderBy:'id':true" ng-if="!deployCompleted()">
+      <div class="progress-wrapper">
+        <label>{{buildLabel(release)}}.{{releaseId(release)}}</label>
+
+        <div class="progress">
+          <div class="progress-bar" role="progressbar" ng-style="{ 'width' : progress(release) }"></div>
+        </div>
+      </div>
+    </div>
+    <div style="flex: 1;" ng-if="!deployCompleted()"></div>
+    <div class="deploy-group-footer">
+      <span class="glyphicon glyphicon-option-horizontal deploy-group-options" uib-tooltip-template="'replicas-status-tooltip.html'"
+            tooltip-trigger="mouseenter"></span>
+      <span class="deploy-group-name">{{deployGroup.name}}</span>
+    </div>
+  </div>
+</script>
+
+<script type="text/ng-template" id="replicas-status-tooltip.html">
+  <div class="release-status" ng-repeat="release in deployGroup.releases | orderBy:'id':true">
+    <span class="release-name">{{buildLabel(release)}}.{{releaseId(release)}}:</span>
+    <span class="release-replicas-count" ng-if="currentRelease(release)">
+      {{liveReplicas(release)}} of {{replicasTotal(release)}} replicas running
+    </span>
+    <span class="release-replicas-count" ng-if="!currentRelease(release)">
+      {{liveReplicas(release)}} of {{replicasTotal(release)}} replicas running
+    </span>
+  </div>
+</script>
