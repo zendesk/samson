@@ -21,7 +21,7 @@ module Kubernetes
       contexts[context_name].try(:client)
     end
 
-    def extension_client_for_client_for(context_name)
+    def extension_client_for(context_name)
       contexts[context_name].try(:extension_client)
     end
 
