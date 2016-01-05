@@ -23,6 +23,7 @@ class KubernetesDashboardController < ApplicationController
 
   def build_pod_info(roles, deploy_group_id, pod)
     labels = pod.metadata.labels
+    return unless labels.role_id && labels.release_id # skip misconfigured / manually created pods
 
     role = role(roles, labels.role_id)
     deploy_group = deploy_group(role[:deploy_groups], deploy_group_id)
