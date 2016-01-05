@@ -16,7 +16,7 @@ module Kubernetes
     end
 
     def extension_client
-      @extension_client ||= kubeconfig.ext_client_for(config_context)
+      @extension_client ||= kubeconfig.extension_client_for(config_context)
     end
 
     def context
