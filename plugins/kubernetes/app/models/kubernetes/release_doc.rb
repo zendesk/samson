@@ -20,6 +20,10 @@ module Kubernetes
       define_method("#{s}?") { status == s }
     end
 
+    def fail!
+      update_attribute(:status, :failed)
+    end
+
     def has_service?
       kubernetes_role.has_service? && service_template.present?
     end

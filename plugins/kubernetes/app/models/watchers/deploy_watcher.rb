@@ -39,12 +39,7 @@ module Watchers
     private
 
     def handle_event_update(release_doc)
-      if release_doc.failed?
-        false # no update needed, the release has already failed
-      else
-        release_doc.update_attribute(:status, :failed)
-        true
-      end
+      release_doc.failed? ? false : release_doc.fail!
     end
 
     def handle_pod_update(release_doc, data)
