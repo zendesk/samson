@@ -2,7 +2,7 @@ module Kubernetes
   class Release < ActiveRecord::Base
     self.table_name = 'kubernetes_releases'
 
-    STATUSES = %w[created spinning_up live spinning_down dead]
+    STATUSES = %w[created spinning_up live spinning_down dead failed]
 
     belongs_to :user
     belongs_to :build
@@ -19,9 +19,11 @@ module Kubernetes
     end
 
     def release_is_live!
-      self.status = :live
-      self.deploy_finished_at = Time.now
-      save!
+      finish_deploy(:live)
+    end
+
+    def release_failed!
+      finish_deploy(:failed)
     end
 
     def pod_labels
@@ -78,6 +80,12 @@ module Kubernetes
       if build && build.docker_repo_digest.blank? && build.docker_ref.blank?
         errors.add(:build, 'Docker image was not pushed to registry')
       end
+    end
+
+    def finish_deploy(status)
+      self.status = status
+      self.deploy_finished_at = Time.now
+      save!
     end
   end
 end

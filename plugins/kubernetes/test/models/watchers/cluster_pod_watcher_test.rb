@@ -4,12 +4,12 @@ require 'kubeclient'
 
 describe Watchers::ClusterPodWatcher do
   describe 'using actors' do
-    let(:rc_name) { 'test' }
+    let(:project_name) { 'test' }
     before do
       Celluloid.shutdown # it's started by default after requiring the gem
       Celluloid.boot
 
-      Celluloid::Actor[:subscriber] = NoticeSubscriber.new(rc_name)
+      Celluloid::Actor[:subscriber] = NoticeSubscriber.new(project_name)
       Celluloid::Actor[:stream] = ConditionedWatchStream.new
     end
     after do
@@ -29,30 +29,30 @@ describe Watchers::ClusterPodWatcher do
       end
 
       it 'publishes notices' do
-        send_notice(actor(:stream), rc_name)
+        send_notice(actor(:stream), project_name)
         wait_for_notice_count(actor(:subscriber), 1)
-        send_notice(actor(:stream), rc_name)
+        send_notice(actor(:stream), project_name)
         wait_for_notice_count(actor(:subscriber), 2)
-        send_notice(actor(:stream), rc_name)
+        send_notice(actor(:stream), project_name)
         wait_for_notice_count(actor(:subscriber), 3)
       end
 
       it 'ignores error notices' do
-        send_notice(actor(:stream), rc_name, 'ERROR')
-        send_notice(actor(:stream), rc_name)
+        send_notice(actor(:stream), project_name, 'ERROR')
+        send_notice(actor(:stream), project_name)
         wait_for_notice_count(actor(:subscriber), 1)
         refute_equal('ERROR', actor(:subscriber).notices.first.type)
       end
 
       it 'tolerates restarts' do
-        send_notice(actor(:stream), rc_name)
+        send_notice(actor(:stream), project_name)
         wait_for_notice_count(actor(:subscriber), 1)
 
         actor(:watcher).async.stop_watching
         wait_for { !actor(:stream).waiting } # wait until the stream actually shuts down
         actor(:watcher).async.start_watching
 
-        send_notice(actor(:stream), rc_name)
+        send_notice(actor(:stream), project_name)
         wait_for_notice_count(actor(:subscriber), 2)
       end
 
@@ -74,13 +74,13 @@ describe Watchers::ClusterPodWatcher do
       end
 
       it 'gets restarted after a crash' do
-        send_notice(actor(:stream), rc_name)
+        send_notice(actor(:stream), project_name)
         wait_for_notice_count(actor(:subscriber), 1)
 
         id_before = actor(:watcher).wrapped_object.object_id
         send_broken_notice(actor(:stream))
 
-        send_notice(actor(:stream), rc_name)
+        send_notice(actor(:stream), project_name)
         wait_for_notice_count(actor(:subscriber), 2)
         refute_equal(id_before, actor(:watcher).wrapped_object.object_id)
       end
