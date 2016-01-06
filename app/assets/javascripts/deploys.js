@@ -148,15 +148,29 @@ $(function () {
     }
   });
 
+  function showDeployConfirmationTab($this) {
+    var $navTabs = $this.find("#deploy-confirmation .nav-tabs"),
+        hasActivePane = $this.find(".tab-pane.active").length === 0;
+
+    // We need to switch to another tab and then switch back in order for
+    // the plugin to detect that the DOM node has been replaced.
+    $navTabs.find("a").tab("show");
+
+    // If there is no active pane defined, show first pane
+    if (hasActivePane) {
+      $navTabs.find("a:first").tab("show");
+    }
+  }
+
   $form.submit(function(event) {
-    var $selected_stage = $("#deploy_stage_id option:selected"),
-        $this = $(this),
-        $submit = $this.find('button[type=submit]');
+    var $this = $(this);
 
     if(!confirmed && $this.data('confirmation')) {
       toggleConfirmed();
       $("#deploy-confirmation").show();
-      $("#deploy-confirmation .nav-tabs a:first").tab("show");
+
+      showDeployConfirmationTab($this);
+
       $container.empty();
       $container.append($placeholderPanes);
 
@@ -164,14 +178,11 @@ $(function () {
         method: "POST",
         url: $this.data("confirm-url"),
         data: $this.serialize(),
-        success: function(data, status, xhr) {
+        success: function(data) {
           $placeholderPanes.detach();
           $container.append(data);
 
-          // We need to switch to another tab and then switch back in order for
-          // the plugin to detect that the DOM node has been replaced.
-          $('#deploy-confirmation .nav-tabs a').tab("show");
-          $('#deploy-confirmation .nav-tabs a:first').tab("show");
+          showDeployConfirmationTab($this);
         }
       });
 

@@ -6,7 +6,7 @@ module Kubernetes
 
     belongs_to :project, inverse_of: :roles
 
-    DEPLOY_STRATEGIES = ['rolling_update', 'kill_and_restart']
+    DEPLOY_STRATEGIES = %w(RollingUpdate Recreate)
 
     validates :project, presence: true
     validates :name, presence: true

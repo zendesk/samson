@@ -8,26 +8,26 @@ describe Kubernetes::RoleConfigFile do
     let(:config_file) { Kubernetes::RoleConfigFile.new(contents, 'some-file.yml') }
 
     it 'should load a replication controller with its contents' do
-      config_file.replication_controller.wont_be_nil
+      config_file.deployment.wont_be_nil
 
       # Labels
-      config_file.replication_controller.labels[:role].must_equal 'some-role'
+      config_file.deployment.labels[:role].must_equal 'some-role'
 
       # Replicas
-      config_file.replication_controller.replicas.must_equal 2
+      config_file.deployment.replicas.must_equal 2
 
       # Selector
-      config_file.replication_controller.selector[:project].must_equal 'some-project'
-      config_file.replication_controller.selector[:role].must_equal 'some-role'
+      config_file.deployment.selector[:project].must_equal 'some-project'
+      config_file.deployment.selector[:role].must_equal 'some-role'
 
       # Pod Template
-      config_file.replication_controller.pod_template.wont_be_nil
-      config_file.replication_controller.pod_template.labels.wont_be_nil
-      config_file.replication_controller.pod_template.container.wont_be_nil
+      config_file.deployment.pod_template.wont_be_nil
+      config_file.deployment.pod_template.labels.wont_be_nil
+      config_file.deployment.pod_template.container.wont_be_nil
 
       # Container
-      config_file.replication_controller.pod_template.container.cpu.must_equal 0.5
-      config_file.replication_controller.pod_template.container.ram.must_equal 100
+      config_file.deployment.pod_template.container.cpu.must_equal 0.5
+      config_file.deployment.pod_template.container.ram.must_equal 100
     end
 
     it 'should load a service with its contents' do

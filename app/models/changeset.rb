@@ -81,7 +81,7 @@ class Changeset
       end
     end
   rescue Octokit::Error => e
-    NullComparison.new("Github: #{e.message.sub("Octokit::", "").underscore.humanize}")
+    NullComparison.new("GitHub: #{e.message.sub("Octokit::", "").underscore.humanize}")
   end
 
   def find_pull_requests

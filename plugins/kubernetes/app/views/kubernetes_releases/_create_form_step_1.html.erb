@@ -21,14 +21,11 @@
           </label>
 
           <div class="col-lg-4 no-padding">
-            <div id="environment-dropdown" class="btn-group" uib-dropdown uib-keyboard-nav>
+            <div id="build-dropdown" class="btn-group" uib-dropdown uib-keyboard-nav>
               <button type="button" class="btn btn-default" uib-dropdown-toggle>
                 {{ build.label || 'Choose build' }} <span class="caret"></span>
               </button>
               <ul class="uib-dropdown-menu" role="menu" aria-labelledby="environment-dropdown">
-                <li role="menuitem">
-                  <a ng-click="buildChanged()"></a>
-                </li>
                 <li role="menuitem" ng-repeat="build in builds">
                   <a ng-click="buildChanged(build)">{{ build.label }}</a>
                 </li>
@@ -48,9 +45,6 @@
               {{ environment.name || 'Choose environment' }} <span class="caret"></span>
             </button>
             <ul class="uib-dropdown-menu" role="menu" aria-labelledby="environment-dropdown">
-              <li role="menuitem">
-                <a ng-click="environmentChanged()"></a>
-              </li>
               <li role="menuitem" ng-repeat="env in environments">
                 <a ng-click="environmentChanged(env)">{{ env.name }}</a>
               </li>

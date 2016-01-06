@@ -10,29 +10,49 @@ module Watchers
     def initialize(release)
       @release = release
       @current_rcs = {}
+      @pod_timer = after(ENV.fetch('KUBERNETES_POD_TIMEOUT', 10.minutes).to_i) { pod_timeout }
       info "Start watching K8s deploy: #{@release}"
       async :watch
     end
 
     def watch
-      @release.release_docs.each do |release_doc|
-        subscribe("#{release_doc.replication_controller_name}", :handle_update)
-      end
+      subscribe("#{@release.build.project_name}", :handle_update)
     end
 
     def handle_update(topic, data)
       release_doc = release_doc_from_rc_name(topic)
-      pod_event = Events::PodEvent.new(data)
-      return error('invalid k8s pod event') unless pod_event.valid?
-      update_replica_count(release_doc, pod_event)
-      send_event(role: release_doc.kubernetes_role.name,
-                 deploy_group: release_doc.deploy_group.name,
-                 target_replicas: release_doc.replica_target,
-                 live_replicas: release_doc.replicas_live)
-      end_deploy if deploy_finished?
+      release_updated = if data.object.kind == 'Event'
+                        handle_event_update(release_doc)
+                      else
+                        handle_pod_update(release_doc, data)
+                      end
+      if release_updated
+        send_event(role: release_doc.kubernetes_role.name,
+                   deploy_group: release_doc.deploy_group.name,
+                   target_replicas: release_doc.replica_target,
+                   live_replicas: release_doc.replicas_live,
+                   failed: release_doc.failed?)
+        end_deploy if deploy_finished?
+      end
     end
 
     private
+
+    def handle_event_update(release_doc)
+      release_doc.failed? ? false : release_doc.fail!
+    end
+
+    def handle_pod_update(release_doc, data)
+      pod_event = Events::PodEvent.new(data)
+      if pod_event.valid?
+        update_replica_count(release_doc, pod_event)
+        update_timeout(pod_event)
+        true
+      else
+        error 'invalid k8s pod event'
+        false
+      end
+    end
 
     def deploy_finished?
       @release.release_docs.all?(&:live?)
@@ -43,7 +63,8 @@ module Watchers
     end
 
     def on_termination
-      send_event(msg: 'Finished Watching Deploy!')
+      info 'Finished Watching Deploy!'
+      @pod_timer.cancel
     end
 
     def update_replica_count(release_doc, pod_event)
@@ -60,9 +81,21 @@ module Watchers
       @release.update_columns(status: :spinning_up) if @release.created?
     end
 
+    def update_timeout(pod_event)
+      unless pod_event.deleted?
+        @pod_timer.reset if pod_event.pod.ready?
+      end
+    end
+
     def end_deploy
       @release.release_is_live!
-      send_event(msg: 'Deploy is live!')
+      info 'Deploy is live!'
+      terminate
+    end
+
+    def pod_timeout
+      @release.release_failed!
+      warn 'Deploy failed!'
       terminate
     end
 
@@ -73,9 +106,13 @@ module Watchers
 
     def send_event(options)
       base = {
-        project: @release.project.id,
-        release: @release.id
+          project: @release.project.id,
+          build: @release.build.label,
+          release: @release.id
       }
+
+      Rails.logger.info("[SSE] Sending: #{base.merge(options)}")
+
       SseRailsEngine.send_event('k8s', base.merge(options))
     end
   end

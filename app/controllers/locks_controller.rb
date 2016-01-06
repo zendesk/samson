@@ -8,7 +8,7 @@ class LocksController < ApplicationController
 
   def create
     attributes = params.require(:lock).
-      permit(:description, :stage_id, :warning).
+      permit(:description, :stage_id, :warning, :delete_in).
       merge(user: current_user)
     Lock.create!(attributes)
     redirect_to :back, notice: 'Locked'
