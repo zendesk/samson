@@ -11,14 +11,14 @@ module Watchers
 
     def handle_notice(notice)
       if error_notice?(notice.object.reason)
-        rc_name = rc_name(notice.object.involvedObject)
-        publish(rc_name, notice) if rc_name
+        project_name = project_name(notice.object.involvedObject)
+        publish(project_name, notice) if project_name
       end
     end
 
-    def rc_name(involved_object)
+    def project_name(involved_object)
       pod = @client.get_pod(involved_object.name, involved_object.namespace)
-      pod.metadata.labels ? pod.metadata.labels.replication_controller : nil
+      pod.metadata.labels ? pod.metadata.labels.project : nil
     rescue KubeException => e
       if e.error_code == 404
         warn e.to_s
