@@ -10,7 +10,7 @@ module Watchers
     def initialize(release)
       @release = release
       @current_rcs = {}
-      @pod_timer = after(ENV.fetch('KUBERNETES_POD_TIMEOUT', 600)) { pod_timeout }
+      @pod_timer = after(ENV.fetch('KUBERNETES_POD_TIMEOUT', 10.minutes).to_i) { pod_timeout }
       info "Start watching K8s deploy: #{@release}"
       async :watch
     end
@@ -21,12 +21,12 @@ module Watchers
 
     def handle_update(topic, data)
       release_doc = release_doc_from_rc_name(topic)
-      updates_found = if data.object.kind == 'Event'
+      release_updated = if data.object.kind == 'Event'
                         handle_event_update(release_doc)
                       else
                         handle_pod_update(release_doc, data)
                       end
-      if updates_found
+      if release_updated
         send_event(role: release_doc.kubernetes_role.name,
                    deploy_group: release_doc.deploy_group.name,
                    target_replicas: release_doc.replica_target,
