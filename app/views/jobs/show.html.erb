@@ -11,7 +11,7 @@
 </h1>
 
 <div id="header">
-  <% if @job.finished? || JobExecution.enabled %>
+  <% if @job.finished? || @job.running? || JobExecution.enabled %>
     <%= render 'header' %>
   <% else %>
     <div class="alert alert-info">
@@ -30,7 +30,7 @@
   </div>
 </section>
 
-<% if @job.active? && JobExecution.enabled %>
+<% if (@job.active? && JobExecution.enabled) || @job.running? %>
   <%= javascript_tag do %>
     toggleOutputToolbar();
     startStream();
