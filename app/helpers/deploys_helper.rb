@@ -15,7 +15,7 @@ module DeploysHelper
         output_hidden = true
         output << render('buddy_check', deploy: @deploy)
       end
-    elsif @deploy.active?
+    elsif @deploy.pending?
       output_hidden = true
       output << render('queued')
     end

@@ -18,7 +18,7 @@
   </div>
 </h1>
 
-<% if @deploy.finished? || JobExecution.enabled %>
+<% if @deploy.finished? || deploy_running? || JobExecution.enabled %>
   <%= status_panel @deploy %>
   <%= Samson::Hooks.render_views(:deploys_header, self) %>
 <% else %>

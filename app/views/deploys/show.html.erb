@@ -59,7 +59,7 @@
   </div>
 </section>
 
-<% if @deploy.active? && JobExecution.enabled %>
+<% if (@deploy.active? && JobExecution.enabled) || deploy_running? %>
   <%= javascript_tag do %>
     toggleOutputToolbar();
     startStream();
