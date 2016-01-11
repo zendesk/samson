@@ -42,6 +42,12 @@ PATH
     samson_pipelines (0.0.0)
 
 PATH
+  remote: plugins/slack_webhooks
+  specs:
+    samson_slack_webhooks (0.0.0)
+      faraday
+
+PATH
   remote: plugins/slack
   specs:
     samson_slack (0.0.0)
@@ -173,7 +179,6 @@ GEM
       dotenv (= 0.11.1)
     erubis (2.7.0)
     eventmachine (1.0.8)
-    eventmachine (1.0.8-java)
     excon (0.45.4)
     execjs (2.6.0)
     faraday (0.9.2)
@@ -550,6 +555,7 @@ DEPENDENCIES
   samson_kubernetes!
   samson_pipelines!
   samson_slack!
+  samson_slack_webhooks!
   samson_zendesk!
   sass-rails (~> 5.0)
   sawyer (~> 0.5)
