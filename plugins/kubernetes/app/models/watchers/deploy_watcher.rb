@@ -29,12 +29,12 @@ module Watchers
 
     def start_watching
       sync_with_cluster
-      info "Start watching deployment for project: #{project.name}"
+      info "Start watching deployment for project: #{@project.name}"
       async :watch
     end
 
     def watch
-      subscribe(Watchers::TopicSubscription.pod_updates_topic(project.id), :handle_event)
+      subscribe(Watchers::TopicSubscription.pod_updates_topic(@project.id), :handle_event)
     end
 
     def handle_event(topic, message)
@@ -50,8 +50,6 @@ module Watchers
 
     private
 
-    attr_reader :project
-
     # Gets the database in-sync with the Kubernetes Cluster
     def sync_with_cluster
       fetch_cluster_data
@@ -62,9 +60,9 @@ module Watchers
     # From the target environment for the current Release, fetches all existing Pods from the corresponding
     # Kubernetes Clusters and updates the internal data structures used by the watcher.
     def fetch_cluster_data
-      env = release_env(last_release(project))
+      env = release_env(last_release(@project))
       env.cluster_deploy_groups.each do |cdg|
-        cdg.cluster.client.get_pods(namespace: cdg.namespace, label_selector: "project_id=#{project.id}").each do |pod|
+        cdg.cluster.client.get_pods(namespace: cdg.namespace, label_selector: "project_id=#{@project.id}").each do |pod|
           update_rc_pods(Kubernetes::Api::Pod.new(pod))
         end
       end
@@ -77,9 +75,9 @@ module Watchers
     # Will mark as :dead each previous Release for which there is no Pod in the cluster.
     # Will mark as :dead each ReleaseDoc belonging to a previous Release for which there is no Pod in the cluster.
     def reconcile_old_releases
-      excluded_from_sync = release_ids_from_cluster << last_release(project).id
+      excluded_from_sync = release_ids_from_cluster << last_release(@project).id
 
-      scope = project.kubernetes_releases.excluding(excluded_from_sync)
+      scope = @project.kubernetes_releases.excluding(excluded_from_sync)
 
       scope.not_dead.update_all(status: :dead)
       scope.with_not_dead_release_docs.distinct.each { |rel| rel.release_docs.update_all(status: :dead) }
@@ -117,7 +115,7 @@ module Watchers
 
       handle_pod_update(pod) do |release_doc, failed_pods|
         send_event(release_doc, failed_pods)
-        terminate_watcher if deploy_finished?(project)
+        terminate_watcher if deploy_finished?(@project)
       end
     end
 
@@ -215,7 +213,7 @@ module Watchers
     end
 
     def pod_timeout
-      last_release(project).fail!
+      last_release(@project).fail!
       warn 'Deploy failed!'
       terminate
     end

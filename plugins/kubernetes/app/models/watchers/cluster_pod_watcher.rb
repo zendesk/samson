@@ -3,7 +3,13 @@ module Watchers
     include Celluloid::Notifications
 
     def initialize(cluster)
-      super(cluster.client.watch_pods)
+      super(cluster)
+    end
+
+    protected
+
+    def watch_stream
+      @watch_stream ||= @cluster.client.watch_pods
     end
 
     private
@@ -13,7 +19,7 @@ module Watchers
 
       if pod_event.valid?
         pod = pod_event.pod
-        publish(Watchers::TopicSubscription.pod_updates_topic(pod.project_id), message(pod_event)) if pod.valid?
+        publish(Watchers::TopicSubscription.pod_updates_topic(pod.project_id), self.class.topic_message(pod_event)) if pod.valid?
       else
         error("Invalid Kubernetes event: #{notice}")
       end
