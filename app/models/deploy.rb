@@ -74,6 +74,10 @@ class Deploy < ActiveRecord::Base
     stage.deploy_requires_approval? && buddy == user
   end
 
+  def waiting_for_buddy?
+    pending? && stage.deploy_requires_approval? && !buddy
+  end
+
   def confirm_buddy!(buddy)
     update_attributes!(buddy: buddy, started_at: Time.now)
     DeployService.new(user).confirm_deploy!(self)
@@ -83,21 +87,17 @@ class Deploy < ActiveRecord::Base
     started_at || created_at
   end
 
-  def pending_non_production?
-    pending? && !stage.production?
-  end
-
   def pending_start!
     touch # hack: refresh is immediate with update
     DeployService.new(user).confirm_deploy!(self)
   end
 
-  def waiting_for_buddy?
-    pending? && stage.production?
-  end
-
   def self.active
     includes(:job).where(jobs: { status: Job::ACTIVE_STATUSES })
+  end
+
+  def self.pending
+    includes(:job).where(jobs: { status: 'pending' })
   end
 
   def self.running

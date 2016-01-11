@@ -20,7 +20,6 @@ Samson::Application.routes.draw do
 
       member do
         post :buddy_check
-        post :pending_start
         get :changeset
       end
     end

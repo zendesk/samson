@@ -2,8 +2,18 @@
 
 <%= breadcrumb @project, "Job ##{@job.id}" %>
 
-<div id="header" class="stream-header">
-  <% if !job_active? && !@job.finished? %>
+<h1>
+  <%= @project.name %>
+
+  <div class="pull-right">
+    <%= link_to "Back", project_jobs_path(@project), class: "btn btn-default" %>
+  </div>
+</h1>
+
+<div id="header">
+  <% if @job.finished? || JobExecution.enabled %>
+    <%= render 'header' %>
+  <% else %>
     <div class="alert alert-info">
       Samson is currently restarting, your job has been queued and will be resumed shortly.
     </div>
@@ -11,8 +21,6 @@
     <%= javascript_tag do %>
       waitUntilEnabled("<%= enabled_jobs_path %>");
     <% end %>
-  <% else %>
-    <%= render 'header' %>
   <% end %>
 </div>
 
@@ -22,7 +30,7 @@
   </div>
 </section>
 
-<% if job_active? %>
+<% if @job.active? && JobExecution.enabled %>
   <%= javascript_tag do %>
     toggleOutputToolbar();
     startStream();

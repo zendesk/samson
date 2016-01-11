@@ -90,13 +90,17 @@ module Samson
     if !Rails.env.test? && ENV['SERVER_MODE'] && !ENV['PRECOMPILE']
       initializer :execute_job, after: :set_routes_reloader_hook do # flowdock uses routes: run after the routes are loaded
         JobExecution.enabled = true
+
         Job.running.each(&:stop!)
+
         Job.non_deploy.pending.each do |job|
           JobExecution.start_job(JobExecution.new(job.commit, job))
         end
-        Deploy.active.each do |deploy|
-          deploy.pending_start! if deploy.pending_non_production?
+
+        Deploy.pending.each do |deploy|
+          deploy.pending_start! unless deploy.waiting_for_buddy?
         end
+
         RestartSignalHandler.listen
         Samson::Tasks::LockCleaner.start
       end
