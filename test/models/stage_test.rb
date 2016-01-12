@@ -26,9 +26,9 @@ describe Stage do
     it 'updates the order on stages' do
       Stage.reorder [stage3.id, stage2.id, stage1.id]
 
-      stage1.order.must_equal 2
-      stage2.order.must_equal 1
-      stage3.order.must_equal 0
+      stage1.reload.order.must_equal 2
+      stage2.reload.order.must_equal 1
+      stage3.reload.order.must_equal 0
     end
 
     it 'succeeds even if a stages points to a deleted stage' do
@@ -37,8 +37,8 @@ describe Stage do
 
       Stage.reorder [stage2.id, stage1.id]
 
-      stage1.order.must_equal 1
-      stage2.order.must_equal 0
+      stage1.reload.order.must_equal 1
+      stage2.reload.order.must_equal 0
     end
   end
 
