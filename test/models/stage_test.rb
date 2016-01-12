@@ -17,6 +17,31 @@ describe Stage do
     end
   end
 
+  describe '.reorder' do
+    let(:project) { projects(:test) }
+    let(:stage1) { Stage.create!(project: project, name: 'stage1', order: 1) }
+    let(:stage2) { Stage.create!(project: project, name: 'stage2', order: 2) }
+    let(:stage3) { Stage.create!(project: project, name: 'stage3', order: 3) }
+
+    it 'updates the order on stages' do
+      Stage.reorder [stage3.id, stage2.id, stage1.id]
+
+      stage1.order.must_equal 2
+      stage2.order.must_equal 1
+      stage3.order.must_equal 0
+    end
+
+    it 'succeeds even if a stages points to a deleted stage' do
+      stage1.update! next_stage_ids: [stage3.id]
+      stage3.soft_delete!
+
+      Stage.reorder [stage2.id, stage1.id]
+
+      stage1.order.must_equal 1
+      stage2.order.must_equal 0
+    end
+  end
+
   describe '#command' do
     describe 'adding a built command' do
       before do

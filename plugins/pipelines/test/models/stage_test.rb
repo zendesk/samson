@@ -78,5 +78,10 @@ describe Stage do
       stage1.valid?.must_equal false
       stage1.errors.messages.must_equal base: ["Stage stage2 causes a circular pipeline with this stage"]
     end
+
+    it 'only validates if next_stage_ids changes' do
+      stage1.update!(order: 2)
+      stage1.valid?.must_equal true
+    end
   end
 end

@@ -28,6 +28,8 @@ class Stage < ActiveRecord::Base
   attr_writer :command
   before_save :build_new_project_command
 
+  before_soft_delete :check_stage_references
+
   def self.reorder(new_order)
     transaction do
       new_order.each.with_index { |stage_id, index| Stage.update stage_id.to_i, order: index.to_i }
@@ -222,5 +224,14 @@ class Stage < ActiveRecord::Base
 
   def permalink_scope
     Stage.unscoped.where(project_id: project_id)
+  end
+
+  def check_stage_references
+    project.stages.each do |s|
+      if s.next_stage_ids.include?(id)
+        errors[:base] << "Stage #{name} is referenced by another stage and cannot be deleted"
+        return false
+      end
+    end
   end
 end
