@@ -58,7 +58,7 @@ describe BinaryBuilder do
     end
 
     it 'uses the new style of mounting directories with api v1.20' do
-      Docker.stubs(:version).returns({ 'ApiVersion' => '1.20' })
+      Docker.stubs(:version).returns({ 'ApiVersion' => '1.24' })
       builder.send(:create_container_options).must_equal(
         {
           'Cmd' => ['/app/build.sh'],

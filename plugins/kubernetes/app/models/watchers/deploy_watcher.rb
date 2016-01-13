@@ -8,7 +8,7 @@ module Watchers
 
     def initialize(project)
       @project = project
-      @pod_timer = after(ENV.fetch('KUBERNETES_POD_TIMEOUT', 10.minutes).to_i) { pod_timeout }
+      @pod_timer = after(ENV.fetch('KUBERNETES_POD_TIMEOUT', 20.minutes).to_i) { pod_timeout }
       start_watching
     end
 
@@ -44,7 +44,7 @@ module Watchers
       case
       when event.kind == 'Event' then handle_cluster_event(message)
       when event.kind == 'Pod' then handle_pod_event(message)
-      else error "Object kind not yet supported: #{notice.object.kind}"
+      else error "Object kind not yet supported: #{event.kind}"
       end
     end
 

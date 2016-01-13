@@ -1,89 +1,53 @@
-pod1_doc:
+test_release_pod_1:
   kubernetes_role: app_server
   kubernetes_release: test_release
   deploy_group: pod1
   replica_target: 2
   replicas_live: 1
 
-pod2_doc:
+second_test_release_pod_2:
   kubernetes_role: resque_worker
   kubernetes_release: second_test_release
   deploy_group: pod2
   replica_target: 5
   replicas_live: 1
 
-test_pod1_deploying_app:
-  kubernetes_release: test_release_deploying
-  kubernetes_role: app_server
-  replica_target: 1
-  replicas_live: 0
-  replication_controller_name: test-service-app-1
-  replication_controller_doc: Yaml stuff
-  deploy_group: pod1
-
-test_pod1_deploying_resque:
-  kubernetes_release: test_release_deploying
-  kubernetes_role: resque_worker
-  replica_target: 2
-  replicas_live: 0
-  replication_controller_name: test-service-resque-2
-  replication_controller_doc: Yaml stuff
-  deploy_group: pod1
-
-test_pod1_deploying_app:
-  kubernetes_release: test_prod_release_deploying
-  kubernetes_role: app_server
-  replica_target: 3
-  replicas_live: 0
-  replication_controller_name: test-service-app-3
-  replication_controller_doc: Yaml stuff
-  deploy_group: pod1
-
-test_pod1_deploying_resque:
-  kubernetes_release: test_prod_release_deploying
-  kubernetes_role: resque_worker
-  replica_target: 2
-  replicas_live: 0
-  replication_controller_name: test-service-resque-4
-  replication_controller_doc: Yaml stuff
-  deploy_group: pod1
-
-test_pod2_complete_app:
-  kubernetes_release: test_prod_release_deploying
+live_release_pod_1:
+  kubernetes_release: live_release
   kubernetes_role: app_server
   replica_target: 2
   replicas_live: 2
   status: live
-  replication_controller_name: test-service-app-5
+  replication_controller_name: test-service-app
   replication_controller_doc: Yaml stuff
-  deploy_group: pod2
+  deploy_group: pod1
 
-test_pod2_complete_resque:
-  kubernetes_release: test_prod_release_deploying
-  kubernetes_role: resque_worker
-  replica_target: 4
-  replicas_live: 4
-  status: live
-  replication_controller_name: test-service-resque-6
-  replication_controller_doc: Yaml stuff
-  deploy_group: pod2
-
-test_pod1_complete_app:
-  kubernetes_release: test_release_complete
+live_release_pod_2:
+  kubernetes_release: live_release
   kubernetes_role: app_server
-  replica_target: 1
-  replicas_live: 1
+  replica_target: 2
+  replicas_live: 2
   status: live
-  replication_controller_name: test-service-app-1
+  replication_controller_name: test-service-app
+  replication_controller_doc: Yaml stuff
+  deploy_group: pod2
+
+created_release_pod_1:
+  kubernetes_release: created_release
+  kubernetes_role: app_server
+  replica_target: 2
+  replicas_live: 0
+  status: created
+  replication_controller_name: test-service-app
   replication_controller_doc: Yaml stuff
   deploy_group: pod1
 
-test_pod1_complete_resque:
-  kubernetes_release: test_release_complete
-  kubernetes_role: resque_worker
-  replica_target: 1
-  replicas_live: 1
-  status: live
-  replication_controller_name: test-service-resque-2
+created_release_pod_2:
+  kubernetes_release: created_release
+  kubernetes_role: app_server
+  replica_target: 2
+  replicas_live: 0
+  status: created
+  replication_controller_name: test-service-app
   replication_controller_doc: Yaml stuff
-  deploy_group: pod1
+  deploy_group: pod2

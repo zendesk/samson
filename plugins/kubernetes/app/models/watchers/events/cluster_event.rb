@@ -1,14 +1,6 @@
 module Watchers
   module Events
-    class ClusterEvent
-
-      def initialize(data)
-        @data = data
-      end
-
-      def kind
-        @data.object.try(:kind)
-      end
+    class ClusterEvent < KubernetesEvent
 
       def reason
         @data.object.try(:reason)
