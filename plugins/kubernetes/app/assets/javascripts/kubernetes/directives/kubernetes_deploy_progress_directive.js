@@ -24,9 +24,8 @@ samson.directive('deployProgressWidget', function() {
       };
 
       $scope.deployFailed = function() {
-        return _.some($scope.deployGroup.releases, function(release) {
-          return $scope.currentRelease(release) ? release.failed : false;
-        });
+        var current_release = $scope.lastRelease();
+        return current_release.failed;
       };
 
       $scope.targetStateReached = function(release) {

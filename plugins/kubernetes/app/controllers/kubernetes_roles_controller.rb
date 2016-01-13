@@ -5,7 +5,7 @@ class KubernetesRolesController < ApplicationController
   before_action :authorize_project_admin!, only: [:show, :update, :refresh]
 
   def index
-    render json: current_project.roles.order('id desc'), root: false
+    render json: current_project.roles.not_deleted.order('id desc'), root: false
   end
 
   def show

@@ -1,10 +1,9 @@
 require_relative '../test_helper'
 
 describe DeployGroupSerializer do
-  let(:deploy_group) { deploy_groups(:pod1) }
-  let(:kubernetes_cluster) { kubernetes_clusters(:test_cluster) }
-
   describe 'a deploy group not associated with a kubernetes cluster' do
+    let(:deploy_group) { deploy_groups(:pod100) }
+
     it 'contains only the basic information when serialized' do
       parsed = JSON.parse(DeployGroupSerializer.new(deploy_group).to_json).with_indifferent_access
       parsed[:deploy_group][:id].must_equal deploy_group.id
@@ -14,6 +13,9 @@ describe DeployGroupSerializer do
   end
 
   describe 'a deploy group associated with a kubernetes cluster' do
+    let(:deploy_group) { deploy_groups(:pod1) }
+    let(:kubernetes_cluster) { kubernetes_clusters(:test_cluster) }
+
     before do
       Kubernetes::Cluster.any_instance.expects(:namespace_exists?).returns(true)
       Kubernetes::ClusterDeployGroup.create!(cluster: kubernetes_cluster, deploy_group: deploy_group, namespace: 'pod1')

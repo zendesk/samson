@@ -8,14 +8,14 @@ module Watchers
 
     finalizer :stop_watching
 
-    def initialize(watch_stream)
-      @watch_stream = watch_stream
+    def initialize(cluster)
+      @cluster = cluster
       async :start_watching
     end
 
     def start_watching
       info 'watcher started'
-      @watch_stream.each do |notice|
+      watch_stream.each do |notice|
         base_handle_notice notice
       end
     end
@@ -34,16 +34,25 @@ module Watchers
 
     def self.start_watcher(cluster)
       watcher_name = watcher_symbol(cluster)
-      supervise as: watcher_name, args: [cluster.client]
+      supervise as: watcher_name, args: [cluster]
     end
 
     def self.restart_watcher(cluster)
-      watcher = Actor[watcher_symbol(cluster)]
+      watcher = Celluloid::Actor[watcher_symbol(cluster)]
       watcher.terminate if watcher and watcher.alive?
       start_watcher(cluster)
     end
 
+    def self.topic_message(event, options={})
+      base = { event: event }
+      OpenStruct.new(base.merge(options))
+    end
+
     protected
+
+    def watch_stream
+      fail 'watch_stream not implemented!'
+    end
 
     def base_handle_notice(notice)
       debug notice.to_s

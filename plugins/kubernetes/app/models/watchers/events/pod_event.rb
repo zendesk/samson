@@ -8,6 +8,10 @@ module Watchers
         @pod = Kubernetes::Api::Pod.new(event.object)
       end
 
+      def kind
+        @event.object.try(:kind)
+      end
+
       def deleted?
         @event.type == 'DELETED'
       end
