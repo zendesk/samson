@@ -9,7 +9,7 @@
       or
       <%= link_to "Bypass", buddy_check_project_deploy_path(@project, @deploy), method: :post, class: "btn btn-danger" %>
     </div>
-  <% elsif current_user.is_deployer? %>
+  <% elsif is_user_deployer_for_project? %>
     <p>This deploy requires a buddy.</p>
     <div class="buddy-approval">
       <%= link_to "Approve", buddy_check_project_deploy_path(@project, @deploy), method: :post, class: "btn btn-primary btn-xl" %>
