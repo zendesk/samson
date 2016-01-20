@@ -1,3 +1,7 @@
 test_staging_echo:
   stage: test_staging
   command: echo
+
+test_production_echo:
+  stage: test_production
+  command: echo
