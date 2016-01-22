@@ -1,3 +1,5 @@
+<h1>Execute job on <%= @project.name %></h1>
+
 <%= form_for [@project, @job], html: { class: "form-horizontal" } do |form| %>
   <fieldset>
     <% if @job.errors.any? %>
