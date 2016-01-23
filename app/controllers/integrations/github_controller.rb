@@ -40,11 +40,11 @@ class Integrations::GithubController < Integrations::BaseController
     @webhook_event = begin
       case request.headers['X-Github-Event']
       when 'push'
-        Changeset::CodePush.new('groat', params)
+        Changeset::CodePush.new(project.repo_name, params)
       when 'pull_request'
-        Changeset::PullRequest.find('mwerner/groat', params[:number])
+        Changeset::PullRequest.find(project.repo_name, params[:number])
       when 'issue_comment'
-        Changeset::IssueComment.new('groat', params)
+        Changeset::IssueComment.new(project.repo_name, params)
       end
     end
   end

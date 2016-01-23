@@ -26,6 +26,6 @@ class Changeset::IssueComment
   private
 
   def pull_request
-    @pull_request ||= Changeset::PullRequest.find('mwerner/groat', data['number'])
+    @pull_request ||= Changeset::PullRequest.find(repo, data['number'])
   end
 end
