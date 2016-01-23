@@ -2,6 +2,7 @@ class Integrations::GithubController < Integrations::BaseController
   cattr_accessor(:github_hook_secret) { ENV['GITHUB_HOOK_SECRET'] }
 
   HMAC_DIGEST = OpenSSL::Digest.new('sha1')
+  ACCEPTED_EVENTS = ['push', 'pull_request.open', 'issue_comment']
 
   protected
 
@@ -20,21 +21,35 @@ class Integrations::GithubController < Integrations::BaseController
   end
 
   def valid_payload?
-    request.headers['X-Github-Event'] == 'push'
+    webhook_event && ACCEPTED_EVENTS.include?(webhook_event.event_type)
   end
 
   def commit
-    params[:after]
+    webhook_event.sha
   end
 
   def branch
-    # Github returns full ref e.g. refs/heads/...
-    params[:ref][/refs\/heads\/(.+)/, 1]
+    webhook_event.branch
   end
 
   private
 
+  def webhook_event
+    return @webhook_event if defined?(@webhook_event)
+
+    @webhook_event = begin
+      case request.headers['X-Github-Event']
+      when 'push'
+        Changeset::CodePush.new('groat', params)
+      when 'pull_request'
+        Changeset::PullRequest.find('mwerner/groat', params[:number])
+      when 'issue_comment'
+        Changeset::IssueComment.new('groat', params)
+      end
+    end
+  end
+
   def service_type
-    'code'
+    webhook_event && webhook_event.service_type
   end
 end

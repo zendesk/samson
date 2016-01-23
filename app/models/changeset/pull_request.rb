@@ -51,6 +51,18 @@ class Changeset::PullRequest
     "##{number}"
   end
 
+  def sha
+    @data.head.sha
+  end
+
+  def branch
+    @data.head.ref
+  end
+
+  def state
+    @data.state
+  end
+
   def users
     users = [@data.user, @data.merged_by]
     users.compact.map {|user| Changeset::GithubUser.new(user) }.uniq
@@ -69,6 +81,14 @@ class Changeset::PullRequest
 
   def jira_issues
     @jira_issues ||= parse_jira_issues
+  end
+
+  def event_type
+    "pull_request.#{state}"
+  end
+
+  def service_type
+    'pull_request'
   end
 
   private
