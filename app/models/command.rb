@@ -12,8 +12,17 @@ class Command < ActiveRecord::Base
     where(project_id: nil)
   end
 
+  # own commands in front then all available
+  def self.for_object(object)
+    (object.commands + Command.for_project(object.project)).uniq
+  end
+
   def self.for_project(project)
-    where('project_id IS NULL OR project_id = ?', project.id)
+    if project && project.persisted?
+      where('project_id IS NULL OR project_id = ?', project.id)
+    else
+      global
+    end
   end
 
   def global?

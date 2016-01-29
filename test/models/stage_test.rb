@@ -174,35 +174,6 @@ describe Stage do
     end
   end
 
-  describe '#all_commands' do
-    describe 'with commands' do
-      before do
-        Command.create!(command: 'test')
-      end
-
-      it 'includes all commands, sorted' do
-        subject.all_commands.must_equal(subject.commands + Command.global)
-      end
-    end
-
-    describe 'no commands' do
-      let(:project) { projects(:test) }
-      subject { project.stages.build }
-
-      it 'includes all commands' do
-        subject.all_commands.must_equal(Command.for_project(project))
-      end
-    end
-
-    describe 'no project' do
-      subject { Stage.new }
-
-      it 'includes all commands' do
-        subject.all_commands.must_equal(Command.global)
-      end
-    end
-  end
-
   describe 'unlocked_for/locked?/locked_for?' do
     describe 'with a lock' do
       before do

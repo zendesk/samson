@@ -133,16 +133,6 @@ class Stage < ActiveRecord::Base
     end
   end
 
-  def all_commands
-    command_scope = project ? Command.for_project(project) : Command.global
-
-    if command_ids.any?
-      command_scope = command_scope.where(['id NOT in (?)', command_ids])
-    end
-
-    commands + command_scope
-  end
-
   def datadog_tags_as_array
     datadog_tags.to_s.split(";").map(&:strip)
   end
