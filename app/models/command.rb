@@ -14,7 +14,9 @@ class Command < ActiveRecord::Base
 
   # own commands in front then all available
   def self.for_object(object)
-    (object.commands + Command.for_project(object.project)).uniq
+    usages = usage_ids
+    available = Command.for_project(object.project).sort_by { |c| -usages.count(c.id) }
+    (object.commands + available).uniq
   end
 
   def self.for_project(project)
