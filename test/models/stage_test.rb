@@ -377,7 +377,7 @@ describe Stage do
     end
   end
 
-  describe 'production flag' do
+  describe '#production?' do
     let(:stage) { stages(:test_production) }
     before { DeployGroup.stubs(:enabled?).returns(true) }
 
@@ -425,6 +425,13 @@ describe Stage do
       stage.save
       stage_updated_at.wont_equal stage.updated_at
       project_updated_at.wont_equal stage.project.updated_at
+    end
+  end
+
+  describe "#ensure_ordering" do
+    it "puts new stages to the back" do
+      new = stage.project.stages.create! name: 'Newish'
+      new.order.must_equal 1
     end
   end
 end

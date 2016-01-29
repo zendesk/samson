@@ -26,6 +26,7 @@ class Stage < ActiveRecord::Base
   accepts_nested_attributes_for :new_relic_applications, allow_destroy: true, reject_if: :no_newrelic_name?
 
   attr_writer :command
+  before_create :ensure_ordering
   before_save :build_new_project_command
 
   def self.reorder(new_order)
@@ -222,5 +223,10 @@ class Stage < ActiveRecord::Base
 
   def permalink_scope
     Stage.unscoped.where(project_id: project_id)
+  end
+
+  def ensure_ordering
+    return unless project
+    self.order = project.stages.maximum(:order).to_i + 1
   end
 end
