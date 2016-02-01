@@ -28,8 +28,6 @@ class Stage < ActiveRecord::Base
   attr_writer :command
   before_save :build_new_project_command
 
-  before_soft_delete :verify_not_part_of_pipeline
-
   def self.reorder(new_order)
     transaction do
       new_order.each.with_index { |stage_id, index| Stage.update stage_id.to_i, order: index.to_i }

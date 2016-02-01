@@ -40,6 +40,5 @@ module SamsonPipelines::StageConcern
         return false
       end
     end
-    true
   end
 end
