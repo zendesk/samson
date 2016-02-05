@@ -155,7 +155,7 @@ class Stage < ActiveRecord::Base
   end
 
   def deploy_requires_approval?
-    BuddyCheck.enabled? && production?
+    BuddyCheck.enabled? && !bypass_buddy_check? && production?
   end
 
   def automated_failure_emails(deploy)

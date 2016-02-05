@@ -46,3 +46,16 @@
     <% end %>
   </div>
 </div>
+
+<% if BuddyCheck.enabled? %>
+  <div class="form-group">
+    <div class="col-sm-offset-2 col-sm-10">
+      <div class="checkbox">
+        <%= form.label :bypass_buddy_check do %>
+          <%= form.check_box :bypass_buddy_check %>
+          Bypass buddy check
+        <% end %>
+      </div>
+    </div>
+  </div>
+<% end %>
