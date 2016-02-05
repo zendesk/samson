@@ -375,7 +375,7 @@ describe Stage do
 
   describe '#production?' do
     let(:stage) { stages(:test_production) }
-    before { DeployGroup.stubs(:enabled?).returns(true) }
+    before { DeployGroup.stubs(enabled?: true) }
 
     it 'is true for stage with production deploy_group' do
       stage.update!(production: false)
@@ -393,9 +393,17 @@ describe Stage do
       stage.production?.must_equal false
     end
 
-    it 'fallbacks to production field for stage with no deploy groups' do
-      stage.update!(production: true)
+    it 'fallbacks to production field when deploy groups was enabled without selecting deploy groups' do
       stage.deploy_groups = []
+      stage.update!(production: true)
+      stage.production?.must_equal true
+      stage.update!(production: false)
+      stage.production?.must_equal false
+    end
+
+    it 'fallbacks to production field when deploy groups was disabled' do
+      DeployGroup.stubs(enabled?: false)
+      stage.update!(production: true)
       stage.production?.must_equal true
       stage.update!(production: false)
       stage.production?.must_equal false
