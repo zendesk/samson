@@ -109,6 +109,7 @@ Samson::Application.routes.draw do
     post "/jenkins/:token" => "jenkins#create", as: :jenkins_deploy
     post "/buildkite/:token" => "buildkite#create", as: :buildkite_deploy
     post "/github/:token" => "github#create", as: :github_deploy
+    post "/gitlab/:token" => "gitlab#create", as: :gitlab_deploy
   end
 
   get '/ping', to: 'ping#show'
