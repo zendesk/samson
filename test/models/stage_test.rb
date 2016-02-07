@@ -438,4 +438,28 @@ describe Stage do
       new.order.must_equal 1
     end
   end
+
+  describe "#ensure_valid_bypass" do
+    before { stage.deploy_groups.clear }
+
+    it "is valid when not production and not bypassed" do
+      assert_valid stage
+    end
+
+    it "is valid when production and not bypassed" do
+      stage.production = true
+      assert_valid stage
+    end
+
+    it "is valid when production and bypassed" do
+      stage.production = true
+      stage.bypass_buddy_check = true
+      assert_valid stage
+    end
+
+    it "invalid when not production and bypassed" do
+      stage.bypass_buddy_check = true
+      refute_valid stage
+    end
+  end
 end

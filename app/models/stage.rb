@@ -22,6 +22,7 @@ class Stage < ActiveRecord::Base
   default_scope { order(:order) }
 
   validates :name, presence: true, uniqueness: { scope: [:project, :deleted_at] }
+  validate :validate_bypass_used_correctly
 
   accepts_nested_attributes_for :new_relic_applications, allow_destroy: true, reject_if: :no_newrelic_name?
 
@@ -155,7 +156,7 @@ class Stage < ActiveRecord::Base
   end
 
   def deploy_requires_approval?
-    BuddyCheck.enabled? && production?
+    BuddyCheck.enabled? && !bypass_buddy_check? && production?
   end
 
   def automated_failure_emails(deploy)
@@ -218,5 +219,11 @@ class Stage < ActiveRecord::Base
   def ensure_ordering
     return unless project
     self.order = project.stages.maximum(:order).to_i + 1
+  end
+
+  def validate_bypass_used_correctly
+    if bypass_buddy_check? && !production?
+      errors.add(:bypass_buddy_check, 'makes no sense when set but not being in production')
+    end
   end
 end
