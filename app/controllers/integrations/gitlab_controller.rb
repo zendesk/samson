@@ -11,11 +11,12 @@ class Integrations::GitlabController < Integrations::BaseController
   end
 
   def commit
-    params[:after]
+    # Gitlab returns full ref e.g. refs/heads/...
+    params[:ref][/refs\/heads\/(.+)/, 1]
   end
 
   def branch
-    # Github returns full ref e.g. refs/heads/...
+    # Gitlab returns full ref e.g. refs/heads/...
     params[:ref][/refs\/heads\/(.+)/, 1]
   end
 
