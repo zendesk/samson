@@ -1,6 +1,8 @@
 class Changeset::IssueComment
   attr_reader :repo, :data
 
+  COMMENT_FILTER = /(\[)\s*(samson)\s*(\])/i # [samson]
+
   def initialize(repo, data)
     @repo = repo
     @body = data['body']
@@ -8,7 +10,9 @@ class Changeset::IssueComment
   end
 
   def self.changeset_from_webhook(project, params = {})
-    new(project.repo_name, params)
+    comment = params['comment'] && params['comment']['body']
+    return unless comment && comment =~ COMMENT_FILTER
+    new(project.github_repo, params)
   end
 
   def sha
@@ -19,12 +23,8 @@ class Changeset::IssueComment
     pull_request.sha
   end
 
-  def event_type
-    'issue_comment' # Github's event name
-  end
-
   def service_type
-    'pull_request' # Samson's webhook category
+    'pull_request' # Samson webhook category
   end
 
   private

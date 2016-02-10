@@ -32,7 +32,9 @@ class Changeset::PullRequest
   end
 
   def self.changeset_from_webhook(project, params = {})
-    find(project.repo_name, params[:number])
+    state = params['pull_request'] && params['pull_request']['state']
+    return unless state && state == 'open'
+    find(project.github_repo, params[:number])
   end
 
   attr_reader :repo
@@ -87,12 +89,8 @@ class Changeset::PullRequest
     @jira_issues ||= parse_jira_issues
   end
 
-  def event_type
-    "pull_request.#{state}" # Github's event name
-  end
-
   def service_type
-    'pull_request' # Samson's webhook category
+    'pull_request' # Samson webhook category
   end
 
   private

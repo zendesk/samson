@@ -21,16 +21,6 @@ describe Integrations::GithubController do
     project.webhooks.create!(stage: stages(:test_staging), branch: "dev", source: 'github')
   end
 
-  it 'does not deploy if signature is invalid' do
-    request.headers['X-Github-Event'] = 'push'
-    request.headers['X-Hub-Signature'] = "nope"
-
-    post :create, payload.merge(token: project.token)
-
-    project.deploys.must_equal []
-    response.status.must_equal 200
-  end
-
   it 'does not deploy if event is invalid' do
     request.headers['X-Github-Event'] = 'event'
 
@@ -43,16 +33,40 @@ describe Integrations::GithubController do
     response.status.must_equal 200
   end
 
+  it 'does not deploy if signature is invalid' do
+    request.headers['X-Github-Event'] = 'push'
+    request.headers['X-Hub-Signature'] = "nope"
+
+    post :create, payload.merge(token: project.token)
+
+    project.deploys.must_equal []
+    response.status.must_equal 200
+  end
+
   describe 'with a valid signature' do
     let(:user_name) { 'Github' }
 
     before do
-      request.headers['X-Github-Event'] = 'push'
-
       hmac = OpenSSL::HMAC.hexdigest(OpenSSL::Digest.new('sha1'), 'test', payload.to_param)
       request.headers['X-Hub-Signature'] = "sha1=#{hmac}"
     end
 
-    test_regular_commit "Github", no_mapping: { ref: 'refs/heads/foobar' }, failed: false
+    describe 'with a code push event' do
+      request.headers['X-Github-Event'] = 'push'
+
+      test_regular_commit "Github", no_mapping: { ref: 'refs/heads/foobar' }, failed: false
+    end
+
+    describe 'with a pull request event' do
+      request.headers['X-Github-Event'] = 'pull_request'
+
+      test_regular_commit "Github", no_mapping: { ref: 'refs/heads/foobar' }, failed: false
+    end
+
+    describe 'with a issue comment event' do
+      request.headers['X-Github-Event'] = 'issue_comment'
+
+      test_regular_commit "Github", no_mapping: { ref: 'refs/heads/foobar' }, failed: false
+    end
   end
 end

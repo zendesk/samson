@@ -3,9 +3,9 @@ class Integrations::GithubController < Integrations::BaseController
 
   HMAC_DIGEST = OpenSSL::Digest.new('sha1')
   WEBHOOK_HANDLERS = {
-    push:           Changeset::CodePush,
-    pull_request:   Changeset::PullRequest,
-    issue_comment:  Changeset::IssueComment
+    'push' => Changeset::CodePush,
+    'pull_request' => Changeset::PullRequest,
+    'issue_comment' => Changeset::IssueComment
   }
 
   protected
@@ -47,6 +47,6 @@ class Integrations::GithubController < Integrations::BaseController
   end
 
   def webhook_handler
-    WEBHOOK_HANDLERS[request.headers['X-Github-Event'].to_s.to_sym]
+    WEBHOOK_HANDLERS[request.headers['X-Github-Event']]
   end
 end
