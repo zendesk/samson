@@ -2,7 +2,11 @@ class Integrations::GithubController < Integrations::BaseController
   cattr_accessor(:github_hook_secret) { ENV['GITHUB_HOOK_SECRET'] }
 
   HMAC_DIGEST = OpenSSL::Digest.new('sha1')
-  ACCEPTED_EVENTS = ['push', 'pull_request.open', 'issue_comment']
+  WEBHOOK_HANDLERS = {
+    push:           Changeset::CodePush,
+    pull_request:   Changeset::PullRequest,
+    issue_comment:  Changeset::IssueComment
+  }
 
   protected
 
@@ -21,7 +25,7 @@ class Integrations::GithubController < Integrations::BaseController
   end
 
   def valid_payload?
-    webhook_event && ACCEPTED_EVENTS.include?(webhook_event.event_type)
+    webhook_handler && webhook_event
   end
 
   def commit
@@ -34,22 +38,15 @@ class Integrations::GithubController < Integrations::BaseController
 
   private
 
-  def webhook_event
-    return @webhook_event if defined?(@webhook_event)
-
-    @webhook_event = begin
-      case request.headers['X-Github-Event']
-      when 'push'
-        Changeset::CodePush.new(project.repo_name, params)
-      when 'pull_request'
-        Changeset::PullRequest.find(project.repo_name, params[:number])
-      when 'issue_comment'
-        Changeset::IssueComment.new(project.repo_name, params)
-      end
-    end
+  def service_type
+    webhook_event.service_type
   end
 
-  def service_type
-    webhook_event && webhook_event.service_type
+  def webhook_event
+    @webhook_event ||= webhook_handler.changeset_from_webhook(project, params)
+  end
+
+  def webhook_handler
+    WEBHOOK_HANDLERS[request.headers['X-Github-Event'].to_s.to_sym]
   end
 end

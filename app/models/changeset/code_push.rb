@@ -6,6 +6,10 @@ class Changeset::CodePush
     @data = data
   end
 
+  def self.changeset_from_webhook(project, params = {})
+    new(project.repo_name, params)
+  end
+
   def sha
     data[:after]
   end
@@ -15,10 +19,10 @@ class Changeset::CodePush
   end
 
   def event_type
-    'push'
+    'push' # Github's event name
   end
 
   def service_type
-    'code'
+    'code' # Samson's webhook category
   end
 end

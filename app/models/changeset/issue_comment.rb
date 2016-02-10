@@ -7,6 +7,10 @@ class Changeset::IssueComment
     @data = data['issue']
   end
 
+  def self.changeset_from_webhook(project, params = {})
+    new(project.repo_name, params)
+  end
+
   def sha
     pull_request.sha
   end
@@ -16,11 +20,11 @@ class Changeset::IssueComment
   end
 
   def event_type
-    'issue_comment'
+    'issue_comment' # Github's event name
   end
 
   def service_type
-    'pull_request'
+    'pull_request' # Samson's webhook category
   end
 
   private

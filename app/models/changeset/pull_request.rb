@@ -31,6 +31,10 @@ class Changeset::PullRequest
     nil
   end
 
+  def self.changeset_from_webhook(project, params = {})
+    find(project.repo_name, params[:number])
+  end
+
   attr_reader :repo
 
   def initialize(repo, data)
@@ -84,11 +88,11 @@ class Changeset::PullRequest
   end
 
   def event_type
-    "pull_request.#{state}"
+    "pull_request.#{state}" # Github's event name
   end
 
   def service_type
-    'pull_request'
+    'pull_request' # Samson's webhook category
   end
 
   private
