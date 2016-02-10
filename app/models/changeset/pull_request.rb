@@ -32,7 +32,7 @@ class Changeset::PullRequest
   end
 
   def self.changeset_from_webhook(project, params = {})
-    state = params['pull_request'] && params['pull_request']['state']
+    state = params[:pull_request] && params[:pull_request][:state]
     return unless state && state == 'open'
     find(project.github_repo, params[:number])
   end
