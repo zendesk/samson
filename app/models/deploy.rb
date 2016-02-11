@@ -122,30 +122,26 @@ class Deploy < ActiveRecord::Base
   end
 
   def csv_buddy
-    if not (BuddyCheck.enabled? && stage.production?)
-      "Buddy Not Required"
+    if not (stage.deploy_requires_approval?)
+      "Not Required"
     elsif buddy.nil? && pending?
-      "Pending Buddy"
+      "Pending"
     elsif buddy.nil?
-      "No Buddy"
+      "None"
     elsif (user.id == buddy.id)
-      "Buddy Bypassed"
+      "Bypassed"
     else
       buddy.name
     end
   end
 
   def self.to_csv
-    per = 1000
-    max = Deploy.count.fdiv(per).ceil
+    @deploys = Deploy.all()
     CSV.generate do |csv|
-      csv << ["Deploy Number", "Project Name", "Deploy Sumary", "Deploy Updated", "Deploy Created", "Deployer Name", "Buddy Name", "Production Flag", Deploy.count]
-      for page in 1..max
-        @deploys = Deploy.all.page(page).per(per)
-        @deploys.each do |deploy|
+      csv << ["Deploy Number", "Project Name", "Deploy Sumary", "Deploy Updated", "Deploy Created", "Deployer Name", "Buddy Name", "Production Flag", Deploy.count.to_s + " Deploys"]
+        @deploys.find_each do |deploy|
           csv << [deploy.id, deploy.project.name, deploy.summary, deploy.updated_at, deploy.start_time, deploy.job.user.name, deploy.csv_buddy, deploy.stage.production]
         end
-      end
     end
   end
 
