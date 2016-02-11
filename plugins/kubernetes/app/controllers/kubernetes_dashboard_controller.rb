@@ -12,9 +12,11 @@ class KubernetesDashboardController < ApplicationController
   def pod_info
     roles = {}
     Environment.find(params[:environment]).cluster_deploy_groups.each do |cluster_deploy_group|
-      cluster_deploy_group.cluster.client.get_pods(
-          namespace: cluster_deploy_group.namespace,
-          label_selector: "project=#{current_project.name_for_label}").each do |pod|
+      namespace = cluster_deploy_group.namespace
+      selector = "project_id=#{current_project.id}"
+      cluster = cluster_deploy_group.cluster
+
+      cluster.client.get_pods(namespace: namespace, label_selector: selector).each do |pod|
         build_pod_info(roles, cluster_deploy_group.deploy_group.id, pod)
       end
     end
@@ -27,47 +29,36 @@ class KubernetesDashboardController < ApplicationController
 
     role = role(roles, labels.role_id)
     deploy_group = deploy_group(role[:deploy_groups], deploy_group_id)
-    release = release(deploy_group[:releases], labels.release_id, labels.role_id)
+    release = release(deploy_group[:releases], labels.release_id, labels.role_id, deploy_group_id)
 
     api_pod = Kubernetes::Api::Pod.new(pod)
-    release[:live_replicas] += 1 if api_pod.ready?
+    release[:live_replicas] += 1 if api_pod.live?
   end
 
   def role(roles, role_id)
-    roles[role_id] ||= build_role(role_id)
-  end
-
-  def build_role(role_id)
-    {
-        id: role_id,
-        name: role_name(role_id),
-        deploy_groups: {}
+    roles[role_id] ||= {
+      id: role_id,
+      name: role_name(role_id),
+      deploy_groups: {}
     }
   end
 
   def deploy_group(deploy_groups, deploy_group_id)
-    deploy_groups[deploy_group_id] ||= build_deploy_group(deploy_group_id)
-  end
-
-  def build_deploy_group(deploy_group_id)
-    {
-        name: deploy_group_name(deploy_group_id),
-        releases: {}
+    deploy_groups[deploy_group_id] ||= {
+      id: deploy_group_id,
+      name: deploy_group_name(deploy_group_id),
+      releases: {}
     }
   end
 
-  def release(releases, release_id, role_id)
-    releases[release_id] ||= build_release(release_id, role_id)
-  end
-
-  def build_release(release_id, role_id)
-    release_doc = release_doc(release_id, role_id)
-    {
-        id: release_id,
-        build: build_label(release_id),
-        target_replicas: release_doc.replica_target,
-        live_replicas: 0, # we don't know if the data in the DB is up to date, we'll recreate it from pod info
-        failed: release_doc.failed?
+  def release(releases, release_id, role_id, deploy_group_id)
+    release_doc = release_doc(release_id, role_id, deploy_group_id)
+    releases[release_id] ||= {
+      id: release_id,
+      build: build_label(release_id),
+      target_replicas: release_doc.replica_target,
+      live_replicas: 0,
+      failed: release_doc.failed?
     }
   end
 
@@ -79,9 +70,9 @@ class KubernetesDashboardController < ApplicationController
     DeployGroup.find(deploy_group_id).name
   end
 
-  def release_doc(release_id, role_id)
-    Kubernetes::ReleaseDoc.find_by(kubernetes_release_id: release_id,
-                                   kubernetes_role_id: role_id)
+  def release_doc(release_id, role_id, deploy_group_id)
+    Kubernetes::ReleaseDoc.find_by(kubernetes_release_id: release_id, kubernetes_role_id: role_id,
+      deploy_group_id: deploy_group_id)
   end
 
   def build_label(release_id)

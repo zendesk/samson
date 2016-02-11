@@ -2,7 +2,7 @@
 app_server:
   project: test
   name: app_server
-  deploy_strategy: rolling_update
+  deploy_strategy: RollingUpdate
   replicas: 3
   ram: 1024
   cpu: 0.5
@@ -11,7 +11,7 @@ app_server:
 resque_worker:
   project: test
   name: resque_worker
-  deploy_strategy: kill_and_restart
+  deploy_strategy: Recreate
   replicas: 2
   ram: 512
   cpu: 1.0

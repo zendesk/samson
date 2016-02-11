@@ -93,7 +93,9 @@ describe Admin::DeployGroupsController do
 
     describe "#deploy_all" do
       before do
-        stage.commands.first.update_attributes!(command: "cap $DEPLOY_GROUPS deploy")
+        [stage, stages(:test_production)].each do |stage|
+          stage.commands.first.update_attributes!(command: "cap $DEPLOY_GROUPS deploy")
+        end
       end
 
       it "renders" do
@@ -126,10 +128,19 @@ describe Admin::DeployGroupsController do
         assigns[:stages].must_equal []
       end
 
-      it "ignores stages that are on different environments" do
-        stage.deploy_groups.clear
-        get :deploy_all, id: deploy_group
-        assigns[:stages].must_equal []
+      describe "without stages on current environment" do
+        before { stage.deploy_groups.clear }
+
+        it "ignores stages that are on different environments" do
+          get :deploy_all, id: deploy_group
+          assigns[:stages].must_equal []
+        end
+
+        it "shows stages that are on different environments when the environment was overwritten" do
+          get :deploy_all, id: deploy_group, environment_id: environments(:production).id
+          production_stage = stages(:test_production)
+          assigns[:stages].must_equal [[production_stage, production_stage.deploys.first]]
+        end
       end
     end
 

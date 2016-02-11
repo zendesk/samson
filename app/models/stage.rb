@@ -22,10 +22,12 @@ class Stage < ActiveRecord::Base
   default_scope { order(:order) }
 
   validates :name, presence: true, uniqueness: { scope: [:project, :deleted_at] }
+  validate :validate_bypass_used_correctly
 
   accepts_nested_attributes_for :new_relic_applications, allow_destroy: true, reject_if: :no_newrelic_name?
 
   attr_writer :command
+  before_create :ensure_ordering
   before_save :build_new_project_command
 
   def self.reorder(new_order)
@@ -133,16 +135,6 @@ class Stage < ActiveRecord::Base
     end
   end
 
-  def all_commands
-    command_scope = project ? Command.for_project(project) : Command.global
-
-    if command_ids.any?
-      command_scope = command_scope.where(['id NOT in (?)', command_ids])
-    end
-
-    commands + command_scope
-  end
-
   def datadog_tags_as_array
     datadog_tags.to_s.split(";").map(&:strip)
   end
@@ -164,7 +156,7 @@ class Stage < ActiveRecord::Base
   end
 
   def deploy_requires_approval?
-    BuddyCheck.enabled? && production?
+    BuddyCheck.enabled? && !bypass_buddy_check? && production?
   end
 
   def automated_failure_emails(deploy)
@@ -222,5 +214,16 @@ class Stage < ActiveRecord::Base
 
   def permalink_scope
     Stage.unscoped.where(project_id: project_id)
+  end
+
+  def ensure_ordering
+    return unless project
+    self.order = project.stages.maximum(:order).to_i + 1
+  end
+
+  def validate_bypass_used_correctly
+    if bypass_buddy_check? && !production?
+      errors.add(:bypass_buddy_check, 'makes no sense when set but not being in production')
+    end
   end
 end

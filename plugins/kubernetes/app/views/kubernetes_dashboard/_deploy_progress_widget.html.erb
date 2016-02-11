@@ -1,5 +1,5 @@
 <script type="text/ng-template" id="kubernetes/deploy_progress_widget.tmpl.html">
-  <div class="deploy-group-widget" ng-class="{ 'deploy-completed': deployCompleted() }">
+  <div class="deploy-group-widget" ng-class="{ 'deploy-completed': deployCompleted(), 'deploy-failed': deployFailed() }">
     <div class="deploy-status" ng-if="deployCompleted()">
       <span>
         {{buildLabel(lastRelease())}}.{{releaseId(lastRelease())}}: {{liveReplicas(lastRelease())}} of {{replicasTotal(lastRelease())}} replicas running.
@@ -10,17 +10,19 @@
         An error occurred while deploying {{buildLabel(lastRelease())}}.{{releaseId(lastRelease())}}.
       </span>
     </div>
-    <div class="deploy-group-release" ng-class="{ 'current-release': currentRelease(release), 'target-reached': targetStateReached(release) }"
-         ng-repeat="release in deployGroup.releases | orderBy:'id':true" ng-if="!deployCompleted()">
-      <div class="progress-wrapper">
-        <label>{{buildLabel(release)}}.{{releaseId(release)}}</label>
+    <div style="flex: auto;" ng-if="!deployCompleted() && !deployFailed()">
+      <div class="deploy-group-release" ng-class="{ 'current-release': currentRelease(release), 'target-reached': targetStateReached(release) }"
+           ng-repeat="release in deployGroup.releases | orderBy:'id':true">
+        <div class="progress-wrapper">
+          <label>{{buildLabel(release)}}.{{releaseId(release)}}</label>
 
-        <div class="progress">
-          <div class="progress-bar" role="progressbar" ng-style="{ 'width' : progress(release) }"></div>
+          <div class="progress">
+            <div class="progress-bar" role="progressbar" ng-style="{ 'width' : progress(release) }"></div>
+          </div>
         </div>
       </div>
+      <div style="flex: 1;"></div>
     </div>
-    <div style="flex: 1;" ng-if="!deployCompleted()"></div>
     <div class="deploy-group-footer">
       <span class="glyphicon glyphicon-option-horizontal deploy-group-options" uib-tooltip-template="'replicas-status-tooltip.html'"
             tooltip-trigger="mouseenter"></span>

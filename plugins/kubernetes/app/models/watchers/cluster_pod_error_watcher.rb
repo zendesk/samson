@@ -2,34 +2,41 @@ module Watchers
   class ClusterPodErrorWatcher < BaseClusterWatcher
     include Celluloid::Notifications
 
-    def initialize(client)
-      @client = client
-      super(@client.watch_events(field_selector: 'involvedObject.kind=Pod'))
+    def initialize(cluster)
+      super(cluster)
+    end
+
+    protected
+
+    def watch_stream
+      @watch_stream ||= @cluster.client.watch_events(field_selector: 'involvedObject.kind=Pod')
     end
 
     private
 
     def handle_notice(notice)
-      if error_notice?(notice.object.reason)
-        project_name = project_name(notice.object.involvedObject)
-        publish(project_name, notice) if project_name
+      event = Events::ClusterEvent.new(notice)
+
+      if pod_error?(event)
+        pod = get_pod(event.involved_object)
+        publish(Watchers::TopicSubscription.pod_updates_topic(pod.project_id), self.class.topic_message(event, pod: pod)) unless pod.nil?
       end
     end
 
-    def project_name(involved_object)
-      pod = @client.get_pod(involved_object.name, involved_object.namespace)
-      pod.metadata.labels ? pod.metadata.labels.project : nil
+    def get_pod(involved_object)
+      api_pod = @cluster.client.get_pod(involved_object.name, involved_object.namespace)
+      Kubernetes::Api::Pod.new(api_pod)
     rescue KubeException => e
-      if e.error_code == 404
-        warn e.to_s
-        nil
-      else
-        raise
-      end
+      warn e.to_s
+      nil
     end
 
-    def error_notice?(reason)
-      reason == 'failed' || reason == 'failedScheduling'
+    def pod_error?(event)
+      downcase(event.reason) == 'failed' || downcase(event.reason) == 'failedscheduling'
+    end
+
+    def downcase(reason)
+      reason.try(:downcase)
     end
   end
 end

@@ -3,8 +3,8 @@ class Changeset::PullRequest
   CODE_ONLY = "[A-Z][A-Z\\d]+-\\d+"  # e.g., S4MS0N-123, SAM-456
   PUNCT = "\\s|\\p{Punct}|~|="
 
-  # Matches a section heading named "Risks".
-  RISKS_SECTION = /#+\s+Risks.*\n/i
+  # Matches a markdown section heading named "Risks".
+  RISKS_SECTION = /^\s*#*\s*Risks?\s*#*\s*\n(?:\s*[-=]*\s*\n)?/i
 
   # Matches URLs to JIRA issues.
   JIRA_ISSUE_URL = %r[https?:\/\/[\da-z\.\-]+\.[a-z\.]{2,6}\/browse\/#{CODE_ONLY}(?=#{PUNCT}|$)]
@@ -62,7 +62,7 @@ class Changeset::PullRequest
 
   def risks
     return @risks if defined?(@risks)
-    @risks = @data.body.to_s.split(RISKS_SECTION, 2)[1].to_s.strip.presence
+    @risks = parse_risks(@data.body.to_s)
     @risks = nil if @risks =~ /\A\s*\-?\s*None\Z/i
     @risks
   end
@@ -72,6 +72,10 @@ class Changeset::PullRequest
   end
 
   private
+
+  def parse_risks(body)
+    body.to_s.split(RISKS_SECTION, 2)[1].to_s.strip.presence
+  end
 
   def parse_jira_issues
     custom_jira_url = ENV['JIRA_BASE_URL']

@@ -12,7 +12,7 @@ describe Kubernetes::Api::Pod do
       end
 
       it 'correctly identifies ready state' do
-        assert pod.ready?
+        assert pod.live?
       end
     end
 
@@ -22,25 +22,25 @@ describe Kubernetes::Api::Pod do
       it 'correctly identifies not ready state using phase' do
         kubeclient_pod.status.phase = 'Failed'
         pod = Kubernetes::Api::Pod.new(kubeclient_pod)
-        refute pod.ready?
+        refute pod.live?
       end
 
       it 'correctly identifies not ready state using condition status' do
         kubeclient_pod.status.conditions.first.status = 'False'
         pod = Kubernetes::Api::Pod.new(kubeclient_pod)
-        refute pod.ready?
+        refute pod.live?
       end
 
       it 'correctly identifies not ready state when ready condition missing' do
         kubeclient_pod.status.conditions.first.type = 'Unknown'
         pod = Kubernetes::Api::Pod.new(kubeclient_pod)
-        refute pod.ready?
+        refute pod.live?
       end
 
       it 'correctly identifies not ready state when conditions missing' do
         kubeclient_pod.status.delete_field 'conditions'
         pod = Kubernetes::Api::Pod.new(kubeclient_pod)
-        refute pod.ready?
+        refute pod.live?
       end
     end
   end
@@ -54,7 +54,7 @@ describe Kubernetes::Api::Pod do
       end
 
       it 'correctly identifies ready state' do
-        assert pod.ready?
+        assert pod.live?
       end
     end
 
@@ -64,25 +64,25 @@ describe Kubernetes::Api::Pod do
       it 'correctly identifies not ready state using phase' do
         watch_notice_object.status.phase = 'Failed'
         pod = Kubernetes::Api::Pod.new(watch_notice_object)
-        refute pod.ready?
+        refute pod.live?
       end
 
       it 'correctly identifies not ready state using condition status' do
         watch_notice_object.status.conditions.first['status'] = 'False'
         pod = Kubernetes::Api::Pod.new(watch_notice_object)
-        refute pod.ready?
+        refute pod.live?
       end
 
       it 'correctly identifies not ready state when ready condition missing' do
         watch_notice_object.status.conditions.first['type'] = 'Unknown'
         pod = Kubernetes::Api::Pod.new(watch_notice_object)
-        refute pod.ready?
+        refute pod.live?
       end
 
       it 'correctly identifies not ready state when conditions missing' do
         watch_notice_object.status.delete_field 'conditions'
         pod = Kubernetes::Api::Pod.new(watch_notice_object)
-        refute pod.ready?
+        refute pod.live?
       end
     end
   end

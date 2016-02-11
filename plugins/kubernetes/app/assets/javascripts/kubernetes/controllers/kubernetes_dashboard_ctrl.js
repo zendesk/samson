@@ -25,6 +25,8 @@ samson.controller('KubernetesDashboardCtrl',
       return _.isNotUndefinedOrEmpty(collection);
     };
 
+    $scope.reloadClusterState = loadClusterState;
+
     function init() {
       // Chaining the several promises (they should be resolved sequentially)
       loadEnvironments()
@@ -78,7 +80,7 @@ samson.controller('KubernetesDashboardCtrl',
       var deferred = $q.defer();
       kubernetesService.loadDashboardData($scope.project_id, $scope.environment).then(
         function(data) {
-          if (_.isNotUndefinedOrEmpty(data)) {
+          if (_.isDefined(data)) {
             $scope.dashboard_data = data;
             deferred.resolve();
           }
@@ -113,7 +115,8 @@ samson.controller('KubernetesDashboardCtrl',
 
       if (_.isUndefined(role)) {
         role = {
-          name: msg.role,
+          id: msg.role.id,
+          name: msg.role.name,
           deploy_groups: []
         };
         $scope.dashboard_data.push(role);
@@ -127,7 +130,8 @@ samson.controller('KubernetesDashboardCtrl',
 
       if (_.isUndefined(deploy_group)) {
         deploy_group = {
-          name: msg.deploy_group,
+          id: msg.deploy_group.id,
+          name: msg.deploy_group.name,
           releases: []
         };
         role.deploy_groups.push(deploy_group);
@@ -137,14 +141,14 @@ samson.controller('KubernetesDashboardCtrl',
     }
 
     function findOrCreateRelease(deploy_group, msg) {
-      var release = findRelease(deploy_group, msg.release);
+      var release = findRelease(deploy_group, msg.release.id);
 
       if (_.isUndefined(release)) {
         release = {
-          id: msg.release,
-          build: msg.build,
-          live_replicas: msg.live_replicas,
-          target_replicas: msg.target_replicas,
+          id: msg.release.id,
+          build: msg.release.build,
+          live_replicas: msg.release.live_replicas,
+          target_replicas: msg.release.target_replicas,
           failed: msg.failed
         };
         deploy_group.releases.push(release);
@@ -154,20 +158,20 @@ samson.controller('KubernetesDashboardCtrl',
     }
 
     function updateReleaseState(release, msg) {
-      release.live_replicas = msg.live_replicas;
-      release.failed = msg.failed;
+      release.live_replicas = msg.release.live_replicas;
+      release.failed = msg.release.failed;
       $scope.$apply();
     }
 
-    function findRole(role_id) {
-      return _.find($scope.dashboard_data, function(role) {
-        return role.name == role_id;
+    function findRole(role) {
+      return _.find($scope.dashboard_data, function(dashboard_role) {
+        return dashboard_role.name == role.name;
       });
     }
 
-    function findDeployGroup(role, deploy_group_name) {
-      return _.find(role.deploy_groups, function(deploy_group) {
-        return deploy_group.name == deploy_group_name;
+    function findDeployGroup(role, deploy_group) {
+      return _.find(role.deploy_groups, function(dashboard_deploy_group) {
+        return dashboard_deploy_group.name == deploy_group.name;
       });
     }
 

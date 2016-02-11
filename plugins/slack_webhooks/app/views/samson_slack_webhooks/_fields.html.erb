@@ -1,0 +1,31 @@
+<fieldset>
+  <legend>Slack</legend>
+
+  <% stage = form.object %>
+  <% stage.slack_webhooks.build unless stage.slack_webhooks.last.try(:webhook_url).blank? %>
+
+  <div class="col-lg-offset-2">
+    <p>Details of the webhook to be notified on deploys.</p>
+
+    <%= form.fields_for :slack_webhooks do |slack_fields| %>
+      <div class="form-group">
+        <div class="col-lg-4">
+          <%= slack_fields.text_field :webhook_url, class: "form-control", placeholder: "Webhook URL" %>
+        </div>
+
+        <div class="col-lg-3">
+          <%= slack_fields.text_field :channel, class: "form-control", placeholder: "Channel (optional)" %>
+        </div>
+
+        <% if slack_fields.object.persisted? %>
+          <div class="col-lg-2 checkbox">
+            <%= slack_fields.label :_destroy do %>
+              <%= slack_fields.check_box :_destroy %>
+              Destroy
+            <% end %>
+          </div>
+        <% end %>
+      </div>
+    <% end %>
+  </div>
+</fieldset>

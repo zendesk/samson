@@ -17,6 +17,31 @@ describe Stage do
     end
   end
 
+  describe '.reorder' do
+    let(:project) { projects(:test) }
+    let(:stage1) { Stage.create!(project: project, name: 'stage1', order: 1) }
+    let(:stage2) { Stage.create!(project: project, name: 'stage2', order: 2) }
+    let(:stage3) { Stage.create!(project: project, name: 'stage3', order: 3) }
+
+    it 'updates the order on stages' do
+      Stage.reorder [stage3.id, stage2.id, stage1.id]
+
+      stage1.reload.order.must_equal 2
+      stage2.reload.order.must_equal 1
+      stage3.reload.order.must_equal 0
+    end
+
+    it 'succeeds even if a stages points to a deleted stage' do
+      stage1.update! next_stage_ids: [stage3.id]
+      stage3.soft_delete!
+
+      Stage.reorder [stage2.id, stage1.id]
+
+      stage1.reload.order.must_equal 1
+      stage2.reload.order.must_equal 0
+    end
+  end
+
   describe '#command' do
     describe 'adding a built command' do
       before do
@@ -171,35 +196,6 @@ describe Stage do
     it "returns email addresses separated by a semicolon" do
       stage = Stage.new(notify_email_address: "a@foo.com; b@foo.com")
       stage.notify_email_addresses.must_equal ["a@foo.com", "b@foo.com"]
-    end
-  end
-
-  describe '#all_commands' do
-    describe 'with commands' do
-      before do
-        Command.create!(command: 'test')
-      end
-
-      it 'includes all commands, sorted' do
-        subject.all_commands.must_equal(subject.commands + Command.global)
-      end
-    end
-
-    describe 'no commands' do
-      let(:project) { projects(:test) }
-      subject { project.stages.build }
-
-      it 'includes all commands' do
-        subject.all_commands.must_equal(Command.for_project(project))
-      end
-    end
-
-    describe 'no project' do
-      subject { Stage.new }
-
-      it 'includes all commands' do
-        subject.all_commands.must_equal(Command.global)
-      end
     end
   end
 
@@ -377,9 +373,9 @@ describe Stage do
     end
   end
 
-  describe 'production flag' do
+  describe '#production?' do
     let(:stage) { stages(:test_production) }
-    before { DeployGroup.stubs(:enabled?).returns(true) }
+    before { DeployGroup.stubs(enabled?: true) }
 
     it 'is true for stage with production deploy_group' do
       stage.update!(production: false)
@@ -397,9 +393,17 @@ describe Stage do
       stage.production?.must_equal false
     end
 
-    it 'fallbacks to production field for stage with no deploy groups' do
-      stage.update!(production: true)
+    it 'fallbacks to production field when deploy groups was enabled without selecting deploy groups' do
       stage.deploy_groups = []
+      stage.update!(production: true)
+      stage.production?.must_equal true
+      stage.update!(production: false)
+      stage.production?.must_equal false
+    end
+
+    it 'fallbacks to production field when deploy groups was disabled' do
+      DeployGroup.stubs(enabled?: false)
+      stage.update!(production: true)
       stage.production?.must_equal true
       stage.update!(production: false)
       stage.production?.must_equal false
@@ -425,6 +429,37 @@ describe Stage do
       stage.save
       stage_updated_at.wont_equal stage.updated_at
       project_updated_at.wont_equal stage.project.updated_at
+    end
+  end
+
+  describe "#ensure_ordering" do
+    it "puts new stages to the back" do
+      new = stage.project.stages.create! name: 'Newish'
+      new.order.must_equal 1
+    end
+  end
+
+  describe "#ensure_valid_bypass" do
+    before { stage.deploy_groups.clear }
+
+    it "is valid when not production and not bypassed" do
+      assert_valid stage
+    end
+
+    it "is valid when production and not bypassed" do
+      stage.production = true
+      assert_valid stage
+    end
+
+    it "is valid when production and bypassed" do
+      stage.production = true
+      stage.bypass_buddy_check = true
+      assert_valid stage
+    end
+
+    it "invalid when not production and bypassed" do
+      stage.bypass_buddy_check = true
+      refute_valid stage
     end
   end
 end

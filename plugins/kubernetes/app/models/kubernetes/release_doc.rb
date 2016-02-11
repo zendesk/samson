@@ -1,8 +1,9 @@
 module Kubernetes
   class ReleaseDoc < ActiveRecord::Base
-    self.table_name = 'kubernetes_release_docs'
-
+    include Kubernetes::HasStatus
     include Kubernetes::DeployYaml
+
+    self.table_name = 'kubernetes_release_docs'
 
     belongs_to :kubernetes_role, class_name: 'Kubernetes::Role'
     belongs_to :kubernetes_release, class_name: 'Kubernetes::Release'
@@ -13,12 +14,8 @@ module Kubernetes
     validates :kubernetes_release, presence: true
     validates :replica_target, presence: true, numericality: { greater_than: 0 }
     validates :replicas_live, presence: true, numericality: { greater_than_or_equal_to: 0 }
-    validates :status, presence: true, inclusion: Kubernetes::Release::STATUSES
+    validates :status, presence: true, inclusion: STATUSES
     validate :validate_config_file, on: :create
-
-    Kubernetes::Release::STATUSES.each do |s|
-      define_method("#{s}?") { status == s }
-    end
 
     def fail!
       update_attribute(:status, :failed)
@@ -36,34 +33,50 @@ module Kubernetes
       kubernetes_role.service_for(deploy_group) if has_service?
     end
 
-    def pretty_rc_doc(format: :json)
-      case format
-        when :json
-          JSON.pretty_generate(deployment_hash)
-        when :yaml, :yml
-          deployment_hash.to_yaml
-        else
-          deployment_hash.to_s
-      end
-    end
-
     def build
       kubernetes_release.try(:build)
+    end
+
+    def release_doc_metadata
+      kubernetes_release.release_metadata.merge(role_metadata).merge(deploy_group_metadata)
+    end
+
+    def role_metadata
+      { role_id: kubernetes_role.id.to_s, role_name: kubernetes_role.name }
+    end
+
+    def deploy_group_metadata
+      { deploy_group_id: deploy_group.id.to_s, deploy_group_namespace: deploy_group.kubernetes_namespace }
     end
 
     def nested_error_messages
       errors.full_messages
     end
 
-    def update_replica_count(new_count)
-      self.replicas_live = new_count
+    def update_release
+      kubernetes_release.update_status(self)
+    end
 
-      if replicas_live >= replica_target
-        self.status ='live'
-      elsif replicas_live > 0 && !failed?
-        self.status ='spinning_up'
+    def update_status(live_pods)
+      case
+      when live_pods == replica_target then self.status = :live
+      when live_pods.zero? then self.status = :dead
+      when live_pods > replicas_live then self.status = :spinning_up
+      when live_pods < replicas_live then self.status = :spinning_down
       end
       save!
+    end
+
+    def update_replica_count(new_count)
+      update_attributes!(replicas_live: new_count)
+    end
+
+    def live_replicas_changed?(new_count)
+      new_count != replicas_live
+    end
+
+    def recovered?(failed_pods)
+      failed_pods == 0
     end
 
     def client
@@ -90,9 +103,9 @@ module Kubernetes
     end
 
     def service_template
+      # It's possible for the file to contain more than one definition,
+      # like a ReplicationController and a Service.
       @service_template ||= begin
-                              # It's possible for the file to contain more than one definition,
-                              # like a ReplicationController and a Service.
         hash = Array.wrap(parsed_config_file).detect { |doc| doc['kind'] == 'Service' }
         (hash || {}).freeze
       end

@@ -46,7 +46,9 @@ class Admin::DeployGroupsController < ApplicationController
 
   def deploy_all
     @stages = Project.all.flat_map do |project|
-      stages = stages_in_same_environment(project)
+      environment = Environment.find(params[:environment_id]) if params[:environment_id]
+
+      stages = stages_in_same_environment(project, environment)
       next unless deploy = stages.map(&:last_successful_deploy).compact.sort_by(&:created_at).last
       stages.map { |s| [s, deploy] }
     end.compact
@@ -69,10 +71,10 @@ class Admin::DeployGroupsController < ApplicationController
     stage.deploy_groups.map(&:id) == [deploy_group.id]
   end
 
-  def stages_in_same_environment(project)
+  def stages_in_same_environment(project, environment)
     project.stages.select do |stage|
       stage.command.include?("$DEPLOY_GROUPS") && # is dynamic
-        stage.deploy_groups.where(environment: deploy_group.environment).exists? # is made to go to this environment
+        stage.deploy_groups.where(environment: environment || deploy_group.environment).exists? # is made to go to this environment
     end.sort_by { |stage| only_to_current_group?(stage) ? 0 : 1 }
   end
 

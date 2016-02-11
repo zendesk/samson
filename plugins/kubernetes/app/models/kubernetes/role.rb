@@ -1,8 +1,10 @@
+require 'soft_deletion'
+
 module Kubernetes
   class Role < ActiveRecord::Base
     self.table_name = 'kubernetes_roles'
 
-    has_soft_deletion default_scope: true
+    has_soft_deletion
 
     belongs_to :project, inverse_of: :roles
 
@@ -14,6 +16,8 @@ module Kubernetes
     validates :replicas, presence: true, numericality: { greater_than: 0 }
     validates :ram, presence: true, numericality: { greater_than: 0 }
     validates :cpu, presence: true, numericality: { greater_than: 0 }
+
+    scope :not_deleted, -> { where(deleted_at: nil) }
 
     def label_name
       name.parameterize('-')

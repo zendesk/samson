@@ -1,8 +1,26 @@
 require 'coderay'
 
 module DeploysHelper
-  def deploy_active?
-    @deploy.waiting_for_buddy? || deploy_running? || deploy_queued?
+  def deploy_output
+    output_hidden = false
+    output = ActiveSupport::SafeBuffer.new
+
+    if JobExecution.enabled
+      output << Samson::Hooks.render_views(:deploy_view, self, deploy: @deploy, project: @project)
+
+      if deploy_queued?
+        output_hidden = true
+        output << render('queued')
+      elsif @deploy.waiting_for_buddy?
+        output_hidden = true
+        output << render('buddy_check', deploy: @deploy)
+      end
+    elsif @deploy.pending?
+      output_hidden = true
+      output << render('queued')
+    end
+
+    output << render('output', deploy: @deploy, project: @project, hide: output_hidden)
   end
 
   def deploy_running?
@@ -10,7 +28,7 @@ module DeploysHelper
   end
 
   def deploy_queued?
-    @deploy.pending? && JobExecution.queued?(@deploy.job_id, key: @deploy.stage_id) && JobExecution.enabled
+    @deploy.pending? && JobExecution.queued?(@deploy.job_id, key: @deploy.stage_id)
   end
 
   def newrelic_enabled_for_deploy?

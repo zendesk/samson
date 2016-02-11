@@ -35,7 +35,6 @@ describe Kubernetes::Release do
 
     describe 'with one single role' do
       setup :expect_file_contents_from_repo
-      setup :expect_deploy
       setup :current_release_count
 
       it 'creates the Release and all the corresponding ReleaseDocs' do
@@ -50,7 +49,6 @@ describe Kubernetes::Release do
 
     describe 'with multiple roles' do
       setup { 2.times { expect_file_contents_from_repo } }
-      setup :expect_deploy
       setup :current_release_count
 
       it 'creates the Release and all the corresponding ReleaseDocs' do
@@ -98,10 +96,6 @@ describe Kubernetes::Release do
         assert_release_count(@current_release_count)
       end
     end
-  end
-
-  def expect_deploy
-    KuberDeployService.any_instance.expects(:deploy!)
   end
 
   def expect_file_contents_from_repo
