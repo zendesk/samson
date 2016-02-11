@@ -1,3 +1,5 @@
+require 'csv'
+
 class Admin::UsersController < ApplicationController
   before_action :authorize_admin!
   before_action :authorize_super_admin!, only: [ :update, :destroy ]
@@ -7,6 +9,7 @@ class Admin::UsersController < ApplicationController
     respond_to do |format|
       format.html
       format.json { render json: @users }
+      format.csv { send_data User.to_csv }
     end
   end
 
