@@ -136,9 +136,9 @@ class Deploy < ActiveRecord::Base
   end
 
   def self.to_csv
-    @deploys = Deploy.all()
+    @deploys = Deploy.joins(:stage).all()
     CSV.generate do |csv|
-      csv << ["Deploy Number", "Project Name", "Deploy Sumary", "Deploy Updated", "Deploy Created", "Deployer Name", "Buddy Name", "Production Flag", Deploy.count.to_s + " Deploys"]
+      csv << ["Deploy Number", "Project Name", "Deploy Sumary", "Deploy Updated", "Deploy Created", "Deployer Name", "Buddy Name", "Production Flag", Deploy.joins(:stage).count.to_s + " Deploys"]
         @deploys.find_each do |deploy|
           csv << [deploy.id, deploy.project.name, deploy.summary, deploy.updated_at, deploy.start_time, deploy.job.user.name, deploy.csv_buddy, deploy.stage.production]
         end
