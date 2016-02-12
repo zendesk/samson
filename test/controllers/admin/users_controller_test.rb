@@ -62,7 +62,7 @@ describe Admin::UsersController do
         rowcount = csv_headers.pop.to_i
         usercount = csv_headers.pop.to_i
         User.count.must_equal usercount
-        (User.count + User.joins(:user_project_roles).count).must_equal rowcount
+        (User.count + UserProjectRole.joins(:user, :project).count).must_equal rowcount
         rowcount.must_equal csv_response.length
         assert_not_nil csv_response
         csv_response.each do |u|
