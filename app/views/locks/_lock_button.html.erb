@@ -3,5 +3,6 @@
   <%= f.hidden_field :stage_id %>
   <%= f.hidden_field :warning %>
   <%= f.text_field :description, class: "lock-description", placeholder: "Description", required: warning %>
+  <%= f.select :delete_in, delete_lock_options, {}, class: "lock-delete-in" %>
   <%= f.submit text, class: "do-lock btn btn-warning" %>
 <% end %>

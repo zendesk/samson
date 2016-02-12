@@ -1,15 +1,15 @@
 <%= render 'projects/header', project: current_project, tab: 'kubernetes' %>
 
-<section class="kubernetes tabs">
+<section class="kubernetes-section">
   <div ng-controller="KubernetesTabsCtrl">
     <uib-tabset>
       <uib-tab ng-repeat="tab in tabs" heading="{{tab.title}}" ui-sref="{{tab.state}}" active="tab.active"></uib-tab>
     </uib-tabset>
 
-    <div id="content" ui-view="content"> </div>
+    <div id="content" ui-view="content" class="kubernetes-content"> </div>
   </div>
 </section>
 
 <%= render 'kubernetes_roles/roles_list' %>
 <%= render 'kubernetes_releases/release_list' %>
-<%= render 'kubernetes_project/dashboard' %>
+<%= render 'kubernetes_dashboard/dashboard' %>

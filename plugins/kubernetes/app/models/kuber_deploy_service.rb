@@ -12,10 +12,10 @@ class KuberDeployService
   def deploy!
     log 'starting deploy'
 
-    @kuber_release.watch
+    start_watching_cluster
 
     create_services!
-    create_replication_controllers!
+    create_deployments!
 
     log 'API requests complete'
   rescue => ex
@@ -23,9 +23,9 @@ class KuberDeployService
     raise ex
   end
 
-  def create_replication_controllers!
+  def create_deployments!
     kuber_release.release_docs.each do |release_doc|
-      log 'creating ReplicationController', role: release_doc.kubernetes_role.name
+      log 'creating Deployment', role: release_doc.kubernetes_role.name
       release_doc.deploy_to_kubernetes
     end
   end
@@ -59,5 +59,10 @@ class KuberDeployService
     )
 
     Kubernetes::Util.log msg, extra_info
+  end
+
+  # Restarts a deploy watcher, forcing it to get in synch with the cluster
+  def start_watching_cluster
+    Watchers::DeployWatcher.restart_watcher(project)
   end
 end

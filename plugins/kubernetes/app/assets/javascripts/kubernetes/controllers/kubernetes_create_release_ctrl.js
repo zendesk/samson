@@ -6,6 +6,7 @@ samson.controller('KubernetesCreateReleaseCtrl',
     $scope.loadingRoles = false;
     $scope.loadingEnvironments = false;
     $scope.loadingDeployGroups = false;
+    $scope.submitting = false;
     $scope.roles = [];
     $scope.environments = [];
     $scope.environment = undefined;
@@ -75,10 +76,12 @@ samson.controller('KubernetesCreateReleaseCtrl',
     };
 
     $scope.toggleAll = function() {
-      var newState = !$scope.allToggled();
-      _.each($scope.deploy_groups, function(deploy_group) {
-        deploy_group.selected = newState;
-      });
+      if(!$scope.submitting) {
+        var newState = !$scope.allToggled();
+        _.each($scope.deploy_groups, function(deploy_group) {
+          deploy_group.selected = newState;
+        });
+      }
     };
 
     $scope.allToggled = function() {
@@ -88,7 +91,9 @@ samson.controller('KubernetesCreateReleaseCtrl',
     };
 
     $scope.toggleSelection = function(deploy_group) {
-      deploy_group.selected = !deploy_group.selected;
+      if(!$scope.submitting) {
+        deploy_group.selected = !deploy_group.selected;
+      }
     };
 
     $scope.isSelected = function(deploy_group) {
@@ -162,6 +167,8 @@ samson.controller('KubernetesCreateReleaseCtrl',
     }
 
     function createRelease() {
+      $scope.submitting = true;
+
       // Fetching only the selected deploy groups
       var selected_deploy_groups = _.filter($scope.deploy_groups, $scope.isSelected);
 
@@ -177,6 +184,7 @@ samson.controller('KubernetesCreateReleaseCtrl',
           });
         },
         function(result) {
+          $scope.submitting = false;
           handleFailure(result);
         }
       );

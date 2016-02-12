@@ -18,7 +18,7 @@ class Project < ActiveRecord::Base
   has_many :jobs, -> { order(created_at: :desc) }
   has_many :webhooks
   has_many :commands
-  has_many :macros
+  has_many :macros, dependent: :destroy
   has_many :user_project_roles
   has_many :users, through: :user_project_roles
 

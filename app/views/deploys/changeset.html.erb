@@ -10,7 +10,7 @@
   <%= render 'changeset/pulls', changeset: @changeset %>
 </div>
 
-<div class="tab-pane" id="risks">
+<div class="tab-pane<%= @changeset.risks? ? " active" : "" %>" id="risks">
   <%= render 'changeset/risks', pull_requests: @changeset.risky_pull_requests, type: "deploy" %>
 </div>
 

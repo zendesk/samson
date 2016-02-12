@@ -74,6 +74,10 @@ class Deploy < ActiveRecord::Base
     stage.deploy_requires_approval? && buddy == user
   end
 
+  def waiting_for_buddy?
+    pending? && stage.deploy_requires_approval? && !buddy
+  end
+
   def confirm_buddy!(buddy)
     update_attributes!(buddy: buddy, started_at: Time.now)
     DeployService.new(user).confirm_deploy!(self)
@@ -83,21 +87,17 @@ class Deploy < ActiveRecord::Base
     started_at || created_at
   end
 
-  def pending_non_production?
-    pending? && !stage.production?
-  end
-
   def pending_start!
     touch # hack: refresh is immediate with update
     DeployService.new(user).confirm_deploy!(self)
   end
 
-  def waiting_for_buddy?
-    pending? && stage.production?
-  end
-
   def self.active
     includes(:job).where(jobs: { status: Job::ACTIVE_STATUSES })
+  end
+
+  def self.pending
+    includes(:job).where(jobs: { status: 'pending' })
   end
 
   def self.running
@@ -119,6 +119,30 @@ class Deploy < ActiveRecord::Base
   def self.expired
     threshold = BuddyCheck.time_limit.minutes.ago
     joins(:job).where(jobs: { status: 'pending'} ).where("jobs.created_at < ?", threshold)
+  end
+
+  def csv_buddy
+    if not (stage.deploy_requires_approval?)
+      "Not Required"
+    elsif buddy.nil? && pending?
+      "Pending"
+    elsif buddy.nil?
+      "None"
+    elsif (user.id == buddy.id)
+      "Bypassed"
+    else
+      buddy.name
+    end
+  end
+
+  def self.to_csv
+    @deploys = Deploy.all()
+    CSV.generate do |csv|
+      csv << ["Deploy Number", "Project Name", "Deploy Sumary", "Deploy Updated", "Deploy Created", "Deployer Name", "Buddy Name", "Production Flag", Deploy.count.to_s + " Deploys"]
+        @deploys.find_each do |deploy|
+          csv << [deploy.id, deploy.project.name, deploy.summary, deploy.updated_at, deploy.start_time, deploy.job.user.name, deploy.csv_buddy, deploy.stage.production]
+        end
+    end
   end
 
   def url

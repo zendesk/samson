@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20151201104205) do
+ActiveRecord::Schema.define(version: 20160205015635) do
 
   create_table "build_statuses", force: :cascade do |t|
     t.integer  "build_id",                                     null: false
@@ -229,7 +229,8 @@ ActiveRecord::Schema.define(version: 20151201104205) do
     t.datetime "updated_at"
     t.datetime "deleted_at"
     t.string   "description", limit: 255
-    t.boolean  "warning",     default: false, null: false
+    t.boolean  "warning",                 default: false, null: false
+    t.datetime "delete_at"
   end
 
   add_index "locks", ["stage_id", "deleted_at", "user_id"], name: "index_locks_on_stage_id_and_deleted_at_and_user_id", using: :btree
@@ -312,6 +313,16 @@ ActiveRecord::Schema.define(version: 20151201104205) do
 
   add_index "slack_channels", ["stage_id"], name: "index_slack_channels_on_stage_id", using: :btree
 
+  create_table "slack_webhooks", force: :cascade do |t|
+    t.text     "webhook_url", limit: 65535, null: false
+    t.string   "channel",     limit: 255
+    t.integer  "stage_id",    limit: 4,     null: false
+    t.datetime "created_at"
+    t.datetime "updated_at"
+  end
+
+  add_index "slack_webhooks", ["stage_id"], name: "index_slack_webhooks_on_stage_id", using: :btree
+
   create_table "stage_commands", force: :cascade do |t|
     t.integer  "stage_id",   limit: 4
     t.integer  "command_id", limit: 4
@@ -342,6 +353,7 @@ ActiveRecord::Schema.define(version: 20151201104205) do
     t.string   "datadog_monitor_ids",                          limit: 255
     t.string   "jenkins_job_names",                            limit: 255
     t.string   "next_stage_ids"
+    t.boolean  "bypass_buddy_check",                                         default: false
   end
 
   add_index "stages", ["project_id", "permalink", "deleted_at"], name: "index_stages_on_project_id_and_permalink_and_deleted_at", length: {"project_id"=>nil, "permalink"=>191, "deleted_at"=>nil}, using: :btree

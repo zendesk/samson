@@ -49,4 +49,49 @@ describe Lock do
       user_lock.summary.must_include('Locked by Deployer')
     end
   end
+
+  describe '#delete_in=' do
+    before { travel_to Time.now }
+    after { travel_back }
+
+    it "sets delete_at when given an offset" do
+      lock = Lock.new(delete_in: 1.hour)
+      lock.delete_at.must_equal(Time.now + 1.hour)
+    end
+
+    it "sets delete_at to nil when given nil" do
+      lock = Lock.new(delete_in: nil)
+      lock.delete_at.must_be_nil
+    end
+
+    it "sets delete_at to nil when given an empty string" do
+      lock = Lock.new(delete_in: "")
+      lock.delete_at.must_be_nil
+    end
+  end
+
+  describe 'remove_expired_locks' do
+    before do
+      expired = 2.hour.ago
+      Lock.create!(user: users(:deployer), stage: stages(:test_staging), created_at: expired, delete_in: 3600)
+      Lock.create!(user: users(:deployer), stage: stages(:test_production), created_at: expired, delete_in: 3600)
+      Lock.create!(user: users(:deployer), stage: stages(:test_staging), delete_in: 3600)
+      Lock.create!(user: users(:deployer), stage: stages(:test_production), delete_in: 3600)
+      Lock.create!(user: users(:deployer), stage: stages(:test_production_pod))
+
+      Lock.remove_expired_locks
+    end
+
+    it "removes expired locks" do
+      Lock.where("delete_at < ?", Time.now).must_be_empty
+    end
+
+    it "leaves unexpired locks alone" do
+      Lock.where("delete_at > ?", Time.now).wont_be_empty
+    end
+
+    it "leaves indefinite locks alone" do
+      Lock.where("delete_at is null").wont_be_empty
+    end
+  end
 end

@@ -1,16 +1,9 @@
 module Kubernetes
 
   # This file represents a Kubernetes configuration file for a specific project role.
-  # A single configuration file can have both a Replication Controller and a Service, as two separate documents.
-  #
-  # For the schema definition of a Replication Controller see:
-  # https://cloud.google.com/container-engine/docs/replicationcontrollers/operations
-  #
-  # For the schema definition of a Service, see:
-  # https://cloud.google.com/container-engine/docs/services/operations
-  #
+  # A single configuration file can have both a Delpoyment spec and a Service spec, as two separate documents.
   class RoleConfigFile
-    attr_reader :file_path, :replication_controller, :service
+    attr_reader :file_path, :deployment, :service
 
     def initialize(contents, file_path)
       @file_path = file_path
@@ -21,19 +14,25 @@ module Kubernetes
     private
 
     def parse_file
-      parse_replication_controller
+      parse_deployment
       parse_service
     end
 
-    def parse_replication_controller
-      rc_hash = as_hash('ReplicationController')
-      raise 'ReplicationController missing in the configuration file.' if rc_hash.nil?
-      @replication_controller = ReplicationController.new(rc_hash)
+    def parse_deployment
+      deployment_hash = as_hash('Deployment')
+      raise 'Deployment specification missing in the configuration file.' if deployment_hash.nil?
+      @deployment = Deployment.new(deployment_hash)
+    rescue => ex
+      Rails.logger.error "Deployment YAML '#{file_path}' invalid: #{ex.message}"
+      raise ex
     end
 
     def parse_service
       service_hash = as_hash('Service')
       @service = Service.new(service_hash) unless service_hash.nil?
+    rescue => ex
+      Rails.logger.error "Deployment YAML '#{file_path}' invalid: #{ex.message}"
+      raise ex
     end
 
     def as_hash(type)
@@ -44,130 +43,39 @@ module Kubernetes
     #
     # INNER CLASSES
     #
+    class Deployment < RecursiveOpenStruct
+      DEFAULT_RESOURCE_CPU = '99m'
+      DEFAULT_RESOURCE_RAM = '512Mi'
+      DEFAULT_ROLLOUT_STRATEGY = 'RollingUpdate'
 
-    class ReplicationController
-
-      def initialize(rc_hash)
-        @rc_hash = rc_hash
+      def initialize(hash = nil, args = {})
+        args.merge!(recurse_over_arrays: true)
+        super(hash, args)
       end
 
-      def labels
-        metadata[:labels]
+      def cpu_m
+        val = first_container.try(:resources).try(:limits).try(:cpu) || DEFAULT_RESOURCE_CPU
+        /(\d+(.\d+)?)/.match(val).to_s.to_f.try(:/, 1000)
       end
 
-      def replicas
-        spec[:replicas]
+      def ram_mi
+        val = first_container.try(:resources).try(:limits).try(:memory) || DEFAULT_RESOURCE_RAM
+        /(\d+)/.match(val).to_s.to_i
       end
 
-      def selector
-        spec[:selector]
+      def first_container
+        spec.template.spec.containers.first
       end
 
-      def pod_template
-        @pod_template ||= PodTemplate.new(spec[:template])
-      end
-
-      def deploy_strategy
-        'rolling_update' #TODO: NOT SUPPORTED THROUGH YAML FILE YET ?
-      end
-
-      private
-
-      def metadata
-        @rc_hash[:metadata]
-      end
-
-      def spec
-        @rc_hash[:spec]
+      def strategy_type
+        spec.try(:strategy).try(:type) || DEFAULT_ROLLOUT_STRATEGY
       end
     end
 
-    class PodTemplate
-
-      def initialize(pod_hash)
-        @pod_hash = pod_hash
-      end
-
-      def labels
-        metadata[:labels]
-      end
-
-      # NOTE: This logic assumes that if there are multiple containers defined
-      # in the pod, the container that should run the image from this project
-      # is the first container defined.
-      def container
-        @container ||= Container.new(spec[:containers].first)
-      end
-
-      private
-
-      def metadata
-        @pod_hash[:metadata]
-      end
-
-      def spec
-        @pod_hash[:spec]
-      end
-    end
-
-    class Container
-
-      def initialize(container_hash)
-        @container_hash = container_hash
-      end
-
-      def cpu
-        cpu = limits.try(:[], :cpu) || '200m'
-        /(\d+)/.match(cpu).to_s.to_f.try(:/, 1000) #e.g. 0.2 cores
-      end
-
-      def ram
-        ram = limits.try(:[], :memory) || '512Mi'
-        /(\d+)/.match(ram).to_s.to_i
-      end
-
-      private
-
-      def resources
-        @container_hash[:resources]
-      end
-
-      def limits
-        resources.try(:[], :limits)
-      end
-
-    end
-
-    class Service
-
-      def initialize(service_hash)
-        @service_hash = service_hash
-      end
-
-      def name
-        metadata[:name]
-      end
-
-      def labels
-        metadata[:labels]
-      end
-
-      def selector
-        spec[:selector]
-      end
-
-      def type
-        spec[:type]
-      end
-
-      private
-
-      def metadata
-        @service_hash[:metadata]
-      end
-
-      def spec
-        @service_hash[:spec]
+    class Service < RecursiveOpenStruct
+      def initialize(hash = nil, args = {})
+        args.merge!(recurse_over_arrays: true)
+        super(hash, args)
       end
     end
   end

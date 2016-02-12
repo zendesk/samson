@@ -1,9 +1,11 @@
+require 'csv'
+
 class DeploysController < ApplicationController
   include ProjectLevelAuthorization
 
   skip_before_action :require_project, only: [:active, :active_count, :recent, :changeset]
 
-  before_action :authorize_project_deployer!, only: [:new, :create, :confirm, :buddy_check, :pending_start, :destroy]
+  before_action :authorize_project_deployer!, only: [:new, :create, :confirm, :buddy_check, :destroy]
   before_action :find_deploy, except: [:index, :recent, :active, :active_count, :new, :create, :confirm]
   before_action :stage, only: :new
 
@@ -40,6 +42,10 @@ class DeploysController < ApplicationController
       format.json do
         render json: Deploy.page(params[:page]).per(30)
       end
+      format.csv do
+        datetime = Time.now.strftime "%Y%m%d_%H%M"
+        send_data Deploy.to_csv, type: :csv, filename: "Deploys_#{datetime}.csv"
+      end
     end
   end
 
@@ -74,14 +80,6 @@ class DeploysController < ApplicationController
   def buddy_check
     if @deploy.pending?
       @deploy.confirm_buddy!(current_user)
-    end
-
-    redirect_to [current_project, @deploy]
-  end
-
-  def pending_start
-    if @deploy.pending_non_production?
-      @deploy.pending_start!
     end
 
     redirect_to [current_project, @deploy]

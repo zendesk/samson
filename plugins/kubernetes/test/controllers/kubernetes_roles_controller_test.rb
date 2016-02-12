@@ -292,21 +292,22 @@ describe KubernetesRolesController do
     end
 
     def assert_new_roles
-      project.roles.count.must_equal 1
-      role = project.roles.first
+      roles = project.reload.roles.not_deleted
+      roles.count.must_equal 1
+      role = roles.first
       role.name.must_equal 'some-role'
       role.config_file.must_equal 'some_folder/file_name.yml'
       role.replicas.must_equal 2
       role.ram.must_equal 100
       role.cpu.must_equal 0.5
-      role.deploy_strategy.must_equal 'rolling_update'
+      role.deploy_strategy.must_equal 'RollingUpdate'
     end
 
     def assert_response_body(response_body)
       result = JSON.parse(response_body)
       result.wont_be_nil
       result.wont_be_empty
-      result.length.must_equal project.roles.count
+      result.length.must_equal project.roles.not_deleted.count
       result.each do |role|
         role_info = Kubernetes::Role.find(role['id'])
         role_info.wont_be_nil

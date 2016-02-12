@@ -33,13 +33,18 @@ PATH
     samson_kubernetes (0.0.1)
       celluloid
       celluloid-io
-      http
-      kubeclient (>= 0.9)
+      kubeclient (>= 1.1)
 
 PATH
   remote: plugins/pipelines
   specs:
     samson_pipelines (0.0.0)
+
+PATH
+  remote: plugins/slack_webhooks
+  specs:
+    samson_slack_webhooks (0.0.0)
+      faraday
 
 PATH
   remote: plugins/slack
@@ -150,6 +155,7 @@ GEM
     codeclimate-test-reporter (0.4.8)
       simplecov (>= 0.7.1, < 1.0.0)
     coderay (1.1.0)
+    concurrent-ruby (1.0.0)
     crack (0.4.3)
       safe_yaml (~> 1.0.0)
     dalli (2.7.5)
@@ -171,7 +177,6 @@ GEM
       dotenv (= 0.11.1)
     erubis (2.7.0)
     eventmachine (1.0.8)
-    eventmachine (1.0.8-java)
     excon (0.45.4)
     execjs (2.6.0)
     faraday (0.9.2)
@@ -183,7 +188,6 @@ GEM
     faye-websocket (0.9.2)
       eventmachine (>= 0.12.0)
       websocket-driver (>= 0.5.1)
-    ffi (1.9.10-java)
     flowdock (0.6.0)
       httparty (~> 0.7)
       multi_json
@@ -197,7 +201,6 @@ GEM
     hashie (3.4.3)
     hike (1.2.3)
     hitimes (1.2.3)
-    hitimes (1.2.3-java)
     http (0.9.8)
       addressable (~> 2.3)
       http-cookie (~> 1.0)
@@ -207,7 +210,6 @@ GEM
       domain_name (~> 0.5)
     http-form_data (1.0.1)
     http_parser.rb (0.6.0)
-    http_parser.rb (0.6.0-java)
     httparty (0.13.7)
       json (~> 1.8)
       multi_xml (>= 0.5.2)
@@ -220,15 +222,15 @@ GEM
       terminal-table (>= 1.4.0)
       thor (>= 0.16.0)
     json (1.8.3)
-    json (1.8.3-java)
     jwt (1.5.2)
     kaminari (0.16.3)
       actionpack (>= 3.0.0)
       activesupport (>= 3.0.0)
-    kubeclient (0.9.0)
+    kubeclient (1.1.0)
       activesupport
+      http (= 0.9.8)
       json
-      recursive-open-struct (= 0.6.1)
+      recursive-open-struct (= 1.0.0)
       rest-client
     lograge (0.3.5)
       actionpack (>= 3)
@@ -264,11 +266,9 @@ GEM
     ngannotate-rails (1.0.3)
       execjs
       rails (>= 3.1)
-    nio4r (1.1.1)
-    nio4r (1.1.1-java)
-    nokogiri (1.6.7)
+    nio4r (1.2.0)
+    nokogiri (1.6.7.1)
       mini_portile2 (~> 2.0.0.rc2)
-    nokogiri (1.6.7-java)
     oauth2 (1.0.0)
       faraday (>= 0.8, < 0.10)
       jwt (~> 1.0)
@@ -302,15 +302,9 @@ GEM
       coderay (~> 1.1.0)
       method_source (~> 0.8.1)
       slop (~> 3.4)
-    pry (0.10.3-java)
-      coderay (~> 1.1.0)
-      method_source (~> 0.8.1)
-      slop (~> 3.4)
-      spoon (~> 0.0)
     pry-rails (0.3.4)
       pry (>= 0.9.10)
     puma (2.15.3)
-    puma (2.15.3-java)
     pyu-ruby-sasl (0.0.3.3)
     query_diet (0.5.3)
     rack (1.6.4)
@@ -387,7 +381,7 @@ GEM
       rake (>= 0.8.7)
       thor (>= 0.18.1, < 2.0)
     rake (10.4.2)
-    recursive-open-struct (0.6.1)
+    recursive-open-struct (1.0.0)
     rest-client (1.8.0)
       http-cookie (>= 1.0.2, < 2.0)
       mime-types (>= 1.16, < 3.0)
@@ -418,8 +412,6 @@ GEM
     slop (3.6.0)
     soft_deletion (0.6.1)
       activerecord (>= 3.2.0, < 4.3.0)
-    spoon (0.0.4)
-      ffi
     sprockets (2.12.4)
       hike (~> 1.2)
       multi_json (~> 1.0)
@@ -435,7 +427,6 @@ GEM
     terminal-table (1.5.2)
     thor (0.19.1)
     thread_safe (0.3.5)
-    thread_safe (0.3.5-java)
     tilt (1.4.1)
     timers (4.1.1)
       hitimes
@@ -446,7 +437,6 @@ GEM
       json (>= 1.8.0)
     unf (0.1.4)
       unf_ext
-    unf (0.1.4-java)
     unf_ext (0.0.7.1)
     warden (1.2.4)
       rack (>= 1.0)
@@ -455,8 +445,6 @@ GEM
       crack (>= 0.3.2)
       hashdiff
     websocket-driver (0.6.3)
-      websocket-extensions (>= 0.1.0)
-    websocket-driver (0.6.3-java)
       websocket-extensions (>= 0.1.0)
     websocket-extensions (0.1.2)
     zendesk_api (1.13.1)
@@ -468,7 +456,6 @@ GEM
       scrub_rb (~> 1.0.1)
 
 PLATFORMS
-  java
   ruby
 
 DEPENDENCIES
@@ -487,6 +474,7 @@ DEPENDENCIES
   byebug
   codeclimate-test-reporter
   coderay (~> 1.1.0)
+  concurrent-ruby
   dalli (~> 2.7.0)
   docker-api
   dogapi (~> 1.9)
@@ -547,6 +535,7 @@ DEPENDENCIES
   samson_kubernetes!
   samson_pipelines!
   samson_slack!
+  samson_slack_webhooks!
   samson_zendesk!
   sass-rails (~> 5.0)
   sawyer (~> 0.5)

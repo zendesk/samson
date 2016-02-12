@@ -69,9 +69,9 @@
 
   <div id="commands">
     <% usage_ids = Command.usage_ids %>
-    <%= form.collection_check_boxes(:command_ids, form.object.all_commands, :id, :command) do |b| %>
+    <%= form.collection_check_boxes(:command_ids, Command.for_object(form.object), :id, :command) do |b| %>
       <% command = b.object %>
-      <% others = usage_ids.count(command.id) - (b.check_box.include?('checked') ? 1 : 0) %>
+      <% others = usage_ids.count(command.id) - (b.check_box.include?('checked') && form.object.persisted? ? 1 : 0) %>
       <% others_warning = "#{others} others" if others > 0 %>
 
       <div class="row stage-bar bar">
@@ -172,7 +172,7 @@
 </fieldset>
 
 <fieldset>
-  <legend>Github</legend>
+  <legend>GitHub</legend>
   <div class="col-lg-6 checkbox col-lg-offset-2">
     <%= form.label :update_github_pull_requests do %>
       <%= form.check_box :update_github_pull_requests %>

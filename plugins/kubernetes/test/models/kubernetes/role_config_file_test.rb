@@ -7,45 +7,45 @@ describe Kubernetes::RoleConfigFile do
 
     let(:config_file) { Kubernetes::RoleConfigFile.new(contents, 'some-file.yml') }
 
-    it 'should load a replication controller with its contents' do
-      config_file.replication_controller.wont_be_nil
+    it 'should load a deployment with its contents' do
+      config_file.deployment.wont_be_nil
 
       # Labels
-      config_file.replication_controller.labels[:role].must_equal 'some-role'
+      config_file.deployment.metadata.labels.role.must_equal 'some-role'
 
       # Replicas
-      config_file.replication_controller.replicas.must_equal 2
+      config_file.deployment.spec.replicas.must_equal 2
 
       # Selector
-      config_file.replication_controller.selector[:project].must_equal 'some-project'
-      config_file.replication_controller.selector[:role].must_equal 'some-role'
+      config_file.deployment.spec.selector.project.must_equal 'some-project'
+      config_file.deployment.spec.selector.role.must_equal 'some-role'
 
       # Pod Template
-      config_file.replication_controller.pod_template.wont_be_nil
-      config_file.replication_controller.pod_template.labels.wont_be_nil
-      config_file.replication_controller.pod_template.container.wont_be_nil
+      config_file.deployment.spec.template.metadata.name.must_equal 'some-project-pod'
+      config_file.deployment.spec.template.metadata.labels.project.must_equal 'some-project'
+      config_file.deployment.spec.template.metadata.labels.role.must_equal 'some-role'
 
       # Container
-      config_file.replication_controller.pod_template.container.cpu.must_equal 0.5
-      config_file.replication_controller.pod_template.container.ram.must_equal 100
+      config_file.deployment.cpu_m.must_equal 0.5
+      config_file.deployment.ram_mi.must_equal 100
     end
 
     it 'should load a service with its contents' do
       config_file.service.wont_be_nil
 
       # Service Name
-      config_file.service.name.must_equal 'some-project'
+      config_file.service.metadata.name.must_equal 'some-project'
 
       # Labels
-      config_file.service.labels[:project].must_equal 'some-project'
+      config_file.service.metadata.labels.project.must_equal 'some-project'
 
       # Selector
-      config_file.service.selector[:project].must_equal 'some-project'
-      config_file.service.selector[:role].must_equal 'some-role'
+      config_file.service.spec.selector.project.must_equal 'some-project'
+      config_file.service.spec.selector.role.must_equal 'some-role'
     end
   end
 
-  describe 'Parsing a Kubernetes with a missing replication controller' do
+  describe 'Parsing a Kubernetes with a missing deployment' do
     let(:contents) { parse_role_config_file('kubernetes_invalid_role_config_file') }
 
     it 'should raise an exception' do

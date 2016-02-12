@@ -5,6 +5,7 @@ class ProjectRole < ActiveHash::Base
   include ActiveModel::Serializers::JSON
 
   self.data = [
+    { id: -1, name: "viewer" },
     { id: 0, name: "deployer" },
     { id: 1, name: "admin" }
   ]

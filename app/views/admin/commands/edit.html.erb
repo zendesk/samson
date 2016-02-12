@@ -17,16 +17,35 @@
         </div>
       </div>
 
+      <% if @command.usages.present? %>
+        <div class="form-group">
+          <%= form.label :usage, value: "Usage", class: "col-lg-2 control-label" %>
+          <% if stage_usage = @command.stages.presence %>
+            <div class="col-lg-4">
+              Used in <%= pluralize(stage_usage.count, 'stage') %>:
+                <ul>
+                  <%= stage_usage.map { |s| "<li>#{link_to "#{s.project.name} - #{s.name}", [s.project, s, action: :edit] }</li>" }.join.html_safe %>
+                </ul>
+            </div>
+          <% end %>
+          <% if macro_usage = @command.macros.presence %>
+            <div class="col-lg-4">
+              Used in <%= pluralize(macro_usage.count, 'macro') %>:
+                <ul>
+                  <%= macro_usage.map { |s| "<li>#{link_to "#{s.project.name} - #{s.name}", [s.project, s, action: :edit] }</li>" }.join.html_safe %>
+                </ul>
+            </div>
+          <% end %>
+        </div>
+      <% end %>
+
       <div class="form-group">
         <div class="col-lg-offset-2 col-lg-10">
           <button type="submit" class="btn btn-default">Save</button>
-          <% if usages = @command.usages.presence %>
-            <%= "Used by #{usages.map { |s| link_to "#{s.class}: #{s.project.name} - #{s.name}", [s.project, s, action: :edit] }.join(", ") }".html_safe %>
-          <% else %>
-            <%= link_to_delete([:admin, @command]) unless @command.new_record? %>
-          <% end %>
+          <%= link_to_delete([:admin, @command]) unless @command.new_record? || @command.usages.present? %>
         </div>
       </div>
+
     </fieldset>
   <% end %>
 </section>

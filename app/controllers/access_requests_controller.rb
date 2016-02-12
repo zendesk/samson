@@ -6,7 +6,7 @@ class AccessRequestsController < ApplicationController
   end
 
   def new
-    session[:access_request_back_to] ||= request.referer
+    session[:access_request_back_to] ||= request.referer || root_path
     @projects = Project.all.order(:name)
     @roles = ProjectRole.all
   end

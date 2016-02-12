@@ -12,7 +12,7 @@ class DeployService
     if deploy.persisted?
       send_sse_deploy_update('new', deploy)
 
-      if !stage.deploy_requires_approval? || release_approved?(deploy)
+      if !deploy.waiting_for_buddy? || release_approved?(deploy)
         confirm_deploy!(deploy)
       end
     end

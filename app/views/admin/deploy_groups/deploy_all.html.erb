@@ -1,5 +1,7 @@
 <h1>Deploy to <%= @deploy_group.name %></h1>
 
+<%= render 'environment_selector' %>
+
 <%= form_tag deploy_all_now_admin_deploy_group_path(@deploy_group) do %>
   <section class="clearfix">
     <div class="table table-hover table-condensed">
