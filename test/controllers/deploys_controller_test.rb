@@ -83,7 +83,7 @@ describe DeploysController do
           csv_response = CSV.parse(response.body)
           csv_headers = csv_response.shift
           deploycount = csv_headers.pop.to_i
-          Deploy.count.must_equal deploycount
+          Deploy.joins(:stage).count.must_equal deploycount
           deploycount.must_equal csv_response.length
           assert_not_nil csv_response
           csv_response.each do |d|
