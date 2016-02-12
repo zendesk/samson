@@ -24,6 +24,20 @@ class User < ActiveRecord::Base
     starred_projects.include?(project)
   end
 
+  def self.to_csv
+    @users = User.order(:id)
+    CSV.generate do |csv|
+      csv << ["id","name","email","projectiD","project","role", User.count.to_s + " Users",
+        (User.count + User.joins(:user_project_roles).count).to_s + " Total entries" ]
+      @users.find_each do |user|
+        csv << [user.id, user.name, user.email, "", "SYSTEM", user.role.name]
+        UserProjectRole.where(user_id: user.id).find_each do |user_project_role|
+            csv << [user.id, user.name, user.email, user_project_role.project_id, user_project_role.project.name, user_project_role.role.name]
+        end
+      end
+    end
+  end
+
   def self.create_or_update_from_hash(hash)
     user = User.where(external_id: hash[:external_id].to_s).first || User.new
 
