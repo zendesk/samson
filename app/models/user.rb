@@ -27,7 +27,8 @@ class User < ActiveRecord::Base
   def self.to_csv
     @users = User.order(:id)
     CSV.generate do |csv|
-      csv << ["id","name","email","projectiD","project","role", User.count.to_s + " Users"]
+      csv << ["id","name","email","projectiD","project","role", User.count.to_s + " Users",
+        (User.count + User.joins(:user_project_roles).count).to_s + " Total entries" ]
       @users.find_each do |user|
         csv << [user.id, user.name, user.email, "", "SYSTEM", user.role.name]
         UserProjectRole.where(user_id: user.id).find_each do |user_project_role|
