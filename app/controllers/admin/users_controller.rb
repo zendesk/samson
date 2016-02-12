@@ -9,7 +9,10 @@ class Admin::UsersController < ApplicationController
     respond_to do |format|
       format.html
       format.json { render json: @users }
-      format.csv { send_data User.to_csv }
+      format.csv do
+        datetime = Time.now.strftime "%Y%m%d_%H%M"
+        send_data User.to_csv, :type => :csv, :filename => "Users_#{datetime}.csv"
+      end
     end
   end
 

@@ -42,7 +42,10 @@ class DeploysController < ApplicationController
       format.json do
         render json: Deploy.page(params[:page]).per(30)
       end
-      format.csv { send_data Deploy.to_csv }
+      format.csv do
+        datetime = Time.now.strftime "%Y%m%d_%H%M"
+        send_data Deploy.to_csv, :type => :csv, :filename => "Deploys_#{datetime}.csv"
+      end
     end
   end
 
