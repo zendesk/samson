@@ -88,6 +88,9 @@ Samson::Application.routes.draw do
       get :deploy_groups
     end
   end
+  
+  get '/stats/projects', to: 'stats#projects'
+  get '/stats/index'
 
   namespace :admin do
     resources :users, only: [:index, :show, :update, :destroy]
