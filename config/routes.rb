@@ -117,6 +117,9 @@ Samson::Application.routes.draw do
 
   get '/project_roles', to: 'project_roles#index'
 
+  get '/stats/projects', to: 'stats#projects'
+  get '/stats/index'
+
   mount SseRailsEngine::Engine, at: '/streaming'
 
   root to: 'projects#index'

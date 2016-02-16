@@ -125,6 +125,23 @@ class Project < ActiveRecord::Base
     releases.map { |group_id, deploys| [ group_id, deploys.sort_by(&:updated_at).last ] }.to_h
   end
 
+  def self.get_stats
+    result = ActiveRecord::Base.connection.execute('SELECT p.*, count(*) as c from projects p
+                                    JOIN jobs j ON j.project_id = p.id
+                                    JOIN deploys d ON d.job_id = j.id
+                                    GROUP BY p.id
+                                    ORDER BY c DESC;')
+
+    result.each_with_object([]) do |row, array|
+      offset = array.length
+      result.fields.each_with_index do |field, i|
+        array[offset] ||= {}
+        array[offset][field] = row[i]
+      end
+      array
+    end
+  end
+
   private
 
   def deploys_by_group(before)
