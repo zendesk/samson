@@ -1,5 +1,8 @@
 class Admin::CommandsController < ApplicationController
-  before_action :authorize_admin!
+  include ProjectLevelAuthorization
+
+  before_action :authorize_admin!, except: [ :update, :edit ]
+  before_action :find_command, only: [ :update, :edit ]
 
   def index
     @commands = Command.order('project_id').page(params[:page])
@@ -22,13 +25,7 @@ class Admin::CommandsController < ApplicationController
     end
   end
 
-  def edit
-    @command = Command.find(params[:id])
-  end
-
   def update
-    @command = Command.find(params[:id])
-
     if @command.update_attributes(command_params)
       successful_response('Command updated.')
     else
@@ -64,5 +61,10 @@ class Admin::CommandsController < ApplicationController
 
       format.json { render json: {} }
     end
+  end
+
+  def find_command
+    @command = Command.find(params[:id])
+    unauthorized! unless current_user.is_admin? || current_user.is_admin_for?(@command.project)
   end
 end
