@@ -3,6 +3,8 @@ class Changeset::PullRequest
   CODE_ONLY = "[A-Z][A-Z\\d]+-\\d+"  # e.g., S4MS0N-123, SAM-456
   PUNCT = "\\s|\\p{Punct}|~|="
 
+  WEBHOOK_FILTER = /(\[)\s*(samson)\s*(\])/i # [samson]
+
   # Matches a section heading named "Risks".
   RISKS_SECTION = /#+\s+Risks.*\n/i
 
@@ -32,9 +34,14 @@ class Changeset::PullRequest
   end
 
   def self.changeset_from_webhook(project, params = {})
-    state = params[:pull_request] && params[:pull_request][:state]
-    return unless state && state == 'open'
     find(project.github_repo, params[:number])
+  end
+
+  def self.valid_webhook?(params)
+    data = params[:pull_request] || {}
+    return false unless data[:state] == 'open'
+
+    data[:body] =~ WEBHOOK_FILTER || data.fetch(:base, {})[:ref] == 'production'
   end
 
   attr_reader :repo

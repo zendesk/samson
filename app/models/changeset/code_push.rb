@@ -21,4 +21,8 @@ class Changeset::CodePush
   def service_type
     'code' # Samson webhook category
   end
+
+  def valid_webhook?
+    true
+  end
 end

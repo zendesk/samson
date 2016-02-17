@@ -25,7 +25,7 @@ class Integrations::GithubController < Integrations::BaseController
   end
 
   def valid_payload?
-    webhook_handler && webhook_event
+    webhook_handler && webhook_handler.valid_webhook?(params)
   end
 
   def commit
