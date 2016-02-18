@@ -41,16 +41,16 @@ PATH
     samson_pipelines (0.0.0)
 
 PATH
-  remote: plugins/slack
-  specs:
-    samson_slack (0.0.0)
-      slack-api (~> 1.1.0)
-
-PATH
   remote: plugins/slack_webhooks
   specs:
     samson_slack_webhooks (0.0.0)
       faraday
+
+PATH
+  remote: plugins/slack
+  specs:
+    samson_slack (0.0.0)
+      slack-api (~> 1.1.0)
 
 PATH
   remote: plugins/zendesk
