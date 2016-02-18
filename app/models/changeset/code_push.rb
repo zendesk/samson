@@ -10,7 +10,7 @@ class Changeset::CodePush
     new(project.github_repo, params)
   end
 
-  def self.valid_webhook?(params)
+  def self.valid_webhook?(_)
     true
   end
 
