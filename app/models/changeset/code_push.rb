@@ -10,6 +10,10 @@ class Changeset::CodePush
     new(project.github_repo, params)
   end
 
+  def self.valid_webhook?(params)
+    true
+  end
+
   def sha
     data[:after]
   end
@@ -20,9 +24,5 @@ class Changeset::CodePush
 
   def service_type
     'code' # Samson webhook category
-  end
-
-  def valid_webhook?
-    true
   end
 end

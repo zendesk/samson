@@ -15,22 +15,11 @@ describe Integrations::GithubController do
 
   before do
     Deploy.delete_all
-
     Integrations::GithubController.github_hook_secret = 'test'
-
-    project.webhooks.create!(stage: stages(:test_staging), branch: "dev", source: 'github')
   end
 
-  it 'does not deploy if event is invalid' do
+  does_not_deploy 'when the event is invalid' do
     request.headers['X-Github-Event'] = 'event'
-
-    hmac = OpenSSL::HMAC.hexdigest(OpenSSL::Digest.new('sha1'), 'test', payload.to_param)
-    request.headers['X-Hub-Signature'] = "sha1=#{hmac}"
-
-    post :create, payload.merge(token: project.token)
-
-    project.deploys.must_equal []
-    response.status.must_equal 200
   end
 
   it 'does not deploy if signature is invalid' do
@@ -43,30 +32,57 @@ describe Integrations::GithubController do
     response.status.must_equal 200
   end
 
-  describe 'with a valid signature' do
+  describe 'with a code push event' do
+    before do
+      request.headers['X-Github-Event'] = 'code_push'
+      project.webhooks.create!(stage: stages(:test_staging), branch: "dev", source: 'github')
+    end
+
     let(:user_name) { 'Github' }
 
-    before do
+    test_regular_commit "Github", no_mapping: { ref: 'refs/heads/foobar' }, failed: false do
+      request.headers['X-Github-Event'] = 'push'
       hmac = OpenSSL::HMAC.hexdigest(OpenSSL::Digest.new('sha1'), 'test', payload.to_param)
       request.headers['X-Hub-Signature'] = "sha1=#{hmac}"
     end
+  end
 
-    describe 'with a code push event' do
-      request.headers['X-Github-Event'] = 'push'
-
-      test_regular_commit "Github", no_mapping: { ref: 'refs/heads/foobar' }, failed: false
-    end
-
-    describe 'with a pull request event' do
+  describe 'with a pull request event' do
+    before do
       request.headers['X-Github-Event'] = 'pull_request'
-
-      test_regular_commit "Github", no_mapping: { ref: 'refs/heads/foobar' }, failed: false
+      project.webhooks.create!(stage: stages(:test_staging), branch: "dev", source: 'any_pull_request')
     end
 
-    describe 'with a issue comment event' do
-      request.headers['X-Github-Event'] = 'issue_comment'
+    let(:user_name) { 'Github' }
+    let(:payload) do
+      {
+        ref: 'refs/heads/dev',
+        after: commit,
+        number: '42',
+        pull_request: {state: 'open', body: 'imafixwolves [samson]'}
+      }.with_indifferent_access
+    end
+    let(:api_response) do
+      stub({
+        user: stub(login: 'foo'),
+        merged_by: stub(login: 'bar'),
+        body: '',
+        head: stub(sha: commit, ref: 'refs/heads/dev')
+      })
+    end
 
-      test_regular_commit "Github", no_mapping: { ref: 'refs/heads/foobar' }, failed: false
+    does_not_deploy 'with a non-open pull request state' do
+      payload.deep_merge!(pull_request: {state: 'closed'})
+    end
+
+    does_not_deploy 'without "[samson]" in the body' do
+      payload.deep_merge!(pull_request: {body: 'imafixwolves'})
+    end
+
+    test_regular_commit "Github", no_mapping: { ref: 'refs/heads/foobar' }, failed: false do
+      GITHUB.stubs(:pull_request).with('bar/foo', '42').returns(api_response)
+      hmac = OpenSSL::HMAC.hexdigest(OpenSSL::Digest.new('sha1'), 'test', payload.to_param)
+      request.headers['X-Hub-Signature'] = "sha1=#{hmac}"
     end
   end
 end
