@@ -39,8 +39,7 @@
     </div>
 
     <div class="form-group">
-      <%= form.select :source, [['Any CI', 'any_ci'], ['Any code push', 'any_code'], ['Any', 'any']] +
-        @sources.map {|source| [ source.titleize, source ]}.to_a, {}, class: "form-control" %>
+      <%= form.select :source, webhook_sources(@sources), {}, class: "form-control" %>
     </div>
 
     <%= form.submit "Add webhook", class: "btn btn-primary" %>
