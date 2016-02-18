@@ -26,25 +26,4 @@ describe Macro do
       end
     end
   end
-
-  describe '#all_commands' do
-    describe 'with commands' do
-      before do
-        Command.create!(command: 'test')
-      end
-
-      it 'includes all commands, sorted' do
-        subject.all_commands.must_equal(subject.commands + Command.global)
-      end
-    end
-
-    describe 'no commands' do
-      let(:project) { projects(:test) }
-      subject { project.macros.build }
-
-      it 'includes all commands' do
-        subject.all_commands.must_equal(Command.for_project(project))
-      end
-    end
-  end
 end

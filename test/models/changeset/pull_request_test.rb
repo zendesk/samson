@@ -337,6 +337,23 @@ describe Changeset::PullRequest do
       pr.risks.must_equal nil
     end
 
+    it "finds risks with underline style markdown headers" do
+      body.replace(<<-BODY.strip_heredoc)
+        Risks
+        =====
+          - Snakes
+      BODY
+      pr.risks.must_equal "- Snakes"
+    end
+
+    it "finds risks with closing hashes in atx style markdown headers" do
+      body.replace(<<-BODY.strip_heredoc)
+        ## Risks ##
+          - Planes
+      BODY
+      pr.risks.must_equal "- Planes"
+    end
+
     context "with nothing risky" do
       before { no_risks }
 
