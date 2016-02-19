@@ -26,7 +26,8 @@ class TerminalOutputScanner
   private
 
   def write(data)
-    data.scrub.scan(/\r?[^\r]*/).each do |part|
+    clean_data = data.scrub.gsub("\r\n", "\n")
+    clean_data.scan(/\r?[^\r]*/).each do |part|
       next if part == ''
       write_part(part)
     end
