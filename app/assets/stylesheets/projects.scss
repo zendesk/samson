@@ -60,6 +60,13 @@
     font-size: 15px;
   }
 
+  .label {
+    max-width: 150px;
+    overflow: hidden;
+    display: inline-block;
+    text-overflow: ellipsis;
+  }
+
   .stage-link {
     color: #333;
   }

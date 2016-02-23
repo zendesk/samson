@@ -11,6 +11,7 @@ module StagePermittedParams
         :email_committers_on_automated_deploy_failure,
         :static_emails_on_automated_deploy_failure,
         :use_github_deployment_api,
+        :bypass_buddy_check,
         deploy_group_ids: [],
         command_ids: [],
         new_relic_applications_attributes: [:id, :name, :_destroy]

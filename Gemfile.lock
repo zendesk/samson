@@ -41,16 +41,16 @@ PATH
     samson_pipelines (0.0.0)
 
 PATH
-  remote: plugins/slack_webhooks
-  specs:
-    samson_slack_webhooks (0.0.0)
-      faraday
-
-PATH
   remote: plugins/slack
   specs:
     samson_slack (0.0.0)
       slack-api (~> 1.1.0)
+
+PATH
+  remote: plugins/slack_webhooks
+  specs:
+    samson_slack_webhooks (0.0.0)
+      faraday
 
 PATH
   remote: plugins/zendesk
@@ -259,7 +259,7 @@ GEM
     multipart-post (2.0.0)
     mysql2 (0.3.20)
     net-http-persistent (2.9.4)
-    net-ldap (0.3.1)
+    net-ldap (0.14.0)
     netrc (0.11.0)
     newrelic_api (1.2.4)
     newrelic_rpm (3.14.1.311)
@@ -289,11 +289,11 @@ GEM
       multi_json (~> 1.3)
       omniauth (>= 1.1.1)
       omniauth-oauth2 (~> 1.3.1)
-    omniauth-ldap (1.0.4)
-      net-ldap (~> 0.3.1)
+    omniauth-ldap (1.0.5)
+      net-ldap (~> 0.12)
       omniauth (~> 1.0)
-      pyu-ruby-sasl (~> 0.0.3.1)
-      rubyntlm (~> 0.1.1)
+      pyu-ruby-sasl (~> 0.0.3.2)
+      rubyntlm (~> 0.3.4)
     omniauth-oauth2 (1.3.1)
       oauth2 (~> 1.0)
       omniauth (~> 1.2)
@@ -386,7 +386,7 @@ GEM
       http-cookie (>= 1.0.2, < 2.0)
       mime-types (>= 1.16, < 3.0)
       netrc (~> 0.7)
-    rubyntlm (0.1.1)
+    rubyntlm (0.3.4)
     safe_yaml (1.0.4)
     sass (3.4.20)
     sass-rails (5.0.4)
@@ -498,7 +498,7 @@ DEPENDENCIES
   omniauth (~> 1.1)
   omniauth-github (= 1.1.1)
   omniauth-google-oauth2 (~> 0.2.4)
-  omniauth-ldap (~> 1.0.4)
+  omniauth-ldap (>= 1.0.5)
   omniauth-oauth2 (~> 1.1)
   pg (~> 0.13)
   pry-rails

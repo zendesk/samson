@@ -42,6 +42,11 @@ describe TerminalOutputScanner do
     tokens.must_equal [[:append, "foobar\n"]]
   end
 
+  it "behaves well with carriage return + newlines" do
+    output("foo\r\n")
+    tokens.must_equal [[:append, "foo\n"]]
+  end
+
   it 'can handle an invalid UTF-8 character' do
     output("invalid char\255\n")
     tokens.must_equal [[:append, "invalid char�\n"]]

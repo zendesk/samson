@@ -49,6 +49,39 @@ describe Admin::UsersController do
         end
       end
     end
+    
+    describe 'a csv GET to #index' do
+      before do
+        get :index, format: :csv
+      end
+      
+      it 'succeeds, accurate and complete' do
+        response.success?.must_equal true
+        csv_response = CSV.parse(response.body)
+        csv_headers = csv_response.shift
+        rowcount = csv_headers.pop.to_i
+        usercount = csv_headers.pop.to_i
+        User.count.must_equal usercount
+        (User.count + UserProjectRole.joins(:user, :project).count).must_equal rowcount
+        rowcount.must_equal csv_response.length
+        assert_not_nil csv_response
+        csv_response.each do |u|
+          user_info = User.find_by(id: u[0])
+          user_info.wont_be_nil
+          user_info.name.must_equal u[1]
+          user_info.email.must_equal u[2]
+          if u[3] == ""
+            u[4].must_equal "SYSTEM"
+            user_info.role.name.must_equal u[5]
+          else
+            user_project_role_info = UserProjectRole.find_by(user_id: u[0], project_id: u[3])
+            user_project_role_info.wont_be_nil
+            user_project_role_info.project.name.must_equal u[4]
+            user_project_role_info.role.name.must_equal u[5]
+          end
+        end
+      end
+    end
 
     describe 'a json get to #index with a search string' do
       it 'succeeds and fetches a single user' do

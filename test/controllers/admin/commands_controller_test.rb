@@ -137,4 +137,49 @@ describe Admin::CommandsController do
       end
     end
   end
+
+  as_a_deployer do
+    unauthorized :get, :index
+    unauthorized :get, :new
+    unauthorized :post, :create
+    unauthorized :delete, :destroy, id: 123123
+
+    describe 'GET to #edit' do
+      it 'does not render for global command' do
+        get :edit, id: commands(:global).id
+        @unauthorized.must_equal true, "Request was not marked unauthorized"
+      end
+
+      it 'renders for local command as project-admin' do
+        UserProjectRole.create!(user: users(:deployer), project: projects(:test), role_id: ProjectRole::ADMIN.id)
+        get :edit, id: commands(:echo).id
+        assert_template :edit
+      end
+
+      it 'does not render for local command as non-project-admin' do
+        get :edit, id: commands(:echo).id
+        @unauthorized.must_equal true, "Request was not marked unauthorized"
+      end
+    end
+
+    describe 'PATCH to #update' do
+      let(:attributes) {{ command: 'echo hi' }}
+
+      it 'does not update for global command' do
+        patch :update, id: commands(:global).id, command: attributes, format: :json
+        @unauthorized.must_equal true, "Request was not marked unauthorized"
+      end
+
+      it 'updates for local command as project-admin' do
+        UserProjectRole.create!(user: users(:deployer), project: projects(:test), role_id: ProjectRole::ADMIN.id)
+        patch :update, id: commands(:echo).id, command: attributes, format: :json
+        assert_response :ok
+      end
+
+      it 'does not update for local command as non-project-admin' do
+        patch :update, id: commands(:echo).id, command: attributes, format: :json
+        @unauthorized.must_equal true, "Request was not marked unauthorized"
+      end
+    end
+  end
 end

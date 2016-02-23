@@ -1,3 +1,5 @@
+require 'csv'
+
 class DeploysController < ApplicationController
   include ProjectLevelAuthorization
 
@@ -39,6 +41,10 @@ class DeploysController < ApplicationController
       format.html { render 'recent', locals: { title: 'Recent Deploys', show_filters: true, controller: 'TimelineCtrl' } }
       format.json do
         render json: Deploy.page(params[:page]).per(30)
+      end
+      format.csv do
+        datetime = Time.now.strftime "%Y%m%d_%H%M"
+        send_data Deploy.to_csv, type: :csv, filename: "Deploys_#{datetime}.csv"
       end
     end
   end

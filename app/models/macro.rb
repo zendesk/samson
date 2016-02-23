@@ -24,16 +24,6 @@ class Macro < ActiveRecord::Base
     end
   end
 
-  def all_commands
-    command_scope = Command.for_project(project)
-
-    if command_ids.any?
-      command_scope = command_scope.where(['id NOT in (?)', command_ids])
-    end
-
-    commands + command_scope
-  end
-
   private
 
   def reorder_commands(command_ids = self.command_ids)

@@ -3,8 +3,10 @@ class Changeset::PullRequest
   CODE_ONLY = "[A-Z][A-Z\\d]+-\\d+"  # e.g., S4MS0N-123, SAM-456
   PUNCT = "\\s|\\p{Punct}|~|="
 
-  # Matches a section heading named "Risks".
-  RISKS_SECTION = /#+\s+Risks.*\n/i
+  WEBHOOK_FILTER = /(\[)\s*(samson)\s*(\])/i # [samson]
+
+  # Matches a markdown section heading named "Risks".
+  RISKS_SECTION = /^\s*#*\s*Risks?\s*#*\s*\n(?:\s*[-=]*\s*\n)?/i
 
   # Matches URLs to JIRA issues.
   JIRA_ISSUE_URL = %r[https?:\/\/[\da-z\.\-]+\.[a-z\.]{2,6}\/browse\/#{CODE_ONLY}(?=#{PUNCT}|$)]
@@ -31,6 +33,17 @@ class Changeset::PullRequest
     nil
   end
 
+  def self.changeset_from_webhook(project, params = {})
+    find(project.github_repo, params[:number])
+  end
+
+  def self.valid_webhook?(params)
+    data = params[:pull_request] || {}
+    return false unless data[:state] == 'open'
+
+    data[:body] =~ WEBHOOK_FILTER || data.fetch(:base, {})[:ref] == 'production'
+  end
+
   attr_reader :repo
 
   def initialize(repo, data)
@@ -51,6 +64,18 @@ class Changeset::PullRequest
     "##{number}"
   end
 
+  def sha
+    @data.head.sha
+  end
+
+  def branch
+    @data.head.ref
+  end
+
+  def state
+    @data.state
+  end
+
   def users
     users = [@data.user, @data.merged_by]
     users.compact.map {|user| Changeset::GithubUser.new(user) }.uniq
@@ -62,7 +87,7 @@ class Changeset::PullRequest
 
   def risks
     return @risks if defined?(@risks)
-    @risks = @data.body.to_s.split(RISKS_SECTION, 2)[1].to_s.strip.presence
+    @risks = parse_risks(@data.body.to_s)
     @risks = nil if @risks =~ /\A\s*\-?\s*None\Z/i
     @risks
   end
@@ -71,7 +96,15 @@ class Changeset::PullRequest
     @jira_issues ||= parse_jira_issues
   end
 
+  def service_type
+    'pull_request' # Samson webhook category
+  end
+
   private
+
+  def parse_risks(body)
+    body.to_s.split(RISKS_SECTION, 2)[1].to_s.strip.presence
+  end
 
   def parse_jira_issues
     custom_jira_url = ENV['JIRA_BASE_URL']

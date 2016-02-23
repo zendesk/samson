@@ -78,5 +78,23 @@ describe Stage do
       stage1.valid?.must_equal false
       stage1.errors.messages.must_equal base: ["Stage stage2 causes a circular pipeline with this stage"]
     end
+
+    it 'only validates if next_stage_ids changes' do
+      Stage.any_instance.expects(:valid_pipeline?).never
+      stage1.update!(order: 2)
+      stage1.valid?.must_equal true
+    end
+  end
+
+  describe '#verify_not_part_of_pipeline' do
+    it 'allows soft delete if the stage is not part of a pipeline' do
+      stage1.soft_delete.must_equal true
+    end
+
+    it 'returns false if this stage is referenced by another' do
+      stage1.update!(next_stage_ids: [ stage2.id ])
+      stage2.soft_delete.must_equal false
+      stage2.errors.messages.must_equal base: ["Stage stage2 is in a pipeline from stage1 and cannot be deleted"]
+    end
   end
 end
