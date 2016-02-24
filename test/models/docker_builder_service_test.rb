@@ -70,5 +70,11 @@ describe DeployService do
       service.push_image('my-test')
       assert_equal('my-test', build.docker_ref)
     end
+
+    it 'always adds the latest tag on top of the one specified' do
+      mock_docker_image.expects(:tag).with(has_entry(tag: 'latest'))
+      mock_docker_image.expects(:push).with(service.send(:registry_credentials), tag: 'latest', force: true)
+      service.push_image('my-test')
+    end
   end
 end
