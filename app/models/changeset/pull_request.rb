@@ -41,7 +41,7 @@ class Changeset::PullRequest
     data = params[:pull_request] || {}
     return false unless data[:state] == 'open'
 
-    data[:body] =~ WEBHOOK_FILTER || data.fetch(:base, {})[:ref] == 'production'
+    data[:body] =~ WEBHOOK_FILTER
   end
 
   attr_reader :repo
