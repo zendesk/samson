@@ -161,7 +161,7 @@ GEM
     dalli (2.7.5)
     debug_inspector (0.0.2)
     docile (1.1.5)
-    docker-api (1.24.1)
+    docker-api (1.26.2)
       excon (>= 0.38.0)
       json
     dockerb (0.3.0)

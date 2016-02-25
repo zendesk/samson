@@ -22,6 +22,7 @@ class DockerBuilderService
       if build_image(tmp_dir) && push
         push_image(image_name)
       end
+      build.docker_image.remove(force: true)
     end
 
     job_execution.on_complete { send_after_notifications }
@@ -47,7 +48,7 @@ class DockerBuilderService
   add_method_tracer :build_image
 
   def push_image(tag)
-    build.docker_ref = tag || build.label.try(:parameterize) || 'latest'
+    build.docker_ref = tag.presence || build.label.try(:parameterize).presence || 'latest'
     build.docker_repo_digest = nil
     build.docker_image.tag(repo: project.docker_repo, tag: build.docker_ref, force: true)
 
@@ -61,6 +62,7 @@ class DockerBuilderService
         build.docker_repo_digest = "#{project.docker_repo}@#{matches[1]}"
       end
     end
+    push_latest unless build.docker_ref == 'latest'
 
     build.save!
     build
@@ -82,6 +84,14 @@ class DockerBuilderService
 
   def project
     @build.project
+  end
+
+  def push_latest
+    output_buffer.puts "### Pushing the 'latest' tag for this image"
+    build.docker_image.tag(repo: project.docker_repo, tag: 'latest', force: true)
+    build.docker_image.push(registry_credentials, tag: 'latest', force: true) do |output|
+      handle_output_chunk(output)
+    end
   end
 
   def handle_output_chunk(chunk)
