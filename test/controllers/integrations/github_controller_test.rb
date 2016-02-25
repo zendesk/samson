@@ -78,11 +78,5 @@ describe Integrations::GithubController do
     does_not_deploy 'without "[samson]" in the body' do
       payload.deep_merge!(pull_request: {body: 'imafixwolves'})
     end
-
-    # test_regular_commit "Github", no_mapping: { ref: 'refs/heads/foobar' }, failed: false do
-    #   GITHUB.stubs(:pull_request).with('bar/foo', '42').returns(api_response)
-    #   hmac = OpenSSL::HMAC.hexdigest(OpenSSL::Digest.new('sha1'), 'test', payload.to_param)
-    #   request.headers['X-Hub-Signature'] = "sha1=#{hmac}"
-    # end
   end
 end

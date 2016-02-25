@@ -21,7 +21,7 @@ class Changeset::IssueComment
   end
 
   def branch
-    pull_request.sha
+    pull_request.branch
   end
 
   def service_type
