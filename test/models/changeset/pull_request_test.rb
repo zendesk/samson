@@ -36,13 +36,10 @@ describe Changeset::PullRequest do
     end
 
     it 'finds the pull request' do
-      GITHUB.stubs(:pull_request).with("bar/foo", 42).returns(data)
-      data.title = "Make it bigger!"
-
       webhook_data = {number: 42, pull_request: {state: 'open'}}
       pr = Changeset::PullRequest.changeset_from_webhook(project, webhook_data)
 
-      pr.title.must_equal "Make it bigger!"
+      pr.state.must_equal 'open'
     end
   end
 
