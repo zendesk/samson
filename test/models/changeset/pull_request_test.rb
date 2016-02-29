@@ -31,10 +31,6 @@ describe Changeset::PullRequest do
   end
 
   describe ".changeset_from_webhook" do
-    before do
-      Rails.cache.clear
-    end
-
     it 'finds the pull request' do
       webhook_data = {number: 42, pull_request: {state: 'open'}}
       pr = Changeset::PullRequest.changeset_from_webhook(project, webhook_data)
