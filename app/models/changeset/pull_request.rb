@@ -3,7 +3,7 @@ class Changeset::PullRequest
   CODE_ONLY = "[A-Z][A-Z\\d]+-\\d+"  # e.g., S4MS0N-123, SAM-456
   PUNCT = "\\s|\\p{Punct}|~|="
 
-  WEBHOOK_FILTER = /\[\s*samson\s*\]/i # [samson]
+  WEBHOOK_FILTER = /(^|\s)\[samson review\]($|\s)/i
 
   # Matches a markdown section heading named "Risks".
   RISKS_SECTION = /^\s*#*\s*Risks?\s*#*\s*\n(?:\s*[-=]*\s*\n)?/i
