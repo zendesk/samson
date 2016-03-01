@@ -10,7 +10,7 @@ gem 'dogstatsd-ruby', '~> 1.5.0', require: 'statsd'
 gem 'goldiloader'
 
 group :mysql2 do
-  gem 'mysql2', '~> 0.3.0'
+  gem 'mysql2', '~> 0.3'
 end
 
 group :postgres do
@@ -50,7 +50,7 @@ group :assets do
   gem 'bootstrap-sass'
 
   source 'https://rails-assets.org' do
-    gem 'rails-assets-angular'
+    gem 'rails-assets-angular', '~> 1.4.0'
     gem 'rails-assets-angular-mocks'
     gem 'rails-assets-angular-scenario'
     gem 'rails-assets-angular-ui-bootstrap-bower'
