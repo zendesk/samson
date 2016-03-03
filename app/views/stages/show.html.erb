@@ -38,6 +38,13 @@
   <h2>Command</h2>
   <pre class="pre-command"><%= @stage.command %></pre>
 
+  <% if groups = @stage.deploy_groups.to_a.presence %>
+    <h2>Deploy groups</h2>
+    <% groups.each do |group| %>
+      <%= link_to group.name, group %>
+    <% end %>
+  <% end %>
+
   <h2>Recent deploys</h2>
   <table class="table">
     <thead>
