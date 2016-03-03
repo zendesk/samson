@@ -1,4 +1,4 @@
-//= require typeahead
+//= require typeahead.js.js
 //= require changesets
 
 var following = true;
