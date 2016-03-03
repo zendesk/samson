@@ -320,8 +320,8 @@ GEM
       rails-assets-angular (~> 1.0)
       rails-assets-spin.js (~> 2.0)
     rails-assets-angular-truncate-2 (0.4.2)
-    rails-assets-angular-ui-bootstrap-bower (1.2.1)
-      rails-assets-angular (>= 1.4.0)
+    rails-assets-angular-ui-bootstrap-bower (0.14.3)
+      rails-assets-angular (>= 1.3.0)
     rails-assets-angular-ui-router (0.2.18)
       rails-assets-angular (>= 1.0.8, < 2)
     rails-assets-bootstrap-select (1.10.0)
@@ -487,7 +487,7 @@ DEPENDENCIES
   rails-assets-angular-scenario!
   rails-assets-angular-spinner!
   rails-assets-angular-truncate-2!
-  rails-assets-angular-ui-bootstrap-bower!
+  rails-assets-angular-ui-bootstrap-bower (~> 0.14)!
   rails-assets-angular-ui-router!
   rails-assets-bootstrap-select!
   rails-assets-font-awesome (~> 4.3.0)!

@@ -53,7 +53,7 @@ group :assets do
     gem 'rails-assets-angular', '~> 1.4.0'
     gem 'rails-assets-angular-mocks'
     gem 'rails-assets-angular-scenario'
-    gem 'rails-assets-angular-ui-bootstrap-bower'
+    gem 'rails-assets-angular-ui-bootstrap-bower', '~> 0.14'
     gem 'rails-assets-spin'
     gem 'rails-assets-angular-spinner'
     gem 'rails-assets-bootstrap-select'
