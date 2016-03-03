@@ -6,8 +6,6 @@ cache:
 sudo: false
 services:
   - memcached
-branches:
-  only: [master]
 env:
   global:
     - CI=1
