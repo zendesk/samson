@@ -24,6 +24,8 @@ If the directory '/opt/samson_build_cache' exists on the Docker host, it will mo
 docker build image. That way you could then instruct Maven to use '/build/cache/.m2' as the cache directory for all your 
 projects.
 
+The build container will also receive all global (`All` selected in the env var's combo box) environment variables that are configured for a project, assuming the `env` plugin is enabled.
+
 ## Example Setup
 
 'Dockerfile' contents

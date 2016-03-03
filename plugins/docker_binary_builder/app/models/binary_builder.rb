@@ -77,7 +77,8 @@ class BinaryBuilder
   def create_container_options
     options = {
       'Cmd' => [BUILD_SCRIPT],
-      'Image' => image_name
+      'Image' => image_name,
+      'Env' => env_vars_for_project
     }
 
     # Mount a cache directory for sharing .m2, .ivy2, .bundler directories between build containers.
@@ -132,5 +133,13 @@ class BinaryBuilder
 
   def docker_api_version
     @docker_api_version ||= Docker.version['ApiVersion']
+  end
+
+  def env_vars_for_project
+    if defined?(EnvironmentVariable) # make sure 'env' plugin is enabled
+      EnvironmentVariable.env(@project, nil).map { |name, value| "#{name}=#{value}" }
+    else
+      []
+    end
   end
 end

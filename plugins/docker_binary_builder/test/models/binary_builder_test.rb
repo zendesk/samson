@@ -48,6 +48,7 @@ describe BinaryBuilder do
         {
           'Cmd' => ['/app/build.sh'],
           'Image' => 'foo_build:abc-19f',
+          'Env' => [],
           'Volumes' => { '/opt/samson_build_cache' => {} },
           'HostConfig' => {
             'Binds' => ['/opt/samson_build_cache:/build/cache'],
@@ -63,6 +64,7 @@ describe BinaryBuilder do
         {
           'Cmd' => ['/app/build.sh'],
           'Image' => 'foo_build:abc-19f',
+          'Env' => [],
           'Mounts' => [
             {
               'Source' => '/opt/samson_build_cache',
@@ -76,6 +78,14 @@ describe BinaryBuilder do
           }
         }
       )
+    end
+
+    it 'sets up global environment variables for the build container' do
+      project.environment_variables.create!(name: 'FIRST', value: 'first')
+      project.environment_variables.create!(name: 'SECOND', value: 'second')
+      project.environment_variables.create!(name: 'THIRD', value: 'third',
+                                            scope_type: 'Environment', scope_id: environments(:production).id)
+      builder.send(:create_container_options)['Env'].must_equal %w(FIRST=first SECOND=second)
     end
 
     it 'throws exception with api < 1.15' do
