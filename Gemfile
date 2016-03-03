@@ -10,7 +10,7 @@ gem 'dogstatsd-ruby', '~> 1.5.0', require: 'statsd'
 gem 'goldiloader'
 
 group :mysql2 do
-  gem 'mysql2', '~> 0.3.0'
+  gem 'mysql2', '~> 0.3'
 end
 
 group :postgres do
