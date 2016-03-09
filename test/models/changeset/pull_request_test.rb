@@ -4,6 +4,7 @@ describe Changeset::PullRequest do
   DataStruct = Struct.new(:user, :merged_by, :body, :title)
   UserStruct = Struct.new(:login)
 
+  let(:project) { projects(:test) }
   let(:data) { DataStruct.new(user, merged_by, body) }
   let(:pr) { Changeset::PullRequest.new("xxx", data) }
   let(:user) { UserStruct.new("foo") }
@@ -26,6 +27,15 @@ describe Changeset::PullRequest do
       pr = Changeset::PullRequest.find("foo/bar", 42)
 
       pr.must_be_nil
+    end
+  end
+
+  describe ".changeset_from_webhook" do
+    it 'finds the pull request' do
+      webhook_data = {number: 42, pull_request: {state: 'open'}}
+      pr = Changeset::PullRequest.changeset_from_webhook(project, webhook_data)
+
+      pr.state.must_equal 'open'
     end
   end
 

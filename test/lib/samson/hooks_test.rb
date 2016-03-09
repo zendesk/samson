@@ -39,22 +39,22 @@ describe Samson::Hooks do
       end
 
        context 'when the plugins env is set to all' do
-        let(:plugins) { 'all,-slack,-zendesk' }
+        let(:plugins) { 'all,-kubernetes,-zendesk' }
 
         it 'returns the plugins that were not disabled' do
           Samson::Hooks.plugins.size.must_equal (number_of_plugins - 2)
-          refute Samson::Hooks.active_plugin?('slack')
+          refute Samson::Hooks.active_plugin?('kubernetes')
           refute Samson::Hooks.active_plugin?('zendesk')
           assert Samson::Hooks.active_plugin?('env')
         end
       end
 
       context 'when the plugins env is set to include some plugins' do
-        let(:plugins) { 'slack, zendesk' }
+        let(:plugins) { 'kubernetes, zendesk' }
 
         it 'only returns those plugins' do
           Samson::Hooks.plugins.size.must_equal 2
-          assert Samson::Hooks.active_plugin?('slack')
+          assert Samson::Hooks.active_plugin?('kubernetes')
           assert Samson::Hooks.active_plugin?('zendesk')
           refute Samson::Hooks.active_plugin?('env')
         end

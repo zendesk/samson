@@ -1,0 +1,41 @@
+---
+engines:
+  brakeman:
+    enabled: true
+    exclude_fingerprints:
+      - e2892672023804e479b99b74816e6cdfa12bf514a554d1630e0b6e8b4ffae73f
+      - 1a12f89976e202e892270621d577f8580bd89d7b51c0c1b0552c82a118c40490
+      - ef234c29fa8f917a299c22516974a3c71e15663257fe6fecbc8717f5b1299897
+      - 2150cbec3db7244873772947552626ab1aaf98fecc563f53273e4efbea2b005b
+      - 7b5977de52b2d843cb4ba3477310b52404d513dcd9d37ffe7c2e7fbb0a5653b4
+      - e7a78556448caa3c0f6a9829028e4bf3e4deb3572278f2ac884505ffaf5dc078
+      - 7b577c89306e7c576eb274be452886aef6f35a3632d351922952c89b7b39178a
+      - d7c65af7ef450e7dad974ceb5cdc412ccd39672bf58dd0bc023815def25754a2
+      - d3c13c29b104aded6cd1aa5123820470beb170d22e00db7d3fb994b94a689ab9
+      - 2150cbec3db7244873772947552626ab1aaf98fecc563f53273e4efbea2b005b
+  bundler-audit:
+    enabled: true
+  duplication:
+    enabled: true
+    config:
+      languages:
+        - ruby
+        - javascript
+  eslint:
+    enabled: true
+  fixme:
+    enabled: false
+  rubocop:
+    enabled: false
+ratings:
+  paths:
+    - Gemfile.lock
+    - "**.erb"
+    - "**.rb"
+    - "**.css"
+    - "**.js"
+exclude_paths:
+  - config/
+  - db/
+  - test/
+  - vendor/

@@ -3,6 +3,8 @@ class Changeset::PullRequest
   CODE_ONLY = "[A-Z][A-Z\\d]+-\\d+"  # e.g., S4MS0N-123, SAM-456
   PUNCT = "\\s|\\p{Punct}|~|="
 
+  WEBHOOK_FILTER = /(^|\s)\[samson review\]($|\s)/i
+
   # Matches a markdown section heading named "Risks".
   RISKS_SECTION = /^\s*#*\s*Risks?\s*#*\s*\n(?:\s*[-=]*\s*\n)?/i
 
@@ -31,6 +33,18 @@ class Changeset::PullRequest
     nil
   end
 
+  def self.changeset_from_webhook(project, params = {})
+    data = Sawyer::Resource.new(Octokit.agent, params[:pull_request])
+    new(project.github_repo, data)
+  end
+
+  def self.valid_webhook?(params)
+    data = params[:pull_request] || {}
+    return false unless data[:state] == 'open'
+
+    data[:body] =~ WEBHOOK_FILTER
+  end
+
   attr_reader :repo
 
   def initialize(repo, data)
@@ -51,6 +65,18 @@ class Changeset::PullRequest
     "##{number}"
   end
 
+  def sha
+    @data.head.sha
+  end
+
+  def branch
+    @data.head.ref
+  end
+
+  def state
+    @data.state
+  end
+
   def users
     users = [@data.user, @data.merged_by]
     users.compact.map {|user| Changeset::GithubUser.new(user) }.uniq
@@ -69,6 +95,10 @@ class Changeset::PullRequest
 
   def jira_issues
     @jira_issues ||= parse_jira_issues
+  end
+
+  def service_type
+    'pull_request' # Samson webhook category
   end
 
   private

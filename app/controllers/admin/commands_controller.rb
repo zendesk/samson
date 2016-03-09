@@ -6,6 +6,16 @@ class Admin::CommandsController < ApplicationController
 
   def index
     @commands = Command.order('project_id').page(params[:page])
+    if search = params[:search]
+      if query = search[:query].presence
+        query = ActiveRecord::Base.send(:sanitize_sql_like, query)
+        @commands = @commands.where('command like ?', "%#{query}%")
+      end
+
+      if project_id = search[:project_id].presence
+        @commands = @commands.where(project_id: project_id)
+      end
+    end
   end
 
   def new

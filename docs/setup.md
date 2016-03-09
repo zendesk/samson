@@ -60,7 +60,7 @@ Set the following variables in your `.env` file or set them as environment varia
       <td>Yes</td>
       <td>
         <ul>
-          <li> Navigate to [https://github.com/settings/applications/new](https://github.com/settings/applications/new) and register a new OAuth application</li>
+          <li> Navigate to https://github.com/settings/applications/new and register a new OAuth application</li>
           <li> Set the Homepage URL to http://localhost:3000</li>
           <li> Set the Authorization callback URL to http://localhost:3000/auth/github/callback</li>
           <li> You should now have Client ID and Client Secret values to populate the these with</li>
