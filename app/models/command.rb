@@ -1,6 +1,6 @@
 class Command < ActiveRecord::Base
-  has_many :stage_command
-  has_many :stages, through: :stage_command
+  has_many :stage_commands
+  has_many :stages, through: :stage_commands
   has_many :macro_commands
   has_many :macros, through: :macro_commands
 
