@@ -13,6 +13,7 @@ class User < ActiveRecord::Base
   has_many :locks, dependent: :destroy
   has_many :user_project_roles, dependent: :destroy
   has_many :projects, through: :user_project_roles
+  has_many :CsvExports
 
   validates :role_id, inclusion: { in: Role.all.map(&:id) }
 

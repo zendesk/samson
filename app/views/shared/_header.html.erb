@@ -49,6 +49,9 @@
             <%= content_tag(:span, '{{ currentActiveDeploys }}', class: 'badge badge-deploys', style: 'display: none', id: 'currentDeploysBadge') %>
           <% end %>
         </li>
+        <li class="<%= 'active' if current_page?(controller: '/csv', action: 'index') %>">
+          <%= link_to "CSV", csv_index_path %>
+        </li>
       <% end %>
 
       <% if current_user.try(:is_admin?) %>
