@@ -25,9 +25,9 @@
             <td><%= csv_export.created_at %></td>
             <td><%= csv_export.status %></td>
             <% if csv_export.finished? or csv_export.downloaded? %>
-              <td><%= link_to "Download", action: "download", id: csv_export.id %></td>
+              <td><%= link_to "Download", csv_path(id: csv_export.id, format: 'csv') %></td>
             <% else %>
-              <td><%= link_to "Status", action: "status", id: csv_export.id %></td>
+              <td><%= link_to "Status", csv_path(id: csv_export.id) %></td>
             <% end %>
           </tr>
         <% end %>

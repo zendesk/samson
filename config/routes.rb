@@ -67,7 +67,7 @@ Samson::Application.routes.draw do
       get :recent
     end
   end
-  
+
   resources :deploy_groups, only: [:show]
 
   resource :profile, only: [:show, :update]
@@ -81,11 +81,8 @@ Samson::Application.routes.draw do
 
   get '/login', to: 'sessions#new'
   get '/logout', to: 'sessions#destroy'
-  
-  resources :csv, only: [ :index, :new, :create ]
-  get '/csv/status/:id', to: 'csv#status', as: :csv_status
-  get '/csv/download/:id', to: 'csv#download', defaults: { format: 'csv' }, as: :csv_download
 
+  resources :csvs, only: [ :index, :new, :create, :show ]
   resources :stars, only: [:create, :destroy]
   resources :dashboards, only: [:show] do
     member do

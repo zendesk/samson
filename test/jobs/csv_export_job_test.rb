@@ -26,7 +26,7 @@ describe CsvExportJob do
       assert File.exist?(filename), "File Not exist"
     end
     
-    it "creates deploys csv accurately and completely" do
+    it "creates deploys csv file accurately and completely" do
       CsvExportJob.perform_now(deploy_export_job.id)
       job = CsvExport.find(deploy_export_job.id)
       filename = "#{Rails.root}/export/#{job.id}"
@@ -52,7 +52,7 @@ describe CsvExportJob do
     end
   end
   
-  describe "Job executies for invalid csv" do
+  describe "Job executes for invalid csv export type" do
     teardown do
       job = CsvExport.find(invalid_export_job.id)
       filename = "#{Rails.root}/export/#{job.id}"

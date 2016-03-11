@@ -50,10 +50,8 @@ ActiveRecord::Schema.define(version: 20160218161746) do
     t.integer  "user_id",    limit: 4,   null: false
     t.datetime "created_at",             null: false
     t.datetime "updated_at",             null: false
-    t.datetime "deleted_at"
     t.string   "content",    limit: 255, null: false
     t.string   "status",     limit: 255
-    t.string   "filename",   limit: 255
   end
 
   create_table "commands", force: :cascade do |t|

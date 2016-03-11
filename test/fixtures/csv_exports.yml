@@ -2,34 +2,3 @@ pending:
   user: admin
   content: 'deploys'
   status: 'pending'
-
-started:
-  user: admin
-  filename: 'test-0123.csv'
-  content: 'deploys'
-  status: 'started'
-
-finished:
-  user: admin
-  filename: 'test-01234.csv'
-  content: 'deploys'
-  status: 'finished'
-
-failed:
-  user: admin
-  filename: 'test-012.csv'
-  content: 'deploys'
-  status: 'finished'
-
-downloaded:
-  user: admin
-  filename: 'test-0125.csv'
-  content: 'deploys'
-  status: 'downloaded'
-
-deleted:
-  user: admin
-  filename: 'test-012345.csv'
-  content: 'deploys'
-  status: 'deleted'
-  deleted_at: 2016-02-03 10:10:00

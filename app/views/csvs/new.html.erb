@@ -1,7 +1,7 @@
 <h1>Request a CSV Report</h1>
 
 <section class="clearfix">
-  <p><%= button_to "Create Deploys CSV Report", { action: "create" }, params: {content: 'deploys'} %></p>
+  <p><%= button_to "Create Deploys CSV Report", csvs_path, params: {content: 'deploys'} %></p>
   <% if current_user.is_admin? %>
     <p><%= link_to "Download Users CSV Report", admin_users_path(format: "csv") %></p>
   <% end %>

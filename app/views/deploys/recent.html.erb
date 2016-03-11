@@ -29,7 +29,7 @@
   <% end %>
   <section class="timeline-content clearfix">
     <div class="deploy-csv">
-    	<%= button_to "Download as CSV", { controller: "csv", action: "create" }, method: :post, params: {content: 'deploys'} %>
+    	<%= button_to "Download as CSV", csvs_path, method: :post, params: {content: 'deploys'} %>
     </div>
     <table class="timeline-content">
       <tr>

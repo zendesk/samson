@@ -1,32 +1,34 @@
 class CsvExport < ActiveRecord::Base
   include Searchable
 
-  has_soft_deletion default_scope: true
-
   belongs_to :user
 
+  def ready?
+    finished? or downloaded?
+  end
+
   def pending?
-    return  status == 'pending'
+    status == 'pending'
   end
 
   def started?
-    return  status == 'started'
+    status == 'started'
   end
 
   def finished?
-    return  status == 'finished'
+    status == 'finished'
   end
 
   def downloaded?
-    return  status == 'downloaded'
+    status == 'downloaded'
   end
 
   def failed?
-    return  status == 'failed'
+    status == 'failed'
   end
 
   def deleted?
-    return  status == 'deleted'
+    status == 'deleted'
   end
 
   def email
@@ -38,7 +40,7 @@ class CsvExport < ActiveRecord::Base
   end
   
   def filename
-    super || generate_csv_filename
+    filename = "#{self.content}_#{formatted_create_at}.csv"
   end
   
   def pending!
@@ -67,13 +69,10 @@ class CsvExport < ActiveRecord::Base
   
   private
 
-  def generate_csv_filename
-    datetime = Time.now.strftime "%Y%m%d_%H%M%S"
-    filename = "#{self.content}_#{datetime}.csv"
-    update_attribute(:filename, filename)
-    filename
+  def formatted_create_at
+    created_at.to_datetime.strftime "%Y%m%d_%H%M%S"
   end
-  
+
   def status!(status)
     update_attribute(:status, status)
   end
