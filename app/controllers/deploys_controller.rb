@@ -1,5 +1,3 @@
-require 'csv'
-
 class DeploysController < ApplicationController
   include ProjectLevelAuthorization
 
@@ -43,8 +41,7 @@ class DeploysController < ApplicationController
         render json: Deploy.page(params[:page]).per(30)
       end
       format.csv do
-        datetime = Time.now.strftime "%Y%m%d_%H%M"
-        send_data Deploy.to_csv, type: :csv, filename: "Deploys_#{datetime}.csv"
+        redirect_to controller: 'csvs', action: 'new'
       end
     end
   end

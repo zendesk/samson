@@ -27,6 +27,9 @@
 .gitkeep
 /coverage/
 
+#ignore csv export forlder
+/export/
+
 # Ignore editor files
 *.sw[oap]
 .idea
