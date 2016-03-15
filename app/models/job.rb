@@ -11,7 +11,12 @@ class Job < ActiveRecord::Base
 
   validate :validate_globally_unlocked
 
+  VALID_STATUSES = %w[pending running cancelling failed errored succeeded cancelled].freeze
   ACTIVE_STATUSES = %w[pending running cancelling].freeze
+
+  def self.valid_status?(status)
+    VALID_STATUSES.include?(status)
+  end
 
   def self.non_deploy
     includes(:deploy).where(deploys: { id: nil })
