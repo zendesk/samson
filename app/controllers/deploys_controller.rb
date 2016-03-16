@@ -72,8 +72,6 @@ class DeploysController < ApplicationController
       jobs        = false
       stages      = false
 
-      deploys     = { :deploys => [] }
-
       # TODO: really need some kinda layer with error handling/messages
       # etc
       unless (params[:status].nil?)
@@ -117,6 +115,8 @@ class DeploysController < ApplicationController
         deploys = Deploy.where(:job_id => jobs).page(params[:page]).per(30)
       elsif stages && !jobs
         deploys = Deploy.where(:stage_id => stages).page(params[:page]).per(30)
+      else
+        deploys = Deploy.page(params[:page]).per(30)
       end
 
       format.json do
