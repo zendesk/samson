@@ -49,39 +49,29 @@ class DeploysController < ApplicationController
     end
   end
 
-  # takes the same tokens that are used by the filter stuff
+  # takes the same tokens that are used by the client side filtering
   # on the recent deploys pages.  returrns a paginated 
-  # json object or CSV of stuff that people are interested in rather than 
+  # json object or CSV that people are interested in rather than 
   # doing client side filtering.
   # params:
   #   * deployer (name of the user that started the job(s)
   #   * project_name (name of the project)
-  #   * user_type (robot or not) (not implemented)
   #   * production (boolean, is this in proudction or not)
   #   * status (what is the status of this job failed|running| etc)
-  #
+
   def search
     respond_to do |format|
 
-      # stuff that we may have gotten from the api call
-      user_type     = (defined? params[:user_type]) ? params[:user_type] : false # TODO: not sure about this
-
-      users       = false
-      projects    = false
-      jobs        = false
-      stages      = false
-
       # TODO: really need some kinda layer with error handling/messages
       # etc
-      unless (params[:status].nil?)
+      if (!params[:status].nil?)
         unless Job.valid_status?(params[:status])
           render json: { :errors => "invalid status given" }, status: 422
           return
         end
       end
-      unless params[:deployer].nil?
-        deployer = ActiveRecord::Base.send(:sanitize_sql_like, params[:deployer])
-        users = User.where("name LIKE ?", "%#{deployer}%").pluck(:id)
+      if deployer = params[:deployer] 
+        users = User.where("name LIKE ?", "%#{ActiveRecord::Base.send(:sanitize_sql_like, deployer)}%").pluck(:id)
         Rails.logger.debug("DEBUGG: your deployer is #{params[:deployer]} filtered : #{deployer} users found #{users}")
       end
 
