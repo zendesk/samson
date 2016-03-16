@@ -11,8 +11,8 @@ class Job < ActiveRecord::Base
 
   validate :validate_globally_unlocked
 
-  VALID_STATUSES = %w[pending running cancelling failed errored succeeded cancelled].freeze
   ACTIVE_STATUSES = %w[pending running cancelling].freeze
+  VALID_STATUSES = ACTIVE_STATUSES + %w[failed errored succeeded cancelled].freeze
 
   def self.valid_status?(status)
     VALID_STATUSES.include?(status)
