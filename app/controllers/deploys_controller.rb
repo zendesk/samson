@@ -49,7 +49,6 @@ class DeploysController < ApplicationController
     end
   end
 
-  # little search endpoint.  
   # takes the same tokens that are used by the filter stuff
   # on the recent deploys pages.  returrns a paginated 
   # json object or CSV of stuff that people are interested in rather than 
