@@ -54,7 +54,7 @@ class DeploysController < ApplicationController
   # json object or CSV that people are interested in rather than 
   # doing client side filtering.
   # params:
-  #   * deployer (name of the user that started the job(s)
+  #   * deployer (name of the user that started the job(s), this is a fuzzy match
   #   * project_name (name of the project)
   #   * production (boolean, is this in proudction or not)
   #   * status (what is the status of this job failed|running| etc)
