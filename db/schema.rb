@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20160205015635) do
+ActiveRecord::Schema.define(version: 20160316233616) do
 
   create_table "build_statuses", force: :cascade do |t|
     t.integer  "build_id",                                     null: false
@@ -329,6 +329,7 @@ ActiveRecord::Schema.define(version: 20160205015635) do
     t.integer  "position",   limit: 4, default: 0, null: false
     t.datetime "created_at"
     t.datetime "updated_at"
+    t.datetime "deleted_at"
   end
 
   create_table "stages", force: :cascade do |t|
