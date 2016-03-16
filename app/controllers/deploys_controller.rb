@@ -55,21 +55,17 @@ class DeploysController < ApplicationController
   # json object or CSV of stuff that people are interested in rather than 
   # doing client side filtering.
   # params:
-  #   * username (name of the user that started the job(s)
+  #   * deployer (name of the user that started the job(s)
   #   * project_name (name of the project)
   #   * user_type (robot or not) (not implemented)
-  #   * stage (boolean, is this in proudction or not)
+  #   * production (boolean, is this in proudction or not)
   #   * status (what is the status of this job failed|running| etc)
   #
   def search
     respond_to do |format|
 
       # stuff that we may have gotten from the api call
-      username      = (defined? params[:username]) ? params[:username] : false
-      project_name  = (defined? params[:project_name]) ? params[:project_name] : false
       user_type     = (defined? params[:user_type]) ? params[:user_type] : false # TODO: not sure about this
-      status        = (defined? params[:status]) ? params[:status] : false
-      stage         = (defined? params[:stage]) ? params[:stage] : false
 
       users       = false
       projects    = false
@@ -80,43 +76,46 @@ class DeploysController < ApplicationController
 
       # TODO: really need some kinda layer with error handling/messages
       # etc
-      if (status)
-        if !Job.valid_status?(status)
+      unless (params[:status].nil?)
+        unless Job.valid_status?(params[:status])
           render json: { :errors => "invalid status given" }, status: 422
           return
         end
       end
-      if username
-        users = User.where("name LIKE ?", "%#{username}%").pluck(:id)
+      unless params[:deployer].nil?
+        deployer = ActiveRecord::Base.send(:sanitize_sql_like, params[:deployer])
+        users = User.where("name LIKE ?", "%#{deployer}%").pluck(:id)
+        Rails.logger.debug("DEBUGG: your deployer is #{params[:deployer]} filtered : #{deployer} users found #{users}")
       end
 
-      if project_name
-        projects = Project.where("name LIKE ?", "%#{project_name}%").pluck(:id)
+      unless params[:project_name].nil?
+        projects = Project.where(:name => params[:project_name]).pluck(:id)
       end
 
       # get the job ids
-      if users and status
-        jobs = Job.where(:user_id => users).where(:status => status).pluck(:id)
-      elsif  users and !status
+      if users && !params[:status].nil?
+        jobs = Job.where(:user_id => users).where(:status => params[:status]).pluck(:id)
+      elsif  users && params[:status].nil?
         jobs = Job.where(:user_id => users).pluck(:id)
-      elsif  !users and status
-        jobs = Job.where(:status => status).pluck(:id)
-      end
-      
-      #get the possible stage ids
-      if projects and stage
-        stages = Stage.where(:project_id => projects).where(:production => stage).pluck(:id)
-      elsif  projects and !stage
-        stages = Stage.where(:project_id => projects).pluck(:id)
-      elsif  !projects and stage
-        stages = Stage.where(:production => stage).pluck(:id)
+      elsif  !users && !params[:status].nil?
+        jobs = Job.where(:status => params[:status]).pluck(:id)
       end
 
-      if stages and jobs
+      
+      #get the possible stage ids
+      if projects && !params[:production].nil?
+        stages = Stage.where(:project_id => projects).where(:production => production).pluck(:id)
+      elsif  projects && params[:production].nil?
+        stages = Stage.where(:project_id => projects).pluck(:id)
+      elsif  !projects && !params[:production].nil?
+        stages = Stage.where(:production => params[:production]).pluck(:id)
+      end
+
+      if stages && jobs
         deploys = Deploy.where(:stage_id => stages).where(:job_id => jobs).page(params[:page]).per(30)
-      elsif !stages and jobs
+      elsif !stages && jobs
         deploys = Deploy.where(:job_id => jobs).page(params[:page]).per(30)
-      elsif stages and !jobs
+      elsif stages && !jobs
         deploys = Deploy.where(:stage_id => stages).page(params[:page]).per(30)
       end
 
