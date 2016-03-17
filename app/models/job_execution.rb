@@ -50,6 +50,10 @@ class JobExecution
     @thread.try(:join)
   end
 
+  def pid
+    @executor.pid
+  end
+
   # Used on queued jobs when shutting down
   # so that the stream sockets are closed
   def close

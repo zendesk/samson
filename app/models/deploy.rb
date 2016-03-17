@@ -26,6 +26,11 @@ class Deploy < ActiveRecord::Base
     "#{job.user.name} #{deploy_buddy} #{summary_action} #{short_reference} to #{stage.name}"
   end
 
+  def summary_for_process
+		t = (Time.now.utc.to_i - start_time.utc.to_i)
+    "JobID: #{job.id} ProcessID: #{job.pid} Running: #{t} seconds"
+  end
+
   def summary_for_timeline
     "#{short_reference}#{' was' if job.succeeded?} #{summary_action} to #{stage.name}"
   end

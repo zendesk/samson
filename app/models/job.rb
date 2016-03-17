@@ -108,6 +108,11 @@ class Job < ActiveRecord::Base
     deploy.try(:full_url) || AppRoutes.url_helpers.project_job_url(project, self)
   end
 
+  def pid
+    return execution.pid if execution
+    nil
+  end
+
   private
 
   def validate_globally_unlocked

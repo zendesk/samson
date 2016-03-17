@@ -21,6 +21,10 @@ module StatusHelper
 
   def status_panel(deploy)
     content = h deploy.summary
+    if deploy.active?
+      content << content_tag(:ul)
+      content << deploy.summary_for_process
+    end
 
     if deploy.finished?
       content << " "
