@@ -64,18 +64,16 @@ class DeploysController < ApplicationController
 
       # TODO: really need some kinda layer with error handling/messages
       # etc
-      if (!params[:status].nil?)
-        unless Job.valid_status?(params[:status])
+      if (params[:status] && !Job.valid_status?(params[:status]))
           render json: { :errors => "invalid status given" }, status: 422
           return
-        end
       end
       if deployer = params[:deployer] 
         users = User.where("name LIKE ?", "%#{ActiveRecord::Base.send(:sanitize_sql_like, deployer)}%").pluck(:id)
         Rails.logger.debug("DEBUGG: your deployer is #{params[:deployer]} filtered : #{deployer} users found #{users}")
       end
 
-      unless params[:project_name].nil?
+      if params[:project_name]
         projects = Project.where(:name => params[:project_name]).pluck(:id)
       end
 
