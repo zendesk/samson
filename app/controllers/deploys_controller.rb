@@ -51,7 +51,7 @@ class DeploysController < ApplicationController
 
   # takes the same tokens that are used by the client side filtering
   # on the recent deploys pages.  returrns a paginated 
-  # json object or CSV that people are interested in rather than 
+  # json object or CSV of deploys that people are interested in rather than 
   # doing client side filtering.
   # params:
   #   * deployer (name of the user that started the job(s), this is a fuzzy match
