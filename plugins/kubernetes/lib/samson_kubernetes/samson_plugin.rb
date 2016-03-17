@@ -3,6 +3,9 @@ require 'celluloid/current'
 
 module SamsonKubernetes
   class Engine < Rails::Engine
+    initializer "refinery.assets.precompile" do |app|
+      app.config.assets.precompile.append %w(kubernetes/icon.png kubernetes/icon.svg)
+    end
   end
 end
 
