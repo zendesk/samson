@@ -47,15 +47,14 @@
   </div>
 </div>
 
-<% if BuddyCheck.enabled? %>
-  <div class="form-group">
-    <div class="col-sm-offset-2 col-sm-10">
-      <div class="checkbox">
-        <%= form.label :bypass_buddy_check do %>
-          <%= form.check_box :bypass_buddy_check %>
-          Does not deploy code <abbr title="Bypass buddy check and release tracking">?</abbr>
-        <% end %>
-      </div>
+<div class="form-group">
+  <div class="col-sm-offset-2 col-sm-10">
+    <div class="checkbox">
+      <%= form.label :no_code_deployed do %>
+        <%= form.check_box :no_code_deployed %>
+        <% details = "Bypass " + [("buddy check" if BuddyCheck.enabled?), "release tracking"].compact.to_sentence %>
+        Does not deploy code <abbr title="<%= details %>">?</abbr>
+      <% end %>
     </div>
   </div>
-<% end %>
+</div>

@@ -169,7 +169,7 @@ describe Stage do
     end
 
     it "creates a no-release deploy when stage was configured to not deploy code" do
-      subject.bypass_buddy_check = true
+      subject.no_code_deployed = true
       deploy = subject.create_deploy(user, {reference: "foo"})
       deploy.release.must_equal false
     end
@@ -460,12 +460,12 @@ describe Stage do
 
     it "is valid when production and bypassed" do
       stage.production = true
-      stage.bypass_buddy_check = true
+      stage.no_code_deployed = true
       assert_valid stage
     end
 
     it "invalid when not production and bypassed" do
-      stage.bypass_buddy_check = true
+      stage.no_code_deployed = true
       refute_valid stage
     end
   end
