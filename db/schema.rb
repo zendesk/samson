@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20160316233616) do
+ActiveRecord::Schema.define(version: 20160317212902) do
 
   create_table "build_statuses", force: :cascade do |t|
     t.integer  "build_id",                                     null: false
@@ -84,6 +84,7 @@ ActiveRecord::Schema.define(version: 20160316233616) do
     t.datetime "started_at"
     t.datetime "deleted_at"
     t.integer  "build_id",   limit: 4
+    t.boolean  "release",                default: false, null: false
   end
 
   add_index "deploys", ["build_id"], name: "index_deploys_on_build_id", using: :btree

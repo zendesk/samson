@@ -98,7 +98,7 @@ class Stage < ActiveRecord::Base
   end
 
   def create_deploy(user, attributes = {})
-    deploys.create(attributes) do |deploy|
+    deploys.create(attributes.merge(release: !bypass_buddy_check)) do |deploy|
       deploy.build_job(project: project, user: user, command: command)
     end
   end
