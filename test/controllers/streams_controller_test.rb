@@ -18,6 +18,9 @@ describe StreamsController do
         fake_execution = JobExecution.new("foo", job)
         JobExecution.expects(:find_by_id).returns(fake_execution)
 
+        # make sure that the JobExecution object responds to the pid method
+        assert fake_execution.respond_to?(:pid)
+
         # Get the :show page to open the SSE stream
         get :show, id: job.id
 
