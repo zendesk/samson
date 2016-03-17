@@ -11,7 +11,7 @@ class Stage < ActiveRecord::Base
 
   has_one :lock
 
-  has_many :stage_commands, autosave: true
+  has_many :stage_commands, autosave: true, dependent: :destroy
   has_many :commands,
     -> { order('stage_commands.position ASC') },
     through: :stage_commands, auto_include: false
