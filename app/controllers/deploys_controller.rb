@@ -88,7 +88,6 @@ class DeploysController < ApplicationController
         jobs = Job.where(:status => params[:status]).pluck(:id)
       end
 
-      
       #get the possible stage ids
       if projects && !params[:production].nil?
         stages = Stage.where(:project_id => projects).where(:production => production).pluck(:id)

@@ -216,6 +216,64 @@ describe DeploysController do
     unauthorized :delete, :destroy, project_id: :foo, id: 1
   end
 
+  as_a_viewer do # TODO: make this api_user
+
+    before do
+      job1 = Job.create({project_id: project.id, command:'cap staging deploy', status:'failed', user_id: admin.id})
+      Deploy.create({ stage_id: Stage.first.id, reference: 'reference', job_id: job1.id})
+      job2 = Job.create({project_id: project.id, command:'cap staging deploy', status:'running', user_id: admin.id})
+      Deploy.create({ stage_id: Stage.first.id, reference: 'reference', job_id: job2.id})
+    end
+
+    after do
+      Deploy.delete_all()
+    end
+
+
+    describe "a GET to :search" do
+      it "returns a 200" do
+        get :search, format: "json"
+        assert_response :ok
+      end
+      it "should return no results" do
+        get :search, format: "json", deployer: 'jimmyjoebob'
+        assert_response :ok
+        @response.body.must_equal "{\"deploys\":\[\]}"
+      end
+      it "should return 4 for user Admin" do
+        get :search, format: "json", deployer: 'Admin'
+        assert_response :ok
+        deploys = JSON.parse(@response.body)
+        deploys["deploys"].count.must_equal 4
+      end
+      it "should return 2 sucessful deploys" do
+        get :search, format: "json", status: 'succeeded'
+        assert_response :ok
+        deploys = JSON.parse(@response.body)
+        deploys["deploys"].count.must_equal 2
+      end
+      it "should return 1 running deploy" do
+        get :search, format: "json", status: 'running'
+        assert_response :ok
+        deploys = JSON.parse(@response.body)
+        deploys["deploys"].count.must_equal 1
+      end
+      it "should return 4 deploys for project: Project" do
+        get :search, format: "json", project_name: 'Project'
+        assert_response :ok
+        deploys = JSON.parse(@response.body)
+        deploys["deploys"].count.must_equal 4
+      end
+      it "should return 3 production deploys" do
+        get :search, format: "json", production: true
+        assert_response :ok
+        deploys = JSON.parse(@response.body)
+        deploys["deploys"].count.must_equal 3
+      end
+    end
+
+  end
+
   as_a_deployer do
     let(:deployer) { users(:deployer) }
 
