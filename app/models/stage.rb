@@ -62,6 +62,17 @@ class Stage < ActiveRecord::Base
     )
   end
 
+  def self.get_search_stages(projects, production)
+		if projects && !production.nil?
+			return Stage.where(:project_id => projects).where(:production => production).pluck(:id)
+		elsif projects && production.nil?
+			return Stage.where(:project_id => projects).pluck(:id)
+		elsif !projects && !production.nil?
+			return Stage.where(:production => production).pluck(:id)
+		end
+		nil
+  end
+
   def current_deploy
     return @current_deploy if defined?(@current_deploy)
     @current_deploy = deploys.active.first

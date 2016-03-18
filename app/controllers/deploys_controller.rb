@@ -77,23 +77,8 @@ class DeploysController < ApplicationController
         projects = Project.where(:name => params[:project_name]).pluck(:id)
       end
 
-      # get the job ids
-      if users && !params[:status].nil?
-        jobs = Job.where(:user_id => users).where(:status => params[:status]).pluck(:id)
-      elsif  users && params[:status].nil?
-        jobs = Job.where(:user_id => users).pluck(:id)
-      elsif  !users && !params[:status].nil?
-        jobs = Job.where(:status => params[:status]).pluck(:id)
-      end
-
-      #get the possible stage ids
-      if projects && !params[:production].nil?
-        stages = Stage.where(:project_id => projects).where(:production => production).pluck(:id)
-      elsif  projects && params[:production].nil?
-        stages = Stage.where(:project_id => projects).pluck(:id)
-      elsif  !projects && !params[:production].nil?
-        stages = Stage.where(:production => params[:production]).pluck(:id)
-      end
+      jobs = Job.get_search_jobs(users, params[:status])
+      stages = Stage.get_search_stages(projects, params[:production])
 
       if stages && jobs
         deploys = Deploy.where(:stage_id => stages).where(:job_id => jobs).page(params[:page]).per(30)
