@@ -28,7 +28,7 @@ class Deploy < ActiveRecord::Base
 
   def summary_for_process
     t = (Time.now.utc.to_i - start_time.utc.to_i)
-    "JobID: #{job.id} ProcessID: #{job.pid} Running: #{t} seconds"
+    "ProcessID: #{job.pid} Running: #{t} seconds"
   end
 
   def summary_for_timeline
