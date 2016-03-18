@@ -35,5 +35,4 @@ describe Job do
       job.pid.must_be_nil
     end
   end
-
 end
