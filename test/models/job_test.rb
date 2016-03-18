@@ -1,5 +1,4 @@
 require_relative '../test_helper'
-require 'byebug'
 
 describe Job do
   include GitRepoTestHelper
