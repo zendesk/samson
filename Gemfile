@@ -9,6 +9,8 @@ gem 'dotenv-rails', '~> 0.9'
 gem 'dogstatsd-ruby', '~> 1.5.0', require: 'statsd'
 gem 'goldiloader'
 
+gem 'sucker_punch', '~> 2.0'
+
 group :mysql2 do
   gem 'mysql2', '~> 0.3'
 end

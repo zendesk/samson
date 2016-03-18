@@ -51,10 +51,10 @@
         </li>
       <% end %>
 
-      <% if current_user.try(:is_admin?) %>
-        <li class="dropdown <%= 'active' if request.path.starts_with?('/admin') %>">
-          <a href="#" class="dropdown-toggle" data-toggle="dropdown">Admin <b class="caret"></b></a>
-          <ul class="dropdown-menu">
+      <li class="dropdown <%= 'active' if request.path.starts_with?('/admin') %>">
+        <a href="#" class="dropdown-toggle" data-toggle="dropdown">Admin <b class="caret"></b></a>
+        <ul class="dropdown-menu">
+          <% if current_user.try(:is_admin?) %>
             <% if DeployGroup.enabled? %>
               <li><%= link_to "Environments", admin_environments_path %></li>
               <li><%= link_to "Deploy Groups", admin_deploy_groups_path %></li>
@@ -63,9 +63,11 @@
             <li><%= link_to "Commands", admin_commands_path %></li>
             <li><%= link_to "Users", admin_users_path %></li>
             <%= Samson::Hooks.render_views(:admin_menu, self) %>
-          </ul>
-        </li>
-      <% end %>
+            <li class="divider"></li>
+          <% end %>
+          <li><%= link_to "Reports", csvs_path %></li>
+        </ul>
+      </li>
     </ul>
 
     <ul class="nav navbar-nav pull-right">
