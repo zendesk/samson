@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20160316233616) do
+ActiveRecord::Schema.define(version: 20160318170635) do
 
   create_table "build_statuses", force: :cascade do |t|
     t.integer  "build_id",                                     null: false
@@ -284,6 +284,7 @@ ActiveRecord::Schema.define(version: 20160316233616) do
     t.string   "owner",              limit: 255
     t.boolean  "deploy_with_docker",               default: false, null: false
     t.boolean  "auto_release_docker_image",        default: false, null: false
+    t.boolean  "extract_docker_packaged_artifact", default: true,  null: false
   end
 
   add_index "projects", ["permalink", "deleted_at"], name: "index_projects_on_permalink_and_deleted_at", length: {"permalink"=>191, "deleted_at"=>nil}, using: :btree

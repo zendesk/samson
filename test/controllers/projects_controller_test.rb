@@ -119,7 +119,9 @@ describe ProjectsController do
             project: {
               name: "Hello",
               repository_url: "git://foo.com/bar",
-              stages_attributes: stage_params
+              stages_attributes: stage_params,
+              deploy_with_docker: true,
+              extract_docker_packaged_artifact: false
             }
           }
         end
@@ -131,6 +133,8 @@ describe ProjectsController do
 
         it "creates a new project" do
           project.wont_be_nil
+          project.deploy_with_docker.must_equal true
+          project.extract_docker_packaged_artifact.must_equal false
           project.stages.wont_be_empty
           project.stages.first.name.must_equal 'foobar'
           project.stages.first.deploy_group_ids.must_equal [DeployGroup.all.first.id]

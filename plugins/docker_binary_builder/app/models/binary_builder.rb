@@ -48,7 +48,7 @@ class BinaryBuilder
     artifacts_tar.close
 
     untar(artifacts_tar.path)
-    untar(File.join(@dir, ARTIFACTS_FILE))
+    untar(File.join(@dir, ARTIFACTS_FILE)) if @project.try(:extract_docker_packaged_artifact?)
   end
 
   def untar(file_path)

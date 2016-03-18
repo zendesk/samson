@@ -59,6 +59,10 @@
           <%= form.check_box :deploy_with_docker %>
           <%= form.label :deploy_with_docker, 'Deploy with Docker' %>
         </div>
+        <div class="checkbox">
+          <%= form.check_box :extract_docker_packaged_artifact %>
+          <%= form.label :extract_docker_packaged_artifact, 'Extract the tar artifact built within Docker' %>
+        </div>
       </div>
     </div>
     <% end %>
