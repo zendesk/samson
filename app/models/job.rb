@@ -109,8 +109,7 @@ class Job < ActiveRecord::Base
   end
 
   def pid
-    return execution.pid if execution
-    nil
+    execution.try :pid
   end
 
   private
