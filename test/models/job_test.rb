@@ -24,10 +24,12 @@ describe Job do
       JobExecution.start_job(JobExecution.new('master', job))
       JobExecution.any_instance.stubs(:pid).returns(1234)
     end
+
     it "has a pid when running" do
       job.run!
       job.pid.wont_be_nil
     end
+
     it "has no pid when stopped" do
       job.stop!
       job.pid.must_be_nil
