@@ -16,13 +16,15 @@ This plugin makes a few assumptions:
 - You have a build script 'build.sh' that can be executed to compile the needed binaries
   - This is packaged inside the Dockerfile.build image and executed
   - After binaries are compiled the build.sh script finishes by tar'ing all necessary files into an 'artifacts.tar' file.
-  
+
 If you want to share caches between builds, e.g. all your projects are Java and use Maven to build, then sharing the .m2 
 directory will be a huge time saving tactic to share all downloaded dependencies.
 
 If the directory '/opt/samson_build_cache' exists on the Docker host, it will mount it to '/build/cache' inside the 
 docker build image. That way you could then instruct Maven to use '/build/cache/.m2' as the cache directory for all your 
 projects.
+
+You can also provide a script named 'pre_binary_build.sh' to be ran, before the docker binary plugin starts building the image.
 
 The build container will also receive all global (`All` selected in the env var's combo box) environment variables that are configured for a project, assuming the `env` plugin is enabled.
 
