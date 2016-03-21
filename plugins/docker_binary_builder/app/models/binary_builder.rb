@@ -38,10 +38,12 @@ class BinaryBuilder
 
   def run_pre_build_script
     file = File.join(@dir, PRE_BUILD_SCRIPT)
-    return unless File.exist?(file)
+    return unless File.file?(file)
 
     @output_stream.puts "Running pre build script..."
-    @executor.execute! file
+    success = @executor.execute! file
+
+    raise "Error running pre build script" unless success
   end
 
   private

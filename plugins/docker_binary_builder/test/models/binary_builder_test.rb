@@ -32,7 +32,7 @@ describe BinaryBuilder do
 
     it 'builds image if docker flag is set for project and dockerfile.build exists' do
       File.expects(:exists?).with(File.join(dir, BinaryBuilder::DOCKER_BUILD_FILE)).returns(true)
-      File.expects(:exists?).with(File.join(dir, BinaryBuilder::PRE_BUILD_SCRIPT)).returns(false)
+      File.expects(:file?).with(File.join(dir, BinaryBuilder::PRE_BUILD_SCRIPT)).returns(false)
       executor.expects(:execute!).with(File.join(dir, BinaryBuilder::PRE_BUILD_SCRIPT)).never
 
       project.update_attributes(deploy_with_docker: true)
@@ -48,8 +48,8 @@ describe BinaryBuilder do
 
     it 'run pre build shell script if it is available' do
       File.expects(:exists?).with(File.join(dir, BinaryBuilder::DOCKER_BUILD_FILE)).returns(true)
-      File.expects(:exists?).with(File.join(dir, BinaryBuilder::PRE_BUILD_SCRIPT)).returns(true)
-      executor.expects(:execute!).with(File.join(dir, BinaryBuilder::PRE_BUILD_SCRIPT)).once
+      File.expects(:file?).with(File.join(dir, BinaryBuilder::PRE_BUILD_SCRIPT)).returns(true)
+      executor.expects(:execute!).with(File.join(dir, BinaryBuilder::PRE_BUILD_SCRIPT)).returns(true)
 
       project.update_attributes(deploy_with_docker: true)
       builder.build
@@ -61,6 +61,17 @@ describe BinaryBuilder do
         "Grabbing '/app/artifacts.tar' from build container...\n",
         "Continuing docker build...\n",
         "Cleaning up docker build image and container...\n"].join
+    end
+
+    it 'stop build when pre build shell script fails' do
+      File.expects(:exists?).with(File.join(dir, BinaryBuilder::DOCKER_BUILD_FILE)).returns(true)
+      File.expects(:file?).with(File.join(dir, BinaryBuilder::PRE_BUILD_SCRIPT)).returns(true)
+      executor.expects(:execute!).with(File.join(dir, BinaryBuilder::PRE_BUILD_SCRIPT)).returns(false)
+
+      project.update_attributes(deploy_with_docker: true)
+      assert_raises RuntimeError do
+        builder.build
+      end
     end
 
     it 'uses the old style of mounting directories with api v1.19' do
