@@ -359,7 +359,8 @@ describe ProjectsController do
           stage: stages(:test_production),
           job: deploy.job,
           reference: "new",
-          updated_at: time - 1.day
+          updated_at: time - 1.day,
+          release: true
         )
         get :deploy_group_versions, id: project.to_param, before: time.to_s
         deploy_ids = JSON.parse(response.body).map { |_id, deploy| deploy['id'] }

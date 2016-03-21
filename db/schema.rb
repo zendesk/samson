@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20160316233616) do
+ActiveRecord::Schema.define(version: 20160317215713) do
 
   create_table "build_statuses", force: :cascade do |t|
     t.integer  "build_id",                                     null: false
@@ -84,6 +84,7 @@ ActiveRecord::Schema.define(version: 20160316233616) do
     t.datetime "started_at"
     t.datetime "deleted_at"
     t.integer  "build_id",   limit: 4
+    t.boolean  "release",                default: false, null: false
   end
 
   add_index "deploys", ["build_id"], name: "index_deploys_on_build_id", using: :btree
@@ -354,7 +355,7 @@ ActiveRecord::Schema.define(version: 20160316233616) do
     t.string   "datadog_monitor_ids",                          limit: 255
     t.string   "jenkins_job_names",                            limit: 255
     t.string   "next_stage_ids"
-    t.boolean  "bypass_buddy_check",                                         default: false
+    t.boolean  "no_code_deployed",                                           default: false
   end
 
   add_index "stages", ["project_id", "permalink", "deleted_at"], name: "index_stages_on_project_id_and_permalink_and_deleted_at", length: {"project_id"=>nil, "permalink"=>191, "deleted_at"=>nil}, using: :btree
