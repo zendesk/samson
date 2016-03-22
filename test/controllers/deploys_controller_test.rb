@@ -269,11 +269,11 @@ describe DeploysController do
         deploys = JSON.parse(@response.body)
         deploys["deploys"].count.must_equal 4
       end
-      it "should return 3 production deploys" do
-        get :search, format: "json", production: true
+      it "should return 1 non production deploys" do
+        get :search, format: "json", production: false
         assert_response :ok
         deploys = JSON.parse(@response.body)
-        deploys["deploys"].count.must_equal 3
+        deploys["deploys"].count.must_equal 1
       end
     end
 
