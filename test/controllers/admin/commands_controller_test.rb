@@ -3,19 +3,28 @@ require_relative '../../test_helper'
 describe Admin::CommandsController do
   as_a_admin do
     describe 'GET to #index' do
+      let(:echo) { commands(:echo) }
+      let(:global) { commands(:global) }
+
       it 'renders template' do
         get :index
         assert_template :index
+        assigns[:commands].sort_by(&:id).must_equal [global, echo].sort_by(&:id)
       end
 
       it 'can filter by words' do
         get :index, search: {query: 'echo'}
-        assigns[:commands].must_equal [commands(:echo)]
+        assigns[:commands].must_equal [echo]
       end
 
       it 'can filter by project_id' do
-        get :index, search: {project_id: commands(:echo).project_id}
-        assigns[:commands].must_equal [commands(:echo)]
+        get :index, search: {project_id: echo.project_id}
+        assigns[:commands].must_equal [echo]
+      end
+
+      it 'can filter by global' do
+        get :index, search: {project_id: 'global'}
+        assigns[:commands].must_equal [global]
       end
     end
 

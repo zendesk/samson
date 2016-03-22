@@ -129,7 +129,7 @@ class Project < ActiveRecord::Base
 
   def deploys_by_group(before)
     stages.each_with_object({}) do |stage, result|
-      if deploy = stage.deploys.successful.where("deploys.updated_at <= ?", before.to_s(:db)).first
+      if deploy = stage.deploys.successful.where(release: true).where("deploys.updated_at <= ?", before.to_s(:db)).first
         stage.deploy_groups.each do |deploy_group|
           result[deploy_group.id] ||= []
           result[deploy_group.id] << deploy
@@ -155,7 +155,7 @@ class Project < ActiveRecord::Base
           log.error("Could not clone git repository #{repository_url} for project #{name} - #{output.string}") unless is_cloned
         end
       rescue => e
-       alert_clone_error!(e)
+        alert_clone_error!(e)
       end
     end
   end

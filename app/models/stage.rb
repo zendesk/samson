@@ -109,7 +109,7 @@ class Stage < ActiveRecord::Base
   end
 
   def create_deploy(user, attributes = {})
-    deploys.create(attributes) do |deploy|
+    deploys.create(attributes.merge(release: !no_code_deployed)) do |deploy|
       deploy.build_job(project: project, user: user, command: command)
     end
   end
@@ -167,7 +167,7 @@ class Stage < ActiveRecord::Base
   end
 
   def deploy_requires_approval?
-    BuddyCheck.enabled? && !bypass_buddy_check? && production?
+    BuddyCheck.enabled? && !no_code_deployed? && production?
   end
 
   def automated_failure_emails(deploy)
@@ -233,8 +233,8 @@ class Stage < ActiveRecord::Base
   end
 
   def validate_bypass_used_correctly
-    if bypass_buddy_check? && !production?
-      errors.add(:bypass_buddy_check, 'makes no sense when set but not being in production')
+    if no_code_deployed? && !production?
+      errors.add(:no_code_deployed, 'makes no sense when set but not being in production')
     end
   end
 end
