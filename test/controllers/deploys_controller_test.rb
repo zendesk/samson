@@ -220,13 +220,14 @@ describe DeploysController do
 
     before do
       Deploy.delete_all()
-      job1 = Job.create({project_id: project.id, command:'cap staging deploy', status:'failed', user_id: admin.id})
+      Job.delete_all()
+      job1 = Job.create({project_id: Project.first.id, command:'cap staging deploy', status:'failed', user_id: admin.id})
       Deploy.create({ stage_id: Stage.first.id, reference: 'reference', job_id: job1.id})
-      job2 = Job.create({project_id: project.id, command:'cap staging deploy', status:'running', user_id: admin.id})
+      job2 = Job.create({project_id: Project.first.id, command:'cap staging deploy', status:'running', user_id: admin.id})
       Deploy.create({ stage_id: Stage.first.id, reference: 'reference', job_id: job2.id})
-      success1 = Job.create({project_id: project.id, command:'cap staging deploy', status:'succeeded', user_id: admin.id})
+      success1 = Job.create({project_id: Project.first.id, command:'cap staging deploy', status:'succeeded', user_id: admin.id})
       Deploy.create({ stage_id: Stage.first.id, reference: 'reference', job_id: success1.id})
-      success2 = Job.create({project_id: project.id, command:'cap staging deploy', status:'succeeded', user_id: admin.id})
+      success2 = Job.create({project_id: Project.first.id, command:'cap staging deploy', status:'succeeded', user_id: admin.id})
       Deploy.create({ stage_id: Stage.find_by_production(false).id, reference: 'reference', job_id: success2.id})
     end
 
