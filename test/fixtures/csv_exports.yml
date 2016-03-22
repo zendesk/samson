@@ -1,4 +1,5 @@
 pending:
-  user: admin
+  user: deployer
   content: 'deploys'
   status: 'pending'
+  filters: "{\"content\":\"deploys\"}"

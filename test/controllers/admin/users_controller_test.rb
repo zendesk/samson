@@ -50,7 +50,7 @@ describe Admin::UsersController do
       end
     end
     
-    describe 'a csvs GET to #index' do
+    describe 'a csv GET to #index' do
       before do
         get :index, format: :csv
       end

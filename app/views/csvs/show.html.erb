@@ -2,11 +2,11 @@
 
 <section class="clearfix">
   <div>
-    <% if @csv_export.nil? or @csv_export.deleted? %>
+    <% if @csv_export.status? :deleted? %>
       <p>Your report has been deleted.  <%= link_to "Request a new report.", new_csv_path %></p>
-    <% elsif @csv_export.ready? %>
-      <p><%= link_to "Your report is ready for download.", csv_path(id: params[:id], format: 'csv') %></p>
-    <% elsif @csv_export.failed? %>
+    <% elsif @csv_export.status? :ready %>
+      <p><%= link_to "Your report is ready for download.", csv_path(@csv_export, format: 'csv') %></p>
+    <% elsif @csv_export.status? :failed %>
       <p>Your report has failed.  <%= link_to "Request a new report.", new_csv_path %></p>
     <% else %>
       <p >Your report is being prepared.  You will receive an email when your report is ready for download or you can refresh this page.</p>

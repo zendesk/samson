@@ -1,8 +1,42 @@
 <h1>Request a CSV Report</h1>
 
 <section class="clearfix">
-  <p><%= button_to "Create Deploys CSV Report", csvs_path, params: {content: 'deploys'} %></p>
+  <div class="csv-deploy-filters clearfix">
+    <%= form_tag csvs_path do %>
+      <div><strong>Deploy reports</strong></div>
+      <div>Configure your report with these parameters</div>
+      <div>
+        <%= label_tag :start_date, "Start Date:" %>
+        <%= select_date Date.today.prev_year, prefix: :start_date %>
+      </div>
+      <div>
+        <%= label_tag :end_date, "End Date:" %>
+        <%=	select_date Date.today, prefix: :end_date %>
+      </div>
+      <div>
+        <%= label_tag :production, "Production:" %>
+        <%= select_tag :production, options_for_select(['Any', 'Yes', 'No'], 'Any') %>
+      </div>
+      <div>
+        <div><%= label_tag :status, "Status (No boxes selected equals all):"%></div>
+        <% ['succeeded', 'running', 'failed', 'errored', 'cancelling', 'cancelled'].each do |s| %>
+          <%= check_box_tag "status[]", s %>
+          <%= label_tag "status[]", s %>
+        <% end %>
+      </div>
+      <div>
+        <%= label_tag :project, "Project" %>
+        <% projects = [['all',0]] %>
+        <% projects += Project.all.map { |p| [p.name, p.id]} %>
+        <%= select_tag(:project, options_for_select(projects, 0)) %>
+      </div>
+      <%= hidden_field_tag :content, 'deploys' %>
+      <%= submit_tag "Create Deploys CSV Report" %>
+    <% end %>
+  </div>
   <% if current_user.is_admin? %>
-    <p><%= link_to "Download Users CSV Report", admin_users_path(format: "csv") %></p>
+      <hr />
+      <div><strong>Admin reports</strong></div>
+      <div><%= link_to "Download Users CSV Report", admin_users_path(format: "csv") %></div>
   <% end %>
 </section>

@@ -4,6 +4,7 @@ class AddCsvExport < ActiveRecord::Migration
       t.integer :user_id,    null: false
       t.timestamps           null: false
       t.string :content,     null: false
+      t.text :filters,       null: false
       t.string :status
     end
   end

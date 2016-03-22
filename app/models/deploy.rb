@@ -122,7 +122,7 @@ class Deploy < ActiveRecord::Base
   end
 
   def csv_buddy
-    if not (stage.deploy_requires_approval?)
+    if not stage.deploy_requires_approval?
       "Not Required"
     elsif buddy.nil? && pending?
       "Pending"
@@ -133,6 +133,10 @@ class Deploy < ActiveRecord::Base
     else
       buddy.name
     end
+  end
+
+  def buddy_email
+    stage.deploy_requires_approval? ? buddy.try(:email) : nil
   end
 
   def url

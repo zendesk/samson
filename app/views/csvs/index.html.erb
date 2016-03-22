@@ -4,8 +4,8 @@
   <div class="deploy-csv">
     <%= link_to "Start a CSV export job", new_csv_path %>
   </div>
-  <% if @csv_exports.nil? %>
-    <p>No current CSV Reports was found!</td>
+  <% if @csv_exports.empty? %>
+    <p>No current CSV Reports was found!</p>
   <% else %>
     <table id="csv-exports" class="table table-hover table-condensed">
       <thead>
@@ -24,10 +24,10 @@
             <td><%= csv_export.content %></td>
             <td><%= csv_export.created_at %></td>
             <td><%= csv_export.status %></td>
-            <% if csv_export.finished? or csv_export.downloaded? %>
-              <td><%= link_to "Download", csv_path(id: csv_export.id, format: 'csv') %></td>
+            <% if csv_export.status? :ready %>
+              <td><%= link_to "Download", csv_path(csv_export, format: 'csv') %></td>
             <% else %>
-              <td><%= link_to "Status", csv_path(id: csv_export.id) %></td>
+              <td><%= link_to "Status", csv_path(csv_export) %></td>
             <% end %>
           </tr>
         <% end %>
