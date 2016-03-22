@@ -70,7 +70,6 @@ class DeploysController < ApplicationController
       end
       if deployer = params[:deployer] 
         users = User.where("name LIKE ?", "%#{ActiveRecord::Base.send(:sanitize_sql_like, deployer)}%").pluck(:id)
-        Rails.logger.debug("DEBUGG: your deployer is #{params[:deployer]} filtered : #{deployer} users found #{users}")
       end
 
       if params[:project_name]

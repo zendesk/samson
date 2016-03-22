@@ -64,11 +64,11 @@ class Stage < ActiveRecord::Base
 
   def self.get_search_stages(projects, production)
 		if projects && !production.nil?
-			return Stage.where(:project_id => projects).where(:production => production).pluck(:id)
-		elsif projects && production.nil?
+			return Stage.where(:project_id => projects).where(:production => ActiveRecord::Type::Boolean.new.type_cast_from_user(production)).pluck(:id)
+		elsif projects
 			return Stage.where(:project_id => projects).pluck(:id)
-		elsif !projects && !production.nil?
-			return Stage.where(:production => production).pluck(:id)
+		elsif !production.nil?
+			return Stage.where(production: ActiveRecord::Type::Boolean.new.type_cast_from_user(production)).pluck(:id)
 		end
 		nil
   end

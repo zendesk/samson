@@ -62,9 +62,9 @@ class Job < ActiveRecord::Base
   def self.get_search_jobs(users, status)
     if users && !status.nil?
       return Job.where(:user_id => users).where(:status => status).pluck(:id)
-    elsif  users && status.nil?
+    elsif  users
       return Job.where(:user_id => users).pluck(:id)
-    elsif  !users && !status.nil?
+    elsif  !status.nil?
       return Job.where(:status => status).pluck(:id)
     end
     nil
