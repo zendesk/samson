@@ -4,7 +4,7 @@ class CsvsController < ApplicationController
     respond_to do |format|
       format.json { render json: {status: "not found"}.to_json, status: :not_found }
       format.csv  { render body: "not found", status: :not_found }
-      format.html { render file: "#{Rails.public_path}/404.html", status: :not_found }
+      format.html { raise exception }
     end
   end
 
@@ -27,8 +27,7 @@ class CsvsController < ApplicationController
 
   def create
     filters = deploy_filter(params)
-    csv_export = CsvExport.create!(user: current_user, filters: filters.to_json)
-    csv_export.status! :pending
+    csv_export = CsvExport.create!(user: current_user, filters: filters)
     CsvExportJob.perform_later(csv_export.id)
     redirect_to csv_path(csv_export)
   end
@@ -41,7 +40,7 @@ class CsvsController < ApplicationController
         send_file @csv_export.path_file, type: :csv, filename: @csv_export.download_name
         @csv_export.status! :downloaded
         Rails.logger.info("#{current_user.name_and_email} just downloaded #{@csv_export.download_name})")
-      rescue
+      rescue ActionController::MissingFile
         @csv_export.status! :deleted
         redirect_to csv_path(@csv_export)
       end
@@ -55,42 +54,34 @@ class CsvsController < ApplicationController
     filter = {}
 
     if param = params[:start_date].presence
-      begin
-        start_date = Date.strptime(param, "%m/%d/%Y")
-      rescue
-        raise("Invalid start date #{param}.")
-      end
+      start_date = Date.parse(param)
     end
 
     if param = params[:end_date].presence
-      begin
-        end_date = Date.strptime(param, "%m/%d/%Y")
-      rescue
-        raise("Invalid end date #{param}.")
-      end
+      end_date = Date.parse(param)
     end
 
     if start_date || end_date
       start_date ||= Date.new
       end_date ||= Date.today
-      filter['deploys.created_at'] = [start_date,end_date]
+      filter['deploys.created_at'] = (start_date..end_date)
     end
 
     if param = params[:production].presence
-      if param == 'Yes'
-        filter['stages.production'] = true
-      elsif param == 'No'
-        filter['stages.production'] = false
-      elsif param != "Any"
-        raise("Invalid production filter #{param}.")
+      case param
+        when 'Yes' then filter['stages.production'] = true
+        when 'No'  then filter['stages.production'] = false
+        when "Any" then #ignore
+        else
+          raise "Invalid production filter #{param}"
       end
     end
 
     if param = params[:status].presence
-      if ['succeeded', 'failed'].include?(param.downcase)
-        filter['jobs.status'] = param.downcase
-      elsif param != "All"
-        raise("Invalid status filter #{param}.")
+      if ['succeeded', 'failed'].include?(param)
+        filter['jobs.status'] = param
+      elsif param != "all"
+        raise "Invalid status filter #{param}"
       end
     end
 
@@ -98,7 +89,7 @@ class CsvsController < ApplicationController
       if param.to_i > 0
         filter['stages.project_id'] = param.to_i
       elsif param != "0"
-        raise("Invalid project id #{param}")
+        raise "Invalid project id #{param}"
       end
     end
 

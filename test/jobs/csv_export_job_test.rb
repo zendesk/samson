@@ -3,9 +3,8 @@ require_relative '../test_helper'
 describe CsvExportJob do
   let(:deployer) { users(:deployer) }
   let(:project) { projects(:test)}
-  let(:deploy_export_job) { CsvExport.create(user: deployer, filters: "{}") }
-  let(:invalid_export_job) { CsvExport.create(user: deployer, filters: "{}") }
-  
+  let(:deploy_export_job) { csv_exports(:pending) }
+
   it "enqueues properly" do
     assert_enqueued_jobs 1 do
       CsvExportJob.perform_later(deploy_export_job.id)
@@ -15,7 +14,7 @@ describe CsvExportJob do
   describe "Job executes for deploy csv" do
     teardown do
       job = CsvExport.find(deploy_export_job.id)
-      job.file_delete
+      job.delete_file
     end
     
     it "finishes with file" do
@@ -30,32 +29,32 @@ describe CsvExportJob do
     end
 
     it "filters the report with known activity accurately and completely" do
-      filter = {'deploys.created_at': [Date.civil(2010,1,1), Date.civil(2015,12,31)],
+      filter = {'deploys.created_at': (Date.new..Date.today),
         'stages.production': true, 'jobs.status': 'succeeded', 'stages.project_id':project.id}
       accuracy_test(filter)
     end
 
-    it "accurately has no results for date range after deploys" do
-      filter = {'deploys.created_at': [Date.civil(2015,12,31), Date.today]}
+    it "has no results for date range after deploys" do
+      filter = {'deploys.created_at': (Date.civil(2015,12,31)..Date.today)}
       empty_test(filter)
     end
 
-    it "accurately has no results for date range before deploys" do
-      filter = {'deploys.created_at': [Date.new, Date.civil(2000,1,1)]}
+    it "has no results for date range before deploys" do
+      filter = {'deploys.created_at': (Date.new..Date.civil(2000,1,1))}
       empty_test(filter)
     end
 
-    it "accurately has no results for statuses with no fixtures" do
+    it "has no results for statuses with no fixtures" do
       filter = {'jobs.status': 'failed'}
       empty_test(filter)
     end
 
-    it "accurately has no results for non-existant project" do
+    it "has no results for non-existant project" do
       filter = {'stages.project_id': -999}
       empty_test(filter)
     end
 
-    it "accurately has no results for non-production with no valid non-prod deploy" do
+    it "has no results for non-production with no valid non-prod deploy" do
       deploys(:succeeded_test).delete
       filter = {'stages.production': false}
       empty_test(filter)
@@ -77,8 +76,7 @@ describe CsvExportJob do
   end
 
   def accuracy_test(filters)
-    deploy_export_job.update_attribute(:filters, filters.to_json)
-    filter = deploy_export_job.filters
+    deploy_export_job.update_attribute(:filters, filters)
     CsvExportJob.perform_now(deploy_export_job.id)
     filename = deploy_export_job.reload.path_file
 
@@ -86,7 +84,7 @@ describe CsvExportJob do
     csv_response.shift  # Remove Header in file
     csv_response.pop # Remove filter summary row
     deploycount = csv_response.pop.pop.to_i # Remove summary row and extract count
-    Deploy.joins(:stage, :job).where(filter).count.must_equal deploycount
+    Deploy.joins(:stage, :job).where(filters).count.must_equal deploycount
     deploycount.must_equal csv_response.length
     assert_not_empty csv_response
     csv_response.each do |d|
@@ -108,7 +106,7 @@ describe CsvExportJob do
   end
 
   def empty_test(filters)
-    deploy_export_job.update_attribute(:filters, filters.to_json)
+    deploy_export_job.update_attribute(:filters, filters)
     CsvExportJob.perform_now(deploy_export_job.id)
     filename = deploy_export_job.reload.path_file
 

@@ -96,7 +96,7 @@ describe CsvsController do
 
           describe "as csv with no file" do
             setup do
-              export.file_delete
+              export.delete_file
               get :show, id: export.id, format: :csv
             end
 
@@ -140,10 +140,10 @@ describe CsvsController do
 
       describe "for invalid id" do
         describe "as html" do
-          it "renders 404 page" do
-            get :show, id: -9999, format: :html
-            @response.body.must_include "The page you were looking for doesn't exist"
-            assert_response 404
+          it "raises ActiveRecord::RecordNotFound" do
+            assert_raise(ActiveRecord::RecordNotFound) do
+              get :show, id: -9999, format: :html
+            end
           end
         end
 
@@ -178,7 +178,7 @@ describe CsvsController do
       end
 
       it "with valid filters should create a new csv_export, with correct filters and redirect to status" do
-        filter = { start_date: "01/01/2010", end_date: "12/31/2015", production:"Yes", status: "Succeeded",
+        filter = { start_date: "2010-01-01", end_date: "2015-12-31", production:"Yes", status: "succeeded",
           project: projects(:test).id.to_s}
         assert_difference 'CsvExport.count' do
           post :create, filter
@@ -188,22 +188,30 @@ describe CsvsController do
         csv_filter.keys.must_include "stages.production"
         csv_filter.keys.must_include "jobs.status"
         csv_filter.keys.must_include "stages.project_id"
-        start_date = Date.strptime(filter[:start_date], "%m/%d/%Y")
-        end_date = Date.strptime(filter[:end_date], "%m/%d/%Y")
+        start_date = Date.parse(filter[:start_date])
+        end_date = Date.parse(filter[:end_date])
         csv_filter["deploys.created_at"].must_equal (start_date..end_date)
         csv_filter["stages.production"].must_equal true
         csv_filter["jobs.status"].must_equal "succeeded"
         csv_filter["stages.project_id"].must_equal projects(:test).id
       end
+
+      it "raises for invalid params" do
+        create_fail_test(ArgumentError, {start_date: '2000-13-13'})
+        create_fail_test(ArgumentError, {end_date: '2015-13-31'})
+        create_fail_test("Invalid production filter foo", {production: 'foo'})
+        create_fail_test("Invalid status filter foo", {status: 'foo'})
+        create_fail_test("Invalid project id foo", {project: "foo"})
+      end
     end
   end
 
   def create_exports
-    CsvExport.create(user: deployer, status: :started, filters: "{}") # pending already in fixtures
-    CsvExport.create(user: deployer, status: :finished, filters: "{}")
-    CsvExport.create(user: deployer, status: :downloaded, filters: "{}")
-    CsvExport.create(user: deployer, status: :failed, filters: "{}")
-    CsvExport.create(user: deployer, status: :deleted, filters: "{}")
+    CsvExport.create(user: deployer, status: :started) # pending already in fixtures
+    CsvExport.create(user: deployer, status: :finished)
+    CsvExport.create(user: deployer, status: :downloaded)
+    CsvExport.create(user: deployer, status: :failed)
+    CsvExport.create(user: deployer, status: :deleted)
   end
 
   def cleanup_files

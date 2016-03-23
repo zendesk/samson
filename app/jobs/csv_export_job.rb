@@ -67,6 +67,6 @@ class CsvExportJob < ActiveJob::Base
   end
   
   def create_export_folder(csv_export)
-    Dir.mkdir(File.dirname(csv_export.path_file)) unless File.exist?(File.dirname(csv_export.path_file))
+    FileUtils.mkdir_p(File.dirname(csv_export.path_file))
   end
 end

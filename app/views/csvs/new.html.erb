@@ -6,11 +6,11 @@
       <div><strong>Deploy reports</strong></div>
       <div>
         <%= label_tag :start_date, "Start Date:" %>
-        <%= date_field_tag :start_date, Date.today.prev_year.strftime("%m/%d/%Y"), id: "datepicker1" %>
+        <%= date_field_tag :start_date, Date.today.prev_year, id: "start-date" %>
       </div>
       <div>
         <%= label_tag :end_date, "End Date:" %>
-        <%=	date_field_tag :end_date, Date.today.strftime("%m/%d/%Y"), id: "datepicker2" %>
+        <%= date_field_tag :end_date, Date.today, id: "end-date" %>
       </div>
       <div>
         <%= label_tag :production, "Production:" %>
@@ -18,7 +18,7 @@
       </div>
       <div>
         <%= label_tag :status, "Status:"%>
-        <%= select_tag :status, options_for_select(['All', 'Succeeded', 'Failed'], 'All') %>
+        <%= select_tag :status, options_for_select([['All', 'all'], ['Succeeded', 'succeeded'], ['Failed', 'failed]']], 'all') %>
       </div>
       <div>
         <%= label_tag :project, "Project" %>
