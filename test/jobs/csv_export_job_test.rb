@@ -3,8 +3,8 @@ require_relative '../test_helper'
 describe CsvExportJob do
   let(:deployer) { users(:deployer) }
   let(:project) { projects(:test)}
-  let(:deploy_export_job) { CsvExport.create(user: deployer, content: 'deploys', filters: "{\"content\":\"deploys\"}") }
-  let(:invalid_export_job) { CsvExport.create(user: deployer, content: 'deploy', filters: "{\"content\":\"deploys\"}") }
+  let(:deploy_export_job) { CsvExport.create(user: deployer, filters: "{}") }
+  let(:invalid_export_job) { CsvExport.create(user: deployer, filters: "{}") }
   
   it "enqueues properly" do
     assert_enqueued_jobs 1 do
@@ -15,48 +15,49 @@ describe CsvExportJob do
   describe "Job executes for deploy csv" do
     teardown do
       job = CsvExport.find(deploy_export_job.id)
-      filename = job.full_filename
-      File.delete(filename) if File.exist?(filename)
+      job.file_delete
     end
     
     it "finishes with file" do
       CsvExportJob.perform_now(deploy_export_job.id)
       job = CsvExport.find(deploy_export_job.id)
       assert job.status?('finished'), "Not Finished"
-      assert File.exist?(job.full_filename), "File Not exist"
+      assert File.exist?(job.path_file), "File Not exist"
     end
     
     it "creates deploys csv file accurately and completely" do
-      accuracy_test( {content: "deploys"}, {})
+      accuracy_test({})
     end
 
     it "filters the report with known activity accurately and completely" do
-      filter = {start_date: {year: 2014, month: 1, day:1},
-        end_date: {year: 2014, month: 2, day:1}, production: 'Yes',
-        status: ['succeeded'], project: project.id}
-      t_filter = { 'deploys.created_at': (Date.civil(2014,1,1)..Date.civil(2014,2,1)),
-        'stages.production': true, 'jobs.status': ['succeeded'],
-        'stages.project_id': project.id}
-      accuracy_test( filter, t_filter)
+      filter = {'deploys.created_at': [Date.civil(2010,1,1), Date.civil(2015,12,31)],
+        'stages.production': true, 'jobs.status': 'succeeded', 'stages.project_id':project.id}
+      accuracy_test(filter)
     end
 
     it "accurately has no results for date range after deploys" do
-      filter = {start_date: {year: 2015, month: 1, day:1}}
+      filter = {'deploys.created_at': [Date.civil(2015,12,31), Date.today]}
       empty_test(filter)
     end
 
     it "accurately has no results for date range before deploys" do
-      filter = {end_date: {year: 2013, month: 1, day:1}}
+      filter = {'deploys.created_at': [Date.new, Date.civil(2000,1,1)]}
       empty_test(filter)
     end
 
     it "accurately has no results for statuses with no fixtures" do
-      filter = {status: ['running', 'failed', 'errored', 'cancelling', 'cancelled']}
+      filter = {'jobs.status': 'failed'}
       empty_test(filter)
     end
 
     it "accurately has no results for non-existant project" do
-      filter = {project: -999}
+      filter = {'stages.project_id': -999}
+      empty_test(filter)
+    end
+
+    it "accurately has no results for non-production with no valid non-prod deploy" do
+      deploys(:succeeded_test).delete
+      filter = {'stages.production': false}
       empty_test(filter)
     end
 
@@ -74,36 +75,18 @@ describe CsvExportJob do
       end
     end
   end
-  
-  describe "Job executes for invalid csv export type" do
-    teardown do
-      job = CsvExport.find(invalid_export_job.id)
-      filename = job.full_filename
-      File.delete(filename) if File.exist?(filename)
-    end
 
-    test "fails with no file" do
-      CsvExportJob.perform_now(invalid_export_job.id)
-      job = CsvExport.find(invalid_export_job.id)
-      assert job.status?('failed'), "Not Failed"
-      refute File.exist?(job.full_filename), "File was created"
-    end
-  end
-
-  def accuracy_test(filters, test_filter)
+  def accuracy_test(filters)
     deploy_export_job.update_attribute(:filters, filters.to_json)
+    filter = deploy_export_job.filters
     CsvExportJob.perform_now(deploy_export_job.id)
-    filename = deploy_export_job.reload.full_filename
+    filename = deploy_export_job.reload.path_file
 
     csv_response = CSV.read(filename)
     csv_response.shift  # Remove Header in file
     csv_response.pop # Remove filter summary row
     deploycount = csv_response.pop.pop.to_i # Remove summary row and extract count
-    if test_filter == {}
-      Deploy.joins(:stage, :job).all.count.must_equal deploycount
-    else
-      Deploy.joins(:stage, :job).where(test_filter).count.must_equal deploycount
-    end
+    Deploy.joins(:stage, :job).where(filter).count.must_equal deploycount
     deploycount.must_equal csv_response.length
     assert_not_empty csv_response
     csv_response.each do |d|
@@ -127,7 +110,7 @@ describe CsvExportJob do
   def empty_test(filters)
     deploy_export_job.update_attribute(:filters, filters.to_json)
     CsvExportJob.perform_now(deploy_export_job.id)
-    filename = deploy_export_job.reload.full_filename
+    filename = deploy_export_job.reload.path_file
 
     csv_response = CSV.read(filename)
     csv_response.shift  # Remove Header in file

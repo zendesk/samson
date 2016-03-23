@@ -122,16 +122,18 @@ class Deploy < ActiveRecord::Base
   end
 
   def csv_buddy
-    if not stage.deploy_requires_approval?
+    unless stage.deploy_requires_approval?
       "Not Required"
-    elsif buddy.nil? && pending?
-      "Pending"
-    elsif buddy.nil?
-      "None"
-    elsif (user.id == buddy.id)
-      "Bypassed"
     else
-      buddy.name
+      if buddy.nil? && pending?
+        "Pending"
+      elsif buddy.nil?
+        "None"
+      elsif (user.id == buddy.id)
+        "Bypassed"
+      else
+        buddy.name
+      end
     end
   end
 

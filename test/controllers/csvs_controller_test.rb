@@ -96,7 +96,7 @@ describe CsvsController do
 
           describe "as csv with no file" do
             setup do
-              File.delete(export.full_filename) if File.exist?(export.full_filename)
+              export.file_delete
               get :show, id: export.id, format: :csv
             end
 
@@ -123,6 +123,7 @@ describe CsvsController do
               it "receives file" do
                 get :show, id: export.id, format: 'csv'
                 @response.content_type.must_equal "text/csv"
+                export.reload.status.must_equal "downloaded"
                 assert export.reload.status? :downloaded
               end
             end
@@ -168,31 +169,45 @@ describe CsvsController do
 
     describe "a POST to create" do
       teardown { cleanup_files }
-    
-      it "should create a new csv_export and redirects to status" do
+
+      it "with no filters should create a new csv_export and redirects to status" do
         assert_difference 'CsvExport.count' do
-          post :create, content: "deploys"
+          post :create
         end
         assert_redirected_to csv_path(CsvExport.last)
+      end
+
+      it "with valid filters should create a new csv_export, with correct filters and redirect to status" do
+        filter = { start_date: "01/01/2010", end_date: "12/31/2015", production:"Yes", status: "Succeeded",
+          project: projects(:test).id.to_s}
+        assert_difference 'CsvExport.count' do
+          post :create, filter
+        end
+        csv_filter = CsvExport.last.filters
+        csv_filter.keys.must_include "deploys.created_at"
+        csv_filter.keys.must_include "stages.production"
+        csv_filter.keys.must_include "jobs.status"
+        csv_filter.keys.must_include "stages.project_id"
+        start_date = Date.strptime(filter[:start_date], "%m/%d/%Y")
+        end_date = Date.strptime(filter[:end_date], "%m/%d/%Y")
+        csv_filter["deploys.created_at"].must_equal (start_date..end_date)
+        csv_filter["stages.production"].must_equal true
+        csv_filter["jobs.status"].must_equal "succeeded"
+        csv_filter["stages.project_id"].must_equal projects(:test).id
       end
     end
   end
 
   def create_exports
-    CsvExport.create(user: deployer, status: :started, content: 'deploys', filters: "{\"content\":\"deploys\"}") # pending already in fixtures
-    CsvExport.create(user: deployer, status: :finished, content: 'deploys', filters: "{\"content\":\"deploys\"}")
-    CsvExport.create(user: deployer, status: :downloaded, content: 'deploys', filters: "{\"content\":\"deploys\"}")
-    CsvExport.create(user: deployer, status: :failed, content: 'deploys', filters: "{\"content\":\"deploys\"}")
-    CsvExport.create(user: deployer, status: :deleted, content: 'deploys', filters: "{\"content\":\"deploys\"}")
+    CsvExport.create(user: deployer, status: :started, filters: "{}") # pending already in fixtures
+    CsvExport.create(user: deployer, status: :finished, filters: "{}")
+    CsvExport.create(user: deployer, status: :downloaded, filters: "{}")
+    CsvExport.create(user: deployer, status: :failed, filters: "{}")
+    CsvExport.create(user: deployer, status: :deleted, filters: "{}")
   end
 
   def cleanup_files
-    @csv_exports = CsvExport.all
-    @csv_exports.each do |csv_file|
-      filename = csv_file.full_filename
-      File.delete(filename) if File.exist?(filename)
-      csv_file.delete
-    end
+    CsvExport.all.each { |csv_file| csv_file.destroy! }
   end
 
   def index_page_includes_type(state)
@@ -207,14 +222,20 @@ describe CsvsController do
 
   def show_expected_html(state)
     case state.to_s
-      when 'deleted.'
+      when 'deleted'
         'has been deleted'
       when 'failed'
         'has failed.'
       when 'finished', 'downloaded'
-        'ready for download'
+        'Download'
       else
         'is being prepared'
+    end
+  end
+
+  def create_fail_test(message, filter)
+    assert_raise(message) do
+      post :create, filter
     end
   end
 end

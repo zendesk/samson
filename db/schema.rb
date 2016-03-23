@@ -57,7 +57,6 @@ ActiveRecord::Schema.define(version: 20160316233616) do
     t.integer  "user_id",    limit: 4,   null: false
     t.datetime "created_at",             null: false
     t.datetime "updated_at",             null: false
-    t.string   "content",    limit: 255, null: false
     t.text     "filters",    limit: 65535, null: false
     t.string   "status",     limit: 255
   end

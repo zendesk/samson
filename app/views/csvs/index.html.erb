@@ -11,7 +11,7 @@
       <thead>
       <tr>
         <th>Id</th>
-        <th>Content</th>
+        <th>Filename</th>
         <th>Created</th>
         <th>Status</th>
         <th>Link</th>
@@ -21,13 +21,13 @@
         <% @csv_exports.each do |csv_export| %>
           <tr>
             <td><%= csv_export.id %></td>
-            <td><%= csv_export.content %></td>
+            <td><%= csv_export.download_name %></td>
             <td><%= csv_export.created_at %></td>
             <td><%= csv_export.status %></td>
             <% if csv_export.status? :ready %>
               <td><%= link_to "Download", csv_path(csv_export, format: 'csv') %></td>
             <% else %>
-              <td><%= link_to "Status", csv_path(csv_export) %></td>
+              <td><%= link_to "Details", csv_path(csv_export) %></td>
             <% end %>
           </tr>
         <% end %>

@@ -3,7 +3,6 @@ require_relative '../test_helper'
 describe CsvMailer do
   setup do
     @csv_export = CsvExport.find(csv_exports(:pending).id)
-    @csv_export.finished!
   end
   
   it "mails to the correct valid user and includes download link" do
