@@ -53,12 +53,12 @@ class CsvExportJob < ActiveJob::Base
     CSV.open(filename, 'w+') do |csv|
       csv << ["Deploy Number", "Project Name", "Deploy Sumary", "Deploy Commit", "Deploy Status", "Deploy Updated",
         "Deploy Created", "Deployer Name", "Deployer Email", "Buddy Name", "Buddy Email",
-        "Production Flag", "Bypass Buddy Check" ]
+        "Production Flag", "No code deployed" ]
       Deploy.uncached do
         @deploys.find_each do |deploy|
           csv << [deploy.id, deploy.project.name, deploy.summary, deploy.commit, deploy.job.status, deploy.updated_at,
             deploy.start_time, deploy.job.user.name, deploy.job.user.try(:email), deploy.csv_buddy, deploy.buddy_email,
-            deploy.stage.production, deploy.stage.bypass_buddy_check ]
+            deploy.stage.production, deploy.stage.no_code_deployed ]
         end
       end
       csv << summary

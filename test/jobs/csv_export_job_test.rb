@@ -103,7 +103,7 @@ describe CsvExportJob do
       deploy_info.csv_buddy.must_equal d[9]
       deploy_info.buddy_email.must_equal d[10]
       deploy_info.stage.production.to_s.must_equal d[11]
-      deploy_info.stage.bypass_buddy_check.to_s.must_equal d[12]
+      deploy_info.stage.no_code_deployed.to_s.must_equal d[12]
     end
   end
 
