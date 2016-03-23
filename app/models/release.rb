@@ -14,11 +14,11 @@ class Release < ActiveRecord::Base
   end
 
   def currently_deploying_stages
-    project.stages.where_reference_being_deployed(version)
+    project.stages.without_macros.where_reference_being_deployed(version)
   end
 
   def deployed_stages
-    @deployed_stages ||= project.stages.select {|stage| stage.current_release?(self) }
+    @deployed_stages ||= project.stages.without_macros.select { |stage| stage.current_release?(self) }
   end
 
   def changeset

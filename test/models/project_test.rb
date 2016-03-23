@@ -276,7 +276,7 @@ describe Project do
 
     it 'performs minimal number of queries' do
       Project.create!(name: 'blank_new_project', repository_url: url)
-      assert_sql_queries 7 do
+      assert_sql_queries 8 do
         Project.ordered_for_user(user).with_deploy_groups.each do |p|
           p.last_deploy_by_group(Time.now)
         end

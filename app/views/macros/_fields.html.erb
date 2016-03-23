@@ -6,12 +6,11 @@
     </div>
   </div>
 
-  <div class="form-group">
-    <%= form.label :reference, "Tag or SHA", class: "col-lg-2 control-label" %>
-    <div class="col-lg-4">
-      <%= form.text_field :reference, class: "form-control", placeholder: "e.g. v2.1.43, master, fa0b4671" %>
-    </div>
-  </div>
+  <%= render 'shared/permalink_input', form: form %>
+
+  <% if DeployGroup.enabled? %>
+    <%= render 'deploy_groups/deploy_group_select', form: form %>
+  <% end %>
 </fieldset>
 
 <%= render 'shared/commands', form: form %>

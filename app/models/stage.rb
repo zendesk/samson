@@ -1,8 +1,9 @@
 class Stage < ActiveRecord::Base
   include Permalinkable
-  include HasCommands
 
   has_soft_deletion default_scope: true unless self < SoftDeletion::Core
+
+  attr_writer :command
 
   belongs_to :project, touch: true
 
@@ -12,9 +13,9 @@ class Stage < ActiveRecord::Base
 
   has_one :lock
 
-  has_many :command_associations, autosave: true, class_name: 'StageCommand', dependent: :destroy
+  has_many :stage_commands, autosave: true, dependent: :destroy
   has_many :commands, -> { order('stage_commands.position ASC') },
-    through: :command_associations, auto_include: false
+    through: :stage_commands, auto_include: false
 
   has_many :deploy_groups_stages
   has_many :deploy_groups, through: :deploy_groups_stages
@@ -26,6 +27,7 @@ class Stage < ActiveRecord::Base
 
   accepts_nested_attributes_for :new_relic_applications, allow_destroy: true, reject_if: :no_newrelic_name?
 
+  before_save :build_new_project_command
   before_create :ensure_ordering
 
   def self.reset_order(new_order)
@@ -49,6 +51,14 @@ class Stage < ActiveRecord::Base
           locks.stage_id = stages.id")
   end
 
+  def self.without_macros
+    where(type: 'Stage')
+  end
+
+  def self.deploying_code
+    where(no_code_deployed: false)
+  end
+
   def self.deployed_on_release
     where(deploy_on_release: true)
   end
@@ -58,6 +68,16 @@ class Stage < ActiveRecord::Base
       deploys: { reference: reference },
       jobs: { status: Job::ACTIVE_STATUSES }
     )
+  end
+
+  def command
+    commands.map(&:command).join("\n")
+  end
+
+  def command_ids=(new_command_ids)
+    super.tap do
+      reorder_commands(new_command_ids.reject(&:blank?).map(&:to_i))
+    end
   end
 
   def current_deploy
@@ -96,7 +116,7 @@ class Stage < ActiveRecord::Base
   end
 
   def create_deploy(user, attributes = {})
-    deploys.create(attributes.merge(release: !no_code_deployed)) do |deploy|
+    deploys.create(attributes.merge(release: !no_code_deployed?)) do |deploy|
       deploy.build_job(project: project, user: user, command: command)
     end
   end
@@ -184,6 +204,22 @@ class Stage < ActiveRecord::Base
 
   def permalink_scope
     Stage.unscoped.where(project_id: project_id)
+  end
+
+  def build_new_project_command
+    return unless @command.present?
+
+    new_command = project.commands.build(command: @command)
+    stage_commands.build(command: new_command).tap do
+      reorder_commands
+    end
+  end
+
+  def reorder_commands(command_ids = self.command_ids)
+    stage_commands.each do |command_association|
+      command_association.position = command_ids.index(command_association.command_id) ||
+        stage_commands.length
+    end
   end
 
   def ensure_ordering

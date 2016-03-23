@@ -77,12 +77,12 @@ module ApplicationHelper
       when Project then [item.name, project_path(item)]
       when Environment then [item.name, dashboard_path(item)]
       when DeployGroup then [item.name, deploy_group_path(item)]
+      when Macro then
+        [item.name, project_macro_path(item.project, item)]
       when Stage then
         name = item.name
         name = (item.lock.warning? ? warning_icon : lock_icon) + " " + name if item.lock
         [name, project_stage_path(item.project, item)]
-      when Macro then
-        [item.name, project_macro_path(item.project, item)]
       when String then [item, nil]
       when Build then [item.nice_name, project_build_path(item)]
       when Array then item
@@ -129,5 +129,9 @@ module ApplicationHelper
   # like `render collection` does
   def static_render(collection)
     render partial: collection.first.to_partial_path, collection: collection if collection.any?
+  end
+
+  def environments
+    @environments ||= Environment.all
   end
 end

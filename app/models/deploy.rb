@@ -189,7 +189,8 @@ class Deploy < ActiveRecord::Base
   # so we validate once a user actually tries to execute the command
   def validate_stage_uses_deploy_groups_properly
     if DeployGroup.enabled? && stage.deploy_groups.none? && stage.command.include?("$DEPLOY_GROUPS")
-      errors.add(:stage, "contains at least one command using the $DEPLOY_GROUPS environment variable, but there are no Deploy Groups associated with this stage.")
+      name = stage.class.name
+      errors.add(:base, "#{name} contains at least one command using the $DEPLOY_GROUPS environment variable, but there are no Deploy Groups associated with this #{name.downcase}.")
     end
   end
 

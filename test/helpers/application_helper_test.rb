@@ -85,7 +85,7 @@ describe ApplicationHelper do
   describe "#breadcrumb" do
     let(:stage) { stages(:test_staging) }
     let(:project) { projects(:test) }
-    let(:environment) { environments(:production) }
+    let(:environment) { Environment.find_by_name!('Production') }
     let(:deploy_group) { deploy_groups(:pod1) }
 
     it "renders strings" do

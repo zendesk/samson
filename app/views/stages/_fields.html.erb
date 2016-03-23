@@ -6,14 +6,7 @@
     </div>
   </div>
 
-  <% if form.object.persisted? %>
-    <div class="form-group">
-      <%= form.label :permalink, "Permalink", class: "col-lg-2 control-label" %>
-      <div class="col-lg-4">
-        <%= form.text_field :permalink, class: "form-control" %>
-      </div>
-    </div>
-  <% end %>
+  <%= render 'shared/permalink_input', form: form %>
 
   <div class="form-group">
     <%= form.label :notify_email_address, "Email addresses", class: "col-lg-2 control-label" %>

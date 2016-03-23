@@ -1,7 +1,7 @@
 require_relative '../test_helper'
 
 describe Macro do
-  subject { macros(:test) }
+  subject { stages(:macro) }
 
   describe '#command' do
     it 'joins all commands based on position' do
@@ -15,7 +15,7 @@ describe Macro do
     end
 
     it "is empty without commands" do
-      subject.command_associations.clear
+      subject.stage_commands.clear
       subject.command.must_equal('')
     end
   end

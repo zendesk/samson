@@ -2,22 +2,14 @@ require_relative '../test_helper'
 
 describe MacrosController do
   let(:project) { projects(:test) }
-  let(:macro) { macros(:test) }
-  let(:macro_service) { stub(execute!: nil) }
-  let(:execute_called) { [] }
-  let(:job) { Job.create!(commit: macro.reference, command: macro.command, project: project, user: user) }
-
-  before do
-    MacroService.stubs(:new).with(project, user).returns(macro_service)
-    macro_service.stubs(:execute!).capture(execute_called).returns(job)
-  end
+  let(:macro) { stages(:macro) }
+  let(:job) { Job.create!(commit: 'master', command: macro.command, project: project, user: user) }
 
   as_a_viewer do
     unauthorized :get, :index, project_id: :foo
     unauthorized :get, :new, project_id: :foo
     unauthorized :get, :edit, project_id: :foo, id: 1
     unauthorized :post, :create, project_id: :foo
-    unauthorized :post, :execute, project_id: :foo, id: 1
     unauthorized :put, :update, project_id: :foo, id: 1
     unauthorized :delete, :destroy, project_id: :foo, id: 1
   end
@@ -28,29 +20,6 @@ describe MacrosController do
 
       it "renders the template" do
         assert_template :index
-      end
-    end
-
-    describe 'a POST to #execute' do
-      describe 'with a macro' do
-        before do
-          JobExecution.stubs(:start_job)
-          post :execute, project_id: project.to_param, id: macro.id
-        end
-
-        it "redirects to the job path" do
-          assert_redirected_to project_job_path(project, Job.last)
-        end
-
-        it "creates a job" do
-          assert_equal [[macro]], execute_called
-        end
-      end
-
-      it 'fails for non-existent macro' do
-        assert_raises ActiveRecord::RecordNotFound do
-          post :execute, project_id: project.to_param, id: 123123123
-        end
       end
     end
 
@@ -93,7 +62,6 @@ describe MacrosController do
         before do
           post :create, project_id: project.to_param, macro: {
             name: 'Testing',
-            reference: 'master',
             command: '/bin/true'
           }
         end
@@ -105,7 +73,7 @@ describe MacrosController do
 
       describe 'with an invalid macro' do
         before do
-          post :create, project_id: project.to_param, macro: {name: 'Testing'}
+          post :create, project_id: project.to_param, macro: {name: ''}
         end
 
         it 'renders the form' do
@@ -136,6 +104,10 @@ describe MacrosController do
 
         it 'renders the correct template' do
           assert_template :edit
+        end
+
+        it 'shows errors' do
+          assert flash[:error]
         end
       end
     end
