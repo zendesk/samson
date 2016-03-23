@@ -7,7 +7,7 @@
   </div>
   <div class="col-sm-3">
     <%= label_tag "Project" %><br/>
-    <% options = options_for_select(Project.pluck(:name, :id), params[:search].try(:[], :project_id)) %>
+    <% options = options_for_select([['Global', 'global']] + Project.order('name asc').pluck(:name, :id), params[:search].try(:[], :project_id)) %>
     <%= select_tag 'search[project_id]', options, include_blank: "All", class: "form-control", style: "background-color: white; width: 100%; height: 35px" %>
   </div>
   <div class="col-sm-2">

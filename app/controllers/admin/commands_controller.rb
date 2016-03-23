@@ -13,6 +13,7 @@ class Admin::CommandsController < ApplicationController
       end
 
       if project_id = search[:project_id].presence
+        project_id = nil if project_id == 'global'
         @commands = @commands.where(project_id: project_id)
       end
     end

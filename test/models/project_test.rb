@@ -268,6 +268,12 @@ describe Project do
       deploys[pod100.id].must_be_nil
     end
 
+    it 'contains no non-releases' do
+      prod_deploy.update_column(:release, false)
+      deploys = project.last_deploy_by_group(Time.now)
+      deploys[pod1.id].must_equal nil
+    end
+
     it 'performs minimal number of queries' do
       Project.create!(name: 'blank_new_project', repository_url: url)
       assert_sql_queries 7 do
