@@ -45,8 +45,6 @@ group :production, :staging do
   gem 'newrelic_rpm', '>= 3.7.1'
 end
 
-# ruby "2.2.3", engine: "jruby", engine_version: "9.0.5.0"
-
 group :assets do
   gem 'ngannotate-rails'
   gem 'sass-rails', '~> 5.0'
@@ -55,26 +53,26 @@ group :assets do
   gem 'bootstrap-sass'
 
   source 'https://rails-assets.org' do
-    gem 'rails-assets-angular', '~> 1.4.0'
-    gem 'rails-assets-angular-mocks'
-    gem 'rails-assets-angular-scenario'
-    gem 'rails-assets-angular-ui-bootstrap-bower', '~> 0.14'
-    gem 'rails-assets-spin'
-    gem 'rails-assets-angular-spinner'
-    gem 'rails-assets-bootstrap-select'
-    gem 'rails-assets-font-awesome', '~> 4.3.0'
-    gem 'rails-assets-jquery'
-    gem 'rails-assets-jquery-ui'
-    gem 'rails-assets-jquery-ujs'
-    gem 'rails-assets-moment'
-    gem 'rails-assets-rickshaw'
-    gem 'rails-assets-typeahead.js'
-    gem 'rails-assets-underscore'
-    gem 'rails-assets-vis'
-    gem 'rails-assets-x-editable'
-    gem 'rails-assets-message-center'
-    gem 'rails-assets-angular-ui-router'
-    gem 'rails-assets-angular-truncate-2'
+  #   gem 'rails-assets-angular', '~> 1.4.0'
+  #   gem 'rails-assets-angular-mocks'
+  #   gem 'rails-assets-angular-scenario'
+  #   gem 'rails-assets-angular-ui-bootstrap-bower', '~> 0.14'
+  #   gem 'rails-assets-spin'
+  #   gem 'rails-assets-angular-spinner'
+  #   gem 'rails-assets-bootstrap-select'
+  #   gem 'rails-assets-font-awesome', '~> 4.3.0'
+  #   gem 'rails-assets-jquery'
+  #   gem 'rails-assets-jquery-ui'
+  #   gem 'rails-assets-jquery-ujs'
+  #   gem 'rails-assets-moment'
+  #   gem 'rails-assets-rickshaw'
+  #   gem 'rails-assets-typeahead.js'
+  #   gem 'rails-assets-underscore'
+  #   gem 'rails-assets-vis'
+  #   gem 'rails-assets-x-editable'
+  #   gem 'rails-assets-message-center'
+  #   gem 'rails-assets-angular-ui-router'
+  #   gem 'rails-assets-angular-truncate-2'
   end
 end
 
