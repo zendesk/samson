@@ -1,6 +1,6 @@
 require_relative '../test_helper'
 
-describe CsvsController do
+describe CsvExportsController do
   let(:deployer) { users(:deployer) }
   let(:export) { csv_exports(:pending) }
 
@@ -101,7 +101,7 @@ describe CsvsController do
             end
 
             it "redirects to status" do
-              assert_redirected_to csv_path(export)
+              assert_redirected_to export
             end
 
             if [:finished, :downloaded].include?(state) # Only run this test if ready
@@ -114,7 +114,7 @@ describe CsvsController do
           if [:finished, :downloaded].include?(state)  # Only run these tests if ready
             describe "as csv with file" do
               setup do
-                CsvExportJob.perform_now(export.id)
+                CsvExportJob.perform_now(export)
                 export.update_attribute("status", state)
               end
 
@@ -174,7 +174,7 @@ describe CsvsController do
         assert_difference 'CsvExport.count' do
           post :create
         end
-        assert_redirected_to csv_path(CsvExport.last)
+        assert_redirected_to CsvExport.last
       end
 
       it "with valid filters should create a new csv_export, with correct filters and redirect to status" do
@@ -225,7 +225,7 @@ describe CsvsController do
 
   def index_link(state)
     csv = CsvExport.find_by(status: state)
-    state == 'ready' ? csv_path(csv, format: 'csv') : csv_path(csv)
+    state == 'ready' ? csv_export_path(csv, format: 'csv') : csv_export_path(csv)
   end
 
   def show_expected_html(state)

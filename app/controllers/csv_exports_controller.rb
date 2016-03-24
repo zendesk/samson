@@ -1,4 +1,4 @@
-class CsvsController < ApplicationController
+class CsvExportsController < ApplicationController
 
   rescue_from ActiveRecord::RecordNotFound do |exception|
     respond_to do |format|
@@ -15,7 +15,11 @@ class CsvsController < ApplicationController
       format.json { render json: @csv_exports }
     end
   end
-  
+
+  def new
+    @csv_export = CsvExport.new
+  end
+
   def show
     @csv_export = CsvExport.find(params[:id])
     respond_to do |format|
@@ -28,8 +32,8 @@ class CsvsController < ApplicationController
   def create
     filters = deploy_filter(params)
     csv_export = CsvExport.create!(user: current_user, filters: filters)
-    CsvExportJob.perform_later(csv_export.id)
-    redirect_to csv_path(csv_export)
+    CsvExportJob.perform_later(csv_export)
+    redirect_to csv_export
   end
 
   private
@@ -42,10 +46,10 @@ class CsvsController < ApplicationController
         Rails.logger.info("#{current_user.name_and_email} just downloaded #{@csv_export.download_name})")
       rescue ActionController::MissingFile
         @csv_export.status! :deleted
-        redirect_to csv_path(@csv_export)
+        redirect_to @csv_export
       end
     else
-      redirect_to csv_path(@csv_export)
+      redirect_to @csv_export
     end
   end
 

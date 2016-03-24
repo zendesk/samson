@@ -82,7 +82,7 @@ Samson::Application.routes.draw do
   get '/login', to: 'sessions#new'
   get '/logout', to: 'sessions#destroy'
 
-  resources :csvs, only: [ :index, :new, :create, :show ]
+  resources :csv_exports, only: [ :index, :new, :create, :show ]
   resources :stars, only: [:create, :destroy]
   resources :dashboards, only: [:show] do
     member do

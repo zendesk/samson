@@ -75,7 +75,7 @@ describe DeploysController do
         let(:format) { :csv }
 
         it "redirects to new CSV job path" do
-          assert_redirected_to new_csv_path
+          assert_redirected_to new_csv_export_path
         end
       end
     end

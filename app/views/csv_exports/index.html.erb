@@ -2,7 +2,7 @@
 
 <section id="csv-exports" class="clearfix">
   <div class="deploy-csv">
-    <%= link_to "Start a CSV export job", new_csv_path %>
+    <%= link_to "Start a CSV export job", new_csv_export_path %>
   </div>
   <% if @csv_exports.empty? %>
     <p>No current CSV Reports was found!</p>
@@ -25,9 +25,9 @@
             <td><%= csv_export.created_at %></td>
             <td><%= csv_export.status %></td>
             <% if csv_export.status? :ready %>
-              <td><%= link_to "Download", csv_path(csv_export, format: 'csv') %></td>
+              <td><%= link_to "Download", csv_export_path(csv_export, format: 'csv') %></td>
             <% else %>
-              <td><%= link_to "Details", csv_path(csv_export) %></td>
+              <td><%= link_to "Details", csv_export %></td>
             <% end %>
           </tr>
         <% end %>

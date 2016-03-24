@@ -7,7 +7,7 @@ describe CsvExportJob do
 
   it "enqueues properly" do
     assert_enqueued_jobs 1 do
-      CsvExportJob.perform_later(deploy_export_job.id)
+      CsvExportJob.perform_later(deploy_export_job)
     end
   end
   
@@ -18,7 +18,7 @@ describe CsvExportJob do
     end
     
     it "finishes with file" do
-      CsvExportJob.perform_now(deploy_export_job.id)
+      CsvExportJob.perform_now(deploy_export_job)
       job = CsvExport.find(deploy_export_job.id)
       assert job.status?('finished'), "Not Finished"
       assert File.exist?(job.path_file), "File Not exist"
@@ -62,14 +62,14 @@ describe CsvExportJob do
 
     it "sends mail" do
       assert_difference('ActionMailer::Base.deliveries.size', 1) do
-        CsvExportJob.perform_now(deploy_export_job.id)
+        CsvExportJob.perform_now(deploy_export_job)
       end
     end
 
     it "doesn't send mail when user is invalid" do
       deploy_export_job.update_attribute('user_id', -999)
       assert_difference('ActionMailer::Base.deliveries.size', 0) do
-        CsvExportJob.perform_now(deploy_export_job.id)
+        CsvExportJob.perform_now(deploy_export_job)
         assert deploy_export_job.email.nil?
       end
     end
@@ -77,7 +77,7 @@ describe CsvExportJob do
 
   def accuracy_test(filters)
     deploy_export_job.update_attribute(:filters, filters)
-    CsvExportJob.perform_now(deploy_export_job.id)
+    CsvExportJob.perform_now(deploy_export_job)
     filename = deploy_export_job.reload.path_file
 
     csv_response = CSV.read(filename)
@@ -107,7 +107,7 @@ describe CsvExportJob do
 
   def empty_test(filters)
     deploy_export_job.update_attribute(:filters, filters)
-    CsvExportJob.perform_now(deploy_export_job.id)
+    CsvExportJob.perform_now(deploy_export_job)
     filename = deploy_export_job.reload.path_file
 
     csv_response = CSV.read(filename)

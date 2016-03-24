@@ -41,7 +41,7 @@ class DeploysController < ApplicationController
         render json: Deploy.page(params[:page]).per(30)
       end
       format.csv do
-        redirect_to new_csv_path
+        redirect_to new_csv_export_path
       end
     end
   end

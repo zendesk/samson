@@ -1,0 +1,53 @@
+<h1>Request a CSV Report</h1>
+
+<section>
+  <div class="csv-deploy-filters clearfix">
+    <%= form_tag csv_exports_path, class: "form-horizontal" do %>
+      <div><strong>Deploy reports</strong></div>
+      <div class="form-group">
+        <%= label_tag :start_date, "Start Date:", class: "col-lg-2 control-label" %>
+        <div class="col-lg-2">
+          <%= date_field_tag :start_date, Date.today.prev_year, id: "start-date", class: "form-control" %>
+        </div>
+      </div>
+      <div class="form-group">
+        <%= label_tag :end_date, "End Date:", class: "col-lg-2 control-label" %>
+        <div class="col-lg-2">
+          <%= date_field_tag :end_date, Date.today, id: "end-date", class: "form-control" %>
+        </div>
+      </div>
+      <div class="form-group">
+        <%= label_tag :production, "Production:", class: "col-lg-2 control-label" %>
+        <div class="col-lg-2">
+          <%= select_tag :production, options_for_select(['Any', 'Yes', 'No'], 'Any'), class: "form-control" %>
+        </div>
+      </div>
+      <div class="form-group">
+        <%= label_tag :status, "Status:", class: "col-lg-2 control-label" %>
+        <div class="col-lg-2">
+          <%= select_tag :status, options_for_select([['All', 'all'], ['Succeeded', 'succeeded'], ['Failed', 'failed]']], 'all'), class: "form-control" %>
+        </div>
+      </div>
+      <div class="form-group">
+        <%= label_tag :project, "Project", class: "col-lg-2 control-label" %>
+        <% projects = [['All',0]] %>
+        <% projects += Project.all.pluck(:name, :id) %>
+        <div class="col-lg-4">
+          <%= select_tag(:project, options_for_select(projects, 0), class: "form-control") %>
+        </div>
+      </div>
+      <div class="form-group">
+        <div class="col-lg-offset-2 col-lg-10">
+          <%= submit_tag "Create Deploys CSV Report", class: 'btn btn-default' %>
+        </div>
+      </div>
+    <% end %>
+  </div>
+  <% if current_user.is_admin? %>
+    <div class="clearfix">
+      <hr />
+      <div><strong>Admin reports</strong></div>
+      <div><%= link_to "Download Users CSV Report", admin_users_path(format: "csv") %></div>
+    </div>
+  <% end %>
+</section>
