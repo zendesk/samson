@@ -63,6 +63,33 @@ describe Deploy do
     end
   end
 
+  describe "#csv_buddy and #buddy_email" do
+    setup { @deploy = create_deploy! }
+
+    describe "no buddy present" do
+      it "returns no email or name" do
+        @deploy.stubs(:buddy).returns(nil)
+        @deploy.buddy_name.must_be_nil
+        @deploy.buddy_email.must_be_nil
+      end
+    end
+
+    describe "buddy present" do
+      it "returns 'bypassed' when bypassed" do
+        @deploy.update_attributes(buddy: user)
+        @deploy.buddy_name.must_equal "bypassed"
+        @deploy.buddy_email.must_equal "bypassed"
+      end
+
+      it "should return the name and email of the buddy when not bypassed" do
+        other_user = users(:deployer_buddy)
+        @deploy.stubs(:buddy).returns(other_user)
+        @deploy.buddy_name.must_equal other_user.name
+        @deploy.buddy_email.must_equal other_user.email
+      end
+    end
+  end
+
   describe "#previous_deploy" do
     it "returns the deploy prior to that deploy" do
       deploy1 = create_deploy!

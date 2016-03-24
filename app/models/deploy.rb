@@ -126,22 +126,12 @@ class Deploy < ActiveRecord::Base
     joins(:job).where(jobs: { status: 'pending'} ).where("jobs.created_at < ?", threshold)
   end
 
-  def csv_buddy
-    if !stage.deploy_requires_approval?
-      "Not Required"
-    elsif buddy.nil? && pending?
-      "Pending"
-    elsif buddy.nil?
-      "None"
-    elsif (user.id == buddy.id)
-      "Bypassed"
-    else
-      buddy.name
-    end
+  def buddy_name
+    user.id == buddy_id ? "bypassed" : buddy.try(:name)
   end
 
   def buddy_email
-    stage.deploy_requires_approval? ? buddy.try(:email) : nil
+    user.id == buddy_id ? "bypassed" : buddy.try(:email)
   end
 
   def url

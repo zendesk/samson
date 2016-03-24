@@ -12,11 +12,8 @@ describe CsvExportJob do
   end
   
   describe "Job executes for deploy csv" do
-    teardown do
-      job = CsvExport.find(deploy_export_job.id)
-      job.delete_file
-    end
-    
+    teardown { deploy_export_job.delete_file }
+
     it "finishes with file" do
       CsvExportJob.perform_now(deploy_export_job)
       job = CsvExport.find(deploy_export_job.id)
@@ -98,7 +95,7 @@ describe CsvExportJob do
       deploy_info.start_time.to_s.must_equal d[6]
       deploy_info.job.user.name.must_equal d[7]
       deploy_info.job.user.try(:email).must_equal d[8]
-      deploy_info.csv_buddy.must_equal d[9]
+      deploy_info.buddy_name.must_equal d[9]
       deploy_info.buddy_email.must_equal d[10]
       deploy_info.stage.production.to_s.must_equal d[11]
       deploy_info.stage.no_code_deployed.to_s.must_equal d[12]

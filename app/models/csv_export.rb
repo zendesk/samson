@@ -30,10 +30,8 @@ class CsvExport < ActiveRecord::Base
   end
 
   def filters
-    filter = super
-    if filter.nil? || filter.class == "".class
-      filter = {}
-    elsif filter.fetch('deploys.created_at', nil).class == "".class
+    filter = super || {}
+    if filter['deploys.created_at'].class == "".class
       dates = filter['deploys.created_at'].scan(/-?\d+-\d+-\d+/)
       filter['deploys.created_at'] = (Date.parse(dates[0])..Date.parse(dates[1]))
     end

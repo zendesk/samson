@@ -57,12 +57,12 @@ class CsvExportsController < ApplicationController
     # sanitizes parameters and generates a filter string for use with the Deploy.joins(:stage, :jobs)
     filter = {}
 
-    if param = params[:start_date].presence
-      start_date = Date.parse(param)
+    if start_date = params[:start_date].presence
+      start_date = Date.parse(start_date)
     end
 
-    if param = params[:end_date].presence
-      end_date = Date.parse(param)
+    if end_date = params[:end_date].presence
+      end_date = Date.parse(end_date)
     end
 
     if start_date || end_date
@@ -71,29 +71,29 @@ class CsvExportsController < ApplicationController
       filter['deploys.created_at'] = (start_date..end_date)
     end
 
-    if param = params[:production].presence
-      case param
+    if production = params[:production].presence
+      case production
         when 'Yes' then filter['stages.production'] = true
         when 'No'  then filter['stages.production'] = false
         when "Any" then #ignore
         else
-          raise "Invalid production filter #{param}"
+          raise "Invalid production filter #{production}"
       end
     end
 
-    if param = params[:status].presence
-      if ['succeeded', 'failed'].include?(param)
-        filter['jobs.status'] = param
-      elsif param != "all"
-        raise "Invalid status filter #{param}"
+    if status = params[:status].presence
+      if ['succeeded', 'failed'].include?(status)
+        filter['jobs.status'] = status
+      elsif status != "all"
+        raise "Invalid status filter #{status}"
       end
     end
 
-    if param = params[:project].presence
-      if param.to_i > 0
-        filter['stages.project_id'] = param.to_i
-      elsif param != "0"
-        raise "Invalid project id #{param}"
+    if project = params[:project].presence
+      if project.to_i > 0
+        filter['stages.project_id'] = project.to_i
+      elsif project != "0"
+        raise "Invalid project id #{project}"
       end
     end
 
