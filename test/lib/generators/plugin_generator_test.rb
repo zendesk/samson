@@ -1,4 +1,4 @@
-require 'test_helper'
+require_relative '../../test_helper'
 require 'generators/plugin/plugin_generator'
 
 class PluginGeneratorTest < Rails::Generators::TestCase
