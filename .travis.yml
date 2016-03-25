@@ -1,4 +1,7 @@
 language: ruby
+rvm:
+  - 2.2.3
+  - rbx
 cache:
   bundler: true
   directories:
