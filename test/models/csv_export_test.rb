@@ -97,6 +97,7 @@ describe CsvExport do
   describe "delete_file" do
     setup do
       @filename = @csv_export.path_file
+      FileUtils.mkdir_p(File.dirname(@filename))
       File.new(@filename, 'w')
       assert File.exists?(@filename), "File not created in setup"
     end
