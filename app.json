@@ -1,0 +1,33 @@
+{
+  "name": "Samson",
+  "repository": "https://github.com/zendesk/samson",
+  "logo": "https://raw.githubusercontent.com/zendesk/samson/master/public/images/favicon.ico",
+  "addons": [
+    "postgres"
+  ],
+  "env": {
+    "PLUGINS": {
+      "description": "What plugins to use",
+      "default": "all",
+      "required": true
+    },
+    "DEFAULT_URL": {
+      "description": "xyz.herokuapp.com",
+      "required": true
+    },
+    "SECRET_TOKEN": {
+      "generator": "secret",
+      "required": true
+    },
+    "GITHUB_CLIENT_ID": {
+      "required": true
+    },
+    "GITHUB_SECRET": {
+      "required": true
+    },
+    "GITHUB_TOKEN": {
+      "required": true
+    }
+  },
+  "keywords": ["samson", "deploy", "github", "rails"]
+}
