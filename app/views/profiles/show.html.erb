@@ -22,6 +22,17 @@
           <%= form.text_field :token, class: "form-control", disabled: true %>
         </div>
       </div>
+      <div class="form-group">
+        <%= form.label :time_format, class: "col-lg-2 control-label" %>
+        <div class="col-lg-4">
+          <%= form.radio_button(:time_format, "utc") %>
+          <%= form.label(:utc, "UTC") %>
+          <%= form.radio_button(:time_format, "relative") %>
+          <%= form.label(:relative, "Relative") %>
+          <%= form.radio_button(:time_format, "local") %>
+          <%= form.label(:local, "Local") %>
+        </div>
+      </div>
 
       <div class="form-group">
         <div class="col-lg-offset-2 col-lg-10">

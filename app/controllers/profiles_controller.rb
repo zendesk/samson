@@ -15,14 +15,12 @@ class ProfilesController < ApplicationController
   end
 
   def details
-    # TODO: add this to the user model
-    current_user.time_format = 'utc'
     render json: current_user
   end
 
   protected
 
   def user_params
-    params.require(:user).permit(:name, :email, :desktop_notify)
+    params.require(:user).permit(:name, :email, :desktop_notify, :time_format)
   end
 end
