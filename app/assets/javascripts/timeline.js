@@ -216,7 +216,7 @@ samson.factory("Deploys",
   }]
 );
 
-samson.controller("TimelineCtrl", function($scope, $window, $timeout, Deploys, StatusFilterMapping, DeployHelper) {
+samson.controller("TimelineCtrl", function($scope, $window, $timeout, Deploys, StatusFilterMapping, DeployHelper, $http) {
   $scope.userTypes = ["Human", "Robot"];
   $scope.stageTypes = { "Production": true, "Non-Production": false };
   $scope.deployStatuses = Object.keys(StatusFilterMapping);
@@ -224,10 +224,17 @@ samson.controller("TimelineCtrl", function($scope, $window, $timeout, Deploys, S
   $scope.timelineDeploys = Deploys;
   $scope.deploys = Deploys.entries;
 
-  $scope.selectedTimeFormat = 'relative';
-  $scope.changeTime = function() {
-    $scope.selectedTimeFormat = $scope.timeFormat;
+  if (!$scope.selectedTimeFormat) {
+    $http.get('/profile/details.foo').success(function(data) {
+      $scope.selectedTimeFormat = data.user.time_format;
+    }).error(function() {
+      alert("can't get profile");
+    })
   }
+  $scope.changeTime = function() {
+    $scope.selectedTimeFormat = $scope.selectedtimeFormat;
+  }
+
   $scope.helper.registerScrollHelpers($scope);
   $scope.timelineDeploys.loadMore();
 

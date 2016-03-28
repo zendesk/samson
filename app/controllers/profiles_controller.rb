@@ -14,6 +14,12 @@ class ProfilesController < ApplicationController
     @user = current_user
   end
 
+  def details
+    # TODO: add this to the user model
+    current_user.time_format = 'utc'
+    render json: current_user
+  end
+
   protected
 
   def user_params

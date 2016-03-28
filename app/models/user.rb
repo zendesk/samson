@@ -18,6 +18,7 @@ class User < ActiveRecord::Base
 
   before_create :set_token
 
+  cattr_accessor(:time_format)
   scope :search, ->(query) { where("name like ? or email like ?", "%#{query}%", "%#{query}%") }
 
   def starred_project?(project)
