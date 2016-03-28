@@ -1,6 +1,18 @@
 require_relative '../test_helper'
 
 describe TerminalExecutor do
+  def with_env(env)
+    old = env.map do |k, v|
+      k = k.to_s
+      o = ENV[k]
+      ENV[k] = v
+      [k, o]
+    end
+    yield
+  ensure
+    old.each { |k, v| ENV[k] = v }
+  end
+
   let(:output) { StringIO.new }
   subject { TerminalExecutor.new(output) }
 
@@ -26,6 +38,28 @@ describe TerminalExecutor do
 
     it 'returns success value' do
       subject.execute!('echo "hi"').must_equal(true)
+    end
+
+    it 'does not expose env secrets' do
+      with_env MY_SECRET: 'XYZ' do
+        subject.execute!('env')
+        output.string.wont_include("SECRET")
+      end
+    end
+
+    it "keeps CACHE_DIR" do
+      with_env CACHE_DIR: 'XYZ' do
+        subject.execute!('env')
+        output.string.must_include("CACHE_DIR=XYZ")
+      end
+    end
+
+    it "keeps custom env vars from ENV_WHITELIST" do
+      with_env ENV_WHITELIST: 'ABC, XYZ,ZZZ', XYZ: 'FOO', ZZZ: 'FOO' do
+        subject.execute!('env')
+        output.string.must_include("XYZ=FOO")
+        output.string.must_include("ZZZ=FOO")
+      end
     end
 
     describe 'in verbose mode' do

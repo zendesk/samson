@@ -1,5 +1,4 @@
-require 'pty'
-require 'shellwords'
+require 'open3'
 
 # Executes commands in a fake terminal. The output will be streamed to a
 # specified IO-like object.
@@ -34,26 +33,30 @@ class TerminalExecutor
   private
 
   def execute_command!(command)
-    output, input, @pid = Bundler.with_clean_env do
-      PTY.spawn(command, in: '/dev/null')
-    end
+    Open3.popen2e(whitelisted_env, command, in: '/dev/null', unsetenv_others: true, pgroup: true)  do |stdin, oe, wait_thr|
+      @pid = wait_thr.pid
 
-    @pgid = begin
-      Process.getpgid(pid)
-    rescue Errno::ESRCH
-      nil
-    end
+      @pgid = begin
+        Process.getpgid(@pid)
+      rescue Errno::ESRCH
+        nil
+      end
 
-    begin
-      output.each(256) {|line| @output.write(line) }
-    rescue Errno::EIO
-      # The IO has been closed.
-    end
+      oe.each(256) do |line|
+        @output.write line.gsub("\n", "\r\n")
+      end
 
-    _, status = Process.wait2(pid)
+      wait_thr.value
+    end.success?
+  end
 
-    input.close
-
-    return status.success?
+  def whitelisted_env
+    whitelist = [
+      'PATH', 'HOME', 'TMPDIR', 'CACHE_DIR', 'TERM', 'SHELL', # general
+      'RBENV_ROOT', 'RBENV_HOOK_PATH', 'RBENV_DIR', # ruby
+      'DOCKER_URL', 'DOCKER_REGISTRY' # docker
+    ] + ENV['ENV_WHITELIST'].to_s.split(/, ?/)
+    ENV.to_h.slice(*whitelist)
   end
 end
+
