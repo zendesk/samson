@@ -34,15 +34,16 @@ class Changeset::PullRequest
   end
 
   def self.changeset_from_webhook(project, params = {})
-    data = Sawyer::Resource.new(Octokit.agent, params[:pull_request])
+    data = Sawyer::Resource.new(Octokit.agent, params['pull_request'])
     new(project.github_repo, data)
   end
 
   def self.valid_webhook?(params)
-    data = params[:pull_request] || {}
-    return false unless data[:state] == 'open'
+    data = params['pull_request'] || {}
+    puts data.inspect
+    return false unless data['state'] == 'open'
 
-    data[:body] =~ WEBHOOK_FILTER
+    (data['body'] =~ WEBHOOK_FILTER).present?
   end
 
   attr_reader :repo
