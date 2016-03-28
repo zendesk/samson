@@ -42,7 +42,7 @@ class Changeset::PullRequest
     data = params['pull_request'] || {}
     return false unless data['state'] == 'open'
 
-    (data['body'] =~ WEBHOOK_FILTER).present?
+    !(data['body'] =~ WEBHOOK_FILTER).nil?
   end
 
   attr_reader :repo

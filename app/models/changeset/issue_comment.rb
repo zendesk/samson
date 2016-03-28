@@ -13,7 +13,7 @@ class Changeset::IssueComment
 
   def self.valid_webhook?(params)
     comment = params['comment'] || {}
-    (comment['body'] =~ Changeset::PullRequest::WEBHOOK_FILTER).present?
+    !(comment['body'] =~ Changeset::PullRequest::WEBHOOK_FILTER).nil?
   end
 
   def sha
