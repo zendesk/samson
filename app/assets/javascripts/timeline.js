@@ -96,6 +96,21 @@ samson.filter("userFilter",
   }
 );
 
+samson.filter("timeDateFilter",
+  function() {
+    return function(td, timeFormat) {
+      if (timeFormat == 'local') {
+        return moment(td).format('LLL');
+      } else if (timeFormat == 'utc'){
+        return moment(td).utc().format();
+      } else {
+        return moment(td).fromNow();
+      }
+
+    };
+  }
+);
+
 samson.filter("stageFilter",
   function() {
     return function(deploys, stageType) {
@@ -209,6 +224,10 @@ samson.controller("TimelineCtrl", function($scope, $window, $timeout, Deploys, S
   $scope.timelineDeploys = Deploys;
   $scope.deploys = Deploys.entries;
 
+  $scope.selectedTimeFormat = 'relative';
+  $scope.changeTime = function() {
+    $scope.selectedTimeFormat = $scope.timeFormat;
+  }
   $scope.helper.registerScrollHelpers($scope);
   $scope.timelineDeploys.loadMore();
 

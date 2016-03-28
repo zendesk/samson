@@ -1,12 +1,18 @@
-samson.controller("currentDeploysCtrl", function($scope, $http, SseFactory, $interval, DeployHelper) {
+samson.controller("currentDeploysCtrl", function($scope, $http, SseFactory, $interval, DeployHelper,  userProfileService) {
   'use strict';
 
   $scope.deploys = [];
   $scope.helper = DeployHelper;
 
+
   function updateUpdatedAt() {
     _.each($scope.deploys, function(deploy) {
-      deploy.updated_at_ago = moment(deploy.updated_at).fromNow();
+      //deploy.updated_at_ago = moment(deploy.updated_at).fromNow();
+      //deploy.updated_at_ago = $scope.profile.time_format;
+      //deploy.updated_at_ago = userProfileService.convertTime($scope.profile.time_format, deploy.updated_at);
+      userProfileService.convertTime(deploy.updated_at).then(function(data){
+        deploy.updated_at_ago = data.time;
+      });
     });
   }
 

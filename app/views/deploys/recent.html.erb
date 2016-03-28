@@ -25,6 +25,12 @@
           <option value="">All</option>
         </select>
       </div>
+      <div class="timeline-filter col-sm-4" >
+        <label for="tlf-status">TIME:</label>
+        	<input type=radio  ng-model="timeFormat" ng-change="changeTime()" value='relative' ng-checked=true>relative</input>
+        	<input type=radio  ng-model="timeFormat" ng-change="changeTime()" value='local'>local</input>
+        	<input type=radio  ng-model="timeFormat" ng-change="changeTime()" value='utc'>utc</input>
+      </div>
     </div>
   <% end %>
   <section class="timeline-content clearfix">
