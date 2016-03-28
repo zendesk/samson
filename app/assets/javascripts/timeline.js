@@ -225,14 +225,17 @@ samson.controller("TimelineCtrl", function($scope, $window, $timeout, Deploys, S
   $scope.deploys = Deploys.entries;
 
   if (!$scope.selectedTimeFormat) {
-    $http.get('/profile/details.foo').success(function(data) {
+    $http.get('/profile/details').success(function(data) {
       $scope.selectedTimeFormat = data.user.time_format;
+      $scope.timeFormat = $scope.selectedTimeFormat;
     }).error(function() {
       alert("can't get profile");
     })
   }
+
+
   $scope.changeTime = function() {
-    $scope.selectedTimeFormat = $scope.selectedtimeFormat;
+    $scope.selectedTimeFormat = $scope.timeFormat;
   }
 
   $scope.helper.registerScrollHelpers($scope);
