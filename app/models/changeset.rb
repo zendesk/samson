@@ -70,6 +70,8 @@ class Changeset
   def find_comparison
     if empty?
       NullComparison.new(nil)
+    elsif !GitRepository.valid_ref_format?(commit)
+      NullComparison.new("Invalid git reference: '#{commit}'")
     else
       # for branches that need review we make sure to always get the correct cache, others might get an outdated changeset if they are reviewed with different shas
       if BRANCH_TAGS.include?(commit)

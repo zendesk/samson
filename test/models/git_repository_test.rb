@@ -219,4 +219,18 @@ describe GitRepository do
     end
   end
 
+  describe '.valid_ref_format?' do
+    it 'validates branches, tags, shas' do
+      assert GitRepository.valid_ref_format?('master')
+      assert GitRepository.valid_ref_format?('v123')
+      assert GitRepository.valid_ref_format?('user/branch-name')
+      assert GitRepository.valid_ref_format?('7f8568e386')
+    end
+
+    it 'catches invalid references' do
+      refute GitRepository.valid_ref_format?('string with spaces')
+      refute GitRepository.valid_ref_format?('double..dots')
+      refute GitRepository.valid_ref_format?('no-question-marks?')
+    end
+  end
 end

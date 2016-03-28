@@ -43,6 +43,11 @@ describe Changeset do
         comparison.error.must_equal message
       end
     end
+
+    it 'handles an invalid commit' do
+      comparison = Changeset.new("foo/bar", "a", "invalid ref").comparison
+      comparison.error.must_include 'Invalid git reference'
+    end
   end
 
   describe "#github_url" do

@@ -9,6 +9,11 @@ class GitRepository
     Rails.application.config.samson.cached_repos_dir
   end
 
+  def self.valid_ref_format?(reference)
+    IO.popen(['git', 'check-ref-format', "refs/head/#{reference}"]) { |_| }
+    $?.success?
+  end
+
   def initialize(repository_url:, repository_dir:, executor: nil)
     @repository_url = repository_url
     @repository_directory = repository_dir
