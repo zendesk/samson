@@ -1,4 +1,4 @@
-samson.controller("currentDeploysCtrl", function($scope, $http, SseFactory, $interval, DeployHelper,  userProfileService) {
+samson.controller("currentDeploysCtrl", function($scope, $http, SseFactory, $interval, DeployHelper) {
   'use strict';
 
   $scope.deploys = [];
