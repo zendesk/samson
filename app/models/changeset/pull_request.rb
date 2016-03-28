@@ -40,7 +40,6 @@ class Changeset::PullRequest
 
   def self.valid_webhook?(params)
     data = params['pull_request'] || {}
-    puts data.inspect
     return false unless data['state'] == 'open'
 
     (data['body'] =~ WEBHOOK_FILTER).present?
