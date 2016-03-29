@@ -65,7 +65,7 @@ class DeploysController < ApplicationController
     # TODO: really need some kinda layer with error handling/messages
     # etc
     if (params[:status] && !Job.valid_status?(params[:status]))
-      render json: { :errors => "invalid status given" }, status: 400
+      render json: { errors: "invalid status given" }, status: 400
       return
     end
     if deployer = params[:deployer] 
@@ -73,18 +73,18 @@ class DeploysController < ApplicationController
     end
 
     if params[:project_name]
-      projects = Project.where(:name => params[:project_name]).pluck(:id)
+      projects = Project.where(name: params[:project_name]).pluck(:id)
     end
 
     jobs = Job.get_search_jobs(users, params[:status])
     stages = Stage.get_search_stages(projects, params[:production])
 
     if stages && jobs
-      deploys = Deploy.where(:stage_id => stages).where(:job_id => jobs).page(params[:page]).per(30)
+      deploys = Deploy.where(stage_id: stages).where(:job_id => jobs).page(params[:page]).per(30)
     elsif !stages && jobs
-      deploys = Deploy.where(:job_id => jobs).page(params[:page]).per(30)
+      deploys = Deploy.where(job_id: jobs).page(params[:page]).per(30)
     elsif stages && !jobs
-      deploys = Deploy.where(:stage_id => stages).page(params[:page]).per(30)
+      deploys = Deploy.where(stage_id: stages).page(params[:page]).per(30)
     else
       deploys = Deploy.page(params[:page]).per(30)
     end
