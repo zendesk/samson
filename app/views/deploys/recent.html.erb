@@ -1,6 +1,7 @@
 <h1><%= title %></h1>
 
 <div class="timeline" ng-controller="<%= controller %>">
+  <input type=hidden  id=default_time_format value="<%= current_user.time_format %>">
   <% if show_filters %>
     <div class="timeline-filters clearfix">
       <div class="timeline-filter col-sm-6">

@@ -224,13 +224,10 @@ samson.controller("TimelineCtrl", function($scope, $window, $timeout, Deploys, S
   $scope.timelineDeploys = Deploys;
   $scope.deploys = Deploys.entries;
 
+
   if (!$scope.selectedTimeFormat) {
-    $http.get('/profile/details').success(function(data) {
-      $scope.selectedTimeFormat = data.user.time_format;
+      $scope.selectedTimeFormat = document.getElementById("default_time_format").value;
       $scope.timeFormat = $scope.selectedTimeFormat;
-    }).error(function() {
-      alert("can't get profile");
-    });
   }
 
 
