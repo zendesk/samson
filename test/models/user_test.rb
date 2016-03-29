@@ -27,14 +27,16 @@ describe User do
   end
 
   describe "#time_format" do
-    let(:user) { User.create(name: "jimbob", email: 'test@test.com') }
+    let(:user) { User.create!(name: "jimbob", email: 'test@test.com') }
     describe 'time_format' do
       it "should have a default time format of relative" do
         user.time_format.must_equal('relative')
       end
-      it "should not update and should raise" do
+
+      it "should not update" do
         lambda {user.update_attributes!(:time_format => 'foobar') }.must_raise ActiveRecord::RecordInvalid
       end
+
       it "should update" do
         user.update_attributes!(:time_format => 'utc')
         user.reload
