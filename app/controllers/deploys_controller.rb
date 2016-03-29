@@ -76,8 +76,8 @@ class DeploysController < ApplicationController
       projects = Project.where(name: params[:project_name]).pluck(:id)
     end
 
-    jobs = Job.get_search_jobs(users, params[:status])
-    stages = Stage.get_search_stages(projects, params[:production])
+    jobs = Job.search_jobs(users, params[:status])
+    stages = Stage.search_stages(projects, params[:production])
 
     if stages && jobs
       deploys = Deploy.where(stage_id: stages).where(:job_id => jobs).page(params[:page]).per(30)
