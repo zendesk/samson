@@ -26,11 +26,11 @@
         <%= form.label :time_format, class: "col-lg-2 control-label" %>
         <div class="col-lg-4">
           <%= form.radio_button(:time_format, "relative") %>
-          <%= form.label(:relative, "Relative") %>
+          <%= form.label(:time_format, "Relative", :value => "relative") %>
           <%= form.radio_button(:time_format, "local") %>
-          <%= form.label(:local, "Local") %>
+          <%= form.label(:time_format, "Local", :value => 'local') %>
           <%= form.radio_button(:time_format, "utc") %>
-          <%= form.label(:utc, "UTC") %>
+          <%= form.label(:time_format, "UTC", :value => 'utc') %>
         </div>
       </div>
 
