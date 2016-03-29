@@ -16,9 +16,7 @@ class User < ActiveRecord::Base
 
   validates :role_id, inclusion: { in: Role.all.map(&:id) }
 
-  before_validation :set_time_format, on: [:create]
-
-  before_create :set_token, :set_time_format
+  before_create :set_token
   validates :time_format, inclusion: { in: ['utc', 'relative', 'local'] }
 
   scope :search, ->(query) { where("name like ? or email like ?", "%#{query}%", "%#{query}%") }
@@ -95,7 +93,4 @@ class User < ActiveRecord::Base
     self.token = SecureRandom.hex
   end
 
-  def set_time_format
-    self.time_format = 'relative'
-  end
 end
