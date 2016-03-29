@@ -42,6 +42,11 @@ describe User do
         user.reload
         user.time_format.must_equal('utc')
       end
+
+      let(:local_user) { User.create!(name: "bettysue", email: 'bsue@test.com', time_format: 'local') }
+      it "should should allow initialization with different time_format" do
+        local_user.time_format.must_equal('local')
+      end
     end
   end
 
