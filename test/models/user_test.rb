@@ -1,4 +1,5 @@
 require_relative '../test_helper'
+require 'byebug'
 
 describe User do
   describe "#name" do
@@ -22,6 +23,23 @@ describe User do
       let(:username) { 'Hello' }
       it 'uses the name' do
         user.name.must_equal(username)
+      end
+    end
+  end
+
+  describe "#time_format" do
+    let(:user) { User.create(name: "jimbob", email: 'test@test.com') }
+    describe 'time_format' do
+      it "should have a default time format of relative" do
+        user.time_format.must_equal('relative')
+      end
+      it "should not update and should raise" do
+        lambda {user.update_attributes!(:time_format => 'foobar') }.must_raise ActiveRecord::RecordInvalid
+      end
+      it "should update" do
+        user.update_attributes!(:time_format => 'utc')
+        user.reload
+        user.time_format.must_equal('utc')
       end
     end
   end
