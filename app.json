@@ -1,0 +1,40 @@
+{
+  "name": "Samson",
+  "repository": "https://github.com/zendesk/samson",
+  "logo": "https://raw.githubusercontent.com/zendesk/samson/master/public/images/favicon.ico",
+  "addons": [
+    "heroku-postgresql:hobby-dev",
+    "memcachier:dev"
+  ],
+  "env": {
+    "PLUGINS": {
+      "description": "What plugins to use",
+      "value": "all",
+      "required": true
+    },
+    "DEFAULT_URL": {
+      "description": "https://xyz.herokuapp.com",
+      "required": true
+    },
+    "SECRET_TOKEN": {
+      "generator": "secret",
+      "required": true
+    },
+    "GITHUB_CLIENT_ID": {
+      "required": true
+    },
+    "GITHUB_SECRET": {
+      "required": true
+    },
+    "GITHUB_TOKEN": {
+      "required": true
+    },
+    "BUNDLE_WITHOUT": {
+      "value": "mysql2:sqlite"
+    }
+  },
+  "scripts": {
+    "postdeploy": "bundle exec rake db:schema:load"
+  },
+  "keywords": ["samson", "deploy", "github", "rails"]
+}
