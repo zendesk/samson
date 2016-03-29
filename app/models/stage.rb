@@ -62,17 +62,6 @@ class Stage < ActiveRecord::Base
     )
   end
 
-  def self.search_stages(projects, production)
-  if projects && !production.nil?
-    return Stage.where(:project_id => projects).where(:production => ActiveRecord::Type::Boolean.new.type_cast_from_user(production)).pluck(:id)
-  elsif projects
-    return Stage.where(:project_id => projects).pluck(:id)
-  elsif !production.nil?
-    return Stage.where(production: ActiveRecord::Type::Boolean.new.type_cast_from_user(production)).pluck(:id)
-  end
-  nil
-  end
-
   def current_deploy
     return @current_deploy if defined?(@current_deploy)
     @current_deploy = deploys.active.first

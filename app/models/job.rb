@@ -59,17 +59,6 @@ class Job < ActiveRecord::Base
     end
   end
 
-  def self.search_jobs(users, status)
-    if users && !status.nil?
-      return Job.where(:user_id => users).where(:status => status).pluck(:id)
-    elsif  users
-      return Job.where(:user_id => users).pluck(:id)
-    elsif  !status.nil?
-      return Job.where(:status => status).pluck(:id)
-    end
-    nil
-  end
-
   %w{pending running succeeded cancelling cancelled failed errored}.each do |status|
     define_method "#{status}?" do
       self.status == status
