@@ -228,7 +228,7 @@ samson.controller("TimelineCtrl", function($scope, $window, $timeout, Deploys, S
 
 
   if (!$scope.selectedTimeFormat) {
-      $scope.selectedTimeFormat = document.getElementById("default_time_format").value;
+      $scope.selectedTimeFormat = $('#default_time_format').val();
       $scope.timeFormat = $scope.selectedTimeFormat;
   }
 
