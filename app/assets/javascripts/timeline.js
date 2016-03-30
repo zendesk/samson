@@ -99,7 +99,7 @@ samson.filter("userFilter",
 samson.filter("timeDateFilter",
   function() {
     return function(td, timeFormat) {
-      if (timeFormat == undefined || timeFormat == "") return;
+      if (timeFormat === undefined || timeFormat === "") return;
       if (timeFormat == 'local') {
         return moment(td).format('LLL');
       } else if (timeFormat == 'utc') {
