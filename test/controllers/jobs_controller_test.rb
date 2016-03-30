@@ -27,6 +27,14 @@ describe JobsController do
         end
       end
 
+      describe 'with a running job' do
+        setup { get :show, project_id: project.to_param, id: jobs(:running_test) }
+
+        it "renders the template" do
+          assert_template :show
+        end
+      end
+
       it "fails with unknown job" do
         assert_raises ActiveRecord::RecordNotFound do
           get :show, project_id: project.to_param, id: "job:nope"
