@@ -15,11 +15,11 @@ class Changeset::CodePush
   end
 
   def sha
-    data[:after]
+    data['after']
   end
 
   def branch
-    data[:ref][/refs\/heads\/(.+)/, 1]
+    data['ref'][/refs\/heads\/(.+)/, 1]
   end
 
   def service_type
