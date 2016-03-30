@@ -1,7 +1,10 @@
 module SamsonPipelines::StageConcern
+  require 'byebug'
   # Return true if any stages in the pipeline are marked production
+  # make sure to check the no_code_deployed flag on the 
+  # next deployment as well
   def production?
-    super || next_stages.any?(&:production?)
+    super || next_stages.any? { |next_stage|  (next_stage.production? && !next_stage.no_code_deployed?) }
   end
 
   def next_stages
