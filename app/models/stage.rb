@@ -135,10 +135,11 @@ class Stage < ActiveRecord::Base
 
   def production?
     if DeployGroup.enabled?
-      deploy_groups.empty? ? (super && !self.no_code_deployed?): deploy_groups.any? do |deploy_group|
-        # the the stage we are talking 'bout has no_code_deployed, then deploy
-        (deploy_group.environment.is_production? && !self.no_code_deployed?)
-      end
+      deploy_groups.empty? ? super : deploy_groups.any? { |deploy_group| deploy_group.environment.is_production? }
+#      deploy_groups.empty? ? (super && !self.no_code_deployed?): deploy_groups.any? do |deploy_group|
+#        # the the stage we are talking 'bout has no_code_deployed, then deploy
+#        (deploy_group.environment.is_production? && !self.no_code_deployed?)
+#      end
     else
       super
     end

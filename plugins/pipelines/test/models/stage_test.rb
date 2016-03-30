@@ -1,4 +1,5 @@
 require_relative '../test_helper'
+require 'byebug'
 
 SingleCov.covered! file: 'plugins/pipelines/app/decorators/stage_decorator.rb'
 
@@ -41,6 +42,20 @@ describe Stage do
       stage2.update(production: true)
       stage1.update!(next_stage_ids: [ stage3.id, stage2.id ])
       stage1.production?.must_equal true
+    end
+
+    it 'returns true if no_code_deployed is false on a production pipeline stage' do
+      stage2.update(production: true)
+      stage2.update(no_code_deployed: false)
+      stage1.update!(next_stage_ids: [ stage2.id ])
+      stage1.production?.must_equal true
+    end
+
+    it 'returns false if no_code_deployed true on a production pipeline stage' do
+      stage2.update(production: true)
+      stage2.update(no_code_deployed: true)
+      stage1.update!(next_stage_ids: [ stage2.id ])
+      stage1.production?.must_equal false
     end
   end
 
@@ -95,6 +110,7 @@ describe Stage do
 
     it 'returns false if this stage is referenced by another' do
       stage1.update!(next_stage_ids: [ stage2.id ])
+      debugger;
       stage2.soft_delete.must_equal false
       stage2.errors.messages.must_equal base: ["Stage stage2 is in a pipeline from stage1 and cannot be deleted"]
     end
