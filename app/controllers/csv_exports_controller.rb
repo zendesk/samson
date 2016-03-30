@@ -66,7 +66,7 @@ class CsvExportsController < ApplicationController
     end
 
     if start_date || end_date
-      start_date ||= Date.new
+      start_date ||= Date.new(1900,1,1)
       end_date ||= Date.today
       filter['deploys.created_at'] = (start_date..end_date)
     end

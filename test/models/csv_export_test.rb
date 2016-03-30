@@ -88,9 +88,9 @@ describe CsvExport do
     end
 
     it "converts date list to range" do
-      @csv_export.update_attribute(:filters, {'deploys.created_at': (Date.new..Date.today)})
+      @csv_export.update_attribute(:filters, {'deploys.created_at': (Date.new(1900,1,1)..Date.today)})
       @csv_export.filters['deploys.created_at'].class.must_equal (1..2).class
-      @csv_export.filters['deploys.created_at'].must_equal (Date.new..Date.today)
+      @csv_export.filters['deploys.created_at'].must_equal (Date.new(1900,1,1)..Date.today)
     end
   end
 

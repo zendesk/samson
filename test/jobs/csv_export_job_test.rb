@@ -26,18 +26,18 @@ describe CsvExportJob do
     end
 
     it "filters the report with known activity accurately and completely" do
-      filter = {'deploys.created_at': (Date.new..Date.today),
+      filter = {'deploys.created_at': (Date.new(1900,1,1)..Date.today),
         'stages.production': true, 'jobs.status': 'succeeded', 'stages.project_id':project.id}
       accuracy_test(filter)
     end
 
     it "has no results for date range after deploys" do
-      filter = {'deploys.created_at': (Date.civil(2015,12,31)..Date.today)}
+      filter = {'deploys.created_at': (Date.new(2015,12,31)..Date.today)}
       empty_test(filter)
     end
 
     it "has no results for date range before deploys" do
-      filter = {'deploys.created_at': (Date.new..Date.civil(2000,1,1))}
+      filter = {'deploys.created_at': (Date.new(1900,1,1)..Date.new(2000,1,1))}
       empty_test(filter)
     end
 
