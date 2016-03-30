@@ -101,10 +101,12 @@ samson.filter("timeDateFilter",
     return function(td, timeFormat) {
       if (timeFormat == 'local') {
         return moment(td).format('LLL');
-      } else if (timeFormat == 'utc'){
+      } else if (timeFormat == 'utc') {
         return moment(td).utc().format();
-      } else {
+      } else if (timeFormat == 'relative') {
         return moment(td).fromNow();
+      } else {
+        throw 'timeFormat should be one of local | utc | relative, ' + timeFormat + " provided";
       }
 
     };
