@@ -57,8 +57,9 @@ Set the following variables in your `.env` file or set them as environment varia
     </tr>
     <tr>
       <td>GITHUB_CLIENT_ID<BR>GITHUB_SECRET</td>
-      <td>Yes</td>
+      <td></td>
       <td>
+        These settings are used if you want to allow users to login/authenticate with Github OAuth
         <ul>
           <li> Navigate to https://github.com/settings/applications/new and register a new OAuth application</li>
           <li> Set the Homepage URL to http://localhost:3000</li>
@@ -97,7 +98,8 @@ Set the following variables in your `.env` file or set them as environment varia
     <tr>
       <td>GOOGLE_CLIENT_ID<BR>GOOGLE_CLIENT_SECRET</td>
       <td></td>
-      <td>These settings are used if you want to allow users to login/authenticate with Google OAuth
+      <td>
+        These settings are used if you want to allow users to login/authenticate with Google OAuth
         <ul>
           <li>Navigate to https://console.developers.google.com/project and create a new project</li>
           <li>Enter a name and a unique project id</li>
