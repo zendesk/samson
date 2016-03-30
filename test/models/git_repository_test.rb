@@ -218,5 +218,4 @@ describe GitRepository do
       repository.clean!
     end
   end
-
 end
