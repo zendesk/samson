@@ -14,10 +14,6 @@ class ProfilesController < ApplicationController
     @user = current_user
   end
 
-  def details
-    render json: current_user
-  end
-
   protected
 
   def user_params
