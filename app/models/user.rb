@@ -4,6 +4,7 @@ require 'digest/md5'
 class User < ActiveRecord::Base
   include HasRole
   include Searchable
+  TIME_FORMATS = ['local', 'utc', 'relative'].freeze()
 
   has_soft_deletion default_scope: true
 
@@ -17,7 +18,7 @@ class User < ActiveRecord::Base
   validates :role_id, inclusion: { in: Role.all.map(&:id) }
 
   before_create :set_token
-  validates :time_format, inclusion: { in: ['utc', 'relative', 'local'] }
+  validates :time_format, inclusion: { in: TIME_FORMATS }
 
   scope :search, ->(query) { where("name like ? or email like ?", "%#{query}%", "%#{query}%") }
 

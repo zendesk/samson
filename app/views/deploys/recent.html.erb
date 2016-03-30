@@ -28,18 +28,12 @@
       </div>
       <div class="timeline-filter col-sm-4" >
         <label for="tlf-status">TIME:</label>
-        <label for=time_foarmat_relative>
-          <input type=radio id=time_foarmat_relative ng-model="timeFormat" ng-change="changeTime()" value='relative'>
-          relative
-        </label>
-        <label for=time_format_local>
-          <input type=radio id=time_format_local ng-model="timeFormat" ng-change="changeTime()" value='local'>
-          local
-        </label>
-        <label for=time_format_utc>
-          <input type=radio id=time_format_utc ng-model="timeFormat" ng-change="changeTime()" value='utc'>
-          utc
-        </label>
+        <% User::TIME_FORMATS.each do |time_fmt| %>
+          <label for=time_format_<%= time_fmt %>>
+            <input type=radio id=time_format_<%= time_fmt %> ng-model="timeFormat" ng-change="changeTime()" value='<%= time_fmt %>'>
+            <%= time_fmt %>
+          </label>
+        <% end %>
       </div>
     </div>
   <% end %>

@@ -25,12 +25,10 @@
       <div class="form-group">
         <%= form.label :time_format, class: "col-lg-2 control-label" %>
         <div class="col-lg-4">
-          <%= form.radio_button(:time_format, "relative") %>
-          <%= form.label(:time_format, "Relative", :value => "relative") %>
-          <%= form.radio_button(:time_format, "local") %>
-          <%= form.label(:time_format, "Local", :value => 'local') %>
-          <%= form.radio_button(:time_format, "utc") %>
-          <%= form.label(:time_format, "UTC", :value => 'utc') %>
+          <% User::TIME_FORMATS.each do |time_fmt| %>
+            <%= form.radio_button(:time_format, "#{time_fmt}") %>
+            <%= form.label(:time_format, "#{time_fmt.capitalize}", :value => "#{time_fmt}") %>
+          <% end %>
         </div>
       </div>
 
