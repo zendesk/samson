@@ -8,7 +8,9 @@
       <%= content_tag :span, "Hotfix!", class: "label label-hotfix" if deploy.changeset.hotfix? %>
       <%= link_to "#{deploy.summary}", [@project || deploy.project, deploy] %>
     </td>
-    <td><%= link_to deploy.stage.name, [deploy.project, deploy.stage] %></td>
+    <% unless @stage %>
+     <td><%= link_to deploy.stage.name, [deploy.project, deploy.stage] %></td>
+    <% end %>
     <td><span class="label <%= status_label(deploy.status) %>"><%= deploy.status.titleize %></span></td>
   </tr>
 <% end %>

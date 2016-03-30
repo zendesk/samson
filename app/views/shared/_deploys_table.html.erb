@@ -8,7 +8,9 @@
 
         <th>When</th>
         <th>Who</th>
-        <th>Stage</th>
+        <% unless @stage %>
+          <th>Stage</th>
+        <% end %>
         <th>Status</th>
         <th></th>
       </tr>
