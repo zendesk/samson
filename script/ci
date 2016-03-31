@@ -16,8 +16,11 @@ precompile)
   export DATABASE_URL=mysql2://none@none/none
   bundle exec rake assets:precompile
   ;;
-rake)
+rake:default)
   bundle exec rake db:create default
+  ;;
+rake:test:plugins)
+  bundle exec rake db:create test:plugins
   ;;
 *)
   echo "Unknown task"

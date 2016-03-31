@@ -5,18 +5,11 @@ require File.expand_path('../config/application', __FILE__)
 
 Samson::Application.load_tasks
 
-Rake::Task["default"].clear
 task default: :test
 
-namespace :plugins do
-  Rails::TestTask.new(:test) do |t|
-    t.pattern = "plugins/*/test/**/*_test.rb"
-  end
-end
-
 namespace :test do
-  Rails::TestTask.new(:default) do |t|
-    t.pattern = "{test,plugins/*/test}/**/*_test.rb"
+  Rails::TestTask.new(:plugins) do |t|
+    t.pattern = 'plugins/*/test/**/*_test.rb'
   end
 
   task js: :environment do
