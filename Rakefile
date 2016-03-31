@@ -39,3 +39,8 @@ namespace :test do
     Rails.application.assets.find_asset(file).to_a.first.pathname.to_s
   end
 end
+
+desc 'Run brakeman ... use brakewan -I to add new ignores'
+task :brakeman do
+  sh "brakeman --exit-on-warn --table-width 500"
+end

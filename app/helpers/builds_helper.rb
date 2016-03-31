@@ -19,10 +19,12 @@ module BuildsHelper
     sha_text = link_to(sha_text, build.commit_url) if make_link
 
     if build.git_ref
-      "#{build.git_ref} (#{sha_text})"
-    else
-      sha_text
+      # html-safe text surround
+      sha_text.prepend "#{build.git_ref} ("
+      sha_text.concat ")"
     end
+
+    sha_text
   end
 
   def creator_for build, method: :name_and_email
