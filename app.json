@@ -20,14 +20,20 @@
       "generator": "secret",
       "required": true
     },
-    "GITHUB_CLIENT_ID": {
-      "required": true
-    },
-    "GITHUB_SECRET": {
-      "required": true
-    },
     "GITHUB_TOKEN": {
       "required": true
+    },
+    "GITHUB_CLIENT_ID": {
+      "description": "Fill in to use github auth"
+    },
+    "GITHUB_SECRET": {
+      "description": "Fill in to use github auth"
+    },
+    "GOOGLE_CLIENT_ID": {
+      "description": "Fill in to use google auth"
+    },
+    "GOOGLE_CLIENT_SECRET": {
+      "description": "Fill in to use google auth"
     },
     "BUNDLE_WITHOUT": {
       "value": "mysql2:sqlite"
