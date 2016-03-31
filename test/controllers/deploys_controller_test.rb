@@ -215,7 +215,7 @@ describe DeploysController do
     unauthorized :delete, :destroy, project_id: :foo, id: 1
   end
 
-  as_a_apiuser do 
+  as_a_viewer do
     before do
       Deploy.delete_all()
       Job.delete_all()

@@ -79,11 +79,8 @@ class DeploysController < ApplicationController
     jobs = Job.where(user: users) if users
     jobs = Job.where(status: params[:status]) if params[:status]
 
-    stages = Stage.where(production: ActiveRecord::Type::Boolean.new.type_cast_from_user(params[:production])) if params[:production]
-    stages = Stage.where(projects: projects) if projects
-
-    Rails.logger.debug("jobs are #{jobs.count}")
-    Rails.logger.debug("stages are #{stages.count}")
+    stages = Stage.where(production: ActiveRecord::Type::Boolean.new.type_cast_from_user(params[:production])) unless params[:production].nil?
+    stages = Stage.where(project: projects) if projects
 
     deploys = Deploy
     deploys = Deploy.where(stage_id: stages) if stages
