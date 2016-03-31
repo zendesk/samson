@@ -1,4 +1,5 @@
 require 'csv'
+require 'byebug'
 
 class DeploysController < ApplicationController
   include ProjectLevelAuthorization
@@ -66,8 +67,8 @@ class DeploysController < ApplicationController
       render json: { errors: "invalid status given" }, status: 400
       return
     end
-    if deployer = params[:deployer] 
-      users = User.where("name LIKE ?", "%#{ActiveRecord::Base.send(:sanitize_sql_like, deployer)}%").pluck(:id)
+    if params[:deployer].present?
+      users = User.where("name LIKE ?", "%#{ActiveRecord::Base.send(:sanitize_sql_like, params[:deployer])}%").pluck(:id)
     end
 
     if params[:project_name]
