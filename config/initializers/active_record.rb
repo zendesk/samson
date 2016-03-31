@@ -4,7 +4,7 @@
 # https://github.com/rails/rails/issues/9855#issuecomment-57665404
 config = ActiveRecord::Base.configurations[Rails.env]
 
-if ENV['USE_UTF8MB4'] && config['adapter'] == 'mysql2'
+if ENV['USE_UTF8MB4'] && config['adapter'] == 'mysql2' && RUBY_ENGINE != "jruby"
   config.merge!(
     'encoding' => 'utf8mb4',
     'collation' => 'utf8mb4_bin'

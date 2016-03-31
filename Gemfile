@@ -10,15 +10,18 @@ gem 'dogstatsd-ruby', '~> 1.5.0', require: 'statsd'
 gem 'goldiloader'
 
 group :mysql2 do
-  gem 'mysql2', '~> 0.3'
+  gem 'mysql2', '~> 0.3', :platforms => [:ruby, :mswin]
+  gem 'activerecord-jdbcmysql-adapter', :platforms => :jruby
 end
 
 group :postgres do
-  gem 'pg', '~> 0.13'
+  gem 'pg', '~> 0.13', :platforms => [:ruby, :mswin]
+  gem 'activerecord-jdbcpostgresql-adapter', :platforms => :jruby
 end
 
 group :sqlite do
-  gem "sqlite3"
+  gem "sqlite3", :platforms => [:ruby, :mswin]
+  gem "activerecord-jdbcsqlite3-adapter", :platforms => :jruby
 end
 
 gem 'kaminari'
@@ -84,7 +87,7 @@ group :no_preload do
   gem 'warden', '~> 1.2'
   gem 'active_hash', '~> 1.0'
   gem 'ansible'
-  gem 'github-markdown', '~> 0.6.3'
+  #gem 'github-markdown', '~> 0.6.3'
   gem 'newrelic_api'
   gem 'activeresource'
   gem 'coderay', '~> 1.1.0'
@@ -96,13 +99,13 @@ group :no_preload do
 end
 
 group :development, :staging do
-  gem "binding_of_caller"
+  gem "binding_of_caller", :platforms => [:ruby, :mswin]
   gem 'better_errors'
   gem 'rack-mini-profiler'
 end
 
 group :development, :test do
-  gem 'byebug', require: false
+  # gem 'byebug', require: false
   gem 'bootscale', require: false
   gem 'pry-rails'
   gem 'awesome_print'

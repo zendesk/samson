@@ -1,5 +1,5 @@
 require 'ansible'
-require 'github/markdown'
+# require 'github/markdown'
 
 module ApplicationHelper
   include Ansible
@@ -13,7 +13,8 @@ module ApplicationHelper
   end
 
   def markdown(str)
-    GitHub::Markdown.render_gfm(str).html_safe
+    str
+    # GitHub::Markdown.render_gfm(str).html_safe
   end
 
   def deploy_link(project, stage)
