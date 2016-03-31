@@ -60,8 +60,6 @@ class DeploysController < ApplicationController
   #   * status (what is the status of this job failed|running| etc)
 
   def search
-  respond_to do |format|
-
     # TODO: really need some kinda layer with error handling/messages
     # etc
     if (params[:status] && !Job.valid_status?(params[:status]))
@@ -86,13 +84,14 @@ class DeploysController < ApplicationController
     deploys = Deploy.where(stage_id: stages) if stages
     deploys = Deploy.where(job_id: jobs) if jobs
 
-    format.json do
-    render json: deploys.page(params[:page]).per(30)
-    end
-    format.csv do
-    datetime = Time.now.strftime "%Y%m%d_%H%M"
-    send_data deploys.to_csv, type: :csv, filename: "deploy_search_results#{datetime}.csv"
-    end
+    respond_to do |format|
+      format.json do
+        render json: deploys.page(params[:page]).per(30)
+      end
+      format.csv do
+        datetime = Time.now.strftime "%Y%m%d_%H%M"
+        send_data deploys.to_csv, type: :csv, filename: "deploy_search_results#{datetime}.csv"
+      end
     end
   end
 
