@@ -61,8 +61,6 @@ class DeploysController < ApplicationController
   #   * status (what is the status of this job failed|running| etc)
 
   def search
-    # TODO: really need some kinda layer with error handling/messages
-    # etc
     if (params[:status] && !Job.valid_status?(params[:status]))
       render json: { errors: "invalid status given" }, status: 400
       return
