@@ -109,7 +109,6 @@ samson.filter("timeDateFilter",
       } else {
         throw 'timeFormat should be one of local | utc | relative, ' + timeFormat + " provided";
       }
-
     };
   }
 );
