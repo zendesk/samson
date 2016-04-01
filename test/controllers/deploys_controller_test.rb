@@ -232,8 +232,8 @@ describe DeploysController do
 
       status.each do |stat| 
         job_def[:status] = stat[:status]
-        job = Job.create(job_def)
-        Deploy.create( {
+        job = Job.create!(job_def)
+        Deploy.create!( {
           stage_id: Stage.find_by_production(stat[:production]).id,
           reference: 'reference',
           job_id: job.id
