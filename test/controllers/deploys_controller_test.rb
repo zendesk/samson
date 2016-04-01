@@ -219,14 +219,26 @@ describe DeploysController do
     before do
       Deploy.delete_all()
       Job.delete_all()
-      job1 = Job.create({project_id: Project.first.id, command:'cap staging deploy', status:'failed', user_id: admin.id})
-      Deploy.create({ stage_id: Stage.find_by_production(true).id, reference: 'reference', job_id: job1.id})
-      job2 = Job.create({project_id: Project.first.id, command:'cap staging deploy', status:'running', user_id: admin.id})
-      Deploy.create({ stage_id: Stage.find_by_production(true).id, reference: 'reference', job_id: job2.id})
-      success1 = Job.create({project_id: Project.first.id, command:'cap staging deploy', status:'succeeded', user_id: admin.id})
-      Deploy.create({ stage_id: Stage.find_by_production(true).id, reference: 'reference', job_id: success1.id})
-      success2 = Job.create({project_id: Project.first.id, command:'cap staging deploy', status:'succeeded', user_id: admin.id})
-      Deploy.create({ stage_id: Stage.find_by_production(false).id, reference: 'reference', job_id: success2.id})
+      cmd = 'cap staging deploy'
+      project = Project.first
+
+      job_def =  {project_id: project.id, command: cmd, status: nil, user_id: admin.id}
+      status = [
+        {status: 'failed', production: true }, 
+        {status: 'running', production: true},
+        {status:'succeeded', production: true},
+        {status:'succeeded', production: false}
+      ]
+
+      status.each do |stat| 
+        job_def[:status] = stat[:status]
+        job = Job.create(job_def)
+        Deploy.create( {
+          stage_id: Stage.find_by_production(stat[:production]).id,
+          reference: 'reference',
+          job_id: job.id
+        } )
+      end
     end
 
     after do
@@ -239,41 +251,41 @@ describe DeploysController do
         assert_response :ok
       end
 
-      it "should return no results" do
+      it "returns no results" do
         get :search, format: "json", deployer: 'jimmyjoebob'
         assert_response :ok
         @response.body.must_equal "{\"deploys\":\[\]}"
       end
 
-      it "should return 4 for user Admin" do
+      it "returns 4 deploys for user Admin" do
         get :search, format: "json", deployer: 'Admin'
         assert_response :ok
         deploys = JSON.parse(@response.body)
         deploys["deploys"].count.must_equal 4
       end
 
-      it "should return 2 sucessful deploys" do
+      it "returns 2 sucessful deploys" do
         get :search, format: "json", status: 'succeeded'
         assert_response :ok
         deploys = JSON.parse(@response.body)
         deploys["deploys"].count.must_equal 2
       end
 
-      it "should return 1 running deploy" do
+      it "returns 1 running deploy" do
         get :search, format: "json", status: 'running'
         assert_response :ok
         deploys = JSON.parse(@response.body)
         deploys["deploys"].count.must_equal 1
       end
 
-      it "should return 4 deploys for project: Project" do
-        get :search, format: "json", project_name: 'Project'
+      it "returns 4 deploys for project: Project" do
+        get :search, format: "json", project_name: "Project"
         assert_response :ok
         deploys = JSON.parse(@response.body)
         deploys["deploys"].count.must_equal 4
       end
 
-      it "should return 1 non production deploys" do
+      it "returns 1 non production deploys" do
         get :search, format: "json", production: false
         assert_response :ok
         deploys = JSON.parse(@response.body)
