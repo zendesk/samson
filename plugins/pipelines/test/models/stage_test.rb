@@ -1,5 +1,4 @@
 require_relative '../test_helper'
-require 'byebug'
 
 describe Stage do
   let(:project) { Project.create!(name: 'foo', repository_url: 'random') }
