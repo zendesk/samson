@@ -109,7 +109,6 @@ describe Stage do
 
     it 'returns false if this stage is referenced by another' do
       stage1.update!(next_stage_ids: [ stage2.id ])
-      debugger;
       stage2.soft_delete.must_equal false
       stage2.errors.messages.must_equal base: ["Stage stage2 is in a pipeline from stage1 and cannot be deleted"]
     end
