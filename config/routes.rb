@@ -70,7 +70,7 @@ Samson::Application.routes.draw do
 
   resources :deploy_groups, only: [:show]
 
-  resource :profile, only: [:show, :update] 
+  resource :profile, only: [:show, :update]
 
   get '/auth/github/callback', to: 'sessions#github'
   get '/auth/google/callback', to: 'sessions#google'
