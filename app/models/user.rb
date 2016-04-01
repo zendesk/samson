@@ -4,7 +4,7 @@ require 'digest/md5'
 class User < ActiveRecord::Base
   include HasRole
   include Searchable
-  TIME_FORMATS = ['local', 'utc', 'relative'].freeze()
+  TIME_FORMATS = ['local', 'utc', 'relative'].freeze
 
   has_soft_deletion default_scope: true
 
