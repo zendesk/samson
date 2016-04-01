@@ -49,6 +49,7 @@ class GitRepository
 
   def commit_from_ref(git_reference, length: 7)
     Dir.chdir(repo_cache_dir) do
+      # brakeman thinks this is unsafe ... https://github.com/presidentbeef/brakeman/issues/851
       description = IO.popen(['git', 'describe', '--long', '--tags', '--all', "--abbrev=#{length || 40}", git_reference], err: [:child, :out]) do |io|
         io.read.strip
       end

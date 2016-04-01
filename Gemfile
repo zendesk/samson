@@ -106,6 +106,7 @@ group :development, :test do
   gem 'bootscale', require: false
   gem 'pry-rails'
   gem 'awesome_print'
+  gem 'brakeman', require: false
 end
 
 group :test do

@@ -7,17 +7,16 @@ sudo: false
 services:
   - memcached
 branches:
-  only: [master]
+  only: master
 env:
-  global:
-    - CI=1
   matrix:
-    - TASK=js
-    - TASK=precompile
-    - DATABASE_URL=mysql2://travis@127.0.0.1/samson_test USE_UTF8MB4=1 TASK=rake
-    - DATABASE_URL=postgresql://postgres@127.0.0.1/samson_test TASK=rake
-    - DATABASE_URL=sqlite3://null$PWD/db/test.sqlite3 TASK=rake
-script: script/ci
+    - TASK='test:prepare_js test:js'
+    - TASK=assets:precompile
+    - TASK=brakeman
+    - DATABASE_URL=mysql2://travis@127.0.0.1/samson_test USE_UTF8MB4=1 TASK='db:create default'
+    - DATABASE_URL=postgresql://postgres@127.0.0.1/samson_test TASK='db:create default'
+    - DATABASE_URL=sqlite3://null$PWD/db/test.sqlite3 TASK='db:create default'
+script: bundle exec rake $TASK
 before_script:
   - mysql -u root -e 'set GLOBAL innodb_large_prefix = true'
   - mysql -u root -e 'set GLOBAL innodb_file_per_table = true'
