@@ -25,9 +25,9 @@
       <div class="form-group">
         <%= form.label :time_format, class: "col-lg-2 control-label" %>
         <div class="col-lg-4">
-          <% User::TIME_FORMATS.each do |time_fmt| %>
-            <%= form.radio_button(:time_format, "#{time_fmt}") %>
-            <%= form.label(:time_format, "#{time_fmt.capitalize}", :value => "#{time_fmt}") %>
+          <% User::TIME_FORMATS.each do |time_format| %>
+            <%= form.radio_button(:time_format, time_format) %>
+            <%= form.label(:time_format, "#{time_format.capitalize}", :value => time_format) %>
           <% end %>
         </div>
       </div>
