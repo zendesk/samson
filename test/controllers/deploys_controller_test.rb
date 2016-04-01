@@ -245,7 +245,7 @@ describe DeploysController do
       Deploy.delete_all()
     end
 
-    describe "a GET to :search" do
+    describe "finds all deploys for a deployer" do
       it "returns a 200" do
         get :search, format: "json"
         assert_response :ok
@@ -292,7 +292,6 @@ describe DeploysController do
         deploys["deploys"].count.must_equal 1
       end
     end
-
   end
 
   as_a_deployer do
