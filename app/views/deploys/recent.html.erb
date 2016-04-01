@@ -28,10 +28,10 @@
       </div>
       <div class="timeline-filter col-sm-4" >
         <label for="tlf-status">TIME:</label>
-        <% User::TIME_FORMATS.each do |time_fmt| %>
-          <label for=time_format_<%= time_fmt %>>
-            <input type=radio id=time_format_<%= time_fmt %> ng-model="timeFormat" ng-change="changeTime()" value='<%= time_fmt %>'>
-            <%= time_fmt %>
+        <% User::TIME_FORMATS.each do |time_format| %>
+          <label for=time_format_<%= time_format %>>
+            <input type=radio id=time_format_<%= time_format %> ng-model="timeFormat" ng-change="changeTime()" value='<%= time_format %>'>
+            <%= time_format %>
           </label>
         <% end %>
       </div>
