@@ -9,7 +9,7 @@
       <%= link_to "#{deploy.summary}", [@project || deploy.project, deploy] %>
     </td>
     <% unless @stage %>
-     <td><%= link_to deploy.stage.name, [deploy.project, deploy.stage] %></td>
+      <td><%= link_to deploy.stage.name, [deploy.project, deploy.stage] %></td>
     <% end %>
     <td><span class="label <%= status_label(deploy.status) %>"><%= deploy.status.titleize %></span></td>
   </tr>
