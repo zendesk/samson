@@ -217,8 +217,8 @@ describe DeploysController do
 
   as_a_viewer do
     before do
-      Deploy.delete_all()
-      Job.delete_all()
+      Deploy.delete_all
+      Job.delete_all
       cmd = 'cap staging deploy'
       project = Project.first
 
@@ -242,7 +242,7 @@ describe DeploysController do
     end
 
     after do
-      Deploy.delete_all()
+      Deploy.delete_all
     end
 
     describe "finds all deploys for a deployer" do
