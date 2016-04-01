@@ -1,5 +1,4 @@
 require_relative '../test_helper'
-require 'byebug'
 
 SingleCov.covered! file: 'plugins/pipelines/app/decorators/stage_decorator.rb'
 
