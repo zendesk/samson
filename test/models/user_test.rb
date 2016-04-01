@@ -33,7 +33,8 @@ describe User do
     end
 
     it "does not update" do
-      lambda {user.update_attributes!(:time_format => 'foobar') }.must_raise ActiveRecord::RecordInvalid
+      user.time_format = 'foobar'
+      refute user.valid?
     end
 
     it "does update" do
@@ -42,8 +43,8 @@ describe User do
       user.time_format.must_equal('utc')
     end
 
-    local_user = User.create!(name: "bettysue", email: 'bsue@test.com', time_format: 'local')
     it "allows initialization with different time_format" do
+      local_user = User.create!(name: "bettysue", email: 'bsue@test.com', time_format: 'local')
       local_user.time_format.must_equal('local')
     end
   end
