@@ -69,21 +69,26 @@ class DeploysController < ApplicationController
       users = User.where("name LIKE ?", "%#{ActiveRecord::Base.send(:sanitize_sql_like, params[:deployer])}%").pluck(:id)
     end
 
-    if params[:project_name]
+    if params[:project_name].present?
       projects = Project.where(name: params[:project_name]).pluck(:id)
     end
 
-    jobs = Job
-    jobs = jobs.where(user: users) if users
-    jobs = jobs.where(status: params[:status]) if params[:status]
+    if users || params[:status]
+      jobs = Job
+      jobs = jobs.where(user: users) if users
+      jobs = jobs.where(status: params[:status]) if params[:status]
+    end
 
-    stages = Stage
-    stages = stages.where(production: ActiveRecord::Type::Boolean.new.type_cast_from_user(params[:production])) unless params[:production].nil?
-    stages = stages.where(project: projects) if projects
+    if params[:production] || projects
+      stages = Stage
+      stages = stages.where(production: ActiveRecord::Type::Boolean.new.type_cast_from_user(params[:production])) if params[:production]
+      stages.where(production: false)
+      stages = stages.where(project: projects) if projects
+    end
 
     deploys = Deploy
-    deploys = Deploy.where(stage_id: stages) if stages
-    deploys = Deploy.where(job_id: jobs) if jobs
+    deploys = Deploy.where(stage: stages) if stages
+    deploys = Deploy.where(job: jobs) if jobs
 
     respond_to do |format|
       format.json do
