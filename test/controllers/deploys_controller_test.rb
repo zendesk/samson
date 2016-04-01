@@ -251,6 +251,12 @@ describe DeploysController do
         assert_response :ok
       end
 
+      it "renders csv" do
+        get :search, format: "csv"
+        assert_equal "text/csv", @response.content_type
+        assert_response :ok
+      end
+
       it "returns no results" do
         get :search, format: "json", deployer: 'jimmyjoebob'
         assert_response :ok
