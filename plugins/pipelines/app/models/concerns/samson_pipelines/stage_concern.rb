@@ -1,23 +1,14 @@
 module SamsonPipelines::StageConcern
   require 'byebug'
-  # Return true if any stages in the pipeline are marked production
-  # make sure to check the no_code_deployed flag on the
-  # next deployment as well
-  def production?
-    super || next_stages.any?(&:production?)
-  end
-
-  def next_stages
-    Stage.find(next_stage_ids)
-  end
 
   # Needs to find all the possible stages in case this is a pipeline of pipelines as each subsequent stage
   # could have valid next_stage_ids
   def all_stages
+    return [] if next_stage_ids.empty?
     stage_collection = []
     stages = Stage.find(next_stage_ids)
-    stages.each do |this_stage|
-      stage_collection.push(this_stage.id)
+    stages.each do |stage|
+      stage_collection.push(stage.id)
       stage_collection += recursive_next_stage_ids
     end
     stage_collection.flatten!
@@ -31,7 +22,7 @@ module SamsonPipelines::StageConcern
   end
 
   def deploy_requires_approval?
-    BuddyCheck.enabled? && !no_code_deployed? && production? && all_stages.any? { |next_stage|  (next_stage.production? && !next_stage.no_code_deployed?) }
+    super || all_stages.any? { |next_stage| (next_stage.production? && !next_stage.no_code_deployed?) }
   end
 
   protected
@@ -48,7 +39,7 @@ module SamsonPipelines::StageConcern
       return false
     end
 
-    next_stages.each do |stage|
+    all_stages.each do |stage|
       unless stage.valid_pipeline?(origin_id)
         errors[:base] << "Stage #{stage.name} causes a circular pipeline with this stage"
         return false
