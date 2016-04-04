@@ -24,7 +24,7 @@ class CsvExportJob < ActiveJob::Base
     csv_export.status! :started
     deploy_csv_export(csv_export)
     notify_of_creation(csv_export)
-  rescue NoMethodError, IOError, ActiveRecord::ActiveRecordError => e
+  rescue IOError, ActiveRecord::ActiveRecordError => e
     csv_export.delete_file
     csv_export.status! :failed
     Rails.logger.error("Export #{csv_export.id} failed with error #{e}")

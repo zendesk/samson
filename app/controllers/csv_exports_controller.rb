@@ -30,7 +30,7 @@ class CsvExportsController < ApplicationController
   end
 
   def create
-    filters = deploy_filter(params)
+    filters = deploy_filter
     csv_export = CsvExport.create!(user: current_user, filters: filters)
     CsvExportJob.perform_later(csv_export)
     redirect_to csv_export
@@ -53,7 +53,7 @@ class CsvExportsController < ApplicationController
     end
   end
 
-  def deploy_filter(params)
+  def deploy_filter
     # sanitizes parameters and generates a filter string for use with the Deploy.joins(:stage, :jobs)
     filter = {}
 
@@ -89,11 +89,11 @@ class CsvExportsController < ApplicationController
       end
     end
 
-    if project = params[:project].presence
-      if project.to_i > 0
-        filter['stages.project_id'] = project.to_i
-      elsif project != "0"
-        raise "Invalid project id #{project}"
+    if project = params[:project].try(:to_i)
+      if project > 0
+        filter['stages.project_id'] = project
+      elsif project.to_s != params[:project]
+        raise "Invalid project id #{params[:project]}"
       end
     end
 
