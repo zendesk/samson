@@ -97,6 +97,16 @@ class Deploy < ActiveRecord::Base
     DeployService.new(user).confirm_deploy!(self)
   end
 
+  def self.in_range(time_value, time_unit)
+    where(created_at: (Time.now - time_value.public_send(time_unit))..Time.now)
+  end
+
+  def self.search_by_project(search)
+    return self unless search
+    joins({stage: 'project'})
+    .where('lower(projects.name) like ?', "%#{sanitize_sql_like(search.downcase)}%")
+  end
+
   def self.active
     includes(:job).where(jobs: { status: Job::ACTIVE_STATUSES })
   end

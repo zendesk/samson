@@ -37,5 +37,8 @@
 # Ignore temp devel files
 /routes.txt
 
+# Ignore certain plugins
+/plugins/zendesk_app
+
 # .bak files
 *.bak
