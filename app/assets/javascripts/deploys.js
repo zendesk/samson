@@ -1,7 +1,8 @@
 //= require typeahead.js.js
 //= require changesets
 
-var following = true;
+var following = true; // shared with stream.js
+
 $(function () {
   // Shows confirmation dropdown using Github comparison
   var changesetLoaded = false,
@@ -194,7 +195,7 @@ $(function () {
     $("#messages").css("max-height", 550);
   }
 
-  $("#output-follow").click(function(event) {
+  $("#output-follow").click(function() {
     following = true;
 
     shrinkOutput();
@@ -210,7 +211,7 @@ $(function () {
     $("#messages").css("max-height", "none");
   }
 
-  $("#output-grow-toggle").click(function(event) {
+  $("#output-grow-toggle").click(function() {
     var $self = $(this);
 
     if($self.hasClass("active")) {
@@ -222,7 +223,7 @@ $(function () {
     }
   });
 
-  $("#output-grow").click(function(event) {
+  $("#output-grow").click(function() {
     growOutput();
 
     $("#output-options > button").removeClass("active");
@@ -230,7 +231,7 @@ $(function () {
     $("#output-grow-toggle").addClass("active");
   });
 
-  $("#output-steady").click(function(event) {
+  $("#output-steady").click(function() {
     following = false;
 
     shrinkOutput();
