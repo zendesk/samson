@@ -1,6 +1,4 @@
 module SamsonPipelines::StageConcern
-  require 'byebug'
-
   # Needs to find all the possible stages in case this is a pipeline of pipelines as each subsequent stage
   # could have valid next_stage_ids
   def all_stages
