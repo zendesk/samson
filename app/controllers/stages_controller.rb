@@ -80,7 +80,7 @@ class StagesController < ApplicationController
   end
 
   def reorder
-    Stage.reorder(params[:stage_id])
+    Stage.reset_order(params[:stage_id])
 
     head :ok
   end

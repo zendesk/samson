@@ -47,7 +47,7 @@
       <div class="form-group">
         <%= form.label :git_ref, "Git Reference", class: "col-lg-2 control-label" %>
         <div class="col-lg-4">
-          <p class="form-control-static"><%= git_ref_and_sha_for(@build, make_link: false).html_safe %></p>
+          <p class="form-control-static"><%= git_ref_and_sha_for(@build) %></p>
         </div>
       </div>
 
