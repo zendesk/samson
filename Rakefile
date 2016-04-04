@@ -20,6 +20,11 @@ namespace :plugins do
   Rails::TestTask.new(:test) do |t|
     t.pattern = "plugins/*/test/**/*_test.rb"
   end
+
+  task :clean_test_run do
+    sh "bundle exec rake db:create db:migrate"
+    sh "bundle exec rake"
+  end
 end
 
 namespace :test do
