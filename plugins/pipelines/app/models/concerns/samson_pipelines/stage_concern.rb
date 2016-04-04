@@ -1,4 +1,5 @@
 module SamsonPipelines::StageConcern
+  require 'byebug'
   # Return true if any stages in the pipeline are marked production
   # make sure to check the no_code_deployed flag on the
   # next deployment as well
@@ -17,25 +18,20 @@ module SamsonPipelines::StageConcern
     stages = Stage.find(next_stage_ids)
     stages.each do |this_stage|
       stage_collection.push(this_stage.id)
-      stage_collection += recursive_stages(this_stage.id)
+      stage_collection += recursive_next_stage_ids
     end
     stage_collection.flatten!
     stage_collection.map { |id| id.to_i }
     Stage.find(stage_collection);
   end
 
-  def recursive_stages(parent_stage_id)
-    result = []
-    stages_ids = Stage.where(id: parent_stage_id).map(&:next_stage_ids)
-    return [parent_stage_id] if stages_ids.empty?
-    stages_ids.each do |stage_id|
-        result << recursive_stages(stage_id)
-    end
-    result << parent_stage_id
+  def recursive_next_stage_ids
+    return [] if next_stage_ids.empty?
+    next_stage_ids.map(&:to_i) + Stage.find(next_stage_ids).flat_map(&:recursive_next_stage_ids)
   end
 
   def deploy_requires_approval?
-    super && all_stages.any? { |next_stage|  (next_stage.production? && !next_stage.no_code_deployed?) }
+    BuddyCheck.enabled? && !no_code_deployed? && production? && all_stages.any? { |next_stage|  (next_stage.production? && !next_stage.no_code_deployed?) }
   end
 
   protected
