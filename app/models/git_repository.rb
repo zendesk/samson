@@ -100,13 +100,6 @@ class GitRepository
     valid
   end
 
-  def downstream_commit?(old_commit, new_commit)
-    return true if old_commit == new_commit
-    cmd = "git merge-base --is-ancestor #{old_commit} #{new_commit}"
-    status, output = run_single_command(cmd) { |l| l }
-    !status && !output[0].to_s.include?("fatal")
-  end
-
   def executor
     @executor ||= TerminalExecutor.new(StringIO.new)
   end
