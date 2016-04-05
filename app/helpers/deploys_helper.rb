@@ -20,7 +20,7 @@ module DeploysHelper
       output << render('queued')
     end
 
-    output << render('output', deploy: @deploy, project: @project, hide: output_hidden)
+    output << render('shared/output', deployable: @deploy, job: @deploy.job, project: @project, hide: output_hidden)
   end
 
   def deploy_running?

@@ -30,7 +30,7 @@ class Stage < ActiveRecord::Base
   before_create :ensure_ordering
   before_save :build_new_project_command
 
-  def self.reorder(new_order)
+  def self.reset_order(new_order)
     transaction do
       new_order.each.with_index { |stage_id, index| Stage.update stage_id.to_i, order: index.to_i }
     end

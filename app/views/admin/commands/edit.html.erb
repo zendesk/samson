@@ -20,20 +20,14 @@
       <% if @command.usages.present? %>
         <div class="form-group">
           <%= form.label :usage, value: "Usage", class: "col-lg-2 control-label" %>
-          <% if stage_usage = @command.stages.presence %>
+          <% [['stage', @command.stages], ['macro', @command.macros]].select { |_,u| u.any? }.each do |type, usages| %>
             <div class="col-lg-4">
-              Used in <%= pluralize(stage_usage.count, 'stage') %>:
-                <ul>
-                  <%= stage_usage.map { |s| "<li>#{link_to "#{s.project.name} - #{s.name}", [s.project, s, action: :edit] }</li>" }.join.html_safe %>
-                </ul>
-            </div>
-          <% end %>
-          <% if macro_usage = @command.macros.presence %>
-            <div class="col-lg-4">
-              Used in <%= pluralize(macro_usage.count, 'macro') %>:
-                <ul>
-                  <%= macro_usage.map { |s| "<li>#{link_to "#{s.project.name} - #{s.name}", [s.project, s, action: :edit] }</li>" }.join.html_safe %>
-                </ul>
+              Used in <%= pluralize(usages.count, type) %>:
+              <ul>
+                <% usages.each do |s| %>
+                  <li><%= link_to "#{s.project.name} - #{s.name}", [s.project, s, action: :edit] %></li>
+                <% end %>
+              </ul>
             </div>
           <% end %>
         </div>
@@ -45,7 +39,6 @@
           <%= link_to_delete([:admin, @command]) unless @command.new_record? || @command.usages.present? %>
         </div>
       </div>
-
     </fieldset>
   <% end %>
 </section>

@@ -8,6 +8,14 @@ Samson::Application.load_tasks
 Rake::Task["default"].clear
 task default: :test
 
+task :asset_compilation_environment do
+  ENV['SECRET_TOKEN'] = 'foo'
+  ENV['GITHUB_TOKEN'] = 'foo'
+  ENV['PRECOMPILE'] = '1'
+  ENV['DATABASE_URL'] = 'mysql2://none@none/none'
+end
+Rake::Task['assets:precompile'].prerequisites.unshift :asset_compilation_environment
+
 namespace :plugins do
   Rails::TestTask.new(:test) do |t|
     t.pattern = "plugins/*/test/**/*_test.rb"
@@ -19,7 +27,13 @@ namespace :test do
     t.pattern = "{test,plugins/*/test}/**/*_test.rb"
   end
 
-  task js: :environment do
+  task :prepare_js do
+    sh "npm install"
+    sh "npm run-script jshint"
+    sh "npm run-script jshint:plugins"
+  end
+
+  task js: [:asset_compilation_environment, :environment] do
     with_tmp_karma_config do |config|
       sh "./node_modules/karma/bin/karma start #{config} --single-run"
     end
@@ -38,4 +52,9 @@ namespace :test do
   def resolve_asset(file)
     Rails.application.assets.find_asset(file).to_a.first.pathname.to_s
   end
+end
+
+desc 'Run brakeman ... use brakewan -I to add new ignores'
+task :brakeman do
+  sh "brakeman --exit-on-warn --table-width 500"
 end
