@@ -144,7 +144,7 @@ class BinaryBuilder
         'dockerfile' => DOCKER_BUILD_FILE,
         't' => image_name
       }
-    )
+    ) { |chunk| @output_stream.write chunk }
   end
 
   def docker_api_version

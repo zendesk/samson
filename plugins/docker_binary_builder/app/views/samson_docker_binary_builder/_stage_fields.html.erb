@@ -1,0 +1,9 @@
+<fieldset>
+  <legend>Docker Binary Builder</legend>
+  <div class="col-lg-6 checkbox col-lg-offset-2">
+    <%= form.label :docker_binary_plugin_enabled do %>
+      <%= form.check_box :docker_binary_plugin_enabled %>
+      Use Docker to build/compile artifacts (<a href="https://github.com/zendesk/samson/tree/master/plugins/docker_binary_builder">docs</a>)
+    <% end %>
+  </div>
+</fieldset>
