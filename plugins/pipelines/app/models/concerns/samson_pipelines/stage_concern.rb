@@ -44,7 +44,7 @@ module SamsonPipelines::StageConcern
       return false
     end
 
-    all_stages.each do |stage|
+    next_stages.each do |stage|
       unless stage.valid_pipeline?(origin_id)
         errors[:base] << "Stage #{stage.name} causes a circular pipeline with this stage"
         return false
