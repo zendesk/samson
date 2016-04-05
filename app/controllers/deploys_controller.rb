@@ -97,7 +97,7 @@ class DeploysController < ApplicationController
       end
       format.csv do
         datetime = Time.now.strftime "%Y%m%d_%H%M"
-        send_data deploys.to_csv, type: :csv, filename: "deploy_search_results#{datetime}.csv"
+        send_data deploys.to_csv, type: :csv, filename: "deploy_search_results_#{datetime}.csv"
       end
     end
   end
