@@ -18,8 +18,6 @@ module SamsonPipelines::StageConcern
       stage_collection.push(stage.id)
       stage_collection += recursive_next_stage_ids
     end
-    stage_collection.flatten!
-    stage_collection.map { |id| id.to_i }
     Stage.find(stage_collection);
   end
 
