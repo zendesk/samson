@@ -240,10 +240,6 @@ describe DeploysController do
       end
     end
 
-    after do
-      Deploy.delete_all
-    end
-
     describe "finds all deploys for a deployer" do
       it "returns a 200" do
         get :search, format: "json"
