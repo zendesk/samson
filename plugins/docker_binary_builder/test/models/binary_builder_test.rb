@@ -6,7 +6,8 @@ describe BinaryBuilder do
     let(:dir) { '/tmp' }
     let(:reference) { 'aBc-19F' }
     let(:output) { StringIO.new }
-    let(:builder) { BinaryBuilder.new(dir, project, reference, output) }
+    let(:executor) { TerminalExecutor.new(@output_stream, verbose: true) }
+    let(:builder) { BinaryBuilder.new(dir, project, reference, output, executor) }
     let(:fake_image) { stub(remove: true) }
     let(:fake_container) { stub(delete: true, start: true, attach: true, copy: true) }
 
@@ -31,6 +32,9 @@ describe BinaryBuilder do
 
     it 'builds image if docker flag is set for project and dockerfile.build exists' do
       File.expects(:exists?).with(File.join(dir, BinaryBuilder::DOCKER_BUILD_FILE)).returns(true)
+      File.expects(:file?).with(File.join(dir, BinaryBuilder::PRE_BUILD_SCRIPT)).returns(false)
+      executor.expects(:execute!).with(File.join(dir, BinaryBuilder::PRE_BUILD_SCRIPT)).never
+
       project.update_attributes(deploy_with_docker: true)
       builder.build
       output.string.must_equal [
@@ -40,6 +44,34 @@ describe BinaryBuilder do
         "Grabbing '/app/artifacts.tar' from build container...\n",
         "Continuing docker build...\n",
         "Cleaning up docker build image and container...\n"].join
+    end
+
+    it 'run pre build shell script if it is available' do
+      File.expects(:exists?).with(File.join(dir, BinaryBuilder::DOCKER_BUILD_FILE)).returns(true)
+      File.expects(:file?).with(File.join(dir, BinaryBuilder::PRE_BUILD_SCRIPT)).returns(true)
+      executor.expects(:execute!).with(File.join(dir, BinaryBuilder::PRE_BUILD_SCRIPT)).returns(true)
+
+      project.update_attributes(deploy_with_docker: true)
+      builder.build
+      output.string.must_equal [
+        "Running pre build script...\n",
+        "Connecting to Docker host with Api version: 1.19 ...\n",
+        "Now building the build container...\n",
+        "Now starting Build container...\n",
+        "Grabbing '/app/artifacts.tar' from build container...\n",
+        "Continuing docker build...\n",
+        "Cleaning up docker build image and container...\n"].join
+    end
+
+    it 'stop build when pre build shell script fails' do
+      File.expects(:exists?).with(File.join(dir, BinaryBuilder::DOCKER_BUILD_FILE)).returns(true)
+      File.expects(:file?).with(File.join(dir, BinaryBuilder::PRE_BUILD_SCRIPT)).returns(true)
+      executor.expects(:execute!).with(File.join(dir, BinaryBuilder::PRE_BUILD_SCRIPT)).returns(false)
+
+      project.update_attributes(deploy_with_docker: true)
+      assert_raises RuntimeError do
+        builder.build
+      end
     end
 
     it 'uses the old style of mounting directories with api v1.19' do

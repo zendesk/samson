@@ -1,0 +1,25 @@
+{
+  "ignored_warnings": [
+    {
+      "warning_type": "Command Injection",
+      "warning_code": 14,
+      "fingerprint": "1a12f89976e202e892270621d577f8580bd89d7b51c0c1b0552c82a118c40490",
+      "message": "Possible command injection",
+      "file": "app/models/git_repository.rb",
+      "line": 53,
+      "link": "http://brakemanscanner.org/docs/warning_types/command_injection/",
+      "code": "IO.popen([\"git\", \"describe\", \"--long\", \"--tags\", \"--all\", \"--abbrev=#{(length or 40)}\", git_reference], :err => ([:child, :out]))",
+      "render_path": null,
+      "location": {
+        "type": "method",
+        "class": "GitRepository",
+        "method": "commit_from_ref"
+      },
+      "user_input": "length",
+      "confidence": "Medium",
+      "note": "https://github.com/presidentbeef/brakeman/issues/851 popen is safe when used with array arguments"
+    }
+  ],
+  "updated": "2016-03-31 15:08:51 -0700",
+  "brakeman_version": "3.2.1"
+}

@@ -29,7 +29,7 @@
     <dd><%= @build.description  %></dd>
 
     <dt>Git Ref</dt>
-    <dd><%= git_ref_and_sha_for(@build, make_link: true).html_safe  %></dd>
+    <dd><%= git_ref_and_sha_for(@build, make_link: true) %></dd>
 
     <dt>Docker Job Status</dt>
     <dd><%= @build.docker_status %></dd>

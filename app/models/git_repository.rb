@@ -49,6 +49,7 @@ class GitRepository
 
   def commit_from_ref(git_reference, length: 7)
     Dir.chdir(repo_cache_dir) do
+      # brakeman thinks this is unsafe ... https://github.com/presidentbeef/brakeman/issues/851
       description = IO.popen(['git', 'describe', '--long', '--tags', '--all', "--abbrev=#{length || 40}", git_reference], err: [:child, :out]) do |io|
         io.read.strip
       end
@@ -97,13 +98,6 @@ class GitRepository
     valid, output = run_single_command(cmd, pwd: '.')
     Rails.logger.error("Repository Path '#{repository_url}' is invalid: #{output}") unless valid
     valid
-  end
-
-  def downstream_commit?(old_commit, new_commit)
-    return true if old_commit == new_commit
-    cmd = "git merge-base --is-ancestor #{old_commit} #{new_commit}"
-    status, output = run_single_command(cmd) { |l| l }
-    !status && !output[0].to_s.include?("fatal")
   end
 
   def executor
