@@ -252,45 +252,64 @@ describe DeploysController do
         assert_response :ok
       end
 
-      it "returns no results" do
+      it "returns no results when deploy is not found" do
         get :search, format: "json", deployer: 'jimmyjoebob'
         assert_response :ok
         @response.body.must_equal "{\"deploys\":\[\]}"
       end
 
-      it "returns 4 deploys for user Admin" do
+      it "fitlers results by deployer" do
         get :search, format: "json", deployer: 'Admin'
         assert_response :ok
         deploys = JSON.parse(@response.body)
         deploys["deploys"].count.must_equal 4
       end
 
-      it "returns 2 sucessful deploys" do
+      it "filters results by status" do
         get :search, format: "json", status: 'succeeded'
         assert_response :ok
         deploys = JSON.parse(@response.body)
         deploys["deploys"].count.must_equal 2
       end
 
-      it "returns 1 running deploy" do
-        get :search, format: "json", status: 'running'
-        assert_response :ok
-        deploys = JSON.parse(@response.body)
-        deploys["deploys"].count.must_equal 1
+      it "failes with invalid status" do
+        get :search, format: "json", status: 'bogus_status'
+        assert_response 400
       end
 
-      it "returns 4 deploys for project: Project" do
+      it "filters by project" do
         get :search, format: "json", project_name: "Project"
         assert_response :ok
         deploys = JSON.parse(@response.body)
         deploys["deploys"].count.must_equal 4
       end
 
-      it "returns 1 non production deploys" do
+      it "filters by non-production" do
         get :search, format: "json", production: 0
         assert_response :ok
         deploys = JSON.parse(@response.body)
         deploys["deploys"].count.must_equal 1
+      end
+
+      it "filters by non-production" do
+        get :search, format: "json", production: "false"
+        assert_response :ok
+        deploys = JSON.parse(@response.body)
+        deploys["deploys"].count.must_equal 1
+      end
+
+      it "filters by production" do
+        get :search, format: "json", production: 1
+        assert_response :ok
+        deploys = JSON.parse(@response.body)
+        deploys["deploys"].count.must_equal 3
+      end
+
+      it "filters by production" do
+        get :search, format: "json", production: "true"
+        assert_response :ok
+        deploys = JSON.parse(@response.body)
+        deploys["deploys"].count.must_equal 3
       end
     end
   end

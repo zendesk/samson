@@ -64,6 +64,7 @@ class DeploysController < ApplicationController
       render json: { errors: "invalid status given" }, status: 400
       return
     end
+
     if params[:deployer].present?
       users = User.where("name LIKE ?", "%#{ActiveRecord::Base.send(:sanitize_sql_like, params[:deployer])}%").pluck(:id)
     end
