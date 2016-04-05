@@ -81,9 +81,10 @@ class DeploysController < ApplicationController
     if params[:production].present? || projects
       stages = Stage
       stages = stages.where(project: projects) if projects
-      production = ActiveRecord::Type::Boolean.new.type_cast_from_user(params[:production]) if params[:production].present?
-      # this will hit the deploy groups as well
-      stages = stages.select { |stage| (stage.production? == production) } if params[:production].present?
+      if params[:production].present?
+        production = ActiveRecord::Type::Boolean.new.type_cast_from_user(params[:production])
+        stages = stages.select { |stage| (stage.production? == production) }
+      end
     end
 
     deploys = Deploy
