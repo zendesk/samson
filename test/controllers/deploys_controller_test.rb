@@ -77,7 +77,7 @@ describe DeploysController do
           assert_equal "text/csv", @response.content_type
           assert_response :ok
         end
-        
+
         it "outputs csv accurately and completely" do
           csv_response = CSV.parse(response.body)
           csv_headers = csv_response.shift
@@ -221,16 +221,15 @@ describe DeploysController do
       Job.delete_all
       cmd = 'cap staging deploy'
       project = Project.first
-
       job_def =  {project_id: project.id, command: cmd, status: nil, user_id: admin.id}
       status = [
-        {status: 'failed', production: true }, 
+        {status: 'failed', production: true },
         {status: 'running', production: true},
         {status:'succeeded', production: true},
         {status:'succeeded', production: false}
       ]
 
-      status.each do |stat| 
+      status.each do |stat|
         job_def[:status] = stat[:status]
         job = Job.create!(job_def)
         Deploy.create!( {
@@ -292,7 +291,7 @@ describe DeploysController do
       end
 
       it "returns 1 non production deploys" do
-        get :search, format: "json", production: false
+        get :search, format: "json", production: 0
         assert_response :ok
         deploys = JSON.parse(@response.body)
         deploys["deploys"].count.must_equal 1

@@ -1,5 +1,4 @@
 require 'csv'
-require 'byebug'
 
 class DeploysController < ApplicationController
   include ProjectLevelAuthorization
@@ -51,8 +50,8 @@ class DeploysController < ApplicationController
   end
 
   # Takes the same params that are used by the client side filtering
-  # on the recent deploys pages.  
-  # Returrns a paginated json object or CSV of deploys that people are 
+  # on the recent deploys pages.
+  # Returrns a paginated json object or CSV of deploys that people are
   # interested in rather than doing client side filtering.
   # params:
   #   * deployer (name of the user that started the job(s), this is a fuzzy match
@@ -81,9 +80,10 @@ class DeploysController < ApplicationController
 
     if params[:production] || projects
       stages = Stage
-      stages = stages.where(production: ActiveRecord::Type::Boolean.new.type_cast_from_user(params[:production])) if params[:production]
-      stages.where(production: false)
       stages = stages.where(project: projects) if projects
+      production = ActiveRecord::Type::Boolean.new.type_cast_from_user(params[:production]) if params[:production]
+      # this will hit the deploy groups as well
+      stages = stages.select { |stage| (stage.production? == production) } if params[:production]
     end
 
     deploys = Deploy
