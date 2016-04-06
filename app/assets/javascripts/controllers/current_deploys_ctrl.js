@@ -4,6 +4,7 @@ samson.controller("currentDeploysCtrl", function($scope, $http, SseFactory, $int
   $scope.deploys = [];
   $scope.helper = DeployHelper;
 
+
   function updateUpdatedAt() {
     _.each($scope.deploys, function(deploy) {
       deploy.updated_at_ago = moment(deploy.updated_at).fromNow();

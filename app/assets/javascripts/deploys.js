@@ -13,7 +13,8 @@ $(function () {
       $submit = $form.find('input[type=submit]'),
       $reference = $("#deploy_reference"),
       $ref_problem_list = $("#ref-problem-list"),
-      $ref_status_label = $("#ref-problem-warning");
+      $ref_status_label = $("#ref-problem-warning"),
+      $messages = $("#messages");
 
   $("#deploy-tabs a[data-type=github]").click(function (e) {
       e.preventDefault();
@@ -192,7 +193,7 @@ $(function () {
   });
 
   function shrinkOutput() {
-    $("#messages").css("max-height", 550);
+    $messages.css("max-height", 550);
   }
 
   $("#output-follow").click(function() {
@@ -200,7 +201,6 @@ $(function () {
 
     shrinkOutput();
 
-    var $messages = $("#messages");
     $messages.scrollTop($messages.prop("scrollHeight"));
 
     $("#output-options > button, #output-grow-toggle").removeClass("active");
@@ -208,7 +208,7 @@ $(function () {
   });
 
   function growOutput() {
-    $("#messages").css("max-height", "none");
+    $messages.css("max-height", "none");
   }
 
   $("#output-grow-toggle").click(function() {
@@ -241,11 +241,23 @@ $(function () {
   });
 
   // If there are messages being streamed, then show the output and hide buddy check
-  $('#messages').bind('contentchanged', function() {
+  $messages.bind('contentchanged', function() {
     var $output = $('#output');
     if ($output.find('.output').hasClass("hidden") ){
       $output.find('.output').removeClass('hidden');
       $output.find('.deploy-check').hide();
+    }
+  });
+
+  // when user scrolls all the way down, start following
+  // when user scrolls up, stop following since it would cause jumping
+  // (adds 30 px wiggle room since the math does not quiet add up)
+  $messages.scroll(function() {
+    var position = $messages.prop("scrollHeight") - $messages.scrollTop() - $messages.height() - 30;
+    if(position > 0 && following) {
+      $("#output-steady").click();
+    } else if (position < 0 && !following) {
+      $("#output-follow").click();
     }
   });
 });

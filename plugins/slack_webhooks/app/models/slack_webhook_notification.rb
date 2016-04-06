@@ -16,7 +16,7 @@ class SlackWebhookNotification
 
   def content
     subject = "[#{@project.name}] #{@deploy.summary}"
-    @content ||= SlackNotificationRenderer.render(@deploy, subject)
+    @content ||= SlackWebhookNotificationRenderer.render(@deploy, subject)
   end
 
   def _deliver(webhook)

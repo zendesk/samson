@@ -96,6 +96,23 @@ samson.filter("userFilter",
   }
 );
 
+samson.filter("timeDateFilter",
+  function() {
+    return function(td, timeFormat) {
+      if (timeFormat === undefined || timeFormat === "") return;
+      if (timeFormat == 'local') {
+        return moment(td).format('LLL');
+      } else if (timeFormat == 'utc') {
+        return moment(td).utc().format();
+      } else if (timeFormat == 'relative') {
+        return moment(td).fromNow();
+      } else {
+        throw 'timeFormat should be one of local | utc | relative, ' + timeFormat + " provided";
+      }
+    };
+  }
+);
+
 samson.filter("stageFilter",
   function() {
     return function(deploys, stageType) {
@@ -201,13 +218,24 @@ samson.factory("Deploys",
   }]
 );
 
-samson.controller("TimelineCtrl", function($scope, $window, $timeout, Deploys, StatusFilterMapping, DeployHelper) {
+samson.controller("TimelineCtrl", function($scope, $window, $timeout, Deploys, StatusFilterMapping, DeployHelper, $http) {
   $scope.userTypes = ["Human", "Robot"];
   $scope.stageTypes = { "Production": true, "Non-Production": false };
   $scope.deployStatuses = Object.keys(StatusFilterMapping);
   $scope.helper = DeployHelper;
   $scope.timelineDeploys = Deploys;
   $scope.deploys = Deploys.entries;
+
+
+  if (!$scope.selectedTimeFormat) {
+      $scope.selectedTimeFormat = $('#default_time_format').val();
+      $scope.timeFormat = $scope.selectedTimeFormat;
+  }
+
+
+  $scope.changeTime = function() {
+    $scope.selectedTimeFormat = $scope.timeFormat;
+  };
 
   $scope.helper.registerScrollHelpers($scope);
   $scope.timelineDeploys.loadMore();

@@ -1,5 +1,7 @@
 source 'https://rubygems.org'
 
+ruby File.read('.ruby-version').strip
+
 gem 'bundler', '>= 1.8.4'
 
 gem 'rails', '~> 4.2.0'
