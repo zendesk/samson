@@ -24,15 +24,13 @@ describe BinaryBuilder do
     end
 
     it 'does nothing if docker flag is set for project but no dockerfile.build exists' do
-      File.expects(:exists?).with(File.join(dir, BinaryBuilder::DOCKER_BUILD_FILE)).returns(false)
       project.update_attributes(deploy_with_docker: true)
       builder.expects(:create_build_image).never
       builder.build
     end
 
     it 'builds image if docker flag is set for project and dockerfile.build exists' do
-      File.expects(:exists?).with(File.join(dir, BinaryBuilder::DOCKER_BUILD_FILE)).returns(true)
-      File.expects(:file?).with(File.join(dir, BinaryBuilder::PRE_BUILD_SCRIPT)).returns(false)
+      builder.expects(:build_file_exist?).returns(true)
       executor.expects(:execute!).with(File.join(dir, BinaryBuilder::PRE_BUILD_SCRIPT)).never
 
       project.update_attributes(deploy_with_docker: true)
@@ -47,8 +45,8 @@ describe BinaryBuilder do
     end
 
     it 'run pre build shell script if it is available' do
-      File.expects(:exists?).with(File.join(dir, BinaryBuilder::DOCKER_BUILD_FILE)).returns(true)
-      File.expects(:file?).with(File.join(dir, BinaryBuilder::PRE_BUILD_SCRIPT)).returns(true)
+      builder.expects(:build_file_exist?).returns(true)
+      builder.expects(:pre_build_file_exist?).returns(true)
       executor.expects(:execute!).with(File.join(dir, BinaryBuilder::PRE_BUILD_SCRIPT)).returns(true)
 
       project.update_attributes(deploy_with_docker: true)
@@ -64,8 +62,8 @@ describe BinaryBuilder do
     end
 
     it 'stop build when pre build shell script fails' do
-      File.expects(:exists?).with(File.join(dir, BinaryBuilder::DOCKER_BUILD_FILE)).returns(true)
-      File.expects(:file?).with(File.join(dir, BinaryBuilder::PRE_BUILD_SCRIPT)).returns(true)
+      builder.expects(:build_file_exist?).returns(true)
+      builder.expects(:pre_build_file_exist?).returns(true)
       executor.expects(:execute!).with(File.join(dir, BinaryBuilder::PRE_BUILD_SCRIPT)).returns(false)
 
       project.update_attributes(deploy_with_docker: true)
@@ -115,8 +113,10 @@ describe BinaryBuilder do
     it 'sets up global environment variables for the build container' do
       project.environment_variables.create!(name: 'FIRST', value: 'first')
       project.environment_variables.create!(name: 'SECOND', value: 'second')
-      project.environment_variables.create!(name: 'THIRD', value: 'third',
-                                            scope_type: 'Environment', scope_id: environments(:production).id)
+      project.environment_variables.create!(
+        name: 'THIRD', value: 'third',
+        scope_type: 'Environment', scope_id: environments(:production).id
+      )
       builder.send(:create_container_options)['Env'].must_equal %w(FIRST=first SECOND=second)
     end
 

@@ -17,7 +17,7 @@ class BinaryBuilder
   end
 
   def build
-    return unless @project.try(:deploy_with_docker?) && File.exists?(File.join(@dir, DOCKER_BUILD_FILE))
+    return unless @project.try(:deploy_with_docker?) && build_file_exist?
 
     run_pre_build_script
 
@@ -37,16 +37,27 @@ class BinaryBuilder
   end
 
   def run_pre_build_script
-    file = File.join(@dir, PRE_BUILD_SCRIPT)
-    return unless File.file?(file)
+    return unless pre_build_file_exist?
 
     @output_stream.puts "Running pre build script..."
-    success = @executor.execute! file
+    success = @executor.execute! pre_build_file
 
     raise "Error running pre build script" unless success
   end
 
   private
+
+  def pre_build_file
+    File.join(@dir, PRE_BUILD_SCRIPT)
+  end
+
+  def pre_build_file_exist?
+    File.file? pre_build_file
+  end
+
+  def build_file_exist?
+    File.exists? File.join(@dir, DOCKER_BUILD_FILE)
+  end
 
   def start_build_script
     @output_stream.puts 'Now starting Build container...'
