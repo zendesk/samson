@@ -288,7 +288,9 @@ $(function () {
     }
 
     function removeHighlight() {
-      $highlightedLines && $highlightedLines.removeClass('highlighted');
+      if ($highlightedLines) {
+        $highlightedLines.removeClass('highlighted');
+      }
     }
 
     function scrollToHash() {
@@ -296,7 +298,7 @@ $(function () {
       var nextLines = linesFromHash();
       addHighlight.apply(this, nextLines);
       if ($highlightedLines) {
-        $highlightedLines.get(0).scrollIntoView(true)
+        $highlightedLines.get(0).scrollIntoView(true);
       }
     }
 
