@@ -9,7 +9,7 @@
     <a ng-href="{{deploy.url}}">{{deploy.summary}}</a>
   </td>
   <td>
-    <span data-time="{{deploy.updated_at}}" class="timeline-time">{{deploy.updated_at_ago}}</span>
+    <span data-time="{{deploy.updated_at}}" class="timeline-time">{{deploy.updated_at | timeDateFilter:this.selectedTimeFormat}}</span>
   </td>
   <td>
     <span class="label label-{{deploy.status | visualizeStatus}} timeline-deploy-status">{{deploy.status}}</span>
