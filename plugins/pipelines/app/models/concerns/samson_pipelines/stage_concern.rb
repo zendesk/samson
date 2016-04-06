@@ -1,7 +1,4 @@
 module SamsonPipelines::StageConcern
-  # Needs to find all the possible stages in case this is a pipeline of pipelines as each subsequent stage
-  # could have valid next_stage_ids
-
   def production?
     super || next_stages.any?(&:production?)
   end
@@ -10,6 +7,8 @@ module SamsonPipelines::StageConcern
     Stage.find(next_stage_ids)
   end
 
+  # Needs to find all the possible stages in case this is a pipeline of pipelines as each subsequent stage
+  # could have valid next_stage_ids
   def all_stages
     return [] if next_stage_ids.empty?
     stage_collection = []
