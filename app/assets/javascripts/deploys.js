@@ -321,7 +321,7 @@ $(function () {
 
     $(window).on('hashchange', scrollToHash);
     scrollToHash();
-  })();
+  }());
 });
 
 function toggleOutputToolbar() {
