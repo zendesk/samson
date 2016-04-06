@@ -1,4 +1,5 @@
 require_relative '../test_helper'
+require 'byebug'
 
 describe Stage do
   let(:project) { Project.create!(name: 'foo', repository_url: 'random') }
@@ -7,6 +8,9 @@ describe Stage do
   let(:stage3) { Stage.create!(project: project, name: 'stage3') }
   let(:production) { deploy_groups(:pod1) }
   let(:staging) { deploy_groups(:pod100) }
+  let(:user) { User.find_by_name("Admin")}
+  let(:job) {Job.create!({project: project, command: "sleep 100", status: "running", user: user})}
+
 
   before do
     Project.any_instance.stubs(:valid_repository_url).returns(true)
@@ -20,7 +24,7 @@ describe Stage do
     end
 
     it 'returns true if no pipeline set and marked production' do
-      stage1.update(production: true)
+      stage1.update!(production: true)
       stage1.production?.must_equal true
     end
 
@@ -30,29 +34,33 @@ describe Stage do
     end
 
     it 'returns true if pipeline set and self is marked production' do
-      stage1.update(production: true)
+      stage1.update!(production: true)
       stage1.update!(next_stage_ids: [ stage3.id, stage2.id ])
       stage1.production?.must_equal true
     end
 
     it 'returns true if pipeline set and later stage is marked production' do
-      stage2.update(production: true)
+      stage2.update!(production: true)
       stage1.update!(next_stage_ids: [ stage3.id, stage2.id ])
       stage1.production?.must_equal true
     end
+  end
 
-    it 'returns true if no_code_deployed is false on a production pipeline stage' do
-      stage2.update(production: true)
-      stage2.update(no_code_deployed: false)
+  describe '#deploy_requires_approval?' do
+    before do
+      stage2.update!(next_stage_ids: [])
+      stage2.update!(production: true)
       stage1.update!(next_stage_ids: [ stage2.id ])
-      stage1.production?.must_equal true
     end
 
-    it 'returns false if no_code_deployed true on a production pipeline stage' do
-      stage2.update(production: true)
-      stage2.update(no_code_deployed: true)
-      stage1.update!(next_stage_ids: [ stage2.id ])
-      stage1.production?.must_equal false
+    it 'requires approval if a future stage does not have no_code_deployed' do
+      stage2.update!(no_code_deployed: false)
+      stage1.deploy_requires_approval?.must_equal true
+    end
+
+    it 'does not require approval if a future stage has no_code_deployed' do
+      stage2.update!(no_code_deployed: true)
+      stage2.deploy_requires_approval?.must_equal false
     end
   end
 
