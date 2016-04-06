@@ -1,5 +1,4 @@
 require_relative '../test_helper'
-
 describe DeploysController do
   let(:project) { job.project }
   let(:stage) { deploy.stage }
@@ -78,7 +77,7 @@ describe DeploysController do
           assert_equal "text/csv", @response.content_type
           assert_response :ok
         end
-        
+
         it "outputs csv accurately and completely" do
           csv_response = CSV.parse(response.body)
           csv_headers = csv_response.shift
@@ -214,6 +213,105 @@ describe DeploysController do
     unauthorized :post, :create, project_id: :foo, stage_id: 2
     unauthorized :post, :buddy_check, project_id: :foo, id: 1
     unauthorized :delete, :destroy, project_id: :foo, id: 1
+  end
+
+  as_a_viewer do
+    before do
+      Deploy.delete_all
+      Job.delete_all
+      cmd = 'cap staging deploy'
+      project = Project.first
+      job_def =  {project_id: project.id, command: cmd, status: nil, user_id: admin.id}
+      status = [
+        {status: 'failed', production: true },
+        {status: 'running', production: true},
+        {status:'succeeded', production: true},
+        {status:'succeeded', production: false}
+      ]
+
+      status.each do |stat|
+        job_def[:status] = stat[:status]
+        job = Job.create!(job_def)
+        Deploy.create!( {
+          stage_id: Stage.find_by_production(stat[:production]).id,
+          reference: 'reference',
+          job_id: job.id
+        } )
+      end
+    end
+
+    describe "finds all deploys for a deployer" do
+      it "returns a 200" do
+        get :search, format: "json"
+        assert_response :ok
+      end
+
+      it "renders csv" do
+        get :search, format: "csv"
+        assert_equal "text/csv", @response.content_type
+        assert_response :ok
+      end
+
+      it "returns no results when deploy is not found" do
+        get :search, format: "json", deployer: 'jimmyjoebob'
+        assert_response :ok
+        @response.body.must_equal "{\"deploys\":\[\]}"
+      end
+
+      it "fitlers results by deployer" do
+        get :search, format: "json", deployer: 'Admin'
+        assert_response :ok
+        deploys = JSON.parse(@response.body)
+        deploys["deploys"].count.must_equal 4
+      end
+
+      it "filters results by status" do
+        get :search, format: "json", status: 'succeeded'
+        assert_response :ok
+        deploys = JSON.parse(@response.body)
+        deploys["deploys"].count.must_equal 2
+      end
+
+      it "failes with invalid status" do
+        get :search, format: "json", status: 'bogus_status'
+        assert_response 400
+      end
+
+      it "filters by project" do
+        get :search, format: "json", project_name: "Project"
+        assert_response :ok
+        deploys = JSON.parse(@response.body)
+        deploys["deploys"].count.must_equal 4
+      end
+
+      it "filters by non-production" do
+        get :search, format: "json", production: 0
+        assert_response :ok
+        deploys = JSON.parse(@response.body)
+        deploys["deploys"].count.must_equal 1
+      end
+
+      it "filters by non-production" do
+        get :search, format: "json", production: "false"
+        assert_response :ok
+        deploys = JSON.parse(@response.body)
+        deploys["deploys"].count.must_equal 1
+      end
+
+      it "filters by production" do
+        get :search, format: "json", production: 1
+        assert_response :ok
+        deploys = JSON.parse(@response.body)
+        deploys["deploys"].count.must_equal 3
+      end
+
+      it "filters by production" do
+        get :search, format: "json", production: "true"
+        assert_response :ok
+        deploys = JSON.parse(@response.body)
+        deploys["deploys"].count.must_equal 3
+      end
+    end
   end
 
   as_a_deployer do
