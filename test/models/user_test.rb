@@ -32,12 +32,12 @@ describe User do
       user.time_format.must_equal('relative')
     end
 
-    it "does not update" do
+    it "does not update with invalid values" do
       user.time_format = 'foobar'
       refute user.valid?
     end
 
-    it "does update" do
+    it "does update with valid values" do
       user.update_attributes!(:time_format => 'utc')
       user.reload
       user.time_format.must_equal('utc')
