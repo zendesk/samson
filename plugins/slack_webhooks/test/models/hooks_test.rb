@@ -35,7 +35,7 @@ describe "slack hooks" do
       stage.slack_webhooks << SlackWebhook.new(webhook_url: 'http://example.com')
       new_stage = Stage.new
       Samson::Hooks.fire(:stage_clone, stage, new_stage)
-      new_stage.slack_webhooks.map(&:attributes).must_equal [{"id"=>nil, "webhook_url"=>"http://example.com", "stage_id"=>nil, "created_at"=>nil, "updated_at"=>nil}]
+      new_stage.slack_webhooks.map(&:attributes).must_equal [{"id"=>nil, "webhook_url"=>"http://example.com", "channel"=>nil, "stage_id"=>nil, "created_at"=>nil, "updated_at"=>nil}]
     end
   end
 end
