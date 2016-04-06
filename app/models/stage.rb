@@ -1,7 +1,7 @@
 class Stage < ActiveRecord::Base
   include Permalinkable
 
-  has_soft_deletion default_scope: true
+  has_soft_deletion default_scope: true unless self < SoftDeletion::Core
 
   belongs_to :project, touch: true
 
