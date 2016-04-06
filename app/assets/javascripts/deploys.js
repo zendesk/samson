@@ -260,6 +260,61 @@ $(function () {
       $("#output-follow").click();
     }
   });
+
+  (function() {
+    var HASH_REGEX = /^#L(\d+)(?:-L(\d+))?$/;
+    var $highlightedLines;
+
+    function linesFromHash() {
+      var result = HASH_REGEX.exec(window.location.hash);
+      if (result === null) {
+        return [];
+      } else {
+        return result.slice(1);
+      }
+    }
+
+    function addHighlight(start, end) {
+      if (!start) {
+        return;
+      }
+      start = Number(start) - 1;
+      if (end) {
+        end = Number(end);
+      } else {
+        end = start + 1;
+      }
+      $highlightedLines = $('#messages span').slice(start, end).addClass('highlighted');
+    }
+
+    function removeHighlight() {
+      $highlightedLines && $highlightedLines.removeClass('highlighted');
+    }
+
+    function scrollToHash() {
+      removeHighlight();
+      var nextLines = linesFromHash();
+      addHighlight.apply(this, nextLines);
+      if ($highlightedLines) {
+        $highlightedLines.get(0).scrollIntoView(true)
+      }
+    }
+
+    $('#messages').on('click', 'span', function(event) {
+      event.preventDefault();
+      var clickedNumber = $(event.currentTarget).index('#messages span') + 1;
+      var shift = event.shiftKey;
+      if (shift && $highlightedLines.length === 1) {
+        var requestedLines = [$highlightedLines.index('#messages span') + 1, clickedNumber].sort();
+        window.location.hash = 'L' + requestedLines[0] + '-L' + requestedLines[1];
+      } else {
+        window.location.hash = 'L' + clickedNumber;
+      }
+    });
+
+    $(window).on('hashchange', scrollToHash);
+    scrollToHash();
+  })();
 });
 
 function toggleOutputToolbar() {
