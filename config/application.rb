@@ -23,7 +23,23 @@ module Samson
 
     config.autoload_paths += Dir["#{config.root}/lib/**/"]
 
-    config.cache_store = :dalli_store, { value_max_bytes: 3000000, compress: true, expires_in: 1.day }
+    servers = []
+    options = { value_max_bytes: 3000000, compress: true, expires_in: 1.day }
+
+    # support memcachier env used by heroku
+    # https://devcenter.heroku.com/articles/memcachier#rails-3-and-4
+    if ENV["MEMCACHIER_SERVERS"]
+      servers = (ENV["MEMCACHIER_SERVERS"]).split(",")
+      options.merge!(
+        username: ENV["MEMCACHIER_USERNAME"],
+        password: ENV["MEMCACHIER_PASSWORD"],
+        failover: true,
+        socket_timeout: 1.5,
+        socket_failure_delay: 0.2
+      )
+    end
+
+    config.cache_store = :dalli_store, servers, options
 
     # Allow streaming
     config.preload_frameworks = true
