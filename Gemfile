@@ -104,7 +104,7 @@ group :development, :staging do
 end
 
 group :development, :test do
-  gem 'byebug', require: false
+  gem 'byebug', require: false, platforms: :mri
   gem 'bootscale', require: false
   gem 'pry-rails'
   gem 'awesome_print'
