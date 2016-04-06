@@ -9,6 +9,9 @@ describe Watchers::DeployWatcher do
   let(:project) { current_release.project }
 
   before do
+    # Disable multithreading so celluloid stays in the same transaction
+    ActiveRecord::Base.stubs(connection: ActiveRecord::Base.connection)
+
     Celluloid.shutdown; Celluloid.boot
     Watchers::DeployWatcher.any_instance.stubs(:terminate_watcher)
     Watchers::DeployWatcher.any_instance.stubs(:last_release).returns(current_release)
