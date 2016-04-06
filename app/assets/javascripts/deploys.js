@@ -264,6 +264,7 @@ $(function () {
   (function() {
     var HASH_REGEX = /^#L(\d+)(?:-L(\d+))?$/;
     var $highlightedLines;
+    var LINES_SELECTOR = '#messages span';
 
     function linesFromHash() {
       var result = HASH_REGEX.exec(window.location.hash);
@@ -284,7 +285,7 @@ $(function () {
       } else {
         end = start + 1;
       }
-      $highlightedLines = $('#messages span').slice(start, end).addClass('highlighted');
+      $highlightedLines = $(LINES_SELECTOR).slice(start, end).addClass('highlighted');
     }
 
     function removeHighlight() {
@@ -302,12 +303,16 @@ $(function () {
       }
     }
 
+    function indexOfLine($line) {
+      return $line.index(LINES_SELECTOR) + 1;
+    }
+
     $('#messages').on('click', 'span', function(event) {
       event.preventDefault();
-      var clickedNumber = $(event.currentTarget).index('#messages span') + 1;
+      var clickedNumber = indexOfLine($(event.currentTarget));
       var shift = event.shiftKey;
       if (shift && $highlightedLines.length === 1) {
-        var requestedLines = [$highlightedLines.index('#messages span') + 1, clickedNumber].sort();
+        var requestedLines = [indexOfLine($highlightedLines), clickedNumber].sort();
         window.location.hash = 'L' + requestedLines[0] + '-L' + requestedLines[1];
       } else {
         window.location.hash = 'L' + clickedNumber;
