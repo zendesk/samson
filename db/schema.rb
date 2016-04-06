@@ -393,6 +393,8 @@ ActiveRecord::Schema.define(version: 20160405103253) do
     t.boolean  "desktop_notify", default: false
     t.boolean  "integration",    default: false, null: false
     t.boolean  "access_request_pending",     default: false
+    t.string   "time_format",            limit: 255, default: "relative", null: false
+
   end
 
   add_index "users", ["external_id", "deleted_at"], name: "index_users_on_external_id_and_deleted_at", length: {"external_id"=>191, "deleted_at"=>nil}, using: :btree

@@ -26,6 +26,29 @@ describe User do
     end
   end
 
+  describe "#time_format" do
+    let(:user) { User.create!(name: "jimbob", email: 'test@test.com') }
+    it "has a default time format of relative" do
+      user.time_format.must_equal('relative')
+    end
+
+    it "does not update with invalid values" do
+      user.time_format = 'foobar'
+      refute user.valid?
+    end
+
+    it "does update with valid values" do
+      user.update_attributes!(:time_format => 'utc')
+      user.reload
+      user.time_format.must_equal('utc')
+    end
+
+    it "allows initialization with different time_format" do
+      local_user = User.create!(name: "bettysue", email: 'bsue@test.com', time_format: 'local')
+      local_user.time_format.must_equal('local')
+    end
+  end
+
   describe "#gravatar url" do
     let(:user) { User.new(name: "User Name", email: email) }
 
