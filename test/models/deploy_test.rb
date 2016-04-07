@@ -119,7 +119,7 @@ describe Deploy do
     end
   end
 
-  describe "#validate_stage_is_deployable" do
+  describe "#validate_stage_is_unlocked" do
     def deploy!
       create_deploy!(job_attributes: { user: user })
     end
@@ -139,6 +139,35 @@ describe Deploy do
     it "can update a deploy while something else is deployed" do
       create_deploy!(job_attributes: { user: user, status: "running" })
       deploys(:succeeded_test).update_attributes!(buddy_id: 123)
+    end
+  end
+
+  describe "#validate_stage_uses_deploy_groups_properly" do
+    def deploy!
+      create_deploy!(job_attributes: { user: user })
+    end
+
+    before do
+      stage.commands.first.update_column(:command, "echo $DEPLOY_GROUPS")
+      DeployGroup.stubs(enabled?: true)
+    end
+
+    it "is valid when using $DEPLOY_GROUPS and having deploy groups selected" do
+      deploy!
+    end
+
+    describe "when not selecting deploy groups" do
+      before { stage.deploy_groups.clear }
+
+      it "is invalid" do
+        e = assert_raise(ActiveRecord::RecordInvalid) { deploy! }
+        e.message.must_equal "Validation failed: Stage contains at least one command using the $DEPLOY_GROUPS environment variable, but there are no Deploy Groups associated with this stage."
+      end
+
+      it "valid when not using $DEPLOY_GROUPS" do
+        DeployGroup.unstub(:enabled?)
+        deploy!
+      end
     end
   end
 
