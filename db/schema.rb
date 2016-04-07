@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20160405103253) do
+ActiveRecord::Schema.define(version: 20160407181257) do
 
   create_table "build_statuses", force: :cascade do |t|
     t.integer  "build_id",                                     null: false
@@ -245,9 +245,8 @@ ActiveRecord::Schema.define(version: 20160405103253) do
   end
 
   create_table "macros", force: :cascade do |t|
-    t.string   "name",       limit: 255,   null: false
-    t.string   "reference",  limit: 255,   null: false
-    t.text     "command",    limit: 65535, null: false
+    t.string   "name",       limit: 255, null: false
+    t.string   "reference",  limit: 255, null: false
     t.integer  "project_id", limit: 4
     t.integer  "user_id",    limit: 4
     t.datetime "deleted_at"
