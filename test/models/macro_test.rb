@@ -15,7 +15,7 @@ describe Macro do
     end
 
     it "is empty without commands" do
-      subject.macro_commands.clear
+      subject.command_associations.clear
       subject.command.must_equal('')
     end
   end
