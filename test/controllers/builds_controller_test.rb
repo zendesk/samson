@@ -43,6 +43,15 @@ describe BuildsController do
         assert_response :ok
         @response.body.must_include default_build.label
       end
+
+      it 'displays the output of docker builds' do
+        default_build.create_docker_job
+        default_build.save!
+
+        get :show, project_id: project.to_param, id: default_build.id
+        assert_response :ok
+        @response.body.must_include 'Docker Build Output'
+      end
     end
 
     describe 'creating a new build' do
