@@ -79,8 +79,10 @@ class Build < ActiveRecord::Base
 
     return if errors.include?(:git_ref) || errors.include?(:git_sha)
 
-    project.with_lock(holder: 'Build reference validation') do
-      project.repository.setup_local_cache!
+    unless project.repository.last_pulled
+      project.with_lock(holder: 'Build reference validation') do
+        project.repository.setup_local_cache!
+      end
     end
 
     if git_ref.present?

@@ -1,7 +1,7 @@
 class GitRepository
   include ::NewRelic::Agent::MethodTracer
 
-  attr_reader :repository_url, :repository_directory
+  attr_reader :repository_url, :repository_directory, :last_pulled
   attr_accessor :executor
 
   # The directory in which repositories should be cached.
@@ -34,6 +34,7 @@ class GitRepository
   end
 
   def clone!(from: repository_url, to: repo_cache_dir, mirror: false)
+    @last_pulled = Time.now if from == repository_url
     if mirror
       executor.execute!("git -c core.askpass=true clone --mirror #{from} #{to}")
     else
@@ -43,11 +44,14 @@ class GitRepository
   add_method_tracer :clone!
 
   def update!
+    @last_pulled = Time.now
     executor.execute!("cd #{repo_cache_dir}", 'git fetch -p')
   end
   add_method_tracer :update!
 
   def commit_from_ref(git_reference, length: 7)
+    setup_local_cache! unless locally_cached?
+
     Dir.chdir(repo_cache_dir) do
       # brakeman thinks this is unsafe ... https://github.com/presidentbeef/brakeman/issues/851
       description = IO.popen(['git', 'describe', '--long', '--tags', '--all', "--abbrev=#{length || 40}", git_reference], err: [:child, :out]) do |io|
@@ -61,6 +65,8 @@ class GitRepository
   end
 
   def tag_from_ref(git_reference)
+    setup_local_cache! unless locally_cached?
+
     Dir.chdir(repo_cache_dir) do
       tag = IO.popen(['git', 'describe', '--tags', git_reference], err: [:child, :out]) do |io|
         io.read.strip
