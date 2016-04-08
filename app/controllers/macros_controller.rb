@@ -2,7 +2,8 @@ class MacrosController < ApplicationController
   include ProjectLevelAuthorization
 
   before_action :authorize_project_deployer!
-  before_action :authorize_project_admin!, only: [:new, :create, :edit, :update, :destroy]
+  before_action :authorize_project_admin!, only: [:new, :create, :edit, :update]
+  before_action :authorize_super_admin!, only: [:destroy]
   before_action :find_macro, only: [:edit, :update, :execute, :destroy]
 
   def index
@@ -47,12 +48,8 @@ class MacrosController < ApplicationController
   end
 
   def destroy
-    if @macro.user == current_user || current_user.is_super_admin?
-      @macro.soft_delete!
-      redirect_to project_macros_path(@project)
-    else
-      head :unauthorized
-    end
+    @macro.soft_delete!
+    redirect_to project_macros_path(@project)
   end
 
   private
