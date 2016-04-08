@@ -8,7 +8,6 @@ class Macro < ActiveRecord::Base
     through: :command_associations, auto_include: false
 
   belongs_to :project
-  belongs_to :user
 
   validates :name, presence: true, uniqueness: { scope: [:project, :deleted_at] }
   validates :reference, presence: true
