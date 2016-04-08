@@ -106,6 +106,7 @@ describe Integrations::TravisController do
             project.deploys.must_equal([])
           end
         end
+
         describe "with [skip deploy] in the message" do
           let(:commit_message) { 'A change but this time [skip deploy] is included' }
 
