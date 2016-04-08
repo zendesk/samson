@@ -45,7 +45,7 @@ describe Stage do
   describe '#command' do
     describe 'adding a built command' do
       before do
-        subject.stage_commands.build(command:
+        subject.command_associations.build(command:
           Command.new(command: 'test')
         )
 
