@@ -48,7 +48,7 @@
     <h2>Docker Build Output</h2>
 
     <div id="output" data-stream-url="<%= stream_path(job) %>" data-desktop-notify="<%= current_user.desktop_notify? %>">
-      <%= render partial: 'jobs/output', locals: { job: job } %>
+      <%= render partial: 'shared/output', locals: { job: job, deployable: job, hide: false } %>
       <% if docker_build_running? @build %>
         <%= javascript_tag do %>
           toggleOutputToolbar();
