@@ -11,6 +11,8 @@ class DockerBuilderService
   end
 
   def run!(image_name: nil, push: false)
+    build.docker_build_job.try(:destroy) # if there's an old build job, delete it
+
     job = build.create_docker_job
     build.save!
 
@@ -19,10 +21,10 @@ class DockerBuilderService
       @output_buffer = execution.output
       repository.executor = execution.executor
 
-      if build_image(tmp_dir) && push
-        push_image(image_name)
+      if build_image(tmp_dir)
+        push_image(image_name) if push
+        build.docker_image.remove(force: true)
       end
-      build.docker_image.remove(force: true)
     end
 
     job_execution.on_complete { send_after_notifications }

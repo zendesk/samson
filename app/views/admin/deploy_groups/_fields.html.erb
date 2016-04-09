@@ -21,7 +21,7 @@
   </div>
 
   <% if Samson::Hooks.active_plugin?('kubernetes') %>
-    <%= form.fields_for :cluster_deploy_group do |cluster_form| %>
+    <%= form.fields_for :cluster_deploy_group, include_id: false do |cluster_form| %>
       <div class="form-group">
         <%= cluster_form.label :kubernetes_cluster_id, "Kubernetes Cluster", class: "col-lg-2 control-label" %>
         <div class="col-lg-4">
