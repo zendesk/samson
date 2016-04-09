@@ -1,7 +1,5 @@
 ENV["RAILS_ENV"] ||= "test"
 
-ENV['PROJECT_CREATED_NOTIFY_ADDRESS'] = 'blah@example.com'
-
 if ENV['CODECLIMATE_REPO_TOKEN']
   require 'codeclimate-test-reporter'
   CodeClimate::TestReporter.start
