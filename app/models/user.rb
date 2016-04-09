@@ -3,6 +3,8 @@ require 'digest/md5'
 
 class User < ActiveRecord::Base
   include Searchable
+  include HasRole
+
   TIME_FORMATS = ['local', 'utc', 'relative'].freeze
 
   has_soft_deletion default_scope: true
@@ -85,20 +87,6 @@ class User < ActiveRecord::Base
 
   def project_role_for(project)
     user_project_roles.find_by(project: project)
-  end
-
-  def role
-    Role.find(role_id)
-  end
-
-  Role.all.each do |role|
-    define_method "is_#{role.name}?" do
-      role_id >= role.id
-    end
-
-    define_method "is_not_#{role.name}?" do
-      role_id < role.id
-    end
   end
 
   private

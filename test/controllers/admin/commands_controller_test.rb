@@ -169,7 +169,7 @@ describe Admin::CommandsController do
       end
 
       it 'renders for local command as project-admin' do
-        UserProjectRole.create!(user: users(:deployer), project: projects(:test), role_id: ProjectRole::ADMIN.id)
+        UserProjectRole.create!(user: users(:deployer), project: projects(:test), role_id: Role::ADMIN.id)
         get :edit, id: commands(:echo).id
         assert_template :edit
       end
@@ -189,7 +189,7 @@ describe Admin::CommandsController do
       end
 
       it 'updates for local command as project-admin' do
-        UserProjectRole.create!(user: user, project: projects(:test), role_id: ProjectRole::ADMIN.id)
+        UserProjectRole.create!(user: user, project: projects(:test), role_id: Role::ADMIN.id)
         patch :update, id: commands(:echo).id, command: attributes, format: :json
         assert_response :ok
       end

@@ -8,14 +8,15 @@ class AccessRequestsController < ApplicationController
   def new
     session[:access_request_back_to] ||= request.referer || root_path
     @projects = Project.all.order(:name)
-    @roles = ProjectRole.all
+    @roles = Role.all
   end
 
   def create
     AccessRequestMailer.access_request_email(
-        request.base_url, current_user,
-        params.require(:manager_email), params.require(:reason),
-        params.require(:project_ids), params.require(:role_id)).deliver_now
+      request.base_url, current_user,
+      params.require(:manager_email), params.require(:reason),
+      params.require(:project_ids), params.require(:role_id)
+    ).deliver_now
     current_user.update!(access_request_pending: true)
     flash[:success] = 'Access request email sent.'
     redirect_to session.delete(:access_request_back_to)
