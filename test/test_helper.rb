@@ -10,6 +10,10 @@ elsif ENV['COVERAGE']
   SimpleCov.start 'rails'
 end
 
+# rake adds these, but we don't need them / want to be in a consistent environment
+$LOAD_PATH.delete 'lib'
+$LOAD_PATH.delete 'test'
+
 require_relative '../config/environment'
 require 'rails/test_help'
 require 'minitest/rails'
@@ -129,6 +133,10 @@ class ActiveSupport::TestCase
     $VERBOSE = old
   end
 
+  undef :assert_nothing_raised
+  class << self
+    undef :test
+  end
 end
 
 Mocha::Expectation.class_eval do
