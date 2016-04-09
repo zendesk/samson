@@ -30,7 +30,7 @@
   <li class="<%= 'active' if active == 'changelog' %>">
     <%= link_to "Changelog", project_changelog_path(project) %>
   </li>
-<% if is_user_admin_for_project? %>
+<% if is_admin_for_project? %>
   <li class="<%= 'active' if active == 'settings' %>">
     <%= link_to "Settings", edit_project_path(project) %>
   </li>

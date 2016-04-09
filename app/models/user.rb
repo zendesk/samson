@@ -2,7 +2,6 @@ require 'soft_deletion'
 require 'digest/md5'
 
 class User < ActiveRecord::Base
-  include HasRole
   include Searchable
   TIME_FORMATS = ['local', 'utc', 'relative'].freeze
 
@@ -77,15 +76,29 @@ class User < ActiveRecord::Base
   end
 
   def is_admin_for?(project)
-    project_role_for(project).try(:is_admin?)
+    is_admin? || !!project_role_for(project).try(:is_admin?)
   end
 
   def is_deployer_for?(project)
-    project_role_for(project).try(:is_deployer?)
+    is_deployer? || !!project_role_for(project).try(:is_deployer?)
   end
 
   def project_role_for(project)
     user_project_roles.find_by(project: project)
+  end
+
+  def role
+    Role.find(role_id)
+  end
+
+  Role.all.each do |role|
+    define_method "is_#{role.name}?" do
+      role_id >= role.id
+    end
+
+    define_method "is_not_#{role.name}?" do
+      role_id < role.id
+    end
   end
 
   private
