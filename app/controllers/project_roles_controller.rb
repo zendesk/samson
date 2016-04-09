@@ -6,7 +6,7 @@ class ProjectRolesController < ApplicationController
   before_action :authorize_project_admin!, only: [:create, :update]
 
   def index
-    render json: ProjectRole.all, root: false
+    render json: UserProjectRole::ROLES, root: false
   end
 
   def create
