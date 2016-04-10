@@ -80,13 +80,6 @@ class SessionsController < ApplicationController
     redirect_to request.env['omniauth.origin'] || root_path
   end
 
-  def restrict_end_users
-    if auth_hash.info.role == 'end-user' || auth_hash.info.email.blank?
-      flash[:error] = 'You are unauthorized.'
-      redirect_to login_path
-    end
-  end
-
   def login(options = {})
     user = User.create_or_update_from_hash(options.merge(
       external_id: "#{strategy.name}-#{auth_hash.uid}",

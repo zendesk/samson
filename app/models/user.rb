@@ -46,7 +46,7 @@ class User < ActiveRecord::Base
     # attributes are always a string hash
     attributes = user.attributes.merge(hash.stringify_keys) do |key, old, new|
       if key == 'role_id'
-        if !User.exists?
+        if !User.exists? # first user will be the super admin
           Role::SUPER_ADMIN.id
         elsif new && (user.new_record? || new >= old)
           new
