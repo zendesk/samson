@@ -2,7 +2,7 @@ class StagesController < ApplicationController
   include ProjectLevelAuthorization
   include StagePermittedParams
 
-  skip_before_action :login_users, if: :badge?
+  skip_before_action :login_user, if: :badge?
 
   before_action :authorize_project_deployer!, unless: :badge?
   before_action :authorize_project_admin!, except: [:index, :show]

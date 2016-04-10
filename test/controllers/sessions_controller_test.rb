@@ -50,7 +50,7 @@ describe SessionsController do
     end
 
     it 'logs the user in' do
-      @controller.current_user.must_equal(user)
+      @controller.send(:current_user).must_equal(user)
     end
 
     it 'redirects to the root path' do
@@ -69,7 +69,7 @@ describe SessionsController do
       let(:role_id) { nil }
 
       it 'is not allowed to view anything' do
-        @controller.current_user.must_be_nil
+        @controller.send(:current_user).must_be_nil
         assert_template :new
         request.flash[:error].wont_be_nil
       end
@@ -104,7 +104,7 @@ describe SessionsController do
       end
 
       it 'logs the user in' do
-        @controller.current_user.must_equal(user)
+        @controller.send(:current_user).must_equal(user)
       end
 
       it 'redirects to the root path' do
@@ -127,7 +127,7 @@ describe SessionsController do
       end
 
       it 'does not log the user in' do
-        @controller.current_user.must_be_nil
+        @controller.send(:current_user).must_be_nil
       end
 
       it "renders" do
@@ -168,7 +168,7 @@ describe SessionsController do
       end
 
       it 'logs the user in' do
-        @controller.current_user.must_equal(user)
+        @controller.send(:current_user).must_equal(user)
       end
 
       it 'redirects to the root path' do
@@ -191,7 +191,7 @@ describe SessionsController do
       end
 
       it 'does not log the user in' do
-        @controller.current_user.must_be_nil
+        @controller.send(:current_user).must_be_nil
       end
 
       it "renders" do

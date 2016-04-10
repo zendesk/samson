@@ -31,4 +31,10 @@ describe "cleanliness" do
     end.compact
     bad.must_equal []
   end
+
+  it "does not have actions on base controller" do
+    found = ApplicationController.action_methods.to_a
+    found.reject { |a| a =~ /^(_conditional_callback_around_|_callback_before_)/ } - ["flash"]
+    found.must_equal []
+  end
 end
