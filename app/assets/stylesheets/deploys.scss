@@ -136,12 +136,15 @@ td.status {
   margin-top: 10px;
 }
 
-#messages > span {
-  display: inline-block;
-  width: 100%;
-  cursor: pointer;
+#messages {
+  white-space: pre-wrap;
+  > span {
+    display: inline-block;
+    width: 100%;
+    cursor: pointer;
 
-  &.highlighted {
-    background-color: #0700d6;
+    &.highlighted {
+      background-color: #0700d6;
+    }
   }
 }

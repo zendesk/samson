@@ -294,33 +294,48 @@ $(function () {
       }
     }
 
-    function scrollToHash() {
-      removeHighlight();
-      var nextLines = linesFromHash();
-      addHighlight.apply(this, nextLines);
+    function highlightAndScroll() {
+      highlight();
+      scroll();
+    }
+
+    function scroll() {
       if ($highlightedLines) {
         $highlightedLines.get(0).scrollIntoView(true);
       }
     }
 
-    function indexOfLine($line) {
-      return $line.index(LINES_SELECTOR) + 1;
+    function highlight() {
+      removeHighlight();
+      var nextLines = linesFromHash();
+      addHighlight.apply(this, nextLines);
+    }
+
+    function indexOfLine() {
+      // the jQuery map passes an index before the element
+      var line = arguments[arguments.length - 1];
+      return $(line).index(LINES_SELECTOR) + 1;
     }
 
     $('#messages').on('click', 'span', function(event) {
       event.preventDefault();
       var clickedNumber = indexOfLine($(event.currentTarget));
       var shift = event.shiftKey;
-      if (shift && $highlightedLines.length === 1) {
-        var requestedLines = [indexOfLine($highlightedLines), clickedNumber].sort();
-        window.location.hash = 'L' + requestedLines[0] + '-L' + requestedLines[1];
+      if (shift && $highlightedLines.length) {
+        var requestedLines = $highlightedLines.map(indexOfLine);
+        requestedLines.push(clickedNumber);
+        requestedLines = requestedLines.sort(function(a, b) {
+          return a - b;
+        });
+        var end = requestedLines.length - 1;
+        window.location.hash = 'L' + requestedLines[0] + '-L' + requestedLines[end];
       } else {
         window.location.hash = 'L' + clickedNumber;
       }
+      highlight();
     });
 
-    $(window).on('hashchange', scrollToHash);
-    scrollToHash();
+    highlightAndScroll();
   }());
 });
 
