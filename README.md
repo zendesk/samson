@@ -1,4 +1,4 @@
-![](https://github.com/zendesk/samson/raw/sdavidovitz/logo/app/assets/images/logo_light.png)
+![](https://github.com/zendesk/samson/raw/master/app/assets/images/logo_light.png)
 
 [![Build Status](https://travis-ci.org/zendesk/samson.svg?branch=master)](https://travis-ci.org/zendesk/samson)
 [![Code Climate](https://codeclimate.com/repos/53340bef6956800b9000675c/badges/c7c44f80cff049aef8f7/gpa.svg)](https://codeclimate.com/repos/53340bef6956800b9000675c/feed)
