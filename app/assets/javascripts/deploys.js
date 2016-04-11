@@ -260,6 +260,68 @@ $(function () {
       $("#output-follow").click();
     }
   });
+
+  (function() {
+    var HASH_REGEX = /^#L(\d+)(?:-L(\d+))?$/;
+    var $highlightedLines;
+    var LINES_SELECTOR = '#messages span';
+
+    function linesFromHash() {
+      var result = HASH_REGEX.exec(window.location.hash);
+      if (result === null) {
+        return [];
+      } else {
+        return result.slice(1);
+      }
+    }
+
+    function addHighlight(start, end) {
+      if (!start) {
+        return;
+      }
+      start = Number(start) - 1;
+      if (end) {
+        end = Number(end);
+      } else {
+        end = start + 1;
+      }
+      $highlightedLines = $(LINES_SELECTOR).slice(start, end).addClass('highlighted');
+    }
+
+    function removeHighlight() {
+      if ($highlightedLines) {
+        $highlightedLines.removeClass('highlighted');
+      }
+    }
+
+    function scrollToHash() {
+      removeHighlight();
+      var nextLines = linesFromHash();
+      addHighlight.apply(this, nextLines);
+      if ($highlightedLines) {
+        $highlightedLines.get(0).scrollIntoView(true);
+      }
+    }
+
+    function indexOfLine($line) {
+      return $line.index(LINES_SELECTOR) + 1;
+    }
+
+    $('#messages').on('click', 'span', function(event) {
+      event.preventDefault();
+      var clickedNumber = indexOfLine($(event.currentTarget));
+      var shift = event.shiftKey;
+      if (shift && $highlightedLines.length === 1) {
+        var requestedLines = [indexOfLine($highlightedLines), clickedNumber].sort();
+        window.location.hash = 'L' + requestedLines[0] + '-L' + requestedLines[1];
+      } else {
+        window.location.hash = 'L' + clickedNumber;
+      }
+    });
+
+    $(window).on('hashchange', scrollToHash);
+    scrollToHash();
+  }());
 });
 
 function toggleOutputToolbar() {
