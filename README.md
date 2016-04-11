@@ -1,5 +1,3 @@
-**Use of this software is subject to important terms and conditions as set forth in the License file**
-
 ![](https://github.com/zendesk/samson/raw/sdavidovitz/logo/app/assets/images/logo_light.png)
 
 [![Build Status](https://travis-ci.org/zendesk/samson.svg?branch=master)](https://travis-ci.org/zendesk/samson)
@@ -57,7 +55,11 @@ Improvements are always welcome. Please follow these steps to contribute
 
 ### Team
 
-Core team is [@steved](https://github.com/steved), [@dasch](https://github.com/dasch), [@jwswj](https://github.com/jwswj), [@henders](https://github.com/henders),
+Core team is [@dasch](https://github.com/dasch), [@jwswj](https://github.com/jwswj), [@henders](https://github.com/henders),
 [@grosser](https://github.com/grosser), [@jonmoter](https://github.com/jonmoter), [@msufa](https://github.com/msufa), [@sbrnunes](https://github.com/sbrnunes).
 
 Support can be found on our [mailing list](https://groups.google.com/forum/#!forum/samson-users) `samson-users@googlegroups.com`.
+
+### License
+
+Use of this software is subject to important terms and conditions as set forth in the [LICENSE](LICENSE) file
