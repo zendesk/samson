@@ -206,7 +206,7 @@ describe KubernetesReleasesController do
     result.wont_be_nil
     result = result.with_indifferent_access
     result[:release][:build][:id].must_equal build.id
-    result[:release][:user][:name].must_equal @controller.current_user.name
+    result[:release][:user][:name].must_equal @controller.send(:current_user).name
     result[:release][:deploy_groups].size.must_equal 1
     result[:release][:deploy_groups][0][:id].must_equal deploy_group.id
     result[:release][:deploy_groups][0][:name].must_equal deploy_group.name

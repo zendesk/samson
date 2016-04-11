@@ -1,28 +1,28 @@
 require 'omniauth/github_authorization'
 
 class SessionsController < ApplicationController
-  skip_before_action :login_users
+  skip_before_action :login_user
   skip_before_action :verify_authenticity_token, only: [ :ldap ]
 
   def new
-    if logged_in?
+    if current_user
       redirect_to root_path
     end
   end
 
   def github
     return show_login_restriction unless role_id = github_authorization.role_id
-    login_user(role_id: role_id)
+    login(role_id: role_id)
   end
 
   def google
     return show_login_restriction unless allowed_to_login
-    login_user(role_id: Role::VIEWER.id)
+    login(role_id: Role::VIEWER.id)
   end
 
   def ldap
     return show_login_restriction unless allowed_to_login
-    login_user(role_id: Role::VIEWER.id)
+    login(role_id: Role::VIEWER.id)
   end
 
   def failure
@@ -87,7 +87,7 @@ class SessionsController < ApplicationController
     end
   end
 
-  def login_user(options = {})
+  def login(options = {})
     user = User.create_or_update_from_hash(options.merge(
       external_id: "#{strategy.name}-#{auth_hash.uid}",
       name: auth_hash.info.name,
