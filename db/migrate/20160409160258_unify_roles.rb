@@ -23,6 +23,6 @@ class UnifyRoles < ActiveRecord::Migration
     end
 
     # remove unnecessary default role
-    UserProjectRole.where('role_id not in (?)', map.values).delete_all
+    UserProjectRole.where('role_id not in (?)', directions.values).delete_all
   end
 end
