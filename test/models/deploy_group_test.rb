@@ -57,6 +57,24 @@ describe DeployGroup do
     end
   end
 
+  describe '#natural_order' do
+    def sort(list)
+      list.map { |n| DeployGroup.new(name: n) }.sort_by(&:natural_order).map(&:name)
+    end
+
+    it "sorts mixed" do
+      sort(['a11', 'a1', 'a22', 'b1', 'a12', 'a9']).must_equal ['a1', 'a9', 'a11', 'a12', 'a22', 'b1']
+    end
+
+    it "sorts pure numbers" do
+      sort(['11', '1', '22', '12', '9']).must_equal ['1', '9','11', '12', '22']
+    end
+
+    it "sorts pure words" do
+      sort(['bb', 'ab', 'aa', 'a', 'b']).must_equal ['a', 'aa', 'ab', 'b', 'bb']
+    end
+  end
+
   it_expires_stage :save
   it_expires_stage :destroy
   it_expires_stage :soft_delete
