@@ -1,5 +1,7 @@
 require_relative '../test_helper'
 
+SingleCov.covered!
+
 describe JobsController do
   let(:project) { projects(:test) }
   let(:stage) { stages(:test_staging) }
@@ -10,8 +12,24 @@ describe JobsController do
   let(:execute_called) { [] }
 
   as_a_viewer do
+    describe "#enabled" do
+      it "is no_content when enabled" do
+        JobExecution.expects(:enabled).returns true
+        get :enabled
+        assert_response :no_content
+      end
+
+      it "is accepted when disabled" do
+        refute JobExecution.enabled
+        get :enabled
+        assert_response :accepted
+      end
+    end
+  end
+
+  as_a_viewer do
     describe "a GET to :index" do
-      setup { get :index, project_id: project.to_param }
+      before { get :index, project_id: project.to_param }
 
       it "renders the template" do
         assert_template :index
@@ -20,7 +38,7 @@ describe JobsController do
 
     describe "a GET to :show" do
       describe 'with a job' do
-        setup { get :show, project_id: project.to_param, id: job }
+        before { get :show, project_id: project.to_param, id: job }
 
         it "renders the template" do
           assert_template :show
@@ -28,7 +46,7 @@ describe JobsController do
       end
 
       describe 'with a running job' do
-        setup { get :show, project_id: project.to_param, id: jobs(:running_test) }
+        before { get :show, project_id: project.to_param, id: jobs(:running_test) }
 
         it "renders the template" do
           assert_template :show
@@ -42,7 +60,7 @@ describe JobsController do
       end
 
       describe "with format .text" do
-        setup { get :show, format: :text, project_id: project.to_param, id: job }
+        before { get :show, format: :text, project_id: project.to_param, id: job }
 
         it "responds with a plain text file" do
           assert_equal response.content_type, "text/plain"
@@ -61,82 +79,28 @@ describe JobsController do
   as_a_deployer do
     unauthorized :post, :create, project_id: :foo
     unauthorized :delete, :destroy, project_id: :foo, id: 1
-  end
-
-  as_a_admin do
-    setup do
-      JobService.stubs(:new).with(project, admin).returns(job_service)
-      job_service.stubs(:execute!).capture(execute_called).returns(job)
-    end
-
-    describe "a POST to :create" do
-      setup do
-        JobExecution.stubs(:start_job)
-
-        post :create, commands: {ids: []}, job: {
-            command: command,
-            commit: "master"
-          }, project_id: project.to_param
-      end
-
-      let(:params)
-
-      it "redirects to the job path" do
-        assert_redirected_to project_job_path(project, job)
-      end
-
-      it "creates a job" do
-        assert_equal [["master", [], command]], execute_called
-      end
-    end
-
-    describe "a DELETE to :destroy" do
-      describe "with a job owned by the admin" do
-        setup do
-          delete :destroy, project_id: project.to_param, id: job
-        end
-
-        it "responds with 302" do
-          response.status.must_equal(302)
-          flash.must_be_empty
-        end
-      end
-
-      describe "with a job not owned by the admin" do
-        let(:another_job) { jobs(:succeeded_test) }
-
-        setup do
-          delete :destroy, project_id: project.to_param, id: another_job
-        end
-
-        it "responds with 302" do
-          response.status.must_equal(302)
-          flash.must_be_empty
-        end
-      end
-    end
+    # FIXME: I should be able to stop my own jobs
   end
 
   as_a_project_admin do
-    let(:project_admin) { users(:project_admin) }
-    let(:job) { Job.create!(command: command, project: project, user: project_admin) }
-
-    setup do
-      JobService.stubs(:new).with(project, project_admin).returns(job_service)
-      job_service.stubs(:execute!).capture(execute_called).returns(job)
+    describe "#new" do
+      it "renders" do
+        get :new, project_id: project
+        assert_template :new
+      end
     end
 
-    describe "a POST to :create" do
-      setup do
+    describe "#create" do
+      before do
+        JobService.stubs(:new).with(project, user).returns(job_service)
+        job_service.stubs(:execute!).capture(execute_called).returns(job)
         JobExecution.stubs(:start_job)
 
         post :create, commands: {ids: []}, job: {
-            command: command,
-            commit: "master"
-          }, project_id: project.to_param
+          command: command,
+          commit: "master"
+        }, project_id: project.to_param
       end
-
-      let(:params)
 
       it "redirects to the job path" do
         assert_redirected_to project_job_path(project, job)
@@ -145,30 +109,36 @@ describe JobsController do
       it "creates a job" do
         assert_equal [["master", [], command]], execute_called
       end
+
+      describe "when invalid" do
+        let("job") { Job.new }
+
+        it "renders" do
+          assert_template :new
+        end
+      end
     end
 
     describe "a DELETE to :destroy" do
-      describe "with a job owned by the project admin" do
-        setup do
+      describe "when being a admin of the project" do
+        before do
           delete :destroy, project_id: project.to_param, id: job
         end
 
-        it "responds with 302" do
-          response.status.must_equal(302)
+        it "deletes the job" do
+          assert_redirected_to [project, job]
           flash.must_be_empty
         end
       end
 
-      describe "with a job not owned by the project admin" do
-        let(:another_job) { jobs(:succeeded_test) }
-
-        setup do
-          delete :destroy, project_id: project.to_param, id: another_job
+      describe "when not being an admin of the project" do
+        before do
+          UserProjectRole.delete_all
+          delete :destroy, project_id: project.to_param, id: job
         end
 
-        it "responds with 302" do
-          response.status.must_equal(302)
-          flash.must_be_empty
+        it "does not delete the job" do
+          assert_unauthorized
         end
       end
     end

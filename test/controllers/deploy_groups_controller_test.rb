@@ -1,5 +1,7 @@
 require_relative '../test_helper'
 
+SingleCov.covered!
+
 describe DeployGroupsController do
   let(:deploy_group) { deploy_groups(:pod1) }
   let(:production_deploy) { deploys(:succeeded_production_test) }

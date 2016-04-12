@@ -1,5 +1,7 @@
 require_relative '../../test_helper'
 
+SingleCov.covered! percent: 94
+
 describe Integrations::TravisController do
   let(:sha) { "123abc" }
   let(:project) { projects(:test) }

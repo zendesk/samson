@@ -11,10 +11,6 @@ class DashboardsController < ApplicationController
 
   private
 
-  def ordered_projects
-    Project.ordered_for_user(current_user).with_deploy_groups
-  end
-
   def find_environment
     @environment = Environment.find_by_param!(params[:id])
   end

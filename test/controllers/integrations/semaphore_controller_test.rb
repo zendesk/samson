@@ -1,5 +1,7 @@
 require_relative '../../test_helper'
 
+SingleCov.covered!
+
 describe Integrations::SemaphoreController do
   extend IntegrationsControllerTestHelper
 

@@ -1,5 +1,7 @@
 require_relative '../../test_helper'
 
+SingleCov.covered! percent: 86
+
 describe Integrations::TddiumController do
   extend IntegrationsControllerTestHelper
 

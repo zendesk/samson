@@ -1,5 +1,7 @@
 require_relative '../test_helper'
 
+SingleCov.covered!
+
 describe LocksController do
   let(:stage) { stages(:test_staging) }
   let(:lock) { stage.create_lock! user: users(:deployer) }
@@ -7,21 +9,40 @@ describe LocksController do
 
   before { request.headers['HTTP_REFERER'] = '/back' }
 
+  describe "#for_global_lock?" do
+    it "raises on unsupported action" do
+      @controller.stubs(action_name: 'show')
+      assert_raises RuntimeError do
+        @controller.send(:for_global_lock?)
+      end
+    end
+  end
+
+  describe "#require_project" do
+    it "raises on unsupported action" do
+      @controller.stubs(action_name: 'show')
+      assert_raises RuntimeError do
+        @controller.send(:require_project)
+      end
+    end
+  end
+
   as_a_viewer do
     unauthorized :post, :create
 
-    it 'responds with unauthorized when doing a post to create a local lock' do
+    it 'is unauthorized when doing a post to create a local lock' do
       post :create, lock: {stage_id: stage.id}
-      @unauthorized.must_equal true, 'Request was not marked unauthorized'
+      assert_unauthorized
     end
 
     it 'is unauthorized when doing a delete to destroy a local lock' do
       delete :destroy, id: lock.id
-      @unauthorized.must_equal true, 'Request was not marked unauthorized'
+      assert_unauthorized
     end
 
     it 'is unauthorized when doing a delete to destroy a global lock' do
       delete :destroy, id: global_lock.id
+      assert_unauthorized
     end
   end
 
@@ -30,7 +51,7 @@ describe LocksController do
 
     it 'responds with unauthorized when doing a post to create a global lock' do
       post :create, lock: {stage_id: '', description: 'DESC'}
-      @unauthorized.must_equal true, 'Request was not marked unauthorized'
+      assert_unauthorized
     end
 
     describe 'POST to #create' do

@@ -1,5 +1,7 @@
 require_relative '../test_helper'
 
+SingleCov.covered!
+
 describe StarsController do
   let(:current_user) { users(:viewer) }
   let(:project) { projects(:test) }

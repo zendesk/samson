@@ -36,9 +36,9 @@ class SingleCov
 
     def uncovered!(file)
       message = if File.exist?(file)
-        "#{file} does not exist and cannot be covered"
-      else
         "#{file} was not covered during tests, possibly loaded before test start ?"
+      else
+        "#{file} does not exist and cannot be covered"
       end
       warn message
       exit 1
