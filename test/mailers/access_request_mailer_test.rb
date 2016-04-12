@@ -1,5 +1,7 @@
 require_relative '../test_helper'
 
+SingleCov.covered!
+
 describe AccessRequestMailer do
   include AccessRequestTestSupport
 
