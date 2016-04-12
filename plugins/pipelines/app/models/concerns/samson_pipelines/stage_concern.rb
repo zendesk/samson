@@ -1,6 +1,6 @@
 module SamsonPipelines::StageConcern
   def production?
-    super || next_stages.any?(&:production?)
+    super || all_next_stages.any? { |next_stage| next_stage.production? && !next_stage.no_code_deployed? }
   end
 
   def next_stages
@@ -9,15 +9,8 @@ module SamsonPipelines::StageConcern
 
   # Needs to find all the possible stages in case this is a pipeline of pipelines as each subsequent stage
   # could have valid next_stage_ids
-  def all_stages
-    return [] if next_stage_ids.empty?
-    stage_collection = []
-    stages = Stage.find(next_stage_ids)
-    stages.each do |stage|
-      stage_collection.push(stage.id)
-      stage_collection += recursive_next_stage_ids
-    end
-    Stage.find(stage_collection);
+  def all_next_stages
+    Stage.find(recursive_next_stage_ids);
   end
 
   def recursive_next_stage_ids
@@ -26,7 +19,7 @@ module SamsonPipelines::StageConcern
   end
 
   def deploy_requires_approval?
-    super || all_stages.any? { |next_stage| (next_stage.production? && !next_stage.no_code_deployed?) }
+      super || all_next_stages.any?(&:deploy_requires_approval?)
   end
 
   protected
