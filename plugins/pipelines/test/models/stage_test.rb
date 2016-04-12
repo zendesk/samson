@@ -14,6 +14,7 @@ describe Stage do
 
   before do
     Project.any_instance.stubs(:valid_repository_url).returns(true)
+    BuddyCheck.stubs(:enabled?).returns(true)
     project.stages = [stage1, stage2, stage3]
   end
 
@@ -48,30 +49,24 @@ describe Stage do
 
   describe '#deploy_requires_approval?' do
     before do
+      BuddyCheck.stubs(:enabled?).returns(true)
       stage2.update!(next_stage_ids: [])
       stage2.update!(production: true)
+      stage2.update!(deploy_groups: [ production ])
+      stage2.update!(no_code_deployed: true)
       stage1.update!(next_stage_ids: [ stage2.id ])
     end
 
-    it 'requires approval if a future stage does not have no_code_deployed' do
-      stage2.update!(no_code_deployed: false)
-      stage1.deploy_requires_approval?.must_equal true
-    end
-
     it 'does not require approval if a future stage has no_code_deployed' do
-      stage2.update!(no_code_deployed: true)
       stage2.deploy_requires_approval?.must_equal false
     end
 
-    it 'does require approval with production deploy group and no_code_deployed' do
-      stage2.deploy_groups = [ production ]
+    it 'requires approval with production deploy group and no_code_deployed' do
       stage2.update!(no_code_deployed: false)
-      stage1.update!(next_stage_ids: [stage2.id ])
       stage1.deploy_requires_approval?.must_equal true
     end
 
     it 'does not require approval with production deploy group and no_code_deployed' do
-      stage2.deploy_groups = [ production ]
       stage2.update!(no_code_deployed: true)
       stage1.update!(next_stage_ids: [stage2.id ])
       stage1.deploy_requires_approval?.must_equal false
