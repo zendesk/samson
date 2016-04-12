@@ -52,7 +52,7 @@ Samson::Application.routes.draw do
 
     resources :users, only: [:index, :update]
 
-    resources :project_roles, only: [:create, :update]
+    resources :project_roles, only: [:create]
 
     member do
       get :deploy_group_versions
@@ -117,8 +117,6 @@ Samson::Application.routes.draw do
   get '/ping', to: 'ping#show'
 
   resources :access_requests, only: [:new, :create]
-
-  get '/project_roles', to: 'project_roles#index'
 
   mount SseRailsEngine::Engine, at: '/streaming'
 end
