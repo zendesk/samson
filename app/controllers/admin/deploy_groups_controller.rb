@@ -4,7 +4,7 @@ class Admin::DeployGroupsController < ApplicationController
   before_action :deploy_group, only: [:show, :edit, :update, :destroy, :deploy_all, :deploy_all_now]
 
   def index
-    @deploy_groups = DeployGroup.all
+    @deploy_groups = DeployGroup.all.sort_by(&:natural_order)
   end
 
   def new

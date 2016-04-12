@@ -6,7 +6,7 @@
     </td>
 
     <% if DeployGroup.enabled? %>
-      <td><%= stage.deploy_groups.map(&:name).join(', ') %></td>
+      <td><%= stage.deploy_groups.sort_by(&:natural_order).map(&:name).join(', ') %></td>
     <% end %>
 
     <% if (deploy = stage.last_successful_deploy) %>
