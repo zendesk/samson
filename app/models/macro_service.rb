@@ -8,7 +8,7 @@ class MacroService
   def execute!(macro)
     @project.jobs.create(
       user: @user,
-      command: macro.macro_command,
+      command: macro.command,
       commit: macro.reference
     )
   end

@@ -4,7 +4,7 @@ class DeploysController < ApplicationController
   skip_before_action :require_project, only: [:active, :active_count, :recent, :changeset]
 
   before_action :authorize_project_deployer!, only: [:new, :create, :confirm, :buddy_check, :destroy]
-  before_action :find_deploy, except: [:index, :recent, :active, :active_count, :new, :create, :confirm]
+  before_action :find_deploy, except: [:index, :recent, :active, :active_count, :new, :create, :confirm, :search]
   before_action :stage, only: :new
 
   def index
@@ -41,6 +41,60 @@ class DeploysController < ApplicationController
         render json: Deploy.page(params[:page]).per(30)
       end
       format.csv { redirect_to new_csv_export_path }
+    end
+  end
+
+  # Takes the same params that are used by the client side filtering
+  # on the recent deploys pages.
+  # Returrns a paginated json object or CSV of deploys that people are
+  # interested in rather than doing client side filtering.
+  # params:
+  #   * deployer (name of the user that started the job(s), this is a fuzzy match
+  #   * project_name (name of the project)
+  #   * production (boolean, is this in proudction or not)
+  #   * status (what is the status of this job failed|running| etc)
+
+  def search
+    if (params[:status] && !Job.valid_status?(params[:status]))
+      render json: { errors: "invalid status given" }, status: 400
+      return
+    end
+
+    if params[:deployer].present?
+      users = User.where("name LIKE ?", "%#{ActiveRecord::Base.send(:sanitize_sql_like, params[:deployer])}%").pluck(:id)
+    end
+
+    if params[:project_name].present?
+      projects = Project.where(name: params[:project_name]).pluck(:id)
+    end
+
+    if users || params[:status]
+      jobs = Job
+      jobs = jobs.where(user: users) if users
+      jobs = jobs.where(status: params[:status]) if params[:status]
+    end
+
+    if params[:production].present? || projects
+      stages = Stage
+      stages = stages.where(project: projects) if projects
+      if params[:production].present?
+        production = ActiveRecord::Type::Boolean.new.type_cast_from_user(params[:production])
+        stages = stages.select { |stage| (stage.production? == production) }
+      end
+    end
+
+    deploys = Deploy
+    deploys = Deploy.where(stage: stages) if stages
+    deploys = Deploy.where(job: jobs) if jobs
+
+    respond_to do |format|
+      format.json do
+        render json: deploys.page(params[:page]).per(30)
+      end
+      format.csv do
+        datetime = Time.now.strftime "%Y%m%d_%H%M"
+        send_data deploys.to_csv, type: :csv, filename: "deploy_search_results_#{datetime}.csv"
+      end
     end
   end
 

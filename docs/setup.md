@@ -123,3 +123,5 @@ Set the following variables in your `.env` file or set them as environment varia
 </table>
 
 For more settings that enable advanced features see the [Extra features page](extra_features.md).
+
+[![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy)

@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20160317215713) do
+ActiveRecord::Schema.define(version: 20160408193842) do
 
   create_table "build_statuses", force: :cascade do |t|
     t.integer  "build_id",                                     null: false
@@ -253,11 +253,9 @@ ActiveRecord::Schema.define(version: 20160317215713) do
   end
 
   create_table "macros", force: :cascade do |t|
-    t.string   "name",       limit: 255,   null: false
-    t.string   "reference",  limit: 255,   null: false
-    t.text     "command",    limit: 65535, null: false
+    t.string   "name",       limit: 255, null: false
+    t.string   "reference",  limit: 255, null: false
     t.integer  "project_id", limit: 4
-    t.integer  "user_id",    limit: 4
     t.datetime "deleted_at"
     t.datetime "created_at"
     t.datetime "updated_at"
@@ -364,6 +362,7 @@ ActiveRecord::Schema.define(version: 20160317215713) do
     t.string   "jenkins_job_names",                            limit: 255
     t.string   "next_stage_ids"
     t.boolean  "no_code_deployed",                                           default: false
+    t.boolean  "docker_binary_plugin_enabled",                               default: true
   end
 
   add_index "stages", ["project_id", "permalink", "deleted_at"], name: "index_stages_on_project_id_and_permalink_and_deleted_at", length: {"project_id"=>nil, "permalink"=>191, "deleted_at"=>nil}, using: :btree
@@ -400,6 +399,8 @@ ActiveRecord::Schema.define(version: 20160317215713) do
     t.boolean  "desktop_notify", default: false
     t.boolean  "integration",    default: false, null: false
     t.boolean  "access_request_pending",     default: false
+    t.string   "time_format",            limit: 255, default: "relative", null: false
+
   end
 
   add_index "users", ["external_id", "deleted_at"], name: "index_users_on_external_id_and_deleted_at", length: {"external_id"=>191, "deleted_at"=>nil}, using: :btree

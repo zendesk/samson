@@ -1,6 +1,7 @@
 <h1><%= title %></h1>
 
 <div class="timeline" ng-controller="<%= controller %>">
+  <input type=hidden  id=default_time_format value="<%= current_user.time_format %>">
   <% if show_filters %>
     <div class="timeline-filters clearfix">
       <div class="timeline-filter col-sm-6">
@@ -24,6 +25,15 @@
         <select id="tlf-status" class="form-control" ng-model="deployStatus" ng-options="status for status in deployStatuses">
           <option value="">All</option>
         </select>
+      </div>
+      <div class="timeline-filter col-sm-4" >
+        <label for="tlf-status">TIME:</label>
+        <% User::TIME_FORMATS.each do |time_format| %>
+          <label for=time_format_<%= time_format %>>
+            <input type=radio id=time_format_<%= time_format %> ng-model="timeFormat" ng-change="changeTime()" value='<%= time_format %>'>
+            <%= time_format %>
+          </label>
+        <% end %>
       </div>
     </div>
   <% end %>

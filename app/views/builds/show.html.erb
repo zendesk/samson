@@ -48,7 +48,7 @@
     <h2>Docker Build Output</h2>
 
     <div id="output" data-stream-url="<%= stream_path(job) %>" data-desktop-notify="<%= current_user.desktop_notify? %>">
-      <%= render partial: 'jobs/output', locals: { job: job } %>
+      <%= render partial: 'shared/output', locals: { job: job, deployable: job, hide: false } %>
       <% if docker_build_running? @build %>
         <%= javascript_tag do %>
           toggleOutputToolbar();
@@ -56,9 +56,9 @@
         <% end %>
       <% end %>
     </div>
-  <% else %>
-    <%= form_for :build, url: build_docker_image_project_build_path(@build.project, @build), html: { class: "form-inline" } do |form| %>
-      <%= form.submit 'Build Docker Image', class: "btn btn-primary" %>
-    <% end %>
+  <% end %>
+
+  <%= form_for :build, url: build_docker_image_project_build_path(@build.project, @build), html: { class: "form-inline" } do |form| %>
+    <%= form.submit (job ? 'Rebuild Docker Image' : 'Build Docker Image'), class: "btn btn-primary" %>
   <% end %>
 </section>

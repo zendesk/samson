@@ -65,6 +65,7 @@ Samson::Application.routes.draw do
       get :active
       get :active_count
       get :recent
+      get :search
     end
   end
 

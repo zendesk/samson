@@ -64,7 +64,7 @@ describe AccessRequestsController do
           before { post :create, request_params, session_params }
 
           it 'sets the pending request flag' do
-            assert @controller.current_user.access_request_pending
+            assert @controller.send(:current_user).access_request_pending
           end
 
           it 'sets the flash' do

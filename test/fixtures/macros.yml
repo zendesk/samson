@@ -2,5 +2,3 @@ test:
   name: Test Macro
   project: test
   reference: master
-  command: seq 1 5
-  user: admin

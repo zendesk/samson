@@ -1,10 +1,12 @@
 source 'https://rubygems.org'
 
+ruby File.read('.ruby-version').strip
+
 gem 'bundler', '>= 1.8.4'
 
 gem 'rails', '~> 4.2.0'
 gem 'puma'
-gem 'dotenv-rails', '~> 0.9'
+gem 'dotenv'
 
 gem 'dogstatsd-ruby', '~> 1.5.0', require: 'statsd'
 gem 'goldiloader'

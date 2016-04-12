@@ -5,16 +5,22 @@ class BinaryBuilder
   ARTIFACTS_FILE_PATH = "/app/#{ARTIFACTS_FILE}".freeze
   DOCKER_HOST_CACHE_DIR = '/opt/samson_build_cache'.freeze
   CONTAINER_CACHE_DIR = '/build/cache'.freeze
+  TAR_LONGLINK = '././@LongLink'.freeze
+  PRE_BUILD_SCRIPT = 'pre_binary_build.sh'.freeze
 
-  def initialize(dir, project, reference, output)
+  def initialize(dir, project, reference, output, executor = nil)
     @dir = dir
     @project = project
     @git_reference = reference
     @output_stream = output
+    @executor = executor || TerminalExecutor.new(@output_stream, verbose: true)
   end
 
   def build
-    return unless @project.try(:deploy_with_docker?) && File.exists?(File.join(@dir, DOCKER_BUILD_FILE))
+    return unless @project.try(:deploy_with_docker?) && build_file_exist?
+
+    run_pre_build_script
+
     @output_stream.puts "Connecting to Docker host with Api version: #{docker_api_version} ..."
 
     @image = create_build_image
@@ -30,7 +36,28 @@ class BinaryBuilder
     @image.remove(force: true) if @image
   end
 
+  def run_pre_build_script
+    return unless pre_build_file_exist?
+
+    @output_stream.puts "Running pre build script..."
+    success = @executor.execute! pre_build_file
+
+    raise "Error running pre build script" unless success
+  end
+
   private
+
+  def pre_build_file
+    File.join(@dir, PRE_BUILD_SCRIPT)
+  end
+
+  def pre_build_file_exist?
+    File.file? pre_build_file
+  end
+
+  def build_file_exist?
+    File.exists? File.join(@dir, DOCKER_BUILD_FILE)
+  end
 
   def start_build_script
     @output_stream.puts 'Now starting Build container...'
@@ -128,7 +155,7 @@ class BinaryBuilder
         'dockerfile' => DOCKER_BUILD_FILE,
         't' => image_name
       }
-    )
+    ) { |chunk| @output_stream.write chunk }
   end
 
   def docker_api_version

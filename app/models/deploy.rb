@@ -9,7 +9,8 @@ class Deploy < ActiveRecord::Base
   default_scope { order(created_at: :desc, id: :desc) }
 
   validates_presence_of :reference
-  validate :validate_stage_is_deployable, on: :create
+  validate :validate_stage_is_unlocked, on: :create
+  validate :validate_stage_uses_deploy_groups_properly, on: :create
 
   delegate :started_by?, :can_be_stopped_by?, :stop!, :status, :user, :output, to: :job
   delegate :active?, :pending?, :running?, :cancelling?, :cancelled?, :succeeded?, to: :job
@@ -134,6 +135,16 @@ class Deploy < ActiveRecord::Base
     user.id == buddy_id ? "bypassed" : buddy.try(:email)
   end
 
+  def self.to_csv
+    @deploys = Deploy.joins(:stage).all()
+    CSV.generate do |csv|
+      csv << ["Deploy Number", "Project Name", "Deploy Sumary", "Deploy Updated", "Deploy Created", "Deployer Name", "Buddy Name", "Production Flag", Deploy.joins(:stage).count.to_s + " Deploys"]
+      @deploys.find_each do |deploy|
+        csv << [deploy.id, deploy.project.name, deploy.summary, deploy.updated_at, deploy.start_time, deploy.job.user.name, deploy.csv_buddy, deploy.stage.production]
+      end
+    end
+  end
+
   def url
     AppRoutes.url_helpers.project_deploy_path(project, self)
   end
@@ -162,9 +173,17 @@ class Deploy < ActiveRecord::Base
     end
   end
 
-  def validate_stage_is_deployable
+  def validate_stage_is_unlocked
     if stage.locked_for?(user) || Lock.global.exists?
       errors.add(:stage, 'is locked')
+    end
+  end
+
+  # commands and deploy groups can change via many different paths,
+  # so we validate once a user actually tries to execute the command
+  def validate_stage_uses_deploy_groups_properly
+    if DeployGroup.enabled? && stage.deploy_groups.none? && stage.command.include?("$DEPLOY_GROUPS")
+      errors.add(:stage, "contains at least one command using the $DEPLOY_GROUPS environment variable, but there are no Deploy Groups associated with this stage.")
     end
   end
 

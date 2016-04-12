@@ -176,8 +176,6 @@ GEM
     dotenv (0.11.1)
       dotenv-deployment (~> 0.0.2)
     dotenv-deployment (0.0.2)
-    dotenv-rails (0.11.1)
-      dotenv (= 0.11.1)
     erubis (2.7.0)
     excon (0.47.0)
     execjs (2.6.0)
@@ -481,7 +479,7 @@ DEPENDENCIES
   docker-api
   dogapi (~> 1.9)
   dogstatsd-ruby (~> 1.5.0)
-  dotenv-rails (~> 0.9)
+  dotenv
   faraday-http-cache (~> 1.1)
   github-markdown (~> 0.6.3)
   goldiloader

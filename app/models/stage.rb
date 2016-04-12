@@ -1,7 +1,8 @@
 class Stage < ActiveRecord::Base
   include Permalinkable
+  include HasCommands
 
-  has_soft_deletion default_scope: true
+  has_soft_deletion default_scope: true unless self < SoftDeletion::Core
 
   belongs_to :project, touch: true
 
@@ -11,10 +12,9 @@ class Stage < ActiveRecord::Base
 
   has_one :lock
 
-  has_many :stage_commands, autosave: true, dependent: :destroy
-  has_many :commands,
-    -> { order('stage_commands.position ASC') },
-    through: :stage_commands, auto_include: false
+  has_many :command_associations, autosave: true, class_name: 'StageCommand', dependent: :destroy
+  has_many :commands, -> { order('stage_commands.position ASC') },
+    through: :command_associations, auto_include: false
 
   has_many :deploy_groups_stages
   has_many :deploy_groups, through: :deploy_groups_stages
@@ -26,9 +26,7 @@ class Stage < ActiveRecord::Base
 
   accepts_nested_attributes_for :new_relic_applications, allow_destroy: true, reject_if: :no_newrelic_name?
 
-  attr_writer :command
   before_create :ensure_ordering
-  before_save :build_new_project_command
 
   def self.reset_order(new_order)
     transaction do
@@ -125,16 +123,6 @@ class Stage < ActiveRecord::Base
     "#{name} - #{project.name}"
   end
 
-  def command
-    commands.map(&:command).join("\n")
-  end
-
-  def command_ids=(new_command_ids)
-    super.tap do
-      reorder_commands(new_command_ids.reject(&:blank?).map(&:to_i))
-    end
-  end
-
   def datadog_tags_as_array
     datadog_tags.to_s.split(";").map(&:strip)
   end
@@ -185,24 +173,6 @@ class Stage < ActiveRecord::Base
   end
 
   private
-
-  def build_new_project_command
-    return unless @command.present?
-
-    new_command = project.commands.build(command: @command)
-    stage_commands.build(command: new_command).tap do
-      reorder_commands
-    end
-  end
-
-  def reorder_commands(command_ids = self.command_ids)
-    stage_commands.each do |stage_command|
-      pos = command_ids.index(stage_command.command_id) ||
-        stage_commands.length
-
-      stage_command.position = pos
-    end
-  end
 
   def no_newrelic_name?(newrelic_attrs)
     newrelic_attrs['name'].blank?

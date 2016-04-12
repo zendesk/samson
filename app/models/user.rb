@@ -4,6 +4,7 @@ require 'digest/md5'
 class User < ActiveRecord::Base
   include HasRole
   include Searchable
+  TIME_FORMATS = ['local', 'utc', 'relative'].freeze
 
   has_soft_deletion default_scope: true
 
@@ -18,6 +19,7 @@ class User < ActiveRecord::Base
   validates :role_id, inclusion: { in: Role.all.map(&:id) }
 
   before_create :set_token
+  validates :time_format, inclusion: { in: TIME_FORMATS }
 
   scope :search, ->(query) { where("name like ? or email like ?", "%#{query}%", "%#{query}%") }
 
@@ -45,7 +47,7 @@ class User < ActiveRecord::Base
     # attributes are always a string hash
     attributes = user.attributes.merge(hash.stringify_keys) do |key, old, new|
       if key == 'role_id'
-        if !User.exists?
+        if !User.exists? # first user will be the super admin
           Role::SUPER_ADMIN.id
         elsif new && (user.new_record? || new >= old)
           new
