@@ -2,7 +2,12 @@ class SingleCov
   COVERAGES = []
 
   class << self
-    def expect(file, percent)
+    def covered!(file: nil, percent: 100)
+      unless file
+        file = caller.first[%r{/test/(.*?)_test\.rb}, 1] << '.rb'
+        file[0...0] = 'app/' unless file.start_with?('lib/')
+      end
+
       COVERAGES << [file, percent]
     end
 
@@ -21,7 +26,7 @@ class SingleCov
         else
           warn "#{file} lower then expected coverage #{details}"
           warn "Lines missing coverage:"
-          warn coverage.select { |c| c == 0 }.each_with_index.map { |c, i| "#{file}:#{i+1}" }
+          warn coverage.each_with_index.map { |c, i| "#{file}:#{i+1}" if c == 0 }.compact
           exit 1
         end
       end

@@ -1,6 +1,6 @@
 require_relative '../test_helper'
 
-SingleCov.expect 'app/controllers/sessions_controller.rb', 100
+SingleCov.covered!
 
 describe SessionsController do
   describe "a GET to #new" do

@@ -1,5 +1,7 @@
 require_relative '../test_helper'
 
+SingleCov.covered!
+
 class ProjectMailerTest < ActionMailer::TestCase
   let(:user) { users(:admin) }
   let(:project) { projects(:test) }
