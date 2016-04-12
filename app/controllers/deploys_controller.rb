@@ -46,7 +46,7 @@ class DeploysController < ApplicationController
 
   # Takes the same params that are used by the client side filtering
   # on the recent deploys pages.
-  # Returrns a paginated json object or CSV of deploys that people are
+  # Returrns a paginated json object of deploys that people are
   # interested in rather than doing client side filtering.
   # params:
   #   * deployer (name of the user that started the job(s), this is a fuzzy match
@@ -88,13 +88,7 @@ class DeploysController < ApplicationController
     deploys = Deploy.where(job: jobs) if jobs
 
     respond_to do |format|
-      format.json do
-        render json: deploys.page(params[:page]).per(30)
-      end
-      format.csv do
-        datetime = Time.now.strftime "%Y%m%d_%H%M"
-        send_data deploys.to_csv, type: :csv, filename: "deploy_search_results_#{datetime}.csv"
-      end
+      format.json { render json: deploys.page(params[:page]).per(30) }
     end
   end
 
