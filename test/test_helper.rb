@@ -10,6 +10,8 @@ elsif ENV['COVERAGE']
   SimpleCov.start 'rails'
 end
 
+require_relative 'support/single_cov'
+
 # rake adds these, but we don't need them / want to be in a consistent environment
 $LOAD_PATH.delete 'lib'
 $LOAD_PATH.delete 'test'
