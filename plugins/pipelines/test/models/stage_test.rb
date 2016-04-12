@@ -1,5 +1,4 @@
 require_relative '../test_helper'
-require 'byebug'
 
 SingleCov.covered! file: 'plugins/pipelines/app/decorators/stage_decorator.rb'
 
@@ -12,7 +11,6 @@ describe Stage do
   let(:staging) { deploy_groups(:pod100) }
   let(:user) { User.find_by_name("Admin")}
   let(:job) {Job.create!({project: project, command: "sleep 100", status: "running", user: user})}
-
 
   before do
     Project.any_instance.stubs(:valid_repository_url).returns(true)
@@ -41,10 +39,10 @@ describe Stage do
       stage1.production?.must_equal true
     end
 
-    it 'returns true if pipeline set and later stage is marked production' do
+    it 'returns true if pipeline set and later stage is production' do
       stage2.update!(production: true)
-      stage1.update!(next_stage_ids: [ stage3.id, stage2.id ])
-      stage1.production?.must_equal true
+      stage1.update!(next_stage_ids: [stage2.id ])
+      stage1.deploy_requires_approval?.must_equal true
     end
   end
 
@@ -63,6 +61,20 @@ describe Stage do
     it 'does not require approval if a future stage has no_code_deployed' do
       stage2.update!(no_code_deployed: true)
       stage2.deploy_requires_approval?.must_equal false
+    end
+
+    it 'does require approval with production deploy group and no_code_deployed' do
+      stage2.deploy_groups = [ production ]
+      stage2.update!(no_code_deployed: false)
+      stage1.update!(next_stage_ids: [stage2.id ])
+      stage1.deploy_requires_approval?.must_equal true
+    end
+
+    it 'does not require approval with production deploy group and no_code_deployed' do
+      stage2.deploy_groups = [ production ]
+      stage2.update!(no_code_deployed: true)
+      stage1.update!(next_stage_ids: [stage2.id ])
+      stage1.deploy_requires_approval?.must_equal false
     end
   end
 
