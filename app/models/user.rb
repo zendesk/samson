@@ -2,8 +2,9 @@ require 'soft_deletion'
 require 'digest/md5'
 
 class User < ActiveRecord::Base
-  include HasRole
   include Searchable
+  include HasRole
+
   TIME_FORMATS = ['local', 'utc', 'relative'].freeze
 
   has_soft_deletion default_scope: true
@@ -46,7 +47,7 @@ class User < ActiveRecord::Base
     # attributes are always a string hash
     attributes = user.attributes.merge(hash.stringify_keys) do |key, old, new|
       if key == 'role_id'
-        if !User.exists?
+        if !User.exists? # first user will be the super admin
           Role::SUPER_ADMIN.id
         elsif new && (user.new_record? || new >= old)
           new
@@ -77,11 +78,11 @@ class User < ActiveRecord::Base
   end
 
   def is_admin_for?(project)
-    project_role_for(project).try(:is_admin?)
+    is_admin? || !!project_role_for(project).try(:is_admin?)
   end
 
   def is_deployer_for?(project)
-    project_role_for(project).try(:is_deployer?)
+    is_deployer? || !!project_role_for(project).try(:is_deployer?)
   end
 
   def project_role_for(project)

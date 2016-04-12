@@ -40,8 +40,8 @@ class Project < ActiveRecord::Base
 
   scope :where_user_is_admin, ->(user) {
     joins(:user_project_roles).where(user_project_roles: {
-        user_id: user.id,
-        role_id: ProjectRole::ADMIN.id
+      user_id: user.id,
+      role_id: Role::ADMIN.id
     })
   }
 

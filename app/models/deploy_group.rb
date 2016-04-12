@@ -28,6 +28,10 @@ class DeployGroup < ActiveRecord::Base
     "#{name} (#{environment.name})"
   end
 
+  def natural_order
+    name.split(/(\d+)/).each_with_index.map { |x, i| i.odd? ? x.to_i : x }
+  end
+
   private
 
   def permalink_base

@@ -22,11 +22,12 @@ namespace :plugins do
   end
 end
 
-namespace :test do
-  Rails::TestTask.new(:default) do |t|
-    t.pattern = "{test,plugins/*/test}/**/*_test.rb"
-  end
+Rake::Task['test'].clear
+Rails::TestTask.new(:test) do |t|
+  t.pattern = "{test,plugins/*/test}/**/*_test.rb"
+end
 
+namespace :test do
   task :prepare_js do
     sh "npm install"
     sh "npm run-script jshint"

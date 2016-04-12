@@ -1,8 +1,10 @@
-<project-roles roles="roles" role-changed="roleChanged(project_role)"
-               data-id="<%= project_role_id_for(user, project) %>"
-               data-user-id="<%= user.id %>"
-               data-user-name="<%= user.name %>"
-               data-project-id="<%= project.id %>"
-               data-project-name="<%= project.name %>"
-               data-role-id="<%= role_id_for(user, project) %>">
-</project-roles>
+<%= form_tag project_project_roles_path(project, user_id: user.id), class: 'project_role_selector' do %>
+  <% options = [['None', nil]] + UserProjectRole::ROLES.map { |r| [r.name, r.id] } %>
+  <% options.each do |name, id| %>
+    <%= label_tag do %>
+      <% checked = user.project_role_for(project).try(:role_id) == id %>
+      <%= radio_button_tag :role_id, id.to_s, checked %>
+      <%= name.titlecase %>
+    <% end %>
+  <% end %>
+<% end %>

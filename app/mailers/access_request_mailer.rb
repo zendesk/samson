@@ -5,7 +5,7 @@ class AccessRequestMailer < ApplicationMailer
     @manager_email = manager_email
     @reason = reason
     @projects = Project.order(:name).find(project_ids)
-    @role = ProjectRole.find(role_id)
+    @role = Role.find(role_id)
     mail(from: @user.email, to: build_to, cc: build_cc, subject: build_subject, body: build_body)
   end
 

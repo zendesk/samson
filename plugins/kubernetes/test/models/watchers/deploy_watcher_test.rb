@@ -9,7 +9,10 @@ describe Watchers::DeployWatcher do
   let(:project) { current_release.project }
 
   before do
-    Celluloid.shutdown; Celluloid.boot
+    # Disable multithreading so celluloid stays in the same transaction
+    ActiveRecord::Base.stubs(connection: ActiveRecord::Base.connection)
+    Celluloid.shutdown
+    Celluloid.boot
     Watchers::DeployWatcher.any_instance.stubs(:terminate_watcher)
     Watchers::DeployWatcher.any_instance.stubs(:last_release).returns(current_release)
     Kubernetes::Cluster.any_instance.stubs(:client).returns(Kubeclient::Client.new('http://cluster.localhost'))
@@ -106,7 +109,7 @@ describe Watchers::DeployWatcher do
         rc_unique_identifier = "#{release_doc.replication_controller_name}-#{rand(100000).to_s}"
         release_doc.replica_target.times do |i|
           msg = Watchers::BaseClusterWatcher.topic_message(create_msg(release_doc, rc_unique_identifier: rc_unique_identifier, name: "pod-#{i}", ready: 'True'))
-          watcher.handle_event('some topic', msg)
+          watcher.send(:handle_event, 'some topic', msg)
         end
       end
 
@@ -126,7 +129,7 @@ describe Watchers::DeployWatcher do
         rc_unique_identifier = "#{release_doc.replication_controller_name}-#{rand(100000).to_s}"
         release_doc.replica_target.times do |i|
           msg = Watchers::BaseClusterWatcher.topic_message(create_msg(release_doc, rc_unique_identifier: rc_unique_identifier, name: "pod-#{i}", ready: 'True'))
-          watcher.handle_event('some topic', msg)
+          watcher.send(:handle_event, 'some topic', msg)
         end
       end
 
@@ -148,14 +151,14 @@ describe Watchers::DeployWatcher do
           SseRailsEngine.expects(:send_event).with('k8s', create_sse_data(release_doc, i + 1))
 
           msg = Watchers::BaseClusterWatcher.topic_message(create_msg(release_doc, rc_unique_identifier: rc_unique_identifier, name: "pod-#{i}", ready: 'True'))
-          watcher.handle_event('some topic', msg)
+          watcher.send(:handle_event, 'some topic', msg)
         end
       end
     end
   end
 
   def create_deploy_watcher
-    Watchers::DeployWatcher.new(project)
+    Watchers::DeployWatcher.send(:new, project)
   end
 
   def expect_pod_list(release)

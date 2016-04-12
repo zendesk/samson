@@ -1,7 +1,7 @@
 {
   "name": "Samson",
   "repository": "https://github.com/zendesk/samson",
-  "logo": "https://raw.githubusercontent.com/zendesk/samson/master/public/images/favicon.ico",
+  "logo": "https://raw.githubusercontent.com/zendesk/samson/master/app/assets/images/logo_light.png",
   "addons": [
     "heroku-postgresql:hobby-dev",
     "memcachier:dev"

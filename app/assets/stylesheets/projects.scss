@@ -166,19 +166,7 @@ pre.pre-inline {
 
 .editable-role {
   width: 300px;
-}
-
-.editable-role .editable-controls {
-  display: table;
-  width: auto;
-}
-
-.editable-role .editable-input {
-  display: table-cell;
-  vertical-align: middle;
-}
-
-.editable-role .editable-input label {
-  padding: 0;
-  margin: 0 15px 0 0;
+  label {
+    margin-right: 10px;
+  }
 }

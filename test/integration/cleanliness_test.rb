@@ -21,4 +21,20 @@ describe "cleanliness" do
       end
     end
   end
+
+  it "does not use let(:user) inside of a as_xyz block" do
+    bad = Dir["{,plugins/*/}test/controllers/**/*.rb"].map do |f|
+      content = File.read(f)
+      if content.include?("  as_") && content.include?("let(:user)")
+        "#{f} uses as_xyz and let(:user) these do not mix!"
+      end
+    end.compact
+    bad.must_equal []
+  end
+
+  it "does not have actions on base controller" do
+    found = ApplicationController.action_methods.to_a
+    found.reject { |a| a =~ /^(_conditional_callback_around_|_callback_before_)/ } - ["flash"]
+    found.must_equal []
+  end
 end

@@ -1,4 +1,6 @@
 Samson::Application.routes.draw do
+  root to: 'projects#index'
+
   resources :projects do
     resources :jobs, only: [:index, :new, :create, :show, :destroy]
 
@@ -50,7 +52,7 @@ Samson::Application.routes.draw do
 
     resources :users, only: [:index, :update]
 
-    resources :project_roles, only: [:create, :update]
+    resources :project_roles, only: [:create]
 
     member do
       get :deploy_group_versions
@@ -65,6 +67,7 @@ Samson::Application.routes.draw do
       get :active
       get :active_count
       get :recent
+      get :search
     end
   end
 
@@ -115,9 +118,5 @@ Samson::Application.routes.draw do
 
   resources :access_requests, only: [:new, :create]
 
-  get '/project_roles', to: 'project_roles#index'
-
   mount SseRailsEngine::Engine, at: '/streaming'
-
-  root to: 'projects#index'
 end

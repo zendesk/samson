@@ -25,7 +25,7 @@ describe LocksController do
     end
   end
 
-  as_a_deployer do
+  as_a_project_deployer do
     unauthorized :post, :create
 
     it 'responds with unauthorized when doing a post to create a global lock' do
@@ -34,8 +34,11 @@ describe LocksController do
     end
 
     describe 'POST to #create' do
+      before { travel_to Time.now }
+      after { travel_back }
+
       it 'creates a lock' do
-        post :create, lock: {stage_id: stage.id, description: 'DESC'}
+        post :create, lock: {stage_id: stage.id, description: 'DESC', delete_in: 3600 }
         assert_redirected_to '/back'
         assert flash[:notice]
 
@@ -44,6 +47,7 @@ describe LocksController do
         stage.warning?.must_equal(false)
         stage.locked?.must_equal(true)
         stage.lock.description.must_equal 'DESC'
+        stage.lock.delete_at.must_equal(Time.now + 3600)
       end
 
       it 'creates a warning' do
@@ -94,60 +98,6 @@ describe LocksController do
         assert_redirected_to '/back'
         assert flash[:notice]
 
-        Lock.count.must_equal 0
-      end
-    end
-  end
-
-  as_a_project_deployer do
-    unauthorized :post, :create
-
-    it 'responds with unauthorized when doing a post to create a global lock' do
-      post :create, lock: {stage_id: '', description: 'DESC'}
-      @unauthorized.must_equal true, 'Request was not marked unauthorized'
-    end
-
-    describe 'POST to #create' do
-      before { travel_to Time.now }
-      after { travel_back }
-
-      it 'creates a lock' do
-        post :create, lock: {stage_id: stage.id, description: 'DESC', delete_in: 3600 }
-        assert_redirected_to '/back'
-        assert flash[:notice]
-
-        stage.reload
-
-        stage.warning?.must_equal(false)
-        stage.locked?.must_equal(true)
-        stage.lock.description.must_equal 'DESC'
-        stage.lock.delete_at.must_equal(Time.now + 3600)
-      end
-
-      it 'creates a warning' do
-        post :create, lock: {stage_id: stage.id, description: 'DESC', warning: true}
-        assert_redirected_to '/back'
-        assert flash[:notice]
-
-        stage.reload
-
-        stage.warning?.must_equal(true)
-        stage.locked?.must_equal(false)
-        stage.lock.description.must_equal 'DESC'
-      end
-    end
-
-    describe 'DELETE to #destroy' do
-      it 'destroys the lock' do
-        lock = stage.create_lock!(user: users(:deployer))
-        delete :destroy, id: lock.id
-
-        assert_redirected_to '/back'
-        assert flash[:notice]
-
-        stage.reload
-
-        stage.locked?.must_equal(false)
         Lock.count.must_equal 0
       end
     end

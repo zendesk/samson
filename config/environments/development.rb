@@ -34,6 +34,9 @@ Samson::Application.configure do
   # ? [= Sender samson] file /Users/myuser/Code/samson/log/samson.log mode=0644
   # require 'syslog/logger'
   # config.logger = Syslog::Logger.new('samson')
+  if ENV['DOCKER'] == 'true'
+    config.logger = Logger.new(STDOUT)
+  end
 
   # config.lograge.enabled = true
   # config.lograge.formatter = Lograge::Formatters::Logstash.new

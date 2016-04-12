@@ -10,6 +10,12 @@ elsif ENV['COVERAGE']
   SimpleCov.start 'rails'
 end
 
+require_relative 'support/single_cov'
+
+# rake adds these, but we don't need them / want to be in a consistent environment
+$LOAD_PATH.delete 'lib'
+$LOAD_PATH.delete 'test'
+
 require_relative '../config/environment'
 require 'rails/test_help'
 require 'minitest/rails'
@@ -129,6 +135,10 @@ class ActiveSupport::TestCase
     $VERBOSE = old
   end
 
+  undef :assert_nothing_raised
+  class << self
+    undef :test
+  end
 end
 
 Mocha::Expectation.class_eval do
@@ -149,19 +159,11 @@ class ActionController::TestCase
       end
     end
 
-    %w{super_admin admin deployer viewer}.each do |user|
+    %w{super_admin admin deployer viewer project_admin project_deployer}.each do |user|
       define_method "as_a_#{user}" do |&block|
         describe "as a #{user}" do
-          setup { request.env['warden'].set_user(users(user)) }
-          instance_eval(&block)
-        end
-      end
-    end
-
-    %w{project_admin project_deployer}.each do |user|
-      define_method "as_a_#{user}" do |&block|
-        describe "as a #{user}" do
-          setup { request.env['warden'].set_user(users(user)) }
+          let(:user) { users(user) }
+          setup { request.env['warden'].set_user(self.user) }
           instance_eval(&block)
         end
       end
@@ -198,6 +200,18 @@ class ActionController::TestCase
   end
 
   alias_method_chain :process, :catch_warden
+
+  def self.use_test_routes
+    before do
+      Rails.application.routes.draw do
+        match "/test/:test_route/:controller/:action", :via => [:get, :post, :put, :patch, :delete]
+      end
+    end
+
+    after do
+      Rails.application.reload_routes!
+    end
+  end
 end
 
 WebMock.disable_net_connect!(allow: 'codeclimate.com')

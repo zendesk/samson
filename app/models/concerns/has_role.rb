@@ -1,5 +1,4 @@
 module HasRole
-
   def role
     Role.find(role_id)
   end
