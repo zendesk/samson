@@ -1,4 +1,6 @@
 Samson::Application.routes.draw do
+  root to: 'projects#index'
+
   resources :projects do
     resources :jobs, only: [:index, :new, :create, :show, :destroy]
 
@@ -119,6 +121,4 @@ Samson::Application.routes.draw do
   get '/project_roles', to: 'project_roles#index'
 
   mount SseRailsEngine::Engine, at: '/streaming'
-
-  root to: 'projects#index'
 end

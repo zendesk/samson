@@ -200,6 +200,18 @@ class ActionController::TestCase
   end
 
   alias_method_chain :process, :catch_warden
+
+  def self.use_test_routes
+    before do
+      Rails.application.routes.draw do
+        match "/test/:test_route/:controller/:action", :via => [:get, :post, :put, :patch, :delete]
+      end
+    end
+
+    after do
+      Rails.application.reload_routes!
+    end
+  end
 end
 
 WebMock.disable_net_connect!(allow: 'codeclimate.com')

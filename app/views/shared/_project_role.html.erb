@@ -1,8 +1,9 @@
+<% role = user.project_role_for(project) %>
 <project-roles roles="roles" role-changed="roleChanged(project_role)"
-               data-id="<%= project_role_id_for(user, project) %>"
+               data-id="<%= role.try(:id) %>"
                data-user-id="<%= user.id %>"
                data-user-name="<%= user.name %>"
                data-project-id="<%= project.id %>"
                data-project-name="<%= project.name %>"
-               data-role-id="<%= role_id_for(user, project) %>">
+               data-role-id="<%= role.try(:role_id) %>">
 </project-roles>
