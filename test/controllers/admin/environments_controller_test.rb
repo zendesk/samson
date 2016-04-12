@@ -1,5 +1,7 @@
 require_relative '../../test_helper'
 
+SingleCov.covered!
+
 describe Admin::EnvironmentsController do
   def self.it_renders_index
     it 'get :index succeeds' do

@@ -1,5 +1,7 @@
 require_relative '../test_helper'
 
+SingleCov.covered! percent: 97
+
 describe MacrosController do
   let(:project) { projects(:test) }
   let(:macro) { macros(:test) }

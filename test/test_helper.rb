@@ -155,7 +155,7 @@ class ActionController::TestCase
     def unauthorized(method, action, params = {})
       it "is unauthorized when doing a #{method} to #{action} with #{params}" do
         send(method, action, params)
-        @unauthorized.must_equal true, "Request was not marked unauthorized"
+        assert_unauthorized
       end
     end
 
@@ -189,6 +189,14 @@ class ActionController::TestCase
 
   def warden
     request.env['warden']
+  end
+
+  def assert_unauthorized
+    @unauthorized.must_equal true, "Request was not marked unauthorized"
+  end
+
+  def refute_unauthorized
+    refute @unauthorized, "Request was marked unauthorized"
   end
 
   def process_with_catch_warden(*args)

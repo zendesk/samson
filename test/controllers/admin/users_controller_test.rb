@@ -1,7 +1,8 @@
 require_relative '../../test_helper'
 
-describe Admin::UsersController do
+SingleCov.covered!
 
+describe Admin::UsersController do
   as_a_viewer do
     unauthorized :get, :index
     unauthorized :get, :show, id: 1
@@ -145,6 +146,11 @@ describe Admin::UsersController do
         modified_user.update!(access_request_pending: true)
         put :update, {id: modified_user.id, user: {role_id: Role::DEPLOYER.id}}
         modified_user.reload.access_request_pending.must_equal false
+      end
+
+      it 'renders when it fails' do
+        put :update, id: modified_user.id, user: {role_id: 5}
+        assert_response :bad_request
       end
     end
 

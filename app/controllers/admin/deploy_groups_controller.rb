@@ -1,6 +1,6 @@
 class Admin::DeployGroupsController < ApplicationController
   before_action :authorize_admin!
-  before_action :authorize_super_admin!, only: [ :create, :new, :update, :destroy, :deploy_all, :deploy_all_now ]
+  before_action :authorize_super_admin!, only: [ :create, :new, :update, :destroy, :deploy_all, :deploy_all_now, :edit ]
   before_action :deploy_group, only: [:show, :edit, :update, :destroy, :deploy_all, :deploy_all_now]
 
   def index
@@ -10,17 +10,17 @@ class Admin::DeployGroupsController < ApplicationController
   def new
     @deploy_group = DeployGroup.new
     Samson::Hooks.fire(:edit_deploy_group, @deploy_group)
-    render 'edit'
+    render :edit
   end
 
   def create
     @deploy_group = DeployGroup.create(deploy_group_params)
     if @deploy_group.persisted?
       flash[:notice] = "Successfully created deploy group: #{@deploy_group.name}"
-      redirect_to action: 'index'
+      redirect_to action: :index
     else
       flash[:error] = @deploy_group.errors.full_messages
-      render 'edit'
+      render :edit
     end
   end
 
@@ -31,17 +31,17 @@ class Admin::DeployGroupsController < ApplicationController
   def update
     if deploy_group.update_attributes(deploy_group_params)
       flash[:notice] = "Successfully saved deploy group: #{deploy_group.name}"
-      redirect_to action: 'index'
+      redirect_to action: :index
     else
       flash[:error] = deploy_group.errors.full_messages
-      render 'edit'
+      render :edit
     end
   end
 
   def destroy
     deploy_group.soft_delete!
     flash[:notice] = "Successfully deleted deploy group: #{deploy_group.name}"
-    redirect_to action: 'index'
+    redirect_to action: :index
   end
 
   def deploy_all

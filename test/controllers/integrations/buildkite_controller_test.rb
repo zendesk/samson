@@ -1,5 +1,7 @@
 require_relative '../../test_helper'
 
+SingleCov.covered!
+
 describe Integrations::BuildkiteController do
   extend IntegrationsControllerTestHelper
 
