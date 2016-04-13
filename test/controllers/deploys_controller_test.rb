@@ -172,7 +172,7 @@ describe DeploysController do
 
     describe "a GET to :show" do
       describe "with a valid deploy" do
-        setup { get :show, project_id: project.to_param, id: deploy.to_param }
+        before { get :show, project_id: project.to_param, id: deploy.to_param }
 
         it "renders the template" do
           assert_template :show
@@ -186,7 +186,7 @@ describe DeploysController do
       end
 
       describe "with format .text" do
-        setup { get :show, format: :text, project_id: project.to_param, id: deploy.to_param }
+        before { get :show, format: :text, project_id: project.to_param, id: deploy.to_param }
 
         it "responds with a plain text file" do
           assert_equal response.content_type, "text/plain"
@@ -395,7 +395,7 @@ describe DeploysController do
 
     describe "a DELETE to :destroy" do
       describe "with a deploy owned by the user" do
-        setup do
+        before do
           DeployService.stubs(:new).with(user).returns(deploy_service)
           Job.any_instance.stubs(:started_by?).returns(true)
           deploy_service.expects(:stop!).once
@@ -409,7 +409,7 @@ describe DeploysController do
       end
 
       describe "with a deploy not owned by the user" do
-        setup do
+        before do
           deploy_service.expects(:stop!).never
           Deploy.any_instance.stubs(:started_by?).returns(false)
           User.any_instance.stubs(:is_admin?).returns(false)

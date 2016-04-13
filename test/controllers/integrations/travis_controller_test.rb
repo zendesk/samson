@@ -7,20 +7,20 @@ describe Integrations::TravisController do
   let(:project) { projects(:test) }
   let(:stage) { stages(:test_staging) }
 
-  setup do
+  before do
     Deploy.delete_all
     @orig_token, ENV["TRAVIS_TOKEN"] = ENV["TRAVIS_TOKEN"], "TOKEN"
     project.webhooks.create!(stage: stages(:test_staging), branch: "master", source: 'travis')
   end
 
-  teardown do
+  after do
     ENV["TRAVIS_TOKEN"] = @orig_token
   end
 
   describe "a POST to :create" do
     let(:authorization) { nil }
 
-    setup do
+    before do
       if authorization
         @request.headers["Authorization"] = authorization
       end
@@ -33,7 +33,7 @@ describe Integrations::TravisController do
     end
 
     describe "with no authorization" do
-      setup { post :create, token: project.token }
+      before { post :create, token: project.token }
 
       it "renders ok" do
         response.status.must_equal(200)
@@ -42,7 +42,7 @@ describe Integrations::TravisController do
 
     describe "with invalid authorization" do
       let(:authorization) { "BLAHBLAH" }
-      setup { post :create, token: project.token }
+      before { post :create, token: project.token }
 
       it "renders ok" do
         response.status.must_equal(200)
@@ -54,7 +54,7 @@ describe Integrations::TravisController do
         Digest::SHA2.hexdigest("bar/foo#{ENV["TRAVIS_TOKEN"]}")
       end
 
-      setup do
+      before do
         post :create, token: project.token,
           payload: JSON.dump(payload)
       end

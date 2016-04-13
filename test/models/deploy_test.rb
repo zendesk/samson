@@ -7,7 +7,7 @@ describe Deploy do
   let(:stage) { stages(:test_staging) }
 
   describe "#deploy_buddy" do
-    setup { @deploy = create_deploy! }
+    before { @deploy = create_deploy! }
 
     describe "no buddy message at all" do
       it "returns no buddy name when BuddyCheck is not enabled" do
@@ -22,7 +22,7 @@ describe Deploy do
     end
 
     describe "when a buddy message should be included" do
-      setup do
+      before do
         BuddyCheck.stubs(:enabled?).returns(true)
         stage.stubs(:production?).returns(true)
         @deploy.stubs(:stage).returns(stage)

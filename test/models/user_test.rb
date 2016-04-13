@@ -111,7 +111,7 @@ describe User do
         User.create!(name: "Test", external_id: 9)
       end
 
-      setup { existing_user }
+      before { existing_user }
 
       it "does not update the user" do
         user.name.must_equal("Test")
@@ -134,7 +134,7 @@ describe User do
           role_id: Role::ADMIN.id
         }}
 
-        setup do
+        before do
           existing_user.update_attributes!(role_id: Role::VIEWER.id)
         end
 
@@ -151,7 +151,7 @@ describe User do
           role_id: Role::VIEWER.id
         }}
 
-        setup do
+        before do
           existing_user.update_attributes!(role_id: Role::ADMIN.id)
         end
 
