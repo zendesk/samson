@@ -41,7 +41,7 @@ describe "cleanliness" do
   end
 
   it "has coverage" do
-    bad = Dir["{,plugins/*/}test/controllers/**/*.rb"].map do |f|
+    bad = Dir["{,plugins/*/}test/{controllers,mailers,serializers,helpers}/**/*_test.rb"].map do |f|
       content = File.read(f)
       unless content.include?("SingleCov.covered!")
         "#{f} needs to use SingleCov.covered!"
