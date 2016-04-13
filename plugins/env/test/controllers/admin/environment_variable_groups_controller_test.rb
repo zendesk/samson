@@ -1,4 +1,6 @@
-require_relative "../test_helper"
+require_relative "../../test_helper"
+
+SingleCov.covered!
 
 describe Admin::EnvironmentVariableGroupsController do
   let(:stage) { stages(:test_staging) }
