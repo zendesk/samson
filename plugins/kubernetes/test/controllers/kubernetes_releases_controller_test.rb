@@ -30,7 +30,7 @@ describe KubernetesReleasesController do
 
   as_a_deployer do
     describe 'a GET to #index' do
-      setup :current_release_count
+      before { current_release_count }
 
       it_responds_successfully do
         get :index, project_id: project.permalink
@@ -39,9 +39,11 @@ describe KubernetesReleasesController do
     end
 
     describe 'a POST to #create with a single role' do
-      setup :expect_file_contents_from_repo
-      setup :expect_deploy
-      setup :current_release_count
+      before do
+        expect_file_contents_from_repo
+        expect_deploy
+        current_release_count
+      end
 
       it_responds_successfully do
         post :create, project_id: project.permalink, kubernetes_release: single_role_release_params, authenticity_token:  set_form_authenticity_token
@@ -51,9 +53,11 @@ describe KubernetesReleasesController do
     end
 
     describe 'a POST to #create with multiple roles' do
-      setup { 2.times { expect_file_contents_from_repo } }
-      setup :expect_deploy
-      setup :current_release_count
+      before do
+        2.times { expect_file_contents_from_repo }
+        expect_deploy
+        current_release_count
+      end
 
       it_responds_successfully do
         post :create, project_id: project.permalink, kubernetes_release: multiple_roles_release_params, authenticity_token:  set_form_authenticity_token
@@ -63,7 +67,7 @@ describe KubernetesReleasesController do
     end
 
     describe 'a POST to #create with a missing build id' do
-      setup :current_release_count
+      before { current_release_count }
 
       it_responds_with_bad_request do
         post :create, project_id: project.permalink, kubernetes_release: single_role_release_params.except(:build_id), authenticity_token:  set_form_authenticity_token
@@ -73,7 +77,7 @@ describe KubernetesReleasesController do
     end
 
     describe 'a POST to #create with missing deploy groups' do
-      setup :current_release_count
+      before { current_release_count }
 
       it_should_raise_an_exception do
         post :create, project_id: project.permalink, kubernetes_release: single_role_release_params.except(:deploy_groups), authenticity_token:  set_form_authenticity_token
@@ -87,7 +91,7 @@ describe KubernetesReleasesController do
     end
 
     describe 'a POST to #create with missing roles' do
-      setup :current_release_count
+      before { current_release_count }
 
       it_should_raise_an_exception do
         post :create, project_id: project.permalink, kubernetes_release: single_role_release_params.tap { |params| params[:deploy_groups].each { |dg| dg.delete(:roles) } }, authenticity_token:  set_form_authenticity_token
@@ -103,7 +107,7 @@ describe KubernetesReleasesController do
 
   as_a_project_deployer do
     describe 'a GET to #index' do
-      setup :current_release_count
+      before { current_release_count }
 
       it_responds_successfully do
         get :index, project_id: project.permalink
@@ -112,9 +116,11 @@ describe KubernetesReleasesController do
     end
 
     describe 'a POST to #create with a single role' do
-      setup :expect_file_contents_from_repo
-      setup :expect_deploy
-      setup :current_release_count
+      before do
+        expect_file_contents_from_repo
+        expect_deploy
+        current_release_count
+      end
 
       it_responds_successfully do
         post :create, project_id: project.permalink, kubernetes_release: single_role_release_params, authenticity_token:  set_form_authenticity_token
@@ -124,9 +130,11 @@ describe KubernetesReleasesController do
     end
 
     describe 'a POST to #create with multiple roles' do
-      setup { 2.times { expect_file_contents_from_repo } }
-      setup :expect_deploy
-      setup :current_release_count
+      before do
+        2.times { expect_file_contents_from_repo }
+        expect_deploy
+        current_release_count
+      end
 
       it_responds_successfully do
         post :create, project_id: project.permalink, kubernetes_release: multiple_roles_release_params, authenticity_token:  set_form_authenticity_token
@@ -136,7 +144,7 @@ describe KubernetesReleasesController do
     end
 
     describe 'a POST to #create with a missing build id' do
-      setup :current_release_count
+      before { current_release_count }
 
       it_responds_with_bad_request do
         post :create, project_id: project.permalink, kubernetes_release: single_role_release_params.except(:build_id), authenticity_token:  set_form_authenticity_token
@@ -146,7 +154,7 @@ describe KubernetesReleasesController do
     end
 
     describe 'a POST to #create with missing deploy groups' do
-      setup :current_release_count
+      before { current_release_count }
 
       it_should_raise_an_exception do
         post :create, project_id: project.permalink, kubernetes_release: single_role_release_params.except(:deploy_groups), authenticity_token:  set_form_authenticity_token
@@ -160,7 +168,7 @@ describe KubernetesReleasesController do
     end
 
     describe 'a POST to #create with missing roles' do
-      setup :current_release_count
+      before { current_release_count }
 
       it_should_raise_an_exception do
         post :create, project_id: project.permalink, kubernetes_release: single_role_release_params.tap { |params| params[:deploy_groups].each { |dg| dg.delete(:roles) } }, authenticity_token:  set_form_authenticity_token

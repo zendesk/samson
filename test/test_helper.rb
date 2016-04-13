@@ -161,14 +161,14 @@ class ActionController::TestCase
       define_method "as_a_#{user}" do |&block|
         describe "as a #{user}" do
           let(:user) { users(user) }
-          setup { request.env['warden'].set_user(self.user) }
+          before { request.env['warden'].set_user(self.user) }
           instance_eval(&block)
         end
       end
     end
   end
 
-  setup do
+  before do
     middleware = Rails.application.config.middleware.detect {|m| m.name == 'Warden::Manager'}
     manager = Warden::Manager.new(nil, &middleware.block)
     request.env['warden'] = Warden::Proxy.new(request.env, manager)
@@ -177,7 +177,7 @@ class ActionController::TestCase
     create_default_stubs
   end
 
-  teardown do
+  after do
     Warden.test_reset!
   end
 
