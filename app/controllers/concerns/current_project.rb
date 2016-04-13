@@ -3,6 +3,7 @@ module CurrentProject
 
   included do
     before_action :require_project
+    helper_method :current_project
   end
 
   def current_project
