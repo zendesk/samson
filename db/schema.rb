@@ -57,8 +57,8 @@ ActiveRecord::Schema.define(version: 20160408193842) do
     t.integer  "user_id",    limit: 4,   null: false
     t.datetime "created_at",             null: false
     t.datetime "updated_at",             null: false
-    t.text     "filters",    limit: 65535
-    t.string   "status",     limit: 255
+    t.string   "filters",    limit: 255, default: "{}"
+    t.string   "status",     limit: 255, default: "pending"
   end
 
   create_table "deploy_groups", force: :cascade do |t|

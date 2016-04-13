@@ -4,67 +4,65 @@ describe CsvExport do
   let(:user) { users(:deployer) }
   setup { @csv_export = CsvExport.create(user: user) }
 
-  it "sets pending upon creation" do
-    assert @csv_export.status? "pending"
-  end
-
-  it "sets pending and responds correctly" do
-    @csv_export.status! :pending
-    @csv_export.status.must_equal "pending"
-    assert @csv_export.status? "pending"
-    refute @csv_export.status? "ready"
-  end
-
-  it "sets started and responds correctly" do
-    @csv_export.status! :started
-    @csv_export.status.must_equal "started"
-    assert @csv_export.status? "started"
-    refute @csv_export.status? "ready"
-  end
-
-  it "sets finished and responds correctly" do
-    @csv_export.status! :finished
-    @csv_export.status.must_equal "finished"
-    assert @csv_export.status? "finished"
-    assert @csv_export.status? "ready"
-  end
-
-  it "sets downloaded and responds correctly" do
-    @csv_export.status! :downloaded
-    @csv_export.status.must_equal "downloaded"
-    assert @csv_export.status? "downloaded"
-    assert @csv_export.status? "ready"
-  end
-
-  it "sets failed and responds correctly" do
-    @csv_export.status! :failed
-    @csv_export.status.must_equal "failed"
-    assert @csv_export.status? "failed"
-    refute @csv_export.status? "ready"
-  end
-
-  it "sets deleted and responds correctly" do
-    @csv_export.status! :deleted
-    @csv_export.status.must_equal "deleted"
-    assert @csv_export.status? "deleted"
-    refute @csv_export.status? "ready"
-  end
-
-  it "raises ActiveRecord::RecordInvalid" do
-    assert_raise(ActiveRecord::RecordInvalid) do
-      @csv_export.status! "hello_world"
+  describe "status methods" do
+    it "sets pending and responds correctly" do
+      @csv_export.status! :pending
+      @csv_export.status.must_equal "pending"
+      assert @csv_export.status? "pending"
+      refute @csv_export.status? "ready"
     end
-  end
 
-  it "status? responds to symbolics" do
-    @csv_export.status! :finished
-    assert @csv_export.status? :ready
-    assert @csv_export.status? :finished
-  end
+    it "sets started and responds correctly" do
+      @csv_export.status! :started
+      @csv_export.status.must_equal "started"
+      assert @csv_export.status? "started"
+      refute @csv_export.status? "ready"
+    end
 
-  it "status! responds to string" do
-    @csv_export.status! "finished"
-    @csv_export.status.must_equal "finished"
+    it "sets finished and responds correctly" do
+      @csv_export.status! :finished
+      @csv_export.status.must_equal "finished"
+      assert @csv_export.status? "finished"
+      assert @csv_export.status? "ready"
+    end
+
+    it "sets downloaded and responds correctly" do
+      @csv_export.status! :downloaded
+      @csv_export.status.must_equal "downloaded"
+      assert @csv_export.status? "downloaded"
+      assert @csv_export.status? "ready"
+    end
+
+    it "sets failed and responds correctly" do
+      @csv_export.status! :failed
+      @csv_export.status.must_equal "failed"
+      assert @csv_export.status? "failed"
+      refute @csv_export.status? "ready"
+    end
+
+    it "sets deleted and responds correctly" do
+      @csv_export.status! :deleted
+      @csv_export.status.must_equal "deleted"
+      assert @csv_export.status? "deleted"
+      refute @csv_export.status? "ready"
+    end
+
+    it "raises ActiveRecord::RecordInvalid" do
+      assert_raise(ActiveRecord::RecordInvalid) do
+        @csv_export.status! "hello_world"
+      end
+    end
+
+    it "status? responds to symbolics" do
+      @csv_export.status! :finished
+      assert @csv_export.status? :ready
+      assert @csv_export.status? :finished
+    end
+
+    it "status! responds to string" do
+      @csv_export.status! "finished"
+      @csv_export.status.must_equal "finished"
+    end
   end
 
   it "sets filename if not assigned" do
@@ -123,14 +121,5 @@ describe CsvExport do
       csv_export.status.must_equal "pending"
       csv_export.filters.must_equal Hash.new
     end
-
-    it "does not override set values" do
-      status = "started"
-      filters = {'test' => 'test'}
-      csv_export = CsvExport.create(user: user, status: status, filters: filters)
-      csv_export.status.must_equal status
-      csv_export.filters.must_equal filters
-    end
-
   end
 end

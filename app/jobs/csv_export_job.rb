@@ -6,7 +6,7 @@ class CsvExportJob < ActiveJob::Base
   def perform(csv_export)
     ActiveRecord::Base.connection_pool.with_connection do
       create_export_folder(csv_export)
-      export_task(csv_export)
+      generate_csv(csv_export)
       cleanup_downloaded
     end
   end
@@ -20,21 +20,17 @@ class CsvExportJob < ActiveJob::Base
     end
   end
   
-  def export_task(csv_export)
+  def generate_csv(csv_export)
     csv_export.status! :started
     deploy_csv_export(csv_export)
-    notify_of_creation(csv_export)
+    CsvMailer.created(csv_export).deliver_now if csv_export.email.present?
+    csv_export.status! :finished
+    Rails.logger.info("Export #{csv_export.download_name} completed")
   rescue IOError, ActiveRecord::ActiveRecordError => e
     csv_export.delete_file
     csv_export.status! :failed
     Rails.logger.error("Export #{csv_export.id} failed with error #{e}")
     Airbrake.notify(e, error_message: "Export #{csv_export.id} failed.")
-  end
-  
-  def notify_of_creation(csv_export)
-    CsvMailer.created_email(csv_export).deliver_now if csv_export.email.present?
-    csv_export.status! :finished
-    Rails.logger.info("Export #{csv_export.download_name} completed")
   end
   
   def deploy_csv_export(csv_export)

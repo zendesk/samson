@@ -106,7 +106,7 @@ module Samson
     config.active_job.queue_adapter = :sucker_punch
     config.samson.export_job = ActiveSupport::OrderedOptions.new
     config.samson.export_job.downloaded_age = (ENV['EXPORT_JOB_DOWNLOADED_AGE'] || 12.hours).to_i
-    config.samson.export_job.max_age = (ENV['EXPORT_JOB_MAX_AGE'] || 1.month).to_i
+    config.samson.export_job.max_age = (ENV['EXPORT_JOB_MAX_AGE'] || 1.day).to_i
 
     if !Rails.env.test? && ENV['SERVER_MODE'] && !ENV['PRECOMPILE']
       initializer :execute_job, after: :set_routes_reloader_hook do # flowdock uses routes: run after the routes are loaded

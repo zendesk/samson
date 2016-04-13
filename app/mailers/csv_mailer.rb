@@ -1,9 +1,9 @@
 class CsvMailer < ApplicationMailer
-  def created_email(csv_export)
+  def created(csv_export)
     address = csv_export.email
-    subject = "Samson CSV Export Completed"
+    subject = "Samson Deploys CSV Export Completed"
     url = csv_export_url(csv_export, format: 'csv')
-    body = "Download your CSV file at #{url}"
+    body = "The csv export you requested on #{csv_export.created_at} has finished!  Download your CSV file at #{url}"
     mail(to: address, subject: subject, body: body)
   end
 end

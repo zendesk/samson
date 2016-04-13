@@ -73,18 +73,18 @@ class CsvExportsController < ApplicationController
 
     if production = params[:production].presence
       case production
-        when 'Yes' then filter['stages.production'] = true
-        when 'No'  then filter['stages.production'] = false
-        when "Any" then #ignore
-        else
-          raise "Invalid production filter #{production}"
+      when 'Yes' then filter['stages.production'] = true
+      when 'No'  then filter['stages.production'] = false
+      when 'Any' then #ignore
+      else
+        raise "Invalid production filter #{production}"
       end
     end
 
     if status = params[:status].presence
       if ['succeeded', 'failed'].include?(status)
         filter['jobs.status'] = status
-      elsif status != "all"
+      elsif status != 'all'
         raise "Invalid status filter #{status}"
       end
     end

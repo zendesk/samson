@@ -3,8 +3,8 @@ class AddCsvExport < ActiveRecord::Migration
     create_table :csv_exports do |t|
       t.integer :user_id,    null: false
       t.timestamps           null: false
-      t.text :filters
-      t.string :status
+      t.string :filters, default: "{}"
+      t.string :status, default: "pending"
     end
   end
 end
