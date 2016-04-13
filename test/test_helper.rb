@@ -1,7 +1,5 @@
 ENV["RAILS_ENV"] ||= "test"
 
-ENV['PROJECT_CREATED_NOTIFY_ADDRESS'] = 'blah@example.com'
-
 if ENV['CODECLIMATE_REPO_TOKEN']
   require 'codeclimate-test-reporter'
   CodeClimate::TestReporter.start
@@ -155,7 +153,7 @@ class ActionController::TestCase
     def unauthorized(method, action, params = {})
       it "is unauthorized when doing a #{method} to #{action} with #{params}" do
         send(method, action, params)
-        @unauthorized.must_equal true, "Request was not marked unauthorized"
+        assert_unauthorized
       end
     end
 
@@ -163,14 +161,14 @@ class ActionController::TestCase
       define_method "as_a_#{user}" do |&block|
         describe "as a #{user}" do
           let(:user) { users(user) }
-          setup { request.env['warden'].set_user(self.user) }
+          before { request.env['warden'].set_user(self.user) }
           instance_eval(&block)
         end
       end
     end
   end
 
-  setup do
+  before do
     middleware = Rails.application.config.middleware.detect {|m| m.name == 'Warden::Manager'}
     manager = Warden::Manager.new(nil, &middleware.block)
     request.env['warden'] = Warden::Proxy.new(request.env, manager)
@@ -179,7 +177,7 @@ class ActionController::TestCase
     create_default_stubs
   end
 
-  teardown do
+  after do
     Warden.test_reset!
   end
 
@@ -189,6 +187,14 @@ class ActionController::TestCase
 
   def warden
     request.env['warden']
+  end
+
+  def assert_unauthorized
+    @unauthorized.must_equal true, "Request was not marked unauthorized"
+  end
+
+  def refute_unauthorized
+    refute @unauthorized, "Request was marked unauthorized"
   end
 
   def process_with_catch_warden(*args)

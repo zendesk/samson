@@ -1,5 +1,7 @@
 require_relative '../test_helper'
 
+SingleCov.covered!
+
 describe CommitStatusesController do
   as_a_viewer do
     unauthorized :get, :show, project_id: :foo, id: 'test/test'
@@ -20,7 +22,7 @@ describe CommitStatusesController do
             status_list: [{ status: 'pending', description: 'the Travis build is still running' }]
           }
         }
-        setup do
+        before do
           CommitStatus.stubs(new: stub(commit_status_data))
           get :show, project_id: projects(:test), id: 'test/test'
         end

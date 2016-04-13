@@ -124,7 +124,7 @@ describe Project do
   describe 'project repository initialization' do
     let(:repository_url) { 'git@github.com:zendesk/demo_apps.git' }
 
-    it 'should not clean the project when the project is created' do
+    it 'does not clean the project when the project is created' do
       project = Project.new(name: 'demo_apps', repository_url: repository_url)
       project.expects(:clean_old_repository).never
       project.save

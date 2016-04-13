@@ -1,5 +1,7 @@
 require_relative '../test_helper'
 
+SingleCov.covered!
+
 describe 'Unauthorized' do
   include Rack::Test::Methods
 

@@ -1,5 +1,7 @@
 require_relative '../../test_helper'
 
+SingleCov.covered!
+
 describe Admin::EnvironmentsController do
   def self.it_renders_index
     it 'get :index succeeds' do
@@ -53,7 +55,7 @@ describe Admin::EnvironmentsController do
         end
       end
 
-      it 'should not create an environment with blank name' do
+      it 'does not create an environment with blank name' do
         env_count = Environment.count
         post :create, environment: {name: nil, is_production: true}
         assert_template :edit
