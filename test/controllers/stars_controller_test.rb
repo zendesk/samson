@@ -8,7 +8,7 @@ describe StarsController do
 
   as_a_viewer do
     describe 'no stars' do
-      it 'should create a star' do
+      it 'creates a star' do
         refute current_user.starred_project?(project)
         post :create, id: project.to_param
         assert_response :success
@@ -20,7 +20,7 @@ describe StarsController do
     describe 'star present' do
       before { current_user.stars.create!(project: project) }
 
-      it 'should delete a star' do
+      it 'deletes a star' do
         assert current_user.starred_project?(project)
         delete :destroy, id: project.to_param
         assert_response :success

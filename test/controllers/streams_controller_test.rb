@@ -13,7 +13,7 @@ describe StreamsController do
 
   as_a_viewer do
     describe "a GET to :show" do
-      it "should have an initial :started SSE and a :finished SSE" do
+      it "has an initial :started SSE and a :finished SSE" do
         # Override the job retrieval in the streams controller. This way we don't have
         # to stub out all the rest of the JobExecution setup/execute/... flow.
         fake_execution = JobExecution.new("foo", job)

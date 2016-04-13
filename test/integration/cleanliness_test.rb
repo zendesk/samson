@@ -59,4 +59,14 @@ describe "cleanliness" do
     end.compact
     bad.must_equal []
   end
+
+  it "uses active test case wording" do
+    bad = all_tests.map do |f|
+      content = File.read(f)
+      if content =~ /\s+it ['"]should /
+        "#{f} uses `it should` working, please use active working `it should activate` -> `it activates`"
+      end
+    end.compact
+    bad.must_equal []
+  end
 end
