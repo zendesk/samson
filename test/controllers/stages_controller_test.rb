@@ -175,7 +175,6 @@ describe StagesController do
 
         it 'renders' do
           assert_template :edit
-          assigns(:environments).wont_be_nil
         end
 
         it 'renders with no environments configured' do

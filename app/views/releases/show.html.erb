@@ -6,7 +6,7 @@
 
 <section class="clearfix tabs release">
   <div class="pull-right">
-    <%= render 'deploy_to_button', release: @release, stages: @project.stages %>
+    <%= render 'deploy_to_button', release: @release, stages: @project.stages.without_macros %>
   </div>
 
   <% if @release.deployed_stages.any? %>

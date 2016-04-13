@@ -1,14 +1,9 @@
-class Macro < ActiveRecord::Base
-  has_soft_deletion default_scope: true
+class Macro < Stage
+  before_create :set_no_code_deployed
 
-  include HasCommands
+  private
 
-  has_many :command_associations, autosave: true, class_name: "MacroCommand", dependent: :destroy
-  has_many :commands, -> { order("macro_commands.position ASC") },
-    through: :command_associations, auto_include: false
-
-  belongs_to :project
-
-  validates :name, presence: true, uniqueness: { scope: [:project, :deleted_at] }
-  validates :reference, presence: true
+  def set_no_code_deployed
+    self.no_code_deployed = true
+  end
 end

@@ -8,10 +8,9 @@ class StagesController < ApplicationController
   before_action :authorize_project_admin!, except: [:index, :show]
   before_action :check_token, if: :badge?
   before_action :find_stage, only: [:show, :edit, :update, :destroy, :clone]
-  before_action :get_environments, only: [:new, :create, :edit, :update, :clone]
 
   def index
-    @stages = @project.stages
+    @stages = @project.stages.without_macros
 
     respond_to do |format|
       format.html
@@ -114,9 +113,5 @@ class StagesController < ApplicationController
 
   def find_stage
     @stage = current_project.stages.find_by_param!(params[:id])
-  end
-
-  def get_environments
-    @environments = Environment.all
   end
 end

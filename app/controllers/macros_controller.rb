@@ -4,10 +4,15 @@ class MacrosController < ApplicationController
   before_action :authorize_project_deployer!
   before_action :authorize_project_admin!, only: [:new, :create, :edit, :update]
   before_action :authorize_super_admin!, only: [:destroy]
-  before_action :find_macro, only: [:edit, :update, :execute, :destroy]
+  before_action :find_macro, only: [:show, :edit, :update, :execute, :destroy]
 
   def index
     @macros = @project.macros.page(params[:page])
+  end
+
+  def show
+    @stage = @macro
+    @deploys = @macro.deploys.page(params[:page])
   end
 
   def new
@@ -31,19 +36,8 @@ class MacrosController < ApplicationController
     if @macro.update_attributes(macro_params)
       redirect_to project_macros_path(@project)
     else
+      flash[:error] = @macro.errors.full_messages
       render :edit
-    end
-  end
-
-  def execute
-    macro_service = MacroService.new(@project, current_user)
-    job = macro_service.execute!(@macro)
-
-    if job.persisted?
-      JobExecution.start_job(JobExecution.new(job.commit, job))
-      redirect_to [@project, job]
-    else
-      redirect_to project_macros_path(@project)
     end
   end
 
@@ -56,8 +50,9 @@ class MacrosController < ApplicationController
 
   def macro_params
     params.require(:macro).permit(
-      :name, :reference, :command,
-      command_ids: []
+      :name, :command, :permalink,
+      command_ids: [],
+      deploy_group_ids: []
     )
   end
 
@@ -66,6 +61,6 @@ class MacrosController < ApplicationController
   end
 
   def find_macro
-    @macro = @project.macros.find(params[:id])
+    @macro = @project.macros.find_by_param!(params[:id])
   end
 end

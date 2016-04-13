@@ -31,11 +31,7 @@ class Command < ActiveRecord::Base
     project_id.nil?
   end
 
-  def usages
-    stages + macros
-  end
-
   def self.usage_ids
-    MacroCommand.pluck(:command_id) + StageCommand.pluck(:command_id)
+    StageCommand.pluck(:command_id)
   end
 end

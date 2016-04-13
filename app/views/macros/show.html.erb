@@ -1,0 +1,19 @@
+<% content_for :page_title, @macro.global_name %>
+
+<%= breadcrumb @project, @macro %>
+
+<h1><%= @macro.name %></h1>
+
+<section>
+  <h2>Actions</h2>
+  <div>
+    <%= deploy_link @project, @macro %>
+
+    <% if is_admin_for_project? %>
+      <%= link_to "Edit", edit_project_macro_path(@project, @macro), class: "btn btn-default" %>
+      <%= link_to_delete_button([@project, @macro]) %>
+    <% end %>
+  </div>
+
+  <%= render 'shared/stage_details' %>
+</section>

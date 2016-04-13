@@ -9,7 +9,7 @@ class ReleasesController < ApplicationController
   end
 
   def index
-    @stages = @project.stages
+    @stages = @project.stages.without_macros
     @releases = @project.releases.sort_by_version.page(params[:page])
   end
 

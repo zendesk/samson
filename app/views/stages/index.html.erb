@@ -2,7 +2,7 @@
 
 <section class="tabs">
   <ul id="stages" data-url="<%= reorder_project_stages_path(@project) %>" data-sortable="<%= is_admin_for_project? %>">
-    <% @stages.each.with_index do |stage, index| %>
+    <% @stages.each do |stage| %>
       <li class="stage-bar bar list-unstyled clearfix<%= ' sortable' if is_admin_for_project? %>" data-id="stage_id_<%= stage.id %>">
         <%= link_to stage.name, [@project, stage] %>
         <%= stage_lock_icon stage %>

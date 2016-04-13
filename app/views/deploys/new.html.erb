@@ -1,61 +1,74 @@
 <%= breadcrumb @project, @stage, "Deploy" %>
 
-<%= render_global_lock %>
+<% if @stage.is_a?(Macro) %>
+  <section>
+    <%= form_for Deploy.new, url: project_stage_deploys_path(@project, @stage), html: { class: "form-horizontal" } do |form| %>
+      <%= render 'errors' %>
 
-<section>
-  <%= form_for [@project, @stage, @deploy], html: { class: "form-horizontal" }, data: { 'commit-status-url' => project_commit_statuses_path(@project), 'confirm-url' => confirm_project_stage_deploys_path(@project, @stage), 'confirmation' => @stage.confirm? } do |form| %>
-    <fieldset>
-      <% if @deploy.errors.any? %>
-        <div class="row">
-          <div class="col-lg-5 col-lg-offset-1 alert alert-warning">
-            <p><strong>Ooops!</strong> There was an error while trying to start the deploy:</p>
-            <ul>
-              <% @deploy.errors.full_messages.each do |message| %>
-                <li><%= message %></li>
-              <% end %>
-            </ul>
+      <fieldset>
+        <div class="form-group">
+          <%= form.label :reference, "Tag or SHA", class: "col-lg-2 control-label" %>
+          <div id="scrollable-dropdown-menu" class="col-lg-4">
+            <%= form.text_field :reference, class: "form-control", autofocus: true, placeholder: "e.g. v2.1.43, master, fa0b4671" %>
           </div>
         </div>
-      <% end %>
 
-      <div class="form-group">
-        <%= form.label :reference, "Tag or SHA", class: "col-lg-2 control-label" %>
-        <div id="scrollable-dropdown-menu" class="col-lg-4">
-          <%= form.text_field :reference, class: "form-control", autofocus: true, placeholder: "e.g. v2.1.43, master, fa0b4671", data: { prefetch_url: project_references_path(@project, format: "json") } %>
+        <div class="form-group">
+          <div class="col-lg-offset-2 col-lg-10">
+            <%= form.submit "Confirm", class: "btn btn-primary" %>
+            <%= link_to "Cancel", :back, class: 'btn btn-default' %>
+          </div>
         </div>
-      </div>
-      <div>
-        <div id="ref-problem-warning" class="col-lg-5 col-lg-offset-2 alert alert-warning hidden">
-          <p>There is currently a problem registered by a CI service for this Tag or SHA. Are you sure you wish to deploy?</p>
-          <ul id="ref-problem-list"></ul>
+      </fieldset>
+    <% end %>
+  </section>
+<% else %>
+  <%= render_global_lock %>
+
+  <section>
+    <%= form_for [@project, @stage, @deploy], html: { class: "form-horizontal" }, data: { 'commit-status-url' => project_commit_statuses_path(@project), 'confirm-url' => confirm_project_stage_deploys_path(@project, @stage), 'confirmation' => @stage.confirm? } do |form| %>
+      <fieldset>
+        <%= render 'errors' %>
+
+        <div class="form-group">
+          <%= form.label :reference, "Tag or SHA", class: "col-lg-2 control-label" %>
+          <div id="scrollable-dropdown-menu" class="col-lg-4">
+            <%= form.text_field :reference, class: "form-control", autofocus: true, placeholder: "e.g. v2.1.43, master, fa0b4671", data: { prefetch_url: project_references_path(@project, format: "json") } %>
+          </div>
         </div>
-      </div>
-
-      <%= Samson::Hooks.render_views(:deploy_form, self, project: @project, form: form) %>
-
-      <div class="form-group" id="new-deploy-buttons">
-        <div class="col-lg-offset-2 col-lg-10">
-          <%= form.submit "", class: "btn btn-primary", disabled: global_lock %>
-          <%= link_to "Cancel", :back, class: 'btn btn-default' %>
+        <div>
+          <div id="ref-problem-warning" class="col-lg-5 col-lg-offset-2 alert alert-warning hidden">
+            <p>There is currently a problem registered by a CI service for this Tag or SHA. Are you sure you wish to deploy?</p>
+            <ul id="ref-problem-list"></ul>
+          </div>
         </div>
-      </div>
 
-      <div id="deploy-confirmation">
-        <ul class="nav nav-tabs">
-          <li><a href="#files" data-toggle="tab">Files</a></li>
-          <li><a href="#commits" data-toggle="tab">Commits</a></li>
-          <li><a href="#pulls" data-toggle="tab">Pull Requests</a></li>
-          <li><a href="#risks" data-toggle="tab">Risks</a></li>
-        </ul>
+        <%= Samson::Hooks.render_views(:deploy_form, self, project: @project, form: form) %>
 
-        <div class="tab-content deploy-details">
-          <% %w(files commits pulls risks).each_with_index do |pane, i| %>
-            <div class="tab-pane changeset-placeholder" id="<%= pane %>">
-              <p>Loading...</p>
-            </div>
-          <% end %>
+        <div class="form-group" id="new-deploy-buttons">
+          <div class="col-lg-offset-2 col-lg-10">
+            <%= form.submit "", class: "btn btn-primary", disabled: global_lock %>
+            <%= link_to "Cancel", :back, class: 'btn btn-default' %>
+          </div>
         </div>
-      </div>
-    </fieldset>
-  <% end %>
-</section>
+
+        <div id="deploy-confirmation">
+          <ul class="nav nav-tabs">
+            <li><a href="#files" data-toggle="tab">Files</a></li>
+            <li><a href="#commits" data-toggle="tab">Commits</a></li>
+            <li><a href="#pulls" data-toggle="tab">Pull Requests</a></li>
+            <li><a href="#risks" data-toggle="tab">Risks</a></li>
+          </ul>
+
+          <div class="tab-content deploy-details">
+            <% %w(files commits pulls risks).each_with_index do |pane, i| %>
+              <div class="tab-pane changeset-placeholder" id="<%= pane %>">
+                <p>Loading...</p>
+              </div>
+            <% end %>
+          </div>
+        </div>
+      </fieldset>
+    <% end %>
+  </section>
+<% end %>

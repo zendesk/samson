@@ -4,9 +4,7 @@ Samson::Application.routes.draw do
   resources :projects do
     resources :jobs, only: [:index, :new, :create, :show, :destroy]
 
-    resources :macros, only: [:index, :new, :create, :edit, :update, :destroy] do
-      member { post :execute }
-    end
+    resources :macros, only: [:index, :new, :create, :show, :edit, :update, :destroy]
 
     resources :builds, only: [:show, :index, :new, :create, :edit, :update] do
       member do

@@ -17,26 +17,24 @@
         </div>
       </div>
 
-      <% if @command.usages.present? %>
+      <% if stages = @command.stages.presence %>
         <div class="form-group">
           <%= form.label :usage, value: "Usage", class: "col-lg-2 control-label" %>
-          <% [['stage', @command.stages], ['macro', @command.macros]].select { |_,u| u.any? }.each do |type, usages| %>
-            <div class="col-lg-4">
-              Used in <%= pluralize(usages.count, type) %>:
-              <ul>
-                <% usages.each do |s| %>
-                  <li><%= link_to "#{s.project.name} - #{s.name}", [s.project, s, action: :edit] %></li>
-                <% end %>
-              </ul>
-            </div>
-          <% end %>
+          <div class="col-lg-4">
+            Used in:
+            <ul>
+              <% stages.each do |s| %>
+                <li><%= link_to "#{s.project.name} - #{s.name}", [s.project, s, action: :edit] %></li>
+              <% end %>
+            </ul>
+          </div>
         </div>
       <% end %>
 
       <div class="form-group">
         <div class="col-lg-offset-2 col-lg-10">
           <button type="submit" class="btn btn-default">Save</button>
-          <%= link_to_delete([:admin, @command]) unless @command.new_record? || @command.usages.present? %>
+          <%= link_to_delete([:admin, @command]) unless @command.new_record? || @command.stages.present? %>
         </div>
       </div>
     </fieldset>

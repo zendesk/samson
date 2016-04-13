@@ -5,3 +5,7 @@ test_staging_echo:
 test_production_echo:
   stage: test_production
   command: echo
+
+test_echo:
+  stage: macro
+  command: echo
