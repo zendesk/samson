@@ -1,9 +1,11 @@
 require_relative '../test_helper'
 
+SingleCov.covered!
+
 describe ProjectsController do
   let(:project) { projects(:test) }
 
-  setup do
+  before do
     Project.any_instance.stubs(:clone_repository).returns(true)
     Project.any_instance.stubs(:valid_repository_url).returns(true)
   end
@@ -101,7 +103,7 @@ describe ProjectsController do
     end
 
     as_a_admin do
-      setup do
+      before do
         post :create, params
       end
 
@@ -171,7 +173,7 @@ describe ProjectsController do
     end
 
     as_a_admin do
-      setup do
+      before do
         delete :destroy, id: project.to_param
       end
 
@@ -212,7 +214,7 @@ describe ProjectsController do
       end
 
       describe "common" do
-        setup do
+        before do
           put :update, params.merge(id: project.to_param)
         end
 
@@ -251,7 +253,7 @@ describe ProjectsController do
       end
 
       describe "common" do
-        setup do
+        before do
           put :update, params.merge(id: project.to_param)
         end
 

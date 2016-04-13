@@ -1,5 +1,7 @@
 require_relative '../../test_helper'
 
+SingleCov.covered! percent: 82
+
 describe Integrations::BaseController do
   let(:sha) { "dc395381e650f3bac18457909880829fc20e34ba" }
   let(:project) { projects(:test) }

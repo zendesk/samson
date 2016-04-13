@@ -1,5 +1,7 @@
 require_relative '../test_helper'
 
+SingleCov.covered!
+
 describe PingController do
   describe 'GET to #show' do
     setup { get :show }

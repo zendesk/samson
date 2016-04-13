@@ -1,5 +1,7 @@
 require_relative '../../test_helper'
 
+SingleCov.covered!
+
 describe "ProjectLevelAuthorization Controller" do
   class ProjectLevelAuthorizationTestController < ApplicationController
     include ProjectLevelAuthorization
@@ -21,18 +23,18 @@ describe "ProjectLevelAuthorization Controller" do
   as_a_project_deployer do
     it "can access allowed projects" do
       get :deploy, project_id: Project.first.id, test_route: true
-      refute @unauthorized
+      refute_unauthorized
     end
 
     it "cannot access forbidden projects" do
       UserProjectRole.delete_all
       get :deploy, project_id: Project.first.id, test_route: true
-      assert @unauthorized
+      assert_unauthorized
     end
 
     it "cannot access admin" do
       get :admin, project_id: Project.first.id, test_route: true
-      assert @unauthorized
+      assert_unauthorized
     end
   end
 
@@ -40,37 +42,37 @@ describe "ProjectLevelAuthorization Controller" do
     it "can access any project" do
       UserProjectRole.delete_all
       get :deploy, project_id: Project.first.id, test_route: true
-      refute @unauthorized
+      refute_unauthorized
     end
 
     it "cannot access admin" do
       get :admin, project_id: Project.first.id, test_route: true
-      assert @unauthorized
+      assert_unauthorized
     end
   end
 
   as_a_project_admin do
     it "can access allowed projects" do
       get :admin, project_id: Project.first.id, test_route: true
-      refute @unauthorized
+      refute_unauthorized
     end
 
     it "cannot access forbidden projects" do
       UserProjectRole.delete_all
       get :admin, project_id: Project.first.id, test_route: true
-      assert @unauthorized
+      assert_unauthorized
     end
   end
 
   as_a_admin do
     it "can access any project" do
       get :admin, project_id: Project.first.id, test_route: true
-      refute @unauthorized
+      refute_unauthorized
     end
 
     it "can access any project deploy" do
       get :deploy, project_id: Project.first.id, test_route: true
-      refute @unauthorized
+      refute_unauthorized
     end
   end
 end

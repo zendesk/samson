@@ -1,5 +1,7 @@
 require_relative '../test_helper'
 
+SingleCov.covered!
+
 describe WebhooksController do
   let(:project) { projects(:test) }
   let(:stage) { stages(:test_staging) }
@@ -11,16 +13,17 @@ describe WebhooksController do
   end
 
   as_a_project_deployer do
-    describe 'GET :index' do
-      it 'renders :index template' do
+    describe '#index' do
+      it 'renders' do
         get :index, project_id: project.to_param
         assert_template :index
       end
     end
 
-    describe 'POST :create' do
+    describe '#create' do
       let(:params) { { branch: "master", stage_id: stage.id, source: 'any' } }
-      setup do
+
+      before do
         post :create, project_id: project.to_param, webhook: params
       end
 
@@ -31,7 +34,7 @@ describe WebhooksController do
       end
 
       describe 'handles stage deletion' do
-        setup do
+        before do
           stage.soft_delete!
           project.reload
         end
@@ -40,6 +43,15 @@ describe WebhooksController do
           get :index, project_id: project.to_param
           assert_template :index
         end
+      end
+    end
+
+    describe "#destroy" do
+      it "deletes the hook" do
+        hook = project.webhooks.create!(stage: stage, branch: 'master', source: 'code')
+        delete :destroy, project_id: project.to_param, id: hook.id
+        assert_raises(ActiveRecord::RecordNotFound) { Webhook.find(hook.id) }
+        assert_redirected_to project_webhooks_path(project)
       end
     end
   end

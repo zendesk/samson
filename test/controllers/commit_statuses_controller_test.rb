@@ -1,5 +1,7 @@
 require_relative '../test_helper'
 
+SingleCov.covered!
+
 describe CommitStatusesController do
   as_a_viewer do
     unauthorized :get, :show, project_id: :foo, id: 'test/test'

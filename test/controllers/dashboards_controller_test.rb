@@ -1,5 +1,7 @@
 require_relative '../test_helper'
 
+SingleCov.covered!
+
 describe DashboardsController do
   let(:production) { environments(:production) }
 

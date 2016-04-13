@@ -37,4 +37,14 @@ describe "cleanliness" do
     found.reject { |a| a =~ /^(_conditional_callback_around_|_callback_before_)/ } - ["flash"]
     found.must_equal []
   end
+
+  it "has coverage" do
+    bad = Dir["test/controllers/**/*.rb"].map do |f|
+      content = File.read(f)
+      unless content.include?("SingleCov.covered!")
+        "#{f} needs to use SingleCov.covered!"
+      end
+    end.compact
+    bad.must_equal []
+  end
 end

@@ -1,5 +1,7 @@
 require_relative '../test_helper'
 
+SingleCov.covered!
+
 describe ProjectRolesController do
   let(:project) { projects(:test) }
 
