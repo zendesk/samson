@@ -1,5 +1,7 @@
 require_relative '../test_helper'
 
+SingleCov.covered!
+
 describe KubernetesReleasesController do
   let(:project) { projects(:test) }
   let(:build) { builds(:docker_build) }

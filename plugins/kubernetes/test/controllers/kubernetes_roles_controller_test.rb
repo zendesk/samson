@@ -1,7 +1,8 @@
 require_relative '../test_helper'
 
-describe KubernetesRolesController do
+SingleCov.covered!
 
+describe KubernetesRolesController do
   let(:project) { projects(:test) }
 
   describe 'a GET to #index' do

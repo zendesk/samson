@@ -1,6 +1,6 @@
 require_relative '../test_helper'
 
-SingleCov.covered! percent: 68
+SingleCov.covered! uncovered: 11
 
 describe StreamsController do
   include OutputBufferSupport
