@@ -1,5 +1,7 @@
 require_relative '../test_helper'
 
+SingleCov.covered!
+
 describe LocksHelper do
   describe "#delete_lock_options" do
     it "returns the correct options" do

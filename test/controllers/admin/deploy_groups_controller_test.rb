@@ -1,5 +1,7 @@
 require_relative '../../test_helper'
 
+SingleCov.covered!
+
 describe Admin::DeployGroupsController do
   let(:deploy_group) { deploy_groups(:pod100) }
   let(:stage) { stages(:test_staging) }
@@ -16,9 +18,10 @@ describe Admin::DeployGroupsController do
   as_a_deployer do
     unauthorized :get, :index
     unauthorized :post, :create
-    unauthorized :delete, :destroy, id: 1
-    unauthorized :post, :update, id: 1
     unauthorized :get, :new
+    unauthorized :get, :edit, id: 1
+    unauthorized :post, :update, id: 1
+    unauthorized :delete, :destroy, id: 1
     unauthorized :get, :deploy_all, id: 1
     unauthorized :post, :deploy_all, id: 1
   end
@@ -26,9 +29,10 @@ describe Admin::DeployGroupsController do
   as_a_admin do
     it_renders_index
     unauthorized :post, :create
-    unauthorized :delete, :destroy, id: 1
-    unauthorized :post, :update, id: 1
     unauthorized :get, :new
+    unauthorized :get, :edit, id: 1
+    unauthorized :post, :update, id: 1
+    unauthorized :delete, :destroy, id: 1
     unauthorized :get, :deploy_all, id: 1
     unauthorized :post, :deploy_all, id: 1
   end
@@ -60,17 +64,10 @@ describe Admin::DeployGroupsController do
       end
     end
 
-    describe '#delete' do
-      it 'succeeds' do
-        delete :destroy, id: deploy_group
-        assert_redirected_to admin_deploy_groups_path
-        DeployGroup.where(id: deploy_group.id).must_equal []
-      end
-
-      it 'fails for non-existent deploy_group' do
-        assert_raises ActiveRecord::RecordNotFound do
-          delete :destroy, id: -1
-        end
+    describe '#edit' do
+      it "renders" do
+        get :edit, id: deploy_group
+        assert_template :edit
       end
     end
 
@@ -88,6 +85,20 @@ describe Admin::DeployGroupsController do
         assert_template :edit
         flash[:error].must_include "Name can't be blank"
         deploy_group.reload.name.must_equal 'Pod 100'
+      end
+    end
+
+    describe '#destroy' do
+      it 'succeeds' do
+        delete :destroy, id: deploy_group
+        assert_redirected_to admin_deploy_groups_path
+        DeployGroup.where(id: deploy_group.id).must_equal []
+      end
+
+      it 'fails for non-existent deploy_group' do
+        assert_raises ActiveRecord::RecordNotFound do
+          delete :destroy, id: -1
+        end
       end
     end
 

@@ -1,12 +1,12 @@
 require_relative '../test_helper'
-require 'flowdock'
+
+SingleCov.covered!
 
 describe FlowdockController do
   let(:token) { 'asdkjh21s' }
 
-  before do
-    ENV['FLOWDOCK_API_TOKEN'] = token
-  end
+  before { ENV['FLOWDOCK_API_TOKEN'] = token }
+  after { ENV.delete 'FLOWDOCK_API_TOKEN'}
 
   as_a_viewer do
     describe 'users' do
@@ -43,14 +43,17 @@ describe FlowdockController do
     end
 
     describe 'buddy request notifications' do
-      before do
+      it 'sends a buddy request' do
         FlowdockNotification.any_instance.expects(:buddy_request).once
         deploy_id = deploys(:succeeded_test).id
         post :notify,  deploy_id: deploy_id, message: 'Test', authenticity_token:  set_form_authenticity_token
+        assert_response :success
       end
 
-      it 'sends a buddy request' do
-        assert_response :success
+      it 'renders 404 as json' do
+        post :notify,  deploy_id: 112212112
+        assert_response :not_found
+        response.body.must_match /{\"message\":\"Couldn't find Deploy with 'id'=112212112/
       end
     end
   end

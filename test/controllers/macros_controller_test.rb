@@ -1,5 +1,7 @@
 require_relative '../test_helper'
 
+SingleCov.covered! uncovered: 1
+
 describe MacrosController do
   let(:project) { projects(:test) }
   let(:macro) { macros(:test) }
@@ -24,7 +26,7 @@ describe MacrosController do
 
   as_a_project_deployer do
     describe "a GET to :index" do
-      setup { get :index, project_id: project.to_param }
+      before { get :index, project_id: project.to_param }
 
       it "renders the template" do
         assert_template :index

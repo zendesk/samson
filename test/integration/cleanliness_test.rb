@@ -2,6 +2,8 @@ require_relative '../test_helper'
 
 # kitchen sink for 1-off tests
 describe "cleanliness" do
+  let(:all_tests) { Dir["{,plugins/*/}test/controllers/**/*_test.rb"] }
+
   it "does not have boolean limit 1 in schema since this breaks mysql" do
     File.read("db/schema.rb").wont_match /\st\.boolean.*limit: 1/
   end
@@ -23,7 +25,7 @@ describe "cleanliness" do
   end
 
   it "does not use let(:user) inside of a as_xyz block" do
-    bad = Dir["{,plugins/*/}test/controllers/**/*.rb"].map do |f|
+    bad = all_tests.map do |f|
       content = File.read(f)
       if content.include?("  as_") && content.include?("let(:user)")
         "#{f} uses as_xyz and let(:user) these do not mix!"
@@ -36,5 +38,35 @@ describe "cleanliness" do
     found = ApplicationController.action_methods.to_a
     found.reject { |a| a =~ /^(_conditional_callback_around_|_callback_before_)/ } - ["flash"]
     found.must_equal []
+  end
+
+  it "has coverage" do
+    bad = Dir["{,plugins/*/}test/{controllers,mailers,serializers,helpers}/**/*_test.rb"].map do |f|
+      content = File.read(f)
+      unless content.include?("SingleCov.covered!")
+        "#{f} needs to use SingleCov.covered!"
+      end
+    end.compact
+    bad.must_equal []
+  end
+
+  it "does not use setup/teardown" do
+    bad = all_tests.map do |f|
+      content = File.read(f)
+      if content =~ /\s+(setup|teardown)[\s\{]/
+        "#{f} uses setup or taerdown, but should use before or after"
+      end
+    end.compact
+    bad.must_equal []
+  end
+
+  it "uses active test case wording" do
+    bad = all_tests.map do |f|
+      content = File.read(f)
+      if content =~ /\s+it ['"]should /
+        "#{f} uses `it should` working, please use active working `it should activate` -> `it activates`"
+      end
+    end.compact
+    bad.must_equal []
   end
 end

@@ -2,26 +2,25 @@ class SingleCov
   COVERAGES = []
 
   class << self
-    def expect(file, percent)
-      COVERAGES << [file, percent]
+    def covered!(file: nil, uncovered: 0)
+      file ||= file_under_test(caller.first)
+      COVERAGES << [file, uncovered]
     end
 
     def verify!(result)
-      COVERAGES.each do |file, expected_percent|
+      COVERAGES.each do |file, expected_uncovered|
         uncovered!(file) unless coverage = result[File.expand_path(file)]
 
-        line_of_code = coverage.compact.count
-        line_of_covered_code = coverage.count { |l| l && l > 0 }
-        actual_percent = 100 * line_of_covered_code / line_of_code
-        next if actual_percent == expected_percent
+        uncovered_lines = coverage.each_with_index.map { |c, i| "#{file}:#{i+1}" if c == 0 }.compact
+        next if uncovered_lines.size == expected_uncovered
 
-        details = "#{actual_percent}% vs #{expected_percent}%"
-        if actual_percent > expected_percent
-          warn "#{file} exceeds expected coverage #{details}, increment expected coverage?"
+        details = "#{uncovered_lines.size} current vs #{expected_uncovered} previous"
+        if expected_uncovered > uncovered_lines.size
+          warn "#{file} has more less uncovered lines now #{details}, decrement expected uncovered?"
         else
-          warn "#{file} lower then expected coverage #{details}"
+          warn "#{file} new uncovered lines introduced #{details}"
           warn "Lines missing coverage:"
-          warn coverage.select { |c| c == 0 }.each_with_index.map { |c, i| "#{file}:#{i+1}" }
+          warn uncovered_lines
           exit 1
         end
       end
@@ -29,11 +28,20 @@ class SingleCov
 
     private
 
+    def file_under_test(file)
+      file = file.dup
+      file.sub!("#{Rails.root}/", '')
+      folder = (file =~ %r{(^|/)lib/} ? '' : 'app/')
+      file.sub!(%r{(^|/)test/}, "\\1#{folder}")
+      file.sub!(/_test.rb.*/, '.rb')
+      file
+    end
+
     def uncovered!(file)
       message = if File.exist?(file)
-        "#{file} does not exist and cannot be covered"
-      else
         "#{file} was not covered during tests, possibly loaded before test start ?"
+      else
+        "#{file} does not exist and cannot be covered"
       end
       warn message
       exit 1

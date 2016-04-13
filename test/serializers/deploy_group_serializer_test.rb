@@ -1,5 +1,7 @@
 require_relative '../test_helper'
 
+SingleCov.covered!
+
 describe DeployGroupSerializer do
   let(:deploy_group) { deploy_groups(:pod1) }
 

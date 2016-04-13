@@ -1,5 +1,7 @@
 require_relative '../test_helper'
 
+SingleCov.covered!
+
 describe ReferencesService do
   let!(:repository_url) do
     tmp = Dir.mktmpdir

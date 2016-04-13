@@ -1,5 +1,7 @@
 require_relative '../test_helper'
 
+SingleCov.covered!
+
 describe AccessRequestsController do
   include AccessRequestTestSupport
   as_a_viewer do
