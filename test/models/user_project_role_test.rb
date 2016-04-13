@@ -5,7 +5,7 @@ describe UserProjectRole do
   let(:project) { projects(:test) }
   let(:project_role) { UserProjectRole.create({user_id: user.id, project_id: project.id, role_id: Role::ADMIN.id}) }
 
-  setup { project_role }
+  before { project_role }
 
   describe "creates a new project role from a hash" do
     it "is persisted" do
@@ -43,7 +43,7 @@ describe UserProjectRole do
   end
 
   describe "updates an existing project role" do
-    setup do
+    before do
       project_role.update({role_id: Role::DEPLOYER.id})
     end
 
@@ -61,7 +61,7 @@ describe UserProjectRole do
   end
 
   describe "fails to update a project role with an invalid role" do
-    setup do
+    before do
       project_role.update({role_id: 3})
     end
 

@@ -4,7 +4,7 @@ SingleCov.covered!
 
 describe PingController do
   describe 'GET to #show' do
-    setup { get :show }
+    before { get :show }
 
     it 'responds ok' do
       response.status.must_equal(200)

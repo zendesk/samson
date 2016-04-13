@@ -5,7 +5,7 @@ SingleCov.covered!
 describe SessionsController do
   describe "a GET to #new" do
     describe "when logged in" do
-      setup do
+      before do
         request.env['warden'].set_user(users(:admin))
         get :new
       end
@@ -16,7 +16,7 @@ describe SessionsController do
     end
 
     describe "when not logged in" do
-      setup do
+      before do
         get :new
       end
 
@@ -48,7 +48,7 @@ describe SessionsController do
     let(:role_id) { Role::VIEWER.id }
     let(:before_call) {  }
 
-    setup do
+    before do
       GithubAuthorization.any_instance.stubs(role_id: role_id)
 
       @request.env.merge!(env)
@@ -110,7 +110,7 @@ describe SessionsController do
       )
     end
 
-    setup do
+    before do
       @request.env.merge!(env)
       @request.env.merge!('omniauth.auth' => auth_hash)
       @request.env.merge!('omniauth.strategy' => strategy)
@@ -118,7 +118,7 @@ describe SessionsController do
     end
 
     describe 'without email restriction' do
-      setup do
+      before do
         @controller.stubs(:restricted_email_domain).returns(nil)
         post :google
       end
@@ -141,7 +141,7 @@ describe SessionsController do
     end
 
     describe "with email restriction" do
-      setup do
+      before do
         @controller.stubs(:restricted_email_domain).returns("@uniqlo.com")
         post :google
       end
@@ -174,7 +174,7 @@ describe SessionsController do
       )
     end
 
-    setup do
+    before do
       @request.env.merge!(env)
       @request.env.merge!('omniauth.auth' => auth_hash)
       @request.env.merge!('omniauth.strategy' => strategy)
@@ -182,7 +182,7 @@ describe SessionsController do
     end
 
     describe 'without email restriction' do
-      setup do
+      before do
         @controller.stubs(:restricted_email_domain).returns(nil)
         post :ldap
       end
@@ -205,7 +205,7 @@ describe SessionsController do
     end
 
     describe "with email restriction" do
-      setup do
+      before do
         @controller.stubs(:restricted_email_domain).returns("@uniqlo.com")
         post :ldap
       end
@@ -225,7 +225,7 @@ describe SessionsController do
   end
 
   describe "a GET to #failure" do
-    setup do
+    before do
       get :failure
     end
 
@@ -239,7 +239,7 @@ describe SessionsController do
   end
 
   describe "a DELETE to #destroy" do
-    setup do
+    before do
       login_as(users(:admin))
       delete :destroy
     end
