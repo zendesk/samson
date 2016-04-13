@@ -1,5 +1,7 @@
 require_relative '../test_helper'
 
+SingleCov.covered! percent: 68
+
 describe Deploy do
   let(:project) { projects(:test) }
   let(:user) { users(:deployer) }
@@ -152,19 +154,37 @@ describe Deploy do
       DeployGroup.stubs(enabled?: true)
     end
 
-    it "is valid when using $DEPLOY_GROUPS and having deploy groups selected" do
-      deploy!
+    describe "when selecting deploy groups" do
+      it "is valid when using $DEPLOY_GROUPS" do
+        deploy!
+      end
+
+      it "is invalid when not using $DEPLOY_GROUPS" do
+        stage.commands.first.update_column(:command, "echo NOPE")
+        e = assert_raise(ActiveRecord::RecordInvalid) { deploy! }
+        e.message.must_equal "Validation failed: Stage has Deploy Groups selected, but has no command using the $DEPLOY_GROUPS environment variable."
+      end
+
+      it "valid when DeployGroup feature is disabled" do
+        DeployGroup.unstub(:enabled?)
+        deploy!
+      end
     end
 
     describe "when not selecting deploy groups" do
       before { stage.deploy_groups.clear }
 
-      it "is invalid" do
+      it "is invalid when using $DEPLOY_GROUPS" do
         e = assert_raise(ActiveRecord::RecordInvalid) { deploy! }
-        e.message.must_equal "Validation failed: Stage contains at least one command using the $DEPLOY_GROUPS environment variable, but there are no Deploy Groups associated with this stage."
+        e.message.must_equal "Validation failed: Stage has at least one command using the $DEPLOY_GROUPS environment variable, but has no Deploy Groups selected."
       end
 
       it "valid when not using $DEPLOY_GROUPS" do
+        DeployGroup.unstub(:enabled?)
+        deploy!
+      end
+
+      it "valid when DeployGroup feature is disabled" do
         DeployGroup.unstub(:enabled?)
         deploy!
       end

@@ -188,8 +188,15 @@ class Deploy < ActiveRecord::Base
   # commands and deploy groups can change via many different paths,
   # so we validate once a user actually tries to execute the command
   def validate_stage_uses_deploy_groups_properly
-    if DeployGroup.enabled? && stage.deploy_groups.none? && stage.command.include?("$DEPLOY_GROUPS")
-      errors.add(:stage, "contains at least one command using the $DEPLOY_GROUPS environment variable, but there are no Deploy Groups associated with this stage.")
+    return unless DeployGroup.enabled?
+    if stage.deploy_groups.none?
+      if stage.command.include?("$DEPLOY_GROUPS")
+        errors.add(:stage, "has at least one command using the $DEPLOY_GROUPS environment variable, but has no Deploy Groups selected.")
+      end
+    else
+      unless stage.command.include?("$DEPLOY_GROUPS")
+        errors.add(:stage, "has Deploy Groups selected, but has no command using the $DEPLOY_GROUPS environment variable.")
+      end
     end
   end
 
