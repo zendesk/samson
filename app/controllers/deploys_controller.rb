@@ -60,7 +60,7 @@ class DeploysController < ApplicationController
   #   * status (what is the status of this job failed|running| etc)
 
   def search
-    if (params[:status] && !Job.valid_status?(params[:status]))
+    if (params[:status].present? && !Job.valid_status?(params[:status]))
       render json: { errors: "invalid status given" }, status: 400
       return
     end
@@ -73,10 +73,10 @@ class DeploysController < ApplicationController
       projects = Project.where(name: params[:project_name]).pluck(:id)
     end
 
-    if users || params[:status]
+    if users || params[:status].present?
       jobs = Job
       jobs = jobs.where(user: users) if users
-      jobs = jobs.where(status: params[:status]) if params[:status]
+      jobs = jobs.where(status: params[:status]) if params[:status].present?
     end
 
     if params[:production].present? || projects
@@ -91,11 +91,13 @@ class DeploysController < ApplicationController
     deploys = Deploy
     deploys = Deploy.where(stage: stages) if stages
     deploys = Deploy.where(job: jobs) if jobs
+    @deploys = deploys.page(params[:page]).per(30)
 
     respond_to do |format|
       format.json do
         render json: deploys.page(params[:page]).per(30)
       end
+      format.html { render 'search', locals: { deploys: deploys.page(1).per(30), title: 'Search Resuls', show_filters: true, controller: 'currentDeploysCtrl' } }
       format.csv do
         datetime = Time.now.strftime "%Y%m%d_%H%M"
         send_data deploys.to_csv, type: :csv, filename: "deploy_search_results_#{datetime}.csv"

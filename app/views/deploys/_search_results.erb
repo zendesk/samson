@@ -1,0 +1,12 @@
+<% cache search_results do %>
+  <tr>
+  <td><%= link_to search_results.project.name, search_results.project %></td>
+    <td><%= search_results.user.name %></td>
+    <td>
+      <%= content_tag :span, "Hotfix!", class: "label label-hotfix" if search_results.changeset.hotfix? %>
+      <%= link_to "#{search_results.summary}", search_results.url %>
+    </td>
+      <td><%= relative_time(search_results.start_time) %></td>
+    <td><span class="label <%= status_label(search_results.status) %>"><%= search_results.status.titleize %></span></td>
+  </tr>
+<% end %>

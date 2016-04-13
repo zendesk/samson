@@ -1,0 +1,72 @@
+<h1><%= title %></h1>
+
+<div class="timeline" ng-controller="<%= controller %>">
+  <input type=hidden  id=default_time_format value="<%= current_user.time_format %>">
+
+
+  <div class="timeline">
+    <%= form_tag("/deploys/search", method: "get") do %>
+      <div class="timeline-filter col-sm-2">
+        <%= label_tag(:deployer, "Deployer") %>
+        <%= text_field_tag(:deployer, params[:deployer], placeholder: 'deployer name') %>
+      </div>
+
+      <div class="timeline-filter col-sm-2">
+        <%= label_tag(:project_name, "Project") %>
+        <%= text_field_tag(:project_name, params[:project_name], placeholder: 'project name') %>
+      </div>
+
+      <div class="timeline-filter col-sm-2">
+        <%= label_tag(:production, "Production") %>
+        <%= select_tag(:production, options_for_select(["true", "false"], selected: params[:production]), { prompt: 'select',  class: "form-control" } ) %>
+      </div>
+
+      <div class="timeline-filter col-sm-2">
+        <%= label_tag(:status, "Status") %>
+        <%= select_tag(:status, options_for_select(Job::VALID_STATUSES, selected: params[:status]), { prompt: 'all', class: 'form-control' } ) %>
+      </div>
+
+      <div class="timeline-filter col-sm-2">
+        <%= submit_tag("Search") %>
+      </div>
+
+    <% end %>
+  </div>
+
+
+
+
+  <div class="timeline-filters clearfix">
+    <div class="timeline-filter col-sm-4" >
+      <label for="tlf-status">TIME:</label>
+      <% User::TIME_FORMATS.each do |time_format| %>
+        <label for=time_format_<%= time_format %>>
+          <input type=radio id=time_format_<%= time_format %> ng-model="timeFormat" ng-change="changeTime()" value='<%= time_format %>'>
+          <%= time_format %>
+        </label>
+      <% end %>
+    </div>
+  </div>
+
+  <section class="timeline-content clearfix">
+    <div class="deploy-csv">
+      <%= link_to "Download as CSV", recent_deploys_path(format: "csv") %>
+    </div>
+    <%= paginate @deploys %>
+    <table class="timeline-content">
+      <tr>
+        <th>PROJECT</th>
+        <th>USER</th>
+        <th>DEPLOY</th>
+        <th>LAST UPDATE</th>
+        <th>STATUS</th>
+      </tr>
+      <% if @deploys.count > 0 %>
+        <tbody>
+          <%= render partial: "search_results", collection: @deploys %>
+        </tbody>
+      <% end %>
+    </table>
+    <%= paginate @deploys %>
+  </section>
+</div>
