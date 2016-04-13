@@ -12,8 +12,9 @@ module ApplicationHelper
     ansi_escaped(escaped).gsub(/\[([A-Z]|[0-9]+)m?/, '').html_safe
   end
 
+  # https://github.com/showdownjs/showdown/wiki/Markdown's-XSS-Vulnerability-(and-how-to-mitigate-it)
   def markdown(str)
-    GitHub::Markdown.render_gfm(str).html_safe
+    sanitize GitHub::Markdown.render_gfm(str)
   end
 
   def deploy_link(project, stage)

@@ -1,5 +1,7 @@
 require_relative '../test_helper'
 
+SingleCov.covered!
+
 describe DashboardsHelper do
   describe '#project_multi_deploys?' do
     it 'has no warnings for same deploy across all deploy groups' do

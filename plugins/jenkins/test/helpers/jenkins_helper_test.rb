@@ -1,5 +1,7 @@
 require_relative "../test_helper"
 
+SingleCov.covered!
+
 describe JenkinsHelper do
   def stub_jenkins_job(status, url)
     JenkinsJob.create!(name: "test_job", deploy_id: 11, jenkins_job_id: 111, status: status, url: url)
