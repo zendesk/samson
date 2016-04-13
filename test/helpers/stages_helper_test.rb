@@ -33,7 +33,7 @@ describe StagesHelper do
       it "links to local edit if command is local and user is project admin" do
         command = commands(:echo)
         project = projects(:test)
-        current_user.user_project_roles.create!(project: project, user: current_user, role_id: ProjectRole::ADMIN.id)
+        current_user.user_project_roles.create!(project: project, user: current_user, role_id: Role::ADMIN.id)
         html = edit_command_link(command)
         html.must_equal "<a title=\"Edit in admin UI\" class=\"edit-command glyphicon glyphicon-edit no-hover\" href=\"/admin/commands/#{command.id}/edit\"></a>"
       end

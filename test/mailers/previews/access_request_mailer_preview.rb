@@ -6,7 +6,7 @@ class AccessRequestMailerPreview < ActionMailer::Preview
     enable_access_request
     email = AccessRequestMailer.access_request_email(
         'localhost', User.first, 'manager@example.com', 'Dummy reason.',
-        Project.all.pluck(:id), ProjectRole::DEPLOYER.id)
+        Project.all.pluck(:id), Role::DEPLOYER.id)
     restore_access_request_settings
     email
   end

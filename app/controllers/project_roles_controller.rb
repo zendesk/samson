@@ -1,48 +1,23 @@
 class ProjectRolesController < ApplicationController
   include ProjectLevelAuthorization
 
-  skip_before_action :require_project, only: [:index]
-
-  before_action :authorize_project_admin!, only: [:create, :update]
-
-  def index
-    render json: ProjectRole.all, root: false
-  end
+  before_action :authorize_project_admin!
 
   def create
-    new_role = UserProjectRole.create(create_params)
+    user = User.find(params[:user_id])
+    role = UserProjectRole.where(user: user, project: current_project).first_or_initialize
+    role.role_id = params[:role_id].presence
 
-    if new_role.persisted?
-      Rails.logger.info("#{current_user.name_and_email} granted the role of #{new_role.role.display_name} to #{new_role.user.name} on project #{current_project.name}")
-      reset_access_request_flag(new_role.user)
-      render status: :created, json: new_role
-    else
-      render status: :bad_request, json: {errors: new_role.errors.full_messages}
+    if role.role_id
+      role.save!
+      user.update!(access_request_pending: false)
+    elsif role.persisted?
+      role.destroy!
     end
-  end
 
-  def update
-    project_role = UserProjectRole.find(params[:id])
-    if project_role.update(update_params)
-      Rails.logger.info("#{current_user.name_and_email} granted the role of #{project_role.role.display_name} to #{project_role.user.name} on project #{current_project.name}")
-      reset_access_request_flag(project_role.user)
-      render status: :ok, json: project_role
-    else
-      render status: :bad_request, json: {errors: project_role.errors.full_messages}
-    end
-  end
+    role_name = (role.role.try(:display_name) || 'None')
+    Rails.logger.info("#{current_user.name_and_email} set the role #{role_name} to #{user.name}} on project #{current_project.name}")
 
-  private
-
-  def create_params
-    params.require(:project_role).permit(:user_id, :project_id, :role_id)
-  end
-
-  def update_params
-    params.require(:project_role).permit(:role_id)
-  end
-
-  def reset_access_request_flag(user)
-    user.update!(access_request_pending: false)
+    render text: "Saved!"
   end
 end

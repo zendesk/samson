@@ -110,7 +110,8 @@ class DeploysController < ApplicationController
       end
 
       format.json do
-        render json: @deploy.to_json, status: @deploy.persisted? ? :created : 422, location: [current_project, @deploy]
+        status = (@deploy.persisted? ? :created : :unprocessable_entity)
+        render json: @deploy.to_json, status: status, location: [current_project, @deploy]
       end
     end
   end
@@ -141,7 +142,7 @@ class DeploysController < ApplicationController
   end
 
   def changeset
-    if stale?(etag: @deploy.cache_key, last_modified: @deploy.updated_at)
+    if stale? @deploy
       @changeset = @deploy.changeset
       render 'changeset', layout: false
     end

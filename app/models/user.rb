@@ -2,8 +2,9 @@ require 'soft_deletion'
 require 'digest/md5'
 
 class User < ActiveRecord::Base
-  include HasRole
   include Searchable
+  include HasRole
+
   TIME_FORMATS = ['local', 'utc', 'relative'].freeze
 
   has_soft_deletion default_scope: true
@@ -78,11 +79,11 @@ class User < ActiveRecord::Base
   end
 
   def is_admin_for?(project)
-    project_role_for(project).try(:is_admin?)
+    is_admin? || !!project_role_for(project).try(:is_admin?)
   end
 
   def is_deployer_for?(project)
-    project_role_for(project).try(:is_deployer?)
+    is_deployer? || !!project_role_for(project).try(:is_deployer?)
   end
 
   def project_role_for(project)

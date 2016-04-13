@@ -55,7 +55,7 @@ describe AccessRequestsController do
       describe 'enabled' do
         let(:manager_email) { 'manager@example.com' }
         let(:reason) { 'Dummy reason.' }
-        let(:role) { ProjectRole::DEPLOYER }
+        let(:role) { Role::DEPLOYER }
         let(:request_params) do
           {manager_email: manager_email, reason: reason, project_ids: Project.all.pluck(:id), role_id: role.id}
         end
