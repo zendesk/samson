@@ -1,6 +1,66 @@
 require_relative '../test_helper'
 
+SingleCov.covered! uncovered: 11
+
 describe ApplicationHelper do
+  describe "#render_log" do
+    it "removes ascii escapes" do
+      # not super accurate tests, just documenting what it currently does
+      render_log("a[Aa").must_equal "<span class=\"ansible_none\">aa</span>"
+      render_log("a[AAa").must_equal "<span class=\"ansible_none\">aAa</span>"
+      render_log("a[1a").must_equal "<span class=\"ansible_none\">aa</span>"
+      render_log("a[12a").must_equal "<span class=\"ansible_none\">aa</span>"
+      render_log("a[12ma").must_equal "<span class=\"ansible_none\">aa</span>"
+    end
+
+    it "escapes html" do
+      result = render_log("<script>1</script>")
+      result.must_equal "<span class=\"ansible_none\">&lt;script&gt;1&lt;/script&gt;</span>"
+      assert result.html_safe?
+    end
+  end
+
+  describe "#markdown" do
+    it "converts markdown to html" do
+      result = markdown("**hello**")
+      result.must_equal "<p><strong>hello</strong></p>\n"
+      assert result.html_safe?
+    end
+
+    it "does not allow XSS" do
+      result = markdown("<script>alert(1)</script>")
+      result.must_equal "alert(1)\n"
+      assert result.html_safe?
+    end
+  end
+
+  describe "#global_lock" do
+    it "caches nil" do
+      Lock.expects(:global).returns []
+      global_lock.must_equal nil
+      global_lock.must_equal nil
+    end
+
+    it "caches values" do
+      Lock.expects(:global).returns [1]
+      global_lock.must_equal 1
+      global_lock.must_equal 1
+    end
+  end
+
+  describe "#controller_action" do
+    it "works" do
+      stubs(action_name: "foo")
+      controller_action.must_equal "test foo"
+    end
+  end
+
+  describe "#revision" do
+    it "works" do
+      revision.must_match /^[\da-f]{40}/
+    end
+  end
+
   describe "#deploy_link" do
     let(:project) { projects(:test) }
     let(:stage) { stages(:test_staging) }
