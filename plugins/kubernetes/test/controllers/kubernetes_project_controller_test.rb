@@ -1,5 +1,7 @@
 require_relative '../test_helper'
 
+SingleCov.covered!
+
 describe KubernetesProjectController do
   let(:project) { projects(:test) }
   let(:environment) { environments(:production) }
