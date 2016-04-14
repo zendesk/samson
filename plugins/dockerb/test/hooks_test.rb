@@ -1,6 +1,8 @@
 require_relative 'test_helper'
 
-SingleCov.covered! file: 'plugins/dockerb/lib/samson_env/samson_plugin.rb'
+if SingleCov.running_single_file?
+  SingleCov.covered! file: 'plugins/dockerb/lib/samson_env/samson_plugin.rb'
+end
 
 describe "env hooks" do
   let(:stage) { stages(:test_staging) }

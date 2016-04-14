@@ -1,6 +1,8 @@
 require_relative 'test_helper'
 
-SingleCov.covered! file: 'plugins/env/lib/samson_env/samson_plugin.rb', uncovered: 1
+if SingleCov.running_single_file?
+  SingleCov.covered! file: 'plugins/env/lib/samson_env/samson_plugin.rb', uncovered: 1
+end
 
 describe "env hooks" do
   let(:deploy) { deploys(:succeeded_test) }

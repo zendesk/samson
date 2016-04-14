@@ -1,6 +1,8 @@
 require_relative 'test_helper'
 
-SingleCov.covered! uncovered: 1, file: 'plugins/slack_webhooks/lib/samson_slack_webhooks/samson_plugin.rb'
+if SingleCov.running_single_file?
+  SingleCov.covered! uncovered: 1, file: 'plugins/slack_webhooks/lib/samson_slack_webhooks/samson_plugin.rb'
+end
 
 describe "slack hooks" do
   let(:deploy) { deploys(:succeeded_test) }
