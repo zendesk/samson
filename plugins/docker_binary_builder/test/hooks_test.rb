@@ -1,4 +1,6 @@
-require_relative '../test_helper'
+require_relative 'test_helper'
+
+SingleCov.covered! file: 'plugins/docker_binary_builder/lib/samson_docker_binary_builder/samson_plugin.rb', uncovered: 2
 
 describe SamsonDockerBinaryBuilder do
   describe '#after_deploy_setup' do

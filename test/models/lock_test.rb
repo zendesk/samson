@@ -1,5 +1,7 @@
 require_relative '../test_helper'
 
+SingleCov.covered! uncovered: 1
+
 describe Lock do
   describe 'global locks' do
     let(:global_lock) { Lock.create!(user: user) }

@@ -1,5 +1,7 @@
 require_relative '../test_helper'
 
+SingleCov.covered! uncovered: 13
+
 describe Project do
   let(:project) { projects(:test) }
   let(:author) { users(:deployer) }

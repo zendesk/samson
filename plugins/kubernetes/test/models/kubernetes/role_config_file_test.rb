@@ -1,7 +1,8 @@
 require_relative '../../test_helper'
 
-describe Kubernetes::RoleConfigFile do
+SingleCov.covered! uncovered: 3
 
+describe Kubernetes::RoleConfigFile do
   describe 'Parsing a valid Kubernetes config file' do
     let(:contents) { parse_role_config_file('kubernetes_role_config_file') }
 

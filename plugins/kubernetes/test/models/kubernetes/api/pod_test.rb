@@ -1,5 +1,7 @@
 require_relative '../../../test_helper'
 
+SingleCov.covered! uncovered: 5
+
 describe Kubernetes::Api::Pod do
   let(:pod_name) { 'test_name' }
 

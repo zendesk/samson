@@ -1,5 +1,7 @@
 require_relative "../../test_helper"
 
+SingleCov.covered! uncovered: 5
+
 describe Kubernetes::Util do
   describe '.parse_file' do
     let(:input_hash) do

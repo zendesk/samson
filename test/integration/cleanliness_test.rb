@@ -2,6 +2,14 @@ require_relative '../test_helper'
 
 # kitchen sink for 1-off tests
 describe "cleanliness" do
+  def check_content(files)
+    bad = files.map do |f|
+      error = yield File.read(f)
+      "#{f}: #{error}" if error
+    end.compact
+    bad.must_equal [], bad.join("\n")
+  end
+
   let(:all_tests) { Dir["{,plugins/*/}test/controllers/**/*_test.rb"] }
 
   it "does not have boolean limit 1 in schema since this breaks mysql" do
@@ -25,13 +33,11 @@ describe "cleanliness" do
   end
 
   it "does not use let(:user) inside of a as_xyz block" do
-    bad = all_tests.map do |f|
-      content = File.read(f)
+    check_content all_tests do |content|
       if content.include?("  as_") && content.include?("let(:user)")
-        "#{f} uses as_xyz and let(:user) these do not mix!"
+        "uses as_xyz and let(:user) these do not mix!"
       end
-    end.compact
-    bad.must_equal []
+    end
   end
 
   it "does not have actions on base controller" do
@@ -41,32 +47,27 @@ describe "cleanliness" do
   end
 
   it "has coverage" do
-    bad = Dir["{,plugins/*/}test/{controllers,mailers,serializers,helpers}/**/*_test.rb"].map do |f|
-      content = File.read(f)
-      unless content.include?("SingleCov.covered!")
-        "#{f} needs to use SingleCov.covered!"
+    files = Dir["{,plugins/*/}test/**/*_test.rb"]
+    check_content files do |content|
+      if content !~ /SingleCov.(not_)?covered\!/
+        "needs to use SingleCov.covered!"
       end
-    end.compact
-    bad.must_equal []
+    end
   end
 
   it "does not use setup/teardown" do
-    bad = all_tests.map do |f|
-      content = File.read(f)
+    check_content all_tests do |content|
       if content =~ /\s+(setup|teardown)[\s\{]/
-        "#{f} uses setup or taerdown, but should use before or after"
+        "uses setup or teardown, but should use before or after"
       end
-    end.compact
-    bad.must_equal []
+    end
   end
 
   it "uses active test case wording" do
-    bad = all_tests.map do |f|
-      content = File.read(f)
+    check_content all_tests do |content|
       if content =~ /\s+it ['"]should /
-        "#{f} uses `it should` working, please use active working `it should activate` -> `it activates`"
+        "uses `it should` working, please use active working `it should activate` -> `it activates`"
       end
-    end.compact
-    bad.must_equal []
+    end
   end
 end

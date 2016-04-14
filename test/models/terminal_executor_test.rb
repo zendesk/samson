@@ -1,5 +1,7 @@
 require_relative '../test_helper'
 
+SingleCov.covered! uncovered: 1
+
 describe TerminalExecutor do
   def with_env(env)
     old = env.map do |k, v|

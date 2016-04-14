@@ -1,5 +1,7 @@
 require_relative '../test_helper'
 
+SingleCov.covered! uncovered: 2
+
 describe Command do
   describe '.for_object' do
     let(:stage) { stages(:test_staging) }

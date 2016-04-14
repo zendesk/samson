@@ -1,5 +1,7 @@
 require_relative '../test_helper'
 
+SingleCov.covered! uncovered: 12
+
 describe Changeset do
   ComparisonStruct = Struct.new(:commits)
   CommitStruct = Struct.new(:commit)

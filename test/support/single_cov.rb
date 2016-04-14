@@ -2,27 +2,39 @@ class SingleCov
   COVERAGES = []
 
   class << self
+    def not_covered!
+    end
+
     def covered!(file: nil, uncovered: 0)
       file ||= file_under_test(caller.first)
+      raise "Need to use files relative to root" if file.start_with?("/")
       COVERAGES << [file, uncovered]
     end
 
     def verify!(result)
-      COVERAGES.each do |file, expected_uncovered|
-        uncovered!(file) unless coverage = result[File.expand_path(file)]
+      errors = COVERAGES.map do |file, expected_uncovered|
+        if coverage = result[File.expand_path(file)]
+          uncovered_lines = coverage.each_with_index.map { |c, i| "#{file}:#{i+1}" if c == 0 }.compact
+          next if uncovered_lines.size == expected_uncovered
 
-        uncovered_lines = coverage.each_with_index.map { |c, i| "#{file}:#{i+1}" if c == 0 }.compact
-        next if uncovered_lines.size == expected_uncovered
-
-        details = "#{uncovered_lines.size} current vs #{expected_uncovered} previous"
-        if expected_uncovered > uncovered_lines.size
-          warn "#{file} has more less uncovered lines now #{details}, decrement expected uncovered?"
+          details = "#{uncovered_lines.size} current vs #{expected_uncovered} previous"
+          if expected_uncovered > uncovered_lines.size
+            "#{file} has less uncovered lines now #{details}, decrement expected uncovered?"
+          else
+            [
+              "#{file} new uncovered lines introduced #{details}",
+              "Lines missing coverage:",
+              *uncovered_lines
+            ].join("\n")
+          end
         else
-          warn "#{file} new uncovered lines introduced #{details}"
-          warn "Lines missing coverage:"
-          warn uncovered_lines
-          exit 1
+          uncovered_details(file)
         end
+      end.compact
+
+      if errors.any?
+        warn errors
+        exit 1 if errors.any? { |l| !l.end_with?('?') } # exit on error, but not on warning
       end
     end
 
@@ -37,14 +49,12 @@ class SingleCov
       file
     end
 
-    def uncovered!(file)
-      message = if File.exist?(file)
+    def uncovered_details(file)
+      if File.exist?(file)
         "#{file} was not covered during tests, possibly loaded before test start ?"
       else
         "#{file} does not exist and cannot be covered"
       end
-      warn message
-      exit 1
     end
   end
 end

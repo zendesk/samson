@@ -1,5 +1,7 @@
 require_relative '../test_helper'
 
+SingleCov.covered! uncovered: 3, file: 'plugins/kubernetes/app/decorators/project_decorator.rb'
+
 describe Project do
   let(:project) { projects(:test) }
   let(:contents) { parse_role_config_file('kubernetes_role_config_file') }

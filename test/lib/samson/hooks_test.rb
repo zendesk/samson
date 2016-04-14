@@ -1,5 +1,7 @@
 require_relative '../../test_helper'
 
+SingleCov.covered! uncovered: 13
+
 describe Samson::Hooks do
   let(:number_of_plugins) { Dir['plugins/*'].size }
   let(:plugins) { 'nope' }

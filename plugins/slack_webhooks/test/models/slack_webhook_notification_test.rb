@@ -1,5 +1,7 @@
 require_relative '../test_helper'
 
+SingleCov.covered! uncovered: 1
+
 describe SlackWebhookNotification do
   let(:project) { stub(name: "Glitter") }
   let(:user) { stub(name: "John Wu", email: "wu@rocks.com") }
