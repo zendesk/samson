@@ -1,5 +1,7 @@
 require_relative '../../test_helper'
 
+SingleCov.covered! uncovered: 9
+
 describe Changeset::PullRequest do
   DataStruct = Struct.new(:user, :merged_by, :body, :title)
   UserStruct = Struct.new(:login)

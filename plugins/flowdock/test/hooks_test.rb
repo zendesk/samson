@@ -1,4 +1,8 @@
-require_relative '../test_helper'
+require_relative 'test_helper'
+
+if SingleCov.running_single_file?
+  SingleCov.covered! uncovered: 1, file: 'plugins/flowdock/lib/samson_flowdock/samson_plugin.rb'
+end
 
 describe "flowdock hooks" do
   let(:deploy) { deploys(:succeeded_test) }

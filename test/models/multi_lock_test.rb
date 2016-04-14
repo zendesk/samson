@@ -1,5 +1,7 @@
 require_relative '../test_helper'
 
+SingleCov.covered!
+
 describe MultiLock do
   before do
     MultiLock.send(:unlock, 1)

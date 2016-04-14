@@ -1,5 +1,7 @@
 require_relative '../test_helper'
 
+SingleCov.covered! uncovered: 21
+
 describe DeployService do
   include GitRepoTestHelper
 

@@ -1,5 +1,7 @@
 require_relative '../../test_helper'
 
+SingleCov.covered! uncovered: 8
+
 describe Changeset::GithubUser do
   describe "#avatar_url" do
     it "returns the URL for the user's avatar" do

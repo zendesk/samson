@@ -1,5 +1,7 @@
 require_relative '../test_helper'
 
+SingleCov.covered! uncovered: 1
+
 describe BuildStatus do
   let(:build) { builds(:docker_build) }
 

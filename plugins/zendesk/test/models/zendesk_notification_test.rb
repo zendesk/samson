@@ -1,5 +1,7 @@
 require_relative '../test_helper'
 
+SingleCov.covered! uncovered: 2
+
 describe ZendeskNotification do
   def commit(message)
     Changeset::Commit.new(nil, Hashie::Mash.new(commit: {message: message}))

@@ -1,5 +1,7 @@
 require_relative '../../../test_helper'
 
+SingleCov.covered! uncovered: 2
+
 describe Samson::Tasks::LockCleaner do
   subject { Samson::Tasks::LockCleaner.new }
 

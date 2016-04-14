@@ -1,5 +1,7 @@
 require_relative '../test_helper'
 
+SingleCov.not_covered!
+
 # need integration in the name for minitest-spec-rails
 describe 'Authentication Integration' do
   before do

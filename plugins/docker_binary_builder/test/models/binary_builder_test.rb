@@ -1,5 +1,7 @@
 require_relative '../test_helper'
 
+SingleCov.covered! uncovered: (SingleCov.running_single_file? ? 14 : 15) # during rake it is 15
+
 describe BinaryBuilder do
   let(:project) { projects(:test) }
   let(:dir) { '/tmp' }

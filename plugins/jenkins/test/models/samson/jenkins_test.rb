@@ -1,5 +1,7 @@
 require_relative '../../test_helper'
 
+SingleCov.covered! uncovered: 2
+
 describe Samson::Jenkins do
   def stub_crumb
     stub_request(:get, "http://user%40test.com:japikey@www.test-url.com/api/json?tree=useCrumbs").

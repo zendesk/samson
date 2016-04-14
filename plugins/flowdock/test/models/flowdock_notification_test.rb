@@ -1,5 +1,7 @@
 require_relative '../test_helper'
 
+SingleCov.covered! uncovered: 7
+
 describe FlowdockNotification do
   let(:deploy) { deploys(:succeeded_test) }
   let(:notification) { FlowdockNotification.new(deploy) }
