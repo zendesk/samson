@@ -51,6 +51,7 @@ describe Stage do
       stage2.update!(next_stage_ids: [])
       stage2.update!(production: true)
       stage2.update!(deploy_groups: [ production ])
+      stage3.update!(deploy_groups: [ production ])
       stage2.update!(no_code_deployed: true)
       stage1.update!(next_stage_ids: [ stage2.id ])
     end
@@ -59,15 +60,24 @@ describe Stage do
       stage2.deploy_requires_approval?.must_equal false
     end
 
-    it 'requires approval with production deploy group and no_code_deployed' do
+    it 'requires approval with production deploy group and no_code_deployed false' do
       stage2.update!(no_code_deployed: false)
       stage1.deploy_requires_approval?.must_equal true
     end
 
-    it 'does not require approval with production deploy group and no_code_deployed' do
+    it 'does not require approval with production deploy group and no_code_deployed true' do
       stage2.update!(no_code_deployed: true)
       stage1.update!(next_stage_ids: [stage2.id ])
       stage1.deploy_requires_approval?.must_equal false
+    end
+
+    it 'requires approval with future chained stage production deploy group and no_code_deployed false' do
+      stage2.update!(no_code_deployed: false)
+      stage2.update!(deploy_groups: [ staging ])
+      stage3.update!(no_code_deployed: false)
+      stage1.update!(next_stage_ids: [stage2.id ])
+      stage2.update!(next_stage_ids: [stage3.id ])
+      stage1.deploy_requires_approval?.must_equal true
     end
   end
 

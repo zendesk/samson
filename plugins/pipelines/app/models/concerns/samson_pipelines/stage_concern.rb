@@ -1,7 +1,4 @@
 module SamsonPipelines::StageConcern
-  def production?
-    super || all_next_stages.any? { |next_stage| next_stage.production? && !next_stage.no_code_deployed? }
-  end
 
   def next_stages
     Stage.find(next_stage_ids)
@@ -19,8 +16,12 @@ module SamsonPipelines::StageConcern
   end
 
   def deploy_requires_approval?
-    super || all_next_stages.any?(&:deploy_requires_approval?)
+    super || all_next_stages.any? do |next_stage|
+      next_stage.deploy_requires_approval? && !next_stage.no_code_deployed?
+    end
   end
+
+  private :all_next_stages
 
   protected
 
