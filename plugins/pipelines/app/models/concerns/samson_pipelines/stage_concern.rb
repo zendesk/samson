@@ -19,7 +19,7 @@ module SamsonPipelines::StageConcern
   end
 
   def deploy_requires_approval?
-      super || all_next_stages.any?(&:deploy_requires_approval?)
+    super || all_next_stages.any?(&:deploy_requires_approval?)
   end
 
   protected
