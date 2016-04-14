@@ -1,29 +1,25 @@
 module SamsonPipelines::StageConcern
 
-  def next_stages
-    Stage.find(next_stage_ids)
-  end
-
-  # Needs to find all the possible stages in case this is a pipeline of pipelines as each subsequent stage
-  # could have valid next_stage_ids
-  def all_next_stages
-    Stage.find(recursive_next_stage_ids);
+  def deploy_requires_approval?
+    super || all_next_stages.any?(&:deploy_requires_approval?)
   end
 
   def recursive_next_stage_ids
     return [] if next_stage_ids.empty?
-    next_stage_ids.map(&:to_i) + Stage.find(next_stage_ids).flat_map(&:recursive_next_stage_ids)
+    next_stages.collect(&:id) + Stage.find(next_stage_ids).flat_map(&:recursive_next_stage_ids)
   end
 
-  def deploy_requires_approval?
-    super || all_next_stages.any? do |next_stage|
-      next_stage.deploy_requires_approval? && !next_stage.no_code_deployed?
-    end
+  def next_stages
+    Stage.find(next_stage_ids)
   end
-
-  private :all_next_stages
 
   protected
+
+  # Needs to find all the possible stages in case this is a pipeline of pipelines as each subsequent stage
+  # could have valid next_stage_ids
+  def all_next_stages
+    Stage.find(recursive_next_stage_ids)
+  end
 
   # Ensure we don't have a circular pipeline:
   #
