@@ -1,6 +1,8 @@
 require_relative '../../test_helper'
 
-SingleCov.covered! uncovered: 13
+if SingleCov.running_single_file?
+  SingleCov.covered! uncovered: 13 unless defined?(Rake)
+end
 
 describe Samson::Hooks do
   let(:number_of_plugins) { Dir['plugins/*'].size }

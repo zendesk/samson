@@ -1,6 +1,8 @@
 require_relative 'test_helper'
 
-SingleCov.covered! file: 'plugins/pipelines/lib/samson_pipelines/samson_plugin.rb', uncovered: 6
+if SingleCov.running_single_file?
+  SingleCov.covered! file: 'plugins/pipelines/lib/samson_pipelines/samson_plugin.rb', uncovered: 6
+end
 
 describe 'zendesk hooks' do
   let(:deploy) { deploys(:succeeded_test) }
