@@ -1,5 +1,7 @@
 require_relative '../test_helper'
 
+SingleCov.covered! file: 'plugins/pipelines/app/decorators/stage_decorator.rb'
+
 describe Stage do
   let(:project) { Project.create!(name: 'foo', repository_url: 'random') }
   let(:stage1) { Stage.create!(project: project, name: 'stage1') }

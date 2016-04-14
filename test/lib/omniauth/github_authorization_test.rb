@@ -1,5 +1,7 @@
-require_relative '../test_helper'
+require_relative '../../test_helper'
 require 'omniauth/github_authorization'
+
+SingleCov.covered!
 
 describe GithubAuthorization do
   let(:teams) {[]}

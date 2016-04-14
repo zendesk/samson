@@ -1,5 +1,7 @@
 require_relative '../test_helper'
 
+SingleCov.covered! uncovered: 9
+
 describe Stage do
   subject { stages(:test_staging) }
   let(:stage) { subject }

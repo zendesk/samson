@@ -1,5 +1,7 @@
 require_relative '../test_helper'
 
+SingleCov.covered! uncovered: 1
+
 describe CommitStatus do
   let(:repo) { 'test/test' }
   let(:sha) { 'master' }

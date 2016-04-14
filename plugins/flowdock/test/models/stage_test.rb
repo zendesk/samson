@@ -1,7 +1,8 @@
 require_relative '../test_helper'
 
-describe Stage do
+SingleCov.covered! uncovered: 3, file: 'plugins/flowdock/app/decorators/stage_decorator.rb'
 
+describe Stage do
   subject { stages(:test_staging) }
 
   before do

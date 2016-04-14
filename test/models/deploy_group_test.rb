@@ -1,5 +1,7 @@
 require_relative '../test_helper'
 
+SingleCov.covered! uncovered: 3
+
 describe DeployGroup do
   let(:stage) { stages(:test_staging) }
   let(:environment) { environments(:production) }

@@ -1,5 +1,7 @@
 require_relative '../test_helper'
 
+SingleCov.covered! uncovered: 1
+
 describe DeployService do
   let(:project) { deploy.project }
   let(:user) { job.user }

@@ -1,5 +1,7 @@
 require_relative '../test_helper'
 
+SingleCov.covered! uncovered: 10
+
 describe User do
   describe "#name" do
     let(:user) { User.new(name: username, email: 'test@test.com') }

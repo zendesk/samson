@@ -1,5 +1,7 @@
 require_relative '../test_helper'
 
+SingleCov.covered! uncovered: 7
+
 describe JobQueue do
   def enable_job_execution
     JobExecution.enabled = true

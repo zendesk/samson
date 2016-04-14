@@ -1,5 +1,7 @@
 require_relative '../test_helper'
 
+SingleCov.covered!
+
 describe ReleaseService do
   let(:project) { projects(:test) }
   let(:author) { users(:deployer) }

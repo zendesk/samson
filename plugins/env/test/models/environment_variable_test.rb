@@ -1,5 +1,7 @@
 require_relative "../test_helper"
 
+SingleCov.covered! uncovered: 7
+
 describe EnvironmentVariable do
   let(:project) { stage.project }
   let(:stage) { stages(:test_staging) }

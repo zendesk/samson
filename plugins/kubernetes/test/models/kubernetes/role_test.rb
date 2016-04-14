@@ -1,5 +1,7 @@
 require_relative "../../test_helper"
 
+SingleCov.covered! uncovered: 3
+
 describe Kubernetes::Role do
   let(:role) { kubernetes_roles(:app_server) }
 
