@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20160413171549) do
+ActiveRecord::Schema.define(version: 20160414181707) do
 
   create_table "build_statuses", force: :cascade do |t|
     t.integer  "build_id",                                     null: false
@@ -301,6 +301,19 @@ ActiveRecord::Schema.define(version: 20160413171549) do
 
   add_index "releases", ["build_id"], name: "index_releases_on_build_id", using: :btree
   add_index "releases", ["project_id", "number"], name: "index_releases_on_project_id_and_number", unique: true, using: :btree
+
+  create_table "secrets", id: false, force: :cascade do |t|
+    t.string   "id",                 limit: 255
+    t.string   "encrypted_value",    limit: 255, null: false
+    t.string   "encrypted_value_iv", limit: 255, null: false
+    t.string   "encryption_key_sha", limit: 255, null: false
+    t.integer  "updater_id",         limit: 4,   null: false
+    t.integer  "creator_id",         limit: 4,   null: false
+    t.datetime "created_at",                     null: false
+    t.datetime "updated_at",                     null: false
+  end
+
+  add_index "secrets", ["id"], name: "index_secrets_on_id", unique: true, using: :btree
 
   create_table "slack_channels", force: :cascade do |t|
     t.string   "name",       limit: 255, null: false
