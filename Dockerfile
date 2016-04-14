@@ -14,6 +14,7 @@ ADD bin /app/bin
 ADD public /app/public
 ADD db /app/db
 ADD .env.bootstrap /app/.env
+ADD .ruby-version /app/.ruby-version
 
 # NPM
 ADD package.json /app/package.json
