@@ -1,5 +1,7 @@
 require_relative '../test_helper'
 
+SingleCov.covered!
+
 describe UserProjectRole do
   let(:user) { users(:viewer) }
   let(:project) { projects(:test) }

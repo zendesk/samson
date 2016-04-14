@@ -2,6 +2,8 @@ require_relative '../../test_helper'
 require 'celluloid/current'
 require 'kubeclient'
 
+SingleCov.covered! uncovered: 1
+
 describe Watchers::ClusterPodWatcher do
   describe 'using actors' do
     let(:project) { projects(:test) }
@@ -32,7 +34,7 @@ describe Watchers::ClusterPodWatcher do
       after do
         actor(:watcher).terminate if actor(:watcher).alive?
       end
-    
+
       it 'publishes notices' do
         send_notice(actor(:stream))
         wait_for_notice_count(actor(:subscriber), 1)
@@ -41,14 +43,14 @@ describe Watchers::ClusterPodWatcher do
         send_notice(actor(:stream))
         wait_for_notice_count(actor(:subscriber), 3)
       end
-    
+
       it 'ignores error notices' do
         send_notice(actor(:stream), 'ERROR')
         send_notice(actor(:stream))
         wait_for_notice_count(actor(:subscriber), 1)
         refute_equal('ERROR', actor(:subscriber).notices.first.type)
       end
-    
+
       it 'tolerates restarts' do
         send_notice(actor(:stream))
         wait_for_notice_count(actor(:subscriber), 1)
@@ -60,7 +62,7 @@ describe Watchers::ClusterPodWatcher do
         send_notice(actor(:stream))
         wait_for_notice_count(actor(:subscriber), 2)
       end
-    
+
       it 'terminates cleanly if exceptions occur' do
         assert actor(:watcher).alive?
         wait_for { actor(:stream).running }

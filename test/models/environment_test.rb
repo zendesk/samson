@@ -1,5 +1,7 @@
 require_relative '../test_helper'
 
+SingleCov.covered!
+
 describe Environment do
   describe '.new' do
     it 'saves' do

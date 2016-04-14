@@ -1,5 +1,7 @@
 require_relative '../test_helper'
 
+SingleCov.covered! uncovered: 1
+
 describe TerminalOutputScanner do
   let(:source) { [] }
   let(:scanner) { TerminalOutputScanner.new(source) }

@@ -1,4 +1,6 @@
-require_relative '../test_helper'
+require_relative 'test_helper'
+
+SingleCov.covered! file: 'plugins/pipelines/lib/samson_pipelines/samson_plugin.rb', uncovered: 6
 
 describe 'zendesk hooks' do
   let(:deploy) { deploys(:succeeded_test) }

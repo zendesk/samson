@@ -1,5 +1,7 @@
 require_relative '../../test_helper'
 
+SingleCov.covered! uncovered: 1
+
 describe Permalinkable do
   let(:project) { projects(:test) }
   let(:project_url) { "git://foo.com:hello/world.git" }

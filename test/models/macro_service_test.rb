@@ -1,5 +1,7 @@
 require_relative '../test_helper'
 
+SingleCov.covered!
+
 describe MacroService do
   let(:macro) { macros(:test) }
   let(:user) { users(:deployer) }

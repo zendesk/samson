@@ -1,5 +1,7 @@
 require_relative '../../test_helper'
 
+SingleCov.covered! uncovered: 8
+
 describe Changeset::Commit do
   let(:commit_data) { stub }
   let(:data) { stub("data", commit: commit_data) }

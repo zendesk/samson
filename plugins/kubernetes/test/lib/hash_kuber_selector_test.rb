@@ -1,5 +1,7 @@
 require_relative "../test_helper"
 
+SingleCov.covered! file: 'plugins/kubernetes/lib/samson_kubernetes/hash_kuber_selector.rb'
+
 describe 'hash decorator' do
   describe '#to_kuber_selector' do
     it 'works with equality' do

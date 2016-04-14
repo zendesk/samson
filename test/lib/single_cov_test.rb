@@ -1,5 +1,7 @@
 require_relative "../test_helper"
 
+SingleCov.not_covered!
+
 describe SingleCov do
   describe ".file_under_test" do
     {

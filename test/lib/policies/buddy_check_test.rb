@@ -1,4 +1,6 @@
-require_relative '../test_helper'
+require_relative '../../test_helper'
+
+SingleCov.covered! uncovered: 6
 
 describe BuddyCheck do
   let(:project) { job.project }

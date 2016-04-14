@@ -1,5 +1,7 @@
 require_relative '../test_helper'
 
+SingleCov.covered! uncovered: 14
+
 describe BinaryBuilder do
   let(:project) { projects(:test) }
   let(:dir) { '/tmp' }

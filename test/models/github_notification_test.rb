@@ -1,5 +1,7 @@
 require_relative '../test_helper'
 
+SingleCov.covered! uncovered: 1
+
 describe GithubNotification do
   let(:project) { stub(name: "Glitter", github_repo: "glitter/glitter", to_param: "3-glitter") }
   let(:stage) { stub(name: "staging", project: project) }

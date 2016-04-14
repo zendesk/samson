@@ -1,5 +1,7 @@
 require_relative '../test_helper'
 
+SingleCov.covered! uncovered: 1
+
 describe GitRepository do
   include GitRepoTestHelper
 
