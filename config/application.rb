@@ -6,6 +6,8 @@ require 'rails/all'
 # you've limited to :test, :development, or :production.
 Bundler.require(:default, :assets, Rails.env)
 
+Dotenv.load(Bundler.root.join('.env')) unless Rails.env.test?
+
 module Samson
   class Application < Rails::Application
     # Settings in config/environments/* take precedence over those specified here.
