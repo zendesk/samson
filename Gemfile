@@ -10,6 +10,7 @@ gem 'dotenv'
 
 gem 'dogstatsd-ruby', '~> 1.5.0', require: 'statsd'
 gem 'goldiloader'
+gem 'attr_encrypted', require: false
 
 group :mysql2 do
   gem 'mysql2', '~> 0.3'
