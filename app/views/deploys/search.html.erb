@@ -1,6 +1,6 @@
 <h1><%= title %></h1>
 
-<div class="search" ng-controller="<%= controller %>">
+<div class="search">
   <input type=hidden  id=default_time_format value="<%= current_user.time_format %>">
 
   <div class="row">
@@ -17,12 +17,12 @@
 
       <div class="search-form col-sm-2">
         <%= label_tag(:production, "Production") %>
-        <%= select_tag(:production, options_for_select(["true", "false"], selected: params[:production]), { prompt: 'select',  class: "form-control" } ) %>
+        <%= select_tag(:production, options_for_select(["true", "false"], selected: params[:production]), { prompt: ' ',  class: "form-control" } ) %>
       </div>
 
       <div class="search-form col-sm-2">
         <%= label_tag(:status, "Status") %>
-        <%= select_tag(:status, options_for_select(Job::VALID_STATUSES, selected: params[:status]), { prompt: 'all', class: 'form-control' } ) %>
+        <%= select_tag(:status, options_for_select(Job::VALID_STATUSES, selected: params[:status]), { prompt: ' ', class: 'form-control' } ) %>
       </div>
 
       <div class="search-form col-md-2 clearfix">
