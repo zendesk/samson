@@ -4,48 +4,43 @@
   <input type=hidden  id=default_time_format value="<%= current_user.time_format %>">
 
 
-  <div class="search">
+  <div class="row">
     <%= form_tag("/deploys/search", method: "get") do %>
-      <div class="search-filter col-sm-2">
+      <div class="search-form col-sm-2">
         <%= label_tag(:deployer, "Deployer") %>
         <%= text_field_tag(:deployer, params[:deployer], placeholder: 'deployer name') %>
       </div>
 
-      <div class="search-filter col-sm-2">
+      <div class="search-form col-sm-2">
         <%= label_tag(:project_name, "Project") %>
         <%= text_field_tag(:project_name, params[:project_name], placeholder: 'project name') %>
       </div>
 
-      <div class="search-filter col-sm-2">
+      <div class="search-form col-sm-2">
         <%= label_tag(:production, "Production") %>
         <%= select_tag(:production, options_for_select(["true", "false"], selected: params[:production]), { prompt: 'select',  class: "form-control" } ) %>
       </div>
 
-      <div class="search-filter col-sm-2">
+      <div class="search-form col-sm-2">
         <%= label_tag(:status, "Status") %>
         <%= select_tag(:status, options_for_select(Job::VALID_STATUSES, selected: params[:status]), { prompt: 'all', class: 'form-control' } ) %>
       </div>
 
-      <div class="search-filter col-sm-2">
-        <%= submit_tag("Search") %>
+      <div class="search-form col-md-2 clearfix">
+        <%= label(:time_format, "Time Format") %>
+        <%= select_tag(:time_format, options_for_select(User::TIME_FORMATS, selected: params[:time_format] ? params[:time_format] : 'relative'), { class: 'form-control' } ) %>
       </div>
 
+      <div class="search-form col-md-2 clearfix">
+        Search:<BR>
+        <div class="btn btn-default">
+          <%= submit_tag("Submit") %>
+        </div>
+      </div>
     <% end %>
   </div>
 
 
-
-
-  <div class="search-filters clearfix">
-    <div class="search-filter col-sm-4" >
-      <label for="tlf-status">TIME:</label>
-      <% User::TIME_FORMATS.each do |time_format| %>
-        <label for=time_format_<%= time_format %>>
-          <input type=radio id=time_format_<%= time_format %> ng-model="timeFormat" ng-change="changeTime()" value='<%= time_format %>'>
-          <%= time_format %>
-        </label>
-      <% end %>
-    </div>
   </div>
 
   <section class="search-content clearfix">
