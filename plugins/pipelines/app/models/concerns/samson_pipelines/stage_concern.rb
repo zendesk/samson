@@ -15,8 +15,8 @@ module SamsonPipelines::StageConcern
   # Needs to find all the possible stages in case this is a pipeline of pipelines as each subsequent stage
   # could have valid next_stage_ids
   def all_next_stages
-    existing_stages = next_stages.collect(&:id).to_set
-    return [] if existing_stages.empty?
+    return [] if next_stage_ids.empty?
+    existing_stages = next_stage_ids.to_set
     loop do
       last_count = existing_stages.count
       existing_stages.each do |stage_id|
