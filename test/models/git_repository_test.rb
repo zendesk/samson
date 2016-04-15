@@ -21,7 +21,7 @@ describe GitRepository do
     repository.repository_directory.must_equal project.repository_directory
   end
 
-  it 'should clone a repository' do
+  it 'clones a repository' do
     Dir.mktmpdir do |dir|
       create_repo_with_tags
       repository.clone!(from: repo_temp_dir, to: dir)
@@ -52,7 +52,7 @@ describe GitRepository do
     end
   end
 
-  it 'should switch to a different branch' do
+  it 'switches to a different branch' do
     create_repo_with_an_additional_branch
     repository.clone!.must_equal(true)
     repository.send(:checkout!, 'master').must_equal(true)
