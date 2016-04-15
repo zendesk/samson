@@ -3,18 +3,7 @@
 <section>
   <%= form_for [@project, @build], html: { class: "form-horizontal" } do |form| %>
     <fieldset>
-      <% if @build.errors.any? %>
-        <div class="row">
-          <div class="col-lg-5 col-lg-offset-1 alert alert-warning">
-            <p><strong>Ooops!</strong> There was an error:</p>
-            <ul>
-              <% @build.errors.full_messages.each do |message| %>
-                <li><%= message %></li>
-              <% end %>
-            </ul>
-          </div>
-        </div>
-      <% end %>
+      <%= render 'shared/errors', object: @build %>
 
       <div class="form-group">
         <%= form.label :git_ref, "Git Reference", class: "col-lg-2 control-label" %>

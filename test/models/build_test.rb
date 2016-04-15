@@ -6,7 +6,8 @@ describe Build do
   include GitRepoTestHelper
 
   let(:project) { Project.new(id: 99999, name: 'test_project', repository_url: repo_temp_dir) }
-  let(:sha_digest) { 'cbbf2f9a99b47fc460d422812b6a5adff7dfee951d8fa2e4a98caa0382cfbdbf' }
+  let(:example_sha) { 'cbbf2f9a99b47fc460d422812b6a5adff7dfee951d8fa2e4a98caa0382cfbdbf' }
+  let(:repo_digest) { "my-registry.zende.sk/some_project@sha256:#{example_sha}" }
 
   def valid_build(attributes = {})
     Build.new(attributes.reverse_merge(project: project, git_ref: 'master'))
@@ -36,8 +37,9 @@ describe Build do
       end
     end
 
-    it 'should validate container sha' do
-      assert_valid(valid_build(docker_image_id: sha_digest))
+    it 'should validate image id' do
+      assert_valid(valid_build(docker_image_id: example_sha))
+      assert_valid(valid_build(docker_image_id: "sha256:#{example_sha}"))
       refute_valid(valid_build(docker_image_id: 'This is a string of 64 characters...............................'))
       refute_valid(valid_build(docker_image_id: 'abc'))
     end
@@ -50,6 +52,12 @@ describe Build do
         assert_valid(valid_build(git_ref: current_commit))
       end
       refute_valid(valid_build(git_ref: 'some_tag_i_made_up'))
+    end
+    
+    it 'should validate docker digest' do
+      assert_valid(valid_build(docker_repo_digest: repo_digest))
+      refute_valid(valid_build(docker_repo_digest: example_sha))
+      refute_valid(valid_build(docker_repo_digest: 'some random string'))
     end
   end
 
