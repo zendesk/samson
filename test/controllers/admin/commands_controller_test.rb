@@ -72,8 +72,7 @@ describe Admin::CommandsController do
         let(:attributes) {{ command: nil }}
 
         describe 'html' do
-          it 'renders and sets the flash' do
-            flash[:error].wont_be_nil
+          it 'renders' do
             assert_template :edit
           end
         end
@@ -140,8 +139,7 @@ describe Admin::CommandsController do
       describe 'invalid' do
         let(:attributes) {{ command: nil }}
 
-        it 'renders and sets the flash' do
-          flash[:error].wont_be_nil
+        it 'renders' do
           assert_template :edit
         end
       end
