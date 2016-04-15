@@ -81,6 +81,17 @@ describe Stage do
       stage2.update!(next_stage_ids: [stage3.id ])
       stage1.deploy_requires_approval?.must_equal true
     end
+
+    it 'still works with a circual pipeline' do
+      stage1.update!(next_stage_ids: [stage2.id ])
+      stage2.update!(no_code_deployed: false)
+      stage2.update!(deploy_groups: [ staging ])
+      stage2.update!(next_stage_ids: [stage3.id ])
+      stage3.update!(no_code_deployed: false)
+      stage3.next_stage_ids = [stage1.id]
+      stage3.save(validate: false)
+      stage1.deploy_requires_approval?.must_equal true
+    end
   end
 
   describe '#valid_pipeline?' do

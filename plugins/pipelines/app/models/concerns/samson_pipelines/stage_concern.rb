@@ -1,12 +1,9 @@
+require 'set'
+
 module SamsonPipelines::StageConcern
 
   def deploy_requires_approval?
     super || all_next_stages.any?(&:deploy_requires_approval?)
-  end
-
-  def recursive_next_stage_ids
-    return [] if next_stage_ids.empty?
-    next_stages.collect(&:id) + Stage.find(next_stage_ids).flat_map(&:recursive_next_stage_ids)
   end
 
   def next_stages
@@ -18,7 +15,22 @@ module SamsonPipelines::StageConcern
   # Needs to find all the possible stages in case this is a pipeline of pipelines as each subsequent stage
   # could have valid next_stage_ids
   def all_next_stages
-    Stage.find(recursive_next_stage_ids)
+    existing_stages = next_stages.collect(&:id).to_set
+    return [] if existing_stages.empty?
+    loop do
+      last_count = existing_stages.count
+      existing_stages.each do |stage_id|
+        existing_stages += Stage.find(stage_id).next_stage_ids.map(&:to_i).to_set
+      end
+      break if last_count == existing_stages.count
+    end
+    # if we find ourselves with ourselves in the list, we have a loop.
+    # this shouldn't happen, but this will prevent it
+    if existing_stages.include?(id)
+      Rails.logger.error("Circular pipeline exists with stage #{id}")
+      existing_stages.delete(id)
+    end
+    Stage.find(existing_stages.to_a)
   end
 
   # Ensure we don't have a circular pipeline:
