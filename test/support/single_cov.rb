@@ -91,7 +91,7 @@ class SingleCov
 end
 
 # do not record or verify when only running selected tests since it would be missing data
-unless ARGV.include?('-n')
+if (ARGV & ['-n', '--name', '-l', '--line']).empty?
   if defined?(SimpleCov)
     # - do not start again when SimpleCov is used / Coverage is already started or it conflicts
     # - do not ask for coverage when SimpleCov already does or it conflicts
