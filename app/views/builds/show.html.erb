@@ -35,7 +35,7 @@
     <dd><%= @build.docker_status %></dd>
 
     <dt>Docker Image Id</dt>
-    <dd><%= short_sha(@build.docker_image_id.split(':').last, length: 12) %></dd>
+    <dd><%= short_sha(@build.docker_image_id, length: 12) %></dd>
 
     <dt>Docker Digest</dt>
     <dd><%= @build.docker_repo_digest %></dd>
