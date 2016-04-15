@@ -36,6 +36,15 @@ class SingleCov
       !defined?(Rake)
     end
 
+    def assert_used(files: Dir["{test,spec}/**/*_{test,spec}.rb"])
+      bad = files.select do |file|
+        File.read(file) !~ /SingleCov.(not_)?covered\!/
+      end
+      unless bad.empty?
+        raise bad.map { |f| "#{f}: needs to use SingleCov.covered!" }.join("\n")
+      end
+    end
+
     private
 
     def guess_and_check_covered_file(file)

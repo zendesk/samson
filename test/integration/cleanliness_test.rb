@@ -47,12 +47,7 @@ describe "cleanliness" do
   end
 
   it "has coverage" do
-    files = Dir["{,plugins/*/}test/**/*_test.rb"]
-    check_content files do |content|
-      if content !~ /SingleCov.(not_)?covered\!/
-        "needs to use SingleCov.covered!"
-      end
-    end
+    SingleCov.assert_used files: all_tests
   end
 
   it "does not use setup/teardown" do
