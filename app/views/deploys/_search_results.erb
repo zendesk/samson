@@ -6,7 +6,13 @@
       <%= content_tag :span, "Hotfix!", class: "label label-hotfix" if search_results.changeset.hotfix? %>
       <%= link_to "#{search_results.summary}", search_results.url %>
     </td>
-      <td><%= relative_time(search_results.start_time) %></td>
+      <% if params[:time_format] == 'utc' %>
+        <td><%= utc_time(search_results.start_time) %></td>
+      <% elsif params[:time_format] == 'local' %>
+        <td><%= local_time(search_results.start_time) %></td>
+      <% else %>
+        <td><%= relative_time(search_results.start_time) %></td>
+      <% end %>
     <td><span class="label <%= status_label(search_results.status) %>"><%= search_results.status.titleize %></span></td>
   </tr>
 <% end %>

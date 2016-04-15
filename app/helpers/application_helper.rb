@@ -51,6 +51,14 @@ module ApplicationHelper
     content_tag(:span, time.rfc822, data: { time: datetime_to_js_ms(time) }, class: "mouseover")
   end
 
+  def local_time(time)
+    time_tag(time, format: '%B %d, %Y %l:%M %p')
+  end
+
+  def utc_time(time)
+    time_tag(time.utc, format: '%B %d, %Y %l:%M %p %Z')
+  end
+
   def sortable(column, title = nil)
     title ||= column.titleize
     direction = (column == params[:sort] && params[:direction] == "asc") ? "desc" : "asc"
