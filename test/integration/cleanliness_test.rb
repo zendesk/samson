@@ -1,16 +1,19 @@
 require_relative '../test_helper'
 
+SingleCov.not_covered!
+
 # kitchen sink for 1-off tests
 describe "cleanliness" do
   def check_content(files)
+    files -= [__FILE__.sub("#{Rails.root}/", '')]
     bad = files.map do |f|
       error = yield File.read(f)
       "#{f}: #{error}" if error
     end.compact
-    bad.must_equal [], bad.join("\n")
+    assert bad.empty?, bad.join("\n")
   end
 
-  let(:all_tests) { Dir["{,plugins/*/}test/controllers/**/*_test.rb"] }
+  let(:all_tests) { Dir["{,plugins/*/}test/**/*_test.rb"] }
 
   it "does not have boolean limit 1 in schema since this breaks mysql" do
     File.read("db/schema.rb").wont_match /\st\.boolean.*limit: 1/
@@ -47,17 +50,12 @@ describe "cleanliness" do
   end
 
   it "has coverage" do
-    files = Dir["{,plugins/*/}test/**/*_test.rb"]
-    check_content files do |content|
-      if content !~ /SingleCov.(not_)?covered\!/
-        "needs to use SingleCov.covered!"
-      end
-    end
+    SingleCov.assert_used files: all_tests
   end
 
   it "does not use setup/teardown" do
     check_content all_tests do |content|
-      if content =~ /\s+(setup|teardown)[\s\{]/
+      if content =~ /^\s+(setup|teardown)[\s\{]/
         "uses setup or teardown, but should use before or after"
       end
     end
@@ -68,6 +66,12 @@ describe "cleanliness" do
       if content =~ /\s+it ['"]should /
         "uses `it should` working, please use active working `it should activate` -> `it activates`"
       end
+    end
+  end
+
+  it "does not have trailing whitespace" do
+    check_content Dir["{app,lib,plugins,test}/**/*.rb"] do |content|
+      "has trailing whitespace" if content =~ / $/
     end
   end
 end

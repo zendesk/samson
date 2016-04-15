@@ -57,7 +57,7 @@ describe Deploy do
         @deploy.summary.must_match(/without a buddy/)
       end
 
-      it "should return the name of the buddy when not bypassed" do
+      it "returns the name of the buddy when not bypassed" do
         other_user = users(:deployer_buddy)
         @deploy.stubs(:buddy).returns(other_user)
         @deploy.summary.must_match(/#{other_user.name}/)
