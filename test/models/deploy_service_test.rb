@@ -84,13 +84,13 @@ describe DeployService do
           stage.update_attribute(:production, false)
         end
 
-        it 'should deploy because of prod deploy groups' do
+        it 'deploys because of prod deploy groups' do
           create_previous_deploy(ref1, stage_production_1)
           service.expects(:confirm_deploy!).once
           service.deploy!(stage_production_2, reference: ref1)
         end
 
-        it 'should not deploy if previous deploy was not on prod' do
+        it 'does not deploy if previous deploy was not on prod' do
           create_previous_deploy(ref1, stages(:test_staging))
           service.expects(:confirm_deploy!).never
           service.deploy!(stage_production_2, reference: ref1)

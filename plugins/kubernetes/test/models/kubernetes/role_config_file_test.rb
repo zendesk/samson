@@ -8,7 +8,7 @@ describe Kubernetes::RoleConfigFile do
 
     let(:config_file) { Kubernetes::RoleConfigFile.new(contents, 'some-file.yml') }
 
-    it 'should load a deployment with its contents' do
+    it 'loads a deployment with its contents' do
       config_file.deployment.wont_be_nil
 
       # Labels
@@ -31,7 +31,7 @@ describe Kubernetes::RoleConfigFile do
       config_file.deployment.ram_mi.must_equal 100
     end
 
-    it 'should load a service with its contents' do
+    it 'loads a service with its contents' do
       config_file.service.wont_be_nil
 
       # Service Name
@@ -49,7 +49,7 @@ describe Kubernetes::RoleConfigFile do
   describe 'Parsing a Kubernetes with a missing deployment' do
     let(:contents) { parse_role_config_file('kubernetes_invalid_role_config_file') }
 
-    it 'should raise an exception' do
+    it 'raises an exception' do
       assert_raises RuntimeError do
         Kubernetes::RoleConfigFile.new(contents, 'some-file.yml')
       end
