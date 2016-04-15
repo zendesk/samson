@@ -1,0 +1,18 @@
+<% cache deploy do %>
+  <tr>
+  <td><%= link_to deploy.project.name, deploy.project %></td>
+    <td><%= deploy.user.name %></td>
+    <td>
+      <%= content_tag :span, "Hotfix!", class: "label label-hotfix" if deploy.changeset.hotfix? %>
+      <%= link_to "#{deploy.summary}", deploy.url %>
+    </td>
+      <% if params[:time_format] == 'utc' %>
+        <td><%= utc_time(deploy.start_time) %></td>
+      <% elsif params[:time_format] == 'local' %>
+        <td><%= local_time(deploy.start_time) %></td>
+      <% else %>
+        <td><%= relative_time(deploy.start_time) %></td>
+      <% end %>
+    <td><span class="label <%= status_label(deploy.status) %>"><%= deploy.status.titleize %></span></td>
+  </tr>
+<% end %>

@@ -53,7 +53,7 @@
       </tr>
       <% if @deploys.count > 0 %>
         <tbody>
-          <%= render partial: "search_results", collection: @deploys %>
+          <%= render partial: "deploy", collection: @deploys %>
         </tbody>
       <% end %>
     </table>
