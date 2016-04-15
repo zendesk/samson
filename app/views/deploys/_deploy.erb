@@ -4,7 +4,7 @@
     <td><%= deploy.user.name %></td>
     <td>
       <%= content_tag :span, "Hotfix!", class: "label label-hotfix" if deploy.changeset.hotfix? %>
-      <%= link_to "#{deploy.summary}", deploy.url %>
+      <%= link_to deploy.summary, deploy.url %>
     </td>
       <% if params[:time_format] == 'utc' %>
         <td><%= utc_time(deploy.start_time) %></td>
