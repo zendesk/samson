@@ -68,4 +68,10 @@ describe "cleanliness" do
       end
     end
   end
+
+  it "does not have trailing whitespace" do
+    check_content Dir["{app,lib,plugins,test}/**/*.rb"] do |content|
+      "has trailing whitespace" if content =~ / $/
+    end
+  end
 end
