@@ -1,5 +1,7 @@
 require_relative '../../test_helper'
 
+SingleCov.covered! uncovered: 18
+
 describe Kubernetes::Release do
   let(:build)  { builds(:docker_build) }
   let(:user)   { users(:deployer) }
@@ -34,8 +36,10 @@ describe Kubernetes::Release do
   describe '#create_release' do
 
     describe 'with one single role' do
-      setup :expect_file_contents_from_repo
-      setup :current_release_count
+      before do
+        expect_file_contents_from_repo
+        current_release_count
+      end
 
       it 'creates the Release and all the corresponding ReleaseDocs' do
         release = Kubernetes::Release.create_release(release_params)
@@ -48,8 +52,10 @@ describe Kubernetes::Release do
     end
 
     describe 'with multiple roles' do
-      setup { 2.times { expect_file_contents_from_repo } }
-      setup :current_release_count
+      before do
+        2.times { expect_file_contents_from_repo }
+        current_release_count
+      end
 
       it 'creates the Release and all the corresponding ReleaseDocs' do
         release = Kubernetes::Release.create_release(multiple_roles_release_params)
@@ -70,7 +76,7 @@ describe Kubernetes::Release do
     end
 
     describe 'with missing deploy groups' do
-      setup :current_release_count
+      before { current_release_count }
 
       it_should_raise_an_exception do
         Kubernetes::Release.create_release(release_params.except(:deploy_groups)) #nil
@@ -84,7 +90,7 @@ describe Kubernetes::Release do
     end
 
     describe 'with missing roles' do
-      setup :current_release_count
+      before { current_release_count }
 
       it_should_raise_an_exception do
         Kubernetes::Release.create_release(release_params.tap { |params| params[:deploy_groups].each { |dg| dg.delete(:roles) } }) #nil

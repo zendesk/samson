@@ -1,8 +1,19 @@
 require_relative '../test_helper'
 
+SingleCov.not_covered!
+
 # kitchen sink for 1-off tests
 describe "cleanliness" do
-  let(:all_tests) { Dir["{,plugins/*/}test/controllers/**/*_test.rb"] }
+  def check_content(files)
+    files -= [__FILE__.sub("#{Rails.root}/", '')]
+    bad = files.map do |f|
+      error = yield File.read(f)
+      "#{f}: #{error}" if error
+    end.compact
+    assert bad.empty?, bad.join("\n")
+  end
+
+  let(:all_tests) { Dir["{,plugins/*/}test/**/*_test.rb"] }
 
   it "does not have boolean limit 1 in schema since this breaks mysql" do
     File.read("db/schema.rb").wont_match /\st\.boolean.*limit: 1/
@@ -25,13 +36,11 @@ describe "cleanliness" do
   end
 
   it "does not use let(:user) inside of a as_xyz block" do
-    bad = all_tests.map do |f|
-      content = File.read(f)
+    check_content all_tests do |content|
       if content.include?("  as_") && content.include?("let(:user)")
-        "#{f} uses as_xyz and let(:user) these do not mix!"
+        "uses as_xyz and let(:user) these do not mix!"
       end
-    end.compact
-    bad.must_equal []
+    end
   end
 
   it "does not have actions on base controller" do
@@ -41,32 +50,28 @@ describe "cleanliness" do
   end
 
   it "has coverage" do
-    bad = Dir["{,plugins/*/}test/controllers/**/*.rb"].map do |f|
-      content = File.read(f)
-      unless content.include?("SingleCov.covered!")
-        "#{f} needs to use SingleCov.covered!"
-      end
-    end.compact
-    bad.must_equal []
+    SingleCov.assert_used files: all_tests
   end
 
   it "does not use setup/teardown" do
-    bad = all_tests.map do |f|
-      content = File.read(f)
-      if content =~ /\s+(setup|teardown)[\s\{]/
-        "#{f} uses setup or taerdown, but should use before or after"
+    check_content all_tests do |content|
+      if content =~ /^\s+(setup|teardown)[\s\{]/
+        "uses setup or teardown, but should use before or after"
       end
-    end.compact
-    bad.must_equal []
+    end
   end
 
   it "uses active test case wording" do
-    bad = all_tests.map do |f|
-      content = File.read(f)
+    check_content all_tests do |content|
       if content =~ /\s+it ['"]should /
-        "#{f} uses `it should` working, please use active working `it should activate` -> `it activates`"
+        "uses `it should` working, please use active working `it should activate` -> `it activates`"
       end
-    end.compact
-    bad.must_equal []
+    end
+  end
+
+  it "does not have trailing whitespace" do
+    check_content Dir["{app,lib,plugins,test}/**/*.rb"] do |content|
+      "has trailing whitespace" if content =~ / $/
+    end
   end
 end

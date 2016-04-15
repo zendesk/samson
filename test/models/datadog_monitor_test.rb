@@ -1,5 +1,7 @@
 require_relative '../test_helper'
 
+SingleCov.covered!
+
 describe DatadogMonitor do
   def stub_datadog(state)
     stub_request(:get, monitor_url).

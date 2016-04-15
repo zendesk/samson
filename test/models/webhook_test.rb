@@ -1,5 +1,7 @@
 require_relative '../test_helper'
 
+SingleCov.covered!
+
 describe Webhook do
   let(:webhook_attributes) { { branch: 'master', stage_id: 1, project_id: 1, source: 'any_ci'} }
 

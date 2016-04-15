@@ -1,5 +1,7 @@
 require_relative '../test_helper'
 
+SingleCov.covered!
+
 describe SlackWebhookNotificationRenderer do
   it "renders a nicely formatted notification" do
     changeset = stub("changeset")

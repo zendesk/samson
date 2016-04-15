@@ -1,5 +1,7 @@
 require_relative '../test_helper'
 
+SingleCov.covered! uncovered: 5
+
 describe GithubDeployment do
   include StubGithubAPI
 

@@ -1,5 +1,7 @@
 require_relative '../../test_helper'
 
+SingleCov.covered! uncovered: 2
+
 describe Samson::Jenkins do
   def stub_crumb
     stub_request(:get, "http://user%40test.com:japikey@www.test-url.com/api/json?tree=useCrumbs").
@@ -70,7 +72,7 @@ describe Samson::Jenkins do
   end
 
   describe "#job_url" do
-    it "should return a jenkins job url" do
+    it "returns a jenkins job url" do
       stub_build_url("https://jenkins.zende.sk/job/rdhanoa_test_project/96/")
       jenkins.job_url(96).must_equal "https://jenkins.zende.sk/job/rdhanoa_test_project/96/"
     end

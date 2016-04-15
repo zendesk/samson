@@ -1,6 +1,22 @@
 require_relative '../test_helper'
 
+SingleCov.covered!
+
 describe ReleasesHelper do
+  describe "#release_label" do
+    let(:release) { releases(:test) }
+    let(:result) { release_label(projects(:test), release) }
+
+    it "produces a label" do
+      result.must_equal "<a class=\"release-label label label-success\" href=\"/projects/foo/releases/v123\">v123</a>"
+    end
+
+    it "adds warnings for hotfix" do
+      release.changeset.stubs(hotfix?: true)
+      result.must_equal "<a class=\"release-label label label-warning\" href=\"/projects/foo/releases/v123\">v123</a> <span class=\"glyphicon glyphicon-exclamation-sign\" title=\"Hotfix!\"></span>"
+    end
+  end
+
   describe "#link_to_deploy_stage" do
     let(:stage) { stages(:test_staging) }
     let(:release) { Release.new }

@@ -1,5 +1,7 @@
 require_relative '../../test_helper'
 
+SingleCov.covered! uncovered: 9
+
 describe Changeset::PullRequest do
   DataStruct = Struct.new(:user, :merged_by, :body, :title)
   UserStruct = Struct.new(:login)
@@ -151,7 +153,7 @@ describe Changeset::PullRequest do
       pr.jira_issues.must_equal []
     end
 
-    it "should use full JIRA urls when given, falling back to JIRA_BASE_URL" do
+    it "uses full JIRA urls when given, falling back to JIRA_BASE_URL" do
       ENV['JIRA_BASE_URL'] = 'https://foo.atlassian.net/browse/'
       body.replace(<<-BODY)
         Fixes https://foobar.atlassian.net/browse/XY-123 and AB-666
@@ -163,7 +165,7 @@ describe Changeset::PullRequest do
       ]
     end
 
-    it "should use full URL if given and not auto-generate even when JIRA_BASE_URL is set" do
+    it "uses full URL if given and not auto-generate even when JIRA_BASE_URL is set" do
       ENV['JIRA_BASE_URL'] = 'https://foo.atlassian.net/browse/'
       body.replace(<<-BODY)
         Fixes XY-123, see https://foobar.atlassian.net/browse/XY-123
@@ -265,8 +267,8 @@ describe Changeset::PullRequest do
       "message -123 invalid key",
       "message 1ABC-123 invalid key",
       "message 123-123 invalid key",
-      "should not parse key0MES-123",
-      "should not parse MES-123key",
+      "does not parse key0MES-123",
+      "does not parse MES-123key",
       "MES-123k invalid char",
       "invalid char MES-123k"
     ]

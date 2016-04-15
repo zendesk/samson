@@ -1,5 +1,7 @@
 require_relative '../test_helper'
 
+SingleCov.covered! uncovered: 4
+
 describe Release do
   describe "create" do
     let(:project) { projects(:test) }

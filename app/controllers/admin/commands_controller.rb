@@ -32,7 +32,6 @@ class Admin::CommandsController < ApplicationController
       flash[:notice] = 'Command created.'
       redirect_to admin_commands_path
     else
-      flash[:error] = 'Command failure.'
       render :edit
     end
   end
@@ -43,7 +42,6 @@ class Admin::CommandsController < ApplicationController
     else
       respond_to do |format|
         format.html do
-          flash[:error] = 'Command failure.'
           render :edit
         end
 

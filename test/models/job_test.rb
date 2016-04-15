@@ -1,5 +1,7 @@
 require_relative '../test_helper'
 
+SingleCov.covered! uncovered: 37
+
 describe Job do
   include GitRepoTestHelper
 

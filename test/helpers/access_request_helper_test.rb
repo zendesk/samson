@@ -1,7 +1,10 @@
 require_relative '../test_helper'
 
+SingleCov.covered!
+
 describe AccessRequestHelper do
   include AccessRequestTestSupport
+
   describe '#display_access_request_link?' do
     before { enable_access_request }
     after { restore_access_request_settings }
