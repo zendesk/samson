@@ -9,7 +9,8 @@ module BuildsHelper
   end
 
   def short_sha value, length: 7
-    "#{value.first(length)}" if value
+    # with Docker, SHA values can be of the form "sha256:0123abc..."
+    "#{value.split(':').last[0..length]}" if value
   end
 
   def git_ref_and_sha_for build, make_link: false

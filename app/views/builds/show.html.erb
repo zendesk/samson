@@ -58,7 +58,9 @@
     </div>
   <% end %>
 
-  <%= form_for :build, url: build_docker_image_project_build_path(@build.project, @build), html: { class: "form-inline" } do |form| %>
-    <%= form.submit (job ? 'Rebuild Docker Image' : 'Build Docker Image'), class: "btn btn-primary" %>
+  <% unless docker_build_running? @build %>
+    <%= form_for :build, url: build_docker_image_project_build_path(@build.project, @build), html: { class: "form-inline" } do |form| %>
+      <%= form.submit (job ? 'Rebuild Docker Image' : 'Build Docker Image'), class: "btn btn-primary" %>
+    <% end %>
   <% end %>
 </section>
