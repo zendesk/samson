@@ -1,6 +1,6 @@
 require_relative '../../test_helper'
 
-if SingleCov.running_single_file?
+unless defined?(Rake) # rake preloads all plugins
   SingleCov.covered! uncovered: 13 unless defined?(Rake)
 end
 
