@@ -78,7 +78,6 @@ describe "cleanliness" do
   it "tests all files" do
     known_missing = [
       "test/controllers/application_controller_test.rb",
-      "test/controllers/changelogs_controller_test.rb",
       "test/controllers/concerns/authorization_test.rb",
       "test/controllers/concerns/current_project_test.rb",
       "test/controllers/concerns/current_user_test.rb",
