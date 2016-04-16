@@ -11,8 +11,6 @@ class ApplicationController < ActionController::Base
   include CurrentUser
   include Authorization
 
-  helper :flash
-
   protected
 
   def force_ssl?
