@@ -152,4 +152,8 @@ module ApplicationHelper
       end
     end
   end
+
+  def link_to_url(url)
+    link_to(url, url)
+  end
 end
