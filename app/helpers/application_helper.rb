@@ -2,6 +2,8 @@ require 'ansible'
 require 'github/markdown'
 
 module ApplicationHelper
+  BOOTSTRAP_FLASH_MAPPINGS = { notice: :info, error: :danger, authorization_error: :danger, success: :success }
+
   include Ansible
   include DateTimeHelper
 
@@ -138,5 +140,16 @@ module ApplicationHelper
   # like `render collection` does
   def static_render(collection)
     render partial: collection.first.to_partial_path, collection: collection if collection.any?
+  end
+
+  # Flash type -> Bootstrap alert class
+  def flash_messages
+    flash.flat_map do |type, messages|
+      type = type.to_sym
+      bootstrap_class = BOOTSTRAP_FLASH_MAPPINGS[type] || :info
+      Array.wrap(messages).map do |message|
+        [type, bootstrap_class, message]
+      end
+    end
   end
 end

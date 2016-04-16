@@ -195,4 +195,27 @@ describe ApplicationHelper do
       breadcrumb(stage).must_equal "<ul class=\"breadcrumb\"><li class=\"\"><a href=\"/\">Home</a></li><li class=\"active\">&lt;script&gt;alert(1)&lt;/script&gt;</li></ul>"
     end
   end
+
+  describe "#flash_messages" do
+    let(:flash) { {} }
+
+    it "returns empty" do
+      flash_messages.must_equal []
+    end
+
+    it "returns unknown" do
+      flash[:foo] = "bar"
+      flash_messages.must_equal [[:foo, :info, "bar"]]
+    end
+
+    it "translates bootstrap classes" do
+      flash[:notice] = "N"
+      flash_messages.must_equal [[:notice, :info, "N"]]
+    end
+
+    it "returns arrays of messages" do
+      flash[:notice] = ["bar", "baz"]
+      flash_messages.must_equal [[:notice, :info, "bar"], [:notice, :info, "baz"]]
+    end
+  end
 end
