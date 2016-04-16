@@ -82,7 +82,6 @@ describe "cleanliness" do
       "test/controllers/concerns/current_project_test.rb",
       "test/controllers/concerns/current_user_test.rb",
       "test/controllers/concerns/stage_permitted_params_test.rb",
-      "test/helpers/admin/projects_helper_test.rb",
       "test/helpers/builds_helper_test.rb",
       "test/helpers/date_time_helper_test.rb",
       "test/helpers/deploys_helper_test.rb",
