@@ -5,7 +5,7 @@ SingleCov.not_covered!
 # kitchen sink for 1-off tests
 describe "cleanliness" do
   def check_content(files)
-    files -= [__FILE__.sub("#{Rails.root}/", '')]
+    files -= [File.expand_path(__FILE__).sub("#{Rails.root}/", '')]
     bad = files.map do |f|
       error = yield File.read(f)
       "#{f}: #{error}" if error
@@ -49,8 +49,8 @@ describe "cleanliness" do
     found.must_equal []
   end
 
-  it "has coverage" do
-    SingleCov.assert_used files: all_tests
+  it "enforces coverage" do
+    SingleCov.assert_used tests: all_tests
   end
 
   it "does not use setup/teardown" do
@@ -76,54 +76,46 @@ describe "cleanliness" do
   end
 
   it "tests all files" do
-    known_missing = [
-      "test/controllers/application_controller_test.rb",
-      "test/controllers/concerns/authorization_test.rb",
-      "test/controllers/concerns/current_project_test.rb",
-      "test/controllers/concerns/current_user_test.rb",
-      "test/controllers/concerns/stage_permitted_params_test.rb",
-      "test/mailers/application_mailer_test.rb",
-      "test/models/changeset/code_push_test.rb",
-      "test/models/changeset/issue_comment_test.rb",
-      "test/models/changeset/jira_issue_test.rb",
-      "test/models/concerns/has_commands_test.rb",
-      "test/models/concerns/has_role_test.rb",
-      "test/models/concerns/searchable_test.rb",
-      "test/models/datadog_notification_test.rb",
-      "test/models/deploy_groups_stage_test.rb",
-      "test/models/job_service_test.rb",
-      "test/models/job_viewers_test.rb",
-      "test/models/macro_command_test.rb",
-      "test/models/new_relic_test.rb",
-      "test/models/new_relic_application_test.rb",
-      "test/models/null_user_test.rb",
-      "test/models/restart_signal_handler_test.rb",
-      "test/models/role_test.rb",
-      "test/models/stage_command_test.rb",
-      "test/models/star_test.rb",
-      "test/serializers/build_serializer_test.rb",
-      "test/serializers/deploy_serializer_test.rb",
-      "test/serializers/project_serializer_test.rb",
-      "test/serializers/stage_serializer_test.rb",
-      "test/serializers/user_serializer_test.rb",
-      "test/lib/generators/plugin/plugin_generator_test.rb",
-      "test/lib/generators/plugin/templates/test_helper_test.rb",
-      "test/lib/samson/integration_test.rb",
-      "test/lib/warden/strategies/basic_strategy_test.rb",
-      "test/lib/warden/strategies/session_strategy_test.rb"
+    untested = [
+      "app/controllers/application_controller.rb",
+      "app/controllers/concerns/authorization.rb",
+      "app/controllers/concerns/current_project.rb",
+      "app/controllers/concerns/current_user.rb",
+      "app/controllers/concerns/stage_permitted_params.rb",
+      "app/mailers/application_mailer.rb",
+      "app/models/changeset/code_push.rb",
+      "app/models/changeset/issue_comment.rb",
+      "app/models/changeset/jira_issue.rb",
+      "app/models/concerns/has_commands.rb",
+      "app/models/concerns/has_role.rb",
+      "app/models/concerns/searchable.rb",
+      "app/models/datadog_notification.rb",
+      "app/models/deploy_groups_stage.rb",
+      "app/models/job_service.rb",
+      "app/models/job_viewers.rb",
+      "app/models/macro_command.rb",
+      "app/models/new_relic.rb",
+      "app/models/new_relic_application.rb",
+      "app/models/null_user.rb",
+      "app/models/restart_signal_handler.rb",
+      "app/models/role.rb",
+      "app/models/stage_command.rb",
+      "app/models/star.rb",
+      "app/serializers/build_serializer.rb",
+      "app/serializers/deploy_serializer.rb",
+      "app/serializers/project_serializer.rb",
+      "app/serializers/stage_serializer.rb",
+      "app/serializers/user_serializer.rb",
+      "lib/generators/plugin/plugin_generator.rb",
+      "lib/generators/plugin/templates/test_helper.rb",
+      "lib/samson/integration.rb",
+      "lib/warden/strategies/basic_strategy.rb",
+      "lib/warden/strategies/session_strategy.rb",
     ]
 
-    expected_tests = (
-      Dir['app/**/*.rb'].map { |f| [f, f.sub('app/', 'test/').sub('.rb', '_test.rb')] } +
-      Dir['lib/**/*.rb'].map { |f| [f, f.sub('lib/', 'test/lib/').sub('.rb', '_test.rb')] }
+    SingleCov.assert_tested(
+      tests: all_tests,
+      untested: untested
     )
-    missing = expected_tests.reject { |_, t| all_tests.include?(t) }
-
-    if fixed = (known_missing - missing.map(&:last)).presence
-      raise "Remove #{fixed.inspect} from known_missing!"
-    else
-      missing.reject! { |_, t| known_missing.include?(t) }
-      assert missing.empty?, missing.map { |f, t| "missing test for #{f} at #{t}" }.join("\n")
-    end
   end
 end

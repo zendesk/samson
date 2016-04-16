@@ -1,5 +1,8 @@
 ENV["RAILS_ENV"] ||= "test"
 
+require 'single_cov'
+SingleCov.setup :minitest
+
 if ENV['CODECLIMATE_REPO_TOKEN']
   require 'codeclimate-test-reporter'
   CodeClimate::TestReporter.start
@@ -7,8 +10,6 @@ elsif ENV['COVERAGE']
   require 'simplecov'
   SimpleCov.start 'rails'
 end
-
-require_relative 'support/single_cov'
 
 # rake adds these, but we don't need them / want to be in a consistent environment
 $LOAD_PATH.delete 'lib'
