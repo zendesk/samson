@@ -218,4 +218,10 @@ describe ApplicationHelper do
       flash_messages.must_equal [[:notice, :info, "bar"], [:notice, :info, "baz"]]
     end
   end
+
+  describe "#link_to_url" do
+    it "builds a link" do
+      link_to_url("b").must_equal "<a href=\"b\">b</a>"
+    end
+  end
 end
