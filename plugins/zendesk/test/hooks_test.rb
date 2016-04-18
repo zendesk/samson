@@ -1,6 +1,6 @@
 require_relative 'test_helper'
 
-if SingleCov.running_single_file?
+unless defined?(Rake) # rake preloads all plugins
   SingleCov.covered! uncovered: 1, file: 'plugins/zendesk/lib/samson_zendesk/samson_plugin.rb'
 end
 

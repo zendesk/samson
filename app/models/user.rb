@@ -27,6 +27,16 @@ class User < ActiveRecord::Base
     starred_projects.include?(project)
   end
 
+  # returns a scope
+  def administrated_projects
+    scope = Project.order(:name)
+    unless is_admin?
+      allowed = user_project_roles.where(role_id: Role::ADMIN.id).pluck(:project_id)
+      scope = scope.where(id: allowed)
+    end
+    scope
+  end
+
   def self.to_csv
     @users = User.order(:id)
     CSV.generate do |csv|

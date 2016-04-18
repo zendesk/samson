@@ -96,6 +96,7 @@ Samson::Application.routes.draw do
     resources :users, only: [:index, :show, :update, :destroy]
     resource :projects, only: [:show]
     resources :commands, except: [:show]
+    resources :secrets, except: [:show]
     resources :environments, except: [:show]
     resources :deploy_groups do
       member do

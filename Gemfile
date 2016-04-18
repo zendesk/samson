@@ -10,6 +10,7 @@ gem 'dotenv'
 
 gem 'dogstatsd-ruby', '~> 1.5.0', require: 'statsd'
 gem 'goldiloader'
+gem 'attr_encrypted', require: false
 
 group :mysql2 do
   gem 'mysql2', '~> 0.3'
@@ -116,6 +117,7 @@ group :test do
   gem 'maxitest'
   gem 'mocha', require: false
   gem 'webmock', require: false
+  gem 'single_cov'
   gem 'simplecov', require: false
   gem 'query_diet'
   gem 'codeclimate-test-reporter', require: false

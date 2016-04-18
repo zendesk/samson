@@ -1,6 +1,6 @@
 require_relative 'test_helper'
 
-if SingleCov.running_single_file?
+unless defined?(Rake) # rake preloads all plugins
   SingleCov.covered! file: 'plugins/dockerb/lib/samson_env/samson_plugin.rb'
 end
 

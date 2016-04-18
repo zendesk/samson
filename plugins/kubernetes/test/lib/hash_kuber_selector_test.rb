@@ -1,6 +1,6 @@
 require_relative "../test_helper"
 
-if SingleCov.running_single_file?
+unless defined?(Rake) # rake preloads all plugins
   SingleCov.covered! file: 'plugins/kubernetes/lib/samson_kubernetes/hash_kuber_selector.rb'
 end
 
