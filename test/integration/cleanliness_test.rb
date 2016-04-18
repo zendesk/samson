@@ -97,7 +97,6 @@ describe "cleanliness" do
       "app/models/new_relic.rb",
       "app/models/new_relic_application.rb",
       "app/models/restart_signal_handler.rb",
-      "app/models/role.rb",
       "app/models/stage_command.rb",
       "app/models/star.rb",
       "lib/generators/plugin/plugin_generator.rb",
