@@ -91,15 +91,17 @@ class DeploysController < ApplicationController
     end
 
     deploys = Deploy
-    deploys = Deploy.where(stage: stages) if stages
-    deploys = Deploy.where(job: jobs) if jobs
+    deploys = deploys.where(stage: stages) if stages
+    deploys = deploys.where(job: jobs) if jobs
     @deploys = deploys.page(params[:page]).per(30)
 
     respond_to do |format|
       format.json do
-        render json: deploys.page(params[:page]).per(30)
+        render json: @deploys
       end
-      format.html { render 'search', locals: { deploys: deploys.page(1).per(30), title: 'Search Resuls', show_filters: true, controller: 'currentDeploysCtrl' } }
+      format.html do
+        render :search, locals: { title: 'Search Resuls' }
+      end
       format.csv do
         datetime = Time.now.strftime "%Y%m%d_%H%M"
         send_data deploys.to_csv, type: :csv, filename: "deploy_search_results_#{datetime}.csv"
