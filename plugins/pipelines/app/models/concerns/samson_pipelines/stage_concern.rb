@@ -5,12 +5,12 @@ module SamsonPipelines::StageConcern
   end
 
   def next_stages
-    Stage.find(next_stage_ids)
+    @next_stages ||= Stage.find(next_stage_ids)
   end
 
   def recursive_next_stage_ids
     return [] if next_stage_ids.empty?
-    next_stages.collect(&:id) + Stage.find(next_stage_ids).flat_map(&:recursive_next_stage_ids)
+    next_stages.collect(&:id) + next_stages.flat_map(&:recursive_next_stage_ids)
   end
 
   protected
