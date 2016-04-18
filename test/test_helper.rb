@@ -138,6 +138,10 @@ class ActiveSupport::TestCase
   class << self
     undef :test
   end
+
+  def create_secret(key)
+    SecretStorage::DbBackend::Secret.create!(id: key, value: 'MY-SECRET', updater_id: users(:admin).id, creator_id: users(:admin).id)
+  end
 end
 
 Mocha::Expectation.class_eval do
