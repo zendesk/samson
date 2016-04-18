@@ -32,6 +32,9 @@ gem 'active_model_serializers', '~> 0.8.0'
 gem 'sawyer', '~> 0.5'
 gem 'sse-rails-engine', '~> 1.4'
 
+# Hashicorp vault
+gem 'vault'
+
 # Logging
 gem 'lograge'
 gem 'logstash-event'

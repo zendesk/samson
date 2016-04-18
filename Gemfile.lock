@@ -441,6 +441,7 @@ GEM
     unf (0.1.4)
       unf_ext
     unf_ext (0.0.7.2)
+    vault (0.4.0)
     warden (1.2.6)
       rack (>= 1.0)
     webmock (1.24.2)
@@ -546,6 +547,7 @@ DEPENDENCIES
   sqlite3
   sse-rails-engine (~> 1.4)
   uglifier (>= 1.3.0)
+  vault
   warden (~> 1.2)
   webmock
 
