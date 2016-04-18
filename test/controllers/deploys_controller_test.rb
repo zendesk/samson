@@ -254,9 +254,9 @@ describe DeploysController do
         deploys["deploys"].count.must_equal 2
       end
 
-      it "fails with empty status" do
+      it "ignores empty status" do
         get :search, format: "json", status: ' '
-        assert_response 400
+        assert_response 200
       end
 
       it "fails with invalid status" do
