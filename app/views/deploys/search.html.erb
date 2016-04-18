@@ -1,8 +1,6 @@
 <h1><%= title %></h1>
 
 <div class="search">
-  <input type=hidden  id=default_time_format value="<%= current_user.time_format %>">
-
   <div class="row">
     <%= form_tag("/deploys/search", method: "get") do %>
       <div class="search-form col-sm-2">
