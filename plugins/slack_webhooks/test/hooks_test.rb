@@ -1,6 +1,6 @@
 require_relative 'test_helper'
 
-if SingleCov.running_single_file?
+unless defined?(Rake) # rake preloads all plugins
   SingleCov.covered! uncovered: 1, file: 'plugins/slack_webhooks/lib/samson_slack_webhooks/samson_plugin.rb'
 end
 
