@@ -96,7 +96,6 @@ describe "cleanliness" do
       "app/models/macro_command.rb",
       "app/models/new_relic.rb",
       "app/models/new_relic_application.rb",
-      "app/models/null_user.rb",
       "app/models/restart_signal_handler.rb",
       "app/models/role.rb",
       "app/models/stage_command.rb",
