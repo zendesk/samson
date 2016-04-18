@@ -53,6 +53,16 @@ module ApplicationHelper
     content_tag(:span, time.rfc822, data: { time: datetime_to_js_ms(time) }, class: "mouseover")
   end
 
+  def render_time(time_stamp, format)
+    if format == 'local'
+      local_time(time_stamp)
+    elsif format == 'utc'
+      utc_time(time_stamp)
+    else
+      relative_time(time_stamp)
+    end
+  end
+
   def local_time(time)
     time_tag(time, format: '%B %d, %Y %l:%M %p')
   end
