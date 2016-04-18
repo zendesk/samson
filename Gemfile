@@ -117,6 +117,7 @@ group :test do
   gem 'maxitest'
   gem 'mocha', require: false
   gem 'webmock', require: false
+  gem 'single_cov'
   gem 'simplecov', require: false
   gem 'query_diet'
   gem 'codeclimate-test-reporter', require: false
