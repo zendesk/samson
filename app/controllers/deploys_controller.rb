@@ -49,7 +49,7 @@ class DeploysController < ApplicationController
   def search
     status = params[:status].presence
 
-    if (status && !Job.valid_status?(params[:status]))
+    if status && !Job.valid_status?(params[:status])
       render json: { errors: "invalid status given" }, status: 400
       return
     end
