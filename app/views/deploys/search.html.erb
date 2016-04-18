@@ -48,11 +48,9 @@
         <th>LAST UPDATE</th>
         <th>STATUS</th>
       </tr>
-      <% if @deploys.count > 0 %>
-        <tbody>
-          <%= render partial: "deploy", collection: @deploys %>
-        </tbody>
-      <% end %>
+      <tbody>
+        <%= render partial: "deploy", collection: @deploys %>
+      </tbody>
     </table>
     <%= paginate @deploys %>
   </section>
