@@ -448,30 +448,6 @@ describe Stage do
     end
   end
 
-  describe "#ensure_valid_bypass" do
-    before { stage.deploy_groups.clear }
-
-    it "is valid when not production and not bypassed" do
-      assert_valid stage
-    end
-
-    it "is valid when production and not bypassed" do
-      stage.production = true
-      assert_valid stage
-    end
-
-    it "is valid when production and bypassed" do
-      stage.production = true
-      stage.no_code_deployed = true
-      assert_valid stage
-    end
-
-    it "invalid when not production and bypassed" do
-      stage.no_code_deployed = true
-      refute_valid stage
-    end
-  end
-
   describe "#destroy" do
     it "soft deletes all it's StageCommand" do
       assert_difference "StageCommand.count", -1 do
