@@ -64,7 +64,7 @@ module Kubernetes
     # old and new Replication Controllers when managing a new Deployment.
     def set_selector_metadata
       deployment_labels.each do |key, value|
-        template.spec.selector[key] = value
+        template.spec.selector.matchLabels[key] = value
       end
     end
 

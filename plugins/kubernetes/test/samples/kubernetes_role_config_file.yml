@@ -9,8 +9,9 @@ metadata:
 spec:
   replicas: 2
   selector:
-    project: some-project
-    role: some-role
+    matchLabels:
+      project: some-project
+      role: some-role
   template:
     metadata:
       name: some-project-pod
