@@ -22,8 +22,6 @@ class Stage < ActiveRecord::Base
   default_scope { order(:order) }
 
   validates :name, presence: true, uniqueness: { scope: [:project, :deleted_at] }
-  validate :validate_bypass_used_correctly
-
   accepts_nested_attributes_for :new_relic_applications, allow_destroy: true, reject_if: :no_newrelic_name?
 
   before_create :ensure_ordering
@@ -189,11 +187,5 @@ class Stage < ActiveRecord::Base
   def ensure_ordering
     return unless project
     self.order = project.stages.maximum(:order).to_i + 1
-  end
-
-  def validate_bypass_used_correctly
-    if no_code_deployed? && !production?
-      errors.add(:no_code_deployed, 'makes no sense when set but not being in production')
-    end
   end
 end
