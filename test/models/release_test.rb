@@ -67,7 +67,7 @@ describe Release do
       create_deploy!(reference: "v666", status: "succeeded")
       author.destroy!
       release.reload
-      assert_equal NullUser.new.name, release.author.name
+      assert_equal NullUser.new(0).name, release.author.name
     end
 
     def create_deploy!(options)
