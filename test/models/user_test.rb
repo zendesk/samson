@@ -164,6 +164,16 @@ describe User do
     end
   end
 
+  describe ".administrated_projects" do
+    it "is all for admin" do
+      users(:admin).administrated_projects.map(&:id).sort.must_equal Project.pluck(:id).sort
+    end
+
+    it "is allowed for project admin" do
+      users(:project_admin).administrated_projects.map(&:permalink).sort.must_equal ['foo']
+    end
+  end
+
   describe "#super_admin?" do
     it "is true for a super admin" do
       users(:super_admin).must_be(:is_super_admin?)

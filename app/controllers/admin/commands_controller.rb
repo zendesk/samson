@@ -6,7 +6,7 @@ class Admin::CommandsController < ApplicationController
   before_action :authorize_admin!, except: [ :update, :edit ]
 
   def index
-    @commands = Command.order('project_id').page(params[:page])
+    @commands = Command.order(:project_id).page(params[:page])
     if search = params[:search]
       if query = search[:query].presence
         query = ActiveRecord::Base.send(:sanitize_sql_like, query)
@@ -29,8 +29,7 @@ class Admin::CommandsController < ApplicationController
     @command = Command.create(command_params)
 
     if @command.persisted?
-      flash[:notice] = 'Command created.'
-      redirect_to admin_commands_path
+      successful_response 'Command created.'
     else
       render :edit
     end
@@ -52,7 +51,6 @@ class Admin::CommandsController < ApplicationController
 
   def destroy
     Command.destroy(params[:id])
-
     successful_response('Command removed.')
   end
 
