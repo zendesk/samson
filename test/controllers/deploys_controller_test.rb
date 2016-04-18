@@ -223,7 +223,7 @@ describe DeploysController do
         end
       end
 
-      it "returns a 200" do
+      it "it renders json" do
         get :search, format: "json"
         assert_response :ok
       end
@@ -231,6 +231,12 @@ describe DeploysController do
       it "renders csv" do
         get :search, format: "csv"
         assert_equal "text/csv", @response.content_type
+        assert_response :ok
+      end
+
+      it "renders html" do
+        get :search, format: "html"
+        assert_equal "text/html", @response.content_type
         assert_response :ok
       end
 
