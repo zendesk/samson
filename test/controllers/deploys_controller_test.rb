@@ -61,58 +61,6 @@ describe DeploysController do
       end
     end
 
-    describe "a GET to :recent" do
-      before { get :recent, project_id: project_id, format: format }
-
-      with_and_without_project do
-        describe "as html" do
-          let(:format) { :html }
-
-          it "renders the template" do
-            assert_template :recent
-          end
-        end
-
-        describe "as json" do
-        let(:format) { :json }
-
-        it "renders json" do
-          assert_equal "application/json", @response.content_type
-          assert_response :ok
-        end
-        end
-
-        describe "as csv" do
-          let(:format) { :csv }
-
-          it "renders csv" do
-            assert_equal "text/csv", @response.content_type
-            assert_response :ok
-          end
-
-          it "outputs csv accurately and completely" do
-            csv_response = CSV.parse(response.body)
-            csv_headers = csv_response.shift
-            deploycount = csv_headers.pop.to_i
-            Deploy.joins(:stage).count.must_equal deploycount
-            deploycount.must_equal csv_response.length
-            assert_not_nil csv_response
-            csv_response.each do |d|
-              deploy_info = Deploy.find_by(id: d[0])
-              deploy_info.wont_be_nil
-              deploy_info.project.name.must_equal d[1]
-              deploy_info.summary.must_equal d[2]
-              deploy_info.updated_at.to_s.must_equal d[3]
-              deploy_info.start_time.to_s.must_equal d[4]
-              deploy_info.job.user.name.must_equal d[5]
-              deploy_info.csv_buddy.must_equal d[6]
-              deploy_info.stage.production.to_s.must_equal d[7]
-            end
-          end
-        end
-      end
-    end
-
     describe "a GET to :active" do
       before { get :active, project_id: project_id, format: format }
 
