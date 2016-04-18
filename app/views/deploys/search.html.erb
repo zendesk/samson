@@ -43,13 +43,13 @@
     <table class="search-content">
       <tr>
         <th>PROJECT</th>
-        <th>USER</th>
-        <th>DEPLOY</th>
         <th>LAST UPDATE</th>
+        <th>DEPLOY</th>
+        <th>STAGE</th>
         <th>STATUS</th>
       </tr>
       <tbody>
-        <%= render partial: "deploy", collection: @deploys %>
+        <%= render partial: "projects/deploy", collection: @deploys %>
       </tbody>
     </table>
     <%= paginate @deploys %>
