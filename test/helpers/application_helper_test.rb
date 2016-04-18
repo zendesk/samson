@@ -1,5 +1,4 @@
 require_relative '../test_helper'
-require 'byebug'
 
 SingleCov.covered! uncovered: 11
 
