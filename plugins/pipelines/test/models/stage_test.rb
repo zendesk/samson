@@ -68,6 +68,7 @@ describe Stage do
     end
 
     it 'does not require approval with production deploy group and no_code_deployed true' do
+      stage2.update!(production: false)
       stage2.update!(no_code_deployed: true)
       stage1.update!(next_stage_ids: [stage2.id ])
       stage1.deploy_requires_approval?.must_equal false
