@@ -47,11 +47,11 @@ class DeploysController < ApplicationController
   #   * status (what is the status of this job failed|running| etc)
 
   def search
-    if (params[:status].present? && !Job.valid_status?(params[:status]))
+    status = params[:status].presence
+
+    if (status && !Job.valid_status?(params[:status]))
       render json: { errors: "invalid status given" }, status: 400
       return
-    else
-      status = params[:status].presence
     end
 
     if params[:deployer].present?
