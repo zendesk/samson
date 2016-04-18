@@ -63,6 +63,8 @@ class DeploysController < ApplicationController
     if (params[:status].present? && !Job.valid_status?(params[:status]))
       render json: { errors: "invalid status given" }, status: 400
       return
+    else
+      status = params[:status].presence
     end
 
     if params[:deployer].present?
@@ -73,10 +75,10 @@ class DeploysController < ApplicationController
       projects = Project.where(name: params[:project_name]).pluck(:id)
     end
 
-    if users || params[:status].present?
+    if users || status
       jobs = Job
       jobs = jobs.where(user: users) if users
-      jobs = jobs.where(status: params[:status]) if params[:status].present?
+      jobs = jobs.where(status: status) if status
     end
 
     if params[:production].present? || projects
