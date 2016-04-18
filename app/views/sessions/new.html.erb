@@ -3,17 +3,17 @@
   <p>Understand what is being deployed.</p>
   <div class="login">
     <% if Rails.application.config.samson.auth.github %>
-      <%= link_to omniauth_path('github'), class: "action github" do %>
+      <%= link_to omniauth_path(:github), class: "action github" do %>
         <%= image_tag image_url('github.png') %> Login with GitHub
       <% end %>
     <% end %>
     <% if Rails.application.config.samson.auth.google %>
-      <%= link_to omniauth_path('google'), class: "action google" do %>
+      <%= link_to omniauth_path(:google), class: "action google" do %>
         <%= image_tag image_url('google.png') %> Login with Google
       <% end %>
     <% end %>
     <% if Rails.application.config.samson.auth.ldap %>
-      <%= link_to omniauth_path('ldap'), class: "action ldap" do %>
+      <%= link_to omniauth_path(:ldap), class: "action ldap" do %>
         <%= image_tag image_url('ldap.png') %> Login with LDAP
       <% end %>
     <% end %>
