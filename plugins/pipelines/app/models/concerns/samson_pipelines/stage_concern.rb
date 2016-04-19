@@ -1,14 +1,34 @@
 module SamsonPipelines::StageConcern
+
   # Return true if any stages in the pipeline are marked production
   def production?
-    super || next_stages.any?(&:production?)
+    super || next_stages.any? { |next_stage| next_stage.production? && !next_stage.no_code_deployed? }
+  end
+
+  def deploy_requires_approval?
+    super || all_next_stages.any?(&:deploy_requires_approval?)
+  end
+
+  def deploy_requires_approval?
+    super || all_next_stages.any?(&:deploy_requires_approval?)
   end
 
   def next_stages
-    Stage.find(next_stage_ids)
+    @next_stages ||= Stage.find(next_stage_ids)
+  end
+
+  # Needs to find all the possible stages in case this is a pipeline of pipelines as each subsequent stage
+  # could have valid next_stage_ids
+  def recursive_next_stage_ids
+    return [] if next_stage_ids.empty?
+    next_stages.map(&:id) + next_stages.flat_map(&:recursive_next_stage_ids)
   end
 
   protected
+
+  def all_next_stages
+    Stage.find(recursive_next_stage_ids)
+  end
 
   # Ensure we don't have a circular pipeline:
   #

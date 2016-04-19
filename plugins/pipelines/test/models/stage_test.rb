@@ -9,9 +9,12 @@ describe Stage do
   let(:stage3) { Stage.create!(project: project, name: 'stage3') }
   let(:production) { deploy_groups(:pod1) }
   let(:staging) { deploy_groups(:pod100) }
+  let(:user) { User.find_by_name("Admin")}
+  let(:job) {Job.create!({project: project, command: "sleep 100", status: "running", user: user})}
 
   before do
     Project.any_instance.stubs(:valid_repository_url).returns(true)
+    BuddyCheck.stubs(:enabled?).returns(true)
     project.stages = [stage1, stage2, stage3]
   end
 
@@ -22,7 +25,7 @@ describe Stage do
     end
 
     it 'returns true if no pipeline set and marked production' do
-      stage1.update(production: true)
+      stage1.update!(production: true)
       stage1.production?.must_equal true
     end
 
@@ -32,15 +35,65 @@ describe Stage do
     end
 
     it 'returns true if pipeline set and self is marked production' do
-      stage1.update(production: true)
+      stage1.update!(production: true)
       stage1.update!(next_stage_ids: [ stage3.id, stage2.id ])
       stage1.production?.must_equal true
     end
 
-    it 'returns true if pipeline set and later stage is marked production' do
-      stage2.update(production: true)
-      stage1.update!(next_stage_ids: [ stage3.id, stage2.id ])
-      stage1.production?.must_equal true
+    it 'returns true if pipeline set and later stage is production' do
+      stage2.update!(production: true)
+      stage1.update!(next_stage_ids: [stage2.id ])
+      stage1.deploy_requires_approval?.must_equal true
+    end
+  end
+
+  describe '#deploy_requires_approval?' do
+    before do
+      BuddyCheck.stubs(:enabled?).returns(true)
+      DeployGroup.stubs(:enabled?).returns(true)
+      stage2.update!(next_stage_ids: [])
+      stage2.update!(production: true)
+      stage2.update!(deploy_groups: [ production ])
+      stage3.update!(deploy_groups: [ production ])
+      stage2.update!(no_code_deployed: true)
+      stage1.update!(next_stage_ids: [ stage2.id ])
+    end
+
+    it 'does not require approval if a future stage has no_code_deployed' do
+      stage1.deploy_requires_approval?.must_equal false
+    end
+
+    it 'requires approval if a future stage does not no_code_deployed with prodution deploy_group' do
+      stage2.update!(next_stage_ids: [ stage3.id ])
+      stage1.deploy_requires_approval?.must_equal true
+    end
+
+    it 'requires approval if a future stage does not no_code_deployed with production stage' do
+      stage2.update!(next_stage_ids: [ ], production: true, no_code_deployed: false)
+      stage1.deploy_requires_approval?.must_equal true
+    end
+
+    it 'requires approval with production deploy group and no_code_deployed false' do
+      stage2.update!(no_code_deployed: false)
+      stage1.deploy_requires_approval?.must_equal true
+    end
+
+    it 'does not require approval with production deploy group and no_code_deployed true' do
+      stage1.update!(production: false)
+      stage1.update!(deploy_groups: [ ])
+      stage2.update!(production: false)
+      stage2.update!(no_code_deployed: true)
+      stage2.update!(deploy_groups: [ production ])
+      stage1.deploy_requires_approval?.must_equal false
+    end
+
+    it 'requires approval with future chained stage production deploy group and no_code_deployed false' do
+      stage2.update!(no_code_deployed: false)
+      stage2.update!(deploy_groups: [ staging ])
+      stage3.update!(no_code_deployed: false)
+      stage1.update!(next_stage_ids: [stage2.id ])
+      stage2.update!(next_stage_ids: [stage3.id ])
+      stage1.deploy_requires_approval?.must_equal true
     end
   end
 
