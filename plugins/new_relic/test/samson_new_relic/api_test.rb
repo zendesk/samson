@@ -2,7 +2,7 @@ require_relative '../test_helper'
 
 SingleCov.covered!
 
-describe NewRelicHelper do
+describe SamsonNewRelic::Api do
   let(:account) { stub(applications: applications) }
   let(:applications) {[
     stub(id: 1, name: 'Production', account_id: 1),
@@ -14,22 +14,22 @@ describe NewRelicHelper do
   end
 
   describe '.applications' do
-    let(:apps) { NewRelicHelper.applications }
+    let(:apps) { SamsonNewRelic::Api.applications }
     it 'is a hash of name -> Application' do
       apps['Production'].name.must_equal('Production')
-      apps['Production'].must_be_instance_of(NewRelicHelper::Application)
+      apps['Production'].must_be_instance_of(SamsonNewRelic::Api::Application)
       apps.size.must_equal(2)
     end
   end
 
   describe '.metrics' do
-    subject { NewRelicHelper.metrics(['Production', 'Staging'], initial) }
+    subject { SamsonNewRelic::Api.metrics(['Production', 'Staging'], initial) }
 
     describe 'initial' do
       let(:initial) { true }
 
       before do
-        NewRelicHelper.applications.each do |_, application|
+        SamsonNewRelic::Api.applications.each do |_, application|
           application.stubs(
             historic_response_time: [[1, 2], [3, 4]],
             historic_throughput: [[5, 6], [7, 8]]
@@ -67,7 +67,7 @@ describe NewRelicHelper do
       let(:initial) { false }
 
       before do
-        NewRelicHelper.applications.each do |_, application|
+        SamsonNewRelic::Api.applications.each do |_, application|
           application.stubs(
             response_time: 100,
             throughput: 1000
@@ -99,9 +99,9 @@ describe NewRelicHelper do
     end
   end
 
-  describe NewRelicHelper::Application do
+  describe SamsonNewRelic::Api::Application do
     subject do
-      NewRelicHelper::Application.new(stub(id: 14, name: 'Production', account_id: 1))
+      SamsonNewRelic::Api::Application.new(stub(id: 14, name: 'Production', account_id: 1))
     end
 
     it 'delegates name, id' do

@@ -36,6 +36,12 @@ PATH
       kubeclient (>= 1.1)
 
 PATH
+  remote: plugins/new_relic
+  specs:
+    samson_new_relic (0.0.0)
+      newrelic_api
+
+PATH
   remote: plugins/pipelines
   specs:
     samson_pipelines (0.0.0)
@@ -493,7 +499,6 @@ DEPENDENCIES
   mocha
   mysql2 (~> 0.3)
   net-http-persistent
-  newrelic_api
   newrelic_rpm (>= 3.7.1)
   ngannotate-rails
   octokit (~> 4.0)
@@ -535,6 +540,7 @@ DEPENDENCIES
   samson_flowdock!
   samson_jenkins!
   samson_kubernetes!
+  samson_new_relic!
   samson_pipelines!
   samson_slack_webhooks!
   samson_zendesk!

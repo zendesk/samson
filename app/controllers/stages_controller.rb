@@ -39,7 +39,6 @@ class StagesController < ApplicationController
 
   def new
     @stage = @project.stages.build(command_ids: Command.global.pluck(:id))
-    @stage.new_relic_applications.build
   end
 
   def create
@@ -51,15 +50,11 @@ class StagesController < ApplicationController
       redirect_to [@project, @stage]
     else
       flash[:error] = @stage.errors.full_messages
-
-      @stage.new_relic_applications.build
-
       render :new
     end
   end
 
   def edit
-    @stage.new_relic_applications.build
   end
 
   def update
@@ -67,9 +62,6 @@ class StagesController < ApplicationController
       redirect_to [@project, @stage]
     else
       flash[:error] = @stage.errors.full_messages
-
-      @stage.new_relic_applications.build
-
       render :edit
     end
   end
@@ -81,7 +73,6 @@ class StagesController < ApplicationController
 
   def reorder
     Stage.reset_order(params[:stage_id])
-
     head :ok
   end
 

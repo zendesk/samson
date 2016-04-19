@@ -14,17 +14,7 @@
   <li><a href="#risks" data-type="github" data-toggle="tab">Risks</a></li>
   <li><a href="#jira-issues" data-type="github" data-toggle="tab">JIRA Issues</a></li>
   <li><a href="#viewers" data-toggle="tab" id="viewers-link">Viewers <span class="badge">0</span></a></li>
-
-  <% if newrelic_enabled_for_deploy? %>
-    <li>
-      <a href="#newrelic" id="newrelic-tab"
-        data-enabled="<%= @deploy.stage.new_relic_applications.any? %>"
-        data-url="<%= new_relic_project_stage_path(@project, @deploy.stage, format: :json) %>"
-        data-interval="60000" data-toggle="tab">
-      New Relic
-      </a>
-    </li>
-  <% end %>
+  <%= Samson::Hooks.render_views(:deploy_tab_nav, self) %>
 </ul>
 
 <section class="clearfix tabs">
@@ -43,19 +33,7 @@
       No other viewers.
     </div>
 
-    <% if newrelic_enabled_for_deploy? %>
-      <div class="tab-pane" id="newrelic">
-        <div class="chart">
-          <h2>Response Time</h2>
-          <div id="newrelic-response-time"></div>
-        </div>
-
-        <div class="chart">
-          <h2>Throughput</h2>
-          <div id="newrelic-throughput"></div>
-        </div>
-      </div>
-    <% end %>
+    <%= Samson::Hooks.render_views(:deploy_tab_body, self) %>
   </div>
 </section>
 

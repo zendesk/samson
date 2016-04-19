@@ -6,7 +6,7 @@ class NewRelicController < ApplicationController
 
   def show
     applications = stage.new_relic_applications.map(&:name)
-    render json: NewRelicHelper.metrics(applications, initial?)
+    render json: SamsonNewRelic::Api.metrics(applications, initial?)
   end
 
   private
@@ -16,7 +16,7 @@ class NewRelicController < ApplicationController
   end
 
   def stage
-    Stage.where(project_id: @project).find(params[:id])
+    Stage.where(project_id: @project).find_by_param!(params[:stage_id])
   end
 
   def ensure_new_reclic_api_key
