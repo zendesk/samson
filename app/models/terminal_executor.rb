@@ -12,15 +12,22 @@ require 'open3'
 #   output.string #=> "hello\r\nworld\r\n"
 #
 class TerminalExecutor
+  SECRET_PREFIX = "secret://"
+
   attr_reader :pid, :pgid, :output
 
-  def initialize(output, verbose: false)
+  def initialize(output, verbose: false, project: nil)
     @output = output
     @verbose = verbose
+    @project = project
   end
 
   def execute!(*commands)
-    commands.map! { |c| "echo » #{c.shellescape}\n#{c}" } if @verbose
+    if @verbose
+      commands.map! { |c| "echo » #{c.shellescape}\n#{resolve_secrets(c)}" }
+    else
+      commands.map! { |c| resolve_secrets(c) }
+    end
     commands.unshift("set -e")
 
     execute_command!(commands.join("\n"))
@@ -31,6 +38,19 @@ class TerminalExecutor
   end
 
   private
+
+  def resolve_secrets(command)
+    allowed_namespaces = ['global']
+    allowed_namespaces << @project.permalink if @project
+    command.gsub(%r{\b#{SECRET_PREFIX}(#{SecretStorage::SECRET_KEY_REGEX})\b}) do
+      key = $1
+      if key.start_with?(*allowed_namespaces.map { |n| "#{n}/" })
+        SecretStorage.read(key, include_secret: true).fetch(:value)
+      else
+        raise ActiveRecord::RecordNotFound, "Not allowed to access key #{key}"
+      end
+    end
+  end
 
   def execute_command!(command)
     Open3.popen2e(whitelisted_env, command, in: '/dev/null', unsetenv_others: true, pgroup: true)  do |stdin, oe, wait_thr|
@@ -59,4 +79,3 @@ class TerminalExecutor
     ENV.to_h.slice(*whitelist)
   end
 end
-

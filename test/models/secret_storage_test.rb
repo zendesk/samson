@@ -3,14 +3,7 @@ require_relative '../test_helper'
 SingleCov.covered!
 
 describe SecretStorage do
-  let(:secret) do
-    SecretStorage::DbBackend::Secret.create!(
-      id: 'foo/hello',
-      value: '111',
-      updater_id: users(:admin).id,
-      creator_id: users(:admin).id
-    )
-  end
+  let(:secret) { create_secret 'foo/hello' }
 
   describe ".allowed_project_prefixes" do
     it "is all for admin" do
@@ -42,12 +35,16 @@ describe SecretStorage do
     it "refuses to write empty values" do
       SecretStorage.write('global/foo', value: '   ', user_id: 11).must_equal false
     end
+
+    it "refuses to write keys we will not be able to replace in commands" do
+      SecretStorage.write('a"b', value: '111', user_id: 11).must_equal false
+    end
   end
 
   describe ".read" do
     it "reads" do
       data = SecretStorage.read(secret.id, include_secret: true)
-      data.fetch(:value).must_equal '111'
+      data.fetch(:value).must_equal 'MY-SECRET'
     end
 
     it "does not read secrets by default" do
@@ -79,12 +76,12 @@ describe SecretStorage do
   describe SecretStorage::DbBackend::Secret do
     describe "#value " do
       it "is encrypted" do
-        secret.value.must_equal "111"
+        secret.value.must_equal "MY-SECRET"
         secret.encrypted_value.size.must_be :>, 10 # cannot assert equality since it is always different
       end
 
       it "can decrypt existing" do
-        SecretStorage::DbBackend::Secret.find(secret.id).value.must_equal "111"
+        SecretStorage::DbBackend::Secret.find(secret.id).value.must_equal "MY-SECRET"
       end
     end
 

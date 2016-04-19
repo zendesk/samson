@@ -77,6 +77,43 @@ describe TerminalExecutor do
         output.string.must_equal("» sh -c \"echo 111\"\r\n111\r\n")
       end
     end
+
+    describe 'with secrets' do
+      let!(:secret) { create_secret 'global/bar' }
+      let(:project) { projects(:test) }
+      let(:command) { 'export SECRET="secret://global/bar"; echo $SECRET' }
+
+      it "resolves secrets" do
+        subject.execute!(command)
+        output.string.must_equal "#{secret.value}\r\n"
+      end
+
+      it "can use project specific secrets" do
+        subject.instance_variable_set(:@project, project)
+        secret = create_secret "#{project.permalink}/bar"
+        subject.execute!(%Q{echo "secret://#{project.permalink}/bar"})
+        output.string.must_equal "#{secret.value}\r\n"
+      end
+
+      it "fails on unresolved secrets" do
+        assert_raises ActiveRecord::RecordNotFound do
+          subject.execute!('echo "secret://global/baz"')
+        end
+      end
+
+      it "cannot use project specific secrets without a project" do
+        create_secret "foo/bar"
+        assert_raises ActiveRecord::RecordNotFound do
+          subject.execute!('echo "secret://foo/bar"')
+        end
+      end
+
+      it "does not show secrets in verbose mode" do
+        subject.instance_variable_set(:@verbose, true)
+        subject.execute!(command)
+        output.string.must_equal "» export SECRET=\"secret://global/bar\"; echo $SECRET\r\n#{secret.value}\r\n"
+      end
+    end
   end
 
   describe '#stop!' do

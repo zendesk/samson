@@ -224,6 +224,13 @@ describe JobExecution do
     end
   end
 
+  it 'can access secrets' do
+    create_secret "#{project.permalink}/bar"
+    job.update(command: "echo '#{"secret://#{project.permalink}/bar"}'")
+    execute_job("master")
+    assert_equal 'MY-SECRET', last_line_of_output
+  end
+
   describe 'when JobExecution is disabled' do
     before do
       JobExecution.enabled = false

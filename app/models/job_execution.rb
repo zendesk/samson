@@ -21,7 +21,7 @@ class JobExecution
 
   def initialize(reference, job, env = {}, &block)
     @output = OutputBuffer.new
-    @executor = TerminalExecutor.new(@output, verbose: true)
+    @executor = TerminalExecutor.new(@output, verbose: true, project: job.project)
     @viewers = JobViewers.new(@output)
 
     @subscribers = []
