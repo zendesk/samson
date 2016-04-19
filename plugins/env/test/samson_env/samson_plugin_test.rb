@@ -1,10 +1,8 @@
-require_relative 'test_helper'
+require_relative '../test_helper'
 
-unless defined?(Rake) # rake preloads all plugins
-  SingleCov.covered! file: 'plugins/env/lib/samson_env/samson_plugin.rb', uncovered: 1
-end
+SingleCov.covered! uncovered: 1 unless defined?(Rake) # rake preloads all plugins
 
-describe "env hooks" do
+describe SamsonEnv do
   let(:deploy) { deploys(:succeeded_test) }
   let(:stage) { deploy.stage }
   let(:project) { stage.project }

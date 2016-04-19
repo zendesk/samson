@@ -1,10 +1,8 @@
-require_relative 'test_helper'
+require_relative '../test_helper'
 
-unless defined?(Rake) # rake preloads all plugins
-  SingleCov.covered! uncovered: 1, file: 'plugins/flowdock/lib/samson_flowdock/samson_plugin.rb'
-end
+SingleCov.covered! uncovered: 1 unless defined?(Rake) # rake preloads all plugins
 
-describe "flowdock hooks" do
+describe SamsonFlowdock do
   let(:deploy) { deploys(:succeeded_test) }
   let(:stage) { deploy.stage }
 

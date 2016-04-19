@@ -1,10 +1,8 @@
-require_relative 'test_helper'
+require_relative '../test_helper'
 
-unless defined?(Rake) # rake preloads all plugins
-  SingleCov.covered! file: 'plugins/pipelines/lib/samson_pipelines/samson_plugin.rb', uncovered: 6
-end
+SingleCov.covered! uncovered: 6 unless defined?(Rake) # rake preloads all plugins
 
-describe 'zendesk hooks' do
+describe SamsonPipelines do
   let(:deploy) { deploys(:succeeded_test) }
   let(:next_deploy) { deploys(:succeeded_production_test) }
   let(:stage) { deploy.stage }

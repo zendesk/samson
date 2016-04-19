@@ -1,10 +1,8 @@
-require_relative 'test_helper'
+require_relative '../test_helper'
 
-unless defined?(Rake) # rake preloads all plugins
-  SingleCov.covered! file: 'plugins/dockerb/lib/samson_env/samson_plugin.rb'
-end
+SingleCov.covered! unless defined?(Rake) # rake preloads all plugins
 
-describe "env hooks" do
+describe SamsonDockerb do
   let(:stage) { stages(:test_staging) }
 
   describe :after_deploy_setup do
