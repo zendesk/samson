@@ -9,6 +9,10 @@ module SamsonPipelines::StageConcern
     super || all_next_stages.any?(&:deploy_requires_approval?)
   end
 
+  def deploy_requires_approval?
+    super || all_next_stages.any?(&:deploy_requires_approval?)
+  end
+
   def next_stages
     @next_stages ||= Stage.find(next_stage_ids)
   end
