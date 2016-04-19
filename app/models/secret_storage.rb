@@ -50,6 +50,30 @@ module SecretStorage
     end
   end
 
+  class HashicorpVault
+
+    SECRET_BACKEND ='secret/'.freeze
+
+    def self.read(key)
+      debugger
+      result = Vault.logical.read(SECRET_BACKEND  + key)
+      result.data[:secret_data]
+    end
+
+    def self.write(key, data)
+      Vault.logical.write(SECRET_BACKEND + key, secret_data: data)
+    end
+
+    def self.keys()
+      dirs = Vault.logical.list(SECRET_BACKEND)
+      dirs.map do |dir|
+        if dir =~ /.*\/$/
+          dir += Vault.logical.list(SECRET_BACKEND + dir).pop
+        end
+      end
+    end
+  end
+
   def self.allowed_project_prefixes(user)
     allowed = user.administrated_projects.pluck(:permalink)
     allowed.unshift 'global' if user.is_admin?
