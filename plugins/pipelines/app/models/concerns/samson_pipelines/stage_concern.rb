@@ -2,7 +2,7 @@ module SamsonPipelines::StageConcern
 
   # Return true if any stages in the pipeline are marked production
   def production?
-    super || next_stages.any?(&:production?)
+    super || next_stages.any? { |next_stage| next_stage.production? && !next_stage.no_code_deployed? }
   end
 
   def deploy_requires_approval?
