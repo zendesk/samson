@@ -148,18 +148,16 @@ describe SamsonNewRelic::Api do
 
     describe 'get_metrics' do
       let(:now) { Time.now.utc }
+      before { NewRelicApi.api_key = '123' }
+      after { NewRelicApi.api_key = nil }
 
       before do
-        thirty_minutes_ago = now - (30 * 60)
-
         query = {
           metrics: ['metric'],
           field: 'field',
-          begin: thirty_minutes_ago.strftime("%Y-%m-%dT%H:%M:00Z"),
+          begin: 30.minutes.ago.strftime("%Y-%m-%dT%H:%M:00Z"),
           end: now.strftime("%Y-%m-%dT%H:%M:00Z")
         }
-
-        @original_key, NewRelicApi.api_key = NewRelicApi.api_key, '123'
 
         stub_request(:get, "https://api.newrelic.com/api/v1/accounts/1/applications/14/data.json?#{query.to_query}").
           with(headers: { 'X-Api-Key' => '123' }).
