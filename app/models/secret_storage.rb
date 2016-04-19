@@ -55,13 +55,16 @@ module SecretStorage
     SECRET_BACKEND ='secret/'.freeze
 
     def self.read(key)
-      debugger
       result = Vault.logical.read(SECRET_BACKEND  + key)
       result.data[:secret_data]
     end
 
     def self.write(key, data)
       Vault.logical.write(SECRET_BACKEND + key, secret_data: data)
+    end
+
+    def self.delete(key)
+      Vault.logical.delete(SECRET_BACKEND + key)
     end
 
     def self.keys()
