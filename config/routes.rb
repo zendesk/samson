@@ -34,7 +34,6 @@ Samson::Application.routes.draw do
       end
 
       member do
-        get :new_relic, to: 'new_relic#show'
         get :clone, to: 'stages#clone'
       end
 

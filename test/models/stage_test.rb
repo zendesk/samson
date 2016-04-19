@@ -365,7 +365,6 @@ describe Stage do
       subject.notify_email_address = "test@test.ttt"
       subject.flowdock_flows = [FlowdockFlow.new(name: "test", token: "abcxyz", stage_id: subject.id)]
       subject.datadog_tags = "xyz:abc"
-      subject.new_relic_applications = [NewRelicApplication.new(name: "test", stage_id: subject.id)]
       subject.save
 
       @clone = Stage.build_clone(subject)
@@ -374,11 +373,6 @@ describe Stage do
     it "returns an unsaved copy of the given stage with exactly the same everything except id" do
       @clone.attributes.except("id").must_equal subject.attributes.except("id")
       @clone.id.wont_equal subject.id
-    end
-
-    it "copies over the new relic applications" do
-      assert_equal @clone.new_relic_applications.map { |n| n.attributes.except("stage_id", "id") },
-        subject.new_relic_applications.map { |n| n.attributes.except("stage_id", "id") }
     end
   end
 
