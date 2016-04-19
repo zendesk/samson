@@ -39,8 +39,8 @@
             </ul>
           </li>
         <% end %>
-        <li class="<%= 'active' if current_page?(controller: '/deploys', action: 'recent') %>">
-          <%= link_to "Recent Deploys", recent_deploys_path %>
+        <li class="<%= 'active' if current_page?(controller: '/deploys', action: 'search') %>">
+          <%= link_to "Deploys", search_deploys_path %>
         </li>
         <li class="current-deploys <%= 'active' if current_page?(controller: '/deploys', action: 'active') %>" ng-controller="currentDeployBadgeCtrl">
           <%= link_to active_deploys_path do %>

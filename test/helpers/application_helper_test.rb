@@ -224,4 +224,11 @@ describe ApplicationHelper do
       link_to_url("b").must_equal "<a href=\"b\">b</a>"
     end
   end
+
+  describe "#time_fomratting" do
+    it "formats time in utc" do
+      ts = Time.parse("2016-04-18T17:46:10.337+00:00")
+      render_time(ts, 'utc').must_equal "<time datetime=\"2016-04-18T17:46:10Z\">April 18, 2016  5:46 PM UTC</time>"
+    end
+  end
 end

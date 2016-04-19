@@ -1,0 +1,57 @@
+<h1><%= title %></h1>
+<div class="timeline">
+  <div class="row">
+    <%= form_tag("/deploys/search", method: "get") do %>
+      <div class="timeline-form col-sm-2">
+        <%= label_tag(:deployer, "Deployer") %>
+        <%= text_field_tag(:deployer, params[:deployer], placeholder: 'deployer name') %>
+      </div>
+
+      <div class="timeline-form col-sm-2">
+        <%= label_tag(:project_name, "Project") %>
+        <%= text_field_tag(:project_name, params[:project_name], placeholder: 'project name') %>
+      </div>
+
+      <div class="timeline-form col-sm-2">
+        <%= label_tag(:production, "Production") %>
+        <%= select_tag(:production, options_for_select(["true", "false"], selected: params[:production]), { prompt: ' ',  class: "form-control" } ) %>
+      </div>
+
+      <div class="timeline-form col-sm-2">
+        <%= label_tag(:status, "Status") %>
+        <%= select_tag(:status, options_for_select(Job::VALID_STATUSES, selected: params[:status]), { prompt: ' ', class: 'form-control' } ) %>
+      </div>
+
+      <div class="timeline-form col-md-2 clearfix">
+        <%= label(:time_format, "Time Format") %>
+        <%= select_tag(:time_format, options_for_select(User::TIME_FORMATS, selected: params[:time_format] ? params[:time_format] : 'relative'), { class: 'form-control' } ) %>
+      </div>
+
+      <div class="timeline-form col-md-2 clearfix">
+        Search:<BR>
+        <div class="btn btn-default">
+          <%= submit_tag("Submit") %>
+        </div>
+      </div>
+    <% end %>
+  </div>
+
+  <section class="timeline-content clearfix">
+    <div class="deploy-csv">
+      <%= link_to "Download as CSV", search_deploys_path(format: "csv", params: params) %>
+    </div>
+    <table class="timeline-content">
+      <tr>
+        <th>PROJECT</th>
+        <th>LAST UPDATE</th>
+        <th>DEPLOY</th>
+        <th>STAGE</th>
+        <th>STATUS</th>
+      </tr>
+      <tbody>
+        <%= render partial: "projects/deploy", collection: @deploys %>
+      </tbody>
+    </table>
+    <%= paginate @deploys %>
+  </section>
+</div>
