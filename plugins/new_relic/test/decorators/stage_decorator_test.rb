@@ -1,8 +1,8 @@
 require_relative '../test_helper'
 
-SingleCov.covered! file: 'plugins/new_relic/app/decorators/stage_decorator.rb'
+SingleCov.covered!
 
-describe NewRelicApplication do
+describe Stage do
   describe "new_relic_applications" do
     it "accepts nested attributes" do
       stage = Stage.new(new_relic_applications_attributes: [{name: 'Foo'}])

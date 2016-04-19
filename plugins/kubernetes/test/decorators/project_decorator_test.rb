@@ -1,6 +1,6 @@
 require_relative '../test_helper'
 
-SingleCov.covered! uncovered: 3, file: 'plugins/kubernetes/app/decorators/project_decorator.rb'
+SingleCov.covered! uncovered: 3
 
 describe Project do
   let(:project) { projects(:test) }

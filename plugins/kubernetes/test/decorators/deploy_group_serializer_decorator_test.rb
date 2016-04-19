@@ -1,6 +1,6 @@
 require_relative '../test_helper'
 
-SingleCov.covered! file: 'plugins/kubernetes/app/decorators/deploy_group_serializer_decorator.rb'
+SingleCov.covered!
 
 describe DeployGroupSerializer do
   describe 'a deploy group not associated with a kubernetes cluster' do
