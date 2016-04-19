@@ -1,10 +1,8 @@
-require_relative 'test_helper'
+require_relative '../test_helper'
 
-unless defined?(Rake) # rake preloads all plugins
-  SingleCov.covered! uncovered: 1, file: 'plugins/slack_webhooks/lib/samson_slack_webhooks/samson_plugin.rb'
-end
+SingleCov.covered! uncovered: 1 unless defined?(Rake) # rake preloads all plugins
 
-describe "slack hooks" do
+describe SamsonSlackWebhooks do
   let(:deploy) { deploys(:succeeded_test) }
   let(:stage) { deploy.stage }
 
