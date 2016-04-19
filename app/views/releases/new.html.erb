@@ -9,7 +9,7 @@
       <div class="form-group">
         <%= form.label :commit, "SHA", class: "col-lg-2 control-label" %>
         <div class="col-lg-4">
-          <%= form.text_field :commit, class: "form-control" %>
+          <%= form.text_field :commit, class: "form-control", value: @project.deploys.last.try(:commit) %>
           <p class="help-block">This commit will be tagged with the version number <%= @release.version %>.</p>
         </div>
       </div>
