@@ -2,11 +2,9 @@
   <li class="<%= 'active' if active == 'overview' %>">
     <%= link_to "Overview", project %>
   </li>
-  <% if project.manage_releases? %>
-    <li class="<%= 'active' if active == 'releases' %>">
-      <%= link_to "Releases", project_releases_path(project) %>
-    </li>
-  <% end %>
+  <li class="<%= 'active' if active == 'releases' %>">
+    <%= link_to "Releases", project_releases_path(project) %>
+  </li>
   <% if project.deploy_with_docker? %>
     <li class="<%= 'active' if active == 'builds' %>">
       <%= link_to "Builds", project_builds_path(project) %>

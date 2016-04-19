@@ -56,13 +56,15 @@ module SecretStorage
     allowed
   end
 
+  SECRET_KEY_REGEX = %r{[\w\/-]+}
   BACKEND = ENV.fetch('SECRET_STORAGE_BACKEND', 'SecretStorage::DbBackend').constantize
 
   class << self
     delegate :delete, :keys, to: :backend
 
     def write(key, data)
-      return false if key.blank? || key =~ /\s/ || data.blank? || data[:value].blank?
+      return false unless key =~ /\A#{SECRET_KEY_REGEX}\z/
+      return false if data.blank? || data[:value].blank?
       backend.write(key, data)
     end
 

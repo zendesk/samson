@@ -18,8 +18,8 @@ describe Kubernetes::RoleConfigFile do
       config_file.deployment.spec.replicas.must_equal 2
 
       # Selector
-      config_file.deployment.spec.selector.project.must_equal 'some-project'
-      config_file.deployment.spec.selector.role.must_equal 'some-role'
+      config_file.deployment.spec.selector.matchLabels.project.must_equal 'some-project'
+      config_file.deployment.spec.selector.matchLabels.role.must_equal 'some-role'
 
       # Pod Template
       config_file.deployment.spec.template.metadata.name.must_equal 'some-project-pod'

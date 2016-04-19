@@ -37,7 +37,7 @@ describe NewRelicController do
 
       describe "success" do
         before do
-          NewRelic.expects(:metrics).
+          NewRelicHelper.expects(:metrics).
             with([new_relic_applications(:production).name], initial).
             returns('test_project' => true)
 

@@ -3,10 +3,6 @@ require_relative '../../test_helper'
 SingleCov.covered!
 
 describe Admin::SecretsController do
-  def create_secret(key)
-    SecretStorage::DbBackend::Secret.create!(id: key, value: '111', updater_id: users(:admin).id, creator_id: users(:admin).id)
-  end
-
   def create_global
     create_secret 'global/foo'
   end

@@ -173,7 +173,7 @@ GEM
     dogapi (1.21.0)
       multi_json
     dogstatsd-ruby (1.5.0)
-    domain_name (0.5.20160216)
+    domain_name (0.5.20160310)
       unf (>= 0.0.5, < 1.0.0)
     dotenv (0.11.1)
       dotenv-deployment (~> 0.0.2)
@@ -229,7 +229,6 @@ GEM
     kubeclient (1.1.3)
       activesupport
       http (= 0.9.8)
-      json
       recursive-open-struct (= 1.0.0)
       rest-client
     lograge (0.3.6)

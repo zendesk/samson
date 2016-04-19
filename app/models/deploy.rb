@@ -194,11 +194,11 @@ class Deploy < ActiveRecord::Base
   end
 
   def deploy_buddy
-    return unless BuddyCheck.enabled? && stage.production?
+    return unless stage.deploy_requires_approval?
 
     if buddy.nil? && pending?
       "(waiting for a buddy)"
-    elsif buddy.nil? || (user.id == buddy.id)
+    elsif buddy.nil? || job.user_id == buddy_id
       "(without a buddy)"
     else
       "(with #{buddy.name})"
