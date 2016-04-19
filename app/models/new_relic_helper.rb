@@ -1,4 +1,4 @@
-module NewRelic
+module NewRelicHelper
   class << self
     def applications
       @applications ||= NewRelicApi::Account.first.applications.inject({}) do |map, app|
@@ -43,7 +43,7 @@ module NewRelic
 
     def application_map(application_names)
       application_names.inject({}) do |map, app_name|
-        app = NewRelic.applications[app_name]
+        app = applications[app_name]
         map[app_name] = (yield app).merge(id: app.id)
         map
       end

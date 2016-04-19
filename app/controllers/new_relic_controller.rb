@@ -6,7 +6,7 @@ class NewRelicController < ApplicationController
 
   def show
     applications = stage.new_relic_applications.map(&:name)
-    render json: NewRelic.metrics(applications, initial?)
+    render json: NewRelicHelper.metrics(applications, initial?)
   end
 
   private
