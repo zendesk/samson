@@ -1,6 +1,8 @@
 require_relative '../test_helper'
 
-describe NewRelic do
+SingleCov.covered!
+
+describe NewRelicHelper do
   let(:account) { stub(applications: applications) }
   let(:applications) {[
     stub(id: 1, name: 'Production', account_id: 1),
@@ -12,22 +14,22 @@ describe NewRelic do
   end
 
   describe '.applications' do
-    let(:apps) { NewRelic.applications }
+    let(:apps) { NewRelicHelper.applications }
     it 'is a hash of name -> Application' do
       apps['Production'].name.must_equal('Production')
-      apps['Production'].must_be_instance_of(NewRelic::Application)
+      apps['Production'].must_be_instance_of(NewRelicHelper::Application)
       apps.size.must_equal(2)
     end
   end
 
   describe '.metrics' do
-    subject { NewRelic.metrics(['Production', 'Staging'], initial) }
+    subject { NewRelicHelper.metrics(['Production', 'Staging'], initial) }
 
     describe 'initial' do
       let(:initial) { true }
 
       before do
-        NewRelic.applications.each do |_, application|
+        NewRelicHelper.applications.each do |_, application|
           application.stubs(
             historic_response_time: [[1, 2], [3, 4]],
             historic_throughput: [[5, 6], [7, 8]]
@@ -65,7 +67,7 @@ describe NewRelic do
       let(:initial) { false }
 
       before do
-        NewRelic.applications.each do |_, application|
+        NewRelicHelper.applications.each do |_, application|
           application.stubs(
             response_time: 100,
             throughput: 1000
@@ -97,9 +99,9 @@ describe NewRelic do
     end
   end
 
-  describe NewRelic::Application do
+  describe NewRelicHelper::Application do
     subject do
-      NewRelic::Application.new(stub(id: 14, name: 'Production', account_id: 1))
+      NewRelicHelper::Application.new(stub(id: 14, name: 'Production', account_id: 1))
     end
 
     it 'delegates name, id' do
@@ -145,28 +147,28 @@ describe NewRelic do
     end
 
     describe 'get_metrics' do
-      let(:time) { Time.now.utc }
+      let(:now) { Time.now.utc }
 
       before do
-        thirty_minutes_ago = time - (30 * 60)
+        thirty_minutes_ago = now - (30 * 60)
 
         query = {
           metrics: ['metric'],
           field: 'field',
           begin: thirty_minutes_ago.strftime("%Y-%m-%dT%H:%M:00Z"),
-          end: time.strftime("%Y-%m-%dT%H:%M:00Z")
+          end: now.strftime("%Y-%m-%dT%H:%M:00Z")
         }
 
         @original_key, NewRelicApi.api_key = NewRelicApi.api_key, '123'
 
         stub_request(:get, "https://api.newrelic.com/api/v1/accounts/1/applications/14/data.json?#{query.to_query}").
           with(headers: { 'X-Api-Key' => '123' }).
-          to_return(status: 200, body: JSON.dump([{ name: 'metric', begin: time.to_i.to_s, field: 'hello' }, { name: 'test' }]))
+          to_return(status: 200, body: JSON.dump([{ name: 'metric', begin: now.to_i.to_s, field: 'hello' }, { name: 'test' }]))
       end
 
       it 'returns proper metrics' do
-        subject.get_metric('metric', 'field', time).must_equal([
-          [time.to_i, 'hello']
+        subject.get_metric('metric', 'field', now).must_equal([
+          [now.to_i, 'hello']
         ])
       end
     end
