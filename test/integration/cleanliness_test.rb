@@ -75,6 +75,15 @@ describe "cleanliness" do
     end
   end
 
+  it "does not have accidental .rb files" do
+    helpers = Dir["{test,plugins/*/test}/**/*.rb"]
+    helpers.reject! { |f| f.end_with?('_test.rb') }
+    helpers.reject! { |f| f.include?('/support/') }
+    helpers.reject! { |f| f.include?('_mailer_preview.rb') }
+    helpers.map! { |f| File.basename(f) }
+    helpers.uniq.must_equal ['test_helper.rb']
+  end
+
   it "tests all files" do
     untested = [
       "app/controllers/application_controller.rb",
@@ -93,8 +102,6 @@ describe "cleanliness" do
       "app/models/deploy_groups_stage.rb",
       "app/models/job_service.rb",
       "app/models/job_viewers.rb",
-      "app/models/new_relic.rb",
-      "app/models/new_relic_application.rb",
       "lib/generators/plugin/plugin_generator.rb",
       "lib/generators/plugin/templates/test_helper.rb",
       "lib/samson/integration.rb",
