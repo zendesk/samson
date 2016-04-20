@@ -29,7 +29,7 @@
           <li class="dropdown <%= 'active' if request.path.starts_with?('/dashboards') %>">
             <a href="#" class="dropdown-toggle" data-toggle="dropdown">Environments <b class="caret"></b></a>
             <ul class="dropdown-menu">
-              <% Environment.all.each do |env| %>
+              <% environments.each do |env| %>
                 <li>
                   <%= link_to dashboard_path(env) do %>
                     <span class="glyphicon">&nbsp;</span> <%= env.name %>

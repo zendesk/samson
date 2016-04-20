@@ -1,12 +1,12 @@
 <div class="form-group">
   <%= form.label :name, 'Deploy Groups', class: 'col-lg-2 control-label' %>
-  <div class=<%= "col-lg-#{2 + @environments.count}" %> >
-    <% if @environments.count > 0 %>
+  <div class=<%= "col-lg-#{2 + environments.count}" %> >
+    <% if environments.count > 0 %>
       <%= hidden_field_tag "#{form.object_name}[deploy_group_ids][]" %>
       <table class="table table-condensed text-left deploy-groups">
         <thead>
         <tr>
-          <% @environments.each do |environment| %>
+          <% environments.each do |environment| %>
             <th>
               <%= label_tag do %>
                 <%= check_box_tag('', nil, false, { id: "#{environment.name}_checkbox", class: "env-toggle-all", data: {target: ".#{environment.name}_checkbox" } }) %>
@@ -17,7 +17,7 @@
         </tr>
         </thead>
         <tbody>
-        <% rows = @environments.map { |e| [e, e.deploy_groups.sort_by(&:natural_order)] } %>
+        <% rows = environments.map { |e| [e, e.deploy_groups.sort_by(&:natural_order)] } %>
         <% rows.map { |_, dgs| dgs.size }.max.times do |index| %>
           <tr>
             <% rows.each do |environment, deploy_groups| %>

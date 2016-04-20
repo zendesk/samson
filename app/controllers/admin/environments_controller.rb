@@ -4,11 +4,9 @@ class Admin::EnvironmentsController < ApplicationController
   before_action :environment, only: [:edit, :update, :destroy]
 
   def index
-    @environments = Environment.all
-
     respond_to do |format|
       format.html
-      format.json { render json: @environments }
+      format.json { render json: Environment.all }
     end
   end
 

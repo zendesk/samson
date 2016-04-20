@@ -53,22 +53,14 @@ module ApplicationHelper
     content_tag(:span, time.rfc822, data: { time: datetime_to_js_ms(time) }, class: "mouseover")
   end
 
-  def render_time(time_stamp, format)
+  def render_time(time, format)
     if format == 'local'
-      local_time(time_stamp)
+      time_tag(time, format: '%B %d, %Y %l:%M %p')
     elsif format == 'utc'
-      utc_time(time_stamp)
+      time_tag(time.utc, format: '%B %d, %Y %l:%M %p %Z')
     else
-      relative_time(time_stamp)
+      relative_time(time)
     end
-  end
-
-  def local_time(time)
-    time_tag(time, format: '%B %d, %Y %l:%M %p')
-  end
-
-  def utc_time(time)
-    time_tag(time.utc, format: '%B %d, %Y %l:%M %p %Z')
   end
 
   def sortable(column, title = nil)
@@ -165,5 +157,9 @@ module ApplicationHelper
 
   def link_to_url(url)
     link_to(url, url)
+  end
+
+  def environments
+    @environments ||= Environment.all
   end
 end
