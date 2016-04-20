@@ -23,7 +23,6 @@ class Admin::EnvironmentsController < ApplicationController
       flash[:notice] = "Successfully saved environment: #{@environment.name}"
       redirect_to action: 'index'
     else
-      flash[:error] = @environment.errors.full_messages
       render 'edit'
     end
   end
@@ -33,7 +32,6 @@ class Admin::EnvironmentsController < ApplicationController
       flash[:notice] = "Successfully saved environment: #{environment.name}"
       redirect_to action: 'index'
     else
-      flash[:error] = environment.errors.full_messages
       render 'edit'
     end
   end

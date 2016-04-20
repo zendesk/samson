@@ -49,7 +49,6 @@ class StagesController < ApplicationController
     if @stage.save
       redirect_to [@project, @stage]
     else
-      flash[:error] = @stage.errors.full_messages
       render :new
     end
   end
@@ -61,7 +60,6 @@ class StagesController < ApplicationController
     if @stage.update_attributes(stage_params)
       redirect_to [@project, @stage]
     else
-      flash[:error] = @stage.errors.full_messages
       render :edit
     end
   end

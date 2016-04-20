@@ -58,7 +58,6 @@ class Admin::SecretsController < ApplicationController
   end
 
   def failure_response(message)
-
     flash[:error] = message
     render :edit
   end

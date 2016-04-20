@@ -19,7 +19,6 @@ class Admin::DeployGroupsController < ApplicationController
       flash[:notice] = "Successfully created deploy group: #{@deploy_group.name}"
       redirect_to action: :index
     else
-      flash[:error] = @deploy_group.errors.full_messages
       render :edit
     end
   end
@@ -33,7 +32,6 @@ class Admin::DeployGroupsController < ApplicationController
       flash[:notice] = "Successfully saved deploy group: #{deploy_group.name}"
       redirect_to action: :index
     else
-      flash[:error] = deploy_group.errors.full_messages
       render :edit
     end
   end
