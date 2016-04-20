@@ -1,15 +1,21 @@
-class JobViewers < ThreadSafe::Array
+class JobViewers
   def initialize(output)
+    @list = ThreadSafe::Array.new
     @output = output
-    super()
   end
 
   def push(*args)
-    super.tap { output }
+    @list.push *args
+    output
   end
 
   def delete(*args)
-    super.tap { output }
+    @list.delete *args
+    output
+  end
+
+  def to_a
+    @list.dup
   end
 
   private
