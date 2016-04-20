@@ -1,4 +1,4 @@
-VAULT_ENABLED = ENV.fetch("SECRET_STORAGE_BACKEND")
+VAULT_ENABLED = ENV.fetch('SECRET_STORAGE_BACKEND', false)
 if VAULT_ENABLED == 'SecretStorage::HashicorpVault'
   require 'vault'
   Rails.logger.info("Enabling the vault client")
