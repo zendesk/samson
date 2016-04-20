@@ -3,7 +3,6 @@ class KubernetesClustersController < ApplicationController
   before_action :authorize_super_admin!, only: [ :create, :new, :update, :edit ]
 
   before_action :find_cluster, only: [:show, :edit, :update]
-  before_action :load_environments, only: [:new, :edit, :update]
   before_action :load_default_config_file, only: [:new, :edit, :update]
 
   def new
@@ -64,10 +63,6 @@ class KubernetesClustersController < ApplicationController
 
   def find_cluster
     @cluster = Kubernetes::Cluster.find(params[:id])
-  end
-
-  def load_environments
-    @environments = Environment.includes(:deploy_groups).all
   end
 
   def new_cluster_params
