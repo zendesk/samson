@@ -53,14 +53,27 @@ module SecretStorage
   class HashicorpVault
 
     SECRET_BACKEND ='secret/'.freeze
+    # we don't really want other directories in here,
+    # and there may be other chars that we find we don't like
+    ENCODINGS = {"/": "%2F"}
+
+    def self.encode(string)
+      ENCODINGS.each { |k, v| string.gsub!(k.to_s, v.to_s) }
+      string
+    end
+
+    def self.decode(string)
+      ENCODINGS.each { |k, v| string.gsub!(v.to_s, k.to_s) }
+      string
+    end
 
     def self.read(key)
-      result = Vault.logical.read(SECRET_BACKEND  + key)
+      result = Vault.logical.read(SECRET_BACKEND  + self.encode(key))
       result.data[:secret_data]
     end
 
     def self.write(key, data)
-      Vault.logical.write(SECRET_BACKEND + key, secret_data: data)
+      Vault.logical.write(SECRET_BACKEND + self.encode(key), secret_data: data)
     end
 
     def self.delete(key)
@@ -68,13 +81,9 @@ module SecretStorage
     end
 
     def self.keys()
-      dirs = Vault.logical.list(SECRET_BACKEND)
-      dirs.map do |dir|
-        if dir =~ /.*\/$/
-          dir += Vault.logical.list(SECRET_BACKEND + dir).pop
-        end
-      end
+      Vault.logical.list(SECRET_BACKEND).map! { |key| self.decode(key) }
     end
+
   end
 
   def self.allowed_project_prefixes(user)
