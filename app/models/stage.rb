@@ -118,14 +118,6 @@ class Stage < ActiveRecord::Base
     "#{name} - #{project.name}"
   end
 
-  def datadog_tags_as_array
-    datadog_tags.to_s.split(";").map(&:strip)
-  end
-
-  def send_datadog_notifications?
-    datadog_tags_as_array.any?
-  end
-
   def send_github_notifications?
     update_github_pull_requests
   end
@@ -161,10 +153,6 @@ class Stage < ActiveRecord::Base
     end
 
     emails.uniq.presence
-  end
-
-  def datadog_monitors
-    datadog_monitor_ids.to_s.split(/, ?/).map { |id| DatadogMonitor.new(id) }
   end
 
   private

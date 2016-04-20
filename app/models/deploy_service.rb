@@ -83,7 +83,6 @@ class DeployService
     send_sse_deploy_update('finish', deploy)
     send_deploy_email(deploy)
     send_failed_deploy_email(deploy)
-    send_datadog_notification(deploy)
     send_github_notification(deploy)
     update_github_deployment_status(deploy)
   end
@@ -98,12 +97,6 @@ class DeployService
   def send_failed_deploy_email(deploy)
     if emails = deploy.stage.automated_failure_emails(deploy)
       DeployMailer.deploy_failed_email(deploy, emails).deliver_now
-    end
-  end
-
-  def send_datadog_notification(deploy)
-    if deploy.stage.send_datadog_notifications?
-      DatadogNotification.new(deploy).deliver
     end
   end
 

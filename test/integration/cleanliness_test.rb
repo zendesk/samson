@@ -98,7 +98,6 @@ describe "cleanliness" do
       "app/models/concerns/has_commands.rb",
       "app/models/concerns/has_role.rb",
       "app/models/concerns/searchable.rb",
-      "app/models/datadog_notification.rb",
       "app/models/deploy_groups_stage.rb",
       "app/models/job_service.rb",
       "app/models/job_viewers.rb",

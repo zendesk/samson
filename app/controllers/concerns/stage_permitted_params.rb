@@ -9,8 +9,6 @@ module StagePermittedParams
       :production,
       :notify_email_address,
       :deploy_on_release,
-      :datadog_tags,
-      :datadog_monitor_ids,
       :update_github_pull_requests,
       :email_committers_on_automated_deploy_failure,
       :static_emails_on_automated_deploy_failure,
@@ -20,6 +18,6 @@ module StagePermittedParams
         deploy_group_ids: [],
         command_ids: [],
       }
-    ] + Samson::Hooks.fire(:stage_permitted_params)).freeze
+    ] + Samson::Hooks.fire(:stage_permitted_params).flatten).freeze
   end
 end

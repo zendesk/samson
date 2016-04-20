@@ -90,7 +90,6 @@ group :no_preload do
   gem 'github-markdown', '~> 0.6.3'
   gem 'activeresource'
   gem 'coderay', '~> 1.1.0'
-  gem 'dogapi', '~> 1.9'
   gem 'net-http-persistent'
   gem 'concurrent-ruby'
 

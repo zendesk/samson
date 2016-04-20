@@ -174,15 +174,6 @@ describe DeployService do
       end.must_equal [[deploy, nil]]
     end
 
-    it "sends datadog notifications if the stage has datadog tags" do
-      stage.stubs(:send_datadog_notifications?).returns(true)
-
-      DatadogNotification.any_instance.expects(:deliver)
-
-      service.deploy!(stage, reference: reference)
-      job_execution.send(:run!)
-    end
-
     it "sends github notifications if the stage has it enabled and deploy succeeded" do
       stage.stubs(:send_github_notifications?).returns(true)
       deploy.stubs(:status).returns("succeeded")
