@@ -2,6 +2,8 @@
 
 <section>
   <%= form_for [:admin, @deploy_group], html: { class: "form-horizontal" } do |form| %>
+    <%= render 'shared/errors', object: @deploy_group %>
+
     <%= render 'admin/deploy_groups/fields', form: form %>
 
     <hr>

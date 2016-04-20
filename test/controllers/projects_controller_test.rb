@@ -148,10 +148,6 @@ describe ProjectsController do
       describe "with invalid parameters" do
         let(:params) { { project: { name: "" } } }
 
-        it "sets the flash error" do
-          request.flash[:error].wont_be_nil
-        end
-
         it "renders new template" do
           assert_template :new
         end
@@ -233,10 +229,6 @@ describe ProjectsController do
         describe "with invalid parameters" do
           let(:params) { { project: { name: "" } } }
 
-          it "sets the flash error" do
-            request.flash[:error].wont_be_nil
-          end
-
           it "renders edit template" do
             assert_template :edit
           end
@@ -271,10 +263,6 @@ describe ProjectsController do
 
         describe "with invalid parameters" do
           let(:params) { { project: { name: "" } } }
-
-          it "sets the flash error" do
-            request.flash[:error].wont_be_nil
-          end
 
           it "renders edit template" do
             assert_template :edit

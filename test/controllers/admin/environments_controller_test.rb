@@ -59,7 +59,6 @@ describe Admin::EnvironmentsController do
         env_count = Environment.count
         post :create, environment: {name: nil, is_production: true}
         assert_template :edit
-        flash[:error].must_equal ["Permalink can't be blank", "Name can't be blank"]
         Environment.count.must_equal env_count
       end
     end
@@ -93,7 +92,6 @@ describe Admin::EnvironmentsController do
       it 'fail to edit with blank name' do
         post :update, environment: {name: '', is_production: false}, id: environment
         assert_template :edit
-        flash[:error].must_equal ["Name can't be blank"]
         Environment.find(environment.id).name.must_equal 'Production'
       end
     end

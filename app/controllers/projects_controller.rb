@@ -40,7 +40,6 @@ class ProjectsController < ApplicationController
       redirect_to @project
       Rails.logger.info("#{@current_user.name_and_email} created a new project #{@project.to_param}")
     else
-      flash[:error] = @project.errors.full_messages
       render :new
     end
   end
@@ -56,7 +55,6 @@ class ProjectsController < ApplicationController
     if project.update_attributes(project_params)
       redirect_to project
     else
-      flash[:error] = project.errors.full_messages
       render :edit
     end
   end
