@@ -98,9 +98,6 @@ describe "cleanliness" do
       "app/models/concerns/has_commands.rb",
       "app/models/concerns/has_role.rb",
       "app/models/concerns/searchable.rb",
-      "app/models/deploy_groups_stage.rb",
-      "app/models/job_service.rb",
-      "app/models/job_viewers.rb",
       "lib/generators/plugin/plugin_generator.rb",
       "lib/generators/plugin/templates/test_helper.rb",
       "lib/samson/integration.rb",
@@ -109,9 +106,6 @@ describe "cleanliness" do
       "plugins/env/app/models/concerns/accepts_environment_variables.rb",
       "plugins/env/app/models/environment_variable_group.rb",
       "plugins/env/app/models/project_environment_variable_group.rb",
-      "plugins/flowdock/app/helpers/flowdock_helper.rb",
-      "plugins/flowdock/app/models/flowdock_flow.rb",
-      "plugins/jenkins/app/models/jenkins_job.rb",
       "plugins/kubernetes/app/controllers/kubernetes_clusters_controller.rb",
       "plugins/kubernetes/app/decorators/admin/deploy_groups_controller_decorator.rb",
       "plugins/kubernetes/app/decorators/build_decorator.rb",
@@ -136,8 +130,6 @@ describe "cleanliness" do
       "plugins/kubernetes/app/serializers/kubernetes/release_doc_serializer.rb",
       "plugins/kubernetes/app/serializers/kubernetes/release_serializer.rb",
       "plugins/pipelines/app/models/concerns/samson_pipelines/stage_concern.rb",
-      "plugins/slack_webhooks/app/models/slack_webhook.rb",
-      "plugins/flowdock/lib/samson_flowdock/flowdock_service.rb",
     ]
 
     SingleCov.assert_tested(
