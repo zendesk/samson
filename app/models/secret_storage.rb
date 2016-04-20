@@ -57,16 +57,6 @@ module SecretStorage
     # and there may be other chars that we find we don't like
     ENCODINGS = {"/": "%2F"}
 
-    def self.encode(string)
-      ENCODINGS.each { |k, v| string.gsub!(k.to_s, v.to_s) }
-      string
-    end
-
-    def self.decode(string)
-      ENCODINGS.each { |k, v| string.gsub!(v.to_s, k.to_s) }
-      string
-    end
-
     def self.read(key)
       result = Vault.logical.read(SECRET_BACKEND  + self.encode(key))
       result.data[:secret_data]
@@ -84,6 +74,17 @@ module SecretStorage
       Vault.logical.list(SECRET_BACKEND).map! { |key| self.decode(key) }
     end
 
+    private
+
+    def self.encode(string)
+      ENCODINGS.each { |k, v| string.gsub!(k.to_s, v.to_s) }
+      string
+    end
+
+    def self.decode(string)
+      ENCODINGS.each { |k, v| string.gsub!(v.to_s, k.to_s) }
+      string
+    end
   end
 
   def self.allowed_project_prefixes(user)
