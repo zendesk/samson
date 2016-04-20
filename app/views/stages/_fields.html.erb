@@ -110,51 +110,6 @@
 <%= Samson::Hooks.render_views(:stage_form, self, form: form) %>
 
 <fieldset>
-  <legend>New Relic</legend>
-  <p class="col-lg-offset-2">
-    Names of New Relic Applications to display during deploy
-  </p>
-  <%= form.fields_for :new_relic_applications do |app_fields| %>
-    <div class="form-group">
-      <div class="col-lg-6 col-lg-offset-2">
-        <%= app_fields.text_field :name, class: "form-control", placeholder: "Application name" %>
-      </div>
-
-      <% if app_fields.object.persisted? %>
-        <div class="col-lg-1 checkbox">
-          <%= app_fields.check_box :_destroy if app_fields.object.persisted? %>
-          <%= app_fields.label :_destroy, "Delete" %>
-        </div>
-      <% end %>
-    </div>
-  <% end %>
-</fieldset>
-
-<fieldset>
-  <legend>Datadog</legend>
-  <div class="col-lg-offset-2">
-    <div class="form-group">
-      <div class="col-lg-6">
-        <%= form.text_field :datadog_tags, class: "form-control", placeholder: "Datadog tags" %>
-        <span class="help-block">
-          Tags that should be used on deploy events, separated by <code>;</code><br/>
-          Leave empty to not send notifications.
-        </span>
-      </div>
-    </div>
-
-    <div class="form-group">
-      <div class="col-lg-6">
-        <%= form.text_field :datadog_monitor_ids, class: "form-control", placeholder: "Datadog Monitor Ids" %>
-        <span class="help-block">
-          Datadog monitor ids (comma separated)
-        </span>
-      </div>
-    </div>
-  </div>
-</fieldset>
-
-<fieldset>
   <legend>GitHub</legend>
   <div class="col-lg-6 checkbox col-lg-offset-2">
     <%= form.label :update_github_pull_requests do %>

@@ -22,18 +22,12 @@
     <% end %>
   </div>
 
-  <% if datadog_monitors = @stage.datadog_monitors.presence %>
-    <h2>Datadog Monitors</h2>
-    <% datadog_monitors.each do |monitor| %>
-      <% label = {pass: "success", fail: "danger"}[monitor.status] || "warning" %>
-      <span class="label label-<%= label %>"><%= monitor.name %></span>
-    <% end %>
-  <% end %>
-
   <% if @stage.dashboard.present? %>
     <h2>Dashboard</h2>
     <div><%= sanitize @stage.dashboard, tags: Loofah::HTML5::WhiteList::ACCEPTABLE_ELEMENTS + %w[iframe] %></div>
   <% end %>
+
+  <%= Samson::Hooks.render_views(:stage_show, self) %>
 
   <h2>Command</h2>
   <pre class="pre-command"><%= @stage.command %></pre>

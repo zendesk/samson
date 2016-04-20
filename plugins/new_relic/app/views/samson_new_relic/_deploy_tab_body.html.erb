@@ -1,0 +1,13 @@
+<% if newrelic_enabled_for_deploy? %>
+  <div class="tab-pane" id="newrelic">
+    <div class="chart">
+      <h2>Response Time</h2>
+      <div id="newrelic-response-time"></div>
+    </div>
+
+    <div class="chart">
+      <h2>Throughput</h2>
+      <div id="newrelic-throughput"></div>
+    </div>
+  </div>
+<% end %>

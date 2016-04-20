@@ -27,8 +27,7 @@ class ProjectsController < ApplicationController
   def new
     @project = Project.new
     @project.current_user = current_user
-    stage = @project.stages.build(name: "Production")
-    stage.new_relic_applications.build
+    @project.stages.build(name: "Production")
   end
 
   def create

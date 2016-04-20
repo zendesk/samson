@@ -1,6 +1,6 @@
 require_relative '../test_helper'
 
-SingleCov.covered! uncovered: 9
+SingleCov.covered! uncovered: 8
 
 describe Stage do
   subject { stages(:test_staging) }
@@ -272,35 +272,6 @@ describe Stage do
     end
   end
 
-  describe "#datadog_tags_as_array" do
-    it "returns an array of the tags" do
-      subject.datadog_tags = " foo; bar; baz "
-      subject.datadog_tags_as_array.must_equal ["foo", "bar", "baz"]
-    end
-
-    it "uses only semicolon as separate" do
-      subject.datadog_tags = " foo bar: baz "
-      subject.datadog_tags_as_array.must_equal ["foo bar: baz"]
-    end
-
-    it "returns an empty array if no tags have been configured" do
-      subject.datadog_tags = nil
-      subject.datadog_tags_as_array.must_equal []
-    end
-  end
-
-  describe "#send_datadog_notifications?" do
-    it "returns true if the stage has a Datadog tag configured" do
-      subject.datadog_tags = "env:beta"
-      subject.send_datadog_notifications?.must_equal true
-    end
-
-    it "returns false if the stage does not have a Datadog tag configured" do
-      subject.datadog_tags = nil
-      subject.send_datadog_notifications?.must_equal false
-    end
-  end
-
   describe "#automated_failure_emails" do
     let(:user) { users(:super_admin) }
     let(:deploy) do
@@ -364,8 +335,6 @@ describe Stage do
     before do
       subject.notify_email_address = "test@test.ttt"
       subject.flowdock_flows = [FlowdockFlow.new(name: "test", token: "abcxyz", stage_id: subject.id)]
-      subject.datadog_tags = "xyz:abc"
-      subject.new_relic_applications = [NewRelicApplication.new(name: "test", stage_id: subject.id)]
       subject.save
 
       @clone = Stage.build_clone(subject)
@@ -374,11 +343,6 @@ describe Stage do
     it "returns an unsaved copy of the given stage with exactly the same everything except id" do
       @clone.attributes.except("id").must_equal subject.attributes.except("id")
       @clone.id.wont_equal subject.id
-    end
-
-    it "copies over the new relic applications" do
-      assert_equal @clone.new_relic_applications.map { |n| n.attributes.except("stage_id", "id") },
-        subject.new_relic_applications.map { |n| n.attributes.except("stage_id", "id") }
     end
   end
 
@@ -416,17 +380,6 @@ describe Stage do
       stage.production?.must_equal true
       stage.update!(production: false)
       stage.production?.must_equal false
-    end
-  end
-
-  describe '#datadog_monitors' do
-    it "is empty by default" do
-      stage.datadog_monitors.must_equal []
-    end
-
-    it "builds multiple monitors" do
-      stage.datadog_monitor_ids = "1,2, 4"
-      stage.datadog_monitors  .map(&:id).must_equal [1,2,4]
     end
   end
 

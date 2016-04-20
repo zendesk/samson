@@ -5,8 +5,11 @@ module Samson
 
     VIEW_HOOKS = [
       :stage_form,
+      :stage_show,
       :project_form,
       :deploys_header,
+      :deploy_tab_nav,
+      :deploy_tab_body,
       :deploy_view,
       :deploy_form, # for external plugin, so they can add extra form fields
       :admin_menu,
