@@ -1,4 +1,10 @@
 PATH
+  remote: plugins/datadog
+  specs:
+    samson_datadog (0.0.0)
+      dogapi (~> 1.9)
+
+PATH
   remote: plugins/docker_binary_builder
   specs:
     samson_docker_binary_builder (0.0.0)
@@ -485,7 +491,6 @@ DEPENDENCIES
   concurrent-ruby
   dalli (~> 2.7.0)
   docker-api
-  dogapi (~> 1.9)
   dogstatsd-ruby (~> 1.5.0)
   dotenv
   faraday-http-cache (~> 1.1)
@@ -534,6 +539,7 @@ DEPENDENCIES
   rails-assets-vis!
   rails-assets-x-editable!
   rails_12factor
+  samson_datadog!
   samson_docker_binary_builder!
   samson_dockerb!
   samson_env!

@@ -5,6 +5,7 @@ module Samson
 
     VIEW_HOOKS = [
       :stage_form,
+      :stage_show,
       :project_form,
       :deploys_header,
       :deploy_tab_nav,
