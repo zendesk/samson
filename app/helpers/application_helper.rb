@@ -11,7 +11,7 @@ module ApplicationHelper
 
   def render_log(str)
     escaped = ERB::Util.html_escape(str)
-    ansi_escaped(escaped).gsub(/\[([A-Z]|[0-9]+)m?/, '').html_safe
+    ansi_escaped(escaped).html_safe
   end
 
   # https://github.com/showdownjs/showdown/wiki/Markdown's-XSS-Vulnerability-(and-how-to-mitigate-it)
