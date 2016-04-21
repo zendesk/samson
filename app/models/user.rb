@@ -24,7 +24,10 @@ class User < ActiveRecord::Base
   scope :search, ->(query) { where("name like ? or email like ?", "%#{query}%", "%#{query}%") }
 
   def starred_project?(project)
-    starred_projects.include?(project)
+    starred = Rails.cache.fetch([:starred_projects_ids, id]) do
+      stars.pluck(:project_id)
+    end
+    starred.include?(project.id)
   end
 
   # returns a scope
