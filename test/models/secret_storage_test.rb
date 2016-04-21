@@ -110,7 +110,7 @@ describe SecretStorage do
 
     describe ".delete" do
       before do
-        stub_request(:delete, "https://127.0.0.1:8200/v1/secret%2Ffoo%2Fisbar")
+        stub_request(:delete, "https://127.0.0.1:8200/v1/secret%2Ffoo%252Fisbar")
       end
 
       it "deletes key with /s" do
