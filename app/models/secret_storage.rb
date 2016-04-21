@@ -58,12 +58,12 @@ module SecretStorage
     ENCODINGS = {"/": "%2F"}
 
     def self.read(key)
-      result = Vault.logical.read(VAULT_SECRET_BACKEND  + self.encode(key))
+      result = Vault.logical.read(VAULT_SECRET_BACKEND  + encode(key))
       result.data[:secret_data]
     end
 
     def self.write(key, data)
-      Vault.logical.write(VAULT_SECRET_BACKEND + self.encode(key), secret_data: data)
+      Vault.logical.write(VAULT_SECRET_BACKEND + encode(key), secret_data: data)
     end
 
     def self.delete(key)
@@ -71,7 +71,7 @@ module SecretStorage
     end
 
     def self.keys()
-      Vault.logical.list(VAULT_SECRET_BACKEND).map! { |key| self.decode(key) }
+      Vault.logical.list(VAULT_SECRET_BACKEND).map! { |key| decode(key) }
     end
 
     private
