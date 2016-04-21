@@ -20,7 +20,7 @@ function startStream() {
 
     var addLine = function(data) {
       var msg = JSON.parse(data).msg;
-      $messages.append(msg);
+      $messages.append(msg + "\n");
       if (following) {
         $messages.scrollTop($messages[0].scrollHeight);
       }
