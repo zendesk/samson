@@ -8,7 +8,6 @@ class StagesController < ApplicationController
   before_action :authorize_project_admin!, except: [:index, :show]
   before_action :check_token, if: :badge?
   before_action :find_stage, only: [:show, :edit, :update, :destroy, :clone]
-  before_action :get_environments, only: [:new, :create, :edit, :update, :clone]
 
   def index
     @stages = @project.stages
@@ -49,7 +48,6 @@ class StagesController < ApplicationController
     if @stage.save
       redirect_to [@project, @stage]
     else
-      flash[:error] = @stage.errors.full_messages
       render :new
     end
   end
@@ -61,7 +59,6 @@ class StagesController < ApplicationController
     if @stage.update_attributes(stage_params)
       redirect_to [@project, @stage]
     else
-      flash[:error] = @stage.errors.full_messages
       render :edit
     end
   end
@@ -105,9 +102,5 @@ class StagesController < ApplicationController
 
   def find_stage
     @stage = current_project.stages.find_by_param!(params[:id])
-  end
-
-  def get_environments
-    @environments = Environment.all
   end
 end

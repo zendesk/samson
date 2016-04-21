@@ -16,8 +16,9 @@
             <% Project.ordered_for_user(current_user).each do |project| %>
               <li filter-by="projectSearchQuery">
                 <%= link_to project do %>
-                  <span class="glyphicon <%= 'glyphicon-star' if current_user.starred_project?(project) %>">
-                    <%= '&nbsp;'.html_safe unless current_user.starred_project?(project) %>
+                  <% starred = current_user.starred_project?(project) %>
+                  <span class="glyphicon <%= 'glyphicon-star' if starred %>">
+                    <%= '&nbsp;'.html_safe unless starred %>
                   </span>
                   <%= project.name %>
                 <% end %>
@@ -29,7 +30,7 @@
           <li class="dropdown <%= 'active' if request.path.starts_with?('/dashboards') %>">
             <a href="#" class="dropdown-toggle" data-toggle="dropdown">Environments <b class="caret"></b></a>
             <ul class="dropdown-menu">
-              <% Environment.all.each do |env| %>
+              <% environments.each do |env| %>
                 <li>
                   <%= link_to dashboard_path(env) do %>
                     <span class="glyphicon">&nbsp;</span> <%= env.name %>

@@ -59,7 +59,6 @@ describe Admin::DeployGroupsController do
         deploy_group_count = DeployGroup.count
         post :create, deploy_group: {name: nil}
         assert_template :edit
-        flash[:error].must_equal ["Permalink can't be blank", "Name can't be blank", "Environment can't be blank"]
         DeployGroup.count.must_equal deploy_group_count
       end
     end
@@ -83,7 +82,6 @@ describe Admin::DeployGroupsController do
       it 'fail to update with blank name' do
         post :update, deploy_group: {name: ''}, id: deploy_group
         assert_template :edit
-        flash[:error].must_include "Name can't be blank"
         deploy_group.reload.name.must_equal 'Pod 100'
       end
     end

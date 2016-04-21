@@ -145,7 +145,7 @@ describe ApplicationHelper do
   describe "#breadcrumb" do
     let(:stage) { stages(:test_staging) }
     let(:project) { projects(:test) }
-    let(:environment) { environments(:production) }
+    let(:environment) { Environment.find_by_param!('production') }
     let(:deploy_group) { deploy_groups(:pod1) }
 
     it "renders strings" do
@@ -219,16 +219,60 @@ describe ApplicationHelper do
     end
   end
 
+  describe "#link_to_delete" do
+    it "builds a link" do
+      link_to_delete_button("/foo").must_include "Delete"
+    end
+  end
+
+  describe "#link_to_delete_button" do
+    it "builds a button" do
+      result = link_to_delete_button("/foo")
+      result.must_include "Delete"
+      result.must_include "Delete"
+    end
+  end
+
   describe "#link_to_url" do
     it "builds a link" do
       link_to_url("b").must_equal "<a href=\"b\">b</a>"
     end
   end
 
-  describe "#time_fomratting" do
+  describe "#render_time" do
+    let(:ts) { Time.parse("2016-04-18T17:46:10.337+00:00") }
+
     it "formats time in utc" do
-      ts = Time.parse("2016-04-18T17:46:10.337+00:00")
       render_time(ts, 'utc').must_equal "<time datetime=\"2016-04-18T17:46:10Z\">April 18, 2016  5:46 PM UTC</time>"
+    end
+
+    it "formats time in local" do
+      render_time(ts, 'local').must_equal "<time datetime=\"2016-04-18T17:46:10+00:00\">April 18, 2016  5:46 PM</time>"
+    end
+
+    it "formats time relative" do
+      render_time(ts, 'foobar').must_equal "<span data-time=\"1461001570000\" class=\"mouseover\">Mon, 18 Apr 2016 17:46:10 +0000</span>"
+    end
+  end
+
+  describe "#static_render" do
+    it "can render nothing" do
+      static_render([]).must_equal nil
+    end
+
+    it "can render objects via their partials" do
+      ActionView::Base.any_instance.stubs(job_path: 'X')
+      static_render([jobs(:succeeded_test)]).must_include "cap staging deploy"
+    end
+  end
+
+  describe "#environments" do
+    it "loads all environments" do
+      environments.size.must_equal Environment.all.size
+    end
+
+    it "caches" do
+      environments.object_id.must_equal environments.object_id
     end
   end
 end
