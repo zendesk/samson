@@ -5,12 +5,17 @@ SingleCov.covered! uncovered: 11
 describe ApplicationHelper do
   describe "#render_log" do
     it "removes ascii escapes" do
-      # not super accurate tests, just documenting what it currently does
-      render_log("a[Aa").must_equal "<span class=\"ansible_none\">aa</span>"
-      render_log("a[AAa").must_equal "<span class=\"ansible_none\">aAa</span>"
-      render_log("a[1a").must_equal "<span class=\"ansible_none\">aa</span>"
-      render_log("a[12a").must_equal "<span class=\"ansible_none\">aa</span>"
-      render_log("a[12ma").must_equal "<span class=\"ansible_none\">aa</span>"
+      # false positive ansi codes
+      render_log("a[Aa").must_equal "<span class=\"ansible_none\">a[Aa</span>"
+      render_log("a[AAa").must_equal "<span class=\"ansible_none\">a[AAa</span>"
+      render_log("a[1a").must_equal "<span class=\"ansible_none\">a[1a</span>"
+      render_log("a[12a").must_equal "<span class=\"ansible_none\">a[12a</span>"
+      render_log("a[12ma").must_equal "<span class=\"ansible_none\">a[12ma</span>"
+
+      # real ansi codes
+      render_log("\e[0;32mok").must_equal "<span class=\"ansible_none\"></span><span class=\"ansible_32\">ok</span>"
+      render_log("\e[0;33mchanged").must_equal "<span class=\"ansible_none\"></span><span class=\"ansible_33\">changed</span>"
+      render_log("\e[0;36mskipping").must_equal "<span class=\"ansible_none\"></span><span class=\"ansible_36\">skipping</span>"
     end
 
     it "escapes html" do
