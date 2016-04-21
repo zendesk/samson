@@ -6,7 +6,7 @@ describe ApplicationHelper do
   describe "#render_log" do
     it "removes ascii escapes" do
       # not super accurate tests, just documenting what it currently does
-      render_log("a[Aa").must_equal "<span class=\"ansible_none\">aa</span>"
+      render_log("a[Aa").must_equal "<span class=\"ansible_none\">a[Aa</span>"
       render_log("a[AAa").must_equal "<span class=\"ansible_none\">aAa</span>"
       render_log("a[1a").must_equal "<span class=\"ansible_none\">aa</span>"
       render_log("a[12a").must_equal "<span class=\"ansible_none\">aa</span>"
