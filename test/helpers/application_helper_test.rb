@@ -13,7 +13,9 @@ describe ApplicationHelper do
       render_log("a[12ma").must_equal "<span class=\"ansible_none\">a[12ma</span>"
 
       # real ansi codes
-      render_log("\e[0;32mok").must_equal "<span class=\"ansible_32\">ok</span>"
+      render_log("\e[0;32mok").must_equal "<span class=\"ansible_none\"></span><span class=\"ansible_32\">ok</span>"
+      render_log("\e[0;33mchanged").must_equal "<span class=\"ansible_none\"></span><span class=\"ansible_33\">changed</span>"
+      render_log("\e[0;36mchanged").must_equal "<span class=\"ansible_none\"></span><span class=\"ansible_36\">skipping</span>"
     end
 
     it "escapes html" do
