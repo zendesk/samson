@@ -72,19 +72,21 @@ module SecretStorage
     end
 
     def self.keys()
-      Vault.logical.list(VAULT_SECRET_BACKEND).map! { |key| decode(key) }
+      Vault.logical.list(VAULT_SECRET_BACKEND).map { |key| decode(key) }
     end
 
     private
 
     def self.encode(string = nil)
       return false if string.nil?
+      string = string.dup
       ENCODINGS.each { |k, v| string.gsub!(k.to_s, v.to_s) }
       string
     end
 
     def self.decode(string = nil)
       return false if string.nil?
+      string = string.dup
       ENCODINGS.each { |k, v| string.gsub!(v.to_s, k.to_s) }
       string
     end
