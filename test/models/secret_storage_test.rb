@@ -127,5 +127,17 @@ describe SecretStorage do
         assert SecretStorage::HashicorpVault.write('foo/isbar', 'somevalue')
       end
     end
+
+    describe ".keys" do
+      before do
+        data = {"data": { "keys": ["this%2Fkey", "that%2Fkey"] } }.to_json
+        stub_request(:get, "https://127.0.0.1:8200/v1/secret%2F?list=true").
+          to_return(status: 200, body: data, headers: {'Content-Type': 'application/json'})
+      end
+
+      it "lists all keys" do
+        SecretStorage::HashicorpVault.keys().must_equal(["this/key", "that/key"])
+      end
+    end
   end
 end
