@@ -60,11 +60,11 @@ module SecretStorage
     def self.read(key)
       result = Vault.logical.read(vault_path(key))
       return false if result.nil?
-      result.data[:secret_data]
+      result.data[:vault]
     end
 
     def self.write(key, data)
-      Vault.logical.write(vault_path(key), secret_data: data)
+      Vault.logical.write(vault_path(key), vault: data)
     end
 
     def self.delete(key)
@@ -72,21 +72,21 @@ module SecretStorage
     end
 
     def self.keys()
-      Vault.logical.list(VAULT_SECRET_BACKEND).map { |key| encode_path(key) }
+      Vault.logical.list(VAULT_SECRET_BACKEND).map! { |key| encode_path(key) }
     end
 
     private
 
-    def self.vault_path(key = nil)
-      key.nil? ? false : VAULT_SECRET_BACKEND + encode_path(key, 'encode')
+    def self.vault_path(key)
+      VAULT_SECRET_BACKEND + encode_path(key, :encode)
     end
 
-    def self.encode_path(string = nil, direction = "decode")
+    def self.encode_path(string = nil, direction = :decode)
       return false if string.nil?
       string = string.dup
-      if direction == 'encode'
+      if direction == :encode
         ENCODINGS.each { |k, v| string.gsub!(k.to_s, v.to_s) }
-      elsif direction == 'decode'
+      elsif direction == :decode
         ENCODINGS.each { |k, v| string.gsub!(v.to_s, k.to_s) }
       end
       string
