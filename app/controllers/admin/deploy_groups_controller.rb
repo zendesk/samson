@@ -71,7 +71,7 @@ class Admin::DeployGroupsController < ApplicationController
 
   def stages_in_same_environment(project, environment)
     project.stages.select do |stage|
-      stage.command.include?("$DEPLOY_GROUPS") && # is dynamic
+      stage.script.include?("$DEPLOY_GROUPS") && # is dynamic
         stage.deploy_groups.where(environment: environment || deploy_group.environment).exists? # is made to go to this environment
     end.sort_by { |stage| only_to_current_group?(stage) ? 0 : 1 }
   end

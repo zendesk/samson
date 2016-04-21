@@ -13,12 +13,12 @@ describe Macro do
       subject.save!
       subject.reload
 
-      subject.command.must_equal("test\n#{commands(:echo).command}")
+      subject.script.must_equal("test\n#{commands(:echo).command}")
     end
 
     it "is empty without commands" do
       subject.command_associations.clear
-      subject.command.must_equal('')
+      subject.script.must_equal('')
     end
   end
 

@@ -7,7 +7,7 @@ module HasCommands
     end
   end
 
-  def command
+  def script
     commands.map(&:command).join("\n")
   end
 
