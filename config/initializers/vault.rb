@@ -14,6 +14,6 @@ if VAULT_ENABLED == 'SecretStorage::HashicorpVault'
     # may also be read as environment variables
     config.ssl_timeout  = 5
     config.open_timeout = 5
-    config.read_timeout = 30
+    config.read_timeout = 2
   end
 end
