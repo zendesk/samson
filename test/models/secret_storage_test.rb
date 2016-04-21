@@ -97,7 +97,7 @@ describe SecretStorage do
     # as the model has already loaded it's config
     # from ENV
     describe ".read" do
-      setup do
+      before do
         data = {foo: 'bar', data: { secret_data:"bar"}}.to_json
         stub_request(:get, "https://127.0.0.1:8200/v1/secret%2Ffoo%252Fisbar").
           to_return(status: 200, body: data, headers: {'Content-Type': 'application/json'})
@@ -109,7 +109,7 @@ describe SecretStorage do
     end
 
     describe ".delete" do
-      setup do
+      before do
         stub_request(:delete, "https://127.0.0.1:8200/v1/secret%2Ffoo%2Fisbar").
           to_return(status: 200, body: '', headers: {'Content-Type': 'application/json'})
       end
@@ -120,15 +120,14 @@ describe SecretStorage do
     end
 
     describe ".delete" do
-      setup do
+      before do
         stub_request(:put, "https://127.0.0.1:8200/v1/secret%2Ffoo%252Fisbar").
           to_return(status: 200, body: "", headers: {'Content-Type': 'application/json'})
       end
 
       it "deletes a key based on a key with /s" do
-        assert SecretStorage::HashicorpVault.write('foo/isbar', 'somevalue')
+        assert SecretStorage::HashicorpVault.delete('foo/isbar', 'somevalue')
       end
     end
   end
-
 end
