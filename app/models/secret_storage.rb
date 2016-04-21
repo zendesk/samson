@@ -52,26 +52,26 @@ module SecretStorage
 
   class HashicorpVault
 
-    SECRET_BACKEND ='secret/'.freeze
+    VAULT_SECRET_BACKEND ='secret/'.freeze
     # we don't really want other directories in here,
     # and there may be other chars that we find we don't like
     ENCODINGS = {"/": "%2F"}
 
     def self.read(key)
-      result = Vault.logical.read(SECRET_BACKEND  + self.encode(key))
+      result = Vault.logical.read(VAULT_SECRET_BACKEND  + self.encode(key))
       result.data[:secret_data]
     end
 
     def self.write(key, data)
-      Vault.logical.write(SECRET_BACKEND + self.encode(key), secret_data: data)
+      Vault.logical.write(VAULT_SECRET_BACKEND + self.encode(key), secret_data: data)
     end
 
     def self.delete(key)
-      Vault.logical.delete(SECRET_BACKEND + key)
+      Vault.logical.delete(VAULT_SECRET_BACKEND + key)
     end
 
     def self.keys()
-      Vault.logical.list(SECRET_BACKEND).map! { |key| self.decode(key) }
+      Vault.logical.list(VAULT_SECRET_BACKEND).map! { |key| self.decode(key) }
     end
 
     private
