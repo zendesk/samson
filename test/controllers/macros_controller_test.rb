@@ -7,7 +7,7 @@ describe MacrosController do
   let(:macro) { macros(:test) }
   let(:macro_service) { stub(execute!: nil) }
   let(:execute_called) { [] }
-  let(:job) { Job.create!(commit: macro.reference, command: macro.command, project: project, user: user) }
+  let(:job) { Job.create!(commit: macro.reference, command: macro.script, project: project, user: user) }
 
   before do
     MacroService.stubs(:new).with(project, user).returns(macro_service)
