@@ -77,12 +77,14 @@ module SecretStorage
 
     private
 
-    def self.encode(string)
+    def self.encode(string = nil)
+      return false if string.nil?
       ENCODINGS.each { |k, v| string.gsub!(k.to_s, v.to_s) }
       string
     end
 
-    def self.decode(string)
+    def self.decode(string = nil)
+      return false if string.nil?
       ENCODINGS.each { |k, v| string.gsub!(v.to_s, k.to_s) }
       string
     end
