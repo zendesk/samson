@@ -110,23 +110,21 @@ describe SecretStorage do
 
     describe ".delete" do
       before do
-        stub_request(:delete, "https://127.0.0.1:8200/v1/secret%2Ffoo%2Fisbar").
-          to_return(status: 200, body: '', headers: {'Content-Type': 'application/json'})
+        stub_request(:delete, "https://127.0.0.1:8200/v1/secret%2Ffoo%2Fisbar")
       end
 
-      it "deletes a key based on a key with /s" do
+      it "deletes key with /s" do
         assert SecretStorage::HashicorpVault.delete('foo/isbar')
       end
     end
 
-    describe ".delete" do
+    describe ".write" do
       before do
-        stub_request(:put, "https://127.0.0.1:8200/v1/secret%2Ffoo%252Fisbar").
-          to_return(status: 200, body: "", headers: {'Content-Type': 'application/json'})
+        stub_request(:put, "https://127.0.0.1:8200/v1/secret%2Ffoo%252Fisbar")
       end
 
-      it "deletes a key based on a key with /s" do
-        assert SecretStorage::HashicorpVault.delete('foo/isbar', 'somevalue')
+      it "wirtes a key with /s" do
+        assert SecretStorage::HashicorpVault.write('foo/isbar', 'somevalue')
       end
     end
   end
