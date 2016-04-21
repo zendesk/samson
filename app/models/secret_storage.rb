@@ -59,6 +59,7 @@ module SecretStorage
 
     def self.read(key)
       result = Vault.logical.read(VAULT_SECRET_BACKEND  + encode(key))
+      return false if result.nil?
       result.data[:secret_data]
     end
 
