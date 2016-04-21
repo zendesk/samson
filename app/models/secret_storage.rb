@@ -58,40 +58,37 @@ module SecretStorage
     ENCODINGS = {"/": "%2F"}
 
     def self.read(key)
-      result = Vault.logical.read(gen_vaul_path(key))
+      result = Vault.logical.read(gen_vault_path(key))
       return false if result.nil?
       result.data[:secret_data]
     end
 
     def self.write(key, data)
-      Vault.logical.write(gen_vaul_path(key), secret_data: data)
+      Vault.logical.write(gen_vault_path(key), secret_data: data)
     end
 
     def self.delete(key)
-      Vault.logical.delete(gen_vaul_path(key))
+      Vault.logical.delete(gen_vault_path(key))
     end
 
     def self.keys()
-      Vault.logical.list(VAULT_SECRET_BACKEND).map { |key| decode(key) }
+      Vault.logical.list(VAULT_SECRET_BACKEND).map { |key| encode_path(key) }
     end
 
     private
 
-    def self.gen_vaul_path(key = nil)
-      key.nil? ? false : VAULT_SECRET_BACKEND + encode(key)
+    def self.gen_vault_path(key = nil)
+      key.nil? ? false : VAULT_SECRET_BACKEND + encode_path(key, 'encode')
     end
 
-    def self.encode(string = nil)
+    def self.encode_path(string = nil, direction = "decode")
       return false if string.nil?
       string = string.dup
-      ENCODINGS.each { |k, v| string.gsub!(k.to_s, v.to_s) }
-      string
-    end
-
-    def self.decode(string = nil)
-      return false if string.nil?
-      string = string.dup
-      ENCODINGS.each { |k, v| string.gsub!(v.to_s, k.to_s) }
+      if direction == 'encode'
+        ENCODINGS.each { |k, v| string.gsub!(k.to_s, v.to_s) }
+      elsif direction == 'decode'
+        ENCODINGS.each { |k, v| string.gsub!(v.to_s, k.to_s) }
+      end
       string
     end
   end
