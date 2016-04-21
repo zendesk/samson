@@ -11,7 +11,6 @@ class User < ActiveRecord::Base
 
   has_many :commands
   has_many :stars
-  has_many :starred_projects, through: :stars, source: :project
   has_many :locks, dependent: :destroy
   has_many :user_project_roles, dependent: :destroy
   has_many :projects, through: :user_project_roles
@@ -24,10 +23,13 @@ class User < ActiveRecord::Base
   scope :search, ->(query) { where("name like ? or email like ?", "%#{query}%", "%#{query}%") }
 
   def starred_project?(project)
-    starred = Rails.cache.fetch([:starred_projects_ids, id]) do
+    starred_project_ids.include?(project.id)
+  end
+
+  def starred_project_ids
+    Rails.cache.fetch([:starred_projects_ids, id]) do
       stars.pluck(:project_id)
     end
-    starred.include?(project.id)
   end
 
   # returns a scope

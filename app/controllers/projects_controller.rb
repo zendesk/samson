@@ -93,8 +93,8 @@ class ProjectsController < ApplicationController
   end
 
   def projects_for_user
-    if current_user.starred_projects.any?
-      current_user.starred_projects
+    if ids = current_user.starred_project_ids.presence
+      Project.where(id: ids)
     else
       Project
     end
