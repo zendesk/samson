@@ -57,7 +57,7 @@ describe Stage do
       end
 
       it 'add new command to the end' do
-        subject.command.must_equal("#{commands(:echo).command}\ntest")
+        subject.script.must_equal("#{commands(:echo).command}\ntest")
       end
     end
 
@@ -71,7 +71,7 @@ describe Stage do
       end
 
       it 'joins all commands based on position' do
-        subject.command.must_equal("test\n#{commands(:echo).command}")
+        subject.script.must_equal("test\n#{commands(:echo).command}")
       end
     end
 
@@ -79,7 +79,7 @@ describe Stage do
       before { subject.commands.clear }
 
       it 'is empty' do
-        subject.command.must_be_empty
+        subject.script.must_be_empty
       end
     end
   end

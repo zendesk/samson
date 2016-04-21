@@ -119,7 +119,7 @@ describe Project do
       project = Project.create!(params)
       stage = project.stages.where(name: 'Production').first
       stage.wont_be_nil
-      stage.command.must_equal("echo hello\ntest command")
+      stage.script.must_equal("echo hello\ntest command")
     end
   end
 
