@@ -119,7 +119,7 @@ GEM
       railties (>= 4.2, < 6)
       sprockets (~> 3.0)
       tilt
-    ansible (0.2.0)
+    ansible (0.2.2)
     arel (6.0.3)
     attr_encrypted (3.0.1)
       encryptor (~> 3.0.0)

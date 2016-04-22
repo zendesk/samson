@@ -1,6 +1,6 @@
 require_relative '../test_helper'
 
-SingleCov.covered! uncovered: 1
+SingleCov.covered! uncovered: 2
 
 describe TerminalExecutor do
   def with_env(env)
@@ -27,6 +27,11 @@ describe TerminalExecutor do
     it 'records stderr' do
       subject.execute!('echo "hi" >&2', 'echo "hello" >&2')
       output.string.must_equal("hi\r\nhello\r\n")
+    end
+
+    it 'pretends to be a tty to show progress bars and fancy colors' do
+      subject.execute!('ruby -e "puts STDOUT.tty?"')
+      output.string.must_equal("true\r\n")
     end
 
     it 'stops on failure' do
