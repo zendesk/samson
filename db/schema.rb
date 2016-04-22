@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20160414181707) do
+ActiveRecord::Schema.define(version: 20160422223358) do
 
   create_table "build_statuses", force: :cascade do |t|
     t.integer  "build_id",                                     null: false
@@ -409,6 +409,17 @@ ActiveRecord::Schema.define(version: 20160414181707) do
   end
 
   add_index "users", ["external_id", "deleted_at"], name: "index_users_on_external_id_and_deleted_at", length: {"external_id"=>191, "deleted_at"=>nil}, using: :btree
+
+  create_table "versions", force: :cascade do |t|
+    t.string   "item_type",  limit: 255,        null: false
+    t.integer  "item_id",    limit: 4,          null: false
+    t.string   "event",      limit: 255,        null: false
+    t.string   "whodunnit",  limit: 255
+    t.text     "object",     limit: 1073741823
+    t.datetime "created_at"
+  end
+
+  add_index "versions", ["item_type", "item_id"], name: "index_versions_on_item_type_and_item_id", using: :btree
 
   create_table "webhooks", force: :cascade do |t|
     t.integer  "project_id", limit: 4,   null: false

@@ -74,6 +74,8 @@ Samson::Application.routes.draw do
 
   resource :profile, only: [:show, :update]
 
+  resources :versions, only: [:index]
+
   get '/auth/github/callback', to: 'sessions#github'
   get '/auth/google/callback', to: 'sessions#google'
   post '/auth/ldap/callback', to: 'sessions#ldap'

@@ -1,0 +1,23 @@
+<h1>Versions for <%= params.require(:item_type) %> : <%= params.require(:item_id) %></h1>
+
+<table class="table">
+  <tr>
+    <th>Date</th>
+    <th>Modified by</th>
+    <th>Data</th>
+  </tr>
+  <% @versions.each do |v| %>
+    <tr>
+      <td><%= v.created_at %></td>
+      <td>
+        <% if v.whodunnit =~ /^\d+$/ && user = User.find_by_id(v.whodunnit) %>
+          <%= link_to user.name, admin_user_path(user) %>
+        <% else %>
+          <%= v.whodunnit %>
+        <% end %>
+
+      </td>
+      <td><%= simple_format v.object %></td>
+    </tr>
+  <% end %>
+</table>

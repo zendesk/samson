@@ -89,7 +89,6 @@ describe "cleanliness" do
       "app/controllers/application_controller.rb",
       "app/controllers/concerns/authorization.rb",
       "app/controllers/concerns/current_project.rb",
-      "app/controllers/concerns/current_user.rb",
       "app/controllers/concerns/stage_permitted_params.rb",
       "app/mailers/application_mailer.rb",
       "app/models/changeset/code_push.rb",
