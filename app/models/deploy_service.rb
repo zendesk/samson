@@ -12,7 +12,7 @@ class DeployService
     if deploy.persisted?
       send_sse_deploy_update('new', deploy)
 
-      if !deploy.waiting_for_buddy? || release_approved?(deploy)
+      if !deploy.waiting_for_buddy? || copy_approval_from_last_deploy(deploy)
         confirm_deploy!(deploy)
       end
     end
@@ -56,7 +56,7 @@ class DeployService
       .detect { |d| d.production? && !d.bypassed_approval? }
   end
 
-  def release_approved?(deploy)
+  def copy_approval_from_last_deploy(deploy)
     last_deploy = latest_approved_deploy(deploy.reference, deploy.stage.project)
     return false unless last_deploy
     return false if last_deploy.started_at < last_deploy.stage.command_updated_at
