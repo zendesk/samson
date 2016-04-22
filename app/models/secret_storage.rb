@@ -60,11 +60,11 @@ module SecretStorage
     def self.read(key)
       result = Vault.logical.read(vault_path(key))
       return false if result.nil?
-      result.data[:vault]
+      {data: result.data[:vault]}
     end
 
     def self.write(key, data)
-      Vault.logical.write(vault_path(key), vault: data)
+      Vault.logical.write(vault_path(key), vault: data[:value])
     end
 
     def self.delete(key)
