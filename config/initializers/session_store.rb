@@ -1,7 +1,10 @@
 # Be sure to restart your server when you modify this file.
 
 config = Samson::Application.config
-options = {key: '_samson_session'}
+
+# enable multiple samson instances on the same base domain (samson-staging.foo.com + samson-production.foo.com)
+# need to set it everywhere in case any of the samsons uses `domain: :all`
+options = {key: "_samson_session_#{Rails.env}"}
 
 # when using multiple domains we have to share our cookies
 # this breaks session on heroku when using *.herokuapp.com
