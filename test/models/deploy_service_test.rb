@@ -1,6 +1,6 @@
 require_relative '../test_helper'
 
-SingleCov.covered! uncovered: 1
+SingleCov.covered!
 
 describe DeployService do
   let(:project) { deploy.project }
@@ -72,6 +72,7 @@ describe DeployService do
           service.stubs(:bypassed?).returns(false)
           service.stubs(:latest_approved_deploy).returns(Deploy.new(id:22, buddy:other_user) )
         end
+
         it "it starts the deploy" do
           service.expects(:confirm_deploy!).once
           service.deploy!(stage, reference: reference)
@@ -125,6 +126,14 @@ describe DeployService do
         deploy.buddy = user
         service.confirm_deploy!(deploy)
       end
+    end
+  end
+
+  describe "#stop!" do
+    it "stops the deploy" do
+      deploy.job = jobs(:running_test)
+      service.stop!(deploy)
+      deploy.job.status.must_equal 'cancelled'
     end
   end
 
