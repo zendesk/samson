@@ -12,6 +12,7 @@ task :asset_compilation_environment do
   ENV['SECRET_TOKEN'] = 'foo'
   ENV['GITHUB_TOKEN'] = 'foo'
   ENV['PRECOMPILE'] = '1'
+  ENV['DATABASE_URL'] = 'mysql2://none@none/none'
 end
 Rake::Task['assets:precompile'].prerequisites.unshift :asset_compilation_environment
 
