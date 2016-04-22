@@ -72,22 +72,20 @@ module SecretStorage
     end
 
     def self.keys()
-      Vault.logical.list(VAULT_SECRET_BACKEND).map! { |key| encode_path(key) }
+      Vault.logical.list(VAULT_SECRET_BACKEND).map! { |key| encode_path(key, :decode) }
     end
 
     private
 
     def self.vault_path(key)
-      VAULT_SECRET_BACKEND + encode_path(key, :encode)
+      VAULT_SECRET_BACKEND + encode_path(key)
     end
 
-    def self.encode_path(string = nil, direction = :decode)
-      return false if string.nil?
-      string = string.dup
-      if direction == :encode
-        ENCODINGS.each { |k, v| string.gsub!(k.to_s, v.to_s) }
-      elsif direction == :decode
+    def self.encode_path(string, direction = :encode)
+      if direction == :decode
         ENCODINGS.each { |k, v| string.gsub!(v.to_s, k.to_s) }
+      else
+        ENCODINGS.each { |k, v| string.gsub!(k.to_s, v.to_s) }
       end
       string
     end
