@@ -412,4 +412,27 @@ describe Stage do
       end
     end
   end
+
+  describe "#command_updated_at" do
+    let(:t) { 3.seconds.from_now }
+
+    it "is nil for new" do
+      Stage.new.command_updated_at.must_equal nil
+    end
+
+    it "ignores updated_at since that is changed on every deploy" do
+      stage.command_associations.clear
+      stage.command_updated_at.must_equal nil
+    end
+
+    it "is updated when command content changed" do
+      stage.commands.first.update_column(:updated_at, t)
+      stage.command_updated_at.to_i.must_equal t.to_i
+    end
+
+    it "is updated when a new command was added" do
+      stage.command_associations.first.update_column(:updated_at, t)
+      stage.command_updated_at.to_i.must_equal t.to_i
+    end
+  end
 end

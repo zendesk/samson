@@ -52,13 +52,14 @@ class DeployService
     Deploy.where(reference: reference).where('buddy_id is NOT NULL AND started_at > ?', BuddyCheck.grace_period.ago)
       .includes(:stage)
       .where(stages: {project_id: project})
+      .reorder('started_at desc')
       .detect { |d| d.production? && !d.bypassed_approval? }
   end
 
   def release_approved?(deploy)
     last_deploy = latest_approved_deploy(deploy.reference, deploy.stage.project)
-
     return false unless last_deploy
+    return false if last_deploy.started_at < last_deploy.stage.command_updated_at
 
     deploy.buddy = (last_deploy.buddy == @user ? last_deploy.job.user : last_deploy.buddy)
     deploy.started_at = Time.now
