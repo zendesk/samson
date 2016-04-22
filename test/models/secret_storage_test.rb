@@ -104,7 +104,8 @@ describe SecretStorage do
       end
 
       it "gets a value based on a key with /s" do
-        SecretStorage::HashicorpVault.read('foo/isbar').must_equal('bar')
+        response = SecretStorage::HashicorpVault.read('foo/isbar')
+        response[:data].must_equal({:vault=>"bar"})
       end
     end
 
@@ -124,7 +125,7 @@ describe SecretStorage do
       end
 
       it "wirtes a key with /s" do
-        assert SecretStorage::HashicorpVault.write('foo/isbar', 'somevalue')
+        assert SecretStorage::HashicorpVault.write('foo/isbar', {value: 'whatever'})
       end
     end
 
