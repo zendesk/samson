@@ -12,6 +12,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="stream-origin" content="<%= Rails.application.config.samson.stream_origin %>">
     <meta name="deploy-origin" content="<%= Rails.application.config.samson.deploy_origin %>">
+    <meta name="environment" content="<%= Rails.env %>">
   </head>
 
   <body class="<%= controller_action %>" ng-app="samson">

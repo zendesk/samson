@@ -155,6 +155,13 @@ class Stage < ActiveRecord::Base
     emails.uniq.presence
   end
 
+  def command_updated_at
+    [
+      command_associations.maximum(:updated_at),
+      commands.maximum(:updated_at)
+    ].compact.max
+  end
+
   private
 
   def permalink_base
