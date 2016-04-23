@@ -1,5 +1,4 @@
 require 'attr_encrypted'
-
 module SecretStorage
   class DbBackend
     class Secret < ActiveRecord::Base
@@ -75,20 +74,20 @@ module SecretStorage
     end
 
     def self.keys()
-      Vault.logical.list(VAULT_SECRET_BACKEND).map! { |key| encode_path(key, :decode) }
+      Vault.logical.list(VAULT_SECRET_BACKEND).map! { |key| convert_path(key, :decode) }
     end
 
     private
 
     def self.vault_path(key)
-      VAULT_SECRET_BACKEND + encode_path(key)
+      VAULT_SECRET_BACKEND + convert_path(key, :encode)
     end
 
-    def self.encode_path(string, direction = :encode)
+    def self.convert_path(string, direction)
       string = string.dup
       if direction == :decode
         ENCODINGS.each { |k, v| string.gsub!(v.to_s, k.to_s) }
-      else
+      elsif direction == :encode
         ENCODINGS.each { |k, v| string.gsub!(k.to_s, v.to_s) }
       end
       string

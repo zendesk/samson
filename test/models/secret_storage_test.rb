@@ -98,14 +98,14 @@ describe SecretStorage do
     # from ENV
     describe ".read" do
       before do
-        data = {foo: 'bar', data: { vault:"bar"}}.to_json
+        data = {data: { vault:"bar"}}.to_json
         stub_request(:get, "https://127.0.0.1:8200/v1/secret%2Ffoo%252Fisbar").
           to_return(status: 200, body: data, headers: {'Content-Type': 'application/json'})
       end
 
       it "gets a value based on a key with /s" do
         response = SecretStorage::HashicorpVault.read('foo/isbar')
-        response[:data].must_equal({:vault=>"bar"})
+        response[:value].must_equal("bar")
       end
     end
 
