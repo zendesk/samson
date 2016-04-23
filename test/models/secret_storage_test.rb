@@ -101,10 +101,18 @@ describe SecretStorage do
         data = {data: { vault:"bar"}}.to_json
         stub_request(:get, "https://127.0.0.1:8200/v1/secret%2Ffoo%252Fisbar").
           to_return(status: 200, body: data, headers: {'Content-Type': 'application/json'})
+        fail_data = {data: { vault:nil}}.to_json
+        # client gets a 200 and nil body when key is missing
+        stub_request(:get, "https://127.0.0.1:8200/v1/secret%2Fnotgoingtobethere").
+          to_return(status: 200, body: fail_data, headers: {'Content-Type': 'application/json'})
       end
 
       it "gets a value based on a key with /s" do
         SecretStorage::HashicorpVault.read('foo/isbar').must_equal({:lease_id=>nil, :lease_duration=>nil, :renewable=>nil, :auth=>nil, :value=>"bar"})
+      end
+
+      it "fails to read a key" do
+        SecretStorage::HashicorpVault.read('notgoingtobethere').must_equal({:lease_id=>nil, :lease_duration=>nil, :renewable=>nil, :auth=>nil, :value=>nil})
       end
     end
 
