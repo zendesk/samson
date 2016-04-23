@@ -104,8 +104,7 @@ describe SecretStorage do
       end
 
       it "gets a value based on a key with /s" do
-        response = SecretStorage::HashicorpVault.read('foo/isbar')
-        response[:value].must_equal("bar")
+        SecretStorage::HashicorpVault.read('foo/isbar').must_equal({:lease_id=>nil, :lease_duration=>nil, :renewable=>nil, :auth=>nil, :value=>"bar"})
       end
     end
 
