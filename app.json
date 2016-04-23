@@ -37,6 +37,12 @@
     },
     "BUNDLE_WITHOUT": {
       "value": "mysql2:sqlite"
+    },
+    "BUILDPACK_URL": {
+      "value": "https://github.com/ddollar/heroku-buildpack-multi.git"
+    },
+    "DEPLOY_TASKS": {
+      "value": "db:migrate"
     }
   },
   "scripts": {
