@@ -60,9 +60,9 @@ module SecretStorage
     def self.read(key)
       result = Vault.logical.read(vault_path(key))
       return false if result.nil?
-      result = result.dup.to_h
-      # making sure that the delete won't blow up
-      result[:value] = result[:data][:vault]
+      result = result.to_h
+      result = result.merge(result.delete(:data))
+      result[:value] = result.delete(:vault)
       result
     end
 
