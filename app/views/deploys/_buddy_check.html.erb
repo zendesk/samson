@@ -7,7 +7,8 @@
     <div class="deployer-stop">
       <%= stop_button %>
       or
-      <%= link_to "Bypass", buddy_check_project_deploy_path(@project, @deploy), method: :post, class: "btn btn-danger" %>
+      <% confirm = "Are you sure this is an emergency and you cannot find a buddy?\n#{strip_tags(details)}" %>
+      <%= link_to "Bypass", buddy_check_project_deploy_path(@project, @deploy), method: :post, data: {confirm: confirm}, class: "btn btn-danger" %>
     </div>
   <% elsif is_deployer_for_project? %>
     <p>This deploy requires a buddy.</p>
