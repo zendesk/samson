@@ -89,6 +89,8 @@ module SecretStorage
         ENCODINGS.each { |k, v| string.gsub!(v.to_s, k.to_s) }
       elsif direction == :encode
         ENCODINGS.each { |k, v| string.gsub!(k.to_s, v.to_s) }
+      else
+        raise ArgumentError.new("direction is required")
       end
       string
     end
