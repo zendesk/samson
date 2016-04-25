@@ -106,7 +106,6 @@ describe "cleanliness" do
       "plugins/env/app/models/concerns/accepts_environment_variables.rb",
       "plugins/env/app/models/environment_variable_group.rb",
       "plugins/env/app/models/project_environment_variable_group.rb",
-      "plugins/kubernetes/app/controllers/kubernetes_clusters_controller.rb",
       "plugins/kubernetes/app/decorators/admin/deploy_groups_controller_decorator.rb",
       "plugins/kubernetes/app/decorators/build_decorator.rb",
       "plugins/kubernetes/app/decorators/deploy_group_decorator.rb",

@@ -69,13 +69,15 @@ class KubernetesClustersController < ApplicationController
     params.require(:kubernetes_cluster).permit(:name, :config_filepath, :config_context, :description, { deploy_group_ids: [] })
   end
 
+  # TODO this blows up when not set
+  # test with relative and absolute paths
   def load_default_config_file
-    @config_file =
-      if File.exists?(ENV['KUBE_CONFIG_FILE'])
-        Kubernetes::ClientConfigFile.new(ENV['KUBE_CONFIG_FILE'])
-      else
-        nil
-      end
-    @context_options = @config_file.try(:context_names) || []
+    if (file = ENV['KUBE_CONFIG_FILE'])
+      @config_file = Kubernetes::ClientConfigFile.new(file)
+      @context_options = @config_file.context_names
+    else
+      @config_file = nil
+      @context_options = []
+    end
   end
 end
