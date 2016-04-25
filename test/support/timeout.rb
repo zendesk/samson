@@ -2,12 +2,13 @@
 module TimeoutEveryTestCase
   def capture_exceptions(*args, &block)
     super do
+      rescued = false
       begin
         Timeout.timeout(5, &block)
-      rescue Timeout::Error
-        super do
-          Timeout.timeout(5, &block)
-        end
+      rescue Timeout::Error => e
+        raise e if rescued
+        rescued = true
+        retry
       end
     end
   end
