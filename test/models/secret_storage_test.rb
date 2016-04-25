@@ -112,7 +112,9 @@ describe SecretStorage do
       end
 
       it "fails to read a key" do
-        SecretStorage::HashicorpVault.read('notgoingtobethere').must_equal({:lease_id=>nil, :lease_duration=>nil, :renewable=>nil, :auth=>nil, :value=>nil})
+        assert_raises ActiveRecord::RecordNotFound do
+          SecretStorage::HashicorpVault.read('notgoingtobethere')
+        end
       end
     end
 

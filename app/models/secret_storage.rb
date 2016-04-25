@@ -58,7 +58,7 @@ module SecretStorage
 
     def self.read(key)
       result = Vault.logical.read(vault_path(key))
-      return false if result.nil?
+      raise(ActiveRecord::RecordNotFound) if result.data[:vault].nil?
       result = result.to_h
       result = result.merge(result.delete(:data))
       result[:value] = result.delete(:vault)
