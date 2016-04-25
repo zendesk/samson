@@ -13,9 +13,9 @@ describe KubernetesClustersController do
 
   as_a_super_admin do
     describe "#new" do
-      it "renders" do
+      it "blows up when not configured" do
         get :new
-        assert_template :new
+        assert_response :bad_request
       end
 
       it "works with an existing config file" do
@@ -31,7 +31,7 @@ describe KubernetesClustersController do
 
       it "blows up with missing config file" do
         with_env "KUBE_CONFIG_FILE": "nope" do
-          assert_raises "XX" do
+          assert_raises ArgumentError do
             get :new
           end
         end
