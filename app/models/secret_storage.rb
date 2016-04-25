@@ -1,5 +1,4 @@
 require 'attr_encrypted'
-
 module SecretStorage
   class DbBackend
     class Secret < ActiveRecord::Base
@@ -47,6 +46,53 @@ module SecretStorage
 
     def self.keys
       Secret.order(:id).pluck(:id)
+    end
+  end
+
+  class HashicorpVault
+
+    VAULT_SECRET_BACKEND ='secret/'.freeze
+    # we don't really want other directories in here,
+    # and there may be other chars that we find we don't like
+    ENCODINGS = {"/": "%2F"}
+
+    def self.read(key)
+      result = Vault.logical.read(vault_path(key))
+      raise(ActiveRecord::RecordNotFound) if result.data[:vault].nil?
+      result = result.to_h
+      result = result.merge(result.delete(:data))
+      result[:value] = result.delete(:vault)
+      result
+    end
+
+    def self.write(key, data)
+      Vault.logical.write(vault_path(key), vault: data[:value])
+    end
+
+    def self.delete(key)
+      Vault.logical.delete(vault_path(key))
+    end
+
+    def self.keys()
+      Vault.logical.list(VAULT_SECRET_BACKEND).map! { |key| convert_path(key, :decode) }
+    end
+
+    private
+
+    def self.vault_path(key)
+      VAULT_SECRET_BACKEND + convert_path(key, :encode)
+    end
+
+    def self.convert_path(string, direction)
+      string = string.dup
+      if direction == :decode
+        ENCODINGS.each { |k, v| string.gsub!(v.to_s, k.to_s) }
+      elsif direction == :encode
+        ENCODINGS.each { |k, v| string.gsub!(k.to_s, v.to_s) }
+      else
+        raise ArgumentError.new("direction is required")
+      end
+      string
     end
   end
 

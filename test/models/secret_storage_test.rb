@@ -91,4 +91,69 @@ describe SecretStorage do
       end
     end
   end
+
+  describe SecretStorage::HashicorpVault do
+    # note, we need to call the storage engine here directly
+    # as the model has already loaded it's config
+    # from ENV
+    describe ".read" do
+      before do
+        data = {data: { vault:"bar"}}.to_json
+        stub_request(:get, "https://127.0.0.1:8200/v1/secret%2Ffoo%252Fisbar").
+          to_return(status: 200, body: data, headers: {'Content-Type': 'application/json'})
+        fail_data = {data: { vault:nil}}.to_json
+        # client gets a 200 and nil body when key is missing
+        stub_request(:get, "https://127.0.0.1:8200/v1/secret%2Fnotgoingtobethere").
+          to_return(status: 200, body: fail_data, headers: {'Content-Type': 'application/json'})
+      end
+
+      it "gets a value based on a key with /s" do
+        SecretStorage::HashicorpVault.read('foo/isbar').must_equal({:lease_id=>nil, :lease_duration=>nil, :renewable=>nil, :auth=>nil, :value=>"bar"})
+      end
+
+      it "fails to read a key" do
+        assert_raises ActiveRecord::RecordNotFound do
+          SecretStorage::HashicorpVault.read('notgoingtobethere')
+        end
+      end
+
+      it "invalid key conversion fails for a read" do
+        assert_raises ArgumentError do
+          SecretStorage::HashicorpVault.convert_path('foopy%2Fthecat', :notvalid)
+        end
+      end
+    end
+
+    describe ".delete" do
+      before do
+        stub_request(:delete, "https://127.0.0.1:8200/v1/secret%2Ffoo%252Fisbar")
+      end
+
+      it "deletes key with /s" do
+        assert SecretStorage::HashicorpVault.delete('foo/isbar')
+      end
+    end
+
+    describe ".write" do
+      before do
+        stub_request(:put, "https://127.0.0.1:8200/v1/secret%2Ffoo%252Fisbar")
+      end
+
+      it "wirtes a key with /s" do
+        assert SecretStorage::HashicorpVault.write('foo/isbar', {value: 'whatever'})
+      end
+    end
+
+    describe ".keys" do
+      before do
+        data = {"data": { "keys": ["this%2Fkey", "that%2Fkey"] } }.to_json
+        stub_request(:get, "https://127.0.0.1:8200/v1/secret%2F?list=true").
+          to_return(status: 200, body: data, headers: {'Content-Type': 'application/json'})
+      end
+
+      it "lists all keys" do
+        SecretStorage::HashicorpVault.keys().must_equal(["this/key", "that/key"])
+      end
+    end
+  end
 end
