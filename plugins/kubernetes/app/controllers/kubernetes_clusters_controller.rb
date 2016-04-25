@@ -70,12 +70,12 @@ class KubernetesClustersController < ApplicationController
   end
 
   def load_default_config_file
-    @config_file =
-      if File.exists?(ENV['KUBE_CONFIG_FILE'])
-        Kubernetes::ClientConfigFile.new(ENV['KUBE_CONFIG_FILE'])
-      else
-        nil
-      end
-    @context_options = @config_file.try(:context_names) || []
+    var = 'KUBE_CONFIG_FILE'
+    if (file = ENV[var])
+      @config_file = Kubernetes::ClientConfigFile.new(file)
+      @context_options = @config_file.context_names
+    else
+      render text: "#{var} is not configured, for local development is should be ~/.kube/config", status: :bad_request
+    end
   end
 end

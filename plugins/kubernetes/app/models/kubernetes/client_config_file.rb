@@ -5,14 +5,10 @@ module Kubernetes
     attr_reader :filepath, :api_version, :clusters, :users, :contexts
 
     def initialize(filepath)
-      raise ArgumentError.new("File #{filepath} does not exist") unless File.exists?(filepath)
-      @filepath = filepath
-      @config_file = YAML.load_file(filepath).with_indifferent_access
+      @filepath = File.expand_path(filepath)
+      raise ArgumentError.new("File #{@filepath} does not exist") unless File.exists?(@filepath)
+      @config_file = YAML.load_file(@filepath).with_indifferent_access
       parse_file
-    end
-
-    def exists?
-      config_file.present?
     end
 
     def current_client
@@ -34,8 +30,8 @@ module Kubernetes
     private
 
     def parse_file
-      @api_version = @config_file[:apiVersion]
-      @current_context = @config_file[:'current-context']
+      @api_version = @config_file.fetch(:apiVersion)
+      @current_context = @config_file.fetch(:'current-context')
       parse_clusters
       parse_users
       parse_contexts
@@ -43,7 +39,7 @@ module Kubernetes
 
     def parse_clusters
       @clusters = {}
-      @config_file[:clusters].each do |cluster_hash|
+      @config_file.fetch(:clusters).each do |cluster_hash|
         cluster = Cluster.new
         cluster.name = cluster_hash[:name]
         cluster.server = cluster_hash[:cluster][:server]
@@ -60,7 +56,7 @@ module Kubernetes
 
     def parse_users
       @users = {}
-      @config_file[:users].each do |user_hash|
+      @config_file.fetch(:users).each do |user_hash|
         user = User.new
         user.name = user_hash[:name]
         user.username = user_hash[:user][:username]
@@ -79,7 +75,7 @@ module Kubernetes
 
     def parse_contexts
       @contexts = {}
-      @config_file[:contexts].each do |context_hash|
+      @config_file.fetch(:contexts).each do |context_hash|
         context = Context.new
         context.name = context_hash[:name]
         context.api_version = api_version

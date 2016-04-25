@@ -3,18 +3,6 @@ require_relative '../test_helper'
 SingleCov.covered! uncovered: 2
 
 describe TerminalExecutor do
-  def with_env(env)
-    old = env.map do |k, v|
-      k = k.to_s
-      o = ENV[k]
-      ENV[k] = v
-      [k, o]
-    end
-    yield
-  ensure
-    old.each { |k, v| ENV[k] = v }
-  end
-
   let(:output) { StringIO.new }
   subject { TerminalExecutor.new(output) }
 

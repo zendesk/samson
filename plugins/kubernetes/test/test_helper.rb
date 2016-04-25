@@ -46,6 +46,14 @@ class ActiveSupport::TestCase
     read_file "#{file_name}.json"
   end
 
+  def with_example_kube_config
+    Tempfile.open('config') do |t|
+      t.write({'users': [], 'clusters': [], 'apiVersion': '1', 'current-context': 'vagrant', 'contexts': []}.to_yaml)
+      t.flush
+      yield t.path
+    end
+  end
+
   private
 
   def read_file(file_name)
