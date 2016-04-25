@@ -116,6 +116,12 @@ describe SecretStorage do
           SecretStorage::HashicorpVault.read('notgoingtobethere')
         end
       end
+
+      it "invalid key conversion fails for a read" do
+        assert_raises ArgumentError do
+          SecretStorage::HashicorpVault.convert_path('foopy%2Fthecat', :notvalid)
+        end
+      end
     end
 
     describe ".delete" do
