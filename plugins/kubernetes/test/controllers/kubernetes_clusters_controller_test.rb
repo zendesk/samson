@@ -19,10 +19,8 @@ describe KubernetesClustersController do
       end
 
       it "works with an existing config file" do
-        Tempfile.open('config') do |t|
-          t.write({'users': [], 'clusters': [], 'apiVersion': '1', 'current-context': 'vagrant', 'contexts': []}.to_yaml)
-          t.flush
-          with_env "KUBE_CONFIG_FILE": t.path do
+        with_example_kube_config do |f|
+          with_env "KUBE_CONFIG_FILE": f do
             get :new
             assert_template :new
           end
