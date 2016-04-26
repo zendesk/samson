@@ -435,4 +435,40 @@ describe Stage do
       stage.command_updated_at.to_i.must_equal t.to_i
     end
   end
+
+  describe "versioning" do
+    around { |t| PaperTrail.with_logging(&t) }
+
+    it "tracks important changes" do
+      stage.update_attribute(:name, "Foo")
+      stage.versions.size.must_equal 1
+    end
+
+    it "ignores unimportant changes" do
+      stage.update_attributes(order: 5, updated_at: 1.second.from_now)
+      stage.versions.size.must_equal 0
+    end
+
+    it "records script" do
+      stage.record_script_change
+      YAML.load(stage.versions.first.object)['script'].must_equal stage.script
+    end
+
+    it "can restore ... but loses script" do
+      old_name = stage.name
+      old_script = stage.script
+      stage.record_script_change
+      stage.update_column(:name, "NEW-NAME")
+      stage.commands.first.update_column(:command, 'NEW')
+      stage.versions.last.reify.save!
+      stage.reload
+      stage.name.must_equal old_name
+      stage.script.must_equal old_script
+    end
+
+    it "does not trigger multiple times when destroying" do
+      stage.destroy
+      stage.versions.size.must_equal 1
+    end
+  end
 end

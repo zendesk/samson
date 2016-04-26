@@ -20,6 +20,10 @@
       <%= link_to "Edit", edit_project_stage_path(@project, @stage), class: "btn btn-default" %>
       <%= link_to_delete_button([@project, @stage]) %>
     <% end %>
+
+    <div class="pull-right">
+      <%= link_to "History", versions_path(item_id: @stage.id, item_type: @stage.class.name) %>
+    </div>
   </div>
 
   <% if @stage.dashboard.present? %>

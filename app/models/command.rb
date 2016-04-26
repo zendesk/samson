@@ -8,6 +8,8 @@ class Command < ActiveRecord::Base
 
   validates :command, presence: true
 
+  after_save :trigger_stage_change
+
   def self.global
     where(project_id: nil)
   end
@@ -37,5 +39,11 @@ class Command < ActiveRecord::Base
 
   def self.usage_ids
     MacroCommand.pluck(:command_id) + StageCommand.pluck(:command_id)
+  end
+
+  private
+
+  def trigger_stage_change
+    stages.each(&:record_script_change)
   end
 end

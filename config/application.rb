@@ -43,6 +43,9 @@ module Samson
 
     config.cache_store = :dalli_store, servers, options
 
+    # Raise exceptions
+    config.active_record.raise_in_transactional_callbacks = true
+
     # Allow streaming
     config.preload_frameworks = true
     config.allow_concurrency = true

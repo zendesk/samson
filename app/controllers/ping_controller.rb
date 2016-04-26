@@ -1,5 +1,5 @@
 class PingController < ApplicationController
-  skip_before_action :login_user
+  skip_around_action :login_user
 
   def show
     head :ok

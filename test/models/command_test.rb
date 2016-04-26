@@ -32,4 +32,14 @@ describe Command do
       )
     end
   end
+
+  describe "#trigger_stage_change" do
+    it "triggers a version when command changes" do
+      PaperTrail.with_logging do
+        command = commands(:echo)
+        commands(:echo).update_attribute(:command, 'new')
+        command.stages.first.versions.size.must_equal 1
+      end
+    end
+  end
 end

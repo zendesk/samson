@@ -4,6 +4,8 @@ class Stage < ActiveRecord::Base
 
   has_soft_deletion default_scope: true unless self < SoftDeletion::Core
 
+  has_paper_trail skip: [:order, :updated_at, :created_at]
+
   belongs_to :project, touch: true
 
   has_many :deploys, dependent: :destroy
@@ -162,6 +164,15 @@ class Stage < ActiveRecord::Base
     ].compact.max
   end
 
+  def record_script_change
+    record_update true
+  end
+
+  def destroy
+    mark_for_destruction
+    super
+  end
+
   private
 
   def permalink_base
@@ -175,5 +186,10 @@ class Stage < ActiveRecord::Base
   def ensure_ordering
     return unless project
     self.order = project.stages.maximum(:order).to_i + 1
+  end
+
+  # overwrites papertrail to record script
+  def object_attrs_for_paper_trail(attributes)
+    super(attributes.merge('script' => script))
   end
 end
