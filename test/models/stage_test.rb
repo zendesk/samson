@@ -456,14 +456,13 @@ describe Stage do
 
     it "can restore ... but loses script" do
       old_name = stage.name
-      old_script = stage.script
       stage.record_script_change
       stage.update_column(:name, "NEW-NAME")
       stage.commands.first.update_column(:command, 'NEW')
       stage.versions.last.reify.save!
       stage.reload
       stage.name.must_equal old_name
-      stage.script.must_equal old_script
+      stage.script.must_equal 'NEW'
     end
 
     it "does not trigger multiple times when destroying" do
