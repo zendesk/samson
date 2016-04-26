@@ -1,4 +1,4 @@
-class KubernetesClustersController < ApplicationController
+class Admin::Kubernetes::ClustersController < ApplicationController
   before_action :authorize_admin!
   before_action :authorize_super_admin!, only: [ :create, :new, :update, :edit ]
 
@@ -6,18 +6,18 @@ class KubernetesClustersController < ApplicationController
   before_action :load_default_config_file, only: [:new, :edit, :update]
 
   def new
-    @cluster = Kubernetes::Cluster.new(config_filepath: @config_file.try(:filepath))
+    @cluster = ::Kubernetes::Cluster.new(config_filepath: @config_file.try(:filepath))
   end
 
   def create
-    @cluster = Kubernetes::Cluster.new(new_cluster_params)
+    @cluster = ::Kubernetes::Cluster.new(new_cluster_params)
     success = @cluster.save
     @cluster.watch! if success
 
     respond_to do |format|
       format.html do
         if success
-          redirect_to kubernetes_clusters_path(@cluster)
+          redirect_to admin_kubernetes_clusters_path(@cluster)
         else
           render :new, status: 422
         end
@@ -30,7 +30,7 @@ class KubernetesClustersController < ApplicationController
   end
 
   def index
-    @cluster_list = Kubernetes::Cluster.all
+    @clusters = ::Kubernetes::Cluster.all
   end
 
   def show
@@ -47,7 +47,7 @@ class KubernetesClustersController < ApplicationController
     respond_to do |format|
       format.html do
         if success
-          redirect_to kubernetes_clusters_path
+          redirect_to admin_kubernetes_clusters_path
         else
           render :edit, status: 422
         end
@@ -62,7 +62,7 @@ class KubernetesClustersController < ApplicationController
   private
 
   def find_cluster
-    @cluster = Kubernetes::Cluster.find(params[:id])
+    @cluster = ::Kubernetes::Cluster.find(params[:id])
   end
 
   def new_cluster_params
@@ -72,7 +72,7 @@ class KubernetesClustersController < ApplicationController
   def load_default_config_file
     var = 'KUBE_CONFIG_FILE'
     if (file = ENV[var])
-      @config_file = Kubernetes::ClientConfigFile.new(file)
+      @config_file = ::Kubernetes::ClientConfigFile.new(file)
       @context_options = @config_file.context_names
     else
       render text: "#{var} is not configured, for local development it should be ~/.kube/config", status: :bad_request

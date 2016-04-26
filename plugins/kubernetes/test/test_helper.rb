@@ -54,6 +54,11 @@ class ActiveSupport::TestCase
     end
   end
 
+  def create_kubernetes_cluster
+    Kubernetes::Cluster.any_instance.stubs(connection_valid?: true)
+    Kubernetes::Cluster.create!(name: 'Foo', config_filepath: __FILE__, config_context: 'y')
+  end
+
   private
 
   def read_file(file_name)

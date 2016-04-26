@@ -3,11 +3,7 @@ require_relative "../../test_helper"
 SingleCov.covered! uncovered: 11
 
 describe Kubernetes::Cluster do
-  let(:cluster) { Kubernetes::Cluster.create!(name: 'Foo', config_filepath: __FILE__, config_context: 'y') }
-
-  before do
-    Kubernetes::Cluster.any_instance.stubs(connection_valid?: true)
-  end
+  let(:cluster) { create_kubernetes_cluster }
 
   describe "#watch!" do
     it "watches" do
