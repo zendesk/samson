@@ -2,7 +2,7 @@ require_relative '../../test_helper'
 
 SingleCov.covered!
 
-describe "ProjectLevelAuthorization Controller" do
+describe "ProjectLevelAuthorization included in controller" do
   class ProjectLevelAuthorizationTestController < ApplicationController
     include ProjectLevelAuthorization
     before_action :authorize_project_deployer!, only: :deploy

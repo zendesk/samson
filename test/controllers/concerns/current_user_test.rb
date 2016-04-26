@@ -1,6 +1,6 @@
 require_relative '../../test_helper'
 
-SingleCov.covered! uncovered: 2
+SingleCov.covered!
 
 describe "CurrentUser included in controller" do
   class CurrentUserTestController < ApplicationController
@@ -40,6 +40,23 @@ describe "CurrentUser included in controller" do
       end
       stage.reload.name.must_equal 'MUUUU'
       stage.versions.size.must_equal 1
+    end
+
+    describe "#current_user=" do
+      it "sets the user and persists it for the next request" do
+        @controller.send(:current_user=, user)
+        @controller.send(:current_user).must_equal user
+        session.inspect.must_equal({"warden.user.default.key" => user.id}.inspect)
+      end
+    end
+
+    describe "#logout!" do
+      it "unsets the user and logs them out" do
+        @controller.send(:current_user=, user)
+        @controller.send(:logout!)
+        @controller.send(:current_user).must_equal nil
+        session.inspect.must_equal({}.inspect)
+      end
     end
   end
 end
