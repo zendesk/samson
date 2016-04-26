@@ -3,7 +3,7 @@ class Admin::Kubernetes::ClustersController < ApplicationController
   before_action :authorize_super_admin!, only: [ :create, :new, :update, :edit ]
 
   before_action :find_cluster, only: [:show, :edit, :update]
-  before_action :load_default_config_file, only: [:new, :edit, :update]
+  before_action :load_default_config_file, only: [:new, :edit, :update, :create]
 
   def new
     @cluster = ::Kubernetes::Cluster.new(config_filepath: @config_file.try(:filepath))
@@ -17,7 +17,7 @@ class Admin::Kubernetes::ClustersController < ApplicationController
     respond_to do |format|
       format.html do
         if success
-          redirect_to admin_kubernetes_clusters_path(@cluster)
+          redirect_to admin_kubernetes_cluster_path(@cluster)
         else
           render :new, status: 422
         end
