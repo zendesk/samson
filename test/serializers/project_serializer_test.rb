@@ -7,6 +7,6 @@ describe ProjectSerializer do
   let(:parsed) { JSON.parse(ProjectSerializer.new(project).to_json) }
 
   it 'serializes url' do
-    parsed['project']['url'].must_equal "http://localhost/projects/foo"
+    parsed['project']['url'].must_equal "http://www.test-url.com/projects/foo"
   end
 end

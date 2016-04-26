@@ -7,7 +7,7 @@ describe BuildSerializer do
   let(:parsed) { JSON.parse(DeploySerializer.new(deploy).to_json) }
 
   it 'serializes url' do
-    parsed['deploy']['url'].must_equal "http://localhost/projects/foo/deploys/#{deploy.to_param}"
+    parsed['deploy']['url'].must_equal "http://www.test-url.com/projects/foo/deploys/#{deploy.to_param}"
   end
 
   it 'serializes summary' do
