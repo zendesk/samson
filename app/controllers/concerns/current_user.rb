@@ -27,11 +27,28 @@ module CurrentUser
   end
 
   def login_user
-    warden.authenticate!
+    warden.authenticate || unauthorized!
     PaperTrail.with_whodunnit(current_user.id) { yield }
   end
 
   def warden
     request.env['warden']
+  end
+
+  def unauthorized!
+    Rails.logger.warn('Halted as unauthorized! threw :warden')
+    throw(:warden) # Warden::Manager middleware catches this and calls UnauthorizedController
+  end
+
+  def authorize_super_admin!
+    unauthorized! unless current_user.is_super_admin?
+  end
+
+  def authorize_admin!
+    unauthorized! unless current_user.is_admin?
+  end
+
+  def authorize_deployer!
+    unauthorized! unless current_user.is_deployer?
   end
 end
