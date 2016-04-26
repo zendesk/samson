@@ -231,6 +231,15 @@ describe JobExecution do
     assert_equal 'MY-SECRET', last_line_of_output
   end
 
+  describe "kubernetes" do
+    before { stage.update_column :kubernetes, true }
+
+    it "does the execution with the kubernetes executor" do
+      Kubernetes::DeployExecutor.any_instance.expects(:execute!).returns true
+      execute_job("master")
+    end
+  end
+
   describe 'when JobExecution is disabled' do
     before do
       JobExecution.enabled = false
