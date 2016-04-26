@@ -103,12 +103,15 @@ module Kubernetes
       attr_accessor :name, :cluster, :user, :api_version
 
       def client
-        Kubeclient::Client.new(cluster.url, api_version,
-                               ssl_options: ssl_options, socket_options: socket_options)
+        build_client(cluster.url, api_version)
       end
 
       def extension_client
-        Kubeclient::Client.new(cluster.server + '/apis', 'extensions/v1beta1', ssl_options: ssl_options)
+        build_client(cluster.server + '/apis', 'extensions/v1beta1')
+      end
+
+      def build_client(url, version)
+        Kubeclient::Client.new(url, version, ssl_options: ssl_options, socket_options: socket_options)
       end
 
       def use_ssl?
