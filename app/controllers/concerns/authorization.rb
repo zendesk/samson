@@ -14,7 +14,7 @@ module Authorization
   end
 
   def unauthorized!
-    # Eventually to UnauthorizedController
-    throw(:warden)
+    Rails.logger.warn('Halted as unauthorized! threw :warden')
+    throw(:warden) # middleware resolves this into UnauthorizedController
   end
 end
