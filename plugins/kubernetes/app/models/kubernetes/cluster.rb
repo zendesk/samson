@@ -11,6 +11,11 @@ module Kubernetes
     validates :config_context, presence: true
     validate :test_client_connection
 
+    def watch!
+      Watchers::ClusterPodWatcher.restart_watcher(self)
+      Watchers::ClusterPodErrorWatcher.restart_watcher(self)
+    end
+
     def client
       @client ||= kubeconfig.client_for(config_context)
     end
