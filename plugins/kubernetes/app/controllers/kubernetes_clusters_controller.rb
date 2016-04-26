@@ -12,7 +12,7 @@ class KubernetesClustersController < ApplicationController
   def create
     @cluster = Kubernetes::Cluster.new(new_cluster_params)
     success = @cluster.save
-    Watchers::ClusterPodWatcher::start_watcher(@cluster) if success
+    @cluster.watch! if success
 
     respond_to do |format|
       format.html do
@@ -42,7 +42,7 @@ class KubernetesClustersController < ApplicationController
   def update
     @cluster.assign_attributes(new_cluster_params)
     success = @cluster.save
-    Watchers::ClusterPodWatcher::restart_watcher(@cluster) if success
+    @cluster.watch! if success
 
     respond_to do |format|
       format.html do
@@ -75,7 +75,7 @@ class KubernetesClustersController < ApplicationController
       @config_file = Kubernetes::ClientConfigFile.new(file)
       @context_options = @config_file.context_names
     else
-      render text: "#{var} is not configured, for local development is should be ~/.kube/config", status: :bad_request
+      render text: "#{var} is not configured, for local development it should be ~/.kube/config", status: :bad_request
     end
   end
 end

@@ -114,7 +114,6 @@ describe "cleanliness" do
       "plugins/kubernetes/app/models/concerns/kubernetes/deploy_yaml.rb",
       "plugins/kubernetes/app/models/concerns/kubernetes/has_status.rb",
       "plugins/kubernetes/app/models/kuber_deploy_service.rb",
-      "plugins/kubernetes/app/models/kubernetes/cluster.rb",
       "plugins/kubernetes/app/models/kubernetes/cluster_deploy_group.rb",
       "plugins/kubernetes/app/models/kubernetes/service.rb",
       "plugins/kubernetes/app/models/watchers/base_cluster_watcher.rb",
