@@ -27,7 +27,10 @@ module CurrentUser
   end
 
   def login_user
-    warden.authenticate!
+    warden.authenticate || begin
+      Rails.logger.warn('Halted as unauthorized! threw :warden')
+      throw(:warden) # middleware resolves this into UnauthorizedController
+    end
     PaperTrail.with_whodunnit(current_user.id) { yield }
   end
 

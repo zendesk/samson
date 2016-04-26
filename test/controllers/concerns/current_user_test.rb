@@ -59,4 +59,10 @@ describe "CurrentUser included in controller" do
       end
     end
   end
+
+  it "logs unautorized so we can see it in test output for easy debugging" do
+    Rails.logger.expects(:warn)
+    get :whodunnit, test_route: true
+    assert_unauthorized
+  end
 end
