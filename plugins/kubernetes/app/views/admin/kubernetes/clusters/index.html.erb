@@ -11,9 +11,9 @@
         <th>Actions</th>
       </tr>
 
-      <% @cluster_list.each do |cluster| %>
+      <% @clusters.each do |cluster| %>
         <tr>
-          <td><%= link_to cluster.name, kubernetes_cluster_path(cluster) %></td>
+          <td><%= link_to cluster.name, admin_kubernetes_cluster_path(cluster) %></td>
           <td><%= cluster.description %></td>
           <td>
             <% cluster.deploy_groups.each do |dg| %>
@@ -22,7 +22,7 @@
               <br/>
             <% end %>
           </td>
-          <td><%= link_to "Edit", edit_kubernetes_cluster_path(cluster) %></td>
+          <td><%= link_to "Edit", edit_admin_kubernetes_cluster_path(cluster) %></td>
         </tr>
       <% end %>
     </table>
@@ -30,7 +30,7 @@
 
   <div class="admin-actions">
     <div class="pull-right">
-      <%= link_to "New", new_kubernetes_cluster_path, class: "btn btn-default" %>
+      <%= link_to "New", new_admin_kubernetes_cluster_path, class: "btn btn-default" %>
     </div>
   </div>
 </section>

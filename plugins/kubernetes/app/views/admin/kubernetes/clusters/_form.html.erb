@@ -1,4 +1,4 @@
-<%= form_for [@cluster], html: { class: "form-horizontal" } do |form| %>
+<%= form_for [:admin, @cluster], html: { class: "form-horizontal" } do |form| %>
   <fieldset>
     <div class="form-group">
       <%= form.label :name, 'Cluster Name', class: "col-lg-2 control-label" %>
