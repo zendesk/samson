@@ -1,4 +1,10 @@
 PATH
+  remote: plugins/aws_ecr
+  specs:
+    samson_aws_ecr (0.0.0)
+      aws-sdk-core
+
+PATH
   remote: plugins/datadog
   specs:
     samson_datadog (0.0.0)
@@ -126,6 +132,8 @@ GEM
     autoprefixer-rails (6.3.3.1)
       execjs
     awesome_print (1.6.1)
+    aws-sdk-core (2.2.36)
+      jmespath (~> 1.0)
     better_errors (2.1.1)
       coderay (>= 1.0.0)
       erubis (>= 2.6.6)
@@ -233,7 +241,10 @@ GEM
       nokogiri (~> 1.6.0)
       terminal-table (>= 1.4.0)
       thor (>= 0.16.0)
+    jmespath (1.2.4)
+      json_pure (>= 1.8.1)
     json (1.8.3)
+    json_pure (1.8.3)
     jwt (1.5.1)
     kaminari (0.16.3)
       actionpack (>= 3.0.0)
@@ -546,6 +557,7 @@ DEPENDENCIES
   rails-assets-vis!
   rails-assets-x-editable!
   rails_12factor
+  samson_aws_ecr!
   samson_datadog!
   samson_docker_binary_builder!
   samson_dockerb!
