@@ -263,7 +263,7 @@ GEM
       nokogiri (>= 1.5.9)
     mail (2.6.3)
       mime-types (>= 1.16, < 3)
-    maxitest (1.5.6)
+    maxitest (1.5.7)
       minitest (>= 5.0.0, < 5.9.0)
     metaclass (0.0.4)
     method_source (0.8.2)
