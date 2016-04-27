@@ -161,15 +161,16 @@ module Samson
       def plugin_test_setup
         fixture_path = ActiveSupport::TestCase.fixture_path
         plugins.each do |plugin|
-          fixtures = Dir.glob(File.join(plugin.folder, 'test', 'fixtures', '*.yml'))
+          fixtures = Dir.glob(File.join(plugin.folder, 'test', 'fixtures', '*'))
           fixtures.each do |fixture|
-            yml_filename = fixture[/\w+\.yml\z/]
-            new_path = File.join(fixture_path, yml_filename)
+            next if !fixture.end_with?(".yml") && fixture.include?(".")
+            new_path = File.join(fixture_path, File.basename(fixture))
             File.symlink(fixture, new_path) unless File.exist?(new_path)
             Minitest.after_run { File.delete(new_path) if File.symlink?(new_path) }
           end
 
           # Load test_helper.rb if it exists
+          # TODO maybe not necessary ...
           test_helper_file = File.join(plugin.folder, 'test', 'test_helper.rb')
           require test_helper_file if File.exists?(test_helper_file)
         end
