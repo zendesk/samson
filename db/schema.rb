@@ -419,7 +419,7 @@ ActiveRecord::Schema.define(version: 20160422223358) do
     t.datetime "created_at"
   end
 
-  add_index "versions", ["item_type", "item_id"], name: "index_versions_on_item_type_and_item_id", using: :btree
+  add_index "versions", ["item_type", "item_id"], name: "index_versions_on_item_type_and_item_id", length: {"item_type"=>191, "item_id"=>nil}, using: :btree
 
   create_table "webhooks", force: :cascade do |t|
     t.integer  "project_id", limit: 4,   null: false

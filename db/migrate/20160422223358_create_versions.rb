@@ -29,6 +29,6 @@ class CreateVersions < ActiveRecord::Migration
       #
       t.datetime :created_at
     end
-    add_index :versions, [:item_type, :item_id]
+    add_index :versions, [:item_type, :item_id], length: { item_type: 191 }
   end
 end
