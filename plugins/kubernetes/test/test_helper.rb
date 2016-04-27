@@ -3,12 +3,6 @@ require_relative '../lib/samson_kubernetes/hash_kuber_selector'
 require 'celluloid/test'
 
 class ActiveSupport::TestCase
-  self.set_fixture_class kubernetes_releases: Kubernetes::Release
-  self.set_fixture_class kubernetes_roles: Kubernetes::Role
-  self.set_fixture_class kubernetes_clusters: Kubernetes::Cluster
-  self.set_fixture_class kubernetes_cluster_deploy_groups: Kubernetes::ClusterDeployGroup
-  self.set_fixture_class kubernetes_release_docs: Kubernetes::ReleaseDoc
-
   def self.it_responds_with_unauthorized(&block)
     it 'responds with unauthorized' do
       self.instance_eval(&block)
