@@ -24,7 +24,7 @@
 
       <div class="timeline-form col-md-2 clearfix">
         <%= label(:time_format, "Time Format") %>
-        <%= select_tag(:time_format, options_for_select(User::TIME_FORMATS, selected: params[:time_format] ? params[:time_format] : 'relative'), { class: 'form-control' } ) %>
+        <%= select_tag(:time_format, options_for_select(User::TIME_FORMATS, selected: params[:time_format] ? params[:time_format] : current_user.time_format ), { class: 'form-control' } ) %>
       </div>
 
       <div class="timeline-form col-md-2 clearfix">

@@ -54,6 +54,8 @@ module ApplicationHelper
   end
 
   def render_time(time, format)
+    # grab the time format that the user has in their profile
+    format = current_user.time_format if format.nil?
     if format == 'local'
       time_tag(time, format: '%B %d, %Y %l:%M %p')
     elsif format == 'utc'
