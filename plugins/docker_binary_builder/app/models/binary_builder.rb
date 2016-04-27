@@ -112,7 +112,7 @@ class BinaryBuilder
     api_version_major, api_version_minor = docker_api_version.scan(/(\d+)\.(\d+)/).flatten.map(&:to_i)
     if api_version_major == 0 || (api_version_major == 1 && api_version_minor <= 14)
       fail "Unsupported Docker api version '#{docker_api_version}', use at least v1.15"
-    elsif api_version_major == 1 && api_version_minor <= 21
+    elsif api_version_major == 1 && api_version_minor <= 22
       options.merge!(
         {
           'Volumes' => {
