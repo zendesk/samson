@@ -55,11 +55,11 @@ class DeploysController < ApplicationController
     end
 
     if params[:deployer].present?
-      users = User.where("name LIKE ?", "%#{ActiveRecord::Base.send(:sanitize_sql_like, params[:deployer])}%").pluck(:id)
+      users = User.where("users.name LIKE ?", "%#{ActiveRecord::Base.send(:sanitize_sql_like, params[:deployer])}%").pluck(:id)
     end
 
     if params[:project_name].present?
-      projects = Project.where("name LIKE ?", "%#{ActiveRecord::Base.send(:sanitize_sql_like, params[:project_name])}%").pluck(:id)
+      projects = Project.where("projects.name LIKE ?", "%#{ActiveRecord::Base.send(:sanitize_sql_like, params[:project_name])}%").pluck(:id)
     end
 
     if users || status
