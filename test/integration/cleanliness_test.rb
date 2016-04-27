@@ -133,4 +133,22 @@ describe "cleanliness" do
       untested: untested
     )
   end
+
+  it "uses short index on string columns" do
+    schema = File.read('db/schema.rb')
+    tables = schema.scan(/^  create_table "(\S+)"(.*?)end/m).map do |table_name, section|
+      [table_name, section.scan(/t\.string\s+("\S+").*limit: 255/).flatten]
+    end
+
+    raise "BAD" if tables.size < 30
+
+    bad = tables.map do |table_name, string_columns|
+      indexes = schema.scan /add_index "#{table_name}", \[.*#{string_columns.join('|')}.*\].*/
+      bad = indexes.reject { |i| i.include?('length: ')}
+      next if bad.empty?
+      "Table #{table_name} has a string index without length which will fail on mysql, use length like the others do"
+    end.compact
+
+    assert bad.empty?, bad.join("\n")
+  end
 end
