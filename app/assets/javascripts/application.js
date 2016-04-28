@@ -12,6 +12,7 @@
 //
 //= require jquery
 //= require jquery-ujs
+//= require jquery-cookie
 //= require angular
 //= require angular-rails-templates
 //= require angular-ui-router
@@ -35,6 +36,6 @@
 //= require vis
 //= require app
 //= require underscore_mixins
-//= require jstz
+//= require jstimezonedetect
 //= require_tree .
 //= require_tree ../templates
