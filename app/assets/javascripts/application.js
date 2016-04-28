@@ -36,6 +36,5 @@
 //= require app
 //= require underscore_mixins
 //= require jstz
-//= require js.cookie
 //= require_tree .
 //= require_tree ../templates

@@ -248,7 +248,11 @@ describe ApplicationHelper do
     let(:ts) { Time.parse("2016-04-18T17:46:10.337+00:00") }
 
     it "formats time in utc" do
-      render_time(ts, 'utc').must_equal "<time datetime=\"2016-04-18T17:46:10Z\">2016-04-18 17:46:10 +0000</time>"
+      render_time(ts, 'utc').must_equal "<time datetime=\"2016-04-18 17:46:10 UTC\">2016-04-18 17:46:10 UTC</time>"
+    end
+
+    it "formats time in utc if no timezone cookie is set" do
+      render_time(ts, 'local').must_equal "<time datetime=\"2016-04-18 17:46:10 UTC\">2016-04-18 17:46:10 UTC</time>"
     end
 
     it "formats local time in America/Los_Angeles" do
