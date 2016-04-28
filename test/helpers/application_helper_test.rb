@@ -255,12 +255,12 @@ describe ApplicationHelper do
       render_time(ts, 'local').must_equal "<time datetime=\"2016-04-18 17:46:10 UTC\">2016-04-18 17:46:10 UTC</time>"
     end
 
-    it "formats local time in America/Los_Angeles" do
+    it "formats local time in America/Los_Angeles via cookie set by JS" do
       cookies[:timezone] = 'America/Los_Angeles'
       render_time(ts, 'local').must_equal "<time datetime=\"2016-04-18 10:46:10 -0700\">2016-04-18 10:46:10 -0700</time>"
     end
 
-    it "formats local time in America/New_York" do
+    it "formats local time in America/New_York via cookie set by JS" do
       cookies[:timezone] = 'America/New_York'
       render_time(ts, 'local').must_equal "<time datetime=\"2016-04-18 13:46:10 -0400\">2016-04-18 13:46:10 -0400</time>"
     end
