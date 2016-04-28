@@ -57,7 +57,8 @@ module ApplicationHelper
     # grab the time format that the user has in their profile
     format = current_user.time_format || 'utc' if format.nil?
     if format == 'local'
-      content_tag(:time, time.in_time_zone(cookies[:timezone] || 'UTC').to_s, datetime: time.in_time_zone(cookies[:timezone] || 'UTC'))
+      time_in_zone = time.in_time_zone(cookies[:timezone] || 'UTC').to_s
+      content_tag(:time, time_in_zone, datetime: time_in_zone)
     elsif format == 'utc'
       content_tag(:time, time.in_time_zone('UTC').to_s, datetime: time.in_time_zone('UTC'))
     else
