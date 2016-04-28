@@ -1,6 +1,101 @@
 require_relative '../../test_helper'
 
+SingleCov.covered!
+
 describe Admin::CommandsController do
+  as_a_deployer do
+    unauthorized :get, :index
+    unauthorized :get, :new
+    unauthorized :post, :create
+    unauthorized :delete, :destroy, id: 123123
+
+    describe 'GET to #edit' do
+      it "is unauthrized" do
+        get :edit, id: commands(:echo)
+        assert_unauthorized
+      end
+    end
+
+    describe 'PUT to #update' do
+      it "is unauthrized" do
+        put :update, id: commands(:echo)
+        assert_unauthorized
+      end
+    end
+  end
+
+  as_a_project_admin do
+    unauthorized :get, :index
+    unauthorized :get, :new
+    unauthorized :post, :create
+    unauthorized :delete, :destroy, id: 123123
+
+    describe 'GET to #edit' do
+      it 'renders for local command as project-admin' do
+        get :edit, id: commands(:echo).id
+        assert_template :edit
+      end
+
+      it "is unauthrized for global commands" do
+        get :edit, id: commands(:global)
+        assert_unauthorized
+      end
+    end
+
+    describe 'PATCH to #update' do
+      let(:command) { commands(:echo) }
+      let(:attributes) {{ command: 'echo hi' }}
+      let(:format) { 'html' }
+
+      before do
+        patch :update, id: command.id, command: attributes, format: format
+      end
+
+      describe 'valid' do
+        describe 'html' do
+          it 'redirects and sets the flash' do
+            flash[:notice].wont_be_nil
+            assert_redirected_to admin_commands_path
+          end
+        end
+
+        describe 'json' do
+          let(:format) { 'json' }
+
+          it 'responds ok' do
+            assert_response :ok
+          end
+        end
+      end
+
+      describe 'invalid' do
+        let(:attributes) {{ command: nil }}
+
+        describe 'html' do
+          it 'renders' do
+            assert_template :edit
+          end
+        end
+
+        describe 'json' do
+          let(:format) { 'json' }
+
+          it 'responds unprocessable' do
+            assert_response :unprocessable_entity
+          end
+        end
+      end
+
+      describe 'global' do
+        let(:command) { commands(:global) }
+
+        it "is unauthrized" do
+          assert_unauthorized
+        end
+      end
+    end
+  end
+
   as_a_admin do
     describe 'GET to #index' do
       let(:echo) { commands(:echo) }
@@ -44,8 +139,7 @@ describe Admin::CommandsController do
       describe 'invalid' do
         let(:attributes) {{ command: nil }}
 
-        it 'renders and sets the flash' do
-          flash[:error].wont_be_nil
+        it 'renders' do
           assert_template :edit
         end
       end
@@ -61,64 +155,16 @@ describe Admin::CommandsController do
     end
 
     describe 'GET to #edit' do
-      it "renders" do
-        get :edit, id: commands(:echo).id
+      it "renders for global commands" do
+        get :edit, id: commands(:global).id
         assert_template :edit
-      end
-
-      it 'fails for non-existent command' do
-        assert_raises ActiveRecord::RecordNotFound do
-          get :edit, id: 123123
-        end
       end
     end
 
-    describe 'PATCH to #update' do
-      before do
-        patch :update, id: commands(:echo).id,
-          command: attributes, format: format
-      end
-
-      describe 'invalid' do
-        let(:attributes) {{ command: nil }}
-
-        describe 'html' do
-          let(:format) { 'html' }
-
-          it 'renders and sets the flash' do
-            flash[:error].wont_be_nil
-            assert_template :edit
-          end
-        end
-
-        describe 'json' do
-          let(:format) { 'json' }
-
-          it 'responds unprocessable' do
-            assert_response :unprocessable_entity
-          end
-        end
-      end
-
-      describe 'valid' do
-        let(:attributes) {{ command: 'echo hi' }}
-
-        describe 'html' do
-          let(:format) { 'html' }
-
-          it 'redirects and sets the flash' do
-            flash[:notice].wont_be_nil
-            assert_redirected_to admin_commands_path
-          end
-        end
-
-        describe 'json' do
-          let(:format) { 'json' }
-
-          it 'responds ok' do
-            assert_response :ok
-          end
-        end
+    describe 'PUT to #update' do
+      it "updates a global commands" do
+        put :update, id: commands(:global).id, command: { command: 'echo hi' }
+        assert_redirected_to admin_commands_path
       end
     end
 
@@ -152,51 +198,6 @@ describe Admin::CommandsController do
             assert_response :ok
           end
         end
-      end
-    end
-  end
-
-  as_a_deployer do
-    unauthorized :get, :index
-    unauthorized :get, :new
-    unauthorized :post, :create
-    unauthorized :delete, :destroy, id: 123123
-
-    describe 'GET to #edit' do
-      it 'does not render for global command' do
-        get :edit, id: commands(:global).id
-        @unauthorized.must_equal true, "Request was not marked unauthorized"
-      end
-
-      it 'renders for local command as project-admin' do
-        UserProjectRole.create!(user: users(:deployer), project: projects(:test), role_id: Role::ADMIN.id)
-        get :edit, id: commands(:echo).id
-        assert_template :edit
-      end
-
-      it 'does not render for local command as non-project-admin' do
-        get :edit, id: commands(:echo).id
-        @unauthorized.must_equal true, "Request was not marked unauthorized"
-      end
-    end
-
-    describe 'PATCH to #update' do
-      let(:attributes) {{ command: 'echo hi' }}
-
-      it 'does not update for global command' do
-        patch :update, id: commands(:global).id, command: attributes, format: :json
-        @unauthorized.must_equal true, "Request was not marked unauthorized"
-      end
-
-      it 'updates for local command as project-admin' do
-        UserProjectRole.create!(user: user, project: projects(:test), role_id: Role::ADMIN.id)
-        patch :update, id: commands(:echo).id, command: attributes, format: :json
-        assert_response :ok
-      end
-
-      it 'does not update for local command as non-project-admin' do
-        patch :update, id: commands(:echo).id, command: attributes, format: :json
-        @unauthorized.must_equal true, "Request was not marked unauthorized"
       end
     end
   end

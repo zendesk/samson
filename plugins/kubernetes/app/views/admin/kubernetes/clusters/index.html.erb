@@ -1,0 +1,36 @@
+<h1>Kubernetes Clusters</h1>
+
+<section class="clearfix tabs">
+  <div class="table table-hover table-condensed">
+
+    <table class="table">
+      <tr>
+        <th>Name</th>
+        <th>Description</th>
+        <th>Deploy Groups</th>
+        <th>Actions</th>
+      </tr>
+
+      <% @clusters.each do |cluster| %>
+        <tr>
+          <td><%= link_to cluster.name, admin_kubernetes_cluster_path(cluster) %></td>
+          <td><%= cluster.description %></td>
+          <td>
+            <% cluster.deploy_groups.each do |dg| %>
+              <%= link_to dg.name, admin_deploy_group_path(dg)  %>
+              (ns: <%= dg.kubernetes_namespace %>)
+              <br/>
+            <% end %>
+          </td>
+          <td><%= link_to "Edit", edit_admin_kubernetes_cluster_path(cluster) %></td>
+        </tr>
+      <% end %>
+    </table>
+  </div>
+
+  <div class="admin-actions">
+    <div class="pull-right">
+      <%= link_to "New", new_admin_kubernetes_cluster_path, class: "btn btn-default" %>
+    </div>
+  </div>
+</section>

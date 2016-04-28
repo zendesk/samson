@@ -1,5 +1,5 @@
 class StarsController < ApplicationController
-  include CurrentProject
+  before_action :require_project
 
   def create
     current_user.stars.create!(project: @project)
@@ -17,7 +17,6 @@ class StarsController < ApplicationController
   private
 
   def require_project
-    # override from CurrentProject
-    @project = (Project.find_by_param!(params[:id]) if params[:id])
+    @project = Project.find_by_param!(params[:id])
   end
 end

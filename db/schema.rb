@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20160409160258) do
+ActiveRecord::Schema.define(version: 20160422223358) do
 
   create_table "build_statuses", force: :cascade do |t|
     t.integer  "build_id",                                     null: false
@@ -310,6 +310,18 @@ ActiveRecord::Schema.define(version: 20160409160258) do
   add_index "releases", ["build_id"], name: "index_releases_on_build_id", using: :btree
   add_index "releases", ["project_id", "number"], name: "index_releases_on_project_id_and_number", unique: true, using: :btree
 
+  create_table "secrets", id: false, force: :cascade do |t|
+    t.string   "id",                 limit: 255
+    t.string   "encrypted_value",    limit: 255, null: false
+    t.string   "encrypted_value_iv", limit: 255, null: false
+    t.string   "encryption_key_sha", limit: 255, null: false
+    t.integer  "updater_id",         limit: 4,   null: false
+    t.integer  "creator_id",         limit: 4,   null: false
+    t.datetime "created_at",                     null: false
+    t.datetime "updated_at",                     null: false
+  end
+
+
   create_table "slack_channels", force: :cascade do |t|
     t.string   "name",       limit: 255, null: false
     t.string   "channel_id", limit: 255, null: false
@@ -319,6 +331,7 @@ ActiveRecord::Schema.define(version: 20160409160258) do
   end
 
   add_index "slack_channels", ["stage_id"], name: "index_slack_channels_on_stage_id", using: :btree
+  add_index "secrets", ["id"], name: "index_secrets_on_id", unique: true, length: {"id"=>191}, using: :btree
 
   create_table "slack_webhooks", force: :cascade do |t|
     t.text     "webhook_url", limit: 65535, null: false
@@ -385,7 +398,7 @@ ActiveRecord::Schema.define(version: 20160409160258) do
   end
 
   add_index "user_project_roles", ["project_id"], name: "index_user_project_roles_on_project_id"
-  add_index "user_project_roles", ["user_id"], name: "index_user_project_roles_on_user_id"
+  add_index "user_project_roles", ["user_id", "project_id"], name: "index_user_project_roles_on_user_id_and_project_id", unique: true, using: :btree
 
   create_table "users", force: :cascade do |t|
     t.string   "name",           limit: 255,                 null: false
@@ -404,6 +417,17 @@ ActiveRecord::Schema.define(version: 20160409160258) do
   end
 
   add_index "users", ["external_id", "deleted_at"], name: "index_users_on_external_id_and_deleted_at", length: {"external_id"=>191, "deleted_at"=>nil}, using: :btree
+
+  create_table "versions", force: :cascade do |t|
+    t.string   "item_type",  limit: 255,        null: false
+    t.integer  "item_id",    limit: 4,          null: false
+    t.string   "event",      limit: 255,        null: false
+    t.string   "whodunnit",  limit: 255
+    t.text     "object",     limit: 1073741823
+    t.datetime "created_at"
+  end
+
+  add_index "versions", ["item_type", "item_id"], name: "index_versions_on_item_type_and_item_id", length: {"item_type"=>191, "item_id"=>nil}, using: :btree
 
   create_table "webhooks", force: :cascade do |t|
     t.integer  "project_id", limit: 4,   null: false

@@ -1,6 +1,71 @@
 require_relative '../test_helper'
 
+SingleCov.covered! uncovered: 11
+
 describe ApplicationHelper do
+  describe "#render_log" do
+    it "removes ascii escapes" do
+      # false positive ansi codes
+      render_log("a[Aa").must_equal "<span class=\"ansible_none\">a[Aa</span>"
+      render_log("a[AAa").must_equal "<span class=\"ansible_none\">a[AAa</span>"
+      render_log("a[1a").must_equal "<span class=\"ansible_none\">a[1a</span>"
+      render_log("a[12a").must_equal "<span class=\"ansible_none\">a[12a</span>"
+      render_log("a[12ma").must_equal "<span class=\"ansible_none\">a[12ma</span>"
+
+      # real ansi codes
+      render_log("\e[0;32mok").must_equal "<span class=\"ansible_none\"></span><span class=\"ansible_32\">ok</span>"
+      render_log("\e[0;33mchanged").must_equal "<span class=\"ansible_none\"></span><span class=\"ansible_33\">changed</span>"
+      render_log("\e[0;36mskipping").must_equal "<span class=\"ansible_none\"></span><span class=\"ansible_36\">skipping</span>"
+    end
+
+    it "escapes html" do
+      result = render_log("<script>1</script>")
+      result.must_equal "<span class=\"ansible_none\">&lt;script&gt;1&lt;/script&gt;</span>"
+      assert result.html_safe?
+    end
+  end
+
+  describe "#markdown" do
+    it "converts markdown to html" do
+      result = markdown("**hello**")
+      result.must_equal "<p><strong>hello</strong></p>\n"
+      assert result.html_safe?
+    end
+
+    it "does not allow XSS" do
+      result = markdown("<script>alert(1)</script>")
+      result.must_equal "alert(1)\n"
+      assert result.html_safe?
+    end
+  end
+
+  describe "#global_lock" do
+    it "caches nil" do
+      Lock.expects(:global).returns []
+      global_lock.must_equal nil
+      global_lock.must_equal nil
+    end
+
+    it "caches values" do
+      Lock.expects(:global).returns [1]
+      global_lock.must_equal 1
+      global_lock.must_equal 1
+    end
+  end
+
+  describe "#controller_action" do
+    it "works" do
+      stubs(action_name: "foo")
+      controller_action.must_equal "test foo"
+    end
+  end
+
+  describe "#revision" do
+    it "works" do
+      revision.must_match /^[\da-f]{40}/
+    end
+  end
+
   describe "#deploy_link" do
     let(:project) { projects(:test) }
     let(:stage) { stages(:test_staging) }
@@ -85,7 +150,7 @@ describe ApplicationHelper do
   describe "#breadcrumb" do
     let(:stage) { stages(:test_staging) }
     let(:project) { projects(:test) }
-    let(:environment) { environments(:production) }
+    let(:environment) { Environment.find_by_param!('production') }
     let(:deploy_group) { deploy_groups(:pod1) }
 
     it "renders strings" do
@@ -133,6 +198,86 @@ describe ApplicationHelper do
     it "does not allow html injection" do
       stage.name = "<script>alert(1)</script>"
       breadcrumb(stage).must_equal "<ul class=\"breadcrumb\"><li class=\"\"><a href=\"/\">Home</a></li><li class=\"active\">&lt;script&gt;alert(1)&lt;/script&gt;</li></ul>"
+    end
+  end
+
+  describe "#flash_messages" do
+    let(:flash) { {} }
+
+    it "returns empty" do
+      flash_messages.must_equal []
+    end
+
+    it "returns unknown" do
+      flash[:foo] = "bar"
+      flash_messages.must_equal [[:foo, :info, "bar"]]
+    end
+
+    it "translates bootstrap classes" do
+      flash[:notice] = "N"
+      flash_messages.must_equal [[:notice, :info, "N"]]
+    end
+
+    it "returns arrays of messages" do
+      flash[:notice] = ["bar", "baz"]
+      flash_messages.must_equal [[:notice, :info, "bar"], [:notice, :info, "baz"]]
+    end
+  end
+
+  describe "#link_to_delete" do
+    it "builds a link" do
+      link_to_delete_button("/foo").must_include "Delete"
+    end
+  end
+
+  describe "#link_to_delete_button" do
+    it "builds a button" do
+      result = link_to_delete_button("/foo")
+      result.must_include "Delete"
+      result.must_include "Delete"
+    end
+  end
+
+  describe "#link_to_url" do
+    it "builds a link" do
+      link_to_url("b").must_equal "<a href=\"b\">b</a>"
+    end
+  end
+
+  describe "#render_time" do
+    let(:ts) { Time.parse("2016-04-18T17:46:10.337+00:00") }
+
+    it "formats time in utc" do
+      render_time(ts, 'utc').must_equal "<time datetime=\"2016-04-18T17:46:10Z\">April 18, 2016  5:46 PM UTC</time>"
+    end
+
+    it "formats time in local" do
+      render_time(ts, 'local').must_equal "<time datetime=\"2016-04-18T17:46:10+00:00\">April 18, 2016  5:46 PM</time>"
+    end
+
+    it "formats time relative" do
+      render_time(ts, 'foobar').must_equal "<span data-time=\"1461001570000\" class=\"mouseover\">Mon, 18 Apr 2016 17:46:10 +0000</span>"
+    end
+  end
+
+  describe "#static_render" do
+    it "can render nothing" do
+      static_render([]).must_equal nil
+    end
+
+    it "can render objects via their partials" do
+      ActionView::Base.any_instance.stubs(job_path: 'X')
+      static_render([jobs(:succeeded_test)]).must_include "cap staging deploy"
+    end
+  end
+
+  describe "#environments" do
+    it "loads all environments" do
+      environments.size.must_equal Environment.all.size
+    end
+
+    it "caches" do
+      environments.object_id.must_equal environments.object_id
     end
   end
 end

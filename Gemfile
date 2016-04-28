@@ -10,6 +10,7 @@ gem 'dotenv'
 
 gem 'dogstatsd-ruby', '~> 1.5.0', require: 'statsd'
 gem 'goldiloader'
+gem 'attr_encrypted', require: false
 
 gem 'sucker_punch', '~> 2.0'
 
@@ -29,9 +30,12 @@ gem 'kaminari'
 gem 'soft_deletion', '~> 0.4'
 gem 'dalli', '~> 2.7.0'
 gem 'active_model_serializers', '~> 0.8.0'
-
+gem 'paper_trail'
 gem 'sawyer', '~> 0.5'
 gem 'sse-rails-engine', '~> 1.4'
+
+# Hashicorp vault
+gem 'vault'
 
 # Logging
 gem 'lograge'
@@ -89,10 +93,8 @@ group :no_preload do
   gem 'active_hash', '~> 1.0'
   gem 'ansible'
   gem 'github-markdown', '~> 0.6.3'
-  gem 'newrelic_api'
   gem 'activeresource'
   gem 'coderay', '~> 1.1.0'
-  gem 'dogapi', '~> 1.9'
   gem 'net-http-persistent'
   gem 'concurrent-ruby'
 
@@ -118,6 +120,7 @@ group :test do
   gem 'maxitest'
   gem 'mocha', require: false
   gem 'webmock', require: false
+  gem 'single_cov'
   gem 'simplecov', require: false
   gem 'query_diet'
   gem 'codeclimate-test-reporter', require: false

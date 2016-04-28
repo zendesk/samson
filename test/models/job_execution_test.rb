@@ -1,5 +1,7 @@
 require_relative '../test_helper'
 
+SingleCov.covered! uncovered: 6
+
 describe JobExecution do
   include GitRepoTestHelper
 
@@ -220,6 +222,13 @@ describe JobExecution do
     ensure
       MultiLock.send(:unlock, project.id)
     end
+  end
+
+  it 'can access secrets' do
+    create_secret "#{project.permalink}/bar"
+    job.update(command: "echo '#{"secret://#{project.permalink}/bar"}'")
+    execute_job("master")
+    assert_equal 'MY-SECRET', last_line_of_output
   end
 
   describe 'when JobExecution is disabled' do

@@ -16,8 +16,9 @@
             <% Project.ordered_for_user(current_user).each do |project| %>
               <li filter-by="projectSearchQuery">
                 <%= link_to project do %>
-                  <span class="glyphicon <%= 'glyphicon-star' if current_user.starred_project?(project) %>">
-                    <%= '&nbsp;'.html_safe unless current_user.starred_project?(project) %>
+                  <% starred = current_user.starred_project?(project) %>
+                  <span class="glyphicon <%= 'glyphicon-star' if starred %>">
+                    <%= '&nbsp;'.html_safe unless starred %>
                   </span>
                   <%= project.name %>
                 <% end %>
@@ -29,7 +30,7 @@
           <li class="dropdown <%= 'active' if request.path.starts_with?('/dashboards') %>">
             <a href="#" class="dropdown-toggle" data-toggle="dropdown">Environments <b class="caret"></b></a>
             <ul class="dropdown-menu">
-              <% Environment.all.each do |env| %>
+              <% environments.each do |env| %>
                 <li>
                   <%= link_to dashboard_path(env) do %>
                     <span class="glyphicon">&nbsp;</span> <%= env.name %>
@@ -39,8 +40,8 @@
             </ul>
           </li>
         <% end %>
-        <li class="<%= 'active' if current_page?(controller: '/deploys', action: 'recent') %>">
-          <%= link_to "Recent Deploys", recent_deploys_path %>
+        <li class="<%= 'active' if current_page?(controller: '/deploys', action: 'search') %>">
+          <%= link_to "Deploys", search_deploys_path %>
         </li>
         <li class="current-deploys <%= 'active' if current_page?(controller: '/deploys', action: 'active') %>" ng-controller="currentDeployBadgeCtrl">
           <%= link_to active_deploys_path do %>
@@ -61,6 +62,7 @@
             <li><%= link_to "Projects", admin_projects_path %></li>
             <li><%= link_to "Commands", admin_commands_path %></li>
             <li><%= link_to "Users", admin_users_path %></li>
+            <li><%= link_to "Secrets", admin_secrets_path %></li>
             <%= Samson::Hooks.render_views(:admin_menu, self) %>
             <li class="divider"></li>
           <% end %>

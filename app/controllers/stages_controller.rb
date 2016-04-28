@@ -2,13 +2,12 @@ class StagesController < ApplicationController
   include ProjectLevelAuthorization
   include StagePermittedParams
 
-  skip_before_action :login_user, if: :badge?
+  skip_around_action :login_user, if: :badge?
 
   before_action :authorize_project_deployer!, unless: :badge?
   before_action :authorize_project_admin!, except: [:index, :show]
   before_action :check_token, if: :badge?
   before_action :find_stage, only: [:show, :edit, :update, :destroy, :clone]
-  before_action :get_environments, only: [:new, :create, :edit, :update, :clone]
 
   def index
     @stages = @project.stages
@@ -39,7 +38,6 @@ class StagesController < ApplicationController
 
   def new
     @stage = @project.stages.build(command_ids: Command.global.pluck(:id))
-    @stage.new_relic_applications.build
   end
 
   def create
@@ -50,26 +48,17 @@ class StagesController < ApplicationController
     if @stage.save
       redirect_to [@project, @stage]
     else
-      flash[:error] = @stage.errors.full_messages
-
-      @stage.new_relic_applications.build
-
       render :new
     end
   end
 
   def edit
-    @stage.new_relic_applications.build
   end
 
   def update
     if @stage.update_attributes(stage_params)
       redirect_to [@project, @stage]
     else
-      flash[:error] = @stage.errors.full_messages
-
-      @stage.new_relic_applications.build
-
       render :edit
     end
   end
@@ -81,7 +70,6 @@ class StagesController < ApplicationController
 
   def reorder
     Stage.reset_order(params[:stage_id])
-
     head :ok
   end
 
@@ -114,9 +102,5 @@ class StagesController < ApplicationController
 
   def find_stage
     @stage = current_project.stages.find_by_param!(params[:id])
-  end
-
-  def get_environments
-    @environments = Environment.all
   end
 end

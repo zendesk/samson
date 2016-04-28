@@ -172,17 +172,17 @@ class Deploy < ActiveRecord::Base
   # commands and deploy groups can change via many different paths,
   # so we validate once a user actually tries to execute the command
   def validate_stage_uses_deploy_groups_properly
-    if DeployGroup.enabled? && stage.deploy_groups.none? && stage.command.include?("$DEPLOY_GROUPS")
+    if DeployGroup.enabled? && stage.deploy_groups.none? && stage.script.include?("$DEPLOY_GROUPS")
       errors.add(:stage, "contains at least one command using the $DEPLOY_GROUPS environment variable, but there are no Deploy Groups associated with this stage.")
     end
   end
 
   def deploy_buddy
-    return unless BuddyCheck.enabled? && stage.production?
+    return unless stage.deploy_requires_approval?
 
     if buddy.nil? && pending?
       "(waiting for a buddy)"
-    elsif buddy.nil? || (user.id == buddy.id)
+    elsif buddy.nil? || job.user_id == buddy_id
       "(without a buddy)"
     else
       "(with #{buddy.name})"

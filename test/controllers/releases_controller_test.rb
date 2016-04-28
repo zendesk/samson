@@ -1,5 +1,7 @@
 require_relative '../test_helper'
 
+SingleCov.covered!
+
 describe ReleasesController do
   let(:project) { projects(:test) }
   let(:release) { releases(:test) }

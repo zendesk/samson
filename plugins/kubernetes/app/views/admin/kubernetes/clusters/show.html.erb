@@ -1,0 +1,58 @@
+<h1>Kubernetes Cluster</h1>
+
+<section class="form-horizontal">
+  <div class="form-group">
+    <label class="col-lg-2 control-label">Cluster Name</label>
+    <div class="col-lg-4">
+      <p class="form-control-static"><%= @cluster.name %></p>
+    </div>
+  </div>
+
+  <div class="form-group">
+    <label class="col-lg-2 control-label">Description</label>
+    <div class="col-lg-4">
+      <p class="form-control-static"><%= @cluster.description %></p>
+    </div>
+  </div>
+
+  <div class="form-group">
+    <label class="col-lg-2 control-label">URL</label>
+    <div class="col-lg-4">
+      <p class="form-control-static"><%= @cluster.client.api_endpoint %></p>
+    </div>
+  </div>
+
+  <div class="form-group">
+    <label class="col-lg-2 control-label">Use SSL?</label>
+    <div class="col-lg-4">
+      <p class="form-control-static"><%= @cluster.context.use_ssl? ? 'Yes' : 'No' %></p>
+    </div>
+  </div>
+
+  <div class="form-group">
+    <label class="col-lg-2 control-label">Username</label>
+    <div class="col-lg-4">
+      <p class="form-control-static"><%= @cluster.username %></p>
+    </div>
+  </div>
+
+  <div class="form-group">
+    <label class="col-lg-2 control-label">Deploy Groups</label>
+    <div class="col-lg-4">
+      <p class="form-control-static">
+        <% @cluster.deploy_groups.each do |dg| %>
+          <%= link_to dg.name, admin_deploy_group_path(dg)  %>
+          (ns: <%= dg.kubernetes_namespace %>)
+          <br/>
+        <% end %>
+      </p>
+    </div>
+  </div>
+
+  <div class="form-group">
+    <div class="col-lg-offset-2 col-lg-10">
+      <%= link_to "Edit", edit_admin_kubernetes_cluster_path(@cluster), class: "btn btn-primary" %>
+      <%= link_to "Back", admin_kubernetes_clusters_path, class: "btn btn-default" %>
+    </div>
+  </div>
+</section>

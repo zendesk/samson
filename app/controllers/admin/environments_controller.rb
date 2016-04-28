@@ -4,11 +4,9 @@ class Admin::EnvironmentsController < ApplicationController
   before_action :environment, only: [:edit, :update, :destroy]
 
   def index
-    @environments = Environment.all
-
     respond_to do |format|
       format.html
-      format.json { render json: @environments }
+      format.json { render json: Environment.all }
     end
   end
 
@@ -23,7 +21,6 @@ class Admin::EnvironmentsController < ApplicationController
       flash[:notice] = "Successfully saved environment: #{@environment.name}"
       redirect_to action: 'index'
     else
-      flash[:error] = @environment.errors.full_messages
       render 'edit'
     end
   end
@@ -33,7 +30,6 @@ class Admin::EnvironmentsController < ApplicationController
       flash[:notice] = "Successfully saved environment: #{environment.name}"
       redirect_to action: 'index'
     else
-      flash[:error] = environment.errors.full_messages
       render 'edit'
     end
   end

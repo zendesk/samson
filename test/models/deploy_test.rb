@@ -1,65 +1,101 @@
 require_relative '../test_helper'
 
+SingleCov.covered! uncovered: 38
+
 describe Deploy do
   let(:project) { projects(:test) }
   let(:user) { users(:deployer) }
   let(:user2) { users(:admin) }
   let(:stage) { stages(:test_staging) }
+  let(:deploy) { deploys(:succeeded_test) }
 
-  describe "#deploy_buddy" do
-    setup { @deploy = create_deploy! }
+  describe "#summary" do
+    let!(:deploy) { create_deploy! }
 
-    describe "no buddy message at all" do
-      it "returns no buddy name when BuddyCheck is not enabled" do
-        BuddyCheck.stubs(:enabled?).returns(false)
-        @deploy.summary.must_match(/#{user.name}  deployed/)
-      end
-
-      it "returns no buddy if we are not deploying to production" do
-        @deploy.stubs(:production?).returns(false)
-        @deploy.summary.must_match(/#{user.name}  deployed/)
-      end
+    it "shows no buddy" do
+      deploy.summary.must_equal "Deployer  deployed baz to Staging"
     end
 
-    describe "when a buddy message should be included" do
-      setup do
-        BuddyCheck.stubs(:enabled?).returns(true)
-        stage.stubs(:production?).returns(true)
-        @deploy.stubs(:stage).returns(stage)
+    it "shows soft delete user" do
+      deploy.user.soft_delete!
+      deploy.reload
+      deploy.summary.must_equal "Deployer  deployed baz to Staging"
+    end
+
+    it "shows hard delete user" do
+      deploy.user.delete
+      deploy.reload
+      deploy.summary.must_equal "Deleted User  deployed baz to Staging"
+    end
+
+    describe "when buddy was required" do
+      before { Stage.any_instance.stubs(:deploy_requires_approval?).returns true }
+
+      describe "with a buddy" do
+        before { deploy.update_column(:buddy_id, user2.id) }
+
+        it "shows the buddy" do
+          deploy.summary.must_equal "Deployer (with Admin) deployed baz to Staging"
+        end
+
+        it "shows soft delete buddy" do
+          deploy.buddy.soft_delete!
+          deploy.reload
+          deploy.summary.must_equal "Deployer (with Admin) deployed baz to Staging"
+        end
+
+        it "shows hard delete buddy" do
+          deploy.buddy.delete
+          deploy.reload
+          deploy.summary.must_equal "Deployer (with Deleted User) deployed baz to Staging"
+        end
       end
 
-      it "returns user name if buddy is soft deleted" do
-        @deploy.confirm_buddy!(user2)
-        user2.soft_delete!
-        @deploy.reload
-        @deploy.summary.must_include(user2.name)
+      it "shows waiting when deploy is pending" do
+        deploy.job.status = 'pending'
+        deploy.summary.must_equal "Deployer (waiting for a buddy) is about to deploy baz to Staging"
       end
 
-      it "returns 'Deleted User' if buddy is hard deleted" do
-        @deploy.confirm_buddy!(user2)
-        user2.destroy!
-        @deploy.reload
-        @deploy.summary.must_include(NullUser.new.name)
+      it "shows that there was no buddy" do
+        deploy.summary.must_equal "Deployer (without a buddy) deployed baz to Staging"
       end
 
-      it "returns 'waiting for a buddy' when waiting for a buddy" do
-        @deploy.stubs(:pending?).returns(true)
-        @deploy.summary.must_match(/waiting for a buddy/)
+      it "shows that there was no buddy when skipping" do
+        deploy.buddy = user
+        deploy.summary.must_equal "Deployer (without a buddy) deployed baz to Staging"
       end
+    end
+  end
 
-      it "returns 'without a buddy' when bypassed" do
-        @deploy.stubs(:buddy).returns(user)
-        @deploy.summary.must_match(/without a buddy/)
+  describe "#summary_for_process" do
+    it "renders" do
+      deploy.job.stubs(pid: 123)
+      deploy.summary_for_process.gsub(/\d+/, "DD").must_equal "ProcessID: DD Running: DD seconds"
+    end
+  end
 
-        @deploy.stubs(:buddy).returns(nil)
-        @deploy.summary.must_match(/without a buddy/)
-      end
+  describe "#summary_for_timeline" do
+    it "renders" do
+      deploy.summary_for_timeline.must_equal "staging was deployed to Staging"
+    end
+  end
 
-      it "should return the name of the buddy when not bypassed" do
-        other_user = users(:deployer_buddy)
-        @deploy.stubs(:buddy).returns(other_user)
-        @deploy.summary.must_match(/#{other_user.name}/)
-      end
+  describe "#summary_for_email" do
+    it "renders" do
+      deploy.summary_for_email.must_equal "Super Admin deployed Project to Staging (staging)"
+    end
+  end
+
+  describe "#commit" do
+    before { deploy.job.commit = 'abcdef' }
+
+    it "returns the jobs commit" do
+      deploy.commit.must_equal "abcdef"
+    end
+
+    it "falls back to deploys reference" do
+      deploy.job.commit = nil
+      deploy.commit.must_equal "staging"
     end
   end
 

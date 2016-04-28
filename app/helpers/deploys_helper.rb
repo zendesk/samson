@@ -31,10 +31,6 @@ module DeploysHelper
     @deploy.pending? && JobExecution.queued?(@deploy.job_id, key: @deploy.stage_id)
   end
 
-  def newrelic_enabled_for_deploy?
-    NewRelicApi.api_key.present? && @deploy.stage.new_relic_applications.any?
-  end
-
   def deploy_page_title
     "#{@deploy.stage.name} deploy (#{@deploy.status}) - #{@project.name}"
   end

@@ -61,29 +61,6 @@ describe DeploysController do
       end
     end
 
-    describe "a GET to :recent" do
-      before { get :recent, project_id: project_id, format: format }
-
-      with_and_without_project do
-        describe "as html" do
-          let(:format) { :html }
-
-          it "renders the template" do
-            assert_template :recent
-          end
-        end
-
-        describe "as json" do
-          let(:format) { :json }
-
-          it "renders json" do
-            assert_equal "application/json", @response.content_type
-            assert_response :ok
-          end
-        end
-      end
-    end
-
     describe "a GET to :active" do
       before { get :active, project_id: project_id, format: format }
 
@@ -143,7 +120,7 @@ describe DeploysController do
 
     describe "a GET to :show" do
       describe "with a valid deploy" do
-        setup { get :show, project_id: project.to_param, id: deploy.to_param }
+        before { get :show, project_id: project.to_param, id: deploy.to_param }
 
         it "renders the template" do
           assert_template :show
@@ -157,7 +134,7 @@ describe DeploysController do
       end
 
       describe "with format .text" do
-        setup { get :show, format: :text, project_id: project.to_param, id: deploy.to_param }
+        before { get :show, format: :text, project_id: project.to_param, id: deploy.to_param }
 
         it "responds with a plain text file" do
           assert_equal response.content_type, "text/plain"
@@ -194,8 +171,14 @@ describe DeploysController do
         end
       end
 
-      it "returns a 200" do
+      it "it renders json" do
         get :search, format: "json"
+        assert_response :ok
+      end
+
+      it "renders html" do
+        get :search, format: "html"
+        assert_equal "text/html", @response.content_type
         assert_response :ok
       end
 
@@ -219,7 +202,12 @@ describe DeploysController do
         deploys["deploys"].count.must_equal 2
       end
 
-      it "failes with invalid status" do
+      it "ignores empty status" do
+        get :search, format: "json", status: ' '
+        assert_response 200
+      end
+
+      it "fails with invalid status" do
         get :search, format: "json", status: 'bogus_status'
         assert_response 400
       end
@@ -360,7 +348,7 @@ describe DeploysController do
 
     describe "a DELETE to :destroy" do
       describe "with a deploy owned by the user" do
-        setup do
+        before do
           DeployService.stubs(:new).with(user).returns(deploy_service)
           Job.any_instance.stubs(:started_by?).returns(true)
           deploy_service.expects(:stop!).once
@@ -374,7 +362,7 @@ describe DeploysController do
       end
 
       describe "with a deploy not owned by the user" do
-        setup do
+        before do
           deploy_service.expects(:stop!).never
           Deploy.any_instance.stubs(:started_by?).returns(false)
           User.any_instance.stubs(:is_admin?).returns(false)

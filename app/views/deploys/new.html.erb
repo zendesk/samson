@@ -5,18 +5,7 @@
 <section>
   <%= form_for [@project, @stage, @deploy], html: { class: "form-horizontal" }, data: { 'commit-status-url' => project_commit_statuses_path(@project), 'confirm-url' => confirm_project_stage_deploys_path(@project, @stage), 'confirmation' => @stage.confirm? } do |form| %>
     <fieldset>
-      <% if @deploy.errors.any? %>
-        <div class="row">
-          <div class="col-lg-5 col-lg-offset-1 alert alert-warning">
-            <p><strong>Ooops!</strong> There was an error while trying to start the deploy:</p>
-            <ul>
-              <% @deploy.errors.full_messages.each do |message| %>
-                <li><%= message %></li>
-              <% end %>
-            </ul>
-          </div>
-        </div>
-      <% end %>
+      <%= render 'shared/errors', object: @deploy %>
 
       <div class="form-group">
         <%= form.label :reference, "Tag or SHA", class: "col-lg-2 control-label" %>

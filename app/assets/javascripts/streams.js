@@ -18,9 +18,15 @@ function startStream() {
     var origin = $('meta[name=deploy-origin]').first().attr('content');
     var source = new EventSource(origin + streamUrl, { withCredentials: true });
 
-    var addLine = function(data) {
+    var addLine = function(data, replace) {
       var msg = JSON.parse(data).msg;
+      if (replace) {
+        $messages.children().last().remove();
+      } else {
+        msg = "\n" + msg;
+      }
       $messages.append(msg);
+
       if (following) {
         $messages.scrollTop($messages[0].scrollHeight);
       }
@@ -63,8 +69,7 @@ function startStream() {
     }, false);
 
     source.addEventListener('replace', function(e) {
-      $messages.children().last().remove();
-      addLine(e.data);
+      addLine(e.data, true);
     }, false);
 
     source.addEventListener('started', function(e) {

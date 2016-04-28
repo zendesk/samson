@@ -1,5 +1,7 @@
 require_relative '../test_helper'
 
+SingleCov.covered! uncovered: 8
+
 describe Stage do
   subject { stages(:test_staging) }
   let(:stage) { subject }
@@ -55,7 +57,7 @@ describe Stage do
       end
 
       it 'add new command to the end' do
-        subject.command.must_equal("#{commands(:echo).command}\ntest")
+        subject.script.must_equal("#{commands(:echo).command}\ntest")
       end
     end
 
@@ -69,7 +71,7 @@ describe Stage do
       end
 
       it 'joins all commands based on position' do
-        subject.command.must_equal("test\n#{commands(:echo).command}")
+        subject.script.must_equal("test\n#{commands(:echo).command}")
       end
     end
 
@@ -77,7 +79,7 @@ describe Stage do
       before { subject.commands.clear }
 
       it 'is empty' do
-        subject.command.must_be_empty
+        subject.script.must_be_empty
       end
     end
   end
@@ -270,35 +272,6 @@ describe Stage do
     end
   end
 
-  describe "#datadog_tags_as_array" do
-    it "returns an array of the tags" do
-      subject.datadog_tags = " foo; bar; baz "
-      subject.datadog_tags_as_array.must_equal ["foo", "bar", "baz"]
-    end
-
-    it "uses only semicolon as separate" do
-      subject.datadog_tags = " foo bar: baz "
-      subject.datadog_tags_as_array.must_equal ["foo bar: baz"]
-    end
-
-    it "returns an empty array if no tags have been configured" do
-      subject.datadog_tags = nil
-      subject.datadog_tags_as_array.must_equal []
-    end
-  end
-
-  describe "#send_datadog_notifications?" do
-    it "returns true if the stage has a Datadog tag configured" do
-      subject.datadog_tags = "env:beta"
-      subject.send_datadog_notifications?.must_equal true
-    end
-
-    it "returns false if the stage does not have a Datadog tag configured" do
-      subject.datadog_tags = nil
-      subject.send_datadog_notifications?.must_equal false
-    end
-  end
-
   describe "#automated_failure_emails" do
     let(:user) { users(:super_admin) }
     let(:deploy) do
@@ -362,8 +335,6 @@ describe Stage do
     before do
       subject.notify_email_address = "test@test.ttt"
       subject.flowdock_flows = [FlowdockFlow.new(name: "test", token: "abcxyz", stage_id: subject.id)]
-      subject.datadog_tags = "xyz:abc"
-      subject.new_relic_applications = [NewRelicApplication.new(name: "test", stage_id: subject.id)]
       subject.save
 
       @clone = Stage.build_clone(subject)
@@ -372,11 +343,6 @@ describe Stage do
     it "returns an unsaved copy of the given stage with exactly the same everything except id" do
       @clone.attributes.except("id").must_equal subject.attributes.except("id")
       @clone.id.wont_equal subject.id
-    end
-
-    it "copies over the new relic applications" do
-      assert_equal @clone.new_relic_applications.map { |n| n.attributes.except("stage_id", "id") },
-        subject.new_relic_applications.map { |n| n.attributes.except("stage_id", "id") }
     end
   end
 
@@ -417,17 +383,6 @@ describe Stage do
     end
   end
 
-  describe '#datadog_monitors' do
-    it "is empty by default" do
-      stage.datadog_monitors.must_equal []
-    end
-
-    it "builds multiple monitors" do
-      stage.datadog_monitor_ids = "1,2, 4"
-      stage.datadog_monitors  .map(&:id).must_equal [1,2,4]
-    end
-  end
-
   describe '#save' do
     it 'touches the stage and project when only changing deploy_groups for cache invalidation' do
       stage_updated_at = stage.updated_at
@@ -446,30 +401,6 @@ describe Stage do
     end
   end
 
-  describe "#ensure_valid_bypass" do
-    before { stage.deploy_groups.clear }
-
-    it "is valid when not production and not bypassed" do
-      assert_valid stage
-    end
-
-    it "is valid when production and not bypassed" do
-      stage.production = true
-      assert_valid stage
-    end
-
-    it "is valid when production and bypassed" do
-      stage.production = true
-      stage.no_code_deployed = true
-      assert_valid stage
-    end
-
-    it "invalid when not production and bypassed" do
-      stage.no_code_deployed = true
-      refute_valid stage
-    end
-  end
-
   describe "#destroy" do
     it "soft deletes all it's StageCommand" do
       assert_difference "StageCommand.count", -1 do
@@ -479,6 +410,64 @@ describe Stage do
       assert_difference "StageCommand.count", +1 do
         stage.soft_undelete!
       end
+    end
+  end
+
+  describe "#command_updated_at" do
+    let(:t) { 3.seconds.from_now }
+
+    it "is nil for new" do
+      Stage.new.command_updated_at.must_equal nil
+    end
+
+    it "ignores updated_at since that is changed on every deploy" do
+      stage.command_associations.clear
+      stage.command_updated_at.must_equal nil
+    end
+
+    it "is updated when command content changed" do
+      stage.commands.first.update_column(:updated_at, t)
+      stage.command_updated_at.to_i.must_equal t.to_i
+    end
+
+    it "is updated when a new command was added" do
+      stage.command_associations.first.update_column(:updated_at, t)
+      stage.command_updated_at.to_i.must_equal t.to_i
+    end
+  end
+
+  describe "versioning" do
+    around { |t| PaperTrail.with_logging(&t) }
+
+    it "tracks important changes" do
+      stage.update_attribute(:name, "Foo")
+      stage.versions.size.must_equal 1
+    end
+
+    it "ignores unimportant changes" do
+      stage.update_attributes(order: 5, updated_at: 1.second.from_now)
+      stage.versions.size.must_equal 0
+    end
+
+    it "records script" do
+      stage.record_script_change
+      YAML.load(stage.versions.first.object)['script'].must_equal stage.script
+    end
+
+    it "can restore ... but loses script" do
+      old_name = stage.name
+      stage.record_script_change
+      stage.update_column(:name, "NEW-NAME")
+      stage.commands.first.update_column(:command, 'NEW')
+      stage.versions.last.reify.save!
+      stage.reload
+      stage.name.must_equal old_name
+      stage.script.must_equal 'NEW'
+    end
+
+    it "does not trigger multiple times when destroying" do
+      stage.destroy
+      stage.versions.size.must_equal 1
     end
   end
 end

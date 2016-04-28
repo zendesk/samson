@@ -4,11 +4,12 @@ class Stage < ActiveRecord::Base
 
   has_soft_deletion default_scope: true unless self < SoftDeletion::Core
 
+  has_paper_trail skip: [:order, :updated_at, :created_at]
+
   belongs_to :project, touch: true
 
   has_many :deploys, dependent: :destroy
   has_many :webhooks, dependent: :destroy
-  has_many :new_relic_applications
 
   has_one :lock
 
@@ -22,9 +23,6 @@ class Stage < ActiveRecord::Base
   default_scope { order(:order) }
 
   validates :name, presence: true, uniqueness: { scope: [:project, :deleted_at] }
-  validate :validate_bypass_used_correctly
-
-  accepts_nested_attributes_for :new_relic_applications, allow_destroy: true, reject_if: :no_newrelic_name?
 
   before_create :ensure_ordering
 
@@ -37,7 +35,6 @@ class Stage < ActiveRecord::Base
   def self.build_clone(old_stage)
     new(old_stage.attributes.except("id")).tap do |new_stage|
       Samson::Hooks.fire(:stage_clone, old_stage, new_stage)
-      new_stage.new_relic_applications.build(old_stage.new_relic_applications.map { |app| app.attributes.except("id", "updated_at", "created_at") })
       new_stage.command_ids = old_stage.command_ids
     end
   end
@@ -97,7 +94,7 @@ class Stage < ActiveRecord::Base
 
   def create_deploy(user, attributes = {})
     deploys.create(attributes.merge(release: !no_code_deployed)) do |deploy|
-      deploy.build_job(project: project, user: user, command: command)
+      deploy.build_job(project: project, user: user, command: script)
     end
   end
 
@@ -121,14 +118,6 @@ class Stage < ActiveRecord::Base
 
   def global_name
     "#{name} - #{project.name}"
-  end
-
-  def datadog_tags_as_array
-    datadog_tags.to_s.split(";").map(&:strip)
-  end
-
-  def send_datadog_notifications?
-    datadog_tags_as_array.any?
   end
 
   def send_github_notifications?
@@ -168,15 +157,23 @@ class Stage < ActiveRecord::Base
     emails.uniq.presence
   end
 
-  def datadog_monitors
-    datadog_monitor_ids.to_s.split(/, ?/).map { |id| DatadogMonitor.new(id) }
+  def command_updated_at
+    [
+      command_associations.maximum(:updated_at),
+      commands.maximum(:updated_at)
+    ].compact.max
+  end
+
+  def record_script_change
+    record_update true
+  end
+
+  def destroy
+    mark_for_destruction
+    super
   end
 
   private
-
-  def no_newrelic_name?(newrelic_attrs)
-    newrelic_attrs['name'].blank?
-  end
 
   def permalink_base
     name
@@ -191,9 +188,8 @@ class Stage < ActiveRecord::Base
     self.order = project.stages.maximum(:order).to_i + 1
   end
 
-  def validate_bypass_used_correctly
-    if no_code_deployed? && !production?
-      errors.add(:no_code_deployed, 'makes no sense when set but not being in production')
-    end
+  # overwrites papertrail to record script
+  def object_attrs_for_paper_trail(attributes)
+    super(attributes.merge('script' => script))
   end
 end

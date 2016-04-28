@@ -1,0 +1,44 @@
+<%= form_for [:admin, @cluster], html: { class: "form-horizontal" } do |form| %>
+  <%= render 'shared/errors', object: @cluster %>
+
+  <fieldset>
+    <div class="form-group">
+      <%= form.label :name, 'Cluster Name', class: "col-lg-2 control-label" %>
+      <div class="col-lg-2">
+        <%= form.text_field :name, class: "form-control" %>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <%= form.label :description, class: "col-lg-2 control-label" %>
+      <div class="col-lg-4">
+        <%= form.text_field :description, class: "form-control" %>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <%= form.label :config_filepath, 'Config File path', class: "col-lg-2 control-label" %>
+      <div class="col-lg-4">
+        <%= form.text_field :config_filepath, class: "form-control" %>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <%= form.label :config_context, 'Context', class: "col-lg-2 control-label" %>
+      <div class="col-lg-2">
+        <% if @context_options.any? %>
+          <%= form.select :config_context, @context_options, {}, { class: 'form-control' } %>
+        <% else %>
+          <%= form.text_field :config_context, class: "form-control" %>
+        <% end %>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <div class="col-lg-offset-2 col-lg-10">
+        <%= form.submit @cluster.persisted? ? 'Save' : 'Create', class: "btn btn-primary" %>
+        <%= link_to "Cancel", :back, class: 'btn btn-default' %>
+      </div>
+    </div>
+  </fieldset>
+<% end %>

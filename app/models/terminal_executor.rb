@@ -12,15 +12,22 @@ require 'open3'
 #   output.string #=> "hello\r\nworld\r\n"
 #
 class TerminalExecutor
+  SECRET_PREFIX = "secret://"
+
   attr_reader :pid, :pgid, :output
 
-  def initialize(output, verbose: false)
+  def initialize(output, verbose: false, project: nil)
     @output = output
     @verbose = verbose
+    @project = project
   end
 
   def execute!(*commands)
-    commands.map! { |c| "echo » #{c.shellescape}\n#{c}" } if @verbose
+    if @verbose
+      commands.map! { |c| "echo » #{c.shellescape}\n#{resolve_secrets(c)}" }
+    else
+      commands.map! { |c| resolve_secrets(c) }
+    end
     commands.unshift("set -e")
 
     execute_command!(commands.join("\n"))
@@ -32,22 +39,48 @@ class TerminalExecutor
 
   private
 
+  def resolve_secrets(command)
+    allowed_namespaces = ['global']
+    allowed_namespaces << @project.permalink if @project
+    command.gsub(%r{\b#{SECRET_PREFIX}(#{SecretStorage::SECRET_KEY_REGEX})\b}) do
+      key = $1
+      if key.start_with?(*allowed_namespaces.map { |n| "#{n}/" })
+        SecretStorage.read(key, include_secret: true).fetch(:value)
+      else
+        raise ActiveRecord::RecordNotFound, "Not allowed to access key #{key}"
+      end
+    end
+  end
+
   def execute_command!(command)
-    Open3.popen2e(whitelisted_env, command, in: '/dev/null', unsetenv_others: true, pgroup: true)  do |stdin, oe, wait_thr|
-      @pid = wait_thr.pid
+    Tempfile.open('samson-execute') do |f|
+      f.write command
+      f.flush
+      options = {in: '/dev/null', unsetenv_others: true, pgroup: true}
 
-      @pgid = begin
-        Process.getpgid(@pid)
-      rescue Errno::ESRCH
-        nil
+      # http://stackoverflow.com/questions/1401002/trick-an-application-into-thinking-its-stdin-is-interactive-not-a-pipe
+      script = if RbConfig::CONFIG["target_os"].include?("darwin")
+        "script -q /dev/null sh #{f.path}"
+      else
+        "script -qfec 'sh #{f.path}'"
       end
 
-      oe.each(256) do |line|
-        @output.write line.gsub("\n", "\r\n")
-      end
+      Open3.popen2e(whitelisted_env, script, options)  do |_stdin, oe, wait_thr|
+        @pid = wait_thr.pid
 
-      wait_thr.value
-    end.success?
+        @pgid = begin
+          Process.getpgid(@pid)
+        rescue Errno::ESRCH
+          nil
+        end
+
+        oe.each(256) do |line|
+          @output.write line.gsub(/\r?\n/, "\r\n") # script on travis returns \n and \r\n on osx and our servers
+        end
+
+        wait_thr.value
+      end.success?
+    end
   end
 
   def whitelisted_env
@@ -59,4 +92,3 @@ class TerminalExecutor
     ENV.to_h.slice(*whitelist)
   end
 end
-

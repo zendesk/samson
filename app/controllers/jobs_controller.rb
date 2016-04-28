@@ -52,11 +52,13 @@ class JobsController < ApplicationController
   end
 
   def destroy
-    if @job.can_be_stopped_by?(current_user)
+    # if @job.can_be_stopped_by?(current_user)
       @job.stop!
-    else
-      flash[:error] = "You do not have privileges to stop this job."
-    end
+    # else
+      # FIXME this can never happen since can_be_stopped_by?
+      # is always true for project admins, which is a before filter
+      # flash[:error] = "You do not have privileges to stop this job."
+    # end
 
     redirect_to [@project, @job]
   end

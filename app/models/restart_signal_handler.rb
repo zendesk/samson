@@ -33,6 +33,6 @@ class RestartSignalHandler
     puts "Passing SIGUSR2 on."
 
     # Pass USR2 to the underlying server
-    Process.kill('SIGUSR2', $$)
+    Process.kill('SIGUSR2', Process.pid)
   end
 end

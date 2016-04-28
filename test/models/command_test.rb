@@ -1,5 +1,7 @@
 require_relative '../test_helper'
 
+SingleCov.covered! uncovered: 2
+
 describe Command do
   describe '.for_object' do
     let(:stage) { stages(:test_staging) }
@@ -28,6 +30,16 @@ describe Command do
       Command.for_object(stage).must_equal(
         stage.commands + [command] + (Command.global - stage.commands - [command])
       )
+    end
+  end
+
+  describe "#trigger_stage_change" do
+    it "triggers a version when command changes" do
+      PaperTrail.with_logging do
+        command = commands(:echo)
+        commands(:echo).update_attribute(:command, 'new')
+        command.stages.first.versions.size.must_equal 1
+      end
     end
   end
 end

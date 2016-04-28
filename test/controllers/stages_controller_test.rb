@@ -1,7 +1,10 @@
 require_relative '../test_helper'
 
+SingleCov.covered!
+
 describe StagesController do
   subject { stages(:test_staging) }
+  let(:project) { subject.project }
 
   unauthorized :get, :show, project_id: :foo, id: 1, token: Rails.application.config.samson.badge_token
   unauthorized :get, :index, project_id: :foo, token: Rails.application.config.samson.badge_token, format: :svg
@@ -41,9 +44,10 @@ describe StagesController do
   end
 
   as_a_viewer do
-    unauthorized :get, :show, project_id: :foo, id: 1
+    unauthorized :get, :index, project_id: :foo
     unauthorized :get, :new, project_id: :foo
     unauthorized :post, :create, project_id: :foo
+    unauthorized :get, :show, project_id: :foo, id: 1
     unauthorized :get, :edit, project_id: :foo, id: 1
     unauthorized :patch, :update, project_id: :foo, id: 1
     unauthorized :delete, :destroy, project_id: :foo, id: 1
@@ -52,6 +56,19 @@ describe StagesController do
   end
 
   as_a_project_deployer do
+    describe "#index" do
+      it "renders html" do
+        get :index, project_id: project
+        assert_template 'index'
+      end
+
+      it "renders json" do
+        get :index, project_id: project, format: 'json'
+        response.body.must_match /\A\{\"stages\":\[/m
+        assert_response :success
+      end
+    end
+
     describe 'GET to :show' do
       describe 'valid' do
         before do
@@ -142,7 +159,7 @@ describe StagesController do
         it 'is created' do
           subject.persisted?.must_equal(true)
           subject.command_ids.must_include(commands(:echo).id)
-          subject.command.must_equal(commands(:echo).command + "\ntest2 command\ntest command")
+          subject.script.must_equal(commands(:echo).command + "\ntest2 command\ntest command")
         end
 
         it 'redirects' do
@@ -175,7 +192,6 @@ describe StagesController do
 
         it 'renders' do
           assert_template :edit
-          assigns(:environments).wont_be_nil
         end
 
         it 'renders with no environments configured' do

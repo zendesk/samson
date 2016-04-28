@@ -9,8 +9,8 @@ module SamsonKubernetes
   end
 end
 
-Samson::Hooks.view :project_tabs_view, 'kubernetes_project/project_tab'
-Samson::Hooks.view :admin_menu, 'kubernetes_project/admin_menu'
+Samson::Hooks.view :project_tabs_view, 'samson_kubernetes/project_tab'
+Samson::Hooks.view :admin_menu, 'samson_kubernetes/admin_menu'
 
 Samson::Hooks.callback :deploy_group_permitted_params do
   { cluster_deploy_group_attributes: [:kubernetes_cluster_id, :namespace] }

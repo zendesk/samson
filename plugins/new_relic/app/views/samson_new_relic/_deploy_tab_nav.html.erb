@@ -1,0 +1,10 @@
+<% if newrelic_enabled_for_deploy? %>
+  <li>
+    <a href="#newrelic" id="newrelic-tab"
+       data-enabled="<%= @deploy.stage.new_relic_applications.any? %>"
+       data-url="<%= project_stage_new_relic_path(@project, @deploy.stage, format: :json) %>"
+       data-interval="60000" data-toggle="tab">
+      New Relic
+    </a>
+  </li>
+<% end %>

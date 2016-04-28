@@ -1,4 +1,6 @@
 <%= form_for [project, stage], html: { class: "form-horizontal" } do |form| %>
+  <%= render 'shared/errors', object: stage %>
+
   <fieldset>
     <%= render 'stages/fields', form: form %>
   </fieldset>

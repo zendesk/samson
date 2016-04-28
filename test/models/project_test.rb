@@ -1,5 +1,7 @@
 require_relative '../test_helper'
 
+SingleCov.covered! uncovered: 13
+
 describe Project do
   let(:project) { projects(:test) }
   let(:author) { users(:deployer) }
@@ -117,14 +119,14 @@ describe Project do
       project = Project.create!(params)
       stage = project.stages.where(name: 'Production').first
       stage.wont_be_nil
-      stage.command.must_equal("echo hello\ntest command")
+      stage.script.must_equal("echo hello\ntest command")
     end
   end
 
   describe 'project repository initialization' do
     let(:repository_url) { 'git@github.com:zendesk/demo_apps.git' }
 
-    it 'should not clean the project when the project is created' do
+    it 'does not clean the project when the project is created' do
       project = Project.new(name: 'demo_apps', repository_url: repository_url)
       project.expects(:clean_old_repository).never
       project.save

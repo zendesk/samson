@@ -1,5 +1,5 @@
 class Integrations::BaseController < ApplicationController
-  skip_before_action :login_user
+  skip_around_action :login_user
   skip_before_action :verify_authenticity_token
 
   def create

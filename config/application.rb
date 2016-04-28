@@ -6,6 +6,8 @@ require 'rails/all'
 # you've limited to :test, :development, or :production.
 Bundler.require(:default, :assets, Rails.env)
 
+Dotenv.load(Bundler.root.join(Rails.env.test? ? '.env.test' : '.env'))
+
 module Samson
   class Application < Rails::Application
     # Settings in config/environments/* take precedence over those specified here.
@@ -40,6 +42,9 @@ module Samson
     end
 
     config.cache_store = :dalli_store, servers, options
+
+    # Raise exceptions
+    config.active_record.raise_in_transactional_callbacks = true
 
     # Allow streaming
     config.preload_frameworks = true

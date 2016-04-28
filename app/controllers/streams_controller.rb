@@ -32,7 +32,7 @@ class StreamsController < ApplicationController
     when :started, :finished
       status_response(event)
     when :viewers
-      viewers = data.uniq.reject {|user| user == current_user}
+      viewers = data.to_a.uniq.reject {|user| user == current_user}
       viewers.to_json(only: [:id, :name])
     else
       JSON.dump(msg: render_log(data))

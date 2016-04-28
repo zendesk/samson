@@ -39,9 +39,10 @@ class DockerBuilderService
 
     output_buffer.puts("### Running Docker build")
 
-    build.docker_image = Docker::Image.build_from_dir(tmp_dir) do |output_chunk|
+    build.docker_image = Docker::Image.build_from_dir(tmp_dir, {}, Docker.connection, registry_credentials) do |output_chunk|
       handle_output_chunk(output_chunk)
     end
+    output_buffer.puts('### Docker build complete')
   rescue Docker::Error::DockerError => e
     # If a docker error is raised, consider that a "failed" job instead of an "errored" job
     output_buffer.puts("Docker build failed: #{e.message}")
@@ -52,9 +53,9 @@ class DockerBuilderService
   def push_image(tag)
     build.docker_ref = tag.presence || build.label.try(:parameterize).presence || 'latest'
     build.docker_repo_digest = nil
-    build.docker_image.tag(repo: project.docker_repo, tag: build.docker_ref, force: true)
+    output_buffer.puts("### Tagging and pushing Docker image to #{project.docker_repo}:#{build.docker_ref}")
 
-    output_buffer.puts("### Pushing Docker image to #{project.docker_repo}:#{build.docker_ref}")
+    build.docker_image.tag(repo: project.docker_repo, tag: build.docker_ref, force: true)
 
     build.docker_image.push(registry_credentials) do |output_chunk|
       parsed_chunk = handle_output_chunk(output_chunk)
@@ -98,11 +99,13 @@ class DockerBuilderService
 
   def handle_output_chunk(chunk)
     parsed_chunk = JSON.parse(chunk)
-    values = parsed_chunk.each_with_object([]) do |(k,v), arr|
-      arr << "#{k}: #{v}" if v.present?
+
+    # Don't bother printing all the incremental output when pulling images
+    unless parsed_chunk['progressDetail']
+      values = parsed_chunk.map { |k,v| "#{k}: #{v}" if v.present? }.compact
+      output_buffer.puts values.join(' | ')
     end
 
-    output_buffer.puts values.join(' | ')
     parsed_chunk
   end
 
@@ -116,7 +119,8 @@ class DockerBuilderService
     {
       username: ENV['DOCKER_REGISTRY_USER'],
       password: ENV['DOCKER_REGISTRY_PASS'],
-      email: ENV['DOCKER_REGISTRY_EMAIL']
+      email: ENV['DOCKER_REGISTRY_EMAIL'],
+      serveraddress: ENV['DOCKER_REGISTRY']
     }
   end
 end

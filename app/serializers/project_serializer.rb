@@ -2,6 +2,6 @@ class ProjectSerializer < ActiveModel::Serializer
   attributes :id, :name, :url
 
   def url
-    project_path(object)
+    project_url(object)
   end
 end

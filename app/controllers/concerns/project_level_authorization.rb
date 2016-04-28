@@ -1,6 +1,5 @@
 module ProjectLevelAuthorization
   extend ActiveSupport::Concern
-  include Authorization
   include CurrentProject
 
   private

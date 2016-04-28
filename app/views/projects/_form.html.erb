@@ -1,4 +1,6 @@
 <%= form_for project, html: { class: "form-horizontal" } do |form| %>
+  <%= render 'shared/errors', object: project %>
+
   <fieldset>
     <div class="form-group">
       <%= form.label :name, class: "col-lg-2 control-label" %>

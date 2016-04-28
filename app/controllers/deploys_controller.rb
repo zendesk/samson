@@ -1,10 +1,10 @@
 class DeploysController < ApplicationController
   include ProjectLevelAuthorization
 
-  skip_before_action :require_project, only: [:active, :active_count, :recent, :changeset]
+  skip_before_action :require_project, only: [:active, :active_count, :changeset]
 
   before_action :authorize_project_deployer!, only: [:new, :create, :confirm, :buddy_check, :destroy]
-  before_action :find_deploy, except: [:index, :recent, :active, :active_count, :new, :create, :confirm, :search]
+  before_action :find_deploy, except: [:index, :active, :active_count, :new, :create, :confirm, :search]
   before_action :stage, only: :new
 
   def index
@@ -34,16 +34,6 @@ class DeploysController < ApplicationController
     end
   end
 
-  def recent
-    respond_to do |format|
-      format.html { render 'recent', locals: { title: 'Recent Deploys', show_filters: true, controller: 'TimelineCtrl' } }
-      format.json do
-        render json: Deploy.page(params[:page]).per(30)
-      end
-      format.csv { redirect_to new_csv_export_path }
-    end
-  end
-
   # Takes the same params that are used by the client side filtering
   # on the recent deploys pages.
   # Returrns a paginated json object of deploys that people are
@@ -55,7 +45,9 @@ class DeploysController < ApplicationController
   #   * status (what is the status of this job failed|running| etc)
 
   def search
-    if (params[:status] && !Job.valid_status?(params[:status]))
+    status = params[:status].presence
+
+    if status && !Job.valid_status?(params[:status])
       render json: { errors: "invalid status given" }, status: 400
       return
     end
@@ -68,10 +60,10 @@ class DeploysController < ApplicationController
       projects = Project.where(name: params[:project_name]).pluck(:id)
     end
 
-    if users || params[:status]
+    if users || status
       jobs = Job
       jobs = jobs.where(user: users) if users
-      jobs = jobs.where(status: params[:status]) if params[:status]
+      jobs = jobs.where(status: status) if status
     end
 
     if params[:production].present? || projects
@@ -84,11 +76,17 @@ class DeploysController < ApplicationController
     end
 
     deploys = Deploy
-    deploys = Deploy.where(stage: stages) if stages
-    deploys = Deploy.where(job: jobs) if jobs
+    deploys = deploys.where(stage: stages) if stages
+    deploys = deploys.where(job: jobs) if jobs
+    @deploys = deploys.page(params[:page]).per(30)
 
     respond_to do |format|
-      format.json { render json: deploys.page(params[:page]).per(30) }
+      format.json do
+        render json: @deploys
+      end
+      format.html do
+        render :search, locals: { title: 'Search Resuls' }
+      end
     end
   end
 

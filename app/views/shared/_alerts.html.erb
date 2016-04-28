@@ -1,15 +1,9 @@
-<% flash_mapping.each do |type, klass| %>
-  <% if messages = flash[type] %>
-    <% Array.wrap(messages).each do |message| %>
-      <div class="alert alert-<%= klass %>">
-        <button type="button" class="close" data-dismiss="alert">&times;</button>
-        <%= message %>
-        <% if display_access_request_link?(type) %>
-          <%= link_to_request_access %>
-        <% end %>
-      </div>
-    <% end %>
-  <% end %>
+<% flash_messages.each do |type, klass, message| %>
+  <div class="alert alert-<%= klass %>">
+    <button type="button" class="close" data-dismiss="alert">&times;</button>
+    <%= message %>
+    <%= link_to_request_access if display_access_request_link?(type) %>
+  </div>
 <% end %>
 
 <!-- Flash messages for ajax requests -->

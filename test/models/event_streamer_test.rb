@@ -1,5 +1,7 @@
 require_relative '../test_helper'
 
+SingleCov.covered! uncovered: 2
+
 describe EventStreamer do
   class FakeStream
     attr_reader :lines

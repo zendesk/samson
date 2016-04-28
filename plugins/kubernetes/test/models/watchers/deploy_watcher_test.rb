@@ -1,6 +1,7 @@
 require_relative "../../test_helper"
 require 'celluloid/current'
 
+SingleCov.covered! uncovered: 32
 
 describe Watchers::DeployWatcher do
   let(:environment) { environments(:production) }

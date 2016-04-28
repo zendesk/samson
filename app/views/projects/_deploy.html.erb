@@ -3,7 +3,7 @@
     <% unless @project %>
       <td><%= link_to deploy.project.name, deploy.project %></td>
     <% end %>
-    <td><%= relative_time(deploy.start_time) %></td>
+    <td><%= render_time(deploy.start_time, params[:time_format]) %></td>
     <td>
       <%= content_tag :span, "Hotfix!", class: "label label-hotfix" if deploy.changeset.hotfix? %>
       <%= link_to "#{deploy.summary}", [@project || deploy.project, deploy] %>

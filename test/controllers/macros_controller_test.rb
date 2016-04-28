@@ -1,11 +1,13 @@
 require_relative '../test_helper'
 
+SingleCov.covered! uncovered: 1
+
 describe MacrosController do
   let(:project) { projects(:test) }
   let(:macro) { macros(:test) }
   let(:macro_service) { stub(execute!: nil) }
   let(:execute_called) { [] }
-  let(:job) { Job.create!(commit: macro.reference, command: macro.command, project: project, user: user) }
+  let(:job) { Job.create!(commit: macro.reference, command: macro.script, project: project, user: user) }
 
   before do
     MacroService.stubs(:new).with(project, user).returns(macro_service)
@@ -24,7 +26,7 @@ describe MacrosController do
 
   as_a_project_deployer do
     describe "a GET to :index" do
-      setup { get :index, project_id: project.to_param }
+      before { get :index, project_id: project.to_param }
 
       it "renders the template" do
         assert_template :index

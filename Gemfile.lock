@@ -1,4 +1,16 @@
 PATH
+  remote: plugins/aws_ecr
+  specs:
+    samson_aws_ecr (0.0.0)
+      aws-sdk-core
+
+PATH
+  remote: plugins/datadog
+  specs:
+    samson_datadog (0.0.0)
+      dogapi (~> 1.9)
+
+PATH
   remote: plugins/docker_binary_builder
   specs:
     samson_docker_binary_builder (0.0.0)
@@ -34,6 +46,12 @@ PATH
       celluloid
       celluloid-io
       kubeclient (>= 1.1)
+
+PATH
+  remote: plugins/new_relic
+  specs:
+    samson_new_relic (0.0.0)
+      newrelic_api
 
 PATH
   remote: plugins/pipelines
@@ -107,11 +125,15 @@ GEM
       railties (>= 4.2, < 6)
       sprockets (~> 3.0)
       tilt
-    ansible (0.2.0)
+    ansible (0.2.2)
     arel (6.0.3)
+    attr_encrypted (3.0.1)
+      encryptor (~> 3.0.0)
     autoprefixer-rails (6.3.3.1)
       execjs
     awesome_print (1.6.1)
+    aws-sdk-core (2.2.36)
+      jmespath (~> 1.0)
     better_errors (2.1.1)
       coderay (>= 1.0.0)
       erubis (>= 2.6.6)
@@ -171,11 +193,12 @@ GEM
     dogapi (1.21.0)
       multi_json
     dogstatsd-ruby (1.5.0)
-    domain_name (0.5.20160216)
+    domain_name (0.5.20160310)
       unf (>= 0.0.5, < 1.0.0)
     dotenv (0.11.1)
       dotenv-deployment (~> 0.0.2)
     dotenv-deployment (0.0.2)
+    encryptor (3.0.0)
     erubis (2.7.0)
     excon (0.47.0)
     execjs (2.6.0)
@@ -218,15 +241,17 @@ GEM
       nokogiri (~> 1.6.0)
       terminal-table (>= 1.4.0)
       thor (>= 0.16.0)
+    jmespath (1.2.4)
+      json_pure (>= 1.8.1)
     json (1.8.3)
+    json_pure (1.8.3)
     jwt (1.5.1)
     kaminari (0.16.3)
       actionpack (>= 3.0.0)
       activesupport (>= 3.0.0)
-    kubeclient (1.1.1)
+    kubeclient (1.1.3)
       activesupport
       http (= 0.9.8)
-      json
       recursive-open-struct (= 1.0.0)
       rest-client
     lograge (0.3.6)
@@ -238,7 +263,7 @@ GEM
       nokogiri (>= 1.5.9)
     mail (2.6.3)
       mime-types (>= 1.16, < 3)
-    maxitest (1.5.6)
+    maxitest (1.5.7)
       minitest (>= 5.0.0, < 5.9.0)
     metaclass (0.0.4)
     method_source (0.8.2)
@@ -294,6 +319,10 @@ GEM
     omniauth-oauth2 (1.3.1)
       oauth2 (~> 1.0)
       omniauth (~> 1.2)
+    paper_trail (4.1.0)
+      activerecord (>= 3.0, < 6.0)
+      activesupport (>= 3.0, < 6.0)
+      request_store (~> 1.1)
     pg (0.18.4)
     pry (0.10.3)
       coderay (~> 1.1.0)
@@ -379,6 +408,7 @@ GEM
       thor (>= 0.18.1, < 2.0)
     rake (10.5.0)
     recursive-open-struct (1.0.0)
+    request_store (1.3.1)
     rest-client (1.8.0)
       http-cookie (>= 1.0.2, < 2.0)
       mime-types (>= 1.16, < 3.0)
@@ -407,6 +437,7 @@ GEM
       json (~> 1.8)
       simplecov-html (~> 0.10.0)
     simplecov-html (0.10.0)
+    single_cov (0.1.2)
     slim (3.0.6)
       temple (~> 0.7.3)
       tilt (>= 1.3.3, < 2.1)
@@ -440,6 +471,7 @@ GEM
     unf (0.1.4)
       unf_ext
     unf_ext (0.0.7.2)
+    vault (0.4.0)
     warden (1.2.6)
       rack (>= 1.0)
     webmock (1.24.2)
@@ -464,6 +496,7 @@ DEPENDENCIES
   airbrake (~> 4.3.0)
   angular-rails-templates
   ansible
+  attr_encrypted
   awesome_print
   better_errors
   binding_of_caller
@@ -477,7 +510,6 @@ DEPENDENCIES
   concurrent-ruby
   dalli (~> 2.7.0)
   docker-api
-  dogapi (~> 1.9)
   dogstatsd-ruby (~> 1.5.0)
   dotenv
   faraday-http-cache (~> 1.1)
@@ -491,7 +523,6 @@ DEPENDENCIES
   mocha
   mysql2 (~> 0.3)
   net-http-persistent
-  newrelic_api
   newrelic_rpm (>= 3.7.1)
   ngannotate-rails
   octokit (~> 4.0)
@@ -500,6 +531,7 @@ DEPENDENCIES
   omniauth-google-oauth2 (~> 0.2.4)
   omniauth-ldap (>= 1.0.5)
   omniauth-oauth2 (~> 1.1)
+  paper_trail
   pg (~> 0.13)
   pry-rails
   puma
@@ -527,23 +559,28 @@ DEPENDENCIES
   rails-assets-vis!
   rails-assets-x-editable!
   rails_12factor
+  samson_aws_ecr!
+  samson_datadog!
   samson_docker_binary_builder!
   samson_dockerb!
   samson_env!
   samson_flowdock!
   samson_jenkins!
   samson_kubernetes!
+  samson_new_relic!
   samson_pipelines!
   samson_slack_webhooks!
   samson_zendesk!
   sass-rails (~> 5.0)
   sawyer (~> 0.5)
   simplecov
+  single_cov
   soft_deletion (~> 0.4)
   sqlite3
   sse-rails-engine (~> 1.4)
   sucker_punch (~> 2.0)
   uglifier (>= 1.3.0)
+  vault
   warden (~> 1.2)
   webmock
 

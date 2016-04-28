@@ -21,7 +21,7 @@ class JobExecution
 
   def initialize(reference, job, env = {}, &block)
     @output = OutputBuffer.new
-    @executor = TerminalExecutor.new(@output, verbose: true)
+    @executor = TerminalExecutor.new(@output, verbose: true, project: job.project)
     @viewers = JobViewers.new(@output)
 
     @subscribers = []
@@ -185,6 +185,9 @@ class JobExecution
       DEPLOYER: @job.user.email,
       DEPLOYER_EMAIL: @job.user.email,
       DEPLOYER_NAME: @job.user.name,
+      PROJECT_NAME: @job.project.name,
+      PROJECT_PERMALINK: @job.project.permalink,
+      PROJECT_REPOSITORY: @job.project.repository_url,
       REVISION: @reference,
       TAG: (@job.tag || @job.commit).to_s,
       CACHE_DIR: artifact_cache_dir

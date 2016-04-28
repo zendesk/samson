@@ -6,7 +6,6 @@ class ProjectsController < ApplicationController
 
   before_action :authorize_admin!, only: [:new, :create, :destroy]
   before_action :authorize_project_admin!, except: [:show, :index, :deploy_group_versions]
-  before_action :get_environments, only: [:new, :create]
 
   helper_method :project
 
@@ -27,8 +26,7 @@ class ProjectsController < ApplicationController
   def new
     @project = Project.new
     @project.current_user = current_user
-    stage = @project.stages.build(name: "Production")
-    stage.new_relic_applications.build
+    @project.stages.build(name: "Production")
   end
 
   def create
@@ -42,7 +40,6 @@ class ProjectsController < ApplicationController
       redirect_to @project
       Rails.logger.info("#{@current_user.name_and_email} created a new project #{@project.to_param}")
     else
-      flash[:error] = @project.errors.full_messages
       render :new
     end
   end
@@ -58,7 +55,6 @@ class ProjectsController < ApplicationController
     if project.update_attributes(project_params)
       redirect_to project
     else
-      flash[:error] = project.errors.full_messages
       render :edit
     end
   end
@@ -91,21 +87,17 @@ class ProjectsController < ApplicationController
         :release_branch,
         :deploy_with_docker,
         :auto_release_docker_image,
-        stages_attributes: stage_permitted_params
+        { stages_attributes: stage_permitted_params }
       ] + Samson::Hooks.fire(:project_permitted_params)
     )
   end
 
   def projects_for_user
-    if current_user.starred_projects.any?
-      current_user.starred_projects
+    if ids = current_user.starred_project_ids.presence
+      Project.where(id: ids)
     else
       Project
     end
-  end
-
-  def get_environments
-    @environments = Environment.all
   end
 
   # Overriding require_project from CurrentProject

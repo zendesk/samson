@@ -2,11 +2,9 @@
   <li class="<%= 'active' if active == 'overview' %>">
     <%= link_to "Overview", project %>
   </li>
-  <% if project.manage_releases? %>
-    <li class="<%= 'active' if active == 'releases' %>">
-      <%= link_to "Releases", project_releases_path(project) %>
-    </li>
-  <% end %>
+  <li class="<%= 'active' if active == 'releases' %>">
+    <%= link_to "Releases", project_releases_path(project) %>
+  </li>
   <% if project.deploy_with_docker? %>
     <li class="<%= 'active' if active == 'builds' %>">
       <%= link_to "Builds", project_builds_path(project) %>
@@ -30,13 +28,15 @@
   <li class="<%= 'active' if active == 'changelog' %>">
     <%= link_to "Changelog", project_changelog_path(project) %>
   </li>
-<% if is_admin_for_project? %>
-  <li class="<%= 'active' if active == 'settings' %>">
-    <%= link_to "Settings", edit_project_path(project) %>
-  </li>
-  <li class="<%= 'active' if active == 'users' %>">
-    <%= link_to "Users", project_users_path(project) %>
-  </li>
+
   <%= Samson::Hooks.render_views(:project_tabs_view, self, { project: @project, active: active }) %>
-<% end %>
+
+  <% if is_admin_for_project? %>
+    <li class="<%= 'active' if active == 'settings' %>">
+      <%= link_to "Settings", edit_project_path(project) %>
+    </li>
+    <li class="<%= 'active' if active == 'users' %>">
+      <%= link_to "Users", project_users_path(project) %>
+    </li>
+  <% end %>
 </ul>

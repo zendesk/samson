@@ -1,18 +1,8 @@
 require_relative '../test_helper'
 
-describe TerminalExecutor do
-  def with_env(env)
-    old = env.map do |k, v|
-      k = k.to_s
-      o = ENV[k]
-      ENV[k] = v
-      [k, o]
-    end
-    yield
-  ensure
-    old.each { |k, v| ENV[k] = v }
-  end
+SingleCov.covered! uncovered: 2
 
+describe TerminalExecutor do
   let(:output) { StringIO.new }
   subject { TerminalExecutor.new(output) }
 
@@ -25,6 +15,11 @@ describe TerminalExecutor do
     it 'records stderr' do
       subject.execute!('echo "hi" >&2', 'echo "hello" >&2')
       output.string.must_equal("hi\r\nhello\r\n")
+    end
+
+    it 'pretends to be a tty to show progress bars and fancy colors' do
+      subject.execute!('ruby -e "puts STDOUT.tty?"')
+      output.string.must_equal("true\r\n")
     end
 
     it 'stops on failure' do
@@ -73,6 +68,43 @@ describe TerminalExecutor do
       it 'does not print subcommands' do
         subject.execute!('sh -c "echo 111"')
         output.string.must_equal("» sh -c \"echo 111\"\r\n111\r\n")
+      end
+    end
+
+    describe 'with secrets' do
+      let!(:secret) { create_secret 'global/bar' }
+      let(:project) { projects(:test) }
+      let(:command) { 'export SECRET="secret://global/bar"; echo $SECRET' }
+
+      it "resolves secrets" do
+        subject.execute!(command)
+        output.string.must_equal "#{secret.value}\r\n"
+      end
+
+      it "can use project specific secrets" do
+        subject.instance_variable_set(:@project, project)
+        secret = create_secret "#{project.permalink}/bar"
+        subject.execute!(%Q{echo "secret://#{project.permalink}/bar"})
+        output.string.must_equal "#{secret.value}\r\n"
+      end
+
+      it "fails on unresolved secrets" do
+        assert_raises ActiveRecord::RecordNotFound do
+          subject.execute!('echo "secret://global/baz"')
+        end
+      end
+
+      it "cannot use project specific secrets without a project" do
+        create_secret "foo/bar"
+        assert_raises ActiveRecord::RecordNotFound do
+          subject.execute!('echo "secret://foo/bar"')
+        end
+      end
+
+      it "does not show secrets in verbose mode" do
+        subject.instance_variable_set(:@verbose, true)
+        subject.execute!(command)
+        output.string.must_equal "» export SECRET=\"secret://global/bar\"; echo $SECRET\r\n#{secret.value}\r\n"
       end
     end
   end

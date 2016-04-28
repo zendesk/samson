@@ -34,7 +34,6 @@ Samson::Application.routes.draw do
       end
 
       member do
-        get :new_relic, to: 'new_relic#show'
         get :clone, to: 'stages#clone'
       end
 
@@ -75,6 +74,8 @@ Samson::Application.routes.draw do
 
   resource :profile, only: [:show, :update]
 
+  resources :versions, only: [:index]
+
   get '/auth/github/callback', to: 'sessions#github'
   get '/auth/google/callback', to: 'sessions#google'
   post '/auth/ldap/callback', to: 'sessions#ldap'
@@ -97,6 +98,7 @@ Samson::Application.routes.draw do
     resources :users, only: [:index, :show, :update, :destroy]
     resource :projects, only: [:show]
     resources :commands, except: [:show]
+    resources :secrets, except: [:show]
     resources :environments, except: [:show]
     resources :deploy_groups do
       member do

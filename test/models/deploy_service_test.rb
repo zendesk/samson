@@ -1,5 +1,7 @@
 require_relative '../test_helper'
 
+SingleCov.covered!
+
 describe DeployService do
   let(:project) { deploy.project }
   let(:user) { job.user }
@@ -30,9 +32,10 @@ describe DeployService do
       before { BuddyCheck.stubs(:enabled?).returns(true) }
       let(:deploy) { deploys(:succeeded_production_test) }
 
-      def create_previous_deploy(ref, stage, successful: true)
+      def create_previous_deploy(ref, stage, successful: true, bypassed: false)
         job = project.jobs.create!(user: user, command: "foo", status: successful ? "succeeded" : 'failed')
-        Deploy.create!(job: job, reference: ref, stage: stage, buddy: other_user, started_at: Time.now)
+        buddy = bypassed ? user : other_user
+        Deploy.create!(job: job, reference: ref, stage: stage, buddy: buddy, started_at: Time.now)
       end
 
       it "does not start the deploy" do
@@ -40,11 +43,11 @@ describe DeployService do
         service.deploy!(stage, reference: reference)
       end
 
-      describe "if release is approved" do
+      describe "similar deploy was approved" do
         before { create_previous_deploy(ref1, stage_production_1) }
 
         it "starts the deploy, if in grace period" do
-          service.expects(:confirm_deploy!).once
+          service.expects(:confirm_deploy!)
           service.deploy!(stage_production_2, reference: ref1)
         end
 
@@ -54,25 +57,29 @@ describe DeployService do
             service.deploy!(stage_production_2, reference: ref1)
           end
         end
+
+        describe "when stage was modified after the similar deploy" do
+          before { stage.commands.first.update_column(:updated_at, 2.seconds.from_now) }
+
+          it "does not start the deploy" do
+            service.expects(:confirm_deploy!).never
+            service.deploy!(stage_production_2, reference: ref1)
+          end
+
+          it "starts the deploy when stage was modified after an older similar deploy" do
+            Deploy.first.update_column(:started_at, 4.seconds.from_now)
+            create_previous_deploy(ref1, stage_production_1)
+            service.expects(:confirm_deploy!)
+            service.deploy!(stage_production_2, reference: ref1)
+          end
+        end
       end
 
       describe "if similar deploy was bypassed" do
-        before { service.stubs(:bypassed?).returns(true) }
         it "does not start the deploy" do
-          service.expects(:release_approved?).once
+          create_previous_deploy(ref1, stage_production_1, bypassed: true)
           service.expects(:confirm_deploy!).never
-          service.deploy!(stage, reference: reference)
-        end
-      end
-
-      describe "if similar deploy was approved" do
-        before do
-          service.stubs(:bypassed?).returns(false)
-          service.stubs(:latest_approved_deploy).returns(Deploy.new(id:22, buddy:other_user) )
-        end
-        it "it starts the deploy" do
-          service.expects(:confirm_deploy!).once
-          service.deploy!(stage, reference: reference)
+          service.deploy!(stage_production_2, reference: ref1)
         end
       end
 
@@ -82,13 +89,13 @@ describe DeployService do
           stage.update_attribute(:production, false)
         end
 
-        it 'should deploy because of prod deploy groups' do
+        it 'deploys because of prod deploy groups' do
           create_previous_deploy(ref1, stage_production_1)
           service.expects(:confirm_deploy!).once
           service.deploy!(stage_production_2, reference: ref1)
         end
 
-        it 'should not deploy if previous deploy was not on prod' do
+        it 'does not deploy if previous deploy was not on prod' do
           create_previous_deploy(ref1, stages(:test_staging))
           service.expects(:confirm_deploy!).never
           service.deploy!(stage_production_2, reference: ref1)
@@ -123,6 +130,14 @@ describe DeployService do
         deploy.buddy = user
         service.confirm_deploy!(deploy)
       end
+    end
+  end
+
+  describe "#stop!" do
+    it "stops the deploy" do
+      deploy.job = jobs(:running_test)
+      service.stop!(deploy)
+      deploy.job.status.must_equal 'cancelled'
     end
   end
 
@@ -170,15 +185,6 @@ describe DeployService do
         service.deploy!(stage, reference: reference)
         job_execution.send(:run!)
       end.must_equal [[deploy, nil]]
-    end
-
-    it "sends datadog notifications if the stage has datadog tags" do
-      stage.stubs(:send_datadog_notifications?).returns(true)
-
-      DatadogNotification.any_instance.expects(:deliver)
-
-      service.deploy!(stage, reference: reference)
-      job_execution.send(:run!)
     end
 
     it "sends github notifications if the stage has it enabled and deploy succeeded" do

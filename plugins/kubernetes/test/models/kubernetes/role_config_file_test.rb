@@ -1,13 +1,14 @@
 require_relative '../../test_helper'
 
-describe Kubernetes::RoleConfigFile do
+SingleCov.covered! uncovered: 3
 
+describe Kubernetes::RoleConfigFile do
   describe 'Parsing a valid Kubernetes config file' do
     let(:contents) { parse_role_config_file('kubernetes_role_config_file') }
 
     let(:config_file) { Kubernetes::RoleConfigFile.new(contents, 'some-file.yml') }
 
-    it 'should load a deployment with its contents' do
+    it 'loads a deployment with its contents' do
       config_file.deployment.wont_be_nil
 
       # Labels
@@ -17,8 +18,8 @@ describe Kubernetes::RoleConfigFile do
       config_file.deployment.spec.replicas.must_equal 2
 
       # Selector
-      config_file.deployment.spec.selector.project.must_equal 'some-project'
-      config_file.deployment.spec.selector.role.must_equal 'some-role'
+      config_file.deployment.spec.selector.matchLabels.project.must_equal 'some-project'
+      config_file.deployment.spec.selector.matchLabels.role.must_equal 'some-role'
 
       # Pod Template
       config_file.deployment.spec.template.metadata.name.must_equal 'some-project-pod'
@@ -30,7 +31,7 @@ describe Kubernetes::RoleConfigFile do
       config_file.deployment.ram_mi.must_equal 100
     end
 
-    it 'should load a service with its contents' do
+    it 'loads a service with its contents' do
       config_file.service.wont_be_nil
 
       # Service Name
@@ -48,7 +49,7 @@ describe Kubernetes::RoleConfigFile do
   describe 'Parsing a Kubernetes with a missing deployment' do
     let(:contents) { parse_role_config_file('kubernetes_invalid_role_config_file') }
 
-    it 'should raise an exception' do
+    it 'raises an exception' do
       assert_raises RuntimeError do
         Kubernetes::RoleConfigFile.new(contents, 'some-file.yml')
       end

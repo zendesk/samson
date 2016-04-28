@@ -1,11 +1,12 @@
 class Admin::CommandsController < ApplicationController
   include ProjectLevelAuthorization
 
-  before_action :authorize_admin!, except: [ :update, :edit ]
   before_action :find_command, only: [ :update, :edit ]
+  before_action :authorize_project_admin!, only: [ :update, :edit ]
+  before_action :authorize_admin!, except: [ :update, :edit ]
 
   def index
-    @commands = Command.order('project_id').page(params[:page])
+    @commands = Command.order(:project_id).page(params[:page])
     if search = params[:search]
       if query = search[:query].presence
         query = ActiveRecord::Base.send(:sanitize_sql_like, query)
@@ -28,10 +29,8 @@ class Admin::CommandsController < ApplicationController
     @command = Command.create(command_params)
 
     if @command.persisted?
-      flash[:notice] = 'Command created.'
-      redirect_to admin_commands_path
+      successful_response 'Command created.'
     else
-      flash[:error] = 'Command failure.'
       render :edit
     end
   end
@@ -42,7 +41,6 @@ class Admin::CommandsController < ApplicationController
     else
       respond_to do |format|
         format.html do
-          flash[:error] = 'Command failure.'
           render :edit
         end
 
@@ -53,7 +51,6 @@ class Admin::CommandsController < ApplicationController
 
   def destroy
     Command.destroy(params[:id])
-
     successful_response('Command removed.')
   end
 
@@ -76,6 +73,9 @@ class Admin::CommandsController < ApplicationController
 
   def find_command
     @command = Command.find(params[:id])
-    unauthorized! unless current_user.is_admin? || current_user.is_admin_for?(@command.project)
+  end
+
+  def current_project
+    @command.project
   end
 end
