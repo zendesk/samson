@@ -243,6 +243,10 @@ GEM
       thor (>= 0.16.0)
     jmespath (1.2.4)
       json_pure (>= 1.8.1)
+    jsTimezoneDetect-rails (1.0.5)
+      railties (~> 4.0, >= 4.0.0)
+    js_cookie_rails (1.0.1)
+      railties (>= 3.1)
     json (1.8.3)
     json_pure (1.8.3)
     jwt (1.5.1)
@@ -513,6 +517,8 @@ DEPENDENCIES
   faraday-http-cache (~> 1.1)
   github-markdown (~> 0.6.3)
   goldiloader
+  jsTimezoneDetect-rails
+  js_cookie_rails
   kaminari
   lograge
   logstash-event

@@ -31,6 +31,8 @@ gem 'active_model_serializers', '~> 0.8.0'
 gem 'paper_trail'
 gem 'sawyer', '~> 0.5'
 gem 'sse-rails-engine', '~> 1.4'
+gem 'jsTimezoneDetect-rails'
+gem 'js_cookie_rails'
 
 # Hashicorp vault
 gem 'vault'
