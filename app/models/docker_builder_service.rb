@@ -39,7 +39,7 @@ class DockerBuilderService
 
     output_buffer.puts("### Running Docker build")
 
-    build.docker_image = Docker::Image.build_from_dir(tmp_dir) do |output_chunk|
+    build.docker_image = Docker::Image.build_from_dir(tmp_dir, {}, Docker.connection, registry_credentials) do |output_chunk|
       handle_output_chunk(output_chunk)
     end
     output_buffer.puts('### Docker build complete')
@@ -119,7 +119,8 @@ class DockerBuilderService
     {
       username: ENV['DOCKER_REGISTRY_USER'],
       password: ENV['DOCKER_REGISTRY_PASS'],
-      email: ENV['DOCKER_REGISTRY_EMAIL']
+      email: ENV['DOCKER_REGISTRY_EMAIL'],
+      serveraddress: ENV['DOCKER_REGISTRY']
     }
   end
 end
