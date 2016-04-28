@@ -1,6 +1,5 @@
 require 'ansible'
 require 'github/markdown'
-require 'byebug'
 
 module ApplicationHelper
   BOOTSTRAP_FLASH_MAPPINGS = { notice: :info, error: :danger, authorization_error: :danger, success: :success }
@@ -58,7 +57,7 @@ module ApplicationHelper
     # grab the time format that the user has in their profile
     format = current_user.time_format if format.nil?
     if format == 'local'
-      content_tag(:time, time.in_time_zone(cookies[:timezone] || 'UTC').to_s, datetime: time.time.in_time_zone(cookies[:timezone] || 'UTC'))
+      content_tag(:time, time.in_time_zone(cookies[:timezone] || 'UTC').to_s, datetime: time.in_time_zone(cookies[:timezone] || 'UTC'))
     elsif format == 'utc'
       content_tag(:time, time.to_s, datetime: time.getutc.iso8601)
     else

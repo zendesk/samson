@@ -248,11 +248,17 @@ describe ApplicationHelper do
     let(:ts) { Time.parse("2016-04-18T17:46:10.337+00:00") }
 
     it "formats time in utc" do
-      render_time(ts, 'utc').must_equal "<time datetime=\"2016-04-18T17:46:10Z\">April 18, 2016  5:46 PM UTC</time>"
+      render_time(ts, 'utc').must_equal "<time datetime=\"2016-04-18T17:46:10Z\">2016-04-18 17:46:10 +0000</time>"
     end
 
-    it "formats time in local" do
-      render_time(ts, 'local').must_equal "<time datetime=\"2016-04-18T17:46:10+00:00\">April 18, 2016  5:46 PM</time>"
+    it "formats local time in America/Los_Angeles" do
+      cookies[:timezone] = 'America/Los_Angeles'
+      render_time(ts, 'local').must_equal "<time datetime=\"2016-04-18 10:46:10 -0700\">2016-04-18 10:46:10 -0700</time>"
+    end
+
+    it "formats local time in America/New_York" do
+      cookies[:timezone] = 'America/New_York'
+      render_time(ts, 'local').must_equal "<time datetime=\"2016-04-18 13:46:10 -0400\">2016-04-18 13:46:10 -0400</time>"
     end
 
     it "formats time relative" do
