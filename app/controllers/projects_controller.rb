@@ -1,5 +1,5 @@
 class ProjectsController < ApplicationController
-  include ProjectLevelAuthorization
+  include CurrentProject
   include StagePermittedParams
 
   skip_before_action :require_project, only: [:index, :new, :create]

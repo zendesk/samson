@@ -1,5 +1,5 @@
 class Admin::SecretsController < ApplicationController
-  include ProjectLevelAuthorization
+  include CurrentProject
 
   before_action :find_project_permalinks
   before_action :find_secret, only: [:update, :edit, :destroy]

@@ -1,7 +1,7 @@
 require 'csv'
 
 class DeploysController < ApplicationController
-  include ProjectLevelAuthorization
+  include CurrentProject
 
   skip_before_action :require_project, only: [:active, :active_count, :changeset]
 
