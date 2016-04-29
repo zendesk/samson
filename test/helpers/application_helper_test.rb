@@ -246,6 +246,11 @@ describe ApplicationHelper do
 
   describe "#render_time" do
     let(:ts) { Time.parse("2016-04-18T17:46:10.337+00:00") }
+    let(:current_user) { users(:admin) }
+
+    it "formats time in the uesrs default preference" do
+      render_time(ts, nil).must_equal "<span data-time=\"1461001570000\" class=\"mouseover\">Mon, 18 Apr 2016 17:46:10 +0000</span>"
+    end
 
     it "formats time in utc" do
       render_time(ts, 'utc').must_equal "<time datetime=\"2016-04-18 17:46:10 UTC\">2016-04-18 17:46:10 UTC</time>"
