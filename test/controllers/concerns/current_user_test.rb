@@ -5,6 +5,7 @@ SingleCov.covered!
 describe "CurrentUser included in controller" do
   class CurrentUserTestController < ApplicationController
     include CurrentUser
+    include CurrentProject
 
     def whodunnit
       render text: PaperTrail.whodunnit.to_s.dup
@@ -27,6 +28,16 @@ describe "CurrentUser included in controller" do
 
     def deployer_action
       authorize_deployer!
+      head :ok
+    end
+
+    def project_deployer_action
+      authorize_project_deployer!
+      head :ok
+    end
+
+    def project_admin_action
+      authorize_project_admin!
       head :ok
     end
 
@@ -84,9 +95,7 @@ describe "CurrentUser included in controller" do
         session.inspect.must_equal({}.inspect)
       end
     end
-  end
 
-  as_a_viewer do
     unauthorized :get, :deployer_action, test_route: true
     unauthorized :get, :admin_action, test_route: true
     unauthorized :get, :super_admin_action, test_route: true
@@ -96,12 +105,64 @@ describe "CurrentUser included in controller" do
     authorized :get, :deployer_action, test_route: true
     unauthorized :get, :admin_action, test_route: true
     unauthorized :get, :super_admin_action, test_route: true
+
+    it "can access any project" do
+      UserProjectRole.delete_all
+      get :project_deployer_action, project_id: Project.first.id, test_route: true
+      refute_unauthorized
+    end
+
+    it "cannot access admin" do
+      get :project_admin_action, project_id: Project.first.id, test_route: true
+      assert_unauthorized
+    end
+  end
+
+  as_a_project_deployer do
+    it "can access allowed projects" do
+      get :project_deployer_action, project_id: Project.first.id, test_route: true
+      refute_unauthorized
+    end
+
+    it "cannot access forbidden projects" do
+      UserProjectRole.delete_all
+      get :project_deployer_action, project_id: Project.first.id, test_route: true
+      assert_unauthorized
+    end
+
+    it "cannot access admin" do
+      get :project_admin_action, project_id: Project.first.id, test_route: true
+      assert_unauthorized
+    end
+  end
+
+  as_a_project_admin do
+    it "can access allowed projects" do
+      get :project_admin_action, project_id: Project.first.id, test_route: true
+      refute_unauthorized
+    end
+
+    it "cannot access forbidden projects" do
+      UserProjectRole.delete_all
+      get :project_admin_action, project_id: Project.first.id, test_route: true
+      assert_unauthorized
+    end
   end
 
   as_a_admin do
     authorized :get, :deployer_action, test_route: true
     authorized :get, :admin_action, test_route: true
     unauthorized :get, :super_admin_action, test_route: true
+
+    it "can access any project" do
+      get :project_admin_action, project_id: Project.first.id, test_route: true
+      refute_unauthorized
+    end
+
+    it "can access any project deploy" do
+      get :project_deployer_action, project_id: Project.first.id, test_route: true
+      refute_unauthorized
+    end
   end
 
   as_a_super_admin do
@@ -110,17 +171,19 @@ describe "CurrentUser included in controller" do
     authorized :get, :super_admin_action, test_route: true
   end
 
-  as_a_viewer do
-    it "logs unautorized so we can see it in test output for easy debugging" do
-      Rails.logger.expects(:warn)
-      get :unauthorized_action, test_route: true
-      assert_unauthorized
+  describe "logging" do
+    as_a_viewer do
+      it "logs unautorized so we can see it in test output for easy debugging" do
+        Rails.logger.expects(:warn)
+        get :unauthorized_action, test_route: true
+        assert_unauthorized
+      end
     end
-  end
 
-  it "logs unautorized so we can see it in test output for easy debugging" do
+    it "logs unautorized so we can see it in test output for easy debugging" do
     Rails.logger.expects(:warn)
     get :whodunnit, test_route: true
     assert_unauthorized
+    end
   end
 end

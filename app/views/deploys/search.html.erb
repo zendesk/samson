@@ -27,10 +27,7 @@
         <%= select_tag(:time_format, options_for_select(User::TIME_FORMATS, selected: params[:time_format] ? params[:time_format] : current_user.time_format ), { class: 'form-control' } ) %>
       </div>
 
-      <div class="col-md-2 clearfix">
-        <label>&nbsp;</label>
-        <%= submit_tag "Search", class: "btn btn-default form-control" %>
-      </div>
+      <%= render 'shared/search_button' %>
     <% end %>
   </div>
 

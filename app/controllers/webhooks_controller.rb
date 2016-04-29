@@ -1,7 +1,7 @@
 require 'samson/integration'
 
 class WebhooksController < ApplicationController
-  include ProjectLevelAuthorization
+  include CurrentProject
 
   before_action :authorize_project_deployer!
 

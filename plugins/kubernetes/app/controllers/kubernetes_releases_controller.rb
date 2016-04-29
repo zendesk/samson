@@ -1,5 +1,5 @@
 class KubernetesReleasesController < ApplicationController
-  include ProjectLevelAuthorization
+  include CurrentProject
 
   before_action :authorize_project_deployer!
 

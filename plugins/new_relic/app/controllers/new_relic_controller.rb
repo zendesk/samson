@@ -1,5 +1,5 @@
 class NewRelicController < ApplicationController
-  include ProjectLevelAuthorization
+  include CurrentProject
 
   before_action :authorize_project_deployer!
   before_action :ensure_new_reclic_api_key
