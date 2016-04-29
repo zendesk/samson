@@ -1,0 +1,20 @@
+<fieldset>
+  <legend>Kubernetes</legend>
+  <div class="col-lg-6 checkbox col-lg-offset-2">
+    <%= form.label :kubernetes do %>
+      <%= form.check_box :kubernetes %>
+      Deploy via kubernetes / ignore commands.
+    <% end %>
+  </div>
+</fieldset>
+
+<script>
+  $(function(){
+    // hide command section when kubernetes is selected
+    var $checkbox = $("#stage_kubernetes");
+    $checkbox.change(function(){
+      $("#commands").parent('fieldset').toggle(!$(this).is(':checked'))
+    });
+    $checkbox.trigger('change');
+  });
+</script>

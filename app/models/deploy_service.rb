@@ -42,10 +42,12 @@ class DeployService
   private
 
   def construct_env(stage)
-    { STAGE: stage.permalink }.tap do |env|
-      group_names = stage.deploy_groups.pluck(:env_value).sort.join(" ")
-      env[:DEPLOY_GROUPS] = group_names if group_names.present?
-    end
+    env = { STAGE: stage.permalink }
+
+    group_names = stage.deploy_groups.pluck(:env_value).sort.join(" ")
+    env[:DEPLOY_GROUPS] = group_names if group_names.present?
+
+    env
   end
 
   def latest_approved_deploy(reference, project)

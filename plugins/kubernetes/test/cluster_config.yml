@@ -1,0 +1,12 @@
+users: []
+clusters:
+- name: test-cluster
+  cluster:
+    server: http://foobar.server
+
+apiVersion: '1'
+current-context: test
+contexts:
+- name: test
+  context:
+    cluster: test-cluster
