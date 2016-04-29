@@ -12,14 +12,14 @@ class CsvExport < ActiveRecord::Base
   scope :old, lambda {
     end_date = Rails.application.config.samson.export_job.downloaded_age.seconds.ago
     timeout_date = Rails.application.config.samson.export_job.max_age.seconds.ago
-    where("(status = 'downloaded' AND updated_at <= :end_date) OR updated_at <= :timeout_date",
+    where("(status = 'downloaded' AND updated_at <= :end_date) OR created_at <= :timeout_date",
       end_date: end_date, timeout_date: timeout_date)
   }
 
   def status?(state)
     'ready' == state.to_s ? ['downloaded', 'finished'].include?(status) : status == state.to_s
   end
-  
+
   def download_name
     "deploys_#{created_at.to_s(:number)}.csv"
   end

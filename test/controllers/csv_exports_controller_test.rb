@@ -1,5 +1,7 @@
 require_relative '../test_helper'
 
+SingleCov.covered!
+
 describe CsvExportsController do
   let(:deployer) { users(:deployer) }
   let(:export) { csv_exports(:pending) }
@@ -76,7 +78,7 @@ describe CsvExportsController do
     describe "#show" do
       def self.show_test(state)
         describe state do
-          setup { export.update_attribute('status', state) }
+          before { export.update_attribute('status', state) }
 
           describe "as html" do
             it "renders html" do
@@ -95,7 +97,7 @@ describe CsvExportsController do
           end
 
           describe "as csv with no file" do
-            setup do
+            before do
               export.delete_file
               get :show, id: export.id, format: :csv
             end
@@ -113,12 +115,12 @@ describe CsvExportsController do
 
           if [:finished, :downloaded].include?(state)  # Only run these tests if ready
             describe "as csv with file" do
-              setup do
+              before do
                 CsvExportJob.perform_now(export)
                 export.update_attribute("status", state)
               end
 
-              teardown { cleanup_files }
+              after { cleanup_files }
 
               it "receives file" do
                 get :show, id: export.id, format: 'csv'
@@ -168,21 +170,22 @@ describe CsvExportsController do
     end
 
     describe "a POST to create" do
-      teardown { cleanup_files }
+      after { cleanup_files }
 
-      it "with no filters should create a new csv_export and redirects to status" do
+      it "with no filters creates a new csv_export and redirects to status" do
         assert_difference 'CsvExport.count' do
           post :create
         end
         assert_redirected_to CsvExport.last
       end
 
-      it "with valid filters should create a new csv_export, with correct filters and redirect to status" do
+      it "with valid filters creates a new csv_export, with correct filters and redirect to status" do
         filter = { start_date: "2010-01-01", end_date: "2015-12-31", production:"Yes", status: "succeeded",
           project: projects(:test).id.to_s}
         assert_difference 'CsvExport.count' do
           post :create, filter
         end
+        assert_redirected_to CsvExport.last
         csv_filter = CsvExport.last.filters
         csv_filter.keys.must_include "deploys.created_at"
         csv_filter.keys.must_include "stages.production"
@@ -194,6 +197,13 @@ describe CsvExportsController do
         csv_filter["stages.production"].must_equal true
         csv_filter["jobs.status"].must_equal "succeeded"
         csv_filter["stages.project_id"].must_equal projects(:test).id
+      end
+
+      it "with production No filter creates a correct filter" do
+        filter = { production: "No"}
+        post :create, filter
+        csv_filter = CsvExport.last.filters
+        csv_filter["stages.production"].must_equal false
       end
 
       it "raises for invalid params" do

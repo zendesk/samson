@@ -100,7 +100,7 @@ describe Deploy do
   end
 
   describe "#csv_buddy and #buddy_email" do
-    setup { @deploy = create_deploy! }
+    before { @deploy = create_deploy! }
 
     describe "no buddy present" do
       it "returns no email or name" do
@@ -117,7 +117,7 @@ describe Deploy do
         @deploy.buddy_email.must_equal "bypassed"
       end
 
-      it "should return the name and email of the buddy when not bypassed" do
+      it "returns the name and email of the buddy when not bypassed" do
         other_user = users(:deployer_buddy)
         @deploy.stubs(:buddy).returns(other_user)
         @deploy.buddy_name.must_equal other_user.name

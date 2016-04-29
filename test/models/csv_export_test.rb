@@ -1,8 +1,32 @@
 require_relative '../test_helper'
 
+SingleCov.covered!
+
 describe CsvExport do
   let(:user) { users(:deployer) }
-  setup { @csv_export = CsvExport.create(user: user) }
+  before { @csv_export = CsvExport.create(user: user) }
+
+  describe "scopes" do
+    before do
+      @old_export = CsvExport.create({user: user, filters: {}})
+    end
+
+    it "returns old created" do
+      @old_export.update_attributes({created_at: DateTime.now - 1.year, updated_at: DateTime.now})
+      assert_equal(1, CsvExport.old.size)
+    end
+
+    it "returns old downloaded" do
+      @old_export.update_attributes({updated_at: DateTime.now - 13.hours, created_at: DateTime.now - 14.hours,
+        status: 'downloaded'})
+      assert_equal(1, CsvExport.old.size)
+    end
+
+    it "returns no old" do
+      @old_export.destroy
+      assert_equal(0, CsvExport.old.size)
+    end
+  end
 
   describe "status methods" do
     it "sets pending and responds correctly" do
@@ -93,14 +117,14 @@ describe CsvExport do
   end
 
   describe "delete_file" do
-    setup do
+    before do
       @filename = @csv_export.path_file
       FileUtils.mkdir_p(File.dirname(@filename))
       File.new(@filename, 'w')
-      assert File.exists?(@filename), "File not created in setup"
+      assert File.exists?(@filename), "File not created in before"
     end
 
-    teardown do
+    after do
       File.delete(@filename) if File.exist?(@filename)
     end
 

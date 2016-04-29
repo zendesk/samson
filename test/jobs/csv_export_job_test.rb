@@ -1,5 +1,7 @@
 require_relative '../test_helper'
 
+SingleCov.covered!
+
 describe CsvExportJob do
   let(:deployer) { users(:deployer) }
   let(:project) { projects(:test)}
@@ -10,9 +12,31 @@ describe CsvExportJob do
       CsvExportJob.perform_later(deploy_export_job)
     end
   end
-  
+
+  it "cleans up old jobs" do
+    old = CsvExport.create!({user: deployer, filters: {}})
+    old.update_attributes({created_at: DateTime.now - 1.year, updated_at: DateTime.now - 1.year})
+    old_id = old.id
+
+    CsvExportJob.perform_now(deploy_export_job)
+    assert_raises(ActiveRecord::RecordNotFound) {CsvExport.find(old_id)}
+  end
+
+  describe "Error Handling" do
+    before do
+      FileUtils.mkdir_p(File.dirname(deploy_export_job.path_file))
+      File.chmod(0000, File.dirname(deploy_export_job.path_file))
+    end
+    after {File.chmod(0755, File.dirname(deploy_export_job.path_file))}
+
+    it "sets :failed" do
+      CsvExportJob.perform_now(deploy_export_job)
+      assert deploy_export_job.status?('failed'), "Not Finished"
+    end
+  end
+
   describe "Job executes for deploy csv" do
-    teardown { deploy_export_job.delete_file }
+    after { deploy_export_job.delete_file }
 
     it "finishes with file" do
       CsvExportJob.perform_now(deploy_export_job)
@@ -20,7 +44,7 @@ describe CsvExportJob do
       assert job.status?('finished'), "Not Finished"
       assert File.exist?(job.path_file), "File Not exist"
     end
-    
+
     it "creates deploys csv file accurately and completely" do
       accuracy_test({})
     end

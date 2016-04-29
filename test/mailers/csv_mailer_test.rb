@@ -1,5 +1,7 @@
 require_relative '../test_helper'
 
+SingleCov.covered!
+
 describe CsvMailer do
   before { @csv_export = CsvExport.find(csv_exports(:pending).id) }
 

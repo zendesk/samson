@@ -2,7 +2,7 @@ require 'csv'
 
 class CsvExportJob < ActiveJob::Base
   queue_as :csv_jobs
- 
+
   def perform(csv_export)
     ActiveRecord::Base.connection_pool.with_connection do
       create_export_folder(csv_export)
@@ -10,29 +10,28 @@ class CsvExportJob < ActiveJob::Base
       cleanup_downloaded
     end
   end
-  
+
   private
-  
+
   def cleanup_downloaded
-    # TODO delete files with no record associations
     CsvExport.old.each do |csv_export|
       csv_export.destroy
     end
   end
-  
+
   def generate_csv(csv_export)
     csv_export.status! :started
     deploy_csv_export(csv_export)
     CsvMailer.created(csv_export).deliver_now if csv_export.email.present?
     csv_export.status! :finished
     Rails.logger.info("Export #{csv_export.download_name} completed")
-  rescue IOError, ActiveRecord::ActiveRecordError => e
+  rescue Errno::EACCES, IOError, ActiveRecord::ActiveRecordError => e
     csv_export.delete_file
     csv_export.status! :failed
     Rails.logger.error("Export #{csv_export.id} failed with error #{e}")
     Airbrake.notify(e, error_message: "Export #{csv_export.id} failed.")
   end
-  
+
   def deploy_csv_export(csv_export)
     filename = csv_export.path_file
     filter = csv_export.filters
@@ -54,7 +53,7 @@ class CsvExportJob < ActiveJob::Base
       csv << filters_applied
     end
   end
-  
+
   def create_export_folder(csv_export)
     FileUtils.mkdir_p(File.dirname(csv_export.path_file))
   end
