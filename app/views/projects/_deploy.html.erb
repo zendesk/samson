@@ -1,4 +1,4 @@
-<% cache [@project, deploy] do %>
+<% cache [@project, deploy, params] do %>
   <tr>
     <% unless @project %>
       <td><%= link_to deploy.project.name, deploy.project %></td>
