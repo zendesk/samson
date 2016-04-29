@@ -54,10 +54,14 @@ module ApplicationHelper
   end
 
   def render_time(time, format)
+    # grab the time format that the user has in their profile
+    format ||= current_user.time_format
     if format == 'local'
-      time_tag(time, format: '%B %d, %Y %l:%M %p')
+      local_time = time.in_time_zone(cookies[:timezone] || 'UTC').to_s
+      content_tag(:time, local_time, datetime: local_time)
     elsif format == 'utc'
-      time_tag(time.utc, format: '%B %d, %Y %l:%M %p %Z')
+      utc_time = time.in_time_zone('UTC')
+      content_tag(:time, utc_time.to_s, datetime: utc_time)
     else
       relative_time(time)
     end
