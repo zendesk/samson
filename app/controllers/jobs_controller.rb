@@ -1,5 +1,5 @@
 class JobsController < ApplicationController
-  include ProjectLevelAuthorization
+  include CurrentProject
 
   skip_before_action :require_project, only: [:enabled]
 
