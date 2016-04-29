@@ -1,0 +1,6 @@
+<script>
+  $(function(){
+    // hide command section when kubernetes is selected
+    $("#script-section").toggle(<%= !@stage.kubernetes %>);
+  });
+</script>
