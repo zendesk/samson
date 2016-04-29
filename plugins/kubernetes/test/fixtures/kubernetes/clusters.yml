@@ -1,5 +1,5 @@
 test_cluster:
   name: test
   description: test cluster
-  config_filepath: /tmp/config
+  config_filepath: plugins/kubernetes/test/cluster_config.yml
   config_context: test

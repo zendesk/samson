@@ -1,6 +1,6 @@
 require_relative '../../../test_helper'
 
-SingleCov.covered! uncovered: 5
+SingleCov.covered! uncovered: 8
 
 describe Kubernetes::Api::Pod do
   let(:pod_name) { 'test_name' }
@@ -89,14 +89,36 @@ describe Kubernetes::Api::Pod do
     end
   end
 
+  describe "#restarted?" do
+    let(:pod) { Kubernetes::Api::Pod.new build_kubeclient_pod }
+
+    it "is not restarted" do
+      refute pod.restarted?
+    end
+
+    it "is not restarted without statuses" do
+      pod.instance_variable_get(:@pod).status.containerStatuses = []
+      refute pod.restarted?
+    end
+
+    it "is restarted when restarting" do
+      pod.instance_variable_get(:@pod).status.containerStatuses[0].restartCount = 1
+      assert pod.restarted?
+    end
+  end
+
   private
 
   def build_kubeclient_pod
-    Kubeclient::Pod.new(
-        JSON.parse(
-            %({"metadata": {"name": "#{pod_name}"},
-               "status": {"phase": "Running",
-                          "conditions": [{"type": "Ready", "status": "True"}]}})))
+    data = {
+      metadata: {name: pod_name},
+      status: {
+        phase: "Running",
+        conditions: [{type: "Ready", status: "True"}],
+        containerStatuses: [{restartCount: 0}]
+      }
+    }
+    Kubeclient::Pod.new(JSON.load(data.to_json))
   end
 
   def build_watch_notice

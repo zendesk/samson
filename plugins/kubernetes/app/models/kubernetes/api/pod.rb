@@ -17,6 +17,10 @@ module Kubernetes
         @pod.status.phase == 'Running' && ready?
       end
 
+      def restarted?
+        @pod.status.containerStatuses.any? { |s| s.restartCount != 0 }
+      end
+
       def phase
         @pod.status.phase
       end
