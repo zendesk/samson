@@ -1,6 +1,6 @@
 require_relative '../test_helper'
 
-SingleCov.covered! unless defined?(Rake) # rake preloads all plugins
+SingleCov.covered! uncovered: 1 unless defined?(Rake) # rake preloads all plugins
 
 describe SamsonAwsEcr do
   let(:stage) { stages(:test_staging) }
@@ -18,15 +18,20 @@ describe SamsonAwsEcr do
 
     around { |test| Dir.mktmpdir { |dir| Dir.chdir(dir) { test.call } } }
 
-    before do
-      SamsonAwsEcr::Engine.ecr_client = ecr_client
-      SamsonAwsEcr::Engine.credentials_expire_at = Time.current
-      FileUtils.mkdir("dir")
+    around do |t|
+      begin
+        old_time = SamsonAwsEcr::Engine.credentials_expire_at
+        old_client, SamsonAwsEcr::Engine.ecr_client = SamsonAwsEcr::Engine.ecr_client, ecr_client
+        t.call
+      ensure
+        SamsonAwsEcr::Engine.credentials_expire_at = old_time
+        SamsonAwsEcr::Engine.ecr_client = old_client
+      end
     end
 
     it "changes the DOCKER_REGISTRY_USER and DOCKER_REGISTRY_PASS" do
       SamsonAwsEcr::Engine.ecr_client.stub_responses(:get_authorization_token, {
-        authorization_data: [ authorization_token: base64_authorization_token ]
+        authorization_data: [ authorization_token: base64_authorization_token, expires_at: Time.now + 2.hours ]
       })
 
       fire
@@ -69,6 +74,12 @@ describe SamsonAwsEcr do
 
       ENV['DOCKER_REGISTRY_USER'].must_equal "new #{username}"
       ENV['DOCKER_REGISTRY_PASS'].must_equal "new #{password}"
+    end
+
+    it "fails silently on InvalidSignatureException" do
+      SamsonAwsEcr::Engine.ecr_client.expects(:get_authorization_token).raises(Aws::ECR::Errors::InvalidSignatureException.new("XXX", {}))
+      Rails.logger.expects(:error)
+      fire
     end
   end
 end
