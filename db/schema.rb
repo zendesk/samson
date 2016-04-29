@@ -11,20 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20160426223230) do
-
-  create_table "build_statuses", force: :cascade do |t|
-    t.integer  "build_id",                                     null: false
-    t.string   "source",     limit: 255
-    t.string   "status",     limit: 255,   default: "pending", null: false
-    t.string   "url",        limit: 255
-    t.string   "summary",    limit: 512
-    t.text     "data",       limit: 65535
-    t.datetime "created_at"
-    t.datetime "updated_at"
-  end
-
-  add_index "build_statuses", ["build_id"], name: "index_build_statuses_on_build_id", using: :btree
+ActiveRecord::Schema.define(version: 20160429203410) do
 
   create_table "builds", force: :cascade do |t|
     t.integer  "project_id",                       null: false
