@@ -55,6 +55,7 @@ module ApplicationHelper
 
   def render_time(time, format)
     # grab the time format that the user has in their profile
+    format ||= current_user.time_format || 'utc'
     if format == 'local'
       local_time = time.in_time_zone(cookies[:timezone] || 'UTC').to_s
       content_tag(:time, local_time, datetime: local_time)
