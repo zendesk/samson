@@ -28,7 +28,9 @@ module Kubernetes
       loop do
         return false if stopped?
 
-        status = release.release_docs.map { |release_doc| pod_is_live?(release_doc) }
+        pods = release.fetch_pods
+        status = release.release_docs.map { |release_doc| pod_is_live?(pods, release_doc) }
+
         if @testing_for_stability
           if status.all?
             @testing_for_stability += 1
@@ -61,22 +63,14 @@ module Kubernetes
       end
     end
 
-    # TODO only call once per cluster and filter the output
-    def pod_is_live?(release_doc)
+    def pod_is_live?(pods, release_doc)
       group = release_doc.deploy_group
-      role = release_doc.kubernetes_role.name
-      pod = group.kubernetes_cluster.client.get_pods(
-        namespace: group.kubernetes_namespace,
-        label_selector: {
-          deploy_group_id: group.id,
-          project_id: @job.project_id,
-          release_id: release_doc.kubernetes_release_id,
-          role: role
-        }.map { |k, v| "#{k}=#{v}" }.join(',')
-      ).first
+      role = release_doc.kubernetes_role
+
+      pod = pods.detect { |pod| pod.role_id == role.id && pod.deploy_group_id == group.id }
 
       live, description = analyze_pod_status(pod)
-      @output.puts "#{group.name} #{role}: #{description}"
+      @output.puts "#{group.name} #{role.name}: #{description}"
       live
     end
 
@@ -142,7 +136,6 @@ module Kubernetes
 
     def analyze_pod_status(pod)
       if pod
-        pod = Kubernetes::Api::Pod.new(pod)
         if pod.live?
           if pod.restarted?
             [false, "Restarted"]
