@@ -63,12 +63,87 @@ describe Kubernetes::DeployExecutor do
       out.must_include "SUCCESS"
     end
 
-    it "fails when build is not found" do
-      job.update_column(:commit, 'some-unfound-sha')
-      e = assert_raises Samson::Hooks::UserError do
-        refute execute!
+    describe "build" do
+      before do
+        build.update_column(:docker_repo_digest, nil)
       end
-      e.message.must_equal "Build for sha some-unfound-sha does not exist, create it before deploying"
+
+      it "fails when the build is not built" do
+        e = assert_raises Samson::Hooks::UserError do
+          execute!
+        end
+        e.message.must_equal "Build #{build.url} was created but never ran, run it manually."
+        out.wont_include "Creating Build"
+      end
+
+      it "waits when build is running" do
+        build.create_docker_job.update_column(:status, 'running')
+        build.save!
+
+        job = build.docker_build_job
+
+        Build.any_instance.stubs(:docker_build_job).with do |reload|
+          if reload # inside wait loop
+            job.status = 'succeeded'
+            build.update_column(:docker_repo_digest, 'somet-digest')
+          end
+          true
+        end.returns job
+
+        assert execute!
+
+        out.must_include "Waiting for Build #{build.url} to finish."
+        out.must_include "SUCCESS"
+      end
+
+      it "fails when build job failed" do
+        build.create_docker_job.update_column(:status, 'cancelled')
+        build.save!
+        e = assert_raises Samson::Hooks::UserError do
+          execute!
+        end
+        e.message.must_equal "Build #{build.url} is cancelled, rerun it manually."
+        out.wont_include "Creating Build"
+      end
+
+      describe "when build needs to be created" do
+        before do
+          build.update_column(:git_sha, 'something-else')
+          Build.any_instance.stubs(:validate_git_reference)
+        end
+
+        it "succeeds when the build works" do
+          DockerBuilderService.any_instance.expects(:run!).with do
+            Build.last.create_docker_job.update_column(:status, 'succeeded')
+            Build.last.update_column(:docker_repo_digest, 'some-sha')
+            true
+          end
+          assert execute!
+          out.must_include "SUCCESS"
+          out.must_include "Creating Build for #{job.commit}"
+          out.must_include "Build #{Build.last.url} is looking good"
+        end
+
+        it "fails when the build fails" do
+          DockerBuilderService.any_instance.expects(:run!).with do
+            Build.any_instance.expects(:docker_build_job).at_least_once.returns Job.new(status: 'cancelled')
+            true
+          end
+          e = assert_raises Samson::Hooks::UserError do
+            execute!
+          end
+          e.message.must_equal "Build #{Build.last.url} is cancelled, rerun it manually."
+          out.must_include "Creating Build for #{job.commit}.\n"
+        end
+
+        it "stops when deploy is stopped by user" do
+          executor.stop!('FAKE-SIGNAL')
+          DockerBuilderService.any_instance.expects(:run!).returns(true)
+          refute execute!
+          out.scan(/.*Build.*/).must_equal ["Creating Build for #{job.commit}."] # not waiting for build
+          out.must_include "STOPPED"
+        end
+      end
     end
 
     it "stops the loop when stopping" do

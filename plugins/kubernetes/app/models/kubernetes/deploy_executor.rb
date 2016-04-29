@@ -18,17 +18,15 @@ module Kubernetes
     end
 
     def execute!(*_commands)
-      build = find_build
+      build = find_or_create_build
+      return false if stopped?
       release = create_release(build)
       ensure_service(release)
       create_deploys(release)
 
       # Wait until deploys are done and show progress
       loop do
-        if @stopped
-          @output.puts "STOPPED"
-          return false
-        end
+        return false if stopped?
 
         status = release.release_docs.map { |release_doc| pod_is_live?(release_doc) }
         if @testing_for_stability
@@ -56,6 +54,13 @@ module Kubernetes
 
     private
 
+    def stopped?
+      if @stopped
+        @output.puts "STOPPED"
+        true
+      end
+    end
+
     # TODO only call once per cluster and filter the output
     def pod_is_live?(release_doc)
       group = release_doc.deploy_group
@@ -75,15 +80,45 @@ module Kubernetes
       live
     end
 
-    # find the docker build we are deploying
-    # TODO: create it and wait ... also show creation logs etc
-    def find_build
-      if build = Build.find_by_git_sha(@job.commit)
-        @output.puts("Found build #{build.id} for sha #{@job.commit}")
-      else
-        raise Samson::Hooks::UserError, "Build for sha #{@job.commit} does not exist, create it before deploying"
-      end
+    def find_or_create_build
+      build = Build.find_by_git_sha(@job.commit) || create_build
+      wait_for_build(build)
+      ensure_build_is_successful(build) unless @stopped
       build
+    end
+
+    def wait_for_build(build)
+      if !build.docker_repo_digest && build.docker_build_job.try(:running?)
+        loop do
+          break if @stopped
+          @output.puts("Waiting for Build #{build.url} to finish.")
+          sleep 2
+          break if build.docker_build_job(:reload).finished?
+        end
+      end
+      build.reload
+    end
+
+    def create_build
+      @output.puts("Creating Build for #{@job.commit}.")
+      build = Build.create!(
+        git_ref: @job.commit,
+        creator: @job.user,
+        project: @job.project,
+        label: "Automated build triggered via Deploy ##{@job.deploy.id}"
+      )
+      DockerBuilderService.new(build).run!(push: true)
+      build
+    end
+
+    def ensure_build_is_successful(build)
+      if build.docker_repo_digest
+        @output.puts("Build #{build.url} is looking good!")
+      elsif build_job = build.docker_build_job
+        raise Samson::Hooks::UserError, "Build #{build.url} is #{build_job.status}, rerun it manually."
+      else
+        raise Samson::Hooks::UserError, "Build #{build.url} was created but never ran, run it manually."
+      end
     end
 
     # create a realese, storing all the configuration
