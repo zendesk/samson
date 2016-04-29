@@ -86,9 +86,7 @@ class DeploysController < ApplicationController
       format.json do
         render json: @deploys
       end
-      format.html do
-        render :search, locals: { title: 'Search Resuls' }
-      end
+      format.html
       format.csv do
         datetime = Time.now.strftime "%Y%m%d_%H%M"
         send_data deploys.to_csv, type: :csv, filename: "deploy_search_results_#{datetime}.csv"
