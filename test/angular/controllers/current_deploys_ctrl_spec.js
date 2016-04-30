@@ -6,15 +6,13 @@ describe("currentDeploysCtrl", function() {
     $controller,
     $httpBackend,
     SseFactory,
-    DeployHelper,
     createController;
 
-  beforeEach(inject(function(_$controller_, _$httpBackend_, _$rootScope_, _SseFactory_, _DeployHelper_) {
+  beforeEach(inject(function(_$controller_, _$httpBackend_, _$rootScope_, _SseFactory_) {
     $rootScope = _$rootScope_;
     $scope = $rootScope.$new();
     $httpBackend = _$httpBackend_;
     SseFactory = _SseFactory_;
-    DeployHelper = _DeployHelper_;
     createController = function() {
       $controller = _$controller_('currentDeploysCtrl', { $scope: $scope });
       $rootScope.$apply();
