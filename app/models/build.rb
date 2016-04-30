@@ -66,6 +66,10 @@ class Build < ActiveRecord::Base
     nil
   end
 
+  def url
+    AppRoutes.url_helpers.project_build_url(project, self)
+  end
+
   private
 
   def validate_git_reference

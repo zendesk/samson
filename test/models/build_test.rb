@@ -93,4 +93,11 @@ describe Build do
       assert_equal(mock_docker_image, build.docker_image)
     end
   end
+
+  describe "#url" do
+    it "builds a url" do
+      build = builds(:staging)
+      build.url.must_equal "http://www.test-url.com/projects/foo/builds/#{build.id}"
+    end
+  end
 end
