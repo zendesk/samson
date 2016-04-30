@@ -9,6 +9,7 @@ describe Kubernetes::DeployExecutor do
   let(:deploy) { job.deploy }
   let(:job) { jobs(:succeeded_test) }
   let(:build) { builds(:docker_build) }
+  let(:deploy_group) { stage.deploy_groups.first }
   let(:executor) { Kubernetes::DeployExecutor.new(output, job: job) }
 
   before do
@@ -35,12 +36,17 @@ describe Kubernetes::DeployExecutor do
     let(:pod_reply) do
       {
         resourceVersion: "1",
-        items: [{
-          status: {
-            phase: "Running", conditions: [{type: "Ready", status: "True"}],
-            containerStatuses: [{restartCount: 0}]
+        items: [kubernetes_roles(:resque_worker), kubernetes_roles(:app_server)].map do |role|
+          {
+            status: {
+              phase: "Running", conditions: [{type: "Ready", status: "True"}],
+              containerStatuses: [{restartCount: 0}]
+            },
+            metadata: {
+              labels: {deploy_group_id: deploy_group.id.to_s, role_id: role.id.to_s}
+            }
           }
-        }]
+        end
       }
     end
     let(:pod_status) { pod_reply[:items].first[:status] }
@@ -49,9 +55,7 @@ describe Kubernetes::DeployExecutor do
       job.update_column(:commit, build.git_sha) # this is normally done by JobExecution
       Kubernetes::ReleaseDoc.any_instance.stubs(raw_template: {'kind' => 'Deployment', 'spec' => {'template' => {'metadata' => {'labels' => {}}, 'spec' => {'containers' => [{}]}}}, 'metadata' => {'labels' => {}}}.to_yaml) # TODO: should inject that from current checkout and not fetch via github
       Kubernetes::Cluster.any_instance.stubs(connection_valid?: true, namespace_exists?: true)
-      stage.deploy_groups.each do |dg|
-        dg.create_cluster_deploy_group cluster: kubernetes_clusters(:test_cluster), namespace: 'staging', deploy_group: dg
-      end
+      deploy_group.create_cluster_deploy_group! cluster: kubernetes_clusters(:test_cluster), namespace: 'staging', deploy_group: deploy_group
       stub_request(:get, "http://foobar.server/apis/extensions/v1beta1/namespaces/staging/deployments/").to_return(status: 404) # checks for previous deploys ... but there are none
       stub_request(:post, "http://foobar.server/apis/extensions/v1beta1/namespaces/staging/deployments").to_return(body: "{}") # creates deployment
       executor.stubs(:sleep)

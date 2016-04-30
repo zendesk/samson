@@ -87,6 +87,20 @@ module Kubernetes
       save!
     end
 
+    def fetch_pods
+      release_docs.map(&:deploy_group).flat_map do |deploy_group|
+        query = {
+          namespace: deploy_group.kubernetes_namespace,
+          label_selector: {
+            deploy_group_id: deploy_group.id,
+            project_id: project.id, # TODO: use project_id once normalize PR is merged
+            release_id: id
+          }.to_kuber_selector
+        }
+        deploy_group.kubernetes_cluster.client.get_pods(query)
+      end.map! { |p| Kubernetes::Api::Pod.new(p) }
+    end
+
     private
 
     def docker_image_in_registry?
