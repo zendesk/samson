@@ -152,10 +152,6 @@ class Deploy < ActiveRecord::Base
   end
 
   def url
-    AppRoutes.url_helpers.project_deploy_path(project, self)
-  end
-
-  def full_url
     AppRoutes.url_helpers.project_deploy_url(project, self)
   end
 
