@@ -21,6 +21,6 @@ class KubernetesReleasesController < ApplicationController
 
   def release_params
     params.require(:kubernetes_release).permit(:build_id, deploy_groups: [:id, roles: [:id, :replicas]])
-      .merge(user: current_user)
+      .merge(user: current_user, project: current_project)
   end
 end
