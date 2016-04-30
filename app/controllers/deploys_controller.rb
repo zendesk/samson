@@ -29,11 +29,7 @@ class DeploysController < ApplicationController
 
   def active
     @deploys = active_deploy_scope
-
-    respond_to do |format|
-      format.html
-      format.json { render json: @deploys }
-    end
+    render partial: 'shared/deploys_table', layout: false if params[:partial]
   end
 
   # Takes the same params that are used by the client side filtering
