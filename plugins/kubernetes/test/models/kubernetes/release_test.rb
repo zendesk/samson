@@ -104,6 +104,21 @@ describe Kubernetes::Release do
     end
   end
 
+  describe "#fetch_pods" do
+    it "is empty when there are no deploy groups" do
+      release.fetch_pods.must_equal []
+    end
+
+    it "fetches information from clusters" do
+      release = kubernetes_releases(:test_release)
+      stub_request(:get, %r{http://foobar.server/api/1/namespaces/pod1/pods}).to_return(body: {
+        resourceVersion: "1",
+        items: [{}, {}]
+      }.to_json)
+      release.fetch_pods.size.must_equal 2
+    end
+  end
+
   def expect_file_contents_from_repo
     Build.any_instance.expects(:file_from_repo).returns(role_config_file)
   end

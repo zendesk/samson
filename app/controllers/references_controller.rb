@@ -1,5 +1,5 @@
 class ReferencesController < ApplicationController
-  include ProjectLevelAuthorization
+  include CurrentProject
 
   before_action :authorize_project_deployer!
 

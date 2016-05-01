@@ -1,5 +1,5 @@
 class KubernetesRolesController < ApplicationController
-  include ProjectLevelAuthorization
+  include CurrentProject
 
   before_action :authorize_project_deployer!, only: [:index]
   before_action :authorize_project_admin!, only: [:show, :update, :refresh]

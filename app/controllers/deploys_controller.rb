@@ -1,5 +1,5 @@
 class DeploysController < ApplicationController
-  include ProjectLevelAuthorization
+  include CurrentProject
 
   skip_before_action :require_project, only: [:active, :active_count, :changeset]
 
@@ -57,7 +57,7 @@ class DeploysController < ApplicationController
     end
 
     if params[:project_name].present?
-      projects = Project.where(name: params[:project_name]).pluck(:id)
+      projects = Project.where("name LIKE ?", "%#{ActiveRecord::Base.send(:sanitize_sql_like, params[:project_name])}%").pluck(:id)
     end
 
     if users || status
@@ -84,9 +84,7 @@ class DeploysController < ApplicationController
       format.json do
         render json: @deploys
       end
-      format.html do
-        render :search, locals: { title: 'Search Resuls' }
-      end
+      format.html
     end
   end
 

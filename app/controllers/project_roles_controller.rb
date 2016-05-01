@@ -1,5 +1,5 @@
 class ProjectRolesController < ApplicationController
-  include ProjectLevelAuthorization
+  include CurrentProject
 
   before_action :authorize_project_admin!
 

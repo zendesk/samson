@@ -2,7 +2,7 @@
   <legend>Slack</legend>
 
   <% stage = form.object %>
-  <% stage.slack_webhooks.build unless stage.slack_webhooks.last.try(:webhook_url).blank? %>
+  <% stage.slack_webhooks.build %>
 
   <div class="col-lg-offset-2">
     <p>Details of the webhook to be notified on deploys.</p>

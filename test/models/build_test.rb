@@ -77,28 +77,6 @@ describe Build do
     end
   end
 
-  describe 'successful?' do
-    let(:build) { builds(:staging) }
-
-    it 'returns true when all successful' do
-      build.statuses.create!(source: 'Jenkins', status: BuildStatus::SUCCESSFUL)
-      build.statuses.create!(source: 'Travis',  status: BuildStatus::SUCCESSFUL)
-      assert build.successful?
-    end
-
-    it 'returns false when there is a failure' do
-      build.statuses.create!(source: 'Jenkins', status: BuildStatus::SUCCESSFUL)
-      build.statuses.create!(source: 'Travis',  status: BuildStatus::FAILED)
-      refute build.successful?
-    end
-
-    it 'returns false when there is a pending status' do
-      build.statuses.create!(source: 'Jenkins', status: BuildStatus::SUCCESSFUL)
-      build.statuses.create!(source: 'Travis',  status: BuildStatus::PENDING)
-      refute build.successful?
-    end
-  end
-
   describe '#docker_image=' do
     let(:build) { valid_build }
     let(:docker_image_id) { '2d2b0b3204b0166435c3d96d0b27d0ad2083e5e040192632c58eeb9491d6bfaa' }
@@ -113,6 +91,13 @@ describe Build do
       build.docker_image = mock_docker_image
       assert_equal(docker_image_id, build.docker_image_id)
       assert_equal(mock_docker_image, build.docker_image)
+    end
+  end
+
+  describe "#url" do
+    it "builds a url" do
+      build = builds(:staging)
+      build.url.must_equal "http://www.test-url.com/projects/foo/builds/#{build.id}"
     end
   end
 end

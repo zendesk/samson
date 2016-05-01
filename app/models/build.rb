@@ -6,7 +6,6 @@ class Build < ActiveRecord::Base
   belongs_to :project
   belongs_to :docker_build_job, class_name: 'Job'
   belongs_to :creator, class_name: 'User', foreign_key: 'created_by'
-  has_many :statuses, class_name: 'BuildStatus'
   has_many :deploys
   has_many :releases
 
@@ -25,10 +24,6 @@ class Build < ActiveRecord::Base
 
   def commit_url
     "#{project.repository_homepage}/tree/#{git_sha}"
-  end
-
-  def successful?
-    statuses.all?(&:successful?)
   end
 
   def docker_build_output
@@ -69,6 +64,10 @@ class Build < ActiveRecord::Base
     end
   rescue Octokit::NotFound
     nil
+  end
+
+  def url
+    AppRoutes.url_helpers.project_build_url(project, self)
   end
 
   private

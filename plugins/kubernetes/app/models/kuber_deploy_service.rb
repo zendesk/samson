@@ -32,17 +32,10 @@ class KuberDeployService
 
   def create_services!
     kuber_release.release_docs.each do |release_doc|
+      status = release_doc.ensure_service
       role = release_doc.kubernetes_role
       service = release_doc.service
-
-      if service.nil?
-        log 'no Service defined', role: role.name
-      elsif service.running?
-        log 'Service already running', role: role.name, service_name: service.name
-      else
-        log 'creating Service', role: role.name, service_name: service.name
-        release_doc.client.create_service(Kubeclient::Service.new(release_doc.service_hash))
-      end
+      log status, role: role.name, service_name: service.try(:name)
     end
   end
 

@@ -34,6 +34,7 @@ gem 'paper_trail'
 gem 'sawyer', '~> 0.5'
 gem 'sse-rails-engine', '~> 1.4'
 
+
 # Hashicorp vault
 gem 'vault'
 
@@ -78,6 +79,8 @@ group :assets do
     gem 'rails-assets-message-center'
     gem 'rails-assets-angular-ui-router'
     gem 'rails-assets-angular-truncate-2'
+    gem 'rails-assets-jstimezonedetect', source: 'https://rails-assets.org'
+    gem 'rails-assets-jquery-cookie', source: 'https://rails-assets.org'
   end
 end
 

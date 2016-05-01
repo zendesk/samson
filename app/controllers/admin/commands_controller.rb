@@ -1,5 +1,5 @@
 class Admin::CommandsController < ApplicationController
-  include ProjectLevelAuthorization
+  include CurrentProject
 
   before_action :find_command, only: [ :update, :edit ]
   before_action :authorize_project_admin!, only: [ :update, :edit ]

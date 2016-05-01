@@ -1,5 +1,5 @@
 class LocksController < ApplicationController
-  include ProjectLevelAuthorization
+  include CurrentProject
 
   before_action :authorize_admin!, if: :for_global_lock?
 

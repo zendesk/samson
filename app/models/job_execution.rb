@@ -85,7 +85,6 @@ class JobExecution
   private
 
   def stage
-    # TODO -- this class should not know about stages
     @job.deploy.try(:stage)
   end
 
@@ -154,7 +153,12 @@ class JobExecution
     ActiveRecord::Base.clear_active_connections!
 
     ActiveSupport::Notifications.instrument("execute_shell.samson", payload) do
-      payload[:success] = @executor.execute!(*cmds)
+      payload[:success] = if stage.try(:kubernetes)
+        @executor = Kubernetes::DeployExecutor.new(@output, job: @job)
+        @executor.execute!
+      else
+        @executor.execute!(*cmds)
+      end
     end
 
     Samson::Hooks.fire(:after_job_execution, @job, payload[:success], @output)
@@ -210,7 +214,7 @@ class JobExecution
 
   def lock_project(&block)
     holder = (stage.try(:name) || @job.user.name)
-    callback = proc { |owner| output.write("Waiting for repository while setting it up for #{owner}\n") if Time.now.to_i % 10 == 0 }
+    callback = proc { |owner| @output.write("Waiting for repository while setting it up for #{owner}\n") if Time.now.to_i % 10 == 0 }
     @job.project.with_lock(output: @output, holder: holder, error_callback: callback, timeout: lock_timeout, &block)
   end
 

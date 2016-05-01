@@ -192,6 +192,9 @@ describe StagesController do
 
         it 'renders' do
           assert_template :edit
+
+          assert_select '#stage_slack_webhooks_attributes_0_webhook_url'
+          assert_select '#stage_slack_webhooks_attributes_0_channel'
         end
 
         it 'renders with no environments configured' do

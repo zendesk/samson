@@ -1,5 +1,5 @@
 class StagesController < ApplicationController
-  include ProjectLevelAuthorization
+  include CurrentProject
   include StagePermittedParams
 
   skip_around_action :login_user, if: :badge?
