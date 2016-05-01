@@ -8,7 +8,7 @@ describe CsvExportsController do
 
   describe "permissions test" do
     as_a_admin do
-      describe "a GET to new" do
+      describe "#new" do
         it "renders the full admin menu and new page" do
           get :new
           @response.body.must_include "Environment variables"
@@ -33,7 +33,7 @@ describe CsvExportsController do
   end
 
   as_a_deployer do
-    describe "#Index" do
+    describe "#index" do
       describe "as html with exports" do
         it "renders the table of each status type" do
           create_exports
@@ -106,9 +106,13 @@ describe CsvExportsController do
               assert_redirected_to export
             end
 
-            if [:finished, :downloaded].include?(state) # Only run this test if ready
+            if [:finished, :downloaded].include?(state)
               it "changes state to deleted if ready" do
                 assert export.reload.status? :deleted
+              end
+            else
+              it "does not change state if not ready" do
+                assert export.reload.status? state
               end
             end
           end
@@ -206,6 +210,13 @@ describe CsvExportsController do
         csv_filter["stages.production"].must_equal false
       end
 
+      it "with production blank filter does not have stages.production filter" do
+        filter = { production: ""}
+        post :create, filter
+        csv_filter = CsvExport.last.filters
+        refute csv_filter.keys.include?"stages.production"
+      end
+
       it "raises for invalid params" do
         create_fail_test(ArgumentError, {start_date: '2000-13-13'})
         create_fail_test(ArgumentError, {end_date: '2015-13-31'})
@@ -225,7 +236,7 @@ describe CsvExportsController do
   end
 
   def cleanup_files
-    CsvExport.all.each { |csv_file| csv_file.destroy! }
+    CsvExport.find_each(&:destroy!)
   end
 
   def index_page_includes_type(state)
@@ -240,14 +251,14 @@ describe CsvExportsController do
 
   def show_expected_html(state)
     case state.to_s
-      when 'deleted'
-        'has been deleted'
-      when 'failed'
-        'has failed.'
-      when 'finished', 'downloaded'
-        'Download'
-      else
-        'is being prepared'
+    when 'deleted'
+      'has been deleted'
+    when 'failed'
+      'has failed.'
+    when 'finished', 'downloaded'
+      'Download'
+    else
+      'is being prepared'
     end
   end
 

@@ -54,11 +54,11 @@ ActiveRecord::Schema.define(version: 20160422223358) do
   end
 
   create_table "csv_exports", force: :cascade do |t|
-    t.integer  "user_id",    limit: 4,   null: false
-    t.datetime "created_at",             null: false
-    t.datetime "updated_at",             null: false
-    t.string   "filters",    limit: 255, default: "{}"
-    t.string   "status",     limit: 255, default: "pending"
+    t.integer  "user_id",    limit: 4,                       null: false
+    t.datetime "created_at",                                 null: false
+    t.datetime "updated_at",                                 null: false
+    t.string   "filters",    limit: 255, default: "{}",      null: false
+    t.string   "status",     limit: 255, default: "pending", null: false
   end
 
   create_table "deploy_groups", force: :cascade do |t|

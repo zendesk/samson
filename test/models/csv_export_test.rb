@@ -143,7 +143,7 @@ describe CsvExport do
     it "sets defaults" do
       csv_export = CsvExport.create(user: user)
       csv_export.status.must_equal "pending"
-      csv_export.filters.must_equal Hash.new
+      csv_export.filters.must_equal({})
     end
   end
 end

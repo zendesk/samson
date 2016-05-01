@@ -52,7 +52,7 @@
       <% end %>
 
       <li class="dropdown <%= 'active' if request.path.starts_with?('/admin') %>">
-        <a href="#" class="dropdown-toggle" data-toggle="dropdown">Admin <b class="caret"></b></a>
+        <a href="#" class="dropdown-toggle" data-toggle="dropdown">Manage <b class="caret"></b></a>
         <ul class="dropdown-menu">
           <% if current_user.try(:is_admin?) %>
             <% if DeployGroup.enabled? %>

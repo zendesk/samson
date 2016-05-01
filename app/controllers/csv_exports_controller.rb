@@ -75,7 +75,6 @@ class CsvExportsController < ApplicationController
       case production
       when 'Yes' then filter['stages.production'] = true
       when 'No'  then filter['stages.production'] = false
-      when 'Any' then #ignore
       else
         raise "Invalid production filter #{production}"
       end
