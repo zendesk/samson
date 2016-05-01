@@ -14,9 +14,7 @@ class CsvExportJob < ActiveJob::Base
   private
 
   def cleanup_downloaded
-    CsvExport.old.each do |csv_export|
-      csv_export.destroy
-    end
+    CsvExport.old.find_each(&:destroy!)
   end
 
   def generate_csv(csv_export)
