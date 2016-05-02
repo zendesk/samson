@@ -1,7 +1,18 @@
 class NormalizeProjectId < ActiveRecord::Migration
+  class KubernetesRelease < ActiveRecord::Base
+    belongs_to :build
+  end
+
+  class Build < ActiveRecord::Base
+  end
+
   def up
     add_column :kubernetes_releases, :project_id, :integer
-    ActiveRecord::Base.connection.execute 'UPDATE kubernetes_releases JOIN builds ON kubernetes_releases.build_id = builds.id SET kubernetes_releases.project_id = builds.project_id'
+
+    KubernetesRelease.find_each do |kr|
+      kr.update_column :project_id, kr.build.project_id
+    end
+
     change_column_null :kubernetes_releases, :project_id, false
   end
 
