@@ -31,7 +31,7 @@ class DeploysController < ApplicationController
     @deploys = active_deploy_scope
 
     respond_to do |format|
-      format.html { render 'recent', locals: { title: 'Current Deploys', show_filters: false, controller: 'currentDeploysCtrl' } }
+      format.html
       format.json { render json: @deploys }
     end
   end

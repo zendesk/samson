@@ -1,0 +1,20 @@
+<h1>Current Deploys</h1>
+
+<div class="timeline" ng-controller="currentDeploysCtrl">
+  <input type=hidden  id=default_time_format value="<%= current_user.time_format %>">
+  <section class="timeline-content clearfix">
+    <div class="deploy-csv">
+      <%= link_to "Download as CSV", recent_deploys_path(format: "csv") %>
+    </div>
+    <table class="timeline-content">
+      <tr>
+        <th>PROJECT</th>
+        <th>USER</th>
+        <th>DEPLOY</th>
+        <th>LAST UPDATE</th>
+        <th>STATUS</th>
+      </tr>
+      <tr deploy-details ng-repeat="deploy in deploys"></tr>
+    </table>
+  </section>
+</div>

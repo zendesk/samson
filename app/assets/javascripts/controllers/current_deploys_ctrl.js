@@ -1,9 +1,8 @@
-samson.controller("currentDeploysCtrl", function($scope, $http, SseFactory, $interval, DeployHelper) {
+// watches event stream to trigger realtime status display of deploys on /deploys/active
+samson.controller("currentDeploysCtrl", function($scope, $http, SseFactory, $interval) {
   'use strict';
 
   $scope.deploys = [];
-  $scope.helper = DeployHelper;
-
 
   function updateUpdatedAt() {
     _.each($scope.deploys, function(deploy) {
@@ -12,6 +11,7 @@ samson.controller("currentDeploysCtrl", function($scope, $http, SseFactory, $int
   }
 
   function init() {
+    // preload all active deploys
     $http.get('/deploys/active.json').success(function(result) {
       $scope.deploys = result.deploys;
       updateUpdatedAt();

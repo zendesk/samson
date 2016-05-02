@@ -69,7 +69,7 @@ describe DeploysController do
           let(:format) { :html }
 
           it "renders the template" do
-            assert_template :recent
+            assert_template :active
           end
         end
 
