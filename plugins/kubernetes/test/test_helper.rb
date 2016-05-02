@@ -44,7 +44,7 @@ class ActiveSupport::TestCase
     Tempfile.open('config') do |t|
       config = {
         'apiVersion' => '1',
-        'users' => [],
+        'users' => nil,
         'clusters' => [
           {
             'name' => 'somecluster',
