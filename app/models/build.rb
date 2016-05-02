@@ -59,11 +59,8 @@ class Build < ActiveRecord::Base
 
   def file_from_repo(path, ttl: 1.hour)
     Rails.cache.fetch([self, path], expire_in: ttl) do
-      data = GITHUB.contents(project.github_repo, path: path, ref: git_sha)
-      Base64.decode64(data[:content])
+      project.repository.file_content git_sha, path
     end
-  rescue Octokit::NotFound
-    nil
   end
 
   def url
