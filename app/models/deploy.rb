@@ -45,7 +45,7 @@ class Deploy < ActiveRecord::Base
   end
 
   def short_reference
-    if reference =~ /\A[0-9a-f]{40}\Z/
+    if reference =~ Build::SHA1_REGEX
       reference[0...7]
     else
       reference
