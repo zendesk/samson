@@ -96,18 +96,18 @@ describe Kubernetes::Release do
     end
   end
 
-  describe "#fetch_pods" do
+  describe "#clients" do
     it "is empty when there are no deploy groups" do
-      release.fetch_pods.must_equal []
+      release.clients.must_equal []
     end
 
-    it "fetches information from clusters" do
+    it "returns scoped queries" do
       release = kubernetes_releases(:test_release)
       stub_request(:get, %r{http://foobar.server/api/1/namespaces/pod1/pods}).to_return(body: {
         resourceVersion: "1",
         items: [{}, {}]
       }.to_json)
-      release.fetch_pods.size.must_equal 2
+      release.clients.map { |c,q| c.get_pods(q) }.first.size.must_equal 2
     end
   end
 

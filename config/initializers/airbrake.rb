@@ -1,4 +1,5 @@
-if !defined?(Rails) || Rails.env.staging? || Rails.env.production?
+from_cap = !defined?(Rails)
+if from_cap || Rails.env.staging? || Rails.env.production?
   require 'airbrake'
   Airbrake.configure do |config|
     config.api_key = ENV['AIRBRAKE_API_KEY']
@@ -6,7 +7,7 @@ if !defined?(Rails) || Rails.env.staging? || Rails.env.production?
 else
   module Airbrake
     def self.notify(ex, *_args)
-      Rails.logger.error "AIRBRAKE: #{ex.message} - #{ex.backtrace[0..5].join("\n")}"
+      Rails.logger.error "AIRBRAKE: #{ex.class} - #{ex.message} - #{ex.backtrace[0..5].join("\n")}"
     end
 
     def self.notify_or_ignore(ex, *_args)

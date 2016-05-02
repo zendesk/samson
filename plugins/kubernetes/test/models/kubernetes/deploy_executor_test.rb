@@ -25,12 +25,16 @@ describe Kubernetes::DeployExecutor do
 
   describe "#execute!" do
     def execute!
-      stub_request(:get, %r{http://foobar.server/api/1/namespaces/staging/pods}).to_return(body: pod_reply.to_json) # checks pod status to see if it's good
+      stub_request(:get, %r{http://foobar.server/api/1/namespaces/staging/pods\?}).to_return(body: pod_reply.to_json) # checks pod status to see if it's good
       executor.execute!
     end
 
     def stop_after_first_iteration
       executor.expects(:sleep).with { executor.stop!('FAKE-SGINAL'); true }
+    end
+
+    def worker_is_unstable
+      pod_status[:containerStatuses].first[:restartCount] = 1
     end
 
     let(:pod_reply) do
@@ -43,6 +47,7 @@ describe Kubernetes::DeployExecutor do
               containerStatuses: [{restartCount: 0}]
             },
             metadata: {
+              name: "pod-#{role.name}",
               labels: {deploy_group_id: deploy_group.id.to_s, role_id: role.id.to_s}
             }
           }
@@ -59,6 +64,9 @@ describe Kubernetes::DeployExecutor do
       stub_request(:get, "http://foobar.server/apis/extensions/v1beta1/namespaces/staging/deployments/").to_return(status: 404) # checks for previous deploys ... but there are none
       stub_request(:post, "http://foobar.server/apis/extensions/v1beta1/namespaces/staging/deployments").to_return(body: "{}") # creates deployment
       executor.stubs(:sleep)
+      stub_request(:get, %r{http://foobar.server/api/1/namespaces/staging/events}).
+        to_return(body: {items: []}.to_json)
+      stub_request(:get, %r{http://foobar.server/api/1/namespaces/staging/pods/.*/log})
     end
 
     it "succeeds" do
@@ -166,6 +174,41 @@ describe Kubernetes::DeployExecutor do
 
       out.must_include "resque_worker: Waiting (Pending, not Ready)\n"
       out.must_include "STOPPED"
+    end
+
+    it "stops when detecting a restart" do
+      worker_is_unstable
+
+      refute execute!
+
+      out.must_include "resque_worker: Restarted\n"
+      out.must_include "UNSTABLE"
+    end
+
+    it "displays events and logs when deploy failed" do
+      # worker restarted -> we request the previous logs
+      stub_request(:get, "http://foobar.server/api/1/namespaces/staging/pods/pod-resque_worker/log?previous=true").
+        to_return(body: "LOG-1")
+
+      stub_request(:get, %r{http://foobar.server/api/1/namespaces/staging/events}).
+        to_return(body: {items:
+          [
+            {reason: 'FailedScheduling', message: "fit failure on node (ip-1-2-3-4)\nfit failure on node (ip-2-3-4-5)"},
+            {reason: 'FailedScheduling', message: "fit failure on node (ip-2-3-4-5)\nfit failure on node (ip-1-2-3-4)"}
+          ]}.to_json)
+
+      worker_is_unstable
+
+      refute execute!
+
+      # failed
+      out.must_include "resque_worker: Restarted\n"
+      out.must_include "UNSTABLE"
+
+      # correct debugging output
+      out.scan(/Pod 100 pod pod-(\S+)/).flatten.uniq.must_equal ["resque_worker:"] # logs and events only for bad pod
+      out.must_include "EVENTS:\nFailedScheduling: fit failure on node (ip-1-2-3-4)\nfit failure on node (ip-2-3-4-5)\n\n" # no repeated events
+      out.must_include "LOG-1\n"
     end
 
     it "waits when deploy is running but not ready" do
