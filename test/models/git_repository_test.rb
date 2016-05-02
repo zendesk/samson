@@ -197,4 +197,41 @@ describe GitRepository do
       repository.clean!
     end
   end
+
+  describe "#file_content" do
+    before do
+      create_repo_without_tags
+      repository.clone!
+    end
+
+    let(:sha) { repository.commit_from_ref('master', length: nil) }
+
+    it 'finds content' do
+      repository.file_content(sha, 'foo').must_equal "monkey"
+    end
+
+    it 'returns nil when file does not exist' do
+      repository.file_content(sha, 'foox').must_equal nil
+    end
+
+    it 'returns nil when sha does not exist' do
+      repository.file_content('x' * 40, 'foox').must_equal nil
+    end
+
+    it "does not support non-shas" do
+      assert_raises ArgumentError do
+        repository.file_content('x' * 41, 'foox')
+      end
+    end
+
+    it "does not update when sha exists to save time" do
+      repository.expects(:update!).never
+      repository.file_content(sha, 'foo').must_equal "monkey"
+    end
+
+    it "updates when sha is missing" do
+      repository.expects(:update!)
+      repository.file_content('x' * 40, 'foo').must_equal nil
+    end
+  end
 end

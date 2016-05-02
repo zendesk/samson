@@ -50,7 +50,7 @@ class GitRepository
   add_method_tracer :update!
 
   def commit_from_ref(git_reference, length: 7)
-    setup_local_cache! unless locally_cached?
+    ensure_local_cache!
 
     Dir.chdir(repo_cache_dir) do
       # brakeman thinks this is unsafe ... https://github.com/presidentbeef/brakeman/issues/851
@@ -65,15 +65,8 @@ class GitRepository
   end
 
   def tag_from_ref(git_reference)
-    setup_local_cache! unless locally_cached?
-
-    Dir.chdir(repo_cache_dir) do
-      tag = IO.popen(['git', 'describe', '--tags', git_reference], err: [:child, :out]) do |io|
-        io.read.strip
-      end
-
-      tag if $?.success?
-    end
+    ensure_local_cache!
+    capture_stdout(['git', 'describe', '--tags', git_reference])
   end
 
   def repo_cache_dir
@@ -114,7 +107,21 @@ class GitRepository
     executor.execute!("cd #{pwd}", "git diff --quiet --name-only #{sha1}..#{sha2} #{file}")
   end
 
+  def file_content(sha, file)
+    raise ArgumentError, "Need a sha, but #{sha} (#{sha.size}) given" unless sha.size == 40
+    (locally_cached? && sha_exist?(sha)) || setup_local_cache!
+    capture_stdout(["git", "show", "#{sha}:#{file}"])
+  end
+
   private
+
+  def sha_exist?(sha)
+    run_single_command("git cat-file -t #{sha}").first
+  end
+
+  def ensure_local_cache!
+    setup_local_cache! unless locally_cached?
+  end
 
   def checkout!(git_reference, pwd: repo_cache_dir)
     executor.execute!("cd #{pwd}", "git checkout --quiet #{git_reference.shellescape}")
@@ -129,5 +136,22 @@ class GitRepository
     success = tmp_executor.execute!("cd #{pwd}", command)
     result = tmp_executor.output.string.lines.map { |line| yield line if block_given? }.uniq.sort
     [success, result]
+  end
+
+  # TODO: replace run_single_command with this, because:
+  # - correct exit codes
+  # - no /r s
+  # - no tty colors
+  # - array support for input safety
+  # - no forced unique + sort
+  # - simpler
+  def capture_stdout(command)
+    Dir.chdir(repo_cache_dir) do
+      out = IO.popen(command, err: [:child, :out]) do |io|
+        io.read.strip
+      end
+
+      out if $?.success?
+    end
   end
 end
