@@ -1,6 +1,6 @@
 require_relative '../test_helper'
 
-SingleCov.covered! uncovered: 1
+SingleCov.covered!
 
 describe GitRepository do
   include GitRepoTestHelper
@@ -21,44 +21,78 @@ describe GitRepository do
     repository.repository_directory.must_equal project.repository_directory
   end
 
-  it 'clones a repository' do
-    Dir.mktmpdir do |dir|
-      create_repo_with_tags
-      repository.clone!(from: repo_temp_dir, to: dir)
-      Dir.exist?(dir).must_equal true
+  describe "#clone!" do
+    it 'clones a repository' do
+      Dir.mktmpdir do |dir|
+        create_repo_with_tags
+        repository.clone!(from: repo_temp_dir, to: dir).must_equal true
+        Dir.exist?("#{dir}/.git").must_equal true
+      end
+    end
+
+    it "returns false when clone fails" do
+      Dir.mktmpdir do |dir|
+        repository.clone!(from: repo_temp_dir, to: dir).must_equal false
+        Dir.exist?("#{dir}/.git").must_equal false
+      end
     end
   end
 
-  describe "#update!" do
-    it 'updates the repository' do
+  describe "#update_local_cache!" do
+    it 'updates an existing repository' do
       create_repo_with_tags
       repository.clone!.must_equal(true)
+      Dir.chdir(repository.repo_cache_dir) do
+        number_of_commits.must_equal 1
+      end
+
       Dir.chdir(repository.repo_cache_dir) { number_of_commits.must_equal(1) }
+
+      # create an extra commit in the remote
       execute_on_remote_repo <<-SHELL
         echo monkey > foo2
         git add foo2
         git commit -m "second commit"
       SHELL
-      repository.update!.must_equal(true)
+
+      repository.update_local_cache!.must_equal(true)
+
+      # commit should now be locally available
       Dir.chdir(repository.repo_cache_dir) do
-        update_workspace
-        number_of_commits.must_equal(2)
+        number_of_commits('origin/master').must_equal(2)
       end
     end
 
-    it 'fails when its cache was removed' do
+    it 'clones when cache does not exist' do
+      create_repo_without_tags
+      File.exist?(repository.repo_cache_dir).must_equal false
+
+      repository.update_local_cache!.must_equal(true)
+
+      Dir.chdir(repository.repo_cache_dir) do
+        number_of_commits.must_equal(1)
+      end
+    end
+
+    it 'returns false when update fails' do
       create_repo_with_tags
-      repository.update!.must_equal(false)
+      repository.clone!.must_equal(true)
+      Dir.chdir(repository.repo_cache_dir) do
+        raise unless system("git remote rm origin")
+      end
+      repository.update_local_cache!.must_equal false
     end
   end
 
-  it 'switches to a different branch' do
-    create_repo_with_an_additional_branch
-    repository.clone!.must_equal(true)
-    repository.send(:checkout!, 'master').must_equal(true)
-    Dir.chdir(repository.repo_cache_dir) { current_branch.must_equal('master') }
-    repository.send(:checkout!, 'test_user/test_branch').must_equal(true)
-    Dir.chdir(repository.repo_cache_dir) { current_branch.must_equal('test_user/test_branch') }
+  describe "#cheakout!" do
+    it 'switches to a different branch' do
+      create_repo_with_an_additional_branch
+      repository.clone!.must_equal(true)
+      repository.send(:checkout!, 'master').must_equal(true)
+      Dir.chdir(repository.repo_cache_dir) { current_branch.must_equal('master') }
+      repository.send(:checkout!, 'test_user/test_branch').must_equal(true)
+      Dir.chdir(repository.repo_cache_dir) { current_branch.must_equal('test_user/test_branch') }
+    end
   end
 
   describe "#commit_from_ref" do
@@ -215,12 +249,12 @@ describe GitRepository do
     end
 
     it 'returns nil when sha does not exist' do
-      repository.file_content('x' * 40, 'foox').must_equal nil
+      repository.file_content('a' * 40, 'foox').must_equal nil
     end
 
     it "does not support non-shas" do
       assert_raises ArgumentError do
-        repository.file_content('x' * 41, 'foox')
+        repository.file_content('a' * 41, 'foox')
       end
     end
 
@@ -231,7 +265,7 @@ describe GitRepository do
 
     it "updates when sha is missing" do
       repository.expects(:update!)
-      repository.file_content('x' * 40, 'foo').must_equal nil
+      repository.file_content('a' * 40, 'foo').must_equal nil
     end
   end
 end

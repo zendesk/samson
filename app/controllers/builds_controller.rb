@@ -111,7 +111,7 @@ class BuildsController < ApplicationController
     @git_sha ||= begin
       # Create/update local cache to avoid getting a stale reference
       current_project.with_lock(holder: 'BuildsController#create') do
-        current_project.repository.setup_local_cache!
+        current_project.repository.update_local_cache!
       end
 
       current_project.repository.commit_from_ref(new_build_params[:git_ref], length: nil)

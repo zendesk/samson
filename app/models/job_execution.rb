@@ -169,7 +169,7 @@ class JobExecution
   def setup!(dir)
     locked = lock_project do
       return false unless @repository.setup!(dir, @reference)
-      commit = @repository.commit_from_ref(@reference, length: 40)
+      commit = @repository.commit_from_ref(@reference, length: nil)
       tag = @repository.tag_from_ref(@reference)
       @job.update_git_references!(commit: commit, tag: tag)
     end
