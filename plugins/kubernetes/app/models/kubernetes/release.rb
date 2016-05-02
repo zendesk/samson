@@ -93,7 +93,7 @@ module Kubernetes
           namespace: deploy_group.kubernetes_namespace,
           label_selector: {
             deploy_group_id: deploy_group.id,
-            project_id: project.id, # TODO: use project_id once normalize PR is merged
+            project_id: project_id,
             release_id: id
           }.to_kuber_selector
         }

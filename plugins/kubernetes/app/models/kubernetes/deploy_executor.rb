@@ -4,6 +4,8 @@ module Kubernetes
   class DeployExecutor
     STABLE_TICKS = 20
 
+    ReleaseStatus = Struct.new(:live, :details, :role, :group)
+
     def initialize(output, job:)
       @output = output
       @job = job
@@ -29,10 +31,10 @@ module Kubernetes
         return false if stopped?
 
         pods = release.fetch_pods
-        status = release.release_docs.map { |release_doc| pod_is_live?(pods, release_doc) }
+        statuses = release.release_docs.map { |release_doc| release_status(pods, release_doc) }
 
         if @testing_for_stability
-          if status.all?
+          if statuses.all?(&:live)
             @testing_for_stability += 1
             @output.puts "Stable #{@testing_for_stability}/#{STABLE_TICKS}"
             if STABLE_TICKS == @testing_for_stability
@@ -40,11 +42,13 @@ module Kubernetes
               return true
             end
           else
+            print_statuses(statuses)
             @output.puts "UNSTABLE - service is restarting"
             return false
           end
         else
-          if status.all?
+          print_statuses(statuses)
+          if statuses.all?(&:live)
             @output.puts "READY, starting stability test"
             @testing_for_stability = 0
           end
@@ -63,15 +67,36 @@ module Kubernetes
       end
     end
 
-    def pod_is_live?(pods, release_doc)
+    def release_status(pods, release_doc)
       group = release_doc.deploy_group
       role = release_doc.kubernetes_role
 
       pod = pods.detect { |pod| pod.role_id == role.id && pod.deploy_group_id == group.id }
 
-      live, description = analyze_pod_status(pod)
-      @output.puts "#{group.name} #{role.name}: #{description}"
-      live
+      live, details = if pod
+        if pod.live?
+          if pod.restarted?
+            [false, "Restarted"]
+          else
+            [true, "Live"]
+          end
+        else
+          [false, "Waiting (#{pod.phase}, not Ready)"]
+        end
+      else
+        [false, "Missing"]
+      end
+
+      ReleaseStatus.new(live, details, role.name, group.name)
+    end
+
+    def print_statuses(statuses)
+      statuses.group_by(&:group).each do |group, statuses|
+        @output.puts "#{group}:"
+        statuses.each do |status|
+          @output.puts "  #{status.role}: #{status.details}"
+        end
+      end
     end
 
     def find_or_create_build
@@ -132,22 +157,6 @@ module Kubernetes
       end
       @output.puts("Created release #{release.id}\nConfig: #{group_config.inspect}")
       release
-    end
-
-    def analyze_pod_status(pod)
-      if pod
-        if pod.live?
-          if pod.restarted?
-            [false, "Restarted"]
-          else
-            [true, "Live"]
-          end
-        else
-          [false, "Waiting (#{pod.phase}, not Ready)"]
-        end
-      else
-        [false, "Missing"]
-      end
     end
 
     # Create deploys
