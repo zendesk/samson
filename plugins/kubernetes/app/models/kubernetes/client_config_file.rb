@@ -39,7 +39,7 @@ module Kubernetes
 
     def parse_clusters
       @clusters = {}
-      @config_file.fetch(:clusters).each do |cluster_hash|
+      (@config_file[:clusters] || []).each do |cluster_hash|
         cluster = Cluster.new
         cluster.name = cluster_hash[:name]
         cluster.server = cluster_hash[:cluster][:server]
@@ -56,7 +56,7 @@ module Kubernetes
 
     def parse_users
       @users = {}
-      @config_file.fetch(:users).each do |user_hash|
+      (@config_file[:users] || []).each do |user_hash|
         user = User.new
         user.name = user_hash[:name]
         user.username = user_hash[:user][:username]
@@ -75,7 +75,7 @@ module Kubernetes
 
     def parse_contexts
       @contexts = {}
-      @config_file.fetch(:contexts).each do |context_hash|
+      (@config_file[:contexts] || []).each do |context_hash|
         context = Context.new
         context.name = context_hash[:name]
         context.api_version = api_version

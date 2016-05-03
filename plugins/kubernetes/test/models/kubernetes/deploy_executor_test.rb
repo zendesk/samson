@@ -9,6 +9,7 @@ describe Kubernetes::DeployExecutor do
   let(:deploy) { job.deploy }
   let(:job) { jobs(:succeeded_test) }
   let(:build) { builds(:docker_build) }
+  let(:deploy_group) { stage.deploy_groups.first }
   let(:executor) { Kubernetes::DeployExecutor.new(output, job: job) }
 
   before do
@@ -35,12 +36,17 @@ describe Kubernetes::DeployExecutor do
     let(:pod_reply) do
       {
         resourceVersion: "1",
-        items: [{
-          status: {
-            phase: "Running", conditions: [{type: "Ready", status: "True"}],
-            containerStatuses: [{restartCount: 0}]
+        items: [kubernetes_roles(:resque_worker), kubernetes_roles(:app_server)].map do |role|
+          {
+            status: {
+              phase: "Running", conditions: [{type: "Ready", status: "True"}],
+              containerStatuses: [{restartCount: 0}]
+            },
+            metadata: {
+              labels: {deploy_group_id: deploy_group.id.to_s, role_id: role.id.to_s}
+            }
           }
-        }]
+        end
       }
     end
     let(:pod_status) { pod_reply[:items].first[:status] }
@@ -49,9 +55,7 @@ describe Kubernetes::DeployExecutor do
       job.update_column(:commit, build.git_sha) # this is normally done by JobExecution
       Kubernetes::ReleaseDoc.any_instance.stubs(raw_template: {'kind' => 'Deployment', 'spec' => {'template' => {'metadata' => {'labels' => {}}, 'spec' => {'containers' => [{}]}}}, 'metadata' => {'labels' => {}}}.to_yaml) # TODO: should inject that from current checkout and not fetch via github
       Kubernetes::Cluster.any_instance.stubs(connection_valid?: true, namespace_exists?: true)
-      stage.deploy_groups.each do |dg|
-        dg.create_cluster_deploy_group cluster: kubernetes_clusters(:test_cluster), namespace: 'staging', deploy_group: dg
-      end
+      deploy_group.create_cluster_deploy_group! cluster: kubernetes_clusters(:test_cluster), namespace: 'staging', deploy_group: deploy_group
       stub_request(:get, "http://foobar.server/apis/extensions/v1beta1/namespaces/staging/deployments/").to_return(status: 404) # checks for previous deploys ... but there are none
       stub_request(:post, "http://foobar.server/apis/extensions/v1beta1/namespaces/staging/deployments").to_return(body: "{}") # creates deployment
       executor.stubs(:sleep)
@@ -63,12 +67,87 @@ describe Kubernetes::DeployExecutor do
       out.must_include "SUCCESS"
     end
 
-    it "fails when build is not found" do
-      job.update_column(:commit, 'some-unfound-sha')
-      e = assert_raises Samson::Hooks::UserError do
-        refute execute!
+    describe "build" do
+      before do
+        build.update_column(:docker_repo_digest, nil)
       end
-      e.message.must_equal "Build for sha some-unfound-sha does not exist, create it before deploying"
+
+      it "fails when the build is not built" do
+        e = assert_raises Samson::Hooks::UserError do
+          execute!
+        end
+        e.message.must_equal "Build #{build.url} was created but never ran, run it manually."
+        out.wont_include "Creating Build"
+      end
+
+      it "waits when build is running" do
+        build.create_docker_job.update_column(:status, 'running')
+        build.save!
+
+        job = build.docker_build_job
+
+        Build.any_instance.stubs(:docker_build_job).with do |reload|
+          if reload # inside wait loop
+            job.status = 'succeeded'
+            build.update_column(:docker_repo_digest, 'somet-digest')
+          end
+          true
+        end.returns job
+
+        assert execute!
+
+        out.must_include "Waiting for Build #{build.url} to finish."
+        out.must_include "SUCCESS"
+      end
+
+      it "fails when build job failed" do
+        build.create_docker_job.update_column(:status, 'cancelled')
+        build.save!
+        e = assert_raises Samson::Hooks::UserError do
+          execute!
+        end
+        e.message.must_equal "Build #{build.url} is cancelled, rerun it manually."
+        out.wont_include "Creating Build"
+      end
+
+      describe "when build needs to be created" do
+        before do
+          build.update_column(:git_sha, 'something-else')
+          Build.any_instance.stubs(:validate_git_reference)
+        end
+
+        it "succeeds when the build works" do
+          DockerBuilderService.any_instance.expects(:run!).with do
+            Build.last.create_docker_job.update_column(:status, 'succeeded')
+            Build.last.update_column(:docker_repo_digest, 'some-sha')
+            true
+          end
+          assert execute!
+          out.must_include "SUCCESS"
+          out.must_include "Creating Build for #{job.commit}"
+          out.must_include "Build #{Build.last.url} is looking good"
+        end
+
+        it "fails when the build fails" do
+          DockerBuilderService.any_instance.expects(:run!).with do
+            Build.any_instance.expects(:docker_build_job).at_least_once.returns Job.new(status: 'cancelled')
+            true
+          end
+          e = assert_raises Samson::Hooks::UserError do
+            execute!
+          end
+          e.message.must_equal "Build #{Build.last.url} is cancelled, rerun it manually."
+          out.must_include "Creating Build for #{job.commit}.\n"
+        end
+
+        it "stops when deploy is stopped by user" do
+          executor.stop!('FAKE-SIGNAL')
+          DockerBuilderService.any_instance.expects(:run!).returns(true)
+          refute execute!
+          out.scan(/.*Build.*/).must_equal ["Creating Build for #{job.commit}."] # not waiting for build
+          out.must_include "STOPPED"
+        end
+      end
     end
 
     it "stops the loop when stopping" do

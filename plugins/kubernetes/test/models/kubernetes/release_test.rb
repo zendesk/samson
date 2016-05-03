@@ -5,19 +5,12 @@ SingleCov.covered! uncovered: 18
 describe Kubernetes::Release do
   let(:build)  { builds(:docker_build) }
   let(:user)   { users(:deployer) }
-  let(:release) { Kubernetes::Release.new(build: build, user: user) }
+  let(:release) { Kubernetes::Release.new(build: build, user: user, project: project) }
   let(:deploy_group) { deploy_groups(:pod1) }
   let(:project) { projects(:test) }
   let(:app_server) { kubernetes_roles(:app_server) }
   let(:resque_worker) { kubernetes_roles(:resque_worker) }
   let(:role_config_file) { parse_role_config_file('kubernetes_role_config_file') }
-
-  describe 'validations' do
-    it 'asserts image is in registry' do
-      release.build = builds(:staging)    # does not have a docker image pushed
-      refute_valid(release, :build)
-    end
-  end
 
   describe 'validations' do
     it 'is valid by default' do
@@ -34,7 +27,6 @@ describe Kubernetes::Release do
   end
 
   describe '#create_release' do
-
     describe 'with one single role' do
       before do
         expect_file_contents_from_repo
@@ -104,6 +96,35 @@ describe Kubernetes::Release do
     end
   end
 
+  describe "#fetch_pods" do
+    it "is empty when there are no deploy groups" do
+      release.fetch_pods.must_equal []
+    end
+
+    it "fetches information from clusters" do
+      release = kubernetes_releases(:test_release)
+      stub_request(:get, %r{http://foobar.server/api/1/namespaces/pod1/pods}).to_return(body: {
+        resourceVersion: "1",
+        items: [{}, {}]
+      }.to_json)
+      release.fetch_pods.size.must_equal 2
+    end
+  end
+
+  describe "#validate_project_ids_are_in_sync" do
+    it 'ensures project ids are in sync' do
+      release.project_id = 123
+      refute_valid(release, :build)
+    end
+  end
+
+  describe '#validate_docker_image_in_registry' do
+    it 'ensures image is in registry' do
+      release.build = builds(:staging) # does not have a docker image pushed
+      refute_valid(release, :build)
+    end
+  end
+
   def expect_file_contents_from_repo
     Build.any_instance.expects(:file_from_repo).returns(role_config_file)
   end
@@ -115,6 +136,7 @@ describe Kubernetes::Release do
   def release_params
     {
       build_id: build.id,
+      project: project,
       deploy_groups: [
         {
           id: deploy_group.id,

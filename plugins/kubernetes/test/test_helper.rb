@@ -42,15 +42,33 @@ class ActiveSupport::TestCase
 
   def with_example_kube_config
     Tempfile.open('config') do |t|
-      t.write({'users': [], 'clusters': [], 'apiVersion': '1', 'current-context': 'vagrant', 'contexts': []}.to_yaml)
+      config = {
+        'apiVersion' => '1',
+        'users' => nil,
+        'clusters' => [
+          {
+            'name' => 'somecluster',
+            'cluster' => { 'server' => 'http://k8s.example.com' }
+          }
+        ],
+        'contexts' => [
+          {
+            'name' => 'default',
+            'context' => { 'cluster' => 'somecluster', 'user' => '' }
+          }
+        ],
+        'current-context' => 'default'
+      }
+      t.write(config.to_yaml)
       t.flush
       yield t.path
     end
   end
 
-  def create_kubernetes_cluster
+  def create_kubernetes_cluster(attr = {})
     Kubernetes::Cluster.any_instance.stubs(connection_valid?: true)
-    Kubernetes::Cluster.create!(name: 'Foo', config_filepath: __FILE__, config_context: 'y')
+    cluster_attr = { name: 'Foo', config_filepath: __FILE__, config_context: 'y' }.merge(attr)
+    Kubernetes::Cluster.create!(cluster_attr)
   end
 
   private

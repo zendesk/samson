@@ -7,10 +7,6 @@ class DeploySerializer < ActiveModel::Serializer
   has_one :project
   has_one :user
 
-  def url
-    project_deploy_url(object.project, object)
-  end
-
   def summary
     object.summary_for_timeline
   end

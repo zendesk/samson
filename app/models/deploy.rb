@@ -45,7 +45,7 @@ class Deploy < ActiveRecord::Base
   end
 
   def short_reference
-    if reference =~ /\A[0-9a-f]{40}\Z/
+    if reference =~ Build::SHA1_REGEX
       reference[0...7]
     else
       reference
@@ -152,10 +152,6 @@ class Deploy < ActiveRecord::Base
   end
 
   def url
-    AppRoutes.url_helpers.project_deploy_path(project, self)
-  end
-
-  def full_url
     AppRoutes.url_helpers.project_deploy_url(project, self)
   end
 

@@ -16,7 +16,7 @@
     <thead>
     <tr>
       <th></th>
-      <% @environment.deploy_groups.each do |deploy_group| %>
+      <% @environment.deploy_groups.sort_by(&:natural_order).each do |deploy_group| %>
         <th><%= link_to deploy_group.name, deploy_group %></th>
       <% end %>
     </tr>
