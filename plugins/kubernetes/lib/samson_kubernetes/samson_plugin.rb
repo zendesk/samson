@@ -13,6 +13,10 @@ Samson::Hooks.view :project_tabs_view, 'samson_kubernetes/project_tab'
 Samson::Hooks.view :admin_menu, 'samson_kubernetes/admin_menu'
 Samson::Hooks.view :stage_form, "samson_kubernetes/stage_form"
 Samson::Hooks.view :stage_show, "samson_kubernetes/stage_show"
+Samson::Hooks.view :deploy_group_show, "samson_kubernetes/deploy_group_show"
+Samson::Hooks.view :deploy_group_form, "samson_kubernetes/deploy_group_form"
+Samson::Hooks.view :deploy_group_table_header, "samson_kubernetes/deploy_group_table_header"
+Samson::Hooks.view :deploy_group_table_cell, "samson_kubernetes/deploy_group_table_cell"
 
 Samson::Hooks.callback :deploy_group_permitted_params do
   { cluster_deploy_group_attributes: [:kubernetes_cluster_id, :namespace] }

@@ -1,0 +1,19 @@
+<div class="form-group">
+  <label class="col-lg-2 control-label">Kubernetes Cluster</label>
+  <div class="col-lg-4">
+    <p class="form-control-static">
+      <% if @deploy_group.kubernetes_cluster %>
+        <%= link_to @deploy_group.kubernetes_cluster.name, [:admin, @deploy_group.kubernetes_cluster] %>
+      <% else %>
+        none
+      <% end %>
+    </p>
+  </div>
+</div>
+
+<div class="form-group">
+  <label class="col-lg-2 control-label">Kubernetes Namespace</label>
+  <div class="col-lg-4">
+    <p class="form-control-static"><%= @deploy_group.kubernetes_namespace %></p>
+  </div>
+</div>
