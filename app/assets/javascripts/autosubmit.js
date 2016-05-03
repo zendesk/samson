@@ -1,6 +1,6 @@
 $(function(){
-  // submit form when role is selected
-  $('.project_role_selector input').change(function(){
+  // submit form when input is changed
+  $('form.autosubmit input').on('change', function(){
     var $form = $(this).parents('form');
     $.ajax({
       url: $form.attr('action'),
