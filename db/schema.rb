@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20160503162523) do
+ActiveRecord::Schema.define(version: 20160503233847) do
 
   create_table "builds", force: :cascade do |t|
     t.integer  "project_id",                       null: false
@@ -166,6 +166,18 @@ ActiveRecord::Schema.define(version: 20160503162523) do
     t.string   "config_filepath", limit: 255
     t.string   "config_context",  limit: 255
   end
+
+  create_table "kubernetes_deploy_group_roles", force: :cascade do |t|
+    t.integer "project_id",      limit: 4,                           null: false
+    t.integer "deploy_group_id", limit: 4,                           null: false
+    t.integer "replicas",        limit: 4,                           null: false
+    t.integer "ram",             limit: 4,                           null: false
+    t.decimal "cpu",                         precision: 4, scale: 2, null: false
+    t.string  "name",            limit: 255,                         null: false
+  end
+
+  add_index "kubernetes_deploy_group_roles", ["deploy_group_id"], name: "index_kubernetes_deploy_group_roles_on_deploy_group_id", using: :btree
+  add_index "kubernetes_deploy_group_roles", ["project_id", "deploy_group_id", "name"], name: "index_kubernetes_deploy_group_roles_on_project_id", length: {"project_id"=>nil, "deploy_group_id"=>nil, "name"=>191}, using: :btree
 
   create_table "kubernetes_release_docs", force: :cascade do |t|
     t.integer  "kubernetes_role_id",          limit: 4,                         null: false
