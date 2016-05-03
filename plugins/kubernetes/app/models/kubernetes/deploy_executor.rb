@@ -3,6 +3,7 @@
 module Kubernetes
   class DeployExecutor
     STABLE_TICKS = 20
+    RESTARTED = "Restarted"
 
     ReleaseStatus = Struct.new(:live, :details, :role, :group)
 
@@ -25,13 +26,18 @@ module Kubernetes
       release = create_release(build)
       ensure_service(release)
       create_deploys(release)
+      success = wait_for_deploys_to_finish(release)
+      show_failure_cause(release) unless success
+      success
+    end
 
-      # Wait until deploys are done and show progress
+    private
+
+    def wait_for_deploys_to_finish(release)
       loop do
         return false if stopped?
 
-        pods = release.fetch_pods
-        statuses = release.release_docs.map { |release_doc| release_status(pods, release_doc) }
+        statuses = pod_statuses(release)
 
         if @testing_for_stability
           if statuses.all?(&:live)
@@ -43,7 +49,7 @@ module Kubernetes
             end
           else
             print_statuses(statuses)
-            @output.puts "UNSTABLE - service is restarting"
+            unstable!
             return false
           end
         else
@@ -51,6 +57,9 @@ module Kubernetes
           if statuses.all?(&:live)
             @output.puts "READY, starting stability test"
             @testing_for_stability = 0
+          elsif statuses.map(&:details).include?(RESTARTED)
+            unstable!
+            return false
           end
         end
 
@@ -58,7 +67,40 @@ module Kubernetes
       end
     end
 
-    private
+    def pod_statuses(release)
+      pods = release.clients.flat_map { |client, query| fetch_pods(client, query) }
+      release.release_docs.map { |release_doc| release_status(pods, release_doc) }
+    end
+
+    def fetch_pods(client, query)
+      client.get_pods(query).map! { |p| Kubernetes::Api::Pod.new(p) }
+    end
+
+    def show_failure_cause(release)
+      bad_pods = release.clients.flat_map do |client, query, deploy_group|
+        bad_pods = fetch_pods(client, query).select { |p| p.restarted? || !p.live? }
+        bad_pods.map { |p| [p, client, deploy_group] }
+      end
+
+      bad_pods.each do |pod, client, deploy_group|
+        namespace = deploy_group.kubernetes_namespace
+        @output.puts "\n#{deploy_group.name} pod #{pod.name}:"
+
+        # events - not enough cpu/ram available
+        @output.puts "EVENTS:"
+        events = client.get_events(namespace: namespace, field_selector: "involvedObject.name=#{pod.name}")
+        events.uniq! { |e| e.message.split("\n").sort }
+        events.each { |e| @output.puts "#{e.reason}: #{e.message}" }
+
+        # logs - container fails to boot
+        @output.puts "\nLOGS:"
+        @output.puts client.get_pod_log(pod.name, namespace, previous: pod.restarted?)
+      end
+    end
+
+    def unstable!
+      @output.puts "UNSTABLE - service is restarting"
+    end
 
     def stopped?
       if @stopped
@@ -76,7 +118,7 @@ module Kubernetes
       live, details = if pod
         if pod.live?
           if pod.restarted?
-            [false, "Restarted"]
+            [false, RESTARTED]
           else
             [true, "Live"]
           end
@@ -108,9 +150,9 @@ module Kubernetes
 
     def wait_for_build(build)
       if !build.docker_repo_digest && build.docker_build_job.try(:running?)
+        @output.puts("Waiting for Build #{build.url} to finish.")
         loop do
           break if @stopped
-          @output.puts("Waiting for Build #{build.url} to finish.")
           sleep 2
           break if build.docker_build_job(:reload).finished?
         end

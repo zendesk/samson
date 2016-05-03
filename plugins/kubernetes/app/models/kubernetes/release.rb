@@ -87,8 +87,8 @@ module Kubernetes
       save!
     end
 
-    def fetch_pods
-      release_docs.map(&:deploy_group).flat_map do |deploy_group|
+    def clients
+      release_docs.map(&:deploy_group).map do |deploy_group|
         query = {
           namespace: deploy_group.kubernetes_namespace,
           label_selector: {
@@ -97,8 +97,8 @@ module Kubernetes
             release_id: id
           }.to_kuber_selector
         }
-        deploy_group.kubernetes_cluster.client.get_pods(query)
-      end.map! { |p| Kubernetes::Api::Pod.new(p) }
+        [deploy_group.kubernetes_cluster.client, query, deploy_group]
+      end
     end
 
     private

@@ -101,6 +101,11 @@ describe Kubernetes::Api::Pod do
       refute pod.restarted?
     end
 
+    it "is not restarted when pending and not having conditions yet" do
+      pod.instance_variable_get(:@pod).status.containerStatuses = nil
+      refute pod.restarted?
+    end
+
     it "is restarted when restarting" do
       pod.instance_variable_get(:@pod).status.containerStatuses[0].restartCount = 1
       assert pod.restarted?
