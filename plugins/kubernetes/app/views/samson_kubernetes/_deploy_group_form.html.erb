@@ -1,0 +1,15 @@
+<%= form.fields_for :cluster_deploy_group, include_id: false do |cluster_form| %>
+  <div class="form-group">
+    <%= cluster_form.label :kubernetes_cluster_id, "Kubernetes Cluster", class: "col-lg-2 control-label" %>
+    <div class="col-lg-4">
+      <%= cluster_form.collection_select(:kubernetes_cluster_id, Kubernetes::Cluster.all, :id, :name, { include_blank: true }, { class: 'form-control' }) %>
+    </div>
+  </div>
+
+  <div class="form-group">
+    <%= cluster_form.label :namespace, "Kubernetes Namespace", class: "col-lg-2 control-label" %>
+    <div class="col-lg-4">
+      <%= cluster_form.text_field :namespace, class: "form-control" %>
+    </div>
+  </div>
+<% end %>
