@@ -7,6 +7,9 @@ class Admin::DeployGroupsController < ApplicationController
     @deploy_groups = DeployGroup.all.sort_by(&:natural_order)
   end
 
+  def show
+  end
+
   def new
     @deploy_group = DeployGroup.new
     Samson::Hooks.fire(:edit_deploy_group, @deploy_group)

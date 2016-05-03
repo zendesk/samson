@@ -6,17 +6,9 @@ describe Admin::DeployGroupsController do
   let(:deploy_group) { deploy_groups(:pod100) }
   let(:stage) { stages(:test_staging) }
 
-  def self.it_renders_index
-    it 'get :index succeeds' do
-      get :index
-      assert_response :success
-      assert_template :index
-      assert_select('tbody tr').count.must_equal DeployGroup.count
-    end
-  end
-
   as_a_deployer do
     unauthorized :get, :index
+    unauthorized :get, :show, id: 1
     unauthorized :post, :create
     unauthorized :get, :new
     unauthorized :get, :edit, id: 1
@@ -27,7 +19,23 @@ describe Admin::DeployGroupsController do
   end
 
   as_a_admin do
-    it_renders_index
+    describe "#index" do
+      it "renders" do
+        get :index
+        assert_template :index
+        assert_response :success
+        assert_select('tbody tr').count.must_equal DeployGroup.count
+      end
+    end
+
+    describe "#show" do
+      it 'renders' do
+        get :show, id: deploy_group.id
+        assert_template :show
+        assert_response :success
+      end
+    end
+
     unauthorized :post, :create
     unauthorized :get, :new
     unauthorized :get, :edit, id: 1
@@ -38,8 +46,6 @@ describe Admin::DeployGroupsController do
   end
 
   as_a_super_admin do
-    it_renders_index
-
     describe "#new" do
       it 'renders' do
         get :new
