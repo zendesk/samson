@@ -319,8 +319,6 @@ describe User do
   end
 
   describe "#starred_project?" do
-    before { Rails.cache.clear }
-
     let(:user) { users(:viewer) }
     let(:project) { projects(:test) }
 
