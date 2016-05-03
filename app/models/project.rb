@@ -130,7 +130,7 @@ class Project < ActiveRecord::Base
   def deploys_by_group(before)
     stages.each_with_object({}) do |stage, result|
       if deploy = stage.deploys.successful.where(release: true).where("deploys.updated_at <= ?", before.to_s(:db)).first
-        stage.deploy_groups.each do |deploy_group|
+        stage.deploy_groups.sort_by(&:natural_order).each do |deploy_group|
           result[deploy_group.id] ||= []
           result[deploy_group.id] << deploy
         end
