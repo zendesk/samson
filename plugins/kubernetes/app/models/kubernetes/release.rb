@@ -6,14 +6,14 @@ module Kubernetes
 
     belongs_to :user
     belongs_to :build
+    belongs_to :project
     has_many :release_docs, class_name: 'Kubernetes::ReleaseDoc', foreign_key: 'kubernetes_release_id'
     has_many :deploy_groups, through: :release_docs
 
-    delegate :project, to: :build
-
-    validates :build, presence: true
+    validates :build, :project, presence: true
     validates :status, inclusion: STATUSES
-    validate :docker_image_in_registry?, on: :create
+    validate :validate_docker_image_in_registry, on: :create
+    validate :validate_project_ids_are_in_sync
 
     scope :not_dead, -> { where.not(status: :dead) }
     scope :excluding, ->(ids) { where.not(id: ids) }
@@ -33,7 +33,7 @@ module Kubernetes
     def release_metadata
       {
         release_id: id.to_s,
-        project_id: build.project.id.to_s
+        project_id: project_id.to_s
       }
     end
 
@@ -87,25 +87,31 @@ module Kubernetes
       save!
     end
 
-    def fetch_pods
-      release_docs.map(&:deploy_group).flat_map do |deploy_group|
+    def clients
+      release_docs.map(&:deploy_group).map do |deploy_group|
         query = {
           namespace: deploy_group.kubernetes_namespace,
           label_selector: {
             deploy_group_id: deploy_group.id,
-            project_id: project.id, # TODO: use project_id once normalize PR is merged
+            project_id: project_id,
             release_id: id
           }.to_kuber_selector
         }
-        deploy_group.kubernetes_cluster.client.get_pods(query)
-      end.map! { |p| Kubernetes::Api::Pod.new(p) }
+        [deploy_group.kubernetes_cluster.client, query, deploy_group]
+      end
     end
 
     private
 
-    def docker_image_in_registry?
+    def validate_docker_image_in_registry
       if build && build.docker_repo_digest.blank? && build.docker_ref.blank?
         errors.add(:build, 'Docker image was not pushed to registry')
+      end
+    end
+
+    def validate_project_ids_are_in_sync
+      if build && build.project_id != project_id
+        errors.add(:build, 'build.project_id is out of sync with project_id')
       end
     end
 

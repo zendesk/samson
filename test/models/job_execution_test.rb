@@ -132,7 +132,7 @@ describe JobExecution do
     job.update(command: 'env | sort')
     execute_job('master', FOO: 'bar')
     lines = job.output.split "\n"
-    lines.must_include "DEPLOY_URL=#{deploy.full_url}"
+    lines.must_include "DEPLOY_URL=#{deploy.url}"
     lines.must_include "DEPLOYER=jdoe@test.com"
     lines.must_include "DEPLOYER_EMAIL=jdoe@test.com"
     lines.must_include "DEPLOYER_NAME=John Doe"

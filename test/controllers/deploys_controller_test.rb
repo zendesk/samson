@@ -62,24 +62,15 @@ describe DeploysController do
     end
 
     describe "a GET to :active" do
-      before { get :active, project_id: project_id, format: format }
-
       with_and_without_project do
-        describe "as html" do
-          let(:format) { :html }
-
-          it "renders the template" do
-            assert_template :recent
-          end
+        it "renders the template" do
+          get :active, project_id: project_id
+          assert_template :active
         end
 
-        describe "as json" do
-          let(:format) { :json }
-
-          it "renders json" do
-            assert_equal "application/json", @response.content_type
-            assert_response :ok
-          end
+        it "renders the partial" do
+          get :active, project_id: project_id, partial: true
+          assert_template 'shared/_deploys_table'
         end
       end
     end

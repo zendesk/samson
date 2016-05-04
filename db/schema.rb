@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20160429203410) do
+ActiveRecord::Schema.define(version: 20160503162523) do
 
   create_table "builds", force: :cascade do |t|
     t.integer  "project_id",                       null: false
@@ -199,6 +199,7 @@ ActiveRecord::Schema.define(version: 20160429203410) do
     t.datetime "updated_at"
     t.integer  "build_id"
     t.integer  "user_id"
+    t.integer  "project_id",         limit: 4,                       null: false
   end
 
   add_index "kubernetes_releases", ["build_id"], name: "index_kubernetes_releases_on_build_id"

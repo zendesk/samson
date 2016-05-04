@@ -19,13 +19,13 @@ class GitRepository
     raise ArgumentError.new("git_reference is required") if git_reference.blank?
 
     executor.output.write("# Beginning git repo setup\n")
-    return false unless setup_local_cache!
+    return false unless update_local_cache!
     return false unless clone!(from: repo_cache_dir, to: temp_dir)
     return false unless checkout!(git_reference, pwd: temp_dir)
     true
   end
 
-  def setup_local_cache!
+  def update_local_cache!
     if locally_cached?
       update!
     else
@@ -35,45 +35,25 @@ class GitRepository
 
   def clone!(from: repository_url, to: repo_cache_dir, mirror: false)
     @last_pulled = Time.now if from == repository_url
-    if mirror
-      executor.execute!("git -c core.askpass=true clone --mirror #{from} #{to}")
+    command = if mirror
+      "git -c core.askpass=true clone --mirror #{from} #{to}"
     else
-      executor.execute!("git clone #{from} #{to}")
+      "git clone #{from} #{to}"
     end
+    executor.execute! command
   end
   add_method_tracer :clone!
 
-  def update!
-    @last_pulled = Time.now
-    executor.execute!("cd #{repo_cache_dir}", 'git fetch -p')
-  end
-  add_method_tracer :update!
-
   def commit_from_ref(git_reference, length: 7)
-    setup_local_cache! unless locally_cached?
-
-    Dir.chdir(repo_cache_dir) do
-      # brakeman thinks this is unsafe ... https://github.com/presidentbeef/brakeman/issues/851
-      description = IO.popen(['git', 'describe', '--long', '--tags', '--all', "--abbrev=#{length || 40}", git_reference], err: [:child, :out]) do |io|
-        io.read.strip
-      end
-
-      return nil unless $?.success?
-
-      description.split('-').last.sub(/^g/, '')
-    end
+    ensure_local_cache!
+    command = ['git', 'describe', '--long', '--tags', '--all', "--abbrev=#{length || 40}", git_reference]
+    return unless output = capture_stdout(*command)
+    output.split('-').last.sub(/^g/, '')
   end
 
   def tag_from_ref(git_reference)
-    setup_local_cache! unless locally_cached?
-
-    Dir.chdir(repo_cache_dir) do
-      tag = IO.popen(['git', 'describe', '--tags', git_reference], err: [:child, :out]) do |io|
-        io.read.strip
-      end
-
-      tag if $?.success?
-    end
+    ensure_local_cache!
+    capture_stdout 'git', 'describe', '--tags', git_reference
   end
 
   def repo_cache_dir
@@ -81,15 +61,18 @@ class GitRepository
   end
 
   def tags
-    cmd = "git for-each-ref refs/tags --sort=-authordate --format='%(refname)' --count=600 | sed 's/refs\\/tags\\///g'"
-    success, output = run_single_command(cmd) { |line| line.strip }
-    success ? output : []
+    ensure_local_cache!
+    command = ["git", "for-each-ref", "refs/tags", "--sort=-authordate", "--format=%(refname)", "--count=600"]
+    return [] unless output = capture_stdout(*command)
+    output.gsub! 'refs/tags/', ''
+    output.split("\n")
   end
 
   def branches
-    cmd = 'git branch --list --no-color --no-column'
-    success, output = run_single_command(cmd) { |line| line.sub('*', '').strip }
-    success ? output : []
+    ensure_local_cache!
+    return [] unless output = capture_stdout('git', 'branch', '--list', '--no-column')
+    output.delete!('* ')
+    output.split("\n")
   end
 
   def clean!
@@ -99,22 +82,37 @@ class GitRepository
 
   def valid_url?
     return false if repository_url.blank?
-
-    cmd = "git -c core.askpass=true ls-remote -h #{repository_url}"
-    valid, output = run_single_command(cmd, pwd: '.')
-    Rails.logger.error("Repository Path '#{repository_url}' is invalid: #{output}") unless valid
-    valid
+    output = capture_stdout "git", "-c", "core.askpass=true", "ls-remote", "-h", repository_url, dir: '.'
+    Rails.logger.error("Repository Path '#{repository_url}' is unreachable") unless output
+    !!output
   end
 
   def executor
     @executor ||= TerminalExecutor.new(StringIO.new)
   end
 
-  def file_changed?(sha1, sha2, file)
-    executor.execute!("cd #{pwd}", "git diff --quiet --name-only #{sha1}..#{sha2} #{file}")
+  # will update the repo if sha is not found
+  def file_content(sha, file)
+    raise ArgumentError, "Need a sha, but #{sha} (#{sha.size}) given" unless sha =~ Build::SHA1_REGEX
+    (locally_cached? && sha_exist?(sha)) || update_local_cache!
+    capture_stdout "git", "show", "#{sha}:#{file}"
   end
 
   private
+
+  def update!
+    @last_pulled = Time.now
+    executor.execute!("cd #{repo_cache_dir}", 'git fetch -p')
+  end
+  add_method_tracer :update!
+
+  def sha_exist?(sha)
+    !!capture_stdout("git", "cat-file", "-t", sha)
+  end
+
+  def ensure_local_cache!
+    update_local_cache! unless locally_cached?
+  end
 
   def checkout!(git_reference, pwd: repo_cache_dir)
     executor.execute!("cd #{pwd}", "git checkout --quiet #{git_reference.shellescape}")
@@ -124,10 +122,12 @@ class GitRepository
     Dir.exist?(repo_cache_dir)
   end
 
-  def run_single_command(command, pwd: repo_cache_dir)
-    tmp_executor = TerminalExecutor.new(StringIO.new)
-    success = tmp_executor.execute!("cd #{pwd}", command)
-    result = tmp_executor.output.string.lines.map { |line| yield line if block_given? }.uniq.sort
-    [success, result]
+  # success: stdout as string
+  # error: nil
+  def capture_stdout(*command, dir: repo_cache_dir)
+    Dir.chdir(dir) do
+      out = IO.popen(command, err: [:child, :out]) { |io| io.read.strip }
+      out if $?.success?
+    end
   end
 end

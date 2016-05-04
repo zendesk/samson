@@ -18,7 +18,7 @@ module Kubernetes
       end
 
       def restarted?
-        @pod.status.containerStatuses.any? { |s| s.restartCount != 0 }
+        @pod.status.containerStatuses.try(:any?) { |s| s.restartCount != 0 }
       end
 
       def phase

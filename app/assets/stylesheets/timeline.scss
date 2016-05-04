@@ -26,42 +26,9 @@
     border-bottom: 1px solid $samsonGrey;
   }
 
-  .timeline-filter {
-    padding-left: 0;
-    &:last-child {
-      padding-right: 0;
-    }
-  }
-
   .timeline-content {
     color: $samsonDark;
     width: 100%;
-  }
-
-  .timeline-entry-main {
-    display: -webkit-flex;
-    display: flex;
-    -webkit-align-items: center;
-    align-items: center;
-  }
-
-  .timeline-project {
-    text-align: center;
-    line-height: 30px;
-    padding: 2px 10px;
-  }
-
-  .timeline-time,
-  .timeline-summary {
-    color: #999;
-  }
-
-  .timeline-show-more {
-    margin-top: 20px;
-  }
-
-  .timeline-deploy-status {
-    text-transform: capitalize;
   }
 
   .dropdown-toggle:focus,
