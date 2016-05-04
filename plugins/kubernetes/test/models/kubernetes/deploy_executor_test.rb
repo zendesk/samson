@@ -58,6 +58,7 @@ describe Kubernetes::DeployExecutor do
 
     before do
       job.update_column(:commit, build.git_sha) # this is normally done by JobExecution
+      job.project.stubs(:refresh_kubernetes_roles!)
       Kubernetes::ReleaseDoc.any_instance.stubs(raw_template: {'kind' => 'Deployment', 'spec' => {'template' => {'metadata' => {'labels' => {}}, 'spec' => {'containers' => [{}]}}}, 'metadata' => {'labels' => {}}}.to_yaml) # TODO: should inject that from current checkout and not fetch via github
       Kubernetes::Cluster.any_instance.stubs(connection_valid?: true, namespace_exists?: true)
       deploy_group.create_cluster_deploy_group! cluster: kubernetes_clusters(:test_cluster), namespace: 'staging', deploy_group: deploy_group
@@ -73,6 +74,15 @@ describe Kubernetes::DeployExecutor do
       assert execute!
       out.must_include "resque_worker: Live\n"
       out.must_include "SUCCESS"
+    end
+
+    it "uses configured roles" do
+      assert execute!
+      docs = Kubernetes::Release.last.release_docs
+      docs.map(&:replica_target).sort.must_equal [
+        kubernetes_deploy_group_roles(:test_pod100_resque_worker).replicas,
+        kubernetes_deploy_group_roles(:test_pod100_app_server).replicas
+      ].sort
     end
 
     describe "build" do
@@ -156,6 +166,14 @@ describe Kubernetes::DeployExecutor do
           out.must_include "STOPPED"
         end
       end
+    end
+
+    it "fails when role config is missing" do
+      kubernetes_deploy_group_roles(:test_pod100_resque_worker).delete
+      e = assert_raises Samson::Hooks::UserError do
+        execute!
+      end
+      e.message.must_equal "No config for role resque_worker and group Pod 100 found"
     end
 
     it "stops the loop when stopping" do

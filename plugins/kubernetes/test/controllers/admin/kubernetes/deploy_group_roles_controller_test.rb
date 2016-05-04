@@ -40,6 +40,12 @@ describe Admin::Kubernetes::DeployGroupRolesController do
         get :new
         assert_template :new
       end
+
+      it "can prefill" do
+        get :new, kubernetes_deploy_group_role: {name: 'foo'}
+        assert_template :new
+        assigns(:deploy_group_role).name.must_equal 'foo'
+      end
     end
 
     unauthorized :post, :create, kubernetes_deploy_group_role: {project_id: project_id}
