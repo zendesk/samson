@@ -4,7 +4,7 @@ class UniqueRoles < ActiveRecord::Migration
 
   def up
     # delete the lowest permission duplicate roles
-    UserProjectRole.all.group_by(&:user_id).each do |_user, roles|
+    UserProjectRole.all.group_by { |role| [role.user_id, role.project_id] }.each do |_, roles|
       roles.sort_by(&:role_id)[0..-2].each(&:destroy)
     end
 
