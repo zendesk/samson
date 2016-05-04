@@ -45,14 +45,14 @@ class GitRepository
   add_method_tracer :clone!
 
   def commit_from_ref(git_reference, length: 7)
-    ensure_local_cache!
+    return unless ensure_local_cache!
     command = ['git', 'describe', '--long', '--tags', '--all', "--abbrev=#{length || 40}", git_reference]
     return unless output = capture_stdout(*command)
     output.split('-').last.sub(/^g/, '')
   end
 
   def tag_from_ref(git_reference)
-    ensure_local_cache!
+    return unless ensure_local_cache!
     capture_stdout 'git', 'describe', '--tags', git_reference
   end
 
@@ -61,7 +61,7 @@ class GitRepository
   end
 
   def tags
-    ensure_local_cache!
+    return unless ensure_local_cache!
     command = ["git", "for-each-ref", "refs/tags", "--sort=-authordate", "--format=%(refname)", "--count=600"]
     return [] unless output = capture_stdout(*command)
     output.gsub! 'refs/tags/', ''
@@ -69,7 +69,7 @@ class GitRepository
   end
 
   def branches
-    ensure_local_cache!
+    return unless ensure_local_cache!
     return [] unless output = capture_stdout('git', 'branch', '--list', '--no-column')
     output.delete!('* ')
     output.split("\n")
@@ -92,9 +92,13 @@ class GitRepository
   end
 
   # will update the repo if sha is not found
-  def file_content(sha, file)
-    raise ArgumentError, "Need a sha, but #{sha} (#{sha.size}) given" unless sha =~ Build::SHA1_REGEX
-    (locally_cached? && sha_exist?(sha)) || update_local_cache!
+  def file_content(file, sha)
+    if sha =~ Build::SHA1_REGEX
+      (locally_cached? && sha_exist?(sha)) || update_local_cache!
+    else
+      update_local_cache!
+      return unless sha = commit_from_ref(sha, length: nil)
+    end
     capture_stdout "git", "show", "#{sha}:#{file}"
   end
 
@@ -111,7 +115,7 @@ class GitRepository
   end
 
   def ensure_local_cache!
-    update_local_cache! unless locally_cached?
+    locally_cached? || update_local_cache!
   end
 
   def checkout!(git_reference, pwd: repo_cache_dir)

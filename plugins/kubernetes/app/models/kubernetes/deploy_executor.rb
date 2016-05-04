@@ -186,7 +186,6 @@ module Kubernetes
     def create_release(build)
       # build config for every cluster and role we want to deploy to
       group_config = @job.deploy.stage.deploy_groups.map do |group|
-        # raise "#{group.name} needs to be on kubernetes" unless group.
         roles = Kubernetes::Role.where(project_id: @job.project_id).map do |role|
           {id: role.id, replicas: role.replicas} # TODO make replicas configureable
         end

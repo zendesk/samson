@@ -3,41 +3,57 @@ require_relative '../test_helper'
 SingleCov.covered! uncovered: 3
 
 describe Project do
+  include GitRepoTestHelper
+
   let(:project) { projects(:test) }
   let(:contents) { parse_role_config_file('kubernetes_role_config_file') }
 
   describe '#file_from_repo' do
-    before do
-      Rails.cache.clear
-      Octokit::Client.any_instance.stubs(:contents).returns({ content: Base64.encode64(contents) })
-    end
-
-    it 'returns the decode file contents' do
-      file_contents = project.file_from_repo('some_folder/other_file_name.rb', 'some_ref')
-      assert_equal contents, file_contents
+    it 'returns the file contents' do
+      create_repo_without_tags
+      project.repository_url = repo_temp_dir
+      project.file_from_repo('foo', 'HEAD').must_equal 'monkey'
     end
   end
 
-  describe '#directory_contents_from_repo' do
+  describe '#kubernetes_config_files_in_repo' do
     before do
-      Rails.cache.clear
-      Octokit::Client.any_instance.stubs(:contents).returns([
-        OpenStruct.new(name: 'file_name.yml', path: 'some_folder/file_name.yml'),
-        OpenStruct.new(name: 'other_file_name.rb', path: 'some_folder/other_file_name.rb')
-      ])
+      create_repo_without_tags
+      project.repository_url = repo_temp_dir
     end
 
-    it 'returns the relevant files from the API response' do
-      files = project.directory_contents_from_repo('some_folder', 'some_ref')
-      assert_includes files, 'some_folder/file_name.yml'
-      refute_includes files, 'some_folder/other_file_name.rb'
-      assert_equal 1, files.size
+    it 'returns config files' do
+      execute_on_remote_repo <<-SHELL
+        mkdir nope
+        touch nope/config.yml
+        touch kuernetes.yml
+
+        mkdir kubernetes
+        touch kubernetes/config.yml
+        touch kubernetes/config.yaml
+        touch kubernetes/config.json
+        touch kubernetes/config.foo
+        touch kubernetes/config.y2k
+
+        git add .
+        git commit -m "second commit"
+      SHELL
+
+      project.kubernetes_config_files_in_repo('HEAD').must_equal ["kubernetes/config.json", "kubernetes/config.yaml", "kubernetes/config.yml"]
+    end
+
+    it "returns empty array when nothing was found" do
+      project.kubernetes_config_files_in_repo('HEAD').must_equal []
+    end
+
+    it "returns empty array on error" do
+      project.kubernetes_config_files_in_repo('DSFFSDJKDFSHDSFHSFDHJ').must_equal []
     end
   end
 
   describe '#refresh_kubernetes_roles' do
     before do
-      Project.any_instance.stubs(:directory_contents_from_repo).returns(['some_folder/file_name.yml'])
+      Project.any_instance.stubs(:kubernetes_config_files_in_repo).returns(['some_folder/file_name.yml'])
       Project.any_instance.stubs(:file_from_repo).returns(contents)
     end
 
