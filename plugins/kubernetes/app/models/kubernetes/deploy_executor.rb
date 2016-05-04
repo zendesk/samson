@@ -203,17 +203,24 @@ module Kubernetes
           {
             id: role.id,
             replicas: role_config.replicas,
-            cpu: role_config.cpu, # FIXME: never used
-            ram: role_config.ram # FIXME: never used
+            cpu: role_config.cpu,
+            ram: role_config.ram
           }
         end
         {id: group.id, roles: roles}
       end
 
-      release = Kubernetes::Release.create_release(deploy_groups: group_config, build_id: build.id, user: @job.user, project: @job.project)
+      release = Kubernetes::Release.create_release(
+        deploy_groups: group_config,
+        build_id: build.id,
+        user: @job.user,
+        project: @job.project
+      )
+
       unless release.persisted?
         raise Samson::Hooks::UserError, "Failed to create release: #{release.errors.full_messages.inspect}"
       end
+
       @output.puts("Created release #{release.id}\nConfig: #{group_config.inspect}")
       release
     end

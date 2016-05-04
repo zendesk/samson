@@ -87,7 +87,7 @@ module Kubernetes
 
     def set_resource_usage
       container.resources = {
-        limits: { cpu: kubernetes_role.cpu, memory: kubernetes_role.ram_with_units }
+        limits: { cpu: cpu, memory: "#{ram}Mi" }
       }
     end
 

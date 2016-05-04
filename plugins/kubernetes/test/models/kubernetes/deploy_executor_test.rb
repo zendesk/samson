@@ -78,11 +78,11 @@ describe Kubernetes::DeployExecutor do
 
     it "uses configured roles" do
       assert execute!
-      docs = Kubernetes::Release.last.release_docs
-      docs.map(&:replica_target).sort.must_equal [
-        kubernetes_deploy_group_roles(:test_pod100_resque_worker).replicas,
-        kubernetes_deploy_group_roles(:test_pod100_app_server).replicas
-      ].sort
+      doc = Kubernetes::Release.last.release_docs.sort_by(&:replica_target).first
+      config = kubernetes_deploy_group_roles(:test_pod100_app_server)
+      doc.replica_target.must_equal config.replicas
+      doc.cpu.must_equal config.cpu
+      doc.ram.must_equal config.ram
     end
 
     describe "build" do
