@@ -1,7 +1,8 @@
 class Admin::SecretsController < ApplicationController
   include CurrentProject
+  require 'byebug'
 
-  before_action :find_project_permalinks
+  before_action :find_project_permalinks, :find_enviorments_permalinks, :generate_deploy_group_list
   before_action :find_secret, only: [:update, :edit, :destroy]
 
   DEPLOYER_ACCESS = [:index, :new]
@@ -44,7 +45,7 @@ class Admin::SecretsController < ApplicationController
     params[:id] || "#{secret_params.fetch(:project_permalink)}/#{secret_params.fetch(:key)}"
   end
 
-  def project_permalink
+  def parse_permalink
     key.split('/', 2).first
   end
 
@@ -66,8 +67,20 @@ class Admin::SecretsController < ApplicationController
     @secret = SecretStorage.read(key)
   end
 
+  def generate_deploy_group_list
+    @deployment_group_list = []
+    DeployGroup.all.map do |group|
+      @deployment_group_list << { "#{group.environment.permalink}": group.permalink }
+    end
+    @deployment_group_list
+  end
+
   def find_project_permalinks
     @project_permalinks = SecretStorage.allowed_project_prefixes(current_user)
+  end
+
+  def find_enviorments_permalinks
+    @enviorment_permalinks = Environment.all().pluck(:permalink)
   end
 
   def ensure_project_access
