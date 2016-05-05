@@ -71,14 +71,14 @@ module Kubernetes
     end
 
     def deploy_to_kubernetes
-      deployment = Kubeclient::Deployment.new(deployment_hash)
-      # Create new client as 'Deployment' API is on different path then 'v1'
-      extension_client = deploy_group.kubernetes_cluster.extension_client
-      if previous_deploy?(extension_client, deployment)
-        extension_client.update_deployment(deployment)
-      else
-        extension_client.create_deployment(deployment)
+      resource = case deploy_yaml.resource_name
+      when 'deployment' then Kubeclient::Deployment.new(deploy_yaml.to_hash)
+      when 'daemon_set' then Kubeclient::DaemonSet.new(deploy_yaml.to_hash)
+      else raise "Unknown resource #{deploy_yaml.resource_name}"
       end
+
+      action = (resource_running?(resource) ? "update" : "create")
+      extension_client.send "#{action}_#{deploy_yaml.resource_name}", resource
     end
 
     def ensure_service
@@ -102,12 +102,17 @@ module Kubernetes
 
     private
 
-    def deployment_hash
-      @deployment_hash ||= DeployYaml.new(self).deployment_hash
+    # Create new client as 'Deployment' API is on different path then 'v1'
+    def extension_client
+      deploy_group.kubernetes_cluster.extension_client
     end
 
-    def previous_deploy?(extension_client, deployment)
-      extension_client.get_deployment(deployment.metadata.name, deployment.metadata.namespace)
+    def deploy_yaml
+      @deploy_yaml ||= DeployYaml.new(self)
+    end
+
+    def resource_running?(resource)
+      extension_client.send("get_#{deploy_yaml.resource_name}", resource.metadata.name, resource.metadata.namespace)
     rescue KubeException
       false
     end
@@ -115,6 +120,7 @@ module Kubernetes
     def service_template
       # It's possible for the file to contain more than one definition,
       # like a ReplicationController and a Service.
+      # TODO: validate there are not multiple services
       @service_template ||= begin
         hash = Array.wrap(parsed_config_file).detect { |doc| doc['kind'] == 'Service' }
         (hash || {}).freeze

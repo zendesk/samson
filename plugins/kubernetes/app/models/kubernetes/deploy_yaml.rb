@@ -1,13 +1,19 @@
 module Kubernetes
   class DeployYaml
     CUSTOM_UNIQUE_LABEL_KEY = 'rc_unique_identifier'
+    DAEMON_SET = 'DaemonSet'
+    DEPLOYMENT = 'Deployment'
 
     def initialize(release_doc)
       @doc = release_doc
     end
 
-    def deployment_hash
-      deployment_spec.to_hash
+    def to_hash
+      @deployment_hash ||= deployment_spec.to_hash
+    end
+
+    def resource_name
+      template.kind.underscore
     end
 
     private
@@ -27,7 +33,7 @@ module Kubernetes
 
     def template
       @template ||= begin
-        sections = YAML.load_stream(@doc.raw_template, @doc.template_name).select { |doc| doc['kind'] == 'Deployment' }
+        sections = YAML.load_stream(@doc.raw_template, @doc.template_name).select { |doc| [DEPLOYMENT, DAEMON_SET].include?(doc['kind']) }
         if sections.size == 1
           RecursiveOpenStruct.new(sections.first, recurse_over_arrays: true)
         else
@@ -43,7 +49,7 @@ module Kubernetes
     end
 
     def set_replica_target
-      template.spec.replicas = @doc.replica_target
+      template.spec.replicas = @doc.replica_target if template.kind == DEPLOYMENT
     end
 
     def set_namespace

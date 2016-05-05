@@ -8,7 +8,7 @@ describe KubernetesReleasesController do
   let(:deploy_group) { deploy_groups(:pod1) }
   let(:app_server) { kubernetes_roles(:app_server) }
   let(:resque_worker) { kubernetes_roles(:resque_worker) }
-  let(:role_config_file) { parse_role_config_file('kubernetes_role_config_file') }
+  let(:role_config_file) { read_kubernetes_sample_file('kubernetes_role_config_file.yml') }
 
   as_a_viewer do
     describe 'a GET to #index' do

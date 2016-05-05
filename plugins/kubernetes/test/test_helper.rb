@@ -32,14 +32,6 @@ class ActiveSupport::TestCase
     end
   end
 
-  def parse_role_config_file(file_name)
-    read_file "#{file_name}.yml"
-  end
-
-  def parse_json_response_file(file_name)
-    read_file "#{file_name}.json"
-  end
-
   def with_example_kube_config
     Tempfile.open('config') do |t|
       config = {
@@ -84,7 +76,7 @@ class ActiveSupport::TestCase
 
   private
 
-  def read_file(file_name)
+  def read_kubernetes_sample_file(file_name)
     File.read("#{Rails.root}/plugins/kubernetes/test/samples/#{file_name}")
   end
 end

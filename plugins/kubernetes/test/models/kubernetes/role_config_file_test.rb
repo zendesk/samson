@@ -4,7 +4,7 @@ SingleCov.covered! uncovered: 3
 
 describe Kubernetes::RoleConfigFile do
   describe 'Parsing a valid Kubernetes config file' do
-    let(:contents) { parse_role_config_file('kubernetes_role_config_file') }
+    let(:contents) { read_kubernetes_sample_file('kubernetes_role_config_file.yml') }
 
     let(:config_file) { Kubernetes::RoleConfigFile.new(contents, 'some-file.yml') }
 
@@ -47,12 +47,22 @@ describe Kubernetes::RoleConfigFile do
   end
 
   describe 'Parsing a Kubernetes with a missing deployment' do
-    let(:contents) { parse_role_config_file('kubernetes_invalid_role_config_file') }
+    let(:contents) { read_kubernetes_sample_file('kubernetes_invalid_role_config_file.yml') }
 
     it 'raises an exception' do
       assert_raises RuntimeError do
         Kubernetes::RoleConfigFile.new(contents, 'some-file.yml')
       end
+    end
+  end
+
+  describe 'Parsing DaemonSet' do
+    let(:contents) { read_kubernetes_sample_file('kubernetes_role_config_file.yml') }
+
+    it "returns a deployment" do
+      assert contents.sub!('Deployment', 'DaemonSet')
+      config_file = Kubernetes::RoleConfigFile.new(contents, 'some-file.yml')
+      config_file.deployment.spec.replicas.must_equal 2
     end
   end
 end

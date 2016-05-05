@@ -6,7 +6,7 @@ describe Project do
   include GitRepoTestHelper
 
   let(:project) { projects(:test) }
-  let(:contents) { parse_role_config_file('kubernetes_role_config_file') }
+  let(:contents) { read_kubernetes_sample_file('kubernetes_role_config_file.yml') }
 
   describe '#file_from_repo' do
     it 'returns the file contents' do

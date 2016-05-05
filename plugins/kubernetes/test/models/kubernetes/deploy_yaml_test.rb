@@ -6,11 +6,22 @@ describe Kubernetes::DeployYaml do
   let(:doc) { kubernetes_release_docs(:test_release_pod_1) }
   let(:yaml) { Kubernetes::DeployYaml.new(doc) }
 
-  describe "#deployment_hash" do
-    before { kubernetes_fake_raw_template }
+  before { kubernetes_fake_raw_template }
 
+  describe "#resource_name" do
+    it 'is deployment' do
+      yaml.resource_name.must_equal 'deployment'
+    end
+
+    it 'knows if it is a DaemonSet' do
+      yaml.send(:template).kind = 'DaemonSet'
+      yaml.resource_name.must_equal 'daemon_set'
+    end
+  end
+
+  describe "#to_hash" do
     it "works" do
-      result = yaml.deployment_hash
+      result = yaml.to_hash
       result.size.must_equal 3
 
       spec = result.fetch(:spec)
@@ -48,7 +59,7 @@ describe Kubernetes::DeployYaml do
     it "fails without selector" do
       assert doc.raw_template.sub!('selector:', 'no_selector:')
       e = assert_raises Samson::Hooks::UserError do
-        yaml.deployment_hash
+        yaml.to_hash
       end
       e.message.must_include 'selector'
     end
@@ -57,7 +68,7 @@ describe Kubernetes::DeployYaml do
       it "fails when deployment section is missing" do
         assert doc.raw_template.sub!('Deployment', 'Foobar')
         e = assert_raises Samson::Hooks::UserError do
-          yaml.deployment_hash
+          yaml.to_hash
         end
         e.message.must_include "has 0 Deployment sections, having 1 section is valid"
       end
@@ -65,7 +76,7 @@ describe Kubernetes::DeployYaml do
       it "fails when multiple deployment sections are present" do
         doc.raw_template.replace("#{doc.raw_template}\n#{doc.raw_template}")
         e = assert_raises Samson::Hooks::UserError do
-          yaml.deployment_hash
+          yaml.to_hash
         end
         e.message.must_include "has 2 Deployment sections, having 1 section is valid"
       end
@@ -75,7 +86,7 @@ describe Kubernetes::DeployYaml do
       it "fails without containers" do
         assert doc.raw_template.sub!("      containers:\n      - {}", '')
         e = assert_raises Samson::Hooks::UserError do
-          yaml.deployment_hash
+          yaml.to_hash
         end
         e.message.must_include "has 0 containers, having 1 section is valid"
       end
@@ -83,9 +94,17 @@ describe Kubernetes::DeployYaml do
       it "fails with multiple containers" do
         assert doc.raw_template.sub!("containers:\n      - {}", "containers:\n      - {}\n      - {}")
         e = assert_raises Samson::Hooks::UserError do
-          yaml.deployment_hash
+          yaml.to_hash
         end
         e.message.must_include "has 2 containers, having 1 section is valid"
+      end
+    end
+
+    describe "daemon_set" do
+      it "does not add replicas since they are not supported" do
+        yaml.send(:template).kind = 'DaemonSet'
+        result = yaml.to_hash
+        refute result.key?(:replicas)
       end
     end
   end
