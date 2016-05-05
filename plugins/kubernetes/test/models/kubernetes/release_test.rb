@@ -143,7 +143,9 @@ describe Kubernetes::Release do
           roles: [
             {
               id: app_server.id,
-              replicas: app_server.replicas
+              replicas: app_server.replicas,
+              cpu: app_server.cpu,
+              ram: app_server.ram
             }
           ]
         }
@@ -154,7 +156,7 @@ describe Kubernetes::Release do
   def multiple_roles_release_params
     release_params.tap do |params|
       params[:deploy_groups].each do |dg|
-        dg[:roles].push({ id: resque_worker.id, replicas: resque_worker.replicas })
+        dg[:roles].push({ id: resque_worker.id, replicas: resque_worker.replicas, cpu: resque_worker.cpu, ram: resque_worker.ram })
       end
     end
   end

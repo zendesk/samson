@@ -1,3 +1,62 @@
+<h2>Kubernetes Roles</h2>
+
+<table class="table table-hover table-condensed">
+  <thead>
+    <th>Deploy Group</th>
+    <th>Replicas</th>
+    <th>CPU</th>
+    <th>RAM</th>
+    <th></th>
+  </thead>
+  <% roles = Kubernetes::DeployGroupRole.where(project_id: @stage.project_id, deploy_group_id: @stage.deploy_groups.map(&:id)).to_a %>
+  <% names = roles.map(&:name).uniq.sort %>
+
+  <% @stage.deploy_groups.sort_by(&:natural_order).each do |deploy_group| %>
+    <% group_roles = roles.select { |r| r.deploy_group_id == deploy_group.id } %>
+    <tr>
+      <td colspan="5"><h3><%= deploy_group.name %></h3></td>
+    </tr>
+    <% names.each do |name| %>
+      <% group_role = group_roles.detect { |r| r.name == name } %>
+      <tr>
+        <td><%= name %></td>
+        <% if group_role %>
+          <td><%= group_role.replicas %></td>
+          <td><%= group_role.cpu %></td>
+          <td><%= group_role.ram %></td>
+          <td>
+            <% if current_user.is_admin_for?(@stage.project) %>
+              <%= link_to 'Edit', edit_admin_kubernetes_deploy_group_role_path(group_role) %>
+            <% end %>
+          </td>
+        <% else %>
+          <td colspan="3">Missing</td>
+          <td>
+            <% if current_user.is_admin_for?(@stage.project) %>
+              <% attributes = {name: name, project_id: @stage.project_id, deploy_group_id: deploy_group.id} %>
+              <%= link_to "Create", new_admin_kubernetes_deploy_group_role_path(group_role, kubernetes_deploy_group_role: attributes) %>
+            <% end %>
+          </td>
+        <% end %>
+      </tr>
+    <% end %>
+    <tr>
+      <td>Subtotal</td>
+      <td><%= group_roles.sum(&:replicas) %></td>
+      <td><%= group_roles.sum { |gr| gr.cpu * gr.replicas } %></td>
+      <td><%= group_roles.sum { |gr| gr.ram * gr.replicas } %></td>
+      <td></td>
+    </tr>
+  <% end %>
+  <tr>
+    <td><b>Total</b></td>
+    <td><%= roles.sum(&:replicas) %></td>
+    <td><%= roles.sum { |gr| gr.cpu * gr.replicas } %></td>
+    <td><%= roles.sum { |gr| gr.ram * gr.replicas } %></td>
+    <td></td>
+  </tr>
+</table>
+
 <script>
   $(function(){
     // hide command section when kubernetes is selected

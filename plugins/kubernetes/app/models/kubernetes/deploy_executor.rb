@@ -190,20 +190,45 @@ module Kubernetes
       end
     end
 
-    # create a realese, storing all the configuration
+    # create a release, storing all the configuration
     def create_release(build)
+      # refresh role info TODO: read role info directly from config file
+      @job.project.refresh_kubernetes_roles!(build.git_sha)
+
+      # find role configs to avoid N+1s
+      roles_config = Kubernetes::DeployGroupRole.where(
+        project_id: @job.project_id,
+        deploy_group: @job.deploy.stage.deploy_groups.map(&:id)
+      )
+
       # build config for every cluster and role we want to deploy to
       group_config = @job.deploy.stage.deploy_groups.map do |group|
         roles = Kubernetes::Role.where(project_id: @job.project_id).map do |role|
-          {id: role.id, replicas: role.replicas} # TODO make replicas configureable
+          role_config = roles_config.detect do |r|
+            r.deploy_group_id == group.id && r.name == role.name
+          end || raise(Samson::Hooks::UserError, "No config for role #{role.name} and group #{group.name} found")
+
+          {
+            id: role.id,
+            replicas: role_config.replicas,
+            cpu: role_config.cpu,
+            ram: role_config.ram
+          }
         end
         {id: group.id, roles: roles}
       end
 
-      release = Kubernetes::Release.create_release(deploy_groups: group_config, build_id: build.id, user: @job.user, project: @job.project)
+      release = Kubernetes::Release.create_release(
+        deploy_groups: group_config,
+        build_id: build.id,
+        user: @job.user,
+        project: @job.project
+      )
+
       unless release.persisted?
         raise Samson::Hooks::UserError, "Failed to create release: #{release.errors.full_messages.inspect}"
       end
+
       @output.puts("Created release #{release.id}\nConfig: #{group_config.inspect}")
       release
     end
