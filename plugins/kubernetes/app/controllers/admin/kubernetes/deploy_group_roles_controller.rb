@@ -4,7 +4,8 @@ class Admin::Kubernetes::DeployGroupRolesController < ApplicationController
   before_action :authorize_project_admin!, only: [:create, :edit, :update, :destroy]
 
   def new
-    @deploy_group_role = ::Kubernetes::DeployGroupRole.new
+    attributes = (params[:kubernetes_deploy_group_role] ? deploy_group_role_params : {})
+    @deploy_group_role = ::Kubernetes::DeployGroupRole.new(attributes)
   end
 
   def create
