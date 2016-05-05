@@ -185,6 +185,19 @@ describe Kubernetes::DeployExecutor do
       out.must_include "UNSTABLE"
     end
 
+    it "stops when taking too long to go live" do
+      pod_status[:phase] = "Pending"
+
+      # make the first sleep take a long time so we trigger our timeout condition
+      start = Time.now
+      Time.stubs(:now).returns(start)
+      executor.expects(:sleep).with { Time.stubs(:now).returns(start+1.hour) ; true }
+
+      refute execute!
+
+      out.must_include "TIMEOUT"
+    end
+
     it "displays events and logs when deploy failed" do
       # worker restarted -> we request the previous logs
       stub_request(:get, "http://foobar.server/api/1/namespaces/staging/pods/pod-resque_worker/log?previous=true").

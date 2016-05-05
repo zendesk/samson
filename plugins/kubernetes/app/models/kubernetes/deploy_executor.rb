@@ -2,7 +2,9 @@
 # finishes when cluster is "Ready"
 module Kubernetes
   class DeployExecutor
-    STABLE_TICKS = 20
+    WAIT_FOR_LIVE = 10.minutes
+    CHECK_STABLE = 1.minute
+    TICK = 2.seconds
     RESTARTED = "Restarted"
 
     ReleaseStatus = Struct.new(:live, :details, :role, :group)
@@ -34,6 +36,9 @@ module Kubernetes
     private
 
     def wait_for_deploys_to_finish(release)
+      start = Time.now
+      stable_ticks = CHECK_STABLE / TICK
+
       loop do
         return false if stopped?
 
@@ -42,8 +47,8 @@ module Kubernetes
         if @testing_for_stability
           if statuses.all?(&:live)
             @testing_for_stability += 1
-            @output.puts "Stable #{@testing_for_stability}/#{STABLE_TICKS}"
-            if STABLE_TICKS == @testing_for_stability
+            @output.puts "Stable #{@testing_for_stability}/#{stable_ticks}"
+            if stable_ticks == @testing_for_stability
               @output.puts "SUCCESS"
               return true
             end
@@ -60,10 +65,13 @@ module Kubernetes
           elsif statuses.map(&:details).include?(RESTARTED)
             unstable!
             return false
+          elsif start + WAIT_FOR_LIVE < Time.now
+            @output.puts "TIMEOUT, pods took too long to get live"
+            return false
           end
         end
 
-        sleep 2
+        sleep TICK
       end
     end
 
@@ -153,7 +161,7 @@ module Kubernetes
         @output.puts("Waiting for Build #{build.url} to finish.")
         loop do
           break if @stopped
-          sleep 2
+          sleep TICK
           break if build.docker_build_job(:reload).finished?
         end
       end
