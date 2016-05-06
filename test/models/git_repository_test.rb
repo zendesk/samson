@@ -84,17 +84,6 @@ describe GitRepository do
     end
   end
 
-  describe "#cheakout!" do
-    it 'switches to a different branch' do
-      create_repo_with_an_additional_branch
-      repository.clone!.must_equal(true)
-      repository.send(:checkout!, 'master').must_equal(true)
-      Dir.chdir(repository.repo_cache_dir) { current_branch.must_equal('master') }
-      repository.send(:checkout!, 'test_user/test_branch').must_equal(true)
-      Dir.chdir(repository.repo_cache_dir) { current_branch.must_equal('test_user/test_branch') }
-    end
-  end
-
   describe "#commit_from_ref" do
     it 'returns the short commit id' do
       create_repo_with_tags
@@ -116,7 +105,7 @@ describe GitRepository do
 
     it 'returns the commit of a branch' do
       create_repo_with_an_additional_branch('my_branch')
-      repository.clone!(mirror: true)
+      repository.clone!
       repository.commit_from_ref('my_branch').must_match /^[0-9a-f]{7}$/
     end
 
@@ -131,7 +120,7 @@ describe GitRepository do
         git checkout master
       SHELL
 
-      repository.clone!(mirror: true)
+      repository.clone!
       sha = repository.commit_from_ref('annotated_tag', length: 40)
       sha.must_match /^[0-9a-f]{40}$/
       repository.commit_from_ref('test_branch', length: 40).must_equal(sha)
@@ -167,13 +156,13 @@ describe GitRepository do
   describe "#tags" do
     it 'returns the tags repository' do
       create_repo_with_tags
-      repository.clone!(mirror: true)
+      repository.clone!
       repository.tags.to_a.must_equal %w(v1 )
     end
 
     it 'returns an empty set of tags' do
       create_repo_without_tags
-      repository.clone!(mirror: true)
+      repository.clone!
       repository.tags.must_equal []
     end
   end
@@ -181,7 +170,7 @@ describe GitRepository do
   describe "#branches" do
     it 'returns the branches of the repository' do
       create_repo_with_an_additional_branch
-      repository.clone!(mirror: true)
+      repository.clone!
       repository.branches.to_a.must_equal %w(master test_user/test_branch)
     end
   end
@@ -209,7 +198,7 @@ describe GitRepository do
     it 'updates an existing repository to a branch' do
       create_repo_with_an_additional_branch
       Dir.mktmpdir do |temp_dir|
-        repository.send(:clone!, mirror: true)
+        repository.send(:clone!)
         assert repository.setup!(temp_dir, 'test_user/test_branch')
         Dir.chdir(temp_dir) { current_branch.must_equal('test_user/test_branch') }
       end

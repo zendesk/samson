@@ -22,7 +22,7 @@ describe ReferencesService do
   let!(:project) { Project.create!(name: 'test_project', repository_url: repository_url) }
 
   before do
-    project.repository.clone!(mirror: true)
+    project.repository.clone!
   end
 
   it 'returns a sorted set of tags and branches' do
