@@ -1,7 +1,6 @@
 module Kubernetes
   class ReleaseDoc < ActiveRecord::Base
     include Kubernetes::HasStatus
-    include Kubernetes::DeployYaml
 
     self.table_name = 'kubernetes_release_docs'
 
@@ -105,7 +104,19 @@ module Kubernetes
       end
     end
 
+    def raw_template
+      @raw_template ||= build.file_from_repo(template_name)
+    end
+
+    def template_name
+      kubernetes_role.config_file
+    end
+
     private
+
+    def deployment_hash
+      @deployment_hash ||= DeployYaml.new(self).deployment_hash
+    end
 
     def previous_deploy?(extension_client, deployment)
       extension_client.get_deployment(deployment.metadata.name, deployment.metadata.namespace)
@@ -137,12 +148,12 @@ module Kubernetes
     end
 
     def parsed_config_file
-      Kubernetes::Util.parse_file(raw_template, kubernetes_role.config_file)
+      Kubernetes::Util.parse_file(raw_template, template_name)
     end
 
     def validate_config_file
       if build && kubernetes_role && raw_template.blank?
-        errors.add(:build, "does not contain config file '#{kubernetes_role.config_file}'")
+        errors.add(:build, "does not contain config file '#{template_name}'")
       end
     end
 
