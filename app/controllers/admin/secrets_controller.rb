@@ -23,6 +23,7 @@ class Admin::SecretsController < ApplicationController
   end
 
   def update
+    debugger
     if SecretStorage.write(key, value: value, user_id: current_user.id)
       successful_response 'Secret created.'
     else
@@ -89,6 +90,7 @@ class Admin::SecretsController < ApplicationController
   end
 
   def current_project
+    debugger
     return if project_permalink == 'global'
     Project.find_by_permalink project_permalink
   end
