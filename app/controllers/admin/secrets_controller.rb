@@ -39,14 +39,14 @@ class Admin::SecretsController < ApplicationController
   private
 
   def secret_params
-    @secret_params ||= params.require(:secret).permit(:project_permalink, :key, :value)
+    @secret_params ||= params.require(:secret).permit(:project_permalink, :deploy_group_permalink, :key, :value)
   end
 
   def key
     params[:id] || "#{secret_params.fetch(:project_permalink)}/#{secret_params.fetch(:key)}"
   end
 
-  def parse_permalink
+  def project_permalink
     key.split('/', 2).first
   end
 
@@ -90,7 +90,6 @@ class Admin::SecretsController < ApplicationController
   end
 
   def current_project
-    debugger
     return if project_permalink == 'global'
     Project.find_by_permalink project_permalink
   end
