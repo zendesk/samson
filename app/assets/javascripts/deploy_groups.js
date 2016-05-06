@@ -15,23 +15,3 @@ var populateProjectSelectList = function() {
     }
   })
 }
-
-/*
-var populateProjectSelectList = function() {
-  var enviornment = $("#enviorment_permalink").val()
-  var deployGroupDiv = document.getElementById("deployGroupDiv");
-  var groups = JSON.parse($('#deployGroupList').attr('imbededData'))
-  var selectList = document.createElement("select");
-  selectList.setAttribute("id", "mySelect");
-  deployGroupDiv.appendChild(selectList);
-	//Create and append the options
-  _.each(groups, function(group) {
-    var option = document.createElement("option");
-    if (group[enviornment] != undefined) {
-      option.setAttribute("value", group[enviornment]);
-      option.text = Object.keys(group).pop();
-      selectList.appendChild(option);
-    }
-  })
-}
-*/
