@@ -224,7 +224,7 @@ describe User do
     end
   end
 
-  describe "search_for scope" do
+  describe ".search" do
 
     let!(:a_singular_user) do
       User.create!(name: 'FindMe', email: 'find.me@example.org')
@@ -254,14 +254,35 @@ describe User do
       User.search('does not exist').count.must_equal(0)
     end
 
-    it 'must return all results with an empty query' do
+    it 'returns all results with an empty query' do
       User.search('').count.must_equal(User.count)
     end
 
-    it 'must return all results with a nil query' do
+    it 'returns all results with a nil query' do
       User.search(nil).count.must_equal(User.count)
     end
+  end
 
+  describe ".with_role" do
+    let(:project) { projects(:test) }
+
+    it "filters everything when asking for a unreachable role" do
+      User.with_role(Role::SUPER_ADMIN.id + 1, project.id).size.must_equal 0
+    end
+
+    it "filters nothing when asking for anything" do
+      User.with_role(Role::VIEWER.id, project.id).size.must_equal User.count
+    end
+
+    it 'filters by deployer' do
+      User.with_role(Role::DEPLOYER.id, project.id).map(&:name).sort.must_equal \
+        ["Admin", "Deployer", "Deployer Project Admin", "DeployerBuddy", "Project Deployer", "Super Admin"]
+    end
+
+    it 'filters by admin' do
+      User.with_role(Role::ADMIN.id, project.id).map(&:name).sort.must_equal \
+        ["Admin", "Deployer Project Admin", "Super Admin"]
+    end
   end
 
   describe 'soft delete!' do
