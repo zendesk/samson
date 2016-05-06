@@ -7,7 +7,7 @@ module Kubernetes
     end
 
     def deployment_hash
-      @deployment_hash ||= deployment_spec.to_hash
+      deployment_spec.to_hash
     end
 
     private
@@ -21,7 +21,7 @@ module Kubernetes
       set_spec_template_metadata
       update_docker_image
       set_resource_usage
-      Rails.logger.info "Created K8S hash: #{template.to_hash}"
+      Rails.logger.info "Created Kubernetes hash: #{template.to_hash}"
       template
     end
 
@@ -51,39 +51,60 @@ module Kubernetes
     end
 
     # Sets the labels for the Deployment resource metadata
+    # only supports strings or we run into `json: expect char '"' but got char '2'`
     def set_deployment_metadata
       deployment_labels.each do |key, value|
-        template.metadata.labels[key] = value
+        template.metadata.labels[key] = value.to_s
       end
     end
 
     def deployment_labels
       # Deployment labels should not include the ids of the release, role or deploy groups
-      @doc.release_doc_metadata.except(:release_id, :role_id, :deploy_group_id)
+      release_doc_metadata.except(:release_id, :role_id, :deploy_group_id)
     end
 
     # Sets the metadata that is going to be used as the selector. Kubernetes will use this metadata to select the
     # old and new Replication Controllers when managing a new Deployment.
     def set_selector_metadata
-      template.spec.selector ||= RecursiveOpenStruct.new(matchLabels: {})
-      template.spec.selector.matchLabels ||= {}
-
+      if !template.spec.selector || !template.spec.selector.matchLabels
+        raise Samson::Hooks::UserError, "Missing spec.selector.matchLabels"
+      end
       deployment_labels.each do |key, value|
-        template.spec.selector.matchLabels[key] = value
+        template.spec.selector.matchLabels[key] = value.to_s
       end
     end
 
     # Sets the labels for each new Pod.
     # Appending the Release ID to allow us to track the progress of a new release from the UI.
     def set_spec_template_metadata
-      @doc.release_doc_metadata.each do |key, value|
-        template.spec.template.metadata.labels[key] = value
+      release_doc_metadata.each do |key, value|
+        template.spec.template.metadata.labels[key] = value.to_s
       end
+    end
+
+    def release_doc_metadata
+      release_metadata.merge(role_metadata).merge(deploy_group_metadata)
+    end
+
+    def release_metadata
+      release = @doc.kubernetes_release
+      {
+        release_id: release.id,
+        project_id: release.project_id
+      }
+    end
+
+    def role_metadata
+      { role_id: @doc.kubernetes_role.id, role_name: @doc.kubernetes_role.name }
+    end
+
+    def deploy_group_metadata
+      { deploy_group_id: @doc.deploy_group.id, deploy_group_namespace: @doc.deploy_group.kubernetes_namespace }
     end
 
     def set_resource_usage
       container.resources = {
-        limits: { cpu: @doc.cpu, memory: "#{@doc.ram}Mi" }
+        limits: { cpu: @doc.cpu.to_f, memory: "#{@doc.ram}Mi" }
       }
     end
 
@@ -94,7 +115,11 @@ module Kubernetes
     end
 
     def container
-      template.spec.template.spec.containers.first
+      containers = template.spec.template.try(:spec).try(:containers) || []
+      if containers.size != 1
+        raise Samson::Hooks::UserError, "Template #{@doc.template_name} has #{containers.size} containers, having 1 section is valid."
+      end
+      containers.first
     end
   end
 end

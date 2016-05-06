@@ -71,6 +71,17 @@ class ActiveSupport::TestCase
     Kubernetes::Cluster.create!(cluster_attr)
   end
 
+  def kubernetes_fake_raw_template
+    Kubernetes::ReleaseDoc.any_instance.stubs(raw_template: {
+      'kind' => 'Deployment',
+      'spec' => {
+        'template' => {'metadata' => {'labels' => {'pre_defined' => 'foobar'}}, 'spec' => {'containers' => [{}]}},
+        'selector' => {'matchLabels' => {'pre_defined' => 'foobar'}}
+      },
+      'metadata' => {'labels' => {}}
+    }.to_yaml)
+  end
+
   private
 
   def read_file(file_name)

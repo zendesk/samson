@@ -36,18 +36,6 @@ module Kubernetes
       kubernetes_release.try(:build)
     end
 
-    def release_doc_metadata
-      kubernetes_release.release_metadata.merge(role_metadata).merge(deploy_group_metadata)
-    end
-
-    def role_metadata
-      { role_id: kubernetes_role.id.to_s, role_name: kubernetes_role.name }
-    end
-
-    def deploy_group_metadata
-      { deploy_group_id: deploy_group.id.to_s, deploy_group_namespace: deploy_group.kubernetes_namespace }
-    end
-
     def nested_error_messages
       errors.full_messages
     end

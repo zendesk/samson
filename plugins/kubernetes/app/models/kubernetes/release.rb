@@ -30,13 +30,6 @@ module Kubernetes
       }
     end
 
-    def release_metadata
-      {
-        release_id: id.to_s,
-        project_id: project_id.to_s
-      }
-    end
-
     def user
       super || NullUser.new(user_id)
     end
