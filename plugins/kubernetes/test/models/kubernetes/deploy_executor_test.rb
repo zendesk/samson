@@ -59,7 +59,7 @@ describe Kubernetes::DeployExecutor do
     before do
       job.update_column(:commit, build.git_sha) # this is normally done by JobExecution
       job.project.stubs(:refresh_kubernetes_roles!)
-      Kubernetes::ReleaseDoc.any_instance.stubs(raw_template: {'kind' => 'Deployment', 'spec' => {'template' => {'metadata' => {'labels' => {}}, 'spec' => {'containers' => [{}]}}}, 'metadata' => {'labels' => {}}}.to_yaml) # TODO: should inject that from current checkout and not fetch via github
+      kubernetes_fake_raw_template
       Kubernetes::Cluster.any_instance.stubs(connection_valid?: true, namespace_exists?: true)
       deploy_group.create_cluster_deploy_group! cluster: kubernetes_clusters(:test_cluster), namespace: 'staging', deploy_group: deploy_group
       stub_request(:get, "http://foobar.server/apis/extensions/v1beta1/namespaces/staging/deployments/").to_return(status: 404) # checks for previous deploys ... but there are none

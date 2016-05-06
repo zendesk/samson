@@ -111,7 +111,6 @@ describe "cleanliness" do
       "plugins/kubernetes/app/models/concerns/kubernetes/api/deleted_pod.rb",
       "plugins/kubernetes/app/models/concerns/kubernetes/api/failed_pod.rb",
       "plugins/kubernetes/app/models/concerns/kubernetes/deploy_group_permitted_params.rb",
-      "plugins/kubernetes/app/models/concerns/kubernetes/deploy_yaml.rb",
       "plugins/kubernetes/app/models/concerns/kubernetes/has_status.rb",
       "plugins/kubernetes/app/models/kuber_deploy_service.rb",
       "plugins/kubernetes/app/models/kubernetes/cluster_deploy_group.rb",
