@@ -1,6 +1,10 @@
 module Kubernetes
-  module DeployYaml
+  class DeployYaml
     CUSTOM_UNIQUE_LABEL_KEY = 'rc_unique_identifier'
+
+    def initialize(release_doc)
+      @doc = release_doc
+    end
 
     def deployment_hash
       @deployment_hash ||= deployment_spec.to_hash
@@ -23,21 +27,13 @@ module Kubernetes
 
     def template
       @template ||= begin
-        sections = YAML.load_stream(raw_template, template_name).select { |doc| doc['kind'] == 'Deployment' }
+        sections = YAML.load_stream(@doc.raw_template, @doc.template_name).select { |doc| doc['kind'] == 'Deployment' }
         if sections.size == 1
-          RecursiveOpenStruct.new(sections.first, :recurse_over_arrays => true)
+          RecursiveOpenStruct.new(sections.first, recurse_over_arrays: true)
         else
-          raise Samson::Hooks::UserError, "Template #{template_name} has #{sections.size} Deployment sections, having 1 section is valid."
+          raise Samson::Hooks::UserError, "Template #{@doc.template_name} has #{sections.size} Deployment sections, having 1 section is valid."
         end
       end
-    end
-
-    def raw_template
-      @raw_template ||= build.file_from_repo(template_name)
-    end
-
-    def template_name
-      kubernetes_role.config_file
     end
 
     # This key replaces the default kubernetes key: 'deployment.kubernetes.io/podTemplateHash'
@@ -47,11 +43,11 @@ module Kubernetes
     end
 
     def set_replica_target
-      template.spec.replicas = replica_target
+      template.spec.replicas = @doc.replica_target
     end
 
     def set_namespace
-      template.metadata.namespace = deploy_group.kubernetes_namespace
+      template.metadata.namespace = @doc.deploy_group.kubernetes_namespace
     end
 
     # Sets the labels for the Deployment resource metadata
@@ -63,7 +59,7 @@ module Kubernetes
 
     def deployment_labels
       # Deployment labels should not include the ids of the release, role or deploy groups
-      release_doc_metadata.except(:release_id, :role_id, :deploy_group_id)
+      @doc.release_doc_metadata.except(:release_id, :role_id, :deploy_group_id)
     end
 
     # Sets the metadata that is going to be used as the selector. Kubernetes will use this metadata to select the
@@ -80,19 +76,19 @@ module Kubernetes
     # Sets the labels for each new Pod.
     # Appending the Release ID to allow us to track the progress of a new release from the UI.
     def set_spec_template_metadata
-      release_doc_metadata.each do |key, value|
+      @doc.release_doc_metadata.each do |key, value|
         template.spec.template.metadata.labels[key] = value
       end
     end
 
     def set_resource_usage
       container.resources = {
-        limits: { cpu: cpu, memory: "#{ram}Mi" }
+        limits: { cpu: @doc.cpu, memory: "#{@doc.ram}Mi" }
       }
     end
 
     def update_docker_image
-      docker_path = build.docker_repo_digest || "#{build.project.docker_repo}:#{build.docker_ref}"
+      docker_path = @doc.build.docker_repo_digest || "#{@doc.build.project.docker_repo}:#{@doc.build.docker_ref}"
       # Assume first container is one we want to update docker image in
       container.image = docker_path
     end
