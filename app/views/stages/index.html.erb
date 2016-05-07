@@ -1,4 +1,7 @@
-<%= render 'projects/header', project: @project, tab: "stages" %>
+<h1>
+  <%= link_to @project.name, @project %> Stages
+</h1>
+
 
 <section class="tabs">
   <ul id="stages" data-url="<%= reorder_project_stages_path(@project) %>" data-sortable="<%= is_admin_for_project? %>">
