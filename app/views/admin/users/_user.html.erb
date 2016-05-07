@@ -6,6 +6,6 @@
     <%= render "roles", user: user %>
   </td>
   <td>
-    <%= link_to "Delete", [:admin, user], method: :delete, data: { confirm: "Delete ##{user.id} #{user.name} #{user.email} ?" }, class: "btn-sm btn-danger" if current_user.is_super_admin? %>
+    <%= link_to "Delete", [:admin, user], method: :delete, data: { confirm: "Delete ##{user.id} #{user.name} #{user.email} ?" }, class: "btn-sm btn-danger" if current_user.super_admin? %>
   </td>
 </tr>

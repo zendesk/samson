@@ -1,4 +1,4 @@
-<% if current_user.is_super_admin? %>
+<% if current_user.super_admin? %>
   <%= form_for [:admin, user], html: {class: 'autosubmit'} do |f| %>
     <% Role.all.each do |role| %>
       <label>

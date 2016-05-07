@@ -31,7 +31,7 @@
 
   <%= Samson::Hooks.render_views(:project_tabs_view, self, { project: @project, active: active }) %>
 
-  <% if is_admin_for_project? %>
+  <% if admin_for_project? %>
     <li class="<%= 'active' if active == 'settings' %>">
       <%= link_to "Settings", edit_project_path(project) %>
     </li>

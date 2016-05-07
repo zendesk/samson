@@ -43,21 +43,21 @@ describe ProjectsHelper do
     end
   end
 
-  describe "#is_admin_for_project?" do
+  describe "#admin_for_project?" do
     let(:current_user) { users(:admin) }
 
     it "works" do
       @project = projects(:test)
-      is_admin_for_project?.must_equal true
+      admin_for_project?.must_equal true
     end
   end
 
-  describe "#is_deployer_for_project?" do
+  describe "#deployer_for_project?" do
     let(:current_user) { users(:deployer) }
 
     it "works" do
       @project = projects(:test)
-      is_deployer_for_project?.must_equal true
+      deployer_for_project?.must_equal true
     end
   end
 end
