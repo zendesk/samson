@@ -2,12 +2,9 @@ require 'omniauth'
 
 OmniAuth.config.logger = Rails.logger
 
-require 'omniauth-github'
-require 'omniauth-google-oauth2'
-require 'omniauth-ldap'
-
 Rails.application.config.middleware.use OmniAuth::Builder do
   if Rails.application.config.samson.auth.github
+    require 'omniauth-github'
     provider :github,
       ENV["GITHUB_CLIENT_ID"],
       ENV["GITHUB_SECRET"],
@@ -20,6 +17,7 @@ Rails.application.config.middleware.use OmniAuth::Builder do
   end
 
   if Rails.application.config.samson.auth.google
+    require 'omniauth-google-oauth2'
     provider OmniAuth::Strategies::GoogleOauth2,
       ENV["GOOGLE_CLIENT_ID"],
       ENV["GOOGLE_CLIENT_SECRET"],
@@ -31,6 +29,8 @@ Rails.application.config.middleware.use OmniAuth::Builder do
   end
 
   if Rails.application.config.samson.auth.ldap
+    require 'omniauth-ldap'
+
     provider OmniAuth::Strategies::LDAP,
       title: Rails.application.config.samson.ldap.title,
       host: Rails.application.config.samson.ldap.host,
