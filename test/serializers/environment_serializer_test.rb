@@ -10,7 +10,7 @@ describe EnvironmentSerializer do
     parsed[:environment][:id].must_equal environment.id
     parsed[:environment][:name].must_equal environment.name
     parsed[:environment][:permalink].must_equal environment.permalink
-    parsed[:environment][:is_production].must_equal environment.is_production
+    parsed[:environment][:production].must_equal environment.production
     parsed[:environment][:created_at].must_equal environment.created_at
     parsed[:environment][:updated_at].must_equal environment.updated_at
     parsed[:environment][:deleted_at].must_equal environment.deleted_at

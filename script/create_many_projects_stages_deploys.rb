@@ -8,7 +8,7 @@ MAX_DEPLOYS_PER_PROJECTS = 15
 root = File.expand_path('..', File.dirname(__FILE__))
 require File.expand_path('config/environment', root)
 
-prod_env = Environment.unscoped.find_or_create_by!(name: 'Production', is_production: true)
+prod_env = Environment.unscoped.find_or_create_by!(name: 'Production', production: true)
 stage_env = Environment.unscoped.find_or_create_by!(name: 'Staging')
 master_env = Environment.unscoped.find_or_create_by!(name: 'Master')
 

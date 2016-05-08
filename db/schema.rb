@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20160504225531) do
+ActiveRecord::Schema.define(version: 20160508055458) do
 
   create_table "builds", force: :cascade do |t|
     t.integer  "project_id",                       null: false
@@ -99,12 +99,12 @@ ActiveRecord::Schema.define(version: 20160504225531) do
   add_index "environment_variables", ["parent_id", "parent_type", "name", "scope_type", "scope_id"], name: "environment_variables_unique_scope", unique: true, length: {"parent_id"=>nil, "parent_type"=>191, "name"=>191, "scope_type"=>191, "scope_id"=>nil}, using: :btree
 
   create_table "environments", force: :cascade do |t|
-    t.string   "name",          limit: 255,                 null: false
-    t.boolean  "is_production", default: false, null: false
+    t.string   "name",       limit: 255,                 null: false
+    t.boolean  "production",             default: false, null: false
     t.datetime "deleted_at"
-    t.datetime "created_at",                                null: false
-    t.datetime "updated_at",                                null: false
-    t.string   "permalink",     limit: 255,                 null: false
+    t.datetime "created_at",                             null: false
+    t.datetime "updated_at",                             null: false
+    t.string   "permalink",  limit: 255,                 null: false
   end
 
   add_index "environments", ["permalink"], name: "index_environments_on_permalink", unique: true, length: {"permalink"=>191}, using: :btree

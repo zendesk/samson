@@ -43,7 +43,7 @@ class Admin::EnvironmentsController < ApplicationController
   private
 
   def env_params
-    params.require(:environment).permit(:name, :is_production)
+    params.require(:environment).permit(:name, :production)
   end
 
   def environment
