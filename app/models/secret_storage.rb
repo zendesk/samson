@@ -12,6 +12,7 @@ module SecretStorage
       before_validation :store_encryption_key_sha
       validates :id, :encrypted_value, :encryption_key_sha, presence: true
       validates :id, format: /\A\S+\/\S*\Z/
+      validates_presence_of :deploy_group_permalink, :enviorment_permalink
 
       private
 
@@ -37,6 +38,8 @@ module SecretStorage
       secret.updater_id = data.fetch(:user_id)
       secret.creator_id ||= data.fetch(:user_id)
       secret.value = data.fetch(:value)
+      secret.deploy_group_id = SecretStorage::permalink_id('deploy_group', (data[:deploy_group_permalink]))
+      secret.enviorment_id = SecretStorage::permalink_id('enviorment', data[:enviorment_permalink])
       secret.save
     end
 
@@ -52,12 +55,17 @@ module SecretStorage
   class HashicorpVault
 
     VAULT_SECRET_BACKEND ='secret/'.freeze
-    # we don't really want other directories in here,
+    # we don't really want other directories in the key,
     # and there may be other chars that we find we don't like
     ENCODINGS = {"/": "%2F"}
 
+    # get and cache a copy of the client that has a token
+    def self.vault_client
+      @vault_client || VaultClient.new
+    end
+
     def self.read(key)
-      result = Vault.logical.read(vault_path(key))
+      result = vault_client.logical.read(VAULT_SECRET_BACKEND + key)
       raise(ActiveRecord::RecordNotFound) if result.data[:vault].nil?
       result = result.to_h
       result = result.merge(result.delete(:data))
@@ -66,21 +74,42 @@ module SecretStorage
     end
 
     def self.write(key, data)
-      Vault.logical.write(vault_path(key), vault: data[:value])
+      key = key.split('/', 4).last
+      vault_client.logical.write(vault_path(key, data[:enviorment_permalink], data[:deploy_group_permalink], data[:project_permalink]), vault: data[:value])
     end
 
     def self.delete(key)
-      Vault.logical.delete(vault_path(key))
+      vault_client.logical.delete(VAULT_SECRET_BACKEND + key)
     end
 
     def self.keys()
-      Vault.logical.list(VAULT_SECRET_BACKEND).map! { |key| convert_path(key, :decode) }
+      base_keys = vault_client.logical.list(VAULT_SECRET_BACKEND)
+      base_keys = keys_recursive(base_keys)
+      base_keys.map! { |secret_path| convert_path(secret_path, :decode) }
     end
 
     private
 
-    def self.vault_path(key)
-      VAULT_SECRET_BACKEND + convert_path(key, :encode)
+    def self.keys_recursive(keys)
+      until all_leaf_nodes?(keys)
+        keys.each do |key|
+          vault_client.logical.list(VAULT_SECRET_BACKEND + key).map.with_index do |new_key, pos|
+            keys << key + new_key
+          end
+          # nuke the key if it's a dir and we have processed it.
+          keys.delete(key) if key[-1] == '/'
+        end
+      end
+      keys
+    end
+
+    def self.all_leaf_nodes?(tree)
+      tree.all? { |node| node.to_s[-1] != '/' }
+    end
+
+    # path for these should be /env/project/deploygroup/key
+    def self.vault_path(key, enviornment, deploy_group, project)
+      VAULT_SECRET_BACKEND + enviornment.to_s + "/" + project.to_s + "/" + deploy_group.to_s + "/" + convert_path(key, :encode)
     end
 
     def self.convert_path(string, direction)
@@ -100,6 +129,11 @@ module SecretStorage
     allowed = user.administrated_projects.pluck(:permalink)
     allowed.unshift 'global' if user.is_admin?
     allowed
+  end
+
+  def self.permalink_id(link_type, link)
+    DeployGroup.find_by_permalink(link).id if link_type == 'deploy_group'
+    Environment.find_by_permalink(link).id if link_type == 'enviorment'
   end
 
   SECRET_KEY_REGEX = %r{[\w\/-]+}

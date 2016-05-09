@@ -1,8 +1,7 @@
 class Admin::SecretsController < ApplicationController
   include CurrentProject
-  require 'byebug'
 
-  before_action :find_project_permalinks, :find_enviorments_permalinks, :generate_deploy_group_list
+  before_action :find_project_permalinks, :find_enviorments_permalinks, :generate_deploy_group_list, :find_deploy_group_permalinks
   before_action :find_secret, only: [:update, :edit, :destroy]
 
   DEPLOYER_ACCESS = [:index, :new]
@@ -23,8 +22,7 @@ class Admin::SecretsController < ApplicationController
   end
 
   def update
-    debugger
-    if SecretStorage.write(key, value: value, user_id: current_user.id)
+    if SecretStorage.write(key, value: value, user_id: current_user.id, deploy_group_permalink: deploy_group_permalink, enviorment_permalink: enviorment_permalink, project_permalink: project_permalink)
       successful_response 'Secret created.'
     else
       failure_response 'Failed to save.'
@@ -39,7 +37,7 @@ class Admin::SecretsController < ApplicationController
   private
 
   def secret_params
-    @secret_params ||= params.require(:secret).permit(:project_permalink, :deploy_group_permalink, :key, :value)
+    @secret_params ||= params.require(:secret).permit(:project_permalink, :deploy_group_permalink, :enviorment_permalink, :key, :value)
   end
 
   def key
@@ -47,11 +45,19 @@ class Admin::SecretsController < ApplicationController
   end
 
   def project_permalink
-    key.split('/', 2).first
+    params[:id].present? ? params[:id].split('/', 4).second : secret_params.fetch(:project_permalink)
   end
 
   def value
     secret_params.fetch(:value)
+  end
+
+  def deploy_group_permalink
+    secret_params.fetch(:deploy_group_permalink)
+  end
+
+  def enviorment_permalink
+    secret_params.fetch(:enviorment_permalink)
   end
 
   def successful_response(notice)
@@ -82,6 +88,10 @@ class Admin::SecretsController < ApplicationController
 
   def find_enviorments_permalinks
     @enviorment_permalinks = Environment.all().pluck(:permalink)
+  end
+
+  def find_deploy_group_permalinks
+    @deploy_group_permalinks = DeployGroup.all().pluck(:permalink)
   end
 
   def ensure_project_access

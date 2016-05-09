@@ -2,7 +2,7 @@
 // these are being stored in the DOM to avoid having to make an ajax query etc
 
 var populateProjectSelectList = function() {
-  var enviornment = $("#enviorment_permalink").val()
+  var enviornment = $("#secret_enviorment_permalink").val()
   var groups = JSON.parse($('#deployGroupList').attr('imbededData'))
   // re-initialize the select list
   $('#secret_deploy_group_permalink').empty().append('');
