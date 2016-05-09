@@ -8,6 +8,7 @@ describe Kubernetes::DeployExecutor do
   let(:stage) { deploy.stage }
   let(:deploy) { job.deploy }
   let(:job) { jobs(:succeeded_test) }
+  let(:project) { job.project }
   let(:build) { builds(:docker_build) }
   let(:deploy_group) { stage.deploy_groups.first }
   let(:executor) { Kubernetes::DeployExecutor.new(output, job: job) }
@@ -58,7 +59,7 @@ describe Kubernetes::DeployExecutor do
 
     before do
       job.update_column(:commit, build.git_sha) # this is normally done by JobExecution
-      job.project.stubs(:refresh_kubernetes_roles!)
+      Kubernetes::Role.stubs(:configured_for_project).returns(project.kubernetes_roles)
       kubernetes_fake_raw_template
       Kubernetes::Cluster.any_instance.stubs(connection_valid?: true, namespace_exists?: true)
       deploy_group.create_cluster_deploy_group! cluster: kubernetes_clusters(:test_cluster), namespace: 'staging', deploy_group: deploy_group
@@ -173,7 +174,15 @@ describe Kubernetes::DeployExecutor do
       e = assert_raises Samson::Hooks::UserError do
         execute!
       end
-      e.message.must_equal "No config for role resque_worker and group Pod 100 found"
+      e.message.must_equal "No config for role resque_worker and group Pod 100 found, add it on the stage page."
+    end
+
+    it "fails when no role is setup in the project" do
+      Kubernetes::Role.stubs(:configured_for_project).returns([])
+      e = assert_raises Samson::Hooks::UserError do
+        execute!
+      end
+      e.message.must_equal "No kubernetes config files found at sha 1a6f551a2ffa6d88e15eef5461384da0bfb1c194"
     end
 
     it "stops the loop when stopping" do

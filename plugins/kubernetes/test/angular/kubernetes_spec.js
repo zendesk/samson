@@ -59,45 +59,8 @@ describe('Kubernetes ui-router config', function() {
       goTo('/projects/some_project/kubernetes/roles');
     }));
 
-    it('State should have transitioned to kubernetes.roles', function() {
-      expect($state.current.name).toEqual('kubernetes.roles');
-    });
-
-    it('State data should reflect current state', function() {
-      expect($state.current.data['selectedTab']).toEqual(0);
-    });
-
-    it('State views should reflect current state', function() {
-      expect($state.current.views['content@']['templateUrl']).toEqual('kubernetes/kubernetes_roles.tmpl.html');
-      expect($state.current.views['content@']['controller']).toEqual('KubernetesRolesCtrl');
-    });
-
-    it('State params should reflect current state', function() {
-      expect($stateParams.project_id).toEqual('some_project');
-    });
-  });
-
-  describe('Transition to kubernetes.roles.edit state', function(){
-    beforeEach(inject(function(){
-      goTo('/projects/some_project/kubernetes/roles/1/edit');
-    }));
-
-    it('State should have transitioned to kubernetes.roles.edit', function() {
-      expect($state.current.name).toEqual('kubernetes.roles.edit');
-    });
-
-    it('State data should reflect current state', function() {
-      expect($state.current.data['selectedTab']).toEqual(0);
-    });
-
-    it('State views should reflect current state', function() {
-      expect($state.current.views['content@']['templateUrl']).toEqual('kubernetes/kubernetes_edit_role.tmpl.html');
-      expect($state.current.views['content@']['controller']).toEqual('KubernetesEditRoleCtrl');
-    });
-
-    it('State params should reflect current state', function() {
-      expect($stateParams.project_id).toEqual('some_project');
-      expect($stateParams.role_id).toEqual('1');
+    it('State should have changed page', function() {
+      expect($location.url()).toEqual('/projects/some_project/kubernetes/roles');
     });
   });
 

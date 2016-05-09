@@ -50,7 +50,7 @@ describe("Service: kubernetesService", function() {
 
   describe('#loadRoles', function() {
     it('should handle a GET request for loading the kubernetes roles', function() {
-      httpBackend.expectGET('/projects/' + project_id + '/kubernetes_roles')
+      httpBackend.expectGET('/projects/' + project_id + '/kubernetes/roles')
         .respond(roles);
 
       kubernetesService.loadRoles(project_id).then(
@@ -62,7 +62,7 @@ describe("Service: kubernetesService", function() {
     });
 
     it('should handle a failed GET request for loading the kubernetes roles', function() {
-      httpBackend.expectGET('/projects/' + project_id + '/kubernetes_roles')
+      httpBackend.expectGET('/projects/' + project_id + '/kubernetes/roles')
         .respond(500, 'Some error');
 
       kubernetesService.loadRoles(project_id).then(
