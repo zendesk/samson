@@ -237,7 +237,7 @@ describe KubernetesRolesController do
 
   describe 'a GET to #refresh' do
     let(:role) { kubernetes_roles(:app_server) }
-    let(:contents) { parse_role_config_file('kubernetes_role_config_file') }
+    let(:contents) { read_kubernetes_sample_file('kubernetes_role_config_file.yml') }
 
     before do
       Project.any_instance.stubs(:kubernetes_config_files_in_repo).returns(['some_folder/file_name.yml'])

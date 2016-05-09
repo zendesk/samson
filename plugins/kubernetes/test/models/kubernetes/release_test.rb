@@ -10,7 +10,7 @@ describe Kubernetes::Release do
   let(:project) { projects(:test) }
   let(:app_server) { kubernetes_roles(:app_server) }
   let(:resque_worker) { kubernetes_roles(:resque_worker) }
-  let(:role_config_file) { parse_role_config_file('kubernetes_role_config_file') }
+  let(:role_config_file) { read_kubernetes_sample_file('kubernetes_role_config_file.yml') }
 
   describe 'validations' do
     it 'is valid by default' do

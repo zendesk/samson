@@ -4,7 +4,9 @@ require 'kubeclient'
 
 module Kubeclient
   class Client
-    NEW_ENTITY_TYPES = %w(Deployment).map do |et|
+    # Add Deployment and Daemonset waiting for PR:
+    # https://github.com/abonas/kubeclient/pull/143
+    NEW_ENTITY_TYPES = %w(Deployment DaemonSet).map do |et|
       clazz = Class.new(RecursiveOpenStruct) do
         def initialize(hash = nil, args = {})
           args.merge!(recurse_over_arrays: true)

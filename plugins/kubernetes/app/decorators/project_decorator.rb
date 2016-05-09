@@ -28,7 +28,7 @@ Project.class_eval do
           service_name: config_file.service.metadata.name,
           ram: config_file.deployment.ram_mi,
           cpu: config_file.deployment.cpu_m,
-          replicas: config_file.deployment.spec.replicas,
+          replicas: config_file.deployment.spec.replicas || 1, # daemonsets do not have replicas ...
           deploy_strategy: config_file.deployment.strategy_type
         )
       end
