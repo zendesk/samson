@@ -17,17 +17,21 @@ module Kubernetes
     validates :replicas, presence: true, numericality: { greater_than: 0 }
     validates :ram, presence: true, numericality: { greater_than: 0 }
     validates :cpu, presence: true, numericality: { greater_than: 0 }
+    validates :service_name, uniqueness: {scope: :deleted_at, allow_nil: true}
 
     scope :not_deleted, -> { where(deleted_at: nil) }
 
     # create initial roles for a project by reading kubernetes/*{.yml,.yaml,json} files into roles
     def self.seed!(project, git_ref)
       kubernetes_config_files_in_repo(project, git_ref).each do |config_file|
+        service_name = config_file.service && config_file.service.metadata.name
+        service_name << "-#{rand(9999999)}" if where(service_name: service_name).exists?
+
         create!(
           project: project,
           config_file: config_file.file_path,
           name: config_file.deployment.metadata.labels.role,
-          service_name: config_file.service && config_file.service.metadata.name,
+          service_name: service_name,
           ram: config_file.deployment.ram_mi, # TODO: remove this column
           cpu: config_file.deployment.cpu_m, # TODO: remove this column
           replicas: config_file.deployment.spec.replicas || 1, # TODO: remove this column
