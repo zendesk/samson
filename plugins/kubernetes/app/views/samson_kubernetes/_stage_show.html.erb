@@ -25,14 +25,14 @@
           <td><%= group_role.cpu %></td>
           <td><%= group_role.ram %></td>
           <td>
-            <% if current_user.is_admin_for?(@stage.project) %>
+            <% if current_user.admin_for?(@stage.project) %>
               <%= link_to 'Edit', edit_admin_kubernetes_deploy_group_role_path(group_role) %>
             <% end %>
           </td>
         <% else %>
           <td colspan="3">Missing</td>
           <td>
-            <% if current_user.is_admin_for?(@stage.project) %>
+            <% if current_user.admin_for?(@stage.project) %>
               <% attributes = {name: name, project_id: @stage.project_id, deploy_group_id: deploy_group.id} %>
               <%= link_to "Create", new_admin_kubernetes_deploy_group_role_path(group_role, kubernetes_deploy_group_role: attributes) %>
             <% end %>

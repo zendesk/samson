@@ -41,22 +41,22 @@ module CurrentUser
   end
 
   def authorize_super_admin!
-    unauthorized! unless current_user.is_super_admin?
+    unauthorized! unless current_user.super_admin?
   end
 
   def authorize_admin!
-    unauthorized! unless current_user.is_admin?
+    unauthorized! unless current_user.admin?
   end
 
   def authorize_project_admin!
-    unauthorized! unless current_user.is_admin_for?(current_project)
+    unauthorized! unless current_user.admin_for?(current_project)
   end
 
   def authorize_deployer!
-    unauthorized! unless current_user.is_deployer?
+    unauthorized! unless current_user.deployer?
   end
 
   def authorize_project_deployer!
-    unauthorized! unless current_user.is_deployer_for?(current_project)
+    unauthorized! unless current_user.deployer_for?(current_project)
   end
 end

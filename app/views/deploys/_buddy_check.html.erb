@@ -10,7 +10,7 @@
       <% confirm = "Are you sure this is an emergency and you cannot find a buddy?\n#{strip_tags(details)}" %>
       <%= link_to "Bypass", buddy_check_project_deploy_path(@project, @deploy), method: :post, data: {confirm: confirm}, class: "btn btn-danger" %>
     </div>
-  <% elsif is_deployer_for_project? %>
+  <% elsif deployer_for_project? %>
     <p>This deploy requires a buddy.</p>
     <div class="buddy-approval">
       <%= link_to "Approve", buddy_check_project_deploy_path(@project, @deploy), method: :post, class: "btn btn-primary btn-xl" %>

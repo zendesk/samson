@@ -98,7 +98,7 @@ module SecretStorage
 
   def self.allowed_project_prefixes(user)
     allowed = user.administrated_projects.pluck(:permalink)
-    allowed.unshift 'global' if user.is_admin?
+    allowed.unshift 'global' if user.admin?
     allowed
   end
 

@@ -36,7 +36,7 @@
       <%= render "samson_env/environment_variables", form: form %> |
       <%= link_to "Preview", preview_admin_environment_variable_groups_path(group_id: @group.id) %>
 
-      <% if current_user.is_admin? %>
+      <% if current_user.admin? %>
         <hr>
 
         <div class="form-group">

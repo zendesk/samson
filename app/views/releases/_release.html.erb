@@ -20,7 +20,7 @@
     <% end %>
   </td>
   <td>
-    <% if is_deployer_for_project? %>
+    <% if deployer_for_project? %>
       <%= render 'deploy_to_button', release: release, stages: @stages %>
     <% end %>
   </td>

@@ -42,7 +42,7 @@ class User < ActiveRecord::Base
   # returns a scope
   def administrated_projects
     scope = Project.order(:name)
-    unless is_admin?
+    unless admin?
       allowed = user_project_roles.where(role_id: Role::ADMIN.id).pluck(:project_id)
       scope = scope.where(id: allowed)
     end
@@ -99,12 +99,12 @@ class User < ActiveRecord::Base
     "https://www.gravatar.com/avatar/#{md5}"
   end
 
-  def is_admin_for?(project)
-    is_admin? || !!project_role_for(project).try(:is_admin?)
+  def admin_for?(project)
+    admin? || !!project_role_for(project).try(:admin?)
   end
 
-  def is_deployer_for?(project)
-    is_deployer? || !!project_role_for(project).try(:is_deployer?)
+  def deployer_for?(project)
+    deployer? || !!project_role_for(project).try(:deployer?)
   end
 
   def project_role_for(project)

@@ -1,9 +1,9 @@
 production:
   name: Production
-  is_production: true
+  production: true
   permalink: production
 
 staging:
   name: Staging
-  is_production: false
+  production: false
   permalink: staging

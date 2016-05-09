@@ -23,7 +23,7 @@
           <td><%= deploy_group_role.ram %></td>
           <td><%= deploy_group_role.replicas %></td>
           <td>
-            <% if current_user.is_admin_for?(deploy_group_role.project) %>
+            <% if current_user.admin_for?(deploy_group_role.project) %>
               <%= link_to 'Edit', edit_admin_kubernetes_deploy_group_role_path(deploy_group_role) %>
             <% end %>
           </td>
