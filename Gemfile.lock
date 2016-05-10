@@ -469,10 +469,10 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
-  active_hash (~> 1.0)
-  active_model_serializers (~> 0.8.0)
+  active_hash
+  active_model_serializers
   activeresource
-  airbrake (~> 4.3.0)
+  airbrake
   angular-rails-templates
   ansible
   attr_encrypted
@@ -482,17 +482,17 @@ DEPENDENCIES
   bootscale
   bootstrap-sass
   brakeman
-  bundler (>= 1.8.4)
+  bundler
   byebug
   codeclimate-test-reporter
-  coderay (~> 1.1.0)
+  coderay
   concurrent-ruby
-  dalli (~> 2.7.0)
+  dalli
   docker-api
-  dogstatsd-ruby (~> 1.5.0)
+  dogstatsd-ruby
   dotenv
-  faraday-http-cache (~> 1.1)
-  github-markdown (~> 0.6.3)
+  faraday-http-cache
+  github-markdown
   goldiloader
   kaminari
   lograge
@@ -500,32 +500,32 @@ DEPENDENCIES
   maxitest
   minitest-rails
   mocha
-  mysql2 (~> 0.3)
+  mysql2
   net-http-persistent
-  newrelic_rpm (>= 3.7.1)
+  newrelic_rpm
   ngannotate-rails
-  octokit (~> 4.0)
-  omniauth (~> 1.1)
-  omniauth-github (= 1.1.1)
-  omniauth-google-oauth2 (~> 0.2.4)
-  omniauth-ldap (>= 1.0.5)
-  omniauth-oauth2 (~> 1.1)
+  octokit
+  omniauth
+  omniauth-github
+  omniauth-google-oauth2
+  omniauth-ldap
+  omniauth-oauth2
   paper_trail
-  pg (~> 0.13)
+  pg
   pry-rails
   puma
   query_diet
   rack-mini-profiler
   rails (~> 4.2.0)
-  rails-assets-angular (~> 1.4.0)!
+  rails-assets-angular!
   rails-assets-angular-mocks!
   rails-assets-angular-scenario!
   rails-assets-angular-spinner!
   rails-assets-angular-truncate-2!
-  rails-assets-angular-ui-bootstrap-bower (~> 0.14)!
+  rails-assets-angular-ui-bootstrap-bower!
   rails-assets-angular-ui-router!
   rails-assets-bootstrap-select!
-  rails-assets-font-awesome (~> 4.3.0)!
+  rails-assets-font-awesome!
   rails-assets-jquery!
   rails-assets-jquery-cookie!
   rails-assets-jquery-ui!
@@ -552,16 +552,16 @@ DEPENDENCIES
   samson_pipelines!
   samson_slack_webhooks!
   samson_zendesk!
-  sass-rails (~> 5.0)
-  sawyer (~> 0.5)
+  sass-rails
+  sawyer
   simplecov
   single_cov
-  soft_deletion (~> 0.4)
+  soft_deletion
   sqlite3
-  sse-rails-engine (~> 1.4)
-  uglifier (>= 1.3.0)
+  sse-rails-engine
+  uglifier
   vault
-  warden (~> 1.2)
+  warden
   webmock
 
 BUNDLED WITH
