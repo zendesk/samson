@@ -4,6 +4,7 @@ require 'rails/all'
 
 Bundler.require(:preload)
 Bundler.require(:assets) if Rails.env.development? || ENV["PRECOMPILE"]
+require 'rack-mini-profiler' if ['development', 'staging'].include?(Rails.env)
 
 Dotenv.load(Bundler.root.join(Rails.env.test? ? '.env.test' : '.env'))
 
