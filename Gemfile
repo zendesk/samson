@@ -2,15 +2,50 @@ source 'https://rubygems.org'
 
 ruby File.read('.ruby-version').strip
 
+# gems that have rails engines are are always needed
+group :preload do
+  gem 'rails', '~> 4.2.0'
+  gem 'dotenv'
+  gem 'sse-rails-engine', '~> 1.4'
+
+  # AR extensions
+  gem 'goldiloader'
+  gem 'kaminari'
+  gem 'active_model_serializers', '~> 0.8.0'
+  gem 'paper_trail'
+  gem 'soft_deletion', '~> 0.4'
+
+  # Logging
+  gem 'lograge'
+  gem 'logstash-event'
+end
+
 gem 'bundler', '>= 1.8.4'
-
-gem 'rails', '~> 4.2.0'
+gem 'dogstatsd-ruby', '~> 1.5.0'
 gem 'puma'
-gem 'dotenv'
+gem 'attr_encrypted'
+gem 'sawyer', '~> 0.5'
+gem 'dalli', '~> 2.7.0'
+gem 'omniauth', '~> 1.1'
+gem 'omniauth-oauth2', '~> 1.1'
+gem 'omniauth-github', '= 1.1.1'
+gem 'omniauth-google-oauth2', '~> 0.2.4'
+gem 'omniauth-ldap', '>= 1.0.5'
+gem 'octokit', '~> 4.0'
+gem 'faraday-http-cache', '~> 1.1'
+gem 'warden', '~> 1.2'
+gem 'active_hash', '~> 1.0'
+gem 'ansible'
+gem 'github-markdown', '~> 0.6.3'
+gem 'activeresource'
+gem 'coderay', '~> 1.1.0'
+gem 'net-http-persistent'
+gem 'concurrent-ruby'
+gem 'vault'
+gem 'docker-api'
 
-gem 'dogstatsd-ruby', '~> 1.5.0', require: 'statsd'
-gem 'goldiloader'
-gem 'attr_encrypted', require: false
+# treat included plugins like gems
+Dir[File.join(Bundler.root, 'plugins/*/')].each { |f| gemspec path: f, require: false }
 
 group :mysql2 do
   gem 'mysql2', '~> 0.3'
@@ -23,25 +58,6 @@ end
 group :sqlite do
   gem "sqlite3"
 end
-
-gem 'kaminari'
-gem 'soft_deletion', '~> 0.4'
-gem 'dalli', '~> 2.7.0'
-gem 'active_model_serializers', '~> 0.8.0'
-gem 'paper_trail'
-gem 'sawyer', '~> 0.5'
-gem 'sse-rails-engine', '~> 1.4'
-
-
-# Hashicorp vault
-gem 'vault'
-
-# Logging
-gem 'lograge'
-gem 'logstash-event'
-
-# Docker
-gem 'docker-api'
 
 group :production, :staging do
   gem 'rails_12factor'
@@ -82,26 +98,6 @@ group :assets do
   end
 end
 
-group :no_preload do
-  gem 'omniauth', '~> 1.1'
-  gem 'omniauth-oauth2', '~> 1.1'
-  gem 'omniauth-github', '= 1.1.1'
-  gem 'omniauth-google-oauth2', '~> 0.2.4'
-  gem 'omniauth-ldap', '>= 1.0.5'
-  gem 'octokit', '~> 4.0'
-  gem 'faraday-http-cache', '~> 1.1'
-  gem 'warden', '~> 1.2'
-  gem 'active_hash', '~> 1.0'
-  gem 'ansible'
-  gem 'github-markdown', '~> 0.6.3'
-  gem 'activeresource'
-  gem 'coderay', '~> 1.1.0'
-  gem 'net-http-persistent'
-  gem 'concurrent-ruby'
-
-  Dir[File.join(Bundler.root, 'plugins/*/')].each { |f| gemspec path: f, require: false } # treat included plugins like gems
-end
-
 group :development, :staging do
   gem "binding_of_caller"
   gem 'better_errors'
@@ -109,20 +105,20 @@ group :development, :staging do
 end
 
 group :development, :test do
-  gem 'byebug', require: false
-  gem 'bootscale', require: false
+  gem 'byebug'
+  gem 'bootscale'
   gem 'pry-rails'
   gem 'awesome_print'
-  gem 'brakeman', require: false
+  gem 'brakeman'
 end
 
 group :test do
   gem 'minitest-rails'
   gem 'maxitest'
-  gem 'mocha', require: false
-  gem 'webmock', require: false
+  gem 'mocha'
+  gem 'webmock'
   gem 'single_cov'
-  gem 'simplecov', require: false
+  gem 'simplecov'
   gem 'query_diet'
-  gem 'codeclimate-test-reporter', require: false
+  gem 'codeclimate-test-reporter'
 end

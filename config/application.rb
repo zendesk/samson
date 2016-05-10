@@ -2,9 +2,8 @@ require File.expand_path('../boot', __FILE__)
 
 require 'rails/all'
 
-# Require the gems listed in Gemfile, including any gems
-# you've limited to :test, :development, or :production.
-Bundler.require(:default, :assets, Rails.env)
+Bundler.require(:preload)
+Bundler.require(:assets) if Rails.env.development? || ENV["PRECOMPILE"]
 
 Dotenv.load(Bundler.root.join(Rails.env.test? ? '.env.test' : '.env'))
 

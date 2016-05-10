@@ -105,6 +105,7 @@ class ActiveSupport::TestCase
   end
 
   def ar_queries
+    require 'query_diet'
     QueryDiet::Logger.queries.map(&:first) - ["select 1"]
   end
 
