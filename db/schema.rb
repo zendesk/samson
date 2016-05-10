@@ -300,6 +300,9 @@ ActiveRecord::Schema.define(version: 20160503162523) do
     t.integer  "creator_id",         limit: 4,   null: false
     t.datetime "created_at",                     null: false
     t.datetime "updated_at",                     null: false
+    t.integer  "deploy_group_id",    limit: 4,   null: false
+    t.integer  "environment_id",     limit: 4,   null: false
+
   end
 
 
