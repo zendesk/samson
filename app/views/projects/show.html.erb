@@ -13,7 +13,7 @@
           <% end %>
           <th>Last Deploy</th>
           <th class="pull-right">
-            <% if current_user.is_admin_for?(@project) %>
+            <% if current_user.admin_for?(@project) %>
               <%= link_to 'Manage', project_stages_path(@project) %>
             <% end %>
           </th>

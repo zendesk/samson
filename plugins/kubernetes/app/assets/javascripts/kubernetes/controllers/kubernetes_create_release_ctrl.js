@@ -12,7 +12,7 @@ samson.controller('KubernetesCreateReleaseCtrl',
     $scope.environment = undefined;
     $scope.build = undefined;
     $scope.deploy_groups = [];
-    
+
     loadBuilds();
 
     loadEnvironments();
@@ -54,7 +54,7 @@ samson.controller('KubernetesCreateReleaseCtrl',
 
     $scope.environmentChanged = function(environment) {
       $scope.environment = environment;
-      
+
       if (_.isUndefined($scope.environment)) {
         $scope.roles = [];
         $scope.deploy_groups = [];

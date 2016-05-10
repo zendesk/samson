@@ -1,0 +1,6 @@
+<%# duplicates the js navigation %>
+<ul class="nav nav-tabs">
+  <li class="active"><%= link_to "Roles", "#" %></li>
+  <li><%= link_to "Releases", "/projects/#{@project.permalink}/kubernetes/releases" %></li>
+  <li><%= link_to "Dashboard", "/projects/#{@project.permalink}/kubernetes/dashboard" %></li>
+</ul>

@@ -192,21 +192,30 @@ module Kubernetes
 
     # create a release, storing all the configuration
     def create_release(build)
-      # refresh role info TODO: read role info directly from config file
-      @job.project.refresh_kubernetes_roles!(build.git_sha)
-
       # find role configs to avoid N+1s
-      roles_config = Kubernetes::DeployGroupRole.where(
+      roles_configs = Kubernetes::DeployGroupRole.where(
         project_id: @job.project_id,
         deploy_group: @job.deploy.stage.deploy_groups.map(&:id)
       )
 
+      # get all the roles that are configured for this sha
+      configured_roles = Kubernetes::Role.configured_for_project(@job.project, build.git_sha)
+      if configured_roles.empty?
+        raise Samson::Hooks::UserError, "No kubernetes config files found at sha #{build.git_sha}"
+      end
+
       # build config for every cluster and role we want to deploy to
+      errors = []
       group_config = @job.deploy.stage.deploy_groups.map do |group|
-        roles = Kubernetes::Role.where(project_id: @job.project_id).map do |role|
-          role_config = roles_config.detect do |r|
-            r.deploy_group_id == group.id && r.name == role.name
-          end || raise(Samson::Hooks::UserError, "No config for role #{role.name} and group #{group.name} found")
+        roles = configured_roles.map do |role|
+          role_config = roles_configs.detect do |r|
+            r.deploy_group_id == group.id && r.name == role.name # TODO: match role via id
+          end
+
+          unless role_config
+            errors << "No config for role #{role.name} and group #{group.name} found, add it on the stage page."
+            next
+          end
 
           {
             id: role.id,
@@ -217,6 +226,8 @@ module Kubernetes
         end
         {id: group.id, roles: roles}
       end
+
+      raise Samson::Hooks::UserError, errors.join("\n") if errors.any?
 
       release = Kubernetes::Release.create_release(
         deploy_groups: group_config,
