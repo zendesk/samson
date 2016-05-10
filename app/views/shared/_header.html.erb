@@ -9,12 +9,12 @@
           <ul class="dropdown-menu">
             <li>
               <a class="padding-sm">
-                <input id="project_search" type="search" ng-model="projectSearchQuery" ng-trim="false" handle-dropdown-selection class="form-control input-block" placeholder="Search projects">
+                <input id="project_search" type="search" handle-dropdown-selection class="filter-list form-control input-block" placeholder="Search projects" data-target=".filtered-projects">
               </a>
             </li>
             <li class="divider"></li>
             <% Project.ordered_for_user(current_user).each do |project| %>
-              <li filter-by="projectSearchQuery">
+              <li class="filtered-projects">
                 <%= link_to project do %>
                   <% starred = current_user.starred_project?(project) %>
                   <span class="glyphicon <%= 'glyphicon-star' if starred %>">
@@ -51,7 +51,7 @@
         </li>
       <% end %>
 
-      <% if current_user.try(:is_admin?) %>
+      <% if current_user.try(:admin?) %>
         <li class="dropdown <%= 'active' if request.path.starts_with?('/admin') %>">
           <a href="#" class="dropdown-toggle" data-toggle="dropdown">Admin <b class="caret"></b></a>
           <ul class="dropdown-menu">

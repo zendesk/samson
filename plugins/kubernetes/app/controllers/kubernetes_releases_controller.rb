@@ -20,7 +20,18 @@ class KubernetesReleasesController < ApplicationController
   private
 
   def release_params
-    params.require(:kubernetes_release).permit(:build_id, deploy_groups: [:id, roles: [:id, :replicas]])
+    attributes = params.require(:kubernetes_release).permit(:build_id, deploy_groups: [:id, roles: [:id, :replicas]])
       .merge(user: current_user, project: current_project)
+
+    # UI does not have cpu/ram, so use the defaults
+    attributes.fetch(:deploy_groups).each do |dg|
+      dg.fetch(:roles).each do |role|
+        r = ::Kubernetes::Role.find(role.fetch(:id))
+        role[:cpu] = r.cpu
+        role[:ram] = r.ram
+      end
+    end
+
+    attributes
   end
 end

@@ -62,38 +62,6 @@ select {
   margin: 0 5px;
 }
 
-/*
-  Kubernetes Roles
-*/
-
-.kubernetes-roles .roles-container {
-  padding: 20px 10px;
-}
-
-.kubernetes-roles .references-typeahead-container {
-  width: 400px;
-  padding: 10px 10px;
-}
-
-.kubernetes-roles .git-reference-control .dropdown-menu {
-  min-width: 100%;
-}
-
-.kubernetes-roles .git-reference-control button {
-  min-height: initial;
-  min-width: initial;
-  margin-top: 0;
-  margin-bottom: 0;
-}
-
-.kubernetes-roles .roles-table-container {
-  padding: 0;
-}
-
-.kubernetes-roles .roles-table-container table {
-  margin: 0;
-}
-
 /* Kubernetes Release Dialog */
 
 .kubernetes-release-dialog .nav-tabs {

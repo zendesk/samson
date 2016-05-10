@@ -19,7 +19,6 @@ describe("Controller: KubernetesTabsCtrl", function() {
     $stateParams = _$stateParams_;
     $location = _$location_;
 
-    $templateCache.put('kubernetes/kubernetes_roles.tmpl.html', '');
     $templateCache.put('kubernetes/kubernetes_releases.tmpl.html', '');
     $templateCache.put('kubernetes/dashboard.tmpl.html', '');
 
@@ -28,18 +27,6 @@ describe("Controller: KubernetesTabsCtrl", function() {
       $scope: $scope
     });
   }));
-
-  describe('navigating to /kubernetes/roles', function() {
-    beforeEach(function() {
-      goTo('/projects/some_project/kubernetes/roles');
-    });
-
-    it('should activate the roles tab', inject(function($q) {
-      $scope.$digest();
-      expect($scope.project_id).toBe('some_project');
-      assertActiveTab($scope.tabs, 0);
-    }));
-  });
 
   describe('navigating to /kubernetes/releases', function() {
     beforeEach(function() {

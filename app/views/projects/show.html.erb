@@ -1,6 +1,6 @@
 <% content_for :page_title, project.name %>
 
-<%= render 'projects/header', project: project, tab: "overview" %>
+<%= render 'projects/header', project: project, tab: "stages" %>
 
 <% cache project do %>
   <section class="clearfix tabs">
@@ -12,7 +12,11 @@
             <th>Deploy Groups</th>
           <% end %>
           <th>Last Deploy</th>
-          <th></th>
+          <th class="pull-right">
+            <% if current_user.admin_for?(@project) %>
+              <%= link_to 'Manage', project_stages_path(@project) %>
+            <% end %>
+          </th>
         </tr>
       </thead>
       <tbody>

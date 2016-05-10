@@ -4,7 +4,9 @@ module GitRepoTestHelper
   end
 
   def execute_on_remote_repo(cmds)
-    `exec 2> /dev/null; cd #{repo_temp_dir}; #{cmds}`
+    result = `exec 2>&1; set -e; cd #{repo_temp_dir}; #{cmds}`
+    raise "FAIL: #{result}" unless $?.success?
+    result
   end
 
   def create_repo_without_tags

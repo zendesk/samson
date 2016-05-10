@@ -19,7 +19,7 @@ module Kubernetes
     end
 
     def parse_deployment
-      deployment_hash = as_hash('Deployment')
+      deployment_hash = as_hash('Deployment') || as_hash('DaemonSet')
       raise 'Deployment specification missing in the configuration file.' if deployment_hash.nil?
       @deployment = Deployment.new(deployment_hash)
     rescue => ex

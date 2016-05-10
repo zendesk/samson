@@ -1,3 +1,9 @@
+<% if !ENV['DOCKER_FEATURE'] %>
+  <div class="alert alert-danger">
+    Kubernetes needs docker to be enabled, set DOCKER_FEATURE=1
+  </div>
+<% end %>
+
 <%= render 'projects/header', project: current_project, tab: 'kubernetes' %>
 
 <section class="kubernetes-section">
@@ -10,6 +16,5 @@
   </div>
 </section>
 
-<%= render 'kubernetes_roles/roles_list' %>
 <%= render 'kubernetes_releases/release_list' %>
 <%= render 'kubernetes_dashboard/dashboard' %>

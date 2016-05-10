@@ -5,7 +5,7 @@
     <dt>Name:</dt>
     <dd><%= @user.name %></dd>
     <dt>System Role:</dt>
-    <dd><%= Role.find(@user.role_id).display_name %></dd>
+    <dd><%= @user.role.display_name %></dd>
   </dl>
 </section>
 <section id="user-project-roles" class="clearfix">

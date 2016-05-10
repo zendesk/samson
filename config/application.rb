@@ -2,9 +2,8 @@ require File.expand_path('../boot', __FILE__)
 
 require 'rails/all'
 
-# Require the gems listed in Gemfile, including any gems
-# you've limited to :test, :development, or :production.
-Bundler.require(:default, :assets, Rails.env)
+Bundler.require(:preload)
+Bundler.require(:assets) if Rails.env.development? || ENV["PRECOMPILE"]
 
 Dotenv.load(Bundler.root.join(Rails.env.test? ? '.env.test' : '.env'))
 
@@ -25,23 +24,26 @@ module Samson
 
     config.autoload_paths += Dir["#{config.root}/lib/**/"]
 
-    servers = []
-    options = { value_max_bytes: 3000000, compress: true, expires_in: 1.day }
+    if Rails.env.test?
+      config.cache_store = :memory_store
+    else
+      servers = []
+      options = { value_max_bytes: 3000000, compress: true, expires_in: 1.day }
 
-    # support memcachier env used by heroku
-    # https://devcenter.heroku.com/articles/memcachier#rails-3-and-4
-    if ENV["MEMCACHIER_SERVERS"]
-      servers = (ENV["MEMCACHIER_SERVERS"]).split(",")
-      options.merge!(
-        username: ENV["MEMCACHIER_USERNAME"],
-        password: ENV["MEMCACHIER_PASSWORD"],
-        failover: true,
-        socket_timeout: 1.5,
-        socket_failure_delay: 0.2
-      )
+      # support memcachier env used by heroku
+      # https://devcenter.heroku.com/articles/memcachier#rails-3-and-4
+      if ENV["MEMCACHIER_SERVERS"]
+        servers = (ENV["MEMCACHIER_SERVERS"]).split(",")
+        options.merge!(
+          username: ENV["MEMCACHIER_USERNAME"],
+          password: ENV["MEMCACHIER_PASSWORD"],
+          failover: true,
+          socket_timeout: 1.5,
+          socket_failure_delay: 0.2
+        )
+      end
+      config.cache_store = :dalli_store, servers, options
     end
-
-    config.cache_store = :dalli_store, servers, options
 
     # Raise exceptions
     config.active_record.raise_in_transactional_callbacks = true

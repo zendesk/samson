@@ -21,6 +21,13 @@ class User < ActiveRecord::Base
   validates :time_format, inclusion: { in: TIME_FORMATS }
 
   scope :search, ->(query) { where("name like ? or email like ?", "%#{query}%", "%#{query}%") }
+  scope :with_role, -> (role_id, project_id) {
+    joins('LEFT OUTER JOIN user_project_roles on users.id = user_project_roles.user_id').
+      where(
+        '(user_project_roles.project_id = ? AND user_project_roles.role_id >= ?) OR users.role_id >= ?',
+        project_id, role_id, role_id
+      )
+  }
 
   def starred_project?(project)
     starred_project_ids.include?(project.id)
@@ -35,7 +42,7 @@ class User < ActiveRecord::Base
   # returns a scope
   def administrated_projects
     scope = Project.order(:name)
-    unless is_admin?
+    unless admin?
       allowed = user_project_roles.where(role_id: Role::ADMIN.id).pluck(:project_id)
       scope = scope.where(id: allowed)
     end
@@ -92,12 +99,12 @@ class User < ActiveRecord::Base
     "https://www.gravatar.com/avatar/#{md5}"
   end
 
-  def is_admin_for?(project)
-    is_admin? || !!project_role_for(project).try(:is_admin?)
+  def admin_for?(project)
+    admin? || !!project_role_for(project).try(:admin?)
   end
 
-  def is_deployer_for?(project)
-    is_deployer? || !!project_role_for(project).try(:is_deployer?)
+  def deployer_for?(project)
+    deployer? || !!project_role_for(project).try(:deployer?)
   end
 
   def project_role_for(project)

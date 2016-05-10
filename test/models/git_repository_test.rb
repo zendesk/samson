@@ -125,7 +125,7 @@ describe GitRepository do
       execute_on_remote_repo <<-SHELL
         git checkout test_branch
         echo "blah blah" >> bar.txt
-        git add bar
+        git add bar.txt
         git commit -m "created bar.txt"
         git tag -a annotated_tag -m "This is really worth tagging"
         git checkout master
@@ -241,31 +241,31 @@ describe GitRepository do
     let(:sha) { repository.commit_from_ref('master', length: nil) }
 
     it 'finds content' do
-      repository.file_content(sha, 'foo').must_equal "monkey"
+      repository.file_content('foo', sha).must_equal "monkey"
     end
 
     it 'returns nil when file does not exist' do
-      repository.file_content(sha, 'foox').must_equal nil
+      repository.file_content('foox', sha).must_equal nil
     end
 
     it 'returns nil when sha does not exist' do
-      repository.file_content('a' * 40, 'foox').must_equal nil
+      repository.file_content('foox', 'a' * 40).must_equal nil
     end
 
-    it "does not support non-shas" do
-      assert_raises ArgumentError do
-        repository.file_content('a' * 41, 'foox')
-      end
+    it "always updates for non-shas" do
+      repository.expects(:sha_exist?).never
+      repository.expects(:update!)
+      repository.file_content('foox', 'a' * 41).must_equal nil
     end
 
     it "does not update when sha exists to save time" do
       repository.expects(:update!).never
-      repository.file_content(sha, 'foo').must_equal "monkey"
+      repository.file_content('foo', sha).must_equal "monkey"
     end
 
     it "updates when sha is missing" do
       repository.expects(:update!)
-      repository.file_content('a' * 40, 'foo').must_equal nil
+      repository.file_content('foo', 'a' * 40).must_equal nil
     end
   end
 end

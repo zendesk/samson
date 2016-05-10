@@ -1,5 +1,5 @@
-require 'attr_encrypted'
 module SecretStorage
+  require 'attr_encrypted'
   class DbBackend
     class Secret < ActiveRecord::Base
       self.table_name = :secrets
@@ -52,6 +52,7 @@ module SecretStorage
     end
   end
 
+  require 'vault'
   class HashicorpVault
 
     VAULT_SECRET_BACKEND ='secret/'.freeze
@@ -127,7 +128,7 @@ module SecretStorage
 
   def self.allowed_project_prefixes(user)
     allowed = user.administrated_projects.pluck(:permalink)
-    allowed.unshift 'global' if user.is_admin?
+    allowed.unshift 'global' if user.admin?
     allowed
   end
 

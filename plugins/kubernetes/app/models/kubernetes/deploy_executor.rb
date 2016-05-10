@@ -2,7 +2,9 @@
 # finishes when cluster is "Ready"
 module Kubernetes
   class DeployExecutor
-    STABLE_TICKS = 20
+    WAIT_FOR_LIVE = 10.minutes
+    CHECK_STABLE = 1.minute
+    TICK = 2.seconds
     RESTARTED = "Restarted"
 
     ReleaseStatus = Struct.new(:live, :details, :role, :group)
@@ -34,6 +36,9 @@ module Kubernetes
     private
 
     def wait_for_deploys_to_finish(release)
+      start = Time.now
+      stable_ticks = CHECK_STABLE / TICK
+
       loop do
         return false if stopped?
 
@@ -42,8 +47,8 @@ module Kubernetes
         if @testing_for_stability
           if statuses.all?(&:live)
             @testing_for_stability += 1
-            @output.puts "Stable #{@testing_for_stability}/#{STABLE_TICKS}"
-            if STABLE_TICKS == @testing_for_stability
+            @output.puts "Stable #{@testing_for_stability}/#{stable_ticks}"
+            if stable_ticks == @testing_for_stability
               @output.puts "SUCCESS"
               return true
             end
@@ -60,10 +65,13 @@ module Kubernetes
           elsif statuses.map(&:details).include?(RESTARTED)
             unstable!
             return false
+          elsif start + WAIT_FOR_LIVE < Time.now
+            @output.puts "TIMEOUT, pods took too long to get live"
+            return false
           end
         end
 
-        sleep 2
+        sleep TICK
       end
     end
 
@@ -153,7 +161,7 @@ module Kubernetes
         @output.puts("Waiting for Build #{build.url} to finish.")
         loop do
           break if @stopped
-          sleep 2
+          sleep TICK
           break if build.docker_build_job(:reload).finished?
         end
       end
@@ -182,21 +190,56 @@ module Kubernetes
       end
     end
 
-    # create a realese, storing all the configuration
+    # create a release, storing all the configuration
     def create_release(build)
+      # find role configs to avoid N+1s
+      roles_configs = Kubernetes::DeployGroupRole.where(
+        project_id: @job.project_id,
+        deploy_group: @job.deploy.stage.deploy_groups.map(&:id)
+      )
+
+      # get all the roles that are configured for this sha
+      configured_roles = Kubernetes::Role.configured_for_project(@job.project, build.git_sha)
+      if configured_roles.empty?
+        raise Samson::Hooks::UserError, "No kubernetes config files found at sha #{build.git_sha}"
+      end
+
       # build config for every cluster and role we want to deploy to
+      errors = []
       group_config = @job.deploy.stage.deploy_groups.map do |group|
-        # raise "#{group.name} needs to be on kubernetes" unless group.
-        roles = Kubernetes::Role.where(project_id: @job.project_id).map do |role|
-          {id: role.id, replicas: role.replicas} # TODO make replicas configureable
+        roles = configured_roles.map do |role|
+          role_config = roles_configs.detect do |r|
+            r.deploy_group_id == group.id && r.name == role.name # TODO: match role via id
+          end
+
+          unless role_config
+            errors << "No config for role #{role.name} and group #{group.name} found, add it on the stage page."
+            next
+          end
+
+          {
+            id: role.id,
+            replicas: role_config.replicas,
+            cpu: role_config.cpu,
+            ram: role_config.ram
+          }
         end
         {id: group.id, roles: roles}
       end
 
-      release = Kubernetes::Release.create_release(deploy_groups: group_config, build_id: build.id, user: @job.user, project: @job.project)
+      raise Samson::Hooks::UserError, errors.join("\n") if errors.any?
+
+      release = Kubernetes::Release.create_release(
+        deploy_groups: group_config,
+        build_id: build.id,
+        user: @job.user,
+        project: @job.project
+      )
+
       unless release.persisted?
         raise Samson::Hooks::UserError, "Failed to create release: #{release.errors.full_messages.inspect}"
       end
+
       @output.puts("Created release #{release.id}\nConfig: #{group_config.inspect}")
       release
     end

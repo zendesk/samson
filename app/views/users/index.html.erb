@@ -3,7 +3,22 @@
 <section id="user-project-roles" class="tabs">
   <h2 class="section-subtitle">Project Level Roles</h2>
 
-  <%= render partial: "shared/search_bar", locals: {url: project_users_path, query: params[:search]} %>
+  <%= form_tag '?', method: :get do %>
+    <div class="col-md-6 clearfix">&nbsp;</div>
+
+    <div class="col-md-3 clearfix">
+      <%= text_field_tag :search, params[:search], class: 'form-control', placeholder: 'Search' %>
+    </div>
+
+    <div class="col-md-2 clearfix">
+      <% roles = [['', '']] + UserProjectRole::ROLES.map { |r| [r.name.capitalize, r.id] } %>
+      <%= select_tag :role_id, options_for_select(roles, params[:role_id]), class: 'form-control' %>
+    </div>
+
+    <div class="col-md-1 clearfix">
+      <%= submit_tag "Search", class: "btn btn-default form-control" %>
+    </div>
+  <% end %>
 
   <table class="table table-hover table-condensed">
     <thead>
@@ -18,10 +33,10 @@
     <tbody>
     <% if @users.empty? %>
       <tr>
-        <td>No user was found!</td>
+        <td>No users found.</td>
       </tr>
     <% else %>
-        <%= render @users %>
+        <%= static_render @users %>
     <% end %>
     </tbody>
   </table>

@@ -362,7 +362,7 @@ describe DeploysController do
         before do
           deploy_service.expects(:stop!).never
           Deploy.any_instance.stubs(:started_by?).returns(false)
-          User.any_instance.stubs(:is_admin?).returns(false)
+          User.any_instance.stubs(:admin?).returns(false)
 
           delete :destroy, project_id: project.to_param, id: deploy.to_param
         end

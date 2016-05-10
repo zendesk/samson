@@ -56,7 +56,7 @@ samson.controller('KubernetesDashboardCtrl',
           $scope.environments = environments;
 
           // Selects the production environment by default
-          var default_environment = _.findWhere(environments, {'is_production': true});
+          var default_environment = _.findWhere(environments, {'production': true});
           $scope.environment = _.isDefined(default_environment) ? default_environment : environments[0];
 
           deferred.resolve();

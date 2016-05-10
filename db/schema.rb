@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20160503162523) do
+ActiveRecord::Schema.define(version: 20160508055458) do
 
   create_table "builds", force: :cascade do |t|
     t.integer  "project_id",                       null: false
@@ -99,12 +99,12 @@ ActiveRecord::Schema.define(version: 20160503162523) do
   add_index "environment_variables", ["parent_id", "parent_type", "name", "scope_type", "scope_id"], name: "environment_variables_unique_scope", unique: true, length: {"parent_id"=>nil, "parent_type"=>191, "name"=>191, "scope_type"=>191, "scope_id"=>nil}, using: :btree
 
   create_table "environments", force: :cascade do |t|
-    t.string   "name",          limit: 255,                 null: false
-    t.boolean  "is_production", default: false, null: false
+    t.string   "name",       limit: 255,                 null: false
+    t.boolean  "production",             default: false, null: false
     t.datetime "deleted_at"
-    t.datetime "created_at",                                null: false
-    t.datetime "updated_at",                                null: false
-    t.string   "permalink",     limit: 255,                 null: false
+    t.datetime "created_at",                             null: false
+    t.datetime "updated_at",                             null: false
+    t.string   "permalink",  limit: 255,                 null: false
   end
 
   add_index "environments", ["permalink"], name: "index_environments_on_permalink", unique: true, length: {"permalink"=>191}, using: :btree
@@ -167,6 +167,18 @@ ActiveRecord::Schema.define(version: 20160503162523) do
     t.string   "config_context",  limit: 255
   end
 
+  create_table "kubernetes_deploy_group_roles", force: :cascade do |t|
+    t.integer "project_id",      limit: 4,                           null: false
+    t.integer "deploy_group_id", limit: 4,                           null: false
+    t.integer "replicas",        limit: 4,                           null: false
+    t.integer "ram",             limit: 4,                           null: false
+    t.decimal "cpu",                         precision: 4, scale: 2, null: false
+    t.string  "name",            limit: 255,                         null: false
+  end
+
+  add_index "kubernetes_deploy_group_roles", ["deploy_group_id"], name: "index_kubernetes_deploy_group_roles_on_deploy_group_id", using: :btree
+  add_index "kubernetes_deploy_group_roles", ["project_id", "deploy_group_id", "name"], name: "index_kubernetes_deploy_group_roles_on_project_id", length: {"project_id"=>nil, "deploy_group_id"=>nil, "name"=>191}, using: :btree
+
   create_table "kubernetes_release_docs", force: :cascade do |t|
     t.integer  "kubernetes_role_id",          limit: 4,                         null: false
     t.integer  "kubernetes_release_id",       limit: 4,                         null: false
@@ -178,6 +190,8 @@ ActiveRecord::Schema.define(version: 20160503162523) do
     t.datetime "created_at"
     t.datetime "updated_at"
     t.integer  "deploy_group_id"
+    t.decimal  "cpu",                                       precision: 4, scale: 2,                     null: false
+    t.integer  "ram",                         limit: 4,                                                 null: false
   end
 
   add_index "kubernetes_release_docs", ["kubernetes_release_id"], name: "index_kubernetes_release_docs_on_kubernetes_release_id", using: :btree
