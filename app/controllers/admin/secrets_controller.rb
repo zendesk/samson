@@ -41,11 +41,11 @@ class Admin::SecretsController < ApplicationController
   end
 
   def key
-    params[:id] || "#{secret_params.fetch(:project_permalink)}/#{secret_params.fetch(:key)}"
+    params[:id] || "#{secret_params.fetch(:enviorment_permalink)}/#{secret_params.fetch(:project_permalink)}/#{secret_params.fetch(:deploy_group_permalink)}/#{secret_params.fetch(:key)}"
   end
 
   def project_permalink
-    params[:id].present? ? params[:id].split('/', 4).second : secret_params.fetch(:project_permalink)
+    params[:id].present? ? params[:id].split('/', 4).third : secret_params.fetch(:project_permalink)
   end
 
   def value

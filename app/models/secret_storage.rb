@@ -12,7 +12,7 @@ module SecretStorage
       before_validation :store_encryption_key_sha
       validates :id, :encrypted_value, :encryption_key_sha, presence: true
       validates :id, format: /\A\S+\/\S*\Z/
-      validates_presence_of :deploy_group_permalink, :enviorment_permalink
+      validates_presence_of :deploy_group_id, :environment_id
 
       private
 
@@ -38,8 +38,8 @@ module SecretStorage
       secret.updater_id = data.fetch(:user_id)
       secret.creator_id ||= data.fetch(:user_id)
       secret.value = data.fetch(:value)
-      secret.deploy_group_id = SecretStorage::permalink_id('deploy_group', (data[:deploy_group_permalink]))
-      secret.enviorment_id = SecretStorage::permalink_id('enviorment', data[:enviorment_permalink])
+      secret.deploy_group_id = SecretStorage::permalink_id('deploy_group', data[:deploy_group_permalink])
+      secret.environment_id = SecretStorage::permalink_id('enviorment', data[:enviorment_permalink])
       secret.save
     end
 
@@ -132,8 +132,8 @@ module SecretStorage
   end
 
   def self.permalink_id(link_type, link)
-    DeployGroup.find_by_permalink(link).id if link_type == 'deploy_group'
-    Environment.find_by_permalink(link).id if link_type == 'enviorment'
+    return DeployGroup.find_by_permalink(link).id if link_type == 'deploy_group'
+    return Environment.find_by_permalink(link).id if link_type == 'enviorment'
   end
 
   SECRET_KEY_REGEX = %r{[\w\/-]+}
