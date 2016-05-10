@@ -2,9 +2,9 @@
 
 <section class="form-horizontal">
   <div class="form-group">
-    <label class="col-lg-2 control-label">Name</label>
+    <label class="col-lg-2 control-label">Role</label>
     <div class="col-lg-4">
-      <p class="form-control-static"><%= @deploy_group_role.name %></p>
+      <p class="form-control-static"><%= link_to @deploy_group_role.kubernetes_role.name, [@deploy_group_role.project, @deploy_group_role.kubernetes_role] %></p>
     </div>
   </div>
 

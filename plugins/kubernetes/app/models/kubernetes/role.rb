@@ -7,6 +7,7 @@ module Kubernetes
     has_soft_deletion
 
     belongs_to :project, inverse_of: :kubernetes_roles
+    has_many :kubernetes_deploy_group_roles, class_name: 'Kubernetes::DeployGroupRole', dependent: :destroy
 
     DEPLOY_STRATEGIES = %w(RollingUpdate Recreate)
 
