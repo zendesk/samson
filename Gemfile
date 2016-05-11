@@ -43,6 +43,9 @@ gem 'net-http-persistent'
 gem 'concurrent-ruby'
 gem 'vault'
 gem 'docker-api'
+
+# Temporarily using our fork, while waiting for this PR to get merged:
+# https://github.com/abonas/kubeclient/pull/127
 gem 'kubeclient', github: 'zendesk/kubeclient', branch: 'samson-gem-branch'
 
 # treat included plugins like gems
