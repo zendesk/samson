@@ -81,17 +81,18 @@ Samson::Application.configure do
   # Lograge
   config.lograge.enabled = true
 
-  # custom_options can be a lambda or hash
-  # if it's a lambda then it must return a hash
   config.lograge.custom_options = lambda do |event|
+    # show params for every request
     unwanted_keys = %w[format action controller]
     params = event.payload[:params].reject { |key,_| unwanted_keys.include? key }
-
-    # capture some specific timing values you are interested in
     { :params => params }
   end
 
-  require 'syslog/logger'
-  config.logger = Syslog::Logger.new('samson')
-  config.lograge.formatter = Lograge::Formatters::Logstash.new
+  if ENV["RAILS_LOG_TO_STDOUT"].present?
+    config.logger = ActiveSupport::TaggedLogging.new(Logger.new(STDOUT))
+  else
+    require 'syslog/logger'
+    config.logger = Syslog::Logger.new('samson')
+    config.lograge.formatter = Lograge::Formatters::Logstash.new
+  end
 end
