@@ -1,0 +1,12 @@
+MethodLength:
+  Enabled: false
+ClassLength:
+  Enabled: false
+Metrics/AbcSize:
+  Enabled: false
+Metrics/LineLength:
+  Max: 100
+Metrics/ParameterLists:
+  Max: 8
+Metrics/CyclomaticComplexity:
+  Max: 8
