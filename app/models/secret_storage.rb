@@ -12,7 +12,7 @@ module SecretStorage
       before_validation :store_encryption_key_sha
       validates :id, :encrypted_value, :encryption_key_sha, presence: true
       validates :id, format: /\A\S+\/\S*\Z/
-      validates_presence_of :deploy_group_id, :environment_id
+      validates_presence_of :deploy_group_id, :environment_id, :on => :create
 
       private
 
@@ -39,7 +39,7 @@ module SecretStorage
       secret.creator_id ||= data.fetch(:user_id)
       secret.value = data.fetch(:value)
       secret.deploy_group_id = SecretStorage::permalink_id('deploy_group', data[:deploy_group_permalink])
-      secret.environment_id = SecretStorage::permalink_id('enviorment', data[:enviorment_permalink])
+      secret.environment_id = SecretStorage::permalink_id('environment', data[:environment_permalink])
       secret.save
     end
 
@@ -76,7 +76,7 @@ module SecretStorage
 
     def self.write(key, data)
       key = key.split('/', 4).last
-      vault_client.logical.write(vault_path(key, data[:enviorment_permalink], data[:deploy_group_permalink], data[:project_permalink]), vault: data[:value])
+      vault_client.logical.write(vault_path(key, data[:environment_permalink], data[:deploy_group_permalink], data[:project_permalink]), vault: data[:value])
     end
 
     def self.delete(key)
@@ -109,8 +109,8 @@ module SecretStorage
     end
 
     # path for these should be /env/project/deploygroup/key
-    def self.vault_path(key, enviornment, deploy_group, project)
-      VAULT_SECRET_BACKEND + enviornment.to_s + "/" + project.to_s + "/" + deploy_group.to_s + "/" + convert_path(key, :encode)
+    def self.vault_path(key, environment, deploy_group, project)
+      VAULT_SECRET_BACKEND + environment.to_s + "/" + project.to_s + "/" + deploy_group.to_s + "/" + convert_path(key, :encode)
     end
 
     def self.convert_path(string, direction)
@@ -134,7 +134,7 @@ module SecretStorage
 
   def self.permalink_id(link_type, link)
     return DeployGroup.find_by_permalink(link).id if link_type == 'deploy_group'
-    return Environment.find_by_permalink(link).id if link_type == 'enviorment'
+    return Environment.find_by_permalink(link).id if link_type == 'environment'
   end
 
   SECRET_KEY_REGEX = %r{[\w\/-]+}

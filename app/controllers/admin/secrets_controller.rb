@@ -1,7 +1,7 @@
 class Admin::SecretsController < ApplicationController
   include CurrentProject
 
-  before_action :find_project_permalinks, :find_enviorments_permalinks, :generate_deploy_group_list, :find_deploy_group_permalinks
+  before_action :find_project_permalinks, :find_environments_permalinks, :generate_deploy_group_list, :find_deploy_group_permalinks
   before_action :find_secret, only: [:update, :edit, :destroy]
 
   DEPLOYER_ACCESS = [:index, :new]
@@ -22,7 +22,15 @@ class Admin::SecretsController < ApplicationController
   end
 
   def update
-    if SecretStorage.write(key, value: value, user_id: current_user.id, deploy_group_permalink: deploy_group_permalink, enviorment_permalink: enviorment_permalink, project_permalink: project_permalink)
+    attributes = {
+      user_id: current_user.id,
+      value:  value
+    }
+    attributes[:environment_permalink] = environment_permalink if environment_permalink
+    attributes[:project_permalink] = project_permalink if project_permalink
+    attributes[:deploy_group_permalink] = deploy_group_permalink if deploy_group_permalink
+    #if SecretStorage.write(key, value: value, user_id: current_user.id, deploy_group_permalink: deploy_group_permalink, environment_permalink: environment_permalink, project_permalink: project_permalink)
+    if SecretStorage.write(key, attributes)
       successful_response 'Secret created.'
     else
       failure_response 'Failed to save.'
@@ -37,15 +45,15 @@ class Admin::SecretsController < ApplicationController
   private
 
   def secret_params
-    @secret_params ||= params.require(:secret).permit(:project_permalink, :deploy_group_permalink, :enviorment_permalink, :key, :value)
+    @secret_params ||= params.require(:secret).permit(:project_permalink, :deploy_group_permalink, :environment_permalink, :key, :value)
   end
 
   def key
-    params[:id] || "#{secret_params.fetch(:enviorment_permalink)}/#{secret_params.fetch(:project_permalink)}/#{secret_params.fetch(:deploy_group_permalink)}/#{secret_params.fetch(:key)}"
+    params[:id] || "#{secret_params.fetch(:environment_permalink)}/#{secret_params.fetch(:project_permalink)}/#{secret_params.fetch(:deploy_group_permalink)}/#{secret_params.fetch(:key)}"
   end
 
   def project_permalink
-    params[:id].present? ? params[:id].split('/', 4).third : secret_params.fetch(:project_permalink)
+    params[:id].present? ? params[:id].split('/', 4).second : secret_params.fetch(:project_permalink)
   end
 
   def value
@@ -53,11 +61,11 @@ class Admin::SecretsController < ApplicationController
   end
 
   def deploy_group_permalink
-    secret_params.fetch(:deploy_group_permalink)
+    params[:id].present? ? params[:id].split('/', 4).third : secret_params.fetch(:deploy_group_permalink)
   end
 
-  def enviorment_permalink
-    secret_params.fetch(:enviorment_permalink)
+  def environment_permalink
+    params[:id].present? ? params[:id].split('/', 4).first : secret_params.fetch(:environment_permalink, false)
   end
 
   def successful_response(notice)
@@ -86,8 +94,8 @@ class Admin::SecretsController < ApplicationController
     @project_permalinks = SecretStorage.allowed_project_prefixes(current_user)
   end
 
-  def find_enviorments_permalinks
-    @enviorment_permalinks = Environment.all().pluck(:permalink)
+  def find_environments_permalinks
+    @environment_permalinks = Environment.all().pluck(:permalink)
   end
 
   def find_deploy_group_permalinks

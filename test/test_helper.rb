@@ -142,7 +142,7 @@ class ActiveSupport::TestCase
   end
 
   def create_secret(key)
-    SecretStorage::DbBackend::Secret.create!(id: key, value: 'MY-SECRET', updater_id: users(:admin).id, creator_id: users(:admin).id)
+    SecretStorage::DbBackend::Secret.create!(id: key, value: 'MY-SECRET', environment_id: key.split('/').first, deploy_group_id: key.split('/').third, updater_id: users(:admin).id, creator_id: users(:admin).id)
   end
 
   def with_env(env)
