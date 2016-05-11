@@ -6,7 +6,7 @@ class Admin::Kubernetes::ClustersController < ApplicationController
   before_action :load_default_config_file, only: [:new, :edit, :update, :create]
 
   def new
-    @cluster = ::Kubernetes::Cluster.new(config_filepath: @config_file.try(:filepath))
+    @cluster = ::Kubernetes::Cluster.new(config_filepath: @config_file)
   end
 
   def create
@@ -71,10 +71,12 @@ class Admin::Kubernetes::ClustersController < ApplicationController
 
   def load_default_config_file
     if (file = ENV['KUBE_CONFIG_FILE'])
-      @config_file = ::Kubernetes::ClientConfigFile.new(file)
+      @config_file = file
     elsif (last_cluster = ::Kubernetes::Cluster.last)
-      @config_file = last_cluster.kubeconfig
+      @config_file = last_cluster.config_filepath
     end
-    @context_options = @config_file.try(:context_names) || []
+
+    @context_options = Kubeclient::Config.read(@config_file).contexts if @config_file
+    @context_options ||= []
   end
 end

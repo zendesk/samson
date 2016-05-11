@@ -103,7 +103,7 @@ describe Kubernetes::Release do
 
     it "returns scoped queries" do
       release = kubernetes_releases(:test_release)
-      stub_request(:get, %r{http://foobar.server/api/1/namespaces/pod1/pods}).to_return(body: {
+      stub_request(:get, %r{http://foobar.server/api/v1/namespaces/pod1/pods}).to_return(body: {
         resourceVersion: "1",
         items: [{}, {}]
       }.to_json)
