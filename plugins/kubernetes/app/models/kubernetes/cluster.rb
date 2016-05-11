@@ -17,19 +17,23 @@ module Kubernetes
     end
 
     def client
-      @client ||= kubeconfig.client_for(config_context)
+      @client ||= Kubeclient::Client.new(
+        context.api_endpoint,
+        context.api_version,
+        ssl_options: context.ssl_options
+      )
     end
 
     def extension_client
-      @extension_client ||= kubeconfig.extension_client_for(config_context)
+      @extension_client ||= Kubeclient::Client.new(
+        context.api_endpoint.gsub(/\/api$/, '') + '/apis',
+        'extensions/v1beta1',
+        ssl_options: context.ssl_options
+      )
     end
 
     def context
-      @context ||= kubeconfig.contexts[config_context]
-    end
-
-    def username
-      context.user.try(:username)
+      @context ||= kubeconfig.context(config_context)
     end
 
     def namespaces
@@ -49,7 +53,7 @@ module Kubernetes
     end
 
     def kubeconfig
-      @kubeconfig ||= Kubernetes::ClientConfigFile.new(config_filepath)
+      @kubeconfig ||= Kubeclient::Config.read(config_filepath)
     end
 
     private

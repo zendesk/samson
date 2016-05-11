@@ -43,6 +43,7 @@ gem 'net-http-persistent'
 gem 'concurrent-ruby'
 gem 'vault'
 gem 'docker-api'
+gem 'kubeclient', github: 'zendesk/kubeclient', branch: 'samson-gem-branch'
 
 # treat included plugins like gems
 Dir[File.join(Bundler.root, 'plugins/*/')].each { |f| gemspec path: f }

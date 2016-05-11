@@ -35,7 +35,7 @@ class ActiveSupport::TestCase
   def with_example_kube_config
     Tempfile.open('config') do |t|
       config = {
-        'apiVersion' => '1',
+        'apiVersion' => 'v1',
         'users' => nil,
         'clusters' => [
           {
@@ -59,7 +59,11 @@ class ActiveSupport::TestCase
 
   def create_kubernetes_cluster(attr = {})
     Kubernetes::Cluster.any_instance.stubs(connection_valid?: true)
-    cluster_attr = { name: 'Foo', config_filepath: __FILE__, config_context: 'y' }.merge(attr)
+    cluster_attr = {
+      name: 'Foo',
+      config_filepath: File.join(File.dirname(__FILE__), 'cluster_config.yml'),
+      config_context: 'test'
+    }.merge(attr)
     Kubernetes::Cluster.create!(cluster_attr)
   end
 

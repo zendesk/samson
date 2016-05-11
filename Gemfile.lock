@@ -1,3 +1,14 @@
+GIT
+  remote: git://github.com/zendesk/kubeclient.git
+  revision: 4813f9b998f4b64372c389d3f930c40fad577c6c
+  branch: samson-gem-branch
+  specs:
+    kubeclient (1.1.3)
+      activesupport
+      http (= 0.9.8)
+      recursive-open-struct (= 1.0.0)
+      rest-client
+
 PATH
   remote: plugins/aws_ecr
   specs:
@@ -45,7 +56,6 @@ PATH
     samson_kubernetes (0.0.1)
       celluloid
       celluloid-io
-      kubeclient (>= 1.1)
 
 PATH
   remote: plugins/new_relic
@@ -237,11 +247,6 @@ GEM
     kaminari (0.16.3)
       actionpack (>= 3.0.0)
       activesupport (>= 3.0.0)
-    kubeclient (1.1.3)
-      activesupport
-      http (= 0.9.8)
-      recursive-open-struct (= 1.0.0)
-      rest-client
     lograge (0.3.6)
       actionpack (>= 3)
       activesupport (>= 3)
@@ -489,6 +494,7 @@ DEPENDENCIES
   github-markdown
   goldiloader
   kaminari
+  kubeclient!
   lograge
   logstash-event
   maxitest
