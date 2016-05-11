@@ -122,7 +122,8 @@ module Kubernetes
 
     def container
       containers = template.spec.template.try(:spec).try(:containers) || []
-      if containers.size != 1
+      if containers.size == 0
+        # TODO: support building and replacement for multiple containers
         raise Samson::Hooks::UserError, "Template #{@doc.template_name} has #{containers.size} containers, having 1 section is valid."
       end
       containers.first
