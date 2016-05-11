@@ -4,10 +4,10 @@ SingleCov.covered!
 
 describe Admin::SecretsController do
   def create_global
-    create_secret 'global/foo'
+    create_secret 'environment/global/deploy_group/foo'
   end
 
-  let(:secret) { create_secret 'foo/hello' }
+  let(:secret) { create_secret 'environment/project/deploy_group/somekey' }
   let(:other_project) do
     Project.any_instance.stubs(:valid_repository_url).returns(true)
     Project.create!(name: 'Z', repository_url: 'Z')
@@ -19,7 +19,7 @@ describe Admin::SecretsController do
   end
 
   as_a_deployer do
-    unauthorized :post, :create, secret: {project_permalink: 'foo', key: 'bar'}
+    unauthorized :post, :create, secret: {enviorment_permalink: 'enviornment', project_permalink: 'foo', deploy_group_permalink: 'group', key: 'bar'}
 
     describe '#index' do
       it 'renders template without secret values' do
@@ -61,21 +61,25 @@ describe Admin::SecretsController do
   end
 
   as_a_project_admin do
+    before do
+      test_env = Environment.create(name: 'enviornment', permalink: 'enviornment', production: true )
+      DeployGroup.create(name: 'group', permalink: 'group', environment_id: test_env.id)
+    end
     describe '#create' do
-      let(:attributes) {{ project_permalink: 'foo', key: 'v', value: 'echo hi' }}
+      let(:attributes) {{ enviorment_permalink: 'enviornment', project_permalink: 'foo', deploy_group_permalink: 'group', key: 'v', value: 'echo hi' }}
 
       before { post :create, secret: attributes }
 
       it 'creates a secret' do
         flash[:notice].wont_be_nil
         assert_redirected_to admin_secrets_path
-        secret = SecretStorage::DbBackend::Secret.find('foo/v')
+        secret = SecretStorage::DbBackend::Secret.find('enviornment/foo/group/v')
         secret.updater_id.must_equal user.id
         secret.creator_id.must_equal user.id
       end
 
       describe 'invalid' do
-        let(:attributes) {{ project_permalink: 'foo', key: '', value: '' }}
+        let(:attributes) {{ enviorment_permalink: 'enviornment', project_permalink: 'foo', deploy_group_permalink: 'group', key: '', value: '' }}
 
         it 'renders and sets the flash' do
           assert flash[:error]
@@ -84,7 +88,7 @@ describe Admin::SecretsController do
       end
 
       describe 'global' do
-        let(:attributes) {{ project_permalink: 'global', key: 'bar' }}
+        let(:attributes) {{ enviorment_permalink: 'production', project_permalink: 'global', deploy_group_permalink: 'somegroup', key: 'bar' }}
 
         it 'is unauthorized' do
           assert_unauthorized
@@ -93,7 +97,9 @@ describe Admin::SecretsController do
     end
 
     describe '#edit' do
+      #FIXME somehow fucked up because of warden shit
       it 'renders for local secret as project-admin' do
+        debugger
         get :edit, id: secret
         assert_template :edit
         response.body.wont_include secret.value
@@ -113,7 +119,7 @@ describe Admin::SecretsController do
     end
 
     describe '#update' do
-      let(:attributes) {{ value: 'hi', project_permalink: secret.id.split('/').first }}
+      let(:attributes) {{ value: 'hi', enviorment_permalink: secret.id.split('/').first, project_permalink: secret.id.split('/').second, deploy_group_permalink: secret.id.split('/').third }}
 
       before do
         patch :update, id: secret.id, secret: attributes
@@ -128,7 +134,7 @@ describe Admin::SecretsController do
       end
 
       describe 'invalid' do
-        let(:attributes) {{ value: '', project_permalink: secret.id.split('/').first }}
+        let(:attributes) {{ value: '', enviorment_permalink: secret.id.split('/').first, project_permalink: secret.id.split('/').second, deploy_group_permalink: secret.id.split('/').third }}
 
         it 'fails to update' do
           assert_template :edit
@@ -143,12 +149,12 @@ describe Admin::SecretsController do
 
         it "is not supported" do
           assert_redirected_to admin_secrets_path
-          secret.reload.id.must_equal 'foo/hello'
+          secret.reload.id.must_equal 'enviornment/foo/group/hello'
         end
       end
 
       describe 'editing a not owned project' do
-        let(:secret) { create_secret "#{other_project.permalink}/xxx" }
+        let(:secret) { create_secret "enviorment/#{other_project.permalink}/foo/xxx" }
 
         it "is not allowed" do
           assert_unauthorized
