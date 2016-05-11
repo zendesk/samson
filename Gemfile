@@ -98,7 +98,7 @@ group :assets do
 end
 
 group :development, :staging do
-  gem "binding_of_caller"
+  gem 'binding_of_caller'
   gem 'better_errors'
   gem 'rack-mini-profiler'
 end
