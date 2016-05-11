@@ -20,9 +20,9 @@ class ChangeRoleNameToId < ActiveRecord::Migration
     end
 
     change_column_null :kubernetes_deploy_group_roles, :kubernetes_role_id, false
+    remove_old_index
     remove_column :kubernetes_deploy_group_roles, :name
 
-    remove_old_index
     add_index :kubernetes_deploy_group_roles, [:project_id, :deploy_group_id, :kubernetes_role_id], name: INDEX
   end
 
@@ -38,13 +38,13 @@ class ChangeRoleNameToId < ActiveRecord::Migration
     end
 
     change_column_null :kubernetes_deploy_group_roles, :name, false
+    remove_old_index
     remove_column :kubernetes_deploy_group_roles, :kubernetes_role_id
 
-    remove_old_index
     add_index :kubernetes_deploy_group_roles, [:project_id, :deploy_group_id, :name], name: INDEX, length: {"name"=>191}
   end
 
   def remove_old_index
-    remove_index :kubernetes_deploy_group_roles, name: INDEX if index_exists?(:kubernetes_deploy_group_roles, name: INDEX)
+    remove_index :kubernetes_deploy_group_roles, name: INDEX
   end
 end
