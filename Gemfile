@@ -60,7 +60,6 @@ group :sqlite do
 end
 
 group :production, :staging do
-  gem 'rails_12factor'
   gem 'airbrake', '~> 4.3.6' # different configuration format on 5.x
   gem 'newrelic_rpm'
 end
