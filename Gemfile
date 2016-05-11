@@ -48,7 +48,7 @@ gem 'docker-api'
 Dir[File.join(Bundler.root, 'plugins/*/')].each { |f| gemspec path: f }
 
 group :mysql2 do
-  gem 'mysql2'
+  gem 'mysql2', '0.4.3' # 0.4.4 fails to compile during deploys
 end
 
 group :postgres do
@@ -61,7 +61,7 @@ end
 
 group :production, :staging do
   gem 'rails_12factor'
-  gem 'airbrake'
+  gem 'airbrake', '~> 4.3.6' # different configuration format on 5.x
   gem 'newrelic_rpm'
 end
 

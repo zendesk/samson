@@ -225,7 +225,7 @@ ActiveRecord::Schema.define(version: 20160510153731) do
   end
 
   add_index "kubernetes_roles", ["project_id"], name: "index_kubernetes_roles_on_project_id", using: :btree
-  add_index "kubernetes_roles", ["service_name", "deleted_at"], name: "index_kubernetes_roles_on_service_name_and_deleted_at", unique: true, using: :btree
+  add_index "kubernetes_roles", ["service_name", "deleted_at"], name: "index_kubernetes_roles_on_service_name_and_deleted_at", unique: true, length: {"service_name"=>191, "deleted_at"=>nil}, using: :btree
 
   create_table "locks", force: :cascade do |t|
     t.integer  "stage_id",    limit: 4
