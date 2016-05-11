@@ -20,7 +20,8 @@ module Kubernetes
       @client ||= Kubeclient::Client.new(
         context.api_endpoint,
         context.api_version,
-        ssl_options: context.ssl_options
+        ssl_options: context.ssl_options,
+        socket_options: client_socket_options
       )
     end
 
@@ -28,7 +29,8 @@ module Kubernetes
       @extension_client ||= Kubeclient::Client.new(
         context.api_endpoint.gsub(/\/api$/, '') + '/apis',
         'extensions/v1beta1',
-        ssl_options: context.ssl_options
+        ssl_options: context.ssl_options,
+        socket_options: client_socket_options
       )
     end
 
@@ -63,6 +65,14 @@ module Kubernetes
         errors.add(:config_context, "Could not connect to API Server") unless connection_valid?
       else
         errors.add(:config_filepath, "File does not exist")
+      end
+    end
+
+    def client_socket_options
+      if context.ssl_options[:verify_ssl] == OpenSSL::SSL::VERIFY_PEER
+        { ssl_socket_class: Celluloid::IO::SSLSocket }
+      else
+        { socket_class: Celluloid::IO::TCPSocket }
       end
     end
   end
