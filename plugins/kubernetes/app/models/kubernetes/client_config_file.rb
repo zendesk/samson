@@ -1,6 +1,8 @@
 require 'celluloid/io'
 
 module Kubernetes
+  # Parses the kubeconfig file that contains cluster information
+  # http://kubernetes.io/docs/user-guide/kubeconfig-file/
   class ClientConfigFile
     attr_reader :filepath, :api_version, :clusters, :users, :contexts
 
@@ -43,10 +45,10 @@ module Kubernetes
         cluster = Cluster.new
         cluster.name = cluster_hash[:name]
         cluster.server = cluster_hash[:cluster][:server]
-        ca_data = cluster_hash[:cluster][:'certificate-authority-data']
+        ca_data = fetch_cluster_ca_data(cluster_hash[:cluster])
         if ca_data
           cluster.cert_store = OpenSSL::X509::Store.new
-          cluster.cert_store.add_cert(OpenSSL::X509::Certificate.new(Base64.decode64(ca_data)))
+          cluster.cert_store.add_cert(OpenSSL::X509::Certificate.new(ca_data))
         else
           cluster.cert_store = nil
         end
@@ -61,14 +63,17 @@ module Kubernetes
         user.name = user_hash[:name]
         user.username = user_hash[:user][:username]
         user.password = user_hash[:user][:password]
-        if user_hash[:user][:'client-certificate-data']
-          cert_data = Base64.decode64(user_hash[:user][:'client-certificate-data'])
-          user.client_cert = OpenSSL::X509::Certificate.new(cert_data)
+
+        client_cert_data = fetch_user_cert_data(user_hash[:user])
+        if client_cert_data
+          user.client_cert = OpenSSL::X509::Certificate.new(client_cert_data)
         end
-        if user_hash[:user][:'client-key-data']
-          key_data = Base64.decode64(user_hash[:user][:'client-key-data'])
-          user.client_key = OpenSSL::PKey::RSA.new(key_data)
+
+        client_key_data  = fetch_user_key_data(user_hash[:user])
+        if client_key_data
+          user.client_key = OpenSSL::PKey::RSA.new(client_key_data)
         end
+
         @users[user.name] = user
       end
     end
@@ -82,6 +87,34 @@ module Kubernetes
         context.cluster = @clusters.fetch(context_hash[:context][:cluster])
         context.user = @users.fetch(context_hash[:context][:user]) if context_hash[:context][:user].present?
         @contexts[context.name] = context
+      end
+    end
+
+    def ext_file_path(path)
+      File.join(File.dirname(@filepath), path)
+    end
+
+    def fetch_cluster_ca_data(cluster)
+      if cluster.key?('certificate-authority')
+        File.read(ext_file_path(cluster['certificate-authority']))
+      elsif cluster.key?('certificate-authority-data')
+        Base64.decode64(cluster['certificate-authority-data'])
+      end
+    end
+
+    def fetch_user_cert_data(user)
+      if user.key?('client-certificate')
+        File.read(ext_file_path(user['client-certificate']))
+      elsif user.key?('client-certificate-data')
+        Base64.decode64(user['client-certificate-data'])
+      end
+    end
+
+    def fetch_user_key_data(user)
+      if user.key?('client-key')
+        File.read(ext_file_path(user['client-key']))
+      elsif user.key?('client-key-data')
+        Base64.decode64(user['client-key-data'])
       end
     end
 
