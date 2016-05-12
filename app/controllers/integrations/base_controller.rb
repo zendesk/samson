@@ -83,7 +83,7 @@ class Integrations::BaseController < ApplicationController
   end
 
   def create_docker_image
-    DockerBuilderService.new(@build).run!(push: true)
+    DockerBuilderService.new(@build).run!(push: true, tag_as_latest: true)
   end
 
   def latest_release

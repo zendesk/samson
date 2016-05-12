@@ -1,0 +1,37 @@
+<h1>Here are your active reports</h1>
+
+<section id="csv-exports" class="clearfix">
+  <div class="deploy-csv">
+    <%= link_to "Start a CSV export job", new_csv_export_path %>
+  </div>
+  <% if @csv_exports.empty? %>
+    <p>No current CSV Reports was found!</p>
+  <% else %>
+    <table id="csv-exports" class="table table-hover table-condensed">
+      <thead>
+      <tr>
+        <th>Id</th>
+        <th>Filename</th>
+        <th>Created</th>
+        <th>Status</th>
+        <th>Link</th>
+      </tr>
+      </thead>
+      <tbody>
+        <% @csv_exports.each do |csv_export| %>
+          <tr>
+            <td><%= csv_export.id %></td>
+            <td><%= csv_export.download_name %></td>
+            <td><%= csv_export.created_at %></td>
+            <td><%= csv_export.status %></td>
+            <% if csv_export.status? :ready %>
+              <td><%= link_to "Download", csv_export_path(csv_export, format: 'csv') %></td>
+            <% else %>
+              <td><%= link_to "Details", csv_export %></td>
+            <% end %>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  <% end %>
+</section>

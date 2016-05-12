@@ -97,7 +97,7 @@ describe Admin::Kubernetes::ClustersController do
 
       it "blows up with missing config file" do
         with_env "KUBE_CONFIG_FILE": "nope" do
-          assert_raises ArgumentError do
+          assert_raises Errno::ENOENT do
             get :new
           end
         end

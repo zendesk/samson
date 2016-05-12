@@ -1,6 +1,6 @@
 require_relative '../test_helper'
 
-SingleCov.covered! uncovered: 21
+SingleCov.covered! uncovered: 20
 
 describe DeployService do
   include GitRepoTestHelper
@@ -26,17 +26,25 @@ describe DeployService do
   describe '#build_image' do
     before do
       Docker::Image.expects(:build_from_dir).returns(mock_docker_image)
-      service.build_image(tmp_dir)
     end
 
     it 'writes the REVISION file' do
+      service.build_image(tmp_dir)
       revision_filepath = File.join(tmp_dir, 'REVISION')
       assert File.exists?(revision_filepath)
       assert_equal(build.git_sha, File.read(revision_filepath))
     end
 
     it 'updates the Build object' do
+      service.build_image(tmp_dir)
       assert_equal(docker_image_id, build.docker_image_id)
+    end
+
+    it 'catches docker errors' do
+      Docker::Image.unstub(:build_from_dir)
+      Docker::Image.expects(:build_from_dir).raises(Docker::Error::DockerError.new("XYZ"))
+      service.build_image(tmp_dir).must_equal nil
+      build.docker_image_id.must_equal nil
     end
   end
 
@@ -57,7 +65,7 @@ describe DeployService do
     end
 
     it 'sets the values on the build' do
-      mock_docker_image.expects(:push).multiple_yields(*push_output).twice
+      mock_docker_image.expects(:push).multiple_yields(*push_output)
       build.label = "Version 123"
       service.push_image(nil)
       assert_equal('version-123', build.docker_ref)
@@ -73,15 +81,29 @@ describe DeployService do
     end
 
     it 'uses the tag passed in' do
-      mock_docker_image.expects(:tag).twice
+      mock_docker_image.expects(:tag)
       service.push_image('my-test')
       assert_equal('my-test', build.docker_ref)
     end
 
-    it 'always adds the latest tag on top of the one specified' do
-      mock_docker_image.expects(:tag).with(has_entry(tag: 'my-test')).with(has_entry(tag: 'latest'))
-      mock_docker_image.expects(:push).with(service.send(:registry_credentials), tag: 'latest', force: true)
-      service.push_image('my-test')
+    describe 'pushing latest' do
+      it 'adds the latest tag on top of the one specified when latest is true' do
+        mock_docker_image.expects(:tag).with(has_entry(tag: 'my-test')).with(has_entry(tag: 'latest'))
+        mock_docker_image.expects(:push).with(service.send(:registry_credentials), tag: 'latest', force: true)
+        service.push_image('my-test', tag_as_latest: true)
+      end
+
+      it 'does not add the latest tag on top of the one specified when that tag is latest' do
+        mock_docker_image.expects(:tag).never
+        mock_docker_image.expects(:push).never
+        service.push_image('latest', tag_as_latest: true)
+      end
+
+      it 'does not add the latest tag on top of the one specified when latest is false' do
+        mock_docker_image.expects(:tag).never
+        mock_docker_image.expects(:push).never
+        service.push_image('my-test')
+      end
     end
   end
 end

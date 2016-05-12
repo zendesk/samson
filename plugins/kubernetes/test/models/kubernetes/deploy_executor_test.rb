@@ -26,7 +26,7 @@ describe Kubernetes::DeployExecutor do
 
   describe "#execute!" do
     def execute!
-      stub_request(:get, %r{http://foobar.server/api/1/namespaces/staging/pods\?}).to_return(body: pod_reply.to_json) # checks pod status to see if it's good
+      stub_request(:get, %r{http://foobar.server/api/v1/namespaces/staging/pods\?}).to_return(body: pod_reply.to_json) # checks pod status to see if it's good
       executor.execute!
     end
 
@@ -66,9 +66,9 @@ describe Kubernetes::DeployExecutor do
       stub_request(:get, "http://foobar.server/apis/extensions/v1beta1/namespaces/staging/deployments/").to_return(status: 404) # checks for previous deploys ... but there are none
       stub_request(:post, "http://foobar.server/apis/extensions/v1beta1/namespaces/staging/deployments").to_return(body: "{}") # creates deployment
       executor.stubs(:sleep)
-      stub_request(:get, %r{http://foobar.server/api/1/namespaces/staging/events}).
+      stub_request(:get, %r{http://foobar.server/api/v1/namespaces/staging/events}).
         to_return(body: {items: []}.to_json)
-      stub_request(:get, %r{http://foobar.server/api/1/namespaces/staging/pods/.*/log})
+      stub_request(:get, %r{http://foobar.server/api/v1/namespaces/staging/pods/.*/log})
     end
 
     it "succeeds" do
@@ -227,10 +227,10 @@ describe Kubernetes::DeployExecutor do
 
     it "displays events and logs when deploy failed" do
       # worker restarted -> we request the previous logs
-      stub_request(:get, "http://foobar.server/api/1/namespaces/staging/pods/pod-resque_worker/log?previous=true").
+      stub_request(:get, "http://foobar.server/api/v1/namespaces/staging/pods/pod-resque_worker/log?previous=true").
         to_return(body: "LOG-1")
 
-      stub_request(:get, %r{http://foobar.server/api/1/namespaces/staging/events}).
+      stub_request(:get, %r{http://foobar.server/api/v1/namespaces/staging/events}).
         to_return(body: {items:
           [
             {reason: 'FailedScheduling', message: "fit failure on node (ip-1-2-3-4)\nfit failure on node (ip-2-3-4-5)"},

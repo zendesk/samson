@@ -91,12 +91,10 @@ describe Kubernetes::DeployYaml do
         e.message.must_include "has 0 containers, having 1 section is valid"
       end
 
-      it "fails with multiple containers" do
+      # https://github.com/zendesk/samson/issues/966
+      it "allows multiple containers, even though they will not be properly replaced" do
         assert doc.raw_template.sub!("containers:\n      - {}", "containers:\n      - {}\n      - {}")
-        e = assert_raises Samson::Hooks::UserError do
-          yaml.to_hash
-        end
-        e.message.must_include "has 2 containers, having 1 section is valid"
+        yaml.to_hash
       end
     end
 

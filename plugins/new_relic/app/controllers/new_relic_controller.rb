@@ -20,7 +20,7 @@ class NewRelicController < ApplicationController
   end
 
   def ensure_new_reclic_api_key
-    return if NewRelicApi.api_key.present?
+    return if SamsonNewRelic::Api::KEY
     head text: "NewReclic api key is not configured", status: :precondition_failed
   end
 end

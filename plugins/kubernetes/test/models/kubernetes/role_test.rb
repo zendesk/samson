@@ -39,35 +39,59 @@ describe Kubernetes::Role do
   let(:config_content_yml) { config_content.map(&:to_yaml).join("\n") }
 
   describe 'validations' do
-    it 'is valid by default' do
-      assert_valid(role)
+    it 'is valid' do
+      assert_valid role
     end
 
-    it 'test that CPU is valid' do
-      refute_valid(kubernetes_roles(:app_server).tap { |kr| kr.cpu = nil })
-      refute_valid(kubernetes_roles(:app_server).tap { |kr| kr.cpu = 'abc' })
-      refute_valid(kubernetes_roles(:app_server).tap { |kr| kr.cpu = 0 })
-      refute_valid(kubernetes_roles(:app_server).tap { |kr| kr.cpu = -2 })
-    end
-
-    it 'test that RAM is valid' do
-      refute_valid(kubernetes_roles(:app_server).tap { |kr| kr.ram = nil })
-      refute_valid(kubernetes_roles(:app_server).tap { |kr| kr.ram = 'abc' })
-      refute_valid(kubernetes_roles(:app_server).tap { |kr| kr.ram = 0 })
-      refute_valid(kubernetes_roles(:app_server).tap { |kr| kr.ram = -2 })
-    end
-
-    it 'test validity of deploy strategy' do
-      Kubernetes::Role::DEPLOY_STRATEGIES.each do |strategy|
-        assert_valid(kubernetes_roles(:app_server).tap { |kr| kr.deploy_strategy = strategy })
+    it 'validates CPU is a float' do
+      [nil, 'abc', 0, -2].each do |v|
+        role.cpu = v
+        refute_valid role
       end
-      refute_valid(kubernetes_roles(:app_server).tap { |kr| kr.deploy_strategy = nil })
-      refute_valid(kubernetes_roles(:app_server).tap { |kr| kr.deploy_strategy = 'foo' })
+    end
+
+    it 'validates RAM is a int' do
+      [nil, 'abc', 0, -2].each do |v|
+        role.ram = v
+        refute_valid role
+      end
+    end
+
+    it 'is valid with known deploy strategy' do
+      Kubernetes::Role::DEPLOY_STRATEGIES.each do |strategy|
+        role.deploy_strategy = strategy
+        assert_valid role
+      end
+    end
+
+    it 'is invalid with unknown deploy strategy' do
+      [nil, 'foo'].each do |strategy|
+        role.deploy_strategy = strategy
+        refute_valid role
+      end
+    end
+
+    describe "service name" do
+      let(:other) { kubernetes_roles(:resque_worker) }
+
+      before do
+        other.update_column(:service_name, 'abc')
+        role.service_name = 'abc'
+      end
+
+      it "is invalid with a already used service name" do
+        refute_valid role
+      end
+
+      it "is valid with a already used service name that was deted" do
+        other.soft_delete!
+        assert_valid role
+      end
     end
   end
 
   describe '#ram_with_units' do
-    it 'works' do
+    it 'converts to kubernetes format' do
       role.ram = 512
       role.ram_with_units.must_equal '512Mi'
     end
@@ -109,6 +133,15 @@ describe Kubernetes::Role do
     it "does nothing on error" do
       Kubernetes::Role.seed! project, 'DFSDSFSDFD'
       project.kubernetes_roles.must_equal []
+    end
+
+    it "can seed duplicate service names" do
+      write_config 'kubernetes/a.yml', config_content_yml
+      Kubernetes::Role.seed! project, 'HEAD'
+      Kubernetes::Role.seed! project, 'HEAD' # normally not possible, but triggers the dupliate service
+      names = project.kubernetes_roles.map(&:service_name).sort
+      names.first.must_equal "SERVICE-NAME"
+      names.last.must_match /SERVICE-NAME-\d+/
     end
   end
 

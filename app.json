@@ -43,6 +43,9 @@
     },
     "DEPLOY_TASKS": {
       "value": "db:migrate"
+    },
+    "RAILS_LOG_TO_STDOUT": {
+      "value": "true"
     }
   },
   "scripts": {

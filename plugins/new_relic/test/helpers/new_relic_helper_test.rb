@@ -9,14 +9,8 @@ describe NewRelicHelper do
       @deploy.stage.new_relic_applications.build
     end
 
-    around do |test|
-      begin
-        old, NewRelicApi.api_key = NewRelicApi.api_key, 'FAKE-KEY'
-        test.call
-      ensure
-        NewRelicApi.api_key = old
-      end
-    end
+    before { silence_warnings { SamsonNewRelic::Api::KEY = '123' } }
+    after { silence_warnings { SamsonNewRelic::Api::KEY = nil } }
 
     it "is true" do
       assert newrelic_enabled_for_deploy?
@@ -28,7 +22,7 @@ describe NewRelicHelper do
     end
 
     it "is false when api is not configured" do
-      NewRelicApi.api_key = nil
+      silence_warnings { SamsonNewRelic::Api::KEY = nil }
       refute newrelic_enabled_for_deploy?
     end
   end

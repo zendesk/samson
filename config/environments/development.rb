@@ -29,17 +29,9 @@ Samson::Application.configure do
   # number of complex assets.
   config.assets.debug = false
 
-  # Lograge
-  # For testing purposes, you need to have something like this in your asl.conf (Mac OS X):
-  # ? [= Sender samson] file /Users/myuser/Code/samson/log/samson.log mode=0644
-  # require 'syslog/logger'
-  # config.logger = Syslog::Logger.new('samson')
-  if ENV['DOCKER'] == 'true'
-    config.logger = Logger.new(STDOUT)
+  if ENV["RAILS_LOG_TO_STDOUT"].present?
+    config.logger = ActiveSupport::TaggedLogging.new(Logger.new(STDOUT))
   end
-
-  # config.lograge.enabled = true
-  # config.lograge.formatter = Lograge::Formatters::Logstash.new
 
   BetterErrors::Middleware.allow_ip! ENV['TRUSTED_IP'] if ENV['TRUSTED_IP']
 end

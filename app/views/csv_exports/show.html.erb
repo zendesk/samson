@@ -1,0 +1,16 @@
+<h1>CSV Report status</h1>
+
+<section class="clearfix">
+  <div>
+    <% if @csv_export.status? :deleted %>
+      <p>Your report has been deleted.  <%= link_to "Request a new report.", new_csv_export_path %></p>
+    <% elsif @csv_export.status? :ready %>
+      <p><%= link_to "Download", csv_export_path(@csv_export, format: 'csv') %></p>
+    <% elsif @csv_export.status? :failed %>
+      <p>Your report has failed.  Please contact an administrator to check the logs export <%= @csv_export.id %>.</p>
+    <% else %>
+      <p >Your report is being prepared.  You will receive an email when your report is ready for download or you can refresh this page.</p>
+      <p>If you do not receive an email in a couple of hours, please try again.</p>
+    <% end %>
+  </div>
+</section>

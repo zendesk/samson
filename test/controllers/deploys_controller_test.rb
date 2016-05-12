@@ -167,12 +167,6 @@ describe DeploysController do
         assert_response :ok
       end
 
-      it "renders csv" do
-        get :search, format: "csv"
-        assert_equal "text/csv", @response.content_type
-        assert_response :ok
-      end
-
       it "renders html" do
         get :search, format: "html"
         assert_equal "text/html", @response.content_type

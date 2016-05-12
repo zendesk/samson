@@ -208,8 +208,8 @@ module Kubernetes
       errors = []
       group_config = @job.deploy.stage.deploy_groups.map do |group|
         roles = configured_roles.map do |role|
-          role_config = roles_configs.detect do |r|
-            r.deploy_group_id == group.id && r.name == role.name # TODO: match role via id
+          role_config = roles_configs.detect do |dgr|
+            dgr.deploy_group_id == group.id && dgr.kubernetes_role_id == role.id
           end
 
           unless role_config

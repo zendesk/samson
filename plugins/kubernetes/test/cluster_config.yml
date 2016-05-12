@@ -4,7 +4,7 @@ clusters:
   cluster:
     server: http://foobar.server
 
-apiVersion: '1'
+apiVersion: 'v1'
 current-context: test
 contexts:
 - name: test

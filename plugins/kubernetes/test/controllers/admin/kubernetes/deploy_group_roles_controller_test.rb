@@ -42,9 +42,9 @@ describe Admin::Kubernetes::DeployGroupRolesController do
       end
 
       it "can prefill" do
-        get :new, kubernetes_deploy_group_role: {name: 'foo'}
+        get :new, kubernetes_deploy_group_role: {kubernetes_role_id: kubernetes_roles(:app_server).id}
         assert_template :new
-        assigns(:deploy_group_role).name.must_equal 'foo'
+        assigns(:deploy_group_role).kubernetes_role_id.must_equal kubernetes_roles(:app_server).id
       end
     end
 
@@ -56,7 +56,7 @@ describe Admin::Kubernetes::DeployGroupRolesController do
 
   as_a_project_admin do
     describe "#create" do
-      let(:params) { {kubernetes_deploy_group_role: {project_id: project.id, name: 'Foo', deploy_group_id: deploy_group.id, cpu: 1, ram: 1, replicas: 1}} }
+      let(:params) { {kubernetes_deploy_group_role: {project_id: project.id, kubernetes_role_id: kubernetes_roles(:app_server).id, deploy_group_id: deploy_group.id, cpu: 1, ram: 1, replicas: 1}} }
 
       it "can create for projects I am admin of" do
         post :create, params
@@ -64,7 +64,7 @@ describe Admin::Kubernetes::DeployGroupRolesController do
       end
 
       it "renders when failing to create" do
-        params[:kubernetes_deploy_group_role].delete(:name)
+        params[:kubernetes_deploy_group_role].delete(:cpu)
         post :create, params
         assert_template :new
       end
@@ -91,8 +91,8 @@ describe Admin::Kubernetes::DeployGroupRolesController do
 
     describe "#update" do
       it "updates" do
-        put :update, id: deploy_group_role.id, kubernetes_deploy_group_role: {name: 'xyz'}
-        deploy_group_role.reload.name.must_equal 'xyz'
+        put :update, id: deploy_group_role.id, kubernetes_deploy_group_role: {cpu: 3.1}
+        deploy_group_role.reload.cpu.must_equal 3.1
         assert_redirected_to [:admin, deploy_group_role]
       end
 
@@ -104,12 +104,12 @@ describe Admin::Kubernetes::DeployGroupRolesController do
 
       it "does not allow updates for non-admins" do
         user.user_project_roles.delete_all
-        put :update, id: deploy_group_role.id, kubernetes_deploy_group_role: {name: 'xyz'}
+        put :update, id: deploy_group_role.id, kubernetes_deploy_group_role: {cpu: 3.1}
         assert_unauthorized
       end
 
       it "renders on failure" do
-        put :update, id: deploy_group_role.id, kubernetes_deploy_group_role: {name: ''}
+        put :update, id: deploy_group_role.id, kubernetes_deploy_group_role: {cpu: ''}
         assert_template :edit
       end
     end

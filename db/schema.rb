@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20160508055458) do
+ActiveRecord::Schema.define(version: 20160510153731) do
 
   create_table "builds", force: :cascade do |t|
     t.integer  "project_id",                       null: false
@@ -38,6 +38,14 @@ ActiveRecord::Schema.define(version: 20160508055458) do
     t.datetime "created_at"
     t.datetime "updated_at"
     t.integer  "project_id", limit: 4
+  end
+
+  create_table "csv_exports", force: :cascade do |t|
+    t.integer  "user_id",    limit: 4,                       null: false
+    t.datetime "created_at",                                 null: false
+    t.datetime "updated_at",                                 null: false
+    t.string   "filters",    limit: 255, default: "{}",      null: false
+    t.string   "status",     limit: 255, default: "pending", null: false
   end
 
   create_table "deploy_groups", force: :cascade do |t|
@@ -168,16 +176,16 @@ ActiveRecord::Schema.define(version: 20160508055458) do
   end
 
   create_table "kubernetes_deploy_group_roles", force: :cascade do |t|
-    t.integer "project_id",      limit: 4,                           null: false
-    t.integer "deploy_group_id", limit: 4,                           null: false
-    t.integer "replicas",        limit: 4,                           null: false
-    t.integer "ram",             limit: 4,                           null: false
-    t.decimal "cpu",                         precision: 4, scale: 2, null: false
-    t.string  "name",            limit: 255,                         null: false
+    t.integer "project_id",         limit: 4,                         null: false
+    t.integer "deploy_group_id",    limit: 4,                         null: false
+    t.integer "replicas",           limit: 4,                         null: false
+    t.integer "ram",                limit: 4,                         null: false
+    t.decimal "cpu",                          precision: 4, scale: 2, null: false
+    t.integer "kubernetes_role_id", limit: 4,                         null: false
   end
 
   add_index "kubernetes_deploy_group_roles", ["deploy_group_id"], name: "index_kubernetes_deploy_group_roles_on_deploy_group_id", using: :btree
-  add_index "kubernetes_deploy_group_roles", ["project_id", "deploy_group_id", "name"], name: "index_kubernetes_deploy_group_roles_on_project_id", length: {"project_id"=>nil, "deploy_group_id"=>nil, "name"=>191}, using: :btree
+  add_index "kubernetes_deploy_group_roles", ["project_id", "deploy_group_id", "kubernetes_role_id"], name: "index_kubernetes_deploy_group_roles_on_project_id", using: :btree
 
   create_table "kubernetes_release_docs", force: :cascade do |t|
     t.integer  "kubernetes_role_id",          limit: 4,                         null: false
@@ -225,6 +233,7 @@ ActiveRecord::Schema.define(version: 20160508055458) do
   end
 
   add_index "kubernetes_roles", ["project_id"], name: "index_kubernetes_roles_on_project_id", using: :btree
+  add_index "kubernetes_roles", ["service_name", "deleted_at"], name: "index_kubernetes_roles_on_service_name_and_deleted_at", unique: true, length: {"service_name"=>191, "deleted_at"=>nil}, using: :btree
 
   create_table "locks", force: :cascade do |t|
     t.integer  "stage_id",    limit: 4
@@ -412,7 +421,6 @@ ActiveRecord::Schema.define(version: 20160508055458) do
     t.boolean  "integration",    default: false, null: false
     t.boolean  "access_request_pending",     default: false
     t.string   "time_format",            limit: 255, default: "relative", null: false
-
   end
 
   add_index "users", ["external_id", "deleted_at"], name: "index_users_on_external_id_and_deleted_at", length: {"external_id"=>191, "deleted_at"=>nil}, using: :btree

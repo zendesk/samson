@@ -7,7 +7,7 @@
       <tr>
         <th>Project</th>
         <th>Deploy Group</th>
-        <th>Name</th>
+        <th>Role</th>
         <th>CPU</th>
         <th>RAM</th>
         <th>Replicase</th>
@@ -16,9 +16,9 @@
 
       <% @deploy_group_roles.each do |deploy_group_role| %>
         <tr>
-          <td><%= link_to deploy_group_role.name, [:admin, deploy_group_role] %></td>
+          <td><%= link_to deploy_group_role.project.name, deploy_group_role.project %></td>
           <td><%= link_to deploy_group_role.deploy_group.name, [:admin, deploy_group_role.deploy_group] %></td>
-          <td></td>
+          <td><%= link_to deploy_group_role.kubernetes_role.name, [deploy_group_role.project, deploy_group_role.kubernetes_role] %></td>
           <td><%= deploy_group_role.cpu %></td>
           <td><%= deploy_group_role.ram %></td>
           <td><%= deploy_group_role.replicas %></td>

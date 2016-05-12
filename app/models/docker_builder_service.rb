@@ -10,7 +10,7 @@ class DockerBuilderService
     @build = build
   end
 
-  def run!(image_name: nil, push: false)
+  def run!(image_name: nil, push: false, tag_as_latest: false)
     build.docker_build_job.try(:destroy) # if there's an old build job, delete it
 
     job = build.create_docker_job
@@ -22,7 +22,7 @@ class DockerBuilderService
       repository.executor = execution.executor
 
       if build_image(tmp_dir)
-        push_image(image_name) if push
+        push_image(image_name, push_to_latest: tag_as_latest) if push
         build.docker_image.remove(force: true)
       end
     end
@@ -50,7 +50,7 @@ class DockerBuilderService
   end
   add_method_tracer :build_image
 
-  def push_image(tag)
+  def push_image(tag, tag_as_latest: false)
     build.docker_ref = tag.presence || build.label.try(:parameterize).presence || 'latest'
     build.docker_repo_digest = nil
     output.puts("### Tagging and pushing Docker image to #{project.docker_repo}:#{build.docker_ref}")
@@ -65,7 +65,8 @@ class DockerBuilderService
         build.docker_repo_digest = "#{project.docker_repo}@#{matches[1]}"
       end
     end
-    push_latest unless build.docker_ref == 'latest'
+
+    push_latest if tag_as_latest && build.docker_ref != 'latest'
 
     build.save!
     build

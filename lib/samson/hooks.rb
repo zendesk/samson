@@ -232,12 +232,19 @@ end
 
 module Samson::LoadDecorators
   def inherited(subclass)
-    Samson::Hooks.load_decorators(subclass.name)
     super
+    Samson::Hooks.load_decorators(subclass.name)
   end
 end
 
 Samson::Hooks.plugin_setup
-ActiveRecord::Base.extend Samson::LoadDecorators
-ActionController::Base.extend Samson::LoadDecorators
-ActiveModel::Serializer.extend Samson::LoadDecorators
+
+class << ActiveRecord::Base
+  prepend Samson::LoadDecorators
+end
+class << ActionController::Base
+  prepend Samson::LoadDecorators
+end
+class << ActiveModel::Serializer
+  prepend Samson::LoadDecorators
+end

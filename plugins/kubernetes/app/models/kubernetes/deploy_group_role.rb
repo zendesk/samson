@@ -3,6 +3,7 @@ module Kubernetes
     self.table_name = 'kubernetes_deploy_group_roles'
     belongs_to :project
     belongs_to :deploy_group
-    validates :name, :ram, :cpu, :replicas, presence: true
+    belongs_to :kubernetes_role, class_name: 'Kubernetes::Role'
+    validates :ram, :cpu, :replicas, presence: true
   end
 end
