@@ -6,7 +6,7 @@ describe CsvExport do
   let(:user) { users(:deployer) }
   before { @csv_export = CsvExport.create(user: user) }
 
-  describe "scopes" do
+  describe ".old" do
     before do
       @old_export = CsvExport.create({user: user, filters: {}})
     end
@@ -89,8 +89,10 @@ describe CsvExport do
     end
   end
 
-  it "sets filename if not assigned" do
-    assert_not_empty @csv_export.download_name
+  describe "#download_name" do
+    it "includes created at" do
+      @csv_export.download_name.must_include @csv_export.created_at.to_s(:number)
+    end
   end
 
   describe "#email" do
@@ -116,7 +118,7 @@ describe CsvExport do
     end
   end
 
-  describe "delete_file" do
+  describe "#delete_file" do
     before do
       @filename = @csv_export.path_file
       FileUtils.mkdir_p(File.dirname(@filename))

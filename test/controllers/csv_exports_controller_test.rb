@@ -3,7 +3,7 @@ require_relative '../test_helper'
 SingleCov.covered!
 
 describe CsvExportsController do
-  let(:deployer) { users(:deployer) }
+  let(:viewer) { users(:viewer) }
   let(:export) { csv_exports(:pending) }
 
   describe "permissions test" do
@@ -19,7 +19,7 @@ describe CsvExportsController do
       end
     end
 
-    as_a_deployer do
+    as_a_viewer do
       describe "a GET to new" do
         it "renders the limited admin menu and limited new page" do
           get :new
@@ -32,7 +32,7 @@ describe CsvExportsController do
     end
   end
 
-  as_a_deployer do
+  as_a_viewer do
     describe "#index" do
       describe "as html with exports" do
         it "renders the table of each status type" do
@@ -228,11 +228,11 @@ describe CsvExportsController do
   end
 
   def create_exports
-    CsvExport.create(user: deployer, status: :started) # pending already in fixtures
-    CsvExport.create(user: deployer, status: :finished)
-    CsvExport.create(user: deployer, status: :downloaded)
-    CsvExport.create(user: deployer, status: :failed)
-    CsvExport.create(user: deployer, status: :deleted)
+    CsvExport.create(user: viewer, status: :started) # pending already in fixtures
+    CsvExport.create(user: viewer, status: :finished)
+    CsvExport.create(user: viewer, status: :downloaded)
+    CsvExport.create(user: viewer, status: :failed)
+    CsvExport.create(user: viewer, status: :deleted)
   end
 
   def cleanup_files
