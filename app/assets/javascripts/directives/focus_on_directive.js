@@ -1,3 +1,6 @@
+// make a link trigger focus
+// <a href="#" focus-on="{ click: '#project_search' }">Something</a>
+// <input id="project_search">
 samson.directive('focusOn', function($timeout, $parse) {
   return {
     restrict: 'A',

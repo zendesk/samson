@@ -13,7 +13,7 @@ samson.service('kubernetesService', function($http, $q, httpErrorService, kubern
   this.loadRoles = function(project_id) {
     var deferred = $q.defer();
 
-    $http.get('/projects/' + project_id + '/kubernetes_roles', config).then(
+    $http.get('/projects/' + project_id + '/kubernetes/roles', config).then(
       function(response) {
         deferred.resolve(response.data.map(kubernetesRoleFactory.build));
       },

@@ -1,13 +1,11 @@
 <tr>
   <td><%= user.id %></td>
-  <td><%= link_to user.name, admin_user_path(user) %></td>
+  <td><%= link_to user.name, [:admin, user] %></td>
   <td><%= user.email %></td>
-  <td class="role" data-user-id="<%= user.id %>">
-    <div class="relative-wrapper">
-      <%= render partial: "roles", locals: { user: user } %>
-    </div>
+  <td>
+    <%= render "roles", user: user %>
   </td>
   <td>
-    <%= link_to "Delete", [:admin, user], method: :delete, data: { confirm: "Delete ##{user.id} #{user.name} #{user.email} ?" }, class: "btn-sm btn-danger" if current_user.is_super_admin? %>
+    <%= link_to "Delete", [:admin, user], method: :delete, data: { confirm: "Delete ##{user.id} #{user.name} #{user.email} ?" }, class: "btn-sm btn-danger" if current_user.super_admin? %>
   </td>
 </tr>

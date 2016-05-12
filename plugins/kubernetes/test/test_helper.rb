@@ -32,18 +32,10 @@ class ActiveSupport::TestCase
     end
   end
 
-  def parse_role_config_file(file_name)
-    read_file "#{file_name}.yml"
-  end
-
-  def parse_json_response_file(file_name)
-    read_file "#{file_name}.json"
-  end
-
   def with_example_kube_config
     Tempfile.open('config') do |t|
       config = {
-        'apiVersion' => '1',
+        'apiVersion' => 'v1',
         'users' => nil,
         'clusters' => [
           {
@@ -67,13 +59,28 @@ class ActiveSupport::TestCase
 
   def create_kubernetes_cluster(attr = {})
     Kubernetes::Cluster.any_instance.stubs(connection_valid?: true)
-    cluster_attr = { name: 'Foo', config_filepath: __FILE__, config_context: 'y' }.merge(attr)
+    cluster_attr = {
+      name: 'Foo',
+      config_filepath: File.join(File.dirname(__FILE__), 'cluster_config.yml'),
+      config_context: 'test'
+    }.merge(attr)
     Kubernetes::Cluster.create!(cluster_attr)
+  end
+
+  def kubernetes_fake_raw_template
+    Kubernetes::ReleaseDoc.any_instance.stubs(raw_template: {
+      'kind' => 'Deployment',
+      'spec' => {
+        'template' => {'metadata' => {'labels' => {'pre_defined' => 'foobar'}}, 'spec' => {'containers' => [{}]}},
+        'selector' => {'matchLabels' => {'pre_defined' => 'foobar'}}
+      },
+      'metadata' => {'labels' => {}}
+    }.to_yaml)
   end
 
   private
 
-  def read_file(file_name)
+  def read_kubernetes_sample_file(file_name)
     File.read("#{Rails.root}/plugins/kubernetes/test/samples/#{file_name}")
   end
 end

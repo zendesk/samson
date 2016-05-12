@@ -1,0 +1,40 @@
+<h1>Kubernetes Deploy Group Roles</h1>
+
+<section class="clearfix tabs">
+  <div class="table table-hover table-condensed">
+
+    <table class="table">
+      <tr>
+        <th>Project</th>
+        <th>Deploy Group</th>
+        <th>Role</th>
+        <th>CPU</th>
+        <th>RAM</th>
+        <th>Replicase</th>
+        <th>Actions</th>
+      </tr>
+
+      <% @deploy_group_roles.each do |deploy_group_role| %>
+        <tr>
+          <td><%= link_to deploy_group_role.project.name, deploy_group_role.project %></td>
+          <td><%= link_to deploy_group_role.deploy_group.name, [:admin, deploy_group_role.deploy_group] %></td>
+          <td><%= link_to deploy_group_role.kubernetes_role.name, [deploy_group_role.project, deploy_group_role.kubernetes_role] %></td>
+          <td><%= deploy_group_role.cpu %></td>
+          <td><%= deploy_group_role.ram %></td>
+          <td><%= deploy_group_role.replicas %></td>
+          <td>
+            <% if current_user.admin_for?(deploy_group_role.project) %>
+              <%= link_to 'Edit', edit_admin_kubernetes_deploy_group_role_path(deploy_group_role) %>
+            <% end %>
+          </td>
+        </tr>
+      <% end %>
+    </table>
+  </div>
+
+  <div class="admin-actions">
+    <div class="pull-right">
+      <%= link_to "New", new_admin_kubernetes_deploy_group_role_path, class: "btn btn-default" %>
+    </div>
+  </div>
+</section>

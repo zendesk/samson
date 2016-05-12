@@ -15,38 +15,28 @@ describe UsersController do
 
   as_a_project_admin do
     describe "a GET to #index" do
-      it 'responds successfully' do
+      it 'renders' do
         get :index, project_id: project.to_param
-        users = User.all
         assert_template :index
-        assigns(:users).wont_be_nil
-        assigns(:users).wont_be_empty
-        assigns(:users).size.must_equal users.size
+        assigns(:users).size.must_equal User.count
       end
 
-      it 'responds successfully to a JSON request' do
+      it 'renders JSON' do
         get :index, project_id: project.to_param, format: 'json'
-        users = User.all
-        assigns(:users).wont_be_nil
-        result = JSON.parse(response.body)
-        result['users'].wont_be_nil
-        users = result['users']
-        users.wont_be_nil
-        users.wont_be_empty
-        users.length.must_equal users.size
-        users.each  do | user |
-          user_info = User.find_by(name: user['name'])
-          user_info.wont_be_nil
-        end
+        users = JSON.parse(response.body).fetch('users')
+        users.size.must_equal User.count
       end
 
-      it 'responds as expected to a filtered search' do
+      it 'filters' do
         get :index, project_id: project.to_param, search: "Admin"
-        users = User.search("Admin").page(1)
         assert_template :index
-        assigns(:users).wont_be_nil
-        assigns(:users).wont_be_empty
-        assigns(:users).size.must_equal users.size
+        assigns(:users).map(&:name).sort.must_equal ["Admin", "Deployer Project Admin", "Super Admin"]
+      end
+
+      it 'filters by role' do
+        get :index, project_id: project.to_param, role_id: Role::ADMIN.id
+        assert_template :index
+        assigns(:users).map(&:name).sort.must_equal ["Admin", "Deployer Project Admin", "Super Admin"]
       end
     end
   end

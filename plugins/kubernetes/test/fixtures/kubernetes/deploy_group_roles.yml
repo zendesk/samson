@@ -1,0 +1,31 @@
+test_pod1_app_server:
+  project: test
+  deploy_group: pod1
+  kubernetes_role: app_server
+  replicas: 3
+  ram: 1024
+  cpu: 0.5
+
+test_pod1_resque_worker:
+  project: test
+  deploy_group: pod1
+  kubernetes_role: resque_worker
+  replicas: 2
+  ram: 512
+  cpu: 1.0
+
+test_pod100_app_server:
+  project: test
+  deploy_group: pod100
+  kubernetes_role: app_server
+  replicas: 4
+  ram: 1024
+  cpu: 0.5
+
+test_pod100_resque_worker:
+  project: test
+  deploy_group: pod100
+  kubernetes_role: resque_worker
+  replicas: 5
+  ram: 512
+  cpu: 0.5

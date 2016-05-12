@@ -34,8 +34,8 @@ h1 {
   font-size: 20px;
   font-weight: normal;
   line-height: 20px;
-  margin-bottom: 30px;
-  margin-top: 30px;
+  margin-bottom: 20px;
+  margin-top: 0px;
   padding-bottom: 10px;
   border-bottom: 1px solid #c5c5c5;
 }
@@ -171,7 +171,7 @@ h3 {
 }
 
 .breadcrumb {
-  padding: 8px 0;
+  padding: 0;
   background: none;
   border-radius: 0;
 }
@@ -184,6 +184,10 @@ h3 {
 
 .label-success {
   background-color: #00a704;
+}
+
+label.disabled {
+  color: grey;
 }
 
 /* Buttons */

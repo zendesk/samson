@@ -71,7 +71,7 @@ class Admin::SecretsController < ApplicationController
   end
 
   def ensure_project_access
-    return if current_user.is_admin?
+    return if current_user.admin?
     unauthorized! unless @project_permalinks.include?(project_permalink)
   end
 

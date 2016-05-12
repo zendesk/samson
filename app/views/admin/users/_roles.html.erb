@@ -1,12 +1,12 @@
-<% if current_user.is_super_admin? %>
-
-  <% Role.all.each do |role| %>
-    <label class="radio-inline" ng-click="updateUser($event)">
-      <%= radio_button_tag "users[#{user.id}][role]", role.id, user.role_id == role.id %>
-      <%= role.display_name %>
-    </label>
+<% if current_user.super_admin? %>
+  <%= form_for [:admin, user], html: {class: 'autosubmit'} do |f| %>
+    <% Role.all.each do |role| %>
+      <label>
+        <%= f.radio_button :role_id, role.id %>
+        <%= role.display_name %>
+      </label>
+    <% end %>
   <% end %>
-
 <% else %>
-  <%= Role.find(user.role_id).display_name %>
+  <%= user.role.display_name %>
 <% end %>

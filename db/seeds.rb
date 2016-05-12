@@ -1,6 +1,6 @@
 prod_env = Environment.create!(
   name: 'Production',
-  is_production: true
+  production: true
 )
 Environment.create!(name: 'Staging')
 Environment.create!(name: 'Master')

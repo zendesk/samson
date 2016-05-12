@@ -1,0 +1,67 @@
+<%= form_for [:admin, @deploy_group_role], html: { class: "form-horizontal" } do |form| %>
+  <%= render 'shared/errors', object: @deploy_group_role%>
+
+  <fieldset>
+    <div class="form-group">
+      <%= form.label :deploy_group_id, 'Deploy Group', class: "col-lg-2 control-label" %>
+      <div class="col-lg-2">
+        <%= form.select :deploy_group_id, DeployGroup.pluck(:name, :id), {}, class: "form-control", disabled: @deploy_group_role.persisted? %>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <%= form.label :project_id, 'Project', class: "col-lg-2 control-label" %>
+      <div class="col-lg-2">
+        <%= form.select :project_id, current_user.administrated_projects.pluck(:name, :id), {}, class: "form-control", disabled: @deploy_group_role.persisted? %>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <%= form.label :kubernetes_role_id, 'Role', class: "col-lg-2 control-label" %>
+      <div class="col-lg-2">
+        <%= form.select :kubernetes_role_id, [['Loading ...', @deploy_group_role.kubernetes_role_id]], {}, class: "form-control", disabled: @deploy_group_role.persisted? %>
+      </div>
+    </div>
+
+    <% [[:cpu, 'CPU Cores'], [:ram, 'Ram in MB'], [:replicas, "Replicas"]].each do |column, label| %>
+      <div class="form-group">
+        <%= form.label column, label, class: "col-lg-2 control-label" %>
+        <div class="col-lg-2">
+          <%= form.text_field column, class: "form-control" %>
+        </div>
+      </div>
+    <% end %>
+
+    <div class="form-group">
+      <div class="col-lg-offset-2 col-lg-10">
+        <%= form.submit @deploy_group_role.persisted? ? 'Save' : 'Create', class: "btn btn-primary" %>
+        <%= link_to_delete [:admin, @deploy_group_role], 'Delete', class: 'btn btn-default' if @deploy_group_role.persisted? %>
+        <%= link_to "Cancel", :back, class: 'btn btn-default' %>
+      </div>
+    </div>
+  </fieldset>
+<% end %>
+
+<script>
+  // change selectable roles when project changes, since every project has different roles
+  $(function(){
+    var project_data = <%= Kubernetes::Role.pluck(:project_id, :id, :name).group_by(&:first).to_json.html_safe %>
+    $('#kubernetes_deploy_group_role_project_id').change(function () {
+      var $role_select = $('#kubernetes_deploy_group_role_kubernetes_role_id');
+      var project_id = parseInt($(this).val(), 10);
+      var val = parseInt($role_select.val(), 10);
+      var roles = project_data[project_id];
+
+      // clear out previous options and refresh the select
+      $role_select.html('').val('');
+
+      // fill in currently selectable roles, keeping the current selection for edit or failed create
+      $.each(roles, function(i, e){
+        $role_select.append($("<option>", { value: e[1], html: e[2], selected: (e[1] === val) }));
+      });
+
+      // highlight the changed select so user sees the effect
+      $role_select.effect("highlight", {color: "#ffffe0"}, 500);
+    }).trigger('change');
+  });
+</script>

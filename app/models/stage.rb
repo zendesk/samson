@@ -126,7 +126,7 @@ class Stage < ActiveRecord::Base
 
   def production?
     if DeployGroup.enabled?
-      deploy_groups.empty? ? super : deploy_groups.any? { |deploy_group| deploy_group.environment.is_production? }
+      deploy_groups.empty? ? super : deploy_groups.any? { |deploy_group| deploy_group.environment.production? }
     else
       super
     end

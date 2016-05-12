@@ -1,6 +1,6 @@
 <ul class="nav nav-tabs">
-  <li class="<%= 'active' if active == 'overview' %>">
-    <%= link_to "Overview", project %>
+  <li class="<%= 'active' if active == 'stages' %>">
+    <%= link_to "Stages", project %>
   </li>
   <li class="<%= 'active' if active == 'releases' %>">
     <%= link_to "Releases", project_releases_path(project) %>
@@ -19,9 +19,6 @@
   <li class="<%= 'active' if active == 'macros' %>">
     <%= link_to "Macros", project_macros_path(project) %>
   </li>
-  <li class="<%= 'active' if active == 'stages' %>">
-    <%= link_to "Stages", project_stages_path(project) %>
-  </li>
   <li class="<%= 'active' if active == 'webhooks' %>">
     <%= link_to "Webhooks", project_webhooks_path(project) %>
   </li>
@@ -31,7 +28,7 @@
 
   <%= Samson::Hooks.render_views(:project_tabs_view, self, { project: @project, active: active }) %>
 
-  <% if is_admin_for_project? %>
+  <% if admin_for_project? %>
     <li class="<%= 'active' if active == 'settings' %>">
       <%= link_to "Settings", edit_project_path(project) %>
     </li>

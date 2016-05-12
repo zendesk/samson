@@ -4,6 +4,8 @@ test_release_pod_1:
   deploy_group: pod1
   replica_target: 2
   replicas_live: 1
+  cpu: 1
+  ram: 100
 
 second_test_release_pod_2:
   kubernetes_role: resque_worker
@@ -11,6 +13,8 @@ second_test_release_pod_2:
   deploy_group: pod2
   replica_target: 5
   replicas_live: 1
+  cpu: 1
+  ram: 100
 
 live_release_pod_1:
   kubernetes_release: live_release
@@ -21,6 +25,8 @@ live_release_pod_1:
   replication_controller_name: test-service-app
   replication_controller_doc: Yaml stuff
   deploy_group: pod1
+  cpu: 1
+  ram: 100
 
 live_release_pod_2:
   kubernetes_release: live_release
@@ -31,6 +37,8 @@ live_release_pod_2:
   replication_controller_name: test-service-app
   replication_controller_doc: Yaml stuff
   deploy_group: pod2
+  cpu: 1
+  ram: 100
 
 created_release_pod_1:
   kubernetes_release: created_release
@@ -41,6 +49,8 @@ created_release_pod_1:
   replication_controller_name: test-service-app
   replication_controller_doc: Yaml stuff
   deploy_group: pod1
+  cpu: 1
+  ram: 100
 
 created_release_pod_2:
   kubernetes_release: created_release
@@ -51,3 +61,5 @@ created_release_pod_2:
   replication_controller_name: test-service-app
   replication_controller_doc: Yaml stuff
   deploy_group: pod2
+  cpu: 1
+  ram: 100

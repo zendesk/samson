@@ -8,6 +8,7 @@ describe Kubernetes::DeployExecutor do
   let(:stage) { deploy.stage }
   let(:deploy) { job.deploy }
   let(:job) { jobs(:succeeded_test) }
+  let(:project) { job.project }
   let(:build) { builds(:docker_build) }
   let(:deploy_group) { stage.deploy_groups.first }
   let(:executor) { Kubernetes::DeployExecutor.new(output, job: job) }
@@ -25,7 +26,7 @@ describe Kubernetes::DeployExecutor do
 
   describe "#execute!" do
     def execute!
-      stub_request(:get, %r{http://foobar.server/api/1/namespaces/staging/pods\?}).to_return(body: pod_reply.to_json) # checks pod status to see if it's good
+      stub_request(:get, %r{http://foobar.server/api/v1/namespaces/staging/pods\?}).to_return(body: pod_reply.to_json) # checks pod status to see if it's good
       executor.execute!
     end
 
@@ -58,21 +59,31 @@ describe Kubernetes::DeployExecutor do
 
     before do
       job.update_column(:commit, build.git_sha) # this is normally done by JobExecution
-      Kubernetes::ReleaseDoc.any_instance.stubs(raw_template: {'kind' => 'Deployment', 'spec' => {'template' => {'metadata' => {'labels' => {}}, 'spec' => {'containers' => [{}]}}}, 'metadata' => {'labels' => {}}}.to_yaml) # TODO: should inject that from current checkout and not fetch via github
+      Kubernetes::Role.stubs(:configured_for_project).returns(project.kubernetes_roles)
+      kubernetes_fake_raw_template
       Kubernetes::Cluster.any_instance.stubs(connection_valid?: true, namespace_exists?: true)
       deploy_group.create_cluster_deploy_group! cluster: kubernetes_clusters(:test_cluster), namespace: 'staging', deploy_group: deploy_group
       stub_request(:get, "http://foobar.server/apis/extensions/v1beta1/namespaces/staging/deployments/").to_return(status: 404) # checks for previous deploys ... but there are none
       stub_request(:post, "http://foobar.server/apis/extensions/v1beta1/namespaces/staging/deployments").to_return(body: "{}") # creates deployment
       executor.stubs(:sleep)
-      stub_request(:get, %r{http://foobar.server/api/1/namespaces/staging/events}).
+      stub_request(:get, %r{http://foobar.server/api/v1/namespaces/staging/events}).
         to_return(body: {items: []}.to_json)
-      stub_request(:get, %r{http://foobar.server/api/1/namespaces/staging/pods/.*/log})
+      stub_request(:get, %r{http://foobar.server/api/v1/namespaces/staging/pods/.*/log})
     end
 
     it "succeeds" do
       assert execute!
       out.must_include "resque_worker: Live\n"
       out.must_include "SUCCESS"
+    end
+
+    it "uses configured roles" do
+      assert execute!
+      doc = Kubernetes::Release.last.release_docs.sort_by(&:replica_target).first
+      config = kubernetes_deploy_group_roles(:test_pod100_app_server)
+      doc.replica_target.must_equal config.replicas
+      doc.cpu.must_equal config.cpu
+      doc.ram.must_equal config.ram
     end
 
     describe "build" do
@@ -158,6 +169,22 @@ describe Kubernetes::DeployExecutor do
       end
     end
 
+    it "fails when role config is missing" do
+      kubernetes_deploy_group_roles(:test_pod100_resque_worker).delete
+      e = assert_raises Samson::Hooks::UserError do
+        execute!
+      end
+      e.message.must_equal "No config for role resque_worker and group Pod 100 found, add it on the stage page."
+    end
+
+    it "fails when no role is setup in the project" do
+      Kubernetes::Role.stubs(:configured_for_project).returns([])
+      e = assert_raises Samson::Hooks::UserError do
+        execute!
+      end
+      e.message.must_equal "No kubernetes config files found at sha 1a6f551a2ffa6d88e15eef5461384da0bfb1c194"
+    end
+
     it "stops the loop when stopping" do
       executor.stop!('FAKE-SIGNAL')
       refute execute!
@@ -185,12 +212,25 @@ describe Kubernetes::DeployExecutor do
       out.must_include "UNSTABLE"
     end
 
+    it "stops when taking too long to go live" do
+      pod_status[:phase] = "Pending"
+
+      # make the first sleep take a long time so we trigger our timeout condition
+      start = Time.now
+      Time.stubs(:now).returns(start)
+      executor.expects(:sleep).with { Time.stubs(:now).returns(start+1.hour) ; true }
+
+      refute execute!
+
+      out.must_include "TIMEOUT"
+    end
+
     it "displays events and logs when deploy failed" do
       # worker restarted -> we request the previous logs
-      stub_request(:get, "http://foobar.server/api/1/namespaces/staging/pods/pod-resque_worker/log?previous=true").
+      stub_request(:get, "http://foobar.server/api/v1/namespaces/staging/pods/pod-resque_worker/log?previous=true").
         to_return(body: "LOG-1")
 
-      stub_request(:get, %r{http://foobar.server/api/1/namespaces/staging/events}).
+      stub_request(:get, %r{http://foobar.server/api/v1/namespaces/staging/events}).
         to_return(body: {items:
           [
             {reason: 'FailedScheduling', message: "fit failure on node (ip-1-2-3-4)\nfit failure on node (ip-2-3-4-5)"},

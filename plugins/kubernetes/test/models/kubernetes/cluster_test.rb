@@ -12,5 +12,14 @@ describe Kubernetes::Cluster do
       cluster.watch!
     end
   end
-end
 
+  describe 'clients' do
+    it 'can create a basic client' do
+      cluster.client.must_be_kind_of Kubeclient::Client
+    end
+
+    it 'can create an extensions client' do
+      cluster.extension_client.must_be_kind_of Kubeclient::Client
+    end
+  end
+end

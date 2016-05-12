@@ -1,10 +1,6 @@
-<%= form_tag project_project_roles_path(project, user_id: user.id), class: 'project_role_selector' do %>
+<%= form_tag project_project_roles_path(project, user_id: user.id), class: 'autosubmit' do %>
   <% options = [['None', nil]] + UserProjectRole::ROLES.map { |r| [r.name, r.id] } %>
   <% options.each do |name, id| %>
-    <%= label_tag do %>
-      <% checked = user.project_role_for(project).try(:role_id) == id %>
-      <%= radio_button_tag :role_id, id.to_s, checked %>
-      <%= name.titlecase %>
-    <% end %>
+    <%= user_project_role_radio user, project, name, id %>
   <% end %>
 <% end %>

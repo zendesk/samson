@@ -48,7 +48,7 @@ class Job < ActiveRecord::Base
   end
 
   def can_be_stopped_by?(user)
-    started_by?(user) || user.is_admin? || user.is_admin_for?(project)
+    started_by?(user) || user.admin? || user.admin_for?(project)
   end
 
   def commands

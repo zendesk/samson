@@ -57,10 +57,8 @@ class Build < ActiveRecord::Base
     @docker_image = image
   end
 
-  def file_from_repo(path, ttl: 1.hour)
-    Rails.cache.fetch([self, path], expire_in: ttl) do
-      project.repository.file_content git_sha, path
-    end
+  def file_from_repo(path)
+    project.repository.file_content path, git_sha
   end
 
   def url

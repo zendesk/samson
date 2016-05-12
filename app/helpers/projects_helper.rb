@@ -36,11 +36,11 @@ module ProjectsHelper
     end
   end
 
-  def is_admin_for_project?
-    current_user.is_admin_for?(@project)
+  def admin_for_project?
+    current_user.admin_for?(@project)
   end
 
-  def is_deployer_for_project?
-    current_user.is_deployer_for?(@project)
+  def deployer_for_project?
+    current_user.deployer_for?(@project)
   end
 end

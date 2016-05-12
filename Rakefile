@@ -1,6 +1,9 @@
 # Add your own tasks in files placed in lib/tasks ending in .rake,
 # for example lib/tasks/capistrano.rake, and they will automatically be available to Rake.
 
+# asset gems need to be loaded before app is done loading
+ENV['PRECOMPILE'] = '1' if ARGV.include?("test:js") || ARGV.include?("assets:precompile")
+
 require File.expand_path('../config/application', __FILE__)
 
 Samson::Application.load_tasks
@@ -11,7 +14,6 @@ task default: :test
 task :asset_compilation_environment do
   ENV['SECRET_TOKEN'] = 'foo'
   ENV['GITHUB_TOKEN'] = 'foo'
-  ENV['PRECOMPILE'] = '1'
 
   config = Rails.application.config
   def config.database_configuration
@@ -59,11 +61,21 @@ namespace :test do
   end
 
   def resolve_asset(file)
-    Rails.application.assets.find_asset(file).to_a.first.pathname.to_s
+    asset = Rails.application.assets.find_asset(file).to_a.first || raise("Could not find #{file}")
+    asset.pathname.to_s
   end
 end
 
 desc 'Run brakeman ... use brakewan -I to add new ignores'
 task :brakeman do
-  sh "brakeman --exit-on-warn --table-width 500"
+  apps = Dir['plugins/*/app/{controllers,models,views,helpers}'].map do |a|
+    link = a.sub(%r{plugins/(.*?)/app/(.*)}, "app/\\2/\\1") # avoid collisions by namespacing everything
+    [a, link]
+  end
+  begin
+    apps.each { |a, l| FileUtils.cp_r(a, l) }
+    sh "brakeman --exit-on-warn --table-width 500"
+  ensure
+    apps.each { |_, l| FileUtils.rm_rf(l) }
+  end
 end
