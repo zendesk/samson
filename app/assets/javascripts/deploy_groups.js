@@ -9,7 +9,7 @@ var populateProjectSelectList = function() {
 	// Create and append the options that match what
 	// we stored in the DOM
   _.each(groups, function(group) {
-    if (group[environment] !== undefined) {
+    if (group[environment] != undefined) {
       let value = group[environment];
       $('#secret_deploy_group_permalink').append(new Option(value, value));
     }
