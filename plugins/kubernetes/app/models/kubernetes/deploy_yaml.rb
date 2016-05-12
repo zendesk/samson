@@ -9,7 +9,21 @@ module Kubernetes
     end
 
     def to_hash
-      @deployment_hash ||= deployment_spec.to_hash
+      @deployment_hash ||= begin
+        set_rc_unique_label_key
+        set_namespace
+        set_replica_target
+        set_deployment_metadata
+        set_selector_metadata
+        set_spec_template_metadata
+        set_docker_image
+        set_resource_usage
+        set_env
+
+        hash = template.to_hash
+        Rails.logger.info "Created Kubernetes hash: #{hash.to_json}"
+        hash
+      end
     end
 
     def resource_name
@@ -17,19 +31,6 @@ module Kubernetes
     end
 
     private
-
-    def deployment_spec
-      set_rc_unique_label_key
-      set_namespace
-      set_replica_target
-      set_deployment_metadata
-      set_selector_metadata
-      set_spec_template_metadata
-      update_docker_image
-      set_resource_usage
-      Rails.logger.info "Created Kubernetes hash: #{template.to_hash}"
-      template
-    end
 
     def template
       @template ||= begin
@@ -81,7 +82,7 @@ module Kubernetes
     end
 
     # Sets the labels for each new Pod.
-    # Appending the Release ID to allow us to track the progress of a new release from the UI.
+    # Adding the Release ID to allow us to track the progress of a new release from the UI.
     def set_spec_template_metadata
       release_doc_metadata.each do |key, value|
         template.spec.template.metadata.labels[key] = value.to_s
@@ -89,23 +90,27 @@ module Kubernetes
     end
 
     def release_doc_metadata
-      release_metadata.merge(role_metadata).merge(deploy_group_metadata)
-    end
+      @release_doc_metadata ||= begin
+        release = @doc.kubernetes_release
+        role = @doc.kubernetes_role
+        deploy_group = @doc.deploy_group
+        build = @doc.build
+        {
+          release_id: release.id,
+          deploy_id: release.deploy_id,
+          project: release.project.permalink,
+          project_id: release.project_id,
 
-    def release_metadata
-      release = @doc.kubernetes_release
-      {
-        release_id: release.id,
-        project_id: release.project_id
-      }
-    end
+          role: role.name,
+          role_id: role.id,
 
-    def role_metadata
-      { role_id: @doc.kubernetes_role.id, role_name: @doc.kubernetes_role.name }
-    end
+          deploy_group: deploy_group.env_value,
+          deploy_group_id: deploy_group.id,
 
-    def deploy_group_metadata
-      { deploy_group_id: @doc.deploy_group.id, deploy_group_namespace: @doc.deploy_group.kubernetes_namespace }
+          revision: build.git_sha,
+          tag: build.git_ref
+        }
+      end
     end
 
     def set_resource_usage
@@ -114,19 +119,45 @@ module Kubernetes
       }
     end
 
-    def update_docker_image
+    def set_docker_image
       docker_path = @doc.build.docker_repo_digest || "#{@doc.build.project.docker_repo}:#{@doc.build.docker_ref}"
       # Assume first container is one we want to update docker image in
       container.image = docker_path
     end
 
-    def container
-      containers = template.spec.template.try(:spec).try(:containers) || []
-      if containers.size == 0
-        # TODO: support building and replacement for multiple containers
-        raise Samson::Hooks::UserError, "Template #{@doc.template_name} has #{containers.size} containers, having 1 section is valid."
+    def set_env
+      env = (container.env || [])
+
+      # static data
+      metadata = release_doc_metadata
+      [:REVISION, :TAG, :PROJECT, :ROLE, :DEPLOY_ID, :DEPLOY_GROUP].each do |k|
+        env << {name: k, value: metadata.fetch(k.downcase)}
       end
-      containers.first
+
+      # dynamic lookups for unknown things during deploy
+      {
+        POD_NAME: 'metadata.name',
+        POD_NAMESPACE: 'metadata.namespace',
+        POD_IP: 'status.podIP'
+      }.each do |k,v|
+         env << {
+          name: k,
+          valueFrom: {fieldRef: {fieldPath: v}}
+        }
+      end
+
+      container.env = env
+    end
+
+    def container
+      @container ||= begin
+        containers = template.spec.template.try(:spec).try(:containers) || []
+        if containers.size == 0
+          # TODO: support building and replacement for multiple containers
+          raise Samson::Hooks::UserError, "Template #{@doc.template_name} has #{containers.size} containers, having 1 section is valid."
+        end
+        containers.first
+      end
     end
   end
 end
