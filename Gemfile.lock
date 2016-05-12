@@ -61,7 +61,6 @@ PATH
   remote: plugins/new_relic
   specs:
     samson_new_relic (0.0.0)
-      newrelic_api
 
 PATH
   remote: plugins/pipelines
@@ -117,10 +116,6 @@ GEM
       activemodel (= 4.2.6)
       activesupport (= 4.2.6)
       arel (~> 6.0)
-    activeresource (4.0.0)
-      activemodel (~> 4.0)
-      activesupport (~> 4.0)
-      rails-observers (~> 0.1.1)
     activesupport (4.2.6)
       i18n (~> 0.7)
       json (~> 1.7, >= 1.7.7)
@@ -276,7 +271,6 @@ GEM
     net-http-persistent (2.9.4)
     net-ldap (0.14.0)
     netrc (0.11.0)
-    newrelic_api (1.2.4)
     newrelic_rpm (3.15.2.317)
     ngannotate-rails (1.2.1)
       execjs
@@ -389,8 +383,6 @@ GEM
       rails-deprecated_sanitizer (>= 1.0.1)
     rails-html-sanitizer (1.0.3)
       loofah (~> 2.0)
-    rails-observers (0.1.2)
-      activemodel (~> 4.0)
     railties (4.2.6)
       actionpack (= 4.2.6)
       activesupport (= 4.2.6)
@@ -472,7 +464,6 @@ PLATFORMS
 DEPENDENCIES
   active_hash
   active_model_serializers
-  activeresource
   airbrake (~> 4.3.6)
   angular-rails-templates
   ansible
