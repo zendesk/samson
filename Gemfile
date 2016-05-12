@@ -53,7 +53,7 @@ Dir[File.join(Bundler.root, 'plugins/*/')].each { |f| gemspec path: f }
 gem 'sucker_punch', '~> 2.0'
 
 group :mysql2 do
-  gem 'mysql2', '0.4.3' # 0.4.4 fails to compile during deploys
+  gem 'mysql2'
 end
 
 group :postgres do
