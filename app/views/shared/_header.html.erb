@@ -51,10 +51,10 @@
         </li>
       <% end %>
 
-      <% if current_user.try(:admin?) %>
-        <li class="dropdown <%= 'active' if request.path.starts_with?('/admin') %>">
-          <a href="#" class="dropdown-toggle" data-toggle="dropdown">Admin <b class="caret"></b></a>
-          <ul class="dropdown-menu">
+      <li class="dropdown <%= 'active' if request.path.starts_with?('/admin') %>">
+        <a href="#" class="dropdown-toggle" data-toggle="dropdown">Manage <b class="caret"></b></a>
+        <ul class="dropdown-menu">
+          <% if current_user.try(:admin?) %>
             <% if DeployGroup.enabled? %>
               <li><%= link_to "Environments", admin_environments_path %></li>
               <li><%= link_to "Deploy Groups", admin_deploy_groups_path %></li>

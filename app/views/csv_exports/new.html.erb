@@ -43,7 +43,7 @@
       </div>
     <% end %>
   </div>
-  <% if current_user.is_admin? %>
+  <% if current_user.try(:admin?) %>
     <div class="clearfix">
       <hr />
       <div><strong>Admin reports</strong></div>
