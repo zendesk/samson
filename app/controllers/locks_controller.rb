@@ -11,12 +11,12 @@ class LocksController < ApplicationController
       permit(:description, :stage_id, :warning, :delete_in).
       merge(user: current_user)
     Lock.create!(attributes)
-    redirect_to :back, notice: 'Locked'
+    redirect_back notice: 'Locked', fallback_location: root_path
   end
 
   def destroy
     lock.try(:soft_delete)
-    redirect_to :back, notice: 'Unlocked'
+    redirect_back notice: 'Unlocked', fallback_location: root_path
   end
 
   protected

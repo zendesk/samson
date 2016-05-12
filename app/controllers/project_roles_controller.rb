@@ -20,6 +20,6 @@ class ProjectRolesController < ApplicationController
       "#{current_user.name_and_email} set the role #{role_name} to #{user.name}} on project #{current_project.name}"
     )
 
-    render text: "Saved!"
+    render plain: "Saved!"
   end
 end

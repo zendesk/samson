@@ -94,7 +94,7 @@ class StagesController < ApplicationController
   end
 
   def badge?
-    action_name == 'show' && request.format == Mime::SVG
+    action_name == 'show' && request.format == Mime[:svg]
   end
 
   def stage_params

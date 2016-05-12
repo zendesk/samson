@@ -5,6 +5,7 @@
 ENV['PRECOMPILE'] = '1' if ARGV.include?("test:js") || ARGV.include?("assets:precompile")
 
 require File.expand_path('../config/application', __FILE__)
+require "rake/testtask"
 
 Samson::Application.load_tasks
 
@@ -27,14 +28,16 @@ end
 Rake::Task['assets:precompile'].prerequisites.unshift :asset_compilation_environment
 
 namespace :plugins do
-  Rails::TestTask.new(:test) do |t|
+  Rake::TestTask.new(:test) do |t|
     t.pattern = "plugins/*/test/**/*_test.rb"
+    t.warning = false
   end
 end
 
 Rake::Task['test'].clear
-Rails::TestTask.new(:test) do |t|
+Rake::TestTask.new(:test) do |t|
   t.pattern = "{test,plugins/*/test}/**/*_test.rb"
+  t.warning = false
 end
 
 namespace :test do

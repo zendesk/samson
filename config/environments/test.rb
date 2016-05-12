@@ -14,9 +14,9 @@ Samson::Application.configure do
 
   # Configure static asset server for tests with Cache-Control for performance.
   # We don't need assets in test, so no need to compile/serve them
-  config.serve_static_files = false
+  config.public_file_server.enabled = false
   config.assets.compile = !!ENV['PRECOMPILE']
-  config.static_cache_control = "public, max-age=3600"
+  config.public_file_server.headers = { 'Cache-Control' => 'public, max-age=3600' }
 
   # Show full error reports and disable caching.
   config.consider_all_requests_local       = true
@@ -34,7 +34,13 @@ Samson::Application.configure do
   config.action_mailer.delivery_method = :test
 
   # Print deprecation notices to the stderr.
-  config.active_support.deprecation = :stderr
+  config.active_support.deprecation = lambda do |message, _backtrace|
+    if message =~ /DEPRECATION WARNING: .* HTTP request methods will accept only/
+      # ignore ... we'll have to deal with that later ...
+    else
+      raise message
+    end
+  end
 
   # By default, we don't want to actually execute jobs when testing. However,
   # this setting can be enabled on a per-test basis.

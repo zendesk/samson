@@ -32,11 +32,11 @@ describe 'Unauthorized' do
       end
 
       describe 'with a referer' do
-        let(:headers) { { 'HTTP_REFERER' => 'hello' } }
+        let(:headers) { { 'HTTP_REFERER' => '/hello' } }
 
         it 'redirects to the referer' do
           last_response.must_be(:redirect?)
-          last_response.headers['Location'].must_equal('hello')
+          last_response.headers['Location'].must_equal("http://example.org/hello")
         end
       end
     end

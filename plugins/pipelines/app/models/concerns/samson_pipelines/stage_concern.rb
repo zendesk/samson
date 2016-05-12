@@ -37,7 +37,7 @@ module SamsonPipelines::StageConcern
     project.stages.each do |s|
       if s.next_stage_ids.include?(id)
         errors[:base] << "Stage #{name} is in a pipeline from #{s.name} and cannot be deleted"
-        return false
+        throw :abort
       end
     end
   end

@@ -7,7 +7,7 @@ describe Integrations::BaseController do
   end
 
   tests BaseTestController
-  use_test_routes
+  use_test_routes BaseTestController
 
   let(:sha) { "dc395381e650f3bac18457909880829fc20e34ba" }
   let(:project) { projects(:test) }

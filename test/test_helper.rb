@@ -19,6 +19,7 @@ $LOAD_PATH.delete 'test'
 require_relative '../config/environment'
 require 'rails/test_help'
 require 'minitest/rails'
+require 'rails-controller-testing'
 require 'maxitest/autorun'
 require 'webmock/minitest'
 require 'mocha/setup'
@@ -207,7 +208,6 @@ class ActionController::TestCase
     middleware = Rails.application.config.middleware.detect { |m| m.name == 'Warden::Manager' }
     manager = Warden::Manager.new(nil, &middleware.block)
     request.env['warden'] = Warden::Proxy.new(request.env, manager)
-
     stub_request(:get, "#{Rails.application.config.samson.github.status_url}/api/status.json").to_timeout
     create_default_stubs
   end
@@ -232,26 +232,45 @@ class ActionController::TestCase
     refute @unauthorized, "Request was marked unauthorized"
   end
 
-  def process_with_catch_warden(*args)
-    catch(:warden) do
-      return process_without_catch_warden(*args)
+  # catch warden throw
+  # TODO: make a helper that directly catches as part of the test
+  prepend(Module.new do
+    def process(*args)
+      catch(:warden) do
+        return super
+      end
+
+      @unauthorized = true
+      stub(cookies: {}) # rails calls .cookies on the response
     end
+  end)
 
-    @unauthorized = true
-  end
-
-  alias_method_chain :process, :catch_warden
-
-  def self.use_test_routes
+  def self.use_test_routes(controller)
+    controller_name = controller.name.underscore.sub('_controller', '')
     before do
       Rails.application.routes.draw do
-        match "/test/:test_route/:controller/:action", via: [:get, :post, :put, :patch, :delete]
+        controller.action_methods.each do |action|
+          match(
+            "/test/:test_route/#{action}",
+            via: [:get, :post, :put, :patch, :delete],
+            controller: controller_name,
+            action: action
+          )
+        end
       end
     end
 
     after do
       Rails.application.reload_routes!
     end
+  end
+end
+
+# https://github.com/blowmage/minitest-rails/issues/195
+class ActionController::TestCase
+  # Use AD::IntegrationTest for the base class when describing a controller
+  register_spec_type(self) do |desc|
+    desc.is_a?(Class) && desc < ActionController::Metal
   end
 end
 

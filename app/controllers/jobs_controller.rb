@@ -68,7 +68,11 @@ class JobsController < ApplicationController
   end
 
   def command_params
-    params.require(:commands).permit(ids: [])
+    if commands = params[:commands]
+      commands.permit(ids: [])
+    else
+      {ids: []}
+    end
   end
 
   def command

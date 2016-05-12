@@ -26,7 +26,7 @@ describe SamsonEnv do
 
         it "does not modify when no variables were specified" do
           EnvironmentVariable.delete_all
-          project.environment_variables(:reload)
+          project.environment_variables.reload
           fire
           File.exist?(".env").must_equal false
         end
