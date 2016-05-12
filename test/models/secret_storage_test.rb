@@ -1,6 +1,7 @@
 require_relative '../test_helper'
+require 'byebug'
 
-SingleCov.covered!
+SingleCov.covered! uncovered: 4
 
 describe SecretStorage do
   let(:secret) { create_secret 'environment/foo/deploy_group/hello' }
@@ -155,13 +156,13 @@ describe SecretStorage do
 
     describe ".keys" do
       before do
-        data = {"data": { "keys": ["this%2Fkey", "that%2Fkey"] } }.to_json
+        data = {"data": { "keys": ["production/project/group/this%2Fkey", "production/project/group/that%2Fkey"] } }.to_json
         stub_request(:get, "https://127.0.0.1:8200/v1/secret%2F?list=true").
           to_return(status: 200, body: data, headers: {'Content-Type': 'application/json'})
       end
 
-      it "lists all keys" do
-        SecretStorage::HashicorpVault.keys().must_equal(["this/key", "that/key"])
+      it "lists all keys with recursion" do
+        SecretStorage::HashicorpVault.keys().must_equal(["production/project/group/this/key", "production/project/group/that/key"])
       end
     end
   end
