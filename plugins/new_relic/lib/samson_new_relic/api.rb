@@ -1,10 +1,13 @@
 module SamsonNewRelic
   module Api
+    KEY = ENV['NEWRELIC_API_KEY'].presence
+
     class << self
       def applications
-        @applications ||= NewRelicApi::Account.first.applications.inject({}) do |map, app|
-          map[app.name] = Application.new(app)
-          map
+        @applications ||= begin
+          get('/v2/applications.json').fetch('applications').each_with_object({}) do |app, all|
+            all[app.fetch('name')] = Application.new(app)
+          end
         end
       end
 
@@ -14,6 +17,15 @@ module SamsonNewRelic
         else
           response(live_metrics(application_names)).merge(time: Time.now.utc.to_i)
         end
+      end
+
+      def get(path, params={})
+        response = Faraday.get("https://api.newrelic.com#{path}", params) do |request|
+          request.options.open_timeout = 2
+          request.headers['X-Api-Key'] = KEY
+        end
+        raise "Newrelic request to #{path} failed #{response.status}" unless response.status == 200
+        JSON.parse(response.body)
       end
 
       private
@@ -60,63 +72,61 @@ module SamsonNewRelic
     end
 
     class Application
-      attr_reader :app
-      delegate :id, :name, to: :app
-
       def initialize(app)
         @app = app
       end
 
+      def id
+        @app.fetch('id')
+      end
+
+      def name
+        @app.fetch('name')
+      end
+
       def throughput
-        thresholds.detect {|t| t.name == "Throughput"}.metric_value
+        @app.fetch('application_summary').fetch('throughput')
       end
 
       def response_time
-        thresholds.detect {|t| t.name == "Response Time"}.metric_value
+        @app.fetch('application_summary').fetch('response_time')
       end
 
-      def get_metric(metric, field, start_time = Time.now.utc)
-        url = "https://api.newrelic.com/api/v1/accounts/#{app.account_id}/applications/#{app.id}/data.json"
-
-        query = {
-          metrics: [metric],
-          field: field,
-          begin: (start_time - 60 * 30).strftime("%Y-%m-%dT%H:%M:00Z"),
-          end: start_time.strftime("%Y-%m-%dT%H:%M:00Z")
-        }
-
-        response = Faraday.get(url, query) do |request|
-          request.options.open_timeout = 2
-          request.headers['X-Api-Key'] = NewRelicApi.api_key
-        end
-
-        doc = JSON.parse(response.body)
-
-        doc.select {|m| m['name'] == metric}.map do |m|
-          stamp = Time.at(m['begin'].to_i).to_i
-          value = m[field]
-          [stamp, value]
-        end
-      end
-
-      def historic_response_time(time = Time.now.utc)
-        data = get_metric('HttpDispatcher', 'average_response_time', time)
-
-        data.map do |stamp, value|
+      def historic_response_time
+        data = metric('HttpDispatcher', 'average_response_time')
+        data.map! do |stamp, value|
           [stamp, (value * 1000).to_i]
         end
       end
 
-      def historic_throughput(time = Time.now.utc, count = 0)
-        get_metric('HttpDispatcher', 'requests_per_minute', time)
+      def historic_throughput
+        metric('HttpDispatcher', 'requests_per_minute')
       end
 
       def reload
-        @thresholds = nil
+        @app = SamsonNewRelic::Api.get("/v2/applications/#{id}.json")
       end
 
-      def thresholds
-        @thresholds ||= app.threshold_values
+      private
+
+      def metric(metric, field)
+        path = "/v2/applications/#{id}/metrics/data.json"
+        start_time = Time.now.utc
+
+        params = {
+          names: [metric],
+          field: field,
+          begin: (start_time - 30.minutes).strftime("%Y-%m-%dT%H:%M:00Z"),
+          end: start_time.strftime("%Y-%m-%dT%H:%M:00Z")
+        }
+
+        doc = SamsonNewRelic::Api.get(path, params).fetch('metric_data').fetch('metrics').first.fetch('timeslices')
+        doc.map! do |m|
+          [
+            Time.parse(m.fetch('from')).to_i,
+            m.fetch('values').fetch(field)
+          ]
+        end
       end
     end
   end

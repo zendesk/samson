@@ -3,19 +3,29 @@ require_relative '../test_helper'
 SingleCov.covered!
 
 describe SamsonNewRelic::Api do
-  let(:account) { stub(applications: applications) }
-  let(:applications) {[
-    stub(id: 1, name: 'Production', account_id: 1),
-    stub(id: 2, name: 'Staging', account_id: 1)
-  ]}
-
-  before do
-    NewRelicApi::Account.stubs(first: account)
+  def stub_metric_api(field, value)
+    Time.stubs(now: Time.parse('2016-01-01 00:00:00'))
+    stub_request(:get, "https://api.newrelic.com/v2/applications/14/metrics/data.json?begin=2015-12-31T23:30:00Z&end=2016-01-01T00:00:00Z&field=#{field}&names%5B%5D=HttpDispatcher").
+      to_return(body: {
+        metric_data: {metrics: [{timeslices: [{from: '2016-01-01 00:00:00', values: {field => value}}]}]}
+      }.to_json)
   end
 
+  let(:account) { stub(applications: applications) }
+  let(:applications) {[
+    {'id' => 1, 'name' => 'Production'},
+    {'id' => 2, 'name' => 'Staging'}
+  ]}
+
+  before { silence_warnings { SamsonNewRelic::Api::KEY = '123' } }
+  after { silence_warnings { SamsonNewRelic::Api::KEY = nil } }
+
   describe '.applications' do
-    let(:apps) { SamsonNewRelic::Api.applications }
     it 'is a hash of name -> Application' do
+      stub_request(:get, "https://api.newrelic.com/v2/applications.json").
+        with(headers: {'X-Api-Key' => '123'}).
+        to_return(body: {applications: applications}.to_json)
+      apps = SamsonNewRelic::Api.applications
       apps['Production'].name.must_equal('Production')
       apps['Production'].must_be_instance_of(SamsonNewRelic::Api::Application)
       apps.size.must_equal(2)
@@ -23,6 +33,9 @@ describe SamsonNewRelic::Api do
   end
 
   describe '.metrics' do
+    before do
+      SamsonNewRelic::Api.stubs(applications: applications.map { |a| [a.fetch('name'), SamsonNewRelic::Api::Application.new(a)] }.to_h)
+    end
     subject { SamsonNewRelic::Api.metrics(['Production', 'Staging'], initial) }
 
     describe 'initial' do
@@ -67,10 +80,11 @@ describe SamsonNewRelic::Api do
       let(:initial) { false }
 
       before do
-        SamsonNewRelic::Api.applications.each do |_, application|
+        SamsonNewRelic::Api.applications.values.each do |application|
           application.stubs(
             response_time: 100,
-            throughput: 1000
+            throughput: 1000,
+            reload: nil
           )
         end
       end
@@ -101,73 +115,53 @@ describe SamsonNewRelic::Api do
 
   describe SamsonNewRelic::Api::Application do
     subject do
-      SamsonNewRelic::Api::Application.new(stub(id: 14, name: 'Production', account_id: 1))
+      SamsonNewRelic::Api::Application.new({
+        'id' => 14,
+        'name' => 'Production',
+        'application_summary' => {
+          'throughput' => 1234,
+          'response_time' => 2345
+        }
+      })
     end
 
-    it 'delegates name, id' do
-      subject.name.must_equal('Production')
+    it 'has an id' do
       subject.id.must_equal(14)
     end
 
-    describe 'thresholds' do
-      before do
-        subject.app.stubs(threshold_values: [
-          stub(name: 'Throughput', metric_value: 1000),
-          stub(name: 'Response Time', metric_value: 100),
-        ])
-      end
-
-      it 'returns throughput' do
-        subject.throughput.must_equal(1000)
-      end
-
-      it 'returns response_time' do
-        subject.response_time.must_equal(100)
-      end
+    it 'has a name' do
+      subject.name.must_equal('Production')
     end
 
-    describe 'historic_response_time' do
-      before do
-        subject.stubs(get_metric: [[1000000, 0.05]])
-      end
+    it 'has throughput' do
+      subject.throughput.must_equal(1234)
+    end
 
+    it 'has response_time' do
+      subject.response_time.must_equal(2345)
+    end
+
+    it 'can reload' do
+      stub_request(:get, "https://api.newrelic.com/v2/applications/14.json").
+        to_return(body: {
+          'application_summary' => {
+          'response_time' => 333
+        }}.to_json)
+      subject.reload
+      subject.response_time.must_equal(333)
+    end
+
+    describe '#historic_response_time' do
       it 'returns 1000 * metric values' do
-        subject.historic_response_time.must_equal([[1000000, 50]])
+        stub_metric_api :average_response_time, 100
+        subject.historic_response_time.must_equal([[1451606400, 100000]])
       end
     end
 
-    describe 'historic_throughput' do
-      before do
-        subject.stubs(get_metric: [[1000000, 500]])
-      end
-
-      it 'returns 1000 * metric values' do
-        subject.historic_throughput.must_equal([[1000000, 500]])
-      end
-    end
-
-    describe 'get_metrics' do
-      let(:now) { Time.now.utc }
-      before { NewRelicApi.api_key = '123' }
-      after { NewRelicApi.api_key = nil }
-
-      before do
-        query = {
-          metrics: ['metric'],
-          field: 'field',
-          begin: 30.minutes.ago.strftime("%Y-%m-%dT%H:%M:00Z"),
-          end: now.strftime("%Y-%m-%dT%H:%M:00Z")
-        }
-
-        stub_request(:get, "https://api.newrelic.com/api/v1/accounts/1/applications/14/data.json?#{query.to_query}").
-          with(headers: { 'X-Api-Key' => '123' }).
-          to_return(status: 200, body: JSON.dump([{ name: 'metric', begin: now.to_i.to_s, field: 'hello' }, { name: 'test' }]))
-      end
-
-      it 'returns proper metrics' do
-        subject.get_metric('metric', 'field', now).must_equal([
-          [now.to_i, 'hello']
-        ])
+    describe '#historic_throughput' do
+      it 'returns the metric' do
+        stub_metric_api :requests_per_minute, 100
+        subject.historic_throughput.must_equal([[1451606400, 100]])
       end
     end
   end
