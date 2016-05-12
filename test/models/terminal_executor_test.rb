@@ -90,7 +90,7 @@ describe TerminalExecutor do
 
       it "fails on unresolved secrets" do
         assert_raises ActiveRecord::RecordNotFound do
-          subject.execute!('echo "secret://global/baz"')
+          subject.execute!('echo "secret://production/global/soemgroup/baz"')
         end
       end
 

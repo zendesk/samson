@@ -53,7 +53,7 @@ class Admin::SecretsController < ApplicationController
   end
 
   def project_permalink
-    params[:id].present? ? params[:id].split('/', 4).second : secret_params.fetch(:project_permalink)
+    params[:id].present? ? SecretStorage.parse_secret_key(params[:id], 'project') : secret_params.fetch(:project_permalink)
   end
 
   def value
@@ -61,11 +61,11 @@ class Admin::SecretsController < ApplicationController
   end
 
   def deploy_group_permalink
-    params[:id].present? ? params[:id].split('/', 4).third : secret_params.fetch(:deploy_group_permalink)
+    params[:id].present? ? SecretStorage.parse_secret_key(params[:id], 'deploy_group') : secret_params.fetch(:deploy_group_permalink)
   end
 
   def environment_permalink
-    params[:id].present? ? params[:id].split('/', 4).first : secret_params.fetch(:environment_permalink, false)
+    params[:id].present? ? SecretStorage.parse_secret_key(params[:id], 'environmnt') : secret_params.fetch(:environment_permalink, false)
   end
 
   def successful_response(notice)

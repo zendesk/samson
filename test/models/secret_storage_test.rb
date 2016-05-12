@@ -45,6 +45,25 @@ describe SecretStorage do
     end
   end
 
+  describe ".parses keys" do
+    let(:secret_key) { 'marry/had/a/little' }
+    it "returs the environment" do
+      SecretStorage::parse_secret_key(secret_key, 'environment').must_equal('marry')
+    end
+
+    it "returs the project" do
+      SecretStorage::parse_secret_key(secret_key, 'project').must_equal('had')
+    end
+
+    it "returs the deploy_group" do
+      SecretStorage::parse_secret_key(secret_key, 'deploy_group').must_equal('a')
+    end
+
+    it "returs the key" do
+      SecretStorage::parse_secret_key(secret_key, 'key').must_equal('little')
+    end
+  end
+
   describe ".read" do
     it "reads" do
       data = SecretStorage.read(secret.id, include_secret: true)
