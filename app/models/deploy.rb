@@ -204,6 +204,6 @@ class Deploy < ActiveRecord::Base
   end
 
   def trim_reference
-    reference.strip! if reference.presence
+    self.reference = reference.strip if reference.present?
   end
 end

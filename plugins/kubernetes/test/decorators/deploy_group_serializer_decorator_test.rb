@@ -26,7 +26,7 @@ describe DeployGroupSerializer do
 
     it 'contains the kubernetes cluster when serialized' do
       parsed = JSON.parse(DeployGroupSerializer.new(deploy_group).to_json).with_indifferent_access
-      cluster = parsed[:deploy_group][:kubernetes_cluster]
+      cluster = parsed[:kubernetes_cluster]
       cluster[:name].must_equal 'test'
       cluster[:config_filepath].must_equal 'plugins/kubernetes/test/cluster_config.yml'
       cluster[:config_context].must_equal 'test'

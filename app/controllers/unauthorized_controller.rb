@@ -33,8 +33,6 @@ class UnauthorizedController < ActionController::Metal
   private
 
   def redirect_back_or(path)
-    redirect_to :back
-  rescue ActionController::RedirectBackError
-    redirect_to path
+    redirect_back fallback_location: path
   end
 end

@@ -245,7 +245,7 @@ describe Deploy do
 
   describe "#cache_key" do
     it "includes self and commit" do
-      deploys(:succeeded_test).cache_key.must_equal ["deploys/178003093-20140102201000000000000", "staging"]
+      deploys(:succeeded_test).cache_key.must_equal ["deploys/178003093-20140102201000000000", "staging"]
     end
   end
 

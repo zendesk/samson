@@ -3,13 +3,13 @@ require_relative '../../test_helper'
 
 SingleCov.covered!
 
-describe "CurrentUser included in controller" do
+class CurrentUserConcernTest < ActionController::TestCase
   class CurrentUserTestController < ApplicationController
     include CurrentUser
     include CurrentProject
 
     def whodunnit
-      render text: PaperTrail.whodunnit.to_s.dup
+      render plain: PaperTrail.whodunnit.to_s.dup
     end
 
     def change
@@ -48,7 +48,7 @@ describe "CurrentUser included in controller" do
   end
 
   tests CurrentUserTestController
-  use_test_routes
+  use_test_routes CurrentUserTestController
 
   def self.authorized(method, action, params)
     it "is authorized to #{method} #{action}" do
