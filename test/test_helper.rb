@@ -145,6 +145,11 @@ class ActiveSupport::TestCase
     SecretStorage::DbBackend::Secret.create!(id: key, value: 'MY-SECRET', environment_id: key.split('/').first, deploy_group_id: key.split('/').third, updater_id: users(:admin).id, creator_id: users(:admin).id)
   end
 
+  def create_secret_test_group
+    test_env = Environment.create(name: 'environment', permalink: 'environment', production: true)
+    DeployGroup.create(name: 'deploy_group', permalink: 'deploy_group', environment_id: test_env.id)
+  end
+
   def with_env(env)
     old = env.map do |k, v|
       k = k.to_s

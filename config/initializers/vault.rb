@@ -1,4 +1,9 @@
-VAULT_ENABLED = ENV.fetch('SECRET_STORAGE_BACKEND', false)
+# some hackery to get this loaded up when testing
+VAULT_ENABLED = ENV.fetch('SECRET_STORAGE_BACKEND', Rails.env.test? ? "SecretStorage::HashicorpVault" : false)
+if Rails.env.test?
+  ENV["VAULT_ADDR"] = "https://127.0.0.1:8200"
+  ENV["VAULT_SSL_CERT"] = "/Users/iwaters/co/zendesk/samson/config/vault_client.pem" #FIXME: change to rails root
+end
 if VAULT_ENABLED == 'SecretStorage::HashicorpVault'
   require 'vault'
   Rails.logger.info("Vault Client enabled")
@@ -33,6 +38,10 @@ if VAULT_ENABLED == 'SecretStorage::HashicorpVault'
       # we are just stubbing in our own auth, everything else should fall
       # through to our parrent
       super
+
+      # if we are testing, just return here.  We'll let super configure
+      # the rest of the client
+      return if Rails.env.test?
       uri = URI.parse(Vault.address)
       @http = Net::HTTP.start(uri.host, uri.port, DEFAULT_CLIENT_OPTIONS)
       response = @http.request(Net::HTTP::Post.new(CERT_AUTH_PATH))

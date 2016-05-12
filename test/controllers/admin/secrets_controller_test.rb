@@ -7,7 +7,11 @@ describe Admin::SecretsController do
     create_secret 'environment/global/deploy_group/foo'
   end
 
-  let(:secret) { create_secret 'environment/foo/deploy_group/somekey' }
+  before do
+    create_secret_test_group
+  end
+
+  let(:secret) { create_secret 'environment/foo/deploy_group/some_key' }
   let(:other_project) do
     Project.any_instance.stubs(:valid_repository_url).returns(true)
     Project.create!(name: 'Z', repository_url: 'Z')
@@ -62,8 +66,7 @@ describe Admin::SecretsController do
 
   as_a_project_admin do
     before do
-      test_env = Environment.create(name: 'environment', permalink: 'environment', production: true )
-      DeployGroup.create(name: 'deploy_group', permalink: 'deploy_group', environment_id: test_env.id)
+      create_secret_test_group
     end
     describe '#create' do
       let(:attributes) {{ environment_permalink: 'environment', project_permalink: 'foo', deploy_group_permalink: 'deploy_group', key: 'v', value: 'echo hi' }}
@@ -148,7 +151,7 @@ describe Admin::SecretsController do
 
         it "is not supported" do
           assert_redirected_to admin_secrets_path
-          secret.reload.id.must_equal 'environment/foo/group/hello'
+          secret.reload.id.must_equal 'environment/foo/deploy_group/some_key'
         end
       end
 
@@ -184,9 +187,11 @@ describe Admin::SecretsController do
 
   as_a_admin do
     let(:secret) { create_global }
-
+    before do
+      create_secret_test_group
+    end
     describe '#create' do
-      let(:attributes) {{ project_permalink: 'foo', key: 'v', value: 'echo hi' }}
+      let(:attributes) {{ environment_permalink: 'environment', project_permalink: 'foo', deploy_group_permalink: 'deploy_group', key: 'v', value: 'echo hi' }}
 
       before do
         post :create, secret: attributes
@@ -213,7 +218,7 @@ describe Admin::SecretsController do
 
     describe '#update' do
       it "updates" do
-        put :update, id: secret, secret: { project_permalink: 'foo', key: 'hi', value: 'secret' }
+        put :update, id: secret, secret: { environment_permalink: 'environment', project_permalink: 'foo', deploy_group_permalink: 'deploy_group', key: 'hi', value: 'secret' }
         assert_redirected_to admin_secrets_path
       end
     end

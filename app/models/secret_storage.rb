@@ -38,8 +38,9 @@ module SecretStorage
       secret.updater_id = data.fetch(:user_id)
       secret.creator_id ||= data.fetch(:user_id)
       secret.value = data.fetch(:value)
-      secret.deploy_group_id = SecretStorage::permalink_id('deploy_group', data[:deploy_group_permalink])
-      secret.environment_id = SecretStorage::permalink_id('environment', data[:environment_permalink])
+      # we can also get all this data from the key
+      secret.deploy_group_id = SecretStorage::permalink_id('deploy_group', data[:deploy_group_permalink].presence || key.split('/').third)
+      secret.environment_id = SecretStorage::permalink_id('environment', data[:environment_permalink].presence || key.split('/').first)
       secret.save
     end
 
@@ -52,7 +53,6 @@ module SecretStorage
     end
   end
 
-  require 'vault'
   class HashicorpVault
 
     VAULT_SECRET_BACKEND ='secret/'.freeze

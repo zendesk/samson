@@ -3,7 +3,10 @@ require_relative '../test_helper'
 SingleCov.covered!
 
 describe SecretStorage do
-  let(:secret) { create_secret 'foo/hello' }
+  let(:secret) { create_secret 'environment/foo/deploy_group/hello' }
+  before do
+    create_secret_test_group
+  end
 
   describe ".allowed_project_prefixes" do
     it "is all for admin" do
@@ -17,8 +20,8 @@ describe SecretStorage do
 
   describe ".write" do
     it "writes" do
-      SecretStorage.write('global/foo', value: '111', user_id: users(:admin).id).must_equal true
-      secret = SecretStorage::DbBackend::Secret.find('global/foo')
+      SecretStorage.write('environment/foo/deploy_group/hello', value: '111', user_id: users(:admin).id).must_equal true
+      secret = SecretStorage::DbBackend::Secret.find('environment/foo/deploy_group/hello')
       secret.value.must_equal '111'
       secret.creator_id.must_equal users(:admin).id
       secret.updater_id.must_equal users(:admin).id
@@ -29,11 +32,11 @@ describe SecretStorage do
     end
 
     it "refuses to write keys with spaces" do
-      SecretStorage.write('global/foo ', value: '111', user_id: 11).must_equal false
+      SecretStorage.write('  environment/foo/deploy_group/hello', value: '111', user_id: 11).must_equal false
     end
 
     it "refuses to write empty values" do
-      SecretStorage.write('global/foo', value: '   ', user_id: 11).must_equal false
+      SecretStorage.write('environment/foo/deploy_group/hello', value: '   ', user_id: 11).must_equal false
     end
 
     it "refuses to write keys we will not be able to replace in commands" do
@@ -69,7 +72,7 @@ describe SecretStorage do
   describe ".keys" do
     it "lists keys" do
       secret # trigger creation
-      SecretStorage.keys.must_equal ['foo/hello']
+      SecretStorage.keys.must_equal ['environment/foo/deploy_group/hello']
     end
   end
 
@@ -96,19 +99,24 @@ describe SecretStorage do
     # note, we need to call the storage engine here directly
     # as the model has already loaded it's config
     # from ENV
+    before do
+      ENV["SECRET_STORAGE_BACKEND"] = "SecretStorage::HashicorpVault"
+    end
     describe ".read" do
       before do
         data = {data: { vault:"bar"}}.to_json
-        stub_request(:get, "https://127.0.0.1:8200/v1/secret%2Ffoo%252Fisbar").
+        stub_request(:get, "https://127.0.0.1:8200/v1/secret%2Fproduction%2Ffoo%2Fdeploy_group%2Fisbar").
           to_return(status: 200, body: data, headers: {'Content-Type': 'application/json'})
         fail_data = {data: { vault:nil}}.to_json
         # client gets a 200 and nil body when key is missing
         stub_request(:get, "https://127.0.0.1:8200/v1/secret%2Fnotgoingtobethere").
           to_return(status: 200, body: fail_data, headers: {'Content-Type': 'application/json'})
+        # this is the auth request, just needs to return 200 for our purposes
+        stub_request(:post, "https://127.0.0.1:8200/v1/auth/cert/login")
       end
 
       it "gets a value based on a key with /s" do
-        SecretStorage::HashicorpVault.read('foo/isbar').must_equal({:lease_id=>nil, :lease_duration=>nil, :renewable=>nil, :auth=>nil, :value=>"bar"})
+        SecretStorage::HashicorpVault.read('production/foo/deploy_group/isbar').must_equal({:lease_id=>nil, :lease_duration=>nil, :renewable=>nil, :auth=>nil, :value=>"bar"})
       end
 
       it "fails to read a key" do
@@ -126,21 +134,22 @@ describe SecretStorage do
 
     describe ".delete" do
       before do
-        stub_request(:delete, "https://127.0.0.1:8200/v1/secret%2Ffoo%252Fisbar")
+        stub_request(:delete, "https://127.0.0.1:8200/v1/secret%2Fproduction%2Ffoo%2Fgroup%2Fisbar")
       end
 
       it "deletes key with /s" do
-        assert SecretStorage::HashicorpVault.delete('foo/isbar')
+        assert SecretStorage::HashicorpVault.delete('production/foo/group/isbar')
       end
     end
 
     describe ".write" do
       before do
-        stub_request(:put, "https://127.0.0.1:8200/v1/secret%2Ffoo%252Fisbar")
+        stub_request(:put, "https://127.0.0.1:8200/v1/secret%2Fenv%2F%2Fbar%2Fisbar").
+          with(:body => "{\"vault\":\"whatever\"}")
       end
 
       it "wirtes a key with /s" do
-        assert SecretStorage::HashicorpVault.write('foo/isbar', {value: 'whatever'})
+        assert SecretStorage::HashicorpVault.write('production/foo/group/isbar', {environment_permalink: 'env', project_permalinl: 'foo', deploy_group_permalink: 'bar', value: 'whatever'})
       end
     end
 
