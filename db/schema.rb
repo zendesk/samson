@@ -40,6 +40,14 @@ ActiveRecord::Schema.define(version: 20160510153731) do
     t.integer  "project_id", limit: 4
   end
 
+  create_table "csv_exports", force: :cascade do |t|
+    t.integer  "user_id",    limit: 4,                       null: false
+    t.datetime "created_at",                                 null: false
+    t.datetime "updated_at",                                 null: false
+    t.string   "filters",    limit: 255, default: "{}",      null: false
+    t.string   "status",     limit: 255, default: "pending", null: false
+  end
+
   create_table "deploy_groups", force: :cascade do |t|
     t.string   "name",           limit: 255, null: false
     t.integer  "environment_id", limit: 4,   null: false

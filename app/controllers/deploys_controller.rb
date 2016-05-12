@@ -1,5 +1,3 @@
-require 'csv'
-
 class DeploysController < ApplicationController
   include CurrentProject
 
@@ -34,7 +32,7 @@ class DeploysController < ApplicationController
 
   # Takes the same params that are used by the client side filtering
   # on the recent deploys pages.
-  # Returrns a paginated json object or CSV of deploys that people are
+  # Returrns a paginated json object of deploys that people are
   # interested in rather than doing client side filtering.
   # params:
   #   * deployer (name of the user that started the job(s), this is a fuzzy match
@@ -83,10 +81,6 @@ class DeploysController < ApplicationController
         render json: @deploys
       end
       format.html
-      format.csv do
-        datetime = Time.now.strftime "%Y%m%d_%H%M"
-        send_data deploys.to_csv, type: :csv, filename: "deploy_search_results_#{datetime}.csv"
-      end
     end
   end
 
