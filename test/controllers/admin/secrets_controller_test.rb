@@ -65,9 +65,6 @@ describe Admin::SecretsController do
   end
 
   as_a_project_admin do
-    before do
-      create_secret_test_group
-    end
     describe '#create' do
       let(:attributes) {{ environment_permalink: 'environment', project_permalink: 'foo', deploy_group_permalink: 'deploy_group', key: 'v', value: 'echo hi' }}
 
@@ -195,9 +192,6 @@ describe Admin::SecretsController do
 
   as_a_admin do
     let(:secret) { create_global }
-    before do
-      create_secret_test_group
-    end
     describe '#create' do
       let(:attributes) {{ environment_permalink: 'environment', project_permalink: 'foo', deploy_group_permalink: 'deploy_group', key: 'v', value: 'echo hi' }}
 
