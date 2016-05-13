@@ -14,11 +14,8 @@ module Kubernetes
     end
 
     def self.log(message, extra_info = {})
-      @output_file ||= File.open(ENV['KUBER_LOGFILE'] || File.join(Rails.root, 'log', 'kubernetes.log'), 'a')
-
-      @output_file.write({ message: message }.merge(extra_info).to_json + "\n")
-      @output_file.flush
-      message
+      msg_log = { message: message }.merge(extra_info).to_json
+      Rails.logger.info(msg_log)
     end
   end
 end
