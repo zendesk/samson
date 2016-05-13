@@ -68,7 +68,7 @@ class Admin::SecretsController < ApplicationController
   end
 
   def environment_permalink
-    params[:id].present? ? SecretStorage.parse_secret_key(params[:id], :environmnt) : secret_params.fetch(:environment_permalink, false)
+    params[:id].present? ? SecretStorage.parse_secret_key(params[:id], :environment) : secret_params.fetch(:environment_permalink, false)
   end
 
   def successful_response(notice)

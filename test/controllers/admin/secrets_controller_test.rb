@@ -121,9 +121,11 @@ describe Admin::SecretsController do
     end
 
     describe '#update' do
-      let(:attributes) {{ value: 'hi', environment_permalink: SecretStorage.parse_secret_key(secret.id, :environment),
-                          project_permalink: SecretStorage.parse_secret_key(secret.id, :project),
-                          deploy_group_permalink: SecretStorage.parse_secret_key(secret.id, :deploy_group) }}
+      let(:attributes) {{
+        value: 'hi', environment_permalink: SecretStorage.parse_secret_key(secret.id, :environment),
+        project_permalink: SecretStorage.parse_secret_key(secret.id, :project),
+        deploy_group_permalink: SecretStorage.parse_secret_key(secret.id, :deploy_group)
+        }}
 
       before do
         patch :update, id: secret.id, secret: attributes
@@ -138,9 +140,11 @@ describe Admin::SecretsController do
       end
 
       describe 'invalid' do
-        let(:attributes) {{ value: '', environment_permalink: SecretStorage.parse_secret_key(secret.id, :environment),
-                            project_permalink: SecretStorage.parse_secret_key(secret.id, :project),
-                            deploy_group_permalink: SecretStorage.parse_secret_key(secret.id, :deploy_group) }}
+        let(:attributes) {{
+          value: '', environment_permalink: SecretStorage.parse_secret_key(secret.id, :environment),
+          project_permalink: SecretStorage.parse_secret_key(secret.id, :project),
+          deploy_group_permalink: SecretStorage.parse_secret_key(secret.id, :deploy_group)
+          }}
 
         it 'fails to update' do
           assert_template :edit

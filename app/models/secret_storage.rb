@@ -1,5 +1,6 @@
 module SecretStorage
   require 'attr_encrypted'
+  SECRET_KEYS = [:environment, :project, :deploy_group, :key].freeze
   class DbBackend
     class Secret < ActiveRecord::Base
       self.table_name = :secrets
@@ -160,16 +161,7 @@ module SecretStorage
     end
 
     def parse_secret_key(key, field)
-      case field
-      when :environment
-        key.split('/', 4).first
-      when :project
-        key.split('/', 4).second
-      when :deploy_group
-        key.split('/', 4).third
-      when :key
-        key.split('/', 4).fourth
-      end
+      key.split('/', SecretStorage::SECRET_KEYS.count)[SecretStorage::SECRET_KEYS.index(field)]
     end
   end
 end
