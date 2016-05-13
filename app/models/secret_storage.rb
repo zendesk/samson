@@ -39,8 +39,8 @@ module SecretStorage
       secret.creator_id ||= data.fetch(:user_id)
       secret.value = data.fetch(:value)
       # we can also get all this data from the key
-      secret.deploy_group_id = SecretStorage::permalink_id('deploy_group', data[:deploy_group_permalink].presence || SecretStorage::parse_secret_key(key, 'deploy_group'))
-      secret.environment_id = SecretStorage::permalink_id('environment', data[:environment_permalink].presence || SecretStorage::parse_secret_key(key, 'environment'))
+      secret.deploy_group_id = SecretStorage::permalink_id('deploy_group', data[:deploy_group_permalink].presence || SecretStorage.parse_secret_key(key, :deploy_group))
+      secret.environment_id = SecretStorage::permalink_id('environment', data[:environment_permalink].presence || SecretStorage::parse_secret_key(key, :environment))
       secret.save
     end
 
@@ -161,13 +161,13 @@ module SecretStorage
 
     def parse_secret_key(key, field)
       case field
-      when "environment"
+      when :environment
         key.split('/', 4).first
-      when 'project'
+      when :project
         key.split('/', 4).second
-      when 'deploy_group'
+      when :deploy_group
         key.split('/', 4).third
-      when 'key'
+      when :key
         key.split('/', 4).fourth
       end
     end
