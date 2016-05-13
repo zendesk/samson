@@ -52,7 +52,11 @@ class Admin::SecretsController < ApplicationController
   end
 
   def project_permalink
-    params[:id].present? ? SecretStorage.parse_secret_key(params[:id], :project) : secret_params.fetch(:project_permalink)
+    if params[:id].present?
+      SecretStorage.parse_secret_key(params[:id], :project)
+    else
+      secret_params.fetch(:project_permalink)
+    end
   end
 
   def value

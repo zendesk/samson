@@ -60,7 +60,7 @@ describe SecretStorage do
     end
 
     it "returs the key" do
-      SecretStorage.parse_secret_key(secret_key', :key).must_equal('little')
+      SecretStorage.parse_secret_key(secret_key, :key).must_equal('little')
     end
   end
 
