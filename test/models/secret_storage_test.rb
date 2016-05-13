@@ -44,7 +44,7 @@ describe SecretStorage do
     end
   end
 
-  describe ".parses keys" do
+  describe ". parse_secret_key" do
     let(:secret_key) { 'marry/had/a/little' }
     it "returs the environment" do
       SecretStorage.parse_secret_key(secret_key, :environment).must_equal('marry')
