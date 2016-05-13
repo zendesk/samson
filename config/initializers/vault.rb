@@ -45,7 +45,7 @@ if VAULT_ENABLED == 'SecretStorage::HashicorpVault'
       uri = URI.parse(Vault.address)
       @http = Net::HTTP.start(uri.host, uri.port, DEFAULT_CLIENT_OPTIONS)
       response = @http.request(Net::HTTP::Post.new(CERT_AUTH_PATH))
-      if (response.code.to_i == 200)
+      if response.code == 200
         @token = JSON.parse(response.body).delete("auth")["client_token"]
       else
         raise "Missing Token"
