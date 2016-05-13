@@ -95,11 +95,11 @@ class Admin::SecretsController < ApplicationController
   end
 
   def find_environments_permalinks
-    @environment_permalinks = Environment.all().pluck(:permalink)
+    @environment_permalinks = Environment.pluck(:permalink)
   end
 
   def find_deploy_group_permalinks
-    @deploy_group_permalinks = DeployGroup.all().pluck(:permalink)
+    @deploy_group_permalinks = DeployGroup.pluck(:permalink)
   end
 
   def ensure_project_access
