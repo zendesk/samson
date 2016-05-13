@@ -242,6 +242,10 @@ describe User do
       User.search('find.me@example.org').must_equal [a_singular_user]
     end
 
+    it 'sanitizes query values' do
+      User.search('%').must_equal []
+    end
+
     it 'finds a single user using a partial match query' do
       User.search('find').must_equal [a_singular_user]
     end
