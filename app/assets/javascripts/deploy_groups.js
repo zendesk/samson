@@ -1,4 +1,4 @@
-// get back a list of deploy groups, generate a select list with 'em
+// when user changes the deploy group, fill in the projects from data stored on the page
 // these are being stored in the DOM to avoid having to make an ajax query etc
 
 var populateProjectSelectList = function() {
