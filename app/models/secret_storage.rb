@@ -12,7 +12,7 @@ module SecretStorage
       before_validation :store_encryption_key_sha
       validates :id, :encrypted_value, :encryption_key_sha, presence: true
       validates :id, format: /\A\S+\/\S*\Z/
-      validates_presence_of :deploy_group_id, :environment_id, :on => :create
+      validates_presence_of :deploy_group_id, :environment_id, on: :create
 
       private
 
