@@ -29,7 +29,6 @@ class Admin::SecretsController < ApplicationController
     attributes[:environment_permalink] = environment_permalink if environment_permalink
     attributes[:project_permalink] = project_permalink if project_permalink
     attributes[:deploy_group_permalink] = deploy_group_permalink if deploy_group_permalink
-    #if SecretStorage.write(key, value: value, user_id: current_user.id, deploy_group_permalink: deploy_group_permalink, environment_permalink: environment_permalink, project_permalink: project_permalink)
     if SecretStorage.write(key, attributes)
       successful_response 'Secret created.'
     else
