@@ -42,7 +42,7 @@ class TerminalExecutor
   def resolve_secrets(command)
     allowed_namespaces = ['global']
     Environment.all.pluck(:permalink).each do |link|
-      #allow access to global in all envs
+      # allow access to global in all envs
       allowed_namespaces << "#{link}/global"
       allowed_namespaces << "#{link}/#{@project.permalink}" if @project
     end
