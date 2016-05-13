@@ -3,10 +3,7 @@ require_relative '../test_helper'
 SingleCov.covered! uncovered: 4
 
 describe SecretStorage do
-  let(:secret) { create_secret 'environment/foo/deploy_group/hello' }
-  before do
-    create_secret_test_group
-  end
+  let(:secret) { create_secret 'production/foo/pod2/hello' }
 
   describe ".allowed_project_prefixes" do
     it "is all for admin" do
@@ -20,8 +17,9 @@ describe SecretStorage do
 
   describe ".write" do
     it "writes" do
-      SecretStorage.write('environment/foo/deploy_group/hello', value: '111', user_id: users(:admin).id).must_equal true
-      secret = SecretStorage::DbBackend::Secret.find('environment/foo/deploy_group/hello')
+      secret_key = 'production/foo/pod2/hello'
+      SecretStorage.write(secret_key, value: '111', user_id: users(:admin).id).must_equal true
+      secret = SecretStorage::DbBackend::Secret.find(secret_key)
       secret.value.must_equal '111'
       secret.creator_id.must_equal users(:admin).id
       secret.updater_id.must_equal users(:admin).id
@@ -32,11 +30,11 @@ describe SecretStorage do
     end
 
     it "refuses to write keys with spaces" do
-      SecretStorage.write('  environment/foo/deploy_group/hello', value: '111', user_id: 11).must_equal false
+      SecretStorage.write('  production/foo/pod2/hello', value: '111', user_id: 11).must_equal false
     end
 
     it "refuses to write empty values" do
-      SecretStorage.write('environment/foo/deploy_group/hello', value: '   ', user_id: 11).must_equal false
+      SecretStorage.write('production/foo/pod2/hello', value: '   ', user_id: 11).must_equal false
     end
 
     it "refuses to write keys we will not be able to replace in commands" do
@@ -95,7 +93,7 @@ describe SecretStorage do
   describe ".keys" do
     it "lists keys" do
       secret # trigger creation
-      SecretStorage.keys.must_equal ['environment/foo/deploy_group/hello']
+      SecretStorage.keys.must_equal ['production/foo/pod2/hello']
     end
   end
 
