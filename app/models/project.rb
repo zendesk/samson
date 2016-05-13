@@ -126,7 +126,7 @@ class Project < ActiveRecord::Base
   end
 
   def deploy_groups
-    stages.all.map(&:deploy_groups)
+    stages.uniq.map(&:deploy_groups)
   end
 
   private
