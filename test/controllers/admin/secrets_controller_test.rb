@@ -1,17 +1,14 @@
 require_relative '../../test_helper'
+require 'byebug'
 
 SingleCov.covered!
 
 describe Admin::SecretsController do
   def create_global
-    create_secret 'environment/global/deploy_group/foo'
+    create_secret 'production/global/pod2/foo'
   end
 
-  before do
-    create_secret_test_group
-  end
-
-  let(:secret) { create_secret 'environment/foo/deploy_group/some_key' }
+  let(:secret) { create_secret 'production/foo/pod2/some_key' }
   let(:other_project) do
     Project.any_instance.stubs(:valid_repository_url).returns(true)
     Project.create!(name: 'Z', repository_url: 'Z')
@@ -23,7 +20,12 @@ describe Admin::SecretsController do
   end
 
   as_a_deployer do
-    unauthorized :post, :create, secret: {environment_permalink: 'environment', project_permalink: 'foo', deploy_group_permalink: 'group', key: 'bar'}
+    unauthorized :post, :create, secret: {
+      environment_permalink: 'production',
+      project_permalink: 'foo',
+      deploy_group_permalink: 'group',
+      key: 'bar'
+      }
 
     describe '#index' do
       it 'renders template without secret values' do
@@ -66,20 +68,26 @@ describe Admin::SecretsController do
 
   as_a_project_admin do
     describe '#create' do
-      let(:attributes) {{ environment_permalink: 'environment', project_permalink: 'foo', deploy_group_permalink: 'deploy_group', key: 'v', value: 'echo hi' }}
+      let(:attributes) {{
+        environment_permalink: 'production',
+        project_permalink: 'foo',
+        deploy_group_permalink: 'pod2',
+        key: 'v',
+        value: 'echo hi'
+      }}
 
       before { post :create, secret: attributes }
 
       it 'creates a secret' do
         flash[:notice].wont_be_nil
         assert_redirected_to admin_secrets_path
-        secret = SecretStorage::DbBackend::Secret.find('environment/foo/deploy_group/v')
+        secret = SecretStorage::DbBackend::Secret.find('production/foo/pod2/v')
         secret.updater_id.must_equal user.id
         secret.creator_id.must_equal user.id
       end
 
       describe 'invalid' do
-        let(:attributes) {{ environment_permalink: 'environment', project_permalink: 'foo', deploy_group_permalink: 'group', key: '', value: '' }}
+        let(:attributes) {{ environment_permalink: 'production', project_permalink: 'foo', deploy_group_permalink: 'group', key: '', value: '' }}
 
         it 'renders and sets the flash' do
           assert flash[:error]
@@ -141,7 +149,7 @@ describe Admin::SecretsController do
           value: '', environment_permalink: SecretStorage.parse_secret_key(secret.id, :environment),
           project_permalink: SecretStorage.parse_secret_key(secret.id, :project),
           deploy_group_permalink: SecretStorage.parse_secret_key(secret.id, :deploy_group)
-          }}
+        }}
 
         it 'fails to update' do
           assert_template :edit
@@ -156,12 +164,12 @@ describe Admin::SecretsController do
 
         it "is not supported" do
           assert_redirected_to admin_secrets_path
-          secret.reload.id.must_equal 'environment/foo/deploy_group/some_key'
+          secret.reload.id.must_equal 'production/foo/pod2/some_key'
         end
       end
 
       describe 'editing a not owned project' do
-        let(:secret) { create_secret "environment/#{other_project.permalink}/foo/xxx" }
+        let(:secret) { create_secret "production/#{other_project.permalink}/foo/xxx" }
 
         it "is not allowed" do
           assert_unauthorized
@@ -193,7 +201,13 @@ describe Admin::SecretsController do
   as_a_admin do
     let(:secret) { create_global }
     describe '#create' do
-      let(:attributes) {{ environment_permalink: 'environment', project_permalink: 'foo', deploy_group_permalink: 'deploy_group', key: 'v', value: 'echo hi' }}
+      let(:attributes) {{
+        environment_permalink: 'production',
+        project_permalink: 'foo',
+        deploy_group_permalink: 'pod2',
+        key: 'v',
+        value: 'echo hi'
+      }}
 
       before do
         post :create, secret: attributes
@@ -220,7 +234,13 @@ describe Admin::SecretsController do
 
     describe '#update' do
       it "updates" do
-        put :update, id: secret, secret: { environment_permalink: 'environment', project_permalink: 'foo', deploy_group_permalink: 'deploy_group', key: 'hi', value: 'secret' }
+        put :update, id: secret, secret: {
+          environment_permalink: 'production',
+          project_permalink: 'foo',
+          deploy_group_permalink: 'pod2',
+          key: 'hi',
+          value: 'secret'
+        }
         assert_redirected_to admin_secrets_path
       end
     end

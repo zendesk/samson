@@ -40,8 +40,8 @@ module SecretStorage
       secret.creator_id ||= data.fetch(:user_id)
       secret.value = data.fetch(:value)
       # we can also get all this data from the key
-      secret.deploy_group_id = SecretStorage.permalink_id('deploy_group', data[:deploy_group_permalink].presence || SecretStorage.parse_secret_key(key, :deploy_group))
-      secret.environment_id = SecretStorage.permalink_id('environment', data[:environment_permalink].presence || SecretStorage::parse_secret_key(key, :environment))
+      secret.deploy_group_id = SecretStorage.permalink_id(:deploy_group, data[:deploy_group_permalink].presence || SecretStorage.parse_secret_key(key, :deploy_group))
+      secret.environment_id = SecretStorage.permalink_id(:environment, data[:environment_permalink].presence || SecretStorage::parse_secret_key(key, :environment))
       secret.save
     end
 
@@ -134,8 +134,8 @@ module SecretStorage
   end
 
   def self.permalink_id(link_type, link)
-    return DeployGroup.find_by_permalink(link).id if link_type == 'deploy_group'
-    return Environment.find_by_permalink(link).id if link_type == 'environment'
+    return DeployGroup.find_by_permalink(link).id if link_type == :deploy_group
+    return Environment.find_by_permalink(link).id if link_type == :environment
   end
 
   SECRET_KEY_REGEX = %r{[\w\/-]+}
