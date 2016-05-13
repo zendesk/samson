@@ -6,8 +6,8 @@ var populateProjectSelectList = function() {
   var groups = JSON.parse($('#deployGroupList').attr('imbededData'))
   // re-initialize the select list
   $('#secret_deploy_group_permalink').empty().append('');
-	// Create and append the options that match what
-	// we stored in the DOM
+  // Create and append the options that match what
+  // we stored in the DOM
   _.each(groups, function(group) {
     if (group[environment] !== undefined) {
       let value = group[environment];
