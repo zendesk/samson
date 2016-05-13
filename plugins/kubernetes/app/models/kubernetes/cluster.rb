@@ -1,4 +1,5 @@
 require 'kubeclient'
+require 'celluloid/io'
 
 module Kubernetes
   class Cluster < ActiveRecord::Base
