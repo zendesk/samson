@@ -39,8 +39,8 @@ module SecretStorage
       secret.creator_id ||= data.fetch(:user_id)
       secret.value = data.fetch(:value)
       # we can also get all this data from the key
-      secret.deploy_group_id = SecretStorage::permalink_id('deploy_group', data[:deploy_group_permalink].presence || SecretStorage.parse_secret_key(key, :deploy_group))
-      secret.environment_id = SecretStorage::permalink_id('environment', data[:environment_permalink].presence || SecretStorage::parse_secret_key(key, :environment))
+      secret.deploy_group_id = SecretStorage.permalink_id('deploy_group', data[:deploy_group_permalink].presence || SecretStorage.parse_secret_key(key, :deploy_group))
+      secret.environment_id = SecretStorage.permalink_id('environment', data[:environment_permalink].presence || SecretStorage::parse_secret_key(key, :environment))
       secret.save
     end
 
@@ -62,7 +62,7 @@ module SecretStorage
 
     # get and cache a copy of the client that has a token
     def self.vault_client
-      @vault_client || VaultClient.new
+      @vault_client ||= VaultClient.new
     end
 
     def self.read(key)
