@@ -161,7 +161,9 @@ module SecretStorage
     end
 
     def parse_secret_key(key, field)
-      key.split('/', SecretStorage::SECRET_KEYS.count)[SecretStorage::SECRET_KEYS.index(field)]
+      index = SecretStorage::SECRET_KEYS.index(field)
+      value = key.split('/', SecretStorage::SECRET_KEYS.count)[index]
+      value.nil? ? false : value
     end
   end
 end

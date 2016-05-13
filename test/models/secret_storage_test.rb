@@ -50,16 +50,20 @@ describe SecretStorage do
       SecretStorage.parse_secret_key(secret_key, :environment).must_equal('marry')
     end
 
-    it "returs the project" do
+    it "returns the project" do
       SecretStorage.parse_secret_key(secret_key, :project).must_equal('had')
     end
 
-    it "returs the deploy_group" do
+    it "returns the deploy_group" do
       SecretStorage.parse_secret_key(secret_key, :deploy_group).must_equal('a')
     end
 
-    it "returs the key" do
+    it "returns the key" do
       SecretStorage.parse_secret_key(secret_key, :key).must_equal('little')
+    end
+
+    it "fails with invalid key" do
+      SecretStorage.parse_secret_key('foo/bar/whatever', :key).must_equal false
     end
   end
 
