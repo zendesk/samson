@@ -38,9 +38,6 @@
     "BUNDLE_WITHOUT": {
       "value": "mysql2:sqlite"
     },
-    "BUILDPACK_URL": {
-      "value": "https://github.com/ddollar/heroku-buildpack-multi.git"
-    },
     "DEPLOY_TASKS": {
       "value": "db:migrate"
     },
@@ -51,5 +48,9 @@
   "scripts": {
     "postdeploy": "bundle exec rake db:schema:load"
   },
-  "keywords": ["samson", "deploy", "github", "rails"]
+  "keywords": ["samson", "deploy", "github", "rails"],
+  "buildpacks": [
+    {"url": "https://github.com/heroku/heroku-buildpack-ruby.git"},
+    {"url": "https://github.com/gunpowderlabs/buildpack-ruby-rake-deploy-tasks.git"}
+  ]
 }
