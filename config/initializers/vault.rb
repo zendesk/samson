@@ -48,7 +48,7 @@ if VAULT_ENABLED == 'SecretStorage::HashicorpVault'
       if response.code == "200"
         @token = JSON.parse(response.body).fetch("auth")["client_token"]
       else
-        raise "Missing Token"
+        raise "Failed to get auth token from vault server"
       end
     end
   end
