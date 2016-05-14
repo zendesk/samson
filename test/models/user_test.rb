@@ -269,6 +269,7 @@ describe User do
 
   describe ".with_role" do
     let(:project) { projects(:test) }
+    let(:deployer_list) { ["Admin", "Deployer", "Deployer Project Admin", "DeployerBuddy", "Project Deployer", "Super Admin"] }
 
     it "filters everything when asking for a unreachable role" do
       User.with_role(Role::SUPER_ADMIN.id + 1, project.id).size.must_equal 0
@@ -280,12 +281,33 @@ describe User do
 
     it 'filters by deployer' do
       User.with_role(Role::DEPLOYER.id, project.id).map(&:name).sort.must_equal \
-        ["Admin", "Deployer", "Deployer Project Admin", "DeployerBuddy", "Project Deployer", "Super Admin"]
+        deployer_list
     end
 
     it 'filters by admin' do
       User.with_role(Role::ADMIN.id, project.id).map(&:name).sort.must_equal \
         ["Admin", "Deployer Project Admin", "Super Admin"]
+    end
+
+    describe "with another project" do
+      let(:other) do
+        p = project.dup
+        p.name = 'xxxxx'
+        p.save!(validate: false)
+        p
+      end
+
+      it 'does not show duplicate when multiple roles exist' do
+        UserProjectRole.create!(user: users(:project_admin), project: other, role_id: Role::ADMIN.id)
+        User.with_role(Role::DEPLOYER.id, project.id).map(&:name).sort.must_equal \
+          deployer_list
+      end
+
+      it 'shows users that only have a role on different projects' do
+        UserProjectRole.create!(user: users(:deployer), project: other, role_id: Role::ADMIN.id)
+        User.with_role(Role::DEPLOYER.id, project.id).map(&:name).sort.must_equal \
+          deployer_list
+      end
     end
   end
 

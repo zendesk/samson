@@ -27,11 +27,8 @@ class User < ActiveRecord::Base
     where("name LIKE ? OR email LIKE ?", "%#{query}%", "%#{query}%")
   }
   scope :with_role, -> (role_id, project_id) {
-    joins('LEFT OUTER JOIN user_project_roles ON users.id = user_project_roles.user_id').
-      where(
-        '(user_project_roles.project_id = ? AND user_project_roles.role_id >= ?) OR users.role_id >= ?',
-        project_id, role_id, role_id
-      )
+    joins("LEFT OUTER JOIN user_project_roles ON users.id = user_project_roles.user_id AND user_project_roles.project_id = #{project_id.to_i}").
+      where('users.role_id >= ? OR user_project_roles.role_id >= ?', role_id, role_id)
   }
 
   def starred_project?(project)
