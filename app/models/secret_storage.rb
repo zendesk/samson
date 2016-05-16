@@ -13,7 +13,6 @@ module SecretStorage
       before_validation :store_encryption_key_sha
       validates :id, :encrypted_value, :encryption_key_sha, presence: true
       validates :id, format: /\A\S+\/\S*\Z/
-      validates_presence_of :deploy_group_id, :environment_id, on: :create
 
       private
 
@@ -39,9 +38,6 @@ module SecretStorage
       secret.updater_id = data.fetch(:user_id)
       secret.creator_id ||= data.fetch(:user_id)
       secret.value = data.fetch(:value)
-      # we can also get all this data from the key
-      secret.deploy_group_id = SecretStorage.permalink_id(:deploy_group, data[:deploy_group_permalink].presence || SecretStorage.parse_secret_key(key, :deploy_group))
-      secret.environment_id = SecretStorage.permalink_id(:environment, data[:environment_permalink].presence || SecretStorage.parse_secret_key(key, :environment))
       secret.save
     end
 
