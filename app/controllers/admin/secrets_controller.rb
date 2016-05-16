@@ -49,7 +49,12 @@ class Admin::SecretsController < ApplicationController
   end
 
   def key
-    params[:id] || "#{secret_params.fetch(:environment_permalink)}/#{secret_params.fetch(:project_permalink)}/#{secret_params.fetch(:deploy_group_permalink)}/#{secret_params.fetch(:key)}"
+    params[:id] || SecretStorage.generate_secret_key(
+      secret_params.fetch(:environment_permalink),
+      secret_params.fetch(:project_permalink),
+      secret_params.fetch(:deploy_group_permalink),
+      secret_params.fetch(:key)
+    )
   end
 
   def project_permalink
