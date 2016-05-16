@@ -71,12 +71,10 @@ describe Kubernetes::DeployYaml do
       )
     end
 
-    it "fails without selector" do
+    it "works without selector" do
       assert doc.raw_template.sub!('selector:', 'no_selector:')
-      e = assert_raises Samson::Hooks::UserError do
-        yaml.to_hash
-      end
-      e.message.must_include 'selector'
+      result = yaml.to_hash
+      result.fetch(:spec).fetch(:selector).fetch(:matchLabels).keys.sort.must_equal([:deploy_group, :deploy_id, :project, :project_id, :revision, :role, :tag].sort)
     end
 
     it "works without labels" do

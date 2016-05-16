@@ -74,9 +74,9 @@ module Kubernetes
     # Sets the metadata that is going to be used as the selector. Kubernetes will use this metadata to select the
     # old and new Replication Controllers when managing a new Deployment.
     def set_selector_metadata
-      if !template.spec.selector || !template.spec.selector.matchLabels
-        raise Samson::Hooks::UserError, "Missing spec.selector.matchLabels"
-      end
+      template.spec.selector ||= {}
+      template.spec.selector.matchLabels ||= {}
+
       deployment_labels.each do |key, value|
         template.spec.selector.matchLabels[key] = value.to_s
       end
