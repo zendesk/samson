@@ -39,7 +39,9 @@ class DockerBuilderService
 
     output.puts("### Running Docker build")
 
-    build.docker_image = Docker::Image.build_from_dir(tmp_dir, {}, Docker.connection, registry_credentials) do |output_chunk|
+    build.docker_image = Docker::Image.build_from_dir(tmp_dir, {}, Docker.connection, registry_credentials) do |output_chunk, remaining_bytes, total_bytes|
+      output.puts("REMAINING BYTES #{remaining_bytes}")
+      output.puts("TOTAL BYTES #{total_bytes}")
       handle_output_chunk(output_chunk)
     end
     output.puts('### Docker build complete')
