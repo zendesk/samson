@@ -24,11 +24,11 @@ class Admin::SecretsController < ApplicationController
   def update
     attributes = {
       user_id: current_user.id,
-      value:  value
+      value:  value,
+      environment_permalink: environment_permalink,
+      project_permalink: project_permalink,
+      deploy_group_permalink: deploy_group_permalink
     }
-    attributes[:environment_permalink] = environment_permalink
-    attributes[:project_permalink] = project_permalink
-    attributes[:deploy_group_permalink] = deploy_group_permalink
     if SecretStorage.write(key, attributes)
       successful_response 'Secret created.'
     else
