@@ -230,6 +230,7 @@ module Kubernetes
       raise Samson::Hooks::UserError, errors.join("\n") if errors.any?
 
       release = Kubernetes::Release.create_release(
+        deploy_id: @job.deploy.id,
         deploy_groups: group_config,
         build_id: build.id,
         user: @job.user,

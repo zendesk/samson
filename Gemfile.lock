@@ -267,7 +267,7 @@ GEM
     multi_json (1.12.0)
     multi_xml (0.5.5)
     multipart-post (2.0.0)
-    mysql2 (0.4.3)
+    mysql2 (0.4.4)
     net-http-persistent (2.9.4)
     net-ldap (0.14.0)
     netrc (0.11.0)
@@ -320,8 +320,8 @@ GEM
     pyu-ruby-sasl (0.0.3.3)
     query_diet (0.6.0)
     rack (1.6.4)
-    rack-mini-profiler (0.9.8)
-      rack (>= 1.1.3)
+    rack-mini-profiler (0.9.9.2)
+      rack (>= 1.2.0)
     rack-test (0.6.3)
       rack (>= 1.0)
     rails (4.2.6)
@@ -493,7 +493,7 @@ DEPENDENCIES
   maxitest
   minitest-rails
   mocha
-  mysql2 (= 0.4.3)
+  mysql2
   net-http-persistent
   newrelic_rpm
   ngannotate-rails
@@ -557,5 +557,8 @@ DEPENDENCIES
   warden
   webmock
 
+RUBY VERSION
+   ruby 2.2.3p173
+
 BUNDLED WITH
-   1.11.2
+   1.12.3

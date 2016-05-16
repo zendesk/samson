@@ -68,15 +68,10 @@ end
 
 desc 'Run brakeman ... use brakewan -I to add new ignores'
 task :brakeman do
-  # use engine paths once available https://github.com/presidentbeef/brakeman/pull/857
-  apps = Dir['plugins/*/app/{controllers,models,views,helpers}'].map do |a|
-    link = a.sub(%r{plugins/(.*?)/app/(.*)}, "app/\\2/\\1") # avoid collisions by namespacing everything
-    [a, link]
-  end
   begin
-    apps.each { |a, l| FileUtils.cp_r(a, l) }
+    File.symlink('plugins', 'engines')
     sh "brakeman --exit-on-warn --table-width 500"
   ensure
-    apps.each { |_, l| FileUtils.rm_rf(l) }
+    File.unlink('engines')
   end
 end
