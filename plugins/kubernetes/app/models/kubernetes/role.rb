@@ -61,7 +61,7 @@ module Kubernetes
     end
 
     def label_name
-      name.parameterize('-')
+      name.parameterize
     end
 
     def ram_with_units
