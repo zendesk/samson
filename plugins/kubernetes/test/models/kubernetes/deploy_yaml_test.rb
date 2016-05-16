@@ -55,20 +55,6 @@ describe Kubernetes::DeployYaml do
         role: "app_server",
         deploy_group: "pod1",
       )
-
-      container = spec.fetch(:template).fetch(:spec).fetch(:containers).first
-      container.fetch(:image).must_equal(
-        'docker-registry.example.com/test@sha256:5f1d7c7381b2e45ca73216d7b06004fdb0908ed7bb8786b62f2cdfa5035fde2c'
-      )
-      container.fetch(:resources).must_equal(
-        limits:{
-          memory: "100Mi",
-          cpu: 1.0
-        }
-      )
-      container.fetch(:env).map(&:to_h).map { |x| x.fetch(:name) }.sort.must_equal(
-        [:REVISION, :TAG, :PROJECT, :ROLE, :DEPLOY_ID, :DEPLOY_GROUP, :POD_NAME, :POD_NAMESPACE, :POD_IP].sort
-      )
     end
 
     it "works without selector" do
@@ -103,8 +89,29 @@ describe Kubernetes::DeployYaml do
 
     describe "containers" do
       let(:result) { yaml.to_hash }
-      let(:env_values) do
-        result.fetch(:spec).fetch(:template).fetch(:spec).fetch(:containers).first.fetch(:env)
+      let(:container) { result.fetch(:spec).fetch(:template).fetch(:spec).fetch(:containers).first }
+
+      it "overrides image" do
+        container.fetch(:image).must_equal(
+          'docker-registry.example.com/test@sha256:5f1d7c7381b2e45ca73216d7b06004fdb0908ed7bb8786b62f2cdfa5035fde2c'
+        )
+      end
+
+      it "copies resource values" do
+        container.fetch(:resources).must_equal(
+          limits:{
+            memory: "100Mi",
+            cpu: 1.0
+          }
+        )
+      end
+
+      it "fills then environment with string values" do
+        env = container.fetch(:env)
+        env.map { |x| x.fetch(:name) }.sort.must_equal(
+          [:REVISION, :TAG, :PROJECT, :ROLE, :DEPLOY_ID, :DEPLOY_GROUP, :POD_NAME, :POD_NAMESPACE, :POD_IP].sort
+        )
+        env.map { |x| x[:value] }.map(&:class).map(&:name).sort.uniq.must_equal(["NilClass", "String"])
       end
 
       it "fails without containers" do
@@ -123,7 +130,7 @@ describe Kubernetes::DeployYaml do
 
       it "merges existing env settings" do
         yaml.send(:template).spec.template.spec.containers[0].env = [{name: 'Foo', value: 'Bar'}]
-        keys = env_values.map(&:to_h).map { |x| x.fetch(:name) }
+        keys = container.fetch(:env).map(&:to_h).map { |x| x.fetch(:name) }
         keys.must_include 'Foo'
         keys.size.must_be :>, 5
       end

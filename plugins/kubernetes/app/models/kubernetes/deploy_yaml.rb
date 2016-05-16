@@ -132,7 +132,7 @@ module Kubernetes
       # static data
       metadata = release_doc_metadata
       [:REVISION, :TAG, :PROJECT, :ROLE, :DEPLOY_ID, :DEPLOY_GROUP].each do |k|
-        env << {name: k, value: metadata.fetch(k.downcase)}
+        env << {name: k, value: metadata.fetch(k.downcase).to_s}
       end
 
       # dynamic lookups for unknown things during deploy
