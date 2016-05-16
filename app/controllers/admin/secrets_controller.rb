@@ -70,9 +70,9 @@ class Admin::SecretsController < ApplicationController
 
   def deploy_group_permalink
     if params[:id].present?
-        SecretStorage.parse_secret_key(params[:id], :deploy_group)
-      else
-        secret_params.fetch(:deploy_group_permalink)
+      SecretStorage.parse_secret_key(params[:id], :deploy_group)
+    else
+      secret_params.fetch(:deploy_group_permalink)
     end
   end
 
