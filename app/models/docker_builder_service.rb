@@ -50,7 +50,7 @@ class DockerBuilderService
   end
   add_method_tracer :build_image
 
-  def push_image(tag, tag_as_latest: false)
+  def push_image(tag, push_to_latest: false)
     build.docker_ref = tag.presence || build.label.try(:parameterize).presence || 'latest'
     build.docker_repo_digest = nil
     output.puts("### Tagging and pushing Docker image to #{project.docker_repo}:#{build.docker_ref}")
@@ -66,7 +66,7 @@ class DockerBuilderService
       end
     end
 
-    push_latest if tag_as_latest && build.docker_ref != 'latest'
+    push_latest if push_as_latest && build.docker_ref != 'latest'
 
     build.save!
     build
