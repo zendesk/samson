@@ -105,7 +105,7 @@ module Kubernetes
           role: role.name,
           role_id: role.id,
 
-          deploy_group: deploy_group.env_value,
+          deploy_group: deploy_group.env_value.parameterize,
           deploy_group_id: deploy_group.id,
 
           revision: build.git_sha,

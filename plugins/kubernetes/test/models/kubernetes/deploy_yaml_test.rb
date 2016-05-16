@@ -114,6 +114,11 @@ describe Kubernetes::DeployYaml do
         env.map { |x| x[:value] }.map(&:class).map(&:name).sort.uniq.must_equal(["NilClass", "String"])
       end
 
+      it "removes : in env values since they would not validate against kubernetes (([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])?" do
+        doc.deploy_group.update_column(:env_value, 'foo:bar')
+        container.fetch(:env).detect { |v| break v if v[:name] == :DEPLOY_GROUP }.fetch(:value).must_equal 'foo-bar'
+      end
+
       it "fails without containers" do
         assert doc.raw_template.sub!("      containers:\n      - {}", '')
         e = assert_raises Samson::Hooks::UserError do
