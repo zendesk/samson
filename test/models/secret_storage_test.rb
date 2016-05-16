@@ -1,7 +1,7 @@
 require_relative '../test_helper'
 require 'byebug'
 
-SingleCov.covered! uncovered: 4 # FIXME: cover these
+SingleCov.covered!
 
 describe SecretStorage do
   let(:secret) { create_secret 'production/foo/pod2/hello' }

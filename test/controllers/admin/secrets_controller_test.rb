@@ -105,7 +105,6 @@ describe Admin::SecretsController do
     end
 
     describe '#edit' do
-      #FIXME somehow fucked up because of warden shit
       it 'renders for local secret as project-admin' do
         get :edit, id: secret
         assert_template :edit
