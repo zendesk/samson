@@ -27,9 +27,9 @@ class Admin::SecretsController < ApplicationController
       user_id: current_user.id,
       value:  value
     }
-    attributes[:environment_permalink] = environment_permalink if environment_permalink
-    attributes[:project_permalink] = project_permalink if project_permalink
-    attributes[:deploy_group_permalink] = deploy_group_permalink if deploy_group_permalink
+    attributes[:environment_permalink] = environment_permalink
+    attributes[:project_permalink] = project_permalink
+    attributes[:deploy_group_permalink] = deploy_group_permalink
     if SecretStorage.write(key, attributes)
       successful_response 'Secret created.'
     else
@@ -70,11 +70,19 @@ class Admin::SecretsController < ApplicationController
   end
 
   def deploy_group_permalink
-    params[:id].present? ? SecretStorage.parse_secret_key(params[:id], :deploy_group) : secret_params.fetch(:deploy_group_permalink)
+    if params[:id].present?
+        SecretStorage.parse_secret_key(params[:id], :deploy_group)
+      else
+        secret_params.fetch(:deploy_group_permalink)
+    end
   end
 
   def environment_permalink
-    params[:id].present? ? SecretStorage.parse_secret_key(params[:id], :environment) : secret_params.fetch(:environment_permalink, false)
+    if params[:id].present?
+      SecretStorage.parse_secret_key(params[:id], :environment)
+    else
+      secret_params.fetch(:environment_permalink, false)
+    end
   end
 
   def successful_response(notice)
