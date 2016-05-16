@@ -13,3 +13,12 @@ if !Rails.env.test? && !ENV['PRECOMPILE'] && ENV['DOCKER_FEATURE']
   Docker.options = { read_timeout: 600, connect_timeout: 2 }
   Docker.validate_version! # Confirm the Docker daemon is a recent enough version
 end
+
+class Docker::Image
+  def self.response_block(body)
+    lambda do |chunk, remaining, total|
+      body << chunk
+      yield(chunk, remaining, total) if block_given?
+    end
+  end
+end
