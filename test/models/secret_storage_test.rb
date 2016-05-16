@@ -120,7 +120,7 @@ describe SecretStorage do
     let(:response_headers) { {'Content-Type': 'application/json'} }
     describe ".client" do
       it 'creates a valid client' do
-        assert_instance_of(VaultStub::Client, SecretStorage::HashicorpVault.vault_client)
+        assert_instance_of(VaultClient, SecretStorage::HashicorpVault.vault_client)
       end
     end
 

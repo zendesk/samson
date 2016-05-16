@@ -59,11 +59,7 @@ module SecretStorage
 
     # get and cache a copy of the client that has a token
     def self.vault_client
-      if Rails.env.test?
-        @vault_client ||= VaultStub::Client.new
-      else
-        @vault_client ||= VaultClient.new
-      end
+      @vault_client ||= VaultClient.new
     end
 
     def self.read(key)
@@ -133,11 +129,6 @@ module SecretStorage
     allowed = user.administrated_projects.pluck(:permalink)
     allowed.unshift 'global' if user.admin?
     allowed
-  end
-
-  def self.permalink_id(link_type, link)
-    return DeployGroup.find_by_permalink(link).id if link_type == :deploy_group
-    return Environment.find_by_permalink(link).id if link_type == :environment
   end
 
   SECRET_KEY_REGEX = %r{[\w\/-]+}

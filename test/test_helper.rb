@@ -26,19 +26,15 @@ require 'mocha/setup'
 require 'sucker_punch/testing/inline'
 
 # Mock up vault client
-module VaultStub
-
-  class Client
-    def logical
-      @logical ||= Logical.new
-    end
-
-    def self.vault_response_object(data)
-      Response.new(data)
-    end
+class VaultClient
+  def logical
+    @logical ||= Logical.new
   end
 
-  # response form of vault response object
+  def self.vault_response_object(data)
+    Response.new(data)
+  end
+
   class Response
     attr_accessor :lease_id, :lease_duration, :renewable, :data, :auth
     def initialize(data)
