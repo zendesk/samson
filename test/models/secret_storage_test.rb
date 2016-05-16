@@ -1,6 +1,7 @@
 require_relative '../test_helper'
+require 'byebug'
 
-SingleCov.covered! uncovered: 4
+SingleCov.covered! uncovered: 4 # FIXME: cover these
 
 describe SecretStorage do
   let(:secret) { create_secret 'production/foo/pod2/hello' }
@@ -117,27 +118,48 @@ describe SecretStorage do
   end
 
   describe SecretStorage::HashicorpVault do
-    # note, we need to call the storage engine here directly
-    # as the model has already loaded it's config
-    # from ENV
-    before do
-      ENV["SECRET_STORAGE_BACKEND"] = "SecretStorage::HashicorpVault"
+    let(:response_headers) { {'Content-Type': 'application/json'} }
+    describe ".client" do
+      it 'creates a valid client' do
+        assert_instance_of(VaultStub::Client, SecretStorage::HashicorpVault.vault_client)
+      end
     end
+
     describe ".read" do
       before do
-        data = {data: { vault:"bar"}}.to_json
-        stub_request(:get, "https://127.0.0.1:8200/v1/secret%2Fproduction%2Ffoo%2Fdeploy_group%2Fisbar").
-          to_return(status: 200, body: data, headers: {'Content-Type': 'application/json'})
         fail_data = {data: { vault:nil}}.to_json
         # client gets a 200 and nil body when key is missing
         stub_request(:get, "https://127.0.0.1:8200/v1/secret%2Fnotgoingtobethere").
           to_return(status: 200, body: fail_data, headers: {'Content-Type': 'application/json'})
         # this is the auth request, just needs to return 200 for our purposes
         stub_request(:post, "https://127.0.0.1:8200/v1/auth/cert/login")
+
+        # using the stubbed client
+        stub_request(:get, "https://127.0.0.1:8200/v1/secret/production/foo/pod2/isbar").
+          to_return(status: 200, headers: {'Content-Type': 'application/json'})
+
+        fail_data = {data: { vault:nil}}.to_json
+        stub_request(:get, "https://127.0.0.1:8200/v1/secret/notgoingtobethere").
+          to_return(status: 200, headers: {'Content-Type': 'application/json'})
+
+        not_branch = ['is_now_a_leaf']
+        empty_body = []
+        stub_request(:get, "https://127.0.0.1:8200/v1/secret/this/is/still/a/branch/?list=true").
+          to_return(status: 200, body: not_branch, headers: response_headers)
+        stub_request(:get, "https://127.0.0.1:8200/v1/secret/this/is/still/a/branch/is_now_a_leaf?list=true").
+          to_return(status: 200, body: empty_body, headers: response_headers)
+
+
       end
 
       it "gets a value based on a key with /s" do
-        SecretStorage::HashicorpVault.read('production/foo/deploy_group/isbar').must_equal({:lease_id=>nil, :lease_duration=>nil, :renewable=>nil, :auth=>nil, :value=>"bar"})
+        SecretStorage::HashicorpVault.read('production/foo/pod2/isbar').must_equal({
+          :lease_id=>nil,
+          :lease_duration=>nil,
+          :renewable=>nil,
+          :auth=>nil,
+          :value=>"bar"
+        })
       end
 
       it "fails to read a key" do
@@ -151,11 +173,16 @@ describe SecretStorage do
           SecretStorage::HashicorpVault.convert_path('foopy%2Fthecat', :notvalid)
         end
       end
+
+      it "recusivly translates keys" do
+        tree = ['this/is/still/a/branch/']
+        assert SecretStorage::HashicorpVault.keys_recursive(tree)
+      end
     end
 
     describe ".delete" do
       before do
-        stub_request(:delete, "https://127.0.0.1:8200/v1/secret%2Fproduction%2Ffoo%2Fgroup%2Fisbar")
+        stub_request(:delete, "http://127.0.0.1:8200/v1/secret/production/foo/group/isbar")
       end
 
       it "deletes key with /s" do
@@ -165,7 +192,7 @@ describe SecretStorage do
 
     describe ".write" do
       before do
-        stub_request(:put, "https://127.0.0.1:8200/v1/secret%2Fenv%2F%2Fbar%2Fisbar").
+        stub_request(:put, "https://127.0.0.1:8200/v1/secret/env//bar/isbar").
           with(:body => "{\"vault\":\"whatever\"}")
       end
 
@@ -176,13 +203,16 @@ describe SecretStorage do
 
     describe ".keys" do
       before do
-        data = {"data": { "keys": ["production/project/group/this%2Fkey", "production/project/group/that%2Fkey"] } }.to_json
-        stub_request(:get, "https://127.0.0.1:8200/v1/secret%2F?list=true").
-          to_return(status: 200, body: data, headers: {'Content-Type': 'application/json'})
+        all_keys = ["production/project/group/this/key", "production/project/group/that/key"]
+        stub_request(:get, "https://127.0.0.1:8200/v1/secret/?list=true").
+          to_return(status: 200, body: all_keys, headers: response_headers)
       end
 
       it "lists all keys with recursion" do
-        SecretStorage::HashicorpVault.keys().must_equal(["production/project/group/this/key", "production/project/group/that/key"])
+        SecretStorage::HashicorpVault.keys().must_equal([
+          "production/project/group/this/key",
+          "production/project/group/that/key"
+        ])
       end
     end
   end

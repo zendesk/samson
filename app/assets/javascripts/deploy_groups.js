@@ -1,3 +1,4 @@
+// FIXME: move this into the page since it's only used once
 // when user changes the deploy group, fill in the projects from data stored on the page
 // these are being stored in the DOM to avoid having to make an ajax query etc
 

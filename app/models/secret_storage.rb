@@ -41,7 +41,7 @@ module SecretStorage
       secret.value = data.fetch(:value)
       # we can also get all this data from the key
       secret.deploy_group_id = SecretStorage.permalink_id(:deploy_group, data[:deploy_group_permalink].presence || SecretStorage.parse_secret_key(key, :deploy_group))
-      secret.environment_id = SecretStorage.permalink_id(:environment, data[:environment_permalink].presence || SecretStorage::parse_secret_key(key, :environment))
+      secret.environment_id = SecretStorage.permalink_id(:environment, data[:environment_permalink].presence || SecretStorage.parse_secret_key(key, :environment))
       secret.save
     end
 
@@ -63,7 +63,11 @@ module SecretStorage
 
     # get and cache a copy of the client that has a token
     def self.vault_client
-      @vault_client ||= VaultClient.new
+      if Rails.env.test?
+        @vault_client ||= VaultStub::Client.new
+      else
+        @vault_client ||= VaultClient.new
+      end
     end
 
     def self.read(key)
@@ -75,8 +79,10 @@ module SecretStorage
       result
     end
 
+    # FIXME need to make the interface the same for wirtes and deletes.  just get the entire key,
+    # and parse it
     def self.write(key, data)
-      key = key.split('/', 4).last
+      key = SecretStorage.parse_secret_key(key, :key)
       vault_client.logical.write(vault_path(key, data[:environment_permalink], data[:deploy_group_permalink], data[:project_permalink]), vault: data[:value])
     end
 
@@ -95,7 +101,7 @@ module SecretStorage
     def self.keys_recursive(keys)
       until all_leaf_nodes?(keys)
         keys.each do |key|
-          vault_client.logical.list(VAULT_SECRET_BACKEND + key).map.with_index do |new_key, pos|
+          vault_client.logical.list(VAULT_SECRET_BACKEND + key).each do |new_key|
             keys << key + new_key
           end
           # nuke the key if it's a dir and we have processed it.
