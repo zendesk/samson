@@ -1,6 +1,5 @@
 class Admin::SecretsController < ApplicationController
   include CurrentProject
-  require 'byebug'
 
   before_action :find_project_permalinks, :find_environments_permalinks, :find_deploy_group_permalinks
   before_action :find_secret, only: [:update, :edit, :destroy]
