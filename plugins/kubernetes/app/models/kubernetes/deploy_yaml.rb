@@ -60,6 +60,7 @@ module Kubernetes
     # Sets the labels for the Deployment resource metadata
     # only supports strings or we run into `json: expect char '"' but got char '2'`
     def set_deployment_metadata
+      template.metadata.labels ||= {}
       deployment_labels.each do |key, value|
         template.metadata.labels[key] = value.to_s
       end

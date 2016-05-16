@@ -79,6 +79,12 @@ describe Kubernetes::DeployYaml do
       e.message.must_include 'selector'
     end
 
+    it "works without labels" do
+      yaml.send(:template).metadata.labels = nil
+      result = yaml.to_hash
+      result.fetch(:metadata).fetch(:labels).keys.sort.must_equal([:deploy_id, :project, :project_id, :role, :deploy_group, :revision, :tag].sort)
+    end
+
     describe "deployment" do
       it "fails when deployment section is missing" do
         assert doc.raw_template.sub!('Deployment', 'Foobar')
