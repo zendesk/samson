@@ -55,28 +55,18 @@ describe Kubernetes::DeployYaml do
         role: "app_server",
         deploy_group: "pod1",
       )
-
-      container = spec.fetch(:template).fetch(:spec).fetch(:containers).first
-      container.fetch(:image).must_equal(
-        'docker-registry.example.com/test@sha256:5f1d7c7381b2e45ca73216d7b06004fdb0908ed7bb8786b62f2cdfa5035fde2c'
-      )
-      container.fetch(:resources).must_equal(
-        limits:{
-          memory: "100Mi",
-          cpu: 1.0
-        }
-      )
-      container.fetch(:env).map(&:to_h).map { |x| x.fetch(:name) }.sort.must_equal(
-        [:REVISION, :TAG, :PROJECT, :ROLE, :DEPLOY_ID, :DEPLOY_GROUP, :POD_NAME, :POD_NAMESPACE, :POD_IP].sort
-      )
     end
 
-    it "fails without selector" do
+    it "works without selector" do
       assert doc.raw_template.sub!('selector:', 'no_selector:')
-      e = assert_raises Samson::Hooks::UserError do
-        yaml.to_hash
-      end
-      e.message.must_include 'selector'
+      result = yaml.to_hash
+      result.fetch(:spec).fetch(:selector).fetch(:matchLabels).keys.sort.must_equal([:deploy_group, :deploy_id, :project, :project_id, :revision, :role, :tag].sort)
+    end
+
+    it "works without labels" do
+      yaml.send(:template).metadata.labels = nil
+      result = yaml.to_hash
+      result.fetch(:metadata).fetch(:labels).keys.sort.must_equal([:deploy_id, :project, :project_id, :role, :deploy_group, :revision, :tag].sort)
     end
 
     describe "deployment" do
@@ -99,8 +89,34 @@ describe Kubernetes::DeployYaml do
 
     describe "containers" do
       let(:result) { yaml.to_hash }
-      let(:env_values) do
-        result.fetch(:spec).fetch(:template).fetch(:spec).fetch(:containers).first.fetch(:env)
+      let(:container) { result.fetch(:spec).fetch(:template).fetch(:spec).fetch(:containers).first }
+
+      it "overrides image" do
+        container.fetch(:image).must_equal(
+          'docker-registry.example.com/test@sha256:5f1d7c7381b2e45ca73216d7b06004fdb0908ed7bb8786b62f2cdfa5035fde2c'
+        )
+      end
+
+      it "copies resource values" do
+        container.fetch(:resources).must_equal(
+          limits:{
+            memory: "100Mi",
+            cpu: 1.0
+          }
+        )
+      end
+
+      it "fills then environment with string values" do
+        env = container.fetch(:env)
+        env.map { |x| x.fetch(:name) }.sort.must_equal(
+          [:REVISION, :TAG, :PROJECT, :ROLE, :DEPLOY_ID, :DEPLOY_GROUP, :POD_NAME, :POD_NAMESPACE, :POD_IP].sort
+        )
+        env.map { |x| x[:value] }.map(&:class).map(&:name).sort.uniq.must_equal(["NilClass", "String"])
+      end
+
+      it "removes : in env values since they would not validate against kubernetes (([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])?" do
+        doc.deploy_group.update_column(:env_value, 'foo:bar')
+        container.fetch(:env).detect { |v| break v if v[:name] == :DEPLOY_GROUP }.fetch(:value).must_equal 'foo-bar'
       end
 
       it "fails without containers" do
@@ -119,7 +135,7 @@ describe Kubernetes::DeployYaml do
 
       it "merges existing env settings" do
         yaml.send(:template).spec.template.spec.containers[0].env = [{name: 'Foo', value: 'Bar'}]
-        keys = env_values.map(&:to_h).map { |x| x.fetch(:name) }
+        keys = container.fetch(:env).map(&:to_h).map { |x| x.fetch(:name) }
         keys.must_include 'Foo'
         keys.size.must_be :>, 5
       end

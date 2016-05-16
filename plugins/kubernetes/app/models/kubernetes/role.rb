@@ -24,13 +24,18 @@ module Kubernetes
     # create initial roles for a project by reading kubernetes/*{.yml,.yaml,json} files into roles
     def self.seed!(project, git_ref)
       kubernetes_config_files_in_repo(project, git_ref).each do |config_file|
+        scope = where(project: project)
+        next if scope.where(config_file: config_file.file_path).exists?
+
         service_name = config_file.service && config_file.service.metadata.name
-        service_name << "-#{rand(9999999)}" if where(service_name: service_name).exists?
+        service_name << "-#{rand(9999999)}" if service_name && scope.where(service_name: service_name).exists?
+
+        name = config_file.deployment.metadata.labels.try(:role) || File.basename(config_file.file_path).sub(/\..*/, '')
 
         create!(
           project: project,
           config_file: config_file.file_path,
-          name: config_file.deployment.metadata.labels.role,
+          name: name,
           service_name: service_name,
           ram: config_file.deployment.ram_mi, # TODO: remove this column
           cpu: config_file.deployment.cpu_m, # TODO: remove this column
@@ -56,7 +61,7 @@ module Kubernetes
     end
 
     def label_name
-      name.parameterize('-')
+      name.parameterize
     end
 
     def ram_with_units

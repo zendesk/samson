@@ -22,7 +22,7 @@ class DockerBuilderService
       repository.executor = execution.executor
 
       if build_image(tmp_dir)
-        push_image(image_name, push_to_latest: tag_as_latest) if push
+        push_image(image_name, tag_as_latest: tag_as_latest) if push
         build.docker_image.remove(force: true)
       end
     end
