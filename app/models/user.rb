@@ -31,7 +31,7 @@ class User < ActiveRecord::Base
       where(
         '(user_project_roles.project_id = ? AND user_project_roles.role_id >= ?) OR users.role_id >= ?',
         project_id, role_id, role_id
-      )
+      ).distinct
   }
 
   def starred_project?(project)
