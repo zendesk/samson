@@ -85,14 +85,6 @@ class Admin::SecretsController < ApplicationController
     @secret = SecretStorage.read(key)
   end
 
-  def generate_deploy_group_list
-    @deployment_group_list = []
-    DeployGroup.all.map do |group|
-      @deployment_group_list << { "#{group.environment.permalink}": group.permalink }
-    end
-    @deployment_group_list
-  end
-
   def find_project_permalinks
     @project_permalinks = SecretStorage.allowed_project_prefixes(current_user)
   end
