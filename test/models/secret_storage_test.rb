@@ -65,6 +65,17 @@ describe SecretStorage do
     end
   end
 
+  describe ". generate_secret_key" do
+    it "generates a private key" do
+      SecretStorage.generate_secret_key('production', 'foo', 'bar', 'snafu').must_equal("production/foo/bar/snafu")
+    end
+
+    it "fails raises when missing params" do
+		assert_raises ArgumentError do
+      SecretStorage.generate_secret_key('foo', 'bar', 'snafu')
+		end
+  end
+
   describe ".read" do
     it "reads" do
       data = SecretStorage.read(secret.id, include_secret: true)

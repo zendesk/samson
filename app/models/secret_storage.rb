@@ -71,7 +71,6 @@ module SecretStorage
       result
     end
 
-    # FIXME need to make the interface the same for wirtes and deletes.  just get the entire key,
     # and parse it
     def self.write(key, data)
       key = SecretStorage.parse_secret_key(key, :key)
@@ -109,7 +108,7 @@ module SecretStorage
 
     # path for these should be /env/project/deploygroup/key
     def self.vault_path(key, environment, deploy_group, project)
-      VAULT_SECRET_BACKEND + environment.to_s + "/" + project.to_s + "/" + deploy_group.to_s + "/" + convert_path(key, :encode)
+      VAULT_SECRET_BACKEND + SecretStorage.generate_secret_key(environment, project, deploy_group, convert_path(key, :encode))
     end
 
     def self.convert_path(string, direction)
@@ -153,7 +152,15 @@ module SecretStorage
       BACKEND
     end
 
+    def generate_secret_key(environment=nil, project=nil, deploy_group=nil, key=nil)
+      if environment.nil? || project.nil? || deploy_group.nil? || key.nil?
+        raise ArgumentError.new("missing paramater")
+      end
+      environment.to_s + "/" + project.to_s + "/" + deploy_group.to_s + "/" + key.to_s
+    end
+
     def parse_secret_key(key, field)
+      return false if key.nil?
       index = SecretStorage::SECRET_KEYS.index(field)
       value = key.split('/', SecretStorage::SECRET_KEYS.count)[index]
       value.nil? ? false : value
