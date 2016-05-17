@@ -68,7 +68,7 @@ module Kubernetes
 
     def deployment_labels
       # Deployment labels should not include the ids of the release, role or deploy groups
-      release_doc_metadata.except(:release_id, :role_id, :deploy_group_id)
+      release_doc_metadata.except(:release_id, :role_id, :deploy_group_id, :revision, :tag)
     end
 
     # Sets the metadata that is going to be used as the selector. Kubernetes will use this metadata to select the
