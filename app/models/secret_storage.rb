@@ -58,7 +58,13 @@ module SecretStorage
     ENCODINGS = {"/": "%2F"}
 
     def self.read(key)
-      result = vault_client.logical.read(VAULT_SECRET_BACKEND + key)
+      safe_key = vault_path(
+        SecretStorage.parse_secret_key_part(key, :environment),
+        SecretStorage.parse_secret_key_part(key, :project),
+        SecretStorage.parse_secret_key_part(key, :deploy_group),
+        SecretStorage.parse_secret_key_part(key, :key),
+      )
+      result = vault_client.logical.read(safe_key)
       raise(ActiveRecord::RecordNotFound) if result.data[:vault].nil?
       result = result.to_h
       result = result.merge(result.delete(:data))
@@ -69,11 +75,17 @@ module SecretStorage
     # and parse it
     def self.write(key, data)
       key = SecretStorage.parse_secret_key_part(key, :key)
-      vault_client.logical.write(vault_path(key, data[:environment_permalink], data[:project_permalink], data[:deploy_group_permalink]), vault: data[:value])
+      vault_client.logical.write(
+        vault_path(
+          data[:environment_permalink],
+          data[:project_permalink],
+          data[:deploy_group_permalink],
+          key),
+        vault: data[:value])
     end
 
     def self.delete(key)
-      vault_client.logical.delete(VAULT_SECRET_BACKEND + key)
+      vault_client.logical.delete(VAULT_SECRET_BACKEND + make_key_safe(key))
     end
 
     def self.keys()
@@ -89,25 +101,19 @@ module SecretStorage
       @vault_client ||= VaultClient.new
     end
 
-    def self.keys_recursive(keys)
-      until all_leaf_nodes?(keys)
-        keys.each do |key|
-          vault_client.logical.list(VAULT_SECRET_BACKEND + key).map.with_index do |new_key, pos|
-            keys << key + new_key
-          end
-          # nuke the key if it's a dir and we have processed it.
-          keys.delete(key) if key[-1] == '/'
+    def self.keys_recursive(keys, key_path="")
+      keys.flat_map do |key|
+        new_key = key_path + key
+        if key.end_with?('/') # a directory
+          keys_recursive(vault_client.logical.list(VAULT_SECRET_BACKEND + new_key ), new_key)
+        else
+          new_key
         end
       end
-      keys
-    end
-
-    def self.all_leaf_nodes?(tree)
-      tree.all? { |node| node.to_s[-1] != '/' }
     end
 
     # path for these should be /env/project/deploygroup/key
-    def self.vault_path(key, environment, deploy_group, project)
+    def self.vault_path(environment, project, deploy_group, key)
       VAULT_SECRET_BACKEND + SecretStorage.generate_secret_key(environment, project, deploy_group, convert_path(key, :encode))
     end
 

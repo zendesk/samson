@@ -59,7 +59,7 @@ class VaultClient
     def read(key)
       response_data = {
         "secret/production/foo/pod2/isbar": { vault: "bar"},
-        "secret/notgoingtobethere": {vault: nil}
+        "secret/this/key/isnot/there": {vault: nil}
       }
 
       uri = URI("https://127.0.0.1:8200/v1/#{key}")

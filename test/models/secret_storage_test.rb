@@ -159,7 +159,7 @@ describe SecretStorage do
       before do
         fail_data = {data: { vault:nil}}.to_json
         # client gets a 200 and nil body when key is missing
-        stub_request(:get, "https://127.0.0.1:8200/v1/secret%2Fnotgoingtobethere").
+        stub_request(:get, "https://127.0.0.1:8200/v1/secret/this/key/isnot/there").
           to_return(status: 200, body: fail_data, headers: {'Content-Type': 'application/json'})
         # this is the auth request, just needs to return 200 for our purposes
         stub_request(:post, "https://127.0.0.1:8200/v1/auth/cert/login")
@@ -188,7 +188,7 @@ describe SecretStorage do
 
       it "fails to read a key" do
         assert_raises ActiveRecord::RecordNotFound do
-          SecretStorage::HashicorpVault.read('notgoingtobethere')
+          SecretStorage::HashicorpVault.read('this/key/isnot/there')
         end
       end
 
@@ -216,12 +216,12 @@ describe SecretStorage do
 
     describe ".write" do
       before do
-        stub_request(:put, "https://127.0.0.1:8200/v1/secret/env/bar/foo/isbar").
+        stub_request(:put, "https://127.0.0.1:8200/v1/secret/env/foo/bar/isbar%2Ffoo").
           with(:body => "{\"vault\":\"whatever\"}")
       end
 
       it "wirtes a key with /s" do
-        assert SecretStorage::HashicorpVault.write('production/foo/group/isbar', {environment_permalink: 'env', project_permalink: 'foo', deploy_group_permalink: 'bar', key_permalink: 'isbar', value: 'whatever'})
+        assert SecretStorage::HashicorpVault.write('production/foo/group/isbar/foo', {environment_permalink: 'env', project_permalink: 'foo', deploy_group_permalink: 'bar', key_permalink: 'isbar', value: 'whatever'})
       end
     end
 
