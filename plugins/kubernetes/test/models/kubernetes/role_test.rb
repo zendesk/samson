@@ -7,7 +7,8 @@ describe Kubernetes::Role do
 
   def write_config(file, content)
     Dir.chdir(repo_temp_dir) do
-      Dir.mkdir(File.dirname(file)) if file.include?("/")
+      dir = File.dirname(file)
+      Dir.mkdir(dir) if file.include?("/") && !File.exist?(dir)
       File.write(file, content)
     end
     commit
@@ -104,17 +105,46 @@ describe Kubernetes::Role do
       Kubernetes::Role.delete_all
     end
 
-    it 'creates a role' do
-      write_config 'kubernetes/a.yml', config_content_yml
-      Kubernetes::Role.seed! project, 'HEAD'
-      project.kubernetes_roles.map(&:config_file).must_equal ["kubernetes/a.yml"]
+    describe "with a correct role config" do
+      before { write_config 'kubernetes/a.yml', config_content_yml }
+
+      it 'creates a role' do
+        Kubernetes::Role.seed! project, 'HEAD'
+        project.kubernetes_roles.map(&:config_file).must_equal ["kubernetes/a.yml"]
+      end
+
+      it 'does not create duplicate roles' do
+        Kubernetes::Role.seed! project, 'HEAD'
+        Kubernetes::Role.seed! project, 'HEAD'
+        project.kubernetes_roles.map(&:config_file).must_equal ["kubernetes/a.yml"]
+      end
     end
 
-    it 'creates a role without a service' do
-      config_content.pop
-      write_config 'kubernetes/a.json', config_content.to_json
-      Kubernetes::Role.seed! project, 'HEAD'
-      project.kubernetes_roles.map(&:service_name).must_equal [nil]
+    describe "without a service" do
+      before do
+        config_content.pop
+        write_config 'kubernetes/a.json', config_content.to_json
+      end
+
+      it 'creates a role' do
+        Kubernetes::Role.seed! project, 'HEAD'
+        project.kubernetes_roles.map(&:service_name).must_equal [nil]
+      end
+
+      it 'creates a role when another role without service already exists' do
+        Kubernetes::Role.create!(
+          project: project,
+          config_file: 'sdfsdf.yml',
+          name: 'sdfsdf',
+          service_name: nil,
+          ram: 1,
+          cpu: 1,
+          replicas: 1,
+          deploy_strategy: 'RollingUpdate'
+        )
+        Kubernetes::Role.seed! project, 'HEAD'
+        project.kubernetes_roles.map(&:service_name).must_equal [nil, nil]
+      end
     end
 
     it "reads other file types" do
@@ -137,11 +167,18 @@ describe Kubernetes::Role do
 
     it "can seed duplicate service names" do
       write_config 'kubernetes/a.yml', config_content_yml
+      write_config 'kubernetes/b.yml', config_content_yml
       Kubernetes::Role.seed! project, 'HEAD'
-      Kubernetes::Role.seed! project, 'HEAD' # normally not possible, but triggers the dupliate service
       names = project.kubernetes_roles.map(&:service_name).sort
       names.first.must_equal "SERVICE-NAME"
-      names.last.must_match /SERVICE-NAME-\d+/
+      names.last.must_match /SERVICE-NAME-CHANGE-ME-\d+/
+    end
+
+    it "can seed without role label" do
+      assert config_content.first.fetch('metadata').delete('labels')
+      write_config 'kubernetes/a.json', config_content.to_json
+      Kubernetes::Role.seed! project, 'HEAD'
+      project.kubernetes_roles.map(&:config_file).must_equal ["kubernetes/a.json"]
     end
   end
 

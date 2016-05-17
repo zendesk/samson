@@ -1,6 +1,6 @@
 require_relative "../../test_helper"
 
-SingleCov.covered! uncovered: 29
+SingleCov.covered! uncovered: 18
 
 describe Kubernetes::ReleaseDoc do
   let(:doc) { kubernetes_release_docs(:test_release_pod_1) }
@@ -17,10 +17,42 @@ describe Kubernetes::ReleaseDoc do
       doc.ensure_service.must_equal "Service already running"
     end
 
-    it "creates the service when it does not exist" do
-      doc.stubs(service: stub(running?: false))
-      doc.expects(:client).returns(stub(create_service: nil))
-      doc.ensure_service.must_equal "creating Service"
+    describe "when service does not exist" do
+      before do
+        doc.stubs(service: stub(running?: false))
+        doc.raw_template << "\n" << {'kind' => 'Service', 'metadata' => {}, 'spec' => {}}.to_yaml
+        doc.kubernetes_role.update_column(:service_name, "app-server")
+      end
+
+      it "creates the service when it does not exist" do
+        doc.expects(:client).returns(stub(create_service: nil))
+        doc.ensure_service.must_equal "creating Service"
+      end
+
+      it "fails when trying to deploy a generated service" do
+        doc.kubernetes_role.update_column(:service_name, "app-server#{Kubernetes::Role::GENERATED}1211212")
+        e = assert_raises Samson::Hooks::UserError do
+          doc.ensure_service
+        end
+        e.message.must_equal "Service name for role app_server was generated and needs to be changed before deploying."
+      end
+
+      it "fails when service is required by the role, but not defined" do
+        assert doc.raw_template.sub!('Service', 'Nope')
+        e = assert_raises Samson::Hooks::UserError do
+          doc.ensure_service
+        end
+        e.message.must_equal "Template kubernetes/app_server.yml has 0 services, having 1 section is valid."
+      end
+
+      it "fails when multiple services are defined and we would only ensure the first one" do
+        doc.raw_template << "\n" << {'kind' => 'Service'}.to_yaml
+
+        e = assert_raises Samson::Hooks::UserError do
+          doc.ensure_service
+        end
+        e.message.must_equal "Template kubernetes/app_server.yml has 2 services, having 1 section is valid."
+      end
     end
   end
 

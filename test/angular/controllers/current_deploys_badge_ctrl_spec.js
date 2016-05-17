@@ -4,46 +4,38 @@ describe('currentDeployBadgeCtrl', function() {
   var $rootScope,
     $scope = {},
     $controller,
-    $httpBackend,
     SseFactory,
     createController,
     fakeBadgeElement;
 
-  beforeEach(inject(function(_$controller_, _$httpBackend_, _$rootScope_, _SseFactory_) {
+  beforeEach(inject(function(_$controller_, _$rootScope_, _SseFactory_) {
     $rootScope = _$rootScope_;
     $scope = $rootScope.$new();
-    $httpBackend = _$httpBackend_;
     SseFactory = _SseFactory_;
     fakeBadgeElement = {
       show: jasmine.createSpy('show'),
-      hide: jasmine.createSpy('hide')
+      hide: jasmine.createSpy('hide'),
+      data: function(){ return '0' }
     };
     spyOn(window, '$').and.returnValue(fakeBadgeElement);
     createController = function() {
       $controller = _$controller_('currentDeployBadgeCtrl', { $scope: $scope });
       $rootScope.$apply();
-      $httpBackend.flush();
     };
   }));
 
-  afterEach(function() {
-    $httpBackend.verifyNoOutstandingExpectation();
-    $httpBackend.verifyNoOutstandingRequest();
-  });
-
   describe('init', function() {
-    it('gets current active deploys', function() {
-      $httpBackend.expectGET('/deploys/active_count.json').respond('{"deploy_count":2}');
-      createController();
-      expect($scope.currentActiveDeploys).toEqual(2);
-      expect(fakeBadgeElement.show).toHaveBeenCalled();
-    });
-
     it('hides badge if there are no deploys', function() {
-      $httpBackend.expectGET('/deploys/active_count.json').respond('{"deploy_count":0}');
       createController();
       expect($scope.currentActiveDeploys).toEqual(0);
       expect(fakeBadgeElement.hide).toHaveBeenCalled();
+    });
+
+    it('show badge if there are deploys', function() {
+      fakeBadgeElement.data = function(){ return '1' }
+      createController();
+      expect($scope.currentActiveDeploys).toEqual(1);
+      expect(fakeBadgeElement.show).toHaveBeenCalled();
     });
   });
 });

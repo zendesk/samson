@@ -20,24 +20,8 @@ module Kubernetes
       update_attribute(:status, :failed)
     end
 
-    def has_service?
-      kubernetes_role.has_service? && service_template.present?
-    end
-
-    def service_hash
-      @service_hash || (build_service_hash if has_service?)
-    end
-
-    def service
-      kubernetes_role.service_for(deploy_group) if has_service?
-    end
-
     def build
       kubernetes_release.try(:build)
-    end
-
-    def nested_error_messages
-      errors.full_messages
     end
 
     def update_release
@@ -87,7 +71,11 @@ module Kubernetes
       elsif service.running?
         'Service already running'
       else
-        client.create_service(Kubeclient::Service.new(service_hash))
+        data = service_hash
+        if data.fetch(:metadata).fetch(:name).include?(Kubernetes::Role::GENERATED)
+          raise Samson::Hooks::UserError, "Service name for role #{kubernetes_role.name} was generated and needs to be changed before deploying."
+        end
+        client.create_service(Kubeclient::Service.new(data))
         'creating Service'
       end
     end
@@ -117,28 +105,34 @@ module Kubernetes
       false
     end
 
-    def service_template
-      # It's possible for the file to contain more than one definition,
-      # like a ReplicationController and a Service.
-      # TODO: validate there are not multiple services
-      @service_template ||= begin
-        hash = Array.wrap(parsed_config_file).detect { |doc| doc['kind'] == 'Service' }
-        (hash || {}).freeze
+    def service
+      if kubernetes_role.service_name.present?
+        Kubernetes::Service.new(role: kubernetes_role, deploy_group: deploy_group)
       end
     end
 
-    def build_service_hash
-      @service_hash = service_template.dup.with_indifferent_access
+    def service_hash
+      @service_hash || begin
+        hash = service_template
 
-      @service_hash[:metadata][:name] = kubernetes_role.service_name
-      @service_hash[:metadata][:namespace] = namespace
-      @service_hash[:metadata][:labels] ||= labels.except(:release_id)
+        hash.fetch(:metadata)[:name] = kubernetes_role.service_name
+        hash.fetch(:metadata)[:namespace] = namespace
 
-      # For now, create a NodePort for each service, so we can expose any
-      # apps running in the Kubernetes cluster to traffic outside the cluster.
-      @service_hash[:spec][:type] = 'NodePort'
+        # For now, create a NodePort for each service, so we can expose any
+        # apps running in the Kubernetes cluster to traffic outside the cluster.
+        hash.fetch(:spec)[:type] = 'NodePort'
 
-      @service_hash
+        hash
+      end
+    end
+
+    # Config has multiple entries like a ReplicationController and a Service
+    def service_template
+      services = Array.wrap(parsed_config_file).select { |doc| doc['kind'] == 'Service' }
+      unless services.size == 1
+        raise Samson::Hooks::UserError, "Template #{template_name} has #{services.size} services, having 1 section is valid."
+      end
+      services.first.with_indifferent_access
     end
 
     def parsed_config_file

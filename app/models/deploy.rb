@@ -102,6 +102,12 @@ class Deploy < ActiveRecord::Base
     includes(:job).where(jobs: { status: Job::ACTIVE_STATUSES })
   end
 
+  def self.active_count
+    Rails.cache.fetch('deploy_active_count', expires_in: 10.seconds) do
+      active.count
+    end
+  end
+
   def self.pending
     includes(:job).where(jobs: { status: 'pending' })
   end

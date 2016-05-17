@@ -7,7 +7,7 @@ module UsersHelper
     checked = (global_access || project_access)
     title = "User is a global #{user.role.name.capitalize}" if global_access
 
-    label_tag :role_id, class: ('disabled' if global_access), title: title do
+    label_tag nil, class: ('disabled' if global_access), title: title do
       radio_button_tag(:role_id, role_id.to_s, checked, disabled: disabled) <<
         " " <<
         role_name.titlecase

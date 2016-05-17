@@ -46,7 +46,12 @@
         <li class="current-deploys <%= 'active' if current_page?(controller: '/deploys', action: 'active') %>" ng-controller="currentDeployBadgeCtrl">
           <%= link_to active_deploys_path do %>
             Deploying
-            <%= content_tag(:span, '{{ currentActiveDeploys }}', class: 'badge badge-deploys', style: 'display: none', id: 'currentDeploysBadge') %>
+            <%= content_tag :span, '{{ currentActiveDeploys }}',
+                class: 'badge badge-deploys',
+                style: 'display: none',
+                id: 'currentDeploysBadge',
+                data: {count: Deploy.active_count}
+            %>
           <% end %>
         </li>
       <% end %>
@@ -62,9 +67,11 @@
             <li><%= link_to "Projects", admin_projects_path %></li>
             <li><%= link_to "Commands", admin_commands_path %></li>
             <li><%= link_to "Users", admin_users_path %></li>
-            <li><%= link_to "Secrets", admin_secrets_path %></li>
             <%= Samson::Hooks.render_views(:admin_menu, self) %>
             <li class="divider"></li>
+          <% end %>
+          <% if current_user.try(:deployer?) %>
+            <li><%= link_to "Secrets", admin_secrets_path %></li>
           <% end %>
           <li><%= link_to "Reports", csv_exports_path %></li>
         </ul>

@@ -27,4 +27,23 @@ describe Stage do
       end
     end
   end
+
+  describe "#seed_kubernetes_roles" do
+    let(:stage) do
+      stage = stages(:test_staging).dup
+      stage.name = 'Another'
+      stage
+    end
+
+    it "does nothing" do
+      Kubernetes::Role.expects(:seed!).never
+      stage.save!
+    end
+
+    it "calls seed to fill in missing roles (most useful for new projects) when kubernetes is set" do
+      Kubernetes::Role.expects(:seed!)
+      stage.kubernetes = true
+      stage.save!
+    end
+  end
 end

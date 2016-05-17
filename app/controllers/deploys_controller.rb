@@ -21,18 +21,18 @@ class DeploysController < ApplicationController
     end
   end
 
-  def active_count
-    render json: { deploy_count: active_deploy_scope.count }
-  end
-
   def active
     @deploys = active_deploy_scope
     render partial: 'shared/deploys_table', layout: false if params[:partial]
   end
 
+  def active_count
+    render json: Deploy.active.count
+  end
+
   # Takes the same params that are used by the client side filtering
   # on the recent deploys pages.
-  # Returrns a paginated json object of deploys that people are
+  # Returns a paginated json object of deploys that people are
   # interested in rather than doing client side filtering.
   # params:
   #   * deployer (name of the user that started the job(s), this is a fuzzy match

@@ -60,6 +60,7 @@ module Kubernetes
     # Sets the labels for the Deployment resource metadata
     # only supports strings or we run into `json: expect char '"' but got char '2'`
     def set_deployment_metadata
+      template.metadata.labels ||= {}
       deployment_labels.each do |key, value|
         template.metadata.labels[key] = value.to_s
       end
@@ -73,9 +74,9 @@ module Kubernetes
     # Sets the metadata that is going to be used as the selector. Kubernetes will use this metadata to select the
     # old and new Replication Controllers when managing a new Deployment.
     def set_selector_metadata
-      if !template.spec.selector || !template.spec.selector.matchLabels
-        raise Samson::Hooks::UserError, "Missing spec.selector.matchLabels"
-      end
+      template.spec.selector ||= {}
+      template.spec.selector.matchLabels ||= {}
+
       deployment_labels.each do |key, value|
         template.spec.selector.matchLabels[key] = value.to_s
       end
@@ -104,7 +105,7 @@ module Kubernetes
           role: role.name,
           role_id: role.id,
 
-          deploy_group: deploy_group.env_value,
+          deploy_group: deploy_group.env_value.parameterize,
           deploy_group_id: deploy_group.id,
 
           revision: build.git_sha,
@@ -131,7 +132,7 @@ module Kubernetes
       # static data
       metadata = release_doc_metadata
       [:REVISION, :TAG, :PROJECT, :ROLE, :DEPLOY_ID, :DEPLOY_GROUP].each do |k|
-        env << {name: k, value: metadata.fetch(k.downcase)}
+        env << {name: k, value: metadata.fetch(k.downcase).to_s}
       end
 
       # dynamic lookups for unknown things during deploy

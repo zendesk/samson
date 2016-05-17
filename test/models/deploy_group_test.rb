@@ -25,19 +25,57 @@ describe DeployGroup do
   end
 
   describe 'validations' do
+    let(:deploy_group) { DeployGroup.new(name: 'sfsdf', environment: environment) }
+
+    it 'is valid' do
+      assert_valid deploy_group
+    end
+
     it 'require a name' do
-      deploy_group = DeployGroup.new(name: nil, environment: environment)
+      deploy_group.name = nil
       refute_valid(deploy_group)
     end
 
     it 'require an environment' do
-      deploy_group = DeployGroup.new(name: 'foo')
+      deploy_group.environment = nil
       refute_valid(deploy_group)
     end
 
     it 'require a unique name' do
-      deploy_group = DeployGroup.new(name: 'Pod1', environment: environment)
+      deploy_group.name = deploy_groups(:pod1).name
       refute_valid(deploy_group)
+    end
+
+    describe 'env values' do
+      it 'fills empty env values' do
+        deploy_group.env_value = ''
+        assert_valid(deploy_group)
+      end
+
+      it 'does not allow invalid env values' do
+        deploy_group.env_value = 'no oooo'
+        refute_valid(deploy_group)
+      end
+
+      it 'does not allow env values that start weird' do
+        deploy_group.env_value = '-nooo'
+        refute_valid(deploy_group)
+      end
+
+      it 'does not allow env values that start weird' do
+        deploy_group.env_value = '-nooo'
+        refute_valid(deploy_group)
+      end
+
+      it 'does not allow env values that end weird' do
+        deploy_group.env_value = 'nooo-'
+        refute_valid(deploy_group)
+      end
+
+      it 'allows :' do
+        deploy_group.env_value = 'y:es'
+        assert_valid(deploy_group)
+      end
     end
   end
 
@@ -51,7 +89,7 @@ describe DeployGroup do
 
   describe "#initialize_env_value" do
     it 'prefils env_value' do
-      DeployGroup.create!(name: 'Pod666 - the best', environment: environment).env_value.must_equal 'Pod666 - the best'
+      DeployGroup.create!(name: 'Pod666 - the best', environment: environment).env_value.must_equal 'pod666-the-best'
     end
 
     it 'can set env_value' do
