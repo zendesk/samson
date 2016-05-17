@@ -42,7 +42,7 @@ describe SecretStorage do
     end
   end
 
-  describe ". parse_secret_key_part" do
+  describe ".parse_secret_key_part" do
     let(:secret_key) { 'marry/had/a/little' }
     it "returs the environment" do
       SecretStorage.parse_secret_key_part(secret_key, :environment).must_equal('marry')
@@ -163,15 +163,11 @@ describe SecretStorage do
           to_return(status: 200, body: fail_data, headers: {'Content-Type': 'application/json'})
         # this is the auth request, just needs to return 200 for our purposes
         stub_request(:post, "https://127.0.0.1:8200/v1/auth/cert/login")
-
         # using the stubbed client
         stub_request(:get, "https://127.0.0.1:8200/v1/secret/production/foo/pod2/isbar").
           to_return(status: 200, headers: {'Content-Type': 'application/json'})
-
-        fail_data = {data: { vault:nil}}.to_json
         stub_request(:get, "https://127.0.0.1:8200/v1/secret/notgoingtobethere").
           to_return(status: 200, headers: {'Content-Type': 'application/json'})
-
         not_branch = ['is_now_a_leaf']
         empty_body = []
         stub_request(:get, "https://127.0.0.1:8200/v1/secret/this/is/still/a/branch/?list=true").
@@ -236,10 +232,10 @@ describe SecretStorage do
           to_return(status: 200, body: first_keys, headers: response_headers)
 
         stub_request(:get, "https://127.0.0.1:8200/v1/secret/production/project/group/this/?list=true").
-          to_return(status: 200, body: ["production/project/group/this/key"], headers: response_headers)
+          to_return(status: 200, body: ["key"], headers: response_headers)
 
         stub_request(:get, "https://127.0.0.1:8200/v1/secret/production/project/group/that/?list=true").
-          to_return(status: 200, body: ["production/project/group/that/key"], headers: response_headers)
+          to_return(status: 200, body: ["key"], headers: response_headers)
 
         stub_request(:get, "https://127.0.0.1:8200/v1/secret/production/project/group/this/key?list=true").
           to_return(status: 200, body: [], headers: response_headers)
