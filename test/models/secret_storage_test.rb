@@ -213,9 +213,15 @@ describe SecretStorage do
 
     describe ".keys" do
       before do
-        all_keys = ["production/project/group/this/key", "production/project/group/that/key"]
+        first_keys = ["production/project/group/this/", "production/project/group/that/"]
         stub_request(:get, "https://127.0.0.1:8200/v1/secret/?list=true").
-          to_return(status: 200, body: all_keys, headers: response_headers)
+          to_return(status: 200, body: first_keys, headers: response_headers)
+
+        stub_request(:get, "https://127.0.0.1:8200/v1/secret/production/project/group/this/?list=true").
+          to_return(status: 200, body: ["production/project/group/this/key"], headers: response_headers)
+
+        stub_request(:get, "https://127.0.0.1:8200/v1/secret/production/project/group/that/?list=true").
+          to_return(status: 200, body: ["production/project/group/that/key"], headers: response_headers)
 
         stub_request(:get, "https://127.0.0.1:8200/v1/secret/production/project/group/this/key?list=true").
           to_return(status: 200, body: [], headers: response_headers)

@@ -89,22 +89,15 @@ module SecretStorage
       @vault_client ||= VaultClient.new
     end
 
-    def self.keys_recursive(keys)
-      until all_leaf_nodes?(keys)
-        keys.each do |key|
-          vault_client.logical.list(VAULT_SECRET_BACKEND + key).each do |new_key|
-            keys << key + new_key
-          end
-          # nuke the key if it's a dir and we have processed it.
-          keys.delete(key) if key.to_s.end_with?('/')
-        end
+  def self.keys_recursive(keys)
+    keys.flat_map do |key|
+      if key.end_with?('/') # a directory
+        keys_recursive(vault_client.logical.list(VAULT_SECRET_BACKEND + key))
+      else
+        key
       end
-      keys
     end
-
-    def self.all_leaf_nodes?(tree)
-      tree.all? { |node| !node.to_s.end_with?('/') }
-    end
+  end
 
     # path for these should be /env/project/deploygroup/key
     def self.vault_path(key, environment, deploy_group, project)
