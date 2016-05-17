@@ -34,8 +34,7 @@ class KuberDeployService
     kuber_release.release_docs.each do |release_doc|
       status = release_doc.ensure_service
       role = release_doc.kubernetes_role
-      service = release_doc.service
-      log status, role: role.name, service_name: service.try(:name)
+      log status, role: role.name, service_name: release_doc.kubernetes_role.service_name
     end
   end
 
