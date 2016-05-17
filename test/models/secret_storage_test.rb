@@ -61,7 +61,7 @@ describe SecretStorage do
     end
 
     it "fails with invalid key" do
-      SecretStorage.parse_secret_key_part('foo/bar/whatever', :key).must_equal false
+      SecretStorage.parse_secret_key_part('foo/bar/whatever', :key).must_be_nil
     end
   end
 
@@ -70,9 +70,27 @@ describe SecretStorage do
       SecretStorage.generate_secret_key('production', 'foo', 'bar', 'snafu').must_equal("production/foo/bar/snafu")
     end
 
-    it "fails raises when missing params" do
+    it "fails raises when missing environment" do
       assert_raises ArgumentError do
-      SecretStorage.generate_secret_key('foo', 'bar', 'snafu')
+      SecretStorage.generate_secret_key(nil, 'foo', 'bar', 'snafu')
+      end
+    end
+
+    it "fails raises when missing project" do
+      assert_raises ArgumentError do
+      SecretStorage.generate_secret_key('env', nil, 'bar', 'snafu')
+      end
+    end
+
+    it "fails raises when missing deploy_group" do
+      assert_raises ArgumentError do
+      SecretStorage.generate_secret_key('env', 'foo', nil, 'snafu')
+      end
+    end
+
+    it "fails raises when missing key" do
+      assert_raises ArgumentError do
+      SecretStorage.generate_secret_key('env', 'foo', 'group', nil)
       end
     end
   end

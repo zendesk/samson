@@ -164,8 +164,7 @@ module SecretStorage
     def parse_secret_key_part(key, part)
       return false if key.nil?
       index = SecretStorage::SECRET_KEYS_PARTS.index(part)
-      value = key.split('/', SecretStorage::SECRET_KEYS_PARTS.count)[index]
-      value.nil? ? false : value
+      key.split('/', SecretStorage::SECRET_KEYS_PARTS.count)[index]
     end
   end
 end
