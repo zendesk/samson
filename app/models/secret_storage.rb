@@ -96,14 +96,14 @@ module SecretStorage
             keys << key + new_key
           end
           # nuke the key if it's a dir and we have processed it.
-          keys.delete(key) if key[-1] == '/'
+          keys.delete(key) if key.to_s.end_with?('/')
         end
       end
       keys
     end
 
     def self.all_leaf_nodes?(tree)
-      tree.all? { |node| node.to_s[-1] != '/' }
+      tree.all? { |node| !node.to_s.end_with?('/') }
     end
 
     # path for these should be /env/project/deploygroup/key
