@@ -109,7 +109,7 @@ module Kubernetes
           deploy_group_id: deploy_group.id,
 
           revision: build.git_sha,
-          tag: build.git_ref
+          tag: build.git_sha
         }
       end
     end
