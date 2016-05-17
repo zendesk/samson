@@ -66,9 +66,11 @@ module Kubernetes
       end
     end
 
+    # labels that are used to match the previous replicasets,
+    # they cannot change or we will create a new replicasets instead of updating the previous one
+    # renaming roles or renaming projects will lead to duplicate replicasets
     def deployment_labels
-      # Deployment labels should not include the ids of the release, role or deploy groups
-      release_doc_metadata.except(:release_id, :role_id, :deploy_group_id)
+      release_doc_metadata.slice(:project, :role)
     end
 
     # Sets the metadata that is going to be used as the selector. Kubernetes will use this metadata to select the
@@ -102,14 +104,14 @@ module Kubernetes
           project: release.project.permalink,
           project_id: release.project_id,
 
-          role: role.name,
+          role: role.name.parameterize,
           role_id: role.id,
 
           deploy_group: deploy_group.env_value.parameterize,
           deploy_group_id: deploy_group.id,
 
           revision: build.git_sha,
-          tag: build.git_ref
+          tag: build.git_ref.parameterize
         }
       end
     end
