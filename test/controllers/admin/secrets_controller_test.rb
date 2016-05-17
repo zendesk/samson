@@ -128,7 +128,7 @@ describe Admin::SecretsController do
         value: 'hi', environment_permalink: SecretStorage.parse_secret_key_part(secret.id, :environment),
         project_permalink: SecretStorage.parse_secret_key_part(secret.id, :project),
         deploy_group_permalink: SecretStorage.parse_secret_key_part(secret.id, :deploy_group)
-        }}
+      }}
 
       before do
         patch :update, id: secret.id, secret: attributes
@@ -144,7 +144,8 @@ describe Admin::SecretsController do
 
       describe 'invalid' do
         let(:attributes) {{
-          value: '', environment_permalink: SecretStorage.parse_secret_key_part(secret.id, :environment),
+          value: '',
+          environment_permalink: SecretStorage.parse_secret_key_part(secret.id, :environment),
           project_permalink: SecretStorage.parse_secret_key_part(secret.id, :project),
           deploy_group_permalink: SecretStorage.parse_secret_key_part(secret.id, :deploy_group)
         }}
