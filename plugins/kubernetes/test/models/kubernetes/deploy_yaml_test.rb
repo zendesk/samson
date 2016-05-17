@@ -47,26 +47,35 @@ describe Kubernetes::DeployYaml do
       metadata = result.fetch(:metadata)
       metadata.fetch(:namespace).must_equal 'pod1'
       metadata.fetch(:labels).must_equal(
-        project_id: doc.kubernetes_release.project_id.to_s,
-        revision: "1a6f551a2ffa6d88e15eef5461384da0bfb1c194",
-        tag: "v123",
-        deploy_id: "123",
-        project: "foo",
-        role: "app_server",
-        deploy_group: "pod1",
+        project: doc.kubernetes_release.project.permalink,
+        role: doc.kubernetes_role.name
       )
     end
 
     it "works without selector" do
       assert doc.raw_template.sub!('selector:', 'no_selector:')
       result = yaml.to_hash
-      result.fetch(:spec).fetch(:selector).fetch(:matchLabels).keys.sort.must_equal([:deploy_group, :deploy_id, :project, :project_id, :revision, :role, :tag].sort)
+      result = result.fetch(:spec).fetch(:selector).fetch(:matchLabels).keys.sort
+      result.must_equal [:project, :role].sort
     end
 
     it "works without labels" do
       yaml.send(:template).metadata.labels = nil
+      result = yaml.to_hash.fetch(:metadata).fetch(:labels).keys.sort
+      result.must_equal [:project, :role].sort
+    end
+
+    it "escapes things that would not be allowed in labels or environment values" do
+      doc.deploy_group.update_column(:env_value, 'foo:bar')
+      doc.kubernetes_role.update_column(:name, 'Oh boy this is weird')
+      doc.build.update_column(:git_ref, 'user/feature')
+
       result = yaml.to_hash
-      result.fetch(:metadata).fetch(:labels).keys.sort.must_equal([:deploy_id, :project, :project_id, :role, :deploy_group, :revision, :tag].sort)
+      result.fetch(:spec).fetch(:template).fetch(:metadata).fetch(:labels).slice(:deploy_group, :role, :tag).must_equal(
+        tag: "user-feature",
+        role: "oh-boy-this-is-weird",
+        deploy_group: 'foo-bar'
+      )
     end
 
     describe "deployment" do
@@ -112,11 +121,6 @@ describe Kubernetes::DeployYaml do
           [:REVISION, :TAG, :PROJECT, :ROLE, :DEPLOY_ID, :DEPLOY_GROUP, :POD_NAME, :POD_NAMESPACE, :POD_IP].sort
         )
         env.map { |x| x[:value] }.map(&:class).map(&:name).sort.uniq.must_equal(["NilClass", "String"])
-      end
-
-      it "removes : in env values since they would not validate against kubernetes (([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])?" do
-        doc.deploy_group.update_column(:env_value, 'foo:bar')
-        container.fetch(:env).detect { |v| break v if v[:name] == :DEPLOY_GROUP }.fetch(:value).must_equal 'foo-bar'
       end
 
       it "fails without containers" do
