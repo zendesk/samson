@@ -178,11 +178,11 @@ describe SecretStorage do
 
       it "gets a value based on a key with /s" do
         SecretStorage::HashicorpVault.read('production/foo/pod2/isbar').must_equal({
-          :lease_id=>nil,
-          :lease_duration=>nil,
-          :renewable=>nil,
-          :auth=>nil,
-          :value=>"bar"
+          lease_id: nil,
+          lease_duration: nil,
+          renewable: nil,
+          auth: nil,
+          value: "bar"
         })
       end
 
