@@ -169,11 +169,8 @@ describe SecretStorage do
         stub_request(:get, "https://127.0.0.1:8200/v1/secret/notgoingtobethere").
           to_return(status: 200, headers: {'Content-Type': 'application/json'})
         not_branch = ['is_now_a_leaf']
-        empty_body = []
-        stub_request(:get, "https://127.0.0.1:8200/v1/secret/this/is/still/a/branch/?list=true").
+        stub_request(:get, "https://127.0.0.1:8200/v1/secret/?list=true").
           to_return(status: 200, body: not_branch, headers: response_headers)
-        stub_request(:get, "https://127.0.0.1:8200/v1/secret/this/is/still/a/branch/is_now_a_leaf?list=true").
-          to_return(status: 200, body: empty_body, headers: response_headers)
       end
 
       it "gets a value based on a key with /s" do
@@ -199,8 +196,7 @@ describe SecretStorage do
       end
 
       it "recusivly translates keys" do
-        tree = ['this/is/still/a/branch/']
-        assert SecretStorage::HashicorpVault.keys_recursive(tree)
+        assert SecretStorage::HashicorpVault.keys
       end
     end
 

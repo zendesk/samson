@@ -85,7 +85,13 @@ module SecretStorage
     end
 
     def self.delete(key)
-      vault_client.logical.delete(VAULT_SECRET_BACKEND + make_key_safe(key))
+      safe_key = vault_path(
+        SecretStorage.parse_secret_key_part(key, :environment),
+        SecretStorage.parse_secret_key_part(key, :project),
+        SecretStorage.parse_secret_key_part(key, :deploy_group),
+        SecretStorage.parse_secret_key_part(key, :key),
+      )
+      vault_client.logical.delete(safe_key)
     end
 
     def self.keys()
