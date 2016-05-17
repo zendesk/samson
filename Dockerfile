@@ -1,6 +1,6 @@
 FROM ruby:2.2.3-slim
 
-RUN apt-get update && apt-get install -y wget apt-transport-https
+RUN apt-get update && apt-get install -y wget apt-transport-https git
 RUN wget -qO- https://deb.nodesource.com/gpgkey/nodesource.gpg.key | apt-key add -
 RUN echo 'deb https://deb.nodesource.com/node_0.12 jessie main' > /etc/apt/sources.list.d/nodesource.list
 RUN apt-get update && apt-get install -y nodejs build-essential
