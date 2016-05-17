@@ -146,8 +146,17 @@ module SecretStorage
     end
 
     def generate_secret_key(environment=nil, project=nil, deploy_group=nil, key=nil)
-      if environment.nil? || project.nil? || deploy_group.nil? || key.nil?
-        raise ArgumentError.new("missing paramater")
+      if environment.nil?
+        raise ArgumentError.new("missing environment paramater")
+      end
+      if project.nil?
+        raise ArgumentError.new("missing project paramater")
+      end
+      if deploy_group.nil?
+        raise ArgumentError.new("missing deploy_group paramater")
+      end
+      if key.nil?
+        raise ArgumentError.new("missing key paramater")
       end
       environment.to_s + "/" + project.to_s + "/" + deploy_group.to_s + "/" + key.to_s
     end
