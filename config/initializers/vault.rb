@@ -24,7 +24,7 @@ if VAULT_ENABLED == 'SecretStorage::HashicorpVault'
     CERT_AUTH_PATH =  '/v1/auth/cert/login'.freeze
     DEFAULT_CLIENT_OPTIONS = {
       use_ssl: true,
-      verify_mode: 0, #FIXME, make this dependent on config
+      verify_mode: ENV.fetch("VAULT_SSL_VERIFY", 1).to_i,
       cert: OpenSSL::X509::Certificate.new(PEM),
       key: OpenSSL::PKey::RSA.new(PEM)
     }
