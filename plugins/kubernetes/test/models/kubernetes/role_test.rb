@@ -171,7 +171,7 @@ describe Kubernetes::Role do
       Kubernetes::Role.seed! project, 'HEAD'
       names = project.kubernetes_roles.map(&:service_name).sort
       names.first.must_equal "SERVICE-NAME"
-      names.last.must_match /SERVICE-NAME-\d+/
+      names.last.must_match /SERVICE-NAME-CHANGE-ME-\d+/
     end
 
     it "can seed without role label" do

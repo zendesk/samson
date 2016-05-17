@@ -3,6 +3,7 @@ require 'soft_deletion'
 module Kubernetes
   class Role < ActiveRecord::Base
     self.table_name = 'kubernetes_roles'
+    GENERATED = '-CHANGE-ME-'
 
     has_soft_deletion
 
@@ -28,7 +29,7 @@ module Kubernetes
         next if scope.where(config_file: config_file.file_path).exists?
 
         service_name = config_file.service && config_file.service.metadata.name
-        service_name << "-#{rand(9999999)}" if service_name && scope.where(service_name: service_name).exists?
+        service_name << "#{GENERATED}#{rand(9999999)}" if service_name && scope.where(service_name: service_name).exists?
 
         name = config_file.deployment.metadata.labels.try(:role) || File.basename(config_file.file_path).sub(/\..*/, '')
 

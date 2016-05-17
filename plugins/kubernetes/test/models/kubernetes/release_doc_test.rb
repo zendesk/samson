@@ -1,6 +1,6 @@
 require_relative "../../test_helper"
 
-SingleCov.covered! uncovered: 29
+SingleCov.covered! uncovered: 22
 
 describe Kubernetes::ReleaseDoc do
   let(:doc) { kubernetes_release_docs(:test_release_pod_1) }
@@ -17,10 +17,24 @@ describe Kubernetes::ReleaseDoc do
       doc.ensure_service.must_equal "Service already running"
     end
 
-    it "creates the service when it does not exist" do
-      doc.stubs(service: stub(running?: false))
-      doc.expects(:client).returns(stub(create_service: nil))
-      doc.ensure_service.must_equal "creating Service"
+    describe "when service does not exist" do
+      before do
+        doc.stubs(service: stub(running?: false), service_template: {'metadata' => {}, 'spec' => {}})
+        doc.kubernetes_role.update_column(:service_name, "app-server")
+      end
+
+      it "creates the service when it does not exist" do
+        doc.expects(:client).returns(stub(create_service: nil))
+        doc.ensure_service.must_equal "creating Service"
+      end
+
+      it "fails when trying to deploy a generated service" do
+        doc.kubernetes_role.update_column(:service_name, "app-server#{Kubernetes::Role::GENERATED}1211212")
+        e = assert_raises Samson::Hooks::UserError do
+          doc.ensure_service
+        end
+        e.message.must_equal "Service name for role app_server was generated and needs to be changed before deploying."
+      end
     end
   end
 

@@ -87,7 +87,11 @@ module Kubernetes
       elsif service.running?
         'Service already running'
       else
-        client.create_service(Kubeclient::Service.new(service_hash))
+        data = service_hash
+        if data.fetch(:metadata).fetch(:name).include?(Kubernetes::Role::GENERATED)
+          raise Samson::Hooks::UserError, "Service name for role #{kubernetes_role.name} was generated and needs to be changed before deploying."
+        end
+        client.create_service(Kubeclient::Service.new(data))
         'creating Service'
       end
     end
@@ -132,7 +136,7 @@ module Kubernetes
 
       @service_hash[:metadata][:name] = kubernetes_role.service_name
       @service_hash[:metadata][:namespace] = namespace
-      @service_hash[:metadata][:labels] ||= labels.except(:release_id)
+      # TODO: never worked @service_hash[:metadata][:labels] ||= deploy_yaml.deployment_labels.except(:release_id)
 
       # For now, create a NodePort for each service, so we can expose any
       # apps running in the Kubernetes cluster to traffic outside the cluster.
