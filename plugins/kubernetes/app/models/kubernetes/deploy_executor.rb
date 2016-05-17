@@ -257,9 +257,8 @@ module Kubernetes
     def ensure_service(release)
       release.release_docs.each do |release_doc|
         role = release_doc.kubernetes_role
-        service = release_doc.service
         status = release_doc.ensure_service
-        @output.puts "#{status} for role #{role.name} / service #{service ? service.name : "none"}"
+        @output.puts "#{status} for role #{role.name} / service #{role.service_name.presence || "none"}"
       end
     end
   end

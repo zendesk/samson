@@ -35,10 +35,6 @@ module Kubernetes
       super || NullUser.new(user_id)
     end
 
-    def nested_error_messages
-      errors.full_messages + release_docs.flat_map(&:nested_error_messages)
-    end
-
     def docs_by_role
       @docs_by_role ||= release_docs.each_with_object({}) do |rel_doc, hash|
         hash[rel_doc.kubernetes_role.label_name] = rel_doc
