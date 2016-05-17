@@ -57,11 +57,6 @@ module SecretStorage
     # and there may be other chars that we find we don't like
     ENCODINGS = {"/": "%2F"}
 
-    # get and cache a copy of the client that has a token
-    def self.vault_client
-      @vault_client ||= VaultClient.new
-    end
-
     def self.read(key)
       result = vault_client.logical.read(VAULT_SECRET_BACKEND + key)
       raise(ActiveRecord::RecordNotFound) if result.data[:vault].nil?
@@ -88,6 +83,11 @@ module SecretStorage
     end
 
     private
+
+    # get and cache a copy of the client that has a token
+    def self.vault_client
+      @vault_client ||= VaultClient.new
+    end
 
     def self.keys_recursive(keys)
       until all_leaf_nodes?(keys)
