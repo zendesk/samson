@@ -13,8 +13,6 @@ module Kubernetes
         set_rc_unique_label_key
         set_namespace
         set_replica_target
-        set_deployment_metadata
-        set_selector_metadata
         set_spec_template_metadata
         set_docker_image
         set_resource_usage
@@ -57,38 +55,11 @@ module Kubernetes
       template.metadata.namespace = @doc.deploy_group.kubernetes_namespace
     end
 
-    # Sets the labels for the Deployment resource metadata
-    # only supports strings or we run into `json: expect char '"' but got char '2'`
-    def set_deployment_metadata
-      template.metadata.labels ||= {}
-      deployment_labels.each do |key, value|
-        template.metadata.labels[key] = value.to_s
-      end
-    end
-
-    # labels that are used to match the previous replicasets,
-    # they cannot change or we will create a new replicasets instead of updating the previous one
-    # renaming roles or renaming projects will lead to duplicate replicasets
-    def deployment_labels
-      release_doc_metadata.slice(:project, :role)
-    end
-
-    # Sets the metadata that is going to be used as the selector. Kubernetes will use this metadata to select the
-    # old and new Replication Controllers when managing a new Deployment.
-    def set_selector_metadata
-      template.spec.selector ||= {}
-      template.spec.selector.matchLabels ||= {}
-
-      deployment_labels.each do |key, value|
-        template.spec.selector.matchLabels[key] = value.to_s
-      end
-    end
-
     # Sets the labels for each new Pod.
     # Adding the Release ID to allow us to track the progress of a new release from the UI.
     def set_spec_template_metadata
       release_doc_metadata.each do |key, value|
-        template.spec.template.metadata.labels[key] = value.to_s
+        template.spec.template.metadata.labels[key] ||= value.to_s
       end
     end
 
@@ -101,10 +72,7 @@ module Kubernetes
         {
           release_id: release.id,
           deploy_id: release.deploy_id,
-          project: release.project.permalink,
           project_id: release.project_id,
-
-          role: role.name.parameterize,
           role_id: role.id,
 
           deploy_group: deploy_group.env_value.parameterize,
@@ -128,13 +96,18 @@ module Kubernetes
       container.image = docker_path
     end
 
+    # helpful env vars, also useful for log tagging
     def set_env
       env = (container.env || [])
 
       # static data
       metadata = release_doc_metadata
-      [:REVISION, :TAG, :PROJECT, :ROLE, :DEPLOY_ID, :DEPLOY_GROUP].each do |k|
+      [:REVISION, :TAG, :DEPLOY_ID, :DEPLOY_GROUP].each do |k|
         env << {name: k, value: metadata.fetch(k.downcase).to_s}
+      end
+
+      [:PROJECT, :ROLE].each do |k|
+        env << {name: k, value: template.spec.template.metadata.labels.send(k.downcase).to_s}
       end
 
       # dynamic lookups for unknown things during deploy

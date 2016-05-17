@@ -128,7 +128,7 @@ module Kubernetes
 
     # Config has multiple entries like a ReplicationController and a Service
     def service_template
-      services = Array.wrap(parsed_config_file).select { |doc| doc['kind'] == 'Service' }
+      services = parsed_config_file.select { |doc| doc['kind'] == 'Service' }
       unless services.size == 1
         raise Samson::Hooks::UserError, "Template #{template_name} has #{services.size} services, having 1 section is valid."
       end
@@ -136,13 +136,42 @@ module Kubernetes
     end
 
     def parsed_config_file
-      Kubernetes::Util.parse_file(raw_template, template_name)
+      Array.wrap(Kubernetes::Util.parse_file(raw_template, template_name))
     end
 
     def validate_config_file
-      if build && kubernetes_role && raw_template.blank?
-        errors.add(:build, "does not contain config file '#{template_name}'")
+      if build && kubernetes_role
+        if raw_template.blank?
+          errors.add(:build, "does not contain config file '#{template_name}'")
+        elsif !project_and_role_consistent?
+          errors.add(:build, "config file '#{template_name}' does not have consistent project and role labels")
+        end
       end
+    end
+
+    def project_and_role_consistent?
+      labels = parsed_config_file.flat_map do |resource|
+        kind = resource.fetch('kind')
+
+        label_paths = case kind
+        when 'Service'
+          [['spec', 'selector']]
+        when 'Deployment', 'DaemonSet'
+          [
+            ['spec', 'template', 'metadata', 'labels'],
+            ['spec', 'selector', 'matchLabels'],
+          ]
+        else
+          [] # ignore unknown / unsupported types
+        end
+
+        label_paths.map do |path|
+          path.inject(resource) { |r, k| r[k] || {} }.slice('project', 'role')
+        end
+      end
+
+      labels = labels.uniq
+      labels.size == 1 && labels.first.size == 2
     end
 
     def namespace

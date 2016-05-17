@@ -78,5 +78,48 @@ describe Kubernetes::ReleaseDoc do
       doc.deploy_to_kubernetes
     end
   end
+
+  describe "#validate_config_file" do
+    let(:doc) { kubernetes_release_docs(:test_release_pod_1).dup }
+
+    it "is valid" do
+      assert_valid doc
+    end
+
+    it "is invalid when missing role" do
+      assert doc.raw_template.sub!('role', 'mole')
+      refute_valid doc
+    end
+
+    it "is invalid when missing project" do
+      assert doc.raw_template.sub!('project', 'reject')
+      refute_valid doc
+    end
+
+    it "is invalid with mismatching project or role" do
+      assert doc.raw_template.sub!('project: foobar', 'project: barfoo')
+      refute_valid doc
+    end
+
+    it "ignores unsupported type" do
+      doc.raw_template << "\n" << {'kind' => "Wut"}.to_yaml
+      assert_valid doc
+    end
+
+    describe "with service" do
+      let(:service) { {'kind' => 'Service', 'spec' => {'selector' => {'project' => 'foobar', 'role' => 'app-server'}}} }
+
+      it "is valid" do
+        doc.raw_template << "\n" << service.to_yaml
+        assert_valid doc
+      end
+
+      it "is invalid with different project" do
+        service.fetch('spec').fetch('selector')['project'] = 'barfoo'
+        doc.raw_template << "\n" << service.to_yaml
+        refute_valid doc
+      end
+    end
+  end
 end
 
