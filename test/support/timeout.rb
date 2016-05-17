@@ -4,7 +4,7 @@ module TimeoutEveryTestCase
     super do
       rescued = false
       begin
-        Timeout.timeout(60, &block)
+        Timeout.timeout(5, &block)
       rescue Timeout::Error => e
         raise e if rescued
         rescued = true
