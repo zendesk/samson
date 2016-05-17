@@ -58,7 +58,7 @@ class Admin::SecretsController < ApplicationController
 
   def project_permalink
     if params[:id].present?
-      SecretStorage.parse_secret_key(params[:id], :project)
+      SecretStorage.parse_secret_key_part(params[:id], :project)
     else
       secret_params.fetch(:project_permalink)
     end
@@ -70,7 +70,7 @@ class Admin::SecretsController < ApplicationController
 
   def deploy_group_permalink
     if params[:id].present?
-      SecretStorage.parse_secret_key(params[:id], :deploy_group)
+      SecretStorage.parse_secret_key_part(params[:id], :deploy_group)
     else
       secret_params.fetch(:deploy_group_permalink)
     end
@@ -78,7 +78,7 @@ class Admin::SecretsController < ApplicationController
 
   def environment_permalink
     if params[:id].present?
-      SecretStorage.parse_secret_key(params[:id], :environment)
+      SecretStorage.parse_secret_key_part(params[:id], :environment)
     else
       secret_params.fetch(:environment_permalink, false)
     end

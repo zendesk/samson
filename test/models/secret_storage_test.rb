@@ -42,26 +42,26 @@ describe SecretStorage do
     end
   end
 
-  describe ". parse_secret_key" do
+  describe ". parse_secret_key_part" do
     let(:secret_key) { 'marry/had/a/little' }
     it "returs the environment" do
-      SecretStorage.parse_secret_key(secret_key, :environment).must_equal('marry')
+      SecretStorage.parse_secret_key_part(secret_key, :environment).must_equal('marry')
     end
 
     it "returns the project" do
-      SecretStorage.parse_secret_key(secret_key, :project).must_equal('had')
+      SecretStorage.parse_secret_key_part(secret_key, :project).must_equal('had')
     end
 
     it "returns the deploy_group" do
-      SecretStorage.parse_secret_key(secret_key, :deploy_group).must_equal('a')
+      SecretStorage.parse_secret_key_part(secret_key, :deploy_group).must_equal('a')
     end
 
     it "returns the key" do
-      SecretStorage.parse_secret_key(secret_key, :key).must_equal('little')
+      SecretStorage.parse_secret_key_part(secret_key, :key).must_equal('little')
     end
 
     it "fails with invalid key" do
-      SecretStorage.parse_secret_key('foo/bar/whatever', :key).must_equal false
+      SecretStorage.parse_secret_key_part('foo/bar/whatever', :key).must_equal false
     end
   end
 
@@ -71,9 +71,10 @@ describe SecretStorage do
     end
 
     it "fails raises when missing params" do
-		assert_raises ArgumentError do
+      assert_raises ArgumentError do
       SecretStorage.generate_secret_key('foo', 'bar', 'snafu')
-		end
+      end
+    end
   end
 
   describe ".read" do
@@ -129,6 +130,7 @@ describe SecretStorage do
 
   describe SecretStorage::HashicorpVault do
     let(:response_headers) { {'Content-Type': 'application/json'} }
+
     describe ".client" do
       it 'creates a valid client' do
         assert_instance_of(VaultClient, SecretStorage::HashicorpVault.vault_client)
@@ -158,8 +160,6 @@ describe SecretStorage do
           to_return(status: 200, body: not_branch, headers: response_headers)
         stub_request(:get, "https://127.0.0.1:8200/v1/secret/this/is/still/a/branch/is_now_a_leaf?list=true").
           to_return(status: 200, body: empty_body, headers: response_headers)
-
-
       end
 
       it "gets a value based on a key with /s" do
@@ -202,12 +202,12 @@ describe SecretStorage do
 
     describe ".write" do
       before do
-        stub_request(:put, "https://127.0.0.1:8200/v1/secret/env//bar/isbar").
+        stub_request(:put, "https://127.0.0.1:8200/v1/secret/env/bar/foo/isbar").
           with(:body => "{\"vault\":\"whatever\"}")
       end
 
       it "wirtes a key with /s" do
-        assert SecretStorage::HashicorpVault.write('production/foo/group/isbar', {environment_permalink: 'env', project_permalinl: 'foo', deploy_group_permalink: 'bar', value: 'whatever'})
+        assert SecretStorage::HashicorpVault.write('production/foo/group/isbar', {environment_permalink: 'env', project_permalink: 'foo', deploy_group_permalink: 'bar', key_permalink: 'isbar', value: 'whatever'})
       end
     end
 

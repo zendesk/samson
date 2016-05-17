@@ -1,6 +1,6 @@
 module SecretStorage
   require 'attr_encrypted'
-  SECRET_KEYS = [:environment, :project, :deploy_group, :key].freeze
+  SECRET_KEYS_PARTS = [:environment, :project, :deploy_group, :key].freeze
   class DbBackend
     class Secret < ActiveRecord::Base
       self.table_name = :secrets
@@ -73,8 +73,8 @@ module SecretStorage
 
     # and parse it
     def self.write(key, data)
-      key = SecretStorage.parse_secret_key(key, :key)
-      vault_client.logical.write(vault_path(key, data[:environment_permalink], data[:deploy_group_permalink], data[:project_permalink]), vault: data[:value])
+      key = SecretStorage.parse_secret_key_part(key, :key)
+      vault_client.logical.write(vault_path(key, data[:environment_permalink], data[:project_permalink], data[:deploy_group_permalink]), vault: data[:value])
     end
 
     def self.delete(key)
@@ -159,10 +159,10 @@ module SecretStorage
       environment.to_s + "/" + project.to_s + "/" + deploy_group.to_s + "/" + key.to_s
     end
 
-    def parse_secret_key(key, field)
+    def parse_secret_key_part(key, part)
       return false if key.nil?
-      index = SecretStorage::SECRET_KEYS.index(field)
-      value = key.split('/', SecretStorage::SECRET_KEYS.count)[index]
+      index = SecretStorage::SECRET_KEYS_PARTS.index(part)
+      value = key.split('/', SecretStorage::SECRET_KEYS_PARTS.count)[index]
       value.nil? ? false : value
     end
   end
