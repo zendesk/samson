@@ -20,7 +20,7 @@ describe CsvExportsController do
     end
 
     as_a_viewer do
-      describe "a GET to new" do
+      describe "#new" do
         it "renders the limited admin menu and limited new page" do
           get :new
           @response.body.wont_include "Environment variables"
@@ -72,6 +72,20 @@ describe CsvExportsController do
           get :index, format: :json
           @response.content_type.must_equal "application/json"
         end
+      end
+    end
+
+    describe "#new" do
+      before do
+        p = projects(:test).dup
+        p.name = "Other"
+        p.save!(validate: false)
+      end
+
+      it "renders form options" do
+        get :new
+        @response.body.must_include ">Other</option>"
+        @response.body.must_include ">Project</option>"
       end
     end
 
@@ -173,7 +187,7 @@ describe CsvExportsController do
       end
     end
 
-    describe "a POST to create" do
+    describe "#create" do
       after { cleanup_files }
 
       it "with no filters creates a new csv_export and redirects to status" do
