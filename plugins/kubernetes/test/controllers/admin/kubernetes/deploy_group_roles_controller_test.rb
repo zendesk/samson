@@ -56,7 +56,18 @@ describe Admin::Kubernetes::DeployGroupRolesController do
 
   as_a_project_admin do
     describe "#create" do
-      let(:params) { {kubernetes_deploy_group_role: {project_id: project.id, kubernetes_role_id: kubernetes_roles(:app_server).id, deploy_group_id: deploy_group.id, cpu: 1, ram: 1, replicas: 1}} }
+      let(:params) do
+        {
+          kubernetes_deploy_group_role: {
+            project_id: project.id,
+            kubernetes_role_id: kubernetes_roles(:app_server).id,
+            deploy_group_id: deploy_group.id,
+            cpu: 1,
+            ram: 1,
+            replicas: 1
+          }
+        }
+      end
 
       it "can create for projects I am admin of" do
         post :create, params

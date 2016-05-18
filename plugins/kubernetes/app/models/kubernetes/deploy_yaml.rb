@@ -1,8 +1,8 @@
 module Kubernetes
   class DeployYaml
-    CUSTOM_UNIQUE_LABEL_KEY = 'rc_unique_identifier'
-    DAEMON_SET = 'DaemonSet'
-    DEPLOYMENT = 'Deployment'
+    CUSTOM_UNIQUE_LABEL_KEY = 'rc_unique_identifier'.freeze
+    DAEMON_SET = 'DaemonSet'.freeze
+    DEPLOYMENT = 'Deployment'.freeze
 
     def initialize(release_doc)
       @doc = release_doc
@@ -32,11 +32,16 @@ module Kubernetes
 
     def template
       @template ||= begin
-        sections = YAML.load_stream(@doc.raw_template, @doc.template_name).select { |doc| [DEPLOYMENT, DAEMON_SET].include?(doc['kind']) }
+        sections = YAML.load_stream(@doc.raw_template, @doc.template_name).
+          select { |doc| [DEPLOYMENT, DAEMON_SET].include?(doc['kind']) }
+
         if sections.size == 1
           RecursiveOpenStruct.new(sections.first, recurse_over_arrays: true)
         else
-          raise Samson::Hooks::UserError, "Template #{@doc.template_name} has #{sections.size} Deployment sections, having 1 section is valid."
+          raise(
+            Samson::Hooks::UserError,
+            "Template #{@doc.template_name} has #{sections.size} Deployment sections, having 1 section is valid."
+          )
         end
       end
     end
@@ -114,11 +119,11 @@ module Kubernetes
         POD_NAME: 'metadata.name',
         POD_NAMESPACE: 'metadata.namespace',
         POD_IP: 'status.podIP'
-      }.each do |k,v|
-         env << {
-          name: k,
-          valueFrom: {fieldRef: {fieldPath: v}}
-        }
+      }.each do |k, v|
+        env << {
+         name: k,
+         valueFrom: {fieldRef: {fieldPath: v}}
+       }
       end
 
       container.env = env
@@ -127,9 +132,12 @@ module Kubernetes
     def container
       @container ||= begin
         containers = template.spec.template.try(:spec).try(:containers) || []
-        if containers.size == 0
+        if containers.empty?
           # TODO: support building and replacement for multiple containers
-          raise Samson::Hooks::UserError, "Template #{@doc.template_name} has #{containers.size} containers, having 1 section is valid."
+          raise(
+            Samson::Hooks::UserError,
+            "Template #{@doc.template_name} has #{containers.size} containers, having 1 section is valid."
+          )
         end
         containers.first
       end

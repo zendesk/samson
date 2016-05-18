@@ -1,3 +1,4 @@
+# rubocop:disable Metrics/LineLength
 class MoveEnvToProject < ActiveRecord::Migration
   def change
     rename_table :stage_environment_variable_groups, :project_environment_variable_groups

@@ -5,7 +5,7 @@ module Kubernetes
     WAIT_FOR_LIVE = 10.minutes
     CHECK_STABLE = 1.minute
     TICK = 2.seconds
-    RESTARTED = "Restarted"
+    RESTARTED = "Restarted".freeze
 
     ReleaseStatus = Struct.new(:live, :details, :role, :group)
 
@@ -149,8 +149,8 @@ module Kubernetes
       end
     end
 
-    def print_statuses(statuses)
-      statuses.group_by(&:group).each do |group, statuses|
+    def print_statuses(status_groups)
+      status_groups.group_by(&:group).each do |group, statuses|
         @output.puts "#{group}:"
         statuses.each do |status|
           @output.puts "  #{status.role}: #{status.details}"

@@ -26,7 +26,8 @@ describe Kubernetes::DeployExecutor do
 
   describe "#execute!" do
     def execute!
-      stub_request(:get, %r{http://foobar.server/api/v1/namespaces/staging/pods\?}).to_return(body: pod_reply.to_json) # checks pod status to see if it's good
+      stub_request(:get, %r{http://foobar.server/api/v1/namespaces/staging/pods\?}).
+        to_return(body: pod_reply.to_json) # checks pod status to see if it's good
       executor.execute!
     end
 
@@ -62,9 +63,15 @@ describe Kubernetes::DeployExecutor do
       Kubernetes::Role.stubs(:configured_for_project).returns(project.kubernetes_roles)
       kubernetes_fake_raw_template
       Kubernetes::Cluster.any_instance.stubs(connection_valid?: true, namespace_exists?: true)
-      deploy_group.create_cluster_deploy_group! cluster: kubernetes_clusters(:test_cluster), namespace: 'staging', deploy_group: deploy_group
-      stub_request(:get, "http://foobar.server/apis/extensions/v1beta1/namespaces/staging/deployments/").to_return(status: 404) # checks for previous deploys ... but there are none
-      stub_request(:post, "http://foobar.server/apis/extensions/v1beta1/namespaces/staging/deployments").to_return(body: "{}") # creates deployment
+      deploy_group.create_cluster_deploy_group!(
+        cluster: kubernetes_clusters(:test_cluster),
+        namespace: 'staging',
+        deploy_group: deploy_group
+      )
+      stub_request(:get, "http://foobar.server/apis/extensions/v1beta1/namespaces/staging/deployments/").
+        to_return(status: 404) # checks for previous deploys ... but there are none
+      stub_request(:post, "http://foobar.server/apis/extensions/v1beta1/namespaces/staging/deployments").
+        to_return(body: "{}") # creates deployment
       executor.stubs(:sleep)
       stub_request(:get, %r{http://foobar.server/api/v1/namespaces/staging/events}).
         to_return(body: {items: []}.to_json)
@@ -225,7 +232,7 @@ describe Kubernetes::DeployExecutor do
       # make the first sleep take a long time so we trigger our timeout condition
       start = Time.now
       Time.stubs(:now).returns(start)
-      executor.expects(:sleep).with { Time.stubs(:now).returns(start+1.hour) ; true }
+      executor.expects(:sleep).with { Time.stubs(:now).returns(start + 1.hour); true }
 
       refute execute!
 
@@ -254,7 +261,9 @@ describe Kubernetes::DeployExecutor do
 
       # correct debugging output
       out.scan(/Pod 100 pod pod-(\S+)/).flatten.uniq.must_equal ["resque_worker:"] # logs and events only for bad pod
-      out.must_include "EVENTS:\nFailedScheduling: fit failure on node (ip-1-2-3-4)\nfit failure on node (ip-2-3-4-5)\n\n" # no repeated events
+      out.must_include(
+        "EVENTS:\nFailedScheduling: fit failure on node (ip-1-2-3-4)\nfit failure on node (ip-2-3-4-5)\n\n"
+      ) # no repeated events
       out.must_include "LOGS:\nLOG-1\n"
     end
 
@@ -306,4 +315,3 @@ describe Kubernetes::DeployExecutor do
     end
   end
 end
-

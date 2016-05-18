@@ -51,9 +51,9 @@ module Watchers
       event = message.event
       debug "Got message on topic: #{topic}. Type of message: #{event.kind}"
 
-      case
-      when event.kind == 'Event' then handle_cluster_event(message)
-      when event.kind == 'Pod' then handle_pod_event(message)
+      case event.kind
+      when 'Event' then handle_cluster_event(message)
+      when 'Pod' then handle_pod_event(message)
       else error "Object kind not yet supported: #{event.kind}"
       end
     end

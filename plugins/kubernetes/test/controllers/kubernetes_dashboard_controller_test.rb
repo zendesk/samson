@@ -1,3 +1,4 @@
+# rubocop:disable Metrics/LineLength
 require_relative '../test_helper'
 
 SingleCov.covered!
@@ -14,8 +15,8 @@ describe KubernetesDashboardController do
 
     it 'returns an empty array if no pods are running' do
       environment.cluster_deploy_groups.each do |cluster_deploy_group|
-        stub_request(:get, %r{http://cluster\.localhost.*/namespaces/#{cluster_deploy_group.namespace}.*})
-          .to_return(body: '{}')
+        stub_request(:get, %r{http://cluster\.localhost.*/namespaces/#{cluster_deploy_group.namespace}.*}).
+          to_return(body: '{}')
       end
 
       get :index, project_id: :foo, environment: environment.id, format: :json
@@ -25,8 +26,8 @@ describe KubernetesDashboardController do
 
     it 'returns a properly formatted response' do
       environment.cluster_deploy_groups.each do |cluster_deploy_group|
-        stub_request(:get, %r{http://cluster\.localhost.*/namespaces/#{cluster_deploy_group.namespace}.*})
-          .to_return(body: pod_list(cluster_deploy_group).to_json)
+        stub_request(:get, %r{http://cluster\.localhost.*/namespaces/#{cluster_deploy_group.namespace}.*}).
+          to_return(body: pod_list(cluster_deploy_group).to_json)
       end
 
       get :index, project_id: project.id, environment: environment.id, format: :json
@@ -37,8 +38,10 @@ describe KubernetesDashboardController do
 
     it 'passes correct params to client' do
       environment.cluster_deploy_groups.each do |cluster_deploy_group|
-        Kubeclient::Client.any_instance.expects(:get_pods).with(namespace: cluster_deploy_group.namespace,
-          label_selector: "project_id=#{project.id}").returns([])
+        Kubeclient::Client.any_instance.expects(:get_pods).with(
+          namespace: cluster_deploy_group.namespace,
+          label_selector: "project_id=#{project.id}"
+        ).returns([])
       end
 
       get :index, project_id: :foo, environment: environment.id, format: :json
@@ -68,11 +71,11 @@ describe KubernetesDashboardController do
   end
 
   def empty_list_template
-    RecursiveOpenStruct.new({
+    RecursiveOpenStruct.new(
       kind: 'PodList',
       apiVersion: 'v1',
       items: []
-    })
+    )
   end
 
   def pod_list_item(project, release, role, cluster_deploy_group)
@@ -134,28 +137,28 @@ describe KubernetesDashboardController do
   end
 
   def role_template(role)
-    RecursiveOpenStruct.new({
+    RecursiveOpenStruct.new(
       id: role.id,
       name: role.name,
       deploy_groups: []
-    })
+    )
   end
 
   def deploy_group_template(deploy_group)
-    RecursiveOpenStruct.new({
+    RecursiveOpenStruct.new(
       id: deploy_group.id,
       name: deploy_group.name,
       releases: []
-    })
+    )
   end
 
   def release_template(release, release_doc)
-    RecursiveOpenStruct.new({
+    RecursiveOpenStruct.new(
       id: release.id,
       build: release.build.label,
       target_replicas: release_doc.replica_target,
       live_replicas: 1,
       failed: false
-    })
+    )
   end
 end

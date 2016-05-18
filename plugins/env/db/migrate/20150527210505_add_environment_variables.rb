@@ -1,3 +1,4 @@
+# rubocop:disable Metrics/LineLength
 class AddEnvironmentVariables < ActiveRecord::Migration
   def change
     create_table :environment_variables do |t|

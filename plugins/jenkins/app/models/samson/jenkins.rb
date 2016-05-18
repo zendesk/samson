@@ -1,3 +1,4 @@
+# rubocop:disable Metrics/LineLength
 require 'jenkins_api_client'
 
 module Samson

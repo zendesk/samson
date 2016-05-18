@@ -61,7 +61,7 @@ describe Kubernetes::ReleaseDoc do
 
     describe "deployment" do
       it "creates when deploy does not exist" do
-        client.expects(:get_deployment).raises(KubeException.new(1,2,3))
+        client.expects(:get_deployment).raises(KubeException.new(1, 2, 3))
         client.expects(:create_deployment)
         doc.deploy
       end
@@ -80,7 +80,7 @@ describe Kubernetes::ReleaseDoc do
       end
 
       it "creates when daemonset does not exist" do
-        client.expects(:get_daemon_set).raises(KubeException.new(1,2,3))
+        client.expects(:get_daemon_set).raises(KubeException.new(1, 2, 3))
         client.expects(:create_daemon_set)
         doc.deploy
       end
@@ -154,4 +154,3 @@ describe Kubernetes::ReleaseDoc do
     end
   end
 end
-

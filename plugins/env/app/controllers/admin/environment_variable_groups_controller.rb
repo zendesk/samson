@@ -32,13 +32,14 @@ module Admin
     end
 
     def preview
-      @groups = if params[:group_id]
-        @group = EnvironmentVariableGroup.find(params[:group_id])
-        SamsonEnv.env_groups(Project.new(environment_variable_groups: [@group]), DeployGroup.all, preview: true)
-      else
-        @project = Project.find(params[:project_id])
-        SamsonEnv.env_groups(@project, DeployGroup.all, preview: true)
-      end
+      @groups =
+        if params[:group_id]
+          @group = EnvironmentVariableGroup.find(params[:group_id])
+          SamsonEnv.env_groups(Project.new(environment_variable_groups: [@group]), DeployGroup.all, preview: true)
+        else
+          @project = Project.find(params[:project_id])
+          SamsonEnv.env_groups(@project, DeployGroup.all, preview: true)
+        end
     end
 
     private

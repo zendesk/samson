@@ -72,21 +72,21 @@ end
 class ActiveSupport::TestCase
   def self.it_responds_with_unauthorized(&block)
     it 'responds with unauthorized' do
-      self.instance_eval(&block)
+      instance_eval(&block)
       @unauthorized.must_equal true, 'Request should get unauthorized'
     end
   end
 
   def self.it_responds_successfully(&block)
     it 'responds successfully' do
-      self.instance_eval(&block)
+      instance_eval(&block)
       assert_response :success
     end
   end
 
   def self.it_responds_with_bad_request(&block)
     it 'responds with 400 Bad Request' do
-      self.instance_eval(&block)
+      instance_eval(&block)
       assert_response :bad_request
     end
   end
@@ -94,7 +94,7 @@ class ActiveSupport::TestCase
   def self.it_should_raise_an_exception(&block)
     it 'should raise an exception' do
       assert_raises Exception do
-        self.instance_eval(&block)
+        instance_eval(&block)
       end
     end
   end
@@ -138,7 +138,10 @@ class ActiveSupport::TestCase
     Kubernetes::ReleaseDoc.any_instance.stubs(raw_template: {
       'kind' => 'Deployment',
       'spec' => {
-        'template' => {'metadata' => {'labels' => {'pre_defined' => 'foobar', 'project' => 'foobar', 'role' => 'app-server'}}, 'spec' => {'containers' => [{}]}},
+        'template' => {
+          'metadata' => {'labels' => {'pre_defined' => 'foobar', 'project' => 'foobar', 'role' => 'app-server'}},
+          'spec' => {'containers' => [{}]}
+        },
         'selector' => {'matchLabels' => {'pre_defined' => 'foobar', 'project' => 'foobar', 'role' => 'app-server'}}
       },
       'metadata' => {'labels' => {'project' => 'foobar', 'role' => 'app-server'}}

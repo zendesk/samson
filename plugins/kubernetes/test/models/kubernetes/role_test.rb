@@ -28,7 +28,14 @@ describe Kubernetes::Role do
       {
         'kind' => 'Deployment',
         'metadata' => {'labels' => {'role' => 'ROLE1'}},
-        'spec' => {'replicas' => 1, 'template'=> {'spec' => {'containers' => [{'resources' => {'limits' => {'ram_mi' => 23, 'cpu_m' => 11.12}}}]}}},
+        'spec' => {
+          'replicas' => 1,
+          'template' => {
+            'spec' => {
+              'containers' => [{'resources' => {'limits' => {'ram_mi' => 23, 'cpu_m' => 11.12}}}]
+            }
+          }
+        },
         'strategy_type' => 'RollingUpdate'
       },
       {

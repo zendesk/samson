@@ -23,9 +23,6 @@ module BuddyCheck
   end
 
   def stop_expired_deploys
-    Deploy.expired.each do |deploy|
-      "Stopping deploy #{deploy.id}"
-      deploy.stop!
-    end
+    Deploy.expired.each(&:stop!)
   end
 end

@@ -45,10 +45,8 @@ class KuberDeployService
   private
 
   def log(msg, extra_info = {})
-    extra_info.merge!(
-      release: kuber_release.id,
-      project: project.name
-    )
+    extra_info[:release] = kuber_release.id
+    extra_info[:project] = project.name
 
     Kubernetes::Util.log msg, extra_info
   end

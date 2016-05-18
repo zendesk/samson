@@ -1,3 +1,4 @@
+# rubocop:disable Metrics/LineLength
 require_relative '../test_helper'
 
 SingleCov.covered!
@@ -164,7 +165,7 @@ describe KubernetesReleasesController do
       end
 
       it_should_raise_an_exception do
-        post :create, project_id: project.permalink, kubernetes_release: single_role_release_params.tap { |params| params[:deploy_groups].clear } , authenticity_token:  set_form_authenticity_token
+        post :create, project_id: project.permalink, kubernetes_release: single_role_release_params.tap { |params| params[:deploy_groups].clear }, authenticity_token:  set_form_authenticity_token
         assert_release_count(@current_release_count)
       end
     end
@@ -253,7 +254,7 @@ describe KubernetesReleasesController do
   def multiple_roles_release_params
     single_role_release_params.tap do |params|
       params[:deploy_groups].each do |dg|
-        dg[:roles].push({ id: resque_worker.id, replicas: resque_worker.replicas })
+        dg[:roles].push(id: resque_worker.id, replicas: resque_worker.replicas)
       end
     end
   end

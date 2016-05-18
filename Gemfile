@@ -114,6 +114,7 @@ group :development, :test do
   gem 'pry-rails'
   gem 'awesome_print'
   gem 'brakeman'
+  gem 'rubocop'
 end
 
 group :test do

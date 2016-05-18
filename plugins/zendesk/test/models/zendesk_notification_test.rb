@@ -7,8 +7,8 @@ describe ZendeskNotification do
     Changeset::Commit.new(nil, Hashie::Mash.new(commit: {message: message}))
   end
 
-  let(:stage) { stub(name: "Production")}
-  let(:user) { stub(email: "deploys@example.org")}
+  let(:stage) { stub(name: "Production") }
+  let(:user) { stub(email: "deploys@example.org") }
   let(:changeset) { stub("changeset", commits: [commit("ZD#18 this fixes a very bad bug")]) }
   let(:deploy) { stub(changeset: changeset, user: user, stage: stage) }
   let(:notification) { ZendeskNotification.new(deploy) }
@@ -16,13 +16,21 @@ describe ZendeskNotification do
 
   describe 'when commit messages include Zendesk tickets' do
     before do
-      ZendeskNotificationRenderer.stubs(:render).returns("A fix to project has been deployed to Production. Deploy details: v2.14")
+      ZendeskNotificationRenderer.stubs(:render).returns(
+        "A fix to project has been deployed to Production. Deploy details: v2.14"
+      )
     end
 
     it "comments on the ticket" do
       comment = stub_api_request(:put, "api/v2/tickets/18").
-        with(body: "{\"ticket\":{\"status\":\"open\",\"comment\":{\"value\":\"A fix to project has been deployed to Production. Deploy details: v2.14\",\"public\":false}}}")
-
+        with(
+          body: {
+            ticket: {
+              status: :open,
+              comment: {value: "A fix to project has been deployed to Production. Deploy details: v2.14", public: false}
+            }
+          }.to_json
+        )
       notification.deliver
 
       assert_requested comment

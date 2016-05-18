@@ -1,6 +1,6 @@
 class Admin::Kubernetes::ClustersController < ApplicationController
   before_action :authorize_admin!
-  before_action :authorize_super_admin!, only: [ :create, :new, :update, :edit ]
+  before_action :authorize_super_admin!, only: [:create, :new, :update, :edit]
 
   before_action :find_cluster, only: [:show, :edit, :update]
   before_action :load_default_config_file, only: [:new, :edit, :update, :create]
@@ -66,7 +66,9 @@ class Admin::Kubernetes::ClustersController < ApplicationController
   end
 
   def new_cluster_params
-    params.require(:kubernetes_cluster).permit(:name, :config_filepath, :config_context, :description, { deploy_group_ids: [] })
+    params.require(:kubernetes_cluster).permit(
+      :name, :config_filepath, :config_context, :description, deploy_group_ids: []
+    )
   end
 
   def load_default_config_file
