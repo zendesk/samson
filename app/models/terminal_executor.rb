@@ -41,7 +41,11 @@ class TerminalExecutor
 
   def resolve_secrets(command)
     allowed_namespaces = ['global']
-    allowed_namespaces << @project.permalink if @project
+    Environment.pluck(:permalink).each do |link|
+      # allow access to global in all envs
+      allowed_namespaces << "#{link}/global"
+      allowed_namespaces << "#{link}/#{@project.permalink}" if @project
+    end
     command.gsub(%r{\b#{SECRET_PREFIX}(#{SecretStorage::SECRET_KEY_REGEX})\b}) do
       key = $1
       if key.start_with?(*allowed_namespaces.map { |n| "#{n}/" })

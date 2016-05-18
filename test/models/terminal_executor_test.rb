@@ -72,9 +72,9 @@ describe TerminalExecutor do
     end
 
     describe 'with secrets' do
-      let!(:secret) { create_secret 'global/bar' }
+      let!(:secret) { create_secret 'production/global/foo/bar' }
       let(:project) { projects(:test) }
-      let(:command) { 'export SECRET="secret://global/bar"; echo $SECRET' }
+      let(:command) { 'export SECRET="secret://production/global/foo/bar"; echo $SECRET' }
 
       it "resolves secrets" do
         subject.execute!(command)
@@ -83,28 +83,28 @@ describe TerminalExecutor do
 
       it "can use project specific secrets" do
         subject.instance_variable_set(:@project, project)
-        secret = create_secret "#{project.permalink}/bar"
-        subject.execute!(%Q{echo "secret://#{project.permalink}/bar"})
+        secret = create_secret "production/#{project.permalink}/blue_group/bar"
+        subject.execute!(%Q{echo "secret://production/#{project.permalink}/blue_group/bar"})
         output.string.must_equal "#{secret.value}\r\n"
       end
 
       it "fails on unresolved secrets" do
         assert_raises ActiveRecord::RecordNotFound do
-          subject.execute!('echo "secret://global/baz"')
+          subject.execute!('echo "secret://production/global/soemgroup/baz"')
         end
       end
 
       it "cannot use project specific secrets without a project" do
-        create_secret "foo/bar"
+        create_secret "production/foo/group/bar"
         assert_raises ActiveRecord::RecordNotFound do
-          subject.execute!('echo "secret://foo/bar"')
+          subject.execute!('echo "secret://production/group/bar"')
         end
       end
 
       it "does not show secrets in verbose mode" do
         subject.instance_variable_set(:@verbose, true)
         subject.execute!(command)
-        output.string.must_equal "» export SECRET=\"secret://global/bar\"; echo $SECRET\r\n#{secret.value}\r\n"
+        output.string.must_equal "» export SECRET=\"secret://production/global/foo/bar\"; echo $SECRET\r\n#{secret.value}\r\n"
       end
     end
   end

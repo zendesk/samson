@@ -1,5 +1,6 @@
 module SecretStorage
   require 'attr_encrypted'
+  SECRET_KEYS_PARTS = [:environment, :project, :deploy_group, :key].freeze
   class DbBackend
     class Secret < ActiveRecord::Base
       self.table_name = :secrets
@@ -49,16 +50,21 @@ module SecretStorage
     end
   end
 
-  require 'vault'
   class HashicorpVault
 
     VAULT_SECRET_BACKEND ='secret/'.freeze
-    # we don't really want other directories in here,
+    # we don't really want other directories in the key,
     # and there may be other chars that we find we don't like
     ENCODINGS = {"/": "%2F"}
 
     def self.read(key)
-      result = Vault.logical.read(vault_path(key))
+      safe_key = vault_path(
+        SecretStorage.parse_secret_key_part(key, :environment),
+        SecretStorage.parse_secret_key_part(key, :project),
+        SecretStorage.parse_secret_key_part(key, :deploy_group),
+        SecretStorage.parse_secret_key_part(key, :key),
+      )
+      result = vault_client.logical.read(safe_key)
       raise(ActiveRecord::RecordNotFound) if result.data[:vault].nil?
       result = result.to_h
       result = result.merge(result.delete(:data))
@@ -66,22 +72,55 @@ module SecretStorage
       result
     end
 
+    # and parse it
     def self.write(key, data)
-      Vault.logical.write(vault_path(key), vault: data[:value])
+      key = SecretStorage.parse_secret_key_part(key, :key)
+      vault_client.logical.write(
+        vault_path(
+          data[:environment_permalink],
+          data[:project_permalink],
+          data[:deploy_group_permalink],
+          key),
+        vault: data[:value])
     end
 
     def self.delete(key)
-      Vault.logical.delete(vault_path(key))
+      safe_key = vault_path(
+        SecretStorage.parse_secret_key_part(key, :environment),
+        SecretStorage.parse_secret_key_part(key, :project),
+        SecretStorage.parse_secret_key_part(key, :deploy_group),
+        SecretStorage.parse_secret_key_part(key, :key),
+      )
+      vault_client.logical.delete(safe_key)
     end
 
     def self.keys()
-      Vault.logical.list(VAULT_SECRET_BACKEND).map! { |key| convert_path(key, :decode) }
+      base_keys = vault_client.logical.list(VAULT_SECRET_BACKEND)
+      base_keys = keys_recursive(base_keys)
+      base_keys.map! { |secret_path| convert_path(secret_path, :decode) }
     end
 
     private
 
-    def self.vault_path(key)
-      VAULT_SECRET_BACKEND + convert_path(key, :encode)
+    # get and cache a copy of the client that has a token
+    def self.vault_client
+      @vault_client ||= VaultClient.new
+    end
+
+    def self.keys_recursive(keys, key_path="")
+      keys.flat_map do |key|
+        new_key = key_path + key
+        if key.end_with?('/') # a directory
+          keys_recursive(vault_client.logical.list(VAULT_SECRET_BACKEND + new_key ), new_key)
+        else
+          new_key
+        end
+      end
+    end
+
+    # path for these should be /env/project/deploygroup/key
+    def self.vault_path(environment, project, deploy_group, key)
+      VAULT_SECRET_BACKEND + SecretStorage.generate_secret_key(environment, project, deploy_group, convert_path(key, :encode))
     end
 
     def self.convert_path(string, direction)
@@ -123,6 +162,28 @@ module SecretStorage
 
     def backend
       BACKEND
+    end
+
+    def generate_secret_key(environment=nil, project=nil, deploy_group=nil, key=nil)
+      if environment.nil?
+        raise ArgumentError.new("missing environment paramater")
+      end
+      if project.nil?
+        raise ArgumentError.new("missing project paramater")
+      end
+      if deploy_group.nil?
+        raise ArgumentError.new("missing deploy_group paramater")
+      end
+      if key.nil?
+        raise ArgumentError.new("missing key paramater")
+      end
+      environment.to_s + "/" + project.to_s + "/" + deploy_group.to_s + "/" + key.to_s
+    end
+
+    def parse_secret_key_part(key, part)
+      return false if key.nil?
+      index = SecretStorage::SECRET_KEYS_PARTS.index(part)
+      key.split('/', SecretStorage::SECRET_KEYS_PARTS.count)[index]
     end
   end
 end
