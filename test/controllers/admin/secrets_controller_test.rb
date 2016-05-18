@@ -24,7 +24,7 @@ describe Admin::SecretsController do
       project_permalink: 'foo',
       deploy_group_permalink: 'group',
       key: 'bar'
-      }
+    }
 
     describe '#index' do
       it 'renders template without secret values' do

@@ -57,18 +57,6 @@ describe Project do
     assert_not_equal project.repository_directory, other_project.repository_directory
   end
 
-
-  describe "#deploy groups" do
-    before do
-      stage = project.deploy_groups.first.stages.first
-      project.deploy_groups << stage
-      project.save!
-    end
-    it 'has a uniq list of deploy groups' do
-      project.deploy_groups.count.must_equal(3)
-    end
-  end
-
   describe "#webhook_stages_for" do
     it "returns the stages with mappings for the branch" do
       master_stage = project.stages.create!(name: "master_stage")

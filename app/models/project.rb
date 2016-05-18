@@ -125,10 +125,6 @@ class Project < ActiveRecord::Base
     releases.map { |group_id, deploys| [ group_id, deploys.sort_by(&:updated_at).last ] }.to_h
   end
 
-  def deploy_groups
-    stages.flat_map(&:deploy_groups).uniq
-  end
-
   private
 
   def deploys_by_group(before)

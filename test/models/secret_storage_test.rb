@@ -72,25 +72,25 @@ describe SecretStorage do
 
     it "fails raises when missing environment" do
       assert_raises ArgumentError do
-      SecretStorage.generate_secret_key(nil, 'foo', 'bar', 'snafu')
+        SecretStorage.generate_secret_key(nil, 'foo', 'bar', 'snafu')
       end
     end
 
     it "fails raises when missing project" do
       assert_raises ArgumentError do
-      SecretStorage.generate_secret_key('env', nil, 'bar', 'snafu')
+        SecretStorage.generate_secret_key('env', nil, 'bar', 'snafu')
       end
     end
 
     it "fails raises when missing deploy_group" do
       assert_raises ArgumentError do
-      SecretStorage.generate_secret_key('env', 'foo', nil, 'snafu')
+        SecretStorage.generate_secret_key('env', 'foo', nil, 'snafu')
       end
     end
 
     it "fails raises when missing key" do
       assert_raises ArgumentError do
-      SecretStorage.generate_secret_key('env', 'foo', 'group', nil)
+        SecretStorage.generate_secret_key('env', 'foo', 'group', nil)
       end
     end
   end
