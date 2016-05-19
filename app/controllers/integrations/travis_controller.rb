@@ -1,14 +1,8 @@
-require 'digest/sha2'
-
 class Integrations::TravisController < Integrations::BaseController
   protected
 
   def payload
     @payload ||= JSON.parse(params.fetch('payload', '{}'))
-  end
-
-  def travis_authorization
-    Digest::SHA2.hexdigest("#{project.github_repo}#{ENV['TRAVIS_TOKEN']}")
   end
 
   def deploy?
