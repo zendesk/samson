@@ -20,8 +20,7 @@ class GitRepository
 
     executor.output.write("# Beginning git repo setup\n")
     return false unless update_local_cache!
-    return false unless clone!(from: repo_cache_dir, to: temp_dir)
-    return false unless checkout!(git_reference, pwd: temp_dir)
+    return false unless setup_worktree!(temp_dir, git_reference)
     true
   end
 
@@ -29,20 +28,21 @@ class GitRepository
     if locally_cached?
       update!
     else
-      clone!(from: repository_url, to: repo_cache_dir, mirror: true)
+      clone!(from: repository_url, to: repo_cache_dir)
     end
   end
 
-  def clone!(from: repository_url, to: repo_cache_dir, mirror: false)
+  def clone!(from: repository_url, to: repo_cache_dir)
     @last_pulled = Time.now if from == repository_url
-    command = if mirror
-      "git -c core.askpass=true clone --mirror #{from} #{to}"
-    else
-      "git clone #{from} #{to}"
-    end
+    command = "git -c core.askpass=true clone --mirror #{from} #{to}"
     executor.execute! command
   end
   add_method_tracer :clone!
+
+  def setup_worktree!(temp_dir, git_reference)
+    command = "git worktree add "
+    executor.execute!("cd #{repo_cache_dir}", "git worktree add #{temp_dir} #{git_reference} --force")
+  end
 
   def commit_from_ref(git_reference, length: 7)
     return unless ensure_local_cache!
@@ -116,10 +116,6 @@ class GitRepository
 
   def ensure_local_cache!
     locally_cached? || update_local_cache!
-  end
-
-  def checkout!(git_reference, pwd: repo_cache_dir)
-    executor.execute!("cd #{pwd}", "git checkout --quiet #{git_reference.shellescape}")
   end
 
   def locally_cached?
