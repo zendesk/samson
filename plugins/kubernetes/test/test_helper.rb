@@ -71,10 +71,10 @@ class ActiveSupport::TestCase
     Kubernetes::ReleaseDoc.any_instance.stubs(raw_template: {
       'kind' => 'Deployment',
       'spec' => {
-        'template' => {'metadata' => {'labels' => {'pre_defined' => 'foobar'}}, 'spec' => {'containers' => [{}]}},
-        'selector' => {'matchLabels' => {'pre_defined' => 'foobar'}}
+        'template' => {'metadata' => {'labels' => {'pre_defined' => 'foobar', 'project' => 'foobar', 'role' => 'app-server'}}, 'spec' => {'containers' => [{}]}},
+        'selector' => {'matchLabels' => {'pre_defined' => 'foobar', 'project' => 'foobar', 'role' => 'app-server'}}
       },
-      'metadata' => {'labels' => {}}
+      'metadata' => {'labels' => {'project' => 'foobar', 'role' => 'app-server'}}
     }.to_yaml)
   end
 
