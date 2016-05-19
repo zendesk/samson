@@ -51,88 +51,92 @@ module SecretStorage
   end
 
   class HashicorpVault
-
-    VAULT_SECRET_BACKEND ='secret/'.freeze
+    VAULT_SECRET_BACKEND = 'secret/'.freeze
     # we don't really want other directories in the key,
     # and there may be other chars that we find we don't like
-    ENCODINGS = {"/": "%2F"}
+    ENCODINGS = {"/": "%2F"}.freeze
 
-    def self.read(key)
-      safe_key = vault_path(
-        SecretStorage.parse_secret_key_part(key, :environment),
-        SecretStorage.parse_secret_key_part(key, :project),
-        SecretStorage.parse_secret_key_part(key, :deploy_group),
-        SecretStorage.parse_secret_key_part(key, :key),
-      )
-      result = vault_client.logical.read(safe_key)
-      raise(ActiveRecord::RecordNotFound) if result.data[:vault].nil?
-      result = result.to_h
-      result = result.merge(result.delete(:data))
-      result[:value] = result.delete(:vault)
-      result
-    end
+    class << self
+      def read(key)
+        safe_key = vault_path(
+          SecretStorage.parse_secret_key_part(key, :environment),
+          SecretStorage.parse_secret_key_part(key, :project),
+          SecretStorage.parse_secret_key_part(key, :deploy_group),
+          SecretStorage.parse_secret_key_part(key, :key)
+        )
+        result = vault_client.logical.read(safe_key)
+        raise(ActiveRecord::RecordNotFound) if result.data[:vault].nil?
+        result = result.to_h
+        result = result.merge(result.delete(:data))
+        result[:value] = result.delete(:vault)
+        result
+      end
 
-    # and parse it
-    def self.write(key, data)
-      key = SecretStorage.parse_secret_key_part(key, :key)
-      vault_client.logical.write(
-        vault_path(
-          data[:environment_permalink],
-          data[:project_permalink],
-          data[:deploy_group_permalink],
-          key),
-        vault: data[:value])
-    end
+      def write(key, data)
+        key = SecretStorage.parse_secret_key_part(key, :key)
+        vault_client.logical.write(
+          vault_path(
+            data[:environment_permalink],
+            data[:project_permalink],
+            data[:deploy_group_permalink],
+            key
+          ),
+          vault: data[:value]
+        )
+      end
 
-    def self.delete(key)
-      safe_key = vault_path(
-        SecretStorage.parse_secret_key_part(key, :environment),
-        SecretStorage.parse_secret_key_part(key, :project),
-        SecretStorage.parse_secret_key_part(key, :deploy_group),
-        SecretStorage.parse_secret_key_part(key, :key),
-      )
-      vault_client.logical.delete(safe_key)
-    end
+      def delete(key)
+        safe_key = vault_path(
+          SecretStorage.parse_secret_key_part(key, :environment),
+          SecretStorage.parse_secret_key_part(key, :project),
+          SecretStorage.parse_secret_key_part(key, :deploy_group),
+          SecretStorage.parse_secret_key_part(key, :key)
+        )
+        vault_client.logical.delete(safe_key)
+      end
 
-    def self.keys()
-      base_keys = vault_client.logical.list(VAULT_SECRET_BACKEND)
-      base_keys = keys_recursive(base_keys)
-      base_keys.map! { |secret_path| convert_path(secret_path, :decode) }
-    end
+      def keys
+        base_keys = vault_client.logical.list(VAULT_SECRET_BACKEND)
+        base_keys = keys_recursive(base_keys)
+        base_keys.map! { |secret_path| convert_path(secret_path, :decode) }
+      end
 
-    private
+      private
 
-    # get and cache a copy of the client that has a token
-    def self.vault_client
-      @vault_client ||= VaultClient.new
-    end
+      # get and cache a copy of the client that has a token
+      def vault_client
+        @vault_client ||= VaultClient.new
+      end
 
-    def self.keys_recursive(keys, key_path="")
-      keys.flat_map do |key|
-        new_key = key_path + key
-        if key.end_with?('/') # a directory
-          keys_recursive(vault_client.logical.list(VAULT_SECRET_BACKEND + new_key ), new_key)
-        else
-          new_key
+      def keys_recursive(keys, key_path = "")
+        keys.flat_map do |key|
+          new_key = key_path + key
+          if key.end_with?('/') # a directory
+            keys_recursive(vault_client.logical.list(VAULT_SECRET_BACKEND + new_key), new_key)
+          else
+            new_key
+          end
         end
       end
-    end
 
-    # path for these should be /env/project/deploygroup/key
-    def self.vault_path(environment, project, deploy_group, key)
-      VAULT_SECRET_BACKEND + SecretStorage.generate_secret_key(environment, project, deploy_group, convert_path(key, :encode))
-    end
-
-    def self.convert_path(string, direction)
-      string = string.dup
-      if direction == :decode
-        ENCODINGS.each { |k, v| string.gsub!(v.to_s, k.to_s) }
-      elsif direction == :encode
-        ENCODINGS.each { |k, v| string.gsub!(k.to_s, v.to_s) }
-      else
-        raise ArgumentError.new("direction is required")
+      # path for these should be /env/project/deploygroup/key
+      def vault_path(environment, project, deploy_group, key)
+        VAULT_SECRET_BACKEND + SecretStorage.generate_secret_key(
+          environment, project, deploy_group, convert_path(key, :encode)
+        )
       end
-      string
+
+      def convert_path(string, direction)
+        string = string.dup
+        if direction == :decode
+          ENCODINGS.each { |k, v| string.gsub!(v.to_s, k.to_s) }
+        elsif direction == :encode
+          ENCODINGS.each { |k, v| string.gsub!(k.to_s, v.to_s) }
+        else
+          raise ArgumentError, "direction is required"
+        end
+        string
+      end
     end
   end
 
@@ -164,19 +168,11 @@ module SecretStorage
       BACKEND
     end
 
-    def generate_secret_key(environment=nil, project=nil, deploy_group=nil, key=nil)
-      if environment.nil?
-        raise ArgumentError.new("missing environment paramater")
-      end
-      if project.nil?
-        raise ArgumentError.new("missing project paramater")
-      end
-      if deploy_group.nil?
-        raise ArgumentError.new("missing deploy_group paramater")
-      end
-      if key.nil?
-        raise ArgumentError.new("missing key paramater")
-      end
+    def generate_secret_key(environment = nil, project = nil, deploy_group = nil, key = nil)
+      raise ArgumentError, "missing environment paramater" if environment.nil?
+      raise ArgumentError, "missing project paramater" if project.nil?
+      raise ArgumentError, "missing deploy_group paramater" if deploy_group.nil?
+      raise ArgumentError, "missing key paramater" if key.nil?
       environment.to_s + "/" + project.to_s + "/" + deploy_group.to_s + "/" + key.to_s
     end
 
