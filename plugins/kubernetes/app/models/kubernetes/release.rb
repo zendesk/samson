@@ -68,7 +68,7 @@ module Kubernetes
     end
 
     def clients
-      release_docs.map(&:deploy_group).map do |deploy_group|
+      release_docs.map(&:deploy_group).uniq.map do |deploy_group|
         query = {
           namespace: deploy_group.kubernetes_namespace,
           label_selector: {

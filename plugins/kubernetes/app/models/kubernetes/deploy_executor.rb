@@ -77,7 +77,7 @@ module Kubernetes
 
     def pod_statuses(release)
       pods = release.clients.flat_map { |client, query| fetch_pods(client, query) }
-      release.release_docs.map { |release_doc| release_status(pods, release_doc) }
+      release.release_docs.flat_map { |release_doc| release_statuses(pods, release_doc) }
     end
 
     def fetch_pods(client, query)
@@ -102,7 +102,12 @@ module Kubernetes
 
         # logs - container fails to boot
         @output.puts "\nLOGS:"
-        @output.puts client.get_pod_log(pod.name, namespace, previous: pod.restarted?)
+        logs = begin
+          client.get_pod_log(pod.name, namespace, previous: pod.restarted?)
+        rescue KubeException
+          "No logs found"
+        end
+        @output.puts logs
       end
     end
 
@@ -117,27 +122,31 @@ module Kubernetes
       end
     end
 
-    def release_status(pods, release_doc)
+    def release_statuses(pods, release_doc)
       group = release_doc.deploy_group
       role = release_doc.kubernetes_role
 
-      pod = pods.detect { |pod| pod.role_id == role.id && pod.deploy_group_id == group.id }
+      pods = pods.select { |pod| pod.role_id == role.id && pod.deploy_group_id == group.id }
 
-      live, details = if pod
-        if pod.live?
-          if pod.restarted?
-            [false, RESTARTED]
-          else
-            [true, "Live"]
-          end
-        else
-          [false, "Waiting (#{pod.phase}, not Ready)"]
-        end
+      statuses = if pods.empty?
+        [[false, "Missing"]]
       else
-        [false, "Missing"]
+        pods.map do |pod|
+          if pod.live?
+            if pod.restarted?
+              [false, RESTARTED]
+            else
+              [true, "Live"]
+            end
+          else
+            [false, "Waiting (#{pod.phase}, not Ready)"]
+          end
+        end
       end
 
-      ReleaseStatus.new(live, details, role.name, group.name)
+      statuses.map do |live, details|
+        ReleaseStatus.new(live, details, role.name, group.name)
+      end
     end
 
     def print_statuses(statuses)

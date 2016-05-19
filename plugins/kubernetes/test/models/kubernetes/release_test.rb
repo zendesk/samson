@@ -1,6 +1,6 @@
 require_relative '../../test_helper'
 
-SingleCov.covered! uncovered: 17
+SingleCov.covered! uncovered: 16
 
 describe Kubernetes::Release do
   let(:build)  { builds(:docker_build) }

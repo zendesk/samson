@@ -86,6 +86,13 @@ describe Kubernetes::DeployExecutor do
       doc.ram.must_equal config.ram
     end
 
+    it "shows status of all pods when replicase or daemonset was used" do
+      pod_reply[:items] << pod_reply[:items].first
+      assert execute!
+      out.must_include "resque_worker: Live\n  resque_worker: Live"
+      out.must_include "SUCCESS"
+    end
+
     describe "build" do
       before do
         build.update_column(:docker_repo_digest, nil)
@@ -248,7 +255,17 @@ describe Kubernetes::DeployExecutor do
       # correct debugging output
       out.scan(/Pod 100 pod pod-(\S+)/).flatten.uniq.must_equal ["resque_worker:"] # logs and events only for bad pod
       out.must_include "EVENTS:\nFailedScheduling: fit failure on node (ip-1-2-3-4)\nfit failure on node (ip-2-3-4-5)\n\n" # no repeated events
-      out.must_include "LOG-1\n"
+      out.must_include "LOGS:\nLOG-1\n"
+    end
+
+    it "does not crash when logs endpoint fails with a 404" do
+      stub_request(:get, "http://foobar.server/api/v1/namespaces/staging/pods/pod-resque_worker/log?previous=true").
+        to_raise(KubeException.new('a', 'b', 'c'))
+      worker_is_unstable
+
+      refute execute!
+
+      out.must_include "LOGS:\nNo logs found\n"
     end
 
     it "waits when deploy is running but not ready" do
