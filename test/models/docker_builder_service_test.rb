@@ -46,6 +46,21 @@ describe DeployService do
       service.build_image(tmp_dir).must_equal nil
       build.docker_image_id.must_equal nil
     end
+
+    it 'catches JSON errors' do
+      push_output = [
+        [{status: 'working okay'}.to_json],
+        ['{"status":"this is incomplete JSON...']
+      ]
+
+      Docker::Image.unstub(:build_from_dir)
+      Docker::Image.expects(:build_from_dir)
+        .multiple_yields(*push_output)
+        .returns(mock_docker_image)
+
+      service.build_image(tmp_dir)
+      service.output.to_s.must_include 'this is incomplete JSON'
+    end
   end
 
   describe '#push_image' do

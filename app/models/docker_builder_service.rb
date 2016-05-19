@@ -108,6 +108,11 @@ class DockerBuilderService
     end
 
     parsed_chunk
+  rescue JSON::ParserError
+    # Sometimes the JSON line is too big to fit in one chunk, so we get
+    # a chunk back that is an incomplete JSON object.
+    output.puts chunk
+    { 'message' => chunk }
   end
 
   def send_after_notifications
