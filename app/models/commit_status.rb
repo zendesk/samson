@@ -2,7 +2,8 @@ class CommitStatus
   cattr_accessor(:token) { ENV['GITHUB_TOKEN'] }
 
   def initialize(repo, sha)
-    @repo, @sha = repo, sha
+    @repo = repo
+    @sha = sha
   end
 
   def status

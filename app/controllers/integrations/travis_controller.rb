@@ -13,7 +13,7 @@ class Integrations::TravisController < Integrations::BaseController
 
   def deploy?
     project &&
-      %w{Passed Fixed}.include?(payload['status_message']) &&
+      %w[Passed Fixed].include?(payload['status_message']) &&
       payload['type'] == 'push' &&
       !skip?
   end

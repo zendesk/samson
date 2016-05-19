@@ -4,7 +4,7 @@ class Admin::SecretsController < ApplicationController
   before_action :find_project_permalinks, :find_environments_permalinks, :find_deploy_group_permalinks
   before_action :find_secret, only: [:update, :edit, :destroy]
 
-  DEPLOYER_ACCESS = [:index, :new]
+  DEPLOYER_ACCESS = [:index, :new].freeze
   before_action :ensure_project_access, except: DEPLOYER_ACCESS
   before_action :authorize_project_admin!, except: DEPLOYER_ACCESS
   before_action :authorize_deployer!, only: DEPLOYER_ACCESS

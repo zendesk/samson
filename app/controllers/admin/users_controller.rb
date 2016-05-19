@@ -2,7 +2,7 @@ require 'csv'
 
 class Admin::UsersController < ApplicationController
   before_action :authorize_admin!
-  before_action :authorize_super_admin!, only: [ :update, :destroy ]
+  before_action :authorize_super_admin!, only: [:update, :destroy]
 
   def index
     @users = User.search_by_criteria(params)
@@ -23,7 +23,9 @@ class Admin::UsersController < ApplicationController
 
   def update
     if user.update_attributes(user_params)
-      Rails.logger.info("#{current_user.name_and_email} changed the role of #{user.name_and_email} to #{user.role.name}")
+      Rails.logger.info(
+        "#{current_user.name_and_email} changed the role of #{user.name_and_email} to #{user.role.name}"
+      )
       head :ok
     else
       head :bad_request

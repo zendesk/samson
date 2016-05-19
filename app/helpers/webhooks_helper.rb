@@ -5,6 +5,6 @@ module WebhooksHelper
       ['Any code push', 'any_code'],
       ['Any Pull Request', 'any_pull_request'],
       ['Any', 'any']
-    ] + sources.map {|source| [ source.titleize, source ]}.to_a
+    ] + sources.map { |source| [source.titleize, source] }.to_a
   end
 end

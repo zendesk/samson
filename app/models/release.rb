@@ -18,7 +18,7 @@ class Release < ActiveRecord::Base
   end
 
   def deployed_stages
-    @deployed_stages ||= project.stages.select {|stage| stage.current_release?(self) }
+    @deployed_stages ||= project.stages.select { |stage| stage.current_release?(self) }
   end
 
   def changeset

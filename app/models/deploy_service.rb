@@ -51,11 +51,11 @@ class DeployService
   end
 
   def latest_approved_deploy(reference, project)
-    Deploy.where(reference: reference).where('buddy_id is NOT NULL AND started_at > ?', BuddyCheck.grace_period.ago)
-      .includes(:stage)
-      .where(stages: {project_id: project})
-      .reorder('started_at desc')
-      .detect { |d| d.production? && !d.bypassed_approval? }
+    Deploy.where(reference: reference).where('buddy_id is NOT NULL AND started_at > ?', BuddyCheck.grace_period.ago).
+      includes(:stage).
+      where(stages: {project_id: project}).
+      reorder('started_at desc').
+      detect { |d| d.production? && !d.bypassed_approval? }
   end
 
   def copy_approval_from_last_deploy(deploy)
@@ -122,6 +122,6 @@ class DeployService
   end
 
   def send_sse_deploy_update(type, deploy)
-    SseRailsEngine.send_event('deploys', { type: type, deploy: DeploySerializer.new(deploy, root: nil) })
+    SseRailsEngine.send_event('deploys', type: type, deploy: DeploySerializer.new(deploy, root: nil))
   end
 end
