@@ -52,7 +52,7 @@ describe Admin::SecretsController do
 
     describe '#update' do
       it "is unauthrized" do
-        put :update, id: secret, secret: {project_permalink: SecretStorage.parse_secret_key_part(secret.id, :project) }
+        put :update, id: secret, secret: {value: 'xxx'}
         assert_unauthorized
       end
     end
@@ -124,11 +124,7 @@ describe Admin::SecretsController do
     end
 
     describe '#update' do
-      let(:attributes) {{
-        value: 'hi', environment_permalink: SecretStorage.parse_secret_key_part(secret.id, :environment),
-        project_permalink: SecretStorage.parse_secret_key_part(secret.id, :project),
-        deploy_group_permalink: SecretStorage.parse_secret_key_part(secret.id, :deploy_group)
-      }}
+      let(:attributes) { { value: 'hi' } }
 
       before do
         patch :update, id: secret.id, secret: attributes
@@ -143,12 +139,7 @@ describe Admin::SecretsController do
       end
 
       describe 'invalid' do
-        let(:attributes) {{
-          value: '',
-          environment_permalink: SecretStorage.parse_secret_key_part(secret.id, :environment),
-          project_permalink: SecretStorage.parse_secret_key_part(secret.id, :project),
-          deploy_group_permalink: SecretStorage.parse_secret_key_part(secret.id, :deploy_group)
-        }}
+        let(:attributes) { { value: '' } }
 
         it 'fails to update' do
           assert_template :edit

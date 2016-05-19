@@ -25,67 +25,6 @@ require 'mocha/setup'
 
 require 'sucker_punch/testing/inline'
 
-# Mock up vault client
-class VaultClient
-  def logical
-    @logical ||= Logical.new
-  end
-
-  def self.vault_response_object(data)
-    Response.new(data)
-  end
-
-  class Response
-    attr_accessor :lease_id, :lease_duration, :renewable, :data, :auth
-    def initialize(data)
-      self.lease_id = nil
-      self.lease_duration = nil
-      self.renewable = nil
-      self.auth = nil
-      self.data = data
-    end
-
-    def to_h
-      instance_values.symbolize_keys
-    end
-  end
-
-  class Logical
-    def list(key)
-      uri = URI("https://127.0.0.1:8200/v1/#{key}?list=true")
-      Net::HTTP.get(uri)
-    end
-
-    def read(key)
-      response_data = {
-        "secret/production/foo/pod2/isbar": { vault: "bar"},
-        "secret/this/key/isnot/there": {vault: nil}
-      }
-
-      uri = URI("https://127.0.0.1:8200/v1/#{key}")
-      Net::HTTP.get(uri)
-      Response.new(response_data[key.to_sym])
-    end
-
-    def delete(key)
-      uri = URI("https://127.0.0.1:8200/v1/#{key}")
-      http = Net::HTTP.new(uri.host, uri.port)
-      req = Net::HTTP::Delete.new(uri.path)
-      http.request(req)
-    end
-
-    def write(key, body)
-      uri = URI("https://127.0.0.1:8200/v1/#{key}")
-      http = Net::HTTP.new(uri.host, uri.port)
-      http.use_ssl = true
-      http.verify_mode = OpenSSL::SSL::VERIFY_NONE
-      req = Net::HTTP::Put.new(uri.path)
-      req.body = body.to_json
-      http.request(req)
-    end
-  end
-end
-
 # Use ActiveSupport::TestCase for everything that was not matched before
 MiniTest::Spec::DSL::TYPES[-1] = [//, ActiveSupport::TestCase]
 
