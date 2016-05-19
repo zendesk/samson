@@ -86,6 +86,13 @@ describe Kubernetes::DeployExecutor do
       doc.ram.must_equal config.ram
     end
 
+    it "shows status of all pods when replicase or daemonset was used" do
+      pod_reply[:items] << pod_reply[:items].first
+      assert execute!
+      out.must_include "resque_worker: Live\n  resque_worker: Live"
+      out.must_include "SUCCESS"
+    end
+
     describe "build" do
       before do
         build.update_column(:docker_repo_digest, nil)
