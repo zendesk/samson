@@ -102,7 +102,12 @@ module Kubernetes
 
         # logs - container fails to boot
         @output.puts "\nLOGS:"
-        @output.puts client.get_pod_log(pod.name, namespace, previous: pod.restarted?)
+        logs = begin
+          client.get_pod_log(pod.name, namespace, previous: pod.restarted?)
+        rescue KubeException
+          "No logs found"
+        end
+        @output.puts logs
       end
     end
 

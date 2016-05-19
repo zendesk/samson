@@ -255,7 +255,17 @@ describe Kubernetes::DeployExecutor do
       # correct debugging output
       out.scan(/Pod 100 pod pod-(\S+)/).flatten.uniq.must_equal ["resque_worker:"] # logs and events only for bad pod
       out.must_include "EVENTS:\nFailedScheduling: fit failure on node (ip-1-2-3-4)\nfit failure on node (ip-2-3-4-5)\n\n" # no repeated events
-      out.must_include "LOG-1\n"
+      out.must_include "LOGS:\nLOG-1\n"
+    end
+
+    it "does not crash when logs endpoint fails with a 404" do
+      stub_request(:get, "http://foobar.server/api/v1/namespaces/staging/pods/pod-resque_worker/log?previous=true").
+        to_raise(KubeException.new('a', 'b', 'c'))
+      worker_is_unstable
+
+      refute execute!
+
+      out.must_include "LOGS:\nNo logs found\n"
     end
 
     it "waits when deploy is running but not ready" do
