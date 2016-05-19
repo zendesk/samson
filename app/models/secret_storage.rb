@@ -1,6 +1,8 @@
 module SecretStorage
+  SECRET_KEYS_PARTS = [:environment_permalink, :project_permalink, :deploy_group_permalink, :key].freeze
+  SEPARATOR = "/".freeze
+
   require 'attr_encrypted'
-  SECRET_KEYS_PARTS = [:environment, :project, :deploy_group, :key].freeze
   class DbBackend
     class Secret < ActiveRecord::Base
       self.table_name = :secrets
@@ -58,14 +60,9 @@ module SecretStorage
 
     class << self
       def read(key)
-        safe_key = vault_path(
-          SecretStorage.parse_secret_key_part(key, :environment),
-          SecretStorage.parse_secret_key_part(key, :project),
-          SecretStorage.parse_secret_key_part(key, :deploy_group),
-          SecretStorage.parse_secret_key_part(key, :key)
-        )
-        result = vault_client.logical.read(safe_key)
-        raise(ActiveRecord::RecordNotFound) if result.data[:vault].nil?
+        key = vault_path(key)
+        result = vault_client.logical.read(key)
+        raise ActiveRecord::RecordNotFound if result.data[:vault].nil?
         result = result.to_h
         result = result.merge(result.delete(:data))
         result[:value] = result.delete(:vault)
@@ -73,32 +70,19 @@ module SecretStorage
       end
 
       def write(key, data)
-        key = SecretStorage.parse_secret_key_part(key, :key)
-        vault_client.logical.write(
-          vault_path(
-            data[:environment_permalink],
-            data[:project_permalink],
-            data[:deploy_group_permalink],
-            key
-          ),
-          vault: data[:value]
-        )
+        vault_client.logical.write(vault_path(key), vault: data[:value])
       end
 
       def delete(key)
-        safe_key = vault_path(
-          SecretStorage.parse_secret_key_part(key, :environment),
-          SecretStorage.parse_secret_key_part(key, :project),
-          SecretStorage.parse_secret_key_part(key, :deploy_group),
-          SecretStorage.parse_secret_key_part(key, :key)
-        )
-        vault_client.logical.delete(safe_key)
+        vault_client.logical.delete(vault_path(key))
       end
 
       def keys
-        base_keys = vault_client.logical.list(VAULT_SECRET_BACKEND)
-        base_keys = keys_recursive(base_keys)
-        base_keys.map! { |secret_path| convert_path(secret_path, :decode) }
+        keys = vault_client.logical.list(VAULT_SECRET_BACKEND)
+        keys = keys_recursive(keys)
+        keys.map! do |secret_path|
+          convert_path(secret_path, :decode) # FIXME: ideally only decode the key(#4) part
+        end
       end
 
       private
@@ -119,13 +103,14 @@ module SecretStorage
         end
       end
 
-      # path for these should be /env/project/deploygroup/key
-      def vault_path(environment, project, deploy_group, key)
-        VAULT_SECRET_BACKEND + SecretStorage.generate_secret_key(
-          environment, project, deploy_group, convert_path(key, :encode)
-        )
+      # key is the last element and should not include bad characters
+      def vault_path(key)
+        parts = key.split(SEPARATOR, SECRET_KEYS_PARTS.size)
+        parts[-1] = convert_path(parts[-1], :encode)
+        VAULT_SECRET_BACKEND + parts.join(SEPARATOR)
       end
 
+      # convert from/to escaped characters
       def convert_path(string, direction)
         string = string.dup
         if direction == :decode
@@ -168,18 +153,12 @@ module SecretStorage
       BACKEND
     end
 
-    def generate_secret_key(environment = nil, project = nil, deploy_group = nil, key = nil)
-      raise ArgumentError, "missing environment paramater" if environment.nil?
-      raise ArgumentError, "missing project paramater" if project.nil?
-      raise ArgumentError, "missing deploy_group paramater" if deploy_group.nil?
-      raise ArgumentError, "missing key paramater" if key.nil?
-      environment.to_s + "/" + project.to_s + "/" + deploy_group.to_s + "/" + key.to_s
+    def generate_secret_key(data)
+      SECRET_KEYS_PARTS.map { |k| data.fetch(k) }.join(SEPARATOR)
     end
 
-    def parse_secret_key_part(key, part)
-      return false if key.nil?
-      index = SecretStorage::SECRET_KEYS_PARTS.index(part)
-      key.split('/', SecretStorage::SECRET_KEYS_PARTS.count)[index]
+    def parse_secret_key(key)
+      SECRET_KEYS_PARTS.zip(key.split(SEPARATOR, SECRET_KEYS_PARTS.size)).to_h
     end
   end
 end
