@@ -19,7 +19,7 @@ class VaultClient
       self.lease_duration = nil
       self.renewable = nil
       self.auth = nil
-      self.data = JSON.parse(data).symbolize_keys
+      self.data = data
     end
 
     def to_h
@@ -28,31 +28,43 @@ class VaultClient
   end
 
   class Logical
+    def initialize
+      @expected = {}
+      @set = {}
+    end
+
     def list(key)
-      uri = URI("https://127.0.0.1:8200/v1/#{key}?list=true")
-      Net::HTTP.get(uri)
+      @expected.delete("list-#{key}") || raise(KeyError, "list-#{key} not registered")
     end
 
     def read(key)
-      uri = URI("https://127.0.0.1:8200/v1/#{key}")
-      Response.new(Net::HTTP.get(uri))
+      Response.new(@expected.delete(key) || raise(KeyError, "#{key} not registered"))
     end
 
     def delete(key)
-      uri = URI("https://127.0.0.1:8200/v1/#{key}")
-      http = Net::HTTP.new(uri.host, uri.port)
-      req = Net::HTTP::Delete.new(uri.path)
-      http.request(req)
+      @set[key] = nil
+      true
     end
 
     def write(key, body)
-      uri = URI("https://127.0.0.1:8200/v1/#{key}")
-      http = Net::HTTP.new(uri.host, uri.port)
-      http.use_ssl = true
-      http.verify_mode = OpenSSL::SSL::VERIFY_NONE
-      req = Net::HTTP::Put.new(uri.path)
-      req.body = body.to_json
-      http.request(req)
+      @set[key] = body
+      true
+    end
+
+    # test hooks
+    def clear
+      @set.clear
+      @expected.clear
+    end
+
+    def expect(key, value)
+      @expected[key] = value
+    end
+
+    attr_reader :set
+
+    def verify!
+      @expected.keys.must_equal([], "Expected calls missed: #{@expected.keys}")
     end
   end
 end

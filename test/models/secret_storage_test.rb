@@ -131,10 +131,14 @@ describe SecretStorage do
   end
 
   describe SecretStorage::HashicorpVault do
+    let(:client) { SecretStorage::HashicorpVault.send(:vault_client).logical }
+
+    before { client.clear }
+    after { client.verify! }
+
     describe ".read" do
       it "gets a value based on a key with /secret" do
-        stub_request(:get, "https://127.0.0.1:8200/v1/secret/production/foo/pod2/bar").
-          to_return(body: '{"vault": "bar"}')
+        client.expect('secret/production/foo/pod2/bar', vault: "bar")
         SecretStorage::HashicorpVault.read('production/foo/pod2/bar').must_equal(
           lease_id: nil,
           lease_duration: nil,
@@ -145,8 +149,7 @@ describe SecretStorage do
       end
 
       it "fails to read a key" do
-        stub_request(:get, "https://127.0.0.1:8200/v1/secret/production/foo/pod2/bar").
-          to_return(body: '{"vault":null}')
+        client.expect('secret/production/foo/pod2/bar', vault: nil)
         assert_raises ActiveRecord::RecordNotFound do
           SecretStorage::HashicorpVault.read('production/foo/pod2/bar')
         end
@@ -154,41 +157,25 @@ describe SecretStorage do
     end
 
     describe ".delete" do
-      before do
-        stub_request(:delete, "http://127.0.0.1:8200/v1/secret/production/foo/group/isbar")
-      end
-
       it "deletes key with /secret" do
         assert SecretStorage::HashicorpVault.delete('production/foo/group/isbar')
+        client.set.must_equal('secret/production/foo/group/isbar' => nil)
       end
     end
 
     describe ".write" do
       it "writes a key with /secret" do
-        stub_request(:put, "https://127.0.0.1:8200/v1/secret/production/foo/group/isbar%2Ffoo").
-          with(body: "{\"vault\":\"whatever\"}")
         assert SecretStorage::HashicorpVault.write('production/foo/group/isbar/foo', {value: 'whatever'})
+        client.set.must_equal("secret/production/foo/group/isbar%2Ffoo" => {vault: 'whatever'})
       end
     end
 
     describe ".keys" do
       it "lists all keys with recursion" do
         first_keys = ["production/project/group/this/", "production/project/group/that/"]
-        stub_request(:get, "https://127.0.0.1:8200/v1/secret/?list=true").
-          to_return(body: first_keys)
-
-        stub_request(:get, "https://127.0.0.1:8200/v1/secret/production/project/group/this/?list=true").
-          to_return(body: ["key"])
-
-        stub_request(:get, "https://127.0.0.1:8200/v1/secret/production/project/group/that/?list=true").
-          to_return(body: ["key"])
-
-        stub_request(:get, "https://127.0.0.1:8200/v1/secret/production/project/group/this/key?list=true").
-          to_return(body: [])
-
-        stub_request(:get, "https://127.0.0.1:8200/v1/secret/production/project/group/that/key?list=true").
-          to_return(body: [])
-
+        client.expect('list-secret/', first_keys)
+        client.expect('list-secret/production/project/group/this/', ["key"])
+        client.expect('list-secret/production/project/group/that/', ["key"])
         SecretStorage::HashicorpVault.keys.must_equal([
           "production/project/group/this/key",
           "production/project/group/that/key"
@@ -198,7 +185,7 @@ describe SecretStorage do
 
     describe ".vault_client" do
       it 'creates a valid client' do
-        assert_instance_of(VaultClient, SecretStorage::HashicorpVault.send(:vault_client))
+        assert_instance_of(::VaultClient, SecretStorage::HashicorpVault.send(:vault_client))
       end
     end
 
