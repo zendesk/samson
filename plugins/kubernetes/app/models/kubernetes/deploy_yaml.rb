@@ -63,6 +63,8 @@ module Kubernetes
       end
     end
 
+    # have to match Kubernetes::Release#clients selector
+    # TODO: dry
     def release_doc_metadata
       @release_doc_metadata ||= begin
         release = @doc.kubernetes_release
