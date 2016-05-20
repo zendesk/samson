@@ -5,7 +5,7 @@ module StatusHelper
     "errored" => "danger",
     "cancelling" => "warning",
     "cancelled" => "danger"
-  }
+  }.freeze
 
   LABEL_STATUS_MAPPING = ALERT_STATUS_MAPPING.merge(
     "running" => "primary"
@@ -27,7 +27,12 @@ module StatusHelper
 
     if deploy.finished?
       content << " "
-      content << content_tag(:span, deploy.start_time.rfc822, data: { time: datetime_to_js_ms(deploy.start_time) }, class: 'mouseover')
+      content << content_tag(
+        :span,
+        deploy.start_time.rfc822,
+        data: { time: datetime_to_js_ms(deploy.start_time) },
+        class: 'mouseover'
+      )
       content << ", it took #{duration_text(deploy)}."
     end
 
@@ -41,11 +46,11 @@ module StatusHelper
 
     if seconds > 60
       minutes = seconds / 60
-      seconds = seconds - minutes * 60
+      seconds -= minutes * 60
 
       duration << "#{minutes} minute".pluralize(minutes)
     end
 
-    duration << (seconds > 0 || duration.size == 0 ? " #{seconds} second".pluralize(seconds) : "")
+    duration << (seconds > 0 || duration.empty? ? " #{seconds} second".pluralize(seconds) : "")
   end
 end

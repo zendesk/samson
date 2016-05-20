@@ -12,7 +12,7 @@ require 'open3'
 #   output.string #=> "hello\r\nworld\r\n"
 #
 class TerminalExecutor
-  SECRET_PREFIX = "secret://"
+  SECRET_PREFIX = "secret://".freeze
 
   attr_reader :pid, :pgid, :output
 
@@ -46,8 +46,8 @@ class TerminalExecutor
       allowed_namespaces << "#{link}/global"
       allowed_namespaces << "#{link}/#{@project.permalink}" if @project
     end
-    command.gsub(%r{\b#{SECRET_PREFIX}(#{SecretStorage::SECRET_KEY_REGEX})\b}) do
-      key = $1
+    command.gsub(/\b#{SECRET_PREFIX}(#{SecretStorage::SECRET_KEY_REGEX})\b/) do
+      key = Regexp.last_match(1)
       if key.start_with?(*allowed_namespaces.map { |n| "#{n}/" })
         SecretStorage.read(key, include_secret: true).fetch(:value)
       else
@@ -63,13 +63,14 @@ class TerminalExecutor
       options = {in: '/dev/null', unsetenv_others: true, pgroup: true}
 
       # http://stackoverflow.com/questions/1401002/trick-an-application-into-thinking-its-stdin-is-interactive-not-a-pipe
-      script = if RbConfig::CONFIG["target_os"].include?("darwin")
-        "script -q /dev/null sh #{f.path}"
-      else
-        "script -qfec 'sh #{f.path}'"
-      end
+      script =
+        if RbConfig::CONFIG["target_os"].include?("darwin")
+          "script -q /dev/null sh #{f.path}"
+        else
+          "script -qfec 'sh #{f.path}'"
+        end
 
-      Open3.popen2e(whitelisted_env, script, options)  do |_stdin, oe, wait_thr|
+      Open3.popen2e(whitelisted_env, script, options) do |_stdin, oe, wait_thr|
         @pid = wait_thr.pid
 
         @pgid = begin

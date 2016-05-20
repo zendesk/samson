@@ -1,13 +1,14 @@
 module ReleasesHelper
   def release_label(project, release)
     path = [project, release]
-    classes = %w(release-label label)
+    classes = %w[release-label label]
 
-    if release.changeset.hotfix?
-      classes << "label-warning"
-    else
-      classes << "label-success"
-    end
+    classes <<
+      if release.changeset.hotfix?
+        "label-warning"
+      else
+        "label-success"
+      end
 
     content = link_to(release.version, path, class: classes.join(" "))
 

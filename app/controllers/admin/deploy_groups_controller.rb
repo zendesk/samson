@@ -1,6 +1,6 @@
 class Admin::DeployGroupsController < ApplicationController
   before_action :authorize_admin!
-  before_action :authorize_super_admin!, only: [ :create, :new, :update, :destroy, :deploy_all, :deploy_all_now, :edit ]
+  before_action :authorize_super_admin!, only: [:create, :new, :update, :destroy, :deploy_all, :deploy_all_now, :edit]
   before_action :deploy_group, only: [:show, :edit, :update, :destroy, :deploy_all, :deploy_all_now]
 
   def index
@@ -73,10 +73,12 @@ class Admin::DeployGroupsController < ApplicationController
   end
 
   def stages_in_same_environment(project, environment)
-    project.stages.select do |stage|
+    environment ||= deploy_group.environment
+    stages = project.stages.select do |stage|
       stage.script.include?("$DEPLOY_GROUPS") && # is dynamic
-        stage.deploy_groups.where(environment: environment || deploy_group.environment).exists? # is made to go to this environment
-    end.sort_by { |stage| only_to_current_group?(stage) ? 0 : 1 }
+        stage.deploy_groups.where(environment: environment).exists? # is made to go to this environment
+    end
+    stages.sort_by { |stage| only_to_current_group?(stage) ? 0 : 1 }
   end
 
   def new_stage_with_group(stage)

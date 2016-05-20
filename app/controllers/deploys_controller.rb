@@ -9,11 +9,12 @@ class DeploysController < ApplicationController
 
   def index
     scope = current_project.try(:deploys) || Deploy
-    @deploys = if params[:ids]
-      Kaminari.paginate_array(scope.find(params[:ids])).page(1).per(1000)
-    else
-      scope.page(params[:page])
-    end
+    @deploys =
+      if params[:ids]
+        Kaminari.paginate_array(scope.find(params[:ids])).page(1).per(1000)
+      else
+        scope.page(params[:page])
+      end
 
     respond_to do |format|
       format.html
@@ -49,11 +50,15 @@ class DeploysController < ApplicationController
     end
 
     if params[:deployer].present?
-      users = User.where("name LIKE ?", "%#{ActiveRecord::Base.send(:sanitize_sql_like, params[:deployer])}%").pluck(:id)
+      users = User.where(
+        "name LIKE ?", "%#{ActiveRecord::Base.send(:sanitize_sql_like, params[:deployer])}%"
+      ).pluck(:id)
     end
 
     if params[:project_name].present?
-      projects = Project.where("name LIKE ?", "%#{ActiveRecord::Base.send(:sanitize_sql_like, params[:project_name])}%").pluck(:id)
+      projects = Project.where(
+        "name LIKE ?", "%#{ActiveRecord::Base.send(:sanitize_sql_like, params[:project_name])}%"
+      ).pluck(:id)
     end
 
     if users || status
@@ -114,9 +119,7 @@ class DeploysController < ApplicationController
   end
 
   def buddy_check
-    if @deploy.pending?
-      @deploy.confirm_buddy!(current_user)
-    end
+    @deploy.confirm_buddy!(current_user) if @deploy.pending?
 
     redirect_to [current_project, @deploy]
   end
@@ -153,7 +156,7 @@ class DeploysController < ApplicationController
   protected
 
   def deploy_permitted_params
-    [ :reference, :stage_id ] + Samson::Hooks.fire(:deploy_permitted_params)
+    [:reference, :stage_id] + Samson::Hooks.fire(:deploy_permitted_params)
   end
 
   def reference

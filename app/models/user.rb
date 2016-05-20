@@ -27,7 +27,7 @@ class User < ActiveRecord::Base
     where("name LIKE ? OR email LIKE ?", "%#{query}%", "%#{query}%")
   }
   scope :with_role, -> (role_id, project_id) {
-    joins("LEFT OUTER JOIN user_project_roles ON users.id = user_project_roles.user_id AND user_project_roles.project_id = #{project_id.to_i}").
+    joins("LEFT OUTER JOIN user_project_roles ON users.id = user_project_roles.user_id AND user_project_roles.project_id = #{project_id.to_i}"). # rubocop:disable Metrics/LineLength
       where('users.role_id >= ? OR user_project_roles.role_id >= ?', role_id, role_id)
   }
 
@@ -54,12 +54,17 @@ class User < ActiveRecord::Base
   def self.to_csv
     @users = User.order(:id)
     CSV.generate do |csv|
-      csv << ["id","name","email","projectiD","project","role", User.count.to_s + " Users",
-        (User.count + UserProjectRole.joins(:user, :project).count).to_s + " Total entries" ]
+      csv << [
+        "id", "name", "email", "projectiD", "project", "role", User.count.to_s + " Users",
+        (User.count + UserProjectRole.joins(:user, :project).count).to_s + " Total entries"
+      ]
       @users.find_each do |user|
         csv << [user.id, user.name, user.email, "", "SYSTEM", user.role.name]
         UserProjectRole.where(user_id: user.id).joins(:project).find_each do |user_project_role|
-            csv << [user.id, user.name, user.email, user_project_role.project_id, user_project_role.project.name, user_project_role.role.name]
+          csv << [
+            user.id, user.name, user.email, user_project_role.project_id,
+            user_project_role.project.name, user_project_role.role.name
+          ]
         end
       end
     end

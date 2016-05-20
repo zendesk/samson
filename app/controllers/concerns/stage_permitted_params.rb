@@ -16,7 +16,7 @@ module StagePermittedParams
       :no_code_deployed,
       {
         deploy_group_ids: [],
-        command_ids: [],
+        command_ids: []
       }
     ] + Samson::Hooks.fire(:stage_permitted_params).flatten).freeze
   end

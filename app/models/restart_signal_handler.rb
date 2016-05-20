@@ -2,7 +2,7 @@
 # Self-pipe is also best practice, since signal handlers can themselves be interrupted
 class RestartSignalHandler
   class << self
-    alias listen new
+    alias_method :listen, :new
   end
 
   def initialize

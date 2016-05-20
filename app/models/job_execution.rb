@@ -91,12 +91,11 @@ class JobExecution
   def error!(exception)
     message = "JobExecution failed: #{exception.message}"
 
-    if !exception.is_a?(Samson::Hooks::UserError)
-      Airbrake.notify(exception,
+    unless exception.is_a?(Samson::Hooks::UserError)
+      Airbrake.notify(
+        exception,
         error_message: message,
-        parameters: {
-          job_id: @job.id
-        }
+        parameters: { job_id: @job.id }
       )
     end
 
@@ -130,7 +129,9 @@ class JobExecution
     finish
     ActiveRecord::Base.clear_active_connections!
   end
-  add_transaction_tracer :run!, category: :task, params: '{ job_id: id, project: job.project.try(:name), reference: reference }'
+  add_transaction_tracer :run!,
+    category: :task,
+    params: '{ job_id: id, project: job.project.try(:name), reference: reference }'
 
   def finish
     @subscribers.each(&:call)
@@ -153,12 +154,13 @@ class JobExecution
     ActiveRecord::Base.clear_active_connections!
 
     ActiveSupport::Notifications.instrument("execute_shell.samson", payload) do
-      payload[:success] = if stage.try(:kubernetes)
-        @executor = Kubernetes::DeployExecutor.new(@output, job: @job)
-        @executor.execute!
-      else
-        @executor.execute!(*cmds)
-      end
+      payload[:success] =
+        if stage.try(:kubernetes)
+          @executor = Kubernetes::DeployExecutor.new(@output, job: @job)
+          @executor.execute!
+        else
+          @executor.execute!(*cmds)
+        end
     end
 
     Samson::Hooks.fire(:after_job_execution, @job, payload[:success], @output)
@@ -214,7 +216,9 @@ class JobExecution
 
   def lock_project(&block)
     holder = (stage.try(:name) || @job.user.name)
-    callback = proc { |owner| @output.write("Waiting for repository while setting it up for #{owner}\n") if Time.now.to_i % 10 == 0 }
+    callback = proc do |owner|
+      @output.write("Waiting for repository while setting it up for #{owner}\n") if Time.now.to_i % 10 == 0
+    end
     @job.project.with_lock(output: @output, holder: holder, error_callback: callback, timeout: lock_timeout, &block)
   end
 

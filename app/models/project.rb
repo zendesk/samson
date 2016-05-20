@@ -61,7 +61,7 @@ class Project < ActiveRecord::Base
   def last_release_contains_commit?(commit)
     last_release = releases.order(:id).last
     # status values documented here: http://stackoverflow.com/questions/23943855/github-api-to-compare-commits-response-status-is-diverged
-    last_release && %w(behind identical).include?(GITHUB.compare(github_repo, last_release.commit, commit).status)
+    last_release && %w[behind identical].include?(GITHUB.compare(github_repo, last_release.commit, commit).status)
   rescue Octokit::Error => e
     Airbrake.notify(e, parameters: { github_repo: github_repo, last_commit: last_release.commit, commit: commit })
     false # Err on side of caution and cause a new release to be created.
@@ -88,7 +88,7 @@ class Project < ActiveRecord::Base
   def github_repo
     # GitHub allows underscores, hyphens and dots in repo names
     # but only hyphens in user/organisation names (as well as alphanumeric).
-    repository_url.scan(/[:\/]([A-Za-z0-9-]+\/[\w.-]+?)(?:\.git)?$/).join
+    repository_url.scan(%r{[:/]([A-Za-z0-9-]+/[\w.-]+?)(?:\.git)?$}).join
   end
 
   def repository_directory
@@ -112,28 +112,29 @@ class Project < ActiveRecord::Base
   end
 
   def with_lock(output: StringIO.new, holder:, error_callback: nil, timeout: 10.minutes, &block)
-    callback = if error_callback.nil?
-      proc { |owner| output.write("Waiting for repository while cloning for #{owner}\n") if Time.now.to_i % 10 == 0 }
-    else
-      error_callback
-    end
+    callback =
+      if error_callback.nil?
+        proc { |owner| output.write("Waiting for repository while cloning for #{owner}\n") if Time.now.to_i % 10 == 0 }
+      else
+        error_callback
+      end
     MultiLock.lock(id, holder, timeout: timeout, failed_to_lock: callback, &block)
   end
 
   def last_deploy_by_group(before_time)
     releases = deploys_by_group(before_time)
-    releases.map { |group_id, deploys| [ group_id, deploys.sort_by(&:updated_at).last ] }.to_h
+    releases.map { |group_id, deploys| [group_id, deploys.sort_by(&:updated_at).last] }.to_h
   end
 
   private
 
   def deploys_by_group(before)
     stages.each_with_object({}) do |stage, result|
-      if deploy = stage.deploys.successful.where(release: true).where("deploys.updated_at <= ?", before.to_s(:db)).first
-        stage.deploy_groups.sort_by(&:natural_order).each do |deploy_group|
-          result[deploy_group.id] ||= []
-          result[deploy_group.id] << deploy
-        end
+      deploy = stage.deploys.successful.where(release: true).where("deploys.updated_at <= ?", before.to_s(:db)).first
+      next unless deploy
+      stage.deploy_groups.sort_by(&:natural_order).each do |deploy_group|
+        result[deploy_group.id] ||= []
+        result[deploy_group.id] << deploy
       end
     end
   end
@@ -152,7 +153,9 @@ class Project < ActiveRecord::Base
         output = repository.executor.output
         with_lock(output: output, holder: 'Initial Repository Setup') do
           is_cloned = repository.clone!(from: repository_url, mirror: true)
-          log.error("Could not clone git repository #{repository_url} for project #{name} - #{output.string}") unless is_cloned
+          unless is_cloned
+            log.error("Could not clone git repository #{repository_url} for project #{name} - #{output.string}")
+          end
         end
       rescue => e
         alert_clone_error!(e)
@@ -180,7 +183,8 @@ class Project < ActiveRecord::Base
   def alert_clone_error!(exception)
     message = "Could not clone git repository #{repository_url} for project #{name}"
     log.error("#{message} - #{exception.message}")
-    Airbrake.notify(exception,
+    Airbrake.notify(
+      exception,
       error_message: message,
       parameters: {
         project_id: id
@@ -189,8 +193,7 @@ class Project < ActiveRecord::Base
   end
 
   def valid_repository_url
-    unless repository.valid_url?
-      errors.add(:repository_url, "is not valid or accessible")
-    end
+    return if repository.valid_url?
+    errors.add(:repository_url, "is not valid or accessible")
   end
 end

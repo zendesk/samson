@@ -2,7 +2,8 @@ class Changeset::Commit
   PULL_REQUEST_MERGE_MESSAGE = /\AMerge pull request #(\d+)/
 
   def initialize(repo, data)
-    @repo, @data = repo, data
+    @repo = repo
+    @data = data
   end
 
   def author_name
@@ -43,9 +44,7 @@ class Changeset::Commit
   end
 
   def pull_request_number
-    if summary =~ PULL_REQUEST_MERGE_MESSAGE
-      Integer($1)
-    end
+    Integer(Regexp.last_match(1)) if summary =~ PULL_REQUEST_MERGE_MESSAGE
   end
 
   def url

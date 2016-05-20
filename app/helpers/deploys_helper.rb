@@ -56,7 +56,7 @@ module DeploysHelper
   end
 
   def github_users(users)
-    users.map {|user| github_user_avatar(user) }.join(" ").html_safe
+    users.map { |user| github_user_avatar(user) }.join(" ").html_safe
   end
 
   def github_user_avatar(user)
@@ -67,7 +67,7 @@ module DeploysHelper
     end
   end
 
-  def buddy_check_button(project, deploy)
+  def buddy_check_button(_project, deploy)
     return unless deploy.waiting_for_buddy?
 
     button_class = ['btn']
@@ -80,7 +80,11 @@ module DeploysHelper
       button_class << 'btn-primary'
     end
 
-    link_to button_text, buddy_check_project_deploy_path(@project, @deploy), method: :post, class: button_class.join(' ')
+    link_to(
+      button_text,
+      buddy_check_project_deploy_path(@project, @deploy),
+      method: :post, class: button_class.join(' ')
+    )
   end
 
   def syntax_highlight(code, language = :ruby)
@@ -95,6 +99,10 @@ module DeploysHelper
 
   def stop_button(deploy: @deploy, **options)
     return unless @project && deploy
-    link_to 'Stop', [@project, deploy], options.merge(method: :delete, class: options.fetch(:class, 'btn btn-danger btn-xl'))
+    link_to(
+      'Stop',
+      [@project, deploy],
+      options.merge(method: :delete, class: options.fetch(:class, 'btn btn-danger btn-xl'))
+    )
   end
 end
