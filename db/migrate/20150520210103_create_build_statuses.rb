@@ -1,11 +1,11 @@
 class CreateBuildStatuses < ActiveRecord::Migration
   def change
     create_table :build_statuses do |t|
-      t.belongs_to :build,    null: false, index: true
+      t.belongs_to :build, null: false, index: true
       t.string :source
-      t.string :status,       null: false, default: 'pending'
+      t.string :status, null: false, default: 'pending'
       t.string :url
-      t.string :summary,      limit: 512
+      t.string :summary, limit: 512
       t.text :data
       t.timestamps
     end

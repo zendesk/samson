@@ -23,28 +23,30 @@ module Samson::StatsdLoader
   end
 end
 
-$statsd = Samson::StatsdLoader.create
-$statsd.namespace = "samson.app"
-
-if ENV['SERVER_MODE']
-  $statsd.event "Startup", "Samson startup"
+class << Samson
+  attr_accessor :statsd
 end
+
+Samson.statsd = Samson::StatsdLoader.create
+Samson.statsd.namespace = "samson.app"
+
+Samson.statsd.event "Startup", "Samson startup" if ENV['SERVER_MODE']
 
 ActiveSupport::Notifications.subscribe("execute_shell.samson") do |*args|
   event = ActiveSupport::Notifications::Event.new(*args)
 
   tags = [event.payload[:project], event.payload[:stage]]
 
-  $statsd.histogram "execute_shell.time", event.duration, tags: tags
-  $statsd.event "Executed shell command", event.payload[:command], tags: tags
-  $statsd.increment "execute_shells", tags: tags
+  Samson.statsd.histogram "execute_shell.time", event.duration, tags: tags
+  Samson.statsd.event "Executed shell command", event.payload[:command], tags: tags
+  Samson.statsd.increment "execute_shells", tags: tags
 
   Rails.logger.debug("Executed shell command in %.2fms" % event.duration)
 end
 
 ActiveSupport::Notifications.subscribe("job.threads") do |*args|
   event = ActiveSupport::Notifications::Event.new(*args)
-  $statsd.gauge "job.threads", event.payload[:thread_count]
+  Samson.statsd.gauge "job.threads", event.payload[:thread_count]
 end
 
 # basic web stats
@@ -57,8 +59,8 @@ ActiveSupport::Notifications.subscribe /process_action.action_controller/ do |*a
   status = event.payload[:status]
   tags = [controller, action, format]
 
-  $statsd.histogram "web.request.time", event.duration, tags: tags
-  $statsd.histogram "web.db_query.time", event.payload[:db_runtime], tags: tags
-  $statsd.histogram "web.view.time", event.payload[:view_runtime].to_i, tags: tags
-  $statsd.increment "web.request.status.#{status}", tags: tags
+  Samson.statsd.histogram "web.request.time", event.duration, tags: tags
+  Samson.statsd.histogram "web.db_query.time", event.payload[:db_runtime], tags: tags
+  Samson.statsd.histogram "web.view.time", event.payload[:view_runtime].to_i, tags: tags
+  Samson.statsd.increment "web.request.status.#{status}", tags: tags
 end
