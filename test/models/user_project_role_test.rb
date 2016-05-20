@@ -5,7 +5,7 @@ SingleCov.covered!
 describe UserProjectRole do
   let(:user) { users(:viewer) }
   let(:project) { projects(:test) }
-  let(:project_role) { UserProjectRole.create({user_id: user.id, project_id: project.id, role_id: Role::ADMIN.id}) }
+  let(:project_role) { UserProjectRole.create(user_id: user.id, project_id: project.id, role_id: Role::ADMIN.id) }
 
   before { project_role }
 
@@ -21,7 +21,7 @@ describe UserProjectRole do
   end
 
   describe "fails to create a project role with an invalid role" do
-    let(:invalid_role) { UserProjectRole.create({user_id: user.id, project_id: project.id, role_id: 3}) }
+    let(:invalid_role) { UserProjectRole.create(user_id: user.id, project_id: project.id, role_id: 3) }
 
     it "is not persisted" do
       invalid_role.persisted?.must_equal(false)
@@ -33,7 +33,7 @@ describe UserProjectRole do
   end
 
   describe "fails to create yet another project role for same user and project" do
-    let(:another_role) { UserProjectRole.create({user_id: user.id, project_id: project.id, role_id: Role::DEPLOYER.id}) }
+    let(:another_role) { UserProjectRole.create(user_id: user.id, project_id: project.id, role_id: Role::DEPLOYER.id) }
 
     it "is not persisted" do
       another_role.persisted?.must_equal(false)
@@ -46,7 +46,7 @@ describe UserProjectRole do
 
   describe "updates an existing project role" do
     before do
-      project_role.update({role_id: Role::DEPLOYER.id})
+      project_role.update(role_id: Role::DEPLOYER.id)
     end
 
     it "does not update the user" do
@@ -64,7 +64,7 @@ describe UserProjectRole do
 
   describe "fails to update a project role with an invalid role" do
     before do
-      project_role.update({role_id: 3})
+      project_role.update(role_id: 3)
     end
 
     it "is persisted" do
@@ -75,5 +75,4 @@ describe UserProjectRole do
       project_role.errors.wont_be_empty
     end
   end
-
 end

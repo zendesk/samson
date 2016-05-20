@@ -41,13 +41,19 @@ describe Integrations::TddiumController do
   end
 
   test_regular_commit "Tddium", no_mapping: {branch: "foobar"}, failed: {status: "failed"} do
-    stub_github_api("repos/organization_name/repo_name/commits/dc395381e650f3bac18457909880829fc20e34ba", commit: {message: "hi"})
+    stub_github_api(
+      "repos/organization_name/repo_name/commits/dc395381e650f3bac18457909880829fc20e34ba",
+      commit: {message: "hi"}
+    )
   end
 
   it "doesn't trigger a deploy if the commit message contains [deploy skip]" do
     @webhook.destroy!
 
-    stub_github_api("repos/organization_name/repo_name/commits/dc395381e650f3bac18457909880829fc20e34ba", commit: {message: "hi[deploy skip]"})
+    stub_github_api(
+      "repos/organization_name/repo_name/commits/dc395381e650f3bac18457909880829fc20e34ba",
+      commit: {message: "hi[deploy skip]"}
+    )
 
     project.webhooks.create!(stage: stages(:test_staging), branch: "production", source: 'tddium')
     post :create, payload.merge(token: project.token)
@@ -58,7 +64,10 @@ describe Integrations::TddiumController do
   it "doesn't trigger a deploy if the commit message contains [skip deploy]" do
     @webhook.destroy!
 
-    stub_github_api("repos/organization_name/repo_name/commits/dc395381e650f3bac18457909880829fc20e34ba", commit: {message: "hi[skip deploy]"})
+    stub_github_api(
+      "repos/organization_name/repo_name/commits/dc395381e650f3bac18457909880829fc20e34ba",
+      commit: {message: "hi[skip deploy]"}
+    )
 
     project.webhooks.create!(stage: stages(:test_staging), branch: "production", source: 'tddium')
     post :create, payload.merge(token: project.token)

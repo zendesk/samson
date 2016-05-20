@@ -27,7 +27,7 @@ describe SessionsController do
   end
 
   describe "a POST to #github" do
-    let(:env) {{}}
+    let(:env) { {} }
     let(:user) { users(:github_viewer) }
     let(:strategy) { stub(name: 'github') }
     let(:uid) { user.external_id[/\d/] }
@@ -46,14 +46,13 @@ describe SessionsController do
       )
     end
     let(:role_id) { Role::VIEWER.id }
-    let(:before_call) {  }
 
     before do
       GithubAuthorization.any_instance.stubs(role_id: role_id)
 
       @request.env.merge!(env)
-      @request.env.merge!('omniauth.auth' => auth_hash)
-      @request.env.merge!('omniauth.strategy' => strategy)
+      @request.env['omniauth.auth'] = auth_hash
+      @request.env['omniauth.strategy'] = strategy
 
       post :github
     end
@@ -67,7 +66,7 @@ describe SessionsController do
     end
 
     describe 'with an origin' do
-      let(:env) {{ 'omniauth.origin' => '/hello' }}
+      let(:env) { { 'omniauth.origin' => '/hello' } }
 
       it 'redirects to /hello' do
         assert_redirected_to '/hello'
@@ -97,7 +96,7 @@ describe SessionsController do
   end
 
   describe "a POST to #google" do
-    let(:env) {{}}
+    let(:env) { {} }
     let(:user) { users(:viewer) }
     let(:strategy) { stub(name: 'google') }
     let(:auth_hash) do
@@ -112,8 +111,8 @@ describe SessionsController do
 
     before do
       @request.env.merge!(env)
-      @request.env.merge!('omniauth.auth' => auth_hash)
-      @request.env.merge!('omniauth.strategy' => strategy)
+      @request.env['omniauth.auth'] = auth_hash
+      @request.env['omniauth.strategy'] = strategy
       user.update_column(:external_id, "#{strategy.name}-#{auth_hash.uid}")
     end
 
@@ -132,7 +131,7 @@ describe SessionsController do
       end
 
       describe 'with an origin' do
-        let(:env) {{ 'omniauth.origin' => '/hello' }}
+        let(:env) { { 'omniauth.origin' => '/hello' } }
 
         it 'redirects to /hello' do
           assert_redirected_to '/hello'
@@ -161,7 +160,7 @@ describe SessionsController do
   end
 
   describe "a POST to #ldap" do
-    let(:env) {{}}
+    let(:env) { {} }
     let(:user) { users(:viewer) }
     let(:strategy) { stub(name: 'ldap') }
     let(:auth_hash) do
@@ -176,8 +175,8 @@ describe SessionsController do
 
     before do
       @request.env.merge!(env)
-      @request.env.merge!('omniauth.auth' => auth_hash)
-      @request.env.merge!('omniauth.strategy' => strategy)
+      @request.env['omniauth.auth'] = auth_hash
+      @request.env['omniauth.strategy'] = strategy
       user.update_column(:external_id, "#{strategy.name}-#{auth_hash.uid}")
     end
 
@@ -196,7 +195,7 @@ describe SessionsController do
       end
 
       describe 'with an origin' do
-        let(:env) {{ 'omniauth.origin' => '/hello' }}
+        let(:env) { { 'omniauth.origin' => '/hello' } }
 
         it 'redirects to /hello' do
           assert_redirected_to '/hello'

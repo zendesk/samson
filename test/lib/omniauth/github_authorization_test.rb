@@ -4,7 +4,7 @@ require 'omniauth/github_authorization'
 SingleCov.covered!
 
 describe GithubAuthorization do
-  let(:teams) {[]}
+  let(:teams) { [] }
   let(:organization) { config.organization }
   let(:organization_member) { true }
   let(:config) { Rails.application.config.samson.github }
@@ -46,9 +46,11 @@ describe GithubAuthorization do
   end
 
   describe 'with an admin team' do
-    let(:teams) {[
-      { id: 1, slug: config.admin_team, member: member? }
-    ]}
+    let(:teams) do
+      [
+        { id: 1, slug: config.admin_team, member: member? }
+      ]
+    end
 
     describe 'as a team member' do
       let(:member?) { true }
@@ -68,9 +70,11 @@ describe GithubAuthorization do
   end
 
   describe 'with a deploy team' do
-    let(:teams) {[
-      { id: 2, slug: config.deploy_team, member: member? }
-    ]}
+    let(:teams) do
+      [
+        { id: 2, slug: config.deploy_team, member: member? }
+      ]
+    end
 
     describe 'as a team member' do
       let(:member?) { true }
@@ -89,10 +93,12 @@ describe GithubAuthorization do
   end
 
   describe 'with both teams' do
-    let(:teams) {[
-      { id: 1, slug: config.admin_team, member: true },
-      { id: 2, slug: config.deploy_team, member: true }
-    ]}
+    let(:teams) do
+      [
+        { id: 1, slug: config.admin_team, member: true },
+        { id: 2, slug: config.deploy_team, member: true }
+      ]
+    end
 
     it 'updates the user to admin' do
       authorization.role_id.must_equal(Role::ADMIN.id)

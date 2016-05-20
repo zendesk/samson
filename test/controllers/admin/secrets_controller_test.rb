@@ -67,13 +67,15 @@ describe Admin::SecretsController do
 
   as_a_project_admin do
     describe '#create' do
-      let(:attributes) {{
-        environment_permalink: 'production',
-        project_permalink: 'foo',
-        deploy_group_permalink: 'pod2',
-        key: 'v',
-        value: 'echo hi'
-      }}
+      let(:attributes) do
+        {
+          environment_permalink: 'production',
+          project_permalink: 'foo',
+          deploy_group_permalink: 'pod2',
+          key: 'v',
+          value: 'echo hi'
+        }
+      end
 
       before { post :create, secret: attributes }
 
@@ -86,7 +88,15 @@ describe Admin::SecretsController do
       end
 
       describe 'invalid' do
-        let(:attributes) {{ environment_permalink: 'production', project_permalink: 'foo', deploy_group_permalink: 'group', key: '', value: '' }}
+        let(:attributes) do
+          {
+            environment_permalink: 'production',
+            project_permalink: 'foo',
+            deploy_group_permalink: 'group',
+            key: '',
+            value: ''
+          }
+        end
 
         it 'renders and sets the flash' do
           assert flash[:error]
@@ -95,7 +105,14 @@ describe Admin::SecretsController do
       end
 
       describe 'global' do
-        let(:attributes) {{ environment_permalink: 'production', project_permalink: 'global', deploy_group_permalink: 'somegroup', key: 'bar' }}
+        let(:attributes) do
+          {
+            environment_permalink: 'production',
+            project_permalink: 'global',
+            deploy_group_permalink: 'somegroup',
+            key: 'bar'
+          }
+        end
 
         it 'is unauthorized' do
           assert_unauthorized
@@ -191,13 +208,15 @@ describe Admin::SecretsController do
   as_a_admin do
     let(:secret) { create_global }
     describe '#create' do
-      let(:attributes) {{
-        environment_permalink: 'production',
-        project_permalink: 'foo',
-        deploy_group_permalink: 'pod2',
-        key: 'v',
-        value: 'echo hi'
-      }}
+      let(:attributes) do
+        {
+          environment_permalink: 'production',
+          project_permalink: 'foo',
+          deploy_group_permalink: 'pod2',
+          key: 'v',
+          value: 'echo hi'
+        }
+      end
 
       before do
         post :create, secret: attributes

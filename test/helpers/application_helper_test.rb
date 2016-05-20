@@ -1,3 +1,4 @@
+# rubocop:disable Metrics/LineLength
 require_relative '../test_helper'
 
 SingleCov.covered! uncovered: 11
@@ -74,7 +75,7 @@ describe ApplicationHelper do
 
     it "starts a deploy" do
       assert_includes link, ">Deploy<"
-      assert_includes link, %{href="/projects/#{project.to_param}/stages/#{stage.to_param}/deploys/new"}
+      assert_includes link, %(href="/projects/#{project.to_param}/stages/#{stage.to_param}/deploys/new")
     end
 
     it "shows locked" do
@@ -89,7 +90,7 @@ describe ApplicationHelper do
       )
       stage.stubs(current_deploy: deploy)
       assert_includes link, ">Deploying master...<"
-      assert_includes link, %{href="/projects/#{project.to_param}/deploys/#{deploy.id}"}
+      assert_includes link, %(href="/projects/#{project.to_param}/deploys/#{deploy.id}")
     end
   end
 

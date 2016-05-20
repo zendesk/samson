@@ -11,7 +11,7 @@ describe GithubNotification do
   let(:endpoint) { "https://api.github.com/repos/glitter/glitter/issues/9/comments" }
 
   describe 'when there are pull requests' do
-    let(:pull_requests) { stub(number: 9)}
+    let(:pull_requests) { stub(number: 9) }
 
     it "adds a comment" do
       comment = stub_request(:post, endpoint)

@@ -19,26 +19,26 @@ describe Project do
   end
 
   describe "#last_release_contains_commit?" do
-    let(:repository) { mock() }
+    let(:repository) { mock }
 
     before do
       project.stubs(:repository).returns(repository)
     end
 
     it "returns true if the last release contains that commit" do
-      stub_github_api('repos/bar/foo/compare/LAST...NEW', { status: 'behind' })
+      stub_github_api('repos/bar/foo/compare/LAST...NEW', status: 'behind')
       project.releases.create!(commit: "LAST", author: author)
       assert project.last_release_contains_commit?("NEW")
     end
 
     it "returns false if last release does not contain commit" do
-      stub_github_api('repos/bar/foo/compare/LAST...NEW', { status: 'ahead' })
+      stub_github_api('repos/bar/foo/compare/LAST...NEW', status: 'ahead')
       project.releases.create!(commit: "LAST", author: author)
       refute project.last_release_contains_commit?("NEW")
     end
 
     it "returns true if last release has the same commit" do
-      stub_github_api('repos/bar/foo/compare/LAST...LAST', { status: 'identical' })
+      stub_github_api('repos/bar/foo/compare/LAST...LAST', status: 'identical')
       project.releases.create!(commit: "LAST", author: author)
       assert project.last_release_contains_commit?("LAST")
     end
@@ -115,7 +115,7 @@ describe Project do
       }
     end
 
-    it 'creates a new project and stage'do
+    it 'creates a new project and stage' do
       project = Project.create!(params)
       stage = project.stages.where(name: 'Production').first
       stage.wont_be_nil
@@ -182,7 +182,8 @@ describe Project do
       error = 'Unexpected error while cloning the repository'
       project = Project.new(id: 9999, name: 'demo_apps', repository_url: repository_url)
       project.repository.expects(:clone!).raises(error)
-      expected_message = "Could not clone git repository #{project.repository_url} for project #{project.name} - #{error}"
+      expected_message =
+        "Could not clone git repository #{project.repository_url} for project #{project.name} - #{error}"
       Rails.logger.expects(:error).with(expected_message)
       Airbrake.expects(:notify).once
       clone_repository(project)
@@ -197,7 +198,6 @@ describe Project do
   end
 
   describe 'lock project' do
-
     let(:repository_url) { 'git@github.com:zendesk/demo_apps.git' }
     let(:project_id) { 999999 }
 

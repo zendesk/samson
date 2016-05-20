@@ -4,7 +4,7 @@ SingleCov.covered!
 
 describe OutputAggregator do
   it "aggregates the output into a single string" do
-    output = ["hel", "lo", "\n", "world\n"].map {|x| [:message, x]}
+    output = ["hel", "lo", "\n", "world\n"].map { |x| [:message, x] }
     aggregator = OutputAggregator.new(output)
     aggregator.to_s.must_equal "hello\nworld\n"
   end

@@ -45,7 +45,7 @@ describe OutputBuffer do
   def build_listener
     Thread.new do
       content = []
-      buffer.each {|_event, chunk| content << chunk }
+      buffer.each { |_event, chunk| content << chunk }
       content
     end
   end

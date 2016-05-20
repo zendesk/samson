@@ -31,7 +31,7 @@ describe DeployService do
     it 'writes the REVISION file' do
       service.build_image(tmp_dir)
       revision_filepath = File.join(tmp_dir, 'REVISION')
-      assert File.exists?(revision_filepath)
+      assert File.exist?(revision_filepath)
       assert_equal(build.git_sha, File.read(revision_filepath))
     end
 
@@ -54,9 +54,9 @@ describe DeployService do
       ]
 
       Docker::Image.unstub(:build_from_dir)
-      Docker::Image.expects(:build_from_dir)
-        .multiple_yields(*push_output)
-        .returns(mock_docker_image)
+      Docker::Image.expects(:build_from_dir).
+        multiple_yields(*push_output).
+        returns(mock_docker_image)
 
       service.build_image(tmp_dir)
       service.output.to_s.must_include 'this is incomplete JSON'
@@ -65,13 +65,15 @@ describe DeployService do
 
   describe '#push_image' do
     let(:repo_digest) { 'sha256:5f1d7c7381b2e45ca73216d7b06004fdb0908ed7bb8786b62f2cdfa5035fde2c' }
-    let(:push_output) { [
-      [{status: "pushing image to repo..."}.to_json],
-      [{status: "completed push."}.to_json],
-      [{status: "Frobinating..."}.to_json],
-      [{status: "Digest: #{repo_digest}"}.to_json],
-      [{status: "Done"}.to_json]
-    ] }
+    let(:push_output) do
+      [
+        [{status: "pushing image to repo..."}.to_json],
+        [{status: "completed push."}.to_json],
+        [{status: "Frobinating..."}.to_json],
+        [{status: "Digest: #{repo_digest}"}.to_json],
+        [{status: "Done"}.to_json]
+      ]
+    end
 
     before do
       mock_docker_image.stubs(:push)

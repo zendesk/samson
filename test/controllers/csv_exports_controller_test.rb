@@ -131,7 +131,7 @@ describe CsvExportsController do
             end
           end
 
-          if [:finished, :downloaded].include?(state)  # Only run these tests if ready
+          if [:finished, :downloaded].include?(state) # Only run these tests if ready
             describe "as csv with file" do
               before do
                 CsvExportJob.perform_now(export)
@@ -198,8 +198,10 @@ describe CsvExportsController do
       end
 
       it "with valid filters creates a new csv_export, with correct filters and redirect to status" do
-        filter = { start_date: "2010-01-01", end_date: "2015-12-31", production:"Yes", status: "succeeded",
-          project: projects(:test).id.to_s}
+        filter = {
+          start_date: "2010-01-01", end_date: "2015-12-31", production: "Yes", status: "succeeded",
+          project: projects(:test).id.to_s
+        }
         assert_difference 'CsvExport.count' do
           post :create, filter
         end
@@ -211,7 +213,7 @@ describe CsvExportsController do
         csv_filter.keys.must_include "stages.project_id"
         start_date = Date.parse(filter[:start_date])
         end_date = Date.parse(filter[:end_date])
-        csv_filter["deploys.created_at"].must_equal (start_date..end_date)
+        csv_filter["deploys.created_at"].must_equal start_date..end_date
         csv_filter["stages.production"].must_equal true
         csv_filter["jobs.status"].must_equal "succeeded"
         csv_filter["stages.project_id"].must_equal projects(:test).id
@@ -232,11 +234,11 @@ describe CsvExportsController do
       end
 
       it "raises for invalid params" do
-        create_fail_test(ArgumentError, {start_date: '2000-13-13'})
-        create_fail_test(ArgumentError, {end_date: '2015-13-31'})
-        create_fail_test("Invalid production filter foo", {production: 'foo'})
-        create_fail_test("Invalid status filter foo", {status: 'foo'})
-        create_fail_test("Invalid project id foo", {project: "foo"})
+        create_fail_test(ArgumentError, start_date: '2000-13-13')
+        create_fail_test(ArgumentError, end_date: '2015-13-31')
+        create_fail_test("Invalid production filter foo", production: 'foo')
+        create_fail_test("Invalid status filter foo", status: 'foo')
+        create_fail_test("Invalid project id foo", project: "foo")
       end
     end
   end

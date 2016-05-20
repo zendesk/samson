@@ -18,7 +18,7 @@ describe CommitStatus do
     end
 
     describe 'with combined status' do
-      let(:statuses) { { state: "success" }}
+      let(:statuses) { { state: "success" } }
 
       it 'is the first status' do
         subject.status.must_equal('success')

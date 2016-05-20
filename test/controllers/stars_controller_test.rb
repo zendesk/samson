@@ -43,4 +43,3 @@ describe StarsController do
     end
   end
 end
-

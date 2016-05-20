@@ -65,12 +65,12 @@ describe Integrations::GithubController do
       }.with_indifferent_access
     end
     let(:api_response) do
-      stub({
+      stub(
         user: stub(login: 'foo'),
         merged_by: stub(login: 'bar'),
         body: '',
         head: stub(sha: commit, ref: 'refs/heads/dev')
-      })
+      )
     end
 
     does_not_deploy 'with a non-open pull request state' do
