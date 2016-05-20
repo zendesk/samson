@@ -9,7 +9,6 @@ if ['development', 'staging'].include?(Rails.env)
   require 'rack-mini-profiler'
 end
 
-
 Dotenv.load(Bundler.root.join(Rails.env.test? ? '.env.test' : '.env'))
 
 module Samson
@@ -114,14 +113,15 @@ module Samson
     }
 
     config.action_controller.action_on_unpermitted_parameters = :raise
-    
+
     config.active_job.queue_adapter = :sucker_punch
     config.samson.export_job = ActiveSupport::OrderedOptions.new
     config.samson.export_job.downloaded_age = (ENV['EXPORT_JOB_DOWNLOADED_AGE'] || 12.hours).to_i
     config.samson.export_job.max_age = (ENV['EXPORT_JOB_MAX_AGE'] || 1.day).to_i
 
     if !Rails.env.test? && ENV['SERVER_MODE'] && !ENV['PRECOMPILE']
-      initializer :execute_job, after: :set_routes_reloader_hook do # flowdock uses routes: run after the routes are loaded
+      # flowdock uses routes: run after the routes are loaded
+      initializer :execute_job, after: :set_routes_reloader_hook do
         JobExecution.enabled = true
 
         Job.running.each(&:stop!)
