@@ -149,6 +149,20 @@ module Kubernetes
         }
       end
 
+      if ENV.fetch("SIDECAR_FEATURE", false)
+        sidecar_env = ( sidecar_container.env || [] )
+        {
+          VAULT_ADDR: ENV.fetch("VAULT_ADDR"),
+          VAULT_SSL_VERIFY: ENV.fetch("VAULT_SSL_VERIFY")
+        }.each do |k, v|
+          sidecar_env << {
+            name: k,
+            value: "#{v}"
+          }
+        end
+      end
+
+      sidecar_container.env = sidecar_env
       container.env = env
     end
 
@@ -160,6 +174,17 @@ module Kubernetes
           raise Samson::Hooks::UserError, "Template #{@doc.template_name} has #{containers.size} containers, having 1 section is valid."
         end
         containers.first
+      end
+    end
+
+    def sidecar_container
+      @sidecar ||= begin
+        containers = template.spec.template.try(:spec).try(:containers) || []
+        if containers.size == 0
+          # TODO: support building and replacement for multiple containers
+          raise Samson::Hooks::UserError, "Template #{@doc.template_name} has #{containers.size} containers, having 1 section is valid."
+        end
+        containers.map { |possible_container| return possible_container if possible_container.name == 'sidecar-container' }
       end
     end
   end
