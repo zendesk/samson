@@ -24,7 +24,10 @@ describe DeploysController do
   let(:changeset) { stub_everything(commits: [], files: [], pull_requests: [], jira_issues: []) }
 
   it "routes" do
-    assert_routing "/projects/1/stages/2/deploys/new", controller: "deploys", action: "new", project_id: "1", stage_id: "2"
+    assert_routing(
+      "/projects/1/stages/2/deploys/new",
+      controller: "deploys", action: "new", project_id: "1", stage_id: "2"
+    )
     assert_routing({ method: "post", path: "/projects/1/stages/2/deploys" },
       controller: "deploys", action: "create", project_id: "1", stage_id: "2")
   end
@@ -75,18 +78,18 @@ describe DeploysController do
       end
     end
 
-  describe "a GET to :active_count" do
-    before do
-      stage.create_deploy(admin, {reference: 'reference'})
-      get :active_count
-    end
+    describe "a GET to :active_count" do
+      before do
+        stage.create_deploy(admin, reference: 'reference')
+        get :active_count
+      end
 
-    it "renders json" do
-      assert_equal "application/json", @response.content_type
-      assert_response :ok
-      @response.body.must_equal "1"
+      it "renders json" do
+        assert_equal "application/json", @response.content_type
+        assert_response :ok
+        @response.body.must_equal "1"
+      end
     end
-  end
 
     describe "a GET to :changeset" do
       before do
@@ -141,22 +144,22 @@ describe DeploysController do
         Job.delete_all
         cmd = 'cap staging deploy'
         project = Project.first
-        job_def =  {project_id: project.id, command: cmd, status: nil, user_id: admin.id}
+        job_def = {project_id: project.id, command: cmd, status: nil, user_id: admin.id}
         status = [
           {status: 'failed', production: true },
           {status: 'running', production: true},
-          {status:'succeeded', production: true},
-          {status:'succeeded', production: false}
+          {status: 'succeeded', production: true},
+          {status: 'succeeded', production: false}
         ]
 
         status.each do |stat|
           job_def[:status] = stat[:status]
           job = Job.create!(job_def)
-          Deploy.create!( {
+          Deploy.create!(
             stage_id: Stage.find_by_production(stat[:production]).id,
             reference: 'reference',
             job_id: job.id
-          } )
+          )
         end
       end
 
@@ -260,7 +263,7 @@ describe DeploysController do
     end
 
     describe "a POST to :create" do
-      let(:params) {{ deploy: { reference: "master" }}}
+      let(:params) { { deploy: { reference: "master" }} }
 
       before do
         post :create, params.merge(project_id: project.to_param, stage_id: stage.to_param, format: format)

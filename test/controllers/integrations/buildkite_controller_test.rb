@@ -11,26 +11,26 @@ describe Integrations::BuildkiteController do
   let(:payload) do
     {
       'build' => {
-        'id'=>'e711180f-b318-4559-be4e-de119d2ac5eb',
-        'url'=> 'https://api.buildkite.com/v1/organizations/my-org/projects/test/builds/9',
-        'number'=>9,
-        'state'=>'passed',
-        'message'=>commit_message,
-        'commit'=>commit,
-        'branch'=>'master',
-        'created_at'=>'2015-03-30 03:46:11 UTC',
-        'scheduled_at'=>'2015-03-30 03:46:11 UTC',
-        'started_at'=>'2015-03-30 03:46:15 UTC',
-        'finished_at'=>'2015-03-30 03:46:22 UTC'
+        'id' => 'e711180f-b318-4559-be4e-de119d2ac5eb',
+        'url' => 'https://api.buildkite.com/v1/organizations/my-org/projects/test/builds/9',
+        'number' => 9,
+        'state' => 'passed',
+        'message' => commit_message,
+        'commit' => commit,
+        'branch' => 'master',
+        'created_at' => '2015-03-30 03:46:11 UTC',
+        'scheduled_at' => '2015-03-30 03:46:11 UTC',
+        'started_at' => '2015-03-30 03:46:15 UTC',
+        'finished_at' => '2015-03-30 03:46:22 UTC'
       },
-      'project'=> {
-        'id'=>'1db912ed-ca71-4d16-9c16-e453b88432cc',
-        'url'=>'https://api.buildkite.com/v1/organizations/my-org/projects/test',
-        'name'=>'We Build',
-        'repository'=>'git@github.com:my-org/test.git'
+      'project' => {
+        'id' => '1db912ed-ca71-4d16-9c16-e453b88432cc',
+        'url' => 'https://api.buildkite.com/v1/organizations/my-org/projects/test',
+        'name' => 'We Build',
+        'repository' => 'git@github.com:my-org/test.git'
       },
-      'sender'=> {
-        'id'=>'4fb41f57-c1d7-41b0-91e3-941edf19ac16', 'name'=>'Dude Rock'
+      'sender' => {
+        'id' => '4fb41f57-c1d7-41b0-91e3-941edf19ac16', 'name' => 'Dude Rock'
       }
     }.with_indifferent_access
   end
@@ -38,7 +38,8 @@ describe Integrations::BuildkiteController do
   before { Deploy.delete_all }
 
   context 'when buildkite passes a build event' do
-    test_regular_commit 'Buildkite', failed: { build: { state: 'failed' }}, no_mapping: { build: { branch: 'non-existent-branch' } } do
+    options = {failed: { build: { state: 'failed' }}, no_mapping: { build: { branch: 'non-existent-branch' } }}
+    test_regular_commit 'Buildkite', options do
       project.webhooks.create!(stage: stages(:test_staging), branch: 'master', source: 'buildkite')
     end
 

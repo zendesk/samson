@@ -111,7 +111,7 @@ class ActiveSupport::TestCase
     QueryDiet::Logger.queries.map(&:first) - ["select 1"]
   end
 
-  def assert_sql_queries(count, &block)
+  def assert_sql_queries(count)
     old = ar_queries
     yield
     new = ar_queries
@@ -127,12 +127,13 @@ class ActiveSupport::TestCase
   # record hook and their arguments called during a given block
   def record_hooks(callback, &block)
     called = []
-    Samson::Hooks.with_callback(callback, lambda{ |*args| called << args }, &block)
+    Samson::Hooks.with_callback(callback, lambda { |*args| called << args }, &block)
     called
   end
 
   def silence_stderr
-    old, $VERBOSE = $VERBOSE, nil
+    old = $VERBOSE
+    $VERBOSE = nil
     yield
   ensure
     $VERBOSE = old
@@ -144,7 +145,12 @@ class ActiveSupport::TestCase
   end
 
   def create_secret(key)
-    SecretStorage::DbBackend::Secret.create!(id: key, value: 'MY-SECRET', updater_id: users(:admin).id, creator_id: users(:admin).id)
+    SecretStorage::DbBackend::Secret.create!(
+      id: key,
+      value: 'MY-SECRET',
+      updater_id: users(:admin).id,
+      creator_id: users(:admin).id
+    )
   end
 
   def with_env(env)
@@ -178,7 +184,7 @@ class ActionController::TestCase
       end
     end
 
-    %w{super_admin admin deployer viewer project_admin project_deployer}.each do |user|
+    %w[super_admin admin deployer viewer project_admin project_deployer].each do |user|
       define_method "as_a_#{user}" do |&block|
         describe "as a #{user}" do
           let(:user) { users(user) }
@@ -190,7 +196,7 @@ class ActionController::TestCase
   end
 
   before do
-    middleware = Rails.application.config.middleware.detect {|m| m.name == 'Warden::Manager'}
+    middleware = Rails.application.config.middleware.detect { |m| m.name == 'Warden::Manager' }
     manager = Warden::Manager.new(nil, &middleware.block)
     request.env['warden'] = Warden::Proxy.new(request.env, manager)
 
@@ -231,7 +237,7 @@ class ActionController::TestCase
   def self.use_test_routes
     before do
       Rails.application.routes.draw do
-        match "/test/:test_route/:controller/:action", :via => [:get, :post, :put, :patch, :delete]
+        match "/test/:test_route/:controller/:action", via: [:get, :post, :put, :patch, :delete]
       end
     end
 

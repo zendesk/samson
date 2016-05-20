@@ -16,7 +16,7 @@ describe DeployService do
   let(:stage_production_1) { stages(:test_production) }
   let(:stage_production_2) { stages(:test_production_pod) }
 
-  let (:ref1) { "v1" }
+  let(:ref1) { "v1" }
 
   describe "#deploy!" do
     it "starts a deploy" do
@@ -162,7 +162,7 @@ describe DeployService do
 
   describe "after notifications" do
     before do
-      SseRailsEngine.expects(:send_event).with('deploys', { type: 'finish' }).never
+      SseRailsEngine.expects(:send_event).with('deploys', type: 'finish').never
       stage.stubs(:create_deploy).returns(deploy)
       deploy.stubs(:persisted?).returns(true)
       job_execution.stubs(:execute!)
@@ -174,7 +174,7 @@ describe DeployService do
     it "sends email notifications if the stage has email addresses" do
       stage.stubs(:send_email_notifications?).returns(true)
 
-      DeployMailer.expects(:deploy_email).returns( stub("DeployMailer", deliver_now: true) )
+      DeployMailer.expects(:deploy_email).returns(stub("DeployMailer", deliver_now: true))
 
       service.deploy!(stage, reference: reference)
       job_execution.send(:run!)
@@ -222,7 +222,7 @@ describe DeployService do
     it "email notification for failed deploys" do
       stage.stubs(:automated_failure_emails).returns(["foo@bar.com"])
 
-      DeployMailer.expects(:deploy_failed_email).returns( stub("DeployMailer", deliver_now: true) )
+      DeployMailer.expects(:deploy_failed_email).returns(stub("DeployMailer", deliver_now: true))
 
       service.deploy!(stage, reference: reference)
       job_execution.send(:run!)

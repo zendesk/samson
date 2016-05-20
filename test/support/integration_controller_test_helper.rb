@@ -16,7 +16,7 @@ module IntegrationsControllerTestHelper
         project.deploys.must_equal []
       end
 
-      if failed = options[:failed]
+      if (failed = options[:failed])
         it "doesn't trigger a deploy if the build did not pass" do
           post :create, payload.deep_merge(token: project.token).deep_merge(failed)
 

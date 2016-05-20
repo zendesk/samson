@@ -132,14 +132,13 @@ describe Deploy do
       deploy2 = create_deploy!
       deploy3 = create_deploy!
 
-
       deploy2.previous_deploy.must_equal deploy1
       deploy3.previous_deploy.must_equal deploy2
     end
 
     it "excludes non-successful deploys" do
       deploy1 = create_deploy!(job: create_job!(status: "succeeded"))
-      deploy2 = create_deploy!(job: create_job!(status: "errored"))
+      create_deploy!(job: create_job!(status: "errored"))
       deploy3 = create_deploy!
 
       deploy3.previous_deploy.must_equal deploy1
@@ -224,7 +223,9 @@ describe Deploy do
 
       it "is invalid" do
         e = assert_raise(ActiveRecord::RecordInvalid) { deploy! }
-        e.message.must_equal "Validation failed: Stage contains at least one command using the $DEPLOY_GROUPS environment variable, but there are no Deploy Groups associated with this stage."
+        e.message.must_equal \
+          "Validation failed: Stage contains at least one command using the $DEPLOY_GROUPS " \
+          "environment variable, but there are no Deploy Groups associated with this stage."
       end
 
       it "valid when not using $DEPLOY_GROUPS" do
@@ -242,7 +243,7 @@ describe Deploy do
 
   describe "trim_reference" do
     it "trims the Git reference" do
-      deploy = create_deploy!({reference: " master "})
+      deploy = create_deploy!(reference: " master ")
       deploy.reference.must_equal "master"
     end
   end

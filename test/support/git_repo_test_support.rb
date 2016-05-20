@@ -55,7 +55,7 @@ module GitRepoTestHelper
     `git rev-parse HEAD`.strip
   end
 
-  def number_of_commits(ref='HEAD')
+  def number_of_commits(ref = 'HEAD')
     `git rev-list #{ref} --count`.strip.to_i
   end
 

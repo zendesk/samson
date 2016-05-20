@@ -42,7 +42,7 @@ describe Admin::UsersController do
       it 'index page search box should contain the query' do
         get :index, search: 'Super Admin'
 
-        assert_template :index,  partial: '_search_bar'
+        assert_template :index, partial: '_search_bar'
         assert_select '#search' do
           assert_select '[name="search"]'
           assert_select '[type="text"]'
@@ -64,7 +64,7 @@ describe Admin::UsersController do
         json_response = JSON.parse response.body
         user_list = json_response['users']
         assert_not_nil user_list
-        user_list.each  do | u |
+        user_list.each do |u|
           user_info = User.find_by(name: u['name'])
           user_info.wont_be_nil
           user_info.email.must_equal u['email']
@@ -72,7 +72,7 @@ describe Admin::UsersController do
       end
 
       it 'succeeds and fetches a single user' do
-        get :index, search: 'Super Admin' , format: :json
+        get :index, search: 'Super Admin', format: :json
 
         response.success?.must_equal true
         assigns(:users).must_equal [users(:super_admin)]
@@ -144,7 +144,7 @@ describe Admin::UsersController do
 
       it 'clears the access request pending flag' do
         modified_user.update!(access_request_pending: true)
-        put :update, {id: modified_user.id, user: {role_id: Role::DEPLOYER.id}}
+        put :update, id: modified_user.id, user: {role_id: Role::DEPLOYER.id}
         modified_user.reload.access_request_pending.must_equal false
       end
 

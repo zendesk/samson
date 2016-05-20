@@ -123,7 +123,7 @@ describe SecretStorage do
       end
     end
 
-    describe "#store_encryption_key_sha"do
+    describe "#store_encryption_key_sha" do
       it "stores the encryption key sha so we can rotate it in the future" do
         secret.encryption_key_sha.must_equal "c975b468c4677aa69a20769bf9553ea1937b84684c2876130f9c528731963f4d"
       end
@@ -165,7 +165,7 @@ describe SecretStorage do
 
     describe ".write" do
       it "writes a key with /secret" do
-        assert SecretStorage::HashicorpVault.write('production/foo/group/isbar/foo', {value: 'whatever'})
+        assert SecretStorage::HashicorpVault.write('production/foo/group/isbar/foo', value: 'whatever')
         client.set.must_equal("secret/production/foo/group/isbar%2Ffoo" => {vault: 'whatever'})
       end
     end
@@ -176,10 +176,12 @@ describe SecretStorage do
         client.expect('list-secret/', first_keys)
         client.expect('list-secret/production/project/group/this/', ["key"])
         client.expect('list-secret/production/project/group/that/', ["key"])
-        SecretStorage::HashicorpVault.keys.must_equal([
-          "production/project/group/this/key",
-          "production/project/group/that/key"
-        ])
+        SecretStorage::HashicorpVault.keys.must_equal(
+          [
+            "production/project/group/this/key",
+            "production/project/group/that/key"
+          ]
+        )
       end
     end
 

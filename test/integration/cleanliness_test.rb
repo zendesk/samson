@@ -45,8 +45,8 @@ describe "cleanliness" do
 
   it "does not have actions on base controller" do
     found = ApplicationController.action_methods.to_a
-    found.reject { |a| a =~ /^(_conditional_callback_around_|_callback_before_)/ } - ["flash"]
-    found.must_equal []
+    found.reject { |a| a =~ /^(_conditional_callback_around_|_callback_before_)/ }
+    (found - ["flash"]).must_equal []
   end
 
   it "enforces coverage" do
@@ -123,7 +123,7 @@ describe "cleanliness" do
       "plugins/kubernetes/app/models/watchers/topic_subscription.rb",
       "plugins/kubernetes/app/serializers/kubernetes/release_doc_serializer.rb",
       "plugins/kubernetes/app/serializers/kubernetes/release_serializer.rb",
-      "plugins/pipelines/app/models/concerns/samson_pipelines/stage_concern.rb",
+      "plugins/pipelines/app/models/concerns/samson_pipelines/stage_concern.rb"
     ]
 
     SingleCov.assert_tested(

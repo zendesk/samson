@@ -47,8 +47,8 @@ describe Stage do
   describe '#command' do
     describe 'adding a built command' do
       before do
-        subject.command_associations.build(command:
-          Command.new(command: 'test')
+        subject.command_associations.build(
+          command: Command.new(command: 'test')
         )
 
         subject.command_ids = [commands(:echo).id]
@@ -119,7 +119,7 @@ describe Stage do
     it 'returns the last successful deploy for the stage' do
       successful_job = project.jobs.create!(command: 'cat foo', user: users(:deployer), status: 'succeeded')
       stage.deploys.create!(reference: 'master', job: successful_job)
-      job = project.jobs.create!(command: 'cat foo', user: users(:deployer), status: 'failed')
+      project.jobs.create!(command: 'cat foo', user: users(:deployer), status: 'failed')
       deploy = stage.deploys.create!(reference: 'master', job: successful_job)
       assert_equal deploy, stage.last_successful_deploy
     end
@@ -154,25 +154,25 @@ describe Stage do
     let(:user) { users(:deployer) }
 
     it "creates a new deploy" do
-      deploy = subject.create_deploy(user, {reference: "foo"})
+      deploy = subject.create_deploy(user, reference: "foo")
       deploy.reference.must_equal "foo"
       deploy.release.must_equal true
     end
 
     it "creates a new job" do
-      deploy = subject.create_deploy(user, {reference: "foo"})
+      deploy = subject.create_deploy(user, reference: "foo")
       deploy.job.user.must_equal user
     end
 
     it "creates neither job nor deploy if one fails to save" do
       assert_no_difference "Deploy.count + Job.count" do
-        subject.create_deploy(user, {reference: ""})
+        subject.create_deploy(user, reference: "")
       end
     end
 
     it "creates a no-release deploy when stage was configured to not deploy code" do
       subject.no_code_deployed = true
-      deploy = subject.create_deploy(user, {reference: "foo"})
+      deploy = subject.create_deploy(user, reference: "foo")
       deploy.release.must_equal false
     end
   end
@@ -275,7 +275,7 @@ describe Stage do
   describe "#automated_failure_emails" do
     let(:user) { users(:super_admin) }
     let(:deploy) do
-      deploy = subject.create_deploy(user, {reference: "commita"})
+      deploy = subject.create_deploy(user, reference: "commita")
       deploy.job.fail!
       deploy
     end

@@ -9,7 +9,8 @@ describe Integrations::TravisController do
 
   before do
     Deploy.delete_all
-    @orig_token, ENV["TRAVIS_TOKEN"] = ENV["TRAVIS_TOKEN"], "TOKEN"
+    @orig_token = ENV["TRAVIS_TOKEN"]
+    ENV["TRAVIS_TOKEN"] = "TOKEN"
     project.webhooks.create!(stage: stages(:test_staging), branch: "master", source: 'travis')
   end
 
@@ -21,9 +22,7 @@ describe Integrations::TravisController do
     let(:authorization) { nil }
 
     before do
-      if authorization
-        @request.headers["Authorization"] = authorization
-      end
+      @request.headers["Authorization"] = authorization if authorization
     end
 
     it "fails with unknown project" do
@@ -55,16 +54,17 @@ describe Integrations::TravisController do
       end
 
       before do
-        post :create, token: project.token,
-          payload: JSON.dump(payload)
+        post :create, token: project.token, payload: JSON.dump(payload)
       end
 
       describe "failure" do
-        let(:payload) {{
-          status_message: 'Failure',
-          branch: 'sdavidovitz/blah',
-          message: 'A change'
-        }}
+        let(:payload) do
+          {
+            status_message: 'Failure',
+            branch: 'sdavidovitz/blah',
+            message: 'A change'
+          }
+        end
 
         it "renders ok" do
           response.status.must_equal(200)
@@ -76,14 +76,16 @@ describe Integrations::TravisController do
         let(:status_message) { 'Passed' }
         let(:commit_message) { 'A change' }
 
-        let(:payload) {{
-          status_message: status_message,
-          branch: 'master',
-          message: commit_message,
-          committer_email: user.email,
-          commit: sha,
-          type: 'push'
-        }}
+        let(:payload) do
+          {
+            status_message: status_message,
+            branch: 'master',
+            message: commit_message,
+            committer_email: user.email,
+            commit: sha,
+            type: 'push'
+          }
+        end
 
         describe "with status_message 'Passed'" do
           it "creates a deploy" do

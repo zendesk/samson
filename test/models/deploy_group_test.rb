@@ -93,7 +93,8 @@ describe DeployGroup do
     end
 
     it 'can set env_value' do
-      DeployGroup.create!(name: 'Pod666 - the best', env_value: 'pod:666', environment: environment).env_value.must_equal 'pod:666'
+      DeployGroup.create!(name: 'Pod666 - the best', env_value: 'pod:666', environment: environment).env_value.
+        must_equal 'pod:666'
     end
   end
 
@@ -107,7 +108,7 @@ describe DeployGroup do
     end
 
     it "sorts pure numbers" do
-      sort(['11', '1', '22', '12', '9']).must_equal ['1', '9','11', '12', '22']
+      sort(['11', '1', '22', '12', '9']).must_equal ['1', '9', '11', '12', '22']
     end
 
     it "sorts pure words" do

@@ -67,7 +67,13 @@ describe BuildsController do
       end
 
       def create
-        post :create, project_id: project.to_param, build: { label: 'Test creation', git_ref: 'master', description: 'hi there' }, build_image: build_image, format: format
+        post(
+          :create,
+          project_id: project.to_param,
+          build: { label: 'Test creation', git_ref: 'master', description: 'hi there' },
+          build_image: build_image,
+          format: format
+        )
       end
 
       let(:git_sha) { '0123456789012345678901234567890123456789' }
@@ -92,7 +98,11 @@ describe BuildsController do
 
         it 'can create a build with same git_ref as previous' do
           create
-          post :create, project_id: project.to_param, build: { label: 'Test creation 2', git_ref: 'master', description: 'hi there' }
+          post(
+            :create,
+            project_id: project.to_param,
+            build: { label: 'Test creation 2', git_ref: 'master', description: 'hi there' }
+          )
           Build.last.label.must_equal 'Test creation 2'
         end
 

@@ -26,11 +26,11 @@ describe ReferencesService do
   end
 
   it 'returns a sorted set of tags and branches' do
-    ReferencesService.new(project).find_git_references.must_equal %w(v1 master test_user/test_branch )
+    ReferencesService.new(project).find_git_references.must_equal %w[v1 master test_user/test_branch ]
   end
 
   it 'returns a sorted set of tags and branches from cached repo' do
-    ReferencesService.new(project).send(:references_from_cached_repo).must_equal %w(v1 master test_user/test_branch)
+    ReferencesService.new(project).send(:references_from_cached_repo).must_equal %w[v1 master test_user/test_branch]
   end
 
   it 'the ttl threshold should always return an integer' do
