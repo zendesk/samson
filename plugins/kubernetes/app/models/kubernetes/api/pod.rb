@@ -14,7 +14,7 @@ module Kubernetes
       end
 
       def live?
-        @pod.status.phase == 'Running' && ready?
+        phase == 'Running' && ready?
       end
 
       def restarted?

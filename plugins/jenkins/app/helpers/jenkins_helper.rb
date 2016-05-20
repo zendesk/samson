@@ -5,7 +5,7 @@ module JenkinsHelper
       "FAILURE"  => "danger",
       "CANCELED" => "warning",
       "ABORTED"  => "warning",
-      "STARTUP_ERROR"  => "warning",
+      "STARTUP_ERROR" => "warning",
       nil        => "info"
     }
 
@@ -14,13 +14,13 @@ module JenkinsHelper
       "FAILURE"  => "has Failed",
       "CANCELED" => "was canceled, Please check Jenkins job for more details",
       "STARTUP_ERROR" => "failed to start, Please check Jenkins job to see what went wrong",
-      "ABORTED"  => "was aborted, Please go to Jenkins job to start it manually",
+      "ABORTED" => "was aborted, Please go to Jenkins job to start it manually",
       nil => "is running. This can take a few minutes to finish, Please reload this page to check latest status"
     }
 
     jenkins_job_status = jenkins_job.status
     jenkins_job_url = jenkins_job.url
-    if !jenkins_job_status
+    unless jenkins_job_status
       jenkins = Samson::Jenkins.new(jenkins_job.name, deploy)
       jenkins_job_status = jenkins.job_status(jenkins_job.jenkins_job_id)
       jenkins_job_url = jenkins.job_url(jenkins_job.jenkins_job_id)

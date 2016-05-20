@@ -2,7 +2,7 @@ class JobQueue
   LOCK = Mutex.new
 
   def initialize
-    @queue = Hash.new {|h, k| h[k] = []}
+    @queue = Hash.new { |h, k| h[k] = [] }
     @active = {}
     @registry = {}
   end
@@ -16,7 +16,7 @@ class JobQueue
   end
 
   def queued?(key, id)
-    @queue.dup[key].any? {|je| je.id == id}
+    @queue.dup[key].any? { |je| je.id == id }
   end
 
   # Assumes active threads will be closed by themselves

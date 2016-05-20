@@ -1,3 +1,4 @@
+# rubocop:disable Metrics/LineLength
 require_relative '../test_helper'
 
 SingleCov.covered!

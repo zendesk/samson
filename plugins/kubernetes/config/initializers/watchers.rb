@@ -6,10 +6,10 @@ module Kubeclient
   class Client
     # Add Deployment and Daemonset waiting for PR:
     # https://github.com/abonas/kubeclient/pull/143
-    NEW_ENTITY_TYPES = %w(Deployment DaemonSet).map do |et|
+    NEW_ENTITY_TYPES = %w[Deployment DaemonSet].map do |et|
       clazz = Class.new(RecursiveOpenStruct) do
         def initialize(hash = nil, args = {})
-          args.merge!(recurse_over_arrays: true)
+          args[:recurse_over_arrays] = true
           super(hash, args)
         end
       end
@@ -21,7 +21,7 @@ module Kubeclient
 end
 
 Celluloid.logger = Rails.logger
-$CELLULOID_DEBUG = true
+$CELLULOID_DEBUG = true # rubocop:disable Style/GlobalVars
 
 if ENV['SERVER_MODE'] && !ENV['PRECOMPILE'] && !ENV['KUBERNETES_NOT_WATCHING']
   Kubernetes::Cluster.find_each(&:watch!)

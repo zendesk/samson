@@ -5,15 +5,17 @@ SingleCov.covered!
 describe Kubernetes::RolesController do
   let(:project) { role.project }
   let(:role) { kubernetes_roles(:app_server) }
-  let(:role_params) { {
-    name: 'NAME',
-    service_name: 'SERVICE_NAME',
-    config_file: 'dsfsd.yml',
-    cpu: 1,
-    ram: 1,
-    replicas: 1,
-    deploy_strategy: 'RollingUpdate'
-  } }
+  let(:role_params) do
+    {
+      name: 'NAME',
+      service_name: 'SERVICE_NAME',
+      config_file: 'dsfsd.yml',
+      cpu: 1,
+      ram: 1,
+      replicas: 1,
+      deploy_strategy: 'RollingUpdate'
+    }
+  end
 
   as_a_viewer do
     unauthorized :get, :index, project_id: :foo

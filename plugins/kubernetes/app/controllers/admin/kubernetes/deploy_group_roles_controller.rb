@@ -28,9 +28,11 @@ class Admin::Kubernetes::DeployGroupRolesController < ApplicationController
   end
 
   def update
-    @deploy_group_role.assign_attributes(deploy_group_role_params.except(:project_id, :deploy_group_id, :kubernetes_role_id))
+    @deploy_group_role.assign_attributes(
+      deploy_group_role_params.except(:project_id, :deploy_group_id, :kubernetes_role_id)
+    )
     if @deploy_group_role.save
-      redirect_to [:admin , @deploy_group_role]
+      redirect_to [:admin, @deploy_group_role]
     else
       render :edit, status: 422
     end

@@ -35,46 +35,32 @@ describe Kubernetes::DeployYaml do
         tag: "v123",
         pre_defined: "foobar",
         release_id: doc.kubernetes_release_id.to_s,
-        project: "foo",
+        project: "foobar",
         project_id: doc.kubernetes_release.project_id.to_s,
         role_id: doc.kubernetes_role_id.to_s,
-        role: "app_server",
+        role: "app-server",
         deploy_group: 'pod1',
         deploy_group_id: doc.deploy_group_id.to_s,
-        deploy_id: "123",
+        deploy_id: "123"
       )
 
       metadata = result.fetch(:metadata)
       metadata.fetch(:namespace).must_equal 'pod1'
       metadata.fetch(:labels).must_equal(
-        project: doc.kubernetes_release.project.permalink,
-        role: doc.kubernetes_role.name
+        project: 'foobar',
+        role: 'app-server'
       )
-    end
-
-    it "works without selector" do
-      assert doc.raw_template.sub!('selector:', 'no_selector:')
-      result = yaml.to_hash
-      result = result.fetch(:spec).fetch(:selector).fetch(:matchLabels).keys.sort
-      result.must_equal [:project, :role].sort
-    end
-
-    it "works without labels" do
-      yaml.send(:template).metadata.labels = nil
-      result = yaml.to_hash.fetch(:metadata).fetch(:labels).keys.sort
-      result.must_equal [:project, :role].sort
     end
 
     it "escapes things that would not be allowed in labels or environment values" do
       doc.deploy_group.update_column(:env_value, 'foo:bar')
-      doc.kubernetes_role.update_column(:name, 'Oh boy this is weird')
       doc.build.update_column(:git_ref, 'user/feature')
 
       result = yaml.to_hash
       result.fetch(:spec).fetch(:template).fetch(:metadata).fetch(:labels).slice(:deploy_group, :role, :tag).must_equal(
         tag: "user-feature",
-        role: "oh-boy-this-is-weird",
-        deploy_group: 'foo-bar'
+        deploy_group: 'foo-bar',
+        role: 'app-server'
       )
     end
 
@@ -108,7 +94,7 @@ describe Kubernetes::DeployYaml do
 
       it "copies resource values" do
         container.fetch(:resources).must_equal(
-          limits:{
+          limits: {
             memory: "100Mi",
             cpu: 1.0
           }
@@ -145,6 +131,36 @@ describe Kubernetes::DeployYaml do
       end
     end
 
+    describe "secret-sidecar-containers" do
+      before do
+        ENV["VAULT_ADDR"] = "somehostontheinternet"
+        ENV["SECRET_SIDECAR_IMAGE"] = "docker-registry.example.com/foo:bar"
+        ENV["VAULT_SSL_VERIFY"] = "false"
+      end
+
+      after do
+        ENV.delete("VAULT_ADDR")
+        ENV.delete("SECRET_SIDECAR_IMAGE")
+        ENV.delete("VAULT_SSL_VERIFY")
+      end
+
+      it "creates a sidecar" do
+        yaml.to_hash[:spec][:template][:spec][:containers].last[:name].must_equal('secret-sidecar')
+      end
+
+      it "adds to existing volume definitions in the sidecar" do
+        doc.raw_template.gsub!("containers:\n      - {}\n",
+          "containers:\n      - {}\n      volumes:\n      - {}\n      - {}\n")
+        yaml.to_hash[:spec][:template][:spec][:volumes].count.must_be(:>=, 2)
+      end
+
+      it "adds to existing volume definitions in the primary container" do
+        doc.raw_template.gsub!("containers:\n      - {}\n",
+          "containers:\n      - :name: foo\n        :volumeMounts:\n        - :name: bar\n")
+        yaml.to_hash[:spec][:template][:spec][:containers].first[:volumeMounts].count.must_be(:>=, 2)
+      end
+    end
+
     describe "daemon_set" do
       it "does not add replicas since they are not supported" do
         yaml.send(:template).kind = 'DaemonSet'
@@ -154,4 +170,3 @@ describe Kubernetes::DeployYaml do
     end
   end
 end
-

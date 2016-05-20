@@ -35,17 +35,21 @@ class CsvExportJob < ActiveJob::Base
     filter = csv_export.filters
 
     @deploys = Deploy.joins(:stage, :job).where(filter)
-    summary = [ "-", "Generated At", csv_export.updated_at, "Deploys", @deploys.count.to_s ]
-    filters_applied = [ "-", "Filters", filter.to_json ]
+    summary = ["-", "Generated At", csv_export.updated_at, "Deploys", @deploys.count.to_s]
+    filters_applied = ["-", "Filters", filter.to_json]
 
     CSV.open(filename, 'w+') do |csv|
-      csv << ["Deploy Number", "Project Name", "Deploy Sumary", "Deploy Commit", "Deploy Status", "Deploy Updated",
+      csv << [
+        "Deploy Number", "Project Name", "Deploy Sumary", "Deploy Commit", "Deploy Status", "Deploy Updated",
         "Deploy Created", "Deployer Name", "Deployer Email", "Buddy Name", "Buddy Email",
-        "Production Flag", "No code deployed" ]
+        "Production Flag", "No code deployed"
+      ]
       @deploys.find_each do |deploy|
-        csv << [deploy.id, deploy.project.name, deploy.summary, deploy.commit, deploy.job.status, deploy.updated_at,
+        csv << [
+          deploy.id, deploy.project.name, deploy.summary, deploy.commit, deploy.job.status, deploy.updated_at,
           deploy.start_time, deploy.job.user.name, deploy.job.user.try(:email), deploy.buddy_name, deploy.buddy_email,
-          deploy.stage.production, deploy.stage.no_code_deployed ]
+          deploy.stage.production, deploy.stage.no_code_deployed
+        ]
       end
       csv << summary
       csv << filters_applied

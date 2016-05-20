@@ -128,9 +128,11 @@ describe Kubernetes::Api::Pod do
 
   def build_watch_notice
     Kubeclient::Common::WatchNotice.new(
-        JSON.parse(
-            %({"type": "MODIFIED", "object": {"metadata": {"name": "#{pod_name}"},
-                                              "status": {"phase": "Running",
-                                                         "conditions": [{"type": "Ready", "status": "True"}]}}})))
+      "type" => "MODIFIED",
+      "object" => {
+        "metadata" => {"name" => pod_name},
+        "status" => {"phase" => "Running", "conditions" => [{"type" => "Ready", "status" => "True"}]}
+      }
+    )
   end
 end

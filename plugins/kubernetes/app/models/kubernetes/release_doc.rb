@@ -29,11 +29,10 @@ module Kubernetes
     end
 
     def update_status(live_pods)
-      case
-      when live_pods == replica_target then self.status = :live
-      when live_pods.zero? then self.status = :dead
-      when live_pods > replicas_live then self.status = :spinning_up
-      when live_pods < replicas_live then self.status = :spinning_down
+      if live_pods == replica_target then self.status = :live
+      elsif live_pods.zero? then self.status = :dead
+      elsif live_pods > replicas_live then self.status = :spinning_up
+      elsif live_pods < replicas_live then self.status = :spinning_down
       end
       save!
     end
@@ -54,15 +53,21 @@ module Kubernetes
       deploy_group.kubernetes_cluster.client
     end
 
-    def deploy_to_kubernetes
-      resource = case deploy_yaml.resource_name
-      when 'deployment' then Kubeclient::Deployment.new(deploy_yaml.to_hash)
-      when 'daemon_set' then Kubeclient::DaemonSet.new(deploy_yaml.to_hash)
-      else raise "Unknown resource #{deploy_yaml.resource_name}"
+    def deploy
+      case deploy_yaml.resource_name
+      when 'deployment'
+        deploy = Kubeclient::Deployment.new(deploy_yaml.to_hash)
+        if resource_running?(deploy)
+          extension_client.update_deployment deploy
+        else
+          extension_client.create_deployment deploy
+        end
+      when 'daemon_set'
+        daemon = Kubeclient::DaemonSet.new(deploy_yaml.to_hash)
+        delete_daemon_set(daemon) if resource_running?(daemon)
+        extension_client.create_daemon_set daemon
+      else raise "Unknown daemon_set #{deploy_yaml.resource_name}"
       end
-
-      action = (resource_running?(resource) ? "update" : "create")
-      extension_client.send "#{action}_#{deploy_yaml.resource_name}", resource
     end
 
     def ensure_service
@@ -73,7 +78,10 @@ module Kubernetes
       else
         data = service_hash
         if data.fetch(:metadata).fetch(:name).include?(Kubernetes::Role::GENERATED)
-          raise Samson::Hooks::UserError, "Service name for role #{kubernetes_role.name} was generated and needs to be changed before deploying."
+          raise(
+            Samson::Hooks::UserError,
+            "Service name for role #{kubernetes_role.name} was generated and needs to be changed before deploying."
+          )
         end
         client.create_service(Kubeclient::Service.new(data))
         'creating Service'
@@ -105,6 +113,31 @@ module Kubernetes
       false
     end
 
+    # we cannot replace or update a daemonset, so we take it down completely
+    #
+    # was do what `kubectl delete daemonset NAME` does:
+    # - make it match no node
+    # - waits for current to reach 0
+    # - deletes the daemonset
+    def delete_daemon_set(daemon_set)
+      daemon_set_selector = [daemon_set.metadata.name, daemon_set.metadata.namespace]
+
+      # make it match no node
+      daemon_set = daemon_set.clone
+      daemon_set.spec.template.spec.nodeSelector = {rand(9999).to_s => rand(9999).to_s}
+      extension_client.update_daemon_set daemon_set
+
+      # wait for it to terminate all it's pods
+      loop do
+        sleep 2
+        current = extension_client.get_daemon_set(*daemon_set_selector)
+        break if current.status.currentNumberScheduled == 0 && current.status.numberMisscheduled == 0
+      end
+
+      # delete it
+      extension_client.delete_daemon_set *daemon_set_selector
+    end
+
     def service
       if kubernetes_role.service_name.present?
         Kubernetes::Service.new(role: kubernetes_role, deploy_group: deploy_group)
@@ -128,21 +161,54 @@ module Kubernetes
 
     # Config has multiple entries like a ReplicationController and a Service
     def service_template
-      services = Array.wrap(parsed_config_file).select { |doc| doc['kind'] == 'Service' }
+      services = parsed_config_file.select { |doc| doc['kind'] == 'Service' }
       unless services.size == 1
-        raise Samson::Hooks::UserError, "Template #{template_name} has #{services.size} services, having 1 section is valid."
+        raise(
+          Samson::Hooks::UserError,
+          "Template #{template_name} has #{services.size} services, having 1 section is valid."
+        )
       end
       services.first.with_indifferent_access
     end
 
     def parsed_config_file
-      Kubernetes::Util.parse_file(raw_template, template_name)
+      Array.wrap(Kubernetes::Util.parse_file(raw_template, template_name))
     end
 
     def validate_config_file
-      if build && kubernetes_role && raw_template.blank?
-        errors.add(:build, "does not contain config file '#{template_name}'")
+      if build && kubernetes_role
+        if raw_template.blank?
+          errors.add(:build, "does not contain config file '#{template_name}'")
+        elsif !project_and_role_consistent?
+          errors.add(:build, "config file '#{template_name}' does not have consistent project and role labels")
+        end
       end
+    end
+
+    def project_and_role_consistent?
+      labels = parsed_config_file.flat_map do |resource|
+        kind = resource.fetch('kind')
+
+        label_paths =
+          case kind
+          when 'Service'
+            [['spec', 'selector']]
+          when 'Deployment', 'DaemonSet'
+            [
+              ['spec', 'template', 'metadata', 'labels'],
+              ['spec', 'selector', 'matchLabels'],
+            ]
+          else
+            [] # ignore unknown / unsupported types
+          end
+
+        label_paths.map do |path|
+          path.inject(resource) { |r, k| r[k] || {} }.slice('project', 'role')
+        end
+      end
+
+      labels = labels.uniq
+      labels.size == 1 && labels.first.size == 2
     end
 
     def namespace

@@ -14,7 +14,7 @@ class FlowdockNotification
 
   def buddy_request_completed(buddy, approved = true)
     buddy_request_content = buddy_request_completed_message(approved, buddy)
-    flowdock_service.notify_chat(buddy_request_content, %w(buddy-request completed))
+    flowdock_service.notify_chat(buddy_request_content, %w[buddy-request completed])
   end
 
   def deliver
@@ -29,10 +29,10 @@ class FlowdockNotification
 
   def buddy_request_completed_message(approved, buddy)
     if user == buddy
-       "#{user.name} bypassed deploy #{deploy_url}"
-     else
-       "#{user.name} #{buddy.name} #{approved ? 'approved' : 'stopped' } deploy #{deploy_url}"
-     end
+      "#{user.name} bypassed deploy #{deploy_url}"
+    else
+      "#{user.name} #{buddy.name} #{approved ? 'approved' : 'stopped'} deploy #{deploy_url}"
+    end
   end
 
   def content

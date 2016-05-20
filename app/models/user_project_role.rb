@@ -4,7 +4,7 @@ class UserProjectRole < ActiveRecord::Base
   belongs_to :project
   belongs_to :user
 
-  ROLES = [Role::DEPLOYER, Role::ADMIN]
+  ROLES = [Role::DEPLOYER, Role::ADMIN].freeze
 
   validates_presence_of :project, :user
   validates :role_id, inclusion: { in: ROLES.map(&:id) }

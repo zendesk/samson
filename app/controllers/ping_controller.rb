@@ -6,6 +6,7 @@ class PingController < ApplicationController
   end
 
   private
+
   def force_ssl?
     false
   end

@@ -1,7 +1,6 @@
 module Watchers
   module Events
     class KubernetesEvent
-
       def initialize(data)
         @data = data
       end

@@ -161,7 +161,7 @@ describe ProjectsController do
 
   describe "a DELETE to #destroy" do
     as_a_viewer do
-        unauthorized :delete, :destroy, id: :foo
+      unauthorized :delete, :destroy, id: :foo
     end
 
     as_a_deployer do

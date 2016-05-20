@@ -43,7 +43,7 @@ describe Admin::Kubernetes::ClustersController do
       use_example_config
       let(:params) { {config_filepath: __FILE__, config_context: 'y', name: 'foobar'} }
 
-      before { Kubernetes::Cluster.any_instance.stubs(connection_valid?: true) }  # avoid real connection
+      before { Kubernetes::Cluster.any_instance.stubs(connection_valid?: true) } # avoid real connection
 
       it "redirects on success" do
         Kubernetes::Cluster.any_instance.expects(:watch!) # spawn threads

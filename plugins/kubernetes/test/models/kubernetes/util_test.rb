@@ -37,9 +37,8 @@ describe Kubernetes::Util do
       output = Kubernetes::Util.parse_file(yaml_input, 'file.yaml')
       output.must_be_kind_of Array
       output.count.must_equal 2
-      output[0].must_equal({ 'name' => 'foo', 'value' => 999 })
-      output[1].must_equal({ 'name' => 'other_key', 'value' => 1000, 'password' => 12345 })
+      output[0].must_equal('name' => 'foo', 'value' => 999)
+      output[1].must_equal('name' => 'other_key', 'value' => 1000, 'password' => 12345)
     end
   end
 end
-

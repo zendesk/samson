@@ -15,14 +15,14 @@ describe BuddyCheck do
   let(:other_user) { users(:deployer_buddy) }
 
   it "start_time is set for buddy_checked deploy" do
-    deploy_rtn = stage.create_deploy(user, { reference: reference })
+    deploy_rtn = stage.create_deploy(user, reference: reference)
     deploy_rtn.confirm_buddy!(other_user)
 
     assert_equal true, deploy_rtn.start_time.to_i > 0
   end
 
   it "start_time is set for non-buddy_checked deploy" do
-    deploy_rtn = stage.create_deploy(user, { reference: reference })
+    deploy_rtn = stage.create_deploy(user, reference: reference)
 
     assert_equal true, deploy_rtn.start_time.to_i > 0
   end
@@ -77,7 +77,7 @@ describe BuddyCheck do
       it "sends bypass alert email notification" do
         DeployMailer.stubs(:prepare_mail)
 
-        DeployMailer.expects(:bypass_email).returns( stub("DeployMailer", deliver_now: true) )
+        DeployMailer.expects(:bypass_email).returns(stub("DeployMailer", deliver_now: true))
 
         deploy.buddy = user
         service.confirm_deploy!(deploy)
@@ -117,7 +117,6 @@ describe BuddyCheck do
 
     describe "for buddy different" do
       it "does not send bypass alert email notification" do
-
         DeployMailer.expects(:bypass_email).never
 
         deploy.buddy = other_user

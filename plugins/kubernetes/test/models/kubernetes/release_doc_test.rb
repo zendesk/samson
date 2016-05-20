@@ -1,6 +1,6 @@
 require_relative "../../test_helper"
 
-SingleCov.covered! uncovered: 18
+SingleCov.covered! uncovered: 16
 
 describe Kubernetes::ReleaseDoc do
   let(:doc) { kubernetes_release_docs(:test_release_pod_1) }
@@ -56,27 +56,101 @@ describe Kubernetes::ReleaseDoc do
     end
   end
 
-  describe "#deploy_to_kubernetes" do
+  describe "#deploy" do
     let(:client) { doc.send(:extension_client) }
 
-    it "creates when deploy does not exist" do
-      client.expects(:get_deployment).returns false
-      client.expects(:create_deployment)
-      doc.deploy_to_kubernetes
+    describe "deployment" do
+      it "creates when deploy does not exist" do
+        client.expects(:get_deployment).raises(KubeException.new(1, 2, 3))
+        client.expects(:create_deployment)
+        doc.deploy
+      end
+
+      it "updates when deploy exists" do
+        client.expects(:get_deployment).returns true
+        client.expects(:update_deployment)
+        doc.deploy
+      end
     end
 
-    it "updates when deploy does exist" do
-      client.expects(:get_deployment).returns true
-      client.expects(:update_deployment)
-      doc.deploy_to_kubernetes
+    describe "daemonset" do
+      before do
+        doc.send(:deploy_yaml).send(:template).kind = 'DaemonSet'
+        doc.stubs(:sleep)
+      end
+
+      it "creates when daemonset does not exist" do
+        client.expects(:get_daemon_set).raises(KubeException.new(1, 2, 3))
+        client.expects(:create_daemon_set)
+        doc.deploy
+      end
+
+      it "deletes and created when daemonset exists without pods" do
+        client.expects(:update_daemon_set)
+        client.expects(:get_daemon_set).times(2).returns(
+          stub(status: stub(currentNumberScheduled: 0, numberMisscheduled: 0)), # initial check
+          stub(status: stub(currentNumberScheduled: 0, numberMisscheduled: 0))  # check for running
+        )
+        client.expects(:delete_daemon_set)
+        client.expects(:create_daemon_set)
+        doc.deploy
+      end
+
+      it "deletes and created when daemonset exists with pods" do
+        client.expects(:update_daemon_set)
+        client.expects(:get_daemon_set).times(4).returns(
+          stub(status: stub(currentNumberScheduled: 1, numberMisscheduled: 1)), # initial check
+          stub(status: stub(currentNumberScheduled: 1, numberMisscheduled: 1)),
+          stub(status: stub(currentNumberScheduled: 0, numberMisscheduled: 1)),
+          stub(status: stub(currentNumberScheduled: 0, numberMisscheduled: 0))
+        )
+        client.expects(:delete_daemon_set)
+        client.expects(:create_daemon_set)
+        doc.deploy
+      end
+    end
+  end
+
+  describe "#validate_config_file" do
+    let(:doc) { kubernetes_release_docs(:test_release_pod_1).dup }
+
+    it "is valid" do
+      assert_valid doc
     end
 
-    it "can manage daemonsets" do
-      doc.send(:deploy_yaml).send(:template).kind = 'DaemonSet'
-      client.expects(:get_daemon_set).returns true
-      client.expects(:update_daemon_set)
-      doc.deploy_to_kubernetes
+    it "is invalid when missing role" do
+      assert doc.raw_template.sub!('role', 'mole')
+      refute_valid doc
+    end
+
+    it "is invalid when missing project" do
+      assert doc.raw_template.sub!('project', 'reject')
+      refute_valid doc
+    end
+
+    it "is invalid with mismatching project or role" do
+      assert doc.raw_template.sub!('project: foobar', 'project: barfoo')
+      refute_valid doc
+    end
+
+    it "ignores unsupported type" do
+      doc.raw_template << "\n" << {'kind' => "Wut"}.to_yaml
+      assert_valid doc
+    end
+
+    describe "with service" do
+      let(:service) { {'kind' => 'Service', 'spec' => {'selector' => {'project' => 'foobar', 'role' => 'app-server'}}} }
+
+      it "is valid" do
+        doc.raw_template << "\n" << service.to_yaml
+        assert_valid doc
+      end
+
+      it "is invalid with different project" do
+        service.fetch('spec').fetch('selector')['project'] = 'barfoo'
+        doc.raw_template << "\n" << service.to_yaml
+        refute_valid doc
+      end
     end
   end
 end
-

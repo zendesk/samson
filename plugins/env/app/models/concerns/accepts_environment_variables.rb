@@ -1,5 +1,5 @@
 module AcceptsEnvironmentVariables
-  ASSIGNABLE_ATTRIBUTES = {environment_variables_attributes: [:name, :value, :scope_type_and_id, :_destroy, :id]}
+  ASSIGNABLE_ATTRIBUTES = {environment_variables_attributes: [:name, :value, :scope_type_and_id, :_destroy, :id]}.freeze
 
   def self.included(base)
     base.class_eval do

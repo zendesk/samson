@@ -14,6 +14,7 @@ module GitRepoTestHelper
       git init
       git config user.email "test@example.com"
       git config user.name "Test User"
+      git config commit.gpgsign false
       echo monkey > foo
       git add foo
       git commit -m "initial commit"
@@ -55,7 +56,7 @@ module GitRepoTestHelper
     `git rev-parse HEAD`.strip
   end
 
-  def number_of_commits(ref='HEAD')
+  def number_of_commits(ref = 'HEAD')
     `git rev-list #{ref} --count`.strip.to_i
   end
 

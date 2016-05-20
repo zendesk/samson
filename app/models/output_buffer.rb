@@ -35,7 +35,7 @@ class OutputBuffer
 
   def write(data, event = :message)
     @previous << [event, data] unless event == :close
-    @listeners.dup.each {|listener| listener.push([event, data]) }
+    @listeners.dup.each { |listener| listener.push([event, data]) }
   end
 
   def include?(event, data)
@@ -65,7 +65,8 @@ class OutputBuffer
       queue = Queue.new
       @listeners << queue
 
-      @previous.each(&block) # race condition: possibly duplicate messages when message comes in between adding listener and this
+      # race condition: possibly duplicate messages when message comes in between adding listener and this
+      @previous.each(&block)
 
       while (chunk = queue.pop) && chunk.first != :close
         yield chunk

@@ -12,7 +12,8 @@ class DatadogNotification
 
     status = @deploy.succeeded? ? "success" : "error"
 
-    event = Dogapi::Event.new(body,
+    event = Dogapi::Event.new(
+      body,
       msg_title: @deploy.summary,
       event_type: "deploy",
       event_object: Digest::MD5.hexdigest("#{Time.new}|#{rand}"),
@@ -23,7 +24,7 @@ class DatadogNotification
     )
 
     client = Dogapi::Client.new(api_key, nil, "")
-    status, _ = client.emit_event(event)
+    status = client.emit_event(event)[0]
 
     if status == "202"
       Rails.logger.info "Sent Datadog notification"

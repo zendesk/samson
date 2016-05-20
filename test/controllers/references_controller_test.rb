@@ -5,7 +5,7 @@ SingleCov.covered!
 describe ReferencesController do
   before do
     reference_service = ReferencesService.new(projects(:test))
-    reference_service.stubs(:find_git_references).returns(%w(master test_user/test_branch))
+    reference_service.stubs(:find_git_references).returns(%w[master test_user/test_branch])
     ReferencesService.stubs(:new).returns(reference_service)
   end
 
@@ -18,7 +18,7 @@ describe ReferencesController do
       it 'returns the git references for the project test' do
         get :index, project_id: projects(:test).to_param, format: :json
         response.content_type.must_equal 'application/json'
-        assigns(:references).must_equal %w(master test_user/test_branch)
+        assigns(:references).must_equal %w[master test_user/test_branch]
       end
     end
   end

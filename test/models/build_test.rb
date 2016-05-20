@@ -56,6 +56,7 @@ describe Build do
 
     it 'validates docker digest' do
       assert_valid(valid_build(docker_repo_digest: repo_digest))
+      assert_valid(valid_build(docker_repo_digest: "my-registry.zende.sk/samson/another_project@sha256:#{example_sha}"))
       refute_valid(valid_build(docker_repo_digest: example_sha))
       refute_valid(valid_build(docker_repo_digest: 'some random string'))
     end

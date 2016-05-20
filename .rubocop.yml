@@ -1,0 +1,147 @@
+LineLength:
+  Max: 120
+
+ClassLength:
+  Enabled: false
+
+Style/CommentIndentation:
+  Enabled: false
+
+Style/StringLiterals:
+  Enabled: false
+
+HashSyntax:
+   EnforcedStyle: ruby19
+
+Style/SignalException:
+  Enabled: false
+
+Style/SpaceInsideHashLiteralBraces:
+  Enabled: false
+
+Lint/AmbiguousOperator:
+  Enabled: false
+
+Style/Lambda:
+  Enabled: false
+
+Style/SpecialGlobalVars:
+  Enabled: false
+
+Metrics/MethodLength:
+  Enabled: false
+
+Metrics/AbcSize:
+  Enabled: false
+
+Style/WordArray:
+  Enabled: false
+
+Lint/EndAlignment:
+  AlignWith: variable
+
+Style/StringLiteralsInInterpolation:
+  Enabled: false
+
+Style/NumericLiterals:
+  Enabled: false
+
+Style/FirstParameterIndentation:
+  Enabled: false
+
+Style/IndentHash:
+  Enabled: false
+
+Style/AlignParameters:
+  EnforcedStyle: with_fixed_indentation
+
+Style/MultilineOperationIndentation:
+  Enabled: false
+
+Metrics/ModuleLength:
+  Enabled: false
+
+Metrics/PerceivedComplexity:
+  Enabled: false
+
+Metrics/CyclomaticComplexity:
+  Enabled: false
+
+Style/DoubleNegation:
+  Enabled: false
+
+Style/Documentation:
+  Enabled: false
+
+Metrics/CyclomaticComplexity:
+  Enabled: false
+
+Style/MultilineMethodCallIndentation:
+  Enabled: false
+
+Lint/AmbiguousRegexpLiteral:
+  Enabled: false
+
+Style/DotPosition:
+  EnforcedStyle: trailing
+
+Style/ClassAndModuleChildren:
+  Enabled: false
+
+# %w[] shows that it will return an array
+Style/PercentLiteralDelimiters:
+  PreferredDelimiters:
+    '%i': '[]'
+    '%w': '[]'
+    '%W': '[]'
+
+# for single `/` more readable
+Style/RegexpLiteral:
+  Enabled: false
+
+# sometimes the most readable way of doing things
+Style/ClassVars:
+  Enabled: false
+
+# nice for .with{} mock stubs
+Style/Semicolon:
+  Enabled: false
+
+# for simple cases more readable
+Style/GuardClause:
+  Enabled: false
+
+Style/FormatString:
+  EnforcedStyle: percent
+
+Style/Alias:
+  EnforcedStyle: prefer_alias_method
+
+Metrics/ParameterLists:
+  Enabled: false
+
+Lint/AssignmentInCondition:
+  Enabled: false
+
+Style/SingleLineBlockParams:
+  Enabled: false
+
+Style/TrailingCommaInLiteral:
+  Enabled: false
+
+Style/PerlBackrefs:
+  Enabled: false
+
+Style/IfUnlessModifier:
+  Enabled: false
+
+Lint/ShadowingOuterLocalVariable:
+  Enabled: false
+
+AllCops:
+  CacheRootDirectory: tmp
+  TargetRubyVersion: 2.2
+  Exclude:
+    - db/schema.rb
+    - vendor/**/*
+    - tmp/**/*

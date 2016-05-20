@@ -1,13 +1,13 @@
 class UnifyRoles < ActiveRecord::Migration
   UP = {
     2 => 3,
-    1 => 2,
-  }
+    1 => 2
+  }.freeze
 
   DOWN = {
     2 => 1,
-    3 => 2,
-  }
+    3 => 2
+  }.freeze
 
   def up
     map!(UP)

@@ -5,19 +5,21 @@ SingleCov.covered!
 describe SamsonNewRelic::Api do
   def stub_metric_api(field, value)
     Time.stubs(now: Time.parse('2016-01-01 00:00:00'))
-    stub_request(:get, "https://api.newrelic.com/v2/applications/14/metrics/data.json?begin=2015-12-31T23:30:00Z&end=2016-01-01T00:00:00Z&field=#{field}&names%5B%5D=HttpDispatcher").
+    stub_request(:get, "https://api.newrelic.com/v2/applications/14/metrics/data.json?begin=2015-12-31T23:30:00Z&end=2016-01-01T00:00:00Z&field=#{field}&names%5B%5D=HttpDispatcher"). # rubocop:disable Metrics/LineLength
       to_return(body: {
         metric_data: {metrics: [{timeslices: [{from: '2016-01-01 00:00:00', values: {field => value}}]}]}
       }.to_json)
   end
 
   let(:account) { stub(applications: applications) }
-  let(:applications) {[
-    {'id' => 1, 'name' => 'Production'},
-    {'id' => 2, 'name' => 'Staging'}
-  ]}
+  let(:applications) do
+    [
+      {'id' => 1, 'name' => 'Production'},
+      {'id' => 2, 'name' => 'Staging'}
+    ]
+  end
 
-  before { silence_warnings { SamsonNewRelic::Api::KEY = '123' } }
+  before { silence_warnings { SamsonNewRelic::Api::KEY = '123'.freeze } }
   after { silence_warnings { SamsonNewRelic::Api::KEY = nil } }
 
   describe '.applications' do
@@ -34,7 +36,8 @@ describe SamsonNewRelic::Api do
 
   describe '.metrics' do
     before do
-      SamsonNewRelic::Api.stubs(applications: applications.map { |a| [a.fetch('name'), SamsonNewRelic::Api::Application.new(a)] }.to_h)
+      applications = self.applications.map { |a| [a.fetch('name'), SamsonNewRelic::Api::Application.new(a)] }.to_h
+      SamsonNewRelic::Api.stubs(applications: applications)
     end
     subject { SamsonNewRelic::Api.metrics(['Production', 'Staging'], initial) }
 
@@ -115,14 +118,14 @@ describe SamsonNewRelic::Api do
 
   describe SamsonNewRelic::Api::Application do
     subject do
-      SamsonNewRelic::Api::Application.new({
+      SamsonNewRelic::Api::Application.new(
         'id' => 14,
         'name' => 'Production',
         'application_summary' => {
           'throughput' => 1234,
           'response_time' => 2345
         }
-      })
+      )
     end
 
     it 'has an id' do
@@ -142,11 +145,13 @@ describe SamsonNewRelic::Api do
     end
 
     it 'can reload' do
-      stub_request(:get, "https://api.newrelic.com/v2/applications/14.json").
-        to_return(body: {
+      stub_request(:get, "https://api.newrelic.com/v2/applications/14.json").to_return(
+        body: {
           'application_summary' => {
-          'response_time' => 333
-        }}.to_json)
+            'response_time' => 333
+          }
+        }.to_json
+      )
       subject.reload
       subject.response_time.must_equal(333)
     end

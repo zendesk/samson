@@ -1,3 +1,4 @@
+# rubocop:disable Metrics/LineLength
 class CreateKubernetesClusterDeployGroups < ActiveRecord::Migration
   def up
     create_table :kubernetes_cluster_deploy_groups do |t|

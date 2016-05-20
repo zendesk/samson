@@ -16,7 +16,7 @@ class GitRepository
   end
 
   def setup!(temp_dir, git_reference)
-    raise ArgumentError.new("git_reference is required") if git_reference.blank?
+    raise ArgumentError, "git_reference is required" if git_reference.blank?
 
     executor.output.write("# Beginning git repo setup\n")
     return false unless update_local_cache!
@@ -35,11 +35,12 @@ class GitRepository
 
   def clone!(from: repository_url, to: repo_cache_dir, mirror: false)
     @last_pulled = Time.now if from == repository_url
-    command = if mirror
-      "git -c core.askpass=true clone --mirror #{from} #{to}"
-    else
-      "git clone #{from} #{to}"
-    end
+    command =
+      if mirror
+        "git -c core.askpass=true clone --mirror #{from} #{to}"
+      else
+        "git clone #{from} #{to}"
+      end
     executor.execute! command
   end
   add_method_tracer :clone!

@@ -2,7 +2,7 @@ require 'ansible'
 require 'github/markdown'
 
 module ApplicationHelper
-  BOOTSTRAP_FLASH_MAPPINGS = { notice: :info, error: :danger, authorization_error: :danger, success: :success }
+  BOOTSTRAP_FLASH_MAPPINGS = { notice: :info, error: :danger, authorization_error: :danger, success: :success }.freeze
 
   include Ansible
   include DateTimeHelper
@@ -134,8 +134,8 @@ module ApplicationHelper
     content_tag :i, '', class: "glyphicon glyphicon-#{type}"
   end
 
-  def link_to_delete(path, body = 'Delete', options={})
-    link_to body, path, options.merge({ method: :delete, data: { confirm: "Are you sure?" } })
+  def link_to_delete(path, body = 'Delete', options = {})
+    link_to body, path, options.merge(method: :delete, data: { confirm: "Are you sure?" })
   end
 
   def link_to_delete_button(path)

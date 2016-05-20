@@ -141,7 +141,7 @@ describe GitRepository do
       create_repo_without_tags
       repository.clone!
       repository.commit_from_ref('master ; rm foo', length: nil).must_be_nil
-      assert File.exists?(File.join(repository.repo_cache_dir, 'foo'))
+      assert File.exist?(File.join(repository.repo_cache_dir, 'foo'))
     end
   end
 
@@ -168,7 +168,7 @@ describe GitRepository do
     it 'returns the tags repository' do
       create_repo_with_tags
       repository.clone!(mirror: true)
-      repository.tags.to_a.must_equal %w(v1 )
+      repository.tags.to_a.must_equal ["v1"]
     end
 
     it 'returns an empty set of tags' do
@@ -182,7 +182,7 @@ describe GitRepository do
     it 'returns the branches of the repository' do
       create_repo_with_an_additional_branch
       repository.clone!(mirror: true)
-      repository.branches.to_a.must_equal %w(master test_user/test_branch)
+      repository.branches.to_a.must_equal %w[master test_user/test_branch]
     end
   end
 

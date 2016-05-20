@@ -69,11 +69,7 @@ class Deploy < ActiveRecord::Base
   end
 
   def buddy
-    if buddy_id
-      super || NullUser.new(buddy_id)
-    else
-      nil
-    end
+    super || NullUser.new(buddy_id) if buddy_id
   end
 
   def bypassed_approval?
@@ -94,7 +90,7 @@ class Deploy < ActiveRecord::Base
   end
 
   def pending_start!
-    touch # hack: refresh is immediate with update
+    touch # HACK: refresh is immediate with update
     DeployService.new(user).confirm_deploy!(self)
   end
 
@@ -130,7 +126,7 @@ class Deploy < ActiveRecord::Base
 
   def self.expired
     threshold = BuddyCheck.time_limit.minutes.ago
-    joins(:job).where(jobs: { status: 'pending'} ).where("jobs.created_at < ?", threshold)
+    joins(:job).where(jobs: { status: 'pending'}).where("jobs.created_at < ?", threshold)
   end
 
   def buddy_name
@@ -175,7 +171,11 @@ class Deploy < ActiveRecord::Base
   # so we validate once a user actually tries to execute the command
   def validate_stage_uses_deploy_groups_properly
     if DeployGroup.enabled? && stage.deploy_groups.none? && stage.script.include?("$DEPLOY_GROUPS")
-      errors.add(:stage, "contains at least one command using the $DEPLOY_GROUPS environment variable, but there are no Deploy Groups associated with this stage.")
+      errors.add(
+        :stage,
+        "contains at least one command using the $DEPLOY_GROUPS environment variable," \
+        " but there are no Deploy Groups associated with this stage."
+      )
     end
   end
 
@@ -192,6 +192,6 @@ class Deploy < ActiveRecord::Base
   end
 
   def trim_reference
-    self.reference.strip! if self.reference.presence
+    reference.strip! if reference.presence
   end
 end

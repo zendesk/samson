@@ -26,11 +26,12 @@ class StagesController < ApplicationController
         @deploys = @stage.deploys.page(params[:page])
       end
       format.svg do
-        badge = if deploy = @stage.last_successful_deploy
-          "#{badge_safe(@stage.name)}-#{badge_safe(deploy.short_reference)}-green"
-        else
-          "#{badge_safe(@stage.name)}-None-red"
-        end
+        badge =
+          if deploy = @stage.last_successful_deploy
+            "#{badge_safe(@stage.name)}-#{badge_safe(deploy.short_reference)}-green"
+          else
+            "#{badge_safe(@stage.name)}-None-red"
+          end
         redirect_to "https://img.shields.io/badge/#{badge}.svg"
       end
     end
@@ -81,9 +82,9 @@ class StagesController < ApplicationController
   private
 
   def badge_safe(string)
-    CGI.escape(string)
-      .gsub('+','%20')
-      .gsub(/-+/,'--')
+    CGI.escape(string).
+      gsub('+', '%20').
+      gsub(/-+/, '--')
   end
 
   def check_token

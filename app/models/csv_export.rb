@@ -1,13 +1,12 @@
 class CsvExport < ActiveRecord::Base
   belongs_to :user
   serialize :filters, JSON
-  STATUS_VALUES = ['pending', 'started', 'finished', 'downloaded', 'failed', 'deleted']
+  STATUS_VALUES = ['pending', 'started', 'finished', 'downloaded', 'failed', 'deleted'].freeze
 
   before_destroy :delete_file
 
   validates :status, inclusion: { in: STATUS_VALUES }
   delegate :email, to: :user, allow_nil: true
-
 
   scope :old, lambda {
     end_date = Rails.application.config.samson.export_job.downloaded_age.seconds.ago
