@@ -111,6 +111,15 @@ describe Kubernetes::Release do
     end
   end
 
+  describe "#pod_selector" do
+    it "generates a query that selects all pods for this deploy group" do
+      release.pod_selector(deploy_group).must_equal(
+        release_id: release.id,
+        deploy_group_id: deploy_group.id
+      )
+    end
+  end
+
   describe "#validate_project_ids_are_in_sync" do
     it 'ensures project ids are in sync' do
       release.project_id = 123

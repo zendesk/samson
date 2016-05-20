@@ -71,18 +71,15 @@ module Kubernetes
         role = @doc.kubernetes_role
         deploy_group = @doc.deploy_group
         build = @doc.build
-        {
-          release_id: release.id,
+
+        release.pod_selector(deploy_group).merge(
           deploy_id: release.deploy_id,
           project_id: release.project_id,
           role_id: role.id,
-
           deploy_group: deploy_group.env_value.parameterize,
-          deploy_group_id: deploy_group.id,
-
           revision: build.git_sha,
           tag: build.git_ref.parameterize
-        }
+        )
       end
     end
 

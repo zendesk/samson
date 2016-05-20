@@ -71,14 +71,17 @@ module Kubernetes
       release_docs.map(&:deploy_group).uniq.map do |deploy_group|
         query = {
           namespace: deploy_group.kubernetes_namespace,
-          label_selector: {
-            deploy_group_id: deploy_group.id,
-            project_id: project_id,
-            release_id: id
-          }.to_kuber_selector
+          label_selector: pod_selector(deploy_group).to_kuber_selector
         }
         [deploy_group.kubernetes_cluster.client, query, deploy_group]
       end
+    end
+
+    def pod_selector(deploy_group)
+      {
+        release_id: id,
+        deploy_group_id: deploy_group.id,
+      }
     end
 
     private
