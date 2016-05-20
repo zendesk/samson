@@ -258,7 +258,7 @@ module Kubernetes
     def create_deploys(release)
       release.release_docs.each do |release_doc|
         @output.puts "Creating deploy for #{release_doc.deploy_group.name} role #{release_doc.kubernetes_role.name}"
-        release_doc.deploy_to_kubernetes
+        release_doc.deploy
       end
     end
 

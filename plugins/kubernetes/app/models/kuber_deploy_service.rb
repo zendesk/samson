@@ -26,7 +26,7 @@ class KuberDeployService
   def create_deployments!
     kuber_release.release_docs.each do |release_doc|
       log 'creating Deployment', role: release_doc.kubernetes_role.name
-      release_doc.deploy_to_kubernetes
+      release_doc.deploy
     end
   end
 

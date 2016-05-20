@@ -54,15 +54,21 @@ module Kubernetes
       deploy_group.kubernetes_cluster.client
     end
 
-    def deploy_to_kubernetes
-      resource = case deploy_yaml.resource_name
-      when 'deployment' then Kubeclient::Deployment.new(deploy_yaml.to_hash)
-      when 'daemon_set' then Kubeclient::DaemonSet.new(deploy_yaml.to_hash)
-      else raise "Unknown resource #{deploy_yaml.resource_name}"
+    def deploy
+      case deploy_yaml.resource_name
+      when 'deployment'
+        deploy = Kubeclient::Deployment.new(deploy_yaml.to_hash)
+        if resource_running?(deploy)
+          extension_client.update_deployment deploy
+        else
+          extension_client.create_deployment deploy
+        end
+      when 'daemon_set'
+        daemon = Kubeclient::DaemonSet.new(deploy_yaml.to_hash)
+        delete_daemon_set(daemon) if resource_running?(daemon)
+        extension_client.create_daemon_set daemon
+      else raise "Unknown daemon_set #{deploy_yaml.resource_name}"
       end
-
-      action = (resource_running?(resource) ? "update" : "create")
-      extension_client.send "#{action}_#{deploy_yaml.resource_name}", resource
     end
 
     def ensure_service
@@ -103,6 +109,31 @@ module Kubernetes
       extension_client.send("get_#{deploy_yaml.resource_name}", resource.metadata.name, resource.metadata.namespace)
     rescue KubeException
       false
+    end
+
+    # we cannot replace or update a daemonset, so we take it down completely
+    #
+    # was do what `kubectl delete daemonset NAME` does:
+    # - make it match no node
+    # - waits for current to reach 0
+    # - deletes the daemonset
+    def delete_daemon_set(daemon_set)
+      daemon_set_selector = [daemon_set.metadata.name, daemon_set.metadata.namespace]
+
+      # make it match no node
+      daemon_set = daemon_set.clone
+      daemon_set.spec.template.spec.nodeSelector = {rand(9999).to_s => rand(9999).to_s}
+      extension_client.update_daemon_set daemon_set
+
+      # wait for it to terminate all it's pods
+      loop do
+        sleep 2
+        current = extension_client.get_daemon_set(*daemon_set_selector)
+        break if current.status.currentNumberScheduled == 0 && current.status.numberMisscheduled == 0
+      end
+
+      # delete it
+      extension_client.delete_daemon_set *daemon_set_selector
     end
 
     def service
