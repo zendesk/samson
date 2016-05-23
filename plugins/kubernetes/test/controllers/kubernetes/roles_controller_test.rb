@@ -10,9 +10,6 @@ describe Kubernetes::RolesController do
       name: 'NAME',
       service_name: 'SERVICE_NAME',
       config_file: 'dsfsd.yml',
-      cpu: 1,
-      ram: 1,
-      replicas: 1,
       deploy_strategy: 'RollingUpdate'
     }
   end
@@ -74,7 +71,7 @@ describe Kubernetes::RolesController do
       it "creates" do
         post :create, project_id: project, kubernetes_role: role_params
         role = Kubernetes::Role.last
-        assert_redirected_to [project, role]
+        assert_redirected_to "/projects/foo/kubernetes/roles"
         role.name.must_equal 'NAME'
       end
 
@@ -86,9 +83,9 @@ describe Kubernetes::RolesController do
     end
 
     describe "#update" do
-      it "creates" do
+      it "updates" do
         put :update, project_id: project, id: role.id, kubernetes_role: role_params
-        assert_redirected_to [project, role]
+        assert_redirected_to "/projects/foo/kubernetes/roles"
         role.reload.name.must_equal 'NAME'
       end
 

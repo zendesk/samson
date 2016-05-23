@@ -243,7 +243,7 @@ describe KubernetesReleasesController do
           roles: [
             {
               id: app_server.id,
-              replicas: app_server.replicas
+              replicas: 1
             }
           ]
         }
@@ -254,7 +254,7 @@ describe KubernetesReleasesController do
   def multiple_roles_release_params
     single_role_release_params.tap do |params|
       params[:deploy_groups].each do |dg|
-        dg[:roles].push(id: resque_worker.id, replicas: resque_worker.replicas)
+        dg[:roles].push(id: resque_worker.id, replicas: 1)
       end
     end
   end
