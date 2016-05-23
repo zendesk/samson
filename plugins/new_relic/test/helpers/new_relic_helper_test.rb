@@ -9,7 +9,7 @@ describe NewRelicHelper do
       @deploy.stage.new_relic_applications.build
     end
 
-    before { silence_warnings { SamsonNewRelic::Api::KEY = '123' } }
+    before { silence_warnings { SamsonNewRelic::Api::KEY = '123'.freeze } }
     after { silence_warnings { SamsonNewRelic::Api::KEY = nil } }
 
     it "is true" do

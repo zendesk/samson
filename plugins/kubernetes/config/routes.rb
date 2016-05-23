@@ -1,10 +1,10 @@
 Samson::Application.routes.draw do
   resources :projects do
-    # FIXME move into kubernetes namespace
+    # FIXME: move into kubernetes namespace
     resources :kubernetes_releases, only: [:new, :create, :index, :show]
     resources :kubernetes_dashboard, only: [:index]
 
-    # FIXME make these proper resources
+    # FIXME: make these proper resources
     member do
       get 'kubernetes', to: 'kubernetes_project#show'
       get 'kubernetes/releases', to: 'kubernetes_project#show'

@@ -67,11 +67,12 @@ module Kubernetes
           next if subset[key].blank?
 
           subset[key].each do |address|
-            if address.targetRef.kind == 'Pod'
-              results << OpenStruct.new(pod_ip: address.ip,
-                                        pod_name: address.targetRef.name,
-                                        ready?: (key == :addresses))
-            end
+            next unless address.targetRef.kind == 'Pod'
+            results << OpenStruct.new(
+              pod_ip: address.ip,
+              pod_name: address.targetRef.name,
+              ready?: (key == :addresses)
+            )
           end
         end
       end

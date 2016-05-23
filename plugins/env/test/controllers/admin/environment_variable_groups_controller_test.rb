@@ -11,8 +11,8 @@ describe Admin::EnvironmentVariableGroupsController do
       name: "G1",
       environment_variables_attributes: {
         0 => {name: "X", value: "Y"},
-        1 => {name: "Y", value: "Z"},
-      },
+        1 => {name: "Y", value: "Z"}
+      }
     )
   end
 
@@ -98,8 +98,8 @@ describe Admin::EnvironmentVariableGroupsController do
             name: "G2",
             comment: "COOMMMENT",
             environment_variables_attributes: {
-              "0" => {name: "N1", value: "V1"},
-            },
+              "0" => {name: "N1", value: "V1"}
+            }
           }, authenticity_token:  set_form_authenticity_token
         end
 
@@ -114,8 +114,8 @@ describe Admin::EnvironmentVariableGroupsController do
         refute_difference "EnvironmentVariable.count" do
           put :update, id: env_group.id, environment_variable_group: {
             environment_variables_attributes: {
-              "0" => {name: "N1", value: "V2", scope_type_and_id: "DeployGroup-#{deploy_group.id}", id: variable.id},
-            },
+              "0" => {name: "N1", value: "V2", scope_type_and_id: "DeployGroup-#{deploy_group.id}", id: variable.id}
+            }
           }, authenticity_token:  set_form_authenticity_token
         end
 
@@ -129,8 +129,8 @@ describe Admin::EnvironmentVariableGroupsController do
         assert_difference "EnvironmentVariable.count", -1 do
           put :update, id: env_group.id, environment_variable_group: {
             environment_variables_attributes: {
-              "0" => {name: "N1", value: "V2", id: variable.id, _destroy: true},
-            },
+              "0" => {name: "N1", value: "V2", id: variable.id, _destroy: true}
+            }
           }, authenticity_token:  set_form_authenticity_token
         end
 

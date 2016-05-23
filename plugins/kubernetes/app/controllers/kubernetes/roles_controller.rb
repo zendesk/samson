@@ -1,7 +1,7 @@
 class Kubernetes::RolesController < ApplicationController
   include CurrentProject
 
-  DEPLOYER_ACCESS = [:index, :show]
+  DEPLOYER_ACCESS = [:index, :show].freeze
   before_action :authorize_project_deployer!, only: DEPLOYER_ACCESS
   before_action :authorize_project_admin!, except: DEPLOYER_ACCESS
   before_action :find_role, only: [:show, :update, :destroy]

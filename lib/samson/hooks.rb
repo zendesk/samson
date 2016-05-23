@@ -36,11 +36,11 @@ module Samson
       :edit_deploy_group
     ].freeze
 
-    INTERNAL_HOOKS = [ :class_defined ]
+    INTERNAL_HOOKS = [:class_defined].freeze
 
     KNOWN = VIEW_HOOKS + EVENT_HOOKS + INTERNAL_HOOKS
 
-    @@hooks = {}
+    @hooks = {}
 
     class Plugin
       attr_reader :name, :folder
@@ -73,7 +73,7 @@ module Samson
       end
 
       def add_assets_to_precompile
-        engine.config.assets.precompile += %W(#{name}/application.css #{name}/application.js)
+        engine.config.assets.precompile += %W[#{name}/application.css #{name}/application.js]
       end
 
       def engine
@@ -176,13 +176,14 @@ module Samson
           # Load test_helper.rb if it exists
           # TODO maybe not necessary ...
           test_helper_file = File.join(plugin.folder, 'test', 'test_helper.rb')
-          require test_helper_file if File.exists?(test_helper_file)
+          require test_helper_file if File.exist?(test_helper_file)
         end
       end
 
       def render_javascripts(view)
         Samson::Hooks.plugins.each do |plugin|
-          next unless File.exists?(plugin.engine.config.root.join("app/assets/javascripts/#{plugin.name}/application.js"))
+          js = plugin.engine.config.root.join("app/assets/javascripts/#{plugin.name}/application.js")
+          next unless File.exist?(js)
           view.concat(view.javascript_include_tag("#{plugin.name}/application.js"))
         end
         nil
@@ -190,7 +191,8 @@ module Samson
 
       def render_stylesheets(view)
         Samson::Hooks.plugins.each do |plugin|
-          next unless File.exists?(plugin.engine.config.root.join("app/assets/stylesheets/#{plugin.name}/application.css"))
+          css = plugin.engine.config.root.join("app/assets/stylesheets/#{plugin.name}/application.css")
+          next unless File.exist?(css)
           view.concat(view.stylesheet_link_tag("#{plugin.name}/application.css"))
         end
         nil
@@ -205,7 +207,7 @@ module Samson
 
       def hooks(*args)
         raise "Using unsupported hook #{args.inspect}" unless KNOWN.include?(args.first)
-        (@@hooks[args] ||= [])
+        (@hooks[args] ||= [])
       end
 
       # Loads the PLUGINS environment variable. See docs/plugins.md for more info.

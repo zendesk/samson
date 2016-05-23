@@ -1,7 +1,6 @@
 module Watchers
   module Events
     class ClusterEvent < KubernetesEvent
-
       def reason
         @data.object.try(:reason)
       end

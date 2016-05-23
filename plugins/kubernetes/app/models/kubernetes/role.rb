@@ -3,14 +3,14 @@ require 'soft_deletion'
 module Kubernetes
   class Role < ActiveRecord::Base
     self.table_name = 'kubernetes_roles'
-    GENERATED = '-CHANGE-ME-'
+    GENERATED = '-CHANGE-ME-'.freeze
 
     has_soft_deletion
 
     belongs_to :project, inverse_of: :kubernetes_roles
     has_many :kubernetes_deploy_group_roles, class_name: 'Kubernetes::DeployGroupRole', dependent: :destroy
 
-    DEPLOY_STRATEGIES = %w(RollingUpdate Recreate)
+    DEPLOY_STRATEGIES = %w[RollingUpdate Recreate].freeze
 
     validates :project, presence: true
     validates :name, presence: true
@@ -29,7 +29,9 @@ module Kubernetes
         next if scope.where(config_file: config_file.file_path).exists?
 
         service_name = config_file.service && config_file.service.metadata.name
-        service_name << "#{GENERATED}#{rand(9999999)}" if service_name && scope.where(service_name: service_name).exists?
+        if service_name && scope.where(service_name: service_name).exists?
+          service_name << "#{GENERATED}#{rand(9999999)}"
+        end
 
         name = config_file.deployment.metadata.labels.try(:role) || File.basename(config_file.file_path).sub(/\..*/, '')
 
@@ -69,9 +71,9 @@ module Kubernetes
       "#{ram}Mi" if ram.present?
     end
 
-    private
-
     class << self
+      private
+
       def kubernetes_config_files_in_repo(project, git_ref)
         path = 'kubernetes'
         files = project.repository.file_content(path, git_ref) || []

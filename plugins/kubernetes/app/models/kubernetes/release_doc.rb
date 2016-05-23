@@ -29,11 +29,10 @@ module Kubernetes
     end
 
     def update_status(live_pods)
-      case
-      when live_pods == replica_target then self.status = :live
-      when live_pods.zero? then self.status = :dead
-      when live_pods > replicas_live then self.status = :spinning_up
-      when live_pods < replicas_live then self.status = :spinning_down
+      if live_pods == replica_target then self.status = :live
+      elsif live_pods.zero? then self.status = :dead
+      elsif live_pods > replicas_live then self.status = :spinning_up
+      elsif live_pods < replicas_live then self.status = :spinning_down
       end
       save!
     end
@@ -79,7 +78,10 @@ module Kubernetes
       else
         data = service_hash
         if data.fetch(:metadata).fetch(:name).include?(Kubernetes::Role::GENERATED)
-          raise Samson::Hooks::UserError, "Service name for role #{kubernetes_role.name} was generated and needs to be changed before deploying."
+          raise(
+            Samson::Hooks::UserError,
+            "Service name for role #{kubernetes_role.name} was generated and needs to be changed before deploying."
+          )
         end
         client.create_service(Kubeclient::Service.new(data))
         'creating Service'
@@ -161,7 +163,10 @@ module Kubernetes
     def service_template
       services = parsed_config_file.select { |doc| doc['kind'] == 'Service' }
       unless services.size == 1
-        raise Samson::Hooks::UserError, "Template #{template_name} has #{services.size} services, having 1 section is valid."
+        raise(
+          Samson::Hooks::UserError,
+          "Template #{template_name} has #{services.size} services, having 1 section is valid."
+        )
       end
       services.first.with_indifferent_access
     end
@@ -184,17 +189,18 @@ module Kubernetes
       labels = parsed_config_file.flat_map do |resource|
         kind = resource.fetch('kind')
 
-        label_paths = case kind
-        when 'Service'
-          [['spec', 'selector']]
-        when 'Deployment', 'DaemonSet'
-          [
-            ['spec', 'template', 'metadata', 'labels'],
-            ['spec', 'selector', 'matchLabels'],
-          ]
-        else
-          [] # ignore unknown / unsupported types
-        end
+        label_paths =
+          case kind
+          when 'Service'
+            [['spec', 'selector']]
+          when 'Deployment', 'DaemonSet'
+            [
+              ['spec', 'template', 'metadata', 'labels'],
+              ['spec', 'selector', 'matchLabels'],
+            ]
+          else
+            [] # ignore unknown / unsupported types
+          end
 
         label_paths.map do |path|
           path.inject(resource) { |r, k| r[k] || {} }.slice('project', 'role')

@@ -18,7 +18,9 @@ module Kubernetes
 
     scope :not_dead, -> { where.not(status: :dead) }
     scope :excluding, ->(ids) { where.not(id: ids) }
-    scope :with_not_dead_release_docs, -> { joins(:release_docs).where.not(Kubernetes::ReleaseDoc.table_name => { status: :dead }) }
+    scope :with_not_dead_release_docs, -> {
+      joins(:release_docs).where.not(Kubernetes::ReleaseDoc.table_name => { status: :dead })
+    }
 
     def release_is_live!
       finish_deploy(:live)
@@ -26,9 +28,9 @@ module Kubernetes
 
     def fail!
       finish_deploy(:failed)
-      release_docs.each { |release_doc|
+      release_docs.each do |release_doc|
         release_doc.fail! unless release_doc.live?
-      }
+      end
     end
 
     def user
@@ -45,9 +47,7 @@ module Kubernetes
     def self.create_release(params)
       Kubernetes::Release.transaction do
         release = create(params.except(:deploy_groups))
-        if release.persisted?
-          release.send :create_release_docs, params
-        end
+        release.send :create_release_docs, params if release.persisted?
         release
       end
     end
@@ -57,12 +57,11 @@ module Kubernetes
     end
 
     def update_status(release_doc)
-      case
-      when release_docs.all?(&:live?) then self.status = :live
-      when release_docs.all?(&:dead?) then self.status = :dead
-      when release_doc.spinning_up? then self.status = :spinning_up
-      when release_doc.spinning_down? then self.status = :spinning_down
-      when release_docs.any?(&:dead?) then self.status = :spinning_down
+      if release_docs.all?(&:live?) then self.status = :live
+      elsif release_docs.all?(&:dead?) then self.status = :dead
+      elsif release_doc.spinning_up? then self.status = :spinning_up
+      elsif release_doc.spinning_down? then self.status = :spinning_down
+      elsif release_docs.any?(&:dead?) then self.status = :spinning_down
       end
       save!
     end

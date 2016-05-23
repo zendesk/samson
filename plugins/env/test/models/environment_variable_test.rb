@@ -40,16 +40,18 @@ describe EnvironmentVariable do
       end
 
       it "includes only common for common groups" do
-        EnvironmentVariable.env(project, nil).must_equal("X"=>"Y", "Y" => "Z", "PROJECT" => "PROJECT")
+        EnvironmentVariable.env(project, nil).must_equal("X" => "Y", "Y" => "Z", "PROJECT" => "PROJECT")
       end
 
       it "includes common for scoped groups" do
-        EnvironmentVariable.env(project, deploy_group).must_equal("PROJECT"=>"DEPLOY", "X"=>"Y", "Z"=>"A", "Y"=>"Z")
+        EnvironmentVariable.env(project, deploy_group).must_equal(
+          "PROJECT" => "DEPLOY", "X" => "Y", "Z" => "A", "Y" => "Z"
+        )
       end
 
       it "overwrites environment groups with project variables" do
         project.environment_variables.create!(name: "X", value: "OVER")
-        EnvironmentVariable.env(project, nil).must_equal("X"=>"OVER", "Y" => "Z", "PROJECT" => "PROJECT")
+        EnvironmentVariable.env(project, nil).must_equal("X" => "OVER", "Y" => "Z", "PROJECT" => "PROJECT")
       end
 
       it "keeps correct order for different priorities" do
@@ -62,7 +64,9 @@ describe EnvironmentVariable do
         project.environment_variables.create!(name: "Y", value: "ENV", scope: environment)
         project.environment_variables.create!(name: "Y", value: "ALL")
 
-        EnvironmentVariable.env(project, deploy_group).must_equal("X"=>"GROUP", "Y" => "ENV", "PROJECT" => "DEPLOY", "Z" => "A")
+        EnvironmentVariable.env(project, deploy_group).must_equal(
+          "X" => "GROUP", "Y" => "ENV", "PROJECT" => "DEPLOY", "Z" => "A"
+        )
       end
 
       it "produces few queries when doing multiple versions as the env builder does" do
@@ -76,13 +80,14 @@ describe EnvironmentVariable do
       it "can resolve references" do
         project.environment_variables.last.update_column(:value, "PROJECT--$POD_ID--$POD_ID_NOT--${POD_ID}")
         project.environment_variables.create!(name: "POD_ID", value: "1")
-        EnvironmentVariable.env(project, nil).must_equal("PROJECT"=>"PROJECT--1--$POD_ID_NOT--1", "POD_ID"=>"1", "X"=>"Y", "Y"=>"Z")
+        EnvironmentVariable.env(project, nil).must_equal(
+          "PROJECT" => "PROJECT--1--$POD_ID_NOT--1", "POD_ID" => "1", "X" => "Y", "Y" => "Z"
+        )
       end
     end
   end
 
   describe "#scope_type_and_id=" do
-
     it "splits type and id" do
       environment_variable.scope_type_and_id = deploy_group_scope_type_and_id
       environment_variable.scope.must_equal deploy_group

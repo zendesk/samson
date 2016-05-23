@@ -29,7 +29,7 @@ module Watchers
     end
 
     def self.watcher_symbol(cluster)
-      "#{self.name.demodulize.underscore}_#{cluster.id}".to_sym
+      "#{name.demodulize.underscore}_#{cluster.id}".to_sym
     end
 
     def self.start_watcher(cluster)
@@ -39,11 +39,11 @@ module Watchers
 
     def self.restart_watcher(cluster)
       watcher = Celluloid::Actor[watcher_symbol(cluster)]
-      watcher.terminate if watcher and watcher.alive?
+      watcher.terminate if watcher && watcher.alive?
       start_watcher(cluster)
     end
 
-    def self.topic_message(event, options={})
+    def self.topic_message(event, options = {})
       base = { event: event }
       OpenStruct.new(base.merge(options))
     end
@@ -72,7 +72,7 @@ module Watchers
       fail 'handle_notice not implemented!'
     end
 
-    %w{debug info warn error}.each do |level|
+    %w[debug info warn error].each do |level|
       define_method level do |message|
         super "#{name} -> #{message}"
       end

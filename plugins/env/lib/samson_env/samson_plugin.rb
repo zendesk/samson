@@ -11,16 +11,17 @@ module SamsonEnv
     end
 
     def env_groups(project, deploy_groups, preview: false)
-      groups = if deploy_groups.any?
-        deploy_groups.map do |deploy_group|
-          [
-            ".#{deploy_group.name.parameterize}",
-            EnvironmentVariable.env(project, deploy_group, preview: preview)
-          ]
+      groups =
+        if deploy_groups.any?
+          deploy_groups.map do |deploy_group|
+            [
+              ".#{deploy_group.name.parameterize}",
+              EnvironmentVariable.env(project, deploy_group, preview: preview)
+            ]
+          end
+        else
+          [["", EnvironmentVariable.env(project, nil, preview: preview)]]
         end
-      else
-        [["", EnvironmentVariable.env(project, nil, preview: preview)]]
-      end
       return groups if groups.any? { |_, data| data.present? }
     end
 
@@ -40,11 +41,12 @@ module SamsonEnv
     # writes a proprietary .json file with a env hash for each deploy group
     def write_env_json_file(env_json, manifest_json, groups)
       return unless File.exist?(manifest_json)
-      json = if File.exist?(env_json)
-        JSON.load(File.read(env_json)).tap { File.unlink(env_json) }
-      else
-        {}
-      end
+      json =
+        if File.exist?(env_json)
+          JSON.load(File.read(env_json)).tap { File.unlink(env_json) }
+        else
+          {}
+        end
 
       # manifest.json includes required keys and other things we copy
       manifest = JSON.load(File.read(manifest_json))

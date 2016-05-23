@@ -3,7 +3,7 @@ require_relative '../test_helper'
 SingleCov.covered!
 
 describe NewRelicController do
-  before { silence_warnings { SamsonNewRelic::Api::KEY = '123' } }
+  before { silence_warnings { SamsonNewRelic::Api::KEY = '123'.freeze } }
   after { silence_warnings { SamsonNewRelic::Api::KEY = nil } }
 
   as_a_viewer do
@@ -36,7 +36,8 @@ describe NewRelicController do
             with([new_relic_applications(:production).name], initial).
             returns('test_project' => true)
 
-          get :show, project_id: projects(:test),
+          get :show,
+            project_id: projects(:test),
             stage_id: stages(:test_staging),
             initial: initial ? 'true' : nil
         end

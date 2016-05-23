@@ -19,7 +19,7 @@ describe EventStreamer do
       @closed = true
     end
 
-    def closed? # rubocop:disable Style/TrivialAccessors
+    def closed?
       @closed
     end
   end

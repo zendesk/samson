@@ -41,7 +41,7 @@ describe Kubernetes::DeployYaml do
         role: "app-server",
         deploy_group: 'pod1',
         deploy_group_id: doc.deploy_group_id.to_s,
-        deploy_id: "123",
+        deploy_id: "123"
       )
 
       metadata = result.fetch(:metadata)
@@ -94,7 +94,7 @@ describe Kubernetes::DeployYaml do
 
       it "copies resource values" do
         container.fetch(:resources).must_equal(
-          limits:{
+          limits: {
             memory: "100Mi",
             cpu: 1.0
           }
@@ -140,4 +140,3 @@ describe Kubernetes::DeployYaml do
     end
   end
 end
-

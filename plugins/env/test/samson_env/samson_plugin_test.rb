@@ -103,7 +103,7 @@ describe SamsonEnv do
             "2" => {name: "MORE", value: "A"}, # overwritten by specific setting
             "3" => {name: "MORE", value: "B", scope: deploy_groups(:pod100)},
             "4" => {name: "MORE", value: "C", scope: deploy_groups(:pod1)},
-            "5" => {name: "OPTIONAL", value: "A"},
+            "5" => {name: "OPTIONAL", value: "A"}
           },
           name: "G1"
         )

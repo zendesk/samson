@@ -2,6 +2,7 @@ language: ruby
 cache:
   bundler: true
   directories:
+    - tmp/rubocop_cache
     - node_modules
 sudo: false
 services:
@@ -13,6 +14,7 @@ env:
     - TASK='test:prepare_js test:js'
     - TASK='assets:precompile'
     - TASK='brakeman'
+    - TASK='rubocop'
     - BUNDLE_WITHOUT=postgres:sqlite DATABASE_URL=mysql2://travis@127.0.0.1/samson_test USE_UTF8MB4=1 TASK='db:create default'
     - BUNDLE_WITHOUT=mysql:sqlite DATABASE_URL=postgresql://postgres@127.0.0.1/samson_test TASK='db:create default'
     - BUNDLE_WITHOUT=postgres:mysql DATABASE_URL=sqlite3://null$PWD/db/test.sqlite3 TASK='db:create default'

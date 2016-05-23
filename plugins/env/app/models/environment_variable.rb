@@ -7,7 +7,8 @@ class EnvironmentVariable < ActiveRecord::Base
   class << self
     # preview parameter can be used to not raise an error,
     # but return a value with a helpful message
-    def env(project, deploy_group, preview: false)
+    # used by an external plugin
+    def env(project, deploy_group, preview: false) # rubocop:disable Lint/UnusedMethodArgument
       variables = project.environment_variables + project.environment_variable_groups.flat_map(&:environment_variables)
       variables.sort_by! { |ev| ev.send :priority }
       env = variables.each_with_object({}) do |ev, all|
@@ -61,11 +62,12 @@ class EnvironmentVariable < ActiveRecord::Base
   def priority
     result = []
     result << (parent_type == "Project" ? 1 : 0)
-    result << case scope_type
-    when nil then 0
-    when "Environment" then 1
-    when "DeployGroup" then 2
-    else raise "Unsupported type: #{scope_type}"
-    end
+    result <<
+      case scope_type
+      when nil then 0
+      when "Environment" then 1
+      when "DeployGroup" then 2
+      else raise "Unsupported type: #{scope_type}"
+      end
   end
 end

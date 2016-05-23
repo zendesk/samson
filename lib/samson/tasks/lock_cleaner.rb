@@ -17,7 +17,7 @@ module Samson::Tasks
     end
 
     # called by Concurrent::TimerTask
-    def update(time, result, exception)
+    def update(time, _result, exception)
       if exception
         Rails.logger.error "(#{time})  with error #{exception}"
         Rails.logger.error exception.backtrace.join("\n")
