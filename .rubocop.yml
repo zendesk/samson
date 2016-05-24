@@ -53,7 +53,7 @@ Style/IndentHash:
   Enabled: false
 
 Style/AlignParameters:
-  Enabled: false
+  EnforcedStyle: with_fixed_indentation
 
 Style/MultilineOperationIndentation:
   Enabled: false
