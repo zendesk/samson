@@ -18,6 +18,7 @@ module Kubernetes
         set_spec_template_metadata
         set_docker_image
         set_resource_usage
+        set_secret_sidecar if ENV.fetch("SECRET_SIDECAR_IMAGE", false)
         set_env
 
         hash = template.to_hash
@@ -41,6 +42,41 @@ module Kubernetes
           raise Samson::Hooks::UserError, "Template #{@doc.template_name} has #{sections.size} Deployment sections, having 1 section is valid."
         end
       end
+    end
+
+    # Sets up the secret_sidecar and the various mounts that are required
+    # if the sidecar service is enabled
+    # /vaultauth is a secrets volume in the cluster
+    # /secretkeys are where the annotations from the config are mounted
+    def set_secret_sidecar
+      pod_volumes =
+        [
+          {name: "secrets-volume", emptyDir: {}},
+          {name: "vaultauth", secret: {secretName: "vaultauth"}},
+          {"name"=>"secretkeys", "downwardAPI"=>{"items"=>[{"path"=>"annotations", "fieldRef"=>{"fieldPath"=>"metadata.annotations"}}]}}
+        ]
+      secret_vol = { mountPath: "/secrets", name: "secrets-volume" }
+      secret_sidecar = {
+        image: ENV.fetch("SECRET_SIDECAR_IMAGE").to_s,
+        name: "secret-sidecar",
+        volumeMounts: [
+          secret_vol,
+          { mountPath: "/vault-auth", name: "vaultauth" },
+          { mountPath: "/secretkeys", name: "secretkeys" }
+        ]
+      }
+      secret_sidecar[:resources] =  { limits: { cpu: 0.1, memory: "100Mi" } }
+
+      # also inject the secrets FS into the primary container so that the
+      # secrets can be shared
+      containers = template.spec.template.spec.containers.dup
+      containers.first.volumeMounts = [secret_vol]
+      containers << secret_sidecar
+
+      template.spec.template.spec.containers = containers
+
+      #lastly, define the volumes in the pod
+      template.spec.template.spec.volumes = pod_volumes if template.spec[:volumes].nil?
     end
 
     # This key replaces the default kubernetes key: 'deployment.kubernetes.io/podTemplateHash'
@@ -149,7 +185,7 @@ module Kubernetes
         }
       end
 
-      if ENV.fetch("SIDECAR_FEATURE", false)
+      if ENV.fetch("SECRET_SIDECAR_IMAGE", false)
         sidecar_env = ( sidecar_container.env || [] )
         {
           VAULT_ADDR: ENV.fetch("VAULT_ADDR"),
@@ -160,9 +196,9 @@ module Kubernetes
             value: "#{v}"
           }
         end
+        sidecar_container.env = sidecar_env
       end
 
-      sidecar_container.env = sidecar_env
       container.env = env
     end
 
@@ -184,7 +220,7 @@ module Kubernetes
           # TODO: support building and replacement for multiple containers
           raise Samson::Hooks::UserError, "Template #{@doc.template_name} has #{containers.size} containers, having 1 section is valid."
         end
-        containers.map { |possible_container| return possible_container if possible_container.name == 'sidecar-container' }
+        containers.map { |possible_container| return possible_container if possible_container.name == 'secret-sidecar' }
       end
     end
   end
