@@ -14,6 +14,7 @@ module GitRepoTestHelper
       git init
       git config user.email "test@example.com"
       git config user.name "Test User"
+      git config commit.gpgsign false
       echo monkey > foo
       git add foo
       git commit -m "initial commit"
