@@ -65,6 +65,7 @@ module Kubernetes
           { mountPath: "/secretkeys", name: "secretkeys" }
         ]
       }
+      #TODO, do we want resource limits on this, or just give it what it needs?
       secret_sidecar[:resources] =  { limits: { cpu: 0.1, memory: "100Mi" } }
 
       # also inject the secrets FS into the primary container so that the
@@ -76,7 +77,11 @@ module Kubernetes
       template.spec.template.spec.containers = containers
 
       #lastly, define the volumes in the pod
-      template.spec.template.spec.volumes = pod_volumes if template.spec[:volumes].nil?
+      if template.spec[:volumes].nil?
+        template.spec.template.spec.volumes = pod_volumes
+      else
+        template.spec.template.spec.volumes << pod_volumes
+      end
     end
 
     # This key replaces the default kubernetes key: 'deployment.kubernetes.io/podTemplateHash'
