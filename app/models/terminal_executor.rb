@@ -39,16 +39,14 @@ class TerminalExecutor
 
   private
 
+  # TODO: verify environment and pick the right secret
   def resolve_secrets(command)
-    allowed_namespaces = ['global']
-    Environment.pluck(:permalink).each do |link|
-      # allow access to global in all envs
-      allowed_namespaces << "#{link}/global"
-      allowed_namespaces << "#{link}/#{@project.permalink}" if @project
-    end
+    allowed_projects = ['global', @project.try(:permalink)]
+
     command.gsub(/\b#{SECRET_PREFIX}(#{SecretStorage::SECRET_KEY_REGEX})\b/) do
-      key = Regexp.last_match(1)
-      if key.start_with?(*allowed_namespaces.map { |n| "#{n}/" })
+      key = $1
+      parts = SecretStorage.parse_secret_key(key)
+      if allowed_projects.include?(parts.fetch(:project_permalink))
         SecretStorage.read(key, include_secret: true).fetch(:value)
       else
         raise ActiveRecord::RecordNotFound, "Not allowed to access key #{key}"
