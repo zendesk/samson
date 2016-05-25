@@ -39,9 +39,10 @@ class DockerBuilderService
 
     output.puts("### Running Docker build")
 
-    build.docker_image = Docker::Image.build_from_dir(tmp_dir, {}, Docker.connection, registry_credentials) do |output_chunk|
-      handle_output_chunk(output_chunk)
-    end
+    build.docker_image =
+      Docker::Image.build_from_dir(tmp_dir, {}, Docker.connection, registry_credentials) do |output_chunk|
+        handle_output_chunk(output_chunk)
+      end
     output.puts('### Docker build complete')
   rescue Docker::Error::DockerError => e
     # If a docker error is raised, consider that a "failed" job instead of an "errored" job
@@ -103,16 +104,21 @@ class DockerBuilderService
 
     # Don't bother printing all the incremental output when pulling images
     unless parsed_chunk['progressDetail']
-      values = parsed_chunk.map { |k,v| "#{k}: #{v}" if v.present? }.compact
+      values = parsed_chunk.map { |k, v| "#{k}: #{v}" if v.present? }.compact
       output.puts values.join(' | ')
     end
 
     parsed_chunk
+  rescue JSON::ParserError
+    # Sometimes the JSON line is too big to fit in one chunk, so we get
+    # a chunk back that is an incomplete JSON object.
+    output.puts chunk
+    { 'message' => chunk }
   end
 
   def send_after_notifications
     Samson::Hooks.fire(:after_docker_build, build)
-    SseRailsEngine.send_event('builds', { type: 'finish', build: BuildSerializer.new(build, root: nil) })
+    SseRailsEngine.send_event('builds', type: 'finish', build: BuildSerializer.new(build, root: nil))
   end
 
   def registry_credentials

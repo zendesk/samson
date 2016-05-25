@@ -53,7 +53,7 @@ class JobsController < ApplicationController
 
   def destroy
     # if @job.can_be_stopped_by?(current_user)
-      @job.stop!
+    @job.stop!
     # else
       # FIXME this can never happen since can_be_stopped_by?
       # is always true for project admins, which is a before filter

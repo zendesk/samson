@@ -25,67 +25,6 @@ require 'mocha/setup'
 
 require 'sucker_punch/testing/inline'
 
-# Mock up vault client
-class VaultClient
-  def logical
-    @logical ||= Logical.new
-  end
-
-  def self.vault_response_object(data)
-    Response.new(data)
-  end
-
-  class Response
-    attr_accessor :lease_id, :lease_duration, :renewable, :data, :auth
-    def initialize(data)
-      self.lease_id = nil
-      self.lease_duration = nil
-      self.renewable = nil
-      self.auth = nil
-      self.data = data
-    end
-
-    def to_h
-      instance_values.symbolize_keys
-    end
-  end
-
-  class Logical
-    def list(key)
-      uri = URI("https://127.0.0.1:8200/v1/#{key}?list=true")
-      Net::HTTP.get(uri)
-    end
-
-    def read(key)
-      response_data = {
-        "secret/production/foo/pod2/isbar": { vault: "bar"},
-        "secret/this/key/isnot/there": {vault: nil}
-      }
-
-      uri = URI("https://127.0.0.1:8200/v1/#{key}")
-      Net::HTTP.get(uri)
-      Response.new(response_data[key.to_sym])
-    end
-
-    def delete(key)
-      uri = URI("https://127.0.0.1:8200/v1/#{key}")
-      http = Net::HTTP.new(uri.host, uri.port)
-      req = Net::HTTP::Delete.new(uri.path)
-      http.request(req)
-    end
-
-    def write(key, body)
-      uri = URI("https://127.0.0.1:8200/v1/#{key}")
-      http = Net::HTTP.new(uri.host, uri.port)
-      http.use_ssl = true
-      http.verify_mode = OpenSSL::SSL::VERIFY_NONE
-      req = Net::HTTP::Put.new(uri.path)
-      req.body = body.to_json
-      http.request(req)
-    end
-  end
-end
-
 # Use ActiveSupport::TestCase for everything that was not matched before
 MiniTest::Spec::DSL::TYPES[-1] = [//, ActiveSupport::TestCase]
 
@@ -172,7 +111,7 @@ class ActiveSupport::TestCase
     QueryDiet::Logger.queries.map(&:first) - ["select 1"]
   end
 
-  def assert_sql_queries(count, &block)
+  def assert_sql_queries(count)
     old = ar_queries
     yield
     new = ar_queries
@@ -188,12 +127,13 @@ class ActiveSupport::TestCase
   # record hook and their arguments called during a given block
   def record_hooks(callback, &block)
     called = []
-    Samson::Hooks.with_callback(callback, lambda{ |*args| called << args }, &block)
+    Samson::Hooks.with_callback(callback, lambda { |*args| called << args }, &block)
     called
   end
 
   def silence_stderr
-    old, $VERBOSE = $VERBOSE, nil
+    old = $VERBOSE
+    $VERBOSE = nil
     yield
   ensure
     $VERBOSE = old
@@ -205,7 +145,12 @@ class ActiveSupport::TestCase
   end
 
   def create_secret(key)
-    SecretStorage::DbBackend::Secret.create!(id: key, value: 'MY-SECRET', updater_id: users(:admin).id, creator_id: users(:admin).id)
+    SecretStorage::DbBackend::Secret.create!(
+      id: key,
+      value: 'MY-SECRET',
+      updater_id: users(:admin).id,
+      creator_id: users(:admin).id
+    )
   end
 
   def with_env(env)
@@ -239,7 +184,7 @@ class ActionController::TestCase
       end
     end
 
-    %w{super_admin admin deployer viewer project_admin project_deployer}.each do |user|
+    %w[super_admin admin deployer viewer project_admin project_deployer].each do |user|
       define_method "as_a_#{user}" do |&block|
         describe "as a #{user}" do
           let(:user) { users(user) }
@@ -251,7 +196,7 @@ class ActionController::TestCase
   end
 
   before do
-    middleware = Rails.application.config.middleware.detect {|m| m.name == 'Warden::Manager'}
+    middleware = Rails.application.config.middleware.detect { |m| m.name == 'Warden::Manager' }
     manager = Warden::Manager.new(nil, &middleware.block)
     request.env['warden'] = Warden::Proxy.new(request.env, manager)
 
@@ -292,7 +237,7 @@ class ActionController::TestCase
   def self.use_test_routes
     before do
       Rails.application.routes.draw do
-        match "/test/:test_route/:controller/:action", :via => [:get, :post, :put, :patch, :delete]
+        match "/test/:test_route/:controller/:action", via: [:get, :post, :put, :patch, :delete]
       end
     end
 

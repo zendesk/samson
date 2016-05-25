@@ -1,13 +1,15 @@
 # record what was done in the console
-PaperTrail.whodunnit = if defined?(::Rails::Console)
-  "#{`whoami`.strip}: console"
-elsif defined?(Rake)
-  "#{`whoami`.strip}: rake"
-end
+PaperTrail.whodunnit =
+  if defined?(::Rails::Console)
+    "#{`whoami`.strip}: console"
+  elsif defined?(Rake)
+    "#{`whoami`.strip}: rake"
+  end
 
 class << PaperTrail
   def with_whodunnit(user)
-    old, self.whodunnit = whodunnit, user
+    old = whodunnit
+    self.whodunnit = user
     yield
   ensure
     self.whodunnit = old
@@ -26,4 +28,3 @@ class << PaperTrail
     end
   end
 end
-

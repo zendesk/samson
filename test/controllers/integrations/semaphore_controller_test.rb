@@ -73,4 +73,3 @@ describe Integrations::SemaphoreController do
     end
   end
 end
-

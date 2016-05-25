@@ -29,7 +29,7 @@ class GithubAuthorization
   end
 
   def find_team(teams, slug)
-    teams.find {|t| t.slug == slug }
+    teams.find { |t| t.slug == slug }
   end
 
   def team_member?(team)

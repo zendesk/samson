@@ -2,7 +2,8 @@ class JobService
   attr_reader :project, :user
 
   def initialize(project, user)
-    @project, @user = project, user
+    @project = project
+    @user = user
   end
 
   def execute!(reference, command_ids, command = nil)

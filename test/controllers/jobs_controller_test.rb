@@ -144,4 +144,3 @@ describe JobsController do
     end
   end
 end
-

@@ -1,6 +1,7 @@
+# rubocop:disable Metrics/LineLength
 require_relative '../../test_helper'
 
-SingleCov.covered! uncovered: 17
+SingleCov.covered! uncovered: 16
 
 describe Kubernetes::Release do
   let(:build)  { builds(:docker_build) }
@@ -71,12 +72,12 @@ describe Kubernetes::Release do
       before { current_release_count }
 
       it_should_raise_an_exception do
-        Kubernetes::Release.create_release(release_params.except(:deploy_groups)) #nil
+        Kubernetes::Release.create_release(release_params.except(:deploy_groups)) # nil
         assert_release_count(@current_release_count)
       end
 
       it_should_raise_an_exception do
-        Kubernetes::Release.create_release(release_params.tap { |params| params[:deploy_groups].clear }) #empty
+        Kubernetes::Release.create_release(release_params.tap { |params| params[:deploy_groups].clear }) # empty
         assert_release_count(@current_release_count)
       end
     end
@@ -85,12 +86,12 @@ describe Kubernetes::Release do
       before { current_release_count }
 
       it_should_raise_an_exception do
-        Kubernetes::Release.create_release(release_params.tap { |params| params[:deploy_groups].each { |dg| dg.delete(:roles) } }) #nil
+        Kubernetes::Release.create_release(release_params.tap { |params| params[:deploy_groups].each { |dg| dg.delete(:roles) } }) # nil
         assert_release_count(@current_release_count)
       end
 
       it_should_raise_an_exception do
-        Kubernetes::Release.create_release(release_params.tap { |params| params[:deploy_groups].each { |dg| dg[:roles].clear } }) #empty
+        Kubernetes::Release.create_release(release_params.tap { |params| params[:deploy_groups].each { |dg| dg[:roles].clear } }) # empty
         assert_release_count(@current_release_count)
       end
     end
@@ -107,7 +108,16 @@ describe Kubernetes::Release do
         resourceVersion: "1",
         items: [{}, {}]
       }.to_json)
-      release.clients.map { |c,q| c.get_pods(q) }.first.size.must_equal 2
+      release.clients.map { |c, q| c.get_pods(q) }.first.size.must_equal 2
+    end
+  end
+
+  describe "#pod_selector" do
+    it "generates a query that selects all pods for this deploy group" do
+      release.pod_selector(deploy_group).must_equal(
+        release_id: release.id,
+        deploy_group_id: deploy_group.id
+      )
     end
   end
 
@@ -156,7 +166,7 @@ describe Kubernetes::Release do
   def multiple_roles_release_params
     release_params.tap do |params|
       params[:deploy_groups].each do |dg|
-        dg[:roles].push({ id: resque_worker.id, replicas: resque_worker.replicas, cpu: resque_worker.cpu, ram: resque_worker.ram })
+        dg[:roles].push(id: resque_worker.id, replicas: resque_worker.replicas, cpu: resque_worker.cpu, ram: resque_worker.ram)
       end
     end
   end
@@ -165,4 +175,3 @@ describe Kubernetes::Release do
     project.kubernetes_releases.count.must_equal current_count
   end
 end
-

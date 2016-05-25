@@ -40,7 +40,7 @@ describe User do
     end
 
     it "does update with valid values" do
-      user.update_attributes!(:time_format => 'utc')
+      user.update_attributes!(time_format: 'utc')
       user.reload
       user.time_format.must_equal('utc')
     end
@@ -81,12 +81,14 @@ describe User do
     let(:user) { User.create_or_update_from_hash(auth_hash) }
 
     describe "with a new user" do
-      let(:auth_hash) {{
-        name: "Test User",
-        email: "test@example.org",
-        role_id: Role::ADMIN.id,
-        external_id: 'strange-bug',
-      }}
+      let(:auth_hash) do
+        {
+          name: "Test User",
+          email: "test@example.org",
+          role_id: Role::ADMIN.id,
+          external_id: 'strange-bug'
+        }
+      end
 
       it "creates a new user" do
         user.persisted?.must_equal(true)
@@ -102,12 +104,14 @@ describe User do
     end
 
     describe "with an existing user" do
-      let(:auth_hash) {{
-        name: "Test User",
-        email: "test@example.org",
-        external_id: 9,
-        token: "abc123",
-      }}
+      let(:auth_hash) do
+        {
+          name: "Test User",
+          email: "test@example.org",
+          external_id: 9,
+          token: "abc123"
+        }
+      end
 
       let(:existing_user) do
         User.create!(name: "Test", external_id: 9)
@@ -129,12 +133,14 @@ describe User do
       end
 
       describe "with a higher role_id" do
-        let(:auth_hash) {{
-          name: "Test User",
-          email: "test@example.org",
-          external_id: 9,
-          role_id: Role::ADMIN.id
-        }}
+        let(:auth_hash) do
+          {
+            name: "Test User",
+            email: "test@example.org",
+            external_id: 9,
+            role_id: Role::ADMIN.id
+          }
+        end
 
         before do
           existing_user.update_attributes!(role_id: Role::VIEWER.id)
@@ -146,12 +152,14 @@ describe User do
       end
 
       describe "with a lower role_id" do
-        let(:auth_hash) {{
-          name: "Test User",
-          email: "test@example.org",
-          external_id: 9,
-          role_id: Role::VIEWER.id
-        }}
+        let(:auth_hash) do
+          {
+            name: "Test User",
+            email: "test@example.org",
+            external_id: 9,
+            role_id: Role::VIEWER.id
+          }
+        end
 
         before do
           existing_user.update_attributes!(role_id: Role::ADMIN.id)
@@ -225,7 +233,6 @@ describe User do
   end
 
   describe ".search" do
-
     let!(:a_singular_user) do
       User.create!(name: 'FindMe', email: 'find.me@example.org')
     end
@@ -269,7 +276,16 @@ describe User do
 
   describe ".with_role" do
     let(:project) { projects(:test) }
-    let(:deployer_list) { ["Admin", "Deployer", "Deployer Project Admin", "DeployerBuddy", "Project Deployer", "Super Admin"] }
+    let(:deployer_list) do
+      [
+        "Admin",
+        "Deployer",
+        "Deployer Project Admin",
+        "DeployerBuddy",
+        "Project Deployer",
+        "Super Admin"
+      ]
+    end
 
     it "filters everything when asking for a unreachable role" do
       User.with_role(Role::SUPER_ADMIN.id + 1, project.id).size.must_equal 0
@@ -314,7 +330,7 @@ describe User do
   describe 'soft delete!' do
     let(:user) { User.create!(name: 'to_delete', email: 'to_delete@test.com') }
     let!(:locks) do
-      %i(test_staging test_production).map { |stage| user.locks.create!(stage: stages(stage)) }
+      %i[test_staging test_production].map { |stage| user.locks.create!(stage: stages(stage)) }
     end
 
     it 'soft deletes all the user locks when the user is soft deleted' do

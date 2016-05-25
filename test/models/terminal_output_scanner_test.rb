@@ -8,7 +8,7 @@ describe TerminalOutputScanner do
 
   def tokens
     tokens = []
-    scanner.each {|token| tokens << token }
+    scanner.each { |token| tokens << token }
     tokens
   end
 

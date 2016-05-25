@@ -84,8 +84,8 @@ Samson::Application.configure do
   config.lograge.custom_options = lambda do |event|
     # show params for every request
     unwanted_keys = %w[format action controller]
-    params = event.payload[:params].reject { |key,_| unwanted_keys.include? key }
-    { :params => params }
+    params = event.payload[:params].reject { |key, _| unwanted_keys.include? key }
+    { params: params }
   end
 
   if ENV["RAILS_LOG_TO_STDOUT"].present?

@@ -15,7 +15,9 @@ describe Stage do
 
       it "is not valid when on kubernetes but deploy groups do not know their cluster" do
         refute_valid stage
-        stage.errors.full_messages.must_equal ["Kubernetes Deploy groups need to have a cluster associated, but Pod 100 did not."]
+        stage.errors.full_messages.must_equal [
+          "Kubernetes Deploy groups need to have a cluster associated, but Pod 100 did not."
+        ]
       end
 
       it "is not valid when on kubernetes but deploy groups do not know their cluster" do

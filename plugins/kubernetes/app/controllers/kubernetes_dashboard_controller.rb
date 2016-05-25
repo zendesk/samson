@@ -71,8 +71,11 @@ class KubernetesDashboardController < ApplicationController
   end
 
   def release_doc(release_id, role_id, deploy_group_id)
-    Kubernetes::ReleaseDoc.find_by(kubernetes_release_id: release_id, kubernetes_role_id: role_id,
-      deploy_group_id: deploy_group_id)
+    Kubernetes::ReleaseDoc.find_by(
+      kubernetes_release_id: release_id,
+      kubernetes_role_id: role_id,
+      deploy_group_id: deploy_group_id
+    )
   end
 
   def build_label(release_id)

@@ -14,7 +14,7 @@ describe AccessRequestHelper do
         let(:current_user) { users(:viewer) }
 
         it 'returns true for authorization_error' do
-          assert(display_access_request_link? :authorization_error)
+          assert display_access_request_link?(:authorization_error)
         end
 
         it 'returns true for default params' do
@@ -22,7 +22,7 @@ describe AccessRequestHelper do
         end
 
         it 'returns false for other flash types' do
-          refute(display_access_request_link? :success)
+          refute display_access_request_link?(:success)
         end
       end
 
@@ -39,15 +39,15 @@ describe AccessRequestHelper do
       before { ENV['REQUEST_ACCESS_FEATURE'] = nil }
 
       it 'returns false for all flash types' do
-        refute(display_access_request_link? :authorization_error)
-        refute(display_access_request_link? :success)
+        refute display_access_request_link?(:authorization_error)
+        refute display_access_request_link?(:success)
       end
     end
   end
 
   describe '#link_to_request_access' do
     let(:current_user) { users(:viewer) }
-    let(:matcher) { /<a href="\/access_requests\/new">.*<\/a>/ }
+    let(:matcher) { %r{<a href="/access_requests/new">.*</a>} }
 
     it 'shows a link if there is no request pending' do
       current_user.update!(access_request_pending: false)

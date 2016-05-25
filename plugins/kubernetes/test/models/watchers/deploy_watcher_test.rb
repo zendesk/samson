@@ -1,3 +1,4 @@
+# rubocop:disable Metrics/LineLength
 require_relative "../../test_helper"
 require 'celluloid/current'
 
@@ -57,9 +58,7 @@ describe Watchers::DeployWatcher do
       current_release.created?.must_equal true
 
       # Expecting only one pod (target = 2)
-      expect_pod_list(current_release) do |pods|
-        pods.pop # removes a pod, leaving only one pod ready per deploy group
-      end
+      expect_pod_list(current_release, &:pop)
       create_deploy_watcher
       current_release.reload.spinning_up?.must_equal true
     end
@@ -100,14 +99,12 @@ describe Watchers::DeployWatcher do
   describe '#watch' do
     it 'recognizes deploy as ongoing until all pods are live' do
       # Expect empty Pod list from the Cluster (not created yet)
-      expect_pod_list(current_release) do |pods|
-        pods.clear
-      end
+      expect_pod_list(current_release, &:clear)
 
       watcher = create_deploy_watcher
 
       current_release.release_docs.first.tap do |release_doc|
-        rc_unique_identifier = "#{release_doc.replication_controller_name}-#{rand(100000).to_s}"
+        rc_unique_identifier = "#{release_doc.replication_controller_name}-#{rand(100000)}"
         release_doc.replica_target.times do |i|
           msg = Watchers::BaseClusterWatcher.topic_message(create_msg(release_doc, rc_unique_identifier: rc_unique_identifier, name: "pod-#{i}", ready: 'True'))
           watcher.send(:handle_event, 'some topic', msg)
@@ -120,14 +117,12 @@ describe Watchers::DeployWatcher do
 
     it 'recognizes deploy as finished when all pods are live' do
       # Expect empty Pod list from the Cluster (not created yet)
-      expect_pod_list(current_release) do |pods|
-        pods.clear
-      end
+      expect_pod_list(current_release, &:clear)
 
       watcher = create_deploy_watcher
 
       current_release.release_docs.each do |release_doc|
-        rc_unique_identifier = "#{release_doc.replication_controller_name}-#{rand(100000).to_s}"
+        rc_unique_identifier = "#{release_doc.replication_controller_name}-#{rand(100000)}"
         release_doc.replica_target.times do |i|
           msg = Watchers::BaseClusterWatcher.topic_message(create_msg(release_doc, rc_unique_identifier: rc_unique_identifier, name: "pod-#{i}", ready: 'True'))
           watcher.send(:handle_event, 'some topic', msg)
@@ -140,14 +135,12 @@ describe Watchers::DeployWatcher do
 
     it 'sends SSE event when event received' do
       # Expect empty Pod list from the Cluster (not created yet)
-      expect_pod_list(current_release) do |pods|
-        pods.clear
-      end
+      expect_pod_list(current_release, &:clear)
 
       watcher = create_deploy_watcher
 
       current_release.release_docs.each do |release_doc|
-        rc_unique_identifier = "#{release_doc.replication_controller_name}-#{rand(100000).to_s}"
+        rc_unique_identifier = "#{release_doc.replication_controller_name}-#{rand(100000)}"
         release_doc.replica_target.times do |i|
           SseRailsEngine.expects(:send_event).with('k8s', create_sse_data(release_doc, i + 1))
 
@@ -166,9 +159,9 @@ describe Watchers::DeployWatcher do
     environment.cluster_deploy_groups.each do |cdg|
       pod_list = pod_list(release, cdg)
       yield pod_list if block_given?
-      Kubeclient::Client.any_instance.expects(:get_pods)
-        .with(namespace: cdg.namespace, label_selector: "project_id=#{project.id}")
-        .returns(pod_list)
+      Kubeclient::Client.any_instance.expects(:get_pods).
+        with(namespace: cdg.namespace, label_selector: "project_id=#{project.id}").
+        returns(pod_list)
     end
   end
 
@@ -176,7 +169,7 @@ describe Watchers::DeployWatcher do
     [].tap do |list|
       release.release_docs.each do |release_doc|
         # In the Cluster, the RC unique identifier is unique per deploy group / namespace
-        rc_unique_identifier = "#{release_doc.replication_controller_name}-#{rand(100000).to_s}"
+        rc_unique_identifier = "#{release_doc.replication_controller_name}-#{rand(100000)}"
         release_doc.replica_target.times do |i|
           pod = pod_list_item(i, rc_unique_identifier, release_doc, cdg.namespace)
           list << RecursiveOpenStruct.new(pod, recurse_over_arrays: true) if release_doc.deploy_group == cdg.deploy_group
@@ -210,7 +203,7 @@ describe Watchers::DeployWatcher do
     }
   end
 
-  def create_msg(release_doc, rc_unique_identifier:, type: 'ADDED', kind: 'Pod', status: 'Running', name:, ready: 'True')
+  def create_msg(release_doc, rc_unique_identifier:, type: 'ADDED', status: 'Running', name:, ready: 'True')
     Watchers::Events::PodEvent.new(
       RecursiveOpenStruct.new({
         type: type,
@@ -233,7 +226,8 @@ describe Watchers::DeployWatcher do
             ]
           }
         }
-      }, recurse_over_arrays: true))
+      }, recurse_over_arrays: true)
+    )
   end
 
   def create_sse_data(release_doc, live_replicas)

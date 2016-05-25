@@ -26,13 +26,13 @@
 class EventStreamer
   def initialize(stream, &block)
     @stream = stream
-    @handler = block || proc {|_, x|
+    @handler = block || proc do |_, x|
       if x.present?
         JSON.dump(msg: x)
       else
         ''
       end
-    }
+    end
   end
 
   def start(output)
@@ -40,9 +40,10 @@ class EventStreamer
     start_heartbeat!
 
     @scanner = TerminalOutputScanner.new(output)
-    @scanner.each {|event, data| emit_event(event, @handler.call(event, data)) }
+    @scanner.each { |event, data| emit_event(event, @handler.call(event, data)) }
   rescue IOError, ActionController::Live::ClientDisconnected
     # Raised on stream close
+    nil
   ensure
     finish
   end
@@ -71,7 +72,7 @@ class EventStreamer
   def start_heartbeat!
     Thread.new do
       begin
-        while true
+        loop do
           @stream.write("data: \n\n")
           sleep(5) # Timeout of 5 seconds
         end

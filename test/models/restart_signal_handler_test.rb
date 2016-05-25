@@ -13,7 +13,8 @@ describe RestartSignalHandler do
   end
 
   def silence_stdout
-    old, $stdout = $stdout, StringIO.new
+    old = $stdout
+    $stdout = StringIO.new
     yield
   ensure
     $stdout = old
@@ -43,7 +44,10 @@ describe RestartSignalHandler do
 
     it "waits for running jobs" do
       registry = JobExecution.send(:registry)
-      registry.expects(:active).times(3).returns [stub(id: 123)], [stub(id: 123)], [] # we call it twice in each iteration
+
+      # we call it twice in each iteration
+      registry.expects(:active).times(3).returns [stub(id: 123)], [stub(id: 123)], []
+
       RestartSignalHandler.any_instance.expects(:sleep).with(5)
       handle
     end

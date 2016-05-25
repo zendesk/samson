@@ -1,5 +1,4 @@
 module Kubernetes
-
   # This file represents a Kubernetes configuration file for a specific project role.
   # A single configuration file can have both a Delpoyment spec and a Service spec, as two separate documents.
   class RoleConfigFile
@@ -44,12 +43,12 @@ module Kubernetes
     # INNER CLASSES
     #
     class Deployment < RecursiveOpenStruct
-      DEFAULT_RESOURCE_CPU = '99m'
-      DEFAULT_RESOURCE_RAM = '512Mi'
-      DEFAULT_ROLLOUT_STRATEGY = 'RollingUpdate'
+      DEFAULT_RESOURCE_CPU = '99m'.freeze
+      DEFAULT_RESOURCE_RAM = '512Mi'.freeze
+      DEFAULT_ROLLOUT_STRATEGY = 'RollingUpdate'.freeze
 
       def initialize(hash = nil, args = {})
-        args.merge!(recurse_over_arrays: true)
+        args[:recurse_over_arrays] = true
         super(hash, args)
       end
 
@@ -74,7 +73,7 @@ module Kubernetes
 
     class Service < RecursiveOpenStruct
       def initialize(hash = nil, args = {})
-        args.merge!(recurse_over_arrays: true)
+        args[:recurse_over_arrays] = true
         super(hash, args)
       end
     end

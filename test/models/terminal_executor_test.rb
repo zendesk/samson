@@ -62,7 +62,7 @@ describe TerminalExecutor do
 
       it 'records commands' do
         subject.execute!('echo "hi"', 'echo "hell o"')
-        output.string.must_equal(%{» echo "hi"\r\nhi\r\n» echo "hell o"\r\nhell o\r\n})
+        output.string.must_equal(%(» echo "hi"\r\nhi\r\n» echo "hell o"\r\nhell o\r\n))
       end
 
       it 'does not print subcommands' do
@@ -84,7 +84,7 @@ describe TerminalExecutor do
       it "can use project specific secrets" do
         subject.instance_variable_set(:@project, project)
         secret = create_secret "production/#{project.permalink}/blue_group/bar"
-        subject.execute!(%Q{echo "secret://production/#{project.permalink}/blue_group/bar"})
+        subject.execute!(%(echo "secret://production/#{project.permalink}/blue_group/bar"))
         output.string.must_equal "#{secret.value}\r\n"
       end
 
@@ -104,7 +104,8 @@ describe TerminalExecutor do
       it "does not show secrets in verbose mode" do
         subject.instance_variable_set(:@verbose, true)
         subject.execute!(command)
-        output.string.must_equal "» export SECRET=\"secret://production/global/foo/bar\"; echo $SECRET\r\n#{secret.value}\r\n"
+        output.string.must_equal \
+          "» export SECRET=\"secret://production/global/foo/bar\"; echo $SECRET\r\n#{secret.value}\r\n"
       end
     end
   end

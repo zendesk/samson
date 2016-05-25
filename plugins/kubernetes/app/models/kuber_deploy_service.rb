@@ -26,7 +26,7 @@ class KuberDeployService
   def create_deployments!
     kuber_release.release_docs.each do |release_doc|
       log 'creating Deployment', role: release_doc.kubernetes_role.name
-      release_doc.deploy_to_kubernetes
+      release_doc.deploy
     end
   end
 
@@ -45,10 +45,8 @@ class KuberDeployService
   private
 
   def log(msg, extra_info = {})
-    extra_info.merge!(
-      release: kuber_release.id,
-      project: project.name
-    )
+    extra_info[:release] = kuber_release.id
+    extra_info[:project] = project.name
 
     Kubernetes::Util.log msg, extra_info
   end

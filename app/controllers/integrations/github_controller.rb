@@ -6,7 +6,7 @@ class Integrations::GithubController < Integrations::BaseController
     'push' => Changeset::CodePush,
     'pull_request' => Changeset::PullRequest,
     'issue_comment' => Changeset::IssueComment
-  }
+  }.freeze
 
   protected
 

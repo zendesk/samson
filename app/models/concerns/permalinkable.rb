@@ -9,14 +9,12 @@ module Permalinkable
 
   module ClassMethods
     def find_by_param!(param)
-      begin
-        find_by_permalink!(param)
-      rescue ActiveRecord::RecordNotFound
-        if param =~ /^\d+$/
-          find_by_id!(param)
-        else
-          raise
-        end
+      find_by_permalink!(param)
+    rescue ActiveRecord::RecordNotFound
+      if param =~ /^\d+$/
+        find_by_id!(param)
+      else
+        raise
       end
     end
   end
@@ -34,9 +32,7 @@ module Permalinkable
   def generate_permalink
     base = permalink_base.to_s.parameterize
     self.permalink = base
-    if permalink_taken?
-      self.permalink = "#{base}-#{SecureRandom.hex(4)}"
-    end
+    self.permalink = "#{base}-#{SecureRandom.hex(4)}" if permalink_taken?
   end
 
   def permalink_taken?

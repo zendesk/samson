@@ -1,5 +1,4 @@
 class CsvExportsController < ApplicationController
-
   rescue_from ActiveRecord::RecordNotFound do |exception|
     respond_to do |format|
       format.json { render json: {status: "not found"}.to_json, status: :not_found }
@@ -66,7 +65,7 @@ class CsvExportsController < ApplicationController
     end
 
     if start_date || end_date
-      start_date ||= Date.new(1900,1,1)
+      start_date ||= Date.new(1900, 1, 1)
       end_date ||= Date.today
       filter['deploys.created_at'] = (start_date..end_date)
     end

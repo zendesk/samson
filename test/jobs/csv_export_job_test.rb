@@ -4,7 +4,7 @@ SingleCov.covered!
 
 describe CsvExportJob do
   let(:deployer) { users(:deployer) }
-  let(:project) { projects(:test)}
+  let(:project) { projects(:test) }
   let(:deploy_export_job) { csv_exports(:pending) }
 
   it "enqueues properly" do
@@ -14,12 +14,12 @@ describe CsvExportJob do
   end
 
   it "cleans up old jobs" do
-    old = CsvExport.create!({user: deployer, filters: {}})
-    old.update_attributes({created_at: DateTime.now - 1.year, updated_at: DateTime.now - 1.year})
+    old = CsvExport.create!(user: deployer, filters: {})
+    old.update_attributes(created_at: DateTime.now - 1.year, updated_at: DateTime.now - 1.year)
     old_id = old.id
 
     CsvExportJob.perform_now(deploy_export_job)
-    assert_raises(ActiveRecord::RecordNotFound) {CsvExport.find(old_id)}
+    assert_raises(ActiveRecord::RecordNotFound) { CsvExport.find(old_id) }
   end
 
   describe "Error Handling" do
@@ -27,7 +27,7 @@ describe CsvExportJob do
       FileUtils.mkdir_p(File.dirname(deploy_export_job.path_file))
       File.chmod(0000, File.dirname(deploy_export_job.path_file))
     end
-    after {File.chmod(0755, File.dirname(deploy_export_job.path_file))}
+    after { File.chmod(0755, File.dirname(deploy_export_job.path_file)) }
 
     it "sets :failed" do
       CsvExportJob.perform_now(deploy_export_job)
@@ -50,18 +50,20 @@ describe CsvExportJob do
     end
 
     it "filters the report with known activity accurately and completely" do
-      filter = {'deploys.created_at': (Date.new(1900,1,1)..Date.today),
-        'stages.production': true, 'jobs.status': 'succeeded', 'stages.project_id':project.id}
+      filter = {
+        'deploys.created_at': (Date.new(1900, 1, 1)..Date.today),
+        'stages.production': true, 'jobs.status': 'succeeded', 'stages.project_id': project.id
+      }
       accuracy_test(filter)
     end
 
     it "has no results for date range after deploys" do
-      filter = {'deploys.created_at': (Date.new(2015,12,31)..Date.today)}
+      filter = {'deploys.created_at': (Date.new(2015, 12, 31)..Date.today)}
       empty_test(filter)
     end
 
     it "has no results for date range before deploys" do
-      filter = {'deploys.created_at': (Date.new(1900,1,1)..Date.new(2000,1,1))}
+      filter = {'deploys.created_at': (Date.new(1900, 1, 1)..Date.new(2000, 1, 1))}
       empty_test(filter)
     end
 
@@ -102,7 +104,7 @@ describe CsvExportJob do
     filename = deploy_export_job.reload.path_file
 
     csv_response = CSV.read(filename)
-    csv_response.shift  # Remove Header in file
+    csv_response.shift # Remove Header in file
     csv_response.pop # Remove filter summary row
     deploycount = csv_response.pop.pop.to_i # Remove summary row and extract count
     Deploy.joins(:stage, :job).where(filters).count.must_equal deploycount
@@ -132,7 +134,7 @@ describe CsvExportJob do
     filename = deploy_export_job.reload.path_file
 
     csv_response = CSV.read(filename)
-    csv_response.shift  # Remove Header in file
+    csv_response.shift # Remove Header in file
     csv_response.pop # Remove filter summary row
     deploycount = csv_response.pop.pop.to_i # Remove summary row and extract count
     deploycount.must_equal 0

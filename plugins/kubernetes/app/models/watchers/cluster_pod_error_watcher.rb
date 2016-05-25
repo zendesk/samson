@@ -1,3 +1,4 @@
+# rubocop:disable Metrics/LineLength
 module Watchers
   class ClusterPodErrorWatcher < BaseClusterWatcher
     include Celluloid::Notifications

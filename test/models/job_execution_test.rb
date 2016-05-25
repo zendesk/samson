@@ -119,7 +119,7 @@ describe JobExecution do
   it "tests additional exports hook" do
     job.update(command: 'env | sort')
 
-    Samson::Hooks.callback :job_additional_vars do |job|
+    Samson::Hooks.callback :job_additional_vars do |_job|
       { ADDITIONAL_EXPORT: "yes" }
     end
 
@@ -226,7 +226,7 @@ describe JobExecution do
 
   it 'can access secrets' do
     create_secret "production/#{project.permalink}/group/bar"
-    job.update(command: "echo '#{"secret://production/#{project.permalink}/group/bar"}'")
+    job.update(command: "echo 'secret://production/#{project.permalink}/group/bar'")
     execute_job("master")
     assert_equal 'MY-SECRET', last_line_of_output
   end
@@ -285,7 +285,8 @@ describe JobExecution do
 
     it "stops the execution with kill if job has already been interrupted" do
       begin
-        old, JobExecution.stop_timeout = JobExecution.stop_timeout, 0
+        old = JobExecution.stop_timeout
+        JobExecution.stop_timeout = 0
         execution.start!
         TerminalExecutor.any_instance.expects(:stop!).with('INT')
         TerminalExecutor.any_instance.expects(:stop!).with('KILL')

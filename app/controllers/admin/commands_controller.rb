@@ -1,9 +1,9 @@
 class Admin::CommandsController < ApplicationController
   include CurrentProject
 
-  before_action :find_command, only: [ :update, :edit ]
-  before_action :authorize_project_admin!, only: [ :update, :edit ]
-  before_action :authorize_admin!, except: [ :update, :edit ]
+  before_action :find_command, only: [:update, :edit]
+  before_action :authorize_project_admin!, only: [:update, :edit]
+  before_action :authorize_admin!, except: [:update, :edit]
 
   def index
     @commands = Command.order(:project_id).page(params[:page])

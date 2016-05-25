@@ -44,7 +44,7 @@ describe Admin::CommandsController do
 
     describe 'PATCH to #update' do
       let(:command) { commands(:echo) }
-      let(:attributes) {{ command: 'echo hi' }}
+      let(:attributes) { { command: 'echo hi' } }
       let(:format) { 'html' }
 
       before do
@@ -69,7 +69,7 @@ describe Admin::CommandsController do
       end
 
       describe 'invalid' do
-        let(:attributes) {{ command: nil }}
+        let(:attributes) { { command: nil } }
 
         describe 'html' do
           it 'renders' do
@@ -137,7 +137,7 @@ describe Admin::CommandsController do
       end
 
       describe 'invalid' do
-        let(:attributes) {{ command: nil }}
+        let(:attributes) { { command: nil } }
 
         it 'renders' do
           assert_template :edit
@@ -145,7 +145,7 @@ describe Admin::CommandsController do
       end
 
       describe 'valid' do
-        let(:attributes) {{ command: 'echo hi' }}
+        let(:attributes) { { command: 'echo hi' } }
 
         it 'redirects and sets the flash' do
           flash[:notice].wont_be_nil

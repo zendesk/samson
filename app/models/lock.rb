@@ -25,7 +25,7 @@ class Lock < ActiveRecord::Base
   end
 
   def locked_by
-    "#{user.try(:name) || 'Unknown user'}"
+    (user.try(:name) || 'Unknown user').to_s
   end
 
   def unlock_at
@@ -47,8 +47,6 @@ class Lock < ActiveRecord::Base
   private
 
   def unique_global_lock
-    if global? && Lock.global.exists?
-      errors.add(:stage_id, :invalid)
-    end
+    errors.add(:stage_id, :invalid) if global? && Lock.global.exists?
   end
 end

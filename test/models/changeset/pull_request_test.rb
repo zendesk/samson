@@ -63,7 +63,7 @@ describe Changeset::PullRequest do
   describe "#title_without_jira" do
     before do
       GITHUB.stubs(:pull_request).with("foo/bar", 42).returns(data)
-      pr = Changeset::PullRequest.find("foo/bar", 42)
+      Changeset::PullRequest.find("foo/bar", 42)
     end
 
     it "scrubs the JIRA from the PR title (with square brackets)" do
@@ -84,7 +84,7 @@ describe Changeset::PullRequest do
 
     before do
       @original_jira_url_env = ENV['JIRA_BASE_URL']
-      ENV['JIRA_BASE_URL'] = nil  # delete for consistent test environment
+      ENV['JIRA_BASE_URL'] = nil # delete for consistent test environment
     end
 
     after do

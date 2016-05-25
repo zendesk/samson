@@ -1,6 +1,6 @@
 module Kubernetes
   module HasStatus
-    STATUSES = %w[created spinning_up live spinning_down dead failed]
+    STATUSES = %w[created spinning_up live spinning_down dead failed].freeze
 
     STATUSES.each do |s|
       define_method("#{s}?") { status == s }

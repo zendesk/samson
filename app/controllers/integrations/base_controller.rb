@@ -79,7 +79,8 @@ class Integrations::BaseController < ApplicationController
       description: message,
       creator: user,
       label: release.version,
-      releases: [release])
+      releases: [release]
+    )
   end
 
   def create_docker_image

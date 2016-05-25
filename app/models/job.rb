@@ -64,7 +64,7 @@ class Job < ActiveRecord::Base
     end
   end
 
-  %w{pending running succeeded cancelling cancelled failed errored}.each do |status|
+  %w[pending running succeeded cancelling cancelled failed errored].each do |status|
     define_method "#{status}?" do
       self.status == status
     end
@@ -125,9 +125,7 @@ class Job < ActiveRecord::Base
   private
 
   def validate_globally_unlocked
-    if Lock.global.exists?
-      errors.add(:project, 'is locked')
-    end
+    errors.add(:project, 'is locked') if Lock.global.exists?
   end
 
   def execution

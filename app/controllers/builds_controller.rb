@@ -23,9 +23,7 @@ class BuildsController < ApplicationController
     @build.creator = current_user
     @build.save
 
-    if @build.persisted? && params[:build_image].present?
-      start_docker_build
-    end
+    start_docker_build if @build.persisted? && params[:build_image].present?
 
     respond_to do |format|
       format.html do

@@ -62,7 +62,7 @@ module Kubernetes
     private
 
     def test_client_connection
-      if File.exists?(config_filepath)
+      if File.exist?(config_filepath)
         errors.add(:config_context, "Could not connect to API Server") unless connection_valid?
       else
         errors.add(:config_filepath, "File does not exist")
