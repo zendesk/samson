@@ -53,7 +53,7 @@ module Kubernetes
         [
           {name: "secrets-volume", emptyDir: {}},
           {name: "vaultauth", secret: {secretName: "vaultauth"}},
-          {"name"=>"secretkeys", "downwardAPI"=>{"items"=>[{"path"=>"annotations", "fieldRef"=>{"fieldPath"=>"metadata.annotations"}}]}}
+          {name: "secretkeys", downwardAPI: {items: [{path: "annotations", fieldRef:{fieldPath:"metadata.annotations"}}]}}
         ]
       secret_vol = { mountPath: "/secrets", name: "secrets-volume" }
       secret_sidecar = {
@@ -77,10 +77,10 @@ module Kubernetes
       template.spec.template.spec.containers = containers
 
       #lastly, define the volumes in the pod
-      if template.spec[:volumes].nil?
+      if template.spec.template.spec[:volumes].nil?
         template.spec.template.spec.volumes = pod_volumes
       else
-        template.spec.template.spec.volumes << pod_volumes
+        pod_volumes.each { |pv| template.spec.template.spec.volumes << pv }
       end
     end
 
@@ -194,7 +194,7 @@ module Kubernetes
         sidecar_env = ( sidecar_container.env || [] )
         {
           VAULT_ADDR: ENV.fetch("VAULT_ADDR"),
-          VAULT_SSL_VERIFY: ENV.fetch("VAULT_SSL_VERIFY")
+          VAULT_SSL_VERIFY: ENV.fetch("VAULT_SSL_VERIFY", true)
         }.each do |k, v|
           sidecar_env << {
             name: k,
@@ -221,10 +221,6 @@ module Kubernetes
     def sidecar_container
       @sidecar ||= begin
         containers = template.spec.template.try(:spec).try(:containers) || []
-        if containers.size == 0
-          # TODO: support building and replacement for multiple containers
-          raise Samson::Hooks::UserError, "Template #{@doc.template_name} has #{containers.size} containers, having 1 section is valid."
-        end
         containers.map { |possible_container| return possible_container if possible_container.name == 'secret-sidecar' }
       end
     end
