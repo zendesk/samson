@@ -210,7 +210,9 @@ module Kubernetes
     def sidecar_container
       @sidecar ||= begin
         containers = template.spec.template.try(:spec).try(:containers) || []
-        containers.each { |possible_container| return possible_container if possible_container.name == 'secret-sidecar' }
+        containers.each do |possible_container|
+          return possible_container if possible_container.name == 'secret-sidecar'
+        end
       end
     end
   end
