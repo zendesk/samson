@@ -82,7 +82,7 @@ module Kubernetes
         containers.first.volumeMounts = [secret_vol]
       else
         containers.first.volumeMounts ||= []
-        containers.first.volumeMounts.concat secret_vol
+        containers.first.volumeMounts << secret_vol
       end
       containers << secret_sidecar
       template.spec.template.spec.containers = containers
