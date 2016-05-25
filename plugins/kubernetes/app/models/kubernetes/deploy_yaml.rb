@@ -16,6 +16,7 @@ module Kubernetes
         set_spec_template_metadata
         set_docker_image
         set_resource_usage
+        set_secret_sidecar if ENV.fetch("SECRET_SIDECAR_IMAGE", false)
         set_env
 
         hash = template.to_hash
@@ -44,6 +45,47 @@ module Kubernetes
           )
         end
       end
+    end
+
+    # Sets up the secret_sidecar and the various mounts that are required
+    # if the sidecar service is enabled
+    # /vaultauth is a secrets volume in the cluster
+    # /secretkeys are where the annotations from the config are mounted
+    def set_secret_sidecar
+      pod_volumes =
+        [
+          {name: "secrets-volume", emptyDir: {}},
+          {name: "vaultauth", secret: {secretName: "vaultauth"}},
+          {
+            name: "secretkeys",
+            downwardAPI:
+            {
+              items: [{path: "annotations", fieldRef: {fieldPath: "metadata.annotations"}}]
+            }
+          }
+        ]
+      secret_vol = { mountPath: "/secrets", name: "secrets-volume" }
+      secret_sidecar = {
+        image: ENV.fetch("SECRET_SIDECAR_IMAGE").to_s,
+        name: "secret-sidecar",
+        volumeMounts: [
+          secret_vol,
+          { mountPath: "/vault-auth", name: "vaultauth" },
+          { mountPath: "/secretkeys", name: "secretkeys" }
+        ]
+      }
+
+      # also inject the secrets FS into the primary container so that the
+      # secrets can be shared
+      containers = template.spec.template.spec.containers.dup
+      containers.first.volumeMounts ||= []
+      containers.first.volumeMounts << secret_vol
+      containers << secret_sidecar
+      template.spec.template.spec.containers = containers
+
+      # lastly, define the volumes in the pod
+      template.spec.template.spec.volumes ||= []
+      template.spec.template.spec.volumes.concat pod_volumes
     end
 
     # This key replaces the default kubernetes key: 'deployment.kubernetes.io/podTemplateHash'
@@ -126,6 +168,20 @@ module Kubernetes
        }
       end
 
+      if ENV["SECRET_SIDECAR_IMAGE"]
+        sidecar_env = (sidecar_container.env || [])
+        {
+          VAULT_ADDR: ENV.fetch("VAULT_ADDR"),
+          VAULT_SSL_VERIFY: ENV.fetch("VAULT_SSL_VERIFY", true)
+        }.each do |k, v|
+          sidecar_env << {
+            name: k,
+            value: v.to_s
+          }
+        end
+        sidecar_container.env = sidecar_env
+      end
+
       container.env = env
     end
 
@@ -140,6 +196,14 @@ module Kubernetes
           )
         end
         containers.first
+      end
+    end
+
+    def sidecar_container
+      @sidecar ||= begin
+        template.spec.template.spec.containers.each do |possible_container|
+          return possible_container if possible_container.name == 'secret-sidecar'
+        end
       end
     end
   end

@@ -131,6 +131,36 @@ describe Kubernetes::DeployYaml do
       end
     end
 
+    describe "secret-sidecar-containers" do
+      before do
+        ENV["VAULT_ADDR"] = "somehostontheinternet"
+        ENV["SECRET_SIDECAR_IMAGE"] = "docker-registry.example.com/foo:bar"
+        ENV["VAULT_SSL_VERIFY"] = "false"
+      end
+
+      after do
+        ENV.delete("VAULT_ADDR")
+        ENV.delete("SECRET_SIDECAR_IMAGE")
+        ENV.delete("VAULT_SSL_VERIFY")
+      end
+
+      it "creates a sidecar" do
+        yaml.to_hash[:spec][:template][:spec][:containers].last[:name].must_equal('secret-sidecar')
+      end
+
+      it "adds to existing volume definitions in the sidecar" do
+        doc.raw_template.gsub!("containers:\n      - {}\n",
+          "containers:\n      - {}\n      volumes:\n      - {}\n      - {}\n")
+        yaml.to_hash[:spec][:template][:spec][:volumes].count.must_be(:>=, 2)
+      end
+
+      it "adds to existing volume definitions in the primary container" do
+        doc.raw_template.gsub!("containers:\n      - {}\n",
+          "containers:\n      - :name: foo\n        :volumeMounts:\n        - :name: bar\n")
+        yaml.to_hash[:spec][:template][:spec][:containers].first[:volumeMounts].count.must_be(:>=, 2)
+      end
+    end
+
     describe "daemon_set" do
       it "does not add replicas since they are not supported" do
         yaml.send(:template).kind = 'DaemonSet'
