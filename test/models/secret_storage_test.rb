@@ -128,6 +128,32 @@ describe SecretStorage do
         secret.encryption_key_sha.must_equal "c975b468c4677aa69a20769bf9553ea1937b84684c2876130f9c528731963f4d"
       end
     end
+
+    describe "validations" do
+      it "is valid" do
+        assert_valid secret
+      end
+
+      it "is invalid without secret" do
+        secret.value = nil
+        refute_valid secret
+      end
+
+      it "is invalid without id" do
+        secret.id = nil
+        refute_valid secret
+      end
+
+      it "is invalid without key" do
+        secret.id = "a/b/c/"
+        refute_valid secret
+      end
+
+      it "is valid with keys with slashes" do
+        secret.id = "a/b/c/d/e/f/g"
+        assert_valid secret
+      end
+    end
   end
 
   describe SecretStorage::HashicorpVault do
