@@ -56,9 +56,11 @@ module Kubernetes
         [
           {name: "secrets-volume", emptyDir: {}},
           {name: "vaultauth", secret: {secretName: "vaultauth"}},
-          {name: "secretkeys",
-            downwardAPI: {
-              items: [{path: "annotations", fieldRef: {fieldPath:"metadata.annotations"}}]
+          {
+            name: "secretkeys",
+            downwardAPI:
+            {
+              items: [{path: "annotations", fieldRef: {fieldPath: "metadata.annotations"}}]
             }
           }
         ]
@@ -72,22 +74,25 @@ module Kubernetes
           { mountPath: "/secretkeys", name: "secretkeys" }
         ]
       }
-      # TODO, do we want resource limits on this, or just give it what it needs?
-      secret_sidecar[:resources] = { limits: { cpu: 0.1, memory: "100Mi" } }
 
       # also inject the secrets FS into the primary container so that the
       # secrets can be shared
       containers = template.spec.template.spec.containers.dup
-      containers.first.volumeMounts = [secret_vol]
+      if containers.first.volumeMounts.nil?
+        containers.first.volumeMounts = [secret_vol]
+      else
+        containers.first.volumeMounts ||= []
+        containers.first.volumeMounts.concat secret_vol
+      end
       containers << secret_sidecar
-
       template.spec.template.spec.containers = containers
 
       # lastly, define the volumes in the pod
-      if template.spec.template.spec[:volumes].nil?
+      if template.spec.template.spec.volumes.nil?
         template.spec.template.spec.volumes = pod_volumes
       else
-        pod_volumes.each { |pv| template.spec.template.spec.volumes << pv }
+        template.spec.template.spec.volumes ||= []
+        template.spec.template.spec.volumes.concat pod_volumes
       end
     end
 
@@ -171,7 +176,7 @@ module Kubernetes
        }
       end
 
-      if ENV.fetch("SECRET_SIDECAR_IMAGE", false)
+      if ENV["SECRET_SIDECAR_IMAGE"]
         sidecar_env = (sidecar_container.env || [])
         {
           VAULT_ADDR: ENV.fetch("VAULT_ADDR"),
@@ -205,7 +210,7 @@ module Kubernetes
     def sidecar_container
       @sidecar ||= begin
         containers = template.spec.template.try(:spec).try(:containers) || []
-        containers.map { |possible_container| return possible_container if possible_container.name == 'secret-sidecar' }
+        containers.each { |possible_container| return possible_container if possible_container.name == 'secret-sidecar' }
       end
     end
   end

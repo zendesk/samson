@@ -139,6 +139,12 @@ describe Kubernetes::DeployYaml do
         ENV["VAULT_SSL_VERIFY"] = "false"
       end
 
+      after do
+        ENV.delete("VAULT_ADDR")
+        ENV.delete("SECRET_SIDECAR_IMAGE")
+        ENV.delete("VAULT_SSL_VERIFY")
+      end
+
       it "creates a sidecar" do
         yaml.to_hash[:spec][:template][:spec][:containers].last[:name].must_equal('secret-sidecar')
       end
@@ -155,12 +161,6 @@ describe Kubernetes::DeployYaml do
         doc.raw_template.gsub!("containers:\n      - {}\n",
                                "containers:\n      - {}\n      volumes:\n      - {}\n      - {}\n")
         yaml.to_hash[:spec][:template][:spec][:volumes].count.must_be(:>=, 2)
-      end
-
-      after do
-        ENV.delete("VAULT_ADDR")
-        ENV.delete("SECRET_SIDECAR_IMAGE")
-        ENV.delete("VAULT_SSL_VERIFY")
       end
     end
 
