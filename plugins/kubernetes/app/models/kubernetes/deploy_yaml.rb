@@ -77,11 +77,11 @@ module Kubernetes
 
       # also inject the secrets FS into the primary container so that the
       # secrets can be shared
-      containers = template.spec.template.spec.containers.dup
+      containers = template.spec.template.spec.containers
       containers.first.volumeMounts ||= []
       containers.first.volumeMounts << secret_vol
       containers << secret_sidecar
-      template.spec.template.spec.containers = containers
+      template.spec.template.spec.containers = containers # set to avoid bug in recursive struct
 
       # lastly, define the volumes in the pod
       template.spec.template.spec.volumes ||= []
@@ -201,8 +201,8 @@ module Kubernetes
 
     def sidecar_container
       @sidecar ||= begin
-        template.spec.template.spec.containers.each do |possible_container|
-          return possible_container if possible_container.name == 'secret-sidecar'
+        template.spec.template.spec.containers.detect do |possible_container|
+          break possible_container if possible_container.name == 'secret-sidecar'
         end
       end
     end

@@ -132,16 +132,12 @@ describe Kubernetes::DeployYaml do
     end
 
     describe "secret-sidecar-containers" do
-      before do
-        ENV["VAULT_ADDR"] = "somehostontheinternet"
-        ENV["SECRET_SIDECAR_IMAGE"] = "docker-registry.example.com/foo:bar"
-        ENV["VAULT_SSL_VERIFY"] = "false"
-      end
-
-      after do
-        ENV.delete("VAULT_ADDR")
-        ENV.delete("SECRET_SIDECAR_IMAGE")
-        ENV.delete("VAULT_SSL_VERIFY")
+      around do |test|
+        with_env({
+          VAULT_ADDR: "somehostontheinternet",
+          SECRET_SIDECAR_IMAGE: "docker-registry.example.com/foo:bar",
+          VAULT_SSL_VERIFY: "false"
+        }, &test)
       end
 
       it "creates a sidecar" do
