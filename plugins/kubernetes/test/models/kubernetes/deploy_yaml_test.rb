@@ -159,7 +159,7 @@ describe Kubernetes::DeployYaml do
 
       it "adds to existing volume definitions" do
         doc.raw_template.gsub!("containers:\n      - {}\n",
-                               "containers:\n      - {}\n      volumes:\n      - {}\n      - {}\n")
+          "containers:\n      - {}\n      volumes:\n      - {}\n      - {}\n")
         yaml.to_hash[:spec][:template][:spec][:volumes].count.must_be(:>=, 2)
       end
     end
