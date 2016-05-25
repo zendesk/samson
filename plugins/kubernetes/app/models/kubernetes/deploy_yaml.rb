@@ -56,7 +56,11 @@ module Kubernetes
         [
           {name: "secrets-volume", emptyDir: {}},
           {name: "vaultauth", secret: {secretName: "vaultauth"}},
-          {name: "secretkeys", downwardAPI: {items: [{path: "annotations", fieldRef:{fieldPath:"metadata.annotations"}}]}}
+          {name: "secretkeys",
+            downwardAPI: {
+              items: [{path: "annotations", fieldRef: {fieldPath:"metadata.annotations"}}]
+            }
+          }
         ]
       secret_vol = { mountPath: "/secrets", name: "secrets-volume" }
       secret_sidecar = {
@@ -68,8 +72,8 @@ module Kubernetes
           { mountPath: "/secretkeys", name: "secretkeys" }
         ]
       }
-      #TODO, do we want resource limits on this, or just give it what it needs?
-      secret_sidecar[:resources] =  { limits: { cpu: 0.1, memory: "100Mi" } }
+      # TODO, do we want resource limits on this, or just give it what it needs?
+      secret_sidecar[:resources] = { limits: { cpu: 0.1, memory: "100Mi" } }
 
       # also inject the secrets FS into the primary container so that the
       # secrets can be shared
@@ -79,7 +83,7 @@ module Kubernetes
 
       template.spec.template.spec.containers = containers
 
-      #lastly, define the volumes in the pod
+      # lastly, define the volumes in the pod
       if template.spec.template.spec[:volumes].nil?
         template.spec.template.spec.volumes = pod_volumes
       else
@@ -168,14 +172,14 @@ module Kubernetes
       end
 
       if ENV.fetch("SECRET_SIDECAR_IMAGE", false)
-        sidecar_env = ( sidecar_container.env || [] )
+        sidecar_env = (sidecar_container.env || [])
         {
           VAULT_ADDR: ENV.fetch("VAULT_ADDR"),
           VAULT_SSL_VERIFY: ENV.fetch("VAULT_SSL_VERIFY", true)
         }.each do |k, v|
           sidecar_env << {
             name: k,
-            value: "#{v}"
+            value: v.to_s
           }
         end
         sidecar_container.env = sidecar_env

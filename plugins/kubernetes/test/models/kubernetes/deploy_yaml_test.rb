@@ -134,9 +134,9 @@ describe Kubernetes::DeployYaml do
     describe "secret-sidecar-containers" do
       let(:container) { result.fetch(:spec).fetch(:template).fetch(:spec).fetch(:containers).first }
       before do
-        ENV["VAULT_ADDR"]="somehostontheinternet"
-        ENV["SECRET_SIDECAR_IMAGE"]="docker-registry.zende.sk/truth_service:secrets_sidecar_v36"
-        ENV["VAULT_SSL_VERIFY"]="false"
+        ENV["VAULT_ADDR"] = "somehostontheinternet"
+        ENV["SECRET_SIDECAR_IMAGE"] = "docker-registry.zende.sk/truth_service:secrets_sidecar_v36"
+        ENV["VAULT_SSL_VERIFY"] = "false"
       end
 
       it "creates a sidecar" do
@@ -152,7 +152,8 @@ describe Kubernetes::DeployYaml do
       end
 
       it "adds to existing volume definitions" do
-        doc.raw_template.gsub!("containers:\n      - {}\n", "containers:\n      - {}\n      volumes:\n      - {}\n      - {}\n")
+        doc.raw_template.gsub!("containers:\n      - {}\n",
+                               "containers:\n      - {}\n      volumes:\n      - {}\n      - {}\n")
         yaml.to_hash[:spec][:template][:spec][:volumes].count.must_be(:>=, 2)
       end
 
