@@ -16,10 +16,10 @@ class TerminalExecutor
 
   attr_reader :pid, :pgid, :output
 
-  def initialize(output, verbose: false, project: nil)
+  def initialize(output, verbose: false, deploy: nil)
     @output = output
     @verbose = verbose
-    @project = project
+    @deploy = deploy
   end
 
   def execute!(*commands)
@@ -39,14 +39,18 @@ class TerminalExecutor
 
   private
 
-  # TODO: verify environment and pick the right secret
+  # TODO: pick dynamic secret from just the key
   def resolve_secrets(command)
-    allowed_projects = ['global', @project.try(:permalink)]
-
+    deploy_groups = @deploy.try(:stage).try(:deploy_groups) || []
+    allowed = {
+      environment_permalink: ['global'].concat(deploy_groups.map(&:environment).map(&:permalink)),
+      project_permalink: ['global'] << @deploy.try(:project).try(:permalink),
+      deploy_group_permalink: ['global'].concat(deploy_groups.map(&:permalink))
+    }
     command.gsub(/\b#{SECRET_PREFIX}(#{SecretStorage::SECRET_KEY_REGEX})\b/) do
       key = $1
       parts = SecretStorage.parse_secret_key(key)
-      if allowed_projects.include?(parts.fetch(:project_permalink))
+      if allowed.all? { |k, v| v.include?(parts.fetch(k)) }
         SecretStorage.read(key, include_secret: true).fetch(:value)
       else
         raise ActiveRecord::RecordNotFound, "Not allowed to access key #{key}"

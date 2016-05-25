@@ -72,40 +72,70 @@ describe TerminalExecutor do
     end
 
     describe 'with secrets' do
-      let!(:secret) { create_secret 'production/global/foo/bar' }
-      let(:project) { projects(:test) }
-      let(:command) { 'export SECRET="secret://production/global/foo/bar"; echo $SECRET' }
-
-      it "resolves secrets" do
-        subject.execute!(command)
+      def assert_resolves(id)
+        secret = create_secret(id)
+        subject.execute!(%(echo "secret://#{id}"))
         output.string.must_equal "#{secret.value}\r\n"
       end
 
-      it "can use project specific secrets" do
-        subject.instance_variable_set(:@project, project)
-        secret = create_secret "production/#{project.permalink}/blue_group/bar"
-        subject.execute!(%(echo "secret://production/#{project.permalink}/blue_group/bar"))
-        output.string.must_equal "#{secret.value}\r\n"
+      def refute_resolves(id)
+        create_secret(id)
+        assert_raises ActiveRecord::RecordNotFound do
+          subject.execute!(%(echo "secret://#{id}"))
+        end
+      end
+
+      let(:deploy) { deploys(:succeeded_test) }
+
+      it "resolves global secrets" do
+        assert_resolves 'global/global/global/bar'
+      end
+
+      describe "with a deploy" do
+        before { subject.instance_variable_set(:@deploy, deploy) }
+
+        it "can use project specific secrets" do
+          assert_resolves "global/#{deploy.project.permalink}/global/bar"
+        end
+
+        it "cannot use secret from other project" do
+          refute_resolves "global/bar/global/bar"
+        end
+
+        it "can use environment specific secrets" do
+          assert_resolves "#{deploy.stage.deploy_groups.first.environment.permalink}/global/global/bar"
+        end
+
+        it "cannot use secret from other environments" do
+          refute_resolves "bar/global/global/bar"
+        end
+
+        it "can use deploy group specific secrets" do
+          assert_resolves "global/global/#{deploy.stage.deploy_groups.first.permalink}/bar"
+        end
+
+        it "cannot use secret from other deploy group" do
+          refute_resolves "global/global/bar/bar"
+        end
       end
 
       it "fails on unresolved secrets" do
         assert_raises ActiveRecord::RecordNotFound do
-          subject.execute!('echo "secret://production/global/soemgroup/baz"')
+          subject.execute!('echo "secret://global/global/global/baz"')
         end
       end
 
-      it "cannot use project specific secrets without a project" do
-        create_secret "production/foo/group/bar"
-        assert_raises ActiveRecord::RecordNotFound do
-          subject.execute!('echo "secret://production/group/bar"')
-        end
+      it "cannot use specific secrets without a deploy" do
+        refute_resolves "global/#{deploy.project.permalink}/global/bar"
       end
 
       it "does not show secrets in verbose mode" do
         subject.instance_variable_set(:@verbose, true)
-        subject.execute!(command)
+        id = 'global/global/global/baz'
+        secret = create_secret(id)
+        subject.execute!("export SECRET='secret://#{id}'; echo $SECRET")
         output.string.must_equal \
-          "» export SECRET=\"secret://production/global/foo/bar\"; echo $SECRET\r\n#{secret.value}\r\n"
+          "» export SECRET='secret://#{id}'; echo $SECRET\r\n#{secret.value}\r\n"
       end
     end
   end

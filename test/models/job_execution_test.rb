@@ -225,8 +225,9 @@ describe JobExecution do
   end
 
   it 'can access secrets' do
-    create_secret "production/#{project.permalink}/group/bar"
-    job.update(command: "echo 'secret://production/#{project.permalink}/group/bar'")
+    id = "global/#{project.permalink}/global/bar"
+    create_secret id
+    job.update(command: "echo 'secret://#{id}'")
     execute_job("master")
     assert_equal 'MY-SECRET', last_line_of_output
   end
