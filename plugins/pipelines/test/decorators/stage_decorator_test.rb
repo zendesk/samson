@@ -16,31 +16,51 @@ describe Stage do
   end
 
   describe '#production?' do
-    it 'returns false if no pipeline set and not marked production' do
-      stage1.deploy_groups = [staging]
-      stage1.production?.must_equal false
+    describe "without pipeline" do
+      it 'is false if not marked production' do
+        stage1.production?.must_equal false
+      end
+
+      it 'is true if marked production' do
+        stage1.update(production: true)
+        stage1.production?.must_equal true
+      end
     end
 
-    it 'returns true if no pipeline set and marked production' do
-      stage1.update(production: true)
-      stage1.production?.must_equal true
+    describe "with pipeline without production" do
+      before do
+        stage1.update!(next_stage_ids: [stage3.id, stage2.id])
+      end
+
+      it 'is false if not marked production' do
+        stage1.production?.must_equal false
+      end
+
+      it 'is true if marked production' do
+        stage1.update(production: true)
+        stage1.production?.must_equal true
+      end
     end
 
-    it 'returns false if pipeline set but none are marked as production' do
-      stage1.update!(next_stage_ids: [stage3.id, stage2.id])
-      stage1.production?.must_equal false
-    end
+    describe "with pipeline with production" do
+      before do
+        stage2.update(production: true)
+        stage1.update!(next_stage_ids: [stage3.id, stage2.id])
+      end
 
-    it 'returns true if pipeline set and self is marked production' do
-      stage1.update(production: true)
-      stage1.update!(next_stage_ids: [stage3.id, stage2.id])
-      stage1.production?.must_equal true
-    end
+      it 'is true if not marked production' do
+        stage1.production?.must_equal true
+      end
 
-    it 'returns true if pipeline set and later stage is marked production' do
-      stage2.update(production: true)
-      stage1.update!(next_stage_ids: [stage3.id, stage2.id])
-      stage1.production?.must_equal true
+      it "does not blow up on deleted next ids" do
+        stage3.update_column(:deleted_at, Time.now)
+        stage1.production?.must_equal true
+      end
+
+      it 'is true if marked production' do
+        stage1.update(production: true)
+        stage1.production?.must_equal true
+      end
     end
   end
 
