@@ -5,7 +5,7 @@ module SamsonPipelines::StageConcern
   end
 
   def next_stages
-    Stage.find(next_stage_ids)
+    Stage.where(id: next_stage_ids).to_a
   end
 
   protected
