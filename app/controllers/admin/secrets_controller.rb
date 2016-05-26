@@ -1,7 +1,7 @@
 class Admin::SecretsController < ApplicationController
   include CurrentProject
 
-  before_action :find_project_permalinks, :find_environments_permalinks, :find_deploy_group_permalinks
+  before_action :find_project_permalinks
   before_action :find_secret, only: [:update, :edit, :destroy]
 
   DEPLOYER_ACCESS = [:index, :new].freeze
@@ -72,14 +72,6 @@ class Admin::SecretsController < ApplicationController
 
   def find_project_permalinks
     @project_permalinks = SecretStorage.allowed_project_prefixes(current_user)
-  end
-
-  def find_environments_permalinks
-    @environment_permalinks = Environment.pluck(:permalink)
-  end
-
-  def find_deploy_group_permalinks
-    @deploy_group_permalinks = DeployGroup.pluck(:permalink)
   end
 
   def ensure_project_access

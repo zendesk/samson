@@ -14,7 +14,7 @@ module SecretStorage
 
       before_validation :store_encryption_key_sha
       validates :id, :encrypted_value, :encryption_key_sha, presence: true
-      validates :id, format: /\A\S+\/\S*\Z/
+      validates :id, format: %r{\A([^/\s]+/){3}[^\s]+\Z}
 
       private
 
