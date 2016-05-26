@@ -75,17 +75,17 @@ module Kubernetes
         ]
       }
 
-      # also inject the secrets FS into the primary container so that the
-      # secrets can be shared
-      containers = template.spec.template.spec.containers.dup
-      containers.first.volumeMounts ||= []
-      containers.first.volumeMounts << secret_vol
-      containers << secret_sidecar
-      template.spec.template.spec.containers = containers
+      # add the sidcar container
+      template.spec.template.spec.containers += [secret_sidecar]
 
-      # lastly, define the volumes in the pod
+      # inject the secrets FS into the primary container to share the secrets
+      container = template.spec.template.spec.containers.first
+      container.volumeMounts ||= []
+      container.volumeMounts << secret_vol
+
+      # define the shared volumes in the pod
       template.spec.template.spec.volumes ||= []
-      template.spec.template.spec.volumes.concat pod_volumes
+      template.spec.template.spec.volumes += pod_volumes
     end
 
     # This key replaces the default kubernetes key: 'deployment.kubernetes.io/podTemplateHash'
@@ -201,8 +201,8 @@ module Kubernetes
 
     def sidecar_container
       @sidecar ||= begin
-        template.spec.template.spec.containers.each do |possible_container|
-          return possible_container if possible_container.name == 'secret-sidecar'
+        template.spec.template.spec.containers.detect do |possible_container|
+          break possible_container if possible_container.name == 'secret-sidecar'
         end
       end
     end

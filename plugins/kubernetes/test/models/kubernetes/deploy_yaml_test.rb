@@ -132,16 +132,12 @@ describe Kubernetes::DeployYaml do
     end
 
     describe "secret-sidecar-containers" do
-      before do
-        ENV["VAULT_ADDR"] = "somehostontheinternet"
-        ENV["SECRET_SIDECAR_IMAGE"] = "docker-registry.example.com/foo:bar"
-        ENV["VAULT_SSL_VERIFY"] = "false"
-      end
-
-      after do
-        ENV.delete("VAULT_ADDR")
-        ENV.delete("SECRET_SIDECAR_IMAGE")
-        ENV.delete("VAULT_SSL_VERIFY")
+      around do |test|
+        with_env({
+          VAULT_ADDR: "somehostontheinternet",
+          SECRET_SIDECAR_IMAGE: "docker-registry.example.com/foo:bar",
+          VAULT_SSL_VERIFY: "false"
+        }, &test)
       end
 
       it "creates a sidecar" do
@@ -151,13 +147,13 @@ describe Kubernetes::DeployYaml do
       it "adds to existing volume definitions in the sidecar" do
         doc.raw_template.gsub!("containers:\n      - {}\n",
           "containers:\n      - {}\n      volumes:\n      - {}\n      - {}\n")
-        yaml.to_hash[:spec][:template][:spec][:volumes].count.must_be(:>=, 2)
+        yaml.to_hash[:spec][:template][:spec][:volumes].count.must_equal 5
       end
 
       it "adds to existing volume definitions in the primary container" do
         doc.raw_template.gsub!("containers:\n      - {}\n",
           "containers:\n      - :name: foo\n        :volumeMounts:\n        - :name: bar\n")
-        yaml.to_hash[:spec][:template][:spec][:containers].first[:volumeMounts].count.must_be(:>=, 2)
+        yaml.to_hash[:spec][:template][:spec][:containers].first[:volumeMounts].count.must_equal 2
       end
     end
 
