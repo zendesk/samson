@@ -74,14 +74,14 @@ describe TerminalExecutor do
     describe 'with secrets' do
       def assert_resolves(id)
         secret = create_secret(id)
-        subject.execute!(%(echo "secret://#{id}"))
+        subject.execute!(%(echo "secret://#{id.split('/', 4).last}"))
         output.string.must_equal "#{secret.value}\r\n"
       end
 
       def refute_resolves(id)
         create_secret(id)
         assert_raises ActiveRecord::RecordNotFound do
-          subject.execute!(%(echo "secret://#{id}"))
+          subject.execute!(%(echo "secret://#{id.split('/', 4).last}"))
         end
       end
 
@@ -89,34 +89,6 @@ describe TerminalExecutor do
 
       it "resolves global secrets" do
         assert_resolves 'global/global/global/bar'
-      end
-
-      describe "with a deploy" do
-        before { subject.instance_variable_set(:@deploy, deploy) }
-
-        it "can use project specific secrets" do
-          assert_resolves "global/#{deploy.project.permalink}/global/bar"
-        end
-
-        it "cannot use secret from other project" do
-          refute_resolves "global/bar/global/bar"
-        end
-
-        it "can use environment specific secrets" do
-          assert_resolves "#{deploy.stage.deploy_groups.first.environment.permalink}/global/global/bar"
-        end
-
-        it "cannot use secret from other environments" do
-          refute_resolves "bar/global/global/bar"
-        end
-
-        it "can use deploy group specific secrets" do
-          assert_resolves "global/global/#{deploy.stage.deploy_groups.first.permalink}/bar"
-        end
-
-        it "cannot use secret from other deploy group" do
-          refute_resolves "global/global/bar/bar"
-        end
       end
 
       it "fails on unresolved secrets" do
@@ -133,9 +105,58 @@ describe TerminalExecutor do
         subject.instance_variable_set(:@verbose, true)
         id = 'global/global/global/baz'
         secret = create_secret(id)
-        subject.execute!("export SECRET='secret://#{id}'; echo $SECRET")
+        subject.execute!("export SECRET='secret://baz'; echo $SECRET")
         output.string.must_equal \
-          "» export SECRET='secret://#{id}'; echo $SECRET\r\n#{secret.value}\r\n"
+          "» export SECRET='secret://baz'; echo $SECRET\r\n#{secret.value}\r\n"
+      end
+
+      describe "with a deploy" do
+        let(:environment_specific_secret) do
+          "#{deploy.stage.deploy_groups.first.environment.permalink}/global/global/bar"
+        end
+        let(:deploy_group_specific_secret) do
+          "global/global/#{deploy.stage.deploy_groups.first.permalink}/bar"
+        end
+
+        before { subject.instance_variable_set(:@deploy, deploy) }
+
+        it "can use project specific secrets" do
+          assert_resolves "global/#{deploy.project.permalink}/global/bar"
+        end
+
+        it "cannot use secret from other project" do
+          refute_resolves "global/bar/global/bar"
+        end
+
+        describe "environment" do
+          it "can use environment specific secrets" do
+            assert_resolves environment_specific_secret
+          end
+
+          it "cannot use secret from other environments" do
+            refute_resolves "bar/global/global/bar"
+          end
+
+          it "cannot use environment specific secrets when deploying to multiple environments" do
+            deploy.stage.deploy_groups << deploy_groups(:pod1)
+            refute_resolves environment_specific_secret
+          end
+        end
+
+        describe "deploy groups" do
+          it "can use deploy group specific secrets" do
+            assert_resolves deploy_group_specific_secret
+          end
+
+          it "cannot use secret from other deploy group" do
+            refute_resolves "global/global/bar/bar"
+          end
+
+          it "cannot use deploy group specific secrets when deploying to multiple deploy groups" do
+            deploy.stage.deploy_groups << deploy_groups(:pod1)
+            refute_resolves deploy_group_specific_secret
+          end
+        end
       end
     end
   end
