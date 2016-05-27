@@ -105,19 +105,19 @@ class Deploy < ActiveRecord::Base
   end
 
   def self.pending
-    includes(:job).where(jobs: { status: 'pending' })
+    joins(:job).where(jobs: { status: 'pending' })
   end
 
   def self.running
-    includes(:job).where(jobs: { status: 'running' })
+    joins(:job).where(jobs: { status: 'running' })
   end
 
   def self.successful
-    includes(:job).where(jobs: { status: 'succeeded' })
+    joins(:job).where(jobs: { status: 'succeeded' })
   end
 
   def self.finished_naturally
-    includes(:job).where(jobs: { status: ['succeeded', 'failed'] })
+    joins(:job).where(jobs: { status: ['succeeded', 'failed'] })
   end
 
   def self.prior_to(deploy)
