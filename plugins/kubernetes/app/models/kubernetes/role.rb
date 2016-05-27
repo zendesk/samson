@@ -15,9 +15,6 @@ module Kubernetes
     validates :project, presence: true
     validates :name, presence: true
     validates :deploy_strategy, presence: true, inclusion: DEPLOY_STRATEGIES
-    validates :replicas, presence: true, numericality: { greater_than: 0 }
-    validates :ram, presence: true, numericality: { greater_than: 0 }
-    validates :cpu, presence: true, numericality: { greater_than: 0 }
     validates :service_name, uniqueness: {scope: :deleted_at, allow_nil: true}
 
     scope :not_deleted, -> { where(deleted_at: nil) }
@@ -40,9 +37,6 @@ module Kubernetes
           config_file: config_file.file_path,
           name: name,
           service_name: service_name,
-          ram: config_file.deployment.ram_mi, # TODO: remove this column
-          cpu: config_file.deployment.cpu_m, # TODO: remove this column
-          replicas: config_file.deployment.spec.replicas || 1, # TODO: remove this column
           deploy_strategy: config_file.deployment.strategy_type
         )
       end
@@ -65,10 +59,6 @@ module Kubernetes
 
     def label_name
       name.parameterize
-    end
-
-    def ram_with_units
-      "#{ram}Mi" if ram.present?
     end
 
     class << self

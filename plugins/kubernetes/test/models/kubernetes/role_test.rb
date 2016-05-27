@@ -28,14 +28,6 @@ describe Kubernetes::Role do
       {
         'kind' => 'Deployment',
         'metadata' => {'labels' => {'role' => 'ROLE1'}},
-        'spec' => {
-          'replicas' => 1,
-          'template' => {
-            'spec' => {
-              'containers' => [{'resources' => {'limits' => {'ram_mi' => 23, 'cpu_m' => 11.12}}}]
-            }
-          }
-        },
         'strategy_type' => 'RollingUpdate'
       },
       {
@@ -49,20 +41,6 @@ describe Kubernetes::Role do
   describe 'validations' do
     it 'is valid' do
       assert_valid role
-    end
-
-    it 'validates CPU is a float' do
-      [nil, 'abc', 0, -2].each do |v|
-        role.cpu = v
-        refute_valid role
-      end
-    end
-
-    it 'validates RAM is a int' do
-      [nil, 'abc', 0, -2].each do |v|
-        role.ram = v
-        refute_valid role
-      end
     end
 
     it 'is valid with known deploy strategy' do
@@ -95,13 +73,6 @@ describe Kubernetes::Role do
         other.soft_delete!
         assert_valid role
       end
-    end
-  end
-
-  describe '#ram_with_units' do
-    it 'converts to kubernetes format' do
-      role.ram = 512
-      role.ram_with_units.must_equal '512Mi'
     end
   end
 
@@ -144,9 +115,6 @@ describe Kubernetes::Role do
           config_file: 'sdfsdf.yml',
           name: 'sdfsdf',
           service_name: nil,
-          ram: 1,
-          cpu: 1,
-          replicas: 1,
           deploy_strategy: 'RollingUpdate'
         )
         Kubernetes::Role.seed! project, 'HEAD'

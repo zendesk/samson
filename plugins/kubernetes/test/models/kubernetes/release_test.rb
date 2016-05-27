@@ -54,16 +54,14 @@ describe Kubernetes::Release do
         release = Kubernetes::Release.create_release(multiple_roles_release_params)
         release.build.id.must_equal release_params[:build_id]
         release.release_docs.count.must_equal 2
-        release.release_docs.first.kubernetes_role.id.must_equal app_server.id
         release.release_docs.first.kubernetes_role.name.must_equal app_server.name
-        release.release_docs.first.kubernetes_role.replicas.must_equal app_server.replicas
-        release.release_docs.first.kubernetes_role.cpu.must_equal app_server.cpu
-        release.release_docs.first.kubernetes_role.ram.must_equal app_server.ram
-        release.release_docs.second.kubernetes_role.id.must_equal resque_worker.id
+        release.release_docs.first.replica_target.must_equal 1
+        release.release_docs.first.cpu.must_equal 1
+        release.release_docs.first.ram.must_equal 50
         release.release_docs.second.kubernetes_role.name.must_equal resque_worker.name
-        release.release_docs.second.kubernetes_role.replicas.must_equal resque_worker.replicas
-        release.release_docs.second.kubernetes_role.cpu.must_equal resque_worker.cpu
-        release.release_docs.second.kubernetes_role.ram.must_equal resque_worker.ram
+        release.release_docs.second.replica_target.must_equal 2
+        release.release_docs.second.cpu.must_equal 2
+        release.release_docs.second.ram.must_equal 100
         assert_release_count(@current_release_count + 1)
       end
     end
@@ -153,9 +151,9 @@ describe Kubernetes::Release do
           roles: [
             {
               id: app_server.id,
-              replicas: app_server.replicas,
-              cpu: app_server.cpu,
-              ram: app_server.ram
+              replicas: 1,
+              cpu: 1,
+              ram: 50
             }
           ]
         }
@@ -166,7 +164,7 @@ describe Kubernetes::Release do
   def multiple_roles_release_params
     release_params.tap do |params|
       params[:deploy_groups].each do |dg|
-        dg[:roles].push(id: resque_worker.id, replicas: resque_worker.replicas, cpu: resque_worker.cpu, ram: resque_worker.ram)
+        dg[:roles].push(id: resque_worker.id, replicas: 2, cpu: 2, ram: 100)
       end
     end
   end
