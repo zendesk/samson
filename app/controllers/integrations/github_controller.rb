@@ -10,8 +10,12 @@ class Integrations::GithubController < Integrations::BaseController
 
   protected
 
+  def validate_webhook
+    head(:unauthorized) unless valid_signature?
+  end
+
   def deploy?
-    valid_signature? && valid_payload?
+    webhook_handler && webhook_handler.valid_webhook?(params)
   end
 
   def valid_signature?
@@ -22,10 +26,6 @@ class Integrations::GithubController < Integrations::BaseController
     )
 
     Rack::Utils.secure_compare(request.headers['X-Hub-Signature'].to_s, "sha1=#{hmac}")
-  end
-
-  def valid_payload?
-    webhook_handler && webhook_handler.valid_webhook?(params)
   end
 
   def commit

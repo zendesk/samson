@@ -31,7 +31,7 @@ describe Integrations::GithubController do
     post :create, payload.merge(token: project.token)
 
     project.deploys.must_equal []
-    response.status.must_equal 200
+    response.status.must_equal 401
   end
 
   describe 'with a code push event' do
