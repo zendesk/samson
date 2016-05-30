@@ -103,6 +103,18 @@ class Project < ActiveRecord::Base
     webhooks.for_source(service_type, service_name).for_branch(branch).map(&:stage)
   end
 
+  def repository_homepage_gitlab
+    "//#{Rails.application.config.samson.gitlab.web_url}/#{repo_name}"
+  end
+
+  def github?
+    repository_url.include? Rails.application.config.samson.github.web_url
+  end
+
+  def gitlab?
+    repository_url.include? Rails.application.config.samson.gitlab.web_url
+  end
+
   def release_prior_to(release)
     releases.where('number < ?', release.number).order(:number).last
   end
