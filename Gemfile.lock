@@ -179,6 +179,7 @@ GEM
       dotenv (= 0.11.1)
     erubis (2.7.0)
     eventmachine (1.0.8)
+    eventmachine (1.0.8-java)
     excon (0.45.4)
     execjs (2.6.0)
     faraday (0.9.2)
@@ -195,6 +196,9 @@ GEM
       httparty (~> 0.7)
       multi_json
     github-markdown (0.6.9)
+    gitlab (3.6.1)
+      httparty
+      terminal-table
     globalid (0.3.6)
       activesupport (>= 4.1.0)
     goldiloader (0.0.9)
@@ -505,6 +509,7 @@ DEPENDENCIES
   dotenv-rails (~> 0.9)
   faraday-http-cache (~> 1.1)
   github-markdown (~> 0.6.3)
+  gitlab (~> 3.0)
   goldiloader
   kaminari
   lograge
