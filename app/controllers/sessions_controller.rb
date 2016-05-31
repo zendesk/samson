@@ -25,7 +25,7 @@ class SessionsController < ApplicationController
 
   def gitlab
     return show_login_restriction unless allowed_to_login
-    login_user(role_id: Role::VIEWER.id)
+    login(role_id: Role::VIEWER.id)
   end
 
   def failure
