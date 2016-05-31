@@ -61,4 +61,47 @@ describe ProjectsHelper do
       deployer_for_project?.must_equal true
     end
   end
+
+  describe "#repository_web_link" do
+    let(:current_user) { users(:admin) }
+    let(:stage) { stages(:test_staging) }
+
+    def config_mock
+      Rails.application.config.samson.github.stub(:web_url, "github.com") do
+        Rails.application.config.samson.gitlab.stub(:web_url, "localhost") do
+          yield
+        end
+      end
+    end
+
+    it "makes github repository web link" do
+      config_mock do
+        project = projects(:test)
+        project.name = "Github Project"
+        project.repository_url = "https://github.com/bar/foo.git"
+
+        link = repository_web_link(project)
+        assert_includes link, "View repository on GitHub"
+      end
+    end
+
+    it "makes gitlab repository web link" do
+      config_mock do
+        project = projects(:test)
+        project.name = "Gitlab Project"
+        project.repository_url = "http://localhost/bar/foo.git"
+
+        link = repository_web_link(project)
+        assert_includes link, "View repository on Gitlab"
+      end
+    end
+
+    it "makes github repository web link" do
+      config_mock do
+        project = projects(:test)
+        link = repository_web_link(project)
+        assert_equal link, ""
+      end
+    end
+  end
 end

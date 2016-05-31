@@ -46,6 +46,13 @@
       color: #666;
       font-size: 25px;
     }
+    .gitlab {
+      position: absolute;
+      right: 20px;
+      top: 18px;
+      color: #666;
+      font-size: 25px;
+    }
   }
 
   ul {
@@ -129,6 +136,12 @@ pre.pre-inline {
   position: relative;
 
   .github {
+    color: #333;
+    position: absolute;
+    right: 0;
+    top: 0;
+  }
+  .gitlab {
     color: #333;
     position: absolute;
     right: 0;

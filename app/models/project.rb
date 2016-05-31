@@ -85,10 +85,18 @@ class Project < ActiveRecord::Base
   end
 
   # The user/repo part of the repository URL.
-  def github_repo
+  def user_repo_part
     # GitHub allows underscores, hyphens and dots in repo names
     # but only hyphens in user/organisation names (as well as alphanumeric).
     repository_url.scan(%r{[:/]([A-Za-z0-9-]+/[\w.-]+?)(?:\.git)?$}).join
+  end
+
+  def github_repo
+    user_repo_part
+  end
+
+  def gitlab_repo
+    user_repo_part
   end
 
   def repository_directory
@@ -101,6 +109,28 @@ class Project < ActiveRecord::Base
 
   def webhook_stages_for(branch, service_type, service_name)
     webhooks.for_source(service_type, service_name).for_branch(branch).map(&:stage)
+  end
+
+  def repository_homepage_gitlab
+    "//#{Rails.application.config.samson.gitlab.web_url}/#{gitlab_repo}"
+  end
+
+  def repository_web_url
+    if github?
+      repository_homepage
+    elsif gitlab?
+      repository_homepage_gitlab
+    else
+      ""
+    end
+  end
+
+  def github?
+    repository_url.include? Rails.application.config.samson.github.web_url
+  end
+
+  def gitlab?
+    repository_url.include? Rails.application.config.samson.gitlab.web_url
   end
 
   def release_prior_to(release)
