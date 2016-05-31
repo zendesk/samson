@@ -2,11 +2,6 @@ require 'omniauth'
 
 OmniAuth.config.logger = Rails.logger
 
-require 'omniauth-github'
-require 'omniauth-google-oauth2'
-require 'omniauth-ldap'
-require 'omniauth-gitlab'
-
 Rails.application.config.middleware.use OmniAuth::Builder do
   if Rails.application.config.samson.auth.github
     require 'omniauth-github'
@@ -33,14 +28,17 @@ Rails.application.config.middleware.use OmniAuth::Builder do
     )
   end
 
-  provider :gitlab,
-    ENV["GITLAB_APPLICATION_ID"],
-    ENV["GITLAB_SECRET"],
-    client_options: {
-       site: "http://#{ENV["GITLAB_URL"]}/",
-       authorize_url: '/oauth/authorize',
-       token_url: '/oauth/token'
-     }
+  if Rails.application.config.samson.auth.gitlab
+    require 'omniauth-gitlab'
+    provider :gitlab,
+      ENV["GITLAB_APPLICATION_ID"],
+      ENV["GITLAB_SECRET"],
+      client_options: {
+        site: "http://#{ENV["GITLAB_URL"]}/",
+        authorize_url: '/oauth/authorize',
+        token_url: '/oauth/token'
+      }
+  end
 
   if Rails.application.config.samson.auth.ldap
     require 'omniauth-ldap'
