@@ -1,11 +1,7 @@
 <h1 class="project-title">
   <%= star_for_project(project) %>
   <%= project.name %>
-  <% if project.github? %>
-    <%= render partial: 'shared/github_link', locals: { project: project } %>
-  <% elsif project.gitlab? %>
-    <%= render partial: 'shared/gitlab_link', locals: { project: project } %>
-  <% end %>
+  <%= repository_web_link(project) %>
 </h1>
 
 <%= render "shared/project_tabs", project: project, active: tab %>
