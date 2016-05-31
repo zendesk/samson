@@ -23,7 +23,7 @@ class Build < ActiveRecord::Base
   end
 
   def commit_url
-    "#{project.repository_web_url}/tree/#{git_sha}"
+    "#{project.repository_homepage}/tree/#{git_sha}"
   end
 
   def docker_build_output
