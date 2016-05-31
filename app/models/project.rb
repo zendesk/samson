@@ -121,7 +121,7 @@ class Project < ActiveRecord::Base
     elsif gitlab?
       repository_homepage_gitlab
     else
-      nil
+      ""
     end
   end
 
