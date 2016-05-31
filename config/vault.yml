@@ -1,0 +1,13 @@
+development: &development
+  pem_path:  <%= ENV.fetch("VAULT_SSL_CERT", nil) %>
+  ssl_verify: <%= ENV.fetch("VAULT_SSL_VERIFY", true) %>
+  hosts: <%= ENV.fetch("VAULT_ADDR", nil) %>
+
+test:
+  <<: *development
+
+staging:
+  <<: *development
+
+production:
+  <<: *development

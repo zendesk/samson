@@ -1,11 +1,10 @@
-VAULT_ENABLED = ENV.fetch('SECRET_STORAGE_BACKEND', false)
-if VAULT_ENABLED == 'SecretStorage::HashicorpVault'
+VAULT_CONFIG = Rails.application.config_for(:vault).symbolize_keys.freeze
+if ENV.fetch("SECRET_STORAGE_BACKEND", false) == "SecretStorage::HashicorpVault"
   require 'vault'
   Rails.logger.info("Vault Client enabled")
   Vault.configure do |config|
-    config.ssl_pem_file = ENV.fetch("VAULT_SSL_CERT")
-    config.ssl_verify = ActiveRecord::Type::Boolean.new.type_cast_from_user(ENV.fetch("VAULT_SSL_VERIFY", true))
-    config.address = ENV.fetch("VAULT_ADDR", 'https://127.0.0.1:8200')
+    config.ssl_pem_file = Rails.root.join(VAULT_CONFIG[:pem_path])
+    config.ssl_verify = ActiveRecord::Type::Boolean.new.type_cast_from_user(VAULT_CONFIG[:ssl_verify])
 
     # Timeout the connection after a certain amount of time (seconds)
     config.timeout = 5
@@ -37,7 +36,7 @@ if VAULT_ENABLED == 'SecretStorage::HashicorpVault'
       # if we are testing, just return here.  We'll let super configure
       # the rest of the client
       return if Rails.env.test?
-      uri = URI.parse(Vault.address)
+      uri = URI.parse(get_host)
       @http = Net::HTTP.start(uri.host, uri.port, DEFAULT_CLIENT_OPTIONS)
       response = @http.request(Net::HTTP::Post.new(CERT_AUTH_PATH))
       if response.code == "200"
@@ -45,6 +44,39 @@ if VAULT_ENABLED == 'SecretStorage::HashicorpVault'
       else
         raise "Failed to get auth token from vault server"
       end
+    end
+
+    def read(key)
+      Vault.address = get_host
+      Vault.logical.read(key)
+    end
+
+    def list(path)
+      Vault.address = get_host
+      Vault.logical.list(path)
+    end
+
+    # make darn sure on deletes and writes that we try a couple of times.
+    def write(key, data)
+      VAULT_CONFIG[:hosts].split(',').each do |vault_server|
+        Vault.address = vault_server
+        Vault.with_retries(Vault::HTTPConnectionError, attempts: 5) do
+          Vault.logical.write(key, data)
+        end
+      end
+    end
+
+    def delete(key)
+      VAULT_CONFIG[:hosts].split(',').each do |vault_server|
+        Vault.address = vault_server
+        Vault.with_retries(Vault::HTTPConnectionError, attempts: 5) do
+          Vault.logical.delete(key)
+        end
+      end
+    end
+
+    def get_host
+      VAULT_CONFIG[:hosts].split(',').first
     end
   end
 end

@@ -61,7 +61,7 @@ module SecretStorage
     class << self
       def read(key)
         key = vault_path(key)
-        result = vault_client.logical.read(key)
+        result = vault_client.read(key)
         raise ActiveRecord::RecordNotFound if result.data[:vault].nil?
         result = result.to_h
         result = result.merge(result.delete(:data))
@@ -70,15 +70,15 @@ module SecretStorage
       end
 
       def write(key, data)
-        vault_client.logical.write(vault_path(key), vault: data[:value])
+        vault_client.write(vault_path(key), {vault: data[:value]} )
       end
 
       def delete(key)
-        vault_client.logical.delete(vault_path(key))
+        vault_client.delete(vault_path(key))
       end
 
       def keys
-        keys = vault_client.logical.list(VAULT_SECRET_BACKEND)
+        keys = vault_client.list(VAULT_SECRET_BACKEND)
         keys = keys_recursive(keys)
         keys.map! do |secret_path|
           convert_path(secret_path, :decode) # FIXME: ideally only decode the key(#4) part
@@ -96,7 +96,7 @@ module SecretStorage
         keys.flat_map do |key|
           new_key = key_path + key
           if key.end_with?('/') # a directory
-            keys_recursive(vault_client.logical.list(VAULT_SECRET_BACKEND + new_key), new_key)
+            keys_recursive(vault_client.list(VAULT_SECRET_BACKEND + new_key), new_key)
           else
             new_key
           end

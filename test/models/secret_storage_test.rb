@@ -157,7 +157,7 @@ describe SecretStorage do
   end
 
   describe SecretStorage::HashicorpVault do
-    let(:client) { SecretStorage::HashicorpVault.send(:vault_client).logical }
+    let(:client) { SecretStorage::HashicorpVault.send(:vault_client)}
 
     before { client.clear }
     after { client.verify! }
