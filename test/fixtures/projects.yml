@@ -3,3 +3,14 @@ test:
   repository_url: ssh://git@example.com:bar/foo.git
   token: kanyewest
   permalink: foo
+github:
+  name: Github Project
+  repository_url: https://github.com/bar/foo.git
+  token: kanyewest
+  permalink: foo-github
+gitlab:
+  name: Gitlab Project
+  repository_url: http://localhost/bar/foo.git
+  token: kanyewest
+  permalink: foo-gitlab
+

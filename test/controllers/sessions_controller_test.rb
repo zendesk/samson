@@ -159,6 +159,70 @@ describe SessionsController do
     end
   end
 
+  describe "a POST to #gitlab" do
+    let(:env) { {} }
+    let(:user) { users(:viewer) }
+    let(:strategy) { stub(name: 'gitlab') }
+    let(:auth_hash) do
+      Hashie::Mash.new(
+        uid: '4',
+        info: Hashie::Mash.new(
+          name: user.name,
+          email: user.email
+        )
+      )
+    end
+
+    before do
+      @request.env.merge!(env)
+      @request.env['omniauth.auth'] = auth_hash
+      @request.env['omniauth.strategy'] = strategy
+      user.update_column(:external_id, "#{strategy.name}-#{auth_hash.uid}")
+    end
+
+    describe 'without email restriction' do
+      before do
+        @controller.stubs(:restricted_email_domain).returns(nil)
+        post :gitlab
+      end
+
+      it 'logs the user in' do
+        @controller.send(:current_user).must_equal(user)
+      end
+
+      it 'redirects to the root path' do
+        assert_redirected_to root_path
+      end
+
+      describe 'with an origin' do
+        let(:env) { { 'omniauth.origin' => '/hello' } }
+
+        it 'redirects to /hello' do
+          assert_redirected_to '/hello'
+        end
+      end
+    end
+
+    describe "with email restriction" do
+      before do
+        @controller.stubs(:restricted_email_domain).returns("@uniqlo.com")
+        post :gitlab
+      end
+
+      it 'does not log the user in' do
+        @controller.send(:current_user).must_be_nil
+      end
+
+      it "renders" do
+        assert_template :new
+      end
+
+      it "sets a flash error" do
+        request.flash[:error].wont_be_nil
+      end
+    end
+  end
+
   describe "a POST to #ldap" do
     let(:env) { {} }
     let(:user) { users(:viewer) }
