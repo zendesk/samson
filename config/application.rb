@@ -97,8 +97,8 @@ module Samson
     config.samson.gitlab.web_url = ENV["GITLAB_URL"].presence || 'gitlab.com'
 
     config.samson.auth = ActiveSupport::OrderedOptions.new
-    config.samson.auth.github = ENV["AUTH_GITHUB"] != "0"
-    config.samson.auth.google = ENV["AUTH_GOOGLE"] != "0"
+    config.samson.auth.github = ENV["AUTH_GITHUB"] == "1"
+    config.samson.auth.google = ENV["AUTH_GOOGLE"] == "1"
     config.samson.auth.ldap = ENV["AUTH_LDAP"] == "1"
     config.samson.auth.gitlab = ENV["AUTH_GITLAB"] == "1"
 
