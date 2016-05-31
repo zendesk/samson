@@ -1,9 +1,9 @@
 VAULT_CONFIG = Rails.application.config_for(:vault).symbolize_keys.freeze
-if ENV.fetch("SECRET_STORAGE_BACKEND", false) == "SecretStorage::HashicorpVault"
+if ENV["SECRET_STORAGE_BACKEND"] == "SecretStorage::HashicorpVault"
   require 'vault'
   Rails.logger.info("Vault Client enabled")
   Vault.configure do |config|
-    config.ssl_pem_file = Rails.root.join(VAULT_CONFIG[:pem_path])
+    config.ssl_pem_file = Rails.root.join(VAULT_CONFIG.fetch(:pem_path))
     config.ssl_verify = ActiveRecord::Type::Boolean.new.type_cast_from_user(VAULT_CONFIG[:ssl_verify])
 
     # Timeout the connection after a certain amount of time (seconds)
@@ -58,7 +58,7 @@ if ENV.fetch("SECRET_STORAGE_BACKEND", false) == "SecretStorage::HashicorpVault"
 
     # make darn sure on deletes and writes that we try a couple of times.
     def write(key, data)
-      VAULT_CONFIG[:hosts].split(',').each do |vault_server|
+      vault_hosts.each do |vault_server|
         Vault.address = vault_server
         Vault.with_retries(Vault::HTTPConnectionError, attempts: 5) do
           Vault.logical.write(key, data)
@@ -67,7 +67,7 @@ if ENV.fetch("SECRET_STORAGE_BACKEND", false) == "SecretStorage::HashicorpVault"
     end
 
     def delete(key)
-      VAULT_CONFIG[:hosts].split(',').each do |vault_server|
+      vault_hosts.each do |vault_server|
         Vault.address = vault_server
         Vault.with_retries(Vault::HTTPConnectionError, attempts: 5) do
           Vault.logical.delete(key)
@@ -76,7 +76,11 @@ if ENV.fetch("SECRET_STORAGE_BACKEND", false) == "SecretStorage::HashicorpVault"
     end
 
     def vault_host
-      VAULT_CONFIG[:hosts].split(',').first
+      vault_hosts.first
+    end
+
+    def vault_hosts
+      VAULT_CONFIG.fetch(:hosts).split(/[\s,]+/)
     end
   end
 end
