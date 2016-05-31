@@ -67,18 +67,18 @@ describe ProjectsHelper do
     let(:stage) { stages(:test_staging) }
 
     def config_mock
-      Rails.application.config.samson.github.stub(:web_url, "github.com") do 
-        Rails.application.config.samson.gitlab.stub(:web_url, "localhost") do 
+      Rails.application.config.samson.github.stub(:web_url, "github.com") do
+        Rails.application.config.samson.gitlab.stub(:web_url, "localhost") do
           yield
         end
       end
-    end 
+    end
 
     it "makes github repository web link" do
       config_mock do
         project = projects(:github)
         link = repository_web_link(project)
-        assert_includes link, "View repository on GitHub" 
+        assert_includes link, "View repository on GitHub"
       end
     end
 
@@ -86,7 +86,7 @@ describe ProjectsHelper do
       config_mock do
         project = projects(:gitlab)
         link = repository_web_link(project)
-        assert_includes link, "View repository on Gitlab" 
+        assert_includes link, "View repository on Gitlab"
       end
     end
 
@@ -94,7 +94,7 @@ describe ProjectsHelper do
       config_mock do
         project = projects(:test)
         link = repository_web_link(project)
-        assert_equal link, "" 
+        assert_equal link, ""
       end
     end
   end
