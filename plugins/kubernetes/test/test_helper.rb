@@ -12,7 +12,6 @@ class VaultClient
     Response.new(data)
   end
 
-
   def initialize
     @expected = {}
     @set = {}

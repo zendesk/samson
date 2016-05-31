@@ -36,7 +36,7 @@ if ENV.fetch("SECRET_STORAGE_BACKEND", false) == "SecretStorage::HashicorpVault"
       # if we are testing, just return here.  We'll let super configure
       # the rest of the client
       return if Rails.env.test?
-      uri = URI.parse(get_host)
+      uri = URI.parse(vault_host)
       @http = Net::HTTP.start(uri.host, uri.port, DEFAULT_CLIENT_OPTIONS)
       response = @http.request(Net::HTTP::Post.new(CERT_AUTH_PATH))
       if response.code == "200"
@@ -47,12 +47,12 @@ if ENV.fetch("SECRET_STORAGE_BACKEND", false) == "SecretStorage::HashicorpVault"
     end
 
     def read(key)
-      Vault.address = get_host
+      Vault.address = vault_host
       Vault.logical.read(key)
     end
 
     def list(path)
-      Vault.address = get_host
+      Vault.address = vault_host
       Vault.logical.list(path)
     end
 
@@ -75,7 +75,7 @@ if ENV.fetch("SECRET_STORAGE_BACKEND", false) == "SecretStorage::HashicorpVault"
       end
     end
 
-    def get_host
+    def vault_host
       VAULT_CONFIG[:hosts].split(',').first
     end
   end

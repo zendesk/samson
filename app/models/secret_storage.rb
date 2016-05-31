@@ -70,7 +70,7 @@ module SecretStorage
       end
 
       def write(key, data)
-        vault_client.write(vault_path(key), {vault: data[:value]} )
+        vault_client.write(vault_path(key), vault: data[:value])
       end
 
       def delete(key)
