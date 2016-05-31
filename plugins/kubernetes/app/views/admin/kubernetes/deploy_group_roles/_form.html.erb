@@ -1,5 +1,6 @@
 <%= form_for [:admin, @deploy_group_role], html: { class: "form-horizontal" } do |form| %>
-  <%= render 'shared/errors', object: @deploy_group_role%>
+  <%= render 'shared/errors', object: @deploy_group_role %>
+  <% defaults = @deploy_group_role.kubernetes_role.try(:defaults) || {} %>
 
   <fieldset>
     <div class="form-group">
@@ -29,6 +30,9 @@
         <%= form.label column, label, class: "col-lg-2 control-label" %>
         <div class="col-lg-2">
           <%= form.text_field column, class: "form-control" %>
+          <% if default = defaults[column] %>
+            Default: <%= default %>
+          <% end %>
         </div>
       </div>
     <% end %>

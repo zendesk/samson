@@ -32,23 +32,15 @@ module Kubernetes
       end
 
       missing.map do |deploy_group, role|
-        next unless raw_template = stage.project.repository.file_content(role.config_file, 'HEAD')
-        objects = Array.wrap(Kubernetes::Util.parse_file(raw_template, role.config_file))
-        next unless deploy = objects.detect { |o| ['Deployment', 'DaemonSet'].include?(o.fetch('kind')) }
-
-        replicas = deploy['spec']['replicas']
-
-        next unless limits = deploy['spec']['template']['spec']['containers'].first['resources'].try(:[], 'limits')
-        cpu = limits['cpu'].to_i / 1000.0 # 250m -> 0.25
-        ram = limits['ram'].to_i # 200Mi -> 200
+        next unless defaults = role.defaults
 
         create!(
           project: stage.project,
           deploy_group: deploy_group,
           kubernetes_role: role,
-          replicas: replicas,
-          cpu: cpu,
-          ram: ram
+          replicas: defaults.fetch(:replicas),
+          cpu: defaults.fetch(:cpu),
+          ram: defaults.fetch(:ram)
         )
       end.all?
     end
