@@ -76,7 +76,10 @@ describe ProjectsHelper do
 
     it "makes github repository web link" do
       config_mock do
-        project = projects(:github)
+        project = projects(:test)
+        project.name = "Github Project"
+        project.repository_url = "https://github.com/bar/foo.git"
+
         link = repository_web_link(project)
         assert_includes link, "View repository on GitHub"
       end
@@ -84,7 +87,10 @@ describe ProjectsHelper do
 
     it "makes gitlab repository web link" do
       config_mock do
-        project = projects(:gitlab)
+        project = projects(:test)
+        project.name = "Gitlab Project"
+        project.repository_url = "http://localhost/bar/foo.git"
+
         link = repository_web_link(project)
         assert_includes link, "View repository on Gitlab"
       end
