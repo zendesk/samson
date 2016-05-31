@@ -103,21 +103,13 @@ class Project < ActiveRecord::Base
     @repository_directory ||= Digest::MD5.hexdigest([repository_url, id].join)
   end
 
-  def repository_homepage
-    "//#{Rails.application.config.samson.github.web_url}/#{github_repo}"
-  end
-
   def webhook_stages_for(branch, service_type, service_name)
     webhooks.for_source(service_type, service_name).for_branch(branch).map(&:stage)
   end
 
-  def repository_homepage_gitlab
-    "//#{Rails.application.config.samson.gitlab.web_url}/#{gitlab_repo}"
-  end
-
-  def repository_web_url
+  def repository_homepage
     if github?
-      repository_homepage
+      repository_homepage_github
     elsif gitlab?
       repository_homepage_gitlab
     else
@@ -157,6 +149,14 @@ class Project < ActiveRecord::Base
   end
 
   private
+
+  def repository_homepage_github
+    "//#{Rails.application.config.samson.github.web_url}/#{github_repo}"
+  end
+
+  def repository_homepage_gitlab
+    "//#{Rails.application.config.samson.gitlab.web_url}/#{gitlab_repo}"
+  end
 
   def deploys_by_group(before)
     stages.each_with_object({}) do |stage, result|

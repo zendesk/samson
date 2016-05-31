@@ -1,6 +1,6 @@
 require_relative '../test_helper'
 
-SingleCov.covered! uncovered: 13
+SingleCov.covered! uncovered: 12
 
 describe Project do
   let(:project) { projects(:test) }
@@ -49,12 +49,30 @@ describe Project do
     end
   end
 
-  it "has separate repository_directories for same project but different url" do
-    project = projects(:test)
-    other_project = Project.find(project.id)
-    other_project.repository_url = 'git://hello'
+  describe "#repository_directory" do
+    it "has separate repository_directories for same project but different url" do
+      project = projects(:test)
+      other_project = Project.find(project.id)
+      other_project.repository_url = 'git://hello'
 
-    assert_not_equal project.repository_directory, other_project.repository_directory
+      project.repository_directory.wont_equal other_project.repository_directory
+    end
+  end
+
+  describe "#repository_homepage" do
+    it "is github when using github" do
+      project.repository_url = "git://github.com/foo/bar"
+      project.repository_homepage.must_equal "//github.com/foo/bar"
+    end
+
+    it "is gitlab when using gitlab" do
+      project.repository_url = "git://gitlab.com/foo/bar"
+      project.repository_homepage.must_equal "//gitlab.com/foo/bar"
+    end
+
+    it "is nothing when unknown" do
+      project.repository_homepage.must_equal ""
+    end
   end
 
   describe "#webhook_stages_for" do
