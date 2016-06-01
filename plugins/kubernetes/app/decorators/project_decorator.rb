@@ -3,6 +3,8 @@ Project.class_eval do
   has_many :kubernetes_roles, class_name: 'Kubernetes::Role', dependent: :destroy
   has_many :kubernetes_deploy_group_roles, class_name: 'Kubernetes::DeployGroupRole'
 
+  scope :with_kubernetes_roles, -> { where(id: Kubernetes::Role.pluck('distinct project_id')) }
+
   def name_for_label
     name.parameterize('-')
   end
