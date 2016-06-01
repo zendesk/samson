@@ -9,6 +9,10 @@ module Kubernetes
         @pod.metadata.name
       end
 
+      def namespace
+        @pod.metadata.namespace
+      end
+
       def valid?
         @pod.metadata.labels.present? && @pod.metadata.labels.project_id.present?
       end
@@ -43,6 +47,10 @@ module Kubernetes
 
       def rc_unique_identifier
         @pod.metadata.labels.rc_unique_identifier
+      end
+
+      def containers
+        @pod.spec.containers
       end
 
       private

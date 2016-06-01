@@ -87,29 +87,37 @@ module Kubernetes
     def show_failure_cause(release)
       bad_pods(release).each do |pod, client, deploy_group|
         @output.puts "\n#{deploy_group.name} pod #{pod.name}:"
-        namespace = deploy_group.kubernetes_namespace
-        print_events(client, namespace, pod)
+        print_events(client, pod)
         @output.puts
-        print_logs(client, namespace, pod)
+        print_logs(client, pod)
       end
     end
 
     # logs - container fails to boot
-    def print_logs(client, namespace, pod)
+    def print_logs(client, pod)
       @output.puts "LOGS:"
-      logs = begin
-        client.get_pod_log(pod.name, namespace, previous: pod.restarted?)
-      rescue KubeException
-        "No logs found"
+
+      pod.containers.map(&:name).each do |container|
+        @output.puts "Container #{container}" if pod.containers.size > 1
+
+        logs = begin
+          client.get_pod_log(pod.name, pod.namespace, previous: pod.restarted?, container: container)
+        rescue KubeException
+          begin
+            client.get_pod_log(pod.name, pod.namespace, previous: !pod.restarted?, container: container)
+          rescue KubeException
+            "No logs found"
+          end
+        end
+        @output.puts logs
       end
-      @output.puts logs
     end
 
     # events - not enough cpu/ram available
-    def print_events(client, namespace, pod)
+    def print_events(client, pod)
       @output.puts "EVENTS:"
       events = client.get_events(
-        namespace: namespace,
+        namespace: pod.namespace,
         field_selector: "involvedObject.name=#{pod.name}"
       )
       events.uniq! { |e| e.message.split("\n").sort }
