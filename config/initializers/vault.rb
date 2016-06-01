@@ -19,21 +19,13 @@ if ENV["SECRET_STORAGE_BACKEND"] == "SecretStorage::HashicorpVault"
 
     def initialize
       return if Rails.env.test?
-      @writers = []
       # since we have a bunch of servers, don't use the client singlton to
       # talk to them
-      vault_hosts.each_with_index do |vault_server, idx|
-        @writers[idx] = Vault::Client.new(DEFAULT_CLIENT_OPTIONS)
-        @writers[idx].address = vault_server
-
-        uri = URI.parse(vault_server)
-        @http = Net::HTTP.start(uri.host, uri.port, DEFAULT_CLIENT_OPTIONS)
-        response = @http.request(Net::HTTP::Post.new(CERT_AUTH_PATH))
-        if response.code == "200"
-          @writers[idx].token = JSON.parse(response.body).fetch("auth")["client_token"]
-        else
-          raise "Failed to get auth token from vault server"
-        end
+      @writers = vault_hosts.map do |vault_server|
+        writer = Vault::Client.new(DEFAULT_CLIENT_OPTIONS)
+        writer.address = vault_server
+        writer.token = VaultClient.auth_token(vault_server)
+        writer
       end
       @reader = @writers.first
     end
@@ -64,6 +56,19 @@ if ENV["SECRET_STORAGE_BACKEND"] == "SecretStorage::HashicorpVault"
         end
       end
     end
+
+    def self.auth_token(vault_server)
+      uri = URI.parse(vault_server)
+      @http = Net::HTTP.start(uri.host, uri.port, DEFAULT_CLIENT_OPTIONS)
+      response = @http.request(Net::HTTP::Post.new(CERT_AUTH_PATH))
+      if response.code == "200"
+        JSON.parse(response.body).fetch("auth")["client_token"]
+      else
+        raise "Failed to get auth token from vault server"
+      end
+    end
+
+    private
 
     def vault_hosts
       ENV.fetch("VAULT_ADDR").split(/[\s,]+/)
