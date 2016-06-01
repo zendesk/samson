@@ -155,6 +155,12 @@ describe Kubernetes::DeployYaml do
           "containers:\n      - :name: foo\n        :volumeMounts:\n        - :name: bar\n")
         yaml.to_hash[:spec][:template][:spec][:containers].first[:volumeMounts].count.must_equal 2
       end
+
+      it "adds to existing volume definitions in the primary container when volumeMounts is empty" do
+        doc.raw_template.gsub!("containers:\n      - {}\n",
+          "containers:\n      - :name: foo\n        :volumeMounts:\n")
+        yaml.to_hash[:spec][:template][:spec][:containers].first[:volumeMounts].count.must_equal 1
+      end
     end
 
     describe "daemon_set" do
