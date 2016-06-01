@@ -81,7 +81,7 @@ module Kubernetes
       # inject the secrets FS into the primary container to share the secrets
       container = template.spec.template.spec.containers.first
       container.volumeMounts ||= []
-      container.volumeMounts << secret_vol
+      container.volumeMounts += [secret_vol]
 
       # define the shared volumes in the pod
       template.spec.template.spec.volumes ||= []
