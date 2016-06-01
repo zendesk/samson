@@ -12,7 +12,8 @@
     <div class="form-group">
       <%= form.label :project_id, 'Project', class: "col-lg-2 control-label" %>
       <div class="col-lg-2">
-        <%= form.select :project_id, current_user.administrated_projects.pluck(:name, :id), {}, class: "form-control", disabled: @deploy_group_role.persisted? %>
+        <% projects = current_user.administrated_projects.with_kubernetes_roles.pluck(:name, :id) %>
+        <%= form.select :project_id, projects, {}, class: "form-control", disabled: @deploy_group_role.persisted? %>
       </div>
     </div>
 

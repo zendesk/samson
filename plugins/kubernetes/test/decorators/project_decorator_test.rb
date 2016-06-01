@@ -27,4 +27,15 @@ describe Project do
       project.name_for_label.must_equal 'ab-c-d-1'
     end
   end
+
+  describe ".with_kubernetes_roles" do
+    it "shows projects with kubernetes roles" do
+      Project.with_kubernetes_roles.must_equal([projects(:test)])
+    end
+
+    it "does not show projects without kubernetes roles" do
+      Kubernetes::Role.delete_all
+      Project.with_kubernetes_roles.must_equal([])
+    end
+  end
 end
