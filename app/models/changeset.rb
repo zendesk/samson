@@ -82,7 +82,7 @@ class Changeset
         GITHUB.compare(repo, previous_commit, commit)
       end
     end
-  rescue Octokit::Error => e
+  rescue Octokit::Error, Faraday::ConnectionFailed => e
     NullComparison.new("GitHub: #{e.message.sub("Octokit::", "").underscore.humanize}")
   end
 

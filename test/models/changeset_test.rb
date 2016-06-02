@@ -37,7 +37,8 @@ describe Changeset do
     {
       Octokit::NotFound => "GitHub: Not found",
       Octokit::Unauthorized => "GitHub: Unauthorized",
-      Octokit::InternalServerError => "GitHub: Internal server error"
+      Octokit::InternalServerError => "GitHub: Internal server error",
+      Faraday::ConnectionFailed.new("Oh no") => "GitHub: Oh no"
     }.each do |exception, message|
       it "catches #{exception} exceptions" do
         GITHUB.expects(:compare).raises(exception)
