@@ -12,6 +12,7 @@ describe Kubernetes::DeployExecutor do
   let(:build) { builds(:docker_build) }
   let(:deploy_group) { stage.deploy_groups.first }
   let(:executor) { Kubernetes::DeployExecutor.new(output, job: job) }
+  let(:log_url) { "http://foobar.server/api/v1/namespaces/staging/pods/pod-resque_worker/log?container=container1" }
 
   before do
     stage.update_column :kubernetes, true
@@ -50,7 +51,13 @@ describe Kubernetes::DeployExecutor do
             },
             metadata: {
               name: "pod-#{role.name}",
+              namespace: 'staging',
               labels: {deploy_group_id: deploy_group.id.to_s, role_id: role.id.to_s}
+            },
+            spec: {
+              containers: [
+                {name: 'container1'}
+              ]
             }
           }
         end
@@ -75,7 +82,7 @@ describe Kubernetes::DeployExecutor do
       executor.stubs(:sleep)
       stub_request(:get, %r{http://foobar.server/api/v1/namespaces/staging/events}).
         to_return(body: {items: []}.to_json)
-      stub_request(:get, %r{http://foobar.server/api/v1/namespaces/staging/pods/.*/log})
+      stub_request(:get, /#{Regexp.escape(log_url)}/)
     end
 
     it "succeeds" do
@@ -241,7 +248,7 @@ describe Kubernetes::DeployExecutor do
 
     it "displays events and logs when deploy failed" do
       # worker restarted -> we request the previous logs
-      stub_request(:get, "http://foobar.server/api/v1/namespaces/staging/pods/pod-resque_worker/log?previous=true").
+      stub_request(:get, "#{log_url}&previous=true").
         to_return(body: "LOG-1")
 
       stub_request(:get, %r{http://foobar.server/api/v1/namespaces/staging/events}).
@@ -267,9 +274,25 @@ describe Kubernetes::DeployExecutor do
       out.must_include "LOGS:\nLOG-1\n"
     end
 
-    it "does not crash when logs endpoint fails with a 404" do
-      stub_request(:get, "http://foobar.server/api/v1/namespaces/staging/pods/pod-resque_worker/log?previous=true").
+    it "requests regular logs when previous logs are not available" do
+      stub_request(:get, "#{log_url}&previous=true").
         to_raise(KubeException.new('a', 'b', 'c'))
+      stub_request(:get, log_url).
+        to_return(body: "LOG-1")
+
+      worker_is_unstable
+
+      refute execute!
+
+      out.must_include "LOGS:\nLOG-1\n"
+    end
+
+    it "does not crash when both log endpoints fails with a 404" do
+      stub_request(:get, "#{log_url}&previous=true").
+        to_raise(KubeException.new('a', 'b', 'c'))
+      stub_request(:get, log_url).
+        to_raise(KubeException.new('a', 'b', 'c'))
+
       worker_is_unstable
 
       refute execute!

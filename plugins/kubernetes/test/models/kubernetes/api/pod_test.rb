@@ -1,14 +1,13 @@
 require_relative '../../../test_helper'
 
-SingleCov.covered! uncovered: 8
+SingleCov.covered! uncovered: 7
 
 describe Kubernetes::Api::Pod do
   let(:pod_name) { 'test_name' }
+  let(:pod) { Kubernetes::Api::Pod.new(build_kubeclient_pod) }
 
   describe 'using kubeclient pod' do
     describe 'with running pod' do
-      let(:pod) { Kubernetes::Api::Pod.new(build_kubeclient_pod) }
-
       it 'returns proper name' do
         pod.name.must_equal pod_name
       end
@@ -112,15 +111,32 @@ describe Kubernetes::Api::Pod do
     end
   end
 
+  describe "#namespace" do
+    it "reads" do
+      pod.namespace.must_equal 'the-namespace'
+    end
+  end
+
+  describe "#containers" do
+    it "returns containers" do
+      pod.containers.map(&:name).must_equal ['container1']
+    end
+  end
+
   private
 
   def build_kubeclient_pod
     data = {
-      metadata: {name: pod_name},
+      metadata: {name: pod_name, namespace: 'the-namespace'},
       status: {
         phase: "Running",
         conditions: [{type: "Ready", status: "True"}],
         containerStatuses: [{restartCount: 0}]
+      },
+      spec: {
+        containers: [
+          name: 'container1'
+        ]
       }
     }
     Kubeclient::Pod.new(JSON.load(data.to_json))

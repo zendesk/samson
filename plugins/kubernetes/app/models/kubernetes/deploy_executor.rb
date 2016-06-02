@@ -85,29 +85,49 @@ module Kubernetes
     end
 
     def show_failure_cause(release)
-      bad_pods = release.clients.flat_map do |client, query, deploy_group|
-        bad_pods = fetch_pods(client, query).select { |p| p.restarted? || !p.live? }
-        bad_pods.map { |p| [p, client, deploy_group] }
-      end
-
-      bad_pods.each do |pod, client, deploy_group|
-        namespace = deploy_group.kubernetes_namespace
+      bad_pods(release).each do |pod, client, deploy_group|
         @output.puts "\n#{deploy_group.name} pod #{pod.name}:"
+        print_events(client, pod)
+        @output.puts
+        print_logs(client, pod)
+      end
+    end
 
-        # events - not enough cpu/ram available
-        @output.puts "EVENTS:"
-        events = client.get_events(namespace: namespace, field_selector: "involvedObject.name=#{pod.name}")
-        events.uniq! { |e| e.message.split("\n").sort }
-        events.each { |e| @output.puts "#{e.reason}: #{e.message}" }
+    # logs - container fails to boot
+    def print_logs(client, pod)
+      @output.puts "LOGS:"
 
-        # logs - container fails to boot
-        @output.puts "\nLOGS:"
+      pod.containers.map(&:name).each do |container|
+        @output.puts "Container #{container}" if pod.containers.size > 1
+
         logs = begin
-          client.get_pod_log(pod.name, namespace, previous: pod.restarted?)
+          client.get_pod_log(pod.name, pod.namespace, previous: pod.restarted?, container: container)
         rescue KubeException
-          "No logs found"
+          begin
+            client.get_pod_log(pod.name, pod.namespace, previous: !pod.restarted?, container: container)
+          rescue KubeException
+            "No logs found"
+          end
         end
         @output.puts logs
+      end
+    end
+
+    # events - not enough cpu/ram available
+    def print_events(client, pod)
+      @output.puts "EVENTS:"
+      events = client.get_events(
+        namespace: pod.namespace,
+        field_selector: "involvedObject.name=#{pod.name}"
+      )
+      events.uniq! { |e| e.message.split("\n").sort }
+      events.each { |e| @output.puts "#{e.reason}: #{e.message}" }
+    end
+
+    def bad_pods(release)
+      release.clients.flat_map do |client, query, deploy_group|
+        bad_pods = fetch_pods(client, query).select { |p| p.restarted? || !p.live? }
+        bad_pods.map { |p| [p, client, deploy_group] }
       end
     end
 
@@ -254,7 +274,6 @@ module Kubernetes
       release
     end
 
-    # Create deploys
     def create_deploys(release)
       release.release_docs.each do |release_doc|
         @output.puts "Creating deploy for #{release_doc.deploy_group.name} role #{release_doc.kubernetes_role.name}"
