@@ -1,6 +1,7 @@
 module SecretStorage
   SECRET_KEYS_PARTS = [:environment_permalink, :project_permalink, :deploy_group_permalink, :key].freeze
   SEPARATOR = "/".freeze
+  VAULT_SECRET_BACKEND = 'secret/'.freeze
 
   require 'attr_encrypted'
   class DbBackend
@@ -53,7 +54,6 @@ module SecretStorage
   end
 
   class HashicorpVault
-    VAULT_SECRET_BACKEND = 'secret/'.freeze
     # we don't really want other directories in the key,
     # and there may be other chars that we find we don't like
     ENCODINGS = {"/": "%2F"}.freeze

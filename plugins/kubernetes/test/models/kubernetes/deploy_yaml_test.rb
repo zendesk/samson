@@ -161,6 +161,37 @@ describe Kubernetes::DeployYaml do
           "containers:\n      - :name: foo\n        :volumeMounts:\n")
         yaml.to_hash[:spec][:template][:spec][:containers].first[:volumeMounts].count.must_equal 1
       end
+
+      it "fails to find a secret needed by the sidecar" do
+        old_metadata = "role: app-server\n    "
+        new_metadata = "role: app-server\n      annotations:\n        secret/FOO: production/foo/snafu/bar\n    "
+        doc.raw_template.gsub!(old_metadata, new_metadata)
+        e = assert_raises Samson::Hooks::UserError do
+          yaml.to_hash
+        end
+        e.message.must_include "secret/FOO with key production/foo/snafu/bar could not be found"
+      end
+
+      describe "scopes" do
+        before do
+          SecretStorage.stubs(:read).returns(true)
+        end
+
+        it "secret is scoped correctly" do
+          old_metadata = "role: app-server\n    "
+          new_metadata = "role: app-server\n      annotations:\n        "
+          new_metadata += "secret/FOO: ${ENV}/foo/${DEPLOY_GROUP}/bar\n    "
+          doc.raw_template.gsub!(old_metadata, new_metadata)
+          yaml.to_hash[:spec][:template][:metadata][:annotations][:'secret/FOO'].must_equal "production/foo/pod1/bar"
+        end
+
+        it "does not effect a non secret annotation" do
+          old_metadata = "role: app-server\n    "
+          new_metadata = "role: app-server\n      annotations:\n        annotation_key: somevalueforthekey\n    "
+          doc.raw_template.gsub!(old_metadata, new_metadata)
+          yaml.to_hash[:spec][:template][:metadata][:annotations][:annotation_key].must_equal "somevalueforthekey"
+        end
+      end
     end
 
     describe "daemon_set" do

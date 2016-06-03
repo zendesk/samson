@@ -16,7 +16,11 @@ module Kubernetes
         set_spec_template_metadata
         set_docker_image
         set_resource_usage
-        set_secret_sidecar if ENV.fetch("SECRET_SIDECAR_IMAGE", false)
+        if ENV["SECRET_SIDECAR_IMAGE"]
+          set_secret_sidecar
+          expand_secret_annotations
+          verify_secret_annotations
+        end
         set_env
 
         hash = template.to_hash
@@ -45,6 +49,40 @@ module Kubernetes
           )
         end
       end
+    end
+
+    # expand $ENV and $DEPLOY_GROUP in annotation that start with 'secret/'
+    def expand_secret_annotations
+      annotations.to_h.each do |annotation_name, secret_key|
+        if annotation_name.to_s.start_with?(SecretStorage::VAULT_SECRET_BACKEND)
+          secret_key.gsub!(/\${ENV}/, @doc.deploy_group.environment.permalink)
+          secret_key.gsub!(/\${DEPLOY_GROUP}/, @doc.deploy_group.permalink)
+        end
+      end
+    end
+
+    # verify that each secret really exists and inform the user
+    # if it does not as the deployment will fail
+    def verify_secret_annotations
+      errors = []
+      annotations.to_h.each do |annotation_name, secret_key|
+        next unless annotation_name.to_s.start_with?(SecretStorage::VAULT_SECRET_BACKEND)
+        begin
+          SecretStorage.read(secret_key)
+        rescue ActiveRecord::RecordNotFound, NoMethodError
+          errors << "Secret #{annotation_name} with key #{secret_key} could not be found."
+        end
+      end
+      if errors.any?
+        raise(
+          Samson::Hooks::UserError,
+          "Missing Secret Keys:\n\t#{errors.join("\n\t")}"
+        )
+      end
+    end
+
+    def annotations
+      @template.spec.template.metadata.annotations
     end
 
     # Sets up the secret_sidecar and the various mounts that are required
