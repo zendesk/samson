@@ -12,6 +12,45 @@ class VaultClient
     Response.new(data)
   end
 
+  def initialize
+    @expected = {}
+    @set = {}
+  end
+
+  def list(key)
+    @expected.delete("list-#{key}") || raise(KeyError, "list-#{key} not registered")
+  end
+
+  def read(key)
+    Response.new(@expected.delete(key) || raise(KeyError, "#{key} not registered"))
+  end
+
+  def delete(key)
+    @set[key] = nil
+    true
+  end
+
+  def write(key, body)
+    @set[key] = body
+    true
+  end
+
+  # test hooks
+  def clear
+    @set.clear
+    @expected.clear
+  end
+
+  def expect(key, value)
+    @expected[key] = value
+  end
+
+  attr_reader :set
+
+  def verify!
+    @expected.keys.must_equal([], "Expected calls missed: #{@expected.keys}")
+  end
+
   class Response
     attr_accessor :lease_id, :lease_duration, :renewable, :data, :auth
     def initialize(data)
@@ -24,47 +63,6 @@ class VaultClient
 
     def to_h
       instance_values.symbolize_keys
-    end
-  end
-
-  class Logical
-    def initialize
-      @expected = {}
-      @set = {}
-    end
-
-    def list(key)
-      @expected.delete("list-#{key}") || raise(KeyError, "list-#{key} not registered")
-    end
-
-    def read(key)
-      Response.new(@expected.delete(key) || raise(KeyError, "#{key} not registered"))
-    end
-
-    def delete(key)
-      @set[key] = nil
-      true
-    end
-
-    def write(key, body)
-      @set[key] = body
-      true
-    end
-
-    # test hooks
-    def clear
-      @set.clear
-      @expected.clear
-    end
-
-    def expect(key, value)
-      @expected[key] = value
-    end
-
-    attr_reader :set
-
-    def verify!
-      @expected.keys.must_equal([], "Expected calls missed: #{@expected.keys}")
     end
   end
 end
