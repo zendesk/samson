@@ -23,7 +23,7 @@ class DockerBuilderService
 
       if build_image(tmp_dir)
         push_image(image_name, tag_as_latest: tag_as_latest) if push
-        build.docker_image.remove(force: true) unless ENV["DOCKER_KEEP_BUILT_IMGS"] == 1
+        build.docker_image.remove(force: true) unless ENV["DOCKER_KEEP_BUILT_IMGS"] == "1"
       end
     end
 
