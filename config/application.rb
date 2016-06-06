@@ -96,11 +96,13 @@ module Samson
     config.samson.gitlab = ActiveSupport::OrderedOptions.new
     config.samson.gitlab.web_url = ENV["GITLAB_URL"].presence || 'gitlab.com'
 
+    truthy = ["1", "true"]
+
     config.samson.auth = ActiveSupport::OrderedOptions.new
-    config.samson.auth.github = ENV["AUTH_GITHUB"] == "1"
-    config.samson.auth.google = ENV["AUTH_GOOGLE"] == "1"
-    config.samson.auth.ldap = ENV["AUTH_LDAP"] == "1"
-    config.samson.auth.gitlab = ENV["AUTH_GITLAB"] == "1"
+    config.samson.auth.github = truthy.include?(ENV["AUTH_GITHUB"])
+    config.samson.auth.google = truthy.include?(ENV["AUTH_GOOGLE"])
+    config.samson.auth.ldap = truthy.include?(ENV["AUTH_LDAP"])
+    config.samson.auth.gitlab = truthy.include?(ENV["AUTH_GITLAB"])
 
     config.samson.docker = ActiveSupport::OrderedOptions.new
     config.samson.docker.registry = ENV['DOCKER_REGISTRY'].presence
