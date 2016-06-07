@@ -15,10 +15,6 @@ describe SlackWebhookNotificationRenderer do
     commit2 = stub("commit2", url: "#", author_name: "author2", summary: "Fix bug")
     changeset.stubs(:commits).returns([commit1, commit2])
 
-    file1 = stub("file1", status: "added", filename: "foo.rb")
-    file2 = stub("file2", status: "modified", filename: "bar.rb")
-    changeset.stubs(:files).returns([file1, file2])
-
     subject = "Deploy starting"
 
     result = SlackWebhookNotificationRenderer.render(deploy, subject)
@@ -26,11 +22,6 @@ describe SlackWebhookNotificationRenderer do
     result.must_equal <<-RESULT.strip_heredoc.chomp
 :point_right: *Deploy starting* :point_left:
 _2 commits by author1 and author2._
-
-*Files changed*
-
-> A foo.rb
-> M bar.rb
 
 *Commits*
 

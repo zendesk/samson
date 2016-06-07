@@ -4,15 +4,9 @@ There are no new commits since last time.
 <% else %>
 _<%= pluralize changeset.commits.count, "commit" %> by <%= changeset.author_names.to_sentence %>._
 
-*Files changed*
-
-<% changeset.files.each do |file| %>
-> <%= file.status[0].upcase %> <%= file.filename %>
-<% end %>
-
 *Commits*
 
-<% changeset.commits.each do |commit| %>
+<% changeset.commits[0..4].each do |commit| %>
 > <<%= commit.url + '|' + commit.summary %>> (<%= commit.author_name %>)
 <% end %>
 <% end %>
