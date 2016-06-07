@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20160621174658) do
+ActiveRecord::Schema.define(version: 20160617223512) do
 
   create_table "builds", force: :cascade do |t|
     t.integer  "project_id",                       null: false
@@ -187,6 +187,35 @@ ActiveRecord::Schema.define(version: 20160621174658) do
   add_index "kubernetes_deploy_group_roles", ["deploy_group_id"], name: "index_kubernetes_deploy_group_roles_on_deploy_group_id", using: :btree
   add_index "kubernetes_deploy_group_roles", ["project_id", "deploy_group_id", "kubernetes_role_id"], name: "index_kubernetes_deploy_group_roles_on_project_id", using: :btree
 
+  create_table "kubernetes_job_docs", force: :cascade do |t|
+    t.integer  "job_id",          limit: 4,                       null: false
+    t.integer  "deploy_group_id", limit: 4,                       null: false
+    t.string   "status",          limit: 255, default: "created", null: false
+    t.datetime "created_at",                                      null: false
+    t.datetime "updated_at",                                      null: false
+  end
+
+  add_index "kubernetes_job_docs", ["deploy_group_id"], name: "index_kubernetes_job_docs_on_deploy_group_id", using: :btree
+  add_index "kubernetes_job_docs", ["job_id"], name: "index_kubernetes_job_docs_on_job_id", using: :btree
+
+  create_table "kubernetes_jobs", force: :cascade do |t|
+    t.integer  "stage_id",           limit: 4,                         null: false
+    t.integer  "kubernetes_task_id", limit: 4,                         null: false
+    t.integer  "user_id",            limit: 4,                         null: false
+    t.integer  "build_id",           limit: 4
+    t.string   "status",             limit: 255,   default: "pending", null: false
+    t.string   "commit",             limit: 255
+    t.string   "tag",                limit: 255
+    t.text     "output",             limit: 65535
+    t.datetime "started_at"
+    t.datetime "created_at",                                           null: false
+    t.datetime "updated_at",                                           null: false
+  end
+
+  add_index "kubernetes_jobs", ["kubernetes_task_id"], name: "index_kubernetes_jobs_on_kubernetes_task_id", using: :btree
+  add_index "kubernetes_jobs", ["stage_id"], name: "index_kubernetes_jobs_on_stage_id", using: :btree
+  add_index "kubernetes_jobs", ["user_id"], name: "index_kubernetes_jobs_on_user_id", using: :btree
+
   create_table "kubernetes_release_docs", force: :cascade do |t|
     t.integer  "kubernetes_role_id",          limit: 4,                         null: false
     t.integer  "kubernetes_release_id",       limit: 4,                         null: false
@@ -227,6 +256,17 @@ ActiveRecord::Schema.define(version: 20160621174658) do
 
   add_index "kubernetes_roles", ["project_id"], name: "index_kubernetes_roles_on_project_id", using: :btree
   add_index "kubernetes_roles", ["service_name", "deleted_at"], name: "index_kubernetes_roles_on_service_name_and_deleted_at", unique: true, length: {"service_name"=>191, "deleted_at"=>nil}, using: :btree
+
+  create_table "kubernetes_tasks", force: :cascade do |t|
+    t.integer  "project_id",  limit: 4,   null: false
+    t.string   "name",        limit: 255, null: false
+    t.string   "config_file", limit: 255
+    t.datetime "deleted_at"
+    t.datetime "created_at",              null: false
+    t.datetime "updated_at",              null: false
+  end
+
+  add_index "kubernetes_tasks", ["project_id"], name: "index_kubernetes_tasks_on_project_id", using: :btree
 
   create_table "locks", force: :cascade do |t|
     t.integer  "stage_id",    limit: 4

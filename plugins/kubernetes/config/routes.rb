@@ -7,6 +7,14 @@ Samson::Application.routes.draw do
         end
       end
       resources :releases, only: [:index]
+
+      resources :tasks, except: :edit do
+        collection do
+          post :seed
+        end
+      end
+      resources :jobs, only: [:new, :create, :index, :show]
+      resources :streams, only: [:show]
     end
   end
 
