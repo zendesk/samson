@@ -1,0 +1,24 @@
+<%= render 'projects/header', project: @project, tab: "kubernetes" %>
+
+<section class="tabs kubernetes-section clearfix">
+  <%= render 'samson_kubernetes/navigation' %>
+
+  <section>
+    <table class="table">
+      <thead>
+        <tr>
+          <th>When</th>
+          <th>Tag</th>
+          <th>Commit</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        <%= static_render @jobs %>
+      </tbody>
+    </table>
+
+    <%# link_to "Execute", new_project_job_path(@project), class: "btn btn-primary" if admin_for_project? %>
+    <%= paginate @jobs %>
+  </section>
+</section>

@@ -120,6 +120,19 @@ class ActiveSupport::TestCase
     Kubernetes::ReleaseDoc.any_instance.stubs(raw_template: template.to_yaml)
   end
 
+  def kubernetes_fake_job_raw_template
+    Kubernetes::Job.any_instance.stubs(raw_template: {
+      'apiVersion' => 'batch/v1',
+      'kind' => 'Job',
+      'metadata' => {'labels' => {'project' => 'foobar', 'task' => 'db_migrate'}},
+      'spec' => {
+        'template' => {
+          'spec' => {'containers' => [{}]}
+        },
+      },
+    }.to_yaml)
+  end
+
   private
 
   def read_kubernetes_sample_file(file_name)

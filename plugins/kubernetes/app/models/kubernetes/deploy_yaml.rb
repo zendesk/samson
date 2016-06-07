@@ -1,12 +1,8 @@
 module Kubernetes
-  class DeployYaml
+  class DeployYaml < Yaml
     CUSTOM_UNIQUE_LABEL_KEY = 'rc_unique_identifier'.freeze
     SIDECAR_NAME = 'secret-sidecar'.freeze
     SIDECAR_IMAGE = ENV['SECRET_SIDECAR_IMAGE'].presence
-
-    def initialize(release_doc)
-      @doc = release_doc
-    end
 
     def to_hash
       @deployment_hash ||= begin
@@ -14,7 +10,7 @@ module Kubernetes
         set_namespace
         set_replica_target
         set_spec_template_metadata
-        set_docker_image
+        set_deploy_docker_image
         set_resource_usage
         if needs_secret_sidecar?
           set_secret_sidecar
@@ -29,15 +25,7 @@ module Kubernetes
       end
     end
 
-    def resource_name
-      template['kind'].underscore
-    end
-
     private
-
-    def template
-      @template ||= @doc.deploy_template
-    end
 
     # expand $ENV and $DEPLOY_GROUP in annotation that start with 'secret/'
     def expand_secret_annotations
@@ -127,10 +115,6 @@ module Kubernetes
       template[:spec][:replicas] = @doc.replica_target if template[:kind] == 'Deployment'
     end
 
-    def set_namespace
-      template[:metadata][:namespace] = @doc.deploy_group.kubernetes_namespace
-    end
-
     # Sets the labels for each new Pod.
     # Adding the Release ID to allow us to track the progress of a new release from the UI.
     def set_spec_template_metadata
@@ -158,17 +142,9 @@ module Kubernetes
       end
     end
 
-    def set_resource_usage
-      container[:resources] = {
-        limits: { cpu: @doc.cpu.to_f, memory: "#{@doc.ram}Mi" }
-      }
-    end
-
-    def set_docker_image
+    def set_deploy_docker_image
       if @doc.build
-        docker_path = @doc.build.docker_repo_digest || "#{@doc.build.project.docker_repo}:#{@doc.build.docker_ref}"
-        # Assume first container is one we want to update docker image in
-        container[:image] = docker_path
+        set_docker_image
       end
     end
 
@@ -214,20 +190,6 @@ module Kubernetes
 
     def needs_secret_sidecar?
       SIDECAR_IMAGE && secret_annotations.any?
-    end
-
-    def container
-      @container ||= begin
-        containers = template[:spec].fetch(:template, {}).fetch(:spec, {}).fetch(:containers, [])
-        if containers.empty?
-          # TODO: support building and replacement for multiple containers
-          raise(
-            Samson::Hooks::UserError,
-            "Template #{@doc.template_name} has #{containers.size} containers, having 1 section is valid."
-          )
-        end
-        containers.first
-      end
     end
 
     def sidecar_container

@@ -1,0 +1,25 @@
+<%= form_for [@project, @job], url: project_kubernetes_jobs_path(@project, kubernetes_task_id: @task), html: { class: "form-horizontal" } do |form| %>
+  <%= render 'shared/errors', object: @task %>
+  <fieldset>
+    <div class="form-group">
+      <%= form.label :stage, 'Stage', class: "col-lg-2 control-label" %>
+      <div class="col-lg-2">
+        <%= form.collection_select :stage_id, @project.stages, :id, :name, {}, class: "form-control" %>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <%= form.label :commit, "Git Reference", class: "col-lg-2 control-label" %>
+      <div id="scrollable-dropdown-menu" class="col-lg-4">
+        <%= form.text_field :commit, class: "form-control", autofocus: true, placeholder: "e.g. v2.1.43, master, fa0b4671", data: { prefetch_url: project_references_path(@project, format: "json") } %>
+      </div>
+    </div>
+
+
+    <div class="form-group">
+      <div class="col-lg-offset-2 col-lg-10">
+        <%= form.submit 'Run!', class: "btn btn-primary" %>
+      </div>
+    </div>
+  </fieldset>
+<% end %>

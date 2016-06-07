@@ -1,11 +1,9 @@
 # executes a deploy and writes log to job output
 # finishes when cluster is "Ready"
 module Kubernetes
-  class DeployExecutor
+  class DeployExecutor < Executor
     WAIT_FOR_LIVE = 10.minutes
     CHECK_STABLE = 1.minute
-    TICK = 2.seconds
-    RESTARTED = "Restarted".freeze
 
     ReleaseStatus = Struct.new(:live, :details, :role, :group)
 
@@ -19,24 +17,16 @@ module Kubernetes
       "Kubernetes-deploy-#{object_id}"
     end
 
-    def stop!(_signal)
-      @stopped = true
-    end
-
-    def execute!(*_commands)
-      build = find_or_create_build
-      return false if stopped?
-      release = create_release(build)
-      ensure_service(release)
-      create_deploys(release)
-      success = wait_for_deploys_to_finish(release)
-      show_failure_cause(release) unless success
-      success
-    end
-
     private
 
-    def wait_for_deploys_to_finish(release)
+    def execute_for(build)
+      create_release(build).tap do |release|
+        ensure_service(release)
+        create_deploys(release)
+      end
+    end
+
+    def wait_to_finish(release)
       start = Time.now
       stable_ticks = CHECK_STABLE / TICK
       expected = release.release_docs.to_a.sum(&:desired_pod_count)
@@ -85,53 +75,6 @@ module Kubernetes
 
     def fetch_pods(client, query)
       client.get_pods(query).map! { |p| Kubernetes::Api::Pod.new(p) }
-    end
-
-    def show_failure_cause(release)
-      bad_pods(release).each do |pod, client, deploy_group|
-        @output.puts "\n#{deploy_group.name} pod #{pod.name}:"
-        print_events(client, pod)
-        @output.puts
-        print_logs(client, pod)
-      end
-    end
-
-    # logs - container fails to boot
-    def print_logs(client, pod)
-      @output.puts "LOGS:"
-
-      pod.containers.map(&:name).each do |container|
-        @output.puts "Container #{container}" if pod.containers.size > 1
-
-        logs = begin
-          client.get_pod_log(pod.name, pod.namespace, previous: pod.restarted?, container: container)
-        rescue KubeException
-          begin
-            client.get_pod_log(pod.name, pod.namespace, previous: !pod.restarted?, container: container)
-          rescue KubeException
-            "No logs found"
-          end
-        end
-        @output.puts logs
-      end
-    end
-
-    # events - not enough cpu/ram available
-    def print_events(client, pod)
-      @output.puts "EVENTS:"
-      events = client.get_events(
-        namespace: pod.namespace,
-        field_selector: "involvedObject.name=#{pod.name}"
-      )
-      events.uniq! { |e| e.message.split("\n").sort }
-      events.each { |e| @output.puts "#{e.reason}: #{e.message}" }
-    end
-
-    def bad_pods(release)
-      release.clients.flat_map do |client, query, deploy_group|
-        bad_pods = fetch_pods(client, query).select { |p| p.restarted? || !p.live? }
-        bad_pods.map { |p| [p, client, deploy_group] }
-      end
     end
 
     def unstable!
