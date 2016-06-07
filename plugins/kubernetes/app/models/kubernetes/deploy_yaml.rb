@@ -1,8 +1,8 @@
 module Kubernetes
   class DeployYaml
     CUSTOM_UNIQUE_LABEL_KEY = 'rc_unique_identifier'.freeze
-    DAEMON_SET = 'DaemonSet'.freeze
-    DEPLOYMENT = 'Deployment'.freeze
+    SIDECAR_NAME = 'secret-sidecar'
+    SIDECAR_IMAGE = ENV['SECRET_SIDECAR_IMAGE']
 
     def initialize(release_doc)
       @doc = release_doc
@@ -16,39 +16,27 @@ module Kubernetes
         set_spec_template_metadata
         set_docker_image
         set_resource_usage
-        if ENV["SECRET_SIDECAR_IMAGE"]
+        if SIDECAR_IMAGE
           set_secret_sidecar
           expand_secret_annotations
           verify_secret_annotations
         end
         set_env
 
-        hash = template.to_hash
+        hash = template
         Rails.logger.info "Created Kubernetes hash: #{hash.to_json}"
         hash
       end
     end
 
     def resource_name
-      template.kind.underscore
+      template['kind'].underscore
     end
 
     private
 
     def template
-      @template ||= begin
-        sections = YAML.load_stream(@doc.raw_template, @doc.template_name).
-          select { |doc| [DEPLOYMENT, DAEMON_SET].include?(doc['kind']) }
-
-        if sections.size == 1
-          RecursiveOpenStruct.new(sections.first, recurse_over_arrays: true)
-        else
-          raise(
-            Samson::Hooks::UserError,
-            "Template #{@doc.template_name} has #{sections.size} Deployment sections, having 1 section is valid."
-          )
-        end
-      end
+      @template ||= @doc.deploy_template
     end
 
     # expand $ENV and $DEPLOY_GROUP in annotation that start with 'secret/'
@@ -82,7 +70,7 @@ module Kubernetes
     end
 
     def annotations
-      @template.spec.template.metadata.annotations
+      @template[:spec][:template][:metadata][:annotations]
     end
 
     # Sets up the secret_sidecar and the various mounts that are required
@@ -104,8 +92,8 @@ module Kubernetes
         ]
       secret_vol = { mountPath: "/secrets", name: "secrets-volume" }
       secret_sidecar = {
-        image: ENV.fetch("SECRET_SIDECAR_IMAGE").to_s,
-        name: "secret-sidecar",
+        image: SIDECAR_IMAGE,
+        name: SIDECAR_NAME,
         volumeMounts: [
           secret_vol,
           { mountPath: "/vault-auth", name: "vaultauth" },
@@ -113,38 +101,38 @@ module Kubernetes
         ]
       }
 
-      # add the sidcar container
-      template.spec.template.spec.containers += [secret_sidecar]
+      containers = template[:spec][:template][:spec][:containers]
 
       # inject the secrets FS into the primary container to share the secrets
-      container = template.spec.template.spec.containers.first
-      container.volumeMounts ||= []
-      container.volumeMounts += [secret_vol]
+      container = containers.first
+      (container[:volumeMounts] ||= []).push secret_vol
+
+      # add the sidcar container
+      containers.push secret_sidecar
 
       # define the shared volumes in the pod
-      template.spec.template.spec.volumes ||= []
-      template.spec.template.spec.volumes += pod_volumes
+      (template[:spec][:template][:spec][:volumes] ||= []).concat pod_volumes
     end
 
     # This key replaces the default kubernetes key: 'deployment.kubernetes.io/podTemplateHash'
     # This label is used by kubernetes to identify a RC and corresponding Pods
     def set_rc_unique_label_key
-      template.spec.uniqueLabelKey = CUSTOM_UNIQUE_LABEL_KEY
+      template[:spec][:uniqueLabelKey] = CUSTOM_UNIQUE_LABEL_KEY
     end
 
     def set_replica_target
-      template.spec.replicas = @doc.replica_target if template.kind == DEPLOYMENT
+      template[:spec][:replicas] = @doc.replica_target if template[:kind] == 'Deployment'
     end
 
     def set_namespace
-      template.metadata.namespace = @doc.deploy_group.kubernetes_namespace
+      template[:metadata][:namespace] = @doc.deploy_group.kubernetes_namespace
     end
 
     # Sets the labels for each new Pod.
     # Adding the Release ID to allow us to track the progress of a new release from the UI.
     def set_spec_template_metadata
       release_doc_metadata.each do |key, value|
-        template.spec.template.metadata.labels[key] ||= value.to_s
+        template[:spec][:template][:metadata][:labels][key] ||= value.to_s
       end
     end
 
@@ -169,7 +157,7 @@ module Kubernetes
     end
 
     def set_resource_usage
-      container.resources = {
+      container[:resources] = {
         limits: { cpu: @doc.cpu.to_f, memory: "#{@doc.ram}Mi" }
       }
     end
@@ -177,12 +165,12 @@ module Kubernetes
     def set_docker_image
       docker_path = @doc.build.docker_repo_digest || "#{@doc.build.project.docker_repo}:#{@doc.build.docker_ref}"
       # Assume first container is one we want to update docker image in
-      container.image = docker_path
+      container[:image] = docker_path
     end
 
     # helpful env vars, also useful for log tagging
     def set_env
-      env = (container.env || [])
+      env = (container[:env] ||= [])
 
       # static data
       metadata = release_doc_metadata
@@ -191,7 +179,7 @@ module Kubernetes
       end
 
       [:PROJECT, :ROLE].each do |k|
-        env << {name: k, value: template.spec.template.metadata.labels.send(k.downcase).to_s}
+        env << {name: k, value: template[:spec][:template][:metadata][:labels][k.downcase].to_s}
       end
 
       # dynamic lookups for unknown things during deploy
@@ -206,8 +194,8 @@ module Kubernetes
        }
       end
 
-      if ENV["SECRET_SIDECAR_IMAGE"]
-        sidecar_env = (sidecar_container.env || [])
+      if SIDECAR_IMAGE
+        sidecar_env = (sidecar_container[:env] ||= [])
         {
           VAULT_ADDR: ENV.fetch("VAULT_ADDR"),
           VAULT_SSL_VERIFY: ENV.fetch("VAULT_SSL_VERIFY", true)
@@ -217,15 +205,12 @@ module Kubernetes
             value: v.to_s
           }
         end
-        sidecar_container.env = sidecar_env
       end
-
-      container.env = env
     end
 
     def container
       @container ||= begin
-        containers = template.spec.template.try(:spec).try(:containers) || []
+        containers = template[:spec].fetch(:template, {}).fetch(:spec, {}).fetch(:containers, [])
         if containers.empty?
           # TODO: support building and replacement for multiple containers
           raise(
@@ -239,8 +224,8 @@ module Kubernetes
 
     def sidecar_container
       @sidecar ||= begin
-        template.spec.template.spec.containers.detect do |possible_container|
-          break possible_container if possible_container.name == 'secret-sidecar'
+        template[:spec][:template][:spec][:containers].detect do |possible_container|
+          break possible_container if possible_container[:name] == SIDECAR_NAME
         end
       end
     end

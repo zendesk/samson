@@ -75,7 +75,7 @@ describe Kubernetes::ReleaseDoc do
 
     describe "daemonset" do
       before do
-        doc.send(:deploy_yaml).send(:template).kind = 'DaemonSet'
+        doc.send(:deploy_yaml).send(:template)['kind'] = 'DaemonSet'
         doc.stubs(:sleep)
       end
 

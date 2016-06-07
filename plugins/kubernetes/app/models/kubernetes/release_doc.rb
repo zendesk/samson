@@ -96,6 +96,28 @@ module Kubernetes
       kubernetes_role.config_file
     end
 
+    def deploy_template
+      self.class.deploy_template(raw_template, template_name)
+    end
+
+    def self.deploy_template(raw_template, template_name)
+      sections = parse_config_file(raw_template, template_name).
+        select { |doc| ['Deployment', 'DaemonSet'].include?(doc.fetch('kind')) }
+
+      if sections.size == 1
+        sections.first.with_indifferent_access
+      else
+        raise(
+          Samson::Hooks::UserError,
+          "Template #{template_name} has #{sections.size} Deployment sections, having 1 section is valid."
+        )
+      end
+    end
+
+    def self.parse_config_file(raw_template, template_name)
+      Array.wrap(Kubernetes::Util.parse_file(raw_template, template_name))
+    end
+
     private
 
     # Create new client as 'Deployment' API is on different path then 'v1'
@@ -172,7 +194,7 @@ module Kubernetes
     end
 
     def parsed_config_file
-      Array.wrap(Kubernetes::Util.parse_file(raw_template, template_name))
+      self.class.parse_config_file(raw_template, template_name)
     end
 
     def validate_config_file

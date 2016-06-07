@@ -66,14 +66,17 @@ module Kubernetes
 
     def defaults
       return unless raw_template = project.repository.file_content(config_file, 'HEAD', pull: false)
-      objects = Array.wrap(Kubernetes::Util.parse_file(raw_template, config_file))
-      return unless deploy = objects.detect { |o| ['Deployment', 'DaemonSet'].include?(o.fetch('kind')) }
+      begin
+        deploy = ReleaseDoc.deploy_template(raw_template, config_file)
+      rescue Samson::Hooks::UserError
+        return
+      end
 
-      replicas = deploy['spec']['replicas']
+      replicas = deploy[:spec][:replicas]
 
-      return unless limits = deploy['spec']['template']['spec']['containers'].first['resources'].try(:[], 'limits')
-      cpu = limits['cpu'].to_i / 1000.0 # 250m -> 0.25
-      ram = limits['ram'].to_i # 200Mi -> 200
+      return unless limits = deploy[:spec][:template][:spec][:containers].first.fetch(:resources, {})[:limits]
+      cpu = limits[:cpu].to_i / 1000.0 # 250m -> 0.25
+      ram = limits[:ram].to_i # 200Mi -> 200
 
       {cpu: cpu, ram: ram, replicas: replicas}
     end

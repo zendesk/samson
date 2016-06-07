@@ -1,6 +1,6 @@
 require_relative "../../test_helper"
 
-SingleCov.covered! uncovered: 3
+SingleCov.covered!
 
 describe Kubernetes::Role do
   include GitRepoTestHelper
@@ -173,6 +173,34 @@ describe Kubernetes::Role do
       assert_raises Samson::Hooks::UserError do
         Kubernetes::Role.configured_for_project(project, 'HEAD')
       end
+    end
+  end
+
+  describe "#label_name" do
+    it "is url safe" do
+      role.name = 'ÍÎapp_server'
+      role.label_name.must_equal 'iiapp_server'
+    end
+  end
+
+  describe '#defaults' do
+    before do
+      config_content[0]['spec'] = {'replicas' => 1, 'template' => {'spec' => {'containers' => [{'resources' => {'limits' => {'ram' => '200m', 'cpu' => '250m'}}}]}}}
+      GitRepository.any_instance.stubs(file_content: config_content_yml)
+    end
+
+    it "find defaults" do
+      role.defaults.must_equal cpu: 0.25, ram: 200, replicas: 1
+    end
+
+    it "ignores when there is no config" do
+      GitRepository.any_instance.stubs(file_content: nil)
+      role.defaults.must_equal nil
+    end
+
+    it "ignores when there is no deployable" do
+      assert config_content_yml.sub!('Deployment', 'Deploymentx')
+      refute role.defaults
     end
   end
 end
