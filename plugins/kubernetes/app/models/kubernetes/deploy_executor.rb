@@ -38,6 +38,8 @@ module Kubernetes
     def wait_for_deploys_to_finish(release)
       start = Time.now
       stable_ticks = CHECK_STABLE / TICK
+      expected = release.release_docs.to_a.sum(&:desired_pod_count)
+      @output.puts "Waiting for #{expected} pods to be created"
 
       loop do
         return false if stopped?
@@ -59,7 +61,7 @@ module Kubernetes
           end
         else
           print_statuses(statuses)
-          if statuses.all?(&:live)
+          if statuses.all?(&:live) && statuses.count == expected
             @output.puts "READY, starting stability test"
             @testing_for_stability = 0
           elsif statuses.map(&:details).include?(RESTARTED)
