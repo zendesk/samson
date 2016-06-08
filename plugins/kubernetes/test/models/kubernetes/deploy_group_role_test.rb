@@ -60,7 +60,7 @@ describe Kubernetes::DeployGroupRole do
       it "fills in missing roles" do
         assert Kubernetes::DeployGroupRole.seed!(stage)
         created_role.cpu.must_equal 0.25
-        created_role.ram.must_equal 200
+        created_role.ram.must_equal 191
         created_role.replicas.must_equal 3
       end
 
