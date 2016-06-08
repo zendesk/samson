@@ -34,6 +34,7 @@
   <% if current_user.admin_for?(@project) %>
     <div class="admin-actions">
       <div class="pull-right">
+        <%= link_to "Verify config", new_kubernetes_role_verification_path, class: "btn btn-default" %>
         <%= link_to "New", new_project_kubernetes_role_path(@project), class: "btn btn-default" %>
       </div>
     </div>

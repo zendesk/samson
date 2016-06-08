@@ -123,34 +123,9 @@ describe Kubernetes::ReleaseDoc do
       refute_valid doc
     end
 
-    it "is invalid when missing project" do
-      assert doc.raw_template.sub!('project', 'reject')
-      refute_valid doc
-    end
-
-    it "is invalid with mismatching project or role" do
-      assert doc.raw_template.sub!('project: foobar', 'project: barfoo')
-      refute_valid doc
-    end
-
     it "ignores unsupported type" do
-      doc.raw_template << "\n" << {'kind' => "Wut"}.to_yaml
+      doc.raw_template << "\n" << {'kind' => "Wut", 'metadata' => {'name' => 'test'}}.to_yaml
       assert_valid doc
-    end
-
-    describe "with service" do
-      let(:service) { {'kind' => 'Service', 'spec' => {'selector' => {'project' => 'foobar', 'role' => 'app-server'}}} }
-
-      it "is valid" do
-        doc.raw_template << "\n" << service.to_yaml
-        assert_valid doc
-      end
-
-      it "is invalid with different project" do
-        service.fetch('spec').fetch('selector')['project'] = 'barfoo'
-        doc.raw_template << "\n" << service.to_yaml
-        refute_valid doc
-      end
     end
   end
 
