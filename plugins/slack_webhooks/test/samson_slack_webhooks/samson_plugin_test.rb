@@ -50,7 +50,9 @@ describe SamsonSlackWebhooks do
 
   describe :stage_permitted_params do
     it "includes our params" do
-      Samson::Hooks.fire(:stage_permitted_params).must_include slack_webhooks_attributes: [:id, :webhook_url, :channel, :_destroy]
+      Samson::Hooks.fire(:stage_permitted_params).must_include(
+        slack_webhooks_attributes: [:id, :webhook_url, :channel, :_destroy]
+      )
     end
   end
 end
