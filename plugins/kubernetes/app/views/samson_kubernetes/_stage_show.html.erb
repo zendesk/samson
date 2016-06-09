@@ -1,24 +1,28 @@
 <% if @stage.kubernetes %>
   <h2><%= link_to "Kubernetes Roles", project_kubernetes_roles_path(@stage.project) %></h2>
 
+  <% matrix = Kubernetes::DeployGroupRole.matrix(@stage) %>
+  <% project_dg_roles = matrix.flat_map(&:last).map!(&:last) %>
+  <% missing = project_dg_roles.include?(nil) %>
+
   <table class="table table-hover table-condensed">
     <thead>
       <th>Deploy Group</th>
       <th>Replicas</th>
       <th>CPU</th>
       <th>RAM</th>
-      <th></th>
+      <th>
+        <% if missing %>
+          <%= link_to 'Seed Missing', seed_admin_kubernetes_deploy_group_roles_path(stage_id: @stage.id), data: {method: :post} %>
+        <% end %>
+      </th>
     </thead>
-    <% project_dg_roles = Kubernetes::DeployGroupRole.where(project_id: @stage.project_id, deploy_group_id: @stage.deploy_groups.map(&:id)).to_a %>
-    <% roles = @stage.project.kubernetes_roles.sort_by(&:name) %>
 
-    <% @stage.deploy_groups.sort_by(&:natural_order).each do |deploy_group| %>
-      <% dg_roles = project_dg_roles.select { |r| r.deploy_group_id == deploy_group.id } %>
+    <% matrix.each do |deploy_group, roles| %>
       <tr>
         <td colspan="5"><h3><%= deploy_group.name %></h3></td>
       </tr>
-      <% roles.each do |role| %>
-        <% dg_role = dg_roles.detect { |r| r.kubernetes_role_id == role.id } %>
+      <% roles.each do |role, dg_role| %>
         <tr>
           <td><%= role.name %></td>
           <% if dg_role %>
@@ -41,6 +45,8 @@
           <% end %>
         </tr>
       <% end %>
+
+      <% dg_roles = roles.map(&:last).compact %>
       <tr>
         <td>Subtotal</td>
         <td><%= dg_roles.sum(&:replicas) %></td>
@@ -49,18 +55,24 @@
         <td></td>
       </tr>
     <% end %>
+
     <tr>
       <td><b>Total</b></td>
-      <td><%= project_dg_roles.sum(&:replicas) %></td>
-      <td><%= project_dg_roles.sum { |gr| gr.cpu * gr.replicas } %></td>
-      <td><%= project_dg_roles.sum { |gr| gr.ram * gr.replicas } %></td>
+      <% found_roles = project_dg_roles.compact %>
+      <td><%= found_roles.sum(&:replicas) %></td>
+      <td><%= found_roles.sum { |gr| gr.cpu * gr.replicas } %></td>
+      <td><%= found_roles.sum { |gr| gr.ram * gr.replicas } %></td>
       <td></td>
     </tr>
   </table>
 
   <script>
     $(function(){
-      $("#script-section").hide(); // hide command section
+      // hide command section when kubernetes is selected
+      $("#script-section").hide();
+
+      // disable Deploy button when roles are missing and deploy would fail
+      $(".btn-primary").toggleClass('disabled', <%= missing %>);
     });
   </script>
 <% end %>

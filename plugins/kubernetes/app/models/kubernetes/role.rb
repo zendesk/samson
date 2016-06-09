@@ -2,6 +2,17 @@ require 'soft_deletion'
 
 module Kubernetes
   class Role < ActiveRecord::Base
+    KUBE_RESOURCE_VALUES = {
+      "" => 1,
+      'm' => 0.001,
+      'K' => 1024,
+      'Ki' => 1000,
+      'M' => 1024**2,
+      'Mi' => 1000**2,
+      'G' => 1024**3,
+      'Gi' => 1000**3
+    }.freeze
+
     self.table_name = 'kubernetes_roles'
     GENERATED = '-CHANGE-ME-'.freeze
 
@@ -60,13 +71,36 @@ module Kubernetes
       end
     end
 
+    def defaults
+      return unless raw_template = project.repository.file_content(config_file, 'HEAD', pull: false)
+      begin
+        deploy = ReleaseDoc.deploy_template(raw_template, config_file)
+      rescue Samson::Hooks::UserError
+        return
+      end
+
+      replicas = deploy[:spec][:replicas]
+
+      return unless limits = deploy[:spec][:template][:spec][:containers].first.fetch(:resources, {})[:limits]
+      return unless cpu = parse_resource_value(limits[:cpu])
+      return unless ram = parse_resource_value(limits[:ram])
+      ram /= 1024**2 # we store megabyte
+
+      {cpu: cpu, ram: ram.round, replicas: replicas}
+    end
+
     def label_name
       name.parameterize
     end
 
-    class << self
-      private
+    private
 
+    def parse_resource_value(v)
+      return unless v.to_s =~ /^(\d+(?:\.\d+)?)(#{KUBE_RESOURCE_VALUES.keys.join('|')})$/
+      $1.to_f * KUBE_RESOURCE_VALUES.fetch($2)
+    end
+
+    class << self
       def kubernetes_config_files_in_repo(project, git_ref)
         path = 'kubernetes'
         files = project.repository.file_content(path, git_ref) || []

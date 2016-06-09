@@ -6,6 +6,7 @@ describe Admin::Kubernetes::DeployGroupRolesController do
   let(:deploy_group_role) { kubernetes_deploy_group_roles(:test_pod1_app_server) }
   let(:deploy_group) { deploy_group_role.deploy_group }
   let(:project) { deploy_group_role.project }
+  let(:stage) { stages(:test_staging) }
 
   id = ActiveRecord::FixtureSet.identify(:test_pod1_app_server)
   project_id = ActiveRecord::FixtureSet.identify(:test)
@@ -52,6 +53,7 @@ describe Admin::Kubernetes::DeployGroupRolesController do
     unauthorized :get, :edit, id: id
     unauthorized :get, :update, id: id
     unauthorized :get, :destroy, id: id
+    unauthorized :post, :seed, stage_id: ActiveRecord::FixtureSet.identify(:test_staging)
   end
 
   as_a_project_admin do
@@ -137,6 +139,22 @@ describe Admin::Kubernetes::DeployGroupRolesController do
         user.user_project_roles.delete_all
         delete :destroy, id: deploy_group_role.id
         assert deploy_group_role.reload
+      end
+    end
+
+    describe "#seed" do
+      it "adds missing roles" do
+        Kubernetes::DeployGroupRole.expects(:seed!).returns true
+        post :seed, stage_id: stage.id
+        assert_redirected_to [stage.project, stage]
+        assert flash[:notice]
+      end
+
+      it "fails to add missing roles" do
+        Kubernetes::DeployGroupRole.expects(:seed!).returns false
+        post :seed, stage_id: stage.id
+        assert_redirected_to [stage.project, stage]
+        assert flash[:alert]
       end
     end
   end

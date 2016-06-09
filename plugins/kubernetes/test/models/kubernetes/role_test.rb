@@ -1,6 +1,6 @@
 require_relative "../../test_helper"
 
-SingleCov.covered! uncovered: 3
+SingleCov.covered!
 
 describe Kubernetes::Role do
   include GitRepoTestHelper
@@ -173,6 +173,60 @@ describe Kubernetes::Role do
       assert_raises Samson::Hooks::UserError do
         Kubernetes::Role.configured_for_project(project, 'HEAD')
       end
+    end
+  end
+
+  describe "#label_name" do
+    it "is url safe" do
+      role.name = 'ÍÎapp_server'
+      role.label_name.must_equal 'iiapp_server'
+    end
+  end
+
+  describe '#defaults' do
+    before do
+      config_content[0]['spec'] = {
+        'replicas' => 1, 'template' => {'spec' => {'containers' => [
+          {'resources' => {'limits' => {'ram' => '200M', 'cpu' => '250m'}}}
+        ]}}
+      }
+      GitRepository.any_instance.stubs(file_content: config_content_yml)
+    end
+
+    it "find defaults" do
+      role.defaults.must_equal cpu: 0.25, ram: 200, replicas: 1
+    end
+
+    {
+      '10000000' => 10,
+      '10000000000m' => 10,
+      '10000K' => 10,
+      '10000Ki' => 10,
+      '10M' => 10,
+      '10Mi' => 10,
+      '10G' => 10 * 1024,
+      '10.5G' => 10.5 * 1024,
+      '10Gi' => 9537,
+    }.each do |ram, expected|
+      it "converts ram units #{ram}" do
+        assert config_content_yml.sub!('200M', ram)
+        role.defaults.try(:[], :ram).must_equal expected
+      end
+    end
+
+    it "ignores unknown units" do
+      assert config_content_yml.sub!('200M', '200T')
+      role.defaults.must_equal nil
+    end
+
+    it "ignores when there is no config" do
+      GitRepository.any_instance.stubs(file_content: nil)
+      role.defaults.must_equal nil
+    end
+
+    it "ignores when there is no deployable" do
+      assert config_content_yml.sub!('Deployment', 'Deploymentx')
+      refute role.defaults
     end
   end
 end

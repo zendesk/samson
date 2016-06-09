@@ -93,12 +93,13 @@ class GitRepository
   end
 
   # will update the repo if sha is not found
-  def file_content(file, sha)
-    if sha =~ Build::SHA1_REGEX
+  def file_content(file, sha, pull: true)
+    if !pull
+      return unless locally_cached?
+    elsif sha =~ Build::SHA1_REGEX
       (locally_cached? && sha_exist?(sha)) || update_local_cache!
     else
       update_local_cache!
-      return unless sha = commit_from_ref(sha, length: nil)
     end
     capture_stdout "git", "show", "#{sha}:#{file}"
   end

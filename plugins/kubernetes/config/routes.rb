@@ -24,7 +24,11 @@ Samson::Application.routes.draw do
   namespace :admin do
     namespace :kubernetes do
       resources :clusters, except: :destroy
-      resources :deploy_group_roles
+      resources :deploy_group_roles do
+        collection do
+          post :seed
+        end
+      end
     end
   end
 end

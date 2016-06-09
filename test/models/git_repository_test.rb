@@ -267,5 +267,17 @@ describe GitRepository do
       repository.expects(:update!)
       repository.file_content('foo', 'a' * 40).must_equal nil
     end
+
+    describe "pull: false" do
+      before { repository.expects(:update!).never }
+
+      it "finds known" do
+        repository.file_content('foo', 'HEAD', pull: false).must_equal 'monkey'
+      end
+
+      it "ignores unknown" do
+        repository.file_content('foo', 'aaaaaaaaa', pull: false).must_equal nil
+      end
+    end
   end
 end

@@ -17,7 +17,7 @@ describe Kubernetes::DeployYaml do
     end
 
     it 'knows if it is a DaemonSet' do
-      yaml.send(:template).kind = 'DaemonSet'
+      yaml.send(:template)[:kind] = 'DaemonSet'
       yaml.resource_name.must_equal 'daemon_set'
     end
   end
@@ -30,7 +30,7 @@ describe Kubernetes::DeployYaml do
       spec = result.fetch(:spec)
       spec.fetch(:uniqueLabelKey).must_equal "rc_unique_identifier"
       spec.fetch(:replicas).must_equal doc.replica_target
-      spec.fetch(:template).fetch(:metadata).fetch(:labels).must_equal(
+      spec.fetch(:template).fetch(:metadata).fetch(:labels).symbolize_keys.must_equal(
         revision: "1a6f551a2ffa6d88e15eef5461384da0bfb1c194",
         tag: "v123",
         pre_defined: "foobar",
@@ -46,7 +46,7 @@ describe Kubernetes::DeployYaml do
 
       metadata = result.fetch(:metadata)
       metadata.fetch(:namespace).must_equal 'pod1'
-      metadata.fetch(:labels).must_equal(
+      metadata.fetch(:labels).symbolize_keys.must_equal(
         project: 'foobar',
         role: 'app-server'
       )
@@ -58,9 +58,9 @@ describe Kubernetes::DeployYaml do
 
       result = yaml.to_hash
       result.fetch(:spec).fetch(:template).fetch(:metadata).fetch(:labels).slice(:deploy_group, :role, :tag).must_equal(
-        tag: "user-feature",
-        deploy_group: 'foo-bar',
-        role: 'app-server'
+        'tag' => "user-feature",
+        'deploy_group' => 'foo-bar',
+        'role' => 'app-server'
       )
     end
 
@@ -94,9 +94,9 @@ describe Kubernetes::DeployYaml do
 
       it "copies resource values" do
         container.fetch(:resources).must_equal(
-          limits: {
-            memory: "100Mi",
-            cpu: 1.0
+          'limits' => {
+            'memory' => "100Mi",
+            'cpu' => 1.0
           }
         )
       end
@@ -110,7 +110,7 @@ describe Kubernetes::DeployYaml do
       end
 
       it "fails without containers" do
-        assert doc.raw_template.sub!("      containers:\n      - {}", '')
+        assert doc.raw_template.sub!("spec:\n      containers:\n      - {}", '')
         e = assert_raises Samson::Hooks::UserError do
           yaml.to_hash
         end
@@ -124,8 +124,8 @@ describe Kubernetes::DeployYaml do
       end
 
       it "merges existing env settings" do
-        yaml.send(:template).spec.template.spec.containers[0].env = [{name: 'Foo', value: 'Bar'}]
-        keys = container.fetch(:env).map(&:to_h).map { |x| x.fetch(:name) }
+        yaml.send(:template)[:spec][:template][:spec][:containers][0][:env] = [{name: 'Foo', value: 'Bar'}]
+        keys = container.fetch(:env).map(&:to_h).map { |x| x.symbolize_keys.fetch(:name) }
         keys.must_include 'Foo'
         keys.size.must_be :>, 5
       end
@@ -133,11 +133,14 @@ describe Kubernetes::DeployYaml do
 
     describe "secret-sidecar-containers" do
       around do |test|
-        with_env({
+        silence_warnings { Kubernetes::DeployYaml.const_set(:SIDECAR_IMAGE, "docker-registry.example.com/foo:bar") }
+        with_env(
           VAULT_ADDR: "somehostontheinternet",
-          SECRET_SIDECAR_IMAGE: "docker-registry.example.com/foo:bar",
           VAULT_SSL_VERIFY: "false"
-        }, &test)
+        ) do
+          test.call
+          silence_warnings { Kubernetes::DeployYaml.const_set(:SIDECAR_IMAGE, nil) }
+        end
       end
 
       it "creates a sidecar" do
@@ -196,7 +199,7 @@ describe Kubernetes::DeployYaml do
 
     describe "daemon_set" do
       it "does not add replicas since they are not supported" do
-        yaml.send(:template).kind = 'DaemonSet'
+        yaml.send(:template)[:kind] = 'DaemonSet'
         result = yaml.to_hash
         refute result.key?(:replicas)
       end
