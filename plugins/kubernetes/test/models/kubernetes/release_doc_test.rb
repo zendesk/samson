@@ -1,6 +1,6 @@
 require_relative "../../test_helper"
 
-SingleCov.covered! uncovered: 16
+SingleCov.covered! uncovered: 15
 
 describe Kubernetes::ReleaseDoc do
   let(:doc) { kubernetes_release_docs(:test_release_pod_1) }
@@ -150,6 +150,26 @@ describe Kubernetes::ReleaseDoc do
         service.fetch('spec').fetch('selector')['project'] = 'barfoo'
         doc.raw_template << "\n" << service.to_yaml
         refute_valid doc
+      end
+    end
+  end
+
+  describe "#desired_pod_count" do
+    it "uses local value deployment" do
+      doc.desired_pod_count.must_equal 2
+    end
+
+    it "asks kubernetes for daemon set since we do not know how many nodes it will match" do
+      doc.send(:deploy_yaml).send(:template)[:kind] = 'DaemonSet'
+      stub_request(:get, "http://foobar.server/apis/extensions/v1beta1/namespaces/pod1/daemonsets/test").
+        to_return(body: {status: {desiredNumberScheduled: 3}}.to_json)
+      doc.desired_pod_count.must_equal 3
+    end
+
+    it "fails for unknown" do
+      doc.send(:deploy_yaml).send(:template)[:kind] = 'Funky'
+      assert_raises RuntimeError do
+        doc.desired_pod_count
       end
     end
   end

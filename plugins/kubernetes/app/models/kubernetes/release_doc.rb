@@ -57,14 +57,14 @@ module Kubernetes
       case deploy_yaml.resource_name
       when 'deployment'
         deploy = Kubeclient::Deployment.new(deploy_yaml.to_hash)
-        if resource_running?(deploy)
+        if deployed
           extension_client.update_deployment deploy
         else
           extension_client.create_deployment deploy
         end
       when 'daemon_set'
         daemon = Kubeclient::DaemonSet.new(deploy_yaml.to_hash)
-        delete_daemon_set(daemon) if resource_running?(daemon)
+        delete_daemon_set(daemon) if deployed
         extension_client.create_daemon_set daemon
       else raise "Unknown daemon_set #{deploy_yaml.resource_name}"
       end
@@ -118,6 +118,16 @@ module Kubernetes
       Array.wrap(Kubernetes::Util.parse_file(raw_template, template_name))
     end
 
+    def desired_pod_count
+      case deploy_yaml.resource_name
+      when 'daemon_set'
+        # need http request since we do not know how many nodes we will match
+        deployed.status.desiredNumberScheduled
+      when 'deployment' then replica_target
+      else raise "Unsupported kind #{deploy_yaml.resource_name}"
+      end
+    end
+
     private
 
     # Create new client as 'Deployment' API is on different path then 'v1'
@@ -129,8 +139,12 @@ module Kubernetes
       @deploy_yaml ||= DeployYaml.new(self)
     end
 
-    def resource_running?(resource)
-      extension_client.send("get_#{deploy_yaml.resource_name}", resource.metadata.name, resource.metadata.namespace)
+    def deployed
+      extension_client.send(
+        "get_#{deploy_yaml.resource_name}",
+        deploy_yaml.to_hash.fetch(:metadata).fetch(:name),
+        deploy_group.kubernetes_namespace
+      )
     rescue KubeException
       false
     end

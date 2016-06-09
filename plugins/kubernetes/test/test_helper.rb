@@ -142,7 +142,10 @@ class ActiveSupport::TestCase
         },
         'selector' => {'matchLabels' => {'pre_defined' => 'foobar', 'project' => 'foobar', 'role' => 'app-server'}}
       },
-      'metadata' => {'labels' => {'project' => 'foobar', 'role' => 'app-server'}}
+      'metadata' => {
+        'name' => 'test',
+        'labels' => {'project' => 'foobar', 'role' => 'app-server'}
+      }
     }.to_yaml)
   end
 
