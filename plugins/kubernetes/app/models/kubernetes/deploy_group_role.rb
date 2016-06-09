@@ -24,6 +24,10 @@ module Kubernetes
     end
 
     # add deploy group roles for everything missing from the matrix
+    # returns:
+    #  - everything was created: true
+    #  - some could not be created because of missing configs: false
+    #  - failed to create because of unknown errors: raises
     def self.seed!(stage)
       missing = matrix(stage).each_with_object([]) do |(deploy_group, roles), missing|
         roles.each do |role, dg_role|

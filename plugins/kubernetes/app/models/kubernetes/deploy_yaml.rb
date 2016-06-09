@@ -1,8 +1,8 @@
 module Kubernetes
   class DeployYaml
     CUSTOM_UNIQUE_LABEL_KEY = 'rc_unique_identifier'.freeze
-    SIDECAR_NAME = 'secret-sidecar'
-    SIDECAR_IMAGE = ENV['SECRET_SIDECAR_IMAGE']
+    SIDECAR_NAME = 'secret-sidecar'.freeze
+    SIDECAR_IMAGE = ENV['SECRET_SIDECAR_IMAGE'].presence
 
     def initialize(release_doc)
       @doc = release_doc

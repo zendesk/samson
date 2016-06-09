@@ -7,11 +7,11 @@ module Kubernetes
       'm' => 0.001,
       'K' => 1024,
       'Ki' => 1000,
-      'M' => 1024 ** 2,
-      'Mi' => 1000 ** 2,
-      'G' => 1024 ** 3,
-      'Gi' => 1000 ** 3
-    }
+      'M' => 1024**2,
+      'Mi' => 1000**2,
+      'G' => 1024**3,
+      'Gi' => 1000**3
+    }.freeze
 
     self.table_name = 'kubernetes_roles'
     GENERATED = '-CHANGE-ME-'.freeze
@@ -34,10 +34,6 @@ module Kubernetes
     scope :not_deleted, -> { where(deleted_at: nil) }
 
     # create initial roles for a project by reading kubernetes/*{.yml,.yaml,json} files into roles
-    # returns:
-    #  - everything was created: true
-    #  - some could not be created because of missing configs: false
-    #  - failed to create because of unknown errors: raises
     def self.seed!(project, git_ref)
       kubernetes_config_files_in_repo(project, git_ref).each do |config_file|
         scope = where(project: project)
@@ -88,7 +84,7 @@ module Kubernetes
       return unless limits = deploy[:spec][:template][:spec][:containers].first.fetch(:resources, {})[:limits]
       return unless cpu = parse_resource_value(limits[:cpu])
       return unless ram = parse_resource_value(limits[:ram])
-      ram /= 1024 ** 2 # we store megabyte
+      ram /= 1024**2 # we store megabyte
 
       {cpu: cpu, ram: ram.round, replicas: replicas}
     end
