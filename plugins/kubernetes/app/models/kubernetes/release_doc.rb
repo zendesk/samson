@@ -16,6 +16,7 @@ module Kubernetes
     validates :status, presence: true, inclusion: STATUSES
     validate :validate_config_file, on: :create
 
+    # used via deprecated release flow
     def fail!
       update_attribute(:status, :failed)
     end
@@ -24,10 +25,12 @@ module Kubernetes
       kubernetes_release.try(:build)
     end
 
+    # used via deprecated release flow
     def update_release
       kubernetes_release.update_status(self)
     end
 
+    # used via deprecated release flow
     def update_status(live_pods)
       if live_pods == replica_target then self.status = :live
       elsif live_pods.zero? then self.status = :dead
@@ -37,14 +40,17 @@ module Kubernetes
       save!
     end
 
+    # used via deprecated release flow
     def update_replica_count(new_count)
       update_attributes!(replicas_live: new_count)
     end
 
+    # used via deprecated release flow
     def live_replicas_changed?(new_count)
       new_count != replicas_live
     end
 
+    # used via deprecated release flow
     def recovered?(failed_pods)
       failed_pods == 0
     end

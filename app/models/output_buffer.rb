@@ -29,7 +29,7 @@ class OutputBuffer
     @closed = false
   end
 
-  def puts(line="")
+  def puts(line = "")
     write(line.rstrip + "\n")
   end
 
