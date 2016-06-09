@@ -185,8 +185,7 @@ module Kubernetes
       # dynamic lookups for unknown things during deploy
       {
         POD_NAME: 'metadata.name',
-        POD_NAMESPACE: 'metadata.namespace',
-        POD_IP: 'status.podIP'
+        POD_NAMESPACE: 'metadata.namespace'
       }.each do |k, v|
         env << {
          name: k,
