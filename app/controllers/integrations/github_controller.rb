@@ -10,8 +10,11 @@ class Integrations::GithubController < Integrations::BaseController
 
   protected
 
-  def validate_webhook
-    head(:unauthorized) unless valid_signature?
+  def validate_request
+    unless valid_signature?
+      Rails.logger.warn("Github webhook: failed to validate signature '#{signature}'")
+      head(:unauthorized, message: 'Invalid signature')
+    end
   end
 
   def deploy?
@@ -25,7 +28,7 @@ class Integrations::GithubController < Integrations::BaseController
       request.body.tap(&:rewind).read
     )
 
-    Rack::Utils.secure_compare(request.headers['X-Hub-Signature'].to_s, "sha1=#{hmac}")
+    Rack::Utils.secure_compare(signature, "sha1=#{hmac}")
   end
 
   def commit
@@ -48,5 +51,9 @@ class Integrations::GithubController < Integrations::BaseController
 
   def webhook_handler
     WEBHOOK_HANDLERS[request.headers['X-Github-Event']]
+  end
+
+  def signature
+    request.headers['X-Hub-Signature'].to_s
   end
 end

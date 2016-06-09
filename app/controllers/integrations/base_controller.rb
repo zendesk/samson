@@ -1,7 +1,7 @@
 class Integrations::BaseController < ApplicationController
   skip_around_action :login_user
   skip_before_action :verify_authenticity_token
-  before_action :validate_webhook
+  before_action :validate_request
 
   def create
     return head(:ok) unless deploy?
@@ -25,16 +25,16 @@ class Integrations::BaseController < ApplicationController
 
   # These methods can/must be overridden by subclasses
 
-  def validate_webhook
+  def validate_request
     true # can be overridden in subclasses
   end
 
   def commit
-    raise NotImplementedError.new("#commit must be overridden in a subclass")
+    raise NotImplementedError, "#commit must be overridden in a subclass"
   end
 
   def deploy?
-    raise NotImplementedError.new("#deploy? must be overridden in a subclass")
+    raise NotImplementedError, "#deploy? must be overridden in a subclass"
   end
 
   def create_new_release
