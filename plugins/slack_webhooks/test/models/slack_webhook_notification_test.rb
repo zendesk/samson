@@ -1,6 +1,6 @@
 require_relative '../test_helper'
 
-SingleCov.covered! uncovered: 1
+SingleCov.covered!
 
 describe SlackWebhookNotification do
   let(:project) { stub(name: "Glitter") }
@@ -35,5 +35,11 @@ describe SlackWebhookNotification do
     end
 
     content.must_equal "bar"
+  end
+
+  it "fails silently on error" do
+    stub_request(:post, endpoint).to_timeout
+    Rails.logger.expects(:error)
+    notification.deliver
   end
 end

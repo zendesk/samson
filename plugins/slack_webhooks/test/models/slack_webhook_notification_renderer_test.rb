@@ -20,13 +20,13 @@ describe SlackWebhookNotificationRenderer do
     result = SlackWebhookNotificationRenderer.render(deploy, subject)
 
     result.must_equal <<-RESULT.strip_heredoc.chomp
-:point_right: *Deploy starting* :point_left:
-_2 commits by author1 and author2._
+      :point_right: *Deploy starting* :point_left:
+      _2 commits by author1 and author2._
 
-*Commits*
+      *Commits*
 
-> <#|Introduce bug> (author1)
-> <#|Fix bug> (author2)
+      > <#|Introduce bug> (author1)
+      > <#|Fix bug> (author2)
     RESULT
   end
 end

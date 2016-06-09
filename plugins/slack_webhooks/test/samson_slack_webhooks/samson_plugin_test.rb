@@ -1,6 +1,6 @@
 require_relative '../test_helper'
 
-SingleCov.covered! uncovered: 1 unless defined?(Rake) # rake preloads all plugins
+SingleCov.covered! unless defined?(Rake) # rake preloads all plugins
 
 describe SamsonSlackWebhooks do
   let(:deploy) { deploys(:succeeded_test) }
@@ -45,6 +45,12 @@ describe SamsonSlackWebhooks do
         "created_at" => nil,
         "updated_at" => nil
       }]
+    end
+  end
+
+  describe :stage_permitted_params do
+    it "includes our params" do
+      Samson::Hooks.fire(:stage_permitted_params).must_include slack_webhooks_attributes: [:id, :webhook_url, :channel, :_destroy]
     end
   end
 end
