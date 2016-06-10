@@ -40,6 +40,8 @@ class TerminalExecutor
   private
 
   # TODO: pick dynamic secret from just the key
+  # build a list of key parts that this deploy can access based on it's project/environment/deploy-groups
+  # then check that each key part is accessible and if not raise an exception
   def resolve_secrets(command)
     deploy_groups = @deploy.try(:stage).try(:deploy_groups) || []
     allowed = {
