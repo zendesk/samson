@@ -44,4 +44,35 @@
 
     <%= form.submit "Add webhook", class: "btn btn-primary" %>
   <% end %>
+
+  <% if hook = WebhookRecorder.read(@project) %>
+    <h2>Latest webhook</h2>
+    <table class="table">
+      <tr><th>Arrived</th><td><%= hook.fetch(:time) %></td></tr>
+      <tr>
+        <th>Request</th>
+        <td>
+          <% if current_user.admin_for?(current_project) %>
+            <pre><%= hook.fetch(:request).map { |k,v| "#{k}: #{v}" }.join("\n") %></pre>
+          <% else %>
+            ... visisble for admins ...
+          <% end %>
+        </td>
+      </tr>
+      <tr>
+        <th>Response</th>
+        <td>
+          Status: <%= hook.fetch(:status_code) %><br/>
+          Body: <%= hook.fetch(:body) %>
+        </td>
+      </tr>
+      <tr>
+        <th>Log</th>
+        <td>
+          <pre><%= hook.fetch(:log) %></pre>
+        </td>
+      </tr>
+    </table>
+  <% end %>
+  <h2></h2>
 </section>

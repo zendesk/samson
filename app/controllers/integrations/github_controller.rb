@@ -12,7 +12,7 @@ class Integrations::GithubController < Integrations::BaseController
 
   def validate_request
     unless valid_signature?
-      Rails.logger.warn("Github webhook: failed to validate signature '#{signature}'")
+      record_log :warn, "Github webhook: failed to validate signature '#{signature}'"
       head(:unauthorized, message: 'Invalid signature')
     end
   end

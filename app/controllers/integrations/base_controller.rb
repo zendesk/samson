@@ -2,11 +2,18 @@ class Integrations::BaseController < ApplicationController
   skip_around_action :login_user
   skip_before_action :verify_authenticity_token
   before_action :validate_request
+  after_action :record_webhook
 
   def create
-    return head(:ok) unless deploy?
+    unless deploy?
+      record_log :info, "Request is not a deploy"
+      return head(:ok)
+    end
 
-    if project.create_releases_for_branch?(branch)
+    release = project.create_releases_for_branch?(branch)
+    record_log :info, "Branch #{branch} is release branch: #{release}"
+
+    if release
       create_build_record
 
       if project.deploy_with_docker? && project.auto_release_docker_image?
@@ -15,6 +22,7 @@ class Integrations::BaseController < ApplicationController
     end
 
     if deploy_to_stages
+      record_log :info, "Starting deploy to all stages"
       head(:ok)
     else
       head(:unprocessable_entity, message: 'Failed to start all deploys')
@@ -104,5 +112,19 @@ class Integrations::BaseController < ApplicationController
 
   def latest_release
     project.releases.order(:id).last
+  end
+
+  def record_log(level, message)
+    (@recorded_log ||= "") << "#{level.upcase}: #{message}\n"
+    Rails.logger.public_send(level, message)
+  end
+
+  def record_webhook
+    WebhookRecorder.record(
+      project,
+      request: request,
+      response: response,
+      log: @recorded_log.to_s
+    )
   end
 end
