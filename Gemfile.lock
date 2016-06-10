@@ -72,6 +72,7 @@ PATH
   specs:
     samson_slack_webhooks (0.0.0)
       faraday
+      slack-ruby-client
 
 PATH
   remote: plugins/zendesk
@@ -203,10 +204,13 @@ GEM
       multipart-post (>= 1.2, < 3)
     faraday-http-cache (1.2.2)
       faraday (~> 0.8)
+    faraday_middleware (0.10.0)
+      faraday (>= 0.7.4, < 0.10)
     flowdock (0.6.0)
       httparty (~> 0.7)
       multi_json
     github-markdown (0.6.9)
+    gli (2.14.0)
     globalid (0.3.6)
       activesupport (>= 4.1.0)
     goldiloader (0.0.10)
@@ -431,6 +435,14 @@ GEM
       simplecov-html (~> 0.10.0)
     simplecov-html (0.10.0)
     single_cov (0.2.2)
+    slack-ruby-client (0.7.4)
+      activesupport
+      faraday
+      faraday_middleware
+      gli
+      hashie
+      json
+      websocket-driver
     slop (3.6.0)
     soft_deletion (0.7.0)
       activerecord (>= 3.2.0, < 5.1.0)
@@ -468,6 +480,9 @@ GEM
       addressable (>= 2.3.6)
       crack (>= 0.3.2)
       hashdiff
+    websocket-driver (0.6.4)
+      websocket-extensions (>= 0.1.0)
+    websocket-extensions (0.1.2)
     zendesk_api (1.13.4)
       faraday (~> 0.9)
       hashie (>= 1.2, < 4.0, != 3.3.0)

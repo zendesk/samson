@@ -1,14 +1,17 @@
 class SlackWebhookNotification
-  def initialize(deploy)
+  def initialize(deploy, deploy_phase=:for_buddy)
     @deploy = deploy
+    @deploy_phase = deploy_phase
     @stage = deploy.stage
     @project = @stage.project
     @user = @deploy.user
   end
 
-  def deliver
+  def deliver(message=content)
     @stage.slack_webhooks.each do |webhook|
-      _deliver(webhook)
+      if webhook.send(@deploy_phase)
+        _deliver(webhook, message)
+      end
     end
   end
 
@@ -19,8 +22,8 @@ class SlackWebhookNotification
     @content ||= SlackWebhookNotificationRenderer.render(@deploy, subject)
   end
 
-  def _deliver(webhook)
-    payload = { text: content, username: 'samson-bot' }
+  def _deliver(webhook, message)
+    payload = { text: message, username: 'samson-bot' }
     payload[:channel] = webhook.channel unless webhook.channel.blank?
 
     Faraday.post(webhook.webhook_url, payload: payload.to_json)
