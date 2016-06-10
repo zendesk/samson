@@ -221,36 +221,12 @@ module Kubernetes
       if build && kubernetes_role
         if raw_template.blank?
           errors.add(:build, "does not contain config file '#{template_name}'")
-        elsif !project_and_role_consistent?
-          errors.add(:build, "config file '#{template_name}' does not have consistent project and role labels")
-        end
-      end
-    end
-
-    def project_and_role_consistent?
-      labels = parsed_config_file.flat_map do |resource|
-        kind = resource.fetch('kind')
-
-        label_paths =
-          case kind
-          when 'Service'
-            [['spec', 'selector']]
-          when 'Deployment', 'DaemonSet'
-            [
-              ['spec', 'template', 'metadata', 'labels'],
-              ['spec', 'selector', 'matchLabels'],
-            ]
-          else
-            [] # ignore unknown / unsupported types
+        elsif problems = RoleVerifier.new(raw_template).verify
+          problems.each do |problem|
+            errors.add(:build, "#{template_name}: #{problem}")
           end
-
-        label_paths.map do |path|
-          path.inject(resource) { |r, k| r[k] || {} }.slice('project', 'role')
         end
       end
-
-      labels = labels.uniq
-      labels.size == 1 && labels.first.size == 2
     end
 
     def namespace
