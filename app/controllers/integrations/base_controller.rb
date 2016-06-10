@@ -1,6 +1,7 @@
 class Integrations::BaseController < ApplicationController
   skip_around_action :login_user
   skip_before_action :verify_authenticity_token
+  before_action :validate_request
 
   def create
     return head(:ok) unless deploy?
@@ -21,6 +22,20 @@ class Integrations::BaseController < ApplicationController
   end
 
   protected
+
+  # These methods can/must be overridden by subclasses
+
+  def validate_request
+    true # can be overridden in subclasses
+  end
+
+  def commit
+    raise NotImplementedError, "#commit must be overridden in a subclass"
+  end
+
+  def deploy?
+    raise NotImplementedError, "#deploy? must be overridden in a subclass"
+  end
 
   def create_new_release
     unless project.last_release_contains_commit?(commit)
