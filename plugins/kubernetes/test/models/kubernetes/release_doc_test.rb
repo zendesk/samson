@@ -1,6 +1,6 @@
 require_relative "../../test_helper"
 
-SingleCov.covered! uncovered: 15
+SingleCov.covered! uncovered: 14
 
 describe Kubernetes::ReleaseDoc do
   let(:doc) { kubernetes_release_docs(:test_release_pod_1) }
@@ -171,6 +171,35 @@ describe Kubernetes::ReleaseDoc do
       assert_raises RuntimeError do
         doc.desired_pod_count
       end
+    end
+  end
+
+  describe "#client" do
+    it "builds a client" do
+      assert doc.client
+    end
+  end
+
+  describe "#build" do
+    it "fetches the build" do
+      doc.build.must_equal builds(:docker_build)
+    end
+  end
+
+  describe "#raw_template" do
+    before do
+      Kubernetes::ReleaseDoc.any_instance.unstub(:raw_template)
+      GitRepository.any_instance.expects(:file_content).
+        with('kubernetes/app_server.yml', doc.build.git_sha).
+        returns("xxx")
+    end
+
+    it "fetches the template from git" do
+      doc.raw_template.must_equal "xxx"
+    end
+
+    it "caches" do
+      doc.raw_template.object_id.must_equal doc.raw_template.object_id
     end
   end
 end
