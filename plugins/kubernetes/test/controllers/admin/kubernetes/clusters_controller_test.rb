@@ -68,6 +68,15 @@ describe Admin::Kubernetes::ClustersController do
       end
     end
 
+    describe "#show" do
+      use_example_config
+
+      it "renders" do
+        get :show, id: cluster.id
+        assert_template :show
+      end
+    end
+
     describe "#load_default_config_file" do
       it "works even without an ENV var or old cluster" do
         ::Kubernetes::Cluster.destroy_all
