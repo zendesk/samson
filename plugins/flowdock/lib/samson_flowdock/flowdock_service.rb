@@ -8,14 +8,23 @@ module SamsonFlowdock
       @deploy = deploy
     end
 
+    # users in the format jquery mentions input needs
+    # see _notify_buddy_box.html.erb
     def users
-      flowdock_client.get('/users').map do |user|
-        {
-          id: user['id'],
-          name: user['nick'],
-          avatar: user['avatar'],
-          type: user['contact']
-        }
+      Rails.cache.fetch(:flowdock_users, expires_in: 5.minutes, race_condition_ttl: 5) do
+        begin
+          flowdock_client.get('/users').map do |user|
+            {
+              id: user['id'],
+              name: user['nick'],
+              avatar: user['avatar'],
+              type: user['contact']
+            }
+          end
+        rescue Flowdock::InvalidParameterError
+          Rails.logger.error('Could not fetch flowdock users! Please set the FLOWDOCK_API_TOKEN env variable')
+          []
+        end
       end
     end
 
