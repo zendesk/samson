@@ -168,6 +168,10 @@ class ActiveSupport::TestCase
   def self.with_env(env)
     around { |test| with_env(env, &test) }
   end
+
+  def self.run_inside_of_temp_directory
+    around { |test| Dir.mktmpdir { |dir| Dir.chdir(dir) { test.call } } }
+  end
 end
 
 Mocha::Expectation.class_eval do

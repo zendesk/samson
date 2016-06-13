@@ -1,8 +1,8 @@
 require_relative '../test_helper'
 
-SingleCov.covered! uncovered: 1 unless defined?(Rake) # rake preloads all plugins
+SingleCov.covered! unless defined?(Rake) # rake preloads all plugins
 
-describe SamsonAwsEcr do
+describe SamsonAwsEcr::Engine do
   let(:stage) { stages(:test_staging) }
   let(:ecr_client) { Aws::ECR::Client.new(stub_responses: true, region: 'us-west-2') }
   let(:username) { "AWS" }
@@ -12,74 +12,139 @@ describe SamsonAwsEcr do
 
   describe :before_docker_build do
     def fire
-      job = stub(deploy: stub(stage: stage), project: stage.project, git_ref: "ref")
-      Samson::Hooks.fire(:before_docker_build, "dir", job, StringIO.new)
+      Samson::Hooks.fire(:before_docker_build, 'foobar', builds(:docker_build), StringIO.new)
     end
 
-    around { |test| Dir.mktmpdir { |dir| Dir.chdir(dir) { test.call } } }
+    run_inside_of_temp_directory
 
     around do |t|
       begin
-        old_time = SamsonAwsEcr::Engine.credentials_expire_at
-        old_client = SamsonAwsEcr::Engine.ecr_client
-        SamsonAwsEcr::Engine.ecr_client = ecr_client
+        old_time = SamsonAwsEcr::Engine.send(:credentials_expire_at)
+        SamsonAwsEcr::Engine.send(:credentials_expire_at=, nil)
         t.call
       ensure
-        SamsonAwsEcr::Engine.credentials_expire_at = old_time
-        SamsonAwsEcr::Engine.ecr_client = old_client
+        SamsonAwsEcr::Engine.send(:credentials_expire_at=, old_time)
       end
     end
 
-    it "changes the DOCKER_REGISTRY_USER and DOCKER_REGISTRY_PASS" do
-      SamsonAwsEcr::Engine.ecr_client.stub_responses(
-        :get_authorization_token,
-        authorization_data: [authorization_token: base64_authorization_token, expires_at: Time.now + 2.hours]
-      )
+    before { SamsonAwsEcr::Engine.stubs(:ecr_client).returns(ecr_client) }
 
-      fire
+    describe '.refresh_credentials' do
+      it "changes the DOCKER_REGISTRY_USER and DOCKER_REGISTRY_PASS" do
+        ecr_client.stub_responses(
+          :get_authorization_token,
+          authorization_data: [authorization_token: base64_authorization_token, expires_at: Time.now + 2.hours]
+        )
 
-      ENV['DOCKER_REGISTRY_USER'].must_equal username
-      ENV['DOCKER_REGISTRY_PASS'].must_equal password
+        fire
+
+        ENV['DOCKER_REGISTRY_USER'].must_equal username
+        ENV['DOCKER_REGISTRY_PASS'].must_equal password
+      end
+
+      it "does not request new credentials if they haven't expired" do
+        ecr_client.stub_responses(:get_authorization_token, {
+          authorization_data: [
+            authorization_token: base64_authorization_token, expires_at: Time.now + 2.hours
+          ]
+        }, authorization_data: [
+          authorization_token: base64_authorization_token
+        ])
+
+        fire
+        fire
+
+        ENV['DOCKER_REGISTRY_USER'].must_equal username
+        ENV['DOCKER_REGISTRY_PASS'].must_equal password
+      end
+
+      it "requests new credentials if they have expired" do
+        ecr_client.stub_responses(:get_authorization_token, {
+          authorization_data: [
+            authorization_token: base64_authorization_token, expires_at: Time.now - 2.hours
+          ]
+        }, authorization_data: [
+          authorization_token: new_base64_authorization_token, expires_at: Time.now + 2.hours
+        ])
+
+        fire
+        fire
+
+        ENV['DOCKER_REGISTRY_USER'].must_equal "new #{username}"
+        ENV['DOCKER_REGISTRY_PASS'].must_equal "new #{password}"
+      end
+
+      it "tells the user what the problem is when unable to authenticate to AWS" do
+        assert_raises Samson::Hooks::UserError do
+          ecr_client.
+            expects(:get_authorization_token).
+            raises(Aws::ECR::Errors::InvalidSignatureException.new("XXX", {}))
+          fire
+        end
+      end
     end
 
-    it "doesn't request new credentials if they haven't expired" do
-      SamsonAwsEcr::Engine.ecr_client.stub_responses(:get_authorization_token, {
-        authorization_data: [
-          authorization_token: base64_authorization_token, expires_at: Time.now + 2.hours
-        ]
-      }, authorization_data: [
-        authorization_token: base64_authorization_token
-      ])
+    describe '.ensure_repository' do
+      before { SamsonAwsEcr::Engine.send(:credentials_expire_at=, 1.hour.from_now) }
 
-      fire
-      fire
+      it 'creates missing repository' do
+        ecr_client.
+          expects(:describe_repositories).
+          with(repository_names: ['foo']).
+          raises(Aws::ECR::Errors::RepositoryNotFoundException.new('x', {}))
+        ecr_client.
+          expects(:create_repository).
+          with(repository_name: 'foo')
+        fire
+      end
 
-      ENV['DOCKER_REGISTRY_USER'].must_equal username
-      ENV['DOCKER_REGISTRY_PASS'].must_equal password
+      it 'does nothing when repository already exists' do
+        ecr_client.
+          expects(:describe_repositories).
+          with(repository_names: ['foo'])
+        ecr_client.expects(:create_repository).never
+        fire
+      end
+
+      it 'does nothing when client is not allowed to create a repository since the build UI will show the error' do
+        ecr_client.
+          expects(:describe_repositories).
+          raises(Aws::ECR::Errors::AccessDenied.new("XXX", {}))
+        fire
+      end
+    end
+  end
+
+  describe '.ecr_client' do
+    def clear_client
+      if SamsonAwsEcr::Engine.instance_variable_defined?(:@ecr_client)
+        SamsonAwsEcr::Engine.remove_instance_variable(:@ecr_client)
+      end
     end
 
-    it "requests new credentials if they have expired" do
-      SamsonAwsEcr::Engine.ecr_client.stub_responses(:get_authorization_token, {
-        authorization_data: [
-          authorization_token: base64_authorization_token, expires_at: Time.now - 2.hours
-        ]
-      }, authorization_data: [
-        authorization_token: new_base64_authorization_token, expires_at: Time.now + 2.hours
-      ])
+    let(:matching) { '12322323232323.dkr.ecr.us-west-1.amazonaws.com' }
 
-      fire
-      fire
-
-      ENV['DOCKER_REGISTRY_USER'].must_equal "new #{username}"
-      ENV['DOCKER_REGISTRY_PASS'].must_equal "new #{password}"
+    around do |test|
+      begin
+        clear_client
+        old = Rails.application.config.samson.docker.registry
+        test.call
+      ensure
+        clear_client
+        Rails.application.config.samson.docker.registry = old
+      end
     end
 
-    it "fails silently on InvalidSignatureException" do
-      SamsonAwsEcr::Engine.ecr_client.
-        expects(:get_authorization_token).
-        raises(Aws::ECR::Errors::InvalidSignatureException.new("XXX", {}))
-      Rails.logger.expects(:error)
-      fire
+    it 'is cached when matching' do
+      stub_request(:get, %r{/latest/meta-data/iam/security-credentials/})
+      Rails.application.config.samson.docker.registry = matching
+      SamsonAwsEcr::Engine.send(:ecr_client).object_id.must_equal SamsonAwsEcr::Engine.send(:ecr_client).object_id
+    end
+
+    it 'is cached when not matching' do
+      refute SamsonAwsEcr::Engine.send(:ecr_client)
+      Rails.application.config.samson.docker.registry = matching
+      refute SamsonAwsEcr::Engine.send(:ecr_client)
     end
   end
 end
