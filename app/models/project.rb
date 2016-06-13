@@ -54,7 +54,7 @@ class Project < ActiveRecord::Base
   def docker_repo
     @docker_repo ||= begin
       registry = Rails.application.config.samson.docker.registry
-      "#{registry}/#{permalink_base}"
+      File.join(registry, ENV['DOCKER_REPO_NAMESPACE'].to_s, permalink_base)
     end
   end
 
