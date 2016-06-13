@@ -203,6 +203,9 @@ GEM
       multipart-post (>= 1.2, < 3)
     faraday-http-cache (1.2.2)
       faraday (~> 0.8)
+    faster_path (0.0.9)
+      ffi
+    ffi (1.9.10)
     flowdock (0.6.0)
       httparty (~> 0.7)
       multi_json
@@ -502,6 +505,7 @@ DEPENDENCIES
   dogstatsd-ruby
   dotenv
   faraday-http-cache
+  faster_path
   github-markdown
   goldiloader
   kaminari
