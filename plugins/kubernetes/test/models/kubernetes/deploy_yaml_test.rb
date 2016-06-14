@@ -132,15 +132,12 @@ describe Kubernetes::DeployYaml do
     end
 
     describe "secret-sidecar-containers" do
+      with_env(VAULT_ADDR: "somehostontheinternet", VAULT_SSL_VERIFY: "false")
+
       around do |test|
         silence_warnings { Kubernetes::DeployYaml.const_set(:SIDECAR_IMAGE, "docker-registry.example.com/foo:bar") }
-        with_env(
-          VAULT_ADDR: "somehostontheinternet",
-          VAULT_SSL_VERIFY: "false"
-        ) do
-          test.call
-          silence_warnings { Kubernetes::DeployYaml.const_set(:SIDECAR_IMAGE, nil) }
-        end
+        test.call
+        silence_warnings { Kubernetes::DeployYaml.const_set(:SIDECAR_IMAGE, nil) }
       end
 
       it "creates a sidecar" do

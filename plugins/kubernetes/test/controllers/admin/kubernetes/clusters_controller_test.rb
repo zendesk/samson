@@ -87,7 +87,7 @@ describe Admin::Kubernetes::ClustersController do
 
       it "works with an existing config file" do
         with_example_kube_config do |f|
-          with_env "KUBE_CONFIG_FILE": f do
+          with_env KUBE_CONFIG_FILE: f do
             get :new
             assert_template :new
             assigns['context_options'].wont_be_empty
@@ -105,7 +105,7 @@ describe Admin::Kubernetes::ClustersController do
       end
 
       it "blows up with missing config file" do
-        with_env "KUBE_CONFIG_FILE": "nope" do
+        with_env KUBE_CONFIG_FILE: "nope" do
           assert_raises Errno::ENOENT do
             get :new
           end

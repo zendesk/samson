@@ -1,6 +1,10 @@
 /*
  * TODO use gem 'rails-assets-jquery-mentions-input' once
  * https://github.com/podio/jquery-mentions-input/pull/131 is released
+ * or rails-assets-jquery-mentions gem
+ * jquery.mentionsInput is super old and unmaintained and it's rails-assets version does not work
+ * jquery-mentions needs coffe-script due to a bug in sprockets (preferring coffee over js)
+ * and then it does not work either ... no other gem on rubygems that does it either
  *
  * Mentions Input
  * Version 1.0.2
