@@ -41,11 +41,9 @@ module Kubernetes
 
     # expand $ENV and $DEPLOY_GROUP in annotation that start with 'secret/'
     def expand_secret_annotations
-      annotations.to_h.each do |annotation_name, secret_key|
-        if annotation_name.to_s.start_with?(SecretStorage::VAULT_SECRET_BACKEND)
-          secret_key.gsub!(/\${ENV}/, @doc.deploy_group.environment.permalink)
-          secret_key.gsub!(/\${DEPLOY_GROUP}/, @doc.deploy_group.permalink)
-        end
+      secret_annotations.each do |_, secret_key|
+        secret_key.gsub!(/\${ENV}/, @doc.deploy_group.environment.permalink)
+        secret_key.gsub!(/\${DEPLOY_GROUP}/, @doc.deploy_group.permalink)
       end
     end
 
@@ -53,8 +51,7 @@ module Kubernetes
     # if it does not as the deployment will fail
     def verify_secret_annotations
       errors = []
-      annotations.to_h.each do |annotation_name, secret_key|
-        next unless annotation_name.to_s.start_with?(SecretStorage::VAULT_SECRET_BACKEND)
+      secret_annotations.each do |annotation_name, secret_key|
         begin
           SecretStorage.read(secret_key)
         rescue ActiveRecord::RecordNotFound, NoMethodError
@@ -66,6 +63,12 @@ module Kubernetes
           Samson::Hooks::UserError,
           "Missing Secret Keys:\n\t#{errors.join("\n\t")}"
         )
+      end
+    end
+
+    def secret_annotations
+      annotations.to_h.select do |annotation_name, secret_key|
+        annotation_name.to_s.start_with?(SecretStorage::VAULT_SECRET_BACKEND)
       end
     end
 
@@ -194,7 +197,7 @@ module Kubernetes
        }
       end
 
-      if SIDECAR_IMAGE
+      if SIDECAR_IMAGE && annotations
         sidecar_env = (sidecar_container[:env] ||= [])
         {
           VAULT_ADDR: ENV.fetch("VAULT_ADDR"),
