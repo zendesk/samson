@@ -9,11 +9,13 @@ module SamsonAwsEcr
       # - ignores if the repo already exists
       # - ignores if the repo cannot be created due to permission problems
       def ensure_repository(repository)
-        return unless ecr_client
-        name = repository.split('/', 2).last
-        ecr_client.describe_repositories(repository_names: [name])
-      rescue Aws::ECR::Errors::RepositoryNotFoundException
-        ecr_client.create_repository(repository_name: name)
+        begin
+          return unless ecr_client
+          name = repository.split('/', 2).last
+          ecr_client.describe_repositories(repository_names: [name])
+        rescue Aws::ECR::Errors::RepositoryNotFoundException
+          ecr_client.create_repository(repository_name: name)
+        end
       rescue Aws::ECR::Errors::AccessDenied
         Rails.logger.info("Not allowed to create or describe repositories")
       end
@@ -44,7 +46,7 @@ module SamsonAwsEcr
       end
 
       def credentials_stale?
-        ecr_client && (!credentials_expire_at || credentials_expire_at < Time.current)
+        ecr_client && (!credentials_expire_at || credentials_expire_at < 1.hour.from_now)
       end
     end
   end

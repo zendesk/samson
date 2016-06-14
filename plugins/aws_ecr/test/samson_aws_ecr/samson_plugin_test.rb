@@ -8,7 +8,13 @@ describe SamsonAwsEcr::Engine do
   let(:username) { "AWS" }
   let(:password) { "Some password" }
   let(:base64_authorization_token)     { Base64.encode64(username + ":" + password) }
-  let(:new_base64_authorization_token) { Base64.encode64("new #{username}:new #{password}") }
+  let(:old_base64_authorization_token) { Base64.encode64("old #{username}:old #{password}") }
+  let(:fresh_response) do
+    {authorization_data: [{authorization_token: base64_authorization_token, expires_at: 2.hour.from_now}]}
+  end
+  let(:expired_response) do
+    {authorization_data: [{authorization_token: old_base64_authorization_token, expires_at: 2.hour.ago}]}
+  end
 
   describe :before_docker_build do
     def fire
@@ -31,10 +37,7 @@ describe SamsonAwsEcr::Engine do
 
     describe '.refresh_credentials' do
       it "changes the DOCKER_REGISTRY_USER and DOCKER_REGISTRY_PASS" do
-        ecr_client.stub_responses(
-          :get_authorization_token,
-          authorization_data: [authorization_token: base64_authorization_token, expires_at: Time.now + 2.hours]
-        )
+        ecr_client.stub_responses(:get_authorization_token, fresh_response)
 
         fire
 
@@ -42,14 +45,8 @@ describe SamsonAwsEcr::Engine do
         ENV['DOCKER_REGISTRY_PASS'].must_equal password
       end
 
-      it "does not request new credentials if they haven't expired" do
-        ecr_client.stub_responses(:get_authorization_token, {
-          authorization_data: [
-            authorization_token: base64_authorization_token, expires_at: Time.now + 2.hours
-          ]
-        }, authorization_data: [
-          authorization_token: base64_authorization_token
-        ])
+      it "does not request new credentials if they are not expired" do
+        ecr_client.stub_responses(:get_authorization_token, fresh_response)
 
         fire
         fire
@@ -59,19 +56,13 @@ describe SamsonAwsEcr::Engine do
       end
 
       it "requests new credentials if they have expired" do
-        ecr_client.stub_responses(:get_authorization_token, {
-          authorization_data: [
-            authorization_token: base64_authorization_token, expires_at: Time.now - 2.hours
-          ]
-        }, authorization_data: [
-          authorization_token: new_base64_authorization_token, expires_at: Time.now + 2.hours
-        ])
+        ecr_client.stub_responses(:get_authorization_token, expired_response, fresh_response)
 
         fire
         fire
 
-        ENV['DOCKER_REGISTRY_USER'].must_equal "new #{username}"
-        ENV['DOCKER_REGISTRY_PASS'].must_equal "new #{password}"
+        ENV['DOCKER_REGISTRY_USER'].must_equal username
+        ENV['DOCKER_REGISTRY_PASS'].must_equal password
       end
 
       it "tells the user what the problem is when unable to authenticate to AWS" do
@@ -85,7 +76,7 @@ describe SamsonAwsEcr::Engine do
     end
 
     describe '.ensure_repository' do
-      before { SamsonAwsEcr::Engine.send(:credentials_expire_at=, 1.hour.from_now) }
+      before { SamsonAwsEcr::Engine.send(:credentials_expire_at=, 2.hour.from_now) }
 
       it 'creates missing repository' do
         ecr_client.
@@ -106,9 +97,19 @@ describe SamsonAwsEcr::Engine do
         fire
       end
 
-      it 'does nothing when client is not allowed to create a repository since the build UI will show the error' do
+      it 'does nothing when client is not allowed to describe the repository (build UI shows repo missing error)' do
         ecr_client.
           expects(:describe_repositories).
+          raises(Aws::ECR::Errors::AccessDenied.new("XXX", {}))
+        fire
+      end
+
+      it 'does nothing when client is not allowed to create the repository (build UI shows repo missing error)' do
+        ecr_client.
+          expects(:describe_repositories).
+          raises(Aws::ECR::Errors::RepositoryNotFoundException.new('x', {}))
+        ecr_client.
+          expects(:create_repository).
           raises(Aws::ECR::Errors::AccessDenied.new("XXX", {}))
         fire
       end
