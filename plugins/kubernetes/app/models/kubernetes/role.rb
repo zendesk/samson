@@ -29,7 +29,7 @@ module Kubernetes
     validates :project, presence: true
     validates :name, presence: true
     validates :deploy_strategy, presence: true, inclusion: DEPLOY_STRATEGIES
-    validates :service_name, uniqueness: {scope: :deleted_at, allow_nil: true}
+    validates :service_name, uniqueness: {scope: [:project_id, :deleted_at], allow_nil: true}
 
     scope :not_deleted, -> { where(deleted_at: nil) }
 
