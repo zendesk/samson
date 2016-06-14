@@ -52,6 +52,9 @@ gem 'kubeclient', github: 'zendesk/kubeclient', branch: 'samson-gem-branch'
 Dir[File.join(Bundler.root, 'plugins/*/')].each { |f| gemspec path: f }
 
 gem 'sucker_punch', '~> 2.0'
+gem 'faster_path'
+gem 'derailed'
+gem 'stackprof'
 
 group :mysql2 do
   gem 'mysql2'

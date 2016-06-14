@@ -12,15 +12,16 @@ class ProjectsController < ApplicationController
   alias_method :project, :current_project
 
   def index
-    respond_to do |format|
-      format.html do
-        @projects = projects_for_user.alphabetical
-      end
-
-      format.json do
-        render json: Project.ordered_for_user(current_user).all
-      end
-    end
+    render text: 'XXX'
+    # respond_to do |format|
+    #   format.html do
+    #     @projects = projects_for_user.alphabetical
+    #   end
+    #
+    #   format.json do
+    #     render json: Project.ordered_for_user(current_user).all
+    #   end
+    # end
   end
 
   def new
