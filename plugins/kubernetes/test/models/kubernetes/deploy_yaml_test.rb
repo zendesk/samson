@@ -178,6 +178,11 @@ describe Kubernetes::DeployYaml do
         yaml.to_hash[:spec][:template][:spec][:containers].first[:volumeMounts].count.must_equal 1
       end
 
+      it "creates no sidecar when there are no secrets" do
+        assert doc.raw_template.sub!('secret/', 'public/')
+        yaml.to_hash[:spec][:template][:spec][:containers].last[:name].must_equal(nil)
+      end
+
       it "fails to find a secret needed by the sidecar" do
         SecretStorage.delete(secret_key)
         e = assert_raises Samson::Hooks::UserError do

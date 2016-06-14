@@ -16,7 +16,7 @@ module Kubernetes
         set_spec_template_metadata
         set_docker_image
         set_resource_usage
-        if SIDECAR_IMAGE
+        if needs_secret_sidecar?
           set_secret_sidecar
           expand_secret_annotations
           verify_secret_annotations
@@ -66,14 +66,14 @@ module Kubernetes
       end
     end
 
-    def secret_annotations
-      annotations.to_h.select do |annotation_name, _|
-        annotation_name.to_s.start_with?(SecretStorage::VAULT_SECRET_BACKEND)
-      end
-    end
-
     def annotations
       @template[:spec][:template][:metadata][:annotations]
+    end
+
+    def secret_annotations
+      @secret_annotations ||= annotations.to_h.select do |annotation_name, _|
+        annotation_name.to_s.start_with?(SecretStorage::VAULT_SECRET_BACKEND)
+      end
     end
 
     # Sets up the secret_sidecar and the various mounts that are required
@@ -197,7 +197,7 @@ module Kubernetes
        }
       end
 
-      if SIDECAR_IMAGE && annotations
+      if needs_secret_sidecar?
         sidecar_env = (sidecar_container[:env] ||= [])
         {
           VAULT_ADDR: ENV.fetch("VAULT_ADDR"),
@@ -209,6 +209,10 @@ module Kubernetes
           }
         end
       end
+    end
+
+    def needs_secret_sidecar?
+      SIDECAR_IMAGE && secret_annotations.any?
     end
 
     def container
