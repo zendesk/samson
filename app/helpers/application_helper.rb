@@ -166,4 +166,27 @@ module ApplicationHelper
   def environments
     @environments ||= Environment.all
   end
+
+  def render_nested_errors(object, seen = Set.new)
+    return "" if seen.include?(object)
+    seen << object
+    return "" if object.errors.empty?
+
+    content_tag :ul do
+      lis = object.errors.map do |attribute, message|
+        content_tag(:li) do
+          content = "".html_safe
+          content << object.errors.full_message(attribute, message)
+          values = (object.respond_to?(attribute) ? Array.wrap(object.send(attribute)) : [])
+          if values.first.is_a?(ActiveRecord::Base)
+            values.each do |value|
+              content << render_nested_errors(value, seen)
+            end
+          end
+          content
+        end
+      end
+      safe_join lis
+    end
+  end
 end

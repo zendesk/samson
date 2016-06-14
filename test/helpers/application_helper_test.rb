@@ -296,4 +296,43 @@ describe ApplicationHelper do
       environments.object_id.must_equal environments.object_id
     end
   end
+
+  describe "#render_nested_errors" do
+    # simulate what erb will do so we can see html_safe issues
+    def render
+      ERB::Util.html_escape(render_nested_errors(stage))
+    end
+
+    let(:stage) { stages(:test_staging) }
+
+    it "renders nothing for valid" do
+      render.must_equal ""
+    end
+
+    it "renders simple errors" do
+      stage.errors.add(:base, "Kaboom")
+      render.must_equal "<ul><li>Kaboom</li></ul>"
+    end
+
+    it "renders nested errors" do
+      stage.errors.add(:deploy_groups, "Invalid") # happens on save normally .. not a helpful message for our users
+      stage.errors.add(:base, "BASE") # other error to make sure nesting is correct
+      stage.deploy_groups.to_a.first.errors.add(:base, "Kaboom")
+      render.must_equal "<ul><li>Deploy groups Invalid<ul><li>Kaboom</li></ul></li><li>BASE</li></ul>"
+    end
+
+    it "does not loop" do
+      stage.errors.add(:project, "Invalid")
+      stage.project.stubs(stages: [stage])
+      stage.project.errors.add(:stages, "Invalid")
+      render.must_equal "<ul><li>Project Invalid<ul><li>Stages Invalid</li></ul></li></ul>"
+    end
+
+    it "cannot inject html" do
+      stage.errors.add(:deploy_groups, "<foo>")
+      stage.errors.add(:base, "<bar>")
+      stage.deploy_groups.to_a.first.errors.add(:base, "<baz>")
+      render.must_equal "<ul><li>Deploy groups &lt;foo&gt;<ul><li>&lt;baz&gt;</li></ul></li><li>&lt;bar&gt;</li></ul>"
+    end
+  end
 end
