@@ -6,7 +6,7 @@ class ApplicationController < ActionController::Base
   # Force all access to the app over SSL, use Strict-Transport-Security, and use secure cookies.
   force_ssl if: :force_ssl?
 
-  include CurrentUser # must be after protect_from_forgery, so that authenticate! is called
+  # include CurrentUser # must be after protect_from_forgery, so that authenticate! is called
 
   protected
 
@@ -14,9 +14,9 @@ class ApplicationController < ActionController::Base
     ENV['FORCE_SSL'] == '1'
   end
 
-  def verified_request?
-    warden.winning_strategy || super
-  end
+  # def verified_request?
+  #   warden.winning_strategy || super
+  # end
 
   # Get parameters for lograge
   def append_info_to_payload(payload)
