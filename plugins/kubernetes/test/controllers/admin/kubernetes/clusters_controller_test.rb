@@ -78,14 +78,15 @@ describe Admin::Kubernetes::ClustersController do
     end
 
     describe "#load_default_config_file" do
+      before { ::Kubernetes::Cluster.destroy_all }
+
       it "works even without an ENV var or old cluster" do
-        ::Kubernetes::Cluster.destroy_all
         get :new
         assert_template :new
         assigns['context_options'].must_be_empty
       end
 
-      it "works with an existing config file" do
+      it "works with an existing config file from ENV" do
         with_example_kube_config do |f|
           with_env KUBE_CONFIG_FILE: f do
             get :new
@@ -95,13 +96,22 @@ describe Admin::Kubernetes::ClustersController do
         end
       end
 
-      it "uses the config file from another cluster" do
+      it "uses the config file from latest cluster" do
         with_example_kube_config do |f|
           create_kubernetes_cluster(config_filepath: f)
           get :new
           assert_template :new
           assigns['context_options'].wont_be_empty
         end
+      end
+
+      it "uses the config file from current cluster" do
+        cluster
+        bad = create_kubernetes_cluster(name: 'bad')
+        bad.update_column(:config_filepath, 'bad')
+        get :edit, id: cluster.id
+        assert_template :edit
+        assigns['context_options'].wont_be_empty
       end
 
       it "blows up with missing config file" do
