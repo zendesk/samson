@@ -164,6 +164,10 @@ class ActiveSupport::TestCase
   ensure
     old.each { |k, v| ENV[k] = v }
   end
+
+  def self.with_env(env)
+    around { |test| with_env(env, &test) }
+  end
 end
 
 Mocha::Expectation.class_eval do
