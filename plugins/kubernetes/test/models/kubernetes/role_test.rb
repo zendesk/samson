@@ -69,7 +69,7 @@ describe Kubernetes::Role do
         refute_valid role
       end
 
-      it "is valid with a already used service name that was deted" do
+      it "is valid with a already used service name that was deleted" do
         other.soft_delete!
         assert_valid role
       end
@@ -141,11 +141,11 @@ describe Kubernetes::Role do
     end
 
     it "can seed duplicate service names" do
+      created = Kubernetes::Role.create!(role.attributes.merge('service_name' => 'SERVICE-NAME'))
+      created.update_column(:project_id, 1234) # make sure we check in glboal scope
       write_config 'kubernetes/a.yml', config_content_yml
-      write_config 'kubernetes/b.yml', config_content_yml
       Kubernetes::Role.seed! project, 'HEAD'
-      names = project.kubernetes_roles.map(&:service_name).sort
-      names.first.must_equal "SERVICE-NAME"
+      names = Kubernetes::Role.all.map(&:service_name)
       names.last.must_match /SERVICE-NAME-CHANGE-ME-\d+/
     end
 
