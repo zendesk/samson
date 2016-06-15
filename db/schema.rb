@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20160523234717) do
+ActiveRecord::Schema.define(version: 20160614183257) do
 
   create_table "builds", force: :cascade do |t|
     t.integer  "project_id",                       null: false
@@ -231,7 +231,7 @@ ActiveRecord::Schema.define(version: 20160523234717) do
   end
 
   add_index "kubernetes_roles", ["project_id"], name: "index_kubernetes_roles_on_project_id", using: :btree
-  add_index "kubernetes_roles", ["service_name", "deleted_at"], name: "index_kubernetes_roles_on_service_name_and_deleted_at", unique: true, length: {"service_name"=>191, "deleted_at"=>nil}, using: :btree
+  add_index "kubernetes_roles", ["service_name", "project_id", "deleted_at"], name: "index_kubernetes_roles_on_service_name", unique: true, length: {"service_name"=>191, "project_id"=>nil, "deleted_at"=>nil}, using: :btree
 
   create_table "locks", force: :cascade do |t|
     t.integer  "stage_id",    limit: 4

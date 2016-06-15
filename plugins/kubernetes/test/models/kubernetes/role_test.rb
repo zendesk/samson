@@ -73,6 +73,11 @@ describe Kubernetes::Role do
         other.soft_delete!
         assert_valid role
       end
+
+      it "is valid with a already used service name in another project" do
+        other.update_column(:project_id, 1234)
+        assert_valid role
+      end
     end
   end
 
