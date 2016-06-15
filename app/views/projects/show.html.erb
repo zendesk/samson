@@ -19,7 +19,7 @@
       </tr>
     </thead>
     <tbody>
-      <% cache project, 'stages' do %>
+      <% cache [project, 'stages'] do %>
         <%= render partial: "stage", collection: @stages %>
       <% end %>
     </tbody>
