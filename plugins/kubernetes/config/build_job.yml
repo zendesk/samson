@@ -1,0 +1,38 @@
+---
+# Sample job configuration to build and optionally
+# push a Docker image. It is used in build_job_executor.rb
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: image-build-job
+  namespace: default
+  labels:
+    project: project-name
+    role: docker-build-job
+spec:
+  autoSelector: true
+  activeDeadlineSeconds: 60
+  template:
+    metadata:
+      name: image-build-job
+      labels:
+        project: project-name
+        role: docker-build-job
+    spec:
+      restartPolicy: Never
+      nodeSelector:
+        role: docker-build-job
+      containers:
+      - name: image-build-job
+        # image: docker-registry.zende.sk/repository-build:latest
+        imagePullPolicy: Always
+        command: ["/opt/build_scripts/repository-build.rb"]
+        args: []
+        volumeMounts:
+          - name: docker-sock
+            mountPath: /var/run/docker.sock
+            readOnly: true
+      volumes:
+        - name: docker-sock
+          hostPath:
+           path: /var/run/docker.sock
