@@ -290,3 +290,10 @@ fieldset {
   height: 50px;
   border-radius: 25px;
 }
+
+/* Very large tables */
+.large-table-responsive {
+  height: 100%;
+  max-height: 65vh;
+  overflow: auto;
+}
