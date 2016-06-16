@@ -2,7 +2,6 @@ require 'slack-ruby-client'
 
 module SamsonSlackWebhooks
   class SlackWebhooksService
-
     def initialize(deploy)
       @deploy = deploy
     end

@@ -10,7 +10,7 @@ class SlackWebhookNotification
   def deliver(message: content)
     @stage.slack_webhooks.each do |webhook|
       if webhook.public_send(@deploy_phase)
-        _deliver(:webhook => webhook, :message => message)
+        _deliver(webhook: webhook, message: message)
       end
     end
   end
