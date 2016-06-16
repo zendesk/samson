@@ -6,13 +6,13 @@ Stage.class_eval do
     slack_webhooks.any?
   end
 
+  def slack_buddy_channels
+    slack_webhooks.for_buddy.map(&:channel)
+  end
+
   private
 
   def no_webhook_url?(slack_webhook_attrs)
     slack_webhook_attrs['webhook_url'].blank?
-  end
-
-  def for_buddy_channels_names
-    slack_webhooks.for_buddy.map(&:channel)
   end
 end

@@ -1,5 +1,4 @@
 Samson::Application.routes.draw do
-  get '/slack_webhooks/users', to: 'slack_webhooks#users'
-  post '/slack_webhooks/notify', to: 'slack_webhooks#notify'
+  post '/slack_webhooks/notify', to: 'slack_webhooks#buddy_request'
 end
 

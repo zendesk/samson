@@ -1,5 +1,5 @@
 class SlackWebhookNotification
-  def initialize(deploy, deploy_phase=:for_buddy)
+  def initialize(deploy:, deploy_phase:)
     @deploy = deploy
     @deploy_phase = deploy_phase
     @stage = deploy.stage
@@ -7,10 +7,10 @@ class SlackWebhookNotification
     @user = @deploy.user
   end
 
-  def deliver(message=content)
+  def deliver(message: content)
     @stage.slack_webhooks.each do |webhook|
-      if webhook.send(@deploy_phase)
-        _deliver(webhook, message)
+      if webhook.public_send(@deploy_phase)
+        _deliver(:webhook => webhook, :message => message)
       end
     end
   end
@@ -22,7 +22,7 @@ class SlackWebhookNotification
     @content ||= SlackWebhookNotificationRenderer.render(@deploy, subject)
   end
 
-  def _deliver(webhook, message)
+  def _deliver(webhook:, message:)
     payload = { text: message, username: 'samson-bot' }
     payload[:channel] = webhook.channel unless webhook.channel.blank?
 
