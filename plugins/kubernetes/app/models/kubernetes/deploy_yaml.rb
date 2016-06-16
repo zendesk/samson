@@ -16,7 +16,7 @@ module Kubernetes
         set_spec_template_metadata
         set_docker_image
         set_resource_usage
-        if SIDECAR_IMAGE
+        if needs_secret_sidecar?
           set_secret_sidecar
           expand_secret_annotations
           verify_secret_annotations
@@ -41,11 +41,9 @@ module Kubernetes
 
     # expand $ENV and $DEPLOY_GROUP in annotation that start with 'secret/'
     def expand_secret_annotations
-      annotations.to_h.each do |annotation_name, secret_key|
-        if annotation_name.to_s.start_with?(SecretStorage::VAULT_SECRET_BACKEND)
-          secret_key.gsub!(/\${ENV}/, @doc.deploy_group.environment.permalink)
-          secret_key.gsub!(/\${DEPLOY_GROUP}/, @doc.deploy_group.permalink)
-        end
+      secret_annotations.each do |_, secret_key|
+        secret_key.gsub!(/\${ENV}/, @doc.deploy_group.environment.permalink)
+        secret_key.gsub!(/\${DEPLOY_GROUP}/, @doc.deploy_group.permalink)
       end
     end
 
@@ -53,8 +51,7 @@ module Kubernetes
     # if it does not as the deployment will fail
     def verify_secret_annotations
       errors = []
-      annotations.to_h.each do |annotation_name, secret_key|
-        next unless annotation_name.to_s.start_with?(SecretStorage::VAULT_SECRET_BACKEND)
+      secret_annotations.each do |annotation_name, secret_key|
         begin
           SecretStorage.read(secret_key)
         rescue ActiveRecord::RecordNotFound, NoMethodError
@@ -71,6 +68,12 @@ module Kubernetes
 
     def annotations
       @template[:spec][:template][:metadata][:annotations]
+    end
+
+    def secret_annotations
+      @secret_annotations ||= annotations.to_h.select do |annotation_name, _|
+        annotation_name.to_s.start_with?(SecretStorage::VAULT_SECRET_BACKEND)
+      end
     end
 
     # Sets up the secret_sidecar and the various mounts that are required
@@ -194,7 +197,7 @@ module Kubernetes
        }
       end
 
-      if SIDECAR_IMAGE
+      if needs_secret_sidecar?
         sidecar_env = (sidecar_container[:env] ||= [])
         {
           VAULT_ADDR: ENV.fetch("VAULT_ADDR"),
@@ -206,6 +209,10 @@ module Kubernetes
           }
         end
       end
+    end
+
+    def needs_secret_sidecar?
+      SIDECAR_IMAGE && secret_annotations.any?
     end
 
     def container

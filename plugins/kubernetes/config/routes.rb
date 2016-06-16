@@ -21,6 +21,10 @@ Samson::Application.routes.draw do
     end
   end
 
+  namespace :kubernetes do
+    resource :role_verification, only: [:new, :create]
+  end
+
   namespace :admin do
     namespace :kubernetes do
       resources :clusters, except: :destroy

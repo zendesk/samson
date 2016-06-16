@@ -2,26 +2,26 @@
 
 <%= render 'projects/header', project: project, tab: "stages" %>
 
-<% cache project do %>
-  <section class="clearfix tabs">
-    <table class="project-stages table table-condensed">
-      <thead>
-        <tr>
-          <th>Stage Name</th>
-          <% if DeployGroup.enabled? %>
-            <th>Deploy Groups</th>
+<section class="clearfix tabs">
+  <table class="project-stages table table-condensed">
+    <thead>
+      <tr>
+        <th>Stage Name</th>
+        <% if DeployGroup.enabled? %>
+          <th>Deploy Groups</th>
+        <% end %>
+        <th>Last Deploy</th>
+        <th class="pull-right">
+          <% if current_user.admin_for?(@project) %>
+            <%= link_to 'Manage', project_stages_path(@project) %>
           <% end %>
-          <th>Last Deploy</th>
-          <th class="pull-right">
-            <% if current_user.admin_for?(@project) %>
-              <%= link_to 'Manage', project_stages_path(@project) %>
-            <% end %>
-          </th>
-        </tr>
-      </thead>
-      <tbody>
+        </th>
+      </tr>
+    </thead>
+    <tbody>
+      <% cache [project, 'stages'] do %>
         <%= render partial: "stage", collection: @stages %>
-      </tbody>
-    </table>
-  </section>
-<% end %>
+      <% end %>
+    </tbody>
+  </table>
+</section>

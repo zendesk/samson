@@ -1,6 +1,6 @@
 require_relative '../test_helper'
 
-SingleCov.covered! uncovered: 12
+SingleCov.covered! uncovered: 9
 
 describe Project do
   let(:project) { projects(:test) }
@@ -316,6 +316,22 @@ describe Project do
       z = Project.create!(name: 'Z', repository_url: url)
       author.stars.create!(project: z)
       Project.ordered_for_user(author).map(&:name).must_equal ['Z', 'A', 'Project']
+    end
+  end
+
+  describe '#docker_repo' do
+    it "builds" do
+      project.docker_repo.must_equal "docker-registry.example.com/foo"
+    end
+
+    it "caches" do
+      project.docker_repo.object_id.must_equal project.docker_repo.object_id
+    end
+
+    it "supports namespaces" do
+      with_env DOCKER_REPO_NAMESPACE: 'bar' do
+        project.docker_repo.must_equal "docker-registry.example.com/bar/foo"
+      end
     end
   end
 end

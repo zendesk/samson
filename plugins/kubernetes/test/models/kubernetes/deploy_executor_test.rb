@@ -98,6 +98,7 @@ describe Kubernetes::DeployExecutor do
       assert execute!
       out.must_include "resque_worker: Live\n"
       out.must_include "SUCCESS"
+      out.wont_include "BigDecimal" # properly serialized configs
     end
 
     describe "role settings" do

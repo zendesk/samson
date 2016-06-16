@@ -158,13 +158,14 @@ describe SecretStorage do
 
   describe SecretStorage::HashicorpVault do
     let(:client) { SecretStorage::HashicorpVault.send(:vault_client) }
+    let(:secret_namespace) { "secret/apps/" }
 
     before { client.clear }
     after { client.verify! }
 
     describe ".read" do
       it "gets a value based on a key with /secret" do
-        client.expect('secret/production/foo/pod2/bar', vault: "bar")
+        client.expect(secret_namespace + 'production/foo/pod2/bar', vault: "bar")
         SecretStorage::HashicorpVault.read('production/foo/pod2/bar').must_equal(
           lease_id: nil,
           lease_duration: nil,
@@ -175,7 +176,7 @@ describe SecretStorage do
       end
 
       it "fails to read a key" do
-        client.expect('secret/production/foo/pod2/bar', vault: nil)
+        client.expect(secret_namespace + 'production/foo/pod2/bar', vault: nil)
         assert_raises ActiveRecord::RecordNotFound do
           SecretStorage::HashicorpVault.read('production/foo/pod2/bar')
         end
@@ -185,23 +186,23 @@ describe SecretStorage do
     describe ".delete" do
       it "deletes key with /secret" do
         assert SecretStorage::HashicorpVault.delete('production/foo/group/isbar')
-        client.set.must_equal('secret/production/foo/group/isbar' => nil)
+        client.set.must_equal(secret_namespace + 'production/foo/group/isbar' => nil)
       end
     end
 
     describe ".write" do
       it "writes a key with /secret" do
         assert SecretStorage::HashicorpVault.write('production/foo/group/isbar/foo', value: 'whatever')
-        client.set.must_equal("secret/production/foo/group/isbar%2Ffoo" => {vault: 'whatever'})
+        client.set.must_equal(secret_namespace + "production/foo/group/isbar%2Ffoo" => {vault: 'whatever'})
       end
     end
 
     describe ".keys" do
       it "lists all keys with recursion" do
         first_keys = ["production/project/group/this/", "production/project/group/that/"]
-        client.expect('list-secret/', first_keys)
-        client.expect('list-secret/production/project/group/this/', ["key"])
-        client.expect('list-secret/production/project/group/that/', ["key"])
+        client.expect('list-secret/apps/', first_keys)
+        client.expect('list-secret/apps/production/project/group/this/', ["key"])
+        client.expect('list-secret/apps/production/project/group/that/', ["key"])
         SecretStorage::HashicorpVault.keys.must_equal(
           [
             "production/project/group/this/key",

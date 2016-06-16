@@ -40,7 +40,8 @@ module Kubernetes
         next if scope.where(config_file: config_file.file_path).exists?
 
         service_name = config_file.service && config_file.service.metadata.name
-        if service_name && scope.where(service_name: service_name).exists?
+
+        if service_name && where(service_name: service_name).exists?
           service_name << "#{GENERATED}#{rand(9999999)}"
         end
 

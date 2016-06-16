@@ -2,6 +2,7 @@ module SecretStorage
   SECRET_KEYS_PARTS = [:environment_permalink, :project_permalink, :deploy_group_permalink, :key].freeze
   SEPARATOR = "/".freeze
   VAULT_SECRET_BACKEND = 'secret/'.freeze
+  SAMSON_SECRET_NAMESPACE = 'apps/'.freeze
 
   require 'attr_encrypted'
   class DbBackend
@@ -78,7 +79,7 @@ module SecretStorage
       end
 
       def keys
-        keys = vault_client.list(VAULT_SECRET_BACKEND)
+        keys = vault_client.list(VAULT_SECRET_BACKEND + SAMSON_SECRET_NAMESPACE)
         keys = keys_recursive(keys)
         keys.map! do |secret_path|
           convert_path(secret_path, :decode) # FIXME: ideally only decode the key(#4) part
@@ -96,7 +97,7 @@ module SecretStorage
         keys.flat_map do |key|
           new_key = key_path + key
           if key.end_with?('/') # a directory
-            keys_recursive(vault_client.list(VAULT_SECRET_BACKEND + new_key), new_key)
+            keys_recursive(vault_client.list(VAULT_SECRET_BACKEND + SAMSON_SECRET_NAMESPACE + new_key), new_key)
           else
             new_key
           end
@@ -107,7 +108,7 @@ module SecretStorage
       def vault_path(key)
         parts = key.split(SEPARATOR, SECRET_KEYS_PARTS.size)
         parts[-1] = convert_path(parts[-1], :encode)
-        VAULT_SECRET_BACKEND + parts.join(SEPARATOR)
+        VAULT_SECRET_BACKEND + SAMSON_SECRET_NAMESPACE + parts.join(SEPARATOR)
       end
 
       # convert from/to escaped characters

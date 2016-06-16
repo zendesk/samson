@@ -132,15 +132,22 @@ describe Kubernetes::DeployYaml do
     end
 
     describe "secret-sidecar-containers" do
+      with_env(VAULT_ADDR: "somehostontheinternet", VAULT_SSL_VERIFY: "false")
+
+      let(:secret_key) { 'production/foo/snafu/bar' }
+
       around do |test|
         silence_warnings { Kubernetes::DeployYaml.const_set(:SIDECAR_IMAGE, "docker-registry.example.com/foo:bar") }
-        with_env(
-          VAULT_ADDR: "somehostontheinternet",
-          VAULT_SSL_VERIFY: "false"
-        ) do
-          test.call
-          silence_warnings { Kubernetes::DeployYaml.const_set(:SIDECAR_IMAGE, nil) }
-        end
+        test.call
+        silence_warnings { Kubernetes::DeployYaml.const_set(:SIDECAR_IMAGE, nil) }
+      end
+
+      before do
+        old_metadata = "role: app-server\n    "
+        new_metadata = "role: app-server\n      annotations:\n        secret/FOO: #{secret_key}\n    "
+        assert doc.raw_template.sub!(old_metadata, new_metadata)
+
+        SecretStorage.write(secret_key, value: 'something', user_id: 123)
       end
 
       it "creates a sidecar" do
@@ -148,27 +155,36 @@ describe Kubernetes::DeployYaml do
       end
 
       it "adds to existing volume definitions in the sidecar" do
-        doc.raw_template.gsub!("containers:\n      - {}\n",
-          "containers:\n      - {}\n      volumes:\n      - {}\n      - {}\n")
+        assert doc.raw_template.sub!(
+          "containers:\n      - {}\n",
+          "containers:\n      - {}\n      volumes:\n      - {}\n      - {}\n"
+        )
         yaml.to_hash[:spec][:template][:spec][:volumes].count.must_equal 5
       end
 
       it "adds to existing volume definitions in the primary container" do
-        doc.raw_template.gsub!("containers:\n      - {}\n",
-          "containers:\n      - :name: foo\n        :volumeMounts:\n        - :name: bar\n")
+        assert doc.raw_template.sub!(
+          "containers:\n      - {}\n",
+          "containers:\n      - :name: foo\n        :volumeMounts:\n        - :name: bar\n"
+        )
         yaml.to_hash[:spec][:template][:spec][:containers].first[:volumeMounts].count.must_equal 2
       end
 
       it "adds to existing volume definitions in the primary container when volumeMounts is empty" do
-        doc.raw_template.gsub!("containers:\n      - {}\n",
-          "containers:\n      - :name: foo\n        :volumeMounts:\n")
+        assert doc.raw_template.sub!(
+          "containers:\n      - {}\n",
+          "containers:\n      - :name: foo\n        :volumeMounts:\n"
+        )
         yaml.to_hash[:spec][:template][:spec][:containers].first[:volumeMounts].count.must_equal 1
       end
 
+      it "creates no sidecar when there are no secrets" do
+        assert doc.raw_template.sub!('secret/', 'public/')
+        yaml.to_hash[:spec][:template][:spec][:containers].last[:name].must_equal(nil)
+      end
+
       it "fails to find a secret needed by the sidecar" do
-        old_metadata = "role: app-server\n    "
-        new_metadata = "role: app-server\n      annotations:\n        secret/FOO: production/foo/snafu/bar\n    "
-        doc.raw_template.gsub!(old_metadata, new_metadata)
+        SecretStorage.delete(secret_key)
         e = assert_raises Samson::Hooks::UserError do
           yaml.to_hash
         end
@@ -181,17 +197,12 @@ describe Kubernetes::DeployYaml do
         end
 
         it "secret is scoped correctly" do
-          old_metadata = "role: app-server\n    "
-          new_metadata = "role: app-server\n      annotations:\n        "
-          new_metadata += "secret/FOO: ${ENV}/foo/${DEPLOY_GROUP}/bar\n    "
-          doc.raw_template.gsub!(old_metadata, new_metadata)
+          assert doc.raw_template.sub!(secret_key, '${ENV}/foo/${DEPLOY_GROUP}/bar')
           yaml.to_hash[:spec][:template][:metadata][:annotations][:'secret/FOO'].must_equal "production/foo/pod1/bar"
         end
 
         it "does not effect a non secret annotation" do
-          old_metadata = "role: app-server\n    "
-          new_metadata = "role: app-server\n      annotations:\n        annotation_key: somevalueforthekey\n    "
-          doc.raw_template.gsub!(old_metadata, new_metadata)
+          assert doc.raw_template.sub!(secret_key, "#{secret_key}\n        annotation_key: somevalueforthekey")
           yaml.to_hash[:spec][:template][:metadata][:annotations][:annotation_key].must_equal "somevalueforthekey"
         end
       end
