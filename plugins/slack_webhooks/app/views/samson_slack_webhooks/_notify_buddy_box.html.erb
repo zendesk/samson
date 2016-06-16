@@ -1,4 +1,4 @@
-<% if @deploy.waiting_for_buddy? && @deploy.stage.send_slack_webhook_notifications? %>
+<% if @deploy.waiting_for_buddy? && @deploy.stage.send_slack_buddy_request? %>
   <%= form_tag slack_webhooks_notify_path(deploy_id: @deploy.id) do %>
     <div class="alert" style="display: none"></div>
 
