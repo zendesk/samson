@@ -12,7 +12,7 @@ module Kubernetes
         project_id: stage.project_id,
         deploy_group_id: stage.deploy_groups.map(&:id)
       ).to_a
-      roles = stage.project.kubernetes_roles.sort_by(&:name)
+      roles = stage.project.kubernetes_roles.not_deleted.sort_by(&:name)
 
       stage.deploy_groups.sort_by(&:natural_order).map do |deploy_group|
         dg_roles = project_dg_roles.select { |r| r.deploy_group_id == deploy_group.id }

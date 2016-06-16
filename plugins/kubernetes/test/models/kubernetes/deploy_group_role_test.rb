@@ -30,6 +30,18 @@ describe Kubernetes::DeployGroupRole do
         ]]
       )
     end
+
+    it "ignores soft deleted roles" do
+      kubernetes_roles(:app_server).soft_delete!
+      Kubernetes::DeployGroupRole.matrix(stage).must_equal(
+        [[
+          stage.deploy_groups.first,
+          [
+            [kubernetes_roles(:resque_worker), kubernetes_deploy_group_roles(:test_pod100_resque_worker)]
+          ]
+        ]]
+      )
+    end
   end
 
   describe "#seed!" do
