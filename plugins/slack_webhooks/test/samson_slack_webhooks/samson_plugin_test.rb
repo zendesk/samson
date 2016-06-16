@@ -43,7 +43,10 @@ describe SamsonSlackWebhooks do
         "channel" => nil,
         "stage_id" => nil,
         "created_at" => nil,
-        "updated_at" => nil
+        "updated_at" => nil,
+        "before_deploy" => false,
+        "after_deploy" => true,
+        "for_buddy" => false
       }]
     end
   end
@@ -51,7 +54,7 @@ describe SamsonSlackWebhooks do
   describe :stage_permitted_params do
     it "includes our params" do
       Samson::Hooks.fire(:stage_permitted_params).must_include(
-        slack_webhooks_attributes: [:id, :webhook_url, :channel, :_destroy]
+        slack_webhooks_attributes: [:id, :webhook_url, :channel, :before_deploy, :after_deploy, :for_buddy, :_destroy]
       )
     end
   end

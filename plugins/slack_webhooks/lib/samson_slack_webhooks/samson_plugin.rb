@@ -20,12 +20,12 @@ end
 
 Samson::Hooks.callback :before_deploy do |deploy, _buddy|
   if deploy.stage.send_slack_webhook_notifications?
-    SlackWebhookNotification.new(deploy: deploy, deploy_phase: :before_deploy).deliver
+    SlackWebhookNotification.new(deploy).deliver(:before_deploy)
   end
 end
 
 Samson::Hooks.callback :after_deploy do |deploy, _buddy|
   if deploy.stage.send_slack_webhook_notifications?
-    SlackWebhookNotification.new(deploy: deploy, deploy_phase: :after_deploy).deliver
+    SlackWebhookNotification.new(deploy).deliver(:after_deploy)
   end
 end
