@@ -293,7 +293,29 @@ fieldset {
 
 /* Very large tables */
 .large-table-responsive {
-  height: 100%;
-  max-height: 65vh;
-  overflow: auto;
+  position: relative;
+  overflow-x: auto;
+  overflow-y: hidden;
+
+  .fix-head,
+  .fix-col,
+  .fix-int {
+    opacity: 0;
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 100;
+    width: auto;
+    background: #fff;
+  }
+
+  .fix-head {
+    z-index: 200;
+    width: 100%;
+  }
+
+  .fix-int {
+    opacity: 1;
+    z-index: 300;
+  }
 }
