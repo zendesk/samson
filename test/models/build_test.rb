@@ -1,6 +1,6 @@
 require_relative '../test_helper'
 
-SingleCov.covered! uncovered: 11
+SingleCov.covered! uncovered: 7
 
 describe Build do
   include GitRepoTestHelper

@@ -57,10 +57,6 @@ class Build < ActiveRecord::Base
     @docker_image = image
   end
 
-  def file_from_repo(path)
-    project.repository.file_content path, git_sha
-  end
-
   def url
     AppRoutes.url_helpers.project_build_url(project, self)
   end

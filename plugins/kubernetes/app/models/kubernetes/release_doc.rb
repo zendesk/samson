@@ -95,7 +95,7 @@ module Kubernetes
     end
 
     def raw_template
-      @raw_template ||= build.file_from_repo(template_name)
+      @raw_template ||= kubernetes_release.project.repository.file_content(template_name, kubernetes_release.git_sha)
     end
 
     def template_name

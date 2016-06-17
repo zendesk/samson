@@ -146,15 +146,14 @@ module Kubernetes
         release = @doc.kubernetes_release
         role = @doc.kubernetes_role
         deploy_group = @doc.deploy_group
-        build = @doc.build
 
         release.pod_selector(deploy_group).merge(
           deploy_id: release.deploy_id,
           project_id: release.project_id,
           role_id: role.id,
           deploy_group: deploy_group.env_value.parameterize,
-          revision: build.git_sha,
-          tag: build.git_ref.parameterize
+          revision: release.git_sha,
+          tag: release.git_ref.parameterize
         )
       end
     end
@@ -166,9 +165,11 @@ module Kubernetes
     end
 
     def set_docker_image
-      docker_path = @doc.build.docker_repo_digest || "#{@doc.build.project.docker_repo}:#{@doc.build.docker_ref}"
-      # Assume first container is one we want to update docker image in
-      container[:image] = docker_path
+      if @doc.build
+        docker_path = @doc.build.docker_repo_digest || "#{@doc.build.project.docker_repo}:#{@doc.build.docker_ref}"
+        # Assume first container is one we want to update docker image in
+        container[:image] = docker_path
+      end
     end
 
     # helpful env vars, also useful for log tagging

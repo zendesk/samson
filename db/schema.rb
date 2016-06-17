@@ -11,13 +11,13 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20160523234717) do
+ActiveRecord::Schema.define(version: 20160617223512) do
 
   create_table "builds", force: :cascade do |t|
     t.integer  "project_id",                       null: false
     t.integer  "number",              limit: 4
-    t.string   "git_sha",             limit: 255
-    t.string   "git_ref",             limit: 255
+    t.string   "git_sha",             limit: 255,  null: false
+    t.string   "git_ref",             limit: 255,  null: false
     t.string   "docker_image_id",     limit: 255
     t.string   "docker_ref",          limit: 255
     t.string   "docker_repo_digest",  limit: 255
@@ -215,6 +215,8 @@ ActiveRecord::Schema.define(version: 20160523234717) do
     t.integer  "user_id"
     t.integer  "project_id",         limit: 4,                       null: false
     t.integer  "deploy_id",          limit: 4
+    t.string   "git_sha",            limit: 40,                      null: false
+    t.string   "git_ref",            limit: 255,                     null: false
   end
 
   add_index "kubernetes_releases", ["build_id"], name: "index_kubernetes_releases_on_build_id"

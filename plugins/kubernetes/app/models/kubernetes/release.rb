@@ -11,7 +11,7 @@ module Kubernetes
     has_many :release_docs, class_name: 'Kubernetes::ReleaseDoc', foreign_key: 'kubernetes_release_id'
     has_many :deploy_groups, through: :release_docs
 
-    validates :build, :project, presence: true
+    validates :project, :git_sha, :git_ref, presence: true
     validates :status, inclusion: STATUSES
     validate :validate_docker_image_in_registry, on: :create
     validate :validate_project_ids_are_in_sync

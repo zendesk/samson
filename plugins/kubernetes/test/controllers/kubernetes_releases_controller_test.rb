@@ -194,7 +194,7 @@ describe KubernetesReleasesController do
   end
 
   def expect_file_contents_from_repo
-    Build.any_instance.expects(:file_from_repo).returns(role_config_file)
+    GitRepository.any_instance.expects(:file_content).returns(role_config_file)
   end
 
   def current_release_count

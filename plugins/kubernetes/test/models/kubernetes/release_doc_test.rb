@@ -165,7 +165,7 @@ describe Kubernetes::ReleaseDoc do
     before do
       Kubernetes::ReleaseDoc.any_instance.unstub(:raw_template)
       GitRepository.any_instance.expects(:file_content).
-        with('kubernetes/app_server.yml', doc.build.git_sha).
+        with('kubernetes/app_server.yml', doc.kubernetes_release.git_sha).
         returns("xxx")
     end
 

@@ -156,7 +156,7 @@ class JobExecution
     ActiveSupport::Notifications.instrument("execute_shell.samson", payload) do
       payload[:success] =
         if stage.try(:kubernetes)
-          @executor = Kubernetes::DeployExecutor.new(@output, job: @job)
+          @executor = Kubernetes::DeployExecutor.new(@output, job: @job, reference: @reference)
           @executor.execute!
         else
           @executor.execute!(*cmds)
