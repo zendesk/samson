@@ -12,19 +12,20 @@
     <% end %>
   </p>
 
-  <div class="large-table-responsive">
-    <table class="table">
-      <thead>
-      <tr>
-        <th></th>
-        <% @environment.deploy_groups.sort_by(&:natural_order).each do |deploy_group| %>
-          <th><%= link_to deploy_group.name, deploy_group %></th>
-        <% end %>
-      </tr>
-      </thead>
-      <tbody>
-        <tr ng-repeat="project in projects" class="{{ project.css.tr_class }}" style="{{ project.css.style }}" project_deploy_groups/>
-      </tbody>
-    </table>
-  </div>
+  <table class="table" id="dashboard-table">
+    <thead>
+    <tr>
+      <th>Project</th>
+      <% @deploy_groups.each do |deploy_group| %>
+        <th><%= link_to deploy_group.name, deploy_group %></th>
+      <% end %>
+    </tr>
+    </thead>
+
+    <tbody>
+      <% @projects.each do |project| %>
+        <%= render partial: 'dashboard_table_row', locals: {project: project} %>
+      <% end %>
+    </tbody>
+  </table>
 </section>

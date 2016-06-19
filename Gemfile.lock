@@ -361,6 +361,18 @@ GEM
       rails-assets-angular (>= 1.0.8, < 2)
     rails-assets-bootstrap-select (1.10.0)
       rails-assets-jquery (>= 1.8)
+    rails-assets-datatables.net (1.10.12)
+      rails-assets-jquery (>= 1.7)
+    rails-assets-datatables.net-bs (1.10.11)
+      rails-assets-datatables.net (>= 1.10.9)
+      rails-assets-jquery (>= 1.7)
+    rails-assets-datatables.net-fixedcolumns (3.2.2)
+      rails-assets-datatables.net (>= 1.10.9)
+      rails-assets-jquery (>= 1.7)
+    rails-assets-datatables.net-fixedcolumns-bs (3.2.2)
+      rails-assets-datatables.net-bs (>= 1.10.9)
+      rails-assets-datatables.net-fixedcolumns (>= 3.1.0)
+      rails-assets-jquery (>= 1.7)
     rails-assets-font-awesome (4.3.0)
     rails-assets-jquery (2.2.1)
     rails-assets-jquery-cookie (1.4.1)
@@ -537,6 +549,10 @@ DEPENDENCIES
   rails-assets-angular-ui-bootstrap-bower!
   rails-assets-angular-ui-router!
   rails-assets-bootstrap-select!
+  rails-assets-datatables.net!
+  rails-assets-datatables.net-bs!
+  rails-assets-datatables.net-fixedcolumns!
+  rails-assets-datatables.net-fixedcolumns-bs!
   rails-assets-font-awesome!
   rails-assets-jquery!
   rails-assets-jquery-cookie!
@@ -576,6 +592,9 @@ DEPENDENCIES
   vault
   warden
   webmock
+
+RUBY VERSION
+   ruby 2.2.3p173
 
 BUNDLED WITH
    1.12.3
