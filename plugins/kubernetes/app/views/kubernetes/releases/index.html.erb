@@ -1,0 +1,40 @@
+<%= render 'projects/header', project: @project, tab: 'kubernetes' %>
+
+<section class="tabs kubernetes-section">
+  <%= render 'samson_kubernetes/navigation' %>
+
+  <table class="table table-condensed">
+    <thead>
+      <tr>
+        <th>Id</th>
+        <th>Build</th>
+        <th>Deploy Groups</th>
+        <th>Created</th>
+        <th>Created By</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% if @kubernetes_releases.empty? %>
+        <tr>
+          <td colspan="5">No releases have been created yet.</td>
+        </tr>
+      <% else %>
+        <% @kubernetes_releases.each do |kubernetes_release| %>
+          <tr>
+            <td><%= kubernetes_release.id %></td>
+            <td>
+              <%= link_to kubernetes_release.build.label, [kubernetes_release.project, kubernetes_release.build] %>
+            </td>
+            <td>
+              <% kubernetes_release.release_docs.map(&:deploy_group).sort_by(&:natural_order).each do |deploy_group| %>
+                 <span class="label label-info"><%= deploy_group.name %></span>
+              <% end %>
+            </td>
+            <td><%= kubernetes_release.created_at %></td>
+            <td><%= kubernetes_release.user.name %></td>
+          </tr>
+        <% end %>
+      <% end %>
+    </tbody>
+  </table>
+</section>
