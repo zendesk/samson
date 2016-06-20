@@ -15,20 +15,20 @@ describe DashboardsHelper do
     end
   end
 
-  describe '#project_style' do
+  describe '#dashboard_project_row_style' do
     it 'returns blank style for same versions' do
       prep_versions('v1.0')
-      project_style(1).must_equal ''
+      dashboard_project_row_style(1).must_equal ''
     end
 
     it 'returns warning for different versions' do
       prep_versions('v1.1')
-      project_style(1).must_equal 'class=warning'
+      dashboard_project_row_style(1).must_equal 'class=warning'
     end
 
     it 'returns no-deploys for no versions' do
       prep_versions('v1.0')
-      project_style(0).must_equal 'class=no-deploys'
+      dashboard_project_row_style(0).must_equal 'class=no-deploys'
     end
   end
 

@@ -1,4 +1,4 @@
-<tr <%= project_style(project.id)%> >
+<tr <%= dashboard_project_row_style(project.id)%> >
   <td><%= link_to project.name, project %></td>
 
   <% @deploy_groups.each do |deploy_group| %>

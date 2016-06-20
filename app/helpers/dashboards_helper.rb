@@ -3,7 +3,7 @@ module DashboardsHelper
     deploy_group_versions.values.map(&:reference).uniq.count > 1
   end
 
-  def project_style(project_id)
+  def dashboard_project_row_style(project_id)
     project_versions = @versions[project_id].values.map(&:reference).uniq.count
     if project_versions == 0
       'class=no-deploys'
