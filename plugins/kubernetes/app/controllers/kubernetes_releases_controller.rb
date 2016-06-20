@@ -23,6 +23,12 @@ class KubernetesReleasesController < ApplicationController
     attributes = params.require(:kubernetes_release).permit(:build_id, deploy_groups: [:id, roles: [:id, :replicas]]).
       merge(user: current_user, project: current_project)
 
+    if attributes[:build_id]
+      build = Build.find(attributes[:build_id])
+      attributes[:git_sha] = build.git_sha
+      attributes[:git_ref] = build.git_ref
+    end
+
     # UI does not have cpu/ram, so use something
     attributes.fetch(:deploy_groups).each do |dg|
       dg.fetch(:roles).each do |role|

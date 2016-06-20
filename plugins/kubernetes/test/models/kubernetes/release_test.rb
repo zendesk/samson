@@ -6,7 +6,7 @@ SingleCov.covered! uncovered: 16
 describe Kubernetes::Release do
   let(:build)  { builds(:docker_build) }
   let(:user)   { users(:deployer) }
-  let(:release) { Kubernetes::Release.new(build: build, user: user, project: project) }
+  let(:release) { Kubernetes::Release.new(build: build, user: user, project: project, git_sha: 'abababa', git_ref: 'master') }
   let(:deploy_group) { deploy_groups(:pod1) }
   let(:project) { projects(:test) }
   let(:app_server) { kubernetes_roles(:app_server) }
@@ -134,7 +134,7 @@ describe Kubernetes::Release do
   end
 
   def expect_file_contents_from_repo
-    Build.any_instance.expects(:file_from_repo).returns(role_config_file)
+    GitRepository.any_instance.expects(:file_content).returns(role_config_file)
   end
 
   def current_release_count
@@ -144,6 +144,8 @@ describe Kubernetes::Release do
   def release_params
     {
       build_id: build.id,
+      git_sha: build.git_sha,
+      git_ref: build.git_ref,
       project: project,
       deploy_groups: [
         {

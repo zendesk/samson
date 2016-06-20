@@ -31,8 +31,8 @@ describe Kubernetes::DeployYaml do
       spec.fetch(:uniqueLabelKey).must_equal "rc_unique_identifier"
       spec.fetch(:replicas).must_equal doc.replica_target
       spec.fetch(:template).fetch(:metadata).fetch(:labels).symbolize_keys.must_equal(
-        revision: "1a6f551a2ffa6d88e15eef5461384da0bfb1c194",
-        tag: "v123",
+        revision: "abababababa",
+        tag: "master",
         pre_defined: "foobar",
         release_id: doc.kubernetes_release_id.to_s,
         project: "foobar",
@@ -54,7 +54,7 @@ describe Kubernetes::DeployYaml do
 
     it "escapes things that would not be allowed in labels or environment values" do
       doc.deploy_group.update_column(:env_value, 'foo:bar')
-      doc.build.update_column(:git_ref, 'user/feature')
+      doc.kubernetes_release.update_column(:git_ref, 'user/feature')
 
       result = yaml.to_hash
       result.fetch(:spec).fetch(:template).fetch(:metadata).fetch(:labels).slice(:deploy_group, :role, :tag).must_equal(
