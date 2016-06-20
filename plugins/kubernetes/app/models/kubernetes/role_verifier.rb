@@ -47,7 +47,7 @@ module Kubernetes
       if role_definition.start_with?('{', '[')
         Array.wrap(JSON.load(role_definition))
       else
-        YAML.load_stream(role_definition)
+        YAML.load_stream(role_definition).compact
       end
     rescue
       @errors << "Unable to parse role definition"
