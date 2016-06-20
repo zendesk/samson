@@ -10,7 +10,7 @@ Paste role yaml/json here to verify it.
 <% end %>
 
 <%= form_tag kubernetes_role_verification_path do %>
-  <%= text_area_tag :role, '', size: '120x20' %>
+  <%= text_area_tag :role, params[:role], size: '120x20' %>
   <br/>
   <%= submit_tag 'Verify' %>
 <% end %>
