@@ -194,8 +194,8 @@ class JobExecution
       PROJECT_NAME: @job.project.name,
       PROJECT_PERMALINK: @job.project.permalink,
       PROJECT_REPOSITORY: @job.project.repository_url,
-      REVISION: @reference,
-      TAG: (@job.tag || @job.commit).to_s,
+      REVISION: @job.commit,
+      TAG: (@job.tag || @job.commit),
       CACHE_DIR: artifact_cache_dir
     }.merge(@env)
 
