@@ -13,6 +13,9 @@
 //= require jquery
 //= require jquery-ujs
 //= require jquery-cookie
+//= require datatables.net
+//= require datatables.net-bs
+//= require datatables.net-fixedcolumns
 //= require angular
 //= require angular-rails-templates
 //= require angular-ui-router
