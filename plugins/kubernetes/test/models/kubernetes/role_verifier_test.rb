@@ -55,6 +55,11 @@ describe Kubernetes::RoleVerifier do
       refute errors.empty?
     end
 
+    it "fails nicely with borked template" do
+      role_json.replace "---"
+      refute errors.empty?
+    end
+
     it "reports invalid json" do
       role_json.replace "{oops"
       errors.must_equal ["Unable to parse role definition"]
