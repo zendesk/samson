@@ -1,5 +1,3 @@
-require 'celluloid/current'
-require 'logger'
 require 'kubeclient'
 
 module Kubeclient
@@ -18,11 +16,4 @@ module Kubeclient
     ClientMixin.define_entity_methods(NEW_ENTITY_TYPES)
     ENTITY_TYPES.concat NEW_ENTITY_TYPES
   end
-end
-
-Celluloid.logger = Rails.logger
-$CELLULOID_DEBUG = true # rubocop:disable Style/GlobalVars
-
-if ENV['SERVER_MODE'] && !ENV['PRECOMPILE'] && !ENV['KUBERNETES_NOT_WATCHING']
-  Kubernetes::Cluster.find_each(&:watch!)
 end

@@ -6,6 +6,4 @@ Gem::Specification.new 'samson_kubernetes', '0.0.1' do |s|
 
   # Commented out while we use our own branch of kubeclient
   # s.add_runtime_dependency 'kubeclient', '>= 1.1'
-  s.add_runtime_dependency 'celluloid'
-  s.add_runtime_dependency 'celluloid-io'
 end
