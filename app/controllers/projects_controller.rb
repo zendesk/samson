@@ -34,7 +34,7 @@ class ProjectsController < ApplicationController
     @project.current_user = current_user
 
     if @project.save
-      if ENV['PROJECT_CREATED_NOTIFY_ADDRESS']
+      if Rails.application.config.samson.project_created_email
         ProjectMailer.created_email(@current_user, @project).deliver_later
       end
       redirect_to @project
@@ -62,6 +62,9 @@ class ProjectsController < ApplicationController
   def destroy
     project.soft_delete!
 
+    if Rails.application.config.samson.project_deleted_email
+      ProjectMailer.deleted_email(@current_user, project).deliver_later
+    end
     flash[:notice] = "Project removed."
     redirect_to admin_projects_path
   end

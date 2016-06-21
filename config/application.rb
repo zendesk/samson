@@ -64,6 +64,11 @@ module Samson
     config.samson.email.prefix = ENV["EMAIL_PREFIX"].presence || "DEPLOY"
     config.samson.email.sender_domain = ENV["EMAIL_SENDER_DOMAIN"].presence || "samson-deployment.com"
 
+    # Email notifications
+    config.samson.project_created_email = ENV["PROJECT_CREATED_NOTIFY_ADDRESS"]
+    config.samson.project_deleted_email = ENV["PROJECT_DELETED_NOTIFY_ADDRESS"].presence ||
+      ENV["PROJECT_CREATED_NOTIFY_ADDRESS"]
+
     # Whether or not jobs are actually executed.
     config.samson.enable_job_execution = true
 
