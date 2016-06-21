@@ -1,31 +1,6 @@
 test_release:
   user: deployer
   build: docker_build
-  status: live
-  project: test
-  git_sha: abababababa
-  git_ref: master
-
-second_test_release:
-  user: deployer
-  build: docker_build
-  status: live
-  project: test
-  git_sha: abababababa
-  git_ref: master
-
-live_release:
-  user: deployer
-  build: docker_build
-  status: live
-  project: test
-  git_sha: abababababa
-  git_ref: master
-
-created_release:
-  user: deployer
-  build: docker_build
-  status: created
   project: test
   git_sha: abababababa
   git_ref: master

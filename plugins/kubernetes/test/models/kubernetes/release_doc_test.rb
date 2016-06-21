@@ -128,7 +128,9 @@ describe Kubernetes::ReleaseDoc do
     it "is invalid without template" do
       doc.stubs(raw_template: nil)
       refute_valid doc
-      doc.errors.full_messages.must_equal ["Kubernetes release does not contain config file 'kubernetes/app_server.yml'"]
+      doc.errors.full_messages.must_equal(
+        ["Kubernetes release does not contain config file 'kubernetes/app_server.yml'"]
+      )
     end
 
     it "is invalid when missing role" do
