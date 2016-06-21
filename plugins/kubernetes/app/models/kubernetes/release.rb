@@ -1,7 +1,5 @@
 module Kubernetes
   class Release < ActiveRecord::Base
-    include Kubernetes::HasStatus
-
     self.table_name = 'kubernetes_releases'
 
     belongs_to :user
@@ -12,35 +10,11 @@ module Kubernetes
     has_many :deploy_groups, through: :release_docs
 
     validates :project, :git_sha, :git_ref, presence: true
-    validates :status, inclusion: STATUSES
     validate :validate_docker_image_in_registry, on: :create
     validate :validate_project_ids_are_in_sync
 
-    scope :not_dead, -> { where.not(status: :dead) }
-    scope :excluding, ->(ids) { where.not(id: ids) }
-    scope :with_not_dead_release_docs, -> {
-      joins(:release_docs).where.not(Kubernetes::ReleaseDoc.table_name => { status: :dead })
-    }
-
-    def release_is_live!
-      finish_deploy(:live)
-    end
-
-    def fail!
-      finish_deploy(:failed)
-      release_docs.each do |release_doc|
-        release_doc.fail! unless release_doc.live?
-      end
-    end
-
     def user
       super || NullUser.new(user_id)
-    end
-
-    def docs_by_role
-      @docs_by_role ||= release_docs.each_with_object({}) do |rel_doc, hash|
-        hash[rel_doc.kubernetes_role.label_name] = rel_doc
-      end
     end
 
     # Creates a new Kubernetes Release and corresponding ReleaseDocs
@@ -50,20 +24,6 @@ module Kubernetes
         release.send :create_release_docs, params if release.persisted?
         release
       end
-    end
-
-    def release_doc_for(deploy_group_id, role_id)
-      release_docs.find_by(deploy_group_id: deploy_group_id, kubernetes_role_id: role_id)
-    end
-
-    def update_status(release_doc)
-      if release_docs.all?(&:live?) then self.status = :live
-      elsif release_docs.all?(&:dead?) then self.status = :dead
-      elsif release_doc.spinning_up? then self.status = :spinning_up
-      elsif release_doc.spinning_down? then self.status = :spinning_down
-      elsif release_docs.any?(&:dead?) then self.status = :spinning_down
-      end
-      save!
     end
 
     def clients
@@ -98,7 +58,7 @@ module Kubernetes
           )
         end
       end
-      raise 'No Kubernetes::ReleaseDoc has been created' if release_docs.empty?
+      raise ArgumentError, 'No roles or deploy groups given' if release_docs.empty?
     end
 
     def validate_docker_image_in_registry
@@ -111,10 +71,6 @@ module Kubernetes
       if build && build.project_id != project_id
         errors.add(:build, 'build.project_id is out of sync with project_id')
       end
-    end
-
-    def finish_deploy(status)
-      update_attributes!(status: status, deploy_finished_at: Time.now)
     end
   end
 end

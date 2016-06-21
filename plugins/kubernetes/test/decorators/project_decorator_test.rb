@@ -21,13 +21,6 @@ describe Project do
     end
   end
 
-  describe "#name_for_label" do
-    it "cleanes up the name" do
-      project.name = 'Ab(*c&d-1'
-      project.name_for_label.must_equal 'ab-c-d-1'
-    end
-  end
-
   describe ".with_kubernetes_roles" do
     it "shows projects with kubernetes roles" do
       Project.with_kubernetes_roles.must_equal([projects(:test)])

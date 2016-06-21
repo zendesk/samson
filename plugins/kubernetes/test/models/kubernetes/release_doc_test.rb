@@ -1,6 +1,6 @@
 require_relative "../../test_helper"
 
-SingleCov.covered! uncovered: 14
+SingleCov.covered!
 
 describe Kubernetes::ReleaseDoc do
   let(:doc) { kubernetes_release_docs(:test_release_pod_1) }
@@ -13,7 +13,8 @@ describe Kubernetes::ReleaseDoc do
     end
 
     it "does nothing when no service is running" do
-      doc.stubs(service: stub(running?: true))
+      doc.kubernetes_role.service_name = 'app'
+      Kubernetes::Service.any_instance.stubs(running?: true)
       doc.ensure_service.must_equal "Service already running"
     end
 
@@ -109,6 +110,12 @@ describe Kubernetes::ReleaseDoc do
         doc.deploy
       end
     end
+
+    it "raises on unknown" do
+      doc.send(:deploy_yaml).send(:template)['kind'] = 'WTFBBQ'
+      e = assert_raises(RuntimeError) { doc.deploy }
+      e.message.must_include "Unknown deploy object wtfbbq"
+    end
   end
 
   describe "#validate_config_file" do
@@ -116,6 +123,12 @@ describe Kubernetes::ReleaseDoc do
 
     it "is valid" do
       assert_valid doc
+    end
+
+    it "is invalid without template" do
+      doc.stubs(raw_template: nil)
+      refute_valid doc
+      doc.errors.full_messages.must_equal ["Kubernetes release does not contain config file 'kubernetes/app_server.yml'"]
     end
 
     it "is invalid when missing role" do
@@ -175,6 +188,39 @@ describe Kubernetes::ReleaseDoc do
 
     it "caches" do
       doc.raw_template.object_id.must_equal doc.raw_template.object_id
+    end
+
+    it "caches not found templates" do
+      GitRepository.any_instance.unstub(:file_content)
+      GitRepository.any_instance.expects(:file_content).once.returns(nil)
+      doc.raw_template.must_equal nil
+      doc.raw_template.must_equal nil
+    end
+  end
+
+  describe "#deploy_template" do
+    let(:raw_template) { "---\nkind: Deployment\n" }
+    let(:service) { "---\nkind: Service\n" }
+
+    before { doc.expects(:raw_template).returns(raw_template) }
+
+    it "works with 1 deploy object" do
+      doc.deploy_template.must_equal("kind" => 'Deployment')
+    end
+
+    it "ignores non-deploy objects" do
+      raw_template.prepend service
+      doc.deploy_template.must_equal("kind" => 'Deployment')
+    end
+
+    it "raises with multiple deploy objects" do
+      raw_template << raw_template
+      assert_raises(Samson::Hooks::UserError) { doc.deploy_template }
+    end
+
+    it "raises without deploy objects" do
+      raw_template.replace(service)
+      assert_raises(Samson::Hooks::UserError) { doc.deploy_template }
     end
   end
 end

@@ -4,8 +4,4 @@ Project.class_eval do
   has_many :kubernetes_deploy_group_roles, class_name: 'Kubernetes::DeployGroupRole'
 
   scope :with_kubernetes_roles, -> { where(id: Kubernetes::Role.not_deleted.pluck('distinct project_id')) }
-
-  def name_for_label
-    name.parameterize('-')
-  end
 end
