@@ -98,8 +98,10 @@ module Kubernetes
     end
 
     def fetch_endpoint
-      @endpoint_object = client.get_endpoints(namespace: namespace,
-                                              field_selector: "metadata.name=#{name}").first
+      @endpoint_object = client.get_endpoints(
+        namespace: namespace,
+        field_selector: "metadata.name=#{name}"
+      ).first
     end
 
     def client
