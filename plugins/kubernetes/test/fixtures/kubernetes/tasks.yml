@@ -1,0 +1,5 @@
+---
+db_migrate:
+  project: test
+  name: db_migrate
+  config_file: 'kubernetes/tasks/db_migrate.yml'

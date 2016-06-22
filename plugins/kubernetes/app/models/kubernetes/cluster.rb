@@ -27,6 +27,15 @@ module Kubernetes
       )
     end
 
+    def batch_client
+      @extension_client ||= Kubeclient::Client.new(
+        context.api_endpoint.gsub(/\/api$/, '') + '/apis',
+        'batch/v1',
+        ssl_options: context.ssl_options,
+        socket_options: client_socket_options
+      )
+    end
+
     def context
       @context ||= kubeconfig.context(config_context)
     end

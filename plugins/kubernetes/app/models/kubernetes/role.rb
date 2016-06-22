@@ -60,7 +60,7 @@ module Kubernetes
     def self.configured_for_project(project, git_sha)
       known = not_deleted.where(project: project)
 
-      necessary_role_configs = kubernetes_config_files_in_repo(project, git_sha).map(&:file_path)
+      necessary_role_configs = kubernetes_config_files_in_repo(project, 'kubernetes', git_sha).map(&:file_path)
       necessary_role_configs.map do |file|
         known.detect { |r| r.config_file == file } || begin
           url = AppRoutes.url_helpers.project_kubernetes_roles_url(project)
@@ -102,8 +102,7 @@ module Kubernetes
     end
 
     class << self
-      def kubernetes_config_files_in_repo(project, git_ref)
-        path = 'kubernetes'
+      def kubernetes_config_files_in_repo(project, path, git_ref)
         files = project.repository.file_content(path, git_ref) || []
         files = files.split("\n").grep(/\.(yml|yaml|json)$/).map { |f| "#{path}/#{f}" }
         files.map do |file|

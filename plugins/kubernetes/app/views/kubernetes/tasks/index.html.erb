@@ -1,0 +1,38 @@
+<%= render 'projects/header', project: @project, tab: 'kubernetes' %>
+
+<section class="tabs kubernetes-section clearfix">
+  <%= render 'samson_kubernetes/navigation' %>
+
+  <% if @tasks.none? %>
+    <%= render 'seed' %>
+  <% else %>
+    <div class="table table-hover table-condensed">
+      <table class="table">
+        <tr>
+          <th>Name</th>
+          <th>Config</th>
+          <th></th>
+        </tr>
+
+        <% @tasks.each do |task| %>
+          <tr>
+            <td><%= link_to task.name, [@project, task] %></td>
+            <td><%= task.config_file %></td>
+            <td>
+              <%= link_to "Run!", new_project_kubernetes_job_path(@project, kubernetes_task_id: task), class: "btn btn-default btn-primary" %>
+              <%= link_to "Executions", project_kubernetes_jobs_path(kubernetes_task_id: task), class: "btn btn-default" %>
+            </td>
+          </tr>
+        <% end %>
+      </table>
+    </div>
+  <% end %>
+
+  <% if current_user.admin_for?(@project) %>
+    <div class="admin-actions">
+      <div class="pull-right">
+        <%= link_to "New", new_project_kubernetes_task_path(@project), class: "btn btn-default" %>
+      </div>
+    </div>
+  <% end %>
+</section>
