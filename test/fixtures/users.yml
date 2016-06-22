@@ -16,6 +16,7 @@ deployer:
   email: "deployer@example.com"
   role_id: <%= Role::DEPLOYER.id %>
   external_id: 'google-2'
+  token: deployertoken
 
 deployer_buddy:
   name: "DeployerBuddy"
@@ -28,6 +29,7 @@ viewer:
   email: "viewer@example.com"
   role_id: <%= Role::VIEWER.id %>
   external_id: 'google-3'
+  token: viewertoken
 
 github_viewer:
   name: "GitHub Viewer"

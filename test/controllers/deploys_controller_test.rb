@@ -240,8 +240,29 @@ describe DeploysController do
       end
     end
 
+    describe "a POST to :create on behalf of a deployer" do
+      let(:params) { { deploy: { reference: 'master' } } }
+
+      before do
+        deploy_service.stubs(:deploy!).capture(deploy_called).returns(deploy)
+        post :create, params.merge(
+          project_id: project.to_param,
+          stage_id: stage.to_param,
+          format: :json,
+          on_behalf: 'deployertoken'
+        )
+      end
+
+      it "creates a deploy that belongs to the deployer" do
+        this_deploy = Deploy.find_by_id JSON.parse(@response.body)['id']
+        this_deploy.job.user.must_equal users(:deployer)
+      end
+    end
+
     unauthorized :get, :new, project_id: :foo, stage_id: 2
     unauthorized :post, :create, project_id: :foo, stage_id: 2
+    unauthorized :post, :create, project_id: :foo, stage_id: 2, on_behalf: 'viewertoken'
+    unauthorized :post, :create, project_id: :foo, stage_id: 2, on_behalf: 'nonexistent'
     unauthorized :post, :buddy_check, project_id: :foo, id: 1
     unauthorized :delete, :destroy, project_id: :foo, id: 1
   end

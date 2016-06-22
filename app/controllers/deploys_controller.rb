@@ -3,7 +3,7 @@ class DeploysController < ApplicationController
 
   skip_before_action :require_project, only: [:active, :active_count, :changeset]
 
-  before_action :authorize_project_deployer!, only: [:new, :create, :confirm, :buddy_check, :destroy]
+  before_action :authorize_project_deployer!, only: [:new, :confirm, :buddy_check, :destroy]
   before_action :find_deploy, except: [:index, :active, :active_count, :new, :create, :confirm, :search]
   before_action :stage, only: :new
 
@@ -94,7 +94,9 @@ class DeploysController < ApplicationController
   end
 
   def create
-    creator = params[:on_behalf] ? User.find_by_token(params[:on_behalf]) : current_user
+    puts params[:on_behalf] if params[:on_behalf].present?
+    creator = params[:on_behalf].present? ? User.find_by_token(params[:on_behalf]) : current_user
+    unauthorized! if creator.nil? || !creator.deployer_for?(current_project)
     deploy_service = DeployService.new(creator)
     @deploy = deploy_service.deploy!(stage, deploy_params)
 
