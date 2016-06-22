@@ -64,24 +64,6 @@ describe Kubernetes::DeployYaml do
       )
     end
 
-    describe "deployment" do
-      it "fails when deployment section is missing" do
-        assert doc.raw_template.sub!('Deployment', 'Foobar')
-        e = assert_raises Samson::Hooks::UserError do
-          yaml.to_hash
-        end
-        e.message.must_include "included 0 "
-      end
-
-      it "fails when multiple deployment sections are present" do
-        doc.raw_template.replace("#{doc.raw_template}\n#{doc.raw_template}")
-        e = assert_raises Samson::Hooks::UserError do
-          yaml.to_hash
-        end
-        e.message.must_include "included 2 objects"
-      end
-    end
-
     describe "containers" do
       let(:result) { yaml.to_hash }
       let(:container) { result.fetch(:spec).fetch(:template).fetch(:spec).fetch(:containers).first }

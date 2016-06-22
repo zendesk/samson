@@ -27,34 +27,38 @@ module Kubernetes
       build = find_or_create_build
       return false if stopped?
       release = create_release(build)
-      ensure_service(release)
-      create_deploys(release)
-      success = wait_for_deploys_to_finish(release)
-      show_failure_cause(release) unless success
-      success
+
+      jobs, deploys = release.release_docs.partition(&:job?)
+      if jobs.any?
+        @output.puts "First deploying jobs ..." if deploys.any?
+        return false unless execute_deploys(release, jobs)
+        @output.puts "Now deploying other roles ..." if deploys.any?
+      end
+      if deploys.any?
+        ensure_service(deploys)
+        return false unless execute_deploys(release, deploys)
+      end
+      true
     end
 
     private
 
-    def wait_for_deploys_to_finish(release)
+    def wait_for_deploys_to_finish(release, release_docs)
       start = Time.now
       stable_ticks = CHECK_STABLE / TICK
-      expected = release.release_docs.to_a.sum(&:desired_pod_count)
+      expected = release_docs.to_a.sum(&:desired_pod_count)
       @output.puts "Waiting for #{expected} pods to be created"
 
       loop do
         return false if stopped?
 
-        statuses = pod_statuses(release)
+        statuses = pod_statuses(release, release_docs)
 
         if @testing_for_stability
           if statuses.all?(&:live)
             @testing_for_stability += 1
             @output.puts "Stable #{@testing_for_stability}/#{stable_ticks}"
-            if stable_ticks == @testing_for_stability
-              @output.puts "SUCCESS"
-              return true
-            end
+            return success if stable_ticks == @testing_for_stability
           else
             print_statuses(statuses)
             unstable!
@@ -63,8 +67,12 @@ module Kubernetes
         else
           print_statuses(statuses)
           if statuses.all?(&:live) && statuses.count == expected
-            @output.puts "READY, starting stability test"
-            @testing_for_stability = 0
+            if release_docs.all?(&:job?)
+              return success
+            else
+              @output.puts "READY, starting stability test"
+              @testing_for_stability = 0
+            end
           elsif statuses.map(&:details).include?(RESTARTED)
             unstable!
             return false
@@ -78,9 +86,9 @@ module Kubernetes
       end
     end
 
-    def pod_statuses(release)
+    def pod_statuses(release, release_docs)
       pods = release.clients.flat_map { |client, query| fetch_pods(client, query) }
-      release.release_docs.flat_map { |release_doc| release_statuses(pods, release_doc) }
+      release_docs.flat_map { |release_doc| release_statuses(pods, release_doc) }
     end
 
     def fetch_pods(client, query)
@@ -285,20 +293,32 @@ module Kubernetes
       release
     end
 
-    def create_deploys(release)
-      release.release_docs.each do |release_doc|
-        @output.puts "Creating deploy for #{release_doc.deploy_group.name} role #{release_doc.kubernetes_role.name}"
+    def deploy(release_docs)
+      release_docs.each do |release_doc|
+        @output.puts "Creating for #{release_doc.deploy_group.name} role #{release_doc.kubernetes_role.name}"
         release_doc.deploy
       end
     end
 
+    def execute_deploys(release, deploys)
+      deploy(deploys)
+      success = wait_for_deploys_to_finish(release, deploys)
+      show_failure_cause(release) unless success
+      success
+    end
+
     # Create the service or report it's status
-    def ensure_service(release)
-      release.release_docs.each do |release_doc|
+    def ensure_service(release_docs)
+      release_docs.each do |release_doc|
         role = release_doc.kubernetes_role
-        status = release_doc.ensure_service
+        status = release_doc.ensure_service # either succeeds or raises
         @output.puts "#{status} for role #{role.name} / service #{role.service_name.presence || "none"}"
       end
+    end
+
+    def success
+      @output.puts "SUCCESS"
+      true
     end
   end
 end

@@ -103,7 +103,11 @@ class ActiveSupport::TestCase
   end
 
   def kubernetes_fake_raw_template
-    template = {
+    Kubernetes::ReleaseDoc.any_instance.stubs(raw_template: kubernetes_faked_raw_template.to_yaml)
+  end
+
+  def kubernetes_faked_raw_template
+    {
       'kind' => 'Deployment',
       'spec' => {
         'template' => {
@@ -117,7 +121,6 @@ class ActiveSupport::TestCase
         'labels' => {'project' => 'foobar', 'role' => 'app-server'}
       }
     }
-    Kubernetes::ReleaseDoc.any_instance.stubs(raw_template: template.to_yaml)
   end
 
   private

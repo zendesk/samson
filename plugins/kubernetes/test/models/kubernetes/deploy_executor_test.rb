@@ -223,6 +223,67 @@ describe Kubernetes::DeployExecutor do
       end
     end
 
+    describe "running a job before the deploy" do
+      before do
+        # we need multiple different templates here
+        # make the worker a job and keep the app server
+        Kubernetes::ReleaseDoc.any_instance.unstub(:raw_template)
+        GitRepository.any_instance.expects(:file_content).with('kubernetes/resque_worker.yml', anything).returns({
+          'kind' => 'Job',
+          'spec' => {
+            'template' => {
+              'metadata' => {'labels' => {'project' => 'foobar', 'role' => 'migrate'}},
+              'spec' => {
+                'containers' => [{'name' => 'job'}],
+                'restartPolicy' => 'Never'
+              }
+            }
+          },
+          'metadata' => {
+            'name' => 'test',
+            'labels' => {'project' => 'foobar', 'role' => 'migrate'}
+          }
+        }.to_yaml)
+        GitRepository.any_instance.stubs(:file_content).with('kubernetes/app_server.yml', anything).
+          returns(kubernetes_faked_raw_template.to_yaml)
+
+        # check if the job already exists ... it does not
+        stub_request(:get, "http://foobar.server/apis/extensions/v1beta1/namespaces/staging/jobs/test").
+          to_return(status: 404)
+
+        # create job
+        stub_request(:post, "http://foobar.server/apis/extensions/v1beta1/namespaces/staging/jobs").
+          to_return(body: '{}')
+      end
+
+      it "runs only jobs" do
+        kubernetes_roles(:app_server).delete
+        assert execute!
+        out.must_include "resque_worker: Live\n"
+        out.must_include "SUCCESS"
+        out.wont_include "stability"
+        out.wont_include "deploying jobs" # not announcing that we deploy jobs since there is nothing else
+        out.wont_include "other roles" # not announcing that we have more to deploy
+      end
+
+      it "runs jobs and then the deploy" do
+        assert execute!
+        out.must_include "resque_worker: Live\n"
+        out.must_include "SUCCESS"
+        out.must_include "stability" # testing deploy for stability
+        out.must_include "deploying jobs" # announcing that we deploy jobs first
+        out.must_include "other roles" # announcing that we have more to deploy
+      end
+
+      it "fails when jobs fail" do
+        executor.expects(:execute_deploys).returns false # jobs failed, they are the first execution
+        refute execute!
+        out.wont_include "SUCCESS"
+        out.wont_include "stability"
+        out.wont_include "other roles" # not announcing that we have more to deploy
+      end
+    end
+
     it "fails when release has errors" do
       Kubernetes::Release.any_instance.expects(:persisted?).at_least_once.returns(false)
       e = assert_raises Samson::Hooks::UserError do

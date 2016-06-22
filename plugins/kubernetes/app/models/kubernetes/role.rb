@@ -38,14 +38,13 @@ module Kubernetes
         scope = where(project: project)
         next if scope.where(config_file: config_file.path).exists?
         begin
-          next unless deploy = config_file.deploy
-        rescue Samson::Hooks::UserError
+          next unless deploy = (config_file.deploy || config_file.job)
+        rescue Samson::Hooks::UserError # invalid config with multiple deploys ...
           next
         end
 
-        # deploy
-        name = deploy.fetch(:metadata, {}).fetch(:labels, {})[:role] ||
-          File.basename(config_file.path).split('.', 2).first
+        # deploy / job
+        next unless name = deploy.fetch(:metadata, {}).fetch(:labels, {})[:role]
 
         # service
         begin
