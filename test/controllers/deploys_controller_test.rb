@@ -241,16 +241,14 @@ describe DeploysController do
     end
 
     describe "a POST to :create on behalf of a deployer" do
-      let(:params) { { deploy: { reference: 'master' } } }
-
       before do
         deploy_service.stubs(:deploy!).capture(deploy_called).returns(deploy)
-        post :create, params.merge(
+        post :create,
+          deploy: { reference: 'master' },
           project_id: project.to_param,
           stage_id: stage.to_param,
           format: :json,
           on_behalf: 'deployertoken'
-        )
       end
 
       it "creates a deploy that belongs to the deployer" do
@@ -403,4 +401,8 @@ describe DeploysController do
       end
     end
   end
+
+  unauthorized :post, :create, project_id: :foo, stage_id: 2, on_behalf: 'viewertoken'
+  unauthorized :post, :create, project_id: :foo, stage_id: 2, on_behalf: 'nonexistent'
+  unauthorized :post, :create, project_id: :foo, stage_id: 2, on_behalf: 'deployertoken'
 end
