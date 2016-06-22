@@ -94,7 +94,8 @@ class DeploysController < ApplicationController
   end
 
   def create
-    deploy_service = DeployService.new(current_user)
+    creator = params[:on_behalf] ? User.find_by_token(params[:on_behalf]) : current_user
+    deploy_service = DeployService.new(creator)
     @deploy = deploy_service.deploy!(stage, deploy_params)
 
     respond_to do |format|
@@ -156,7 +157,7 @@ class DeploysController < ApplicationController
   protected
 
   def deploy_permitted_params
-    [:reference, :stage_id] + Samson::Hooks.fire(:deploy_permitted_params)
+    [:reference, :stage_id, :on_behalf] + Samson::Hooks.fire(:deploy_permitted_params)
   end
 
   def reference
