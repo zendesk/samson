@@ -97,23 +97,23 @@ describe Kubernetes::JobsController do
       let(:job_params) { { "stage_id" => stage.id.to_param, "commit" => "master" } }
 
       before do
-        Kubernetes::JobService.stubs(:new).with(user).returns(job_service)
-        job_service.stubs(:run!).capture(execute_called).returns(job)
+        Kubernetes::JobService.stubs(:new).returns(job_service)
+        job_service.stubs(:run!).capture(execute_called)
         JobExecution.stubs(:start_job)
 
         post :create, kubernetes_job: job_params, project_id: project.to_param, kubernetes_task_id: task.id
       end
 
       it "redirects to the job path" do
-        assert_redirected_to project_kubernetes_job_path(project, job, kubernetes_task_id: task.id)
+        assert_redirected_to project_kubernetes_job_path(project, Kubernetes::Job.last, kubernetes_task_id: task.id)
       end
 
       it "creates a job" do
-        assert_equal [[task, job_params]], execute_called
+        assert_equal [[]], execute_called
       end
 
       describe "when invalid" do
-        let(:job) { Kubernetes::Job.new }
+        let(:job_params) { { "stage_id" => '', "commit" => "master" } }
 
         it "renders" do
           assert_template :new

@@ -9,9 +9,10 @@ class Kubernetes::JobsController < ApplicationController
   end
 
   def create
-    @job = Kubernetes::JobService.new(current_user).run!(@task, job_params)
+    @job = @task.kubernetes_jobs.build(job_params)
 
-    if @job.persisted?
+    if @job.save
+      Kubernetes::JobService.new(@job).run!
       redirect_to project_kubernetes_job_path(@project, @job, kubernetes_task_id: @task)
     else
       render :new
@@ -42,6 +43,6 @@ class Kubernetes::JobsController < ApplicationController
   end
 
   def job_params
-    params.require(:kubernetes_job).permit(:stage_id, :commit)
+    params.require(:kubernetes_job).permit(:stage_id, :commit).merge(user: current_user)
   end
 end
