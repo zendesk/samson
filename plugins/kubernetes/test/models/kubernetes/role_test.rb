@@ -16,8 +16,8 @@ describe Kubernetes::Role do
 
   def commit
     execute_on_remote_repo <<-SHELL
-        git add .
-        git commit -m "second commit"
+      git add .
+      git commit -m "second commit"
     SHELL
   end
 

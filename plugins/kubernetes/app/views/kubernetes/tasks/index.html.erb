@@ -19,8 +19,8 @@
             <td><%= link_to task.name, [@project, task] %></td>
             <td><%= task.config_file %></td>
             <td>
-              <%= link_to "Run!", new_project_kubernetes_job_path(@project, kubernetes_task_id: task), class: "btn btn-default" %>
-              <%= link_to "View Executions", project_kubernetes_jobs_path(kubernetes_task_id: task), class: "btn btn-default" %>
+              <%= link_to "Run!", new_project_kubernetes_job_path(@project, kubernetes_task_id: task), class: "btn btn-default btn-primary" %>
+              <%= link_to "Executions", project_kubernetes_jobs_path(kubernetes_task_id: task), class: "btn btn-default" %>
             </td>
           </tr>
         <% end %>

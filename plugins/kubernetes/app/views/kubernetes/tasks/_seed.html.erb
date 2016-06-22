@@ -1,6 +1,6 @@
 <%= form_tag seed_project_kubernetes_tasks_path(@project), class: "form-horizontal" do %>
   <fieldset>
-    No tasks exist, you can seed tasks from all files in kubernetes/jobs/*.
+    No tasks exist, you can seed tasks from all files in <%= Kubernetes::Task::FOLDER %>/*.
     <br/><br/>
     <div class="form-group">
       <%= label_tag :ref, 'Branch', class: "col-lg-2 control-label" %>
