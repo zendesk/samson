@@ -162,6 +162,15 @@ describe GitRepository do
       repository.tag_from_ref('master~').must_equal 'v1'
       repository.tag_from_ref('master').must_match /^v1-1-g[0-9a-f]{7}$/
     end
+
+    it 'returns tag when it is ambiguous' do
+      create_repo_with_tags
+      execute_on_remote_repo <<-SHELL
+        git checkout -b v1
+      SHELL
+      repository.clone!
+      repository.tag_from_ref('v1').must_equal 'v1'
+    end
   end
 
   describe "#tags" do
