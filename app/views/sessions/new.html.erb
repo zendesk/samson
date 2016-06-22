@@ -2,24 +2,30 @@
   <h1 class="login-brand">Samson</h1>
   <p>Understand what is being deployed.</p>
   <div class="login">
-    <% if Rails.application.config.samson.auth.github %>
-      <%= link_to omniauth_path(:github), class: "action github" do %>
-        <%= image_tag image_url('github.png') %> Login with GitHub
+    <% if Rails.application.config.samson.auth.values.none? %>
+      You cannot signup or login since no auth provider is configured.<br/>
+      Please configure them via the AUTH_* environment variables as documented in
+      <%= link_to '.env.example', 'https://github.com/zendesk/samson/blob/master/.env.example' %>.
+    <% else %>
+      <% if Rails.application.config.samson.auth.github %>
+        <%= link_to omniauth_path(:github), class: "action github" do %>
+          <%= image_tag image_url('github.png') %> Login with GitHub
+        <% end %>
       <% end %>
-    <% end %>
-    <% if Rails.application.config.samson.auth.google %>
-      <%= link_to omniauth_path(:google), class: "action google" do %>
-        <%= image_tag image_url('google.png') %> Login with Google
+      <% if Rails.application.config.samson.auth.google %>
+        <%= link_to omniauth_path(:google), class: "action google" do %>
+          <%= image_tag image_url('google.png') %> Login with Google
+        <% end %>
       <% end %>
-    <% end %>
-    <% if Rails.application.config.samson.auth.ldap %>
-      <%= link_to omniauth_path(:ldap), class: "action ldap" do %>
-        <%= image_tag image_url('ldap.png') %> Login with LDAP
+      <% if Rails.application.config.samson.auth.ldap %>
+        <%= link_to omniauth_path(:ldap), class: "action ldap" do %>
+          <%= image_tag image_url('ldap.png') %> Login with LDAP
+        <% end %>
       <% end %>
-    <% end %>
-    <% if Rails.application.config.samson.auth.gitlab %>
-      <%= link_to omniauth_path('gitlab'), class: "action gitlab" do %>
-        <%= image_tag image_url('gitlab.png') %> Login with Gitlab
+      <% if Rails.application.config.samson.auth.gitlab %>
+        <%= link_to omniauth_path('gitlab'), class: "action gitlab" do %>
+          <%= image_tag image_url('gitlab.png') %> Login with Gitlab
+        <% end %>
       <% end %>
     <% end %>
   </div>
