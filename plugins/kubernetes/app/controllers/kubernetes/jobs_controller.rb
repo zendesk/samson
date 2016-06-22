@@ -1,7 +1,7 @@
 class Kubernetes::JobsController < ApplicationController
   include CurrentProject
 
-  before_action :authorize_project_admin!, only: [:new, :create, :destroy]
+  before_action :authorize_project_admin!, except: [:index, :show]
   before_action :find_task, except: [:stream]
 
   def new
@@ -44,5 +44,4 @@ class Kubernetes::JobsController < ApplicationController
   def job_params
     params.require(:kubernetes_job).permit(:stage_id, :commit)
   end
-
 end
