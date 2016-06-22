@@ -94,7 +94,6 @@ class DeploysController < ApplicationController
   end
 
   def create
-    puts params[:on_behalf] if params[:on_behalf].present?
     creator = params[:on_behalf].present? ? User.find_by_token(params[:on_behalf]) : current_user
     unauthorized! if creator.nil? || !creator.deployer_for?(current_project)
     deploy_service = DeployService.new(creator)
