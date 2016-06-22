@@ -25,17 +25,8 @@ class SlackWebhookNotification
   def _deliver(deploy_phase:, message:)
     @stage.slack_webhooks.each do |webhook|
       if webhook.public_send(deploy_phase)
-        _deliver_for_one_webhook(webhook: webhook, message: message)
+        SamsonSlackWebhooks::SlackWebhooksService.new.deliver_message_via_webhook(webhook: webhook, message: message)
       end
     end
-  end
-
-  def _deliver_for_one_webhook(webhook:, message:)
-    payload = { text: message, username: 'samson-bot' }
-    payload[:channel] = webhook.channel unless webhook.channel.blank?
-
-    Faraday.post(webhook.webhook_url, payload: payload.to_json)
-  rescue Faraday::ClientError => e
-    Rails.logger.error("Could not deliver slack message: #{e.message}")
   end
 end

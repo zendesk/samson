@@ -49,7 +49,7 @@
       });
 
       // when user types @, show possible user names
-      var users = <%= SamsonSlackWebhooks::SlackWebhooksService.new(@deploy).users.to_json.html_safe %>;
+      var users = <%= SamsonSlackWebhooks::SlackWebhooksService.new.users.to_json.html_safe %>;
       $input.mentionsInput({
         // prefill with what is already there
         defaultValue: $input.val(),

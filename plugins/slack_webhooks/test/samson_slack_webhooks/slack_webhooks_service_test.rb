@@ -4,7 +4,7 @@ SingleCov.covered!
 
 describe SamsonSlackWebhooks::SlackWebhooksService do
   let(:deploy) { deploys(:succeeded_test) }
-  let(:service) { SamsonSlackWebhooks::SlackWebhooksService.new(deploy) }
+  let(:service) { SamsonSlackWebhooks::SlackWebhooksService.new }
 
   before do
     Rails.cache.delete(:slack_users)
@@ -17,6 +17,16 @@ describe SamsonSlackWebhooks::SlackWebhooksService do
       stub_request(:post, "https://slack.com/api/users.list").
         to_return(body: {ok: true, members: [{id: 1, name: 'NICK', profile: {image_48: 'AVATAR'}}]}.to_json)
       service.users.must_equal([{id: 1, name: "NICK", avatar: "AVATAR", type: "contact"}])
+
+      # is cached
+      service.users.object_id.must_equal service.users.object_id
+    end
+
+    it "returns empty users when there's an error" do
+      stub_request(:post, "https://slack.com/api/users.list").
+        to_return(body: {ok: false, error: "some error"}.to_json)
+      Rails.logger.expects(:error).with('Error fetching slack users: some error')
+      service.users.must_equal([])
 
       # is cached
       service.users.object_id.must_equal service.users.object_id

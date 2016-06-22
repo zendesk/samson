@@ -1,5 +1,3 @@
-require 'slack-ruby-client'
-
 class SlackWebhooksController < ApplicationController
   def buddy_request
     @deploy = Deploy.find(params.require(:deploy_id))
