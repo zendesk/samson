@@ -4,7 +4,19 @@ module SamsonFlowdock
 end
 
 Samson::Hooks.view :stage_form, "samson_flowdock/fields"
-Samson::Hooks.view :deploy_view, 'samson_flowdock/notify_buddy_box'
+Samson::Hooks.view :deploy_view, "shared/notify_buddy_box" do |deploy:, project:|
+  {
+    deploy: deploy, project: project,
+    id_prefix: 'flowdock',
+    send_buddy_request: deploy.stage.send_flowdock_notifications?,
+    form_path: AppRoutes.url_helpers.flowdock_notify_path(deploy_id: deploy.id),
+    title: 'Request a buddy via Flowdock',
+    message: FlowdockNotification.new(deploy).default_buddy_request_message,
+    channels: deploy.stage.enabled_flows_names.join(', '),
+    users: SamsonFlowdock::FlowdockService.new(deploy).users,
+    channel_type: 'flows'
+  }
+end
 
 Samson::Hooks.callback :stage_clone do |old_stage, new_stage|
   new_stage.flowdock_flows.build(

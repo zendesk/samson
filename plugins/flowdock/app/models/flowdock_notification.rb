@@ -25,6 +25,13 @@ class FlowdockNotification
     Airbrake.notify(error, error_message: 'Could not deliver flowdock message')
   end
 
+  def default_buddy_request_message
+    project = @deploy.project
+    ":pray: @team #{@deploy.user.name} is requesting approval" \
+      " to deploy #{project.name} **#{@deploy.reference}** to production."\
+      " [Review this deploy](#{project_deploy_url(project, @deploy)})."
+  end
+
   private
 
   def buddy_request_completed_message(approved, buddy)

@@ -15,6 +15,13 @@ class SlackWebhookNotification
     _deliver(deploy_phase: :for_buddy, message: message)
   end
 
+  def default_buddy_request_message
+    project = @deploy.project
+    ":pray: @here _#{@deploy.user.name}_ is requesting approval" \
+      " to deploy #{project.name} *#{@deploy.reference}* to #{@deploy.stage.name}.\n"\
+      "Review this deploy: #{AppRoutes.url_helpers.project_deploy_url(project, @deploy)}"
+  end
+
   private
 
   def content

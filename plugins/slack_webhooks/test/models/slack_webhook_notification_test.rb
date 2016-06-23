@@ -3,15 +3,17 @@ require_relative '../test_helper'
 SingleCov.covered!
 
 describe SlackWebhookNotification do
-  let(:project) { stub(name: "Glitter") }
+  let(:project) { stub(name: "Glitter", to_s: "foo") }
   let(:user) { stub(name: "John Wu", email: "wu@rocks.com") }
   let(:endpoint) { "https://slack.com/api/chat.postMessage" }
 
   def stub_notification(before_deploy: false, after_deploy: true, for_buddy: false)
     webhook = stub(webhook_url: endpoint, channel: nil,
                    before_deploy: before_deploy, after_deploy: after_deploy, for_buddy: for_buddy)
-    stage = stub(name: "staging", slack_webhooks: [webhook], project: project)
-    deploy = stub(summary: "hello world!", user: user, stage: stage)
+    stage = stub(name: "Staging", slack_webhooks: [webhook], project: project)
+    deploy = stub(to_s: 123456, summary: "hello world!",
+                  user: user, stage: stage, project: project,
+                  reference: '123abc')
     SlackWebhookNotification.new(deploy)
   end
 
@@ -71,5 +73,14 @@ describe SlackWebhookNotification do
     stub_request(:post, endpoint).to_timeout
     Rails.logger.expects(:error)
     notification.deliver :after_deploy
+  end
+
+  describe "#default_buddy_request_message" do
+    it "renders" do
+      notification = stub_notification
+      message = notification.default_buddy_request_message
+      message.must_include ":pray: @here _John Wu_ is requesting approval to deploy Glitter *123abc*"\
+        " to Staging.\nReview this deploy: http://www.test-url.com/projects/foo/deploys/123456"
+    end
   end
 end

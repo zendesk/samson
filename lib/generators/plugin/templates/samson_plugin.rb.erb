@@ -7,6 +7,8 @@ end
 # - Create app/views/samson_<%= file_name %>/_my_fields.html.erb
 # - Add this line to this file, note the lack of leading underscore and extension:
 #   Samson::Hooks.view :stage_form, 'samson_<%= file_name %>/my_fields'
+# - This view hook also supports an optional code block for customizing the render context
+#   Samson::Hooks.view :stage_form, 'samson_<%= file_name %>/my_fields' do |*args| {p1: ..., p2: ...} end
 
 <% Samson::Hooks::VIEW_HOOKS.each do |hook| %>
 #Samson::Hooks.view :<%= hook %>, '<view path>'
