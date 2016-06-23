@@ -1,6 +1,5 @@
 require_relative '../../../test/test_helper'
 require_relative '../lib/samson_kubernetes/hash_kuber_selector'
-require 'celluloid/test'
 
 # Mock up vault client
 class VaultClient
@@ -68,35 +67,6 @@ class VaultClient
 end
 
 class ActiveSupport::TestCase
-  def self.it_responds_with_unauthorized(&block)
-    it 'responds with unauthorized' do
-      instance_eval(&block)
-      @unauthorized.must_equal true, 'Request should get unauthorized'
-    end
-  end
-
-  def self.it_responds_successfully(&block)
-    it 'responds successfully' do
-      instance_eval(&block)
-      assert_response :success
-    end
-  end
-
-  def self.it_responds_with_bad_request(&block)
-    it 'responds with 400 Bad Request' do
-      instance_eval(&block)
-      assert_response :bad_request
-    end
-  end
-
-  def self.it_should_raise_an_exception(&block)
-    it 'should raise an exception' do
-      assert_raises Exception do
-        instance_eval(&block)
-      end
-    end
-  end
-
   def with_example_kube_config
     Tempfile.open('config') do |t|
       config = {
@@ -133,7 +103,7 @@ class ActiveSupport::TestCase
   end
 
   def kubernetes_fake_raw_template
-    Kubernetes::ReleaseDoc.any_instance.stubs(raw_template: {
+    template = {
       'kind' => 'Deployment',
       'spec' => {
         'template' => {
@@ -146,7 +116,8 @@ class ActiveSupport::TestCase
         'name' => 'test',
         'labels' => {'project' => 'foobar', 'role' => 'app-server'}
       }
-    }.to_yaml)
+    }
+    Kubernetes::ReleaseDoc.any_instance.stubs(raw_template: template.to_yaml)
   end
 
   private

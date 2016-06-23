@@ -1,6 +1,6 @@
 require_relative '../test_helper'
 
-SingleCov.covered! uncovered: 20
+SingleCov.covered! uncovered: 19
 
 describe DeployService do
   include GitRepoTestHelper
@@ -10,7 +10,7 @@ describe DeployService do
   let(:git_tag) { 'v123' }
   let(:project) { projects(:test).tap { |p| p.repository_url = project_repo_url } }
 
-  let(:build) { project.builds.create(git_ref: git_tag) }
+  let(:build) { project.builds.create!(git_ref: git_tag, git_sha: 'a' * 40) }
   let(:service) { DockerBuilderService.new(build) }
 
   let(:docker_image_id) { '2d2b0b3204b0166435c3d96d0b27d0ad2083e5e040192632c58eeb9491d6bfaa' }

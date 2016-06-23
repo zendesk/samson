@@ -1,7 +1,5 @@
 module Kubernetes
   class ReleaseDoc < ActiveRecord::Base
-    include Kubernetes::HasStatus
-
     self.table_name = 'kubernetes_release_docs'
 
     belongs_to :kubernetes_role, class_name: 'Kubernetes::Role'
@@ -12,47 +10,10 @@ module Kubernetes
     validates :kubernetes_role, presence: true
     validates :kubernetes_release, presence: true
     validates :replica_target, presence: true, numericality: { greater_than: 0 }
-    validates :replicas_live, presence: true, numericality: { greater_than_or_equal_to: 0 }
-    validates :status, presence: true, inclusion: STATUSES
     validate :validate_config_file, on: :create
-
-    # used via deprecated release flow
-    def fail!
-      update_attribute(:status, :failed)
-    end
 
     def build
       kubernetes_release.try(:build)
-    end
-
-    # used via deprecated release flow
-    def update_release
-      kubernetes_release.update_status(self)
-    end
-
-    # used via deprecated release flow
-    def update_status(live_pods)
-      if live_pods == replica_target then self.status = :live
-      elsif live_pods.zero? then self.status = :dead
-      elsif live_pods > replicas_live then self.status = :spinning_up
-      elsif live_pods < replicas_live then self.status = :spinning_down
-      end
-      save!
-    end
-
-    # used via deprecated release flow
-    def update_replica_count(new_count)
-      update_attributes!(replicas_live: new_count)
-    end
-
-    # used via deprecated release flow
-    def live_replicas_changed?(new_count)
-      new_count != replicas_live
-    end
-
-    # used via deprecated release flow
-    def recovered?(failed_pods)
-      failed_pods == 0
     end
 
     def client
@@ -72,7 +33,8 @@ module Kubernetes
         daemon = Kubeclient::DaemonSet.new(deploy_yaml.to_hash)
         delete_daemon_set(daemon) if deployed
         extension_client.create_daemon_set daemon
-      else raise "Unknown daemon_set #{deploy_yaml.resource_name}"
+      else
+        raise "Unknown deploy object #{deploy_yaml.resource_name}"
       end
     end
 
@@ -95,7 +57,8 @@ module Kubernetes
     end
 
     def raw_template
-      @raw_template ||= build.file_from_repo(template_name)
+      return @raw_template if defined?(@raw_template)
+      @raw_template = kubernetes_release.project.repository.file_content(template_name, kubernetes_release.git_sha)
     end
 
     def template_name
@@ -181,7 +144,8 @@ module Kubernetes
     end
 
     def service
-      if kubernetes_role.service_name.present?
+      return @service if defined?(@service)
+      @service = if kubernetes_role.service_name.present?
         Kubernetes::Service.new(role: kubernetes_role, deploy_group: deploy_group)
       end
     end
@@ -220,10 +184,10 @@ module Kubernetes
     def validate_config_file
       if build && kubernetes_role
         if raw_template.blank?
-          errors.add(:build, "does not contain config file '#{template_name}'")
+          errors.add(:kubernetes_release, "does not contain config file '#{template_name}'")
         elsif problems = RoleVerifier.new(raw_template).verify
           problems.each do |problem|
-            errors.add(:build, "#{template_name}: #{problem}")
+            errors.add(:kubernetes_release, "#{template_name}: #{problem}")
           end
         end
       end

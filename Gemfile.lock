@@ -54,8 +54,6 @@ PATH
   remote: plugins/kubernetes
   specs:
     samson_kubernetes (0.0.1)
-      celluloid
-      celluloid-io
 
 PATH
   remote: plugins/new_relic
@@ -150,30 +148,9 @@ GEM
     bootstrap-sass (3.3.6)
       autoprefixer-rails (>= 5.2.1)
       sass (>= 3.3.4)
-    brakeman (3.3.1)
+    brakeman (3.3.2)
     builder (3.2.2)
     byebug (8.2.2)
-    celluloid (0.17.3)
-      celluloid-essentials
-      celluloid-extras
-      celluloid-fsm
-      celluloid-pool
-      celluloid-supervision
-      timers (>= 4.1.1)
-    celluloid-essentials (0.20.5)
-      timers (>= 4.1.1)
-    celluloid-extras (0.20.5)
-      timers (>= 4.1.1)
-    celluloid-fsm (0.20.5)
-      timers (>= 4.1.1)
-    celluloid-io (0.17.3)
-      celluloid (>= 0.17.2)
-      nio4r (>= 1.1)
-      timers (>= 4.1.1)
-    celluloid-pool (0.20.5)
-      timers (>= 4.1.1)
-    celluloid-supervision (0.20.5)
-      timers (>= 4.1.1)
     codeclimate-test-reporter (0.5.0)
       simplecov (>= 0.7.1, < 1.0.0)
     coderay (1.1.1)
@@ -214,7 +191,6 @@ GEM
       activesupport (>= 3.2, < 5.1)
     hashdiff (0.3.0)
     hashie (3.4.4)
-    hitimes (1.2.3)
     http (0.9.8)
       addressable (~> 2.3)
       http-cookie (~> 1.0)
@@ -276,7 +252,6 @@ GEM
     ngannotate-rails (1.2.1)
       execjs
       rails (>= 3.1)
-    nio4r (1.2.1)
     nokogiri (1.6.8)
       mini_portile2 (~> 2.1.0)
       pkg-config (~> 1.1.7)
@@ -361,6 +336,18 @@ GEM
       rails-assets-angular (>= 1.0.8, < 2)
     rails-assets-bootstrap-select (1.10.0)
       rails-assets-jquery (>= 1.8)
+    rails-assets-datatables.net (1.10.12)
+      rails-assets-jquery (>= 1.7)
+    rails-assets-datatables.net-bs (1.10.11)
+      rails-assets-datatables.net (>= 1.10.9)
+      rails-assets-jquery (>= 1.7)
+    rails-assets-datatables.net-fixedcolumns (3.2.2)
+      rails-assets-datatables.net (>= 1.10.9)
+      rails-assets-jquery (>= 1.7)
+    rails-assets-datatables.net-fixedcolumns-bs (3.2.2)
+      rails-assets-datatables.net-bs (>= 1.10.9)
+      rails-assets-datatables.net-fixedcolumns (>= 3.1.0)
+      rails-assets-jquery (>= 1.7)
     rails-assets-font-awesome (4.3.0)
     rails-assets-jquery (2.2.1)
     rails-assets-jquery-cookie (1.4.1)
@@ -450,8 +437,6 @@ GEM
     thor (0.19.1)
     thread_safe (0.3.5)
     tilt (2.0.2)
-    timers (4.1.1)
-      hitimes
     tzinfo (1.2.2)
       thread_safe (~> 0.1)
     uglifier (2.7.2)
@@ -537,6 +522,10 @@ DEPENDENCIES
   rails-assets-angular-ui-bootstrap-bower!
   rails-assets-angular-ui-router!
   rails-assets-bootstrap-select!
+  rails-assets-datatables.net!
+  rails-assets-datatables.net-bs!
+  rails-assets-datatables.net-fixedcolumns!
+  rails-assets-datatables.net-fixedcolumns-bs!
   rails-assets-font-awesome!
   rails-assets-jquery!
   rails-assets-jquery-cookie!

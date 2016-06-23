@@ -64,6 +64,11 @@ module Samson
     config.samson.email.prefix = ENV["EMAIL_PREFIX"].presence || "DEPLOY"
     config.samson.email.sender_domain = ENV["EMAIL_SENDER_DOMAIN"].presence || "samson-deployment.com"
 
+    # Email notifications
+    config.samson.project_created_email = ENV["PROJECT_CREATED_NOTIFY_ADDRESS"]
+    config.samson.project_deleted_email = ENV["PROJECT_DELETED_NOTIFY_ADDRESS"].presence ||
+      ENV["PROJECT_CREATED_NOTIFY_ADDRESS"]
+
     # Whether or not jobs are actually executed.
     config.samson.enable_job_execution = true
 
@@ -96,11 +101,13 @@ module Samson
     config.samson.gitlab = ActiveSupport::OrderedOptions.new
     config.samson.gitlab.web_url = ENV["GITLAB_URL"].presence || 'gitlab.com'
 
+    truthy = ["1", "true"]
+
     config.samson.auth = ActiveSupport::OrderedOptions.new
-    config.samson.auth.github = ENV["AUTH_GITHUB"] != "0"
-    config.samson.auth.google = ENV["AUTH_GOOGLE"] != "0"
-    config.samson.auth.ldap = ENV["AUTH_LDAP"] == "1"
-    config.samson.auth.gitlab = ENV["AUTH_GITLAB"] == "1"
+    config.samson.auth.github = truthy.include?(ENV["AUTH_GITHUB"])
+    config.samson.auth.google = truthy.include?(ENV["AUTH_GOOGLE"])
+    config.samson.auth.ldap = truthy.include?(ENV["AUTH_LDAP"])
+    config.samson.auth.gitlab = truthy.include?(ENV["AUTH_GITLAB"])
 
     config.samson.docker = ActiveSupport::OrderedOptions.new
     config.samson.docker.registry = ENV['DOCKER_REGISTRY'].presence

@@ -23,11 +23,11 @@ describe 'Unauthorized' do
       end
 
       describe 'without a referer' do
-        it 'redirects to the root path' do
+        it 'redirects to the login path' do
           last_response.must_be(:redirect?)
 
           # Really just '/', but Rack insists on using the full SERVER_NAME
-          last_response.headers['Location'].must_equal('http://example.org/')
+          last_response.headers['Location'].must_equal('http://example.org/login')
         end
       end
 

@@ -72,10 +72,12 @@ class Admin::Kubernetes::ClustersController < ApplicationController
   end
 
   def load_default_config_file
-    if (file = ENV['KUBE_CONFIG_FILE'])
-      @config_file = file
-    elsif (last_cluster = ::Kubernetes::Cluster.last)
-      @config_file = last_cluster.config_filepath
+    @config_file = if @cluster
+      @cluster.config_filepath
+    elsif file = ENV['KUBE_CONFIG_FILE']
+      File.expand_path(file)
+    elsif last_cluster = ::Kubernetes::Cluster.last
+      last_cluster.config_filepath
     end
 
     @context_options = Kubeclient::Config.read(@config_file).contexts if @config_file

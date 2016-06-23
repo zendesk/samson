@@ -13,7 +13,7 @@ describe SamsonEnv do
       Samson::Hooks.fire(:after_deploy_setup, Dir.pwd, job, StringIO.new, 'abc')
     end
 
-    around { |test| Dir.mktmpdir { |dir| Dir.chdir(dir) { test.call } } }
+    run_inside_of_temp_directory
 
     before do
       project.environment_variables.create!(name: "HELLO", value: "world")

@@ -185,6 +185,12 @@ describe ProjectsController do
       it "sets the flash" do
         request.flash[:notice].wont_be_nil
       end
+
+      it "notifies about deletion" do
+        mail = ActionMailer::Base.deliveries.last
+        mail.subject.include?("Samson Project Deleted")
+        mail.subject.include?(project.name)
+      end
     end
 
     as_a_project_admin do

@@ -1,4 +1,0 @@
-<td><a href="{{ project.url }}">{{ project.name }}</a></td>
-<td ng-repeat="dg in deploy_groups">
-    <a href="{{ project.deploy_group_versions[dg.id].url }}" id="{{ dg.id }}">{{ project.deploy_group_versions[dg.id.toString()].reference | characters:7 }}</a>
-</td>

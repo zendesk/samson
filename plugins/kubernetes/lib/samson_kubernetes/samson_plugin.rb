@@ -1,10 +1,9 @@
 require_relative 'hash_kuber_selector'
-require 'celluloid/current'
 
 module SamsonKubernetes
   class Engine < Rails::Engine
     initializer "refinery.assets.precompile" do |app|
-      app.config.assets.precompile.append %w[kubernetes/icon.png kubernetes/icon.svg]
+      app.config.assets.precompile.append %w[kubernetes/icon.png]
     end
   end
 end

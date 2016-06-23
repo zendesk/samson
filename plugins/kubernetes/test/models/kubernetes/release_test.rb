@@ -1,12 +1,13 @@
-# rubocop:disable Metrics/LineLength
 require_relative '../../test_helper'
 
-SingleCov.covered! uncovered: 16
+SingleCov.covered!
 
 describe Kubernetes::Release do
   let(:build)  { builds(:docker_build) }
   let(:user)   { users(:deployer) }
-  let(:release) { Kubernetes::Release.new(build: build, user: user, project: project) }
+  let(:release) do
+    Kubernetes::Release.new(build: build, user: user, project: project, git_sha: 'abababa', git_ref: 'master')
+  end
   let(:deploy_group) { deploy_groups(:pod1) }
   let(:project) { projects(:test) }
   let(:app_server) { kubernetes_roles(:app_server) }
@@ -17,80 +18,81 @@ describe Kubernetes::Release do
     it 'is valid by default' do
       assert_valid(release)
     end
+  end
 
-    it 'test validity of status' do
-      Kubernetes::Release::STATUSES.each do |status|
-        assert_valid(release.tap { |kr| kr.status = status })
-      end
-      refute_valid(release.tap { |kr| kr.status = 'foo' })
-      refute_valid(release.tap { |kr| kr.status = nil })
+  describe "#user" do
+    it "is normal user when findable" do
+      release.user.class.must_equal User
+    end
+
+    it "is NullUser when user was deleted so we can still display the user" do
+      release.user_id = 1234
+      release.user.class.must_equal NullUser
     end
   end
 
   describe '#create_release' do
-    describe 'with one single role' do
-      before do
-        expect_file_contents_from_repo
-        current_release_count
-      end
-
-      it 'creates the Release and all the corresponding ReleaseDocs' do
-        release = Kubernetes::Release.create_release(release_params)
-        release.build.id.must_equal release_params[:build_id]
-        release.release_docs.count.must_equal 1
-        release.release_docs.first.kubernetes_role.id.must_equal app_server.id
-        release.release_docs.first.kubernetes_role.name.must_equal app_server.name
-        assert_release_count(@current_release_count + 1)
+    def assert_create_fails(&block)
+      refute_difference 'Kubernetes::Release.count' do
+        assert_raises ArgumentError, KeyError, &block
       end
     end
 
-    describe 'with multiple roles' do
-      before do
-        2.times { expect_file_contents_from_repo }
-        current_release_count
+    def assert_create_succeeds(params)
+      release = nil
+      assert_difference 'Kubernetes::Release.count', +1 do
+        release = Kubernetes::Release.create_release(params)
       end
+      release
+    end
 
-      it 'creates the Release and all the corresponding ReleaseDocs' do
-        release = Kubernetes::Release.create_release(multiple_roles_release_params)
-        release.build.id.must_equal release_params[:build_id]
-        release.release_docs.count.must_equal 2
-        release.release_docs.first.kubernetes_role.name.must_equal app_server.name
-        release.release_docs.first.replica_target.must_equal 1
-        release.release_docs.first.cpu.must_equal 1
-        release.release_docs.first.ram.must_equal 50
-        release.release_docs.second.kubernetes_role.name.must_equal resque_worker.name
-        release.release_docs.second.replica_target.must_equal 2
-        release.release_docs.second.cpu.must_equal 2
-        release.release_docs.second.ram.must_equal 100
-        assert_release_count(@current_release_count + 1)
+    it 'creates with 1 role' do
+      expect_file_contents_from_repo
+      release = assert_create_succeeds(release_params)
+      release.build.id.must_equal release_params[:build_id]
+      release.release_docs.count.must_equal 1
+      release.release_docs.first.kubernetes_role.id.must_equal app_server.id
+      release.release_docs.first.kubernetes_role.name.must_equal app_server.name
+    end
+
+    it 'creates with multiple roles' do
+      2.times { expect_file_contents_from_repo }
+      release = assert_create_succeeds(multiple_roles_release_params)
+      release.build.id.must_equal release_params[:build_id]
+      release.release_docs.count.must_equal 2
+      release.release_docs.first.kubernetes_role.name.must_equal app_server.name
+      release.release_docs.first.replica_target.must_equal 1
+      release.release_docs.first.cpu.must_equal 1
+      release.release_docs.first.ram.must_equal 50
+      release.release_docs.second.kubernetes_role.name.must_equal resque_worker.name
+      release.release_docs.second.replica_target.must_equal 2
+      release.release_docs.second.cpu.must_equal 2
+      release.release_docs.second.ram.must_equal 100
+    end
+
+    it "fails to save with missing deploy groups" do
+      assert_create_fails do
+        Kubernetes::Release.create_release(release_params.except(:deploy_groups))
       end
     end
 
-    describe 'with missing deploy groups' do
-      before { current_release_count }
-
-      it_should_raise_an_exception do
-        Kubernetes::Release.create_release(release_params.except(:deploy_groups)) # nil
-        assert_release_count(@current_release_count)
-      end
-
-      it_should_raise_an_exception do
-        Kubernetes::Release.create_release(release_params.tap { |params| params[:deploy_groups].clear }) # empty
-        assert_release_count(@current_release_count)
+    it "fails to save with empty deploy groups" do
+      assert_create_fails do
+        Kubernetes::Release.create_release(release_params.tap { |params| params[:deploy_groups].clear })
       end
     end
 
-    describe 'with missing roles' do
-      before { current_release_count }
-
-      it_should_raise_an_exception do
-        Kubernetes::Release.create_release(release_params.tap { |params| params[:deploy_groups].each { |dg| dg.delete(:roles) } }) # nil
-        assert_release_count(@current_release_count)
+    it "fails to save with missing roles" do
+      assert_create_fails do
+        params = release_params.tap { |params| params[:deploy_groups].each { |dg| dg.delete(:roles) } }
+        Kubernetes::Release.create_release(params)
       end
+    end
 
-      it_should_raise_an_exception do
-        Kubernetes::Release.create_release(release_params.tap { |params| params[:deploy_groups].each { |dg| dg[:roles].clear } }) # empty
-        assert_release_count(@current_release_count)
+    it "fails to save with empty roles" do
+      assert_create_fails do
+        params = release_params.tap { |params| params[:deploy_groups].each { |dg| dg[:roles].clear } }
+        Kubernetes::Release.create_release(params)
       end
     end
   end
@@ -134,16 +136,14 @@ describe Kubernetes::Release do
   end
 
   def expect_file_contents_from_repo
-    Build.any_instance.expects(:file_from_repo).returns(role_config_file)
-  end
-
-  def current_release_count
-    @current_release_count = project.kubernetes_releases.count
+    GitRepository.any_instance.expects(:file_content).returns(role_config_file)
   end
 
   def release_params
     {
       build_id: build.id,
+      git_sha: build.git_sha,
+      git_ref: build.git_ref,
       project: project,
       deploy_groups: [
         {
@@ -167,9 +167,5 @@ describe Kubernetes::Release do
         dg[:roles].push(id: resque_worker.id, replicas: 2, cpu: 2, ram: 100)
       end
     end
-  end
-
-  def assert_release_count(current_count)
-    project.kubernetes_releases.count.must_equal current_count
   end
 end

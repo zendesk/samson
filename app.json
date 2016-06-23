@@ -17,17 +17,25 @@
       "required": true
     },
     "SECRET_TOKEN": {
+      "description": "Token used to generate session secret",
       "generator": "secret",
       "required": true
     },
     "GITHUB_TOKEN": {
+      "description": "Token to fetch commit diff / PR status / create tags",
       "required": true
+    },
+    "AUTH_GITHUB": {
+      "description": "Set to 1 to use github auth"
     },
     "GITHUB_CLIENT_ID": {
       "description": "Fill in to use github auth"
     },
     "GITHUB_SECRET": {
       "description": "Fill in to use github auth"
+    },
+    "AUTH_GOOGLE": {
+      "description": "Set to 1 to use google auth"
     },
     "GOOGLE_CLIENT_ID": {
       "description": "Fill in to use google auth"
@@ -36,12 +44,15 @@
       "description": "Fill in to use google auth"
     },
     "BUNDLE_WITHOUT": {
+      "description": "Groups to ignore when bundling",
       "value": "mysql2:sqlite"
     },
     "DEPLOY_TASKS": {
+      "description": "Rake tasks to run after deploying",
       "value": "db:migrate"
     },
     "RAILS_LOG_TO_STDOUT": {
+      "description": "Log to stdout so heroku can display logs",
       "value": "true"
     }
   },

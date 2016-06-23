@@ -100,6 +100,10 @@ group :assets do
     gem 'rails-assets-angular-truncate-2'
     gem 'rails-assets-jstimezonedetect'
     gem 'rails-assets-jquery-cookie'
+    gem 'rails-assets-datatables.net'
+    gem 'rails-assets-datatables.net-bs'
+    gem 'rails-assets-datatables.net-fixedcolumns'
+    gem 'rails-assets-datatables.net-fixedcolumns-bs'
   end
 end
 

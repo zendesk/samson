@@ -11,7 +11,7 @@ describe Kubernetes::DeployExecutor do
   let(:project) { job.project }
   let(:build) { builds(:docker_build) }
   let(:deploy_group) { stage.deploy_groups.first }
-  let(:executor) { Kubernetes::DeployExecutor.new(output, job: job) }
+  let(:executor) { Kubernetes::DeployExecutor.new(output, job: job, reference: 'master') }
   let(:log_url) { "http://foobar.server/api/v1/namespaces/staging/pods/pod-resque_worker/log?container=container1" }
 
   before do
@@ -92,6 +92,7 @@ describe Kubernetes::DeployExecutor do
         to_return(body: {items: []}.to_json)
       stub_request(:get, /#{Regexp.escape(log_url)}/)
       Kubernetes::ReleaseDoc.any_instance.stubs(:desired_pod_count).returns(1)
+      GitRepository.any_instance.stubs(:file_content).with('Dockerfile', anything).returns "FROM all"
     end
 
     it "succeeds" do
@@ -99,6 +100,17 @@ describe Kubernetes::DeployExecutor do
       out.must_include "resque_worker: Live\n"
       out.must_include "SUCCESS"
       out.wont_include "BigDecimal" # properly serialized configs
+    end
+
+    it "succeeds without a build" do
+      Build.delete_all
+      refute_difference 'Build.count' do
+        GitRepository.any_instance.expects(:file_content).with('Dockerfile', anything).returns nil
+        assert execute!
+        out.must_include "Not creating a Build"
+        out.must_include "resque_worker: Live\n"
+        out.must_include "SUCCESS"
+      end
     end
 
     describe "role settings" do

@@ -11,7 +11,7 @@ describe SamsonDockerb do
       Samson::Hooks.fire(:after_deploy_setup, "repo", job, StringIO.new, 'abc')
     end
 
-    around { |test| Dir.mktmpdir { |dir| Dir.chdir(dir) { test.call } } }
+    run_inside_of_temp_directory
 
     before do
       FileUtils.mkdir("repo")

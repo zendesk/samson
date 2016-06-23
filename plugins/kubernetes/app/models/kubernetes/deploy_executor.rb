@@ -9,9 +9,10 @@ module Kubernetes
 
     ReleaseStatus = Struct.new(:live, :details, :role, :group)
 
-    def initialize(output, job:)
+    def initialize(output, job:, reference:)
       @output = output
       @job = job
+      @reference = reference
     end
 
     def pid
@@ -181,7 +182,7 @@ module Kubernetes
     end
 
     def find_or_create_build
-      build = Build.find_by_git_sha(@job.commit) || create_build
+      return unless build = (Build.find_by_git_sha(@job.commit) || create_build)
       wait_for_build(build)
       ensure_build_is_successful(build) unless @stopped
       build
@@ -200,15 +201,21 @@ module Kubernetes
     end
 
     def create_build
-      @output.puts("Creating Build for #{@job.commit}.")
-      build = Build.create!(
-        git_ref: @job.commit,
-        creator: @job.user,
-        project: @job.project,
-        label: "Automated build triggered via Deploy ##{@job.deploy.id}"
-      )
-      DockerBuilderService.new(build).run!(push: true)
-      build
+      if @job.project.repository.file_content('Dockerfile', @job.commit)
+        @output.puts("Creating Build for #{@job.commit}.")
+        build = Build.create!(
+          git_sha: @job.commit,
+          git_ref: @reference,
+          creator: @job.user,
+          project: @job.project,
+          label: "Automated build triggered via Deploy ##{@job.deploy.id}"
+        )
+        DockerBuilderService.new(build).run!(push: true)
+        build
+      else
+        @output.puts("Not creating a Build for #{@job.commit} since it does not have a Dockerfile.")
+        false
+      end
     end
 
     def ensure_build_is_successful(build)
@@ -230,9 +237,9 @@ module Kubernetes
       )
 
       # get all the roles that are configured for this sha
-      configured_roles = Kubernetes::Role.configured_for_project(@job.project, build.git_sha)
+      configured_roles = Kubernetes::Role.configured_for_project(@job.project, @job.commit)
       if configured_roles.empty?
-        raise Samson::Hooks::UserError, "No kubernetes config files found at sha #{build.git_sha}"
+        raise Samson::Hooks::UserError, "No kubernetes config files found at sha #{@job.commit}"
       end
 
       # build config for every cluster and role we want to deploy to
@@ -263,7 +270,9 @@ module Kubernetes
       release = Kubernetes::Release.create_release(
         deploy_id: @job.deploy.id,
         deploy_groups: group_config,
-        build_id: build.id,
+        build_id: build.try(:id),
+        git_sha: @job.commit,
+        git_ref: @reference,
         user: @job.user,
         project: @job.project
       )

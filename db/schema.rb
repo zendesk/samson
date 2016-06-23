@@ -11,13 +11,13 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20160609164219) do
+ActiveRecord::Schema.define(version: 20160621174658) do
 
   create_table "builds", force: :cascade do |t|
     t.integer  "project_id",                       null: false
     t.integer  "number",              limit: 4
-    t.string   "git_sha",             limit: 255
-    t.string   "git_ref",             limit: 255
+    t.string   "git_sha",             limit: 255,  null: false
+    t.string   "git_ref",             limit: 255,  null: false
     t.string   "docker_image_id",     limit: 255
     t.string   "docker_ref",          limit: 255
     t.string   "docker_repo_digest",  limit: 255
@@ -191,10 +191,6 @@ ActiveRecord::Schema.define(version: 20160609164219) do
     t.integer  "kubernetes_role_id",          limit: 4,                         null: false
     t.integer  "kubernetes_release_id",       limit: 4,                         null: false
     t.integer  "replica_target",              limit: 4,                         null: false
-    t.integer  "replicas_live",               limit: 4,     default: 0,         null: false
-    t.string   "replication_controller_name", limit: 255
-    t.text     "replication_controller_doc",  limit: 65535
-    t.string   "status",                      limit: 255,   default: "created"
     t.datetime "created_at"
     t.datetime "updated_at"
     t.integer  "deploy_group_id"
@@ -206,15 +202,14 @@ ActiveRecord::Schema.define(version: 20160609164219) do
   add_index "kubernetes_release_docs", ["kubernetes_role_id"], name: "index_kubernetes_release_docs_on_kubernetes_role_id", using: :btree
 
   create_table "kubernetes_releases", force: :cascade do |t|
-    t.string   "status",             default: "created"
-    t.datetime "deploy_finished_at"
-    t.datetime "destroyed_at"
     t.datetime "created_at"
     t.datetime "updated_at"
     t.integer  "build_id"
     t.integer  "user_id"
     t.integer  "project_id",         limit: 4,                       null: false
     t.integer  "deploy_id",          limit: 4
+    t.string   "git_sha",            limit: 40,                      null: false
+    t.string   "git_ref",            limit: 255,                     null: false
   end
 
   add_index "kubernetes_releases", ["build_id"], name: "index_kubernetes_releases_on_build_id"
