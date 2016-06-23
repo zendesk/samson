@@ -92,7 +92,7 @@ describe Kubernetes::RoleVerifier do
 
     it "reports missing containers" do
       role.first[:spec][:template][:spec].delete(:containers)
-      errors.must_include "Deployments and DaemonSets need at least 1 container"
+      errors.must_include "Deployment and DaemonSet need at least 1 container"
     end
 
     describe 'inconsistent labels' do

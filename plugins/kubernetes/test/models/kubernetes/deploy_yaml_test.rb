@@ -70,7 +70,7 @@ describe Kubernetes::DeployYaml do
         e = assert_raises Samson::Hooks::UserError do
           yaml.to_hash
         end
-        e.message.must_include "has 0 Deployment sections, having 1 section is valid"
+        e.message.must_include "included 0 "
       end
 
       it "fails when multiple deployment sections are present" do
@@ -78,7 +78,7 @@ describe Kubernetes::DeployYaml do
         e = assert_raises Samson::Hooks::UserError do
           yaml.to_hash
         end
-        e.message.must_include "has 2 Deployment sections, having 1 section is valid"
+        e.message.must_include "included 2 objects"
       end
     end
 

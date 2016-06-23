@@ -122,6 +122,42 @@ describe Kubernetes::Role do
       end
     end
 
+    describe "without a deploy" do
+      before do
+        config_content.shift
+        write_config 'kubernetes/a.json', config_content.to_json
+      end
+
+      it 'creates no role' do
+        Kubernetes::Role.seed! project, 'HEAD'
+        project.kubernetes_roles.must_equal []
+      end
+    end
+
+    describe "with invalid deploy" do
+      before do
+        config_content.push config_content.first
+        write_config 'kubernetes/a.json', config_content.to_json
+      end
+
+      it 'creates no role' do
+        Kubernetes::Role.seed! project, 'HEAD'
+        project.kubernetes_roles.must_equal []
+      end
+    end
+
+    describe "with invalid service" do
+      before do
+        config_content.push config_content.last
+        write_config 'kubernetes/a.json', config_content.to_json
+      end
+
+      it 'creates no role' do
+        Kubernetes::Role.seed! project, 'HEAD'
+        project.kubernetes_roles.must_equal []
+      end
+    end
+
     it "reads other file types" do
       write_config 'kubernetes/a.json', config_content.to_json
       Kubernetes::Role.seed! project, 'HEAD'
