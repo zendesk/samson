@@ -43,7 +43,7 @@ describe Kubernetes::ReleaseDoc do
         e = assert_raises Samson::Hooks::UserError do
           doc.ensure_service
         end
-        e.message.must_equal "Template kubernetes/app_server.yml has 0 services, having 1 section is valid."
+        e.message.must_equal "Config file kubernetes/app_server.yml included 0 objects of kind Service, 1 is supported"
       end
 
       it "fails when multiple services are defined and we would only ensure the first one" do
@@ -52,7 +52,7 @@ describe Kubernetes::ReleaseDoc do
         e = assert_raises Samson::Hooks::UserError do
           doc.ensure_service
         end
-        e.message.must_equal "Template kubernetes/app_server.yml has 2 services, having 1 section is valid."
+        e.message.must_equal "Config file kubernetes/app_server.yml included 2 objects of kind Service, 1 is supported"
       end
     end
   end

@@ -1,6 +1,6 @@
 module Kubernetes
   class RoleVerifier
-    DEPLOYISH = ['Deployment', 'DaemonSet'].freeze
+    DEPLOYISH = RoleConfigFile::DEPLOY_KINDS
 
     def initialize(role_definition)
       @errors = []
@@ -25,7 +25,7 @@ module Kubernetes
     end
 
     def verify_deployish
-      expected = ['Deployment', 'DaemonSet']
+      expected = DEPLOYISH
       return if (map_attributes([:kind]) & expected).any?
       @errors << "Did not include supported kinds: #{expected.join(", ")}"
     end
@@ -85,7 +85,7 @@ module Kubernetes
       deployish = @elements.select { |e| DEPLOYISH.include?(e['kind']) }
       containers = map_attributes([:spec, :template, :spec, :containers], elements: deployish)
       return if containers.all? { |c| c.is_a?(Array) && c.size >= 1 }
-      @errors << "Deployments and DaemonSets need at least 1 container"
+      @errors << "#{DEPLOYISH.join(" and ")} need at least 1 container"
     end
 
     def map_attributes(path, elements: @elements, array: :all)

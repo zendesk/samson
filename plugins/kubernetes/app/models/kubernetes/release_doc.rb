@@ -66,25 +66,7 @@ module Kubernetes
     end
 
     def deploy_template
-      self.class.deploy_template(raw_template, template_name)
-    end
-
-    def self.deploy_template(raw_template, template_name)
-      sections = parse_config_file(raw_template, template_name).
-        select { |doc| ['Deployment', 'DaemonSet'].include?(doc.fetch('kind')) }
-
-      if sections.size == 1
-        sections.first.with_indifferent_access
-      else
-        raise(
-          Samson::Hooks::UserError,
-          "Template #{template_name} has #{sections.size} Deployment sections, having 1 section is valid."
-        )
-      end
-    end
-
-    def self.parse_config_file(raw_template, template_name)
-      Array.wrap(Kubernetes::Util.parse_file(raw_template, template_name))
+      parsed_config_file.deploy(required: true)
     end
 
     def desired_pod_count
@@ -152,7 +134,7 @@ module Kubernetes
 
     def service_hash
       @service_hash || begin
-        hash = service_template
+        hash = parsed_config_file.service(required: true)
 
         hash.fetch(:metadata)[:name] = kubernetes_role.service_name
         hash.fetch(:metadata)[:namespace] = namespace
@@ -165,20 +147,8 @@ module Kubernetes
       end
     end
 
-    # Config has multiple entries like a ReplicationController and a Service
-    def service_template
-      services = parsed_config_file.select { |doc| doc['kind'] == 'Service' }
-      unless services.size == 1
-        raise(
-          Samson::Hooks::UserError,
-          "Template #{template_name} has #{services.size} services, having 1 section is valid."
-        )
-      end
-      services.first.with_indifferent_access
-    end
-
     def parsed_config_file
-      self.class.parse_config_file(raw_template, template_name)
+      @parsed_config_file ||= RoleConfigFile.new(raw_template, template_name)
     end
 
     def validate_config_file
