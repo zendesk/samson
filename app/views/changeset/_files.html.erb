@@ -8,7 +8,11 @@
     <tbody>
     <% changeset.files.each do |file| %>
       <tr class="file-summary">
-        <td><%= file_status_label file.status %> &nbsp; <%= file.filename %></td>
+        <td>
+          <%= file_status_label file.status %> &nbsp;
+          <%= "#{file.previous_filename} → " if file.status == "renamed" %>
+          <%= file.filename %>
+        </td>
         <td align="right">
           <%= file_changes_label file.additions, "success" %>
           <%= file_changes_label file.deletions, "danger" %>
