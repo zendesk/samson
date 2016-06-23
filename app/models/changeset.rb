@@ -72,7 +72,7 @@ class Changeset
     if empty?
       NullComparison.new(nil)
     else
-      # for branches that need review we make sure to always get the correct cache,
+      # for branches that frequently change we make sure to always get the correct cache,
       # others might get an outdated changeset if they are reviewed with different shas
       if BRANCH_TAGS.include?(commit)
         @commit = GITHUB.branch(repo, commit).commit[:sha]

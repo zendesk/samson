@@ -1,6 +1,14 @@
 require 'coderay'
 
 module DeploysHelper
+  # maps git changes to bootstrap classes
+  GIT_BOOTSTRAP_MAPPINGS = {
+    "added"    => "label-success",
+    "modified" => "label-info",
+    "removed"  => "label-danger",
+    "renamed"  => "label-info"
+  }.freeze
+
   def deploy_output
     output_hidden = false
     output = ActiveSupport::SafeBuffer.new
@@ -40,19 +48,12 @@ module DeploysHelper
   end
 
   def file_status_label(status)
-    mapping = {
-      "added"    => "success",
-      "modified" => "info",
-      "removed"  => "danger"
-    }
-
-    type = mapping[status]
-
-    content_tag :span, status[0].upcase, class: "label label-#{type}"
+    label = GIT_BOOTSTRAP_MAPPINGS.fetch(status)
+    content_tag :span, status[0].upcase, class: "label #{label}"
   end
 
   def file_changes_label(count, type)
-    content_tag :span, count.to_s, class: "label label-#{type}" unless count.zero?
+    content_tag :span, count.to_s, class: "label #{type}" unless count.zero?
   end
 
   def github_users(users)
