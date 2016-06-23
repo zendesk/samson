@@ -1,10 +1,27 @@
 require 'octokit'
 require 'faraday-http-cache'
 
+# we don't want to forever pay the price of redirects, but make users fix them
+# https://github.com/octokit/octokit.rb/issues/771
+#
+# to reproduce/remove: rename a repository and try to create a diff with the old name
+# it should return a NullComparison and not a broken Changeset with nil commits
+# tested via test/models/changeset_test.rb
+class Octokit::RedirectAsError < Faraday::Response::Middleware
+  private
+
+  def on_complete(response)
+    if response[:status].to_i.between?(300, 399)
+      raise Octokit::RepositoryUnavailable, response
+    end
+  end
+end
+
 Octokit.middleware = Faraday::RackBuilder.new do |builder|
   builder.use Faraday::HttpCache, shared_cache: false, store: Rails.cache, serializer: Marshal
   builder.response :logger, Rails.logger
   builder.use Octokit::Response::RaiseError
+  builder.use Octokit::RedirectAsError
   builder.adapter Faraday.default_adapter
 end
 

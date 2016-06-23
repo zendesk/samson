@@ -38,6 +38,7 @@ describe Changeset do
       Octokit::NotFound => "GitHub: Not found",
       Octokit::Unauthorized => "GitHub: Unauthorized",
       Octokit::InternalServerError => "GitHub: Internal server error",
+      Octokit::RepositoryUnavailable => "GitHub: Repository unavailable", # used to signal redirects too
       Faraday::ConnectionFailed.new("Oh no") => "GitHub: Oh no"
     }.each do |exception, message|
       it "catches #{exception} exceptions" do
@@ -45,6 +46,12 @@ describe Changeset do
         comparison = Changeset.new("foo/bar", "a", "b").comparison
         comparison.error.must_equal message
       end
+    end
+
+    # tests config/initializers/octokit.rb Octokit::RedirectAsError
+    it "converts a redirect into a NullComparison" do
+      stub_github_api("repos/foo/bar/branches/master", {}, 301)
+      Changeset.new("foo/bar", "a", "master").comparison.class.must_equal Changeset::NullComparison
     end
   end
 
