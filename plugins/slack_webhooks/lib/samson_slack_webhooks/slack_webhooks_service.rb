@@ -4,7 +4,10 @@ module SamsonSlackWebhooks
     # see _notify_buddy_box.html.erb
     def users
       Rails.cache.fetch(:slack_users, expires_in: 5.minutes, race_condition_ttl: 5) do
-        if slack_api_token
+        if !slack_api_token
+          Rails.logger.error('Set the SLACK_API_TOKEN env variable to enabled user mention autocomplete.')
+          []
+        else
           begin
             body = JSON.parse(Faraday.post("https://slack.com/api/users.list", token: slack_api_token).body)
             if body['ok']
@@ -24,9 +27,6 @@ module SamsonSlackWebhooks
             Rails.logger.error("Error fetching slack users (token invalid / service down). #{$!.class}: #{$!}")
             []
           end
-        else
-          Rails.logger.error('Set the SLACK_API_TOKEN env variable to enabled user mention autocomplete.')
-          []
         end
       end
     end
