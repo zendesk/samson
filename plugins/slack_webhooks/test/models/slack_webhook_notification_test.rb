@@ -8,12 +8,14 @@ describe SlackWebhookNotification do
   let(:endpoint) { "https://slack.com/api/chat.postMessage" }
 
   def stub_notification(before_deploy: false, after_deploy: true, for_buddy: false)
-    webhook = stub(webhook_url: endpoint, channel: nil,
-                   before_deploy: before_deploy, after_deploy: after_deploy, for_buddy: for_buddy)
+    webhook = stub(
+      webhook_url: endpoint, channel: nil,
+      before_deploy: before_deploy, after_deploy: after_deploy, for_buddy: for_buddy
+    )
     stage = stub(name: "Staging", slack_webhooks: [webhook], project: project)
-    deploy = stub(to_s: 123456, summary: "hello world!",
-                  user: user, stage: stage, project: project,
-                  reference: '123abc')
+    deploy = stub(
+      to_s: 123456, summary: "hello world!", user: user, stage: stage, project: project, reference: '123abc'
+    )
     SlackWebhookNotification.new(deploy)
   end
 
