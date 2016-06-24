@@ -47,7 +47,7 @@ class GitRepository
 
   def commit_from_ref(git_reference, length: 7)
     return unless ensure_local_cache!
-    command = ['git', 'describe', '--long', '--tags', '--all', "--abbrev=#{length || 40}", git_reference]
+    command = ['git', 'describe', '--always', '--long', '--tags', '--all', "--abbrev=#{length || 40}", git_reference]
     return unless output = capture_stdout(*command)
     output.split('-').last.sub(/^g/, '')
   end

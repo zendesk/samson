@@ -108,6 +108,13 @@ describe GitRepository do
       repository.commit_from_ref('master', length: nil).must_match /^[0-9a-f]{40}$/
     end
 
+    it 'returns the full commit id with nil length when given a short commit id' do
+      create_repo_with_tags
+      repository.clone!
+      short_commit_id = (execute_on_remote_repo "git rev-parse --short HEAD").strip
+      repository.commit_from_ref(short_commit_id, length: nil).must_match /^[0-9a-f]{40}$/
+    end
+
     it 'returns nil if ref does not exist' do
       create_repo_with_tags
       repository.clone!
