@@ -1,0 +1,13 @@
+<% if deploy.waiting_for_buddy? && deploy.stage.send_flowdock_notifications? %>
+  <%= render 'shared/notify_buddy_box',
+    deploy: deploy, project: project,
+    id_prefix: 'flowdock',
+    form_path: AppRoutes.url_helpers.flowdock_notify_path(deploy_id: deploy.id),
+    title: 'Request a buddy via Flowdock',
+    message: FlowdockNotification.new(deploy).default_buddy_request_message,
+    channels: deploy.stage.enabled_flows_names.join(', '),
+    users: SamsonFlowdock::FlowdockService.new(deploy).users,
+    channel_type: 'flows'
+  %>
+<% end %>
+

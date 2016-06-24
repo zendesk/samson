@@ -120,8 +120,8 @@ module Samson
         hooks(name) << block
       end
 
-      def view(name, partial, &params_generator)
-        hooks(name) << [partial, params_generator]
+      def view(name, partial)
+        hooks(name) << partial
       end
 
       def decorator(class_name, file)
@@ -144,10 +144,8 @@ module Samson
       end
 
       def render_views(name, view, *args)
-        hooks(name).each_with_object("".html_safe) do |value, html|
-          partial, params_generator = value
-          new_args = params_generator ? [params_generator.call(*args)] : args
-          html << view.render(partial, *new_args)
+        hooks(name).each_with_object("".html_safe) do |partial, html|
+          html << view.render(partial, *args)
         end
       end
 

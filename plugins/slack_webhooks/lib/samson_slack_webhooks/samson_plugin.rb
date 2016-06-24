@@ -6,19 +6,7 @@ module SamsonSlackWebhooks
 end
 
 Samson::Hooks.view :stage_form, "samson_slack_webhooks/fields"
-Samson::Hooks.view :deploy_view, "shared/notify_buddy_box" do |deploy:, project:|
-  {
-    deploy: deploy, project: project,
-    id_prefix: 'slack',
-    send_buddy_request: deploy.stage.send_slack_buddy_request?,
-    form_path: AppRoutes.url_helpers.slack_webhooks_notify_path(deploy_id: deploy.id),
-    title: 'Request a buddy via Slack',
-    message: SlackWebhookNotification.new(deploy).default_buddy_request_message,
-    channels: deploy.stage.slack_buddy_channels.join(', '),
-    users: SamsonSlackWebhooks::SlackWebhooksService.new.users,
-    channel_type: 'channels'
-  }
-end
+Samson::Hooks.view :deploy_view, "samson_slack_webhooks/notify_buddy_box"
 
 Samson::Hooks.callback :stage_clone do |old_stage, new_stage|
   new_stage.slack_webhooks.build(

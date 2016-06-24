@@ -4,33 +4,7 @@ SingleCov.covered! unless defined?(Rake) # rake preloads all plugins
 
 describe SamsonSlackWebhooks do
   let(:deploy) { deploys(:succeeded_test) }
-  let(:project) { projects(:test) }
   let(:stage) { deploy.stage }
-
-  describe :deploy_view do
-    it "returns rendering params" do
-      stage.stubs(:send_slack_buddy_request?).returns(true)
-      stage.stubs(:slack_buddy_channels).returns(["ch1", "ch2"])
-      AppRoutes.url_helpers.stubs(:slack_webhooks_notify_path).returns("http://localhost.com/deploy")
-      SlackWebhookNotification.any_instance.stubs(:default_buddy_request_message).returns("message")
-      SamsonSlackWebhooks::SlackWebhooksService.any_instance.stubs(:users).returns([{id: 123}])
-      view = Object.new
-      view.stubs(:render)
-      view.expects(:render).with(
-        "shared/notify_buddy_box",
-        deploy: deploy, project: project,
-        id_prefix: 'slack',
-        send_buddy_request: true,
-        form_path: 'http://localhost.com/deploy',
-        title: 'Request a buddy via Slack',
-        message: 'message',
-        channels: 'ch1, ch2',
-        users: [{id: 123}],
-        channel_type: 'channels'
-      )
-      Samson::Hooks.render_views(:deploy_view, view, project: project, deploy: deploy)
-    end
-  end
 
   describe :before_deploy do
     it "sends notification on before hook" do
