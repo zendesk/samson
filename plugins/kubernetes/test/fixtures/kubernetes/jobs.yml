@@ -1,0 +1,8 @@
+running_test:
+  user: super_admin
+  stage: test_staging
+  status: running
+  build: docker_build
+  kubernetes_task: db_migrate
+  output: This worked!
+  commit: staging

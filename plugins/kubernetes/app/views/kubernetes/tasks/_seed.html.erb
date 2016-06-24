@@ -1,0 +1,16 @@
+<%= form_tag seed_project_kubernetes_tasks_path(@project), class: "form-horizontal" do %>
+  <fieldset>
+    <div class="form-group">
+      <%= label_tag :ref, 'Read tasks from branch', class: "col-lg-2 control-label" %>
+      <div class="col-lg-2">
+        <%= text_field_tag :ref, '', placeholder: 'master', class: "form-control" %>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <div class="col-lg-offset-2 col-lg-10">
+        <%= submit_tag 'Seed', class: "btn btn-primary" %>
+      </div>
+    </div>
+  </fieldset>
+<% end %>

@@ -1,0 +1,6 @@
+<tr>
+  <td><span class="mouseover" data-time="<%= datetime_to_js_ms(job.created_at) %>"><%= job.created_at.rfc822 %></span></td>
+  <td><pre class="pre-command"><%= job.tag %></pre></td>
+  <td><pre class="pre-command"><%= job.commit %></pre></td>
+  <td><span class="label <%= status_label(job.status) %>"><%= job.status.titleize %></span></td>
+</tr>

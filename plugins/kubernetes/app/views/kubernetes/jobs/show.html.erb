@@ -1,0 +1,38 @@
+<% content_for :page_title, job_page_title %>
+
+<%= breadcrumb @project, "Job ##{@job.id}" %>
+
+<h1>
+  <%= @project.name %>
+
+  <div class="pull-right">
+    <%= link_to "Back", project_jobs_path(@project), class: "btn btn-default" %>
+  </div>
+</h1>
+
+<div id="header">
+  <% if @job.finished? || @job.running? || JobExecution.enabled %>
+    <%= render 'jobs/header' %>
+  <% else %>
+    <div class="alert alert-info">
+      Samson is currently restarting, your job has been queued and will be resumed shortly.
+    </div>
+
+    <%= javascript_tag do %>
+      waitUntilEnabled("<%= enabled_jobs_path %>");
+    <% end %>
+  <% end %>
+</div>
+
+<section>
+  <div class="row" id="output" data-stream-url="<%= project_kubernetes_stream_path(@project, @job) %>">
+    <%= render 'shared/output', job: @job, deployable: @job, hide: false %>
+  </div>
+</section>
+
+<% if (@job.active? && JobExecution.enabled) || @job.running? %>
+  <%= javascript_tag do %>
+    toggleOutputToolbar();
+    startStream();
+  <% end %>
+<% end %>

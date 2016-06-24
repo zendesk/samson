@@ -4,7 +4,7 @@ module Kubeclient
   class Client
     # Add Deployment and Daemonset waiting for PR:
     # https://github.com/abonas/kubeclient/pull/143
-    NEW_ENTITY_TYPES = %w[Deployment DaemonSet].map do |et|
+    NEW_ENTITY_TYPES = %w[Deployment DaemonSet Job].map do |et|
       clazz = Class.new(RecursiveOpenStruct) do
         def initialize(hash = nil, args = {})
           args[:recurse_over_arrays] = true
