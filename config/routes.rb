@@ -121,5 +121,11 @@ Samson::Application.routes.draw do
 
   resources :access_requests, only: [:new, :create]
 
+  namespace :api do
+    namespace :v1, defaults: { format: 'json' } do
+      resources :deploys, only: [:create]
+    end
+  end
+
   mount SseRailsEngine::Engine, at: '/streaming'
 end
