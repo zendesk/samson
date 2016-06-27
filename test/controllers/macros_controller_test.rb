@@ -1,18 +1,11 @@
 require_relative '../test_helper'
 
-SingleCov.covered! uncovered: 1
+SingleCov.covered!
 
 describe MacrosController do
   let(:project) { projects(:test) }
   let(:macro) { macros(:test) }
-  let(:macro_service) { stub(execute!: nil) }
-  let(:execute_called) { [] }
   let(:job) { Job.create!(commit: macro.reference, command: macro.script, project: project, user: user) }
-
-  before do
-    MacroService.stubs(:new).with(project, user).returns(macro_service)
-    macro_service.stubs(:execute!).capture(execute_called).returns(job)
-  end
 
   as_a_viewer do
     unauthorized :get, :index, project_id: :foo
@@ -34,19 +27,21 @@ describe MacrosController do
     end
 
     describe 'a POST to #execute' do
-      describe 'with a macro' do
-        before do
-          JobExecution.stubs(:start_job)
+      it "executes a macro" do
+        JobExecution.expects(:start_job)
+        assert_difference 'Job.count' do
           post :execute, project_id: project.to_param, id: macro.id
         end
+        assert_redirected_to project_job_path(project, Job.last)
+      end
 
-        it "redirects to the job path" do
-          assert_redirected_to project_job_path(project, Job.last)
+      it "fails execute an invalid macro" do
+        JobExecution.expects(:start_job).never
+        Job.any_instance.expects(:save).returns(false)
+        refute_difference 'Job.count' do
+          post :execute, project_id: project.to_param, id: macro.id
         end
-
-        it "creates a job" do
-          assert_equal [[macro]], execute_called
-        end
+        assert_redirected_to project_macros_path(project)
       end
 
       it 'fails for non-existent macro' do
