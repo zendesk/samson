@@ -47,11 +47,14 @@ describe SamsonSlackWebhooks::SlackWebhooksService do
       with_env(SLACK_API_TOKEN: nil) do
         Rails.logger.expects(:error).with(
           'Set the SLACK_API_TOKEN env variable to enabled user mention autocomplete.'
-        )
-        service.users.must_equal([])
+        ).twice
+        users_1st_time = service.users
+        users_1st_time.must_equal([])
 
-        # is cached
-        service.users.object_id.must_equal service.users.object_id
+        # is not cached
+        users_2nd_time = service.users
+        users_2nd_time.must_equal([])
+        users_2nd_time.object_id.wont_equal users_1st_time.object_id
       end
     end
   end
