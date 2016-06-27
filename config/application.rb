@@ -25,6 +25,12 @@ module Samson
     # config.i18n.load_path += Dir[Rails.root.join('my', 'locales', '*.{rb,yml}').to_s]
     # config.i18n.default_locale = :de
     #
+    deprecated_url = ->(var) do
+      url = ENV[var].presence
+      return url if !url || url.start_with?('http')
+      warn "Using deprecated url without protocol for #{var}"
+      "https://#{url}"
+    end
 
     config.autoload_paths += Dir["#{config.root}/lib/**/"]
 
@@ -83,9 +89,9 @@ module Samson
     config.samson.github.organization = ENV["GITHUB_ORGANIZATION"].presence
     config.samson.github.admin_team = ENV["GITHUB_ADMIN_TEAM"].presence
     config.samson.github.deploy_team = ENV["GITHUB_DEPLOY_TEAM"].presence
-    config.samson.github.web_url = ENV["GITHUB_WEB_URL"].presence || 'github.com'
-    config.samson.github.api_url = ENV["GITHUB_API_URL"].presence || 'api.github.com'
-    config.samson.github.status_url = ENV["GITHUB_STATUS_URL"].presence || 'status.github.com'
+    config.samson.github.web_url = deprecated_url.call("GITHUB_WEB_URL") || 'https://github.com'
+    config.samson.github.api_url = deprecated_url.call("GITHUB_API_URL") || 'https://api.github.com'
+    config.samson.github.status_url = deprecated_url.call("GITHUB_STATUS_URL") || 'https://status.github.com'
     config.samson.references_cache_ttl = ENV['REFERENCES_CACHE_TTL'].presence || 10.minutes
 
     # Configuration for LDAP
@@ -99,7 +105,7 @@ module Samson
     config.samson.ldap.password = ENV["LDAP_PASSWORD"].presence
 
     config.samson.gitlab = ActiveSupport::OrderedOptions.new
-    config.samson.gitlab.web_url = ENV["GITLAB_URL"].presence || 'gitlab.com'
+    config.samson.gitlab.web_url = deprecated_url.call("GITLAB_URL") || 'https://gitlab.com'
 
     truthy = ["1", "true"]
 
