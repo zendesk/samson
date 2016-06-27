@@ -78,7 +78,7 @@ class Build < ActiveRecord::Base
     end
 
     if git_ref.present?
-      commit = project.repository.commit_from_ref(git_ref, length: nil)
+      commit = project.repository.commit_from_ref(git_ref)
       if commit
         self.git_sha = commit unless git_sha.present?
       else

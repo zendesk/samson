@@ -96,35 +96,29 @@ describe GitRepository do
   end
 
   describe "#commit_from_ref" do
-    it 'returns the short commit id' do
+    it 'returns the full commit id' do
       create_repo_with_tags
       repository.clone!
-      repository.commit_from_ref('master').must_match /^[0-9a-f]{7}$/
+      repository.commit_from_ref('master').must_match /^[0-9a-f]{40}$/
     end
 
-    it 'returns the full commit id with nil length' do
-      create_repo_with_tags
-      repository.clone!
-      repository.commit_from_ref('master', length: nil).must_match /^[0-9a-f]{40}$/
-    end
-
-    it 'returns the full commit id with nil length when given a short commit id' do
+    it 'returns the full commit id when given a short commit id' do
       create_repo_with_tags
       repository.clone!
       short_commit_id = (execute_on_remote_repo "git rev-parse --short HEAD").strip
-      repository.commit_from_ref(short_commit_id, length: nil).must_match /^[0-9a-f]{40}$/
+      repository.commit_from_ref(short_commit_id).must_match /^[0-9a-f]{40}$/
     end
 
     it 'returns nil if ref does not exist' do
       create_repo_with_tags
       repository.clone!
-      repository.commit_from_ref('NOT A VALID REF', length: nil).must_be_nil
+      repository.commit_from_ref('NOT A VALID REF').must_be_nil
     end
 
     it 'returns the commit of a branch' do
       create_repo_with_an_additional_branch('my_branch')
       repository.clone!(mirror: true)
-      repository.commit_from_ref('my_branch').must_match /^[0-9a-f]{7}$/
+      repository.commit_from_ref('my_branch').must_match /^[0-9a-f]{40}$/
     end
 
     it 'returns the commit of a named tag' do
@@ -139,15 +133,15 @@ describe GitRepository do
       SHELL
 
       repository.clone!(mirror: true)
-      sha = repository.commit_from_ref('annotated_tag', length: 40)
+      sha = repository.commit_from_ref('annotated_tag')
       sha.must_match /^[0-9a-f]{40}$/
-      repository.commit_from_ref('test_branch', length: 40).must_equal(sha)
+      repository.commit_from_ref('test_branch').must_equal(sha)
     end
 
     it 'prevents script insertion attacks' do
       create_repo_without_tags
       repository.clone!
-      repository.commit_from_ref('master ; rm foo', length: nil).must_be_nil
+      repository.commit_from_ref('master ; rm foo').must_be_nil
       assert File.exist?(File.join(repository.repo_cache_dir, 'foo'))
     end
   end
@@ -254,7 +248,7 @@ describe GitRepository do
       repository.clone!
     end
 
-    let(:sha) { repository.commit_from_ref('master', length: nil) }
+    let(:sha) { repository.commit_from_ref('master') }
 
     it 'finds content' do
       repository.file_content('foo', sha).must_equal "monkey"
