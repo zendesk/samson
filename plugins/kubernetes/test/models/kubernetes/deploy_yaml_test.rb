@@ -52,6 +52,11 @@ describe Kubernetes::DeployYaml do
       )
     end
 
+    it "sets deploy_strategy" do
+      kubernetes_roles(:app_server).update_column(:deploy_strategy, 'Xyz')
+      yaml.to_hash.fetch(:spec).fetch(:strategy).fetch(:type).must_equal 'Xyz'
+    end
+
     it "escapes things that would not be allowed in labels or environment values" do
       doc.deploy_group.update_column(:env_value, 'foo:bar')
       doc.kubernetes_release.update_column(:git_ref, 'user/feature')
