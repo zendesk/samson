@@ -7,7 +7,7 @@ Stage.class_eval do
   end
 
   def slack_buddy_channels
-    slack_webhooks.for_buddy.map(&:channel)
+    @slack_buddy_channels ||= slack_webhooks.for_buddy.pluck(:channel)
   end
 
   def send_slack_buddy_request?

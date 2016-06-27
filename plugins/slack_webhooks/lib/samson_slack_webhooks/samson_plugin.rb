@@ -18,14 +18,10 @@ Samson::Hooks.callback :stage_permitted_params do
   { slack_webhooks_attributes: [:id, :webhook_url, :channel, :before_deploy, :after_deploy, :for_buddy, :_destroy] }
 end
 
-Samson::Hooks.callback :before_deploy do |deploy, _buddy|
-  if deploy.stage.send_slack_webhook_notifications?
-    SlackWebhookNotification.new(deploy).deliver(:before_deploy)
-  end
-end
-
-Samson::Hooks.callback :after_deploy do |deploy, _buddy|
-  if deploy.stage.send_slack_webhook_notifications?
-    SlackWebhookNotification.new(deploy).deliver(:after_deploy)
+[:before_deploy, :after_deploy].each do |callback|
+  Samson::Hooks.callback callback do |deploy, _buddy|
+    if deploy.stage.send_slack_webhook_notifications?
+      SlackWebhookNotification.new(deploy).deliver(callback)
+    end
   end
 end
