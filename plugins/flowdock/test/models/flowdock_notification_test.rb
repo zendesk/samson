@@ -40,4 +40,11 @@ describe FlowdockNotification do
 
     content.must_equal "bar"
   end
+
+  describe "#default_buddy_request_message" do
+    it "renders" do
+      message = notification.default_buddy_request_message
+      message.must_include ":pray: @team Super Admin is requesting approval to deploy Project **staging** to production"
+    end
+  end
 end

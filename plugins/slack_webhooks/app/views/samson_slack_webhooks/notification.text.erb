@@ -1,12 +1,6 @@
-:point_right: *<%= subject %>* :point_left:
+:point_right: *<%= subject %>* (<<%= deploy.url %>|view the deploy>) :point_left:
 <% if changeset.commits.count == 0 %>
 There are no new commits since last time.
 <% else %>
-_<%= pluralize changeset.commits.count, "commit" %> by <%= changeset.author_names.to_sentence %>._
-
-*Commits*
-
-<% changeset.commits[0..4].each do |commit| %>
-> <<%= commit.url + '|' + commit.summary %>> (<%= commit.author_name %>)
-<% end %>
+_<<%= changeset.github_url %>|<%= pluralize changeset.commits.count, "commit" %>> and <%= pluralize changeset.pull_requests.count, "pull request" %> by <%= changeset.author_names.to_sentence %>._
 <% end %>

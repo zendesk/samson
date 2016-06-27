@@ -1,5 +1,7 @@
 //= require typeahead.js.js
 //= require changesets
+//= require jquery-mentions-input/jquery.elastic.source
+//= require jquery-mentions-input/jquery.mentionsInput
 
 var following = true; // shared with stream.js
 

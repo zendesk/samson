@@ -1,0 +1,12 @@
+<% if deploy.waiting_for_buddy? && deploy.stage.send_slack_buddy_request? %>
+  <%= render 'shared/notify_buddy_box',
+    deploy: deploy, project: project,
+    id_prefix: 'slack',
+    form_path: AppRoutes.url_helpers.slack_webhooks_notify_path(deploy_id: deploy.id),
+    title: 'Request a buddy via Slack',
+    message: SlackWebhookNotification.new(deploy).default_buddy_request_message,
+    channels: deploy.stage.slack_buddy_channels.join(', '),
+    users: SamsonSlackWebhooks::SlackWebhooksService.new.users,
+    channel_type: 'channels'
+  %>
+<% end %>

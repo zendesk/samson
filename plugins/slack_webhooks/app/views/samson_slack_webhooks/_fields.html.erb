@@ -26,6 +26,29 @@
           </div>
         <% end %>
       </div>
+
+      <div class="form-group">
+        <div class="col-lg-2 checkbox">
+          <%= slack_fields.label :before_deploy do %>
+            <%= slack_fields.check_box :before_deploy%>
+            Before Deploy
+          <% end %>
+        </div>
+
+        <div class="col-lg-2 checkbox">
+          <%= slack_fields.label :after_deploy do %>
+            <%= slack_fields.check_box :after_deploy%>
+            After Deploy
+          <% end %>
+        </div>
+
+        <div class="col-lg-3 checkbox">
+          <%= slack_fields.label :for_buddy do %>
+            <%= slack_fields.check_box :for_buddy%>
+            For Buddy Approval
+          <% end %>
+        </div>
+      </div>
     <% end %>
   </div>
 </fieldset>

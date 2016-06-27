@@ -6,6 +6,14 @@ Stage.class_eval do
     slack_webhooks.any?
   end
 
+  def slack_buddy_channels
+    @slack_buddy_channels ||= slack_webhooks.for_buddy.pluck(:channel)
+  end
+
+  def send_slack_buddy_request?
+    slack_buddy_channels.any?
+  end
+
   private
 
   def no_webhook_url?(slack_webhook_attrs)

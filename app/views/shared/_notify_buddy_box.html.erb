@@ -1,0 +1,66 @@
+<%# see _notify_buddy_box in flowdock and slack_webhooks plugins for examples of using this shared template %>
+<%= form_tag form_path do %>
+  <div class="alert" style="display: none"></div>
+
+  <div class="panel panel-info">
+    <div class="panel-heading">
+      <h3 class="panel-title"><%= title %></h3>
+    </div>
+    <div class="panel-body">
+      <div class="col-sm-10">
+        <div class="mentions-input-box">
+          <%= text_area_tag :message, message, id: id_prefix + 'buddy_request_box' %>
+        </div>
+        <em>This will send a buddy request to the <strong><%= channels %></strong> <%= channel_type %>.</em>
+      </div>
+      <div class="col-sm-2">
+        <%= submit_tag 'Request a Buddy!', class: "btn btn-primary" %>
+      </div>
+    </div>
+  </div>
+<% end %>
+
+<script>
+  $(function(){
+    var $input = $('#<%= id_prefix %>buddy_request_box');
+
+    // when user hits 'Request', normalize text and submit via ajax
+    var $form = $input.parents('form');
+    $form.submit(function(e){
+      e.preventDefault();
+
+      // normalize mentioned users @[alex](user:1) -> @alex
+      $input.mentionsInput('val', function(text){
+        $input.val(text.replace(/@\[([^\\]+?)\]\(([^)]+?)\)/g, "@$1"));
+      });
+
+      // submit form without leaving the page and show result
+      $.ajax({
+        url: $form.attr('action'),
+        type: $form.attr('method'),
+        data: $form.serialize(),
+        success: function() {
+          $form.find('.alert').addClass('alert-success').text('Message sent!').show()
+        },
+        error: function(_, _, text) {
+          $form.find('.alert').addClass('alert-danger').text('ERROR: ' + text).show()
+        }
+      });
+    });
+
+    // when user types @, show possible user names
+    var users = <%= users.to_json.html_safe %>;
+    $input.mentionsInput({
+      // prefill with what is already there
+      defaultValue: $input.val(),
+
+      // when user types after the @ filter down the possible users
+      onDataRequest: function (mode, query, callback) {
+        var filtered = _.filter(users, function (user) {
+          return user.name.toLowerCase().indexOf(query.toLowerCase()) > -1;
+        });
+        callback.call(this, filtered);
+      }
+    });
+  });
+</script>
