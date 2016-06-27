@@ -9,8 +9,7 @@ describe Kubernetes::RolesController do
     {
       name: 'NAME',
       service_name: 'SERVICE_NAME',
-      config_file: 'dsfsd.yml',
-      deploy_strategy: 'RollingUpdate'
+      config_file: 'dsfsd.yml'
     }
   end
 

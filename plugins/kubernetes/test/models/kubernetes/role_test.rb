@@ -42,21 +42,6 @@ describe Kubernetes::Role do
     it 'is valid' do
       assert_valid role
     end
-
-    it 'is valid with known deploy strategy' do
-      Kubernetes::Role::DEPLOY_STRATEGIES.each do |strategy|
-        role.deploy_strategy = strategy
-        assert_valid role
-      end
-    end
-
-    it 'is invalid with unknown deploy strategy' do
-      [nil, 'foo'].each do |strategy|
-        role.deploy_strategy = strategy
-        refute_valid role
-      end
-    end
-
     describe "service name" do
       let(:other) { kubernetes_roles(:resque_worker) }
 
@@ -120,8 +105,7 @@ describe Kubernetes::Role do
           project: project,
           config_file: 'sdfsdf.yml',
           name: 'sdfsdf',
-          service_name: nil,
-          deploy_strategy: 'RollingUpdate'
+          service_name: nil
         )
         Kubernetes::Role.seed! project, 'HEAD'
         project.kubernetes_roles.map(&:service_name).must_equal [nil, nil]

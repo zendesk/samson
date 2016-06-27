@@ -2,11 +2,9 @@
 app_server:
   project: test
   name: app_server
-  deploy_strategy: RollingUpdate
   config_file: 'kubernetes/app_server.yml'
 
 resque_worker:
   project: test
   name: resque_worker
-  deploy_strategy: Recreate
   config_file: 'kubernetes/resque_worker.yml'
