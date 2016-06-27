@@ -12,7 +12,6 @@
           <th>Name</th>
           <th>Config</th>
           <th>Service Name</th>
-          <th>Deploy Strategy</th>
           <th></th>
         </tr>
 
@@ -21,7 +20,6 @@
             <td><%= link_to role.name, [@project, role] %></td>
             <td><%= role.config_file %></td>
             <td><%= role.service_name %></td>
-            <td><%= role.deploy_strategy %></td>
             <td>
               <%= link_to 'Edit', [@project, role] if current_user.admin_for?(role.project) %>
             </td>

@@ -24,12 +24,10 @@ module Kubernetes
       foreign_key: :kubernetes_role_id,
       dependent: :destroy
 
-    DEPLOY_STRATEGIES = %w[RollingUpdate Recreate].freeze
-
     before_validation :nilify_service_name
+
     validates :project, presence: true
     validates :name, presence: true
-    validates :deploy_strategy, presence: true, inclusion: DEPLOY_STRATEGIES
     validates :service_name, uniqueness: {scope: :deleted_at, allow_nil: true}
 
     scope :not_deleted, -> { where(deleted_at: nil) }
@@ -48,7 +46,6 @@ module Kubernetes
         # deploy
         name = deploy.fetch(:metadata, {}).fetch(:labels, {})[:role] ||
           File.basename(config_file.path).split('.', 2).first
-        deploy_strategy = deploy.fetch(:spec, {}).fetch(:strategy, {})[:type] || 'RollingUpdate'
 
         # service
         begin
@@ -67,8 +64,7 @@ module Kubernetes
           project: project,
           config_file: config_file.path,
           name: name,
-          service_name: service_name,
-          deploy_strategy: deploy_strategy
+          service_name: service_name
         )
       end
     end
