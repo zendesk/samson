@@ -15,15 +15,13 @@ class JobsController < ApplicationController
   end
 
   def create
-    job_service = JobService.new(@project, current_user)
-    command_ids = command_params[:ids].select(&:present?)
-
-    @job = job_service.execute!(
-      job_params[:commit].strip, command_ids,
-      job_params[:command].strip.presence
+    @job = current_project.jobs.build(
+      user: current_user,
+      command: command,
+      commit: job_params[:commit]
     )
 
-    if @job.persisted?
+    if @job.save
       JobExecution.start_job(JobExecution.new(@job.commit, @job))
       redirect_to [@project, @job]
     else
@@ -71,6 +69,15 @@ class JobsController < ApplicationController
 
   def command_params
     params.require(:commands).permit(ids: [])
+  end
+
+  def command
+    command_ids = command_params[:ids].select(&:present?).map(&:to_i)
+    commands = Command.find(command_ids).sort_by { |c| command_ids.index(c.id) }.map(&:command)
+    if command = job_params[:command].strip.presence
+      commands << command
+    end
+    commands.join("\n")
   end
 
   def find_job
