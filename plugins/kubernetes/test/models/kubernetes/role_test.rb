@@ -65,6 +65,12 @@ describe Kubernetes::Role do
         role.service_name = 'abc'
       end
 
+      it "stores empty as nil to not run into duplication issues" do
+        role.service_name = ''
+        assert_valid role
+        role.service_name.must_equal nil
+      end
+
       it "is invalid with a already used service name" do
         refute_valid role
       end
