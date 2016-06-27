@@ -11,14 +11,14 @@ describe Kubernetes::DeployYaml do
     doc.kubernetes_release.deploy_id = 123
   end
 
-  describe "#resource_name" do
+  describe "#resource_kind" do
     it 'is deployment' do
-      yaml.resource_name.must_equal 'deployment'
+      yaml.resource_kind.must_equal 'deployment'
     end
 
     it 'knows if it is a DaemonSet' do
       yaml.send(:template)[:kind] = 'DaemonSet'
-      yaml.resource_name.must_equal 'daemon_set'
+      yaml.resource_kind.must_equal 'daemon_set'
     end
   end
 

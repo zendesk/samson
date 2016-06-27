@@ -276,7 +276,7 @@ describe Kubernetes::DeployExecutor do
       end
 
       it "fails when jobs fail" do
-        executor.expects(:execute_deploys).returns false # jobs failed, they are the first execution
+        executor.expects(:deploy_to_cluster).returns false # jobs failed, they are the first execution
         refute execute!
         out.wont_include "SUCCESS"
         out.wont_include "stability"

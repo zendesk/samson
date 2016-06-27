@@ -29,7 +29,7 @@ module Kubernetes
       end
     end
 
-    def resource_name
+    def resource_kind
       template['kind'].underscore
     end
 

@@ -12,7 +12,7 @@ module Kubernetes
     validate :test_client_connection
 
     def client
-      @client ||= build_client nil
+      @client ||= build_client :default
     end
 
     def extension_client
@@ -47,10 +47,10 @@ module Kubernetes
 
     def build_client(type)
       endpoint = context.api_endpoint
-      if type
-        endpoint = endpoint.sub(/\/api$/, '') + '/apis'
-      else
+      if type == :default
         type = context.api_version
+      else
+        endpoint = endpoint.sub(/\/api$/, '') + '/apis'
       end
 
       Kubeclient::Client.new(

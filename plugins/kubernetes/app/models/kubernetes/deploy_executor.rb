@@ -31,19 +31,19 @@ module Kubernetes
       jobs, deploys = release.release_docs.partition(&:job?)
       if jobs.any?
         @output.puts "First deploying jobs ..." if deploys.any?
-        return false unless execute_deploys(release, jobs)
+        return false unless deploy_to_cluster(release, jobs)
         @output.puts "Now deploying other roles ..." if deploys.any?
       end
       if deploys.any?
         ensure_service(deploys)
-        return false unless execute_deploys(release, deploys)
+        return false unless deploy_to_cluster(release, deploys)
       end
       true
     end
 
     private
 
-    def wait_for_deploys_to_finish(release, release_docs)
+    def wait_for_resources_to_complete(release, release_docs)
       start = Time.now
       stable_ticks = CHECK_STABLE / TICK
       expected = release_docs.to_a.sum(&:desired_pod_count)
@@ -300,9 +300,9 @@ module Kubernetes
       end
     end
 
-    def execute_deploys(release, deploys)
+    def deploy_to_cluster(release, deploys)
       deploy(deploys)
-      success = wait_for_deploys_to_finish(release, deploys)
+      success = wait_for_resources_to_complete(release, deploys)
       show_failure_cause(release) unless success
       success
     end
