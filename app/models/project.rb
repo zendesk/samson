@@ -118,11 +118,11 @@ class Project < ActiveRecord::Base
   end
 
   def github?
-    repository_url.include? Rails.application.config.samson.github.web_url
+    repository_url.include? Rails.application.config.samson.github.web_url.split("://", 2).last
   end
 
   def gitlab?
-    repository_url.include? Rails.application.config.samson.gitlab.web_url
+    repository_url.include? Rails.application.config.samson.gitlab.web_url.split("://", 2).last
   end
 
   def release_prior_to(release)
@@ -151,11 +151,11 @@ class Project < ActiveRecord::Base
   private
 
   def repository_homepage_github
-    "//#{Rails.application.config.samson.github.web_url}/#{github_repo}"
+    "#{Rails.application.config.samson.github.web_url}/#{github_repo}"
   end
 
   def repository_homepage_gitlab
-    "//#{Rails.application.config.samson.gitlab.web_url}/#{gitlab_repo}"
+    "#{Rails.application.config.samson.gitlab.web_url}/#{gitlab_repo}"
   end
 
   def deploys_by_group(before)

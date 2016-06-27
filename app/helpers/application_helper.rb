@@ -77,7 +77,7 @@ module ApplicationHelper
     status_url = Rails.application.config.samson.github.status_url
 
     Rails.cache.fetch(github_status_cache_key, expires_in: 5.minutes) do
-      response = Faraday.get("https://#{status_url}/api/status.json") do |req|
+      response = Faraday.get("#{status_url}/api/status.json") do |req|
         req.options.timeout = req.options.open_timeout = 1
       end
 

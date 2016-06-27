@@ -59,7 +59,7 @@ class Changeset::PullRequest
   end
 
   def url
-    "https://#{Rails.application.config.samson.github.web_url}/#{repo}/pull/#{number}"
+    "#{Rails.application.config.samson.github.web_url}/#{repo}/pull/#{number}"
   end
 
   def reference

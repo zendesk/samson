@@ -95,7 +95,7 @@ describe ApplicationHelper do
   end
 
   describe "#github_ok?" do
-    let(:status_url) { "https://#{Rails.application.config.samson.github.status_url}/api/status.json" }
+    let(:status_url) { "#{Rails.application.config.samson.github.status_url}/api/status.json" }
 
     describe "with an OK response" do
       before do

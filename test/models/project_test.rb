@@ -62,12 +62,12 @@ describe Project do
   describe "#repository_homepage" do
     it "is github when using github" do
       project.repository_url = "git://github.com/foo/bar"
-      project.repository_homepage.must_equal "//github.com/foo/bar"
+      project.repository_homepage.must_equal "https://github.com/foo/bar"
     end
 
     it "is gitlab when using gitlab" do
       project.repository_url = "git://gitlab.com/foo/bar"
-      project.repository_homepage.must_equal "//gitlab.com/foo/bar"
+      project.repository_homepage.must_equal "https://gitlab.com/foo/bar"
     end
 
     it "is nothing when unknown" do
