@@ -26,6 +26,7 @@ module Kubernetes
 
     DEPLOY_STRATEGIES = %w[RollingUpdate Recreate].freeze
 
+    before_validation :nilify_service_name
     validates :project, presence: true
     validates :name, presence: true
     validates :deploy_strategy, presence: true, inclusion: DEPLOY_STRATEGIES
@@ -105,6 +106,10 @@ module Kubernetes
     end
 
     private
+
+    def nilify_service_name
+      self.service_name = service_name.presence
+    end
 
     def parse_resource_value(v)
       return unless v.to_s =~ /^(\d+(?:\.\d+)?)(#{KUBE_RESOURCE_VALUES.keys.join('|')})$/
