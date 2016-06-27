@@ -16,6 +16,7 @@ module Kubernetes
         set_spec_template_metadata
         set_docker_image
         set_resource_usage
+        set_strategy
         if needs_secret_sidecar?
           set_secret_sidecar
           expand_secret_annotations
@@ -129,6 +130,11 @@ module Kubernetes
 
     def set_namespace
       template[:metadata][:namespace] = @doc.deploy_group.kubernetes_namespace
+    end
+
+    def set_strategy
+      template[:spec][:strategy] ||= {}
+      template[:spec][:strategy][:type] = @doc.kubernetes_role.deploy_strategy
     end
 
     # Sets the labels for each new Pod.
