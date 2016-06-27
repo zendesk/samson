@@ -20,8 +20,12 @@ module Kubernetes
       deploy_group.kubernetes_cluster.client
     end
 
+    def job?
+      deploy_yaml.resource_kind == 'job'
+    end
+
     def deploy
-      case deploy_yaml.resource_name
+      case deploy_yaml.resource_kind
       when 'deployment'
         deploy = Kubeclient::Deployment.new(deploy_yaml.to_hash)
         if deployed
@@ -33,8 +37,15 @@ module Kubernetes
         daemon = Kubeclient::DaemonSet.new(deploy_yaml.to_hash)
         delete_daemon_set(daemon) if deployed
         extension_client.create_daemon_set daemon
+      when 'job'
+        # FYI per docs it is supposed to use batch api, but extension api works
+        job = Kubeclient::Job.new(deploy_yaml.to_hash)
+        if deployed
+          extension_client.delete_job job.metadata.name, job.metadata.namespace
+        end
+        extension_client.create_job job
       else
-        raise "Unknown deploy object #{deploy_yaml.resource_name}"
+        raise "Unknown deploy object #{deploy_yaml.resource_kind}"
       end
     end
 
@@ -66,16 +77,16 @@ module Kubernetes
     end
 
     def deploy_template
-      parsed_config_file.deploy(required: true)
+      parsed_config_file.deploy || parsed_config_file.job
     end
 
     def desired_pod_count
-      case deploy_yaml.resource_name
+      case deploy_yaml.resource_kind
       when 'daemon_set'
         # need http request since we do not know how many nodes we will match
         deployed.status.desiredNumberScheduled
-      when 'deployment' then replica_target
-      else raise "Unsupported kind #{deploy_yaml.resource_name}"
+      when 'deployment', 'job' then replica_target
+      else raise "Unsupported kind #{deploy_yaml.resource_kind}"
       end
     end
 
@@ -92,7 +103,7 @@ module Kubernetes
 
     def deployed
       extension_client.send(
-        "get_#{deploy_yaml.resource_name}",
+        "get_#{deploy_yaml.resource_kind}",
         deploy_yaml.to_hash.fetch(:metadata).fetch(:name),
         deploy_group.kubernetes_namespace
       )

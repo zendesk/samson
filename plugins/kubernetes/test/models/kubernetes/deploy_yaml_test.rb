@@ -11,14 +11,14 @@ describe Kubernetes::DeployYaml do
     doc.kubernetes_release.deploy_id = 123
   end
 
-  describe "#resource_name" do
+  describe "#resource_kind" do
     it 'is deployment' do
-      yaml.resource_name.must_equal 'deployment'
+      yaml.resource_kind.must_equal 'deployment'
     end
 
     it 'knows if it is a DaemonSet' do
       yaml.send(:template)[:kind] = 'DaemonSet'
-      yaml.resource_name.must_equal 'daemon_set'
+      yaml.resource_kind.must_equal 'daemon_set'
     end
   end
 
@@ -62,24 +62,6 @@ describe Kubernetes::DeployYaml do
         'deploy_group' => 'foo-bar',
         'role' => 'app-server'
       )
-    end
-
-    describe "deployment" do
-      it "fails when deployment section is missing" do
-        assert doc.raw_template.sub!('Deployment', 'Foobar')
-        e = assert_raises Samson::Hooks::UserError do
-          yaml.to_hash
-        end
-        e.message.must_include "included 0 "
-      end
-
-      it "fails when multiple deployment sections are present" do
-        doc.raw_template.replace("#{doc.raw_template}\n#{doc.raw_template}")
-        e = assert_raises Samson::Hooks::UserError do
-          yaml.to_hash
-        end
-        e.message.must_include "included 2 objects"
-      end
     end
 
     describe "containers" do

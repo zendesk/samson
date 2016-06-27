@@ -16,8 +16,8 @@ describe Kubernetes::Role do
 
   def commit
     execute_on_remote_repo <<-SHELL
-        git add .
-        git commit -m "second commit"
+      git add .
+      git commit -m "second commit"
     SHELL
   end
 
@@ -86,6 +86,21 @@ describe Kubernetes::Role do
         Kubernetes::Role.seed! project, 'HEAD'
         Kubernetes::Role.seed! project, 'HEAD'
         project.kubernetes_roles.map(&:config_file).must_equal ["kubernetes/a.yml"]
+      end
+    end
+
+    describe "with a job" do
+      before do
+        write_config 'kubernetes/a.yml', {
+          'metadata' => {'name' => 'j', 'labels' => {'role' => 'migrate'}},
+          'kind' => 'Job'
+        }.to_yaml
+      end
+
+      it 'creates a role' do
+        Kubernetes::Role.seed! project, 'HEAD'
+        role = project.kubernetes_roles.first
+        role.name.must_equal 'migrate'
       end
     end
 
@@ -175,11 +190,11 @@ describe Kubernetes::Role do
       names.last.must_match /SERVICE-NAME-CHANGE-ME-\d+/
     end
 
-    it "can seed without role label" do
+    it "does not seed without role label" do
       assert config_content.first.fetch('metadata').delete('labels')
       write_config 'kubernetes/a.json', config_content.to_json
       Kubernetes::Role.seed! project, 'HEAD'
-      project.kubernetes_roles.map(&:config_file).must_equal ["kubernetes/a.json"]
+      project.kubernetes_roles.map(&:config_file).must_equal []
     end
   end
 

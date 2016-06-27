@@ -111,6 +111,23 @@ describe Kubernetes::ReleaseDoc do
       end
     end
 
+    describe "job" do
+      before { doc.send(:deploy_yaml).send(:template)['kind'] = 'Job' }
+
+      it "creates when job does not exist" do
+        client.expects(:get_job).raises(KubeException.new(1, 2, 3))
+        client.expects(:create_job)
+        doc.deploy
+      end
+
+      it "deletes and then creates when job exists" do
+        client.expects(:get_job).returns true
+        client.expects(:delete_job).with('test', 'pod1')
+        client.expects(:create_job)
+        doc.deploy
+      end
+    end
+
     it "raises on unknown" do
       doc.send(:deploy_yaml).send(:template)['kind'] = 'WTFBBQ'
       e = assert_raises(RuntimeError) { doc.deploy }
@@ -145,7 +162,12 @@ describe Kubernetes::ReleaseDoc do
   end
 
   describe "#desired_pod_count" do
-    it "uses local value deployment" do
+    it "uses local value for deployment" do
+      doc.desired_pod_count.must_equal 2
+    end
+
+    it "uses local value for job" do
+      doc.send(:deploy_yaml).send(:template)[:kind] = 'Job'
       doc.desired_pod_count.must_equal 2
     end
 
@@ -214,15 +236,16 @@ describe Kubernetes::ReleaseDoc do
       raw_template.prepend service
       doc.deploy_template.must_equal("kind" => 'Deployment')
     end
+  end
 
-    it "raises with multiple deploy objects" do
-      raw_template << raw_template
-      assert_raises(Samson::Hooks::UserError) { doc.deploy_template }
+  describe "#job?" do
+    it "is a job when it is a job" do
+      assert doc.raw_template.sub!('Deployment', 'Job')
+      assert doc.job?
     end
 
-    it "raises without deploy objects" do
-      raw_template.replace(service)
-      assert_raises(Samson::Hooks::UserError) { doc.deploy_template }
+    it "is not a job when it is not a job" do
+      refute doc.job?
     end
   end
 end
