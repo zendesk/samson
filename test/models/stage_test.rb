@@ -161,6 +161,7 @@ describe Stage do
 
     it "creates a new job" do
       deploy = subject.create_deploy(user, reference: "foo")
+      deploy.job.commit.must_equal "foo"
       deploy.job.user.must_equal user
     end
 
