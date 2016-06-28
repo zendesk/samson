@@ -53,6 +53,9 @@ class GitRepository
 
   def tag_from_ref(git_reference)
     return unless ensure_local_cache!
+
+    # favour git_reference if multiple tags point to the same commit
+    return git_reference if capture_stdout('git', 'tag', '-l', git_reference) != ''
     capture_stdout 'git', 'describe', '--tags', git_reference
   end
 

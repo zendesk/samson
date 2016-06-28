@@ -172,6 +172,16 @@ describe GitRepository do
       repository.clone!
       repository.tag_from_ref('v1').must_equal 'v1'
     end
+
+    it 'returns original ref when ref is tag' do
+      create_repo_with_tags
+      execute_on_remote_repo <<-SHELL
+        git tag v2 v1
+      SHELL
+      repository.clone!
+      repository.tag_from_ref('v1').must_equal 'v1'
+      repository.tag_from_ref('v2').must_equal 'v2'
+    end
   end
 
   describe "#tags" do
