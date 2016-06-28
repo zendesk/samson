@@ -136,6 +136,7 @@ describe JobExecution do
     lines.must_include "DEPLOYER=jdoe@test.com"
     lines.must_include "DEPLOYER_EMAIL=jdoe@test.com"
     lines.must_include "DEPLOYER_NAME=John Doe"
+    lines.must_include "REFERENCE=master"
     lines.must_include "REVISION=#{job.commit}"
     lines.must_include "TAG=v1"
     lines.must_include "FOO=bar"
