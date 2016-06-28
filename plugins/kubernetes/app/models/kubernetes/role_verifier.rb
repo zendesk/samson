@@ -2,6 +2,7 @@ module Kubernetes
   class RoleVerifier
     DEPLOYISH = RoleConfigFile::DEPLOY_KINDS
     JOBS = RoleConfigFile::JOB_KINDS
+    VALID_LABEL = /\A[a-z0-9]([-a-z0-9]*[a-z0-9])?\z/
 
     SUPPORTED_KINDS = [
       ['Deployment'],
@@ -30,6 +31,7 @@ module Kubernetes
 
     private
 
+    # we do not use this directly, but if a template is supposed to be used via kubectl it needs a name
     def verify_name
       @errors << "Needs a metadata.name" unless map_attributes([:metadata, :name]).all?
     end
@@ -76,11 +78,24 @@ module Kubernetes
           end
 
         label_paths.map do |path|
-          found = path.inject(resource) { |r, k| r[k] || {} }.slice('project', 'role')
-          if found.size != 2
+          labels = path.inject(resource) { |r, k| r[k] || {} }
+
+          # role and project from all used labels
+          required = labels.slice('project', 'role')
+          if required.size != 2
             @errors << "Missing label or role for #{kind} #{path.join('.')}"
           end
-          found
+
+          # make sure we get sane values for labels or deploy will blow up
+          labels.each do |k, v|
+            if v.is_a?(String)
+              @errors << "#{kind} #{path.join('.')}.#{k} must match #{VALID_LABEL.inspect}" unless v =~ VALID_LABEL
+            else
+              @errors << "#{kind} #{path.join('.')}.#{k} must be a String"
+            end
+          end
+
+          required
         end
       end
 

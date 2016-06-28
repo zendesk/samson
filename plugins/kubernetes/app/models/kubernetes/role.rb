@@ -27,7 +27,7 @@ module Kubernetes
     before_validation :nilify_service_name
 
     validates :project, presence: true
-    validates :name, presence: true
+    validates :name, presence: true, format: Kubernetes::RoleVerifier::VALID_LABEL
     validates :service_name, uniqueness: {scope: :deleted_at, allow_nil: true}
 
     scope :not_deleted, -> { where(deleted_at: nil) }
@@ -92,8 +92,8 @@ module Kubernetes
       {cpu: cpu, ram: ram.round, replicas: replicas}
     end
 
-    def label_name
-      name.parameterize
+    def resource_name
+      "#{project.permalink}-#{name}"
     end
 
     private

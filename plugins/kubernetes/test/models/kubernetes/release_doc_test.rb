@@ -133,7 +133,7 @@ describe Kubernetes::ReleaseDoc do
 
       it "deletes and then creates when job exists" do
         client.expects(:get_job).returns true
-        client.expects(:delete_job).with('some-project-rc', 'pod1')
+        client.expects(:delete_job).with('foo-app_server', 'pod1')
         client.expects(:create_job)
         doc.deploy
       end
@@ -179,7 +179,7 @@ describe Kubernetes::ReleaseDoc do
 
     it "asks kubernetes for daemon set since we do not know how many nodes it will match" do
       doc.resource_template['kind'] = 'DaemonSet'
-      stub_request(:get, "http://foobar.server/apis/extensions/v1beta1/namespaces/pod1/daemonsets/some-project-rc").
+      stub_request(:get, "http://foobar.server/apis/extensions/v1beta1/namespaces/pod1/daemonsets/foo-app_server").
         to_return(body: {status: {desiredNumberScheduled: 3}}.to_json)
       doc.desired_pod_count.must_equal 3
     end

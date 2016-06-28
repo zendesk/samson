@@ -56,6 +56,13 @@ describe Kubernetes::Role do
         assert_valid role
       end
     end
+
+    describe "name" do
+      it 'is invalid with a name we could not use in kubernetes' do
+        role.name = 'foo_bar'
+        refute_valid role
+      end
+    end
   end
 
   describe '.seed' do
@@ -191,13 +198,6 @@ describe Kubernetes::Role do
       assert_raises Samson::Hooks::UserError do
         Kubernetes::Role.configured_for_project(project, 'HEAD')
       end
-    end
-  end
-
-  describe "#label_name" do
-    it "is url safe" do
-      role.name = 'ÍÎapp_server'
-      role.label_name.must_equal 'iiapp_server'
     end
   end
 

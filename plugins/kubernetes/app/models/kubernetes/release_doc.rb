@@ -44,7 +44,7 @@ module Kubernetes
         # FYI per docs it is supposed to use batch api, but extension api works
         job = Kubeclient::Job.new(resource_template)
         if deployed
-          extension_client.delete_job job.metadata.name, job.metadata.namespace
+          extension_client.delete_job kubernetes_role.resource_name, job.metadata.namespace
         end
         extension_client.create_job job
       else
@@ -115,7 +115,7 @@ module Kubernetes
     def deployed
       extension_client.send(
         "get_#{resource_template.fetch('kind').underscore}",
-        resource_template.fetch('metadata').fetch('name'),
+        kubernetes_role.resource_name,
         deploy_group.kubernetes_namespace
       )
     rescue KubeException

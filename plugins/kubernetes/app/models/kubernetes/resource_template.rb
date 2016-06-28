@@ -11,6 +11,7 @@ module Kubernetes
     def to_hash
       @to_hash ||= begin
         set_rc_unique_label_key
+        set_name
         set_namespace
         set_replica_target
         set_spec_template_metadata
@@ -121,6 +122,10 @@ module Kubernetes
 
     def set_replica_target
       template[:spec][:replicas] = @doc.replica_target if template[:kind] == 'Deployment'
+    end
+
+    def set_name
+      template[:metadata][:name] = @doc.kubernetes_role.resource_name
     end
 
     def set_namespace

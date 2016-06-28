@@ -86,6 +86,16 @@ describe Kubernetes::RoleVerifier do
         ", supported combinations are: Deployment, DaemonSet, Deployment + Service, Job"
     end
 
+    it "reports non-string labels" do
+      role.first[:metadata][:labels][:role_id] = 1
+      errors.must_include "Deployment metadata.labels.role_id must be a String"
+    end
+
+    it "reports invalid labels" do
+      role.first[:metadata][:labels][:role] = 'foo_bar'
+      errors.must_include "Deployment metadata.labels.role must match /\\A[a-z0-9]([-a-z0-9]*[a-z0-9])?\\z/"
+    end
+
     describe 'verify_job_restart_policy' do
       let(:expected) { ["Job spec.template.spec.restartPolicy must be one of Never/OnFailure"] }
       before { role.replace(job_role) }
