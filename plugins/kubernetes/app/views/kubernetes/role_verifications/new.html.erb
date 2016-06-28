@@ -3,7 +3,7 @@ Paste role yaml/json here to verify it.
 <% if @errors %>
   <h2>Errors</h2>
   <ul>
-    <% @errors.each do |error| %>
+    <% @errors.split("\n").each do |error| %>
       <li><%= error %></li>
     <% end %>
   </ul>

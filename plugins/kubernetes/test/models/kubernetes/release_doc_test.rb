@@ -21,7 +21,6 @@ describe Kubernetes::ReleaseDoc do
     describe "when service does not exist" do
       before do
         doc.stubs(service: stub(running?: false))
-        doc.raw_template << "\n" << {'kind' => 'Service', 'metadata' => {}, 'spec' => {}}.to_yaml
         doc.kubernetes_role.update_column(:service_name, "app-server")
       end
 
@@ -39,20 +38,11 @@ describe Kubernetes::ReleaseDoc do
       end
 
       it "fails when service is required by the role, but not defined" do
-        assert doc.raw_template.sub!('Service', 'Nope')
+        assert doc.raw_template.sub!(/\n---\n.*/m, '')
         e = assert_raises Samson::Hooks::UserError do
           doc.ensure_service
         end
-        e.message.must_equal "Config file kubernetes/app_server.yml included 0 objects of kind Service, 1 is supported"
-      end
-
-      it "fails when multiple services are defined and we would only ensure the first one" do
-        doc.raw_template << "\n" << {'kind' => 'Service'}.to_yaml
-
-        e = assert_raises Samson::Hooks::UserError do
-          doc.ensure_service
-        end
-        e.message.must_equal "Config file kubernetes/app_server.yml included 2 objects of kind Service, 1 is supported"
+        e.message.must_equal "Unable to find Service definition in kubernetes/app_server.yml"
       end
     end
   end
@@ -122,7 +112,7 @@ describe Kubernetes::ReleaseDoc do
 
       it "deletes and then creates when job exists" do
         client.expects(:get_job).returns true
-        client.expects(:delete_job).with('test', 'pod1')
+        client.expects(:delete_job).with('some-project-rc', 'pod1')
         client.expects(:create_job)
         doc.deploy
       end
@@ -150,14 +140,9 @@ describe Kubernetes::ReleaseDoc do
       )
     end
 
-    it "is invalid when missing role" do
+    it "reports detailed errors when invalid" do
       assert doc.raw_template.sub!('role', 'mole')
       refute_valid doc
-    end
-
-    it "ignores unsupported type" do
-      doc.raw_template << "\n" << {'kind' => "Wut", 'metadata' => {'name' => 'test'}}.to_yaml
-      assert_valid doc
     end
   end
 
@@ -173,7 +158,7 @@ describe Kubernetes::ReleaseDoc do
 
     it "asks kubernetes for daemon set since we do not know how many nodes it will match" do
       doc.send(:deploy_yaml).send(:template)[:kind] = 'DaemonSet'
-      stub_request(:get, "http://foobar.server/apis/extensions/v1beta1/namespaces/pod1/daemonsets/test").
+      stub_request(:get, "http://foobar.server/apis/extensions/v1beta1/namespaces/pod1/daemonsets/some-project-rc").
         to_return(body: {status: {desiredNumberScheduled: 3}}.to_json)
       doc.desired_pod_count.must_equal 3
     end
@@ -223,24 +208,20 @@ describe Kubernetes::ReleaseDoc do
   end
 
   describe "#deploy_template" do
-    let(:raw_template) { "---\nkind: Deployment\n" }
-    let(:service) { "---\nkind: Service\n" }
-
-    before { doc.expects(:raw_template).returns(raw_template) }
-
-    it "works with 1 deploy object" do
-      doc.deploy_template.must_equal("kind" => 'Deployment')
+    it "finds deploy" do
+      doc.expects(:raw_template).returns(read_kubernetes_sample_file('kubernetes_deployment.yml'))
+      doc.deploy_template[:kind].must_equal 'Deployment'
     end
 
-    it "ignores non-deploy objects" do
-      raw_template.prepend service
-      doc.deploy_template.must_equal("kind" => 'Deployment')
+    it "finds job" do
+      doc.expects(:raw_template).returns(read_kubernetes_sample_file('kubernetes_job.yml'))
+      doc.deploy_template[:kind].must_equal 'Job'
     end
   end
 
   describe "#job?" do
     it "is a job when it is a job" do
-      assert doc.raw_template.sub!('Deployment', 'Job')
+      doc.stubs(:raw_template).returns(read_kubernetes_sample_file('kubernetes_job.yml'))
       assert doc.job?
     end
 

@@ -1,0 +1,21 @@
+---
+# http://kubernetes.io/docs/user-guide/jobs/
+apiVersion: batch/v1
+kind: Job
+metadata:
+  labels:
+    project: some-project
+    role: job-role
+  name: pi
+spec:
+  template:
+    metadata:
+      labels:
+        project: some-project
+        role: job-role
+    spec:
+      containers:
+      - name: pi
+        image: perl
+        command: ["perl"]
+      restartPolicy: Never

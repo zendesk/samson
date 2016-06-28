@@ -24,6 +24,21 @@ describe Kubernetes::RoleVerificationsController do
         assert assigns[:errors]
         assert_template :new
       end
+
+      it "fails nicely with borked template" do
+        post :create, role: "---"
+        assigns[:errors].must_include "Error found when parsing test.yml"
+      end
+
+      it "reports invalid json" do
+        post :create, role: "{oops"
+        assigns[:errors].must_include "Error found when parsing test.json"
+      end
+
+      it "reports invalid yaml" do
+        post :create, role: "}foobar:::::"
+        assigns[:errors].must_include "Error found when parsing test.yml"
+      end
     end
   end
 end

@@ -83,7 +83,7 @@ describe Kubernetes::DeployExecutor do
         namespace: 'staging',
         deploy_group: deploy_group
       )
-      stub_request(:get, "http://foobar.server/apis/extensions/v1beta1/namespaces/staging/deployments/test").
+      stub_request(:get, "http://foobar.server/apis/extensions/v1beta1/namespaces/staging/deployments/some-project-rc").
         to_return(status: 404) # checks for previous deploys ... but there are none
       stub_request(:post, "http://foobar.server/apis/extensions/v1beta1/namespaces/staging/deployments").
         to_return(body: "{}") # creates deployment
@@ -245,7 +245,7 @@ describe Kubernetes::DeployExecutor do
           }
         }.to_yaml)
         GitRepository.any_instance.stubs(:file_content).with('kubernetes/app_server.yml', anything).
-          returns(kubernetes_faked_raw_template.to_yaml)
+          returns(read_kubernetes_sample_file('kubernetes_deployment.yml'))
 
         # check if the job already exists ... it does not
         stub_request(:get, "http://foobar.server/apis/extensions/v1beta1/namespaces/staging/jobs/test").

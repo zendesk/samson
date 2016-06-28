@@ -5,70 +5,16 @@ SingleCov.covered!
 describe Kubernetes::RoleVerifier do
   describe '.verify' do
     let(:role) do
-      [
-        {
-          kind: 'Deployment',
-          metadata: {name: 'foobar'},
-          spec: {
-            selector: {
-              matchLabels: {
-                project: 'foo',
-                role: 'bar'
-              }
-            },
-            template: {
-              metadata: {
-                labels: {
-                  project: 'foo',
-                  role: 'bar'
-                }
-              },
-              spec: {
-                containers: [{}]
-              }
-            }
-          }
-        },
-        {
-          kind: 'Service',
-          metadata: {
-            name: 'foobar'
-          },
-          spec: {
-            selector: {
-              project: 'foo',
-              role: 'bar'
-            }
-          }
-        }
-      ]
+      YAML.load_stream(read_kubernetes_sample_file('kubernetes_deployment.yml')).map(&:with_indifferent_access)
     end
     let(:job_role) do
-      # http://kubernetes.io/docs/user-guide/jobs/
-      [YAML.load(<<-YAML).with_indifferent_access]
-        apiVersion: batch/v1
-        kind: Job
-        metadata:
-          labels:
-            project: foo
-            role: bar
-          name: pi
-        spec:
-          template:
-            metadata:
-              labels:
-                project: foo
-                role: bar
-            spec:
-              containers:
-              - name: pi
-                image: perl
-                command: ["perl"]
-              restartPolicy: Never
-      YAML
+      [YAML.load(read_kubernetes_sample_file('kubernetes_job.yml')).with_indifferent_access]
     end
     let(:role_json) { role.to_json }
-    let(:errors) { Kubernetes::RoleVerifier.new(role_json).verify }
+    let(:errors) do
+      elements = Kubernetes::Util.parse_file(role_json, 'fake.json')
+      Kubernetes::RoleVerifier.new(elements).verify
+    end
 
     it "works" do
       errors.must_equal nil
@@ -79,24 +25,21 @@ describe Kubernetes::RoleVerifier do
       refute errors.empty?
     end
 
-    it "fails nicely with borked template" do
-      role_json.replace "---"
-      refute errors.empty?
+    it "fails nicely with empty template" do
+      role_json.replace "[]"
+      errors.must_equal ["No content found"]
     end
 
-    it "reports invalid json" do
-      role_json.replace "{oops"
-      errors.must_equal ["Unable to parse role definition"]
-    end
-
-    it "reports invalid yaml" do
-      role_json.replace "}foobar:::::"
-      errors.must_equal ["Unable to parse role definition"]
+    it "fails nicely with false" do
+      elements = Kubernetes::Util.parse_file('---', 'fake.yml')
+      errors = Kubernetes::RoleVerifier.new(elements).verify
+      errors.must_equal ["No content found"]
     end
 
     it "reports invalid types" do
       role.first[:kind] = "Ohno"
-      errors.must_include "Did not include supported kinds: Deployment, DaemonSet, Job"
+      errors.must_include "Unsupported combination of kinds: Ohno + Service" \
+        ", supported combinations are: Deployment, DaemonSet, Deployment + Service, Job"
     end
 
     it "allows only Job" do
@@ -111,7 +54,8 @@ describe Kubernetes::RoleVerifier do
 
     it "reports multiple services" do
       role << role.last.dup
-      errors.must_include "Can only have maximum of 1 Service"
+      errors.must_include "Unsupported combination of kinds: Deployment + Service + Service" \
+        ", supported combinations are: Deployment, DaemonSet, Deployment + Service, Job"
     end
 
     it "reports numeric cpu" do
@@ -138,7 +82,8 @@ describe Kubernetes::RoleVerifier do
     # release_doc does not support that and it would lead to chaos
     it 'reports job mixed with deploy' do
       role.concat job_role
-      errors.must_equal ["Only 1 item of type Deployment/DaemonSet/Job is supported per role"]
+      errors.must_include "Unsupported combination of kinds: Deployment + Job + Service" \
+        ", supported combinations are: Deployment, DaemonSet, Deployment + Service, Job"
     end
 
     describe 'verify_job_restart_policy' do
@@ -157,18 +102,32 @@ describe Kubernetes::RoleVerifier do
     end
 
     describe 'inconsistent labels' do
-      let(:error_message) { "Project and role labels must be consistent accross Deployment/DaemonSet/Service/Job" }
+      let(:error_message) { "Project and role labels must be consistent across Deployment/DaemonSet/Service/Job" }
 
       # this is not super important, but adding it for consistency
       it "reports missing job labels" do
         role.replace(job_role)
         role[0][:metadata][:labels].delete(:role)
-        errors.must_include error_message
+        errors.must_equal [
+          "Missing label or role for Job metadata.labels",
+          error_message
+        ]
       end
 
       it "reports missing labels" do
         role.first[:spec][:template][:metadata][:labels].delete(:project)
-        errors.must_include error_message
+        errors.must_equal [
+          "Missing label or role for Deployment spec.template.metadata.labels",
+          error_message
+        ]
+      end
+
+      it "reports missing label section" do
+        role.first[:spec][:template][:metadata].delete(:labels)
+        errors.must_equal [
+          "Missing label or role for Deployment spec.template.metadata.labels",
+          error_message
+        ]
       end
 
       it "reports inconsistent deploy label" do
