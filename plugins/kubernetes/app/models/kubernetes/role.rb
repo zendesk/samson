@@ -37,22 +37,13 @@ module Kubernetes
       kubernetes_config_files_in_repo(project, git_ref).each do |config_file|
         scope = where(project: project)
         next if scope.where(config_file: config_file.path).exists?
-        begin
-          next unless deploy = (config_file.deploy || config_file.job)
-        rescue Samson::Hooks::UserError # invalid config with multiple deploys ...
-          next
-        end
+        deploy = (config_file.deploy || config_file.job)
 
         # deploy / job
-        next unless name = deploy.fetch(:metadata, {}).fetch(:labels, {})[:role]
+        name = deploy.fetch(:metadata).fetch(:labels).fetch(:role)
 
         # service
-        begin
-          service = config_file.service
-        rescue Samson::Hooks::UserError
-          next
-        end
-        if service
+        if service = config_file.service
           service_name = service[:metadata][:name]
           if where(service_name: service_name).exists?
             service_name << "#{GENERATED}#{rand(9999999)}"
@@ -85,12 +76,17 @@ module Kubernetes
 
     def defaults
       return unless raw_template = project.repository.file_content(config_file, 'HEAD', pull: false)
-      deploy = RoleConfigFile.new(raw_template, config_file).deploy || return
-      replicas = deploy.fetch(:spec, {})[:replicas]
+      deploy = begin
+        RoleConfigFile.new(raw_template, config_file).deploy || return
+      rescue Samson::Hooks::UserError
+        return
+      end
+
+      replicas = deploy[:spec][:replicas]
 
       return unless limits = deploy[:spec][:template][:spec][:containers].first.fetch(:resources, {})[:limits]
       return unless cpu = parse_resource_value(limits[:cpu])
-      return unless ram = parse_resource_value(limits[:ram])
+      return unless ram = parse_resource_value(limits[:memory]) # TODO: rename this and the column to memory
       ram /= 1024**2 # we store megabyte
 
       {cpu: cpu, ram: ram.round, replicas: replicas}
@@ -118,8 +114,12 @@ module Kubernetes
         files = files.split("\n").grep(/\.(yml|yaml|json)$/).map { |f| "#{path}/#{f}" }
         files.map do |path|
           file_contents = project.repository.file_content path, git_ref
-          Kubernetes::RoleConfigFile.new(file_contents, path)
-        end
+          begin
+            Kubernetes::RoleConfigFile.new(file_contents, path)
+          rescue Samson::Hooks::UserError
+            nil
+          end
+        end.compact
       end
     end
   end

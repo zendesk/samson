@@ -25,7 +25,7 @@ describe Kubernetes::DeployYaml do
   describe "#to_hash" do
     it "works" do
       result = yaml.to_hash
-      result.size.must_equal 3
+      result.size.must_equal 4
 
       spec = result.fetch(:spec)
       spec.fetch(:uniqueLabelKey).must_equal "rc_unique_identifier"
@@ -33,12 +33,11 @@ describe Kubernetes::DeployYaml do
       spec.fetch(:template).fetch(:metadata).fetch(:labels).symbolize_keys.must_equal(
         revision: "abababababa",
         tag: "master",
-        pre_defined: "foobar",
         release_id: doc.kubernetes_release_id.to_s,
-        project: "foobar",
+        project: "some-project",
         project_id: doc.kubernetes_release.project_id.to_s,
         role_id: doc.kubernetes_role_id.to_s,
-        role: "app-server",
+        role: "some-role",
         deploy_group: 'pod1',
         deploy_group_id: doc.deploy_group_id.to_s,
         deploy_id: "123"
@@ -47,8 +46,8 @@ describe Kubernetes::DeployYaml do
       metadata = result.fetch(:metadata)
       metadata.fetch(:namespace).must_equal 'pod1'
       metadata.fetch(:labels).symbolize_keys.must_equal(
-        project: 'foobar',
-        role: 'app-server'
+        project: 'some-project',
+        role: 'some-role'
       )
     end
 
@@ -60,7 +59,7 @@ describe Kubernetes::DeployYaml do
       result.fetch(:spec).fetch(:template).fetch(:metadata).fetch(:labels).slice(:deploy_group, :role, :tag).must_equal(
         'tag' => "user-feature",
         'deploy_group' => 'foo-bar',
-        'role' => 'app-server'
+        'role' => 'some-role'
       )
     end
 
@@ -91,17 +90,9 @@ describe Kubernetes::DeployYaml do
         env.map { |x| x[:value] }.map(&:class).map(&:name).sort.uniq.must_equal(["NilClass", "String"])
       end
 
-      it "fails without containers" do
-        assert doc.raw_template.sub!("spec:\n      containers:\n      - {}", '')
-        e = assert_raises Samson::Hooks::UserError do
-          yaml.to_hash
-        end
-        e.message.must_include "has 0 containers, having 1 section is valid"
-      end
-
       # https://github.com/zendesk/samson/issues/966
       it "allows multiple containers, even though they will not be properly replaced" do
-        assert doc.raw_template.sub!("containers:\n      - {}", "containers:\n      - {}\n      - {}")
+        assert doc.raw_template.sub!("containers:\n", "containers:\n      - {}\n")
         yaml.to_hash
       end
 
@@ -125,8 +116,8 @@ describe Kubernetes::DeployYaml do
       end
 
       before do
-        old_metadata = "role: app-server\n    "
-        new_metadata = "role: app-server\n      annotations:\n        secret/FOO: #{secret_key}\n    "
+        old_metadata = "role: some-role\n    "
+        new_metadata = "role: some-role\n      annotations:\n        secret/FOO: #{secret_key}\n    "
         assert doc.raw_template.sub!(old_metadata, new_metadata)
 
         SecretStorage.write(secret_key, value: 'something', user_id: 123)
@@ -138,7 +129,7 @@ describe Kubernetes::DeployYaml do
 
       it "adds to existing volume definitions in the sidecar" do
         assert doc.raw_template.sub!(
-          "containers:\n      - {}\n",
+          /containers:\n(    .*\n)+/m,
           "containers:\n      - {}\n      volumes:\n      - {}\n      - {}\n"
         )
         yaml.to_hash[:spec][:template][:spec][:volumes].count.must_equal 5
@@ -146,7 +137,7 @@ describe Kubernetes::DeployYaml do
 
       it "adds to existing volume definitions in the primary container" do
         assert doc.raw_template.sub!(
-          "containers:\n      - {}\n",
+          /containers:\n(    .*\n)+/m,
           "containers:\n      - :name: foo\n        :volumeMounts:\n        - :name: bar\n"
         )
         yaml.to_hash[:spec][:template][:spec][:containers].first[:volumeMounts].count.must_equal 2
@@ -154,7 +145,7 @@ describe Kubernetes::DeployYaml do
 
       it "adds to existing volume definitions in the primary container when volumeMounts is empty" do
         assert doc.raw_template.sub!(
-          "containers:\n      - {}\n",
+          /containers:\n(    .*\n)+/m,
           "containers:\n      - :name: foo\n        :volumeMounts:\n"
         )
         yaml.to_hash[:spec][:template][:spec][:containers].first[:volumeMounts].count.must_equal 1
@@ -162,7 +153,7 @@ describe Kubernetes::DeployYaml do
 
       it "creates no sidecar when there are no secrets" do
         assert doc.raw_template.sub!('secret/', 'public/')
-        yaml.to_hash[:spec][:template][:spec][:containers].last[:name].must_equal(nil)
+        yaml.to_hash[:spec][:template][:spec][:containers].map { |c| c[:name] }.must_equal(['some-project'])
       end
 
       it "fails to find a secret needed by the sidecar" do

@@ -145,7 +145,8 @@ module Kubernetes
 
     def service_hash
       @service_hash || begin
-        hash = parsed_config_file.service(required: true)
+        hash = parsed_config_file.service ||
+          raise(Samson::Hooks::UserError, "Unable to find Service definition in #{template_name}")
 
         hash.fetch(:metadata)[:name] = kubernetes_role.service_name
         hash.fetch(:metadata)[:namespace] = namespace
@@ -166,9 +167,11 @@ module Kubernetes
       if build && kubernetes_role
         if raw_template.blank?
           errors.add(:kubernetes_release, "does not contain config file '#{template_name}'")
-        elsif problems = RoleVerifier.new(raw_template).verify
-          problems.each do |problem|
-            errors.add(:kubernetes_release, "#{template_name}: #{problem}")
+        else
+          begin
+            parsed_config_file
+          rescue Samson::Hooks::UserError
+            errors.add(:kubernetes_release, $!.message)
           end
         end
       end

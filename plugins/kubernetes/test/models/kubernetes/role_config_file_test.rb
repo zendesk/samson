@@ -3,7 +3,7 @@ require_relative '../../test_helper'
 SingleCov.covered!
 
 describe Kubernetes::RoleConfigFile do
-  let(:content) { read_kubernetes_sample_file('kubernetes_role_config_file.yml') }
+  let(:content) { read_kubernetes_sample_file('kubernetes_deployment.yml') }
   let(:config_file) { Kubernetes::RoleConfigFile.new(content, 'some-file.yml') }
 
   describe "#initialize" do
@@ -22,41 +22,17 @@ describe Kubernetes::RoleConfigFile do
 
     it "finds a Daemonset" do
       assert content.sub!('Deployment', 'DaemonSet')
+      assert content.sub!(/\n---.*/m, '')
       config_file.deploy[:kind].must_equal 'DaemonSet'
     end
 
-    it "ignores others" do
+    it "blows up on unsupported" do
       assert content.sub!('Deployment', 'SomethingElse')
-      config_file.deploy.must_equal nil
-    end
-
-    # general purpose assertions that also apply to all other types
-    it "passes when required and there" do
-      config_file.deploy(required: true)[:kind].must_equal 'Deployment'
-    end
-
-    it "fails when required and not there" do
-      assert content.sub!('Deployment', 'SomethingElse')
-      e = assert_raises Samson::Hooks::UserError do
-        config_file.deploy(required: true)
-      end
-      e.message.must_equal(
-        "Config file some-file.yml included 0 objects of kind Deployment or DaemonSet, 1 is supported"
-      )
+      assert_raises(Samson::Hooks::UserError) { config_file }
     end
 
     it "allows deep symbol access" do
       config_file.deploy.fetch(:spec).fetch(:selector).fetch(:matchLabels).fetch(:project).must_equal 'some-project'
-    end
-
-    it "fails when there are multiple, which would be unsupported" do
-      assert content.sub!('Service', 'DaemonSet')
-      e = assert_raises Samson::Hooks::UserError do
-        config_file.deploy
-      end
-      e.message.must_equal(
-        "Config file some-file.yml included 2 objects of kind Deployment or DaemonSet, 1 or none are supported"
-      )
     end
   end
 
@@ -66,20 +42,18 @@ describe Kubernetes::RoleConfigFile do
     end
 
     it 'is nil when no service is found' do
-      assert content.sub!('Service', 'SomethingElse')
+      content.replace(read_kubernetes_sample_file('kubernetes_job.yml'))
       config_file.service.must_equal nil
     end
   end
 
   describe "#job" do
-    before { assert content.sub!('Service', 'Job') }
-
     it 'loads a job' do
+      content.replace(read_kubernetes_sample_file('kubernetes_job.yml'))
       config_file.job[:kind].must_equal 'Job'
     end
 
     it 'is nil when no job is found' do
-      assert content.sub!('Job', 'Service')
       config_file.job.must_equal nil
     end
   end

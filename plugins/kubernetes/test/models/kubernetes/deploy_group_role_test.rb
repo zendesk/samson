@@ -53,16 +53,7 @@ describe Kubernetes::DeployGroupRole do
           kubernetes_role: kubernetes_roles(:app_server)
         ).first
       end
-      let(:content) do
-        {
-          'kind' => 'Deployment',
-          'spec' => {
-            'replicas' => 3,
-            'template' =>
-              {'spec' => {'containers' => [{'resources' => {'limits' => {'ram' => '200Mi', 'cpu' => '250m'}}}]}}
-          }
-        }.to_yaml
-      end
+      let(:content) { read_kubernetes_sample_file('kubernetes_deployment.yml') }
 
       before do
         kubernetes_deploy_group_roles(:test_pod100_app_server).delete
@@ -71,9 +62,9 @@ describe Kubernetes::DeployGroupRole do
 
       it "fills in missing roles" do
         assert Kubernetes::DeployGroupRole.seed!(stage)
-        created_role.cpu.must_equal 0.25
-        created_role.ram.must_equal 191
-        created_role.replicas.must_equal 3
+        created_role.cpu.must_equal 0.5
+        created_role.ram.must_equal 95
+        created_role.replicas.must_equal 2
       end
 
       it "does nothing when there is no deployment" do
