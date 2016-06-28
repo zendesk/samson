@@ -20,7 +20,7 @@ module Samson
         buildStartedBy: deploy.user.name,
         originatedFrom: originated_from,
         commit: deploy.job.commit,
-        deployUrl: AppRoutes.url_helpers.project_deploy_url(deploy.project, deploy)
+        deployUrl: deploy.url
       }, opts).to_i
     rescue Timeout::Error => e
       "Jenkins '#{job_name}' build failed to start in a timely manner.  #{e.class} #{e}"

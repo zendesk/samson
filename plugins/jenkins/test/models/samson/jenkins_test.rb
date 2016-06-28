@@ -19,7 +19,7 @@ describe Samson::Jenkins do
   def stub_build_with_parameters
     stub_request(:post, "http://www.test-url.com/job/test_job/buildWithParameters").
       with(
-        body: {"buildStartedBy" => "Super Admin", "originatedFrom" => "Project_Staging_staging", "commit" => "staging", "deployUrl" => "http://www.test-url.com/projects/foo/deploys/178003093"},
+        body: {"buildStartedBy" => "Super Admin", "originatedFrom" => "Project_Staging_staging", "commit" => "staging", "deployUrl" => "http://www.test-url.com/projects/foo/deploys/#{deploy.id}"},
         headers: {'Authorization' => 'Basic dXNlckB0ZXN0LmNvbTpqYXBpa2V5'}
       ).
       to_return(status: 200, body: "", headers: {}).to_timeout
