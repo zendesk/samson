@@ -36,7 +36,7 @@ class JobsController < ApplicationController
         datetime = @job.updated_at.strftime("%Y%m%d_%H%M%Z")
         send_data @job.output,
           type: 'text/plain',
-          filename: "#{@project.repo_name}-#{@job.id}-#{datetime}.log"
+          filename: "#{@project.permalink}-#{@job.id}-#{datetime}.log"
       end
     end
   end
