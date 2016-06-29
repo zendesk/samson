@@ -115,7 +115,8 @@ describe Kubernetes::Role do
           project: project,
           config_file: 'sdfsdf.yml',
           name: 'sdfsdf',
-          service_name: nil
+          service_name: nil,
+          resource_name: 'ssddssd'
         )
         Kubernetes::Role.seed! project, 'HEAD'
         project.kubernetes_roles.map(&:service_name).must_equal [nil, nil]
@@ -146,6 +147,18 @@ describe Kubernetes::Role do
       end
     end
 
+    it "generates a unique resource_name when metadata.name is already in use" do
+      project.update_column(:permalink, 'foo_bar') # check we remove _ correctly
+      created = Kubernetes::Role.create!(role.attributes)
+      config_content[0]['metadata']['name'] = created.resource_name
+      write_config 'kubernetes/a.json', config_content.to_json
+
+      Kubernetes::Role.seed! project, 'HEAD'
+
+      names = Kubernetes::Role.all.map(&:resource_name)
+      names.must_equal ["test-app-server", "foo-bar-test-app-server"]
+    end
+
     it "reads other file types" do
       write_config 'kubernetes/a.json', config_content.to_json
       Kubernetes::Role.seed! project, 'HEAD'
@@ -171,7 +184,7 @@ describe Kubernetes::Role do
       write_config 'kubernetes/a.yml', config_content_yml
       Kubernetes::Role.seed! project, 'HEAD'
       names = Kubernetes::Role.all.map(&:service_name)
-      names.last.must_match /#{existing_name}-CHANGE-ME-\d+/
+      names.last.must_match /#{existing_name}-change-me-\d+/
     end
 
     it "does not seed without role label" do

@@ -7,9 +7,10 @@ describe Kubernetes::RolesController do
   let(:role) { kubernetes_roles(:app_server) }
   let(:role_params) do
     {
-      name: 'NAME',
-      service_name: 'SERVICE_NAME',
-      config_file: 'dsfsd.yml'
+      name: 'name',
+      service_name: 'service-name',
+      config_file: 'dsfsd.yml',
+      resource_name: 'name-app-server'
     }
   end
 
@@ -71,7 +72,7 @@ describe Kubernetes::RolesController do
         post :create, project_id: project, kubernetes_role: role_params
         role = Kubernetes::Role.last
         assert_redirected_to "/projects/foo/kubernetes/roles"
-        role.name.must_equal 'NAME'
+        role.name.must_equal 'name'
       end
 
       it "renders on failure" do
@@ -85,7 +86,7 @@ describe Kubernetes::RolesController do
       it "updates" do
         put :update, project_id: project, id: role.id, kubernetes_role: role_params
         assert_redirected_to "/projects/foo/kubernetes/roles"
-        role.reload.name.must_equal 'NAME'
+        role.reload.name.must_equal 'name'
       end
 
       it "renders on failure" do

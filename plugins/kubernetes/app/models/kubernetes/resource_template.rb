@@ -152,9 +152,9 @@ module Kubernetes
           deploy_id: release.deploy_id,
           project_id: release.project_id,
           role_id: role.id,
-          deploy_group: deploy_group.env_value.parameterize,
+          deploy_group: deploy_group.env_value.parameterize.tr('_', '-'),
           revision: release.git_sha,
-          tag: release.git_ref.parameterize
+          tag: release.git_ref.parameterize.tr('_', '-')
         )
       end
     end

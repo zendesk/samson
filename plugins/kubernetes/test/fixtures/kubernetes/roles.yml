@@ -1,10 +1,12 @@
 ---
 app_server:
   project: test
-  name: app_server
+  name: app-server
   config_file: 'kubernetes/app_server.yml'
+  resource_name: test-app-server
 
 resque_worker:
   project: test
-  name: resque_worker
+  name: resque-worker
   config_file: 'kubernetes/resque_worker.yml'
+  resource_name: test-resque-worker

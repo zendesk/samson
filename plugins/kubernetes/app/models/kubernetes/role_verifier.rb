@@ -31,7 +31,6 @@ module Kubernetes
 
     private
 
-    # we do not use this directly, but if a template is supposed to be used via kubectl it needs a name
     def verify_name
       @errors << "Needs a metadata.name" unless map_attributes([:metadata, :name]).all?
     end

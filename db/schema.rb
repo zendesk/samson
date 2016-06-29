@@ -216,16 +216,18 @@ ActiveRecord::Schema.define(version: 20160629232753) do
   add_index "kubernetes_releases", ["build_id"], name: "index_kubernetes_releases_on_build_id"
 
   create_table "kubernetes_roles", force: :cascade do |t|
-    t.integer  "project_id",   limit: 4,   null: false
-    t.string   "name",         limit: 255, null: false
-    t.string   "config_file",  limit: 255
-    t.string   "service_name", limit: 255
-    t.datetime "created_at",               null: false
-    t.datetime "updated_at",               null: false
+    t.integer  "project_id",    limit: 4,   null: false
+    t.string   "name",          limit: 255, null: false
+    t.string   "config_file",   limit: 255
+    t.string   "service_name",  limit: 255
+    t.datetime "created_at",                null: false
+    t.datetime "updated_at",                null: false
     t.datetime "deleted_at"
+    t.string   "resource_name", limit: 255, null: false
   end
 
   add_index "kubernetes_roles", ["project_id"], name: "index_kubernetes_roles_on_project_id", using: :btree
+  add_index "kubernetes_roles", ["resource_name", "deleted_at"], name: "index_kubernetes_roles_on_resource_name_and_deleted_at", unique: true, length: {"resource_name"=>191, "deleted_at"=>nil}, using: :btree
   add_index "kubernetes_roles", ["service_name", "deleted_at"], name: "index_kubernetes_roles_on_service_name_and_deleted_at", unique: true, length: {"service_name"=>191, "deleted_at"=>nil}, using: :btree
 
   create_table "locks", force: :cascade do |t|

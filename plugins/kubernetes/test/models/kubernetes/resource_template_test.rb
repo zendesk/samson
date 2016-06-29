@@ -53,7 +53,7 @@ describe Kubernetes::ResourceTemplate do
     end
 
     it "overrides the name" do
-      yaml.to_hash[:metadata][:name].must_equal 'foo-app_server'
+      template.to_hash[:metadata][:name].must_equal 'test-app-server'
     end
 
     describe "containers" do
