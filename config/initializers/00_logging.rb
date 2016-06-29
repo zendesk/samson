@@ -1,9 +1,9 @@
 config = Rails.application.config
 
-if ENV["RAILS_LOG_TO_STDOUT"].present?
+if Samson::EnvCheck.set?("RAILS_LOG_TO_STDOUT")
   # heroku and docker: dump everything to stdout
   config.logger = ActiveSupport::TaggedLogging.new(Logger.new(STDOUT))
-elsif ENV["RAILS_LOG_TO_SYSLOG"]
+elsif Samson::EnvCheck.set?("RAILS_LOG_TO_SYSLOG")
   # log 1 message per request to syslog in json format
   config.lograge.enabled = true
 

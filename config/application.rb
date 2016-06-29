@@ -11,6 +11,8 @@ end
 
 Dotenv.load(Bundler.root.join(Rails.env.test? ? '.env.test' : '.env'))
 
+require "#{Bundler.root}/lib/samson/env_check"
+
 module Samson
   class Application < Rails::Application
     # Settings in config/environments/* take precedence over those specified here.
@@ -107,13 +109,11 @@ module Samson
     config.samson.gitlab = ActiveSupport::OrderedOptions.new
     config.samson.gitlab.web_url = deprecated_url.call("GITLAB_URL") || 'https://gitlab.com'
 
-    truthy = ["1", "true"]
-
     config.samson.auth = ActiveSupport::OrderedOptions.new
-    config.samson.auth.github = truthy.include?(ENV["AUTH_GITHUB"])
-    config.samson.auth.google = truthy.include?(ENV["AUTH_GOOGLE"])
-    config.samson.auth.ldap = truthy.include?(ENV["AUTH_LDAP"])
-    config.samson.auth.gitlab = truthy.include?(ENV["AUTH_GITLAB"])
+    config.samson.auth.github = Samson::EnvCheck.set?("AUTH_GITHUB")
+    config.samson.auth.google = Samson::EnvCheck.set?("AUTH_GOOGLE")
+    config.samson.auth.ldap = Samson::EnvCheck.set?("AUTH_LDAP")
+    config.samson.auth.gitlab = Samson::EnvCheck.set?("AUTH_GITLAB")
 
     config.samson.docker = ActiveSupport::OrderedOptions.new
     config.samson.docker.registry = ENV['DOCKER_REGISTRY'].presence
