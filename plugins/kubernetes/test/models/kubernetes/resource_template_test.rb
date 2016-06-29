@@ -11,17 +11,6 @@ describe Kubernetes::ResourceTemplate do
     doc.kubernetes_release.deploy_id = 123
   end
 
-  describe "#resource_kind" do
-    it 'is deployment' do
-      template.resource_kind.must_equal 'deployment'
-    end
-
-    it 'knows if it is a DaemonSet' do
-      template.send(:template)[:kind] = 'DaemonSet'
-      template.resource_kind.must_equal 'daemon_set'
-    end
-  end
-
   describe "#to_hash" do
     it "works" do
       result = template.to_hash

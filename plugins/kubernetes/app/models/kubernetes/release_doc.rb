@@ -6,11 +6,15 @@ module Kubernetes
     belongs_to :kubernetes_release, class_name: 'Kubernetes::Release'
     belongs_to :deploy_group
 
+    serialize :resource_template, JSON
+
     validates :deploy_group, presence: true
     validates :kubernetes_role, presence: true
     validates :kubernetes_release, presence: true
     validates :replica_target, presence: true, numericality: { greater_than: 0 }
     validate :validate_config_file, on: :create
+
+    before_save :store_resource_template, on: :create
 
     def build
       kubernetes_release.try(:build)
@@ -21,31 +25,30 @@ module Kubernetes
     end
 
     def job?
-      resource_template.resource_kind == 'job'
+      resource_template.fetch('kind') == 'Job'
     end
 
     def deploy
-      case resource_template.resource_kind
-      when 'deployment'
-        deploy = Kubeclient::Deployment.new(resource_template.to_hash)
+      if deployment?
+        deploy = Kubeclient::Deployment.new(resource_template)
         if deployed
           extension_client.update_deployment deploy
         else
           extension_client.create_deployment deploy
         end
-      when 'daemon_set'
-        daemon = Kubeclient::DaemonSet.new(resource_template.to_hash)
+      elsif daemon_set?
+        daemon = Kubeclient::DaemonSet.new(resource_template)
         delete_daemon_set(daemon) if deployed
         extension_client.create_daemon_set daemon
-      when 'job'
+      elsif job?
         # FYI per docs it is supposed to use batch api, but extension api works
-        job = Kubeclient::Job.new(resource_template.to_hash)
+        job = Kubeclient::Job.new(resource_template)
         if deployed
           extension_client.delete_job job.metadata.name, job.metadata.namespace
         end
         extension_client.create_job job
       else
-        raise "Unknown deploy object #{resource_template.resource_kind}"
+        raise "Unknown deploy object #{resource_template.fetch('kind')}"
       end
     end
 
@@ -81,30 +84,38 @@ module Kubernetes
     end
 
     def desired_pod_count
-      case resource_template.resource_kind
-      when 'daemon_set'
+      case resource_template.fetch('kind')
+      when 'DaemonSet'
         # need http request since we do not know how many nodes we will match
         deployed.status.desiredNumberScheduled
-      when 'deployment', 'job' then replica_target
-      else raise "Unsupported kind #{resource_template.resource_kind}"
+      when 'Deployment', 'Job' then replica_target
+      else raise "Unsupported kind #{resource_template.fetch('kind')}"
       end
     end
 
     private
+
+    def deployment?
+      resource_template.fetch('kind') == 'Deployment'
+    end
+
+    def daemon_set?
+      resource_template.fetch('kind') == 'DaemonSet'
+    end
+
+    def store_resource_template
+      self.resource_template = ResourceTemplate.new(self)
+    end
 
     # Create new client as 'Deployment' API is on different path then 'v1'
     def extension_client
       deploy_group.kubernetes_cluster.extension_client
     end
 
-    def resource_template
-      @resource_template ||= ResourceTemplate.new(self)
-    end
-
     def deployed
       extension_client.send(
-        "get_#{resource_template.resource_kind}",
-        resource_template.to_hash.fetch(:metadata).fetch(:name),
+        "get_#{resource_template.fetch('kind').underscore}",
+        resource_template.fetch('metadata').fetch('name'),
         deploy_group.kubernetes_namespace
       )
     rescue KubeException
@@ -164,17 +175,10 @@ module Kubernetes
     end
 
     def validate_config_file
-      if build && kubernetes_role
-        if raw_template.blank?
-          errors.add(:kubernetes_release, "does not contain config file '#{template_name}'")
-        else
-          begin
-            parsed_config_file
-          rescue Samson::Hooks::UserError
-            errors.add(:kubernetes_release, $!.message)
-          end
-        end
-      end
+      return if !build || !kubernetes_role
+      parsed_config_file
+    rescue Samson::Hooks::UserError
+      errors.add(:kubernetes_release, $!.message)
     end
 
     def namespace

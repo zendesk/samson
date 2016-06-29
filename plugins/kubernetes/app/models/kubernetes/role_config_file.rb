@@ -10,6 +10,11 @@ module Kubernetes
 
     def initialize(content, path)
       @path = path
+
+      if content.blank?
+        raise Samson::Hooks::UserError, "does not contain config file '#{path}'"
+      end
+
       begin
         @elements = Array.wrap(Kubernetes::Util.parse_file(content, path)).compact
       rescue
