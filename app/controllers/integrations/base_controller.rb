@@ -46,7 +46,7 @@ class Integrations::BaseController < ApplicationController
   end
 
   def release_params
-    {commit: commit, author: user}
+    { commit: commit, author: user }
   end
 
   def create_new_release
