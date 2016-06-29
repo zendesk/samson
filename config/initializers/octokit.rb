@@ -11,7 +11,7 @@ class Octokit::RedirectAsError < Faraday::Response::Middleware
   private
 
   def on_complete(response)
-    if response[:status].to_i.between?(300, 399)
+    if [301, 302].include?(response[:status].to_i)
       raise Octokit::RepositoryUnavailable, response
     end
   end
