@@ -77,22 +77,4 @@ Samson::Application.configure do
 
   # Use default logging formatter so that PID and timestamp are not suppressed.
   # config.log_formatter = ::Logger::Formatter.new
-
-  # Lograge
-  config.lograge.enabled = true
-
-  config.lograge.custom_options = lambda do |event|
-    # show params for every request
-    unwanted_keys = %w[format action controller]
-    params = event.payload[:params].reject { |key, _| unwanted_keys.include? key }
-    { params: params }
-  end
-
-  if ENV["RAILS_LOG_TO_STDOUT"].present?
-    config.logger = ActiveSupport::TaggedLogging.new(Logger.new(STDOUT))
-  else
-    require 'syslog/logger'
-    config.logger = Syslog::Logger.new('samson')
-    config.lograge.formatter = Lograge::Formatters::Logstash.new
-  end
 end
