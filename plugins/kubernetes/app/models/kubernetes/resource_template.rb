@@ -1,5 +1,5 @@
 module Kubernetes
-  class DeployYaml
+  class ResourceTemplate
     CUSTOM_UNIQUE_LABEL_KEY = 'rc_unique_identifier'.freeze
     SIDECAR_NAME = 'secret-sidecar'.freeze
     SIDECAR_IMAGE = ENV['SECRET_SIDECAR_IMAGE'].presence
