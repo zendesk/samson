@@ -1,7 +1,7 @@
 # rubocop:disable Metrics/LineLength
 require_relative '../test_helper'
 
-SingleCov.covered! uncovered: 11
+SingleCov.covered! uncovered: 7
 
 describe ApplicationHelper do
   describe "#render_log" do
@@ -333,6 +333,22 @@ describe ApplicationHelper do
       stage.errors.add(:base, "<bar>")
       stage.deploy_groups.to_a.first.errors.add(:base, "<baz>")
       render.must_equal "<ul><li>Deploy groups &lt;foo&gt;<ul><li>&lt;baz&gt;</li></ul></li><li>&lt;bar&gt;</li></ul>"
+    end
+  end
+
+  describe "#link_to_history" do
+    let(:user) { users(:admin) }
+
+    around { |t| PaperTrail.with_logging(&t) }
+
+    it "shows a link" do
+      link_to_history(user).must_equal "<a href=\"/versions?item_id=#{user.id}&amp;item_type=User\">History (0)</a>"
+    end
+
+    it "shows number of entries" do
+      user.update_attributes!(name: "Foo")
+      user.update_attributes!(name: "Bar")
+      link_to_history(user).must_include "History (2)"
     end
   end
 end

@@ -9,6 +9,8 @@ class User < ActiveRecord::Base
 
   has_soft_deletion default_scope: true
 
+  has_paper_trail skip: [:updated_at, :created_at, :token]
+
   has_many :commands
   has_many :stars
   has_many :locks, dependent: :destroy

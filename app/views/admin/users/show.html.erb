@@ -7,6 +7,7 @@
     <dt>System Role:</dt>
     <dd><%= @user.role.display_name %></dd>
   </dl>
+  <%= link_to_history @user %>
 </section>
 <section id="user-project-roles" class="clearfix">
   <h2 class="section-subtitle">Project Level Roles</h2>

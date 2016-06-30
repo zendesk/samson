@@ -189,4 +189,8 @@ module ApplicationHelper
       safe_join lis
     end
   end
+
+  def link_to_history(resource)
+    link_to "History (#{resource.versions.count})", versions_path(item_id: resource.id, item_type: resource.class.name)
+  end
 end
