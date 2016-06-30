@@ -93,7 +93,7 @@ group :assets do
     gem 'rails-assets-rickshaw'
     gem 'rails-assets-typeahead.js'
     gem 'rails-assets-underscore'
-    gem 'rails-assets-vis'
+    gem 'rails-assets-vis', '~> 4.10.0'
     gem 'rails-assets-x-editable'
     gem 'rails-assets-message-center'
     gem 'rails-assets-angular-ui-router'

@@ -368,7 +368,7 @@ GEM
     rails-assets-typeahead.js (0.11.1)
       rails-assets-jquery (>= 1.7)
     rails-assets-underscore (1.8.3)
-    rails-assets-vis (4.15.0)
+    rails-assets-vis (4.10.0)
     rails-assets-x-editable (1.5.1)
       rails-assets-jquery (>= 1.6)
     rails-deprecated_sanitizer (1.0.3)
@@ -538,7 +538,7 @@ DEPENDENCIES
   rails-assets-spin!
   rails-assets-typeahead.js!
   rails-assets-underscore!
-  rails-assets-vis!
+  rails-assets-vis (~> 4.10.0)!
   rails-assets-x-editable!
   rubocop
   samson_aws_ecr!
@@ -570,4 +570,4 @@ RUBY VERSION
    ruby 2.2.3p173
 
 BUNDLED WITH
-   1.12.3
+   1.12.4
