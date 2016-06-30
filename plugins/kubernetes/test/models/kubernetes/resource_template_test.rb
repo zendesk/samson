@@ -2,9 +2,9 @@ require_relative "../../test_helper"
 
 SingleCov.covered!
 
-describe Kubernetes::DeployYaml do
+describe Kubernetes::ResourceTemplate do
   let(:doc) { kubernetes_release_docs(:test_release_pod_1) }
-  let(:yaml) { Kubernetes::DeployYaml.new(doc) }
+  let(:template) { Kubernetes::ResourceTemplate.new(doc) }
 
   before do
     kubernetes_fake_raw_template
@@ -13,18 +13,18 @@ describe Kubernetes::DeployYaml do
 
   describe "#resource_kind" do
     it 'is deployment' do
-      yaml.resource_kind.must_equal 'deployment'
+      template.resource_kind.must_equal 'deployment'
     end
 
     it 'knows if it is a DaemonSet' do
-      yaml.send(:template)[:kind] = 'DaemonSet'
-      yaml.resource_kind.must_equal 'daemon_set'
+      template.send(:template)[:kind] = 'DaemonSet'
+      template.resource_kind.must_equal 'daemon_set'
     end
   end
 
   describe "#to_hash" do
     it "works" do
-      result = yaml.to_hash
+      result = template.to_hash
       result.size.must_equal 4
 
       spec = result.fetch(:spec)
@@ -55,7 +55,7 @@ describe Kubernetes::DeployYaml do
       doc.deploy_group.update_column(:env_value, 'foo:bar')
       doc.kubernetes_release.update_column(:git_ref, 'user/feature')
 
-      result = yaml.to_hash
+      result = template.to_hash
       result.fetch(:spec).fetch(:template).fetch(:metadata).fetch(:labels).slice(:deploy_group, :role, :tag).must_equal(
         'tag' => "user-feature",
         'deploy_group' => 'foo-bar',
@@ -64,7 +64,7 @@ describe Kubernetes::DeployYaml do
     end
 
     describe "containers" do
-      let(:result) { yaml.to_hash }
+      let(:result) { template.to_hash }
       let(:container) { result.fetch(:spec).fetch(:template).fetch(:spec).fetch(:containers).first }
 
       it "overrides image" do
@@ -93,11 +93,11 @@ describe Kubernetes::DeployYaml do
       # https://github.com/zendesk/samson/issues/966
       it "allows multiple containers, even though they will not be properly replaced" do
         assert doc.raw_template.sub!("containers:\n", "containers:\n      - {}\n")
-        yaml.to_hash
+        template.to_hash
       end
 
       it "merges existing env settings" do
-        yaml.send(:template)[:spec][:template][:spec][:containers][0][:env] = [{name: 'Foo', value: 'Bar'}]
+        template.send(:template)[:spec][:template][:spec][:containers][0][:env] = [{name: 'Foo', value: 'Bar'}]
         keys = container.fetch(:env).map(&:to_h).map { |x| x.symbolize_keys.fetch(:name) }
         keys.must_include 'Foo'
         keys.size.must_be :>, 5
@@ -110,9 +110,10 @@ describe Kubernetes::DeployYaml do
       let(:secret_key) { 'production/foo/snafu/bar' }
 
       around do |test|
-        silence_warnings { Kubernetes::DeployYaml.const_set(:SIDECAR_IMAGE, "docker-registry.example.com/foo:bar") }
+        klass = Kubernetes::ResourceTemplate
+        silence_warnings { klass.const_set(:SIDECAR_IMAGE, "docker-registry.example.com/foo:bar") }
         test.call
-        silence_warnings { Kubernetes::DeployYaml.const_set(:SIDECAR_IMAGE, nil) }
+        silence_warnings { klass.const_set(:SIDECAR_IMAGE, nil) }
       end
 
       before do
@@ -124,7 +125,7 @@ describe Kubernetes::DeployYaml do
       end
 
       it "creates a sidecar" do
-        yaml.to_hash[:spec][:template][:spec][:containers].last[:name].must_equal('secret-sidecar')
+        template.to_hash[:spec][:template][:spec][:containers].last[:name].must_equal('secret-sidecar')
       end
 
       it "adds to existing volume definitions in the sidecar" do
@@ -132,7 +133,7 @@ describe Kubernetes::DeployYaml do
           /containers:\n(    .*\n)+/m,
           "containers:\n      - {}\n      volumes:\n      - {}\n      - {}\n"
         )
-        yaml.to_hash[:spec][:template][:spec][:volumes].count.must_equal 5
+        template.to_hash[:spec][:template][:spec][:volumes].count.must_equal 5
       end
 
       it "adds to existing volume definitions in the primary container" do
@@ -140,7 +141,7 @@ describe Kubernetes::DeployYaml do
           /containers:\n(    .*\n)+/m,
           "containers:\n      - :name: foo\n        :volumeMounts:\n        - :name: bar\n"
         )
-        yaml.to_hash[:spec][:template][:spec][:containers].first[:volumeMounts].count.must_equal 2
+        template.to_hash[:spec][:template][:spec][:containers].first[:volumeMounts].count.must_equal 2
       end
 
       it "adds to existing volume definitions in the primary container when volumeMounts is empty" do
@@ -148,18 +149,18 @@ describe Kubernetes::DeployYaml do
           /containers:\n(    .*\n)+/m,
           "containers:\n      - :name: foo\n        :volumeMounts:\n"
         )
-        yaml.to_hash[:spec][:template][:spec][:containers].first[:volumeMounts].count.must_equal 1
+        template.to_hash[:spec][:template][:spec][:containers].first[:volumeMounts].count.must_equal 1
       end
 
       it "creates no sidecar when there are no secrets" do
         assert doc.raw_template.sub!('secret/', 'public/')
-        yaml.to_hash[:spec][:template][:spec][:containers].map { |c| c[:name] }.must_equal(['some-project'])
+        template.to_hash[:spec][:template][:spec][:containers].map { |c| c[:name] }.must_equal(['some-project'])
       end
 
       it "fails to find a secret needed by the sidecar" do
         SecretStorage.delete(secret_key)
         e = assert_raises Samson::Hooks::UserError do
-          yaml.to_hash
+          template.to_hash
         end
         e.message.must_include "secret/FOO with key production/foo/snafu/bar could not be found"
       end
@@ -171,20 +172,22 @@ describe Kubernetes::DeployYaml do
 
         it "secret is scoped correctly" do
           assert doc.raw_template.sub!(secret_key, '${ENV}/foo/${DEPLOY_GROUP}/bar')
-          yaml.to_hash[:spec][:template][:metadata][:annotations][:'secret/FOO'].must_equal "production/foo/pod1/bar"
+          template.to_hash[:spec][:template][:metadata][:annotations][:'secret/FOO'].
+            must_equal "production/foo/pod1/bar"
         end
 
         it "does not effect a non secret annotation" do
           assert doc.raw_template.sub!(secret_key, "#{secret_key}\n        annotation_key: somevalueforthekey")
-          yaml.to_hash[:spec][:template][:metadata][:annotations][:annotation_key].must_equal "somevalueforthekey"
+          template.to_hash[:spec][:template][:metadata][:annotations][:annotation_key].
+            must_equal "somevalueforthekey"
         end
       end
     end
 
     describe "daemon_set" do
       it "does not add replicas since they are not supported" do
-        yaml.send(:template)[:kind] = 'DaemonSet'
-        result = yaml.to_hash
+        template.send(:template)[:kind] = 'DaemonSet'
+        result = template.to_hash
         refute result.key?(:replicas)
       end
     end

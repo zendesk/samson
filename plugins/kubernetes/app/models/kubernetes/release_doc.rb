@@ -21,31 +21,31 @@ module Kubernetes
     end
 
     def job?
-      deploy_yaml.resource_kind == 'job'
+      resource_template.resource_kind == 'job'
     end
 
     def deploy
-      case deploy_yaml.resource_kind
+      case resource_template.resource_kind
       when 'deployment'
-        deploy = Kubeclient::Deployment.new(deploy_yaml.to_hash)
+        deploy = Kubeclient::Deployment.new(resource_template.to_hash)
         if deployed
           extension_client.update_deployment deploy
         else
           extension_client.create_deployment deploy
         end
       when 'daemon_set'
-        daemon = Kubeclient::DaemonSet.new(deploy_yaml.to_hash)
+        daemon = Kubeclient::DaemonSet.new(resource_template.to_hash)
         delete_daemon_set(daemon) if deployed
         extension_client.create_daemon_set daemon
       when 'job'
         # FYI per docs it is supposed to use batch api, but extension api works
-        job = Kubeclient::Job.new(deploy_yaml.to_hash)
+        job = Kubeclient::Job.new(resource_template.to_hash)
         if deployed
           extension_client.delete_job job.metadata.name, job.metadata.namespace
         end
         extension_client.create_job job
       else
-        raise "Unknown deploy object #{deploy_yaml.resource_kind}"
+        raise "Unknown deploy object #{resource_template.resource_kind}"
       end
     end
 
@@ -81,12 +81,12 @@ module Kubernetes
     end
 
     def desired_pod_count
-      case deploy_yaml.resource_kind
+      case resource_template.resource_kind
       when 'daemon_set'
         # need http request since we do not know how many nodes we will match
         deployed.status.desiredNumberScheduled
       when 'deployment', 'job' then replica_target
-      else raise "Unsupported kind #{deploy_yaml.resource_kind}"
+      else raise "Unsupported kind #{resource_template.resource_kind}"
       end
     end
 
@@ -97,14 +97,14 @@ module Kubernetes
       deploy_group.kubernetes_cluster.extension_client
     end
 
-    def deploy_yaml
-      @deploy_yaml ||= DeployYaml.new(self)
+    def resource_template
+      @resource_template ||= ResourceTemplate.new(self)
     end
 
     def deployed
       extension_client.send(
-        "get_#{deploy_yaml.resource_kind}",
-        deploy_yaml.to_hash.fetch(:metadata).fetch(:name),
+        "get_#{resource_template.resource_kind}",
+        resource_template.to_hash.fetch(:metadata).fetch(:name),
         deploy_group.kubernetes_namespace
       )
     rescue KubeException

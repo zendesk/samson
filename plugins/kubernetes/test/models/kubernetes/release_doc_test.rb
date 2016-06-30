@@ -66,7 +66,7 @@ describe Kubernetes::ReleaseDoc do
 
     describe "daemonset" do
       before do
-        doc.send(:deploy_yaml).send(:template)['kind'] = 'DaemonSet'
+        doc.send(:resource_template).send(:template)['kind'] = 'DaemonSet'
         doc.stubs(:sleep)
       end
 
@@ -102,7 +102,7 @@ describe Kubernetes::ReleaseDoc do
     end
 
     describe "job" do
-      before { doc.send(:deploy_yaml).send(:template)['kind'] = 'Job' }
+      before { doc.send(:resource_template).send(:template)['kind'] = 'Job' }
 
       it "creates when job does not exist" do
         client.expects(:get_job).raises(KubeException.new(1, 2, 3))
@@ -119,7 +119,7 @@ describe Kubernetes::ReleaseDoc do
     end
 
     it "raises on unknown" do
-      doc.send(:deploy_yaml).send(:template)['kind'] = 'WTFBBQ'
+      doc.send(:resource_template).send(:template)['kind'] = 'WTFBBQ'
       e = assert_raises(RuntimeError) { doc.deploy }
       e.message.must_include "Unknown deploy object wtfbbq"
     end
@@ -152,19 +152,19 @@ describe Kubernetes::ReleaseDoc do
     end
 
     it "uses local value for job" do
-      doc.send(:deploy_yaml).send(:template)[:kind] = 'Job'
+      doc.send(:resource_template).send(:template)[:kind] = 'Job'
       doc.desired_pod_count.must_equal 2
     end
 
     it "asks kubernetes for daemon set since we do not know how many nodes it will match" do
-      doc.send(:deploy_yaml).send(:template)[:kind] = 'DaemonSet'
+      doc.send(:resource_template).send(:template)[:kind] = 'DaemonSet'
       stub_request(:get, "http://foobar.server/apis/extensions/v1beta1/namespaces/pod1/daemonsets/some-project-rc").
         to_return(body: {status: {desiredNumberScheduled: 3}}.to_json)
       doc.desired_pod_count.must_equal 3
     end
 
     it "fails for unknown" do
-      doc.send(:deploy_yaml).send(:template)[:kind] = 'Funky'
+      doc.send(:resource_template).send(:template)[:kind] = 'Funky'
       assert_raises RuntimeError do
         doc.desired_pod_count
       end
