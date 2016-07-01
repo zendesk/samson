@@ -40,7 +40,7 @@ describe ProjectRolesController do
         new_admin.user_project_roles.create!(role_id: Role::DEPLOYER.id, project: project)
         create ''
         assert_response :success
-        refute new_admin.user_project_roles.first
+        refute new_admin.reload.user_project_roles.first
       end
 
       it 'does nothing when setting from None to None' do

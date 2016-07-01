@@ -5,7 +5,7 @@ SingleCov.covered!
 describe UserProjectRole do
   let(:user) { users(:viewer) }
   let(:project) { projects(:test) }
-  let(:project_role) { UserProjectRole.create(user_id: user.id, project_id: project.id, role_id: Role::ADMIN.id) }
+  let(:project_role) { UserProjectRole.create!(user_id: user.id, project_id: project.id, role_id: Role::ADMIN.id) }
 
   before { project_role }
 
@@ -73,6 +73,21 @@ describe UserProjectRole do
 
     it "contains errors" do
       project_role.errors.wont_be_empty
+    end
+  end
+
+  describe "versioning" do
+    around { |t| PaperTrail.with_logging(&t) }
+
+    it "tracks important changes" do
+      project_role.versions.size.must_equal 1
+      project_role.update_attributes!(role_id: 1)
+      project_role.versions.size.must_equal 2
+    end
+
+    it "ignores unimportant changes" do
+      project_role.update_attributes!(updated_at: 1.second.from_now)
+      project_role.versions.size.must_equal 1
     end
   end
 end

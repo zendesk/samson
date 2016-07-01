@@ -434,5 +434,19 @@ describe User do
       user.update_attributes!(token: 'secret')
       user.versions.size.must_equal 0
     end
+
+    it "records project_roles change" do
+      UserProjectRole.create!(project: projects(:test), user: user, role_id: 1)
+      user.versions.size.must_equal 1
+      YAML.load(user.versions.first.object)['project_roles'].must_equal "foo" => 1
+    end
+
+    it "records project_roles destruction" do
+      role = UserProjectRole.create!(project: projects(:test), user: user, role_id: 1)
+      role.reload
+      role.destroy
+      user.versions.size.must_equal 2
+      YAML.load(user.versions.last.object)['project_roles'].must_equal({})
+    end
   end
 end
