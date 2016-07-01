@@ -5,3 +5,4 @@ test_release_pod_1:
   replica_target: 2
   cpu: 1
   ram: 100
+  resource_template: '{"kind":"Deployment", "metadata":{"name":"app-server"}}'

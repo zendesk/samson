@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20160627212913) do
+ActiveRecord::Schema.define(version: 20160629232753) do
 
   create_table "builds", force: :cascade do |t|
     t.integer  "project_id",                       null: false
@@ -196,6 +196,7 @@ ActiveRecord::Schema.define(version: 20160627212913) do
     t.integer  "deploy_group_id"
     t.decimal  "cpu",                                       precision: 4, scale: 2,                     null: false
     t.integer  "ram",                         limit: 4,                                                 null: false
+    t.text     "resource_template",           limit: 65535
   end
 
   add_index "kubernetes_release_docs", ["kubernetes_release_id"], name: "index_kubernetes_release_docs_on_kubernetes_release_id", using: :btree

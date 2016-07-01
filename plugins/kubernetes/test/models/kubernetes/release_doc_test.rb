@@ -5,7 +5,26 @@ SingleCov.covered!
 describe Kubernetes::ReleaseDoc do
   let(:doc) { kubernetes_release_docs(:test_release_pod_1) }
 
-  before { kubernetes_fake_raw_template }
+  before do
+    kubernetes_fake_raw_template
+    doc.resource_template =
+      YAML.load_stream(read_kubernetes_sample_file('kubernetes_deployment.yml'))[0]
+    doc.resource_template['metadata']['namespace'] = 'pod1'
+  end
+
+  describe "#store_resource_template" do
+    it "stores the template when creating" do
+      created = Kubernetes::ReleaseDoc.create!(doc.attributes.except('id', 'resource_template'))
+      created.resource_template['kind'].must_equal 'Deployment'
+    end
+
+    it "fails to create with missing config file" do
+      Kubernetes::ReleaseDoc.any_instance.unstub(:raw_template)
+      GitRepository.any_instance.expects(:file_content).returns(nil) # File not found
+      created = Kubernetes::ReleaseDoc.create(doc.attributes.except('id', 'resource_template'))
+      refute created.id
+    end
+  end
 
   describe "#ensure_service" do
     it "does nothing when no service is defined" do
@@ -66,7 +85,7 @@ describe Kubernetes::ReleaseDoc do
 
     describe "daemonset" do
       before do
-        doc.send(:resource_template).send(:template)['kind'] = 'DaemonSet'
+        doc.resource_template['kind'] = 'DaemonSet'
         doc.stubs(:sleep)
       end
 
@@ -102,7 +121,9 @@ describe Kubernetes::ReleaseDoc do
     end
 
     describe "job" do
-      before { doc.send(:resource_template).send(:template)['kind'] = 'Job' }
+      before do
+        doc.resource_template['kind'] = 'Job'
+      end
 
       it "creates when job does not exist" do
         client.expects(:get_job).raises(KubeException.new(1, 2, 3))
@@ -119,9 +140,9 @@ describe Kubernetes::ReleaseDoc do
     end
 
     it "raises on unknown" do
-      doc.send(:resource_template).send(:template)['kind'] = 'WTFBBQ'
+      doc.resource_template = {'kind' => 'WTFBBQ'}
       e = assert_raises(RuntimeError) { doc.deploy }
-      e.message.must_include "Unknown deploy object wtfbbq"
+      e.message.must_include "Unknown deploy object WTFBBQ"
     end
   end
 
@@ -152,19 +173,19 @@ describe Kubernetes::ReleaseDoc do
     end
 
     it "uses local value for job" do
-      doc.send(:resource_template).send(:template)[:kind] = 'Job'
+      doc.resource_template['kind'] = 'Job'
       doc.desired_pod_count.must_equal 2
     end
 
     it "asks kubernetes for daemon set since we do not know how many nodes it will match" do
-      doc.send(:resource_template).send(:template)[:kind] = 'DaemonSet'
+      doc.resource_template['kind'] = 'DaemonSet'
       stub_request(:get, "http://foobar.server/apis/extensions/v1beta1/namespaces/pod1/daemonsets/some-project-rc").
         to_return(body: {status: {desiredNumberScheduled: 3}}.to_json)
       doc.desired_pod_count.must_equal 3
     end
 
     it "fails for unknown" do
-      doc.send(:resource_template).send(:template)[:kind] = 'Funky'
+      doc.resource_template['kind'] = 'Funky'
       assert_raises RuntimeError do
         doc.desired_pod_count
       end
@@ -221,7 +242,7 @@ describe Kubernetes::ReleaseDoc do
 
   describe "#job?" do
     it "is a job when it is a job" do
-      doc.stubs(:raw_template).returns(read_kubernetes_sample_file('kubernetes_job.yml'))
+      doc.resource_template = YAML.load(read_kubernetes_sample_file('kubernetes_job.yml'))
       assert doc.job?
     end
 

@@ -9,7 +9,7 @@ module Kubernetes
     end
 
     def to_hash
-      @deployment_hash ||= begin
+      @to_hash ||= begin
         set_rc_unique_label_key
         set_namespace
         set_replica_target
@@ -27,10 +27,6 @@ module Kubernetes
         Rails.logger.info "Created Kubernetes hash: #{hash.to_json}"
         hash
       end
-    end
-
-    def resource_kind
-      template['kind'].underscore
     end
 
     private
