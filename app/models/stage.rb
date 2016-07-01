@@ -25,6 +25,7 @@ class Stage < ActiveRecord::Base
   validates :name, presence: true, uniqueness: { scope: [:project, :deleted_at] }
 
   before_create :ensure_ordering
+  after_destroy :destroy_deploy_groups_stages
 
   def self.reset_order(new_order)
     transaction do
@@ -191,5 +192,10 @@ class Stage < ActiveRecord::Base
   # overwrites papertrail to record script
   def object_attrs_for_paper_trail(attributes)
     super(attributes.merge('script' => script))
+  end
+
+  # DeployGroupsStage has no ids so the default dependent: :destroy fails
+  def destroy_deploy_groups_stages
+    DeployGroupsStage.where(stage_id: id).delete_all
   end
 end

@@ -471,4 +471,12 @@ describe Stage do
       stage.versions.size.must_equal 1
     end
   end
+
+  describe "#destroy_deploy_groups_stages" do
+    it 'deletes deploy_groups_stages on destroy' do
+      assert_difference 'DeployGroupsStage.count', -1 do
+        stage.destroy!
+      end
+    end
+  end
 end
