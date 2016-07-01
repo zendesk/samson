@@ -119,4 +119,14 @@ describe DeployGroup do
   it_expires_stage :save
   it_expires_stage :destroy
   it_expires_stage :soft_delete
+
+  describe "#destroy_deploy_groups_stages" do
+    let(:deploy_group) { deploy_groups(:pod100) }
+
+    it 'deletes deploy_groups_stages on destroy' do
+      assert_difference 'DeployGroupsStage.count', -1 do
+        deploy_group.destroy!
+      end
+    end
+  end
 end
