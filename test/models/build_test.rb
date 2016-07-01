@@ -1,6 +1,6 @@
 require_relative '../test_helper'
 
-SingleCov.covered! uncovered: 7
+SingleCov.covered!
 
 describe Build do
   include GitRepoTestHelper
@@ -8,6 +8,7 @@ describe Build do
   let(:project) { Project.new(id: 99999, name: 'test_project', repository_url: repo_temp_dir) }
   let(:example_sha) { 'cbbf2f9a99b47fc460d422812b6a5adff7dfee951d8fa2e4a98caa0382cfbdbf' }
   let(:repo_digest) { "my-registry.zende.sk/some_project@sha256:#{example_sha}" }
+  let(:build) { builds(:staging) }
 
   def valid_build(attributes = {})
     Build.new(attributes.reverse_merge(project: project, git_ref: 'master'))
@@ -99,6 +100,45 @@ describe Build do
     it "builds a url" do
       build = builds(:staging)
       build.url.must_equal "http://www.test-url.com/projects/foo/builds/#{build.id}"
+    end
+  end
+
+  describe "#nice_name" do
+    it "builds a nice name" do
+      build.nice_name.must_equal "Build #{build.id}"
+    end
+
+    it "uses the label when avialable" do
+      build.label = 'foo'
+      build.nice_name.must_equal "Build foo"
+    end
+  end
+
+  describe "#commit_url" do
+    it "builds a path when the url is unknown" do
+      build.commit_url.must_equal "/tree/da39a3ee5e6b4b0d3255bfef95601890afd80709"
+    end
+
+    it "builds a full url when host is known" do
+      build.project.repository_url = 'git@github.com:foo/bar.git'
+      build.commit_url.must_equal "https://github.com/foo/bar/tree/da39a3ee5e6b4b0d3255bfef95601890afd80709"
+    end
+  end
+
+  describe "#docker_status" do
+    it "is the build status" do
+      build.docker_build_job = Job.new(status: 'foo')
+      build.docker_status.must_equal "foo"
+    end
+
+    it "is not built when there is no build" do
+      build.docker_status.must_equal "not built"
+    end
+  end
+
+  describe "#create_docker_job" do
+    it "creates a job" do
+      build.create_docker_job.class.must_equal Job
     end
   end
 end

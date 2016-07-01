@@ -1,6 +1,6 @@
 require_relative '../test_helper'
 
-SingleCov.covered! uncovered: 9
+SingleCov.covered!
 
 describe User do
   describe "#name" do
@@ -101,6 +101,11 @@ describe User do
       it "sets the role_id" do
         user.role_id.must_equal(Role::ADMIN.id)
       end
+
+      it "creates a super admin for the first user" do
+        User.delete_all
+        user.role_id.must_equal(Role::SUPER_ADMIN.id)
+      end
     end
 
     describe "with an existing user" do
@@ -179,6 +184,12 @@ describe User do
 
     it "is allowed for project admin" do
       users(:project_admin).administrated_projects.map(&:permalink).sort.must_equal ['foo']
+    end
+  end
+
+  describe ".to_csv" do
+    it "generates csv" do
+      User.to_csv.split("\n").size.must_equal User.count + 1 + UserProjectRole.count
     end
   end
 
@@ -447,6 +458,12 @@ describe User do
       role.destroy
       user.versions.size.must_equal 2
       YAML.load(user.versions.last.object)['project_roles'].must_equal({})
+    end
+  end
+
+  describe "#name_and_email" do
+    it "is name and email" do
+      users(:admin).name_and_email.must_equal "Admin (admin@example.com)"
     end
   end
 end

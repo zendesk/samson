@@ -26,10 +26,6 @@ class Build < ActiveRecord::Base
     "#{project.repository_homepage}/tree/#{git_sha}"
   end
 
-  def docker_build_output
-    docker_build_job.try(:output)
-  end
-
   def docker_status
     if docker_build_job
       docker_build_job.status
