@@ -25,6 +25,12 @@ describe Release do
       assert_equal 1234, release.number
     end
 
+    it 'uses the default release number if build number is nil' do
+      project.releases.destroy_all
+      release = project.releases.create!(author: author, commit: "bar", number:nil )
+      assert_equal 1, release.number
+    end
+
     it 'uses the build number if build number is 1' do
       project.releases.destroy_all
       release = project.releases.create!(author: author, commit: "bar")

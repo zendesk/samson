@@ -45,7 +45,7 @@ class Release < ActiveRecord::Base
 
   def assign_release_number
     default_number = 1
-    return if number != default_number
+    return if number != default_number && !number.nil?
 
     latest_release_number = project.releases.last.try(:number) || 0
     self.number = latest_release_number + 1
