@@ -2,6 +2,6 @@
   <td><%= link_to project.name, project %></td>
 
   <% @deploy_groups.each do |deploy_group| %>
-    <td><%= display_version(project.id, deploy_group.id) %></td>
+    <td class="dashboard-cell"><%= display_version(project.id, deploy_group.id) %></td>
   <% end %>
 </tr>

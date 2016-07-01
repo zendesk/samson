@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20160621174658) do
+ActiveRecord::Schema.define(version: 20160627212913) do
 
   create_table "builds", force: :cascade do |t|
     t.integer  "project_id",                       null: false
@@ -215,13 +215,12 @@ ActiveRecord::Schema.define(version: 20160621174658) do
   add_index "kubernetes_releases", ["build_id"], name: "index_kubernetes_releases_on_build_id"
 
   create_table "kubernetes_roles", force: :cascade do |t|
-    t.integer  "project_id",      limit: 4,   null: false
-    t.string   "name",            limit: 255, null: false
-    t.string   "config_file",     limit: 255
-    t.string   "service_name",    limit: 255
-    t.string   "deploy_strategy", limit: 255, null: false
-    t.datetime "created_at",                  null: false
-    t.datetime "updated_at",                  null: false
+    t.integer  "project_id",   limit: 4,   null: false
+    t.string   "name",         limit: 255, null: false
+    t.string   "config_file",  limit: 255
+    t.string   "service_name", limit: 255
+    t.datetime "created_at",               null: false
+    t.datetime "updated_at",               null: false
     t.datetime "deleted_at"
   end
 
@@ -336,6 +335,9 @@ ActiveRecord::Schema.define(version: 20160621174658) do
     t.integer  "stage_id",    limit: 4,     null: false
     t.datetime "created_at"
     t.datetime "updated_at"
+    t.boolean  "before_deploy",               default: false, null: false
+    t.boolean  "after_deploy",                default: true,  null: false
+    t.boolean  "for_buddy",                   default: false, null: false
   end
 
   add_index "slack_webhooks", ["stage_id"], name: "index_slack_webhooks_on_stage_id", using: :btree

@@ -171,7 +171,7 @@ class JobExecution
   def setup!(dir)
     locked = lock_project do
       return false unless @repository.setup!(dir, @reference)
-      commit = @repository.commit_from_ref(@reference, length: nil)
+      commit = @repository.commit_from_ref(@reference)
       tag = @repository.tag_from_ref(@reference)
       @job.update_git_references!(commit: commit, tag: tag)
     end
@@ -194,6 +194,7 @@ class JobExecution
       PROJECT_NAME: @job.project.name,
       PROJECT_PERMALINK: @job.project.permalink,
       PROJECT_REPOSITORY: @job.project.repository_url,
+      REFERENCE: @reference,
       REVISION: @job.commit,
       TAG: (@job.tag || @job.commit),
       CACHE_DIR: artifact_cache_dir

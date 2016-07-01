@@ -36,10 +36,13 @@ class MacrosController < ApplicationController
   end
 
   def execute
-    macro_service = MacroService.new(@project, current_user)
-    job = macro_service.execute!(@macro)
+    job = @project.jobs.build(
+      user: current_user,
+      command: @macro.script,
+      commit: @macro.reference
+    )
 
-    if job.persisted?
+    if job.save
       JobExecution.start_job(JobExecution.new(job.commit, job))
       redirect_to [@project, job]
     else

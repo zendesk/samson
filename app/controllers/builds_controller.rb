@@ -112,7 +112,7 @@ class BuildsController < ApplicationController
         current_project.repository.update_local_cache!
       end
 
-      current_project.repository.commit_from_ref(new_build_params[:git_ref], length: nil)
+      current_project.repository.commit_from_ref(new_build_params[:git_ref])
     end
   end
 end

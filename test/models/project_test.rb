@@ -1,6 +1,6 @@
 require_relative '../test_helper'
 
-SingleCov.covered! uncovered: 9
+SingleCov.covered!
 
 describe Project do
   let(:project) { projects(:test) }
@@ -47,6 +47,20 @@ describe Project do
       project.releases.destroy_all
       refute project.last_release_contains_commit?("NEW")
     end
+
+    it "returns false on error and reports to airbrake" do
+      stub_github_api('repos/bar/foo/compare/LAST...LAST', {}, 400)
+      project.releases.create!(commit: "LAST", author: author)
+      Airbrake.expects(:notify)
+      refute project.last_release_contains_commit?("LAST")
+    end
+
+    it "returns false on 404 and does not report to airbrake since it is common" do
+      stub_github_api('repos/bar/foo/compare/LAST...LAST', {}, 404)
+      project.releases.create!(commit: "LAST", author: author)
+      Airbrake.expects(:notify).never
+      refute project.last_release_contains_commit?("LAST")
+    end
   end
 
   describe "#repository_directory" do
@@ -62,12 +76,12 @@ describe Project do
   describe "#repository_homepage" do
     it "is github when using github" do
       project.repository_url = "git://github.com/foo/bar"
-      project.repository_homepage.must_equal "//github.com/foo/bar"
+      project.repository_homepage.must_equal "https://github.com/foo/bar"
     end
 
     it "is gitlab when using gitlab" do
       project.repository_url = "git://gitlab.com/foo/bar"
-      project.repository_homepage.must_equal "//gitlab.com/foo/bar"
+      project.repository_homepage.must_equal "https://gitlab.com/foo/bar"
     end
 
     it "is nothing when unknown" do
@@ -332,6 +346,51 @@ describe Project do
       with_env DOCKER_REPO_NAMESPACE: 'bar' do
         project.docker_repo.must_equal "docker-registry.example.com/bar/foo"
       end
+    end
+  end
+
+  describe '#soft_delete' do
+    before { undo_default_stubs }
+
+    it "clears the repository" do
+      project.repository.expects(:clean!)
+      assert project.soft_delete!
+    end
+  end
+
+  describe "#release_prior_to" do
+    let(:release) { releases(:test) }
+
+    it "finds no release before given if there is none" do
+      project.release_prior_to(release).must_equal nil
+    end
+
+    it "finds a release before given" do
+      others = [-2, -1, 1]
+      others.map! do |diff|
+        r = Release.create!(
+          commit: 'aba',
+          author: release.author,
+          project: project
+        )
+        [diff, r]
+      end
+      others.map! do |diff, r|
+        r.update_column(:number, release.number + diff)
+        r
+      end
+
+      others.index(project.release_prior_to(release)).must_equal 1
+    end
+  end
+
+  describe "#create_releases_for_branch?" do
+    it "is true when it is the release branch" do
+      assert project.create_releases_for_branch?(project.release_branch)
+    end
+
+    it "is false when it is not the release branch" do
+      refute project.create_releases_for_branch?("x")
     end
   end
 end

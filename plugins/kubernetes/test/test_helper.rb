@@ -103,24 +103,8 @@ class ActiveSupport::TestCase
   end
 
   def kubernetes_fake_raw_template
-    template = {
-      'kind' => 'Deployment',
-      'spec' => {
-        'template' => {
-          'metadata' => {'labels' => {'pre_defined' => 'foobar', 'project' => 'foobar', 'role' => 'app-server'}},
-          'spec' => {'containers' => [{}]}
-        },
-        'selector' => {'matchLabels' => {'pre_defined' => 'foobar', 'project' => 'foobar', 'role' => 'app-server'}}
-      },
-      'metadata' => {
-        'name' => 'test',
-        'labels' => {'project' => 'foobar', 'role' => 'app-server'}
-      }
-    }
-    Kubernetes::ReleaseDoc.any_instance.stubs(raw_template: template.to_yaml)
+    Kubernetes::ReleaseDoc.any_instance.stubs(raw_template: read_kubernetes_sample_file('kubernetes_deployment.yml'))
   end
-
-  private
 
   def read_kubernetes_sample_file(file_name)
     File.read("#{Rails.root}/plugins/kubernetes/test/samples/#{file_name}")

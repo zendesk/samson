@@ -1,65 +1,44 @@
 module Kubernetes
-  # This file represents a Kubernetes configuration file for a specific project role.
-  # A single configuration file can have both a Delpoyment spec and a Service spec, as two separate documents.
-  #
-  # FIXME: this config reading logic is duplicated in a few places ... unify
+  # Represents a Kubernetes configuration file for a project role.
+  # A configuration file can have for example both a Deployment spec and a Service spec
   class RoleConfigFile
-    attr_reader :file_path
+    attr_reader :path, :elements
 
-    def initialize(contents, file_path)
-      @file_path = file_path
-      @config_file = Kubernetes::Util.parse_file(contents, file_path)
+    DEPLOY_KINDS = ['Deployment', 'DaemonSet'].freeze
+    JOB_KINDS = ['Job'].freeze
+    SERVICE_KINDS = ['Service'].freeze
+
+    def initialize(content, path)
+      @path = path
+      begin
+        @elements = Array.wrap(Kubernetes::Util.parse_file(content, path)).compact
+      rescue
+        raise Samson::Hooks::UserError, "Error found when parsing #{path}\n#{$!.message}"
+      end
+
+      if errors = Kubernetes::RoleVerifier.new(@elements).verify
+        raise Samson::Hooks::UserError, "Error found when parsing #{path}\n#{errors.join("\n")}"
+      end
     end
 
-    def deployment
-      @deployment ||= begin
-        deployment_hash = as_hash('Deployment') || as_hash('DaemonSet')
-        raise 'Deployment specification missing in the configuration file.' if deployment_hash.nil?
-        Deployment.new(deployment_hash)
-      end
-    rescue => ex
-      Rails.logger.error "Config '#{file_path}' invalid: #{ex.message}"
-      raise ex
+    def deploy
+      find_by_kind(DEPLOY_KINDS)
     end
 
     def service
-      return @service if @service
-      service_hash = as_hash('Service')
-      @service = (Service.new(service_hash) if service_hash)
-    rescue => ex
-      Rails.logger.error "Config '#{file_path}' invalid: #{ex.message}"
-      raise ex
+      find_by_kind(SERVICE_KINDS)
+    end
+
+    def job
+      find_by_kind(JOB_KINDS)
     end
 
     private
 
-    def as_hash(type)
-      hash = Array.wrap(@config_file).detect { |doc| doc['kind'] == type }.freeze
-      hash.dup.with_indifferent_access unless hash.nil?
-    end
-
-    #
-    # INNER CLASSES
-    #
-    class NestedConfig < RecursiveOpenStruct
-      def initialize(hash = nil, args = {})
-        args[:recurse_over_arrays] = true
-        super(hash, args)
+    def find_by_kind(kinds)
+      @elements.detect do |doc|
+        return doc.with_indifferent_access if kinds.include?(doc['kind'])
       end
-    end
-
-    class Deployment < NestedConfig
-      DEFAULT_ROLLOUT_STRATEGY = 'RollingUpdate'.freeze
-
-      def strategy_type
-        spec.try(:strategy).try(:type) || DEFAULT_ROLLOUT_STRATEGY
-      end
-    end
-
-    class Service < NestedConfig
-    end
-
-    class Job < NestedConfig
     end
   end
 end

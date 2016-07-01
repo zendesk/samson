@@ -13,12 +13,9 @@ module Kubernetes
         @pod.metadata.namespace
       end
 
-      def valid?
-        @pod.metadata.labels.present? && @pod.metadata.labels.project_id.present?
-      end
-
+      # jobs are 'Succeeded' ... deploys are 'Running'
       def live?
-        phase == 'Running' && ready?
+        (phase == 'Running' && ready?) || (phase == 'Succeeded')
       end
 
       def restarted?
@@ -29,24 +26,12 @@ module Kubernetes
         @pod.status.phase
       end
 
-      def project_id
-        labels.project_id.to_i
-      end
-
-      def release_id
-        labels.release_id.to_i
-      end
-
       def deploy_group_id
         labels.deploy_group_id.to_i
       end
 
       def role_id
         labels.role_id.to_i
-      end
-
-      def rc_unique_identifier
-        @pod.metadata.labels.rc_unique_identifier
       end
 
       def containers

@@ -10,9 +10,9 @@ Rails.application.config.middleware.use OmniAuth::Builder do
       ENV["GITHUB_SECRET"],
       scope: "user:email",
       client_options: {
-        site:          "https://#{Rails.application.config.samson.github.api_url}",
-        authorize_url: "https://#{Rails.application.config.samson.github.web_url}/login/oauth/authorize",
-        token_url:     "https://#{Rails.application.config.samson.github.web_url}/login/oauth/access_token"
+        site:          Rails.application.config.samson.github.api_url,
+        authorize_url: "#{Rails.application.config.samson.github.web_url}/login/oauth/authorize",
+        token_url:     "#{Rails.application.config.samson.github.web_url}/login/oauth/access_token"
       }
   end
 

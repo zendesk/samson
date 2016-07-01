@@ -38,18 +38,7 @@ class Project < ActiveRecord::Base
       alphabetical
   }
 
-  scope :where_user_admin, ->(user) {
-    joins(:user_project_roles).where(user_project_roles: {
-      user_id: user.id,
-      role_id: Role::ADMIN.id
-    })
-  }
-
   scope :search, ->(name) { where("name like ?", "%#{name}%") }
-
-  def repo_name
-    name.parameterize('_')
-  end
 
   def docker_repo
     @docker_repo ||= begin
@@ -62,17 +51,11 @@ class Project < ActiveRecord::Base
     last_release = releases.order(:id).last
     # status values documented here: http://stackoverflow.com/questions/23943855/github-api-to-compare-commits-response-status-is-diverged
     last_release && %w[behind identical].include?(GITHUB.compare(github_repo, last_release.commit, commit).status)
+  rescue Octokit::NotFound
+    false
   rescue Octokit::Error => e
     Airbrake.notify(e, parameters: { github_repo: github_repo, last_commit: last_release.commit, commit: commit })
     false # Err on side of caution and cause a new release to be created.
-  end
-
-  def auto_release_stages
-    stages.deployed_on_release
-  end
-
-  def manage_releases?
-    releases.any?
   end
 
   # Whether to create new releases when the branch is updated.
@@ -118,11 +101,11 @@ class Project < ActiveRecord::Base
   end
 
   def github?
-    repository_url.include? Rails.application.config.samson.github.web_url
+    repository_url.include? Rails.application.config.samson.github.web_url.split("://", 2).last
   end
 
   def gitlab?
-    repository_url.include? Rails.application.config.samson.gitlab.web_url
+    repository_url.include? Rails.application.config.samson.gitlab.web_url.split("://", 2).last
   end
 
   def release_prior_to(release)
@@ -151,11 +134,11 @@ class Project < ActiveRecord::Base
   private
 
   def repository_homepage_github
-    "//#{Rails.application.config.samson.github.web_url}/#{github_repo}"
+    "#{Rails.application.config.samson.github.web_url}/#{github_repo}"
   end
 
   def repository_homepage_gitlab
-    "//#{Rails.application.config.samson.gitlab.web_url}/#{gitlab_repo}"
+    "#{Rails.application.config.samson.gitlab.web_url}/#{gitlab_repo}"
   end
 
   def deploys_by_group(before)

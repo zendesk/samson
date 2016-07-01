@@ -11,7 +11,7 @@ class Octokit::RedirectAsError < Faraday::Response::Middleware
   private
 
   def on_complete(response)
-    if response[:status].to_i.between?(300, 399)
+    if [301, 302].include?(response[:status].to_i)
       raise Octokit::RepositoryUnavailable, response
     end
   end
@@ -33,7 +33,7 @@ unless Rails.env.test? || ENV['PRECOMPILE']
   raise "No GitHub token available" if token.blank?
 end
 
-Octokit.api_endpoint = "https://#{Rails.application.config.samson.github.api_url}"
-Octokit.web_endpoint = "https://#{Rails.application.config.samson.github.web_url}"
+Octokit.api_endpoint = Rails.application.config.samson.github.api_url
+Octokit.web_endpoint = Rails.application.config.samson.github.web_url
 
 GITHUB = Octokit::Client.new(access_token: token)

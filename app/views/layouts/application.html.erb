@@ -24,7 +24,7 @@
         <% unless github_ok? %>
           <div class="alert alert-warning alert-dismissable">
             <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
-            GitHub may be having problems. Please monitor their <a href="//<%= Rails.application.config.samson.github.status_url %>">status page</a> for more details.
+            GitHub may be having problems. Please monitor their <a href="<%= Rails.application.config.samson.github.status_url %>">status page</a> for more details.
           </div>
         <% end %>
 

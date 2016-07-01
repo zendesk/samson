@@ -5,6 +5,7 @@ module DeploysHelper
   GIT_BOOTSTRAP_MAPPINGS = {
     "added"    => "label-success",
     "modified" => "label-info",
+    "changed"  => "label-info",
     "removed"  => "label-danger",
     "renamed"  => "label-info"
   }.freeze

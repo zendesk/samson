@@ -1,5 +1,5 @@
 module Kubernetes
-  class DeployYaml
+  class ResourceTemplate
     CUSTOM_UNIQUE_LABEL_KEY = 'rc_unique_identifier'.freeze
     SIDECAR_NAME = 'secret-sidecar'.freeze
     SIDECAR_IMAGE = ENV['SECRET_SIDECAR_IMAGE'].presence
@@ -29,7 +29,7 @@ module Kubernetes
       end
     end
 
-    def resource_name
+    def resource_kind
       template['kind'].underscore
     end
 
@@ -218,15 +218,7 @@ module Kubernetes
 
     def container
       @container ||= begin
-        containers = template[:spec].fetch(:template, {}).fetch(:spec, {}).fetch(:containers, [])
-        if containers.empty?
-          # TODO: support building and replacement for multiple containers
-          raise(
-            Samson::Hooks::UserError,
-            "Template #{@doc.template_name} has #{containers.size} containers, having 1 section is valid."
-          )
-        end
-        containers.first
+        template[:spec].fetch(:template, {}).fetch(:spec, {}).fetch(:containers, []).first
       end
     end
 

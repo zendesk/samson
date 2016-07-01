@@ -6,10 +6,20 @@ class SlackWebhookNotification
     @user = @deploy.user
   end
 
-  def deliver
-    @stage.slack_webhooks.each do |webhook|
-      _deliver(webhook)
-    end
+  # deploy_phase is either :before_deploy or :after_deploy
+  def deliver(deploy_phase)
+    _deliver(deploy_phase: deploy_phase, message: content)
+  end
+
+  def buddy_request(message)
+    _deliver(deploy_phase: :for_buddy, message: message)
+  end
+
+  def default_buddy_request_message
+    project = @deploy.project
+    ":pray: @here _#{@deploy.user.name}_ is requesting approval" \
+      " to deploy #{project.name} *#{@deploy.reference}* to #{@deploy.stage.name}.\n"\
+      "Review this deploy: #{AppRoutes.url_helpers.project_deploy_url(project, @deploy)}"
   end
 
   private
@@ -19,12 +29,11 @@ class SlackWebhookNotification
     @content ||= SlackWebhookNotificationRenderer.render(@deploy, subject)
   end
 
-  def _deliver(webhook)
-    payload = { text: content, username: 'samson-bot' }
-    payload[:channel] = webhook.channel unless webhook.channel.blank?
-
-    Faraday.post(webhook.webhook_url, payload: payload.to_json)
-  rescue Faraday::ClientError => e
-    Rails.logger.error("Could not deliver slack message: #{e.message}")
+  def _deliver(deploy_phase:, message:)
+    @stage.slack_webhooks.each do |webhook|
+      if webhook.public_send(deploy_phase)
+        SamsonSlackWebhooks::SlackWebhooksService.new.deliver_message_via_webhook(webhook: webhook, message: message)
+      end
+    end
   end
 end

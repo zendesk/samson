@@ -20,21 +20,32 @@ module Kubernetes
       deploy_group.kubernetes_cluster.client
     end
 
+    def job?
+      resource_template.resource_kind == 'job'
+    end
+
     def deploy
-      case deploy_yaml.resource_name
+      case resource_template.resource_kind
       when 'deployment'
-        deploy = Kubeclient::Deployment.new(deploy_yaml.to_hash)
+        deploy = Kubeclient::Deployment.new(resource_template.to_hash)
         if deployed
           extension_client.update_deployment deploy
         else
           extension_client.create_deployment deploy
         end
       when 'daemon_set'
-        daemon = Kubeclient::DaemonSet.new(deploy_yaml.to_hash)
+        daemon = Kubeclient::DaemonSet.new(resource_template.to_hash)
         delete_daemon_set(daemon) if deployed
         extension_client.create_daemon_set daemon
+      when 'job'
+        # FYI per docs it is supposed to use batch api, but extension api works
+        job = Kubeclient::Job.new(resource_template.to_hash)
+        if deployed
+          extension_client.delete_job job.metadata.name, job.metadata.namespace
+        end
+        extension_client.create_job job
       else
-        raise "Unknown deploy object #{deploy_yaml.resource_name}"
+        raise "Unknown deploy object #{resource_template.resource_kind}"
       end
     end
 
@@ -66,34 +77,16 @@ module Kubernetes
     end
 
     def deploy_template
-      self.class.deploy_template(raw_template, template_name)
-    end
-
-    def self.deploy_template(raw_template, template_name)
-      sections = parse_config_file(raw_template, template_name).
-        select { |doc| ['Deployment', 'DaemonSet'].include?(doc.fetch('kind')) }
-
-      if sections.size == 1
-        sections.first.with_indifferent_access
-      else
-        raise(
-          Samson::Hooks::UserError,
-          "Template #{template_name} has #{sections.size} Deployment sections, having 1 section is valid."
-        )
-      end
-    end
-
-    def self.parse_config_file(raw_template, template_name)
-      Array.wrap(Kubernetes::Util.parse_file(raw_template, template_name))
+      parsed_config_file.deploy || parsed_config_file.job
     end
 
     def desired_pod_count
-      case deploy_yaml.resource_name
+      case resource_template.resource_kind
       when 'daemon_set'
         # need http request since we do not know how many nodes we will match
         deployed.status.desiredNumberScheduled
-      when 'deployment' then replica_target
-      else raise "Unsupported kind #{deploy_yaml.resource_name}"
+      when 'deployment', 'job' then replica_target
+      else raise "Unsupported kind #{resource_template.resource_kind}"
       end
     end
 
@@ -104,14 +97,14 @@ module Kubernetes
       deploy_group.kubernetes_cluster.extension_client
     end
 
-    def deploy_yaml
-      @deploy_yaml ||= DeployYaml.new(self)
+    def resource_template
+      @resource_template ||= ResourceTemplate.new(self)
     end
 
     def deployed
       extension_client.send(
-        "get_#{deploy_yaml.resource_name}",
-        deploy_yaml.to_hash.fetch(:metadata).fetch(:name),
+        "get_#{resource_template.resource_kind}",
+        resource_template.to_hash.fetch(:metadata).fetch(:name),
         deploy_group.kubernetes_namespace
       )
     rescue KubeException
@@ -152,7 +145,8 @@ module Kubernetes
 
     def service_hash
       @service_hash || begin
-        hash = service_template
+        hash = parsed_config_file.service ||
+          raise(Samson::Hooks::UserError, "Unable to find Service definition in #{template_name}")
 
         hash.fetch(:metadata)[:name] = kubernetes_role.service_name
         hash.fetch(:metadata)[:namespace] = namespace
@@ -165,29 +159,19 @@ module Kubernetes
       end
     end
 
-    # Config has multiple entries like a ReplicationController and a Service
-    def service_template
-      services = parsed_config_file.select { |doc| doc['kind'] == 'Service' }
-      unless services.size == 1
-        raise(
-          Samson::Hooks::UserError,
-          "Template #{template_name} has #{services.size} services, having 1 section is valid."
-        )
-      end
-      services.first.with_indifferent_access
-    end
-
     def parsed_config_file
-      self.class.parse_config_file(raw_template, template_name)
+      @parsed_config_file ||= RoleConfigFile.new(raw_template, template_name)
     end
 
     def validate_config_file
       if build && kubernetes_role
         if raw_template.blank?
           errors.add(:kubernetes_release, "does not contain config file '#{template_name}'")
-        elsif problems = RoleVerifier.new(raw_template).verify
-          problems.each do |problem|
-            errors.add(:kubernetes_release, "#{template_name}: #{problem}")
+        else
+          begin
+            parsed_config_file
+          rescue Samson::Hooks::UserError
+            errors.add(:kubernetes_release, $!.message)
           end
         end
       end

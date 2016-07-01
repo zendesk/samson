@@ -3,85 +3,58 @@ require_relative '../../test_helper'
 SingleCov.covered!
 
 describe Kubernetes::RoleConfigFile do
-  let(:contents) { read_kubernetes_sample_file('kubernetes_role_config_file.yml') }
-  let(:config_file) { Kubernetes::RoleConfigFile.new(contents, 'some-file.yml') }
+  let(:content) { read_kubernetes_sample_file('kubernetes_deployment.yml') }
+  let(:config_file) { Kubernetes::RoleConfigFile.new(content, 'some-file.yml') }
 
-  describe "#deployment" do
-    it 'loads a deployment with its contents' do
-      config_file.deployment.wont_be_nil
-
-      # Labels
-      config_file.deployment.metadata.labels.role.must_equal 'some-role'
-
-      # Replicas
-      config_file.deployment.spec.replicas.must_equal 2
-
-      # Selector
-      config_file.deployment.spec.selector.matchLabels.project.must_equal 'some-project'
-      config_file.deployment.spec.selector.matchLabels.role.must_equal 'some-role'
-
-      # Pod Template
-      config_file.deployment.spec.template.metadata.name.must_equal 'some-project-pod'
-      config_file.deployment.spec.template.metadata.labels.project.must_equal 'some-project'
-      config_file.deployment.spec.template.metadata.labels.role.must_equal 'some-role'
-    end
-
-    it "parses a Daemonset" do
-      assert contents.sub!('Deployment', 'DaemonSet')
-      config_file.deployment.spec.replicas.must_equal 2
-    end
-
-    # TODO: maybe make this consistent and move the raise outside ...
-    it "raises when no deployment is found" do
-      assert contents.sub!('Deployment', 'SomethingElse')
-      e = assert_raises RuntimeError do
-        config_file.deployment
+  describe "#initialize" do
+    it "fails with a message that points to the broken file" do
+      e = assert_raises Samson::Hooks::UserError do
+        Kubernetes::RoleConfigFile.new(content, 'some-file.json')
       end
-      e.message.must_include 'Deployment specification missing in the configuration file'
+      e.message.must_include 'some-file.json'
+    end
+  end
+
+  describe "#deploy" do
+    it 'finds a Deployment' do
+      config_file.deploy[:kind].must_equal 'Deployment'
     end
 
-    it 'tells which file failed when there is an error' do
-      Rails.logger.expects(:error).with { |m| m.must_include 'some-file.yml'; true }
-      Kubernetes::RoleConfigFile::Deployment.expects(:new).raises
-      assert_raises(RuntimeError) { config_file.deployment }
+    it "finds a Daemonset" do
+      assert content.sub!('Deployment', 'DaemonSet')
+      assert content.sub!(/\n---.*/m, '')
+      config_file.deploy[:kind].must_equal 'DaemonSet'
     end
 
-    describe "#strategy_type" do
-      it "defaults" do
-        config_file.deployment.strategy_type.must_equal 'RollingUpdate'
-      end
+    it "blows up on unsupported" do
+      assert content.sub!('Deployment', 'SomethingElse')
+      assert_raises(Samson::Hooks::UserError) { config_file }
+    end
 
-      it "uses the set value" do
-        assert contents.sub!('spec:', "spec:\n  strategy:\n    type: Foobar")
-        config_file.deployment.strategy_type.must_equal 'Foobar'
-      end
+    it "allows deep symbol access" do
+      config_file.deploy.fetch(:spec).fetch(:selector).fetch(:matchLabels).fetch(:project).must_equal 'some-project'
     end
   end
 
   describe "#service" do
-    it 'loads a service with its contents' do
-      config_file.service.wont_be_nil
-
-      # Service Name
-      config_file.service.metadata.name.must_equal 'some-project'
-
-      # Labels
-      config_file.service.metadata.labels.project.must_equal 'some-project'
-
-      # Selector
-      config_file.service.spec.selector.project.must_equal 'some-project'
-      config_file.service.spec.selector.role.must_equal 'some-role'
+    it 'loads a service with its content' do
+      config_file.service[:kind].must_equal 'Service'
     end
 
     it 'is nil when no service is found' do
-      assert contents.sub!('Service', 'SomethingElse')
+      content.replace(read_kubernetes_sample_file('kubernetes_job.yml'))
       config_file.service.must_equal nil
     end
+  end
 
-    it 'tells which file failed when there is an error' do
-      Rails.logger.expects(:error).with { |m| m.must_include 'some-file.yml'; true }
-      Kubernetes::RoleConfigFile::Service.expects(:new).raises
-      assert_raises(RuntimeError) { config_file.service }
+  describe "#job" do
+    it 'loads a job' do
+      content.replace(read_kubernetes_sample_file('kubernetes_job.yml'))
+      config_file.job[:kind].must_equal 'Job'
+    end
+
+    it 'is nil when no job is found' do
+      config_file.job.must_equal nil
     end
   end
 end

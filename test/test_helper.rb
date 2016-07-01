@@ -208,7 +208,7 @@ class ActionController::TestCase
     manager = Warden::Manager.new(nil, &middleware.block)
     request.env['warden'] = Warden::Proxy.new(request.env, manager)
 
-    stub_request(:get, "https://#{Rails.application.config.samson.github.status_url}/api/status.json").to_timeout
+    stub_request(:get, "#{Rails.application.config.samson.github.status_url}/api/status.json").to_timeout
     create_default_stubs
   end
 

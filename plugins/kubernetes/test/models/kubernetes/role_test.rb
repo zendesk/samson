@@ -16,25 +16,15 @@ describe Kubernetes::Role do
 
   def commit
     execute_on_remote_repo <<-SHELL
-        git add .
-        git commit -m "second commit"
+      git add .
+      git commit -m "second commit"
     SHELL
   end
 
   let(:role) { kubernetes_roles(:app_server) }
   let(:project) { role.project }
   let(:config_content) do
-    [
-      {
-        'kind' => 'Deployment',
-        'metadata' => {'labels' => {'role' => 'ROLE1'}},
-        'strategy_type' => 'RollingUpdate'
-      },
-      {
-        'kind' => 'Service',
-        'metadata' => {'name' => 'SERVICE-NAME'}
-      }
-    ]
+    YAML.load_stream(read_kubernetes_sample_file('kubernetes_deployment.yml'))
   end
   let(:config_content_yml) { config_content.map(&:to_yaml).join("\n") }
 
@@ -43,26 +33,18 @@ describe Kubernetes::Role do
       assert_valid role
     end
 
-    it 'is valid with known deploy strategy' do
-      Kubernetes::Role::DEPLOY_STRATEGIES.each do |strategy|
-        role.deploy_strategy = strategy
-        assert_valid role
-      end
-    end
-
-    it 'is invalid with unknown deploy strategy' do
-      [nil, 'foo'].each do |strategy|
-        role.deploy_strategy = strategy
-        refute_valid role
-      end
-    end
-
     describe "service name" do
       let(:other) { kubernetes_roles(:resque_worker) }
 
       before do
         other.update_column(:service_name, 'abc')
         role.service_name = 'abc'
+      end
+
+      it "stores empty as nil to not run into duplication issues" do
+        role.service_name = ''
+        assert_valid role
+        role.service_name.must_equal nil
       end
 
       it "is invalid with a already used service name" do
@@ -98,6 +80,18 @@ describe Kubernetes::Role do
       end
     end
 
+    describe "with a job" do
+      before do
+        write_config 'kubernetes/a.yml', read_kubernetes_sample_file('kubernetes_job.yml')
+      end
+
+      it 'creates a role' do
+        Kubernetes::Role.seed! project, 'HEAD'
+        role = project.kubernetes_roles.first
+        role.name.must_equal 'job-role'
+      end
+    end
+
     describe "without a service" do
       before do
         config_content.pop
@@ -114,11 +108,34 @@ describe Kubernetes::Role do
           project: project,
           config_file: 'sdfsdf.yml',
           name: 'sdfsdf',
-          service_name: nil,
-          deploy_strategy: 'RollingUpdate'
+          service_name: nil
         )
         Kubernetes::Role.seed! project, 'HEAD'
         project.kubernetes_roles.map(&:service_name).must_equal [nil, nil]
+      end
+    end
+
+    describe "with invalid role" do
+      before do
+        config_content.push config_content.first
+        write_config 'kubernetes/a.json', config_content.to_json
+      end
+
+      it 'creates no role' do
+        Kubernetes::Role.seed! project, 'HEAD'
+        project.kubernetes_roles.must_equal []
+      end
+    end
+
+    describe "with invalid service" do
+      before do
+        config_content.push config_content.last
+        write_config 'kubernetes/a.json', config_content.to_json
+      end
+
+      it 'creates no role' do
+        Kubernetes::Role.seed! project, 'HEAD'
+        project.kubernetes_roles.must_equal []
       end
     end
 
@@ -141,19 +158,20 @@ describe Kubernetes::Role do
     end
 
     it "can seed duplicate service names" do
-      created = Kubernetes::Role.create!(role.attributes.merge('service_name' => 'SERVICE-NAME'))
+      existing_name = config_content.last.fetch('metadata').fetch('name')
+      created = Kubernetes::Role.create!(role.attributes.merge('service_name' => existing_name))
       created.update_column(:project_id, 1234) # make sure we check in glboal scope
       write_config 'kubernetes/a.yml', config_content_yml
       Kubernetes::Role.seed! project, 'HEAD'
       names = Kubernetes::Role.all.map(&:service_name)
-      names.last.must_match /SERVICE-NAME-CHANGE-ME-\d+/
+      names.last.must_match /#{existing_name}-CHANGE-ME-\d+/
     end
 
-    it "can seed without role label" do
+    it "does not seed without role label" do
       assert config_content.first.fetch('metadata').delete('labels')
       write_config 'kubernetes/a.json', config_content.to_json
       Kubernetes::Role.seed! project, 'HEAD'
-      project.kubernetes_roles.map(&:config_file).must_equal ["kubernetes/a.json"]
+      project.kubernetes_roles.map(&:config_file).must_equal []
     end
   end
 
@@ -185,16 +203,11 @@ describe Kubernetes::Role do
 
   describe '#defaults' do
     before do
-      config_content[0]['spec'] = {
-        'replicas' => 1, 'template' => {'spec' => {'containers' => [
-          {'resources' => {'limits' => {'ram' => '200M', 'cpu' => '250m'}}}
-        ]}}
-      }
       GitRepository.any_instance.stubs(file_content: config_content_yml)
     end
 
     it "find defaults" do
-      role.defaults.must_equal cpu: 0.25, ram: 200, replicas: 1
+      role.defaults.must_equal cpu: 0.5, ram: 95, replicas: 2
     end
 
     {
@@ -208,14 +221,14 @@ describe Kubernetes::Role do
       '10.5G' => 10.5 * 1024,
       '10Gi' => 9537,
     }.each do |ram, expected|
-      it "converts ram units #{ram}" do
-        assert config_content_yml.sub!('200M', ram)
+      it "converts memory units #{ram}" do
+        assert config_content_yml.sub!('100Mi', ram)
         role.defaults.try(:[], :ram).must_equal expected
       end
     end
 
     it "ignores unknown units" do
-      assert config_content_yml.sub!('200M', '200T')
+      assert config_content_yml.sub!('100Mi', '200T')
       role.defaults.must_equal nil
     end
 
@@ -224,7 +237,7 @@ describe Kubernetes::Role do
       role.defaults.must_equal nil
     end
 
-    it "ignores when there is no deployable" do
+    it "ignores when config is invalid" do
       assert config_content_yml.sub!('Deployment', 'Deploymentx')
       refute role.defaults
     end

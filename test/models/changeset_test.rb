@@ -53,6 +53,13 @@ describe Changeset do
       stub_github_api("repos/foo/bar/branches/master", {}, 301)
       Changeset.new("foo/bar", "a", "master").comparison.class.must_equal Changeset::NullComparison
     end
+
+    # tests config/initializers/octokit.rb Octokit::RedirectAsError
+    it "uses the cached body of a 304" do
+      stub_github_api("repos/foo/bar/branches/master", {commit: { sha: "bar"}}, 304)
+      stub_github_api("repos/foo/bar/compare/a...bar", "x" => "z")
+      Changeset.new("foo/bar", "a", "master").comparison.to_h.must_equal x: "z"
+    end
   end
 
   describe "#github_url" do

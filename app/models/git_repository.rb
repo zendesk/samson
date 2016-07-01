@@ -45,11 +45,10 @@ class GitRepository
   end
   add_method_tracer :clone!
 
-  def commit_from_ref(git_reference, length: 7)
+  def commit_from_ref(git_reference)
     return unless ensure_local_cache!
-    command = ['git', 'describe', '--long', '--tags', '--all', "--abbrev=#{length || 40}", git_reference]
-    return unless output = capture_stdout(*command)
-    output.split('-').last.sub(/^g/, '')
+    command = ['git', 'rev-parse', "#{git_reference}^{commit}"]
+    capture_stdout(*command)
   end
 
   def tag_from_ref(git_reference)

@@ -3,6 +3,8 @@ class SlackWebhook < ActiveRecord::Base
 
   belongs_to :stage
 
+  scope :for_buddy, -> { where(for_buddy: true) }
+
   private
 
   def validate_url

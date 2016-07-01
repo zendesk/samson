@@ -22,6 +22,10 @@ describe DeploysHelper do
       file_status_label('modified').must_equal "<span class=\"label label-info\">M</span>"
     end
 
+    it "shows changed" do
+      file_status_label('changed').must_equal "<span class=\"label label-info\">C</span>"
+    end
+
     it "shows renamed" do
       file_status_label('renamed').must_equal "<span class=\"label label-info\">R</span>"
     end

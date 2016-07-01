@@ -4,7 +4,12 @@ class Kubernetes::RoleVerificationsController < ApplicationController
 
   def create
     input = params[:role].presence || '{}'
-    unless @errors = Kubernetes::RoleVerifier.new(input).verify
+    filename = (input.start_with?('{', '[') ? 'test.json' : 'test.yml')
+    begin
+      Kubernetes::RoleConfigFile.new(input, filename)
+    rescue Samson::Hooks::UserError
+      @errors = $!.message
+    else
       flash.now[:notice] = "Valid!"
     end
     render :new

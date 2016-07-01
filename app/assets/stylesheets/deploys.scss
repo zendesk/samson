@@ -2,6 +2,8 @@
 // They will automatically be included in application.css.
 // You can use Sass (SCSS) here: http://sass-lang.com/
 
+@import "jquery-mentions-input/jquery.mentionsInput";
+
 .panel {
   .failed {
     border-color: red;

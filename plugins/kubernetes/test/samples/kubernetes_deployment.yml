@@ -37,6 +37,7 @@ metadata:
   name: some-project
   labels:
     project: some-project
+    role: some-role
 spec:
   ports:
   - port: 80
