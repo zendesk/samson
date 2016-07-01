@@ -15,6 +15,20 @@
     </div>
   </div>
 
+  <div class="form-group">
+    <label class="col-lg-2 control-label">Used by</label>
+    <div class="col-lg-4">
+      <p class="form-control-static">
+        <% @deploy_group.deploy_groups_stages.group_by { |dgs| dgs.stage.project }.each do |project, dgs_group| %>
+          <h3><%= link_to project.name, project %></h3>
+          <% dgs_group.each do |dgs| %>
+            <%= link_to dgs.stage.name, [dgs.stage.project, dgs.stage] %><br/>
+          <% end %>
+        <% end %>
+      </p>
+    </div>
+  </div>
+
   <%= Samson::Hooks.render_views(:deploy_group_show, self) %>
 
   <div class="form-group">

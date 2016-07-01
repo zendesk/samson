@@ -96,6 +96,7 @@ describe Admin::DeployGroupsController do
 
     describe '#destroy' do
       it 'succeeds' do
+        DeployGroupsStage.delete_all
         delete :destroy, id: deploy_group
         assert_redirected_to admin_deploy_groups_path
         DeployGroup.where(id: deploy_group.id).must_equal []
@@ -105,6 +106,13 @@ describe Admin::DeployGroupsController do
         assert_raises ActiveRecord::RecordNotFound do
           delete :destroy, id: -1
         end
+      end
+
+      it 'fails for used deploy_group and sends user to a page that shows which groups are used' do
+        delete :destroy, id: deploy_group
+        assert_redirected_to [:admin, deploy_group]
+        assert flash[:error]
+        deploy_group.reload
       end
     end
 
