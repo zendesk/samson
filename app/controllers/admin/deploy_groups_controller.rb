@@ -40,9 +40,14 @@ class Admin::DeployGroupsController < ApplicationController
   end
 
   def destroy
-    deploy_group.soft_delete!
-    flash[:notice] = "Successfully deleted deploy group: #{deploy_group.name}"
-    redirect_to action: :index
+    if deploy_group.deploy_groups_stages.empty?
+      deploy_group.soft_delete!
+      flash[:notice] = "Successfully deleted deploy group: #{deploy_group.name}"
+      redirect_to action: :index
+    else
+      flash[:error] = "Deploy group is still in use."
+      redirect_to [:admin, deploy_group]
+    end
   end
 
   def deploy_all

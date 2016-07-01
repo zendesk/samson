@@ -1,4 +1,4 @@
-<h1><%= @deploy_group.new_record? ? 'New' : 'Edit' %> Deploy Group</h1>
+<h1><%= @deploy_group.new_record? ? 'New' : 'Edit' %> Deploy Group <%= link_to_if @deploy_group.id, @deploy_group.name, [:admin, @deploy_group] %></h1>
 
 <section>
   <%= form_for [:admin, @deploy_group], html: { class: "form-horizontal" } do |form| %>
@@ -11,6 +11,7 @@
     <div class="form-group">
       <div class="col-lg-offset-2 col-lg-10">
         <%= form.submit "Save", class: 'btn btn-default' %>
+        <%= link_to_delete([:admin, @deploy_group]) %>
       </div>
     </div>
   <% end %>
