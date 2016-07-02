@@ -70,6 +70,14 @@ describe Api::V1::DeploysController do
             assert_response :unprocessable_entity
           end
         end
+
+        describe "with an invalid git reference" do
+          let(:git_references) { [] }
+
+          it "responds with unprocessable entity" do
+            assert_response :unprocessable_entity
+          end
+        end
       end
     end
   end
