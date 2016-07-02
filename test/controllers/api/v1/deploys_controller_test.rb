@@ -6,7 +6,7 @@ describe Api::V1::DeploysController do
   it "routes" do
     assert_routing(
       { method: "post", path: "/api/v1/deploys" },
-      { controller: "api/v1/deploys", action: "create", format: "json" }
+      controller: "api/v1/deploys", action: "create", format: "json"
     )
   end
 

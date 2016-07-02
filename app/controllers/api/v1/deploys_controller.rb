@@ -38,7 +38,6 @@ class Api::V1::DeploysController < Api::V1::ApplicationController
       include?(deploy_params[:reference])
   end
 
-
   def deploy_permitted_params
     [:reference, :stage_id] + Samson::Hooks.fire(:deploy_permitted_params)
   end
