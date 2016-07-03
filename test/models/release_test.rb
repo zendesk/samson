@@ -27,7 +27,7 @@ describe Release do
 
     it 'uses the default release number if build number is nil' do
       project.releases.destroy_all
-      release = project.releases.create!(author: author, commit: "bar", number:nil )
+      release = project.releases.create!(author: author, commit: "bar", number: nil)
       assert_equal 1, release.number
     end
 
