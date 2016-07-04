@@ -28,4 +28,9 @@ class Integrations::BuildkiteController < Integrations::BaseController
   def message
     build_param[:message]
   end
+
+  def release_params
+    extra_params = Samson::Hooks.fire(:release_params, project, build_param)
+    { commit: commit, author: user }.merge( Hash[*extra_params.flatten]  )
+  end
 end
