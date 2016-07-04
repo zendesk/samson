@@ -82,8 +82,8 @@ describe Integrations::BuildkiteController do
     end
 
     it 'creates the release with the buildkite build number' do
-
       post :create, payload.merge(token: project.token), test_route: true
+
       project.releases.size.must_equal 1
       project.releases.first.number.must_equal 9
     end
