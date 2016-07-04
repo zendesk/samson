@@ -76,7 +76,7 @@ describe Integrations::BuildkiteController do
       Build.any_instance.stubs(:validate_git_reference).returns(true)
       stub_request(:post, "https://api.github.com/repos/bar/foo/releases").
         to_return(status: 200, body: "", headers: {})
-      Samson::Hooks.callback :release_params do |project, build_param|
+      Samson::Hooks.callback :release_params do |_|
         [[:number, 9]]
       end
     end
