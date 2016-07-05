@@ -9,9 +9,9 @@ describe DeployGroupSerializer do
 
     it 'contains only the basic information when serialized' do
       parsed = JSON.parse(DeployGroupSerializer.new(deploy_group).to_json).with_indifferent_access
-      parsed[:deploy_group][:id].must_equal deploy_group.id
-      parsed[:deploy_group][:name].must_equal deploy_group.name
-      parsed[:deploy_group][:kubernetes_cluster].must_be_nil
+      parsed[:id].must_equal deploy_group.id
+      parsed[:name].must_equal deploy_group.name
+      parsed[:kubernetes_cluster].must_be_nil
     end
   end
 

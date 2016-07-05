@@ -22,9 +22,9 @@ describe EnvironmentSerializer do
   end
 
   it 'serializes the deploy groups' do
-    parsed[:environment][:deploy_groups].wont_be_nil
-    parsed[:environment][:deploy_groups].count.must_equal environment.deploy_groups.count
-    parsed[:environment][:deploy_groups].each do |dg|
+    parsed[:deploy_groups].wont_be_nil
+    parsed[:deploy_groups].count.must_equal environment.deploy_groups.count
+    parsed[:deploy_groups].each do |dg|
       dg[:id].to_s.wont_be_empty
       dg[:name].wont_be_empty
     end

@@ -8,6 +8,6 @@ describe BuildSerializer do
   let(:parsed) { JSON.parse(BuildSerializer.new(build).to_json) }
 
   it 'serializes create at to milliseconds' do
-    parsed['build']['created_at'].must_equal build.created_at.to_i * 1000
+    parsed['created_at'].must_equal build.created_at.to_i * 1000
   end
 end
