@@ -168,6 +168,9 @@ module Samson
         config.samson.badge_token = Digest::MD5.hexdigest('badge_token' << Samson::Application.config.secret_key_base)
       end
     end
+
+    # we want 'project' as root for project collections in controller responses
+    ActiveModelSerializers.config.adapter = :json
   end
 end
 
