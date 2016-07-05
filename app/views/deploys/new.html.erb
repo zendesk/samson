@@ -24,7 +24,7 @@
 
       <div class="form-group" id="new-deploy-buttons">
         <div class="col-lg-offset-2 col-lg-10">
-          <%= form.submit "", class: "btn btn-primary", disabled: global_lock %>
+          <%= form.submit "", class: "btn btn-primary", disabled: global_lock, data: {disable_with: false} %>
           <%= link_to "Cancel", :back, class: 'btn btn-default' %>
         </div>
       </div>
