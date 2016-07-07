@@ -12,7 +12,7 @@ describe StreamsController do
   after { kill_extra_threads } # SSE heartbeat never finishes
 
   as_a_viewer do
-    describe "a GET to :show" do
+    describe "#show" do
       it "has an initial :started SSE and a :finished SSE" do
         # Override the job retrieval in the streams controller. This way we don't have
         # to stub out all the rest of the JobExecution setup/execute/... flow.

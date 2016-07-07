@@ -27,7 +27,7 @@ describe JobsController do
   end
 
   as_a_viewer do
-    describe "a GET to :index" do
+    describe "#index" do
       before { get :index, project_id: project.to_param }
 
       it "renders the template" do
@@ -35,7 +35,7 @@ describe JobsController do
       end
     end
 
-    describe "a GET to :show" do
+    describe "#show" do
       describe 'with a job' do
         before { get :show, project_id: project.to_param, id: job }
 
@@ -119,7 +119,7 @@ describe JobsController do
       end
     end
 
-    describe "a DELETE to :destroy" do
+    describe "#destroy" do
       describe "when being a admin of the project" do
         before do
           delete :destroy, project_id: project.to_param, id: job

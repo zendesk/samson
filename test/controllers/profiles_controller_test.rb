@@ -4,14 +4,14 @@ SingleCov.covered!
 
 describe ProfilesController do
   as_a_viewer do
-    describe 'a GET to #show' do
+    describe '#show' do
       it 'renders' do
         get :show
         assert_template :show
       end
     end
 
-    describe 'a PUT to #update' do
+    describe '#update' do
       it 'updates' do
         put :update, user: {name: 'Hans'}
         assert_redirected_to profile_path

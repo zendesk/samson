@@ -14,7 +14,7 @@ describe ReferencesController do
   end
 
   as_a_project_deployer do
-    describe 'a GET to :index' do
+    describe '#index' do
       it 'returns the git references for the project test' do
         get :index, project_id: projects(:test).to_param, format: :json
         response.content_type.must_equal 'application/json'
