@@ -18,7 +18,7 @@ describe MacrosController do
   end
 
   as_a_project_deployer do
-    describe "a GET to :index" do
+    describe "#index" do
       before { get :index, project_id: project.to_param }
 
       it "renders the template" do
@@ -26,7 +26,7 @@ describe MacrosController do
       end
     end
 
-    describe 'a POST to #execute' do
+    describe '#execute' do
       it "executes a macro" do
         JobExecution.expects(:start_job)
         assert_difference 'Job.count' do
@@ -59,7 +59,7 @@ describe MacrosController do
   end
 
   as_a_project_admin do
-    describe 'a GET to #new' do
+    describe '#new' do
       before { get :new, project_id: project.to_param }
 
       it 'renders the template' do
@@ -67,7 +67,7 @@ describe MacrosController do
       end
     end
 
-    describe 'a GET to #edit' do
+    describe '#edit' do
       describe 'with a macro' do
         before do
           get :edit, project_id: project.to_param, id: macro.id
@@ -85,7 +85,7 @@ describe MacrosController do
       end
     end
 
-    describe 'a POST to #create' do
+    describe '#create' do
       describe 'with a valid macro' do
         before do
           post :create, project_id: project.to_param, macro: {
@@ -111,7 +111,7 @@ describe MacrosController do
       end
     end
 
-    describe 'a PUT to #update' do
+    describe '#update' do
       describe 'with a valid macro' do
         before do
           post :update, project_id: project.to_param, id: macro.id, macro: {name: 'New'}
@@ -137,11 +137,7 @@ describe MacrosController do
       end
     end
 
-    unauthorized :delete, :destroy, project_id: :foo, id: 1
-  end
-
-  as_a_super_admin do
-    describe 'a DELETE to #destroy' do
+    describe '#destroy' do
       before do
         delete :destroy, project_id: project.to_param, id: macro.id
       end
