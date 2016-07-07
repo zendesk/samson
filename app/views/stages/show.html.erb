@@ -22,7 +22,7 @@
     <% end %>
 
     <div class="pull-right">
-      <%= link_to "History", versions_path(item_id: @stage.id, item_type: @stage.class.name) %>
+      <%= link_to_history @stage %>
     </div>
   </div>
 

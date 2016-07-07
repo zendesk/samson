@@ -414,4 +414,25 @@ describe User do
       user.starred_project?(project).must_equal false
     end
   end
+
+  describe "versioning" do
+    let(:user) { users(:admin) }
+
+    around { |t| PaperTrail.with_logging(&t) }
+
+    it "tracks important changes" do
+      user.update_attributes!(name: "Foo")
+      user.versions.size.must_equal 1
+    end
+
+    it "ignores unimportant changes" do
+      user.update_attributes!(updated_at: 1.second.from_now)
+      user.versions.size.must_equal 0
+    end
+
+    it "ignores sensitive changes" do
+      user.update_attributes!(token: 'secret')
+      user.versions.size.must_equal 0
+    end
+  end
 end
