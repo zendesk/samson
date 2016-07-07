@@ -14,7 +14,7 @@ module Kubernetes
     }.freeze
 
     self.table_name = 'kubernetes_roles'
-    GENERATED = '-CHANGE-ME-'.freeze
+    GENERATED = '-change-me-'.freeze
 
     has_soft_deletion
 
@@ -27,8 +27,14 @@ module Kubernetes
     before_validation :nilify_service_name
 
     validates :project, presence: true
-    validates :name, presence: true
-    validates :service_name, uniqueness: {scope: :deleted_at, allow_nil: true}
+    validates :name, presence: true, format: Kubernetes::RoleVerifier::VALID_LABEL
+    validates :service_name,
+      uniqueness: {scope: :deleted_at, allow_nil: true},
+      format: Kubernetes::RoleVerifier::VALID_LABEL,
+      allow_nil: true
+    validates :resource_name,
+      uniqueness: {scope: :deleted_at, allow_nil: true},
+      format: Kubernetes::RoleVerifier::VALID_LABEL
 
     scope :not_deleted, -> { where(deleted_at: nil) }
 
@@ -50,10 +56,17 @@ module Kubernetes
           end
         end
 
+        # ensure we have a unique resource name
+        resource_name = deploy.fetch(:metadata).fetch(:name)
+        if where(resource_name: resource_name).exists?
+          resource_name = "#{project.permalink}-#{resource_name}".tr('_', '-')
+        end
+
         create!(
           project: project,
           config_file: config_file.path,
           name: name,
+          resource_name: resource_name,
           service_name: service_name
         )
       end
@@ -90,10 +103,6 @@ module Kubernetes
       ram /= 1024**2 # we store megabyte
 
       {cpu: cpu, ram: ram.round, replicas: replicas}
-    end
-
-    def label_name
-      name.parameterize
     end
 
     private

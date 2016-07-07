@@ -11,6 +11,7 @@ module Kubernetes
     def to_hash
       @to_hash ||= begin
         set_rc_unique_label_key
+        set_name
         set_namespace
         set_replica_target
         set_spec_template_metadata
@@ -123,6 +124,10 @@ module Kubernetes
       template[:spec][:replicas] = @doc.replica_target if template[:kind] == 'Deployment'
     end
 
+    def set_name
+      template[:metadata][:name] = @doc.kubernetes_role.resource_name
+    end
+
     def set_namespace
       template[:metadata][:namespace] = @doc.deploy_group.kubernetes_namespace
     end
@@ -147,9 +152,9 @@ module Kubernetes
           deploy_id: release.deploy_id,
           project_id: release.project_id,
           role_id: role.id,
-          deploy_group: deploy_group.env_value.parameterize,
+          deploy_group: deploy_group.env_value.parameterize.tr('_', '-'),
           revision: release.git_sha,
-          tag: release.git_ref.parameterize
+          tag: release.git_ref.parameterize.tr('_', '-')
         )
       end
     end

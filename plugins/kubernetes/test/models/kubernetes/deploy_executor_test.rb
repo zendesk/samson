@@ -12,7 +12,7 @@ describe Kubernetes::DeployExecutor do
   let(:build) { builds(:docker_build) }
   let(:deploy_group) { stage.deploy_groups.first }
   let(:executor) { Kubernetes::DeployExecutor.new(output, job: job, reference: 'master') }
-  let(:log_url) { "http://foobar.server/api/v1/namespaces/staging/pods/pod-resque_worker/log?container=container1" }
+  let(:log_url) { "http://foobar.server/api/v1/namespaces/staging/pods/pod-resque-worker/log?container=container1" }
 
   before do
     stage.update_column :kubernetes, true
@@ -83,8 +83,14 @@ describe Kubernetes::DeployExecutor do
         namespace: 'staging',
         deploy_group: deploy_group
       )
-      stub_request(:get, "http://foobar.server/apis/extensions/v1beta1/namespaces/staging/deployments/some-project-rc").
-        to_return(status: 404) # checks for previous deploys ... but there are none
+      stub_request(
+        :get,
+        "http://foobar.server/apis/extensions/v1beta1/namespaces/staging/deployments/test-app-server"
+      ).to_return(status: 404) # checks for previous deploys ... but there are none
+      stub_request(
+        :get,
+        "http://foobar.server/apis/extensions/v1beta1/namespaces/staging/deployments/test-resque-worker"
+      ).to_return(status: 404) # checks for previous deploys ... but there are none
       stub_request(:post, "http://foobar.server/apis/extensions/v1beta1/namespaces/staging/deployments").
         to_return(body: "{}") # creates deployment
       executor.stubs(:sleep)
@@ -97,7 +103,7 @@ describe Kubernetes::DeployExecutor do
 
     it "succeeds" do
       assert execute!
-      out.must_include "resque_worker: Live\n"
+      out.must_include "resque-worker: Live\n"
       out.must_include "SUCCESS"
       out.wont_include "BigDecimal" # properly serialized configs
     end
@@ -108,7 +114,7 @@ describe Kubernetes::DeployExecutor do
         GitRepository.any_instance.expects(:file_content).with('Dockerfile', anything).returns nil
         assert execute!
         out.must_include "Not creating a Build"
-        out.must_include "resque_worker: Live\n"
+        out.must_include "resque-worker: Live\n"
         out.must_include "SUCCESS"
       end
     end
@@ -128,7 +134,7 @@ describe Kubernetes::DeployExecutor do
         e = assert_raises Samson::Hooks::UserError do
           execute!
         end
-        e.message.must_equal "No config for role resque_worker and group Pod 100 found, add it on the stage page."
+        e.message.must_equal "No config for role resque-worker and group Pod 100 found, add it on the stage page."
       end
 
       it "fails when no role is setup in the project" do
@@ -248,7 +254,7 @@ describe Kubernetes::DeployExecutor do
           returns(read_kubernetes_sample_file('kubernetes_deployment.yml'))
 
         # check if the job already exists ... it does not
-        stub_request(:get, "http://foobar.server/apis/extensions/v1beta1/namespaces/staging/jobs/test").
+        stub_request(:get, "http://foobar.server/apis/extensions/v1beta1/namespaces/staging/jobs/test-resque-worker").
           to_return(status: 404)
 
         # create job
@@ -259,7 +265,7 @@ describe Kubernetes::DeployExecutor do
       it "runs only jobs" do
         kubernetes_roles(:app_server).delete
         assert execute!
-        out.must_include "resque_worker: Live\n"
+        out.must_include "resque-worker: Live\n"
         out.must_include "SUCCESS"
         out.wont_include "stability"
         out.wont_include "deploying jobs" # not announcing that we deploy jobs since there is nothing else
@@ -268,7 +274,7 @@ describe Kubernetes::DeployExecutor do
 
       it "runs jobs and then the deploy" do
         assert execute!
-        out.must_include "resque_worker: Live\n"
+        out.must_include "resque-worker: Live\n"
         out.must_include "SUCCESS"
         out.must_include "stability" # testing deploy for stability
         out.must_include "deploying jobs" # announcing that we deploy jobs first
@@ -296,7 +302,7 @@ describe Kubernetes::DeployExecutor do
       Kubernetes::ReleaseDoc.any_instance.stubs(:desired_pod_count).returns(1.5)
       pod_reply[:items] << pod_reply[:items].first
       assert execute!
-      out.must_include "resque_worker: Live\n  resque_worker: Live"
+      out.must_include "resque-worker: Live\n  resque-worker: Live"
       out.must_include "SUCCESS"
     end
 
@@ -314,7 +320,7 @@ describe Kubernetes::DeployExecutor do
       stop_after_first_iteration
       refute execute!
 
-      out.must_include "resque_worker: Waiting (Pending, not Ready)\n"
+      out.must_include "resque-worker: Waiting (Pending, not Ready)\n"
       out.must_include "STOPPED"
     end
 
@@ -323,7 +329,7 @@ describe Kubernetes::DeployExecutor do
 
       refute execute!
 
-      out.must_include "resque_worker: Restarted\n"
+      out.must_include "resque-worker: Restarted\n"
       out.must_include "UNSTABLE"
     end
 
@@ -347,7 +353,7 @@ describe Kubernetes::DeployExecutor do
       stop_after_first_iteration
       refute execute!
 
-      out.must_include "resque_worker: Waiting (Running, not Ready)\n"
+      out.must_include "resque-worker: Waiting (Running, not Ready)\n"
       out.must_include "STOPPED"
     end
 
@@ -355,7 +361,7 @@ describe Kubernetes::DeployExecutor do
       pod_status[:containerStatuses][0][:restartCount] = 1
       executor.instance_variable_set(:@testing_for_stability, 0)
       refute execute!
-      out.must_include "resque_worker: Restarted"
+      out.must_include "resque-worker: Restarted"
       out.must_include "UNSTABLE - service is restarting"
     end
 
@@ -366,7 +372,7 @@ describe Kubernetes::DeployExecutor do
       stop_after_first_iteration
       refute execute!
 
-      out.must_include "resque_worker: Missing\n"
+      out.must_include "resque-worker: Missing\n"
       out.must_include "STOPPED"
     end
 
@@ -397,11 +403,11 @@ describe Kubernetes::DeployExecutor do
         refute execute!
 
         # failed
-        out.must_include "resque_worker: Restarted\n"
+        out.must_include "resque-worker: Restarted\n"
         out.must_include "UNSTABLE"
 
         # correct debugging output
-        out.scan(/Pod 100 pod pod-(\S+)/).flatten.uniq.must_equal ["resque_worker:"] # logs and events only for bad pod
+        out.scan(/Pod 100 pod pod-(\S+)/).flatten.uniq.must_equal ["resque-worker:"] # logs and events only for bad pod
         out.must_include(
           "EVENTS:\nFailedScheduling: fit failure on node (ip-1-2-3-4)\nfit failure on node (ip-2-3-4-5)\n\n"
         ) # no repeated events

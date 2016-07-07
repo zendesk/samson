@@ -52,6 +52,10 @@ describe Kubernetes::ResourceTemplate do
       )
     end
 
+    it "overrides the name" do
+      template.to_hash[:metadata][:name].must_equal 'test-app-server'
+    end
+
     describe "containers" do
       let(:result) { template.to_hash }
       let(:container) { result.fetch(:spec).fetch(:template).fetch(:spec).fetch(:containers).first }
