@@ -2,18 +2,22 @@ require 'concurrent'
 
 module Samson::Tasks
   class LockCleaner
+    INTERVAL = 60
+
+    # stop by calling .shutdown on the result
     def self.start
-      new.start
+      new.send(:build).execute
     end
 
-    def start
-      task.tap(&:execute)
+    private
+
+    def build
+      options = {run_now: true, execution_interval: INTERVAL, timeout_interval: 10}
+      Concurrent::TimerTask.new(options) { run }.with_observer(self)
     end
 
-    def task
-      @task ||= Concurrent::TimerTask.new(run_now: true, execution_interval: 60, timeout_interval: 10) do
-        Lock.remove_expired_locks
-      end.with_observer(self)
+    def run
+      Lock.remove_expired_locks
     end
 
     # called by Concurrent::TimerTask

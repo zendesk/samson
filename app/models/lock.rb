@@ -20,20 +20,26 @@ class Lock < ActiveRecord::Base
     stage_id.blank?
   end
 
+  # short summary used in helpers ... keep in sync with locks/_lock.html.erb
   def summary
-    "Locked by #{locked_by} #{time_ago_in_words(created_at)} ago#{unlock_at}"
+    "Locked: #{reason} by #{locked_by} #{time_ago_in_words(created_at)} ago#{unlock_summary}"
   end
 
   def locked_by
     (user.try(:name) || 'Unknown user').to_s
   end
 
-  def unlock_at
-    " and will unlock in #{time_ago_in_words(delete_at)}" if delete_at
+  def unlock_summary
+    return unless delete_at
+    if delete_at < (Samson::Tasks::LockCleaner::INTERVAL * 2).seconds.ago
+      " and automatic unlock is not working"
+    else
+      " and will unlock in #{time_ago_in_words(delete_at)}"
+    end
   end
 
   def reason
-    description.blank? ? "Description not given." : description
+    description.blank? ? "Description not given" : description
   end
 
   def self.remove_expired_locks

@@ -5,5 +5,5 @@
     <%= lock_icon %> Deployments to <%= lock.global? ? "ALL STAGES" : "this stage" %> were locked
   <% end %>
   <%= lock.reason %> by <%= lock.locked_by %> <%= time_ago_in_words(lock.created_at) %>
-  ago<%= lock.unlock_at %>.
+  ago<%= lock.unlock_summary %>.
 </div>
