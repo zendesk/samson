@@ -1,0 +1,11 @@
+deployer:
+  identifier: 'Udeployer'
+
+deployer_buddy:
+  identifier: 'Ubuddy'
+
+super_admin:
+  identifier: 'Uadmin'
+
+github_viewer:
+  identifier: 'Ugithubviewer'

@@ -66,6 +66,11 @@ PATH
     samson_pipelines (0.0.0)
 
 PATH
+  remote: plugins/slack_app
+  specs:
+    samson_slack_app (0.0.0)
+
+PATH
   remote: plugins/slack_webhooks
   specs:
     samson_slack_webhooks (0.0.0)
@@ -551,6 +556,7 @@ DEPENDENCIES
   samson_kubernetes!
   samson_new_relic!
   samson_pipelines!
+  samson_slack_app!
   samson_slack_webhooks!
   samson_zendesk!
   sass-rails
@@ -570,4 +576,4 @@ RUBY VERSION
    ruby 2.2.3p173
 
 BUNDLED WITH
-   1.12.4
+   1.12.5

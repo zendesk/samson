@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20160715165508) do
+ActiveRecord::Schema.define(version: 20160717144254) do
 
   create_table "builds", force: :cascade do |t|
     t.integer  "project_id",                                       null: false
@@ -69,6 +69,15 @@ ActiveRecord::Schema.define(version: 20160715165508) do
 
   add_index "deploy_groups_stages", ["deploy_group_id"], name: "index_deploy_groups_stages_on_deploy_group_id", using: :btree
   add_index "deploy_groups_stages", ["stage_id"], name: "index_deploy_groups_stages_on_stage_id", using: :btree
+
+  create_table "deploy_response_urls", force: :cascade do |t|
+    t.integer  "deploy_id",    limit: 4,   null: false
+    t.string   "response_url", limit: 255, null: false
+    t.datetime "created_at",               null: false
+    t.datetime "updated_at",               null: false
+  end
+
+  add_index "deploy_response_urls", ["deploy_id"], name: "index_deploy_response_urls_on_deploy_id", unique: true, using: :btree
 
   create_table "deploys", force: :cascade do |t|
     t.integer  "stage_id",   limit: 4,   null: false
@@ -332,6 +341,16 @@ ActiveRecord::Schema.define(version: 20160715165508) do
 
   add_index "slack_channels", ["stage_id"], name: "index_slack_channels_on_stage_id", using: :btree
   add_index "secrets", ["id"], name: "index_secrets_on_id", unique: true, length: {"id"=>191}, using: :btree
+
+  create_table "slack_identifiers", force: :cascade do |t|
+    t.integer  "user_id",    limit: 4
+    t.text     "identifier", limit: 65535, null: false
+    t.datetime "created_at",               null: false
+    t.datetime "updated_at",               null: false
+  end
+
+  add_index "slack_identifiers", ["identifier"], name: "index_slack_identifiers_on_identifier", length: {"identifier"=>12}, using: :btree
+  add_index "slack_identifiers", ["user_id"], name: "index_slack_identifiers_on_user_id", unique: true, using: :btree
 
   create_table "slack_webhooks", force: :cascade do |t|
     t.text     "webhook_url", limit: 65535, null: false
