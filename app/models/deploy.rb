@@ -130,11 +130,31 @@ class Deploy < ActiveRecord::Base
   end
 
   def buddy_name
-    user.id == buddy_id ? "bypassed" : buddy.try(:name)
+    user.id == buddy_id ? "bypassed" : r_buddy.try(:name)
   end
 
   def buddy_email
-    user.id == buddy_id ? "bypassed" : buddy.try(:email)
+    user.id == buddy_id ? "bypassed" : r_buddy.try(:email)
+  end
+
+  def r_buddy
+    User.unscoped { buddy_id > 0 ? User.find(buddy_id) : nil }
+  end
+
+  def r_project
+    Project.unscoped { Project.find(r_stage.project_id) }
+  end
+
+  def r_stage
+    Stage.unscoped { Stage.find(stage_id) }
+  end
+
+  def r_summary
+    "#{summary_action} #{short_reference} to #{r_stage.name}"
+  end
+
+  def r_user
+    User.unscoped { job.user_id > 0 ? User.find(job.user_id) : nil }
   end
 
   def url
