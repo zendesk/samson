@@ -1,5 +1,6 @@
 require 'soft_deletion'
 require 'digest/md5'
+require 'csv'
 
 class User < ActiveRecord::Base
   include Searchable
