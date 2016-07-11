@@ -31,7 +31,7 @@ describe Release do
       assert_equal 1, release.number
     end
 
-    it 'uses the build number if build number is 1' do
+    it 'uses the build number if build number is not given' do
       project.releases.destroy_all
       release = project.releases.create!(author: author, commit: "bar")
       assert_equal 1, release.number
