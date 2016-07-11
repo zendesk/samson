@@ -34,8 +34,9 @@ class CsvExportJob < ActiveJob::Base
     filename = csv_export.path_file
     filter = csv_export.filters
 
-    @deploys = Deploy.joins('INNER JOIN stages ON stages.id = deploys.stage_id INNER JOIN jobs ON jobs.id =' \
-                            ' deploys.job_id').unscope(where: :deleted_at).where(filter)
+    @deploys = Deploy.joins(
+      'INNER JOIN stages ON stages.id = deploys.stage_id INNER JOIN jobs ON jobs.id = deploys.job_id'
+    ).unscope(where: :deleted_at).where(filter)
     summary = ["-", "Generated At", csv_export.updated_at, "Deploys", @deploys.count.to_s]
     filters_applied = ["-", "Filters", filter.to_json]
 

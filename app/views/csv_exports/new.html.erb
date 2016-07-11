@@ -31,7 +31,7 @@
       <div class="form-group">
         <%= label_tag :project, "Project", class: "col-lg-2 control-label" %>
         <% projects = [['', 0]] + Project.pluck(:name, :id) +
-           Project.unscoped.where("deleted_at IS NOT NULL").map { |p| ["(deleted) #{p.name}", p.id] } %>
+           Project.unscoped.where("deleted_at IS NOT NULL").pluck(:name, :id).map { |p| ["(deleted) #{p[0]}", p[1]] } %>
         <div class="col-lg-4">
           <%= select_tag(:project, options_for_select(projects, 0), class: "form-control") %>
         </div>

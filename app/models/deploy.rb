@@ -23,13 +23,8 @@ class Deploy < ActiveRecord::Base
     [super, commit]
   end
 
-  def summary(with_deleted: false)
-    if with_deleted
-      "#{job.user.name} #{deploy_buddy(with_deleted: true)} #{summary_action} #{short_reference} to"\
-      " #{stage_with_deleted.name}"
-    else
-      "#{job.user.name} #{deploy_buddy} #{summary_action} #{short_reference} to #{stage.name}"
-    end
+  def summary
+    "#{job.user.name} #{deploy_buddy} #{summary_action} #{short_reference} to #{stage_with_deleted.name}"
   end
 
   def summary_for_process
@@ -147,9 +142,11 @@ class Deploy < ActiveRecord::Base
   end
 
   def to_csv
-    [id, project_with_deleted.name, summary(with_deleted: true), commit, job.status, updated_at,
-     start_time, user_with_deleted.try(:name), user_with_deleted.try(:email), buddy_name, buddy_email,
-     stage_with_deleted.production, stage_with_deleted.no_code_deployed, project_with_deleted.deleted_at]
+    [
+      id, project_with_deleted.name, summary, commit, job.status, updated_at,
+      start_time, user_with_deleted.try(:name), user_with_deleted.try(:email), buddy_name, buddy_email,
+      stage_with_deleted.production, stage_with_deleted.no_code_deployed, project_with_deleted.deleted_at
+    ]
   end
 
   private
@@ -206,12 +203,8 @@ class Deploy < ActiveRecord::Base
     end
   end
 
-  def deploy_buddy(with_deleted: false)
-    if with_deleted
-      return unless stage_with_deleted.deploy_requires_approval?
-    else
-      return unless stage.deploy_requires_approval?
-    end
+  def deploy_buddy
+    return unless stage_with_deleted.deploy_requires_approval?
 
     if buddy.nil? && pending?
       "(waiting for a buddy)"

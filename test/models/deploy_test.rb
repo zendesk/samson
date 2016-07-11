@@ -31,7 +31,7 @@ describe Deploy do
     it "shows soft delete stage when with_deleted" do
       deploy.stage.soft_delete!
       deploy.reload
-      deploy.summary(with_deleted: true).must_equal "Deployer  deployed baz to Staging"
+      deploy.summary.must_equal "Deployer  deployed baz to Staging"
     end
 
     describe "when buddy was required" do
@@ -265,19 +265,20 @@ describe Deploy do
     before { Stage.any_instance.stubs(:deploy_requires_approval?).returns true }
 
     it "returns array with deleted object values" do
-      project.update_attributes(repository_url: "https://github.com/samson-test-org/example-project")
       prod_deploy.update_attributes(buddy_id: other_user.id)
       prod_deploy.job.user.soft_delete!
       prod_deploy.buddy.soft_delete!
-      prod_deploy.stage.project.soft_delete!
+      prod_deploy.stage.project.update_column(:deleted_at, Time.now)
       prod_deploy.stage.soft_delete
-      line = prod_deploy.to_csv
-      line[0].must_equal prod_deploy.id
-      line[1].must_equal project.name
-      line[4].must_equal job.status
-      line[7].must_equal deployer.name
-      line[9].must_equal other_user.name
-      line[11].must_equal prod.production
+      prod_deploy.to_csv.values_at(0, 1, 4, 7, 9, 11, 13).must_equal [
+        prod_deploy.id,
+        project.name,
+        job.status,
+        deployer.name,
+        other_user.name,
+        prod.production,
+        project.deleted_at
+      ]
     end
   end
 
