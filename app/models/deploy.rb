@@ -23,8 +23,13 @@ class Deploy < ActiveRecord::Base
     [super, commit]
   end
 
-  def summary
-    "#{job.user.name} #{deploy_buddy} #{summary_action} #{short_reference} to #{stage.name}"
+  def summary(with_deleted: false)
+    if with_deleted
+      "#{job.user.name} #{deploy_buddy(with_deleted: true)} #{summary_action} #{short_reference} to"\
+      " #{stage_with_deleted.name}"
+    else
+      "#{job.user.name} #{deploy_buddy} #{summary_action} #{short_reference} to #{stage.name}"
+    end
   end
 
   def summary_for_process
@@ -130,38 +135,40 @@ class Deploy < ActiveRecord::Base
   end
 
   def buddy_name
-    user.id == buddy_id ? "bypassed" : r_buddy.try(:name)
+    user.id == buddy_id ? "bypassed" : buddy_with_deleted.try(:name)
   end
 
   def buddy_email
-    user.id == buddy_id ? "bypassed" : r_buddy.try(:email)
-  end
-
-  def r_buddy
-    User.unscoped { buddy_id > 0 ? User.find(buddy_id) : nil }
-  end
-
-  def r_project
-    Project.unscoped { Project.find(r_stage.project_id) }
-  end
-
-  def r_stage
-    Stage.unscoped { Stage.find(stage_id) }
-  end
-
-  def r_summary
-    "#{summary_action} #{short_reference} to #{r_stage.name}"
-  end
-
-  def r_user
-    User.unscoped { job.user_id > 0 ? User.find(job.user_id) : nil }
+    user.id == buddy_id ? "bypassed" : buddy_with_deleted.try(:email)
   end
 
   def url
     AppRoutes.url_helpers.project_deploy_url(project, self)
   end
 
+  def to_csv
+    [id, project_with_deleted.name, summary(with_deleted: true), commit, job.status, updated_at,
+     start_time, user_with_deleted.try(:name), user_with_deleted.try(:email), buddy_name, buddy_email,
+     stage_with_deleted.production, stage_with_deleted.no_code_deployed, project_with_deleted.deleted_at]
+  end
+
   private
+
+  def buddy_with_deleted
+    buddy || (buddy_id && User.with_deleted { User.find(buddy_id) })
+  end
+
+  def project_with_deleted
+    Project.unscoped { Project.find(stage_with_deleted.project_id) }
+  end
+
+  def stage_with_deleted
+    Stage.unscoped { Stage.find(stage_id) }
+  end
+
+  def user_with_deleted
+    User.unscoped { job.user_id > 0 ? User.find(job.user_id) : nil }
+  end
 
   def summary_action
     if pending?
@@ -199,8 +206,12 @@ class Deploy < ActiveRecord::Base
     end
   end
 
-  def deploy_buddy
-    return unless stage.deploy_requires_approval?
+  def deploy_buddy(with_deleted: false)
+    if with_deleted
+      return unless stage_with_deleted.deploy_requires_approval?
+    else
+      return unless stage.deploy_requires_approval?
+    end
 
     if buddy.nil? && pending?
       "(waiting for a buddy)"

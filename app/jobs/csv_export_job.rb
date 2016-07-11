@@ -34,7 +34,8 @@ class CsvExportJob < ActiveJob::Base
     filename = csv_export.path_file
     filter = csv_export.filters
 
-    @deploys = Deploy.joins('INNER JOIN stages ON stages.id = deploys.stage_id INNER JOIN jobs ON jobs.id = deploys.job_id').unscope(where: :deleted_at).where(filter)
+    @deploys = Deploy.joins('INNER JOIN stages ON stages.id = deploys.stage_id INNER JOIN jobs ON jobs.id =' \
+                            ' deploys.job_id').unscope(where: :deleted_at).where(filter)
     summary = ["-", "Generated At", csv_export.updated_at, "Deploys", @deploys.count.to_s]
     filters_applied = ["-", "Filters", filter.to_json]
 
@@ -45,11 +46,7 @@ class CsvExportJob < ActiveJob::Base
         "Production Flag", "No code deployed", "Project Deleted On"
       ]
       @deploys.find_each do |deploy|
-        csv << [
-          deploy.id, deploy.r_project.name, deploy.r_summary, deploy.commit, deploy.job.status, deploy.updated_at,
-          deploy.start_time, deploy.r_user.try(:name), deploy.r_user.try(:email), deploy.buddy_name, deploy.buddy_email,
-          deploy.r_stage.production, deploy.r_stage.no_code_deployed, deploy.r_project.deleted_at
-        ]
+        csv << deploy.to_csv
       end
       csv << summary
       csv << filters_applied

@@ -28,6 +28,12 @@ describe Deploy do
       deploy.summary.must_equal "Deleted User  deployed baz to Staging"
     end
 
+    it "shows soft delete stage when with_deleted" do
+      deploy.stage.soft_delete!
+      deploy.reload
+      deploy.summary(with_deleted: true).must_equal "Deployer  deployed baz to Staging"
+    end
+
     describe "when buddy was required" do
       before { Stage.any_instance.stubs(:deploy_requires_approval?).returns true }
 
@@ -99,7 +105,7 @@ describe Deploy do
     end
   end
 
-  describe "#csv_buddy and #buddy_email" do
+  describe "#buddy_name and #buddy_email" do
     before { @deploy = create_deploy! }
 
     describe "no buddy present" do
@@ -120,6 +126,14 @@ describe Deploy do
       it "returns the name and email of the buddy when not bypassed" do
         other_user = users(:deployer_buddy)
         @deploy.stubs(:buddy).returns(other_user)
+        @deploy.buddy_name.must_equal other_user.name
+        @deploy.buddy_email.must_equal other_user.email
+      end
+
+      it "returns the name and email of the deleted buddy when not bypassed" do
+        other_user = users(:deployer_buddy)
+        @deploy.stubs(:buddy).returns(other_user)
+        users(:deployer_buddy).delete
         @deploy.buddy_name.must_equal other_user.name
         @deploy.buddy_email.must_equal other_user.email
       end
@@ -238,6 +252,32 @@ describe Deploy do
   describe "#cache_key" do
     it "includes self and commit" do
       deploys(:succeeded_test).cache_key.must_equal ["deploys/178003093-20140102201000000000000", "staging"]
+    end
+  end
+
+  describe "to_csv associations with_deleted" do
+    let(:deployer) { users(:super_admin) }
+    let(:other_user) { users(:deployer_buddy) }
+    let(:prod) { stages(:test_production) }
+    let(:prod_deploy) { deploys(:succeeded_production_test) }
+    let(:job) { jobs(:succeeded_production_test) }
+
+    before { Stage.any_instance.stubs(:deploy_requires_approval?).returns true }
+
+    it "returns array with deleted object values" do
+      project.update_attributes(repository_url: "https://github.com/samson-test-org/example-project")
+      prod_deploy.update_attributes(buddy_id: other_user.id)
+      prod_deploy.job.user.soft_delete!
+      prod_deploy.buddy.soft_delete!
+      prod_deploy.stage.project.soft_delete!
+      prod_deploy.stage.soft_delete
+      line = prod_deploy.to_csv
+      line[0].must_equal prod_deploy.id
+      line[1].must_equal project.name
+      line[4].must_equal job.status
+      line[7].must_equal deployer.name
+      line[9].must_equal other_user.name
+      line[11].must_equal prod.production
     end
   end
 
