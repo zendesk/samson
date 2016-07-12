@@ -44,8 +44,11 @@ class Release < ActiveRecord::Base
   private
 
   def assign_release_number
-    default_number = 1
-    return if number != default_number && !number.nil?
+    # Detect whether the number has been overwritten by params, e.g. using the
+    # release-number-from-ci plugin.
+    # DefaultNumber is the default value assigned to release#number by ActiveRecord.
+    DefaultNumber = 1
+    return if number != DefaultNumber && !number.nil?
 
     latest_release_number = project.releases.last.try(:number) || 0
     self.number = latest_release_number + 1
