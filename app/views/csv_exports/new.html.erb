@@ -1,9 +1,8 @@
-<h1>Request a CSV Report</h1>
+<h1>Request Deploys Report</h1>
 
 <section>
   <div class="csv-deploy-filters clearfix">
     <%= form_tag csv_exports_path, class: "form-horizontal" do %>
-      <div><strong>Deploy reports</strong></div>
       <div class="form-group">
         <%= label_tag :start_date, "Start Date:", class: "col-lg-2 control-label" %>
         <div class="col-lg-2">
@@ -43,11 +42,9 @@
       </div>
     <% end %>
   </div>
-  <% if current_user.try(:admin?) %>
-    <div class="clearfix">
-      <hr />
-      <div><strong>Admin reports</strong></div>
-      <div><%= link_to "Download Users CSV Report", admin_users_path(format: "csv") %></div>
-    </div>
-  <% end %>
+  <div class="clearfix">
+    <hr />
+    <div><strong>Other reports</strong></div>
+    <div><%= link_to "Create Users Report", new_csv_export_path(type: :users) %></div>
+  </div>
 </section>

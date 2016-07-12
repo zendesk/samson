@@ -188,8 +188,64 @@ describe User do
   end
 
   describe ".to_csv" do
-    it "generates csv" do
-      User.to_csv.split("\n").size.must_equal User.count + 1 + UserProjectRole.count
+    before { users(:super_admin).soft_delete! }
+
+    it "generates csv with default options" do
+      csv_test({}, User.count + UserProjectRole.count)
+    end
+
+    it "generates csv with inherited option" do
+      csv_test({inherited: true}, User.count * (1 + Project.count))
+    end
+
+    it "generates csv with specific project option" do
+      csv_test({project_id: Project.first.id}, User.count)
+    end
+
+    it "generates csv with deleted option" do
+      csv_test({deleted: true}, User.count + UserProjectRole.count + 1)
+    end
+
+    it "generates csv with specific user option and user is deleted" do
+      csv_test({user_id: users(:super_admin).id}, 1 + Project.count)
+    end
+
+    def csv_test(options = {}, expected = {})
+      meta_rows = 3
+      User.to_csv(options).split("\n").size.must_equal expected + meta_rows
+      User.to_csv(options).split("\n")[-2].split(",")[-1].to_i.must_equal expected
+    end
+  end
+
+  describe "#csv_line" do
+    let(:user) { users(:project_deployer) }
+    let(:project) { projects(:test) }
+
+    it "returns project line" do
+      user.csv_line(project).must_equal(
+        [user.id, user.name, user.email, project.id, project.name, Role::DEPLOYER.name, nil]
+      )
+    end
+
+    it "returns system line with deleted user" do
+      user.soft_delete!
+      user.csv_line(nil).must_equal(
+        [user.id, user.name, user.email, "", "SYSTEM", Role::VIEWER.name, user.deleted_at]
+      )
+    end
+  end
+
+  describe "#effective project role" do
+    let(:user) { users(:project_deployer) }
+    let(:project) { projects(:test) }
+
+    it "returns Admin when project deployer and system super admin" do
+      user.update_attribute(:role_id, Role::SUPER_ADMIN.id)
+      user.effective_project_role(project).must_equal Role::ADMIN.name
+    end
+
+    it "returns Deployer when project deployer and system viewer" do
+      user.effective_project_role(project).must_equal Role::DEPLOYER.name
     end
   end
 

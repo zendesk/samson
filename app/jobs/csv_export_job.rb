@@ -30,7 +30,7 @@ class CsvExportJob < ActiveJob::Base
     Airbrake.notify(e, error_message: "Export #{csv_export.id} failed.")
   end
 
-  # Relper method to removes the default soft_deletion scope for these models for the report
+  # Helper method to removes the default soft_deletion scope for these models for the report
   def remove_deleted_scope_and_create_report(csv_export)
     Deploy.with_deleted do
       Stage.with_deleted do

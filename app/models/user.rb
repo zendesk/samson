@@ -54,23 +54,58 @@ class User < ActiveRecord::Base
     scope
   end
 
-  def self.to_csv
-    @users = User.order(:id)
+  def self.to_csv(
+    inherited: false, deleted: false, project_id: nil, user_id: nil,
+    datetime: (Time.now.strftime "%Y%m%d_%H%M")
+  )
+    inherited = true if project_id || user_id
+    users = (deleted || user_id) ? User.unscoped : User
+    users = users.order(:id)
+    users = users.where(id: user_id) if user_id
+    if inherited
+      permissions_projects = project_id ? Project.where(id: project_id) : Project
+      total = project_id ? users.count : (1 + permissions_projects.count) * users.count
+    else
+      total = users.count + UserProjectRole.joins(:user, :project).count
+    end
+    summary = ["-", "Generated At", datetime, "Users", users.count.to_s, "Total entries", total.to_s]
+    options_applied = [
+      "-", "Options",
+      {
+        inherited: inherited,
+        deleted: deleted,
+        project_id: project_id,
+        user_id: user_id
+      }.to_json
+    ]
+
     CSV.generate do |csv|
-      csv << [
-        "id", "name", "email", "projectiD", "project", "role", User.count.to_s + " Users",
-        (User.count + UserProjectRole.joins(:user, :project).count).to_s + " Total entries"
-      ]
-      @users.find_each do |user|
-        csv << [user.id, user.name, user.email, "", "SYSTEM", user.role.name]
-        UserProjectRole.where(user_id: user.id).joins(:project).find_each do |user_project_role|
-          csv << [
-            user.id, user.name, user.email, user_project_role.project_id,
-            user_project_role.project.name, user_project_role.role.name
-          ]
+      csv << ["id", "name", "email", "projectiD", "project", "role", "deleted at"]
+      users.each do |user|
+        csv << user.csv_line(nil) unless project_id
+        if inherited
+          permissions_projects.find_each { |project| csv << user.csv_line(project) }
+        else
+          user.user_project_roles.joins(:project).find_each do |user_project_role|
+            csv << user.csv_line(user_project_role.project)
+          end
         end
       end
+      csv << summary
+      csv << options_applied
     end
+  end
+
+  def csv_line(project)
+    [
+      id,
+      name,
+      email,
+      project ? project.id : "",
+      project ? project.name : "SYSTEM",
+      project ? effective_project_role(project) : role.name,
+      deleted_at
+    ]
   end
 
   def self.create_or_update_from_hash(hash)
@@ -119,6 +154,15 @@ class User < ActiveRecord::Base
 
   def project_role_for(project)
     user_project_roles.find_by(project: project)
+  end
+
+  def effective_project_role(project)
+    if role_id == Role::SUPER_ADMIN.id || role_id == Role::ADMIN.id
+      Role::ADMIN.name
+    else
+      project_role = project_role_for(project)
+      role_id.to_i >= project_role.try(:role_id).to_i ? role.name : project_role.role.name
+    end
   end
 
   def record_project_role_change
