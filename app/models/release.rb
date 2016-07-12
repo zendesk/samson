@@ -5,6 +5,10 @@ class Release < ActiveRecord::Base
 
   before_create :assign_release_number
 
+  # DEFAULT_RELEASE_NUMBER is the default value assigned to release#number by the database.
+  # This constant is here for convenience - the value that the database uses is in db/schema.rb.
+  DEFAULT_RELEASE_NUMBER = 1
+
   def self.sort_by_version
     order(number: :desc)
   end
@@ -46,9 +50,7 @@ class Release < ActiveRecord::Base
   def assign_release_number
     # Detect whether the number has been overwritten by params, e.g. using the
     # release-number-from-ci plugin.
-    # DefaultNumber is the default value assigned to release#number by ActiveRecord.
-    DefaultNumber = 1
-    return if number != DefaultNumber && !number.nil?
+    return if number != DEFAULT_RELEASE_NUMBER && !number.nil?
 
     latest_release_number = project.releases.last.try(:number) || 0
     self.number = latest_release_number + 1
