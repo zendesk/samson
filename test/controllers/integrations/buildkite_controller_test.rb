@@ -64,7 +64,7 @@ describe Integrations::BuildkiteController do
     end
   end
 
-  context 'when the release_params hook gets trigger' do
+  context 'when the buildkite_release_params hook gets trigger' do
     before do
       project.releases.destroy_all
       project.builds.destroy_all
@@ -76,7 +76,7 @@ describe Integrations::BuildkiteController do
       Build.any_instance.stubs(:validate_git_reference).returns(true)
       stub_request(:post, "https://api.github.com/repos/bar/foo/releases").
         to_return(status: 200, body: "", headers: {})
-      Samson::Hooks.callback :release_params do |_|
+      Samson::Hooks.callback :buildkite_release_params do |_|
         [[:number, 9]]
       end
     end
