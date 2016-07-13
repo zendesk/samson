@@ -33,7 +33,8 @@ module Samson
       :after_job_execution,
       :job_additional_vars,
       :deploy_group_permitted_params,
-      :edit_deploy_group
+      :edit_deploy_group,
+      :buildkite_release_params
     ].freeze
 
     INTERNAL_HOOKS = [:class_defined].freeze

@@ -45,10 +45,14 @@ class Integrations::BaseController < ApplicationController
     raise NotImplementedError, "#deploy? must be overridden in a subclass"
   end
 
+  def release_params
+    { commit: commit, author: user }
+  end
+
   def create_new_release
     unless project.last_release_contains_commit?(commit)
       release_service = ReleaseService.new(project)
-      release_service.create_release!(commit: commit, author: user)
+      release_service.create_release!(release_params)
     end
   end
 

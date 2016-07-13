@@ -63,4 +63,26 @@ describe Integrations::BuildkiteController do
       response.status.must_equal 200
     end
   end
+
+  context 'when the buildkite_release_params hook gets trigger' do
+    let(:buildkite_build_number) { lambda { |_, _| [[:number, 9]] } }
+    before do
+      project.releases.destroy_all
+      project.builds.destroy_all
+      Integrations::BuildkiteController.any_instance.stubs(:project).returns(project)
+      project.stubs(:create_releases_for_branch?).returns(true)
+      Build.any_instance.stubs(:validate_git_reference).returns(true)
+      stub_request(:post, "https://api.github.com/repos/bar/foo/releases").
+        to_return(status: 200, body: "", headers: {})
+    end
+
+    it 'creates the release with the buildkite build number' do
+      Samson::Hooks.with_callback(:buildkite_release_params, buildkite_build_number) do |_|
+        post :create, payload.merge(token: project.token), test_route: true
+
+        project.releases.size.must_equal 1
+        project.releases.first.number.must_equal 9
+      end
+    end
+  end
 end

@@ -18,6 +18,7 @@ Current Plugins:
 * [Hipchat](https://github.com/listia/samson_hipchat): Clone of Slack plugin
 * Jenkins
 * Pipelines
+* [ReleaseNumberFromCI](https://github.com/redbubble/samson-release-number-from-ci): A plugin which supports setting specific release number for samson release from CI
 * Slack
 
 ## Enabling Plugins
