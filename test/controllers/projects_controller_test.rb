@@ -318,9 +318,20 @@ describe ProjectsController do
 
   describe "a GET to #show" do
     as_a_viewer do
-      it "does not redirect to the deploys page" do
-        get :show, id: project.to_param
-        assert_response :success
+      describe "as HTML" do
+        it "does not redirect to the deploys page" do
+          get :show, id: project.to_param
+          assert_response :success
+        end
+      end
+
+      describe "as JSON" do
+        it "is json and does not include :token" do
+          get :show, id: project.permalink, format: :json
+          assert_response :success
+          result = JSON.parse(response.body)
+          result.keys.wont_include('token')
+        end
       end
     end
 
