@@ -1,6 +1,6 @@
 class Job < ActiveRecord::Base
   belongs_to :project
-  belongs_to :user
+  belongs_to :user, -> { unscope(where: 'deleted_at') }
 
   has_one :deploy
 

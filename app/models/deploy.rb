@@ -4,7 +4,8 @@ class Deploy < ActiveRecord::Base
   belongs_to :stage, touch: true
   belongs_to :build
   belongs_to :job
-  belongs_to :buddy, class_name: 'User'
+  belongs_to :buddy, -> { unscope(where: "deleted_at") }, class_name: 'User'
+  belongs_to :stage_with_deleted, -> { unscope(where: "deleted_at") }, class_name: 'Stage', foreign_key: 'stage_id'
 
   default_scope { order(created_at: :desc, id: :desc) }
 
@@ -16,6 +17,7 @@ class Deploy < ActiveRecord::Base
   delegate :active?, :pending?, :running?, :cancelling?, :cancelled?, :succeeded?, to: :job
   delegate :finished?, :errored?, :failed?, to: :job
   delegate :production?, :project, to: :stage
+  delegate :project_with_deleted, to: :stage_with_deleted, allow_nil: true
 
   before_validation :trim_reference
 
@@ -130,11 +132,11 @@ class Deploy < ActiveRecord::Base
   end
 
   def buddy_name
-    user.id == buddy_id ? "bypassed" : buddy_with_deleted.try(:name)
+    user.id == buddy_id ? "bypassed" : buddy.try(:name)
   end
 
   def buddy_email
-    user.id == buddy_id ? "bypassed" : buddy_with_deleted.try(:email)
+    user.id == buddy_id ? "bypassed" : buddy.try(:email)
   end
 
   def url
@@ -144,28 +146,12 @@ class Deploy < ActiveRecord::Base
   def to_csv
     [
       id, project_with_deleted.name, summary, commit, job.status, updated_at,
-      start_time, user_with_deleted.try(:name), user_with_deleted.try(:email), buddy_name, buddy_email,
+      start_time, user.try(:name), user.try(:email), buddy_name, buddy_email,
       stage_with_deleted.production, stage_with_deleted.no_code_deployed, project_with_deleted.deleted_at
     ]
   end
 
   private
-
-  def buddy_with_deleted
-    buddy || (buddy_id && User.with_deleted { User.find(buddy_id) })
-  end
-
-  def project_with_deleted
-    Project.unscoped { Project.find(stage_with_deleted.project_id) }
-  end
-
-  def stage_with_deleted
-    Stage.unscoped { Stage.find(stage_id) }
-  end
-
-  def user_with_deleted
-    User.unscoped { job.user_id > 0 ? User.find(job.user_id) : nil }
-  end
 
   def summary_action
     if pending?
