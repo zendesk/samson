@@ -28,6 +28,7 @@ class Project < ActiveRecord::Base
   accepts_nested_attributes_for :stages
 
   scope :alphabetical, -> { order('name') }
+  scope :deleted, -> { unscoped.where('deleted_at IS NOT NULL') }
   scope :with_deploy_groups, -> { includes(stages: [:deploy_groups]) }
 
   scope :ordered_for_user, ->(user) {

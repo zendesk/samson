@@ -7,7 +7,8 @@ class Stage < ActiveRecord::Base
   has_paper_trail skip: [:order, :updated_at, :created_at]
 
   belongs_to :project, touch: true
-  belongs_to :project_with_deleted, -> { unscope(where: 'deleted_at') }, class_name: 'Project', foreign_key: 'project_id'
+  belongs_to :project_with_deleted, -> { unscope(where: 'deleted_at') },
+    class_name: 'Project', foreign_key: 'project_id'
 
   has_many :deploys, dependent: :destroy
   has_many :webhooks, dependent: :destroy
