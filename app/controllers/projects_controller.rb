@@ -45,7 +45,10 @@ class ProjectsController < ApplicationController
   end
 
   def show
-    @stages = project.stages
+    respond_to do |format|
+      format.html { @stages = project.stages }
+      format.json { render json: project.to_json(except: [:token, :deleted_at]) }
+    end
   end
 
   def edit
