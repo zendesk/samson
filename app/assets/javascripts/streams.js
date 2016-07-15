@@ -8,7 +8,10 @@ function timeAgoFormat() {
   });
 }
 
-$(document).ready(timeAgoFormat);
+$(document).ready(function() {
+  timeAgoFormat();
+  setInterval(timeAgoFormat, 60000); // update times every 60s
+});
 
 function startStream() {
   $(document).ready(function() {
