@@ -24,24 +24,14 @@ module StatusHelper
     if deploy.active?
       content << content_tag(:br)
       content << "Started "
-      content << content_tag(
-        :span,
-        deploy.start_time.rfc822,
-        data: { time: datetime_to_js_ms(deploy.start_time) },
-        class: 'mouseover'
-      )
+      content << relative_time(deploy.start_time)
       job = deploy.respond_to?(:job) ? deploy.job : deploy
       content << " [Process ID: #{job.pid}]"
     end
 
     if deploy.finished?
       content << " "
-      content << content_tag(
-        :span,
-        deploy.start_time.rfc822,
-        data: { time: datetime_to_js_ms(deploy.start_time) },
-        class: 'mouseover'
-      )
+      content << render_time(deploy.start_time, current_user.time_format)
       content << ", it took #{duration_text(deploy)}."
     end
 
