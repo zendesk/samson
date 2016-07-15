@@ -85,7 +85,9 @@ class BuildsController < ApplicationController
   end
 
   def new_build_params
-    params.require(:build).permit(:git_ref, :label, :description)
+    params.require(:build).permit(
+      *[:git_ref, :label, :description] + Samson::Hooks.fire(:build_params)
+    )
   end
 
   def edit_build_params
