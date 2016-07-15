@@ -67,13 +67,6 @@ describe Deploy do
     end
   end
 
-  describe "#summary_for_process" do
-    it "renders" do
-      deploy.job.stubs(pid: 123)
-      deploy.summary_for_process.gsub(/\d+/, "DD").must_equal "ProcessID: DD Running: DD seconds"
-    end
-  end
-
   describe "#summary_for_timeline" do
     it "renders" do
       deploy.summary_for_timeline.must_equal "staging was deployed to Staging"

@@ -6,6 +6,8 @@ describe StatusHelper do
   include ERB::Util
   include DateTimeHelper
 
+  let(:current_user) { users(:viewer) }
+
   describe "#status_panel" do
     it "accepts a deploy" do
       refute_nil status_panel(deploys(:succeeded_production_test))

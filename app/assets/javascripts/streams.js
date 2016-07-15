@@ -8,7 +8,10 @@ function timeAgoFormat() {
   });
 }
 
-$(document).ready(timeAgoFormat);
+$(document).ready(function() {
+  timeAgoFormat();
+  setInterval(timeAgoFormat, 60000); // update times every 60s
+});
 
 function startStream() {
   $(document).ready(function() {
@@ -36,6 +39,7 @@ function startStream() {
       var data = JSON.parse(e.data);
 
       $('#header').html(data.html);
+      timeAgoFormat();
       window.document.title = data.title;
       if (doNotify && data.notification !== undefined) {
         var notification = new Notification(data.notification, {icon: '/favicon.ico'});
