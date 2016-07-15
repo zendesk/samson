@@ -143,7 +143,7 @@ class Deploy < ActiveRecord::Base
     AppRoutes.url_helpers.project_deploy_url(project, self)
   end
 
-  def to_csv
+  def csv_line
     [
       id, project_with_deleted.name, summary, commit, job.status, updated_at,
       start_time, user.try(:name), user.try(:email), buddy_name, buddy_email,

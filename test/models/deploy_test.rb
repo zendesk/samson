@@ -9,6 +9,18 @@ describe Deploy do
   let(:stage) { stages(:test_staging) }
   let(:deploy) { deploys(:succeeded_test) }
 
+  describe "#stage_with_deleted" do
+    it "returns stage when soft deleted" do
+      stage.soft_delete!
+      deploy.stage_with_deleted.must_equal stage
+    end
+
+    it "returns nil when hard deleted" do
+      stage.delete
+      deploy.stage_with_deleted.must_be_nil
+    end
+  end
+
   describe "#summary" do
     let!(:deploy) { create_deploy! }
 
@@ -255,7 +267,7 @@ describe Deploy do
     end
   end
 
-  describe "to_csv associations with_deleted" do
+  describe "csv_line" do
     let(:deployer) { users(:super_admin) }
     let(:other_user) { users(:deployer_buddy) }
     let(:prod) { stages(:test_production) }
@@ -270,12 +282,12 @@ describe Deploy do
       prod_deploy.buddy.soft_delete!
       prod_deploy.stage.project.update_column(:deleted_at, Time.now)
       prod_deploy.stage.soft_delete
-      prod_deploy.to_csv.values_at(0, 1, 4, 7, 9, 11, 13).must_equal [
+      prod_deploy.csv_line.values_at(0, 1, 4, 7, 10, 11, 13).must_equal [
         prod_deploy.id,
         project.name,
         job.status,
         deployer.name,
-        other_user.name,
+        other_user.email,
         prod.production,
         project.deleted_at
       ]
