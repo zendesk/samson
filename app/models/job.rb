@@ -34,11 +34,6 @@ class Job < ActiveRecord::Base
     "#{user.name} #{summary_action} against #{short_reference}"
   end
 
-  def summary_for_process
-    t = (Time.now.to_i - start_time.to_i)
-    "ProcessID: #{pid} Running: #{t} seconds"
-  end
-
   def user
     super || NullUser.new(user_id)
   end
