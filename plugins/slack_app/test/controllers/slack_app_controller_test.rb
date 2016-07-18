@@ -24,13 +24,6 @@ describe SlackAppController do
     )]))
   end
 
-  before do
-    deployer_identifier.update_column(:user_id, deployer.id)
-    buddy_identifier.update_column(:user_id, buddy.id)
-    admin_identifier.update_column(:user_id, admin.id)
-    viewer_identifier.update_column(:user_id, github_viewer.id)
-  end
-
   def post_as(method, id, params = {})
     opts = params.merge(
       token: 'token',

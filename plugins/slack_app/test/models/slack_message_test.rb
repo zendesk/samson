@@ -6,13 +6,12 @@ describe SlackMessage do
   let(:deploy) { deploys(:succeeded_test) }
   let(:msg) { SlackMessage.new deploy }
   let(:body) { msg.message_body }
-  let(:deployer) { users(:deployer) }
+  let(:super_admin) { users(:super_admin) }
   let(:deployer_buddy) { users(:deployer_buddy) }
-  let(:deployer_identifier) { slack_identifiers(:deployer) }
+  let(:super_admin_identifier) { slack_identifiers(:super_admin) }
   let(:deployer_buddy_identifier) { slack_identifiers(:deployer_buddy) }
+
   before do
-    deployer_identifier.update_column(:user_id, deploy.user.id)
-    deployer_buddy_identifier.update_column(:user_id, deployer_buddy.id)
     deploy.changeset.stubs(:pull_requests).returns([])
   end
 
@@ -94,7 +93,7 @@ describe SlackMessage do
 
       it 'mentions both users when the deploy has a buddy' do
         deploy.stubs(:buddy).returns(deployer_buddy)
-        body[:text].must_include deployer_identifier.identifier
+        body[:text].must_include super_admin_identifier.identifier
         body[:text].must_include deployer_buddy_identifier.identifier
       end
 
@@ -122,7 +121,7 @@ describe SlackMessage do
 
       it 'mentions both users when the deploy has a buddy' do
         deploy.stubs(:buddy).returns(deployer_buddy)
-        body[:text].must_include deployer_identifier.identifier
+        body[:text].must_include super_admin_identifier.identifier
         body[:text].must_include deployer_buddy_identifier.identifier
         body[:text].must_include 'successfully deployed'
       end
