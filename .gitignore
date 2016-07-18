@@ -42,3 +42,4 @@
 
 # .bak files
 *.bak
+/vendor/cache/**/
