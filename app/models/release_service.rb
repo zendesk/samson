@@ -20,7 +20,7 @@ class ReleaseService
     deploy_service = DeployService.new(release.author)
 
     @project.stages.deployed_on_release.each do |stage|
-      if Samson::Hooks.fire(:release_deploy_conditions, stage, release).reduce(true) { |acc, res| acc && res }
+      if Samson::Hooks.fire(:release_deploy_conditions, stage, release).all?
         deploy_service.deploy!(stage, reference: release.version)
       end
     end
