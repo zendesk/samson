@@ -24,13 +24,21 @@ describe SlackAppController do
     )]))
   end
 
-  def post_as(method, id, params = {})
+  def post_command(id, params = {})
     opts = params.merge(
       token: 'token',
       user_id: id.identifier,
       response_url: 'http://example.com/blah'
     )
-    with_env(SLACK_VERIFICATION_TOKEN: 'token') { post method, opts }
+    with_env(SLACK_VERIFICATION_TOKEN: 'token') { post :command, opts }
+  end
+
+  def post_interact(id, params = {})
+    opts = params.merge(
+      token: 'token',
+      user: {id: id.identifier}
+    )
+    with_env(SLACK_VERIFICATION_TOKEN: 'token') { post :interact, opts }
   end
 
   as_a_viewer do
@@ -108,22 +116,22 @@ describe SlackAppController do
       end
 
       it 'warns on an unauthorized deployer' do
-        post_as :command, viewer_identifier, text: project.permalink
+        post_command viewer_identifier, text: project.permalink
       end
 
       it 'warns on unknown project' do
-        post_as :command, deployer_identifier, text: 'jkfldsaklfdsalk'
+        post_command deployer_identifier, text: 'jkfldsaklfdsalk'
         @response.body.must_include "Couldn't find"
       end
 
       it 'warns on unknown stage' do
-        post_as :command, deployer_identifier, text: "#{project.permalink} to unknown"
+        post_command deployer_identifier, text: "#{project.permalink} to unknown"
         @response.body.must_include "doesn't have a stage named"
       end
 
       it 'mentions PRs in the return JSON' do
         expects_new_deploy
-        post_as :command, deployer_identifier, text: project.permalink
+        post_command deployer_identifier, text: project.permalink
         first_attachment = body['attachments'][0]
         first_attachment['fields'][0]['value'].must_include '#123'
         first_attachment['fields'][0]['value'].must_include 'sample PR'
@@ -138,24 +146,24 @@ describe SlackAppController do
     end
 
     it 'promts the user to connect if user is not connected to Slack' do
-      post_as :interact, stub(identifier: 'jkflds'), callback_id: deploy.id
+      post_interact stub(identifier: 'jkflds'), callback_id: deploy.id
       body['text'].must_include '/slack_app/oauth'
       body['replace_original'].must_equal false
     end
 
     it 'denies if the user tries to approve their own deploy' do
-      post_as :interact, admin_identifier, callback_id: deploy.id
+      post_interact admin_identifier, callback_id: deploy.id
       body['text'].must_include 'cannot approve your own deploys'
     end
 
     it 'denies if the user cannot approve the deploy' do
-      post_as :interact, viewer_identifier, callback_id: deploy.id
+      post_interact viewer_identifier, callback_id: deploy.id
       body['text'].must_include 'do not have permissions'
     end
 
     it 'confirms the deploy on a good approval' do
       Deploy.any_instance.expects(:confirm_buddy!)
-      post_as :interact, buddy_identifier, callback_id: deploy.id
+      post_interact buddy_identifier, callback_id: deploy.id
     end
   end
 end
