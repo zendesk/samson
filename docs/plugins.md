@@ -19,6 +19,7 @@ Current Plugins:
 * Jenkins
 * Pipelines
 * [ReleaseNumberFromCI](https://github.com/redbubble/samson-release-number-from-ci): A plugin which supports setting specific release number for samson release from CI
+* [Stalemate](https://github.com/redbubble/samson-stalemate): Prevents deployment if a newly created release has commit which is contained in a previously deployed release
 * Slack
 
 ## Enabling Plugins
