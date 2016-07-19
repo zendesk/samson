@@ -3,6 +3,7 @@ require_relative '../lib/samson_kubernetes/hash_kuber_selector'
 
 # Mock up vault client
 class VaultClient
+  CONFIG_PATH = 'vault.json'.freeze
   def logical
     @logical ||= Logical.new
   end
@@ -12,6 +13,7 @@ class VaultClient
   end
 
   def initialize
+    ensure_config_exists
     @expected = {}
     @set = {}
   end
@@ -63,6 +65,12 @@ class VaultClient
     def to_h
       instance_values.symbolize_keys
     end
+  end
+
+  private
+
+  def ensure_config_exists
+    raise "vault.json is required for #{CONFIG_PATH}" unless File.exist?(CONFIG_PATH)
   end
 end
 
