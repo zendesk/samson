@@ -13,7 +13,7 @@ class VaultClient
   end
 
   def initialize
-    config_valid?
+    ensure_config_exists
     @expected = {}
     @set = {}
   end
@@ -69,7 +69,7 @@ class VaultClient
 
   private
 
-  def config_valid?
+  def ensure_config_exists
     raise "vault.json is required for #{CONFIG_PATH}" unless File.exist?(CONFIG_PATH)
   end
 end

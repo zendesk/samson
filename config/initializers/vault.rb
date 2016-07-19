@@ -15,7 +15,7 @@ if ENV["SECRET_STORAGE_BACKEND"] == "SecretStorage::HashicorpVault"
 
     def initialize
       return if Rails.env.test?
-      config_valid?
+      ensure_config_exists
       # since we have a bunch of servers, don't use the client singlton to
       # talk to them
       # as we configure each client, check to see if the config has a token in it,
@@ -81,9 +81,9 @@ if ENV["SECRET_STORAGE_BACKEND"] == "SecretStorage::HashicorpVault"
 
     private
 
-    def config_valid?
+    def ensure_config_exists
       unless File.exist?(Rails.root.join(CONFIG_PATH))
-        raise "config/vault.json is required for #{ENV["SECRET_STORAGE_BACKEND"]}"
+        raise "#{CONFIG_PATH} is required for #{ENV["SECRET_STORAGE_BACKEND"]}"
       end
     end
 
