@@ -3,6 +3,7 @@ if ENV["SECRET_STORAGE_BACKEND"] == "SecretStorage::HashicorpVault"
   Rails.logger.info("Vault Client enabled")
 
   class VaultClient < Vault::Client
+    CONFIG_PATH = 'config/vault.json'.freeze
     CERT_AUTH_PATH = '/v1/auth/cert/login'.freeze
     DEFAULT_CLIENT_OPTIONS = {
       use_ssl: true,
@@ -14,13 +15,14 @@ if ENV["SECRET_STORAGE_BACKEND"] == "SecretStorage::HashicorpVault"
 
     def initialize
       return if Rails.env.test?
+      config_valid?
       # since we have a bunch of servers, don't use the client singlton to
       # talk to them
       # as we configure each client, check to see if the config has a token in it,
       # if it does, then we don't need to worry about going and getting one
       @writers = vault_hosts.map do |vault_server|
         if vault_server["vault_token"].present?
-          writer = Vault::Client.new(DEFAULT_CLIENT_OPTIONS.merge({verify_mode: vault_server["tls_verify"]}))
+          writer = Vault::Client.new(DEFAULT_CLIENT_OPTIONS.merge(verify_mode: vault_server["tls_verify"]))
           writer.token = File.read(vault_server["vault_token"])
         else
           pemfile = File.read(vault_server["vault_auth_pem"])
@@ -79,8 +81,13 @@ if ENV["SECRET_STORAGE_BACKEND"] == "SecretStorage::HashicorpVault"
 
     private
 
+    def config_valid?
+      unless File.exist?(Rails.root.join(CONFIG_PATH))
+        raise "config/vault.json is required for #{ENV["SECRET_STORAGE_BACKEND"]}"
+      end
+    end
+
     def vault_hosts
-      raise "config/vault.json is required for #{ENV["SECRET_STORAGE_BACKEND"]}" unless File.exist?("config/vault.json")
       JSON.parse(File.read(Rails.root.join("config/vault.json")))
     end
   end
