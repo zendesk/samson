@@ -33,6 +33,8 @@
         </div>
       </div>
 
+      <%= Samson::Hooks.render_views(:build_new, self, form: form) %>
+
       <div class="form-group">
         <%= form.label :build_image, "Build Docker Image?", class: "col-lg-2 control-label" %>
         <div class="col-lg-4">

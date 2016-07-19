@@ -7,6 +7,7 @@ module Samson
       :stage_form,
       :stage_show,
       :project_form,
+      :build_new,
       :deploy_group_show,
       :deploy_group_form,
       :deploy_group_table_header,
@@ -25,6 +26,7 @@ module Samson
       :stage_permitted_params,
       :deploy_permitted_params, # for external plugin
       :project_permitted_params,
+      :build_params,
       :before_deploy,
       :after_deploy_setup,
       :after_deploy,

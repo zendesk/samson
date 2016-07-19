@@ -2,6 +2,7 @@ require 'docker'
 
 class DockerBuilderService
   DIGEST_SHA_REGEX = /Digest:.*(sha256:[0-9a-f]+)/i
+  DOCKER_REPO_REGEX = /^BUILD DIGEST: (.*@sha256:[0-9a-f]+)/i
   include ::NewRelic::Agent::MethodTracer
 
   attr_reader :build, :execution
@@ -21,7 +22,9 @@ class DockerBuilderService
       @output = execution.output
       repository.executor = execution.executor
 
-      if build_image(tmp_dir)
+      if build.kubernetes_job
+        run_build_image_job(job, image_name, push: push, tag_as_latest: tag_as_latest)
+      elsif build_image(tmp_dir)
         push_image(image_name, tag_as_latest: tag_as_latest) if push
         build.docker_image.remove(force: true) unless ENV["DOCKER_KEEP_BUILT_IMGS"] == "1"
       end
@@ -30,6 +33,31 @@ class DockerBuilderService
     job_execution.on_complete { send_after_notifications }
 
     JobExecution.start_job(job_execution)
+  end
+
+  def run_build_image_job(local_job, image_name, push: false, tag_as_latest: false)
+    k8s_job = Kubernetes::BuildJobExecutor.new(output, job: local_job)
+    docker_ref = docker_image_ref(image_name, build)
+
+    success, build_log = k8s_job.execute!(build, project,
+      tag: docker_ref, push: push,
+      registry: registry_credentials, tag_as_latest: tag_as_latest)
+
+    build.docker_ref = docker_ref
+    build.docker_repo_digest = nil
+
+    if success
+      build_log.each_line do |line|
+        if (match = line[DOCKER_REPO_REGEX, 1])
+          build.docker_repo_digest = match
+        end
+      end
+    end
+    if build.docker_repo_digest.blank?
+      output.puts "### Failed to get the image digest"
+    end
+
+    build.save!
   end
 
   def build_image(tmp_dir)
@@ -52,7 +80,7 @@ class DockerBuilderService
   add_method_tracer :build_image
 
   def push_image(tag, tag_as_latest: false)
-    build.docker_ref = tag.presence || build.label.try(:parameterize).presence || 'latest'
+    build.docker_ref = docker_image_ref(tag, build)
     build.docker_repo_digest = nil
     output.puts("### Tagging and pushing Docker image to #{project.docker_repo}:#{build.docker_ref}")
 
@@ -91,6 +119,20 @@ class DockerBuilderService
     @build.project
   end
 
+  def registry_credentials
+    return nil unless ENV['DOCKER_REGISTRY'].present?
+    {
+      username: ENV['DOCKER_REGISTRY_USER'],
+      password: ENV['DOCKER_REGISTRY_PASS'],
+      email: ENV['DOCKER_REGISTRY_EMAIL'],
+      serveraddress: ENV['DOCKER_REGISTRY']
+    }
+  end
+
+  def docker_image_ref(image_name, build)
+    image_name.presence || build.label.try(:parameterize).presence || 'latest'
+  end
+
   def push_latest
     output.puts "### Pushing the 'latest' tag for this image"
     build.docker_image.tag(repo: project.docker_repo, tag: 'latest', force: true)
@@ -119,15 +161,5 @@ class DockerBuilderService
   def send_after_notifications
     Samson::Hooks.fire(:after_docker_build, build)
     SseRailsEngine.send_event('builds', type: 'finish', build: BuildSerializer.new(build, root: nil))
-  end
-
-  def registry_credentials
-    return nil unless ENV['DOCKER_REGISTRY_USER'].present? || ENV['DOCKER_REGISTRY_EMAIL'].present?
-    {
-      username: ENV['DOCKER_REGISTRY_USER'],
-      password: ENV['DOCKER_REGISTRY_PASS'],
-      email: ENV['DOCKER_REGISTRY_EMAIL'],
-      serveraddress: ENV['DOCKER_REGISTRY']
-    }
   end
 end

@@ -1,6 +1,6 @@
 require_relative '../test_helper'
 
-SingleCov.covered! uncovered: 19
+SingleCov.covered! uncovered: 20
 
 describe DeployService do
   include GitRepoTestHelper
@@ -22,6 +22,33 @@ describe DeployService do
   let(:mock_docker_image) { stub(json: docker_image_json) }
 
   before { create_repo_with_tags(git_tag) }
+
+  describe "#run_build_image_job" do
+    let(:local_job) { stub }
+    let(:k8s_job) { stub }
+    let(:repo_digest) { 'sha256:5f1d7c7381b2e45ca73216d7b06004fdb0908ed7bb8786b62f2cdfa5035fde2c' }
+    let(:build_log) { ["status: Random status", "BUILD DIGEST: #{project.docker_repo}@#{repo_digest}"].join("\n") }
+
+    before do
+      Kubernetes::BuildJobExecutor.expects(:new).returns k8s_job
+    end
+
+    it 'updates build metadata when the remote job completes' do
+      k8s_job.expects(:execute!).returns([true, build_log])
+      build.label = "Version 123"
+
+      service.run_build_image_job(local_job, nil)
+      assert_equal('version-123', build.docker_ref)
+      assert_equal("#{project.docker_repo}@#{repo_digest}", build.docker_repo_digest)
+    end
+
+    it 'leaves the build docker metadata empty when the remote job fails' do
+      k8s_job.expects(:execute!).returns([false, build_log])
+
+      service.run_build_image_job(local_job, nil)
+      assert_nil build.docker_repo_digest
+    end
+  end
 
   describe '#build_image' do
     before do

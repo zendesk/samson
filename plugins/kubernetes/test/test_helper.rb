@@ -114,7 +114,11 @@ class ActiveSupport::TestCase
     Kubernetes::ReleaseDoc.any_instance.stubs(raw_template: read_kubernetes_sample_file('kubernetes_deployment.yml'))
   end
 
+  def kubernetes_sample_file_path(file_name)
+    "#{Rails.root}/plugins/kubernetes/test/samples/#{file_name}"
+  end
+
   def read_kubernetes_sample_file(file_name)
-    File.read("#{Rails.root}/plugins/kubernetes/test/samples/#{file_name}")
+    File.read(kubernetes_sample_file_path(file_name))
   end
 end
