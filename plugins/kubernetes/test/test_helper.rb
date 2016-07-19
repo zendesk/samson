@@ -70,7 +70,7 @@ class VaultClient
   private
 
   def config_valid?
-    raise "vault.json is required for #{ENV["SECRET_STORAGE_BACKEND"]}" unless File.exist?("vault.json")
+    raise "vault.json is required for #{CONFIG_PATH}" unless File.exist?(CONFIG_PATH)
   end
 end
 
