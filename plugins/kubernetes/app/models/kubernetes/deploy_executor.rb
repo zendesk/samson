@@ -197,7 +197,7 @@ module Kubernetes
     end
 
     def wait_for_build(build)
-      if !build.docker_repo_digest && build.docker_build_job.try(:running?)
+      if !build.docker_repo_digest && build.docker_build_job.try(:active?)
         @output.puts("Waiting for Build #{build.url} to finish.")
         loop do
           break if @stopped
