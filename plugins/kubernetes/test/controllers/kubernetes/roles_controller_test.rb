@@ -57,6 +57,14 @@ describe Kubernetes::RolesController do
         Kubernetes::Role.expects(:seed!)
         post :seed, project_id: project, ref: 'HEAD'
         assert_redirected_to action: :index
+        refute flash[:error]
+      end
+
+      it "shows errors when role creation fails due to an invalid template" do
+        Kubernetes::Role.expects(:seed!).raises(Samson::Hooks::UserError.new("Heyho"))
+        post :seed, project_id: project, ref: 'HEAD'
+        assert_redirected_to action: :index
+        flash[:error].must_include "Heyho"
       end
     end
 

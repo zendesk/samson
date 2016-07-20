@@ -15,7 +15,11 @@ class Kubernetes::RolesController < ApplicationController
   end
 
   def seed
-    Kubernetes::Role.seed!(@project, params.require(:ref))
+    begin
+      Kubernetes::Role.seed!(@project, params.require(:ref))
+    rescue Samson::Hooks::UserError
+      flash[:error] = $!.message
+    end
     redirect_to action: :index
   end
 
