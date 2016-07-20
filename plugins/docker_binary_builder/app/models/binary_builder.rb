@@ -140,7 +140,7 @@ class BinaryBuilder
   end
 
   def image_name
-    "#{@project.send(:permalink_base)}_build:#{@git_reference}".downcase
+    "#{@project.send(:permalink_base)}_build:#{@git_reference.parameterize}".downcase
   end
 
   def create_build_image

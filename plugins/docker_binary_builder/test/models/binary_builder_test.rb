@@ -138,5 +138,13 @@ describe BinaryBuilder do
       image_name = builder.send(:image_name)
       image_name.must_equal(image_name.downcase)
     end
+
+    describe 'with git refs that include slashes' do
+      let(:reference) { 'namespaced/ref' }
+
+      it 'replaces slashes with dashes' do
+        builder.send(:image_name).must_equal 'foo_build:namespaced-ref'
+      end
+    end
   end
 end
