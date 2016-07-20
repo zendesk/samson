@@ -123,11 +123,7 @@ module Kubernetes
         files = files.split("\n").grep(/\.(yml|yaml|json)$/).map { |f| "#{path}/#{f}" }
         files.map do |path|
           file_contents = project.repository.file_content path, git_ref
-          begin
-            Kubernetes::RoleConfigFile.new(file_contents, path)
-          rescue Samson::Hooks::UserError
-            nil
-          end
+          Kubernetes::RoleConfigFile.new(file_contents, path)
         end.compact
       end
     end

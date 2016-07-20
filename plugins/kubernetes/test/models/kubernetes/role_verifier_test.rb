@@ -119,7 +119,7 @@ describe Kubernetes::RoleVerifier do
         role.replace(job_role)
         role[0][:metadata][:labels].delete(:role)
         errors.must_equal [
-          "Missing label or role for Job metadata.labels",
+          "Missing project or role for Job metadata.labels",
           error_message
         ]
       end
@@ -127,7 +127,7 @@ describe Kubernetes::RoleVerifier do
       it "reports missing labels" do
         role.first[:spec][:template][:metadata][:labels].delete(:project)
         errors.must_equal [
-          "Missing label or role for Deployment spec.template.metadata.labels",
+          "Missing project or role for Deployment spec.template.metadata.labels",
           error_message
         ]
       end
@@ -135,7 +135,7 @@ describe Kubernetes::RoleVerifier do
       it "reports missing label section" do
         role.first[:spec][:template][:metadata].delete(:labels)
         errors.must_equal [
-          "Missing label or role for Deployment spec.template.metadata.labels",
+          "Missing project or role for Deployment spec.template.metadata.labels",
           error_message
         ]
       end

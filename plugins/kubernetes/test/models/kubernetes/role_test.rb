@@ -129,20 +129,10 @@ describe Kubernetes::Role do
         write_config 'kubernetes/a.json', config_content.to_json
       end
 
-      it 'creates no role' do
-        Kubernetes::Role.seed! project, 'HEAD'
-        project.kubernetes_roles.must_equal []
-      end
-    end
-
-    describe "with invalid service" do
-      before do
-        config_content.push config_content.last
-        write_config 'kubernetes/a.json', config_content.to_json
-      end
-
-      it 'creates no role' do
-        Kubernetes::Role.seed! project, 'HEAD'
+      it 'blows up so the controller can show an error' do
+        assert_raises Samson::Hooks::UserError do
+          Kubernetes::Role.seed! project, 'HEAD'
+        end
         project.kubernetes_roles.must_equal []
       end
     end
@@ -186,13 +176,6 @@ describe Kubernetes::Role do
       names = Kubernetes::Role.all.map(&:service_name)
       names.last.must_match /#{existing_name}-change-me-\d+/
     end
-
-    it "does not seed without role label" do
-      assert config_content.first.fetch('metadata').delete('labels')
-      write_config 'kubernetes/a.json', config_content.to_json
-      Kubernetes::Role.seed! project, 'HEAD'
-      project.kubernetes_roles.map(&:config_file).must_equal []
-    end
   end
 
   describe '.configured_for_project' do
@@ -208,6 +191,15 @@ describe Kubernetes::Role do
 
     it "raises when a role is in the repo, but not configured" do
       role.soft_delete!
+      assert_raises Samson::Hooks::UserError do
+        Kubernetes::Role.configured_for_project(project, 'HEAD')
+      end
+    end
+
+    it "raises when a role is invalid so the deploy is stopped" do
+      assert config_content_yml.sub!('Deployment', 'Broken')
+      write_config role.config_file, config_content_yml
+
       assert_raises Samson::Hooks::UserError do
         Kubernetes::Role.configured_for_project(project, 'HEAD')
       end

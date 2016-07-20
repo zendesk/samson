@@ -80,9 +80,10 @@ module Kubernetes
           labels = path.inject(resource) { |r, k| r[k] || {} }
 
           # role and project from all used labels
-          required = labels.slice('project', 'role')
+          wanted = 'project', 'role'
+          required = labels.slice(*wanted)
           if required.size != 2
-            @errors << "Missing label or role for #{kind} #{path.join('.')}"
+            @errors << "Missing #{wanted.join(' or ')} for #{kind} #{path.join('.')}"
           end
 
           # make sure we get sane values for labels or deploy will blow up
