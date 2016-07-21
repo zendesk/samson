@@ -129,7 +129,11 @@ class Stage < ActiveRecord::Base
 
   def production?
     if DeployGroup.enabled?
-      deploy_groups.empty? ? super : deploy_groups.any? { |deploy_group| deploy_group.environment.production? }
+      if deploy_groups.empty?
+        super
+      else
+        deploy_groups.any? { |deploy_group| deploy_group.environment_with_deleted.production? }
+      end
     else
       super
     end
@@ -174,6 +178,10 @@ class Stage < ActiveRecord::Base
   def destroy
     mark_for_destruction
     super
+  end
+
+  def deploy_group_names
+    deploy_groups.pluck(:name).join('|')
   end
 
   private

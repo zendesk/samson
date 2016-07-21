@@ -143,11 +143,20 @@ class Deploy < ActiveRecord::Base
     AppRoutes.url_helpers.project_deploy_url(project, self)
   end
 
+  def self.csv_header
+    [
+      "Deploy Number", "Project Name", "Deploy Summary", "Deploy Commit", "Deploy Status", "Deploy Updated",
+      "Deploy Created", "Deployer Name", "Deployer Email", "Buddy Name", "Buddy Email", "Stage Name",
+      "Production Flag", "Code deployed", "Project Deleted On", "Deploy Groups"
+    ]
+  end
+
   def csv_line
     [
       id, project_with_deleted.name, summary, commit, job.status, updated_at,
-      start_time, user.try(:name), user.try(:email), buddy_name, buddy_email,
-      stage_with_deleted.production, stage_with_deleted.no_code_deployed, project_with_deleted.deleted_at
+      start_time, user.try(:name), user.try(:email), buddy_name, buddy_email, stage_with_deleted.name,
+      stage_with_deleted.production?, !stage_with_deleted.no_code_deployed, project_with_deleted.deleted_at,
+      stage_with_deleted.deploy_group_names
     ]
   end
 

@@ -282,14 +282,23 @@ describe Deploy do
       prod_deploy.buddy.soft_delete!
       prod_deploy.stage.project.update_column(:deleted_at, Time.now)
       prod_deploy.stage.soft_delete
-      prod_deploy.csv_line.values_at(0, 1, 4, 7, 10, 11, 13).must_equal [
+      prod_deploy.csv_line.must_equal [
         prod_deploy.id,
         project.name,
+        prod_deploy.summary,
+        prod_deploy.commit,
         job.status,
+        prod_deploy.updated_at,
+        prod_deploy.start_time,
         deployer.name,
+        deployer.email,
+        other_user.name,
         other_user.email,
+        prod.name,
         prod.production,
-        project.deleted_at
+        !prod.no_code_deployed, # Inverted because report is reporting as code deployed
+        project.deleted_at,
+        prod.deploy_group_names
       ]
     end
   end

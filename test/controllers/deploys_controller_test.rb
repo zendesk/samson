@@ -168,6 +168,18 @@ describe DeploysController do
         assert_response :ok
       end
 
+      it "it renders csv" do
+        get :search, format: "csv"
+        assert_response :ok
+        @response.body.split("\n").length.must_equal 7 # 4 records and 3 meta rows
+      end
+
+      it "it renders csv with 1000 records and links to generate full report" do
+        get :search, format: "csv", limit: 1
+        assert_response :ok
+        @response.body.split("\n").length.must_equal 6 # 1 record and 5 meta rows
+      end
+
       it "renders html" do
         get :search, format: "html"
         assert_equal "text/html", @response.content_type

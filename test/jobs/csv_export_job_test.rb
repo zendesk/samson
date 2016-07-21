@@ -46,24 +46,32 @@ describe CsvExportJob do
     end
 
     it "creates deploys csv file accurately and completely" do
-      accuracy_test({})
+      completeness_test({})
     end
 
-    it "filters the report with known activity accurately and completely" do
+    it "filters the report with known production activity accurately and completely" do
       filter = {
-        'deploys.created_at': (Date.new(1900, 1, 1)..Date.today),
-        'stages.production': true, 'jobs.status': 'succeeded', 'stages.project_id': project.id
+        'deploys.created_at': (DateTime.new(1900, 1, 1)..DateTime.parse(Date.today.to_s + "T23:59:59Z")),
+        'environments.production': true, 'jobs.status': 'succeeded', 'stages.project_id': project.id
       }
-      accuracy_test(filter)
+      completeness_test(filter)
+    end
+
+    it "filters the report with known non-production activity accurately and completely" do
+      filter = {
+        'deploys.created_at': (DateTime.new(1900, 1, 1)..DateTime.parse(Date.today.to_s + "T23:59:59Z")),
+        'environments.production': false, 'jobs.status': 'succeeded', 'stages.project_id': project.id
+      }
+      completeness_test(filter)
     end
 
     it "has no results for date range after deploys" do
-      filter = {'deploys.created_at': (Date.new(2015, 12, 31)..Date.today)}
+      filter = {'deploys.created_at': (DateTime.new(2015, 12, 31)..DateTime.parse(Date.today.to_s + "T23:59:50Z"))}
       empty_test(filter)
     end
 
     it "has no results for date range before deploys" do
-      filter = {'deploys.created_at': (Date.new(1900, 1, 1)..Date.new(2000, 1, 1))}
+      filter = {'deploys.created_at': (DateTime.new(1900, 1, 1)..DateTime.new(2000, 1, 1, 23, 59, 59))}
       empty_test(filter)
     end
 
@@ -98,8 +106,12 @@ describe CsvExportJob do
     end
   end
 
-  def accuracy_test(filters)
+  def completeness_test(filters)
     deploy_export_job.update_attribute(:filters, filters)
+    if filters.keys.include?(:'environments.production')
+      production = filters.delete(:'environments.production')
+      filters['stages.production'] = production
+    end
     CsvExportJob.perform_now(deploy_export_job)
     filename = deploy_export_job.reload.path_file
 
@@ -110,22 +122,6 @@ describe CsvExportJob do
     Deploy.joins(:stage, :job).where(filters).count.must_equal deploycount
     deploycount.must_equal csv_response.length
     assert_not_empty csv_response
-    csv_response.each do |d|
-      deploy_info = Deploy.find_by(id: d[0])
-      deploy_info.wont_be_nil
-      deploy_info.project.name.must_equal d[1]
-      deploy_info.summary.must_equal d[2]
-      deploy_info.commit.must_equal d[3]
-      deploy_info.job.status.must_equal d[4]
-      deploy_info.updated_at.to_s.must_equal d[5]
-      deploy_info.start_time.to_s.must_equal d[6]
-      deploy_info.job.user.name.must_equal d[7]
-      deploy_info.job.user.try(:email).must_equal d[8]
-      deploy_info.buddy_name.must_equal d[9]
-      deploy_info.buddy_email.must_equal d[10]
-      deploy_info.stage.production.to_s.must_equal d[11]
-      deploy_info.stage.no_code_deployed.to_s.must_equal d[12]
-    end
   end
 
   def empty_test(filters)

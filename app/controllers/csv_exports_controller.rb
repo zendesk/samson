@@ -71,9 +71,18 @@ class CsvExportsController < ApplicationController
     end
 
     if production = params[:production].presence
-      case production
-      when 'Yes' then filter['stages.production'] = true
-      when 'No'  then filter['stages.production'] = false
+      if production == 'Yes'
+        if DeployGroup.enabled?
+          filter['environments.production'] = true
+        else
+          filter['stages.production'] = true
+        end
+      elsif production == 'No'
+        if DeployGroup.enabled?
+          filter['environments.production'] = false
+        else
+          filter['stages.production'] = false
+        end
       else
         raise "Invalid production filter #{production}"
       end

@@ -1,3 +1,5 @@
+require 'csv'
+
 class DeploysController < ApplicationController
   include CurrentProject
 
@@ -84,6 +86,10 @@ class DeploysController < ApplicationController
     respond_to do |format|
       format.json do
         render json: @deploys
+      end
+      format.csv do
+        datetime = Time.now.strftime "%Y%m%d_%H%M"
+        send_data realtime_csv, type: :csv, filename: "Deploys_search_#{datetime}.csv"
       end
       format.html
     end
@@ -177,5 +183,20 @@ class DeploysController < ApplicationController
 
   def active_deploy_scope
     current_project ? current_project.deploys.active : Deploy.active
+  end
+
+  # Creates a CSV for @deploys as a result of the search query limited to 1000 for speed
+  def realtime_csv
+    csv_limit = (params[:limit].presence || 1000).to_i
+    CSV.generate do |csv|
+      csv << Deploy.csv_header
+      @deploys.limit(csv_limit).each { |deploy| csv << deploy.csv_line }
+      csv << ['-', 'count:', @deploys.limit(csv_limit).count]
+      csv << ['-', 'params:', params]
+      if @deploys.count > csv_limit
+        csv << ['-', 'There are more records. Generate a full report at']
+        csv << ['-', new_csv_export_url]
+      end
+    end
   end
 end
