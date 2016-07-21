@@ -1,0 +1,74 @@
+<%= render 'projects/header', project: @project, tab: 'kubernetes' %>
+
+<section class="tabs kubernetes-section clearfix" xmlns="http://www.w3.org/1999/html">
+  <%= render 'samson_kubernetes/navigation' %>
+
+  <h2>Example kubernetes config</h2>
+  A web-server would look like this:
+
+  <% project_label = @project.permalink.tr('_', '-') %>
+  <pre>
+# kubernetes/app-server.yml
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: <%= project_label %>-app-server
+  labels:
+    project: <%= project_label %>
+    role: app-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      project: <%= project_label %>
+      role: app-server
+  strategy:
+    type: RollingUpdate
+  template:
+    metadata:
+      name: <%= project_label %>-app-server
+      labels:
+        project: <%= project_label %>
+        role: app-server
+<% if Kubernetes::ResourceTemplate::SIDECAR_IMAGE %>
+      # secrets can be added via https://github.com/zendesk/samson_secret_puller
+      # annotations:
+      #  secret/RAILS_ENV: ${ENV}/global/global/rails_env
+<% end %>
+    spec:
+      containers:
+      - name: <%= project_label %>
+        image: <%= ENV['DOCKER_REGISTRY'] %>/<%= project_label %>:latest
+        resources:
+          limits:
+            cpu: 20m
+            memory: 75Mi
+        ports:
+        - name: main-port
+          containerPort: 3000
+          protocol: TCP
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 3000
+          initialDelaySeconds: 5
+          timeoutSeconds: 1
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: <%= project_label %>
+  labels:
+    project: <%= project_label %>
+    role: app-server
+spec:
+  type: NodePort
+  ports:
+  - port: 80
+    targetPort: main-port
+  selector:
+    project: <%= project_label %>
+    role: app-server
+  </pre>
+</section>

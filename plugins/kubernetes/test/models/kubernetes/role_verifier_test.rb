@@ -20,12 +20,12 @@ describe Kubernetes::RoleVerifier do
       errors.must_equal nil
     end
 
-    it "fails nicely with empty template" do
+    it "fails nicely with empty Hash template" do
       role_json.replace "{}"
       refute errors.empty?
     end
 
-    it "fails nicely with empty template" do
+    it "fails nicely with empty Array template" do
       role_json.replace "[]"
       errors.must_equal ["No content found"]
     end
@@ -34,6 +34,11 @@ describe Kubernetes::RoleVerifier do
       elements = Kubernetes::Util.parse_file('---', 'fake.yml')
       errors = Kubernetes::RoleVerifier.new(elements).verify
       errors.must_equal ["No content found"]
+    end
+
+    it "fails nicely with bad template" do
+      role_json.replace '["bad", {"kind": "Good"}]'
+      errors.to_s.must_include "Unsupported combination of kinds:  + Good"
     end
 
     it "reports invalid types" do
