@@ -36,7 +36,7 @@ module Kubernetes
     end
 
     def verify_kinds
-      kinds = map_attributes([:kind]).sort
+      kinds = map_attributes([:kind]).sort_by(&:to_s)
       return if SUPPORTED_KINDS.include?(kinds)
       supported = SUPPORTED_KINDS.map { |c| c.join(' + ') }.join(', ')
       @errors << "Unsupported combination of kinds: #{kinds.join(' + ')}, supported combinations are: #{supported}"

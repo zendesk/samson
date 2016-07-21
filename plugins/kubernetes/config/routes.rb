@@ -4,6 +4,7 @@ Samson::Application.routes.draw do
       resources :roles, except: :edit do
         collection do
           post :seed
+          get :example
         end
       end
       resources :releases, only: [:index]
