@@ -4,9 +4,14 @@ require 'rails/all'
 
 Bundler.require(:preload)
 Bundler.require(:assets) if Rails.env.development? || ENV["PRECOMPILE"]
+
 if ['development', 'staging'].include?(Rails.env)
   require 'better_errors'
   require 'rack-mini-profiler'
+end
+
+if ['staging', 'production'].include?(Rails.env)
+  require 'airbrake/railtie'
 end
 
 Dotenv.load(Bundler.root.join(Rails.env.test? ? '.env.test' : '.env'))

@@ -1,8 +1,10 @@
 from_cap = !defined?(Rails)
-if from_cap || Rails.env.staging? || Rails.env.production?
-  require 'airbrake'
+if from_cap || defined?(Airbrake)
   Airbrake.configure do |config|
     config.api_key = ENV['AIRBRAKE_API_KEY']
+    config.user_information = # replaces <!-- AIRBRAKE ERROR --> on 500 pages
+      "<br/><br/>Error number: <a href='https://airbrake.io/locate/{{error_id}}'>{{error_id}}</a>"
+    # config.development_environments = ['test'] # uncomment to report in development
   end
 else
   module Airbrake
