@@ -11,7 +11,7 @@
   <div class="form-group">
     <label class="col-lg-2 control-label">Project</label>
     <div class="col-lg-4">
-      <p class="form-control-static"><%= link_to @deploy_group_role.project.name, url_for(@deploy_group_role.project) %></p>
+      <p class="form-control-static"><%= link_to @deploy_group_role.project.name, project_path(@deploy_group_role.project) %></p>
     </div>
   </div>
 
