@@ -100,6 +100,14 @@ class JobExecution
     end
 
     @output.write(message + "\n")
+
+    # show full errors if we show exceptions
+    if Rails.application.config.consider_all_requests_local
+      backtrace = Rails.backtrace_cleaner.filter(exception.backtrace).first(10)
+      backtrace << '...'
+      @output.write(backtrace.join("\n") << "\n")
+    end
+
     @job.error! if @job.active?
   end
 

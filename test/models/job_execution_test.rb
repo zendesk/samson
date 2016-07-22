@@ -258,7 +258,15 @@ describe JobExecution do
   end
 
   describe "#start!" do
+    def with_hidden_errors
+      Rails.application.config.consider_all_requests_local = false
+      yield
+    ensure
+      Rails.application.config.consider_all_requests_local = true
+    end
+
     let(:execution) { JobExecution.new('master', job) }
+    let(:model_file) { 'app/models/job_execution.rb' }
 
     it "runs a job" do
       execution.start!
@@ -267,12 +275,34 @@ describe JobExecution do
       job.reload.output.must_include "cat foo"
     end
 
-    it "records exceptions" do
+    it "records exceptions to output" do
+      Airbrake.expects(:notify)
       job.expects(:run!).raises("Oh boy")
       execution.start!
       execution.wait!
       execution.output.to_s.must_include "JobExecution failed: Oh boy"
-      job.reload.output.must_include "JobExecution failed: Oh boy"
+      job.reload.output.must_include "JobExecution failed: Oh boy" # shows error message
+      job.reload.output.must_include model_file # shows important backtrace
+      job.reload.output.wont_include 'test/models/job_execution_test.rb' # hides unimportant backtrace
+    end
+
+    it "does not spam airbrake on user erorrs" do
+      Airbrake.expects(:notify).never
+      job.expects(:run!).raises(Samson::Hooks::UserError, "Oh boy")
+      execution.start!
+      execution.wait!
+      execution.output.to_s.must_include "JobExecution failed: Oh boy"
+    end
+
+    it "does not show error backtraces in production to hide internals" do
+      with_hidden_errors do
+        Airbrake.expects(:notify)
+        job.expects(:run!).raises("Oh boy")
+        execution.start!
+        execution.wait!
+        execution.output.to_s.must_include "JobExecution failed: Oh boy"
+        execution.output.to_s.wont_include model_file
+      end
     end
   end
 
