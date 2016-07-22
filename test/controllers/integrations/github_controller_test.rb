@@ -58,10 +58,23 @@ describe Integrations::GithubController do
     let(:user_name) { 'Github' }
     let(:payload) do
       {
-        ref: 'refs/heads/dev',
         after: commit,
         number: '42',
-        pull_request: {state: 'open', body: 'imafixwolves [samson]'}
+        pull_request: {
+          head: {
+            ref: 'refs/heads/dev'
+          },
+          state: 'open',
+          body: 'imafixwolves [samson review]'
+        },
+        github: {
+          action: 'edited',
+          changes: {
+            body: {
+              from: 'something'
+            }
+          }
+        }
       }.with_indifferent_access
     end
     let(:api_response) do
@@ -77,7 +90,7 @@ describe Integrations::GithubController do
       payload.deep_merge!(pull_request: {state: 'closed'})
     end
 
-    does_not_deploy 'without "[samson]" in the body' do
+    does_not_deploy 'without "[samson review]" in the body' do
       payload.deep_merge!(pull_request: {body: 'imafixwolves'})
     end
   end

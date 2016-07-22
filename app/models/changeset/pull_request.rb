@@ -16,6 +16,12 @@ class Changeset::PullRequest
 
   # Matches "VOICE-1234" only
   JIRA_CODE = /(?<=#{PUNCT}|^)(#{CODE_ONLY})(?=#{PUNCT}|$)/
+
+  # Github pull request events can be triggered by a number of actions such as 'labeled', 'assigned'
+  # Actions which aren't related to a code push should not trigger a samson deploy.
+  # Docs on the pull request event: https://developer.github.com/v3/activity/events/types/#pullrequestevent
+  VALID_ACTIONS = ['opened', 'edited', 'synchronized'].freeze
+
   # Finds the pull request with the given number.
   #
   # repo   - The String repository name, e.g. "zendesk/samson".
@@ -38,9 +44,19 @@ class Changeset::PullRequest
     new(project.github_repo, data)
   end
 
+  # Webhook events that are valid should be related to a pr code push or someone adding [samson review]
+  # to the description. The actions related to a code push are 'opened' and 'synchronized'
+  # The 'edited' action gets sent when the PR description is edited. To trigger a deploy from an edit - it
+  # should only be when the edit is related to adding the text [samson review]
   def self.valid_webhook?(params)
     data = params['pull_request'] || {}
-    return false unless data['state'] == 'open'
+    action = params.fetch('github').fetch('action')
+    return false unless data['state'] == 'open' && (VALID_ACTIONS.include? action)
+
+    if action == 'edited'
+      previous_desc = params['github']['changes']['body']['from']
+      return false if previous_desc =~ WEBHOOK_FILTER && data['body'] =~ WEBHOOK_FILTER
+    end
 
     !(data['body'] =~ WEBHOOK_FILTER).nil?
   end
