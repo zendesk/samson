@@ -28,7 +28,7 @@ class GithubNotification
   private
 
   def body
-    url = AppRoutes.url_helpers.project_deploy_url(@project, @deploy)
+    url = Rails.application.routes.url_helpers.project_deploy_url(@project, @deploy)
     short_reference_link = "<a href='#{url}' target='_blank'>#{@deploy.short_reference}</a>"
     "This PR was deployed to #{@stage.name}. Reference: #{short_reference_link}"
   end

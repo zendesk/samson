@@ -110,7 +110,7 @@ class Job < ActiveRecord::Base
   end
 
   def url
-    deploy.try(:url) || AppRoutes.url_helpers.project_job_url(project, self)
+    deploy.try(:url) || Rails.application.routes.url_helpers.project_job_url(project, self)
   end
 
   def pid

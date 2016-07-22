@@ -10,7 +10,7 @@ class ZendeskNotificationRenderer
     private
 
     def url(deploy)
-      AppRoutes.url_helpers.project_deploy_url(deploy.project, deploy)
+      Rails.application.routes.url_helpers.project_deploy_url(deploy.project, deploy)
     end
   end
 end
