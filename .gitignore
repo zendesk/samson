@@ -27,7 +27,7 @@
 .gitkeep
 /coverage/
 
-#ignore csv export forlder
+#ignore csv export folder
 /export/
 
 # Ignore editor files
