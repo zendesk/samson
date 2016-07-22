@@ -78,7 +78,7 @@ module Kubernetes
       necessary_role_configs = kubernetes_config_files_in_repo(project, git_sha).map(&:path)
       necessary_role_configs.map do |path|
         known.detect { |r| r.config_file == path } || begin
-          url = AppRoutes.url_helpers.project_kubernetes_roles_url(project)
+          url = Rails.application.routes.url_helpers.project_kubernetes_roles_url(project)
           raise(
             Samson::Hooks::UserError,
             "No role for #{path} is configured. Add it on kubernetes Roles tab #{url}"

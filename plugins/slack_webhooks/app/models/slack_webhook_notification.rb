@@ -20,7 +20,7 @@ class SlackWebhookNotification
     # https://api.slack.com/docs/message-formatting
     ":pray: <!here> _#{@deploy.user.name}_ is requesting approval" \
       " to deploy #{project.name} *#{@deploy.reference}* to #{@deploy.stage.name}.\n"\
-      "Review this deploy: #{AppRoutes.url_helpers.project_deploy_url(project, @deploy)}"
+      "Review this deploy: #{Rails.application.routes.url_helpers.project_deploy_url(project, @deploy)}"
   end
 
   private
