@@ -5,7 +5,7 @@
 # asset gems need to be loaded before app is done loading
 ENV['PRECOMPILE'] = '1' if ARGV.include?("test:js") || ARGV.include?("assets:precompile")
 
-require File.expand_path('../config/application', __FILE__)
+require_relative 'config/application'
 require "rake/testtask"
 
 Samson::Application.load_tasks

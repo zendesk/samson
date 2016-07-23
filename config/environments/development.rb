@@ -16,6 +16,7 @@ Samson::Application.configure do
 
   # Don't care if the mailer can't send.
   config.action_mailer.raise_delivery_errors = false
+  config.action_mailer.perform_caching = false
 
   default_url_options[:port] = config.samson.uri.port
 
@@ -30,5 +31,12 @@ Samson::Application.configure do
   # number of complex assets.
   config.assets.debug = false
 
+  # Suppress logger output for asset requests.
+  config.assets.quiet = true
+
   BetterErrors::Middleware.allow_ip! ENV['TRUSTED_IP'] if ENV['TRUSTED_IP']
+
+  # Use an evented file watcher to asynchronously detect changes in source code,
+  # routes, locales, etc. This feature depends on the listen gem.
+  # config.file_watcher = ActiveSupport::EventedFileUpdateChecker
 end
