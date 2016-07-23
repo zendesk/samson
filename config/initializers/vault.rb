@@ -35,6 +35,7 @@ if ENV["SECRET_STORAGE_BACKEND"] == "SecretStorage::HashicorpVault"
           writer.token = VaultClient.auth_token(vault_server["vault_address"])
         end
         writer.address = vault_server["vault_address"]
+        writer.ssl_ca_cert = vault_server["ca_cert"] if vault_server["ca_cert"]
         writer
       end
       @reader = @writers.first
