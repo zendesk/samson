@@ -30,7 +30,7 @@ class OutputBuffer
   end
 
   def puts(line = "")
-    write(line.rstrip + "\n")
+    write(line.to_s.rstrip << "\n")
   end
 
   def write(data, event = :message)

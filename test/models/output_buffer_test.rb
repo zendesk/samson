@@ -1,6 +1,6 @@
 require_relative '../test_helper'
 
-SingleCov.covered! uncovered: 3
+SingleCov.covered! uncovered: 2
 
 describe OutputBuffer do
   include OutputBufferSupport
@@ -42,11 +42,32 @@ describe OutputBuffer do
     build_listener.value.must_equal ["hello"]
   end
 
+  describe "#puts" do
+    it "writes a newline without argument" do
+      listen(&:puts).must_equal ["\n"]
+    end
+
+    it "writes nil as newline" do
+      listen { |o| o.puts nil }.must_equal ["\n"]
+    end
+
+    it "rstrips content" do # not sure why we do this, just documenting
+      listen { |o| o.puts " x " }.must_equal [" x\n"]
+    end
+  end
+
   def build_listener
     Thread.new do
       content = []
       buffer.each { |_event, chunk| content << chunk }
       content
     end
+  end
+
+  def listen
+    listener = build_listener
+    yield buffer
+    buffer.close
+    listener.value
   end
 end

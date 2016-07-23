@@ -304,6 +304,18 @@ describe JobExecution do
         execution.output.to_s.wont_include model_file
       end
     end
+
+    it "shows airbrake error location" do
+      with_hidden_errors do
+        Airbrake.expects(:notify).returns("12345")
+        Airbrake.expects(:configuration).returns(stub(user_information: 'href="http://foo.com/{{error_id}}"'))
+        job.expects(:run!).raises("Oh boy")
+        execution.start!
+        execution.wait!
+        execution.output.to_s.must_include "JobExecution failed: Oh boy"
+        execution.output.to_s.must_include "http://foo.com/12345"
+      end
+    end
   end
 
   describe "#stop!" do
