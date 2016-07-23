@@ -119,4 +119,8 @@ describe "cleanliness" do
       untested: untested
     )
   end
+
+  it "has same version in .ruby-version and lock to make herku not crash" do
+    File.read('Gemfile.lock').must_include File.read('.ruby-version').strip
+  end
 end

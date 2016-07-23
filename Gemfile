@@ -1,6 +1,6 @@
 source 'https://rubygems.org'
 
-ruby '2.3.1'
+ruby File.read('.ruby-version').strip
 
 # gems that have rails engines are are always needed
 group :preload do
