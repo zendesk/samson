@@ -89,25 +89,9 @@ class JobExecution
   end
 
   def error!(exception)
-    message = "JobExecution failed: #{exception.message}"
-
-    unless exception.is_a?(Samson::Hooks::UserError)
-      Airbrake.notify(
-        exception,
-        error_message: message,
-        parameters: { job_id: @job.id }
-      )
-    end
-
-    @output.write(message + "\n")
-
-    # show full errors if we show exceptions
-    if Rails.application.config.consider_all_requests_local
-      backtrace = Rails.backtrace_cleaner.filter(exception.backtrace).first(10)
-      backtrace << '...'
-      @output.write(backtrace.join("\n") << "\n")
-    end
-
+    puts_if_present report_to_airbrake(exception)
+    puts_if_present "JobExecution failed: #{exception.message}"
+    puts_if_present render_backtrace(exception)
     @job.error! if @job.active?
   end
 
@@ -229,6 +213,32 @@ class JobExecution
       @output.write("Waiting for repository while setting it up for #{owner}\n") if Time.now.to_i % 10 == 0
     end
     @job.project.with_lock(output: @output, holder: holder, error_callback: callback, timeout: lock_timeout, &block)
+  end
+
+  # show full errors if we show exceptions
+  def render_backtrace(exception)
+    return unless Rails.application.config.consider_all_requests_local
+    backtrace = Rails.backtrace_cleaner.filter(exception.backtrace).first(10)
+    backtrace << '...'
+    backtrace.join("\n")
+  end
+
+  def report_to_airbrake(exception)
+    return if exception.is_a?(Samson::Hooks::UserError) # do not spam us with users issues
+
+    return unless error_id = Airbrake.notify(
+      exception,
+      error_message: exception.message,
+      parameters: {job_id: @job.id}
+    )
+
+    raise 'unable to find url' unless url = Airbrake.configuration.user_information[/['"](http.*?)['"]/, 1]
+    raise 'unable to find error' unless url.sub!('{{error_id}}', error_id)
+    "Error #{url}"
+  end
+
+  def puts_if_present(message)
+    @output.puts message if message
   end
 
   class << self
