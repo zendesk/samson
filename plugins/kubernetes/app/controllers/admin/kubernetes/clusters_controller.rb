@@ -12,7 +12,6 @@ class Admin::Kubernetes::ClustersController < ApplicationController
   def create
     @cluster = ::Kubernetes::Cluster.new(new_cluster_params)
     success = @cluster.save
-    @cluster.watch! if success
 
     respond_to do |format|
       format.html do
@@ -42,7 +41,6 @@ class Admin::Kubernetes::ClustersController < ApplicationController
   def update
     @cluster.assign_attributes(new_cluster_params)
     success = @cluster.save
-    @cluster.watch! if success
 
     respond_to do |format|
       format.html do

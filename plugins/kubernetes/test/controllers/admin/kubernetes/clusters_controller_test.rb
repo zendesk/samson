@@ -46,14 +46,12 @@ describe Admin::Kubernetes::ClustersController do
       before { Kubernetes::Cluster.any_instance.stubs(connection_valid?: true) } # avoid real connection
 
       it "redirects on success" do
-        Kubernetes::Cluster.any_instance.expects(:watch!) # spawn threads
         post :create, kubernetes_cluster: params
         assert_redirected_to "http://test.host/admin/kubernetes/clusters/#{Kubernetes::Cluster.last.id}"
       end
 
       it "renders when it fails to create" do
         params.delete(:name)
-        Kubernetes::Cluster.any_instance.expects(:watch!).never
         post :create, kubernetes_cluster: params
         assert_template :new
       end
