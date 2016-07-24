@@ -200,10 +200,13 @@ module Kubernetes
       end
 
       if needs_secret_sidecar?
+        vault_config = VaultClient.client.config_for(@doc.deploy_group.permalink)
+        raise StandardError, "Could not find Vault config for #{@doc.deploy_group.permalink}" unless vault_config
+
         sidecar_env = (sidecar_container[:env] ||= [])
         {
-          VAULT_ADDR: ENV.fetch("VAULT_ADDR"),
-          VAULT_SSL_VERIFY: ENV.fetch("VAULT_SSL_VERIFY", true)
+          VAULT_ADDR: vault_config['vault_address'],
+          VAULT_SSL_VERIFY: vault_config['tls_verify']
         }.each do |k, v|
           sidecar_env << {
             name: k,

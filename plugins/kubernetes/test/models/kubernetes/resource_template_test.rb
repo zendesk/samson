@@ -98,9 +98,13 @@ describe Kubernetes::ResourceTemplate do
     end
 
     describe "secret-sidecar-containers" do
-      with_env(VAULT_ADDR: "somehostontheinternet", VAULT_SSL_VERIFY: "false")
-
       let(:secret_key) { 'production/foo/snafu/bar' }
+      let(:vault_server_config) do
+        {
+          'vault_address' => 'myvault.server',
+          'tls_verify' => false
+        }
+      end
 
       around do |test|
         klass = Kubernetes::ResourceTemplate
@@ -110,6 +114,7 @@ describe Kubernetes::ResourceTemplate do
       end
 
       before do
+        VaultClient.any_instance.stubs(:config_for).returns(vault_server_config)
         old_metadata = "role: some-role\n    "
         new_metadata = "role: some-role\n      annotations:\n        secret/FOO: #{secret_key}\n    "
         assert doc.raw_template.sub!(old_metadata, new_metadata)
