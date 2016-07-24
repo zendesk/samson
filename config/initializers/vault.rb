@@ -3,7 +3,6 @@ if ENV["SECRET_STORAGE_BACKEND"] == "SecretStorage::HashicorpVault"
   Rails.logger.info("Vault Client enabled")
 
   class VaultClient < Vault::Client
-    CONFIG_PATH = 'config/vault.json'.freeze
     CERT_AUTH_PATH = '/v1/auth/cert/login'.freeze
     DEFAULT_CLIENT_OPTIONS = {
       use_ssl: true,
@@ -36,6 +35,7 @@ if ENV["SECRET_STORAGE_BACKEND"] == "SecretStorage::HashicorpVault"
           writer.token = VaultClient.auth_token(vault_server["vault_address"])
         end
         writer.address = vault_server["vault_address"]
+        writer.ssl_ca_cert = vault_server["ca_cert"] if vault_server["ca_cert"]
         writer
       end
       @reader = @writers.first
@@ -82,13 +82,17 @@ if ENV["SECRET_STORAGE_BACKEND"] == "SecretStorage::HashicorpVault"
     private
 
     def ensure_config_exists
-      unless File.exist?(Rails.root.join(CONFIG_PATH))
-        raise "#{CONFIG_PATH} is required for #{ENV["SECRET_STORAGE_BACKEND"]}"
+      unless File.exist?(vault_config_file)
+        raise "VAULT_CONFIG_FILE or config/vault.json is required for #{ENV["SECRET_STORAGE_BACKEND"]}"
       end
     end
 
     def vault_hosts
-      JSON.parse(File.read(Rails.root.join("config/vault.json")))
+      JSON.parse(File.read(vault_config_file))
+    end
+
+    def vault_config_file
+      ENV['VAULT_CONFIG_FILE'] || Rails.root.join("config/vault.json")
     end
   end
 end
