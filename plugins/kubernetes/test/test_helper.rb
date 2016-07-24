@@ -3,7 +3,6 @@ require_relative '../lib/samson_kubernetes/hash_kuber_selector'
 
 # Mock up vault client
 class VaultClient
-  CONFIG_PATH = 'vault.json'.freeze
   def logical
     @logical ||= Logical.new
   end
@@ -12,8 +11,11 @@ class VaultClient
     Response.new(data)
   end
 
+  def self.client
+    @client ||= new
+  end
+
   def initialize
-    ensure_config_exists
     @expected = {}
     @set = {}
   end
@@ -34,6 +36,14 @@ class VaultClient
   def write(key, body)
     @set[key] = body
     true
+  end
+
+  def config_for(deploy_group_name)
+    {
+      'vault_address' => 'https://test.hvault.server',
+      'deploy_groups' => [deploy_group_name, 'other_deploy_group'],
+      'tls_verify' => false
+    }
   end
 
   # test hooks
@@ -65,12 +75,6 @@ class VaultClient
     def to_h
       instance_values.symbolize_keys
     end
-  end
-
-  private
-
-  def ensure_config_exists
-    raise "vault.json is required for #{CONFIG_PATH}" unless File.exist?(CONFIG_PATH)
   end
 end
 
