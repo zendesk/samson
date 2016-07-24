@@ -98,8 +98,6 @@ describe Kubernetes::ResourceTemplate do
     end
 
     describe "secret-sidecar-containers" do
-      with_env(VAULT_ADDR: "somehostontheinternet", VAULT_SSL_VERIFY: "false")
-
       let(:secret_key) { 'production/foo/snafu/bar' }
 
       around do |test|

@@ -159,26 +159,6 @@ describe SecretStorage do
   describe SecretStorage::HashicorpVault do
     let(:client) { SecretStorage::HashicorpVault.send(:vault_client) }
     let(:secret_namespace) { "secret/apps/" }
-    around do |test|
-      Dir.mktmpdir do |dir|
-        Dir.chdir(dir) do
-          File.write("vault.json", '{foo: bar}')
-          test.call
-        end
-      end
-    end
-
-    describe "config file" do
-      it "cannot create w/o a config" do
-        File.unlink("vault.json")
-        e = assert_raises(RuntimeError) { VaultClient.new }
-        e.message.must_include("vault.json")
-      end
-
-      it "creates a client" do
-        assert_instance_of(::VaultClient, VaultClient.new)
-      end
-    end
 
     before { client.clear }
     after { client.verify! }
