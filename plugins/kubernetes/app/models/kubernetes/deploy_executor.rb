@@ -44,7 +44,7 @@ module Kubernetes
     private
 
     def wait_for_resources_to_complete(release, release_docs)
-      start = Time.now
+      @wait_start_time = Time.now
       stable_ticks = CHECK_STABLE / TICK
       expected = release_docs.to_a.sum(&:desired_pod_count)
       @output.puts "Waiting for #{expected} pods to be created"
@@ -76,7 +76,7 @@ module Kubernetes
           elsif statuses.map(&:details).include?(RESTARTED)
             unstable!
             return false
-          elsif start + WAIT_FOR_LIVE < Time.now
+          elsif seconds_waiting > WAIT_FOR_LIVE
             @output.puts "TIMEOUT, pods took too long to get live"
             return false
           end
@@ -106,10 +106,10 @@ module Kubernetes
 
     # logs - container fails to boot
     def print_logs(client, pod)
-      @output.puts "LOGS:"
+      @output.puts "  LOGS:"
 
       pod.containers.map(&:name).each do |container|
-        @output.puts "Container #{container}" if pod.containers.size > 1
+        @output.puts "  Container #{container}" if pod.containers.size > 1
 
         logs = begin
           client.get_pod_log(pod.name, pod.namespace, previous: pod.restarted?, container: container)
@@ -120,19 +120,18 @@ module Kubernetes
             "No logs found"
           end
         end
-        @output.puts logs
+        logs.split("\n").each { |line| @output.puts "  #{line}"}
       end
     end
 
-    # events - not enough cpu/ram available
     def print_events(client, pod)
-      @output.puts "EVENTS:"
+      @output.puts "  EVENTS:"
       events = client.get_events(
         namespace: pod.namespace,
         field_selector: "involvedObject.name=#{pod.name}"
       )
       events.uniq! { |e| e.message.split("\n").sort }
-      events.each { |e| @output.puts "#{e.reason}: #{e.message}" }
+      events.each { |e| @output.puts "  #{e.reason}: #{e.message}" }
     end
 
     def bad_pods(release)
@@ -181,10 +180,13 @@ module Kubernetes
     end
 
     def print_statuses(status_groups)
+      return if @last_status_output && @last_status_output < 10.seconds.ago
+
+      @last_status_output = Time.now
+      @output.puts "Deploy status after #{seconds_waiting} seconds:"
       status_groups.group_by(&:group).each do |group, statuses|
-        @output.puts "#{group}:"
         statuses.each do |status|
-          @output.puts "  #{status.role}: #{status.details}"
+          @output.puts "  #{group} #{status.role}: #{status.details}"
         end
       end
     end
@@ -319,6 +321,10 @@ module Kubernetes
     def success
       @output.puts "SUCCESS"
       true
+    end
+
+    def seconds_waiting
+      (Time.now - @wait_start_time).to_i if @wait_start_time
     end
   end
 end
