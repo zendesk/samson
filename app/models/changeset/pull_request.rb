@@ -50,7 +50,7 @@ class Changeset::PullRequest
   # should only be when the edit is related to adding the text [samson review]
   def self.valid_webhook?(params)
     data = params['pull_request'] || {}
-    action = params.fetch('github').fetch('action')
+    action = params.dig('github', 'action')
     return false unless data['state'] == 'open' && (VALID_ACTIONS.include? action)
 
     if action == 'edited'
