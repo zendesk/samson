@@ -101,15 +101,16 @@ module Kubernetes
         print_events(client, pod)
         @output.puts
         print_logs(client, pod)
+        @output.puts "\n------------------------------------------\n"
       end
     end
 
     # logs - container fails to boot
     def print_logs(client, pod)
-      @output.puts "  LOGS:"
+      @output.puts "LOGS:"
 
       pod.containers.map(&:name).each do |container|
-        @output.puts "  Container #{container}" if pod.containers.size > 1
+        @output.puts "Container #{container}" if pod.containers.size > 1
 
         logs = begin
           client.get_pod_log(pod.name, pod.namespace, previous: pod.restarted?, container: container)
@@ -120,12 +121,13 @@ module Kubernetes
             "No logs found"
           end
         end
-        logs.split("\n").each { |line| @output.puts "  #{line}" }
+        # Don't display hundreds of log lines
+        logs.split("\n").last(50).each { |line| @output.puts "  #{line}" }
       end
     end
 
     def print_events(client, pod)
-      @output.puts "  EVENTS:"
+      @output.puts "EVENTS:"
       events = client.get_events(
         namespace: pod.namespace,
         field_selector: "involvedObject.name=#{pod.name}"
