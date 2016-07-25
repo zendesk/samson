@@ -12,6 +12,9 @@ module Samson
         define_method :login_user do |&block|
           block.call
         end
+
+        define_method :verify_authenticity_token do
+        end
         "logged in as #{user.name}"
       end
     end
