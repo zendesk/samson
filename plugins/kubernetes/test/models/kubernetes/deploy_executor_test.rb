@@ -302,7 +302,7 @@ describe Kubernetes::DeployExecutor do
       Kubernetes::ReleaseDoc.any_instance.stubs(:desired_pod_count).returns(1.5)
       pod_reply[:items] << pod_reply[:items].first
       assert execute!
-      out.must_include "resque-worker: Live\n  resque-worker: Live"
+      out.scan(/resque-worker: Live/).count.must_equal 2
       out.must_include "SUCCESS"
     end
 
@@ -408,10 +408,10 @@ describe Kubernetes::DeployExecutor do
 
         # correct debugging output
         out.scan(/Pod 100 pod pod-(\S+)/).flatten.uniq.must_equal ["resque-worker:"] # logs and events only for bad pod
-        out.must_include(
-          "EVENTS:\nFailedScheduling: fit failure on node (ip-1-2-3-4)\nfit failure on node (ip-2-3-4-5)\n\n"
+        out.must_match(
+          /EVENTS:\s+FailedScheduling: fit failure on node \(ip-1-2-3-4\)\s+fit failure on node \(ip-2-3-4-5\)\n\n/
         ) # no repeated events
-        out.must_include "LOGS:\nLOG-1\n"
+        out.must_match /LOGS:\s+LOG-1/
       end
 
       it "requests regular logs when previous logs are not available" do
@@ -424,7 +424,7 @@ describe Kubernetes::DeployExecutor do
 
         refute execute!
 
-        out.must_include "LOGS:\nLOG-1\n"
+        out.must_match /LOGS:\s+LOG-1/
       end
 
       it "does not crash when both log endpoints fails with a 404" do
@@ -437,7 +437,7 @@ describe Kubernetes::DeployExecutor do
 
         refute execute!
 
-        out.must_include "LOGS:\nNo logs found\n"
+        out.must_match /LOGS:\s+No logs found/
       end
     end
   end
