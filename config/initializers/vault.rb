@@ -46,7 +46,7 @@ if ENV["SECRET_STORAGE_BACKEND"] == "SecretStorage::HashicorpVault"
       # if it does, then we don't need to worry about going and getting one
       @writers = vault_hosts.map do |vault_server|
         if vault_server["vault_token"].present?
-          writer = Vault::Client.new(DEFAULT_CLIENT_OPTIONS.merge(verify_mode: vault_server["tls_verify"]))
+          writer = Vault::Client.new(DEFAULT_CLIENT_OPTIONS.merge(ssl_verify: vault_server["tls_verify"]))
           writer.token = File.read(vault_server["vault_token"]).strip
         else
           pemfile = File.read(vault_server["vault_auth_pem"])
