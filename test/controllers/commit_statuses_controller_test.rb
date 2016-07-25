@@ -8,7 +8,7 @@ describe CommitStatusesController do
   end
 
   as_a_project_deployer do
-    describe 'a GET to #show' do
+    describe '#show' do
       it "fails with unknown project" do
         assert_raises ActiveRecord::RecordNotFound do
           get :show, project_id: 123123, id: 'test/test'

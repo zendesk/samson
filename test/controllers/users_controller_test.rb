@@ -14,7 +14,7 @@ describe UsersController do
   end
 
   as_a_project_admin do
-    describe "a GET to #index" do
+    describe "#index" do
       it 'renders' do
         get :index, project_id: project.to_param
         assert_template :index

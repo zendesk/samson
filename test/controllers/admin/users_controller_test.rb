@@ -122,7 +122,7 @@ describe Admin::UsersController do
       end
     end
 
-    describe 'a GET to #show' do
+    describe '#show' do
       let(:modified_user) { users(:viewer) }
 
       it 'succeeds' do
@@ -133,7 +133,7 @@ describe Admin::UsersController do
   end
 
   as_a_super_admin do
-    describe 'a PUT to #update' do
+    describe '#update' do
       let(:modified_user) { users(:viewer) }
 
       it 'updates the user role' do
@@ -154,7 +154,7 @@ describe Admin::UsersController do
       end
     end
 
-    describe 'a DELETE to #destroy' do
+    describe '#destroy' do
       let(:modified_user) { users(:viewer) }
 
       it 'soft delete the user' do

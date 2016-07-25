@@ -10,7 +10,7 @@ describe ProjectsController do
     Project.any_instance.stubs(:valid_repository_url).returns(true)
   end
 
-  describe "a GET to #index" do
+  describe "#index" do
     as_a_viewer do
       it "renders" do
         get :index
@@ -65,7 +65,7 @@ describe ProjectsController do
     end
   end
 
-  describe "a GET to #new" do
+  describe "#new" do
     as_a_viewer do
       unauthorized :get, :new
     end
@@ -93,7 +93,7 @@ describe ProjectsController do
     end
   end
 
-  describe "a POST to #create" do
+  describe "#create" do
     as_a_viewer do
       unauthorized :post, :create
     end
@@ -159,7 +159,7 @@ describe ProjectsController do
     end
   end
 
-  describe "a DELETE to #destroy" do
+  describe "#destroy" do
     as_a_viewer do
       unauthorized :delete, :destroy, id: :foo
     end
@@ -198,7 +198,7 @@ describe ProjectsController do
     end
   end
 
-  describe "a PUT to #update" do
+  describe "#update" do
     as_a_viewer do
       unauthorized :put, :update, id: :foo
     end
@@ -278,7 +278,7 @@ describe ProjectsController do
     end
   end
 
-  describe "a GET to #edit" do
+  describe "#edit" do
     as_a_viewer do
       unauthorized :get, :edit, id: :foo
     end
@@ -316,7 +316,7 @@ describe ProjectsController do
     end
   end
 
-  describe "a GET to #show" do
+  describe "#show" do
     as_a_viewer do
       describe "as HTML" do
         it "does not redirect to the deploys page" do
@@ -350,7 +350,7 @@ describe ProjectsController do
     end
   end
 
-  describe 'a GET to #deploy_group_versions' do
+  describe '#deploy_group_versions' do
     let(:deploy) { deploys(:succeeded_production_test) }
 
     as_a_viewer do

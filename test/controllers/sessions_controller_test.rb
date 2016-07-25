@@ -3,7 +3,7 @@ require_relative '../test_helper'
 SingleCov.covered!
 
 describe SessionsController do
-  describe "a GET to #new" do
+  describe "#new" do
     describe "when logged in" do
       before do
         request.env['warden'].set_user(users(:admin))
@@ -26,7 +26,7 @@ describe SessionsController do
     end
   end
 
-  describe "a POST to #github" do
+  describe "#github" do
     let(:env) { {} }
     let(:user) { users(:github_viewer) }
     let(:strategy) { stub(name: 'github') }
@@ -95,7 +95,7 @@ describe SessionsController do
     end
   end
 
-  describe "a POST to #google" do
+  describe "#google" do
     let(:env) { {} }
     let(:user) { users(:viewer) }
     let(:strategy) { stub(name: 'google') }
@@ -159,7 +159,7 @@ describe SessionsController do
     end
   end
 
-  describe "a POST to #gitlab" do
+  describe "#gitlab" do
     let(:env) { {} }
     let(:user) { users(:viewer) }
     let(:strategy) { stub(name: 'gitlab') }
@@ -223,7 +223,7 @@ describe SessionsController do
     end
   end
 
-  describe "a POST to #ldap" do
+  describe "#ldap" do
     let(:env) { {} }
     let(:user) { users(:viewer) }
     let(:strategy) { stub(name: 'ldap') }
@@ -287,7 +287,7 @@ describe SessionsController do
     end
   end
 
-  describe "a GET to #failure" do
+  describe "#failure" do
     before do
       get :failure
     end
@@ -301,7 +301,7 @@ describe SessionsController do
     end
   end
 
-  describe "a DELETE to #destroy" do
+  describe "#destroy" do
     before do
       login_as(users(:admin))
       delete :destroy

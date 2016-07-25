@@ -18,7 +18,7 @@ describe Integrations::TravisController do
     ENV["TRAVIS_TOKEN"] = @orig_token
   end
 
-  describe "a POST to :create" do
+  describe "#create" do
     let(:authorization) { nil }
 
     before do

@@ -33,7 +33,7 @@ describe DeploysController do
   end
 
   as_a_viewer do
-    describe "a GET to :index" do
+    describe "#index" do
       it "renders html" do
         get :index, project_id: project
         assert_template :index
@@ -64,7 +64,7 @@ describe DeploysController do
       end
     end
 
-    describe "a GET to :active" do
+    describe "#active" do
       with_and_without_project do
         it "renders the template" do
           get :active, project_id: project_id
@@ -78,7 +78,7 @@ describe DeploysController do
       end
     end
 
-    describe "a GET to :active_count" do
+    describe "#active_count" do
       before do
         stage.create_deploy(admin, reference: 'reference')
         get :active_count
@@ -91,7 +91,7 @@ describe DeploysController do
       end
     end
 
-    describe "a GET to :changeset" do
+    describe "#changeset" do
       before do
         get :changeset, id: deploy.id, project_id: project.to_param
       end
@@ -110,7 +110,7 @@ describe DeploysController do
       end
     end
 
-    describe "a GET to :show" do
+    describe "#show" do
       describe "with a valid deploy" do
         before { get :show, project_id: project.to_param, id: deploy.to_param }
 
@@ -138,7 +138,7 @@ describe DeploysController do
       end
     end
 
-    describe "a GET to :search" do
+    describe "#search" do
       before do
         Deploy.delete_all
         Job.delete_all
@@ -254,7 +254,7 @@ describe DeploysController do
       Deploy.any_instance.stubs(:changeset).returns(changeset)
     end
 
-    describe "a GET to :new" do
+    describe "#new" do
       it "sets stage and reference" do
         get :new, project_id: project.to_param, stage_id: stage.to_param, reference: "abcd"
         deploy = assigns(:deploy)
@@ -262,7 +262,7 @@ describe DeploysController do
       end
     end
 
-    describe "a POST to :create" do
+    describe "#create" do
       let(:params) { { deploy: { reference: "master" }} }
 
       before do
@@ -310,7 +310,7 @@ describe DeploysController do
       end
     end
 
-    describe "a POST to :confirm" do
+    describe "#confirm" do
       before do
         Deploy.delete_all # triggers more callbacks
 
@@ -322,7 +322,7 @@ describe DeploysController do
       end
     end
 
-    describe "a POST to :buddy_check" do
+    describe "#buddy_check" do
       let(:deploy) { deploys(:succeeded_test) }
       before { deploy.job.update_column(:status, 'pending') }
 
@@ -338,7 +338,7 @@ describe DeploysController do
       end
     end
 
-    describe "a DELETE to :destroy" do
+    describe "#destroy" do
       describe "with a deploy owned by the user" do
         before do
           DeployService.stubs(:new).with(user).returns(deploy_service)
@@ -374,7 +374,7 @@ describe DeploysController do
       DeployService.stubs(:new).with(user).returns(deploy_service)
     end
 
-    describe "a DELETE to :destroy" do
+    describe "#destroy" do
       it "cancels the deploy" do
         deploy_service.expects(:stop!).once
         delete :destroy, project_id: project.to_param, id: deploy.to_param

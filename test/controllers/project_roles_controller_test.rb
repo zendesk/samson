@@ -14,7 +14,7 @@ describe ProjectRolesController do
   end
 
   as_a_project_admin do
-    describe "a POST to #create" do
+    describe "#create" do
       def create(role_id)
         post :create, project_id: project, user_id: new_admin.id, role_id: role_id
       end
