@@ -120,7 +120,7 @@ module Kubernetes
             "No logs found"
           end
         end
-        logs.split("\n").each { |line| @output.puts "  #{line}"}
+        logs.split("\n").each { |line| @output.puts "  #{line}" }
       end
     end
 
