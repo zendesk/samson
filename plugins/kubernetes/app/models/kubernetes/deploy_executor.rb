@@ -2,7 +2,7 @@
 # finishes when cluster is "Ready"
 module Kubernetes
   class DeployExecutor
-    WAIT_FOR_LIVE = 10.minutes
+    WAIT_FOR_LIVE = ENV.fetch('KUBE_WAIT_FOR_LIVE', 10).to_i.minutes
     CHECK_STABLE = 1.minute
     TICK = 2.seconds
     RESTARTED = "Restarted".freeze
@@ -180,7 +180,7 @@ module Kubernetes
     end
 
     def print_statuses(status_groups)
-      return if @last_status_output && @last_status_output < 10.seconds.ago
+      return if @last_status_output && @last_status_output > 10.seconds.ago
 
       @last_status_output = Time.now
       @output.puts "Deploy status after #{seconds_waiting} seconds:"
