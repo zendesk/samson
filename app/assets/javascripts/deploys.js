@@ -339,6 +339,8 @@ $(function () {
 
     highlightAndScroll();
   }());
+
+  $('[data-toggle="tooltip"]').tooltip();
 });
 
 function toggleOutputToolbar() {

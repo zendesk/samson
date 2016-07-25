@@ -13,6 +13,7 @@
 //= require jquery
 //= require jquery-ujs
 //= require jquery-cookie
+//= require jquery-ui
 //= require datatables.net
 //= require datatables.net-bs
 //= require datatables.net-fixedcolumns
@@ -31,7 +32,6 @@
 //= require bootstrap/tooltip
 //= require bootstrap/popover
 //= require bootstrap-select
-//= require jquery-ui
 //= require x-editable/dist/bootstrap3-editable/js/bootstrap-editable
 //= require message-center
 //= require rickshaw/vendor/d3.min

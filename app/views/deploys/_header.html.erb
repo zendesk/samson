@@ -3,8 +3,10 @@
 
   <div class="pull-right">
     <% if deployer_for_project? %>
-      <% unless @deploy.succeeded? || @deploy.active? %>
-        <%= link_to "Redeploy", project_stage_deploys_path(@project, @deploy.stage, deploy: { reference: @deploy.reference }), method: :post, class: "btn btn-danger" %>
+      <% if @deploy.succeeded? %>
+        <%= redeploy_button(true) %>
+      <% elsif !@deploy.active? %>
+        <%= redeploy_button %>
       <% end %>
 
       <% if @deploy.succeeded? && next_stage = @deploy.stage.next_stage %>

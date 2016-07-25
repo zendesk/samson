@@ -99,6 +99,28 @@ module DeploysHelper
     end
   end
 
+  def redeploy_button(already_succeeded = false)
+    html_options = {
+      class: 'btn btn-danger',
+      method: :post
+    }
+    if already_succeeded
+      html_options[:class] = 'btn btn-default'
+      html_options[:data] = {
+        toggle: 'tooltip',
+        placement: 'auto bottom'
+      }
+      html_options[:title] = 'Why? This deploy succeeded.'
+    end
+    link_to "Redeploy",
+      project_stage_deploys_path(
+        @project,
+        @deploy.stage,
+        deploy: { reference: @deploy.reference }
+      ),
+      html_options
+  end
+
   def stop_button(deploy: @deploy, **options)
     return unless @project && deploy
     link_to(
