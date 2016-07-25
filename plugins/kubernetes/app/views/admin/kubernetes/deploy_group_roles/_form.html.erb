@@ -1,4 +1,5 @@
 <%= form_for [:admin, @deploy_group_role], html: { class: "form-horizontal" } do |form| %>
+  <%= hidden_field_tag :redirect_to, params[:redirect_to] %>
   <%= render 'shared/errors', object: @deploy_group_role %>
   <% defaults = @deploy_group_role.kubernetes_role.try(:defaults) || {} %>
 

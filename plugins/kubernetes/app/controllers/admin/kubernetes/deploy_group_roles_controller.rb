@@ -14,7 +14,7 @@ class Admin::Kubernetes::DeployGroupRolesController < ApplicationController
   def create
     @deploy_group_role = ::Kubernetes::DeployGroupRole.new(deploy_group_role_params)
     if @deploy_group_role.save
-      redirect_to [:admin, @deploy_group_role]
+      redirect_back_or [:admin, @deploy_group_role]
     else
       render :new, status: 422
     end
