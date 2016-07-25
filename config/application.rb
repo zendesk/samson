@@ -39,7 +39,7 @@ module Samson
       "https://#{url}"
     end
 
-    config.autoload_paths += Dir["#{config.root}/lib/**/"]
+    config.autoload_paths << "#{config.root}/lib"
 
     if Rails.env.test?
       config.cache_store = :memory_store
