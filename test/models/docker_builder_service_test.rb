@@ -1,8 +1,8 @@
 require_relative '../test_helper'
 
-SingleCov.covered! uncovered: 20
+SingleCov.covered!
 
-describe DeployService do
+describe DockerBuilderService do
   include GitRepoTestHelper
 
   let(:tmp_dir) { Dir.mktmpdir }
@@ -22,6 +22,83 @@ describe DeployService do
   let(:mock_docker_image) { stub(json: docker_image_json) }
 
   before { create_repo_with_tags(git_tag) }
+
+  describe "#run!" do
+    def run!(options = {})
+      JobExecution.expects(:start_job).capture(start_jobs)
+      service.run!(options)
+    end
+
+    def execute_job
+      job.instance_variable_get(:@execution_block).call(job, Dir.mktmpdir)
+    end
+
+    let(:start_jobs) { [] }
+    let(:job) { start_jobs[0][0] }
+
+    it "deletes previous build job" do
+      build.docker_build_job = jobs(:succeeded_test)
+      run!
+      assert_raises(ActiveRecord::RecordNotFound) { jobs(:succeeded_test).reload }
+    end
+
+    it "sends notifications when the job succeeds" do
+      run!
+      Samson::Hooks.expects(:fire).with(:after_docker_build, anything)
+      job.send(:finish)
+    end
+
+    it "builds, does not push and removes the image" do
+      run!
+
+      # simulate that build worked
+      service.expects(:build_image).returns(true)
+      service.expects(:push_image).never
+
+      # simulate falling removal ... should not change return value
+      build.stubs(docker_image: stub)
+      build.docker_image.expects(:remove).with(force: true).returns(false)
+
+      assert execute_job
+    end
+
+    it "does not remove when DOCKER_KEEP_BUILT_IMGS is set" do
+      with_env "DOCKER_KEEP_BUILT_IMGS" => "1" do
+        run!(push: false)
+
+        service.expects(:build_image).returns(true) # simulate that build worked
+        build.expects(:docker_image).never # image will not be removed
+        build.expects(:docker_image).never # image will not be removed
+
+        assert execute_job
+      end
+    end
+
+    it "returns push_image result when it pushes" do
+      with_env "DOCKER_KEEP_BUILT_IMGS" => "1" do
+        run!(push: true)
+
+        # simulate that build worked
+        service.expects(:build_image).returns(true)
+        service.expects(:push_image).returns(123)
+
+        execute_job.must_equal(123)
+      end
+    end
+
+    it "runs via kubernetes when job is marked as kubernetes_job" do
+      build.kubernetes_job = true
+      with_env "DOCKER_KEEP_BUILT_IMGS" => "1" do
+        run!
+
+        # simulate that build worked
+        service.expects(:build_image).never
+        service.expects(:run_build_image_job).returns(123)
+
+        execute_job.must_equal(123)
+      end
+    end
+  end
 
   describe "#run_build_image_job" do
     let(:local_job) { stub }
@@ -50,7 +127,7 @@ describe DeployService do
     end
   end
 
-  describe '#build_image' do
+  describe "#build_image" do
     before do
       Docker::Image.expects(:build_from_dir).returns(mock_docker_image)
     end
@@ -90,7 +167,7 @@ describe DeployService do
     end
   end
 
-  describe '#push_image' do
+  describe "#push_image" do
     let(:repo_digest) { 'sha256:5f1d7c7381b2e45ca73216d7b06004fdb0908ed7bb8786b62f2cdfa5035fde2c' }
     let(:push_output) do
       [
@@ -130,10 +207,35 @@ describe DeployService do
       assert_equal('my-test', build.docker_ref)
     end
 
+    it 'rescues docker error' do
+      service.expects(:docker_image_ref).raises(Docker::Error::DockerError)
+      service.push_image('my-test').must_equal nil
+      service.output.to_s.must_equal "Docker push failed: Docker::Error::DockerError\n"
+    end
+
+    it 'pushes with credentials when DOCKER_REGISTRY is set' do
+      with_env(
+        'DOCKER_REGISTRY' => 'reg',
+        'DOCKER_REGISTRY_USER' => 'usr',
+        'DOCKER_REGISTRY_PASS' => 'pas',
+        'DOCKER_REGISTRY_EMAIL' => 'eml'
+      ) do
+        mock_docker_image.unstub(:push)
+        mock_docker_image.expects(:push).with(
+          username: 'usr', password: 'pas', email: 'eml', serveraddress: 'reg'
+        ).multiple_yields(*push_output)
+        build.label = "Version 123"
+        service.push_image(nil)
+        assert_equal('version-123', build.docker_ref)
+      end
+    end
+
     describe 'pushing latest' do
       it 'adds the latest tag on top of the one specified when latest is true' do
         mock_docker_image.expects(:tag).with(has_entry(tag: 'my-test')).with(has_entry(tag: 'latest'))
-        mock_docker_image.expects(:push).with(service.send(:registry_credentials), tag: 'latest', force: true)
+        mock_docker_image.expects(:push).
+          with(service.send(:registry_credentials), tag: 'latest', force: true).
+          multiple_yields(*push_output)
         service.push_image('my-test', tag_as_latest: true)
       end
 
