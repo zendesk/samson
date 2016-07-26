@@ -41,6 +41,40 @@ describe Changeset::PullRequest do
     end
   end
 
+  describe ".valid_webhook" do
+    let(:webhook_data) do
+      {
+        number: 1,
+        pull_request: {
+          state: 'open',
+          body: 'pr description [samson review]'
+        },
+        github: {
+          action: 'opened'
+        }
+      }.with_indifferent_access
+    end
+
+    it "is invalid for PRs that had its label changed" do
+      webhook_data.deep_merge!(github: {action: 'labeled'})
+      Changeset::PullRequest.valid_webhook?(webhook_data).must_equal false
+    end
+
+    describe "PR change that is an edit" do
+      before { webhook_data.deep_merge!(github: {action: 'edited'}) }
+
+      it 'is valid if [samson review] was not in the previous description' do
+        webhook_data.deep_merge!(github: {changes: {body: {from: 'a desc'}}})
+        Changeset::PullRequest.valid_webhook?(webhook_data).must_equal true
+      end
+
+      it 'is valid if [samson review] was in the previous description' do
+        webhook_data.deep_merge!(github: {changes: {body: {from: '[samson review]'}}})
+        Changeset::PullRequest.valid_webhook?(webhook_data).must_equal false
+      end
+    end
+  end
+
   describe "#users" do
     it "returns the users associated with the pull request" do
       pr.users.map(&:login).must_equal ["foo", "bar"]
