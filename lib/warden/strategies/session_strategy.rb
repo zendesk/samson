@@ -4,7 +4,11 @@ class Warden::Strategies::SessionStrategy < Warden::Strategies::Base
   end
 
   def authenticate!
-    redirect!('/login', origin: request.path)
+    if request.content_type == 'application/json'
+      throw(:warden)
+    else
+      redirect!('/login', origin: request.path)
+    end
   end
 end
 

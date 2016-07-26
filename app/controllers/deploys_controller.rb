@@ -29,10 +29,6 @@ class DeploysController < ApplicationController
     render partial: 'shared/deploys_table', layout: false if params[:partial]
   end
 
-  def active_count
-    render json: Deploy.active.count
-  end
-
   # Takes the same params that are used by the client side filtering
   # on the recent deploys pages.
   # Returns a paginated json object of deploys that people are

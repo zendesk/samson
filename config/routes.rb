@@ -1,5 +1,14 @@
 Samson::Application.routes.draw do
+  use_doorkeeper
   root to: 'projects#index'
+
+  namespace :api do
+    resources :deploys, only: [:active_count] do
+      collection do
+        get :active_count
+      end
+    end
+  end
 
   resources :projects do
     resources :jobs, only: [:index, :new, :create, :show, :destroy]
@@ -63,7 +72,6 @@ Samson::Application.routes.draw do
   resources :deploys, only: [:index] do
     collection do
       get :active
-      get :active_count
       get :recent
       get :search
     end

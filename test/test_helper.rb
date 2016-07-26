@@ -203,6 +203,14 @@ class ActionController::TestCase
     end
   end
 
+  def json!
+    request.env['CONTENT_TYPE'] = 'application/json'
+  end
+
+  def auth!(header)
+    request.env['HTTP_AUTHORIZATION'] = header
+  end
+
   before do
     middleware = Rails.application.config.middleware.detect { |m| m.name == 'Warden::Manager' }
     manager = Warden::Manager.new(nil, &middleware.block)

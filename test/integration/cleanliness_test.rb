@@ -99,6 +99,7 @@ describe "cleanliness" do
       "lib/samson/integration.rb",
       "lib/warden/strategies/basic_strategy.rb",
       "lib/warden/strategies/session_strategy.rb",
+      "lib/warden/strategies/doorkeeper_strategy.rb",
       "plugins/env/app/models/concerns/accepts_environment_variables.rb",
       "plugins/env/app/models/environment_variable_group.rb",
       "plugins/env/app/models/project_environment_variable_group.rb",

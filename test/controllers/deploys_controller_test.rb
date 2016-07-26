@@ -78,19 +78,6 @@ describe DeploysController do
       end
     end
 
-    describe "#active_count" do
-      before do
-        stage.create_deploy(admin, reference: 'reference')
-        get :active_count
-      end
-
-      it "renders json" do
-        assert_equal "application/json", @response.content_type
-        assert_response :ok
-        @response.body.must_equal "1"
-      end
-    end
-
     describe "#changeset" do
       before do
         get :changeset, id: deploy.id, project_id: project.to_param

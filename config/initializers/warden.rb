@@ -7,9 +7,10 @@ Warden::Manager.serialize_from_session do |id|
 end
 
 require 'warden/strategies/basic_strategy'
+require "warden/strategies/doorkeeper_strategy"
 require 'warden/strategies/session_strategy'
 
 Rails.application.config.middleware.insert_after(ActionDispatch::Flash, Warden::Manager) do |manager|
-  manager.default_strategies :basic, :session
+  manager.default_strategies :basic, :doorkeeper, :session
   manager.failure_app = UnauthorizedController
 end

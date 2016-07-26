@@ -8,7 +8,7 @@ samson.controller('currentDeployBadgeCtrl', function($scope, $http, SseFactory) 
   // - get current active count to reduce race condition
   // - connect to stream for updates
   setTimeout(function(){
-    $http.get('/deploys/active_count.json').success(function(result) {
+    $http.get('/api/deploys/active_count.json').success(function(result) {
       $scope.currentActiveDeploys = result.deploy_count;
       updateBadge();
 
