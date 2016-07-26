@@ -1,4 +1,6 @@
 class Admin::SecretsController < ApplicationController
+  ADD_MORE = 'Save and add another'.freeze
+
   include CurrentProject
 
   before_action :find_project_permalinks
@@ -58,7 +60,11 @@ class Admin::SecretsController < ApplicationController
 
   def successful_response(notice)
     flash[:notice] = notice
-    redirect_to action: :index
+    if params[:commit] == ADD_MORE
+      redirect_to new_admin_secret_path(secret: params[:secret].except(:value))
+    else
+      redirect_to action: :index
+    end
   end
 
   def failure_response(message)

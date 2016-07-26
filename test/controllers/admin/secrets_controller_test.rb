@@ -77,9 +77,8 @@ describe Admin::SecretsController do
         }
       end
 
-      before { post :create, secret: attributes }
-
       it 'creates a secret' do
+        post :create, secret: attributes
         flash[:notice].wont_be_nil
         assert_redirected_to admin_secrets_path
         secret = SecretStorage::DbBackend::Secret.find('production/foo/pod2/v')
@@ -87,36 +86,23 @@ describe Admin::SecretsController do
         secret.creator_id.must_equal user.id
       end
 
-      describe 'invalid' do
-        let(:attributes) do
-          {
-            environment_permalink: 'production',
-            project_permalink: 'foo',
-            deploy_group_permalink: 'group',
-            key: '',
-            value: ''
-          }
-        end
-
-        it 'renders and sets the flash' do
-          assert flash[:error]
-          assert_template :edit
-        end
+      it "redirects to new form when user wants to create another secret" do
+        post :create, secret: attributes, commit: Admin::SecretsController::ADD_MORE
+        flash[:notice].wont_be_nil
+        assert_redirected_to "/admin/secrets/new?#{{secret: attributes.except(:value)}.to_query}"
       end
 
-      describe 'global' do
-        let(:attributes) do
-          {
-            environment_permalink: 'production',
-            project_permalink: 'global',
-            deploy_group_permalink: 'somegroup',
-            key: 'bar'
-          }
-        end
+      it 'renders and sets the flash when invalid' do
+        attributes[:key] = ''
+        post :create, secret: attributes
+        assert flash[:error]
+        assert_template :edit
+      end
 
-        it 'is unauthorized' do
-          assert_unauthorized
-        end
+      it "is not authorized to create global secrets" do
+        attributes[:project_permalink] = 'global'
+        post :create, secret: attributes
+        assert_unauthorized
       end
     end
 
