@@ -25,8 +25,10 @@ class DockerBuilderService
       if build.kubernetes_job
         run_build_image_job(job, image_name, push: push, tag_as_latest: tag_as_latest)
       elsif build_image(tmp_dir)
-        push_image(image_name, tag_as_latest: tag_as_latest) if push
+        ret = true
+        ret = push_image(image_name, tag_as_latest: tag_as_latest) if push
         build.docker_image.remove(force: true) unless ENV["DOCKER_KEEP_BUILT_IMGS"] == "1"
+        ret
       end
     end
 
