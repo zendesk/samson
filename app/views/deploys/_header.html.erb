@@ -3,7 +3,7 @@
 
   <div class="pull-right">
     <% if deployer_for_project? %>
-        <%= redeploy_button %>
+      <%= redeploy_button %>
 
       <% if @deploy.succeeded? && next_stage = @deploy.stage.next_stage %>
         <% unless next_stage.locked? %>
