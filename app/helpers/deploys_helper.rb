@@ -99,12 +99,13 @@ module DeploysHelper
     end
   end
 
-  def redeploy_button(already_succeeded = false)
+  def redeploy_button
+    return if @deploy.active?
     html_options = {
       class: 'btn btn-danger',
       method: :post
     }
-    if already_succeeded
+    if @deploy.succeeded?
       html_options[:class] = 'btn btn-default'
       html_options[:data] = {
         toggle: 'tooltip',
