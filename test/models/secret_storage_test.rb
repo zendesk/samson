@@ -170,8 +170,20 @@ describe SecretStorage do
     let(:client) { SecretStorage::HashicorpVault.send(:vault_client) }
     let(:secret_namespace) { "secret/apps/" }
 
+    around { |test| Dir.mktmpdir { |dir| Dir.chdir(dir) { test.call } } }
     before { client.clear }
     after { client.verify! }
+
+    describe "missing config file" do
+      before { client.remove_config }
+      after { client.create_config }
+      it "fails without a config file" do
+        e = assert_raises RuntimeError do
+          client.ensure_config_exists
+        end
+        e.message.must_include "config file missing"
+      end
+    end
 
     describe ".read" do
       it "gets a value based on a key with /secret" do
@@ -219,6 +231,20 @@ describe SecretStorage do
             "production/project/group/that/key"
           ]
         )
+      end
+    end
+
+    describe "vault instances" do
+      it "fails to find a vault instance for the deploy group" do
+        e = assert_raises KeyError do
+          SecretStorage::HashicorpVault.read('production/foo/whateverman/bar')
+        end
+        e.message.must_include("no vault_instance configured for deploy group whateverman")
+      end
+
+      it "works with a global deploy group" do
+        client.expect(secret_namespace + 'production/foo/global/bar', vault: "bar")
+        assert SecretStorage::HashicorpVault.read('production/foo/global/bar')
       end
     end
 

@@ -3,6 +3,7 @@ require_relative '../lib/samson_kubernetes/hash_kuber_selector'
 
 # Mock up vault client
 class VaultClient
+  CONFIG_FILE = "vault.json".freeze
   def logical
     @logical ||= Logical.new
   end
@@ -16,6 +17,8 @@ class VaultClient
   end
 
   def initialize
+    create_config
+    ensure_config_exists
     @expected = {}
     @set = {}
   end
@@ -25,6 +28,7 @@ class VaultClient
   end
 
   def read(key)
+    vault_instance(key)
     Response.new(@expected.delete(key) || raise(KeyError, "#{key} not registered"))
   end
 
@@ -34,6 +38,7 @@ class VaultClient
   end
 
   def write(key, body)
+    vault_instance(key)
     @set[key] = body
     true
   end
@@ -41,9 +46,30 @@ class VaultClient
   def config_for(deploy_group_name)
     {
       'vault_address' => 'https://test.hvault.server',
-      'deploy_groups' => [deploy_group_name, 'other_deploy_group'],
-      'tls_verify' => false
+      'tls_verify' => false, "vault_instance": deploy_group_name
     }
+  end
+
+  def ensure_config_exists
+    raise "config file missing" unless File.exist?(CONFIG_FILE)
+  end
+
+  def create_config
+    vault_json = {pod2: 'yup', foo: 'bar', group: 'foo', global: 'all your keys are belong to us'}
+    File.write(CONFIG_FILE, vault_json.to_json)
+  end
+
+  def remove_config
+    File.delete(CONFIG_FILE) if File.exist?(CONFIG_FILE)
+  end
+
+  def vault_instance(key)
+    create_config
+    deploy_group = SecretStorage.parse_secret_key(key.split('/', 3).last).fetch(:deploy_group_permalink)
+    vaults = JSON.parse(File.read(CONFIG_FILE))
+    unless vaults.include?(deploy_group)
+      raise(KeyError, "no vault_instance configured for deploy group #{deploy_group}")
+    end
   end
 
   # test hooks

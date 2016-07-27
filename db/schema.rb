@@ -57,6 +57,7 @@ ActiveRecord::Schema.define(version: 20160715165508) do
     t.datetime "updated_at",                 null: false
     t.string   "env_value",      limit: 255, null: false
     t.string   "permalink",      limit: 255, null: false
+    t.string   "vault_instance", limit: 255
   end
 
   add_index "deploy_groups", ["environment_id"], name: "index_deploy_groups_on_environment_id", using: :btree
