@@ -46,6 +46,13 @@
           </td>
         </tr>
       <% end %>
+
+      <tr>
+        <td colspan="3">Total</td>
+        <td><%= @deploy_group_roles.map(&:cpu).sum %></td>
+        <td><%= @deploy_group_roles.map(&:ram).sum %></td>
+        <td><%= @deploy_group_roles.map(&:replicas).sum %></td>
+      </tr>
     </table>
   </div>
 
