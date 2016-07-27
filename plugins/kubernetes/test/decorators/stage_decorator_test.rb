@@ -42,10 +42,18 @@ describe Stage do
       stage.save!
     end
 
-    it "calls seed to fill in missing roles (most useful for new projects) when kubernetes is set" do
-      Kubernetes::Role.expects(:seed!)
-      stage.kubernetes = true
-      stage.save!
+    describe "when kubernetes is set" do
+      before { stage.kubernetes = true }
+
+      it "calls seed to fill in missing roles (most useful for new projects)" do
+        Kubernetes::Role.expects(:seed!)
+        stage.save!
+      end
+
+      it "does not blow up when seeding fails, users can fix this later" do
+        Kubernetes::Role.expects(:seed!).raises(Samson::Hooks::UserError)
+        stage.save!
+      end
     end
   end
 end

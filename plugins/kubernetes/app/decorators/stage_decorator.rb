@@ -14,6 +14,9 @@ Stage.class_eval do
   end
 
   def seed_kubernetes_roles
-    Kubernetes::Role.seed! project, 'master' if kubernetes
+    return unless kubernetes
+    Kubernetes::Role.seed! project, 'master'
+  rescue Samson::Hooks::UserError
+    nil # ignore ... user can set this up later
   end
 end
