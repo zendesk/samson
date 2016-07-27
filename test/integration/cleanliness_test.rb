@@ -86,7 +86,6 @@ describe "cleanliness" do
 
   it "tests all files" do
     untested = [
-      "app/controllers/application_controller.rb",
       "app/controllers/concerns/current_project.rb",
       "app/controllers/concerns/stage_permitted_params.rb",
       "app/mailers/application_mailer.rb",

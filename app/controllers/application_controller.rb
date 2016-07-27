@@ -23,4 +23,18 @@ class ApplicationController < ActionController::Base
     super
     payload["params"] = request.params
   end
+
+  def redirect_back_or(fallback)
+    if param_location = params[:redirect_to].to_s.presence
+      if param_location.is_a?(String) && param_location.start_with?('/')
+        redirect_to URI("http://nope.nope#{param_location}").request_uri # using URI to silence Brakeman
+      else
+        render status: :bad_request, plain: 'Invalid redirect_to parameter'
+      end
+    elsif request.env['HTTP_REFERER']
+      redirect_to :back
+    else
+      redirect_to fallback
+    end
+  end
 end

@@ -39,7 +39,7 @@
             <td>
               <% if current_user.admin_for?(@stage.project) %>
                 <% attributes = {kubernetes_role_id: role.id, project_id: @stage.project_id, deploy_group_id: deploy_group.id} %>
-                <%= link_to "Create", new_admin_kubernetes_deploy_group_role_path(kubernetes_deploy_group_role: attributes) %>
+                <%= link_to "Create", new_admin_kubernetes_deploy_group_role_path(kubernetes_deploy_group_role: attributes, redirect_to: request.path) %>
               <% end %>
             </td>
           <% end %>

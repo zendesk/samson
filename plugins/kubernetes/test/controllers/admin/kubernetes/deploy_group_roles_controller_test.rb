@@ -76,6 +76,11 @@ describe Admin::Kubernetes::DeployGroupRolesController do
         assert_redirected_to [:admin, Kubernetes::DeployGroupRole.last]
       end
 
+      it "redirects to param" do
+        post :create, params.merge(redirect_to: '/bar')
+        assert_redirected_to '/bar'
+      end
+
       it "renders when failing to create" do
         params[:kubernetes_deploy_group_role].delete(:cpu)
         post :create, params
