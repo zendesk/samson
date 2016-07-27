@@ -34,4 +34,42 @@ describe DeploysHelper do
       assert_raises(KeyError) { file_status_label('wut') }
     end
   end
+
+  describe '#redeploy_button' do
+    before do
+      @deploy = deploys(:succeeded_test)
+      @project = projects(:test)
+    end
+
+    describe 'when the deploy already succeeded' do
+      it 'generates a link' do
+        link = '<a class="btn btn-default" data-toggle="tooltip" data-placement="auto bottom" title="Why? This deploy'\
+               ' succeeded." rel="nofollow" data-method="post" href="/projects/foo/stages/staging/deploys?deploy%5Bre'\
+               'ference%5D=staging">Redeploy</a>'
+        redeploy_button.must_equal link
+      end
+    end
+
+    describe 'when the deploy is still running' do
+      around do |t|
+        @deploy.stub(:active?, true) { t.call }
+      end
+
+      it 'does not generate a link' do
+        redeploy_button.must_equal nil
+      end
+    end
+
+    describe 'when the deploy failed' do
+      around do |t|
+        @deploy = deploys(:succeeded_test)
+        @deploy.stub(:succeeded?, false) { t.call }
+      end
+
+      it 'generates a red link' do
+        redeploy_button.must_equal '<a class="btn btn-danger" rel="nofollow" data-method="post" href="/projects/foo/'\
+                                   'stages/staging/deploys?deploy%5Breference%5D=staging">Redeploy</a>'
+      end
+    end
+  end
 end
