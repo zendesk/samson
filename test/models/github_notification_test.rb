@@ -1,6 +1,6 @@
 require_relative '../test_helper'
 
-SingleCov.covered! uncovered: 1
+SingleCov.covered!
 
 describe GithubNotification do
   let(:project) { stub(name: "Glitter", github_repo: "glitter/glitter", to_param: "3-glitter") }
@@ -16,7 +16,6 @@ describe GithubNotification do
     it "adds a comment" do
       comment = stub_request(:post, endpoint)
       notification.deliver
-
       assert_requested comment
     end
   end
