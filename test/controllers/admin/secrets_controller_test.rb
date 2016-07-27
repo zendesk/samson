@@ -27,12 +27,20 @@ describe Admin::SecretsController do
     }
 
     describe '#index' do
+      before { create_global }
+
       it 'renders template without secret values' do
-        create_global
         get :index
         assert_template :index
         assigns[:secret_keys].size.must_equal 1
         response.body.wont_include secret.value
+      end
+
+      it 'can filter' do
+        create_secret 'production/global/pod2/bar'
+        get :index, search: {query: 'bar'}
+        assert_template :index
+        assigns[:secret_keys].must_equal ['production/global/pod2/bar']
       end
     end
 
