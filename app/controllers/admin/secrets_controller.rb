@@ -13,6 +13,9 @@ class Admin::SecretsController < ApplicationController
 
   def index
     @secret_keys = SecretStorage.keys
+    if query = params.dig(:search, :query).presence
+      @secret_keys.select! { |s| s.include?(query) }
+    end
   end
 
   def new
