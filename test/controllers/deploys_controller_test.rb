@@ -178,6 +178,7 @@ describe DeploysController do
         get :search, format: "csv", limit: 1
         assert_response :ok
         @response.body.split("\n").length.must_equal 6 # 1 record and 5 meta rows
+        @response.body.split("\n")[2].split(",")[2].to_i.must_equal(1) # validate that count equals = csv_limit
       end
 
       it "renders html" do

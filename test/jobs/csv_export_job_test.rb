@@ -45,73 +45,116 @@ describe CsvExportJob do
       assert File.exist?(job.path_file), "File Not exist"
     end
 
-    it "creates deploys csv file accurately and completely" do
-      completeness_test({})
-    end
+    describe "with Deploy Groups production filter (from environment)" do
+      before do
+        stages(:test_production).update_attribute(:production, nil)
+        stages(:test_staging).update_attribute(:production, nil)
+      end
 
-    it "filters the report with known production activity accurately and completely" do
-      filter = {
-        'deploys.created_at': (DateTime.new(1900, 1, 1)..DateTime.parse(Date.today.to_s + "T23:59:59Z")),
-        'environments.production': true, 'jobs.status': 'succeeded', 'stages.project_id': project.id
-      }
-      completeness_test(filter)
-    end
+      it "filters the report with known production activity completely" do
+        filter = {
+          'deploys.created_at': (DateTime.new(1900, 1, 1)..DateTime.parse(Date.today.to_s + "T23:59:59Z")),
+          'environments.production': true, 'jobs.status': 'succeeded', 'stages.project_id': project.id
+        }
+        completeness_test(filter, 1)
+      end
 
-    it "filters the report with known non-production activity accurately and completely" do
-      filter = {
-        'deploys.created_at': (DateTime.new(1900, 1, 1)..DateTime.parse(Date.today.to_s + "T23:59:59Z")),
-        'environments.production': false, 'jobs.status': 'succeeded', 'stages.project_id': project.id
-      }
-      completeness_test(filter)
-    end
-
-    it "has no results for date range after deploys" do
-      filter = {'deploys.created_at': (DateTime.new(2015, 12, 31)..DateTime.parse(Date.today.to_s + "T23:59:50Z"))}
-      empty_test(filter)
-    end
-
-    it "has no results for date range before deploys" do
-      filter = {'deploys.created_at': (DateTime.new(1900, 1, 1)..DateTime.new(2000, 1, 1, 23, 59, 59))}
-      empty_test(filter)
-    end
-
-    it "has no results for statuses with no fixtures" do
-      filter = {'jobs.status': 'failed'}
-      empty_test(filter)
-    end
-
-    it "has no results for non-existant project" do
-      filter = {'stages.project_id': -999}
-      empty_test(filter)
-    end
-
-    it "has no results for non-production with no valid non-prod deploy" do
-      deploys(:succeeded_test).delete
-      filter = {'stages.production': false}
-      empty_test(filter)
-    end
-
-    it "sends mail" do
-      assert_difference('ActionMailer::Base.deliveries.size', 1) do
-        CsvExportJob.perform_now(deploy_export_job)
+      it "filters the report with known non-production activity completely" do
+        filter = {
+          'deploys.created_at': (DateTime.new(1900, 1, 1)..DateTime.parse(Date.today.to_s + "T23:59:59Z")),
+          'environments.production': false, 'jobs.status': 'succeeded', 'stages.project_id': project.id
+        }
+        completeness_test(filter, 1)
       end
     end
 
-    it "doesn't send mail when user is invalid" do
-      deploy_export_job.update_attribute('user_id', -999)
-      assert_difference('ActionMailer::Base.deliveries.size', 0) do
-        CsvExportJob.perform_now(deploy_export_job)
-        assert deploy_export_job.email.nil?
+    describe "with Deploy Groups production filter (from stage)" do
+      before do
+        DeployGroupsStage.delete_all
+      end
+
+      it "filters the report with known production activity completely" do
+        filter = {
+          'deploys.created_at': (DateTime.new(1900, 1, 1)..DateTime.parse(Date.today.to_s + "T23:59:59Z")),
+          'environments.production': true, 'jobs.status': 'succeeded', 'stages.project_id': project.id
+        }
+        completeness_test(filter, 1)
+      end
+
+      it "filters the report with known non-production activity completely" do
+        filter = {
+          'deploys.created_at': (DateTime.new(1900, 1, 1)..DateTime.parse(Date.today.to_s + "T23:59:59Z")),
+          'environments.production': false, 'jobs.status': 'succeeded', 'stages.project_id': project.id
+        }
+        completeness_test(filter, 1)
+      end
+    end
+
+    describe "with Deploy Groups disabled production filter" do
+      it "creates deploys csv file accurately and completely" do
+        completeness_test({}, 2)
+      end
+
+      it "filters the report with known production activity completely" do
+        filter = {
+          'deploys.created_at': (DateTime.new(1900, 1, 1)..DateTime.parse(Date.today.to_s + "T23:59:59Z")),
+          'stages.production': true, 'jobs.status': 'succeeded', 'stages.project_id': project.id
+        }
+        completeness_test(filter, 1)
+      end
+
+      it "filters the report with known non-production activity completely" do
+        filter = {
+          'deploys.created_at': (DateTime.new(1900, 1, 1)..DateTime.parse(Date.today.to_s + "T23:59:59Z")),
+          'stages.production': false, 'jobs.status': 'succeeded', 'stages.project_id': project.id
+        }
+        completeness_test(filter, 1)
+      end
+
+      it "has no results for date range after deploys" do
+        filter = {'deploys.created_at': (DateTime.new(2015, 12, 31)..DateTime.parse(Date.today.to_s + "T23:59:59Z"))}
+        completeness_test(filter, 0)
+      end
+
+      it "has no results for date range before deploys" do
+        filter = {'deploys.created_at': (DateTime.new(1900, 1, 1)..DateTime.new(2000, 1, 1, 23, 59, 59))}
+        completeness_test(filter, 0)
+      end
+
+      it "has no results for statuses with no fixtures" do
+        filter = {'jobs.status': 'failed'}
+        completeness_test(filter, 0)
+      end
+
+      it "has no results for non-existant project" do
+        filter = {'stages.project_id': -999}
+        completeness_test(filter, 0)
+      end
+
+      it "has no results for non-production with no valid non-prod deploy" do
+        deploys(:succeeded_test).delete
+        filter = {'stages.production': false}
+        completeness_test(filter, 0)
+      end
+
+      it "sends mail" do
+        assert_difference('ActionMailer::Base.deliveries.size', 1) do
+          CsvExportJob.perform_now(deploy_export_job)
+        end
+      end
+
+      it "doesn't send mail when user is invalid" do
+        deploy_export_job.update_attribute('user_id', -999)
+        assert_difference('ActionMailer::Base.deliveries.size', 0) do
+          CsvExportJob.perform_now(deploy_export_job)
+          assert deploy_export_job.email.nil?
+        end
       end
     end
   end
 
-  def completeness_test(filters)
+  def completeness_test(filters, expected_count)
     deploy_export_job.update_attribute(:filters, filters)
-    if filters.keys.include?(:'environments.production')
-      production = filters.delete(:'environments.production')
-      filters['stages.production'] = production
-    end
     CsvExportJob.perform_now(deploy_export_job)
     filename = deploy_export_job.reload.path_file
 
@@ -119,21 +162,7 @@ describe CsvExportJob do
     csv_response.shift # Remove Header in file
     csv_response.pop # Remove filter summary row
     deploycount = csv_response.pop.pop.to_i # Remove summary row and extract count
-    Deploy.joins(:stage, :job).where(filters).count.must_equal deploycount
-    deploycount.must_equal csv_response.length
-    assert_not_empty csv_response
-  end
-
-  def empty_test(filters)
-    deploy_export_job.update_attribute(:filters, filters)
-    CsvExportJob.perform_now(deploy_export_job)
-    filename = deploy_export_job.reload.path_file
-
-    csv_response = CSV.read(filename)
-    csv_response.shift # Remove Header in file
-    csv_response.pop # Remove filter summary row
-    deploycount = csv_response.pop.pop.to_i # Remove summary row and extract count
-    deploycount.must_equal 0
+    expected_count.must_equal deploycount
     deploycount.must_equal csv_response.length
   end
 end

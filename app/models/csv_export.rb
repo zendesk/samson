@@ -37,9 +37,9 @@ class CsvExport < ActiveRecord::Base
   end
 
   def filters_project
-    if filters['stages.project_id']
-      proj = Project.unscoped.where(id: filters['stages.project_id']).first.try(:permalink)
-      proj + '_' unless proj.nil?
+    if id = filters['stages.project_id']
+      proj = Project.unscoped.where(id: id).first.try(:permalink)
+      proj + '_' if proj
     end
   end
 

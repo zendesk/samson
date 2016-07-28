@@ -89,7 +89,7 @@ class DeploysController < ApplicationController
       end
       format.csv do
         datetime = Time.now.strftime "%Y%m%d_%H%M"
-        send_data realtime_csv, type: :csv, filename: "Deploys_search_#{datetime}.csv"
+        send_data as_csv, type: :csv, filename: "Deploys_search_#{datetime}.csv"
       end
       format.html
     end
@@ -186,14 +186,17 @@ class DeploysController < ApplicationController
   end
 
   # Creates a CSV for @deploys as a result of the search query limited to 1000 for speed
-  def realtime_csv
-    csv_limit = (params[:limit].presence || 1000).to_i
+  def as_csv
+    max = 1000
+    csv_limit = [(params[:limit].presence || max).to_i, max].min
+    # may be expensive to count an unfiltered @deploys so do count once
+    deploy_count = @deploys.limit(csv_limit + 1).count
     CSV.generate do |csv|
       csv << Deploy.csv_header
       @deploys.limit(csv_limit).each { |deploy| csv << deploy.csv_line }
-      csv << ['-', 'count:', @deploys.limit(csv_limit).count]
+      csv << ['-', 'count:', [deploy_count, csv_limit].min]
       csv << ['-', 'params:', params]
-      if @deploys.count > csv_limit
+      if deploy_count > csv_limit
         csv << ['-', 'There are more records. Generate a full report at']
         csv << ['-', new_csv_export_url]
       end

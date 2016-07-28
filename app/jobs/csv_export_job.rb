@@ -34,13 +34,13 @@ class CsvExportJob < ActiveJob::Base
     filename = csv_export.path_file
     filter = csv_export.filters
 
-    get_deploys(filter)
-    summary = ["-", "Generated At", csv_export.updated_at, "Deploys", @deploys.count.to_s]
+    deploys = filter_deploys(filter)
+    summary = ["-", "Generated At", csv_export.updated_at, "Deploys", deploys.count.to_s]
     filters_applied = ["-", "Filters", filter.to_json]
 
     CSV.open(filename, 'w+') do |csv|
       csv << Deploy.csv_header
-      @deploys.find_each do |deploy|
+      deploys.find_each do |deploy|
         csv << deploy.csv_line
       end
       csv << summary
@@ -48,25 +48,31 @@ class CsvExportJob < ActiveJob::Base
     end
   end
 
-  def get_deploys(filter)
+  def filter_deploys(filter)
     if filter.keys.include?('environments.production')
       production_value = filter.delete('environments.production')
       # To match logic of stages.production? True when any deploy_group environment is true or
       # deploy_groups environment is empty and stages is true
-      production_query = "(A.production = ? OR (A.production IS NULL AND stages.production = ?))"
-      production_query = "NOT " + production_query if production_value == false
+      production_query = "(StageProd.production = ? OR (StageProd.production IS NULL AND stages.production = ?))"
+      if production_value == false
+        production_query = "(NOT StageProd.production = ? OR "\
+          "(StageProd.production IS NULL AND NOT stages.production = ?))"
+      end
+
+      # This subquery extracts the distinct pairs of stage.id to environment.production for the join below as StageProd
+      stage_prod_subquery = "(SELECT DISTINCT deploy_groups_stages.stage_id, environments.production "\
+      "FROM deploy_groups_stages " \
+      "INNER JOIN deploy_groups ON deploy_groups.id = deploy_groups_stages.deploy_group_id " \
+      "INNER JOIN environments ON environments.id = deploy_groups.environment_id) StageProd"
 
       # The query could result in duplicate entries when a stage has a production and non-production deploy group
       # so it is important this is run only if enviornments.production was set
-      @deploys = Deploy.includes(:buddy, job: :user, stage_with_deleted: :project).
+      Deploy.includes(:buddy, job: :user, stage_with_deleted: :project).
         joins("INNER JOIN jobs ON jobs.id = deploys.job_id INNER JOIN stages ON stages.id = deploys.stage_id").
-        joins("LEFT JOIN " \
-          "(SELECT DISTINCT deploy_groups_stages.stage_id, environments.production FROM deploy_groups_stages " \
-          "INNER JOIN deploy_groups ON deploy_groups.id = deploy_groups_stages.deploy_group_id " \
-          "INNER JOIN environments ON environments.id = deploy_groups.environment_id) A ON A.stage_id = stages.id").
+        joins("LEFT JOIN #{stage_prod_subquery} ON StageProd.stage_id = stages.id").
         unscope(where: :deleted_at).where(filter).where(production_query, true, true)
     else
-      @deploys = Deploy.includes(:buddy, job: :user, stage_with_deleted: :project).
+      Deploy.includes(:buddy, job: :user, stage_with_deleted: :project).
         joins("INNER JOIN jobs ON jobs.id = deploys.job_id INNER JOIN stages ON stages.id = deploys.stage_id").
         unscope(where: :deleted_at).where(filter)
     end
