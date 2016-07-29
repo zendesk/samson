@@ -39,7 +39,7 @@ module Samson
       "https://#{url}"
     end
 
-    config.autoload_paths << "#{config.root}/lib"
+    config.eager_load_paths << "#{config.root}/lib"
 
     if Rails.env.test?
       config.cache_store = :memory_store

@@ -62,7 +62,7 @@ module Samson
         lib = "#{@folder}/lib"
         $LOAD_PATH << lib
         require @path
-        engine.config.autoload_paths << lib
+        engine.config.eager_load_paths << lib
       end
 
       def add_migrations
