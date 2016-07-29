@@ -53,10 +53,10 @@ class CsvExportJob < ActiveJob::Base
       production_value = filter.delete('environments.production')
       # To match logic of stages.production? True when any deploy_group environment is true or
       # deploy_groups environment is empty and stages is true
-      production_query = "(StageProd.production = ? OR (StageProd.production IS NULL AND stages.production = ?))"
-      if production_value == false
-        production_query = "(NOT StageProd.production = ? OR "\
-          "(StageProd.production IS NULL AND NOT stages.production = ?))"
+      production_query = if production_value
+        "(StageProd.production = ? OR (StageProd.production IS NULL AND stages.production = ?))"
+      else
+        "(NOT StageProd.production = ? OR (StageProd.production IS NULL AND NOT stages.production = ?))"
       end
 
       # This subquery extracts the distinct pairs of stage.id to environment.production for the join below as StageProd

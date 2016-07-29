@@ -163,18 +163,18 @@ describe DeploysController do
         end
       end
 
-      it "it renders json" do
+      it "renders json" do
         get :search, format: "json"
         assert_response :ok
       end
 
-      it "it renders csv" do
+      it "renders csv" do
         get :search, format: "csv"
         assert_response :ok
         @response.body.split("\n").length.must_equal 7 # 4 records and 3 meta rows
       end
 
-      it "it renders csv with 1000 records and links to generate full report" do
+      it "renders csv with limit (1) records and links to generate full report" do
         get :search, format: "csv", limit: 1
         assert_response :ok
         @response.body.split("\n").length.must_equal 6 # 1 record and 5 meta rows

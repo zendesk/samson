@@ -127,6 +127,8 @@ class Stage < ActiveRecord::Base
     update_github_pull_requests
   end
 
+  # this logic is replicated in SQL inside of app/jobs/csv_export_job.rb#filter_deploys for report filtering
+  # update the SQL query as well when editing this method
   def production?
     if DeployGroup.enabled?
       if deploy_groups.empty?
@@ -181,7 +183,7 @@ class Stage < ActiveRecord::Base
   end
 
   def deploy_group_names
-    deploy_groups.pluck(:name).join('|')
+    deploy_groups.select(:name).sort_by(&:natural_order).map(&:name)
   end
 
   private

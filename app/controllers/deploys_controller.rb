@@ -189,11 +189,12 @@ class DeploysController < ApplicationController
   def as_csv
     max = 1000
     csv_limit = [(params[:limit].presence || max).to_i, max].min
-    # may be expensive to count an unfiltered @deploys so do count once
-    deploy_count = @deploys.limit(csv_limit + 1).count
+    deploys = @deploys.limit(csv_limit + 1).to_a
+    deploy_count = deploys.length
+    deploys.pop if deploy_count > csv_limit
     CSV.generate do |csv|
       csv << Deploy.csv_header
-      @deploys.limit(csv_limit).each { |deploy| csv << deploy.csv_line }
+      deploys.each { |deploy| csv << deploy.csv_line }
       csv << ['-', 'count:', [deploy_count, csv_limit].min]
       csv << ['-', 'params:', params]
       if deploy_count > csv_limit

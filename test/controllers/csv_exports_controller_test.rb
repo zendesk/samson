@@ -219,7 +219,7 @@ describe CsvExportsController do
         csv_filter["stages.project_id"].must_equal projects(:test).id
       end
 
-      def self.prod_filter_test(prod, groups)
+      def self.it_filters_production(prod, groups)
         it "with production filter #{prod == "Yes"} and DeployGroup enabled #{groups} creates correct filter" do
           DeployGroup.stubs(:enabled?).returns(groups)
           post :create, production: prod
@@ -228,10 +228,10 @@ describe CsvExportsController do
         end
       end
 
-      prod_filter_test("Yes", true)
-      prod_filter_test("Yes", false)
-      prod_filter_test("No", true)
-      prod_filter_test("No", false)
+      it_filters_production "Yes", true
+      it_filters_production "Yes", false
+      it_filters_production "No", true
+      it_filters_production "No", false
 
       it "with production blank filter does not have stages.production filter" do
         filter = { production: ""}

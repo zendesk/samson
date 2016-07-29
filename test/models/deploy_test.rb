@@ -298,7 +298,7 @@ describe Deploy do
         prod.production,
         !prod.no_code_deployed, # Inverted because report is reporting as code deployed
         project.deleted_at,
-        prod.deploy_group_names
+        prod.deploy_group_names.join('|')
       ]
     end
   end

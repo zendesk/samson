@@ -156,7 +156,7 @@ class Deploy < ActiveRecord::Base
       id, project_with_deleted.name, summary, commit, job.status, updated_at,
       start_time, user.try(:name), user.try(:email), buddy_name, buddy_email, stage_with_deleted.name,
       stage_with_deleted.production?, !stage_with_deleted.no_code_deployed, project_with_deleted.deleted_at,
-      stage_with_deleted.deploy_group_names
+      stage_with_deleted.deploy_group_names.join('|')
     ]
   end
 
