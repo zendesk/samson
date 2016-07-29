@@ -14,7 +14,11 @@ if ['staging', 'production'].include?(Rails.env)
   require 'airbrake/railtie'
 end
 
-Dotenv.load(Bundler.root.join(Rails.env.test? ? '.env.test' : '.env'))
+if Rails.env.test?
+  Dotenv.overload(Bundler.root.join('.env.test'))
+else
+  Dotenv.load(Bundler.root.join('.env'))
+end
 
 require "#{Bundler.root}/lib/samson/env_check"
 
