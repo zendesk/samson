@@ -74,10 +74,9 @@ class CsvExportsController < ApplicationController
     # location of the production value to the Environment model instead of the Stage model
     filter_key = (DeployGroup.enabled? ? 'environments.production' : 'stages.production')
     if production = params[:production].presence
-      if production == 'Yes'
-        filter[filter_key] = true
-      elsif production == 'No'
-        filter[filter_key] = false
+      case production
+      when 'Yes'  then filter[filter_key] = true
+      when 'No'   then filter[filter_key] = false
       else
         raise "Invalid production filter #{production}"
       end

@@ -7,8 +7,6 @@ class Stage < ActiveRecord::Base
   has_paper_trail skip: [:order, :updated_at, :created_at]
 
   belongs_to :project, touch: true
-  belongs_to :project_with_deleted, -> { unscope(where: 'deleted_at') },
-    class_name: 'Project', foreign_key: 'project_id'
 
   has_many :deploys, dependent: :destroy
   has_many :webhooks, dependent: :destroy
@@ -131,11 +129,7 @@ class Stage < ActiveRecord::Base
   # update the SQL query as well when editing this method
   def production?
     if DeployGroup.enabled?
-      if deploy_groups.empty?
-        super
-      else
-        deploy_groups.any? { |deploy_group| deploy_group.environment_with_deleted.production? }
-      end
+      deploy_groups.empty? ? super : deploy_groups.any? { |deploy_group| deploy_group.environment.production? }
     else
       super
     end
@@ -183,7 +177,7 @@ class Stage < ActiveRecord::Base
   end
 
   def deploy_group_names
-    deploy_groups.select(:name).sort_by(&:natural_order).map(&:name)
+    DeployGroup.enabled? ? deploy_groups.select(:name).sort_by(&:natural_order).map(&:name) : []
   end
 
   private

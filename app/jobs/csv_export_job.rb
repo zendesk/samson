@@ -19,7 +19,7 @@ class CsvExportJob < ActiveJob::Base
 
   def generate_csv(csv_export)
     csv_export.status! :started
-    deploy_csv_export(csv_export)
+    remove_deleted_scope_and_create_report(csv_export)
     CsvMailer.created(csv_export).deliver_now if csv_export.email.present?
     csv_export.status! :finished
     Rails.logger.info("Export #{csv_export.download_name} completed")
@@ -28,6 +28,21 @@ class CsvExportJob < ActiveJob::Base
     csv_export.status! :failed
     Rails.logger.error("Export #{csv_export.id} failed with error #{e}")
     Airbrake.notify(e, error_message: "Export #{csv_export.id} failed.")
+  end
+
+  # Relper method to removes the default soft_deletion scope for these models for the report
+  def remove_deleted_scope_and_create_report(csv_export)
+    Deploy.with_deleted do
+      Stage.with_deleted do
+        Project.with_deleted do
+          DeployGroup.with_deleted do
+            Environment.with_deleted do
+              deploy_csv_export(csv_export)
+            end
+          end
+        end
+      end
+    end
   end
 
   def deploy_csv_export(csv_export)
@@ -67,14 +82,11 @@ class CsvExportJob < ActiveJob::Base
 
       # The query could result in duplicate entries when a stage has a production and non-production deploy group
       # so it is important this is run only if enviornments.production was set
-      Deploy.includes(:buddy, job: :user, stage_with_deleted: :project).
-        joins("INNER JOIN jobs ON jobs.id = deploys.job_id INNER JOIN stages ON stages.id = deploys.stage_id").
+      Deploy.includes(:buddy, job: :user, stage: :project).joins(:job, :stage).
         joins("LEFT JOIN #{stage_prod_subquery} ON StageProd.stage_id = stages.id").
-        unscope(where: :deleted_at).where(filter).where(production_query, true, true)
+        where(filter).where(production_query, true, true)
     else
-      Deploy.includes(:buddy, job: :user, stage_with_deleted: :project).
-        joins("INNER JOIN jobs ON jobs.id = deploys.job_id INNER JOIN stages ON stages.id = deploys.stage_id").
-        unscope(where: :deleted_at).where(filter)
+      Deploy.includes(:buddy, job: :user, stage: :project).joins(:job, :stage).where(filter)
     end
   end
 

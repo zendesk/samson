@@ -9,18 +9,6 @@ describe Deploy do
   let(:stage) { stages(:test_staging) }
   let(:deploy) { deploys(:succeeded_test) }
 
-  describe "#stage_with_deleted" do
-    it "returns stage when soft deleted" do
-      stage.soft_delete!
-      deploy.stage_with_deleted.must_equal stage
-    end
-
-    it "returns nil when hard deleted" do
-      stage.delete
-      deploy.stage_with_deleted.must_be_nil
-    end
-  end
-
   describe "#summary" do
     let!(:deploy) { create_deploy! }
 
@@ -40,10 +28,10 @@ describe Deploy do
       deploy.summary.must_equal "Deleted User  deployed baz to Staging"
     end
 
-    it "shows soft delete stage when with_deleted" do
+    it "shows soft delete stage when INCLUDE_DELETED" do
       deploy.stage.soft_delete!
       deploy.reload
-      deploy.summary.must_equal "Deployer  deployed baz to Staging"
+      Stage.with_deleted { deploy.summary.must_equal "Deployer  deployed baz to Staging" }
     end
 
     describe "when buddy was required" do
@@ -273,33 +261,88 @@ describe Deploy do
     let(:prod) { stages(:test_production) }
     let(:prod_deploy) { deploys(:succeeded_production_test) }
     let(:job) { jobs(:succeeded_production_test) }
+    let(:environment) { environments(:production) }
 
-    before { Stage.any_instance.stubs(:deploy_requires_approval?).returns true }
+    before do
+      Stage.any_instance.stubs(:deploy_requires_approval?).returns true
+    end
 
-    it "returns array with deleted object values" do
-      prod_deploy.update_attributes(buddy_id: other_user.id)
-      prod_deploy.job.user.soft_delete!
-      prod_deploy.buddy.soft_delete!
-      prod_deploy.stage.project.update_column(:deleted_at, Time.now)
-      prod_deploy.stage.soft_delete
-      prod_deploy.csv_line.must_equal [
-        prod_deploy.id,
-        project.name,
-        prod_deploy.summary,
-        prod_deploy.commit,
-        job.status,
-        prod_deploy.updated_at,
-        prod_deploy.start_time,
-        deployer.name,
-        deployer.email,
-        other_user.name,
-        other_user.email,
-        prod.name,
-        prod.production,
-        !prod.no_code_deployed, # Inverted because report is reporting as code deployed
-        project.deleted_at,
-        prod.deploy_group_names.join('|')
-      ]
+    describe "with deleted objects" do
+      before do
+        # replicate worse case scenario where any referenced associations are soft deleted
+        prod_deploy.update_attributes(buddy_id: other_user.id)
+        prod_deploy.job.user.soft_delete!
+        prod_deploy.buddy.soft_delete!
+        prod_deploy.stage.deploy_groups.first.environment.soft_delete!
+        # next 3 are false soft_deletions: there are dependent destroys that would result in
+        # deploy_groups_stages to be cleared which would make this test condition to likely
+        # never occur in production but could exist
+        prod_deploy.stage.project.update_attribute(:deleted_at, DateTime.new(2016, 1, 1))
+        prod_deploy.stage.deploy_groups.first.update_attribute(:deleted_at, DateTime.now)
+        prod_deploy.stage.update_attribute(:deleted_at, DateTime.now)
+        prod_deploy.reload
+      end
+
+      it "returns array with deleted object values with DeployGroups" do
+        DeployGroup.stubs(enabled?: true)
+        prod.update_attribute(:production, nil) # make sure response is from environment
+
+        # the with_deleted calls would be done in CsvJob
+        Stage.with_deleted do
+          Project.with_deleted do
+            DeployGroup.with_deleted do
+              Environment.with_deleted do
+                prod_deploy.csv_line.must_equal [
+                  prod_deploy.id,
+                  project.name,
+                  prod_deploy.summary,
+                  prod_deploy.commit,
+                  job.status,
+                  prod_deploy.updated_at,
+                  prod_deploy.start_time,
+                  deployer.name,
+                  deployer.email,
+                  other_user.name,
+                  other_user.email,
+                  prod.name,
+                  environment.production,
+                  !prod.no_code_deployed, # Inverted because report is reporting as code deployed
+                  project.deleted_at,
+                  prod.deploy_group_names.join('|')
+                ]
+              end
+            end
+          end
+        end
+      end
+
+      it "returns array with deleted object values without DeployGroups" do
+        DeployGroup.stubs(enabled?: false)
+
+        # the with_deleted calls would be done in CsvJob
+        Stage.with_deleted do
+          Project.with_deleted do
+            prod_deploy.csv_line.must_equal [
+              prod_deploy.id,
+              project.name,
+              prod_deploy.summary,
+              prod_deploy.commit,
+              job.status,
+              prod_deploy.updated_at,
+              prod_deploy.start_time,
+              deployer.name,
+              deployer.email,
+              other_user.name,
+              other_user.email,
+              prod.name,
+              prod.production,
+              !prod.no_code_deployed, # Inverted because report is reporting as code deployed
+              project.deleted_at,
+              ''
+            ]
+          end
+        end
+      end
     end
   end
 

@@ -5,7 +5,6 @@ class Deploy < ActiveRecord::Base
   belongs_to :build
   belongs_to :job
   belongs_to :buddy, -> { unscope(where: "deleted_at") }, class_name: 'User'
-  belongs_to :stage_with_deleted, -> { unscope(where: "deleted_at") }, class_name: 'Stage', foreign_key: 'stage_id'
 
   default_scope { order(created_at: :desc, id: :desc) }
 
@@ -17,7 +16,6 @@ class Deploy < ActiveRecord::Base
   delegate :active?, :pending?, :running?, :cancelling?, :cancelled?, :succeeded?, to: :job
   delegate :finished?, :errored?, :failed?, to: :job
   delegate :production?, :project, to: :stage
-  delegate :project_with_deleted, to: :stage_with_deleted, allow_nil: true
 
   before_validation :trim_reference
 
@@ -26,7 +24,7 @@ class Deploy < ActiveRecord::Base
   end
 
   def summary
-    "#{job.user.name} #{deploy_buddy} #{summary_action} #{short_reference} to #{stage_with_deleted.name}"
+    "#{job.user.name} #{deploy_buddy} #{summary_action} #{short_reference} to #{stage.name}"
   end
 
   def summary_for_process
@@ -153,10 +151,9 @@ class Deploy < ActiveRecord::Base
 
   def csv_line
     [
-      id, project_with_deleted.name, summary, commit, job.status, updated_at,
-      start_time, user.try(:name), user.try(:email), buddy_name, buddy_email, stage_with_deleted.name,
-      stage_with_deleted.production?, !stage_with_deleted.no_code_deployed, project_with_deleted.deleted_at,
-      stage_with_deleted.deploy_group_names.join('|')
+      id, project.name, summary, commit, job.status, updated_at, start_time, user.try(:name), user.try(:email),
+      buddy_name, buddy_email, stage.name, stage.production?, !stage.no_code_deployed, project.deleted_at,
+      stage.deploy_group_names.join('|')
     ]
   end
 
@@ -199,7 +196,7 @@ class Deploy < ActiveRecord::Base
   end
 
   def deploy_buddy
-    return unless stage_with_deleted.deploy_requires_approval?
+    return unless stage.deploy_requires_approval?
 
     if buddy.nil? && pending?
       "(waiting for a buddy)"

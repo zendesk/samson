@@ -49,6 +49,7 @@ describe CsvExportJob do
       before do
         stages(:test_production).update_attribute(:production, nil)
         stages(:test_staging).update_attribute(:production, nil)
+        DeployGroup.stubs(enabled?: true)
       end
 
       it "filters the report with known production activity completely" do
@@ -70,6 +71,7 @@ describe CsvExportJob do
 
     describe "with Deploy Groups production filter (from stage)" do
       before do
+        DeployGroup.stubs(enabled?: true)
         DeployGroupsStage.delete_all
       end
 

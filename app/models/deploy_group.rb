@@ -6,8 +6,6 @@ class DeployGroup < ActiveRecord::Base
   belongs_to :environment
   has_many :deploy_groups_stages
   has_many :stages, through: :deploy_groups_stages
-  belongs_to :environment_with_deleted, -> { unscope(where: 'deleted_at') },
-    class_name: 'Environment', foreign_key: 'environment_id'
 
   validates_presence_of :name, :environment_id
   validates_uniqueness_of :name, :env_value
