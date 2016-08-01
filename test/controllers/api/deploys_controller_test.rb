@@ -45,4 +45,11 @@ describe Api::DeploysController do
       response.body.must_be :==, "1"
     end
   end
+
+  describe 'Doorkeeper Auth Status' do
+    subject { @controller }
+    it 'is allowed' do
+      subject.api_accessible.must_equal true
+    end
+  end
 end

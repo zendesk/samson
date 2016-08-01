@@ -45,8 +45,8 @@ describe "cleanliness" do
 
   it "does not have actions on base controller" do
     found = ApplicationController.action_methods.to_a
-    found.reject { |a| a =~ /^(_conditional_callback_around_|_callback_before_)/ }
-    (found - ["flash"]).must_equal []
+    found.reject! { |a| a =~ /^(_conditional_callback_around_|_callback_before_|api_)/ }
+    (found - ["flash", "access_denied?", "disallowed?"]).must_equal []
   end
 
   it "enforces coverage" do

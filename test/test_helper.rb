@@ -254,6 +254,7 @@ class ActionController::TestCase
     before do
       Rails.application.routes.draw do
         match "/test/:test_route/:controller/:action", via: [:get, :post, :put, :patch, :delete]
+        get "testing/foo" => "testing#foo"
       end
     end
 
