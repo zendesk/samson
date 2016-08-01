@@ -96,7 +96,6 @@ describe "cleanliness" do
       "app/models/concerns/has_role.rb",
       "app/models/concerns/searchable.rb",
       "lib/generators/plugin/plugin_generator.rb",
-      "lib/generators/plugin/templates/test_helper.rb",
       "lib/samson/integration.rb",
       "lib/warden/strategies/basic_strategy.rb",
       "lib/warden/strategies/session_strategy.rb",

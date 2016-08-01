@@ -10,7 +10,7 @@ class PluginGenerator < Rails::Generators::NamedBase
   end
 
   def create_test_helper_file
-    copy_file 'test_helper.rb', "plugins/#{file_name}/test/test_helper.rb"
+    copy_file 'test_helper.rb.erb', "plugins/#{file_name}/test/test_helper.rb"
   end
 
   def create_directory_structure

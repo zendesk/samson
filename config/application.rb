@@ -14,7 +14,11 @@ if ['staging', 'production'].include?(Rails.env)
   require 'airbrake/railtie'
 end
 
-Dotenv.load(Bundler.root.join(Rails.env.test? ? '.env.test' : '.env'))
+if Rails.env.test?
+  Dotenv.overload(Bundler.root.join('.env.test'))
+else
+  Dotenv.load(Bundler.root.join('.env'))
+end
 
 require "#{Bundler.root}/lib/samson/env_check"
 
@@ -39,7 +43,7 @@ module Samson
       "https://#{url}"
     end
 
-    config.autoload_paths << "#{config.root}/lib"
+    config.eager_load_paths << "#{config.root}/lib"
 
     if Rails.env.test?
       config.cache_store = :memory_store
