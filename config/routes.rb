@@ -109,6 +109,7 @@ Samson::Application.routes.draw do
   end
 
   namespace :integrations do
+    post "/circleci/:token" => "circleci#create", as: :circleci_deploy
     post "/travis/:token" => "travis#create", as: :travis_deploy
     post "/semaphore/:token" => "semaphore#create", as: :semaphore_deploy
     post "/tddium/:token" => "tddium#create", as: :tddium_deploy
