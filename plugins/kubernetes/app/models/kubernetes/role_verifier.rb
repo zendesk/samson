@@ -26,6 +26,7 @@ module Kubernetes
       verify_job_restart_policy
       verify_numeric_limits
       verify_project_and_role_consistent
+      verify_env_values
       @errors.presence
     end
 
@@ -124,6 +125,13 @@ module Kubernetes
       names = map_attributes(path, elements: jobs)
       return if names - allowed == []
       @errors << "Job #{path.join('.')} must be one of #{allowed.join('/')}"
+    end
+
+    def verify_env_values
+      path = [:spec, :template, :spec, :containers, :env, :value]
+      values = map_attributes(path, array: :first).compact
+      bad = values.reject { |x| x.is_a?(String) }
+      @errors << "Env values #{bad.join(', ')} must be strings." if bad.any?
     end
 
     def jobs
