@@ -393,4 +393,14 @@ describe Project do
       refute project.create_releases_for_branch?("x")
     end
   end
+
+  describe "#user_project_roles" do
+    it "deletes them on deletion and audits as user change" do
+      assert_difference 'PaperTrail::Version.where(item_type: User).count', +2 do
+        assert_difference 'UserProjectRole.count', -2 do
+          project.soft_delete!
+        end
+      end
+    end
+  end
 end

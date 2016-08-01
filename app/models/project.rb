@@ -10,6 +10,7 @@ class Project < ActiveRecord::Base
   after_save :clone_repository, if: :repository_url_changed?
   before_update :clean_old_repository, if: :repository_url_changed?
   after_soft_delete :clean_repository
+  before_soft_delete :destroy_user_project_roles
 
   has_many :builds
   has_many :releases
@@ -19,7 +20,7 @@ class Project < ActiveRecord::Base
   has_many :webhooks
   has_many :commands
   has_many :macros, dependent: :destroy
-  has_many :user_project_roles
+  has_many :user_project_roles, dependent: :destroy
   has_many :users, through: :user_project_roles
 
   # For permission checks on callbacks. Currently used in private plugins.
@@ -208,5 +209,9 @@ class Project < ActiveRecord::Base
   def valid_repository_url
     return if repository.valid_url?
     errors.add(:repository_url, "is not valid or accessible")
+  end
+
+  def destroy_user_project_roles
+    user_project_roles.each(&:destroy)
   end
 end
