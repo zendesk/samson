@@ -112,6 +112,16 @@ describe SecretStorage do
   end
 
   describe SecretStorage::DbBackend::Secret do
+    # A hack to make attr_encrypted always behave the same even when loaded without a database being present.
+    # On load it checks if the column exists and then defined attr_accessors if they do not.
+    # Reproduce with: `CI=1 RAILS_ENV=test rake db:drop db:create default`
+    # https://github.com/attr-encrypted/attr_encrypted/issues/226
+    if ENV['CI'] && SecretStorage::DbBackend::Secret.instance_methods.include?(:encrypted_value_iv)
+      [:encrypted_value_iv, :encrypted_value_iv=, :encrypted_value, :encrypted_value=].each do |m|
+        SecretStorage::DbBackend::Secret.send(:undef_method, m)
+      end
+    end
+
     describe "#value " do
       it "is encrypted" do
         secret.value.must_equal "MY-SECRET"
