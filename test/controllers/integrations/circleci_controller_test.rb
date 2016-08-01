@@ -7,6 +7,7 @@ describe Integrations::CircleciController do
 
   let(:commit) { "dc395381e650f3bac18457909880829fc20e34ba" }
   let(:project) { projects(:test) }
+  let(:commit_message) { "Don't explode when the system clock shifts backwards" }
   let(:payload) do
     {
       "payload" => {
@@ -17,7 +18,7 @@ describe Integrations::CircleciController do
         "vcs_revision" => commit,
         "committer_name" => "Allen Rohner",
         "committer_email" => "arohner@gmail.com",
-        "subject" => "Don't explode when the system clock shifts backwards",
+        "subject" => commit_message,
         "body" => "",
         "why" => "github",
         "dont_build" => nil,
@@ -35,27 +36,12 @@ describe Integrations::CircleciController do
     }.with_indifferent_access
   end
 
-  before { Deploy.delete_all }
-
-  test_regular_commit "Circleci", failed: {payload: {status: "failed"}}, no_mapping: {payload: {branch: "foobar"}} do
+  before do
+    Deploy.delete_all
     project.webhooks.create!(stage: stages(:test_staging), branch: "master", source: 'circleci')
   end
 
-  describe "skipping" do
-    it "doesn't trigger a deploy if we want to skip with [deploy skip]" do
-      payload["payload"]["subject"] = "[deploy skip]"
-      project.webhooks.create!(stage: stages(:test_staging), branch: "master", source: 'circleci')
-      post :create, payload.merge(token: project.token)
+  test_regular_commit "Circleci", failed: {payload: {status: "failed"}}, no_mapping: {payload: {branch: "foobar"}}
 
-      project.deploys.must_equal []
-    end
-
-    it "doesn't trigger a deploy if we want to skip with [skip deploy]" do
-      payload["payload"]["subject"] = "[skip deploy]"
-      project.webhooks.create!(stage: stages(:test_staging), branch: "master", source: 'circleci')
-      post :create, payload.merge(token: project.token)
-
-      project.deploys.must_equal []
-    end
-  end
+  it_ignores_skipped_commits
 end
