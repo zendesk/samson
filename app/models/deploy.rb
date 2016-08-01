@@ -4,7 +4,7 @@ class Deploy < ActiveRecord::Base
   belongs_to :stage, touch: true
   belongs_to :build
   belongs_to :job
-  belongs_to :buddy, class_name: 'User'
+  belongs_to :buddy, -> { unscope(where: "deleted_at") }, class_name: 'User'
 
   default_scope { order(created_at: :desc, id: :desc) }
 
@@ -134,6 +134,22 @@ class Deploy < ActiveRecord::Base
 
   def url
     Rails.application.routes.url_helpers.project_deploy_url(project, self)
+  end
+
+  def self.csv_header
+    [
+      "Deploy Number", "Project Name", "Deploy Summary", "Deploy Commit", "Deploy Status", "Deploy Updated",
+      "Deploy Created", "Deployer Name", "Deployer Email", "Buddy Name", "Buddy Email", "Stage Name",
+      "Production Flag", "Code deployed", "Project Deleted On", "Deploy Groups"
+    ]
+  end
+
+  def csv_line
+    [
+      id, project.name, summary, commit, job.status, updated_at, start_time, user.try(:name), user.try(:email),
+      buddy_name, buddy_email, stage.name, stage.production?, !stage.no_code_deployed, project.deleted_at,
+      stage.deploy_group_names.join('|')
+    ]
   end
 
   private

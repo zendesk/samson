@@ -125,6 +125,8 @@ class Stage < ActiveRecord::Base
     update_github_pull_requests
   end
 
+  # this logic is replicated in SQL inside of app/jobs/csv_export_job.rb#filter_deploys for report filtering
+  # update the SQL query as well when editing this method
   def production?
     if DeployGroup.enabled?
       deploy_groups.empty? ? super : deploy_groups.any? { |deploy_group| deploy_group.environment.production? }
@@ -172,6 +174,10 @@ class Stage < ActiveRecord::Base
   def destroy
     mark_for_destruction
     super
+  end
+
+  def deploy_group_names
+    DeployGroup.enabled? ? deploy_groups.select(:name).sort_by(&:natural_order).map(&:name) : []
   end
 
   private

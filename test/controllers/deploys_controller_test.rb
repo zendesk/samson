@@ -163,9 +163,22 @@ describe DeploysController do
         end
       end
 
-      it "it renders json" do
+      it "renders json" do
         get :search, format: "json"
         assert_response :ok
+      end
+
+      it "renders csv" do
+        get :search, format: "csv"
+        assert_response :ok
+        @response.body.split("\n").length.must_equal 7 # 4 records and 3 meta rows
+      end
+
+      it "renders csv with limit (1) records and links to generate full report" do
+        get :search, format: "csv", limit: 1
+        assert_response :ok
+        @response.body.split("\n").length.must_equal 6 # 1 record and 5 meta rows
+        @response.body.split("\n")[2].split(",")[2].to_i.must_equal(1) # validate that count equals = csv_limit
       end
 
       it "renders html" do

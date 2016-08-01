@@ -211,20 +211,27 @@ describe CsvExportsController do
         csv_filter.keys.must_include "stages.production"
         csv_filter.keys.must_include "jobs.status"
         csv_filter.keys.must_include "stages.project_id"
-        start_date = Date.parse(filter[:start_date])
-        end_date = Date.parse(filter[:end_date])
+        start_date = DateTime.parse(filter[:start_date])
+        end_date = DateTime.parse(filter[:end_date] + "T23:59:59Z")
         csv_filter["deploys.created_at"].must_equal start_date..end_date
         csv_filter["stages.production"].must_equal true
         csv_filter["jobs.status"].must_equal "succeeded"
         csv_filter["stages.project_id"].must_equal projects(:test).id
       end
 
-      it "with production No filter creates a correct filter" do
-        filter = { production: "No"}
-        post :create, filter
-        csv_filter = CsvExport.last.filters
-        csv_filter["stages.production"].must_equal false
+      def self.it_filters_production(prod, groups)
+        it "with production filter #{prod == "Yes"} and DeployGroup enabled #{groups} creates correct filter" do
+          DeployGroup.stubs(:enabled?).returns(groups)
+          post :create, production: prod
+          csv_filter = CsvExport.last.filters
+          csv_filter[groups ? "environments.production" : "stages.production"].must_equal prod == "Yes"
+        end
       end
+
+      it_filters_production "Yes", true
+      it_filters_production "Yes", false
+      it_filters_production "No", true
+      it_filters_production "No", false
 
       it "with production blank filter does not have stages.production filter" do
         filter = { production: ""}

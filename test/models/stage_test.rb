@@ -384,6 +384,20 @@ describe Stage do
     end
   end
 
+  describe '#deploy_group_names' do
+    let(:stage) { stages(:test_production) }
+
+    it 'returns array when DeployGroup enabled' do
+      DeployGroup.stubs(enabled?: true)
+      stage.deploy_group_names.must_equal ['Pod1', 'Pod2']
+    end
+
+    it 'returns empty array when DeployGroup disabled' do
+      DeployGroup.stubs(enabled?: false)
+      stage.deploy_group_names.must_equal []
+    end
+  end
+
   describe '#save' do
     it 'touches the stage and project when only changing deploy_groups for cache invalidation' do
       stage_updated_at = stage.updated_at

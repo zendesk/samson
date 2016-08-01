@@ -19,7 +19,7 @@ class CsvExportJob < ActiveJob::Base
 
   def generate_csv(csv_export)
     csv_export.status! :started
-    deploy_csv_export(csv_export)
+    remove_deleted_scope_and_create_report(csv_export)
     CsvMailer.created(csv_export).deliver_now if csv_export.email.present?
     csv_export.status! :finished
     Rails.logger.info("Export #{csv_export.download_name} completed")
@@ -30,29 +30,63 @@ class CsvExportJob < ActiveJob::Base
     Airbrake.notify(e, error_message: "Export #{csv_export.id} failed.")
   end
 
+  # Relper method to removes the default soft_deletion scope for these models for the report
+  def remove_deleted_scope_and_create_report(csv_export)
+    Deploy.with_deleted do
+      Stage.with_deleted do
+        Project.with_deleted do
+          DeployGroup.with_deleted do
+            Environment.with_deleted do
+              deploy_csv_export(csv_export)
+            end
+          end
+        end
+      end
+    end
+  end
+
   def deploy_csv_export(csv_export)
     filename = csv_export.path_file
     filter = csv_export.filters
 
-    @deploys = Deploy.joins(:stage, :job).where(filter)
-    summary = ["-", "Generated At", csv_export.updated_at, "Deploys", @deploys.count.to_s]
+    deploys = filter_deploys(filter)
+    summary = ["-", "Generated At", csv_export.updated_at, "Deploys", deploys.count.to_s]
     filters_applied = ["-", "Filters", filter.to_json]
 
     CSV.open(filename, 'w+') do |csv|
-      csv << [
-        "Deploy Number", "Project Name", "Deploy Sumary", "Deploy Commit", "Deploy Status", "Deploy Updated",
-        "Deploy Created", "Deployer Name", "Deployer Email", "Buddy Name", "Buddy Email",
-        "Production Flag", "No code deployed"
-      ]
-      @deploys.find_each do |deploy|
-        csv << [
-          deploy.id, deploy.project.name, deploy.summary, deploy.commit, deploy.job.status, deploy.updated_at,
-          deploy.start_time, deploy.job.user.name, deploy.job.user.try(:email), deploy.buddy_name, deploy.buddy_email,
-          deploy.stage.production, deploy.stage.no_code_deployed
-        ]
+      csv << Deploy.csv_header
+      deploys.find_each do |deploy|
+        csv << deploy.csv_line
       end
       csv << summary
       csv << filters_applied
+    end
+  end
+
+  def filter_deploys(filter)
+    if filter.keys.include?('environments.production')
+      production_value = filter.delete('environments.production')
+      # To match logic of stages.production? True when any deploy_group environment is true or
+      # deploy_groups environment is empty and stages is true
+      production_query = if production_value
+        "(StageProd.production = ? OR (StageProd.production IS NULL AND stages.production = ?))"
+      else
+        "(NOT StageProd.production = ? OR (StageProd.production IS NULL AND NOT stages.production = ?))"
+      end
+
+      # This subquery extracts the distinct pairs of stage.id to environment.production for the join below as StageProd
+      stage_prod_subquery = "(SELECT DISTINCT deploy_groups_stages.stage_id, environments.production "\
+      "FROM deploy_groups_stages " \
+      "INNER JOIN deploy_groups ON deploy_groups.id = deploy_groups_stages.deploy_group_id " \
+      "INNER JOIN environments ON environments.id = deploy_groups.environment_id) StageProd"
+
+      # The query could result in duplicate entries when a stage has a production and non-production deploy group
+      # so it is important this is run only if enviornments.production was set
+      Deploy.includes(:buddy, job: :user, stage: :project).joins(:job, :stage).
+        joins("LEFT JOIN #{stage_prod_subquery} ON StageProd.stage_id = stages.id").
+        where(filter).where(production_query, true, true)
+    else
+      Deploy.includes(:buddy, job: :user, stage: :project).joins(:job, :stage).where(filter)
     end
   end
 

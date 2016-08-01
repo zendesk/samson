@@ -70,10 +70,13 @@ class CsvExportsController < ApplicationController
       filter['deploys.created_at'] = (start_date..end_date)
     end
 
+    # We are filtering on a different joins if we enabled DeployGroups.  Deploy groups moves the correct
+    # location of the production value to the Environment model instead of the Stage model
+    filter_key = (DeployGroup.enabled? ? 'environments.production' : 'stages.production')
     if production = params[:production].presence
       case production
-      when 'Yes' then filter['stages.production'] = true
-      when 'No'  then filter['stages.production'] = false
+      when 'Yes'  then filter[filter_key] = true
+      when 'No'   then filter[filter_key] = false
       else
         raise "Invalid production filter #{production}"
       end

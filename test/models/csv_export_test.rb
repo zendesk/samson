@@ -93,6 +93,19 @@ describe CsvExport do
     it "includes created at" do
       @csv_export.download_name.must_include @csv_export.created_at.to_s(:number)
     end
+
+    it "includes project permalink if filtered and created at" do
+      project = projects(:test)
+      project.update_attribute(:deleted_at, Time.now)
+      @csv_export.update_attribute(:filters, 'stages.project_id': project.id)
+      @csv_export.download_name.must_include project.permalink
+      @csv_export.download_name.must_include @csv_export.created_at.to_s(:number)
+    end
+
+    it "does not includes double underscore if filtered and invalid project id" do
+      @csv_export.update_attribute(:filters, 'stages.project_id': -9999)
+      @csv_export.download_name.wont_include '__'
+    end
   end
 
   describe "#email" do
@@ -113,8 +126,9 @@ describe CsvExport do
 
     it "converts date list to range" do
       @csv_export.update_attribute(:filters, 'deploys.created_at': Date.new(1900, 1, 1)..Date.today)
+      expected_range = DateTime.new(1900, 1, 1)..DateTime.parse(Date.today.to_s + "T23:59:59Z")
       @csv_export.filters['deploys.created_at'].class.must_equal((1..2).class)
-      @csv_export.filters['deploys.created_at'].must_equal Date.new(1900, 1, 1)..Date.today
+      @csv_export.filters['deploys.created_at'].must_equal expected_range
     end
   end
 

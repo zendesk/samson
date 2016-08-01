@@ -419,7 +419,7 @@ GEM
     simplecov-html (0.10.0)
     single_cov (0.2.2)
     slop (3.6.0)
-    soft_deletion (0.7.0)
+    soft_deletion (0.8.0)
       activerecord (>= 3.2.0, < 5.1.0)
     sprockets (3.7.0)
       concurrent-ruby (~> 1.0)
