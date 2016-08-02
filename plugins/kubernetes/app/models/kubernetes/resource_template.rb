@@ -4,6 +4,75 @@ module Kubernetes
     SIDECAR_NAME = 'secret-sidecar'.freeze
     SIDECAR_IMAGE = ENV['SECRET_SIDECAR_IMAGE'].presence
 
+    class SecretKeyResolver
+      def initialize(project, deploy_groups)
+        @project = project
+        @deploy_groups = deploy_groups
+        @errors = []
+      end
+
+      # expands a key by finding the most specific value for it
+      # bar -> production/my_project/pod100/bar
+      def expand!(secret_key)
+        key = secret_key.split('/', 2).last
+
+        # build a list of all possible ids
+        possible_ids = possible_secret_key_parts.map do |id|
+          SecretStorage.generate_secret_key(id.merge(key: key))
+        end
+
+        # use the value of the first id that exists
+        all_found = SecretStorage.read_multi(possible_ids)
+
+        if found = possible_ids.detect { |id| all_found[id] }
+          secret_key.replace(found)
+        else
+          @errors << "#{secret_key} (tried: #{possible_ids.join(', ')})"
+          nil
+        end
+      end
+
+      # raises all errors at once for faster debugging
+      def verify!
+        if @errors.any?
+          raise(
+            Samson::Hooks::UserError,
+            "Failed to resolve secret keys:\n\t#{@errors.join("\n\t")}"
+          )
+        end
+      end
+
+      private
+
+      def possible_secret_key_parts
+        @possible_secret_key_parts ||= begin
+          environments = @deploy_groups.map(&:environment).uniq
+
+          # build list of allowed key parts
+          environment_permalinks = ['global']
+          project_permalinks = ['global']
+          deploy_group_permalinks = ['global']
+
+          environment_permalinks.concat(environments.map(&:permalink)) if environments.size == 1
+          project_permalinks << @project.permalink if @project
+          deploy_group_permalinks.concat(@deploy_groups.map(&:permalink)) if @deploy_groups.size == 1
+
+          # build a list of all key part combinations, sorted by most specific
+          deploy_group_permalinks.reverse_each.flat_map do |d|
+            project_permalinks.reverse_each.flat_map do |p|
+              environment_permalinks.reverse_each.map do |e|
+                {
+                  deploy_group_permalink: d,
+                  project_permalink: p,
+                  environment_permalink: e,
+                }
+              end
+            end
+          end
+        end
+      end
+    end
+
     def initialize(release_doc)
       @doc = release_doc
     end
@@ -20,7 +89,6 @@ module Kubernetes
         if needs_secret_sidecar?
           set_secret_sidecar
           expand_secret_annotations
-          verify_secret_annotations
         end
         set_env
 
@@ -36,75 +104,14 @@ module Kubernetes
       @template ||= @doc.deploy_template
     end
 
-    # expand $ENV and $DEPLOY_GROUP in annotation that start with 'secret/'
+    # look up keys in all possible namespaces by specificity
+    #
+    # deprecated: expand $ENV and $DEPLOY_GROUP in annotation that start with 'secret/'
     # TODO: use this in terminal_executor too see https://github.com/zendesk/samson/pull/1022
     def expand_secret_annotations
-      secret_annotations.each do |_, secret_key|
-        if secret_key.split('/').size >= 4 # legecy way of specifying full keys
-          secret_key.gsub!(/\${ENV}/, @doc.deploy_group.environment.permalink)
-          secret_key.gsub!(/\${DEPLOY_GROUP}/, @doc.deploy_group.permalink)
-        else # new way of only specifying the key
-          key = secret_key.split('/', 2).last
-
-          # build a list of all possible ids
-          possible_ids = possible_secret_key_parts(@doc.build.project, [@doc.deploy_group]).map do |id|
-            SecretStorage.generate_secret_key(id.merge(key: key))
-          end
-
-          # use the value of the first id that exists
-          found = SecretStorage.read_multi(possible_ids)
-
-          found = possible_ids.detect { |id| found[id] } || raise(
-            Samson::Hooks::UserError, "Key #{secret_key} could not be resolved, tried #{possible_ids.join(', ')}"
-          )
-          secret_key.replace(found)
-        end
-      end
-    end
-
-    def possible_secret_key_parts(project, deploy_groups)
-      environments = deploy_groups.map(&:environment).uniq
-
-      # build list of allowed key parts
-      environment_permalinks = ['global']
-      project_permalinks = ['global']
-      deploy_group_permalinks = ['global']
-
-      environment_permalinks.concat(environments.map(&:permalink)) if environments.size == 1
-      project_permalinks << project.permalink
-      deploy_group_permalinks.concat(deploy_groups.map(&:permalink)) if deploy_groups.size == 1
-
-      # build a list of all key part combinations, sorted by most specific
-      deploy_group_permalinks.reverse_each.flat_map do |d|
-        project_permalinks.reverse_each.flat_map do |p|
-          environment_permalinks.reverse_each.map do |e|
-            {
-              deploy_group_permalink: d,
-              project_permalink: p,
-              environment_permalink: e,
-            }
-          end
-        end
-      end
-    end
-
-    # verify that each secret really exists and inform the user
-    # if it does not as the deployment will fail
-    def verify_secret_annotations
-      errors = []
-      secret_annotations.each do |annotation_name, secret_key|
-        begin
-          SecretStorage.read(secret_key)
-        rescue ActiveRecord::RecordNotFound, NoMethodError
-          errors << "Secret #{annotation_name} with key #{secret_key} could not be found."
-        end
-      end
-      if errors.any?
-        raise(
-          Samson::Hooks::UserError,
-          "Missing Secret Keys:\n\t#{errors.join("\n\t")}"
-        )
-      end
+      resolver = SecretKeyResolver.new(@doc.build.project, [@doc.deploy_group])
+      secret_annotations.each_value { |secret_key| resolver.expand!(secret_key) }
+      resolver.verify!
     end
 
     def annotations
