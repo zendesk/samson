@@ -72,7 +72,8 @@
       $("#script-section").hide();
 
       // disable Deploy button when roles are missing and deploy would fail
-      $(".btn-primary").toggleClass('disabled', <%= missing %>);
+      var title = (<%= missing %> ? "A kubernetes role is missing!" : "")
+      $(".btn-primary").toggleClass('disabled', <%= missing %>).attr('title', title);
     });
   </script>
 <% end %>
