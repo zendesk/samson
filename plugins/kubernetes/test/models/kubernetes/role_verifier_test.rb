@@ -101,6 +101,14 @@ describe Kubernetes::RoleVerifier do
       errors.must_include "Deployment metadata.labels.role must match /\\A[a-z0-9]([-a-z0-9]*[a-z0-9])?\\z/"
     end
 
+    it "reports non-string env values" do
+      role.first[:spec][:template][:spec][:containers][0][:env] = {
+        name: 'XYZ_PORT',
+        value: 1234 # can happen when using yml configs
+      }
+      errors.must_include "Env values 1234 must be strings."
+    end
+
     describe 'verify_job_restart_policy' do
       let(:expected) { ["Job spec.template.spec.restartPolicy must be one of Never/OnFailure"] }
       before { role.replace(job_role) }
