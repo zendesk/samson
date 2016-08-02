@@ -1,0 +1,15 @@
+<% if @deploy.kubernetes && @deploy.kubernetes_release %>
+  <% release = @deploy.kubernetes_release %>
+  <div class="tab-pane" id="kubernetes_release">
+    <h2>Release #<%= @deploy.kubernetes_release.id %></h2>
+    GIT: <%= release.git_ref %> @ <%= release.git_sha %><br/>
+
+    <h3>Release docs</h3>
+    <% release.release_docs.sort_by { |rd| rd.deploy_group.natural_order }.each do |release_doc| %>
+      <div>
+        <h3><%= release_doc.deploy_group.name %> - <%= link_to release_doc.kubernetes_role.name, [@project, release_doc.kubernetes_role] %></h3>
+        <pre><%= release_doc.resource_template.to_yaml %></pre>
+      </div>
+    <% end %>
+  </div>
+<% end %>
