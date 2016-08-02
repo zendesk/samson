@@ -54,6 +54,8 @@
         <td>
           <% if current_user.admin_for?(current_project) %>
             <pre><%= hook.fetch(:request).map { |k,v| "#{k}: #{v}" }.join("\n") %></pre>
+            Body:
+            <pre><%= hook.fetch(:request_body, '') %></pre>
           <% else %>
             ... visisble for admins ...
           <% end %>
@@ -63,7 +65,8 @@
         <th>Response</th>
         <td>
           Status: <%= hook.fetch(:status_code) %><br/>
-          Body: <%= hook.fetch(:body) %>
+          Body:
+          <pre><%= hook.fetch(:body) %></pre>
         </td>
       </tr>
       <tr>
