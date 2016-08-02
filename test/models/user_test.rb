@@ -219,17 +219,24 @@ describe User do
 
   describe "#csv_line" do
     let(:user) { users(:project_deployer) }
+    let(:role_id) { user_project_roles(:project_deployer).role_id }
     let(:project) { projects(:test) }
 
     it "returns project line" do
-      user.csv_line(project).must_equal(
+      user.csv_line(project, role_id).must_equal(
         [user.id, user.name, user.email, project.id, project.name, Role::DEPLOYER.name, nil]
       )
     end
 
-    it "returns system line with deleted user" do
+    it "returns project line with user role when no project_role provided" do
+      user.csv_line(project, nil).must_equal(
+        [user.id, user.name, user.email, project.id, project.name, user.role.name, nil]
+      )
+    end
+
+    it "returns system line with no project" do
       user.soft_delete!
-      user.csv_line(nil).must_equal(
+      user.csv_line(nil, nil).must_equal(
         [user.id, user.name, user.email, "", "SYSTEM", Role::VIEWER.name, user.deleted_at]
       )
     end
@@ -237,15 +244,19 @@ describe User do
 
   describe "#effective project role" do
     let(:user) { users(:project_deployer) }
-    let(:project) { projects(:test) }
+    let(:role_id) { user_project_roles(:project_deployer).role_id }
 
     it "returns Admin when project deployer and system super admin" do
       user.update_attribute(:role_id, Role::SUPER_ADMIN.id)
-      user.effective_project_role(project).must_equal Role::ADMIN.name
+      user.effective_project_role(role_id).must_equal Role::ADMIN.name
     end
 
     it "returns Deployer when project deployer and system viewer" do
-      user.effective_project_role(project).must_equal Role::DEPLOYER.name
+      user.effective_project_role(role_id).must_equal Role::DEPLOYER.name
+    end
+
+    it "returns Viewer when no user_project_role.role_id provided" do
+      user.effective_project_role(nil).must_equal Role::VIEWER.name
     end
   end
 

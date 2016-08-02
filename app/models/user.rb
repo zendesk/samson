@@ -82,12 +82,14 @@ class User < ActiveRecord::Base
     CSV.generate do |csv|
       csv << ["id", "name", "email", "projectiD", "project", "role", "deleted at"]
       users.each do |user|
-        csv << user.csv_line(nil) unless project_id
+        csv << user.csv_line(nil, nil) unless project_id
+        project_roles = user.user_project_roles.joins(:project)
         if inherited
-          permissions_projects.find_each { |project| csv << user.csv_line(project) }
+          user_roles = project_roles.pluck(:project_id, :role_id).to_h
+          permissions_projects.find_each { |project| csv << user.csv_line(project, user_roles[project.id]) }
         else
-          user.user_project_roles.joins(:project).find_each do |user_project_role|
-            csv << user.csv_line(user_project_role.project)
+          project_roles.each do |user_project_role|
+            csv << user.csv_line(user_project_role.project, user_project_role.role_id)
           end
         end
       end
@@ -96,14 +98,14 @@ class User < ActiveRecord::Base
     end
   end
 
-  def csv_line(project)
+  def csv_line(project, project_role_id)
     [
       id,
       name,
       email,
       project ? project.id : "",
       project ? project.name : "SYSTEM",
-      project ? effective_project_role(project) : role.name,
+      (project && project_role_id) ? effective_project_role(project_role_id) : role.name,
       deleted_at
     ]
   end
@@ -156,12 +158,11 @@ class User < ActiveRecord::Base
     user_project_roles.find_by(project: project)
   end
 
-  def effective_project_role(project)
+  def effective_project_role(project_role_id)
     if role_id == Role::SUPER_ADMIN.id || role_id == Role::ADMIN.id
       Role::ADMIN.name
     else
-      project_role = project_role_for(project)
-      role_id.to_i >= project_role.try(:role_id).to_i ? role.name : project_role.role.name
+      role_id.to_i >= project_role_id.to_i ? role.name : Role.find(project_role_id).name
     end
   end
 
