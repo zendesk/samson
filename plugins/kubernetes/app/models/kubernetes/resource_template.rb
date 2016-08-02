@@ -37,10 +37,54 @@ module Kubernetes
     end
 
     # expand $ENV and $DEPLOY_GROUP in annotation that start with 'secret/'
+    # TODO: use this in terminal_executor too see https://github.com/zendesk/samson/pull/1022
     def expand_secret_annotations
       secret_annotations.each do |_, secret_key|
-        secret_key.gsub!(/\${ENV}/, @doc.deploy_group.environment.permalink)
-        secret_key.gsub!(/\${DEPLOY_GROUP}/, @doc.deploy_group.permalink)
+        if secret_key.split('/').size >= 4 # legecy way of specifying full keys
+          secret_key.gsub!(/\${ENV}/, @doc.deploy_group.environment.permalink)
+          secret_key.gsub!(/\${DEPLOY_GROUP}/, @doc.deploy_group.permalink)
+        else # new way of only specifying the key
+          key = secret_key.split('/', 2).last
+
+          # build a list of all possible ids
+          possible_ids = possible_secret_key_parts(@doc.build.project, [@doc.deploy_group]).map do |id|
+            SecretStorage.generate_secret_key(id.merge(key: key))
+          end
+
+          # use the value of the first id that exists
+          found = SecretStorage.read_multi(possible_ids)
+
+          found = possible_ids.detect { |id| found[id] } || raise(
+            Samson::Hooks::UserError, "Key #{secret_key} could not be resolved, tried #{possible_ids.join(', ')}"
+          )
+          secret_key.replace(found)
+        end
+      end
+    end
+
+    def possible_secret_key_parts(project, deploy_groups)
+      environments = deploy_groups.map(&:environment).uniq
+
+      # build list of allowed key parts
+      environment_permalinks = ['global']
+      project_permalinks = ['global']
+      deploy_group_permalinks = ['global']
+
+      environment_permalinks.concat(environments.map(&:permalink)) if environments.size == 1
+      project_permalinks << project.permalink
+      deploy_group_permalinks.concat(deploy_groups.map(&:permalink)) if deploy_groups.size == 1
+
+      # build a list of all key part combinations, sorted by most specific
+      deploy_group_permalinks.reverse_each.flat_map do |d|
+        project_permalinks.reverse_each.flat_map do |p|
+          environment_permalinks.reverse_each.map do |e|
+            {
+              deploy_group_permalink: d,
+              project_permalink: p,
+              environment_permalink: e,
+            }
+          end
+        end
       end
     end
 

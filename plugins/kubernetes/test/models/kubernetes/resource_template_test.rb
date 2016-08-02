@@ -161,16 +161,45 @@ describe Kubernetes::ResourceTemplate do
           SecretStorage.stubs(:read).returns(true)
         end
 
-        it "secret is scoped correctly" do
-          assert doc.raw_template.sub!(secret_key, '${ENV}/foo/${DEPLOY_GROUP}/bar')
-          template.to_hash[:spec][:template][:metadata][:annotations][:'secret/FOO'].
-            must_equal "production/foo/pod1/bar"
+        describe "deprecated replacement lookup" do
+          it "secret is scoped correctly" do
+            assert doc.raw_template.sub!(secret_key, '${ENV}/foo/${DEPLOY_GROUP}/bar')
+            template.to_hash[:spec][:template][:metadata][:annotations][:'secret/FOO'].
+              must_equal "production/foo/pod1/bar"
+          end
+
+          it "does not effect a non secret annotation" do
+            assert doc.raw_template.sub!(secret_key, "#{secret_key}\n        annotation_key: somevalueforthekey")
+            template.to_hash[:spec][:template][:metadata][:annotations][:annotation_key].
+              must_equal "somevalueforthekey"
+          end
         end
 
-        it "does not effect a non secret annotation" do
-          assert doc.raw_template.sub!(secret_key, "#{secret_key}\n        annotation_key: somevalueforthekey")
-          template.to_hash[:spec][:template][:metadata][:annotations][:annotation_key].
-            must_equal "somevalueforthekey"
+        describe "key lookup" do
+          before { assert doc.raw_template.sub!(secret_key, 'bar') }
+
+          it "looks up by only the key" do
+            SecretStorage.expects(:read_multi).returns({'global/global/global/bar' => 'xyz'})
+            template.to_hash[:spec][:template][:metadata][:annotations][:'secret/FOO'].
+              must_equal "global/global/global/bar"
+          end
+
+          it "fails when unable to find by onl key" do
+            SecretStorage.expects(:read_multi).returns({})
+            e = assert_raises(Samson::Hooks::UserError) { template.to_hash }
+            # order is important here and should not change
+            priority = [
+              "production/foo/pod1/bar",
+              "global/foo/pod1/bar",
+              "production/global/pod1/bar",
+              "global/global/pod1/bar",
+              "production/foo/global/bar",
+              "global/foo/global/bar",
+              "production/global/global/bar",
+              "global/global/global/bar"
+            ]
+            e.message.must_equal "Key bar could not be resolved, tried #{priority.join(", ")}"
+          end
         end
       end
     end
