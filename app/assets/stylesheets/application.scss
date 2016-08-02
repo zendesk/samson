@@ -54,3 +54,7 @@ a.no-hover:hover {
   color: #262626;
   background-color: #f5f5f5;
 }
+
+a.btn.disabled[title] {
+  pointer-events: auto;
+}
