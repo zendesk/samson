@@ -1,7 +1,6 @@
 require 'csv'
 
 class UserCsvPresenter
-
   ## Returns a CSV output of the user's permissions report
   ## Params
   ## - Options hash:
@@ -13,8 +12,7 @@ class UserCsvPresenter
   ##   - datetime - defaults to now, Timestamp for when the report is kicked off and generated
 
   def self.to_csv(
-    inherited: false, deleted: false, project_id: nil, user_id: nil,
-      datetime: (Time.now.strftime "%Y%m%d_%H%M")
+    inherited: false, deleted: false, project_id: nil, user_id: nil, datetime: (Time.now.strftime "%Y%m%d_%H%M")
   )
     inherited = true if project_id || user_id
     users = (deleted || user_id) ? User.unscoped : User
@@ -61,8 +59,6 @@ class UserCsvPresenter
     end
   end
 
-  protected
-
   def self.csv_header
     ["id", "name", "email", "projectiD", "project", "role", "deleted at"]
   end
@@ -72,7 +68,8 @@ class UserCsvPresenter
   ## - user: User Object
   ## - project: Project object or nil for System level role
   ## - project_role_id: prefetched user_project_role for project
-  ## - project_role_id is prefetched inside of to_csv to optimize to O(N) from O(N*M) using native ActiveRecord methods
+  ## - project_role_id is prefetched inside of to_csv to optimize to O(N) from O(N*M) using native
+  ##   ActiveRecord methods
 
   def self.csv_line(user, project, project_role_id)
     [

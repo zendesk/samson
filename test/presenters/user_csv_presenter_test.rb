@@ -27,7 +27,7 @@ describe UserCsvPresenter do
     end
 
     it "accurately generates the inherited csv Report" do
-      csv_accuracy_test({inherited: true})
+      csv_accuracy_test(inherited: true)
     end
 
     def csv_completeness_test(options = {}, expected = {})
@@ -54,14 +54,14 @@ describe UserCsvPresenter do
           csv_row_project.wont_be_nil
           csv_row[4].must_equal csv_row_project.name
           csv_row[5].must_equal proj_role_test_helper(csv_row_user, csv_row_project)
+        end
       end
     end
-  end
 
     def proj_role_test_helper(test_user, project)
       project_role = test_user.project_role_for(project)
-      return test_user.role.name if (project_role.nil?)
-      return Role::ADMIN.name if (test_user.role_id == Role::SUPER_ADMIN.id)
+      return test_user.role.name if project_role.nil?
+      return Role::ADMIN.name if test_user.role_id == Role::SUPER_ADMIN.id
       test_user.role_id >= project_role.role_id ? test_user.role.name : project_role.role.name
     end
   end
@@ -114,6 +114,4 @@ describe UserCsvPresenter do
       end
     end
   end
-
-
 end
