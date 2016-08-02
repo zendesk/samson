@@ -18,7 +18,7 @@ class ApplicationController < ActionController::Base
     if Rails.env.test?
       raise(DoorkeeperAuth::DisallowedAccessError, message)
     else
-      render text: "This resource is not available via the API", status: 403
+      render plain: "This resource is not available via the API", status: 403
     end
   end
 

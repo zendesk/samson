@@ -137,10 +137,11 @@ class SlackAppController < ApplicationController
       return render json: 'ok'
     end
 
-    @payload = params[:payload] ? JSON.parse(params[:payload]) : params
-    token = @payload['token']
-    raise "Slack token doesn't match SLACK_VERIFICATION_TOKEN" \
-      if token && !ActiveSupport::SecurityUtils.secure_compare(token, ENV['SLACK_VERIFICATION_TOKEN'] || '')
+    @payload = (params[:payload] ? JSON.parse(params[:payload]) : params)
+    token = @payload['token'].presence
+    if token && !ActiveSupport::SecurityUtils.secure_compare(token, ENV['SLACK_VERIFICATION_TOKEN'] || '')
+      raise "Slack token doesn't match SLACK_VERIFICATION_TOKEN"
+    end
 
     @current_user_from_slack = if current_user
       SlackIdentifier.find_by_user_id(current_user.id).try(:user)

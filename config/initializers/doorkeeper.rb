@@ -18,7 +18,7 @@ Doorkeeper.configure do
   orm :active_record
 
   resource_owner_authenticator do
-    env['warden'].user
+    request.env['warden'].user
   end
 
   default_scopes :default
