@@ -200,7 +200,7 @@ module Kubernetes
       end
 
       if needs_secret_sidecar?
-        vault_config = VaultClient.client.config_for(@doc.deploy_group.permalink)
+        vault_config = VaultClient.client.config_for(@doc.deploy_group.vault_instance)
         raise StandardError, "Could not find Vault config for #{@doc.deploy_group.permalink}" unless vault_config
 
         sidecar_env = (sidecar_container[:env] ||= [])

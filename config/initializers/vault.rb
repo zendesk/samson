@@ -39,80 +39,97 @@ if ENV["SECRET_STORAGE_BACKEND"] == "SecretStorage::HashicorpVault"
 
     def initialize
       return if Rails.env.test?
-      ensure_config_exists
+      VaultClient.ensure_config_exists
       # since we have a bunch of servers, don't use the client singlton to
       # talk to them
       # as we configure each client, check to see if the config has a token in it,
       # if it does, then we don't need to worry about going and getting one
-      @writers = vault_hosts.map do |vault_server|
+      @vaults = {}
+      vault_hosts.each do |vault_server|
+        instance = vault_server.fetch("vault_instance")
         if vault_server["vault_token"].present?
-          writer = Vault::Client.new(DEFAULT_CLIENT_OPTIONS.merge(ssl_verify: vault_server["tls_verify"]))
-          writer.token = File.read(vault_server["vault_token"]).strip
+          tls_verification = vault_server.fetch("tls_verify")
+          @vaults[instance] = Vault::Client.new(DEFAULT_CLIENT_OPTIONS.merge(ssl_verify: tls_verification))
+          @vaults[instance].token = File.read(vault_server.fetch("vault_token")).strip
         else
-          pemfile = File.read(vault_server["vault_auth_pem"])
+          pemfile = File.read(vault_server.fetch("vault_auth_pem"))
           client_cert_options = {
             cert: OpenSSL::X509::Certificate.new(pemfile),
             key: OpenSSL::PKey::RSA.new(pemfile),
-            ssl_pem_file: vault_server["vault_auth_pem"],
-            verify_mode: vault_server["tls_verify"]
+            ssl_pem_file: vault_server.fetch("vault_auth_pem"),
+            verify_mode: vault_server.fetch("tls_verify")
           }
           writer = Vault::Client.new(DEFAULT_CLIENT_OPTIONS.merge(client_cert_options))
           writer.token = VaultClient.auth_token(vault_server["vault_address"])
         end
-        writer.address = vault_server["vault_address"]
-        writer.ssl_ca_cert = vault_server["ca_cert"] if vault_server["ca_cert"]
-        writer
+        @vaults[instance].address = vault_server.fetch("vault_address")
+        @vaults[instance].ssl_ca_cert = vault_server.fetch("ca_cert") if vault_server.fetch("ca_cert", false)
       end
-      @reader = @writers.first
     end
 
+    # normally we'll only get a single instance back.  if it's global, just read it once
     def read(key)
-      @reader.logical.read(key)
+      vault_instances(key).first.logical.read(key)
     end
 
     def list(path)
-      @reader.logical.list(path)
+      @vaults.each_value.flat_map { |vault| vault.logical.list(path) }
     end
 
     # make darn sure on deletes and writes that we try a couple of times.
     # not going to catch any other excpeptions as we want this to blow up
     # if anything fails
     def write(key, data)
-      @writers.each do |vault_server|
-        Vault.with_retries(Vault::HTTPConnectionError, attempts: 5) do
-          vault_server.logical.write(key, data)
-        end
+      Vault.with_retries(Vault::HTTPConnectionError, attempts: 5) do
+        vault_instances(key).each { |v| v.logical.write(key, data) }
       end
     end
 
     def delete(key)
-      @writers.each do |vault_server|
-        Vault.with_retries(Vault::HTTPConnectionError, attempts: 5) do
-          vault_server.logical.delete(key)
-        end
+      Vault.with_retries(Vault::HTTPConnectionError, attempts: 5) do
+        vault_instances(key).each { |v| v.logical.delete(key) }
       end
     end
 
-    def config_for(deploy_group_name)
-      vault_hosts.detect do |hash|
-        hash.fetch('deploy_groups', []).include? deploy_group_name
-      end
+    def self.available_instances
+      VaultClient.ensure_config_exists
+      JSON.parse(File.read(VaultClient.vault_config_file)).map { |v| v["vault_instance"] }
     end
 
-    private
+    def config_for(instance_name)
+      vault_hosts.detect { |vault| vault["vault_instance"] == instance_name }
+    end
 
-    def ensure_config_exists
-      unless File.exist?(vault_config_file)
+    def self.ensure_config_exists
+      unless File.exist?(VaultClient.vault_config_file)
         raise "VAULT_CONFIG_FILE or config/vault.json is required for #{ENV["SECRET_STORAGE_BACKEND"]}"
       end
     end
 
-    def vault_hosts
-      @vault_hosts ||= JSON.parse(File.read(vault_config_file))
+    def self.vault_config_file
+      ENV['VAULT_CONFIG_FILE'] || Rails.root.join("config/vault.json")
     end
 
-    def vault_config_file
-      ENV['VAULT_CONFIG_FILE'] || Rails.root.join("config/vault.json")
+    private
+
+    def vault_hosts
+      @vault_hosts ||= JSON.parse(File.read(VaultClient.vault_config_file))
+    end
+
+    # get back the vault instance that's required for this pod.  we'll take
+    # the key, and look up the instance or return all of 'em if it's a global key
+    def vault_instances(key)
+      # parse_secret_key doesn't know about the namespace etc, so strip it off
+      deploy_group = SecretStorage.parse_secret_key(key.split('/', 3).last).fetch(:deploy_group_permalink)
+      if deploy_group == 'global'
+        @vaults.map(&:pop)
+      else
+        deploy_group = DeployGroup.find_by_name(deploy_group)
+        if deploy_group.nil?
+          raise "no vault_instance configured for deploy group #{deploy_group}"
+        end
+        [@vaults.fetch(deploy_group.vault_instance.to_s)]
+      end
     end
   end
 end
