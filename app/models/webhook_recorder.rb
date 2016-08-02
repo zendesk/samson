@@ -4,10 +4,11 @@ class WebhookRecorder
 
   class << self
     def record(project, request:, response:, log:)
-      request = request.env.select { |k, _v| k =~ NATIVE_HEADER }
+      request_info = request.env.select { |k, _v| k =~ NATIVE_HEADER }
 
       data = {
-        request: request,
+        request: request_info,
+        request_body: request.body.read,
         status_code: response.status,
         body: response.body,
         log: log,

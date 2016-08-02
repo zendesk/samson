@@ -3,7 +3,7 @@ require_relative '../test_helper'
 SingleCov.covered!
 
 describe WebhookRecorder do
-  let(:request) { ActionController::TestRequest.new("FOO" => "bar") }
+  let(:request) { ActionController::TestRequest.new("FOO" => "bar", "RAW_POST_DATA" => "BODY") }
   let(:response) { ActionController::TestResponse.new }
   let(:project) { projects(:test) }
 
@@ -21,15 +21,18 @@ describe WebhookRecorder do
         "HTTP_HOST" => "test.host",
         "REMOTE_ADDR" => "0.0.0.0",
         "HTTP_USER_AGENT" => "Rails Testing",
-        "FOO" => "bar"
+        "FOO" => "bar",
+        "RAW_POST_DATA" => "BODY"
       )
     end
 
     it "records status, body, log" do
       WebhookRecorder.record(project, request: request, log: "LOG", response: response)
-      WebhookRecorder.read(project).fetch(:status_code).must_equal 200
-      WebhookRecorder.read(project).fetch(:body).must_equal ""
-      WebhookRecorder.read(project).fetch(:log).must_equal "LOG"
+      read = WebhookRecorder.read(project)
+      read.fetch(:status_code).must_equal 200
+      read.fetch(:body).must_equal ""
+      read.fetch(:log).must_equal "LOG"
+      read.fetch(:request_body).must_equal "BODY"
     end
   end
 
