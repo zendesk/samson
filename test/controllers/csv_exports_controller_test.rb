@@ -78,17 +78,19 @@ describe CsvExportsController do
     describe "#new" do
       describe "as html" do
         before do
+          # clone a project to test it appears in the UI
           p = projects(:test).dup
           p.name = "Other Project"
           p.save!(validate: false)
         end
 
         describe "empty type (Deploys)" do
-          it "renders deploy form" do
+          it "renders deploy form with deleted_projects" do
+            Project.last.update_attribute(:deleted_at, DateTime.now)
             get :new
             assert_select "h1", "Request Deploys Report"
             @response.body.must_include ">Project</option>"
-            @response.body.must_include ">Other Project</option>"
+            @response.body.must_include ">(deleted) Other Project</option>"
           end
         end
 
