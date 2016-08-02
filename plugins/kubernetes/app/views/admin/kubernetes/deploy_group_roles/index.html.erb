@@ -1,5 +1,22 @@
 <h1>Kubernetes Deploy Group Roles</h1>
 
+<%= form_tag '?', method: :get, class: 'clearfix' do %>
+  <div class="col-sm-3">
+    <%= label_tag "Project" %><br/>
+    <% possible = Project.where(id: Kubernetes::DeployGroupRole.pluck('distinct project_id')).order('name asc') %>
+    <% options = options_for_select(possible.pluck(:name, :id), params[:search].try(:[], :project_id)) %>
+    <%= select_tag 'search[project_id]', options, include_blank: "", class: "form-control", style: "background-color: white; width: 100%; height: 35px" %>
+  </div>
+  <div class="col-sm-3">
+    <%= label_tag "Deploy Group" %><br/>
+    <% possible = DeployGroup.where(id: Kubernetes::DeployGroupRole.pluck('distinct deploy_group_id')).sort_by(&:natural_order) %>
+    <% options = options_for_select(possible.map { |dg| [dg.name, dg.id] }, params[:search].try(:[], :deploy_group_id)) %>
+    <%= select_tag 'search[deploy_group_id]', options, include_blank: "", class: "form-control", style: "background-color: white; width: 100%; height: 35px" %>
+  </div>
+  <%= render 'shared/search_button' %>
+<% end %>
+<br/>
+
 <section class="clearfix tabs">
   <div class="table table-hover table-condensed">
 
@@ -29,6 +46,13 @@
           </td>
         </tr>
       <% end %>
+
+      <tr>
+        <td colspan="3">Total</td>
+        <td><%= @deploy_group_roles.map(&:cpu).sum %></td>
+        <td><%= @deploy_group_roles.map(&:ram).sum %></td>
+        <td><%= @deploy_group_roles.map(&:replicas).sum %></td>
+      </tr>
     </table>
   </div>
 
