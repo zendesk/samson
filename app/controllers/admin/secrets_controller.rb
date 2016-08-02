@@ -64,7 +64,7 @@ class Admin::SecretsController < ApplicationController
   def successful_response(notice)
     flash[:notice] = notice
     if params[:commit] == ADD_MORE
-      redirect_to new_admin_secret_path(secret: params[:secret].except(:value))
+      redirect_to new_admin_secret_path(secret: params[:secret].except(:value).to_unsafe_h)
     else
       redirect_to action: :index
     end
