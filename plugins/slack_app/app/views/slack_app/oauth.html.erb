@@ -1,0 +1,25 @@
+<h1>Connect to Slack</h1>
+<% if @missing_configs.any? %>
+  <div class="alert alert-danger">
+    Samson is not fully configured for this feature.
+    Set these environment variables to continue:
+    <ul>
+      <% @missing_configs.each do |var| %>
+      <li><code><%= var %></code></li>
+      <% end %>
+    </ul>
+  </div>
+<% else %>
+  <p>
+    <% if @need_to_connect_app %>
+      Samson isn't connected to Slack.
+      <%= link_to 'Connect to Slack', slack_app_oauth_url('chat:write:bot,commands,identify'), class: 'btn btn-success' %>
+    <% elsif @need_to_connect_user %>
+      Samson needs to know your Slack user ID in order to enable the <code>/deploy</code> command.
+      <%= link_to 'Connect to Slack', slack_app_oauth_url('identify'), class: 'btn btn-success' %>
+    <% else %>
+      Samson is connected to Slack, and knows who you are.
+      Now you can use the <code>/deploy</code> command from Slack.
+    <% end %>
+  </p>
+<% end %>
