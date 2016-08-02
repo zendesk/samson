@@ -20,7 +20,7 @@ describe Integrations::GithubController do
     Integrations::GithubController.github_hook_secret = 'test'
   end
 
-  does_not_deploy 'when the event is invalid' do
+  it_does_not_deploy 'when the event is invalid' do
     request.headers['X-Github-Event'] = 'event'
   end
 
@@ -86,11 +86,11 @@ describe Integrations::GithubController do
       )
     end
 
-    does_not_deploy 'with a non-open pull request state' do
+    it_does_not_deploy 'with a non-open pull request state' do
       payload.deep_merge!(pull_request: {state: 'closed'})
     end
 
-    does_not_deploy 'without "[samson review]" in the body' do
+    it_does_not_deploy 'without "[samson review]" in the body' do
       payload.deep_merge!(pull_request: {body: 'imafixwolves'})
     end
   end
