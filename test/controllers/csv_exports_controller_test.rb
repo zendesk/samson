@@ -12,9 +12,9 @@ describe CsvExportsController do
         it "renders the full admin menu and new page" do
           get :new
           @response.body.must_include "Environment variables"
-          @response.body.must_include "Create Users Report"
+          @response.body.must_include "Users Report"
           @response.body.must_include "Reports"
-          @response.body.must_include "Create Deploys CSV Report"
+          @response.body.must_include "Deploys CSV Report"
         end
       end
     end
@@ -24,9 +24,9 @@ describe CsvExportsController do
         it "renders the limited admin menu and limited new page" do
           get :new
           @response.body.wont_include "Environment variables"
-          @response.body.must_include "Create Users Report"
+          @response.body.must_include "Users Report"
           @response.body.must_include "Reports"
-          @response.body.must_include "Create Deploys CSV Report"
+          @response.body.must_include "Deploys CSV Report"
         end
       end
     end

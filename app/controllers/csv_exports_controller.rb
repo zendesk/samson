@@ -27,7 +27,7 @@ class CsvExportsController < ApplicationController
       format.csv do
         if params[:type] == "users"
           options = user_filter
-          send_data User.to_csv(options), type: :csv, filename: "Users_#{options[:datetime]}.csv"
+          send_data UserCsvPresenter.to_csv(options), type: :csv, filename: "Users_#{options[:datetime]}.csv"
         else
           render body: "not found", status: :not_found
         end
