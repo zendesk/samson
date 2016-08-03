@@ -1,7 +1,7 @@
 ENV["RAILS_ENV"] ||= "test"
 
 require 'single_cov'
-SingleCov::APP_FOLDERS << 'decorators'
+SingleCov::APP_FOLDERS << 'decorators' << 'presenters'
 SingleCov.setup :minitest
 
 if ENV['CODECLIMATE_REPO_TOKEN']

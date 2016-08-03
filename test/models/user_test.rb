@@ -187,12 +187,6 @@ describe User do
     end
   end
 
-  describe ".to_csv" do
-    it "generates csv" do
-      User.to_csv.split("\n").size.must_equal User.count + 1 + UserProjectRole.count
-    end
-  end
-
   describe "#super_admin?" do
     it "is true for a super admin" do
       users(:super_admin).must_be(:super_admin?)

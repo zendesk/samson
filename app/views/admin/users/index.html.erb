@@ -4,7 +4,7 @@
 
   <%= render partial: "shared/search_bar", locals: { url: admin_users_path, query: params[:search] } %>
   <div class="users-csv">
-    <%= link_to "Download as CSV", admin_users_path(format: "csv") %>
+    <%= link_to "Download as CSV", new_csv_export_path(format: :csv, type: :users) %>
   </div>
 
   <table class="table table-hover table-condensed">

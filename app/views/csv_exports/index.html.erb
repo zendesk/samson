@@ -1,8 +1,9 @@
 <h1>Here are your active reports</h1>
 
 <section id="csv-exports" class="clearfix">
-  <div class="deploy-csv">
-    <%= link_to "Start a CSV export job", new_csv_export_path %>
+  <div>
+    <p><%= link_to "Deploys Report", new_csv_export_path %></p>
+    <p><%= link_to "Users Report", new_csv_export_path(type: :users) %></p>
   </div>
   <% if @csv_exports.empty? %>
     <p>No current CSV Reports was found!</p>

@@ -1,0 +1,47 @@
+<h1>User Permission Reports</h1>
+
+<section>
+  <div class="csv-users-filters clearfix">
+    <%= form_tag new_csv_export_path(format: :csv, type: :users), method: :get, class: "form-horizontal" do %>
+      <%= hidden_field_tag :type, "users" %>
+      <div class="form-group">
+        <%= label_tag :inherited, "Show inherited project permissions", class: "col-lg-2 control-label" %>
+        <div class="col-lg-2">
+          <%= check_box_tag :inherited, true, false, class: "form-control" %>
+        </div>
+      </div>
+      <div class="form-group">
+        <%= label_tag :deleted, "Include deleted users", class: "col-lg-2 control-label" %>
+        <div class="col-lg-2">
+          <%= check_box_tag :deleted, true, false, class: "form-control" %>
+        </div>
+      </div>
+      <div class="form-group">
+        <%= label_tag :project_id, "Project", class: "col-lg-2 control-label" %>
+        <% projects = [['', nil]] + Project.order(:name).pluck(:name, :id) %>
+        <div class="col-lg-4">
+          <%= select_tag(:project_id, options_for_select(projects), class: "form-control") %>
+        </div>
+      </div>
+      <div class="form-group">
+        <%= label_tag :user_id, "User", class: "col-lg-2 control-label" %>
+        <% users = [['', nil]] + User.order(:name).pluck(:name, :id) +
+            User.unscoped.order(:name).where("deleted_at IS NOT NULL")
+              .pluck(:name, :id).map { |u| ["(deleted) #{u[0]}", u[1]] } %>
+        <div class="col-lg-4">
+          <%= select_tag(:user_id, options_for_select(users), class: "form-control") %>
+        </div>
+      </div>
+      <div class="form-group">
+        <div class="col-lg-offset-2 col-lg-10">
+          <%= submit_tag "Download Users CSV Report", class: 'btn btn-default' %>
+        </div>
+      </div>
+    <% end %>
+  </div>
+  <div class="clearfix">
+    <hr />
+    <div><strong>Other reports</strong></div>
+    <div><%= link_to "Deploys Report", new_csv_export_path %></div>
+  </div>
+</section>
