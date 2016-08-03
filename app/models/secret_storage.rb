@@ -76,7 +76,7 @@ module SecretStorage
       def read(key)
         key = vault_path(key)
         result = vault_client.read(key)
-        return if result.data[:vault].nil?
+        return if !result || result.data[:vault].nil?
 
         result = result.to_h
         result = result.merge(result.delete(:data))
