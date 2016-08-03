@@ -39,23 +39,21 @@ class TerminalExecutor
 
   private
 
-  # TODO: pick dynamic secret from just the key
   def resolve_secrets(command)
     deploy_groups = @deploy.try(:stage).try(:deploy_groups) || []
-    allowed = {
-      environment_permalink: ['global'].concat(deploy_groups.map(&:environment).map(&:permalink)),
-      project_permalink: ['global'] << @deploy.try(:project).try(:permalink),
-      deploy_group_permalink: ['global'].concat(deploy_groups.map(&:permalink))
-    }
-    command.gsub(/\b#{SECRET_PREFIX}(#{SecretStorage::SECRET_KEY_REGEX})\b/) do
+    project = @deploy.try(:project)
+    resolver = Kubernetes::ResourceTemplate::SecretKeyResolver.new(project, deploy_groups)
+
+    result = command.gsub(/\b#{SECRET_PREFIX}(#{SecretStorage::SECRET_KEY_REGEX})\b/) do
       key = $1
-      parts = SecretStorage.parse_secret_key(key)
-      if allowed.all? { |k, v| v.include?(parts.fetch(k)) }
+      if resolver.expand!(key)
         SecretStorage.read(key, include_secret: true).fetch(:value)
-      else
-        raise ActiveRecord::RecordNotFound, "Not allowed to access key #{key}"
       end
     end
+
+    resolver.verify!
+
+    result
   end
 
   def execute_command!(command)

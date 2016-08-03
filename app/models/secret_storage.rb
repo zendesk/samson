@@ -25,32 +25,45 @@ module SecretStorage
       end
     end
 
-    def self.read(key)
-      secret = Secret.find(key)
-      {
-        key: key,
-        updater_id: secret.updater_id,
-        creator_id: secret.creator_id,
-        updated_at: secret.updated_at,
-        created_at: secret.created_at,
-        value: secret.value
-      }
-    end
+    class << self
+      def read(key)
+        return unless secret = Secret.find_by_id(key)
+        secret_to_hash secret
+      end
 
-    def self.write(key, data)
-      secret = Secret.where(id: key).first_or_initialize
-      secret.updater_id = data.fetch(:user_id)
-      secret.creator_id ||= data.fetch(:user_id)
-      secret.value = data.fetch(:value)
-      secret.save
-    end
+      def read_multi(keys)
+        secrets = Secret.where(id: keys).all
+        secrets.each_with_object({}) { |s, a| a[s.id] = secret_to_hash(s) }
+      end
 
-    def self.delete(key)
-      Secret.delete(key)
-    end
+      def write(key, data)
+        secret = Secret.where(id: key).first_or_initialize
+        secret.updater_id = data.fetch(:user_id)
+        secret.creator_id ||= data.fetch(:user_id)
+        secret.value = data.fetch(:value)
+        secret.save
+      end
 
-    def self.keys
-      Secret.order(:id).pluck(:id)
+      def delete(key)
+        Secret.delete(key)
+      end
+
+      def keys
+        Secret.order(:id).pluck(:id)
+      end
+
+      private
+
+      def secret_to_hash(secret)
+        {
+          key: secret.id,
+          updater_id: secret.updater_id,
+          creator_id: secret.creator_id,
+          updated_at: secret.updated_at,
+          created_at: secret.created_at,
+          value: secret.value
+        }
+      end
     end
   end
 
@@ -63,11 +76,20 @@ module SecretStorage
       def read(key)
         key = vault_path(key)
         result = vault_client.read(key)
-        raise ActiveRecord::RecordNotFound if result.data[:vault].nil?
+        return if !result || result.data[:vault].nil?
+
         result = result.to_h
         result = result.merge(result.delete(:data))
         result[:value] = result.delete(:vault)
         result
+      end
+
+      def read_multi(keys)
+        keys.each_with_object({}) do |key, a|
+          if value = read(key)
+            a[key] = value
+          end
+        end
       end
 
       def write(key, data)
@@ -145,9 +167,18 @@ module SecretStorage
       backend.write(key, data)
     end
 
+    # reads a single key and raises ActiveRecord::RecordNotFound if it is not found
     def read(key, include_secret: false)
       data = backend.read(key) || raise(ActiveRecord::RecordNotFound)
       data.delete(:value) unless include_secret
+      data
+    end
+
+    # reads multiple keys from the backend into a hash
+    # [a, b, c] -> {a: 1, c: 2}
+    def read_multi(keys, include_secret: false)
+      data = backend.read_multi(keys)
+      data.each_value { |s| s.delete(:value) } unless include_secret
       data
     end
 

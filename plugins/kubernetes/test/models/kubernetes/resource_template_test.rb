@@ -98,7 +98,7 @@ describe Kubernetes::ResourceTemplate do
     end
 
     describe "secret-sidecar-containers" do
-      let(:secret_key) { 'production/foo/snafu/bar' }
+      let(:secret_key) { "global/global/global/bar" }
 
       around do |test|
         klass = Kubernetes::ResourceTemplate
@@ -109,7 +109,7 @@ describe Kubernetes::ResourceTemplate do
 
       before do
         old_metadata = "role: some-role\n    "
-        new_metadata = "role: some-role\n      annotations:\n        secret/FOO: #{secret_key}\n    "
+        new_metadata = "role: some-role\n      annotations:\n        secret/FOO: bar\n    "
         assert doc.raw_template.sub!(old_metadata, new_metadata)
 
         SecretStorage.write(secret_key, value: 'something', user_id: 123)
@@ -150,10 +150,16 @@ describe Kubernetes::ResourceTemplate do
 
       it "fails to find a secret needed by the sidecar" do
         SecretStorage.delete(secret_key)
-        e = assert_raises Samson::Hooks::UserError do
-          template.to_hash
-        end
-        e.message.must_include "secret/FOO with key production/foo/snafu/bar could not be found"
+        e = assert_raises(Samson::Hooks::UserError) { template.to_hash }
+        e.message.must_include "Failed to resolve secret keys:\n\tbar (tried: production/foo/pod1/bar"
+      end
+
+      it "fails to find multiple secret needed by the sidecar, but shows them all at once" do
+        assert doc.raw_template.sub!("secret/FOO: bar", "secret/FOO: bar\n        secret/BAR: baz")
+        SecretStorage.delete(secret_key)
+        e = assert_raises(Samson::Hooks::UserError) { template.to_hash }
+        e.message.must_include "bar (tried: production/foo/pod1/bar"
+        e.message.must_include "baz (tried: production/foo/pod1/baz"
       end
 
       describe "scopes" do
@@ -161,16 +167,27 @@ describe Kubernetes::ResourceTemplate do
           SecretStorage.stubs(:read).returns(true)
         end
 
-        it "secret is scoped correctly" do
-          assert doc.raw_template.sub!(secret_key, '${ENV}/foo/${DEPLOY_GROUP}/bar')
+        it "looks up by only the key" do
+          SecretStorage.expects(:read_multi).returns('global/global/global/bar' => 'xyz')
           template.to_hash[:spec][:template][:metadata][:annotations][:'secret/FOO'].
-            must_equal "production/foo/pod1/bar"
+            must_equal "global/global/global/bar"
         end
 
-        it "does not effect a non secret annotation" do
-          assert doc.raw_template.sub!(secret_key, "#{secret_key}\n        annotation_key: somevalueforthekey")
-          template.to_hash[:spec][:template][:metadata][:annotations][:annotation_key].
-            must_equal "somevalueforthekey"
+        it "fails when unable to find by onl key" do
+          SecretStorage.expects(:read_multi).returns({})
+          e = assert_raises(Samson::Hooks::UserError) { template.to_hash }
+          # order is important here and should not change
+          priority = [
+            "production/foo/pod1/bar",
+            "global/foo/pod1/bar",
+            "production/global/pod1/bar",
+            "global/global/pod1/bar",
+            "production/foo/global/bar",
+            "global/foo/global/bar",
+            "production/global/global/bar",
+            "global/global/global/bar"
+          ]
+          e.message.must_equal "Failed to resolve secret keys:\n\tbar (tried: #{priority.join(", ")})"
         end
       end
     end

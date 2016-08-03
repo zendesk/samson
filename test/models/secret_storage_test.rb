@@ -97,6 +97,24 @@ describe SecretStorage do
     end
   end
 
+  describe ".read_multi" do
+    it "reads" do
+      data = SecretStorage.read_multi([secret.id], include_secret: true)
+      data.keys.must_equal [secret.id]
+      data[secret.id].fetch(:value).must_equal 'MY-SECRET'
+    end
+
+    it "does not read secrets by default" do
+      data = SecretStorage.read_multi([secret.id])
+      refute data[secret.id].key?(:value)
+    end
+
+    it "returns empty for unknown" do
+      SecretStorage.read_multi([secret.id, 'dfsfsfdsdf']).keys.must_equal [secret.id]
+      SecretStorage.read_multi(['dfsfsfdsdf']).keys.must_equal []
+    end
+  end
+
   describe ".delete" do
     it "deletes" do
       SecretStorage.delete(secret.id)
@@ -199,9 +217,25 @@ describe SecretStorage do
 
       it "fails to read a key" do
         client.expect(secret_namespace + 'production/foo/pod2/bar', vault: nil)
-        assert_raises ActiveRecord::RecordNotFound do
-          SecretStorage::HashicorpVault.read('production/foo/pod2/bar')
-        end
+        SecretStorage::HashicorpVault.read('production/foo/pod2/bar').must_equal nil
+      end
+    end
+
+    describe ".read_multi" do
+      it "gets a value based on a key with /secret" do
+        client.expect(secret_namespace + 'production/foo/pod2/bar', vault: "bar")
+        SecretStorage::HashicorpVault.read_multi(['production/foo/pod2/bar']).must_equal('production/foo/pod2/bar' => {
+          lease_id: nil,
+          lease_duration: nil,
+          renewable: nil,
+          auth: nil,
+          value: "bar"
+        })
+      end
+
+      it "fails to read a key" do
+        client.expect(secret_namespace + 'production/foo/pod2/bar', vault: nil)
+        SecretStorage::HashicorpVault.read_multi(['production/foo/pod2/bar']).must_equal({})
       end
     end
 

@@ -74,20 +74,20 @@ describe TerminalExecutor do
     describe 'with secrets' do
       def assert_resolves(id)
         secret = create_secret(id)
-        subject.execute!(%(echo "secret://#{id}"))
+        subject.execute!(%(echo "secret://#{id.split('/').last}"))
         output.string.must_equal "#{secret.value}\r\n"
       end
 
       def refute_resolves(id)
         create_secret(id)
-        assert_raises ActiveRecord::RecordNotFound do
-          subject.execute!(%(echo "secret://#{id}"))
+        assert_raises Samson::Hooks::UserError do
+          subject.execute!(%(echo "secret://#{id.split('/').last}"))
         end
       end
 
       let(:deploy) { deploys(:succeeded_test) }
 
-      it "resolves global secrets" do
+      it "resolves secrets" do
         assert_resolves 'global/global/global/bar'
       end
 
@@ -120,8 +120,8 @@ describe TerminalExecutor do
       end
 
       it "fails on unresolved secrets" do
-        assert_raises ActiveRecord::RecordNotFound do
-          subject.execute!('echo "secret://global/global/global/baz"')
+        assert_raises Samson::Hooks::UserError do
+          subject.execute!('echo "secret://nothing"')
         end
       end
 
@@ -133,9 +133,9 @@ describe TerminalExecutor do
         subject.instance_variable_set(:@verbose, true)
         id = 'global/global/global/baz'
         secret = create_secret(id)
-        subject.execute!("export SECRET='secret://#{id}'; echo $SECRET")
+        subject.execute!("export SECRET='secret://baz'; echo $SECRET")
         output.string.must_equal \
-          "» export SECRET='secret://#{id}'; echo $SECRET\r\n#{secret.value}\r\n"
+          "» export SECRET='secret://baz'; echo $SECRET\r\n#{secret.value}\r\n" # echo prints it, but not the execution
       end
     end
   end
