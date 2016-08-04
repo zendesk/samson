@@ -175,3 +175,4 @@ module Samson
 end
 
 require 'samson/hooks'
+require "#{Rails.root}/lib/samson/logging"
