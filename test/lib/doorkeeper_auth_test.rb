@@ -2,7 +2,7 @@ require_relative '../test_helper'
 
 SingleCov.covered!
 
-class TestingController < ActionController::Base
+class DoorkeeperAuthTestingController < ActionController::Base
   include DoorkeeperAuth
   api_accessible! true
 
@@ -11,10 +11,10 @@ class TestingController < ActionController::Base
   end
 end
 
-describe TestingController do
+describe DoorkeeperAuthTestingController do
   use_test_routes
 
-  subject { proc { get :foo } }
+  subject { proc { get :foo, test_route: true } }
 
   describe 'when winning_strategy is not doorkeeper' do
     before do
@@ -29,7 +29,7 @@ describe TestingController do
   describe 'when winning_strategy is doorkeeper' do
     describe 'for disallowed controllers' do
       before do
-        TestingController.stubs(:api_accessible).returns(false)
+        DoorkeeperAuthTestingController.stubs(:api_accessible).returns(false)
         request.stubs(:fullpath).returns("/testings/foo")
         request.env['warden'].stubs(:winning_strategy).returns(:doorkeeper)
       end
@@ -41,7 +41,7 @@ describe TestingController do
 
     describe 'for allowed controllers' do
       before do
-        TestingController.stubs(:api_accessible).returns(true)
+        DoorkeeperAuthTestingController.stubs(:api_accessible).returns(true)
         request.stubs(:fullpath).returns("/api/testings/foo")
         request.env['warden'].stubs(:winning_strategy).returns(:doorkeeper)
       end
@@ -52,7 +52,7 @@ describe TestingController do
 
       describe 'for non-api paths' do
         before do
-          TestingController.stubs(:api_accessible).returns(true)
+          DoorkeeperAuthTestingController.stubs(:api_accessible).returns(true)
           request.stubs(:fullpath).returns("/testings/foo")
           request.env['warden'].stubs(:winning_strategy).returns(:doorkeeper)
         end

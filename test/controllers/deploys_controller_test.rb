@@ -39,12 +39,6 @@ describe DeploysController do
         assert_template :index
       end
 
-      it "renders json" do
-        get :index, project_id: project, format: "json"
-        assert_response :ok
-        assert_equal "application/json", @response.content_type
-      end
-
       it "renders without a project" do
         get :index
         assert_template :index

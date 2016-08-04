@@ -142,11 +142,13 @@ describe 'Authentication Integration' do
 
         describe 'getting the token' do
           let(:new_params) do
-            { client_id: oauth_app.uid,
+            {
+              client_id: oauth_app.uid,
               client_secret: oauth_app.secret,
               code: oauth_app.access_grants.first.token,
               grant_type: "authorization_code",
-              redirect_uri: redirect_uri }
+              redirect_uri: redirect_uri
+            }
           end
 
           before do

@@ -17,10 +17,9 @@ Doorkeeper.configure do
   orm :active_record
 
   resource_owner_authenticator do
-    env['warden'].user || redirect_to(login_url)
+    env['warden'].user
   end
 
   default_scopes :default
-  optional_scopes :read, :modify, :delete
   base_controller 'DoorkeeperBaseController'
 end

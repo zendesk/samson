@@ -3,10 +3,14 @@ Samson::Application.routes.draw do
   root to: 'projects#index'
 
   namespace :api do
-    resources :deploys, only: [:active_count] do
+    resources :deploys, only: [:index, :active_count] do
       collection do
         get :active_count
       end
+    end
+
+    resources :stages, only: [:index] do
+      post :clone, to: 'stages#clone'
     end
   end
 

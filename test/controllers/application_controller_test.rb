@@ -4,7 +4,7 @@ SingleCov.covered!
 
 describe ApplicationController do
   class ApplicationTestController < ApplicationController
-    def something
+    def raise_doorkeeper_error!
       raise DoorkeeperAuth::DisallowedAccessError
     end
 
@@ -69,21 +69,21 @@ describe ApplicationController do
       subject { @controller }
 
       it 'is disallowed' do
-        subject.api_accessible.must_equal false
+        subject.class.api_accessible.must_equal false
       end
 
       describe 'in test env' do
         it 'does not rescue' do
           Rails.env.stubs(:test?).returns(true)
-          proc { get :something, test_route: true }.must_raise(DoorkeeperAuth::DisallowedAccessError)
+          proc { get :raise_doorkeeper_error!, test_route: true }.must_raise(DoorkeeperAuth::DisallowedAccessError)
         end
       end
 
       describe 'in non-test env' do
         it 'rescues DoorkeeperAuth::DisallowedAccessError' do
           Rails.env.stubs(:test?).returns(false)
-          get :something, test_route: true
-          assert_response :success
+          get :raise_doorkeeper_error!, test_route: true
+          assert_response 403
         end
       end
     end
