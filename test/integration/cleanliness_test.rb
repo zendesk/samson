@@ -97,6 +97,7 @@ describe "cleanliness" do
       "app/models/concerns/searchable.rb",
       "lib/generators/plugin/plugin_generator.rb",
       "lib/samson/integration.rb",
+      "lib/samson/logging.rb",
       "lib/warden/strategies/basic_strategy.rb",
       "lib/warden/strategies/session_strategy.rb",
       "plugins/env/app/models/concerns/accepts_environment_variables.rb",
