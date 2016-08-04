@@ -181,6 +181,39 @@ Mocha::Expectation.class_eval do
   end
 end
 
+class ActionDispatch::IntegrationTest
+  include StubGithubAPI
+  include DefaultStubs
+
+  class << self
+    def unauthorized(method, action, params = {})
+      it "is unauthorized when doing a #{method} to #{action} with #{params}" do
+        send(method, action, params)
+        assert_unauthorized
+      end
+    end
+
+    %w[super_admin admin deployer viewer project_admin project_deployer].each do |user|
+      define_method "as_a_#{user}" do |&block|
+        describe "as a #{user}" do
+          let(:user) { users(user) }
+          before { login_as(self.user) }
+          instance_eval(&block)
+        end
+      end
+    end
+  end
+
+  before do
+    stub_request(:get, "https://status.github.com/api/status.json").
+      to_return(status: 200, body: "{}", headers: {})
+  end
+
+  after do
+    Warden.test_reset!
+  end
+end
+
 class ActionController::TestCase
   include StubGithubAPI
   include DefaultStubs
@@ -266,13 +299,14 @@ class ActionController::TestCase
   end
 end
 
-# https://github.com/blowmage/minitest-rails/issues/195
-class ActionController::TestCase
-  # Use AD::IntegrationTest for the base class when describing a controller
-  register_spec_type(self) do |desc|
-    desc.is_a?(Class) && desc < ActionController::Metal
-  end
-end
+# Seems to be working now without this
+# # https://github.com/blowmage/minitest-rails/issues/195
+# class ActionController::TestCase
+#   # Use AD::IntegrationTest for the base class when describing a controller
+#   register_spec_type(self) do |desc|
+#     desc.is_a?(Class) && desc < ActionController::Metal
+#   end
+# end
 
 WebMock.disable_net_connect!(allow: 'codeclimate.com')
 

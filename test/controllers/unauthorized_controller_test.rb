@@ -2,7 +2,7 @@ require_relative '../test_helper'
 
 SingleCov.covered!
 
-describe 'Unauthorized' do
+class UnauthorizedControllerTest < ActionDispatch::IntegrationTest
   include Rack::Test::Methods
 
   def app
@@ -14,7 +14,9 @@ describe 'Unauthorized' do
       let(:headers) { {} }
 
       before do
-        get '/', {}, headers
+        # should be next commented line but not working
+        # get '/', headers: headers
+        get '/', {}, headers # should get a deprecation message with this but not
       end
 
       it 'sets the flash' do
@@ -25,8 +27,6 @@ describe 'Unauthorized' do
       describe 'without a referer' do
         it 'redirects to the login path' do
           last_response.must_be(:redirect?)
-
-          # Really just '/', but Rack insists on using the full SERVER_NAME
           last_response.headers['Location'].must_equal('http://example.org/login')
         end
       end
@@ -36,7 +36,7 @@ describe 'Unauthorized' do
 
         it 'redirects to the referer' do
           last_response.must_be(:redirect?)
-          last_response.headers['Location'].must_equal("http://example.org/hello")
+          last_response.headers['Location'].must_equal('http://example.org/hello')
         end
       end
     end
