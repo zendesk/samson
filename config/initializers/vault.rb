@@ -124,7 +124,7 @@ if ENV["SECRET_STORAGE_BACKEND"] == "SecretStorage::HashicorpVault"
       if deploy_group == 'global'
         @vaults.map(&:pop)
       else
-        deploy_group = DeployGroup.find_by_name(deploy_group)
+        deploy_group = DeployGroup.find_by_permalink(deploy_group)
         if deploy_group.nil?
           raise "no vault_instance configured for deploy group #{deploy_group}"
         end
