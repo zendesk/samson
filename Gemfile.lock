@@ -1,14 +1,3 @@
-GIT
-  remote: git://github.com/zendesk/kubeclient.git
-  revision: 4813f9b998f4b64372c389d3f930c40fad577c6c
-  branch: samson-gem-branch
-  specs:
-    kubeclient (1.1.3)
-      activesupport
-      http (= 0.9.8)
-      recursive-open-struct (= 1.0.0)
-      rest-client
-
 PATH
   remote: plugins/aws_ecr
   specs:
@@ -172,7 +161,7 @@ GEM
     dogapi (1.21.0)
       multi_json
     dogstatsd-ruby (1.5.0)
-    domain_name (0.5.20160310)
+    domain_name (0.5.20160615)
       unf (>= 0.0.5, < 1.0.0)
     dotenv (0.11.1)
       dotenv-deployment (~> 0.0.2)
@@ -224,6 +213,11 @@ GEM
     kaminari (0.16.3)
       actionpack (>= 3.0.0)
       activesupport (>= 3.0.0)
+    kubeclient (1.1.4)
+      activesupport
+      http (= 0.9.8)
+      recursive-open-struct (= 1.0.0)
+      rest-client
     lograge (0.3.6)
       actionpack (>= 3)
       activesupport (>= 3)
@@ -393,10 +387,10 @@ GEM
     rake (11.2.2)
     recursive-open-struct (1.0.0)
     request_store (1.3.1)
-    rest-client (1.8.0)
+    rest-client (2.0.0)
       http-cookie (>= 1.0.2, < 2.0)
-      mime-types (>= 1.16, < 3.0)
-      netrc (~> 0.7)
+      mime-types (>= 1.16, < 4.0)
+      netrc (~> 0.8)
     rubocop (0.40.0)
       parser (>= 2.3.1.0, < 3.0)
       powerpack (~> 0.1)
@@ -495,7 +489,7 @@ DEPENDENCIES
   github-markdown
   goldiloader
   kaminari
-  kubeclient!
+  kubeclient (= 1.1.4)
   lograge
   logstash-event
   maxitest

@@ -46,7 +46,7 @@ gem 'docker-api'
 
 # Temporarily using our fork, while waiting for this PR to get merged:
 # https://github.com/abonas/kubeclient/pull/127
-gem 'kubeclient', github: 'zendesk/kubeclient', branch: 'samson-gem-branch'
+gem 'kubeclient', '= 1.1.4'
 
 # treat included plugins like gems
 Dir[File.join(Bundler.root, 'plugins/*/')].each { |f| gemspec path: f }
