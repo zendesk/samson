@@ -292,7 +292,7 @@ ActiveRecord::Schema.define(version: 20160726210144) do
   end
 
   add_index "oauth_access_grants", ["application_id"], name: "fk_rails_b4b53e07b8", using: :btree
-  add_index "oauth_access_grants", ["token"], name: "index_oauth_access_grants_on_token", unique: true, using: :btree
+  add_index "oauth_access_grants", ["token"], name: "index_oauth_access_grants_on_token", unique: true, length: {"token"=>191}, using: :btree
 
   create_table "oauth_access_tokens", force: :cascade do |t|
     t.integer  "resource_owner_id",      limit: 4
@@ -307,9 +307,9 @@ ActiveRecord::Schema.define(version: 20160726210144) do
   end
 
   add_index "oauth_access_tokens", ["application_id"], name: "fk_rails_732cb83ab7", using: :btree
-  add_index "oauth_access_tokens", ["refresh_token"], name: "index_oauth_access_tokens_on_refresh_token", unique: true, using: :btree
+  add_index "oauth_access_tokens", ["refresh_token"], name: "index_oauth_access_tokens_on_refresh_token", unique: true, length: {"refresh_token"=>191}, using: :btree
   add_index "oauth_access_tokens", ["resource_owner_id"], name: "index_oauth_access_tokens_on_resource_owner_id", using: :btree
-  add_index "oauth_access_tokens", ["token"], name: "index_oauth_access_tokens_on_token", unique: true, using: :btree
+  add_index "oauth_access_tokens", ["token"], name: "index_oauth_access_tokens_on_token", unique: true, length: {"token"=>191}, using: :btree
 
   create_table "oauth_applications", force: :cascade do |t|
     t.string   "name",         limit: 255,                null: false
@@ -321,7 +321,7 @@ ActiveRecord::Schema.define(version: 20160726210144) do
     t.datetime "updated_at",                              null: false
   end
 
-  add_index "oauth_applications", ["uid"], name: "index_oauth_applications_on_uid", unique: true, using: :btree
+  add_index "oauth_applications", ["uid"], name: "index_oauth_applications_on_uid", unique: true, length: {"uid"=>191}, using: :btree
 
   create_table "project_environment_variable_groups", force: :cascade do |t|
     t.integer "project_id",                    limit: 4, null: false
