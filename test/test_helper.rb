@@ -203,6 +203,14 @@ class ActionController::TestCase
     end
   end
 
+  def json!
+    request.env['CONTENT_TYPE'] = 'application/json'
+  end
+
+  def auth!(header)
+    request.env['HTTP_AUTHORIZATION'] = header
+  end
+
   before do
     middleware = Rails.application.config.middleware.detect { |m| m.name == 'Warden::Manager' }
     manager = Warden::Manager.new(nil, &middleware.block)
@@ -242,10 +250,41 @@ class ActionController::TestCase
 
   alias_method_chain :process, :catch_warden
 
+  def self.oauth_setup!
+    let(:redirect_uri) { 'urn:ietf:wg:oauth:2.0:oob' }
+    let(:oauth_app) do
+      Doorkeeper::Application.new do |app|
+        app.name = "Test App"
+        app.redirect_uri = redirect_uri
+        app.scopes = :default
+      end
+    end
+
+    let(:user) do
+      users(:admin)
+    end
+
+    let(:token) do
+      oauth_app.access_tokens.new do |token|
+        token.resource_owner_id = user.id
+        token.application_id = oauth_app.id
+        token.expires_in = 1000
+        token.scopes = :default
+      end
+    end
+
+    before do
+      token.save!
+      json!
+      auth!("Bearer #{token.token}")
+    end
+  end
+
   def self.use_test_routes
     before do
       Rails.application.routes.draw do
         match "/test/:test_route/:controller/:action", via: [:get, :post, :put, :patch, :delete]
+        # get "testing/foo" => "testing#foo"
       end
     end
 

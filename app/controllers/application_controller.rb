@@ -1,4 +1,7 @@
+require 'doorkeeper_auth'
+
 class ApplicationController < ActionController::Base
+  include DoorkeeperAuth
   # Prevent CSRF attacks by raising an exception.
   # For APIs, you may want to use :null_session instead.
   protect_from_forgery with: :exception
@@ -6,7 +9,17 @@ class ApplicationController < ActionController::Base
   # Force all access to the app over SSL, use Strict-Transport-Security, and use secure cookies.
   force_ssl if: :force_ssl?
 
+  api_accessible! false
+
   include CurrentUser # must be after protect_from_forgery, so that authenticate! is called
+
+  rescue_from(DoorkeeperAuth::DisallowedAccessError) do |message|
+    if Rails.env.test?
+      raise(DoorkeeperAuth::DisallowedAccessError, message)
+    else
+      render text: "This resource is not available via the API", status: 403
+    end
+  end
 
   protected
 

@@ -39,12 +39,6 @@ describe DeploysController do
         assert_template :index
       end
 
-      it "renders json" do
-        get :index, project_id: project, format: "json"
-        assert_response :ok
-        assert_equal "application/json", @response.content_type
-      end
-
       it "renders without a project" do
         get :index
         assert_template :index
@@ -75,19 +69,6 @@ describe DeploysController do
           get :active, project_id: project_id, partial: true
           assert_template 'shared/_deploys_table'
         end
-      end
-    end
-
-    describe "#active_count" do
-      before do
-        stage.create_deploy(admin, reference: 'reference')
-        get :active_count
-      end
-
-      it "renders json" do
-        assert_equal "application/json", @response.content_type
-        assert_response :ok
-        @response.body.must_equal "1"
       end
     end
 

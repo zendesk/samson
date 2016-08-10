@@ -163,6 +163,8 @@ GEM
     dogstatsd-ruby (1.5.0)
     domain_name (0.5.20160615)
       unf (>= 0.0.5, < 1.0.0)
+    doorkeeper (4.1.0)
+      railties (>= 4.2)
     dotenv (0.11.1)
       dotenv-deployment (~> 0.0.2)
     dotenv-deployment (0.0.2)
@@ -448,6 +450,8 @@ GEM
     vault (0.4.0)
     warden (1.2.6)
       rack (>= 1.0)
+    warden-doorkeeper (0.3.0)
+      warden (~> 1.2)
     webmock (2.0.1)
       addressable (>= 2.3.6)
       crack (>= 0.3.2)
@@ -484,6 +488,7 @@ DEPENDENCIES
   dalli
   docker-api
   dogstatsd-ruby
+  doorkeeper
   dotenv
   faraday-http-cache
   github-markdown
@@ -508,6 +513,7 @@ DEPENDENCIES
   omniauth-oauth2
   paper_trail
   pg
+  pry
   pry-rails
   puma
   query_diet
@@ -564,6 +570,7 @@ DEPENDENCIES
   uglifier
   vault
   warden
+  warden-doorkeeper
   webmock
 
 RUBY VERSION

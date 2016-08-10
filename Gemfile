@@ -14,6 +14,7 @@ group :preload do
   gem 'active_model_serializers'
   gem 'paper_trail'
   gem 'soft_deletion'
+  gem 'doorkeeper'
 
   # Logging
   gem 'lograge'
@@ -43,6 +44,7 @@ gem 'net-http-persistent'
 gem 'concurrent-ruby'
 gem 'vault'
 gem 'docker-api'
+gem 'warden-doorkeeper'
 
 # Temporarily using our fork, while waiting for this PR to get merged:
 # https://github.com/abonas/kubeclient/pull/127
@@ -117,6 +119,7 @@ group :development, :test do
   gem 'byebug'
   gem 'bootscale'
   gem 'pry-rails'
+  gem 'pry'
   gem 'awesome_print'
   gem 'brakeman'
   gem 'rubocop'
