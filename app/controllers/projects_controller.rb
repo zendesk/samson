@@ -17,10 +17,6 @@ class ProjectsController < ApplicationController
       format.html do
         @projects = projects_for_user.alphabetical
       end
-
-      format.json do
-        render json: Project.ordered_for_user(current_user).all
-      end
     end
   end
 

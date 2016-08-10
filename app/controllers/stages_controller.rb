@@ -12,10 +12,6 @@ class StagesController < ApplicationController
 
   def index
     @stages = @project.stages
-
-    respond_to do |format|
-      format.html
-    end
   end
 
   def show
@@ -55,6 +51,7 @@ class StagesController < ApplicationController
   end
 
   def update
+    update_template
     if @stage.update_attributes(stage_params)
       redirect_to [@project, @stage]
     else
@@ -101,5 +98,13 @@ class StagesController < ApplicationController
 
   def find_stage
     @stage = current_project.stages.find_by_param!(params[:id])
+  end
+
+  def template_param
+    @template_param ||= ActiveRecord::Type::Boolean.new.type_cast_from_database(stage_params.delete("template"))
+  end
+
+  def update_template
+    template_param ? @stage.project.template_stage!(@stage) : @stage.project.reset_template_stage!
   end
 end

@@ -23,6 +23,7 @@ class Project < ActiveRecord::Base
   has_many :macros, dependent: :destroy
   has_many :user_project_roles, dependent: :destroy
   has_many :users, through: :user_project_roles
+  has_one :template_stage, -> { where(template: true) }, class_name: 'Stage'
 
   # For permission checks on callbacks. Currently used in private plugins.
   attr_accessor :current_user
@@ -42,6 +43,15 @@ class Project < ActiveRecord::Base
   }
 
   scope :search, ->(name) { where("name like ?", "%#{name}%") }
+
+  def template_stage!(stage)
+    reset_template_stage!
+    stage.update!(template: true)
+  end
+
+  def reset_template_stage!
+    template_stage.update!(template: false) if template_stage
+  end
 
   def docker_repo
     @docker_repo ||= begin

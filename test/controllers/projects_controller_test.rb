@@ -46,23 +46,6 @@ describe ProjectsController do
 
         assert_equal [projects(:test)], assigns(:projects)
       end
-
-      it "responds to json requests" do
-        get :index, format: 'json'
-        result = JSON.parse(response.body)
-        result['projects'].map(&:symbolize_keys!).map { |obj| obj[:name] }.must_equal ['Project']
-      end
-
-      it 'renders starred projects first for json' do
-        starred_project1 = Project.create!(name: 'Z', repository_url: 'Z')
-        starred_project2 = Project.create!(name: 'A', repository_url: 'A')
-        users(:admin).stars.create!(project: starred_project1)
-        users(:admin).stars.create!(project: starred_project2)
-
-        get :index, format: 'json'
-        result = JSON.parse(response.body)
-        result['projects'].map { |obj| obj['name'] }.must_equal ['A', 'Z', 'Project']
-      end
     end
   end
 
