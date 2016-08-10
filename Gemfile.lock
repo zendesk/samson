@@ -303,7 +303,7 @@ GEM
     pyu-ruby-sasl (0.0.3.3)
     query_diet (0.6.0)
     rack (1.6.4)
-    rack-mini-profiler (0.9.9.2)
+    rack-mini-profiler (0.10.1)
       rack (>= 1.2.0)
     rack-test (0.6.3)
       rack (>= 1.0)
