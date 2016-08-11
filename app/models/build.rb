@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 class Build < ActiveRecord::Base
   SHA1_REGEX = /\A[0-9a-f]{40}\Z/i
   SHA256_REGEX = /\A(sha256:)?[0-9a-f]{64}\Z/i

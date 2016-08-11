@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 class RemoveReleaseGroups < ActiveRecord::Migration
   def change
     add_reference :kubernetes_releases, :build, index: true

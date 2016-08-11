@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 module BuildsHelper
   def build_page_title
     "#{@build.nice_name} - #{@project.name}"

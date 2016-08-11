@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 module Kubernetes
   class RoleVerifier
     DEPLOYISH = RoleConfigFile::DEPLOY_KINDS

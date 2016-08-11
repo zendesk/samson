@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 class DropReleaseStatuses < ActiveRecord::Migration
   def up
     remove_column :kubernetes_releases, :status

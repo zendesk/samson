@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 class CreateMacros < ActiveRecord::Migration
   def change
     create_table :macros do |t|

@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 class SlackAppController < ApplicationController
   skip_before_action :verify_authenticity_token, only: [:command, :interact]
   skip_around_action :login_user, except: :oauth

@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 module ReleasesHelper
   def release_label(project, release)
     path = [project, release]

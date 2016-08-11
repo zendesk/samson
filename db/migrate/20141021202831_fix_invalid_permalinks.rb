@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 class FixInvalidPermalinks < ActiveRecord::Migration
   def change
     [Stage, Project].each do |klass|

@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 # expects command_associations to be defined in base class
 module HasCommands
   def self.included(base)

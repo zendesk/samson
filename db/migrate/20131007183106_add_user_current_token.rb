@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 class AddUserCurrentToken < ActiveRecord::Migration
   def change
     change_table :users do |t|

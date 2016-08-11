@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 module StagesHelper
   def edit_command_link(command)
     admin = current_user.admin? || current_user.admin_for?(command.project)

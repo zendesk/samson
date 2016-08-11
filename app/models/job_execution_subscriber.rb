@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 class JobExecutionSubscriber
   def initialize(job, block)
     @job = job

@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 class StagesIndexDeletedAt < ActiveRecord::Migration
   def change
     add_index :stages, [:project_id, :permalink, :deleted_at], length: { permalink: 191 }

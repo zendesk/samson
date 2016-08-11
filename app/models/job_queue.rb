@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 class JobQueue
   LOCK = Mutex.new
 

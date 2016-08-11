@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 module StagePermittedParams
   def stage_permitted_params
     @stage_permitted_params ||= ([

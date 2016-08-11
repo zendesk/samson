@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 class CreateDeploys < ActiveRecord::Migration
   def change
     create_table :deploys do |t|

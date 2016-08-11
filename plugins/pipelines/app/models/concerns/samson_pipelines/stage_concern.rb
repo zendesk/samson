@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 module SamsonPipelines::StageConcern
   # Return true if any stages in the pipeline are marked production
   def production?

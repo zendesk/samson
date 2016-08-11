@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 class DeployMailer < ApplicationMailer
   add_template_helper(DeploysHelper)
   add_template_helper(ApplicationHelper)

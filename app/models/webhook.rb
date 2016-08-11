@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 class Webhook < ActiveRecord::Base
   has_soft_deletion default_scope: true
   validates :branch, uniqueness: {

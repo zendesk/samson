@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 module Kubernetes
   # Convenience wrapper around the 'Service' object we can get from the K8S API
   class Service

@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 Stage.class_eval do
   def datadog_tags_as_array
     datadog_tags.to_s.split(";").map(&:strip)

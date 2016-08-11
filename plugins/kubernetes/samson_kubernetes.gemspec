@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 Gem::Specification.new 'samson_kubernetes', '0.0.1' do |s|
   s.summary = 'Allow deploying projects using Kubernetes'
   s.description = 'TBD'

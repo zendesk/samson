@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 class SetKuberReleaseDefaultStatus < ActiveRecord::Migration
   def change
     change_column :kubernetes_releases, :status, :string, default: 'created'

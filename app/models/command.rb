@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 class Command < ActiveRecord::Base
   has_many :stage_commands
   has_many :stages, through: :stage_commands

@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 module AccessRequestTestSupport
   def enable_access_request(address_list = 'jira@example.com watchers@example.com', email_prefix = 'SAMSON ACCESS')
     @original_feature_flag = ENV['REQUEST_ACCESS_FEATURE']

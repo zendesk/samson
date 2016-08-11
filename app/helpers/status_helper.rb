@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 module StatusHelper
   ALERT_STATUS_MAPPING = {
     "succeeded" => "success",

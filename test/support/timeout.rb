@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 # tests sometimes hang locally or on ci and with this we can actually debug the cause instead of just hanging forever
 module TimeoutEveryTestCase
   class TestCaseTimeout < StandardError

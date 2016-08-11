@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 class CsvExport < ActiveRecord::Base
   belongs_to :user
   serialize :filters, JSON

@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 class Lock < ActiveRecord::Base
   include ActionView::Helpers::DateHelper
 

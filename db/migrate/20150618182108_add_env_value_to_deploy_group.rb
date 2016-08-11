@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 class AddEnvValueToDeployGroup < ActiveRecord::Migration
   def change
     add_column :deploy_groups, :env_value, :string

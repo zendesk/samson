@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 class AddPermalinkToStages < ActiveRecord::Migration
   def change
     add_column :stages, :permalink, :string

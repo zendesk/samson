@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 prod_env = Environment.create!(
   name: 'Production',
   production: true

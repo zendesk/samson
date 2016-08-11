@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 class DeployGroupsController < ApplicationController
   before_action :find_deploy_group
 

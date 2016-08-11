@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 class DeployGroup < ActiveRecord::Base
   include Permalinkable
 

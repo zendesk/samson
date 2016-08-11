@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 class AccessRequestsController < ApplicationController
   before_action :check_if_enabled
 

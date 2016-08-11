@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 # Monkey patch the Hash class to add the #to_kuber_selector method, which
 # makes it easy to generate the "Selectors" that Kubernetes uses to get
 # objects that given criteria.

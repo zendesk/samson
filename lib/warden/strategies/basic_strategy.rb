@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 require "warden/action_dispatch_patch"
 
 class Warden::Strategies::BasicStrategy < Warden::Strategies::Base

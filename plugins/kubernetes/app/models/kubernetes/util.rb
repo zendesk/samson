@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 module Kubernetes
   module Util
     def self.parse_file(contents, filepath)

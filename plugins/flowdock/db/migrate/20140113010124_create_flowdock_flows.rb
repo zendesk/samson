@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 class CreateFlowdockFlows < ActiveRecord::Migration
   def change
     create_table :flowdock_flows do |t|

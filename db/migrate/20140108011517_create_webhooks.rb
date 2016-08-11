@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 class CreateWebhooks < ActiveRecord::Migration
   def change
     create_table :webhooks do |t|

@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 file = Rails.root.join('REVISION')
 
 Rails.application.config.samson.revision =

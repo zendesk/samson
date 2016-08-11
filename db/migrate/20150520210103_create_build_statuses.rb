@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 class CreateBuildStatuses < ActiveRecord::Migration
   def change
     create_table :build_statuses do |t|

@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 class GithubNotification
   def initialize(deploy)
     @deploy = deploy

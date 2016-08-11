@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 Project.class_eval do
   has_many :kubernetes_releases, class_name: 'Kubernetes::Release'
   has_many :kubernetes_roles, class_name: 'Kubernetes::Role', dependent: :destroy

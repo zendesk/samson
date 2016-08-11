@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 Samson::Application.routes.draw do
   resources :projects do
     resources :stages do

@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 # by default backtrace from plugins are hidden in test output and production logs
 # to update: add a error into a file inside a plugin and run the test
 # backtrace should show the exact line of the error

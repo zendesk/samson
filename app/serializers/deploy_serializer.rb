@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 class DeploySerializer < ActiveModel::Serializer
   include ApplicationHelper
   include ActionView::Helpers::DateHelper

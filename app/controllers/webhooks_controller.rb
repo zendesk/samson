@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 require 'samson/integration'
 
 class WebhooksController < ApplicationController

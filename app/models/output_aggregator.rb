@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 # Reads and aggregates a stream of terminal output events.
 class OutputAggregator
   def initialize(output)

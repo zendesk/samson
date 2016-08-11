@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 Gem::Specification.new "samson_slack_webhooks", "0.0.0" do |s|
   s.summary = "Samson slack integration"
   s.authors = ['Akash Manohar']

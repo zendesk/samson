@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 module Kubernetes
   class DeployGroupRole < ActiveRecord::Base
     self.table_name = 'kubernetes_deploy_group_roles'

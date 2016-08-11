@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 # ActionDispatch has an authorization method but Rack::Request does not.
 # https://github.com/kolorahl/warden-doorkeeper/issues/3
 module ActionDispatchPatch

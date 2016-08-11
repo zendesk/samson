@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 config = Rails.application.config
 
 if Samson::EnvCheck.set?("RAILS_LOG_TO_STDOUT")

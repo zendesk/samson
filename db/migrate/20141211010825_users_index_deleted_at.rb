@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 class UsersIndexDeletedAt < ActiveRecord::Migration
   def change
     add_index :users, [:external_id, :deleted_at], length: { external_id: 191 }

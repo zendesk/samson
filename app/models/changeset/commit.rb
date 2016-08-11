@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 class Changeset::Commit
   PULL_REQUEST_MERGE_MESSAGE = /\AMerge pull request #(\d+)/
 

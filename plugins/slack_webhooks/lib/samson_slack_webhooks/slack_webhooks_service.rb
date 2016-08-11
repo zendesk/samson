@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 module SamsonSlackWebhooks
   class SlackWebhooksService
     # users in the format jquery mentions input needs

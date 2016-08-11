@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 class GitRepository
   include ::NewRelic::Agent::MethodTracer
 

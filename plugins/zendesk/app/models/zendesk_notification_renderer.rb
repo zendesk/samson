@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 class ZendeskNotificationRenderer
   class << self
     def render(deploy, ticket_id)

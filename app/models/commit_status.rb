@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 class CommitStatus
   cattr_accessor(:token) { ENV['GITHUB_TOKEN'] }
 

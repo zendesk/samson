@@ -1,7 +1,8 @@
+# frozen_string_literal: true
 module Kubernetes
   class ResourceTemplate
-    CUSTOM_UNIQUE_LABEL_KEY = 'rc_unique_identifier'.freeze
-    SIDECAR_NAME = 'secret-sidecar'.freeze
+    CUSTOM_UNIQUE_LABEL_KEY = 'rc_unique_identifier'
+    SIDECAR_NAME = 'secret-sidecar'
     SIDECAR_IMAGE = ENV['SECRET_SIDECAR_IMAGE'].presence
 
     class SecretKeyResolver

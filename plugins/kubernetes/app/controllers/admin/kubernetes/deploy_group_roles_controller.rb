@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 class Admin::Kubernetes::DeployGroupRolesController < ApplicationController
   DEPLOYER_ACCESS = [:index, :show, :new].freeze
 

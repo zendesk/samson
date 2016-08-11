@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 class CreateStageCommands < ActiveRecord::Migration
   def change
     create_table :stage_commands do |t|

@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 require 'doorkeeper_auth'
 
 class Api::BaseController < ApplicationController

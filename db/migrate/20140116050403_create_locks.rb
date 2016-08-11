@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 class CreateLocks < ActiveRecord::Migration
   def change
     create_table :locks do |t|

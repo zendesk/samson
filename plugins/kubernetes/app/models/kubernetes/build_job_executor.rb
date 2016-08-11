@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 # Execute a job that can build/push Docker images
 # and write progress to the local job output.
 module Kubernetes

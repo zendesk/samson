@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 class Warden::Strategies::SessionStrategy < Warden::Strategies::Base
   def valid?
     true

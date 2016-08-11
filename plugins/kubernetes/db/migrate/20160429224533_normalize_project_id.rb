@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 class NormalizeProjectId < ActiveRecord::Migration
   class KubernetesRelease < ActiveRecord::Base
     belongs_to :build
