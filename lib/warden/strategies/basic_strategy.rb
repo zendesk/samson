@@ -30,7 +30,7 @@ class Warden::Strategies::BasicStrategy < Warden::Strategies::Base
 
   # ActionDispatch's
   def authorization
-    RequestObject.new(request).authorization
+    RequestObject.new(request).authorization.to_s.dup
   end
 end
 

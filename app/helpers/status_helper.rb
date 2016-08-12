@@ -42,7 +42,7 @@ module StatusHelper
   def duration_text(deploy)
     seconds  = (deploy.updated_at - deploy.start_time).to_i
 
-    duration = ""
+    duration = "".dup
 
     if seconds > 60
       minutes = seconds / 60

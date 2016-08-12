@@ -20,4 +20,4 @@ module TimeoutEveryTestCase
     end
   end
 end
-Minitest::Test.prepend TimeoutEveryTestCase
+# Minitest::Test.prepend TimeoutEveryTestCase

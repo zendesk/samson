@@ -62,7 +62,7 @@ class TerminalOutputScanner
   end
 
   def reset_buffer!
-    @buffer = ""
+    @buffer = "".dup
     @state = :append
   end
 

@@ -4,7 +4,7 @@ require_relative '../test_helper'
 SingleCov.covered!
 
 describe WebhookRecorder do
-  let(:request) { ActionController::TestRequest.new("FOO" => "bar", "RAW_POST_DATA" => "BODY") }
+  let(:request) { ActionController::TestRequest.new("FOO" => "bar", "RAW_POST_DATA" => "BODY".dup) }
   let(:response) { ActionController::TestResponse.new }
   let(:project) { projects(:test) }
 

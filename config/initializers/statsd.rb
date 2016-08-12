@@ -39,7 +39,7 @@ ActiveSupport::Notifications.subscribe("execute_shell.samson") do |*args|
   tags = [event.payload[:project], event.payload[:stage]]
 
   Samson.statsd.histogram "execute_shell.time", event.duration, tags: tags
-  Samson.statsd.event "Executed shell command", event.payload[:command], tags: tags
+  Samson.statsd.event "Executed shell command".dup, event.payload[:command], tags: tags
   Samson.statsd.increment "execute_shells", tags: tags
 
   Rails.logger.debug("Executed shell command in %.2fms" % event.duration)

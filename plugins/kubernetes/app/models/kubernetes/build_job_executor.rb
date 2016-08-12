@@ -102,7 +102,7 @@ module Kubernetes
     def create_and_wait_for_job(k8s_job, output)
       extension_client.create_job(k8s_job.deep_symbolize_keys)
       start = Time.now
-      logs = pod_name = ""
+      logs = pod_name = "".dup
       job_name = k8s_job[:metadata][:name]
       job_namespace = k8s_job[:metadata][:namespace]
 
@@ -115,7 +115,7 @@ module Kubernetes
           job = Kubernetes::Api::Job.new(
             extension_client.get_job(job_name, job_namespace)
           )
-          selector = "job_name=#{job_name}" # A build job only has one pod
+          selector = "job_name=#{job_name}".dup # A build job only has one pod
           pod = Kubernetes::Api::Pod.new(
             client.get_pods(namespace: job_namespace, label_selector: selector).first
           )
