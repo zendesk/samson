@@ -22,7 +22,7 @@ module Kubeclient
     # To roll back to a specific version of the deployment, you can pass in
     # the `:revision` option. If you pass in 0 (the default), it will roll
     # back to whatever the previous version was.
-    def rollback_deployment(deployment_name, namespace: nil, revision: 0, annotations: nil)
+    def rollback_deployment(deployment_name, namespace = nil, revision: 0, annotations: nil)
       ns_prefix = build_namespace_prefix(namespace)
 
       # http://kubernetes.io/docs/api-reference/extensions/v1beta1/definitions/#_v1beta1_deploymentrollback

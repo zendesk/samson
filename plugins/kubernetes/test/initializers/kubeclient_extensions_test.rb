@@ -31,7 +31,7 @@ describe 'Kubeclient::Client' do
         .to_return(body: rollback_response_body, status: 200)
 
       client = Kubeclient::Client.new('http://localhost:8080/api', 'extensions/v1beta1')
-      rollback = client.rollback_deployment(deployment_name, namespace: 'staging')
+      rollback = client.rollback_deployment(deployment_name, 'staging')
       assert_instance_of(Kubeclient::DeploymentRollback, rollback)
 
       assert_requested(:post,
