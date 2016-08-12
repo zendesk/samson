@@ -90,14 +90,25 @@ describe SlackMessage do
       before { deploy.stubs(:waiting_for_buddy?).returns(false) }
 
       it 'has no buttons' do
+        text = "<@Uadmin> is deploying <http://www.test-url.com/projects/foo/deploys/178003093|*Project* to *Staging*>."
         assert_equal body,
           attachments: [{
             text: 'Deploying…',
-            fields: [{title: "PRs", value: "(no PRs)", short: true}, {title: "Risks", value: "(no risks)", short: true}],
+            fields: [
+              {
+                title: "PRs",
+                value: "(no PRs)",
+                short: true
+              }, {
+                title: "Risks",
+                value: "(no risks)",
+                short: true
+              }
+            ],
             color: 'warning'
           }],
           response_type: 'in_channel',
-          text: "<@Uadmin> is deploying <http://www.test-url.com/projects/foo/deploys/178003093|*Project* to *Staging*>."
+          text: text
       end
 
       it 'mentions both users when the deploy has a buddy' do
