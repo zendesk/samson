@@ -1,6 +1,6 @@
 require_relative '../test_helper'
 
-SingleCov.covered! uncovered: 3
+SingleCov.covered!
 
 describe SlackMessage do
   let(:deploy) { deploys(:succeeded_test) }
@@ -86,9 +86,18 @@ describe SlackMessage do
 
     describe 'during deploy' do
       before { deploy.stubs(:running?).returns(true) }
+      before { deploy.stubs(:succeeded?).returns(false) }
+      before { deploy.stubs(:waiting_for_buddy?).returns(false) }
 
       it 'has no buttons' do
-        assert_nil body[:attachments]
+        assert_equal body,
+          attachments: [{
+            text: 'Deploying…',
+            fields: [{title: "PRs", value: "(no PRs)", short: true}, {title: "Risks", value: "(no risks)", short: true}],
+            color: 'warning'
+          }],
+          response_type: 'in_channel',
+          text: "<@Uadmin> is deploying <http://www.test-url.com/projects/foo/deploys/178003093|*Project* to *Staging*>."
       end
 
       it 'mentions both users when the deploy has a buddy' do
