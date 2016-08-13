@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 class CreateKubernetesReleaseGroups < ActiveRecord::Migration
   def change
     create_table :kubernetes_release_groups do |t|

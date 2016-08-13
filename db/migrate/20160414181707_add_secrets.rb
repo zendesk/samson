@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 class AddSecrets < ActiveRecord::Migration
   def change
     create_table :secrets, id: false do |t|

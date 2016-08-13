@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 # Scans a stream of characters, yielding a stream of tokens.
 #
 # The scanner understands some terminal escape codes - in particular, it pays
@@ -61,7 +62,7 @@ class TerminalOutputScanner
   end
 
   def reset_buffer!
-    @buffer = ""
+    @buffer = "".dup
     @state = :append
   end
 

@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 module JenkinsHelper
   def jenkins_status_panel(deploy, jenkins_job)
     mapping = {

@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 class CreateSlackAppTable < ActiveRecord::Migration
   def change
     create_table :slack_identifiers do |t|

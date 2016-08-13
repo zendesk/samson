@@ -1,9 +1,10 @@
+# frozen_string_literal: true
 require_relative '../test_helper'
 
 SingleCov.covered!
 
 describe NewRelicController do
-  before { silence_warnings { SamsonNewRelic::Api::KEY = '123'.freeze } }
+  before { silence_warnings { SamsonNewRelic::Api::KEY = '123' } }
   after { silence_warnings { SamsonNewRelic::Api::KEY = nil } }
 
   as_a_viewer do

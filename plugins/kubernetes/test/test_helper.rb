@@ -1,9 +1,10 @@
+# frozen_string_literal: true
 require_relative '../../../test/test_helper'
 require_relative '../lib/samson_kubernetes/hash_kuber_selector'
 
 # Mock up vault client
 class VaultClient
-  CONFIG_FILE = "vault.json".freeze
+  CONFIG_FILE = "vault.json"
   def logical
     @logical ||= Logical.new
   end

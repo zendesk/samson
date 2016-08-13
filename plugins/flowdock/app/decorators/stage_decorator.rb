@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 Stage.class_eval do
   has_many :flowdock_flows
 

@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 class EnvironmentVariable < ActiveRecord::Base
   belongs_to :parent, polymorphic: true
   belongs_to :scope, polymorphic: true

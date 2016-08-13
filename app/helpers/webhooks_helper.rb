@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 module WebhooksHelper
   def webhook_sources(sources)
     [

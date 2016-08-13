@@ -1,12 +1,13 @@
+# frozen_string_literal: true
 class BinaryBuilder
-  DOCKER_BUILD_FILE = 'Dockerfile.build'.freeze
-  BUILD_SCRIPT = '/app/build.sh'.freeze
-  ARTIFACTS_FILE = 'artifacts.tar'.freeze
-  ARTIFACTS_FILE_PATH = "/app/#{ARTIFACTS_FILE}".freeze
-  DOCKER_HOST_CACHE_DIR = '/opt/samson_build_cache'.freeze
-  CONTAINER_CACHE_DIR = '/build/cache'.freeze
-  TAR_LONGLINK = '././@LongLink'.freeze
-  PRE_BUILD_SCRIPT = 'pre_binary_build.sh'.freeze
+  DOCKER_BUILD_FILE = 'Dockerfile.build'
+  BUILD_SCRIPT = '/app/build.sh'
+  ARTIFACTS_FILE = 'artifacts.tar'
+  ARTIFACTS_FILE_PATH = "/app/#{ARTIFACTS_FILE}"
+  DOCKER_HOST_CACHE_DIR = '/opt/samson_build_cache'
+  CONTAINER_CACHE_DIR = '/build/cache'
+  TAR_LONGLINK = '././@LongLink'
+  PRE_BUILD_SCRIPT = 'pre_binary_build.sh'
 
   def initialize(dir, project, reference, output, executor = nil)
     @dir = dir

@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 class Integrations::TravisController < Integrations::BaseController
   protected
 

@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 require 'omniauth'
 
 OmniAuth.config.logger = Rails.logger

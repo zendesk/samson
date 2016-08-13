@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 class AddUserExternalId < ActiveRecord::Migration
   def change
     add_column :users, :external_id, :string

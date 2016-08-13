@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 class CreateDeployGroups < ActiveRecord::Migration
   def change
     create_table :environments do |t|

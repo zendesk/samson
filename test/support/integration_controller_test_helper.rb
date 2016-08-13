@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 module IntegrationsControllerTestHelper
   def test_regular_commit(user_name, options, &block)
     describe "normal" do

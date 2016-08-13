@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 class DeploysIndexDeletedAt < ActiveRecord::Migration
   def change
     add_index :deploys, [:deleted_at]

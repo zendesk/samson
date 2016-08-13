@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 class RemoveUniqueIndexFromWebhooks < ActiveRecord::Migration
   def change
     remove_index :webhooks, :stage_id_and_branch

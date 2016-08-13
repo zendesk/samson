@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 module ProjectsHelper
   def star_for_project(project)
     content_tag :span, class: 'star' do

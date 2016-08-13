@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 class BuildSerializer < ActiveModel::Serializer
   include DateTimeHelper
 

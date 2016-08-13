@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 class AddAutoBuildDockerImageToProjects < ActiveRecord::Migration
   def change
     change_table :projects do |t|

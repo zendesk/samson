@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 module Samson
   module ConsoleExtensions
     # used to fake a login while debugging in a `rails c` console session

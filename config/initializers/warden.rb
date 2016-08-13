@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 require 'warden'
 
 Warden::Manager.serialize_into_session(&:id)

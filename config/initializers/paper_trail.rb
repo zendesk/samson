@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 # record what was done in the console
 PaperTrail.whodunnit =
   if defined?(::Rails::Console)

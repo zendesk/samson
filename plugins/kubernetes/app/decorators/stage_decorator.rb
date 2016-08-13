@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 Stage.class_eval do
   validate :validate_deploy_groups_have_a_cluster, if: :kubernetes
   after_create :seed_kubernetes_roles

@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 class DashboardsController < ApplicationController
   before_action :find_environment
   before_action :prepare_dashboard, only: [:show]

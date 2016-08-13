@@ -1,5 +1,6 @@
+# frozen_string_literal: true
 class WebhookRecorder
-  KEY = 'WebhookRecorder'.freeze
+  KEY = 'WebhookRecorder'
   NATIVE_HEADER = /^[_A-Z]+$/
 
   class << self

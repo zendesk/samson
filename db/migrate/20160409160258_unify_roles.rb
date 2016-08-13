@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 class UnifyRoles < ActiveRecord::Migration
   UP = {
     2 => 3,

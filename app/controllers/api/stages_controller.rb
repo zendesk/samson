@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 class Api::StagesController < Api::BaseController
   include CurrentProject
 

@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 class CreateJenkinsJobs < ActiveRecord::Migration
   def change
     create_table :jenkins_jobs do |t|

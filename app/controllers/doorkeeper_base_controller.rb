@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 class DoorkeeperBaseController < ActionController::Base
   include CurrentUser
   # We need this because it's used in the header template

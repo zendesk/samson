@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 class SoftDeleteStageCommand < ActiveRecord::Migration
   def change
     add_column :stage_commands, :deleted_at, :timestamp

@@ -1,4 +1,5 @@
 #!/usr/bin/env ruby
+# frozen_string_literal: true
 
 # Creates lots of projects + stages + deploys with environments and deploy groups.
 

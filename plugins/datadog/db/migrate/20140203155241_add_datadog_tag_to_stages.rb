@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 class AddDatadogTagToStages < ActiveRecord::Migration
   def change
     change_table :stages do |t|

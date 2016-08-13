@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 class CreateKubernetesRoles < ActiveRecord::Migration
   def change
     create_table :kubernetes_roles do |t|

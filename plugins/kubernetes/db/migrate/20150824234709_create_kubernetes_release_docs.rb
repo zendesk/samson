@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 class CreateKubernetesReleaseDocs < ActiveRecord::Migration
   def change
     create_table :kubernetes_release_docs do |t|

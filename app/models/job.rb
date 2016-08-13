@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 class Job < ActiveRecord::Base
   belongs_to :project
   belongs_to :user, -> { unscope(where: 'deleted_at') }

@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 require 'open3'
 
 # Executes commands in a fake terminal. The output will be streamed to a
@@ -12,7 +13,7 @@ require 'open3'
 #   output.string #=> "hello\r\nworld\r\n"
 #
 class TerminalExecutor
-  SECRET_PREFIX = "secret://".freeze
+  SECRET_PREFIX = "secret://"
 
   attr_reader :pid, :pgid, :output
 

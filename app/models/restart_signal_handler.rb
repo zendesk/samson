@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 # JobQueue locks a mutex, hence the need for a separate SignalHandler thread
 # Self-pipe is also best practice, since signal handlers can themselves be interrupted
 class RestartSignalHandler

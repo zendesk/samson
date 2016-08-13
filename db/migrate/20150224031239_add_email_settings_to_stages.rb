@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 class AddEmailSettingsToStages < ActiveRecord::Migration
   def change
     add_column :stages, :email_committers_on_automated_deploy_failure, :boolean, default: false, null: false

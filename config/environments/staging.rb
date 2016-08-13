@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 load File.expand_path '../production.rb', __FILE__
 
 Samson::Application.configure do

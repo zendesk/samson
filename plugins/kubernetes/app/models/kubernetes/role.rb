@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 require 'soft_deletion'
 
 module Kubernetes
@@ -14,7 +15,7 @@ module Kubernetes
     }.freeze
 
     self.table_name = 'kubernetes_roles'
-    GENERATED = '-change-me-'.freeze
+    GENERATED = '-change-me-'
 
     has_soft_deletion
 

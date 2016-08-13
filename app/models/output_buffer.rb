@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 require 'thread_safe'
 
 # Allows fanning out a stream to multiple listening threads. Each thread will

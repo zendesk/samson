@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 class Integrations::GithubController < Integrations::BaseController
   cattr_accessor(:github_hook_secret) { ENV['GITHUB_HOOK_SECRET'] }
 

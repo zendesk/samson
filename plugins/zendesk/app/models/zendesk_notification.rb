@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 require 'zendesk_api'
 require 'net/http/persistent'
 

@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 module Kubernetes
   # Represents a Kubernetes configuration file for a project role.
   # A configuration file can have for example both a Deployment spec and a Service spec

@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 class AddJenkinsJobsToStage < ActiveRecord::Migration
   def change
     change_table :stages do |t|

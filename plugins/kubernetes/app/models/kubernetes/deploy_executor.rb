@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 # executes a deploy and writes log to job output
 # finishes when cluster is "Ready"
 module Kubernetes
@@ -5,7 +6,7 @@ module Kubernetes
     WAIT_FOR_LIVE = ENV.fetch('KUBE_WAIT_FOR_LIVE', 10).to_i.minutes
     CHECK_STABLE = 1.minute
     TICK = 2.seconds
-    RESTARTED = "Restarted".freeze
+    RESTARTED = "Restarted"
 
     ReleaseStatus = Struct.new(:live, :details, :role, :group)
 

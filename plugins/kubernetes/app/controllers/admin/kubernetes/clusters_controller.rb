@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 class Admin::Kubernetes::ClustersController < ApplicationController
   before_action :authorize_admin!
   before_action :authorize_super_admin!, only: [:create, :new, :update, :edit]

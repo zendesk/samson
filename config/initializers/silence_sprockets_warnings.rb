@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 # angular-rails-templates does not work cleanly with new sprockets
 # and spams warnings when booting rails
 # https://github.com/pitr/angular-rails-templates/issues/143

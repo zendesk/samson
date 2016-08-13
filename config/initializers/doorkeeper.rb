@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 # do not auto initialize all the models
 # will make rails runner fail because the models were preloaded
 module Doorkeeper

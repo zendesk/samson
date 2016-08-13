@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 # rubocop:disable Metrics/LineLength
 class ChangeEnvDeployGroupToScope < ActiveRecord::Migration
   def change

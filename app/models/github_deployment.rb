@@ -1,5 +1,6 @@
+# frozen_string_literal: true
 class GithubDeployment
-  DEPLOYMENTS_PREVIEW_MEDIA_TYPE = "application/vnd.github.cannonball-preview+json".freeze
+  DEPLOYMENTS_PREVIEW_MEDIA_TYPE = "application/vnd.github.cannonball-preview+json"
 
   def initialize(deploy)
     @deploy = deploy

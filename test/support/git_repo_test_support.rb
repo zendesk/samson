@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 module GitRepoTestHelper
   def repo_temp_dir
     @repo_temp_dir ||= Dir.mktmpdir

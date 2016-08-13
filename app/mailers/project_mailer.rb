@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 class ProjectMailer < ApplicationMailer
   def created_email(user, project)
     address = Rails.application.config.samson.project_created_email

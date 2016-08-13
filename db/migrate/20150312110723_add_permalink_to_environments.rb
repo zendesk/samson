@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 class AddPermalinkToEnvironments < ActiveRecord::Migration
   def change
     add_column :environments, :permalink, :string

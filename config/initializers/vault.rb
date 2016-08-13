@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 if ENV["SECRET_STORAGE_BACKEND"] == "SecretStorage::HashicorpVault"
   require 'vault'
   Rails.logger.info("Vault Client enabled")
@@ -13,7 +14,7 @@ if ENV["SECRET_STORAGE_BACKEND"] == "SecretStorage::HashicorpVault"
   #   - tls_verify (boolean) - whether to verify the server's cert
 
   class VaultClient < Vault::Client
-    CERT_AUTH_PATH = '/v1/auth/cert/login'.freeze
+    CERT_AUTH_PATH = '/v1/auth/cert/login'
     DEFAULT_CLIENT_OPTIONS = {
       use_ssl: true,
       timeout: 5,

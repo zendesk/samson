@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 class Release < ActiveRecord::Base
   belongs_to :project, touch: true
   belongs_to :author, polymorphic: true

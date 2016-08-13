@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 class Warden::Strategies::SessionStrategy < Warden::Strategies::Base
   def valid?
     true
@@ -7,7 +8,7 @@ class Warden::Strategies::SessionStrategy < Warden::Strategies::Base
     if request.content_type == 'application/json'
       throw(:warden)
     else
-      redirect!('/login', origin: request.path)
+      redirect!('/login'.dup, origin: request.path)
     end
   end
 end

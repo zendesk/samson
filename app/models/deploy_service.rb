@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 class DeployService
   include ::NewRelic::Agent::MethodTracer
   attr_reader :user

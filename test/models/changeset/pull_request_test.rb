@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 require_relative '../../test_helper'
 
 SingleCov.covered! uncovered: 9
@@ -11,7 +12,7 @@ describe Changeset::PullRequest do
   let(:pr) { Changeset::PullRequest.new("xxx", data) }
   let(:user) { UserStruct.new("foo") }
   let(:merged_by) { UserStruct.new("bar") }
-  let(:body) { "" }
+  let(:body) { "".dup }
 
   describe ".find" do
     it "finds the pull request" do
@@ -126,7 +127,7 @@ describe Changeset::PullRequest do
     end
 
     it "returns a list of JIRA issues referenced in the PR body" do
-      body.replace(<<-BODY)
+      body.replace(<<-BODY.dup)
         Fixes https://foobar.atlassian.net/browse/XY-123 and
         https://foobar.atlassian.net/browse/AB-666
       BODY
@@ -147,7 +148,7 @@ describe Changeset::PullRequest do
 
     it "returns a list of JIRA urls using JIRA_BASE_URL ENV var given JIRA codes" do
       ENV['JIRA_BASE_URL'] = 'https://foo.atlassian.net/browse/'
-      body.replace(<<-BODY)
+      body.replace(<<-BODY.dup)
         Fixes XY-123 and AB-666
       BODY
 
@@ -159,7 +160,7 @@ describe Changeset::PullRequest do
 
     it "returns JIRA URLs from both title and body" do
       ENV['JIRA_BASE_URL'] = 'https://foo.atlassian.net/browse/'
-      body.replace(<<-BODY)
+      body.replace(<<-BODY.dup)
         Fixes issue in title and AB-666
       BODY
       data.title = "XY-123: Make it bigger!"
@@ -172,7 +173,7 @@ describe Changeset::PullRequest do
 
     it "returns an empty array if JIRA_BASE_URL ENV var is not set when given JIRA codes" do
       ENV['JIRA_BASE_URL'] = nil
-      body.replace(<<-BODY)
+      body.replace(<<-BODY.dup)
         Fixes XY-123 and AB-666
       BODY
 
@@ -180,7 +181,7 @@ describe Changeset::PullRequest do
     end
 
     it "returns an empty array if invalid URLs are given" do
-      body.replace(<<-BODY)
+      body.replace(<<-BODY.dup)
         Fixes https://foobar.atlassian.net/browse/XY-123k
       BODY
 
@@ -189,7 +190,7 @@ describe Changeset::PullRequest do
 
     it "uses full JIRA urls when given, falling back to JIRA_BASE_URL" do
       ENV['JIRA_BASE_URL'] = 'https://foo.atlassian.net/browse/'
-      body.replace(<<-BODY)
+      body.replace(<<-BODY.dup)
         Fixes https://foobar.atlassian.net/browse/XY-123 and AB-666
       BODY
 
@@ -201,7 +202,7 @@ describe Changeset::PullRequest do
 
     it "uses full URL if given and not auto-generate even when JIRA_BASE_URL is set" do
       ENV['JIRA_BASE_URL'] = 'https://foo.atlassian.net/browse/'
-      body.replace(<<-BODY)
+      body.replace(<<-BODY.dup)
         Fixes XY-123, see https://foobar.atlassian.net/browse/XY-123
       BODY
 
@@ -316,14 +317,14 @@ describe Changeset::PullRequest do
 
   describe "#risks" do
     def add_risks
-      body.replace(<<-BODY.strip_heredoc)
+      body.replace(<<-BODY.dup.strip_heredoc)
         # Risks
          - Explosions
       BODY
     end
 
     def no_risks
-      body.replace(<<-BODY.strip_heredoc)
+      body.replace(<<-BODY.dup.strip_heredoc)
         Not that risky ...
       BODY
     end
@@ -341,7 +342,7 @@ describe Changeset::PullRequest do
     end
 
     it "does not find - None" do
-      body.replace(<<-BODY.strip_heredoc)
+      body.replace(<<-BODY.dup.strip_heredoc)
         # Risks
          - None
       BODY
@@ -349,7 +350,7 @@ describe Changeset::PullRequest do
     end
 
     it "does not find None" do
-      body.replace(<<-BODY.strip_heredoc)
+      body.replace(<<-BODY.dup.strip_heredoc)
         # Risks
         None
       BODY
@@ -357,7 +358,7 @@ describe Changeset::PullRequest do
     end
 
     it "finds risks with underline style markdown headers" do
-      body.replace(<<-BODY.strip_heredoc)
+      body.replace(<<-BODY.dup.strip_heredoc)
         Risks
         =====
           - Snakes
@@ -366,7 +367,7 @@ describe Changeset::PullRequest do
     end
 
     it "finds risks with closing hashes in atx style markdown headers" do
-      body.replace(<<-BODY.strip_heredoc)
+      body.replace(<<-BODY.dup.strip_heredoc)
         ## Risks ##
           - Planes
       BODY

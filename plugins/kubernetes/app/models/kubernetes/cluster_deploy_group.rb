@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 module Kubernetes
   class ClusterDeployGroup < ActiveRecord::Base
     self.table_name = 'kubernetes_cluster_deploy_groups'

@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 class AddPermalinkToProjects < ActiveRecord::Migration
   def change
     add_column :projects, :permalink, :string
