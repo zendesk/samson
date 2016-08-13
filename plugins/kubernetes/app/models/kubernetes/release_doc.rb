@@ -16,6 +16,8 @@ module Kubernetes
 
     before_save :store_resource_template, on: :create
 
+    attr_reader :previous_deploy, :new_deploy
+
     def build
       kubernetes_release.try(:build)
     end
@@ -24,31 +26,60 @@ module Kubernetes
       deploy_group.kubernetes_cluster.client
     end
 
+    def deployment?
+      resource_type == 'Deployment'
+    end
+
+    def daemon_set?
+      resource_type == 'DaemonSet'
+    end
+
     def job?
-      resource_template.fetch('kind') == 'Job'
+      resource_type == 'Job'
     end
 
     def deploy
+      @previous_deploy = deployed
+
       if deployment?
         deploy = Kubeclient::Deployment.new(resource_template)
-        if deployed
+        if previous_deploy
           extension_client.update_deployment deploy
         else
           extension_client.create_deployment deploy
         end
       elsif daemon_set?
         daemon = Kubeclient::DaemonSet.new(resource_template)
-        delete_daemon_set(daemon) if deployed
+        delete_daemon_set(daemon) if previous_deploy
         extension_client.create_daemon_set daemon
       elsif job?
         # FYI per docs it is supposed to use batch api, but extension api works
         job = Kubeclient::Job.new(resource_template)
-        if deployed
-          extension_client.delete_job kubernetes_role.resource_name, job.metadata.namespace
+        if previous_deploy
+          extension_client.delete_job resource_name, namespace
         end
         extension_client.create_job job
       else
-        raise "Unknown deploy object #{resource_template.fetch('kind')}"
+        raise "Unknown deploy object #{resource_type}"
+      end
+
+      @new_deploy = deployed
+    end
+
+    def delete_or_rollback
+      if deployment?
+        if previous_deploy
+          extension_client.rollback_deployment resource_name, namespace
+        else
+          delete_deployment
+        end
+      elsif daemon_set?
+        delete_daemon_set new_deploy if new_deploy
+        extension_client.create_daemon_set previous_deploy if previous_deploy
+      elsif job?
+        extension_client.delete_job(resource_name, namespace) if previous_deploy
+      else
+        raise "Unknown deploy object #{resource_type}"
       end
     end
 
@@ -84,23 +115,24 @@ module Kubernetes
     end
 
     def desired_pod_count
-      case resource_template.fetch('kind')
-      when 'DaemonSet'
+      if daemon_set?
         # need http request since we do not know how many nodes we will match
         deployed.status.desiredNumberScheduled
-      when 'Deployment', 'Job' then replica_target
-      else raise "Unsupported kind #{resource_template.fetch('kind')}"
+      elsif deployment? || job?
+        replica_target
+      else
+        raise "Unsupported kind #{resource_type}"
       end
     end
 
     private
 
-    def deployment?
-      resource_template.fetch('kind') == 'Deployment'
+    def resource_name
+      kubernetes_role.resource_name
     end
 
-    def daemon_set?
-      resource_template.fetch('kind') == 'DaemonSet'
+    def resource_type
+      resource_template.fetch('kind')
     end
 
     def store_resource_template
@@ -114,12 +146,29 @@ module Kubernetes
 
     def deployed
       extension_client.send(
-        "get_#{resource_template.fetch('kind').underscore}",
-        kubernetes_role.resource_name,
-        deploy_group.kubernetes_namespace
+        "get_#{resource_type.underscore}",
+        resource_name,
+        namespace
       )
     rescue KubeException
       false
+    end
+
+    def delete_deployment
+      copy = deployed.clone
+
+      # Scale down the deployment to include zero pods
+      copy.spec.replicas = 0
+      extension_client.update_deployment copy
+
+      # Wait for there to be zero pods
+      loop do
+        sleep 2
+        break if deployed.status.replicas.to_i == 0
+      end
+
+      # delete the actual deployment
+      extension_client.delete_deployment resource_name, namespace
     end
 
     # we cannot replace or update a daemonset, so we take it down completely
@@ -129,8 +178,6 @@ module Kubernetes
     # - waits for current to reach 0
     # - deletes the daemonset
     def delete_daemon_set(daemon_set)
-      daemon_set_selector = [daemon_set.metadata.name, daemon_set.metadata.namespace]
-
       # make it match no node
       daemon_set = daemon_set.clone
       daemon_set.spec.template.spec.nodeSelector = {rand(9999).to_s => rand(9999).to_s}
@@ -139,12 +186,12 @@ module Kubernetes
       # wait for it to terminate all it's pods
       loop do
         sleep 2
-        current = extension_client.get_daemon_set(*daemon_set_selector)
+        current = deployed
         break if current.status.currentNumberScheduled == 0 && current.status.numberMisscheduled == 0
       end
 
       # delete it
-      extension_client.delete_daemon_set *daemon_set_selector
+      extension_client.delete_daemon_set resource_name, namespace
     end
 
     def service

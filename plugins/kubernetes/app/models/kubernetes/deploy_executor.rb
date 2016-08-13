@@ -2,7 +2,7 @@
 # finishes when cluster is "Ready"
 module Kubernetes
   class DeployExecutor
-    WAIT_FOR_LIVE = ENV.fetch('KUBE_WAIT_FOR_LIVE', 10).to_i.minutes
+    WAIT_FOR_LIVE = 10 # ENV.fetch('KUBE_WAIT_FOR_LIVE', 10).to_i.minutes
     CHECK_STABLE = 1.minute
     TICK = 2.seconds
     RESTARTED = "Restarted".freeze
@@ -240,6 +240,14 @@ module Kubernetes
       end
     end
 
+    def rollback(release_docs)
+      release_docs.each do |release_doc|
+        action = release_doc.previous_deploy ? 'Rolling back' : 'Deleting'
+        @output.puts "#{action} #{release_doc.deploy_group.name} role #{release_doc.kubernetes_role.name}"
+        release_doc.delete_or_rollback
+      end
+    end
+
     # create a release, storing all the configuration
     def create_release(build)
       # find role configs to avoid N+1s
@@ -306,9 +314,13 @@ module Kubernetes
 
     def deploy_to_cluster(release, deploys)
       deploy(deploys)
-      success = wait_for_resources_to_complete(release, deploys)
-      show_failure_cause(release) unless success
-      success
+      successful = wait_for_resources_to_complete(release, deploys)
+      unless successful
+        rollback(deploys)
+        show_failure_cause(release)
+        @output.puts "DONE"
+      end
+      successful
     end
 
     # Create the service or report it's status
