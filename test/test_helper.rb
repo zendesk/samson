@@ -21,6 +21,7 @@ require_relative '../config/environment'
 require 'rails/test_help'
 require 'minitest/rails'
 require 'maxitest/autorun'
+require 'maxitest/timeout'
 require 'webmock/minitest'
 require 'mocha/setup'
 
