@@ -26,7 +26,7 @@ class SlackMessage
     else
       running_body
     end
-    body['response_type'] = 'in_channel'
+    body[:response_type] = 'in_channel'
     body
   end
 
