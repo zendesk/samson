@@ -1,6 +1,7 @@
+# frozen_string_literal: true
 require_relative "../test_helper"
 
-SingleCov.covered!
+SingleCov.covered! file: 'plugins/kubernetes/config/initializers/kubeclient_extensions.rb'
 
 describe 'Kubeclient::Client' do
   describe 'entities' do
