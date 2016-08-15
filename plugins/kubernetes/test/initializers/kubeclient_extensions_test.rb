@@ -1,10 +1,12 @@
 require_relative "../test_helper"
 
+SingleCov.covered!
+
 describe 'Kubeclient::Client' do
   describe 'entities' do
     let(:entity_list) { %w[Deployment DeploymentRollback DaemonSet Job] }
 
-    it 'should define all the classes' do
+    it 'defines all the classes' do
       entity_list.each do |entity|
         assert Kernel.const_get "Kubeclient::#{entity}"
       end
