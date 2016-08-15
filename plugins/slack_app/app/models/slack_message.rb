@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 class SlackMessage
   def initialize(deploy)
     @deploy = deploy
@@ -25,7 +26,7 @@ class SlackMessage
     else
       running_body
     end
-    body['response_type'] = 'in_channel'
+    body[:response_type] = 'in_channel'
     body
   end
 
@@ -75,7 +76,7 @@ class SlackMessage
   end
 
   def title(ended = nil)
-    str = "#{user_string(@deploy.user)} "
+    str = "#{user_string(@deploy.user)} ".dup
     connector = 'is'
     if @deploy.buddy
       str << "and #{user_string(@deploy.buddy)} "

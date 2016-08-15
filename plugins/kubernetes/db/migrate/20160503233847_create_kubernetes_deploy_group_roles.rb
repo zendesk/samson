@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 # rubocop:disable Metrics/LineLength
 class CreateKubernetesDeployGroupRoles < ActiveRecord::Migration
   def change

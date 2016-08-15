@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 Gem::Specification.new "samson_datadog", "0.0.0" do |s|
   s.summary = "Samson Datadog integration"
   s.authors = ["Michael Grosser"]

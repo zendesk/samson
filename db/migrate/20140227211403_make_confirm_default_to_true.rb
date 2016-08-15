@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 class MakeConfirmDefaultToTrue < ActiveRecord::Migration
   def up
     change_column :stages, :confirm, :boolean, default: true

@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 class EngineMigration < ActiveRecord::Migration
   def change
     # does nothing but we will see it execute

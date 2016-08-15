@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 class CreateDeployResponseUrlTable < ActiveRecord::Migration
   def change
     create_table :deploy_response_urls do |t|

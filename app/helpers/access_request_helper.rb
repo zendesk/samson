@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 module AccessRequestHelper
   def display_access_request_link?(flash_type = :authorization_error)
     flash_type == :authorization_error &&

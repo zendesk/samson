@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 class RenameBuildColumns < ActiveRecord::Migration
   def change
     change_table :builds do |t|

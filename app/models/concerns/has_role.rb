@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 module HasRole
   def role
     Role.find(role_id)

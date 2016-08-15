@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 class AddCpuAndRamToReleaseDocs < ActiveRecord::Migration
   class KubernetesReleaseDoc < ActiveRecord::Base
     belongs_to :kubernetes_role

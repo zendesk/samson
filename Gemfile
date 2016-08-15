@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 source 'https://rubygems.org'
 
 ruby File.read('.ruby-version').strip
@@ -14,6 +15,7 @@ group :preload do
   gem 'active_model_serializers'
   gem 'paper_trail'
   gem 'soft_deletion'
+  gem 'doorkeeper'
 
   # Logging
   gem 'lograge'
@@ -43,10 +45,11 @@ gem 'net-http-persistent'
 gem 'concurrent-ruby'
 gem 'vault'
 gem 'docker-api'
+gem 'warden-doorkeeper'
 
 # Temporarily using our fork, while waiting for this PR to get merged:
 # https://github.com/abonas/kubeclient/pull/127
-gem 'kubeclient', github: 'zendesk/kubeclient', branch: 'samson-gem-branch'
+gem 'kubeclient', '= 1.1.4'
 
 # treat included plugins like gems
 Dir[File.join(Bundler.root, 'plugins/*/')].each { |f| gemspec path: f }
@@ -117,6 +120,7 @@ group :development, :test do
   gem 'byebug'
   gem 'bootscale'
   gem 'pry-rails'
+  gem 'pry'
   gem 'awesome_print'
   gem 'brakeman'
   gem 'rubocop'

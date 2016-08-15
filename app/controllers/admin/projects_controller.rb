@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 class Admin::ProjectsController < ApplicationController
   before_action :authorize_admin!
 

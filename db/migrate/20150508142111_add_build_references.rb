@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 class AddBuildReferences < ActiveRecord::Migration
   def change
     change_table :deploys do |t|

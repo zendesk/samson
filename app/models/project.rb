@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 class Project < ActiveRecord::Base
   include Permalinkable
   include Searchable

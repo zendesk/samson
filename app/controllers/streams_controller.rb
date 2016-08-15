@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 class StreamsController < ApplicationController
   newrelic_ignore if respond_to?(:newrelic_ignore)
 

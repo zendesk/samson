@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 class Integrations::BaseController < ApplicationController
   skip_around_action :login_user
   skip_before_action :verify_authenticity_token
@@ -119,7 +120,7 @@ class Integrations::BaseController < ApplicationController
   end
 
   def record_log(level, message)
-    (@recorded_log ||= "") << "#{level.upcase}: #{message}\n"
+    (@recorded_log ||= "".dup) << "#{level.upcase}: #{message}\n"
     Rails.logger.public_send(level, message)
   end
 

@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 Admin::DeployGroupsController.class_eval do
   prepend(
     Module.new do

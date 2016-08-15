@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 class GitRepository
   include ::NewRelic::Agent::MethodTracer
 
@@ -64,7 +65,7 @@ class GitRepository
     return unless ensure_local_cache!
     command = ["git", "for-each-ref", "refs/tags", "--sort=-authordate", "--format=%(refname)", "--count=600"]
     return [] unless output = capture_stdout(*command)
-    output.gsub! 'refs/tags/', ''
+    output = output.gsub 'refs/tags/', ''
     output.split("\n")
   end
 

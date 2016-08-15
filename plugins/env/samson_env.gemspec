@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 Gem::Specification.new "samson_env", "0.0.0" do |s|
   s.summary =
     "Generate a .env file via stages ui for all deploy groups," \

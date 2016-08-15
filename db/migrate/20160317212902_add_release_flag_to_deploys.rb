@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 class AddReleaseFlagToDeploys < ActiveRecord::Migration
   def change
     add_column :deploys, :release, :boolean, default: true, null: false

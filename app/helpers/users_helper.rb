@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 module UsersHelper
   # multiple are checked, but browser only shows last
   def user_project_role_radio(user, project, role_name, role_id)

@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 class AddReferenceToJobs < ActiveRecord::Migration
   def change
     change_table :jobs do |t|

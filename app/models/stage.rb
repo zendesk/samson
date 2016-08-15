@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 class Stage < ActiveRecord::Base
   include Permalinkable
   include HasCommands

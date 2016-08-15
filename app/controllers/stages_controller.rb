@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 class StagesController < ApplicationController
   include CurrentProject
   include StagePermittedParams
@@ -14,9 +15,6 @@ class StagesController < ApplicationController
 
     respond_to do |format|
       format.html
-      format.json do
-        render json: @stages
-      end
     end
   end
 

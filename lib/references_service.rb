@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 class ReferencesService
   cattr_accessor(:lock_timeout, instance_writer: false) { 2.minutes }
 

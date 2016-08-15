@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 class AddSamsonAppIndices < ActiveRecord::Migration
   def change
     add_index :slack_identifiers, :user_id, unique: true

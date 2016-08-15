@@ -1,8 +1,9 @@
+# frozen_string_literal: true
 module SecretStorage
   SECRET_KEYS_PARTS = [:environment_permalink, :project_permalink, :deploy_group_permalink, :key].freeze
-  SEPARATOR = "/".freeze
-  VAULT_SECRET_BACKEND = 'secret/'.freeze
-  SAMSON_SECRET_NAMESPACE = 'apps/'.freeze
+  SEPARATOR = "/"
+  VAULT_SECRET_BACKEND = 'secret/'
+  SAMSON_SECRET_NAMESPACE = 'apps/'
 
   require 'attr_encrypted'
   class DbBackend

@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 from_cap = !defined?(Rails)
 if from_cap || defined?(Airbrake)
   Airbrake.configure do |config|

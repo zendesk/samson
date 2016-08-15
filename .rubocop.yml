@@ -140,7 +140,7 @@ Lint/ShadowingOuterLocalVariable:
 
 AllCops:
   CacheRootDirectory: tmp
-  TargetRubyVersion: 2.2
+  TargetRubyVersion: 2.3
   Exclude:
     - db/schema.rb
     - vendor/**/*

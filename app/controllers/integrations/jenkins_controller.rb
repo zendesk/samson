@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 class Integrations::JenkinsController < Integrations::BaseController
   protected
 

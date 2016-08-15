@@ -1,14 +1,3 @@
-GIT
-  remote: git://github.com/zendesk/kubeclient.git
-  revision: 4813f9b998f4b64372c389d3f930c40fad577c6c
-  branch: samson-gem-branch
-  specs:
-    kubeclient (1.1.3)
-      activesupport
-      http (= 0.9.8)
-      recursive-open-struct (= 1.0.0)
-      rest-client
-
 PATH
   remote: plugins/aws_ecr
   specs:
@@ -172,8 +161,10 @@ GEM
     dogapi (1.21.0)
       multi_json
     dogstatsd-ruby (1.5.0)
-    domain_name (0.5.20160310)
+    domain_name (0.5.20160615)
       unf (>= 0.0.5, < 1.0.0)
+    doorkeeper (4.1.0)
+      railties (>= 4.2)
     dotenv (0.11.1)
       dotenv-deployment (~> 0.0.2)
     dotenv-deployment (0.0.2)
@@ -224,6 +215,11 @@ GEM
     kaminari (0.16.3)
       actionpack (>= 3.0.0)
       activesupport (>= 3.0.0)
+    kubeclient (1.1.4)
+      activesupport
+      http (= 0.9.8)
+      recursive-open-struct (= 1.0.0)
+      rest-client
     lograge (0.3.6)
       actionpack (>= 3)
       activesupport (>= 3)
@@ -233,7 +229,7 @@ GEM
       nokogiri (>= 1.5.9)
     mail (2.6.4)
       mime-types (>= 1.16, < 4)
-    maxitest (2.0.2)
+    maxitest (2.1.0)
       minitest (>= 5.0.0, < 5.10.0)
     metaclass (0.0.4)
     method_source (0.8.2)
@@ -309,7 +305,7 @@ GEM
     pyu-ruby-sasl (0.0.3.3)
     query_diet (0.6.0)
     rack (1.6.4)
-    rack-mini-profiler (0.9.9.2)
+    rack-mini-profiler (0.10.1)
       rack (>= 1.2.0)
     rack-test (0.6.3)
       rack (>= 1.0)
@@ -393,10 +389,10 @@ GEM
     rake (11.2.2)
     recursive-open-struct (1.0.0)
     request_store (1.3.1)
-    rest-client (1.8.0)
+    rest-client (2.0.0)
       http-cookie (>= 1.0.2, < 2.0)
-      mime-types (>= 1.16, < 3.0)
-      netrc (~> 0.7)
+      mime-types (>= 1.16, < 4.0)
+      netrc (~> 0.8)
     rubocop (0.40.0)
       parser (>= 2.3.1.0, < 3.0)
       powerpack (~> 0.1)
@@ -454,6 +450,8 @@ GEM
     vault (0.4.0)
     warden (1.2.6)
       rack (>= 1.0)
+    warden-doorkeeper (0.3.0)
+      warden (~> 1.2)
     webmock (2.0.1)
       addressable (>= 2.3.6)
       crack (>= 0.3.2)
@@ -490,12 +488,13 @@ DEPENDENCIES
   dalli
   docker-api
   dogstatsd-ruby
+  doorkeeper
   dotenv
   faraday-http-cache
   github-markdown
   goldiloader
   kaminari
-  kubeclient!
+  kubeclient (= 1.1.4)
   lograge
   logstash-event
   maxitest
@@ -514,6 +513,7 @@ DEPENDENCIES
   omniauth-oauth2
   paper_trail
   pg
+  pry
   pry-rails
   puma
   query_diet
@@ -570,6 +570,7 @@ DEPENDENCIES
   uglifier
   vault
   warden
+  warden-doorkeeper
   webmock
 
 RUBY VERSION

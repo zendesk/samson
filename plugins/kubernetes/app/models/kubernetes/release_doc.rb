@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 module Kubernetes
   class ReleaseDoc < ActiveRecord::Base
     self.table_name = 'kubernetes_release_docs'

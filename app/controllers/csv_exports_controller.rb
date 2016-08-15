@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 class CsvExportsController < ApplicationController
   rescue_from ActiveRecord::RecordNotFound do |exception|
     respond_to do |format|

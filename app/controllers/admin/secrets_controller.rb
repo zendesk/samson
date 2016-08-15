@@ -1,5 +1,6 @@
+# frozen_string_literal: true
 class Admin::SecretsController < ApplicationController
-  ADD_MORE = 'Save and add another'.freeze
+  ADD_MORE = 'Save and add another'
 
   include CurrentProject
 

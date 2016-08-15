@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 class AddProjectAndGlobalToCommands < ActiveRecord::Migration
   def change
     change_table :commands do |t|

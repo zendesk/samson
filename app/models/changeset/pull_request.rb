@@ -1,7 +1,8 @@
+# frozen_string_literal: true
 class Changeset::PullRequest
   # Common patterns
-  CODE_ONLY = "[A-Z][A-Z\\d]+-\\d+".freeze # e.g., S4MS0N-123, SAM-456
-  PUNCT = "\\s|\\p{Punct}|~|=".freeze
+  CODE_ONLY = "[A-Z][A-Z\\d]+-\\d+" # e.g., S4MS0N-123, SAM-456
+  PUNCT = "\\s|\\p{Punct}|~|="
 
   WEBHOOK_FILTER = /(^|\s)\[samson review\]($|\s)/i
 

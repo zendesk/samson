@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 class AddCheckboxesToSlackWebhooks < ActiveRecord::Migration
   def change
     add_column :slack_webhooks, :before_deploy, :boolean, default: false, null: false

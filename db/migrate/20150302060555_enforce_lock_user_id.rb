@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 class EnforceLockUserId < ActiveRecord::Migration
   def change
     Lock.where(user_id: nil).update_all(user_id: User.where(role_id: 3).first.id) if User.where(role_id: 3).first

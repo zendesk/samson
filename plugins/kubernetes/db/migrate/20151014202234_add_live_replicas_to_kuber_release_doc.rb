@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 class AddLiveReplicasToKuberReleaseDoc < ActiveRecord::Migration
   def change
     change_table :kubernetes_release_docs do |t|

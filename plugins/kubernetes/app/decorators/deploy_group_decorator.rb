@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 DeployGroup.class_eval do
   has_one(
     :cluster_deploy_group,

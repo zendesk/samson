@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 class UniqueRoles < ActiveRecord::Migration
   class UserProjectRole < ActiveRecord::Base
   end

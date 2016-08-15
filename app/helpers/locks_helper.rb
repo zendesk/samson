@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 module LocksHelper
   def delete_lock_options
     [

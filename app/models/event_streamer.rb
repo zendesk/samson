@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 # Streams the terminal output events from a output source to a destination IO
 # stream.
 #

@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 require 'docker'
 
 if !Rails.env.test? && !ENV['PRECOMPILE'] && ENV['DOCKER_FEATURE']

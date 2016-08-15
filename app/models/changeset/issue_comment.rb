@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 class Changeset::IssueComment
   attr_reader :repo, :data
 

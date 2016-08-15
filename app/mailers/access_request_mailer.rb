@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 class AccessRequestMailer < ApplicationMailer
   def access_request_email(host, user, manager_email, reason, project_ids, role_id)
     @host = host

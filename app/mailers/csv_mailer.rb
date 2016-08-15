@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 class CsvMailer < ApplicationMailer
   def created(csv_export)
     address = csv_export.email

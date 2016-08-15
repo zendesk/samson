@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 class Macro < ActiveRecord::Base
   has_soft_deletion default_scope: true
 

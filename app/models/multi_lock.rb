@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 class MultiLock
   cattr_accessor(:mutex) { Mutex.new }
   cattr_accessor(:locks) { {} }

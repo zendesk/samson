@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 class RemoveBuildStatuses < ActiveRecord::Migration
   def up
     drop_table :build_statuses

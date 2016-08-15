@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 threads 8, 250
 preload_app!
 

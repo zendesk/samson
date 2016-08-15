@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 require 'soft_deletion'
 require 'digest/md5'
 

@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 require_relative '../test_helper'
 
 SingleCov.covered!
@@ -62,12 +63,6 @@ describe StagesController do
       it "renders html" do
         get :index, project_id: project
         assert_template 'index'
-      end
-
-      it "renders json" do
-        get :index, project_id: project, format: 'json'
-        response.body.must_match /\A\{\"stages\":\[/m
-        assert_response :success
       end
     end
 

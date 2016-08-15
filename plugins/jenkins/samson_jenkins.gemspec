@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 Gem::Specification.new "samson_jenkins", "0.0.0" do |s|
   s.summary = "Samson jenkins integration"
   s.authors = ["Rupinder Dhanoa "]

@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 Stage.class_eval do
   has_many :new_relic_applications
   accepts_nested_attributes_for :new_relic_applications, allow_destroy: true, reject_if: :no_newrelic_name?
