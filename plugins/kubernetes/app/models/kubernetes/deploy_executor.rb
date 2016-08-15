@@ -2,7 +2,7 @@
 # finishes when cluster is "Ready"
 module Kubernetes
   class DeployExecutor
-    WAIT_FOR_LIVE = 10 # ENV.fetch('KUBE_WAIT_FOR_LIVE', 10).to_i.minutes
+    WAIT_FOR_LIVE = ENV.fetch('KUBE_WAIT_FOR_LIVE', 10).to_i.minutes
     CHECK_STABLE = 1.minute
     TICK = 2.seconds
     RESTARTED = "Restarted".freeze
@@ -316,8 +316,8 @@ module Kubernetes
       deploy(deploys)
       successful = wait_for_resources_to_complete(release, deploys)
       unless successful
-        rollback(deploys)
         show_failure_cause(release)
+        rollback(deploys)
         @output.puts "DONE"
       end
       successful

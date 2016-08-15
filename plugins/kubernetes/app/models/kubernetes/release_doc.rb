@@ -46,7 +46,6 @@ module Kubernetes
       raise "Unknown deploy object #{resource_type}" unless valid_resource?
 
       @previous_deploy = fetch_resource
-
       @new_deploy = if deployment?
         deploy = Kubeclient::Deployment.new(resource_template)
         if previous_deploy
@@ -71,13 +70,13 @@ module Kubernetes
     def delete_or_rollback
       if deployment?
         if previous_deploy
-          extension_client.rollback_deployment resource_name, namespace
+          extension_client.rollback_deployment(resource_name, namespace)
         else
           delete_deployment
         end
       elsif daemon_set?
         delete_daemon_set new_deploy if new_deploy
-        extension_client.create_daemon_set previous_deploy if previous_deploy
+        extension_client.create_daemon_set(previous_deploy) if previous_deploy
       elsif job?
         extension_client.delete_job(resource_name, namespace) if previous_deploy
       else
@@ -160,7 +159,6 @@ module Kubernetes
 
     def delete_deployment
       return unless deployed = fetch_resource
-
       copy = deployed.clone
 
       # Scale down the deployment to include zero pods

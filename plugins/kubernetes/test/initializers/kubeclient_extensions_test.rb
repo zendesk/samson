@@ -1,5 +1,4 @@
 require_relative "../test_helper"
-require 'pry'
 
 describe 'Kubeclient::Client' do
   describe 'entities' do
