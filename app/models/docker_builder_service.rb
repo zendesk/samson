@@ -80,9 +80,12 @@ class DockerBuilderService
     output.puts("### Running Docker build")
 
     build.docker_image =
-      Docker::Image.build_from_dir(tmp_dir, {}, Docker.connection, registry_credentials) do |output_chunk|
-        handle_output_chunk(output_chunk)
-      end
+      Docker::Image.build_from_dir(
+        tmp_dir,
+        {dockerfile: project.dockerfile},
+        Docker.connection,
+        registry_credentials
+      ) { |output_chunk| handle_output_chunk(output_chunk) }
     output.puts('### Docker build complete')
   rescue Docker::Error::DockerError => e
     # If a docker error is raised, consider that a "failed" job instead of an "errored" job

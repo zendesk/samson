@@ -94,14 +94,14 @@ describe DockerBuilderService do
 
         # simulate that build worked
         service.expects(:build_image).never
-        service.expects(:run_build_image_job).returns(123)
+        service.expects(:build_image_via_kubernetes_job).returns(123)
 
         execute_job.must_equal(123)
       end
     end
   end
 
-  describe "#run_build_image_job" do
+  describe "#build_image_via_kubernetes_job" do
     let(:local_job) { stub }
     let(:k8s_job) { stub }
     let(:repo_digest) { 'sha256:5f1d7c7381b2e45ca73216d7b06004fdb0908ed7bb8786b62f2cdfa5035fde2c' }
@@ -115,7 +115,7 @@ describe DockerBuilderService do
       k8s_job.expects(:execute!).returns([true, build_log])
       build.label = "Version 123"
 
-      service.run_build_image_job(local_job, nil)
+      service.build_image_via_kubernetes_job(local_job, nil)
       assert_equal('version-123', build.docker_ref)
       assert_equal("#{project.docker_repo}@#{repo_digest}", build.docker_repo_digest)
     end
@@ -123,7 +123,7 @@ describe DockerBuilderService do
     it 'leaves the build docker metadata empty when the remote job fails' do
       k8s_job.expects(:execute!).returns([false, build_log])
 
-      service.run_build_image_job(local_job, nil)
+      service.build_image_via_kubernetes_job(local_job, nil)
       assert_nil build.docker_repo_digest
     end
   end
@@ -133,26 +133,39 @@ describe DockerBuilderService do
       Docker::Image.expects(:build_from_dir).returns(mock_docker_image)
     end
 
-    it 'writes the REVISION file' do
+    it 'generates an image and stores it in the build' do
+      service.build_image(tmp_dir)
+      assert_equal(docker_image_id, build.docker_image_id)
+    end
+
+    it 'generates an image with a custom Dockerfile' do
+      Docker::Image.unstub(:build_from_dir)
+
+      build.project.dockerfile = 'Otherfile'
+      Docker::Image.expects(:build_from_dir).
+        with { |*args| args[1][:dockerfile].must_equal 'Otherfile'; true }.
+        returns(mock_docker_image)
+
+      service.build_image(tmp_dir)
+      assert_equal(docker_image_id, build.docker_image_id)
+    end
+
+    it 'stores current commit in REVISION file' do
       service.build_image(tmp_dir)
       revision_filepath = File.join(tmp_dir, 'REVISION')
       assert File.exist?(revision_filepath)
       assert_equal(build.git_sha, File.read(revision_filepath))
     end
 
-    it 'updates the Build object' do
-      service.build_image(tmp_dir)
-      assert_equal(docker_image_id, build.docker_image_id)
-    end
-
-    it 'catches docker errors' do
+    it 'catches and shows docker errors' do
       Docker::Image.unstub(:build_from_dir)
       Docker::Image.expects(:build_from_dir).raises(Docker::Error::DockerError.new("XYZ"))
       service.build_image(tmp_dir).must_equal nil
       build.docker_image_id.must_equal nil
+      service.output.to_s.must_include 'Docker build failed: XYZ'
     end
 
-    it 'catches JSON errors' do
+    it 'catches and shows JSON errors' do
       push_output = [
         [{status: 'working okay'}.to_json],
         ['{"status":"this is incomplete JSON...']

@@ -26,7 +26,7 @@
     <%= link_to "Changelog", project_changelog_path(project) %>
   </li>
 
-  <%= Samson::Hooks.render_views(:project_tabs_view, self, { project: @project, active: active }) %>
+  <%= Samson::Hooks.render_views(:project_tabs_view, self, project: @project, active: active) %>
 
   <% if admin_for_project? %>
     <li class="<%= 'active' if active == 'settings' %>">
