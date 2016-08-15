@@ -160,7 +160,7 @@ GEM
     dockerb (0.3.0)
     dogapi (1.21.0)
       multi_json
-    dogstatsd-ruby (1.5.0)
+    dogstatsd-ruby (1.6.0)
     domain_name (0.5.20160615)
       unf (>= 0.0.5, < 1.0.0)
     doorkeeper (4.1.0)
