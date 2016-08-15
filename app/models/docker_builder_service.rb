@@ -24,12 +24,9 @@ class DockerBuilderService
       repository.executor = execution.executor
 
       if build.kubernetes_job
-        run_build_image_job(job, image_name, push: push, tag_as_latest: tag_as_latest)
-      elsif build_image(tmp_dir)
-        ret = true
-        ret = push_image(image_name, tag_as_latest: tag_as_latest) if push
-        build.docker_image.remove(force: true) unless ENV["DOCKER_KEEP_BUILT_IMGS"] == "1"
-        ret
+        build_image_via_kubernetes_job(job, image_name, push: push, tag_as_latest: tag_as_latest)
+      else
+        build_image_locally(job, image_name, push: push, tag_as_latest: tag_as_latest, tmp_dir: tmp_dir)
       end
     end
 
@@ -38,13 +35,25 @@ class DockerBuilderService
     JobExecution.start_job(job_execution)
   end
 
-  def run_build_image_job(local_job, image_name, push: false, tag_as_latest: false)
+  def build_image_locally(_job, image_name, push:, tag_as_latest:, tmp_dir:)
+    return unless build_image(tmp_dir)
+    ret = true
+    ret = push_image(image_name, tag_as_latest: tag_as_latest) if push
+    build.docker_image.remove(force: true) unless ENV["DOCKER_KEEP_BUILT_IMGS"] == "1"
+    ret
+  end
+
+  # FIXME: this does not seem to do the same tag and remove logic as build_image_locally
+  def build_image_via_kubernetes_job(local_job, image_name, push: false, tag_as_latest: false)
     k8s_job = Kubernetes::BuildJobExecutor.new(output, job: local_job)
     docker_ref = docker_image_ref(image_name, build)
 
-    success, build_log = k8s_job.execute!(build, project,
+    success, build_log = k8s_job.execute!(
+      build,
+      project,
       tag: docker_ref, push: push,
-      registry: registry_credentials, tag_as_latest: tag_as_latest)
+      registry: registry_credentials, tag_as_latest: tag_as_latest
+    )
 
     build.docker_ref = docker_ref
     build.docker_repo_digest = nil
