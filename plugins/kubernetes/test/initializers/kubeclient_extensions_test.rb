@@ -2,9 +2,8 @@ require_relative "../test_helper"
 require 'pry'
 
 describe 'Kubeclient::Client' do
-
   describe 'entities' do
-    let(:entity_list) { %w(Deployment DeploymentRollback DaemonSet Job) }
+    let(:entity_list) { %w[Deployment DeploymentRollback DaemonSet Job] }
 
     it 'should define all the classes' do
       entity_list.each do |entity|
@@ -27,16 +26,16 @@ describe 'Kubeclient::Client' do
     end
 
     it 'works' do
-      stub_request(:post, /rollback/)
-        .to_return(body: rollback_response_body, status: 200)
+      stub_request(:post, /rollback/).
+        to_return(body: rollback_response_body, status: 200)
 
       client = Kubeclient::Client.new('http://localhost:8080/api', 'extensions/v1beta1')
       rollback = client.rollback_deployment(deployment_name, 'staging')
       assert_instance_of(Kubeclient::DeploymentRollback, rollback)
 
       assert_requested(:post,
-                       "http://localhost:8080/api/extensions/v1beta1/namespaces/staging/deployments/#{deployment_name}/rollback",
-                       times: 1)
+        "http://localhost:8080/api/extensions/v1beta1/namespaces/staging/deployments/#{deployment_name}/rollback",
+        times: 1)
     end
   end
 end

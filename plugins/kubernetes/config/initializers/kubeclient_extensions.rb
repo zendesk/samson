@@ -38,8 +38,8 @@ module Kubeclient
 
       @headers['Content-Type'] = 'application/json'
       response = handle_exception do
-        rest_client[ns_prefix + "deployments/#{deployment_name}/rollback"]
-          .post(hash.to_json, @headers)
+        rest_client[ns_prefix + "deployments/#{deployment_name}/rollback"].
+          post(hash.to_json, @headers)
       end
       new_entity(JSON.parse(response), DeploymentRollback)
     end

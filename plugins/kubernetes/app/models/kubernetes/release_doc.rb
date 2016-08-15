@@ -38,10 +38,16 @@ module Kubernetes
       resource_type == 'Job'
     end
 
-    def deploy
-      @previous_deploy = deployed
+    def valid_resource?
+      deployment? || daemon_set? || job?
+    end
 
-      if deployment?
+    def deploy
+      raise "Unknown deploy object #{resource_type}" unless valid_resource?
+
+      @previous_deploy = fetch_resource
+
+      @new_deploy = if deployment?
         deploy = Kubeclient::Deployment.new(resource_template)
         if previous_deploy
           extension_client.update_deployment deploy
@@ -59,11 +65,7 @@ module Kubernetes
           extension_client.delete_job resource_name, namespace
         end
         extension_client.create_job job
-      else
-        raise "Unknown deploy object #{resource_type}"
       end
-
-      @new_deploy = deployed
     end
 
     def delete_or_rollback
@@ -117,7 +119,7 @@ module Kubernetes
     def desired_pod_count
       if daemon_set?
         # need http request since we do not know how many nodes we will match
-        deployed.status.desiredNumberScheduled
+        fetch_resource.status.desiredNumberScheduled
       elsif deployment? || job?
         replica_target
       else
@@ -144,17 +146,21 @@ module Kubernetes
       deploy_group.kubernetes_cluster.extension_client
     end
 
-    def deployed
+    def fetch_resource
+      return nil unless valid_resource?
+
       extension_client.send(
         "get_#{resource_type.underscore}",
         resource_name,
         namespace
       )
     rescue KubeException
-      false
+      nil
     end
 
     def delete_deployment
+      return unless deployed = fetch_resource
+
       copy = deployed.clone
 
       # Scale down the deployment to include zero pods
@@ -164,7 +170,7 @@ module Kubernetes
       # Wait for there to be zero pods
       loop do
         sleep 2
-        break if deployed.status.replicas.to_i == 0
+        break if fetch_resource.status.replicas.to_i == 0
       end
 
       # delete the actual deployment
@@ -186,7 +192,7 @@ module Kubernetes
       # wait for it to terminate all it's pods
       loop do
         sleep 2
-        current = deployed
+        current = fetch_resource
         break if current.status.currentNumberScheduled == 0 && current.status.numberMisscheduled == 0
       end
 
