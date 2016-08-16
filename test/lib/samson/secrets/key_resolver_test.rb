@@ -33,9 +33,19 @@ describe Samson::Secrets::KeyResolver do
     it "has the correct order of specificity" do
       key = 'secret/baz'.dup
       resolver.expand!(key)
-      resolver.instance_variable_get(:@errors).must_equal([
-        "secret/baz (tried: production/foo/pod1/baz, global/foo/pod1/baz, production/global/pod1/baz, global/global/pod1/baz, production/foo/global/baz, global/foo/global/baz, production/global/global/baz, global/global/global/baz)"
-      ])
+      keys = [
+        "production/foo/pod1/baz",
+        "global/foo/pod1/baz",
+        "production/global/pod1/baz",
+        "global/global/pod1/baz",
+        "production/foo/global/baz",
+        "global/foo/global/baz",
+        "production/global/global/baz",
+        "global/global/global/baz"
+      ]
+      resolver.instance_variable_get(:@errors).must_equal(
+        ["secret/baz (tried: #{keys.join(", ")})"]
+      )
     end
   end
 

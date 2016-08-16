@@ -13,7 +13,7 @@
     </div>
   </div>
 
-  <% if SecretStorage.backend == SecretStorage::HashicorpVault %>
+  <% if SecretStorage.backend == Samson::Secrets::HashicorpVaultBackend %>
     <div class="form-group">
       <%= form.label :vault_instance, "Vault Instance", class: "col-lg-2 control-label" %>
       <div class="col-lg-4">

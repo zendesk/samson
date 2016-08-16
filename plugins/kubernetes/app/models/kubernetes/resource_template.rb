@@ -49,7 +49,7 @@ module Kubernetes
 
     def secret_annotations
       @secret_annotations ||= annotations.to_h.select do |annotation_name, _|
-        annotation_name.to_s.start_with?(SecretStorage::VAULT_SECRET_BACKEND)
+        annotation_name.to_s.start_with?(Samson::Secrets::HashicorpVaultBackend::VAULT_SECRET_BACKEND)
       end
     end
 
