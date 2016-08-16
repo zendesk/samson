@@ -21,7 +21,8 @@ describe SlackWebhookNotification do
     )
     stage = stub(name: "Staging", slack_webhooks: [webhook], project: project)
     deploy = stub(
-      to_s: 123456, summary: "hello world!", user: user, stage: stage, project: project, changeset: changeset, reference: '123abc'
+      to_s: 123456, summary: "hello world!", user: user, stage: stage, project: project,
+      changeset: changeset, reference: '123abc'
     )
     SlackWebhookNotification.new(deploy)
   end
