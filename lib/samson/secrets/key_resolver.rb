@@ -3,6 +3,8 @@
 module Samson
   module Secrets
     class KeyResolver
+      WILDCARD = '*'
+
       def initialize(project, deploy_groups)
         @project = project
         @deploy_groups = deploy_groups
@@ -11,23 +13,29 @@ module Samson
 
       # expands a key by finding the most specific value for it
       # bar -> production/my_project/pod100/bar
-      def expand!(secret_key)
-        key = secret_key.split('/', 2).last
+      def expand(env_name, secret_key)
+        if env_name.end_with?(WILDCARD) ^ secret_key.end_with?(WILDCARD)
+          @errors << "#{env_name} and #{secret_key} need to both end with #{WILDCARD} or not include them"
+          return []
+        end
 
         # build a list of all possible ids
         possible_ids = possible_secret_key_parts.map do |id|
-          SecretStorage.generate_secret_key(id.merge(key: key))
+          SecretStorage.generate_secret_key(id.merge(key: secret_key))
         end
 
-        # use the value of the first id that exists
-        all_found = SecretStorage.read_multi(possible_ids)
-
-        if found = possible_ids.detect { |id| all_found[id] }
-          secret_key.replace(found)
+        found = if secret_key.end_with?(WILDCARD)
+          expand_wildcard_keys(env_name, secret_key, possible_ids)
         else
-          @errors << "#{secret_key} (tried: #{possible_ids.join(', ')})"
-          nil
+          expand_simple_key(env_name, possible_ids)
         end
+
+        if found.empty?
+          @errors << "#{secret_key} (tried: #{possible_ids.join(', ')})"
+          return []
+        end
+
+        found
       end
 
       # raises all errors at once for faster debugging
@@ -41,6 +49,39 @@ module Samson
       end
 
       private
+
+      # use the value of the first id that exists
+      def expand_simple_key(env_name, possible_ids)
+        all_found = SecretStorage.read_multi(possible_ids)
+
+        if found = possible_ids.detect { |id| all_found[id] }
+          [[env_name, found]]
+        else
+          []
+        end
+      end
+
+      # FOO_* with foo_* -> [[FOO_BAR, a/a/a/foo_bar], [FOO_BAZ, a/a/a/foo_baz]]
+      def expand_wildcard_keys(env_name, secret_key, possible_ids)
+        # look through all keys to check which ones match
+        all = SecretStorage.keys
+        matched = possible_ids.flat_map do |id|
+          all.select { |a| a.start_with?(id.delete('*')) }
+        end
+
+        # pick the most specific id per key, they are already sorted ... [a/b/c/d, a/a/a/d] -> [a/b/c/d]
+        matched.uniq! { |id| SecretStorage.parse_secret_key(id).fetch(:key) }
+
+        # expand env name to match the expanded key
+        # env FOO_* with key d_* finds id a/b/c/d_bar and results in [FOO_BAR, a/b/c/d_bar]
+        matched.map! do |id|
+          expanded = SecretStorage.parse_secret_key(id).fetch(:key)
+          expanded.slice!(0, secret_key.size - 1)
+          [env_name.delete('*') + expanded.upcase, id]
+        end
+
+        matched
+      end
 
       def possible_secret_key_parts
         @possible_secret_key_parts ||= begin

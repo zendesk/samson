@@ -47,7 +47,8 @@ class TerminalExecutor
 
     result = command.gsub(/\b#{SECRET_PREFIX}(#{SecretStorage::SECRET_KEY_REGEX})\b/) do
       key = $1
-      if resolver.expand!(key)
+      if expanded = resolver.expand('unused', key).first&.last
+        key.replace(expanded)
         SecretStorage.read(key, include_secret: true).fetch(:value)
       end
     end

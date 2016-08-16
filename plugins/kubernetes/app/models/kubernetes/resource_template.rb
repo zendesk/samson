@@ -42,7 +42,7 @@ module Kubernetes
     # look up keys in all possible namespaces by specificity
     def expand_secret_annotations
       resolver = Samson::Secrets::KeyResolver.new(project, [@doc.deploy_group])
-      secret_annotations.each_value { |secret_key| resolver.expand!(secret_key) }
+      secret_annotations.replace(secret_annotations.flat_map { |k, v| resolver.expand(k, v) }.to_h)
       resolver.verify!
     end
 
