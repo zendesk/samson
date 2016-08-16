@@ -15,8 +15,8 @@ describe SlackWebhookNotification do
     end
     payload
   end
-  let(:prs) { attachment.fetch('fields')[0] }
-  let(:risks) { attachment.fetch('fields')[1] }
+  let(:prs) { payload.fetch('attachments')[0].fetch('fields')[0] }
+  let(:risks) { payload.fetch('attachments')[0].fetch('fields')[1] }
 
   def stub_notification(before_deploy: false, after_deploy: true, for_buddy: false, risks: true, prs: true)
     pr_stub = stub url: 'https://github.com/foo/bar/pulls/1', number: 1, title: 'PR 1',
@@ -75,10 +75,9 @@ describe SlackWebhookNotification do
     risks['value'].must_equal "<https://github.com/foo/bar/pulls/1|#1>:\nabc"
   end
 
-  it 'says if there are no PRs' do
+  it 'tells the user if there are no PRs' do
     notification = stub_notification(for_buddy: true, prs: false)
     notification.buddy_request "no PRs"
-
     prs['value'].must_equal '(no PRs)'
     risks['value'].must_equal "(no risks)"
   end
@@ -86,7 +85,6 @@ describe SlackWebhookNotification do
   it 'says if there are no risks' do
     notification = stub_notification(for_buddy: true, risks: false)
     notification.buddy_request "PRs but no risks"
-
     prs['value'].must_equal '<https://github.com/foo/bar/pulls/1|#1> - PR 1'
     risks['value'].must_equal "(no risks)"
   end
