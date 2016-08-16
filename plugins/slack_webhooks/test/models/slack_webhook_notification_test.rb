@@ -9,13 +9,19 @@ describe SlackWebhookNotification do
   let(:endpoint) { "https://slack.com/api/chat.postMessage" }
 
   def stub_notification(before_deploy: false, after_deploy: true, for_buddy: false)
+    changeset = stub("changeset",
+      pull_requests: [
+        stub(url: 'https://github.com/foo/bar/pulls/1', number: 1, title: 'PR 1',
+             risks: 'abc')
+      ])
+
     webhook = stub(
       webhook_url: endpoint, channel: nil,
       before_deploy: before_deploy, after_deploy: after_deploy, for_buddy: for_buddy
     )
     stage = stub(name: "Staging", slack_webhooks: [webhook], project: project)
     deploy = stub(
-      to_s: 123456, summary: "hello world!", user: user, stage: stage, project: project, reference: '123abc'
+      to_s: 123456, summary: "hello world!", user: user, stage: stage, project: project, changeset: changeset, reference: '123abc'
     )
     SlackWebhookNotification.new(deploy)
   end
@@ -82,8 +88,8 @@ describe SlackWebhookNotification do
     it "renders" do
       notification = stub_notification
       message = notification.default_buddy_request_message
-      message.must_include ":pray: <!here> _John Wu_ is requesting approval to deploy Glitter *123abc*"\
-        " to Staging.\nReview this deploy: http://www.test-url.com/projects/foo/deploys/123456"
+      message.must_include ":pray: <!here> _John Wu_ is requesting approval to deploy "\
+      "<http://www.test-url.com/projects/foo/deploys/123456|Glitter *123abc* to Staging>."\
     end
   end
 end
