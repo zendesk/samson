@@ -15,6 +15,8 @@ describe SlackWebhookNotification do
     end
     payload
   end
+  let(:prs) { attachment.fetch('fields')[0] }
+  let(:risks) { attachment.fetch('fields')[1] }
 
   def stub_notification(before_deploy: false, after_deploy: true, for_buddy: false, risks: true, prs: true)
     pr_stub = stub url: 'https://github.com/foo/bar/pulls/1', number: 1, title: 'PR 1',
@@ -67,8 +69,6 @@ describe SlackWebhookNotification do
 
     payload.fetch('text').must_equal "buddy approval needed"
     payload.fetch('attachments').length.must_equal 1
-    attachment = payload.fetch('attachments')[0]
-    prs, risks = attachment.fetch('fields')
     prs['title'].must_equal 'PRs'
     prs['value'].must_equal '<https://github.com/foo/bar/pulls/1|#1> - PR 1'
     risks['title'].must_equal 'Risks'
@@ -79,7 +79,6 @@ describe SlackWebhookNotification do
     notification = stub_notification(for_buddy: true, prs: false)
     notification.buddy_request "no PRs"
 
-    prs, risks = payload.fetch('attachments')[0].fetch('fields')
     prs['value'].must_equal '(no PRs)'
     risks['value'].must_equal "(no risks)"
   end
@@ -88,7 +87,6 @@ describe SlackWebhookNotification do
     notification = stub_notification(for_buddy: true, risks: false)
     notification.buddy_request "PRs but no risks"
 
-    prs, risks = payload.fetch('attachments')[0].fetch('fields')
     prs['value'].must_equal '<https://github.com/foo/bar/pulls/1|#1> - PR 1'
     risks['value'].must_equal "(no risks)"
   end
