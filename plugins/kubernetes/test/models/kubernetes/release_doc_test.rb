@@ -69,25 +69,25 @@ describe Kubernetes::ReleaseDoc do
 
   def deployment_stub(replica_count)
     stub(
-      :'spec' => stub(
-        :'replicas=' => replica_count
+      spec: stub(
+        'replicas=' => replica_count
       ),
-      :'status' => stub(
-        :'replicas' => replica_count
+      status: stub(
+        replicas: replica_count
       )
     )
   end
 
   def daemonset_stub(scheduled, misscheduled)
     stub(
-      :'status' => stub(
-        :'currentNumberScheduled' => scheduled,
-        :'numberMisscheduled' => misscheduled
+      status: stub(
+        currentNumberScheduled: scheduled,
+        numberMisscheduled:     misscheduled
       ),
-      :'spec' => stub(
-        :'template' => stub(
-          :'spec' => stub(
-            :'nodeSelector=' => nil
+      spec: stub(
+        template: stub(
+          spec: stub(
+            'nodeSelector=' => nil
           )
         )
       )
@@ -217,7 +217,7 @@ describe Kubernetes::ReleaseDoc do
         client.expects(:update_daemon_set)
         client.expects(:get_daemon_set).times(2).returns(
           daemonset_stub(3, 0),
-          daemonset_stub(0, 0),
+          daemonset_stub(0, 0)
         )
         client.expects(:delete_daemon_set)
 

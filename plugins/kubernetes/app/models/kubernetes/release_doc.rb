@@ -17,6 +17,8 @@ module Kubernetes
 
     before_save :store_resource_template, on: :create
 
+    attr_reader :previous_deploy
+
     def build
       kubernetes_release.try(:build)
     end
@@ -66,7 +68,6 @@ module Kubernetes
         extension_client.create_job job
       end
     end
-
 
     def revert
       raise "Can only be done after a deploy" unless @deployed
