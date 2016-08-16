@@ -36,27 +36,25 @@ describe SlackWebhookNotification do
 
   before do
     SlackWebhookNotificationRenderer.stubs(:render).returns("foo")
+    @delivery = stub_request(:post, endpoint)
   end
 
   it "notifies slack channels configured for the stage when the deploy_phase is configured" do
     notification = stub_notification
-    delivery = stub_request(:post, endpoint)
     notification.deliver :after_deploy
 
-    assert_requested delivery
+    assert_requested @delivery
   end
 
   it "does not notify slack channels configured for the stage when the deploy_phase is not configured" do
     notification = stub_notification
-    delivery = stub_request(:post, endpoint)
     notification.deliver :before_deploy
 
-    assert_not_requested delivery
+    assert_not_requested @delivery
   end
 
   it "renders a nicely formatted notification" do
     notification = stub_notification(before_deploy: true)
-    stub_request(:post, endpoint)
     SlackWebhookNotificationRenderer.stubs(:render).returns("bar")
     notification.deliver :before_deploy
 
@@ -65,7 +63,6 @@ describe SlackWebhookNotification do
 
   it "sends buddy request with the specified message" do
     notification = stub_notification(for_buddy: true)
-    stub_request(:post, endpoint)
     notification.buddy_request "buddy approval needed"
 
     payload.fetch('text').must_equal "buddy approval needed"
@@ -80,8 +77,7 @@ describe SlackWebhookNotification do
 
   it 'says if there are no PRs' do
     notification = stub_notification(for_buddy: true, prs: false)
-    stub_request(:post, endpoint)
-    notification.buddy_request "buddy approval needed"
+    notification.buddy_request "no PRs"
 
     prs, risks = payload.fetch('attachments')[0].fetch('fields')
     prs['value'].must_equal '(no PRs)'
@@ -90,8 +86,7 @@ describe SlackWebhookNotification do
 
   it 'says if there are no risks' do
     notification = stub_notification(for_buddy: true, risks: false)
-    stub_request(:post, endpoint)
-    notification.buddy_request "buddy approval needed"
+    notification.buddy_request "PRs but no risks"
 
     prs, risks = payload.fetch('attachments')[0].fetch('fields')
     prs['value'].must_equal '<https://github.com/foo/bar/pulls/1|#1> - PR 1'
