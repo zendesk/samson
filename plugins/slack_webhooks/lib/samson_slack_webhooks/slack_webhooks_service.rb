@@ -31,9 +31,10 @@ module SamsonSlackWebhooks
       end
     end
 
-    def deliver_message_via_webhook(webhook:, message:)
+    def deliver_message_via_webhook(webhook:, message:, attachments:)
       payload = { text: message, username: 'samson-bot' }
       payload[:channel] = webhook.channel unless webhook.channel.blank?
+      payload[:attachments] = attachments if attachments.present?
 
       Faraday.post(webhook.webhook_url, payload: payload.to_json)
     rescue Faraday::ClientError => e
