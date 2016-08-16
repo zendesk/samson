@@ -25,6 +25,7 @@ module Kubernetes
     end
 
     def execute!(*_commands)
+      verify_kubernetes_templates!
       build = find_or_create_build
       return false if stopped?
       release = create_release(build)
@@ -243,46 +244,9 @@ module Kubernetes
 
     # create a release, storing all the configuration
     def create_release(build)
-      # find role configs to avoid N+1s
-      roles_configs = Kubernetes::DeployGroupRole.where(
-        project_id: @job.project_id,
-        deploy_group: @job.deploy.stage.deploy_groups.map(&:id)
-      )
-
-      # get all the roles that are configured for this sha
-      configured_roles = Kubernetes::Role.configured_for_project(@job.project, @job.commit)
-      if configured_roles.empty?
-        raise Samson::Hooks::UserError, "No kubernetes config files found at sha #{@job.commit}"
-      end
-
-      # build config for every cluster and role we want to deploy to
-      errors = []
-      group_config = @job.deploy.stage.deploy_groups.map do |group|
-        roles = configured_roles.map do |role|
-          role_config = roles_configs.detect do |dgr|
-            dgr.deploy_group_id == group.id && dgr.kubernetes_role_id == role.id
-          end
-
-          unless role_config
-            errors << "No config for role #{role.name} and group #{group.name} found, add it on the stage page."
-            next
-          end
-
-          {
-            id: role.id,
-            replicas: role_config.replicas,
-            cpu: role_config.cpu,
-            ram: role_config.ram
-          }
-        end
-        {id: group.id, roles: roles}
-      end
-
-      raise Samson::Hooks::UserError, errors.join("\n") if errors.any?
-
       release = Kubernetes::Release.create_release(
         deploy_id: @job.deploy.id,
-        deploy_groups: group_config,
+        deploy_groups: deploy_group_configs,
         build_id: build.try(:id),
         git_sha: @job.commit,
         git_ref: @reference,
@@ -294,8 +258,50 @@ module Kubernetes
         raise Samson::Hooks::UserError, "Failed to create release: #{release.errors.full_messages.inspect}"
       end
 
-      @output.puts("Created release #{release.id}\nConfig: #{group_config.to_json}")
+      @output.puts("Created release #{release.id}\nConfig: #{deploy_group_configs.to_json}")
       release
+    end
+
+    def deploy_group_configs
+      @deploy_group_configs ||= begin
+        # find role configs to avoid N+1s
+        roles_configs = Kubernetes::DeployGroupRole.where(
+          project_id: @job.project_id,
+          deploy_group: @job.deploy.stage.deploy_groups.map(&:id)
+        )
+
+        # get all the roles that are configured for this sha
+        configured_roles = Kubernetes::Role.configured_for_project(@job.project, @job.commit)
+        if configured_roles.empty?
+          raise Samson::Hooks::UserError, "No kubernetes config files found at sha #{@job.commit}"
+        end
+
+        # build config for every cluster and role we want to deploy to
+        errors = []
+        group_configs = @job.deploy.stage.deploy_groups.map do |group|
+          roles = configured_roles.map do |role|
+            role_config = roles_configs.detect do |dgr|
+              dgr.deploy_group_id == group.id && dgr.kubernetes_role_id == role.id
+            end
+
+            unless role_config
+              errors << "No config for role #{role.name} and group #{group.name} found, add it on the stage page."
+              next
+            end
+
+            {
+              role: role,
+              replicas: role_config.replicas,
+              cpu: role_config.cpu,
+              ram: role_config.ram
+            }
+          end
+          {deploy_group: group, roles: roles}
+        end
+
+        raise Samson::Hooks::UserError, errors.join("\n") if errors.any?
+        group_configs
+      end
     end
 
     def deploy(release_docs)
@@ -328,6 +334,28 @@ module Kubernetes
 
     def seconds_waiting
       (Time.now - @wait_start_time).to_i if @wait_start_time
+    end
+
+    # verify with a temp release so we can verify everything before creating a real release
+    # and having to wait for docker build to finish
+    def verify_kubernetes_templates!
+      release = Kubernetes::Release.new(project: @job.project, git_sha: @job.commit)
+      deploy_group_configs.each do |config|
+        config.fetch(:roles).each do |role|
+          doc = Kubernetes::ReleaseDoc.new(
+            kubernetes_release: release,
+            deploy_group: config.fetch(:deploy_group),
+            kubernetes_role: role.fetch(:role)
+          )
+
+          # verifies that config files are readable
+          doc.deploy_template
+
+          # verifies that secrets are findable
+          template = Kubernetes::ResourceTemplate.new(doc)
+          template.set_secrets
+        end
+      end
     end
   end
 end

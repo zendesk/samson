@@ -18,16 +18,19 @@ module Kubernetes
         set_spec_template_metadata
         set_docker_image
         set_resource_usage
-        if needs_secret_sidecar?
-          set_secret_sidecar
-          expand_secret_annotations
-        end
+        set_secrets
         set_env
 
         hash = template
         Rails.logger.info "Created Kubernetes hash: #{hash.to_json}"
         hash
       end
+    end
+
+    def set_secrets
+      return unless needs_secret_sidecar?
+      set_secret_sidecar
+      expand_secret_annotations
     end
 
     private
@@ -38,7 +41,7 @@ module Kubernetes
 
     # look up keys in all possible namespaces by specificity
     def expand_secret_annotations
-      resolver = Samson::Secrets::KeyResolver.new(@doc.build.project, [@doc.deploy_group])
+      resolver = Samson::Secrets::KeyResolver.new(project, [@doc.deploy_group])
       secret_annotations.each_value { |secret_key| resolver.expand!(secret_key) }
       resolver.verify!
     end
@@ -147,10 +150,14 @@ module Kubernetes
 
     def set_docker_image
       if @doc.build
-        docker_path = @doc.build.docker_repo_digest || "#{@doc.build.project.docker_repo}:#{@doc.build.docker_ref}"
+        docker_path = @doc.build.docker_repo_digest || "#{project.docker_repo}:#{@doc.build.docker_ref}"
         # Assume first container is one we want to update docker image in
         container[:image] = docker_path
       end
+    end
+
+    def project
+      @project ||= @doc.kubernetes_release.project
     end
 
     # helpful env vars, also useful for log tagging

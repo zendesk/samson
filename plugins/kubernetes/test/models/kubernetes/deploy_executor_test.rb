@@ -120,6 +120,34 @@ describe Kubernetes::DeployExecutor do
       end
     end
 
+    describe "invalid configs" do
+      before { build.delete } # build needs to be created -> assertion fails
+      around { |test| refute_difference('Build.count') { refute_difference('Release.count', &test) } }
+
+      it "fails before building when roles are invalid" do
+        Kubernetes::ReleaseDoc.any_instance.stubs(raw_template: 'oops: "this is bad"')
+        e = assert_raises Samson::Hooks::UserError do
+          refute execute!
+        end
+        e.message.must_include "Error found when parsing kubernetes/resque_worker.yml"
+      end
+
+      it "fails before building when secrets are not configured in the backend" do
+        Kubernetes::ResourceTemplate.any_instance.stubs(:needs_secret_sidecar?).returns(true)
+        template = read_kubernetes_sample_file('kubernetes_deployment.yml')
+        assert template.sub!(
+          "      name: some-project-pod\n",
+          "      name: some-project-pod\n      annotations:\n        secret/foo: bar\n"
+        )
+        Kubernetes::ReleaseDoc.any_instance.stubs(raw_template: template)
+
+        e = assert_raises Samson::Hooks::UserError do
+          refute execute!
+        end
+        e.message.must_include "Failed to resolve secret keys:\n\tbar"
+      end
+    end
+
     describe "role settings" do
       it "uses configured role settings" do
         assert execute!
@@ -235,7 +263,7 @@ describe Kubernetes::DeployExecutor do
         # we need multiple different templates here
         # make the worker a job and keep the app server
         Kubernetes::ReleaseDoc.any_instance.unstub(:raw_template)
-        GitRepository.any_instance.expects(:file_content).with('kubernetes/resque_worker.yml', anything).returns({
+        GitRepository.any_instance.stubs(:file_content).with('kubernetes/resque_worker.yml', anything).returns({
           'kind' => 'Job',
           'spec' => {
             'template' => {

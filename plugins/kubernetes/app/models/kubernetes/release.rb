@@ -51,8 +51,8 @@ module Kubernetes
       params.fetch(:deploy_groups).each do |dg|
         dg.fetch(:roles).to_a.each do |role|
           release_docs.create!(
-            deploy_group_id: dg.fetch(:id),
-            kubernetes_role_id: role.fetch(:id),
+            deploy_group: dg.fetch(:deploy_group),
+            kubernetes_role: role.fetch(:role),
             replica_target: role.fetch(:replicas),
             cpu: role.fetch(:cpu),
             ram: role.fetch(:ram)
