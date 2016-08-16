@@ -8,12 +8,11 @@ describe SlackWebhookNotification do
   let(:user) { stub(name: "John Wu", email: "wu@rocks.com") }
   let(:endpoint) { "https://slack.com/api/chat.postMessage" }
 
-  def stub_notification(before_deploy: false, after_deploy: true, for_buddy: false)
-    changeset = stub("changeset",
-      pull_requests: [
-        stub(url: 'https://github.com/foo/bar/pulls/1', number: 1, title: 'PR 1',
-             risks: 'abc')
-      ])
+  def stub_notification(before_deploy: false, after_deploy: true, for_buddy: false, risks: true, prs: true)
+    pr_stub = stub url: 'https://github.com/foo/bar/pulls/1', number: 1, title: 'PR 1',
+                   risks: risks ? 'abc' : nil
+    changeset = stub "changeset"
+    changeset.stubs(:pull_requests).returns(prs ? [pr_stub] : [])
 
     webhook = stub(
       webhook_url: endpoint, channel: nil,
@@ -68,14 +67,52 @@ describe SlackWebhookNotification do
     stub_request(:post, endpoint)
     notification.buddy_request "buddy approval needed"
 
-    content = nil
+    payload = nil
     assert_requested :post, endpoint do |request|
       body = Rack::Utils.parse_query(request.body)
       payload = JSON.parse(body.fetch('payload'))
-      content = payload.fetch("text")
     end
 
-    content.must_equal "buddy approval needed"
+    payload.fetch('text').must_equal "buddy approval needed"
+    payload.fetch('attachments').length.must_equal 1
+    attachment = payload.fetch('attachments')[0]
+    prs, risks = attachment.fetch('fields')
+    prs['title'].must_equal 'PRs'
+    prs['value'].must_equal '<https://github.com/foo/bar/pulls/1|#1> - PR 1'
+    risks['title'].must_equal 'Risks'
+    risks['value'].must_equal "<https://github.com/foo/bar/pulls/1|#1>:\nabc"
+  end
+
+  it 'says if there are no PRs' do
+    notification = stub_notification(for_buddy: true, prs: false)
+    stub_request(:post, endpoint)
+    notification.buddy_request "buddy approval needed"
+
+    payload = nil
+    assert_requested :post, endpoint do |request|
+      body = Rack::Utils.parse_query(request.body)
+      payload = JSON.parse(body.fetch('payload'))
+    end
+
+    prs, risks = payload.fetch('attachments')[0].fetch('fields')
+    prs['value'].must_equal '(no PRs)'
+    risks['value'].must_equal "(no risks)"
+  end
+
+  it 'says if there are no risks' do
+    notification = stub_notification(for_buddy: true, risks: false)
+    stub_request(:post, endpoint)
+    notification.buddy_request "buddy approval needed"
+
+    payload = nil
+    assert_requested :post, endpoint do |request|
+      body = Rack::Utils.parse_query(request.body)
+      payload = JSON.parse(body.fetch('payload'))
+    end
+
+    prs, risks = payload.fetch('attachments')[0].fetch('fields')
+    prs['value'].must_equal '<https://github.com/foo/bar/pulls/1|#1> - PR 1'
+    risks['value'].must_equal "(no risks)"
   end
 
   it "fails silently on error" do
