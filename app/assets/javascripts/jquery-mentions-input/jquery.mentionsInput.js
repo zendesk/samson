@@ -470,7 +470,7 @@
     //Resets the text area
     function resetInput(currentVal) {
       mentionsCollection = [];
-      var mentionText = utils.htmlEncode(currentVal);
+      var mentionText = currentVal;
       var regex = new RegExp("(" + settings.triggerChar + ")\\[(.*?)\\]\\((.*?):(.*?)\\)", "gi");
       var match, newMentionText = mentionText;
       while ((match = regex.exec(mentionText)) !== null) {
