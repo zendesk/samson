@@ -6,7 +6,11 @@ SingleCov.covered!
 describe SlackWebhookNotificationRenderer do
   it "renders a nicely formatted notification" do
     changeset = stub("changeset")
-    deploy = stub("deploy", short_reference: "xyz", changeset: changeset, url: "http://sams.on/url")
+    deploy = stub("deploy",
+      short_reference: "xyz",
+      changeset: changeset,
+      pending?: true,
+      url: "http://sams.on/url")
 
     changeset.stubs(:commits).returns(stub("commits", count: 3))
     changeset.stubs(:github_url).returns("https://github.com/url")
@@ -21,7 +25,7 @@ describe SlackWebhookNotificationRenderer do
     result = SlackWebhookNotificationRenderer.render(deploy, subject)
 
     result.must_equal <<-RESULT.strip_heredoc.chomp
-      :point_right: *Deploy starting* (<http://sams.on/url|view the deploy>) :point_left:
+      :stopwatch: *Deploy starting* (<http://sams.on/url|view the deploy>)
       _<https://github.com/url|3 commits> and 2 pull requests by author1 and author2._
     RESULT
   end
