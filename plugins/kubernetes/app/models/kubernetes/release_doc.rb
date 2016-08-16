@@ -66,6 +66,8 @@ module Kubernetes
           extension_client.delete_job resource_name, namespace
         end
         extension_client.create_job job
+      else
+        raise # Should never reach this line, due to check above. But just in case...
       end
     end
 
@@ -83,6 +85,8 @@ module Kubernetes
         extension_client.create_daemon_set(@previous_deploy) if @previous_deploy
       elsif job?
         extension_client.delete_job(resource_name, namespace)
+      else
+        raise "Unknown deploy object #{resource_type}"
       end
     end
 
