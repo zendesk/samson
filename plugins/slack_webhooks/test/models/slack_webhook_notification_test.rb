@@ -7,6 +7,14 @@ describe SlackWebhookNotification do
   let(:project) { stub(name: "Glitter", to_s: "foo") }
   let(:user) { stub(name: "John Wu", email: "wu@rocks.com") }
   let(:endpoint) { "https://slack.com/api/chat.postMessage" }
+  let(:payload) do
+    payload = nil
+    assert_requested :post, endpoint do |request|
+      body = Rack::Utils.parse_query(request.body)
+      payload = JSON.parse(body.fetch('payload'))
+    end
+    payload
+  end
 
   def stub_notification(before_deploy: false, after_deploy: true, for_buddy: false, risks: true, prs: true)
     pr_stub = stub url: 'https://github.com/foo/bar/pulls/1', number: 1, title: 'PR 1',
@@ -52,26 +60,13 @@ describe SlackWebhookNotification do
     SlackWebhookNotificationRenderer.stubs(:render).returns("bar")
     notification.deliver :before_deploy
 
-    content = nil
-    assert_requested :post, endpoint do |request|
-      body = Rack::Utils.parse_query(request.body)
-      payload = JSON.parse(body.fetch('payload'))
-      content = payload.fetch("text")
-    end
-
-    content.must_equal "bar"
+    payload.fetch("text").must_equal "bar"
   end
 
   it "sends buddy request with the specified message" do
     notification = stub_notification(for_buddy: true)
     stub_request(:post, endpoint)
     notification.buddy_request "buddy approval needed"
-
-    payload = nil
-    assert_requested :post, endpoint do |request|
-      body = Rack::Utils.parse_query(request.body)
-      payload = JSON.parse(body.fetch('payload'))
-    end
 
     payload.fetch('text').must_equal "buddy approval needed"
     payload.fetch('attachments').length.must_equal 1
@@ -88,12 +83,6 @@ describe SlackWebhookNotification do
     stub_request(:post, endpoint)
     notification.buddy_request "buddy approval needed"
 
-    payload = nil
-    assert_requested :post, endpoint do |request|
-      body = Rack::Utils.parse_query(request.body)
-      payload = JSON.parse(body.fetch('payload'))
-    end
-
     prs, risks = payload.fetch('attachments')[0].fetch('fields')
     prs['value'].must_equal '(no PRs)'
     risks['value'].must_equal "(no risks)"
@@ -103,12 +92,6 @@ describe SlackWebhookNotification do
     notification = stub_notification(for_buddy: true, risks: false)
     stub_request(:post, endpoint)
     notification.buddy_request "buddy approval needed"
-
-    payload = nil
-    assert_requested :post, endpoint do |request|
-      body = Rack::Utils.parse_query(request.body)
-      payload = JSON.parse(body.fetch('payload'))
-    end
 
     prs, risks = payload.fetch('attachments')[0].fetch('fields')
     prs['value'].must_equal '<https://github.com/foo/bar/pulls/1|#1> - PR 1'
