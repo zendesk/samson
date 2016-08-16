@@ -81,4 +81,19 @@ describe SlackWebhookNotificationRenderer do
     result = SlackWebhookNotificationRenderer.render(deploy, subject)
     result.must_include ':white_check_mark:'
   end
+
+  it 'omits emoji for any other situation' do
+    deploy = stub("deploy",
+      short_reference: "xyz",
+      changeset: changeset,
+      pending?: false,
+      running?: false,
+      errored?: false,
+      failed?: false,
+      succeeded?: false,
+      url: "http://sams.on/url")
+
+    result = SlackWebhookNotificationRenderer.render(deploy, subject)
+    result.wont_match /:.*:/
+  end
 end
