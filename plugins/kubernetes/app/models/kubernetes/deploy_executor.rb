@@ -245,7 +245,7 @@ module Kubernetes
       release_docs.each do |release_doc|
         action = release_doc.previous_deploy ? 'Rolling back' : 'Deleting'
         @output.puts "#{action} #{release_doc.deploy_group.name} role #{release_doc.kubernetes_role.name}"
-        release_doc.delete_or_rollback
+        release_doc.revert
       end
     end
 

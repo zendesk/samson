@@ -17,8 +17,6 @@ module Kubernetes
 
     before_save :store_resource_template, on: :create
 
-    attr_reader :previous_deploy, :new_deploy
-
     def build
       kubernetes_release.try(:build)
     end
@@ -46,42 +44,44 @@ module Kubernetes
     def deploy
       raise "Unknown deploy object #{resource_type}" unless valid_resource?
 
+      @deployed = true
       @previous_deploy = fetch_resource
       @new_deploy = if deployment?
         deploy = Kubeclient::Deployment.new(resource_template)
-        if previous_deploy
+        if @previous_deploy
           extension_client.update_deployment deploy
         else
           extension_client.create_deployment deploy
         end
       elsif daemon_set?
         daemon = Kubeclient::DaemonSet.new(resource_template)
-        delete_daemon_set(daemon) if previous_deploy
+        delete_daemon_set(daemon) if @previous_deploy
         extension_client.create_daemon_set daemon
       elsif job?
         # FYI per docs it is supposed to use batch api, but extension api works
         job = Kubeclient::Job.new(resource_template)
-        if previous_deploy
+        if @previous_deploy
           extension_client.delete_job resource_name, namespace
         end
         extension_client.create_job job
       end
     end
 
-    def delete_or_rollback
+
+    def revert
+      raise "Can only be done after a deploy" unless @deployed
+
       if deployment?
-        if previous_deploy
+        if @previous_deploy
           extension_client.rollback_deployment(resource_name, namespace)
         else
           delete_deployment
         end
       elsif daemon_set?
-        delete_daemon_set new_deploy if new_deploy
-        extension_client.create_daemon_set(previous_deploy) if previous_deploy
+        delete_daemon_set @new_deploy if @new_deploy
+        extension_client.create_daemon_set(@previous_deploy) if @previous_deploy
       elsif job?
-        extension_client.delete_job(resource_name, namespace) if previous_deploy
-      else
-        raise "Unknown deploy object #{resource_type}"
+        extension_client.delete_job(resource_name, namespace)
       end
     end
 
@@ -143,7 +143,7 @@ module Kubernetes
 
     # Create new client as 'Deployment' API is on different path then 'v1'
     def extension_client
-      deploy_group.kubernetes_cluster.extension_client
+      @extension_client ||= deploy_group.kubernetes_cluster.extension_client
     end
 
     def fetch_resource
@@ -168,7 +168,7 @@ module Kubernetes
 
       # Wait for there to be zero pods
       loop do
-        sleep 2
+        loop_sleep
         break if fetch_resource.status.replicas.to_i == 0
       end
 
@@ -190,7 +190,7 @@ module Kubernetes
 
       # wait for it to terminate all it's pods
       loop do
-        sleep 2
+        loop_sleep
         current = fetch_resource
         break if current.status.currentNumberScheduled == 0 && current.status.numberMisscheduled == 0
       end
@@ -235,6 +235,10 @@ module Kubernetes
 
     def namespace
       deploy_group.kubernetes_namespace
+    end
+
+    def loop_sleep
+      sleep 2 unless ENV['RAILS_ENV'] == 'test'
     end
   end
 end
