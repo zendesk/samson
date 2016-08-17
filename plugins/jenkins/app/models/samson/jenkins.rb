@@ -21,7 +21,8 @@ module Samson
         buildStartedBy: deploy.user.name,
         originatedFrom: originated_from,
         commit: deploy.job.commit,
-        deployUrl: deploy.url
+        deployUrl: deploy.url,
+        emails: notify_emails
       }, opts).to_i
     rescue Timeout::Error => e
       "Jenkins '#{job_name}' build failed to start in a timely manner.  #{e.class} #{e}"
@@ -47,6 +48,21 @@ module Samson
       @@client ||= JenkinsApi::Client.new(server_url: URL, username: USERNAME, password: API_KEY).tap do |cli|
         cli.logger = Rails.logger
       end
+    end
+
+    def notify_emails
+      emails = [deploy.user.email]
+      if deploy.buddy
+        emails.push(deploy.buddy.email)
+      end
+      if ENV["JENKINS_NOTIFY_COMMITTERS"]
+        emails.concat(deploy.changeset.commits.map(&:author_email))
+      end
+      emails = emails.map { |x| Mail::Address.new(x) }
+      if ENV["GOOGLE_DOMAIN"]
+        emails = emails.select { |x| ENV["GOOGLE_DOMAIN"].match(x.domain) }
+      end
+      emails.map(&:address).uniq.join(",")
     end
   end
 end
