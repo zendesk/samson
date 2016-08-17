@@ -3,9 +3,9 @@ require_relative '../../test_helper'
 SingleCov.covered!
 
 describe Api::DeploysController do
-  assert_route verb: "GET", path: "/api/deploys/active_count", to: 'api/deploys#active_count'
-  assert_route verb: "GET", path: "/api/projects/1/deploys", to: 'api/deploys#index', params: {project_id: '1'}
-  assert_route verb: "GET", path: "/api/stages/2/deploys", to: 'api/deploys#index', params: {stage_id: '2'}
+  assert_route :get, "/api/deploys/active_count", to: 'api/deploys#active_count'
+  assert_route :get, "/api/projects/1/deploys", to: 'api/deploys#index', params: {project_id: '1'}
+  assert_route :get, "/api/stages/2/deploys", to: 'api/deploys#index', params: {stage_id: '2'}
 
   oauth_setup!
 

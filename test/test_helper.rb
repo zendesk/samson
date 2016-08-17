@@ -175,13 +175,14 @@ class ActiveSupport::TestCase
     around { |test| Dir.mktmpdir { |dir| Dir.chdir(dir) { test.call } } }
   end
 
-  def self.assert_route(verb:, path:, to:, params: {})
+  def self.assert_route(verb, path, to:, params: {})
     controller, action = to.split("#", 2)
     it_name = "routes to #{controller} #{action}"
     it_name += params.keys.empty? ? " with no parameters" : " with parameters #{params}"
 
     describe "a #{verb} to #{path}" do
       it it_name do
+        verb = verb.to_s.upcase
         assert_routing({method: verb, path: path}, {controller: controller, action: action}.merge(params))
       end
     end

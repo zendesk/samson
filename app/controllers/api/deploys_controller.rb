@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 class Api::DeploysController < Api::BaseController
   skip_before_action :require_project, only: [:active_count]
-  before_action :ensure_filter, only: :index
+  before_action :validate_filter, only: :index
 
   def index
     render json: paginate(Deploy.joins(:job).where(search_params))
@@ -30,7 +30,7 @@ class Api::DeploysController < Api::BaseController
     search_params
   end
 
-  def ensure_filter
+  def validate_filter
     return unless job_filter
     unless Job.valid_status?(job_filter)
       render json: { error: "Filter is not valid. Please use " + Job::VALID_STATUSES.join(", ") }, status: :bad_request
