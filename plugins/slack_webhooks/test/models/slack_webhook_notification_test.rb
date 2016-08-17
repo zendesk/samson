@@ -100,7 +100,7 @@ describe SlackWebhookNotification do
     it "renders" do
       notification = stub_notification
       message = notification.default_buddy_request_message
-      message.must_include ":pray: <!here> _John Wu_ is requesting approval to deploy "\
+      message.must_include ":pray: @here _John Wu_ is requesting approval to deploy "\
       "<http://www.test-url.com/projects/foo/deploys/123456|Glitter *123abc* to Staging>."\
     end
   end
