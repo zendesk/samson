@@ -10,7 +10,7 @@ describe Api::StagesController do
 
   describe 'get #index' do
     before do
-      get :index, project_id: project.permalink
+      get :index, project_id: project.id
     end
 
     subject { JSON.parse(response.body) }
