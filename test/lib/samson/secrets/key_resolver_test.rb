@@ -7,32 +7,26 @@ describe Samson::Secrets::KeyResolver do
   let(:project) { projects(:test) }
   let(:deploy_group) { deploy_groups(:pod1) }
   let(:resolver) { Samson::Secrets::KeyResolver.new(project, [deploy_group]) }
+  let(:errors) { resolver.instance_variable_get(:@errors) }
 
-  describe "#expand!" do
+  describe "#expand" do
     before { SecretStorage.write("global/global/global/bar", value: 'something', user_id: 123) }
 
     it "expands" do
-      key = 'secret/bar'.dup
-      resolver.expand!(key)
-      key.must_equal "global/global/global/bar"
+      resolver.expand('ABC', 'bar').must_equal [["ABC", "global/global/global/bar"]]
     end
 
     it "does nothing when not finding a key" do
-      key = 'secret/baz'.dup
-      resolver.expand!(key)
-      key.must_equal "secret/baz"
+      resolver.expand('ABC', 'baz').must_equal []
     end
 
     it "looks up by specificity" do
       SecretStorage.write("global/#{project.permalink}/global/bar", value: 'something', user_id: 123)
-      key = 'secret/bar'.dup
-      resolver.expand!(key)
-      key.must_equal "global/#{project.permalink}/global/bar"
+      resolver.expand('ABC', 'bar').must_equal [["ABC", "global/#{project.permalink}/global/bar"]]
     end
 
     it "has the correct order of specificity" do
-      key = 'secret/baz'.dup
-      resolver.expand!(key)
+      resolver.expand('ABC', 'baz')
       keys = [
         "production/foo/pod1/baz",
         "global/foo/pod1/baz",
@@ -44,8 +38,51 @@ describe Samson::Secrets::KeyResolver do
         "global/global/global/baz"
       ]
       resolver.instance_variable_get(:@errors).must_equal(
-        ["secret/baz (tried: #{keys.join(", ")})"]
+        ["baz (tried: #{keys.join(", ")})"]
       )
+    end
+
+    describe "wildcards" do
+      it "fails when only name has wildcard" do
+        resolver.expand('ABC_*', 'ba').must_equal []
+        errors.first.must_include "need to both end with"
+      end
+
+      it "fails when only secret has wildcard" do
+        resolver.expand('ABC', 'ba*').must_equal []
+        errors.first.must_include "need to both end with"
+      end
+
+      it "expands single wildcard key" do
+        resolver.expand('ABC_*', 'ba*').must_equal [["ABC_R", "global/global/global/bar"]]
+      end
+
+      it "expands duplicate wildcard key at the right place" do
+        SecretStorage.write("global/global/global/global_global_global", value: 'something', user_id: 123)
+        resolver.expand('ABC_*', 'global_glob*').must_equal(
+          [["ABC_AL_GLOBAL", "global/global/global/global_global_global"]]
+        )
+      end
+
+      it "prioritizes ids with the same key" do
+        SecretStorage.write("global/#{project.permalink}/global/bar", value: 'something', user_id: 123)
+        resolver.expand('ABC_*', 'ba*').must_equal [["ABC_R", "global/#{project.permalink}/global/bar"]]
+      end
+
+      it "finds all matching ids" do
+        SecretStorage.write("global/global/global/baz", value: 'something', user_id: 123)
+        resolver.expand('ABC_*', 'ba*').sort.must_equal(
+          [
+            ["ABC_R", "global/global/global/bar"],
+            ["ABC_Z", "global/global/global/baz"]
+          ]
+        )
+      end
+
+      it "fails when no key is found" do
+        resolver.expand('ABC_*', 'bax*').must_equal []
+        errors.first.must_include "bax* (tried: production/foo/pod1/bax*"
+      end
     end
   end
 
@@ -55,8 +92,8 @@ describe Samson::Secrets::KeyResolver do
     end
 
     it "raises all errors for easy debugging" do
-      resolver.expand!('secret/xxx')
-      resolver.expand!('secret/yyy')
+      resolver.expand('ABC', 'xxx')
+      resolver.expand('ABC', 'yyy')
       e = assert_raises Samson::Hooks::UserError do
         resolver.verify!
       end
