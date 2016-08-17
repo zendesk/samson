@@ -61,6 +61,17 @@
     </div>
   </div>
 
+  <div class="form-group">
+    <div class="col-sm-offset-2 col-sm-10">
+      <div class="checkbox">
+        <%= form.label :template do %>
+          <%= form.check_box :template %>
+          This stage can serve as a production template (maximum of 1 per project).
+        <% end %>
+      </div>
+    </div>
+  </div>
+
   <% if @project.releases.any? %>
     <div class="form-group">
       <div class="col-sm-offset-2 col-sm-10">

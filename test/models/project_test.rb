@@ -19,6 +19,68 @@ describe Project do
     Project.create!(name: "hello", repository_url: url).token.wont_be_nil
   end
 
+  describe '#template_stage' do
+    describe 'when no template is set' do
+      it 'returns nil' do
+        project.template_stage.must_be_nil
+      end
+    end
+
+    describe 'when a template is set' do
+      let(:stage) { stages(:test_production) }
+      let(:other_stage) { stages(:test_staging) }
+      let(:project) { stage.project }
+
+      before do
+        project.template_stage!(stage)
+        project.reload
+      end
+
+      it 'returns the proper stage' do
+        project.template_stage.must_equal stage
+      end
+
+      describe 'setting a different stage as template' do
+        before do
+          project.template_stage!(other_stage)
+          project.reload
+        end
+
+        it 'sets the new one' do
+          project.template_stage.must_equal other_stage
+        end
+
+        it 'unsets the previous stage' do
+          stage.reload.template.must_equal false
+        end
+      end
+
+      describe 'unsetting' do
+        before do
+          project.reset_template_stage!
+          project.reload
+        end
+
+        it 'returns nil' do
+          project.template_stage.must_equal nil
+        end
+      end
+    end
+
+    describe '#template' do
+      it 'returns true for a stage that is a template' do
+        stage = project.stages.first
+        project.template_stage!(stage)
+        stage.reload.template?.must_equal true
+      end
+
+      it 'returns false otherwise' do
+        stage = project.stages.first
+        stage.template?.must_equal false
+      end
+    end
+  end
+
   describe "#last_release_contains_commit?" do
     let(:repository) { mock }
 

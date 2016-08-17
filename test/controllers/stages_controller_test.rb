@@ -10,6 +10,19 @@ describe StagesController do
   unauthorized :get, :show, project_id: :foo, id: 1, token: Rails.application.config.samson.badge_token
   unauthorized :get, :index, project_id: :foo, token: Rails.application.config.samson.badge_token, format: :svg
 
+  assert_route :get, "/projects/foo/stages",\
+    to: "stages#index", params: { project_id: 'foo' }
+  assert_route :post, "/projects/foo/stages",\
+    to: "stages#create", params: { project_id: 'foo' }
+  assert_route :get, "/projects/foo/stages/new",\
+    to: "stages#new", params: { project_id: 'foo' }
+  assert_route :get, "/projects/foo/stages/bar/edit",\
+    to: "stages#edit", params: { project_id: 'foo', id: 'bar' }
+  assert_route :put, "/projects/foo/stages/bar",\
+    to: "stages#update", params: { project_id: 'foo', id: 'bar' }
+  assert_route :delete, "/projects/foo/stages/bar",\
+    to: "stages#destroy", params: { project_id: 'foo', id: 'bar' }
+
   describe 'GET to :show with svg' do
     let(:valid_params) do
       {
@@ -221,13 +234,29 @@ describe StagesController do
         end
 
         describe 'valid attributes' do
+          [[true, "0"], [false, "1"]].each do |bool, val|
+            describe "setting template to #{!bool}" do
+              before do
+                subject.update_attributes(template: bool)
+                attributes[:template] = val
+                patch :update, project_id: subject.project.to_param, id: subject.to_param, stage: attributes
+                subject.reload
+              end
+
+              it 'sets the stage as template' do
+                subject.template?.must_equal !bool
+              end
+            end
+          end
+
           let(:attributes) do
             {
               command: 'test command',
               name: 'Hello',
               dashboard: '<p>Some text</p>',
               email_committers_on_automated_deploy_failure: true,
-              static_emails_on_automated_deploy_failure: "static@example.com"
+              static_emails_on_automated_deploy_failure: "static@example.com",
+              template: "1"
             }
           end
 

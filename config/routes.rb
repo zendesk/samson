@@ -14,8 +14,14 @@ Samson::Application.routes.draw do
 
     resources :projects, only: [:index] do
       resources :stages, only: [:index] do
+        collection do
+          get :template_stage
+        end
+
         member do
+          put :template, to: 'stages#mark_template'
           get :deploy_groups, to: 'deploy_groups#index'
+          put :deploy_groups, to: 'stages#update'
         end
       end
 

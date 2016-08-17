@@ -18,10 +18,6 @@ class DeploysController < ApplicationController
       else
         scope.page(params[:page])
       end
-
-    respond_to do |format|
-      format.html
-    end
   end
 
   def active

@@ -10,6 +10,7 @@ module StagePermittedParams
       :production,
       :notify_email_address,
       :deploy_on_release,
+      :template,
       :update_github_pull_requests,
       :email_committers_on_automated_deploy_failure,
       :static_emails_on_automated_deploy_failure,
