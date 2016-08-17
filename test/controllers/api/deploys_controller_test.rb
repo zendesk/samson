@@ -1,10 +1,14 @@
 # frozen_string_literal: true
 require_relative '../../test_helper'
-
 SingleCov.covered!
 
 describe Api::DeploysController do
+  assert_route verb: "GET", path: "/api/deploys/active_count", to: 'api/deploys#active_count'
+  assert_route verb: "GET", path: "/api/projects/1/deploys", to: 'api/deploys#index', params: {project_id: '1'}
+  assert_route verb: "GET", path: "/api/stages/2/deploys", to: 'api/deploys#index', params: {stage_id: '2'}
+
   oauth_setup!
+
   describe '#active_count' do
     before do
       Deploy.stubs(:active).returns(['a'])
@@ -25,52 +29,120 @@ describe Api::DeploysController do
   end
 
   describe 'get #index' do
-    let(:project) { job.project }
+    let!(:job_failure) do
+      Job.create! do |job|
+        job.command = "cap staging deploy"
+        job.user = users(:super_admin)
+        job.project = project
+        job.status = "failed"
+        job.output = "Error"
+        job.commit = "staging"
+      end
+    end
+
+    let(:project) { job_success.project }
     let(:stage) { stages(:test_staging) }
     let(:admin) { users(:admin) }
     let(:command) { job.command }
-    let(:job) { jobs(:succeeded_test) }
-    let(:deploy) { deploys(:succeeded_test) }
-    let(:deploy_service) { stub(deploy!: nil, stop!: nil) }
-    let(:deploy_called) { [] }
-    let(:changeset) { stub_everything(commits: [], files: [], pull_requests: [], jira_issues: []) }
+    let(:job_success) { jobs(:succeeded_test) }
 
-    before do
-      get :index, project_id: project.to_param
+    let(:deploy_success) { deploys(:succeeded_test) }
+    let!(:deploy_failure) do
+      deploy = deploys(:succeeded_test)
+      deploy.job_id = job_failure.id
+      deploy.stage_id = stage.id
+      deploy.save!
+      deploy
     end
 
-    subject { JSON.parse(response.body) }
+    describe '#search_params' do
+      let(:params) { { stage_id: stage.id, filter: "succeeded" } }
 
-    describe 'when the current project has a deploy' do
-      it 'succeeds' do
-        assert_response :success
-        response.content_type.must_equal 'application/json'
+      subject do
+        @controller.stubs(:params).returns(ActionController::Parameters.new(params))
+        @controller
       end
 
-      it 'renders 1 deploy' do
-        subject.size.must_equal 1
+      it 'renders a scope specific to the stage' do
+        expected = {jobs: {status: "succeeded"}, deploys: {stage_id: stage.id}}
+        subject.send(:search_params).must_equal expected
+      end
+
+      describe 'no filter' do
+        let(:params) { { stage_id: stage.id } }
+
+        it 'does not include a filter' do
+          expected = {deploys: {stage_id: stage.id}}
+          subject.send(:search_params).must_equal expected
+        end
+      end
+
+      describe 'if the route is a project' do
+        let(:params) { { project_id: project.id, filter: "succeeded" } }
+
+        it 'gives a scope is project based' do
+          expected = {jobs: {status: "succeeded"}, deploys: {stage_id: [398743887, 554917358, 685639643]}}
+          subject.send(:search_params).tap do |p|
+            p[:deploys][:stage_id].sort!
+          end.must_equal expected
+
+          project.stages.order(:id).pluck(:id).must_equal expected[:deploys][:stage_id]
+        end
       end
     end
 
-    describe 'when an id is passed in' do
+    describe 'for a project' do
       before do
-        deploy2 = deploys(:succeeded_production_test)
-        get :index, project_id: project.to_param, ids: [deploy.id, deploy2.id]
+        get :index, project_id: project.id
       end
 
-      it 'succeeds' do
-        assert_response :success
-        response.content_type.must_equal 'application/json'
+      subject { JSON.parse(response.body) }
+
+      describe 'when the current project has a deploy' do
+        it 'succeeds' do
+          assert_response :success
+          response.content_type.must_equal 'application/json'
+        end
+
+        it 'renders 1 deploy' do
+          subject.size.must_equal 1
+        end
       end
 
-      it 'renders the deploy' do
-        subject['deploys'].size.must_equal 2
-      end
+      describe 'with filter parameter' do
+        subject do
+          get :index, params
+        end
 
-      it 'consists of an array of objects' do
-        subject.keys.must_equal ['deploys']
-        subject['deploys'].first.keys.sort.must_equal ["id", "production", "project", "status", \
-                                                       "summary", "updated_at", "url", "user"]
+        let(:deploy_response) { JSON.parse(response.body)['deploys'] }
+
+        describe 'invalid filter' do
+          let(:params) { { project_id: project.id, filter: 'foo' } }
+
+          it 'returns an error' do
+            subject
+            response.body.must_include(Job::VALID_STATUSES.join(', '))
+            JSON.parse(response.body).keys.must_equal ['error']
+            assert_response :bad_request
+          end
+        end
+
+        ["failed", "succeeded"].each do |status|
+          describe "a valid filter (#{status})" do
+            let(:params) { { project_id: project.id, filter: status } }
+            let!(:deploy) do
+              Deploy.where(job_id: Job.where(status: status).pluck(:id)).first
+            end
+
+            it 'does not error' do
+              subject
+              deploy_response.size.must_be :>=, 1
+              deploy_response.map { |r| r['id'] }.must_include deploy.id
+              deploy_response.map { |d| d['status'] }.uniq.must_equal [status]
+              assert_response :success
+            end
+          end
+        end
       end
     end
   end
