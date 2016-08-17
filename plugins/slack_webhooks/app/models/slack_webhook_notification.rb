@@ -18,7 +18,8 @@ class SlackWebhookNotification
 
   def default_buddy_request_message
     project = @deploy.project
-    ":pray: @here _#{@deploy.user.name}_ is requesting approval to deploy " \
+    # https://api.slack.com/docs/message-formatting
+    ":pray: <!here> _#{@deploy.user.name}_ is requesting approval to deploy " \
       "<#{Rails.application.routes.url_helpers.project_deploy_url(project, @deploy)}|" \
       "#{project.name} *#{@deploy.reference}* to #{@deploy.stage.name}>."
   end
