@@ -32,8 +32,7 @@ module SamsonSlackWebhooks
     end
 
     def deliver_message_via_webhook(webhook:, message:, attachments:)
-      # https://api.slack.com/docs/message-formatting#parsing_modes
-      payload = { text: message, username: 'samson-bot', parse: 'full' }
+      payload = { text: message, username: 'samson-bot' }
       payload[:channel] = webhook.channel unless webhook.channel.blank?
       payload[:attachments] = attachments if attachments.present?
 
