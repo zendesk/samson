@@ -67,6 +67,33 @@ describe Kubernetes::ReleaseDoc do
     end
   end
 
+  def deployment_stub(replica_count)
+    stub(
+      spec: stub(
+        'replicas=' => replica_count
+      ),
+      status: stub(
+        replicas: replica_count
+      )
+    )
+  end
+
+  def daemonset_stub(scheduled, misscheduled)
+    stub(
+      status: stub(
+        currentNumberScheduled: scheduled,
+        numberMisscheduled:     misscheduled
+      ),
+      spec: stub(
+        template: stub(
+          spec: stub(
+            'nodeSelector=' => nil
+          )
+        )
+      )
+    )
+  end
+
   describe "#deploy" do
     let(:client) { doc.send(:extension_client) }
 
@@ -78,7 +105,7 @@ describe Kubernetes::ReleaseDoc do
       end
 
       it "updates when deploy exists" do
-        client.expects(:get_deployment).returns true
+        client.expects(:get_deployment).returns deployment_stub(3)
         client.expects(:update_deployment)
         doc.deploy
       end
@@ -99,8 +126,8 @@ describe Kubernetes::ReleaseDoc do
       it "deletes and created when daemonset exists without pods" do
         client.expects(:update_daemon_set)
         client.expects(:get_daemon_set).times(2).returns(
-          stub(status: stub(currentNumberScheduled: 0, numberMisscheduled: 0)), # initial check
-          stub(status: stub(currentNumberScheduled: 0, numberMisscheduled: 0))  # check for running
+          daemonset_stub(0, 0), # initial check
+          daemonset_stub(0, 0)  # check for running
         )
         client.expects(:delete_daemon_set)
         client.expects(:create_daemon_set)
@@ -110,10 +137,10 @@ describe Kubernetes::ReleaseDoc do
       it "deletes and created when daemonset exists with pods" do
         client.expects(:update_daemon_set)
         client.expects(:get_daemon_set).times(4).returns(
-          stub(status: stub(currentNumberScheduled: 1, numberMisscheduled: 1)), # initial check
-          stub(status: stub(currentNumberScheduled: 1, numberMisscheduled: 1)),
-          stub(status: stub(currentNumberScheduled: 0, numberMisscheduled: 1)),
-          stub(status: stub(currentNumberScheduled: 0, numberMisscheduled: 0))
+          daemonset_stub(0, 0), # initial check
+          daemonset_stub(1, 1),
+          daemonset_stub(0, 1),
+          daemonset_stub(0, 0)
         )
         client.expects(:delete_daemon_set)
         client.expects(:create_daemon_set)
@@ -144,6 +171,84 @@ describe Kubernetes::ReleaseDoc do
       doc.resource_template = {'kind' => 'WTFBBQ'}
       e = assert_raises(RuntimeError) { doc.deploy }
       e.message.must_include "Unknown deploy object WTFBBQ"
+    end
+  end
+
+  describe '#revert' do
+    let(:client) { doc.send(:extension_client) }
+
+    describe "deployment" do
+      before do
+        doc.resource_template['kind'] = 'Deployment'
+        doc.instance_variable_set(:'@deployed', true)
+        doc.instance_variable_set(:'@new_deploy', deployment_stub(3))
+      end
+
+      it "is deleted when it's a new deployment" do
+        client.expects(:update_deployment)
+        client.expects(:get_deployment).times(3).returns(
+          deployment_stub(3),
+          deployment_stub(3),
+          deployment_stub(0)
+        )
+        client.expects(:delete_deployment)
+        doc.revert
+      end
+
+      it "rolls back when a deployment already existed" do
+        doc.instance_variable_set(:'@previous_deploy', deployment_stub(3))
+
+        client.expects(:rollback_deployment)
+        doc.revert
+      end
+    end
+
+    # I really don't like these unit tests, since it's doing all sorts of
+    # mocking and mucking of internal state. But I don't know of a better
+    # way to test the functionality.  :-(
+    describe "daemonset" do
+      before do
+        doc.resource_template['kind'] = 'DaemonSet'
+        doc.instance_variable_set(:'@deployed', true)
+        doc.instance_variable_set(:'@new_deploy', daemonset_stub(3, 0))
+      end
+
+      it "is deleted when it's brand new" do
+        client.expects(:update_daemon_set)
+        client.expects(:get_daemon_set).times(2).returns(
+          daemonset_stub(3, 0),
+          daemonset_stub(0, 0)
+        )
+        client.expects(:delete_daemon_set)
+
+        doc.revert
+      end
+
+      it "is deleted and recreated on rollback" do
+        doc.instance_variable_set(:'@previous_deploy', daemonset_stub(3, 0))
+
+        client.expects(:update_daemon_set)
+        client.expects(:get_daemon_set).times(2).returns(
+          daemonset_stub(3, 0), # Deleting old
+          daemonset_stub(0, 0), # Old deleted
+        )
+        client.expects(:delete_daemon_set)
+        client.expects(:create_daemon_set)
+
+        doc.revert
+      end
+    end
+
+    describe 'job' do
+      before do
+        doc.resource_template['kind'] = 'Job'
+        doc.instance_variable_set(:'@deployed', true)
+      end
+
+      it "is deleted" do
+        client.expects(:delete_job)
+        doc.revert
+      end
     end
   end
 

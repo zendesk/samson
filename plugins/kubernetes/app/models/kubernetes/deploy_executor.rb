@@ -242,6 +242,14 @@ module Kubernetes
       end
     end
 
+    def rollback(release_docs)
+      release_docs.each do |release_doc|
+        action = release_doc.previous_deploy ? 'Rolling back' : 'Deleting'
+        @output.puts "#{action} #{release_doc.deploy_group.name} role #{release_doc.kubernetes_role.name}"
+        release_doc.revert
+      end
+    end
+
     # create a release, storing all the configuration
     def create_release(build)
       release = Kubernetes::Release.create_release(
@@ -313,9 +321,13 @@ module Kubernetes
 
     def deploy_to_cluster(release, deploys)
       deploy(deploys)
-      success = wait_for_resources_to_complete(release, deploys)
-      show_failure_cause(release) unless success
-      success
+      successful = wait_for_resources_to_complete(release, deploys)
+      unless successful
+        show_failure_cause(release)
+        rollback(deploys)
+        @output.puts "DONE"
+      end
+      successful
     end
 
     # Create the service or report it's status
