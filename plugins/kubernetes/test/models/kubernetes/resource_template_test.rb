@@ -118,6 +118,9 @@ describe Kubernetes::ResourceTemplate do
 
       it "creates a sidecar" do
         template.to_hash[:spec][:template][:spec][:containers].last[:name].must_equal('secret-sidecar')
+        template.to_hash[:spec][:template][:metadata][:annotations].must_equal(
+          "secret/FOO" => "global/global/global/bar"
+        )
       end
 
       it "adds to existing volume definitions in the sidecar" do
