@@ -47,7 +47,7 @@ module Kubernetes
     end
 
     def annotations
-      @template[:spec][:template][:metadata][:annotations]
+      template[:spec][:template][:metadata][:annotations]
     end
 
     def secret_annotations
