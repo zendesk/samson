@@ -12,11 +12,9 @@ module Samson
       # expands a key by finding the most specific value for it
       # bar -> production/my_project/pod100/bar
       def expand!(secret_key)
-        key = secret_key.split('/', 2).last
-
         # build a list of all possible ids
         possible_ids = possible_secret_key_parts.map do |id|
-          SecretStorage.generate_secret_key(id.merge(key: key))
+          SecretStorage.generate_secret_key(id.merge(key: secret_key))
         end
 
         # use the value of the first id that exists
