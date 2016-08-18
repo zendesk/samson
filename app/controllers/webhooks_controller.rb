@@ -8,6 +8,7 @@ class WebhooksController < ApplicationController
 
   def index
     @webhooks = current_project.webhooks
+    @outbound_webhooks = current_project.outbound_webhooks
   end
 
   def create

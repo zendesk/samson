@@ -490,6 +490,7 @@ DEPENDENCIES
   dogstatsd-ruby
   doorkeeper
   dotenv
+  faraday
   faraday-http-cache
   github-markdown
   goldiloader

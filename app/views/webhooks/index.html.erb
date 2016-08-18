@@ -1,6 +1,7 @@
 <%= render 'projects/header', project: @project, tab: "webhooks" %>
 
 <section class="tabs">
+  <h1>Inbound Webhooks</h1>
   <p>In order to automatically trigger a deploy to a stage, add a branch &rarr; stage mapping below
   and paste in the project's webhook URL to your CI service of choice.</p>
 
@@ -78,4 +79,44 @@
     </table>
   <% end %>
   <h2></h2>
+
+  <h1>Outbound Webhooks</h1> <p>Outbound webhooks POST to an external url after a deploy has finished. The request body will contain deploy, stage, and project information.</p>
+
+  <% if @outbound_webhooks.any? %>
+    <h2>Webhooks mappings</h2>
+    <ul>
+      <% @outbound_webhooks.each do |outbound_webhook| %>
+        <li>
+          POST to
+          <strong><%= outbound_webhook.url %></strong>
+          on the
+          <strong><%= outbound_webhook.stage.name %></strong>
+          stage
+          <strong>
+          <% if outbound_webhook.username.present? %>
+            with Basic Auth
+          <% end %>
+          </strong>
+          (<%= link_to "remove", [@project, outbound_webhook], method: :delete %>)
+        </li>
+      <% end %>
+    </ul>
+  <% end %>
+
+  <h2>Add an outbound webhook</h2>
+  <%= form_for [:project, OutboundWebhook.new] do |form| %>
+    <div class="form-group">
+      <%= form.text_field :url, class: "form-control", placeholder: "Full Url" %>
+    </div>
+    <div class="form-group">
+      <%= form.collection_select :stage_id, @project.stages, :id, :name, {}, class: "form-control" %>
+    </div>
+    <div class="form-group">
+      <%= form.text_field :username, class: "form-control", placeholder: "Username (optional)" %>
+    </div>
+    <div class="form-group">
+      <%= form.text_field :password, class: "form-control", placeholder: "Password (optional)", type: "password" %>
+    </div>
+    <%= form.submit "Add Outbound Webhook", class: "btn btn-primary" %>
+  <% end %>
 </section>

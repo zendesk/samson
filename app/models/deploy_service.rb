@@ -88,6 +88,7 @@ class DeployService
     send_deploy_email(deploy)
     send_failed_deploy_email(deploy)
     send_github_notification(deploy)
+    notify_outbound_webhooks(deploy)
     update_github_deployment_status(deploy)
   end
   add_method_tracer :send_after_notifications
@@ -108,6 +109,10 @@ class DeployService
     if deploy.stage.send_github_notifications? && deploy.status == "succeeded"
       GithubNotification.new(deploy).deliver
     end
+  end
+
+  def notify_outbound_webhooks(deploy)
+    deploy.stage.outbound_webhooks.map {|webhook| webhook.deliver(deploy) }
   end
 
   def create_github_deployment(deploy)
