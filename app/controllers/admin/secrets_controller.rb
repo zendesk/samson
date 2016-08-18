@@ -28,10 +28,8 @@ class Admin::SecretsController < ApplicationController
   end
 
   def update
-    attributes = {
-      user_id: current_user.id,
-      value:  secret_params.fetch(:value)
-    }
+    attributes = secret_params.slice(:visible, :value)
+    attributes[:user_id] = current_user.id
     if SecretStorage.write(key, attributes)
       successful_response 'Secret created.'
     else
@@ -47,7 +45,7 @@ class Admin::SecretsController < ApplicationController
   private
 
   def secret_params
-    @secret_params ||= params.require(:secret).permit(*SecretStorage::SECRET_KEYS_PARTS, :value)
+    @secret_params ||= params.require(:secret).permit(*SecretStorage::SECRET_KEYS_PARTS, :value, :visible)
   end
 
   def key
@@ -77,7 +75,7 @@ class Admin::SecretsController < ApplicationController
   end
 
   def find_secret
-    @secret = SecretStorage.read(key)
+    @secret = SecretStorage.read(key, include_secret: true)
   end
 
   def find_project_permalinks

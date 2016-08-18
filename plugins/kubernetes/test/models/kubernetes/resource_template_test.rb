@@ -113,7 +113,7 @@ describe Kubernetes::ResourceTemplate do
         new_metadata = "role: some-role\n      annotations:\n        secret/FOO: bar\n    "
         assert doc.raw_template.sub!(old_metadata, new_metadata)
 
-        SecretStorage.write(secret_key, value: 'something', user_id: 123)
+        create_secret(secret_key)
       end
 
       it "creates a sidecar" do

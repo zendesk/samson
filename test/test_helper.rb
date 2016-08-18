@@ -150,6 +150,7 @@ class ActiveSupport::TestCase
     SecretStorage::DbBackend::Secret.create!(
       id: key,
       value: 'MY-SECRET',
+      visible: false,
       updater_id: users(:admin).id,
       creator_id: users(:admin).id
     )

@@ -10,7 +10,7 @@ describe Samson::Secrets::KeyResolver do
   let(:errors) { resolver.instance_variable_get(:@errors) }
 
   describe "#expand" do
-    before { SecretStorage.write("global/global/global/bar", value: 'something', user_id: 123) }
+    before { create_secret("global/global/global/bar") }
 
     it "expands" do
       resolver.expand('ABC', 'bar').must_equal [["ABC", "global/global/global/bar"]]
@@ -21,7 +21,7 @@ describe Samson::Secrets::KeyResolver do
     end
 
     it "looks up by specificity" do
-      SecretStorage.write("global/#{project.permalink}/global/bar", value: 'something', user_id: 123)
+      create_secret("global/#{project.permalink}/global/bar")
       resolver.expand('ABC', 'bar').must_equal [["ABC", "global/#{project.permalink}/global/bar"]]
     end
 
@@ -58,19 +58,19 @@ describe Samson::Secrets::KeyResolver do
       end
 
       it "expands duplicate wildcard key at the right place" do
-        SecretStorage.write("global/global/global/global_global_global", value: 'something', user_id: 123)
+        create_secret("global/global/global/global_global_global")
         resolver.expand('ABC_*', 'global_glob*').must_equal(
           [["ABC_AL_GLOBAL", "global/global/global/global_global_global"]]
         )
       end
 
       it "prioritizes ids with the same key" do
-        SecretStorage.write("global/#{project.permalink}/global/bar", value: 'something', user_id: 123)
+        create_secret("global/#{project.permalink}/global/bar")
         resolver.expand('ABC_*', 'ba*').must_equal [["ABC_R", "global/#{project.permalink}/global/bar"]]
       end
 
       it "finds all matching ids" do
-        SecretStorage.write("global/global/global/baz", value: 'something', user_id: 123)
+        create_secret("global/global/global/baz")
         resolver.expand('ABC_*', 'ba*').sort.must_equal(
           [
             ["ABC_R", "global/global/global/bar"],
