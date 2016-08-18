@@ -13,6 +13,17 @@ describe Admin::SecretsController do
     Project.any_instance.stubs(:valid_repository_url).returns(true)
     Project.create!(name: 'Z', repository_url: 'Z')
   end
+  let(:attributes) do
+    {
+      environment_permalink: 'production',
+      project_permalink: 'foo',
+      deploy_group_permalink: 'pod2',
+      key: 'hi',
+      value: 'secret',
+      comment: 'hello',
+      visible: false
+    }
+  end
 
   as_a_viewer do
     unauthorized :get, :index
@@ -76,25 +87,15 @@ describe Admin::SecretsController do
 
   as_a_project_admin do
     describe '#create' do
-      let(:attributes) do
-        {
-          environment_permalink: 'production',
-          project_permalink: 'foo',
-          deploy_group_permalink: 'pod2',
-          key: 'v',
-          value: 'echo hi',
-          visible: true
-        }
-      end
-
       it 'creates a secret' do
-        post :create, secret: attributes
+        post :create, secret: attributes.merge(visible: true)
         flash[:notice].wont_be_nil
         assert_redirected_to admin_secrets_path
-        secret = SecretStorage::DbBackend::Secret.find('production/foo/pod2/v')
+        secret = SecretStorage::DbBackend::Secret.find('production/foo/pod2/hi')
         secret.updater_id.must_equal user.id
         secret.creator_id.must_equal user.id
         secret.visible.must_equal true
+        secret.comment.must_equal 'hello'
       end
 
       it "redirects to new form when user wants to create another secret" do
@@ -145,7 +146,9 @@ describe Admin::SecretsController do
     end
 
     describe '#update' do
-      let(:attributes) { { value: 'hi', visible: false } }
+      def attributes
+        super.except(*SecretStorage::SECRET_KEYS_PARTS)
+      end
 
       before do
         patch :update, id: secret.id, secret: attributes
@@ -215,17 +218,6 @@ describe Admin::SecretsController do
     let(:secret) { create_global }
 
     describe '#create' do
-      let(:attributes) do
-        {
-          environment_permalink: 'production',
-          project_permalink: 'foo',
-          deploy_group_permalink: 'pod2',
-          key: 'v',
-          visible: true,
-          value: 'echo hi'
-        }
-      end
-
       before do
         post :create, secret: attributes
       end
@@ -251,14 +243,7 @@ describe Admin::SecretsController do
 
     describe '#update' do
       it "updates" do
-        put :update, id: secret, secret: {
-          environment_permalink: 'production',
-          project_permalink: 'foo',
-          deploy_group_permalink: 'pod2',
-          key: 'hi',
-          value: 'secret',
-          visible: false
-        }
+        put :update, id: secret, secret: attributes.except(*SecretStorage::SECRET_KEYS_PARTS)
         assert_redirected_to admin_secrets_path
       end
     end

@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20160818194622) do
+ActiveRecord::Schema.define(version: 20160818210955) do
 
   create_table "builds", force: :cascade do |t|
     t.integer  "project_id",                                       null: false
@@ -373,6 +373,7 @@ ActiveRecord::Schema.define(version: 20160818194622) do
     t.datetime "created_at",                                     null: false
     t.datetime "updated_at",                                     null: false
     t.boolean  "visible",                        default: false, null: false
+    t.string   "comment",            limit: 255
   end
 
   add_index "secrets", ["id"], name: "index_secrets_on_id", unique: true, length: {"id"=>191}, using: :btree

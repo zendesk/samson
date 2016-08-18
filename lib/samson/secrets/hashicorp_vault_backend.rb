@@ -34,6 +34,7 @@ module Samson
             vault_path(key),
             vault: data.fetch(:value),
             visible: data.fetch(:visible),
+            comment: data.fetch(:comment),
             creator_id: data.fetch(:user_id)
           )
         end

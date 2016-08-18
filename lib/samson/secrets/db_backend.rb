@@ -38,6 +38,7 @@ module Samson
           secret = Secret.where(id: key).first_or_initialize
           secret.value = data.fetch(:value)
           secret.visible = data.fetch(:visible)
+          secret.comment = data.fetch(:comment)
           secret.updater_id = data.fetch(:user_id)
           secret.creator_id ||= data.fetch(:user_id)
           secret.save
@@ -58,6 +59,7 @@ module Samson
             key: secret.id,
             value: secret.value,
             visible: secret.visible,
+            comment: secret.comment,
             updater_id: secret.updater_id,
             creator_id: secret.creator_id,
             updated_at: secret.updated_at,
