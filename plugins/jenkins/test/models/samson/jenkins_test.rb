@@ -102,6 +102,7 @@ describe Samson::Jenkins do
     before(:each) do
       stub_crumb
       stub_job_detail
+      stub_add_changeset
     end
 
     it "check for both emails when deployer has buddy" do
@@ -113,7 +114,6 @@ describe Samson::Jenkins do
 
     it "checks for committers email when JENKINS_NOTIFY_COMMITTERS is set" do
       with_env 'JENKINS_NOTIFY_COMMITTERS': "1" do
-        stub_add_changeset
         stub_build_with_parameters("emails": 'super-admin@example.com,author1@example.com,author2@test.com')
         stub_get_build_id_from_queue(1)
         jenkins.build.must_equal 1
@@ -122,7 +122,6 @@ describe Samson::Jenkins do
 
     it "checks email is sent to domains mentioned in GOOGLE_DOMAIN" do
       with_env 'JENKINS_NOTIFY_COMMITTERS': "1", 'GOOGLE_DOMAIN': 'example.com' do
-        stub_add_changeset
         stub_build_with_parameters("emails": 'super-admin@example.com,author1@example.com')
         stub_get_build_id_from_queue(1)
         jenkins.build.must_equal 1
