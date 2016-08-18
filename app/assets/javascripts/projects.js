@@ -4,7 +4,8 @@ $(function() {
     window.location.reload();
   });
 
+  // Show/hide docker related fields when docker checkbox is changed
   $('#project_deploy_with_docker').change(function(){
-    $('#docker_release_push').toggle($(this).prop('checked'));
+    $('#docker_release_push_field, #dockfile_field').toggle($(this).prop('checked'));
   }).triggerHandler('change');
 });
