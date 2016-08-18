@@ -26,6 +26,13 @@ describe SecretStorage do
       secret.updater_id.must_equal users(:admin).id
     end
 
+    it "expires keys" do
+      SecretStorage.keys
+      secret_key = 'production/foo/pod2/hello'
+      SecretStorage.write(secret_key, value: '111', user_id: users(:admin).id).must_equal true
+      SecretStorage.keys.must_equal [secret_key]
+    end
+
     it "refuses to write empty keys" do
       SecretStorage.write('', value: '111', user_id: 11).must_equal false
     end
@@ -121,12 +128,24 @@ describe SecretStorage do
       SecretStorage.delete(secret.id)
       refute SecretStorage::DbBackend::Secret.exists?(secret.id)
     end
+
+    it "expires keys" do
+      SecretStorage.keys
+      SecretStorage.delete(secret.id)
+      SecretStorage.keys.must_equal []
+    end
   end
 
   describe ".keys" do
     it "lists keys" do
       secret # trigger creation
       SecretStorage.keys.must_equal ['production/foo/pod2/hello']
+    end
+
+    it "is cached" do
+      SecretStorage.keys
+      secret # trigger creation
+      SecretStorage.keys.must_equal []
     end
   end
 end

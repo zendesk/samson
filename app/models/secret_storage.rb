@@ -10,6 +10,7 @@ module SecretStorage
   end
 
   SECRET_KEY_REGEX = %r{[\w\/-]+}
+  SECRET_KEYS_CACHE = 'secret_storage_keys'
 
   # keeps older lookups working
   DbBackend = Samson::Secrets::DbBackend
@@ -18,12 +19,12 @@ module SecretStorage
   BACKEND = ENV.fetch('SECRET_STORAGE_BACKEND', 'Samson::Secrets::DbBackend').constantize
 
   class << self
-    delegate :delete, :keys, to: :backend
-
     def write(key, data)
       return false unless key =~ /\A#{SECRET_KEY_REGEX}\z/
       return false if data.blank? || data[:value].blank?
-      backend.write(key, data)
+      result = backend.write(key, data)
+      clear_cache
+      result
     end
 
     # reads a single key and raises ActiveRecord::RecordNotFound if it is not found
@@ -41,6 +42,16 @@ module SecretStorage
       data
     end
 
+    def delete(key)
+      result = backend.delete(key)
+      clear_cache
+      result
+    end
+
+    def keys
+      Rails.cache.fetch(SECRET_KEYS_CACHE, expires_in: 10.minutes) { backend.keys }
+    end
+
     def backend
       BACKEND
     end
@@ -51,6 +62,12 @@ module SecretStorage
 
     def parse_secret_key(key)
       SECRET_KEYS_PARTS.zip(key.split(SEPARATOR, SECRET_KEYS_PARTS.size)).to_h
+    end
+
+    private
+
+    def clear_cache
+      Rails.cache.delete(SECRET_KEYS_CACHE)
     end
   end
 end
