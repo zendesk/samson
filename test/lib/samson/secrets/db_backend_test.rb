@@ -43,8 +43,8 @@ describe Samson::Secrets::DbBackend do
 
   describe ".write" do
     it "stores the secret" do
-      Samson::Secrets::DbBackend.write(secret.id + 'x', value: 'SECRET', user_id: 1)
-      Samson::Secrets::DbBackend.read(secret.id + 'x')[:value].must_equal 'SECRET'
+      create_secret secret.id + 'x'
+      Samson::Secrets::DbBackend.read(secret.id + 'x')[:value].must_equal 'MY-SECRET'
     end
   end
 

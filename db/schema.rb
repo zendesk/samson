@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20160726210144) do
+ActiveRecord::Schema.define(version: 20160818194622) do
 
   create_table "builds", force: :cascade do |t|
     t.integer  "project_id",                                       null: false
@@ -365,15 +365,17 @@ ActiveRecord::Schema.define(version: 20160726210144) do
 
   create_table "secrets", id: false, force: :cascade do |t|
     t.string   "id",                 limit: 255
-    t.string   "encrypted_value",    limit: 255, null: false
-    t.string   "encrypted_value_iv", limit: 255, null: false
-    t.string   "encryption_key_sha", limit: 255, null: false
-    t.integer  "updater_id",         limit: 4,   null: false
-    t.integer  "creator_id",         limit: 4,   null: false
-    t.datetime "created_at",                     null: false
-    t.datetime "updated_at",                     null: false
+    t.string   "encrypted_value",    limit: 255,                 null: false
+    t.string   "encrypted_value_iv", limit: 255,                 null: false
+    t.string   "encryption_key_sha", limit: 255,                 null: false
+    t.integer  "updater_id",         limit: 4,                   null: false
+    t.integer  "creator_id",         limit: 4,                   null: false
+    t.datetime "created_at",                                     null: false
+    t.datetime "updated_at",                                     null: false
+    t.boolean  "visible",                        default: false, null: false
   end
 
+  add_index "secrets", ["id"], name: "index_secrets_on_id", unique: true, length: {"id"=>191}, using: :btree
 
   create_table "slack_channels", force: :cascade do |t|
     t.string   "name",       limit: 255, null: false
@@ -384,7 +386,6 @@ ActiveRecord::Schema.define(version: 20160726210144) do
   end
 
   add_index "slack_channels", ["stage_id"], name: "index_slack_channels_on_stage_id", using: :btree
-  add_index "secrets", ["id"], name: "index_secrets_on_id", unique: true, length: {"id"=>191}, using: :btree
 
   create_table "slack_identifiers", force: :cascade do |t|
     t.integer  "user_id",    limit: 4

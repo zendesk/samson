@@ -36,9 +36,10 @@ module Samson
 
         def write(key, data)
           secret = Secret.where(id: key).first_or_initialize
+          secret.value = data.fetch(:value)
+          secret.visible = data.fetch(:visible)
           secret.updater_id = data.fetch(:user_id)
           secret.creator_id ||= data.fetch(:user_id)
-          secret.value = data.fetch(:value)
           secret.save
         end
 
@@ -55,11 +56,12 @@ module Samson
         def secret_to_hash(secret)
           {
             key: secret.id,
+            value: secret.value,
+            visible: secret.visible,
             updater_id: secret.updater_id,
             creator_id: secret.creator_id,
             updated_at: secret.updated_at,
-            created_at: secret.created_at,
-            value: secret.value
+            created_at: secret.created_at
           }
         end
       end

@@ -82,7 +82,8 @@ describe Admin::SecretsController do
           project_permalink: 'foo',
           deploy_group_permalink: 'pod2',
           key: 'v',
-          value: 'echo hi'
+          value: 'echo hi',
+          visible: true
         }
       end
 
@@ -93,6 +94,7 @@ describe Admin::SecretsController do
         secret = SecretStorage::DbBackend::Secret.find('production/foo/pod2/v')
         secret.updater_id.must_equal user.id
         secret.creator_id.must_equal user.id
+        secret.visible.must_equal true
       end
 
       it "redirects to new form when user wants to create another secret" do
@@ -122,6 +124,13 @@ describe Admin::SecretsController do
         response.body.wont_include secret.value
       end
 
+      it 'shows visible secerts' do
+        secret.update_column(:visible, true)
+        get :edit, id: secret
+        assert_template :edit
+        response.body.must_include secret.value
+      end
+
       it 'renders with unfound users' do
         secret.update_column(:updater_id, 32232323)
         get :edit, id: secret
@@ -136,7 +145,7 @@ describe Admin::SecretsController do
     end
 
     describe '#update' do
-      let(:attributes) { { value: 'hi' } }
+      let(:attributes) { { value: 'hi', visible: false } }
 
       before do
         patch :update, id: secret.id, secret: attributes
@@ -151,7 +160,9 @@ describe Admin::SecretsController do
       end
 
       describe 'invalid' do
-        let(:attributes) { { value: '' } }
+        def attributes
+          super.merge(value: '')
+        end
 
         it 'fails to update' do
           assert_template :edit
@@ -160,8 +171,8 @@ describe Admin::SecretsController do
       end
 
       describe 'updating key' do
-        let(:attributes) do
-          {value: 'hi', project_permalink: other_project.permalink, key: 'bar'}
+        def attributes
+          super.merge(key: 'bar')
         end
 
         it "is not supported" do
@@ -202,6 +213,7 @@ describe Admin::SecretsController do
 
   as_a_admin do
     let(:secret) { create_global }
+
     describe '#create' do
       let(:attributes) do
         {
@@ -209,6 +221,7 @@ describe Admin::SecretsController do
           project_permalink: 'foo',
           deploy_group_permalink: 'pod2',
           key: 'v',
+          visible: true,
           value: 'echo hi'
         }
       end
@@ -243,7 +256,8 @@ describe Admin::SecretsController do
           project_permalink: 'foo',
           deploy_group_permalink: 'pod2',
           key: 'hi',
-          value: 'secret'
+          value: 'secret',
+          visible: false
         }
         assert_redirected_to admin_secrets_path
       end

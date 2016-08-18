@@ -30,7 +30,12 @@ module Samson
         end
 
         def write(key, data)
-          vault_client.write(vault_path(key), vault: data[:value])
+          vault_client.write(
+            vault_path(key),
+            vault: data.fetch(:value),
+            visible: data.fetch(:visible),
+            creator_id: data.fetch(:user_id)
+          )
         end
 
         def delete(key)
