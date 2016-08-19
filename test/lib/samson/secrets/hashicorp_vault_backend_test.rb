@@ -11,17 +11,6 @@ describe Samson::Secrets::HashicorpVaultBackend do
   before { client.clear }
   after { client.verify! }
 
-  describe "missing config file" do
-    before { client.remove_config }
-    after { client.create_config }
-    it "fails without a config file" do
-      e = assert_raises RuntimeError do
-        client.ensure_config_exists
-      end
-      e.message.must_include "config file missing"
-    end
-  end
-
   describe ".read" do
     it "gets a value based on a key with /secret" do
       client.expect(secret_namespace + 'production/foo/pod2/bar', vault: "bar")
