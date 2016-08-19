@@ -98,21 +98,21 @@ describe Samson::Jenkins do
     end
   end
 
-  describe "#build_with_env_flags" do
+  describe "build with env flags" do
     before(:each) do
       stub_crumb
       stub_job_detail
       stub_add_changeset
     end
 
-    it "check for both emails when deployer has buddy" do
+    it "sends deployer and buddy emails to jenkins" do
       deploy.stubs(:buddy).returns(buddy)
       stub_build_with_parameters("emails": "super-admin@example.com,deployerbuddy@example.com")
       stub_get_build_id_from_queue(1)
       jenkins.build.must_equal 1
     end
 
-    it "checks for committers email when JENKINS_NOTIFY_COMMITTERS is set" do
+    it "includes committer emails when JENKINS_NOTIFY_COMMITTERS is set" do
       with_env 'JENKINS_NOTIFY_COMMITTERS': "1" do
         stub_build_with_parameters("emails": 'super-admin@example.com,author1@example.com,author2@test.com')
         stub_get_build_id_from_queue(1)
@@ -120,9 +120,9 @@ describe Samson::Jenkins do
       end
     end
 
-    it "checks email is sent to domains mentioned in GOOGLE_DOMAIN" do
-      with_env 'JENKINS_NOTIFY_COMMITTERS': "1", 'GOOGLE_DOMAIN': 'example.com' do
-        stub_build_with_parameters("emails": 'super-admin@example.com,author1@example.com')
+    it "filters emails by GOOGLE_DOMAIN" do
+      with_env 'GOOGLE_DOMAIN': 'example1.com' do
+        stub_build_with_parameters("emails": "")
         stub_get_build_id_from_queue(1)
         jenkins.build.must_equal 1
       end

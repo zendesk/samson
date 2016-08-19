@@ -58,9 +58,9 @@ module Samson
       if ENV["JENKINS_NOTIFY_COMMITTERS"]
         emails.concat(deploy.changeset.commits.map(&:author_email))
       end
-      emails = emails.map { |x| Mail::Address.new(x) }
+      emails = emails.map! { |x| Mail::Address.new(x) }
       if ENV["GOOGLE_DOMAIN"]
-        emails = emails.select { |x| ENV["GOOGLE_DOMAIN"].match(x.domain) }
+        emails = emails.select! { |x| ENV["GOOGLE_DOMAIN"].match(x.domain) }
       end
       emails.map(&:address).uniq.join(",")
     end
