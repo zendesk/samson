@@ -127,8 +127,8 @@ describe Samson::Jenkins do
     end
 
     it "filters emails by GOOGLE_DOMAIN" do
-      with_env 'GOOGLE_DOMAIN': '@example.com' do
-        stub_build_with_parameters({})
+      with_env 'GOOGLE_DOMAIN': '@example1.com' do
+        stub_build_with_parameters("emails": "")
         stub_get_build_id_from_queue(1)
         jenkins.build.must_equal 1
       end
