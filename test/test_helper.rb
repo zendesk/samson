@@ -151,6 +151,7 @@ class ActiveSupport::TestCase
       id: key,
       value: 'MY-SECRET',
       visible: false,
+      comment: 'this is secret',
       updater_id: users(:admin).id,
       creator_id: users(:admin).id
     )

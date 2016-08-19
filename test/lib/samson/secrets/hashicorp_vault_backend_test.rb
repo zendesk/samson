@@ -70,10 +70,11 @@ describe Samson::Secrets::HashicorpVaultBackend do
   describe ".write" do
     it "writes a key with /secret" do
       assert Samson::Secrets::HashicorpVaultBackend.write(
-        'production/foo/group/isbar/foo', value: 'whatever', visible: false, user_id: 1
+        'production/foo/group/isbar/foo', value: 'whatever', visible: false, user_id: 1, comment: 'secret!'
       )
       client.set.must_equal(
-        secret_namespace + "production/foo/group/isbar%2Ffoo" => {vault: 'whatever', visible: false, creator_id: 1}
+        secret_namespace + "production/foo/group/isbar%2Ffoo" =>
+          {vault: 'whatever', visible: false, comment: 'secret!', creator_id: 1}
       )
     end
   end

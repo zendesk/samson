@@ -28,7 +28,7 @@ class Admin::SecretsController < ApplicationController
   end
 
   def update
-    attributes = secret_params.slice(:visible, :value)
+    attributes = secret_params.slice(:value, :visible, :comment)
     attributes[:user_id] = current_user.id
     if SecretStorage.write(key, attributes)
       successful_response 'Secret created.'
@@ -45,7 +45,7 @@ class Admin::SecretsController < ApplicationController
   private
 
   def secret_params
-    @secret_params ||= params.require(:secret).permit(*SecretStorage::SECRET_KEYS_PARTS, :value, :visible)
+    @secret_params ||= params.require(:secret).permit(*SecretStorage::SECRET_KEYS_PARTS, :value, :visible, :comment)
   end
 
   def key
