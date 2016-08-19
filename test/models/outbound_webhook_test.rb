@@ -6,13 +6,17 @@ SingleCov.covered!
 describe OutboundWebhook do
   let(:webhook_attributes) { { stage_id: 1, project_id: 1, url: "https://testing.com/deploys" } }
   let(:webhook_attributes_invalid) { { stage_id: 1, project_id: 1, url: "testing.com/deploys" } }
-  let(:webhook_attributes_with_auth) { { stage_id: 1, project_id: 1, url: "https://testing.com/deploys", username: "adminuser", password: "abc123" } }
+  let(:webhook_attributes_with_auth) { { 
+    stage_id: 1,
+    project_id: 1,
+    url: "https://testing.com/deploys",
+    username: "adminuser",
+    password: "abc123" 
+  } }
 
   describe '#create' do
     it 'creates the webhook' do
-      assert_difference 'OutboundWebhook.count', +1 do
-        OutboundWebhook.create!(webhook_attributes)
-      end
+      assert OutboundWebhook.create(webhook_attributes)
     end
 
     it 'refuses to create a duplicate webhook' do
@@ -102,7 +106,7 @@ describe OutboundWebhook do
     def stub_request
       Faraday.new(url: @webhook.url) do |builder|
         builder.adapter :test, Faraday::Adapter::Test::Stubs.new do |stub|
-          stub.post('/deploys') { |env| [ response, {}, "AOK" ]}
+          stub.post('/deploys') { [ response, {}, "AOK" ] }
         end
       end
     end
@@ -110,7 +114,7 @@ describe OutboundWebhook do
     before do
       @webhook = OutboundWebhook.create!(webhook_attributes)
       OutboundWebhook.any_instance.stubs(:connection).returns(stub_request)
-      DeployPresenter.any_instance.stubs(:present).returns({})
+      DeploySerializer.stubs(:new).returns({})
     end
 
     describe "with a successful request" do

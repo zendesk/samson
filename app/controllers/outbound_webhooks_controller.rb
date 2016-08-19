@@ -9,9 +9,16 @@ class OutboundWebhooksController < ApplicationController
   def create
     webhook = current_project.outbound_webhooks.build(outbound_webhook_params)
 
-    flash[:error] = webhook.errors.full_messages.join(', ') unless webhook.save
-
-    redirect_to project_webhooks_path(current_project)
+    if webhook.save
+      redirect_to project_webhooks_path(current_project)
+    else
+      flash[:error] = webhook.errors.full_messages.join(', ')
+      current_project.reload
+      @webhooks = current_project.webhooks
+      @outbound_webhooks = current_project.outbound_webhooks
+      @new_outbound_webhook = webhook
+      render 'webhooks/index'
+    end
   end
 
   def destroy

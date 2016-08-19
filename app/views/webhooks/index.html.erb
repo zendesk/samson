@@ -94,7 +94,7 @@
           stage
           <strong>
           <% if outbound_webhook.username.present? %>
-            with Basic Auth
+            <%= "with Basic Auth as #{outbound_webhook.username}" %>
           <% end %>
           </strong>
           (<%= link_to "remove", [@project, outbound_webhook], method: :delete %>)
@@ -104,7 +104,7 @@
   <% end %>
 
   <h2>Add an outbound webhook</h2>
-  <%= form_for [:project, OutboundWebhook.new] do |form| %>
+  <%= form_for [:project, @new_outbound_webhook], html: { class: 'form-inline' } do |form| %>
     <div class="form-group">
       <%= form.text_field :url, class: "form-control", placeholder: "Full Url" %>
     </div>
@@ -117,6 +117,8 @@
     <div class="form-group">
       <%= form.text_field :password, class: "form-control", placeholder: "Password (optional)", type: "password" %>
     </div>
-    <%= form.submit "Add Outbound Webhook", class: "btn btn-primary" %>
+    <div class="form-group">
+      <%= form.submit "Add Outbound Webhook", class: "btn btn-primary" %>
+    </div>
   <% end %>
 </section>

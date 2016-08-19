@@ -31,7 +31,7 @@ end
 Samson.statsd = Samson::StatsdLoader.create
 Samson.statsd.namespace = "samson.app"
 
-Samson.statsd.event "Startup".dup, "Samson startup".dup if ENV['SERVER_MODE']
+Samson.statsd.event "Startup", "Samson startup" if ENV['SERVER_MODE']
 
 ActiveSupport::Notifications.subscribe("execute_shell.samson") do |*args|
   event = ActiveSupport::Notifications::Event.new(*args)

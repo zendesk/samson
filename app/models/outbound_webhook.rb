@@ -9,19 +9,20 @@ class OutboundWebhook < ActiveRecord::Base
   belongs_to :stage
 
   validates :url, uniqueness: {
-    scope: [:stage],
+    scope: :stage_id,
     conditions: -> { where("deleted_at IS NULL") },
     message: "one webhook per (stage, url) combination."
   }
   validate :url_is_not_relative
   validates_presence_of :username, if: proc { |outbound_webhook| outbound_webhook.password.present? }
+  validates_presence_of :password, if: proc { |outbound_webhook| outbound_webhook.username.present? }
 
   def deliver(deploy)
-    Rails.logger.info "Sending webhook notification to #{self.url}. Deploy: #{deploy.id}"
+    Rails.logger.info "Sending webhook notification to #{url}. Deploy: #{deploy.id}"
 
     response = connection.post do |req|
       req.headers['Content-Type'] = 'application/json'
-      req.body = DeployPresenter.new(deploy).present.to_json
+      req.body = DeploySerializer.new(deploy).as_json
     end
 
     if response.success?
@@ -34,17 +35,17 @@ class OutboundWebhook < ActiveRecord::Base
   end
 
   def connection
-    Faraday.new(url: self.url) do |faraday|
+    Faraday.new(url: url) do |faraday|
       faraday.request  :url_encoded
       faraday.response :logger
       faraday.adapter  Faraday.default_adapter
-      faraday.basic_auth(self.username, self.password) if self.username.present?
+      faraday.basic_auth(username, password) if username.present?
     end
   end
 
   private
 
   def url_is_not_relative
-    errors.add(:url, "must begin with http:// or https://") unless self.url.start_with?("http://", "https://")
+    errors.add(:url, "must begin with http:// or https://") unless url.start_with?("http://", "https://")
   end
 end
