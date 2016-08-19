@@ -49,7 +49,13 @@ describe Samson::Jenkins do
     commit1.stubs("author_email").returns("author1@example.com")
     commit2 = stub("commit2")
     commit2.stubs("author_email").returns("author2@test.com")
-    changeset.stubs(:commits).returns([commit1, commit2])
+    commit3 = stub("commit3")
+    commit3.stubs("author_email").returns("author3@example.comm")
+    commit4 = stub("commit4")
+    commit4.stubs("author_email").returns("author4@example.co")
+    commit5 = stub("commit5")
+    commit5.stubs("author_email").returns("AUTHOR5@EXAMPLE.COM")
+    changeset.stubs(:commits).returns([commit1, commit2, commit3, commit4, commit5])
     deploy.stubs(:changeset).returns(changeset)
   end
 
@@ -114,15 +120,23 @@ describe Samson::Jenkins do
 
     it "includes committer emails when JENKINS_NOTIFY_COMMITTERS is set" do
       with_env 'JENKINS_NOTIFY_COMMITTERS': "1" do
-        stub_build_with_parameters("emails": 'super-admin@example.com,author1@example.com,author2@test.com')
+        stub_build_with_parameters("emails": 'super-admin@example.com,author1@example.com,author2@test.com,author3@example.comm,author4@example.co,AUTHOR5@EXAMPLE.COM')
         stub_get_build_id_from_queue(1)
         jenkins.build.must_equal 1
       end
     end
 
     it "filters emails by GOOGLE_DOMAIN" do
-      with_env 'GOOGLE_DOMAIN': 'example1.com' do
-        stub_build_with_parameters("emails": "")
+      with_env 'GOOGLE_DOMAIN': '@example.com' do
+        stub_build_with_parameters({})
+        stub_get_build_id_from_queue(1)
+        jenkins.build.must_equal 1
+      end
+    end
+
+    it "filters emails by GOOGLE_DOMAIN when JENKINS_NOTIFY_COMMITTERS is set" do
+      with_env 'GOOGLE_DOMAIN': '@example.com', 'JENKINS_NOTIFY_COMMITTERS': '1' do
+        stub_build_with_parameters("emails": 'super-admin@example.com,author1@example.com,AUTHOR5@EXAMPLE.COM')
         stub_get_build_id_from_queue(1)
         jenkins.build.must_equal 1
       end
