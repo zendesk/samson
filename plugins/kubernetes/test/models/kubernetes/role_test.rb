@@ -66,7 +66,7 @@ describe Kubernetes::Role do
     end
   end
 
-  describe '.seed' do
+  describe '.seed!' do
     before do
       create_repo_without_tags
       project.repository_url = repo_temp_dir
@@ -85,6 +85,13 @@ describe Kubernetes::Role do
         Kubernetes::Role.seed! project, 'HEAD'
         Kubernetes::Role.seed! project, 'HEAD'
         project.kubernetes_roles.map(&:config_file).must_equal ["kubernetes/a.yml"]
+      end
+
+      it "re-creates deleted roles" do
+        Kubernetes::Role.seed! project, 'HEAD'
+        project.kubernetes_roles.each(&:soft_delete!)
+        Kubernetes::Role.seed! project, 'HEAD'
+        project.kubernetes_roles.where(deleted_at: nil).map(&:config_file).must_equal ["kubernetes/a.yml"]
       end
     end
 
@@ -159,13 +166,18 @@ describe Kubernetes::Role do
     it "does not read other files" do
       write_config 'kubernetes.yml', config_content_yml
       write_config 'foobar/kubernetes.yml', config_content_yml
-      Kubernetes::Role.seed! project, 'HEAD'
+      e = assert_raises Samson::Hooks::UserError do
+        Kubernetes::Role.seed! project, 'HEAD'
+      end
+      e.message.must_include "No configs found"
       project.kubernetes_roles.must_equal []
     end
 
-    it "does nothing on error" do
-      Kubernetes::Role.seed! project, 'DFSDSFSDFD'
-      project.kubernetes_roles.must_equal []
+    it "warns when nothing was found" do
+      e = assert_raises Samson::Hooks::UserError do
+        Kubernetes::Role.seed! project, 'DFSDSFSDFD'
+      end
+      e.message.must_include "No configs found"
     end
 
     it "can seed duplicate service names" do
