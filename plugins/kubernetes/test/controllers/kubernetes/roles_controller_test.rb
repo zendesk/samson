@@ -73,6 +73,13 @@ describe Kubernetes::RolesController do
         refute flash[:error]
       end
 
+      it "creates roles from default branch when none is given" do
+        Kubernetes::Role.expects(:seed!)
+        post :seed, project_id: project, ref: ''
+        assert_redirected_to action: :index
+        refute flash[:error]
+      end
+
       it "shows errors when role creation fails due to an invalid template" do
         Kubernetes::Role.expects(:seed!).raises(Samson::Hooks::UserError.new("Heyho"))
         post :seed, project_id: project, ref: 'HEAD'

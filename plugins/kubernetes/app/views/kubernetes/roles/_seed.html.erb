@@ -3,7 +3,7 @@
     <div class="form-group">
       <%= label_tag :ref, 'Read roles from branch', class: "col-lg-2 control-label" %>
       <div class="col-lg-2">
-        <%= text_field_tag :ref, '', placeholder: 'master', class: "form-control" %>
+        <%= text_field_tag :ref, '', placeholder: Kubernetes::RolesController::DEFAULT_BRANCH, class: "form-control" %>
       </div>
     </div>
 

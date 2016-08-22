@@ -2,6 +2,8 @@
 class Kubernetes::RolesController < ApplicationController
   include CurrentProject
 
+  DEFAULT_BRANCH = 'master'
+
   DEPLOYER_ACCESS = [:index, :show, :example].freeze
   before_action :authorize_project_deployer!, only: DEPLOYER_ACCESS
   before_action :authorize_project_admin!, except: DEPLOYER_ACCESS
@@ -17,7 +19,7 @@ class Kubernetes::RolesController < ApplicationController
 
   def seed
     begin
-      Kubernetes::Role.seed!(@project, params.require(:ref))
+      Kubernetes::Role.seed!(@project, params[:ref].presence || DEFAULT_BRANCH)
     rescue Samson::Hooks::UserError
       flash[:error] = $!.message
     end

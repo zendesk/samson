@@ -41,9 +41,15 @@ module Kubernetes
 
     # create initial roles for a project by reading kubernetes/*{.yml,.yaml,json} files into roles
     def self.seed!(project, git_ref)
-      kubernetes_config_files_in_repo(project, git_ref).each do |config_file|
+      configs = kubernetes_config_files_in_repo(project, git_ref)
+      if configs.empty?
+        raise Samson::Hooks::UserError, "No configs found in kubernetes folder or invalid git ref #{git_ref}"
+      end
+
+      configs.each do |config_file|
         scope = where(project: project)
-        next if scope.where(config_file: config_file.path).exists?
+
+        next if scope.where(config_file: config_file.path, deleted_at: nil).exists?
         deploy = (config_file.deploy || config_file.job)
 
         # deploy / job
@@ -121,6 +127,7 @@ module Kubernetes
       def kubernetes_config_files_in_repo(project, git_ref)
         path = 'kubernetes'
         files = project.repository.file_content(path, git_ref) || []
+
         files = files.split("\n").grep(/\.(yml|yaml|json)$/).map { |f| "#{path}/#{f}" }
         files.map do |path|
           file_contents = project.repository.file_content path, git_ref
