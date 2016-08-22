@@ -17,10 +17,10 @@ describe Samson::Jenkins do
       to_return(status: 200, body: json_response)
   end
 
-  def stub_build_with_parameters
+  def stub_build_with_parameters(update_params)
     stub_request(:post, "http://www.test-url.com/job/test_job/buildWithParameters").
       with(
-        body: {"buildStartedBy" => "Super Admin", "originatedFrom" => "Project_Staging_staging", "commit" => "staging", "deployUrl" => "http://www.test-url.com/projects/foo/deploys/#{deploy.id}"},
+        body: {"buildStartedBy" => "Super Admin", "originatedFrom" => "Project_Staging_staging", "commit" => "staging", "deployUrl" => "http://www.test-url.com/projects/foo/deploys/#{deploy.id}", "emails" => "super-admin@example.com"}.merge(update_params),
         headers: {'Authorization' => 'Basic dXNlckB0ZXN0LmNvbTpqYXBpa2V5'}
       ).
       to_return(status: 200, body: "", headers: {}).to_timeout
@@ -43,7 +43,24 @@ describe Samson::Jenkins do
     JenkinsApi::Client::Job.any_instance.expects(:get_build_id_from_queue).returns(build_id)
   end
 
+  def stub_add_changeset
+    changeset = stub("changeset")
+    commit1 = stub("commit1")
+    commit1.stubs("author_email").returns("author1@example.com")
+    commit2 = stub("commit2")
+    commit2.stubs("author_email").returns("author2@test.com")
+    commit3 = stub("commit3")
+    commit3.stubs("author_email").returns("author3@example.comm")
+    commit4 = stub("commit4")
+    commit4.stubs("author_email").returns("author4@example.co")
+    commit5 = stub("commit5")
+    commit5.stubs("author_email").returns("AUTHOR5@EXAMPLE.COM")
+    changeset.stubs(:commits).returns([commit1, commit2, commit3, commit4, commit5])
+    deploy.stubs(:changeset).returns(changeset)
+  end
+
   let(:deploy) { deploys(:succeeded_test) }
+  let(:buddy) { users(:deployer_buddy) }
   let(:jenkins) { Samson::Jenkins.new('test_job', deploy) }
   let(:json_response) { '{"actions":[{"parameterDefinitions":[{"defaultParameterValue":{"value":"qarunner"},"description":"Replace the default value with the user id of the person starting this here, or doing the auto-check-in for Samson, or the person that should have message addressed to them","name":"buildStartedBy","type":"StringParameterDefinition"},{"defaultParameterValue":{"value":"Jenkins"},"description":"Replace the default value with the user id of the person starting this here, or doing the auto-check-in for Samson, or the person that should have message addressed to them","name":"originatedFrom","type":"StringParameterDefinition"}]},{},{},{},{}],"description":"","displayName":"rdhanoa_test_project","displayNameOrNull":null,"name":"rdhanoa_test_project","url":"https://jenkins.zende.sk/job/rdhanoa_test_project/","buildable":true,"builds":[{"number":95,"url":"https://jenkins.zende.sk/job/rdhanoa_test_project/95/"},{"number":94,"url":"https://jenkins.zende.sk/job/rdhanoa_test_project/94/"},{"number":93,"url":"https://jenkins.zende.sk/job/rdhanoa_test_project/93/"},{"number":92,"url":"https://jenkins.zende.sk/job/rdhanoa_test_project/92/"},{"number":91,"url":"https://jenkins.zende.sk/job/rdhanoa_test_project/91/"},{"number":87,"url":"https://jenkins.zende.sk/job/rdhanoa_test_project/87/"}],"color":"red","firstBuild":{"number":87,"url":"https://jenkins.zende.sk/job/rdhanoa_test_project/87/"},"healthReport":[{"description":"Build stability: All recent builds failed.","iconClassName":"icon-health-00to19","iconUrl":"health-00to19.png","score":0}],"inQueue":false,"keepDependencies":false,"lastBuild":{"number":95,"url":"https://jenkins.zende.sk/job/rdhanoa_test_project/95/"},"lastCompletedBuild":{"number":95,"url":"https://jenkins.zende.sk/job/rdhanoa_test_project/95/"},"lastFailedBuild":{"number":95,"url":"https://jenkins.zende.sk/job/rdhanoa_test_project/95/"},"lastStableBuild":{"number":87,"url":"https://jenkins.zende.sk/job/rdhanoa_test_project/87/"},"lastSuccessfulBuild":{"number":87,"url":"https://jenkins.zende.sk/job/rdhanoa_test_project/87/"},"lastUnstableBuild":null,"lastUnsuccessfulBuild":{"number":95,"url":"https://jenkins.zende.sk/job/rdhanoa_test_project/95/"},"nextBuildNumber":96,"property":[{},{},{"parameterDefinitions":[{"defaultParameterValue":{"name":"buildStartedBy","value":"qarunner"},"description":"Replace the default value with the user id of the person starting this here, or doing the auto-check-in for Samson, or the person that should have message addressed to them","name":"buildStartedBy","type":"StringParameterDefinition"},{"defaultParameterValue":{"name":"originatedFrom","value":"Jenkins"},"description":"Replace the default value with the user id of the person starting this here, or doing the auto-check-in for Samson, or the person that should have message addressed to them","name":"originatedFrom","type":"StringParameterDefinition"}]},{},{"wallDisplayBgPicture":null,"wallDisplayName":null}],"queueItem":null,"concurrentBuild":false,"downstreamProjects":[],"scm":{},"upstreamProjects":[]}' }
   let(:build_detail_response) { JSON.parse('{"actions":[{"parameters":[{"name":"buildStartedBy","value":"rupinder dhanoa"},{"name":"originatedFrom","value":"Production"}]},{"causes":[{"shortDescription":"Started by user Quality Assurance","userId":"qaauto@zendesk.com","userName":"Quality Assurance"}]},{"buildsByBranchName":{"refs/remotes/origin/master":{"buildNumber":110,"buildResult":null,"marked":{"SHA1":"77d6dac84c6e70dfae72e92fe3cc83ab53d0e28d","branch":[{"SHA1":"77d6dac84c6e70dfae72e92fe3cc83ab53d0e28d","name":"refs/remotes/origin/master"}]},"revision":{"SHA1":"77d6dac84c6e70dfae72e92fe3cc83ab53d0e28d","branch":[{"SHA1":"77d6dac84c6e70dfae72e92fe3cc83ab53d0e28d","name":"refs/remotes/origin/master"}]}}},"lastBuiltRevision":{"SHA1":"77d6dac84c6e70dfae72e92fe3cc83ab53d0e28d","branch":[{"SHA1":"77d6dac84c6e70dfae72e92fe3cc83ab53d0e28d","name":"refs/remotes/origin/master"}]},"remoteUrls":["git@github.com:zendesk/zendesk_browser_tests.git"],"scmName":""},{},{},{"failCount":0,"skipCount":0,"totalCount":1,"urlName":"testReport"},{}],"artifacts":[],"building":false,"description":null,"displayName":"#110","duration":89688,"estimatedDuration":91911,"executor":null,"fullDisplayName":"rdhanoa_test_project #110","id":"110","keepLog":false,"number":110,"queueId":8669,"result":"SUCCESS","timestamp":1429053438085,"url":"https://jenkins.zende.sk/job/rdhanoa_test_project/110/","builtOn":"","changeSet":{"items":[],"kind":"git"},"culprits":[]}') }
@@ -60,7 +77,7 @@ describe Samson::Jenkins do
     it "returns a job number when jenkins starts a build" do
       stub_crumb
       stub_job_detail
-      stub_build_with_parameters
+      stub_build_with_parameters({})
       stub_build_detail("")
       stub_get_build_id_from_queue(123)
 
@@ -84,6 +101,45 @@ describe Samson::Jenkins do
     it "returns a jenkins job url" do
       stub_build_url("https://jenkins.zende.sk/job/rdhanoa_test_project/96/")
       jenkins.job_url(96).must_equal "https://jenkins.zende.sk/job/rdhanoa_test_project/96/"
+    end
+  end
+
+  describe "build with env flags" do
+    before(:each) do
+      stub_crumb
+      stub_job_detail
+      stub_add_changeset
+    end
+
+    it "sends deployer and buddy emails to jenkins" do
+      deploy.stubs(:buddy).returns(buddy)
+      stub_build_with_parameters("emails": "super-admin@example.com,deployerbuddy@example.com")
+      stub_get_build_id_from_queue(1)
+      jenkins.build.must_equal 1
+    end
+
+    it "includes committer emails when JENKINS_NOTIFY_COMMITTERS is set" do
+      with_env 'JENKINS_NOTIFY_COMMITTERS': "1" do
+        stub_build_with_parameters("emails": 'super-admin@example.com,author1@example.com,author2@test.com,author3@example.comm,author4@example.co,AUTHOR5@EXAMPLE.COM')
+        stub_get_build_id_from_queue(1)
+        jenkins.build.must_equal 1
+      end
+    end
+
+    it "filters emails by GOOGLE_DOMAIN" do
+      with_env 'GOOGLE_DOMAIN': '@example1.com' do
+        stub_build_with_parameters("emails": "")
+        stub_get_build_id_from_queue(1)
+        jenkins.build.must_equal 1
+      end
+    end
+
+    it "filters emails by GOOGLE_DOMAIN when JENKINS_NOTIFY_COMMITTERS is set" do
+      with_env 'GOOGLE_DOMAIN': '@example.com', 'JENKINS_NOTIFY_COMMITTERS': '1' do
+        stub_build_with_parameters("emails": 'super-admin@example.com,author1@example.com,AUTHOR5@EXAMPLE.COM')
+        stub_get_build_id_from_queue(1)
+        jenkins.build.must_equal 1
+      end
     end
   end
 end
