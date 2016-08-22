@@ -34,6 +34,8 @@ class OutboundWebhook < ActiveRecord::Base
     response.success?
   end
 
+  private
+
   def connection
     Faraday.new(url: url) do |faraday|
       faraday.request  :url_encoded
@@ -42,8 +44,6 @@ class OutboundWebhook < ActiveRecord::Base
       faraday.basic_auth(username, password) if username.present?
     end
   end
-
-  private
 
   def url_is_not_relative
     errors.add(:url, "must begin with http:// or https://") unless url.start_with?("http://", "https://")

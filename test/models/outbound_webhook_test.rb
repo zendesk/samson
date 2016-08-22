@@ -6,13 +6,15 @@ SingleCov.covered!
 describe OutboundWebhook do
   let(:webhook_attributes) { { stage_id: 1, project_id: 1, url: "https://testing.com/deploys" } }
   let(:webhook_attributes_invalid) { { stage_id: 1, project_id: 1, url: "testing.com/deploys" } }
-  let(:webhook_attributes_with_auth) { { 
-    stage_id: 1,
-    project_id: 1,
-    url: "https://testing.com/deploys",
-    username: "adminuser",
-    password: "abc123" 
-  } }
+  let(:webhook_attributes_with_auth) do
+    {
+      stage_id: 1,
+      project_id: 1,
+      url: "https://testing.com/deploys",
+      username: "adminuser",
+      password: "abc123"
+    }
+  end
 
   describe '#create' do
     it 'creates the webhook' do
@@ -80,7 +82,7 @@ describe OutboundWebhook do
   describe "#connection" do
     before do
       @webhook = OutboundWebhook.create!(selected_webhook)
-      @connection = @webhook.connection
+      @connection = @webhook.send(:connection)
 
       assert_equal selected_webhook[:url], @connection.url_prefix.to_s
     end
@@ -106,7 +108,7 @@ describe OutboundWebhook do
     def stub_request
       Faraday.new(url: @webhook.url) do |builder|
         builder.adapter :test, Faraday::Adapter::Test::Stubs.new do |stub|
-          stub.post('/deploys') { [ response, {}, "AOK" ] }
+          stub.post('/deploys') { [response, {}, "AOK"] }
         end
       end
     end

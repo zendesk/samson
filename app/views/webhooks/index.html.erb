@@ -39,6 +39,8 @@
       <%= form.collection_select :stage_id, @project.stages, :id, :name, {}, class: "form-control" %>
     </div>
 
+    <p></p>
+
     <div class="form-group">
       <%= form.select :source, webhook_sources(Samson::Integration::SOURCES), {}, class: "form-control" %>
     </div>
@@ -80,7 +82,14 @@
   <% end %>
   <h2></h2>
 
-  <h1>Outbound Webhooks</h1> <p>Outbound webhooks POST to an external url after a deploy has finished. The request body will contain deploy, stage, and project information.</p>
+  <h1>Outbound Webhooks</h1> 
+  <p>Outbound webhooks POST to an external url after a deploy has finished. The request body will contain deploy, stage, an project information.</p>
+  <% if @project.deploys.any? %>
+    <p>Here is an example payload of this project's latest deploy:</p>
+    <p><%= DeploySerializer.new(@project.deploys.last).as_json %></p>
+  <% else %>
+    <p>Deploy this project at least once to see a sample payload.</p>
+  <% end %>
 
   <% if @outbound_webhooks.any? %>
     <h2>Webhooks mappings</h2>
@@ -104,13 +113,14 @@
   <% end %>
 
   <h2>Add an outbound webhook</h2>
-  <%= form_for [:project, @new_outbound_webhook], html: { class: 'form-inline' } do |form| %>
+  <%= form_for [:project, (@new_outbound_webhook || OutboundWebhook.new)], html: { class: 'form-inline' } do |form| %>
     <div class="form-group">
       <%= form.text_field :url, class: "form-control", placeholder: "Full Url" %>
     </div>
     <div class="form-group">
       <%= form.collection_select :stage_id, @project.stages, :id, :name, {}, class: "form-control" %>
     </div>
+    <p></p>
     <div class="form-group">
       <%= form.text_field :username, class: "form-control", placeholder: "Username (optional)" %>
     </div>
