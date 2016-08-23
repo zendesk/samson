@@ -230,6 +230,14 @@ describe ApplicationHelper do
     it "builds a link" do
       link_to_delete_button("/foo").must_include "Delete"
     end
+
+    it "shows common message for paths" do
+      link_to_delete_button("/foo").must_include "Are you sure ?"
+    end
+
+    it "shows detailed message for resource" do
+      link_to_delete_button([projects(:test), stages(:test_staging)]).must_include "Delete this Stage ?"
+    end
   end
 
   describe "#link_to_delete_button" do

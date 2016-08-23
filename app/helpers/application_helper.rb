@@ -118,7 +118,9 @@ module ApplicationHelper
   end
 
   def link_to_delete(path, body = 'Delete', options = {})
-    link_to body, path, options.merge(method: :delete, data: { confirm: "Are you sure?" })
+    resource = Array(path).last
+    message = (resource.is_a?(ActiveRecord::Base) ? "Delete this #{resource.class.name} ?" : "Are you sure ?")
+    link_to body, path, options.merge(method: :delete, data: { confirm: message })
   end
 
   def link_to_delete_button(path)
