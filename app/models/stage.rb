@@ -79,7 +79,7 @@ class Stage < ActiveRecord::Base
   end
 
   def warning?
-    !!lock && lock.warning?
+    lock&.warning?
   end
 
   def locked_for?(user)
@@ -90,10 +90,6 @@ class Stage < ActiveRecord::Base
     last_successful_deploy && last_successful_deploy.reference == release.version
   end
 
-  def confirm_before_deploying?
-    confirm
-  end
-
   def create_deploy(user, attributes = {})
     deploys.create(attributes.merge(release: !no_code_deployed)) do |deploy|
       deploy.build_job(project: project, user: user, command: script, commit: deploy.reference)
@@ -101,7 +97,7 @@ class Stage < ActiveRecord::Base
   end
 
   def currently_deploying?
-    current_deploy.present?
+    !!current_deploy
   end
 
   # The next stage for the project. If this is the last stage, returns nil.
@@ -120,10 +116,6 @@ class Stage < ActiveRecord::Base
 
   def global_name
     "#{name} - #{project.name}"
-  end
-
-  def send_github_notifications?
-    update_github_pull_requests
   end
 
   # this logic is replicated in SQL inside of app/jobs/csv_export_job.rb#filter_deploys for report filtering

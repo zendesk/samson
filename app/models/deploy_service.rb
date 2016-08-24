@@ -105,7 +105,7 @@ class DeployService
   end
 
   def send_github_notification(deploy)
-    if deploy.stage.send_github_notifications? && deploy.status == "succeeded"
+    if deploy.stage.update_github_pull_requests? && deploy.status == "succeeded"
       GithubNotification.new(deploy).deliver
     end
   end
