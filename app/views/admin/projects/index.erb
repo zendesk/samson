@@ -2,6 +2,11 @@
 
 <%= render_global_lock %>
 
+<%= form_tag '?', method: :get, class: 'clearfix' do %>
+  <%= render 'shared/search_query' %>
+  <%= render 'shared/search_button' %>
+<% end %>
+
 <section class="clearfix">
   <% if @projects.empty? %>
     <div class="alert alert-warning alert-dismissable">

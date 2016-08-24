@@ -63,16 +63,6 @@ class ProjectsController < ApplicationController
     end
   end
 
-  def destroy
-    project.soft_delete!
-
-    if Rails.application.config.samson.project_deleted_email
-      ProjectMailer.deleted_email(@current_user, project).deliver_later
-    end
-    flash[:notice] = "Project removed."
-    redirect_to admin_projects_path
-  end
-
   def deploy_group_versions
     before = params[:before] ? Time.parse(params[:before]) : Time.now
     deploy_group_versions = project.last_deploy_by_group(before).each_with_object({}) do |(id, deploy), hash|

@@ -1,0 +1,4 @@
+<div class="col-sm-6" style="padding-left: 0;">
+  <%= label_tag "Search" %>
+  <%= text_field_tag 'search[query]', params[:search].try(:[], :query), class: "form-control" %>
+</div>
