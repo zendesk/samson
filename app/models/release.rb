@@ -46,8 +46,6 @@ class Release < ActiveRecord::Base
     find_by_number!(version[/\Av(\d+)\Z/, 1].to_i)
   end
 
-  private
-
   def assign_release_number
     # Detect whether the number has been overwritten by params, e.g. using the
     # release-number-from-ci plugin.
