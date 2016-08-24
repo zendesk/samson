@@ -189,7 +189,7 @@ describe DeployService do
     end
 
     it "sends github notifications if the stage has it enabled and deploy succeeded" do
-      stage.stubs(:send_github_notifications?).returns(true)
+      stage.stubs(:update_github_pull_requests?).returns(true)
       deploy.stubs(:status).returns("succeeded")
 
       GithubNotification.any_instance.expects(:deliver)
@@ -199,7 +199,7 @@ describe DeployService do
     end
 
     it "does not send github notifications if the stage has it enabled and deploy failed" do
-      stage.stubs(:send_github_notifications?).returns(true)
+      stage.stubs(:update_github_pull_requests?).returns(true)
       deploy.stubs(:status).returns("failed")
 
       GithubNotification.any_instance.expects(:deliver).never

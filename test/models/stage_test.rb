@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 require_relative '../test_helper'
 
-SingleCov.covered! uncovered: 8
+SingleCov.covered!
 
 describe Stage do
   subject { stages(:test_staging) }
@@ -17,6 +17,13 @@ describe Stage do
       stage.deploys.create!(reference: "xyz", job: job)
 
       assert_equal [stage], Stage.where_reference_being_deployed("xyz")
+    end
+  end
+
+  describe ".deployed_on_release" do
+    it "returns stages with deploy_on_release" do
+      stage.update_column(:deploy_on_release, true)
+      Stage.deployed_on_release.must_equal [stage]
     end
   end
 
@@ -256,6 +263,59 @@ describe Stage do
     end
   end
 
+  describe "#warning?" do
+    let!(:lock) { stage.create_lock!(user: users(:deployer), warning: true, description: 'X') }
+
+    it "shows" do
+      assert stage.warning?
+    end
+
+    it "does not show without lock" do
+      lock.destroy!
+      stage.reload
+      refute stage.warning?
+    end
+
+    it "does not with normal lock" do
+      lock.update_column(:warning, false)
+      stage.reload
+      refute stage.warning?
+    end
+  end
+
+  describe "#currently_deploying?" do
+    it "is false when not deploying" do
+      stage.currently_deploying?.must_equal false
+    end
+
+    it "is true when deploying" do
+      stage.deploys.first.job.update_column(:status, 'running')
+      stage.currently_deploying?.must_equal true
+    end
+  end
+
+  describe "#send_email_notifications?" do
+    it "is false when there is no address" do
+      refute stage.send_email_notifications?
+    end
+
+    it "is false when there is a blank address" do
+      stage.notify_email_address = ''
+      refute stage.send_email_notifications?
+    end
+
+    it "is true when there is an address" do
+      stage.notify_email_address = 'a'
+      assert stage.send_email_notifications?
+    end
+  end
+
+  describe "#global_name" do
+    it "shows projects name to so we see where this stage belongs" do
+      stage.global_name.must_equal "Staging - Project"
+    end
+  end
+
   describe "#next_stage" do
     let(:project) { Project.new }
     let(:stage1) { Stage.new(project: project) }
@@ -382,6 +442,32 @@ describe Stage do
       stage.production?.must_equal true
       stage.update!(production: false)
       stage.production?.must_equal false
+    end
+  end
+
+  describe "#deploy_requires_approval?" do
+    before do
+      BuddyCheck.stubs(enabled?: true)
+      stage.production = true
+    end
+
+    it "requires approval with buddy-check + deploying + production" do
+      assert stage.deploy_requires_approval?
+    end
+
+    it "does not require approval when buddy check is disabled" do
+      BuddyCheck.unstub(:enabled?)
+      refute stage.deploy_requires_approval?
+    end
+
+    it "does not require approval when not in production" do
+      stage.production = false
+      refute stage.deploy_requires_approval?
+    end
+
+    it "does not require approval when not deploying code" do
+      stage.no_code_deployed = true
+      refute stage.deploy_requires_approval?
     end
   end
 
