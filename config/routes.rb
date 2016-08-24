@@ -28,7 +28,7 @@ Samson::Application.routes.draw do
     end
   end
 
-  resources :projects do
+  resources :projects, except: [:destroy] do
     resources :jobs, only: [:index, :new, :create, :show, :destroy]
 
     resources :macros, only: [:index, :new, :create, :edit, :update, :destroy] do
@@ -122,7 +122,7 @@ Samson::Application.routes.draw do
 
   namespace :admin do
     resources :users, only: [:index, :show, :update, :destroy]
-    resource :projects, only: [:show]
+    resources :projects, only: [:index, :destroy]
     resources :commands, except: [:show]
     resources :secrets, except: [:show]
     resources :environments, except: [:show]

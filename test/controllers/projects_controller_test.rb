@@ -160,45 +160,6 @@ describe ProjectsController do
     end
   end
 
-  describe "#destroy" do
-    as_a_viewer do
-      unauthorized :delete, :destroy, id: :foo
-    end
-
-    as_a_deployer do
-      unauthorized :delete, :destroy, id: :foo
-    end
-
-    as_a_admin do
-      before do
-        delete :destroy, id: project.to_param
-      end
-
-      it "redirects to root url" do
-        assert_redirected_to admin_projects_path
-      end
-
-      it "removes the project" do
-        project.reload
-        project.deleted_at.wont_be_nil
-      end
-
-      it "sets the flash" do
-        request.flash[:notice].wont_be_nil
-      end
-
-      it "notifies about deletion" do
-        mail = ActionMailer::Base.deliveries.last
-        mail.subject.include?("Samson Project Deleted")
-        mail.subject.include?(project.name)
-      end
-    end
-
-    as_a_project_admin do
-      unauthorized :delete, :destroy, id: :foo
-    end
-  end
-
   describe "#update" do
     as_a_viewer do
       unauthorized :put, :update, id: :foo
