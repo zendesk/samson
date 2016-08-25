@@ -112,7 +112,7 @@ class DeployService
   end
 
   def notify_outbound_webhooks(deploy)
-    deploy.stage.outbound_webhooks.map { |webhook| webhook.deliver(deploy) }
+    deploy.stage.outbound_webhooks.each { |webhook| webhook.deliver(deploy) }
   end
 
   def create_github_deployment(deploy)

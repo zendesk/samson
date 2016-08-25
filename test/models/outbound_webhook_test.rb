@@ -24,15 +24,11 @@ describe OutboundWebhook do
     it 'refuses to create a duplicate webhook' do
       OutboundWebhook.create!(webhook_attributes)
 
-      assert_raise ActiveRecord::RecordInvalid do
-        OutboundWebhook.create!(webhook_attributes)
-      end
+      refute_valid OutboundWebhook.new(webhook_attributes)
     end
 
     it "validates that url begins with http:// or https://" do
-      assert_raise ActiveRecord::RecordInvalid do
-        OutboundWebhook.create!(webhook_attributes_invalid)
-      end
+      refute_valid OutboundWebhook.new(webhook_attributes_invalid)
     end
 
     it 'recreates a webhook after soft_delete' do

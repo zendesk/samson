@@ -22,7 +22,7 @@ class OutboundWebhook < ActiveRecord::Base
 
     response = connection.post do |req|
       req.headers['Content-Type'] = 'application/json'
-      req.body = DeploySerializer.new(deploy).as_json
+      req.body = DeploySerializer.new(deploy).to_json
     end
 
     if response.success?

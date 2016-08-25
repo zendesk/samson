@@ -511,19 +511,20 @@ ActiveRecord::Schema.define(version: 20160818210955) do
   add_index "webhooks", ["stage_id", "branch"], name: "index_webhooks_on_stage_id_and_branch", length: {"stage_id"=>nil, "branch"=>191}, using: :btree
 
   create_table :outbound_webhooks do |t|
-    t.datetime "created_at"
-    t.datetime "updated_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
     t.datetime "deleted_at"
 
-    t.integer "project_id",   limit: 4, default: false
-    t.integer "stage_id",     limit: 4, default: false
+    t.integer "project_id",   limit: 4, default: false, null: false
+    t.integer "stage_id",     limit: 4, default: false, null: false
 
-    t.string "url",           limit: 255
+    t.string "url",           limit: 255, null: false
     t.string "username",      limit: 255
     t.string "password",      limit: 255
   end
 
   add_index "outbound_webhooks", "deleted_at"
+  add_index "outbound_webhooks", "project_id"
 
   add_foreign_key "deploy_groups", "environments"
 end

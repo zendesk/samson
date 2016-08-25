@@ -1,5 +1,8 @@
 <%= render 'projects/header', project: @project, tab: "webhooks" %>
 
+<% webhooks = @project.webhooks %>
+<% outbound_webhooks = @project.outbound_webhooks %>
+
 <section class="tabs">
   <h1>Inbound Webhooks</h1>
   <p>In order to automatically trigger a deploy to a stage, add a branch &rarr; stage mapping below
@@ -11,10 +14,10 @@
     <% end %>
   </dl>
 
-  <% if @webhooks.any? %>
+  <% if webhooks.any? %>
     <h2>Webhooks mappings</h2>
     <ul>
-      <% @webhooks.each do |webhook| %>
+      <% webhooks.each do |webhook| %>
         <li>
           <strong><%= webhook.branch.blank? ? 'Any' : webhook.branch %></strong>
           branch &rarr;
@@ -39,11 +42,12 @@
       <%= form.collection_select :stage_id, @project.stages, :id, :name, {}, class: "form-control" %>
     </div>
 
-    <p></p>
 
     <div class="form-group">
       <%= form.select :source, webhook_sources(Samson::Integration::SOURCES), {}, class: "form-control" %>
     </div>
+
+    <p></p>
 
     <%= form.submit "Add webhook", class: "btn btn-primary" %>
   <% end %>
@@ -84,17 +88,17 @@
 
   <h1>Outbound Webhooks</h1> 
   <p>Outbound webhooks POST to an external url after a deploy has finished. The request body will contain deploy, stage, an project information.</p>
-  <% if @project.deploys.any? %>
-    <p>Here is an example payload of this project's latest deploy:</p>
-    <p><%= DeploySerializer.new(@project.deploys.last).as_json %></p>
+  <% if @project.deploys.last %>
+    <p><a onclick='toggleSample()'>Click here to see an example payload of this project's latest deploy.</a></p>
+    <p class='payload-sample' style='display:none'><%= DeploySerializer.new(@project.deploys.last).as_json %></p>
   <% else %>
     <p>Deploy this project at least once to see a sample payload.</p>
   <% end %>
 
-  <% if @outbound_webhooks.any? %>
+  <% if outbound_webhooks.any? %>
     <h2>Webhooks mappings</h2>
     <ul>
-      <% @outbound_webhooks.each do |outbound_webhook| %>
+      <% outbound_webhooks.each do |outbound_webhook| %>
         <li>
           POST to
           <strong><%= outbound_webhook.url %></strong>
@@ -120,15 +124,21 @@
     <div class="form-group">
       <%= form.collection_select :stage_id, @project.stages, :id, :name, {}, class: "form-control" %>
     </div>
-    <p></p>
     <div class="form-group">
       <%= form.text_field :username, class: "form-control", placeholder: "Username (optional)" %>
     </div>
     <div class="form-group">
       <%= form.text_field :password, class: "form-control", placeholder: "Password (optional)", type: "password" %>
     </div>
+    <p></p>
     <div class="form-group">
       <%= form.submit "Add Outbound Webhook", class: "btn btn-primary" %>
     </div>
   <% end %>
+
+  <script>
+    function toggleSample() {
+      $('.payload-sample').toggle();
+    }
+  </script>
 </section>

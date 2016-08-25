@@ -18,15 +18,20 @@ describe OutboundWebhooksController do
     describe '#create' do
       describe 'with valid params' do
         it 'redirects to :index' do
-          post :create, project_id: project.to_param, outbound_webhook: params
-          assert_redirected_to project_webhooks_path(project)
+          assert_difference 'OutboundWebhook.count', 1 do
+            post :create, project_id: project.to_param, outbound_webhook: params
+            assert_redirected_to project_webhooks_path(project)
+          end
         end
       end
 
       describe 'with invalid params' do
-        it 'redirects to :index' do
-          post :create, project_id: project.to_param, outbound_webhook: invalid_params
-          assert_template 'webhooks/index'
+        it 'renders to :index' do
+          assert_difference 'OutboundWebhook.count', 0 do
+            post :create, project_id: project.to_param, outbound_webhook: invalid_params
+            assert_equal flash[:error], "Password can't be blank"
+            assert_template 'webhooks/index'
+          end
         end
       end
     end
@@ -35,7 +40,7 @@ describe OutboundWebhooksController do
       it "deletes the hook" do
         hook = project.outbound_webhooks.create!(params)
         delete :destroy, project_id: project.to_param, id: hook.id
-        assert_raises(ActiveRecord::RecordNotFound) { OutboundWebhook.find(hook.id) }
+        refute OutboundWebhook.find_by_id(hook.id)
         assert_redirected_to project_webhooks_path(project)
       end
     end
