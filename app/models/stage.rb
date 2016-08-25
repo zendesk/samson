@@ -18,7 +18,7 @@ class Stage < ActiveRecord::Base
   has_many :commands, -> { order('stage_commands.position ASC') },
     through: :command_associations, auto_include: false
 
-  has_many :deploy_groups_stages
+  has_many :deploy_groups_stages, dependent: :destroy
   has_many :deploy_groups, through: :deploy_groups_stages
 
   default_scope { order(:order) }
