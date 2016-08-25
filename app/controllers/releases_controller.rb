@@ -16,6 +16,7 @@ class ReleasesController < ApplicationController
 
   def new
     @release = @project.releases.build
+    @release.assign_release_number
   end
 
   def create
@@ -26,6 +27,6 @@ class ReleasesController < ApplicationController
   private
 
   def release_params
-    params.require(:release).permit(:commit).merge(author: current_user)
+    params.require(:release).permit(:commit, :number).merge(author: current_user)
   end
 end
