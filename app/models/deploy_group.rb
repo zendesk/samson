@@ -7,6 +7,7 @@ class DeployGroup < ActiveRecord::Base
   belongs_to :environment
   has_many :deploy_groups_stages
   has_many :stages, through: :deploy_groups_stages
+  has_many :template_stages, -> { where(is_template: true) }, through: :deploy_groups_stages, source: :stage
 
   validates_presence_of :name, :environment_id
   validates_uniqueness_of :name, :env_value

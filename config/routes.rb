@@ -131,6 +131,7 @@ Samson::Application.routes.draw do
       member do
         get :deploy_all
         post :deploy_all_now
+        post :create_all_stages
       end
     end
   end

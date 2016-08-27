@@ -54,6 +54,13 @@
       </div>
     </div>
 
+    <div class="form-group">
+      <div class="col-lg-offset-2 col-lg-4">
+        <%= form.check_box :include_new_deploy_groups %>
+        <%= form.label :include_new_deploy_groups, 'Include in New Deploy Groups'%>
+      </div>
+    </div>
+
     <% if ENV['DOCKER_FEATURE'] %>
     <div class="form-group">
       <div class="col-sm-offset-2 col-sm-10">

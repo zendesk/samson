@@ -61,6 +61,19 @@
     </div>
   </div>
 
+  <div class="form-group">
+    <div class="col-sm-offset-2 col-sm-10">
+      <div class="checkbox">
+        <%= form.label :is_template do %>
+          <%= form.check_box :is_template %>
+          Is a Template Stage
+        <% end %>
+        <span class="help-block">This stage can serve as a template to create new stages for its environment.</span>
+      </div>
+    </div>
+  </div>
+
+
   <% if @project.releases.any? %>
     <div class="form-group">
       <div class="col-sm-offset-2 col-sm-10">

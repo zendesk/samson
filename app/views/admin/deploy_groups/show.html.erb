@@ -34,6 +34,7 @@
   <div class="form-group">
     <div class="col-lg-offset-2 col-lg-10">
       <%= link_to "Edit", edit_admin_deploy_group_path(@deploy_group), class: "btn btn-primary" %>
+      <%= link_to "Create all stages", create_all_stages_admin_deploy_group_path(@deploy_group), class: "btn btn-default", data: { method: "post", confirm: "Create new stages for all pod-specific projects?" } %>
       <%= link_to "Deploy all projects", deploy_all_admin_deploy_group_path(@deploy_group), class: "btn btn-default" if DeployGroup.enabled? %>
       <%= link_to "Back", admin_deploy_groups_path, class: "btn btn-default" %>
     </div>

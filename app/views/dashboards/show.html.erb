@@ -1,9 +1,14 @@
 <h1><%= @environment.name %></h1>
 
 <section>
-  <p style="float: right;">
-    <a class="toggle" data-target="tr.no-deploys" href="#">Toggle Projects without Deploys</a>
-  </p>
+  <div style="float: right;">
+    <p>
+      <a class="toggle" data-target="tr.no-deploys" href="#">Toggle Projects without Deploys</a>
+    </p>
+    <p>
+      <a href="?failed_deploys=<%= !@failed_deploys %>">Toggle Failed Deploys</a>
+    </p>
+  </div>
 
   <p>
     <%= form_tag "", method: :get do %>

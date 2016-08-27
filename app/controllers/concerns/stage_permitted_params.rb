@@ -15,6 +15,7 @@ module StagePermittedParams
       :static_emails_on_automated_deploy_failure,
       :use_github_deployment_api,
       :no_code_deployed,
+      :is_template,
       {
         deploy_group_ids: [],
         command_ids: []
