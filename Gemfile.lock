@@ -447,7 +447,7 @@ GEM
       unf_ext
     unf_ext (0.0.7.2)
     unicode-display_width (1.0.5)
-    vault (0.4.0)
+    vault (0.5.0)
     warden (1.2.6)
       rack (>= 1.0)
     warden-doorkeeper (0.3.0)
