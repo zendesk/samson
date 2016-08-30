@@ -110,7 +110,7 @@ class User < ActiveRecord::Base
 
   # overwrites papertrail to record script
   def object_attrs_for_paper_trail(attributes)
-    roles = user_project_roles.map { |upr| [upr.project.permalink, upr.role_id] }.to_h
+    roles = user_project_roles.map { |upr| [upr.project&.permalink, upr.role_id] }.to_h
     super(attributes.merge('project_roles' => roles))
   end
 
