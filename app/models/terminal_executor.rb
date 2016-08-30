@@ -29,6 +29,8 @@ class TerminalExecutor
     else
       commands.map! { |c| resolve_secrets(c) }
     end
+    commands.map! { |c| ['date -u "+[%Y-%m-%d %H:%M:%S UTC]"', c] }
+    commands.flatten!
     commands.unshift("set -e")
 
     execute_command!(commands.join("\n"))
