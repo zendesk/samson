@@ -123,8 +123,11 @@ module Kubernetes
             "No logs found"
           end
         end
-        # Don't display hundreds of log lines
-        logs.split("\n").last(50).each { |line| @output.puts "  #{line}" }
+        # Display the first and last n_lines of the log
+        max = 50
+        lines = logs.split("\n")
+        lines = lines.first(max / 2) + ['...'] + lines.last(max / 2) if lines.size > max
+        lines.each { |line| @output.puts "  #{line}" }
       end
     end
 
