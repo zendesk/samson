@@ -19,6 +19,7 @@ class Project < ActiveRecord::Base
   has_many :deploys, through: :stages
   has_many :jobs, -> { order(created_at: :desc) }
   has_many :webhooks
+  has_many :outbound_webhooks
   has_many :commands
   has_many :macros, dependent: :destroy
   has_many :user_project_roles, dependent: :destroy

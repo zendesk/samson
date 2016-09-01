@@ -11,6 +11,7 @@ class Stage < ActiveRecord::Base
 
   has_many :deploys, dependent: :destroy
   has_many :webhooks, dependent: :destroy
+  has_many :outbound_webhooks, dependent: :destroy
 
   has_one :lock
 

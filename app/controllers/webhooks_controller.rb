@@ -6,10 +6,6 @@ class WebhooksController < ApplicationController
 
   before_action :authorize_project_deployer!
 
-  def index
-    @webhooks = current_project.webhooks
-  end
-
   def create
     current_project.webhooks.create!(webhook_params)
 
