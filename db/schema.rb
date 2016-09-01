@@ -337,7 +337,6 @@ ActiveRecord::Schema.define(version: 20160901175936) do
     t.datetime "deleted_at"
     t.datetime "created_at"
     t.datetime "updated_at"
-    t.boolean  "include_new_deploy_groups"
     t.string   "token",              limit: 255
     t.string   "release_branch",     limit: 255
     t.string   "permalink",          limit: 255,                   null: false
@@ -345,6 +344,7 @@ ActiveRecord::Schema.define(version: 20160901175936) do
     t.string   "owner",              limit: 255
     t.boolean  "deploy_with_docker",               default: false, null: false
     t.boolean  "auto_release_docker_image",        default: false, null: false
+    t.boolean  "include_new_deploy_groups",               default: false, null: false
   end
 
   add_index "projects", ["permalink", "deleted_at"], name: "index_projects_on_permalink_and_deleted_at", length: {"permalink"=>191, "deleted_at"=>nil}, using: :btree
@@ -446,7 +446,7 @@ ActiveRecord::Schema.define(version: 20160901175936) do
     t.boolean  "no_code_deployed",                                           default: false
     t.boolean  "docker_binary_plugin_enabled",                               default: true
     t.boolean  "kubernetes",                                                 default: false, null: false
-    t.boolean  "is_template"
+    t.boolean  "is_template",                                                default: false, null: false
   end
 
   add_index "stages", ["project_id", "permalink", "deleted_at"], name: "index_stages_on_project_id_and_permalink_and_deleted_at", length: {"project_id"=>nil, "permalink"=>191, "deleted_at"=>nil}, using: :btree
