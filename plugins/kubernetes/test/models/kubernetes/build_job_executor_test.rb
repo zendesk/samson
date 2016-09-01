@@ -4,7 +4,7 @@ require_relative "../../test_helper"
 # Skip the following lines:
 # - Simple resetting tracking variables for the next loop when
 #   there is an error creating a build job or getting/watching pod log
-SingleCov.covered! uncovered: 2
+SingleCov.covered! uncovered: 3
 
 describe Kubernetes::BuildJobExecutor do
   let(:output) { StringIO.new }
@@ -132,6 +132,42 @@ describe Kubernetes::BuildJobExecutor do
           success, job_log = execute!
           refute success
           assert_empty job_log
+        end
+
+        it 'tests clair exit code 0 - success' do
+          executor.unstub(:scan_with_clair)
+          executor.unstub(:script_exit_status)
+          executor.stubs(:script_exit_status).returns OpenStruct.new(success?: true)
+          Process.stubs(:wait).returns true
+          IO.stubs(:popen).returns OpenStruct.new(pid: 123, read: "test", close: "test")
+          with_env(
+            "CLAIR_EXEC_SCRIPT"  => "/invalid/path",
+            "CLAIR_SCAN_ENABLED" => "true"
+          ) do
+            job_api_obj.stubs(:failure?).returns false
+            job_api_obj.stubs(:complete?).returns true
+            success, job_log = execute!(registry_info: registry_info)
+            assert success
+            assert_equal(job_pod_log.join("\n") << "\n", job_log)
+          end
+        end
+
+        it 'tests clair exit code 1 - failure' do
+          executor.unstub(:scan_with_clair)
+          executor.unstub(:script_exit_status)
+          executor.stubs(:script_exit_status).returns OpenStruct.new(success?: false)
+          executor.stubs(:clair_result).returns "test"
+          Process.stubs(:wait).returns true
+          IO.stubs(:popen).returns OpenStruct.new(pid: 123, read: "test", close: "test")
+          with_env(
+            "CLAIR_EXEC_SCRIPT"  => "/invalid/path",
+            "CLAIR_SCAN_ENABLED" => "true"
+          ) do
+            job_api_obj.stubs(:failure?).returns false
+            job_api_obj.stubs(:complete?).returns true
+            success, = execute!(registry_info: registry_info)
+            refute success
+          end
         end
 
         it 'returns a failure status and an empty log when the job times out' do

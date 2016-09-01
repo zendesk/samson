@@ -35,6 +35,16 @@ module Kubernetes
       message = (success ? "completed successfully" : "failed or timed out")
       @output.puts "### Remote build job #{job_name} #{message}"
 
+      if ENV['CLAIR_SCAN_ENABLED'] == 'true'
+        ### Running security scan
+        result_clair = scan_with_clair(project.permalink.tr('_', '-'), tag)
+        ### Adding clair log to job log and success code
+        if result_clair
+          job_log = job_log << result_clair
+          success &&= false
+        end
+      end
+
       return success, job_log
     ensure
       # Jobs will still be there regardless of their statuses
@@ -89,6 +99,31 @@ module Kubernetes
         ]
       }
       k8s_job[:spec][:template][:spec][:containers][0].update(container_params)
+    end
+
+    # Stub this, otherwise hard to test
+    def script_exit_status
+      $?
+    end
+
+    # Exctract script execution to a separate method
+    def exec_script(script, project, tag)
+      result = IO.popen([script, project, tag], err: [:child, :out])
+      Process.wait(result.pid)
+      result.read
+    end
+
+    # So far we don't have ruby API for clair scanner and using shell script to wrap hyperclair.
+    # Hyperclair will pull the image from registry and run scan against Clair scanner
+    def scan_with_clair(project, tag)
+      clair_result = exec_script(ENV['CLAIR_EXEC_SCRIPT'], project, tag)
+      if script_exit_status.success?
+        return nil
+      else
+        @output.puts "### Clair scanner found vulnarabilities, stopping build"
+        @output.puts "### #{clair_result}"
+        return clair_result
+      end
     end
 
     def job_config(build, project, tag:, push: false, tag_as_latest: false)

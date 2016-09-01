@@ -136,3 +136,14 @@ Kubernetes::ReleaseGroup
         |
         -> Kubernetes Pods (how ever many replicas specified)
 ```
+### CLair security scans
+
+To use hyperclair tool (command-line tool for Clair and Docker Registry) for security scans we should supply environment variables:
+
+```
+CLAIR_SCAN_ENABLED = [ true | false ]
+CLAIR_EXEC_SCRIPT = /filesystem/path
+```
+
+CLAIR_EXEC_SCRIPT  - path to shell script that will invoke security scanning. It should be able to return status code. 
+CLAIR_SCAN_EANBLE - should be set to `true` if we want to have clair scans enabled
