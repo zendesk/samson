@@ -89,19 +89,6 @@ class Admin::DeployGroupsController < ApplicationController
 
   private
 
-  def only_to_current_group?(stage)
-    stage.deploy_groups.map(&:id) == [deploy_group.id]
-  end
-
-  def stages_in_same_environment(project, environment)
-    environment ||= deploy_group.environment
-    stages = project.stages.select do |stage|
-      stage.script.include?("$DEPLOY_GROUPS") && # is dynamic
-        stage.deploy_groups.where(environment: environment).exists? # is made to go to this environment
-    end
-    stages.sort_by { |stage| only_to_current_group?(stage) ? 0 : 1 }
-  end
-
   def new_stage_with_group(stage)
     stage = Stage.build_clone(stage)
     stage.deploy_groups << deploy_group
