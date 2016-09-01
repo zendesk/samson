@@ -79,7 +79,18 @@ describe Kubernetes::ResourceTemplate do
       it "fills then environment with string values" do
         env = container.fetch(:env)
         env.map { |x| x.fetch(:name) }.sort.must_equal(
-          [:REVISION, :TAG, :PROJECT, :ROLE, :DEPLOY_ID, :DEPLOY_GROUP, :POD_NAME, :POD_NAMESPACE, :POD_IP, :KUBE_CLUSTER_NAME].sort
+          [
+            :REVISION,
+            :TAG,
+            :PROJECT,
+            :ROLE,
+            :DEPLOY_ID,
+            :DEPLOY_GROUP,
+            :POD_NAME,
+            :POD_NAMESPACE,
+            :POD_IP,
+            :KUBE_CLUSTER_NAME
+          ].sort
         )
         env.map { |x| x[:value] }.map(&:class).map(&:name).sort.uniq.must_equal(["NilClass", "String"])
       end
