@@ -95,7 +95,7 @@ describe CsvExportJob do
 
     describe "with Deploy Groups disabled production filter" do
       it "creates deploys csv file accurately and completely" do
-        completeness_test({}, 2)
+        completeness_test({}, 3)
       end
 
       it "filters the report with known production activity completely" do
@@ -126,7 +126,7 @@ describe CsvExportJob do
 
       it "has no results for statuses with no fixtures" do
         filter = {'jobs.status': 'failed'}
-        completeness_test(filter, 0)
+        completeness_test(filter, 1)
       end
 
       it "has no results for non-existant project" do
@@ -137,7 +137,7 @@ describe CsvExportJob do
       it "has no results for non-production with no valid non-prod deploy" do
         deploys(:succeeded_test).delete
         filter = {'stages.production': false}
-        completeness_test(filter, 0)
+        completeness_test(filter, 1)
       end
 
       it "sends mail" do

@@ -278,6 +278,7 @@ describe Project do
     let(:pod100) { deploy_groups(:pod100) }
     let(:prod_deploy) { deploys(:succeeded_production_test) }
     let(:staging_deploy) { deploys(:succeeded_test) }
+    let(:staging_failed_deploy) { deploys(:failed_staging_test) }
     let!(:user) { users(:deployer) }
 
     it 'contains releases per deploy group' do
@@ -285,6 +286,16 @@ describe Project do
       deploys[pod1.id].must_equal prod_deploy
       deploys[pod2.id].must_equal prod_deploy
       deploys[pod100.id].must_equal staging_deploy
+    end
+
+    it 'ignores failed deploys' do
+      deploys = project.last_deploy_by_group(Time.now)
+      deploys[pod100.id].must_equal staging_deploy
+    end
+
+    it 'includes failed deploys' do
+      deploys = project.last_deploy_by_group(Time.now, true)
+      deploys[pod100.id].must_equal staging_failed_deploy
     end
 
     it "does not contain releases after requested time" do

@@ -349,6 +349,7 @@ describe Stage do
       user.update_attribute(:integration, true)
       subject.update_column(:static_emails_on_automated_deploy_failure, "static@example.com")
       subject.update_column(:email_committers_on_automated_deploy_failure, true)
+      deploys(:failed_staging_test).destroy # this fixture confuses these tests.
     end
 
     it "includes static emails and committer emails" do

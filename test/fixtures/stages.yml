@@ -4,6 +4,7 @@ test_staging:
   confirm: false
   permalink: staging
   deploy_groups: [ pod100 ]
+  is_template: true
 
 test_production:
   name: Production
