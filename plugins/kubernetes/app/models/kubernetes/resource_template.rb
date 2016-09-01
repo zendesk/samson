@@ -178,8 +178,8 @@ module Kubernetes
       end
 
       # name of the cluster
-      [:CLUSTER_NAME].each do |k|
-        env << {name: k, value: DeployGroup.find_by_permalink(metadata[:deploy_group]).kubernetes_cluster.name.to_s}
+      [:KUBE_CLUSTER_NAME].each do |k|
+        env << {name: k, value: DeployGroup.find(metadata[:deploy_group_id]).kubernetes_cluster.name.to_s}
       end
 
       # dynamic lookups for unknown things during deploy
