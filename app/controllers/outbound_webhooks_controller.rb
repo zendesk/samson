@@ -7,13 +7,13 @@ class OutboundWebhooksController < ApplicationController
   before_action :authorize_project_deployer!
 
   def create
-    webhook = current_project.outbound_webhooks.build(outbound_webhook_params)
+    webhook = OutboundWebhook.new(outbound_webhook_params.merge(project_id: current_project.id))
 
     if webhook.save
+      flash.delete(:error)
       redirect_to project_webhooks_path(current_project)
     else
       flash[:error] = webhook.errors.full_messages.join(', ')
-      current_project.reload
       @new_outbound_webhook = webhook
       render 'webhooks/index'
     end
