@@ -54,8 +54,9 @@ class Admin::DeployGroupsController < ApplicationController
 
   def deploy_all
     environment = deploy_group.environment
+    template_stages = environment.template_stages.all
     deploys = deploy_group.stages.map do |stage|
-      template_stage = environment.template_stages.where(project: stage.project).first
+      template_stage = template_stages.detect { |ts| ts.project_id == stage.project.id }
       next unless template_stage
 
       last_success_deploy = template_stage.last_successful_deploy
@@ -77,9 +78,11 @@ class Admin::DeployGroupsController < ApplicationController
     # No more than one stage, per project, per deploy_group
     # Note: you can call this multiple times, and it will create missing stages, but no redundant stages.
     environment = deploy_group.environment
+    template_stages = environment.template_stages.all
+    deploy_group_stages = deploy_group.stages.all
     Project.where(include_new_deploy_groups: true).each do |project|
-      template_stage = environment.template_stages.where(project: project).first
-      deploy_group_stage = deploy_group.stages.where(project: project).first
+      template_stage = template_stages.detect { |ts| ts.project_id == project.id }
+      deploy_group_stage = deploy_group_stages.detect { |dgs| dgs.project.id == project.id}
       if template_stage && !deploy_group_stage
         new_stage_with_group(template_stage)
       end
