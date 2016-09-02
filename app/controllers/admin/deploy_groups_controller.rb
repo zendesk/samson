@@ -82,7 +82,7 @@ class Admin::DeployGroupsController < ApplicationController
     deploy_group_stages = deploy_group.stages.all
     Project.where(include_new_deploy_groups: true).each do |project|
       template_stage = template_stages.detect { |ts| ts.project_id == project.id }
-      deploy_group_stage = deploy_group_stages.detect { |dgs| dgs.project.id == project.id}
+      deploy_group_stage = deploy_group_stages.detect { |dgs| dgs.project.id == project.id }
       if template_stage && !deploy_group_stage
         create_stage_with_group(template_stage)
       end
