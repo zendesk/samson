@@ -54,13 +54,15 @@
       </div>
     </div>
 
-    <div class="form-group">
-      <div class="col-lg-offset-2 col-lg-4">
-        <%= form.check_box :include_new_deploy_groups %>
-        <%= form.label :include_new_deploy_groups, 'Include in New Deploy Groups'%>
-        <p class="help-block">The "Create all stages" button for a deploy group will create a stage for this project.</p>
+    <% if DeployGroup.enabled? %>
+      <div class="form-group">
+        <div class="col-lg-offset-2 col-lg-4">
+          <%= form.check_box :include_new_deploy_groups %>
+          <%= form.label :include_new_deploy_groups, 'Include in New Deploy Groups'%>
+          <p class="help-block">The "Create all stages" button for a deploy group will create a stage for this project.</p>
+        </div>
       </div>
-    </div>
+    <% end %>
 
     <% if ENV['DOCKER_FEATURE'] %>
     <div class="form-group">
