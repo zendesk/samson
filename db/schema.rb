@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20160818210955) do
+ActiveRecord::Schema.define(version: 20160901175936) do
 
   create_table "builds", force: :cascade do |t|
     t.integer  "project_id",                                       null: false
@@ -428,16 +428,16 @@ ActiveRecord::Schema.define(version: 20160818210955) do
     t.string   "notify_email_address",                         limit: 255
     t.integer  "order",                                        limit: 4
     t.datetime "deleted_at"
-    t.boolean  "confirm",                                      default: true
+    t.boolean  "confirm",                                                    default: true
     t.string   "datadog_tags",                                 limit: 255
-    t.boolean  "update_github_pull_requests"
-    t.boolean  "deploy_on_release",                            default: false
-    t.boolean  "comment_on_zendesk_tickets"
-    t.boolean  "production",                                   default: false
-    t.boolean  "use_github_deployment_api"
+    t.boolean  "update_github_pull_requests",                                default: false, null: false
+    t.boolean  "deploy_on_release",                                          default: false
+    t.boolean  "comment_on_zendesk_tickets",                                 default: false, null: false
+    t.boolean  "production",                                                 default: false
+    t.boolean  "use_github_deployment_api",                                  default: false, null: false
     t.string   "permalink",                                    limit: 255,                   null: false
     t.text     "dashboard",                                    limit: 65535
-    t.boolean  "email_committers_on_automated_deploy_failure", default: false, null: false
+    t.boolean  "email_committers_on_automated_deploy_failure",               default: false, null: false
     t.string   "static_emails_on_automated_deploy_failure",    limit: 255
     t.string   "datadog_monitor_ids",                          limit: 255
     t.string   "jenkins_job_names",                            limit: 255

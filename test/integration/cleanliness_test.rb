@@ -20,6 +20,11 @@ describe "cleanliness" do
     File.read("db/schema.rb").wont_match /\st\.boolean.*limit: 1/
   end
 
+  it "does not have 3-state booleans (nil/false/true)" do
+    bad = File.read("db/schema.rb").scan(/\st\.boolean.*/).reject { |l| l =~ /default: (false|true)|null: false/ }
+    assert bad.empty?, "Boolean columns missing a default or null: false\n#{bad.join("\n")}"
+  end
+
   it "does not include rails-assets-bootstrap" do
     # make sure rails-assets-bootstrap did not get included by accident (dependency of some other bootstrap thing)
     # if it is not avoidable see http://stackoverflow.com/questions/7163264
