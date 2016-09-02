@@ -84,7 +84,7 @@ class Admin::DeployGroupsController < ApplicationController
       template_stage = template_stages.detect { |ts| ts.project_id == project.id }
       deploy_group_stage = deploy_group_stages.detect { |dgs| dgs.project.id == project.id}
       if template_stage && !deploy_group_stage
-        new_stage_with_group(template_stage)
+        create_stage_with_group(template_stage)
       end
     end
     redirect_to [:admin, deploy_group]
@@ -92,7 +92,7 @@ class Admin::DeployGroupsController < ApplicationController
 
   private
 
-  def new_stage_with_group(stage)
+  def create_stage_with_group(stage)
     stage = Stage.build_clone(stage)
     stage.deploy_groups << deploy_group
     stage.name = deploy_group.name
