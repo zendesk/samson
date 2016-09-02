@@ -177,6 +177,10 @@ module Kubernetes
         env << {name: k, value: template[:spec][:template][:metadata][:labels][k.downcase].to_s}
       end
 
+      # name of the cluster
+      kube_cluster_name = DeployGroup.find(metadata[:deploy_group_id]).kubernetes_cluster.name.to_s
+      env << {name: :KUBERNETES_CLUSTER_NAME, value: kube_cluster_name}
+
       # dynamic lookups for unknown things during deploy
       {
         POD_NAME: 'metadata.name',
