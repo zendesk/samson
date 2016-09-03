@@ -12,7 +12,6 @@ module Kubernetes
     validates :deploy_group, presence: true
     validates :kubernetes_role, presence: true
     validates :kubernetes_release, presence: true
-    validates :replica_target, presence: true, numericality: { greater_than: 0 }
     validate :validate_config_file, on: :create
 
     before_save :store_resource_template, on: :create
@@ -118,13 +117,15 @@ module Kubernetes
     end
 
     def desired_pod_count
-      if daemon_set?
-        # need http request since we do not know how many nodes we will match
-        fetch_resource.status.desiredNumberScheduled
-      elsif deployment? || job?
-        replica_target
-      else
-        raise "Unsupported kind #{resource_type}"
+      @desired_pod_count ||= begin
+        if daemon_set?
+          # need http request since we do not know how many nodes we will match
+          fetch_resource.status.desiredNumberScheduled
+        elsif deployment? || job?
+          replica_target
+        else
+          raise "Unsupported kind #{resource_type}"
+        end
       end
     end
 
