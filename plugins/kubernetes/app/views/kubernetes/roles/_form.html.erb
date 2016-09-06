@@ -1,3 +1,4 @@
+<% @role.resource_name ||= @project.permalink.tr('_', '-') + '-' %>
 <%= form_for [@project, @role], html: { class: "form-horizontal" } do |form| %>
   <%= render 'shared/errors', object: @role %>
 
@@ -24,7 +25,7 @@
     </div>
 
     <div class="form-group">
-      <% pattern = Kubernetes::RoleVerifier::VALID_LABEL.source.sub!('\\A', '^').sub!('\\z', '$') || raise %>
+      <% pattern = Kubernetes::RoleVerifier::VALID_LABEL_JS %>
       <%= form.label :resource_name,
           class: "col-lg-2 control-label",
           title: "Name for the resource this role will create (service/job), must match #{pattern}",
