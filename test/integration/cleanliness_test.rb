@@ -96,7 +96,6 @@ describe "cleanliness" do
       "app/controllers/concerns/stage_permitted_params.rb",
       "app/mailers/application_mailer.rb",
       "app/models/changeset/code_push.rb",
-      "app/models/changeset/issue_comment.rb",
       "app/models/changeset/jira_issue.rb",
       "app/models/concerns/has_commands.rb",
       "app/models/concerns/has_role.rb",
