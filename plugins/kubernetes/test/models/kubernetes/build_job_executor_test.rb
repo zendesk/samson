@@ -147,6 +147,7 @@ describe Kubernetes::BuildJobExecutor do
             job_api_obj.stubs(:failure?).returns false
             job_api_obj.stubs(:complete?).returns true
             success, job_log = execute!(registry_info: registry_info)
+
             assert success
             assert_equal(job_pod_log.join("\n") << "\n", job_log)
           end
@@ -166,6 +167,7 @@ describe Kubernetes::BuildJobExecutor do
             job_api_obj.stubs(:failure?).returns false
             job_api_obj.stubs(:complete?).returns true
             success, = execute!(registry_info: registry_info)
+
             refute success
           end
         end
