@@ -87,7 +87,7 @@
   <h2></h2>
 
   <h1>Outbound Webhooks</h1> 
-  <p>Outbound webhooks POST to an external url after a deploy has finished. The request body will contain deploy, stage, an project information.</p>
+  <p>Outbound webhooks POST to an external url after a deploy has finished. The request body will contain deploy, stage, and project information.</p>
   <% if @project.deploys.last %>
     <p><a onclick='toggleSample()'>Click here to see an example payload of this project's latest deploy.</a></p>
     <p class='payload-sample' style='display:none'><%= DeploySerializer.new(@project.deploys.last).as_json %></p>
