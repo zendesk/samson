@@ -64,6 +64,23 @@ describe Kubernetes::Role do
         refute_valid role
       end
     end
+
+    describe "resource_name" do
+      it "is invalid when blank" do
+        role.resource_name = ""
+        refute_valid role
+      end
+
+      it "is valid when filled with a valid name" do
+        role.resource_name = "dfssd"
+        assert_valid role
+      end
+
+      it "is invalid when it cannot be used in kubernetes" do
+        role.resource_name = "sfsdf__F"
+        refute_valid role
+      end
+    end
   end
 
   describe '.seed!' do
