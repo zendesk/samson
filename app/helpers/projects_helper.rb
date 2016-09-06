@@ -30,11 +30,7 @@ module ProjectsHelper
   end
 
   def job_state_class(job)
-    if job.succeeded?
-      'success'
-    else
-      'failed'
-    end
+    job.succeeded? ? 'success' : 'failed'
   end
 
   def admin_for_project?
