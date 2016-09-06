@@ -116,7 +116,7 @@ module Kubernetes
     # So far we don't have ruby API for clair scanner and using shell script to wrap hyperclair.
     # Hyperclair will pull the image from registry and run scan against Clair scanner
     def scan_with_clair(project, tag)
-      clair_result = exec_script(ENV['CLAIR_EXEC_SCRIPT'], project, tag)
+      clair_result = exec_script(ENV['CLAIR_EXEC_SCRIPT'], @registry[:serveraddress], project, tag)
       if script_exit_status.success?
         return nil
       else
