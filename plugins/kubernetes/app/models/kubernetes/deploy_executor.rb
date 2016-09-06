@@ -48,8 +48,7 @@ module Kubernetes
     def wait_for_resources_to_complete(release, release_docs)
       @wait_start_time = Time.now
       stable_ticks = CHECK_STABLE / TICK
-      expected = release_docs.to_a.sum(&:desired_pod_count)
-      @output.puts "Waiting for #{expected} pods to be created"
+      @output.puts "Waiting for pods to be created"
 
       loop do
         return false if stopped?
@@ -68,7 +67,7 @@ module Kubernetes
           end
         else
           print_statuses(statuses)
-          if statuses.all?(&:live) && statuses.count == expected
+          if statuses.all?(&:live)
             if release_docs.all?(&:job?)
               return success
             else
@@ -165,19 +164,19 @@ module Kubernetes
 
       pods = pods.select { |pod| pod.role_id == role.id && pod.deploy_group_id == group.id }
 
-      statuses = if pods.empty?
-        [[false, "Missing"]]
-      else
-        pods.map do |pod|
-          if pod.live?
-            if pod.restarted?
-              [false, RESTARTED]
-            else
-              [true, "Live"]
-            end
+      statuses = Array.new(release_doc.desired_pod_count).each_with_index.map do |_, i|
+        pod = pods[i]
+
+        if !pod
+          [false, "Missing"]
+        elsif pod.live?
+          if pod.restarted?
+            [false, RESTARTED]
           else
-            [false, "Waiting (#{pod.phase}, not Ready)"]
+            [true, "Live"]
           end
+        else
+          [false, "Waiting (#{pod.phase}, not Ready)"]
         end
       end
 

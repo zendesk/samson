@@ -75,6 +75,7 @@ describe Kubernetes::DeployExecutor do
     let(:worker_role) { kubernetes_deploy_group_roles(:test_pod100_resque_worker) }
 
     before do
+      Kubernetes::DeployGroupRole.update_all(replicas: 1)
       job.update_column(:commit, build.git_sha) # this is normally done by JobExecution
       Kubernetes::Role.stubs(:configured_for_project).returns(project.kubernetes_roles)
       kubernetes_fake_raw_template
@@ -98,7 +99,6 @@ describe Kubernetes::DeployExecutor do
       stub_request(:get, %r{http://foobar.server/api/v1/namespaces/staging/events}).
         to_return(body: {items: []}.to_json)
       stub_request(:get, /#{Regexp.escape(log_url)}/)
-      Kubernetes::ReleaseDoc.any_instance.stubs(:desired_pod_count).returns(1)
       GitRepository.any_instance.stubs(:file_content).with('Dockerfile', anything).returns "FROM all"
     end
 
@@ -118,6 +118,13 @@ describe Kubernetes::DeployExecutor do
         out.must_include "resque-worker: Live\n"
         out.must_include "SUCCESS"
       end
+    end
+
+    it "can deploy roles with 0 replicas to disable them" do
+      worker_role.update_column(:replicas, 0)
+      assert execute!
+      out.wont_include "resque-worker: Live\n"
+      out.must_include "app-server: Live\n"
     end
 
     describe "invalid configs" do
@@ -151,7 +158,7 @@ describe Kubernetes::DeployExecutor do
     describe "role settings" do
       it "uses configured role settings" do
         assert execute!
-        doc = Kubernetes::Release.last.release_docs.sort_by(&:replica_target).first
+        doc = Kubernetes::Release.last.release_docs.sort_by(&:id).last
         config = kubernetes_deploy_group_roles(:test_pod100_app_server)
         doc.replica_target.must_equal config.replicas
         doc.cpu.must_equal config.cpu
@@ -328,7 +335,7 @@ describe Kubernetes::DeployExecutor do
     end
 
     it "shows status of each individual pod when there is more than 1 per deploy group" do
-      Kubernetes::ReleaseDoc.any_instance.stubs(:desired_pod_count).returns(1.5)
+      worker_role.update_column(:replicas, 2)
       pod_reply[:items] << pod_reply[:items].first
       assert execute!
       out.scan(/resque-worker: Live/).count.must_equal 2
