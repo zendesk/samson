@@ -26,17 +26,19 @@ describe Samson::Jenkins do
       to_return(status: 200, body: "", headers: {}).to_timeout
   end
 
-  # avoid polling logic
-  def stub_build_detail(result)
+  def stub_job(result: nil, url: nil, status: 200)
     stub_request(:get, "http://www.test-url.com/job/test_job/96//api/json").
       with(headers: {'Authorization' => 'Basic dXNlckB0ZXN0LmNvbTpqYXBpa2V5'}).
-      to_return(status: 200, body: build_detail_response.merge("result" => result).to_json, headers: {}).to_timeout
+      to_return(status: status, body: build_detail_response.merge('result' => result, 'url' => url).to_json, headers: {}).to_timeout
   end
 
-  def stub_build_url(url)
-    stub_request(:get, "http://www.test-url.com/job/test_job/96//api/json").
-      with(headers: {'Authorization' => 'Basic dXNlckB0ZXN0LmNvbTpqYXBpa2V5'}).
-      to_return(status: 200, body: build_detail_response.merge("url" => url).to_json, headers: {}).to_timeout
+  # avoid polling logic
+  def stub_build_detail(result, status: 200)
+    stub_job(result: result, status: status)
+  end
+
+  def stub_build_url(url, status: 200)
+    stub_job(url: url, status: status)
   end
 
   def stub_get_build_id_from_queue(build_id)
@@ -95,12 +97,22 @@ describe Samson::Jenkins do
       stub_build_detail("FAILURE")
       jenkins.job_status(96).must_equal "FAILURE"
     end
+
+    it "returns not found when jenkins job is not found" do
+      stub_build_detail('doesnt matter', status: 404)
+      jenkins.job_status(96).must_equal "Requested component is not found on the Jenkins CI server."
+    end
   end
 
   describe "#job_url" do
     it "returns a jenkins job url" do
       stub_build_url("https://jenkins.zende.sk/job/rdhanoa_test_project/96/")
       jenkins.job_url(96).must_equal "https://jenkins.zende.sk/job/rdhanoa_test_project/96/"
+    end
+
+    it "returns an error when the job is missing" do
+      stub_build_url("https://jenkins.zende.sk/job/rdhanoa_test_project/96/", status: 404)
+      jenkins.job_url(96).must_equal "#"
     end
   end
 
