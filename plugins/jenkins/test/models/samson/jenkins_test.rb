@@ -26,17 +26,19 @@ describe Samson::Jenkins do
       to_return(status: 200, body: "", headers: {}).to_timeout
   end
 
-  # avoid polling logic
-  def stub_build_detail(result, status: 200)
+  def stub_job(result: nil, url: nil, status: 200)
     stub_request(:get, "http://www.test-url.com/job/test_job/96//api/json").
       with(headers: {'Authorization' => 'Basic dXNlckB0ZXN0LmNvbTpqYXBpa2V5'}).
-      to_return(status: status, body: build_detail_response.merge("result" => result).to_json, headers: {}).to_timeout
+      to_return(status: status, body: build_detail_response.merge('result' => result, 'url' => url).to_json, headers: {}).to_timeout
+  end
+
+  # avoid polling logic
+  def stub_build_detail(result, status: 200)
+    stub_job(result: result, status: status)
   end
 
   def stub_build_url(url, status: 200)
-    stub_request(:get, "http://www.test-url.com/job/test_job/96//api/json").
-      with(headers: {'Authorization' => 'Basic dXNlckB0ZXN0LmNvbTpqYXBpa2V5'}).
-      to_return(status: status, body: build_detail_response.merge("url" => url).to_json, headers: {}).to_timeout
+    stub_job(url: url, status: status)
   end
 
   def stub_get_build_id_from_queue(build_id)
