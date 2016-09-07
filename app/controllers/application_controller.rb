@@ -18,7 +18,7 @@ class ApplicationController < ActionController::Base
     if Rails.env.test?
       raise(DoorkeeperAuth::DisallowedAccessError, message)
     else
-      render text: "This resource is not available via the API", status: 403
+      render plain: "This resource is not available via the API", status: 403
     end
   end
 
@@ -45,10 +45,8 @@ class ApplicationController < ActionController::Base
       else
         render status: :bad_request, plain: 'Invalid redirect_to parameter'
       end
-    elsif request.env['HTTP_REFERER']
-      redirect_to :back
     else
-      redirect_to fallback
+      redirect_back fallback_location: fallback
     end
   end
 end

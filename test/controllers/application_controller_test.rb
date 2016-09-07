@@ -15,7 +15,7 @@ describe ApplicationController do
   end
 
   tests ApplicationTestController
-  use_test_routes
+  use_test_routes ApplicationTestController
 
   describe "#redirect_back_or" do
     as_a_viewer do

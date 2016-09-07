@@ -13,7 +13,7 @@ class DoorkeeperAuthTestingController < ActionController::Base
 end
 
 describe DoorkeeperAuthTestingController do
-  use_test_routes
+  use_test_routes DoorkeeperAuthTestingController
 
   subject { proc { get :foo, test_route: true } }
 
@@ -31,7 +31,7 @@ describe DoorkeeperAuthTestingController do
     describe 'for disallowed controllers' do
       before do
         DoorkeeperAuthTestingController.stubs(:api_accessible).returns(false)
-        request.stubs(:fullpath).returns("/testings/foo")
+        request.class.any_instance.stubs(:fullpath).returns("/testings/foo")
         request.env['warden'].stubs(:winning_strategy).returns(:doorkeeper)
       end
 
@@ -43,7 +43,7 @@ describe DoorkeeperAuthTestingController do
     describe 'for allowed controllers' do
       before do
         DoorkeeperAuthTestingController.stubs(:api_accessible).returns(true)
-        request.stubs(:fullpath).returns("/api/testings/foo")
+        request.class.any_instance.stubs(:fullpath).returns("/api/testings/foo")
         request.env['warden'].stubs(:winning_strategy).returns(:doorkeeper)
       end
 
@@ -54,7 +54,7 @@ describe DoorkeeperAuthTestingController do
       describe 'for non-api paths' do
         before do
           DoorkeeperAuthTestingController.stubs(:api_accessible).returns(true)
-          request.stubs(:fullpath).returns("/testings/foo")
+          request.class.any_instance.stubs(:fullpath).returns("/testings/foo")
           request.env['warden'].stubs(:winning_strategy).returns(:doorkeeper)
         end
 

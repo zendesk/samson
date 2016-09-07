@@ -14,7 +14,7 @@ describe Samson::ConsoleExtensions do
       end
 
       include CurrentUser
-      before_filter :authorize_super_admin!
+      before_action :authorize_super_admin!
 
       def secret
         render plain: 'OK'

@@ -8,6 +8,6 @@ describe StageSerializer do
   let(:parsed) { JSON.parse(StageSerializer.new(stage).to_json) }
 
   it 'serializes' do
-    parsed['stage']['id'].must_equal stage.id
+    parsed['id'].must_equal stage.id
   end
 end
