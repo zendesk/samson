@@ -138,6 +138,7 @@ describe Kubernetes::BuildJobExecutor do
           Tempfile.open('clair') do |f|
             f.write("#!/bin/bash\n exit 0")
             f.rewind
+            f.close
             File.chmod 0755, f.path
             with_env("CLAIR_EXEC_SCRIPT": f.path) do
               job_api_obj.stubs(:failure?).returns false
@@ -153,6 +154,7 @@ describe Kubernetes::BuildJobExecutor do
           Tempfile.open('clair') do |f|
             f.write("#!/bin/bash\n exit 1")
             f.rewind
+            f.close
             File.chmod 0755, f.path
             with_env("CLAIR_EXEC_SCRIPT": f.path) do
               job_api_obj.stubs(:failure?).returns false
