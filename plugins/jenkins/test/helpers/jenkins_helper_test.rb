@@ -13,9 +13,9 @@ describe JenkinsHelper do
     JenkinsJob.create!(name: "test_job", deploy_id: 11, jenkins_job_id: 111)
   end
 
-  def stub_build_detail(result)
+  def stub_build_detail(result, status: 200)
     stub_request(:get, "http://www.test-url.com/job/test_job/111//api/json").with(headers: {'Authorization' => 'Basic dXNlckB0ZXN0LmNvbTpqYXBpa2V5'}).
-      to_return(status: 200, body: build_detail_response.merge("result" => result).to_json, headers: {}).to_timeout
+      to_return(status: status, body: build_detail_response.merge("result" => result).to_json, headers: {}).to_timeout
   end
 
   let(:deploy) { deploys(:succeeded_test) }
@@ -47,6 +47,13 @@ describe JenkinsHelper do
       stub_build_detail("FAILURE")
       html = jenkins_status_panel(deploy, jenkins_job)
       html.must_equal "<a href=\"https://jenkins.zende.sk/job/rdhanoa_test_project/110/\" target=\"_blank\"><div class=\"alert alert-danger\">Jenkins build test_job for Staging has Failed.</div></a>"
+    end
+
+    it 'shows when the jenkins job is missing' do
+      jenkins_job = stub_jenkins_job_without_status
+      stub_build_detail("doesnt-matter", status: 404)
+      html = jenkins_status_panel(deploy, jenkins_job)
+      html.must_equal "<a href=\"#\" target=\"_blank\"><div class=\"alert alert-warning\">Jenkins build test_job for Staging Requested component is not found on the Jenkins CI server.</div></a>"
     end
   end
 end

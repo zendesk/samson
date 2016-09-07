@@ -11,12 +11,12 @@ module JenkinsHelper
     }
 
     result = {
-      "SUCCESS"  => "has Passed",
-      "FAILURE"  => "has Failed",
-      "CANCELED" => "was canceled, Please check Jenkins job for more details",
-      "STARTUP_ERROR" => "failed to start, Please check Jenkins job to see what went wrong",
-      "ABORTED" => "was aborted, Please go to Jenkins job to start it manually",
-      nil => "is running. This can take a few minutes to finish, Please reload this page to check latest status"
+      "SUCCESS"  => "has Passed.",
+      "FAILURE"  => "has Failed.",
+      "CANCELED" => "was canceled, Please check Jenkins job for more details.",
+      "STARTUP_ERROR" => "failed to start, Please check Jenkins job to see what went wrong.",
+      "ABORTED" => "was aborted, Please go to Jenkins job to start it manually.",
+      nil => "is running. This can take a few minutes to finish, Please reload this page to check latest status."
     }
 
     jenkins_job_status = jenkins_job.status
@@ -37,7 +37,7 @@ module JenkinsHelper
       status_message = result.fetch(jenkins_job_status)
     end
 
-    content = "Jenkins build #{jenkins_job.name} for #{deploy.stage.name} #{status_message}."
+    content = "Jenkins build #{jenkins_job.name} for #{deploy.stage.name} #{status_message}"
     content_tag :a, href: jenkins_job_url, target: "_blank" do
       content_tag :div, content.html_safe, class: "alert alert-#{status}"
     end
