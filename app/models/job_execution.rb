@@ -167,6 +167,7 @@ class JobExecution
       commit = @repository.commit_from_ref(@reference)
       tag = @repository.tag_from_ref(@reference)
       @job.update_git_references!(commit: commit, tag: tag)
+      @output.write("Commit: #{commit}\n")
     end
 
     if locked
