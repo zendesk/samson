@@ -134,41 +134,32 @@ describe Kubernetes::BuildJobExecutor do
           assert_empty job_log
         end
 
-        it 'tests clair exit code 0 - success' do
-          executor.unstub(:scan_with_clair)
-          executor.unstub(:script_exit_status)
-          executor.stubs(:script_exit_status).returns OpenStruct.new(success?: true)
-          Process.stubs(:wait).returns true
-          IO.stubs(:popen).returns OpenStruct.new(pid: 123, read: "test", close: "test")
-          with_env(
-            "CLAIR_EXEC_SCRIPT"  => "/invalid/path",
-            "CLAIR_SCAN_ENABLED" => "true"
-          ) do
-            job_api_obj.stubs(:failure?).returns false
-            job_api_obj.stubs(:complete?).returns true
-            success, job_log = execute!(registry_info: registry_info)
-
-            assert success
-            assert_equal(job_pod_log.join("\n") << "\n", job_log)
+        it 'prints results when clair scan passes' do
+          Tempfile.open('clair') do |f|
+            f.write("#!/bin/bash\n exit 0")
+            f.rewind
+            File.chmod 0755, f.path
+            with_env("CLAIR_EXEC_SCRIPT": f.path) do
+              job_api_obj.stubs(:failure?).returns false
+              job_api_obj.stubs(:complete?).returns true
+              success, job_log = execute!(registry_info: registry_info)
+              assert success
+              assert_equal(job_log, job_pod_log.join("\n") << "\n")
+            end
           end
         end
 
-        it 'tests clair exit code 1 - failure' do
-          executor.unstub(:scan_with_clair)
-          executor.unstub(:script_exit_status)
-          executor.stubs(:script_exit_status).returns OpenStruct.new(success?: false)
-          executor.stubs(:clair_result).returns "test"
-          Process.stubs(:wait).returns true
-          IO.stubs(:popen).returns OpenStruct.new(pid: 123, read: "test", close: "test")
-          with_env(
-            "CLAIR_EXEC_SCRIPT"  => "/invalid/path",
-            "CLAIR_SCAN_ENABLED" => "true"
-          ) do
-            job_api_obj.stubs(:failure?).returns false
-            job_api_obj.stubs(:complete?).returns true
-            success, = execute!(registry_info: registry_info)
-
-            refute success
+        it 'shows errors when clair scan fails' do
+          Tempfile.open('clair') do |f|
+            f.write("#!/bin/bash\n exit 1")
+            f.rewind
+            File.chmod 0755, f.path
+            with_env("CLAIR_EXEC_SCRIPT": f.path) do
+              job_api_obj.stubs(:failure?).returns false
+              job_api_obj.stubs(:complete?).returns true
+              success, = execute!(registry_info: registry_info)
+              refute success
+            end
           end
         end
 
