@@ -1,5 +1,5 @@
 # frozen_string_literal: true
-class CreateKubernetesReleaseDocs < ActiveRecord::Migration
+class CreateKubernetesReleaseDocs < ActiveRecord::Migration[4.2]
   def change
     create_table :kubernetes_release_docs do |t|
       t.references :kubernetes_role, null: false, index: true

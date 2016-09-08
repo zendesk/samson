@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 # rubocop:disable Metrics/LineLength
-class ChangeRoleNameToId < ActiveRecord::Migration
+class ChangeRoleNameToId < ActiveRecord::Migration[4.2]
   INDEX = "index_kubernetes_deploy_group_roles_on_project_id"
 
   class KubernetesRole < ActiveRecord::Base

@@ -1,5 +1,5 @@
 # frozen_string_literal: true
-class DeploysIndexDeletedAt < ActiveRecord::Migration
+class DeploysIndexDeletedAt < ActiveRecord::Migration[4.2]
   def change
     add_index :deploys, [:deleted_at]
     add_index :deploys, [:job_id, :deleted_at]

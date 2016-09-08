@@ -1,5 +1,5 @@
 # frozen_string_literal: true
-class AddPermalinkToProjects < ActiveRecord::Migration
+class AddPermalinkToProjects < ActiveRecord::Migration[4.2]
   def change
     add_column :projects, :permalink, :string
     add_index :projects, :permalink, unique: true, length: 191

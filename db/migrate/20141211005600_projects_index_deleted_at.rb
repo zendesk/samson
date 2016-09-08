@@ -1,5 +1,5 @@
 # frozen_string_literal: true
-class ProjectsIndexDeletedAt < ActiveRecord::Migration
+class ProjectsIndexDeletedAt < ActiveRecord::Migration[4.2]
   def change
     add_index :projects, [:permalink, :deleted_at], length: { permalink: 191 }
     add_index :projects, [:token, :deleted_at], length: { token: 191 }

@@ -1,5 +1,5 @@
 # frozen_string_literal: true
-class AddResourceNameToKubernetesRoles < ActiveRecord::Migration
+class AddResourceNameToKubernetesRoles < ActiveRecord::Migration[4.2]
   def up
     add_column :kubernetes_roles, :resource_name, :string
     backfill_resource_names

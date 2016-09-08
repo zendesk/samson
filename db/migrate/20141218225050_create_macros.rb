@@ -1,5 +1,5 @@
 # frozen_string_literal: true
-class CreateMacros < ActiveRecord::Migration
+class CreateMacros < ActiveRecord::Migration[4.2]
   def change
     create_table :macros do |t|
       t.string :name, null: false

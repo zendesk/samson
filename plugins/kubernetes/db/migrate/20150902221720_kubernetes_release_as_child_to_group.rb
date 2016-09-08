@@ -1,5 +1,5 @@
 # frozen_string_literal: true
-class KubernetesReleaseAsChildToGroup < ActiveRecord::Migration
+class KubernetesReleaseAsChildToGroup < ActiveRecord::Migration[4.2]
   def up
     change_table :kubernetes_releases do |t|
       t.remove :build_id

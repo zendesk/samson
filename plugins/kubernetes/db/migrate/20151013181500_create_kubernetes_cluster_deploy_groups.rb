@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 # rubocop:disable Metrics/LineLength
-class CreateKubernetesClusterDeployGroups < ActiveRecord::Migration
+class CreateKubernetesClusterDeployGroups < ActiveRecord::Migration[4.2]
   def up
     create_table :kubernetes_cluster_deploy_groups do |t|
       t.belongs_to :kubernetes_cluster, null: false, index: { name: 'index_kuber_cluster_deploy_groups_on_kuber_cluster_id' }

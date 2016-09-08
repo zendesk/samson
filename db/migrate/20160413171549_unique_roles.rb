@@ -1,5 +1,5 @@
 # frozen_string_literal: true
-class UniqueRoles < ActiveRecord::Migration
+class UniqueRoles < ActiveRecord::Migration[4.2]
   class UserProjectRole < ActiveRecord::Base
   end
 

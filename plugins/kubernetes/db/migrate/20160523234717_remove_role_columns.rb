@@ -1,5 +1,5 @@
 # frozen_string_literal: true
-class RemoveRoleColumns < ActiveRecord::Migration
+class RemoveRoleColumns < ActiveRecord::Migration[4.2]
   def up
     remove_column :kubernetes_roles, :cpu
     remove_column :kubernetes_roles, :ram

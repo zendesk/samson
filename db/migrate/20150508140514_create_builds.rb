@@ -1,5 +1,5 @@
 # frozen_string_literal: true
-class CreateBuilds < ActiveRecord::Migration
+class CreateBuilds < ActiveRecord::Migration[4.2]
   def change
     create_table :builds do |t|
       t.belongs_to :project,    null: false, index: true

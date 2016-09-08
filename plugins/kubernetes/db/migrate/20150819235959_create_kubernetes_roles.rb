@@ -1,5 +1,5 @@
 # frozen_string_literal: true
-class CreateKubernetesRoles < ActiveRecord::Migration
+class CreateKubernetesRoles < ActiveRecord::Migration[4.2]
   def change
     create_table :kubernetes_roles do |t|
       t.references :project, null: false, index: true

@@ -1,5 +1,5 @@
 # frozen_string_literal: true
-class NilifyServiceNames < ActiveRecord::Migration
+class NilifyServiceNames < ActiveRecord::Migration[4.2]
   class KubernetesRole < ActiveRecord::Base
   end
 

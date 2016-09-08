@@ -1,5 +1,5 @@
 # frozen_string_literal: true
-class RemoveMacrosCommand < ActiveRecord::Migration
+class RemoveMacrosCommand < ActiveRecord::Migration[4.2]
   class OldMacro < ActiveRecord::Base
     self.table_name = :macros
   end

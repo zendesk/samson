@@ -1,5 +1,5 @@
 # frozen_string_literal: true
-class AddGitShaToKubernetesRelease < ActiveRecord::Migration
+class AddGitShaToKubernetesRelease < ActiveRecord::Migration[4.2]
   class KubernetesRelease < ActiveRecord::Base
     belongs_to :build
   end

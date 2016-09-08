@@ -20,8 +20,7 @@ Samson::Application.configure do
 
   default_url_options[:port] = config.samson.uri.port
 
-  # Print deprecation notices to the Rails logger.
-  config.active_support.deprecation = :log
+  config.active_support.deprecation = :raise
 
   # Raise an error on page load if there are pending migrations
   config.active_record.migration_error = :page_load
