@@ -36,12 +36,12 @@
       <%= link_to "Edit", edit_admin_deploy_group_path(@deploy_group), class: "btn btn-primary" %>
       <% if DeployGroup.enabled? %>
         <%= link_to "Create all stages",
-                    create_all_stages_admin_deploy_group_path(@deploy_group),
-                    class: "btn btn-default",
-                    data: {
-                        method: "post",
-                        confirm: "Create all missing stages for this deploy group? All Project marked to be included in new deploy groups will get a stage for this deploy group."
-                    }
+          create_all_stages_admin_deploy_group_path(@deploy_group),
+          class: "btn btn-default",
+          data: {
+            method: "post",
+            confirm: "Create all missing stages for this deploy group? All Project marked to be included in new deploy groups will get a stage for this deploy group."
+          }
         %>
         <%= link_to "Deploy all projects", deploy_all_admin_deploy_group_path(@deploy_group), class: "btn btn-default", data: { method: "post" } %>
       <% end %>
