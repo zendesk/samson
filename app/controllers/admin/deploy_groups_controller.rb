@@ -1,8 +1,9 @@
 # frozen_string_literal: true
 class Admin::DeployGroupsController < ApplicationController
   before_action :authorize_admin!
-  before_action :authorize_super_admin!, only: [:create, :new, :update, :destroy, :deploy_all, :deploy_all_now, :edit]
-  before_action :deploy_group, only: [:show, :edit, :update, :destroy, :deploy_all, :deploy_all_now]
+  before_action :authorize_super_admin!, only: [:create, :new, :update, :destroy, :deploy_all,
+                                                :create_all_stages, :edit]
+  before_action :deploy_group, only: [:show, :edit, :update, :destroy, :deploy_all, :create_all_stages]
 
   def index
     @deploy_groups = DeployGroup.all.sort_by(&:natural_order)
@@ -52,46 +53,50 @@ class Admin::DeployGroupsController < ApplicationController
   end
 
   def deploy_all
-    @stages = Project.all.flat_map do |project|
-      environment = Environment.find(params[:environment_id]) if params[:environment_id]
+    environment = deploy_group.environment
+    template_stages = environment.template_stages.all
+    deploys = deploy_group.stages.map do |stage|
+      template_stage = template_stages.detect { |ts| ts.project_id == stage.project.id }
+      next unless template_stage
 
-      stages = stages_in_same_environment(project, environment)
-      next unless deploy = stages.map(&:last_successful_deploy).compact.sort_by(&:created_at).last
-      stages.map { |s| [s, deploy] }
+      last_success_deploy = template_stage.last_successful_deploy
+      next unless last_success_deploy
+
+      deploy_service = DeployService.new(current_user)
+      deploy_service.deploy!(stage, reference: last_success_deploy.reference)
     end.compact
+
+    if deploys.empty?
+      flash[:error] = "There were no stages ready for deploy."
+      redirect_to deploys_path
+    else
+      redirect_to deploys_path(ids: deploys.map(&:id))
+    end
   end
 
-  def deploy_all_now
-    deploys = params.require(:stages).map do |stage|
-      stage_id, reference = stage.split("-", 2)
-      stage = Stage.find(stage_id)
-      stage = new_stage_with_group(stage) unless only_to_current_group?(stage)
-      deploy_service = DeployService.new(current_user)
-      deploy_service.deploy!(stage, reference: reference)
+  def create_all_stages
+    # No more than one stage, per project, per deploy_group
+    # Note: you can call this multiple times, and it will create missing stages, but no redundant stages.
+    environment = deploy_group.environment
+    template_stages = environment.template_stages.all
+    deploy_group_stages = deploy_group.stages.all
+    Project.where(include_new_deploy_groups: true).each do |project|
+      template_stage = template_stages.detect { |ts| ts.project_id == project.id }
+      deploy_group_stage = deploy_group_stages.detect { |dgs| dgs.project.id == project.id }
+      if template_stage && !deploy_group_stage
+        create_stage_with_group(template_stage)
+      end
     end
-    redirect_to deploys_path(ids: deploys.map(&:id))
+    redirect_to [:admin, deploy_group]
   end
 
   private
 
-  def only_to_current_group?(stage)
-    stage.deploy_groups.map(&:id) == [deploy_group.id]
-  end
-
-  def stages_in_same_environment(project, environment)
-    environment ||= deploy_group.environment
-    stages = project.stages.select do |stage|
-      stage.script.include?("$DEPLOY_GROUPS") && # is dynamic
-        stage.deploy_groups.where(environment: environment).exists? # is made to go to this environment
-    end
-    stages.sort_by { |stage| only_to_current_group?(stage) ? 0 : 1 }
-  end
-
-  def new_stage_with_group(stage)
+  def create_stage_with_group(stage)
     stage = Stage.build_clone(stage)
     stage.deploy_groups << deploy_group
     stage.name = deploy_group.name
-    stage.name << " -- copy #{SecureRandom.hex(4)}" if stage.project.stages.where(name: stage.name).exists?
+    stage.is_template = false
     stage.save!
     stage
   end

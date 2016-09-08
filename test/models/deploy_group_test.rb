@@ -130,4 +130,12 @@ describe DeployGroup do
       end
     end
   end
+
+  describe "#template_stages" do
+    let(:deploy_group) { deploy_groups(:pod100) }
+
+    it "returns all template_stages for the deploy_group" do
+      refute deploy_group.template_stages.empty?
+    end
+  end
 end

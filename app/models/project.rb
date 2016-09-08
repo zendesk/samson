@@ -130,8 +130,8 @@ class Project < ActiveRecord::Base
     MultiLock.lock(id, holder, timeout: timeout, failed_to_lock: callback, &block)
   end
 
-  def last_deploy_by_group(before_time)
-    releases = deploys_by_group(before_time)
+  def last_deploy_by_group(before_time, include_failed_deploys: false)
+    releases = deploys_by_group(before_time, include_failed_deploys)
     releases.map { |group_id, deploys| [group_id, deploys.sort_by(&:updated_at).last] }.to_h
   end
 
@@ -145,9 +145,10 @@ class Project < ActiveRecord::Base
     "#{Rails.application.config.samson.gitlab.web_url}/#{gitlab_repo}"
   end
 
-  def deploys_by_group(before)
+  def deploys_by_group(before, include_failed_deploys = false)
     stages.each_with_object({}) do |stage, result|
-      deploy = stage.deploys.successful.where(release: true).where("deploys.updated_at <= ?", before.to_s(:db)).first
+      stage_filter = include_failed_deploys ? stage.deploys : stage.deploys.successful.where(release: true)
+      deploy = stage_filter.where("deploys.updated_at <= ?", before.to_s(:db)).first
       next unless deploy
       stage.deploy_groups.sort_by(&:natural_order).each do |deploy_group|
         result[deploy_group.id] ||= []

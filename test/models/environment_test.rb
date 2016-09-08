@@ -33,4 +33,12 @@ describe Environment do
       refute_valid(env)
     end
   end
+
+  describe '#template_stages' do
+    let(:env) { environments(:staging) }
+
+    it 'finds the template stages' do
+      refute env.template_stages.empty?
+    end
+  end
 end

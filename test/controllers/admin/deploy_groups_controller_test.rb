@@ -17,6 +17,7 @@ describe Admin::DeployGroupsController do
     unauthorized :delete, :destroy, id: 1
     unauthorized :get, :deploy_all, id: 1
     unauthorized :post, :deploy_all, id: 1
+    unauthorized :post, :create_all_stages, id: 1
   end
 
   as_a_admin do
@@ -44,6 +45,7 @@ describe Admin::DeployGroupsController do
     unauthorized :delete, :destroy, id: 1
     unauthorized :get, :deploy_all, id: 1
     unauthorized :post, :deploy_all, id: 1
+    unauthorized :post, :create_all_stages, id: 1
   end
 
   as_a_super_admin do
@@ -118,87 +120,80 @@ describe Admin::DeployGroupsController do
     end
 
     describe "#deploy_all" do
-      before do
-        [stage, stages(:test_production)].each do |stage|
-          stage.commands.first.update_attributes!(command: "cap $DEPLOY_GROUPS deploy")
-        end
-      end
-
-      it "renders" do
-        get :deploy_all, id: deploy_group
-        assert_response :success
-        assigns[:stages].must_equal [[stage, stage.deploys.first]]
-      end
-
-      it "ignores stages that do not have $DEPLOY_GROUPS" do
-        stage.commands.first.update_attributes!(command: "cap pod1 deploy")
-        get :deploy_all, id: deploy_group
-        assigns[:stages].must_equal []
-      end
-
-      it "also lists stages that have not been deployed since they might be our last failed deploy" do
-        Job.update_all(status: 'running')
-
-        other_stage = stages(:test_production)
-        other_stage.deploy_groups << deploy_group
-        other_stage.commands.create!(command: "cap $DEPLOY_GROUPS deploy")
-        other_stage.deploys.last.job.update_attribute(:status, 'succeeded')
-
-        get :deploy_all, id: deploy_group
-        assigns[:stages].must_equal [[stage, other_stage.deploys.first], [other_stage, other_stage.deploys.first]]
-      end
-
-      it "ignores stages where the whole environment never got deployed" do
-        Job.update_all(status: 'running')
-        get :deploy_all, id: deploy_group
-        assigns[:stages].must_equal []
-      end
-
-      describe "without stages on current environment" do
-        before { stage.deploy_groups.clear }
-
-        it "ignores stages that are on different environments" do
-          get :deploy_all, id: deploy_group
-          assigns[:stages].must_equal []
-        end
-
-        it "shows stages that are on different environments when the environment was overwritten" do
-          get :deploy_all, id: deploy_group, environment_id: environments(:production).id
-          production_stage = stages(:test_production)
-          assigns[:stages].must_equal [[production_stage, production_stage.deploys.first]]
-        end
-      end
-    end
-
-    describe "#deploy_all_now" do
-      it "deploys matching stages" do
-        stage.update_attributes!(name: deploy_group.name.upcase + '  ----')
-        assert_no_difference "Stage.count" do
-          post :deploy_all_now, id: deploy_group, stages: ["#{stage.id}-master"]
-        end
+      it "deploys all stages for this deploy_group" do
+        post :deploy_all, id: deploy_group
         deploy = stage.deploys.order('created_at desc').first.id
         assert_redirected_to "/deploys?ids%5B%5D=#{deploy}"
       end
 
-      describe "when it does not match" do
-        before { stage.deploy_groups << deploy_groups(:pod2) }
+      it 'ignores template_stages that have not been deployed yet' do
+        Deploy.delete_all
 
-        it "deploys to a new stage" do
-          assert_difference "Stage.count", +1 do
-            post :deploy_all_now, id: deploy_group, stages: ["#{stage.id}-master"]
-          end
-          deploy = Deploy.first
-          new_stage = deploy.stage
-          new_stage.wont_equal stage
-          assert_redirected_to "/deploys?ids%5B%5D=#{deploy.id}"
+        post :deploy_all, id: deploy_group
+        assert_redirected_to "/deploys" # with no ids  present.
+      end
+
+      it 'ignores template_stages with only a failed deploy' do
+        Job.update_all(status: :failed)
+
+        post :deploy_all, id: deploy_group
+        assert_redirected_to "/deploys" # with no ids  present.
+      end
+
+      it 'ignores failed deploy and takes last successful deploy' do
+        stage = deploy_group.stages.first
+
+        # verify the test is setup correctly.
+        assert stage.last_deploy.failed?
+        last_successful_deploy = stage.last_successful_deploy
+        assert last_successful_deploy.succeeded?
+
+        post :deploy_all, id: deploy_group
+        assert_equal Deploy.last.reference, last_successful_deploy.reference
+      end
+
+      it 'ignores stages with no deploy groups' do
+        DeployGroupsStage.delete_all
+
+        post :deploy_all, id: deploy_group
+        assert_redirected_to "/deploys" # with no ids  present.
+      end
+
+      it 'ignores stages that include only other deploy groups' do
+        env = environments(:staging)
+        new_dp = DeployGroup.create!(name: "foo", environment: env)
+        DeployGroupsStage.update_all(deploy_group_id: new_dp.id)
+
+        post :deploy_all, id: deploy_group
+        assert_redirected_to "/deploys" # with no ids  present.
+      end
+
+      it 'ignores projects with no template for this environment' do
+        Stage.update_all(is_template: false)
+
+        post :deploy_all, id: deploy_group
+        assert_redirected_to "/deploys" # with no ids  present.
+      end
+    end
+
+    describe "#create_all_stages" do
+      let(:env) { environments(:staging) }
+      let(:deploy_group) { DeployGroup.create!(name: 'Pod 101', environment: env) }
+      let(:template_stage) { stages(:test_staging) }
+
+      it 'creates no stages if there are no template_environments' do
+        template_stage.update(is_template: false)
+        assert_no_difference 'Stage.count' do
+          post :create_all_stages, id: deploy_group
+        end
+      end
+
+      it 'creates a missing stage for a template_environment' do
+        assert_difference 'Stage.count', 1 do
+          post :create_all_stages, id: deploy_group
         end
 
-        it "deploys to a new stage when it does not match and a stage with the same name already exists" do
-          stage.update_attribute(:name, deploy_group.name)
-          assert_difference "Stage.count", +1 do
-            post :deploy_all_now, id: deploy_group, stages: ["#{stage.id}-master"]
-          end
-        end
+        refute_empty deploy_group.stages.where(project: template_stage.project)
       end
     end
   end

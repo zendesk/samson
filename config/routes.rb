@@ -129,8 +129,8 @@ Samson::Application.routes.draw do
     resources :environments, except: [:show]
     resources :deploy_groups do
       member do
-        get :deploy_all
-        post :deploy_all_now
+        post :deploy_all
+        post :create_all_stages
       end
     end
   end

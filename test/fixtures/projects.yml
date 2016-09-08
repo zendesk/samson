@@ -3,3 +3,4 @@ test:
   repository_url: ssh://git@example.com:bar/foo.git
   token: kanyewest
   permalink: foo
+  include_new_deploy_groups: true
