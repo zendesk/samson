@@ -35,6 +35,10 @@ module Kubernetes
       message = (success ? "completed successfully" : "failed or timed out")
       @output.puts "### Remote build job #{job_name} #{message}"
 
+      if success && clair = ENV['HYPERCLAIR_PATH']
+        Thread.new { scan_with_clair(clair, project.permalink.tr('_', '-'), tag) }
+      end
+
       return success, job_log
     ensure
       # Jobs will still be there regardless of their statuses
@@ -89,6 +93,48 @@ module Kubernetes
         ]
       }
       k8s_job[:spec][:template][:spec][:containers][0].update(container_params)
+    end
+
+    # Run a shell script that wraps hyperclair.
+    # Hyperclair will pull the image from registry and run scan with Clair scanner
+    def scan_with_clair(script, project, tag)
+      sleep 0.1 if Rails.env.test? # in test we reuse the same connection, so we cannot use it at the same time
+      success, output, time = execute_command(script, @registry.fetch(:serveraddress), project, tag, timeout: 60 * 60)
+      status = (success ? "success" : "errored or vulnerabilities found")
+      output = "### Clair scan: #{status} in #{time}s\n#{output}"
+      @job.reload
+      @job.update_column(:output, @job.output + output)
+    end
+
+    # timeout could be done more reliably with timeout(1) from gnu coreutils ... but that would add another dependency
+    def execute_command(*command, timeout:)
+      output = "ABORTED"
+
+      time = Benchmark.realtime do
+        IO.popen(command, unsetenv_others: true, err: [:child, :out]) do |io|
+          output = Timeout.timeout(timeout) { kill_child_on_error(io) { io.read } }
+        end
+      end.round
+      success = $?.success?
+
+      return success, output, time
+    rescue Errno::ENOENT, Timeout::Error
+      return false, $!.message, 0
+    end
+
+    # timeout or parent process interrupted by user with Interrupt or SystemExit
+    def kill_child_on_error(io)
+      yield
+    rescue Exception => e # rubocop:disable Lint/RescueException
+      begin
+        Process.kill :INT, io.pid # tell it to stop
+        sleep 1 # give it a second to clean up
+        Process.kill :KILL, io.pid # kill it
+        Process.wait io.pid # prevent zombie processes
+      rescue Errno::ESRCH # rubocop:disable Lint/HandleExceptions
+        # pid was already gone
+      end
+      raise e
     end
 
     def job_config(build, project, tag:, push: false, tag_as_latest: false)

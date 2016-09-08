@@ -136,3 +136,13 @@ Kubernetes::ReleaseGroup
         |
         -> Kubernetes Pods (how ever many replicas specified)
 ```
+
+### Clair security scans
+
+To security scan docker images using hyperclair, add:
+
+```
+HYPERCLAIR_PATH=/filesystem/path/to/hyperclair
+``` 
+
+Must exit with 0 for success and 1 for failure.

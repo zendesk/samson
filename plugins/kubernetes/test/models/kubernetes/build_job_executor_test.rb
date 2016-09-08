@@ -4,7 +4,7 @@ require_relative "../../test_helper"
 # Skip the following lines:
 # - Simple resetting tracking variables for the next loop when
 #   there is an error creating a build job or getting/watching pod log
-SingleCov.covered! uncovered: 2
+SingleCov.covered! uncovered: 3
 
 describe Kubernetes::BuildJobExecutor do
   let(:output) { StringIO.new }
@@ -152,6 +152,92 @@ describe Kubernetes::BuildJobExecutor do
 
           assert success
           assert_equal(job_pod_log.join("\n") << "\n", job_log)
+        end
+
+        describe "clair" do
+          # wait for clair thread to finish
+          def wait_for_clair_to_finish
+            sleep 0.1 while Thread.list.size > @before_threads.size
+          end
+
+          before { ActiveRecord::Base.stubs(connection: ActiveRecord::Base.connection) } # we update in another thread
+
+          around do |t|
+            Tempfile.open('clair') do |f|
+              f.write("#!/bin/bash\necho HELLO\nexit 0")
+              f.close
+              File.chmod 0755, f.path
+              with_env(HYPERCLAIR_PATH: f.path, &t)
+            end
+          end
+
+          it "runs clair and reports success to the database" do
+            success, job_log = execute!
+            job_log.wont_include "Clair"
+            assert success
+
+            wait_for_clair_to_finish
+
+            job = Job.first
+            job.output.must_include "Clair scan: success"
+            job.output.must_include "HELLO"
+          end
+
+          it "does not run clair when build failed" do
+            job_api_obj.stubs(:failure?).returns true
+            success, job_log = execute!
+            job_log.wont_include "Clair"
+            refute success
+
+            wait_for_clair_to_finish # just in case something goes wrong / to keep tests symmetric
+
+            job = Job.first
+            job.output.wont_include "Clair scan"
+          end
+
+          it "runs clair and reports missing script to the database" do
+            File.unlink ENV['HYPERCLAIR_PATH']
+
+            success, job_log = execute!
+            job_log.wont_include "Clair"
+            assert success
+
+            wait_for_clair_to_finish
+
+            job = Job.first
+            job.output.must_include "Clair scan: errored"
+            job.output.must_include "No such file or directory"
+          end
+
+          it "runs clair and reports failed script to the database" do
+            File.write ENV['HYPERCLAIR_PATH'], "#!/bin/bash\necho WORLD\nexit 1"
+
+            success, job_log = execute!
+            job_log.wont_include "Clair"
+            assert success
+
+            wait_for_clair_to_finish
+
+            job = Job.first
+            job.output.must_include "Clair scan: errored"
+            job.output.must_include "WORLD"
+          end
+
+          it "runs clair and reports timed out script to the database" do
+            IO.any_instance.expects(:read).raises(Timeout::Error)
+            Process.expects(:kill).times(2)
+            Process.expects(:wait)
+
+            success, job_log = execute!
+            job_log.wont_include "Clair"
+            assert success
+
+            wait_for_clair_to_finish
+
+            job = Job.first
+            job.output.must_include "Clair scan: errored"
+            job.output.must_include "Timeout::Error"
+          end
         end
       end
     end
