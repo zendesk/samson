@@ -15,11 +15,7 @@ Samson::Application.configure do
   config.consider_all_requests_local       = false
   config.action_controller.perform_caching = true
 
-  if Rails::VERSION::MAJOR == 5
-    config.public_file_server.enabled = true
-  else
-    config.serve_static_files = true
-  end
+  config.public_file_server.enabled = true
 
   # Compress JavaScripts and CSS.
   config.assets.js_compressor = :uglifier
