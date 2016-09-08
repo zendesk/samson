@@ -30,7 +30,7 @@ describe Admin::SecretsController do
     unauthorized :get, :new
   end
 
-  as_a_deployer do
+  as_a_project_deployer do
     unauthorized :post, :create, secret: {
       environment_permalink: 'production',
       project_permalink: 'foo',
@@ -81,6 +81,15 @@ describe Admin::SecretsController do
       it "is unauthorized" do
         delete :destroy, id: secret.id
         assert_unauthorized
+      end
+    end
+  end
+
+  as_a_deployer do
+    describe '#index' do
+      it 'renders template' do
+        get :index
+        assert_template :index
       end
     end
   end
