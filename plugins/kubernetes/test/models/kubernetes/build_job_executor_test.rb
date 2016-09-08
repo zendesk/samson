@@ -23,9 +23,11 @@ describe Kubernetes::BuildJobExecutor do
   let(:executor) { Kubernetes::BuildJobExecutor.new(output, job: job) }
 
   describe '#execute!' do
-    def execute!(push: false, registry_info: nil)
-      executor.execute!(build, project,
-        tag: 'latest', push: push, registry: registry_info)
+    def execute!(push: false)
+      executor.execute!(
+        build, project,
+        tag: 'latest', push: push, registry: registry_info
+      )
     end
 
     let(:client) { stub }
@@ -37,11 +39,10 @@ describe Kubernetes::BuildJobExecutor do
     end
 
     it 'fails when an invalid registry is passed in' do
-      invalid_registry = registry_info.dup
-      invalid_registry[:serveraddress] = ''
+      registry_info[:serveraddress] = ''
       extension_client.expects(:create_job).never
       extension_client.expects(:delete_job).never
-      success, job_log = execute!(registry_info: invalid_registry)
+      success, job_log = execute!
       refute success
       assert_empty job_log
     end
@@ -82,9 +83,7 @@ describe Kubernetes::BuildJobExecutor do
       it 'reads the job config file and populates correct job parameters, but fails to start a job' do
         extension_client.expects(:create_job).raises(KubeException.new(500, 'Server Error', {}))
 
-        assert_raises KubeException do
-          execute!(registry_info: registry_info)
-        end
+        assert_raises(KubeException) { execute! }
 
         project_name_dash = project.permalink.tr('_', '-')
         assert_match(/^#{Regexp.quote(project_name_dash)}-docker-build-#{build.id}-[0-9a-f]{14}$/,
@@ -103,7 +102,7 @@ describe Kubernetes::BuildJobExecutor do
       end
 
       describe 'when the job resource is created' do
-        let(:job_api_obj) { stub }
+        let(:job_api_obj) { stub(failure?: false, complete?: true) }
         let(:job_pod) { stub(first: stub(name: stub, namespace: stub)) }
         let(:job_pod_log) { ['A long long log', 'A shorter log'] }
         let(:pod_api_obj) { stub(name: stub, namespace: stub) }
@@ -120,10 +119,17 @@ describe Kubernetes::BuildJobExecutor do
           job_api_obj.stubs(:name).returns 'job-123'
         end
 
+        it 'returns a success status and a non-empty log when the job completes' do
+          success, job_log = execute!
+
+          assert success
+          assert_equal(job_pod_log.join("\n") << "\n", job_log)
+        end
+
         it 'returns a failure status and an empty log when the job fails' do
           job_api_obj.stubs(:failure?).returns true
 
-          success, job_log = execute!(registry_info: registry_info)
+          success, job_log = execute!
           refute success
           assert_empty job_log
         end
@@ -132,29 +138,17 @@ describe Kubernetes::BuildJobExecutor do
           start = Time.now
           Time.stubs(:now).returns(start)
           executor.expects(:sleep).with { Time.stubs(:now).returns(start + 1.hour); true }
-          job_api_obj.stubs(:failure?).returns false
           job_api_obj.stubs(:complete?).returns false
-          success, job_log = execute!(registry_info: registry_info)
+          success, job_log = execute!
 
           refute success
           assert_empty job_log
         end
 
-        it 'returns a success status and a non-empty log when the job completes' do
-          job_api_obj.stubs(:failure?).returns false
-          job_api_obj.stubs(:complete?).returns true
-          success, job_log = execute!(registry_info: registry_info)
-
-          assert success
-          assert_equal(job_pod_log.join("\n") << "\n", job_log)
-        end
-
         it 'returns the job status when it fails to clean up the build job' do
           extension_client.unstub(:delete_job)
           extension_client.expects(:delete_job).raises(KubeException.new(404, 'Not Found', {}))
-          job_api_obj.stubs(:failure?).returns false
-          job_api_obj.stubs(:complete?).returns true
-          success, job_log = execute!(registry_info: registry_info)
+          success, job_log = execute!
 
           assert success
           assert_equal(job_pod_log.join("\n") << "\n", job_log)
