@@ -134,37 +134,6 @@ describe Kubernetes::BuildJobExecutor do
           assert_empty job_log
         end
 
-        it 'prints results when clair scan passes' do
-          Tempfile.open('clair') do |f|
-            f.write("#!/bin/bash\n exit 0")
-            f.rewind
-            f.close
-            File.chmod 0755, f.path
-            with_env("CLAIR_EXEC_SCRIPT": f.path) do
-              job_api_obj.stubs(:failure?).returns false
-              job_api_obj.stubs(:complete?).returns true
-              success, job_log = execute!(registry_info: registry_info)
-              assert success
-              assert_equal(job_log, job_pod_log.join("\n") << "\n")
-            end
-          end
-        end
-
-        it 'shows errors when clair scan fails' do
-          Tempfile.open('clair') do |f|
-            f.write("#!/bin/bash\n exit 1")
-            f.rewind
-            f.close
-            File.chmod 0755, f.path
-            with_env("CLAIR_EXEC_SCRIPT": f.path) do
-              job_api_obj.stubs(:failure?).returns false
-              job_api_obj.stubs(:complete?).returns true
-              success, = execute!(registry_info: registry_info)
-              refute success
-            end
-          end
-        end
-
         it 'returns a failure status and an empty log when the job times out' do
           start = Time.now
           Time.stubs(:now).returns(start)
@@ -183,6 +152,92 @@ describe Kubernetes::BuildJobExecutor do
 
           assert success
           assert_equal(job_pod_log.join("\n") << "\n", job_log)
+        end
+
+        describe "clair" do
+          # wait for clair thread to finish
+          def wait_for_clair_to_finish
+            sleep 0.1 while Thread.list.size > @before_threads.size
+          end
+
+          before { ActiveRecord::Base.stubs(connection: ActiveRecord::Base.connection) } # we update in another thread
+
+          around do |t|
+            Tempfile.open('clair') do |f|
+              f.write("#!/bin/bash\necho HELLO\nexit 0")
+              f.close
+              File.chmod 0755, f.path
+              with_env(HYPERCLAIR_PATH: f.path, &t)
+            end
+          end
+
+          it "runs clair and reports success to the database" do
+            success, job_log = execute!
+            job_log.wont_include "Clair"
+            assert success
+
+            wait_for_clair_to_finish
+
+            job = Job.first
+            job.output.must_include "Clair scan: success"
+            job.output.must_include "HELLO"
+          end
+
+          it "does not run clair when build failed" do
+            job_api_obj.stubs(:failure?).returns true
+            success, job_log = execute!
+            job_log.wont_include "Clair"
+            refute success
+
+            wait_for_clair_to_finish # just in case something goes wrong / to keep tests symmetric
+
+            job = Job.first
+            job.output.wont_include "Clair scan"
+          end
+
+          it "runs clair and reports missing script to the database" do
+            File.unlink ENV['HYPERCLAIR_PATH']
+
+            success, job_log = execute!
+            job_log.wont_include "Clair"
+            assert success
+
+            wait_for_clair_to_finish
+
+            job = Job.first
+            job.output.must_include "Clair scan: errored"
+            job.output.must_include "No such file or directory"
+          end
+
+          it "runs clair and reports failed script to the database" do
+            File.write ENV['HYPERCLAIR_PATH'], "#!/bin/bash\necho WORLD\nexit 1"
+
+            success, job_log = execute!
+            job_log.wont_include "Clair"
+            assert success
+
+            wait_for_clair_to_finish
+
+            job = Job.first
+            job.output.must_include "Clair scan: errored"
+            job.output.must_include "WORLD"
+          end
+
+          it "runs clair and reports timed out script to the database" do
+            IO.any_instance.expects(:read).raises(Timeout::Error)
+            Process.expects(:kill).times(2)
+            Process.expects(:wait)
+
+            success, job_log = execute!
+            job_log.wont_include "Clair"
+            assert success
+
+            wait_for_clair_to_finish
+
+            job = Job.first
+            job.output.must_include "Clair scan: errored"
+            job.output.must_include "Timeout::Error"
+          end
         end
       end
     end

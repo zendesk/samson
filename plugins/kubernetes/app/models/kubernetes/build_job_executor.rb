@@ -35,14 +35,8 @@ module Kubernetes
       message = (success ? "completed successfully" : "failed or timed out")
       @output.puts "### Remote build job #{job_name} #{message}"
 
-      if ENV['CLAIR_EXEC_SCRIPT']
-        ### Running security scan
-        clair_result = scan_with_clair(project.permalink.tr('_', '-'), tag)
-        ### Adding clair log to job log and success code
-        if clair_result
-          job_log << clair_result
-          success = false
-        end
+      if success && clair = ENV['HYPERCLAIR_PATH']
+        Thread.new { scan_with_clair(clair, project.permalink.tr('_', '-'), tag) }
       end
 
       return success, job_log
@@ -101,25 +95,46 @@ module Kubernetes
       k8s_job[:spec][:template][:spec][:containers][0].update(container_params)
     end
 
-    # External script execution method for Clair security scanner
-    def exec_script(script, registry, project, tag)
-      result = IO.popen([script, registry, project, tag], err: [:child, :out])
-      Process.wait(result.pid)
-      result.read
+    # Run a shell script that wraps hyperclair.
+    # Hyperclair will pull the image from registry and run scan with Clair scanner
+    def scan_with_clair(script, project, tag)
+      sleep 0.1 if Rails.env.test? # in test we reuse the same connection, so we cannot use it at the same time
+      success, output, time = execute_command(script, @registry.fetch(:serveraddress), project, tag, timeout: 60 * 60)
+      status = (success ? "success" : "errored or vulnerabilities found")
+      output = "### Clair scan: #{status} in #{time}s\n#{output}"
+      @job.reload
+      @job.update_column(:output, @job.output + output)
     end
 
-    # So far we don't have ruby API for clair scanner and using shell script to wrap hyperclair.
-    # Hyperclair will pull the image from registry and run scan against Clair scanner
-    def scan_with_clair(project, tag)
-      clair_result = exec_script(ENV['CLAIR_EXEC_SCRIPT'], @registry[:serveraddress], project, tag)
-      if $?.success?
-        @output.puts "### Clair scan passed successfully"
-        return nil
-      else
-        @output.puts "### Clair scanner found vulnarabilities, stopping build"
-        @output.puts "### #{clair_result}"
-        return clair_result
+    # timeout could be done more reliably with timeout(1) from gnu coreutils ... but that would add another dependency
+    def execute_command(*command, timeout:)
+      output = "ABORTED"
+
+      time = Benchmark.realtime do
+        IO.popen(command, unsetenv_others: true, err: [:child, :out]) do |io|
+          output = Timeout.timeout(timeout) { kill_child_on_error(io) { io.read } }
+        end
+      end.round
+      success = $?.success?
+
+      return success, output, time
+    rescue Errno::ENOENT, Timeout::Error
+      return false, $!.message, 0
+    end
+
+    # timeout or parent process interrupted by user with Interrupt or SystemExit
+    def kill_child_on_error(io)
+      yield
+    rescue Exception => e # rubocop:disable Lint/RescueException
+      begin
+        Process.kill :INT, io.pid # tell it to stop
+        sleep 1 # give it a second to clean up
+        Process.kill :KILL, io.pid # kill it
+        Process.wait io.pid # prevent zombie processes
+      rescue Errno::ESRCH # rubocop:disable Lint/HandleExceptions
+        # pid was already gone
       end
+      raise e
     end
 
     def job_config(build, project, tag:, push: false, tag_as_latest: false)
