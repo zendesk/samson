@@ -10,7 +10,7 @@ class Admin::SecretsController < ApplicationController
   DEPLOYER_ACCESS = [:index, :new].freeze
   before_action :ensure_project_access, except: DEPLOYER_ACCESS
   before_action :authorize_project_admin!, except: DEPLOYER_ACCESS
-  before_action :authorize_deployer!, only: DEPLOYER_ACCESS
+  before_action :authorize_any_deployer!, only: DEPLOYER_ACCESS
 
   def index
     @secret_keys = SecretStorage.keys
@@ -90,5 +90,11 @@ class Admin::SecretsController < ApplicationController
   def current_project
     return if project_permalink == 'global'
     Project.find_by_permalink project_permalink
+  end
+
+  def authorize_any_deployer!
+    if !current_user.deployer? && !current_user.user_project_roles.where('role_id >= ?', Role::DEPLOYER).exists?
+      unauthorized!
+    end
   end
 end
