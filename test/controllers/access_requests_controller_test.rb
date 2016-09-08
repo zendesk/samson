@@ -64,7 +64,7 @@ describe AccessRequestsController do
         end
         let(:session_params) { {access_request_back_to: root_path} }
         describe 'environment and user' do
-          before { post :create, request_params, session_params }
+          before { post :create, params: request_params, session: session_params }
 
           it 'sets the pending request flag' do
             assert @controller.send(:current_user).access_request_pending
@@ -86,7 +86,7 @@ describe AccessRequestsController do
         describe 'email' do
           it 'sends the message' do
             assert_difference 'ActionMailer::Base.deliveries.size', +1 do
-              post :create, request_params, session_params
+              post :create, params: request_params, session: session_params
             end
             access_request_email = ActionMailer::Base.deliveries.last
             access_request_email.cc.must_equal [manager_email]
