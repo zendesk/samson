@@ -130,7 +130,7 @@ class Project < ActiveRecord::Base
     MultiLock.lock(id, holder, timeout: timeout, failed_to_lock: callback, &block)
   end
 
-  def last_deploy_by_group(before_time, include_failed_deploys = false)
+  def last_deploy_by_group(before_time, include_failed_deploys: false)
     releases = deploys_by_group(before_time, include_failed_deploys)
     releases.map { |group_id, deploys| [group_id, deploys.sort_by(&:updated_at).last] }.to_h
   end

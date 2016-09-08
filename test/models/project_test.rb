@@ -294,7 +294,7 @@ describe Project do
     end
 
     it 'includes failed deploys' do
-      deploys = project.last_deploy_by_group(Time.now, true)
+      deploys = project.last_deploy_by_group(Time.now, include_failed_deploys: true)
       deploys[pod100.id].must_equal staging_failed_deploy
     end
 
