@@ -16,10 +16,10 @@ class Integrations::BaseController < ApplicationController
 
     if release
       create_build_record
+    end
 
-      if project.deploy_with_docker? && project.auto_release_docker_image?
-        create_docker_image
-      end
+    if project.build_docker_image_for_branch?(branch)
+      create_docker_image
     end
 
     if deploy_to_stages
