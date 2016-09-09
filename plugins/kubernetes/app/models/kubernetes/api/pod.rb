@@ -27,6 +27,15 @@ module Kubernetes
         @pod.status.phase
       end
 
+      def reason
+        reasons = []
+        reasons.concat @pod.status.conditions.try(:map, &:reason).to_a
+        reasons.concat @pod.status.containerStatuses.
+          try(:map) { |s| s.to_h.fetch(:state).values.map { |s| s[:reason] } }.
+          to_a
+        reasons.reject(&:blank?).uniq.join("/").presence || "Unknown"
+      end
+
       def deploy_group_id
         labels.deploy_group_id.to_i
       end

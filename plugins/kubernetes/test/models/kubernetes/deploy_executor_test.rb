@@ -55,7 +55,7 @@ describe Kubernetes::DeployExecutor do
           {
             status: {
               phase: "Running", conditions: [{type: "Ready", status: "True"}],
-              containerStatuses: [{restartCount: 0}]
+              containerStatuses: [{restartCount: 0, state: {}}]
             },
             metadata: {
               name: "pod-#{role.name}",
@@ -356,7 +356,7 @@ describe Kubernetes::DeployExecutor do
       stop_after_first_iteration
       refute execute!
 
-      out.must_include "resque-worker: Waiting (Pending, not Ready)\n"
+      out.must_include "resque-worker: Waiting (Pending, Unknown)\n"
       out.must_include "STOPPED"
     end
 
@@ -383,13 +383,13 @@ describe Kubernetes::DeployExecutor do
       out.must_include "TIMEOUT"
     end
 
-    it "waits when deploy is running but not ready" do
+    it "waits when deploy is running but Unknown" do
       pod_status[:conditions][0][:status] = "False"
 
       stop_after_first_iteration
       refute execute!
 
-      out.must_include "resque-worker: Waiting (Running, not Ready)\n"
+      out.must_include "resque-worker: Waiting (Running, Unknown)\n"
       out.must_include "STOPPED"
     end
 

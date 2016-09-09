@@ -176,7 +176,7 @@ module Kubernetes
             [true, "Live"]
           end
         else
-          [false, "Waiting (#{pod.phase}, not Ready)"]
+          [false, "Waiting (#{pod.phase}, #{pod.reason})"]
         end
       end
 
