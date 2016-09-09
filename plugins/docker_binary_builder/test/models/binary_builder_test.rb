@@ -25,7 +25,7 @@ describe BinaryBuilder do
       Docker::Container.stubs(:create).returns(fake_container)
       Docker::Image.stubs(:build_from_dir).returns(fake_image)
       builder.stubs(:untar).returns(true)
-      project.update_attributes(deploy_with_docker: true)
+      project.update_attributes(docker_release_branch: 'master')
       builder.stubs(:build_file_exist?).returns(true)
     end
 
@@ -44,7 +44,7 @@ describe BinaryBuilder do
     end
 
     it 'does nothing if docker flag is not set for project' do
-      project.update_attributes(deploy_with_docker: false)
+      project.update_attributes(docker_release_branch: nil)
       builder.expects(:create_build_image).never
       builder.build
     end

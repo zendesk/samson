@@ -1,4 +1,3 @@
-# encoding: UTF-8
 # This file is auto-generated from the current state of the database. Instead
 # of editing this file, please use the migrations feature of Active Record to
 # incrementally modify your database, and then regenerate this schema definition.
@@ -11,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20160901175936) do
+ActiveRecord::Schema.define(version: 20160909013442) do
 
   create_table "builds", force: :cascade do |t|
     t.integer  "project_id",                                       null: false
@@ -337,14 +336,13 @@ ActiveRecord::Schema.define(version: 20160901175936) do
     t.datetime "deleted_at"
     t.datetime "created_at"
     t.datetime "updated_at"
-    t.string   "token",              limit: 255
-    t.string   "release_branch",     limit: 255
-    t.string   "permalink",          limit: 255,                   null: false
-    t.text     "description",        limit: 65535
-    t.string   "owner",              limit: 255
-    t.boolean  "deploy_with_docker",               default: false, null: false
-    t.boolean  "auto_release_docker_image",        default: false, null: false
+    t.string   "token"
+    t.string   "release_branch"
+    t.string   "permalink",                                               null: false
+    t.text     "description",               limit: 65535
+    t.string   "owner"
     t.boolean  "include_new_deploy_groups",               default: false, null: false
+    t.string   "docker_release_branch"
   end
 
   add_index "projects", ["permalink", "deleted_at"], name: "index_projects_on_permalink_and_deleted_at", length: {"permalink"=>191, "deleted_at"=>nil}, using: :btree

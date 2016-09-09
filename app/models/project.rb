@@ -71,6 +71,19 @@ class Project < ActiveRecord::Base
     release_branch == branch
   end
 
+  # Whether to create a new docker image when the branch is updated.
+  #
+  # branch - The String name of the branch in question.
+  #
+  # Returns true if new releases should be created, false otherwise.
+  def build_docker_image_for_branch?(branch)
+    deploy_with_docker? && docker_release_branch == branch
+  end
+
+  def deploy_with_docker?
+    docker_release_branch.present?
+  end
+
   # The user/repo part of the repository URL.
   def user_repo_part
     # GitHub allows underscores, hyphens and dots in repo names

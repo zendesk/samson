@@ -406,6 +406,33 @@ describe Project do
     end
   end
 
+  describe "#build_docker_image_for_branch?" do
+    context 'when the docker release branch is set' do
+      before do
+        project.docker_release_branch = 'master'
+        project.release_branch = 'master-of-puppets'
+      end
+      it 'returns false for the wrong branch' do
+        refute project.build_docker_image_for_branch?('master-of-puppets')
+      end
+
+      it 'returns true for the right branch' do
+        assert project.build_docker_image_for_branch?('master')
+      end
+    end
+
+    context 'when the docker release branch is not set' do
+      before do
+        project.docker_release_branch = nil
+        project.release_branch = 'master-of-puppets'
+      end
+      it 'returns false' do
+        refute project.build_docker_image_for_branch?(nil)
+        refute project.build_docker_image_for_branch?('master-of-puppets')
+      end
+    end
+  end
+
   describe "#user_project_roles" do
     it "deletes them on deletion and audits as user change" do
       assert_difference 'PaperTrail::Version.where(item_type: "User").count', +2 do

@@ -45,14 +45,23 @@
       <%= form.label :release_branch, class: "col-lg-2 control-label" %>
       <div class="col-lg-4">
         <%= form.text_field :release_branch, class: "form-control" %>
-        <div id="docker_release_push">
-          <%= form.check_box :auto_release_docker_image  %>
-          <%= form.label :auto_release_docker_image, 'Auto push docker images' %>
-        </div>
-
         <p class="help-block">New commits on this branch will cause a release when a webhook arrives.</p>
       </div>
     </div>
+
+
+    <% if ENV['DOCKER_FEATURE'] %>
+      <div class="form-group">
+        <%= form.label :docker_release_branch, class: "col-lg-2 control-label" %>
+        <div class="col-lg-4">
+          <%= form.text_field :docker_release_branch, class: "form-control" %>
+
+          <p class="help-block">
+            New commits on this branch will cause a docker image to be built when a webhook arrives.
+          </p>
+        </div>
+      </div>
+    <% end %>
 
     <% if DeployGroup.enabled? %>
       <div class="form-group">
@@ -62,17 +71,6 @@
           <p class="help-block">The "Create all stages" button for a deploy group will create a stage for this project.</p>
         </div>
       </div>
-    <% end %>
-
-    <% if ENV['DOCKER_FEATURE'] %>
-    <div class="form-group">
-      <div class="col-sm-offset-2 col-sm-10">
-        <div class="checkbox">
-          <%= form.check_box :deploy_with_docker %>
-          <%= form.label :deploy_with_docker, 'Deploy with Docker' %>
-        </div>
-      </div>
-    </div>
     <% end %>
 
     <%= Samson::Hooks.render_views(:project_form, self, form: form) %>
