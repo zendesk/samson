@@ -43,12 +43,6 @@ describe BinaryBuilder do
       ].join
     end
 
-    it 'does nothing if docker flag is not set for project' do
-      project.update_attributes(docker_release_branch: nil)
-      builder.expects(:create_build_image).never
-      builder.build
-    end
-
     it 'does nothing if docker flag is set for project but no dockerfile.build exists' do
       builder.unstub(:build_file_exist?)
       builder.expects(:create_build_image).never

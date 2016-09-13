@@ -77,11 +77,7 @@ class Project < ActiveRecord::Base
   #
   # Returns true if new releases should be created, false otherwise.
   def build_docker_image_for_branch?(branch)
-    deploy_with_docker? && docker_release_branch == branch
-  end
-
-  def deploy_with_docker?
-    docker_release_branch.present?
+    docker_release_branch == branch
   end
 
   # The user/repo part of the repository URL.
