@@ -48,7 +48,7 @@ class JobExecution
   end
 
   def wait!
-    @thread.try(:join)
+    @thread.join
   end
 
   def pid
@@ -65,18 +65,15 @@ class JobExecution
   def stop!
     if @thread
       @executor.stop! 'INT'
-
-      stop_timeout.times do
-        return if @thread.join(1)
-      end
+      return if @thread.join(stop_timeout)
 
       @executor.stop! 'KILL'
-
-      wait!
-    else
-      @job.cancelled!
-      finish
+      @thread.join(stop_timeout) ||
+        (Rails.env.test? ? @thread.join : @thread.kill) # miniest runs before blocks twice when killing thread here
     end
+
+    @job.cancelled!
+    finish
   end
 
   def on_complete(&block)
