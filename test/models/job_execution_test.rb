@@ -336,6 +336,7 @@ describe JobExecution do
         TerminalExecutor.any_instance.expects(:stop!).with('INT')
         TerminalExecutor.any_instance.expects(:stop!).with('KILL')
         execution.stop!
+        job.reload.status.must_equal 'cancelled'
       ensure
         JobExecution.stop_timeout = old
       end
