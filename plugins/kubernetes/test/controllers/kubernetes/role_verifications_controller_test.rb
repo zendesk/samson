@@ -15,29 +15,29 @@ describe Kubernetes::RoleVerificationsController do
     describe '#create' do
       it "succeeds when valid" do
         Kubernetes::RoleVerifier.any_instance.expects(:verify).returns nil
-        post :create, role: {}.to_json
+        post :create, params: {role: {}.to_json}
         assert flash.now[:notice], assigns[:errors]
         assert_template :new
       end
 
       it "fails when invalid" do
-        post :create, role: {}.to_json
+        post :create, params: {role: {}.to_json}
         assert assigns[:errors]
         assert_template :new
       end
 
       it "fails nicely with borked template" do
-        post :create, role: "---"
+        post :create, params: {role: "---"}
         assigns[:errors].must_include "Error found when parsing test.yml"
       end
 
       it "reports invalid json" do
-        post :create, role: "{oops"
+        post :create, params: {role: "{oops"}
         assigns[:errors].must_include "Error found when parsing test.json"
       end
 
       it "reports invalid yaml" do
-        post :create, role: "}foobar:::::"
+        post :create, params: {role: "}foobar:::::"}
         assigns[:errors].must_include "Error found when parsing test.yml"
       end
     end

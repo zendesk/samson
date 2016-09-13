@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 # rubocop:disable Metrics/LineLength
-class AddEnvironmentVariables < ActiveRecord::Migration
+class AddEnvironmentVariables < ActiveRecord::Migration[4.2]
   def change
     create_table :environment_variables do |t|
       t.string :name, null: false

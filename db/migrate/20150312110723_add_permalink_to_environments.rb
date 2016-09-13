@@ -1,5 +1,5 @@
 # frozen_string_literal: true
-class AddPermalinkToEnvironments < ActiveRecord::Migration
+class AddPermalinkToEnvironments < ActiveRecord::Migration[4.2]
   def change
     add_column :environments, :permalink, :string
     add_index :environments, :permalink, unique: true, length: 191

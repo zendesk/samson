@@ -1,5 +1,5 @@
 # frozen_string_literal: true
-class CreateLocks < ActiveRecord::Migration
+class CreateLocks < ActiveRecord::Migration[4.2]
   def change
     create_table :locks do |t|
       t.belongs_to :stage

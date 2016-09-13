@@ -17,7 +17,7 @@ describe ProjectRolesController do
   as_a_project_admin do
     describe "#create" do
       def create(role_id)
-        post :create, project_id: project, user_id: new_admin.id, role_id: role_id
+        post :create, params: {project_id: project, user_id: new_admin.id, role_id: role_id}
       end
 
       let(:new_admin) { users(:deployer) }

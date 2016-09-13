@@ -11,7 +11,7 @@ describe Kubernetes::ReleasesController do
   as_a_project_deployer do
     describe 'a GET to #index' do
       it 'renders' do
-        get :index, project_id: :foo
+        get :index, params: {project_id: :foo}
         assert_response :success
       end
     end

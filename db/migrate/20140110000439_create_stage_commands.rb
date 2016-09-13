@@ -1,5 +1,5 @@
 # frozen_string_literal: true
-class CreateStageCommands < ActiveRecord::Migration
+class CreateStageCommands < ActiveRecord::Migration[4.2]
   def change
     create_table :stage_commands do |t|
       t.belongs_to :stage

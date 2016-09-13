@@ -34,16 +34,7 @@ Samson::Application.configure do
   # ActionMailer::Base.deliveries array.
   config.action_mailer.delivery_method = :test
 
-  # Print deprecation notices to the stderr.
-  config.active_support.deprecation = lambda do |message, _backtrace|
-    if message =~ /DEPRECATION WARNING: .* HTTP request methods will accept only/
-      # ignore ... we'll have to deal with that later ...
-    elsif message =~ /Directly inheriting from ActiveRecord::Migration is deprecated/
-      # ignore ... change everything to 4.2 once we merged 5.0
-    else
-      raise message
-    end
-  end
+  config.active_support.deprecation = :raise
 
   # By default, we don't want to actually execute jobs when testing. However,
   # this setting can be enabled on a per-test basis.

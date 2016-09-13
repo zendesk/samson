@@ -1,5 +1,5 @@
 # frozen_string_literal: true
-class CreateCommands < ActiveRecord::Migration
+class CreateCommands < ActiveRecord::Migration[4.2]
   def change
     create_table :commands do |t|
       t.text :command, limit: 10.megabytes / 4

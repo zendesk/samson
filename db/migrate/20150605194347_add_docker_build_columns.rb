@@ -1,5 +1,5 @@
 # frozen_string_literal: true
-class AddDockerBuildColumns < ActiveRecord::Migration
+class AddDockerBuildColumns < ActiveRecord::Migration[4.2]
   def change
     change_table :builds do |t|
       t.string :docker_image_url, after: :docker_ref

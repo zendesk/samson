@@ -30,7 +30,7 @@ describe Admin::ProjectsController do
       end
 
       it "searches" do
-        get :index, search: {query: 'x'}
+        get :index, params: {search: {query: 'x'}}
         assert_template :index
         assigns[:projects].must_equal []
       end
@@ -38,7 +38,7 @@ describe Admin::ProjectsController do
 
     describe "#destroy" do
       before do
-        delete :destroy, id: project.to_param
+        delete :destroy, params: {id: project.to_param}
       end
 
       it "redirects to root url" do

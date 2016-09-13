@@ -32,7 +32,7 @@ describe Admin::DeployGroupsController do
 
     describe "#show" do
       it 'renders' do
-        get :show, id: deploy_group.id
+        get :show, params: {id: deploy_group.id}
         assert_template :show
         assert_response :success
       end
@@ -59,14 +59,14 @@ describe Admin::DeployGroupsController do
     describe '#create' do
       it 'creates a deploy group' do
         assert_difference 'DeployGroup.count', +1 do
-          post :create, deploy_group: {name: 'pod666', environment_id: environments(:staging).id}
+          post :create, params: {deploy_group: {name: 'pod666', environment_id: environments(:staging).id}}
           assert_redirected_to admin_deploy_groups_path
         end
       end
 
       it 'fails with blank name' do
         deploy_group_count = DeployGroup.count
-        post :create, deploy_group: {name: nil}
+        post :create, params: {deploy_group: {name: nil}}
         assert_template :edit
         DeployGroup.count.must_equal deploy_group_count
       end
@@ -74,7 +74,7 @@ describe Admin::DeployGroupsController do
 
     describe '#edit' do
       it "renders" do
-        get :edit, id: deploy_group
+        get :edit, params: {id: deploy_group}
         assert_template :edit
       end
     end
@@ -83,15 +83,18 @@ describe Admin::DeployGroupsController do
       before { request.env["HTTP_REFERER"] = admin_deploy_groups_url }
 
       it 'saves' do
-        post :update, deploy_group: {
-          name: 'Test Update', environment_id: environments(:production).id
-        }, id: deploy_group.id
+        post :update, params: {
+          deploy_group: {
+            name: 'Test Update', environment_id: environments(:production).id
+          },
+          id: deploy_group.id
+        }
         assert_redirected_to admin_deploy_groups_path
         DeployGroup.find(deploy_group.id).name.must_equal 'Test Update'
       end
 
       it 'fail to update with blank name' do
-        post :update, deploy_group: {name: ''}, id: deploy_group
+        post :update, params: {deploy_group: {name: ''}, id: deploy_group}
         assert_template :edit
         deploy_group.reload.name.must_equal 'Pod 100'
       end
@@ -100,19 +103,19 @@ describe Admin::DeployGroupsController do
     describe '#destroy' do
       it 'succeeds' do
         DeployGroupsStage.delete_all
-        delete :destroy, id: deploy_group
+        delete :destroy, params: {id: deploy_group}
         assert_redirected_to admin_deploy_groups_path
         DeployGroup.where(id: deploy_group.id).must_equal []
       end
 
       it 'fails for non-existent deploy_group' do
         assert_raises ActiveRecord::RecordNotFound do
-          delete :destroy, id: -1
+          delete :destroy, params: {id: -1}
         end
       end
 
       it 'fails for used deploy_group and sends user to a page that shows which groups are used' do
-        delete :destroy, id: deploy_group
+        delete :destroy, params: {id: deploy_group}
         assert_redirected_to [:admin, deploy_group]
         assert flash[:error]
         deploy_group.reload
@@ -121,7 +124,7 @@ describe Admin::DeployGroupsController do
 
     describe "#deploy_all" do
       it "deploys all stages for this deploy_group" do
-        post :deploy_all, id: deploy_group
+        post :deploy_all, params: {id: deploy_group}
         deploy = stage.deploys.order('created_at desc').first.id
         assert_redirected_to "/deploys?ids%5B%5D=#{deploy}"
       end
@@ -129,14 +132,14 @@ describe Admin::DeployGroupsController do
       it 'ignores template_stages that have not been deployed yet' do
         Deploy.delete_all
 
-        post :deploy_all, id: deploy_group
+        post :deploy_all, params: {id: deploy_group}
         assert_redirected_to "/deploys" # with no ids  present.
       end
 
       it 'ignores template_stages with only a failed deploy' do
         Job.update_all(status: :failed)
 
-        post :deploy_all, id: deploy_group
+        post :deploy_all, params: {id: deploy_group}
         assert_redirected_to "/deploys" # with no ids  present.
       end
 
@@ -148,14 +151,14 @@ describe Admin::DeployGroupsController do
         last_successful_deploy = stage.last_successful_deploy
         assert last_successful_deploy.succeeded?
 
-        post :deploy_all, id: deploy_group
+        post :deploy_all, params: {id: deploy_group}
         assert_equal Deploy.last.reference, last_successful_deploy.reference
       end
 
       it 'ignores stages with no deploy groups' do
         DeployGroupsStage.delete_all
 
-        post :deploy_all, id: deploy_group
+        post :deploy_all, params: {id: deploy_group}
         assert_redirected_to "/deploys" # with no ids  present.
       end
 
@@ -164,14 +167,14 @@ describe Admin::DeployGroupsController do
         new_dp = DeployGroup.create!(name: "foo", environment: env)
         DeployGroupsStage.update_all(deploy_group_id: new_dp.id)
 
-        post :deploy_all, id: deploy_group
+        post :deploy_all, params: {id: deploy_group}
         assert_redirected_to "/deploys" # with no ids  present.
       end
 
       it 'ignores projects with no template for this environment' do
         Stage.update_all(is_template: false)
 
-        post :deploy_all, id: deploy_group
+        post :deploy_all, params: {id: deploy_group}
         assert_redirected_to "/deploys" # with no ids  present.
       end
     end
@@ -184,13 +187,13 @@ describe Admin::DeployGroupsController do
       it 'creates no stages if there are no template_environments' do
         template_stage.update(is_template: false)
         assert_no_difference 'Stage.count' do
-          post :create_all_stages, id: deploy_group
+          post :create_all_stages, params: {id: deploy_group}
         end
       end
 
       it 'creates a missing stage for a template_environment' do
         assert_difference 'Stage.count', 1 do
-          post :create_all_stages, id: deploy_group
+          post :create_all_stages, params: {id: deploy_group}
         end
 
         refute_empty deploy_group.stages.where(project: template_stage.project)

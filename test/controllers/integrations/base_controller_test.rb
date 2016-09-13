@@ -29,7 +29,7 @@ describe Integrations::BaseController do
 
   describe "#create" do
     it 'creates release and build' do
-      post :create, test_route: true
+      post :create, params: {test_route: true}
       assert_response :success
       project.releases.count.must_equal 1
       project.builds.count.must_equal 1
@@ -37,7 +37,7 @@ describe Integrations::BaseController do
 
     it 'returns :ok if this is not a merge' do
       Integrations::BaseController.any_instance.stubs(:deploy?).returns(false)
-      post :create, test_route: true
+      post :create, params: {test_route: true}
       assert_response :success
       project.releases.count.must_equal 0
       project.builds.count.must_equal 0
@@ -45,18 +45,18 @@ describe Integrations::BaseController do
 
     it 're-uses last release if commit already present' do
       stub_github_api("repos/bar/foo/compare/#{sha}...#{sha}", status: 'identical')
-      post :create, test_route: true
+      post :create, params: {test_route: true}
       assert_response :success
 
       @controller.expects(:latest_release).once
-      post :create, test_route: true
+      post :create, params: {test_route: true}
       assert_response :success
       project.releases.count.must_equal 1
       project.builds.count.must_equal 1
     end
 
     it 'records the request' do
-      post :create, test_route: true
+      post :create, params: {test_route: true}
       assert_response :success
       result = WebhookRecorder.read(project)
       result.fetch(:log).must_equal <<-LOG.strip_heredoc

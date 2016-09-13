@@ -34,14 +34,14 @@ describe BuildsController do
   as_a_project_deployer do
     describe '#index' do
       it 'works with no builds' do
-        get :index, project_id: project.to_param
+        get :index, params: {project_id: project.to_param}
         assert_response :ok
       end
 
       it 'displays basic build info' do
         project.builds.create!(label: 'test branch', git_ref: 'test_branch', git_sha: 'a' * 40)
         project.builds.create!(label: 'master branch', git_ref: 'master', git_sha: 'b' * 40)
-        get :index, project_id: project.to_param
+        get :index, params: {project_id: project.to_param}
         assert_response :ok
         @response.body.must_include 'test branch'
         @response.body.must_include 'master branch'
@@ -50,7 +50,7 @@ describe BuildsController do
 
     describe '#new' do
       it 'renders' do
-        get :new, project_id: project.to_param
+        get :new, params: {project_id: project.to_param}
         assert_response :ok
       end
     end
@@ -70,10 +70,12 @@ describe BuildsController do
       def create
         post(
           :create,
-          project_id: project.to_param,
-          build: { label: 'Test creation', git_ref: 'master', description: 'hi there' },
-          build_image: build_image,
-          format: format
+          params: {
+            project_id: project.to_param,
+            build: { label: 'Test creation', git_ref: 'master', description: 'hi there' },
+            build_image: build_image,
+            format: format
+          }
         )
       end
 
@@ -101,8 +103,10 @@ describe BuildsController do
           create
           post(
             :create,
-            project_id: project.to_param,
-            build: { label: 'Test creation 2', git_ref: 'master', description: 'hi there' }
+            params: {
+              project_id: project.to_param,
+              build: { label: 'Test creation 2', git_ref: 'master', description: 'hi there' }
+            }
           )
           Build.last.label.must_equal 'Test creation 2'
         end
@@ -142,7 +146,7 @@ describe BuildsController do
       before { default_build }
 
       it 'displays information about the build' do
-        get :show, project_id: project.to_param, id: default_build.id
+        get :show, params: {project_id: project.to_param, id: default_build.id}
         assert_response :ok
         @response.body.must_include default_build.label
       end
@@ -151,7 +155,7 @@ describe BuildsController do
         default_build.create_docker_job
         default_build.save!
 
-        get :show, project_id: project.to_param, id: default_build.id
+        get :show, params: {project_id: project.to_param, id: default_build.id}
         assert_response :ok
         @response.body.must_include 'Docker Build Output'
       end
@@ -161,7 +165,7 @@ describe BuildsController do
       before { default_build }
 
       it 'renders' do
-        get :edit, project_id: project.to_param, id: default_build.id
+        get :edit, params: {project_id: project.to_param, id: default_build.id}
         assert_response :ok
         @response.body.must_include default_build.label
       end
@@ -169,7 +173,7 @@ describe BuildsController do
 
     describe "#update" do
       def update(params = {label: 'New updated label!'})
-        put :update, project_id: project.to_param, id: default_build.id, build: params, format: format
+        put :update, params: {project_id: project.to_param, id: default_build.id, build: params, format: format}
       end
 
       before { default_build }
@@ -225,7 +229,7 @@ describe BuildsController do
     describe "#build_docker_image" do
       before do
         DockerBuilderService.any_instance.expects(:run!)
-        post :build_docker_image, project_id: project.to_param, id: default_build.id, format: format
+        post :build_docker_image, params: {project_id: project.to_param, id: default_build.id, format: format}
       end
 
       describe 'html' do

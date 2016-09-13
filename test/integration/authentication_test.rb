@@ -15,7 +15,7 @@ describe 'Authentication Integration' do
     let(:path) { '/' }
 
     before do
-      get path, {}, 'HTTP_AUTHORIZATION' => authorization
+      get path, headers: {HTTP_AUTHORIZATION: authorization}
     end
 
     describe 'successful' do
@@ -126,7 +126,7 @@ describe 'Authentication Integration' do
         end
 
         before do
-          post '/oauth/authorize', params
+          post '/oauth/authorize', params: params
         end
 
         it 'redirects' do
@@ -135,8 +135,8 @@ describe 'Authentication Integration' do
 
         it 'includes a code' do
           code = oauth_app.access_grants.first
-          code.redirect_uri.must_be :==, redirect_uri
-          code.application_id.must_be :==, oauth_app.id
+          code.redirect_uri.must_equal redirect_uri
+          code.application_id.must_equal oauth_app.id
           code = code.token
           response.location.must_match %r{#{code}}
         end
@@ -153,15 +153,15 @@ describe 'Authentication Integration' do
           end
 
           before do
-            post "/oauth/token", new_params
+            post "/oauth/token", params: new_params
           end
 
           it 'returns a json blob' do
-            response.content_type.must_be :==, 'application/json'
+            response.content_type.must_equal 'application/json'
           end
 
           it 'has an access token' do
-            JSON.parse(response.body)['access_token'].must_be :==, oauth_app.access_tokens.first.token
+            JSON.parse(response.body)['access_token'].must_equal oauth_app.access_tokens.first.token
           end
 
           describe 'using the token to access the api' do
@@ -173,13 +173,15 @@ describe 'Authentication Integration' do
             describe 'with a correct token' do
               let(:token) { oauth_app.access_tokens.first.token }
               let(:headers) do
-                { "Authorization" => "Bearer #{token}",
+                {
+                  "Authorization" => "Bearer #{token}",
                   "Accept" => "application/json",
-                  "Content-Type" => "application/json" }
+                  "Content-Type" => "application/json"
+                }
               end
 
               before do
-                get "/api/deploys/active_count", {format: 'json'}, headers
+                get "/api/deploys/active_count.json", headers: headers
               end
 
               it 'is successful' do
@@ -187,7 +189,7 @@ describe 'Authentication Integration' do
               end
 
               it 'returns a result' do
-                response.body.must_be :==, "1"
+                response.body.must_equal "1"
               end
             end
 
@@ -195,12 +197,12 @@ describe 'Authentication Integration' do
               let(:headers) { {'Authorization' => "Bearer notrealtoken", "Content-Type" => "application/json"} }
 
               before do
-                get '/api/deploys/active_count', {format: 'json'}, headers
+                get '/api/deploys/active_count.json', headers: headers
               end
 
               it 'is not successful' do
-                response.status.must_be :==, 404
-                response.content_type.must_be :==, "application/json"
+                response.status.must_equal 404
+                response.content_type.must_equal "application/json"
               end
             end
           end

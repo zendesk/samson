@@ -93,7 +93,7 @@ describe Api::DeploysController do
 
     describe 'for a project' do
       before do
-        get :index, project_id: project.id
+        get :index, params: {project_id: project.id}
       end
 
       subject { JSON.parse(response.body) }
@@ -111,7 +111,7 @@ describe Api::DeploysController do
 
       describe 'with filter parameter' do
         subject do
-          get :index, params
+          get :index, params: params
         end
 
         let(:deploy_response) { JSON.parse(response.body)['deploys'] }

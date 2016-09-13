@@ -1,5 +1,5 @@
 # frozen_string_literal: true
-class CreateOutboundWebhooks < ActiveRecord::Migration
+class CreateOutboundWebhooks < ActiveRecord::Migration[4.2]
   def change
     create_table :outbound_webhooks do |t|
       t.timestamps null: false

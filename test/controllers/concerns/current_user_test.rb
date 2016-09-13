@@ -52,7 +52,7 @@ class CurrentUserConcernTest < ActionController::TestCase
 
   def self.authorized(method, action, params)
     it "is authorized to #{method} #{action}" do
-      send method, action, params
+      public_send method, action, params: params
       refute_unauthorized
     end
   end
@@ -61,20 +61,20 @@ class CurrentUserConcernTest < ActionController::TestCase
     around { |t| PaperTrail.with_whodunnit(nil, &t) }
 
     it "knows who did something" do
-      get :whodunnit, test_route: true
+      get :whodunnit, params: {test_route: true}
       response.body.must_equal users(:viewer).id.to_s
     end
 
     it "does not assign to different users by accident" do
       before = PaperTrail.whodunnit # FIXME: this is not nil on travis ... capturing current value instead
-      get :whodunnit, test_route: true
+      get :whodunnit, params: {test_route: true}
       PaperTrail.whodunnit.must_equal before
     end
 
     it "records changes" do
       stage = stages(:test_staging)
       PaperTrail.with_logging do
-        get :change, test_route: true, id: stage.id
+        get :change, params: {test_route: true, id: stage.id}
       end
       stage.reload.name.must_equal 'MUUUU'
       stage.versions.size.must_equal 1
@@ -109,43 +109,43 @@ class CurrentUserConcernTest < ActionController::TestCase
 
     it "can access any project" do
       UserProjectRole.delete_all
-      get :project_deployer_action, project_id: Project.first.id, test_route: true
+      get :project_deployer_action, params: {project_id: Project.first.id, test_route: true}
       refute_unauthorized
     end
 
     it "cannot access admin" do
-      get :project_admin_action, project_id: Project.first.id, test_route: true
+      get :project_admin_action, params: {project_id: Project.first.id, test_route: true}
       assert_unauthorized
     end
   end
 
   as_a_project_deployer do
     it "can access allowed projects" do
-      get :project_deployer_action, project_id: Project.first.id, test_route: true
+      get :project_deployer_action, params: {project_id: Project.first.id, test_route: true}
       refute_unauthorized
     end
 
     it "cannot access forbidden projects" do
       UserProjectRole.delete_all
-      get :project_deployer_action, project_id: Project.first.id, test_route: true
+      get :project_deployer_action, params: {project_id: Project.first.id, test_route: true}
       assert_unauthorized
     end
 
     it "cannot access admin" do
-      get :project_admin_action, project_id: Project.first.id, test_route: true
+      get :project_admin_action, params: {project_id: Project.first.id, test_route: true}
       assert_unauthorized
     end
   end
 
   as_a_project_admin do
     it "can access allowed projects" do
-      get :project_admin_action, project_id: Project.first.id, test_route: true
+      get :project_admin_action, params: {project_id: Project.first.id, test_route: true}
       refute_unauthorized
     end
 
     it "cannot access forbidden projects" do
       UserProjectRole.delete_all
-      get :project_admin_action, project_id: Project.first.id, test_route: true
+      get :project_admin_action, params: {project_id: Project.first.id, test_route: true}
       assert_unauthorized
     end
   end
@@ -156,12 +156,12 @@ class CurrentUserConcernTest < ActionController::TestCase
     unauthorized :get, :super_admin_action, test_route: true
 
     it "can access any project" do
-      get :project_admin_action, project_id: Project.first.id, test_route: true
+      get :project_admin_action, params: {project_id: Project.first.id, test_route: true}
       refute_unauthorized
     end
 
     it "can access any project deploy" do
-      get :project_deployer_action, project_id: Project.first.id, test_route: true
+      get :project_deployer_action, params: {project_id: Project.first.id, test_route: true}
       refute_unauthorized
     end
   end
@@ -176,14 +176,14 @@ class CurrentUserConcernTest < ActionController::TestCase
     as_a_viewer do
       it "logs unautorized so we can see it in test output for easy debugging" do
         Rails.logger.expects(:warn)
-        get :unauthorized_action, test_route: true
+        get :unauthorized_action, params: {test_route: true}
         assert_unauthorized
       end
     end
 
     it "logs unautorized so we can see it in test output for easy debugging" do
       Rails.logger.expects(:warn)
-      get :whodunnit, test_route: true
+      get :whodunnit, params: {test_route: true}
       assert_unauthorized
     end
   end

@@ -1,5 +1,5 @@
 # frozen_string_literal: true
-class FixInvalidPermalinks < ActiveRecord::Migration
+class FixInvalidPermalinks < ActiveRecord::Migration[4.2]
   def change
     [Stage, Project].each do |klass|
       klass.with_deleted do

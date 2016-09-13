@@ -1,5 +1,5 @@
 # frozen_string_literal: true
-class CreateWebhooks < ActiveRecord::Migration
+class CreateWebhooks < ActiveRecord::Migration[4.2]
   def change
     create_table :webhooks do |t|
       t.integer :project_id, null: false

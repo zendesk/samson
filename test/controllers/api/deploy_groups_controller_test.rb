@@ -38,7 +38,7 @@ describe Api::DeployGroupsController do
 
   describe '#index with project and stage' do
     before do
-      get :index, project_id: project.id, id: stage.id
+      get :index, params: {project_id: project.id, id: stage.id}
     end
 
     let(:project) { projects(:test) }

@@ -29,7 +29,7 @@ describe Integrations::GithubController do
     request.headers['X-Github-Event'] = 'push'
     request.headers['X-Hub-Signature'] = "nope"
 
-    post :create, payload.merge(token: project.token)
+    post :create, params: payload.merge(token: project.token)
 
     project.deploys.must_equal []
     response.status.must_equal 401

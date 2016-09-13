@@ -13,20 +13,20 @@ describe ReleasesController do
 
     describe "#show" do
       it "renders" do
-        get :show, project_id: project.to_param, id: release.version
+        get :show, params: {project_id: project.to_param, id: release.version}
         assert_response :success
       end
 
       it "fails to render unknown release" do
         assert_raises ActiveRecord::RecordNotFound do
-          get :show, project_id: project.to_param, id: 123
+          get :show, params: {project_id: project.to_param, id: 123}
         end
       end
     end
 
     describe "#index" do
       it "renders" do
-        get :index, project_id: project.to_param
+        get :index, params: {project_id: project.to_param}
         assert_response :success
       end
     end
@@ -39,7 +39,7 @@ describe ReleasesController do
 
       it "creates a new release" do
         assert_difference "Release.count", +1 do
-          post :create, project_id: project.to_param, release: release_params
+          post :create, params: {project_id: project.to_param, release: release_params}
           assert_redirected_to "/projects/foo/releases/v124"
         end
       end
@@ -47,7 +47,7 @@ describe ReleasesController do
 
     describe "#new" do
       it "renders" do
-        get :new, project_id: project.to_param
+        get :new, params: {project_id: project.to_param}
         assert_response :success
       end
     end

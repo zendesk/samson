@@ -12,7 +12,7 @@ describe CommitStatusesController do
     describe '#show' do
       it "fails with unknown project" do
         assert_raises ActiveRecord::RecordNotFound do
-          get :show, project_id: 123123, id: 'test/test'
+          get :show, params: {project_id: 123123, id: 'test/test'}
         end
       end
 
@@ -25,7 +25,7 @@ describe CommitStatusesController do
         end
         before do
           CommitStatus.stubs(new: stub(commit_status_data))
-          get :show, project_id: projects(:test), id: 'test/test'
+          get :show, params: {project_id: projects(:test), id: 'test/test'}
         end
 
         it 'responds ok' do

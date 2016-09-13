@@ -10,7 +10,7 @@ describe Api::StagesController do
 
   describe 'get #index' do
     before do
-      get :index, project_id: project.id
+      get :index, params: {project_id: project.id}
     end
 
     subject { JSON.parse(response.body) }
@@ -47,7 +47,7 @@ describe Api::StagesController do
     end
 
     it 'renders a cloned stage' do
-      post :clone, stage_id: stages.first.permalink
+      post :clone, params: {stage_id: stages.first.permalink}
       assert_response :created
     end
 
@@ -60,7 +60,7 @@ describe Api::StagesController do
 
       before do
         stage.deploy_groups_stages.delete_all
-        post :clone, stage_id: stage.permalink, deploy_group_ids: [dg.id], stage_name: 'NewProduction'
+        post :clone, params: {stage_id: stage.permalink, deploy_group_ids: [dg.id], stage_name: 'NewProduction'}
       end
 
       let(:stage) { stages.first }
@@ -90,24 +90,24 @@ describe Api::StagesController do
 
     describe 'when the cloned stage is invalid' do
       before do
-        post :clone, stage_id: stages.first.permalink, stage_name: stages.first.name
+        post :clone, params: {stage_id: stages.first.permalink, stage_name: stages.first.name}
       end
 
       it 'does not clone' do
         assert_difference('Stage.count', 0) do
-          post :clone, stage_id: stages.first.permalink, stage_name: stages.first.name
+          post :clone, params: {stage_id: stages.first.permalink, stage_name: stages.first.name}
         end
       end
 
       it 'includes the errors' do
-        post :clone, stage_id: stages.first.permalink, stage_name: stages.first.name
+        post :clone, params: {stage_id: stages.first.permalink, stage_name: stages.first.name}
         response.body.must_include "already been taken"
       end
     end
 
     it 'creates a new stage' do
       assert_difference('Stage.count', 1) do
-        post :clone, stage_id: stages.first.permalink
+        post :clone, params: {stage_id: stages.first.permalink}
       end
     end
   end

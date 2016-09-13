@@ -1,5 +1,5 @@
 # frozen_string_literal: true
-class Prevent3StateBooleans < ActiveRecord::Migration
+class Prevent3StateBooleans < ActiveRecord::Migration[4.2]
   class Stage < ActiveRecord::Base
   end
 

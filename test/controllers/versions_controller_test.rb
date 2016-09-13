@@ -18,13 +18,13 @@ describe VersionsController do
     describe "#index" do
       it "renders" do
         create_version user.id
-        get :index, item_id: stage.id, item_type: stage.class.name
+        get :index, params: {item_id: stage.id, item_type: stage.class.name}
         assert_template :index
       end
 
       it "renders with unfound user" do
         create_version '1211212'
-        get :index, item_id: stage.id, item_type: stage.class.name
+        get :index, params: {item_id: stage.id, item_type: stage.class.name}
         assert_template :index
       end
     end

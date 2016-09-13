@@ -1,5 +1,5 @@
 # frozen_string_literal: true
-class AddPermalinkToDeployGroups < ActiveRecord::Migration
+class AddPermalinkToDeployGroups < ActiveRecord::Migration[4.2]
   def change
     add_column :deploy_groups, :permalink, :string, length: 191
     add_index :deploy_groups, :permalink, unique: true, length: 191

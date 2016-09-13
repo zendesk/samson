@@ -1,5 +1,5 @@
 # frozen_string_literal: true
-class AddSecrets < ActiveRecord::Migration
+class AddSecrets < ActiveRecord::Migration[4.2]
   def change
     create_table :secrets, id: false do |t|
       t.string :id, primary_key: true, null: false

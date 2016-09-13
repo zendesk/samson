@@ -32,19 +32,19 @@ describe Admin::Kubernetes::DeployGroupRolesController do
 
       it "can filter by project_id" do
         deploy_group_role.update_column(:project_id, 123)
-        get :index, search: {project_id: project_id}
+        get :index, params: {search: {project_id: project_id}}
         assigns[:deploy_group_roles].map(&:project_id).uniq.size.must_equal 1
       end
 
       it "can filter by deploy_group" do
-        get :index, search: {deploy_group_id: deploy_groups(:pod100).id}
+        get :index, params: {search: {deploy_group_id: deploy_groups(:pod100).id}}
         assigns[:deploy_group_roles].map(&:deploy_group_id).uniq.size.must_equal 1
       end
     end
 
     describe "#show" do
       it "renders" do
-        get :show, id: deploy_group_role.id
+        get :show, params: {id: deploy_group_role.id}
         assert_template :show
       end
     end
@@ -56,7 +56,7 @@ describe Admin::Kubernetes::DeployGroupRolesController do
       end
 
       it "can prefill" do
-        get :new, kubernetes_deploy_group_role: {kubernetes_role_id: kubernetes_roles(:app_server).id}
+        get :new, params: {kubernetes_deploy_group_role: {kubernetes_role_id: kubernetes_roles(:app_server).id}}
         assert_template :new
         assigns(:deploy_group_role).kubernetes_role_id.must_equal kubernetes_roles(:app_server).id
       end
@@ -85,69 +85,69 @@ describe Admin::Kubernetes::DeployGroupRolesController do
       end
 
       it "can create for projects I am admin of" do
-        post :create, params
+        post :create, params: params
         assert_redirected_to [:admin, Kubernetes::DeployGroupRole.last]
       end
 
       it "redirects to param" do
-        post :create, params.merge(redirect_to: '/bar')
+        post :create, params: params.merge(redirect_to: '/bar')
         assert_redirected_to '/bar'
       end
 
       it "renders when failing to create" do
         params[:kubernetes_deploy_group_role].delete(:cpu)
-        post :create, params
+        post :create, params: params
         assert_template :new
       end
 
       it "cannot create for projects I am not admin of" do
         user.user_project_roles.delete_all
-        post :create, params
+        post :create, params: params
         assert_unauthorized
       end
     end
 
     describe "#edit" do
       it "renders" do
-        get :edit, id: deploy_group_role.id
+        get :edit, params: {id: deploy_group_role.id}
         assert_template :edit
       end
 
       it "does not render when I am not admin" do
         user.user_project_roles.delete_all
-        get :edit, id: deploy_group_role.id
+        get :edit, params: {id: deploy_group_role.id}
         assert_unauthorized
       end
     end
 
     describe "#update" do
       it "updates" do
-        put :update, id: deploy_group_role.id, kubernetes_deploy_group_role: {cpu: 3.1}
+        put :update, params: {id: deploy_group_role.id, kubernetes_deploy_group_role: {cpu: 3.1}}
         deploy_group_role.reload.cpu.must_equal 3.1
         assert_redirected_to [:admin, deploy_group_role]
       end
 
       it "does not allow to circumvent project admin protection" do
-        put :update, id: deploy_group_role.id, kubernetes_deploy_group_role: {project_id: 123}
+        put :update, params: {id: deploy_group_role.id, kubernetes_deploy_group_role: {project_id: 123}}
         deploy_group_role.reload.project_id.must_equal projects(:test).id
         assert_redirected_to [:admin, deploy_group_role]
       end
 
       it "does not allow updates for non-admins" do
         user.user_project_roles.delete_all
-        put :update, id: deploy_group_role.id, kubernetes_deploy_group_role: {cpu: 3.1}
+        put :update, params: {id: deploy_group_role.id, kubernetes_deploy_group_role: {cpu: 3.1}}
         assert_unauthorized
       end
 
       it "renders on failure" do
-        put :update, id: deploy_group_role.id, kubernetes_deploy_group_role: {cpu: ''}
+        put :update, params: {id: deploy_group_role.id, kubernetes_deploy_group_role: {cpu: ''}}
         assert_template :edit
       end
     end
 
     describe "#destroy" do
       it "deletes" do
-        delete :destroy, id: deploy_group_role.id
+        delete :destroy, params: {id: deploy_group_role.id}
         assert_raises(ActiveRecord::RecordNotFound) do
           deploy_group_role.reload
         end
@@ -155,7 +155,7 @@ describe Admin::Kubernetes::DeployGroupRolesController do
 
       it "does not delete when I am not an admin" do
         user.user_project_roles.delete_all
-        delete :destroy, id: deploy_group_role.id
+        delete :destroy, params: {id: deploy_group_role.id}
         assert deploy_group_role.reload
       end
     end
@@ -163,14 +163,14 @@ describe Admin::Kubernetes::DeployGroupRolesController do
     describe "#seed" do
       it "adds missing roles" do
         Kubernetes::DeployGroupRole.expects(:seed!).returns true
-        post :seed, stage_id: stage.id
+        post :seed, params: {stage_id: stage.id}
         assert_redirected_to [stage.project, stage]
         assert flash[:notice]
       end
 
       it "fails to add missing roles" do
         Kubernetes::DeployGroupRole.expects(:seed!).returns false
-        post :seed, stage_id: stage.id
+        post :seed, params: {stage_id: stage.id}
         assert_redirected_to [stage.project, stage]
         assert flash[:alert]
       end
