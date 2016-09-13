@@ -159,21 +159,29 @@ class JobExecution
   end
 
   def setup!(dir)
+    resolve_ref_to_commit
+    stage.try(:kubernetes) || create_workspace(dir)
+  end
+
+  def create_workspace(dir)
     locked = lock_project do
       return false unless @repository.setup!(dir, @reference)
-      commit = @repository.commit_from_ref(@reference)
-      tag = @repository.tag_from_ref(@reference)
-      @job.update_git_references!(commit: commit, tag: tag)
-      @output.write("Commit: #{commit}\n")
     end
 
     if locked
       true
     else
-      @output.write("Could not get exclusive lock on repo.\n")
-
+      @output.puts("Could not get exclusive lock on repo.")
       false
     end
+  end
+
+  def resolve_ref_to_commit
+    @repository.update_local_cache!
+    commit = @repository.commit_from_ref(@reference)
+    tag = @repository.tag_from_ref(@reference)
+    @job.update_git_references!(commit: commit, tag: tag)
+    @output.puts("Commit: #{commit}")
   end
 
   def commands(dir)

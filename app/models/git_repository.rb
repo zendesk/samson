@@ -20,7 +20,7 @@ class GitRepository
     raise ArgumentError, "git_reference is required" if git_reference.blank?
 
     executor.output.write("# Beginning git repo setup\n")
-    return false unless update_local_cache!
+    return false unless @last_pulled || update_local_cache!
     return false unless clone!(from: repo_cache_dir, to: temp_dir)
     return false unless checkout!(git_reference, pwd: temp_dir)
     true

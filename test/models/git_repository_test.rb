@@ -209,8 +209,9 @@ describe GitRepository do
   end
 
   describe "#setup!" do
+    before { create_repo_with_an_additional_branch }
+
     it 'creates a repository' do
-      create_repo_with_an_additional_branch
       Dir.mktmpdir do |temp_dir|
         assert repository.setup!(temp_dir, 'test_user/test_branch')
         Dir.chdir(temp_dir) { current_branch.must_equal('test_user/test_branch') }
@@ -218,11 +219,29 @@ describe GitRepository do
     end
 
     it 'updates an existing repository to a branch' do
-      create_repo_with_an_additional_branch
       Dir.mktmpdir do |temp_dir|
         repository.send(:clone!, mirror: true)
         assert repository.setup!(temp_dir, 'test_user/test_branch')
         Dir.chdir(temp_dir) { current_branch.must_equal('test_user/test_branch') }
+      end
+    end
+
+    it 'does not update cache when the cache was already updated' do
+      Dir.mktmpdir do |temp_dir|
+        # updates the cache
+        repository.send(:clone!, mirror: true)
+
+        # remote has changed
+        execute_on_remote_repo <<-SHELL
+          git checkout test_user/test_branch
+          echo CHANGED > foo
+          git commit -am more
+          git checkout master
+        SHELL
+
+        # change is not visible
+        assert repository.setup!(temp_dir, 'test_user/test_branch')
+        File.read("#{temp_dir}/foo").must_equal "monkey\n"
       end
     end
   end
