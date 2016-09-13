@@ -1,10 +1,12 @@
+# frozen_string_literal: true
+#
 # basic ledger event client
 #
 require 'faraday'
 require 'openssl'
 
-LEDGER_HOST = ENV["LEDGER_HOST"].freeze
-LEDGER_URI = "/api/v1/events".freeze
+LEDGER_HOST = ENV["LEDGER_HOST"]
+LEDGER_URI = "/api/v1/events"
 LEDGER_TOKEN = ENV.fetch("LEDGER_TOKEN", false)
 
 class LedgerClient
@@ -28,7 +30,7 @@ class LedgerClient
   end
 
   def create_event(event)
-    events = { "events": [ event ]}
+    events = { "events": [event] }
     results = post(events)
     # TODO: raise or display errors if results.status != 200
     results
@@ -40,6 +42,7 @@ class LedgerClient
   end
 
   private
+
   def post(data)
     connection.post do |request|
       request.headers['Content-Type'] = "application/json"
