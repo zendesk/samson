@@ -18,7 +18,7 @@ class BinaryBuilder
   end
 
   def build
-    return unless @project.try(:deploy_with_docker?) && build_file_exist?
+    return unless build_file_exist?
 
     run_pre_build_script
 

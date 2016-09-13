@@ -5,7 +5,7 @@
   <li class="<%= 'active' if active == 'releases' %>">
     <%= link_to "Releases", project_releases_path(project) %>
   </li>
-  <% if project.deploy_with_docker? %>
+  <% if ENV['DOCKER_FEATURE'] %>
     <li class="<%= 'active' if active == 'builds' %>">
       <%= link_to "Builds", project_builds_path(project) %>
     </li>
