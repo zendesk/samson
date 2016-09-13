@@ -155,11 +155,6 @@ describe Kubernetes::BuildJobExecutor do
         end
 
         describe "clair" do
-          # wait for clair thread to finish
-          def wait_for_clair_to_finish
-            sleep 0.1 while Thread.list.size > @before_threads.size
-          end
-
           before { ActiveRecord::Base.stubs(connection: ActiveRecord::Base.connection) } # we update in another thread
 
           around do |t|
@@ -176,7 +171,7 @@ describe Kubernetes::BuildJobExecutor do
             job_log.wont_include "Clair"
             assert success
 
-            wait_for_clair_to_finish
+            wait_for_threads
 
             job = Job.first
             job.output.must_include "Clair scan: success"
@@ -189,7 +184,7 @@ describe Kubernetes::BuildJobExecutor do
             job_log.wont_include "Clair"
             refute success
 
-            wait_for_clair_to_finish # just in case something goes wrong / to keep tests symmetric
+            wait_for_threads # just in case something goes wrong / to keep tests symmetric
 
             job = Job.first
             job.output.wont_include "Clair scan"
@@ -202,7 +197,7 @@ describe Kubernetes::BuildJobExecutor do
             job_log.wont_include "Clair"
             assert success
 
-            wait_for_clair_to_finish
+            wait_for_threads
 
             job = Job.first
             job.output.must_include "Clair scan: errored"
@@ -216,7 +211,7 @@ describe Kubernetes::BuildJobExecutor do
             job_log.wont_include "Clair"
             assert success
 
-            wait_for_clair_to_finish
+            wait_for_threads
 
             job = Job.first
             job.output.must_include "Clair scan: errored"
@@ -232,7 +227,7 @@ describe Kubernetes::BuildJobExecutor do
             job_log.wont_include "Clair"
             assert success
 
-            wait_for_clair_to_finish
+            wait_for_threads
 
             job = Job.first
             job.output.must_include "Clair scan: errored"
