@@ -14,7 +14,7 @@ class Changeset::IssueComment
   end
 
   def self.valid_webhook?(params)
-    return false unless VALID_ACTIONS.include? params['action']
+    return false unless VALID_ACTIONS.include? params.dig('github', 'action')
     comment = params['comment'] || {}
     !(comment['body'] =~ Changeset::PullRequest::WEBHOOK_FILTER).nil?
   end
