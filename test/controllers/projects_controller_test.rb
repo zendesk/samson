@@ -48,7 +48,7 @@ describe ProjectsController do
       end
 
       it "responds to json requests" do
-        get :index, format: 'json'
+        get :index, params: {format: 'json'}
         result = JSON.parse(response.body)
         result['projects'].map(&:symbolize_keys!).map { |obj| obj[:name] }.must_equal ['Project']
       end
@@ -59,7 +59,7 @@ describe ProjectsController do
         users(:admin).stars.create!(project: starred_project1)
         users(:admin).stars.create!(project: starred_project2)
 
-        get :index, format: 'json'
+        get :index, params: {format: 'json'}
         result = JSON.parse(response.body)
         result['projects'].map { |obj| obj['name'] }.must_equal ['A', 'Z', 'Project']
       end
@@ -105,7 +105,7 @@ describe ProjectsController do
 
     as_a_admin do
       before do
-        post :create, params
+        post :create, params: params
       end
 
       describe "with valid parameters" do
@@ -173,13 +173,13 @@ describe ProjectsController do
       it "does not find soft deleted" do
         project.soft_delete!
         assert_raises ActiveRecord::RecordNotFound do
-          put :update, id: project.to_param
+          put :update, params: {id: project.to_param}
         end
       end
 
       describe "common" do
         before do
-          put :update, params.merge(id: project.to_param)
+          put :update, params: params.merge(id: project.to_param)
         end
 
         describe "with valid parameters" do
@@ -208,13 +208,13 @@ describe ProjectsController do
       it "does not find soft deleted" do
         project.soft_delete!
         assert_raises ActiveRecord::RecordNotFound do
-          put :update, id: project.to_param
+          put :update, params: {id: project.to_param}
         end
       end
 
       describe "common" do
         before do
-          put :update, params.merge(id: project.to_param)
+          put :update, params: params.merge(id: project.to_param)
         end
 
         describe "with valid parameters" do
@@ -251,28 +251,28 @@ describe ProjectsController do
 
     as_a_admin do
       it "renders" do
-        get :edit, id: project.to_param
+        get :edit, params: {id: project.to_param}
         assert_template :edit
       end
 
       it "does not find soft deleted" do
         project.soft_delete!
         assert_raises ActiveRecord::RecordNotFound do
-          get :edit, id: project.to_param
+          get :edit, params: {id: project.to_param}
         end
       end
     end
 
     as_a_project_admin do
       it "renders" do
-        get :edit, id: project.to_param
+        get :edit, params: {id: project.to_param}
         assert_template :edit
       end
 
       it "does not find soft deleted" do
         project.soft_delete!
         assert_raises ActiveRecord::RecordNotFound do
-          get :edit, id: project.to_param
+          get :edit, params: {id: project.to_param}
         end
       end
     end
@@ -282,14 +282,14 @@ describe ProjectsController do
     as_a_viewer do
       describe "as HTML" do
         it "does not redirect to the deploys page" do
-          get :show, id: project.to_param
+          get :show, params: {id: project.to_param}
           assert_response :success
         end
       end
 
       describe "as JSON" do
         it "is json and does not include :token" do
-          get :show, id: project.permalink, format: :json
+          get :show, params: {id: project.permalink, format: :json}
           assert_response :success
           result = JSON.parse(response.body)
           result.keys.wont_include('token')
@@ -299,14 +299,14 @@ describe ProjectsController do
 
     as_a_deployer do
       it "renders" do
-        get :show, id: project.to_param
+        get :show, params: {id: project.to_param}
         assert_template :show
       end
 
       it "does not find soft deleted" do
         project.soft_delete!
         assert_raises ActiveRecord::RecordNotFound do
-          get :show, id: project.to_param
+          get :show, params: {id: project.to_param}
         end
       end
     end
@@ -317,7 +317,7 @@ describe ProjectsController do
 
     as_a_viewer do
       it 'renders' do
-        get :deploy_group_versions, id: project.to_param, format: 'json'
+        get :deploy_group_versions, params: {id: project.to_param, format: 'json'}
         result = JSON.parse(response.body)
         result.keys.sort.must_equal DeployGroup.all.ids.map(&:to_s).sort
       end
@@ -331,7 +331,7 @@ describe ProjectsController do
           updated_at: time - 1.day,
           release: true
         )
-        get :deploy_group_versions, id: project.to_param, before: time.to_s
+        get :deploy_group_versions, params: {id: project.to_param, before: time.to_s}
         deploy_ids = JSON.parse(response.body).map { |_id, deploy| deploy['id'] }
         deploy_ids.include?(deploy.id).must_equal false
         deploy_ids.include?(old.id).must_equal true

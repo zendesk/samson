@@ -50,7 +50,7 @@ describe Integrations::BuildkiteController do
   context 'when buildkite does not pass a build event' do
     it 'does not create a deploy' do
       payload.delete(:build)
-      post :create, payload.merge(token: project.token)
+      post :create, params: payload.merge(token: project.token)
 
       project.deploys.must_equal []
       response.status.must_equal 200
@@ -71,7 +71,7 @@ describe Integrations::BuildkiteController do
 
     it 'creates the release with the buildkite build number' do
       Samson::Hooks.with_callback(:buildkite_release_params, buildkite_build_number) do |_|
-        post :create, payload.merge(token: project.token), test_route: true
+        post :create, params: payload.merge(token: project.token), test_route: true
 
         project.releases.size.must_equal 1
         project.releases.first.number.must_equal 9

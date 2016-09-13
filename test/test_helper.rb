@@ -183,7 +183,7 @@ class ActionController::TestCase
   class << self
     def unauthorized(method, action, params = {})
       it "is unauthorized when doing a #{method} to #{action} with #{params}" do
-        send(method, action, params)
+        public_send method, action, params: params
         assert_unauthorized
       end
     end

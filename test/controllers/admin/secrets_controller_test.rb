@@ -50,7 +50,7 @@ describe Admin::SecretsController do
 
       it 'can filter' do
         create_secret 'production/global/pod2/bar'
-        get :index, search: {query: 'bar'}
+        get :index, params: {search: {query: 'bar'}}
         assert_template :index
         assigns[:secret_keys].must_equal ['production/global/pod2/bar']
       end
@@ -65,21 +65,21 @@ describe Admin::SecretsController do
 
     describe '#edit' do
       it "is unauthrized" do
-        get :edit, id: secret
+        get :edit, params: {id: secret}
         assert_unauthorized
       end
     end
 
     describe '#update' do
       it "is unauthrized" do
-        put :update, id: secret, secret: {value: 'xxx'}
+        put :update, params: {id: secret, secret: {value: 'xxx'}}
         assert_unauthorized
       end
     end
 
     describe "#destroy" do
       it "is unauthorized" do
-        delete :destroy, id: secret.id
+        delete :destroy, params: {id: secret.id}
         assert_unauthorized
       end
     end
@@ -97,7 +97,7 @@ describe Admin::SecretsController do
   as_a_project_admin do
     describe '#create' do
       it 'creates a secret' do
-        post :create, secret: attributes.merge(visible: true)
+        post :create, params: {secret: attributes.merge(visible: true)}
         flash[:notice].wont_be_nil
         assert_redirected_to admin_secrets_path
         secret = SecretStorage::DbBackend::Secret.find('production/foo/pod2/hi')
@@ -108,48 +108,48 @@ describe Admin::SecretsController do
       end
 
       it "redirects to new form when user wants to create another secret" do
-        post :create, secret: attributes, commit: Admin::SecretsController::ADD_MORE
+        post :create, params: {secret: attributes, commit: Admin::SecretsController::ADD_MORE}
         flash[:notice].wont_be_nil
         assert_redirected_to "/admin/secrets/new?#{{secret: attributes.except(:value)}.to_query}"
       end
 
       it 'renders and sets the flash when invalid' do
         attributes[:key] = ''
-        post :create, secret: attributes
+        post :create, params: {secret: attributes}
         assert flash[:error]
         assert_template :edit
       end
 
       it "is not authorized to create global secrets" do
         attributes[:project_permalink] = 'global'
-        post :create, secret: attributes
+        post :create, params: {secret: attributes}
         assert_unauthorized
       end
     end
 
     describe '#edit' do
       it 'renders for local secret as project-admin' do
-        get :edit, id: secret
+        get :edit, params: {id: secret}
         assert_template :edit
         response.body.wont_include secret.value
       end
 
       it 'shows visible secerts' do
         secret.update_column(:visible, true)
-        get :edit, id: secret
+        get :edit, params: {id: secret}
         assert_template :edit
         response.body.must_include secret.value
       end
 
       it 'renders with unfound users' do
         secret.update_column(:updater_id, 32232323)
-        get :edit, id: secret
+        get :edit, params: {id: secret}
         assert_template :edit
         response.body.must_include "Unknown user id"
       end
 
       it "is unauthrized for global secret" do
-        get :edit, id: create_global
+        get :edit, params: {id: create_global}
         assert_unauthorized
       end
     end
@@ -160,7 +160,7 @@ describe Admin::SecretsController do
       end
 
       before do
-        patch :update, id: secret.id, secret: attributes
+        patch :update, params: {id: secret.id, secret: attributes}
       end
 
       it 'updates' do
@@ -212,12 +212,12 @@ describe Admin::SecretsController do
 
     describe "#destroy" do
       it "deletes project secret" do
-        delete :destroy, id: secret
+        delete :destroy, params: {id: secret}
         assert_redirected_to admin_secrets_path
       end
 
       it "is unauthorized for global" do
-        delete :destroy, id: create_global
+        delete :destroy, params: {id: create_global}
         assert_unauthorized
       end
     end
@@ -228,7 +228,7 @@ describe Admin::SecretsController do
 
     describe '#create' do
       before do
-        post :create, secret: attributes
+        post :create, params: {secret: attributes}
       end
 
       it 'redirects and sets the flash' do
@@ -239,27 +239,27 @@ describe Admin::SecretsController do
 
     describe '#edit' do
       it "renders" do
-        get :edit, id: secret.id
+        get :edit, params: {id: secret.id}
         assert_template :edit
       end
 
       it "renders with unknown project" do
         secret.update_column(:id, 'oops/bar')
-        get :edit, id: secret.id
+        get :edit, params: {id: secret.id}
         assert_template :edit
       end
     end
 
     describe '#update' do
       it "updates" do
-        put :update, id: secret, secret: attributes.except(*SecretStorage::SECRET_KEYS_PARTS)
+        put :update, params: {id: secret, secret: attributes.except(*SecretStorage::SECRET_KEYS_PARTS)}
         assert_redirected_to admin_secrets_path
       end
     end
 
     describe '#destroy' do
       it 'deletes and redirects' do
-        delete :destroy, id: secret.id
+        delete :destroy, params: {id: secret.id}
         flash[:notice].wont_be_nil
         assert_redirected_to admin_secrets_path
         SecretStorage::DbBackend::Secret.exists?(secret.id).must_equal(false)
@@ -267,7 +267,7 @@ describe Admin::SecretsController do
 
       it "works with unknown project" do
         secret.update_column(:id, 'oops/bar')
-        delete :destroy, id: secret.id
+        delete :destroy, params: {id: secret.id}
         flash[:notice].wont_be_nil
         assert_redirected_to admin_secrets_path
         SecretStorage::DbBackend::Secret.exists?(secret.id).must_equal(false)

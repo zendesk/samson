@@ -16,7 +16,7 @@ describe ChangelogsController do
           'master@{2016-02-26}',
           'master@{2016-03-01}'
         ).returns(stub(pull_requests: []))
-        get :show, project_id: project
+        get :show, params: {project_id: project}
         assert_template :show
       end
 
@@ -26,7 +26,7 @@ describe ChangelogsController do
           'master@{2016-01-01}',
           'master@{2016-02-01}'
         ).returns(stub(pull_requests: []))
-        get :show, project_id: project, start_date: '2016-01-01', end_date: '2016-02-01'
+        get :show, params: {project_id: project, start_date: '2016-01-01', end_date: '2016-02-01'}
         assert_template :show
       end
     end

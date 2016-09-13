@@ -31,7 +31,7 @@ describe SlackAppController do
       user_id: id.identifier,
       response_url: 'http://example.com/blah'
     )
-    with_env(SLACK_VERIFICATION_TOKEN: 'token') { post :command, opts }
+    with_env(SLACK_VERIFICATION_TOKEN: 'token') { post :command, params: opts }
   end
 
   def post_interact(id, params = {})
@@ -39,7 +39,7 @@ describe SlackAppController do
       token: 'token',
       user: {id: id.identifier}
     )
-    with_env(SLACK_VERIFICATION_TOKEN: 'token') { post :interact, opts }
+    with_env(SLACK_VERIFICATION_TOKEN: 'token') { post :interact, params: opts }
   end
 
   as_a_viewer do
@@ -50,11 +50,11 @@ describe SlackAppController do
       end
 
       it 'sends the user to Slack to connect the app' do
-        with_env SLACK_CLIENT_ID: 'client-id',
-                 SLACK_CLIENT_SECRET: 'client-secret',
-                 SLACK_VERIFICATION_TOKEN: 'token' do
-          get :oauth
-        end
+        with_env(
+          SLACK_CLIENT_ID: 'client-id',
+          SLACK_CLIENT_SECRET: 'client-secret',
+          SLACK_VERIFICATION_TOKEN: 'token'
+        ) { get :oauth }
         @response.body.must_include 'https://slack.com/oauth/authorize?client_id='
         @response.body.must_include '%2Fslack_app%2Foauth'
         @response.body.must_include 'chat%3Awrite%3Abot%2Ccommands%2Cidentify'
@@ -62,7 +62,7 @@ describe SlackAppController do
 
       it 'accepts an app token from Slack' do
         with_env SLACK_CLIENT_ID: 'client-id', SLACK_CLIENT_SECRET: 'client-secret' do
-          get :oauth, code: 'iamaslackcode'
+          get :oauth, params: {code: 'iamaslackcode'}
         end
         assert SlackIdentifier.app_token.present?
         identifier = SlackIdentifier.find_by_user_id users(:github_viewer).id
@@ -72,7 +72,7 @@ describe SlackAppController do
       it 'accepts a user token from Slack' do
         SlackIdentifier.create! identifier: 'i-am-an-app-token'
         with_env SLACK_CLIENT_ID: 'client-id', SLACK_CLIENT_SECRET: 'client-secret' do
-          get :oauth, code: 'iamaslackcode'
+          get :oauth, params: {code: 'iamaslackcode'}
         end
         identifier = SlackIdentifier.find_by_user_id users(:github_viewer).id
         identifier.identifier.must_equal 'Ugithubviewer'
@@ -83,7 +83,7 @@ describe SlackAppController do
   describe "#command" do
     it "raises if secret token doesn't match" do
       e = assert_raises RuntimeError do
-        post :command, token: 'thiswontmatch'
+        post :command, params: {token: 'thiswontmatch'}
       end
       e.message.must_equal "Slack token doesn't match SLACK_VERIFICATION_TOKEN"
     end
@@ -91,7 +91,7 @@ describe SlackAppController do
     describe 'without Slack linkage' do
       it "returns a private error if the user isn't matched up" do
         with_env SLACK_VERIFICATION_TOKEN: 'token' do
-          post :command, user_id: 'notconnected', token: nil
+          post :command, params: {user_id: 'notconnected', token: nil}
         end
         @response.body.must_include "slack_app/oauth"
       end
@@ -105,13 +105,13 @@ describe SlackAppController do
 
       it 'checks the verification token' do
         e = assert_raises do
-          post :command, token: 'wups'
+          post :command, params: {token: 'wups'}
         end
         e.message.must_equal "Slack token doesn't match SLACK_VERIFICATION_TOKEN"
       end
 
       it 'succeeds on SSL check' do
-        post :command, ssl_check: true
+        post :command, params: {ssl_check: true}
         assert_response :success
         @response.body.must_equal 'ok'
       end

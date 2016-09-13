@@ -29,7 +29,7 @@ describe JobsController do
 
   as_a_viewer do
     describe "#index" do
-      before { get :index, project_id: project.to_param }
+      before { get :index, params: {project_id: project.to_param } }
 
       it "renders the template" do
         assert_template :index
@@ -38,7 +38,7 @@ describe JobsController do
 
     describe "#show" do
       describe 'with a job' do
-        before { get :show, project_id: project.to_param, id: job }
+        before { get :show, params: {project_id: project.to_param, id: job } }
 
         it "renders the template" do
           assert_template :show
@@ -46,7 +46,7 @@ describe JobsController do
       end
 
       describe 'with a running job' do
-        before { get :show, project_id: project.to_param, id: jobs(:running_test) }
+        before { get :show, params: {project_id: project.to_param, id: jobs(:running_test) } }
 
         it "renders the template" do
           assert_template :show
@@ -55,12 +55,12 @@ describe JobsController do
 
       it "fails with unknown job" do
         assert_raises ActiveRecord::RecordNotFound do
-          get :show, project_id: project.to_param, id: "job:nope"
+          get :show, params: {project_id: project.to_param, id: "job:nope"}
         end
       end
 
       describe "with format .text" do
-        before { get :show, format: :text, project_id: project.to_param, id: job }
+        before { get :show, params: {format: :text, project_id: project.to_param, id: job } }
 
         it "responds with a plain text file" do
           assert_equal response.content_type, "text/plain"
@@ -85,7 +85,7 @@ describe JobsController do
   as_a_project_admin do
     describe "#new" do
       it "renders" do
-        get :new, project_id: project
+        get :new, params: {project_id: project}
         assert_template :new
       end
     end
@@ -94,10 +94,14 @@ describe JobsController do
       let(:command_ids) { [] }
 
       def create
-        post :create, commands: {ids: command_ids}, job: {
-          command: command,
-          commit: "master"
-        }, project_id: project.to_param
+        post :create, params: {
+          commands: {ids: command_ids},
+          job: {
+            command: command,
+            commit: "master"
+          },
+          project_id: project.to_param
+        }
       end
 
       it "creates a job and starts it" do
@@ -123,7 +127,7 @@ describe JobsController do
     describe "#destroy" do
       describe "when being a admin of the project" do
         before do
-          delete :destroy, project_id: project.to_param, id: job
+          delete :destroy, params: {project_id: project.to_param, id: job}
         end
 
         it "deletes the job" do
@@ -135,7 +139,7 @@ describe JobsController do
       describe "when not being an admin of the project" do
         before do
           UserProjectRole.delete_all
-          delete :destroy, project_id: project.to_param, id: job
+          delete :destroy, params: {project_id: project.to_param, id: job}
         end
 
         it "does not delete the job" do

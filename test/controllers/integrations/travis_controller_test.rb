@@ -23,7 +23,7 @@ describe Integrations::TravisController do
 
   describe "#create" do
     def create(options = {})
-      post :create, {token: project.token, payload: JSON.dump(payload)}.merge(options)
+      post :create, params: {token: project.token, payload: JSON.dump(payload)}.merge(options)
     end
 
     let(:authorization) { Digest::SHA2.hexdigest("bar/foo#{ENV["TRAVIS_TOKEN"]}") }

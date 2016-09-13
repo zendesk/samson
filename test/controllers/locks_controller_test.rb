@@ -32,17 +32,17 @@ describe LocksController do
     unauthorized :post, :create
 
     it 'is unauthorized when doing a post to create a local lock' do
-      post :create, lock: {stage_id: stage.id}
+      post :create, params: {lock: {stage_id: stage.id}}
       assert_unauthorized
     end
 
     it 'is unauthorized when doing a delete to destroy a local lock' do
-      delete :destroy, id: lock.id
+      delete :destroy, params: {id: lock.id}
       assert_unauthorized
     end
 
     it 'is unauthorized when doing a delete to destroy a global lock' do
-      delete :destroy, id: global_lock.id
+      delete :destroy, params: {id: global_lock.id}
       assert_unauthorized
     end
   end
@@ -51,7 +51,7 @@ describe LocksController do
     unauthorized :post, :create
 
     it 'responds with unauthorized when doing a post to create a global lock' do
-      post :create, lock: {stage_id: '', description: 'DESC'}
+      post :create, params: {lock: {stage_id: '', description: 'DESC'}}
       assert_unauthorized
     end
 
@@ -60,7 +60,7 @@ describe LocksController do
       after { travel_back }
 
       it 'creates a lock' do
-        post :create, lock: {stage_id: stage.id, description: 'DESC', delete_in: 3600 }
+        post :create, params: {lock: {stage_id: stage.id, description: 'DESC', delete_in: 3600 }}
         assert_redirected_to '/back'
         assert flash[:notice]
 
@@ -73,7 +73,7 @@ describe LocksController do
       end
 
       it 'creates a warning' do
-        post :create, lock: {stage_id: stage.id, description: 'DESC', warning: true}
+        post :create, params: {lock: {stage_id: stage.id, description: 'DESC', warning: true}}
         assert_redirected_to '/back'
         assert flash[:notice]
 
@@ -88,7 +88,7 @@ describe LocksController do
     describe 'DELETE to #destroy' do
       it 'destroys the lock' do
         lock = stage.create_lock!(user: users(:deployer))
-        delete :destroy, id: lock.id
+        delete :destroy, params: {id: lock.id}
 
         assert_redirected_to '/back'
         assert flash[:notice]
@@ -104,7 +104,7 @@ describe LocksController do
   as_a_admin do
     describe 'POST to #create' do
       it 'creates a global lock' do
-        post :create, lock: {stage_id: '', description: 'DESC'}
+        post :create, params: {lock: {stage_id: '', description: 'DESC'}}
         assert_redirected_to '/back'
         assert flash[:notice]
 
@@ -115,7 +115,7 @@ describe LocksController do
 
     describe 'DELETE to #destroy' do
       it 'destroys a global lock' do
-        delete :destroy, id: global_lock.id
+        delete :destroy, params: {id: global_lock.id}
 
         assert_redirected_to '/back'
         assert flash[:notice]

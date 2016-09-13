@@ -44,7 +44,7 @@ describe StreamsController do
         end
 
         # Get the :show page to open the SSE stream
-        get :show, id: job.id
+        get :show, params: {id: job.id}
 
         response.status.must_equal(200)
         t.join

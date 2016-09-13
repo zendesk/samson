@@ -16,7 +16,7 @@ describe WebhooksController do
   as_a_project_deployer do
     describe '#index' do
       it 'renders' do
-        get :index, project_id: project.to_param
+        get :index, params: {project_id: project.to_param}
         assert_template :index
       end
     end
@@ -25,7 +25,7 @@ describe WebhooksController do
       let(:params) { { branch: "master", stage_id: stage.id, source: 'any' } }
 
       before do
-        post :create, project_id: project.to_param, webhook: params
+        post :create, params: {project_id: project.to_param, webhook: params}
       end
 
       describe 'with valid params' do
@@ -41,7 +41,7 @@ describe WebhooksController do
         end
 
         it "renders :index" do
-          get :index, project_id: project.to_param
+          get :index, params: {project_id: project.to_param}
           assert_template :index
         end
       end
@@ -50,7 +50,7 @@ describe WebhooksController do
     describe "#destroy" do
       it "deletes the hook" do
         hook = project.webhooks.create!(stage: stage, branch: 'master', source: 'code')
-        delete :destroy, project_id: project.to_param, id: hook.id
+        delete :destroy, params: {project_id: project.to_param, id: hook.id}
         assert_raises(ActiveRecord::RecordNotFound) { Webhook.find(hook.id) }
         assert_redirected_to project_webhooks_path(project)
       end

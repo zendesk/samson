@@ -12,14 +12,14 @@ describe Admin::CommandsController do
 
     describe 'GET to #edit' do
       it "is unauthrized" do
-        get :edit, id: commands(:echo)
+        get :edit, params: {id: commands(:echo)}
         assert_unauthorized
       end
     end
 
     describe 'PUT to #update' do
       it "is unauthrized" do
-        put :update, id: commands(:echo)
+        put :update, params: {id: commands(:echo)}
         assert_unauthorized
       end
     end
@@ -33,12 +33,12 @@ describe Admin::CommandsController do
 
     describe 'GET to #edit' do
       it 'renders for local command as project-admin' do
-        get :edit, id: commands(:echo).id
+        get :edit, params: {id: commands(:echo).id}
         assert_template :edit
       end
 
       it "is unauthrized for global commands" do
-        get :edit, id: commands(:global)
+        get :edit, params: {id: commands(:global)}
         assert_unauthorized
       end
     end
@@ -49,7 +49,7 @@ describe Admin::CommandsController do
       let(:format) { 'html' }
 
       before do
-        patch :update, id: command.id, command: attributes, format: format
+        patch :update, params: {id: command.id, command: attributes, format: format}
       end
 
       describe 'valid' do
@@ -109,17 +109,17 @@ describe Admin::CommandsController do
       end
 
       it 'can filter by words' do
-        get :index, search: {query: 'echo'}
+        get :index, params: {search: {query: 'echo'}}
         assigns[:commands].must_equal [echo]
       end
 
       it 'can filter by project_id' do
-        get :index, search: {project_id: echo.project_id}
+        get :index, params: {search: {project_id: echo.project_id}}
         assigns[:commands].must_equal [echo]
       end
 
       it 'can filter by global' do
-        get :index, search: {project_id: 'global'}
+        get :index, params: {search: {project_id: 'global'}}
         assigns[:commands].must_equal [global]
       end
     end
@@ -134,7 +134,7 @@ describe Admin::CommandsController do
 
     describe 'POST to #create' do
       before do
-        post :create, command: attributes
+        post :create, params: {command: attributes}
       end
 
       describe 'invalid' do
@@ -157,14 +157,14 @@ describe Admin::CommandsController do
 
     describe 'GET to #edit' do
       it "renders for global commands" do
-        get :edit, id: commands(:global).id
+        get :edit, params: {id: commands(:global).id}
         assert_template :edit
       end
     end
 
     describe 'PUT to #update' do
       it "updates a global commands" do
-        put :update, id: commands(:global).id, command: { command: 'echo hi' }
+        put :update, params: {id: commands(:global).id, command: { command: 'echo hi' }}
         assert_redirected_to admin_commands_path
       end
     end
@@ -172,12 +172,12 @@ describe Admin::CommandsController do
     describe 'DELETE to #destroy' do
       it "fails with unknown id" do
         assert_raises ActiveRecord::RecordNotFound do
-          delete :destroy, id: 123123
+          delete :destroy, params: {id: 123123}
         end
       end
 
       describe 'valid' do
-        before { delete :destroy, id: commands(:echo).id, format: format }
+        before { delete :destroy, params: {id: commands(:echo).id, format: format } }
 
         describe 'html' do
           let(:format) { 'html' }

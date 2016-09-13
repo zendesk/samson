@@ -47,13 +47,13 @@ describe Admin::Kubernetes::ClustersController do
       before { Kubernetes::Cluster.any_instance.stubs(connection_valid?: true) } # avoid real connection
 
       it "redirects on success" do
-        post :create, kubernetes_cluster: params
+        post :create, params: {kubernetes_cluster: params}
         assert_redirected_to "http://test.host/admin/kubernetes/clusters/#{Kubernetes::Cluster.last.id}"
       end
 
       it "renders when it fails to create" do
         params.delete(:name)
-        post :create, kubernetes_cluster: params
+        post :create, params: {kubernetes_cluster: params}
         assert_template :new
       end
     end
@@ -62,7 +62,7 @@ describe Admin::Kubernetes::ClustersController do
       use_example_config
 
       it "renders" do
-        get :edit, id: cluster.id
+        get :edit, params: {id: cluster.id}
         assert_template :edit
       end
     end
@@ -71,7 +71,7 @@ describe Admin::Kubernetes::ClustersController do
       use_example_config
 
       it "renders" do
-        get :show, id: cluster.id
+        get :show, params: {id: cluster.id}
         assert_template :show
       end
     end
@@ -108,7 +108,7 @@ describe Admin::Kubernetes::ClustersController do
         cluster
         bad = create_kubernetes_cluster(name: 'bad')
         bad.update_column(:config_filepath, 'bad')
-        get :edit, id: cluster.id
+        get :edit, params: {id: cluster.id}
         assert_template :edit
         assigns['context_options'].wont_be_empty
       end

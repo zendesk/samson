@@ -20,7 +20,7 @@ describe MacrosController do
 
   as_a_project_deployer do
     describe "#index" do
-      before { get :index, project_id: project.to_param }
+      before { get :index, params: {project_id: project.to_param } }
 
       it "renders the template" do
         assert_template :index
@@ -31,7 +31,7 @@ describe MacrosController do
       it "executes a macro" do
         JobExecution.expects(:start_job)
         assert_difference 'Job.count' do
-          post :execute, project_id: project.to_param, id: macro.id
+          post :execute, params: {project_id: project.to_param, id: macro.id}
         end
         assert_redirected_to project_job_path(project, Job.last)
       end
@@ -40,14 +40,14 @@ describe MacrosController do
         JobExecution.expects(:start_job).never
         Job.any_instance.expects(:save).returns(false)
         refute_difference 'Job.count' do
-          post :execute, project_id: project.to_param, id: macro.id
+          post :execute, params: {project_id: project.to_param, id: macro.id}
         end
         assert_redirected_to project_macros_path(project)
       end
 
       it 'fails for non-existent macro' do
         assert_raises ActiveRecord::RecordNotFound do
-          post :execute, project_id: project.to_param, id: 123123123
+          post :execute, params: {project_id: project.to_param, id: 123123123}
         end
       end
     end
@@ -61,7 +61,7 @@ describe MacrosController do
 
   as_a_project_admin do
     describe '#new' do
-      before { get :new, project_id: project.to_param }
+      before { get :new, params: {project_id: project.to_param } }
 
       it 'renders the template' do
         assert_template :new
@@ -71,7 +71,7 @@ describe MacrosController do
     describe '#edit' do
       describe 'with a macro' do
         before do
-          get :edit, project_id: project.to_param, id: macro.id
+          get :edit, params: {project_id: project.to_param, id: macro.id}
         end
 
         it 'renders the template' do
@@ -81,7 +81,7 @@ describe MacrosController do
 
       it 'fails for non-existent macro' do
         assert_raises ActiveRecord::RecordNotFound do
-          get :edit, project_id: project.to_param, id: 123123
+          get :edit, params: {project_id: project.to_param, id: 123123}
         end
       end
     end
@@ -89,10 +89,13 @@ describe MacrosController do
     describe '#create' do
       describe 'with a valid macro' do
         before do
-          post :create, project_id: project.to_param, macro: {
-            name: 'Testing',
-            reference: 'master',
-            command: '/bin/true'
+          post :create, params: {
+            project_id: project.to_param,
+            macro: {
+              name: 'Testing',
+              reference: 'master',
+              command: '/bin/true'
+            }
           }
         end
 
@@ -103,7 +106,7 @@ describe MacrosController do
 
       describe 'with an invalid macro' do
         before do
-          post :create, project_id: project.to_param, macro: {name: 'Testing'}
+          post :create, params: {project_id: project.to_param, macro: {name: 'Testing'}}
         end
 
         it 'renders the form' do
@@ -115,7 +118,7 @@ describe MacrosController do
     describe '#update' do
       describe 'with a valid macro' do
         before do
-          post :update, project_id: project.to_param, id: macro.id, macro: {name: 'New'}
+          post :update, params: {project_id: project.to_param, id: macro.id, macro: {name: 'New'}}
         end
 
         it 'updates the macro' do
@@ -129,7 +132,7 @@ describe MacrosController do
 
       describe 'with an invalid macro' do
         before do
-          post :update, project_id: project.to_param, id: macro.id, macro: {name: ''}
+          post :update, params: {project_id: project.to_param, id: macro.id, macro: {name: ''}}
         end
 
         it 'renders the correct template' do
@@ -140,7 +143,7 @@ describe MacrosController do
 
     describe '#destroy' do
       before do
-        delete :destroy, project_id: project.to_param, id: macro.id
+        delete :destroy, params: {project_id: project.to_param, id: macro.id}
       end
 
       it 'soft deletes the macro' do

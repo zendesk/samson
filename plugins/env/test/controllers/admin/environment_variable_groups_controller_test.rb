@@ -27,41 +27,41 @@ describe Admin::EnvironmentVariableGroupsController do
 
     describe "#show" do
       it "renders" do
-        get :show, id: env_group.id
+        get :show, params: {id: env_group.id}
         assert_response :success
       end
     end
 
     describe "#preview" do
       it "renders for groups" do
-        get :preview, group_id: env_group.id
+        get :preview, params: {group_id: env_group.id}
         assert_response :success
       end
 
       it "renders for projects" do
-        get :preview, project_id: project.id
+        get :preview, params: {project_id: project.id}
         assert_response :success
       end
 
       it "calls env with preview" do
         EnvironmentVariable.expects(:env).with(anything, anything, preview: true).times(3)
-        get :preview, group_id: env_group.id
+        get :preview, params: {group_id: env_group.id}
         assert_response :success
       end
     end
 
     it 'responds with unauthorized' do
-      post :create, authenticity_token: set_form_authenticity_token
+      post :create, params: {authenticity_token: set_form_authenticity_token}
       @unauthorized.must_equal true, 'Request should get unauthorized'
     end
 
     it 'responds with unauthorized' do
-      delete :destroy, id: 1, authenticity_token: set_form_authenticity_token
+      delete :destroy, params: {id: 1, authenticity_token: set_form_authenticity_token}
       @unauthorized.must_equal true, 'Request should get unauthorized'
     end
 
     it 'responds with unauthorized' do
-      post :update, id: 1, authenticity_token: set_form_authenticity_token
+      post :update, params: {id: 1, authenticity_token: set_form_authenticity_token}
       @unauthorized.must_equal true, 'Request should get unauthorized'
     end
 
@@ -80,10 +80,13 @@ describe Admin::EnvironmentVariableGroupsController do
       it "creates" do
         assert_difference "EnvironmentVariable.count", +1 do
           assert_difference "EnvironmentVariableGroup.count", +1 do
-            post :create, environment_variable_group: {
-              environment_variables_attributes: {"0" => {name: "N1", value: "V1"}},
-              name: "G2"
-            }, authenticity_token:  set_form_authenticity_token
+            post :create, params: {
+              environment_variable_group: {
+                environment_variables_attributes: {"0" => {name: "N1", value: "V1"}},
+                name: "G2"
+              },
+              authenticity_token:  set_form_authenticity_token
+            }
           end
         end
         assert_redirected_to "/admin/environment_variable_groups"
@@ -95,13 +98,17 @@ describe Admin::EnvironmentVariableGroupsController do
 
       it "adds" do
         assert_difference "EnvironmentVariable.count", +1 do
-          put :update, id: env_group.id, environment_variable_group: {
-            name: "G2",
-            comment: "COOMMMENT",
-            environment_variables_attributes: {
-              "0" => {name: "N1", value: "V1"}
-            }
-          }, authenticity_token:  set_form_authenticity_token
+          put :update, params: {
+            id: env_group.id,
+            environment_variable_group: {
+              name: "G2",
+              comment: "COOMMMENT",
+              environment_variables_attributes: {
+                "0" => {name: "N1", value: "V1"}
+              }
+            },
+            authenticity_token:  set_form_authenticity_token
+          }
         end
 
         assert_redirected_to "/admin/environment_variable_groups"
@@ -113,11 +120,15 @@ describe Admin::EnvironmentVariableGroupsController do
       it "updates" do
         variable = env_group.environment_variables.first
         refute_difference "EnvironmentVariable.count" do
-          put :update, id: env_group.id, environment_variable_group: {
-            environment_variables_attributes: {
-              "0" => {name: "N1", value: "V2", scope_type_and_id: "DeployGroup-#{deploy_group.id}", id: variable.id}
-            }
-          }, authenticity_token:  set_form_authenticity_token
+          put :update, params: {
+            id: env_group.id,
+            environment_variable_group: {
+              environment_variables_attributes: {
+                "0" => {name: "N1", value: "V2", scope_type_and_id: "DeployGroup-#{deploy_group.id}", id: variable.id}
+              }
+            },
+            authenticity_token:  set_form_authenticity_token
+          }
         end
 
         assert_redirected_to "/admin/environment_variable_groups"
@@ -128,11 +139,14 @@ describe Admin::EnvironmentVariableGroupsController do
       it "destoys variables" do
         variable = env_group.environment_variables.first
         assert_difference "EnvironmentVariable.count", -1 do
-          put :update, id: env_group.id, environment_variable_group: {
-            environment_variables_attributes: {
-              "0" => {name: "N1", value: "V2", id: variable.id, _destroy: true}
-            }
-          }, authenticity_token:  set_form_authenticity_token
+          put :update, params: {
+            id: env_group.id, environment_variable_group: {
+              environment_variables_attributes: {
+                "0" => {name: "N1", value: "V2", id: variable.id, _destroy: true}
+              }
+            },
+            authenticity_token:  set_form_authenticity_token
+          }
         end
 
         assert_redirected_to "/admin/environment_variable_groups"
@@ -143,7 +157,7 @@ describe Admin::EnvironmentVariableGroupsController do
       it "destroy" do
         env_group
         assert_difference "EnvironmentVariableGroup.count", -1 do
-          delete :destroy, id: env_group.id, authenticity_token:  set_form_authenticity_token
+          delete :destroy, params: {id: env_group.id, authenticity_token:  set_form_authenticity_token}
         end
         assert_redirected_to "/admin/environment_variable_groups"
       end

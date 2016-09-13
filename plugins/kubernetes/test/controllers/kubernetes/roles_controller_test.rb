@@ -35,26 +35,26 @@ describe Kubernetes::RolesController do
 
     describe "#index" do
       it "renders" do
-        get :index, project_id: project
+        get :index, params: {project_id: project}
         assert_template :index
       end
 
       it "can render as json" do
-        get :index, project_id: project, format: 'json'
+        get :index, params: {project_id: project, format: 'json'}
         JSON.parse(response.body).size.must_equal project.kubernetes_roles.size
       end
     end
 
     describe "#show" do
       it "renders" do
-        get :show, project_id: project, id: role.id
+        get :show, params: {project_id: project, id: role.id}
         assert_template :show
       end
     end
 
     describe "#example" do
       it "renders" do
-        get :example, project_id: project
+        get :example, params: {project_id: project}
         assert_template :example
 
         # verify that the template is valid
@@ -68,21 +68,21 @@ describe Kubernetes::RolesController do
     describe "#seed" do
       it "creates roles" do
         Kubernetes::Role.expects(:seed!)
-        post :seed, project_id: project, ref: 'HEAD'
+        post :seed, params: {project_id: project, ref: 'HEAD'}
         assert_redirected_to action: :index
         refute flash[:error]
       end
 
       it "creates roles from default branch when none is given" do
         Kubernetes::Role.expects(:seed!)
-        post :seed, project_id: project, ref: ''
+        post :seed, params: {project_id: project, ref: ''}
         assert_redirected_to action: :index
         refute flash[:error]
       end
 
       it "shows errors when role creation fails due to an invalid template" do
         Kubernetes::Role.expects(:seed!).raises(Samson::Hooks::UserError.new("Heyho"))
-        post :seed, project_id: project, ref: 'HEAD'
+        post :seed, params: {project_id: project, ref: 'HEAD'}
         assert_redirected_to action: :index
         flash[:error].must_include "Heyho"
       end
@@ -90,14 +90,14 @@ describe Kubernetes::RolesController do
 
     describe "#new" do
       it "renders" do
-        get :new, project_id: project
+        get :new, params: {project_id: project}
         assert_template :new
       end
     end
 
     describe "#create" do
       it "creates" do
-        post :create, project_id: project, kubernetes_role: role_params
+        post :create, params: {project_id: project, kubernetes_role: role_params}
         role = Kubernetes::Role.last
         assert_redirected_to "/projects/foo/kubernetes/roles"
         role.name.must_equal 'name'
@@ -105,28 +105,28 @@ describe Kubernetes::RolesController do
 
       it "renders on failure" do
         role_params[:name] = ''
-        post :create, project_id: project, kubernetes_role: role_params
+        post :create, params: {project_id: project, kubernetes_role: role_params}
         assert_template :new
       end
     end
 
     describe "#update" do
       it "updates" do
-        put :update, project_id: project, id: role.id, kubernetes_role: role_params
+        put :update, params: {project_id: project, id: role.id, kubernetes_role: role_params}
         assert_redirected_to "/projects/foo/kubernetes/roles"
         role.reload.name.must_equal 'name'
       end
 
       it "renders on failure" do
         role_params[:name] = ''
-        put :update, project_id: project, id: role.id, kubernetes_role: role_params
+        put :update, params: {project_id: project, id: role.id, kubernetes_role: role_params}
         assert_template :show
       end
     end
 
     describe "#destroy" do
       it "destroys" do
-        delete :destroy, project_id: project, id: role.id
+        delete :destroy, params: {project_id: project, id: role.id}
         role.reload.deleted_at.wont_equal nil
         assert_redirected_to action: :index
       end

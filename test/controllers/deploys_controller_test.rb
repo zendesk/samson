@@ -36,7 +36,7 @@ describe DeploysController do
   as_a_viewer do
     describe "#index" do
       it "renders html" do
-        get :index, project_id: project
+        get :index, params: {project_id: project}
         assert_template :index
       end
 
@@ -47,14 +47,14 @@ describe DeploysController do
       end
 
       it "renders with given ids" do
-        get :index, ids: [deploy.id]
+        get :index, params: {ids: [deploy.id]}
         assert_template :index
         assigns[:deploys].must_equal [deploy]
       end
 
       it "fails when given ids do not exist" do
         assert_raises ActiveRecord::RecordNotFound do
-          get :index, ids: [121211221]
+          get :index, params: {ids: [121211221]}
         end
       end
     end
@@ -62,12 +62,12 @@ describe DeploysController do
     describe "#active" do
       with_and_without_project do
         it "renders the template" do
-          get :active, project_id: project_id
+          get :active, params: {project_id: project_id}
           assert_template :active
         end
 
         it "renders the partial" do
-          get :active, project_id: project_id, partial: true
+          get :active, params: {project_id: project_id, partial: true}
           assert_template 'shared/_deploys_table'
         end
       end
@@ -75,7 +75,7 @@ describe DeploysController do
 
     describe "#changeset" do
       before do
-        get :changeset, id: deploy.id, project_id: project.to_param
+        get :changeset, params: {id: deploy.id, project_id: project.to_param}
       end
 
       it "renders" do
@@ -86,7 +86,7 @@ describe DeploysController do
         request.env["HTTP_IF_NONE_MATCH"] = response.headers["ETag"]
         request.env["HTTP_IF_MODIFIED_SINCE"] = 2.minutes.ago.rfc2822
 
-        get :changeset, id: deploy.id, project_id: project.to_param
+        get :changeset, params: {id: deploy.id, project_id: project.to_param}
 
         assert_response :not_modified
       end
@@ -94,7 +94,7 @@ describe DeploysController do
 
     describe "#show" do
       describe "with a valid deploy" do
-        before { get :show, project_id: project.to_param, id: deploy.to_param }
+        before { get :show, params: {project_id: project.to_param, id: deploy.to_param } }
 
         it "renders the template" do
           assert_template :show
@@ -103,12 +103,12 @@ describe DeploysController do
 
       it "fails with unknown deploy" do
         assert_raises ActiveRecord::RecordNotFound do
-          get :show, project_id: project.to_param, id: "deploy:nope"
+          get :show, params: {project_id: project.to_param, id: "deploy:nope"}
         end
       end
 
       describe "with format .text" do
-        before { get :show, format: :text, project_id: project.to_param, id: deploy.to_param }
+        before { get :show, params: {format: :text, project_id: project.to_param, id: deploy.to_param } }
 
         it "responds with a plain text file" do
           assert_equal response.content_type, "text/plain"
@@ -146,89 +146,89 @@ describe DeploysController do
       end
 
       it "renders json" do
-        get :search, format: "json"
+        get :search, params: {format: "json"}
         assert_response :ok
       end
 
       it "renders csv" do
-        get :search, format: "csv"
+        get :search, params: {format: "csv"}
         assert_response :ok
         @response.body.split("\n").length.must_equal 7 # 4 records and 3 meta rows
       end
 
       it "renders csv with limit (1) records and links to generate full report" do
-        get :search, format: "csv", limit: 1
+        get :search, params: {format: "csv", limit: 1}
         assert_response :ok
         @response.body.split("\n").length.must_equal 6 # 1 record and 5 meta rows
         @response.body.split("\n")[2].split(",")[2].to_i.must_equal(1) # validate that count equals = csv_limit
       end
 
       it "renders html" do
-        get :search, format: "html"
+        get :search, params: {format: "html"}
         assert_equal "text/html", @response.content_type
         assert_response :ok
       end
 
       it "returns no results when deploy is not found" do
-        get :search, format: "json", deployer: 'jimmyjoebob'
+        get :search, params: {format: "json", deployer: 'jimmyjoebob'}
         assert_response :ok
         @response.body.must_equal "{\"deploys\":\[\]}"
       end
 
       it "fitlers results by deployer" do
-        get :search, format: "json", deployer: 'Admin'
+        get :search, params: {format: "json", deployer: 'Admin'}
         assert_response :ok
         deploys = JSON.parse(@response.body)
         deploys["deploys"].count.must_equal 4
       end
 
       it "filters results by status" do
-        get :search, format: "json", status: 'succeeded'
+        get :search, params: {format: "json", status: 'succeeded'}
         assert_response :ok
         deploys = JSON.parse(@response.body)
         deploys["deploys"].count.must_equal 2
       end
 
       it "ignores empty status" do
-        get :search, format: "json", status: ' '
+        get :search, params: {format: "json", status: ' '}
         assert_response 200
       end
 
       it "fails with invalid status" do
-        get :search, format: "json", status: 'bogus_status'
+        get :search, params: {format: "json", status: 'bogus_status'}
         assert_response 400
       end
 
       it "filters by project" do
-        get :search, format: "json", project_name: "Project"
+        get :search, params: {format: "json", project_name: "Project"}
         assert_response :ok
         deploys = JSON.parse(@response.body)
         deploys["deploys"].count.must_equal 4
       end
 
       it "filters by non-production" do
-        get :search, format: "json", production: 0
+        get :search, params: {format: "json", production: 0}
         assert_response :ok
         deploys = JSON.parse(@response.body)
         deploys["deploys"].count.must_equal 1
       end
 
       it "filters by non-production" do
-        get :search, format: "json", production: "false"
+        get :search, params: {format: "json", production: "false"}
         assert_response :ok
         deploys = JSON.parse(@response.body)
         deploys["deploys"].count.must_equal 1
       end
 
       it "filters by production" do
-        get :search, format: "json", production: 1
+        get :search, params: {format: "json", production: 1}
         assert_response :ok
         deploys = JSON.parse(@response.body)
         deploys["deploys"].count.must_equal 3
       end
 
       it "filters by production" do
-        get :search, format: "json", production: "true"
+        get :search, params: {format: "json", production: "true"}
         assert_response :ok
         deploys = JSON.parse(@response.body)
         deploys["deploys"].count.must_equal 3
@@ -251,7 +251,7 @@ describe DeploysController do
 
     describe "#new" do
       it "sets stage and reference" do
-        get :new, project_id: project.to_param, stage_id: stage.to_param, reference: "abcd"
+        get :new, params: {project_id: project.to_param, stage_id: stage.to_param, reference: "abcd"}
         deploy = assigns(:deploy)
         deploy.reference.must_equal "abcd"
       end
@@ -261,7 +261,7 @@ describe DeploysController do
       let(:params) { { deploy: { reference: "master" }} }
 
       before do
-        post :create, params.merge(project_id: project.to_param, stage_id: stage.to_param, format: format)
+        post :create, params: params.merge(project_id: project.to_param, stage_id: stage.to_param, format: format)
       end
 
       describe "as html" do
@@ -311,7 +311,7 @@ describe DeploysController do
       before do
         Deploy.delete_all # triggers more callbacks
 
-        post :confirm, project_id: project.to_param, stage_id: stage.to_param, deploy: { reference: "master" }
+        post :confirm, params: {project_id: project.to_param, stage_id: stage.to_param, deploy: { reference: "master" }}
       end
 
       it "renders the template" do
@@ -328,7 +328,7 @@ describe DeploysController do
         deploy_service.expects(:confirm_deploy!)
         refute deploy.buddy
 
-        post :buddy_check, project_id: project.to_param, id: deploy.id
+        post :buddy_check, params: {project_id: project.to_param, id: deploy.id}
 
         assert_redirected_to project_deploy_path(project, deploy)
         deploy.reload.buddy.must_equal user
@@ -342,7 +342,7 @@ describe DeploysController do
           Job.any_instance.stubs(:started_by?).returns(true)
           deploy_service.expects(:stop!).once
 
-          delete :destroy, project_id: project.to_param, id: deploy.to_param
+          delete :destroy, params: {project_id: project.to_param, id: deploy.to_param}
         end
 
         it "cancels a deploy" do
@@ -356,7 +356,7 @@ describe DeploysController do
           Deploy.any_instance.stubs(:started_by?).returns(false)
           User.any_instance.stubs(:admin?).returns(false)
 
-          delete :destroy, project_id: project.to_param, id: deploy.to_param
+          delete :destroy, params: {project_id: project.to_param, id: deploy.to_param}
         end
 
         it "doesn't cancel the deloy" do
@@ -374,7 +374,7 @@ describe DeploysController do
     describe "#destroy" do
       it "cancels the deploy" do
         deploy_service.expects(:stop!).once
-        delete :destroy, project_id: project.to_param, id: deploy.to_param
+        delete :destroy, params: {project_id: project.to_param, id: deploy.to_param}
         flash[:error].must_be_nil
       end
     end

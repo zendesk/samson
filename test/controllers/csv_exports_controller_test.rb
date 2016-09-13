@@ -38,7 +38,7 @@ describe CsvExportsController do
       describe "as html with exports" do
         it "renders the table of each status type" do
           create_exports
-          get :index, format: :html
+          get :index, params: {format: :html}
           assert_template :index
           index_page_includes_type :pending
           index_page_includes_type :started
@@ -52,7 +52,7 @@ describe CsvExportsController do
       describe "as html without exports" do
         it "responds with empty message" do
           CsvExport.delete_all
-          get :index, format: :html
+          get :index, params: {format: :html}
           assert_template :index
           @response.body.must_include "No current CSV Reports was found!"
         end
@@ -61,7 +61,7 @@ describe CsvExportsController do
       describe "as JSON with exports" do
         it "renders json" do
           create_exports
-          get :index, format: :json
+          get :index, params: {format: :json}
           @response.content_type.must_equal "application/json"
           @response.body.must_include CsvExport.all.to_json
         end
@@ -70,7 +70,7 @@ describe CsvExportsController do
       describe "as JSON without exports" do
         it "renders json" do
           CsvExport.delete_all
-          get :index, format: :json
+          get :index, params: {format: :json}
           @response.content_type.must_equal "application/json"
         end
       end
@@ -97,7 +97,7 @@ describe CsvExportsController do
 
         describe "users type" do
           it "renders form options" do
-            get :new, type: :users
+            get :new, params: {type: :users}
             assert_select "h1", "User Permission Reports"
             @response.body.must_include ">Project</option>"
             @response.body.must_include ">Other Project</option>"
@@ -110,7 +110,7 @@ describe CsvExportsController do
       describe "as csv" do
         describe "no type" do
           it "responds with not found" do
-            get :new, format: :csv
+            get :new, params: {format: :csv}
             response.body.must_equal "not found"
           end
         end
@@ -155,7 +155,7 @@ describe CsvExportsController do
 
           def csv_test(options, expected)
             options = options.merge(format: :csv, type: "users")
-            get :new, options
+            get :new, params: options
             response.success?.must_equal true
             CSV.parse(response.body).pop.pop.must_equal expected.to_json
           end
@@ -170,7 +170,7 @@ describe CsvExportsController do
 
           describe "as html" do
             it "renders html" do
-              get :show, id: export.id, format: :html
+              get :show, params: {id: export.id, format: :html}
               assert_template :show
               @response.body.must_include show_expected_html(state)
             end
@@ -178,7 +178,7 @@ describe CsvExportsController do
 
           describe "as json" do
             it "renders json" do
-              get :show, id: export.id, format: :json
+              get :show, params: {id: export.id, format: :json}
               @response.content_type.must_equal "application/json"
               @response.body.must_equal export.reload.to_json
             end
@@ -187,7 +187,7 @@ describe CsvExportsController do
           describe "as csv with no file" do
             before do
               export.delete_file
-              get :show, id: export.id, format: :csv
+              get :show, params: {id: export.id, format: :csv}
             end
 
             it "redirects to status" do
@@ -215,7 +215,7 @@ describe CsvExportsController do
               after { cleanup_files }
 
               it "receives file" do
-                get :show, id: export.id, format: 'csv'
+                get :show, params: {id: export.id, format: 'csv'}
                 @response.content_type.must_equal "text/csv"
                 export.reload.status.must_equal "downloaded"
                 assert export.reload.status? :downloaded
@@ -236,14 +236,14 @@ describe CsvExportsController do
         describe "as html" do
           it "raises ActiveRecord::RecordNotFound" do
             assert_raise(ActiveRecord::RecordNotFound) do
-              get :show, id: -9999, format: :html
+              get :show, params: {id: -9999, format: :html}
             end
           end
         end
 
         describe "as json" do
           it "returns not found" do
-            get :show, id: -9999, format: :json
+            get :show, params: {id: -9999, format: :json}
             @response.content_type.must_equal "application/json"
             @response.body.must_include "not found"
             assert_response 404
@@ -252,7 +252,7 @@ describe CsvExportsController do
 
         describe "as csv" do
           it "returns not found" do
-            get :show, id: -9999, format: :csv
+            get :show, params: {id: -9999, format: :csv}
             @response.content_type.must_equal "text/csv"
             @response.body.must_include "not found"
             assert_response 404
@@ -277,7 +277,7 @@ describe CsvExportsController do
           project: projects(:test).id.to_s
         }
         assert_difference 'CsvExport.count' do
-          post :create, filter
+          post :create, params: filter
         end
         assert_redirected_to CsvExport.last
         csv_filter = CsvExport.last.filters
@@ -296,7 +296,7 @@ describe CsvExportsController do
       def self.it_filters_production(prod, groups)
         it "with production filter #{prod == "Yes"} and DeployGroup enabled #{groups} creates correct filter" do
           DeployGroup.stubs(:enabled?).returns(groups)
-          post :create, production: prod
+          post :create, params: {production: prod}
           csv_filter = CsvExport.last.filters
           csv_filter[groups ? "environments.production" : "stages.production"].must_equal prod == "Yes"
         end
@@ -308,8 +308,7 @@ describe CsvExportsController do
       it_filters_production "No", false
 
       it "with production blank filter does not have stages.production filter" do
-        filter = { production: ""}
-        post :create, filter
+        post :create, params: {production: ""}
         csv_filter = CsvExport.last.filters
         refute csv_filter.keys.include?"stages.production"
       end
@@ -360,8 +359,8 @@ describe CsvExportsController do
   end
 
   def create_fail_test(message, filter)
-    assert_raise(message) do
-      post :create, filter
+    assert_raise message do
+      post :create, params: filter
     end
   end
 end

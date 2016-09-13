@@ -15,7 +15,7 @@ end
 describe DoorkeeperAuthTestingController do
   use_test_routes DoorkeeperAuthTestingController
 
-  subject { proc { get :foo, test_route: true } }
+  subject { proc { get :foo, params: {test_route: true} } }
 
   describe 'when winning_strategy is not doorkeeper' do
     before do
