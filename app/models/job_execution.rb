@@ -127,6 +127,7 @@ class JobExecution
     params: '{ job_id: id, project: job.project.try(:name), reference: reference }'
 
   def finish
+    LedgerClient.post_deployment(@job.deploy) if ENV["LEDGER_TOKEN"]
     @subscribers.each(&:call)
   end
 
