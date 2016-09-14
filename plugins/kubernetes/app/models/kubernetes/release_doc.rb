@@ -191,10 +191,19 @@ module Kubernetes
       extension_client.update_daemon_set daemon_set
 
       # wait for it to terminate all it's pods
-      loop do
+      max = 30
+      (1..max).each do |i|
         loop_sleep
         current = fetch_resource
-        break if current.status.currentNumberScheduled == 0 && current.status.numberMisscheduled == 0
+        scheduled = current.status.currentNumberScheduled
+        misscheduled = current.status.numberMisscheduled
+        break if scheduled == 0 && misscheduled == 0
+        if i == max
+          raise(
+            Samson::Hooks::UserError,
+            "Unable to terminate previous DaemonSet, scheduled: #{scheduled} / misscheduled: #{misscheduled}\n"
+          )
+        end
       end
 
       # delete it

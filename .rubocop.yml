@@ -73,6 +73,9 @@ Style/DoubleNegation:
 Style/Documentation:
   Enabled: false
 
+Style/Next:
+  Enabled: false
+
 Metrics/CyclomaticComplexity:
   Enabled: false
 

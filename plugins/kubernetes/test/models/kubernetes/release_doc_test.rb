@@ -146,6 +146,17 @@ describe Kubernetes::ReleaseDoc do
         client.expects(:create_daemon_set)
         doc.deploy
       end
+
+      it "tells the user what is wrong when the pods never get terminated" do
+        client.expects(:update_daemon_set)
+        client.expects(:get_daemon_set).times(31).returns(daemonset_stub(0, 1))
+        client.expects(:delete_daemon_set).never
+        client.expects(:create_daemon_set).never
+        e = assert_raises Samson::Hooks::UserError do
+          doc.deploy
+        end
+        e.message.must_include "misscheduled"
+      end
     end
 
     describe "job" do
