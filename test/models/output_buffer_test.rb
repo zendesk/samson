@@ -57,6 +57,45 @@ describe OutputBuffer do
     end
   end
 
+  describe "#write_docker_chunk" do
+    it "nicely formats complete chunk" do
+      buffer.write_docker_chunk('{"foo": 1, "bar": 2}').must_equal("foo" => 1, "bar" => 2)
+      buffer.to_s.must_equal("foo: 1 | bar: 2\n")
+    end
+
+    it "ignores blank values" do
+      buffer.write_docker_chunk('{"foo": " ", "bar": null}').must_equal("foo" => " ", "bar" => nil)
+      buffer.to_s.must_equal("")
+    end
+
+    it "writes partial chunks" do # ideally piece together multiple partial chunks
+      buffer.write_docker_chunk('{"foo": ').must_equal('message' => '{"foo": ')
+      buffer.to_s.must_equal "{\"foo\":\n"
+    end
+
+    it "does not print spammy progressDetail" do
+      buffer.write_docker_chunk('{"progressDetail": 1}').must_equal("progressDetail" => 1)
+      buffer.to_s.must_equal ""
+    end
+
+    it "coverts dockers ASCII encoding to utf-8 with valid json" do
+      buffer.write_docker_chunk('{"foo": "\255"}'.dup.force_encoding(Encoding::BINARY))
+      buffer.write_docker_chunk('{"bar": "meh"}')
+      buffer.to_s.must_equal "foo: 255\nbar: meh\n"
+    end
+
+    it "coverts dockers ASCII encoding to utf-8 with invalid json" do
+      buffer.write_docker_chunk('foo"\255"}'.dup.force_encoding(Encoding::BINARY))
+      buffer.write_docker_chunk('---\u003e 6c9a006fd38a\n'.dup.force_encoding(Encoding::BINARY))
+      buffer.write_docker_chunk('foo"\255"}')
+      buffer.close
+
+      buffer.to_s.must_equal "foo\"\\255\"}\n---\\u003e 6c9a006fd38a\\n\nfoo\"\\255\"}\n"
+      build_listener.value.map(&:encoding).uniq.must_equal([Encoding::UTF_8])
+      build_listener.value.map(&:valid_encoding?).uniq.must_equal([true])
+    end
+  end
+
   describe "#include?" do
     before { buffer.write("hello", :message) }
 

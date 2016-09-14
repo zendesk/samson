@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 require_relative '../test_helper'
 
-SingleCov.covered! uncovered: (defined?(Rake) ? 15 : 14) # during rake it is 15
+SingleCov.covered! uncovered: (defined?(Rake) ? 16 : 14) # during rake it is 16
 
 describe BinaryBuilder do
   let(:project) { projects(:test) }

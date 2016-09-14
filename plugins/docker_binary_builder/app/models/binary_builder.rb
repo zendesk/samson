@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 class BinaryBuilder
-  include HandlesDockerOutput
-
   DOCKER_BUILD_FILE = 'Dockerfile.build'
   BUILD_SCRIPT = '/app/build.sh'
   ARTIFACTS_FILE = 'artifacts.tar'
@@ -22,21 +20,23 @@ class BinaryBuilder
   def build
     return unless build_file_exist?
 
-    run_pre_build_script
+    begin
+      run_pre_build_script
 
-    @output_stream.puts "Connecting to Docker host with Api version: #{docker_api_version} ..."
+      @output_stream.puts "Connecting to Docker host with Api version: #{docker_api_version} ..."
 
-    @image = create_build_image
-    @container = Docker::Container.create(create_container_options)
+      @image = create_build_image
+      @container = Docker::Container.create(create_container_options)
 
-    start_build_script
-    retrieve_binaries
+      start_build_script
+      retrieve_binaries
 
-    @output_stream.puts 'Continuing docker build...'
-  ensure
-    @output_stream.puts 'Cleaning up docker build image and container...' if build_file_exist?
-    @container.delete(force: true) if @container
-    @image.remove(force: true) if @image
+      @output_stream.puts 'Continuing docker build...'
+    ensure
+      @output_stream.puts 'Cleaning up docker build image and container...'
+      @container.delete(force: true) if @container
+      @image.remove(force: true) if @image
+    end
   end
 
   def run_pre_build_script
@@ -64,7 +64,7 @@ class BinaryBuilder
 
   def start_build_script
     @output_stream.puts 'Now starting Build container...'
-    @container.tap(&:start).attach { |_stream, chunk| handle_output_chunk(chunk, @output_stream) }
+    @container.tap(&:start).attach { |_stream, chunk| @output_stream.write_docker_chunk(chunk) }
   rescue => ex
     @output_stream.puts "Failed to run the build script '#{BUILD_SCRIPT}' inside container."
     raise ex
@@ -153,7 +153,7 @@ class BinaryBuilder
       't' => image_name
     }
     Docker::Image.build_from_dir(@dir, build_options) do |chunk|
-      handle_output_chunk(chunk, @output_stream)
+      @output_stream.write_docker_chunk(chunk)
     end
   end
 

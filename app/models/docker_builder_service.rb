@@ -2,8 +2,6 @@
 require 'docker'
 
 class DockerBuilderService
-  include HandlesDockerOutput
-
   DIGEST_SHA_REGEX = /Digest:.*(sha256:[0-9a-f]+)/i
   DOCKER_REPO_REGEX = /^BUILD DIGEST: (.*@sha256:[0-9a-f]+)/i
   include ::NewRelic::Agent::MethodTracer
@@ -74,7 +72,7 @@ class DockerBuilderService
 
     build.docker_image =
       Docker::Image.build_from_dir(tmp_dir, {}, Docker.connection, registry_credentials) do |chunk|
-        handle_output_chunk(chunk, output)
+        output.write_docker_chunk(chunk)
       end
     output.puts('### Docker build complete')
   rescue Docker::Error::DockerError => e
@@ -92,11 +90,10 @@ class DockerBuilderService
     build.docker_image.tag(repo: project.docker_repo, tag: build.docker_ref, force: true)
 
     build.docker_image.push(registry_credentials) do |chunk|
-      parsed_chunk = handle_output_chunk(chunk, output)
-
+      parsed_chunk = output.write_docker_chunk(chunk)
       status = parsed_chunk.fetch('status', '')
-      if (matches = DIGEST_SHA_REGEX.match(status))
-        build.docker_repo_digest = "#{project.docker_repo}@#{matches[1]}"
+      if sha = status[DIGEST_SHA_REGEX, 1]
+        build.docker_repo_digest = "#{project.docker_repo}@#{sha}"
       end
     end
 
@@ -142,7 +139,7 @@ class DockerBuilderService
     output.puts "### Pushing the 'latest' tag for this image"
     build.docker_image.tag(repo: project.docker_repo, tag: 'latest', force: true)
     build.docker_image.push(registry_credentials, tag: 'latest', force: true) do |chunk|
-      handle_output_chunk(chunk, output)
+      output.write_docker_chunk(chunk)
     end
   end
 
