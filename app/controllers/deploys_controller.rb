@@ -99,6 +99,8 @@ class DeploysController < ApplicationController
   def create
     deploy_service = DeployService.new(current_user)
     @deploy = deploy_service.deploy!(stage, deploy_params)
+    # log the fact that a deployment is running in ledger
+    LedgerClient.post_deployment(@deploy) if ENV["LEDGER_TOKEN"]
 
     respond_to do |format|
       format.html do
