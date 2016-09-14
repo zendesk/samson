@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 class BinaryBuilder
+  include HandlesDockerOutput
+
   DOCKER_BUILD_FILE = 'Dockerfile.build'
   BUILD_SCRIPT = '/app/build.sh'
   ARTIFACTS_FILE = 'artifacts.tar'
@@ -32,7 +34,7 @@ class BinaryBuilder
 
     @output_stream.puts 'Continuing docker build...'
   ensure
-    @output_stream.puts 'Cleaning up docker build image and container...'
+    @output_stream.puts 'Cleaning up docker build image and container...' if build_file_exist?
     @container.delete(force: true) if @container
     @image.remove(force: true) if @image
   end
@@ -62,7 +64,7 @@ class BinaryBuilder
 
   def start_build_script
     @output_stream.puts 'Now starting Build container...'
-    @container.tap(&:start).attach { |_stream, chunk| @output_stream.write chunk }
+    @container.tap(&:start).attach { |_stream, chunk| handle_output_chunk(chunk, @output_stream) }
   rescue => ex
     @output_stream.puts "Failed to run the build script '#{BUILD_SCRIPT}' inside container."
     raise ex
@@ -146,9 +148,13 @@ class BinaryBuilder
 
   def create_build_image
     @output_stream.puts 'Now building the build container...'
-    Docker::Image.build_from_dir(
-      @dir, 'dockerfile' => DOCKER_BUILD_FILE, 't' => image_name
-    ) { |chunk| @output_stream.write chunk }
+    build_options = {
+      'dockerfile' => DOCKER_BUILD_FILE,
+      't' => image_name
+    }
+    Docker::Image.build_from_dir(@dir, build_options) do |chunk|
+      handle_output_chunk(chunk, @output_stream)
+    end
   end
 
   def docker_api_version
