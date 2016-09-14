@@ -20,21 +20,23 @@ class BinaryBuilder
   def build
     return unless build_file_exist?
 
-    run_pre_build_script
+    begin
+      run_pre_build_script
 
-    @output_stream.puts "Connecting to Docker host with Api version: #{docker_api_version} ..."
+      @output_stream.puts "Connecting to Docker host with Api version: #{docker_api_version} ..."
 
-    @image = create_build_image
-    @container = Docker::Container.create(create_container_options)
+      @image = create_build_image
+      @container = Docker::Container.create(create_container_options)
 
-    start_build_script
-    retrieve_binaries
+      start_build_script
+      retrieve_binaries
 
-    @output_stream.puts 'Continuing docker build...'
-  ensure
-    @output_stream.puts 'Cleaning up docker build image and container...'
-    @container.delete(force: true) if @container
-    @image.remove(force: true) if @image
+      @output_stream.puts 'Continuing docker build...'
+    ensure
+      @output_stream.puts 'Cleaning up docker build image and container...'
+      @container.delete(force: true) if @container
+      @image.remove(force: true) if @image
+    end
   end
 
   def run_pre_build_script
@@ -62,7 +64,7 @@ class BinaryBuilder
 
   def start_build_script
     @output_stream.puts 'Now starting Build container...'
-    @container.tap(&:start).attach { |_stream, chunk| @output_stream.write chunk }
+    @container.tap(&:start).attach { |_stream, chunk| @output_stream.write_docker_chunk(chunk) }
   rescue => ex
     @output_stream.puts "Failed to run the build script '#{BUILD_SCRIPT}' inside container."
     raise ex
@@ -146,9 +148,13 @@ class BinaryBuilder
 
   def create_build_image
     @output_stream.puts 'Now building the build container...'
-    Docker::Image.build_from_dir(
-      @dir, 'dockerfile' => DOCKER_BUILD_FILE, 't' => image_name
-    ) { |chunk| @output_stream.write chunk }
+    build_options = {
+      'dockerfile' => DOCKER_BUILD_FILE,
+      't' => image_name
+    }
+    Docker::Image.build_from_dir(@dir, build_options) do |chunk|
+      @output_stream.write_docker_chunk(chunk)
+    end
   end
 
   def docker_api_version

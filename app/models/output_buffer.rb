@@ -39,6 +39,24 @@ class OutputBuffer
     @listeners.dup.each { |listener| listener.push([event, data]) }
   end
 
+  def write_docker_chunk(chunk)
+    parsed_chunk = JSON.parse(chunk)
+
+    # Don't bother printing all the incremental output when pulling images
+    unless parsed_chunk['progressDetail']
+      values = parsed_chunk.map { |k, v| "#{k}: #{v}" if v.present? }.compact
+      puts values.join(' | ') if values.any?
+    end
+
+    parsed_chunk
+  rescue JSON::ParserError
+    # Sometimes the JSON line is too big to fit in one chunk, so we get
+    # a chunk back that is an incomplete JSON object.
+    chunk = chunk.encode(Encoding::UTF_8, chunk.encoding, invalid: :replace, undef: :replace)
+    puts chunk
+    { 'message' => chunk }
+  end
+
   def include?(event, data)
     @previous.include?([event, data])
   end

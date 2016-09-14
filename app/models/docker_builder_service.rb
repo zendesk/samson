@@ -71,8 +71,8 @@ class DockerBuilderService
     output.puts("### Running Docker build")
 
     build.docker_image =
-      Docker::Image.build_from_dir(tmp_dir, {}, Docker.connection, registry_credentials) do |output_chunk|
-        handle_output_chunk(output_chunk)
+      Docker::Image.build_from_dir(tmp_dir, {}, Docker.connection, registry_credentials) do |chunk|
+        output.write_docker_chunk(chunk)
       end
     output.puts('### Docker build complete')
   rescue Docker::Error::DockerError => e
@@ -89,12 +89,11 @@ class DockerBuilderService
 
     build.docker_image.tag(repo: project.docker_repo, tag: build.docker_ref, force: true)
 
-    build.docker_image.push(registry_credentials) do |output_chunk|
-      parsed_chunk = handle_output_chunk(output_chunk)
-
+    build.docker_image.push(registry_credentials) do |chunk|
+      parsed_chunk = output.write_docker_chunk(chunk)
       status = parsed_chunk.fetch('status', '')
-      if (matches = DIGEST_SHA_REGEX.match(status))
-        build.docker_repo_digest = "#{project.docker_repo}@#{matches[1]}"
+      if sha = status[DIGEST_SHA_REGEX, 1]
+        build.docker_repo_digest = "#{project.docker_repo}@#{sha}"
       end
     end
 
@@ -139,26 +138,9 @@ class DockerBuilderService
   def push_latest
     output.puts "### Pushing the 'latest' tag for this image"
     build.docker_image.tag(repo: project.docker_repo, tag: 'latest', force: true)
-    build.docker_image.push(registry_credentials, tag: 'latest', force: true) do |output|
-      handle_output_chunk(output)
+    build.docker_image.push(registry_credentials, tag: 'latest', force: true) do |chunk|
+      output.write_docker_chunk(chunk)
     end
-  end
-
-  def handle_output_chunk(chunk)
-    parsed_chunk = JSON.parse(chunk)
-
-    # Don't bother printing all the incremental output when pulling images
-    unless parsed_chunk['progressDetail']
-      values = parsed_chunk.map { |k, v| "#{k}: #{v}" if v.present? }.compact
-      output.puts values.join(' | ')
-    end
-
-    parsed_chunk
-  rescue JSON::ParserError
-    # Sometimes the JSON line is too big to fit in one chunk, so we get
-    # a chunk back that is an incomplete JSON object.
-    output.puts chunk
-    { 'message' => chunk }
   end
 
   def send_after_notifications
