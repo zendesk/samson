@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 require_relative '../test_helper'
 
-SingleCov.covered! uncovered: 2
+SingleCov.covered!
 
 describe OutputBuffer do
   include OutputBufferSupport
@@ -54,6 +54,31 @@ describe OutputBuffer do
 
     it "rstrips content" do # not sure why we do this, just documenting
       listen { |o| o.puts " x " }.must_equal [" x\n"]
+    end
+  end
+
+  describe "#include?" do
+    before { buffer.write("hello", :message) }
+
+    it "is true when exact message was sent" do
+      assert buffer.include?(:message, "hello")
+    end
+
+    it "is false when different event was sent" do
+      refute buffer.include?(:close, "hello")
+    end
+
+    it "is false when different content was sent" do
+      refute buffer.include?(:message, "foo")
+    end
+  end
+
+  describe "#to_s" do
+    it "serializes all messages" do
+      buffer.write("hello", :message)
+      buffer.write("hello", :close)
+      buffer.write("world", :message)
+      buffer.to_s.must_equal "helloworld"
     end
   end
 

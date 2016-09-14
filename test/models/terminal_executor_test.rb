@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 require_relative '../test_helper'
 
-SingleCov.covered! uncovered: 2
+SingleCov.covered! uncovered: 2 # 1 platform if/else ... 1 missing test for getpgid failure
 
 describe TerminalExecutor do
   let(:output) { StringIO.new }
@@ -56,6 +56,11 @@ describe TerminalExecutor do
         output.string.must_include("XYZ=FOO")
         output.string.must_include("ZZZ=FOO")
       end
+    end
+
+    it "preserves multibyte characters" do
+      subject.execute!(%(echo "#{"ß" * 400}"))
+      output.string.must_equal("#{"ß" * 400}\r\n")
     end
 
     describe 'in verbose mode' do
