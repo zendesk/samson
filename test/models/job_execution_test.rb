@@ -241,6 +241,11 @@ describe JobExecution do
       Kubernetes::DeployExecutor.any_instance.expects(:execute!).returns true
       execute_job("master")
     end
+
+    it "does not clone the repo" do
+      GitRepository.any_instance.expects(:setup!).never
+      execute_job("master")
+    end
   end
 
   describe 'when JobExecution is disabled' do
