@@ -160,12 +160,12 @@ class JobExecution
 
   def setup!(dir)
     resolve_ref_to_commit
-    stage.try(:kubernetes) || create_workspace(dir)
+    stage.try(:kubernetes) || checkout_workspace(dir)
   end
 
-  def create_workspace(dir)
+  def checkout_workspace(dir)
     locked = lock_project do
-      return false unless @repository.setup!(dir, @reference)
+      return false unless @repository.checkout_workspace(dir, @reference)
     end
 
     if locked

@@ -243,7 +243,7 @@ describe JobExecution do
     end
 
     it "does not clone the repo" do
-      GitRepository.any_instance.expects(:setup!).never
+      GitRepository.any_instance.expects(:checkout_workspace).never
       execute_job("master")
     end
   end
