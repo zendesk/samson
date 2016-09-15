@@ -2,7 +2,7 @@
 # rubocop:disable Metrics/LineLength
 require_relative '../../test_helper'
 
-SingleCov.covered! uncovered: 2
+SingleCov.covered!
 
 describe Samson::Jenkins do
   def stub_crumb
@@ -75,6 +75,65 @@ describe Samson::Jenkins do
     Samson::Jenkins.new(nil, nil).send(:client).get_root
   end
 
+  describe ".deployed!" do
+    let(:attributes) { JenkinsJob.last.attributes.except("id", "created_at", "updated_at") }
+
+    before do
+      Samson::Jenkins.any_instance.stubs(:build).returns 123
+      deploy.stage.jenkins_job_names = 'foo,bar'
+    end
+
+    it "stores successful deploys" do
+      assert_difference('JenkinsJob.count', +2) { Samson::Jenkins.deployed!(deploy) }
+      attributes.must_equal(
+        "jenkins_job_id" => 123,
+        "name" => "bar",
+        "status" => nil,
+        "error" => nil,
+        "deploy_id" => deploy.id,
+        "url" => nil
+      )
+    end
+
+    it "stores failed deploys" do
+      Samson::Jenkins.any_instance.stubs(:build).returns "Whoops"
+      assert_difference('JenkinsJob.count', +2) { Samson::Jenkins.deployed!(deploy) }
+
+      attributes.must_equal(
+        "jenkins_job_id" => nil,
+        "name" => "bar",
+        "status" => "STARTUP_ERROR",
+        "error" => "Whoops",
+        "deploy_id" => deploy.id,
+        "url" => nil
+      )
+    end
+
+    it "truncated too long error messages" do
+      Samson::Jenkins.any_instance.stubs(:build).returns("a" * 999)
+      assert_difference('JenkinsJob.count', +2) { Samson::Jenkins.deployed!(deploy) }
+      attributes["error"].size.must_equal 255
+    end
+
+    it "skips stages with blank jenkins jobs" do
+      deploy.stage.jenkins_job_names = ''
+      Samson::Jenkins.any_instance.expects(:build).never
+      Samson::Jenkins.deployed!(deploy)
+    end
+
+    it "skips stages with nil jenkins jobs" do
+      deploy.stage.jenkins_job_names = nil
+      Samson::Jenkins.any_instance.expects(:build).never
+      Samson::Jenkins.deployed!(deploy)
+    end
+
+    it "skips failed deploys" do
+      deploy.job.status = 'failed'
+      Samson::Jenkins.any_instance.expects(:build).never
+      Samson::Jenkins.deployed!(deploy)
+    end
+  end
+
   describe "#build" do
     it "returns a job number when jenkins starts a build" do
       stub_crumb
@@ -84,6 +143,55 @@ describe Samson::Jenkins do
       stub_get_build_id_from_queue(123)
 
       jenkins.build.must_equal 123
+    end
+
+    it "returns an error on timeout" do
+      stub_request(:get, "http://www.test-url.com/job/test_job/api/json").to_timeout
+      jenkins.build.must_include "timely"
+    end
+
+    it "returns an error on api error" do
+      stub_request(:get, "http://www.test-url.com/job/test_job/api/json").to_return(status: 500, body: "{}")
+      jenkins.build.must_include "Problem while waiting"
+    end
+
+    describe "with env flags" do
+      before(:each) do
+        stub_crumb
+        stub_job_detail
+        stub_add_changeset
+      end
+
+      it "sends deployer and buddy emails to jenkins" do
+        deploy.stubs(:buddy).returns(buddy)
+        stub_build_with_parameters("emails": "super-admin@example.com,deployerbuddy@example.com")
+        stub_get_build_id_from_queue(1)
+        jenkins.build.must_equal 1
+      end
+
+      it "includes committer emails when JENKINS_NOTIFY_COMMITTERS is set" do
+        with_env 'JENKINS_NOTIFY_COMMITTERS': "1" do
+          stub_build_with_parameters("emails": 'super-admin@example.com,author1@example.com,author2@test.com,author3@example.comm,author4@example.co,AUTHOR5@EXAMPLE.COM')
+          stub_get_build_id_from_queue(1)
+          jenkins.build.must_equal 1
+        end
+      end
+
+      it "filters emails by GOOGLE_DOMAIN" do
+        with_env 'GOOGLE_DOMAIN': '@example1.com' do
+          stub_build_with_parameters("emails": "")
+          stub_get_build_id_from_queue(1)
+          jenkins.build.must_equal 1
+        end
+      end
+
+      it "filters emails by GOOGLE_DOMAIN when JENKINS_NOTIFY_COMMITTERS is set" do
+        with_env 'GOOGLE_DOMAIN': '@example.com', 'JENKINS_NOTIFY_COMMITTERS': '1' do
+          stub_build_with_parameters("emails": 'super-admin@example.com,author1@example.com,AUTHOR5@EXAMPLE.COM')
+          stub_get_build_id_from_queue(1)
+          jenkins.build.must_equal 1
+        end
+      end
     end
   end
 
@@ -113,45 +221,6 @@ describe Samson::Jenkins do
     it "returns an error when the job is missing" do
       stub_build_url("https://jenkins.zende.sk/job/rdhanoa_test_project/96/", status: 404)
       jenkins.job_url(96).must_equal "#"
-    end
-  end
-
-  describe "build with env flags" do
-    before(:each) do
-      stub_crumb
-      stub_job_detail
-      stub_add_changeset
-    end
-
-    it "sends deployer and buddy emails to jenkins" do
-      deploy.stubs(:buddy).returns(buddy)
-      stub_build_with_parameters("emails": "super-admin@example.com,deployerbuddy@example.com")
-      stub_get_build_id_from_queue(1)
-      jenkins.build.must_equal 1
-    end
-
-    it "includes committer emails when JENKINS_NOTIFY_COMMITTERS is set" do
-      with_env 'JENKINS_NOTIFY_COMMITTERS': "1" do
-        stub_build_with_parameters("emails": 'super-admin@example.com,author1@example.com,author2@test.com,author3@example.comm,author4@example.co,AUTHOR5@EXAMPLE.COM')
-        stub_get_build_id_from_queue(1)
-        jenkins.build.must_equal 1
-      end
-    end
-
-    it "filters emails by GOOGLE_DOMAIN" do
-      with_env 'GOOGLE_DOMAIN': '@example1.com' do
-        stub_build_with_parameters("emails": "")
-        stub_get_build_id_from_queue(1)
-        jenkins.build.must_equal 1
-      end
-    end
-
-    it "filters emails by GOOGLE_DOMAIN when JENKINS_NOTIFY_COMMITTERS is set" do
-      with_env 'GOOGLE_DOMAIN': '@example.com', 'JENKINS_NOTIFY_COMMITTERS': '1' do
-        stub_build_with_parameters("emails": 'super-admin@example.com,author1@example.com,AUTHOR5@EXAMPLE.COM')
-        stub_get_build_id_from_queue(1)
-        jenkins.build.must_equal 1
-      end
     end
   end
 end

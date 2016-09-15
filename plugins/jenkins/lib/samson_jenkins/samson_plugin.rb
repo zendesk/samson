@@ -12,17 +12,5 @@ Samson::Hooks.callback :stage_permitted_params do
 end
 
 Samson::Hooks.callback :after_deploy do |deploy|
-  if deploy.status == 'succeeded' && deploy.stage.jenkins_job_names?
-    deploy.stage.jenkins_job_names.to_s.split(/, ?/).map do |job_name|
-      job_id = Samson::Jenkins.new(job_name, deploy).build
-      attributes = {name: job_name, deploy_id: deploy.id}
-      if job_id.is_a?(Fixnum)
-        attributes[:jenkins_job_id] = job_id
-      else
-        attributes[:status] = "STARTUP_ERROR"
-        attributes[:error] = job_id
-      end
-      JenkinsJob.create!(attributes)
-    end
-  end
+  Samson::Jenkins.deployed!(deploy)
 end

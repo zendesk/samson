@@ -6,8 +6,24 @@ module Samson
     URL = ENV['JENKINS_URL']
     USERNAME = ENV['JENKINS_USERNAME']
     API_KEY = ENV['JENKINS_API_KEY']
+    ERROR_COLUMN_LIMIT = 255
 
     attr_reader :job_name, :deploy
+
+    def self.deployed!(deploy)
+      return unless deploy.succeeded?
+      deploy.stage.jenkins_job_names.to_s.strip.split(/, ?/).map do |job_name|
+        job_id = new(job_name, deploy).build
+        attributes = {name: job_name, deploy_id: deploy.id}
+        if job_id.is_a?(Fixnum)
+          attributes[:jenkins_job_id] = job_id
+        else
+          attributes[:status] = "STARTUP_ERROR"
+          attributes[:error] = job_id.to_s.slice(0, ERROR_COLUMN_LIMIT)
+        end
+        JenkinsJob.create!(attributes)
+      end
+    end
 
     def initialize(job_name, deploy)
       @job_name = job_name
