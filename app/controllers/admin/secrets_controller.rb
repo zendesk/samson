@@ -75,7 +75,7 @@ class Admin::SecretsController < ApplicationController
   end
 
   def find_secret
-    @secret = SecretStorage.read(key, include_secret: true)
+    @secret = SecretStorage.read(key, include_value: true)
   end
 
   def find_project_permalinks

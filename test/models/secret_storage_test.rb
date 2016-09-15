@@ -91,7 +91,7 @@ describe SecretStorage do
 
   describe ".read" do
     it "reads" do
-      data = SecretStorage.read(secret.id, include_secret: true)
+      data = SecretStorage.read(secret.id, include_value: true)
       data.fetch(:value).must_equal 'MY-SECRET'
     end
 
@@ -109,7 +109,7 @@ describe SecretStorage do
 
   describe ".read_multi" do
     it "reads" do
-      data = SecretStorage.read_multi([secret.id], include_secret: true)
+      data = SecretStorage.read_multi([secret.id], include_value: true)
       data.keys.must_equal [secret.id]
       data[secret.id].fetch(:value).must_equal 'MY-SECRET'
     end

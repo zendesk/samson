@@ -49,7 +49,7 @@ class TerminalExecutor
       key = $1
       if expanded = resolver.expand('unused', key).first&.last
         key.replace(expanded)
-        SecretStorage.read(key, include_secret: true).fetch(:value)
+        SecretStorage.read(key, include_value: true).fetch(:value)
       end
     end
 
