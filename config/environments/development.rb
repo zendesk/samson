@@ -20,7 +20,13 @@ Samson::Application.configure do
 
   default_url_options[:port] = config.samson.uri.port
 
-  config.active_support.deprecation = :raise
+  config.active_support.deprecation = -> (message, _backtrace) do
+    if message.include?("#original_exception is deprecated")
+      # ignored until https://github.com/charliesome/better_errors/issues/333
+    else
+      raise message
+    end
+  end
 
   # Raise an error on page load if there are pending migrations
   config.active_record.migration_error = :page_load
