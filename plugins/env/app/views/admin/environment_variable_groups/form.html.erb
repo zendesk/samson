@@ -31,7 +31,7 @@
     <fieldset>
       <legend>
         Environment variables
-        <i class="glyphicon glyphicon-info-sign" title="$VAR / ${VAR} replacements supported&#13;Priority is DeployGroup, Environment, All"></i>
+        <%= additional_info "$VAR / ${VAR} replacements supported&#13;Priority is DeployGroup, Environment, All" %>
       </legend>
       <%= render "samson_env/environment_variables", form: form %> |
       <%= link_to "Preview", preview_admin_environment_variable_groups_path(group_id: @group.id) %>
