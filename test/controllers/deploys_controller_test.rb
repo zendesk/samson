@@ -35,6 +35,10 @@ describe DeploysController do
 
   as_a_viewer do
     describe "#index" do
+      before do
+        Deploy.any_instance.stubs(:changeset).returns(changeset)
+      end
+
       it "renders html" do
         get :index, params: {project_id: project}
         assert_template :index
