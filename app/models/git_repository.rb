@@ -16,7 +16,7 @@ class GitRepository
     @executor = executor
   end
 
-  def setup!(temp_dir, git_reference)
+  def checkout_workspace(temp_dir, git_reference)
     raise ArgumentError, "git_reference is required" if git_reference.blank?
 
     executor.output.write("# Beginning git repo setup\n")

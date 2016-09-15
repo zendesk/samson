@@ -208,12 +208,12 @@ describe GitRepository do
     end
   end
 
-  describe "#setup!" do
+  describe ".checkout_workspace" do
     before { create_repo_with_an_additional_branch }
 
     it 'creates a repository' do
       Dir.mktmpdir do |temp_dir|
-        assert repository.setup!(temp_dir, 'test_user/test_branch')
+        assert repository.checkout_workspace(temp_dir, 'test_user/test_branch')
         Dir.chdir(temp_dir) { current_branch.must_equal('test_user/test_branch') }
       end
     end
@@ -221,7 +221,7 @@ describe GitRepository do
     it 'updates an existing repository to a branch' do
       Dir.mktmpdir do |temp_dir|
         repository.send(:clone!, mirror: true)
-        assert repository.setup!(temp_dir, 'test_user/test_branch')
+        assert repository.checkout_workspace(temp_dir, 'test_user/test_branch')
         Dir.chdir(temp_dir) { current_branch.must_equal('test_user/test_branch') }
       end
     end
@@ -240,7 +240,7 @@ describe GitRepository do
         SHELL
 
         # change is not visible
-        assert repository.setup!(temp_dir, 'test_user/test_branch')
+        assert repository.checkout_workspace(temp_dir, 'test_user/test_branch')
         File.read("#{temp_dir}/foo").must_equal "monkey\n"
       end
     end
@@ -250,7 +250,7 @@ describe GitRepository do
     it 'removes a repository' do
       create_repo_without_tags
       Dir.mktmpdir do |temp_dir|
-        assert repository.setup!(temp_dir, 'master')
+        assert repository.checkout_workspace(temp_dir, 'master')
         Dir.exist?(repository.repo_cache_dir).must_equal true
         repository.clean!
         Dir.exist?(repository.repo_cache_dir).must_equal false
