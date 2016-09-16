@@ -175,7 +175,15 @@ module Samson
             next if !fixture.end_with?(".yml") && fixture.include?(".")
             new_path = File.join(fixture_path, File.basename(fixture))
             File.symlink(fixture, new_path) unless File.exist?(new_path)
-            Minitest.after_run { File.delete(new_path) if File.symlink?(new_path) }
+
+            # rails test does not trigger after_run and rake does not work with at_exit
+            # https://github.com/rails/rails/pull/26515
+            callback = -> { File.delete(new_path) if File.symlink?(new_path) }
+            if Minitest.respond_to?(:run_with_rails_extension) && Minitest.run_with_rails_extension
+              at_exit(&callback)
+            else
+              Minitest.after_run(&callback)
+            end
           end
         end
       end
