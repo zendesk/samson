@@ -63,11 +63,7 @@ class ActiveSupport::TestCase
 
   ActiveRecord::Migration.check_pending!
 
-  # Setup all fixtures in test/fixtures/*.yml for all tests in alphabetical order.
-  #
-  # Note: You'll currently still have to declare fixtures explicitly in integration tests
-  # -- they do not yet inherit this setting
-  Samson::Hooks.plugin_test_setup
+  Samson::Hooks.symlink_plugin_fixtures
   fixtures :all
 
   before do
