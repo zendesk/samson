@@ -159,7 +159,7 @@ class JobExecution
   end
 
   def setup!(dir)
-    resolve_ref_to_commit
+    return unless resolve_ref_to_commit
     stage.try(:kubernetes) || checkout_workspace(dir)
   end
 
@@ -180,8 +180,14 @@ class JobExecution
     @repository.update_local_cache!
     commit = @repository.commit_from_ref(@reference)
     tag = @repository.tag_from_ref(@reference)
-    @job.update_git_references!(commit: commit, tag: tag)
-    @output.puts("Commit: #{commit}")
+    if commit
+      @job.update_git_references!(commit: commit, tag: tag)
+      @output.puts("Commit: #{commit}")
+      true
+    else
+      @output.puts("Could not find commit for #{@reference}")
+      false
+    end
   end
 
   def commands(dir)

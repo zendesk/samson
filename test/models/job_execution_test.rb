@@ -213,6 +213,14 @@ describe JobExecution do
   it 'errors if job setup fails' do
     execute_job('nope')
     assert_equal 'errored', job.status
+    job.output.to_s.must_include "Could not find commit for nope"
+  end
+
+  it 'errors if job commit resultion fails, but checkout works' do
+    GitRepository.any_instance.expects(:commit_from_ref).returns nil
+    execute_job('master')
+    assert_equal 'errored', job.status
+    job.output.to_s.must_include "Could not find commit for master"
   end
 
   it 'cannot setup project if project is locked' do
