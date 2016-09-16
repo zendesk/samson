@@ -167,7 +167,7 @@ module Samson
           each(&:add_decorators)
       end
 
-      def plugin_test_setup
+      def symlink_plugin_fixtures
         fixture_path = ActiveSupport::TestCase.fixture_path
         plugins.each do |plugin|
           fixtures = Dir.glob(File.join(plugin.folder, 'test', 'fixtures', '*'))
@@ -177,11 +177,6 @@ module Samson
             File.symlink(fixture, new_path) unless File.exist?(new_path)
             Minitest.after_run { File.delete(new_path) if File.symlink?(new_path) }
           end
-
-          # Load test_helper.rb if it exists
-          # TODO maybe not necessary ...
-          test_helper_file = File.join(plugin.folder, 'test', 'test_helper.rb')
-          require test_helper_file if File.exist?(test_helper_file)
         end
       end
 
