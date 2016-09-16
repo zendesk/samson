@@ -4,7 +4,7 @@ succeeded_test:
   project: test
   status: succeeded
   output: This worked!
-  commit: staging
+  commit: abcabc1
 
 succeeded_production_test:
   command: cap production deploy
@@ -12,7 +12,7 @@ succeeded_production_test:
   project: test
   status: succeeded
   output: This worked!
-  commit: production
+  commit: abcabc2
 
 running_test:
   command: cap staging deploy
@@ -20,7 +20,7 @@ running_test:
   project: test
   status: running
   output: This worked!
-  commit: staging
+  commit: abcabc3
 
 failed_test:
   command: cap staging deploy

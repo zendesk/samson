@@ -353,7 +353,7 @@ describe Stage do
     end
 
     it "includes static emails and committer emails" do
-      GITHUB.expects(:compare).with(anything, previous_deploy.reference, "commita").returns simple_response
+      GITHUB.expects(:compare).with(anything, previous_deploy.job.commit, "commita").returns simple_response
       emails.must_equal ["static@example.com", "pete@example.com"]
     end
 
