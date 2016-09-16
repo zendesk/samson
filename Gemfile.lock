@@ -55,6 +55,12 @@ PATH
     samson_pipelines (0.0.0)
 
 PATH
+  remote: plugins/samson_ledger
+  specs:
+    samson_ledger (0.0.1)
+      faraday
+
+PATH
   remote: plugins/slack_app
   specs:
     samson_slack_app (0.0.0)
@@ -570,6 +576,7 @@ DEPENDENCIES
   samson_flowdock!
   samson_jenkins!
   samson_kubernetes!
+  samson_ledger!
   samson_new_relic!
   samson_pipelines!
   samson_slack_app!
