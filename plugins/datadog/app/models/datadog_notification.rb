@@ -37,7 +37,7 @@ class DatadogNotification
   private
 
   def body
-    "@#{@deploy.user.email} deployed #{@deploy.short_reference} to #{@stage.name}"
+    "#{@deploy.user.email} deployed #{@deploy.short_reference} to #{@stage.name}"
   end
 
   def api_key
