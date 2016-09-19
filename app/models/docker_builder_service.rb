@@ -75,6 +75,11 @@ class DockerBuilderService
         output.write_docker_chunk(chunk)
       end
     output.puts('### Docker build complete')
+  rescue Docker::Error::UnexpectedResponseError
+    # If the docker library isn't able to find an image id, it returns the
+    # entire output of the "docker build" command, which we've already captured
+    output.puts("Docker build failed (image id not found in response)")
+    nil
   rescue Docker::Error::DockerError => e
     # If a docker error is raised, consider that a "failed" job instead of an "errored" job
     output.puts("Docker build failed: #{e.message}")
