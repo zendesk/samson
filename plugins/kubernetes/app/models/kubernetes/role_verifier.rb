@@ -28,6 +28,7 @@ module Kubernetes
       verify_job_restart_policy
       verify_numeric_limits
       verify_project_and_role_consistent
+      verify_annotations
       verify_env_values
       @errors.presence
     end
@@ -127,6 +128,12 @@ module Kubernetes
       names = map_attributes(path, elements: jobs)
       return if names - allowed == []
       @errors << "Job #{path.join('.')} must be one of #{allowed.join('/')}"
+    end
+
+    def verify_annotations
+      path = [:spec, :template, :metadata, :annotations]
+      annotations = map_attributes(path)
+      @errors << "Annotations must be a hash" if annotations.any? { |a| a && !a.kind_of?(Hash) }
     end
 
     def verify_env_values

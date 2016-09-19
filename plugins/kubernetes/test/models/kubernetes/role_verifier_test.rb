@@ -102,6 +102,11 @@ describe Kubernetes::RoleVerifier do
       errors.must_include "Deployment metadata.labels.role must match /\\A[a-z0-9]([-a-z0-9]*[a-z0-9])?\\z/"
     end
 
+    it "reports invalid annotations" do
+      role.first[:spec][:template][:metadata][:annotations] = ['foo', 'bar']
+      errors.must_include "Annotations must be a hash"
+    end
+
     it "reports non-string env values" do
       role.first[:spec][:template][:spec][:containers][0][:env] = {
         name: 'XYZ_PORT',

@@ -18,6 +18,9 @@ spec:
       labels:
         project: some-project
         role: some-role
+      annotations:
+        secret/API_KEY: api_key
+        secret/DB_PASS: database/password
     spec:
       containers:
       - name: some-project
