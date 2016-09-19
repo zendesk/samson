@@ -57,7 +57,8 @@ module Kubernetes
       Kubeclient::Client.new(
         endpoint,
         type,
-        ssl_options: context.ssl_options
+        ssl_options: context.ssl_options,
+        auth_options: context.auth_options
       )
     end
 
