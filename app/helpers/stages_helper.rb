@@ -27,8 +27,7 @@ module StagesHelper
     content_tag :span, text.html_safe, class: "label label-warning", title: stage.lock.summary
   end
 
-  def stage_template_icon(stage)
-    return unless stage.is_template
-    image_tag "template-icon.png", size: "18x18"
+  def stage_template_icon
+    content_tag :span, '', class: "glyphicon glyphicon-duplicate"
   end
 end

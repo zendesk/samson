@@ -3,7 +3,7 @@
     <td>
       <%= link_to stage.name, [project, stage] %>
       <%= stage_lock_icon stage %>
-      <%= stage_template_icon stage %>
+      <%= stage.is_template ? stage_template_icon : '' %>
     </td>
 
     <% if DeployGroup.enabled? %>
