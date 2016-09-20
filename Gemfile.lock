@@ -153,7 +153,7 @@ GEM
     bootstrap-sass (3.3.6)
       autoprefixer-rails (>= 5.2.1)
       sass (>= 3.3.4)
-    brakeman (3.3.5)
+    brakeman (3.4.0)
     builder (3.2.2)
     byebug (8.2.2)
     codeclimate-test-reporter (0.5.0)
