@@ -230,48 +230,6 @@ describe Project do
     end
   end
 
-  describe 'lock project' do
-    let(:repository_url) { 'git@github.com:zendesk/demo_apps.git' }
-    let(:project_id) { 999999 }
-
-    after(:each) do
-      MultiLock.locks = {}
-    end
-
-    it 'locks the project' do
-      project = Project.new(id: project_id, name: 'demo_apps', repository_url: repository_url)
-      output = StringIO.new
-      MultiLock.locks[project_id].must_be_nil
-      project.with_lock(output: output, holder: 'test', timeout: 2.seconds) do
-        MultiLock.locks[project_id].wont_be_nil
-      end
-      MultiLock.locks[project_id].must_be_nil
-    end
-
-    it 'fails to aquire a lock if there is a lock already there' do
-      MultiLock.locks = { project_id => 'test' }
-      MultiLock.locks[project_id].wont_be_nil
-      project = Project.new(id: project_id, name: 'demo_apps', repository_url: repository_url)
-      output = StringIO.new
-      project.with_lock(output: output, holder: 'test', timeout: 1.seconds) { output.puts("Can't get here") }
-      output.string.include?("Can't get here").must_equal(false)
-    end
-
-    it 'executes the provided error callback if cannot acquire the lock' do
-      MultiLock.locks = { project_id => 'test' }
-      MultiLock.locks[project_id].wont_be_nil
-      project = Project.new(id: project_id, name: 'demo_apps', repository_url: repository_url)
-      output = StringIO.new
-      callback = proc { output << 'using the error callback' }
-      project.with_lock(output: output, holder: 'test', error_callback: callback, timeout: 1.seconds) do
-        output.puts("Can't get here")
-      end
-      MultiLock.locks[project_id].wont_be_nil
-      output.string.include?('using the error callback').must_equal(true)
-      output.string.include?("Can't get here").must_equal(false)
-    end
-  end
-
   describe '#last_deploy_by_group' do
     let(:pod1) { deploy_groups(:pod1) }
     let(:pod2) { deploy_groups(:pod2) }
