@@ -63,4 +63,10 @@ describe StagesHelper do
       stage_lock_icon(stage).must_include "Locked"
     end
   end
+
+  describe "#stage_template_icon" do
+    it "renders icon" do
+      stage_template_icon.must_include "glyphicon-duplicate"
+    end
+  end
 end

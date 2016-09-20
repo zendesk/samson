@@ -26,4 +26,8 @@ module StagesHelper
       end
     content_tag :span, text.html_safe, class: "label label-warning", title: stage.lock.summary
   end
+
+  def stage_template_icon
+    content_tag :span, '', class: "glyphicon glyphicon-duplicate", title: "Template stage, this stage will be used when copying to new Deploy Groups"
+  end
 end
