@@ -47,9 +47,6 @@ gem 'concurrent-ruby'
 gem 'vault'
 gem 'docker-api'
 gem 'warden-doorkeeper'
-
-# Temporarily using our fork, while waiting for this PR to get merged:
-# https://github.com/abonas/kubeclient/pull/127
 gem 'kubeclient', '~> 1.2.0'
 
 # treat included plugins like gems
