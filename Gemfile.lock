@@ -172,7 +172,7 @@ GEM
     dogapi (1.21.0)
       multi_json
     dogstatsd-ruby (1.6.0)
-    domain_name (0.5.20160615)
+    domain_name (0.5.20160826)
       unf (>= 0.0.5, < 1.0.0)
     doorkeeper (4.2.0)
       railties (>= 4.2)
@@ -228,7 +228,7 @@ GEM
     kaminari (0.17.0)
       actionpack (>= 3.0.0)
       activesupport (>= 3.0.0)
-    kubeclient (1.1.4)
+    kubeclient (1.2.0)
       activesupport
       http (= 0.9.8)
       recursive-open-struct (= 1.0.0)
@@ -515,7 +515,7 @@ DEPENDENCIES
   github-markdown
   goldiloader
   kaminari (~> 0.17.0)
-  kubeclient (= 1.1.4)
+  kubeclient (~> 1.2.0)
   lograge
   logstash-event
   maxitest
