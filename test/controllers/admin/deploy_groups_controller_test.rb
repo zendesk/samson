@@ -198,6 +198,14 @@ describe Admin::DeployGroupsController do
 
         refute_empty deploy_group.stages.where(project: template_stage.project)
       end
+
+      it 'adds the new stage to the end of the deploy pipeline' do
+        post :create_all_stages, params: {id: deploy_group}
+
+        # the new stage is at the end of the pipeline
+        stage = deploy_group.stages.last
+        template_stage.next_stage_ids.must_equal([stage.id])
+      end
     end
   end
 end

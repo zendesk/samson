@@ -92,12 +92,18 @@ class Admin::DeployGroupsController < ApplicationController
 
   private
 
-  def create_stage_with_group(stage)
-    stage = Stage.build_clone(stage)
+  def create_stage_with_group(template_stage)
+    stage = Stage.build_clone(template_stage)
     stage.deploy_groups << deploy_group
     stage.name = deploy_group.name
     stage.is_template = false
     stage.save!
+
+    if template_stage.respond_to?(:next_stage_ids) # pipeline plugin was installed
+      template_stage.next_stage_ids << stage.id
+      template_stage.save!
+    end
+
     stage
   end
 
