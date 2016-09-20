@@ -84,19 +84,19 @@ class Changeset::PullRequest
   end
 
   def sha
-    @data.head.sha
+    @data['head']['sha']
   end
 
   def branch
-    @data.head.ref
+    @data['head']['ref']
   end
 
   def state
-    @data.state
+    @data['state']
   end
 
   def users
-    users = [@data.user, @data.merged_by]
+    users = [@data['user'], @data['merged_by']]
     users.compact.map { |user| Changeset::GithubUser.new(user) }.uniq
   end
 
