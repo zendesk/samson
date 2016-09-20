@@ -146,10 +146,21 @@ describe DockerBuilderService do
     end
 
     it 'catches docker errors' do
+      error_message = "A bad thing happened..."
       Docker::Image.unstub(:build_from_dir)
-      Docker::Image.expects(:build_from_dir).raises(Docker::Error::DockerError.new("XYZ"))
+      Docker::Image.expects(:build_from_dir).raises(Docker::Error::DockerError.new(error_message))
       service.build_image(tmp_dir).must_equal nil
       build.docker_image_id.must_equal nil
+      service.output.to_s.must_include error_message
+    end
+
+    it 'catches UnexpectedResponseErrors' do
+      error_message = "Really long output..."
+      Docker::Image.unstub(:build_from_dir)
+      Docker::Image.expects(:build_from_dir).raises(Docker::Error::UnexpectedResponseError.new(error_message))
+      service.build_image(tmp_dir).must_equal nil
+      build.docker_image_id.must_equal nil
+      service.output.to_s.wont_include error_message
     end
 
     it 'catches JSON errors' do

@@ -133,7 +133,7 @@ module Kubernetes
     def verify_annotations
       path = [:spec, :template, :metadata, :annotations]
       annotations = map_attributes(path)
-      @errors << "Annotations must be a hash" if annotations.any? { |a| a && !a.kind_of?(Hash) }
+      @errors << "Annotations must be a hash" if annotations.any? { |a| a && !a.is_a?(Hash) }
     end
 
     def verify_env_values
