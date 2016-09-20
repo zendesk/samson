@@ -26,4 +26,9 @@ module StagesHelper
       end
     content_tag :span, text.html_safe, class: "label label-warning", title: stage.lock.summary
   end
+
+  def stage_template_icon(stage)
+    return unless stage.is_template
+    image_tag "template-icon.png", size: "18x18"
+  end
 end
