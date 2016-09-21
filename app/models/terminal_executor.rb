@@ -1,5 +1,5 @@
 # frozen_string_literal: true
-require 'open3'
+require 'pty'
 
 # Executes commands in a fake terminal. The output will be streamed to a
 # specified IO-like object.
@@ -59,35 +59,24 @@ class TerminalExecutor
   end
 
   def execute_command!(command)
-    Tempfile.open('samson-execute') do |f|
-      f.write command
-      f.flush
-      options = {in: '/dev/null', unsetenv_others: true, pgroup: true}
+    options = {in: '/dev/null', unsetenv_others: true}
+    output, input, @pid = PTY.spawn(whitelisted_env, command, options)
 
-      # http://stackoverflow.com/questions/1401002/trick-an-application-into-thinking-its-stdin-is-interactive-not-a-pipe
-      script =
-        if RbConfig::CONFIG["target_os"].include?("darwin")
-          "script -q /dev/null sh #{f.path}"
-        else
-          "script -qfec 'sh #{f.path}'"
-        end
-
-      Open3.popen2e(whitelisted_env, script, options) do |_stdin, oe, wait_thr|
-        @pid = wait_thr.pid
-
-        @pgid = begin
-          Process.getpgid(@pid)
-        rescue Errno::ESRCH
-          nil
-        end
-
-        oe.each(256) do |line|
-          @output.write line.gsub(/\r?\n/, "\r\n") # script on travis returns \n and \r\n on osx and our servers
-        end
-
-        wait_thr.value
-      end.success?
+    @pgid = begin
+      Process.getpgid(@pid)
+    rescue Errno::ESRCH
+      nil
     end
+
+    begin
+      output.each(256) { |line| @output.write line }
+    rescue Errno::EIO
+      nil # output was closed ... only happens on linux
+    end
+
+    _pid, status = Process.wait2(@pid)
+    input.close
+    status.success?
   end
 
   def whitelisted_env
