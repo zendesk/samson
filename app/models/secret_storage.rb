@@ -28,17 +28,17 @@ module SecretStorage
     end
 
     # reads a single key and raises ActiveRecord::RecordNotFound if it is not found
-    def read(key, include_secret: false)
+    def read(key, include_value: false)
       data = backend.read(key) || raise(ActiveRecord::RecordNotFound)
-      data.delete(:value) unless include_secret
+      data.delete(:value) unless include_value
       data
     end
 
-    # reads multiple keys from the backend into a hash
+    # reads multiple keys from the backend into a hash, not raising on missing
     # [a, b, c] -> {a: 1, c: 2}
-    def read_multi(keys, include_secret: false)
+    def read_multi(keys, include_value: false)
       data = backend.read_multi(keys)
-      data.each_value { |s| s.delete(:value) } unless include_secret
+      data.each_value { |s| s.delete(:value) } unless include_value
       data
     end
 

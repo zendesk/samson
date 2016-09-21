@@ -1,0 +1,18 @@
+<% if DeployGroup.enabled? %>
+  <fieldset>
+    <legend>
+      Airbrake
+    </legend>
+    <div class="form-group">
+      <div class="col-sm-offset-2 col-sm-10">
+        <div class="checkbox">
+          <%= form.label :notify_airbrake do %>
+            <%= form.check_box :notify_airbrake %>
+            Notify airbrake on deploy
+            <%= additional_info "Only for deploys that: are successful, go to a deploy group that has airbrake_api_key secret set, go to an environments with a Rails env like name (staging/production)" %>
+          <% end %>
+        </div>
+      </div>
+    </div>
+  </fieldset>
+<% end %>

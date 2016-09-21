@@ -18,5 +18,11 @@ else
       notify(ex)
       nil
     end
+
+    def self.configuration
+      @configuration ||= Struct.new(
+        :api_key, :host, :port, :proxy_host, :proxy_port, :proxy_user, :proxy_pass, :secure?
+      ).new('fake-key')
+    end
   end
 end

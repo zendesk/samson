@@ -1,4 +1,10 @@
 PATH
+  remote: plugins/airbrake
+  specs:
+    samson_airbrake (0.0.0)
+      airbrake
+
+PATH
   remote: plugins/aws_ecr
   specs:
     samson_aws_ecr (0.0.0)
@@ -568,6 +574,7 @@ DEPENDENCIES
   rails-assets-x-editable!
   rails-controller-testing
   rubocop
+  samson_airbrake!
   samson_aws_ecr!
   samson_datadog!
   samson_docker_binary_builder!
