@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 require_relative '../test_helper'
 
-SingleCov.covered! uncovered: 2 # 1 platform if/else ... 1 missing test for getpgid failure
+SingleCov.covered!
 
 describe TerminalExecutor do
   let(:output) { StringIO.new }
@@ -61,6 +61,16 @@ describe TerminalExecutor do
     it "preserves multibyte characters" do
       subject.execute!(%(echo "#{"ß" * 400}"))
       output.string.must_equal("#{"ß" * 400}\r\n")
+    end
+
+    it "ignores getpgid failures" do
+      Process.expects(:getpgid).raises(Errno::ESRCH)
+      subject.execute!('echo "hi"').must_equal(true)
+    end
+
+    it "ignores closed output errors that happen on linux" do
+      output.expects(:write).raises(Errno::EIO) # it is actually the .each call that raises it, but that is hard to stub
+      subject.execute!('echo "hi"').must_equal(true)
     end
 
     describe 'in verbose mode' do
