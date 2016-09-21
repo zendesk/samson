@@ -21,32 +21,21 @@ class GitRepository
 
     executor.output.write("# Beginning git repo setup\n")
     return false unless @last_pulled || update_local_cache!
-    return false unless clone!(from: repo_cache_dir, to: temp_dir)
-    return false unless checkout!(git_reference, pwd: temp_dir)
+    return false unless create_workspace(temp_dir)
+    return false unless checkout!(git_reference, temp_dir)
     true
   end
 
+  # FIXME: always use exclusive
+  # atm we use exclusive only from a few placed that call this
   def update_local_cache!
+    @last_pulled = Time.now
     if locally_cached?
       update!
     else
-      clone!(from: repository_url, to: repo_cache_dir, mirror: true)
+      clone!
     end
   end
-
-  # FIXME: make private / remove arguments / always use exclusive
-  # atm we use exclusive only from a few placed that call this
-  def clone!(from: repository_url, to: repo_cache_dir, mirror: false)
-    @last_pulled = Time.now if from == repository_url
-    command =
-      if mirror
-        "git -c core.askpass=true clone --mirror #{from} #{to}"
-      else
-        "git clone #{from} #{to}"
-      end
-    executor.execute! command
-  end
-  add_method_tracer :clone!
 
   def commit_from_ref(git_reference)
     return unless ensure_local_cache!
@@ -115,8 +104,17 @@ class GitRepository
 
   private
 
+  def clone!
+    executor.execute! "git -c core.askpass=true clone --mirror #{repository_url} #{repo_cache_dir}"
+  end
+  add_method_tracer :clone!
+
+  def create_workspace(temp_dir)
+    executor.execute! "git clone #{repo_cache_dir} #{temp_dir}"
+  end
+  add_method_tracer :create_workspace
+
   def update!
-    @last_pulled = Time.now
     executor.execute!("cd #{repo_cache_dir}", 'git fetch -p')
   end
   add_method_tracer :update!
@@ -129,7 +127,7 @@ class GitRepository
     locally_cached? || update_local_cache!
   end
 
-  def checkout!(git_reference, pwd: repo_cache_dir)
+  def checkout!(git_reference, pwd)
     executor.execute!("cd #{pwd}", "git checkout --quiet #{git_reference.shellescape}")
   end
 

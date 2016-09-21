@@ -22,18 +22,20 @@ describe GitRepository do
     repository.repository_directory.must_equal project.repository_directory
   end
 
-  describe "#clone!" do
+  describe "#create_workspace" do
     it 'clones a repository' do
       Dir.mktmpdir do |dir|
-        create_repo_with_tags
-        repository.clone!(from: repo_temp_dir, to: dir).must_equal true
+        create_repo_without_tags
+        FileUtils.mv(repo_temp_dir, repository.repo_cache_dir)
+
+        repository.send(:create_workspace, dir).must_equal true
         Dir.exist?("#{dir}/.git").must_equal true
       end
     end
 
     it "returns false when clone fails" do
       Dir.mktmpdir do |dir|
-        repository.clone!(from: repo_temp_dir, to: dir).must_equal false
+        repository.send(:create_workspace, dir).must_equal false
         Dir.exist?("#{dir}/.git").must_equal false
       end
     end
@@ -42,7 +44,7 @@ describe GitRepository do
   describe "#update_local_cache!" do
     it 'updates an existing repository' do
       create_repo_with_tags
-      repository.clone!.must_equal(true)
+      repository.send(:clone!).must_equal(true)
       Dir.chdir(repository.repo_cache_dir) do
         number_of_commits.must_equal 1
       end
@@ -60,7 +62,7 @@ describe GitRepository do
 
       # commit should now be locally available
       Dir.chdir(repository.repo_cache_dir) do
-        number_of_commits('origin/master').must_equal(2)
+        number_of_commits('master').must_equal(2)
       end
     end
 
@@ -77,48 +79,46 @@ describe GitRepository do
 
     it 'returns false when update fails' do
       create_repo_with_tags
-      repository.clone!.must_equal(true)
-      Dir.chdir(repository.repo_cache_dir) do
-        raise unless system("git remote rm origin")
-      end
+      repository.send(:clone!).must_equal(true)
+      assert system("rm -rf #{repository.repo_cache_dir}/*")
       repository.update_local_cache!.must_equal false
     end
   end
 
-  describe "#cheakout!" do
+  describe "#checkout!" do
     it 'switches to a different branch' do
       create_repo_with_an_additional_branch
-      repository.clone!.must_equal(true)
-      repository.send(:checkout!, 'master').must_equal(true)
-      Dir.chdir(repository.repo_cache_dir) { current_branch.must_equal('master') }
-      repository.send(:checkout!, 'test_user/test_branch').must_equal(true)
-      Dir.chdir(repository.repo_cache_dir) { current_branch.must_equal('test_user/test_branch') }
+      repository.update_local_cache!
+      repository.send(:checkout!, 'master', repo_temp_dir).must_equal(true)
+      Dir.chdir(repo_temp_dir) { current_branch.must_equal('master') }
+      repository.send(:checkout!, 'test_user/test_branch', repo_temp_dir).must_equal(true)
+      Dir.chdir(repo_temp_dir) { current_branch.must_equal('test_user/test_branch') }
     end
   end
 
   describe "#commit_from_ref" do
     it 'returns the full commit id' do
       create_repo_with_tags
-      repository.clone!
+      repository.update_local_cache!
       repository.commit_from_ref('master').must_match /^[0-9a-f]{40}$/
     end
 
     it 'returns the full commit id when given a short commit id' do
       create_repo_with_tags
-      repository.clone!
+      repository.update_local_cache!
       short_commit_id = (execute_on_remote_repo "git rev-parse --short HEAD").strip
       repository.commit_from_ref(short_commit_id).must_match /^[0-9a-f]{40}$/
     end
 
     it 'returns nil if ref does not exist' do
       create_repo_with_tags
-      repository.clone!
+      repository.update_local_cache!
       repository.commit_from_ref('NOT A VALID REF').must_be_nil
     end
 
     it 'returns the commit of a branch' do
       create_repo_with_an_additional_branch('my_branch')
-      repository.clone!(mirror: true)
+      repository.update_local_cache!
       repository.commit_from_ref('my_branch').must_match /^[0-9a-f]{40}$/
     end
 
@@ -133,7 +133,7 @@ describe GitRepository do
         git checkout master
       SHELL
 
-      repository.clone!(mirror: true)
+      repository.update_local_cache!
       sha = repository.commit_from_ref('annotated_tag')
       sha.must_match /^[0-9a-f]{40}$/
       repository.commit_from_ref('test_branch').must_equal(sha)
@@ -141,16 +141,18 @@ describe GitRepository do
 
     it 'prevents script insertion attacks' do
       create_repo_without_tags
-      repository.clone!
-      repository.commit_from_ref('master ; rm foo').must_be_nil
-      assert File.exist?(File.join(repository.repo_cache_dir, 'foo'))
+      repository.update_local_cache!
+      file = File.join(repo_temp_dir, "foo")
+      assert File.exist?(file)
+      repository.commit_from_ref("master ; rm #{file}").must_be_nil
+      assert File.exist?(file)
     end
   end
 
   describe "#tag_from_ref" do
     it 'returns nil when repo has no tags' do
       create_repo_without_tags
-      repository.clone!
+      repository.update_local_cache!
       repository.tag_from_ref('master').must_be_nil
     end
 
@@ -160,7 +162,7 @@ describe GitRepository do
         echo update > foo
         git commit -a -m 'untagged commit'
       SHELL
-      repository.clone!
+      repository.update_local_cache!
       repository.tag_from_ref('master~').must_equal 'v1'
       repository.tag_from_ref('master').must_match /^v1-1-g[0-9a-f]{7}$/
     end
@@ -170,7 +172,7 @@ describe GitRepository do
       execute_on_remote_repo <<-SHELL
         git checkout -b v1
       SHELL
-      repository.clone!
+      repository.update_local_cache!
       repository.tag_from_ref('v1').must_equal 'v1'
     end
   end
@@ -178,13 +180,13 @@ describe GitRepository do
   describe "#tags" do
     it 'returns the tags repository' do
       create_repo_with_tags
-      repository.clone!(mirror: true)
+      repository.update_local_cache!
       repository.tags.to_a.must_equal ["v1"]
     end
 
     it 'returns an empty set of tags' do
       create_repo_without_tags
-      repository.clone!(mirror: true)
+      repository.update_local_cache!
       repository.tags.must_equal []
     end
   end
@@ -192,7 +194,7 @@ describe GitRepository do
   describe "#branches" do
     it 'returns the branches of the repository' do
       create_repo_with_an_additional_branch
-      repository.clone!(mirror: true)
+      repository.update_local_cache!
       repository.branches.to_a.must_equal %w[master test_user/test_branch]
     end
   end
@@ -220,7 +222,7 @@ describe GitRepository do
 
     it 'updates an existing repository to a branch' do
       Dir.mktmpdir do |temp_dir|
-        repository.send(:clone!, mirror: true)
+        repository.update_local_cache!
         assert repository.checkout_workspace(temp_dir, 'test_user/test_branch')
         Dir.chdir(temp_dir) { current_branch.must_equal('test_user/test_branch') }
       end
@@ -229,7 +231,7 @@ describe GitRepository do
     it 'does not update cache when the cache was already updated' do
       Dir.mktmpdir do |temp_dir|
         # updates the cache
-        repository.send(:clone!, mirror: true)
+        repository.update_local_cache!
 
         # remote has changed
         execute_on_remote_repo <<-SHELL
@@ -265,7 +267,7 @@ describe GitRepository do
   describe "#file_content" do
     before do
       create_repo_without_tags
-      repository.clone!
+      repository.update_local_cache!
     end
 
     let(:sha) { repository.commit_from_ref('master') }
