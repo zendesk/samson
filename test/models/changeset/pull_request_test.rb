@@ -35,10 +35,20 @@ describe Changeset::PullRequest do
 
   describe ".changeset_from_webhook" do
     it 'finds the pull request' do
-      webhook_data = {'number' => 42, 'pull_request' => {'state' => 'open'}}
-      pr = Changeset::PullRequest.changeset_from_webhook(project, webhook_data)
-
+      params = ActionController::Parameters.new(
+        number: 42,
+        pull_request: {
+          state: 'open',
+          head: ActionController::Parameters.new(
+            ref: 'a/ref',
+            sha: 'abcd123'
+          )
+        }
+      )
+      pr = Changeset::PullRequest.changeset_from_webhook(project, params)
       pr.state.must_equal 'open'
+      pr.branch.must_equal 'a/ref'
+      pr.sha.must_equal 'abcd123'
     end
   end
 
