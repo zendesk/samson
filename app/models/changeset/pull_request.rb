@@ -41,7 +41,7 @@ class Changeset::PullRequest
   end
 
   def self.changeset_from_webhook(project, params = {})
-    data = Sawyer::Resource.new(Octokit.agent, params['pull_request'])
+    data = Sawyer::Resource.new(Octokit.agent, params['pull_request'].to_unsafe_h)
     new(project.github_repo, data)
   end
 
