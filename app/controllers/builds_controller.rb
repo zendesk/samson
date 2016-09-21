@@ -111,7 +111,7 @@ class BuildsController < ApplicationController
   def git_sha
     @git_sha ||= begin
       # Create/update local cache to avoid getting a stale reference
-      current_project.with_lock(holder: 'BuildsController#create') do
+      current_project.repository.exclusive(holder: 'BuildsController#create') do
         current_project.repository.update_local_cache!
       end
 

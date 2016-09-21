@@ -164,7 +164,7 @@ class JobExecution
   end
 
   def checkout_workspace(dir)
-    locked = lock_project do
+    locked = lock_repository do
       return false unless @repository.checkout_workspace(dir, @reference)
     end
 
@@ -220,12 +220,9 @@ class JobExecution
     File.join(@repository.repo_cache_dir, "artifacts")
   end
 
-  def lock_project(&block)
+  def lock_repository(&block)
     holder = (stage.try(:name) || @job.user.name)
-    callback = proc do |owner|
-      @output.write("Waiting for repository while setting it up for #{owner}\n") if Time.now.to_i % 10 == 0
-    end
-    @job.project.with_lock(output: @output, holder: holder, error_callback: callback, timeout: lock_timeout, &block)
+    @job.project.repository.exclusive(output: @output, holder: holder, timeout: lock_timeout, &block)
   end
 
   # show full errors if we show exceptions

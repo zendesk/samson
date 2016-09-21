@@ -129,16 +129,6 @@ class Project < ActiveRecord::Base
     @repository ||= GitRepository.new(repository_url: repository_url, repository_dir: repository_directory)
   end
 
-  def with_lock(output: StringIO.new, holder:, error_callback: nil, timeout: 10.minutes, &block)
-    callback =
-      if error_callback.nil?
-        proc { |owner| output.write("Waiting for repository while cloning for #{owner}\n") if Time.now.to_i % 10 == 0 }
-      else
-        error_callback
-      end
-    MultiLock.lock(id, holder, timeout: timeout, failed_to_lock: callback, &block)
-  end
-
   def last_deploy_by_group(before_time, include_failed_deploys: false)
     releases = deploys_by_group(before_time, include_failed_deploys)
     releases.map { |group_id, deploys| [group_id, deploys.sort_by(&:updated_at).last] }.to_h
@@ -178,9 +168,8 @@ class Project < ActiveRecord::Base
     Thread.new do
       begin
         output = repository.executor.output
-        with_lock(output: output, holder: 'Initial Repository Setup') do
-          is_cloned = repository.clone!(from: repository_url, mirror: true)
-          unless is_cloned
+        repository.exclusive(output: output, holder: 'Initial Repository Setup') do
+          unless repository.update_local_cache!
             log.error("Could not clone git repository #{repository_url} for project #{name} - #{output.string}")
           end
         end

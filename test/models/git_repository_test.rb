@@ -310,4 +310,34 @@ describe GitRepository do
       end
     end
   end
+
+  describe '#exclusive' do
+    let(:output) { StringIO.new }
+    let(:lock_key) { repository.repo_cache_dir }
+
+    after { MultiLock.locks.clear }
+
+    it 'locks' do
+      MultiLock.locks[lock_key].must_be_nil
+      repository.exclusive(output: output, holder: 'test', timeout: 2.seconds) do
+        MultiLock.locks[lock_key].wont_be_nil
+      end
+      MultiLock.locks[lock_key].must_be_nil
+    end
+
+    it 'fails to lock when already locked' do
+      MultiLock.locks[lock_key] = true
+      repository.exclusive(output: output, holder: 'test', timeout: 1.seconds) { output.puts("Can't get here") }
+      MultiLock.locks[lock_key].wont_be_nil
+      output.string.wont_include "Can't get here"
+    end
+
+    it 'executes error callback if it cannot lock' do
+      MultiLock.locks[lock_key] = true
+      refute repository.exclusive(output: output, holder: 'test', timeout: 1.seconds) do
+        output.puts("Can't get here")
+      end
+      output.string.wont_include "Can't get here"
+    end
+  end
 end

@@ -34,6 +34,8 @@ class GitRepository
     end
   end
 
+  # FIXME: make private / remove arguments / always use exclusive
+  # atm we use exclusive only from a few placed that call this
   def clone!(from: repository_url, to: repo_cache_dir, mirror: false)
     @last_pulled = Time.now if from == repository_url
     command =
@@ -102,6 +104,13 @@ class GitRepository
       update_local_cache!
     end
     capture_stdout "git", "show", "#{sha}:#{file}"
+  end
+
+  def exclusive(output: StringIO.new, holder:, timeout: 10.minutes, &block)
+    error_callback = proc do |owner|
+      output.write("Waiting for repository lock for #{owner}\n") if Time.now.to_i % 10 == 0
+    end
+    MultiLock.lock(repo_cache_dir, holder, timeout: timeout, failed_to_lock: error_callback, &block)
   end
 
   private
