@@ -17,6 +17,9 @@ class EnvironmentVariable < ActiveRecord::Base
       end
 
       resolve_dollar_variables(env)
+      resolve_secrets(project, deploy_group, env)
+
+      env
     end
 
     # also used by private plugin
@@ -46,6 +49,16 @@ class EnvironmentVariable < ActiveRecord::Base
           env[$1 || $2] || original
         end
       end
+    end
+
+    def resolve_secrets(project, deploy_group, env)
+      resolver = Samson::Secrets::KeyResolver.new(project, Array(deploy_group))
+      env.each_value do |value|
+        if value.start_with?(TerminalExecutor::SECRET_PREFIX)
+          value.replace resolver.read(value.sub(TerminalExecutor::SECRET_PREFIX, '')).to_s
+        end
+      end
+      resolver.verify!
     end
   end
 
