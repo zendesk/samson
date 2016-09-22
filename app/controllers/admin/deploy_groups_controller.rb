@@ -79,10 +79,9 @@ class Admin::DeployGroupsController < ApplicationController
     @preexisting_stages, @missing_stages = stages_for_creation
   end
 
+  # No more than one stage, per project, per deploy_group
+  # Note: you can call this multiple times, and it will create missing stages, but no redundant stages.
   def create_all_stages
-    # No more than one stage, per project, per deploy_group
-    # Note: you can call this multiple times, and it will create missing stages, but no redundant stages.
-
     _, missing_stages = stages_for_creation
     missing_stages.each do |template_stage|
       create_stage_with_group(template_stage)
