@@ -2,9 +2,9 @@
 class Admin::DeployGroupsController < ApplicationController
   before_action :authorize_admin!
   before_action :authorize_super_admin!, only: [:create, :new, :update, :destroy, :deploy_all,
-                                                :create_all_stages, :create_all_stages_verify, :edit]
+                                                :create_all_stages, :create_all_stages_preview, :edit]
   before_action :deploy_group, only: [:show, :edit, :update, :destroy, :deploy_all, :create_all_stages,
-                                      :create_all_stages_verify]
+                                      :create_all_stages_preview]
 
   def index
     @deploy_groups = DeployGroup.all.sort_by(&:natural_order)
@@ -75,7 +75,7 @@ class Admin::DeployGroupsController < ApplicationController
     end
   end
 
-  def create_all_stages_verify
+  def create_all_stages_preview
     @stages_preexisting, @stages_to_create = gather_stages_for_creation
 
     render
