@@ -130,6 +130,7 @@ Samson::Application.routes.draw do
     resources :deploy_groups do
       member do
         post :deploy_all
+        get :create_all_stages_verify
         post :create_all_stages
       end
     end

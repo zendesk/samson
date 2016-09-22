@@ -1,0 +1,79 @@
+<h1>Deploy to <%= @deploy_group.name %></h1>
+
+<label>Environment</label>
+<div>
+  <%= @deploy_group.environment.name %>
+</div>
+
+<h2>Creating Stages</h2>
+
+<small>These stages will be created.</small>
+
+<section class="clearfix">
+  <div class="table table-hover table-condensed">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Project</th>
+          <th>New Stage Name</th>
+          <th>Copied From</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        <% @stages_to_create.each do |template_stage| %>
+          <tr>
+            <td><%= template_stage.project.name %></td>
+            <td><%= @deploy_group.name %></td>
+            <td><%= template_stage.name %></td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="admin-actions">
+    <div class="pull-right">
+      <%= link_to "Create Stages",
+        create_all_stages_admin_deploy_group_path(@deploy_group),
+        class: "btn btn-primary",
+        data: {
+          method: "post",
+          confirm: "All Project marked 'Include in New Deploy Groups' will get a stage for this deploy group.\n\n" +
+                   "Create all missing stages for this deploy group now?"
+        }
+      %>
+
+      <%= link_to "Cancel", admin_deploy_group_path(@deploy_group), class: "btn btn-default"%>
+    </div>
+  </div>
+</section>
+
+
+<h2>Stages Already Created</h2>
+
+<small>These stages already exist for this Deploy Group. New stages won't be created for these projects.</small>
+
+<section class="clearfix">
+  <div class="table table-hover table-condensed">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Project</th>
+          <th>Stage Name</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        <% @stages_preexisting.each do |stage| %>
+          <tr>
+            <td><%= stage.project.name %></td>
+            <td><%= stage.name %></td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+
