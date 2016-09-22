@@ -93,8 +93,6 @@ class Admin::DeployGroupsController < ApplicationController
 
   private
 
-  # stages_for_creation()
-  #
   # returns a list of stages already created and list of stages to create (through their template stages)
   def stages_for_creation
     environment = deploy_group.environment
