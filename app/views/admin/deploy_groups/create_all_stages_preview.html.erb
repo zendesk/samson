@@ -44,7 +44,7 @@
 <% end %>
 
 
-<h2>Stages Already Created</h2>
+<h2>Existing Stages for <%= @deploy_group.name %></h2>
 
 <% if @preexisting_stages.empty? %>
   <p>There are no stages created for this Deploy Group.</p>
@@ -58,6 +58,7 @@
           <tr>
             <th>Project</th>
             <th>Stage Name</th>
+            <th>Deploy Groups</th>
           </tr>
         </thead>
 
@@ -66,6 +67,7 @@
             <tr>
               <td><%= stage.project.name %></td>
               <td><%= stage.name %></td>
+              <td><%= stage.deploy_groups.map(&:name).join(', ') %></td>
             </tr>
           <% end %>
         </tbody>
