@@ -77,8 +77,6 @@ class Admin::DeployGroupsController < ApplicationController
 
   def create_all_stages_preview
     @stages_preexisting, @stages_to_create = stages_for_creation
-
-    render
   end
 
   def create_all_stages
