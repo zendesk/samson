@@ -57,6 +57,14 @@ describe Kubernetes::ResourceTemplate do
       template.to_hash[:metadata][:name].must_equal 'test-app-server'
     end
 
+    it "sets imagePullSecrets" do
+      with_env KUBERNETES_IMAGE_PULL_SECRETS: 'a,b,c' do
+        template.to_hash[:spec][:template][:spec][:imagePullSecrets].must_equal(
+          [{"name" => 'a'}, {"name" => 'b'}, {"name" => 'c'}]
+        )
+      end
+    end
+
     describe "containers" do
       let(:result) { template.to_hash }
       let(:container) { result.fetch(:spec).fetch(:template).fetch(:spec).fetch(:containers).first }

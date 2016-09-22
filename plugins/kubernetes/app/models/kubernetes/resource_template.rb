@@ -19,6 +19,7 @@ module Kubernetes
         set_resource_usage
         set_secrets
         set_env
+        set_image_pull_secrets
 
         hash = template
         Rails.logger.info "Created Kubernetes hash: #{hash.to_json}"
@@ -199,6 +200,12 @@ module Kubernetes
 
       # env from plugins
       env.merge!(Samson::Hooks.fire(:deploy_group_env, project, @doc.deploy_group).inject({}, :merge!))
+    end
+
+    def set_image_pull_secrets
+      return unless secrets = ENV['KUBERNETES_IMAGE_PULL_SECRETS']
+      template[:spec].fetch(:template, {}).fetch(:spec, {})[:imagePullSecrets] =
+        secrets.split(",").map { |s| {name: s} }
     end
 
     def needs_secret_sidecar?
