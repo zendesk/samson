@@ -44,8 +44,12 @@ class OutputBuffer
 
     # Don't bother printing all the incremental output when pulling images
     unless parsed_chunk['progressDetail']
-      values = parsed_chunk.map { |k, v| "#{k}: #{v}" if v.present? }.compact
-      puts values.join(' | ') if values.any?
+      if parsed_chunk.keys == ['stream']
+        puts parsed_chunk.values.first
+      else
+        values = parsed_chunk.map { |k, v| "#{k}: #{v}" if v.present? }.compact
+        puts values.join(' | ') if values.any?
+      end
     end
 
     parsed_chunk
