@@ -83,7 +83,7 @@ class Admin::DeployGroupsController < ApplicationController
     # No more than one stage, per project, per deploy_group
     # Note: you can call this multiple times, and it will create missing stages, but no redundant stages.
 
-    _throwaway, stages_to_create = stages_for_creation
+    _, stages_to_create = stages_for_creation
     stages_to_create.each do |template_stage|
       create_stage_with_group(template_stage)
     end
