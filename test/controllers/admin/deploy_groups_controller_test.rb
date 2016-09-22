@@ -207,5 +207,30 @@ describe Admin::DeployGroupsController do
         template_stage.next_stage_ids.must_equal([stage.id])
       end
     end
+
+    describe "#create_all_stages_preview" do
+      let(:env) { environments(:staging) }
+      let(:deploy_group) { DeployGroup.create!(name: 'Pod 101', environment: env) }
+      let(:template_stage) { stages(:test_staging) }
+
+      it "finds stages to create" do
+        get :create_all_stages_preview, params: {id: deploy_group}
+
+        refute @controller.instance_variable_get(:@missing_stages).empty?
+      end
+
+      it "finds precreated stages" do
+        # clone the stage
+        stage = Stage.build_clone(template_stage)
+        stage.deploy_groups << deploy_group
+        stage.name = "foo"
+        stage.is_template = false
+        stage.save!
+
+        get :create_all_stages_preview, params: {id: deploy_group}
+
+        refute @controller.instance_variable_get(:@preexisting_stages).empty?
+      end
+    end
   end
 end

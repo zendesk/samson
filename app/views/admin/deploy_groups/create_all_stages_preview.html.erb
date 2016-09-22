@@ -1,0 +1,78 @@
+<h1>Creating Stages for <%= @deploy_group.name %> in <%= @deploy_group.environment.name %></h1>
+
+<h2>Creating Stages</h2>
+
+<% if @missing_stages.empty? %>
+  <p>There are no missing stages to create for this Deploy Group.</p>
+<% else %>
+  <small>These stages will be created.</small>
+  <section class="clearfix">
+    <div class="table table-hover table-condensed">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Project</th>
+            <th>New Stage Name</th>
+            <th>From Template</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          <% @missing_stages.each do |template_stage| %>
+            <tr>
+              <td><%= template_stage.project.name %></td>
+              <td><%= @deploy_group.name %></td>
+              <td><%= template_stage.name %></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="admin-actions">
+      <div class="pull-right">
+        <%= link_to "Create #{@missing_stages.length} Stages",
+                    create_all_stages_admin_deploy_group_path(@deploy_group),
+                    class: "btn btn-primary",
+                    data: { method: "post" }
+        %>
+
+        <%= link_to "Cancel", admin_deploy_group_path(@deploy_group), class: "btn btn-default"%>
+      </div>
+    </div>
+  </section>
+<% end %>
+
+
+<h2>Existing Stages for <%= @deploy_group.name %></h2>
+
+<% if @preexisting_stages.empty? %>
+  <p>There are no stages created for this Deploy Group.</p>
+<% else %>
+  <small>These stages already exist for this Deploy Group. New stages won't be created for these projects.</small>
+
+  <section class="clearfix">
+    <div class="table table-hover table-condensed">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Project</th>
+            <th>Stage Name</th>
+            <th>Deploy Groups</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          <% @preexisting_stages.each do |stage| %>
+            <tr>
+              <td><%= stage.project.name %></td>
+              <td><%= stage.name %></td>
+              <td><%= stage.deploy_groups.sort_by(&:natural_order).map(&:name).join(', ') %></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </section>
+<% end %>
+

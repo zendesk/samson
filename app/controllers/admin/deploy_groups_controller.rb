@@ -2,8 +2,9 @@
 class Admin::DeployGroupsController < ApplicationController
   before_action :authorize_admin!
   before_action :authorize_super_admin!, only: [:create, :new, :update, :destroy, :deploy_all,
-                                                :create_all_stages, :edit]
-  before_action :deploy_group, only: [:show, :edit, :update, :destroy, :deploy_all, :create_all_stages]
+                                                :create_all_stages, :create_all_stages_preview, :edit]
+  before_action :deploy_group, only: [:show, :edit, :update, :destroy, :deploy_all, :create_all_stages,
+                                      :create_all_stages_preview]
 
   def index
     @deploy_groups = DeployGroup.all.sort_by(&:natural_order)
@@ -74,23 +75,43 @@ class Admin::DeployGroupsController < ApplicationController
     end
   end
 
+  def create_all_stages_preview
+    @preexisting_stages, @missing_stages = stages_for_creation
+  end
+
+  # No more than one stage, per project, per deploy_group
+  # Note: you can call this multiple times, and it will create missing stages, but no redundant stages.
   def create_all_stages
-    # No more than one stage, per project, per deploy_group
-    # Note: you can call this multiple times, and it will create missing stages, but no redundant stages.
-    environment = deploy_group.environment
-    template_stages = environment.template_stages.all
-    deploy_group_stages = deploy_group.stages.all
-    Project.where(include_new_deploy_groups: true).each do |project|
-      template_stage = template_stages.detect { |ts| ts.project_id == project.id }
-      deploy_group_stage = deploy_group_stages.detect { |dgs| dgs.project.id == project.id }
-      if template_stage && !deploy_group_stage
-        create_stage_with_group(template_stage)
-      end
+    _, missing_stages = stages_for_creation
+    missing_stages.each do |template_stage|
+      create_stage_with_group(template_stage)
     end
+
     redirect_to [:admin, deploy_group]
   end
 
   private
+
+  # returns a list of stages already created and list of stages to create (through their template stages)
+  def stages_for_creation
+    environment = deploy_group.environment
+    template_stages = environment.template_stages.all
+    deploy_group_stages = deploy_group.stages.all
+
+    preexisting_stages = []
+    missing_stages = []
+    Project.where(include_new_deploy_groups: true).each do |project|
+      template_stage = template_stages.detect { |ts| ts.project_id == project.id }
+      deploy_group_stage = deploy_group_stages.detect { |dgs| dgs.project.id == project.id }
+      if deploy_group_stage
+        preexisting_stages << deploy_group_stage
+      elsif template_stage
+        missing_stages << template_stage
+      end
+    end
+
+    [preexisting_stages, missing_stages]
+  end
 
   def create_stage_with_group(template_stage)
     stage = Stage.build_clone(template_stage)
