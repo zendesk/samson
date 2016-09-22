@@ -216,7 +216,7 @@ describe Admin::DeployGroupsController do
       it "finds stages to create" do
         get :create_all_stages_preview, params: {id: deploy_group}
 
-        refute @controller.instance_variable_get(:@stages_to_create).empty?
+        refute @controller.instance_variable_get(:@missing_stages).empty?
       end
 
       it "finds precreated stages" do
@@ -229,7 +229,7 @@ describe Admin::DeployGroupsController do
 
         get :create_all_stages_preview, params: {id: deploy_group}
 
-        refute @controller.instance_variable_get(:@stages_preexisting).empty?
+        refute @controller.instance_variable_get(:@preexisting_stages).empty?
       end
     end
   end
