@@ -78,6 +78,11 @@ describe OutputBuffer do
       buffer.to_s.must_equal ""
     end
 
+    it "simplifies stream only responses" do
+      buffer.write_docker_chunk('{"stream": 123}').must_equal("stream" => 123)
+      buffer.to_s.must_equal("123\n")
+    end
+
     it "coverts dockers ASCII encoding to utf-8 with valid json" do
       buffer.write_docker_chunk('{"foo": "\255"}'.dup.force_encoding(Encoding::BINARY))
       buffer.write_docker_chunk('{"bar": "meh"}')
