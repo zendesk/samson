@@ -19,11 +19,12 @@ class EnvironmentVariable < ActiveRecord::Base
       resolve_dollar_variables(env)
     end
 
-    def env_deploygroup_array(include_all: true) # used by private plugin
+    # also used by private plugin
+    def env_deploygroup_array(include_all: true)
       all = include_all ? [["All", nil]] : []
       envs = Environment.all.map { |env| [env.name, "Environment-#{env.id}"] }
       separator = [["----", nil]]
-      deploy_groups = DeployGroup.all.map { |dg| [dg.name, "DeployGroup-#{dg.id}"] }
+      deploy_groups = DeployGroup.all.sort_by(&:natural_order).map { |dg| [dg.name, "DeployGroup-#{dg.id}"] }
       all + envs + separator + deploy_groups
     end
 
@@ -68,7 +69,7 @@ class EnvironmentVariable < ActiveRecord::Base
       when nil then 0
       when "Environment" then 1
       when "DeployGroup" then 2
-      else raise "Unsupported type: #{scope_type}"
+      else raise "Unsupported scope #{scope_type}"
       end
   end
 end

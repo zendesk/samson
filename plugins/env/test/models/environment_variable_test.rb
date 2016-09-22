@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 require_relative "../test_helper"
 
-SingleCov.covered! uncovered: 7
+SingleCov.covered!
 
 describe EnvironmentVariable do
   let(:project) { stage.project }
@@ -85,6 +85,50 @@ describe EnvironmentVariable do
           "PROJECT" => "PROJECT--1--$POD_ID_NOT--1", "POD_ID" => "1", "X" => "Y", "Y" => "Z"
         )
       end
+    end
+  end
+
+  describe ".env_deploygroup_array" do
+    it "includes All" do
+      all = EnvironmentVariable.env_deploygroup_array
+      all.map! { |name, value| [name, value&.sub(/-\d+/, '-X')] }
+      all.must_equal(
+        [
+          ["All", nil],
+          ["Production", "Environment-X"],
+          ["Staging", "Environment-X"],
+          ["----", nil],
+          ["Pod1", "DeployGroup-X"],
+          ["Pod2", "DeployGroup-X"],
+          ["Pod 100", "DeployGroup-X"]
+        ]
+      )
+    end
+
+    it "does not includes All when requested" do
+      EnvironmentVariable.env_deploygroup_array(include_all: false).wont_include ["All", nil]
+    end
+  end
+
+  describe ".matches?" do
+    it "fails on bad references" do
+      e = assert_raises RuntimeError do
+        EnvironmentVariable.send(
+          :matches?,
+          EnvironmentVariable.new(scope_type: 'Foo', scope_id: 123),
+          deploy_groups(:pod1)
+        )
+      end
+      e.message.must_equal "Unsupported scope Foo"
+    end
+  end
+
+  describe "#priority" do
+    it "fails on bad references" do
+      e = assert_raises RuntimeError do
+        EnvironmentVariable.new(scope_type: 'Foo', scope_id: 123).send(:priority)
+      end
+      e.message.must_equal "Unsupported scope Foo"
     end
   end
 
