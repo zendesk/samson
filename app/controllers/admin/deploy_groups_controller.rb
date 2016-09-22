@@ -76,7 +76,7 @@ class Admin::DeployGroupsController < ApplicationController
   end
 
   def create_all_stages_preview
-    @stages_preexisting, @stages_to_create = gather_stages_for_creation
+    @stages_preexisting, @stages_to_create = stages_for_creation
 
     render
   end
@@ -85,7 +85,7 @@ class Admin::DeployGroupsController < ApplicationController
     # No more than one stage, per project, per deploy_group
     # Note: you can call this multiple times, and it will create missing stages, but no redundant stages.
 
-    _throwaway, stages_to_create = gather_stages_for_creation
+    _throwaway, stages_to_create = stages_for_creation
     stages_to_create.each do |template_stage|
       create_stage_with_group(template_stage)
     end
@@ -95,10 +95,10 @@ class Admin::DeployGroupsController < ApplicationController
 
   private
 
-  # gather_stages_for_creation()
+  # stages_for_creation()
   #
   # returns a list of stages already created and list of stages to create (through their template stages)
-  def gather_stages_for_creation
+  def stages_for_creation
     environment = deploy_group.environment
     template_stages = environment.template_stages.all
     deploy_group_stages = deploy_group.stages.all
