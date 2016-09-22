@@ -34,6 +34,7 @@ class Changeset::IssueComment
   private
 
   def pull_request
-    @pull_request ||= Changeset::PullRequest.find(repo, data['number'])
+    pr_data = GITHUB.pull_request(repo, data['number'])
+    @pull_request ||= Changeset::PullRequest.new(repo, pr_data)
   end
 end

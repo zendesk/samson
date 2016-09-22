@@ -29,4 +29,33 @@ describe Changeset::IssueComment do
       Changeset::IssueComment.valid_webhook?(webhook_data).must_equal false
     end
   end
+
+  describe '#sha' do
+    let(:issue_data) { {issue: {number: 1}}.with_indifferent_access }
+
+    let(:pr_data) do
+      {
+        head: {
+          sha: 'abcd123',
+          ref: 'a/test'
+        }
+      }.with_indifferent_access
+    end
+
+    let(:cached_pr_data) do
+      {
+        head: {
+          sha: 'cach123',
+          ref: 'a/test'
+        }
+      }.with_indifferent_access
+    end
+
+    it 'does not read from cached PullRequest' do
+      Rails.cache.write(['Changeset::PullRequest', 'foo/bar', 1].join("-"), cached_pr_data)
+      GITHUB.stubs(:pull_request).with("foo/bar", 1).returns(pr_data)
+      issue = Changeset::IssueComment.new('foo/bar', issue_data)
+      issue.sha.must_equal 'abcd123'
+    end
+  end
 end
