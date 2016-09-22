@@ -76,15 +76,15 @@ class Admin::DeployGroupsController < ApplicationController
   end
 
   def create_all_stages_preview
-    @stages_preexisting, @stages_to_create = stages_for_creation
+    @preexisting_stages, @missing_stages = stages_for_creation
   end
 
   def create_all_stages
     # No more than one stage, per project, per deploy_group
     # Note: you can call this multiple times, and it will create missing stages, but no redundant stages.
 
-    _, stages_to_create = stages_for_creation
-    stages_to_create.each do |template_stage|
+    _, missing_stages = stages_for_creation
+    missing_stages.each do |template_stage|
       create_stage_with_group(template_stage)
     end
 
@@ -99,19 +99,19 @@ class Admin::DeployGroupsController < ApplicationController
     template_stages = environment.template_stages.all
     deploy_group_stages = deploy_group.stages.all
 
-    stages_preexisting = []
-    stages_to_create = []
+    preexisting_stages = []
+    missing_stages = []
     Project.where(include_new_deploy_groups: true).each do |project|
       template_stage = template_stages.detect { |ts| ts.project_id == project.id }
       deploy_group_stage = deploy_group_stages.detect { |dgs| dgs.project.id == project.id }
       if deploy_group_stage
-        stages_preexisting << deploy_group_stage
+        preexisting_stages << deploy_group_stage
       elsif template_stage
-        stages_to_create << template_stage
+        missing_stages << template_stage
       end
     end
 
-    [stages_preexisting, stages_to_create]
+    [preexisting_stages, missing_stages]
   end
 
   def create_stage_with_group(template_stage)

@@ -21,7 +21,7 @@
       </thead>
 
       <tbody>
-        <% @stages_to_create.each do |template_stage| %>
+        <% @missing_stages.each do |template_stage| %>
           <tr>
             <td><%= template_stage.project.name %></td>
             <td><%= @deploy_group.name %></td>
@@ -65,7 +65,7 @@
       </thead>
 
       <tbody>
-        <% @stages_preexisting.each do |stage| %>
+        <% @preexisting_stages.each do |stage| %>
           <tr>
             <td><%= stage.project.name %></td>
             <td><%= stage.name %></td>
