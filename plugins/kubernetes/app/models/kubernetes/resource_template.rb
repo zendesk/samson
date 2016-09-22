@@ -2,7 +2,6 @@
 module Kubernetes
   class ResourceTemplate
     CUSTOM_UNIQUE_LABEL_KEY = 'rc_unique_identifier'
-    SIDECAR_NAME = 'secret-sidecar'
     SIDECAR_IMAGE = ENV['SECRET_SIDECAR_IMAGE'].presence
 
     def initialize(release_doc)
@@ -64,40 +63,40 @@ module Kubernetes
     # /vaultauth is a secrets volume in the cluster
     # /secretkeys are where the annotations from the config are mounted
     def set_secret_sidecar
-      pod_volumes =
-        [
-          {name: "secrets-volume", emptyDir: {}},
-          {name: "vaultauth", secret: {secretName: "vaultauth"}},
-          {
-            name: "secretkeys",
-            downwardAPI:
-            {
-              items: [{path: "annotations", fieldRef: {fieldPath: "metadata.annotations"}}]
-            }
-          }
-        ]
-      secret_vol = { mountPath: "/secrets", name: "secrets-volume" }
-      secret_sidecar = {
+      unless vault_config = VaultClient.client.config_for(@doc.deploy_group.vault_instance)
+        raise "Could not find Vault config for #{@doc.deploy_group.permalink}"
+      end
+
+      containers.push(
         image: SIDECAR_IMAGE,
-        name: SIDECAR_NAME,
+        name: 'secret-sidecar',
         volumeMounts: [
-          secret_vol,
           { mountPath: "/vault-auth", name: "vaultauth" },
           { mountPath: "/secretkeys", name: "secretkeys" }
+        ],
+        env: [
+          {name: :VAULT_ADDR, value: vault_config['vault_address'].to_s},
+          {name: :VAULT_SSL_VERIFY, value: vault_config['tls_verify'].to_s}
         ]
-      }
+      )
 
-      containers = template[:spec][:template][:spec][:containers]
-
-      # inject the secrets FS into the primary container to share the secrets
-      container = containers.first
-      (container[:volumeMounts] ||= []).push secret_vol
-
-      # add the sidcar container
-      containers.push secret_sidecar
+      # share secrets volume between all containers
+      secret_vol = { mountPath: "/secrets", name: "secrets-volume" }
+      containers.each do |container|
+        (container[:volumeMounts] ||= []).push secret_vol
+      end
 
       # define the shared volumes in the pod
-      (template[:spec][:template][:spec][:volumes] ||= []).concat pod_volumes
+      (template[:spec][:template][:spec][:volumes] ||= []).concat [
+        {name: secret_vol.fetch(:name), emptyDir: {}},
+        {name: "vaultauth", secret: {secretName: "vaultauth"}},
+        {
+          name: "secretkeys",
+          downwardAPI: {
+            items: [{path: "annotations", fieldRef: {fieldPath: "metadata.annotations"}}]
+          }
+        }
+      ]
     end
 
     # This key replaces the default kubernetes key: 'deployment.kubernetes.io/podTemplateHash'
@@ -192,40 +191,18 @@ module Kubernetes
          valueFrom: {fieldRef: {fieldPath: v}}
        }
       end
-
-      if needs_secret_sidecar?
-        vault_config = VaultClient.client.config_for(@doc.deploy_group.vault_instance)
-        raise StandardError, "Could not find Vault config for #{@doc.deploy_group.permalink}" unless vault_config
-
-        sidecar_env = (sidecar_container[:env] ||= [])
-        {
-          VAULT_ADDR: vault_config['vault_address'],
-          VAULT_SSL_VERIFY: vault_config['tls_verify']
-        }.each do |k, v|
-          sidecar_env << {
-            name: k,
-            value: v.to_s
-          }
-        end
-      end
     end
 
     def needs_secret_sidecar?
       SIDECAR_IMAGE && secret_annotations.any?
     end
 
-    def container
-      @container ||= begin
-        template[:spec].fetch(:template, {}).fetch(:spec, {}).fetch(:containers, []).first
-      end
+    def containers
+      template[:spec][:template][:spec][:containers]
     end
 
-    def sidecar_container
-      @sidecar ||= begin
-        template[:spec][:template][:spec][:containers].detect do |possible_container|
-          break possible_container if possible_container[:name] == SIDECAR_NAME
-        end
-      end
+    def container
+      containers.first
     end
   end
 end
