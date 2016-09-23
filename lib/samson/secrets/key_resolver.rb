@@ -38,6 +38,11 @@ module Samson
         found
       end
 
+      def read(key)
+        full_key = expand('unused-param', key).map(&:last).first
+        SecretStorage.read_multi([full_key], include_value: true).values.first&.fetch(:value) # read key without raising
+      end
+
       # raises all errors at once for faster debugging
       def verify!
         if @errors.any?

@@ -85,6 +85,24 @@ describe EnvironmentVariable do
           "PROJECT" => "PROJECT--1--$POD_ID_NOT--1", "POD_ID" => "1", "X" => "Y", "Y" => "Z"
         )
       end
+
+      describe "secrets" do
+        before { project.environment_variables.last.update_column(:value, "secret://foobar") }
+
+        it "can resolve secrets" do
+          create_secret 'global/global/global/foobar'
+          EnvironmentVariable.env(project, nil).must_equal(
+            "PROJECT" => "MY-SECRET", "X" => "Y", "Y" => "Z"
+          )
+        end
+
+        it "fails on unfound secrets" do
+          e = assert_raises Samson::Hooks::UserError do
+            EnvironmentVariable.env(project, nil)
+          end
+          e.message.must_include "Failed to resolve secret keys:\n\tfoobar"
+        end
+      end
     end
   end
 

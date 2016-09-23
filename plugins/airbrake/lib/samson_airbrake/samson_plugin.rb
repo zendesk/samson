@@ -16,6 +16,7 @@ module SamsonAirbrake
         deploy.stage.deploy_groups.group_by(&:environment).each do |environment, deploy_groups|
           rails_env = environment.name.downcase
           next unless rails_env =~ VALID_RAILS_ENV
+
           next unless project_api_key = read_secret(deploy.project, deploy_groups, SECRET_KEY)
 
           # using v1 deploy api since it does not need the project_id to simplify configuration
@@ -34,9 +35,7 @@ module SamsonAirbrake
       private
 
       def read_secret(project, deploy_groups, key)
-        resolver = Samson::Secrets::KeyResolver.new(project, deploy_groups)
-        full_key = resolver.expand('unused-param', key).map(&:last).first
-        SecretStorage.read_multi([full_key], include_value: true).values.first&.fetch(:value) # read key without raising
+        Samson::Secrets::KeyResolver.new(project, deploy_groups).read(key)
       end
     end
   end

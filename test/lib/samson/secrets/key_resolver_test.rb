@@ -86,6 +86,19 @@ describe Samson::Secrets::KeyResolver do
     end
   end
 
+  describe "#read" do
+    it "reads secrets" do
+      create_secret "global/global/global/foobar"
+      resolver.read("foobar").must_equal "MY-SECRET"
+      errors.must_equal []
+    end
+
+    it "returns nil when it fails to read secrets" do
+      resolver.read("foobar").must_equal nil
+      errors.first.must_include "foobar (tried"
+    end
+  end
+
   describe "#verify!" do
     it "does nothing when clean" do
       resolver.verify!
