@@ -129,6 +129,10 @@ module Kubernetes
       end
     end
 
+    def namespace
+      deploy_group.kubernetes_namespace
+    end
+
     private
 
     def resource_name
@@ -242,10 +246,6 @@ module Kubernetes
       parsed_config_file
     rescue Samson::Hooks::UserError
       errors.add(:kubernetes_release, $!.message)
-    end
-
-    def namespace
-      deploy_group.kubernetes_namespace
     end
 
     def loop_sleep

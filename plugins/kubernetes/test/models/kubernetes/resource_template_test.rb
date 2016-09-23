@@ -10,6 +10,7 @@ describe Kubernetes::ResourceTemplate do
   before do
     kubernetes_fake_raw_template
     doc.kubernetes_release.deploy_id = 123
+    stub_request(:get, "http://foobar.server/api/v1/namespaces/pod1/secrets").to_return(body: "{}")
   end
 
   describe "#to_hash" do
@@ -58,11 +59,17 @@ describe Kubernetes::ResourceTemplate do
     end
 
     it "sets imagePullSecrets" do
-      with_env KUBERNETES_IMAGE_PULL_SECRETS: 'a,b,c' do
-        template.to_hash[:spec][:template][:spec][:imagePullSecrets].must_equal(
-          [{"name" => 'a'}, {"name" => 'b'}, {"name" => 'c'}]
-        )
-      end
+      reply = {
+        items: [
+          {type: "kubernetes.io/dockercfg", metadata: {name: 'a'}},
+          {type: "kubernetes.io/nope", metadata: {name: 'b'}},
+          {type: "kubernetes.io/dockercfg", metadata: {name: 'c'}}
+        ]
+      }
+      stub_request(:get, "http://foobar.server/api/v1/namespaces/pod1/secrets").to_return(body: reply.to_json)
+      template.to_hash[:spec][:template][:spec][:imagePullSecrets].must_equal(
+        [{"name" => 'a'}, {"name" => 'c'}]
+      )
     end
 
     describe "containers" do
