@@ -23,7 +23,7 @@ describe JobExecution do
     create_repo_with_tags('v1')
     user.name = 'John Doe'
     user.email = 'jdoe@test.com'
-    project.repository.clone!(mirror: true)
+    project.repository.update_local_cache!
     job.deploy = deploy
     JobExecution.enabled = true
     JobExecution.clear_registry

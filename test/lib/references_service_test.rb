@@ -14,7 +14,7 @@ describe ReferencesService do
   let!(:project) { Project.create!(name: 'test_project', repository_url: repo_temp_dir) }
 
   before do
-    project.repository.clone!(mirror: true)
+    project.repository.update_local_cache!
   end
 
   after do
