@@ -166,19 +166,7 @@ module Kubernetes
     def set_env
       env = (container[:env] ||= [])
 
-      # static data
-      metadata = release_doc_metadata
-      [:REVISION, :TAG, :DEPLOY_ID, :DEPLOY_GROUP].each do |k|
-        env << {name: k, value: metadata.fetch(k.downcase).to_s}
-      end
-
-      [:PROJECT, :ROLE].each do |k|
-        env << {name: k, value: template[:spec][:template][:metadata][:labels][k.downcase].to_s}
-      end
-
-      # name of the cluster
-      kube_cluster_name = DeployGroup.find(metadata[:deploy_group_id]).kubernetes_cluster.name.to_s
-      env << {name: :KUBERNETES_CLUSTER_NAME, value: kube_cluster_name}
+      static_env.each { |k, v| env << {name: k, value: v.to_s} }
 
       # dynamic lookups for unknown things during deploy
       {
@@ -191,6 +179,26 @@ module Kubernetes
          valueFrom: {fieldRef: {fieldPath: v}}
        }
       end
+    end
+
+    def static_env
+      env = {}
+
+      metadata = release_doc_metadata
+      [:REVISION, :TAG, :DEPLOY_ID, :DEPLOY_GROUP].each do |k|
+        env[k] = metadata.fetch(k.downcase)
+      end
+
+      [:PROJECT, :ROLE].each do |k|
+        env[k] = template[:spec][:template][:metadata][:labels][k.downcase]
+      end
+
+      # name of the cluster
+      kube_cluster_name = DeployGroup.find(metadata[:deploy_group_id]).kubernetes_cluster.name.to_s
+      env[:KUBERNETES_CLUSTER_NAME] = kube_cluster_name
+
+      # env from plugins
+      env.merge!(Samson::Hooks.fire(:deploy_group_env, project, @doc.deploy_group).inject({}, :merge!))
     end
 
     def needs_secret_sidecar?

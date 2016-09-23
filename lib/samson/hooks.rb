@@ -27,6 +27,7 @@ module Samson
       :stage_permitted_params,
       :deploy_permitted_params, # for external plugin
       :project_permitted_params,
+      :deploy_group_permitted_params,
       :build_params,
       :before_deploy,
       :after_deploy_setup,
@@ -35,10 +36,10 @@ module Samson
       :after_docker_build,
       :after_job_execution,
       :job_additional_vars,
-      :deploy_group_permitted_params,
       :edit_deploy_group,
       :buildkite_release_params,
-      :release_deploy_conditions
+      :release_deploy_conditions,
+      :deploy_group_env
     ].freeze
 
     INTERNAL_HOOKS = [:class_defined].freeze

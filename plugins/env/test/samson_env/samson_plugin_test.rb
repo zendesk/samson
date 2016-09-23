@@ -1,12 +1,21 @@
 # frozen_string_literal: true
 require_relative '../test_helper'
 
-SingleCov.covered! uncovered: 1 unless defined?(Rake) # rake preloads all plugins
+SingleCov.covered! unless defined?(Rake) # rake preloads all plugins
 
 describe SamsonEnv do
   let(:deploy) { deploys(:succeeded_test) }
   let(:stage) { deploy.stage }
   let(:project) { stage.project }
+
+  describe :project_permitted_params do
+    it "adds params" do
+      Samson::Hooks.fire(:project_permitted_params).must_include(
+        environment_variables_attributes: [:name, :value, :scope_type_and_id, :_destroy, :id],
+        environment_variable_group_ids: []
+      )
+    end
+  end
 
   describe :after_deploy_setup do
     def fire
@@ -114,31 +123,46 @@ describe SamsonEnv do
 
         refute File.exist?("ENV.json")
 
-        File.read("ENV.pod-100.json").must_equal "{
-  \"other\": true,
-  \"roles\": {
-    \"some\": \"thing\"
-  },
-  \"env\": {
-    \"HELLO\": \"world\",
-    \"OTHER\": \"A\",
-    \"MORE\": \"B\",
-    \"OPTIONAL\": \"A\"
-  }
-}"
-        File.read("ENV.pod1.json").must_equal "{
-  \"other\": true,
-  \"roles\": {
-    \"some\": \"thing\"
-  },
-  \"env\": {
-    \"HELLO\": \"world\",
-    \"OTHER\": \"A\",
-    \"MORE\": \"C\",
-    \"OPTIONAL\": \"A\"
-  }
-}"
+        JSON.load(File.read("ENV.pod-100.json")).must_equal(
+          "other" => true,
+          "roles" => {
+            "some" => "thing"
+          },
+          "env" => {
+            "HELLO" => "world",
+            "OTHER" => "A",
+            "MORE" => "B",
+            "OPTIONAL" => "A"
+          }
+        )
+
+        JSON.load(File.read("ENV.pod1.json")).must_equal(
+          "other" => true,
+          "roles" => {
+            "some" => "thing"
+          },
+          "env" => {
+            "HELLO" => "world",
+            "OTHER" => "A",
+            "MORE" => "C",
+            "OPTIONAL" => "A"
+          }
+        )
       end
+    end
+  end
+
+  describe :deploy_group_env do
+    it "adds env variables" do
+      deploy_group = deploy_groups(:pod1)
+      project.environment_variables.create!(name: "WORLD1", value: "hello", scope: environments(:staging))
+      project.environment_variables.create!(name: "WORLD2", value: "hello", scope: deploy_group)
+      project.environment_variables.create!(name: "WORLD3", value: "hello")
+      all = Samson::Hooks.fire(:deploy_group_env, project, deploy_group).inject({}, :merge!)
+
+      refute all["WORLD1"]
+      all["WORLD2"].must_equal "hello"
+      all["WORLD3"].must_equal "hello"
     end
   end
 end
