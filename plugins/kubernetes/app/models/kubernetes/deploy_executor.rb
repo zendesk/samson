@@ -210,7 +210,7 @@ module Kubernetes
         loop do
           break if @stopped
           sleep TICK
-          break if build.docker_build_job(:reload).finished?
+          break if build.docker_build_job.reload.finished?
         end
       end
       build.reload
