@@ -368,6 +368,27 @@ describe Kubernetes::DeployExecutor do
       out.must_include "UNSTABLE"
     end
 
+    it "stops when detecting a failure via events" do
+      pod_status[:phase] = "Pending"
+      stub_request(:get, %r{http://foobar.server/api/v1/namespaces/staging/events}).
+        to_return(
+          body: {
+            items: [
+              {
+                type: 'Warning',
+                reason: 'FailedScheduling',
+                message: "fit failure on node (ip-1-2-3-4)\nfit failure on node (ip-2-3-4-5)"
+              }
+            ]
+          }.to_json
+        )
+
+      refute execute!
+
+      out.must_include "resque-worker: Unschedulable\n"
+      out.must_include "UNSTABLE"
+    end
+
     it "stops when taking too long to go live" do
       pod_status[:phase] = "Pending"
       timeout_after_first_iteration
@@ -397,7 +418,7 @@ describe Kubernetes::DeployExecutor do
       executor.instance_variable_set(:@testing_for_stability, 0)
       refute execute!
       out.must_include "resque-worker: Restarted"
-      out.must_include "UNSTABLE - service is restarting"
+      out.must_include "UNSTABLE"
     end
 
     # not sure if this will ever happen ...
@@ -447,32 +468,6 @@ describe Kubernetes::DeployExecutor do
           /EVENTS:\s+FailedScheduling: fit failure on node \(ip-1-2-3-4\)\s+fit failure on node \(ip-2-3-4-5\)\n\n/
         ) # no repeated events
         out.must_match /LOGS:\s+LOG-1/
-      end
-
-      it "requests regular logs when previous logs are not available" do
-        stub_request(:get, "#{log_url}&previous=true").
-          to_raise(KubeException.new('a', 'b', 'c'))
-        stub_request(:get, log_url).
-          to_return(body: "LOG-1")
-
-        worker_is_unstable
-
-        refute execute!
-
-        out.must_match /LOGS:\s+LOG-1/
-      end
-
-      it "does not crash when both log endpoints fails with a 404" do
-        stub_request(:get, "#{log_url}&previous=true").
-          to_raise(KubeException.new('a', 'b', 'c'))
-        stub_request(:get, log_url).
-          to_raise(KubeException.new('a', 'b', 'c'))
-
-        worker_is_unstable
-
-        refute execute!
-
-        out.must_match /LOGS:\s+No logs found/
       end
     end
   end

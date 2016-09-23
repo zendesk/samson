@@ -31,6 +31,12 @@ describe Kubernetes::Api::Pod do
     }
   end
   let(:pod) { Kubernetes::Api::Pod.new(Kubeclient::Pod.new(JSON.parse(pod_attributes.to_json))) }
+  let(:pod_with_client) do
+    Kubernetes::Api::Pod.new(
+      Kubeclient::Pod.new(JSON.parse(pod_attributes.to_json)),
+      client: deploy_groups(:pod1).kubernetes_cluster.client
+    )
+  end
 
   describe '#live?' do
     it "is live" do
@@ -147,6 +153,60 @@ describe Kubernetes::Api::Pod do
         {state: {waiting: {reason: "ContainerCreating"}}}
       end
       pod.reason.must_equal "ContainerCreating"
+    end
+  end
+
+  describe "#logs" do
+    let(:log_url) { "http://foobar.server/api/v1/namespaces/the-namespace/pods/test_name/log?container=some-container" }
+
+    it "reads regular logs" do
+      stub_request(:get, log_url).
+        and_return(body: "HELLO")
+      pod_with_client.logs('some-container').must_equal "HELLO"
+    end
+
+    it "reads previous logs when container restarted so we see why it restarted" do
+      pod_attributes[:status][:containerStatuses].first[:restartCount] = 1
+      stub_request(:get, "#{log_url}&previous=true").
+        and_return(body: "HELLO")
+      pod_with_client.logs('some-container').must_equal "HELLO"
+    end
+
+    it "requests regular logs when previous logs are not available" do
+      stub_request(:get, "#{log_url}&previous=true").
+        to_raise(KubeException.new('a', 'b', 'c'))
+      stub_request(:get, log_url).
+        to_return(body: "LOG-1")
+      pod_with_client.logs('some-container').must_equal "LOG-1"
+    end
+
+    it "does not crash when both log endpoints fails with a 404" do
+      stub_request(:get, "#{log_url}&previous=true").
+        to_raise(KubeException.new('a', 'b', 'c'))
+      stub_request(:get, log_url).
+        to_raise(KubeException.new('a', 'b', 'c'))
+      pod_with_client.logs('some-container').must_equal nil
+    end
+  end
+
+  describe "#unschedulable?" do
+    let(:events_url) do
+      "http://foobar.server/api/v1/namespaces/the-namespace/events?fieldSelector=involvedObject.name=test_name"
+    end
+
+    it "is schedulable when there are no events" do
+      stub_request(:get, events_url).to_return(body: {items: []}.to_json)
+      refute pod_with_client.unschedulable?
+    end
+
+    it "is schedulable when there are Normal events" do
+      stub_request(:get, events_url).to_return(body: {items: [{type: 'Normal'}]}.to_json)
+      refute pod_with_client.unschedulable?
+    end
+
+    it "is unschedulable when there are abnormal events" do
+      stub_request(:get, events_url).to_return(body: {items: [{type: 'Warning'}]}.to_json)
+      assert pod_with_client.unschedulable?
     end
   end
 end
