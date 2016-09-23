@@ -13,9 +13,8 @@ class Integrations::BaseController < ApplicationController
 
     release = project.create_releases_for_branch?(branch)
     record_log :info, "Branch #{branch} is release branch: #{release}"
-
     if release
-      create_build_record
+      create_release_and_build_record
     end
 
     if project.build_docker_image_for_branch?(branch)
@@ -99,19 +98,24 @@ class Integrations::BaseController < ApplicationController
     @service_name ||= self.class.name.demodulize.sub('Controller', '').downcase
   end
 
-  def create_build_record
+  def create_release_and_build_record
     release = create_new_release || latest_release
-    @build = project.builds.where(git_sha: commit).last || project.builds.create!(
+    create_build(release.version, [release])
+  end
+
+  def create_build(label, releases = [])
+    @build ||= project.builds.where(git_sha: commit).last || project.builds.create!(
       git_ref: branch,
       git_sha: commit,
       description: message,
       creator: user,
-      label: release.version,
-      releases: [release]
+      label: label,
+      releases: releases
     )
   end
 
   def create_docker_image
+    create_build(branch)
     DockerBuilderService.new(@build).run!(push: true, tag_as_latest: true)
   end
 
