@@ -40,13 +40,13 @@
                     class: "btn btn-default"
         %>
         <%= link_to "Deploy All Projects", deploy_all_admin_deploy_group_path(@deploy_group), class: "btn btn-default", data: { method: "post" } %>
-        <%= link_to "Merge All Stages",
+        <%= link_to "Merge These Stages",
                     merge_all_stages_admin_deploy_group_path(@deploy_group),
                     class: "btn btn-default",
                     data: {
                       method: "post",
                       confirm: "All stages listed will be deleted, and this Deploy Group will be added to the template stage for each project.\n\n" +
-                               "Merge all stages now?"
+                               "Merge all of these stages now?"
                     }
         %>
     <% end %>

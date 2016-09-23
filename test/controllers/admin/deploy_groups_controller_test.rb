@@ -234,7 +234,6 @@ describe Admin::DeployGroupsController do
     end
 
     describe "#merge_all_stages" do
-
       describe "without a created stage" do
         it "succeeds with no work to do" do
           post :merge_all_stages, params: {id: deploy_group}
@@ -243,18 +242,16 @@ describe Admin::DeployGroupsController do
       end
 
       describe "with a create stage" do
-
         let(:env) { environments(:staging) }
         let(:deploy_group) { DeployGroup.create!(name: 'Pod 101', environment: env) }
         let(:template_stage) { stages(:test_staging) }
 
-        let (:stage) {
-          post :create_all_stages, params: {id: deploy_group}
+        let :stage do
+          Admin::DeployGroupsController.create_all_stages(deploy_group)
           deploy_group.stages.where(project: template_stage.project).first
-        }
+        end
 
         before do
-          assert deploy_group
           assert template_stage
           assert stage
         end
@@ -280,9 +277,7 @@ describe Admin::DeployGroupsController do
 
           assert template_stage.deploy_groups.include?(deploy_group)
         end
-
       end
-
     end
   end
 end

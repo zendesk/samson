@@ -82,16 +82,13 @@ class Admin::DeployGroupsController < ApplicationController
   # No more than one stage, per project, per deploy_group
   # Note: you can call this multiple times, and it will create missing stages, but no redundant stages.
   def create_all_stages
-    _, missing_stages = stages_for_creation
-    missing_stages.each do |template_stage|
-      create_stage_with_group(template_stage)
-    end
+    self.class.create_all_stages(deploy_group)
 
     redirect_to [:admin, deploy_group]
   end
 
   def merge_all_stages
-    preexisting_stages, _ = stages_for_creation
+    preexisting_stages, = stages_for_creation
     template_stages = deploy_group.environment.template_stages.all
 
     preexisting_stages.each do |stage|
@@ -101,16 +98,27 @@ class Admin::DeployGroupsController < ApplicationController
       template_stage.next_stage_ids.delete(stage.id)
       template_stage.save!
 
-      stage.destroy
+      stage.soft_delete
     end
 
     redirect_to [:admin, deploy_group]
   end
 
+  def self.create_all_stages(deploy_group)
+    _, missing_stages = stages_for_creation
+    missing_stages.each do |template_stage|
+      create_stage_with_group(template_stage, deploy_group)
+    end
+  end
+
   private
 
-  # returns a list of stages already created and list of stages to create (through their template stages)
   def stages_for_creation
+    self.class.stages_for_creation(deploy_group)
+  end
+
+  # returns a list of stages already created and list of stages to create (through their template stages)
+  def self.stages_for_creation(deploy_group)
     environment = deploy_group.environment
     template_stages = environment.template_stages.all
     deploy_group_stages = deploy_group.stages.all
@@ -130,7 +138,7 @@ class Admin::DeployGroupsController < ApplicationController
     [preexisting_stages, missing_stages]
   end
 
-  def create_stage_with_group(template_stage)
+  def self.create_stage_with_group(template_stage, deploy_group)
     stage = Stage.build_clone(template_stage)
     stage.deploy_groups << deploy_group
     stage.name = deploy_group.name
