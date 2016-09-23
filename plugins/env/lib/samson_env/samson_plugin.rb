@@ -100,3 +100,7 @@ end
 Samson::Hooks.callback :after_deploy_setup do |dir, stage|
   SamsonEnv.write_env_files(dir, stage)
 end
+
+Samson::Hooks.callback :deploy_group_env do |project, deploy_group|
+  EnvironmentVariable.env(project, deploy_group)
+end
