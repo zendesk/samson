@@ -232,5 +232,57 @@ describe Admin::DeployGroupsController do
         refute @controller.instance_variable_get(:@preexisting_stages).empty?
       end
     end
+
+    describe "#merge_all_stages" do
+
+      describe "without a created stage" do
+        it "succeeds with no work to do" do
+          post :merge_all_stages, params: {id: deploy_group}
+          assert_redirected_to admin_deploy_group_path(deploy_group)
+        end
+      end
+
+      describe "with a create stage" do
+
+        let(:env) { environments(:staging) }
+        let(:deploy_group) { DeployGroup.create!(name: 'Pod 101', environment: env) }
+        let(:template_stage) { stages(:test_staging) }
+
+        let (:stage) {
+          post :create_all_stages, params: {id: deploy_group}
+          deploy_group.stages.where(project: template_stage.project).first
+        }
+
+        before do
+          assert deploy_group
+          assert template_stage
+          assert stage
+        end
+
+        it "removes the stage" do
+          assert_difference 'Stage.count', -1 do
+            post :merge_all_stages, params: {id: deploy_group}
+          end
+        end
+
+        it "removes the next_stage_id" do
+          assert template_stage.reload.next_stage_ids.include?(stage.id)
+
+          post :merge_all_stages, params: {id: deploy_group}
+
+          refute template_stage.reload.next_stage_ids.include?(stage.id)
+        end
+
+        it "adds the deploy group to the template stage" do
+          refute template_stage.deploy_groups.include?(deploy_group)
+
+          post :merge_all_stages, params: {id: deploy_group}
+
+          assert template_stage.deploy_groups.include?(deploy_group)
+        end
+
+      end
+
+    end
   end
 end

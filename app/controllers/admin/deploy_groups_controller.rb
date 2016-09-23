@@ -90,6 +90,23 @@ class Admin::DeployGroupsController < ApplicationController
     redirect_to [:admin, deploy_group]
   end
 
+  def merge_all_stages
+    preexisting_stages, _ = stages_for_creation
+    template_stages = deploy_group.environment.template_stages.all
+
+    preexisting_stages.each do |stage|
+      template_stage = template_stages.detect { |ts| ts.project_id == stage.project.id }
+
+      template_stage.deploy_groups += stage.deploy_groups
+      template_stage.next_stage_ids.delete(stage.id)
+      template_stage.save!
+
+      stage.destroy
+    end
+
+    redirect_to [:admin, deploy_group]
+  end
+
   private
 
   # returns a list of stages already created and list of stages to create (through their template stages)
