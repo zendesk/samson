@@ -4,9 +4,7 @@ require_relative '../test_helper'
 SingleCov.covered! uncovered: 12
 
 describe Changeset do
-  ComparisonStruct = Struct.new(:commits)
-  CommitStruct = Struct.new(:commit)
-  MessageStruct = Struct.new(:message)
+  include StructHelper
 
   describe "#comparison" do
     it "builds a new changeset" do
@@ -71,11 +69,15 @@ describe Changeset do
   end
 
   describe "#pull_requests" do
-    it "finds pull requests mentioned in merge commits" do
-      c1 = CommitStruct.new(MessageStruct.new("Merge pull request #42"))
-      c2 = CommitStruct.new(MessageStruct.new("Fix typo"))
+    let(:comparison_struct) { create_singleton_struct('ComparisonStruct', :commits) }
+    let(:commit_struct) { create_singleton_struct('CommitStruct', :commit) }
+    let(:message_struct) { create_singleton_struct('MessageStruct', :message) }
 
-      GITHUB.stubs(:compare).with("foo/bar", "a", "b").returns(ComparisonStruct.new([c1, c2]))
+    it "finds pull requests mentioned in merge commits" do
+      c1 = commit_struct.new(message_struct.new("Merge pull request #42"))
+      c2 = commit_struct.new(message_struct.new("Fix typo"))
+
+      GITHUB.stubs(:compare).with("foo/bar", "a", "b").returns(comparison_struct.new([c1, c2]))
 
       Changeset::PullRequest.stubs(:find).with("foo/bar", 42).returns("yeah!")
       changeset = Changeset.new("foo/bar", "a", "b")
@@ -83,8 +85,8 @@ describe Changeset do
     end
 
     it "ignores invalid pull request numbers" do
-      commit = CommitStruct.new(MessageStruct.new("Merge pull request #42"))
-      GITHUB.stubs(:compare).with("foo/bar", "a", "b").returns(ComparisonStruct.new([commit]))
+      commit = commit_struct.new(message_struct.new("Merge pull request #42"))
+      GITHUB.stubs(:compare).with("foo/bar", "a", "b").returns(comparison_struct.new([commit]))
 
       Changeset::PullRequest.stubs(:find).with("foo/bar", 42).returns(nil)
       changeset = Changeset.new("foo/bar", "a", "b")
