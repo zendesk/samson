@@ -200,12 +200,10 @@ describe Kubernetes::DeployExecutor do
         build.save!
 
         job = build.docker_build_job
-
-        Build.any_instance.stubs(:docker_build_job).with do |reload|
-          if reload # inside wait loop
-            job.status = 'succeeded'
-            build.update_column(:docker_repo_digest, 'somet-digest')
-          end
+        job.class.any_instance.expects(:reload).with do
+          # inside wait loop ... pretend the build worked
+          job.status = 'succeeded'
+          build.update_column(:docker_repo_digest, 'somet-digest')
           true
         end.returns job
 
