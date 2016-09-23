@@ -68,7 +68,9 @@ describe Integrations::BaseController do
     end
 
     describe 'when creating a docker image' do
-      Project.any_instance.stubs(:build_docker_image_for_branch?).returns(true)
+      before do
+        Project.any_instance.stubs(:build_docker_image_for_branch?).returns(true)
+      end
 
       it 'works' do
         mocked_method = MiniTest::Mock.new
@@ -83,7 +85,9 @@ describe Integrations::BaseController do
       end
 
       describe 'when not creating a release' do
-        Project.any_instance.stubs(:create_releases_for_branch?).returns(false)
+        before do
+          Project.any_instance.stubs(:create_releases_for_branch?).returns(false)
+        end
 
         it 'works' do
           mocked_method = MiniTest::Mock.new
