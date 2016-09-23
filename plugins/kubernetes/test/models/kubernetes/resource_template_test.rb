@@ -128,10 +128,25 @@ describe Kubernetes::ResourceTemplate do
       end
 
       it "creates a sidecar" do
-        template.to_hash[:spec][:template][:spec][:containers].last[:name].must_equal('secret-sidecar')
+        sidecar = template.to_hash[:spec][:template][:spec][:containers].last
+        sidecar[:name].must_equal('secret-sidecar')
+        sidecar[:env].must_equal(
+          [
+            {name: :VAULT_ADDR, value: "https://test.hvault.server"},
+            {name: :VAULT_SSL_VERIFY, value: "false"}
+          ]
+        )
+
+        # secrets got resolved?
         template.to_hash[:spec][:template][:metadata][:annotations].must_equal(
           "secret/FOO" => "global/global/global/bar"
         )
+      end
+
+      it "fails when vault is not configured" do
+        VaultClient.client.expects(:config_for).returns(nil)
+        e = assert_raises { template.to_hash }
+        e.message.must_equal "Could not find Vault config for pod1"
       end
 
       it "adds to existing volume definitions in the sidecar" do
@@ -163,18 +178,12 @@ describe Kubernetes::ResourceTemplate do
         template.to_hash[:spec][:template][:spec][:containers].map { |c| c[:name] }.must_equal(['some-project'])
       end
 
-      it "fails to find a secret needed by the sidecar" do
-        SecretStorage.delete(secret_key)
-        e = assert_raises(Samson::Hooks::UserError) { template.to_hash }
-        e.message.must_include "Failed to resolve secret keys:\n\tbar (tried: production/foo/pod1/bar"
-      end
-
-      it "fails to find multiple secret needed by the sidecar, but shows them all at once" do
+      it "fails when it cannot find secrets needed by the sidecar" do
         assert doc.raw_template.sub!("secret/FOO: bar", "secret/FOO: bar\n        secret/BAR: baz")
         SecretStorage.delete(secret_key)
         e = assert_raises(Samson::Hooks::UserError) { template.to_hash }
         e.message.must_include "bar (tried: production/foo/pod1/bar"
-        e.message.must_include "baz (tried: production/foo/pod1/baz"
+        e.message.must_include "baz (tried: production/foo/pod1/baz" # shows all at once for easier debugging
       end
     end
 
