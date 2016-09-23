@@ -48,7 +48,7 @@ describe Integrations::BaseController do
       post :create, params: {test_route: true}
       assert_response :success
 
-      @controller.expects(:latest_release).once
+      @controller.expects(:latest_release).once.returns(Minitest::Mock.new.expect(:version, nil))
       post :create, params: {test_route: true}
       assert_response :success
       project.releases.count.must_equal 1
@@ -65,6 +65,38 @@ describe Integrations::BaseController do
       LOG
       result.fetch(:status_code).must_equal 200
       result.fetch(:body).must_equal ""
+    end
+
+    describe 'when creating a docker image' do
+      Project.any_instance.stubs(:build_docker_image_for_branch?).returns(true)
+
+      it 'works' do
+        mocked_method = MiniTest::Mock.new
+        mocked_method.expect :call, MiniTest::Mock.new.expect(:run!, nil, [Hash]), [Build]
+        DockerBuilderService.stub :new, mocked_method do
+          post :create, params: {test_route: true}
+        end
+        assert_response :success
+        project.releases.count.must_equal 1
+        project.builds.count.must_equal 1
+        mocked_method.verify
+      end
+
+      describe 'when not creating a release' do
+        Project.any_instance.stubs(:create_releases_for_branch?).returns(false)
+
+        it 'works' do
+          mocked_method = MiniTest::Mock.new
+          mocked_method.expect :call, MiniTest::Mock.new.expect(:run!, nil, [Hash]), [Build]
+          DockerBuilderService.stub :new, mocked_method do
+            post :create, params: {test_route: true}
+          end
+          assert_response :success
+          project.releases.count.must_equal 0
+          project.builds.count.must_equal 1
+          mocked_method.verify
+        end
+      end
     end
   end
 
