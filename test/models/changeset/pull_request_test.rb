@@ -4,15 +4,14 @@ require_relative '../../test_helper'
 SingleCov.covered! uncovered: 9
 
 describe Changeset::PullRequest do
-  DataStruct = Struct.new(:user, :merged_by, :body, :title)
-  UserStruct = Struct.new(:login)
-
   let(:project) { projects(:test) }
-  let(:data) { DataStruct.new(user, merged_by, body) }
   let(:pr) { Changeset::PullRequest.new("xxx", data) }
-  let(:user) { UserStruct.new("foo") }
-  let(:merged_by) { UserStruct.new("bar") }
   let(:body) { "".dup }
+
+  let(:sawyer_agent) { Sawyer::Agent.new('') }
+  let(:data) { Sawyer::Resource.new(sawyer_agent, user: user, merged_by: merged_by, body: body) }
+  let(:user) { Sawyer::Resource.new(sawyer_agent, login: 'foo') }
+  let(:merged_by) { Sawyer::Resource.new(sawyer_agent, login: 'bar') }
 
   describe ".find" do
     it "finds the pull request" do
