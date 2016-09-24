@@ -1,6 +1,9 @@
 # frozen_string_literal: true
 ENV["RAILS_ENV"] ||= "test"
 
+require 'bundler/setup'
+
+# anything loaded before coverage will be uncovered
 require 'single_cov'
 SingleCov::APP_FOLDERS << 'decorators' << 'presenters'
 SingleCov.setup :minitest
@@ -13,7 +16,7 @@ elsif ENV['COVERAGE']
   SimpleCov.start 'rails'
 end
 
-# rake adds these, but we don't need them / want to be in a consistent environment
+# rake adds these, but we don't need them / want to be consistent with using `ruby x_test.rb`
 $LOAD_PATH.delete 'lib'
 $LOAD_PATH.delete 'test'
 
