@@ -4,8 +4,6 @@ require_relative "../../test_helper"
 SingleCov.covered!
 
 describe 'SamsonLedger::Client' do
-  include StructHelper
-
   let(:deploy) { Deploy.first }
 
   with_env(LEDGER_BASE_URL: 'https://foo.bar', LEDGER_TOKEN: "sometoken")
@@ -29,7 +27,7 @@ describe 'SamsonLedger::Client' do
   describe ".post_deployment" do
     before do
       stub_github_api("repos/bar/foo/compare/abcabc1...staging", "x" => "y")
-      GITHUB.stubs(:compare).with("bar/foo", "abcabc1", "staging").returns(comparison_struct.new([commit]))
+      GITHUB.stubs(:compare).with("bar/foo", "abcabc1", "staging").returns(comparison)
       Changeset::PullRequest.stubs(:find).with("bar/foo", 42).returns(pull_request)
 
       request_lambda = -> (request) do
@@ -42,14 +40,19 @@ describe 'SamsonLedger::Client' do
     let(:results) { [] }
     let(:response) { {status: 200} }
 
-    let(:comparison_struct) { create_singleton_struct('ComparisonStruct', :commits) }
-    let(:commit_struct) { create_singleton_struct('CommitStruct', :commit) }
-    let(:message_struct) { create_singleton_struct('MessageStruct', :message) }
-    let(:pull_request_struct) { create_singleton_struct('PullRequestStruct', :users, :number, :url, :title) }
-    let(:github_user_struct) { create_singleton_struct('GithubUserStruct', :url, :avatar_url) }
-
-    let(:commit) { commit_struct.new(message_struct.new("Merge pull request #42")) }
-    let(:pull_request) { pull_request_struct.new([github_user], 42, 'http://some-github-url', 'some pr title') }
+    let(:sawyer_agent) { Sawyer::Agent.new('') }
+    let(:comparison) { Sawyer::Resource.new(sawyer_agent, commits: [commit]) }
+    let(:commit) { Sawyer::Resource.new(sawyer_agent, commit: commit_message) }
+    let(:commit_message) { Sawyer::Resource.new(sawyer_agent, message: 'Merge pull request #42') }
+    let(:pull_request) do
+      Sawyer::Resource.new(
+        sawyer_agent,
+        users:  [github_user],
+        number: 42,
+        url:    'http://some-github-url',
+        title:  'some pr title'
+      )
+    end
     let(:github_user) { nil }
 
     it "posts an event with a valid client" do
@@ -90,7 +93,13 @@ describe 'SamsonLedger::Client' do
     end
 
     describe "pull_requests" do
-      let(:github_user) { github_user_struct.new('http://some-github-user-url', 'http://some-github-user-avatar-url') }
+      let(:github_user) do
+        Sawyer::Resource.new(
+          sawyer_agent,
+          url: 'http://some-github-user-url',
+          avatar_url: 'http://some-github-user-avatar-url'
+        )
+      end
 
       it "constructs an unordered list of pull requests" do
         SamsonLedger::Client.post_deployment(deploy)

@@ -4,8 +4,6 @@ require_relative '../test_helper'
 SingleCov.covered! uncovered: 12
 
 describe Changeset do
-  include StructHelper
-
   describe "#comparison" do
     it "builds a new changeset" do
       stub_github_api("repos/foo/bar/compare/a...b", "x" => "y")
@@ -69,24 +67,25 @@ describe Changeset do
   end
 
   describe "#pull_requests" do
-    let(:comparison_struct) { create_singleton_struct('ComparisonStruct', :commits) }
-    let(:commit_struct) { create_singleton_struct('CommitStruct', :commit) }
-    let(:message_struct) { create_singleton_struct('MessageStruct', :message) }
+    let(:sawyer_agent) { Sawyer::Agent.new('') }
+    let(:commit1) { Sawyer::Resource.new(sawyer_agent, commit: message1) }
+    let(:commit2) { Sawyer::Resource.new(sawyer_agent, commit: message2) }
+    let(:message1) { Sawyer::Resource.new(sawyer_agent, message: 'Merge pull request #42') }
+    let(:message2) { Sawyer::Resource.new(sawyer_agent, message: 'Fix typo') }
 
     it "finds pull requests mentioned in merge commits" do
-      c1 = commit_struct.new(message_struct.new("Merge pull request #42"))
-      c2 = commit_struct.new(message_struct.new("Fix typo"))
-
-      GITHUB.stubs(:compare).with("foo/bar", "a", "b").returns(comparison_struct.new([c1, c2]))
+      comparison = Sawyer::Resource.new(sawyer_agent, commits: [commit1, commit2])
+      GITHUB.stubs(:compare).with("foo/bar", "a", "b").returns(comparison)
 
       Changeset::PullRequest.stubs(:find).with("foo/bar", 42).returns("yeah!")
       changeset = Changeset.new("foo/bar", "a", "b")
+
       changeset.pull_requests.must_equal ["yeah!"]
     end
 
     it "ignores invalid pull request numbers" do
-      commit = commit_struct.new(message_struct.new("Merge pull request #42"))
-      GITHUB.stubs(:compare).with("foo/bar", "a", "b").returns(comparison_struct.new([commit]))
+      comparison = Sawyer::Resource.new(sawyer_agent, commits: [commit1])
+      GITHUB.stubs(:compare).with("foo/bar", "a", "b").returns(comparison)
 
       Changeset::PullRequest.stubs(:find).with("foo/bar", 42).returns(nil)
       changeset = Changeset.new("foo/bar", "a", "b")
