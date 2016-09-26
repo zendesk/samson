@@ -1,11 +1,12 @@
 # frozen_string_literal: true
 class Changeset::IssueComment
-  attr_reader :repo, :data
+  attr_reader :repo, :data, :comment
   VALID_ACTIONS = ['created'].freeze
 
   def initialize(repo, data)
     @repo = repo
     @body = data['body']
+    @comment = data['comment']
     @data = data['issue']
   end
 
@@ -34,7 +35,9 @@ class Changeset::IssueComment
   private
 
   def pull_request
-    pr_data = GITHUB.pull_request(repo, data['number'])
+    pr_data = Rails.cache.fetch(['IssueComment', repo, comment['id']].join("-")) do
+      GITHUB.pull_request(repo, data['number'])
+    end
     @pull_request ||= Changeset::PullRequest.new(repo, pr_data)
   end
 end
