@@ -93,15 +93,7 @@ class Admin::DeployGroupsController < ApplicationController
 
     preexisting_stages.each do |stage|
       template_stage = template_stages.detect { |ts| ts.project_id == stage.project.id }
-
-      template_stage.deploy_groups += stage.deploy_groups
-      template_stage.next_stage_ids.delete(stage.id)
-      template_stage.save!
-
-      # these interfere with views as they don't respect soft_deletion.
-      DeployGroupsStage.where(stage: stage).delete_all
-
-      stage.soft_delete
+      merge_stage(stage, template_stage)
     end
 
     redirect_to [:admin, deploy_group]
@@ -115,6 +107,22 @@ class Admin::DeployGroupsController < ApplicationController
   end
 
   private
+
+  def merge_stage(stage, template_stage)
+    return unless template_stage
+    return if template_stage.deploy_groups.include?(stage)
+    return if stage.is_template
+    return if stage.deploy_groups.count > 1
+
+    template_stage.deploy_groups += stage.deploy_groups
+    template_stage.next_stage_ids.delete(stage.id)
+    template_stage.save!
+
+    # these don't respect soft_deletion (yet).
+    DeployGroupsStage.where(stage: stage).delete_all
+
+    stage.soft_delete
+  end
 
   def stages_for_creation
     self.class.stages_for_creation(deploy_group)
