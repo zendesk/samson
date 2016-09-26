@@ -98,6 +98,9 @@ class Admin::DeployGroupsController < ApplicationController
       template_stage.next_stage_ids.delete(stage.id)
       template_stage.save!
 
+      # these interfere with views as they don't respect soft_deletion.
+      DeployGroupsStage.where(stage: stage).delete_all
+
       stage.soft_delete
     end
 
