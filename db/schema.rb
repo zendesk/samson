@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20160915042046) do
+ActiveRecord::Schema.define(version: 20160927223306) do
 
   create_table "builds", force: :cascade do |t|
     t.integer  "project_id",                                       null: false
@@ -446,6 +446,7 @@ ActiveRecord::Schema.define(version: 20160915042046) do
     t.boolean  "kubernetes",                                                 default: false, null: false
     t.boolean  "is_template",                                                default: false, null: false
     t.boolean  "notify_airbrake",                                            default: false, null: false
+    t.integer  "template_stage_id"
   end
 
   add_index "stages", ["project_id", "permalink", "deleted_at"], name: "index_stages_on_project_id_and_permalink_and_deleted_at", length: {"project_id"=>nil, "permalink"=>191, "deleted_at"=>nil}, using: :btree
