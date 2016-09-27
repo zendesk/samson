@@ -58,6 +58,7 @@
           <tr>
             <th>Project</th>
             <th>Stage Name</th>
+            <th>Source Stage</th>
             <th>Deploy Groups</th>
           </tr>
         </thead>
@@ -67,6 +68,7 @@
             <tr>
               <td><%= stage.project.name %></td>
               <td><%= stage.name %></td>
+              <td><%= stage.template_stage.try(:name) %></td>
               <td><%= stage.deploy_groups.sort_by(&:natural_order).map(&:name).join(', ') %></td>
             </tr>
           <% end %>
