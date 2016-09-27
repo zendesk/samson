@@ -241,7 +241,7 @@ describe Admin::DeployGroupsController do
         end
       end
 
-      describe "with a create stage" do
+      describe "with a created stage" do
         let(:env) { environments(:staging) }
         let(:deploy_group) { DeployGroup.create!(name: 'Pod 101', environment: env) }
         let(:template_stage) { stages(:test_staging) }

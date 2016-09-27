@@ -110,15 +110,16 @@ class Admin::DeployGroupsController < ApplicationController
 
   def merge_stage(stage, template_stage)
     return unless template_stage
-    return if template_stage.deploy_groups.include?(stage)
+    return if template_stage.deploy_groups.include?(stage.deploy_groups.first)
     return if stage.is_template
+    return if stage.deploy_groups.count == 0
     return if stage.deploy_groups.count > 1
 
     template_stage.deploy_groups += stage.deploy_groups
     template_stage.next_stage_ids.delete(stage.id)
     template_stage.save!
 
-    stage.soft_delete
+    stage.soft_delete!
   end
 
   def stages_for_creation
