@@ -447,6 +447,7 @@ ActiveRecord::Schema.define(version: 20160927223306) do
     t.boolean  "is_template",                                                default: false, null: false
     t.boolean  "notify_airbrake",                                            default: false, null: false
     t.integer  "template_stage_id"
+    t.index ["template_stage_id"], name: "index_stages_on_template_stage_id", using: :btree
   end
 
   add_index "stages", ["project_id", "permalink", "deleted_at"], name: "index_stages_on_project_id_and_permalink_and_deleted_at", length: {"project_id"=>nil, "permalink"=>191, "deleted_at"=>nil}, using: :btree
