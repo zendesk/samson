@@ -277,6 +277,22 @@ describe Admin::DeployGroupsController do
 
           assert template_stage.deploy_groups.include?(deploy_group)
         end
+
+        it "removes the stale deploy_group links as well" do
+          assert DeployGroupsStage.where(stage_id: stage.id, deploy_group_id: deploy_group.id).first
+
+          post :merge_all_stages, params: {id: deploy_group}
+
+          refute DeployGroupsStage.where(stage_id: stage.id, deploy_group_id: deploy_group.id).first
+        end
+
+        it "replaces the stale stage deploy group link with one for the template stage" do
+          refute DeployGroupsStage.where(stage_id: template_stage.id, deploy_group_id: deploy_group.id).first
+
+          post :merge_all_stages, params: {id: deploy_group}
+
+          assert DeployGroupsStage.where(stage_id: template_stage.id, deploy_group_id: deploy_group.id).first
+        end
       end
     end
   end
