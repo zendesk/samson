@@ -404,7 +404,7 @@ describe Stage do
     end
 
     it "returns an unsaved copy of the given stage with exactly the same everything except id" do
-      @clone.attributes.except("id").must_equal subject.attributes.except("id")
+      @clone.attributes.except("id").except("template_stage_id").must_equal subject.attributes.except("id").except("template_stage_id")
       @clone.id.wont_equal subject.id
     end
   end
