@@ -120,6 +120,10 @@ class Admin::DeployGroupsController < ApplicationController
     template_stage.save!
 
     stage.soft_delete!
+
+    if !stage.reload.deleted?
+      Rails.logger.warn("Soft delete of stage #{stage.id} failed")
+    end
   end
 
   def stages_for_creation
