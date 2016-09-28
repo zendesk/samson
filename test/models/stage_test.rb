@@ -42,8 +42,8 @@ describe Stage do
     end
 
     it 'succeeds even if a stages points to a deleted stage' do
-      stage1.update! next_stage_ids: [stage3.id]
       stage3.soft_delete!
+      stage1.update! next_stage_ids: [stage3.id]
 
       Stage.reset_order [stage2.id, stage1.id]
 
