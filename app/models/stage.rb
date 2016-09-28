@@ -13,6 +13,9 @@ class Stage < ActiveRecord::Base
   has_many :webhooks, dependent: :destroy
   has_many :outbound_webhooks, dependent: :destroy
 
+  belongs_to :template_stage, class_name: "Stage"
+  has_many :clones, class_name: "Stage", foreign_key: "template_stage_id"
+
   has_one :lock
 
   has_many :command_associations, autosave: true, class_name: 'StageCommand', dependent: :destroy
@@ -39,6 +42,7 @@ class Stage < ActiveRecord::Base
     new(old_stage.attributes.except("id")).tap do |new_stage|
       Samson::Hooks.fire(:stage_clone, old_stage, new_stage)
       new_stage.command_ids = old_stage.command_ids
+      new_stage.template_stage = old_stage
     end
   end
 

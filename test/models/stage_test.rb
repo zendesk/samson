@@ -404,7 +404,8 @@ describe Stage do
     end
 
     it "returns an unsaved copy of the given stage with exactly the same everything except id" do
-      @clone.attributes.except("id").must_equal subject.attributes.except("id")
+      @clone.attributes.except("id").except("template_stage_id").
+          must_equal subject.attributes.except("id").except("template_stage_id")
       @clone.id.wont_equal subject.id
     end
   end
@@ -582,6 +583,61 @@ describe Stage do
     it 'deletes deploy_groups_stages on destroy' do
       assert_difference 'DeployGroupsStage.count', -1 do
         stage.destroy!
+      end
+    end
+  end
+
+  describe "template linking" do
+    describe "with no clones" do
+      it "has no parent" do
+        assert_nil subject.template_stage
+      end
+
+      it "has no clones" do
+        assert_empty subject.clones
+      end
+    end
+
+    describe "with one clone" do
+      before do
+        @clone = Stage.build_clone(subject)
+        @clone.name = "foo1"
+        @clone.save!
+        @clone.reload
+      end
+
+      it "has one parent" do
+        assert_equal subject, @clone.template_stage
+      end
+
+      it "has one clone" do
+        assert_equal [@clone], subject.clones
+      end
+    end
+
+    describe "with many clones" do
+      before do
+        @clone1 = Stage.build_clone(subject)
+        @clone1.name = "foo1"
+        @clone1.save!
+        @clone1.reload
+
+        @clone2 = Stage.build_clone(subject)
+        @clone2.name = "foo2"
+        @clone2.save!
+        @clone2.reload
+
+        @clones = [@clone1, @clone2]
+      end
+
+      it "has one parent" do
+        @clones.each do |c|
+          assert_equal subject, c.template_stage
+        end
+      end
+
+      it "has multiple clones" do
+        assert_equal @clones, subject.clones
       end
     end
   end
