@@ -121,10 +121,6 @@ class Admin::DeployGroupsController < ApplicationController
 
     stage.project.stages.reload # need to reload to make verify_not_part_of_pipeline have current data and not fail
     stage.soft_delete!
-
-    if !stage.reload.deleted?
-      Rails.logger.warn("Soft delete of stage #{stage.id} failed")
-    end
   end
 
   def stages_for_creation
