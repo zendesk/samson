@@ -19,6 +19,7 @@ module Kubernetes
         set_resource_usage
         set_secrets
         set_env
+        set_image_pull_secrets
 
         hash = template
         Rails.logger.info "Created Kubernetes hash: #{hash.to_json}"
@@ -199,6 +200,19 @@ module Kubernetes
 
       # env from plugins
       env.merge!(Samson::Hooks.fire(:deploy_group_env, project, @doc.deploy_group).inject({}, :merge!))
+    end
+
+    # kubernetes needs docker secrets to be able to pull down images from the registry
+    # in kubernetes 1.3 this might work without this workaround
+    def set_image_pull_secrets
+      secrets = @doc.client.get_secrets(namespace: @doc.namespace)
+      docker_credentials = secrets.
+        select { |secret| secret.type == "kubernetes.io/dockercfg" }.
+        map! { |c| {name: c.metadata.name} }
+
+      return if docker_credentials.empty?
+
+      template[:spec].fetch(:template, {}).fetch(:spec, {})[:imagePullSecrets] = docker_credentials
     end
 
     def needs_secret_sidecar?

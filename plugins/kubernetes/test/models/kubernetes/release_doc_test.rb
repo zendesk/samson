@@ -14,6 +14,8 @@ describe Kubernetes::ReleaseDoc do
   end
 
   describe "#store_resource_template" do
+    before { Kubernetes::ResourceTemplate.any_instance.stubs(:set_image_pull_secrets) }
+
     it "stores the template when creating" do
       created = Kubernetes::ReleaseDoc.create!(doc.attributes.except('id', 'resource_template'))
       created.resource_template['kind'].must_equal 'Deployment'

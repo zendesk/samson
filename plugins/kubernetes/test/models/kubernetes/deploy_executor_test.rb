@@ -100,6 +100,7 @@ describe Kubernetes::DeployExecutor do
         to_return(body: {items: []}.to_json)
       stub_request(:get, /#{Regexp.escape(log_url)}/)
       GitRepository.any_instance.stubs(:file_content).with('Dockerfile', anything).returns "FROM all"
+      Kubernetes::ResourceTemplate.any_instance.stubs(:set_image_pull_secrets)
     end
 
     it "succeeds" do
