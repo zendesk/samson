@@ -297,19 +297,28 @@ describe Admin::DeployGroupsController do
     end
 
     describe "with multiple stages to remove" do
-
-      let(:env) {environments(:staging)}
-      let(:template_deploy_group) {deploy_groups(:pod100)} # needed so the templaste stages have an environment.
-      let(:deploy_group) {DeployGroup.create!(name: 'Pod 101', environment: env)}
+      let(:env) { environments(:staging) }
+      let(:template_deploy_group) { deploy_groups(:pod100) } # needed so the templaste stages have an environment.
+      let(:deploy_group) { DeployGroup.create!(name: 'Pod 101', environment: env) }
 
       before do
         Project.any_instance.stubs(:valid_repository_url)
         # create 2 new template stages, and remember we still have a 3rd from the default fixtures.
 
-        project1 = Project.create!(name: "foo1", include_new_deploy_groups: true, permalink: "foo1", repository_url: "https://github.com/samson-test-org/example-project.git")
+        project1 = Project.create!(
+            name: "foo1",
+            include_new_deploy_groups: true,
+            permalink: "foo1",
+            repository_url: "https://github.com/samson-test-org/example-project.git"
+        )
         Stage.create!(name: "foo1 tstage", project: project1, is_template: true, deploy_groups: [template_deploy_group])
 
-        project2 = Project.create!(name: "foo2", include_new_deploy_groups: true, permalink: "foo2", repository_url: "https://github.com/samson-test-org/example-project.git")
+        project2 = Project.create!(
+            name: "foo2",
+            include_new_deploy_groups: true,
+            permalink: "foo2",
+            repository_url: "https://github.com/samson-test-org/example-project.git"
+        )
         Stage.create!(name: "foo2 tstage", project: project2, is_template: true, deploy_groups: [template_deploy_group])
 
         # now create the non-template stages for this deploy-group
