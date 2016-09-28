@@ -82,6 +82,13 @@ describe Kubernetes::ResourceTemplate do
         )
       end
 
+      it "does not override image when no build was made" do
+        doc.kubernetes_release.build = nil
+        container.fetch(:image).must_equal(
+          "docker-registry.zende.sk/truth_service:latest"
+        )
+      end
+
       it "copies resource values" do
         container.fetch(:resources).must_equal(
           'limits' => {
