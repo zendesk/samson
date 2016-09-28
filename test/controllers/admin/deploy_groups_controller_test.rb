@@ -303,6 +303,7 @@ describe Admin::DeployGroupsController do
       let(:deploy_group) {DeployGroup.create!(name: 'Pod 101', environment: env)}
 
       before do
+        Project.any_instance.stubs(:valid_repository_url)
         # create 2 new template stages, and remember we still have a 3rd from the default fixtures.
 
         project1 = Project.create!(name: "foo1", include_new_deploy_groups: true, permalink: "foo1", repository_url: "https://github.com/samson-test-org/example-project.git")

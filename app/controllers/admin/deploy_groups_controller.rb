@@ -119,6 +119,7 @@ class Admin::DeployGroupsController < ApplicationController
     template_stage.next_stage_ids.delete(stage.id)
     template_stage.save!
 
+    stage.project.stages.reload # need to reload to make verify_not_part_of_pipeline have current data and not fail
     stage.soft_delete!
 
     if !stage.reload.deleted?
