@@ -99,7 +99,12 @@ describe Kubernetes::RoleVerifier do
 
     it "reports invalid labels" do
       role.first[:metadata][:labels][:role] = 'foo_bar'
-      errors.must_include "Deployment metadata.labels.role must match /\\A[a-z0-9]([-a-z0-9]*[a-z0-9])?\\z/"
+      errors.must_include "Deployment metadata.labels.role must match /\\A[a-zA-Z0-9]([-a-zA-Z0-9]*[a-zA-Z0-9])?\\z/"
+    end
+
+    it "allows valid labels" do
+      role.first[:metadata][:labels][:foo] = 'KubeDNS'
+      errors.must_equal nil
     end
 
     it "works with proper annotations" do
