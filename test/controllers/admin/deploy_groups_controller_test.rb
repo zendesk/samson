@@ -323,7 +323,6 @@ describe Admin::DeployGroupsController do
 
         # should have only template-stages now (all others were soft-deleted)
         stages = deploy_group.stages.where(is_template: false)
-        Rails.logger.warn("stages after soft delete #{ stages.map { |s| [s.reload.project.name, s.name, s.deleted?] }.inspect }")
         assert_empty stages
       end
     end
