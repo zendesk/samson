@@ -40,14 +40,13 @@
                     class: "btn btn-default"
         %>
         <%= link_to "Deploy All Projects", deploy_all_admin_deploy_group_path(@deploy_group), class: "btn btn-default", data: { method: "post" } %>
-        <% num_elligable_merge_stages = @deploy_group.stages.where.not(template_stage_id: nil).count %>
-        <%= link_to "Merge #{num_elligable_merge_stages} Elligable Stages",
+        <%= link_to "Merge #{@deploy_group.cloned_stages.count} Cloned Stages",
                     merge_all_stages_admin_deploy_group_path(@deploy_group),
                     class: "btn btn-default",
                     data: {
                       method: "post",
-                      confirm: "Elligable Stages (those that have exactly this deploy group, no other deploy groups, and are on a project that uses include_new_deploy_groups) will be deleted. This Deploy Group will then be added to the \"Template Stage\" for each affected Project.\n\n" +
-                               "Merge #{num_elligable_merge_stages} elligable stages now?"
+                      confirm: "Stages will be deleted. Before deleting, each stage will have its Deploy Group added to the stage it was copied from. Stages affected are those cloned from a template stage, have exactly this deploy group, no other deploy groups, and are on a project that uses include_new_deploy_groups.\n\n" +
+                               "Merge #{@deploy_group.cloned_stages.count} cloned stages now?"
                     }
         %>
     <% end %>

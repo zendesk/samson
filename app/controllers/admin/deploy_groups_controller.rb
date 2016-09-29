@@ -84,14 +84,11 @@ class Admin::DeployGroupsController < ApplicationController
   def create_all_stages
     stages_created = self.class.create_all_stages(deploy_group)
 
-    flash[:success] = "Created #{stages_created.length} Stages"
-
-    redirect_to [:admin, deploy_group]
+    redirect_to [:admin, deploy_group], notice: "Created #{stages_created.length} Stages"
   end
 
   def merge_all_stages
-    cloned_stages = deploy_group.stages.where.not(template_stage_id: nil)
-    cloned_stages.each do |stage|
+    deploy_group.cloned_stages.each do |stage|
       merge_stage(stage)
     end
 
@@ -111,13 +108,14 @@ class Admin::DeployGroupsController < ApplicationController
     template_stage = stage.template_stage
 
     return unless template_stage
-    return if template_stage.deploy_groups.include?(stage.deploy_groups.first)
     return if stage.is_template
     return if stage.deploy_groups.count != 1
 
-    template_stage.deploy_groups += stage.deploy_groups
-    template_stage.next_stage_ids.delete(stage.id)
-    template_stage.save!
+    if !template_stage.deploy_groups.include?(stage.deploy_groups.first)
+      template_stage.deploy_groups += stage.deploy_groups
+      template_stage.next_stage_ids.delete(stage.id)
+      template_stage.save!
+    end
 
     stage.project.stages.reload # need to reload to make verify_not_part_of_pipeline have current data and not fail
     stage.soft_delete!
