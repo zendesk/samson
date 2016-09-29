@@ -40,13 +40,14 @@
                     class: "btn btn-default"
         %>
         <%= link_to "Deploy All Projects", deploy_all_admin_deploy_group_path(@deploy_group), class: "btn btn-default", data: { method: "post" } %>
-        <%= link_to "Merge Elligable Stages",
+        <% num_elligable_merge_stages = @deploy_group.stages.where.not(template_stage_id: nil).count %>
+        <%= link_to "Merge #{num_elligable_merge_stages} Elligable Stages",
                     merge_all_stages_admin_deploy_group_path(@deploy_group),
                     class: "btn btn-default",
                     data: {
                       method: "post",
                       confirm: "Elligable Stages (those that have exactly this deploy group, no other deploy groups, and are on a project that uses include_new_deploy_groups) will be deleted. This Deploy Group will then be added to the \"Template Stage\" for each affected Project.\n\n" +
-                               "Merge all elligable stages now?"
+                               "Merge #{num_elligable_merge_stages} elligable stages now?"
                     }
         %>
     <% end %>

@@ -76,24 +76,23 @@ class Admin::DeployGroupsController < ApplicationController
   end
 
   def create_all_stages_preview
-    @preexisting_stages, @missing_stages = stages_for_creation
+    @preexisting_stages, @missing_stages = self.class.stages_for_creation(deploy_group)
   end
 
   # No more than one stage, per project, per deploy_group
   # Note: you can call this multiple times, and it will create missing stages, but no redundant stages.
   def create_all_stages
-    self.class.create_all_stages(deploy_group)
+    stages_created = self.class.create_all_stages(deploy_group)
+
+    flash[:success] = "Created #{stages_created.length} Stages"
 
     redirect_to [:admin, deploy_group]
   end
 
   def merge_all_stages
-    preexisting_stages, = stages_for_creation
-    template_stages = deploy_group.environment.template_stages.all
-
-    preexisting_stages.each do |stage|
-      template_stage = template_stages.detect { |ts| ts.project_id == stage.project.id }
-      merge_stage(stage, template_stage)
+    cloned_stages = deploy_group.stages.where.not(template_stage_id: nil)
+    cloned_stages.each do |stage|
+      merge_stage(stage)
     end
 
     redirect_to [:admin, deploy_group]
@@ -101,19 +100,20 @@ class Admin::DeployGroupsController < ApplicationController
 
   def self.create_all_stages(deploy_group)
     _, missing_stages = stages_for_creation(deploy_group)
-    missing_stages.each do |template_stage|
+    missing_stages.map do |template_stage|
       create_stage_with_group(template_stage, deploy_group)
     end
   end
 
   private
 
-  def merge_stage(stage, template_stage)
+  def merge_stage(stage)
+    template_stage = stage.template_stage
+
     return unless template_stage
     return if template_stage.deploy_groups.include?(stage.deploy_groups.first)
     return if stage.is_template
-    return if stage.deploy_groups.count == 0
-    return if stage.deploy_groups.count > 1
+    return if stage.deploy_groups.count != 1
 
     template_stage.deploy_groups += stage.deploy_groups
     template_stage.next_stage_ids.delete(stage.id)
@@ -121,10 +121,6 @@ class Admin::DeployGroupsController < ApplicationController
 
     stage.project.stages.reload # need to reload to make verify_not_part_of_pipeline have current data and not fail
     stage.soft_delete!
-  end
-
-  def stages_for_creation
-    self.class.stages_for_creation(deploy_group)
   end
 
   class << self
@@ -138,7 +134,7 @@ class Admin::DeployGroupsController < ApplicationController
       missing_stages = []
       Project.where(include_new_deploy_groups: true).each do |project|
         template_stage = template_stages.detect { |ts| ts.project_id == project.id }
-        deploy_group_stage = deploy_group_stages.detect { |dgs| dgs.project.id == project.id }
+        deploy_group_stage = deploy_group_stages.detect { |dgs| dgs.project_id == project_id }
         if deploy_group_stage
           preexisting_stages << deploy_group_stage
         elsif template_stage
