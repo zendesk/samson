@@ -88,7 +88,7 @@ class Admin::DeployGroupsController < ApplicationController
   end
 
   def merge_all_stages
-    deploy_group.cloned_stages.each do |stage|
+    deploy_group.stages.cloned.each do |stage|
       merge_stage(stage)
     end
 

@@ -36,10 +36,6 @@ class DeployGroup < ActiveRecord::Base
     name.split(/(\d+)/).each_with_index.map { |x, i| i.odd? ? x.to_i : x }
   end
 
-  def cloned_stages
-    stages.where.not(template_stage_id: nil)
-  end
-
   private
 
   def permalink_base

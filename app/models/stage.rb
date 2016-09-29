@@ -33,6 +33,8 @@ class Stage < ActiveRecord::Base
   after_destroy :destroy_deploy_groups_stages
   after_soft_delete :destroy_deploy_groups_stages
 
+  scope :cloned, -> { where.not(template_stage_id: nil) }
+
   def self.reset_order(new_order)
     transaction do
       new_order.each.with_index { |stage_id, index| Stage.update stage_id.to_i, order: index.to_i }
