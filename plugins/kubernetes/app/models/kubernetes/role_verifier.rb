@@ -3,7 +3,7 @@ module Kubernetes
   class RoleVerifier
     DEPLOYISH = RoleConfigFile::DEPLOY_KINDS
     JOBS = RoleConfigFile::JOB_KINDS
-    VALID_LABEL = /\A[a-z0-9]([-a-z0-9]*[a-z0-9])?\z/
+    VALID_LABEL = /\A[a-zA-Z0-9]([-a-zA-Z0-9]*[a-zA-Z0-9])?\z/ # cannot use /i since it is not supported in js patterns
     VALID_LABEL_JS = VALID_LABEL.source.sub!('\\A', '^').sub!('\\z', '$') || raise
 
     SUPPORTED_KINDS = [
