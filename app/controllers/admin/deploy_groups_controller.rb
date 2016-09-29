@@ -134,7 +134,7 @@ class Admin::DeployGroupsController < ApplicationController
       missing_stages = []
       Project.where(include_new_deploy_groups: true).each do |project|
         template_stage = template_stages.detect { |ts| ts.project_id == project.id }
-        deploy_group_stage = deploy_group_stages.detect { |dgs| dgs.project_id == project_id }
+        deploy_group_stage = deploy_group_stages.detect { |dgs| dgs.project_id == project.id }
         if deploy_group_stage
           preexisting_stages << deploy_group_stage
         elsif template_stage
