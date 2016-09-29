@@ -21,7 +21,7 @@ describe "cleanliness" do
   end
 
   it "does not have 3-state booleans (nil/false/true)" do
-    bad = File.read("db/schema.rb").scan(/\st\.boolean.*/).reject { |l| l =~ /default: (false|true)|null: false/ }
+    bad = File.read("db/schema.rb").scan(/\st\.boolean.*/).reject { |l| l .include?(" null: false") }
     assert bad.empty?, "Boolean columns missing a default or null: false\n#{bad.join("\n")}"
   end
 

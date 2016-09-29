@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20160929161911) do
+ActiveRecord::Schema.define(version: 20160929164311) do
 
   create_table "builds", force: :cascade do |t|
     t.integer  "project_id",                                       null: false
@@ -133,7 +133,7 @@ ActiveRecord::Schema.define(version: 20160929161911) do
     t.integer  "stage_id",   limit: 4,                  null: false
     t.datetime "created_at"
     t.datetime "updated_at"
-    t.boolean  "enabled",    default: true
+    t.boolean  "enabled",    default: true, null: false
   end
 
   create_table "jenkins_jobs", force: :cascade do |t|
@@ -427,12 +427,12 @@ ActiveRecord::Schema.define(version: 20160929161911) do
     t.string   "notify_email_address",                         limit: 255
     t.integer  "order",                                        limit: 4
     t.datetime "deleted_at"
-    t.boolean  "confirm",                                                    default: true
+    t.boolean  "confirm",                                                    default: true,  null: false
     t.string   "datadog_tags",                                 limit: 255
     t.boolean  "update_github_pull_requests",                                default: false, null: false
-    t.boolean  "deploy_on_release",                                          default: false
+    t.boolean  "deploy_on_release",                                          default: false, null: false
     t.boolean  "comment_on_zendesk_tickets",                                 default: false, null: false
-    t.boolean  "production",                                                 default: false
+    t.boolean  "production",                                                 default: false, null: false
     t.boolean  "use_github_deployment_api",                                  default: false, null: false
     t.string   "permalink",                                    limit: 255,                   null: false
     t.text     "dashboard",                                    limit: 65535
@@ -441,7 +441,7 @@ ActiveRecord::Schema.define(version: 20160929161911) do
     t.string   "datadog_monitor_ids",                          limit: 255
     t.string   "jenkins_job_names",                            limit: 255
     t.string   "next_stage_ids"
-    t.boolean  "no_code_deployed",                                           default: false
+    t.boolean  "no_code_deployed",                                           default: false, null: false
     t.boolean  "docker_binary_plugin_enabled",                               default: false, null: false
     t.boolean  "kubernetes",                                                 default: false, null: false
     t.boolean  "is_template",                                                default: false, null: false
@@ -481,9 +481,9 @@ ActiveRecord::Schema.define(version: 20160929161911) do
     t.string   "token",          limit: 255
     t.datetime "deleted_at"
     t.string   "external_id",    limit: 255
-    t.boolean  "desktop_notify", default: false
-    t.boolean  "integration",    default: false, null: false
-    t.boolean  "access_request_pending",     default: false
+    t.boolean  "desktop_notify",         default: false,      null: false
+    t.boolean  "integration",            default: false,      null: false
+    t.boolean  "access_request_pending", default: false,      null: false
     t.string   "time_format",            limit: 255, default: "relative", null: false
   end
 

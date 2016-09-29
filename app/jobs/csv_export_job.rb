@@ -82,7 +82,7 @@ class CsvExportJob < ActiveJob::Base
       "INNER JOIN environments ON environments.id = deploy_groups.environment_id) StageProd"
 
       # The query could result in duplicate entries when a stage has a production and non-production deploy group
-      # so it is important this is run only if enviornments.production was set
+      # so it is important this is run only if environments.production was set
       Deploy.includes(:buddy, job: :user, stage: :project).joins(:job, :stage).
         joins("LEFT JOIN #{stage_prod_subquery} ON StageProd.stage_id = stages.id").
         where(filter).where(production_query, true, true)
