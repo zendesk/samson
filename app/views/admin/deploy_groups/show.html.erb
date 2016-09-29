@@ -45,7 +45,7 @@
                     class: "btn btn-default",
                     data: {
                       method: "post",
-                      confirm: "Stages will be deleted. Before deleting, each stage will have its Deploy Group added to the stage it was copied from. Stages affected are those cloned from a template stage, have exactly this deploy group, no other deploy groups, and are on a project that uses include_new_deploy_groups.\n\n" +
+                      confirm: "Stages will be deleted. Before deleting, each stage will have its Deploy Group added to the stage it was copied from. Stages affected are those cloned from a template stage, have exactly this deploy group, and are on a project that uses include_new_deploy_groups.\n\n" +
                                "Merge #{@deploy_group.stages.cloned.count} cloned stages now?"
                     }
         %>
