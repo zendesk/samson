@@ -111,7 +111,7 @@ class Admin::DeployGroupsController < ApplicationController
     return if stage.is_template
     return if stage.deploy_groups.count != 1
 
-    if !template_stage.deploy_groups.include?(stage.deploy_groups.first)
+    unless template_stage.deploy_groups.include?(stage.deploy_groups.first)
       template_stage.deploy_groups += stage.deploy_groups
       template_stage.next_stage_ids.delete(stage.id)
       template_stage.save!
