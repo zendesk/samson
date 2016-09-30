@@ -82,5 +82,5 @@ end
 
 desc "Run rubocop"
 task :rubocop do
-  sh "rubocop --display-cop-names"
+  sh "rubocop"
 end
