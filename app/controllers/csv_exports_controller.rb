@@ -73,8 +73,8 @@ class CsvExportsController < ApplicationController
     options = {}
     options[:inherited] = params[:inherited] == "true"
     options[:deleted] = params[:deleted] == "true"
-    options[:project_id] = params[:project_id].to_i unless params[:project_id].to_i == 0
-    options[:user_id] = params[:user_id].to_i unless params[:user_id].to_i == 0
+    options[:project_id] = params[:project_id].to_i unless params[:project_id].to_i.zero?
+    options[:user_id] = params[:user_id].to_i unless params[:user_id].to_i.zero?
     options[:datetime] = Time.now.strftime "%Y%m%d_%H%M"
     options
   end
@@ -118,7 +118,7 @@ class CsvExportsController < ApplicationController
     end
 
     if project = params[:project].try(:to_i)
-      if project > 0
+      if project.positive?
         filter['stages.project_id'] = project
       elsif project.to_s != params[:project]
         raise "Invalid project id #{params[:project]}"

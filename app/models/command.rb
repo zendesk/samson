@@ -23,7 +23,7 @@ class Command < ActiveRecord::Base
   end
 
   def self.for_project(project)
-    if project && project.persisted?
+    if project&.persisted?
       where('project_id IS NULL OR project_id = ?', project.id)
     else
       global

@@ -161,7 +161,7 @@ describe Kubernetes::BuildJobExecutor do
             Tempfile.open('clair') do |f|
               f.write("#!/bin/bash\necho HELLO\nexit 0")
               f.close
-              File.chmod 0755, f.path
+              File.chmod 0o755, f.path
               with_env(HYPERCLAIR_PATH: f.path, &t)
             end
           end

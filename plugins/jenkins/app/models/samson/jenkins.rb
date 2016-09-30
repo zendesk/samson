@@ -15,7 +15,7 @@ module Samson
       deploy.stage.jenkins_job_names.to_s.strip.split(/, ?/).map do |job_name|
         job_id = new(job_name, deploy).build
         attributes = {name: job_name, deploy_id: deploy.id}
-        if job_id.is_a?(Fixnum)
+        if job_id.is_a?(Integer)
           attributes[:jenkins_job_id] = job_id
         else
           attributes[:status] = "STARTUP_ERROR"
@@ -80,7 +80,7 @@ module Samson
       end
       emails.map! { |x| Mail::Address.new(x) }
       if ENV["GOOGLE_DOMAIN"]
-        emails.select! { |x| ("@" + x.domain).casecmp(ENV["GOOGLE_DOMAIN"]) == 0 }
+        emails.select! { |x| ("@" + x.domain).casecmp(ENV["GOOGLE_DOMAIN"]).zero? }
       end
       emails.map(&:address).uniq.join(",")
     end

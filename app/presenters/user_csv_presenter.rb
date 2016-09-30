@@ -16,7 +16,7 @@ class UserCsvPresenter
     inherited: false, deleted: false, project_id: nil, user_id: nil, datetime: (Time.now.strftime "%Y%m%d_%H%M")
   )
     inherited = true if project_id || user_id
-    users = (deleted || user_id) ? User.unscoped : User
+    users = (deleted || user_id ? User.unscoped : User)
     users = users.order(:id)
     users = users.where(id: user_id) if user_id
     if inherited

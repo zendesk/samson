@@ -20,7 +20,7 @@ class WebhookRecorder
 
     def read(project)
       if result = Rails.cache.read(key(project))
-        JSON.load(result).with_indifferent_access
+        JSON.parse(result).with_indifferent_access
       end
     end
 

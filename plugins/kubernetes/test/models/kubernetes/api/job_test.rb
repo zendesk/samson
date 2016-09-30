@@ -86,6 +86,6 @@ describe Kubernetes::Api::Job do
         }
       }
     }
-    Kubeclient::Job.new(JSON.load(data.to_json))
+    Kubeclient::Job.new(JSON.parse(data.to_json))
   end
 end

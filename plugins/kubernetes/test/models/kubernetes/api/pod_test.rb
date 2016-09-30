@@ -30,7 +30,7 @@ describe Kubernetes::Api::Pod do
       }
     }
   end
-  let(:pod) { Kubernetes::Api::Pod.new(Kubeclient::Pod.new(JSON.load(pod_attributes.to_json))) }
+  let(:pod) { Kubernetes::Api::Pod.new(Kubeclient::Pod.new(JSON.parse(pod_attributes.to_json))) }
 
   describe '#live?' do
     it "is live" do

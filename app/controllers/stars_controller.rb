@@ -10,7 +10,7 @@ class StarsController < ApplicationController
 
   def destroy
     star = current_user.stars.find_by_project_id(@project.id)
-    star && star.destroy
+    star&.destroy
 
     head :ok
   end

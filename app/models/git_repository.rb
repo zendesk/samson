@@ -97,7 +97,7 @@ class GitRepository
 
   def exclusive(output: StringIO.new, holder:, timeout: 10.minutes, &block)
     error_callback = proc do |owner|
-      output.write("Waiting for repository lock for #{owner}\n") if Time.now.to_i % 10 == 0
+      output.write("Waiting for repository lock for #{owner}\n") if (Time.now.to_i % 10).zero?
     end
     MultiLock.lock(repo_cache_dir, holder, timeout: timeout, failed_to_lock: error_callback, &block)
   end

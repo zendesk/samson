@@ -51,6 +51,6 @@ module StatusHelper
       duration << "#{minutes} minute".pluralize(minutes)
     end
 
-    duration << (seconds > 0 || duration.empty? ? " #{seconds} second".pluralize(seconds) : "")
+    duration << (seconds.positive? || duration.empty? ? " #{seconds} second".pluralize(seconds) : "")
   end
 end

@@ -8,7 +8,7 @@ class Job < ActiveRecord::Base
   # Used by status_panel
   alias_attribute :start_time, :created_at
 
-  after_update { deploy.touch if deploy }
+  after_update { deploy&.touch }
 
   validate :validate_globally_unlocked
 
@@ -62,7 +62,7 @@ class Job < ActiveRecord::Base
 
   %w[pending running succeeded cancelling cancelled failed errored].each do |status|
     define_method "#{status}?" do
-      self.status == status
+      self.status == status # rubocop:disable Style/RedundantSelf
     end
   end
 
