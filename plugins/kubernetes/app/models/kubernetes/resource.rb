@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 module Kubernetes
   # abstraction for interacting with kubernetes resources
+  # ... could be merged with Kubernetes::Api counterparts
   module Resource
     class Base
       def initialize(template, deploy_group)

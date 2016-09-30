@@ -99,8 +99,10 @@ describe Kubernetes::DeployExecutor do
       stub_request(:get, /#{Regexp.escape(log_url)}/)
       GitRepository.any_instance.stubs(:file_content).with('Dockerfile', anything).returns "FROM all"
       Kubernetes::ResourceTemplate.any_instance.stubs(:set_image_pull_secrets)
-      stub_request(:get, "http://foobar.server/api/v1/namespaces/staging/services/some-project").
-        to_return(body: {metadata: {}}.to_json)
+
+      service_url = "http://foobar.server/api/v1/namespaces/staging/services/some-project"
+      stub_request(:get, service_url).to_return(body: {metadata: {}}.to_json)
+      stub_request(:delete, service_url)
     end
 
     it "succeeds" do
