@@ -40,10 +40,6 @@ module Kubernetes
       find_by_kind(JOB_KINDS)
     end
 
-    def secondary
-      @elements.reject { |doc| PRIMARY.include?(doc[:kind]) }
-    end
-
     private
 
     def find_by_kind(kinds)

@@ -2,19 +2,11 @@
 module Kubernetes
   # Convenience wrapper around the 'Service' object we can get from the K8S API
   class Service
-    attr_reader :deploy_group, :role
+    attr_reader :deploy_group, :name
 
-    def initialize(deploy_group:, role:)
+    def initialize(name, deploy_group:)
+      @name = name
       @deploy_group = deploy_group
-      @role = role
-    end
-
-    def name
-      if defined?(@service_object)
-        service_object.metadata.name
-      else
-        role.try(:service_name)
-      end
     end
 
     def namespace

@@ -5,10 +5,10 @@ SingleCov.covered!
 
 describe Kubernetes::ResourceTemplate do
   let(:doc) { kubernetes_release_docs(:test_release_pod_1) }
-  let(:template) { Kubernetes::ResourceTemplate.new(doc) }
+  let(:template) { Kubernetes::ResourceTemplate.new(doc, doc.send(:resource)) }
 
   before do
-    kubernetes_fake_raw_template
+    doc.send(:resource_template=, YAML.load_stream(read_kubernetes_sample_file('kubernetes_deployment.yml')))
     doc.kubernetes_release.deploy_id = 123
     stub_request(:get, "http://foobar.server/api/v1/namespaces/pod1/secrets").to_return(body: "{}")
   end
@@ -112,7 +112,7 @@ describe Kubernetes::ResourceTemplate do
 
       # https://github.com/zendesk/samson/issues/966
       it "allows multiple containers, even though they will not be properly replaced" do
-        assert doc.raw_template.sub!("containers:\n", "containers:\n      - {}\n")
+        doc.send(:resource)[:spec][:template][:metadata][:containers] = [{}, {}]
         template.to_hash
       end
 
@@ -141,10 +141,7 @@ describe Kubernetes::ResourceTemplate do
       end
 
       before do
-        old_metadata = "role: some-role\n    "
-        new_metadata = "role: some-role\n      annotations:\n        secret/FOO: bar\n    "
-        assert doc.raw_template.sub!(old_metadata, new_metadata)
-
+        doc.send(:resource)[:spec][:template][:metadata][:annotations] = {"secret/FOO": "bar"}
         create_secret(secret_key)
       end
 
@@ -171,36 +168,31 @@ describe Kubernetes::ResourceTemplate do
       end
 
       it "adds to existing volume definitions in the sidecar" do
-        assert doc.raw_template.sub!(
-          /containers:\n(    .*\n)+/m,
-          "containers:\n      - {}\n      volumes:\n      - {}\n      - {}\n"
-        )
+        doc.send(:resource)[:spec][:template][:spec][:volumes] = [{}, {}]
         template.to_hash[:spec][:template][:spec][:volumes].count.must_equal 5
       end
 
       it "adds to existing volume definitions in the primary container" do
-        assert doc.raw_template.sub!(
-          /containers:\n(    .*\n)+/m,
-          "containers:\n      - :name: foo\n        :volumeMounts:\n        - :name: bar\n"
-        )
+        doc.send(:resource)[:spec][:template][:spec][:containers] = [
+          {name: 'foo', volumeMounts: [{name: 'bar'}]}
+        ]
         template.to_hash[:spec][:template][:spec][:containers].first[:volumeMounts].count.must_equal 2
       end
 
       it "adds to existing volume definitions in the primary container when volumeMounts is empty" do
-        assert doc.raw_template.sub!(
-          /containers:\n(    .*\n)+/m,
-          "containers:\n      - :name: foo\n        :volumeMounts:\n"
-        )
+        doc.send(:resource)[:spec][:template][:spec][:containers] = [
+          {name: 'foo', volumeMounts: nil}
+        ]
         template.to_hash[:spec][:template][:spec][:containers].first[:volumeMounts].count.must_equal 1
       end
 
       it "creates no sidecar when there are no secrets" do
-        assert doc.raw_template.sub!('secret/', 'public/')
+        doc.send(:resource)[:spec][:template][:metadata][:annotations].replace('public/foobar': 'xyz')
         template.to_hash[:spec][:template][:spec][:containers].map { |c| c[:name] }.must_equal(['some-project'])
       end
 
       it "fails when it cannot find secrets needed by the sidecar" do
-        assert doc.raw_template.sub!("secret/FOO: bar", "secret/FOO: bar\n        secret/BAR: baz")
+        doc.send(:resource)[:spec][:template][:metadata][:annotations].replace('secret/FOO': 'bar', 'secret/BAR': 'baz')
         SecretStorage.delete(secret_key)
         e = assert_raises(Samson::Hooks::UserError) { template.to_hash }
         e.message.must_include "bar (tried: production/foo/pod1/bar"

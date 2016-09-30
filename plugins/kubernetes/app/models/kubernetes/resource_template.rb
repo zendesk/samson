@@ -1,11 +1,15 @@
 # frozen_string_literal: true
+# fills out Deploy/Job template with dynamic values
 module Kubernetes
   class ResourceTemplate
+    attr_reader :template
+
     CUSTOM_UNIQUE_LABEL_KEY = 'rc_unique_identifier'
     SIDECAR_IMAGE = ENV['SECRET_SIDECAR_IMAGE'].presence
 
-    def initialize(release_doc)
+    def initialize(release_doc, template)
       @doc = release_doc
+      @template = template
     end
 
     def to_hash
@@ -34,10 +38,6 @@ module Kubernetes
     end
 
     private
-
-    def template
-      @template ||= @doc.deploy_template
-    end
 
     # look up keys in all possible namespaces by specificity
     def expand_secret_annotations

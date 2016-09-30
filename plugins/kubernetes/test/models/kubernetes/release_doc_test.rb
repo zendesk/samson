@@ -4,71 +4,6 @@ require_relative "../../test_helper"
 SingleCov.covered!
 
 describe Kubernetes::ReleaseDoc do
-  let(:doc) { kubernetes_release_docs(:test_release_pod_1) }
-
-  before do
-    kubernetes_fake_raw_template
-    doc.resource_template =
-      YAML.load_stream(read_kubernetes_sample_file('kubernetes_deployment.yml'))
-    doc.resource_template[0]['metadata']['namespace'] = 'pod1'
-  end
-
-  describe "#store_resource_template" do
-    before { Kubernetes::ResourceTemplate.any_instance.stubs(:set_image_pull_secrets) }
-
-    it "stores the template when creating" do
-      created = Kubernetes::ReleaseDoc.create!(doc.attributes.except('id', 'resource_template'))
-      created.resource_template[0]['kind'].must_equal 'Deployment'
-    end
-
-    it "fails to create with missing config file" do
-      Kubernetes::ReleaseDoc.any_instance.unstub(:raw_template)
-      GitRepository.any_instance.expects(:file_content).returns(nil) # File not found
-      created = Kubernetes::ReleaseDoc.create(doc.attributes.except('id', 'resource_template'))
-      refute created.id
-    end
-  end
-
-  describe "#ensure_service" do
-    it "does nothing when no service is defined" do
-      doc.ensure_service.must_equal "no Service defined"
-    end
-
-    it "does nothing when no service is running" do
-      doc.kubernetes_role.service_name = 'app'
-      Kubernetes::Service.any_instance.stubs(running?: true)
-      doc.ensure_service.must_equal "Service already running"
-    end
-
-    describe "when service does not exist" do
-      before do
-        doc.stubs(service: stub(running?: false))
-        doc.kubernetes_role.update_column(:service_name, "app-server")
-      end
-
-      it "creates the service when it does not exist" do
-        doc.expects(:client).returns(stub(create_service: nil))
-        doc.ensure_service.must_equal "creating Service"
-      end
-
-      it "fails when trying to deploy a generated service" do
-        doc.kubernetes_role.update_column(:service_name, "app-server#{Kubernetes::Role::GENERATED}1211212")
-        e = assert_raises Samson::Hooks::UserError do
-          doc.ensure_service
-        end
-        e.message.must_equal "Service name for role app-server was generated and needs to be changed before deploying."
-      end
-
-      it "fails when service is required by the role, but not defined" do
-        assert doc.raw_template.sub!(/\n---\n.*/m, '')
-        e = assert_raises Samson::Hooks::UserError do
-          doc.ensure_service
-        end
-        e.message.must_equal "Unable to find Service definition in kubernetes/app_server.yml"
-      end
-    end
-  end
-
   def deployment_stub(replica_count)
     stub(
       spec: stub(
@@ -96,6 +31,65 @@ describe Kubernetes::ReleaseDoc do
     )
   end
 
+  let(:doc) { kubernetes_release_docs(:test_release_pod_1) }
+  let(:primary_resource) { doc.resource_template[0] }
+
+  before do
+    kubernetes_fake_raw_template
+    configs = YAML.load_stream(read_kubernetes_sample_file('kubernetes_deployment.yml'))
+    doc.send(:resource_template=, configs)
+    primary_resource['metadata']['namespace'] = 'pod1'
+  end
+
+  describe "#store_resource_template" do
+    def create!
+      Kubernetes::ReleaseDoc.create!(doc.attributes.except('id', 'resource_template'))
+    end
+
+    before { Kubernetes::ResourceTemplate.any_instance.stubs(:set_image_pull_secrets) }
+
+    it "stores the template when creating" do
+      create!.resource_template[0]['kind'].must_equal 'Deployment'
+    end
+
+    it "does not store blank service name" do
+      doc.kubernetes_role.update_column(:service_name, '') # user left field empty
+      create!.resource_template[1][:metadata][:name].must_equal 'some-project'
+    end
+
+    it "fails to create with missing config file" do
+      Kubernetes::ReleaseDoc.any_instance.unstub(:raw_template)
+      GitRepository.any_instance.expects(:file_content).returns(nil) # File not found
+      assert_raises(ActiveRecord::RecordInvalid) { create! }
+    end
+
+    it "fails when trying to create for a generated service" do
+      doc.kubernetes_role.update_column(:service_name, "app-server#{Kubernetes::Role::GENERATED}1211212")
+      e = assert_raises Samson::Hooks::UserError do
+        create!
+      end
+      e.message.must_equal "Service name for role app-server was generated and needs to be changed before deploying."
+    end
+  end
+
+  describe "#ensure_service" do
+    it "does nothing when no service is not defined" do
+      doc.resource_template.pop
+      doc.ensure_service.must_equal "no Service defined"
+    end
+
+    it "does nothing when no service is running" do
+      Kubernetes::Service.any_instance.stubs(running?: true)
+      doc.ensure_service.must_equal "Service already running"
+    end
+
+    it "creates the service when it does not exist" do
+      Kubernetes::Service.any_instance.stubs(running?: false)
+      doc.expects(:client).returns(stub(create_service: nil))
+      doc.ensure_service.must_equal "creating Service"
+    end
+  end
+
   describe "#deploy" do
     let(:client) { doc.send(:extension_client) }
 
@@ -115,7 +109,7 @@ describe Kubernetes::ReleaseDoc do
 
     describe "daemonset" do
       before do
-        doc.resource_template[0]['kind'] = 'DaemonSet'
+        primary_resource['kind'] = 'DaemonSet'
         doc.stubs(:sleep)
       end
 
@@ -163,7 +157,7 @@ describe Kubernetes::ReleaseDoc do
 
     describe "job" do
       before do
-        doc.resource_template[0]['kind'] = 'Job'
+        primary_resource['kind'] = 'Job'
       end
 
       it "creates when job does not exist" do
@@ -192,7 +186,7 @@ describe Kubernetes::ReleaseDoc do
 
     describe "deployment" do
       before do
-        doc.resource_template[0]['kind'] = 'Deployment'
+        primary_resource['kind'] = 'Deployment'
         doc.instance_variable_set(:'@deployed', true)
         doc.instance_variable_set(:'@new_deploy', deployment_stub(3))
       end
@@ -221,7 +215,7 @@ describe Kubernetes::ReleaseDoc do
     # way to test the functionality.  :-(
     describe "daemonset" do
       before do
-        doc.resource_template[0]['kind'] = 'DaemonSet'
+        primary_resource['kind'] = 'DaemonSet'
         doc.instance_variable_set(:'@deployed', true)
         doc.instance_variable_set(:'@new_deploy', daemonset_stub(3, 0))
       end
@@ -254,7 +248,7 @@ describe Kubernetes::ReleaseDoc do
 
     describe 'job' do
       before do
-        doc.resource_template[0]['kind'] = 'Job'
+        primary_resource['kind'] = 'Job'
         doc.instance_variable_set(:'@deployed', true)
       end
 
@@ -292,12 +286,12 @@ describe Kubernetes::ReleaseDoc do
     end
 
     it "uses local value for job" do
-      doc.resource_template[0]['kind'] = 'Job'
+      primary_resource['kind'] = 'Job'
       doc.desired_pod_count.must_equal 2
     end
 
     it "asks kubernetes for daemon set since we do not know how many nodes it will match" do
-      doc.resource_template[0]['kind'] = 'DaemonSet'
+      primary_resource['kind'] = 'DaemonSet'
       stub_request(:get, "http://foobar.server/apis/extensions/v1beta1/namespaces/pod1/daemonsets/some-project-rc").
         to_return(body: {status: {desiredNumberScheduled: 3}}.to_json)
       doc.desired_pod_count.must_equal 3
@@ -347,26 +341,21 @@ describe Kubernetes::ReleaseDoc do
     end
   end
 
-  describe "#deploy_template" do
-    it "finds deploy" do
-      doc.expects(:raw_template).returns(read_kubernetes_sample_file('kubernetes_deployment.yml'))
-      doc.deploy_template[:kind].must_equal 'Deployment'
-    end
-
-    it "finds job" do
-      doc.expects(:raw_template).returns(read_kubernetes_sample_file('kubernetes_job.yml'))
-      doc.deploy_template[:kind].must_equal 'Job'
-    end
-  end
-
   describe "#job?" do
     it "is a job when it is a job" do
-      doc.resource_template = YAML.load_stream(read_kubernetes_sample_file('kubernetes_job.yml'))
+      doc.send(:resource_template=, YAML.load_stream(read_kubernetes_sample_file('kubernetes_job.yml')))
       assert doc.job?
     end
 
     it "is not a job when it is not a job" do
       refute doc.job?
+    end
+  end
+
+  # tested in depth from deploy_executor.rb
+  describe "#verify_template" do
+    it "can run with a new release doc" do
+      doc.verify_template
     end
   end
 end

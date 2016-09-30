@@ -356,18 +356,11 @@ module Kubernetes
       release = Kubernetes::Release.new(project: @job.project, git_sha: @job.commit)
       deploy_group_configs.each do |config|
         config.fetch(:roles).each do |role|
-          doc = Kubernetes::ReleaseDoc.new(
+          Kubernetes::ReleaseDoc.new(
             kubernetes_release: release,
             deploy_group: config.fetch(:deploy_group),
             kubernetes_role: role.fetch(:role)
-          )
-
-          # verifies that config files are readable
-          doc.deploy_template
-
-          # verifies that secrets are findable
-          template = Kubernetes::ResourceTemplate.new(doc)
-          template.set_secrets
+          ).verify_template
         end
       end
     end

@@ -101,6 +101,8 @@ describe Kubernetes::DeployExecutor do
       stub_request(:get, /#{Regexp.escape(log_url)}/)
       GitRepository.any_instance.stubs(:file_content).with('Dockerfile', anything).returns "FROM all"
       Kubernetes::ResourceTemplate.any_instance.stubs(:set_image_pull_secrets)
+      stub_request(:get, "http://foobar.server/api/v1/namespaces/staging/services/some-project").
+        to_return(body: {}.to_json)
     end
 
     it "succeeds" do

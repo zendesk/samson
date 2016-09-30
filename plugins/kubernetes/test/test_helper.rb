@@ -123,6 +123,7 @@ class ActiveSupport::TestCase
     Kubernetes::Cluster.create!(cluster_attr)
   end
 
+  # TODO: can be removed ?
   def kubernetes_fake_raw_template
     Kubernetes::ReleaseDoc.any_instance.stubs(raw_template: read_kubernetes_sample_file('kubernetes_deployment.yml'))
   end
