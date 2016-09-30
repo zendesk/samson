@@ -96,7 +96,7 @@ module DeploysHelper
 
   def stages_select_options
     @project.stages.unlocked_for(current_user).map do |stage|
-      [stage.name, stage.id, 'data-confirmation' => stage.confirm?]
+      [stage.name, stage.id, 'data-confirmation' => stage.review_before_deploying?]
     end
   end
 
