@@ -38,33 +38,29 @@ module Kubernetes
       resource_kind == 'Job'
     end
 
-    def valid_resource?
-      deployment? || daemon_set? || job?
-    end
-
     def deploy
-      raise "Unknown deploy object #{resource_kind}" unless valid_resource?
-
       @deployed = true
       @previous_deploy = fetch_resource
       @new_deploy = if deployment?
-        deploy = Kubeclient::Deployment.new(resource_template)
+        deploy = Kubeclient::Deployment.new(resource)
         if @previous_deploy
           extension_client.update_deployment deploy
         else
           extension_client.create_deployment deploy
         end
       elsif daemon_set?
-        daemon = Kubeclient::DaemonSet.new(resource_template)
+        daemon = Kubeclient::DaemonSet.new(resource)
         delete_daemon_set(daemon) if @previous_deploy
         extension_client.create_daemon_set daemon
       elsif job?
         # FYI per docs it is supposed to use batch api, but extension api works
-        job = Kubeclient::Job.new(resource_template)
+        job = Kubeclient::Job.new(resource)
         if @previous_deploy
           extension_client.delete_job resource_name, namespace
         end
         extension_client.create_job job
+      else
+        raise "Unsupported resource kind #{resource&.fetch('kind')}"
       end
     end
 
@@ -124,7 +120,7 @@ module Kubernetes
         elsif deployment? || job?
           replica_target
         else
-          raise "Unsupported kind #{resource_kind}"
+          raise "Unsupported kind #{resource&.fetch('kind')}"
         end
       end
     end
@@ -136,15 +132,23 @@ module Kubernetes
     private
 
     def resource_name
-      kubernetes_role.resource_name
+      resource.fetch('metadata').fetch('name')
     end
 
     def resource_kind
-      resource_template.fetch('kind')
+      resource.fetch('kind')
     end
 
+    # TODO: make this an object and move more logic there
+    def resource
+      @resource ||= Array(resource_template).detect do |config|
+        Kubernetes::RoleConfigFile::PRIMARY.include?(config.fetch('kind'))
+      end
+    end
+
+    # TODO: fill out service here and store generated service ... then use this to read it back
     def store_resource_template
-      self.resource_template = ResourceTemplate.new(self)
+      self.resource_template = [ResourceTemplate.new(self).to_hash] + parsed_config_file.secondary
     end
 
     # Create new client as 'Deployment' API is on different path then 'v1'
@@ -153,8 +157,6 @@ module Kubernetes
     end
 
     def fetch_resource
-      return nil unless valid_resource?
-
       extension_client.send(
         "get_#{resource_kind.underscore}",
         resource_name,

@@ -7,6 +7,7 @@ module Kubernetes
 
     DEPLOY_KINDS = ['Deployment', 'DaemonSet'].freeze
     JOB_KINDS = ['Job'].freeze
+    PRIMARY = (DEPLOY_KINDS + JOB_KINDS).freeze
     SERVICE_KINDS = ['Service'].freeze
 
     def initialize(content, path)
@@ -17,7 +18,7 @@ module Kubernetes
       end
 
       begin
-        @elements = Array.wrap(Kubernetes::Util.parse_file(content, path)).compact
+        @elements = Array.wrap(Kubernetes::Util.parse_file(content, path)).compact.map(&:with_indifferent_access)
       rescue
         raise Samson::Hooks::UserError, "Error found when parsing #{path}\n#{$!.message}"
       end
@@ -39,12 +40,14 @@ module Kubernetes
       find_by_kind(JOB_KINDS)
     end
 
+    def secondary
+      @elements.reject { |doc| PRIMARY.include?(doc[:kind]) }
+    end
+
     private
 
     def find_by_kind(kinds)
-      @elements.detect do |doc|
-        return doc.with_indifferent_access if kinds.include?(doc['kind'])
-      end
+      @elements.detect { |doc| kinds.include?(doc[:kind]) }
     end
   end
 end

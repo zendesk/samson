@@ -9,8 +9,8 @@ describe Kubernetes::ReleaseDoc do
   before do
     kubernetes_fake_raw_template
     doc.resource_template =
-      YAML.load_stream(read_kubernetes_sample_file('kubernetes_deployment.yml'))[0]
-    doc.resource_template['metadata']['namespace'] = 'pod1'
+      YAML.load_stream(read_kubernetes_sample_file('kubernetes_deployment.yml'))
+    doc.resource_template[0]['metadata']['namespace'] = 'pod1'
   end
 
   describe "#store_resource_template" do
@@ -18,7 +18,7 @@ describe Kubernetes::ReleaseDoc do
 
     it "stores the template when creating" do
       created = Kubernetes::ReleaseDoc.create!(doc.attributes.except('id', 'resource_template'))
-      created.resource_template['kind'].must_equal 'Deployment'
+      created.resource_template[0]['kind'].must_equal 'Deployment'
     end
 
     it "fails to create with missing config file" do
@@ -115,7 +115,7 @@ describe Kubernetes::ReleaseDoc do
 
     describe "daemonset" do
       before do
-        doc.resource_template['kind'] = 'DaemonSet'
+        doc.resource_template[0]['kind'] = 'DaemonSet'
         doc.stubs(:sleep)
       end
 
@@ -163,7 +163,7 @@ describe Kubernetes::ReleaseDoc do
 
     describe "job" do
       before do
-        doc.resource_template['kind'] = 'Job'
+        doc.resource_template[0]['kind'] = 'Job'
       end
 
       it "creates when job does not exist" do
@@ -174,16 +174,16 @@ describe Kubernetes::ReleaseDoc do
 
       it "deletes and then creates when job exists" do
         client.expects(:get_job).returns true
-        client.expects(:delete_job).with('test-app-server', 'pod1')
+        client.expects(:delete_job).with('some-project-rc', 'pod1')
         client.expects(:create_job)
         doc.deploy
       end
     end
 
     it "raises on unknown" do
-      doc.resource_template = {'kind' => 'WTFBBQ'}
+      doc.stubs(job?: false, deployment?: false, daemonset?: false, fetch_resource: nil)
       e = assert_raises(RuntimeError) { doc.deploy }
-      e.message.must_include "Unknown deploy object WTFBBQ"
+      e.message.must_equal "Unsupported resource kind Deployment"
     end
   end
 
@@ -192,7 +192,7 @@ describe Kubernetes::ReleaseDoc do
 
     describe "deployment" do
       before do
-        doc.resource_template['kind'] = 'Deployment'
+        doc.resource_template[0]['kind'] = 'Deployment'
         doc.instance_variable_set(:'@deployed', true)
         doc.instance_variable_set(:'@new_deploy', deployment_stub(3))
       end
@@ -221,7 +221,7 @@ describe Kubernetes::ReleaseDoc do
     # way to test the functionality.  :-(
     describe "daemonset" do
       before do
-        doc.resource_template['kind'] = 'DaemonSet'
+        doc.resource_template[0]['kind'] = 'DaemonSet'
         doc.instance_variable_set(:'@deployed', true)
         doc.instance_variable_set(:'@new_deploy', daemonset_stub(3, 0))
       end
@@ -254,7 +254,7 @@ describe Kubernetes::ReleaseDoc do
 
     describe 'job' do
       before do
-        doc.resource_template['kind'] = 'Job'
+        doc.resource_template[0]['kind'] = 'Job'
         doc.instance_variable_set(:'@deployed', true)
       end
 
@@ -292,20 +292,20 @@ describe Kubernetes::ReleaseDoc do
     end
 
     it "uses local value for job" do
-      doc.resource_template['kind'] = 'Job'
+      doc.resource_template[0]['kind'] = 'Job'
       doc.desired_pod_count.must_equal 2
     end
 
     it "asks kubernetes for daemon set since we do not know how many nodes it will match" do
-      doc.resource_template['kind'] = 'DaemonSet'
-      stub_request(:get, "http://foobar.server/apis/extensions/v1beta1/namespaces/pod1/daemonsets/test-app-server").
+      doc.resource_template[0]['kind'] = 'DaemonSet'
+      stub_request(:get, "http://foobar.server/apis/extensions/v1beta1/namespaces/pod1/daemonsets/some-project-rc").
         to_return(body: {status: {desiredNumberScheduled: 3}}.to_json)
       doc.desired_pod_count.must_equal 3
     end
 
     it "fails for unknown" do
-      doc.resource_template['kind'] = 'Funky'
       assert_raises RuntimeError do
+        doc.stubs(job?: false, deployment?: false, daemonset?: false)
         doc.desired_pod_count
       end
     end
@@ -361,7 +361,7 @@ describe Kubernetes::ReleaseDoc do
 
   describe "#job?" do
     it "is a job when it is a job" do
-      doc.resource_template = YAML.load(read_kubernetes_sample_file('kubernetes_job.yml'))
+      doc.resource_template = YAML.load_stream(read_kubernetes_sample_file('kubernetes_job.yml'))
       assert doc.job?
     end
 
