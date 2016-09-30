@@ -31,6 +31,9 @@ class Stage < ActiveRecord::Base
 
   before_create :ensure_ordering
   after_destroy :destroy_deploy_groups_stages
+  after_soft_delete :destroy_deploy_groups_stages
+
+  scope :cloned, -> { where.not(template_stage_id: nil) }
 
   def self.reset_order(new_order)
     transaction do

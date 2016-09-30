@@ -76,56 +76,87 @@ class Admin::DeployGroupsController < ApplicationController
   end
 
   def create_all_stages_preview
-    @preexisting_stages, @missing_stages = stages_for_creation
+    @preexisting_stages, @missing_stages = self.class.stages_for_creation(deploy_group)
   end
 
   # No more than one stage, per project, per deploy_group
   # Note: you can call this multiple times, and it will create missing stages, but no redundant stages.
   def create_all_stages
-    _, missing_stages = stages_for_creation
-    missing_stages.each do |template_stage|
-      create_stage_with_group(template_stage)
+    stages_created = self.class.create_all_stages(deploy_group)
+
+    redirect_to [:admin, deploy_group], notice: "Created #{stages_created.length} Stages"
+  end
+
+  def merge_all_stages
+    deploy_group.stages.cloned.each do |stage|
+      merge_stage(stage)
     end
 
     redirect_to [:admin, deploy_group]
   end
 
-  private
-
-  # returns a list of stages already created and list of stages to create (through their template stages)
-  def stages_for_creation
-    environment = deploy_group.environment
-    template_stages = environment.template_stages.all
-    deploy_group_stages = deploy_group.stages.all
-
-    preexisting_stages = []
-    missing_stages = []
-    Project.where(include_new_deploy_groups: true).each do |project|
-      template_stage = template_stages.detect { |ts| ts.project_id == project.id }
-      deploy_group_stage = deploy_group_stages.detect { |dgs| dgs.project.id == project.id }
-      if deploy_group_stage
-        preexisting_stages << deploy_group_stage
-      elsif template_stage
-        missing_stages << template_stage
-      end
+  def self.create_all_stages(deploy_group)
+    _, missing_stages = stages_for_creation(deploy_group)
+    missing_stages.map do |template_stage|
+      create_stage_with_group(template_stage, deploy_group)
     end
-
-    [preexisting_stages, missing_stages]
   end
 
-  def create_stage_with_group(template_stage)
-    stage = Stage.build_clone(template_stage)
-    stage.deploy_groups << deploy_group
-    stage.name = deploy_group.name
-    stage.is_template = false
-    stage.save!
+  private
 
-    if template_stage.respond_to?(:next_stage_ids) # pipeline plugin was installed
-      template_stage.next_stage_ids << stage.id
+  def merge_stage(stage)
+    template_stage = stage.template_stage
+
+    return unless template_stage
+    return if stage.is_template
+    return if stage.deploy_groups.count != 1
+
+    unless template_stage.deploy_groups.include?(stage.deploy_groups.first)
+      template_stage.deploy_groups += stage.deploy_groups
+      template_stage.next_stage_ids.delete(stage.id)
       template_stage.save!
     end
 
-    stage
+    stage.project.stages.reload # need to reload to make verify_not_part_of_pipeline have current data and not fail
+    stage.soft_delete!
+  end
+
+  class << self
+    # returns a list of stages already created and list of stages to create (through their template stages)
+    def stages_for_creation(deploy_group)
+      environment = deploy_group.environment
+      template_stages = environment.template_stages.all
+      deploy_group_stages = deploy_group.stages.all
+
+      preexisting_stages = []
+      missing_stages = []
+      Project.where(include_new_deploy_groups: true).each do |project|
+        template_stage = template_stages.detect { |ts| ts.project_id == project.id }
+        deploy_group_stage = deploy_group_stages.detect { |dgs| dgs.project_id == project.id }
+        if deploy_group_stage
+          preexisting_stages << deploy_group_stage
+        elsif template_stage
+          missing_stages << template_stage
+        end
+      end
+
+      [preexisting_stages, missing_stages]
+    end
+
+    def create_stage_with_group(template_stage, deploy_group)
+      stage = Stage.build_clone(template_stage)
+      stage.deploy_groups << deploy_group
+      stage.name = deploy_group.name
+      stage.is_template = false
+      stage.save!
+
+      if template_stage.respond_to?(:next_stage_ids) # pipeline plugin was installed
+        template_stage.next_stage_ids << stage.id
+        template_stage.save!
+      end
+
+      stage
+    end
   end
 
   def deploy_group_params

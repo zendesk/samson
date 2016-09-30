@@ -232,5 +232,100 @@ describe Admin::DeployGroupsController do
         refute @controller.instance_variable_get(:@preexisting_stages).empty?
       end
     end
+
+    describe "#merge_all_stages" do
+      describe "without a created stage" do
+        it "succeeds with no work to do" do
+          post :merge_all_stages, params: {id: deploy_group}
+          assert_redirected_to admin_deploy_group_path(deploy_group)
+        end
+      end
+
+      describe "with a created stage" do
+        let(:env) { environments(:staging) }
+        let(:deploy_group) { DeployGroup.create!(name: 'Pod 101', environment: env) }
+        let(:template_stage) { stages(:test_staging) }
+
+        let :stage do
+          Admin::DeployGroupsController.create_all_stages(deploy_group)
+          deploy_group.stages.where(project: template_stage.project).first
+        end
+
+        before do
+          assert template_stage
+          assert stage
+        end
+
+        it "removes the stage" do
+          assert_difference 'Stage.count', -1 do
+            post :merge_all_stages, params: {id: deploy_group}
+          end
+        end
+
+        it "removes the next_stage_id" do
+          assert template_stage.reload.next_stage_ids.include?(stage.id)
+
+          post :merge_all_stages, params: {id: deploy_group}
+
+          refute template_stage.reload.next_stage_ids.include?(stage.id)
+        end
+
+        it "adds the deploy group to the template stage" do
+          refute template_stage.deploy_groups.include?(deploy_group)
+
+          post :merge_all_stages, params: {id: deploy_group}
+
+          assert template_stage.deploy_groups.include?(deploy_group)
+        end
+
+        it "removes the stale deploy_group links as well" do
+          assert DeployGroupsStage.where(stage_id: stage.id, deploy_group_id: deploy_group.id).first
+
+          post :merge_all_stages, params: {id: deploy_group}
+
+          refute DeployGroupsStage.where(stage_id: stage.id, deploy_group_id: deploy_group.id).first
+        end
+
+        it "replaces the stale stage deploy group link with one for the template stage" do
+          refute DeployGroupsStage.where(stage_id: template_stage.id, deploy_group_id: deploy_group.id).first
+
+          post :merge_all_stages, params: {id: deploy_group}
+
+          assert DeployGroupsStage.where(stage_id: template_stage.id, deploy_group_id: deploy_group.id).first
+        end
+      end
+
+      describe "with multiple stages to remove" do
+        let(:env) { environments(:staging) }
+        let(:template_deploy_group) { deploy_groups(:pod100) } # needed so the templaste stages have an environment.
+        let(:deploy_group) { DeployGroup.create!(name: 'Pod 101', environment: env) }
+
+        before do
+          Project.any_instance.stubs(:valid_repository_url)
+          # create a new template stages, and remember we still have a 2nd from the default fixtures.
+
+          project = Project.create!(
+            name: "foo",
+            include_new_deploy_groups: true,
+            permalink: "foo",
+            repository_url: "https://github.com/samson-test-org/example-project.git"
+          )
+          Stage.create!(name: "foo tstage", project: project, is_template: true, deploy_groups: [template_deploy_group])
+
+          # now create the non-template stages for this deploy-group
+          Admin::DeployGroupsController.create_all_stages(deploy_group)
+        end
+
+        it "merges and soft-deletes all non-template stages" do
+          assert_equal 2, deploy_group.stages.count
+
+          post :merge_all_stages, params: {id: deploy_group}
+
+          # should have only template-stages now (all others were soft-deleted)
+          stages = deploy_group.stages.where(is_template: false)
+          assert_empty stages
+        end
+      end
+    end
   end
 end
