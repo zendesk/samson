@@ -27,15 +27,15 @@ module Kubernetes
     end
 
     def deployment?
-      resource_type == 'Deployment'
+      resource_kind == 'Deployment'
     end
 
     def daemon_set?
-      resource_type == 'DaemonSet'
+      resource_kind == 'DaemonSet'
     end
 
     def job?
-      resource_type == 'Job'
+      resource_kind == 'Job'
     end
 
     def valid_resource?
@@ -43,7 +43,7 @@ module Kubernetes
     end
 
     def deploy
-      raise "Unknown deploy object #{resource_type}" unless valid_resource?
+      raise "Unknown deploy object #{resource_kind}" unless valid_resource?
 
       @deployed = true
       @previous_deploy = fetch_resource
@@ -124,7 +124,7 @@ module Kubernetes
         elsif deployment? || job?
           replica_target
         else
-          raise "Unsupported kind #{resource_type}"
+          raise "Unsupported kind #{resource_kind}"
         end
       end
     end
@@ -139,7 +139,7 @@ module Kubernetes
       kubernetes_role.resource_name
     end
 
-    def resource_type
+    def resource_kind
       resource_template.fetch('kind')
     end
 
@@ -156,7 +156,7 @@ module Kubernetes
       return nil unless valid_resource?
 
       extension_client.send(
-        "get_#{resource_type.underscore}",
+        "get_#{resource_kind.underscore}",
         resource_name,
         namespace
       )
