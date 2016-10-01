@@ -60,7 +60,7 @@ module Kubernetes
         end
         extension_client.create_job job
       else
-        raise "Unsupported resource kind #{resource&.fetch('kind')}"
+        raise "Unsupported resource kind #{resource&.fetch(:kind)}"
       end
     end
 
@@ -83,14 +83,12 @@ module Kubernetes
 
     def ensure_service
       if service.nil?
-        'no Service defined'
+        'Service not defined'
       elsif service.running?
         'Service already running'
       else
-        # TODO: service.create
-        data = resource_template.detect { |r| r['kind'] == 'Service' }
-        client.create_service(Kubeclient::Service.new(data))
-        'creating Service'
+        service.create
+        'Service created'
       end
     end
 
@@ -111,7 +109,7 @@ module Kubernetes
         elsif deployment? || job?
           replica_target
         else
-          raise "Unsupported kind #{resource&.fetch('kind')}"
+          raise "Unsupported kind #{resource&.fetch(:kind)}"
         end
       end
     end
@@ -127,18 +125,19 @@ module Kubernetes
       template.set_secrets
     end
 
+    # kubeclient needs pure symbol hash ... not indifferent access
     def resource_template
-      @resource_template ||= Array.wrap(super).map(&:with_indifferent_access)
+      @resource_template ||= Array.wrap(super).map(&:deep_symbolize_keys)
     end
 
     private
 
     def resource_name
-      resource.fetch('metadata').fetch('name')
+      resource.fetch(:metadata).fetch(:name)
     end
 
     def resource_kind
-      resource.fetch('kind')
+      resource.fetch(:kind)
     end
 
     # TODO: make this an object and move more logic there
@@ -148,7 +147,7 @@ module Kubernetes
 
     def primary_resource(elements)
       Array.wrap(elements).detect do |config|
-        Kubernetes::RoleConfigFile::PRIMARY.include?(config.fetch('kind'))
+        Kubernetes::RoleConfigFile::PRIMARY.include?(config.fetch(:kind))
       end
     end
 
@@ -160,7 +159,7 @@ module Kubernetes
     # dynamically fill out the templates and store the result
     def store_resource_template
       self.resource_template = parsed_config_file.elements.map do |resource|
-        case resource['kind']
+        case resource[:kind]
         when 'Service'
           name = kubernetes_role.service_name
           if name.to_s.include?(Kubernetes::Role::GENERATED)
@@ -249,8 +248,8 @@ module Kubernetes
 
     def service
       return @service if defined?(@service)
-      service = resource_template.detect { |t| t[:kind] == 'Service' }
-      @service = service && Kubernetes::Service.new(service[:metadata][:name], deploy_group: deploy_group)
+      template = resource_template.detect { |t| t.fetch(:kind) == 'Service' }
+      @service = template && Kubernetes::Service.new(template, deploy_group)
     end
 
     def parsed_config_file
@@ -265,7 +264,7 @@ module Kubernetes
     end
 
     def loop_sleep
-      sleep 2 unless ENV['RAILS_ENV'] == 'test'
+      sleep 2 unless ENV.fetch('RAILS_ENV') == 'test'
     end
   end
 end

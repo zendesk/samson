@@ -14,6 +14,7 @@ module Samson
       # expands a key by finding the most specific value for it
       # bar -> production/my_project/pod100/bar
       def expand(env_name, secret_key)
+        env_name = env_name.to_s
         if env_name.end_with?(WILDCARD) ^ secret_key.end_with?(WILDCARD)
           @errors << "#{env_name} and #{secret_key} need to both end with #{WILDCARD} or not include them"
           return []

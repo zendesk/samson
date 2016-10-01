@@ -38,7 +38,7 @@ describe Kubernetes::ReleaseDoc do
     kubernetes_fake_raw_template
     configs = YAML.load_stream(read_kubernetes_sample_file('kubernetes_deployment.yml'))
     doc.send(:resource_template=, configs)
-    primary_resource['metadata']['namespace'] = 'pod1'
+    primary_resource[:metadata][:namespace] = 'pod1'
   end
 
   describe "#store_resource_template" do
@@ -49,7 +49,7 @@ describe Kubernetes::ReleaseDoc do
     before { Kubernetes::ResourceTemplate.any_instance.stubs(:set_image_pull_secrets) }
 
     it "stores the template when creating" do
-      create!.resource_template[0]['kind'].must_equal 'Deployment'
+      create!.resource_template[0][:kind].must_equal 'Deployment'
     end
 
     it "does not store blank service name" do
@@ -75,7 +75,7 @@ describe Kubernetes::ReleaseDoc do
   describe "#ensure_service" do
     it "does nothing when no service is not defined" do
       doc.resource_template.pop
-      doc.ensure_service.must_equal "no Service defined"
+      doc.ensure_service.must_equal "Service not defined"
     end
 
     it "does nothing when no service is running" do
@@ -85,8 +85,8 @@ describe Kubernetes::ReleaseDoc do
 
     it "creates the service when it does not exist" do
       Kubernetes::Service.any_instance.stubs(running?: false)
-      doc.expects(:client).returns(stub(create_service: nil))
-      doc.ensure_service.must_equal "creating Service"
+      doc.deploy_group.kubernetes_cluster.expects(:client).returns(stub(create_service: nil))
+      doc.ensure_service.must_equal "Service created"
     end
   end
 
@@ -109,7 +109,7 @@ describe Kubernetes::ReleaseDoc do
 
     describe "daemonset" do
       before do
-        primary_resource['kind'] = 'DaemonSet'
+        primary_resource[:kind] = 'DaemonSet'
         doc.stubs(:sleep)
       end
 
@@ -157,7 +157,7 @@ describe Kubernetes::ReleaseDoc do
 
     describe "job" do
       before do
-        primary_resource['kind'] = 'Job'
+        primary_resource[:kind] = 'Job'
       end
 
       it "creates when job does not exist" do
@@ -186,7 +186,7 @@ describe Kubernetes::ReleaseDoc do
 
     describe "deployment" do
       before do
-        primary_resource['kind'] = 'Deployment'
+        primary_resource[:kind] = 'Deployment'
         doc.instance_variable_set(:'@deployed', true)
         doc.instance_variable_set(:'@new_deploy', deployment_stub(3))
       end
@@ -215,7 +215,7 @@ describe Kubernetes::ReleaseDoc do
     # way to test the functionality.  :-(
     describe "daemonset" do
       before do
-        primary_resource['kind'] = 'DaemonSet'
+        primary_resource[:kind] = 'DaemonSet'
         doc.instance_variable_set(:'@deployed', true)
         doc.instance_variable_set(:'@new_deploy', daemonset_stub(3, 0))
       end
@@ -248,7 +248,7 @@ describe Kubernetes::ReleaseDoc do
 
     describe 'job' do
       before do
-        primary_resource['kind'] = 'Job'
+        primary_resource[:kind] = 'Job'
         doc.instance_variable_set(:'@deployed', true)
       end
 
@@ -286,12 +286,12 @@ describe Kubernetes::ReleaseDoc do
     end
 
     it "uses local value for job" do
-      primary_resource['kind'] = 'Job'
+      primary_resource[:kind] = 'Job'
       doc.desired_pod_count.must_equal 2
     end
 
     it "asks kubernetes for daemon set since we do not know how many nodes it will match" do
-      primary_resource['kind'] = 'DaemonSet'
+      primary_resource[:kind] = 'DaemonSet'
       stub_request(:get, "http://foobar.server/apis/extensions/v1beta1/namespaces/pod1/daemonsets/some-project-rc").
         to_return(body: {status: {desiredNumberScheduled: 3}}.to_json)
       doc.desired_pod_count.must_equal 3

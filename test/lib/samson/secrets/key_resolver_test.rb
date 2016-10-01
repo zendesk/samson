@@ -16,6 +16,10 @@ describe Samson::Secrets::KeyResolver do
       resolver.expand('ABC', 'bar').must_equal [["ABC", "global/global/global/bar"]]
     end
 
+    it "expands symbols" do
+      resolver.expand(:ABC, 'bar').must_equal [["ABC", "global/global/global/bar"]]
+    end
+
     it "does nothing when not finding a key" do
       resolver.expand('ABC', 'baz').must_equal []
     end
