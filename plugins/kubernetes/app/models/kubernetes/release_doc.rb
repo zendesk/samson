@@ -42,23 +42,20 @@ module Kubernetes
       @deployed = true
       @previous_deploy = fetch_resource
       @new_deploy = if deployment?
-        deploy = Kubeclient::Deployment.new(resource)
         if @previous_deploy
-          extension_client.update_deployment deploy
+          extension_client.update_deployment resource
         else
-          extension_client.create_deployment deploy
+          extension_client.create_deployment resource
         end
       elsif daemon_set?
-        daemon = Kubeclient::DaemonSet.new(resource)
-        delete_daemon_set(daemon) if @previous_deploy
-        extension_client.create_daemon_set daemon
+        delete_daemon_set(resource) if @previous_deploy
+        extension_client.create_daemon_set resource
       elsif job?
         # FYI per docs it is supposed to use batch api, but extension api works
-        job = Kubeclient::Job.new(resource)
         if @previous_deploy
           extension_client.delete_job resource_name, namespace
         end
-        extension_client.create_job job
+        extension_client.create_job resource
       else
         raise "Unsupported resource kind #{resource&.fetch(:kind)}"
       end
@@ -105,7 +102,7 @@ module Kubernetes
       @desired_pod_count ||= begin
         if daemon_set?
           # need http request since we do not know how many nodes we will match
-          fetch_resource.status.desiredNumberScheduled
+          fetch_resource[:status][:desiredNumberScheduled]
         elsif deployment? || job?
           replica_target
         else
@@ -191,23 +188,22 @@ module Kubernetes
         "get_#{resource_kind.underscore}",
         resource_name,
         namespace
-      )
+      ).to_hash
     rescue KubeException
       nil
     end
 
     def delete_deployment
       return unless deployed = fetch_resource
-      copy = deployed.clone
 
       # Scale down the deployment to include zero pods
-      copy.spec.replicas = 0
-      extension_client.update_deployment copy
+      deployed[:spec][:replicas] = 0
+      extension_client.update_deployment deployed
 
       # Wait for there to be zero pods
       loop do
         loop_sleep
-        break if fetch_resource.status.replicas.to_i.zero?
+        break if fetch_resource[:status][:replicas].to_i.zero?
       end
 
       # delete the actual deployment
@@ -223,7 +219,7 @@ module Kubernetes
     def delete_daemon_set(daemon_set)
       # make it match no node
       daemon_set = daemon_set.clone
-      daemon_set.spec.template.spec.nodeSelector = {rand(9999).to_s => rand(9999).to_s}
+      daemon_set[:spec][:template][:spec][:nodeSelector] = {rand(9999).to_s => rand(9999).to_s}
       extension_client.update_daemon_set daemon_set
 
       # wait for it to terminate all it's pods
@@ -231,8 +227,8 @@ module Kubernetes
       (1..max).each do |i|
         loop_sleep
         current = fetch_resource
-        scheduled = current.status.currentNumberScheduled
-        misscheduled = current.status.numberMisscheduled
+        scheduled = current[:status][:currentNumberScheduled]
+        misscheduled = current[:status][:numberMisscheduled]
         break if scheduled.zero? && misscheduled.zero?
         if i == max
           raise(

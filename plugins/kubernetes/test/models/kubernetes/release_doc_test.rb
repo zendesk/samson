@@ -6,28 +6,32 @@ SingleCov.covered!
 describe Kubernetes::ReleaseDoc do
   def deployment_stub(replica_count)
     stub(
-      spec: stub(
-        'replicas=' => replica_count
-      ),
-      status: stub(
-        replicas: replica_count
-      )
+      to_hash: {
+        spec: {
+          'replicas=' => replica_count
+        },
+        status: {
+          replicas: replica_count
+        }
+      }
     )
   end
 
   def daemonset_stub(scheduled, misscheduled)
     stub(
-      status: stub(
-        currentNumberScheduled: scheduled,
-        numberMisscheduled:     misscheduled
-      ),
-      spec: stub(
-        template: stub(
-          spec: stub(
-            'nodeSelector=' => nil
-          )
-        )
-      )
+      to_hash: {
+        status: {
+          currentNumberScheduled: scheduled,
+          numberMisscheduled:     misscheduled
+        },
+        spec: {
+          template: {
+            spec: {
+              'nodeSelector=' => nil
+            }
+          }
+        }
+      }
     )
   end
 
@@ -167,7 +171,7 @@ describe Kubernetes::ReleaseDoc do
       end
 
       it "deletes and then creates when job exists" do
-        client.expects(:get_job).returns true
+        client.expects(:get_job).returns({})
         client.expects(:delete_job).with('some-project-rc', 'pod1')
         client.expects(:create_job)
         doc.deploy
@@ -188,7 +192,7 @@ describe Kubernetes::ReleaseDoc do
       before do
         primary_resource[:kind] = 'Deployment'
         doc.instance_variable_set(:'@deployed', true)
-        doc.instance_variable_set(:'@new_deploy', deployment_stub(3))
+        doc.instance_variable_set(:'@new_deploy', deployment_stub(3).to_hash)
       end
 
       it "is deleted when it's a new deployment" do
@@ -203,7 +207,7 @@ describe Kubernetes::ReleaseDoc do
       end
 
       it "rolls back when a deployment already existed" do
-        doc.instance_variable_set(:'@previous_deploy', deployment_stub(3))
+        doc.instance_variable_set(:'@previous_deploy', deployment_stub(3).to_hash)
 
         client.expects(:rollback_deployment)
         doc.revert
@@ -217,7 +221,7 @@ describe Kubernetes::ReleaseDoc do
       before do
         primary_resource[:kind] = 'DaemonSet'
         doc.instance_variable_set(:'@deployed', true)
-        doc.instance_variable_set(:'@new_deploy', daemonset_stub(3, 0))
+        doc.instance_variable_set(:'@new_deploy', daemonset_stub(3, 0).to_hash)
       end
 
       it "is deleted when it's brand new" do

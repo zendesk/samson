@@ -48,9 +48,9 @@ describe Kubernetes::ResourceTemplate do
 
       result = template.to_hash
       result.fetch(:spec).fetch(:template).fetch(:metadata).fetch(:labels).slice(:deploy_group, :role, :tag).must_equal(
-        'tag' => "user-feature",
-        'deploy_group' => 'foo-bar',
-        'role' => 'some-role'
+        tag: "user-feature",
+        deploy_group: 'foo-bar',
+        role: 'some-role'
       )
     end
 
@@ -68,7 +68,7 @@ describe Kubernetes::ResourceTemplate do
       }
       stub_request(:get, "http://foobar.server/api/v1/namespaces/pod1/secrets").to_return(body: reply.to_json)
       template.to_hash[:spec][:template][:spec][:imagePullSecrets].must_equal(
-        [{"name" => 'a'}, {"name" => 'c'}]
+        [{name: 'a'}, {name: 'c'}]
       )
     end
 
@@ -84,9 +84,9 @@ describe Kubernetes::ResourceTemplate do
 
       it "copies resource values" do
         container.fetch(:resources).must_equal(
-          'limits' => {
-            'memory' => "100Mi",
-            'cpu' => 1.0
+          limits: {
+            memory: "100Mi",
+            cpu: 1.0
           }
         )
       end
