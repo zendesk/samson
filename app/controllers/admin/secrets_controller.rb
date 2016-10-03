@@ -13,9 +13,13 @@ class Admin::SecretsController < ApplicationController
   before_action :authorize_any_deployer!, only: DEPLOYER_ACCESS
 
   def index
-    @secret_keys = SecretStorage.keys
-    if query = params.dig(:search, :query).presence
-      @secret_keys.select! { |s| s.include?(query) }
+    begin
+      @secret_keys = SecretStorage.keys
+      if query = params.dig(:search, :query).presence
+        @secret_keys.select! { |s| s.include?(query) }
+      end
+    rescue RuntimeError => e
+      failure e.message
     end
   end
 
@@ -72,6 +76,11 @@ class Admin::SecretsController < ApplicationController
   def failure_response(message)
     flash[:error] = message
     render :edit
+  end
+
+  def failure(message)
+    flash[:error] = message
+    render :fail
   end
 
   def find_secret
