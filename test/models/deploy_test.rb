@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 require_relative '../test_helper'
 
-SingleCov.covered! uncovered: 38
+SingleCov.covered! uncovered: 26
 
 describe Deploy do
   let(:project) { projects(:test) }
@@ -279,7 +279,7 @@ describe Deploy do
 
       it "returns array with deleted object values with DeployGroups" do
         DeployGroup.stubs(enabled?: true)
-        prod.update_attribute(:production, nil) # make sure response is from environment
+        prod.update_attribute(:production, false) # make sure response is from environment
 
         # the with_deleted calls would be done in CsvJob
         Stage.with_deleted do

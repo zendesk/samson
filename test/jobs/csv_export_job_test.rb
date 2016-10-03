@@ -48,8 +48,8 @@ describe CsvExportJob do
 
     describe "with Deploy Groups production filter (from environment)" do
       before do
-        stages(:test_production).update_attribute(:production, nil)
-        stages(:test_staging).update_attribute(:production, nil)
+        stages(:test_production).update_attribute(:production, false)
+        stages(:test_staging).update_attribute(:production, false)
         DeployGroup.stubs(enabled?: true)
       end
 
