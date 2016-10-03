@@ -20,6 +20,11 @@ describe Kubernetes::ReleaseDoc do
   def daemonset_stub(scheduled, misscheduled)
     stub(
       to_hash: {
+        kind: "DaemonSet",
+        metadata: {
+          name: 'some-project',
+          namespace: 'pod1'
+        },
         status: {
           currentNumberScheduled: scheduled,
           numberMisscheduled:     misscheduled
@@ -39,7 +44,7 @@ describe Kubernetes::ReleaseDoc do
   let(:primary_resource) { doc.resource_template[0] }
 
   before do
-    kubernetes_fake_raw_template
+    kubernetes_fake_raw_template # TODO: this is only needed by very few tests ...
     configs = YAML.load_stream(read_kubernetes_sample_file('kubernetes_deployment.yml'))
     doc.send(:resource_template=, configs)
     primary_resource[:metadata][:namespace] = 'pod1'
@@ -83,12 +88,12 @@ describe Kubernetes::ReleaseDoc do
     end
 
     it "does nothing when no service is running" do
-      Kubernetes::Service.any_instance.stubs(running?: true)
+      Kubernetes::Resource::Service.any_instance.stubs(running?: true)
       doc.ensure_service.must_equal "Service already running"
     end
 
     it "creates the service when it does not exist" do
-      Kubernetes::Service.any_instance.stubs(running?: false)
+      Kubernetes::Resource::Service.any_instance.stubs(running?: false)
       doc.deploy_group.kubernetes_cluster.expects(:client).returns(stub(create_service: nil))
       doc.ensure_service.must_equal "Service created"
     end
@@ -97,91 +102,18 @@ describe Kubernetes::ReleaseDoc do
   describe "#deploy" do
     let(:client) { doc.send(:extension_client) }
 
-    describe "deployment" do
-      it "creates when deploy does not exist" do
-        client.expects(:get_deployment).raises(KubeException.new(1, 2, 3))
-        client.expects(:create_deployment)
-        doc.deploy
-      end
-
-      it "updates when deploy exists" do
-        client.expects(:get_deployment).returns deployment_stub(3)
-        client.expects(:update_deployment)
-        doc.deploy
-      end
+    it "creates" do
+      client.expects(:get_deployment).raises(KubeException.new(404, 2, 3))
+      client.expects(:create_deployment).returns(stub(to_hash: {}))
+      doc.deploy
+      refute doc.instance_variable_get(:@previous_deploy) # will not revert
     end
 
-    describe "daemonset" do
-      before do
-        primary_resource[:kind] = 'DaemonSet'
-        doc.stubs(:sleep)
-      end
-
-      it "creates when daemonset does not exist" do
-        client.expects(:get_daemon_set).raises(KubeException.new(1, 2, 3))
-        client.expects(:create_daemon_set)
-        doc.deploy
-      end
-
-      it "deletes and created when daemonset exists without pods" do
-        client.expects(:update_daemon_set)
-        client.expects(:get_daemon_set).times(2).returns(
-          daemonset_stub(0, 0), # initial check
-          daemonset_stub(0, 0)  # check for running
-        )
-        client.expects(:delete_daemon_set)
-        client.expects(:create_daemon_set)
-        doc.deploy
-      end
-
-      it "deletes and created when daemonset exists with pods" do
-        client.expects(:update_daemon_set)
-        client.expects(:get_daemon_set).times(4).returns(
-          daemonset_stub(0, 0), # initial check
-          daemonset_stub(1, 1),
-          daemonset_stub(0, 1),
-          daemonset_stub(0, 0)
-        )
-        client.expects(:delete_daemon_set)
-        client.expects(:create_daemon_set)
-        doc.deploy
-      end
-
-      it "tells the user what is wrong when the pods never get terminated" do
-        client.expects(:update_daemon_set)
-        client.expects(:get_daemon_set).times(31).returns(daemonset_stub(0, 1))
-        client.expects(:delete_daemon_set).never
-        client.expects(:create_daemon_set).never
-        e = assert_raises Samson::Hooks::UserError do
-          doc.deploy
-        end
-        e.message.must_include "misscheduled"
-      end
-    end
-
-    describe "job" do
-      before do
-        primary_resource[:kind] = 'Job'
-      end
-
-      it "creates when job does not exist" do
-        client.expects(:get_job).raises(KubeException.new(1, 2, 3))
-        client.expects(:create_job)
-        doc.deploy
-      end
-
-      it "deletes and then creates when job exists" do
-        client.expects(:get_job).returns({})
-        client.expects(:delete_job).with('some-project-rc', 'pod1')
-        client.expects(:create_job)
-        doc.deploy
-      end
-    end
-
-    it "raises on unknown" do
-      doc.stubs(job?: false, deployment?: false, daemonset?: false, fetch_resource: nil)
-      e = assert_raises(RuntimeError) { doc.deploy }
-      e.message.must_equal "Unsupported resource kind Deployment"
+    it "remembers the previous deploy in case we have to revert" do
+      client.expects(:get_deployment).returns(foo: :bar)
+      client.expects(:update_deployment).returns("Rest client resonse")
+      doc.deploy
+      assert doc.instance_variable_get(:@previous_deploy) # will revert
     end
   end
 
@@ -196,13 +128,7 @@ describe Kubernetes::ReleaseDoc do
       end
 
       it "is deleted when it's a new deployment" do
-        client.expects(:update_deployment)
-        client.expects(:get_deployment).times(3).returns(
-          deployment_stub(3),
-          deployment_stub(3),
-          deployment_stub(0)
-        )
-        client.expects(:delete_deployment)
+        doc.send(:resource_object).expects(:delete)
         doc.revert
       end
 
@@ -221,7 +147,6 @@ describe Kubernetes::ReleaseDoc do
       before do
         primary_resource[:kind] = 'DaemonSet'
         doc.instance_variable_set(:'@deployed', true)
-        doc.instance_variable_set(:'@new_deploy', daemonset_stub(3, 0).to_hash)
       end
 
       it "is deleted when it's brand new" do
@@ -236,7 +161,7 @@ describe Kubernetes::ReleaseDoc do
       end
 
       it "is deleted and recreated on rollback" do
-        doc.instance_variable_set(:'@previous_deploy', daemonset_stub(3, 0))
+        doc.instance_variable_set(:'@previous_deploy', daemonset_stub(3, 0).to_hash)
 
         client.expects(:update_daemon_set)
         client.expects(:get_daemon_set).times(2).returns(

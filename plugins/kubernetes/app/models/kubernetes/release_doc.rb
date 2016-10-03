@@ -40,27 +40,13 @@ module Kubernetes
 
     def deploy
       @deployed = true
-      @previous_deploy = fetch_resource
-      @new_deploy = if deployment?
-        if @previous_deploy
-          extension_client.update_deployment resource
-        else
-          extension_client.create_deployment resource
-        end
-      elsif daemon_set?
-        delete_daemon_set(resource) if @previous_deploy
-        extension_client.create_daemon_set resource
-      elsif job?
-        # FYI per docs it is supposed to use batch api, but extension api works
-        if @previous_deploy
-          extension_client.delete_job resource_name, namespace
-        end
-        extension_client.create_job resource
-      else
-        raise "Unsupported resource kind #{resource&.fetch(:kind)}"
+      if resource_object.running?
+        @previous_deploy = resource.deep_dup # dup since some deploy actions modify the resource
       end
+      resource_object.deploy
     end
 
+    # TODO: move to resource
     def revert
       raise "Can only be done after a deploy" unless @deployed
 
@@ -68,13 +54,16 @@ module Kubernetes
         if @previous_deploy
           extension_client.rollback_deployment(resource_name, namespace)
         else
-          delete_deployment
+          resource_object.delete
         end
       elsif daemon_set?
-        delete_daemon_set @new_deploy if @new_deploy
-        extension_client.create_daemon_set(@previous_deploy) if @previous_deploy
+        if @previous_deploy
+          Kubernetes::Resource.build(@previous_deploy, deploy_group).deploy
+        else
+          resource_object.delete
+        end
       elsif job?
-        extension_client.delete_job(resource_name, namespace)
+        resource_object.delete
       end
     end
 
@@ -84,11 +73,12 @@ module Kubernetes
       elsif service.running?
         'Service already running'
       else
-        service.create
+        service.deploy
         'Service created'
       end
     end
 
+    # TODO: private
     def raw_template
       return @raw_template if defined?(@raw_template)
       @raw_template = kubernetes_release.project.repository.file_content(template_name, kubernetes_release.git_sha)
@@ -98,6 +88,7 @@ module Kubernetes
       kubernetes_role.config_file
     end
 
+    # TODO: move to resource
     def desired_pod_count
       @desired_pod_count ||= begin
         if daemon_set?
@@ -137,9 +128,12 @@ module Kubernetes
       resource.fetch(:kind)
     end
 
-    # TODO: make this an object and move more logic there
     def resource
       @resource ||= primary_resource(resource_template)
+    end
+
+    def resource_object
+      @resource_object ||= Kubernetes::Resource.build(resource, deploy_group)
     end
 
     def primary_resource(elements)
@@ -183,69 +177,15 @@ module Kubernetes
       @extension_client ||= deploy_group.kubernetes_cluster.extension_client
     end
 
+    # TODO: remove the need for that
     def fetch_resource
-      extension_client.send(
-        "get_#{resource_kind.underscore}",
-        resource_name,
-        namespace
-      ).to_hash
-    rescue KubeException
-      nil
-    end
-
-    def delete_deployment
-      return unless deployed = fetch_resource
-
-      # Scale down the deployment to include zero pods
-      deployed[:spec][:replicas] = 0
-      extension_client.update_deployment deployed
-
-      # Wait for there to be zero pods
-      loop do
-        loop_sleep
-        break if fetch_resource[:status][:replicas].to_i.zero?
-      end
-
-      # delete the actual deployment
-      extension_client.delete_deployment resource_name, namespace
-    end
-
-    # we cannot replace or update a daemonset, so we take it down completely
-    #
-    # was do what `kubectl delete daemonset NAME` does:
-    # - make it match no node
-    # - waits for current to reach 0
-    # - deletes the daemonset
-    def delete_daemon_set(daemon_set)
-      # make it match no node
-      daemon_set = daemon_set.clone
-      daemon_set[:spec][:template][:spec][:nodeSelector] = {rand(9999).to_s => rand(9999).to_s}
-      extension_client.update_daemon_set daemon_set
-
-      # wait for it to terminate all it's pods
-      max = 30
-      (1..max).each do |i|
-        loop_sleep
-        current = fetch_resource
-        scheduled = current[:status][:currentNumberScheduled]
-        misscheduled = current[:status][:numberMisscheduled]
-        break if scheduled.zero? && misscheduled.zero?
-        if i == max
-          raise(
-            Samson::Hooks::UserError,
-            "Unable to terminate previous DaemonSet, scheduled: #{scheduled} / misscheduled: #{misscheduled}\n"
-          )
-        end
-      end
-
-      # delete it
-      extension_client.delete_daemon_set resource_name, namespace
+      resource_object.send(:resource_object)
     end
 
     def service
       return @service if defined?(@service)
       template = resource_template.detect { |t| t.fetch(:kind) == 'Service' }
-      @service = template && Kubernetes::Service.new(template, deploy_group)
+      @service = template && Kubernetes::Resource.build(template, deploy_group)
     end
 
     def parsed_config_file
@@ -257,10 +197,6 @@ module Kubernetes
       parsed_config_file
     rescue Samson::Hooks::UserError
       errors.add(:kubernetes_release, $!.message)
-    end
-
-    def loop_sleep
-      sleep 2 unless ENV.fetch('RAILS_ENV') == 'test'
     end
   end
 end
