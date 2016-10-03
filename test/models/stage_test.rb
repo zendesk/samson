@@ -493,12 +493,14 @@ describe Stage do
 
   describe '#save' do
     it 'touches the stage and project when only changing deploy_groups for cache invalidation' do
-      stage_updated_at = stage.updated_at
-      project_updated_at = stage.project.updated_at
+      stage.update_column(:updated_at, 1.minutes.ago)
+      stage.project.update_column(:updated_at, 1.minutes.ago)
+
       stage.deploy_groups << deploy_groups(:pod1)
       stage.save
-      stage_updated_at.wont_equal stage.updated_at
-      project_updated_at.wont_equal stage.project.updated_at
+
+      stage.updated_at.must_be :>, 2.seconds.ago
+      stage.project.updated_at.must_be :>, 2.seconds.ago
     end
   end
 
