@@ -2,29 +2,31 @@
 
 module Samson
   module Secrets
+    class BackendError < StandardError
+      def initialize(msg)
+        super(msg)
+      end
+    end
+
     class HashicorpVaultBackend
       VAULT_SECRET_BACKEND = 'secret/'
       SAMSON_SECRET_NAMESPACE = 'apps/'
-      VAULT_ERR = "Vault backend is down. "
       # we don't really want other directories in the key,
       # and there may be other chars that we find we don't like
       ENCODINGS = {"/": "%2F"}.freeze
 
       class << self
         def read(key)
-          begin
-            key = vault_path(key)
-            result = vault_client.read(key)
-            return if !result || result.data[:vault].nil?
+          key = vault_path(key)
+          result = vault_client.read(key)
+          return if !result || result.data[:vault].nil?
 
-            result = result.to_h
-            result = result.merge(result.delete(:data))
-            result[:value] = result.delete(:vault)
-            result
+          result = result.to_h
+          result = result.merge(result.delete(:data))
+          result[:value] = result.delete(:vault)
           rescue Vault::HTTPConnectionError => e
-            Rails.logger.error(e.message)
-            raise VAULT_ERR + e.message
-          end
+            wrap_vault_errors(e.message)
+          result
         end
 
         def read_multi(keys)
@@ -45,8 +47,7 @@ module Samson
               creator_id: data.fetch(:user_id)
             )
           rescue Vault::HTTPConnectionError => e
-            Rails.logger.error(e.message)
-            raise VAULT_ERR + e.message
+            wrap_vault_errors(e.message)
           end
         end
 
@@ -63,8 +64,7 @@ module Samson
               convert_path(secret_path, :decode) # FIXME: ideally only decode the key(#4) part
             end
           rescue Vault::HTTPConnectionError => e
-            Rails.logger.error(e.message)
-            raise VAULT_ERR + e.message
+            wrap_vault_errors(e.message)
           end
         end
 
@@ -73,6 +73,10 @@ module Samson
         # get and cache a copy of the client that has a token
         def vault_client
           @vault_client ||= VaultClient.new
+        end
+
+        def wrap_vault_errors(message)
+          raise Samson::Secrets::BackendError.new("Vault backend is down!! " + message)
         end
 
         def keys_recursive(keys, key_path = "")

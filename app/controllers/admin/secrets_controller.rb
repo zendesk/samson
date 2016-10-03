@@ -13,14 +13,12 @@ class Admin::SecretsController < ApplicationController
   before_action :authorize_any_deployer!, only: DEPLOYER_ACCESS
 
   def index
-    begin
-      @secret_keys = SecretStorage.keys
-      if query = params.dig(:search, :query).presence
-        @secret_keys.select! { |s| s.include?(query) }
-      end
-    rescue RuntimeError => e
-      failure e.message
+    @secret_keys = SecretStorage.keys
+    if query = params.dig(:search, :query).presence
+      @secret_keys.select! { |s| s.include?(query) }
     end
+    rescue Samson::Secrets::BackendError => e
+      failure e.message
   end
 
   def new
