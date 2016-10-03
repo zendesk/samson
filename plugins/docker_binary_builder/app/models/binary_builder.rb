@@ -34,8 +34,8 @@ class BinaryBuilder
       @output_stream.puts 'Continuing docker build...'
     ensure
       @output_stream.puts 'Cleaning up docker build image and container...'
-      @container.delete(force: true) if @container
-      @image.remove(force: true) if @image
+      @container&.delete(force: true)
+      @image&.remove(force: true)
     end
   end
 
@@ -113,7 +113,7 @@ class BinaryBuilder
 
     # Mount a cache directory for sharing .m2, .ivy2, .bundler directories between build containers.
     api_version_major, api_version_minor = docker_api_version.scan(/(\d+)\.(\d+)/).flatten.map(&:to_i)
-    if api_version_major == 0 || (api_version_major == 1 && api_version_minor <= 14)
+    if api_version_major.zero? || (api_version_major == 1 && api_version_minor <= 14)
       fail "Unsupported Docker api version '#{docker_api_version}', use at least v1.15"
     elsif api_version_major == 1 && api_version_minor <= 22
       options.merge!(

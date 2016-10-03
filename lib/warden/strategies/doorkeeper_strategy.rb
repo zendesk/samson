@@ -12,7 +12,7 @@ class Warden::Strategies::Doorkeeper < ::Warden::Strategies::Base
     return unless r.authorization.present?
     return unless r.authorization.start_with?("Bearer ")
     @token = ::Doorkeeper::OAuth::Token.authenticate(r, *Doorkeeper.configuration.access_token_methods)
-    @token && @token.accessible? && @token.acceptable?(@scope)
+    @token&.accessible? && @token.acceptable?(@scope)
   end
 end
 

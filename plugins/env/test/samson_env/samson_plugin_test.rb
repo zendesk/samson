@@ -123,7 +123,7 @@ describe SamsonEnv do
 
         refute File.exist?("ENV.json")
 
-        JSON.load(File.read("ENV.pod-100.json")).must_equal(
+        JSON.parse(File.read("ENV.pod-100.json")).must_equal(
           "other" => true,
           "roles" => {
             "some" => "thing"
@@ -136,7 +136,7 @@ describe SamsonEnv do
           }
         )
 
-        JSON.load(File.read("ENV.pod1.json")).must_equal(
+        JSON.parse(File.read("ENV.pod1.json")).must_equal(
           "other" => true,
           "roles" => {
             "some" => "thing"

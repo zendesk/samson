@@ -44,13 +44,13 @@ module SamsonEnv
       return unless File.exist?(manifest_json)
       json =
         if File.exist?(env_json)
-          JSON.load(File.read(env_json)).tap { File.unlink(env_json) }
+          JSON.parse(File.read(env_json)).tap { File.unlink(env_json) }
         else
           {}
         end
 
       # manifest.json includes required keys and other things we copy
-      manifest = JSON.load(File.read(manifest_json))
+      manifest = JSON.parse(File.read(manifest_json))
       settings = manifest.delete("settings")
 
       # hackaround to support projects that have a manifest.json for

@@ -137,7 +137,7 @@ if ENV["SECRET_STORAGE_BACKEND"] == "SecretStorage::HashicorpVault"
   # fixed in vault server 0.6.2 https://github.com/hashicorp/vault/pull/1795
   Vault::Client.prepend(Module.new do
     def success(response)
-      response.content_type = 'application/json' if response.body && response.body.start_with?('{', '[')
+      response.content_type = 'application/json' if response.body&.start_with?('{', '[')
       super
     end
   end)

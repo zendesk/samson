@@ -149,3 +149,15 @@ Style/IfUnlessModifier:
 
 Lint/ShadowingOuterLocalVariable:
   Enabled: false
+
+Style/VariableNumber:
+  Enabled: false
+
+Style/TernaryParentheses:
+  Enabled: false
+
+# should use, but is currently showing false positives / bugs
+# https://github.com/bbatsov/rubocop/issues/3551
+# https://github.com/bbatsov/rubocop/issues/3561
+Style/SafeNavigation:
+  Enabled: false

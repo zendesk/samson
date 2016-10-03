@@ -19,13 +19,13 @@ describe BuddyCheck do
     deploy_rtn = stage.create_deploy(user, reference: reference)
     deploy_rtn.confirm_buddy!(other_user)
 
-    assert_equal true, deploy_rtn.start_time.to_i > 0
+    assert_equal true, deploy_rtn.start_time.to_i.positive?
   end
 
   it "start_time is set for non-buddy_checked deploy" do
     deploy_rtn = stage.create_deploy(user, reference: reference)
 
-    assert_equal true, deploy_rtn.start_time.to_i > 0
+    assert_equal true, deploy_rtn.start_time.to_i.positive?
   end
 
   it "does not deploy production if buddy check is enabled" do

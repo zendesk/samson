@@ -19,7 +19,7 @@ class Integrations::GithubController < Integrations::BaseController
   end
 
   def deploy?
-    webhook_handler && webhook_handler.valid_webhook?(params)
+    webhook_handler&.valid_webhook?(params)
   end
 
   def valid_signature?

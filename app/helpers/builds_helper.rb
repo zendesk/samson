@@ -34,6 +34,6 @@ module BuildsHelper
 
   def docker_build_running?(build)
     job = build.docker_build_job
-    job && job.active? && (JobExecution.find_by_id(job.id) || JobExecution.enabled)
+    job&.active? && (JobExecution.find_by_id(job.id) || JobExecution.enabled)
   end
 end

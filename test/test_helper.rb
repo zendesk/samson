@@ -191,7 +191,7 @@ class ActionController::TestCase
       define_method "as_a_#{user}" do |&block|
         describe "as a #{user}" do
           let(:user) { users(user) }
-          before { request.env['warden'].set_user(self.user) }
+          before { request.env['warden'].set_user(self.user) } # rubocop:disable Style/RedundantSelf
           instance_eval(&block)
         end
       end

@@ -175,7 +175,7 @@ module Kubernetes
       # Wait for there to be zero pods
       loop do
         loop_sleep
-        break if fetch_resource.status.replicas.to_i == 0
+        break if fetch_resource.status.replicas.to_i.zero?
       end
 
       # delete the actual deployment
@@ -201,7 +201,7 @@ module Kubernetes
         current = fetch_resource
         scheduled = current.status.currentNumberScheduled
         misscheduled = current.status.numberMisscheduled
-        break if scheduled == 0 && misscheduled == 0
+        break if scheduled.zero? && misscheduled.zero?
         if i == max
           raise(
             Samson::Hooks::UserError,

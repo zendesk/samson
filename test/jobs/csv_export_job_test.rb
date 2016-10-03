@@ -26,9 +26,9 @@ describe CsvExportJob do
   describe "Error Handling" do
     before do
       FileUtils.mkdir_p(File.dirname(deploy_export_job.path_file))
-      File.chmod(0000, File.dirname(deploy_export_job.path_file))
+      File.chmod(0o000, File.dirname(deploy_export_job.path_file))
     end
-    after { File.chmod(0755, File.dirname(deploy_export_job.path_file)) }
+    after { File.chmod(0o755, File.dirname(deploy_export_job.path_file)) }
 
     it "sets :failed" do
       CsvExportJob.perform_now(deploy_export_job)
