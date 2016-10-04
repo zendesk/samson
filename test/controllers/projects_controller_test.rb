@@ -109,20 +109,11 @@ describe ProjectsController do
       end
 
       describe "with valid parameters" do
-        let(:stage_params) do
-          {
-            '0': {
-              name: 'foobar',
-              deploy_group_ids: [DeployGroup.all.first.id]
-            }
-          }
-        end
         let(:params) do
           {
             project: {
               name: "Hello",
-              repository_url: "git://foo.com/bar",
-              stages_attributes: stage_params
+              repository_url: "git://foo.com/bar"
             }
           }
         end
@@ -134,9 +125,7 @@ describe ProjectsController do
 
         it "creates a new project" do
           project.wont_be_nil
-          project.stages.wont_be_empty
-          project.stages.first.name.must_equal 'foobar'
-          project.stages.first.deploy_group_ids.must_equal [DeployGroup.all.first.id]
+          project.stages.must_be_empty
         end
 
         it "notifies about creation" do

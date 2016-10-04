@@ -19,8 +19,16 @@
       </tr>
     </thead>
     <tbody>
-      <% cache [project, 'stages'] do %>
-        <%= render partial: "stage", collection: @stages %>
+      <% if @stages.any? %>
+        <% cache [project, 'stages'] do %>
+          <%= render partial: "stage", collection: @stages %>
+        <% end %>
+      <% else %>
+        <tr>
+          <td rowspan="4">
+            No stages found, use the <b>Manage</b> link up top to add the first stage!
+          </td>
+        </tr>
       <% end %>
     </tbody>
   </table>

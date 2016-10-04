@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 class StagesController < ApplicationController
   include CurrentProject
-  include StagePermittedParams
 
   skip_around_action :login_user, if: :badge?
 
@@ -101,5 +100,28 @@ class StagesController < ApplicationController
 
   def find_stage
     @stage = current_project.stages.find_by_param!(params[:id])
+  end
+
+  def stage_permitted_params
+    [
+      :name,
+      :command,
+      :confirm,
+      :permalink,
+      :dashboard,
+      :production,
+      :notify_email_address,
+      :deploy_on_release,
+      :update_github_pull_requests,
+      :email_committers_on_automated_deploy_failure,
+      :static_emails_on_automated_deploy_failure,
+      :use_github_deployment_api,
+      :no_code_deployed,
+      :is_template,
+      {
+        deploy_group_ids: [],
+        command_ids: []
+      }
+    ] + Samson::Hooks.fire(:stage_permitted_params).flatten
   end
 end

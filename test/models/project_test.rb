@@ -133,29 +133,6 @@ describe Project do
     end
   end
 
-  describe "nested stages attributes" do
-    let(:params) do
-      {
-        name: "Hello",
-        repository_url: url,
-        stages_attributes: {
-          '0' => {
-            name: 'Production',
-            command: 'test command',
-            command_ids: [commands(:echo).id]
-          }
-        }
-      }
-    end
-
-    it 'creates a new project and stage' do
-      project = Project.create!(params)
-      stage = project.stages.where(name: 'Production').first
-      stage.wont_be_nil
-      stage.script.must_equal("echo hello\ntest command")
-    end
-  end
-
   describe 'project repository initialization' do
     let(:repository_url) { 'git@github.com:zendesk/demo_apps.git' }
 

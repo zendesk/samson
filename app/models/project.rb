@@ -28,8 +28,6 @@ class Project < ActiveRecord::Base
   # For permission checks on callbacks. Currently used in private plugins.
   attr_accessor :current_user
 
-  accepts_nested_attributes_for :stages
-
   scope :alphabetical, -> { order('name') }
   scope :deleted, -> { unscoped.where.not(deleted_at: nil) }
   scope :with_deploy_groups, -> { includes(stages: [:deploy_groups]) }
