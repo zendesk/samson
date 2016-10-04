@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 class ProjectsController < ApplicationController
   include CurrentProject
-  include StagePermittedParams
 
   skip_before_action :require_project, only: [:index, :new, :create]
 
@@ -84,7 +83,6 @@ class ProjectsController < ApplicationController
         :release_branch,
         :docker_release_branch,
         :include_new_deploy_groups,
-        { stages_attributes: stage_permitted_params }
       ] + Samson::Hooks.fire(:project_permitted_params)
     )
   end

@@ -75,14 +75,6 @@
 
     <%= Samson::Hooks.render_views(:project_form, self, form: form) %>
 
-    <% unless project.persisted? %>
-      <%= form.fields_for :stages do |stage_fields| %>
-        <%= render 'stages/fields', form: stage_fields %>
-      <% end %>
-    <% end %>
-
-    <hr>
-
     <div class="form-group">
       <div class="col-lg-offset-2 col-lg-10">
         <button type="submit" class="btn btn-default">Save</button>

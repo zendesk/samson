@@ -4,16 +4,12 @@ require_relative '../test_helper'
 SingleCov.covered! unless defined?(Rake) # rake preloads all plugins
 
 describe SamsonDatadog do
-  include StagePermittedParams
-
   let(:deploy) { deploys(:succeeded_test) }
   let(:stage) { deploy.stage }
 
   describe :stage_permitted_params do
     it "lists extra keys" do
-      params = stage_permitted_params
-      params.must_include :datadog_tags
-      params.must_include :datadog_monitor_ids
+      Samson::Hooks.fire(:stage_permitted_params).must_include [:datadog_tags, :datadog_monitor_ids]
     end
   end
 
