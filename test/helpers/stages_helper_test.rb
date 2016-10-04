@@ -65,8 +65,9 @@ describe StagesHelper do
   end
 
   describe "#stage_template_icon" do
+    let(:stage) { stages(:test_staging) }
     it "renders icon" do
-      stage_template_icon.must_include "glyphicon-duplicate"
+      stage_template_icon(stage).must_include "glyphicon-duplicate"
     end
   end
 end
