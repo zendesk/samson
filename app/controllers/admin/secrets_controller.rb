@@ -18,8 +18,7 @@ class Admin::SecretsController < ApplicationController
       @secret_keys.select! { |s| s.include?(query) }
     end
     rescue Samson::Secrets::BackendError => e
-      #failure e.message
-      render html: e.message, layout: true
+    render html: "<div style=\"background-color:#FF9999\">#{e.message}</div>".html_safe, layout: true
   end
 
   def new

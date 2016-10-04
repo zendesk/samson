@@ -3,9 +3,6 @@
 module Samson
   module Secrets
     class BackendError < StandardError
-      def initialize(msg)
-        super(msg)
-      end
     end
 
     class HashicorpVaultBackend
@@ -24,9 +21,9 @@ module Samson
           result = result.to_h
           result = result.merge(result.delete(:data))
           result[:value] = result.delete(:vault)
-          rescue Vault::HTTPConnectionError => e
-            wrap_vault_errors(e.message)
           result
+          rescue Vault::HTTPConnectionError => e
+          wrap_vault_errors(e.message)
         end
 
         def read_multi(keys)
@@ -38,17 +35,15 @@ module Samson
         end
 
         def write(key, data)
-          begin
-            vault_client.write(
-              vault_path(key),
-              vault: data.fetch(:value),
-              visible: data.fetch(:visible),
-              comment: data.fetch(:comment),
-              creator_id: data.fetch(:user_id)
-            )
+          vault_client.write(
+            vault_path(key),
+            vault: data.fetch(:value),
+            visible: data.fetch(:visible),
+            comment: data.fetch(:comment),
+            creator_id: data.fetch(:user_id)
+          )
           rescue Vault::HTTPConnectionError => e
-            wrap_vault_errors(e.message)
-          end
+          wrap_vault_errors(e.message)
         end
 
         def delete(key)
@@ -56,16 +51,14 @@ module Samson
         end
 
         def keys
-          begin
-            keys = vault_client.list(VAULT_SECRET_BACKEND + SAMSON_SECRET_NAMESPACE)
-            keys = keys_recursive(keys)
-            keys.uniq! # we read from multiple backends that might have the same keys
-            keys.map! do |secret_path|
-              convert_path(secret_path, :decode) # FIXME: ideally only decode the key(#4) part
-            end
-          rescue Vault::HTTPConnectionError => e
-            wrap_vault_errors(e.message)
+          keys = vault_client.list(VAULT_SECRET_BACKEND + SAMSON_SECRET_NAMESPACE)
+          keys = keys_recursive(keys)
+          keys.uniq! # we read from multiple backends that might have the same keys
+          keys.map! do |secret_path|
+            convert_path(secret_path, :decode) # FIXME: ideally only decode the key(#4) part
           end
+          rescue Vault::HTTPConnectionError => e
+          wrap_vault_errors(e.message)
         end
 
         private
@@ -76,7 +69,7 @@ module Samson
         end
 
         def wrap_vault_errors(message)
-          raise Samson::Secrets::BackendError.new("Vault backend is down!! " + message)
+          raise Samson::Secrets::BackendError.new("Error talking to vault backend: #{message}")
         end
 
         def keys_recursive(keys, key_path = "")
