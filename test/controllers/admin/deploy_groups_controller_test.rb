@@ -293,6 +293,19 @@ describe Admin::DeployGroupsController do
 
           assert DeployGroupsStage.where(stage_id: template_stage.id, deploy_group_id: deploy_group.id).first
         end
+
+        it "ignores a stage with changed commands" do
+          command = Command.create!(command: "flooboop")
+          StageCommand.create!(command: command, stage: stage, position: 2)
+
+          # doesn't remove the old stage
+          assert_difference 'Stage.count', 0 do
+            post :merge_all_stages, params: {id: deploy_group}
+          end
+
+          # doesn't merge the deploy group
+          refute template_stage.deploy_groups.include?(deploy_group)
+        end
       end
 
       describe "with multiple stages to remove" do
