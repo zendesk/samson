@@ -69,7 +69,7 @@ module Samson
         end
 
         def wrap_vault_errors(message)
-          raise Samson::Secrets::BackendError.new("Error talking to vault backend: #{message}")
+          raise Samson::Secrets::BackendError, "Error talking to vault backend: #{message}"
         end
 
         def keys_recursive(keys, key_path = "")
