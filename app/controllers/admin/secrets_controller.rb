@@ -18,7 +18,8 @@ class Admin::SecretsController < ApplicationController
       @secret_keys.select! { |s| s.include?(query) }
     end
     rescue Samson::Secrets::BackendError => e
-      failure e.message
+      #failure e.message
+      render html: e.message, layout: true
   end
 
   def new
@@ -74,11 +75,6 @@ class Admin::SecretsController < ApplicationController
   def failure_response(message)
     flash[:error] = message
     render :edit
-  end
-
-  def failure(message)
-    flash[:error] = message
-    render :fail
   end
 
   def find_secret
