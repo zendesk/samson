@@ -17,7 +17,7 @@ class Admin::SecretsController < ApplicationController
     if query = params.dig(:search, :query).presence
       @secret_keys.select! { |s| s.include?(query) }
     end
-    rescue Samson::Secrets::BackendError => e
+  rescue Samson::Secrets::BackendError => e
     render html: "<div style=\"background-color:#FF9999\">#{e.message}</div>".html_safe, layout: true
   end
 

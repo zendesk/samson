@@ -22,7 +22,7 @@ module Samson
           result = result.merge(result.delete(:data))
           result[:value] = result.delete(:vault)
           result
-          rescue Vault::HTTPConnectionError => e
+        rescue Vault::HTTPConnectionError => e
           wrap_vault_errors(e.message)
         end
 
@@ -42,7 +42,7 @@ module Samson
             comment: data.fetch(:comment),
             creator_id: data.fetch(:user_id)
           )
-          rescue Vault::HTTPConnectionError => e
+        rescue Vault::HTTPConnectionError => e
           wrap_vault_errors(e.message)
         end
 
@@ -57,7 +57,7 @@ module Samson
           keys.map! do |secret_path|
             convert_path(secret_path, :decode) # FIXME: ideally only decode the key(#4) part
           end
-          rescue Vault::HTTPConnectionError => e
+        rescue Vault::HTTPConnectionError => e
           wrap_vault_errors(e.message)
         end
 
