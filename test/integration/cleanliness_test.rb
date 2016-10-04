@@ -113,7 +113,6 @@ describe "cleanliness" do
       "plugins/kubernetes/app/decorators/deploy_group_decorator.rb",
       "plugins/kubernetes/app/decorators/environment_decorator.rb",
       "plugins/kubernetes/app/models/kubernetes/cluster_deploy_group.rb",
-      "plugins/kubernetes/app/models/kubernetes/service.rb",
       "plugins/pipelines/app/models/concerns/samson_pipelines/stage_concern.rb"
     ]
 

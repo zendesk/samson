@@ -14,6 +14,13 @@ describe Kubernetes::RoleConfigFile do
       end
       e.message.must_include 'some-file.json'
     end
+
+    it "fails when empty" do
+      e = assert_raises Samson::Hooks::UserError do
+        Kubernetes::RoleConfigFile.new("", 'some-file.json')
+      end
+      e.message.must_include 'some-file.json'
+    end
   end
 
   describe "#deploy" do

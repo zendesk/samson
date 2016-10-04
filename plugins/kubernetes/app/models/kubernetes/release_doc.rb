@@ -38,36 +38,15 @@ module Kubernetes
       resource_kind == 'Job'
     end
 
-    def valid_resource?
-      deployment? || daemon_set? || job?
-    end
-
     def deploy
-      raise "Unknown deploy object #{resource_kind}" unless valid_resource?
-
       @deployed = true
-      @previous_deploy = fetch_resource
-      @new_deploy = if deployment?
-        deploy = Kubeclient::Deployment.new(resource_template)
-        if @previous_deploy
-          extension_client.update_deployment deploy
-        else
-          extension_client.create_deployment deploy
-        end
-      elsif daemon_set?
-        daemon = Kubeclient::DaemonSet.new(resource_template)
-        delete_daemon_set(daemon) if @previous_deploy
-        extension_client.create_daemon_set daemon
-      elsif job?
-        # FYI per docs it is supposed to use batch api, but extension api works
-        job = Kubeclient::Job.new(resource_template)
-        if @previous_deploy
-          extension_client.delete_job resource_name, namespace
-        end
-        extension_client.create_job job
+      if resource_object.running?
+        @previous_deploy = resource.deep_dup # dup since some deploy actions modify the resource
       end
+      resource_object.deploy
     end
 
+    # TODO: move to resource
     def revert
       raise "Can only be done after a deploy" unless @deployed
 
@@ -75,34 +54,31 @@ module Kubernetes
         if @previous_deploy
           extension_client.rollback_deployment(resource_name, namespace)
         else
-          delete_deployment
+          resource_object.delete
         end
       elsif daemon_set?
-        delete_daemon_set @new_deploy if @new_deploy
-        extension_client.create_daemon_set(@previous_deploy) if @previous_deploy
+        if @previous_deploy
+          Kubernetes::Resource.build(@previous_deploy, deploy_group).deploy
+        else
+          resource_object.delete
+        end
       elsif job?
-        extension_client.delete_job(resource_name, namespace)
+        resource_object.delete
       end
     end
 
     def ensure_service
       if service.nil?
-        'no Service defined'
+        'Service not defined'
       elsif service.running?
         'Service already running'
       else
-        data = service_hash
-        if data.fetch(:metadata).fetch(:name).include?(Kubernetes::Role::GENERATED)
-          raise(
-            Samson::Hooks::UserError,
-            "Service name for role #{kubernetes_role.name} was generated and needs to be changed before deploying."
-          )
-        end
-        client.create_service(Kubeclient::Service.new(data))
-        'creating Service'
+        service.deploy
+        'Service created'
       end
     end
 
+    # TODO: private
     def raw_template
       return @raw_template if defined?(@raw_template)
       @raw_template = kubernetes_release.project.repository.file_content(template_name, kubernetes_release.git_sha)
@@ -112,19 +88,16 @@ module Kubernetes
       kubernetes_role.config_file
     end
 
-    def deploy_template
-      parsed_config_file.deploy || parsed_config_file.job
-    end
-
+    # TODO: move to resource
     def desired_pod_count
       @desired_pod_count ||= begin
         if daemon_set?
           # need http request since we do not know how many nodes we will match
-          fetch_resource.status.desiredNumberScheduled
+          fetch_resource[:status][:desiredNumberScheduled]
         elsif deployment? || job?
           replica_target
         else
-          raise "Unsupported kind #{resource_kind}"
+          raise "Unsupported kind #{resource&.fetch(:kind)}"
         end
       end
     end
@@ -133,18 +106,70 @@ module Kubernetes
       deploy_group.kubernetes_namespace
     end
 
+    # run on unsaved mock ReleaseDoc to test template and secrets before we save or create a build
+    def verify_template
+      config = primary_resource(parsed_config_file.elements)
+      template = Kubernetes::ResourceTemplate.new(self, config)
+      template.set_secrets
+    end
+
+    # kubeclient needs pure symbol hash ... not indifferent access
+    def resource_template
+      @resource_template ||= Array.wrap(super).map(&:deep_symbolize_keys)
+    end
+
     private
 
     def resource_name
-      kubernetes_role.resource_name
+      resource.fetch(:metadata).fetch(:name)
     end
 
     def resource_kind
-      resource_template.fetch('kind')
+      resource.fetch(:kind)
     end
 
+    def resource
+      @resource ||= primary_resource(resource_template)
+    end
+
+    def resource_object
+      @resource_object ||= Kubernetes::Resource.build(resource, deploy_group)
+    end
+
+    def primary_resource(elements)
+      Array.wrap(elements).detect do |config|
+        Kubernetes::RoleConfigFile::PRIMARY.include?(config.fetch(:kind))
+      end
+    end
+
+    def resource_template=(value)
+      @resource_template = nil
+      super
+    end
+
+    # dynamically fill out the templates and store the result
     def store_resource_template
-      self.resource_template = ResourceTemplate.new(self)
+      self.resource_template = parsed_config_file.elements.map do |resource|
+        case resource[:kind]
+        when 'Service'
+          name = kubernetes_role.service_name
+          if name.to_s.include?(Kubernetes::Role::GENERATED)
+            raise(
+              Samson::Hooks::UserError,
+              "Service name for role #{kubernetes_role.name} was generated and needs to be changed before deploying."
+            )
+          end
+          resource[:metadata][:name] = name.presence || resource[:metadata][:name]
+          resource[:metadata][:namespace] = namespace
+
+          # For now, create a NodePort for each service, so we can expose any
+          # apps running in the Kubernetes cluster to traffic outside the cluster.
+          resource[:spec][:type] = 'NodePort'
+          resource
+        else
+          ResourceTemplate.new(self, resource).to_hash
+        end
+      end
     end
 
     # Create new client as 'Deployment' API is on different path then 'v1'
@@ -152,89 +177,15 @@ module Kubernetes
       @extension_client ||= deploy_group.kubernetes_cluster.extension_client
     end
 
+    # TODO: remove the need for that
     def fetch_resource
-      return nil unless valid_resource?
-
-      extension_client.send(
-        "get_#{resource_kind.underscore}",
-        resource_name,
-        namespace
-      )
-    rescue KubeException
-      nil
-    end
-
-    def delete_deployment
-      return unless deployed = fetch_resource
-      copy = deployed.clone
-
-      # Scale down the deployment to include zero pods
-      copy.spec.replicas = 0
-      extension_client.update_deployment copy
-
-      # Wait for there to be zero pods
-      loop do
-        loop_sleep
-        break if fetch_resource.status.replicas.to_i.zero?
-      end
-
-      # delete the actual deployment
-      extension_client.delete_deployment resource_name, namespace
-    end
-
-    # we cannot replace or update a daemonset, so we take it down completely
-    #
-    # was do what `kubectl delete daemonset NAME` does:
-    # - make it match no node
-    # - waits for current to reach 0
-    # - deletes the daemonset
-    def delete_daemon_set(daemon_set)
-      # make it match no node
-      daemon_set = daemon_set.clone
-      daemon_set.spec.template.spec.nodeSelector = {rand(9999).to_s => rand(9999).to_s}
-      extension_client.update_daemon_set daemon_set
-
-      # wait for it to terminate all it's pods
-      max = 30
-      (1..max).each do |i|
-        loop_sleep
-        current = fetch_resource
-        scheduled = current.status.currentNumberScheduled
-        misscheduled = current.status.numberMisscheduled
-        break if scheduled.zero? && misscheduled.zero?
-        if i == max
-          raise(
-            Samson::Hooks::UserError,
-            "Unable to terminate previous DaemonSet, scheduled: #{scheduled} / misscheduled: #{misscheduled}\n"
-          )
-        end
-      end
-
-      # delete it
-      extension_client.delete_daemon_set resource_name, namespace
+      resource_object.send(:resource_object)
     end
 
     def service
       return @service if defined?(@service)
-      @service = if kubernetes_role.service_name.present?
-        Kubernetes::Service.new(role: kubernetes_role, deploy_group: deploy_group)
-      end
-    end
-
-    def service_hash
-      @service_hash || begin
-        hash = parsed_config_file.service ||
-          raise(Samson::Hooks::UserError, "Unable to find Service definition in #{template_name}")
-
-        hash.fetch(:metadata)[:name] = kubernetes_role.service_name
-        hash.fetch(:metadata)[:namespace] = namespace
-
-        # For now, create a NodePort for each service, so we can expose any
-        # apps running in the Kubernetes cluster to traffic outside the cluster.
-        hash.fetch(:spec)[:type] = 'NodePort'
-
-        hash
-      end
+      template = resource_template.detect { |t| t.fetch(:kind) == 'Service' }
+      @service = template && Kubernetes::Resource.build(template, deploy_group)
     end
 
     def parsed_config_file
@@ -246,10 +197,6 @@ module Kubernetes
       parsed_config_file
     rescue Samson::Hooks::UserError
       errors.add(:kubernetes_release, $!.message)
-    end
-
-    def loop_sleep
-      sleep 2 unless ENV['RAILS_ENV'] == 'test'
     end
   end
 end

@@ -73,6 +73,7 @@ describe Kubernetes::DeployExecutor do
     end
     let(:pod_status) { pod_reply[:items].first[:status] }
     let(:worker_role) { kubernetes_deploy_group_roles(:test_pod100_resque_worker) }
+    let(:deployments_url) { "http://foobar.server/apis/extensions/v1beta1/namespaces/staging/deployments" }
 
     before do
       Kubernetes::DeployGroupRole.update_all(replicas: 1)
@@ -85,22 +86,21 @@ describe Kubernetes::DeployExecutor do
         namespace: 'staging',
         deploy_group: deploy_group
       )
-      stub_request(
-        :get,
-        "http://foobar.server/apis/extensions/v1beta1/namespaces/staging/deployments/test-app-server"
-      ).to_return(status: 404) # checks for previous deploys ... but there are none
-      stub_request(
-        :get,
-        "http://foobar.server/apis/extensions/v1beta1/namespaces/staging/deployments/test-resque-worker"
-      ).to_return(status: 404) # checks for previous deploys ... but there are none
-      stub_request(:post, "http://foobar.server/apis/extensions/v1beta1/namespaces/staging/deployments").
-        to_return(body: "{}") # creates deployment
+
+      stub_request(:get, "#{deployments_url}/test-app-server").to_return(status: 404) # previous deploys ? -> none!
+      stub_request(:get, "#{deployments_url}/test-resque-worker").to_return(status: 404) # previous deploys ? -> none!
+      stub_request(:post, deployments_url).to_return(body: {spec: {}}.to_json) # creates deployment
+      stub_request(:put, "#{deployments_url}/test-resque-worker").
+        to_return(body: {spec: {}}.to_json) # updating deployment during delete for rollback
+
       executor.stubs(:sleep)
       stub_request(:get, %r{http://foobar.server/api/v1/namespaces/staging/events}).
         to_return(body: {items: []}.to_json)
       stub_request(:get, /#{Regexp.escape(log_url)}/)
       GitRepository.any_instance.stubs(:file_content).with('Dockerfile', anything).returns "FROM all"
       Kubernetes::ResourceTemplate.any_instance.stubs(:set_image_pull_secrets)
+      stub_request(:get, "http://foobar.server/api/v1/namespaces/staging/services/some-project").
+        to_return(body: {metadata: {}}.to_json)
     end
 
     it "succeeds" do
