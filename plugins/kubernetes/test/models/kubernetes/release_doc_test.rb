@@ -113,7 +113,7 @@ describe Kubernetes::ReleaseDoc do
       client.expects(:get_deployment).returns(foo: :bar)
       client.expects(:update_deployment).returns("Rest client resonse")
       doc.deploy
-      assert doc.instance_variable_get(:@previous_deploy) # will revert
+      doc.instance_variable_get(:@previous_deploy).must_equal(foo: :bar)
     end
   end
 

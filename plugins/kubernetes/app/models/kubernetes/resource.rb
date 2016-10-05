@@ -23,11 +23,17 @@ module Kubernetes
 
       def delete
         request(:delete, name, namespace)
-        remove_instance_variable(:@resource_object) if @resource_object
+        remove_instance_variable(:@resource) if @resource
       end
 
       def running?
-        !!resource_object
+        !!resource
+      end
+
+      # TODO: caching might not be necessary and just complicating things ...
+      def resource
+        return @resource if defined?(@resource)
+        @resource = fetch_resource
       end
 
       private
@@ -39,12 +45,6 @@ module Kubernetes
       # FYI: do not use result, see https://github.com/abonas/kubeclient/issues/196
       def update
         request(:update, @template)
-      end
-
-      # TODO: caching might not be necessary and just complicating things ...
-      def resource_object
-        return @resource_object if defined?(@resource_object)
-        @resource_object = fetch_resource
       end
 
       def fetch_resource
@@ -79,10 +79,10 @@ module Kubernetes
 
     class Deployment < Base
       def delete
-        return unless resource_object
+        return unless resource
 
         # Make kubenretes kill all the pods by scaling down
-        resource_object[:spec][:replicas] = 0
+        resource[:spec][:replicas] = 0
         update
 
         # Wait for there to be zero pods

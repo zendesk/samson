@@ -40,9 +40,7 @@ module Kubernetes
 
     def deploy
       @deployed = true
-      if resource_object.running?
-        @previous_deploy = resource.deep_dup # dup since some deploy actions modify the resource
-      end
+      @previous_deploy = resource_object.resource
       resource_object.deploy
     end
 
@@ -186,7 +184,7 @@ module Kubernetes
 
     # TODO: remove the need for that
     def fetch_resource
-      resource_object.send(:resource_object)
+      resource_object.send(:resource)
     end
 
     def service
