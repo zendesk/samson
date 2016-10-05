@@ -81,6 +81,12 @@ describe Kubernetes::ReleaseDoc do
       end
       e.message.must_equal "Service name for role app-server was generated and needs to be changed before deploying."
     end
+
+    it "keeps kube-system namespace because it is a unique system namespace" do
+      assert doc.send(:raw_template).
+        sub!("name: some-project-rc\n", "name: some-project-rc\n  namespace: kube-system\n")
+      create!.resource_template[0][:metadata][:namespace].must_equal 'kube-system'
+    end
   end
 
   describe "#ensure_service" do

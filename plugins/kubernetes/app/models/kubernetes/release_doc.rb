@@ -90,7 +90,9 @@ module Kubernetes
     # dynamically fill out the templates and store the result
     def store_resource_template
       self.resource_template = parsed_config_file.elements.map do |resource|
-        resource[:metadata][:namespace] = deploy_group.kubernetes_namespace
+        unless resource[:metadata][:namespace] == "kube-system"
+          resource[:metadata][:namespace] = deploy_group.kubernetes_namespace
+        end
 
         case resource[:kind]
         when 'Service'
