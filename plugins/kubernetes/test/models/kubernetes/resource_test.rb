@@ -157,6 +157,32 @@ describe Kubernetes::Resource do
         e.message.must_include "misscheduled"
       end
     end
+
+    describe "#desired_pod_count" do
+      it "reads the value from the server since it is comlicated" do
+        stub_request(:get, url).to_return(body: {status: {desiredNumberScheduled: 5}}.to_json)
+        resource.desired_pod_count.must_equal 5
+      end
+    end
+
+    describe "#revert" do
+      let(:kind) { 'DaemonSet' }
+
+      it "reverts to previous version" do
+        # checks if it exists and then creates the old resource
+        stub_request(:get, "http://foobar.server/apis/extensions/v1beta1/namespaces/bar/daemonsets/foo").
+          to_return(status: 404)
+        stub_request(:post, "http://foobar.server/apis/extensions/v1beta1/namespaces/bar/daemonsets").
+          to_return(body: "{}")
+
+        resource.revert(metadata: {name: 'foo', namespace: 'bar'}, kind: kind)
+      end
+
+      it "deletes when there was no previous version" do
+        resource.expects(:delete)
+        resource.revert(nil)
+      end
+    end
   end
 
   describe Kubernetes::Resource::Deployment do
@@ -197,6 +223,25 @@ describe Kubernetes::Resource do
         resource.delete
       end
     end
+
+    describe "#desired_pod_count" do
+      it "reads the value from config" do
+        template[:spec] = {replicas: 3}
+        resource.desired_pod_count.must_equal 3
+      end
+    end
+
+    describe "#revert" do
+      it "reverts to previous version" do
+        stub_request(:post, "#{url}/rollback").to_return(body: "{}")
+        resource.revert(foo: :bar)
+      end
+
+      it "deletes when there was no previous version" do
+        resource.expects(:delete)
+        resource.revert(nil)
+      end
+    end
   end
 
   describe Kubernetes::Resource::Job do
@@ -229,6 +274,25 @@ describe Kubernetes::Resource do
         assert_requested request
       end
     end
+
+    describe "#desired_pod_count" do
+      it "reads the value from config" do
+        template[:spec] = {replicas: 3}
+        resource.desired_pod_count.must_equal 3
+      end
+    end
+
+    describe "#revert" do
+      it "deletes with previous version since job is already done" do
+        resource.expects(:delete)
+        resource.revert(foo: :bar)
+      end
+
+      it "deletes when there was no previous version" do
+        resource.expects(:delete)
+        resource.revert(nil)
+      end
+    end
   end
 
   describe Kubernetes::Resource::Service do
@@ -245,6 +309,17 @@ describe Kubernetes::Resource do
         stub_request(:get, url).to_return(body: '{}')
 
         resource.deploy
+      end
+    end
+
+    describe "#revert" do
+      it "leaves previous version since we cannot update" do
+        resource.revert(foo: :bar)
+      end
+
+      it "deletes when there was no previous version" do
+        resource.expects(:delete)
+        resource.revert(nil)
       end
     end
   end

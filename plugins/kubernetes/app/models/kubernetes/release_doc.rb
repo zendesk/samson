@@ -8,6 +8,7 @@ module Kubernetes
     belongs_to :deploy_group
 
     serialize :resource_template, JSON
+    delegate :desired_pod_count, to: :resource_object
 
     validates :deploy_group, presence: true
     validates :kubernetes_role, presence: true
@@ -22,53 +23,25 @@ module Kubernetes
       kubernetes_release.try(:build)
     end
 
+    # TODO: private
     def client
       deploy_group.kubernetes_cluster.client
     end
 
-    def deployment?
-      resource_kind == 'Deployment'
-    end
-
-    def daemon_set?
-      resource_kind == 'DaemonSet'
-    end
-
     def job?
-      resource_kind == 'Job'
+      resource.fetch(:kind) == 'Job'
     end
 
     def deploy
       @deployed = true
-      if resource_object.running?
-        @previous_deploy = resource.deep_dup # dup since some deploy actions modify the resource
-      end
+      @previous_deploy = resource_object.resource
       resource_object.deploy
     end
 
-    # TODO: move to resource
     def revert
       raise "Can only be done after a deploy" unless @deployed
-
-      if deployment?
-        if @previous_deploy
-          extension_client.rollback_deployment(resource_name, namespace)
-        else
-          resource_object.delete
-        end
-      elsif daemon_set?
-        if @previous_deploy
-          Kubernetes::Resource.build(@previous_deploy, deploy_group).deploy
-        else
-          resource_object.delete
-        end
-      elsif job?
-        resource_object.delete
-      end
-
-      if service&.running? && !@previous_deploy
-        service.delete
-      end
+      resource_object.revert(@previous_deploy)
+      service&.revert(!!@previous_deploy)
     end
 
     def ensure_service
@@ -82,30 +55,6 @@ module Kubernetes
       else
         service.deploy
         'Service created'
-      end
-    end
-
-    # TODO: private
-    def raw_template
-      return @raw_template if defined?(@raw_template)
-      @raw_template = kubernetes_release.project.repository.file_content(template_name, kubernetes_release.git_sha)
-    end
-
-    def template_name
-      kubernetes_role.config_file
-    end
-
-    # TODO: move to resource
-    def desired_pod_count
-      @desired_pod_count ||= begin
-        if daemon_set?
-          # need http request since we do not know how many nodes we will match
-          fetch_resource[:status][:desiredNumberScheduled]
-        elsif deployment? || job?
-          replica_target
-        else
-          raise "Unsupported kind #{resource&.fetch(:kind)}"
-        end
       end
     end
 
@@ -127,18 +76,11 @@ module Kubernetes
 
     private
 
-    def resource_name
-      resource.fetch(:metadata).fetch(:name)
-    end
-
-    def resource_kind
-      resource.fetch(:kind)
-    end
-
     def resource
       @resource ||= primary_resource(resource_template)
     end
 
+    # TODO: rename to resource and other to primary_template
     def resource_object
       @resource_object ||= Kubernetes::Resource.build(resource, deploy_group)
     end
@@ -184,11 +126,7 @@ module Kubernetes
       @extension_client ||= deploy_group.kubernetes_cluster.extension_client
     end
 
-    # TODO: remove the need for that
-    def fetch_resource
-      resource_object.send(:resource_object)
-    end
-
+    # TODO: handle as one of many secondary_resources
     def service
       return @service if defined?(@service)
       template = resource_template.detect { |t| t.fetch(:kind) == 'Service' }
@@ -204,6 +142,17 @@ module Kubernetes
       parsed_config_file
     rescue Samson::Hooks::UserError
       errors.add(:kubernetes_release, $!.message)
+    end
+
+    def template_name
+      kubernetes_role.config_file
+    end
+
+    # FIXME: caching is only needed because tests hack this ...
+    # ... inline into parsed_config_file
+    def raw_template
+      return @raw_template if defined?(@raw_template)
+      @raw_template = kubernetes_release.project.repository.file_content(template_name, kubernetes_release.git_sha)
     end
   end
 end

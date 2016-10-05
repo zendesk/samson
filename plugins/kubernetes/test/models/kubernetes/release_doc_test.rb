@@ -113,99 +113,28 @@ describe Kubernetes::ReleaseDoc do
       client.expects(:get_deployment).returns(foo: :bar)
       client.expects(:update_deployment).returns("Rest client resonse")
       doc.deploy
-      assert doc.instance_variable_get(:@previous_deploy) # will revert
+      doc.instance_variable_get(:@previous_deploy).must_equal(foo: :bar)
     end
   end
 
   describe '#revert' do
-    let(:client) { doc.send(:extension_client) }
     let(:service_url) { "http://foobar.server/api/v1/namespaces/pod1/services/some-project" }
 
-    before do
-      doc.instance_variable_set(:@deployed, true)
-      stub_request(:get, service_url).to_return(status: 404)
+    before { doc.instance_variable_set(:@deployed, true) }
+
+    it "reverts only resource when service does not exist" do
+      doc.expects(:service).returns(nil)
+      doc.send(:resource_object).expects(:revert)
+      doc.revert
     end
 
-    describe "deployment" do
-      before do
-        primary_resource[:kind] = 'Deployment'
-      end
+    it "reverts resource and service when service is running" do
+      stub_request(:get, service_url).to_return(body: "{}")
 
-      it "is deleted when it's a new deployment" do
-        doc.send(:resource_object).expects(:delete)
-        doc.revert
-      end
-
-      it "rolls back when a deployment already existed" do
-        doc.instance_variable_set(:@previous_deploy, deployment_stub(3).to_hash)
-
-        client.expects(:rollback_deployment)
-        doc.revert
-      end
-    end
-
-    # I really don't like these unit tests, since it's doing all sorts of
-    # mocking and mucking of internal state. But I don't know of a better
-    # way to test the functionality.  :-(
-    describe "daemonset" do
-      before { primary_resource[:kind] = 'DaemonSet' }
-
-      it "is deleted when it's brand new" do
-        client.expects(:update_daemon_set)
-        client.expects(:get_daemon_set).times(2).returns(
-          daemonset_stub(3, 0),
-          daemonset_stub(0, 0)
-        )
-        client.expects(:delete_daemon_set)
-
-        doc.revert
-      end
-
-      it "is deleted and recreated on rollback" do
-        doc.instance_variable_set(:@previous_deploy, daemonset_stub(3, 0).to_hash)
-
-        client.expects(:update_daemon_set)
-        client.expects(:get_daemon_set).times(2).returns(
-          daemonset_stub(3, 0), # Deleting old
-          daemonset_stub(0, 0), # Old deleted
-        )
-        client.expects(:delete_daemon_set)
-        client.expects(:create_daemon_set)
-
-        doc.revert
-      end
-    end
-
-    describe 'job' do
-      before do
-        primary_resource[:kind] = 'Job'
-      end
-
-      it "is deleted" do
-        client.expects(:delete_job)
-        doc.revert
-      end
-    end
-
-    describe 'service' do
-      before do
-        stub_request(:get, service_url).to_return(body: "{}")
-      end
-
-      it "does nothing when there is a service but it is old" do
-        client.stubs(:rollback_deployment) # deploy is reverted
-
-        doc.instance_variable_set(:@previous_deploy, daemonset_stub(3, 0).to_hash)
-        doc.revert
-      end
-
-      it "deletes the service when there is no previous deploy" do
-        doc.send(:resource_object).expects(:delete) # deploy is deleted
-
-        delete = stub_request(:delete, service_url)
-        doc.revert
-        assert_requested delete
-      end
+      delete = stub_request(:delete, service_url)
+      doc.send(:resource_object).expects(:revert)
+      doc.revert
+      assert_requested delete
     end
   end
 
@@ -225,7 +154,7 @@ describe Kubernetes::ReleaseDoc do
     end
 
     it "reports detailed errors when invalid" do
-      assert doc.raw_template.sub!('role', 'mole')
+      assert doc.send(:raw_template).sub!('role', 'mole')
       refute_valid doc
     end
   end
@@ -245,13 +174,6 @@ describe Kubernetes::ReleaseDoc do
       stub_request(:get, "http://foobar.server/apis/extensions/v1beta1/namespaces/pod1/daemonsets/some-project-rc").
         to_return(body: {status: {desiredNumberScheduled: 3}}.to_json)
       doc.desired_pod_count.must_equal 3
-    end
-
-    it "fails for unknown" do
-      assert_raises RuntimeError do
-        doc.stubs(job?: false, deployment?: false, daemonset?: false)
-        doc.desired_pod_count
-      end
     end
   end
 
@@ -276,18 +198,18 @@ describe Kubernetes::ReleaseDoc do
     end
 
     it "fetches the template from git" do
-      doc.raw_template.must_equal "xxx"
+      doc.send(:raw_template).must_equal "xxx"
     end
 
     it "caches" do
-      doc.raw_template.object_id.must_equal doc.raw_template.object_id
+      doc.send(:raw_template).object_id.must_equal doc.send(:raw_template).object_id
     end
 
     it "caches not found templates" do
       GitRepository.any_instance.unstub(:file_content)
       GitRepository.any_instance.expects(:file_content).once.returns(nil)
-      doc.raw_template.must_equal nil
-      doc.raw_template.must_equal nil
+      doc.send(:raw_template).must_equal nil
+      doc.send(:raw_template).must_equal nil
     end
   end
 

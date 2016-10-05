@@ -21,13 +21,27 @@ module Kubernetes
         running? ? update : create
       end
 
+      def revert(previous)
+        if previous
+          self.class.new(previous, @deploy_group).deploy
+        else
+          delete
+        end
+      end
+
       def delete
         request(:delete, name, namespace)
-        remove_instance_variable(:@resource_object) if @resource_object
+        remove_instance_variable(:@resource) if @resource
       end
 
       def running?
-        !!resource_object
+        !!resource
+      end
+
+      # TODO: caching might not be necessary and just complicating things ...
+      def resource
+        return @resource if defined?(@resource)
+        @resource = fetch_resource
       end
 
       private
@@ -39,12 +53,6 @@ module Kubernetes
       # FYI: do not use result, see https://github.com/abonas/kubeclient/issues/196
       def update
         request(:update, @template)
-      end
-
-      # TODO: caching might not be necessary and just complicating things ...
-      def resource_object
-        return @resource_object if defined?(@resource_object)
-        @resource_object = fetch_resource
       end
 
       def fetch_resource
@@ -75,14 +83,18 @@ module Kubernetes
         return if running?
         create
       end
+
+      def revert(previous)
+        delete unless previous
+      end
     end
 
     class Deployment < Base
       def delete
-        return unless resource_object
+        return unless resource
 
         # Make kubenretes kill all the pods by scaling down
-        resource_object[:spec][:replicas] = 0
+        resource[:spec][:replicas] = 0
         update
 
         # Wait for there to be zero pods
@@ -93,6 +105,18 @@ module Kubernetes
 
         # delete the actual deployment
         super
+      end
+
+      def desired_pod_count
+        @template[:spec][:replicas]
+      end
+
+      def revert(previous)
+        if previous
+          client.rollback_deployment(name, namespace)
+        else
+          delete
+        end
       end
 
       private
@@ -139,6 +163,13 @@ module Kubernetes
         super
       end
 
+      # need http request since we do not know how many nodes we will match
+      # and the number of matches nodes could update with a changed template
+      # only makes sense to call this after deploying / while waiting for pods
+      def desired_pod_count
+        @desired_pod_count ||= fetch_resource[:status][:desiredNumberScheduled]
+      end
+
       private
 
       def client
@@ -150,6 +181,14 @@ module Kubernetes
       def deploy
         delete if running?
         create
+      end
+
+      def desired_pod_count
+        @template[:spec][:replicas]
+      end
+
+      def revert(_previous)
+        delete
       end
 
       private
