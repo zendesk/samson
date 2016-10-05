@@ -159,7 +159,6 @@ module Kubernetes
       end
     end
 
-    # TODO: cleanup ... a bit ugly with all these arrays
     def release_statuses(pods, release_doc)
       group = release_doc.deploy_group
       role = release_doc.kubernetes_role

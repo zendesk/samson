@@ -95,6 +95,10 @@ module Kubernetes
         super
       end
 
+      def desired_pod_count
+        @template[:spec][:replicas]
+      end
+
       private
 
       def client
@@ -139,6 +143,13 @@ module Kubernetes
         super
       end
 
+      # need http request since we do not know how many nodes we will match
+      # and the number of matches nodes could update with a changed template
+      # only makes sense to call this after deploying / while waiting for pods
+      def desired_pod_count
+        @desired_pod_count ||= fetch_resource[:status][:desiredNumberScheduled]
+      end
+
       private
 
       def client
@@ -150,6 +161,10 @@ module Kubernetes
       def deploy
         delete if running?
         create
+      end
+
+      def desired_pod_count
+        @template[:spec][:replicas]
       end
 
       private

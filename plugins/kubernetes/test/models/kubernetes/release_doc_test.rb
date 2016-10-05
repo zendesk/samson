@@ -246,13 +246,6 @@ describe Kubernetes::ReleaseDoc do
         to_return(body: {status: {desiredNumberScheduled: 3}}.to_json)
       doc.desired_pod_count.must_equal 3
     end
-
-    it "fails for unknown" do
-      assert_raises RuntimeError do
-        doc.stubs(job?: false, deployment?: false, daemonset?: false)
-        doc.desired_pod_count
-      end
-    end
   end
 
   describe "#client" do

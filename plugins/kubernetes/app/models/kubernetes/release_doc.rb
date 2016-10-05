@@ -8,6 +8,7 @@ module Kubernetes
     belongs_to :deploy_group
 
     serialize :resource_template, JSON
+    delegate :desired_pod_count, to: :resource_object
 
     validates :deploy_group, presence: true
     validates :kubernetes_role, presence: true
@@ -93,20 +94,6 @@ module Kubernetes
       kubernetes_role.config_file
     end
 
-    # TODO: move to resource
-    def desired_pod_count
-      @desired_pod_count ||= begin
-        if daemon_set?
-          # need http request since we do not know how many nodes we will match
-          fetch_resource[:status][:desiredNumberScheduled]
-        elsif deployment? || job?
-          resource.fetch(:spec).fetch(:replicas)
-        else
-          raise "Unsupported kind #{resource&.fetch(:kind)}"
-        end
-      end
-    end
-
     def namespace
       deploy_group.kubernetes_namespace
     end
@@ -180,11 +167,6 @@ module Kubernetes
     # Create new client as 'Deployment' API is on different path then 'v1'
     def extension_client
       @extension_client ||= deploy_group.kubernetes_cluster.extension_client
-    end
-
-    # TODO: remove the need for that
-    def fetch_resource
-      resource_object.send(:resource)
     end
 
     def service
