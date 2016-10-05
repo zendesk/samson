@@ -21,6 +21,14 @@ module Kubernetes
         running? ? update : create
       end
 
+      def revert(previous)
+        if previous
+          self.class.new(previous, @deploy_group).deploy
+        else
+          delete
+        end
+      end
+
       def delete
         request(:delete, name, namespace)
         remove_instance_variable(:@resource) if @resource
@@ -75,6 +83,10 @@ module Kubernetes
         return if running?
         create
       end
+
+      def revert(previous)
+        delete unless previous
+      end
     end
 
     class Deployment < Base
@@ -97,6 +109,14 @@ module Kubernetes
 
       def desired_pod_count
         @template[:spec][:replicas]
+      end
+
+      def revert(previous)
+        if previous
+          client.rollback_deployment(name, namespace)
+        else
+          delete
+        end
       end
 
       private
@@ -165,6 +185,10 @@ module Kubernetes
 
       def desired_pod_count
         @template[:spec][:replicas]
+      end
+
+      def revert(_previous)
+        delete
       end
 
       private

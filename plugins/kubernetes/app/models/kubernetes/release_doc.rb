@@ -28,18 +28,8 @@ module Kubernetes
       deploy_group.kubernetes_cluster.client
     end
 
-    # TODO: private
-    def deployment?
-      resource_kind == 'Deployment'
-    end
-
-    # TODO: private
-    def daemon_set?
-      resource_kind == 'DaemonSet'
-    end
-
     def job?
-      resource_kind == 'Job'
+      resource.fetch(:kind) == 'Job'
     end
 
     def deploy
@@ -48,29 +38,10 @@ module Kubernetes
       resource_object.deploy
     end
 
-    # TODO: move to resource
     def revert
       raise "Can only be done after a deploy" unless @deployed
-
-      if deployment?
-        if @previous_deploy
-          extension_client.rollback_deployment(resource_name, namespace)
-        else
-          resource_object.delete
-        end
-      elsif daemon_set?
-        if @previous_deploy
-          Kubernetes::Resource.build(@previous_deploy, deploy_group).deploy
-        else
-          resource_object.delete
-        end
-      elsif job?
-        resource_object.delete
-      end
-
-      if service&.running? && !@previous_deploy
-        service.delete
-      end
+      resource_object.revert(@previous_deploy)
+      service&.revert(!!@previous_deploy)
     end
 
     def ensure_service
@@ -105,18 +76,11 @@ module Kubernetes
 
     private
 
-    def resource_name
-      resource.fetch(:metadata).fetch(:name)
-    end
-
-    def resource_kind
-      resource.fetch(:kind)
-    end
-
     def resource
       @resource ||= primary_resource(resource_template)
     end
 
+    # TODO: rename to resource and other to primary_template
     def resource_object
       @resource_object ||= Kubernetes::Resource.build(resource, deploy_group)
     end
@@ -162,6 +126,7 @@ module Kubernetes
       @extension_client ||= deploy_group.kubernetes_cluster.extension_client
     end
 
+    # TODO: handle as one of many secondary_resources
     def service
       return @service if defined?(@service)
       template = resource_template.detect { |t| t.fetch(:kind) == 'Service' }
@@ -184,6 +149,7 @@ module Kubernetes
     end
 
     # FIXME: caching is only needed because tests hack this ...
+    # ... inline into parsed_config_file
     def raw_template
       return @raw_template if defined?(@raw_template)
       @raw_template = kubernetes_release.project.repository.file_content(template_name, kubernetes_release.git_sha)

@@ -118,94 +118,23 @@ describe Kubernetes::ReleaseDoc do
   end
 
   describe '#revert' do
-    let(:client) { doc.send(:extension_client) }
     let(:service_url) { "http://foobar.server/api/v1/namespaces/pod1/services/some-project" }
 
-    before do
-      doc.instance_variable_set(:@deployed, true)
-      stub_request(:get, service_url).to_return(status: 404)
+    before { doc.instance_variable_set(:@deployed, true) }
+
+    it "reverts only resource when service does not exist" do
+      doc.expects(:service).returns(nil)
+      doc.send(:resource_object).expects(:revert)
+      doc.revert
     end
 
-    describe "deployment" do
-      before do
-        primary_resource[:kind] = 'Deployment'
-      end
+    it "reverts resource and service when service is running" do
+      stub_request(:get, service_url).to_return(body: "{}")
 
-      it "is deleted when it's a new deployment" do
-        doc.send(:resource_object).expects(:delete)
-        doc.revert
-      end
-
-      it "rolls back when a deployment already existed" do
-        doc.instance_variable_set(:@previous_deploy, deployment_stub(3).to_hash)
-
-        client.expects(:rollback_deployment)
-        doc.revert
-      end
-    end
-
-    # I really don't like these unit tests, since it's doing all sorts of
-    # mocking and mucking of internal state. But I don't know of a better
-    # way to test the functionality.  :-(
-    describe "daemonset" do
-      before { primary_resource[:kind] = 'DaemonSet' }
-
-      it "is deleted when it's brand new" do
-        client.expects(:update_daemon_set)
-        client.expects(:get_daemon_set).times(2).returns(
-          daemonset_stub(3, 0),
-          daemonset_stub(0, 0)
-        )
-        client.expects(:delete_daemon_set)
-
-        doc.revert
-      end
-
-      it "is deleted and recreated on rollback" do
-        doc.instance_variable_set(:@previous_deploy, daemonset_stub(3, 0).to_hash)
-
-        client.expects(:update_daemon_set)
-        client.expects(:get_daemon_set).times(2).returns(
-          daemonset_stub(3, 0), # Deleting old
-          daemonset_stub(0, 0), # Old deleted
-        )
-        client.expects(:delete_daemon_set)
-        client.expects(:create_daemon_set)
-
-        doc.revert
-      end
-    end
-
-    describe 'job' do
-      before do
-        primary_resource[:kind] = 'Job'
-      end
-
-      it "is deleted" do
-        client.expects(:delete_job)
-        doc.revert
-      end
-    end
-
-    describe 'service' do
-      before do
-        stub_request(:get, service_url).to_return(body: "{}")
-      end
-
-      it "does nothing when there is a service but it is old" do
-        client.stubs(:rollback_deployment) # deploy is reverted
-
-        doc.instance_variable_set(:@previous_deploy, daemonset_stub(3, 0).to_hash)
-        doc.revert
-      end
-
-      it "deletes the service when there is no previous deploy" do
-        doc.send(:resource_object).expects(:delete) # deploy is deleted
-
-        delete = stub_request(:delete, service_url)
-        doc.revert
-        assert_requested delete
-      end
+      delete = stub_request(:delete, service_url)
+      doc.send(:resource_object).expects(:revert)
+      doc.revert
+      assert_requested delete
     end
   end
 
