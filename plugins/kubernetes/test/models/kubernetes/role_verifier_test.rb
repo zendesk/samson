@@ -6,14 +6,14 @@ SingleCov.covered!
 describe Kubernetes::RoleVerifier do
   describe '.verify' do
     let(:role) do
-      YAML.load_stream(read_kubernetes_sample_file('kubernetes_deployment.yml')).map(&:with_indifferent_access)
+      YAML.load_stream(read_kubernetes_sample_file('kubernetes_deployment.yml')).map(&:deep_symbolize_keys)
     end
     let(:job_role) do
-      [YAML.load(read_kubernetes_sample_file('kubernetes_job.yml')).with_indifferent_access]
+      [YAML.load(read_kubernetes_sample_file('kubernetes_job.yml')).deep_symbolize_keys]
     end
     let(:role_json) { role.to_json }
     let(:errors) do
-      elements = Kubernetes::Util.parse_file(role_json, 'fake.json')
+      elements = Kubernetes::Util.parse_file(role_json, 'fake.json').map(&:deep_symbolize_keys)
       Kubernetes::RoleVerifier.new(elements).verify
     end
 
@@ -38,8 +38,7 @@ describe Kubernetes::RoleVerifier do
     end
 
     it "fails nicely with bad template" do
-      role_json.replace '["bad", {"kind": "Good"}]'
-      errors.to_s.must_include "Unsupported combination of kinds:  + Good"
+      Kubernetes::RoleVerifier.new(["bad", {kind: "Good"}]).verify.must_equal ["Only hashes supported"]
     end
 
     it "reports invalid types" do

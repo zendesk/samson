@@ -2,6 +2,7 @@
 module Kubernetes
   # Represents a Kubernetes configuration file for a project role.
   # A configuration file can have for example both a Deployment spec and a Service spec
+  # ... this is no longer needed ... merge into release_doc
   class RoleConfigFile
     attr_reader :path, :elements
 
@@ -18,8 +19,7 @@ module Kubernetes
       end
 
       begin
-        # TODO: use deep_symbolize_keys to avoid overhead
-        @elements = Array.wrap(Kubernetes::Util.parse_file(content, path)).compact.map(&:with_indifferent_access)
+        @elements = Array.wrap(Kubernetes::Util.parse_file(content, path)).compact.map(&:deep_symbolize_keys)
       rescue
         raise Samson::Hooks::UserError, "Error found when parsing #{path}\n#{$!.message}"
       end
