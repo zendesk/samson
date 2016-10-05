@@ -8,7 +8,7 @@ module Kubernetes
     belongs_to :deploy_group
 
     serialize :resource_template, JSON
-    delegate :desired_pod_count, to: :resource_object
+    delegate :desired_pod_count, to: :primary_resource
 
     validates :deploy_group, presence: true
     validates :kubernetes_role, presence: true
@@ -24,18 +24,18 @@ module Kubernetes
     end
 
     def job?
-      resource.fetch(:kind) == 'Job'
+      primary_resource.class == Kubernetes::Resource::Job
     end
 
     def deploy
       @deployed = true
-      @previous_deploy = resource_object.resource
-      resource_object.deploy
+      @previous_deploy = primary_resource.resource
+      primary_resource.deploy
     end
 
     def revert
       raise "Can only be done after a deploy" unless @deployed
-      resource_object.revert(@previous_deploy)
+      primary_resource.revert(@previous_deploy)
       service&.revert(!!@previous_deploy)
     end
 
@@ -55,7 +55,7 @@ module Kubernetes
 
     # run on unsaved mock ReleaseDoc to test template and secrets before we save or create a build
     def verify_template
-      config = primary_resource(parsed_config_file.elements)
+      config = find_primary_template(parsed_config_file.elements)
       template = Kubernetes::ResourceTemplate.new(self, config)
       template.set_secrets
     end
@@ -67,16 +67,14 @@ module Kubernetes
 
     private
 
-    def resource
-      @resource ||= primary_resource(resource_template)
+    def primary_resource
+      @resource_object ||= begin
+        template = find_primary_template(resource_template)
+        Kubernetes::Resource.build(template, deploy_group)
+      end
     end
 
-    # TODO: rename to resource and other to primary_template
-    def resource_object
-      @resource_object ||= Kubernetes::Resource.build(resource, deploy_group)
-    end
-
-    def primary_resource(elements)
+    def find_primary_template(elements)
       Array.wrap(elements).detect do |config|
         Kubernetes::RoleConfigFile::PRIMARY.include?(config.fetch(:kind))
       end

@@ -41,7 +41,7 @@ describe Kubernetes::ReleaseDoc do
   end
 
   let(:doc) { kubernetes_release_docs(:test_release_pod_1) }
-  let(:primary_resource) { doc.resource_template[0] }
+  let(:primary_template) { doc.resource_template[0] }
 
   before do
     configs = YAML.load_stream(read_kubernetes_sample_file('kubernetes_deployment.yml'))
@@ -132,7 +132,7 @@ describe Kubernetes::ReleaseDoc do
 
     it "reverts only resource when service does not exist" do
       doc.expects(:service).returns(nil)
-      doc.send(:resource_object).expects(:revert)
+      doc.send(:primary_resource).expects(:revert)
       doc.revert
     end
 
@@ -140,7 +140,7 @@ describe Kubernetes::ReleaseDoc do
       stub_request(:get, service_url).to_return(body: "{}")
 
       delete = stub_request(:delete, service_url)
-      doc.send(:resource_object).expects(:revert)
+      doc.send(:primary_resource).expects(:revert)
       doc.revert
       assert_requested delete
     end
@@ -175,12 +175,12 @@ describe Kubernetes::ReleaseDoc do
     end
 
     it "uses local value for job" do
-      primary_resource[:kind] = 'Job'
+      primary_template[:kind] = 'Job'
       doc.desired_pod_count.must_equal 2
     end
 
     it "asks kubernetes for daemon set since we do not know how many nodes it will match" do
-      primary_resource[:kind] = 'DaemonSet'
+      primary_template[:kind] = 'DaemonSet'
       stub_request(:get, "http://foobar.server/apis/extensions/v1beta1/namespaces/pod1/daemonsets/some-project-rc").
         to_return(body: {status: {desiredNumberScheduled: 3}}.to_json)
       doc.desired_pod_count.must_equal 3
