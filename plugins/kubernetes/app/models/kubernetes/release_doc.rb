@@ -29,27 +29,14 @@ module Kubernetes
 
     def deploy
       @deployed = true
-      @previous_deploy = primary_resource.resource
-      primary_resource.deploy
+      @previous_deploy = resources.map(&:resource)
+      resources.each(&:deploy)
     end
 
     def revert
       raise "Can only be done after a deploy" unless @deployed
-      primary_resource.revert(@previous_deploy)
-      service&.revert(!!@previous_deploy)
-    end
-
-    def ensure_service
-      if service.nil?
-        'Service not defined'
-      elsif service.running?
-        # ideally we should update, but that is not supported
-        # and delete+create would mean interrupting service
-        # TODO: warn if the running definition does not match the requested definition
-        'Service already running'
-      else
-        service.deploy
-        'Service created'
+      resources.each_with_index do |resource, i|
+        resource.revert(@previous_deploy[i])
       end
     end
 
@@ -67,6 +54,11 @@ module Kubernetes
 
     private
 
+    def resources
+      @resources ||= resource_template.map { |t| Kubernetes::Resource.build(t, deploy_group) }
+    end
+
+    # TODO: remove
     def primary_resource
       @resource_object ||= begin
         template = find_primary_template(resource_template)
@@ -74,6 +66,7 @@ module Kubernetes
       end
     end
 
+    # TODO: remove
     def find_primary_template(elements)
       Array.wrap(elements).detect do |config|
         Kubernetes::RoleConfigFile::PRIMARY.include?(config.fetch(:kind))
@@ -111,13 +104,6 @@ module Kubernetes
           ResourceTemplate.new(self, resource).to_hash
         end
       end
-    end
-
-    # TODO: handle as one of many secondary_resources
-    def service
-      return @service if defined?(@service)
-      template = resource_template.detect { |t| t.fetch(:kind) == 'Service' }
-      @service = template && Kubernetes::Resource.build(template, deploy_group)
     end
 
     def parsed_config_file

@@ -48,7 +48,6 @@ module Kubernetes
         @output.puts "Now deploying other roles ..." if deploys.any?
       end
       if deploys.any?
-        ensure_service(deploys)
         return false unless deploy_to_cluster(release, deploys)
       end
       true
@@ -333,15 +332,6 @@ module Kubernetes
         @output.puts "DONE"
       end
       successful
-    end
-
-    # Create the service or report it's status
-    def ensure_service(release_docs)
-      release_docs.each do |release_doc|
-        role = release_doc.kubernetes_role
-        status = release_doc.ensure_service # either succeeds or raises
-        @output.puts "#{status} for role #{role.name} / service #{role.service_name.presence || "none"}"
-      end
     end
 
     def success
