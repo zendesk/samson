@@ -17,6 +17,9 @@ class Admin::SecretsController < ApplicationController
     if query = params.dig(:search, :query).presence
       @secret_keys.select! { |s| s.include?(query) }
     end
+  rescue Samson::Secrets::BackendError => e
+    flash[:error] = e.message
+    render html: "", layout: true
   end
 
   def new

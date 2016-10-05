@@ -54,6 +54,12 @@ describe Admin::SecretsController do
         assert_template :index
         assigns[:secret_keys].must_equal ['production/global/pod2/bar']
       end
+
+      it 'raises when vault server is broken' do
+        SecretStorage.expects(:keys).raises(Samson::Secrets::BackendError.new('this is my error'))
+        get :index
+        assert flash[:error]
+      end
     end
 
     describe "#new" do

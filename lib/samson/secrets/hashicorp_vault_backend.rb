@@ -1,7 +1,11 @@
 # frozen_string_literal: true
+require 'vault'
 
 module Samson
   module Secrets
+    class BackendError < StandardError
+    end
+
     class HashicorpVaultBackend
       VAULT_SECRET_BACKEND = 'secret/'
       SAMSON_SECRET_NAMESPACE = 'apps/'
@@ -19,6 +23,8 @@ module Samson
           result = result.merge(result.delete(:data))
           result[:value] = result.delete(:vault)
           result
+        rescue Vault::HTTPConnectionError => e
+          wrap_vault_errors(e.message)
         end
 
         def read_multi(keys)
@@ -37,6 +43,8 @@ module Samson
             comment: data.fetch(:comment),
             creator_id: data.fetch(:user_id)
           )
+        rescue Vault::HTTPConnectionError => e
+          wrap_vault_errors(e.message)
         end
 
         def delete(key)
@@ -50,6 +58,8 @@ module Samson
           keys.map! do |secret_path|
             convert_path(secret_path, :decode) # FIXME: ideally only decode the key(#4) part
           end
+        rescue Vault::HTTPConnectionError => e
+          wrap_vault_errors(e.message)
         end
 
         private
@@ -57,6 +67,10 @@ module Samson
         # get and cache a copy of the client that has a token
         def vault_client
           @vault_client ||= VaultClient.new
+        end
+
+        def wrap_vault_errors(message)
+          raise Samson::Secrets::BackendError, "Error talking to vault backend: #{message}"
         end
 
         def keys_recursive(keys, key_path = "")

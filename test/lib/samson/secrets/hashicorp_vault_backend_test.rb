@@ -97,6 +97,34 @@ describe Samson::Secrets::HashicorpVaultBackend do
     end
   end
 
+  describe "raises when a vault instance is down/unreachable" do
+    it ".keys" do
+      client.expects(:list).raises(Vault::HTTPConnectionError.new("address", RuntimeError.new('no keys for you')))
+      e = assert_raises Samson::Secrets::BackendError do
+        Samson::Secrets::HashicorpVaultBackend.keys
+      end
+      e.message.must_include('no keys for you')
+    end
+
+    it ".read" do
+      client.expects(:read).raises(Vault::HTTPConnectionError.new("address", RuntimeError.new('no read for you')))
+      e = assert_raises Samson::Secrets::BackendError do
+        Samson::Secrets::HashicorpVaultBackend.read('production/foo/group/isbar/foo')
+      end
+      e.message.must_include('no read for you')
+    end
+
+    it ".write" do
+      client.expects(:write).raises(Vault::HTTPConnectionError.new("address", RuntimeError.new('no write for you')))
+      e = assert_raises Samson::Secrets::BackendError do
+        Samson::Secrets::HashicorpVaultBackend.write(
+          'production/foo/group/isbar/foo', value: 'whatever', visible: false, user_id: 1, comment: 'secret!'
+        )
+      end
+      e.message.must_include('no write for you')
+    end
+  end
+
   describe ".vault_client" do
     it 'creates a valid client' do
       assert_instance_of(::VaultClient, Samson::Secrets::HashicorpVaultBackend.send(:vault_client))
