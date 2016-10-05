@@ -23,14 +23,17 @@ module Kubernetes
       kubernetes_release.try(:build)
     end
 
+    # TODO: private
     def client
       deploy_group.kubernetes_cluster.client
     end
 
+    # TODO: private
     def deployment?
       resource_kind == 'Deployment'
     end
 
+    # TODO: private
     def daemon_set?
       resource_kind == 'DaemonSet'
     end
@@ -82,16 +85,6 @@ module Kubernetes
         service.deploy
         'Service created'
       end
-    end
-
-    # TODO: private
-    def raw_template
-      return @raw_template if defined?(@raw_template)
-      @raw_template = kubernetes_release.project.repository.file_content(template_name, kubernetes_release.git_sha)
-    end
-
-    def template_name
-      kubernetes_role.config_file
     end
 
     def namespace
@@ -184,6 +177,16 @@ module Kubernetes
       parsed_config_file
     rescue Samson::Hooks::UserError
       errors.add(:kubernetes_release, $!.message)
+    end
+
+    def template_name
+      kubernetes_role.config_file
+    end
+
+    # FIXME: caching is only needed because tests hack this ...
+    def raw_template
+      return @raw_template if defined?(@raw_template)
+      @raw_template = kubernetes_release.project.repository.file_content(template_name, kubernetes_release.git_sha)
     end
   end
 end

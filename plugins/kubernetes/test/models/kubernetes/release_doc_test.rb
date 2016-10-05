@@ -225,7 +225,7 @@ describe Kubernetes::ReleaseDoc do
     end
 
     it "reports detailed errors when invalid" do
-      assert doc.raw_template.sub!('role', 'mole')
+      assert doc.send(:raw_template).sub!('role', 'mole')
       refute_valid doc
     end
   end
@@ -269,18 +269,18 @@ describe Kubernetes::ReleaseDoc do
     end
 
     it "fetches the template from git" do
-      doc.raw_template.must_equal "xxx"
+      doc.send(:raw_template).must_equal "xxx"
     end
 
     it "caches" do
-      doc.raw_template.object_id.must_equal doc.raw_template.object_id
+      doc.send(:raw_template).object_id.must_equal doc.send(:raw_template).object_id
     end
 
     it "caches not found templates" do
       GitRepository.any_instance.unstub(:file_content)
       GitRepository.any_instance.expects(:file_content).once.returns(nil)
-      doc.raw_template.must_equal nil
-      doc.raw_template.must_equal nil
+      doc.send(:raw_template).must_equal nil
+      doc.send(:raw_template).must_equal nil
     end
   end
 
