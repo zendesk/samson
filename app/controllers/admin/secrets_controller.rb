@@ -18,7 +18,8 @@ class Admin::SecretsController < ApplicationController
       @secret_keys.select! { |s| s.include?(query) }
     end
   rescue Samson::Secrets::BackendError => e
-    render html: "<div class=\"label-error\">#{e.message}</div>".html_safe, layout: true
+    flash[:error] = e.message
+    render html: "", layout: true
   end
 
   def new
