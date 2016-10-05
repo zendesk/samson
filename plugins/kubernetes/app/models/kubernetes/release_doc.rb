@@ -65,12 +65,19 @@ module Kubernetes
       elsif job?
         resource_object.delete
       end
+
+      if service&.running? && !@previous_deploy
+        service.delete
+      end
     end
 
     def ensure_service
       if service.nil?
         'Service not defined'
       elsif service.running?
+        # ideally we should update, but that is not supported
+        # and delete+create would mean interrupting service
+        # TODO: warn if the running definition does not match the requested definition
         'Service already running'
       else
         service.deploy

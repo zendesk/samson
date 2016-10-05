@@ -46,8 +46,8 @@ describe Kubernetes::ReleaseDoc do
   before do
     kubernetes_fake_raw_template # TODO: this is only needed by very few tests ...
     configs = YAML.load_stream(read_kubernetes_sample_file('kubernetes_deployment.yml'))
+    configs.each { |c| c['metadata']['namespace'] = 'pod1' }
     doc.send(:resource_template=, configs)
-    primary_resource[:metadata][:namespace] = 'pod1'
   end
 
   describe "#store_resource_template" do
@@ -119,12 +119,16 @@ describe Kubernetes::ReleaseDoc do
 
   describe '#revert' do
     let(:client) { doc.send(:extension_client) }
+    let(:service_url) { "http://foobar.server/api/v1/namespaces/pod1/services/some-project" }
+
+    before do
+      doc.instance_variable_set(:@deployed, true)
+      stub_request(:get, service_url).to_return(status: 404)
+    end
 
     describe "deployment" do
       before do
         primary_resource[:kind] = 'Deployment'
-        doc.instance_variable_set(:'@deployed', true)
-        doc.instance_variable_set(:'@new_deploy', deployment_stub(3).to_hash)
       end
 
       it "is deleted when it's a new deployment" do
@@ -133,7 +137,7 @@ describe Kubernetes::ReleaseDoc do
       end
 
       it "rolls back when a deployment already existed" do
-        doc.instance_variable_set(:'@previous_deploy', deployment_stub(3).to_hash)
+        doc.instance_variable_set(:@previous_deploy, deployment_stub(3).to_hash)
 
         client.expects(:rollback_deployment)
         doc.revert
@@ -144,10 +148,7 @@ describe Kubernetes::ReleaseDoc do
     # mocking and mucking of internal state. But I don't know of a better
     # way to test the functionality.  :-(
     describe "daemonset" do
-      before do
-        primary_resource[:kind] = 'DaemonSet'
-        doc.instance_variable_set(:'@deployed', true)
-      end
+      before { primary_resource[:kind] = 'DaemonSet' }
 
       it "is deleted when it's brand new" do
         client.expects(:update_daemon_set)
@@ -161,7 +162,7 @@ describe Kubernetes::ReleaseDoc do
       end
 
       it "is deleted and recreated on rollback" do
-        doc.instance_variable_set(:'@previous_deploy', daemonset_stub(3, 0).to_hash)
+        doc.instance_variable_set(:@previous_deploy, daemonset_stub(3, 0).to_hash)
 
         client.expects(:update_daemon_set)
         client.expects(:get_daemon_set).times(2).returns(
@@ -178,12 +179,32 @@ describe Kubernetes::ReleaseDoc do
     describe 'job' do
       before do
         primary_resource[:kind] = 'Job'
-        doc.instance_variable_set(:'@deployed', true)
       end
 
       it "is deleted" do
         client.expects(:delete_job)
         doc.revert
+      end
+    end
+
+    describe 'service' do
+      before do
+        stub_request(:get, service_url).to_return(body: "{}")
+      end
+
+      it "does nothing when there is a service but it is old" do
+        client.stubs(:rollback_deployment) # deploy is reverted
+
+        doc.instance_variable_set(:@previous_deploy, daemonset_stub(3, 0).to_hash)
+        doc.revert
+      end
+
+      it "deletes the service when there is no previous deploy" do
+        doc.send(:resource_object).expects(:delete) # deploy is deleted
+
+        delete = stub_request(:delete, service_url)
+        doc.revert
+        assert_requested delete
       end
     end
   end
