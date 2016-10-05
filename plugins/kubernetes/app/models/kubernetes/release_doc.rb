@@ -42,8 +42,8 @@ module Kubernetes
 
     # run on unsaved mock ReleaseDoc to test template and secrets before we save or create a build
     def verify_template
-      config = find_primary_template(parsed_config_file.elements)
-      template = Kubernetes::ResourceTemplate.new(self, config)
+      primary_config = raw_template.detect { |e| Kubernetes::RoleConfigFile::PRIMARY.include?(e.fetch(:kind)) }
+      template = Kubernetes::ResourceTemplate.new(self, primary_config)
       template.set_secrets
     end
 
@@ -55,22 +55,14 @@ module Kubernetes
     private
 
     def resources
-      @resources ||= resource_template.map { |t| Kubernetes::Resource.build(t, deploy_group) }
+      @resources ||= resource_template.map do |t|
+        Kubernetes::Resource.build(t, deploy_group)
+      end
     end
 
-    # TODO: remove
     def primary_resource
-      @resource_object ||= begin
-        template = find_primary_template(resource_template)
-        Kubernetes::Resource.build(template, deploy_group)
-      end
-    end
-
-    # TODO: remove
-    def find_primary_template(elements)
-      Array.wrap(elements).detect do |config|
-        Kubernetes::RoleConfigFile::PRIMARY.include?(config.fetch(:kind))
-      end
+      primary = resource_template.index { |r| Kubernetes::RoleConfigFile::PRIMARY.include?(r.fetch(:kind)) }
+      resources[primary]
     end
 
     def resource_template=(value)
@@ -80,7 +72,7 @@ module Kubernetes
 
     # dynamically fill out the templates and store the result
     def store_resource_template
-      self.resource_template = parsed_config_file.elements.map do |resource|
+      self.resource_template = raw_template.map do |resource|
         unless resource[:metadata][:namespace] == "kube-system"
           resource[:metadata][:namespace] = deploy_group.kubernetes_namespace
         end
@@ -106,23 +98,19 @@ module Kubernetes
       end
     end
 
-    def parsed_config_file
-      @parsed_config_file ||= RoleConfigFile.new(raw_template, template_name)
-    end
-
     def validate_config_file
       return if !build || !kubernetes_role
-      parsed_config_file
+      raw_template # trigger RoleConfigFile validations
     rescue Samson::Hooks::UserError
       errors.add(:kubernetes_release, $!.message)
     end
 
-    def template_name
-      kubernetes_role.config_file
-    end
-
     def raw_template
-      kubernetes_release.project.repository.file_content(template_name, kubernetes_release.git_sha)
+      @raw_template ||= begin
+        file = kubernetes_role.config_file
+        content = kubernetes_release.project.repository.file_content(file, kubernetes_release.git_sha)
+        RoleConfigFile.new(content, file).elements
+      end
     end
   end
 end

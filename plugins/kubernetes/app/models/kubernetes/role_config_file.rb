@@ -18,6 +18,7 @@ module Kubernetes
       end
 
       begin
+        # TODO: use deep_symbolize_keys to avoid overhead
         @elements = Array.wrap(Kubernetes::Util.parse_file(content, path)).compact.map(&:with_indifferent_access)
       rescue
         raise Samson::Hooks::UserError, "Error found when parsing #{path}\n#{$!.message}"

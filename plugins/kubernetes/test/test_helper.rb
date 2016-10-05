@@ -123,9 +123,12 @@ class ActiveSupport::TestCase
     Kubernetes::Cluster.create!(cluster_attr)
   end
 
-  # TODO: can be removed ?
   def kubernetes_fake_raw_template
-    Kubernetes::ReleaseDoc.any_instance.stubs(raw_template: read_kubernetes_sample_file('kubernetes_deployment.yml'))
+    role = Kubernetes::RoleConfigFile.new(
+      read_kubernetes_sample_file('kubernetes_deployment.yml'),
+      'config/app_server.yml'
+    )
+    Kubernetes::ReleaseDoc.any_instance.stubs(raw_template: role.elements)
   end
 
   def kubernetes_sample_file_path(file_name)

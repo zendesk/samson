@@ -85,8 +85,7 @@ describe Kubernetes::ReleaseDoc do
     end
 
     it "keeps kube-system namespace because it is a unique system namespace" do
-      assert doc.send(:raw_template).
-        sub!("name: some-project-rc\n", "name: some-project-rc\n  namespace: kube-system\n")
+      assert doc.send(:raw_template)[0][:metadata][:namespace] = "kube-system"
       create!.resource_template[0][:metadata][:namespace].must_equal 'kube-system'
     end
   end
@@ -134,14 +133,13 @@ describe Kubernetes::ReleaseDoc do
   describe "#validate_config_file" do
     let(:doc) { kubernetes_release_docs(:test_release_pod_1).dup } # validate_config_file is always called on a new doc
 
-    before { doc.stubs(raw_template: read_kubernetes_sample_file('kubernetes_deployment.yml')) }
-
     it "is valid" do
+      kubernetes_fake_raw_template
       assert_valid doc
     end
 
     it "is invalid without template" do
-      doc.stubs(raw_template: nil)
+      GitRepository.any_instance.expects(:file_content).returns(nil)
       refute_valid doc
       doc.errors.full_messages.must_equal(
         ["Kubernetes release does not contain config file 'kubernetes/app_server.yml'"]
@@ -149,7 +147,7 @@ describe Kubernetes::ReleaseDoc do
     end
 
     it "reports detailed errors when invalid" do
-      assert doc.send(:raw_template).sub!('role', 'mole')
+      GitRepository.any_instance.expects(:file_content).returns("foo: bar")
       refute_valid doc
     end
   end
