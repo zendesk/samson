@@ -92,8 +92,10 @@ module Kubernetes
           # apps running in the Kubernetes cluster to traffic outside the cluster.
           resource[:spec][:type] = 'NodePort'
           resource
-        else
+        when *Kubernetes::RoleConfigFile::PRIMARY
           ResourceTemplate.new(self, resource).to_hash
+        else
+          resource
         end
       end
     end

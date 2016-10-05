@@ -323,4 +323,20 @@ describe Kubernetes::Resource do
       end
     end
   end
+
+  describe Kubernetes::Resource::ConfigMap do
+    # a simple test to make sure basics work
+    describe "#deploy" do
+      let(:kind) { 'ConfigMap' }
+      let(:url) { "http://foobar.server/api/v1/namespaces/pod1/configmaps/some-project" }
+
+      it "creates when missing" do
+        stub_request(:get, url).to_return(status: 404)
+
+        request = stub_request(:post, base_url).to_return(body: "{}")
+        resource.deploy
+        assert_requested request
+      end
+    end
+  end
 end

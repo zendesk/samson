@@ -31,7 +31,7 @@ module Kubernetes
 
       def delete
         request(:delete, name, namespace)
-        remove_instance_variable(:@resource) if @resource
+        remove_instance_variable(:@resource) if @resource # expire cache
       end
 
       def running?
@@ -74,6 +74,9 @@ module Kubernetes
       def loop_sleep
         sleep 2 unless ENV.fetch('RAILS_ENV') == 'test'
       end
+    end
+
+    class ConfigMap < Base
     end
 
     class Service < Base

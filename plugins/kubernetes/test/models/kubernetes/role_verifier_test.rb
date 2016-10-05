@@ -21,6 +21,11 @@ describe Kubernetes::RoleVerifier do
       errors.must_equal nil
     end
 
+    it "allows ConfigMap" do
+      role_json[-1...-1] = ", #{{kind: 'ConfigMap', metadata: {name: 'my-map'}}.to_json}"
+      errors.must_equal nil
+    end
+
     it "fails nicely with empty Hash template" do
       role_json.replace "{}"
       refute errors.empty?
@@ -43,8 +48,7 @@ describe Kubernetes::RoleVerifier do
 
     it "reports invalid types" do
       role.first[:kind] = "Ohno"
-      errors.must_include "Unsupported combination of kinds: Ohno + Service" \
-        ", supported combinations are: Deployment, DaemonSet, Deployment + Service, Job"
+      errors.to_s.must_include "Unsupported combination of kinds: Ohno + Service, supported"
     end
 
     it "allows only Job" do
@@ -59,8 +63,7 @@ describe Kubernetes::RoleVerifier do
 
     it "reports multiple services" do
       role << role.last.dup
-      errors.must_include "Unsupported combination of kinds: Deployment + Service + Service" \
-        ", supported combinations are: Deployment, DaemonSet, Deployment + Service, Job"
+      errors.to_s.must_include "Unsupported combination of kinds: Deployment + Service + Service, supported"
     end
 
     it "reports numeric cpu" do
@@ -87,8 +90,7 @@ describe Kubernetes::RoleVerifier do
     # release_doc does not support that and it would lead to chaos
     it 'reports job mixed with deploy' do
       role.concat job_role
-      errors.must_include "Unsupported combination of kinds: Deployment + Job + Service" \
-        ", supported combinations are: Deployment, DaemonSet, Deployment + Service, Job"
+      errors.to_s.must_include "Unsupported combination of kinds: Deployment + Job + Service, supported"
     end
 
     it "reports non-string labels" do

@@ -42,9 +42,10 @@ module Kubernetes
 
     def verify_kinds
       kinds = map_attributes([:kind]).sort_by(&:to_s)
-      return if SUPPORTED_KINDS.include?(kinds)
+      return if SUPPORTED_KINDS.include?(kinds - ['ConfigMap'])
       supported = SUPPORTED_KINDS.map { |c| c.join(' + ') }.join(', ')
-      @errors << "Unsupported combination of kinds: #{kinds.join(' + ')}, supported combinations are: #{supported}"
+      @errors << "Unsupported combination of kinds: #{kinds.join(' + ')}" \
+        ", supported combinations are: #{supported} and ConfigMap"
     end
 
     # spec actually allows this, but blows up when used

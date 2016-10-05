@@ -85,8 +85,13 @@ describe Kubernetes::ReleaseDoc do
     end
 
     it "keeps kube-system namespace because it is a unique system namespace" do
-      assert doc.send(:raw_template)[0][:metadata][:namespace] = "kube-system"
+      doc.send(:raw_template)[0][:metadata][:namespace] = "kube-system"
       create!.resource_template[0][:metadata][:namespace].must_equal 'kube-system'
+    end
+
+    it "configures ConfigMap" do
+      assert doc.send(:raw_template)[1][:kind] = "ConfigMap"
+      create!.resource_template[1][:metadata][:namespace].must_equal 'pod1'
     end
   end
 
