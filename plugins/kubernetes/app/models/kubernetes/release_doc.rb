@@ -23,11 +23,6 @@ module Kubernetes
       kubernetes_release.try(:build)
     end
 
-    # TODO: private
-    def client
-      deploy_group.kubernetes_cluster.client
-    end
-
     def job?
       resource.fetch(:kind) == 'Job'
     end
@@ -56,10 +51,6 @@ module Kubernetes
         service.deploy
         'Service created'
       end
-    end
-
-    def namespace
-      deploy_group.kubernetes_namespace
     end
 
     # run on unsaved mock ReleaseDoc to test template and secrets before we save or create a build
@@ -99,6 +90,8 @@ module Kubernetes
     # dynamically fill out the templates and store the result
     def store_resource_template
       self.resource_template = parsed_config_file.elements.map do |resource|
+        resource[:metadata][:namespace] = deploy_group.kubernetes_namespace
+
         case resource[:kind]
         when 'Service'
           name = kubernetes_role.service_name
@@ -109,7 +102,6 @@ module Kubernetes
             )
           end
           resource[:metadata][:name] = name.presence || resource[:metadata][:name]
-          resource[:metadata][:namespace] = namespace
 
           # For now, create a NodePort for each service, so we can expose any
           # apps running in the Kubernetes cluster to traffic outside the cluster.
@@ -119,11 +111,6 @@ module Kubernetes
           ResourceTemplate.new(self, resource).to_hash
         end
       end
-    end
-
-    # Create new client as 'Deployment' API is on different path then 'v1'
-    def extension_client
-      @extension_client ||= deploy_group.kubernetes_cluster.extension_client
     end
 
     # TODO: handle as one of many secondary_resources
@@ -148,11 +135,8 @@ module Kubernetes
       kubernetes_role.config_file
     end
 
-    # FIXME: caching is only needed because tests hack this ...
-    # ... inline into parsed_config_file
     def raw_template
-      return @raw_template if defined?(@raw_template)
-      @raw_template = kubernetes_release.project.repository.file_content(template_name, kubernetes_release.git_sha)
+      kubernetes_release.project.repository.file_content(template_name, kubernetes_release.git_sha)
     end
   end
 end

@@ -44,7 +44,6 @@ describe Kubernetes::ReleaseDoc do
   let(:primary_resource) { doc.resource_template[0] }
 
   before do
-    kubernetes_fake_raw_template # TODO: this is only needed by very few tests ...
     configs = YAML.load_stream(read_kubernetes_sample_file('kubernetes_deployment.yml'))
     configs.each { |c| c['metadata']['namespace'] = 'pod1' }
     doc.send(:resource_template=, configs)
@@ -55,7 +54,10 @@ describe Kubernetes::ReleaseDoc do
       Kubernetes::ReleaseDoc.create!(doc.attributes.except('id', 'resource_template'))
     end
 
-    before { Kubernetes::ResourceTemplate.any_instance.stubs(:set_image_pull_secrets) }
+    before do
+      kubernetes_fake_raw_template
+      Kubernetes::ResourceTemplate.any_instance.stubs(:set_image_pull_secrets) # makes an extra request we ignore
+    end
 
     it "stores the template when creating" do
       create!.resource_template[0][:kind].must_equal 'Deployment'
@@ -100,7 +102,7 @@ describe Kubernetes::ReleaseDoc do
   end
 
   describe "#deploy" do
-    let(:client) { doc.send(:extension_client) }
+    let(:client) { doc.deploy_group.kubernetes_cluster.extension_client }
 
     it "creates" do
       client.expects(:get_deployment).raises(KubeException.new(404, 2, 3))
@@ -139,7 +141,9 @@ describe Kubernetes::ReleaseDoc do
   end
 
   describe "#validate_config_file" do
-    let(:doc) { kubernetes_release_docs(:test_release_pod_1).dup }
+    let(:doc) { kubernetes_release_docs(:test_release_pod_1).dup } # validate_config_file is always called on a new doc
+
+    before { doc.stubs(raw_template: read_kubernetes_sample_file('kubernetes_deployment.yml')) }
 
     it "is valid" do
       assert_valid doc
@@ -177,39 +181,9 @@ describe Kubernetes::ReleaseDoc do
     end
   end
 
-  describe "#client" do
-    it "builds a client" do
-      assert doc.client
-    end
-  end
-
   describe "#build" do
     it "fetches the build" do
       doc.build.must_equal builds(:docker_build)
-    end
-  end
-
-  describe "#raw_template" do
-    before do
-      Kubernetes::ReleaseDoc.any_instance.unstub(:raw_template)
-      GitRepository.any_instance.expects(:file_content).
-        with('kubernetes/app_server.yml', doc.kubernetes_release.git_sha).
-        returns("xxx")
-    end
-
-    it "fetches the template from git" do
-      doc.send(:raw_template).must_equal "xxx"
-    end
-
-    it "caches" do
-      doc.send(:raw_template).object_id.must_equal doc.send(:raw_template).object_id
-    end
-
-    it "caches not found templates" do
-      GitRepository.any_instance.unstub(:file_content)
-      GitRepository.any_instance.expects(:file_content).once.returns(nil)
-      doc.send(:raw_template).must_equal nil
-      doc.send(:raw_template).must_equal nil
     end
   end
 
@@ -227,6 +201,7 @@ describe Kubernetes::ReleaseDoc do
   # tested in depth from deploy_executor.rb
   describe "#verify_template" do
     it "can run with a new release doc" do
+      kubernetes_fake_raw_template
       doc.verify_template
     end
   end

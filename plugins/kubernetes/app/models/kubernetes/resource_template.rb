@@ -16,7 +16,6 @@ module Kubernetes
       @to_hash ||= begin
         set_rc_unique_label_key
         set_name
-        set_namespace
         set_replica_target
         set_spec_template_metadata
         set_docker_image
@@ -114,10 +113,6 @@ module Kubernetes
       template[:metadata][:name] = @doc.kubernetes_role.resource_name
     end
 
-    def set_namespace
-      template[:metadata][:namespace] = @doc.deploy_group.kubernetes_namespace
-    end
-
     # Sets the labels for each new Pod.
     # Adding the Release ID to allow us to track the progress of a new release from the UI.
     def set_spec_template_metadata
@@ -205,7 +200,8 @@ module Kubernetes
     # kubernetes needs docker secrets to be able to pull down images from the registry
     # in kubernetes 1.3 this might work without this workaround
     def set_image_pull_secrets
-      secrets = @doc.client.get_secrets(namespace: @doc.namespace)
+      client = @doc.deploy_group.kubernetes_cluster.client
+      secrets = client.get_secrets(namespace: template.fetch(:metadata).fetch(:namespace))
       docker_credentials = secrets.
         select { |secret| secret.type == "kubernetes.io/dockercfg" }.
         map! { |c| {name: c.metadata.name} }
