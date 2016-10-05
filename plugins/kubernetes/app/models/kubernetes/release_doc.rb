@@ -100,7 +100,7 @@ module Kubernetes
           # need http request since we do not know how many nodes we will match
           fetch_resource[:status][:desiredNumberScheduled]
         elsif deployment? || job?
-          replica_target
+          resource.fetch(:spec).fetch(:replicas)
         else
           raise "Unsupported kind #{resource&.fetch(:kind)}"
         end
