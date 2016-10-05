@@ -88,6 +88,7 @@ describe Kubernetes::Role do
       create_repo_without_tags
       project.repository_url = repo_temp_dir
       Kubernetes::Role.delete_all
+      project.kubernetes_roles.clear
     end
 
     describe "with a correct role config" do
@@ -136,8 +137,7 @@ describe Kubernetes::Role do
       end
 
       it 'creates a role when another role without service already exists' do
-        Kubernetes::Role.create!(
-          project: project,
+        project.kubernetes_roles.create!(
           config_file: 'sdfsdf.yml',
           name: 'sdfsdf',
           service_name: nil,
@@ -164,7 +164,7 @@ describe Kubernetes::Role do
 
     it "generates a unique resource_name when metadata.name is already in use" do
       project.update_column(:permalink, 'foo_bar') # check we remove _ correctly
-      created = Kubernetes::Role.create!(role.attributes)
+      created = project.kubernetes_roles.create!(role.attributes)
       config_content[0]['metadata']['name'] = created.resource_name
       write_config 'kubernetes/a.json', config_content.to_json
 
@@ -199,7 +199,7 @@ describe Kubernetes::Role do
 
     it "can seed duplicate service names" do
       existing_name = config_content.last.fetch('metadata').fetch('name')
-      created = Kubernetes::Role.create!(role.attributes.merge('service_name' => existing_name))
+      created = project.kubernetes_roles.create!(role.attributes.merge('service_name' => existing_name))
       created.update_column(:project_id, 1234) # make sure we check in glboal scope
       write_config 'kubernetes/a.yml', config_content_yml
       Kubernetes::Role.seed! project, 'HEAD'
@@ -217,6 +217,24 @@ describe Kubernetes::Role do
 
     it "finds all roles that are deployed" do
       Kubernetes::Role.configured_for_project(project, 'HEAD').must_equal [role]
+    end
+
+    describe "with uncommon config location" do
+      before do
+        execute_on_remote_repo "git rm #{role.config_file}" # remove file from git ls-files
+        role.update_column(:config_file, 'foobar/foo.yml')
+      end
+
+      it "finds roles outside of the common locations" do
+        write_config role.config_file, config_content_yml
+        Kubernetes::Role.configured_for_project(project, 'HEAD').must_equal [role]
+      end
+
+      it "raises when a role is configured but not in the repo" do
+        assert_raises Samson::Hooks::UserError do
+          Kubernetes::Role.configured_for_project(project, 'HEAD')
+        end
+      end
     end
 
     it "raises when a role is in the repo, but not configured" do

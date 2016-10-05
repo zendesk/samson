@@ -69,8 +69,7 @@ module Kubernetes
           resource_name = "#{project.permalink}-#{resource_name}".tr('_', '-')
         end
 
-        create!(
-          project: project,
+        project.kubernetes_roles.create!(
           config_file: config_file.path,
           name: name,
           resource_name: resource_name,
@@ -129,8 +128,11 @@ module Kubernetes
         files = project.repository.file_content(path, git_ref) || []
 
         files = files.split("\n").grep(/\.(yml|yaml|json)$/).map { |f| "#{path}/#{f}" }
+        files.concat project.kubernetes_roles.map(&:config_file).
+          reject { |f| f.start_with?("#{path}/") }
+
         files.map do |path|
-          file_contents = project.repository.file_content path, git_ref
+          next unless file_contents = project.repository.file_content(path, git_ref)
           Kubernetes::RoleConfigFile.new(file_contents, path)
         end.compact
       end
