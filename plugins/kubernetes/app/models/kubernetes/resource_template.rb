@@ -107,7 +107,7 @@ module Kubernetes
     end
 
     def set_replica_target
-      template[:spec][:replicas] = @doc.replica_target if ['Deployment', 'Job'].include?(template[:kind])
+      template[:spec][:replicas] = @doc.replica_target
     end
 
     def set_name
