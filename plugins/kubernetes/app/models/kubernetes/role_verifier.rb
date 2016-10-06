@@ -23,6 +23,7 @@ module Kubernetes
       return ["No content found"] if @elements.blank?
       return ["Only hashes supported"] unless @elements.all? { |e| e.is_a?(Hash) }
       verify_name
+      verify_namespace
       verify_kinds
       verify_containers
       verify_job_container_name
@@ -38,6 +39,10 @@ module Kubernetes
 
     def verify_name
       @errors << "Needs a metadata.name" unless map_attributes([:metadata, :name]).all?
+    end
+
+    def verify_namespace
+      @errors << "Namespaces need to be unique" if map_attributes([:metadata, :namespace]).uniq.size != 1
     end
 
     def verify_kinds

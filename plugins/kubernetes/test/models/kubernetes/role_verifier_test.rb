@@ -61,6 +61,11 @@ describe Kubernetes::RoleVerifier do
       errors.must_equal ["Needs a metadata.name"]
     end
 
+    it "reports non-unique namespaces since that would break pod fetching" do
+      role.first[:metadata][:namespace] = "kube-system"
+      errors.to_s.must_include "Namespaces need to be unique"
+    end
+
     it "reports multiple services" do
       role << role.last.dup
       errors.to_s.must_include "Unsupported combination of kinds: Deployment + Service + Service, supported"
