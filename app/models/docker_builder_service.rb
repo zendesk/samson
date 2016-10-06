@@ -101,6 +101,10 @@ class DockerBuilderService
       end
     end
 
+    unless build.docker_repo_digest
+      raise Docker::Error::DockerError, "Unable to get repo digest"
+    end
+
     push_latest if tag_as_latest && build.docker_ref != 'latest'
 
     build.save!
