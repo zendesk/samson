@@ -171,7 +171,7 @@ module Kubernetes
       # and the number of matches nodes could update with a changed template
       # only makes sense to call this after deploying / while waiting for pods
       def desired_pod_count
-        @desired_pod_count ||= fetch_resource[:status][:desiredNumberScheduled]
+        @desired_pod_count ||= [fetch_resource[:status][:desiredNumberScheduled], @template[:spec][:replicas]].max
       end
 
       private

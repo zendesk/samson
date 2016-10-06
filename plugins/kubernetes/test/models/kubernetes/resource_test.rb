@@ -159,9 +159,22 @@ describe Kubernetes::Resource do
     end
 
     describe "#desired_pod_count" do
+      before { template[:spec] = {replicas: 2 } }
+
       it "reads the value from the server since it is comlicated" do
         stub_request(:get, url).to_return(body: {status: {desiredNumberScheduled: 5}}.to_json)
         resource.desired_pod_count.must_equal 5
+      end
+
+      it "returns replicas when desired count is 0 to fail the deployment and show underlying issue" do
+        stub_request(:get, url).to_return(body: {status: {desiredNumberScheduled: 0}}.to_json)
+        resource.desired_pod_count.must_equal 2
+      end
+
+      it "returns 0 when desired count is and replicas are 0 to pass deletion deploys" do
+        template[:spec][:replicas] = 0
+        stub_request(:get, url).to_return(body: {status: {desiredNumberScheduled: 0}}.to_json)
+        resource.desired_pod_count.must_equal 0
       end
     end
 
