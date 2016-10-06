@@ -113,19 +113,21 @@ module Kubernetes
     end
 
     def show_failure_cause(release, release_docs)
+      release_docs.each { |doc| print_resource_events(doc) }
+
       pod_statuses(release, release_docs).reject(&:live).select(&:pod).each do |status|
         pod = status.pod
         deploy_group = deploy_group_for_pod(pod, release)
         @output.puts "\n#{deploy_group.name} pod #{pod.name}:"
-        print_events(pod)
+        print_pod_events(pod)
         @output.puts
-        print_logs(pod)
+        print_pod_logs(pod)
         @output.puts "\n------------------------------------------\n"
       end
     end
 
     # show why container failed to boot
-    def print_logs(pod)
+    def print_pod_logs(pod)
       @output.puts "LOGS:"
 
       pod.containers.map(&:name).each do |container|
@@ -139,10 +141,33 @@ module Kubernetes
       end
     end
 
+    # show what happened at the resource level ... need uid to avoid showing previous events
+    def print_resource_events(doc)
+      doc.resources.each do |resource|
+        selector = ["involvedObject.name=#{resource.name}"]
+
+        # do not query for nil uid ... rather show events for old+new resource when creation failed
+        if uid = resource.uid
+          selector << "involvedObject.uid=#{uid}"
+        end
+
+        events = doc.deploy_group.kubernetes_cluster.client.get_events(
+          namespace: resource.namespace,
+          field_selector: selector.join(',')
+        )
+        next if events.none?
+        @output.puts "RESOURCE EVENTS #{resource.name}:"
+        print_events(events)
+      end
+    end
+
     # show what happened in kubernetes internally since we might not have any logs
-    def print_events(pod)
-      @output.puts "EVENTS:"
-      events = pod.events
+    def print_pod_events(pod)
+      @output.puts "POD EVENTS:"
+      print_events(pod.events)
+    end
+
+    def print_events(events)
       events.uniq! { |e| e.message.split("\n").sort }
       events.each { |e| @output.puts "  #{e.reason}: #{e.message}" }
     end
@@ -249,9 +274,13 @@ module Kubernetes
 
     def rollback(release_docs)
       release_docs.each do |release_doc|
-        action = release_doc.previous_deploy ? 'Rolling back' : 'Deleting'
-        @output.puts "#{action} #{release_doc.deploy_group.name} role #{release_doc.kubernetes_role.name}"
-        release_doc.revert
+        begin
+          action = release_doc.previous_deploy ? 'Rolling back' : 'Deleting'
+          @output.puts "#{action} #{release_doc.deploy_group.name} role #{release_doc.kubernetes_role.name}"
+          release_doc.revert
+        rescue # ... still show events and logs if somehow the rollback fails
+          @output.puts "FAILED: #{$!.message}"
+        end
       end
     end
 

@@ -52,13 +52,13 @@ module Kubernetes
       @resource_template ||= Array.wrap(super).map(&:deep_symbolize_keys)
     end
 
-    private
-
     def resources
       @resources ||= resource_template.map do |t|
         Kubernetes::Resource.build(t, deploy_group)
       end
     end
+
+    private
 
     def primary_resource
       primary = resource_template.index { |r| Kubernetes::RoleConfigFile::PRIMARY.include?(r.fetch(:kind)) }
@@ -92,8 +92,10 @@ module Kubernetes
           # apps running in the Kubernetes cluster to traffic outside the cluster.
           resource[:spec][:type] = 'NodePort'
           resource
-        else
+        when *Kubernetes::RoleConfigFile::PRIMARY
           ResourceTemplate.new(self, resource).to_hash
+        else
+          resource
         end
       end
     end

@@ -27,13 +27,20 @@ module Kubernetes
       end
     end
 
+    # optimization to not do multiple queries to the same cluster+namespace because we have many roles
+    # ... needs to check doc namespace too since it might be kube-system
+    # ... assumes that there is only 1 namespace per release_doc
     def clients
-      release_docs.map(&:deploy_group).uniq.map do |deploy_group|
+      scopes = release_docs.map do |release_doc|
+        [release_doc.deploy_group, release_doc.resources.first.namespace]
+      end.uniq
+
+      scopes.map do |group, namespace|
         query = {
-          namespace: deploy_group.kubernetes_namespace,
-          label_selector: pod_selector(deploy_group).to_kuber_selector
+          namespace: namespace,
+          label_selector: pod_selector(group).to_kuber_selector
         }
-        [deploy_group.kubernetes_cluster.client, query, deploy_group]
+        [group.kubernetes_cluster.client, query, group]
       end
     end
 

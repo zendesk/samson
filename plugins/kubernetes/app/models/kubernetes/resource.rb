@@ -31,7 +31,7 @@ module Kubernetes
 
       def delete
         request(:delete, name, namespace)
-        remove_instance_variable(:@resource) if @resource
+        expire_cache
       end
 
       def running?
@@ -44,15 +44,25 @@ module Kubernetes
         @resource = fetch_resource
       end
 
+      def uid
+        resource&.fetch(:metadata)&.fetch(:uid)
+      end
+
       private
+
+      def expire_cache
+        remove_instance_variable(:@resource) if defined?(@resource)
+      end
 
       def create
         request(:create, @template)
+        expire_cache
       end
 
       # FYI: do not use result, see https://github.com/abonas/kubeclient/issues/196
       def update
         request(:update, @template)
+        expire_cache
       end
 
       def fetch_resource
@@ -74,6 +84,9 @@ module Kubernetes
       def loop_sleep
         sleep 2 unless ENV.fetch('RAILS_ENV') == 'test'
       end
+    end
+
+    class ConfigMap < Base
     end
 
     class Service < Base
@@ -168,7 +181,7 @@ module Kubernetes
       # and the number of matches nodes could update with a changed template
       # only makes sense to call this after deploying / while waiting for pods
       def desired_pod_count
-        @desired_pod_count ||= fetch_resource[:status][:desiredNumberScheduled]
+        @desired_pod_count ||= [resource[:status][:desiredNumberScheduled], @template[:spec][:replicas]].max
       end
 
       private

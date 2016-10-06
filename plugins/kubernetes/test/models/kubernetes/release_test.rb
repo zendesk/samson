@@ -113,6 +113,16 @@ describe Kubernetes::Release do
       }.to_json)
       release.clients.map { |c, q| c.get_pods(q) }.first.size.must_equal 2
     end
+
+    it "can scope queries by resource namespace" do
+      release = kubernetes_releases(:test_release)
+      Kubernetes::Resource::Deployment.any_instance.stubs(namespace: "kube-system")
+      stub_request(:get, %r{http://foobar.server/api/v1/namespaces/kube-system/pods}).to_return(body: {
+        resourceVersion: "1",
+        items: [{}, {}]
+      }.to_json)
+      release.clients.map { |c, q| c.get_pods(q) }.first.size.must_equal 2
+    end
   end
 
   describe "#pod_selector" do

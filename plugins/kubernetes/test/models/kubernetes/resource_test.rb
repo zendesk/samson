@@ -36,17 +36,28 @@ describe Kubernetes::Resource do
     it "creates when missing" do
       stub_request(:get, url).to_return(status: 404)
 
-      request = stub_request(:post, base_url).to_return(body: "{}")
+      create = stub_request(:post, base_url).to_return(body: "{}")
       resource.deploy
-      assert_requested request
+      assert_requested create
+
+      # cache was expired
+      get = stub_request(:get, url).to_return(body: "{}")
+      assert resource.running?
+      assert resource.running?
+      assert_requested get, times: 2 # this counts the 404 and the successful request ...
     end
 
     it "updates existing" do
-      stub_request(:get, url).to_return(body: '{}')
+      get = stub_request(:get, url).to_return(body: '{}')
 
-      request = stub_request(:put, url).to_return(body: "{}")
+      update = stub_request(:put, url).to_return(body: "{}")
       resource.deploy
-      assert_requested request
+      assert_requested update
+
+      # cache was expired
+      assert resource.running?
+      assert resource.running?
+      assert_requested get, times: 2
     end
   end
 
@@ -79,6 +90,17 @@ describe Kubernetes::Resource do
       stub_request(:get, url).to_return(status: 404)
       resource.delete
       refute resource.running?
+    end
+  end
+
+  describe "#uid" do
+    it "returns the uid of the created resource" do
+      stub_request(:get, url).to_return(body: {metadata: {uid: 123}}.to_json)
+      resource.uid.must_equal 123
+    end
+
+    it "returns nil when resource is missing" do
+      stub_request(:get, url).to_return(status: 404)
     end
   end
 
@@ -159,9 +181,22 @@ describe Kubernetes::Resource do
     end
 
     describe "#desired_pod_count" do
+      before { template[:spec] = {replicas: 2 } }
+
       it "reads the value from the server since it is comlicated" do
         stub_request(:get, url).to_return(body: {status: {desiredNumberScheduled: 5}}.to_json)
         resource.desired_pod_count.must_equal 5
+      end
+
+      it "returns replicas when desired count is 0 to fail the deployment and show underlying issue" do
+        stub_request(:get, url).to_return(body: {status: {desiredNumberScheduled: 0}}.to_json)
+        resource.desired_pod_count.must_equal 2
+      end
+
+      it "returns 0 when desired count is and replicas are 0 to pass deletion deploys" do
+        template[:spec][:replicas] = 0
+        stub_request(:get, url).to_return(body: {status: {desiredNumberScheduled: 0}}.to_json)
+        resource.desired_pod_count.must_equal 0
       end
     end
 
@@ -320,6 +355,22 @@ describe Kubernetes::Resource do
       it "deletes when there was no previous version" do
         resource.expects(:delete)
         resource.revert(nil)
+      end
+    end
+  end
+
+  describe Kubernetes::Resource::ConfigMap do
+    # a simple test to make sure basics work
+    describe "#deploy" do
+      let(:kind) { 'ConfigMap' }
+      let(:url) { "http://foobar.server/api/v1/namespaces/pod1/configmaps/some-project" }
+
+      it "creates when missing" do
+        stub_request(:get, url).to_return(status: 404)
+
+        request = stub_request(:post, base_url).to_return(body: "{}")
+        resource.deploy
+        assert_requested request
       end
     end
   end
