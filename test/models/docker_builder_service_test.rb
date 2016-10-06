@@ -242,8 +242,18 @@ describe DockerBuilderService do
       end
     end
 
+    it 'fails when digest cannot be found' do
+      assert push_output.reject! { |e| e.first =~ /Digest/ }
+      service.push_image('my-test').must_equal nil
+      service.output.to_s.must_include "Docker push failed: Unable to get repo digest"
+    end
+
     describe 'pushing latest' do
       it 'adds the latest tag on top of the one specified when latest is true' do
+        # block would normally set it, we prevent unset to not fail
+        build.docker_repo_digest = builds(:docker_build).docker_repo_digest
+        build.stubs(:docker_repo_digest=)
+
         mock_docker_image.expects(:tag).with(has_entry(tag: 'my-test')).with(has_entry(tag: 'latest'))
         mock_docker_image.expects(:push).
           with(service.send(:registry_credentials), tag: 'latest', force: true).
