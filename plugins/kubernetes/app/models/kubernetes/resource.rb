@@ -77,7 +77,8 @@ module Kubernetes
     end
 
     class Service < Base
-      # deleting a service is never and option since it would interrupt the service
+      # ideally we should update, but that is not supported
+      # and delete+create would mean interrupting service
       # TODO: warn users when a change needs to be made but could not be done
       def deploy
         return if running?

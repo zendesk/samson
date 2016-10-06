@@ -8,7 +8,7 @@ module Kubernetes
     belongs_to :deploy_group
 
     serialize :resource_template, JSON
-    delegate :desired_pod_count, to: :resource_object
+    delegate :desired_pod_count, to: :primary_resource
 
     validates :deploy_group, presence: true
     validates :kubernetes_role, presence: true
@@ -24,39 +24,26 @@ module Kubernetes
     end
 
     def job?
-      resource.fetch(:kind) == 'Job'
+      primary_resource.class == Kubernetes::Resource::Job
     end
 
     def deploy
       @deployed = true
-      @previous_deploy = resource_object.resource
-      resource_object.deploy
+      @previous_deploy = resources.map(&:resource)
+      resources.each(&:deploy)
     end
 
     def revert
       raise "Can only be done after a deploy" unless @deployed
-      resource_object.revert(@previous_deploy)
-      service&.revert(!!@previous_deploy)
-    end
-
-    def ensure_service
-      if service.nil?
-        'Service not defined'
-      elsif service.running?
-        # ideally we should update, but that is not supported
-        # and delete+create would mean interrupting service
-        # TODO: warn if the running definition does not match the requested definition
-        'Service already running'
-      else
-        service.deploy
-        'Service created'
+      resources.each_with_index do |resource, i|
+        resource.revert(@previous_deploy[i])
       end
     end
 
     # run on unsaved mock ReleaseDoc to test template and secrets before we save or create a build
     def verify_template
-      config = primary_resource(parsed_config_file.elements)
-      template = Kubernetes::ResourceTemplate.new(self, config)
+      primary_config = raw_template.detect { |e| Kubernetes::RoleConfigFile::PRIMARY.include?(e.fetch(:kind)) }
+      template = Kubernetes::ResourceTemplate.new(self, primary_config)
       template.set_secrets
     end
 
@@ -67,19 +54,15 @@ module Kubernetes
 
     private
 
-    def resource
-      @resource ||= primary_resource(resource_template)
-    end
-
-    # TODO: rename to resource and other to primary_template
-    def resource_object
-      @resource_object ||= Kubernetes::Resource.build(resource, deploy_group)
-    end
-
-    def primary_resource(elements)
-      Array.wrap(elements).detect do |config|
-        Kubernetes::RoleConfigFile::PRIMARY.include?(config.fetch(:kind))
+    def resources
+      @resources ||= resource_template.map do |t|
+        Kubernetes::Resource.build(t, deploy_group)
       end
+    end
+
+    def primary_resource
+      primary = resource_template.index { |r| Kubernetes::RoleConfigFile::PRIMARY.include?(r.fetch(:kind)) }
+      resources[primary]
     end
 
     def resource_template=(value)
@@ -89,7 +72,7 @@ module Kubernetes
 
     # dynamically fill out the templates and store the result
     def store_resource_template
-      self.resource_template = parsed_config_file.elements.map do |resource|
+      self.resource_template = raw_template.map do |resource|
         unless resource[:metadata][:namespace] == "kube-system"
           resource[:metadata][:namespace] = deploy_group.kubernetes_namespace
         end
@@ -115,30 +98,19 @@ module Kubernetes
       end
     end
 
-    # TODO: handle as one of many secondary_resources
-    def service
-      return @service if defined?(@service)
-      template = resource_template.detect { |t| t.fetch(:kind) == 'Service' }
-      @service = template && Kubernetes::Resource.build(template, deploy_group)
-    end
-
-    def parsed_config_file
-      @parsed_config_file ||= RoleConfigFile.new(raw_template, template_name)
-    end
-
     def validate_config_file
       return if !build || !kubernetes_role
-      parsed_config_file
+      raw_template # trigger RoleConfigFile validations
     rescue Samson::Hooks::UserError
       errors.add(:kubernetes_release, $!.message)
     end
 
-    def template_name
-      kubernetes_role.config_file
-    end
-
     def raw_template
-      kubernetes_release.project.repository.file_content(template_name, kubernetes_release.git_sha)
+      @raw_template ||= begin
+        file = kubernetes_role.config_file
+        content = kubernetes_release.project.repository.file_content(file, kubernetes_release.git_sha)
+        RoleConfigFile.new(content, file).elements
+      end
     end
   end
 end

@@ -135,7 +135,11 @@ describe Kubernetes::DeployExecutor do
       around { |test| refute_difference('Build.count') { refute_difference('Release.count', &test) } }
 
       it "fails before building when roles are invalid" do
-        Kubernetes::ReleaseDoc.any_instance.stubs(raw_template: 'oops: "this is bad"')
+        Kubernetes::ReleaseDoc.any_instance.unstub(:raw_template)
+        GitRepository.any_instance.expects(:file_content).
+          with('kubernetes/resque_worker.yml', anything).
+          returns("oops: bad")
+
         e = assert_raises Samson::Hooks::UserError do
           refute execute!
         end
@@ -144,12 +148,10 @@ describe Kubernetes::DeployExecutor do
 
       it "fails before building when secrets are not configured in the backend" do
         Kubernetes::ResourceTemplate.any_instance.stubs(:needs_secret_sidecar?).returns(true)
-        template = read_kubernetes_sample_file('kubernetes_deployment.yml')
-        assert template.sub!(
-          "      name: some-project-pod\n",
-          "      name: some-project-pod\n      annotations:\n        secret/foo: bar\n"
-        )
-        Kubernetes::ReleaseDoc.any_instance.stubs(raw_template: template)
+
+        # overriding the stubbed value
+        template = Kubernetes::ReleaseDoc.new.send(:raw_template)[0]
+        template[:spec][:template][:metadata][:annotations] = {"secret/foo": "bar"}
 
         e = assert_raises Samson::Hooks::UserError do
           refute execute!

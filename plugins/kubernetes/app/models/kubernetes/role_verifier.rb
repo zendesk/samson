@@ -21,6 +21,7 @@ module Kubernetes
     def verify
       return @errors if @errors.any?
       return ["No content found"] if @elements.blank?
+      return ["Only hashes supported"] unless @elements.all? { |e| e.is_a?(Hash) }
       verify_name
       verify_kinds
       verify_containers
@@ -56,25 +57,25 @@ module Kubernetes
 
     def verify_project_and_role_consistent
       labels = @elements.flat_map do |resource|
-        kind = resource['kind']
+        kind = resource[:kind]
 
         label_paths =
           case kind
           when 'Service'
             [
-              ['metadata', 'labels'],
-              ['spec', 'selector']
+              [:metadata, :labels],
+              [:spec, :selector]
             ]
           when *DEPLOYISH
             [
-              ['metadata', 'labels'],
-              ['spec', 'template', 'metadata', 'labels'],
-              ['spec', 'selector', 'matchLabels'],
+              [:metadata, :labels],
+              [:spec, :template, :metadata, :labels],
+              [:spec, :selector, :matchLabels],
             ]
           when *JOBS
             [
-              ['metadata', 'labels'],
-              ['spec', 'template', 'metadata', 'labels']
+              [:metadata, :labels],
+              [:spec, :template, :metadata, :labels]
             ]
           else
             [] # ignore unknown / unsupported types
@@ -84,7 +85,7 @@ module Kubernetes
           labels = path.inject(resource) { |r, k| r[k] || {} }
 
           # role and project from all used labels
-          wanted = 'project', 'role'
+          wanted = [:project, :role]
           required = labels.slice(*wanted)
           if required.size != 2
             @errors << "Missing #{wanted.join(' or ')} for #{kind} #{path.join('.')}"
@@ -109,7 +110,7 @@ module Kubernetes
 
     def verify_containers
       expected = DEPLOYISH + JOBS
-      deployish = @elements.select { |e| expected.include?(e['kind']) }
+      deployish = @elements.select { |e| expected.include?(e[:kind]) }
       containers = map_attributes([:spec, :template, :spec, :containers], elements: deployish)
       return if containers.all? { |c| c.is_a?(Array) && c.size >= 1 }
       @errors << "#{expected.join("/")} need at least 1 container"
@@ -144,13 +145,13 @@ module Kubernetes
     end
 
     def jobs
-      @elements.select { |e| JOBS.include?(e['kind']) }
+      @elements.select { |e| JOBS.include?(e[:kind]) }
     end
 
     def map_attributes(path, elements: @elements, array: :all)
       elements.map do |e|
         path.inject(e) do |e, p|
-          e = e[p.to_s]
+          e = e[p]
           e = Array.wrap(e).first if array == :first
           e || break
         end

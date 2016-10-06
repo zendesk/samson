@@ -41,7 +41,9 @@ describe Kubernetes::ReleaseDoc do
   end
 
   let(:doc) { kubernetes_release_docs(:test_release_pod_1) }
-  let(:primary_resource) { doc.resource_template[0] }
+  let(:primary_template) { doc.resource_template[0] }
+  let(:kube_404) { KubeException.new(404, 2, 3) }
+  let(:service_url) { "http://foobar.server/api/v1/namespaces/pod1/services/some-project" }
 
   before do
     configs = YAML.load_stream(read_kubernetes_sample_file('kubernetes_deployment.yml'))
@@ -83,27 +85,8 @@ describe Kubernetes::ReleaseDoc do
     end
 
     it "keeps kube-system namespace because it is a unique system namespace" do
-      assert doc.send(:raw_template).
-        sub!("name: some-project-rc\n", "name: some-project-rc\n  namespace: kube-system\n")
+      assert doc.send(:raw_template)[0][:metadata][:namespace] = "kube-system"
       create!.resource_template[0][:metadata][:namespace].must_equal 'kube-system'
-    end
-  end
-
-  describe "#ensure_service" do
-    it "does nothing when no service is not defined" do
-      doc.resource_template.pop
-      doc.ensure_service.must_equal "Service not defined"
-    end
-
-    it "does nothing when no service is running" do
-      Kubernetes::Resource::Service.any_instance.stubs(running?: true)
-      doc.ensure_service.must_equal "Service already running"
-    end
-
-    it "creates the service when it does not exist" do
-      Kubernetes::Resource::Service.any_instance.stubs(running?: false)
-      doc.deploy_group.kubernetes_cluster.expects(:client).returns(stub(create_service: nil))
-      doc.ensure_service.must_equal "Service created"
     end
   end
 
@@ -111,52 +94,52 @@ describe Kubernetes::ReleaseDoc do
     let(:client) { doc.deploy_group.kubernetes_cluster.extension_client }
 
     it "creates" do
-      client.expects(:get_deployment).raises(KubeException.new(404, 2, 3))
+      # check and then create service
+      stub_request(:get, service_url).to_raise(kube_404)
+      stub_request(:post, "http://foobar.server/api/v1/namespaces/pod1/services").to_return(body: "{}")
+
+      # check and then create deployment
+      client.expects(:get_deployment).raises(kube_404)
       client.expects(:create_deployment).returns(stub(to_hash: {}))
+
       doc.deploy
-      refute doc.instance_variable_get(:@previous_deploy) # will not revert
+      doc.instance_variable_get(:@previous_deploy).must_equal([nil, nil]) # will not revert
     end
 
     it "remembers the previous deploy in case we have to revert" do
-      client.expects(:get_deployment).returns(foo: :bar)
+      # check service ... do nothing
+      stub_request(:get, service_url).
+        to_return(body: '{"SER":"VICE"}')
+
+      # check and update deployment
+      client.expects(:get_deployment).returns(DE: "PLOY")
       client.expects(:update_deployment).returns("Rest client resonse")
+
       doc.deploy
-      doc.instance_variable_get(:@previous_deploy).must_equal(foo: :bar)
+      doc.instance_variable_get(:@previous_deploy).must_equal([{DE: "PLOY"}, {SER: "VICE"}])
     end
   end
 
   describe '#revert' do
-    let(:service_url) { "http://foobar.server/api/v1/namespaces/pod1/services/some-project" }
-
-    before { doc.instance_variable_set(:@deployed, true) }
-
-    it "reverts only resource when service does not exist" do
-      doc.expects(:service).returns(nil)
-      doc.send(:resource_object).expects(:revert)
+    it "reverts all resources" do
+      doc.instance_variable_set(:@previous_deploy, [{DE: "PLOY"}, {SER: "VICE"}])
+      doc.instance_variable_set(:@deployed, true)
+      doc.send(:resources)[0].expects(:revert).with(DE: "PLOY")
+      doc.send(:resources)[1].expects(:revert).with(SER: "VICE")
       doc.revert
-    end
-
-    it "reverts resource and service when service is running" do
-      stub_request(:get, service_url).to_return(body: "{}")
-
-      delete = stub_request(:delete, service_url)
-      doc.send(:resource_object).expects(:revert)
-      doc.revert
-      assert_requested delete
     end
   end
 
   describe "#validate_config_file" do
     let(:doc) { kubernetes_release_docs(:test_release_pod_1).dup } # validate_config_file is always called on a new doc
 
-    before { doc.stubs(raw_template: read_kubernetes_sample_file('kubernetes_deployment.yml')) }
-
     it "is valid" do
+      kubernetes_fake_raw_template
       assert_valid doc
     end
 
     it "is invalid without template" do
-      doc.stubs(raw_template: nil)
+      GitRepository.any_instance.expects(:file_content).returns(nil)
       refute_valid doc
       doc.errors.full_messages.must_equal(
         ["Kubernetes release does not contain config file 'kubernetes/app_server.yml'"]
@@ -164,7 +147,7 @@ describe Kubernetes::ReleaseDoc do
     end
 
     it "reports detailed errors when invalid" do
-      assert doc.send(:raw_template).sub!('role', 'mole')
+      GitRepository.any_instance.expects(:file_content).returns("foo: bar")
       refute_valid doc
     end
   end
@@ -175,12 +158,12 @@ describe Kubernetes::ReleaseDoc do
     end
 
     it "uses local value for job" do
-      primary_resource[:kind] = 'Job'
+      primary_template[:kind] = 'Job'
       doc.desired_pod_count.must_equal 2
     end
 
     it "asks kubernetes for daemon set since we do not know how many nodes it will match" do
-      primary_resource[:kind] = 'DaemonSet'
+      primary_template[:kind] = 'DaemonSet'
       stub_request(:get, "http://foobar.server/apis/extensions/v1beta1/namespaces/pod1/daemonsets/some-project-rc").
         to_return(body: {status: {desiredNumberScheduled: 3}}.to_json)
       doc.desired_pod_count.must_equal 3
