@@ -44,6 +44,11 @@ module Kubernetes
         @resource = fetch_resource
       end
 
+      # fetch since we want the uid for the created resource, not the previous one / nil
+      def uid
+        fetch_resource&.fetch(:metadata)&.fetch(:uid)
+      end
+
       private
 
       def create

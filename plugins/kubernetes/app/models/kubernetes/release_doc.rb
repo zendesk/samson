@@ -52,13 +52,13 @@ module Kubernetes
       @resource_template ||= Array.wrap(super).map(&:deep_symbolize_keys)
     end
 
-    private
-
     def resources
       @resources ||= resource_template.map do |t|
         Kubernetes::Resource.build(t, deploy_group)
       end
     end
+
+    private
 
     def primary_resource
       primary = resource_template.index { |r| Kubernetes::RoleConfigFile::PRIMARY.include?(r.fetch(:kind)) }

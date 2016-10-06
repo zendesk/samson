@@ -89,9 +89,9 @@ describe Kubernetes::DeployExecutor do
 
       stub_request(:get, "#{deployments_url}/test-app-server").to_return(status: 404) # previous deploys ? -> none!
       stub_request(:get, "#{deployments_url}/test-resque-worker").to_return(status: 404) # previous deploys ? -> none!
-      stub_request(:post, deployments_url).to_return(body: {spec: {}}.to_json) # creates deployment
+      stub_request(:post, deployments_url).to_return(body: {}.to_json) # creates deployment
       stub_request(:put, "#{deployments_url}/test-resque-worker").
-        to_return(body: {spec: {}}.to_json) # updating deployment during delete for rollback
+        to_return(body: {}.to_json) # updating deployment during delete for rollback
 
       executor.stubs(:sleep)
       stub_request(:get, %r{http://foobar.server/api/v1/namespaces/staging/events}).
@@ -101,7 +101,7 @@ describe Kubernetes::DeployExecutor do
       Kubernetes::ResourceTemplate.any_instance.stubs(:set_image_pull_secrets)
 
       service_url = "http://foobar.server/api/v1/namespaces/staging/services/some-project"
-      stub_request(:get, service_url).to_return(body: {metadata: {}}.to_json)
+      stub_request(:get, service_url).to_return(body: {metadata: {uid: '123'}}.to_json)
       stub_request(:delete, service_url)
     end
 
@@ -472,6 +472,7 @@ describe Kubernetes::DeployExecutor do
           /EVENTS:\s+FailedScheduling: fit failure on node \(ip-1-2-3-4\)\s+fit failure on node \(ip-2-3-4-5\)\n\n/
         ) # no repeated events
         out.must_match /LOGS:\s+LOG-1/
+        out.must_include "RESOURCE EVENTS some-project:\n  FailedScheduling:"
       end
     end
   end

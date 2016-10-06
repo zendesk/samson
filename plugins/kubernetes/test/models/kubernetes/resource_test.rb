@@ -82,6 +82,17 @@ describe Kubernetes::Resource do
     end
   end
 
+  describe "#uid" do
+    it "returns the uid of the created resource" do
+      stub_request(:get, url).to_return(body: {metadata: {uid: 123}}.to_json)
+      resource.uid.must_equal 123
+    end
+
+    it "returns nil when resource is missing" do
+      stub_request(:get, url).to_return(status: 404)
+    end
+  end
+
   describe Kubernetes::Resource::DaemonSet do
     def daemonset_stub(scheduled, misscheduled)
       stub(
