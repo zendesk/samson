@@ -36,17 +36,28 @@ describe Kubernetes::Resource do
     it "creates when missing" do
       stub_request(:get, url).to_return(status: 404)
 
-      request = stub_request(:post, base_url).to_return(body: "{}")
+      create = stub_request(:post, base_url).to_return(body: "{}")
       resource.deploy
-      assert_requested request
+      assert_requested create
+
+      # cache was expired
+      get = stub_request(:get, url).to_return(body: "{}")
+      assert resource.running?
+      assert resource.running?
+      assert_requested get, times: 2 # this counts the 404 and the successful request ...
     end
 
     it "updates existing" do
-      stub_request(:get, url).to_return(body: '{}')
+      get = stub_request(:get, url).to_return(body: '{}')
 
-      request = stub_request(:put, url).to_return(body: "{}")
+      update = stub_request(:put, url).to_return(body: "{}")
       resource.deploy
-      assert_requested request
+      assert_requested update
+
+      # cache was expired
+      assert resource.running?
+      assert resource.running?
+      assert_requested get, times: 2
     end
   end
 
