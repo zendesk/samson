@@ -139,26 +139,26 @@ describe Project do
     it 'does not clean the project when the project is created' do
       project = Project.new(name: 'demo_apps', repository_url: repository_url)
       project.expects(:clean_old_repository).never
-      project.save
+      project.save!
     end
 
     it 'invokes the setup repository callback after creation' do
       project = Project.new(name: 'demo_apps', repository_url: repository_url)
       project.expects(:clone_repository).once
-      project.save
+      project.save!
     end
 
     it 'removes the cached repository after the project has been deleted' do
       project = Project.new(name: 'demo_apps', repository_url: repository_url)
       project.expects(:clone_repository).once
       project.expects(:clean_repository).once
-      project.save
+      project.save!
       project.soft_delete!
     end
 
     it 'removes the old repository and sets up the new repository if the repository_url is updated' do
       new_repository_url = 'git@github.com:angular/angular.js.git'
-      project = Project.create(name: 'demo_apps', repository_url: repository_url)
+      project = Project.create!(name: 'demo_apps', repository_url: repository_url)
       project.expects(:clone_repository).once
       original_repo_dir = project.repository.repo_cache_dir
       FileUtils.expects(:rm_rf).with(original_repo_dir).once
@@ -204,6 +204,11 @@ describe Project do
       project = Project.new(id: 9999, name: 'demo_apps', repository_url: 'my_bad_url')
       project.valid?.must_equal false
       project.errors.messages.must_equal repository_url: ["is not valid or accessible"]
+    end
+
+    it 'can initialize with a local repo' do
+      project = Project.new(name: 'demo_apps', repository_url: '/foo/bar/.git')
+      project.save!
     end
   end
 

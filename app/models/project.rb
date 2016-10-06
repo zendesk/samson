@@ -155,7 +155,8 @@ class Project < ActiveRecord::Base
   end
 
   def permalink_base
-    repository_url.to_s.split('/').last.to_s.sub(/\.git/, '')
+    parts = repository_url.to_s.split('/')
+    parts.last.to_s.sub(/\.git/, '').presence || parts[-2].to_s
   end
 
   def generate_token
