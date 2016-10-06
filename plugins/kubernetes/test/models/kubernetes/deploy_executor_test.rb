@@ -74,6 +74,7 @@ describe Kubernetes::DeployExecutor do
     let(:pod_status) { pod_reply[:items].first[:status] }
     let(:worker_role) { kubernetes_deploy_group_roles(:test_pod100_resque_worker) }
     let(:deployments_url) { "http://foobar.server/apis/extensions/v1beta1/namespaces/staging/deployments" }
+    let(:service_url) { "http://foobar.server/api/v1/namespaces/staging/services/some-project" }
 
     before do
       Kubernetes::DeployGroupRole.update_all(replicas: 1)
@@ -100,7 +101,6 @@ describe Kubernetes::DeployExecutor do
       GitRepository.any_instance.stubs(:file_content).with('Dockerfile', anything).returns "FROM all"
       Kubernetes::ResourceTemplate.any_instance.stubs(:set_image_pull_secrets)
 
-      service_url = "http://foobar.server/api/v1/namespaces/staging/services/some-project"
       stub_request(:get, service_url).to_return(body: {metadata: {uid: '123'}}.to_json)
       stub_request(:delete, service_url)
     end
@@ -434,6 +434,18 @@ describe Kubernetes::DeployExecutor do
 
       out.must_include "resque-worker: Missing\n"
       out.must_include "STOPPED"
+    end
+
+    it "does not crash when rollback fails" do
+      Kubernetes::Resource::Deployment.any_instance.stubs(:revert).raises("Weird error")
+      worker_is_unstable
+
+      refute execute!
+
+      out.must_include "resque-worker: Restarted\n"
+      out.must_include "UNSTABLE"
+      out.must_include "DONE" # DONE is shown ... we got past the rollback
+      out.must_include "FAILED: Weird error" # rollback error cause is shown
     end
 
     describe "events and logs" do

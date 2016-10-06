@@ -273,9 +273,13 @@ module Kubernetes
 
     def rollback(release_docs)
       release_docs.each do |release_doc|
-        action = release_doc.previous_deploy ? 'Rolling back' : 'Deleting'
-        @output.puts "#{action} #{release_doc.deploy_group.name} role #{release_doc.kubernetes_role.name}"
-        release_doc.revert
+        begin
+          action = release_doc.previous_deploy ? 'Rolling back' : 'Deleting'
+          @output.puts "#{action} #{release_doc.deploy_group.name} role #{release_doc.kubernetes_role.name}"
+          release_doc.revert
+        rescue # ... still show events and logs if somehow the rollback fails
+          @output.puts "FAILED: #{$!.message}"
+        end
       end
     end
 
