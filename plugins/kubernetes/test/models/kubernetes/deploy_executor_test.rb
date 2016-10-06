@@ -73,6 +73,7 @@ describe Kubernetes::DeployExecutor do
     end
     let(:pod_status) { pod_reply[:items].first[:status] }
     let(:worker_role) { kubernetes_deploy_group_roles(:test_pod100_resque_worker) }
+    let(:server_role) { kubernetes_deploy_group_roles(:test_pod100_app_server) }
     let(:deployments_url) { "http://foobar.server/apis/extensions/v1beta1/namespaces/staging/deployments" }
 
     before do
@@ -130,6 +131,15 @@ describe Kubernetes::DeployExecutor do
       out.must_include "app-server: Live\n"
     end
 
+    it "does not test for stability when not deploying any pods" do
+      worker_role.update_column(:replicas, 0)
+      server_role.update_column(:replicas, 0)
+      assert execute!
+      out.must_include "SUCCESS"
+      out.wont_include "Stable"
+      out.wont_include "Deploy status after"
+    end
+
     describe "invalid configs" do
       before { build.delete } # build needs to be created -> assertion fails
       around { |test| refute_difference('Build.count') { refute_difference('Release.count', &test) } }
@@ -164,7 +174,7 @@ describe Kubernetes::DeployExecutor do
       it "uses configured role settings" do
         assert execute!
         doc = Kubernetes::Release.last.release_docs.sort_by(&:id).last
-        config = kubernetes_deploy_group_roles(:test_pod100_app_server)
+        config = server_role
         doc.replica_target.must_equal config.replicas
         doc.cpu.must_equal config.cpu
         doc.ram.must_equal config.ram

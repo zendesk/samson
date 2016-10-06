@@ -64,6 +64,7 @@ module Kubernetes
         return false if stopped?
 
         statuses = pod_statuses(release, release_docs)
+        return success if statuses.none?
 
         if @testing_for_stability
           if statuses.all?(&:live)
