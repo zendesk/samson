@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20160929164311) do
+ActiveRecord::Schema.define(version: 20161007231901) do
 
   create_table "builds", force: :cascade do |t|
     t.integer  "project_id",                                       null: false
@@ -183,6 +183,7 @@ ActiveRecord::Schema.define(version: 20160929164311) do
     t.datetime "updated_at"
     t.string   "config_filepath", limit: 255
     t.string   "config_context",  limit: 255
+    t.string   "ip_prefix"
   end
 
   create_table "kubernetes_deploy_group_roles", force: :cascade do |t|

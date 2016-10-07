@@ -59,6 +59,14 @@ describe Samson::FormBuilder do
         builder.input(:name, input_html: {size: 'zxy'}) { "XYZ" }
       end
     end
+
+    it "does not include empty pattern" do
+      builder.input(:name, help: "Hello!").wont_include "pattern"
+    end
+
+    it "includes translated js pattern" do
+      builder.input(:name, pattern: /\Aabc\z/).must_include 'pattern="^abc$"'
+    end
   end
 
   describe '#actions' do

@@ -27,6 +27,33 @@ describe Kubernetes::Cluster do
       cluster.config_filepath = 'nope'
       refute_valid cluster
     end
+
+    describe "ip_prefix" do
+      it "is valid with 1" do
+        cluster.ip_prefix = '123'
+        assert_valid cluster
+      end
+
+      it "is valid with 3" do
+        cluster.ip_prefix = '123.123.123'
+        assert_valid cluster
+      end
+
+      it "is invalid with bad values" do
+        cluster.ip_prefix = '12312.'
+        refute_valid cluster
+      end
+
+      it "is invalid with trailing ." do
+        cluster.ip_prefix = '123.'
+        refute_valid cluster
+      end
+
+      it "is invalid with 4" do
+        cluster.ip_prefix = '123.123.123.123'
+        refute_valid cluster
+      end
+    end
   end
 
   describe '#client' do

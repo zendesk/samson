@@ -91,8 +91,36 @@ describe Kubernetes::ReleaseDoc do
     end
 
     it "configures ConfigMap" do
-      assert doc.send(:raw_template)[1][:kind] = "ConfigMap"
+      doc.send(:raw_template)[1][:kind] = "ConfigMap"
       create!.resource_template[1][:metadata][:namespace].must_equal 'pod1'
+    end
+
+    describe 'service clusterIP' do
+      let(:result) { create!.resource_template[1][:spec][:clusterIP] }
+
+      before do
+        doc.deploy_group.kubernetes_cluster.update_column(:ip_prefix, '123.34')
+        doc.send(:raw_template)[1][:spec][:clusterIP] = "1.2.3.4"
+      end
+
+      it "replaces ip prefix" do
+        result.must_equal '123.34.3.4'
+      end
+
+      it "replaces with trailing ." do
+        doc.deploy_group.kubernetes_cluster.update_column(:ip_prefix, '123.34.')
+        result.must_equal '123.34.3.4'
+      end
+
+      it "does nothing when service has no clusterIP" do
+        doc.send(:raw_template)[1][:spec].delete(:clusterIP)
+        result.must_equal nil
+      end
+
+      it "does nothing when ip prefix is blank" do
+        doc.deploy_group.kubernetes_cluster.update_column(:ip_prefix, '')
+        result.must_equal '1.2.3.4'
+      end
     end
   end
 
