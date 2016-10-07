@@ -12,7 +12,7 @@ elsif Samson::EnvCheck.set?("RAILS_LOG_TO_SYSLOG")
     # show params for every request
     unwanted_keys = %w[format action controller]
     params = event.payload[:params].reject { |key, _| unwanted_keys.include? key }
-    { params: params }
+    { params: params, thread_count: Thread.list.size }
   end
 
   require 'syslog/logger'
