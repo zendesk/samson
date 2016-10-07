@@ -78,7 +78,7 @@ describe DeployMailer do
     it "sends" do
       stub_empty_changeset
       DeployMailer.deploy_failed_email(deploy, ["foo@bar.com"]).deliver_now
-      subject.subject.must_equal "[AUTO-DEPLOY][DEPLOY][#{deploy.id}] Super Admin deployed Project to Staging (staging)"
+      subject.subject.must_equal "[AUTO-DEPLOY][DEPLOY][##{deploy.id}] Super Admin deployed Project to Staging (staging)" # rubocop:disable Metrics/LineLength
     end
   end
 end
