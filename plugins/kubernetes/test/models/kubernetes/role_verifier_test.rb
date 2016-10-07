@@ -62,7 +62,7 @@ describe Kubernetes::RoleVerifier do
     end
 
     it "reports non-unique namespaces since that would break pod fetching" do
-      role.first[:metadata][:namespace] = "kube-system"
+      role.first[:metadata][:namespace] = "default"
       errors.to_s.must_include "Namespaces need to be unique"
     end
 

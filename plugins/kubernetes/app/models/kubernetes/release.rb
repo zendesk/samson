@@ -28,7 +28,7 @@ module Kubernetes
     end
 
     # optimization to not do multiple queries to the same cluster+namespace because we have many roles
-    # ... needs to check doc namespace too since it might be kube-system
+    # ... needs to check doc namespace too since it might be not overwritten
     # ... assumes that there is only 1 namespace per release_doc
     def clients
       scopes = release_docs.map do |release_doc|

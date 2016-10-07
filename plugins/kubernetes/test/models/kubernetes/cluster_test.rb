@@ -42,7 +42,7 @@ describe Kubernetes::Cluster do
   end
 
   describe "#namespaces" do
-    it 'ignores kube-system' do
+    it 'ignores kube-system because it is internal and should not be deployed too' do
       items = [{metadata: {name: 'N1'}}, {metadata: {name: 'N2'}}, {metadata: {name: 'kube-system'}}]
       stub_request(:get, "http://foobar.server/api/v1/namespaces").
         to_return(body: {items: items, }.to_json)

@@ -82,7 +82,7 @@ module Kubernetes
       end
 
       def loop_sleep
-        sleep 2 unless ENV.fetch('RAILS_ENV') == 'test'
+        sleep 2 unless Rails.env == 'test'
       end
     end
 
