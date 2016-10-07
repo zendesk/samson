@@ -23,7 +23,7 @@
           <tr>
             <td><%= kubernetes_release.deploy ? link_to(kubernetes_release.id, project_deploy_path(@project, kubernetes_release.deploy, anchor: 'kubernetes_release')) : kubernetes_release.id %></td>
             <td>
-              <%= link_to kubernetes_release.build.label, [kubernetes_release.project, kubernetes_release.build] %>
+              <%= link_to kubernetes_release.build.label, [kubernetes_release.project, kubernetes_release.build] if kubernetes_release.build %>
             </td>
             <td>
               <% kubernetes_release.release_docs.map(&:deploy_group).sort_by(&:natural_order).each do |deploy_group| %>
