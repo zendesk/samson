@@ -33,7 +33,7 @@ class DeployMailer < ApplicationMailer
   private
 
   def deploy_subject(deploy)
-    "[#{Rails.application.config.samson.email.prefix}] #{deploy.summary_for_email}"
+    "[#{Rails.application.config.samson.email.prefix}][#{deploy.id}] #{deploy.summary_for_email}"
   end
 
   def prepare_mail(deploy)
