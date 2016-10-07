@@ -48,6 +48,7 @@ gem 'vault'
 gem 'docker-api', '>= 1.32'
 gem 'warden-doorkeeper'
 gem 'kubeclient', '~> 1.2.0'
+gem 'newrelic_rpm'
 
 # treat included plugins like gems
 Dir[File.join(Bundler.root, 'plugins/*/')].each { |f| gemspec path: f }
@@ -68,7 +69,6 @@ end
 
 group :production, :staging do
   gem 'airbrake', '~> 4.3.6' # different configuration format on 5.x
-  gem 'newrelic_rpm'
 end
 
 group :assets do
