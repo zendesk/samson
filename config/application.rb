@@ -3,9 +3,19 @@ require_relative 'boot'
 
 require 'rails/all'
 
+# Define dotenv before preload, so that gems can use the ENV vars defined within
+require 'dotenv'
+if Rails.env.test?
+  Dotenv.overload(Bundler.root.join('.env.test'))
+else
+  Dotenv.load(Bundler.root.join('.env'))
+end
+
 Bundler.require(:preload)
 Bundler.require(:assets) if Rails.env.development? || ENV["PRECOMPILE"]
 
+###
+# Railties need to be loaded before the application is defined
 if ['development', 'staging'].include?(Rails.env)
   require 'better_errors'
   require 'rack-mini-profiler'
@@ -13,13 +23,12 @@ end
 
 if ['staging', 'production'].include?(Rails.env)
   require 'airbrake/railtie'
-end
-
-if Rails.env.test?
-  Dotenv.overload(Bundler.root.join('.env.test'))
+  require 'newrelic_rpm'
 else
-  Dotenv.load(Bundler.root.join('.env'))
+  require 'new_relic/agent/method_tracer' # needed even in dev/test mode
 end
+# END Railties
+###
 
 require "#{Bundler.root}/lib/samson/env_check"
 
