@@ -106,17 +106,17 @@ describe Kubernetes::ResourceTemplate do
       it "fills then environment with string values" do
         env = container.fetch(:env)
         env.map { |x| x.fetch(:name) }.sort.must_equal(
-          [
-            :REVISION,
-            :TAG,
-            :PROJECT,
-            :ROLE,
-            :DEPLOY_ID,
-            :DEPLOY_GROUP,
-            :POD_NAME,
-            :POD_NAMESPACE,
-            :POD_IP,
-            :KUBERNETES_CLUSTER_NAME
+          %w[
+            REVISION
+            TAG
+            PROJECT
+            ROLE
+            DEPLOY_ID
+            DEPLOY_GROUP
+            POD_NAME
+            POD_NAMESPACE
+            POD_IP
+            KUBERNETES_CLUSTER_NAME
           ].sort
         )
         env.map { |x| x[:value] }.map(&:class).map(&:name).sort.uniq.must_equal(["NilClass", "String"])
@@ -137,7 +137,18 @@ describe Kubernetes::ResourceTemplate do
 
       it "adds env from deploy_group_env hook" do
         Samson::Hooks.with_callback(:deploy_group_env, ->(p, dg) { {FromEnv: "#{p.name}-#{dg.name}"} }) do
-          container.fetch(:env).must_include(name: :FromEnv, value: 'Project-Pod1')
+          container.fetch(:env).must_include(name: 'FromEnv', value: 'Project-Pod1')
+        end
+      end
+
+      it "overrides container env with deploy_group_env so samson can modify env variables" do
+        raw_template[:spec][:template][:spec][:containers].first[:env] = [{name: 'FromEnv', value: 'THIS-IS-BAD'}]
+        # plugins can return string or symbol keys, we should be prepared for both
+        callback = ->(*) { {'FromEnv' => "THIS-IS-MEH", FromEnv: "THIS-IS-GOOD"} }
+        Samson::Hooks.with_callback(:deploy_group_env, callback) do
+          container.fetch(:env).select { |e| e[:name] == 'FromEnv' }.must_equal(
+            [{name: 'FromEnv', value: 'THIS-IS-GOOD'}]
+          )
         end
       end
     end
