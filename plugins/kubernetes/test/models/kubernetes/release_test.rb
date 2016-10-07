@@ -116,8 +116,8 @@ describe Kubernetes::Release do
 
     it "can scope queries by resource namespace" do
       release = kubernetes_releases(:test_release)
-      Kubernetes::Resource::Deployment.any_instance.stubs(namespace: "kube-system")
-      stub_request(:get, %r{http://foobar.server/api/v1/namespaces/kube-system/pods}).to_return(body: {
+      Kubernetes::Resource::Deployment.any_instance.stubs(namespace: "default")
+      stub_request(:get, %r{http://foobar.server/api/v1/namespaces/default/pods}).to_return(body: {
         resourceVersion: "1",
         items: [{}, {}]
       }.to_json)

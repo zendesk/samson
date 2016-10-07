@@ -73,9 +73,7 @@ module Kubernetes
     # dynamically fill out the templates and store the result
     def store_resource_template
       self.resource_template = raw_template.map do |resource|
-        unless resource[:metadata][:namespace] == "kube-system"
-          resource[:metadata][:namespace] = deploy_group.kubernetes_namespace
-        end
+        update_namespace resource
 
         case resource[:kind]
         when 'Service'
@@ -98,6 +96,12 @@ module Kubernetes
           resource
         end
       end
+    end
+
+    def update_namespace(resource)
+      return if resource[:metadata][:namespace] == "default" &&
+        (resource[:metadata][:labels] || {})[:'kubernetes.io/cluster-service'] == 'true'
+      resource[:metadata][:namespace] = deploy_group.kubernetes_namespace
     end
 
     def validate_config_file

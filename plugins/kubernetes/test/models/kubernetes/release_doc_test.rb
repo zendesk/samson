@@ -84,9 +84,10 @@ describe Kubernetes::ReleaseDoc do
       e.message.must_equal "Service name for role app-server was generated and needs to be changed before deploying."
     end
 
-    it "keeps kube-system namespace because it is a unique system namespace" do
-      doc.send(:raw_template)[0][:metadata][:namespace] = "kube-system"
-      create!.resource_template[0][:metadata][:namespace].must_equal 'kube-system'
+    it "keeps default service namespace because it is a unique system namespace" do
+      doc.send(:raw_template)[0][:metadata][:namespace] = "default"
+      doc.send(:raw_template)[0][:metadata][:labels] = {"kubernetes.io/cluster-service": 'true'}
+      create!.resource_template[0][:metadata][:namespace].must_equal 'default'
     end
 
     it "configures ConfigMap" do
