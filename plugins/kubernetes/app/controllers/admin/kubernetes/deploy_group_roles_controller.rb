@@ -42,7 +42,7 @@ class Admin::Kubernetes::DeployGroupRolesController < ApplicationController
       deploy_group_role_params.except(:project_id, :deploy_group_id, :kubernetes_role_id)
     )
     if @deploy_group_role.save
-      redirect_to [:admin, @deploy_group_role]
+      redirect_back_or [:admin, @deploy_group_role]
     else
       render :edit, status: 422
     end
