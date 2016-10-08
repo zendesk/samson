@@ -121,10 +121,18 @@ describe Admin::Kubernetes::DeployGroupRolesController do
     end
 
     describe "#update" do
+      let(:valid_params) { {id: deploy_group_role.id, kubernetes_deploy_group_role: {cpu: 3.1}} }
+
       it "updates" do
-        put :update, params: {id: deploy_group_role.id, kubernetes_deploy_group_role: {cpu: 3.1}}
+        put :update, params: valid_params
         deploy_group_role.reload.cpu.must_equal 3.1
         assert_redirected_to [:admin, deploy_group_role]
+      end
+
+      it "can redirect back" do
+        valid_params[:redirect_to] = "/test"
+        put :update, params: valid_params
+        assert_redirected_to "/test"
       end
 
       it "does not allow to circumvent project admin protection" do
@@ -135,7 +143,7 @@ describe Admin::Kubernetes::DeployGroupRolesController do
 
       it "does not allow updates for non-admins" do
         user.user_project_roles.delete_all
-        put :update, params: {id: deploy_group_role.id, kubernetes_deploy_group_role: {cpu: 3.1}}
+        put :update, params: valid_params
         assert_unauthorized
       end
 

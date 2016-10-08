@@ -31,7 +31,7 @@
             <td><%= dg_role.ram %></td>
             <td>
               <% if current_user.admin_for?(@stage.project) %>
-                <%= link_to 'Edit', edit_admin_kubernetes_deploy_group_role_path(dg_role) %>
+                <%= link_to 'Edit', edit_admin_kubernetes_deploy_group_role_path(dg_role, redirect_to: request.path) %>
               <% end %>
             </td>
           <% else %>
