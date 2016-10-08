@@ -162,7 +162,7 @@ module Kubernetes
     def set_env
       env = (container[:env] ||= [])
 
-      static_env.each { |k, v| env << {name: k, value: v.to_s} }
+      static_env.each { |k, v| env << {name: k.to_s, value: v.to_s} }
 
       # dynamic lookups for unknown things during deploy
       {
@@ -171,10 +171,15 @@ module Kubernetes
         POD_IP: 'status.podIP'
       }.each do |k, v|
         env << {
-         name: k,
+         name: k.to_s,
          valueFrom: {fieldRef: {fieldPath: v}}
        }
       end
+
+      # unique, but keep last elements
+      env.reverse!
+      env.uniq! { |h| h[:name] }
+      env.reverse!
     end
 
     def static_env
