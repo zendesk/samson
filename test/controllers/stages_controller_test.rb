@@ -28,9 +28,8 @@ describe StagesController do
     end
 
     it "fails with invalid token" do
-      assert_raises ActiveRecord::RecordNotFound do
-        get :show, params: valid_params.merge(token: 'invalid')
-      end
+      get :show, params: valid_params.merge(token: 'invalid')
+      assert_response :not_found
     end
 
     it "renders none without deploy" do
