@@ -61,8 +61,8 @@ describe DeployMailer do
     end
 
     it 'sets a bypass subject' do
-      subject.subject.must_match /BYPASS/
-      subject.subject.must_match Regexp.new deploy.id.to_s
+      subject.subject.must_include "BYPASS"
+      subject.subject.must_include deploy.id.to_s
     end
 
     describe "with jira address" do
