@@ -2,75 +2,17 @@
   <%= render 'shared/errors', object: project %>
 
   <fieldset>
-    <div class="form-group">
-      <%= form.label :name, class: "col-lg-2 control-label" %>
-      <div class="col-lg-4">
-        <%= form.text_field :name, class: "form-control" %>
-      </div>
-    </div>
-
-    <div class="form-group">
-      <%= form.label :description, class: "col-lg-2 control-label" %>
-      <div class="col-lg-4">
-        <%= form.text_area :description, class: "form-control" %>
-        <p class="help-block">How would you explain the project to someone new?</p>
-      </div>
-    </div>
-
-    <div class="form-group">
-      <%= form.label :Contact, class: "col-lg-2 control-label" %>
-      <div class="col-lg-4">
-        <%= form.text_field :owner, class: "form-control" %>
-        <p class="help-block">An email or group to contact with questions.</p>
-      </div>
-    </div>
-
-    <div class="form-group">
-      <%= form.label :repository_url, class: "col-lg-2 control-label" %>
-      <div class="col-lg-4">
-        <%= form.text_field :repository_url, class: "form-control" %>
-      </div>
-    </div>
-
-    <% if project.persisted? %>
-      <div class="form-group">
-        <%= form.label :permalink, class: "col-lg-2 control-label" %>
-        <div class="col-lg-4">
-          <%= form.text_field :permalink, class: "form-control" %>
-        </div>
-      </div>
-    <% end %>
-
-    <div class="form-group">
-      <%= form.label :release_branch, class: "col-lg-2 control-label" %>
-      <div class="col-lg-4">
-        <%= form.text_field :release_branch, class: "form-control" %>
-        <p class="help-block">New commits on this branch will cause a release when a webhook arrives.</p>
-      </div>
-    </div>
-
-
+    <%= form.input :name %>
+    <%= form.input :description, as: :text_area, help: 'How would you explain the project to someone new?' %>
+    <%= form.input :owner, label: 'Contact', help: 'An email or group to contact with questions.' %>
+    <%= form.input :repository_url %>
+    <%= form.input :permalink if project.persisted? %>
+    <%= form.input :release_branch, help: 'New commits on this branch will cause a release when a webhook arrives.' %>
     <% if ENV['DOCKER_FEATURE'] %>
-      <div class="form-group">
-        <%= form.label :docker_release_branch, class: "col-lg-2 control-label" %>
-        <div class="col-lg-4">
-          <%= form.text_field :docker_release_branch, class: "form-control" %>
-
-          <p class="help-block">
-            New commits on this branch will cause a docker image to be built when a webhook arrives.
-          </p>
-        </div>
-      </div>
+      <%= form.input :docker_release_branch, help: 'New commits on this branch will cause a docker image to be built when a webhook arrives.' %>
     <% end %>
-
     <% if DeployGroup.enabled? %>
-      <div class="form-group">
-        <div class="col-lg-offset-2 col-lg-4">
-          <%= form.check_box :include_new_deploy_groups %>
-          <%= form.label :include_new_deploy_groups, 'Include in New Deploy Groups'%>
-          <p class="help-block">The "Create all stages" button for a deploy group will create a stage for this project.</p>
-        </div>
-      </div>
+      <%= form.input :include_new_deploy_groups, as: :check_box, label: 'Include in New Deploy Groups', help: 'The "Create all stages" button for a deploy group will create a stage for this project.' %>
     <% end %>
 
     <%= Samson::Hooks.render_views(:project_form, self, form: form) %>
