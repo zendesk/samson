@@ -3,22 +3,9 @@ require 'kubeclient'
 
 module Kubeclient
   class Client
-    # Add Deployment and Daemonset waiting for PR:
-    # https://github.com/abonas/kubeclient/pull/143
-    NEW_ENTITY_TYPES = %w[Deployment DeploymentRollback DaemonSet Job ConfigMap].map do |et|
-      clazz = Class.new(RecursiveOpenStruct) do
-        def initialize(hash = nil, args = {})
-          args[:recurse_over_arrays] = true
-          super(hash, args)
-        end
-      end
-      [Kubeclient.const_set(et, clazz), et]
-    end
-    ClientMixin.define_entity_methods(NEW_ENTITY_TYPES)
-    ENTITY_TYPES.concat NEW_ENTITY_TYPES
+    ClientMixin.resource_class(self, 'DeploymentRollback')
 
-    # Since Deployment isn't a supported model in the kubeclient gem, we need
-    # to implement a custom method to handle the rollback endpoint.
+    # Entity methods for resources that have a / in their name are not defined by kubeclient
     #
     # To roll back to a specific version of the deployment, you can pass in
     # the `:revision` option. If you pass in 0 (the default), it will roll

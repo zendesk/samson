@@ -47,7 +47,6 @@ gem 'concurrent-ruby'
 gem 'vault'
 gem 'docker-api', '>= 1.32'
 gem 'warden-doorkeeper'
-gem 'kubeclient', '~> 1.2.0'
 gem 'newrelic_rpm'
 
 # treat included plugins like gems

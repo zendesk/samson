@@ -49,6 +49,7 @@ PATH
   remote: plugins/kubernetes
   specs:
     samson_kubernetes (0.0.1)
+      kubeclient (>= 2)
 
 PATH
   remote: plugins/new_relic
@@ -209,7 +210,7 @@ GEM
       http-cookie (~> 1.0)
       http-form_data (~> 1.0.1)
       http_parser.rb (~> 0.6.0)
-    http-cookie (1.0.2)
+    http-cookie (1.0.3)
       domain_name (~> 0.5)
     http-form_data (1.0.1)
     http_parser.rb (0.6.0)
@@ -234,8 +235,7 @@ GEM
     kaminari (0.17.0)
       actionpack (>= 3.0.0)
       activesupport (>= 3.0.0)
-    kubeclient (1.2.0)
-      activesupport
+    kubeclient (2.1.0)
       http (= 0.9.8)
       recursive-open-struct (= 1.0.0)
       rest-client
@@ -252,7 +252,7 @@ GEM
       minitest (>= 5.0.0, < 5.10.0)
     metaclass (0.0.4)
     method_source (0.8.2)
-    mime-types (2.99.2)
+    mime-types (2.99.3)
     mini_portile2 (2.1.0)
     minitest (5.9.0)
     minitest-rails (3.0.0)
@@ -521,7 +521,6 @@ DEPENDENCIES
   github-markdown
   goldiloader
   kaminari (~> 0.17.0)
-  kubeclient (~> 1.2.0)
   lograge
   logstash-event
   maxitest
