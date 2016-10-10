@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 require_relative '../../test_helper'
 
-SingleCov.covered! uncovered: 1
+SingleCov.covered!
 
 describe Permalinkable do
   let(:project) { projects(:test) }
@@ -49,6 +49,13 @@ describe Permalinkable do
     it "behaves like find when not finding" do
       assert_raise ActiveRecord::RecordNotFound do
         Project.find_by_param!("bar")
+      end
+    end
+
+    it "uses a single query to find by permalink or id" do
+      id = project.id
+      assert_sql_queries 1 do
+        Project.find_by_param!(id)
       end
     end
 

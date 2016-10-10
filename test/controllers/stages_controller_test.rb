@@ -27,7 +27,13 @@ describe StagesController do
       assert_redirected_to "https://img.shields.io/badge/Staging-staging-green.svg"
     end
 
-    it "fails with invalid token" do
+    it "fails silently with invalid stage" do
+      valid_params[:id] = 'whoops'
+      get :show, params: valid_params
+      assert_response :not_found
+    end
+
+    it "fails silently with invalid token" do
       get :show, params: valid_params.merge(token: 'invalid')
       assert_response :not_found
     end
