@@ -98,7 +98,8 @@ class StagesController < ApplicationController
   end
 
   def find_stage
-    @stage = current_project.stages.find_by_param!(params[:id])
+    return if @stage = current_project.stages.find_by_param(params[:id])
+    badge? ? head(:not_found) : raise(ActiveRecord::RecordNotFound)
   end
 
   def stage_permitted_params

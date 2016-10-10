@@ -9,14 +9,18 @@ module Permalinkable
   end
 
   module ClassMethods
-    def find_by_param!(param)
-      find_by_permalink!(param)
-    rescue ActiveRecord::RecordNotFound
+    # find by permalink or id
+    def find_by_param(param)
+      param = param.to_s
       if param =~ /^\d+$/
-        find_by_id!(param)
+        where("permalink = ? OR id = ?", param, param).first
       else
-        raise
+        where(permalink: param).first
       end
+    end
+
+    def find_by_param!(param)
+      find_by_param(param) || raise(ActiveRecord::RecordNotFound)
     end
   end
 
