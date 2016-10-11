@@ -38,7 +38,7 @@ module Kubernetes
       scopes.map do |group, namespace|
         query = {
           namespace: namespace,
-          label_selector: pod_selector(group).to_kuber_selector
+          label_selector: pod_selector(group).map { |k, v| "#{k}=#{v}" }.join(",")
         }
         [group.kubernetes_cluster.client, query, group]
       end
