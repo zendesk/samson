@@ -34,6 +34,10 @@ describe Samson::FormBuilder do
       builder.input(:name, help: "Hello!").must_include "title=\"Hello!\"></i>"
     end
 
+    it "can show help for check box" do
+      builder.input(:name, as: :check_box, help: "Hello!").must_include "title=\"Hello!\"></i>"
+    end
+
     it "can show size" do
       builder.input(:name, input_html: {size: '1x4'}).must_include ' size="1x4"'
     end
@@ -44,6 +48,10 @@ describe Samson::FormBuilder do
 
     it "replaces input with block" do
       builder.input(:name) { "XYZ" }.must_include "XYZ"
+    end
+
+    it "replaces input with block for check boxes" do
+      builder.input(:name, as: :check_box) { "XYZ" }.must_include "XYZ"
     end
 
     it "does not allow input_html and block" do
