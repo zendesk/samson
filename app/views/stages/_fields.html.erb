@@ -1,92 +1,34 @@
 <fieldset>
-  <div class="form-group">
-    <%= form.label :name, "Name", class: "col-lg-2 control-label" %>
-    <div class="col-lg-4">
-      <%= form.text_field :name, class: "form-control" %>
-    </div>
-  </div>
-
-  <% if form.object.persisted? %>
-    <div class="form-group">
-      <%= form.label :permalink, "Permalink", class: "col-lg-2 control-label" %>
-      <div class="col-lg-4">
-        <%= form.text_field :permalink, class: "form-control" %>
-      </div>
-    </div>
-  <% end %>
-
-  <div class="form-group">
-    <%= form.label :notify_email_address, "Email addresses", class: "col-lg-2 control-label" %>
-    <div class="col-lg-4">
-      <%= form.text_field :notify_email_address, class: "form-control" %>
-      <span class="help-block">Enter the email addresses that should be notified of new deploys, separated by <code>;</code></span>
-    </div>
-  </div>
+  <%= form.input :name %>
+  <%= form.input :permalink if form.object.persisted? %>
+  <%= form.input :notify_email_address,
+        label: "Email addresses",
+        help: "Enter the email addresses that should be notified of new deploys, separated by <code>;</code>".html_safe
+  %>
 
   <% if DeployGroup.enabled? %>
     <%= render 'deploy_groups/deploy_group_select', form: form %>
   <% else %>
-    <div class="form-group">
-      <div class="col-sm-offset-2 col-sm-10">
-        <div class="checkbox">
-          <%= form.label :production do %>
-            <%= form.check_box :production %>
-            Does this stage impact production servers?
-          <% end %>
-        </div>
-      </div>
-    </div>
+    <%= form.input :production, as: :check_box,
+          label: 'Impacts production',
+          help: "Deploys to production need to pass a buddy check when BuddyCheck is enabled."
+    %>
   <% end %>
 
-  <div class="form-group">
-    <div class="col-sm-offset-2 col-sm-10">
-      <div class="checkbox">
-        <%= form.label :no_code_deployed do %>
-          <%= form.check_box :no_code_deployed %>
-          <% details = "Bypass " + [("buddy check" if BuddyCheck.enabled?), "release tracking"].compact.to_sentence %>
-          Does not deploy code <abbr title="<%= details %>">?</abbr>
-        <% end %>
-      </div>
-    </div>
-  </div>
+  <% help = "Bypass " + [("buddy check" if BuddyCheck.enabled?), "release tracking"].compact.to_sentence %>
+  <%= form.input :no_code_deployed, as: :check_box, label: "Does not deploy code", help: help %>
 
-  <div class="form-group">
-    <div class="col-sm-offset-2 col-sm-10">
-      <div class="checkbox">
-        <%= form.label :confirm do %>
-          <%= form.check_box :confirm %>
-          Confirm before deployment
-        <% end %>
-      </div>
-    </div>
-  </div>
-
-  <% if DeployGroup.enabled? %>
-    <div class="form-group">
-      <div class="col-sm-offset-2 col-sm-10">
-        <div class="checkbox">
-          <%= form.label :is_template do %>
-            <%= form.check_box :is_template %>
-            Is a Template Stage
-          <% end %>
-          <span class="help-block">This stage can serve as a template to create new stages for its environment (only changing the deploy group).</span>
-        </div>
-      </div>
-    </div>
-  <% end %>
-
+  <%= form.input :confirm, as: :check_box, label: "Confirm before deployment", help: "Show a review page before starting a deploy" %>
 
   <% if @project.releases.any? %>
-    <div class="form-group">
-      <div class="col-sm-offset-2 col-sm-10">
-        <div class="checkbox">
-          <%= form.label :deploy_on_release do %>
-            <%= form.check_box :deploy_on_release %>
-            Automatically deploy new releases
-          <% end %>
-        </div>
-      </div>
-    </div>
+    <%= form.input :deploy_on_release, as: :check_box, label: "Automatically deploy new releases" %>
+  <% end %>
+
+  <% if DeployGroup.enabled? %>
+    <%= form.input :is_template, as: :check_box,
+          label: "Template Stage",
+          help: "This stage can serve as a template to create new stages for its environment (only changing the deploy group)."
+    %>
   <% end %>
 </fieldset>
 
@@ -126,16 +68,6 @@
 
 <fieldset>
   <legend>GitHub</legend>
-  <div class="col-lg-6 checkbox col-lg-offset-2">
-    <%= form.label :update_github_pull_requests do %>
-      <%= form.check_box :update_github_pull_requests %>
-      Update Pull Request after deployment
-    <% end %>
-  </div>
-  <div class="col-lg-6 checkbox col-lg-offset-2">
-    <%= form.label :use_github_deployment_api do %>
-      <%= form.check_box :use_github_deployment_api %>
-      Use GitHub Deployment API [beta]
-    <% end %>
-  </div>
+  <%= form.input :update_github_pull_requests, as: :check_box, label: "Update Pull Requests after deployment" %>
+  <%= form.input :use_github_deployment_api, as: :check_box, label: "Use GitHub Deployment API" %>
 </fieldset>
