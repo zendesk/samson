@@ -66,7 +66,7 @@ class Admin::Kubernetes::ClustersController < ApplicationController
 
   def new_cluster_params
     params.require(:kubernetes_cluster).permit(
-      :name, :config_filepath, :config_context, :description, deploy_group_ids: []
+      :name, :config_filepath, :config_context, :description, :ip_prefix, deploy_group_ids: []
     )
   end
 

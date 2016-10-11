@@ -86,6 +86,8 @@ module Kubernetes
           end
           resource[:metadata][:name] = name.presence || resource[:metadata][:name]
 
+          prefix_service_cluster_ip(resource)
+
           # For now, create a NodePort for each service, so we can expose any
           # apps running in the Kubernetes cluster to traffic outside the cluster.
           resource[:spec][:type] = 'NodePort'
@@ -96,6 +98,16 @@ module Kubernetes
           resource
         end
       end
+    end
+
+    # no ipv6 support
+    def prefix_service_cluster_ip(resource)
+      return unless ip = resource[:spec][:clusterIP]
+      return unless prefix = deploy_group.kubernetes_cluster.ip_prefix.presence
+      ip = ip.split('.')
+      prefix = prefix.split('.')
+      ip[0...prefix.size] = prefix
+      resource[:spec][:clusterIP] = ip.join('.')
     end
 
     def update_namespace(resource)

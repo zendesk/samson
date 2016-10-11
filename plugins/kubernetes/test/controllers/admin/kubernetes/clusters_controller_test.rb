@@ -42,7 +42,7 @@ describe Admin::Kubernetes::ClustersController do
 
     describe "#create" do
       use_example_config
-      let(:params) { {config_filepath: __FILE__, config_context: 'y', name: 'foobar'} }
+      let(:params) { {config_filepath: __FILE__, config_context: 'y', name: 'foobar', ip_prefix: '1.2'} }
 
       before { Kubernetes::Cluster.any_instance.stubs(connection_valid?: true) } # avoid real connection
 

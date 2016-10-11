@@ -24,14 +24,11 @@
       </div>
     </div>
 
-    <div class="form-group">
-      <% pattern = Kubernetes::RoleVerifier::VALID_LABEL_JS %>
-      <%= form.label :resource_name, class: "col-lg-2 control-label" %>
-      <div class="col-lg-4">
-        <%= form.text_field :resource_name, class: "form-control", pattern: pattern %>
-      </div>
-      <%= additional_info "Name for the resource this role will create (service/job), must match #{pattern}" %>
-    </div>
+    <%= form.input :resource_name,
+          pattern: Kubernetes::RoleVerifier::VALID_LABEL,
+          help: "Name for the resource this role will create (service/job), a-Z 0-9 and -"
+    %>
+
 
     <div class="form-group">
       <div class="col-lg-offset-2 col-lg-10">
