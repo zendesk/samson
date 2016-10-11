@@ -185,7 +185,7 @@ describe Kubernetes::ResourceTemplate do
       end
 
       it "fails when vault is not configured" do
-        VaultClient.client.expects(:config_for).returns(nil)
+        Samson::Secrets::VaultClient.client.expects(:config_for).returns(nil)
         e = assert_raises { template.to_hash }
         e.message.must_equal "Could not find Vault config for pod1"
       end

@@ -127,7 +127,7 @@ describe Samson::Secrets::HashicorpVaultBackend do
 
   describe ".vault_client" do
     it 'creates a valid client' do
-      assert_instance_of(::VaultClient, Samson::Secrets::HashicorpVaultBackend.send(:vault_client))
+      assert_instance_of(Samson::Secrets::VaultClient, Samson::Secrets::HashicorpVaultBackend.send(:vault_client))
     end
   end
 

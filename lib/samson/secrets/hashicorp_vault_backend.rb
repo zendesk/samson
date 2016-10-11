@@ -1,5 +1,4 @@
 # frozen_string_literal: true
-require 'vault'
 
 module Samson
   module Secrets
@@ -66,7 +65,7 @@ module Samson
 
         # get and cache a copy of the client that has a token
         def vault_client
-          @vault_client ||= VaultClient.new
+          @vault_client ||= Samson::Secrets::VaultClient.new
         end
 
         def wrap_vault_errors(message)
