@@ -88,11 +88,16 @@ class Admin::DeployGroupsController < ApplicationController
   end
 
   def merge_all_stages
-    deploy_group.stages.cloned.each do |stage|
-      merge_stage(stage)
+    failures = deploy_group.stages.cloned.map do |stage|
+      reason = merge_stage(stage)
+      [reason, stage]
     end
 
-    redirect_to [:admin, deploy_group]
+    failures = failures.select(&:first)
+
+    message = failures.map { |reason, stage| "#{stage.project.name} #{stage.name} #{reason}" }.join(", ")
+
+    redirect_to [:admin, deploy_group], alert: (failures.empty? ? nil : "Some stages were skipped: #{message}")
   end
 
   def self.create_all_stages(deploy_group)
@@ -104,12 +109,15 @@ class Admin::DeployGroupsController < ApplicationController
 
   private
 
+  # returns nil on success, otherwise the reason this stage was skipped.
   def merge_stage(stage)
     template_stage = stage.template_stage
 
-    return unless template_stage
-    return if stage.is_template
-    return if stage.deploy_groups.count != 1
+    return "has no template stage to merge into" unless template_stage
+    return "is a template stage" if stage.is_template
+    return "has no deploy groups" if stage.deploy_groups.count.zero?
+    return "has more than one deploy group" if stage.deploy_groups.count > 1
+    return "commands in template stage differ" if stage.commands.to_a != template_stage.commands.to_a
 
     unless template_stage.deploy_groups.include?(stage.deploy_groups.first)
       template_stage.deploy_groups += stage.deploy_groups
@@ -119,6 +127,8 @@ class Admin::DeployGroupsController < ApplicationController
 
     stage.project.stages.reload # need to reload to make verify_not_part_of_pipeline have current data and not fail
     stage.soft_delete!
+
+    nil
   end
 
   class << self

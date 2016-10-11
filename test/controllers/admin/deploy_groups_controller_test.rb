@@ -262,6 +262,12 @@ describe Admin::DeployGroupsController do
           end
         end
 
+        it "success sets no alert for skipping" do
+          post :merge_all_stages, params: {id: deploy_group}
+
+          refute flash.alert
+        end
+
         it "removes the next_stage_id" do
           assert template_stage.reload.next_stage_ids.include?(stage.id)
 
@@ -292,6 +298,90 @@ describe Admin::DeployGroupsController do
           post :merge_all_stages, params: {id: deploy_group}
 
           assert DeployGroupsStage.where(stage_id: template_stage.id, deploy_group_id: deploy_group.id).first
+        end
+
+        describe "commands differ between clone and template" do
+          before do
+            command = Command.create!(command: "flooboop")
+            StageCommand.create!(command: command, stage: stage, position: 2)
+          end
+
+          it "ignores clone during merge" do
+            # doesn't remove the old stage
+            refute_difference 'Stage.count' do
+              post :merge_all_stages, params: {id: deploy_group}
+            end
+
+            # doesn't merge the deploy group
+            refute template_stage.deploy_groups.include?(deploy_group)
+          end
+
+          it "sets warning in alert" do
+            post :merge_all_stages, params: {id: deploy_group}
+            assert flash.alert
+          end
+        end
+
+        describe "stage has no template" do
+          before do
+            stage.template_stage = nil
+            stage.save!
+          end
+
+          it "ignores clone during merge" do
+            refute_difference 'Stage.count' do
+              post :merge_all_stages, params: {id: deploy_group}
+            end
+
+            refute template_stage.deploy_groups.include?(deploy_group)
+          end
+
+          # non-cloned stages are naturally ignored as part of the merge process
+          # no alert is necessary
+          xit "sets warning in alert" do
+            post :merge_all_stages, params: {id: deploy_group}
+            assert flash.alert
+          end
+        end
+
+        describe "stage is a template" do
+          before do
+            stage.is_template = true
+            stage.save!
+          end
+
+          it "ignores clone during merge" do
+            refute_difference 'Stage.count' do
+              post :merge_all_stages, params: {id: deploy_group}
+            end
+
+            refute template_stage.deploy_groups.include?(deploy_group)
+          end
+
+          it "sets warning in alert" do
+            post :merge_all_stages, params: {id: deploy_group}
+            assert flash.alert
+          end
+        end
+
+        describe "stage has more than one deploy group" do
+          before do
+            stage.deploy_groups << DeployGroup.create!(name: 'Pod 102', environment: env)
+            stage.save!
+          end
+
+          it "ignores clone during merge" do
+            refute_difference 'Stage.count' do
+              post :merge_all_stages, params: {id: deploy_group}
+            end
+
+            refute template_stage.deploy_groups.include?(deploy_group)
+          end
+
+          it "sets warning in alert" do
+            post :merge_all_stages, params: {id: deploy_group}
+            assert flash.alert
+          end
         end
       end
 
