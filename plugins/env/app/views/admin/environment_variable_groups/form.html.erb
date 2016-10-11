@@ -13,19 +13,8 @@
 <section>
   <%= form_for [:admin, @group], html: { class: "form-horizontal" } do |form| %>
     <fieldset>
-      <div class="form-group">
-        <label class="col-lg-2 control-label">Group name</label>
-        <div class="col-lg-2">
-          <%= form.text_field :name, class: "form-control", placeholder: "Name" %>
-        </div>
-      </div>
-
-      <div class="form-group">
-        <label class="col-lg-2 control-label">Comment</label>
-        <div class="col-lg-2">
-          <%= form.text_area :comment, size: "80x4" %>
-        </div>
-      </div>
+      <%= form.input :name %>
+      <%= form.input :comment, as: :text_area, input_html: {size: "80x4"} %>
     </fieldset>
 
     <fieldset>
@@ -39,11 +28,7 @@
       <% if current_user.admin? %>
         <hr>
 
-        <div class="form-group">
-          <div class="col-lg-10">
-            <button type="submit" class="btn btn-default">Save</button>
-          </div>
-        </div>
+        <%= form.actions %>
       <% end %>
     </fieldset>
   <% end %>
