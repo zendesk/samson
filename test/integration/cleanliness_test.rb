@@ -102,6 +102,7 @@ describe "cleanliness" do
       "lib/generators/plugin/plugin_generator.rb",
       "lib/samson/integration.rb",
       "lib/samson/logging.rb",
+      "lib/samson/secrets/vault_client.rb",
       "lib/warden/strategies/basic_strategy.rb",
       "lib/warden/strategies/session_strategy.rb",
       "lib/warden/strategies/doorkeeper_strategy.rb",
