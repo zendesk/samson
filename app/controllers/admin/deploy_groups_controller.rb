@@ -91,11 +91,13 @@ class Admin::DeployGroupsController < ApplicationController
     failures = deploy_group.stages.cloned.map do |stage|
       reason = merge_stage(stage)
       [reason, stage]
-    end.reject { |reason,| reason.nil? }
+    end
+
+    failures = failures.reject { |reason,| reason.nil? }
 
     message = failures.map { |reason, stage| "#{stage.project.name} #{stage.name} #{reason}" }.join(", ")
 
-    redirect_to [:admin, deploy_group], notice: ( failures.empty? ? nil : "Some stages were skipped: #{message}" )
+    redirect_to [:admin, deploy_group], notice: (failures.empty? ? nil : "Some stages were skipped: #{message}")
   end
 
   def self.create_all_stages(deploy_group)
@@ -113,7 +115,7 @@ class Admin::DeployGroupsController < ApplicationController
 
     return "has no template stage to merge into" unless template_stage
     return "is a template stage" if stage.is_template
-    return "has no deploy groups" if stage.deploy_groups.count == 0
+    return "has no deploy groups" if stage.deploy_groups.count.zero?
     return "has more than one deploy group" if stage.deploy_groups.count > 1
     return "commands in template stage differ" if stage.commands.to_a != template_stage.commands.to_a
 
