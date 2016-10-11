@@ -1,3 +1,10 @@
+GIT
+  remote: https://github.com/grosser/vault-ruby.git
+  revision: cebcda27a9e59813fd2771a25325ddbf1bdc4d72
+  branch: grosser/cert_store
+  specs:
+    vault (0.6.0)
+
 PATH
   remote: plugins/airbrake
   specs:
@@ -470,7 +477,6 @@ GEM
       unf_ext
     unf_ext (0.0.7.2)
     unicode-display_width (1.1.1)
-    vault (0.6.0)
     warden (1.2.6)
       rack (>= 1.0)
     warden-doorkeeper (0.3.0)
@@ -598,7 +604,7 @@ DEPENDENCIES
   sse-rails-engine
   sucker_punch (~> 2.0)
   uglifier
-  vault
+  vault!
   warden
   warden-doorkeeper
   webmock

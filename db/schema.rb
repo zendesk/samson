@@ -491,6 +491,19 @@ ActiveRecord::Schema.define(version: 20161012161509) do
 
   add_index "users", ["external_id", "deleted_at"], name: "index_users_on_external_id_and_deleted_at", length: {"external_id"=>191, "deleted_at"=>nil}, using: :btree
 
+  create_table "vault_servers", force: :cascade do |t|
+    t.string   "name",                                             null: false
+    t.string   "address",                                          null: false
+    t.string   "encrypted_token",                                  null: false
+    t.string   "encrypted_token_iv",                               null: false
+    t.string   "encryption_key_sha",                               null: false
+    t.boolean  "tls_verify",                       default: false, null: false
+    t.text     "ca_cert",            limit: 65535
+    t.datetime "created_at",                                       null: false
+    t.datetime "updated_at",                                       null: false
+    t.index ["name"], name: "index_vault_servers_on_name", unique: true, using: :btree
+  end
+
   create_table "versions", force: :cascade do |t|
     t.string   "item_type",  limit: 255,        null: false
     t.integer  "item_id",    limit: 4,          null: false

@@ -1,0 +1,43 @@
+<h1>Vault servers</h1>
+
+<section class="clearfix">
+  <table class="table table-hover table-condensed">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Address</th>
+        <th>SSL</th>
+        <th>Cert</th>
+        <th>Used by</th>
+        <th></th>
+      </tr>
+    </thead>
+
+    <tbody>
+      <% deploy_groups = DeployGroup.where.not(vault_instance: nil).sort_by(&:natural_order) %>
+      <% @vault_servers.each do |vault_server| %>
+        <tr>
+          <td><%= vault_server.name %></td>
+          <td><%= vault_server.address %></td>
+          <td><%= vault_server.tls_verify ? "YES" : "NO" %></td>
+          <td><%= vault_server.ca_cert.present? ? "YES" : "NO" %></td>
+          <td>
+            <% deploy_groups.select { |dg| dg.vault_instance == vault_server.name }.each do |deploy_group| %>
+              <%= link_to deploy_group.name, [:admin, deploy_group] %><br/>
+            <% end %>
+          </td>
+          <td>
+            <%= link_to "Edit", [:admin, vault_server] %> |
+            <%= link_to_delete [:admin, vault_server] %>
+          </td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+
+  <div class="admin-actions">
+    <div class="pull-right">
+      <%= link_to "New Server", new_admin_vault_server_path, class: "btn btn-default" %>
+    </div>
+  </div>
+</section>

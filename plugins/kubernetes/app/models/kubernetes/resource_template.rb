@@ -63,7 +63,7 @@ module Kubernetes
     # /vaultauth is a secrets volume in the cluster
     # /secretkeys are where the annotations from the config are mounted
     def set_secret_sidecar
-      unless vault_config = Samson::Secrets::VaultClient.client.config_for(@doc.deploy_group.vault_instance)
+      unless vault_client = Samson::Secrets::VaultClient.client.client(@doc.deploy_group)
         raise "Could not find Vault config for #{@doc.deploy_group.permalink}"
       end
 
@@ -75,8 +75,8 @@ module Kubernetes
           { mountPath: "/secretkeys", name: "secretkeys" }
         ],
         env: [
-          {name: :VAULT_ADDR, value: vault_config['vault_address'].to_s},
-          {name: :VAULT_SSL_VERIFY, value: vault_config['tls_verify'].to_s}
+          {name: :VAULT_ADDR, value: vault_client.options.fetch(:address)},
+          {name: :VAULT_SSL_VERIFY, value: vault_client.options.fetch(:ssl_verify).to_s}
         ]
       )
 

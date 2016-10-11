@@ -3,11 +3,16 @@ module Samson
   class FormBuilder < ActionView::Helpers::FormBuilder
     SPACER = " ".html_safe
 
-    def input(attribute, as: :text_field, help: false, label: false, input_html: nil, pattern: nil, &block)
+    def input(
+      attribute,
+      as: :text_field, help: false, label: false, input_html: nil, pattern: nil, required: false,
+      &block
+    )
       raise ArgumentError if block && input_html
 
       input_html ||= {}
       input_html[:pattern] ||= translate_regex_to_js(pattern)
+      input_html[:required] ||= required # TODO: mark label somehow
 
       label ||= attribute.to_s.humanize
       help = (help ? SPACER + @template.additional_info(help) : "".html_safe)
@@ -29,10 +34,14 @@ module Samson
       end
     end
 
-    def actions
+    def actions(delete: false, &block)
       content_tag :div, class: "form-group" do
         content_tag :div, class: "col-lg-offset-2 col-lg-10" do
-          submit 'Save', class: "btn btn-primary"
+          content = submit 'Save', class: "btn btn-primary"
+          resource = (delete.is_a?(Array) ? delete : object)
+          content << SPACER << @template.link_to_delete(resource) if delete && object.persisted?
+          content << @template.capture(&block) if block
+          content
         end
       end
     end

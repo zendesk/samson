@@ -71,11 +71,38 @@ describe Samson::FormBuilder do
     it "removes _id part for labels" do
       builder.input(:role_id).must_include '>Role</label>'
     end
+
+    it "can mark fields as required" do
+      builder.input(:name, required: true).must_include 'required'
+    end
   end
 
   describe '#actions' do
+    before { builder.object.stubs(persisted?: true) }
+
     it "renders" do
-      builder.actions.must_include "value=\"Save\""
+      result = builder.actions
+      result.must_include "value=\"Save\""
+      result.wont_include "Delete"
+    end
+
+    it "does not include delete link for new object" do
+      builder.object.unstub(:persisted?)
+      builder.actions(delete: true).wont_include "Delete"
+    end
+
+    it "can include delete link" do
+      template.expects(:url_for).with(builder.object).returns('/xxx')
+      builder.actions(delete: true).must_include "Delete"
+    end
+
+    it "can include custom delete link" do
+      template.expects(:url_for).with([:admin, commands(:echo)]).returns('/xxx')
+      builder.actions(delete: [:admin, commands(:echo)]).must_include "Delete"
+    end
+
+    it "can add additional links with block" do
+      builder.actions { "XYZ" }.must_include "XYZ"
     end
   end
 end
