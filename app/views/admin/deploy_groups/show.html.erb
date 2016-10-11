@@ -42,7 +42,7 @@
         <%= link_to "Deploy All Projects", deploy_all_admin_deploy_group_path(@deploy_group), class: "btn btn-default", data: { method: "post" } %>
         <%= link_to "Merge #{@deploy_group.stages.cloned.count} Cloned Stages",
                     merge_all_stages_admin_deploy_group_path(@deploy_group),
-                    class: "btn btn-default",
+                    class: "btn btn-default #{ 'disabled' unless @deploy_group.stages.cloned.exists? }",
                     data: {
                       method: "post",
                       confirm: "Stages will be deleted. Before deleting, each stage will have its Deploy Group added to the stage it was copied from. Stages affected are those cloned from a template stage, have exactly this deploy group, and are on a project that uses include_new_deploy_groups.\n\n" +
