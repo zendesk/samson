@@ -1,11 +1,6 @@
 <fieldset>
   <legend>Kubernetes</legend>
-  <div class="col-lg-6 checkbox col-lg-offset-2">
-    <%= form.label 'Kubernetes', for: nil do %>
-      <%= form.check_box :kubernetes, id: 'stage_kubernetes' %>
-      Deploy via kubernetes / ignore commands.
-    <% end %>
-  </div>
+  <%= form.input :kubernetes, as: :check_box, label: "Deploy via kubernetes / ignore commands" %>
 </fieldset>
 
 <script>

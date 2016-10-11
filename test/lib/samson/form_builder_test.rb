@@ -67,6 +67,10 @@ describe Samson::FormBuilder do
     it "includes translated js pattern" do
       builder.input(:name, pattern: /\Aabc\z/).must_include 'pattern="^abc$"'
     end
+
+    it "removes _id part for labels" do
+      builder.input(:role_id).must_include '>Role</label>'
+    end
   end
 
   describe '#actions' do
