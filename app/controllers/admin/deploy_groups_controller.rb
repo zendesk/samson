@@ -110,7 +110,7 @@ class Admin::DeployGroupsController < ApplicationController
     return unless template_stage
     return if stage.is_template
     return if stage.deploy_groups.count != 1
-    return if (stage.commands.to_a <=> template_stage.commands.to_a).nonzero?
+    return if stage.commands.to_a != template_stage.commands.to_a
 
     unless template_stage.deploy_groups.include?(stage.deploy_groups.first)
       template_stage.deploy_groups += stage.deploy_groups

@@ -299,7 +299,7 @@ describe Admin::DeployGroupsController do
           StageCommand.create!(command: command, stage: stage, position: 2)
 
           # doesn't remove the old stage
-          assert_difference 'Stage.count', 0 do
+          refute_difference 'Stage.count' do
             post :merge_all_stages, params: {id: deploy_group}
           end
 
