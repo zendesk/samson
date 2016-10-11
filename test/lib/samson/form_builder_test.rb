@@ -33,5 +33,29 @@ describe Samson::FormBuilder do
     it "can show help" do
       builder.input(:name, help: "Hello!").must_include "title=\"Hello!\"></i>"
     end
+
+    it "can show size" do
+      builder.input(:name, input_html: {size: '1x4'}).must_include ' size="1x4"'
+    end
+
+    it "can override input class" do
+      builder.input(:name, input_html: {class: 'foo'}).must_include ' class="foo"'
+    end
+
+    it "replaces input with block" do
+      builder.input(:name) { "XYZ" }.must_include "XYZ"
+    end
+
+    it "does not allow input_html and block" do
+      assert_raises ArgumentError do
+        builder.input(:name, input_html: {size: 'zxy'}) { "XYZ" }
+      end
+    end
+  end
+
+  describe '#actions' do
+    it "renders" do
+      builder.actions.must_include "value=\"Save\""
+    end
   end
 end
