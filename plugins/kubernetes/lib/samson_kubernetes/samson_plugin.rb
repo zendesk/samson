@@ -1,5 +1,4 @@
 # frozen_string_literal: true
-require_relative 'hash_kuber_selector'
 
 module SamsonKubernetes
   class Engine < Rails::Engine
