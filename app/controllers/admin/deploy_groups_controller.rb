@@ -93,11 +93,11 @@ class Admin::DeployGroupsController < ApplicationController
       [reason, stage]
     end
 
-    failures = failures.reject { |reason,| reason.nil? }
+    failures = failures.select(&:first)
 
     message = failures.map { |reason, stage| "#{stage.project.name} #{stage.name} #{reason}" }.join(", ")
 
-    redirect_to [:admin, deploy_group], notice: (failures.empty? ? nil : "Some stages were skipped: #{message}")
+    redirect_to [:admin, deploy_group], alert: (failures.empty? ? nil : "Some stages were skipped: #{message}")
   end
 
   def self.create_all_stages(deploy_group)

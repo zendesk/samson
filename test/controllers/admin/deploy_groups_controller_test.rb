@@ -262,10 +262,10 @@ describe Admin::DeployGroupsController do
           end
         end
 
-        it "success sets no the reason for skipping" do
+        it "success sets no alert for skipping" do
           post :merge_all_stages, params: {id: deploy_group}
 
-          refute flash.notice
+          refute flash.alert
         end
 
         it "removes the next_stage_id" do
@@ -316,9 +316,9 @@ describe Admin::DeployGroupsController do
             refute template_stage.deploy_groups.include?(deploy_group)
           end
 
-          it "sets warning in notice" do
+          it "sets warning in alert" do
             post :merge_all_stages, params: {id: deploy_group}
-            assert flash.notice
+            assert flash.alert
           end
         end
 
@@ -337,10 +337,10 @@ describe Admin::DeployGroupsController do
           end
 
           # non-cloned stages are naturally ignored as part of the merge process
-          # no notice is necessary
-          xit "sets warning in notice" do
+          # no alert is necessary
+          xit "sets warning in alert" do
             post :merge_all_stages, params: {id: deploy_group}
-            assert flash.notice
+            assert flash.alert
           end
         end
 
@@ -358,9 +358,9 @@ describe Admin::DeployGroupsController do
             refute template_stage.deploy_groups.include?(deploy_group)
           end
 
-          it "sets warning in notice" do
+          it "sets warning in alert" do
             post :merge_all_stages, params: {id: deploy_group}
-            assert flash.notice
+            assert flash.alert
           end
         end
 
@@ -378,9 +378,9 @@ describe Admin::DeployGroupsController do
             refute template_stage.deploy_groups.include?(deploy_group)
           end
 
-          it "sets warning in notice" do
+          it "sets warning in alert" do
             post :merge_all_stages, params: {id: deploy_group}
-            assert flash.notice
+            assert flash.alert
           end
         end
       end
