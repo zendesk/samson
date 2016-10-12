@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20161012161509) do
+ActiveRecord::Schema.define(version: 20161007231901) do
 
   create_table "builds", force: :cascade do |t|
     t.integer  "project_id",                                       null: false
@@ -164,7 +164,6 @@ ActiveRecord::Schema.define(version: 20161012161509) do
 
   add_index "jobs", ["project_id"], name: "index_jobs_on_project_id", using: :btree
   add_index "jobs", ["status"], name: "index_jobs_on_status", length: {"status"=>191}, using: :btree
-  add_index "jobs", ["user_id"], name: "index_jobs_on_user_id", using: :btree
 
   create_table "kubernetes_cluster_deploy_groups", force: :cascade do |t|
     t.integer  "kubernetes_cluster_id", limit: 4,   null: false
