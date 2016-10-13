@@ -15,19 +15,40 @@
     </div>
   </div>
 
-  <div class="form-group">
+  <div class="form-group row">
     <label class="col-lg-2 control-label">Used by</label>
-    <div class="col-lg-4">
-      <p class="form-control-static">
-        <% @deploy_group.deploy_groups_stages.group_by { |dgs| dgs.stage.project }.each do |project, dgs_group| %>
-          <h3><%= link_to project.name, project %></h3>
-          <% dgs_group.each do |dgs| %>
-            <%= link_to dgs.stage.name, [dgs.stage.project, dgs.stage] %><br/>
-          <% end %>
-        <% end %>
-      </p>
+    <div class="col-md-1">
+      <b>Project</b>
+    </div>
+    <div class="col-md-2">
+      <b>Stage</b>
+    </div>
+    <div class="col-md-2">
+      <b>Last Successful</b>
+    </div>
+    <div class="col-md-2">
+      <b>Template</b>
     </div>
   </div>
+
+  <% @deploy_group.deploy_groups_stages.group_by { |dgs| dgs.stage.project }.each do |project, dgs_group| %>
+    <% dgs_group.each do |dgs| %>
+      <div class="form-group row">
+        <div class="col-md-offset-2 col-md-1">
+          <%= link_to project.name, project %>
+        </div>
+        <div class="col-md-2">
+          <%= link_to dgs.stage.name, [dgs.stage.project, dgs.stage] %>
+        </div>
+        <div class="col-md-2">
+          <%= dgs.stage.last_successful_deploy.try(&:reference) || 'NONE' %>
+        </div>
+        <div class="col-md-2">
+          <%= dgs.stage.template_stage.try(&:last_successful_deploy).try(&:reference) %>
+        </div>
+      </div>
+    <% end %>
+  <% end %>
 
   <%= Samson::Hooks.render_views(:deploy_group_show, self) %>
 
