@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20161012161509) do
+ActiveRecord::Schema.define(version: 20161013175858) do
 
   create_table "builds", force: :cascade do |t|
     t.integer  "project_id",                                       null: false
@@ -405,9 +405,10 @@ ActiveRecord::Schema.define(version: 20161012161509) do
     t.integer  "stage_id",    limit: 4,     null: false
     t.datetime "created_at"
     t.datetime "updated_at"
-    t.boolean  "before_deploy",               default: false, null: false
-    t.boolean  "after_deploy",                default: true,  null: false
-    t.boolean  "for_buddy",                   default: false, null: false
+    t.boolean  "before_deploy",                 default: false, null: false
+    t.boolean  "after_deploy",                  default: true,  null: false
+    t.boolean  "for_buddy",                     default: false, null: false
+    t.boolean  "only_on_failure",               default: false, null: false
   end
 
   add_index "slack_webhooks", ["stage_id"], name: "index_slack_webhooks_on_stage_id", using: :btree

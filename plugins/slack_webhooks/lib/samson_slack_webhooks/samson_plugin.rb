@@ -16,12 +16,16 @@ Samson::Hooks.callback :stage_clone do |old_stage, new_stage|
 end
 
 Samson::Hooks.callback :stage_permitted_params do
-  { slack_webhooks_attributes: [:id, :webhook_url, :channel, :before_deploy, :after_deploy, :for_buddy, :_destroy] }
+  {
+    slack_webhooks_attributes: [
+      :id, :webhook_url, :channel, :before_deploy, :after_deploy, :for_buddy, :only_on_failure, :_destroy
+    ]
+  }
 end
 
 [:before_deploy, :after_deploy].each do |callback|
   Samson::Hooks.callback callback do |deploy, _buddy|
-    if deploy.stage.send_slack_webhook_notifications?
+    if deploy.stage.send_slack_webhook_notifications? # avoid rendering overhead when disabled
       SlackWebhookNotification.new(deploy).deliver(callback)
     end
   end

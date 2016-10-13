@@ -33,7 +33,7 @@ class SlackWebhookNotification
 
   def _deliver(deploy_phase:, message:, attachments: nil)
     @stage.slack_webhooks.each do |webhook|
-      next unless webhook.public_send(deploy_phase)
+      next unless webhook.deliver_for?(deploy_phase, @deploy)
       SamsonSlackWebhooks::SlackWebhooksService.new.deliver_message_via_webhook(
         webhook: webhook,
         message: message,
