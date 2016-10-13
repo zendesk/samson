@@ -4,38 +4,26 @@
   <% defaults = @deploy_group_role.kubernetes_role.try(:defaults) || {} %>
 
   <fieldset>
-    <div class="form-group">
-      <%= form.label :deploy_group_id, 'Deploy Group', class: "col-lg-2 control-label" %>
-      <div class="col-lg-2">
-        <%= form.select :deploy_group_id, DeployGroup.pluck(:name, :id), {}, class: "form-control", disabled: @deploy_group_role.persisted? %>
-      </div>
-    </div>
+    <%= form.input :deploy_group_id do %>
+      <%= form.select :deploy_group_id, DeployGroup.pluck(:name, :id), {}, class: "form-control", disabled: @deploy_group_role.persisted? %>
+    <% end %>
 
-    <div class="form-group">
-      <%= form.label :project_id, 'Project', class: "col-lg-2 control-label" %>
-      <div class="col-lg-2">
-        <% projects = current_user.administrated_projects.with_kubernetes_roles.pluck(:name, :id) %>
-        <%= form.select :project_id, projects, {}, class: "form-control", disabled: @deploy_group_role.persisted? %>
-      </div>
-    </div>
+    <%= form.input :project_id do %>
+      <% projects = current_user.administrated_projects.with_kubernetes_roles.pluck(:name, :id) %>
+      <%= form.select :project_id, projects, {}, class: "form-control", disabled: @deploy_group_role.persisted? %>
+    <% end %>
 
-    <div class="form-group">
-      <%= form.label :kubernetes_role_id, 'Role', class: "col-lg-2 control-label" %>
-      <div class="col-lg-2">
-        <%= form.select :kubernetes_role_id, [['Loading ...', @deploy_group_role.kubernetes_role_id]], {}, class: "form-control", disabled: @deploy_group_role.persisted? %>
-      </div>
-    </div>
+    <%= form.input :kubernetes_role_id, label: 'Role' do %>
+      <%= form.select :kubernetes_role_id, [['Loading ...', @deploy_group_role.kubernetes_role_id]], {}, class: "form-control", disabled: @deploy_group_role.persisted? %>
+    <% end %>
 
     <% [[:cpu, 'CPU Cores'], [:ram, 'Ram in MB'], [:replicas, "Replicas"]].each do |column, label| %>
-      <div class="form-group">
-        <%= form.label column, label, class: "col-lg-2 control-label" %>
-        <div class="col-lg-2">
-          <%= form.text_field column, class: "form-control" %>
-          <% if default = defaults[column] %>
-            Default: <%= default %>
-          <% end %>
-        </div>
-      </div>
+      <%= form.input column, label: label do %>
+        <%= form.text_field column, class: "form-control" %>
+        <% if default = defaults[column] %>
+          Default: <%= default %>
+        <% end %>
+      <% end %>
     <% end %>
 
     <div class="form-group">

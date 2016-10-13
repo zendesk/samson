@@ -5,18 +5,13 @@
     <%= form.input :name %>
     <%= form.input :description %>
     <%= form.input :config_filepath, label: 'Config File path' %>
-
-    <div class="form-group">
-      <%= form.label :config_context, 'Context', class: "col-lg-2 control-label" %>
-      <div class="col-lg-2">
-        <% if @context_options.any? %>
-          <%= form.select :config_context, @context_options, {}, { class: 'form-control' } %>
-        <% else %>
-          <%= form.text_field :config_context, class: "form-control" %>
-        <% end %>
-      </div>
-    </div>
-
+    <%= form.input :config_context, label: 'Context' do %>
+      <% if @context_options.any? %>
+        <%= form.select :config_context, @context_options, {}, { class: 'form-control' } %>
+      <% else %>
+        <%= form.text_field :config_context, class: "form-control" %>
+      <% end %>
+    <% end %>
     <%= form.input :ip_prefix,
         label: "IP prefix",
         pattern: Kubernetes::Cluster::IP_PREFIX_PATTERN,
