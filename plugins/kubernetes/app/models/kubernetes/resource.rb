@@ -153,6 +153,8 @@ module Kubernetes
       # - waits for current to reach 0
       # - deletes the daemonset
       def delete
+        return super if no_pods_running? # delete when already dead from previous deletion try, update would fail
+
         # make it match no node
         @template[:spec][:template][:spec][:nodeSelector] = {rand(9999).to_s => rand(9999).to_s}
         update
@@ -161,15 +163,10 @@ module Kubernetes
         max = 30
         (1..max).each do |i|
           loop_sleep
-          current = fetch_resource
-          scheduled = current[:status][:currentNumberScheduled]
-          misscheduled = current[:status][:numberMisscheduled]
-          break if scheduled.zero? && misscheduled.zero?
+          expire_cache
+          break if no_pods_running?
           if i == max
-            raise(
-              Samson::Hooks::UserError,
-              "Unable to terminate previous DaemonSet, scheduled: #{scheduled} / misscheduled: #{misscheduled}\n"
-            )
+            raise Samson::Hooks::UserError, "Unable to terminate previous DaemonSet because it still has pods"
           end
         end
 
@@ -185,6 +182,10 @@ module Kubernetes
       end
 
       private
+
+      def no_pods_running?
+        resource[:status][:currentNumberScheduled].zero? && resource[:status][:numberMisscheduled].zero?
+      end
 
       def client
         @deploy_group.kubernetes_cluster.extension_client
