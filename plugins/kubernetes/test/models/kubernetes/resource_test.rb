@@ -145,11 +145,7 @@ describe Kubernetes::Resource do
       end
 
       it "deletes and created when daemonset exists without pods" do
-        client.expects(:update_daemon_set)
-        client.expects(:get_daemon_set).times(2).returns(
-          daemonset_stub(0, 0), # initial check
-          daemonset_stub(0, 0)  # check for running
-        )
+        client.expects(:get_daemon_set).returns(daemonset_stub(0, 0))
         client.expects(:delete_daemon_set)
         client.expects(:create_daemon_set)
         resource.deploy
@@ -158,10 +154,10 @@ describe Kubernetes::Resource do
       it "deletes and created when daemonset exists with pods" do
         client.expects(:update_daemon_set)
         client.expects(:get_daemon_set).times(4).returns(
-          daemonset_stub(0, 0), # initial check
-          daemonset_stub(1, 1),
-          daemonset_stub(0, 1),
-          daemonset_stub(0, 0)
+          daemonset_stub(1, 1), # running check
+          daemonset_stub(1, 1), # after update check #1 ... still running
+          daemonset_stub(0, 1), # after update check #2 ... still running
+          daemonset_stub(0, 0)  # after update check #3 ... done
         )
         client.expects(:delete_daemon_set)
         client.expects(:create_daemon_set)
@@ -176,7 +172,7 @@ describe Kubernetes::Resource do
         e = assert_raises Samson::Hooks::UserError do
           resource.deploy
         end
-        e.message.must_include "misscheduled"
+        e.message.must_include "Unable to terminate previous DaemonSet"
       end
     end
 
