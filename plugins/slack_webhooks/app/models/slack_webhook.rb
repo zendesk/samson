@@ -6,6 +6,15 @@ class SlackWebhook < ActiveRecord::Base
 
   scope :for_buddy, -> { where(for_buddy: true) }
 
+  def deliver_for?(deploy_phase, deploy)
+    case deploy_phase
+    when :for_buddy then for_buddy?
+    when :before_deploy then before_deploy?
+    when :after_deploy then after_deploy? && (!only_on_failure? || !deploy.succeeded?)
+    else raise
+    end
+  end
+
   private
 
   def validate_url
