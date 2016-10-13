@@ -13,7 +13,9 @@
     <p>
       Deployed to:
       <% @release.deployed_stages.each do |stage| %>
-        <%= link_to stage.name, [@project, stage] %>
+        <%= link_to [@project, stage] do %>
+          <%= stage.name %> <%= stage_template_icon(stage) %>
+        <% end %>
       <% end %>
     </p>
   <% end %>

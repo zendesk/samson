@@ -22,7 +22,10 @@
         <% @deploy_group.deploy_groups_stages.group_by { |dgs| dgs.stage.project }.each do |project, dgs_group| %>
           <h3><%= link_to project.name, project %></h3>
           <% dgs_group.each do |dgs| %>
-            <%= link_to dgs.stage.name, [dgs.stage.project, dgs.stage] %><br/>
+            <%= link_to [dgs.stage.project, dgs.stage] do %>
+              <%= dgs.stage.name %> <%= stage_template_icon(dgs.stage) %>
+            <% end %>
+            <br/>
           <% end %>
         <% end %>
       </p>
