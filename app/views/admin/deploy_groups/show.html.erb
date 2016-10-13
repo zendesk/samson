@@ -44,7 +44,7 @@
           <%= dgs.stage.last_successful_deploy.try(&:reference) || 'NONE' %>
         </div>
         <div class="col-md-2">
-          <%= dgs.stage.template_stage.try(&:last_successful_deploy).try(&:reference) %>
+          <%= dgs.stage.template_stage&.last_successful_deploy&.reference %>
         </div>
       </div>
     <% end %>
