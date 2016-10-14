@@ -207,6 +207,18 @@ describe StagesController do
         end
       end
 
+      it 'checks the appropriate next_stage_ids checkbox' do
+        next_stage = Stage.create!(name: 'food', project: subject.project)
+        subject.next_stage_ids = [next_stage.id.to_s]
+        subject.save!
+
+        get :edit, params: {project_id: subject.project.to_param, id: subject.to_param }
+
+        checkbox = css_select('#stage_next_stage_ids_').
+            detect { |node| node.attribute('value')&.value == next_stage.id.to_s }
+        assert_equal 'checked', checkbox.attribute('checked').value
+      end
+
       it "fails with unknown project" do
         assert_raises ActiveRecord::RecordNotFound do
           get :edit, params: {project_id: :foo23123, id: 1}
