@@ -12,9 +12,11 @@ module Samson
 
       input_html ||= {}
       input_html[:pattern] ||= translate_regex_to_js(pattern)
-      input_html[:required] ||= required # TODO: mark label somehow
+      input_html[:required] ||= required
 
       label ||= attribute.to_s.humanize
+      label = "* " + label if required
+
       help = (help ? SPACER + @template.additional_info(help) : "".html_safe)
       block ||= -> { public_send(as, attribute, input_html) }
 

@@ -73,7 +73,9 @@ describe Samson::FormBuilder do
     end
 
     it "can mark fields as required" do
-      builder.input(:name, required: true).must_include 'required'
+      result = builder.input(:name, required: true)
+      result.must_include 'required="required"'
+      result.must_include '* Name'
     end
   end
 
