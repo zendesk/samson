@@ -59,7 +59,7 @@ describe Admin::EnvironmentsController do
       it 'does not create an environment with blank name' do
         env_count = Environment.count
         post :create, params: {environment: {name: nil, production: true}}
-        assert_template :edit
+        assert_template :show
         Environment.count.must_equal env_count
       end
     end
@@ -90,9 +90,9 @@ describe Admin::EnvironmentsController do
         Environment.find(environment.id).name.must_equal 'Test Update'
       end
 
-      it 'fail to edit with blank name' do
+      it 'fail to show with blank name' do
         post :update, params: {environment: {name: '', production: false}, id: environment}
-        assert_template :edit
+        assert_template :show
         Environment.find(environment.id).name.must_equal 'Production'
       end
     end

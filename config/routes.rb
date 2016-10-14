@@ -124,10 +124,10 @@ Samson::Application.routes.draw do
   namespace :admin do
     resources :users, only: [:index, :show, :update, :destroy]
     resources :projects, only: [:index, :destroy]
-    resources :commands, except: [:show]
-    resources :secrets, except: [:show]
-    resources :vault_servers, except: [:edit] # TODO: make other here also use `except: :edit`
-    resources :environments, except: [:show]
+    resources :commands, except: [:edit]
+    resources :secrets, except: [:edit]
+    resources :vault_servers, except: [:edit]
+    resources :environments, except: [:edit]
     resources :deploy_groups do
       member do
         post :deploy_all

@@ -5,7 +5,7 @@ class Admin::SecretsController < ApplicationController
   include CurrentProject
 
   before_action :find_project_permalinks
-  before_action :find_secret, only: [:update, :edit, :destroy]
+  before_action :find_secret, only: [:update, :show, :destroy]
 
   DEPLOYER_ACCESS = [:index, :new].freeze
   before_action :ensure_project_access, except: DEPLOYER_ACCESS
@@ -23,11 +23,14 @@ class Admin::SecretsController < ApplicationController
   end
 
   def new
-    render :edit
+    render :show
   end
 
   def create
     update
+  end
+
+  def show
   end
 
   def update
@@ -74,7 +77,7 @@ class Admin::SecretsController < ApplicationController
 
   def failure_response(message)
     flash[:error] = message
-    render :edit
+    render :show
   end
 
   def find_secret

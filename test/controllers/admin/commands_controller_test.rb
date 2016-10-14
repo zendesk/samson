@@ -10,9 +10,9 @@ describe Admin::CommandsController do
     unauthorized :post, :create
     unauthorized :delete, :destroy, id: 123123
 
-    describe 'GET to #edit' do
+    describe 'GET to #show' do
       it "is unauthrized" do
-        get :edit, params: {id: commands(:echo)}
+        get :show, params: {id: commands(:echo)}
         assert_unauthorized
       end
     end
@@ -31,14 +31,14 @@ describe Admin::CommandsController do
     unauthorized :post, :create
     unauthorized :delete, :destroy, id: 123123
 
-    describe 'GET to #edit' do
+    describe 'GET to #show' do
       it 'renders for local command as project-admin' do
-        get :edit, params: {id: commands(:echo).id}
-        assert_template :edit
+        get :show, params: {id: commands(:echo).id}
+        assert_template :show
       end
 
       it "is unauthrized for global commands" do
-        get :edit, params: {id: commands(:global)}
+        get :show, params: {id: commands(:global)}
         assert_unauthorized
       end
     end
@@ -74,7 +74,7 @@ describe Admin::CommandsController do
 
         describe 'html' do
           it 'renders' do
-            assert_template :edit
+            assert_template :show
           end
         end
 
@@ -128,7 +128,7 @@ describe Admin::CommandsController do
       before { get :new }
 
       it 'renders template' do
-        assert_template :edit
+        assert_template :show
       end
     end
 
@@ -141,7 +141,7 @@ describe Admin::CommandsController do
         let(:attributes) { { command: nil } }
 
         it 'renders' do
-          assert_template :edit
+          assert_template :show
         end
       end
 
@@ -155,10 +155,10 @@ describe Admin::CommandsController do
       end
     end
 
-    describe 'GET to #edit' do
+    describe 'GET to #show' do
       it "renders for global commands" do
-        get :edit, params: {id: commands(:global).id}
-        assert_template :edit
+        get :show, params: {id: commands(:global).id}
+        assert_template :show
       end
     end
 
