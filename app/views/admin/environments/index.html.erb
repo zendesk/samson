@@ -19,7 +19,7 @@
             <td><%= env.name%></td>
             <td><%= env.production ? 'Yes' : 'No' %></td>
             <td>
-              <%= link_to "Edit", edit_admin_environment_path(env) %>
+              <%= link_to "Edit", [:admin, env] %>
               |
               <%= link_to_delete([:admin, env]) %>
             </td>

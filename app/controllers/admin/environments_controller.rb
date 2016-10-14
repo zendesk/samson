@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 class Admin::EnvironmentsController < ApplicationController
   before_action :authorize_admin!, except: [:index]
-  before_action :authorize_super_admin!, only: [:create, :new, :edit, :update, :destroy]
-  before_action :environment, only: [:edit, :update, :destroy]
+  before_action :authorize_super_admin!, only: [:create, :new, :show, :update, :destroy]
+  before_action :environment, only: [:show, :update, :destroy]
 
   def index
     respond_to do |format|
@@ -13,7 +13,10 @@ class Admin::EnvironmentsController < ApplicationController
 
   def new
     @environment = Environment.new
-    render 'edit'
+    render 'show'
+  end
+
+  def show
   end
 
   def create
@@ -22,7 +25,7 @@ class Admin::EnvironmentsController < ApplicationController
       flash[:notice] = "Successfully saved environment: #{@environment.name}"
       redirect_to action: 'index'
     else
-      render 'edit'
+      render 'show'
     end
   end
 
@@ -31,7 +34,7 @@ class Admin::EnvironmentsController < ApplicationController
       flash[:notice] = "Successfully saved environment: #{environment.name}"
       redirect_to action: 'index'
     else
-      render 'edit'
+      render 'show'
     end
   end
 

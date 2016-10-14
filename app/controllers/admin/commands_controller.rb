@@ -2,9 +2,9 @@
 class Admin::CommandsController < ApplicationController
   include CurrentProject
 
-  before_action :find_command, only: [:update, :edit]
-  before_action :authorize_project_admin!, only: [:update, :edit]
-  before_action :authorize_admin!, except: [:update, :edit]
+  before_action :find_command, only: [:update, :show]
+  before_action :authorize_project_admin!, only: [:update, :show]
+  before_action :authorize_admin!, except: [:update, :show]
 
   def index
     @commands = Command.order(:project_id).page(params[:page])
@@ -23,7 +23,7 @@ class Admin::CommandsController < ApplicationController
 
   def new
     @command = Command.new
-    render :edit
+    render :show
   end
 
   def create
@@ -32,8 +32,11 @@ class Admin::CommandsController < ApplicationController
     if @command.persisted?
       successful_response 'Command created.'
     else
-      render :edit
+      render :show
     end
+  end
+
+  def show
   end
 
   def update
@@ -41,10 +44,7 @@ class Admin::CommandsController < ApplicationController
       successful_response('Command updated.')
     else
       respond_to do |format|
-        format.html do
-          render :edit
-        end
-
+        format.html { render :show }
         format.json { render json: {}, status: :unprocessable_entity }
       end
     end

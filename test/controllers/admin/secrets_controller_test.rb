@@ -65,13 +65,13 @@ describe Admin::SecretsController do
     describe "#new" do
       it "renders" do
         get :new
-        assert_template :edit
+        assert_template :show
       end
     end
 
-    describe '#edit' do
+    describe '#show' do
       it "is unauthrized" do
-        get :edit, params: {id: secret}
+        get :show, params: {id: secret}
         assert_unauthorized
       end
     end
@@ -123,7 +123,7 @@ describe Admin::SecretsController do
         attributes[:key] = ''
         post :create, params: {secret: attributes}
         assert flash[:error]
-        assert_template :edit
+        assert_template :show
       end
 
       it "is not authorized to create global secrets" do
@@ -133,29 +133,29 @@ describe Admin::SecretsController do
       end
     end
 
-    describe '#edit' do
+    describe '#show' do
       it 'renders for local secret as project-admin' do
-        get :edit, params: {id: secret}
-        assert_template :edit
+        get :show, params: {id: secret}
+        assert_template :show
         response.body.wont_include secret.value
       end
 
       it 'shows visible secerts' do
         secret.update_column(:visible, true)
-        get :edit, params: {id: secret}
-        assert_template :edit
+        get :show, params: {id: secret}
+        assert_template :show
         response.body.must_include secret.value
       end
 
       it 'renders with unfound users' do
         secret.update_column(:updater_id, 32232323)
-        get :edit, params: {id: secret}
-        assert_template :edit
+        get :show, params: {id: secret}
+        assert_template :show
         response.body.must_include "Unknown user id"
       end
 
       it "is unauthrized for global secret" do
-        get :edit, params: {id: create_global}
+        get :show, params: {id: create_global}
         assert_unauthorized
       end
     end
@@ -183,7 +183,7 @@ describe Admin::SecretsController do
         end
 
         it 'fails to update' do
-          assert_template :edit
+          assert_template :show
           assert flash[:error]
         end
       end
@@ -199,7 +199,7 @@ describe Admin::SecretsController do
         end
       end
 
-      describe 'editing a not owned project' do
+      describe 'showing a not owned project' do
         let(:secret) { create_secret "production/#{other_project.permalink}/foo/xxx" }
 
         it "is not allowed" do
@@ -243,16 +243,16 @@ describe Admin::SecretsController do
       end
     end
 
-    describe '#edit' do
+    describe '#show' do
       it "renders" do
-        get :edit, params: {id: secret.id}
-        assert_template :edit
+        get :show, params: {id: secret.id}
+        assert_template :show
       end
 
       it "renders with unknown project" do
         secret.update_column(:id, 'oops/bar')
-        get :edit, params: {id: secret.id}
-        assert_template :edit
+        get :show, params: {id: secret.id}
+        assert_template :show
       end
     end
 

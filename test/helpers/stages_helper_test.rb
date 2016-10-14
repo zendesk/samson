@@ -14,13 +14,13 @@ describe StagesHelper do
       it "links to global edit" do
         command = commands(:global)
         html = edit_command_link(command)
-        html.must_equal "<a title=\"Edit global command\" class=\"edit-command glyphicon glyphicon-globe no-hover\" href=\"/admin/commands/#{command.id}/edit\"></a>"
+        html.must_equal "<a title=\"Edit global command\" class=\"edit-command glyphicon glyphicon-globe no-hover\" href=\"/admin/commands/#{command.id}\"></a>"
       end
 
       it "links to local edit" do
         command = commands(:echo)
         html = edit_command_link(command)
-        html.must_equal "<a title=\"Edit in admin UI\" class=\"edit-command glyphicon glyphicon-edit no-hover\" href=\"/admin/commands/#{command.id}/edit\"></a>"
+        html.must_equal "<a title=\"Edit in admin UI\" class=\"edit-command glyphicon glyphicon-edit no-hover\" href=\"/admin/commands/#{command.id}\"></a>"
       end
     end
 
@@ -41,7 +41,7 @@ describe StagesHelper do
         project = projects(:test)
         current_user.user_project_roles.create!(project: project, user: current_user, role_id: Role::ADMIN.id)
         html = edit_command_link(command)
-        html.must_equal "<a title=\"Edit in admin UI\" class=\"edit-command glyphicon glyphicon-edit no-hover\" href=\"/admin/commands/#{command.id}/edit\"></a>"
+        html.must_equal "<a title=\"Edit in admin UI\" class=\"edit-command glyphicon glyphicon-edit no-hover\" href=\"/admin/commands/#{command.id}\"></a>"
       end
     end
   end

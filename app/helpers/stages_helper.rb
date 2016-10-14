@@ -2,7 +2,7 @@
 module StagesHelper
   def edit_command_link(command)
     admin = current_user.admin? || current_user.admin_for?(command.project)
-    edit_url = edit_admin_command_path(command)
+    edit_url = [:admin, command]
     if command.global?
       title, url =
         if admin
