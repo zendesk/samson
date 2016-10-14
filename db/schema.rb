@@ -502,7 +502,7 @@ ActiveRecord::Schema.define(version: 20161013175858) do
     t.text     "ca_cert",            limit: 65535
     t.datetime "created_at",                                       null: false
     t.datetime "updated_at",                                       null: false
-    t.index ["name"], name: "index_vault_servers_on_name", unique: true, using: :btree
+    t.index ["name"], name: "index_vault_servers_on_name", unique: true, length: {"name"=>191}, using: :btree
   end
 
   create_table "versions", force: :cascade do |t|
