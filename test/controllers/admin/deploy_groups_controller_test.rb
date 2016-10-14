@@ -204,7 +204,7 @@ describe Admin::DeployGroupsController do
 
         # the new stage is at the end of the pipeline
         stage = deploy_group.stages.last
-        template_stage.next_stage_ids.must_equal([stage.id])
+        template_stage.next_stage_ids.must_equal([stage.id.to_s])
       end
     end
 
@@ -269,11 +269,11 @@ describe Admin::DeployGroupsController do
         end
 
         it "removes the next_stage_id" do
-          assert template_stage.reload.next_stage_ids.include?(stage.id)
+          assert template_stage.reload.next_stage_ids.include?(stage.id.to_s)
 
           post :merge_all_stages, params: {id: deploy_group}
 
-          refute template_stage.reload.next_stage_ids.include?(stage.id)
+          refute template_stage.reload.next_stage_ids.include?(stage.id.to_s)
         end
 
         it "adds the deploy group to the template stage" do

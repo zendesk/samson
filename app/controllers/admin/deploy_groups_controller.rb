@@ -121,7 +121,7 @@ class Admin::DeployGroupsController < ApplicationController
 
     unless template_stage.deploy_groups.include?(stage.deploy_groups.first)
       template_stage.deploy_groups += stage.deploy_groups
-      template_stage.next_stage_ids.delete(stage.id)
+      template_stage.next_stage_ids.delete(stage.id.to_s)
       template_stage.save!
     end
 
@@ -161,7 +161,7 @@ class Admin::DeployGroupsController < ApplicationController
       stage.save!
 
       if template_stage.respond_to?(:next_stage_ids) # pipeline plugin was installed
-        template_stage.next_stage_ids << stage.id
+        template_stage.next_stage_ids << stage.id.to_s
         template_stage.save!
       end
 
