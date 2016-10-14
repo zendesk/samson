@@ -7,7 +7,7 @@ describe Admin::VaultServersController do
   let!(:server) do
     Samson::Secrets::VaultServer.create!(name: 'pod1', address: 'http://vault-land.com', token: 'TOKEN2')
   end
-  before { deploy_groups(:pod1).update_column(:vault_instance, 'pod1') }
+  before { deploy_groups(:pod1).update_column(:vault_server_id, server.id) }
 
   as_a_viewer do
     describe "#index" do

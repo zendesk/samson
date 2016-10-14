@@ -3,8 +3,8 @@ module VaultRequestHelper
   def self.included(base)
     base.before do
       Samson::Secrets::VaultClient.class_eval { @client = nil } # bust client cache so we build a new one each time
-      deploy_groups(:pod2).update_column(:vault_instance, 'pod2')
-      Samson::Secrets::VaultServer.create!(name: 'pod2', address: 'http://vault-land.com', token: 'TOKEN')
+      server = Samson::Secrets::VaultServer.create!(name: 'pod2', address: 'http://vault-land.com', token: 'TOKEN')
+      deploy_groups(:pod2).update_column(:vault_server_id, server.id)
     end
   end
 

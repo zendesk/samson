@@ -22,7 +22,7 @@ module Samson
       def initialize
         @clients = {}
         VaultServer.all.each do |vault_server|
-          @clients[vault_server.name] = Vault::Client.new(
+          @clients[vault_server.id] = Vault::Client.new(
             DEFAULT_CLIENT_OPTIONS.merge(
               ssl_verify: vault_server.tls_verify,
               token: vault_server.token,
@@ -63,11 +63,11 @@ module Samson
       end
 
       def client(deploy_group)
-        unless name = deploy_group.vault_instance.presence
-          raise "deploy group #{deploy_group.permalink} has no vault_instance configured"
+        unless id = deploy_group.vault_server_id.presence
+          raise "deploy group #{deploy_group.permalink} has no vault server configured"
         end
-        unless client = @clients[name]
-          raise "no vault server found with name #{name}"
+        unless client = @clients[id]
+          raise "no vault server found with id #{id}"
         end
         client
       end
