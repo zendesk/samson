@@ -101,7 +101,7 @@ module Kubernetes
         return
       end
 
-      replicas = deploy[:spec][:replicas]
+      replicas = deploy[:spec][:replicas] || 1
 
       return unless limits = deploy[:spec][:template][:spec][:containers].first.fetch(:resources, {})[:limits]
       return unless cpu = parse_resource_value(limits[:cpu])

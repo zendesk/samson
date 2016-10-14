@@ -263,6 +263,11 @@ describe Kubernetes::Role do
       role.defaults.must_equal cpu: 0.5, ram: 95, replicas: 2
     end
 
+    it "defaults to 1 replica" do
+      assert config_content_yml.sub!('replicas: 2', 'foobar: 3')
+      role.defaults.must_equal cpu: 0.5, ram: 95, replicas: 1
+    end
+
     {
       '10000000' => 10,
       '10000000000m' => 10,
