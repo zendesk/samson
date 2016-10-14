@@ -184,14 +184,26 @@ describe Kubernetes::Resource do
         resource.desired_pod_count.must_equal 5
       end
 
-      it "returns replicas when desired count is 0 to fail the deployment and show underlying issue" do
-        stub_request(:get, url).to_return(body: {status: {desiredNumberScheduled: 0}}.to_json)
-        resource.desired_pod_count.must_equal 2
+      it "retries once when initial state has 0 desired pods" do
+        request = stub_request(:get, url).to_return(
+          {body: {status: {desiredNumberScheduled: 0}}.to_json},
+          body: {status: {desiredNumberScheduled: 5}}.to_json
+        )
+        resource.desired_pod_count.must_equal 5
+        assert_requested request, times: 2
       end
 
-      it "returns 0 when desired count is and replicas are 0 to pass deletion deploys" do
+      it "blows up when desired count cannot be found (bad state or no nodes are available)" do
+        request = stub_request(:get, url).to_return(body: {status: {desiredNumberScheduled: 0}}.to_json)
+        resource.expects(:loop_sleep).once
+        assert_raises Samson::Hooks::UserError do
+          resource.desired_pod_count
+        end
+        assert_requested request, times: 2
+      end
+
+      it "returns 0 when replicas are 0 to pass deletion deploys" do
         template[:spec][:replicas] = 0
-        stub_request(:get, url).to_return(body: {status: {desiredNumberScheduled: 0}}.to_json)
         resource.desired_pod_count.must_equal 0
       end
     end

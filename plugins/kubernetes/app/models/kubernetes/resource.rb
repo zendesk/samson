@@ -178,7 +178,24 @@ module Kubernetes
       # and the number of matches nodes could update with a changed template
       # only makes sense to call this after deploying / while waiting for pods
       def desired_pod_count
-        @desired_pod_count ||= [resource[:status][:desiredNumberScheduled], @template[:spec][:replicas]].max
+        return 0 if @template[:spec][:replicas].to_i.zero?
+        @desired_pod_count ||= begin
+          desired = resource[:status][:desiredNumberScheduled]
+          return desired unless desired.zero?
+
+          # in bad state or does not yet know how many it needs
+          loop_sleep
+          expire_cache
+
+          desired = resource[:status][:desiredNumberScheduled]
+          return desired unless desired.zero?
+
+          raise(
+            Samson::Hooks::UserError,
+            "Unable to find desired number of pods for daemonset #{name}\n" \
+            "delete it manually and make sure there is at least 1 node scheduleable."
+          )
+        end
       end
 
       private
