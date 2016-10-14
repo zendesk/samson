@@ -14,8 +14,7 @@ module Samson
 
       class << self
         def read(key)
-          key = vault_path(key)
-          result = vault_action(:read, key)
+          result = vault_action(:read, vault_path(key))
           return if !result || result.data[:vault].nil?
 
           result = result.to_h
@@ -48,18 +47,17 @@ module Samson
         end
 
         def keys
-          keys = vault_action(:list, VAULT_SECRET_BACKEND + SAMSON_SECRET_NAMESPACE)
+          keys = vault_action(:list, "")
           keys = keys_recursive(keys)
           keys.uniq! # we read from multiple backends that might have the same keys
-          keys.map! do |secret_path|
-            convert_path(secret_path, :decode) # FIXME: ideally only decode the key(#4) part
-          end
+          keys.map! { |secret_path| vault_path(secret_path, :decode) }
         end
 
         private
 
-        def vault_action(method, *args)
-          vault_client.public_send(method, *args)
+        def vault_action(method, path, *args)
+          path = VAULT_SECRET_BACKEND + SAMSON_SECRET_NAMESPACE + path
+          vault_client.public_send(method, path, *args)
         rescue Vault::HTTPConnectionError => e
           raise Samson::Secrets::BackendError, "Error talking to vault backend: #{e.message}"
         end
@@ -72,7 +70,8 @@ module Samson
           keys.flat_map do |key|
             new_key = key_path + key
             if key.end_with?('/') # a directory
-              keys_recursive(vault_action(:list, VAULT_SECRET_BACKEND + SAMSON_SECRET_NAMESPACE + new_key), new_key)
+              # we work with keys we got back from vault, so not encoding
+              keys_recursive(vault_action(:list, new_key), new_key)
             else
               new_key
             end
@@ -80,10 +79,11 @@ module Samson
         end
 
         # key is the last element and should not include bad characters
-        def vault_path(key)
-          parts = key.split(SecretStorage::SEPARATOR, SecretStorage::SECRET_KEYS_PARTS.size)
-          parts[-1] = convert_path(parts[-1], :encode)
-          VAULT_SECRET_BACKEND + SAMSON_SECRET_NAMESPACE + parts.join(SecretStorage::SEPARATOR)
+        # ... could be faster by not jumping through hash generation and parsing
+        def vault_path(key, direction = :encode)
+          parts = SecretStorage.parse_secret_key(key)
+          parts[:key] = convert_path(parts[:key], direction)
+          SecretStorage.generate_secret_key(parts)
         end
 
         # convert from/to escaped characters
