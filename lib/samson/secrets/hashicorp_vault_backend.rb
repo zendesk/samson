@@ -6,8 +6,6 @@ module Samson
     end
 
     class HashicorpVaultBackend
-      VAULT_SECRET_BACKEND = 'secret/'
-      SAMSON_SECRET_NAMESPACE = 'apps/'
       # we don't really want other directories in the key,
       # and there may be other chars that we find we don't like
       ENCODINGS = {"/": "%2F"}.freeze
@@ -56,7 +54,6 @@ module Samson
         private
 
         def vault_action(method, path, *args)
-          path = VAULT_SECRET_BACKEND + SAMSON_SECRET_NAMESPACE + path
           vault_client.public_send(method, path, *args)
         rescue Vault::HTTPConnectionError => e
           raise Samson::Secrets::BackendError, "Error talking to vault backend: #{e.message}"

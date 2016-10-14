@@ -36,7 +36,7 @@ describe Samson::Secrets::VaultClient do
   describe "#read" do
     it "only reads from first server" do
       assert_vault_request :get, 'global/global/global/foo', body: {data: {foo: :bar}}.to_json do
-        client.read('secret/apps/global/global/global/foo').class.must_equal(Vault::Secret)
+        client.read('global/global/global/foo').class.must_equal(Vault::Secret)
       end
     end
   end
@@ -44,7 +44,7 @@ describe Samson::Secrets::VaultClient do
   describe "#write" do
     it "writes to all servers" do
       assert_vault_request :put, 'global/global/global/foo', times: 2 do
-        client.write('secret/apps/global/global/global/foo', foo: :bar)
+        client.write('global/global/global/foo', foo: :bar)
       end
     end
   end
@@ -52,7 +52,7 @@ describe Samson::Secrets::VaultClient do
   describe "#delete" do
     it "deletes from all servers" do
       assert_vault_request :delete, 'global/global/global/foo', times: 2 do
-        client.delete('secret/apps/global/global/global/foo')
+        client.delete('global/global/global/foo')
       end
     end
   end
@@ -60,7 +60,7 @@ describe Samson::Secrets::VaultClient do
   describe "#list" do
     it "combines lists from all servers" do
       assert_vault_request :get, '?list=true', body: {data: {keys: ['abc']}}.to_json, times: 2 do
-        client.list('secret/apps/').must_equal ['abc']
+        client.list('').must_equal ['abc']
       end
     end
   end
@@ -69,13 +69,13 @@ describe Samson::Secrets::VaultClient do
     it "scopes to matching server" do
       Samson::Secrets::VaultServer.last.update_column(:address, 'do-not-use')
       assert_vault_request :put, 'global/global/pod2/foo' do
-        client.write('secret/apps/global/global/pod2/foo', foo: :bar)
+        client.write('global/global/pod2/foo', foo: :bar)
       end
     end
 
     it "fails descriptively when not deploy group was found" do
       e = assert_raises(RuntimeError) do
-        client.write('secret/apps/global/global/podoops/foo', foo: :bar)
+        client.write('global/global/podoops/foo', foo: :bar)
       end
       e.message.must_equal "no deploy group with permalink podoops found"
     end
