@@ -1,26 +1,17 @@
 # frozen_string_literal: true
-require 'attr_encrypted'
-
 module Samson
   module Secrets
     class DbBackend
       class Secret < ActiveRecord::Base
+        include AttrEncryptedSupport
+
         self.table_name = :secrets
         self.primary_key = :id # uses a string id
 
-        ENCRYPTION_KEY = Rails.application.secrets.secret_key_base
+        attr_encrypted :value
 
-        attr_encrypted :value, key: ENCRYPTION_KEY, algorithm: 'aes-256-cbc'
-
-        before_validation :store_encryption_key_sha
         validates :id, :encrypted_value, :encryption_key_sha, presence: true
         validates :id, format: %r{\A([^/\s]+/){3}[^\s]+\Z}
-
-        private
-
-        def store_encryption_key_sha
-          self.encryption_key_sha = Digest::SHA2.hexdigest(ENCRYPTION_KEY)
-        end
       end
 
       class << self

@@ -1,0 +1,19 @@
+<h1><%= @vault_server.new_record? ? "New Server" : "Edit Sever #{@vault_server.name}" %></h1>
+
+<section>
+  <%= form_for [:admin, @vault_server], html: { class: "form-horizontal" } do |form| %>
+    <fieldset>
+      <%= render 'shared/errors', object: @vault_server %>
+
+      <%= form.input :name, required: true %>
+      <%= form.input :address, as: :url_field, required: true %>
+      <%= form.input :token, required: true %>
+      <%= form.input :tls_verify, as: :check_box %>
+      <%= form.input :ca_cert, as: :text_area %>
+
+      <%= form.actions delete: [:admin, @vault_server] do %>
+        | <%= link_to_history @vault_server %>
+      <% end %>
+    </fieldset>
+  <% end %>
+</section>

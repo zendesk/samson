@@ -17,7 +17,7 @@
     <div class="form-group">
       <%= form.label :vault_instance, "Vault Instance", class: "col-lg-2 control-label" %>
       <div class="col-lg-4">
-        <%= form.select(:vault_instance, options_for_select(Sasmon::Secrets::VaultClient.available_instances, @deploy_group.vault_instance), {}, class: "form-control", required: true) %>
+        <%= form.select(:vault_instance, options_for_select(Samson::Secrets::VaultServer.pluck(:name).sort, @deploy_group.vault_instance), {}, class: "form-control", required: true) %>
       </div>
     </div>
   <% end %>

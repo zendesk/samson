@@ -44,7 +44,7 @@ gem 'github-markdown'
 gem 'coderay'
 gem 'net-http-persistent'
 gem 'concurrent-ruby'
-gem 'vault'
+gem 'vault', git: 'https://github.com/grosser/vault-ruby.git', branch: 'grosser/cert_store' # https://github.com/hashicorp/vault-ruby/pull/101
 gem 'docker-api', '>= 1.32'
 gem 'warden-doorkeeper'
 gem 'kubeclient', '~> 1.2.0'

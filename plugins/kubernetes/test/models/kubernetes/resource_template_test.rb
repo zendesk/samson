@@ -16,6 +16,8 @@ describe Kubernetes::ResourceTemplate do
     doc.send(:resource_template=, YAML.load_stream(read_kubernetes_sample_file('kubernetes_deployment.yml')))
     doc.kubernetes_release.deploy_id = 123
     stub_request(:get, "http://foobar.server/api/v1/namespaces/pod1/secrets").to_return(body: "{}")
+    Samson::Secrets::VaultClient.any_instance.stubs(:client).
+      returns(stub(options: {address: 'https://test.hvault.server', ssl_verify: false}))
   end
 
   describe "#to_hash" do
@@ -185,7 +187,7 @@ describe Kubernetes::ResourceTemplate do
       end
 
       it "fails when vault is not configured" do
-        Samson::Secrets::VaultClient.client.expects(:config_for).returns(nil)
+        Samson::Secrets::VaultClient.client.expects(:client).returns(nil)
         e = assert_raises { template.to_hash }
         e.message.must_equal "Could not find Vault config for pod1"
       end

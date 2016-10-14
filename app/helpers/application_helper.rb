@@ -119,7 +119,12 @@ module ApplicationHelper
 
   def link_to_delete(path, body = 'Delete', options = {})
     resource = Array(path).last
-    message = (resource.is_a?(ActiveRecord::Base) ? "Delete this #{resource.class.name} ?" : "Are you sure ?")
+    message =
+      if resource.is_a?(ActiveRecord::Base)
+        "Delete this #{resource.class.name.split("::").last} ?"
+      else
+        "Are you sure ?"
+      end
     link_to body, path, options.merge(method: :delete, data: { confirm: message })
   end
 

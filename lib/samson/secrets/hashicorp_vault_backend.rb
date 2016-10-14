@@ -42,7 +42,7 @@ module Samson
             comment: data.fetch(:comment),
             creator_id: data.fetch(:user_id)
           )
-        rescue Vault::HTTPConnectionError => e
+        rescue Vault::HTTPConnectionError => e # TODO: extract vault method that wraps
           wrap_vault_errors(e.message)
         end
 
@@ -63,9 +63,8 @@ module Samson
 
         private
 
-        # get and cache a copy of the client that has a token
         def vault_client
-          @vault_client ||= Samson::Secrets::VaultClient.new
+          Samson::Secrets::VaultClient.client
         end
 
         def wrap_vault_errors(message)

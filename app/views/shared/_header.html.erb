@@ -71,6 +71,9 @@
             <li class="divider"></li>
           <% end %>
           <li><%= link_to "Secrets", admin_secrets_path %></li>
+          <% if SecretStorage.backend == Samson::Secrets::HashicorpVaultBackend %>
+            <li><%= link_to "Vault Servers", admin_vault_servers_path %></li>
+          <% end %>
           <li><%= link_to "Reports", csv_exports_path %></li>
           <% if current_user&.super_admin? %>
             <li><%= link_to "OAuth Applications", oauth_applications_path %></li>

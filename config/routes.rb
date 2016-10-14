@@ -126,6 +126,7 @@ Samson::Application.routes.draw do
     resources :projects, only: [:index, :destroy]
     resources :commands, except: [:show]
     resources :secrets, except: [:show]
+    resources :vault_servers, except: [:edit] # TODO: make other here also use `except: :edit`
     resources :environments, except: [:show]
     resources :deploy_groups do
       member do
