@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 # fills out Deploy/Job template with dynamic values
 module Kubernetes
-  class ResourceTemplate
+  class TemplateFiller
     attr_reader :template
 
     CUSTOM_UNIQUE_LABEL_KEY = 'rc_unique_identifier'

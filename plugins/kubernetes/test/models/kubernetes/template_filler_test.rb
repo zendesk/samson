@@ -3,14 +3,14 @@ require_relative "../../test_helper"
 
 SingleCov.covered!
 
-describe Kubernetes::ResourceTemplate do
+describe Kubernetes::TemplateFiller do
   let(:doc) { kubernetes_release_docs(:test_release_pod_1) }
   let(:raw_template) do
     raw_template = YAML.load(read_kubernetes_sample_file('kubernetes_deployment.yml')).deep_symbolize_keys
     raw_template[:metadata][:namespace] = "pod1"
     raw_template
   end
-  let(:template) { Kubernetes::ResourceTemplate.new(doc, raw_template) }
+  let(:template) { Kubernetes::TemplateFiller.new(doc, raw_template) }
 
   before do
     doc.send(:resource_template=, YAML.load_stream(read_kubernetes_sample_file('kubernetes_deployment.yml')))
@@ -159,7 +159,7 @@ describe Kubernetes::ResourceTemplate do
       let(:secret_key) { "global/global/global/bar" }
 
       around do |test|
-        klass = Kubernetes::ResourceTemplate
+        klass = Kubernetes::TemplateFiller
         silence_warnings { klass.const_set(:SIDECAR_IMAGE, "docker-registry.example.com/foo:bar") }
         test.call
         silence_warnings { klass.const_set(:SIDECAR_IMAGE, nil) }
