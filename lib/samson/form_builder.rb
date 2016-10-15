@@ -11,7 +11,7 @@ module Samson
       raise ArgumentError if block && input_html
 
       input_html ||= {}
-      input_html[:pattern] ||= translate_regex_to_js(pattern)
+      input_html[:pattern] ||= translate_regex_to_js(pattern) if pattern
       input_html[:required] ||= required
 
       label ||= attribute.to_s.humanize
@@ -52,8 +52,12 @@ module Samson
 
     # html regexp input ... allows blank values, does not know case insensitive so use a-zA-Z, does not know \A\z
     # FYI: could also read from validations: _validators[attribute].first.options[:with]
+    # js patterns need to match the full inout "/foo" will not match "/foobar" ... so we enforce \A + \z
     def translate_regex_to_js(pattern)
-      pattern.source.sub('\\A', '^').sub('\\z', '$') if pattern
+      pattern = pattern.source
+      raise ArgumentError, "pattern needs \\A" unless pattern.sub!('\\A', '^')
+      raise ArgumentError, "pattern needs \\z" unless pattern.sub!('\\z', '$')
+      pattern
     end
 
     def content_tag(*args, &block)
