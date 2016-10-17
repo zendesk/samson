@@ -248,6 +248,20 @@ describe GitRepository do
     end
   end
 
+  describe '#checkout_submodules!' do
+    before do
+      create_repo_with_submodule
+    end
+
+    it 'checks out submodules' do
+      Dir.mktmpdir do |temp_dir|
+        assert repository.checkout_workspace(temp_dir, 'master')
+        Dir.exist?("#{temp_dir}/submodule").must_equal true
+        File.read("#{temp_dir}/submodule/bar").must_equal "banana\n"
+      end
+    end
+  end
+
   describe "#clean!" do
     it 'removes a repository' do
       create_repo_without_tags

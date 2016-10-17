@@ -49,6 +49,39 @@ module GitRepoTestHelper
     SHELL
   end
 
+  def create_repo_with_submodule
+    create_submodule_repo
+    create_repo_without_tags
+    execute_on_remote_repo <<-SHELL
+      git submodule add #{submodule_repo_temp_dir} submodule
+      git add .gitmodules
+      git add submodule
+      git commit -m "added submodule"
+    SHELL
+  end
+
+  def submodule_repo_temp_dir
+    @submodule_repo_temp_dir ||= Dir.mktmpdir
+  end
+
+  def execute_on_remote_submodule_repo(cmds)
+    result = `exec 2>&1; set -e; cd #{submodule_repo_temp_dir}; #{cmds}`
+    raise "FAIL: #{result}" unless $?.success?
+    result
+  end
+
+  def create_submodule_repo
+    execute_on_remote_submodule_repo <<-SHELL
+      git init
+      git config user.email "test@example.com"
+      git config user.name "Test User"
+      git config commit.gpgsign false
+      echo banana > bar
+      git add bar
+      git commit -m "initial commit"
+    SHELL
+  end
+
   def current_branch
     `git rev-parse --abbrev-ref HEAD`.strip
   end

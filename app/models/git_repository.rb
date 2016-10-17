@@ -23,6 +23,7 @@ class GitRepository
     return false unless @last_pulled || update_local_cache!
     return false unless create_workspace(temp_dir)
     return false unless checkout!(git_reference, temp_dir)
+    return false unless checkout_submodules!(temp_dir)
     true
   end
 
@@ -129,6 +130,14 @@ class GitRepository
 
   def checkout!(git_reference, pwd)
     executor.execute!("cd #{pwd}", "git checkout --quiet #{git_reference.shellescape}")
+  end
+
+  def checkout_submodules!(pwd)
+    executor.execute!(
+      "cd #{pwd}",
+      "git submodule sync --recursive",
+      "git submodule update --init --recursive"
+    )
   end
 
   def locally_cached?
