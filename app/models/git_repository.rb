@@ -134,11 +134,17 @@ class GitRepository
 
   def checkout_submodules!(pwd)
     return true unless File.exist? "#{pwd}/.gitmodules"
+
+    recursive_flag = " --recursive" if git_supports_recursive_flag?
     executor.execute!(
       "cd #{pwd}",
-      "git submodule sync",
+      "git submodule sync#{recursive_flag}",
       "git submodule update --init --recursive"
     )
+  end
+
+  def git_supports_recursive_flag?
+    Gem::Version.new($git_version) >= Gem::Version.new("1.8.1")
   end
 
   def locally_cached?
