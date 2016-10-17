@@ -1,10 +1,10 @@
 # frozen_string_literal: true
 class Admin::DeployGroupsController < ApplicationController
   before_action :authorize_admin!
-  before_action :authorize_super_admin!, only: [:create, :new, :update, :destroy, :deploy_all,
+  before_action :authorize_super_admin!, only: [:create, :new, :update, :destroy, :deploy_all, :deploy_missing,
                                                 :create_all_stages, :create_all_stages_preview, :edit]
   before_action :deploy_group, only: [:show, :edit, :update, :destroy, :deploy_all, :create_all_stages,
-                                      :create_all_stages_preview]
+                                      :create_all_stages_preview, :deploy_missing]
 
   def index
     @deploy_groups = DeployGroup.all.sort_by(&:natural_order)
@@ -54,25 +54,11 @@ class Admin::DeployGroupsController < ApplicationController
   end
 
   def deploy_all
-    environment = deploy_group.environment
-    template_stages = environment.template_stages.all
-    deploys = deploy_group.stages.map do |stage|
-      template_stage = template_stages.detect { |ts| ts.project_id == stage.project.id }
-      next unless template_stage
+    deploy_stages(redeploy_successful: true)
+  end
 
-      last_success_deploy = template_stage.last_successful_deploy
-      next unless last_success_deploy
-
-      deploy_service = DeployService.new(current_user)
-      deploy_service.deploy!(stage, reference: last_success_deploy.reference)
-    end.compact
-
-    if deploys.empty?
-      flash[:error] = "There were no stages ready for deploy."
-      redirect_to deploys_path
-    else
-      redirect_to deploys_path(ids: deploys.map(&:id))
-    end
+  def deploy_missing
+    deploy_stages(redeploy_successful: false)
   end
 
   def create_all_stages_preview
@@ -108,6 +94,29 @@ class Admin::DeployGroupsController < ApplicationController
   end
 
   private
+
+  def deploy_stages(redeploy_successful:)
+    environment = deploy_group.environment
+    template_stages = environment.template_stages.all
+    stages_to_deploy = redeploy_successful ? deploy_group.stages : deploy_group.stages.reject(&:last_successful_deploy)
+    deploys = stages_to_deploy.map do |stage|
+      template_stage = template_stages.detect { |ts| ts.project_id == stage.project.id }
+      next unless template_stage
+
+      last_success_deploy = template_stage.last_successful_deploy
+      next unless last_success_deploy
+
+      deploy_service = DeployService.new(current_user)
+      deploy_service.deploy!(stage, reference: last_success_deploy.reference)
+    end.compact
+
+    if deploys.empty?
+      flash[:error] = "There were no stages ready for deploy."
+      redirect_to deploys_path
+    else
+      redirect_to deploys_path(ids: deploys.map(&:id))
+    end
+  end
 
   # returns nil on success, otherwise the reason this stage was skipped.
   def merge_stage(stage)
