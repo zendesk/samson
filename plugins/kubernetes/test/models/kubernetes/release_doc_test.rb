@@ -58,7 +58,7 @@ describe Kubernetes::ReleaseDoc do
 
     before do
       kubernetes_fake_raw_template
-      Kubernetes::ResourceTemplate.any_instance.stubs(:set_image_pull_secrets) # makes an extra request we ignore
+      Kubernetes::TemplateFiller.any_instance.stubs(:set_image_pull_secrets) # makes an extra request we ignore
     end
 
     it "stores the template when creating" do

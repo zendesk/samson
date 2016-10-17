@@ -100,7 +100,7 @@ describe Kubernetes::DeployExecutor do
         to_return(body: {items: []}.to_json)
       stub_request(:get, /#{Regexp.escape(log_url)}/)
       GitRepository.any_instance.stubs(:file_content).with('Dockerfile', anything).returns "FROM all"
-      Kubernetes::ResourceTemplate.any_instance.stubs(:set_image_pull_secrets)
+      Kubernetes::TemplateFiller.any_instance.stubs(:set_image_pull_secrets)
 
       stub_request(:get, service_url).to_return(body: {metadata: {uid: '123'}}.to_json)
       stub_request(:delete, service_url)
@@ -160,7 +160,7 @@ describe Kubernetes::DeployExecutor do
       end
 
       it "fails before building when secrets are not configured in the backend" do
-        Kubernetes::ResourceTemplate.any_instance.stubs(:needs_secret_sidecar?).returns(true)
+        Kubernetes::TemplateFiller.any_instance.stubs(:needs_secret_sidecar?).returns(true)
 
         # overriding the stubbed value
         template = Kubernetes::ReleaseDoc.new.send(:raw_template)[0]

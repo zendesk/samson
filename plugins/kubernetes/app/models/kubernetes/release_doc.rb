@@ -43,7 +43,7 @@ module Kubernetes
     # run on unsaved mock ReleaseDoc to test template and secrets before we save or create a build
     def verify_template
       primary_config = raw_template.detect { |e| Kubernetes::RoleConfigFile::PRIMARY.include?(e.fetch(:kind)) }
-      template = Kubernetes::ResourceTemplate.new(self, primary_config)
+      template = Kubernetes::TemplateFiller.new(self, primary_config)
       template.set_secrets
     end
 
@@ -93,7 +93,7 @@ module Kubernetes
           resource[:spec][:type] = 'NodePort'
           resource
         when *Kubernetes::RoleConfigFile::PRIMARY
-          ResourceTemplate.new(self, resource).to_hash
+          TemplateFiller.new(self, resource).to_hash
         else
           resource
         end
