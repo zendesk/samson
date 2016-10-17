@@ -60,12 +60,26 @@ describe Samson::FormBuilder do
       end
     end
 
-    it "does not include empty pattern" do
-      builder.input(:name, help: "Hello!").wont_include "pattern"
-    end
+    describe "pattern" do
+      it "does not include empty pattern" do
+        builder.input(:name, help: "Hello!").wont_include "pattern"
+      end
 
-    it "includes translated js pattern" do
-      builder.input(:name, pattern: /\Aabc\z/).must_include 'pattern="^abc$"'
+      it "includes translated js pattern" do
+        builder.input(:name, pattern: /\Aabc\z/).must_include 'pattern="^abc$"'
+      end
+
+      it "fails on pattern without start" do
+        assert_raises ArgumentError do
+          builder.input(:name, pattern: /abc\z/)
+        end
+      end
+
+      it "fails on pattern without end" do
+        assert_raises ArgumentError do
+          builder.input(:name, pattern: /\Aabc/)
+        end
+      end
     end
 
     it "removes _id part for labels" do
@@ -73,7 +87,9 @@ describe Samson::FormBuilder do
     end
 
     it "can mark fields as required" do
-      builder.input(:name, required: true).must_include 'required'
+      result = builder.input(:name, required: true)
+      result.must_include 'required="required"'
+      result.must_include '* Name'
     end
   end
 

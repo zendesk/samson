@@ -2,11 +2,11 @@
   <%= render 'shared/errors', object: project %>
 
   <fieldset>
-    <%= form.input :name %>
+    <%= form.input :name, required: true %>
     <%= form.input :description, as: :text_area, help: 'How would you explain the project to someone new?' %>
     <%= form.input :owner, label: 'Contact', help: 'An email or group to contact with questions.' %>
-    <%= form.input :repository_url %>
-    <%= form.input :permalink if project.persisted? %>
+    <%= form.input :repository_url, required: true %>
+    <%= form.input :permalink, required: true if project.persisted? %>
     <%= form.input :release_branch, help: 'New commits on this branch will cause a release when a webhook arrives.' %>
     <% if ENV['DOCKER_FEATURE'] %>
       <%= form.input :docker_release_branch, help: 'New commits on this branch will cause a docker image to be built when a webhook arrives.' %>
