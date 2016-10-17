@@ -133,6 +133,7 @@ class GitRepository
   end
 
   def checkout_submodules!(pwd)
+    return true unless File.exist? "#{pwd}/.gitmodules"
     executor.execute!(
       "cd #{pwd}",
       "git submodule sync --recursive",

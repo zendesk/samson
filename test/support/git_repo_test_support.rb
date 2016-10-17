@@ -12,10 +12,7 @@ module GitRepoTestHelper
 
   def create_repo_without_tags
     execute_on_remote_repo <<-SHELL
-      git init
-      git config user.email "test@example.com"
-      git config user.name "Test User"
-      git config commit.gpgsign false
+      #{init_repo_commands}
       echo monkey > foo
       git add foo
       git commit -m "initial commit"
@@ -72,13 +69,19 @@ module GitRepoTestHelper
 
   def create_submodule_repo
     execute_on_remote_submodule_repo <<-SHELL
+      #{init_repo_commands}
+      echo banana > bar
+      git add bar
+      git commit -m "initial submodule commit"
+    SHELL
+  end
+
+  def init_repo_commands
+    <<-SHELL
       git init
       git config user.email "test@example.com"
       git config user.name "Test User"
       git config commit.gpgsign false
-      echo banana > bar
-      git add bar
-      git commit -m "initial commit"
     SHELL
   end
 
