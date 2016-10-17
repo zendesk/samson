@@ -136,7 +136,7 @@ class GitRepository
     return true unless File.exist? "#{pwd}/.gitmodules"
     executor.execute!(
       "cd #{pwd}",
-      "git submodule sync --recursive",
+      "git submodule sync",
       "git submodule update --init --recursive"
     )
   end
