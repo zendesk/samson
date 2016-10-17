@@ -4,18 +4,19 @@ module GitRepoTestHelper
     @repo_temp_dir ||= Dir.mktmpdir
   end
 
-  def execute_on_remote_repo(cmds)
-    result = `exec 2>&1; set -e; cd #{repo_temp_dir}; #{cmds}`
+  def submodule_temp_dir
+    @submodule_temp_dir ||= Dir.mktmpdir
+  end
+
+  def execute_on_remote_repo(cmds, repo_dir = repo_temp_dir)
+    result = `exec 2>&1; set -e; cd #{repo_dir}; #{cmds}`
     raise "FAIL: #{result}" unless $?.success?
     result
   end
 
   def create_repo_without_tags
     execute_on_remote_repo <<-SHELL
-      git init
-      git config user.email "test@example.com"
-      git config user.name "Test User"
-      git config commit.gpgsign false
+      #{init_repo_commands}
       echo monkey > foo
       git add foo
       git commit -m "initial commit"
@@ -46,6 +47,36 @@ module GitRepoTestHelper
       echo more-monkey >> foo
       git add foo
       git commit -m "added more monkey"
+    SHELL
+  end
+
+  def create_repo_with_submodule
+    create_submodule_repo
+    create_repo_without_tags
+    execute_on_remote_repo <<-SHELL
+      git submodule add #{submodule_temp_dir} submodule
+      git add .gitmodules
+      git add submodule
+      git commit -m "added submodule"
+    SHELL
+  end
+
+  def create_submodule_repo
+    commands = <<-SHELL
+      #{init_repo_commands}
+      echo banana > bar
+      git add bar
+      git commit -m "initial submodule commit"
+    SHELL
+    execute_on_remote_repo commands, submodule_temp_dir
+  end
+
+  def init_repo_commands
+    <<-SHELL
+      git init
+      git config user.email "test@example.com"
+      git config user.name "Test User"
+      git config commit.gpgsign false
     SHELL
   end
 
