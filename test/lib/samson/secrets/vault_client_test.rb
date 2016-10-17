@@ -8,8 +8,8 @@ describe Samson::Secrets::VaultClient do
 
   # have 2 servers around so we can test multi-server logic
   before do
-    deploy_groups(:pod1).update_column(:vault_instance, 'pod1')
-    Samson::Secrets::VaultServer.create!(name: 'pod1', address: 'http://vault-land.com', token: 'TOKEN2')
+    server = Samson::Secrets::VaultServer.create!(name: 'pod1', address: 'http://vault-land.com', token: 'TOKEN2')
+    deploy_groups(:pod1).update_column(:vault_server_id, server.id)
   end
 
   let(:client) { Samson::Secrets::VaultClient.new }
@@ -87,16 +87,16 @@ describe Samson::Secrets::VaultClient do
     end
 
     it "fails descriptively when deploy group has no vault server associated" do
-      deploy_groups(:pod2).update_column(:vault_instance, "")
+      deploy_groups(:pod2).update_column(:vault_server_id, nil)
       e = assert_raises(RuntimeError) { client.client(deploy_groups(:pod2)) }
-      e.message.must_equal "deploy group pod2 has no vault_instance configured"
+      e.message.must_equal "deploy group pod2 has no vault server configured"
     end
 
     it "fails descriptively when vault client cannot be found" do
       client # trigger caching
-      deploy_groups(:pod2).update_column(:vault_instance, "xyz")
+      deploy_groups(:pod2).update_column(:vault_server_id, 123)
       e = assert_raises(RuntimeError) { client.client(deploy_groups(:pod2)) }
-      e.message.must_equal "no vault server found with name xyz"
+      e.message.must_equal "no vault server found with id 123"
     end
   end
 end

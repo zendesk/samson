@@ -5,6 +5,7 @@ class DeployGroup < ActiveRecord::Base
   has_soft_deletion default_scope: true
 
   belongs_to :environment
+  belongs_to :vault_server
   has_many :deploy_groups_stages
   has_many :stages, through: :deploy_groups_stages
   has_many :template_stages, -> { where(is_template: true) }, through: :deploy_groups_stages, source: :stage

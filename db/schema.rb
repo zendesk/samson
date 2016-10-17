@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20161013175858) do
+ActiveRecord::Schema.define(version: 20161014175742) do
 
   create_table "builds", force: :cascade do |t|
     t.integer  "project_id",                                       null: false
@@ -56,7 +56,7 @@ ActiveRecord::Schema.define(version: 20161013175858) do
     t.datetime "updated_at",                 null: false
     t.string   "env_value",      limit: 255, null: false
     t.string   "permalink",      limit: 255, null: false
-    t.string   "vault_instance", limit: 255
+    t.integer  "vault_server_id"
   end
 
   add_index "deploy_groups", ["environment_id"], name: "index_deploy_groups_on_environment_id", using: :btree
