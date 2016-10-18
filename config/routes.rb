@@ -131,7 +131,6 @@ Samson::Application.routes.draw do
     resources :deploy_groups do
       member do
         post :deploy_all
-        post :deploy_missing
         get :create_all_stages_preview
         post :create_all_stages
         post :merge_all_stages
