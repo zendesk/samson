@@ -144,7 +144,7 @@ class GitRepository
   end
 
   def git_supports_recursive_flag?
-    GitInfo.version >= Gem::Version.new("1.8.1")
+    Samson::GitInfo.version >= Gem::Version.new("1.8.1")
   end
 
   def locally_cached?
