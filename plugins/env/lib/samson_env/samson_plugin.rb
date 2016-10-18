@@ -4,9 +4,8 @@ module SamsonEnv
   end
 
   class << self
-    def write_env_files(dir, job)
-      return unless (stage = job.deploy.try(:stage))
-      return unless groups = env_groups(stage.project, stage.deploy_groups.to_a)
+    def write_env_files(dir, project, deploy_groups)
+      return unless groups = env_groups(project, deploy_groups)
       write_env_json_file("#{dir}/ENV.json", "#{dir}/manifest.json", groups) ||
         write_dotenv_file("#{dir}/.env", groups)
     end
@@ -97,8 +96,14 @@ Samson::Hooks.callback :project_permitted_params do
   AcceptsEnvironmentVariables::ASSIGNABLE_ATTRIBUTES.merge(environment_variable_group_ids: [])
 end
 
-Samson::Hooks.callback :after_deploy_setup do |dir, stage|
-  SamsonEnv.write_env_files(dir, stage)
+Samson::Hooks.callback :after_deploy_setup do |dir, job|
+  if stage = job.deploy.try(:stage)
+    SamsonEnv.write_env_files(dir, stage.project, stage.deploy_groups.to_a)
+  end
+end
+
+Samson::Hooks.callback :before_docker_build do |dir, build|
+  SamsonEnv.write_env_files(dir, build.project, [])
 end
 
 Samson::Hooks.callback :deploy_group_env do |project, deploy_group|
