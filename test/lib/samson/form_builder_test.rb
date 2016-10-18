@@ -4,6 +4,10 @@ require_relative '../../test_helper'
 SingleCov.covered!
 
 describe Samson::FormBuilder do
+  def fake_erb_rendering
+    builder.instance_variable_get(:@template).output_buffer << "XYZ"
+  end
+
   let(:template) do
     template = ActionView::Base.new
     template.extend ApplicationHelper
@@ -47,11 +51,16 @@ describe Samson::FormBuilder do
     end
 
     it "replaces input with block" do
-      builder.input(:name) { "XYZ" }.must_include "XYZ"
+      builder.input(:name) { fake_erb_rendering }.must_include "XYZ"
     end
 
     it "replaces input with block for check boxes" do
-      builder.input(:name, as: :check_box) { "XYZ" }.must_include "XYZ"
+      builder.input(:name, as: :check_box) { fake_erb_rendering }.must_include "XYZ"
+    end
+
+    it "does not add a for attribute on check boxes so whatever is wrapped is clickable" do
+      result = builder.input(:name, as: :check_box) { '<inout name="foo" type="checkbox">'.html_safe }
+      result.must_include "<label><inout name=\"foo\" type=\"checkbox\"> Name</label>"
     end
 
     it "does not allow input_html and block" do
@@ -118,7 +127,11 @@ describe Samson::FormBuilder do
     end
 
     it "can add additional links with block" do
-      builder.actions { "XYZ" }.must_include "XYZ"
+      builder.actions { fake_erb_rendering }.must_include "XYZ"
+    end
+
+    it "can override button text" do
+      builder.actions(label: 'Execute!').must_include "value=\"Execute!\""
     end
   end
 end

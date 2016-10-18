@@ -1,20 +1,11 @@
 <h1>Execute job on <%= @project.name %></h1>
 
 <%= form_for [@project, @job], html: { class: "form-horizontal" } do |form| %>
-  <fieldset>
-    <%= render 'shared/errors', object: @job %>
-  </fieldset>
+  <%= render 'shared/errors', object: @job %>
 
-  <fieldset>
-    <legend>Reference</legend>
-
-    <div class="form-group">
-      <%= form.label :commit, "Tag or SHA", class: "col-lg-2 control-label" %>
-      <div class="col-lg-4">
-        <%= form.text_field :commit, class: "form-control", autofocus: true, placeholder: "e.g. v2.1.43, master, fa0b4671" %>
-      </div>
-    </div>
-  </fieldset>
+  <%= form.input :commit, label: "Tag or SHA" do %>
+    <%= form.text_field :commit, class: "form-control", autofocus: true, placeholder: "e.g. v2.1.43, master, fa0b4671" %>
+  <% end %>
 
   <fieldset>
     <legend>Commands</legend>
@@ -47,10 +38,5 @@
 
   <hr>
 
-  <div class="form-group">
-    <div class="col-lg-offset-2 col-lg-10">
-      <button type="submit" class="btn btn-primary">Execute!</button>
-      <%= link_to "Cancel", project_jobs_path(@project), class: 'btn btn-default' %>
-    </div>
-  </div>
+  <%= form.actions label: 'Execute!' %>
 <% end %>

@@ -23,8 +23,8 @@ module Samson
       content_tag :div, class: 'form-group' do
         if as == :check_box
           content_tag(:div, class: "col-lg-offset-2 col-lg-10 checkbox") do
-            label(attribute) do
-              block.call.dup << SPACER << label << help
+            @template.label_tag do
+              @template.capture(&block) << SPACER << label << help
             end
           end
         else
@@ -36,10 +36,10 @@ module Samson
       end
     end
 
-    def actions(delete: false, &block)
+    def actions(delete: false, label: 'Save', &block)
       content_tag :div, class: "form-group" do
         content_tag :div, class: "col-lg-offset-2 col-lg-10" do
-          content = submit 'Save', class: "btn btn-primary"
+          content = submit label, class: "btn btn-primary"
           resource = (delete.is_a?(Array) ? delete : object)
           content << SPACER << @template.link_to_delete(resource) if delete && object.persisted?
           content << @template.capture(&block) if block

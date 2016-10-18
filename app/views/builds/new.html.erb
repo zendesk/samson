@@ -2,53 +2,29 @@
 
 <section>
   <%= form_for [@project, @build], html: { class: "form-horizontal" } do |form| %>
-    <fieldset>
-      <%= render 'shared/errors', object: @build %>
+    <%= render 'shared/errors', object: @build %>
 
-      <div class="form-group">
-        <%= form.label :git_ref, "Git Reference", class: "col-lg-2 control-label" %>
-        <div id="scrollable-dropdown-menu" class="col-lg-4">
-          <%= form.text_field :git_ref, class: "form-control", autofocus: true, placeholder: "e.g. v2.1.43, master, fa0b4671", data: { prefetch_url: project_references_path(@project, format: "json") } %>
-        </div>
+    <%= form.input :git_ref, label: 'Git Reference' do %>
+      <div id="scrollable-dropdown-menu">
+        <%= form.text_field :git_ref, class: "form-control", autofocus: true, placeholder: "e.g. v2.1.43, master, fa0b4671", data: { prefetch_url: project_references_path(@project, format: "json") } %>
       </div>
 
-      <div>
-        <div id="ref-problem-warning" class="col-lg-5 col-lg-offset-2 alert alert-warning hidden">
-          <p>There is currently a problem registered by a CI service for this Tag or SHA. Are you sure you wish to create a build?</p>
-          <ul id="ref-problem-list"></ul>
-        </div>
+      <div id="ref-problem-warning" class="alert alert-warning hidden">
+        <p>There is currently a problem registered by a CI service for this Tag or SHA. Are you sure you wish to create a build?</p>
+        <ul id="ref-problem-list"></ul>
       </div>
+    <% end %>
 
-      <div class="form-group">
-        <%= form.label :label, "Label", class: "col-lg-2 control-label" %>
-        <div class="col-lg-4">
-          <%= form.text_field :label, class: "form-control" %>
-        </div>
-      </div>
+    <%= form.input :label %>
+    <%= form.input :description, input_html: {row: 3} %>
 
-      <div class="form-group">
-        <%= form.label :description, "Description", class: "col-lg-2 control-label" %>
-        <div class="col-lg-4">
-          <%= form.text_area :description, rows: 3, class: "form-control" %>
-        </div>
-      </div>
+    <%= Samson::Hooks.render_views(:build_new, self, form: form) %>
 
-      <%= Samson::Hooks.render_views(:build_new, self, form: form) %>
+    <%# important / easy to overlook so it goes last %>
+    <%= form.input :build_image, as: :check_box do %>
+      <%= check_box_tag :build_image %>
+    <% end %>
 
-      <div class="form-group">
-        <%= form.label :build_image, "Build Docker Image?", class: "col-lg-2 control-label" %>
-        <div class="col-lg-4">
-          <%= check_box_tag :build_image %>
-        </div>
-      </div>
-
-      <div class="form-group">
-        <div class="col-lg-offset-2 col-lg-10">
-          <%= form.submit "Create", class: "btn btn-primary" %>
-          <%= link_to "Cancel", :back, class: 'btn btn-default' %>
-        </div>
-      </div>
-
-    </fieldset>
+    <%= form.actions %>
   <% end %>
 </section>

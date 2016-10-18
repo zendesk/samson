@@ -4,14 +4,9 @@
   <%= form_for [:admin, @environment], html: { class: "form-horizontal" } do |form| %>
     <%= render 'shared/errors', object: @environment %>
 
-    <%= render 'admin/environments/fields', form: form %>
+    <%= form.input :name, required: true %>
+    <%= form.input :production, as: :check_box, label: 'Affects Production' %>
 
-    <hr>
-
-    <div class="form-group">
-      <div class="col-lg-offset-2 col-lg-10">
-        <%= form.submit "Save", class: 'btn btn-default' %>
-      </div>
-    </div>
+    <%= form.actions %>
   <% end %>
 </section>
