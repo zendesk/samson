@@ -97,8 +97,8 @@ Samson::Hooks.callback :project_permitted_params do
   AcceptsEnvironmentVariables::ASSIGNABLE_ATTRIBUTES.merge(environment_variable_group_ids: [])
 end
 
-Samson::Hooks.callback :after_deploy_setup do |dir, stage|
-  SamsonEnv.write_env_files(dir, stage)
+Samson::Hooks.callback :after_deploy_setup do |dir, job|
+  SamsonEnv.write_env_files(dir, job)
 end
 
 Samson::Hooks.callback :deploy_group_env do |project, deploy_group|
