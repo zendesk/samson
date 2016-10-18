@@ -179,6 +179,50 @@ describe Admin::DeployGroupsController do
       end
     end
 
+    describe "deploy_all for missing deploys" do
+      let(:env) { environments(:staging) }
+      let(:new_deploy_group) { DeployGroup.create!(name: 'pod102', environment: env) }
+
+      before do
+        # create the new stage to test against
+        Admin::DeployGroupsController.create_all_stages(new_deploy_group)
+
+        # Give it a successful deploy
+        new_stage = new_deploy_group.reload.stages.first
+        new_stage.deploys.create!(
+          reference: 'master',
+          job: Job.create!(
+            project: stage.project,
+            user: User.first,
+            status: "succeeded",
+            command: 'blah'
+          )
+        )
+      end
+
+      it "deploys undeployed stage" do
+        new_deploy_group.stages.first.deploys.delete_all
+
+        assert_difference 'Deploy.count', 1 do
+          post :deploy_all, params: {id: new_deploy_group, missing_only: "true"}
+        end
+      end
+
+      it "deploys 'failed deploy' stage" do
+        new_deploy_group.stages.first.deploys.last.job.update_column(:status, "failed")
+
+        assert_difference 'Deploy.count', 1 do
+          post :deploy_all, params: {id: new_deploy_group, missing_only: "true"}
+        end
+      end
+
+      it "ignores 'succesfully deployed' stage" do
+        refute_difference 'Deploy.count' do
+          post :deploy_all, params: {id: new_deploy_group, missing_only: "true"}
+        end
+      end
+    end
+
     describe "#create_all_stages" do
       let(:env) { environments(:staging) }
       let(:deploy_group) { DeployGroup.create!(name: 'Pod 101', environment: env) }

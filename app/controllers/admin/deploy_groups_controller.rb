@@ -56,7 +56,9 @@ class Admin::DeployGroupsController < ApplicationController
   def deploy_all
     environment = deploy_group.environment
     template_stages = environment.template_stages.all
-    deploys = deploy_group.stages.map do |stage|
+    missing_only = params[:missing_only] == "true"
+    stages_to_deploy = missing_only ? deploy_group.stages.reject(&:last_successful_deploy) : deploy_group.stages
+    deploys = stages_to_deploy.map do |stage|
       template_stage = template_stages.detect { |ts| ts.project_id == stage.project.id }
       next unless template_stage
 
