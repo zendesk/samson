@@ -192,13 +192,13 @@ describe Admin::DeployGroupsController do
         # Give it a successful deploy
         new_stage = new_deploy_group.reload.stages.first
         new_stage.deploys.create!(
-            reference: 'master',
-            job: Job.create!(
-                project: stage.project,
-                user: User.first,
-                status: "succeeded",
-                command: 'blah'
-            )
+          reference: 'master',
+          job: Job.create!(
+            project: stage.project,
+            user: User.first,
+            status: "succeeded",
+            command: 'blah'
+          )
         )
       end
 
