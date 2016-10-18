@@ -1,58 +1,29 @@
 <h1>Your profile</h1>
 <section>
   <%= form_for @user, url: profile_path, html: { :class => "form-horizontal", "ng-controller" => "ProfileCtrl" } do |form| %>
-    <fieldset>
-      <div class="form-group">
-        <%= form.label :name, class: "col-lg-2 control-label" %>
-        <div class="col-lg-4">
-          <%= form.text_field :name, class: "form-control" %>
-        </div>
-      </div>
-
-      <div class="form-group">
-        <%= form.label :email, class: "col-lg-2 control-label" %>
-        <div class="col-lg-4">
-          <%= form.text_field :email, class: "form-control" %>
-        </div>
-      </div>
-
-      <div class="form-group">
-        <%= form.label :token, class: "col-lg-2 control-label" %>
-        <div class="col-lg-4">
-          <%= form.text_field :token, class: "form-control", disabled: true %>
-        </div>
-      </div>
-
-      <div class="form-group">
-        <%= form.label :time_format, class: "col-lg-2 control-label" %>
-        <div class="col-lg-4">
-          <% User::TIME_FORMATS.each do |time_format| %>
-            <%= form.radio_button(:time_format, time_format) %>
-            <%= form.label(:time_format, "#{time_format.capitalize}", :value => time_format) %>
-          <% end %>
-        </div>
-      </div>
-
-      <div class="form-group">
-        <div class="col-lg-offset-2 col-lg-10">
-          <%= form.check_box :desktop_notify, 'ng-click' => 'toggleNotify($event)' %>
-          <%= form.label :desktop_notify, "Desktop notifications" %>
-        </div>
-      </div>
-
-      <% if display_access_request_link? %>
-        <div class="form-group">
-          <div class="col-lg-offset-2 col-lg-10">
-            <%= link_to_request_access %>
-          </div>
-        </div>
+    <%= form.input :name, required: true %>
+    <%= form.input :email %>
+    <%= form.input :token, input_html: { disabled: true } %>
+    <%= form.input :time_format do %>
+      <% User::TIME_FORMATS.each do |time_format| %>
+        <%= form.radio_button :time_format, time_format %>
+        <%= form.label :time_format, "#{time_format.capitalize}", value: time_format %>
       <% end %>
+    <% end %>
+    <%= form.input :desktop_notify,
+          as: :check_box, label: "Desktop notifications",
+        input_html: { 'ng-click': 'toggleNotify($event)' },
+        help: 'Show popups on your desktop when deploys are finishing.'
+    %>
 
+    <% if display_access_request_link? %>
       <div class="form-group">
         <div class="col-lg-offset-2 col-lg-10">
-          <button type="submit" class="btn btn-default">Save</button>
+          <%= link_to_request_access %>
         </div>
       </div>
-    </fieldset>
+    <% end %>
+
+    <%= form.actions %>
   <% end %>
 </section>

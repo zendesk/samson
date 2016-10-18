@@ -2,57 +2,23 @@
 
 <section>
   <%= form_for [@project, @build], html: { class: "form-horizontal" } do |form| %>
-    <fieldset>
-      <%= render 'shared/errors', object: @build %>
+    <%= render 'shared/errors', object: @build %>
 
-      <div class="form-group">
-        <%= form.label :id, "Id", class: "col-lg-2 control-label" %>
-        <div class="col-lg-4">
-          <p class="form-control-static"><%= @build.id %></p>
-        </div>
-      </div>
+    <%= form.input :id do %>
+      <p class="form-control-static"><%= @build.id %></p>
+    <% end %>
+    <%= form.input :created do %>
+      <p class="form-control-static"><%= @build.created_at.to_s %></p>
+    <% end %>
+    <%= form.input :label %>
+    <%= form.input :description, as: :text_area, input_html: { rows: 3 } %>
+    <%= form.input :git_ref, label: 'Git Reference' do %>
+      <p class="form-control-static"><%= git_ref_and_sha_for(@build) %></p>
+    <% end %>
+    <%= form.input :docker_image, label: 'Docker Repo Digest' do %>
+      <p class="form-control-static"><%= @build.docker_repo_digest %></p>
+    <% end %>
 
-      <div class="form-group">
-        <%= form.label :created, "Created", class: "col-lg-2 control-label" %>
-        <div class="col-lg-4">
-          <p class="form-control-static"><%= @build.created_at.to_s %></p>
-        </div>
-      </div>
-
-      <div class="form-group">
-        <%= form.label :label, "Label", class: "col-lg-2 control-label" %>
-        <div class="col-lg-4">
-          <%= form.text_field :label, class: "form-control" %>
-        </div>
-      </div>
-
-      <div class="form-group">
-        <%= form.label :description, "Description", class: "col-lg-2 control-label" %>
-        <div class="col-lg-4">
-          <%= form.text_area :description, rows: 3, class: "form-control" %>
-        </div>
-      </div>
-
-      <div class="form-group">
-        <%= form.label :git_ref, "Git Reference", class: "col-lg-2 control-label" %>
-        <div class="col-lg-4">
-          <p class="form-control-static"><%= git_ref_and_sha_for(@build) %></p>
-        </div>
-      </div>
-
-      <div class="form-group">
-        <%= form.label :docker_image, "Docker Repo Digest", class: "col-lg-2 control-label" %>
-        <div class="col-lg-4">
-          <p class="form-control-static"><%= @build.docker_repo_digest %></p>
-        </div>
-      </div>
-
-      <div class="form-group">
-        <div class="col-lg-offset-2 col-lg-10">
-          <%= form.submit "Save", class: "btn btn-primary" %>
-          <%= link_to "Cancel", :back, class: 'btn btn-default' %>
-        </div>
-      </div>
-    </fieldset>
+    <%= form.actions %>
   <% end %>
 </section>
