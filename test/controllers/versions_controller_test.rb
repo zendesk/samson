@@ -22,6 +22,15 @@ describe VersionsController do
         assert_template :index
       end
 
+      it "renders with jenkins job name" do
+        create_version user.id
+        stage.update_attribute(:jenkins_job_names, 'jenkins-job-1')
+        stage.update_attribute(:jenkins_job_names, 'jenkins-job-2')
+        get :index, params: {item_id: stage.id, item_type: stage.class.name}
+        assert_template :index
+        assert_select 'p', text: /jenkins-job-1/
+      end
+
       it "renders with unfound user" do
         create_version '1211212'
         get :index, params: {item_id: stage.id, item_type: stage.class.name}
