@@ -61,11 +61,16 @@
                     class: "btn btn-default"
         %>
         <%= link_to "Deploy All Projects", deploy_all_admin_deploy_group_path(@deploy_group), class: "btn btn-default", data: { method: "post" } %>
-        <form style="display: inline-block" method="post" action="<%= deploy_all_admin_deploy_group_path(@deploy_group) %>">
-          <%= hidden_field_tag :authenticity_token, form_authenticity_token %>
-          <input type="hidden" name="missing_only" value="true">
-          <input type="submit" class="btn btn-default" value="Deploy Missing Projects" title="Deploys will be started for any stages that haven't yet been deployed or have failed all their deploys." >
-        </form>
+        <%= button_to "Deploy Missing Projects",
+                    {
+                      action: :deploy_all,
+                      id: @deploy_group.id
+                    },
+                    class: "btn btn-default",
+                    form_class: "force-form-inline",
+                    params: { missing_only: "true" },
+                    title: "Deploys will be started for any stages that haven't yet been deployed or have failed all their deploys."
+        %>
         <%= link_to "Merge #{@deploy_group.stages.cloned.count} Cloned Stages",
                     merge_all_stages_admin_deploy_group_path(@deploy_group),
                     class: "btn btn-default #{ 'disabled' unless @deploy_group.stages.cloned.exists? }",
