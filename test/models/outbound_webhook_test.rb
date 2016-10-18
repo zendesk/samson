@@ -101,7 +101,7 @@ describe OutboundWebhook do
   end
 
   describe "#deliver" do
-    def stub_request
+    def stub_delivery
       Faraday.new(url: @webhook.url) do |builder|
         builder.adapter :test, Faraday::Adapter::Test::Stubs.new do |stub|
           stub.post('/deploys') { [response, {}, "AOK"] }
@@ -111,7 +111,7 @@ describe OutboundWebhook do
 
     before do
       @webhook = OutboundWebhook.create!(webhook_attributes)
-      OutboundWebhook.any_instance.stubs(:connection).returns(stub_request)
+      OutboundWebhook.any_instance.stubs(:connection).returns(stub_delivery)
       DeploySerializer.stubs(:new).returns({})
     end
 
