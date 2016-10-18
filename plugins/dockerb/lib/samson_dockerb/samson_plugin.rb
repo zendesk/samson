@@ -4,7 +4,7 @@ module SamsonDockerb
   end
 end
 
-Samson::Hooks.callback :after_deploy_setup do |dir, _|
+Samson::Hooks.callback :after_deploy_setup do |dir|
   if File.exist?("#{dir}/Dockerfile.erb") && !File.exist?("#{dir}/Dockerfile")
     require 'dockerb'
     Dir.chdir(dir) do

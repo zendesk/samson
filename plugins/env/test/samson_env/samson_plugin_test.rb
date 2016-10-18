@@ -152,6 +152,30 @@ describe SamsonEnv do
     end
   end
 
+  describe :before_docker_build do
+    def fire
+      build = Build.new(project: project)
+      Samson::Hooks.fire(:before_docker_build, Dir.pwd, build, StringIO.new)
+    end
+
+    run_inside_of_temp_directory
+
+    before do
+      project.environment_variables.create!(name: "HELLO", value: "world")
+    end
+
+    it "writes to .env" do
+      fire
+      File.read(".env").must_equal "HELLO=\"world\"\n"
+    end
+
+    it "does not include deploy group level variables" do
+      EnvironmentVariable.create!(name: "HELLO", value: "world", parent: deploy_groups(:pod1))
+      fire
+      File.read(".env").must_equal "HELLO=\"world\"\n"
+    end
+  end
+
   describe :deploy_group_env do
     it "adds env variables" do
       deploy_group = deploy_groups(:pod1)
