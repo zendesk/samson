@@ -55,6 +55,27 @@ describe ApplicationHelper do
     end
   end
 
+  describe "#render_lock" do
+    let(:stage) { stages(:test_staging) }
+
+    it "can render global" do
+      Lock.create!(user: users(:admin))
+      global_lock # caches
+      assert_sql_queries 1 do # loads user to render the lock
+        render_lock(:global).must_include "ALL STAGES"
+      end
+    end
+
+    it "can render specific locks" do
+      Lock.create!(user: users(:admin), resource: stage)
+      render_lock(stage).must_include "Deployments to stage were locked"
+    end
+
+    it "does not render when there is no locks" do
+      render_lock(stage).must_equal nil
+    end
+  end
+
   describe "#controller_action" do
     it "works" do
       stubs(action_name: "foo")
@@ -80,7 +101,7 @@ describe ApplicationHelper do
     end
 
     it "shows locked" do
-      stage.stubs(locked_for?: true)
+      Lock.stubs(locked_for?: true)
       assert_includes link, ">Locked<"
     end
 

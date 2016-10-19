@@ -8,10 +8,10 @@
     <ul>
       <% project.stages.each do |stage| %>
         <% cache stage do %>
-          <li class="<%= 'locked' if stage.locked? %>">
+          <li>
             <%= link_to stage.name, [project, stage], class: 'stage-link' %>
             <%= link_to 'Deploying', [project, stage.current_deploy], class: 'label label-primary' if stage.currently_deploying? %>
-            <%= content_tag :i, '', class: 'fa fa-lock', title: stage.lock.summary if stage.locked? %>
+            <%= stage_lock_icon stage %>
             <%= stage.is_template ? stage_template_icon : '' %>
 
             <div class="pull-right">

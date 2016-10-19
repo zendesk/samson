@@ -1,6 +1,7 @@
 <button class="btn btn-default want-lock" <%= "disabled" if disabled %>><%= icon %> <%= text %></button>
-<%= form_for Lock.new(stage: @stage, warning: warning), html: {class: 'before-lock'} do |f| %>
-  <%= f.hidden_field :stage_id %>
+<%= form_for Lock.new(resource: resource, warning: warning), html: {class: 'before-lock'} do |f| %>
+  <%= f.hidden_field :resource_id %>
+  <%= f.hidden_field :resource_type %>
   <%= f.hidden_field :warning %>
   <%= f.text_field :description, class: "lock-description", placeholder: "Description", required: warning %>
   <%= f.select :delete_in, delete_lock_options, {}, class: "lock-delete-in" %>

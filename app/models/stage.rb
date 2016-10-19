@@ -16,7 +16,7 @@ class Stage < ActiveRecord::Base
   belongs_to :template_stage, class_name: "Stage"
   has_many :clones, class_name: "Stage", foreign_key: "template_stage_id"
 
-  has_one :lock
+  has_one :lock, as: :resource
 
   has_many :command_associations, autosave: true, class_name: 'StageCommand', dependent: :destroy
   has_many :commands, -> { order('stage_commands.position ASC') },
@@ -49,13 +49,6 @@ class Stage < ActiveRecord::Base
     end
   end
 
-  def self.unlocked_for(user)
-    where("locks.id IS NULL OR locks.user_id = ?", user.id).
-    joins("LEFT OUTER JOIN locks ON \
-          locks.deleted_at IS NULL AND \
-          locks.stage_id = stages.id")
-  end
-
   def self.deployed_on_release
     where(deploy_on_release: true)
   end
@@ -80,18 +73,6 @@ class Stage < ActiveRecord::Base
   def last_successful_deploy
     return @last_successful_deploy if defined?(@last_successful_deploy)
     @last_successful_deploy = deploys.successful.first
-  end
-
-  def locked?
-    !!lock && !lock.warning?
-  end
-
-  def warning?
-    lock&.warning?
-  end
-
-  def locked_for?(user)
-    locked? && lock.user != user
   end
 
   def current_release?(release)
@@ -130,7 +111,7 @@ class Stage < ActiveRecord::Base
   # update the SQL query as well when editing this method
   def production?
     if DeployGroup.enabled?
-      deploy_groups.empty? ? super : deploy_groups.any? { |deploy_group| deploy_group.environment.production? }
+      deploy_groups.empty? ? super : environments.any?(&:production?)
     else
       super
     end
@@ -179,6 +160,10 @@ class Stage < ActiveRecord::Base
 
   def deploy_group_names
     DeployGroup.enabled? ? deploy_groups.select(:name).sort_by(&:natural_order).map(&:name) : []
+  end
+
+  def environments
+    DeployGroup.enabled? ? deploy_groups.map(&:environment).uniq : []
   end
 
   private

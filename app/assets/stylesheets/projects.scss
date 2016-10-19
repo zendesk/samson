@@ -78,23 +78,9 @@
     color: #333;
   }
 
-  .locked {
-    .stage-link {
-      font-weight: bold;
-    }
-    .status {
-      background: #333;
-    }
-  }
-
   .status {
     font-size: 14px;
     font-weight: normal;
-  }
-
-  .fa-lock {
-    padding-left: 10px;
-    color: #757575;
   }
 }
 

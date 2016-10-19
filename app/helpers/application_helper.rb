@@ -25,7 +25,7 @@ module ApplicationHelper
       link_to "Deploying #{deploy.short_reference}...",
         [project, deploy],
         class: "btn btn-primary"
-    elsif stage.locked_for?(current_user)
+    elsif Lock.locked_for?(stage, current_user)
       content_tag :a, "Locked", class: "btn btn-primary disabled", disabled: true
     else
       path = new_project_stage_deploy_path(project, stage)
@@ -46,8 +46,9 @@ module ApplicationHelper
     @global_lock = Lock.global.first
   end
 
-  def render_global_lock
-    render '/locks/lock', lock: global_lock if global_lock
+  def render_lock(resource)
+    lock = (resource == :global ? global_lock : Lock.for_resource(resource).first)
+    render '/locks/lock', lock: lock if lock
   end
 
   def sortable(column, title = nil)

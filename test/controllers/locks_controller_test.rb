@@ -4,17 +4,24 @@ require_relative '../test_helper'
 SingleCov.covered!
 
 describe LocksController do
+  def create(resource = nil, options = {})
+    params = {resource_id: resource&.id.to_s, resource_type: resource&.class&.name.to_s, description: 'DESC'}
+    params.merge!(options)
+    post :create, params: {lock: params}
+  end
+
   let(:stage) { stages(:test_staging) }
+  let(:environment) { environments(:production) }
   let(:lock) { stage.create_lock! user: users(:deployer) }
   let(:global_lock) { Lock.create! user: users(:deployer) }
 
   before { request.headers['HTTP_REFERER'] = '/back' }
 
-  describe "#for_global_lock?" do
+  describe "#for_stage_lock?" do
     it "raises on unsupported action" do
       @controller.stubs(action_name: 'show')
       assert_raises RuntimeError do
-        @controller.send(:for_global_lock?)
+        @controller.send(:for_stage_lock?)
       end
     end
   end
@@ -31,12 +38,12 @@ describe LocksController do
   as_a_viewer do
     unauthorized :post, :create
 
-    it 'is unauthorized when doing a post to create a local lock' do
-      post :create, params: {lock: {stage_id: stage.id}}
+    it 'is unauthorized when doing a post to create a stage lock' do
+      create stage
       assert_unauthorized
     end
 
-    it 'is unauthorized when doing a delete to destroy a local lock' do
+    it 'is unauthorized when doing a delete to destroy a stage lock' do
       delete :destroy, params: {id: lock.id}
       assert_unauthorized
     end
@@ -50,43 +57,48 @@ describe LocksController do
   as_a_project_deployer do
     unauthorized :post, :create
 
-    it 'responds with unauthorized when doing a post to create a global lock' do
-      post :create, params: {lock: {stage_id: '', description: 'DESC'}}
+    it 'is not authorized to create a global lock' do
+      create
       assert_unauthorized
     end
 
-    describe 'POST to #create' do
+    it 'is not authorized to create an environment lock' do
+      create environment
+      assert_unauthorized
+    end
+
+    describe '#create' do
       before { travel_to Time.now }
       after { travel_back }
 
-      it 'creates a lock' do
-        post :create, params: {lock: {stage_id: stage.id, description: 'DESC', delete_in: 3600 }}
+      it 'creates a stage lock' do
+        create stage, delete_in: 3600
         assert_redirected_to '/back'
         assert flash[:notice]
 
         stage.reload
 
-        stage.warning?.must_equal(false)
-        stage.locked?.must_equal(true)
-        stage.lock.description.must_equal 'DESC'
-        stage.lock.delete_at.must_equal(Time.now + 3600)
+        lock = stage.lock
+        lock.warning?.must_equal(false)
+        lock.description.must_equal 'DESC'
+        lock.delete_at.must_equal(Time.now + 3600)
       end
 
-      it 'creates a warning' do
-        post :create, params: {lock: {stage_id: stage.id, description: 'DESC', warning: true}}
+      it 'creates a stage warning' do
+        create stage, warning: true
         assert_redirected_to '/back'
         assert flash[:notice]
 
         stage.reload
 
-        stage.warning?.must_equal(true)
-        stage.locked?.must_equal(false)
-        stage.lock.description.must_equal 'DESC'
+        lock = stage.lock
+        lock.warning?.must_equal(true)
+        lock.description.must_equal 'DESC'
       end
     end
 
-    describe 'DELETE to #destroy' do
-      it 'destroys the lock' do
+    describe '#destroy' do
+      it 'destroys a stage lock' do
         lock = stage.create_lock!(user: users(:deployer))
         delete :destroy, params: {id: lock.id}
 
@@ -95,25 +107,33 @@ describe LocksController do
 
         stage.reload
 
-        stage.locked?.must_equal(false)
         Lock.count.must_equal 0
       end
     end
   end
 
   as_a_admin do
-    describe 'POST to #create' do
+    describe '#create' do
       it 'creates a global lock' do
-        post :create, params: {lock: {stage_id: '', description: 'DESC'}}
+        create
         assert_redirected_to '/back'
         assert flash[:notice]
 
         lock = Lock.global.first
         lock.description.must_equal 'DESC'
       end
+
+      it 'creates an environment lock' do
+        create environment
+        assert_redirected_to '/back'
+        assert flash[:notice]
+
+        lock = environment.lock
+        lock.description.must_equal 'DESC'
+      end
     end
 
-    describe 'DELETE to #destroy' do
+    describe '#destroy' do
       it 'destroys a global lock' do
         delete :destroy, params: {id: global_lock.id}
 
