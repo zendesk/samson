@@ -6,7 +6,7 @@ require 'bundler/setup'
 # anything loaded before coverage will be uncovered
 require 'single_cov'
 SingleCov::APP_FOLDERS << 'decorators' << 'presenters'
-SingleCov.setup :minitest
+SingleCov.setup :minitest unless defined?(Spring)
 
 if ENV['CODECLIMATE_REPO_TOKEN']
   require 'codeclimate-test-reporter'

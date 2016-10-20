@@ -1,0 +1,56 @@
+# frozen_string_literal: true
+
+# Controller to test OAuth flow by using a self-signed OAuth application, only available in test/dev
+class OauthTestController < ActionController::Base
+  before_action :ensure_application
+
+  def index
+    redirect_to oauth_client.auth_code.authorize_url(redirect_uri: token_url)
+  end
+
+  def show
+    access_token = params[:code]
+    render plain: <<-TEXT.strip_heredoc
+      Your access token is: #{access_token}
+
+      You can use this to make requests:
+
+      curl -H "Authorization: Bearer #{access_token}" -H "Content-Type: application/json" #{api_projects_url}.json
+    TEXT
+  end
+
+  private
+
+  # users can have other `real` OAuth apps ... we will find the one that points to samson
+  def application
+    @application ||= Doorkeeper::Application.where(redirect_uri: token_url).first
+  end
+
+  def oauth_client
+    OAuth2::Client.new(
+      application.uid,
+      application.secret,
+      site: Rails.configuration.samson.uri.to_s, connection_opts: {ssl: {verify: false}}
+    )
+  end
+
+  def ensure_application
+    return if application
+    message = <<-TEXT.strip_heredoc
+      Add an OAuth application at
+
+      #{new_oauth_application_url}
+
+      Name: self-signed
+      Redirect URI: #{token_url}
+
+      Then click on "Authorize" to get your access token.
+    TEXT
+    render plain: message
+  end
+
+  # we use a fake id to use `resources` routing, because it looks nicer
+  def token_url
+    url_for action: :show, id: 'token'
+  end
+end
