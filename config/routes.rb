@@ -1,6 +1,5 @@
 # frozen_string_literal: true
 Samson::Application.routes.draw do
-  use_doorkeeper
   root to: 'projects#index'
 
   namespace :api do
@@ -153,4 +152,7 @@ Samson::Application.routes.draw do
   resources :access_requests, only: [:new, :create]
 
   mount SseRailsEngine::Engine, at: '/streaming'
+
+  use_doorkeeper
+  resources :oauth_test, only: [:index, :show] if Rails.env.development?
 end
