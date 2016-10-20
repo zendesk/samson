@@ -1,28 +1,32 @@
+# frozen_string_literal: true
+
+# Controller to test OAuth flow by using a self-signed OAuth application, only available in test/dev
 class OauthTestController < ActionController::Base
   before_action :ensure_application
 
   def index
-    redirect_to client.auth_code.authorize_url(redirect_uri: test_application_url)
+    redirect_to oauth_client.auth_code.authorize_url(redirect_uri: token_url)
   end
 
   def show
-    token = client.auth_code.get_token(params[:code], redirect_uri: test_application_url)
-    render plain: <<-MESSAGE.strip_heredoc
-    Your access token is: #{params[:code]}
+    access_token = params[:code]
+    render plain: <<-TEXT.strip_heredoc
+      Your access token is: #{access_token}
 
-    You can use this to make requests:
+      You can use this to make requests:
 
-    curl -H "Authorization: Bearer #{params[:code]}" -H "Content-Type: application/json" #{api_projects_url}.json
-    MESSAGE
+      curl -H "Authorization: Bearer #{access_token}" -H "Content-Type: application/json" #{api_projects_url}.json
+    TEXT
   end
 
   private
 
+  # users can have other `real` OAuth apps ... we will find the one that points to samson
   def application
-    @application ||= Doorkeeper::Application.where(redirect_uri: test_application_url).first
+    @application ||= Doorkeeper::Application.where(redirect_uri: token_url).first
   end
 
-  def client
+  def oauth_client
     OAuth2::Client.new(
       application.uid,
       application.secret,
@@ -32,19 +36,21 @@ class OauthTestController < ActionController::Base
 
   def ensure_application
     return if application
-    message = <<-WARN.strip_heredoc
+    message = <<-TEXT.strip_heredoc
       Add an OAuth application at
 
       #{new_oauth_application_url}
 
-      and set the redirect URI to: #{test_application_url}
+      Name: self-signed
+      Redirect URI: #{token_url}
 
-      Then come back here.
-    WARN
+      Then click on "Authorize" to get your access token.
+    TEXT
     render plain: message
   end
 
-  def test_application_url
-    oauth_test_url(1)
+  # we use a fake id to use `resources` routing, because it looks nicer
+  def token_url
+    url_for action: :show, id: 'token'
   end
 end
