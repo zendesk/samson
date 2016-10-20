@@ -174,9 +174,7 @@ class Deploy < ActiveRecord::Base
   end
 
   def validate_stage_is_unlocked
-    if stage.locked_for?(user) || Lock.global.exists?
-      errors.add(:stage, 'is locked')
-    end
+    errors.add(:stage, 'is locked') if Lock.locked_for?(stage, user)
   end
 
   # commands and deploy groups can change via many different paths,

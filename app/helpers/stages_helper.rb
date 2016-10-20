@@ -17,14 +17,9 @@ module StagesHelper
   end
 
   def stage_lock_icon(stage)
-    return unless stage.lock
-    text =
-      if stage.lock.warning?
-        "#{warning_icon} Warning"
-      else
-        "#{lock_icon} Locked"
-      end
-    content_tag :span, text.html_safe, class: "label label-warning", title: stage.lock.summary
+    return unless lock = Lock.for_resource(stage).first
+    text = (lock.warning? ? "#{warning_icon} Warning" : "#{lock_icon} Locked")
+    content_tag :span, text.html_safe, class: "label label-warning", title: lock.summary
   end
 
   def stage_template_icon

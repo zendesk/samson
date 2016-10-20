@@ -2,7 +2,7 @@
 
 <%= breadcrumb @project, @stage %>
 
-<%= render @stage.lock if @stage.lock %>
+<%= render_lock @stage %>
 
 <h1>
   <%= @stage.name %>
@@ -14,7 +14,7 @@
   <div>
     <%= deploy_link @project, @stage %>
 
-    <%= render "locks/button", lock: @stage.lock %>
+    <%= render "locks/button", lock: @stage.lock, resource: @stage %>
 
     <% if admin_for_project? %>
       <%= link_to "Edit", edit_project_stage_path(@project, @stage), class: "btn btn-default" %>

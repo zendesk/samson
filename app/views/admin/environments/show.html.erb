@@ -1,5 +1,7 @@
 <h1><%= @environment.new_record? ? 'New' : 'Edit' %> Environment</h1>
 
+<%= render_lock @environment %>
+
 <section>
   <%= form_for [:admin, @environment], html: { class: "form-horizontal" } do |form| %>
     <%= render 'shared/errors', object: @environment %>
@@ -9,4 +11,6 @@
 
     <%= form.actions %>
   <% end %>
+
+  <%= render "locks/button", lock: @environment.lock, resource: @environment %>
 </section>

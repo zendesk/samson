@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20161014175742) do
+ActiveRecord::Schema.define(version: 20161019000833) do
 
   create_table "builds", force: :cascade do |t|
     t.integer  "project_id",                                       null: false
@@ -243,17 +243,17 @@ ActiveRecord::Schema.define(version: 20161014175742) do
   add_index "kubernetes_roles", ["service_name", "deleted_at"], name: "index_kubernetes_roles_on_service_name_and_deleted_at", unique: true, length: {"service_name"=>191, "deleted_at"=>nil}, using: :btree
 
   create_table "locks", force: :cascade do |t|
-    t.integer  "stage_id",    limit: 4
-    t.integer  "user_id",     limit: 4,                   null: false
+    t.integer  "resource_id"
+    t.integer  "user_id",                       null: false
     t.datetime "created_at"
     t.datetime "updated_at"
     t.datetime "deleted_at"
-    t.string   "description", limit: 255
-    t.boolean  "warning",                 default: false, null: false
+    t.string   "description"
+    t.boolean  "warning",       default: false, null: false
     t.datetime "delete_at"
+    t.string   "resource_type"
+    t.index ["resource_id", "resource_type", "deleted_at"], name: "index_locks_on_resource_id_and_resource_type_and_deleted_at", unique: true, length: {"resource_id"=>nil, "resource_type"=>40, "deleted_at"=>nil}, using: :btree
   end
-
-  add_index "locks", ["stage_id", "deleted_at", "user_id"], name: "index_locks_on_stage_id_and_deleted_at_and_user_id", using: :btree
 
   create_table "macro_commands", force: :cascade do |t|
     t.integer  "macro_id",   limit: 4

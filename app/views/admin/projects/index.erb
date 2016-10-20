@@ -1,6 +1,6 @@
 <h1>Projects</h1>
 
-<%= render_global_lock %>
+<%= render_lock :global %>
 
 <%= form_tag '?', method: :get, class: 'clearfix' do %>
   <%= render 'shared/search_query' %>
@@ -31,7 +31,7 @@
 
   <div class="admin-actions">
     <div class="pull-right">
-      <%= render "locks/button", lock: global_lock %>
+      <%= render "locks/button", lock: global_lock, resource: nil %>
 
       <%= link_to "Add a new project", new_project_path, class: "btn btn-default" %>
     </div>

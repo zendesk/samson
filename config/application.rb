@@ -51,7 +51,12 @@ module Samson
       config.cache_store = :memory_store
     else
       servers = []
-      options = { value_max_bytes: 3000000, compress: true, expires_in: 1.day }
+      options = {
+        value_max_bytes: 3000000,
+        compress: true,
+        expires_in: 1.day,
+        namespace: "samson-#{Rails.version}-#{RUBY_VERSION}"
+      }
 
       # support memcachier env used by heroku
       # https://devcenter.heroku.com/articles/memcachier#rails-3-and-4

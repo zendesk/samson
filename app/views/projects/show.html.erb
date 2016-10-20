@@ -20,7 +20,7 @@
     </thead>
     <tbody>
       <% if @stages.any? %>
-        <% cache [project, 'stages'] do %>
+        <% cache [project, 'stages', Lock.cache_key] do %>
           <%= render partial: "stage", collection: @stages %>
         <% end %>
       <% else %>

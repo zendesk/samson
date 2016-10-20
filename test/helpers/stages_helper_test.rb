@@ -53,14 +53,27 @@ describe StagesHelper do
       stage_lock_icon(stage).must_equal nil
     end
 
-    it "renders warnings" do
-      stage.lock = Lock.new(warning: true, description: "X", user: users(:deployer))
-      stage_lock_icon(stage).must_include "Warning"
-    end
-
     it "renders locks" do
       stage.lock = Lock.new(user: users(:deployer))
       stage_lock_icon(stage).must_include "Locked"
+    end
+
+    it "renders global locks" do
+      Lock.create!(user: users(:deployer))
+      stage_lock_icon(stage).must_include "Locked"
+    end
+
+    describe "with a warning" do
+      before { stage.lock = Lock.new(warning: true, description: "X", user: users(:deployer)) }
+
+      it "renders warnings" do
+        stage_lock_icon(stage).must_include "Warning"
+      end
+
+      it "renders lock when there is a warning and a lock" do
+        Lock.create!(user: users(:deployer))
+        stage_lock_icon(stage).must_include "Locked"
+      end
     end
   end
 
