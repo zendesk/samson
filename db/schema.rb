@@ -252,7 +252,7 @@ ActiveRecord::Schema.define(version: 20161019000833) do
     t.boolean  "warning",       default: false, null: false
     t.datetime "delete_at"
     t.string   "resource_type"
-    t.index ["resource_id", "resource_type", "deleted_at"], name: "index_locks_on_resource_id_and_resource_type_and_deleted_at", unique: true, using: :btree
+    t.index ["resource_id", "resource_type", "deleted_at"], name: "index_locks_on_resource_id_and_resource_type_and_deleted_at", unique: true, length: {"resource_id"=>nil, "resource_type"=>40, "deleted_at"=>nil}, using: :btree
   end
 
   create_table "macro_commands", force: :cascade do |t|

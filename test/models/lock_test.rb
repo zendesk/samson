@@ -163,31 +163,50 @@ describe Lock do
   describe ".for_resource" do
     it "finds nothing when nothing is locked" do
       stage # trigger find
-      assert_sql_queries 1 do
+      Lock.send :all_cached
+      assert_sql_queries 0 do
         Lock.for_resource(stage).must_equal []
       end
     end
 
     it "finds stage lock" do
       lock # trigger creation
-      assert_sql_queries 1 do
+      Lock.send :all_cached
+      assert_sql_queries 0 do
         Lock.for_resource(stage).must_equal [lock]
       end
     end
 
-    it "finds environment lock on stage" do
-      DeployGroup.stubs(enabled?: true)
-      assert(env = stage.environments.first)
-      lock = Lock.create!(resource: env, user: user)
-      assert_sql_queries 1 do
-        Lock.for_resource(stage).must_equal [lock]
+    describe "with environments active" do
+      let!(:lock) { Lock.create!(resource: environments(:staging), user: user) }
+
+      before do
+        DeployGroup.stubs(enabled?: true)
+        stage # load stage
+        DeployGroupsStage.first # load column information
+      end
+
+      it "finds environment lock on stage" do
+        Lock.send :all_cached
+        assert_sql_queries 3 do # deploy-groups -> deploy-groups-stages -> environments
+          Lock.for_resource(stage).must_equal [lock]
+        end
+      end
+
+      it "does not check environments on non-environment locks" do
+        lock.update_attributes!(resource: stages(:test_production))
+        Lock.send :all_cached
+        assert_sql_queries 0 do
+          Lock.for_resource(stage).must_equal []
+        end
       end
     end
 
     it "finds environment lock" do
       env = environments(:production)
       lock = Lock.create!(resource: env, user: user).reload
-      assert_sql_queries 1 do
+      Lock.send :all_cached
+      assert_sql_queries 0 do
         Lock.for_resource(env).must_equal [lock]
       end
     end
@@ -195,7 +214,8 @@ describe Lock do
     it "finds global lock" do
       stage # trigger find
       lock = Lock.create!(user: user)
-      assert_sql_queries 1 do
+      Lock.send :all_cached
+      assert_sql_queries 0 do
         Lock.for_resource(stage).must_equal [lock]
       end
     end
@@ -246,6 +266,52 @@ describe Lock do
       Lock.create!(user: user, resource: stage.environments.first)
       Lock.create!(user: user, resource: stage, warning: true, description: "DESC")
       assert Lock.locked_for?(stage, users(:admin))
+    end
+  end
+
+  describe ".all_cached" do
+    it "is cached" do
+      assert_sql_queries 1 do
+        Lock.send(:all_cached).must_equal []
+        Lock.send(:all_cached).must_equal []
+      end
+    end
+
+    it "expires when lock is created" do
+      Lock.send(:all_cached).must_equal []
+      lock # trigger create
+      Lock.send(:all_cached).must_equal [lock]
+    end
+
+    it "expires when lock is updated" do
+      lock # trigger create
+
+      Lock.send(:all_cached).must_equal [lock]
+      lock.update_attributes(warning: false)
+      assert_sql_queries 1 do
+        Lock.send(:all_cached).must_equal [lock]
+      end
+    end
+
+    it "expires when lock is soft deleted" do
+      lock # trigger create
+      Lock.send(:all_cached).must_equal [lock]
+      lock.soft_delete!
+      assert_sql_queries 1 do
+        Lock.send(:all_cached).must_equal []
+      end
+    end
+  end
+
+  describe ".cache_key" do
+    it "is constant" do
+      Lock.cache_key.must_equal Lock.cache_key
+    end
+
+    it "updates when locks change" do
+      old = Lock.cache_key
+      lock
+      old.wont_equal Lock.cache_key
     end
   end
 end

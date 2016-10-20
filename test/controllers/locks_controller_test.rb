@@ -4,7 +4,7 @@ require_relative '../test_helper'
 SingleCov.covered!
 
 describe LocksController do
-  def create(resource = nil, options = {})
+  def create_lock(resource = nil, options = {})
     params = {resource_id: resource&.id.to_s, resource_type: resource&.class&.name.to_s, description: 'DESC'}
     params.merge!(options)
     post :create, params: {lock: params}
@@ -39,7 +39,7 @@ describe LocksController do
     unauthorized :post, :create
 
     it 'is unauthorized when doing a post to create a stage lock' do
-      create stage
+      create_lock stage
       assert_unauthorized
     end
 
@@ -58,12 +58,12 @@ describe LocksController do
     unauthorized :post, :create
 
     it 'is not authorized to create a global lock' do
-      create
+      create_lock
       assert_unauthorized
     end
 
     it 'is not authorized to create an environment lock' do
-      create environment
+      create_lock environment
       assert_unauthorized
     end
 
@@ -72,7 +72,7 @@ describe LocksController do
       after { travel_back }
 
       it 'creates a stage lock' do
-        create stage, delete_in: 3600
+        create_lock stage, delete_in: 3600
         assert_redirected_to '/back'
         assert flash[:notice]
 
@@ -85,7 +85,7 @@ describe LocksController do
       end
 
       it 'creates a stage warning' do
-        create stage, warning: true
+        create_lock stage, warning: true
         assert_redirected_to '/back'
         assert flash[:notice]
 
@@ -115,7 +115,7 @@ describe LocksController do
   as_a_admin do
     describe '#create' do
       it 'creates a global lock' do
-        create
+        create_lock
         assert_redirected_to '/back'
         assert flash[:notice]
 
@@ -124,7 +124,7 @@ describe LocksController do
       end
 
       it 'creates an environment lock' do
-        create environment
+        create_lock environment
         assert_redirected_to '/back'
         assert flash[:notice]
 
