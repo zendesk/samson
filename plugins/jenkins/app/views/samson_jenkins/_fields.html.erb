@@ -7,4 +7,10 @@
       <%= form.text_field :jenkins_job_names, class: "form-control", placeholder: "Jenkins jobs" %>
     </div>
   </div>
+  <div class="col-lg-6 checkbox col-lg-offset-2">
+    <%= form.label :jenkins_email_committers do %>
+        <%= form.check_box :jenkins_email_committers %>
+           Should Jenkins send email to all committers?
+    <% end %>
+   </div>
 </fieldset>

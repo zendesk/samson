@@ -75,7 +75,7 @@ module Samson
       if deploy.buddy
         emails.push(deploy.buddy.email)
       end
-      if ENV["JENKINS_NOTIFY_COMMITTERS"]
+      if deploy.stage.jenkins_email_committers
         emails.concat(deploy.changeset.commits.map(&:author_email))
       end
       emails.map! { |x| Mail::Address.new(x) }
