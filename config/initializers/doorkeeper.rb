@@ -2,11 +2,8 @@
 
 # Doorkeeper (https://github.com/doorkeeper-gem/doorkeeper) is the engine
 # that secures /api. It uses OAuth and the OAuth2 gem can be used to interact
-# with the samson api.
-
-
-
-
+# with the samson api. There is a test flow you can use by going to /oauth_test and
+# following the instructions.
 
 # do not auto initialize all the models
 # will make rails runner fail because the models were preloaded
