@@ -46,6 +46,14 @@ describe Lock do
         assert_valid lock
       end
     end
+
+    describe "#nil_out_blank_resource_type" do
+      it "nils blank resource_type" do
+        lock.resource_type = ''
+        assert_valid lock
+        lock.resource_type.must_equal nil
+      end
+    end
   end
 
   describe "#affected" do

@@ -20,6 +20,8 @@ describe Api::BaseController do
   tests ApiBaseTestController
   use_test_routes ApiBaseTestController
 
+  before { @controller.stubs(:store_requested_oauth_scope) }
+
   describe "#paginate" do
     it 'paginates array' do
       @controller.send(:paginate, Array.new(1000).fill('a')).size.must_equal 1000
@@ -77,6 +79,21 @@ describe Api::BaseController do
       json!
       get :test_render, params: {test_route: true}
       assert_response :unsupported_media_type
+    end
+  end
+
+  describe "#store_requested_oauth_scope" do
+    before { @controller.unstub(:store_requested_oauth_scope) }
+
+    it "stores the controller scope" do
+      I18n.expects(:t).with('doorkeeper.applications.help.scopes').returns('foo api_base_test')
+      get :test_render, params: {test_route: true}
+      request.env['requested_oauth_scope'].must_equal 'api_base_test'
+    end
+
+    it "fails when scope is unknown" do
+      e = assert_raises(RuntimeError) { get :test_render, params: {test_route: true} }
+      e.message.must_include "Add api_base_test to"
     end
   end
 end

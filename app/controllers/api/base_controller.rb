@@ -3,6 +3,7 @@ class Api::BaseController < ApplicationController
   skip_before_action :verify_authenticity_token, if: :using_per_request_auth?
 
   prepend_before_action :enforce_json_format
+  prepend_before_action :store_requested_oauth_scope
   before_action :require_project
 
   protected
@@ -40,5 +41,12 @@ class Api::BaseController < ApplicationController
   def enforce_json_format
     return if request.format == :json
     render status: 415, json: {error: 'JSON only api. Use json extension or set content type application/json'}
+  end
+
+  # making sure all scopes are documented
+  def store_requested_oauth_scope
+    scope = controller_name
+    raise "Add #{scope} to config/locales/en.yml" unless I18n.t('doorkeeper.applications.help.scopes') =~ /\b#{scope}\b/
+    request.env['requested_oauth_scope'] = scope
   end
 end
