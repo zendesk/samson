@@ -2,11 +2,20 @@
 class ReleasesController < ApplicationController
   include CurrentProject
 
-  before_action :authorize_project_deployer!, except: [:show, :index]
+  before_action :authorize_project_deployer!, except: [:show, :flow, :index]
+  before_action :find_release, only: [:show, :flow]
 
   def show
-    @release = @project.releases.find_by_version!(params[:id])
     @changeset = @release.changeset
+  end
+
+  def flow
+    groups = ENV.fetch("RELEASE_FLOW").split("|").map { |g| g.split(",") }
+
+    @release_flow = groups.map do |env_values|
+      stage = current_project.stages.detect {|stage| stage.deploy_groups.map(&:env_value).sort == env_values.sort }
+      [env_values, stage]
+    end
   end
 
   def index
@@ -28,5 +37,9 @@ class ReleasesController < ApplicationController
 
   def release_params
     params.require(:release).permit(:commit, :number).merge(author: current_user)
+  end
+
+  def find_release
+    @release = @project.releases.find_by_version!(params[:id])
   end
 end

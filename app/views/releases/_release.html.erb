@@ -21,6 +21,9 @@
   </td>
   <td>
     <% if deployer_for_project? %>
+      <% if ENV['RELEASE_FLOW'] %>
+        <%= link_to "Release Flow", flow_project_release_path(@project, release) %>
+      <% end %>
       <%= render 'deploy_to_button', release: release, stages: @stages %>
     <% end %>
   </td>

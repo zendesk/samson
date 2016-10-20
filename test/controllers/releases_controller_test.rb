@@ -24,6 +24,33 @@ describe ReleasesController do
       end
     end
 
+    describe "#flow" do
+      def get_flow
+        get :flow, params: {project_id: project.to_param, id: release.version}
+      end
+
+      with_env RELEASE_FLOW: "pod100|pod1,pod2"
+
+      it "renders" do
+        get_flow
+        assert_template :flow
+
+        assigns[:release_flow].must_equal [
+          [["pod100"], stages(:test_staging)], [["pod1", "pod2"], stages(:test_production)]
+        ]
+      end
+
+      it "renders missing stages" do
+        DeployGroupsStage.delete_all
+        get_flow
+        assert_template :flow
+
+        assigns[:release_flow].must_equal [
+          [["pod100"], nil], [["pod1", "pod2"], nil]
+        ]
+      end
+    end
+
     describe "#index" do
       it "renders" do
         get :index, params: {project_id: project.to_param}
@@ -34,7 +61,7 @@ describe ReleasesController do
 
   as_a_project_deployer do
     describe "#create" do
-      let(:release_params) { { commit: "abcd" } }
+      let(:release_params) { {commit: "abcd"} }
       before { GITHUB.stubs(:create_release) }
 
       it "creates a new release" do

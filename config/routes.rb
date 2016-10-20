@@ -51,7 +51,11 @@ Samson::Application.routes.draw do
       end
     end
 
-    resources :releases, only: [:show, :index, :new, :create]
+    resources :releases, only: [:show, :index, :new, :create] do
+      member do
+        get :flow
+      end
+    end
 
     resources :stages do
       collection do
