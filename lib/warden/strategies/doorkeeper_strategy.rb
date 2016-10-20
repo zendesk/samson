@@ -11,6 +11,7 @@ class Warden::Strategies::Doorkeeper < ::Warden::Strategies::Base
     return unless request.content_type == 'application/json'
     return unless r.authorization.present?
     return unless r.authorization.start_with?("Bearer ")
+    Rails.logger.warn("Requrest is properly formatted. Checking credentials.")
     @token = ::Doorkeeper::OAuth::Token.authenticate(r, *Doorkeeper.configuration.access_token_methods)
     @token&.accessible? && @token.acceptable?(@scope)
   end
