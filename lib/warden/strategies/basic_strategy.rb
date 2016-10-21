@@ -2,6 +2,8 @@
 
 # Strategy that allows login via email / token header
 class Warden::Strategies::BasicStrategy < Warden::Strategies::Base
+  KEY = :basic
+
   def valid?
     @auth = ActionDispatch::Request.new(request.env).authorization.to_s[/^Basic (.*)/i, 1]
   end
@@ -19,4 +21,4 @@ class Warden::Strategies::BasicStrategy < Warden::Strategies::Base
   end
 end
 
-Warden::Strategies.add(:basic, Warden::Strategies::BasicStrategy)
+Warden::Strategies.add(Warden::Strategies::BasicStrategy::KEY, Warden::Strategies::BasicStrategy)

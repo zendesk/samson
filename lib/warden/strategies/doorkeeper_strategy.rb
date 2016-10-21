@@ -3,6 +3,8 @@ require "warden/strategies/doorkeeper"
 
 # Strategy that allows login via OAuth baerer token
 class Warden::Strategies::Doorkeeper < ::Warden::Strategies::Base
+  KEY = :doorkeeper
+
   def valid?
     request.authorization.to_s.start_with?("Bearer ")
   end
@@ -31,4 +33,4 @@ class Warden::Strategies::Doorkeeper < ::Warden::Strategies::Base
   end
 end
 
-Warden::Strategies.add(:doorkeeper, Warden::Strategies::Doorkeeper)
+Warden::Strategies.add(Warden::Strategies::Doorkeeper::KEY, Warden::Strategies::Doorkeeper)

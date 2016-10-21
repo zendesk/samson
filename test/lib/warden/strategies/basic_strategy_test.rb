@@ -33,7 +33,7 @@ describe 'Warden::Strategies::BasicStrategy Integration' do
   end
 
   it "checks and fails with invalid header" do
-    assert_sql_queries(1) { perform_get(valid_header + "oops") }
+    assert_sql_queries(1) { perform_get(valid_header + Base64.encode64('foo')) }
     assert_response :redirect
   end
 
