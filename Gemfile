@@ -8,6 +8,7 @@ group :preload do
   gem 'rails', '5.0.0.1'
   gem 'dotenv'
   gem 'sse-rails-engine'
+  gem 'rails_autolink'
 
   # AR extensions
   gem 'goldiloader'
