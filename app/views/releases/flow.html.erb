@@ -1,1 +1,41 @@
-<%
+<% content_for :page_title, "#{@project.name} #{@release.version} Release Flow" %>
+
+<%= breadcrumb @project, link_to("Releases", project_releases_path(@project)), [@project, @release], "Flow" %>
+
+<h1>Release <%= @release.version %> Flow</h1>
+
+<section class="clearfix">
+
+  <table class="table table-hover release-list">
+    <thead>
+    <tr>
+      <th>Stages</th>
+      <th>Deploy Groups</th>
+      <th>Actions</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    <% @release_flow.each do |deploy_groups, stage| %>
+      <tr>
+        <td>
+          <% if stage %>
+            <%= link_to stage.name, [@project, stage]  %>
+          <% else %>
+            <%= "Missing stage for #{deploy_groups.map(&:name).join(",")}. Clone a template." %>
+          <% end %>
+        </td>
+        <td>
+          <% deploy_groups.each do |deploy_group| %>
+            <%= link_to deploy_group.name, [:adimin, deploy_group] %>
+            </br>
+          <% end %>
+        </td>
+        <td></td>
+      </tr>
+    <% end %>
+
+    </tbody>
+  </table>
+
+</section>

@@ -13,8 +13,9 @@ class ReleasesController < ApplicationController
     groups = ENV.fetch("RELEASE_FLOW").split("|").map { |g| g.split(",") }
 
     @release_flow = groups.map do |env_values|
-      stage = current_project.stages.detect {|stage| stage.deploy_groups.map(&:env_value).sort == env_values.sort }
-      [env_values, stage]
+      deploy_groups = DeployGroup.where(env_value: env_values).sort_by(&:natural_order)
+      stage = current_project.stages.detect { |stage| stage.deploy_groups.sort == deploy_groups.sort }
+      [stage, deploy_groups]
     end
   end
 

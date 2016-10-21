@@ -36,7 +36,7 @@ describe ReleasesController do
         assert_template :flow
 
         assigns[:release_flow].must_equal [
-          [["pod100"], stages(:test_staging)], [["pod1", "pod2"], stages(:test_production)]
+          [stages(:test_staging)],["pod100"], [stages(:test_production),["pod1", "pod2"]]
         ]
       end
 
@@ -46,7 +46,7 @@ describe ReleasesController do
         assert_template :flow
 
         assigns[:release_flow].must_equal [
-          [["pod100"], nil], [["pod1", "pod2"], nil]
+          [nil, ["pod100"]], [nil, ["pod1", "pod2"]]
         ]
       end
     end
