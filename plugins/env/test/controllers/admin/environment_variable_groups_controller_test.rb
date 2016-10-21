@@ -52,17 +52,17 @@ describe Admin::EnvironmentVariableGroupsController do
 
     it 'responds with unauthorized' do
       post :create, params: {authenticity_token: set_form_authenticity_token}
-      @unauthorized.must_equal true, 'Request should get unauthorized'
+      assert_response :unauthorized
     end
 
     it 'responds with unauthorized' do
       delete :destroy, params: {id: 1, authenticity_token: set_form_authenticity_token}
-      @unauthorized.must_equal true, 'Request should get unauthorized'
+      assert_response :unauthorized
     end
 
     it 'responds with unauthorized' do
       post :update, params: {id: 1, authenticity_token: set_form_authenticity_token}
-      @unauthorized.must_equal true, 'Request should get unauthorized'
+      assert_response :unauthorized
     end
 
     unauthorized :get, :new

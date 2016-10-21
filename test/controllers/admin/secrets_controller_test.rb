@@ -72,21 +72,21 @@ describe Admin::SecretsController do
     describe '#show' do
       it "is unauthrized" do
         get :show, params: {id: secret}
-        assert_unauthorized
+        assert_response :unauthorized
       end
     end
 
     describe '#update' do
       it "is unauthrized" do
         put :update, params: {id: secret, secret: {value: 'xxx'}}
-        assert_unauthorized
+        assert_response :unauthorized
       end
     end
 
     describe "#destroy" do
       it "is unauthorized" do
         delete :destroy, params: {id: secret.id}
-        assert_unauthorized
+        assert_response :unauthorized
       end
     end
   end
@@ -129,7 +129,7 @@ describe Admin::SecretsController do
       it "is not authorized to create global secrets" do
         attributes[:project_permalink] = 'global'
         post :create, params: {secret: attributes}
-        assert_unauthorized
+        assert_response :unauthorized
       end
     end
 
@@ -156,7 +156,7 @@ describe Admin::SecretsController do
 
       it "is unauthrized for global secret" do
         get :show, params: {id: create_global}
-        assert_unauthorized
+        assert_response :unauthorized
       end
     end
 
@@ -203,7 +203,7 @@ describe Admin::SecretsController do
         let(:secret) { create_secret "production/#{other_project.permalink}/foo/xxx" }
 
         it "is not allowed" do
-          assert_unauthorized
+          assert_response :unauthorized
         end
       end
 
@@ -211,7 +211,7 @@ describe Admin::SecretsController do
         let(:secret) { create_global }
 
         it "is unauthrized" do
-          assert_unauthorized
+          assert_response :unauthorized
         end
       end
     end
@@ -224,7 +224,7 @@ describe Admin::SecretsController do
 
       it "is unauthorized for global" do
         delete :destroy, params: {id: create_global}
-        assert_unauthorized
+        assert_response :unauthorized
       end
     end
   end

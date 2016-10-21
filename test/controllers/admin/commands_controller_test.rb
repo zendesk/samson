@@ -13,14 +13,14 @@ describe Admin::CommandsController do
     describe 'GET to #show' do
       it "is unauthrized" do
         get :show, params: {id: commands(:echo)}
-        assert_unauthorized
+        assert_response :unauthorized
       end
     end
 
     describe 'PUT to #update' do
       it "is unauthrized" do
         put :update, params: {id: commands(:echo)}
-        assert_unauthorized
+        assert_response :unauthorized
       end
     end
   end
@@ -39,7 +39,7 @@ describe Admin::CommandsController do
 
       it "is unauthrized for global commands" do
         get :show, params: {id: commands(:global)}
-        assert_unauthorized
+        assert_response :unauthorized
       end
     end
 
@@ -91,7 +91,7 @@ describe Admin::CommandsController do
         let(:command) { commands(:global) }
 
         it "is unauthrized" do
-          assert_unauthorized
+          assert_response :unauthorized
         end
       end
     end

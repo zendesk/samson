@@ -40,17 +40,17 @@ describe LocksController do
 
     it 'is unauthorized when doing a post to create a stage lock' do
       create_lock stage
-      assert_unauthorized
+      assert_response :unauthorized
     end
 
     it 'is unauthorized when doing a delete to destroy a stage lock' do
       delete :destroy, params: {id: lock.id}
-      assert_unauthorized
+      assert_response :unauthorized
     end
 
     it 'is unauthorized when doing a delete to destroy a global lock' do
       delete :destroy, params: {id: global_lock.id}
-      assert_unauthorized
+      assert_response :unauthorized
     end
   end
 
@@ -59,12 +59,12 @@ describe LocksController do
 
     it 'is not authorized to create a global lock' do
       create_lock
-      assert_unauthorized
+      assert_response :unauthorized
     end
 
     it 'is not authorized to create an environment lock' do
       create_lock environment
-      assert_unauthorized
+      assert_response :unauthorized
     end
 
     describe '#create' do

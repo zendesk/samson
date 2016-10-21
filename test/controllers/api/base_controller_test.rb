@@ -30,6 +30,9 @@ describe Api::BaseController do
   end
 
   describe "#using_per_request_auth?" do
+    # cannot use login_as since setting the winning_strategy breaks regular auth
+    before { request.env['warden'].set_user users(:admin) }
+
     it "allows posts without auth token for basic auth" do
       request.env['warden'].winning_strategy = :basic
       post :test_render, params: {test_route: true}
