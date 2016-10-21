@@ -11,7 +11,7 @@
           <li>
             <%= link_to stage.name, [project, stage], class: 'stage-link' %>
             <%= link_to 'Deploying', [project, stage.current_deploy], class: 'label label-primary' if stage.currently_deploying? %>
-            <%= stage_lock_icon stage %>
+            <%= resource_lock_icon stage %>
             <%= stage.is_template ? stage_template_icon : '' %>
 
             <div class="pull-right">
