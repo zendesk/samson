@@ -4,7 +4,9 @@ require_relative '../test_helper'
 SingleCov.covered!
 
 describe OauthTestController do
-  before { Doorkeeper::Application.create!(redirect_uri: 'http://test.host/oauth_test/token', name: 'test') }
+  let!(:application) do
+    Doorkeeper::Application.create!(redirect_uri: 'http://test.host/oauth_test/token', name: 'test')
+  end
 
   describe "#ensure_application" do
     it "renders instructions when app does not exist" do
@@ -24,9 +26,18 @@ describe OauthTestController do
 
   describe "#show" do
     it "shows my token" do
-      get :show, params: {id: 'token', code: 'my-token'}
+      OAuth2::Strategy::AuthCode.any_instance.expects(:get_token).returns(stub(token: "some-token"))
+      get :show, params: {id: 'token', code: 'my-code'}
       assert_response :success
-      response.body.must_include 'my-token'
+      response.body.must_include "some-token"
+    end
+
+    it "redirects to the app when token is expired" do
+      OAuth2::Strategy::AuthCode.any_instance.expects(:get_token).raises(
+        OAuth2::Error.new(stub("error=": 1, parsed: nil, body: "B"))
+      )
+      get :show, params: {id: 'token', code: 'my-code'}
+      assert_redirected_to "/oauth/applications/#{application.id}"
     end
   end
 end

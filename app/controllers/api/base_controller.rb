@@ -1,14 +1,8 @@
 # frozen_string_literal: true
-require 'doorkeeper_auth'
-
 class Api::BaseController < ApplicationController
   skip_before_action :verify_authenticity_token
 
   before_action :require_project
-
-  include DoorkeeperAuth
-
-  api_accessible! true
 
   def paginate(scope)
     if scope.is_a?(Array)

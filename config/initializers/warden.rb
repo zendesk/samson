@@ -9,9 +9,9 @@ end
 
 require 'warden/strategies/basic_strategy'
 require "warden/strategies/doorkeeper_strategy"
-require 'warden/strategies/session_strategy'
 
 Rails.application.config.middleware.insert_after(ActionDispatch::Flash, Warden::Manager) do |manager|
-  manager.default_strategies :basic, :doorkeeper, :session
+  manager.default_strategies :basic, :doorkeeper
   manager.failure_app = UnauthorizedController
+  manager.intercept_401 = false # doorkeeper sends direct 401s
 end

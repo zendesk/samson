@@ -146,11 +146,4 @@ describe Api::DeploysController do
       end
     end
   end
-
-  describe 'Doorkeeper Auth Status' do
-    subject { @controller }
-    it 'is allowed' do
-      subject.class.api_accessible.must_equal true
-    end
-  end
 end

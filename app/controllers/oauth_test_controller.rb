@@ -9,7 +9,10 @@ class OauthTestController < ActionController::Base
   end
 
   def show
-    access_token = params[:code]
+    # This can take a long time since it makes a new request to samson itself
+    # alternatively we could call whatever the oauth controller does internally directly
+    access_token = oauth_client.auth_code.get_token(params[:code], redirect_uri: token_url).token
+
     render plain: <<-TEXT.strip_heredoc
       Your access token is: #{access_token}
 
@@ -17,6 +20,8 @@ class OauthTestController < ActionController::Base
 
       curl -H "Authorization: Bearer #{access_token}" -H "Content-Type: application/json" #{api_projects_url}.json
     TEXT
+  rescue OAuth2::Error # getting the token failed ... most likely user refreshed the page
+    redirect_to oauth_application_path(application), alert: 'Token has expired ... hit Authorize!'
   end
 
   private
