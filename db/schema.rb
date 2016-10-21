@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20161019000833) do
+ActiveRecord::Schema.define(version: 20161019034559) do
 
   create_table "builds", force: :cascade do |t|
     t.integer  "project_id",                                       null: false
@@ -450,6 +450,7 @@ ActiveRecord::Schema.define(version: 20161019000833) do
     t.boolean  "is_template",                                                default: false, null: false
     t.boolean  "notify_airbrake",                                            default: false, null: false
     t.integer  "template_stage_id"
+    t.boolean  "jenkins_email_committers",                                   default: false, null: false
     t.index ["template_stage_id"], name: "index_stages_on_template_stage_id", using: :btree
   end
 
