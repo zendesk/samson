@@ -15,7 +15,11 @@ module VaultRequestHelper
     times = response.delete(:times) || 1
 
     # make calling code easy to read by not having to encode keys
-    request = stub_request(method, "http://vault-land.com/v1/secret/apps/#{path}")
+    parts = path.split("?", 2)
+    parts[0] = CGI.escape(parts[0])
+    path = parts.join("?")
+
+    request = stub_request(method, "http://vault-land.com/v1/secret%2Fapps%2F#{path}")
     request = request.with(with) if with
     request = request.to_return(response)
 
