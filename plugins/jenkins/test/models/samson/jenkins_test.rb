@@ -169,7 +169,7 @@ describe Samson::Jenkins do
         jenkins.build.must_equal 1
       end
 
-      it "includes committer emails when JENKINS_NOTIFY_COMMITTERS is set" do
+      it "includes committer emails when jenkins_email_committers flag is set" do
         deploy.stage.jenkins_email_committers = true
         stub_build_with_parameters("emails": 'super-admin@example.com,author1@example.com,author2@test.com,author3@example.comm,author4@example.co,AUTHOR5@EXAMPLE.COM')
         stub_get_build_id_from_queue(1)
@@ -184,7 +184,7 @@ describe Samson::Jenkins do
         end
       end
 
-      it "filters emails by GOOGLE_DOMAIN when JENKINS_NOTIFY_COMMITTERS is set" do
+      it "filters emails by GOOGLE_DOMAIN when jenkins_email_committers flag is set" do
         with_env 'GOOGLE_DOMAIN': '@example.com' do
           deploy.stage.jenkins_email_committers = true
           stub_build_with_parameters("emails": 'super-admin@example.com,author1@example.com,AUTHOR5@EXAMPLE.COM')
