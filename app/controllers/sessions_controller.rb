@@ -91,12 +91,12 @@ class SessionsController < ApplicationController
       email: auth_hash.info.email
     ))
 
-    if user.persisted?
-      self.current_user = user
-      flash[:notice] = "You have been logged in."
-    else
-      flash[:error] = "Could not log you in."
-    end
+#    if user.persisted?
+#      self.current_user = user
+#      flash[:notice] = "You have been logged in."
+#    else
+#      flash[:error] = "Could not log you in."
+#    end
 
     redirect_to_origin_or_default
   end

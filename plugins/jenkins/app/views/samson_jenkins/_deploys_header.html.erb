@@ -1,3 +1,12 @@
+<script>
+  setInterval(function() {
+    console.log("This is called automatically after every minute");
+    $.get( "/jenkins/ping?deploy_id=<%= @deploy.id %>", function( data ) {
+      alert(data);
+    });
+  }, 1*10*1000);
+</script>
+<div id="jenkins_job_status">
 <% if @deploy.stage.jenkins_job_names? && @deploy.jenkins_jobs.none? && @deploy.active? %>
   <% @deploy.stage.jenkins_job_names.to_s.split(/, ?/).map do |jenkins_job_name| %>
     <div class="alert alert-info">Jenkins build <%= jenkins_job_name %> for <%= @deploy.stage.name %> will start after successful deploy. Reload this page after deploy is finished to get latest status.</div>
@@ -7,3 +16,4 @@
 <% @deploy.jenkins_jobs.each do |jenkins_job| %>
   <%= jenkins_status_panel @deploy, jenkins_job%>
 <% end %>
+</div>
