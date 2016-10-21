@@ -1,6 +1,6 @@
 <%= breadcrumb @project, @stage, "Deploy" %>
 
-<%= render_lock :global %>
+<%= render_lock @stage %>
 
 <section>
   <%= form_for [@project, @stage, @deploy], html: { class: "form-horizontal" }, data: { 'commit-status-url' => project_commit_statuses_path(@project), 'confirm-url' => confirm_project_stage_deploys_path(@project, @stage), 'confirmation' => @stage.confirm? } do |form| %>
