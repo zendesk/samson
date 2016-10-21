@@ -58,18 +58,25 @@ module ApplicationHelper
   end
 
   def github_ok?
-    status_url = Rails.application.config.samson.github.status_url
+    key = github_status_cache_key
 
-    Rails.cache.fetch(github_status_cache_key, expires_in: 5.minutes) do
-      response = Faraday.get("#{status_url}/api/status.json") do |req|
-        req.options.timeout = req.options.open_timeout = 1
+    old = Rails.cache.read(key)
+    return old unless old.nil?
+
+    status =
+      begin
+        status_url = Rails.application.config.samson.github.status_url
+        response = Faraday.get("#{status_url}/api/status.json") do |req|
+          req.options.timeout = req.options.open_timeout = 1
+        end
+
+        response.status == 200 && JSON.parse(response.body)['status'] == 'good'
+      rescue Faraday::ClientError
+        false
       end
 
-      # don't cache bad responses
-      (response.status == 200 && JSON.parse(response.body)['status'] == 'good') || nil
-    end
-  rescue Faraday::ClientError
-    false
+    Rails.cache.write(key, status, expires_in: (status ? 5.minutes : 30.seconds))
+    !!status
   end
 
   def breadcrumb(*items)
