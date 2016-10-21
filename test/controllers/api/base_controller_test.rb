@@ -4,28 +4,48 @@ require_relative '../../test_helper'
 SingleCov.covered!
 
 describe Api::BaseController do
-  describe 'paginate array' do
-    subject { n = []; 2000.times { n << ['a'] }; n }
+  class ApiBaseTestController < Api::BaseController
+    def test_render
+      head :ok
+    end
 
-    it 'paginates' do
-      @controller.paginate(subject).size.must_equal 1000
+    # turned off in test ... but we want to simulate it
+    def allow_forgery_protection
+      true
     end
   end
 
-  describe 'paginate scope' do
-    subject { Deploy }
-    let(:junk) { n = []; 2000.times { n << ['a'] }; n }
+  tests ApiBaseTestController
+  use_test_routes ApiBaseTestController
 
-    it 'calls #page' do
+  describe "#paginate" do
+    it 'paginates array' do
+      @controller.paginate(Array.new(1000).fill('a')).size.must_equal 1000
+    end
+
+    it 'paginates scope' do
       Deploy.stubs(:page).with(1).returns('foo')
-      @controller.paginate(subject).must_equal 'foo'
+      @controller.paginate(Deploy).must_equal 'foo'
     end
   end
 
-  describe 'Doorkeeper Auth Status' do
-    subject { Api::BaseController }
-    it 'is allowed' do
-      subject.api_accessible.must_equal true
+  describe "#using_per_request_auth?" do
+    it "allows posts without auth token for basic auth" do
+      request.env['warden'].winning_strategy = :basic
+      post :test_render, params: {test_route: true}
+      assert_response :success
+    end
+
+    it "allows posts without auth token for oauth auth" do
+      request.env['warden'].winning_strategy = :doorkeeper
+      post :test_render, params: {test_route: true}
+      assert_response :success
+    end
+
+    it "does not allows posts without auth token for sessions" do
+      assert_raises ActionController::InvalidAuthenticityToken do
+        post :test_render, params: {test_route: true}
+      end
     end
   end
 end

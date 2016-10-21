@@ -18,14 +18,14 @@ class UnauthorizedController < ActionController::Metal
   end
 
   def respond
-    respond_to do |format|
-      format.html do
-        flash[:authorization_error] = "You are not authorized to view this page."
-        redirect_back_or(login_path)
-      end
-
-      format.json do
-        render json: {}, status: 404
+    if request.path.start_with?('/api/') || request.format == :json
+      render json: {}, status: 404
+    else
+      respond_to do |format|
+        format.html do
+          flash[:authorization_error] = "You are not authorized to view this page."
+          redirect_back_or(login_path)
+        end
       end
     end
   end

@@ -5,8 +5,8 @@ SingleCov.covered!
 
 describe ApplicationController do
   class ApplicationTestController < ApplicationController
-    def raise_doorkeeper_error!
-      raise DoorkeeperAuth::DisallowedAccessError
+    def test_render
+      head :ok
     end
 
     def test_redirect_back_or
@@ -61,33 +61,6 @@ describe ApplicationController do
       it "does not redirect to hacky hash in redirect_to" do
         get :test_redirect_back_or, params: {test_route: true, redirect_to: {host: 'hacks.com', path: 'bar'}}
         assert_response :bad_request
-      end
-    end
-  end
-
-  describe 'Doorkeeper Auth Status' do
-    as_a_viewer do
-      subject { @controller }
-
-      it 'is disallowed' do
-        subject.class.api_accessible.must_equal false
-      end
-
-      describe 'in test env' do
-        it 'does not rescue' do
-          Rails.env.stubs(:test?).returns(true)
-          proc do
-            get :raise_doorkeeper_error!, params: {test_route: true}
-          end.must_raise(DoorkeeperAuth::DisallowedAccessError)
-        end
-      end
-
-      describe 'in non-test env' do
-        it 'rescues DoorkeeperAuth::DisallowedAccessError' do
-          Rails.env.stubs(:test?).returns(false)
-          get :raise_doorkeeper_error!, params: {test_route: true}
-          assert_response 403
-        end
       end
     end
   end

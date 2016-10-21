@@ -1,37 +1,24 @@
 # frozen_string_literal: true
-require "warden/action_dispatch_patch"
 
+# Strategy that allows login via email / token header
 class Warden::Strategies::BasicStrategy < Warden::Strategies::Base
-  include ActionDispatchPatch
+  KEY = :basic
 
   def valid?
-    authorization.present? &&
-      authorization =~ /^Basic/i
-  end
-
-  # Don't store user id in session
-  def store?
-    false
+    @auth = ActionDispatch::Request.new(request.env).authorization.to_s[/^Basic (.*)/i, 1]
   end
 
   def authenticate!
-    email, token = Base64.decode64(authorization.sub!(/^Basic /, '')).split(':')
+    email, token = Base64.decode64(@auth).split(':', 2)
 
-    # This + store? change stops the Set-Cookie header from being sent
-    request.session_options[:skip] = true
-
-    if (user = User.where(email: email).where(token: token).first)
-      success!(user)
+    if user = User.where(email: email).where(token: token).first
+      request.session_options[:skip] = true # do not store user in session
+      success! user
     else
-      Rails.logger.error("Auth Error for #{email}")
+      Rails.logger.error "Basic auth error for #{email}"
       halt!
     end
   end
-
-  # ActionDispatch's
-  def authorization
-    RequestObject.new(request).authorization.to_s.dup
-  end
 end
 
-Warden::Strategies.add(:basic, Warden::Strategies::BasicStrategy)
+Warden::Strategies.add(Warden::Strategies::BasicStrategy::KEY, Warden::Strategies::BasicStrategy)
