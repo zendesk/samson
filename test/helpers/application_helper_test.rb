@@ -119,6 +119,16 @@ describe ApplicationHelper do
   describe "#github_ok?" do
     let(:status_url) { "#{Rails.application.config.samson.github.status_url}/api/status.json" }
 
+    it "returns cached true" do
+      Rails.cache.write(github_status_cache_key, true)
+      assert github_ok?
+    end
+
+    it "returns cached false" do
+      Rails.cache.write(github_status_cache_key, false)
+      refute github_ok?
+    end
+
     describe "with an OK response" do
       before do
         stub_request(:get, status_url).to_return(
@@ -128,8 +138,8 @@ describe ApplicationHelper do
       end
 
       it 'returns ok and caches' do
-        assert_equal true, github_ok?
-        assert_equal true, Rails.cache.read(github_status_cache_key)
+        assert github_ok?
+        Rails.cache.read(github_status_cache_key).must_equal true
       end
     end
 
@@ -142,8 +152,8 @@ describe ApplicationHelper do
       end
 
       it 'returns false and does not cache' do
-        assert_equal nil, github_ok?
-        assert_nil Rails.cache.read(github_status_cache_key)
+        refute github_ok?
+        Rails.cache.read(github_status_cache_key).must_equal false
       end
     end
 
@@ -153,8 +163,8 @@ describe ApplicationHelper do
       end
 
       it 'returns false and does not cache' do
-        assert_equal nil, github_ok?
-        assert_nil Rails.cache.read(github_status_cache_key)
+        refute github_ok?
+        Rails.cache.read(github_status_cache_key).must_equal false
       end
     end
 
@@ -163,9 +173,9 @@ describe ApplicationHelper do
         stub_request(:get, status_url).to_timeout
       end
 
-      it 'returns false and does not cache' do
-        assert_equal false, github_ok?
-        assert_nil Rails.cache.read(github_status_cache_key)
+      it 'returns false caches' do
+        refute github_ok?
+        Rails.cache.read(github_status_cache_key).must_equal false
       end
     end
   end
