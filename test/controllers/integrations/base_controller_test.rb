@@ -61,7 +61,7 @@ describe Integrations::BaseController do
       result = WebhookRecorder.read(project)
       result.fetch(:log).must_equal <<-LOG.strip_heredoc
         INFO: Branch master is release branch: true
-        INFO: Starting deploy to all stages
+        INFO: Deploying to 0 stages
       LOG
       result.fetch(:status_code).must_equal 200
       result.fetch(:body).must_equal ""
