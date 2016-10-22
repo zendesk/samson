@@ -54,7 +54,7 @@
 
   <% if hook = WebhookRecorder.read(@project) %>
     <h2>Latest webhook</h2>
-    <table class="table">
+    <table class="table" id="latest_response">
       <tr><th>Arrived</th><td><%= hook.fetch(:time) %></td></tr>
       <tr>
         <th>Request</th>
@@ -86,7 +86,7 @@
   <% end %>
   <h2></h2>
 
-  <h1>Outbound Webhooks</h1> 
+  <h1>Outbound Webhooks</h1>
   <p>Outbound webhooks POST to an external url after a deploy has finished. The request body will contain deploy, stage, and project information.</p>
   <% if @project.deploys.last %>
     <p><a onclick='toggleSample()'>Click here to see an example payload of this project's latest deploy.</a></p>
