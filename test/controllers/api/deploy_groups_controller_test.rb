@@ -15,13 +15,13 @@ describe Api::DeployGroupsController do
 
   it 'returns precondition_failed when deploy_groups are disabled' do
     DeployGroup.unstub(:enabled?)
-    get :index
+    get :index, format: :json
     assert_response :precondition_failed
   end
 
   describe '#index' do
     before do
-      get :index
+      get :index, format: :json
     end
 
     subject { JSON.parse(response.body) }
@@ -38,7 +38,7 @@ describe Api::DeployGroupsController do
 
   describe '#index with project and stage' do
     before do
-      get :index, params: {project_id: project.id, id: stage.id}
+      get :index, params: {project_id: project.id, id: stage.id}, format: :json
     end
 
     let(:project) { projects(:test) }

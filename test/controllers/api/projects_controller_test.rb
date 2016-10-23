@@ -10,7 +10,7 @@ describe Api::ProjectsController do
 
   describe '#index' do
     before do
-      get :index
+      get :index, format: :json
     end
 
     subject { JSON.parse(response.body) }
