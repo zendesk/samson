@@ -3,7 +3,7 @@ module AccessRequestHelper
   def display_access_request_link?(flash_type = :authorization_error)
     flash_type == :authorization_error &&
         AccessRequestsController.feature_enabled? &&
-        !current_user.super_admin?
+        (current_user && !current_user.super_admin?)
   end
 
   def link_to_request_access
