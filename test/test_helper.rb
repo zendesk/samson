@@ -245,11 +245,7 @@ class ActionController::TestCase
         app.scopes = :default
       end
     end
-
-    let(:user) do
-      users(:admin)
-    end
-
+    let(:user) { users(:admin) }
     let(:token) do
       oauth_app.access_tokens.new do |token|
         token.resource_owner_id = user.id

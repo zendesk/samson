@@ -25,23 +25,23 @@ describe 'Warden::Strategies::DoorkeeperStrategy Integration' do
 
   it "does not check and fails without header" do
     assert_sql_queries(0) { perform_get nil }
-    assert_response :not_found
+    assert_response :unauthorized
   end
 
   it "checks and fails with invalid header" do
     assert_sql_queries(1) { perform_get(valid_header + Base64.encode64('foo')) }
-    assert_response :not_found
+    assert_response :unauthorized
   end
 
   it "checks and fails with unfound user" do
     user.delete
     assert_sql_queries(3) { perform_get(valid_header) } # FYI queries are: find token, revoke token, find user
-    assert_response :not_found
+    assert_response :unauthorized
   end
 
   it "does not check and fails with non matching header" do
     assert_sql_queries(0) { perform_get "oops" + valid_header }
-    assert_response :not_found
+    assert_response :unauthorized
   end
 
   it "does not check and fails with non-api resource to show users they are doing it wrong" do

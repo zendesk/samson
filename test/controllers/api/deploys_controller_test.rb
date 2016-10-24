@@ -12,7 +12,7 @@ describe Api::DeploysController do
   describe '#active_count' do
     before do
       Deploy.stubs(:active).returns(['a'])
-      get :active_count
+      get :active_count, format: :json
     end
 
     it 'responds successfully' do
@@ -93,7 +93,7 @@ describe Api::DeploysController do
 
     describe 'for a project' do
       before do
-        get :index, params: {project_id: project.id}
+        get :index, params: {project_id: project.id}, format: :json
       end
 
       subject { JSON.parse(response.body) }
@@ -111,7 +111,7 @@ describe Api::DeploysController do
 
       describe 'with filter parameter' do
         subject do
-          get :index, params: params
+          get :index, params: params, format: :json
         end
 
         let(:deploy_response) { JSON.parse(response.body)['deploys'] }

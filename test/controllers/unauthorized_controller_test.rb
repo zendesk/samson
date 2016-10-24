@@ -27,8 +27,8 @@ describe 'Unauthorized' do
       describe "with api" do
         let(:path) { "/api/deploys/active_count.json" }
 
-        it 'responds not found' do
-          last_response.status.must_equal 404
+        it 'responds unauthorized' do
+          last_response.status.must_equal 401
         end
 
         it 'responds with json' do
@@ -60,8 +60,8 @@ describe 'Unauthorized' do
         get '/', format: :json
       end
 
-      it 'responds not found' do
-        last_response.status.must_equal 404
+      it 'responds unauthorized' do
+        last_response.status.must_equal 401
       end
 
       it 'responds with json' do
