@@ -1,6 +1,6 @@
 <% content_for :page_title, "#{@project.name} #{@release.version} Release Flow" %>
 
-<%= breadcrumb @project, link_to("Releases", project_releases_path(@project)), [@project, @release], "Flow" %>
+<%= breadcrumb @project, link_to("Releases", project_releases_path(@project)), link_to(@release.version, [@project, @release]), "Flow" %>
 
 <h1>Release <%= @release.version %> Flow</h1>
 
@@ -16,7 +16,7 @@
     </thead>
 
     <tbody>
-    <% @release_flow.each do |deploy_groups, stage| %>
+    <% @release_flow.each do |stage, deploy_groups| %>
       <tr>
         <td>
           <% if stage %>
@@ -27,7 +27,7 @@
         </td>
         <td>
           <% deploy_groups.each do |deploy_group| %>
-            <%= link_to deploy_group.name, [:adimin, deploy_group] %>
+            <%= link_to deploy_group.name, [:admin, deploy_group] %>
             </br>
           <% end %>
         </td>

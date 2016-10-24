@@ -29,14 +29,19 @@ describe ReleasesController do
         get :flow, params: {project_id: project.to_param, id: release.version}
       end
 
+      def release_flow
+        assigns[:release_flow].map { |s, dgs| [s&.name, dgs.map(&:name)] }
+      end
+
       with_env RELEASE_FLOW: "pod100|pod1,pod2"
 
       it "renders" do
         get_flow
         assert_template :flow
 
-        assigns[:release_flow].must_equal [
-          [stages(:test_staging)],["pod100"], [stages(:test_production),["pod1", "pod2"]]
+        release_flow.must_equal [
+          [stages(:test_staging).name, [deploy_groups(:pod100).name]],
+          [stages(:test_production).name, [deploy_groups(:pod1).name, deploy_groups(:pod2).name]]
         ]
       end
 
@@ -45,8 +50,9 @@ describe ReleasesController do
         get_flow
         assert_template :flow
 
-        assigns[:release_flow].must_equal [
-          [nil, ["pod100"]], [nil, ["pod1", "pod2"]]
+        release_flow.must_equal [
+          [nil, [deploy_groups(:pod100).name]],
+          [nil, [deploy_groups(:pod1).name, deploy_groups(:pod2).name]]
         ]
       end
     end
