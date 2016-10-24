@@ -16,7 +16,10 @@
         <% environments.each do |env| %>
           <tr>
             <td><%= env.id%></td>
-            <td><%= env.name%></td>
+            <td>
+              <%= env.name%>
+              <%= resource_lock_icon env %>
+            </td>
             <td><%= env.production ? 'Yes' : 'No' %></td>
             <td>
               <%= link_to "Edit", [:admin, env] %>

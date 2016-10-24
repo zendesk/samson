@@ -8,7 +8,7 @@
     <% @stages.each.with_index do |stage, index| %>
       <li class="stage-bar bar list-unstyled clearfix<%= ' sortable' if admin_for_project? %>" data-id="stage_id_<%= stage.id %>">
         <%= link_to stage.name, [@project, stage] %>
-        <%= stage_lock_icon stage %>
+        <%= resource_lock_icon stage %>
         <%= stage.is_template ? stage_template_icon : '' %>
         <div class="btn-group pull-right">
           <% if admin_for_project? %>
