@@ -11,6 +11,14 @@ describe AccessRequestHelper do
     after { restore_access_request_settings }
 
     describe 'feature enabled' do
+      describe 'not authed' do
+        let(:current_user) { nil }
+
+        it 'returns false' do
+          refute display_access_request_link?
+        end
+      end
+
       describe 'viewer user' do
         let(:current_user) { users(:viewer) }
 
