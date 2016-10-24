@@ -53,7 +53,7 @@ class CurrentUserConcernTest < ActionController::TestCase
   def self.authorized(method, action, params)
     it "is authorized to #{method} #{action}" do
       public_send method, action, params: params
-      refute_unauthorized
+      assert_response :success
     end
   end
 
@@ -110,43 +110,43 @@ class CurrentUserConcernTest < ActionController::TestCase
     it "can access any project" do
       UserProjectRole.delete_all
       get :project_deployer_action, params: {project_id: Project.first.id, test_route: true}
-      refute_unauthorized
+      assert_response :success
     end
 
     it "cannot access admin" do
       get :project_admin_action, params: {project_id: Project.first.id, test_route: true}
-      assert_unauthorized
+      assert_response :unauthorized
     end
   end
 
   as_a_project_deployer do
     it "can access allowed projects" do
       get :project_deployer_action, params: {project_id: Project.first.id, test_route: true}
-      refute_unauthorized
+      assert_response :success
     end
 
     it "cannot access forbidden projects" do
       UserProjectRole.delete_all
       get :project_deployer_action, params: {project_id: Project.first.id, test_route: true}
-      assert_unauthorized
+      assert_response :unauthorized
     end
 
     it "cannot access admin" do
       get :project_admin_action, params: {project_id: Project.first.id, test_route: true}
-      assert_unauthorized
+      assert_response :unauthorized
     end
   end
 
   as_a_project_admin do
     it "can access allowed projects" do
       get :project_admin_action, params: {project_id: Project.first.id, test_route: true}
-      refute_unauthorized
+      assert_response :success
     end
 
     it "cannot access forbidden projects" do
       UserProjectRole.delete_all
       get :project_admin_action, params: {project_id: Project.first.id, test_route: true}
-      assert_unauthorized
+      assert_response :unauthorized
     end
   end
 
@@ -157,12 +157,12 @@ class CurrentUserConcernTest < ActionController::TestCase
 
     it "can access any project" do
       get :project_admin_action, params: {project_id: Project.first.id, test_route: true}
-      refute_unauthorized
+      assert_response :success
     end
 
     it "can access any project deploy" do
       get :project_deployer_action, params: {project_id: Project.first.id, test_route: true}
-      refute_unauthorized
+      assert_response :success
     end
   end
 
@@ -177,14 +177,19 @@ class CurrentUserConcernTest < ActionController::TestCase
       it "logs unautorized so we can see it in test output for easy debugging" do
         Rails.logger.expects(:warn)
         get :unauthorized_action, params: {test_route: true}
-        assert_unauthorized
+        assert_response :unauthorized
       end
     end
 
     it "logs unautorized so we can see it in test output for easy debugging" do
       Rails.logger.expects(:warn)
       get :whodunnit, params: {test_route: true}
-      assert_unauthorized
+      assert_response :unauthorized
+    end
+
+    it "fails the request so during a test we can see failures instead of assert_response lying" do
+      get :whodunnit, params: {test_route: true}
+      assert_response :unauthorized
     end
   end
 end

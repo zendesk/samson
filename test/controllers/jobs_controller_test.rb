@@ -143,7 +143,7 @@ describe JobsController do
         end
 
         it "does not delete the job" do
-          assert_unauthorized
+          assert_response :unauthorized
         end
       end
     end

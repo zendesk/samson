@@ -103,7 +103,7 @@ describe Admin::Kubernetes::DeployGroupRolesController do
       it "cannot create for projects I am not admin of" do
         user.user_project_roles.delete_all
         post :create, params: params
-        assert_unauthorized
+        assert_response :unauthorized
       end
     end
 
@@ -116,7 +116,7 @@ describe Admin::Kubernetes::DeployGroupRolesController do
       it "does not render when I am not admin" do
         user.user_project_roles.delete_all
         get :edit, params: {id: deploy_group_role.id}
-        assert_unauthorized
+        assert_response :unauthorized
       end
     end
 
@@ -144,7 +144,7 @@ describe Admin::Kubernetes::DeployGroupRolesController do
       it "does not allow updates for non-admins" do
         user.user_project_roles.delete_all
         put :update, params: valid_params
-        assert_unauthorized
+        assert_response :unauthorized
       end
 
       it "renders on failure" do

@@ -6,7 +6,7 @@ require 'bundler/setup'
 # anything loaded before coverage will be uncovered
 require 'single_cov'
 SingleCov::APP_FOLDERS << 'decorators' << 'presenters'
-# SingleCov.setup :minitest unless defined?(Spring)
+SingleCov.setup :minitest unless defined?(Spring)
 
 if ENV['CODECLIMATE_REPO_TOKEN']
   require 'codeclimate-test-reporter'
@@ -183,7 +183,7 @@ class ActionController::TestCase
     def unauthorized(method, action, params = {})
       it "is unauthorized when doing a #{method} to #{action} with #{params}" do
         public_send method, action, params: params
-        assert_unauthorized
+        assert_response :unauthorized
       end
     end
 
@@ -226,24 +226,13 @@ class ActionController::TestCase
     request.env['warden']
   end
 
-  def assert_unauthorized
-    @unauthorized.must_equal true, "Request was not marked unauthorized"
-  end
-
-  def refute_unauthorized
-    refute @unauthorized, "Request was marked unauthorized"
-  end
-
-  # catch warden throw
-  # TODO: make a helper that directly catches as part of the test
+  # catch warden throw ... which would normally go into warden middleware and then be an unauthorized response
   prepend(Module.new do
     def process(*args)
-      catch(:warden) do
-        return super
-      end
-
-      @unauthorized = true
-      stub(cookies: {}) # rails calls .cookies on the response
+      catch(:warden) { return super }
+      response.status = :unauthorized
+      response.body = ":warden caught in test_helper.rb"
+      response
     end
   end)
 

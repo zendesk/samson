@@ -37,8 +37,8 @@ module CurrentUser
   end
 
   def unauthorized!
-    Rails.logger.warn("Halted as unauthorized! threw :warden (called from #{caller.first.sub(Rails.root.to_s, '')})")
-    throw(:warden) # Warden::Manager middleware catches this and calls UnauthorizedController
+    Rails.logger.warn "Halted as unauthorized! threw :warden (called from #{caller.first.sub(Rails.root.to_s, '')})"
+    throw :warden # Warden::Manager middleware catches this and calls UnauthorizedController
   end
 
   def authorize_super_admin!
