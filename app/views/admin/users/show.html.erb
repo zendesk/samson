@@ -1,12 +1,17 @@
 <h1><%= @user.name %></h1>
 
 <section id="user-description" class="clearfix">
+  <div class="pull-right">
+    <%= link_to "Merge", new_admin_user_user_merges_path(@user) %>
+  </div>
+
   <dl class="dl-horizontal">
     <dt>Name:</dt>
     <dd><%= @user.name %></dd>
     <dt>System Role:</dt>
     <dd><%= @user.role.display_name %></dd>
   </dl>
+
   <%= link_to_history @user %>
 </section>
 <section id="user-project-roles" class="clearfix">

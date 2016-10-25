@@ -119,11 +119,7 @@ describe User do
         }
       end
 
-      let(:existing_user) do
-        User.create!(name: "Test", external_id: 9)
-      end
-
-      before { existing_user }
+      let!(:existing_user) { User.create!(name: "Test", external_id: 9) }
 
       it "does not update the user" do
         user.name.must_equal("Test")
@@ -457,8 +453,15 @@ describe User do
   end
 
   describe "#name_and_email" do
+    let(:user) { users(:admin) }
+
     it "is name and email" do
-      users(:admin).name_and_email.must_equal "Admin (admin@example.com)"
+      user.name_and_email.must_equal "Admin (admin@example.com)"
+    end
+
+    it "is email without name" do
+      user.name = ''
+      user.name_and_email.must_equal "admin@example.com"
     end
   end
 end
