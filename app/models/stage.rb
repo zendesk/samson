@@ -194,12 +194,8 @@ class Stage < ActiveRecord::Base
   end
 
   def destroy_stage_pipeline
-    puts
-    puts "destroying pipeline"
-    puts
     project.stages.each do |s|
       if s.next_stage_ids.delete(id.to_s).present?
-        puts "found a pipeline to destroy"
         s.save!
       end
     end
