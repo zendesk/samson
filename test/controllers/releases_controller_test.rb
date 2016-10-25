@@ -55,6 +55,12 @@ describe ReleasesController do
           [nil, [deploy_groups(:pod1).name, deploy_groups(:pod2).name]]
         ]
       end
+
+      it "raises when release flow is misconfigured" do
+        deploy_groups(:pod1).delete
+        e = assert_raises(RuntimeError) { get_flow }
+        e.message.must_include "Did not find all deploy groups:"
+      end
     end
 
     describe "#index" do

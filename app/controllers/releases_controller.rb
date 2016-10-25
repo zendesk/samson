@@ -14,6 +14,7 @@ class ReleasesController < ApplicationController
 
     @release_flow = groups.map do |env_values|
       deploy_groups = DeployGroup.where(env_value: env_values).sort_by(&:natural_order)
+      raise "Did not find all deploy groups: #{env_values.join(",")}" if deploy_groups.size != env_values.size
       stage = current_project.stages.detect { |stage| stage.deploy_groups.sort == deploy_groups.sort }
       [stage, deploy_groups]
     end

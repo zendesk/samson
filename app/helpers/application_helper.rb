@@ -20,7 +20,7 @@ module ApplicationHelper
     sanitize GitHub::Markdown.render_gfm(str)
   end
 
-  def deploy_link(project, stage)
+  def deploy_link(project, stage, reference: nil)
     if deploy = stage.current_deploy
       link_to "Deploying #{deploy.short_reference}...",
         [project, deploy],
@@ -28,7 +28,7 @@ module ApplicationHelper
     elsif Lock.locked_for?(stage, current_user)
       content_tag :a, "Locked", class: "btn btn-primary disabled", disabled: true
     else
-      path = new_project_stage_deploy_path(project, stage)
+      path = new_project_stage_deploy_path(project, stage, reference: reference)
       link_to "Deploy", path, role: "button", class: "btn btn-primary"
     end
   end

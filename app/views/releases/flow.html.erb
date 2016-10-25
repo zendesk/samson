@@ -6,7 +6,7 @@
 
 <section class="clearfix">
 
-  <table class="table table-hover release-list">
+  <table class="table table-hover">
     <thead>
     <tr>
       <th>Stages</th>
@@ -22,7 +22,8 @@
           <% if stage %>
             <%= link_to stage.name, [@project, stage]  %>
           <% else %>
-            <%= "Missing stage for #{deploy_groups.map(&:name).join(",")}. Clone a template." %>
+
+            Missing stage for <%= deploy_groups.map(&:name).join(",") %>. Clone a template.
           <% end %>
         </td>
         <td>
@@ -31,7 +32,21 @@
             </br>
           <% end %>
         </td>
-        <td></td>
+        <td>
+          <% if stage %>
+            <% deploy = stage.deploys.last %>
+            <% deploy_link = link_to relative_time(deploy.updated_at), [@project, deploy] if deploy %>
+            <% if deploy && deploy.succeeded? && deploy.job.commit == @release.commit %>
+              Deployed at <%= deploy_link %>
+            <% else %>
+              <% if deploy %>
+                Deployed <%= deploy.job.tag || deploy.reference %> <%= deploy_link %>, <%= deploy.status %>.
+                </br>
+              <% end %>
+              <%= deploy_link @project, stage, reference: @release.version %>
+            <% end %>
+          <% end %>
+        </td>
       </tr>
     <% end %>
 

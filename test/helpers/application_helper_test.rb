@@ -114,6 +114,10 @@ describe ApplicationHelper do
       assert_includes link, ">Deploying master...<"
       assert_includes link, %(href="/projects/#{project.to_param}/deploys/#{deploy.id}")
     end
+
+    it "can start a deploy with a reference" do
+      deploy_link(project, stage, reference: "foo").must_include "?reference=foo"
+    end
   end
 
   describe "#github_ok?" do
