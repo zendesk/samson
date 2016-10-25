@@ -40,7 +40,7 @@
         <td>No users found.</td>
       </tr>
     <% else %>
-        <%= static_render @users %>
+        <%= render partial: 'user', collection: @users %>
     <% end %>
     </tbody>
   </table>

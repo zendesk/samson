@@ -140,12 +140,6 @@ module ApplicationHelper
     link_to_delete(path, icon_tag('remove') + ' Delete', class: 'btn btn-danger')
   end
 
-  # render collections without making brakeman trigger a dynamic render alert
-  # like `render collection` does
-  def static_render(collection)
-    render partial: collection.first.to_partial_path, collection: collection if collection.any?
-  end
-
   # Flash type -> Bootstrap alert class
   def flash_messages
     flash.flat_map do |type, messages|

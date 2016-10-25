@@ -20,7 +20,7 @@
         </thead>
 
         <tbody>
-          <%= static_render @releases %>
+          <%= render partial: 'release', collection: @releases %>
         </tbody>
       </table>
 

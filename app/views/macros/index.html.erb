@@ -2,7 +2,7 @@
 
 <section class="tabs">
   <ul id="macros">
-    <%= static_render @macros %>
+    <%= render partial: 'macro', collection: @macros %>
   </ul>
 
   <% if admin_for_project? %>
