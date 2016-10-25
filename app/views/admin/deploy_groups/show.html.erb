@@ -80,7 +80,18 @@
                                "Merge #{@deploy_group.stages.cloned.count} cloned stages now?"
                     }
         %>
-    <% end %>
+        <%= link_to "Delete Cloned Stages",
+                    delete_all_stages_admin_deploy_group_path(@deploy_group),
+                    class: "btn btn-default #{ 'disabled' unless @deploy_group.stages.cloned.exists? }",
+                    data: {
+                        method: "post",
+                        confirm: "Cloned stages will be deleted. No stages will be merged into their templates. You will need to create a new stage to deploy the project to this deploy group."
+                    }
+        %>
+      <% end %>
+    </div>
+    <br>
+    <div class="col-lg-offset-2 col-lg-10" style="margin-top: 10px;">
       <%= link_to "Back", admin_deploy_groups_path, class: "btn btn-default" %>
     </div>
   </div>
