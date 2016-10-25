@@ -455,6 +455,13 @@ describe Stage do
         stage.soft_undelete!
       end
     end
+
+    it "removes the stage from the pipeline of other stages" do
+      other_stage = Stage.create!(project: stage.project, name: 'stage1', next_stage_ids: [stage.id.to_s])
+      assert other_stage.next_stage_ids.include?(stage.id.to_s)
+      stage.soft_delete!
+      refute other_stage.reload.next_stage_ids.include?(stage.id.to_s)
+    end
   end
 
   describe "#command_updated_at" do

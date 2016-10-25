@@ -123,7 +123,6 @@ class Admin::DeployGroupsController < ApplicationController
 
     unless template_stage.deploy_groups.include?(stage.deploy_groups.first)
       template_stage.deploy_groups += stage.deploy_groups
-      template_stage.next_stage_ids.delete(stage.id.to_s)
       template_stage.save!
     end
 
