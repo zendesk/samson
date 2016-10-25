@@ -124,12 +124,12 @@ module Kubernetes
 
     class << self
       def kubernetes_config_files_in_repo(project, git_ref)
-        path = 'kubernetes'
-        files = project.repository.file_content(path, git_ref) || []
+        folder = 'kubernetes'
+        files = project.repository.file_content(folder, git_ref) || []
 
-        files = files.split("\n").grep(/\.(yml|yaml|json)$/).map { |f| "#{path}/#{f}" }
+        files = files.split("\n").grep(/\.(yml|yaml|json)$/).map { |f| "#{folder}/#{f}" }
         files.concat project.kubernetes_roles.map(&:config_file).
-          reject { |f| f.start_with?("#{path}/") }
+          reject { |f| f.start_with?("#{folder}/") }
 
         files.map do |path|
           next unless file_contents = project.repository.file_content(path, git_ref)

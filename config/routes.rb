@@ -153,6 +153,6 @@ Samson::Application.routes.draw do
 
   mount SseRailsEngine::Engine, at: '/streaming'
 
-  use_doorkeeper
+  use_doorkeeper # adds oauth/* routes
   resources :oauth_test, only: [:index, :show] if %w[development test].include?(Rails.env)
 end

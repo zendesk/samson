@@ -155,10 +155,10 @@ module Kubernetes
 
     def map_attributes(path, elements: @elements, array: :all)
       elements.map do |e|
-        path.inject(e) do |e, p|
-          e = e[p]
-          e = Array.wrap(e).first if array == :first
-          e || break
+        path.inject(e) do |el, p|
+          el = el[p]
+          el = Array.wrap(el).first if array == :first
+          el || break
         end
       end
     end
