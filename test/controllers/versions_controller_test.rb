@@ -16,14 +16,14 @@ describe VersionsController do
 
   as_a_viewer do
     describe "#index" do
+      before { create_version user.id }
+
       it "renders" do
-        create_version user.id
         get :index, params: {item_id: stage.id, item_type: stage.class.name}
         assert_template :index
       end
 
       it "renders with jenkins job name" do
-        create_version user.id
         stage.update_attribute(:jenkins_job_names, 'jenkins-job-1')
         stage.update_attribute(:jenkins_job_names, 'jenkins-job-2')
         get :index, params: {item_id: stage.id, item_type: stage.class.name}
@@ -34,6 +34,18 @@ describe VersionsController do
       it "renders with unfound user" do
         create_version '1211212'
         get :index, params: {item_id: stage.id, item_type: stage.class.name}
+        assert_template :index
+      end
+
+      it "renders with deleted item" do
+        stage.delete
+        get :index, params: {item_id: stage.id, item_type: stage.class.name}
+        assert_template :index
+      end
+
+      it "renders with removed class" do
+        stage.versions.last.update_column(:item_type, 'Whooops')
+        get :index, params: {item_id: stage.id, item_type: 'Whooops'}
         assert_template :index
       end
     end

@@ -1,12 +1,14 @@
-<h1>Versions for <%= params.require(:item_type) %> : <%= params.require(:item_id) %></h1>
+<% title = "Versions for #{params.require(:item_type)} #{params.require(:item_id)}" %>
+<%= content_for :page_title, title %>
+<h1><%= title %></h1>
 
 <table class="table">
   <tr>
     <th>Date</th>
     <th>Modified by</th>
-    <th>Data</th>
+    <th>Previous version</th>
   </tr>
-  <% @versions.each do |v| %>
+  <% @versions.each do |v, diff| %>
     <tr>
       <td><%= v.created_at %></td>
       <td>
@@ -15,9 +17,23 @@
         <% else %>
           <%= v.whodunnit %>
         <% end %>
-
       </td>
-      <td><%= simple_format v.object %></td>
+      <td>
+        <% if diff %>
+          <% diff.each do |key, previous, current| %>
+            <%= key %>: <%= previous.inspect %> -> <%= current.inspect %><br/>
+          <% end %>
+        <% else %>
+          Unable to find item
+        <% end %>
+        <br/>
+        <% full_id = "full_object_#{v.id}" %>
+        <%= link_to "Full", "#", class: "toggle", data: {target: "##{full_id}"} %>
+        <br/>
+        <div id="<%= full_id %>" style="display: none">
+          <%= simple_format v.object %>
+        </div>
+      </td>
     </tr>
   <% end %>
 </table>
