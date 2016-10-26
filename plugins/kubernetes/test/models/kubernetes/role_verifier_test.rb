@@ -85,11 +85,10 @@ describe Kubernetes::RoleVerifier do
       role << {kind: 'Ooops'}
     end
 
-    # kubernetes somehow needs them to have names
-    it "reports missing name for job containers" do
-      role.replace(job_role)
+    # if there are multiple containers they each need a name ... so enforcing this from the start
+    it "reports missing name for containers" do
       role[0][:spec][:template][:spec][:containers][0].delete(:name)
-      errors.must_equal ['Job containers need a name']
+      errors.must_equal ['Containers need a name']
     end
 
     # release_doc does not support that and it would lead to chaos

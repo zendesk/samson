@@ -121,11 +121,10 @@ module Kubernetes
       @errors << "#{expected.join("/")} need at least 1 container"
     end
 
-    # job needs a name since we atm do not enforce it's uniqueness like we do for service
     def verify_job_container_name
-      names = map_attributes([:spec, :template, :spec, :containers, :name], elements: jobs, array: :first)
+      names = map_attributes([:spec, :template, :spec, :containers]).compact.flatten(1).map { |c| c[:name] }
       return if names.all?
-      @errors << "Job containers need a name"
+      @errors << "Containers need a name"
     end
 
     def verify_job_restart_policy
