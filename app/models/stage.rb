@@ -31,7 +31,9 @@ class Stage < ActiveRecord::Base
 
   before_create :ensure_ordering
   after_destroy :destroy_deploy_groups_stages
+  after_destroy :destroy_stage_pipeline
   after_soft_delete :destroy_deploy_groups_stages
+  after_soft_delete :destroy_stage_pipeline
 
   scope :cloned, -> { where.not(template_stage_id: nil) }
 
@@ -189,5 +191,13 @@ class Stage < ActiveRecord::Base
   # DeployGroupsStage has no ids so the default dependent: :destroy fails
   def destroy_deploy_groups_stages
     DeployGroupsStage.where(stage_id: id).delete_all
+  end
+
+  def destroy_stage_pipeline
+    (project.stages - [self]).each do |s|
+      if s.next_stage_ids.delete(id.to_s)
+        s.save(validate: false)
+      end
+    end
   end
 end
