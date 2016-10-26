@@ -194,9 +194,9 @@ class Stage < ActiveRecord::Base
   end
 
   def destroy_stage_pipeline
-    project.stages.each do |s|
+    (project.stages - [self]).each do |s|
       if s.next_stage_ids.delete(id.to_s)
-        s.save!
+        s.save(validate: false)
       end
     end
   end
