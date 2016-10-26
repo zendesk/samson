@@ -34,26 +34,23 @@ module IntegrationsControllerTestHelper
 
       it "creates the ci user if it does not exist" do
         post :create, params: payload.deep_merge(token: project.token)
-
-        User.find_by_name(user_name).wont_be_nil
+        assert User.find_by_name(user_name)
       end
 
       it "responds with 200 OK if the request is valid" do
         post :create, params: payload.deep_merge(token: project.token)
-
-        response.status.must_equal 200
+        assert_response :success
       end
 
       it "responds with 422 OK if deploy cannot be started" do
-        DeployService.stubs(new: stub(deploy!: stub(persisted?: false)))
+        DeployService.stubs(new: stub(deploy!: Deploy.new))
         post :create, params: payload.deep_merge(token: project.token)
-        response.status.must_equal 422
+        assert_response :unprocessable_entity
       end
 
-      it "responds with 404 Not Found if the token is invalid" do
-        assert_raises ActiveRecord::RecordNotFound do
-          post :create, params: payload.deep_merge(token: "foobar")
-        end
+      it "responds with 401 Unauthorized if the token is invalid" do
+        post :create, params: payload.deep_merge(token: "foobar")
+        assert_response :unauthorized
       end
     end
   end
