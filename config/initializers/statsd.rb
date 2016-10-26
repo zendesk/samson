@@ -51,7 +51,7 @@ ActiveSupport::Notifications.subscribe("job.threads") do |*args|
 end
 
 # basic web stats
-ActiveSupport::Notifications.subscribe /process_action.action_controller/ do |*args|
+ActiveSupport::Notifications.subscribe(/process_action.action_controller/) do |*args|
   event = ActiveSupport::Notifications::Event.new(*args)
   controller = "controller:#{event.payload[:controller]}"
   action = "action:#{event.payload[:action]}"

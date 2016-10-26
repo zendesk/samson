@@ -3,7 +3,7 @@ class GitRepository
   include ::NewRelic::Agent::MethodTracer
 
   attr_reader :repository_url, :repository_directory, :last_pulled
-  attr_accessor :executor
+  attr_writer :executor
 
   # The directory in which repositories should be cached.
   cattr_accessor(:cached_repos_dir, instance_writer: false) do

@@ -2,7 +2,8 @@
 class NullUser
   include ActiveModel::Serialization
 
-  attr_accessor :name, :id
+  attr_accessor :id
+  attr_writer :name
 
   def initialize(id)
     self.id = id
