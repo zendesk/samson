@@ -285,17 +285,6 @@ describe ApplicationHelper do
     end
   end
 
-  describe "#static_render" do
-    it "can render nothing" do
-      static_render([]).must_equal nil
-    end
-
-    it "can render objects via their partials" do
-      ActionView::Base.any_instance.stubs(job_path: 'X')
-      static_render([jobs(:succeeded_test)]).must_include "cap staging deploy"
-    end
-  end
-
   describe "#environments" do
     it "loads all environments" do
       environments.size.must_equal Environment.all.size
