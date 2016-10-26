@@ -301,6 +301,11 @@ describe Lock do
         Lock.send(:all_cached).must_equal []
       end
     end
+
+    it "does not store associations" do
+      lock # trigger create
+      Marshal.dump(Lock.send(:all_cached).first).size.must_be :<, 1500
+    end
   end
 
   describe ".cache_key" do
