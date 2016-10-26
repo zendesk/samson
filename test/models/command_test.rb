@@ -35,12 +35,18 @@ describe Command do
   end
 
   describe "#trigger_stage_change" do
+    let(:command) { commands(:echo) }
+
+    around { |t| PaperTrail.with_logging(&t) }
+
     it "triggers a version when command changes" do
-      PaperTrail.with_logging do
-        command = commands(:echo)
-        commands(:echo).update_attribute(:command, 'new')
-        command.stages.first.versions.size.must_equal 1
-      end
+      command.update_attribute(:command, 'new')
+      command.reload.stages.first.versions.size.must_equal 1
+    end
+
+    it "does not trigger when command does not change" do
+      command.update_attribute(:project, nil)
+      command.reload.stages.first.versions.size.must_equal 0
     end
   end
 end
