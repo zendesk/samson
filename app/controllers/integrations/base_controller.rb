@@ -21,8 +21,10 @@ class Integrations::BaseController < ApplicationController
       create_docker_image
     end
 
-    if deploy_to_stages
-      record_log :info, "Starting deploy to all stages"
+    stages = project.webhook_stages_for(branch, service_type, service_name)
+
+    if deploy_to_stages(stages)
+      record_log :info, "Deploying to #{stages.size} stages"
       head(:ok)
     else
       head(:unprocessable_entity, message: 'Failed to start all deploys')
@@ -56,13 +58,14 @@ class Integrations::BaseController < ApplicationController
     end
   end
 
-  def deploy_to_stages
-    stages = project.webhook_stages_for(branch, service_type, service_name)
+  def deploy_to_stages(stages)
     deploy_service = DeployService.new(user)
 
-    stages.all? do |stage|
+    return unless stages.all? do |stage|
       deploy_service.deploy!(stage, reference: commit).persisted?
     end
+
+    stages.count
   end
 
   def project

@@ -1,0 +1,5 @@
+// Gets super bloated wih a long param or tokens
+// and pre auto-expands without limits ... cannot use % widths
+#latest_response pre {
+  max-width: $container-lg - 170px; // body size minus some room for labels
+}
