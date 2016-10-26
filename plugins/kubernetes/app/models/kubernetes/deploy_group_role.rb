@@ -30,9 +30,9 @@ module Kubernetes
     #  - some could not be created because of missing configs: false
     #  - failed to create because of unknown errors: raises
     def self.seed!(stage)
-      missing = matrix(stage).each_with_object([]) do |(deploy_group, roles), missing|
+      missing = matrix(stage).each_with_object([]) do |(deploy_group, roles), all|
         roles.each do |role, dg_role|
-          missing << [deploy_group, role] unless dg_role
+          all << [deploy_group, role] unless dg_role
         end
       end
 
