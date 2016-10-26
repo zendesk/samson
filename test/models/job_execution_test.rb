@@ -242,6 +242,24 @@ describe JobExecution do
     assert_equal 'MY-SECRET', last_line_of_output
   end
 
+  it 'does not add the job to the registry when JobExecution is disabled' do
+    JobExecution.enabled = false
+
+    job_execution = JobExecution.start_job(JobExecution.new('master', job))
+    job_execution.wont_be_nil
+
+    JobExecution.find_by_id(job.id).must_equal(job_execution)
+    JobExecution.queued?(job.id).must_equal(false)
+    JobExecution.active?(job.id).must_equal(false)
+  end
+
+  it 'can run with a block' do
+    x = :not_called
+    execution = JobExecution.new('master', job) { x = :called }
+    execution.send(:run!)
+    x.must_equal :called
+  end
+
   describe "kubernetes" do
     before { stage.update_column :kubernetes, true }
 
@@ -253,21 +271,6 @@ describe JobExecution do
     it "does not clone the repo" do
       GitRepository.any_instance.expects(:checkout_workspace).never
       execute_job("master")
-    end
-  end
-
-  describe 'when JobExecution is disabled' do
-    before do
-      JobExecution.enabled = false
-    end
-
-    it 'does not add the job to the registry' do
-      job_execution = JobExecution.start_job(JobExecution.new('master', job))
-      job_execution.wont_be_nil
-
-      JobExecution.find_by_id(job.id).must_equal(job_execution)
-      JobExecution.queued?(job.id).must_equal(false)
-      JobExecution.active?(job.id).must_equal(false)
     end
   end
 
@@ -353,6 +356,14 @@ describe JobExecution do
       ensure
         JobExecution.stop_timeout = old
       end
+    end
+  end
+
+  describe "#pid" do
+    it "returns current pid" do
+      execution = JobExecution.new('master', job)
+      execution.executor.stubs(pid: 2)
+      execution.pid.must_equal 2
     end
   end
 
