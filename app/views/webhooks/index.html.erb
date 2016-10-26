@@ -89,8 +89,11 @@
   <h1>Outbound Webhooks</h1>
   <p>Outbound webhooks POST to an external url after a deploy has finished. The request body will contain deploy, stage, and project information.</p>
   <% if @project.deploys.last %>
-    <p><a onclick='toggleSample()'>Click here to see an example payload of this project's latest deploy.</a></p>
-    <p class='payload-sample' style='display:none'><%= DeploySerializer.new(@project.deploys.last).as_json %></p>
+    <p>
+      <%= link_to 'Example payload', '#', class: 'toggle', data: {target: '#payload-sample'} %>
+    </p>
+    <% example = JSON.pretty_generate(DeploySerializer.new(@project.deploys.last).as_json) %>
+    <pre id='payload-sample' style='display:none'><%= example %></pre>
   <% else %>
     <p>Deploy this project at least once to see a sample payload.</p>
   <% end %>
@@ -135,10 +138,4 @@
       <%= form.submit "Add Outbound Webhook", class: "btn btn-primary" %>
     </div>
   <% end %>
-
-  <script>
-    function toggleSample() {
-      $('.payload-sample').toggle();
-    }
-  </script>
 </section>
