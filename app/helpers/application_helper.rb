@@ -189,4 +189,10 @@ module ApplicationHelper
   def additional_info(text)
     content_tag :i, '', class: "glyphicon glyphicon-info-sign", title: text
   end
+
+  def page_title(content = nil, &block)
+    content ||= capture(&block)
+    content_for :page_title, content
+    content_tag :h1, content
+  end
 end

@@ -1,7 +1,6 @@
-<h1>
+<% page_title do %>
   <%= link_to @project.name, @project %> Stages
-</h1>
-
+<% end %>
 
 <section class="tabs">
   <ul id="stages" data-url="<%= reorder_project_stages_path(@project) %>" data-sortable="<%= admin_for_project? %>">
