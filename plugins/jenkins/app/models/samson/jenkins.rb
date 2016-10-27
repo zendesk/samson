@@ -37,6 +37,7 @@ module Samson
         buildStartedBy: deploy.user.name,
         originatedFrom: originated_from,
         commit: deploy.job.commit,
+        tag: deploy.job.tag,
         deployUrl: deploy.url,
         emails: notify_emails
       }, opts).to_i
