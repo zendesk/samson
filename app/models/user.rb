@@ -23,6 +23,7 @@ class User < ActiveRecord::Base
 
   before_create :set_token
   validates :time_format, inclusion: { in: TIME_FORMATS }
+  validates :external_id, presence: :true, unless: :integration?
 
   scope :search, ->(query) {
     return self if query.blank?

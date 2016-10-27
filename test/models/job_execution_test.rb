@@ -13,7 +13,7 @@ describe JobExecution do
   let(:project) { Project.create!(name: 'duck', repository_url: repo_temp_dir) }
   let(:stage) { Stage.create!(name: 'stage4', project: project, deploy_groups: [pod1, pod2, deploy_group_hack]) }
   let(:stage_no_groups) { Stage.create!(name: 'stage_no_groups', project: project, deploy_groups: []) }
-  let(:user) { User.create!(name: 'test') }
+  let(:user) { users(:admin) }
   let(:job) { project.jobs.create!(command: 'cat foo', user: user, project: project) }
   let(:execution) { JobExecution.new('master', job) }
   let(:deploy) { Deploy.create!(stage: stage, job: job, reference: 'master') }

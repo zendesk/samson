@@ -7,7 +7,7 @@ describe Job do
   include GitRepoTestHelper
 
   let(:url) { "git://foo.com:hello/world.git" }
-  let(:user) { User.create!(name: 'test') }
+  let(:user) { users(:admin) }
   let(:project) { Project.create!(name: 'jobtest', repository_url: url) }
   let(:job) { project.jobs.create!(command: 'cat foo', user: user, project: project) }
 

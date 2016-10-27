@@ -5,7 +5,7 @@ SingleCov.covered!
 
 describe User do
   describe "#name" do
-    let(:user) { User.new(name: username, email: 'test@test.com') }
+    let(:user) { User.new(name: username, email: 'test@test.com', external_id: 'xyz') }
 
     describe 'nil name' do
       let(:username) { nil }
@@ -30,7 +30,8 @@ describe User do
   end
 
   describe "#time_format" do
-    let(:user) { User.create!(name: "jimbob", email: 'test@test.com') }
+    let(:user) { User.create!(name: "jimbob", email: 'test@test.com', external_id: 'xyz') }
+
     it "has a default time format of relative" do
       user.time_format.must_equal('relative')
     end
@@ -47,13 +48,13 @@ describe User do
     end
 
     it "allows initialization with different time_format" do
-      local_user = User.create!(name: "bettysue", email: 'bsue@test.com', time_format: 'local')
+      local_user = User.create!(name: "bettysue", email: 'bsue@test.com', time_format: 'local', external_id: 'xyz')
       local_user.time_format.must_equal('local')
     end
   end
 
   describe "#gravatar url" do
-    let(:user) { User.new(name: "User Name", email: email) }
+    let(:user) { User.new(name: "User Name", email: email, external_id: 'xyz') }
 
     describe 'real email' do
       let(:email) { 'test@test.com' }
@@ -236,11 +237,13 @@ describe User do
 
   describe ".search" do
     let!(:a_singular_user) do
-      User.create!(name: 'FindMe', email: 'find.me@example.org')
+      User.create!(name: 'FindMe', email: 'find.me@example.org', external_id: 'xyz')
     end
 
     let!(:some_similar_users) do
-      (1..3).map { |index| User.create!(name: "TestUser#{index}", email: "some_email#{index}@example.org") }
+      (1..3).map do |index|
+        User.create!(name: "TestUser#{index}", email: "some_email#{index}@example.org", external_id: "x-#{index}")
+      end
     end
 
     it 'finds a single user' do
@@ -330,7 +333,7 @@ describe User do
   end
 
   describe 'soft delete!' do
-    let(:user) { User.create!(name: 'to_delete', email: 'to_delete@test.com') }
+    let(:user) { User.create!(name: 'to_delete', email: 'to_delete@test.com', external_id: 'xyz') }
     let!(:locks) do
       %i[test_staging test_production].map { |stage| user.locks.create!(resource: stages(stage)) }
     end
