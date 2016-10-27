@@ -479,21 +479,21 @@ ActiveRecord::Schema.define(version: 20161102201243) do
   add_index "user_project_roles", ["user_id", "project_id"], name: "index_user_project_roles_on_user_id_and_project_id", unique: true, using: :btree
 
   create_table "users", force: :cascade do |t|
-    t.string   "name",           limit: 255,                 null: false
-    t.string   "email",          limit: 255
+    t.string   "name",                                        null: false
+    t.string   "email"
     t.datetime "created_at"
     t.datetime "updated_at"
-    t.integer  "role_id",        limit: 4,   default: 0,     null: false
-    t.string   "token",          limit: 255
+    t.integer  "role_id",                default: 0,          null: false
+    t.string   "token"
     t.datetime "deleted_at"
-    t.string   "external_id",    limit: 255
+    t.string   "external_id"
     t.boolean  "desktop_notify",         default: false,      null: false
     t.boolean  "integration",            default: false,      null: false
     t.boolean  "access_request_pending", default: false,      null: false
-    t.string   "time_format",            limit: 255, default: "relative", null: false
+    t.string   "time_format",            default: "relative", null: false
+    t.datetime "last_login_at"
+    t.index ["external_id", "deleted_at"], name: "index_users_on_external_id_and_deleted_at", length: {"external_id"=>191, "deleted_at"=>nil}, using: :btree
   end
-
-  add_index "users", ["external_id", "deleted_at"], name: "index_users_on_external_id_and_deleted_at", length: {"external_id"=>191, "deleted_at"=>nil}, using: :btree
 
   create_table "vault_servers", force: :cascade do |t|
     t.string   "name",                                             null: false

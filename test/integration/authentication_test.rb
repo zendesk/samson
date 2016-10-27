@@ -19,13 +19,29 @@ describe 'Authentication Integration' do
   end
 
   describe 'session request' do
+    before do
+      Warden::SessionSerializer.any_instance.stubs(:session).returns("warden.user.default.key" => user.id)
+    end
+
     it "uses the user stored in the sesion" do
-      login_as user
       get '/'
       assert_response :success
     end
 
     it "fails when no user is in the session" do
+      Warden::SessionSerializer.any_instance.unstub(:session)
+      get '/'
+      assert_response :redirect
+    end
+
+    it "fails when user logged in too long ago" do
+      user.update_column :last_login_at, 1.year.ago
+      get '/'
+      assert_response :redirect
+    end
+
+    it "fails when user never logged in, to log out legacy users" do
+      user.update_column :last_login_at, nil
       get '/'
       assert_response :redirect
     end
