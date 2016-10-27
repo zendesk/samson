@@ -30,10 +30,10 @@
 
   <% if admin_for_project? %>
     <li class="<%= 'active' if active == 'users' %>">
-      <%= link_to "Users", project_users_path(project) %>
+      <%= link_to icon_tag('user'), project_users_path(project) %>
     </li>
     <li class="<%= 'active' if active == 'settings' %>">
-      <%= link_to "Settings", edit_project_path(project) %>
+      <%= link_to icon_tag('cog'), edit_project_path(project) %>
     </li>
   <% end %>
 </ul>
