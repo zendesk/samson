@@ -9,6 +9,7 @@ group :preload do
   gem 'dotenv'
   gem 'sse-rails-engine'
   gem 'rails_autolink'
+  gem 'connection_pool'
 
   # AR extensions
   gem 'goldiloader'
