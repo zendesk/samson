@@ -109,7 +109,6 @@ class Admin::DeployGroupsController < ApplicationController
     redirect_to [:admin, deploy_group], alert: (failures.empty? ? nil : "Some stages were skipped: #{message}")
   end
 
-
   def self.create_all_stages(deploy_group)
     _, missing_stages = stages_for_creation(deploy_group)
     missing_stages.map do |template_stage|
