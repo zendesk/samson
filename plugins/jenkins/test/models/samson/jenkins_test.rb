@@ -20,7 +20,7 @@ describe Samson::Jenkins do
   def stub_build_with_parameters(update_params)
     stub_request(:post, "http://www.test-url.com/job/test_job/buildWithParameters").
       with(
-        body: {"buildStartedBy" => "Super Admin", "originatedFrom" => "Project_Staging_staging", "commit" => "abcabc1", "deployUrl" => "http://www.test-url.com/projects/foo/deploys/#{deploy.id}", "emails" => "super-admin@example.com"}.merge(update_params),
+        body: {"buildStartedBy" => "Super Admin", "originatedFrom" => "Project_Staging_staging", "commit" => "abcabc1", "deployUrl" => "http://www.test-url.com/projects/foo/deploys/#{deploy.id}", "emails" => "super-admin@example.com", "tag" => nil}.merge(update_params),
         headers: {'Authorization' => 'Basic dXNlckB0ZXN0LmNvbTpqYXBpa2V5'}
       ).
       to_return(status: 200, body: "", headers: {}).to_timeout
