@@ -133,6 +133,7 @@ Samson::Application.routes.draw do
         get :create_all_stages_preview
         post :create_all_stages
         post :merge_all_stages
+        post :delete_all_stages
       end
     end
   end

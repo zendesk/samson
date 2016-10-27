@@ -71,16 +71,28 @@
                     params: { missing_only: "true" },
                     title: "Deploys will be started for any stages that haven't yet been deployed or have failed all their deploys."
         %>
-        <%= link_to "Merge #{@deploy_group.stages.cloned.count} Cloned Stages",
+        <% cloned_stage_count = @deploy_group.stages.cloned.count %>
+        <%= link_to "Merge #{cloned_stage_count} Cloned Stages",
                     merge_all_stages_admin_deploy_group_path(@deploy_group),
-                    class: "btn btn-default #{ 'disabled' unless @deploy_group.stages.cloned.exists? }",
+                    class: "btn btn-default #{ 'disabled' if cloned_stage_count.zero? }",
                     data: {
                       method: "post",
                       confirm: "Stages will be deleted. Before deleting, each stage will have its Deploy Group added to the stage it was copied from. Stages affected are those cloned from a template stage, have exactly this deploy group, and are on a project that uses include_new_deploy_groups.\n\n" +
                                "Merge #{@deploy_group.stages.cloned.count} cloned stages now?"
                     }
         %>
-    <% end %>
+        <%= link_to "Delete #{cloned_stage_count} Cloned Stages",
+                    delete_all_stages_admin_deploy_group_path(@deploy_group),
+                    class: "btn btn-default #{ 'disabled' if cloned_stage_count.zero? }",
+                    data: {
+                        method: "post",
+                        confirm: "Cloned stages will be deleted. No stages will be merged into their templates. You will need to create a new stage to deploy the project to this deploy group."
+                    }
+        %>
+      <% end %>
+    </div>
+    <br>
+    <div class="col-lg-offset-2 col-lg-10" style="margin-top: 10px;">
       <%= link_to "Back", admin_deploy_groups_path, class: "btn btn-default" %>
     </div>
   </div>

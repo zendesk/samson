@@ -1,10 +1,10 @@
 # frozen_string_literal: true
 class Admin::DeployGroupsController < ApplicationController
   before_action :authorize_admin!
-  before_action :authorize_super_admin!, only: [:create, :new, :update, :destroy, :deploy_all,
+  before_action :authorize_super_admin!, only: [:create, :new, :update, :destroy, :deploy_all, :delete_all_stages,
                                                 :create_all_stages, :create_all_stages_preview, :edit]
   before_action :deploy_group, only: [:show, :edit, :update, :destroy, :deploy_all, :create_all_stages,
-                                      :create_all_stages_preview]
+                                      :create_all_stages_preview, :delete_all_stages]
 
   def index
     @deploy_groups = DeployGroup.all.sort_by(&:natural_order)
@@ -90,12 +90,19 @@ class Admin::DeployGroupsController < ApplicationController
   end
 
   def merge_all_stages
-    failures = deploy_group.stages.cloned.map do |stage|
-      reason = merge_stage(stage)
-      [reason, stage]
+    failures = try_each_cloned_stage do |stage|
+      merge_stage(stage)
     end
 
-    failures = failures.select(&:first)
+    message = failures.map { |reason, stage| "#{stage.project.name} #{stage.name} #{reason}" }.join(", ")
+
+    redirect_to [:admin, deploy_group], alert: (failures.empty? ? nil : "Some stages were skipped: #{message}")
+  end
+
+  def delete_all_stages
+    failures = try_each_cloned_stage do |stage|
+      delete_stage(stage)
+    end
 
     message = failures.map { |reason, stage| "#{stage.project.name} #{stage.name} #{reason}" }.join(", ")
 
@@ -110,6 +117,17 @@ class Admin::DeployGroupsController < ApplicationController
   end
 
   private
+
+  # executes the block for each cloned stage, returns an array of [result, stage] any non-nil responses.
+  def try_each_cloned_stage
+    cloned_stages = deploy_group.stages.cloned
+    results = cloned_stages.map do |stage|
+      result = yield stage
+      [result, stage]
+    end
+
+    results.select(&:first)
+  end
 
   # returns nil on success, otherwise the reason this stage was skipped.
   def merge_stage(stage)
@@ -127,6 +145,17 @@ class Admin::DeployGroupsController < ApplicationController
     end
 
     stage.project.stages.reload # need to reload to make verify_not_part_of_pipeline have current data and not fail
+    stage.soft_delete!
+
+    nil
+  end
+
+  def delete_stage(stage)
+    return "has no template stage" unless stage.template_stage
+    return "is a template stage" if stage.is_template
+    return "has more than one deploy group" if stage.deploy_groups.count > 1
+    return "commands in template stage differ" if stage.commands.to_a != stage.template_stage.commands.to_a
+
     stage.soft_delete!
 
     nil

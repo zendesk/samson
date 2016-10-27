@@ -18,6 +18,7 @@ describe Admin::DeployGroupsController do
     unauthorized :get, :deploy_all, id: 1
     unauthorized :post, :deploy_all, id: 1
     unauthorized :post, :create_all_stages, id: 1
+    unauthorized :post, :delete_all_stages, id: 1
   end
 
   as_a_admin do
@@ -46,6 +47,7 @@ describe Admin::DeployGroupsController do
     unauthorized :get, :deploy_all, id: 1
     unauthorized :post, :deploy_all, id: 1
     unauthorized :post, :create_all_stages, id: 1
+    unauthorized :post, :delete_all_stages, id: 1
   end
 
   as_a_super_admin do
@@ -459,6 +461,43 @@ describe Admin::DeployGroupsController do
           stages = deploy_group.stages.where(is_template: false)
           assert_empty stages
         end
+      end
+    end
+
+    describe "#delete_all_stages" do
+      let(:env) { environments(:staging) }
+      let(:deploy_group) { DeployGroup.create!(name: 'Pod 101', environment: env) }
+      let(:template_stage) { stages(:test_staging) }
+
+      let :stage do
+        Admin::DeployGroupsController.create_all_stages(deploy_group)
+        deploy_group.stages.where(project: template_stage.project).first
+      end
+
+      it "deletes a cloned stage" do
+        refute stage.reload.deleted?
+
+        post :delete_all_stages, params: {id: deploy_group}
+
+        assert Stage.with_deleted { stage.reload.deleted? }
+      end
+
+      it "ignores a non-cloned stage" do
+        stage.template_stage = nil
+        stage.save!
+
+        post :delete_all_stages, params: {id: deploy_group}
+
+        refute stage.reload.deleted?
+      end
+
+      it "ignores a cloned stage that has been altered (commands)" do
+        command = Command.create!(command: "flooboop")
+        StageCommand.create!(command: command, stage: stage, position: 2)
+
+        post :delete_all_stages, params: {id: deploy_group}
+
+        refute stage.reload.deleted?
       end
     end
   end
