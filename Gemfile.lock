@@ -167,6 +167,7 @@ GEM
       simplecov (>= 0.7.1, < 1.0.0)
     coderay (1.1.1)
     concurrent-ruby (1.0.2)
+    connection_pool (2.2.0)
     crack (0.4.3)
       safe_yaml (~> 1.0.0)
     dalli (2.7.6)
@@ -513,6 +514,7 @@ DEPENDENCIES
   codeclimate-test-reporter
   coderay
   concurrent-ruby
+  connection_pool
   dalli
   docker-api (>= 1.32)
   dogstatsd-ruby
