@@ -90,12 +90,9 @@ class Admin::DeployGroupsController < ApplicationController
   end
 
   def merge_all_stages
-    failures = deploy_group.stages.cloned.map do |stage|
-      reason = merge_stage(stage)
-      [reason, stage]
+    failures = try_each_cloned_stage do |stage|
+      merge_stage(stage)
     end
-
-    failures = failures.select(&:first)
 
     message = failures.map { |reason, stage| "#{stage.project.name} #{stage.name} #{reason}" }.join(", ")
 
@@ -103,17 +100,15 @@ class Admin::DeployGroupsController < ApplicationController
   end
 
   def delete_all_stages
-    failures = deploy_group.stages.cloned.map do |stage|
-      reason = delete_stage(stage)
-      [reason, stage]
+    failures = try_each_cloned_stage do |stage|
+      delete_stage(stage)
     end
-
-    failures = failures.select(&:first)
 
     message = failures.map { |reason, stage| "#{stage.project.name} #{stage.name} #{reason}" }.join(", ")
 
     redirect_to [:admin, deploy_group], alert: (failures.empty? ? nil : "Some stages were skipped: #{message}")
   end
+
 
   def self.create_all_stages(deploy_group)
     _, missing_stages = stages_for_creation(deploy_group)
@@ -123,6 +118,17 @@ class Admin::DeployGroupsController < ApplicationController
   end
 
   private
+
+  # executes the block for each cloned stage, returns an array of [result, stage] any non-nil responses.
+  def try_each_cloned_stage
+    cloned_stages = deploy_group.stages.cloned
+    results = cloned_stages.map do |stage|
+      result = yield stage
+      [result, stage]
+    end
+
+    results.select(&:first)
+  end
 
   # returns nil on success, otherwise the reason this stage was skipped.
   def merge_stage(stage)

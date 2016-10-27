@@ -71,7 +71,8 @@
                     params: { missing_only: "true" },
                     title: "Deploys will be started for any stages that haven't yet been deployed or have failed all their deploys."
         %>
-        <%= link_to "Merge #{@deploy_group.stages.cloned.count} Cloned Stages",
+        <% cloned_stage_count = @deploy_group.stages.cloned.count %>
+        <%= link_to "Merge #{cloned_stage_count} Cloned Stages",
                     merge_all_stages_admin_deploy_group_path(@deploy_group),
                     class: "btn btn-default #{ 'disabled' unless @deploy_group.stages.cloned.exists? }",
                     data: {
@@ -80,7 +81,7 @@
                                "Merge #{@deploy_group.stages.cloned.count} cloned stages now?"
                     }
         %>
-        <%= link_to "Delete Cloned Stages",
+        <%= link_to "Delete #{cloned_stage_count} Cloned Stages",
                     delete_all_stages_admin_deploy_group_path(@deploy_group),
                     class: "btn btn-default #{ 'disabled' unless @deploy_group.stages.cloned.exists? }",
                     data: {
