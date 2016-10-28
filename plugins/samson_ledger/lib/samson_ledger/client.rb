@@ -19,7 +19,7 @@ module SamsonLedger
 
       def post_deployment(deploy)
         return false unless plugin_enabled?
-        post_event(deploy)
+        post_event(deploy) unless deploy.stage.no_code_deployed?
       end
 
       private

@@ -5,6 +5,10 @@ SingleCov.covered!
 
 describe 'SamsonLedger::Client' do
   let(:deploy) { Deploy.first }
+  let(:no_code_deploy) do
+    Deploy.last.stage.update!(no_code_deployed: true)
+    Deploy.last
+  end
 
   with_env(LEDGER_BASE_URL: 'https://foo.bar', LEDGER_TOKEN: "sometoken")
 
@@ -58,6 +62,11 @@ describe 'SamsonLedger::Client' do
     it "posts an event with a valid client" do
       SamsonLedger::Client.post_deployment(deploy)
       assert_requested(@event_sent)
+    end
+
+    it "does not post an event when no_code_deployed" do
+      SamsonLedger::Client.post_deployment(no_code_deploy)
+      assert_not_requested(@event_sent)
     end
 
     describe "started_at" do
