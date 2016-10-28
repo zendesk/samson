@@ -60,4 +60,17 @@ module CurrentUser
   def authorize_project_deployer!
     unauthorized! unless current_user.deployer_for?(current_project)
   end
+
+  def authorize_resource!
+    case controller_name
+    when 'locks'
+      if @project
+        authorize_project_deployer!
+      else
+        authorize_admin!
+      end
+    else
+      raise "Unsupported controller"
+    end
+  end
 end

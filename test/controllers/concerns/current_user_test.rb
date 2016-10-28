@@ -45,6 +45,12 @@ class CurrentUserConcernTest < ActionController::TestCase
     def unauthorized_action
       unauthorized!
     end
+
+    def resource_action
+      @project = Project.find(params[:project_id]) if params[:project_id]
+      authorize_resource!
+      head :ok
+    end
   end
 
   tests CurrentUserTestController
@@ -190,6 +196,48 @@ class CurrentUserConcernTest < ActionController::TestCase
     it "fails the request so during a test we can see failures instead of assert_response lying" do
       get :whodunnit, params: {test_route: true}
       assert_response :unauthorized
+    end
+  end
+
+  describe "#resource_action" do
+    def perform_get(add = {})
+      get :resource_action, params: add.merge(test_route: true)
+    end
+
+    before do
+      @controller.stubs(:controller_name).returns('locks')
+      login_as :admin
+    end
+
+    it "renders when authorized" do
+      perform_get
+      assert_response :success
+    end
+
+    it "fails for unknown controller" do
+      @controller.unstub(:controller_name)
+      e = assert_raises(RuntimeError) { perform_get }
+      e.message.must_equal "Unsupported controller"
+    end
+
+    describe "when user is not authorized to do everything" do
+      before { login_as :project_deployer }
+
+      it "does not render when unauthorized" do
+        perform_get
+        assert_response :unauthorized
+      end
+
+      it "renders when authorized via the project" do
+        perform_get(project_id: projects(:test).id)
+        assert_response :success
+      end
+
+      it "fails when not authorized via the project" do
+        users(:project_deployer).user_project_roles.delete_all
+        perform_get(project_id: projects(:test).id)
+        assert_response :unauthorized
+      end
     end
   end
 end

@@ -182,7 +182,7 @@ class ActionController::TestCase
   class << self
     def unauthorized(method, action, params = {})
       it "is unauthorized when doing a #{method} to #{action} with #{params}" do
-        public_send method, action, params: params
+        public_send method, action, params: params, format: (@request_format || :html)
         assert_response :unauthorized
       end
     end
@@ -191,11 +191,18 @@ class ActionController::TestCase
       define_method "as_a_#{user}" do |&block|
         describe "as a #{user}" do
           let(:user) { users(user) }
-          before { request.env['warden'].set_user(self.user) } # rubocop:disable Style/RedundantSelf
+          before { login_as(self.user) } # rubocop:disable Style/RedundantSelf
           instance_eval(&block)
         end
       end
     end
+  end
+
+  # overrides warden/test/helpers.rb which does not work in controller tests
+  # TODO: file a warden bug or figure out what we are doing wrong
+  def login_as(user)
+    user = users(user) if user.is_a?(Symbol)
+    request.env['warden'].set_user(user)
   end
 
   def json!

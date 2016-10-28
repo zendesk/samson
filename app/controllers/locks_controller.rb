@@ -2,15 +2,11 @@
 class LocksController < ApplicationController
   include CurrentProject
 
-  before_action :authorize_admin!, unless: :for_stage_lock?
-
   before_action :require_project, if: :for_stage_lock?
-  before_action :authorize_project_deployer!, if: :for_stage_lock?
+  before_action :authorize_resource!
 
   def create
-    attributes = params.require(:lock).
-      permit(:description, :resource_id, :resource_type, :warning, :delete_in).
-      merge(user: current_user)
+    attributes = params.require(:lock).permit(Lock::ASSIGNABLE_KEYS).merge(user: current_user)
     Lock.create!(attributes)
     redirect_back notice: 'Locked', fallback_location: root_path
   end

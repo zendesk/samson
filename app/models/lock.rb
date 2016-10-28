@@ -1,9 +1,10 @@
 # frozen_string_literal: true
 class Lock < ActiveRecord::Base
   include ActionView::Helpers::DateHelper
-  RESOURCE_TYPES = ['Stage', 'Environment', '', nil].freeze # sorted by specificity
+  RESOURCE_TYPES = ['Stage', 'Environment', nil].freeze # sorted by specificity
   CACHE_KEY = 'lock-cache-key'
   ALL_CACHE_KEY = 'lock-all'
+  ASSIGNABLE_KEYS = [:description, :resource_id, :resource_type, :warning, :delete_in].freeze
 
   attr_reader :delete_in
 
@@ -12,6 +13,8 @@ class Lock < ActiveRecord::Base
   belongs_to :resource, polymorphic: true
   belongs_to :user
   belongs_to :environment
+
+  before_validation :nil_out_blank_resource_type
 
   validates :user_id, presence: true
   validates :description, presence: true, if: :warning?
@@ -108,6 +111,10 @@ class Lock < ActiveRecord::Base
   def expire_all_cached
     Rails.cache.delete CACHE_KEY
     Rails.cache.delete ALL_CACHE_KEY
+  end
+
+  def nil_out_blank_resource_type
+    self.resource_type = resource_type.presence
   end
 
   # our index does not work on nils, so we have to verify by hand

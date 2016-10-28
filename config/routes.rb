@@ -25,6 +25,8 @@ Samson::Application.routes.draw do
       get :deploys, to: 'deploys#index'
       post :clone, to: 'stages#clone'
     end
+
+    resources :locks, only: [:index, :create, :destroy]
   end
 
   resources :projects, except: [:destroy] do
