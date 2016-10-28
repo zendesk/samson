@@ -19,9 +19,25 @@ describe 'Unauthorized' do
         get path, {}, headers
       end
 
+      it 'redirects to the login path' do
+        last_response.status.must_equal 302
+
+        # Really just '/', but Rack insists on using the full SERVER_NAME
+        last_response.headers['Location'].must_equal('http://example.org/login')
+      end
+
       it 'sets the flash' do
         flash = last_request.env['action_dispatch.request.flash_hash']
-        flash[:authorization_error].must_equal('You are not authorized to view this page.')
+        flash[:authorization_error].must_equal('You are not logged in.')
+      end
+
+      describe 'when user is not authorized' do
+        let(:headers) { {'warden' => stub(user: 111)} }
+
+        it 'uses a custom flash message' do
+          flash = last_request.env['action_dispatch.request.flash_hash']
+          flash[:authorization_error].must_equal('You are not authorized to view this page.')
+        end
       end
 
       describe "with api" do
@@ -33,15 +49,6 @@ describe 'Unauthorized' do
 
         it 'responds with json' do
           last_response.headers['Content-Type'].must_match(%r{\Aapplication/json})
-        end
-      end
-
-      describe 'without a referer' do
-        it 'redirects to the login path' do
-          last_response.status.must_equal 302
-
-          # Really just '/', but Rack insists on using the full SERVER_NAME
-          last_response.headers['Location'].must_equal('http://example.org/login')
         end
       end
 
