@@ -82,7 +82,7 @@ class User < ActiveRecord::Base
   end
 
   def name_and_email
-    "#{name} (#{email})"
+    name == email ? name : "#{name} (#{email})"
   end
 
   def gravatar_url

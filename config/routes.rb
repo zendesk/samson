@@ -121,7 +121,9 @@ Samson::Application.routes.draw do
   end
 
   namespace :admin do
-    resources :users, only: [:index, :show, :update, :destroy]
+    resources :users, only: [:index, :show, :update, :destroy] do
+      resource :user_merges, only: [:new, :create]
+    end
     resources :projects, only: [:index, :destroy]
     resources :commands, except: [:edit]
     resources :secrets, except: [:edit]
