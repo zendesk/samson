@@ -8,7 +8,7 @@ describe Samson::GitInfo do
     before { Samson::GitInfo.instance_variable_set(:@version, nil) }
 
     it "works" do
-      Samson::GitInfo.version.to_s.must_match /^\d(\.\d){2,3}$/
+      Samson::GitInfo.version.to_s.must_match /^\d+(\.\d+){2,3}$/
     end
 
     it "fails when command fails" do
