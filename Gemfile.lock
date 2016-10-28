@@ -184,9 +184,7 @@ GEM
       unf (>= 0.0.5, < 1.0.0)
     doorkeeper (4.2.0)
       railties (>= 4.2)
-    dotenv (0.11.1)
-      dotenv-deployment (~> 0.0.2)
-    dotenv-deployment (0.0.2)
+    dotenv (2.1.1)
     encryptor (3.0.0)
     erubis (2.7.0)
     excon (0.53.0)
@@ -249,13 +247,13 @@ GEM
       nokogiri (>= 1.5.9)
     mail (2.6.4)
       mime-types (>= 1.16, < 4)
-    maxitest (2.1.0)
+    maxitest (2.2.0)
       minitest (>= 5.0.0, < 5.10.0)
     metaclass (0.0.4)
     method_source (0.8.2)
     mime-types (2.99.3)
     mini_portile2 (2.1.0)
-    minitest (5.9.0)
+    minitest (5.9.1)
     minitest-rails (3.0.0)
       minitest (~> 5.8)
       railties (~> 5.0)
@@ -476,8 +474,6 @@ GEM
     vault (0.7.1)
     warden (1.2.6)
       rack (>= 1.0)
-    warden-doorkeeper (0.3.0)
-      warden (~> 1.2)
     webmock (2.1.0)
       addressable (>= 2.3.6)
       crack (>= 0.3.2)
@@ -604,7 +600,6 @@ DEPENDENCIES
   uglifier
   vault
   warden
-  warden-doorkeeper
   webmock
 
 RUBY VERSION

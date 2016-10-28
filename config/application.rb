@@ -25,7 +25,12 @@ if ['staging', 'production'].include?(Rails.env)
   require 'airbrake/railtie'
   require 'newrelic_rpm'
 else
-  require 'new_relic/agent/method_tracer' # needed even in dev/test mode
+  # avoids circular dependencies warning
+  # https://discuss.newrelic.com/t/circular-require-in-ruby-agent-lib-new-relic-agent-method-tracer-rb/42737
+  require 'new_relic/control'
+
+  # needed even in dev/test mode
+  require 'new_relic/agent/method_tracer'
 end
 # END Railties
 ###

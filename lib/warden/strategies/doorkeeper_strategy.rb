@@ -1,5 +1,4 @@
 # frozen_string_literal: true
-require "warden/strategies/doorkeeper"
 
 # Strategy that allows login via OAuth baerer token
 class Warden::Strategies::Doorkeeper < ::Warden::Strategies::Base
