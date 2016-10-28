@@ -9,7 +9,7 @@ class Command < ActiveRecord::Base
 
   validates :command, presence: true
 
-  after_save :trigger_stage_change
+  after_save :trigger_stage_change, if: :command_changed?
 
   def self.global
     where(project_id: nil)

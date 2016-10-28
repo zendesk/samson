@@ -505,6 +505,12 @@ describe Stage do
       YAML.load(stage.versions.first.object)['script'].must_equal stage.script
     end
 
+    it "does not record when unchanged" do
+      stage.record_script_change
+      e = assert_raises(RuntimeError) { stage.record_script_change }
+      e.message.must_equal "Trying to record the same state twice"
+    end
+
     it "can restore ... but loses script" do
       old_name = stage.name
       stage.record_script_change
@@ -518,6 +524,11 @@ describe Stage do
 
     it "does not trigger multiple times when destroying" do
       stage.destroy
+      stage.versions.size.must_equal 1
+    end
+
+    it "does not trigger multiple times when creating" do
+      stage = Stage.create!(name: 'Foobar', project: projects(:test), command_ids: Command.pluck(:id))
       stage.versions.size.must_equal 1
     end
   end

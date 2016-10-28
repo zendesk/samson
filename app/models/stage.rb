@@ -151,7 +151,15 @@ class Stage < ActiveRecord::Base
     ].compact.max
   end
 
+  # in theory this should not get called multiple times for the same state,
+  # but adding a bit of extra sanity checking to make sure nothing slips in
   def record_script_change
+    state_to_record = object_attrs_for_paper_trail(attributes_before_change)
+    if @last_recorded_state == state_to_record
+      raise "Trying to record the same state twice"
+    end
+
+    @last_recorded_state = state_to_record
     record_update true
   end
 
