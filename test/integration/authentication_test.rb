@@ -5,6 +5,10 @@ SingleCov.not_covered!
 
 # needs Integration at the end for minitest-spec-rails
 describe 'Authentication Integration' do
+  def stub_session_auth
+    Warden::SessionSerializer.any_instance.stubs(:session).returns("warden.user.default.key" => user.id)
+  end
+
   before do
     # UI wants to show github status
     stub_request(:get, "#{Rails.application.config.samson.github.status_url}/api/status.json").to_timeout
@@ -19,9 +23,7 @@ describe 'Authentication Integration' do
   end
 
   describe 'session request' do
-    before do
-      Warden::SessionSerializer.any_instance.stubs(:session).returns("warden.user.default.key" => user.id)
-    end
+    before { stub_session_auth }
 
     it "uses the user stored in the sesion" do
       get '/'
@@ -44,6 +46,43 @@ describe 'Authentication Integration' do
       user.update_column :last_login_at, nil
       get '/'
       assert_response :redirect
+    end
+  end
+
+  describe 'last_seen_at' do
+    def perform_get(authorization)
+      get "/", headers: {HTTP_AUTHORIZATION: authorization}
+    end
+
+    let(:valid_header) { "Basic #{Base64.encode64(user.email + ':' + user.token).strip}" }
+
+    it "updates last_seen_at when it was unset" do
+      user.update_column(:last_seen_at, nil)
+      perform_get valid_header
+      user.reload.last_seen_at.must_be :>, 3.seconds.ago
+    end
+
+    it "updates last_seen_at when it was old" do
+      user.update_column(:last_seen_at, 1.day.ago)
+      perform_get valid_header
+      user.reload.last_seen_at.must_be :>, 3.seconds.ago
+    end
+
+    it "does not update last_seen_at when it was current, to avoid db overhead" do
+      perform_get valid_header
+      user.reload.last_seen_at.must_be :<, 10.seconds.ago
+    end
+
+    it "does not update last_seen_at when login failed" do
+      perform_get valid_header + Base64.encode64('foo')
+      user.reload.last_seen_at.must_be :<, 10.seconds.ago
+    end
+
+    it "updates last_seen_at when using an existing session" do
+      user.update_column(:last_seen_at, nil)
+      stub_session_auth
+      perform_get ''
+      user.reload.last_seen_at.must_be :>, 3.seconds.ago
     end
   end
 

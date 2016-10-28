@@ -4,9 +4,15 @@ require 'warden'
 
 Warden::Manager.serialize_into_session(&:id)
 
+# Login users unless their login is too old
 Warden::Manager.serialize_from_session do |id|
   timeout = Integer(ENV['SESSION_EXPIRATION'] || 1.month).seconds.ago
   User.where('last_login_at > ?', timeout).find_by_id(id)
+end
+
+# Keep track of who currently uses samson
+Warden::Manager.after_set_user do |user|
+  user.update_column(:last_seen_at, Time.now) unless user.last_seen_at&.> 10.minutes.ago
 end
 
 require 'warden/strategies/basic_strategy'
