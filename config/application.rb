@@ -18,7 +18,7 @@ Bundler.require(:assets) if Rails.env.development? || ENV["PRECOMPILE"]
 # Railties need to be loaded before the application is defined
 if ['development', 'staging'].include?(Rails.env)
   require 'better_errors'
-  require 'rack-mini-profiler'
+  require 'rack-mini-profiler' # side effect: removes expires headers
 end
 
 if ['staging', 'production'].include?(Rails.env)
