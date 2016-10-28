@@ -45,12 +45,6 @@ describe Integrations::TravisController do
       @request.headers["Authorization"] = authorization if authorization
     end
 
-    it "fails with unknown project" do
-      assert_raises ActiveRecord::RecordNotFound do
-        create token: 'sdasda'
-      end
-    end
-
     describe "with no authorization" do
       let(:authorization) { nil }
 

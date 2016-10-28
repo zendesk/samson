@@ -2,6 +2,7 @@
 class Integrations::BaseController < ApplicationController
   skip_around_action :login_user
   skip_before_action :verify_authenticity_token
+  before_action :validate_token
   before_action :validate_request
   after_action :record_webhook
 
@@ -22,12 +23,13 @@ class Integrations::BaseController < ApplicationController
     end
 
     stages = project.webhook_stages_for(branch, service_type, service_name)
+    failed = deploy_to_stages(stages)
 
-    if deploy_to_stages(stages)
-      record_log :info, "Deploying to #{stages.size} stages"
-      head(:ok)
+    if failed
+      head :unprocessable_entity, message: "Failed to start deploy to #{failed.name}"
     else
-      head(:unprocessable_entity, message: 'Failed to start all deploys')
+      record_log :info, "Deploying to #{stages.size} stages"
+      head :ok
     end
   end
 
@@ -58,18 +60,16 @@ class Integrations::BaseController < ApplicationController
     end
   end
 
+  # returns stage that failed to deploy or nil
   def deploy_to_stages(stages)
     deploy_service = DeployService.new(user)
-
-    return unless stages.all? do |stage|
-      deploy_service.deploy!(stage, reference: commit).persisted?
+    stages.detect do |stage|
+      deploy_service.deploy!(stage, reference: commit).new_record?
     end
-
-    stages.count
   end
 
   def project
-    @project ||= Project.find_by_token!(params[:token])
+    @project ||= Project.find_by_token(params[:token])
   end
 
   def contains_skip_token?(message)
@@ -92,6 +92,10 @@ class Integrations::BaseController < ApplicationController
   end
 
   private
+
+  def validate_token
+    project || render(plain: "Invalid token", status: :unauthorized)
+  end
 
   def service_type
     'ci'
