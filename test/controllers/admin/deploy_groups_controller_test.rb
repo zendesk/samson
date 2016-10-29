@@ -381,13 +381,6 @@ describe Admin::DeployGroupsController do
 
             refute template_stage.deploy_groups.include?(deploy_group)
           end
-
-          # non-cloned stages are naturally ignored as part of the merge process
-          # no alert is necessary
-          xit "sets warning in alert" do
-            post :merge_all_stages, params: {id: deploy_group}
-            assert flash.alert
-          end
         end
 
         describe "stage is a template" do
