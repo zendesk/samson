@@ -15,4 +15,13 @@ class Api::LocksController < Api::BaseController
     Lock.find(params.require(:id)).soft_delete!
     head :ok
   end
+
+  def destroy_via_resource
+    lock = Lock.where(
+      resource_id: params.fetch(:resource_id).presence,
+      resource_type: params.fetch(:resource_type).presence
+    ).first!
+    lock.soft_delete!
+    head :ok
+  end
 end

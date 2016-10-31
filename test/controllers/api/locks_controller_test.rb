@@ -45,5 +45,43 @@ describe Api::LocksController do
         assert_response :success
       end
     end
+
+    describe "#destroy_via_resource" do
+      before { Lock.create!(user: users(:admin)) }
+
+      it "unlocks global" do
+        assert_difference "Lock.count", -1 do
+          delete :destroy_via_resource,
+            params: {resource_id: nil, resource_type: nil},
+            format: :json
+        end
+        assert_response :success
+      end
+
+      it "unlocks resource" do
+        stage = stages(:test_staging)
+        Lock.create!(user: users(:admin), resource: stage)
+        assert_difference "Lock.count", -1 do
+          delete :destroy_via_resource,
+            params: {resource_id: stage.id, resource_type: 'Stage'},
+            format: :json
+        end
+        assert_response :success
+      end
+
+      it "fails with unfound lock" do
+        assert_raises ActiveRecord::RecordNotFound do
+          delete :destroy_via_resource,
+            params: {resource_id: 333223, resource_type: 'Stage'},
+            format: :json
+        end
+      end
+
+      it "fails without parameters" do
+        assert_raises ActionController::ParameterMissing do
+          delete :destroy_via_resource, format: :json
+        end
+      end
+    end
   end
 end
