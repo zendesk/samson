@@ -61,12 +61,7 @@ class TerminalExecutor
   def execute_command!(command)
     options = {in: '/dev/null', unsetenv_others: true}
     output, input, @pid = PTY.spawn(whitelisted_env, command, options)
-
-    @pgid = begin
-      Process.getpgid(@pid)
-    rescue Errno::ESRCH
-      nil
-    end
+    @pgid = pgid_from_pid(@pid)
 
     begin
       output.each(256) { |line| @output.write line }
@@ -77,6 +72,21 @@ class TerminalExecutor
     _pid, status = Process.wait2(@pid)
     input.close
     status.success?
+  end
+
+  # We need the group pid to cleanly shut down all children
+  # if we somehow fail to get that, kill everything now before more bad stuff happens
+  def pgid_from_pid(pid)
+    Process.getpgid(pid)
+  rescue Errno::ESRCH
+    @output.write "Failed to get pgid, stopping #{pid}."
+    begin
+      Process.kill(:KILL, pid)
+      @output.write "Stopped."
+    rescue Errno::ESRCH
+      @output.write "Already stopped."
+    end
+    nil
   end
 
   def whitelisted_env
