@@ -377,4 +377,37 @@ describe ApplicationHelper do
       content_for(:page_title).must_equal "x"
     end
   end
+
+  describe "#redirect_to_field" do
+    let(:root_url) { 'http://foobar.com/' }
+
+    before { stubs(request: stub(referrer: "#{root_url}referrer"), params: {redirect_to: '/params'}) }
+
+    it "stores current parameter" do
+      redirect_to_field.must_include "value=\"/params\""
+    end
+
+    it "does not store empty parameter" do
+      params[:redirect_to] = ""
+      redirect_to_field.must_include "value=\"/referrer\""
+    end
+
+    describe "without param" do
+      before { params.delete(:redirect_to) }
+
+      it "uses referrer when param is missing" do
+        redirect_to_field.must_include "value=\"/referrer\""
+      end
+
+      it "does not use referrer from other page since redirect_back_or would not work" do
+        assert request.stubs(:referrer, request.referrer.sub(root_url, 'http://hacky.com/'))
+        redirect_to_field.must_equal nil
+      end
+
+      it "is empty when nothing is known" do
+        request.stubs(:referrer).returns(nil)
+        redirect_to_field.must_equal nil
+      end
+    end
+  end
 end

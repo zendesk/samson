@@ -14,6 +14,17 @@ describe AccessRequestMailer do
     let(:manager_email) { 'manager@example.com' }
     let(:reason) { 'Dummy reason.' }
     let(:role) { Role::DEPLOYER }
+    let(:mail_options) do
+      {
+        host: hostname,
+        user: user,
+        manager_email: manager_email,
+        reason: reason,
+        project_ids: Project.all.pluck(:id),
+        role_id: role.id
+      }
+    end
+
     subject { ActionMailer::Base.deliveries.last }
 
     before do
@@ -26,9 +37,7 @@ describe AccessRequestMailer do
       before do
         Project.any_instance.stubs(:valid_repository_url).returns(true)
         Project.create!(name: 'Second project', repository_url: 'git://foo.com:hello/world.git')
-        AccessRequestMailer.access_request_email(
-          hostname, user, manager_email, reason, Project.all.pluck(:id), role.id
-        ).deliver_now
+        AccessRequestMailer.access_request_email(mail_options).deliver_now
       end
 
       it 'has correct sender and recipients' do
@@ -76,9 +85,8 @@ describe AccessRequestMailer do
 
     describe 'single project' do
       before do
-        AccessRequestMailer.access_request_email(
-          hostname, user, manager_email, reason, [projects(:test).id], role.id
-        ).deliver_now
+        mail_options[:project_ids] = [projects(:test).id]
+        AccessRequestMailer.access_request_email(mail_options).deliver_now
       end
 
       it 'includes target project name in body' do
