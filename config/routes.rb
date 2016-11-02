@@ -102,6 +102,8 @@ Samson::Application.routes.draw do
 
   resource :profile, only: [:show, :update]
 
+  resources :access_tokens, only: [:index, :new, :create, :destroy]
+
   resources :versions, only: [:index]
 
   get '/auth/github/callback', to: 'sessions#github'
