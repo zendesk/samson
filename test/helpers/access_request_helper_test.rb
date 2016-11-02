@@ -7,8 +7,7 @@ describe AccessRequestHelper do
   include AccessRequestTestSupport
 
   describe '#display_access_request_link?' do
-    before { enable_access_request }
-    after { restore_access_request_settings }
+    around { |t| enable_access_request &t }
 
     describe 'feature enabled' do
       describe 'not authed' do

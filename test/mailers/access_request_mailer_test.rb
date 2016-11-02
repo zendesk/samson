@@ -16,11 +16,7 @@ describe AccessRequestMailer do
     let(:role) { Role::DEPLOYER }
     subject { ActionMailer::Base.deliveries.last }
 
-    before do
-      enable_access_request(address_list, prefix)
-    end
-
-    after { restore_access_request_settings }
+    around { |t| enable_access_request address_list, email_prefix: prefix, &t }
 
     describe 'multiple projects' do
       before do

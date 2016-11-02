@@ -144,7 +144,8 @@ class ActiveSupport::TestCase
     end
     yield
   ensure
-    old.each { |k, v| ENV[k] = v }
+    # the `if old` is here to not blow up with nil.each when setting the env failed
+    old.each { |k, v| ENV[k] = v } if old
   end
 
   def self.with_env(env)
