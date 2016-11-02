@@ -38,7 +38,7 @@ class AccessTokensController < ApplicationController
   def ensure_personal_access_app
     Doorkeeper::Application.where(name: 'Personal Access Token').first_or_create!(
       scopes: '', # by default nothing is allowed ... scopes will come from access tokens
-      redirect_uri: 'http://example.com' # this app will never redirect
+      redirect_uri: 'https://example.com' # this app will never redirect
     )
   end
 end
