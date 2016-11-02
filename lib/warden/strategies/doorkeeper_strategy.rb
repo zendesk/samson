@@ -37,7 +37,7 @@ class Warden::Strategies::Doorkeeper < ::Warden::Strategies::Base
   end
 
   def halt_json(message)
-    custom! [401, {'Content-Type': 'application/json'}, [message]]
+    custom! [401, {'Content-Type' => 'application/json'}, [message]]
   end
 end
 
