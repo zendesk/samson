@@ -62,4 +62,25 @@ describe 'Warden::Strategies::DoorkeeperStrategy Integration' do
     assert_sql_queries(0) { perform_get valid_header }
     assert_response :bad_request
   end
+
+  describe "last_used_at" do
+    it "tracks when previously unset" do
+      perform_get valid_header
+      token.reload.last_used_at.must_be :>, 2.seconds.ago
+    end
+
+    it "does not update when recent to avoid db overhead" do
+      old = 10.seconds.ago
+      token.update_column(:last_used_at, old)
+      perform_get valid_header
+      token.reload.last_used_at.to_s.must_equal old.to_s
+    end
+
+    it "updates when old" do
+      old = 1.hour.ago
+      token.update_column(:last_used_at, old)
+      perform_get valid_header
+      token.reload.last_used_at.must_be :>, 2.seconds.ago
+    end
+  end
 end

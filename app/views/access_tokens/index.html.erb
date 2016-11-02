@@ -1,0 +1,33 @@
+<%= page_title 'OAuth Access Tokens' %>
+
+<section class="tabs">
+  <p class="pull-right">
+    <%= link_to "Create Token", new_access_token_path, class: "btn btn-default" %>
+  </p>
+
+  <table class="table">
+    <thead>
+    <tr>
+      <th>Application</th>
+      <th>Description</th>
+      <th>Scope</th>
+      <th>Last used</th>
+      <th>Created</th>
+      <th></th>
+    </tr>
+    </thead>
+
+    <tbody>
+    <% @access_tokens.each do |token| %>
+    <tr>
+      <td><%= link_to_if current_user.super_admin?, token.application.name, oauth_application_path(token.application) %></td>
+      <td><%= token.description %></td>
+      <td><%= token.scopes.to_a.join(", ") %></td>
+      <td><%= token.last_used_at ? relative_time(token.last_used_at) : "Never" %></td>
+      <td><%= relative_time token.created_at %></td>
+      <td><%= link_to_delete(access_token_path(token)) %></td>
+    </tr>
+    <% end %>
+    </tbody>
+  </table>
+</section>

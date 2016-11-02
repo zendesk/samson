@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20161026004331) do
+ActiveRecord::Schema.define(version: 20161102201243) do
 
   create_table "builds", force: :cascade do |t|
     t.integer  "project_id",                                       null: false
@@ -305,6 +305,8 @@ ActiveRecord::Schema.define(version: 20161026004331) do
     t.datetime "created_at",                                      null: false
     t.string   "scopes",                 limit: 255
     t.string   "previous_refresh_token", limit: 255, default: "", null: false
+    t.string   "description"
+    t.datetime "last_used_at"
   end
 
   add_index "oauth_access_tokens", ["application_id"], name: "fk_rails_732cb83ab7", using: :btree
