@@ -26,14 +26,14 @@ class ApplicationController < ActionController::Base
   end
 
   def redirect_back_or(fallback)
-    if param_location = params[:redirect_to].to_s.presence
+    if param_location = params[:redirect_to].presence
       if param_location.is_a?(String) && param_location.start_with?('/')
         redirect_to URI("http://nope.nope#{param_location}").request_uri # using URI to silence Brakeman
+        return
       else
-        render status: :bad_request, plain: 'Invalid redirect_to parameter'
+        Rails.logger.error("Invalid redirect_to parameter #{param_location}")
       end
-    else
-      redirect_back fallback_location: fallback
     end
+    redirect_back fallback_location: fallback
   end
 end

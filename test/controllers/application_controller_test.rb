@@ -53,14 +53,16 @@ describe ApplicationController do
         end
       end
 
-      it "does not redirect to hacky url in redirect_to" do
+      it "does not redirect to hacky url in redirect_to which might have come in via referrer" do
+        Rails.logger.expects(:error)
         get :test_redirect_back_or, params: {test_route: true, redirect_to: 'http://hacks.com'}
-        assert_response :bad_request
+        assert_redirected_to '/fallback'
       end
 
       it "does not redirect to hacky hash in redirect_to" do
+        Rails.logger.expects(:error)
         get :test_redirect_back_or, params: {test_route: true, redirect_to: {host: 'hacks.com', path: 'bar'}}
-        assert_response :bad_request
+        assert_redirected_to '/fallback'
       end
     end
   end

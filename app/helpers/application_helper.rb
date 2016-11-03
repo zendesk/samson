@@ -195,4 +195,11 @@ module ApplicationHelper
     content_for :page_title, content
     content_tag :h1, content
   end
+
+  # keep values short, urls would be ignored ... see application_controller.rb#redirect_back_or
+  # also failing fast here for easy debugging instead of sending invalid urls around
+  def redirect_to_field
+    return unless location = params[:redirect_to].presence || request.referrer.to_s.dup.sub!(root_url, '/')
+    hidden_field_tag :redirect_to, location
+  end
 end
