@@ -31,7 +31,13 @@ class DeployService
       send_after_notifications(deploy)
     end
 
-    JobExecution.start_job(job_execution, key: stage.id)
+    if stage.run_in_parallel
+      # immediately execute job
+      job_execution.start!
+    else
+      # queue job
+      JobExecution.start_job(job_execution, key: stage.id)
+    end
 
     send_sse_deploy_update('start', deploy)
   end
