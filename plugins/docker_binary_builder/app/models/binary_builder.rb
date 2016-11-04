@@ -147,14 +147,11 @@ class BinaryBuilder
   end
 
   def create_build_image
-    @output_stream.puts 'Now building the build container...'
     build_options = {
       'dockerfile' => DOCKER_BUILD_FILE,
       't' => image_name
     }
-    Docker::Image.build_from_dir(@dir, build_options) do |chunk|
-      @output_stream.write_docker_chunk(chunk)
-    end
+    DockerBuilderService.build_docker_image(@dir, build_options, @output_stream)
   end
 
   def docker_api_version

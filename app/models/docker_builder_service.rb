@@ -8,6 +8,28 @@ class DockerBuilderService
 
   attr_reader :build, :execution
 
+  def self.build_docker_image(dir, docker_options, output)
+    output.puts("### Running Docker build")
+
+    docker_image =
+      Docker::Image.build_from_dir(dir, docker_options, Docker.connection, registry_credentials) do |chunk|
+        output.write_docker_chunk(chunk)
+      end
+    output.puts('### Docker build complete')
+
+    docker_image
+  end
+
+  def self.registry_credentials
+    return nil unless ENV['DOCKER_REGISTRY'].present?
+    {
+      username: ENV['DOCKER_REGISTRY_USER'],
+      password: ENV['DOCKER_REGISTRY_PASS'],
+      email: ENV['DOCKER_REGISTRY_EMAIL'],
+      serveraddress: ENV['DOCKER_REGISTRY']
+    }
+  end
+
   def initialize(build)
     @build = build
   end
@@ -68,13 +90,7 @@ class DockerBuilderService
 
     File.write("#{tmp_dir}/REVISION", build.git_sha)
 
-    output.puts("### Running Docker build")
-
-    build.docker_image =
-      Docker::Image.build_from_dir(tmp_dir, {}, Docker.connection, registry_credentials) do |chunk|
-        output.write_docker_chunk(chunk)
-      end
-    output.puts('### Docker build complete')
+    build.docker_image = DockerBuilderService.build_docker_image(tmp_dir, {}, output)
   rescue Docker::Error::UnexpectedResponseError
     # If the docker library isn't able to find an image id, it returns the
     # entire output of the "docker build" command, which we've already captured
@@ -127,16 +143,6 @@ class DockerBuilderService
 
   def project
     @build.project
-  end
-
-  def registry_credentials
-    return nil unless ENV['DOCKER_REGISTRY'].present?
-    {
-      username: ENV['DOCKER_REGISTRY_USER'],
-      password: ENV['DOCKER_REGISTRY_PASS'],
-      email: ENV['DOCKER_REGISTRY_EMAIL'],
-      serveraddress: ENV['DOCKER_REGISTRY']
-    }
   end
 
   def docker_image_ref(image_name, build)
