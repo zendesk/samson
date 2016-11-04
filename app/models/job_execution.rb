@@ -19,6 +19,7 @@ class JobExecution
   attr_reader :output, :reference, :job, :viewers, :executor
 
   delegate :id, to: :job
+  delegate :pid, :pgid, to: :executor
 
   def initialize(reference, job, env = {}, &block)
     @output = OutputBuffer.new
@@ -49,10 +50,6 @@ class JobExecution
 
   def wait!
     @thread.join
-  end
-
-  def pid
-    @executor.pid
   end
 
   # Used on queued jobs when shutting down
