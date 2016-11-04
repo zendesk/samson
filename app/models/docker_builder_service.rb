@@ -66,7 +66,7 @@ class DockerBuilderService
 
     success, build_log = k8s_job.execute!(build, project,
       tag: docker_ref, push: push,
-      registry: registry_credentials, tag_as_latest: tag_as_latest)
+      registry: DockerBuilderService.registry_credentials, tag_as_latest: tag_as_latest)
 
     build.docker_ref = docker_ref
     build.docker_repo_digest = nil
@@ -110,7 +110,7 @@ class DockerBuilderService
 
     build.docker_image.tag(repo: project.docker_repo, tag: build.docker_ref, force: true)
 
-    build.docker_image.push(registry_credentials) do |chunk|
+    build.docker_image.push(DockerBuilderService.registry_credentials) do |chunk|
       parsed_chunk = output.write_docker_chunk(chunk)
       if (status = parsed_chunk['status']) && sha = status[DIGEST_SHA_REGEX, 1]
         build.docker_repo_digest = "#{project.docker_repo}@#{sha}"
@@ -152,7 +152,7 @@ class DockerBuilderService
   def push_latest
     output.puts "### Pushing the 'latest' tag for this image"
     build.docker_image.tag(repo: project.docker_repo, tag: 'latest', force: true)
-    build.docker_image.push(registry_credentials, tag: 'latest', force: true) do |chunk|
+    build.docker_image.push(DockerBuilderService.registry_credentials, tag: 'latest', force: true) do |chunk|
       output.write_docker_chunk(chunk)
     end
   end
