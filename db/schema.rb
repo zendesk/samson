@@ -492,6 +492,7 @@ ActiveRecord::Schema.define(version: 20161102201243) do
     t.boolean  "access_request_pending", default: false,      null: false
     t.string   "time_format",            default: "relative", null: false
     t.datetime "last_login_at"
+    t.datetime "last_seen_at"
     t.index ["external_id", "deleted_at"], name: "index_users_on_external_id_and_deleted_at", length: {"external_id"=>191, "deleted_at"=>nil}, using: :btree
   end
 
