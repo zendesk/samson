@@ -20,7 +20,7 @@ module BuddyCheck
   end
 
   def time_limit
-    ENV.fetch("BUDDY_CHECK_TIME_LIMIT", ENV.fetch("DEPLOY_MAX_MINUTES_PENDING", 20)).to_i
+    Integer(ENV["BUDDY_CHECK_TIME_LIMIT"] || ENV["DEPLOY_MAX_MINUTES_PENDING"] || 20)
   end
 
   def stop_expired_deploys

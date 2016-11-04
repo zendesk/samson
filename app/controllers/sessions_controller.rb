@@ -93,6 +93,7 @@ class SessionsController < ApplicationController
 
     if user.persisted?
       self.current_user = user
+      user.update_column(:last_login_at, Time.now)
       flash[:notice] = "You have been logged in."
     else
       flash[:error] = "Could not log you in."
