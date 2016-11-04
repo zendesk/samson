@@ -23,7 +23,8 @@ describe BinaryBuilder do
 
     before do
       Docker::Container.stubs(:create).returns(fake_container)
-      Docker::Image.stubs(:build_from_dir).returns(fake_image)
+      Docker::Util.stubs(:create_relative_dir_tar).returns(nil)
+      Docker::Image.stubs(:build_from_tar).returns(fake_image)
       builder.stubs(:untar).returns(true)
       project.update_attributes(docker_release_branch: 'master')
       builder.stubs(:build_file_exist?).returns(true)
@@ -35,6 +36,7 @@ describe BinaryBuilder do
       builder.build
       output.string.must_equal [
         "Connecting to Docker host with Api version: 1.19 ...\n",
+        "### Creating tarfile for Docker build\n",
         "### Running Docker build\n",
         "### Docker build complete\n",
         "Now starting Build container...\n",
@@ -60,6 +62,7 @@ describe BinaryBuilder do
         output.string.must_equal [
           "Running pre build script...\n",
           "Connecting to Docker host with Api version: 1.19 ...\n",
+          "### Creating tarfile for Docker build\n",
           "### Running Docker build\n",
           "### Docker build complete\n",
           "Now starting Build container...\n",
