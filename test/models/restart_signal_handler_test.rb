@@ -45,9 +45,10 @@ describe RestartSignalHandler do
 
     it "waits for running jobs" do
       registry = JobExecution.send(:registry)
+      job_exec = stub(id: 123, pid: 444, pgid: 5555, descriptor: 'Job thingy')
 
       # we call it twice in each iteration
-      registry.expects(:active).times(3).returns [stub(id: 123)], [stub(id: 123)], []
+      registry.expects(:active).times(3).returns [job_exec], [job_exec], []
 
       RestartSignalHandler.any_instance.expects(:sleep).with(5)
       handle

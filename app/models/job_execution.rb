@@ -19,6 +19,7 @@ class JobExecution
   attr_reader :output, :reference, :job, :viewers, :executor
 
   delegate :id, to: :job
+  delegate :pid, :pgid, to: :executor
 
   def initialize(reference, job, env = {}, &block)
     @output = OutputBuffer.new
@@ -51,10 +52,6 @@ class JobExecution
     @thread.join
   end
 
-  def pid
-    @executor.pid
-  end
-
   # Used on queued jobs when shutting down
   # so that the stream sockets are closed
   def close
@@ -78,6 +75,10 @@ class JobExecution
 
   def on_complete(&block)
     @subscribers << JobExecutionSubscriber.new(job, block)
+  end
+
+  def descriptor
+    "#{job.project.name} - #{reference}"
   end
 
   private

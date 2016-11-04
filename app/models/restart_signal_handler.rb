@@ -25,15 +25,36 @@ class RestartSignalHandler
     JobExecution.enabled = false
 
     until JobExecution.active.empty? && MultiLock.locks.empty?
-      puts "Waiting for jobs: #{JobExecution.active.map(&:id)}"
+      loginfo = {
+        jobs: JobExecution.active.map do |job_exec|
+          {
+            job_id: job_exec.id,
+            pid: job_exec.pid,
+            pgid: job_exec.pgid,
+            descriptor: job_exec.descriptor
+          }
+        end,
+        locks: MultiLock.locks
+      }
+
+      output 'waiting for jobs to complete', loginfo
       sleep(5)
     end
 
     JobExecution.clear_registry
 
-    puts "Passing SIGUSR2 on."
+    output 'Passing SIGUSR2 on.'
 
     # Pass USR2 to the underlying server
     Process.kill('SIGUSR2', Process.pid)
+  end
+
+  def output(message, data = {})
+    output = {
+      timestamp: Time.now.to_s,
+      message: message
+    }.merge(data).to_json
+
+    Rails.logger.info(output)
   end
 end
