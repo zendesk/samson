@@ -256,7 +256,7 @@ describe DockerBuilderService do
 
         mock_docker_image.expects(:tag).with(has_entry(tag: 'my-test')).with(has_entry(tag: 'latest'))
         mock_docker_image.expects(:push).
-          with(service.send(:registry_credentials), tag: 'latest', force: true).
+          with(DockerBuilderService.registry_credentials, tag: 'latest', force: true).
           multiple_yields(*push_output)
         service.push_image('my-test', tag_as_latest: true)
       end
