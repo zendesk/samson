@@ -31,7 +31,7 @@ class RestartSignalHandler
             job_id: job_exec.id,
             pid: job_exec.pid,
             pgid: job_exec.pgid,
-            project: job_exec.job.project.name
+            descriptor: job_exec.descriptor
           }
         end,
         locks: MultiLock.locks
@@ -55,10 +55,6 @@ class RestartSignalHandler
       message: message
     }.merge(data).to_json
 
-    if Rails.logger
-      Rails.logger.info(output)
-    else
-      puts output
-    end
+    Rails.logger.info(output)
   end
 end

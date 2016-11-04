@@ -77,6 +77,10 @@ class JobExecution
     @subscribers << JobExecutionSubscriber.new(job, block)
   end
 
+  def descriptor
+    "#{job.project.name} - #{reference}"
+  end
+
   private
 
   def stage
