@@ -112,8 +112,10 @@ class DockerBuilderService
 
     build.docker_image.push(DockerBuilderService.registry_credentials) do |chunk|
       parsed_chunk = output.write_docker_chunk(chunk)
-      if (status = parsed_chunk['status']) && sha = status[DIGEST_SHA_REGEX, 1]
-        build.docker_repo_digest = "#{project.docker_repo}@#{sha}"
+      parsed_chunk.each do |output_hash|
+        if (status = output_hash['status']) && sha = status[DIGEST_SHA_REGEX, 1]
+          build.docker_repo_digest = "#{project.docker_repo}@#{sha}"
+        end
       end
     end
 
