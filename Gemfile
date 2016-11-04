@@ -21,6 +21,7 @@ group :preload do
   # Logging
   gem 'lograge'
   gem 'logstash-event'
+  gem 'splunk_logger'
 end
 
 gem 'bundler'
