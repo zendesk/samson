@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 class DoorkeeperBaseController < ActionController::Base
-  include CurrentUser
-  # We need this because it's used in the header template
+  include CurrentUser # used in the header template
   layout 'application'
+  protect_from_forgery with: :exception
 
   before_action :authorize_super_admin!
 

@@ -2,6 +2,8 @@
 
 # Controller to test OAuth flow by using a self-signed OAuth application, only available in test/dev
 class OauthTestController < ActionController::Base
+  protect_from_forgery with: :exception
+
   before_action :ensure_application
 
   def index
