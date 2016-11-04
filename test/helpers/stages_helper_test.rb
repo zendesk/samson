@@ -46,37 +46,6 @@ describe StagesHelper do
     end
   end
 
-  describe "#stage_lock_icon" do
-    let(:stage) { stages(:test_staging) }
-
-    it "renders nothing when there is no lock" do
-      resource_lock_icon(stage).must_equal nil
-    end
-
-    it "renders locks" do
-      stage.lock = Lock.new(user: users(:deployer))
-      resource_lock_icon(stage).must_include "Locked"
-    end
-
-    it "renders global locks" do
-      Lock.create!(user: users(:deployer))
-      resource_lock_icon(stage).must_include "Locked"
-    end
-
-    describe "with a warning" do
-      before { stage.lock = Lock.new(warning: true, description: "X", user: users(:deployer)) }
-
-      it "renders warnings" do
-        resource_lock_icon(stage).must_include "Warning"
-      end
-
-      it "renders lock when there is a warning and a lock" do
-        Lock.create!(user: users(:deployer))
-        resource_lock_icon(stage).must_include "Locked"
-      end
-    end
-  end
-
   describe "#stage_template_icon" do
     it "renders icon" do
       stage_template_icon.must_include "glyphicon-duplicate"

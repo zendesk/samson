@@ -41,16 +41,6 @@ module ApplicationHelper
     Rails.application.config.samson.revision.presence
   end
 
-  def global_lock
-    return @global_lock if defined?(@global_lock)
-    @global_lock = Lock.global.first
-  end
-
-  def render_lock(resource)
-    lock = (resource == :global ? global_lock : Lock.for_resource(resource).first)
-    render '/locks/lock', lock: lock if lock
-  end
-
   def sortable(column, title = nil)
     title ||= column.titleize
     direction = (column == params[:sort] && params[:direction] == "asc" ? "desc" : "asc")
@@ -111,14 +101,6 @@ module ApplicationHelper
         content_tag :li, content, class: (active ? "active" : "")
       end.join.html_safe
     end
-  end
-
-  def lock_icon
-    icon_tag "lock"
-  end
-
-  def warning_icon
-    icon_tag "warning-sign"
   end
 
   def icon_tag(type)

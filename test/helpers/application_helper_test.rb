@@ -5,6 +5,8 @@ require_relative '../test_helper'
 SingleCov.covered! uncovered: 7
 
 describe ApplicationHelper do
+  include LocksHelper
+
   describe "#render_log" do
     it "removes ascii escapes" do
       # false positive ansi codes
@@ -38,41 +40,6 @@ describe ApplicationHelper do
       result = markdown("<script>alert(1)</script>")
       result.must_equal "alert(1)\n"
       assert result.html_safe?
-    end
-  end
-
-  describe "#global_lock" do
-    it "caches nil" do
-      Lock.expects(:global).returns []
-      global_lock.must_equal nil
-      global_lock.must_equal nil
-    end
-
-    it "caches values" do
-      Lock.expects(:global).returns [1]
-      global_lock.must_equal 1
-      global_lock.must_equal 1
-    end
-  end
-
-  describe "#render_lock" do
-    let(:stage) { stages(:test_staging) }
-
-    it "can render global" do
-      Lock.create!(user: users(:admin))
-      global_lock # caches
-      assert_sql_queries 1 do # loads user to render the lock
-        render_lock(:global).must_include "ALL STAGES"
-      end
-    end
-
-    it "can render specific locks" do
-      Lock.create!(user: users(:admin), resource: stage)
-      render_lock(stage).must_include "Deployments to stage were locked"
-    end
-
-    it "does not render when there is no locks" do
-      render_lock(stage).must_equal nil
     end
   end
 

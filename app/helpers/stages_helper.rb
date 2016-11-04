@@ -16,12 +16,6 @@ module StagesHelper
     end
   end
 
-  def resource_lock_icon(resource)
-    return unless lock = Lock.for_resource(resource).first
-    text = (lock.warning? ? "#{warning_icon} Warning" : "#{lock_icon} Locked")
-    content_tag :span, text.html_safe, class: "label label-warning", title: lock.summary
-  end
-
   def stage_template_icon
     content_tag :span, '',
       class: "glyphicon glyphicon-duplicate",
