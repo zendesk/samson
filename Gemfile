@@ -121,6 +121,7 @@ group :development, :test do
   gem 'awesome_print'
   gem 'brakeman'
   gem 'rubocop'
+  gem 'flay'
 end
 
 group :test do
@@ -130,7 +131,5 @@ group :test do
   gem 'mocha'
   gem 'webmock'
   gem 'single_cov'
-  gem 'simplecov'
   gem 'query_diet'
-  gem 'codeclimate-test-reporter'
 end

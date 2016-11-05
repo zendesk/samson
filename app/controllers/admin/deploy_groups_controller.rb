@@ -90,20 +90,14 @@ class Admin::DeployGroupsController < ApplicationController
   end
 
   def merge_all_stages
-    failures = try_each_cloned_stage do |stage|
-      merge_stage(stage)
-    end
-
-    message = failures.map { |reason, stage| "#{stage.project.name} #{stage.name} #{reason}" }.join(", ")
-
-    redirect_to [:admin, deploy_group], alert: (failures.empty? ? nil : "Some stages were skipped: #{message}")
+    render_failures try_each_cloned_stage { |stage| merge_stage(stage) }
   end
 
   def delete_all_stages
-    failures = try_each_cloned_stage do |stage|
-      delete_stage(stage)
-    end
+    render_failures try_each_cloned_stage { |stage| delete_stage(stage) }
+  end
 
+  def render_failures(failures)
     message = failures.map { |reason, stage| "#{stage.project.name} #{stage.name} #{reason}" }.join(", ")
 
     redirect_to [:admin, deploy_group], alert: (failures.empty? ? nil : "Some stages were skipped: #{message}")

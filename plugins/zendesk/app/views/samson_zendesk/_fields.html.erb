@@ -1,9 +1,4 @@
 <fieldset>
   <legend>Zendesk</legend>
-  <div class="col-lg-6 checkbox col-lg-offset-2">
-    <%= form.label :comment_on_zendesk_tickets do %>
-      <%= form.check_box :comment_on_zendesk_tickets %>
-      Add comment on a Zendesk ticket after deployment
-    <% end %>
-  </div>
+  <%= form.input :comment_on_zendesk_tickets, as: :check_box, label: "Add comment on a Zendesk ticket after deployment" %>
 </fieldset>

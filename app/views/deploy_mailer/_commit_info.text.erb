@@ -1,0 +1,21 @@
+Deploy details: <%= project_deploy_url(@project, @deploy) %>
+
+Risks:
+<% if (risks = @changeset.risky_pull_requests) %>
+  <% risks.each do |pr| %>
+    #<%= pr.number %> <%= pr.title %> <%= pr.url %>
+    <%= pr.risks %>
+
+  <% end %>
+<% else %>
+  None
+<% end %>
+
+Commit Range: <%= @changeset.commit_range %>
+<%= @changeset.github_url %>
+
+<% @changeset.commits.each do |commit| %>
+  <%= commit.author_name %>    <%= commit.summary %>
+  <%= commit.url %>
+
+<% end %>

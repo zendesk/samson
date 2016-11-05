@@ -184,4 +184,11 @@ module ApplicationHelper
     return unless location = params[:redirect_to].presence || request.referrer.to_s.dup.sub!(root_url, '/')
     hidden_field_tag :redirect_to, location
   end
+
+  def delete_checkbox(form)
+    return unless form.object.persisted?
+    content_tag :div, class: "col-lg-1 checkbox" do
+      form.check_box(:_destroy) << form.label(:_destroy, "Delete")
+    end
+  end
 end
