@@ -1,5 +1,4 @@
 <% title = "Preview environment" %>
-<% content_for(:page_title, title) %>
 
 <% if @group %>
   <%= manual_breadcrumb([
@@ -11,7 +10,7 @@
   <%= breadcrumb(@project, title) %>
 <% end %>
 
-<h1><%= title %></h1>
+<%= page_title title %>
 
 <% if @groups %>
   <% @groups.each do |deploy_group_name, env| %>

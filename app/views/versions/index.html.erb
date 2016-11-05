@@ -1,6 +1,4 @@
-<% title = "Versions for #{params.require(:item_type)} #{params.require(:item_id)}" %>
-<%= content_for :page_title, title %>
-<h1><%= title %></h1>
+<%= page_title "Versions for #{params.require(:item_type)} #{params.require(:item_id)}" %>
 
 <table class="table">
   <tr>

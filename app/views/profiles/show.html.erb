@@ -1,4 +1,5 @@
-<h1>Your profile</h1>
+<%= page_title "Profile" %>
+
 <section>
   <%= form_for @user, url: profile_path, html: { :class => "form-horizontal", "ng-controller" => "ProfileCtrl" } do |form| %>
     <%= form.input :name, required: true %>

@@ -172,10 +172,10 @@ module ApplicationHelper
     content_tag :i, '', class: "glyphicon glyphicon-info-sign", title: text
   end
 
-  def page_title(content = nil, &block)
+  def page_title(content = nil, in_tab: false, &block)
     content ||= capture(&block)
     content_for :page_title, content
-    content_tag :h1, content
+    content_tag((in_tab ? :h2 : :h1), content)
   end
 
   # keep values short, urls would be ignored ... see application_controller.rb#redirect_back_or

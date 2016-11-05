@@ -320,27 +320,27 @@ describe ApplicationHelper do
   describe "#page_title" do
     before { _prepare_context } # setup ActionView::Base
 
-    it "can render content" do
+    it "renders content" do
       result = page_title 'xyz'
       result.must_equal "<h1>xyz</h1>"
       content_for(:page_title).must_equal "xyz"
     end
 
-    it "can render html" do
+    it "renders html" do
       result = page_title '<img/>'.html_safe
       result.must_equal "<h1><img/></h1>"
       content_for(:page_title).must_equal "<img/>"
     end
 
-    it "can render content" do
-      result = page_title 'xyz'
-      result.must_equal "<h1>xyz</h1>"
-      content_for(:page_title).must_equal "xyz"
-    end
-
-    it "can render blocks" do
+    it "renders blocks" do
       result = page_title { "x" }
       result.must_equal "<h1>x</h1>"
+      content_for(:page_title).must_equal "x"
+    end
+
+    it "renders inside of tabs where we already have a h1" do
+      result = page_title "x", in_tab: true
+      result.must_equal "<h2>x</h2>"
       content_for(:page_title).must_equal "x"
     end
   end

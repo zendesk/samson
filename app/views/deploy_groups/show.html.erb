@@ -1,6 +1,6 @@
 <%= breadcrumb @deploy_group.environment, @deploy_group %>
 
-<h1><%= @deploy_group.name %></h1>
+<%= page_title @deploy_group.name %>
 
 <deploy-group-timeline ng-controller="DeployGroupsCtrl" ></deploy-group-timeline>
 

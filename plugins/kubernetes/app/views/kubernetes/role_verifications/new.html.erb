@@ -1,3 +1,5 @@
+<%= page_title "Role Verification" %>
+
 Paste role yaml/json here to verify it.
 
 <% if @errors %>
@@ -12,5 +14,5 @@ Paste role yaml/json here to verify it.
 <%= form_tag kubernetes_role_verification_path do %>
   <%= text_area_tag :role, params[:role], size: '120x20', style: 'font-family: monospace' %>
   <br/>
-  <%= submit_tag 'Verify' %>
+  <%= submit_tag 'Verify', class: 'btn btn-primary' %>
 <% end %>

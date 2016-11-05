@@ -1,4 +1,4 @@
-<h1><%= @vault_server.new_record? ? "New Server" : "Edit Sever #{@vault_server.name}" %></h1>
+<%= page_title @vault_server.new_record? ? "New Server" : "Edit Sever #{@vault_server.name}" %>
 
 <section>
   <%= form_for [:admin, @vault_server], html: { class: "form-horizontal" } do |form| %>

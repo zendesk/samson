@@ -1,8 +1,6 @@
-<% content_for :page_title, build_page_title %>
+<%= breadcrumb @project, ['Builds', project_builds_path(@project)], @build.nice_name %>
 
-<%= breadcrumb @project, ['Builds', project_builds_path(@project)], build_title(@build) %>
-
-<h1><%= build_title(@build) %></h1>
+<%= page_title @build.nice_name %>
 
 <div id="header" class="stream-header">
   <!-- will be filled when running build -->
