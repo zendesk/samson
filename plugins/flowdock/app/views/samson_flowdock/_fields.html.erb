@@ -5,29 +5,24 @@
   <% stage = form.object %>
   <% stage.flowdock_flows.build if stage.flowdock_flows.last.try(:name).blank? %>
 
-  <%= form.fields_for :flowdock_flows do |flow_fields| %>
+  <%= form.fields_for :flowdock_flows do |flow_field| %>
     <div class="form-group">
       <div class="col-lg-2 col-lg-offset-2">
-        <%= flow_fields.text_field :name, class: "form-control", placeholder: "Flow name" %>
+        <%= flow_field.text_field :name, class: "form-control", placeholder: "Flow name" %>
       </div>
 
       <div class="col-lg-4">
-        <%= flow_fields.text_field :token, class: "form-control", placeholder: "Token" %>
+        <%= flow_field.text_field :token, class: "form-control", placeholder: "Token" %>
       </div>
 
       <div class="col-lg-2 checkbox">
-        <%= flow_fields.label :enabled do %>
-          <%= flow_fields.check_box :enabled %>
+        <%= flow_field.label :enabled do %>
+          <%= flow_field.check_box :enabled %>
           Enabled
         <% end %>
       </div>
 
-      <% if flow_fields.object.persisted? %>
-        <div class="col-lg-1 checkbox">
-          <%= flow_fields.check_box :_destroy if flow_fields.object.persisted? %>
-          <%= flow_fields.label :_destroy, "Delete" %>
-        </div>
-      <% end %>
+      <%= delete_checkbox flow_field %>
     </div>
   <% end %>
 </fieldset>

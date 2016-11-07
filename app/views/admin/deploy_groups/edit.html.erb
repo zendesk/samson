@@ -1,4 +1,8 @@
-<h1><%= @deploy_group.new_record? ? 'New' : 'Edit' %> Deploy Group <%= link_to_if @deploy_group.id, @deploy_group.name, [:admin, @deploy_group] %></h1>
+<%= page_title do %>
+  <%= @deploy_group.new_record? ? 'New' : 'Edit' %>
+  Deploy Group
+  <%= link_to_if @deploy_group.id, @deploy_group.name, [:admin, @deploy_group] %>
+<% end %>
 
 <section>
   <%= form_for [:admin, @deploy_group], html: { class: "form-horizontal" } do |form| %>

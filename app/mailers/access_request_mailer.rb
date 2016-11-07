@@ -1,12 +1,12 @@
 # frozen_string_literal: true
 class AccessRequestMailer < ApplicationMailer
-  def access_request_email(host, user, manager_email, reason, project_ids, role_id)
-    @host = host
-    @user = user
-    @manager_email = manager_email
-    @reason = reason
-    @projects = Project.order(:name).find(project_ids)
-    @role = Role.find(role_id)
+  def access_request_email(options)
+    @host = options.fetch(:host)
+    @user = options.fetch(:user)
+    @manager_email = options.fetch(:manager_email)
+    @reason = options.fetch(:reason)
+    @projects = Project.order(:name).find(options.fetch(:project_ids))
+    @role = Role.find(options.fetch(:role_id))
     mail(from: @user.email, to: build_to, cc: build_cc, subject: build_subject, body: build_body)
   end
 
@@ -14,7 +14,7 @@ class AccessRequestMailer < ApplicationMailer
 
   def build_to
     # send to manager if no primary recipients configured
-    ENV['REQUEST_ACCESS_EMAIL_ADDRESS_LIST'].present? ? ENV['REQUEST_ACCESS_EMAIL_ADDRESS_LIST'].split : @manager_email
+    ENV['REQUEST_ACCESS_EMAIL_ADDRESS_LIST'].presence&.split || @manager_email
   end
 
   def build_cc

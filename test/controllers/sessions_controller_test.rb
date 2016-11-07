@@ -59,7 +59,9 @@ describe SessionsController do
     end
 
     it 'logs the user in' do
+      old = user.last_login_at
       @controller.send(:current_user).must_equal(user)
+      user.reload.last_login_at.must_be :>, old
     end
 
     it 'redirects to the root path' do

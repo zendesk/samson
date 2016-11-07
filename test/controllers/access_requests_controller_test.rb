@@ -5,13 +5,13 @@ SingleCov.covered!
 
 describe AccessRequestsController do
   include AccessRequestTestSupport
+
   as_a_viewer do
+    around { |t| enable_access_request &t }
+
     before do
-      enable_access_request
       @request.headers['HTTP_REFERER'] = root_path
     end
-
-    after { restore_access_request_settings }
 
     describe '#feature_enabled?' do
       it 'returns true when enabled' do
@@ -28,7 +28,7 @@ describe AccessRequestsController do
       describe 'disabled' do
         before { ENV['REQUEST_ACCESS_FEATURE'] = nil }
 
-        it 'raises an exception' do
+        it 'renders 404' do
           assert_raises(ActionController::RoutingError) { get :new }
         end
       end
@@ -39,10 +39,6 @@ describe AccessRequestsController do
         it 'renders new template' do
           assert_template :new
         end
-
-        it 'stores the referrer' do
-          session[:access_request_back_to].must_equal root_path
-        end
       end
     end
 
@@ -50,7 +46,7 @@ describe AccessRequestsController do
       describe 'disabled' do
         before { ENV['REQUEST_ACCESS_FEATURE'] = nil }
 
-        it 'raises an exception' do
+        it 'renders 404' do
           assert_raises(ActionController::RoutingError) { post :create }
         end
       end
@@ -60,33 +56,35 @@ describe AccessRequestsController do
         let(:reason) { 'Dummy reason.' }
         let(:role) { Role::DEPLOYER }
         let(:request_params) do
-          {manager_email: manager_email, reason: reason, project_ids: Project.all.pluck(:id), role_id: role.id}
+          {
+            manager_email: manager_email,
+            reason: reason,
+            project_ids: Project.all.pluck(:id),
+            role_id: role.id,
+            redirect_to: '/projects'
+          }
         end
-        let(:session_params) { {access_request_back_to: root_path} }
+
         describe 'environment and user' do
-          before { post :create, params: request_params, session: session_params }
+          before { post :create, params: request_params }
 
           it 'sets the pending request flag' do
-            assert @controller.send(:current_user).access_request_pending
+            assert user.reload.access_request_pending
           end
 
           it 'sets the flash' do
-            flash[:success].wont_be_nil
-          end
-
-          it 'clears the session' do
-            session.wont_include :access_request_back_to
+            flash[:notice].wont_be_nil
           end
 
           it 'redirects to referrer' do
-            assert_redirected_to root_path
+            assert_redirected_to '/projects'
           end
         end
 
         describe 'email' do
           it 'sends the message' do
             assert_difference 'ActionMailer::Base.deliveries.size', +1 do
-              post :create, params: request_params, session: session_params
+              post :create, params: request_params
             end
             access_request_email = ActionMailer::Base.deliveries.last
             access_request_email.cc.must_equal [manager_email]

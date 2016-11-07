@@ -1,10 +1,12 @@
+<% page_title "Webhooks" %>
+
 <%= render 'projects/header', project: @project, tab: "webhooks" %>
 
 <% webhooks = @project.webhooks %>
 <% outbound_webhooks = @project.outbound_webhooks %>
 
 <section class="tabs">
-  <h1>Inbound Webhooks</h1>
+  <h2>Inbound Webhooks</h2>
   <p>In order to automatically trigger a deploy to a stage, add a branch &rarr; stage mapping below
   and paste in the project's webhook URL to your CI service of choice.</p>
 
@@ -86,7 +88,7 @@
   <% end %>
   <h2></h2>
 
-  <h1>Outbound Webhooks</h1>
+  <h2>Outbound Webhooks</h2>
   <p>Outbound webhooks POST to an external url after a deploy has finished. The request body will contain deploy, stage, and project information.</p>
   <% if @project.deploys.last %>
     <p>

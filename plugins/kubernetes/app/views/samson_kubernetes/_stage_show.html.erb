@@ -31,7 +31,7 @@
             <td><%= dg_role.ram %></td>
             <td>
               <% if current_user.admin_for?(@stage.project) %>
-                <%= link_to 'Edit', edit_admin_kubernetes_deploy_group_role_path(dg_role, redirect_to: request.path) %>
+                <%= link_to 'Edit', edit_admin_kubernetes_deploy_group_role_path(dg_role) %>
               <% end %>
             </td>
           <% else %>
@@ -39,7 +39,7 @@
             <td>
               <% if current_user.admin_for?(@stage.project) %>
                 <% attributes = {kubernetes_role_id: role.id, project_id: @stage.project_id, deploy_group_id: deploy_group.id} %>
-                <%= link_to "Create", new_admin_kubernetes_deploy_group_role_path(kubernetes_deploy_group_role: attributes, redirect_to: request.path) %>
+                <%= link_to "Create", new_admin_kubernetes_deploy_group_role_path(kubernetes_deploy_group_role: attributes) %>
               <% end %>
             </td>
           <% end %>

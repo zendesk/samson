@@ -190,21 +190,11 @@ module Samson
       end
 
       def render_javascripts(view)
-        Samson::Hooks.plugins.each do |plugin|
-          js = plugin.engine.config.root.join("app/assets/javascripts/#{plugin.name}/application.js")
-          next unless File.exist?(js)
-          view.concat(view.javascript_include_tag("#{plugin.name}/application.js"))
-        end
-        nil
+        render_assets view, 'javascripts', 'application.js', :javascript_include_tag
       end
 
       def render_stylesheets(view)
-        Samson::Hooks.plugins.each do |plugin|
-          css = plugin.engine.config.root.join("app/assets/stylesheets/#{plugin.name}/application.css")
-          next unless File.exist?(css)
-          view.concat(view.stylesheet_link_tag("#{plugin.name}/application.css"))
-        end
-        nil
+        render_assets view, 'stylesheets', 'application.css', :stylesheet_link_tag
       end
 
       def reset_plugins!
@@ -213,6 +203,15 @@ module Samson
       end
 
       private
+
+      def render_assets(view, folder, file, method)
+        Samson::Hooks.plugins.each do |plugin|
+          full_file = plugin.engine.config.root.join("app/assets/#{folder}/#{plugin.name}/#{file}")
+          next unless File.exist?(full_file)
+          view.concat(view.send(method, "#{plugin.name}/#{file}"))
+        end
+        nil
+      end
 
       def hooks(*args)
         raise "Using unsupported hook #{args.inspect}" unless KNOWN.include?(args.first)

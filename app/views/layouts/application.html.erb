@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <title><%= strip_tags(content_for(:page_title) || "Samson") %></title>
+    <% title = content_for(:page_title) %>
+    <title><%= title ? strip_tags(title) + (@project ? " - #{@project.name}" : "") : "Samson" %></title>
     <%= csrf_meta_tags %>
     <%= favicon_link_tag '32x32_light.png', type: 'image/png'%>
     <%= stylesheet_link_tag "application", media: "all" %>

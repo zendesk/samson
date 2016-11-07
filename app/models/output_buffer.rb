@@ -40,25 +40,8 @@ class OutputBuffer
   end
 
   def write_docker_chunk(chunk)
-    parsed_chunk = JSON.parse(chunk)
-
-    # Don't bother printing all the incremental output when pulling images
-    unless parsed_chunk['progressDetail']
-      if parsed_chunk.keys == ['stream']
-        puts parsed_chunk.values.first
-      else
-        values = parsed_chunk.map { |k, v| "#{k}: #{v}" if v.present? }.compact
-        puts values.join(' | ') if values.any?
-      end
-    end
-
-    parsed_chunk
-  rescue JSON::ParserError
-    # Sometimes the JSON line is too big to fit in one chunk, so we get
-    # a chunk back that is an incomplete JSON object.
-    chunk = chunk.encode(Encoding::UTF_8, chunk.encoding, invalid: :replace, undef: :replace)
-    puts chunk
-    { 'message' => chunk }
+    chunk = chunk.encode(Encoding::UTF_8, chunk.encoding, invalid: :replace, undef: :replace).strip
+    chunk.split("\n").map { |line| write_docker_chunk_line(line) }
   end
 
   def include?(event, data)
@@ -97,5 +80,28 @@ class OutputBuffer
     ensure
       @listeners.delete(queue)
     end
+  end
+
+  private
+
+  def write_docker_chunk_line(line)
+    parsed_line = JSON.parse(line)
+
+    # Don't bother printing all the incremental output when pulling images
+    unless parsed_line['progressDetail']
+      if parsed_line.keys == ['stream']
+        puts parsed_line.values.first
+      else
+        values = parsed_line.map { |k, v| "#{k}: #{v}" if v.present? }.compact
+        puts values.join(' | ') if values.any?
+      end
+    end
+
+    parsed_line
+  rescue JSON::ParserError
+    # Sometimes the JSON line is too big to fit in one chunk, so we get
+    # a chunk back that is an incomplete JSON object.
+    puts line
+    { 'message' => line }
   end
 end

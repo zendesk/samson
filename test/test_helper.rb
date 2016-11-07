@@ -8,14 +8,6 @@ require 'single_cov'
 SingleCov::APP_FOLDERS << 'decorators' << 'presenters'
 SingleCov.setup :minitest unless defined?(Spring)
 
-if ENV['CODECLIMATE_REPO_TOKEN']
-  require 'codeclimate-test-reporter'
-  CodeClimate::TestReporter.start
-elsif ENV['COVERAGE']
-  require 'simplecov'
-  SimpleCov.start 'rails'
-end
-
 # rake adds these, but we don't need them / want to be consistent with using `ruby x_test.rb`
 $LOAD_PATH.delete 'lib'
 $LOAD_PATH.delete 'test'
@@ -144,7 +136,8 @@ class ActiveSupport::TestCase
     end
     yield
   ensure
-    old.each { |k, v| ENV[k] = v }
+    # the `if old` is here to not blow up with nil.each when setting the env failed
+    old.each { |k, v| ENV[k] = v } if old
   end
 
   def self.with_env(env)

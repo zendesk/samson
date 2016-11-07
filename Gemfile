@@ -8,7 +8,6 @@ group :preload do
   gem 'rails', '5.0.0.1'
   gem 'dotenv'
   gem 'sse-rails-engine'
-  gem 'rails_autolink'
   gem 'connection_pool'
 
   # AR extensions
@@ -122,6 +121,7 @@ group :development, :test do
   gem 'awesome_print'
   gem 'brakeman'
   gem 'rubocop'
+  gem 'flay'
 end
 
 group :test do
@@ -131,7 +131,5 @@ group :test do
   gem 'mocha'
   gem 'webmock'
   gem 'single_cov'
-  gem 'simplecov'
   gem 'query_diet'
-  gem 'codeclimate-test-reporter'
 end

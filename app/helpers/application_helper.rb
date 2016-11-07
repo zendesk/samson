@@ -41,16 +41,6 @@ module ApplicationHelper
     Rails.application.config.samson.revision.presence
   end
 
-  def global_lock
-    return @global_lock if defined?(@global_lock)
-    @global_lock = Lock.global.first
-  end
-
-  def render_lock(resource)
-    lock = (resource == :global ? global_lock : Lock.for_resource(resource).first)
-    render '/locks/lock', lock: lock if lock
-  end
-
   def sortable(column, title = nil)
     title ||= column.titleize
     direction = (column == params[:sort] && params[:direction] == "asc" ? "desc" : "asc")
@@ -111,14 +101,6 @@ module ApplicationHelper
         content_tag :li, content, class: (active ? "active" : "")
       end.join.html_safe
     end
-  end
-
-  def lock_icon
-    icon_tag "lock"
-  end
-
-  def warning_icon
-    icon_tag "warning-sign"
   end
 
   def icon_tag(type)
@@ -190,9 +172,23 @@ module ApplicationHelper
     content_tag :i, '', class: "glyphicon glyphicon-info-sign", title: text
   end
 
-  def page_title(content = nil, &block)
+  def page_title(content = nil, in_tab: false, &block)
     content ||= capture(&block)
     content_for :page_title, content
-    content_tag :h1, content
+    content_tag((in_tab ? :h2 : :h1), content)
+  end
+
+  # keep values short, urls would be ignored ... see application_controller.rb#redirect_back_or
+  # also failing fast here for easy debugging instead of sending invalid urls around
+  def redirect_to_field
+    return unless location = params[:redirect_to].presence || request.referrer.to_s.dup.sub!(root_url, '/')
+    hidden_field_tag :redirect_to, location
+  end
+
+  def delete_checkbox(form)
+    return unless form.object.persisted?
+    content_tag :div, class: "col-lg-1 checkbox" do
+      form.check_box(:_destroy) << form.label(:_destroy, "Delete")
+    end
   end
 end

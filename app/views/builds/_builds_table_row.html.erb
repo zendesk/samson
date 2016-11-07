@@ -1,7 +1,7 @@
 <tr>
-  <td><%= link_to build_title(build), project_build_path(build.project, build) %></td>
+  <td><%= link_to build.nice_name, project_build_path(build.project, build) %></td>
   <% unless @project %>
-      <td><%= link_to build.project.name, build.project %></td>
+    <td><%= link_to build.project.name, build.project %></td>
   <% end %>
   <td><%= relative_time(build.created_at) %></td>
   <td><%= creator_for(build, method: :name) %></td>

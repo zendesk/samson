@@ -5,6 +5,8 @@ require_relative '../test_helper'
 SingleCov.covered! uncovered: 7
 
 describe ApplicationHelper do
+  include LocksHelper
+
   describe "#render_log" do
     it "removes ascii escapes" do
       # false positive ansi codes
@@ -38,41 +40,6 @@ describe ApplicationHelper do
       result = markdown("<script>alert(1)</script>")
       result.must_equal "alert(1)\n"
       assert result.html_safe?
-    end
-  end
-
-  describe "#global_lock" do
-    it "caches nil" do
-      Lock.expects(:global).returns []
-      global_lock.must_equal nil
-      global_lock.must_equal nil
-    end
-
-    it "caches values" do
-      Lock.expects(:global).returns [1]
-      global_lock.must_equal 1
-      global_lock.must_equal 1
-    end
-  end
-
-  describe "#render_lock" do
-    let(:stage) { stages(:test_staging) }
-
-    it "can render global" do
-      Lock.create!(user: users(:admin))
-      global_lock # caches
-      assert_sql_queries 1 do # loads user to render the lock
-        render_lock(:global).must_include "ALL STAGES"
-      end
-    end
-
-    it "can render specific locks" do
-      Lock.create!(user: users(:admin), resource: stage)
-      render_lock(stage).must_include "Deployments to stage were locked"
-    end
-
-    it "does not render when there is no locks" do
-      render_lock(stage).must_equal nil
     end
   end
 
@@ -353,28 +320,61 @@ describe ApplicationHelper do
   describe "#page_title" do
     before { _prepare_context } # setup ActionView::Base
 
-    it "can render content" do
+    it "renders content" do
       result = page_title 'xyz'
       result.must_equal "<h1>xyz</h1>"
       content_for(:page_title).must_equal "xyz"
     end
 
-    it "can render html" do
+    it "renders html" do
       result = page_title '<img/>'.html_safe
       result.must_equal "<h1><img/></h1>"
       content_for(:page_title).must_equal "<img/>"
     end
 
-    it "can render content" do
-      result = page_title 'xyz'
-      result.must_equal "<h1>xyz</h1>"
-      content_for(:page_title).must_equal "xyz"
-    end
-
-    it "can render blocks" do
+    it "renders blocks" do
       result = page_title { "x" }
       result.must_equal "<h1>x</h1>"
       content_for(:page_title).must_equal "x"
+    end
+
+    it "renders inside of tabs where we already have a h1" do
+      result = page_title "x", in_tab: true
+      result.must_equal "<h2>x</h2>"
+      content_for(:page_title).must_equal "x"
+    end
+  end
+
+  describe "#redirect_to_field" do
+    let(:root_url) { 'http://foobar.com/' }
+
+    before { stubs(request: stub(referrer: "#{root_url}referrer"), params: {redirect_to: '/params'}) }
+
+    it "stores current parameter" do
+      redirect_to_field.must_include "value=\"/params\""
+    end
+
+    it "does not store empty parameter" do
+      params[:redirect_to] = ""
+      redirect_to_field.must_include "value=\"/referrer\""
+    end
+
+    describe "without param" do
+      before { params.delete(:redirect_to) }
+
+      it "uses referrer when param is missing" do
+        redirect_to_field.must_include "value=\"/referrer\""
+      end
+
+      it "does not use referrer from other page since redirect_back_or would not work" do
+        assert request.stubs(:referrer, request.referrer.sub(root_url, 'http://hacky.com/'))
+        redirect_to_field.must_equal nil
+      end
+
+      it "is empty when nothing is known" do
+        request.stubs(:referrer).returns(nil)
+        redirect_to_field.must_equal nil
+      end
     end
   end
 end

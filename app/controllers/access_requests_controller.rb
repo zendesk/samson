@@ -1,31 +1,33 @@
 # frozen_string_literal: true
 class AccessRequestsController < ApplicationController
-  before_action :check_if_enabled
+  before_action :ensure_enabled
 
   def self.feature_enabled?
     ENV['REQUEST_ACCESS_FEATURE'].present?
   end
 
   def new
-    session[:access_request_back_to] ||= request.referer || root_path
     @projects = Project.all.order(:name)
     @roles = Role.all
   end
 
   def create
-    AccessRequestMailer.access_request_email(
-      request.base_url, current_user,
-      params.require(:manager_email), params.require(:reason),
-      params.require(:project_ids), params.require(:role_id)
-    ).deliver_now
+    options = {
+      host: request.base_url,
+      user: current_user,
+    }
+    [:manager_email, :reason, :project_ids, :role_id].each { |p| options[p] = params.require(p) }
+
+    AccessRequestMailer.access_request_email(options).deliver_now
     current_user.update!(access_request_pending: true)
-    flash[:success] = 'Access request email sent.'
-    redirect_to session.delete(:access_request_back_to)
+
+    flash[:notice] = 'Access request email sent.'
+    redirect_back_or root_path
   end
 
   private
 
-  def check_if_enabled
+  def ensure_enabled
     raise ActionController::RoutingError, 'Not Found' unless self.class.feature_enabled?
   end
 end

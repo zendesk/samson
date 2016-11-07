@@ -1,3 +1,4 @@
+<% page_title "Login" %>
 <div class="login-wrapper fade-in">
   <h1 class="login-brand">Samson</h1>
   <p>Understand what is being deployed.</p>
@@ -7,24 +8,11 @@
       Please configure them via the AUTH_* environment variables as documented in
       <%= link_to '.env.example', 'https://github.com/zendesk/samson/blob/master/.env.example' %>.
     <% else %>
-      <% if Rails.application.config.samson.auth.github %>
-        <%= link_to omniauth_path(:github), class: "action github" do %>
-          <%= image_tag image_url('github.png') %> Login with GitHub
-        <% end %>
-      <% end %>
-      <% if Rails.application.config.samson.auth.google %>
-        <%= link_to omniauth_path(:google), class: "action google" do %>
-          <%= image_tag image_url('google.png') %> Login with Google
-        <% end %>
-      <% end %>
-      <% if Rails.application.config.samson.auth.ldap %>
-        <%= link_to omniauth_path(:ldap), class: "action ldap" do %>
-          <%= image_tag image_url('ldap.png') %> Login with LDAP
-        <% end %>
-      <% end %>
-      <% if Rails.application.config.samson.auth.gitlab %>
-        <%= link_to omniauth_path('gitlab'), class: "action gitlab" do %>
-          <%= image_tag image_url('gitlab.png') %> Login with Gitlab
+      <% ['Github', 'Google', 'LDAP', 'Gitlab'].each do |provider| %>
+        <% if Rails.application.config.samson.auth.public_send(provider.downcase) %>
+          <%= link_to omniauth_path(provider.downcase.to_sym), class: "action #{provider.downcase}" do %>
+            <%= image_tag image_url("#{provider.downcase}.png") %> Login with <%= provider %>
+          <% end %>
         <% end %>
       <% end %>
     <% end %>

@@ -8,6 +8,28 @@ class DockerBuilderService
 
   attr_reader :build, :execution
 
+  def self.build_docker_image(dir, docker_options, output)
+    output.puts("### Running Docker build")
+
+    docker_image =
+      Docker::Image.build_from_dir(dir, docker_options, Docker.connection, registry_credentials) do |chunk|
+        output.write_docker_chunk(chunk)
+      end
+    output.puts('### Docker build complete')
+
+    docker_image
+  end
+
+  def self.registry_credentials
+    return nil unless ENV['DOCKER_REGISTRY'].present?
+    {
+      username: ENV['DOCKER_REGISTRY_USER'],
+      password: ENV['DOCKER_REGISTRY_PASS'],
+      email: ENV['DOCKER_REGISTRY_EMAIL'],
+      serveraddress: ENV['DOCKER_REGISTRY']
+    }
+  end
+
   def initialize(build)
     @build = build
   end
@@ -44,7 +66,7 @@ class DockerBuilderService
 
     success, build_log = k8s_job.execute!(build, project,
       tag: docker_ref, push: push,
-      registry: registry_credentials, tag_as_latest: tag_as_latest)
+      registry: DockerBuilderService.registry_credentials, tag_as_latest: tag_as_latest)
 
     build.docker_ref = docker_ref
     build.docker_repo_digest = nil
@@ -68,13 +90,7 @@ class DockerBuilderService
 
     File.write("#{tmp_dir}/REVISION", build.git_sha)
 
-    output.puts("### Running Docker build")
-
-    build.docker_image =
-      Docker::Image.build_from_dir(tmp_dir, {}, Docker.connection, registry_credentials) do |chunk|
-        output.write_docker_chunk(chunk)
-      end
-    output.puts('### Docker build complete')
+    build.docker_image = DockerBuilderService.build_docker_image(tmp_dir, {}, output)
   rescue Docker::Error::UnexpectedResponseError
     # If the docker library isn't able to find an image id, it returns the
     # entire output of the "docker build" command, which we've already captured
@@ -94,10 +110,12 @@ class DockerBuilderService
 
     build.docker_image.tag(repo: project.docker_repo, tag: build.docker_ref, force: true)
 
-    build.docker_image.push(registry_credentials) do |chunk|
+    build.docker_image.push(DockerBuilderService.registry_credentials) do |chunk|
       parsed_chunk = output.write_docker_chunk(chunk)
-      if (status = parsed_chunk['status']) && sha = status[DIGEST_SHA_REGEX, 1]
-        build.docker_repo_digest = "#{project.docker_repo}@#{sha}"
+      parsed_chunk.each do |output_hash|
+        if (status = output_hash['status']) && sha = status[DIGEST_SHA_REGEX, 1]
+          build.docker_repo_digest = "#{project.docker_repo}@#{sha}"
+        end
       end
     end
 
@@ -129,16 +147,6 @@ class DockerBuilderService
     @build.project
   end
 
-  def registry_credentials
-    return nil unless ENV['DOCKER_REGISTRY'].present?
-    {
-      username: ENV['DOCKER_REGISTRY_USER'],
-      password: ENV['DOCKER_REGISTRY_PASS'],
-      email: ENV['DOCKER_REGISTRY_EMAIL'],
-      serveraddress: ENV['DOCKER_REGISTRY']
-    }
-  end
-
   def docker_image_ref(image_name, build)
     image_name.presence || build.label.try(:parameterize).presence || 'latest'
   end
@@ -146,7 +154,7 @@ class DockerBuilderService
   def push_latest
     output.puts "### Pushing the 'latest' tag for this image"
     build.docker_image.tag(repo: project.docker_repo, tag: 'latest', force: true)
-    build.docker_image.push(registry_credentials, tag: 'latest', force: true) do |chunk|
+    build.docker_image.push(DockerBuilderService.registry_credentials, tag: 'latest', force: true) do |chunk|
       output.write_docker_chunk(chunk)
     end
   end

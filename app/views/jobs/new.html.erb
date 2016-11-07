@@ -1,4 +1,4 @@
-<h1>Execute job on <%= @project.name %></h1>
+<%= page_title "Execute job" %>
 
 <%= form_for [@project, @job], html: { class: "form-horizontal" } do |form| %>
   <%= render 'shared/errors', object: @job %>

@@ -7,51 +7,46 @@
   <div class="col-lg-offset-2">
     <p>Details of the webhook to be notified on deploys.</p>
 
-    <%= form.fields_for :slack_webhooks do |slack_fields| %>
+    <%= form.fields_for :slack_webhooks do |slack_field| %>
       <div class="form-group">
         <div class="col-lg-4">
-          <%= slack_fields.url_field :webhook_url, class: "form-control", placeholder: "Webhook URL" %>
+          <%= slack_field.url_field :webhook_url, class: "form-control", placeholder: "Webhook URL" %>
         </div>
 
         <div class="col-lg-3">
-          <%= slack_fields.text_field :channel, class: "form-control", placeholder: "Channel (optional)" %>
+          <%= slack_field.text_field :channel, class: "form-control", placeholder: "Channel (optional)" %>
         </div>
 
-        <% if slack_fields.object.persisted? %>
-          <div class="col-lg-2 checkbox">
-            <%= slack_fields.label :_destroy do %>
-              <%= slack_fields.check_box :_destroy %>
-              Destroy
-            <% end %>
-          </div>
-        <% end %>
+        <%= delete_checkbox slack_field %>
       </div>
+
+      <%= slack_field.input :for_buddy, label: "Buddy Approval" %>
 
       <div class="form-group">
         <div class="col-lg-2 checkbox">
-          <%= slack_fields.label :for_buddy do %>
-            <%= slack_fields.check_box :for_buddy%>
+          <%= slack_field.label :for_buddy do %>
+            <%= slack_field.check_box :for_buddy%>
             Buddy Approval
           <% end %>
         </div>
 
         <div class="col-lg-2 checkbox">
-          <%= slack_fields.label :before_deploy do %>
-            <%= slack_fields.check_box :before_deploy%>
+          <%= slack_field.label :before_deploy do %>
+            <%= slack_field.check_box :before_deploy%>
             Before Deploy
           <% end %>
         </div>
 
         <div class="col-lg-2 checkbox">
-          <%= slack_fields.label :after_deploy do %>
-            <%= slack_fields.check_box :after_deploy%>
+          <%= slack_field.label :after_deploy do %>
+            <%= slack_field.check_box :after_deploy%>
             After Deploy
           <% end %>
         </div>
 
         <div class="col-lg-3 checkbox">
-          <%= slack_fields.label :only_on_failure do %>
-            <%= slack_fields.check_box :only_on_failure %>
+          <%= slack_field.label :only_on_failure do %>
+            <%= slack_field.check_box :only_on_failure %>
             Only on failure <%= additional_info "... for After Deploy" %>
           <% end %>
         </div>

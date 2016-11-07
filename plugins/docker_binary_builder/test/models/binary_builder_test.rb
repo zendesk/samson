@@ -35,7 +35,8 @@ describe BinaryBuilder do
       builder.build
       output.string.must_equal [
         "Connecting to Docker host with Api version: 1.19 ...\n",
-        "Now building the build container...\n",
+        "### Running Docker build\n",
+        "### Docker build complete\n",
         "Now starting Build container...\n",
         "Grabbing '/app/artifacts.tar' from build container...\n",
         "Continuing docker build...\n",
@@ -59,7 +60,8 @@ describe BinaryBuilder do
         output.string.must_equal [
           "Running pre build script...\n",
           "Connecting to Docker host with Api version: 1.19 ...\n",
-          "Now building the build container...\n",
+          "### Running Docker build\n",
+          "### Docker build complete\n",
           "Now starting Build container...\n",
           "Grabbing '/app/artifacts.tar' from build container...\n",
           "Continuing docker build...\n",
