@@ -72,7 +72,7 @@ end
 
 desc 'Run brakeman ... use brakewan -I to add new ignores'
 task :brakeman do
-  sh "brakeman --exit-on-warn --table-width 500 --add-engine-path 'plugins/*'"
+  sh "brakeman --exit-on-warn --format plain --add-engine-path 'plugins/*'"
 end
 
 desc "Run rubocop"
