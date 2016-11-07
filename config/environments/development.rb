@@ -39,6 +39,9 @@ Samson::Application.configure do
   # Suppress logger output for asset requests.
   config.assets.quiet = true
 
+  # docker ships with precompiled assets, but we want dynamic assets in development
+  config.assets.prefix = "/assets_dev"
+
   BetterErrors::Middleware.allow_ip! ENV['TRUSTED_IP'] if ENV['TRUSTED_IP']
 
   # Use an evented file watcher to asynchronously detect changes in source code,
