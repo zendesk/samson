@@ -8,14 +8,6 @@ require 'single_cov'
 SingleCov::APP_FOLDERS << 'decorators' << 'presenters'
 SingleCov.setup :minitest unless defined?(Spring)
 
-if ENV['CODECLIMATE_REPO_TOKEN']
-  require 'codeclimate-test-reporter'
-  CodeClimate::TestReporter.start
-elsif ENV['COVERAGE']
-  require 'simplecov'
-  SimpleCov.start 'rails'
-end
-
 # rake adds these, but we don't need them / want to be consistent with using `ruby x_test.rb`
 $LOAD_PATH.delete 'lib'
 $LOAD_PATH.delete 'test'

@@ -8,18 +8,13 @@
       <p class="col-lg-offset-2">
         Names of New Relic Applications to display during deploy
       </p>
-      <%= form.fields_for :new_relic_applications do |app_fields| %>
+      <%= form.fields_for :new_relic_applications do |app_field| %>
         <div class="form-group">
           <div class="col-lg-6 col-lg-offset-2">
-            <%= app_fields.select :name, apps.keys.sort, class: "form-control", include_blank: true %>
+            <%= app_field.select :name, apps.keys.sort, class: "form-control", include_blank: true %>
           </div>
 
-          <% if app_fields.object.persisted? %>
-            <div class="col-lg-1 checkbox">
-              <%= app_fields.check_box :_destroy if app_fields.object.persisted? %>
-              <%= app_fields.label :_destroy, "Delete" %>
-            </div>
-          <% end %>
+          <%= delete_checkbox app_field %>
         </div>
       <% end %>
     <% else %>
