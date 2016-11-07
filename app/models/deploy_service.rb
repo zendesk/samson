@@ -33,10 +33,10 @@ class DeployService
 
     if stage.run_in_parallel
       # immediately execute job
-      job_execution.start!
+      JobExecution.start_job(job_execution, key: "deploy-#{deploy.id}")
     else
       # queue job
-      JobExecution.start_job(job_execution, key: stage.id)
+      JobExecution.start_job(job_execution, key: "stage-#{stage.id}")
     end
 
     send_sse_deploy_update('start', deploy)
