@@ -123,4 +123,16 @@ describe "cleanliness" do
   it "has same version in .ruby-version and lock to make herku not crash" do
     File.read('Gemfile.lock').must_include File.read('.ruby-version').strip
   end
+
+  it "has page title for all views" do
+    views = Dir['{,plugins/*/}app/views/**/*.html.erb'].
+      reject { |v| File.basename(v).start_with?('_') }.
+      reject { |v| v.include?('_mailer/') }.
+      reject { |v| v.include?('/layouts/') }
+    check_content views do |content|
+      unless content.include?(' page_title')
+        "declare a page title for nicer navigation"
+      end
+    end
+  end
 end

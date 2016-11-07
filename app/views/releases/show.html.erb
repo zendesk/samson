@@ -1,8 +1,8 @@
-<% content_for :page_title, "#{@project.name} #{@release.version}" %>
-
 <%= breadcrumb @project, link_to("Releases", project_releases_path(@project)), "Release #{@release.version}" %>
 
-<h1>Release <%= @release.version %>: <code><%= @release.commit %></code></h1>
+<%= page_title do %>
+  Release <%= @release.version %>: <code><%= @release.commit %></code>
+<% end %>
 
 <section class="clearfix tabs release">
   <div class="pull-right">

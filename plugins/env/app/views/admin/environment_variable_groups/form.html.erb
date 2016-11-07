@@ -1,5 +1,4 @@
 <% title = (@group.new_record? ? "New group" : "Edit #{@group.name}") %>
-<% content_for(:page_title, title) %>
 
 <% crumbs = [["Environment variables", [:admin, EnvironmentVariableGroup]]] %>
 <% if @group.new_record? %>
@@ -8,7 +7,7 @@
   <%= manual_breadcrumb(crumbs + [[@group.name, [:admin, @group]], ["Edit", nil]]) %>
 <% end %>
 
-<h1><%= title %></h1>
+<%= page_title title %>
 
 <section>
   <%= form_for [:admin, @group], html: { class: "form-horizontal" } do |form| %>
