@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-class Audit::UserPresenter
+class AuditPresenter::UserPresenter
   ## User presenter for Audit Logger
   ## Returns user object with only id, email and name
 

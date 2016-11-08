@@ -17,14 +17,14 @@ class AuditPresenter
   end
 
   def self.user(user)
-    Audit::UserPresenter.present(user)
+    AuditPresenter::UserPresenter.present(user)
   end
 
   def self.deploy(deploy)
-    Audit::DeployPresenter.present(deploy)
+    AuditPresenter::DeployPresenter.present(deploy)
   end
 
   def self.project(project)
-    Audit::ProjectPresenter.present(project)
+    AuditPresenter::ProjectPresenter.present(project)
   end
 end
