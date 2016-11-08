@@ -30,13 +30,18 @@ module Samson
         end
 
         def write(key, data)
+          user_id = data.fetch(:user_id)
+          current = read(key)
+          creator_id = (current && current[:creator_id]) || user_id
+
           vault_action(
             :write,
             vault_path(key),
             vault: data.fetch(:value),
             visible: data.fetch(:visible),
             comment: data.fetch(:comment),
-            creator_id: data.fetch(:user_id)
+            creator_id: creator_id,
+            updater_id: user_id
           )
         end
 

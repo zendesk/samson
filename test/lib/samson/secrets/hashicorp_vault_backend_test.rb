@@ -62,11 +62,24 @@ describe Samson::Secrets::HashicorpVaultBackend do
 
   describe ".write" do
     it "writes" do
-      data = {vault: "whatever", visible: false, comment: "secret!", creator_id: 1}
-      assert_vault_request :put, "production/foo/pod2/bar", with: {body: data.to_json} do
-        assert Samson::Secrets::HashicorpVaultBackend.write(
-          'production/foo/pod2/bar', value: 'whatever', visible: false, user_id: 1, comment: 'secret!'
-        )
+      data = {vault: "whatever", visible: false, comment: "secret!", creator_id: 1, updater_id: 1}
+      assert_vault_request :get, "production/foo/pod2/bar", status: 404 do
+        assert_vault_request :put, "production/foo/pod2/bar", with: {body: data.to_json} do
+          assert Samson::Secrets::HashicorpVaultBackend.write(
+            'production/foo/pod2/bar', value: 'whatever', visible: false, user_id: 1, comment: 'secret!'
+          )
+        end
+      end
+    end
+
+    it "updates without changing the creator" do
+      data = {vault: "whatever", visible: false, comment: "secret!", creator_id: 2, updater_id: 1}
+      assert_vault_request :get, "production/foo/pod2/bar", body: {data: {creator_id: 2, vault: "old"}}.to_json do
+        assert_vault_request :put, "production/foo/pod2/bar", with: {body: data.to_json} do
+          assert Samson::Secrets::HashicorpVaultBackend.write(
+            'production/foo/pod2/bar', value: 'whatever', visible: false, user_id: 1, comment: 'secret!'
+          )
+        end
       end
     end
   end
@@ -111,6 +124,7 @@ describe Samson::Secrets::HashicorpVaultBackend do
     end
 
     it ".write" do
+      client.expects(:read).returns(nil)
       client.expects(:write).raises(Vault::HTTPConnectionError.new("address", RuntimeError.new('no write for you')))
       e = assert_raises Samson::Secrets::BackendError do
         Samson::Secrets::HashicorpVaultBackend.write(
