@@ -4,6 +4,10 @@ require_relative '../test_helper'
 SingleCov.covered! uncovered: 31
 
 describe DeploysHelper do
+  include StatusHelper
+
+  let(:deploy) { deploys(:succeeded_test) }
+
   describe '#syntax_highlight' do
     it "renders code" do
       syntax_highlight("puts 1").must_equal "puts <span class=\"integer\">1</span>"
@@ -38,7 +42,7 @@ describe DeploysHelper do
 
   describe '#redeploy_button' do
     before do
-      @deploy = deploys(:succeeded_test)
+      @deploy = deploy
       @project = projects(:test)
     end
 
@@ -52,9 +56,7 @@ describe DeploysHelper do
     end
 
     describe 'when the deploy is still running' do
-      around do |t|
-        @deploy.stub(:active?, true) { t.call }
-      end
+      before { deploy.stubs(active?: true) }
 
       it 'does not generate a link' do
         redeploy_button.must_equal nil
@@ -62,15 +64,18 @@ describe DeploysHelper do
     end
 
     describe 'when the deploy failed' do
-      around do |t|
-        @deploy = deploys(:succeeded_test)
-        @deploy.stub(:succeeded?, false) { t.call }
-      end
+      before { deploy.stubs(succeeded?: false) }
 
       it 'generates a red link' do
         redeploy_button.must_equal '<a class="btn btn-danger" rel="nofollow" data-method="post" href="/projects/foo/'\
                                    'stages/staging/deploys?deploy%5Breference%5D=staging">Redeploy</a>'
       end
+    end
+  end
+
+  describe '#deploy_status_badge' do
+    it 'renders' do
+      deploy_status_badge(deploy).must_include "Succeeded"
     end
   end
 end
