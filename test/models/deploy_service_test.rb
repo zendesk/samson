@@ -111,6 +111,34 @@ describe DeployService do
       service.confirm_deploy!(deploy)
     end
 
+    describe "when stage can run in parallel" do
+      before do
+        stage.stubs(:run_in_parallel).returns true
+      end
+
+      it "immediately starts the job" do
+        job_execution
+        JobExecution.stubs(:new).returns(job_execution)
+        JobExecution.expects(:start_job).with(job_execution, key: "deploy-#{deploy.id}")
+        deploy.buddy = user
+        service.confirm_deploy!(deploy)
+      end
+    end
+
+    describe "when stage can't run in parallel" do
+      before do
+        stage.stubs(:run_in_parallel).returns false
+      end
+
+      it "will be queued on the stage id" do
+        job_execution
+        JobExecution.stubs(:new).returns(job_execution)
+        JobExecution.expects(:start_job).with(job_execution, key: "stage-#{stage.id}")
+        deploy.buddy = user
+        service.confirm_deploy!(deploy)
+      end
+    end
+
     describe "when buddy check is needed" do
       before do
         stage.stubs(:deploy_requires_approval?).returns(true)
