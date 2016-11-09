@@ -5,6 +5,12 @@ PATH
       airbrake
 
 PATH
+  remote: plugins/audit_log
+  specs:
+    samson_audit_log (0.0.0)
+      airbrake
+
+PATH
   remote: plugins/aws_ecr
   specs:
     samson_aws_ecr (0.0.0)
@@ -578,6 +584,7 @@ DEPENDENCIES
   rails-controller-testing
   rubocop
   samson_airbrake!
+  samson_audit_log!
   samson_aws_ecr!
   samson_datadog!
   samson_docker_binary_builder!

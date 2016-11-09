@@ -39,7 +39,8 @@ module Samson
       :edit_deploy_group,
       :buildkite_release_params,
       :release_deploy_conditions,
-      :deploy_group_env
+      :deploy_group_env,
+      :unauthorized_action
     ].freeze
 
     INTERNAL_HOOKS = [:class_defined].freeze

@@ -38,6 +38,7 @@ module CurrentUser
 
   def unauthorized!
     Rails.logger.warn "Halted as unauthorized! threw :warden (called from #{caller.first.sub(Rails.root.to_s, '')})"
+    Samson::Hooks.fire(:unauthorized_action, current_user, controller_name, action_name)
     throw :warden # Warden::Manager middleware catches this and calls UnauthorizedController
   end
 
