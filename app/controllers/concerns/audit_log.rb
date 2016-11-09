@@ -1,11 +1,12 @@
 # frozen_string_literal: true
 module AuditLog
   extend ActiveSupport::Concern
-  VALID_METHODS = [:info, :warn, :debug, :error]
 
   private
 
   class Audit
+    VALID_METHODS = [:info, :warn, :debug, :error]
+
     def self.log(user, action, *args)
       logger(:info, user, action, args)
     end
