@@ -1,6 +1,23 @@
 # frozen_string_literal: true
 require 'vault'
 
+# replace once https://github.com/hashicorp/vault-ruby/pull/118 is released
+# using a monkey patch so `vault_action :list_recursive` works nicely in the backend
+Vault::Logical.class_eval do
+  def list_recursive(path, root = true)
+    keys = list(path).flat_map do |p|
+      full = "#{path}#{p}".dup
+      if full.end_with?("/")
+        list_recursive(full, false)
+      else
+        full
+      end
+    end
+    keys.each { |k| k.slice!(0, path.size) } if root
+    keys
+  end
+end
+
 module Samson
   module Secrets
     class VaultServer < ActiveRecord::Base
@@ -19,7 +36,10 @@ module Samson
         read_timeout: 2
       }.freeze
 
+      has_many :deploy_groups
+
       attr_encrypted :token
+
       validates :name, presence: true, uniqueness: true
       validates :address, presence: true, format: ADDRESS_PATTERN
       validate :validate_cert
@@ -33,7 +53,7 @@ module Samson
       end
 
       def client
-        Vault::Client.new(
+        @client ||= Vault::Client.new(
           DEFAULT_CLIENT_OPTIONS.merge(
             ssl_verify: tls_verify,
             token: token,
@@ -41,6 +61,27 @@ module Samson
             ssl_cert_store: cert_store
           )
         )
+      end
+
+      # Sync all data from one server to another
+      # making sure not to leak for example production credentials to a test environment
+      def sync!(other)
+        allowed_envs = deploy_groups.map(&:environment).map(&:permalink) << 'global'
+        allowed_groups = deploy_groups.map(&:permalink) << 'global'
+
+        keys = other.client.logical.list_recursive(PREFIX)
+
+        # we can only write the keys that are allowed to live in this server
+        keys.select! do |key|
+          scope = SecretStorage.parse_secret_key(key.sub(PREFIX, ''))
+          allowed_envs.include?(scope.fetch(:environment_permalink)) &&
+            allowed_groups.include?(scope.fetch(:deploy_group_permalink))
+        end
+
+        keys.each do |key|
+          data = other.client.logical.read(key)
+          client.logical.write(key, data)
+        end
       end
 
       private

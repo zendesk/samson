@@ -50,8 +50,7 @@ module Samson
         end
 
         def keys
-          keys = vault_action(:list, "")
-          keys = keys_recursive(keys)
+          keys = vault_action(:list_recursive, "")
           keys.uniq! # we read from multiple backends that might have the same keys
           keys.map! { |secret_path| vault_path(secret_path, :decode) }
         end
@@ -66,18 +65,6 @@ module Samson
 
         def vault_client
           Samson::Secrets::VaultClient.client
-        end
-
-        def keys_recursive(keys, key_path = "")
-          keys.flat_map do |key|
-            new_key = key_path + key
-            if key.end_with?('/') # a directory
-              # we work with keys we got back from vault, so not encoding
-              keys_recursive(vault_action(:list, new_key), new_key)
-            else
-              new_key
-            end
-          end
         end
 
         # key is the last element and should not include bad characters

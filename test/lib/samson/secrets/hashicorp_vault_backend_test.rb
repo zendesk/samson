@@ -108,7 +108,8 @@ describe Samson::Secrets::HashicorpVaultBackend do
     let(:client) { Samson::Secrets::VaultClient.client }
 
     it ".keys" do
-      client.expects(:list).raises(Vault::HTTPConnectionError.new("address", RuntimeError.new('no keys for you')))
+      client.expects(:list_recursive).
+        raises(Vault::HTTPConnectionError.new("address", RuntimeError.new('no keys for you')))
       e = assert_raises Samson::Secrets::BackendError do
         Samson::Secrets::HashicorpVaultBackend.keys
       end

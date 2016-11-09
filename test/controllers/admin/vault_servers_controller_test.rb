@@ -27,8 +27,9 @@ describe Admin::VaultServersController do
 
     unauthorized :get, :new
     unauthorized :post, :create
-    unauthorized :delete, :destroy, id: 1
+    unauthorized :post, :sync, id: 1
     unauthorized :patch, :update, id: 1
+    unauthorized :delete, :destroy, id: 1
   end
 
   as_a_super_admin do
@@ -56,6 +57,18 @@ describe Admin::VaultServersController do
           post :create, params: {vault_server: valid_params}
         end
         assert_response :success # renders edit
+      end
+    end
+
+    describe "#sync" do
+      it "syncs" do
+        other = Samson::Secrets::VaultServer.create!(name: 'pod2', address: 'http://vault-land.com', token: 'TOKEN2')
+        Samson::Secrets::VaultServer.any_instance.expects(:sync!).with(other).returns([1, 2, 3])
+
+        post :sync, params: {id: server.id, other_id: other.id}
+
+        assert_redirected_to admin_vault_server_path(server)
+        flash[:notice].must_equal "Synced 3 values!"
       end
     end
 

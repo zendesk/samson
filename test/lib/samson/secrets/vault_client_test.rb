@@ -57,10 +57,10 @@ describe Samson::Secrets::VaultClient do
     end
   end
 
-  describe "#list" do
+  describe "#list_recursive" do
     it "combines lists from all servers" do
       assert_vault_request :get, '?list=true', body: {data: {keys: ['abc']}}.to_json, times: 2 do
-        client.list('').must_equal ['abc']
+        client.list_recursive('').must_equal ['abc']
       end
     end
   end
