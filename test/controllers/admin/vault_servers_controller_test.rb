@@ -22,6 +22,7 @@ describe Admin::VaultServersController do
       it "renders" do
         get :show, params: {id: server.id}
         assert_response :success
+        response.body.wont_include server.token
       end
     end
 
