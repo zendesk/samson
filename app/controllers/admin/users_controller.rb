@@ -5,8 +5,6 @@ class Admin::UsersController < ApplicationController
   before_action :authorize_admin!
   before_action :authorize_super_admin!, only: [:update, :destroy]
 
-  include AuditLog::UserLog
-
   def index
     @users = User.search_by_criteria(params)
     respond_to do |format|
