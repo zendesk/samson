@@ -5,6 +5,7 @@ SingleCov.covered!
 
 describe Admin::VaultServersController do
   let!(:server) do
+    Samson::Secrets::VaultServer.any_instance.stubs(:validate_connection)
     Samson::Secrets::VaultServer.create!(name: 'pod1', address: 'http://vault-land.com', token: 'TOKEN2')
   end
   before { deploy_groups(:pod1).update_column(:vault_server_id, server.id) }

@@ -1,21 +1,9 @@
 # frozen_string_literal: true
-require 'vault'
 
 module Samson
   module Secrets
     # Vault wrapper that sends requests to all matching vault servers
     class VaultClient
-      VAULT_SECRET_BACKEND = 'secret/'
-      SAMSON_SECRET_NAMESPACE = 'apps/'
-      CERT_AUTH_PATH = '/v1/auth/cert/login'
-      DEFAULT_CLIENT_OPTIONS = {
-        use_ssl: true,
-        timeout: 5,
-        ssl_timeout: 3,
-        open_timeout: 3,
-        read_timeout: 2
-      }.freeze
-
       def self.client
         @client ||= new
       end
@@ -23,14 +11,7 @@ module Samson
       def initialize
         @clients = {}
         VaultServer.all.each do |vault_server|
-          @clients[vault_server.id] = Vault::Client.new(
-            DEFAULT_CLIENT_OPTIONS.merge(
-              ssl_verify: vault_server.tls_verify,
-              token: vault_server.token,
-              address: vault_server.address,
-              ssl_cert_store: vault_server.cert_store
-            )
-          )
+          @clients[vault_server.id] = vault_server.client
         end
       end
 
@@ -77,7 +58,7 @@ module Samson
       private
 
       def wrap_key(key)
-        "#{VAULT_SECRET_BACKEND}#{SAMSON_SECRET_NAMESPACE}#{key}"
+        "#{VaultServer::PREFIX}#{key}"
       end
 
       def with_retries(&block)
