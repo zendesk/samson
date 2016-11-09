@@ -81,6 +81,22 @@ describe ApplicationHelper do
       assert_includes link, ">Deploying master...<"
       assert_includes link, %(href="/projects/#{project.to_param}/deploys/#{deploy.id}")
     end
+
+    describe "when stage can run in parallel" do
+      before do
+        stage.stubs(:run_in_parallel).returns true
+      end
+
+      it "always starts a deploy" do
+        deploy = stage.deploys.create!(
+          reference: 'master',
+          job: Job.create(user: current_user, command: '', project: project)
+        )
+        stage.stubs(current_deploy: deploy)
+        assert_includes link, ">Deploy<"
+        assert_includes link, %(href="/projects/#{project.to_param}/stages/#{stage.to_param}/deploys/new")
+      end
+    end
   end
 
   describe "#github_ok?" do

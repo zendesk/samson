@@ -118,6 +118,7 @@ class StagesController < ApplicationController
       :use_github_deployment_api,
       :no_code_deployed,
       :is_template,
+      :run_in_parallel,
       {
         deploy_group_ids: [],
         command_ids: []
