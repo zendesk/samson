@@ -28,7 +28,6 @@ class Admin::UsersController < ApplicationController
       Rails.logger.info(
         "#{current_user.name_and_email} changed the role of #{user.name_and_email} to #{user.role.name}"
       )
-      #Audit.info(current_user, 'updated', user, user.role)
       head :ok
     else
       head :bad_request
@@ -38,7 +37,6 @@ class Admin::UsersController < ApplicationController
   def destroy
     user.soft_delete!
     Rails.logger.info("#{current_user.name_and_email} just deleted #{user.name_and_email})")
-    #Audit.warn(current_user, 'destroyed', user)
     redirect_to admin_users_path
   end
 
