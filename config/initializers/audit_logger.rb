@@ -3,11 +3,11 @@ require 'splunk_logger'
 
 token = ENV['SPLUNK_TOKEN']
 url = ENV['SPLUNK_URL']
-interval = ENV['SPLUNK_INTERVAL'].to_i || 1
+interval = (ENV['SPLUNK_INTERVAL'].presence || 1).to_i
 ssl_verify = ENV['SPLUNK_DISABLE_VERIFY_SSL'] != "1"
 
-if (token && url)
-  AUDIT_LOGGER = SplunkLogger::Client.new({token: token, url: url, send_interval: interval, verify_ssl: ssl_verify})
+AUDIT_LOGGER = if token && url
+  SplunkLogger::Client.new({token: token, url: url, send_interval: interval, verify_ssl: ssl_verify})
 else
-  AUDIT_LOGGER = nil
+  nil
 end
