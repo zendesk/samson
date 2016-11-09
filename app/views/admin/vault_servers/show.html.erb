@@ -1,5 +1,14 @@
 <%= page_title @vault_server.new_record? ? "New Server" : "Edit Sever #{@vault_server.name}" %>
 <% sync_targets = (@vault_server.persisted? && (Samson::Secrets::VaultServer.all - [@vault_server]).presence) %>
+<%
+  # do not show the token and do not accidentally override it
+  @vault_server.token = nil
+  token_options = if @vault_server.new_record?
+    {}
+  else
+    {placeholder: "-- hidden, click to edit --", disabled: true}
+  end
+%>
 
 <section>
   <%= form_for [:admin, @vault_server], html: { class: "form-horizontal" } do |form| %>
@@ -8,7 +17,7 @@
 
       <%= form.input :name, required: true %>
       <%= form.input :address, as: :url_field, required: true %>
-      <%= form.input :token, required: true %>
+      <%= form.input :token, required: true, input_html: token_options %>
       <%= form.input :tls_verify, as: :check_box %>
       <%= form.input :ca_cert, as: :text_area %>
 
@@ -34,3 +43,13 @@
     </div>
   <% end %>
 </section>
+
+<script>
+  // when a user decides to edit enable input
+  // DOM events on disabled elements do not work, so attaching to parents
+  var disabled = $('#vault_server_token');
+  disabled.parent().one('click', function(){
+    disabled.attr('disabled', false);
+    disabled.attr('placeholder', '');
+  });
+</script>
