@@ -126,10 +126,6 @@ describe DeployService do
     end
 
     describe "when stage can't run in parallel" do
-      before do
-        stage.stubs(:run_in_parallel).returns false
-      end
-
       it "will be queued on the stage id" do
         job_execution
         JobExecution.stubs(:new).returns(job_execution)

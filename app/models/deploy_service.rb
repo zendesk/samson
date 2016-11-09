@@ -31,13 +31,9 @@ class DeployService
       send_after_notifications(deploy)
     end
 
-    if stage.run_in_parallel
-      # immediately execute job
-      JobExecution.start_job(job_execution, key: "deploy-#{deploy.id}")
-    else
-      # queue job
-      JobExecution.start_job(job_execution, key: "stage-#{stage.id}")
-    end
+    # if stage can run in parallel - set key to a unique id so it can immediately execute
+    key = stage.run_in_parallel ? "deploy-#{deploy.id}" : "stage-#{stage.id}"
+    JobExecution.start_job(job_execution, key: key)
 
     send_sse_deploy_update('start', deploy)
   end
