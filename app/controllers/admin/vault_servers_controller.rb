@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 class Admin::VaultServersController < ApplicationController
-  before_action :authorize_super_admin!, only: [:new, :create, :update, :destroy]
-  before_action :find_server, only: [:update, :show, :destroy]
+  before_action :authorize_super_admin!, except: [:index, :show]
+  before_action :find_server, only: [:update, :show, :destroy, :sync]
 
   def index
     @vault_servers = Samson::Secrets::VaultServer.all
@@ -22,6 +22,11 @@ class Admin::VaultServersController < ApplicationController
     else
       render :show
     end
+  end
+
+  def sync
+    updated = @vault_server.sync!(Samson::Secrets::VaultServer.find(params.require(:other_id))).count
+    redirect_to({action: :show}, notice: "Synced #{updated} values!")
   end
 
   def update

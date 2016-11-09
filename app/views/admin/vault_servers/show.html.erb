@@ -1,4 +1,5 @@
 <%= page_title @vault_server.new_record? ? "New Server" : "Edit Sever #{@vault_server.name}" %>
+<% sync_targets = (@vault_server.persisted? && (Samson::Secrets::VaultServer.all - [@vault_server]).presence) %>
 
 <section>
   <%= form_for [:admin, @vault_server], html: { class: "form-horizontal" } do |form| %>
@@ -13,7 +14,23 @@
 
       <%= form.actions delete: [:admin, @vault_server] do %>
         | <%= link_to_history @vault_server %>
+        <% if sync_targets %>
+          | <%= link_to "Sync", "#", data: {target: "#sync_dialog"}, class: 'toggle' %>
+        <% end %>
       <% end %>
     </fieldset>
+  <% end %>
+
+  <% if sync_targets %>
+    <div style="display: none;" id="sync_dialog">
+      <%= form_tag sync_admin_vault_server_path(@vault_server) do %>
+        <fieldset>
+          Copy eligible secrets from
+          <%= select_tag :other_id, options_from_collection_for_select(sync_targets, :id, :name), class: 'form-control', style: 'width: auto; display: inline-block' %>
+          into this server.
+          <%= submit_tag 'Sync!', class: 'btn btn-primary', data: {confirm: "This will override all eligible secrets in this server!"} %>
+        </fieldset>
+      <% end %>
+    </div>
   <% end %>
 </section>

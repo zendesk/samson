@@ -4,6 +4,11 @@ require_relative '../../../test_helper'
 SingleCov.covered!
 
 describe Samson::Secrets::VaultServer do
+  def create_server(i)
+    Samson::Secrets::VaultServer.any_instance.stubs(:validate_connection)
+    Samson::Secrets::VaultServer.create!(name: "pod#{i}", address: 'http://vault-land.com', token: 'TOKEN2')
+  end
+
   describe "validations" do
     let(:server) { Samson::Secrets::VaultServer.new(name: 'abc', address: 'http://vault-land.com', token: "TOKEN") }
 
@@ -46,6 +51,60 @@ describe Samson::Secrets::VaultServer do
       stub_request(:get, "http://vault-land.com/v1/secret/apps/?list=true").
         to_raise(Vault::HTTPError.new("address", stub(code: '200')))
       refute_valid server
+    end
+  end
+
+  describe "#sync!" do
+    let(:from) { create_server(0) }
+    let(:to) { create_server(1) }
+    let(:scoped_key) { "secret/apps/staging/foo/pod100/a" }
+
+    before { to.deploy_groups = [deploy_groups(:pod100)] }
+
+    it "copies global keys" do
+      key = "secret/apps/global/global/global/a"
+      from.client.logical.expects(:list_recursive).returns([key])
+      from.client.logical.expects(:read).with(key).returns("value")
+      to.client.logical.expects(:write).with(key, "value")
+      to.sync!(from)
+    end
+
+    it "copies keys that this server has access to" do
+      key = scoped_key
+      from.client.logical.expects(:list_recursive).returns([key])
+      from.client.logical.expects(:read).with(key).returns("value")
+      to.client.logical.expects(:write).with(key, "value")
+      to.sync!(from)
+    end
+
+    it "does not copy keys that should not be kept in this vault by environment" do
+      deploy_groups(:pod100).environment.update_column(:permalink, 'nope')
+      from.client.logical.expects(:list_recursive).returns([scoped_key])
+      from.client.logical.expects(:read).never
+      to.client.logical.expects(:write).never
+      to.sync!(from)
+    end
+
+    it "does not copy keys that should not be kept in this vault by deploy group" do
+      deploy_groups(:pod100).update_column(:permalink, 'nope')
+      from.client.logical.expects(:list_recursive).returns([scoped_key])
+      from.client.logical.expects(:read).never
+      to.client.logical.expects(:write).never
+      to.sync!(from)
+    end
+  end
+
+  # testing our added method
+  describe "#list_recursive" do
+    it "iterates through all keys" do
+      stub_request(:get, "http://vault-land.com/v1/secret/apps/?list=true").
+        to_return(headers: {content_type: 'application/json'}, body: {data: {keys: ['abc/'.dup, 'def'.dup]}}.to_json)
+      stub_request(:get, "http://vault-land.com/v1/secret/apps/abc/?list=true").
+        to_return(headers: {content_type: 'application/json'}, body: {data: {keys: ['ghi'.dup]}}.to_json)
+
+      server = create_server(0)
+      Samson::Secrets::VaultServer.any_instance.unstub(:validate_connection)
+      server.client.logical.list_recursive("secret/apps/").must_equal ["abc/ghi", "def"]
     end
   end
 end
