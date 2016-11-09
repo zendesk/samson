@@ -24,5 +24,15 @@
       <%= form.actions %>
     </fieldset>
   <% end %>
-
 </section>
+
+<% if @context_options.any? %>
+  <script>
+    // When an existing config is changed, we have to allow editing the context
+    // since we do not know what contexts are in the new file
+    $('#kubernetes_cluster_config_filepath').one('keyup', function(){
+      var context = $('#kubernetes_cluster_config_context');
+      context.replaceWith('<input name="' + context.attr('name') + '" type="text" value="' + context.val() + '" class="form-control">');
+    });
+  </script>
+<% end %>
