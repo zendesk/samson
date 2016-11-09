@@ -8,6 +8,7 @@ class Admin::Kubernetes::ClustersController < ApplicationController
 
   def new
     @cluster = ::Kubernetes::Cluster.new(config_filepath: @config_file)
+    render :edit
   end
 
   def create
