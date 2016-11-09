@@ -20,7 +20,7 @@ class Admin::Kubernetes::ClustersController < ApplicationController
         if success
           redirect_to admin_kubernetes_cluster_path(@cluster)
         else
-          render :new, status: 422
+          render :edit, status: 422
         end
       end
 

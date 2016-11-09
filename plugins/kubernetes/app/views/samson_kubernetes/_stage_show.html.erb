@@ -24,7 +24,7 @@
       </tr>
       <% roles.each do |role, dg_role| %>
         <tr>
-          <td><%= role.name %></td>
+          <td><%= link_to role.name, [@project, role] %></td>
           <% if dg_role %>
             <td><%= dg_role.replicas %></td>
             <td><%= dg_role.cpu %></td>

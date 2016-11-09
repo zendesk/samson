@@ -36,7 +36,7 @@ describe Admin::Kubernetes::ClustersController do
 
       it "renders" do
         get :new
-        assert_template :new
+        assert_template :edit
       end
     end
 
@@ -54,7 +54,7 @@ describe Admin::Kubernetes::ClustersController do
       it "renders when it fails to create" do
         params.delete(:name)
         post :create, params: {kubernetes_cluster: params}
-        assert_template :new
+        assert_template :edit
       end
     end
 
@@ -81,7 +81,7 @@ describe Admin::Kubernetes::ClustersController do
 
       it "works even without an ENV var or old cluster" do
         get :new
-        assert_template :new
+        assert_template :edit
         assigns['context_options'].must_be_empty
       end
 
@@ -89,7 +89,7 @@ describe Admin::Kubernetes::ClustersController do
         with_example_kube_config do |f|
           with_env KUBE_CONFIG_FILE: f do
             get :new
-            assert_template :new
+            assert_template :edit
             assigns['context_options'].wont_be_empty
           end
         end
@@ -99,7 +99,7 @@ describe Admin::Kubernetes::ClustersController do
         with_example_kube_config do |f|
           create_kubernetes_cluster(config_filepath: f)
           get :new
-          assert_template :new
+          assert_template :edit
           assigns['context_options'].wont_be_empty
         end
       end
@@ -115,9 +115,7 @@ describe Admin::Kubernetes::ClustersController do
 
       it "blows up with missing config file" do
         with_env KUBE_CONFIG_FILE: "nope" do
-          assert_raises Errno::ENOENT do
-            get :new
-          end
+          assert_raises(Errno::ENOENT) { get :new }
         end
       end
     end
