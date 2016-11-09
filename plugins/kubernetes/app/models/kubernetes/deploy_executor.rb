@@ -306,31 +306,37 @@ module Kubernetes
 
     def deploy_group_configs
       @deploy_group_configs ||= begin
-        # find role configs to avoid N+1s
+        # load all role configs to avoid N+1s
         roles_configs = Kubernetes::DeployGroupRole.where(
           project_id: @job.project_id,
           deploy_group: @job.deploy.stage.deploy_groups.map(&:id)
         )
 
-        # get all the roles that are configured for this sha
-        configured_roles = Kubernetes::Role.configured_for_project(@job.project, @job.commit)
-        if configured_roles.empty?
-          raise Samson::Hooks::UserError, "No kubernetes config files found at sha #{@job.commit}"
-        end
+        # roles that exist in the repo for this sha
+        roles_present_in_repo = Kubernetes::Role.configured_for_project(@job.project, @job.commit)
 
         # build config for every cluster and role we want to deploy to
         errors = []
         group_configs = @job.deploy.stage.deploy_groups.map do |group|
-          roles = configured_roles.map do |role|
-            role_config = roles_configs.detect do |dgr|
-              dgr.deploy_group_id == group.id && dgr.kubernetes_role_id == role.id
-            end
+          group_role_configs = roles_configs.select { |dgr| dgr.deploy_group_id == group.id }
 
-            unless role_config
-              errors << "No config for role #{role.name} and group #{group.name} found, add it on the stage page."
-              next
-            end
+          if missing = (group_role_configs.map(&:kubernetes_role) - roles_present_in_repo).presence
+            files = missing.map(&:config_file).sort
+            raise(
+              Samson::Hooks::UserError,
+              "Could not find config files for #{group.name} #{files.join(", ")} at #{@job.commit}"
+            )
+          end
 
+          if extra = (roles_present_in_repo - group_role_configs.map(&:kubernetes_role)).presence
+            raise(
+              Samson::Hooks::UserError,
+              "Role #{extra.map(&:name).join(', ')} for #{group.name} is not configured, but in repo at #{@job.commit}"
+            )
+          end
+
+          roles = roles_present_in_repo.map do |role|
+            role_config = group_role_configs.detect { |dgr| dgr.kubernetes_role_id == role.id } || raise
             {
               role: role,
               replicas: role_config.replicas,
@@ -338,6 +344,7 @@ module Kubernetes
               ram: role_config.ram
             }
           end
+
           {deploy_group: group, roles: roles}
         end
 

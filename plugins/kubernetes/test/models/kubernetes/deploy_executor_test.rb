@@ -185,18 +185,19 @@ describe Kubernetes::DeployExecutor do
 
       it "fails when role config is missing" do
         worker_role.delete
-        e = assert_raises Samson::Hooks::UserError do
-          execute!
-        end
-        e.message.must_equal "No config for role resque-worker and group Pod 100 found, add it on the stage page."
+        e = assert_raises(Samson::Hooks::UserError) { execute! }
+        e.message.must_equal(
+          "Role resque-worker for Pod 100 is not configured, but in repo at 1a6f551a2ffa6d88e15eef5461384da0bfb1c194"
+        )
       end
 
       it "fails when no role is setup in the project" do
-        Kubernetes::Role.stubs(:configured_for_project).returns([])
-        e = assert_raises Samson::Hooks::UserError do
-          execute!
-        end
-        e.message.must_equal "No kubernetes config files found at sha 1a6f551a2ffa6d88e15eef5461384da0bfb1c194"
+        Kubernetes::Role.stubs(:configured_for_project).returns([worker_role])
+        e = assert_raises(Samson::Hooks::UserError) { execute! }
+        e.message.must_equal(
+          "Could not find config files for Pod 100 kubernetes/app_server.yml, kubernetes/resque_worker.yml" \
+          " at 1a6f551a2ffa6d88e15eef5461384da0bfb1c194"
+        )
       end
     end
 
@@ -206,9 +207,7 @@ describe Kubernetes::DeployExecutor do
       end
 
       it "fails when the build is not built" do
-        e = assert_raises Samson::Hooks::UserError do
-          execute!
-        end
+        e = assert_raises(Samson::Hooks::UserError) { execute! }
         e.message.must_equal "Build #{build.url} was created but never ran, run it manually."
         out.wont_include "Creating Build"
       end
@@ -315,7 +314,7 @@ describe Kubernetes::DeployExecutor do
       end
 
       it "runs only jobs" do
-        kubernetes_roles(:app_server).delete
+        kubernetes_roles(:app_server).destroy
         assert execute!
         out.must_include "resque-worker: Live\n"
         out.must_include "SUCCESS"
@@ -344,9 +343,7 @@ describe Kubernetes::DeployExecutor do
 
     it "fails when release has errors" do
       Kubernetes::Release.any_instance.expects(:persisted?).at_least_once.returns(false)
-      e = assert_raises Samson::Hooks::UserError do
-        execute!
-      end
+      e = assert_raises(Samson::Hooks::UserError) { execute! }
       e.message.must_equal "Failed to create release: []" # inspected errros
     end
 
