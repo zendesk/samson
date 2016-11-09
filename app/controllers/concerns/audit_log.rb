@@ -5,39 +5,38 @@ module AuditLog
 
   private
 
-  def auditLog(user, action, args)
-    auditLogger(:info, user, action, args)
-  end
+  class Audit
+    def self.log(user, action, *args)
+      logger(:info, user, action, args)
+    end
 
-  def auditInfo(user, action, args)
-    auditLogger(:info, user, action, args)
-  end
+    def self.info(user, action, *args)
+      logger(:info, user, action, args)
+    end
 
-  def auditWarn(user, action, args)
-    auditLogger(:warn, user, action, args)
-  end
+    def self.warn(user, action, *args)
+      logger(:warn, user, action, args)
+    end
 
-  def auditDebug(user, action, args)
-    auditLogger(:debug, user, action, args)
-  end
+    def self.debug(user, action, *args)
+      logger(:debug, user, action, args)
+    end
 
-  def auditError(user, action, args)
-    auditLogger(:error, user, action, args)
-  end
+    def self.error(user, action, *args)
+      logger(:error, user, action, args)
+    end
 
-  def auditLogger(level, user, action, args)
-    if AUDIT_LOGGER && VALID_METHODS.include?(level)
-      message = {}
-      message.user = AuditPresenter.present(user)
-      message.time = Time.now
-      message.action = action
-      i = 0
-      for arg in args
-        message[subject+i] = AuditPresenter.present(arg)
-        i += 1
+    def self.logger(level, user, action, *args)
+      if AUDIT_LOGGER && VALID_METHODS.include?(level)
+        message = {}
+        message[:user] = AuditPresenter.present(user)
+        message[:time] = Time.now
+        message[:action] = action
+        args[0].each_with_index do |arg, i|
+          message['subject' + i.to_s] = AuditPresenter.present(arg)
+        end
+        AUDIT_LOGGER.send(level, message)
       end
-
-      AUDIT_LOGGER.send(level, message)
     end
   end
 end
