@@ -6,13 +6,12 @@ class AuditPresenter
   AVAILABLE_PRESENTERS = [:user, :deploy]
 
   def self.present(object)
-    unless (object.nil?)
-      type = object.class.name.downcase.to_sym
-      if AVAILABLE_PRESENTERS.include?(type)
-        self.send(type, object)
-      else
-        object
-      end
+    return unless object
+    type = object.class.name.underscore.to_sym
+    if AVAILABLE_PRESENTERS.include?(type)
+      self.send(type, object)
+    else
+      object
     end
   end
 

@@ -2,7 +2,6 @@
 
 class AuditPresenter::DeployPresenter
   ## Deploy presenter for Audit Logger
-  ## Returns deploy object with only id, stage id and name, reference, deployer and buddy id and name, and time
 
   def self.present(deploy)
     if deploy
