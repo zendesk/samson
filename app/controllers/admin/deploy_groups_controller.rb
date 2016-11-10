@@ -23,6 +23,7 @@ class Admin::DeployGroupsController < ApplicationController
     @deploy_group = DeployGroup.create(deploy_group_params)
     if @deploy_group.persisted?
       flash[:notice] = "Successfully created deploy group: #{@deploy_group.name}"
+      Samson::Hooks.fire(:controller_action, current_user, 'created deploy group', @deploy_group)
       redirect_to action: :index
     else
       render :edit
@@ -36,6 +37,7 @@ class Admin::DeployGroupsController < ApplicationController
   def update
     if deploy_group.update_attributes(deploy_group_params)
       flash[:notice] = "Successfully saved deploy group: #{deploy_group.name}"
+      Samson::Hooks.fire(:controller_action, current_user, 'edited deploy group', deploy_group)
       redirect_to action: :index
     else
       render :edit
@@ -46,6 +48,7 @@ class Admin::DeployGroupsController < ApplicationController
     if deploy_group.deploy_groups_stages.empty?
       deploy_group.soft_delete!
       flash[:notice] = "Successfully deleted deploy group: #{deploy_group.name}"
+      Samson::Hooks.fire(:controller_action, current_user, 'deleted deploy group', deploy_group)
       redirect_to action: :index
     else
       flash[:error] = "Deploy group is still in use."

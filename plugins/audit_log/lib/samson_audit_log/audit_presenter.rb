@@ -6,6 +6,7 @@ module SamsonAuditLog
     class << self
       AVAILABLE_PRESENTERS = [
         :deploy,
+        :deploy_group,
         :project,
         :user,
         :user_project_role
@@ -25,6 +26,10 @@ module SamsonAuditLog
 
       def deploy(deploy)
         SamsonAuditLog::DeployPresenter.present(deploy)
+      end
+
+      def deploy_group(deploy_group)
+        SamsonAuditLog::DeployGroupPresenter.present(deploy_group)
       end
 
       def project(project)
