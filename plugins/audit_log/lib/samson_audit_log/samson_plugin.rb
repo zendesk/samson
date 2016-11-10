@@ -10,7 +10,7 @@ module SamsonAuditLog
       VALID_METHODS = [:info, :warn, :debug, :error]
 
       def plugin_enabled?
-        not (ENV['SPLUNK_TOKEN'].nil? || ENV['SPLUNK_URL'].nil?)
+        ENV['AUDIT_PLUGIN'] == '1' && !ENV['SPLUNK_TOKEN'].nil? && !ENV['SPLUNK_URL'].nil?
       end
 
       def client
@@ -23,11 +23,11 @@ module SamsonAuditLog
         return unless plugin_enabled?
 
         message = {}
-        message[:user] = AuditPresenter.present(user)
+        message[:actor] = SamsonAuditLog::AuditPresenter.present(user)
         message[:time] = Time.now
         message[:action] = action
         args.each_with_index do |arg, i|
-          message['subject' + i.to_s] = AuditPresenter.present(arg)
+          message['subject' + i.to_s] = SamsonAuditLog::AuditPresenter.present(arg)
         end
         client.send(level, message)
       end
@@ -36,9 +36,13 @@ module SamsonAuditLog
 end
 
 Samson::Hooks.callback :unauthorized_action do |current_user, controller, method|
-  SamsonAuditLog::Audit.log(:warn, current_user, 'unauthorized user', {controller: controller, method: method})
+  SamsonAuditLog::Audit.log(:warn, current_user, 'unauthorized action', {controller: controller, method: method})
 end
 
 Samson::Hooks.callback :after_deploy do |deploy, buddy|
-  SamsonAuditLog::Audit.log(:info, {}, 'deploy_finished', deploy, buddy)
+  SamsonAuditLog::Audit.log(:info, {}, 'deploy completed', deploy, buddy)
+end
+
+Samson::Hooks.callback :controller_action do |current_user, action_text, object|
+  SamsonAuditLog::Audit.log(:info, current_user, action_text, object)
 end
