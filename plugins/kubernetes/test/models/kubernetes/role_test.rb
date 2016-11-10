@@ -230,18 +230,14 @@ describe Kubernetes::Role do
         Kubernetes::Role.configured_for_project(project, 'HEAD').must_equal [role]
       end
 
-      it "raises when a role is configured but not in the repo" do
-        assert_raises Samson::Hooks::UserError do
-          Kubernetes::Role.configured_for_project(project, 'HEAD')
-        end
+      it "ignores when the role is configured but not in the repo" do
+        Kubernetes::Role.configured_for_project(project, 'HEAD').must_equal []
       end
     end
 
-    it "raises when a role is in the repo, but not configured" do
+    it "ignores when a role is in the repo, but not configured" do
       role.destroy!
-      assert_raises Samson::Hooks::UserError do
-        Kubernetes::Role.configured_for_project(project, 'HEAD')
-      end
+      Kubernetes::Role.configured_for_project(project, 'HEAD').must_equal []
     end
 
     it "raises when a role is invalid so the deploy is stopped" do
