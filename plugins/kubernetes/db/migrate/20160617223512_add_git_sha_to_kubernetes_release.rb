@@ -5,10 +5,10 @@ class AddGitShaToKubernetesRelease < ActiveRecord::Migration[4.2]
   end
 
   def up
-    [:git_sha, :git_ref].each do |attribute|
-      if Build.where(attribute => nil).exists?
-        raise "Delete all builds that do not have a #{attribute} and then re-run this migration"
-      end
+    bad = [:git_sha, :git_ref].flat_map { |attribute| Build.where(attribute => nil).all.to_a }
+    if bad.any?
+      puts "Deleting bad builds: #{bad.map(&:attributes)}"
+      bad.each(&:destroy!)
     end
 
     change_column_null :builds, :git_sha, false
