@@ -238,7 +238,7 @@ describe Kubernetes::Role do
     end
 
     it "raises when a role is in the repo, but not configured" do
-      role.soft_delete!
+      role.destroy!
       assert_raises Samson::Hooks::UserError do
         Kubernetes::Role.configured_for_project(project, 'HEAD')
       end
@@ -251,6 +251,16 @@ describe Kubernetes::Role do
       assert_raises Samson::Hooks::UserError do
         Kubernetes::Role.configured_for_project(project, 'HEAD')
       end
+    end
+
+    it "ignores deleted roles" do
+      other = project.kubernetes_roles.create!(
+        config_file: 'foobar/foo.yml', name: 'xasdasd', resource_name: 'dsfsfsdf'
+      )
+      write_config other.config_file, config_content_yml
+      other.soft_delete!
+
+      Kubernetes::Role.configured_for_project(project, 'HEAD').must_equal [role]
     end
   end
 

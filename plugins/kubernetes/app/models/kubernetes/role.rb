@@ -79,7 +79,7 @@ module Kubernetes
     end
 
     def self.configured_for_project(project, git_sha)
-      known = not_deleted.where(project: project)
+      known = project.kubernetes_roles.not_deleted
 
       necessary_role_configs = kubernetes_config_files_in_repo(project, git_sha).map(&:path)
       necessary_role_configs.map do |path|
@@ -123,12 +123,17 @@ module Kubernetes
     end
 
     class << self
+      # this is a little conflicted code because it tries to solve:
+      # - allow adding a new role for a branch without making all deploys fail
+      # - make deploys fail that do not serve all kubernetes/ files in the repo
+      # - make deploys fail that do not serve one-off kubernetes files in the repo
       def kubernetes_config_files_in_repo(project, git_ref)
         folder = 'kubernetes'
         files = project.repository.file_content(folder, git_ref) || []
 
         files = files.split("\n").grep(/\.(yml|yaml|json)$/).map { |f| "#{folder}/#{f}" }
-        files.concat project.kubernetes_roles.map(&:config_file).
+
+        files.concat project.kubernetes_roles.not_deleted.map(&:config_file).
           reject { |f| f.start_with?("#{folder}/") }
 
         files.map do |path|
