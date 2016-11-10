@@ -45,6 +45,8 @@ module Samson
       validate :validate_cert
       validate :validate_connection
 
+      after_save :refresh_vault_clients
+
       def cert_store
         return unless ca_cert.present?
         cert_store = OpenSSL::X509::Store.new
@@ -97,6 +99,10 @@ module Samson
         client.logical.list(PREFIX)
       rescue Vault::VaultError
         errors.add :base, "Unable to connect to server:\n#{$!.message}"
+      end
+
+      def refresh_vault_clients
+        VaultClient.client.refresh_clients
       end
     end
   end

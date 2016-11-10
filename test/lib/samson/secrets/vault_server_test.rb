@@ -94,6 +94,29 @@ describe Samson::Secrets::VaultServer do
     end
   end
 
+  describe "#refresh_vault_clients" do
+    let(:client) { Samson::Secrets::VaultClient.client }
+
+    around do |test|
+      client.refresh_clients
+      test.call
+      client.refresh_clients
+    end
+
+    it "adds new clients" do
+      client.send(:clients).size.must_equal 0
+      create_server(0)
+      client.send(:clients).size.must_equal 1
+    end
+
+    it "updates client attributes" do
+      server = create_server(0)
+      client.send(:clients).size.must_equal 1
+      server.update_attribute(:address, 'http://new.com')
+      client.send(:clients).values.first.address.must_equal 'http://new.com'
+    end
+  end
+
   # testing our added method
   describe "#list_recursive" do
     it "iterates through all keys" do

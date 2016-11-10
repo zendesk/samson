@@ -21,7 +21,7 @@ describe Samson::Secrets::VaultClient do
   end
 
   describe "#initialize" do
-    let(:clients) { client.instance_variable_get(:@clients) }
+    let(:clients) { client.send(:clients) }
 
     it "creates clients without certs" do
       refute clients.values.first.options.fetch(:ssl_cert_store)

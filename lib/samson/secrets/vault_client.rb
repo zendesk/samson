@@ -8,13 +8,6 @@ module Samson
         @client ||= new
       end
 
-      def initialize
-        @clients = {}
-        VaultServer.all.each do |vault_server|
-          @clients[vault_server.id] = vault_server.client
-        end
-      end
-
       # responsible servers should have the same data, so read from the first
       def read(key)
         vault = responsible_clients(key).first
@@ -24,7 +17,7 @@ module Samson
       # different servers have different keys so combine all
       def list_recursive(path)
         path = wrap_key(path)
-        all = @clients.each_value.flat_map do |vault|
+        all = clients.each_value.flat_map do |vault|
           with_retries { vault.logical.list_recursive(path) }
         end
         all.uniq!
@@ -49,10 +42,14 @@ module Samson
         unless id = deploy_group.vault_server_id.presence
           raise "deploy group #{deploy_group.permalink} has no vault server configured"
         end
-        unless client = @clients[id]
+        unless client = clients[id]
           raise "no vault server found with id #{id}"
         end
         client
+      end
+
+      def refresh_clients
+        @clients = nil
       end
 
       private
@@ -69,12 +66,18 @@ module Samson
       def responsible_clients(key)
         deploy_group_permalink = SecretStorage.parse_secret_key(key).fetch(:deploy_group_permalink)
         if deploy_group_permalink == 'global'
-          @clients.values.presence || raise("no vault servers found")
+          clients.values.presence || raise("no vault servers found")
         else
           unless deploy_group = DeployGroup.find_by_permalink(deploy_group_permalink)
             raise "no deploy group with permalink #{deploy_group_permalink} found"
           end
           [client(deploy_group)]
+        end
+      end
+
+      def clients
+        @clients ||= VaultServer.all.each_with_object({}) do |vault_server, all|
+          all[vault_server.id] = vault_server.client
         end
       end
     end
