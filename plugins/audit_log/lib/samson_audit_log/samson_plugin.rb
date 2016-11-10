@@ -46,3 +46,7 @@ end
 Samson::Hooks.callback :controller_action do |current_user, action_text, object|
   SamsonAuditLog::Audit.log(:info, current_user, action_text, object)
 end
+
+Samson::Hooks.callback :merged_user do |current_user, user, target|
+  SamsonAuditLog::Audit.log(:warn, current_user, 'merged user subject1 into subject0', user, target)
+end

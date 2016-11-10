@@ -10,6 +10,7 @@ class Admin::UserMergesController < ApplicationController
     target = User.find(params[:merge_target_id])
     @user.update_attributes!(external_id: target.external_id)
     target.soft_delete!
+    Samson::Hooks.fire(:merged_user, current_user, @user, target)
     redirect_to [:admin, @user], notice: "Merge successful."
   end
 
