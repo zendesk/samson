@@ -33,19 +33,19 @@ class Lock < ActiveRecord::Base
 
   # short summary used in helpers ... keep in sync with locks/_lock.html.erb
   def summary
-    "Locked: #{reason} by #{locked_by} #{time_ago_in_words(created_at)} ago#{unlock_summary}"
+    "Locked: #{reason} by #{locked_by} #{time_ago_in_words(created_at)} ago#{expire_summary}"
   end
 
   def locked_by
     user&.name || 'Unknown user'
   end
 
-  def unlock_summary
+  def expire_summary
     return unless delete_at
     if delete_at < (Samson::Tasks::LockCleaner::INTERVAL * 2).seconds.ago
-      " and automatic unlock is not working"
+      " and expiration is not working"
     else
-      " and will unlock in #{time_ago_in_words(delete_at)}"
+      " and will expire in #{time_ago_in_words(delete_at)}"
     end
   end
 

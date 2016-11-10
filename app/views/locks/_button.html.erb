@@ -3,13 +3,13 @@
 <% if lock %>
   <% if lock.warning? %>
     <%= link_to lock, class: 'btn btn-default', method: :delete do %>
-      <%= warning_icon %> Resolve
+      <%= warning_icon %> Remove
     <% end %>
     <%= render '/locks/lock_button', locking.merge(disabled: true) %>
   <% else %>
     <%= render '/locks/lock_button', warning.merge(disabled: true) %>
     <%= link_to lock, class: 'btn btn-default', method: :delete do %>
-      <%= lock_icon %> Unlock
+      <%= lock_icon %> Remove
     <% end %>
   <% end %>
 <% else %>
