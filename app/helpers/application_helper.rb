@@ -37,10 +37,6 @@ module ApplicationHelper
     "#{controller_name} #{action_name}"
   end
 
-  def revision
-    Rails.application.config.samson.revision.presence
-  end
-
   def sortable(column, title = nil)
     title ||= column.titleize
     direction = (column == params[:sort] && params[:direction] == "asc" ? "desc" : "asc")
