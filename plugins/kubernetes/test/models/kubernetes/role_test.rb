@@ -230,18 +230,14 @@ describe Kubernetes::Role do
         Kubernetes::Role.configured_for_project(project, 'HEAD').must_equal [role]
       end
 
-      it "raises when a role is configured but not in the repo" do
-        assert_raises Samson::Hooks::UserError do
-          Kubernetes::Role.configured_for_project(project, 'HEAD')
-        end
+      it "ignores when the role is configured but not in the repo" do
+        Kubernetes::Role.configured_for_project(project, 'HEAD').must_equal []
       end
     end
 
-    it "raises when a role is in the repo, but not configured" do
-      role.soft_delete!
-      assert_raises Samson::Hooks::UserError do
-        Kubernetes::Role.configured_for_project(project, 'HEAD')
-      end
+    it "ignores when a role is in the repo, but not configured" do
+      role.destroy!
+      Kubernetes::Role.configured_for_project(project, 'HEAD').must_equal []
     end
 
     it "raises when a role is invalid so the deploy is stopped" do
@@ -251,6 +247,16 @@ describe Kubernetes::Role do
       assert_raises Samson::Hooks::UserError do
         Kubernetes::Role.configured_for_project(project, 'HEAD')
       end
+    end
+
+    it "ignores deleted roles" do
+      other = project.kubernetes_roles.create!(
+        config_file: 'foobar/foo.yml', name: 'xasdasd', resource_name: 'dsfsfsdf'
+      )
+      write_config other.config_file, config_content_yml
+      other.soft_delete!
+
+      Kubernetes::Role.configured_for_project(project, 'HEAD').must_equal [role]
     end
   end
 

@@ -78,18 +78,13 @@ module Kubernetes
       end
     end
 
+    # roles for which a config file exists in the repo
+    # ... we ignore those without to allow users to deploy a branch that changes roles
     def self.configured_for_project(project, git_sha)
-      known = not_deleted.where(project: project)
-
-      necessary_role_configs = kubernetes_config_files_in_repo(project, git_sha).map(&:path)
-      necessary_role_configs.map do |path|
-        known.detect { |r| r.config_file == path } || begin
-          url = Rails.application.routes.url_helpers.project_kubernetes_roles_url(project)
-          raise(
-            Samson::Hooks::UserError,
-            "No role for #{path} is configured. Add it on kubernetes Roles tab #{url}"
-          )
-        end
+      project.kubernetes_roles.not_deleted.select do |role|
+        path = role.config_file
+        next unless file_contents = project.repository.file_content(path, git_sha)
+        Kubernetes::RoleConfigFile.new(file_contents, path) # run validations
       end
     end
 
@@ -123,15 +118,14 @@ module Kubernetes
     end
 
     class << self
+      # all configs in kubernetes/* at given ref
       def kubernetes_config_files_in_repo(project, git_ref)
         folder = 'kubernetes'
-        files = project.repository.file_content(folder, git_ref) || []
+        files = project.repository.file_content(folder, git_ref).
+          to_s.split("\n").
+          map { |f| "#{folder}/#{f}" }
 
-        files = files.split("\n").grep(/\.(yml|yaml|json)$/).map { |f| "#{folder}/#{f}" }
-        files.concat project.kubernetes_roles.map(&:config_file).
-          reject { |f| f.start_with?("#{folder}/") }
-
-        files.map do |path|
+        files.grep(/\.(yml|yaml|json)$/).map do |path|
           next unless file_contents = project.repository.file_content(path, git_ref)
           Kubernetes::RoleConfigFile.new(file_contents, path)
         end.compact
