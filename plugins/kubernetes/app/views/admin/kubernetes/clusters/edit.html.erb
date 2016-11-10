@@ -1,5 +1,38 @@
-<%= page_title "Edit Kubernetes Cluster" %>
+<%= page_title(@cluster.new_record? ? "New Kubernetes Cluster" : "Edit Kubernetes Cluster") %>
 
 <section>
-  <%= render 'form' %>
+  <%= form_for [:admin, @cluster], html: { class: "form-horizontal" } do |form| %>
+    <%= render 'shared/errors', object: @cluster %>
+
+    <fieldset>
+      <%= form.input :name, required: true %>
+      <%= form.input :description %>
+      <%= form.input :config_filepath, label: 'Config File path', pattern: /\A\/.*\z/, help: 'Absolute paths only', required: true %>
+      <%= form.input :config_context, label: 'Context', required: true do %>
+        <% if @context_options.any? %>
+          <%= form.select :config_context, @context_options, {}, { class: 'form-control' } %>
+        <% else %>
+          <%= form.text_field :config_context, class: "form-control" %>
+        <% end %>
+      <% end %>
+      <%= form.input :ip_prefix,
+          label: "IP prefix",
+          pattern: Kubernetes::Cluster::IP_PREFIX_PATTERN,
+          help: "First 1 to 3 sections of an IPv4 address to replace Service clusterIP, for example 123.231"
+      %>
+
+      <%= form.actions %>
+    </fieldset>
+  <% end %>
 </section>
+
+<% if @context_options.any? %>
+  <script>
+    // When an existing config is changed, we have to allow editing the context
+    // since we do not know what contexts are in the new file
+    $('#kubernetes_cluster_config_filepath').one('keyup', function(){
+      var context = $('#kubernetes_cluster_config_context');
+      context.replaceWith('<input name="' + context.attr('name') + '" type="text" value="' + context.val() + '" class="form-control">');
+    });
+  </script>
+<% end %>

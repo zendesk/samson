@@ -8,24 +8,15 @@ class Admin::Kubernetes::ClustersController < ApplicationController
 
   def new
     @cluster = ::Kubernetes::Cluster.new(config_filepath: @config_file)
+    render :edit
   end
 
   def create
     @cluster = ::Kubernetes::Cluster.new(new_cluster_params)
-    success = @cluster.save
-
-    respond_to do |format|
-      format.html do
-        if success
-          redirect_to admin_kubernetes_cluster_path(@cluster)
-        else
-          render :new, status: 422
-        end
-      end
-
-      format.json do
-        render json: {}, status: success ? 200 : 422
-      end
+    if @cluster.save
+      redirect_to [:admin, @cluster], notice: "Saved!"
+    else
+      render :edit
     end
   end
 
@@ -41,20 +32,10 @@ class Admin::Kubernetes::ClustersController < ApplicationController
 
   def update
     @cluster.assign_attributes(new_cluster_params)
-    success = @cluster.save
-
-    respond_to do |format|
-      format.html do
-        if success
-          redirect_to admin_kubernetes_clusters_path
-        else
-          render :edit, status: 422
-        end
-      end
-
-      format.json do
-        render json: {}, status: success ? 200 : 422
-      end
+    if @cluster.save
+      redirect_to({action: :index}, notice: "Saved!")
+    else
+      render :edit
     end
   end
 

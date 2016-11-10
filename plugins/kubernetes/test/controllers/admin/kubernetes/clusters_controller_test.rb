@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 require_relative '../../../test_helper'
 
-SingleCov.covered! uncovered: 11
+SingleCov.covered!
 
 describe Admin::Kubernetes::ClustersController do
   def self.use_example_config
@@ -15,12 +15,14 @@ describe Admin::Kubernetes::ClustersController do
     unauthorized :get, :new
     unauthorized :post, :create
     unauthorized :get, :edit, id: 1
+    unauthorized :patch, :update, id: 1
   end
 
   as_a_admin do
     unauthorized :get, :new
     unauthorized :post, :create
     unauthorized :get, :edit, id: 1
+    unauthorized :patch, :update, id: 1
 
     describe "#index" do
       it "renders" do
@@ -36,7 +38,7 @@ describe Admin::Kubernetes::ClustersController do
 
       it "renders" do
         get :new
-        assert_template :new
+        assert_template :edit
       end
     end
 
@@ -54,15 +56,6 @@ describe Admin::Kubernetes::ClustersController do
       it "renders when it fails to create" do
         params.delete(:name)
         post :create, params: {kubernetes_cluster: params}
-        assert_template :new
-      end
-    end
-
-    describe "#edit" do
-      use_example_config
-
-      it "renders" do
-        get :edit, params: {id: cluster.id}
         assert_template :edit
       end
     end
@@ -76,12 +69,36 @@ describe Admin::Kubernetes::ClustersController do
       end
     end
 
+    describe "#edit" do
+      use_example_config
+
+      it "renders" do
+        get :edit, params: {id: cluster.id}
+        assert_template :edit
+      end
+    end
+
+    describe "#update" do
+      use_example_config
+
+      it "updates" do
+        patch :update, params: {id: cluster.id, kubernetes_cluster: {name: "NEW"}}
+        assert_redirected_to "/admin/kubernetes/clusters"
+        cluster.reload.name.must_equal "NEW"
+      end
+
+      it "shows errors when it fails to update" do
+        patch :update, params: {id: cluster.id, kubernetes_cluster: {name: ""}}
+        assert_template :edit
+      end
+    end
+
     describe "#load_default_config_file" do
       before { ::Kubernetes::Cluster.destroy_all }
 
       it "works even without an ENV var or old cluster" do
         get :new
-        assert_template :new
+        assert_template :edit
         assigns['context_options'].must_be_empty
       end
 
@@ -89,7 +106,7 @@ describe Admin::Kubernetes::ClustersController do
         with_example_kube_config do |f|
           with_env KUBE_CONFIG_FILE: f do
             get :new
-            assert_template :new
+            assert_template :edit
             assigns['context_options'].wont_be_empty
           end
         end
@@ -99,7 +116,7 @@ describe Admin::Kubernetes::ClustersController do
         with_example_kube_config do |f|
           create_kubernetes_cluster(config_filepath: f)
           get :new
-          assert_template :new
+          assert_template :edit
           assigns['context_options'].wont_be_empty
         end
       end
@@ -115,9 +132,7 @@ describe Admin::Kubernetes::ClustersController do
 
       it "blows up with missing config file" do
         with_env KUBE_CONFIG_FILE: "nope" do
-          assert_raises Errno::ENOENT do
-            get :new
-          end
+          assert_raises(Errno::ENOENT) { get :new }
         end
       end
     end
