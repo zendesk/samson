@@ -28,8 +28,12 @@ module CurrentUser
   end
 
   def login_user
-    warden.authenticate || unauthorized!
+    warden.authenticate(*warden_strategies) || unauthorized!
     PaperTrail.with_whodunnit(current_user.id) { yield }
+  end
+
+  def warden_strategies
+    warden.default_strategies
   end
 
   def warden
