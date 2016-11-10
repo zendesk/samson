@@ -1,10 +1,10 @@
 # frozen_string_literal: true
 
-class AuditPresenter::DeployPresenter
-  ## Deploy presenter for Audit Logger
+module SamsonAuditLog
+  class DeployPresenter
+    ## Deploy presenter for Audit Logger
 
-  def self.present(deploy)
-    if deploy
+    def self.present(deploy)
       {
         id: deploy.id,
         stage_id: deploy.stage_id,
