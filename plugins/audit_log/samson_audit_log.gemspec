@@ -4,5 +4,5 @@ Gem::Specification.new 'samson_audit_log', '0.0.0' do |s|
   s.authors = ['Robert Ikeoka']
   s.email = ['rikeoka@zendesk.com']
   s.files = Dir['{app,config,db,lib}/**/*']
-  s.add_runtime_dependency 'airbrake'
+  s.add_runtime_dependency 'splunk_logger'
 end

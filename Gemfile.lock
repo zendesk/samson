@@ -8,7 +8,7 @@ PATH
   remote: plugins/audit_log
   specs:
     samson_audit_log (0.0.0)
-      airbrake
+      splunk_logger
 
 PATH
   remote: plugins/aws_ecr
@@ -603,7 +603,6 @@ DEPENDENCIES
   sawyer
   single_cov
   soft_deletion
-  splunk_logger
   sqlite3
   sse-rails-engine
   sucker_punch (~> 2.0)
