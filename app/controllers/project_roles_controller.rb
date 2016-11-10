@@ -20,6 +20,7 @@ class ProjectRolesController < ApplicationController
     Rails.logger.info(
       "#{current_user.name_and_email} set the role #{role_name} to #{user.name}} on project #{current_project.name}"
     )
+    Samson::Hooks.fire(:controller_action, current_user, 'modified project user role', role)
 
     render plain: "Saved!"
   end
