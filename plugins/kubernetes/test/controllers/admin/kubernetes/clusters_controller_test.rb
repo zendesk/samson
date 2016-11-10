@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 require_relative '../../../test_helper'
 
-SingleCov.covered! uncovered: 11
+SingleCov.covered!
 
 describe Admin::Kubernetes::ClustersController do
   def self.use_example_config
@@ -15,12 +15,14 @@ describe Admin::Kubernetes::ClustersController do
     unauthorized :get, :new
     unauthorized :post, :create
     unauthorized :get, :edit, id: 1
+    unauthorized :patch, :update, id: 1
   end
 
   as_a_admin do
     unauthorized :get, :new
     unauthorized :post, :create
     unauthorized :get, :edit, id: 1
+    unauthorized :patch, :update, id: 1
 
     describe "#index" do
       it "renders" do
@@ -58,6 +60,15 @@ describe Admin::Kubernetes::ClustersController do
       end
     end
 
+    describe "#show" do
+      use_example_config
+
+      it "renders" do
+        get :show, params: {id: cluster.id}
+        assert_template :show
+      end
+    end
+
     describe "#edit" do
       use_example_config
 
@@ -67,12 +78,18 @@ describe Admin::Kubernetes::ClustersController do
       end
     end
 
-    describe "#show" do
+    describe "#update" do
       use_example_config
 
-      it "renders" do
-        get :show, params: {id: cluster.id}
-        assert_template :show
+      it "updates" do
+        patch :update, params: {id: cluster.id, kubernetes_cluster: {name: "NEW"}}
+        assert_redirected_to "/admin/kubernetes/clusters"
+        cluster.reload.name.must_equal "NEW"
+      end
+
+      it "shows errors when it fails to update" do
+        patch :update, params: {id: cluster.id, kubernetes_cluster: {name: ""}}
+        assert_template :edit
       end
     end
 
