@@ -109,17 +109,17 @@ describe Lock do
 
   describe "#unlock_summary" do
     it "is emppty when not deleting" do
-      lock.unlock_summary.must_equal nil
+      lock.expire_summary.must_equal nil
     end
 
     it "says when unlock is in the future" do
       lock.delete_at = 5.minutes.from_now + 2
-      lock.unlock_summary.must_equal " and will unlock in 5 minutes"
+      lock.expire_summary.must_equal " and will expire in 5 minutes"
     end
 
     it "says when unlock failed" do
       lock.delete_at = 5.minutes.ago
-      lock.unlock_summary.must_equal " and automatic unlock is not working"
+      lock.expire_summary.must_equal " and expiration is not working"
     end
   end
 
