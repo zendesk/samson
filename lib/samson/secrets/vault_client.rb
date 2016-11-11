@@ -4,6 +4,9 @@ module Samson
   module Secrets
     # Vault wrapper that sends requests to all matching vault servers
     class VaultClient
+      class VaultServerNotConfigured < StandardError
+      end
+
       def self.client
         @client ||= new
       end
@@ -40,7 +43,7 @@ module Samson
 
       def client(deploy_group)
         unless id = deploy_group.vault_server_id.presence
-          raise "deploy group #{deploy_group.permalink} has no vault server configured"
+          raise VaultServerNotConfigured, "deploy group #{deploy_group.permalink} has no vault server configured"
         end
         unless client = clients[id]
           raise "no vault server found with id #{id}"

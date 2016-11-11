@@ -50,6 +50,10 @@ describe Samson::Secrets::HashicorpVaultBackend do
         Samson::Secrets::HashicorpVaultBackend.read_multi(['production/foo/pod2/bar']).must_equal({})
       end
     end
+
+    it "leaves out vaules from deploy groups that have no vault server so KeyResolver works" do
+      Samson::Secrets::HashicorpVaultBackend.read_multi(['production/foo/pod100/bar']).must_equal({})
+    end
   end
 
   describe ".delete" do

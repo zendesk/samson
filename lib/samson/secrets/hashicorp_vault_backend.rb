@@ -23,8 +23,12 @@ module Samson
 
         def read_multi(keys)
           keys.each_with_object({}) do |key, a|
-            if value = read(key)
-              a[key] = value
+            begin
+              if value = read(key)
+                a[key] = value
+              end
+            rescue VaultClient::VaultServerNotConfigured # deploy group has no vault server
+              nil
             end
           end
         end
