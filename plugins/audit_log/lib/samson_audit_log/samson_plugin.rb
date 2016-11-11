@@ -13,13 +13,8 @@ module SamsonAuditLog
         ENV['AUDIT_PLUGIN'] == '1' && !ENV['SPLUNK_TOKEN'].nil? && !ENV['SPLUNK_URL'].nil?
       end
 
-      def client
-        ssl_verify = ENV['SPLUNK_DISABLE_VERIFY_SSL'] != "1"
-        SplunkLogger::Client.new({token: ENV['SPLUNK_TOKEN'], url: ENV['SPLUNK_URL'], verify_ssl: ssl_verify});
-      end
-
       def log(level, user, action, *args)
-        throw ArgumentError unless VALID_METHODS.include?(level)
+        raise ArgumentError unless VALID_METHODS.include?(level)
         return unless plugin_enabled?
 
         message = {}
@@ -30,6 +25,13 @@ module SamsonAuditLog
           message['subject' + i.to_s] = SamsonAuditLog::AuditPresenter.present(arg)
         end
         client.send(level, message)
+      end
+
+      private
+
+      def client
+        ssl_verify = ENV['SPLUNK_DISABLE_VERIFY_SSL'] != "1"
+        SplunkLogger::Client.new({token: ENV['SPLUNK_TOKEN'], url: ENV['SPLUNK_URL'], verify_ssl: ssl_verify});
       end
     end
   end
