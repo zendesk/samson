@@ -39,6 +39,8 @@ module Kubernetes
 
     scope :not_deleted, -> { where(deleted_at: nil) }
 
+    after_soft_delete :delete_kubernetes_deploy_group_roles
+
     # create initial roles for a project by reading kubernetes/*{.yml,.yaml,json} files into roles
     def self.seed!(project, git_ref)
       configs = kubernetes_config_files_in_repo(project, git_ref)
@@ -115,6 +117,10 @@ module Kubernetes
     def parse_resource_value(v)
       return unless v.to_s =~ /^(\d+(?:\.\d+)?)(#{KUBE_RESOURCE_VALUES.keys.join('|')})$/
       $1.to_f * KUBE_RESOURCE_VALUES.fetch($2)
+    end
+
+    def delete_kubernetes_deploy_group_roles
+      kubernetes_deploy_group_roles.destroy_all
     end
 
     class << self
