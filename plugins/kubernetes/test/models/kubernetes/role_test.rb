@@ -306,4 +306,20 @@ describe Kubernetes::Role do
       refute role.defaults
     end
   end
+
+  describe "#delete_kubernetes_deploy_group_roles" do
+    it "cleanes up configs on delete so other validations do not run in to them" do
+      Kubernetes::DeployGroupRole.create!(
+        kubernetes_role: role,
+        project: project,
+        ram: 1,
+        replicas: 1,
+        cpu: 1,
+        deploy_group: deploy_groups(:pod2)
+      )
+      role.kubernetes_deploy_group_roles.wont_equal []
+      role.soft_delete!
+      role.reload.kubernetes_deploy_group_roles.must_equal []
+    end
+  end
 end
