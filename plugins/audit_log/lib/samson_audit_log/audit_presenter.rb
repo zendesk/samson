@@ -8,6 +8,7 @@ module SamsonAuditLog
         :deploy,
         :deploy_group,
         :project,
+        :stage,
         :user,
         :user_project_role
       ].freeze
@@ -34,6 +35,10 @@ module SamsonAuditLog
 
       def project(project)
         SamsonAuditLog::ProjectPresenter.present(project)
+      end
+
+      def stage(stage)
+        SamsonAuditLog::StagePresenter.present(stage)
       end
 
       def user(user)

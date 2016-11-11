@@ -9,8 +9,10 @@ module SamsonAuditLog
         id: role.id,
         user: SamsonAuditLog::AuditPresenter.present(role.user),
         project: SamsonAuditLog::AuditPresenter.present(role.project),
-        role_id: role.role_id,
-        role_name: role.role.try(:name),
+        role: {
+          id: role.role_id,
+          name: role.role.try(:name)
+        },
         created_at: role.created_at,
         updated_at: role.updated_at
       }

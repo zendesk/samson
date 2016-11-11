@@ -7,16 +7,13 @@ module SamsonAuditLog
     def self.present(deploy)
       {
         id: deploy.id,
-        stage_id: deploy.stage_id,
-        stage_name: deploy.stage.try(:name),
+        stage: SamsonAuditLog::AuditPresenter.present(deploy.stage),
         reference: deploy.reference,
-        deployer_id: deploy.job.user_id,
-        deployer_name: deploy.job.user.name,
-        buddy_id: deploy.buddy_id,
-        buddy: deploy.buddy,
+        deployer: SamsonAuditLog::AuditPresenter.present(deploy.job.try(:user)),
+        buddy: SamsonAuditLog::AuditPresenter.present(deploy.buddy),
+        started_at: deploy.started_at,
         created_at: deploy.created_at,
-        updated_at: deploy.updated_at,
-        started_at: deploy.started_at
+        updated_at: deploy.updated_at
       }
     end
   end
