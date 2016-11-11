@@ -67,6 +67,7 @@ module Samson
 
       # Sync all data from one server to another
       # making sure not to leak for example production credentials to a test environment
+      # and using raw access to write only to the correct server
       def sync!(other)
         allowed_envs = deploy_groups.map(&:environment).map(&:permalink) << 'global'
         allowed_groups = deploy_groups.map(&:permalink) << 'global'
@@ -81,8 +82,8 @@ module Samson
         end
 
         keys.each do |key|
-          data = other.client.logical.read(key)
-          client.logical.write(key, data)
+          secret = other.client.logical.read("#{PREFIX}#{key}")
+          client.logical.write("#{PREFIX}#{key}", secret.data)
         end
       end
 

@@ -62,18 +62,18 @@ describe Samson::Secrets::VaultServer do
     before { to.deploy_groups = [deploy_groups(:pod100)] }
 
     it "copies global keys" do
-      key = "secret/apps/global/global/global/a"
+      key = "global/global/global/a"
       from.client.logical.expects(:list_recursive).returns([key])
-      from.client.logical.expects(:read).with(key).returns("value")
-      to.client.logical.expects(:write).with(key, "value")
+      from.client.logical.expects(:read).with("secret/apps/#{key}").returns(stub(data: {foo: :bar}))
+      to.client.logical.expects(:write).with("secret/apps/#{key}", foo: :bar)
       to.sync!(from)
     end
 
     it "copies keys that this server has access to" do
       key = scoped_key
       from.client.logical.expects(:list_recursive).returns([key])
-      from.client.logical.expects(:read).with(key).returns("value")
-      to.client.logical.expects(:write).with(key, "value")
+      from.client.logical.expects(:read).with("secret/apps/#{key}").returns(stub(data: {foo: :bar}))
+      to.client.logical.expects(:write).with("secret/apps/#{key}", foo: :bar)
       to.sync!(from)
     end
 
