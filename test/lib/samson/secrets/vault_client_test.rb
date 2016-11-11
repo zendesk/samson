@@ -88,7 +88,7 @@ describe Samson::Secrets::VaultClient do
 
     it "fails descriptively when deploy group has no vault server associated" do
       deploy_groups(:pod2).update_column(:vault_server_id, nil)
-      e = assert_raises(RuntimeError) { client.client(deploy_groups(:pod2)) }
+      e = assert_raises(Samson::Secrets::VaultClient::VaultServerNotConfigured) { client.client(deploy_groups(:pod2)) }
       e.message.must_equal "deploy group pod2 has no vault server configured"
     end
 
