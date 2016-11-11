@@ -9,8 +9,8 @@ class RemoveDeletedDeployGroups < ActiveRecord::Migration[5.0]
   end
 
   def up
-    existing_roles = Role.where.not(deleted_at: nil).pluck(:id)
-    DeployGroupRole.where.not(kubernetes_role_id: existing_roles).delete_all
+    deleted_roles = Role.where.not(deleted_at: nil).pluck(:id)
+    DeployGroupRole.where(kubernetes_role_id: deleted_roles).delete_all
   end
 
   def down
