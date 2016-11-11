@@ -19,7 +19,7 @@
       <%= form.input :address, as: :url_field, required: true %>
       <%= form.input :token, required: true, input_html: token_options %>
       <%= form.input :tls_verify, as: :check_box %>
-      <%= form.input :ca_cert, as: :text_area %>
+      <%= form.input :ca_cert, as: :text_area, input_html: {size: '80x5', style: 'width: auto'} %>
 
       <%= form.actions delete: [:admin, @vault_server] do %>
         | <%= link_to_history @vault_server %>

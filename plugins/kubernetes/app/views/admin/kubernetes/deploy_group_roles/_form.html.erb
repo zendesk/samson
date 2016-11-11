@@ -17,7 +17,7 @@
       <%= form.select :kubernetes_role_id, [['Loading ...', @deploy_group_role.kubernetes_role_id]], {}, class: "form-control", disabled: @deploy_group_role.persisted? %>
     <% end %>
 
-    <% [[:cpu, 'CPU Cores'], [:ram, 'Ram in MB'], [:replicas, "Replicas"]].each do |column, label| %>
+    <% [[:replicas, "Replicas"], [:cpu, 'CPU Cores'], [:ram, 'Ram in MB']].each do |column, label| %>
       <%= form.input column, label: label do %>
         <%= form.text_field column, class: "form-control" %>
         <% if default = defaults[column] %>
