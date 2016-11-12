@@ -30,13 +30,16 @@ class SessionsController < ApplicationController
   end
 
   def failure
+    Samson::Hooks.fire(:audit_action, nil, 'login', :failed, auth_hash)
     flash[:error] = "Could not log you in."
     redirect_to root_path
   end
 
   def destroy
+    user = current_user # current_user disappears after logout! so can't log using current_user
     logout!
 
+    Samson::Hooks.fire(:audit_action, user, 'logout', :success)
     flash[:notice] = "You have been logged out."
     redirect_to root_path
   end
@@ -44,6 +47,7 @@ class SessionsController < ApplicationController
   protected
 
   def show_login_restriction
+    Samson::Hooks.fire(:audit_action, nil, 'login', :restricted, auth_hash)
     logout!
 
     flash[:error] = "Only #{restricted_email_domain} users are allowed to login"
@@ -94,8 +98,10 @@ class SessionsController < ApplicationController
     if user.persisted?
       self.current_user = user
       user.update_column(:last_login_at, Time.now)
+      Samson::Hooks.fire(:audit_action, user, 'login', :success)
       flash[:notice] = "You have been logged in."
     else
+      Samson::Hooks.fire(:audit_action, user, 'login', :failed, auth_hash)
       flash[:error] = "Could not log you in."
     end
 
