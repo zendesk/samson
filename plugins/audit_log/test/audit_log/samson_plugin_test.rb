@@ -75,16 +75,23 @@ describe SamsonAuditLog do
 
     it 'successfully fires after_deploy' do
       SamsonAuditLog::Audit.expects(:log)
-        .with(:info, {}, 'deploy completed', deploy, user )
+        .with(:info, {}, 'deploy ended', deploy )
         .once
       Samson::Hooks.fire(:after_deploy, deploy, user)
     end
 
-    it 'successfully fires controller_action' do
+    it 'successfully fires before_deploy' do
+      SamsonAuditLog::Audit.expects(:log)
+        .with(:info, {}, 'deploy started', deploy )
+        .once
+      Samson::Hooks.fire(:before_deploy, deploy, user)
+    end
+
+    it 'successfully fires audit_action' do
       SamsonAuditLog::Audit.expects(:log)
         .with(:info, user, 'created deploy', deploy )
         .once
-      Samson::Hooks.fire(:controller_action, user, 'created deploy', deploy)
+      Samson::Hooks.fire(:audit_action, user, 'created deploy', deploy)
     end
 
     it 'successfully fires merged_user' do

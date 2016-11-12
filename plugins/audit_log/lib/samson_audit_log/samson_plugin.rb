@@ -41,11 +41,15 @@ Samson::Hooks.callback :unauthorized_action do |current_user, controller, method
   SamsonAuditLog::Audit.log(:warn, current_user, 'unauthorized action', {controller: controller, method: method})
 end
 
-Samson::Hooks.callback :after_deploy do |deploy, buddy|
-  SamsonAuditLog::Audit.log(:info, {}, 'deploy completed', deploy, buddy)
+Samson::Hooks.callback :after_deploy do |deploy|
+  SamsonAuditLog::Audit.log(:info, {}, 'deploy ended', deploy)
 end
 
-Samson::Hooks.callback :controller_action do |current_user, action_text, object|
+Samson::Hooks.callback :before_deploy do |deploy|
+  SamsonAuditLog::Audit.log(:info, {}, 'deploy started', deploy)
+end
+
+Samson::Hooks.callback :audit_action do |current_user, action_text, object|
   SamsonAuditLog::Audit.log(:info, current_user, action_text, object)
 end
 

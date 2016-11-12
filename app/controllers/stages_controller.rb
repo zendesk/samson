@@ -44,6 +44,7 @@ class StagesController < ApplicationController
     @stage.attributes = stage_params
 
     if @stage.save
+      Samson::Hooks.fire(:audit_action, current_user, 'created stage', @stage)
       redirect_to [@project, @stage]
     else
       render :new
@@ -55,6 +56,7 @@ class StagesController < ApplicationController
 
   def update
     if @stage.update_attributes(stage_params)
+      Samson::Hooks.fire(:audit_action, current_user, 'updated stage', @stage)
       redirect_to [@project, @stage]
     else
       render :edit
@@ -63,6 +65,7 @@ class StagesController < ApplicationController
 
   def destroy
     @stage.soft_delete!
+    Samson::Hooks.fire(:audit_action, current_user, 'deleted stage', @stage)
     redirect_to @project
   end
 
@@ -73,6 +76,7 @@ class StagesController < ApplicationController
 
   def clone
     @stage = Stage.build_clone(@stage)
+    Samson::Hooks.fire(:audit_action, current_user, 'cloned stage', @stage)
     render :new
   end
 

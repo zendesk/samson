@@ -41,7 +41,7 @@ module Samson
       :release_deploy_conditions,
       :deploy_group_env,
       :unauthorized_action,
-      :controller_action,
+      :audit_action,
       :merged_user
     ].freeze
 
