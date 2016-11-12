@@ -85,9 +85,11 @@ describe Admin::EnvironmentsController do
       before { request.env["HTTP_REFERER"] = admin_environments_url }
 
       it 'save' do
-        post :update, params: {environment: {name: 'Test Update', production: false}, id: environment}
+        post :update, params: {environment: {name: 'Test Update', production: false, permalink: 'foo'}, id: environment}
         assert_redirected_to admin_environments_path
-        Environment.find(environment.id).name.must_equal 'Test Update'
+        environment.reload
+        environment.name.must_equal 'Test Update'
+        environment.permalink.must_equal 'foo'
       end
 
       it 'fail to show with blank name' do

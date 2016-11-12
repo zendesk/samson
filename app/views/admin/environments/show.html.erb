@@ -7,6 +7,7 @@
     <%= render 'shared/errors', object: @environment %>
 
     <%= form.input :name, required: true %>
+    <%= form.input :permalink, required: true if @environment.persisted? %>
     <%= form.input :production, as: :check_box, label: 'Affects Production' %>
 
     <%= form.actions %>
