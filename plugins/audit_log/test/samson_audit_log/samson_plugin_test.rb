@@ -73,12 +73,12 @@ describe SamsonAuditLog do
     end
 
     it 'successfully fires after_deploy' do
-      SamsonAuditLog::Audit.expects(:log).with(:info, {}, 'deploy ended', deploy).once
+      SamsonAuditLog::Audit.expects(:log).with(:info, nil, 'deploy ended', deploy).once
       Samson::Hooks.fire(:after_deploy, deploy, user)
     end
 
     it 'successfully fires before_deploy' do
-      SamsonAuditLog::Audit.expects(:log).with(:info, {}, 'deploy started', deploy).once
+      SamsonAuditLog::Audit.expects(:log).with(:info, nil, 'deploy started', deploy).once
       Samson::Hooks.fire(:before_deploy, deploy, user)
     end
 
