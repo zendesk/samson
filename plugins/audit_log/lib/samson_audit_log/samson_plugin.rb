@@ -7,7 +7,7 @@ module SamsonAuditLog
 
   class Audit
     class << self
-      VALID_METHODS = [:info, :warn, :debug, :error]
+      VALID_METHODS = [:info, :warn, :debug, :error].freeze
 
       def plugin_enabled?
         ENV['AUDIT_PLUGIN'] == '1' && !ENV['SPLUNK_TOKEN'].nil? && !ENV['SPLUNK_URL'].nil?
@@ -31,14 +31,14 @@ module SamsonAuditLog
 
       def client
         ssl_verify = ENV['SPLUNK_DISABLE_VERIFY_SSL'] != "1"
-        SplunkLogger::Client.new({token: ENV['SPLUNK_TOKEN'], url: ENV['SPLUNK_URL'], verify_ssl: ssl_verify});
+        SplunkLogger::Client.new(token: ENV['SPLUNK_TOKEN'], url: ENV['SPLUNK_URL'], verify_ssl: ssl_verify)
       end
     end
   end
 end
 
 Samson::Hooks.callback :unauthorized_action do |current_user, controller, method|
-  SamsonAuditLog::Audit.log(:warn, current_user, 'unauthorized action', {controller: controller, method: method})
+  SamsonAuditLog::Audit.log(:warn, current_user, 'unauthorized action', controller: controller, method: method)
 end
 
 Samson::Hooks.callback :after_deploy do |deploy|

@@ -8,7 +8,7 @@ describe SamsonAuditLog do
     @event_sent = stub_request(:post, 'https://foo.bar/services/collector/event').to_return(status: 200)
   end
 
-  with_env( SPLUNK_URL: 'https://foo.bar', SPLUNK_TOKEN: 'sometoken', AUDIT_PLUGIN: '1' )
+  with_env(SPLUNK_URL: 'https://foo.bar', SPLUNK_TOKEN: 'sometoken', AUDIT_PLUGIN: '1')
 
   describe 'SamsonAuditLog::Audit' do
     describe '.plugin_enabled?' do
@@ -67,38 +67,29 @@ describe SamsonAuditLog do
     let(:deploy) { Deploy.first }
 
     it 'successfully fires unauthorized_action' do
-      SamsonAuditLog::Audit.expects(:log)
-        .with(:warn, user, 'unauthorized action', {controller: 'user', method: 'delete'})
-        .once
+      SamsonAuditLog::Audit.expects(:log).
+        with(:warn, user, 'unauthorized action', controller: 'user', method: 'delete').once
       Samson::Hooks.fire(:unauthorized_action, user, 'user', 'delete')
     end
 
     it 'successfully fires after_deploy' do
-      SamsonAuditLog::Audit.expects(:log)
-        .with(:info, {}, 'deploy ended', deploy )
-        .once
+      SamsonAuditLog::Audit.expects(:log).with(:info, {}, 'deploy ended', deploy).once
       Samson::Hooks.fire(:after_deploy, deploy, user)
     end
 
     it 'successfully fires before_deploy' do
-      SamsonAuditLog::Audit.expects(:log)
-        .with(:info, {}, 'deploy started', deploy )
-        .once
+      SamsonAuditLog::Audit.expects(:log).with(:info, {}, 'deploy started', deploy).once
       Samson::Hooks.fire(:before_deploy, deploy, user)
     end
 
     it 'successfully fires audit_action' do
-      SamsonAuditLog::Audit.expects(:log)
-        .with(:info, user, 'created deploy', deploy )
-        .once
+      SamsonAuditLog::Audit.expects(:log).with(:info, user, 'created deploy', deploy).once
       Samson::Hooks.fire(:audit_action, user, 'created deploy', deploy)
     end
 
     it 'successfully fires merged_user' do
       target = User.last
-      SamsonAuditLog::Audit.expects(:log)
-        .with(:warn, user, 'merged user subject1 into subject0', user, target )
-        .once
+      SamsonAuditLog::Audit.expects(:log).with(:warn, user, 'merged user subject1 into subject0', user, target).once
       Samson::Hooks.fire(:merged_user, user, user, target)
     end
   end
