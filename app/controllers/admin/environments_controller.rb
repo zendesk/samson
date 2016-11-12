@@ -47,7 +47,7 @@ class Admin::EnvironmentsController < ApplicationController
   private
 
   def env_params
-    params.require(:environment).permit(:name, :production)
+    params.require(:environment).permit(:name, :permalink, :production)
   end
 
   def environment
