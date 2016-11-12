@@ -42,7 +42,7 @@ module Samson
       end
 
       def client(deploy_group)
-        unless id = deploy_group.vault_server_id.presence
+        unless id = deploy_group.vault_server_id
           raise VaultServerNotConfigured, "deploy group #{deploy_group.permalink} has no vault server configured"
         end
         unless client = clients[id]
@@ -65,17 +65,29 @@ module Samson
         Vault.with_retries(Vault::HTTPConnectionError, attempts: 3, &block)
       end
 
-      # local server for deploy-group specific key and all for global key
+      # - local server for deploy-group specific key
+      # - servers in environment for environment specific key
+      # - all for global key
       def responsible_clients(key)
-        deploy_group_permalink = SecretStorage.parse_secret_key(key).fetch(:deploy_group_permalink)
+        parts = SecretStorage.parse_secret_key(key)
+        deploy_group_permalink = parts.fetch(:deploy_group_permalink)
+        environment_permalink = parts.fetch(:environment_permalink)
+
         if deploy_group_permalink == 'global'
-          clients.values.presence || raise("no vault servers found")
+          if environment_permalink == 'global'
+            clients.values
+          else
+            unless environment = Environment.find_by_permalink(environment_permalink)
+              raise "no environment with permalink #{environment_permalink} found"
+            end
+            environment.deploy_groups.map { |deploy_group| client(deploy_group) }.uniq
+          end
         else
           unless deploy_group = DeployGroup.find_by_permalink(deploy_group_permalink)
             raise "no deploy group with permalink #{deploy_group_permalink} found"
           end
           [client(deploy_group)]
-        end
+        end.presence || raise("no vault servers found")
       end
 
       def clients

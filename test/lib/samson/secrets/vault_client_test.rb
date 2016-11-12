@@ -8,8 +8,8 @@ describe Samson::Secrets::VaultClient do
 
   # have 2 servers around so we can test multi-server logic
   before do
-    server = Samson::Secrets::VaultServer.create!(name: 'pod1', address: 'http://vault-land.com', token: 'TOKEN2')
-    deploy_groups(:pod1).update_column(:vault_server_id, server.id)
+    server = Samson::Secrets::VaultServer.create!(name: 'pod100', address: 'http://vault-land.com', token: 'TOKEN2')
+    deploy_groups(:pod100).update_column(:vault_server_id, server.id)
   end
 
   let(:client) { Samson::Secrets::VaultClient.new }
@@ -66,10 +66,42 @@ describe Samson::Secrets::VaultClient do
   end
 
   describe "#clients" do
-    it "scopes to matching server" do
+    it "scopes to matching deploy group" do
       Samson::Secrets::VaultServer.last.update_column(:address, 'do-not-use')
       assert_vault_request :put, 'global/global/pod2/foo' do
         client.write('global/global/pod2/foo', foo: :bar)
+      end
+    end
+
+    describe "environment matching" do
+      before do
+        # make sure we never write to staging pod100
+        Samson::Secrets::VaultServer.last.update_column(:address, 'do-not-use')
+      end
+
+      it "scopes to matching environment" do
+        deploy_groups(:pod1).update_attribute(:vault_server_id, deploy_groups(:pod2).vault_server_id)
+        assert_vault_request :put, 'production/global/global/foo' do
+          client.write('production/global/global/foo', foo: :bar)
+        end
+      end
+
+      it "fails when not all deploy groups in that environment have a vault server" do
+        assert_raises Samson::Secrets::VaultClient::VaultServerNotConfigured do
+          client.write('production/global/global/foo', foo: :bar)
+        end
+      end
+
+      it "fails when no servers were found" do
+        deploy_groups(:pod1).delete
+        deploy_groups(:pod2).delete
+        e = assert_raises(RuntimeError) { client.write('production/global/global/foo', foo: :bar) }
+        e.message.must_equal "no vault servers found"
+      end
+
+      it "fails with unknown environment" do
+        e = assert_raises(RuntimeError) { client.write('unfound/global/global/foo', foo: :bar) }
+        e.message.must_equal "no environment with permalink unfound found"
       end
     end
 
