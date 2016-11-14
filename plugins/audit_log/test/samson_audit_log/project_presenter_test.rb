@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 require_relative '../test_helper'
 
-SingleCov.covered! unless defined?(Rake) # rake preloads all plugins
+SingleCov.covered!
 
 describe 'SamsonAuditLog::ProjectPresenter' do
   let(:project) { Project.first }
