@@ -80,7 +80,7 @@ module Samson
             unless environment = Environment.find_by_permalink(environment_permalink)
               raise "no environment with permalink #{environment_permalink} found"
             end
-            environment.deploy_groups.map { |deploy_group| client(deploy_group) }.uniq
+            environment.deploy_groups.select(&:vault_server_id).map { |deploy_group| client(deploy_group) }.uniq
           end
         else
           unless deploy_group = DeployGroup.find_by_permalink(deploy_group_permalink)
