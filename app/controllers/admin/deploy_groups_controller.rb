@@ -198,7 +198,10 @@ class Admin::DeployGroupsController < ApplicationController
   end
 
   def allowed_deploy_group_params
-    ([:name, :environment_id, :env_value, :vault_server_id] + Samson::Hooks.fire(:deploy_group_permitted_params)).freeze
+    (
+      [:name, :environment_id, :env_value, :vault_server_id, :permalink] +
+      Samson::Hooks.fire(:deploy_group_permitted_params)
+    ).freeze
   end
 
   def deploy_group
