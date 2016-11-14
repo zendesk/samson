@@ -10,11 +10,12 @@
       <td><%= stage.deploy_groups.sort_by(&:natural_order).map(&:name).join(', ') %></td>
     <% end %>
 
-    <% if deploy = stage.last_successful_deploy %>
+    <% if deploy = stage.last_deploy %>
       <td>
         <%= link_to deploy.short_reference, [project, deploy], title: "#{deploy.reference} at #{deploy.updated_at.to_s(:db)}" %>
         by
         <%= deploy.user.name %>
+        <%= deploy_status_badge deploy %>
       </td>
     <% else %>
       <td>-</td>
