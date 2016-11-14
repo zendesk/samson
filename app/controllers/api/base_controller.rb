@@ -29,10 +29,13 @@ class Api::BaseController < ApplicationController
   end
 
   def using_per_request_auth?
+    return unless warden = request.env['warden']
+    warden.authenticate # trigger auth so we see which strategy won
+
     [
-      Warden::Strategies::BasicStrategy::KEY,
-      Warden::Strategies::Doorkeeper::KEY
-    ].include? request.env['warden']&.winning_strategy
+      Warden::Strategies::BasicStrategy,
+      Warden::Strategies::Doorkeeper
+    ].include? warden.winning_strategy.class
   end
 
   # without json format 404/500 pages are rendered in html and auth will redirect
