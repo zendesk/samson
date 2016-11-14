@@ -353,11 +353,11 @@ ActiveRecord::Schema.define(version: 20161115181738) do
   add_index "projects", ["token", "deleted_at"], name: "index_projects_on_token_and_deleted_at", length: {"token"=>191, "deleted_at"=>nil}, using: :btree
 
   create_table "releases", force: :cascade do |t|
-    t.integer  "project_id",  limit: 4,               null: false
-    t.string   "commit",      limit: 255,             null: false
-    t.integer  "number",      limit: 4,   default: 1
-    t.integer  "author_id",   limit: 4,               null: false
-    t.string   "author_type", limit: 255,             null: false
+    t.integer  "project_id",  limit: 4,                 null: false
+    t.string   "commit",      limit: 255,               null: false
+    t.string   "number",      limit: 255, default: "1", null: false
+    t.integer  "author_id",   limit: 4,                 null: false
+    t.string   "author_type", limit: 255,               null: false
     t.datetime "created_at"
     t.datetime "updated_at"
     t.integer  "build_id",    limit: 4

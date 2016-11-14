@@ -11,31 +11,47 @@ describe Release do
 
     it "creates a new release" do
       release = project.releases.create!(commit: commit, author: author)
-      assert_equal 124, release.number
+      assert_equal "124", release.number
     end
 
-    it "increments the release number" do
-      release = project.releases.create!(author: author, commit: "bar")
-      release.update_column(:number, 41)
-      release = project.releases.create!(commit: "foo", author: author)
-      assert_equal 42, release.number
+    describe "when incrementing the release number" do
+      it "correctly increments continuous versions" do
+        release = project.releases.create!(author: author, commit: "bar")
+        release.update_column(:number, "41")
+        release = project.releases.create!(commit: "foo", author: author)
+        assert_equal "42", release.number
+      end
+
+      it "correctly increments major-minor versions" do
+        release = project.releases.create!(author: author, commit: "bar")
+        release.update_column(:number, "4.1")
+        release = project.releases.create!(commit: "foo", author: author)
+        assert_equal "4.2", release.number
+      end
+
+      it "correctly increments semantic versions" do
+        release = project.releases.create!(author: author, commit: "bar")
+        release.update_column(:number, "4.1.6")
+        release = project.releases.create!(commit: "foo", author: author)
+        assert_equal "4.1.7", release.number
+      end
     end
 
     it 'uses the specified release number' do
       release = project.releases.create!(author: author, commit: "bar", number: 1234)
-      assert_equal 1234, release.number
+      assert_equal "1234", release.number
     end
 
     it 'uses the default release number if build number is nil' do
       project.releases.destroy_all
       release = project.releases.create!(author: author, commit: "bar", number: nil)
-      assert_equal 1, release.number
+      assert_equal "1", release.number
     end
 
     it 'uses the build number if build number is not given' do
       project.releases.destroy_all
       release = project.releases.create!(author: author, commit: "bar")
-      assert_equal 1, release.number
+      assert_equal "1", release.number
     end
   end
 
