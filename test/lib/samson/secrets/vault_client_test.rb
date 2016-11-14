@@ -86,8 +86,8 @@ describe Samson::Secrets::VaultClient do
         end
       end
 
-      it "fails when not all deploy groups in that environment have a vault server" do
-        assert_raises Samson::Secrets::VaultClient::VaultServerNotConfigured do
+      it "ignores when not all deploy groups in that environment have a vault server" do
+        assert_vault_request :put, 'production/global/global/foo' do
           client.write('production/global/global/foo', foo: :bar)
         end
       end
