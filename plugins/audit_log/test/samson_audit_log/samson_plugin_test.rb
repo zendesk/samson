@@ -82,6 +82,11 @@ describe SamsonAuditLog do
       Samson::Hooks.fire(:before_deploy, deploy, user)
     end
 
+    it 'successfully fires audit_action with 0 subject objects' do
+      SamsonAuditLog::Audit.expects(:log).with(:info, user, 'created deploy').once
+      Samson::Hooks.fire(:audit_action, user, 'created deploy')
+    end
+
     it 'successfully fires audit_action with 1 subject object' do
       SamsonAuditLog::Audit.expects(:log).with(:info, user, 'created deploy', deploy).once
       Samson::Hooks.fire(:audit_action, user, 'created deploy', deploy)
