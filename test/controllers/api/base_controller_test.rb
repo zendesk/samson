@@ -41,29 +41,6 @@ describe Api::BaseController do
     end
   end
 
-  describe "#using_per_request_auth?" do
-    # cannot use login_as since setting the winning_strategy breaks regular auth
-    before { request.env['warden'].set_user users(:admin) }
-
-    it "allows posts without auth token for basic auth" do
-      request.env['warden'].winning_strategy = :basic
-      post :test_render, params: {test_route: true, format: :json}
-      assert_response :success
-    end
-
-    it "allows posts without auth token for oauth auth" do
-      request.env['warden'].winning_strategy = :doorkeeper
-      post :test_render, params: {test_route: true, format: :json}
-      assert_response :success
-    end
-
-    it "does not allows posts without auth token for sessions" do
-      assert_raises ActionController::InvalidAuthenticityToken do
-        post :test_render, params: {test_route: true, format: :json}
-      end
-    end
-  end
-
   describe "#enforce_json_format" do
     it "fails without json" do
       get :test_render, params: {test_route: true}
@@ -94,6 +71,54 @@ describe Api::BaseController do
     it "fails when scope is unknown" do
       e = assert_raises(RuntimeError) { get :test_render, params: {test_route: true} }
       e.message.must_include "Add api_base_test to"
+    end
+  end
+end
+
+describe "Api::BaseController Integration" do
+  describe "#using_per_request_auth?" do
+    let(:user) { users(:super_admin) }
+    let(:token) { Doorkeeper::AccessToken.create!(resource_owner_id: user.id, scopes: 'default') }
+    let(:post_params) { {lock: {resource_id: nil, resource_type: nil}, format: :json} }
+
+    with_forgery_protection
+
+    it 'can POST without authenticiy_token when logging in via per request doorkeeper auth' do
+      post '/api/locks', params: post_params, headers: {'Authorization' => "Bearer #{token.token}"}
+      assert_response :success
+    end
+
+    it 'can POST without authenticiy_token when logging in via per request basic auth' do
+      auth = "Basic #{Base64.encode64(user.email + ':' + user.token).strip}"
+      post '/api/locks', params: post_params, headers: {'Authorization' => auth}
+      assert_response :success
+    end
+
+    it 'does not authenticate twice' do
+      ::Doorkeeper::OAuth::Token.expects(:authenticate).returns(token) # called inside of DoorkeeperStrategy
+      post '/api/locks', params: post_params, headers: {'Authorization' => "Bearer #{token.token}"}
+      assert_response :success
+    end
+
+    describe "when in the browser" do
+      before { stub_session_auth }
+
+      it 'can GET without authenticiy_token' do
+        get '/api/locks', params: {format: :json}
+        assert_response :success
+      end
+
+      it 'cannot POST without authenticiy_token' do
+        assert_raises ActionController::InvalidAuthenticityToken do
+          post '/api/locks', params: post_params
+        end
+      end
+    end
+
+    it 'cannot POST without authenticiy_token when not logged in' do
+      assert_raises ActionController::InvalidAuthenticityToken do
+        post '/api/locks', params: post_params
+      end
     end
   end
 end

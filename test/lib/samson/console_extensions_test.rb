@@ -4,15 +4,12 @@ require_relative '../../test_helper'
 SingleCov.covered!
 
 describe Samson::ConsoleExtensions do
+  with_forgery_protection
+
   describe "#login" do
     include Samson::ConsoleExtensions
 
     class ConsoleExtensionTestController < ApplicationController
-      # turned off in test ... but we want to simulate it
-      def allow_forgery_protection
-        true
-      end
-
       include CurrentUser
       before_action :authorize_super_admin!
 

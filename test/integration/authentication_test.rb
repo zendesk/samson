@@ -5,10 +5,6 @@ SingleCov.not_covered!
 
 # needs Integration at the end for minitest-spec-rails
 describe 'Authentication Integration' do
-  def stub_session_auth
-    Warden::SessionSerializer.any_instance.stubs(:session).returns("warden.user.default.key" => user.id)
-  end
-
   before do
     # UI wants to show github status
     stub_request(:get, "#{Rails.application.config.samson.github.status_url}/api/status.json").to_timeout

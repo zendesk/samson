@@ -160,6 +160,22 @@ class ActiveSupport::TestCase
       end
     end
   end
+
+  def stub_session_auth
+    Warden::SessionSerializer.any_instance.stubs(:session).returns("warden.user.default.key" => user.id)
+  end
+
+  def self.with_forgery_protection
+    around do |test|
+      begin
+        old = ActionController::Base.allow_forgery_protection
+        ActionController::Base.allow_forgery_protection = true
+        test.call
+      ensure
+        ActionController::Base.allow_forgery_protection = old
+      end
+    end
+  end
 end
 
 Mocha::Expectation.class_eval do
