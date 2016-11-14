@@ -82,9 +82,14 @@ describe SamsonAuditLog do
       Samson::Hooks.fire(:before_deploy, deploy, user)
     end
 
-    it 'successfully fires audit_action' do
+    it 'successfully fires audit_action with 1 subject object' do
       SamsonAuditLog::Audit.expects(:log).with(:info, user, 'created deploy', deploy).once
       Samson::Hooks.fire(:audit_action, user, 'created deploy', deploy)
+    end
+
+    it 'successfully fires audit_action with many subject objects' do
+      SamsonAuditLog::Audit.expects(:log).with(:info, user, 'created deploy', :test, 'test', deploy).once
+      Samson::Hooks.fire(:audit_action, user, 'created deploy', :test, 'test', deploy)
     end
 
     it 'successfully fires merged_user' do

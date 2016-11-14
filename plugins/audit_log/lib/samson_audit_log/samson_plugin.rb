@@ -49,8 +49,8 @@ Samson::Hooks.callback :before_deploy do |deploy|
   SamsonAuditLog::Audit.log(:info, nil, 'deploy started', deploy)
 end
 
-Samson::Hooks.callback :audit_action do |current_user, action_text, object|
-  SamsonAuditLog::Audit.log(:info, current_user, action_text, object)
+Samson::Hooks.callback :audit_action do |current_user, action_text, *objects|
+  SamsonAuditLog::Audit.log(:info, current_user, action_text, *objects)
 end
 
 Samson::Hooks.callback :merged_user do |current_user, user, target|
