@@ -87,12 +87,14 @@ describe Admin::DeployGroupsController do
       it 'saves' do
         post :update, params: {
           deploy_group: {
-            name: 'Test Update', environment_id: environments(:production).id
+            name: 'Test Update', environment_id: environments(:production).id, permalink: 'fooo'
           },
           id: deploy_group.id
         }
         assert_redirected_to admin_deploy_groups_path
-        DeployGroup.find(deploy_group.id).name.must_equal 'Test Update'
+        deploy_group.reload
+        deploy_group.name.must_equal 'Test Update'
+        deploy_group.permalink.must_equal 'fooo'
       end
 
       it 'fail to update with blank name' do
