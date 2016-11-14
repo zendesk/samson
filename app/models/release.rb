@@ -4,7 +4,9 @@ class Release < ActiveRecord::Base
   belongs_to :author, polymorphic: true
   belongs_to :build
 
-  before_create :assign_release_number
+  before_validation :assign_release_number
+
+  validates :number, format: { with: /\A\d+(.\d+)*\z/, message: "Version number may only be numbers and decimals." }
 
   # DEFAULT_RELEASE_NUMBER is the default value assigned to release#number by the database.
   # This constant is here for convenience - the value that the database uses is in db/schema.rb.
@@ -53,10 +55,6 @@ class Release < ActiveRecord::Base
 
     latest_release_number = project.releases.last.try(:number) || "0"
 
-    # Split and increment the lowest versioning digit
-    split_release_number = latest_release_number.split(".")
-    split_release_number[-1] = (split_release_number[-1].to_i + 1).to_s
-
-    self.number = split_release_number.join(".")
+    raise "Unable to auto bump version" unless self.number = latest_release_number.dup.sub!(/\d+$/) { |d| d.to_i + 1 }
   end
 end

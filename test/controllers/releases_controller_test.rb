@@ -35,6 +35,7 @@ describe ReleasesController do
   as_a_project_deployer do
     describe "#create" do
       let(:release_params) { { commit: "abcd" } }
+      let(:bad_release_params) { { commit: "abcd", number: "1A"} }
       before { GITHUB.stubs(:create_release) }
 
       it "creates a new release" do
@@ -42,6 +43,11 @@ describe ReleasesController do
           post :create, params: {project_id: project.to_param, release: release_params}
           assert_redirected_to "/projects/foo/releases/v124"
         end
+      end
+
+      it "rescues bad input and redirects back to new" do
+        post :create, params: {project_id: project.to_param, release: bad_release_params}
+        assert_redirected_to action: :new
       end
     end
 

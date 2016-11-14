@@ -15,30 +15,22 @@ describe Release do
     end
 
     describe "when incrementing the release number" do
-      it "correctly increments continuous versions" do
-        release = project.releases.create!(author: author, commit: "bar")
-        release.update_column(:number, "41")
-        release = project.releases.create!(commit: "foo", author: author)
-        assert_equal "42", release.number
-      end
-
-      it "correctly increments major-minor versions" do
-        release = project.releases.create!(author: author, commit: "bar")
-        release.update_column(:number, "4.1")
-        release = project.releases.create!(commit: "foo", author: author)
-        assert_equal "4.2", release.number
-      end
-
-      it "correctly increments semantic versions" do
-        release = project.releases.create!(author: author, commit: "bar")
-        release.update_column(:number, "4.1.6")
-        release = project.releases.create!(commit: "foo", author: author)
-        assert_equal "4.1.7", release.number
+      let(:release) { project.releases.create!(author: author, commit: "bar") }
+      [
+        {type: "continuous", previous: "41", next: "42"},
+        {type: "major-minor", previous: "4.1", next: "4.2"},
+        {type: "semantic", previous: "4.1.1", next: "4.1.2"},
+      ].each do |version_type|
+        it "correctly increments #{version_type[:type]} versions" do
+          release.update_column(:number, version_type[:previous])
+          release = project.releases.create!(commit: "foo", author: author)
+          assert_equal version_type[:next], release.number
+        end
       end
     end
 
     it 'uses the specified release number' do
-      release = project.releases.create!(author: author, commit: "bar", number: 1234)
+      release = project.releases.create!(author: author, commit: "bar", number: "1234")
       assert_equal "1234", release.number
     end
 
@@ -52,6 +44,13 @@ describe Release do
       project.releases.destroy_all
       release = project.releases.create!(author: author, commit: "bar")
       assert_equal "1", release.number
+    end
+
+    it "validates invalid numbers" do
+      release = project.releases.new(author: author, commit: "bar", number: "1a")
+      assert_raises ActiveRecord::RecordInvalid do
+        release.save!
+      end
     end
   end
 
