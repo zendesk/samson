@@ -23,7 +23,6 @@ class Admin::EnvironmentsController < ApplicationController
     @environment = Environment.create(env_params)
     if @environment.persisted?
       flash[:notice] = "Successfully saved environment: #{@environment.name}"
-      Samson::Hooks.fire(:audit_action, current_user, 'created environment', @environment)
       redirect_to action: 'index'
     else
       render 'show'
@@ -33,7 +32,6 @@ class Admin::EnvironmentsController < ApplicationController
   def update
     if environment.update_attributes(env_params)
       flash[:notice] = "Successfully saved environment: #{environment.name}"
-      Samson::Hooks.fire(:audit_action, current_user, 'updated environment', environment)
       redirect_to action: 'index'
     else
       render 'show'
@@ -43,7 +41,6 @@ class Admin::EnvironmentsController < ApplicationController
   def destroy
     environment.soft_delete!
     flash[:notice] = "Successfully deleted environment: #{environment.name}"
-    Samson::Hooks.fire(:audit_action, current_user, 'deleted environment', environment)
     redirect_to action: 'index'
   end
 

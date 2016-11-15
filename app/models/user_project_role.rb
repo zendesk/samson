@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 class UserProjectRole < ActiveRecord::Base
   include HasRole
+  include AuditLog
 
   has_paper_trail skip: [:updated_at, :created_at]
 

@@ -37,7 +37,6 @@ class ProjectsController < ApplicationController
       if Rails.application.config.samson.project_created_email
         ProjectMailer.created_email(@current_user, @project).deliver_later
       end
-      Samson::Hooks.fire(:audit_action, current_user, 'created project', @project)
       redirect_to @project
       Rails.logger.info("#{@current_user.name_and_email} created a new project #{@project.to_param}")
     else
@@ -57,7 +56,6 @@ class ProjectsController < ApplicationController
 
   def update
     if project.update_attributes(project_params)
-      Samson::Hooks.fire(:audit_action, current_user, 'edited project', project)
       redirect_to project
     else
       render :edit

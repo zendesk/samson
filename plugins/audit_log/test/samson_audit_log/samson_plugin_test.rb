@@ -99,7 +99,7 @@ describe SamsonAuditLog do
 
     it 'successfully fires merged_user' do
       target = User.last
-      SamsonAuditLog::Audit.expects(:log).with(:warn, user, 'merged user subject1 into subject0', user, target).once
+      SamsonAuditLog::Audit.expects(:log).with(:warn, user, 'merged user1 into user0', user, target).once
       Samson::Hooks.fire(:merged_user, user, user, target)
     end
   end

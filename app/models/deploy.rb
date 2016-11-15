@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 class Deploy < ActiveRecord::Base
+  include AuditLog
   has_soft_deletion default_scope: true
 
   belongs_to :stage, touch: true

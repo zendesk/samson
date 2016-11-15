@@ -2,6 +2,7 @@
 class Project < ActiveRecord::Base
   include Permalinkable
   include Searchable
+  include AuditLog
 
   has_soft_deletion default_scope: true
 

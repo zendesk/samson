@@ -17,7 +17,6 @@ class Admin::ProjectsController < ApplicationController
     if Rails.application.config.samson.project_deleted_email
       ProjectMailer.deleted_email(@current_user, project).deliver_later
     end
-    Samson::Hooks.fire(:audit_action, current_user, 'deleted project', project)
     flash[:notice] = "Project removed."
     redirect_to admin_projects_path
   end
