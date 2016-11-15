@@ -8,12 +8,19 @@ PaperTrail.whodunnit =
   end
 
 class << PaperTrail
-  def with_whodunnit(user)
-    old = whodunnit
-    self.whodunnit = user
+  undef_method :whodunnit= # nobody uses this directly and we should never use the default papertrail before_actions
+  attr_reader :whodunnit_user
+
+  def with_whodunnit_user(user)
+    old = @whodunnit_user
+    @whodunnit_user = user
     yield
   ensure
-    self.whodunnit = old
+    @whodunnit_user = old
+  end
+
+  def whodunnit
+    @whodunnit_user&.id
   end
 
   def with_logging
