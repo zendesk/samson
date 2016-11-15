@@ -74,7 +74,7 @@ describe Integrations::BuildkiteController do
         post :create, params: payload.merge(token: project.token), test_route: true
 
         project.releases.size.must_equal 1
-        project.releases.first.number.must_equal 9
+        project.releases.first.number.must_equal "9"
       end
     end
   end

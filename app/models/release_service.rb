@@ -4,10 +4,12 @@ class ReleaseService
     @project = project
   end
 
-  def create_release!(attrs = {})
-    release = @project.releases.create!(attrs)
-    push_tag_to_git_repository(release)
-    start_deploys(release)
+  def release!(attrs = {})
+    release = @project.releases.create(attrs)
+    if release.persisted?
+      push_tag_to_git_repository(release)
+      start_deploys(release)
+    end
     release
   end
 

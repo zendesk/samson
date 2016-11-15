@@ -328,7 +328,7 @@ describe Project do
         [diff, r]
       end
       others.map! do |diff, r|
-        r.update_column(:number, release.number + diff)
+        r.update_column(:number, (release.number.to_i + diff).to_s)
         r
       end
 

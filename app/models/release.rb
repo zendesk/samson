@@ -4,11 +4,13 @@ class Release < ActiveRecord::Base
   belongs_to :author, polymorphic: true
   belongs_to :build
 
-  before_create :assign_release_number
+  before_validation :assign_release_number
+
+  validates :number, format: { with: /\A\d+(.\d+)*\z/, message: "may only contain numbers and decimals." }
 
   # DEFAULT_RELEASE_NUMBER is the default value assigned to release#number by the database.
   # This constant is here for convenience - the value that the database uses is in db/schema.rb.
-  DEFAULT_RELEASE_NUMBER = 1
+  DEFAULT_RELEASE_NUMBER = "1"
 
   def self.sort_by_version
     order(number: :desc)
@@ -49,9 +51,10 @@ class Release < ActiveRecord::Base
   def assign_release_number
     # Detect whether the number has been overwritten by params, e.g. using the
     # release-number-from-ci plugin.
-    return if number != DEFAULT_RELEASE_NUMBER && !number.nil?
+    return if number != DEFAULT_RELEASE_NUMBER && number.present?
 
-    latest_release_number = project.releases.last.try(:number) || 0
-    self.number = latest_release_number + 1
+    latest_release_number = project.releases.last.try(:number) || "0"
+
+    raise "Unable to auto bump version" unless self.number = latest_release_number.dup.sub!(/\d+$/) { |d| d.to_i + 1 }
   end
 end

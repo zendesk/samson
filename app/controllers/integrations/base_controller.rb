@@ -56,7 +56,7 @@ class Integrations::BaseController < ApplicationController
   def create_new_release
     unless project.last_release_contains_commit?(commit)
       release_service = ReleaseService.new(project)
-      release_service.create_release!(release_params)
+      release_service.release!(release_params)
     end
   end
 
@@ -106,7 +106,8 @@ class Integrations::BaseController < ApplicationController
   end
 
   def create_release_and_build_record
-    release = create_new_release || latest_release
+    release = create_new_release
+    release = latest_release unless release && release.persisted?
     create_build(release.version, [release])
   end
 
