@@ -6,7 +6,7 @@ class Release < ActiveRecord::Base
 
   before_validation :assign_release_number
 
-  validates :number, format: { with: /\A\d+(.\d+)*\z/, message: "Version number may only be numbers and decimals." }
+  validates :number, format: { with: /\A\d+(.\d+)*\z/, message: "may only contain numbers and decimals." }
 
   # DEFAULT_RELEASE_NUMBER is the default value assigned to release#number by the database.
   # This constant is here for convenience - the value that the database uses is in db/schema.rb.

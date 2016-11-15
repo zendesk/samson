@@ -47,7 +47,7 @@ describe ReleasesController do
 
       it "rescues bad input and redirects back to new" do
         post :create, params: {project_id: project.to_param, release: bad_release_params}
-        assert_redirected_to action: :new
+        assert_template :new
       end
     end
 

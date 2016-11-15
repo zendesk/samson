@@ -20,11 +20,13 @@ class ReleasesController < ApplicationController
   end
 
   def create
-    @release = ReleaseService.new(@project).create_release!(release_params)
-    redirect_to [@project, @release]
-  rescue ActiveRecord::RecordInvalid => e
-    flash[:error] = e.message
-    redirect_to action: :new
+    @release = ReleaseService.new(@project).release!(release_params)
+    if @release.persisted?
+      redirect_to [@project, @release]
+    else
+      flash[:error] = @release.errors.full_messages.to_sentence
+      render action: :new
+    end
   end
 
   private
