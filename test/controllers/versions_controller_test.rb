@@ -4,8 +4,8 @@ require_relative '../test_helper'
 SingleCov.covered!
 
 describe VersionsController do
-  def create_version(id)
-    PaperTrail.with_whodunnit(id) do
+  def create_version(user)
+    PaperTrail.with_whodunnit_user(user) do
       PaperTrail.with_logging do
         stage.update_attribute(:name, 'Fooo')
       end
@@ -16,7 +16,7 @@ describe VersionsController do
 
   as_a_viewer do
     describe "#index" do
-      before { create_version user.id }
+      before { create_version user }
 
       it "renders" do
         get :index, params: {item_id: stage.id, item_type: stage.class.name}
@@ -32,7 +32,7 @@ describe VersionsController do
       end
 
       it "renders with unfound user" do
-        create_version '1211212'
+        create_version(User.new { |u| u.id = 1211212 })
         get :index, params: {item_id: stage.id, item_type: stage.class.name}
         assert_template :index
       end

@@ -9,7 +9,7 @@ class CurrentUserConcernTest < ActionController::TestCase
     include CurrentProject
 
     def whodunnit
-      render plain: PaperTrail.whodunnit.to_s.dup
+      render plain: "#{PaperTrail.whodunnit} -- #{PaperTrail.whodunnit_user.name}"
     end
 
     def change
@@ -64,11 +64,11 @@ class CurrentUserConcernTest < ActionController::TestCase
   end
 
   as_a_viewer do
-    around { |t| PaperTrail.with_whodunnit(nil, &t) }
+    around { |t| PaperTrail.with_whodunnit_user(nil, &t) }
 
     it "knows who did something" do
       get :whodunnit, params: {test_route: true}
-      response.body.must_equal users(:viewer).id.to_s
+      response.body.must_equal "#{users(:viewer).id} -- #{users(:viewer).name}"
     end
 
     it "does not assign to different users by accident" do

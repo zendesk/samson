@@ -29,7 +29,7 @@ module CurrentUser
 
   def login_user
     warden.authenticate || unauthorized!
-    PaperTrail.with_whodunnit(current_user.id) { yield }
+    PaperTrail.with_whodunnit_user(current_user) { yield }
   end
 
   def warden
