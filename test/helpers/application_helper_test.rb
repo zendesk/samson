@@ -50,12 +50,6 @@ describe ApplicationHelper do
     end
   end
 
-  describe "#revision" do
-    it "works" do
-      revision.must_match /^[\da-f]{40}/
-    end
-  end
-
   describe "#deploy_link" do
     let(:project) { projects(:test) }
     let(:stage) { stages(:test_staging) }
