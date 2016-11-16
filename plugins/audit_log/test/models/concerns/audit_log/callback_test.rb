@@ -1,8 +1,9 @@
 # frozen_string_literal: true
-require_relative '../../test_helper'
+require_relative '../../../test_helper'
 
 SingleCov.covered!
 
+# full test of all callbacks, decorator tests validate that model callbacks are loaded with a simple test
 describe AuditLog do
   it 'calls SamsonAuditLog::Audit.log on create action' do
     SamsonAuditLog::Audit.expects(:log).with(:info, PaperTrail.whodunnit_user, 'created User', instance_of(User)).once

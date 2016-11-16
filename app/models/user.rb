@@ -5,7 +5,6 @@ require 'digest/md5'
 class User < ActiveRecord::Base
   include Searchable
   include HasRole
-  include AuditLog
 
   TIME_FORMATS = ['local', 'utc', 'relative'].freeze
 

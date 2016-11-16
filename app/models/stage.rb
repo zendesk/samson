@@ -2,7 +2,6 @@
 class Stage < ActiveRecord::Base
   include Permalinkable
   include HasCommands
-  include AuditLog
 
   has_soft_deletion default_scope: true unless self < SoftDeletion::Core
 

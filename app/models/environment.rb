@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 class Environment < ActiveRecord::Base
   include Permalinkable
-  include AuditLog
 
   has_soft_deletion default_scope: true
   has_many :deploy_groups

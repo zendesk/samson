@@ -1,5 +1,5 @@
 # frozen_string_literal: true
-module AuditLog
+module AuditLog::Callback
   def self.included(base)
     base.after_create_commit do |object|
       SamsonAuditLog::Audit.log(:info, PaperTrail.whodunnit_user, "created #{object.class.name}", object)

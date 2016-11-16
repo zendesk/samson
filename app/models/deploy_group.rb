@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 class DeployGroup < ActiveRecord::Base
   include Permalinkable
-  include AuditLog
 
   has_soft_deletion default_scope: true
 
