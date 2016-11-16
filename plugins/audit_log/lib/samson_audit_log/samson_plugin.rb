@@ -24,7 +24,7 @@ module SamsonAuditLog
         args.each_with_index do |arg, i|
           message[arg.class.name.underscore + i.to_s] = SamsonAuditLog::AuditPresenter.present(arg)
         end
-        client.send(level, message)
+        client.public_send(level, message)
       end
 
       private
