@@ -1,18 +1,14 @@
 # frozen_string_literal: true
 module AuditLog::Callback
   def self.included(base)
-    base.after_create_commit do |object|
-      SamsonAuditLog::Audit.log(:info, PaperTrail.whodunnit_user, "created #{object.class.name}", object)
-    end
-    base.after_destroy_commit do |object|
-      SamsonAuditLog::Audit.log(:info, PaperTrail.whodunnit_user, "deleted #{object.class.name}", object)
-    end
-    base.after_update_commit do |object|
-      if object.try(:deleted_at)
-        SamsonAuditLog::Audit.log(:info, PaperTrail.whodunnit_user, "deleted #{object.class.name}", object)
-      else
-        SamsonAuditLog::Audit.log(:info, PaperTrail.whodunnit_user, "updated #{object.class.name}", object)
-      end
-    end
+    base.after_create_commit { |object| audit_log 'created', object }
+    base.after_destroy_commit { |object| audit_log 'deleted', object }
+    base.after_update_commit { |object| audit_log (object.try(:deleted_at) ? 'deleted' : 'updated'), object }
+  end
+
+  protected
+
+  def audit_log(action, object)
+    SamsonAuditLog::Audit.log(:info, PaperTrail.whodunnit_user, "#{action} #{object.class.name}", object)
   end
 end
