@@ -8,41 +8,27 @@ describe SamsonAuditLog do
     @event_sent = stub_request(:post, 'https://foo.bar/services/collector/event').to_return(status: 200)
   end
 
-  with_env(SPLUNK_URL: 'https://foo.bar', SPLUNK_TOKEN: 'sometoken', AUDIT_PLUGIN: '1')
-
   describe 'SamsonAuditLog::Audit' do
-    describe '.plugin_enabled?' do
-      it 'is enabled' do
-        assert SamsonAuditLog::Audit.plugin_enabled?
-      end
-
-      it 'is not enabled without plugin 1' do
-        ENV.delete('AUDIT_PLUGIN')
-        refute SamsonAuditLog::Audit.plugin_enabled?
-      end
-
-      it 'is not enabled without token' do
-        ENV.delete('SPLUNK_TOKEN')
-        refute SamsonAuditLog::Audit.plugin_enabled?
-      end
-
-      it 'is not enabled without url' do
-        ENV.delete('SPLUNK_URL')
-        refute SamsonAuditLog::Audit.plugin_enabled?
-      end
-    end
-
     describe '.log' do
-      it 'raises ArgumentError with invalid status' do
+      before { undo_default_audit_stubs }
+
+      it 'raises ArgumentError with invalid method' do
         assert_raises ArgumentError do
           SamsonAuditLog::Audit.log(:invalid, {}, '', {})
         end
       end
 
-      it 'does not send with plugin disabled' do
-        ENV.delete('AUDIT_PLUGIN')
-        SamsonAuditLog::Audit.log(:info, {}, '', {})
-        assert_not_requested @event_sent
+      it 'does not reach valid methods check without client' do
+        SamsonAuditLog::Audit::VALID_METHODS.expects(:include?).never
+        silence_warnings do # disable ruby warnings about changing a defined constant
+          begin
+            @old = AUDIT_LOG_CLIENT
+            AUDIT_LOG_CLIENT = nil
+            SamsonAuditLog::Audit.log(:info, {}, '', {})
+          ensure
+            AUDIT_LOG_CLIENT = @old # make sure we reset the constant to previous state
+          end
+        end
       end
 
       it 'sends log with no *args' do

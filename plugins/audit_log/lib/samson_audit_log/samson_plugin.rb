@@ -6,33 +6,20 @@ module SamsonAuditLog
   end
 
   class Audit
-    class << self
-      VALID_METHODS = [:info, :warn, :debug, :error].freeze
+    VALID_METHODS = Set[:info, :warn, :debug, :error]
 
-      def plugin_enabled?
-        ENV['AUDIT_PLUGIN'] == '1' && !ENV['SPLUNK_TOKEN'].nil? && !ENV['SPLUNK_URL'].nil?
+    def self.log(level, user, action, *args)
+      return unless AUDIT_LOG_CLIENT
+      raise ArgumentError unless VALID_METHODS.include?(level)
+
+      message = {}
+      message[:actor] = SamsonAuditLog::AuditPresenter.present(user)
+      message[:time] = Time.now
+      message[:action] = action
+      args.each_with_index do |arg, i|
+        message[arg.class.name.underscore + i.to_s] = SamsonAuditLog::AuditPresenter.present(arg)
       end
-
-      def log(level, user, action, *args)
-        raise ArgumentError unless VALID_METHODS.include?(level)
-        return unless plugin_enabled?
-
-        message = {}
-        message[:actor] = SamsonAuditLog::AuditPresenter.present(user)
-        message[:time] = Time.now
-        message[:action] = action
-        args.each_with_index do |arg, i|
-          message[arg.class.name.underscore + i.to_s] = SamsonAuditLog::AuditPresenter.present(arg)
-        end
-        client.public_send(level, message)
-      end
-
-      private
-
-      def client
-        ssl_verify = ENV['SPLUNK_DISABLE_VERIFY_SSL'] != "1"
-        SplunkLogger::Client.new(token: ENV['SPLUNK_TOKEN'], url: ENV['SPLUNK_URL'], verify_ssl: ssl_verify)
-      end
+      AUDIT_LOG_CLIENT.public_send(level, message)
     end
   end
 end
