@@ -96,7 +96,7 @@ describe Samson::Secrets::VaultClient do
         deploy_groups(:pod1).delete
         deploy_groups(:pod2).delete
         e = assert_raises(RuntimeError) { client.write('production/global/global/foo', foo: :bar) }
-        e.message.must_equal "no vault servers found"
+        e.message.must_equal "no vault servers found for production/global/global/foo"
       end
 
       it "fails with unknown environment" do
