@@ -5,7 +5,7 @@ class << PaperTrail
   attr_reader :whodunnit_user
 
   # record what was done in the console
-  def default
+  def default_whodunnit
     if defined?(::Rails::Console)
       "#{`whoami`.strip}: console"
     elsif defined?(Rake)
@@ -22,11 +22,11 @@ class << PaperTrail
   end
 
   def whodunnit
-    @whodunnit_user&.id || default
+    @whodunnit_user&.id || default_whodunnit
   end
 
   def whodunnit_user
-    @whodunnit_user || default
+    @whodunnit_user || default_whodunnit
   end
 
   def with_logging
