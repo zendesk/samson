@@ -87,7 +87,7 @@ module Samson
             raise "no deploy group with permalink #{deploy_group_permalink} found"
           end
           [client(deploy_group)]
-        end.presence || raise("no vault servers found")
+        end.presence || raise("no vault servers found for #{key}")
       end
 
       def clients
