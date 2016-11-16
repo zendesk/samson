@@ -49,17 +49,6 @@ class Project < ActiveRecord::Base
     end
   end
 
-  def last_release_contains_commit?(commit)
-    last_release = releases.order(:id).last
-    # status values documented here: http://stackoverflow.com/questions/23943855/github-api-to-compare-commits-response-status-is-diverged
-    last_release && %w[behind identical].include?(GITHUB.compare(github_repo, last_release.commit, commit).status)
-  rescue Octokit::NotFound
-    false
-  rescue Octokit::Error => e
-    Airbrake.notify(e, parameters: { github_repo: github_repo, last_commit: last_release.commit, commit: commit })
-    false # Err on side of caution and cause a new release to be created.
-  end
-
   # Whether to create new releases when the branch is updated.
   #
   # branch - The String name of the branch in question.

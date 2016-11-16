@@ -11,13 +11,7 @@
   <div class="tab-pane" id="info-<%= release.version %>">
     Commit: <code><%= release.commit %></code>
     <p>Author: <%= release.author.name %>
-
-    <% if release.deployed_stages.any? %>
-      <p>Deployed to:
-      <% release.deployed_stages.each do |stage| %>
-        <%= link_to stage.name, [@project, stage] %>
-      <% end %>
-    <% end %>
+    <%= render 'deployed_to', release: release %>
   </div>
 
   <div class="tab-pane" id="pulls-<%= release.version %>">

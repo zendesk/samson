@@ -12,14 +12,12 @@ class Integrations::BaseController < ApplicationController
       return head(:ok)
     end
 
-    release = project.create_releases_for_branch?(branch)
-    record_log :info, "Branch #{branch} is release branch: #{release}"
-    if release
-      create_release_and_build_record
-    end
+    create_release = project.create_releases_for_branch?(branch)
+    record_log :info, "Branch #{branch} is release branch: #{create_release}"
+    release = find_or_create_release if create_release
 
     if project.build_docker_image_for_branch?(branch)
-      create_docker_image
+      create_docker_image(release)
     end
 
     stages = project.webhook_stages_for(branch, service_type, service_name)
@@ -53,11 +51,10 @@ class Integrations::BaseController < ApplicationController
     { commit: commit, author: user }
   end
 
-  def create_new_release
-    unless project.last_release_contains_commit?(commit)
-      release_service = ReleaseService.new(project)
-      release_service.release!(release_params)
-    end
+  def find_or_create_release
+    latest_release = project.releases.order(:id).last
+    return latest_release if latest_release&.contains_commit?(commit)
+    ReleaseService.new(project).release!(release_params)
   end
 
   # returns stage that failed to deploy or nil
@@ -105,30 +102,19 @@ class Integrations::BaseController < ApplicationController
     @service_name ||= self.class.name.demodulize.sub('Controller', '').downcase
   end
 
-  def create_release_and_build_record
-    release = create_new_release
-    release = latest_release unless release && release.persisted?
-    create_build(release.version, [release])
+  def create_docker_image(release)
+    build = find_or_create_build(branch)
+    release.update_attribute(:build, build)
+    DockerBuilderService.new(build).run!(push: true, tag_as_latest: true)
   end
 
-  def create_build(label, releases = [])
-    @build ||= project.builds.where(git_sha: commit).last || project.builds.create!(
+  def find_or_create_build(label)
+    project.builds.where(git_sha: commit).first_or_create!(
       git_ref: branch,
-      git_sha: commit,
       description: message,
       creator: user,
-      label: label,
-      releases: releases
+      label: label
     )
-  end
-
-  def create_docker_image
-    create_build(branch)
-    DockerBuilderService.new(@build).run!(push: true, tag_as_latest: true)
-  end
-
-  def latest_release
-    project.releases.order(:id).last
   end
 
   def record_log(level, message)

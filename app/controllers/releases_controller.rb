@@ -5,13 +5,13 @@ class ReleasesController < ApplicationController
   before_action :authorize_project_deployer!, except: [:show, :index]
 
   def show
-    @release = @project.releases.find_by_version!(params[:id])
+    @release = @project.releases.find_by_param!(params[:id])
     @changeset = @release.changeset
   end
 
   def index
     @stages = @project.stages
-    @releases = @project.releases.sort_by_version.page(params[:page])
+    @releases = @project.releases.order(id: :desc).page(params[:page])
   end
 
   def new

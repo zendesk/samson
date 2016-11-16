@@ -1,12 +1,14 @@
 # frozen_string_literal: true
 require_relative '../test_helper'
 
-SingleCov.covered! uncovered: 4
+SingleCov.covered!
 
 describe Release do
+  let(:author) { users(:deployer) }
+  let(:project) { projects(:test) }
+  let(:release) { releases(:test) }
+
   describe "create" do
-    let(:project) { projects(:test) }
-    let(:author) { users(:deployer) }
     let(:commit) { "abcd" }
 
     it "creates a new release" do
@@ -54,15 +56,27 @@ describe Release do
     end
   end
 
-  describe "#currently_deploying_stages" do
-    let(:project) { projects(:test) }
-    let(:author) { users(:deployer) }
-    let(:stage) { project.stages.create!(name: "One") }
-    let(:release) do
-      release = project.releases.create!(author: author, commit: "xyz")
-      release.update_column(:number, 42)
-      release
+  describe "#to_param" do
+    it "is the number" do
+      release.to_param.must_equal "v123"
     end
+  end
+
+  describe ".find_by_param!" do
+    it "finds" do
+      Release.find_by_param!("v123").must_equal release
+    end
+
+    it "does not find unknoqn" do
+      assert_raises ActiveRecord::RecordNotFound do
+        Release.find_by_param!("123")
+      end
+    end
+  end
+
+  describe "#currently_deploying_stages" do
+    let(:stage) { project.stages.create!(name: "One") }
+    before { release.update_column(:number, '42') }
 
     it "returns stages where the release is pending deploy" do
       create_deploy!(reference: "v42", status: "pending")
@@ -110,20 +124,44 @@ describe Release do
   end
 
   describe "#changeset" do
-    let(:project) { projects(:test) }
-    let(:author) { users(:deployer) }
-
     it "returns changeset" do
       release = project.releases.create!(commit: "foo", author: author)
       assert_equal 'abc...foo', release.changeset.commit_range
     end
 
     it 'returns empty changeset when there is no prior release' do
-      Release.delete_all
-      release = project.releases.create!(author: author, commit: "bar")
-
-      assert_equal 'bar...bar', release.changeset.commit_range
+      assert_equal 'abc...abc', release.changeset.commit_range
       assert_equal [], release.changeset.commits
+    end
+  end
+
+  describe "#contains_commit?" do
+    before { project.stubs(:repository).returns(mock) }
+
+    it "is true if it contains commit" do
+      stub_github_api('repos/bar/foo/compare/abc...NEW', status: 'behind')
+      assert release.contains_commit?("NEW")
+    end
+
+    it "is false if it does not contain commit" do
+      stub_github_api('repos/bar/foo/compare/abc...NEW', status: 'ahead')
+      refute release.contains_commit?("NEW")
+    end
+
+    it "is true if it is the same commit" do
+      assert release.contains_commit?(release.commit)
+    end
+
+    it "is false on error and reports to airbrake" do
+      stub_github_api('repos/bar/foo/compare/abc...NEW', {}, 400)
+      Airbrake.expects(:notify)
+      refute release.contains_commit?("NEW")
+    end
+
+    it "returns false on 404 and does not report to airbrake since it is common" do
+      stub_github_api('repos/bar/foo/compare/abc...NEW', {}, 404)
+      Airbrake.expects(:notify).never
+      refute release.contains_commit?("NEW")
     end
   end
 end
