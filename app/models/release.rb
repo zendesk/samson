@@ -1,5 +1,9 @@
 # frozen_string_literal: true
 class Release < ActiveRecord::Base
+  NUMBER = '\d+(:?.\d+)*'
+  NUMBER_REGEX = /\A#{NUMBER}\z/
+  VERSION_REGEX = /\Av(#{NUMBER})\z/
+
   belongs_to :project, touch: true
   belongs_to :author, polymorphic: true
   belongs_to :build # direct association is not necessary since the release commit is the same as the build sha
@@ -7,7 +11,7 @@ class Release < ActiveRecord::Base
   before_validation :assign_release_number
   before_validation :covert_ref_to_sha
 
-  validates :number, format: { with: /\A\d+(.\d+)*\z/, message: "may only contain numbers and decimals." }
+  validates :number, format: { with: NUMBER_REGEX, message: "may only contain numbers and decimals." }
   validates :commit, format: { with: Build::SHA1_REGEX, message: "can only be a full sha"}, on: :create
 
   # DEFAULT_RELEASE_NUMBER is the default value assigned to release#number by the database.
@@ -35,7 +39,11 @@ class Release < ActiveRecord::Base
   end
 
   def self.find_by_param!(version)
-    find_by_number!(version[/\Av(.*)\Z/, 1])
+    if number = version[VERSION_REGEX, 1]
+      find_by_number!(number)
+    else
+      raise ActiveRecord::RecordNotFound
+    end
   end
 
   def version
