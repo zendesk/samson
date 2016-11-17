@@ -3,7 +3,6 @@ var samson = angular.module("samson", [
     'MessageCenterModule',
     'angularSpinner',
     'ui.router',
-    'ui.bootstrap',
     'truncate'])
   .config(function($locationProvider, $httpProvider, usSpinnerConfigProvider) {
 

@@ -20,7 +20,6 @@
 //= require angular
 //= require angular-rails-templates
 //= require angular-ui-router
-//= require angular-ui-bootstrap-bower
 //= require spin
 //= require angular-spinner
 //= require angular-truncate-2
@@ -41,4 +40,3 @@
 //= require underscore_mixins
 //= require jstimezonedetect
 //= require_tree .
-//= require_tree ../templates
