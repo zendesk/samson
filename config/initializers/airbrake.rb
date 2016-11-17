@@ -1,6 +1,5 @@
 # frozen_string_literal: true
-from_cap = !defined?(Rails)
-if from_cap || defined?(Airbrake)
+if defined?(Airbrake)
   Airbrake.configure do |config|
     config.api_key = ENV['AIRBRAKE_API_KEY']
     config.user_information = # replaces <!-- AIRBRAKE ERROR --> on 500 pages
