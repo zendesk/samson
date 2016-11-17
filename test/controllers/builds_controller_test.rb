@@ -73,14 +73,12 @@ describe BuildsController do
           params: {
             project_id: project.to_param,
             build: { label: 'Test creation', git_ref: 'master', description: 'hi there' },
-            build_image: build_image,
             format: format
           }
         )
       end
 
       let(:git_sha) { '0123456789012345678901234567890123456789' }
-      let(:build_image) { false }
 
       before do
         stub_git_reference_check(returns: git_sha)
@@ -111,19 +109,15 @@ describe BuildsController do
           Build.last.label.must_equal 'Test creation 2'
         end
 
-        describe 'with build_image' do
-          let(:build_image) { true }
+        it 'starts the build' do
+          DockerBuilderService.any_instance.expects(:run!)
+          create
+        end
 
-          it 'starts the build' do
-            DockerBuilderService.any_instance.expects(:run!)
-            create
-          end
-
-          it "does not start the build when there were errors" do
-            DockerBuilderService.any_instance.expects(:run!).never
-            stub_git_reference_check(returns: false)
-            create
-          end
+        it "does not start the build when there were errors" do
+          DockerBuilderService.any_instance.expects(:run!).never
+          stub_git_reference_check(returns: false)
+          create
         end
 
         it_renders_error
