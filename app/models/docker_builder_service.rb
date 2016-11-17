@@ -20,6 +20,11 @@ class DockerBuilderService
     output.puts('### Docker build complete')
 
     docker_image
+  ensure
+    if tarfile
+      tarfile.close
+      FileUtils.rm(tarfile.path, force: true)
+    end
   end
 
   def self.create_docker_tarfile(dir)
@@ -36,7 +41,7 @@ class DockerBuilderService
       end
     end
 
-    if ENV['RAILS_ENV'] == 'test'
+    if Rails.env.test?
       tar_proc.call
     else
       pid = fork(&tar_proc)
