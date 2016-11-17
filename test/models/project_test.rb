@@ -276,7 +276,7 @@ describe Project do
       others = [-2, -1, 1]
       others.map! do |diff|
         r = Release.create!(
-          commit: 'aba',
+          commit: 'abab' * 10,
           author: release.author,
           project: project
         )

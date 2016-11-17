@@ -22,7 +22,7 @@ project.stages.create!(
 )
 
 project.releases.create!(
-  commit: "123456",
+  commit: "1234" * 10,
   author_id: 1,
   author_type: "User"
 )

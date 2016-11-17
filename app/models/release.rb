@@ -5,9 +5,10 @@ class Release < ActiveRecord::Base
   belongs_to :build # direct association is not necessary since the release commit is the same as the build sha
 
   before_validation :assign_release_number
+  before_validation :covert_ref_to_sha
 
   validates :number, format: { with: /\A\d+(.\d+)*\z/, message: "may only contain numbers and decimals." }
-  # TODO: commit must be a sha
+  validates :commit, format: { with: Build::SHA1_REGEX, message: "can only be a full sha"}, on: :create
 
   # DEFAULT_RELEASE_NUMBER is the default value assigned to release#number by the database.
   # This constant is here for convenience - the value that the database uses is in db/schema.rb.
@@ -60,5 +61,15 @@ class Release < ActiveRecord::Base
   rescue Octokit::Error => e
     Airbrake.notify(e, parameters: { github_repo: project.github_repo, commit: commit, other_commit: other_commit})
     false # Err on side of caution and cause a new release to be created.
+  end
+
+  private
+
+  def covert_ref_to_sha
+    return if commit.blank? || commit =~ Build::SHA1_REGEX
+
+    # Create/update local cache to avoid getting a stale reference
+    project.repository.exclusive(holder: 'Release#covert_ref_to_sha', &:update_local_cache!)
+    self.commit = project.repository.commit_from_ref(commit)
   end
 end

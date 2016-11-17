@@ -38,12 +38,14 @@ class GitRepository
     end
   end
 
+  # @return [nil, sha1]
   def commit_from_ref(git_reference)
     return unless ensure_local_cache!
     command = ['git', 'rev-parse', "#{git_reference}^{commit}"]
     capture_stdout(*command)
   end
 
+  # @return [nil, sha1]
   def tag_from_ref(git_reference)
     return unless ensure_local_cache!
     capture_stdout 'git', 'describe', '--tags', git_reference
@@ -96,11 +98,12 @@ class GitRepository
     capture_stdout "git", "show", "#{sha}:#{file}"
   end
 
-  def exclusive(output: StringIO.new, holder:, timeout: 10.minutes, &block)
+  # @return [true, false] if it could lock
+  def exclusive(output: StringIO.new, holder:, timeout: 10.minutes)
     error_callback = proc do |owner|
       output.write("Waiting for repository lock for #{owner}\n") if (Time.now.to_i % 10).zero?
     end
-    MultiLock.lock(repo_cache_dir, holder, timeout: timeout, failed_to_lock: error_callback, &block)
+    MultiLock.lock(repo_cache_dir, holder, timeout: timeout, failed_to_lock: error_callback) { yield self }
   end
 
   private

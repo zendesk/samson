@@ -138,7 +138,7 @@ describe Stage do
     let(:stage) { stages(:test_staging) }
     let(:author) { users(:deployer) }
     let(:job) { project.jobs.create!(user: author, commit: "x", command: "echo", status: "succeeded") }
-    let(:releases) { Array.new(3).map { project.releases.create!(author: author, commit: "A") } }
+    let(:releases) { Array.new(3).map { project.releases.create!(author: author, commit: "a" * 40) } }
 
     before do
       stage.deploys.create!(reference: "v124", job: job)
