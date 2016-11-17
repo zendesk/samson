@@ -23,6 +23,7 @@ describe CommitStatusesController do
             status_list: [{ status: 'pending', description: 'the Travis build is still running' }]
           }
         end
+
         before do
           CommitStatus.stubs(new: stub(commit_status_data))
           get :show, params: {project_id: projects(:test), id: 'test/test'}

@@ -1,29 +1,29 @@
 # frozen_string_literal: true
+# Used to display all warnings/failures before user actually deploys
 class CommitStatus
-  cattr_accessor(:token) { ENV['GITHUB_TOKEN'] }
-
-  def initialize(repo, sha)
-    @repo = repo
-    @sha = sha
+  def initialize(user_repo_part, reference)
+    @repo = user_repo_part
+    @reference = reference
   end
 
   def status
-    combined_status[:state]
+    combined_status.fetch(:state)
   end
 
   def status_list
-    (combined_status[:statuses] || []).map(&:to_h)
-  end
-
-  def combined_status
-    @combined_status ||= load_status
+    combined_status.fetch(:statuses).map(&:to_h)
   end
 
   private
 
-  def load_status
-    GITHUB.combined_status(@repo, @sha)
-  rescue Octokit::NotFound
-    {}
+  def combined_status
+    @combined_status ||= begin
+      GITHUB.combined_status(@repo, @reference).to_h
+    rescue Octokit::NotFound
+      {
+        state: "failure",
+        statuses: [{"state": "Reference", description: "'#{@reference}' does not exist"}]
+      }
+    end
   end
 end

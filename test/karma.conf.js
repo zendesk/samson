@@ -24,7 +24,6 @@ module.exports = function(config) {
       '<%= resolve_asset("message-center") %>',
       '<%= resolve_asset("angular-spinner") %>',
       '<%= resolve_asset("angular-ui-router") %>',
-      '<%= resolve_asset("angular-ui-bootstrap-bower") %>',
       '<%= resolve_asset("angular-truncate-2") %>',
       'test/angular/test_helper.js',
       'app/assets/javascripts/app.js',

@@ -15,7 +15,7 @@ $(function () {
       $submit = $form.find('input[type=submit]'),
       $reference = $("#deploy_reference"),
       $ref_problem_list = $("#ref-problem-list"),
-      $ref_status_label = $("#ref-problem-warning"),
+      $ref_status_container = $("#ref-problem-warning"),
       $messages = $("#messages");
 
   $("#deploy-tabs a[data-type=github]").click(function (e) {
@@ -94,11 +94,15 @@ $(function () {
   var $tag_form_group = $reference.parent();
 
   function show_status_problems(status_list) {
-    $ref_status_label.removeClass("hidden");
+    $ref_status_container.removeClass("hidden");
     $ref_problem_list.empty();
     $.each(status_list, function(idx, status) {
       if (status.state != "success") {
-        $ref_problem_list.append($("<li>").text(status.state + ": " + status.description));
+        var item = $ref_problem_list.append($("<li>"));
+        item.text(status.state + ": " + status.description);
+        if(status.target_url) {
+          item.append(' <a href="' + status.target_url + '">details</a>');
+        }
       }
     });
   }
@@ -107,27 +111,23 @@ $(function () {
     $.ajax({
       url: $("#new_deploy").data("commit-status-url"),
       data: { ref: ref },
-      success: function(data, status, xhr) {
-        switch(data.status) {
+      success: function(response) {
+        switch(response.status) {
           case "success":
-            $ref_status_label.addClass("hidden");
+            $ref_status_container.addClass("hidden");
             $tag_form_group.addClass("has-success");
             break;
           case "pending":
-            $ref_status_label.removeClass("hidden");
             $tag_form_group.addClass("has-warning");
-            show_status_problems(data.status_list);
+            show_status_problems(response.status_list);
             break;
           case "failure":
           case "error":
-            $ref_status_label.removeClass("hidden");
             $tag_form_group.addClass("has-error");
-            show_status_problems(data.status_list);
+            show_status_problems(response.status_list);
             break;
-          case null:
-            $ref_status_label.removeClass("hidden");
-            $tag_form_group.addClass("has-error");
-            show_status_problems([{"state": "Tag or SHA", description: "'" + ref + "' does not exist"}]);
+          default:
+            alert("Unexpected response: " + response.toString());
             break;
         }
       }
@@ -144,7 +144,7 @@ $(function () {
   toggleConfirmed();
 
   $reference.keyup(function(e) {
-    $ref_status_label.addClass("hidden");
+    $ref_status_container.addClass("hidden");
     $tag_form_group.removeClass("has-success has-warning has-error");
 
     var ref = $(this).val();
