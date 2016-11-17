@@ -27,16 +27,16 @@ describe Integrations::BaseController do
   end
 
   describe "#create" do
-    it 'creates release and build' do
+    it 'creates release and no build' do
       post :create, params: {test_route: true, token: token}
       assert_response :success
       project.releases.count.must_equal 1
-      project.builds.count.must_equal 1
+      project.builds.count.must_equal 0
     end
 
     it 'does not create a release when latest already includes the commit' do
       GITHUB.expects(:compare).returns(stub(status: 'behind'))
-      project.releases.create!(commit: sha, author: users(:admin))
+      project.releases.create!(commit: sha.sub('d', 'e'), author: users(:admin))
       post :create, params: {test_route: true, token: token}
       assert_response :success
       project.releases.count.must_equal 1
@@ -51,15 +51,10 @@ describe Integrations::BaseController do
     end
 
     it 're-uses last release if commit already present' do
-      stub_github_api("repos/bar/foo/compare/#{sha}...#{sha}", status: 'identical')
-      post :create, params: {test_route: true, token: token}
-      assert_response :success
-
-      @controller.expects(:latest_release).once.returns(Minitest::Mock.new.expect(:version, nil))
       post :create, params: {test_route: true, token: token}
       assert_response :success
       project.releases.count.must_equal 1
-      project.builds.count.must_equal 1
+      project.builds.count.must_equal 0
     end
 
     it 'records the request' do
@@ -74,40 +69,16 @@ describe Integrations::BaseController do
       result.fetch(:body).must_equal ""
     end
 
-    describe 'when creating a docker image' do
-      before do
-        Project.any_instance.stubs(:build_docker_image_for_branch?).returns(true)
-      end
+    it 'creates a release and a connected build' do
+      Project.any_instance.stubs(:build_docker_image_for_branch?).returns(true)
 
-      it 'works' do
-        mocked_method = MiniTest::Mock.new
-        mocked_method.expect :call, MiniTest::Mock.new.expect(:run!, nil, [Hash]), [Build]
-        DockerBuilderService.stub :new, mocked_method do
-          post :create, params: {test_route: true, token: token}
-        end
-        assert_response :success
-        project.releases.count.must_equal 1
-        project.builds.count.must_equal 1
-        mocked_method.verify
-      end
+      post :create, params: {test_route: true, token: token}
 
-      describe 'when not creating a release' do
-        before do
-          Project.any_instance.stubs(:create_releases_for_branch?).returns(false)
-        end
-
-        it 'works' do
-          mocked_method = MiniTest::Mock.new
-          mocked_method.expect :call, MiniTest::Mock.new.expect(:run!, nil, [Hash]), [Build]
-          DockerBuilderService.stub :new, mocked_method do
-            post :create, params: {test_route: true, token: token}
-          end
-          assert_response :success
-          project.releases.count.must_equal 0
-          project.builds.count.must_equal 1
-          mocked_method.verify
-        end
-      end
+      assert_response :success
+      project.reload
+      project.releases.count.must_equal 1
+      project.builds.count.must_equal 1
+      project.builds.first.releases.must_equal project.releases
     end
 
     it "stops deploy to further stages when first fails" do

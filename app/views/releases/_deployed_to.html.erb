@@ -1,0 +1,9 @@
+<%# this is n+1 ... we could fetch all deploys unique by stage instead %>
+<% if deployed_stages = @project.stages.select { |stage| stage.current_release?(release) }.presence %>
+  <p>
+    Deployed to:
+    <% deployed_stages.each do |stage| %>
+      <%= link_to stage.name, [@project, stage] %>
+    <% end %>
+  </p>
+<% end %>

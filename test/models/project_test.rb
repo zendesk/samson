@@ -19,51 +19,6 @@ describe Project do
     Project.create!(name: "hello", repository_url: url).token.wont_be_nil
   end
 
-  describe "#last_release_contains_commit?" do
-    let(:repository) { mock }
-
-    before do
-      project.stubs(:repository).returns(repository)
-    end
-
-    it "returns true if the last release contains that commit" do
-      stub_github_api('repos/bar/foo/compare/LAST...NEW', status: 'behind')
-      project.releases.create!(commit: "LAST", author: author)
-      assert project.last_release_contains_commit?("NEW")
-    end
-
-    it "returns false if last release does not contain commit" do
-      stub_github_api('repos/bar/foo/compare/LAST...NEW', status: 'ahead')
-      project.releases.create!(commit: "LAST", author: author)
-      refute project.last_release_contains_commit?("NEW")
-    end
-
-    it "returns true if last release has the same commit" do
-      stub_github_api('repos/bar/foo/compare/LAST...LAST', status: 'identical')
-      project.releases.create!(commit: "LAST", author: author)
-      assert project.last_release_contains_commit?("LAST")
-    end
-
-    it "returns false if there have been no releases" do
-      project.releases.destroy_all
-      refute project.last_release_contains_commit?("NEW")
-    end
-
-    it "returns false on error and reports to airbrake" do
-      stub_github_api('repos/bar/foo/compare/LAST...LAST', {}, 400)
-      project.releases.create!(commit: "LAST", author: author)
-      Airbrake.expects(:notify)
-      refute project.last_release_contains_commit?("LAST")
-    end
-
-    it "returns false on 404 and does not report to airbrake since it is common" do
-      stub_github_api('repos/bar/foo/compare/LAST...LAST', {}, 404)
-      project.releases.create!(commit: "LAST", author: author)
-      Airbrake.expects(:notify).never
-      refute project.last_release_contains_commit?("LAST")
-    end
-  end
-
   describe "#repository_directory" do
     it "has separate repository_directories for same project but different url" do
       project = projects(:test)

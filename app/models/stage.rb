@@ -77,8 +77,9 @@ class Stage < ActiveRecord::Base
     @last_successful_deploy = deploys.successful.first
   end
 
+  # comparing commits might be better ...
   def current_release?(release)
-    last_successful_deploy && last_successful_deploy.reference == release.version
+    last_successful_deploy&.reference == release.version
   end
 
   def create_deploy(user, attributes = {})

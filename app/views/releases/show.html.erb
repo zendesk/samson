@@ -9,14 +9,7 @@
     <%= render 'deploy_to_button', release: @release, stages: @project.stages %>
   </div>
 
-  <% if @release.deployed_stages.any? %>
-    <p>
-      Deployed to:
-      <% @release.deployed_stages.each do |stage| %>
-        <%= link_to stage.name, [@project, stage] %>
-      <% end %>
-    </p>
-  <% end %>
+  <%= render 'deployed_to', release: @release %>
 
   <% if @changeset.empty? %>
     <p>This release contains no changes.</p>

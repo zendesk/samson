@@ -1,28 +1,39 @@
 # frozen_string_literal: true
 require_relative '../test_helper'
 
-SingleCov.covered! uncovered: 37
+SingleCov.covered! uncovered: 36
 
 describe Job do
   include GitRepoTestHelper
 
-  before { Project.any_instance.stubs(:valid_repository_url).returns(true) }
   let(:url) { "git://foo.com:hello/world.git" }
   let(:user) { User.create!(name: 'test') }
   let(:project) { Project.create!(name: 'jobtest', repository_url: url) }
   let(:job) { project.jobs.create!(command: 'cat foo', user: user, project: project) }
 
-  describe 'when project is globally locked' do
-    before do
-      Lock.create!(user: users(:admin))
+  before { Project.any_instance.stubs(:valid_repository_url).returns(true) }
+
+  describe "#validate_globally_unlocked" do
+    def create
+      Job.create(command: "", user: user, project: project)
     end
 
-    it 'does not allow a job to be created' do
-      Job.create.errors[:project].must_equal(['is locked'])
+    it 'does not allow a job to be created when locked' do
+      Lock.create!(user: users(:admin))
+      create.errors.to_h.must_equal(base: 'all stages are locked')
+    end
+
+    it 'allows a job to be created when warning' do
+      Lock.create!(user: users(:admin), warning: true, description: "X")
+      create.errors.to_h.must_equal({})
+    end
+
+    it 'allows a job to be created when no locks exist' do
+      create.errors.to_h.must_equal({})
     end
   end
 
-  describe "looking for the pid of a job" do
+  describe "#pid" do
     before do
       JobExecution.start_job(JobExecution.new('master', job))
       JobExecution.any_instance.stubs(:pid).returns(1234)

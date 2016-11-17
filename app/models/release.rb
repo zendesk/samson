@@ -2,30 +2,19 @@
 class Release < ActiveRecord::Base
   belongs_to :project, touch: true
   belongs_to :author, polymorphic: true
-  belongs_to :build
+  belongs_to :build # direct association is not necessary since the release commit is the same as the build sha
 
   before_validation :assign_release_number
 
   validates :number, format: { with: /\A\d+(.\d+)*\z/, message: "may only contain numbers and decimals." }
+  # TODO: commit must be a sha
 
   # DEFAULT_RELEASE_NUMBER is the default value assigned to release#number by the database.
   # This constant is here for convenience - the value that the database uses is in db/schema.rb.
   DEFAULT_RELEASE_NUMBER = "1"
 
-  def self.sort_by_version
-    order(number: :desc)
-  end
-
-  def to_param
-    version
-  end
-
   def currently_deploying_stages
     project.stages.where_reference_being_deployed(version)
-  end
-
-  def deployed_stages
-    @deployed_stages ||= project.stages.select { |stage| stage.current_release?(self) }
   end
 
   def changeset
@@ -36,16 +25,20 @@ class Release < ActiveRecord::Base
     project.release_prior_to(self)
   end
 
-  def version
-    "v#{number}"
-  end
-
   def author
     super || NullUser.new(author_id)
   end
 
-  def self.find_by_version!(version)
-    find_by_number!(version[/\Av(\d+)\Z/, 1].to_i)
+  def to_param
+    version
+  end
+
+  def self.find_by_param!(version)
+    find_by_number!(version[/\Av(.*)\Z/, 1])
+  end
+
+  def version
+    "v#{number}"
   end
 
   def assign_release_number
@@ -56,5 +49,16 @@ class Release < ActiveRecord::Base
     latest_release_number = project.releases.last.try(:number) || "0"
 
     raise "Unable to auto bump version" unless self.number = latest_release_number.dup.sub!(/\d+$/) { |d| d.to_i + 1 }
+  end
+
+  def contains_commit?(other_commit)
+    return true if other_commit == commit
+    # status values documented here: http://stackoverflow.com/questions/23943855/github-api-to-compare-commits-response-status-is-diverged
+    GITHUB.compare(project.github_repo, commit, other_commit).status == 'behind'
+  rescue Octokit::NotFound
+    false
+  rescue Octokit::Error => e
+    Airbrake.notify(e, parameters: { github_repo: project.github_repo, commit: commit, other_commit: other_commit})
+    false # Err on side of caution and cause a new release to be created.
   end
 end

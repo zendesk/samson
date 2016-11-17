@@ -25,7 +25,7 @@
       </table>
 
       <%= paginate @releases %>
-    <% elsif !@project.release_branch.present? %>
+    <% elsif @project.release_branch.blank? %>
       <div class="alert alert-warning">
         <p>Configure a <%= link_to "release branch", edit_project_path(@project, anchor: "project_release_branch") %> to automatically create releases whenever a branch is pushed to.</p>
       </div>

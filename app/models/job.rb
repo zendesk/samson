@@ -121,7 +121,9 @@ class Job < ActiveRecord::Base
   private
 
   def validate_globally_unlocked
-    errors.add(:project, 'is locked') if Lock.global.any?
+    return unless lock = Lock.global.first
+    return if lock.warning?
+    errors.add(:base, 'all stages are locked')
   end
 
   def execution
