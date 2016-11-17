@@ -9,6 +9,11 @@ module AuditLog::Callback
   protected
 
   def audit_log(action, object)
-    SamsonAuditLog::Audit.log(:info, PaperTrail.whodunnit_user, "#{action} #{object.class.name}", object)
+    SamsonAuditLog::Audit.log(
+      :info,
+      PaperTrail.whodunnit_user || PaperTrail.whodunnit,
+      "#{action} #{object.class.name}",
+      object
+    )
   end
 end

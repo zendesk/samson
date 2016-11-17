@@ -12,10 +12,11 @@ module SamsonAuditLog
       return unless AUDIT_LOG_CLIENT
       raise ArgumentError unless VALID_METHODS.include?(level)
 
-      message = {}
-      message[:actor] = SamsonAuditLog::AuditPresenter.present(user)
-      message[:time] = Time.now
-      message[:action] = action
+      message = {
+        actor: SamsonAuditLog::AuditPresenter.present(user),
+        time: Time.now,
+        action: action
+      }
       args.each_with_index do |arg, i|
         message[arg.class.name.underscore + i.to_s] = SamsonAuditLog::AuditPresenter.present(arg)
       end

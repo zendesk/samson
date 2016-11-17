@@ -25,10 +25,6 @@ class << PaperTrail
     @whodunnit_user&.id || default_whodunnit
   end
 
-  def whodunnit_user
-    @whodunnit_user || default_whodunnit
-  end
-
   def with_logging
     was_enabled = PaperTrail.enabled?
     was_enabled_for_controller = PaperTrail.enabled_for_controller?
