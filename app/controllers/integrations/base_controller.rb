@@ -8,7 +8,7 @@ class Integrations::BaseController < ApplicationController
 
   def create
     unless deploy?
-      record_log :info, "Request is not a deploy"
+      record_log :info, "Request is not supposed to trigger a deploy"
       return head(:ok)
     end
 
