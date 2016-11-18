@@ -1,7 +1,5 @@
 # frozen_string_literal: true
-Maxitest.timeout = false
 require 'jenkins_api_client'
-require "byebug"
 
 module Samson
   class Jenkins
@@ -35,6 +33,7 @@ module Samson
                 " Please see samson to exclude the committers email."
     }.freeze
     JENKINS_BUILD_PARAMETERS.with_indifferent_access
+
     attr_reader :job_name, :deploy
 
     def self.deployed!(deploy)
