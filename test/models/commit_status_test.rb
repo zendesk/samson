@@ -74,6 +74,12 @@ describe CommitStatus do
         success!
         status.status.must_equal 'success'
       end
+
+      it "ignores when previous deploy was failed" do
+        deploy.job.update_column(:status, 'faild')
+        success!
+        status.status.must_equal 'success'
+      end
     end
   end
 
@@ -94,7 +100,8 @@ describe CommitStatus do
       it "merges" do
         success!
         status.status_list.must_equal [
-          {foo: "bar"}, {state: "Old Release", description: "v4.3 was already deployed to hosts in this stage"}
+          {foo: "bar"},
+          {state: "Old Release", description: "v4.3 was deployed to deploy groups in this stage by Production"}
         ]
       end
     end

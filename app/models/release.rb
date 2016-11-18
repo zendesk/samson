@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 class Release < ActiveRecord::Base
-  NUMBER = '\d+(:?.\d+)*'
+  NUMBER = '\d+(:?\.\d+)*'
   NUMBER_REGEX = /\A#{NUMBER}\z/
   VERSION_REGEX = /\Av(#{NUMBER})\z/
 
