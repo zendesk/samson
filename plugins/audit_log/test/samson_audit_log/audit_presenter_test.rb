@@ -35,14 +35,14 @@ describe 'SamsonAuditLog::AuditPresenter' do
       presenter_filter_test(user_project_role, SamsonAuditLog::UserProjectRolePresenter.present(user_project_role))
     end
 
-    it 'returns unfiltered models with no presenter' do
+    it 'returns environment unmodified' do
       environment = Environment.first
       presenter_filter_test(environment, environment)
     end
 
-    it 'returns arrays unmodified' do
-      test = ['foo', 'bar']
-      presenter_filter_test(test, test)
+    it 'returns arrays with each object processed by the presenter' do
+      user = User.first
+      presenter_filter_test(['test', user], ['test', SamsonAuditLog::UserPresenter.present(user)])
     end
 
     it 'returns object unmodified' do
@@ -52,6 +52,20 @@ describe 'SamsonAuditLog::AuditPresenter' do
 
     it 'returns nil for nil passed' do
       presenter_filter_test(nil, nil)
+    end
+
+    it 'returns string unmodified' do
+      presenter_filter_test('test', 'test')
+    end
+
+    it 'returns symbol unmodified' do
+      presenter_filter_test(:test, :test)
+    end
+
+    it 'raises ArgumentError for unknown object' do
+      assert_raises ArgumentError do
+        SamsonAuditLog::AuditPresenter.present(CsvExport.first)
+      end
     end
 
     def presenter_filter_test(input, expected)
