@@ -7,7 +7,7 @@ class Deploy < ActiveRecord::Base
   belongs_to :job
   belongs_to :buddy, -> { unscope(where: "deleted_at") }, class_name: 'User'
 
-  default_scope { order(created_at: :desc, id: :desc) }
+  default_scope { order(id: :desc) }
 
   validates_presence_of :reference
   validate :validate_stage_is_unlocked, on: :create
