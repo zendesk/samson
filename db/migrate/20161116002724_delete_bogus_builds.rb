@@ -13,7 +13,7 @@ class DeleteBogusBuilds < ActiveRecord::Migration[5.0]
 
     # update manually created releases so we do not lose information
     never_built.each do |build|
-      build.releases.update_attribute(:commit, build.git_sha)
+      build.releases.update_all(commit: build.git_sha)
     end
   end
 end
