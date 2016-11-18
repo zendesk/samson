@@ -350,7 +350,8 @@ describe Deploy do
   def create_deploy!(attrs = {})
     default_attrs = {
       reference: "baz",
-      job: create_job!(attrs.delete(:job_attributes) || {})
+      job: create_job!(attrs.delete(:job_attributes) || {}),
+      project: project
     }
 
     deploy_stage = attrs.delete(:stage) || stage

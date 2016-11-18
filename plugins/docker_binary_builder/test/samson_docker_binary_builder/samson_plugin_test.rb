@@ -7,7 +7,7 @@ describe SamsonDockerBinaryBuilder do
   describe '#after_deploy_setup' do
     let(:admin) { users(:admin) }
     let(:stage) { stages(:test_production) }
-    let(:deploy) { stage.create_deploy(admin, reference: 'reference') }
+    let(:deploy) { stage.create_deploy(admin, reference: 'reference', project: stage.project) }
     let(:dir) { '/tmp' }
     let(:output) { StringIO.new }
 

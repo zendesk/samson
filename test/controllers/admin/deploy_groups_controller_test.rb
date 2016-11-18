@@ -195,6 +195,7 @@ describe Admin::DeployGroupsController do
         new_stage = new_deploy_group.reload.stages.first
         new_stage.deploys.create!(
           reference: 'master',
+          project: stage.project,
           job: Job.create!(
             project: stage.project,
             user: User.first,
@@ -220,7 +221,7 @@ describe Admin::DeployGroupsController do
         end
       end
 
-      it "ignores 'succesfully deployed' stage" do
+      it "ignores 'successfully deployed' stage" do
         refute_difference 'Deploy.count' do
           post :deploy_all, params: {id: new_deploy_group, missing_only: "true"}
         end

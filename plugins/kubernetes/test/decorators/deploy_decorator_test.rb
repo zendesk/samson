@@ -11,7 +11,8 @@ describe Deploy do
       Deploy.create!(
         stage: stage,
         reference: "baz",
-        job: jobs(:succeeded_test)
+        job: jobs(:succeeded_test),
+        project: stage.project
       )
     end
 

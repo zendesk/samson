@@ -36,7 +36,7 @@ describe DeployService do
       def create_previous_deploy(ref, stage, successful: true, bypassed: false)
         job = project.jobs.create!(user: user, command: "foo", status: successful ? "succeeded" : 'failed')
         buddy = bypassed ? user : other_user
-        Deploy.create!(job: job, reference: ref, stage: stage, buddy: buddy, started_at: Time.now)
+        Deploy.create!(job: job, reference: ref, stage: stage, buddy: buddy, started_at: Time.now, project: project)
       end
 
       it "does not start the deploy" do

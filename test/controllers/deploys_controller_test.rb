@@ -144,6 +144,7 @@ describe DeploysController do
           Deploy.create!(
             stage_id: Stage.find_by_production(stat[:production]).id,
             reference: 'reference',
+            project: project,
             job_id: job.id
           )
         end

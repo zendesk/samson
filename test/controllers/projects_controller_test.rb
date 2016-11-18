@@ -318,7 +318,8 @@ describe ProjectsController do
           job: deploy.job,
           reference: "new",
           updated_at: time - 1.day,
-          release: true
+          release: true,
+          project: project
         )
         get :deploy_group_versions, params: {id: project.to_param, before: time.to_s}
         deploy_ids = JSON.parse(response.body).map { |_id, deploy| deploy['id'] }

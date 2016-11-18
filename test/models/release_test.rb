@@ -142,7 +142,7 @@ describe Release do
 
     def create_deploy!(options)
       job = project.jobs.create!(user: author, commit: "x", command: "yes", status: options.fetch(:status))
-      stage.deploys.create!(reference: options.fetch(:reference), job: job)
+      stage.deploys.create!(reference: options.fetch(:reference), job: job, project: project)
     end
   end
 
