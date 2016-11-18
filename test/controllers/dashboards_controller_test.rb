@@ -18,7 +18,7 @@ describe DashboardsController do
 
       it 'gets list of deploy groups' do
         get :deploy_groups, params: {id: production}
-        JSON.parse(response.body)['deploy_groups'].map { |dg| dg['id'] }.must_equal production.deploy_group_ids
+        JSON.parse(response.body)['deploy_groups'].map { |d| d['id'] }.sort.must_equal production.deploy_group_ids.sort
       end
 
       it 'renders a super old timestamp' do

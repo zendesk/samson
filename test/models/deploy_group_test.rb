@@ -85,7 +85,7 @@ describe DeployGroup do
     dg1 = DeployGroup.create!(name: 'Pod666', environment: env)
     dg2 = DeployGroup.create!(name: 'Pod667', environment: env)
     DeployGroup.create!(name: 'Pod668', environment: environment)
-    env.deploy_groups.must_equal [dg1, dg2]
+    env.deploy_groups.sort.must_equal [dg1, dg2].sort
   end
 
   describe "#initialize_env_value" do
