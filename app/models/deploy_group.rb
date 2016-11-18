@@ -15,8 +15,6 @@ class DeployGroup < ActiveRecord::Base
   validates_format_of :env_value, with: /\A\w[-:\w]*\w\z/
   before_validation :initialize_env_value, on: :create
 
-  default_scope { order(:name) }
-
   after_save :touch_stages
   before_destroy :touch_stages
   after_destroy :destroy_deploy_groups_stages
