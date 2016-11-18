@@ -7,29 +7,40 @@ SingleCov.covered!
 describe Samson::Jenkins do
   def stub_crumb
     stub_request(:get, "http://www.test-url.com/api/json?tree=useCrumbs").
-      with(headers: {'Authorization' => 'Basic dXNlckB0ZXN0LmNvbTpqYXBpa2V5'}).
+      with(headers: {'Authorization': 'Basic dXNlckB0ZXN0LmNvbTpqYXBpa2V5'}).
       to_return(body: '{"crumb": "fb171d526b9cc9e25afe80b356e12cb7", "crumbRequestField": ".crumb"}')
   end
 
   def stub_job_detail
     stub_request(:get, "http://www.test-url.com/job/test_job/api/json").
-      with(headers: {'Authorization' => 'Basic dXNlckB0ZXN0LmNvbTpqYXBpa2V5'}).
+      with(headers: {'Authorization': 'Basic dXNlckB0ZXN0LmNvbTpqYXBpa2V5'}).
       to_return(status: 200, body: json_response)
   end
 
   def stub_build_with_parameters(update_params)
     stub_request(:post, "http://www.test-url.com/job/test_job/buildWithParameters").
       with(
-        body: {"buildStartedBy" => "Super Admin", "originatedFrom" => "Project_Staging_staging", "commit" => "abcabc1", "deployUrl" => "http://www.test-url.com/projects/foo/deploys/#{deploy.id}", "emails" => "super-admin@example.com", "tag" => nil}.merge(update_params),
-        headers: {'Authorization' => 'Basic dXNlckB0ZXN0LmNvbTpqYXBpa2V5'}
+        body: {"buildStartedBy": "Super Admin", "originatedFrom": "Project_Staging_staging", "commit": "abcabc1", "deployUrl": "http://www.test-url.com/projects/foo/deploys/#{deploy.id}", "emails" => "super-admin@example.com", "tag" => nil}.merge(update_params),
+        headers: {'Authorization': 'Basic dXNlckB0ZXN0LmNvbTpqYXBpa2V5'}
+      ).
+      to_return(status: 200, body: "", headers: {}).to_timeout
+  end
+
+  def stub_build_with_parameters_when_autoconfig_is_enabled(update_params)
+    stub_request(:post, "http://www.test-url.com/job/test_job/buildWithParameters").
+      with(
+        body: {"SAMSON_buildStartedBy": "Super Admin", "SAMSON_commit": "abcabc1", "SAMSON_deployUrl": "http://www.test-url.com/projects/foo/deploys/178003093", "SAMSON_emails": "super-admin@example.com", "SAMSON_originatedFrom": "Project_Staging_staging", "SAMSON_tag": nil}.merge(update_params),
+        headers: {
+          'Authorization': 'Basic dXNlckB0ZXN0LmNvbTpqYXBpa2V5'
+        }
       ).
       to_return(status: 200, body: "", headers: {}).to_timeout
   end
 
   def stub_job(result: nil, url: nil, status: 200)
     stub_request(:get, "http://www.test-url.com/job/test_job/96//api/json").
-      with(headers: {'Authorization' => 'Basic dXNlckB0ZXN0LmNvbTpqYXBpa2V5'}).
-      to_return(status: status, body: build_detail_response.merge('result' => result, 'url' => url).to_json, headers: {}).to_timeout
+      with(headers: {'Authorization': 'Basic dXNlckB0ZXN0LmNvbTpqYXBpa2V5'}).
+      to_return(status: status, body: build_detail_response.merge('result': result, 'url': url).to_json, headers: {}).to_timeout
   end
 
   # avoid polling logic
@@ -66,12 +77,19 @@ describe Samson::Jenkins do
   let(:jenkins) { Samson::Jenkins.new('test_job', deploy) }
   let(:json_response) { '{"actions":[{"parameterDefinitions":[{"defaultParameterValue":{"value":"qarunner"},"description":"Replace the default value with the user id of the person starting this here, or doing the auto-check-in for Samson, or the person that should have message addressed to them","name":"buildStartedBy","type":"StringParameterDefinition"},{"defaultParameterValue":{"value":"Jenkins"},"description":"Replace the default value with the user id of the person starting this here, or doing the auto-check-in for Samson, or the person that should have message addressed to them","name":"originatedFrom","type":"StringParameterDefinition"}]},{},{},{},{}],"description":"","displayName":"rdhanoa_test_project","displayNameOrNull":null,"name":"rdhanoa_test_project","url":"https://jenkins.zende.sk/job/rdhanoa_test_project/","buildable":true,"builds":[{"number":95,"url":"https://jenkins.zende.sk/job/rdhanoa_test_project/95/"},{"number":94,"url":"https://jenkins.zende.sk/job/rdhanoa_test_project/94/"},{"number":93,"url":"https://jenkins.zende.sk/job/rdhanoa_test_project/93/"},{"number":92,"url":"https://jenkins.zende.sk/job/rdhanoa_test_project/92/"},{"number":91,"url":"https://jenkins.zende.sk/job/rdhanoa_test_project/91/"},{"number":87,"url":"https://jenkins.zende.sk/job/rdhanoa_test_project/87/"}],"color":"red","firstBuild":{"number":87,"url":"https://jenkins.zende.sk/job/rdhanoa_test_project/87/"},"healthReport":[{"description":"Build stability: All recent builds failed.","iconClassName":"icon-health-00to19","iconUrl":"health-00to19.png","score":0}],"inQueue":false,"keepDependencies":false,"lastBuild":{"number":95,"url":"https://jenkins.zende.sk/job/rdhanoa_test_project/95/"},"lastCompletedBuild":{"number":95,"url":"https://jenkins.zende.sk/job/rdhanoa_test_project/95/"},"lastFailedBuild":{"number":95,"url":"https://jenkins.zende.sk/job/rdhanoa_test_project/95/"},"lastStableBuild":{"number":87,"url":"https://jenkins.zende.sk/job/rdhanoa_test_project/87/"},"lastSuccessfulBuild":{"number":87,"url":"https://jenkins.zende.sk/job/rdhanoa_test_project/87/"},"lastUnstableBuild":null,"lastUnsuccessfulBuild":{"number":95,"url":"https://jenkins.zende.sk/job/rdhanoa_test_project/95/"},"nextBuildNumber":96,"property":[{},{},{"parameterDefinitions":[{"defaultParameterValue":{"name":"buildStartedBy","value":"qarunner"},"description":"Replace the default value with the user id of the person starting this here, or doing the auto-check-in for Samson, or the person that should have message addressed to them","name":"buildStartedBy","type":"StringParameterDefinition"},{"defaultParameterValue":{"name":"originatedFrom","value":"Jenkins"},"description":"Replace the default value with the user id of the person starting this here, or doing the auto-check-in for Samson, or the person that should have message addressed to them","name":"originatedFrom","type":"StringParameterDefinition"}]},{},{"wallDisplayBgPicture":null,"wallDisplayName":null}],"queueItem":null,"concurrentBuild":false,"downstreamProjects":[],"scm":{},"upstreamProjects":[]}' }
   let(:build_detail_response) { JSON.parse('{"actions":[{"parameters":[{"name":"buildStartedBy","value":"rupinder dhanoa"},{"name":"originatedFrom","value":"Production"}]},{"causes":[{"shortDescription":"Started by user Quality Assurance","userId":"qaauto@zendesk.com","userName":"Quality Assurance"}]},{"buildsByBranchName":{"refs/remotes/origin/master":{"buildNumber":110,"buildResult":null,"marked":{"SHA1":"77d6dac84c6e70dfae72e92fe3cc83ab53d0e28d","branch":[{"SHA1":"77d6dac84c6e70dfae72e92fe3cc83ab53d0e28d","name":"refs/remotes/origin/master"}]},"revision":{"SHA1":"77d6dac84c6e70dfae72e92fe3cc83ab53d0e28d","branch":[{"SHA1":"77d6dac84c6e70dfae72e92fe3cc83ab53d0e28d","name":"refs/remotes/origin/master"}]}}},"lastBuiltRevision":{"SHA1":"77d6dac84c6e70dfae72e92fe3cc83ab53d0e28d","branch":[{"SHA1":"77d6dac84c6e70dfae72e92fe3cc83ab53d0e28d","name":"refs/remotes/origin/master"}]},"remoteUrls":["git@github.com:zendesk/zendesk_browser_tests.git"],"scmName":""},{},{},{"failCount":0,"skipCount":0,"totalCount":1,"urlName":"testReport"},{}],"artifacts":[],"building":false,"description":null,"displayName":"#110","duration":89688,"estimatedDuration":91911,"executor":null,"fullDisplayName":"rdhanoa_test_project #110","id":"110","keepLog":false,"number":110,"queueId":8669,"result":"SUCCESS","timestamp":1429053438085,"url":"https://jenkins.zende.sk/job/rdhanoa_test_project/110/","builtOn":"","changeSet":{"items":[],"kind":"git"},"culprits":[]}') }
+  let(:jenkins_xml_new_job) { "<?xml version='1.0' encoding='UTF-8'?>\n<project>\n  <description></description>\n  <keepDependencies>false</keepDependencies>\n  <properties>\n    <com.sonyericsson.rebuild.RebuildSettings plugin=\"rebuild@1.25\">\n      <autoRebuild>false</autoRebuild>\n      <rebuildDisabled>false</rebuildDisabled>\n    </com.sonyericsson.rebuild.RebuildSettings>\n  </properties>\n  <scm class=\"hudson.scm.NullSCM\"/>\n  <canRoam>true</canRoam>\n  <disabled>false</disabled>\n  <blockBuildWhenDownstreamBuilding>false</blockBuildWhenDownstreamBuilding>\n  <blockBuildWhenUpstreamBuilding>false</blockBuildWhenUpstreamBuilding>\n  <triggers/>\n  <concurrentBuild>false</concurrentBuild>\n  <builders/>\n  <publishers/>\n  <buildWrappers/>\n</project>" }
+  let(:jenkins_xml_configured) { "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<project>\n  <description>\n#### SAMSON DESCRIPTION STARTS ####\nFollowing text is generated by Samson. Please do not edit manually.\nThis job is triggered from following Samson projects and stages:\n* Project - Staging\nBuild Parameters starting with SAMSON_ are updated automatically by Samson. Please disable automatic updating of this jenkins job from the above mentioned samson projects before manually editing build parameters or description.\n#### SAMSON DESCRIPTION ENDS ####</description>\n  <keepDependencies>false</keepDependencies>\n  <properties>\n    <com.sonyericsson.rebuild.RebuildSettings plugin=\"rebuild@1.25\">\n      <autoRebuild>false</autoRebuild>\n      <rebuildDisabled>false</rebuildDisabled>\n    </com.sonyericsson.rebuild.RebuildSettings>\n  <hudson.model.ParametersDefinitionProperty><parameterDefinitions><hudson.model.StringParameterDefinition><name>SAMSON_buildStartedBy</name><description>Samson username of the person who started the deployment.</description><defaultValue/></hudson.model.StringParameterDefinition><hudson.model.StringParameterDefinition><name>SAMSON_originatedFrom</name><description>Samson project + stage + commit hash from github tag</description><defaultValue/></hudson.model.StringParameterDefinition><hudson.model.StringParameterDefinition><name>SAMSON_commit</name><description>Github commit hash of the change deployed.</description><defaultValue/></hudson.model.StringParameterDefinition><hudson.model.StringParameterDefinition><name>SAMSON_tag</name><description>Github tags of the commit being deployed.</description><defaultValue/></hudson.model.StringParameterDefinition><hudson.model.StringParameterDefinition><name>SAMSON_deployUrl</name><description>Samson url which triggered the current job.</description><defaultValue/></hudson.model.StringParameterDefinition><hudson.model.StringParameterDefinition><name>SAMSON_emails</name><description>Emails of the committers, buddy and user for current deployment. Please see samson to exclude the committers email.</description><defaultValue/></hudson.model.StringParameterDefinition></parameterDefinitions></hudson.model.ParametersDefinitionProperty></properties>\n  <scm class=\"hudson.scm.NullSCM\"/>\n  <canRoam>true</canRoam>\n  <disabled>false</disabled>\n  <blockBuildWhenDownstreamBuilding>false</blockBuildWhenDownstreamBuilding>\n  <blockBuildWhenUpstreamBuilding>false</blockBuildWhenUpstreamBuilding>\n  <triggers/>\n  <concurrentBuild>false</concurrentBuild>\n  <builders/>\n  <publishers/>\n  <buildWrappers/>\n</project>\n" }
+  let(:jenkins_xml_with_string_build_params_other_then_samson) { "<?xml version='1.0' encoding='UTF-8'?>\n<project>\n  <actions/>\n  <description></description>\n  <keepDependencies>false</keepDependencies>\n  <properties>\n    <com.sonyericsson.rebuild.RebuildSettings plugin=\"rebuild@1.25\">\n      <autoRebuild>false</autoRebuild>\n      <rebuildDisabled>false</rebuildDisabled>\n    </com.sonyericsson.rebuild.RebuildSettings>\n    <hudson.model.ParametersDefinitionProperty>\n      <parameterDefinitions>\n        <hudson.model.StringParameterDefinition>\n          <name>test1</name>\n          <description>this is sample desc</description>\n          <defaultValue>default value</defaultValue>\n        </hudson.model.StringParameterDefinition>\n        <hudson.model.StringParameterDefinition>\n          <name>test2</name>\n          <description>default value 3</description>\n          <defaultValue>default value 2</defaultValue>\n        </hudson.model.StringParameterDefinition>\n      </parameterDefinitions>\n    </hudson.model.ParametersDefinitionProperty>\n  </properties>\n  <scm class=\"hudson.scm.NullSCM\"/>\n  <canRoam>true</canRoam>\n  <disabled>false</disabled>\n  <blockBuildWhenDownstreamBuilding>false</blockBuildWhenDownstreamBuilding>\n  <blockBuildWhenUpstreamBuilding>false</blockBuildWhenUpstreamBuilding>\n  <triggers/>\n  <concurrentBuild>false</concurrentBuild>\n  <builders/>\n  <publishers/>\n  <buildWrappers/>\n</project>" }
+  let(:jenkins_xml_configured_with_other_params) { "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<project>\n  <actions/>\n  <description>\n#### SAMSON DESCRIPTION STARTS ####\nFollowing text is generated by Samson. Please do not edit manually.\nThis job is triggered from following Samson projects and stages:\n* Project - Staging\nBuild Parameters starting with SAMSON_ are updated automatically by Samson. Please disable automatic updating of this jenkins job from the above mentioned samson projects before manually editing build parameters or description.\n#### SAMSON DESCRIPTION ENDS ####</description>\n  <keepDependencies>false</keepDependencies>\n  <properties>\n    <com.sonyericsson.rebuild.RebuildSettings plugin=\"rebuild@1.25\">\n      <autoRebuild>false</autoRebuild>\n      <rebuildDisabled>false</rebuildDisabled>\n    </com.sonyericsson.rebuild.RebuildSettings>\n    <hudson.model.ParametersDefinitionProperty>\n      <parameterDefinitions>\n        <hudson.model.StringParameterDefinition>\n          <name>test1</name>\n          <description>this is sample desc</description>\n          <defaultValue>default value</defaultValue>\n        </hudson.model.StringParameterDefinition>\n        <hudson.model.StringParameterDefinition>\n          <name>test2</name>\n          <description>default value 3</description>\n          <defaultValue>default value 2</defaultValue>\n        </hudson.model.StringParameterDefinition>\n      <hudson.model.StringParameterDefinition><name>SAMSON_buildStartedBy</name><description>Samson username of the person who started the deployment.</description><defaultValue/></hudson.model.StringParameterDefinition><hudson.model.StringParameterDefinition><name>SAMSON_originatedFrom</name><description>Samson project + stage + commit hash from github tag</description><defaultValue/></hudson.model.StringParameterDefinition><hudson.model.StringParameterDefinition><name>SAMSON_commit</name><description>Github commit hash of the change deployed.</description><defaultValue/></hudson.model.StringParameterDefinition><hudson.model.StringParameterDefinition><name>SAMSON_tag</name><description>Github tags of the commit being deployed.</description><defaultValue/></hudson.model.StringParameterDefinition><hudson.model.StringParameterDefinition><name>SAMSON_deployUrl</name><description>Samson url which triggered the current job.</description><defaultValue/></hudson.model.StringParameterDefinition><hudson.model.StringParameterDefinition><name>SAMSON_emails</name><description>Emails of the committers, buddy and user for current deployment. Please see samson to exclude the committers email.</description><defaultValue/></hudson.model.StringParameterDefinition></parameterDefinitions>\n    </hudson.model.ParametersDefinitionProperty>\n  </properties>\n  <scm class=\"hudson.scm.NullSCM\"/>\n  <canRoam>true</canRoam>\n  <disabled>false</disabled>\n  <blockBuildWhenDownstreamBuilding>false</blockBuildWhenDownstreamBuilding>\n  <blockBuildWhenUpstreamBuilding>false</blockBuildWhenUpstreamBuilding>\n  <triggers/>\n  <concurrentBuild>false</concurrentBuild>\n  <builders/>\n  <publishers/>\n  <buildWrappers/>\n</project>\n" }
+  let(:jenkins_xml_with_some_samson_build_params) { "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<project>\n  <actions/>\n  <description>\n#### SAMSON DESCRIPTION STARTS ####\nFollowing text is generated by Samson. Please do not edit manually.\nThis job is triggered from following Samson projects and stages:\n* Project - Staging\nBuild Parameters starting with SAMSON_ are updated automatically by Samson. Please disable automatic updating of this jenkins job from the above mentioned samson projects before manually editing build parameters or description.\n#### SAMSON DESCRIPTION ENDS ####</description>\n  <keepDependencies>false</keepDependencies>\n  <properties>\n    <com.sonyericsson.rebuild.RebuildSettings plugin=\"rebuild@1.25\">\n      <autoRebuild>false</autoRebuild>\n      <rebuildDisabled>false</rebuildDisabled>\n    </com.sonyericsson.rebuild.RebuildSettings>\n    <hudson.model.ParametersDefinitionProperty>\n      <parameterDefinitions>\n        <hudson.model.StringParameterDefinition>\n          <name>SAMSON_buildStartedBy</name>\n          <description>this is sample desc</description>\n          <defaultValue>default value</defaultValue>\n        </hudson.model.StringParameterDefinition>\n        <hudson.model.StringParameterDefinition>\n          <name>SAMSON_emails</name>\n          <description>default value 3</description>\n          <defaultValue>default value 2</defaultValue>\n        </hudson.model.StringParameterDefinition>\n      <hudson.model.StringParameterDefinition><name>SAMSON_originatedFrom</name><description>Samson project + stage + commit hash from github tag</description><defaultValue/></hudson.model.StringParameterDefinition><hudson.model.StringParameterDefinition><name>SAMSON_commit</name><description>Github commit hash of the change deployed.</description><defaultValue/></hudson.model.StringParameterDefinition><hudson.model.StringParameterDefinition><name>SAMSON_tag</name><description>Github tags of the commit being deployed.</description><defaultValue/></hudson.model.StringParameterDefinition><hudson.model.StringParameterDefinition><name>SAMSON_deployUrl</name><description>Samson url which triggered the current job.</description><defaultValue/></hudson.model.StringParameterDefinition></parameterDefinitions>\n    </hudson.model.ParametersDefinitionProperty>\n  </properties>\n  <scm class=\"hudson.scm.NullSCM\"/>\n  <canRoam>true</canRoam>\n  <disabled>false</disabled>\n  <blockBuildWhenDownstreamBuilding>false</blockBuildWhenDownstreamBuilding>\n  <blockBuildWhenUpstreamBuilding>false</blockBuildWhenUpstreamBuilding>\n  <triggers/>\n  <concurrentBuild>false</concurrentBuild>\n  <builders/>\n  <publishers/>\n  <buildWrappers/>\n</project>\n" }
+  let(:jenkins_xml_configured_with_some_samson_build_params) { "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<project>\n  <actions/>\n  <description>\n#### SAMSON DESCRIPTION STARTS ####\nFollowing text is generated by Samson. Please do not edit manually.\nThis job is triggered from following Samson projects and stages:\n* Project - Staging\nBuild Parameters starting with SAMSON_ are updated automatically by Samson. Please disable automatic updating of this jenkins job from the above mentioned samson projects before manually editing build parameters or description.\n#### SAMSON DESCRIPTION ENDS ####</description>\n  <keepDependencies>false</keepDependencies>\n  <properties>\n    <com.sonyericsson.rebuild.RebuildSettings plugin=\"rebuild@1.25\">\n      <autoRebuild>false</autoRebuild>\n      <rebuildDisabled>false</rebuildDisabled>\n    </com.sonyericsson.rebuild.RebuildSettings>\n    <hudson.model.ParametersDefinitionProperty>\n      <parameterDefinitions>\n        <hudson.model.StringParameterDefinition>\n          <name>SAMSON_buildStartedBy</name>\n          <description>this is sample desc</description>\n          <defaultValue>default value</defaultValue>\n        </hudson.model.StringParameterDefinition>\n        <hudson.model.StringParameterDefinition>\n          <name>SAMSON_emails</name>\n          <description>default value 3</description>\n          <defaultValue>default value 2</defaultValue>\n        </hudson.model.StringParameterDefinition>\n      <hudson.model.StringParameterDefinition><name>SAMSON_originatedFrom</name><description>desc buildStartedBy</description><defaultValue/></hudson.model.StringParameterDefinition><hudson.model.StringParameterDefinition><name>SAMSON_commit</name><description>desc buildStartedBy</description><defaultValue/></hudson.model.StringParameterDefinition><hudson.model.StringParameterDefinition><name>SAMSON_tag</name><description>desc buildStartedBy</description><defaultValue/></hudson.model.StringParameterDefinition><hudson.model.StringParameterDefinition><name>SAMSON_deployUrl</name><description>desc buildStartedBy</description><defaultValue/></hudson.model.StringParameterDefinition></parameterDefinitions>\n    </hudson.model.ParametersDefinitionProperty>\n  </properties>\n  <scm class=\"hudson.scm.NullSCM\"/>\n  <canRoam>true</canRoam>\n  <disabled>false</disabled>\n  <blockBuildWhenDownstreamBuilding>false</blockBuildWhenDownstreamBuilding>\n  <blockBuildWhenUpstreamBuilding>false</blockBuildWhenUpstreamBuilding>\n  <triggers/>\n  <concurrentBuild>false</concurrentBuild>\n  <builders/>\n  <publishers/>\n  <buildWrappers/>\n</project>\n" }
+  let(:jenkins_xml_configured_with_updated_desc) { "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<project>\n  <actions/>\n  <description>\n#### SAMSON DESCRIPTION STARTS ####\nFollowing text is generated by Samson. Please do not edit manually.\nThis job is triggered from following Samson projects and stages:\n* Project - Staging\n* Project - test_stage2\nBuild Parameters starting with SAMSON_ are updated automatically by Samson. Please disable automatic updating of this jenkins job from the above mentioned samson projects before manually editing build parameters or description.\n#### SAMSON DESCRIPTION ENDS ####</description>\n  <keepDependencies>false</keepDependencies>\n  <properties>\n    <com.sonyericsson.rebuild.RebuildSettings plugin=\"rebuild@1.25\">\n      <autoRebuild>false</autoRebuild>\n      <rebuildDisabled>false</rebuildDisabled>\n    </com.sonyericsson.rebuild.RebuildSettings>\n    <hudson.model.ParametersDefinitionProperty>\n      <parameterDefinitions>\n        <hudson.model.StringParameterDefinition>\n          <name>SAMSON_buildStartedBy</name>\n          <description>this is sample desc</description>\n          <defaultValue>default value</defaultValue>\n        </hudson.model.StringParameterDefinition>\n        <hudson.model.StringParameterDefinition>\n          <name>SAMSON_emails</name>\n          <description>default value 3</description>\n          <defaultValue>default value 2</defaultValue>\n        </hudson.model.StringParameterDefinition>\n      <hudson.model.StringParameterDefinition><name>SAMSON_originatedFrom</name><description>desc buildStartedBy</description><defaultValue/></hudson.model.StringParameterDefinition><hudson.model.StringParameterDefinition><name>SAMSON_commit</name><description>desc buildStartedBy</description><defaultValue/></hudson.model.StringParameterDefinition><hudson.model.StringParameterDefinition><name>SAMSON_tag</name><description>desc buildStartedBy</description><defaultValue/></hudson.model.StringParameterDefinition><hudson.model.StringParameterDefinition><name>SAMSON_deployUrl</name><description>desc buildStartedBy</description><defaultValue/></hudson.model.StringParameterDefinition></parameterDefinitions>\n    </hudson.model.ParametersDefinitionProperty>\n  </properties>\n  <scm class=\"hudson.scm.NullSCM\"/>\n  <canRoam>true</canRoam>\n  <disabled>false</disabled>\n  <blockBuildWhenDownstreamBuilding>false</blockBuildWhenDownstreamBuilding>\n  <blockBuildWhenUpstreamBuilding>false</blockBuildWhenUpstreamBuilding>\n  <triggers/>\n  <concurrentBuild>false</concurrentBuild>\n  <builders/>\n  <publishers/>\n  <buildWrappers/>\n</project>\n" }
 
   before do
     # trigger initial request that does a version check (stub with a version that signals we support queueing)
     stub_request(:get, "http://www.test-url.com/").
-      with(headers: {'Authorization' => 'Basic dXNlckB0ZXN0LmNvbTpqYXBpa2V5'}).
-      to_return(headers: {"X-Jenkins" => "1.600"})
+      with(headers: {'Authorization': 'Basic dXNlckB0ZXN0LmNvbTpqYXBpa2V5'}).
+      to_return(headers: {"X-Jenkins": "1.600"})
     Samson::Jenkins.new(nil, nil).send(:client).get_root
   end
 
@@ -221,6 +239,79 @@ describe Samson::Jenkins do
     it "returns an error when the job is missing" do
       stub_build_url("https://jenkins.zende.sk/job/rdhanoa_test_project/96/", status: 404)
       jenkins.job_url(96).must_equal "#"
+    end
+  end
+
+  describe "with auto-config flag" do
+    before(:each) do
+      stub_crumb
+      stub_job_detail
+      Rails.cache.clear
+    end
+
+    it "adds description and build params to job configuration" do
+      stub_request(:get, "http://www.test-url.com/job/test_job/config.xml").
+        with(headers: {'Authorization': 'Basic dXNlckB0ZXN0LmNvbTpqYXBpa2V5'}).
+        to_return(status: 200, body: jenkins_xml_new_job)
+
+      stub_request(:post, "http://www.test-url.com/job/test_job/config.xml").
+        with(body: jenkins_xml_configured,
+             headers: {'Authorization': 'Basic dXNlckB0ZXN0LmNvbTpqYXBpa2V5'}).
+        to_return(status: 200, body: "")
+
+      deploy.stage.jenkins_autoconfig_buildparams = true
+      stub_get_build_id_from_queue(1)
+      stub_build_with_parameters_when_autoconfig_is_enabled({})
+      jenkins.build.must_equal 1
+    end
+
+    it "adds samson build params when pre-configured params are present" do
+      stub_request(:get, "http://www.test-url.com/job/test_job/config.xml").
+        with(headers: {'Authorization': 'Basic dXNlckB0ZXN0LmNvbTpqYXBpa2V5'}).
+        to_return(status: 200, body: jenkins_xml_with_string_build_params_other_then_samson)
+
+      stub_request(:post, "http://www.test-url.com/job/test_job/config.xml").
+        with(body: jenkins_xml_configured_with_other_params,
+             headers: {'Authorization': 'Basic dXNlckB0ZXN0LmNvbTpqYXBpa2V5'}).
+        to_return(status: 200, body: "")
+
+      deploy.stage.jenkins_autoconfig_buildparams = true
+      stub_get_build_id_from_queue(1)
+      stub_build_with_parameters_when_autoconfig_is_enabled({})
+      jenkins.build.must_equal 1
+    end
+
+    it "adds missing samson build params when some are present" do
+      stub_request(:get, "http://www.test-url.com/job/test_job/config.xml").
+        with(headers: {'Authorization': 'Basic dXNlckB0ZXN0LmNvbTpqYXBpa2V5'}).
+        to_return(status: 200, body: jenkins_xml_with_some_samson_build_params)
+
+      stub_request(:post, "http://www.test-url.com/job/test_job/config.xml").
+        with(body: jenkins_xml_configured_with_some_samson_build_params,
+             headers: {'Authorization': 'Basic dXNlckB0ZXN0LmNvbTpqYXBpa2V5'}).
+        to_return(status: 200, body: "")
+
+      deploy.stage.jenkins_autoconfig_buildparams = true
+      stub_get_build_id_from_queue(1)
+      stub_build_with_parameters_when_autoconfig_is_enabled({})
+      jenkins.build.must_equal 1
+    end
+
+    it "updates desc when job is added to a new stage or project" do
+      stub_request(:get, "http://www.test-url.com/job/test_job/config.xml").
+        with(headers: {'Authorization': 'Basic dXNlckB0ZXN0LmNvbTpqYXBpa2V5'}).
+        to_return(status: 200, body: jenkins_xml_configured_with_some_samson_build_params)
+
+      stub_request(:post, "http://www.test-url.com/job/test_job/config.xml").
+        with(body: jenkins_xml_configured_with_updated_desc,
+             headers: {'Authorization': 'Basic dXNlckB0ZXN0LmNvbTpqYXBpa2V5'}).
+        to_return(status: 200, body: "")
+
+      deploy.stage.jenkins_autoconfig_buildparams = true
+      deploy.stage.name = "test_stage2"
+      stub_get_build_id_from_queue(1)
+      stub_build_with_parameters_when_autoconfig_is_enabled("SAMSON_originatedFrom": "Project_test_stage2_staging")
+      jenkins.build.must_equal 1
     end
   end
 end

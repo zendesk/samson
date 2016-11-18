@@ -455,6 +455,7 @@ ActiveRecord::Schema.define(version: 20161118215353) do
     t.integer  "template_stage_id"
     t.boolean  "jenkins_email_committers",                                   default: false, null: false
     t.boolean  "run_in_parallel",                                            default: false, null: false
+    t.boolean  "jenkins_autoconfig_buildparams",                             default: false, null: false
     t.index ["template_stage_id"], name: "index_stages_on_template_stage_id", using: :btree
   end
 
