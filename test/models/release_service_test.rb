@@ -7,7 +7,7 @@ describe ReleaseService do
   let(:project) { projects(:test) }
   let(:author) { users(:deployer) }
   let(:service) { ReleaseService.new(project) }
-  let(:commit) { "abcd" }
+  let(:commit) { "abcd" * 10 }
   let(:release_params_used) { [] }
 
   before do

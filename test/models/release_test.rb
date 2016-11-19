@@ -7,17 +7,15 @@ describe Release do
   let(:author) { users(:deployer) }
   let(:project) { projects(:test) }
   let(:release) { releases(:test) }
+  let(:commit) { "abcde" * 8 }
 
   describe "create" do
-    let(:commit) { "abcd" }
-
     it "creates a new release" do
       release = project.releases.create!(commit: commit, author: author)
       assert_equal "124", release.number
     end
 
     describe "when incrementing the release number" do
-      let(:release) { project.releases.create!(author: author, commit: "bar") }
       [
         {type: "continuous", previous: "41", next: "42"},
         {type: "major-minor", previous: "4.1", next: "4.2"},
@@ -25,34 +23,59 @@ describe Release do
       ].each do |version_type|
         it "correctly increments #{version_type[:type]} versions" do
           release.update_column(:number, version_type[:previous])
-          release = project.releases.create!(commit: "foo", author: author)
+          release = project.releases.create!(commit: commit, author: author)
           assert_equal version_type[:next], release.number
         end
       end
     end
 
     it 'uses the specified release number' do
-      release = project.releases.create!(author: author, commit: "bar", number: "1234")
+      release = project.releases.create!(author: author, commit: commit, number: "1234")
       assert_equal "1234", release.number
     end
 
     it 'uses the default release number if build number is nil' do
       project.releases.destroy_all
-      release = project.releases.create!(author: author, commit: "bar", number: nil)
+      release = project.releases.create!(author: author, commit: commit, number: nil)
       assert_equal "1", release.number
     end
 
     it 'uses the build number if build number is not given' do
       project.releases.destroy_all
-      release = project.releases.create!(author: author, commit: "bar")
+      release = project.releases.create!(author: author, commit: commit)
       assert_equal "1", release.number
     end
 
     it "validates invalid numbers" do
-      release = project.releases.new(author: author, commit: "bar", number: "1a")
+      release = project.releases.new(author: author, commit: commit, number: "1a")
       assert_raises ActiveRecord::RecordInvalid do
         release.save!
       end
+    end
+
+    it "converts refs to commits so we later know what exactly was deployed" do
+      GitRepository.any_instance.expects(:clone!)
+      GitRepository.any_instance.expects(:commit_from_ref).with('master').returns(commit)
+      release = project.releases.create!(author: author, commit: 'master')
+      release.commit.must_equal commit
+    end
+
+    it "fails with unresolvable ref" do
+      GitRepository.any_instance.expects(:clone!)
+      GitRepository.any_instance.expects(:commit_from_ref).with('master').returns(nil)
+      e = assert_raises ActiveRecord::RecordInvalid do
+        project.releases.create!(author: author, commit: 'master')
+      end
+      e.message.must_equal "Validation failed: Commit can only be a full sha"
+    end
+
+    it "does not covert blank" do
+      GitRepository.any_instance.expects(:clone!).never
+      GitRepository.any_instance.expects(:commit_from_ref).never
+      e = assert_raises ActiveRecord::RecordInvalid do
+        project.releases.create!(author: author, commit: '')
+      end
+      e.message.must_equal "Validation failed: Commit can only be a full sha"
     end
   end
 
@@ -125,26 +148,28 @@ describe Release do
 
   describe "#changeset" do
     it "returns changeset" do
-      release = project.releases.create!(commit: "foo", author: author)
-      assert_equal 'abc...foo', release.changeset.commit_range
+      release = project.releases.create!(commit: commit, author: author)
+      assert_equal "abcdabcdabcdabcdabcdabcdabcdabcdabcdabcd...#{commit}", release.changeset.commit_range
     end
 
     it 'returns empty changeset when there is no prior release' do
-      assert_equal 'abc...abc', release.changeset.commit_range
+      assert_equal "#{release.commit}...#{release.commit}", release.changeset.commit_range
       assert_equal [], release.changeset.commits
     end
   end
 
   describe "#contains_commit?" do
+    let(:url) { "repos/bar/foo/compare/#{release.commit}...NEW" }
+
     before { project.stubs(:repository).returns(mock) }
 
     it "is true if it contains commit" do
-      stub_github_api('repos/bar/foo/compare/abc...NEW', status: 'behind')
+      stub_github_api(url, status: 'behind')
       assert release.contains_commit?("NEW")
     end
 
     it "is false if it does not contain commit" do
-      stub_github_api('repos/bar/foo/compare/abc...NEW', status: 'ahead')
+      stub_github_api(url, status: 'ahead')
       refute release.contains_commit?("NEW")
     end
 
@@ -153,13 +178,13 @@ describe Release do
     end
 
     it "is false on error and reports to airbrake" do
-      stub_github_api('repos/bar/foo/compare/abc...NEW', {}, 400)
+      stub_github_api(url, {}, 400)
       Airbrake.expects(:notify)
       refute release.contains_commit?("NEW")
     end
 
     it "returns false on 404 and does not report to airbrake since it is common" do
-      stub_github_api('repos/bar/foo/compare/abc...NEW', {}, 404)
+      stub_github_api(url, {}, 404)
       Airbrake.expects(:notify).never
       refute release.contains_commit?("NEW")
     end

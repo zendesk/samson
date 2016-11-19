@@ -1,5 +1,5 @@
 test:
   project: test
-  commit: abc
+  commit: abcdabcdabcdabcdabcdabcdabcdabcdabcdabcd
   number: 123
   author: deployer (User)

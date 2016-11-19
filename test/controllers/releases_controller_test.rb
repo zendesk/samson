@@ -35,8 +35,11 @@ describe ReleasesController do
   as_a_project_deployer do
     describe "#create" do
       let(:release_params) { { commit: "abcd" } }
-      let(:bad_release_params) { { commit: "abcd", number: "1A"} }
-      before { GITHUB.stubs(:create_release) }
+      before do
+        GitRepository.any_instance.expects(:clone!)
+        GitRepository.any_instance.expects(:commit_from_ref).with('abcd').returns('a' * 40)
+        GITHUB.stubs(:create_release)
+      end
 
       it "creates a new release" do
         assert_difference "Release.count", +1 do
@@ -46,7 +49,8 @@ describe ReleasesController do
       end
 
       it "rescues bad input and redirects back to new" do
-        post :create, params: {project_id: project.to_param, release: bad_release_params}
+        release_params[:number] = "1A"
+        post :create, params: {project_id: project.to_param, release: release_params}
         assert_template :new
       end
     end
