@@ -11,7 +11,7 @@ Samson::Hooks.callback :stage_permitted_params do
   [
     :jenkins_job_names,
     :jenkins_email_committers,
-    :jenkins_autoconfig_buildparams
+    :jenkins_build_params
   ]
 end
 

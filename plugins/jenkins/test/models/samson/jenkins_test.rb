@@ -259,7 +259,7 @@ describe Samson::Jenkins do
              headers: {'Authorization': 'Basic dXNlckB0ZXN0LmNvbTpqYXBpa2V5'}).
         to_return(status: 200, body: "")
 
-      deploy.stage.jenkins_autoconfig_buildparams = true
+      deploy.stage.jenkins_build_params = true
       stub_get_build_id_from_queue(1)
       stub_build_with_parameters_when_autoconfig_is_enabled({})
       jenkins.build.must_equal 1
@@ -275,7 +275,7 @@ describe Samson::Jenkins do
              headers: {'Authorization': 'Basic dXNlckB0ZXN0LmNvbTpqYXBpa2V5'}).
         to_return(status: 200, body: "")
 
-      deploy.stage.jenkins_autoconfig_buildparams = true
+      deploy.stage.jenkins_build_params = true
       stub_get_build_id_from_queue(1)
       stub_build_with_parameters_when_autoconfig_is_enabled({})
       jenkins.build.must_equal 1
@@ -291,7 +291,7 @@ describe Samson::Jenkins do
              headers: {'Authorization': 'Basic dXNlckB0ZXN0LmNvbTpqYXBpa2V5'}).
         to_return(status: 200, body: "")
 
-      deploy.stage.jenkins_autoconfig_buildparams = true
+      deploy.stage.jenkins_build_params = true
       stub_get_build_id_from_queue(1)
       stub_build_with_parameters_when_autoconfig_is_enabled({})
       jenkins.build.must_equal 1
@@ -307,7 +307,7 @@ describe Samson::Jenkins do
              headers: {'Authorization': 'Basic dXNlckB0ZXN0LmNvbTpqYXBpa2V5'}).
         to_return(status: 200, body: "")
 
-      deploy.stage.jenkins_autoconfig_buildparams = true
+      deploy.stage.jenkins_build_params = true
       deploy.stage.name = "test_stage2"
       stub_get_build_id_from_queue(1)
       stub_build_with_parameters_when_autoconfig_is_enabled("SAMSON_originatedFrom": "Project_test_stage2_staging")
