@@ -37,6 +37,19 @@ describe Samson::Jenkins do
       to_return(status: 200, body: "", headers: {}).to_timeout
   end
 
+  def stub_get_config(resp)
+    stub_request(:get, "http://www.test-url.com/job/test_job/config.xml").
+      with(headers: {'Authorization': 'Basic dXNlckB0ZXN0LmNvbTpqYXBpa2V5'}).
+      to_return(status: 200, body: resp)
+  end
+
+  def stub_post_config(body)
+    stub_request(:post, "http://www.test-url.com/job/test_job/config.xml").
+      with(body: body,
+           headers: {'Authorization': 'Basic dXNlckB0ZXN0LmNvbTpqYXBpa2V5'}).
+      to_return(status: 200, body: "")
+  end
+
   def stub_job(result: nil, url: nil, status: 200)
     stub_request(:get, "http://www.test-url.com/job/test_job/96//api/json").
       with(headers: {'Authorization': 'Basic dXNlckB0ZXN0LmNvbTpqYXBpa2V5'}).
@@ -250,15 +263,8 @@ describe Samson::Jenkins do
     end
 
     it "adds description and build params to job configuration" do
-      stub_request(:get, "http://www.test-url.com/job/test_job/config.xml").
-        with(headers: {'Authorization': 'Basic dXNlckB0ZXN0LmNvbTpqYXBpa2V5'}).
-        to_return(status: 200, body: jenkins_xml_new_job)
-
-      stub_request(:post, "http://www.test-url.com/job/test_job/config.xml").
-        with(body: jenkins_xml_configured,
-             headers: {'Authorization': 'Basic dXNlckB0ZXN0LmNvbTpqYXBpa2V5'}).
-        to_return(status: 200, body: "")
-
+      stub_get_config(jenkins_xml_new_job)
+      stub_post_config(jenkins_xml_configured)
       deploy.stage.jenkins_build_params = true
       stub_get_build_id_from_queue(1)
       stub_build_with_parameters_when_autoconfig_is_enabled({})
@@ -266,15 +272,8 @@ describe Samson::Jenkins do
     end
 
     it "adds samson build params when pre-configured params are present" do
-      stub_request(:get, "http://www.test-url.com/job/test_job/config.xml").
-        with(headers: {'Authorization': 'Basic dXNlckB0ZXN0LmNvbTpqYXBpa2V5'}).
-        to_return(status: 200, body: jenkins_xml_with_string_build_params_other_then_samson)
-
-      stub_request(:post, "http://www.test-url.com/job/test_job/config.xml").
-        with(body: jenkins_xml_configured_with_other_params,
-             headers: {'Authorization': 'Basic dXNlckB0ZXN0LmNvbTpqYXBpa2V5'}).
-        to_return(status: 200, body: "")
-
+      stub_get_config(jenkins_xml_with_string_build_params_other_then_samson)
+      stub_post_config(jenkins_xml_configured_with_other_params)
       deploy.stage.jenkins_build_params = true
       stub_get_build_id_from_queue(1)
       stub_build_with_parameters_when_autoconfig_is_enabled({})
@@ -282,15 +281,8 @@ describe Samson::Jenkins do
     end
 
     it "adds missing samson build params when some are present" do
-      stub_request(:get, "http://www.test-url.com/job/test_job/config.xml").
-        with(headers: {'Authorization': 'Basic dXNlckB0ZXN0LmNvbTpqYXBpa2V5'}).
-        to_return(status: 200, body: jenkins_xml_with_some_samson_build_params)
-
-      stub_request(:post, "http://www.test-url.com/job/test_job/config.xml").
-        with(body: jenkins_xml_configured_with_some_samson_build_params,
-             headers: {'Authorization': 'Basic dXNlckB0ZXN0LmNvbTpqYXBpa2V5'}).
-        to_return(status: 200, body: "")
-
+      stub_get_config(jenkins_xml_with_some_samson_build_params)
+      stub_post_config(jenkins_xml_configured_with_some_samson_build_params)
       deploy.stage.jenkins_build_params = true
       stub_get_build_id_from_queue(1)
       stub_build_with_parameters_when_autoconfig_is_enabled({})
@@ -298,15 +290,8 @@ describe Samson::Jenkins do
     end
 
     it "updates desc when job is added to a new stage or project" do
-      stub_request(:get, "http://www.test-url.com/job/test_job/config.xml").
-        with(headers: {'Authorization': 'Basic dXNlckB0ZXN0LmNvbTpqYXBpa2V5'}).
-        to_return(status: 200, body: jenkins_xml_configured_with_some_samson_build_params)
-
-      stub_request(:post, "http://www.test-url.com/job/test_job/config.xml").
-        with(body: jenkins_xml_configured_with_updated_desc,
-             headers: {'Authorization': 'Basic dXNlckB0ZXN0LmNvbTpqYXBpa2V5'}).
-        to_return(status: 200, body: "")
-
+      stub_get_config(jenkins_xml_configured_with_some_samson_build_params)
+      stub_post_config(jenkins_xml_configured_with_updated_desc)
       deploy.stage.jenkins_build_params = true
       deploy.stage.name = "test_stage2"
       stub_get_build_id_from_queue(1)
