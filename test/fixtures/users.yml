@@ -7,6 +7,7 @@ super_admin:
   email: "super-admin@example.com"
   role_id: <%= Role::SUPER_ADMIN.id %>
   token: abc123
+  external_id: 'github-super_admin'
   <<: *DEFAULTS
 
 admin:
