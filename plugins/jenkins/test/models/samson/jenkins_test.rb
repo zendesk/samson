@@ -7,13 +7,13 @@ SingleCov.covered!
 describe Samson::Jenkins do
   def stub_crumb
     stub_request(:get, "http://www.test-url.com/api/json?tree=useCrumbs").
-      with(headers: {'Authorization': 'Basic dXNlckB0ZXN0LmNvbTpqYXBpa2V5'}).
+      with(headers: {Authorization: 'Basic dXNlckB0ZXN0LmNvbTpqYXBpa2V5'}).
       to_return(body: '{"crumb": "fb171d526b9cc9e25afe80b356e12cb7", "crumbRequestField": ".crumb"}')
   end
 
   def stub_job_detail
     stub_request(:get, "http://www.test-url.com/job/test_job/api/json").
-      with(headers: {'Authorization': 'Basic dXNlckB0ZXN0LmNvbTpqYXBpa2V5'}).
+      with(headers: {Authorization: 'Basic dXNlckB0ZXN0LmNvbTpqYXBpa2V5'}).
       to_return(status: 200, body: json_response)
   end
 
@@ -21,7 +21,7 @@ describe Samson::Jenkins do
     stub_request(:post, "http://www.test-url.com/job/test_job/buildWithParameters").
       with(
         body: {"buildStartedBy": "Super Admin", "originatedFrom": "Project_Staging_staging", "commit": "abcabc1", "deployUrl": "http://www.test-url.com/projects/foo/deploys/#{deploy.id}", "emails" => "super-admin@example.com", "tag" => nil}.merge(update_params),
-        headers: {'Authorization': 'Basic dXNlckB0ZXN0LmNvbTpqYXBpa2V5'}
+        headers: {Authorization: 'Basic dXNlckB0ZXN0LmNvbTpqYXBpa2V5'}
       ).
       to_return(status: 200, body: "", headers: {}).to_timeout
   end
@@ -31,7 +31,7 @@ describe Samson::Jenkins do
       with(
         body: {"SAMSON_buildStartedBy": "Super Admin", "SAMSON_commit": "abcabc1", "SAMSON_deployUrl": "http://www.test-url.com/projects/foo/deploys/178003093", "SAMSON_emails": "super-admin@example.com", "SAMSON_originatedFrom": "Project_Staging_staging", "SAMSON_tag": nil}.merge(update_params),
         headers: {
-          'Authorization': 'Basic dXNlckB0ZXN0LmNvbTpqYXBpa2V5'
+          Authorization: 'Basic dXNlckB0ZXN0LmNvbTpqYXBpa2V5'
         }
       ).
       to_return(status: 200, body: "", headers: {}).to_timeout
@@ -39,20 +39,20 @@ describe Samson::Jenkins do
 
   def stub_get_config(resp)
     stub_request(:get, "http://www.test-url.com/job/test_job/config.xml").
-      with(headers: {'Authorization': 'Basic dXNlckB0ZXN0LmNvbTpqYXBpa2V5'}).
+      with(headers: {Authorization: 'Basic dXNlckB0ZXN0LmNvbTpqYXBpa2V5'}).
       to_return(status: 200, body: resp)
   end
 
   def stub_post_config(body)
     stub_request(:post, "http://www.test-url.com/job/test_job/config.xml").
       with(body: body,
-           headers: {'Authorization': 'Basic dXNlckB0ZXN0LmNvbTpqYXBpa2V5'}).
+           headers: {Authorization: 'Basic dXNlckB0ZXN0LmNvbTpqYXBpa2V5'}).
       to_return(status: 200, body: "")
   end
 
   def stub_job(result: nil, url: nil, status: 200)
     stub_request(:get, "http://www.test-url.com/job/test_job/96//api/json").
-      with(headers: {'Authorization': 'Basic dXNlckB0ZXN0LmNvbTpqYXBpa2V5'}).
+      with(headers: {Authorization: 'Basic dXNlckB0ZXN0LmNvbTpqYXBpa2V5'}).
       to_return(status: status, body: build_detail_response.merge('result': result, 'url': url).to_json, headers: {}).to_timeout
   end
 
@@ -101,7 +101,7 @@ describe Samson::Jenkins do
   before do
     # trigger initial request that does a version check (stub with a version that signals we support queueing)
     stub_request(:get, "http://www.test-url.com/").
-      with(headers: {'Authorization': 'Basic dXNlckB0ZXN0LmNvbTpqYXBpa2V5'}).
+      with(headers: {Authorization: 'Basic dXNlckB0ZXN0LmNvbTpqYXBpa2V5'}).
       to_return(headers: {"X-Jenkins": "1.600"})
     Samson::Jenkins.new(nil, nil).send(:client).get_root
   end
