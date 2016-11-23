@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20161116002724) do
+ActiveRecord::Schema.define(version: 20161118215353) do
 
   create_table "builds", force: :cascade do |t|
     t.integer  "project_id",                                       null: false
@@ -80,23 +80,24 @@ ActiveRecord::Schema.define(version: 20161116002724) do
   add_index "deploy_response_urls", ["deploy_id"], name: "index_deploy_response_urls_on_deploy_id", unique: true, using: :btree
 
   create_table "deploys", force: :cascade do |t|
-    t.integer  "stage_id",   limit: 4,   null: false
-    t.integer  "job_id",     limit: 4,   null: false
-    t.string   "reference",  limit: 255, null: false
+    t.integer  "stage_id",                   null: false
+    t.integer  "job_id",                     null: false
+    t.string   "reference",                  null: false
     t.datetime "created_at"
     t.datetime "updated_at"
-    t.integer  "buddy_id",   limit: 4
+    t.integer  "buddy_id"
     t.datetime "started_at"
     t.datetime "deleted_at"
-    t.integer  "build_id",   limit: 4
-    t.boolean  "release",                default: false, null: false
-    t.boolean  "kubernetes",             default: false, null: false
+    t.integer  "build_id"
+    t.boolean  "release",    default: false, null: false
+    t.boolean  "kubernetes", default: false, null: false
+    t.integer  "project_id",                 null: false
+    t.index ["build_id"], name: "index_deploys_on_build_id", using: :btree
+    t.index ["deleted_at"], name: "index_deploys_on_deleted_at", using: :btree
+    t.index ["job_id", "deleted_at"], name: "index_deploys_on_job_id_and_deleted_at", using: :btree
+    t.index ["project_id", "deleted_at"], name: "index_deploys_on_project_id_and_deleted_at", using: :btree
+    t.index ["stage_id", "deleted_at"], name: "index_deploys_on_stage_id_and_deleted_at", using: :btree
   end
-
-  add_index "deploys", ["build_id"], name: "index_deploys_on_build_id", using: :btree
-  add_index "deploys", ["deleted_at"], name: "index_deploys_on_deleted_at", using: :btree
-  add_index "deploys", ["job_id", "deleted_at"], name: "index_deploys_on_job_id_and_deleted_at", using: :btree
-  add_index "deploys", ["stage_id", "deleted_at"], name: "index_deploys_on_stage_id_and_deleted_at", using: :btree
 
   create_table "environment_variable_groups", force: :cascade do |t|
     t.string "name", limit: 255, null: false

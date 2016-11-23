@@ -28,7 +28,7 @@ describe Api::DeploysController do
     end
   end
 
-  describe 'get #index' do
+  describe '#index' do
     let!(:job_failure) do
       Job.create! do |job|
         job.command = "cap staging deploy"
@@ -55,8 +55,10 @@ describe Api::DeploysController do
       deploy
     end
 
-    describe '#search_params' do
+    describe '#deploy_scope' do
+      let(:job_join) { "INNER JOIN `jobs`" }
       let(:params) { { stage_id: stage.id, filter: "succeeded" } }
+      let(:sql) { subject.send(:deploy_scope).to_sql.tr('"', '`') }
 
       subject do
         @controller.stubs(:params).returns(ActionController::Parameters.new(params))
@@ -64,16 +66,15 @@ describe Api::DeploysController do
       end
 
       it 'renders a scope specific to the stage' do
-        expected = {jobs: {status: "succeeded"}, deploys: {stage_id: stage.id}}
-        subject.send(:search_params).must_equal expected
+        sql.must_include job_join
+        sql.must_include "`deploys`.`stage_id` = #{stage.id}"
       end
 
       describe 'no filter' do
         let(:params) { { stage_id: stage.id } }
 
         it 'does not include a filter' do
-          expected = {deploys: {stage_id: stage.id}}
-          subject.send(:search_params).must_equal expected
+          sql.wont_include job_join
         end
       end
 
@@ -81,12 +82,8 @@ describe Api::DeploysController do
         let(:params) { { project_id: project.id, filter: "succeeded" } }
 
         it 'gives a scope is project based' do
-          expected = {jobs: {status: "succeeded"}, deploys: {stage_id: [398743887, 554917358, 685639643]}}
-          subject.send(:search_params).tap do |p|
-            p[:deploys][:stage_id].sort!
-          end.must_equal expected
-
-          project.stages.order(:id).pluck(:id).must_equal expected[:deploys][:stage_id]
+          sql.must_include job_join
+          sql.must_include "`deploys`.`project_id` = #{project.id}"
         end
       end
     end

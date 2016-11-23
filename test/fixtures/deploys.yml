@@ -1,5 +1,6 @@
 succeeded_test:
   release: true
+  project: test
   stage: test_staging
   job: succeeded_test
   reference: staging
@@ -9,6 +10,7 @@ succeeded_test:
 
 succeeded_production_test:
   release: true
+  project: test
   stage: test_production
   job: succeeded_production_test
   reference: v1.0
@@ -18,6 +20,7 @@ succeeded_production_test:
 
 failed_staging_test:
   release: true
+  project: test
   stage: test_staging
   job: failed_test
   reference: staging

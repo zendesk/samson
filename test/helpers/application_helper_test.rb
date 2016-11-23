@@ -69,7 +69,8 @@ describe ApplicationHelper do
     it "shows running deploy" do
       deploy = stage.deploys.create!(
         reference: 'master',
-        job: Job.create(user: current_user, command: '', project: project)
+        job: Job.create(user: current_user, command: '', project: project),
+        project: project
       )
       stage.stubs(current_deploy: deploy)
       assert_includes link, ">Deploying master...<"
@@ -77,14 +78,13 @@ describe ApplicationHelper do
     end
 
     describe "when stage can run in parallel" do
-      before do
-        stage.stubs(:run_in_parallel).returns true
-      end
+      before { stage.stubs(:run_in_parallel).returns true }
 
       it "always starts a deploy" do
         deploy = stage.deploys.create!(
           reference: 'master',
-          job: Job.create(user: current_user, command: '', project: project)
+          job: Job.create(user: current_user, command: '', project: project),
+          project: project
         )
         stage.stubs(current_deploy: deploy)
         assert_includes link, ">Deploy<"

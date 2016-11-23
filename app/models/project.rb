@@ -13,14 +13,14 @@ class Project < ActiveRecord::Base
   after_soft_delete :clean_repository
   before_soft_delete :destroy_user_project_roles
 
-  has_many :builds
-  has_many :releases
+  has_many :builds, dependent: :destroy
+  has_many :releases, dependent: :destroy
   has_many :stages, dependent: :destroy
-  has_many :deploys, through: :stages
-  has_many :jobs, -> { order(created_at: :desc) }
-  has_many :webhooks
-  has_many :outbound_webhooks
-  has_many :commands
+  has_many :deploys
+  has_many :jobs, -> { order(id: :desc) }
+  has_many :webhooks, dependent: :destroy
+  has_many :outbound_webhooks, dependent: :destroy
+  has_many :commands, dependent: :destroy
   has_many :macros, dependent: :destroy
   has_many :user_project_roles, dependent: :destroy
   has_many :users, through: :user_project_roles

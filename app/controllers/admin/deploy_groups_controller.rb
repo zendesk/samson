@@ -1,10 +1,14 @@
 # frozen_string_literal: true
 class Admin::DeployGroupsController < ApplicationController
   before_action :authorize_admin!
-  before_action :authorize_super_admin!, only: [:create, :new, :update, :destroy, :deploy_all, :delete_all_stages,
-                                                :create_all_stages, :create_all_stages_preview, :edit]
-  before_action :deploy_group, only: [:show, :edit, :update, :destroy, :deploy_all, :create_all_stages,
-                                      :create_all_stages_preview, :delete_all_stages]
+  before_action :authorize_super_admin!, only: [
+    :new, :create, :edit, :update, :destroy,
+    :deploy_all, :delete_all_stages, :create_all_stages, :create_all_stages_preview
+  ]
+  before_action :deploy_group, only: [
+    :show, :edit, :update, :destroy,
+    :deploy_all, :create_all_stages, :create_all_stages_preview, :delete_all_stages
+  ]
 
   def index
     @deploy_groups = DeployGroup.all.sort_by(&:natural_order)

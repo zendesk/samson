@@ -14,7 +14,7 @@ describe Stage do
       author = users(:deployer)
 
       job = project.jobs.create!(user: author, commit: "a", command: "yes", status: "running")
-      stage.deploys.create!(reference: "xyz", job: job)
+      stage.deploys.create!(reference: "xyz", job: job, project: project)
 
       assert_equal [stage], Stage.where_reference_being_deployed("xyz")
     end
@@ -106,9 +106,9 @@ describe Stage do
 
     it 'returns the last deploy for the stage' do
       job = project.jobs.create!(command: 'cat foo', user: users(:deployer), status: 'succeeded')
-      stage.deploys.create!(reference: 'master', job: job)
+      stage.deploys.create!(reference: 'master', job: job, project: project)
       job = project.jobs.create!(command: 'cat foo', user: users(:deployer), status: 'failed')
-      deploy = stage.deploys.create!(reference: 'master', job: job)
+      deploy = stage.deploys.create!(reference: 'master', job: job, project: project)
       assert_equal deploy, stage.last_deploy
     end
   end
@@ -126,9 +126,9 @@ describe Stage do
 
     it 'returns the last successful deploy for the stage' do
       successful_job = project.jobs.create!(command: 'cat foo', user: users(:deployer), status: 'succeeded')
-      stage.deploys.create!(reference: 'master', job: successful_job)
+      stage.deploys.create!(reference: 'master', job: successful_job, project: project)
       project.jobs.create!(command: 'cat foo', user: users(:deployer), status: 'failed')
-      deploy = stage.deploys.create!(reference: 'master', job: successful_job)
+      deploy = stage.deploys.create!(reference: 'master', job: successful_job, project: project)
       assert_equal deploy, stage.last_successful_deploy
     end
   end
@@ -141,8 +141,8 @@ describe Stage do
     let(:releases) { Array.new(3).map { project.releases.create!(author: author, commit: "a" * 40) } }
 
     before do
-      stage.deploys.create!(reference: "v124", job: job)
-      stage.deploys.create!(reference: "v125", job: job)
+      stage.deploys.create!(reference: "v124", job: job, project: project)
+      stage.deploys.create!(reference: "v125", job: job, project: project)
     end
 
     it "returns true if the release was the last thing deployed to the stage" do

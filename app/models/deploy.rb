@@ -4,6 +4,7 @@ class Deploy < ActiveRecord::Base
 
   belongs_to :stage, touch: true
   belongs_to :build
+  belongs_to :project
   belongs_to :job
   belongs_to :buddy, -> { unscope(where: "deleted_at") }, class_name: 'User'
 
@@ -16,7 +17,7 @@ class Deploy < ActiveRecord::Base
   delegate :started_by?, :can_be_stopped_by?, :stop!, :status, :user, :output, to: :job
   delegate :active?, :pending?, :running?, :cancelling?, :cancelled?, :succeeded?, to: :job
   delegate :finished?, :errored?, :failed?, to: :job
-  delegate :production?, :project, to: :stage
+  delegate :production?, to: :stage
 
   before_validation :trim_reference
 

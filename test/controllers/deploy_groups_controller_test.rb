@@ -33,7 +33,12 @@ describe DeployGroupsController do
       end
 
       it 'only shows successful deploy for json response' do
-        failed_deploy = Deploy.create!(stage: production_deploy.stage, job: jobs(:failed_test), reference: 'master')
+        failed_deploy = Deploy.create!(
+          stage: production_deploy.stage,
+          job: jobs(:failed_test),
+          reference: 'master',
+          project: production_deploy.project
+        )
         get :show, params: {id: deploy_group, format: 'json'}
         result = Hashie::Mash.new(JSON.parse(response.body))
         result.deploys.map(&:id).include?(production_deploy.id).must_equal true

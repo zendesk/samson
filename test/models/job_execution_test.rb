@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 require_relative '../test_helper'
 
-SingleCov.covered! uncovered: 6
+SingleCov.covered! uncovered: 7
 
 describe JobExecution do
   include GitRepoTestHelper
@@ -16,7 +16,7 @@ describe JobExecution do
   let(:user) { users(:admin) }
   let(:job) { project.jobs.create!(command: 'cat foo', user: user, project: project) }
   let(:execution) { JobExecution.new('master', job) }
-  let(:deploy) { Deploy.create!(stage: stage, job: job, reference: 'master') }
+  let(:deploy) { Deploy.create!(stage: stage, job: job, reference: 'master', project: project) }
 
   before do
     Project.any_instance.stubs(:valid_repository_url).returns(true)

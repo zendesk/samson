@@ -83,7 +83,7 @@ class Stage < ActiveRecord::Base
   end
 
   def create_deploy(user, attributes = {})
-    deploys.create(attributes.merge(release: !no_code_deployed)) do |deploy|
+    deploys.create(attributes.merge(release: !no_code_deployed, project: project)) do |deploy|
       deploy.build_job(project: project, user: user, command: script, commit: deploy.reference)
     end
   end
