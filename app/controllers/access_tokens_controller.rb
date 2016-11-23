@@ -15,6 +15,7 @@ class AccessTokensController < ApplicationController
         permit(:description, :scopes, :application_id).
         merge(resource_owner_id: current_user.id)
     )
+    Samson::Hooks.fire(:audit_action, current_user, 'created access token', token.id)
     redirect_to(
       {action: :index},
       notice: "Token created: copy this token, it will not be shown again: #{token.token}"
@@ -23,6 +24,7 @@ class AccessTokensController < ApplicationController
 
   def destroy
     token_scope.find(params.require(:id)).destroy!
+    Samson::Hooks.fire(:audit_action, current_user, 'deleted access token', params.require(:id))
     redirect_to(
       {action: :index},
       notice: "Token deleted"

@@ -78,6 +78,7 @@ class DeployService
 
     if deploy.bypassed_approval?
       DeployMailer.bypass_email(deploy, user).deliver_now
+      Samson::Hooks.fire(:audit_action, user, 'bypassed deploy', deploy)
     end
 
     create_github_deployment(deploy)

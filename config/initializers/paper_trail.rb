@@ -1,15 +1,17 @@
 # frozen_string_literal: true
-# record what was done in the console
-PaperTrail.whodunnit =
-  if defined?(::Rails::Console)
-    "#{`whoami`.strip}: console"
-  elsif defined?(Rake)
-    "#{`whoami`.strip}: rake"
-  end
 
 class << PaperTrail
   undef_method :whodunnit= # nobody uses this directly and we should never use the default papertrail before_actions
   attr_reader :whodunnit_user
+
+  # record what was done in the console
+  def default_whodunnit
+    if defined?(::Rails::Console)
+      "#{`whoami`.strip}: console"
+    elsif defined?(Rake)
+      "#{`whoami`.strip}: rake"
+    end
+  end
 
   def with_whodunnit_user(user)
     old = @whodunnit_user
@@ -20,7 +22,7 @@ class << PaperTrail
   end
 
   def whodunnit
-    @whodunnit_user&.id
+    @whodunnit_user&.id || default_whodunnit
   end
 
   def with_logging
