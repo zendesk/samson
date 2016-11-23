@@ -16,6 +16,7 @@ describe Admin::Kubernetes::ClustersController do
     unauthorized :post, :create
     unauthorized :get, :edit, id: 1
     unauthorized :patch, :update, id: 1
+    unauthorized :post, :seed_ecr, id: 1
   end
 
   as_a_admin do
@@ -28,6 +29,28 @@ describe Admin::Kubernetes::ClustersController do
       it "renders" do
         get :index
         assert_template :index
+      end
+    end
+
+    describe "#seed_ecr" do
+      let(:secrets_url) { "http://foobar.server/api/v1/namespaces/foobar/secrets" }
+
+      before { SamsonAwsEcr::Engine.expects(:refresh_credentials).returns('user', 'pass') }
+
+      it "creates missing credentials" do
+        Kubernetes::Cluster.any_instance.expects(:namespaces).returns(['foobar'])
+        stub_request(:get, "#{secrets_url}/kube-ecr-auth").to_return(status: 404)
+        stub_request(:post, secrets_url).to_return(body: "{}")
+        post :seed_ecr, params: {id: cluster.id}
+        assert_redirected_to "/admin/kubernetes/clusters"
+      end
+
+      it "updates existing credentials" do
+        Kubernetes::Cluster.any_instance.expects(:namespaces).returns(['foobar'])
+        stub_request(:get, "#{secrets_url}/kube-ecr-auth").to_return(body: "{}")
+        stub_request(:put, "#{secrets_url}/kube-ecr-auth").to_return(body: "{}")
+        post :seed_ecr, params: {id: cluster.id}
+        assert_redirected_to "/admin/kubernetes/clusters"
       end
     end
   end

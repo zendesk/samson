@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 class Admin::Kubernetes::ClustersController < ApplicationController
   before_action :authorize_admin!
-  before_action :authorize_super_admin!, only: [:create, :new, :update, :edit]
+  before_action :authorize_super_admin!, except: [:index, :show, :seed_ecr]
 
-  before_action :find_cluster, only: [:show, :edit, :update]
+  before_action :find_cluster, only: [:show, :edit, :update, :seed_ecr]
   before_action :load_default_config_file, only: [:new, :edit, :update, :create]
 
   def new
@@ -39,6 +39,14 @@ class Admin::Kubernetes::ClustersController < ApplicationController
     end
   end
 
+  def seed_ecr
+    user, password = SamsonAwsEcr::Engine.refresh_credentials
+    @cluster.namespaces.each do |namespace|
+      update_secret namespace, user, password
+    end
+    redirect_to({action: :index}, notice: "Seeded!")
+  end
+
   private
 
   def find_cluster
@@ -62,5 +70,47 @@ class Admin::Kubernetes::ClustersController < ApplicationController
 
     @context_options = Kubeclient::Config.read(@config_file).contexts if @config_file
     @context_options ||= []
+  end
+
+  # same as this does under the hood:
+  # http://kubernetes.io/docs/user-guide/images/#using-aws-ec2-container-registry
+  # kubectl create secret docker-registry kube-ecr-auth --docker-server=X --docker-username=X --docker-password=X
+  def update_secret(namespace, user, pass)
+    docker_config = {
+      Rails.application.config.samson.docker.registry => {
+        username: user,
+        password: pass
+      }
+    }
+
+    secret = {
+      kind: "Secret",
+      apiVersion: "v1",
+      metadata: {
+        name: "kube-ecr-auth",
+        namespace: namespace,
+        annotations: {
+          via: "Samson",
+          created_at: Time.now.to_s(:db)
+        }
+      },
+      data: {
+        ".dockercfg" => Base64.encode64(JSON.dump(docker_config))
+      },
+      type: "kubernetes.io/dockercfg"
+    }
+
+    if secret_exist?(secret)
+      @cluster.client.update_secret(secret)
+    else
+      @cluster.client.create_secret(secret)
+    end
+  end
+
+  def secret_exist?(secret)
+    @cluster.client.get_secret(secret.fetch(:metadata).fetch(:name), secret.fetch(:metadata).fetch(:namespace))
+    true
+  rescue KubeException
+    false
   end
 end

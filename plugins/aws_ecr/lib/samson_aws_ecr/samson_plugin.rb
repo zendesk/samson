@@ -31,8 +31,14 @@ module SamsonAwsEcr
           ENV['DOCKER_REGISTRY_USER'] = user
           ENV['DOCKER_REGISTRY_PASS'] = pass
         end
+
+        [ENV['DOCKER_REGISTRY_USER'], ENV['DOCKER_REGISTRY_PASS']]
       rescue Aws::ECR::Errors::InvalidSignatureException
         raise Samson::Hooks::UserError, "Invalid AWS credentials"
+      end
+
+      def active?
+        !!ecr_client
       end
 
       private
