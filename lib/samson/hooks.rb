@@ -56,10 +56,6 @@ module Samson
         @name = realname(File.basename(@folder))
       end
 
-      def active?
-        Hooks.active_plugin?(@name)
-      end
-
       def load
         lib = "#{@folder}/lib"
         $LOAD_PATH << lib
@@ -107,18 +103,14 @@ module Samson
     class << self
       def plugins
         @plugins ||= begin
-          Gem.find_files("*/samson_plugin.rb").map { |path| Plugin.new(path) }.select(&:active?)
+          Gem.find_files("*/samson_plugin.rb").map { |path| Plugin.new(path) }.select { |p| active_plugin?(p.name) }
         end
       end
 
       def active_plugin?(plugin_name)
-        if Rails.env.test?
-          true
-        elsif @all_plugins_enabled
-          !@disabled_plugins.include?(plugin_name)
-        else
-          @enabled_plugins.include?(plugin_name)
-        end
+        @plugin_list ||= ENV['PLUGINS'].to_s.split(',').map(&:strip).to_set
+        (@plugin_list.include?(plugin_name) || @plugin_list.include?('all')) &&
+          !@plugin_list.include?("-#{plugin_name}")
       end
 
       # configure
@@ -160,7 +152,6 @@ module Samson
       end
 
       def plugin_setup
-        parse_env_var
         Samson::Hooks.plugins.
           each(&:load).
           each(&:add_migrations).
@@ -197,11 +188,6 @@ module Samson
         render_assets view, 'stylesheets', 'application.css', :stylesheet_link_tag
       end
 
-      def reset_plugins!
-        @plugins = nil
-        parse_env_var
-      end
-
       private
 
       def render_assets(view, folder, file, method)
@@ -216,25 +202,6 @@ module Samson
       def hooks(*args)
         raise "Using unsupported hook #{args.inspect}" unless KNOWN.include?(args.first)
         (@hooks[args] ||= [])
-      end
-
-      # Loads the PLUGINS environment variable. See docs/plugins.md for more info.
-      def parse_env_var
-        @enabled_plugins = []
-        @disabled_plugins = []
-        @all_plugins_enabled = false
-
-        values = (ENV['PLUGINS'] || '').split(',').map(&:strip)
-
-        @all_plugins_enabled = true if values.delete('all')
-
-        values.each do |v|
-          if v.starts_with?('-')
-            @disabled_plugins << v[1..-1]
-          else
-            @enabled_plugins << v
-          end
-        end
       end
     end
   end
