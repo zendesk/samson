@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 require_relative '../../test_helper'
 
-SingleCov.covered! uncovered: 9
+SingleCov.covered! uncovered: 4
 
 describe Changeset::PullRequest do
   let(:project) { projects(:test) }
@@ -126,15 +126,6 @@ describe Changeset::PullRequest do
     let(:pr_no_body) { Changeset::PullRequest.new("xxx", data_nil_body) }
     let(:jira_url) { "https://jira.zendesk.com/browse/" }
 
-    before do
-      @original_jira_url_env = ENV['JIRA_BASE_URL']
-      ENV['JIRA_BASE_URL'] = nil # delete for consistent test environment
-    end
-
-    after do
-      ENV['JIRA_BASE_URL'] = @original_jira_url_env
-    end
-
     it "returns a list of JIRA issues referenced in the PR body" do
       body.replace(<<-BODY.dup)
         Fixes https://foobar.atlassian.net/browse/XY-123 and
@@ -156,32 +147,33 @@ describe Changeset::PullRequest do
     end
 
     it "returns a list of JIRA urls using JIRA_BASE_URL ENV var given JIRA codes" do
-      ENV['JIRA_BASE_URL'] = 'https://foo.atlassian.net/browse/'
-      body.replace(<<-BODY.dup)
-        Fixes XY-123 and AB-666
-      BODY
+      with_env JIRA_BASE_URL: 'https://foo.atlassian.net/browse/' do
+        body.replace(<<-BODY.dup)
+          Fixes XY-123 and AB-666
+        BODY
 
-      pr.jira_issues.must_equal [
-        Changeset::JiraIssue.new("https://foo.atlassian.net/browse/XY-123"),
-        Changeset::JiraIssue.new("https://foo.atlassian.net/browse/AB-666")
-      ]
+        pr.jira_issues.must_equal [
+          Changeset::JiraIssue.new("https://foo.atlassian.net/browse/XY-123"),
+          Changeset::JiraIssue.new("https://foo.atlassian.net/browse/AB-666")
+        ]
+      end
     end
 
     it "returns JIRA URLs from both title and body" do
-      ENV['JIRA_BASE_URL'] = 'https://foo.atlassian.net/browse/'
-      body.replace(<<-BODY.dup)
-        Fixes issue in title and AB-666
-      BODY
-      data.title = "XY-123: Make it bigger!"
+      with_env JIRA_BASE_URL: 'https://foo.atlassian.net/browse/' do
+        body.replace(<<-BODY.dup)
+          Fixes issue in title and AB-666
+        BODY
+        data.title = "XY-123: Make it bigger!"
 
-      pr.jira_issues.must_equal [
-        Changeset::JiraIssue.new("https://foo.atlassian.net/browse/XY-123"),
-        Changeset::JiraIssue.new("https://foo.atlassian.net/browse/AB-666")
-      ]
+        pr.jira_issues.must_equal [
+          Changeset::JiraIssue.new("https://foo.atlassian.net/browse/XY-123"),
+          Changeset::JiraIssue.new("https://foo.atlassian.net/browse/AB-666")
+        ]
+      end
     end
 
     it "returns an empty array if JIRA_BASE_URL ENV var is not set when given JIRA codes" do
-      ENV['JIRA_BASE_URL'] = nil
       body.replace(<<-BODY.dup)
         Fixes XY-123 and AB-666
       BODY
@@ -198,26 +190,28 @@ describe Changeset::PullRequest do
     end
 
     it "uses full JIRA urls when given, falling back to JIRA_BASE_URL" do
-      ENV['JIRA_BASE_URL'] = 'https://foo.atlassian.net/browse/'
-      body.replace(<<-BODY.dup)
-        Fixes https://foobar.atlassian.net/browse/XY-123 and AB-666
-      BODY
+      with_env JIRA_BASE_URL: 'https://foo.atlassian.net/browse/' do
+        body.replace(<<-BODY.dup)
+          Fixes https://foobar.atlassian.net/browse/XY-123 and AB-666
+        BODY
 
-      pr.jira_issues.must_equal [
-        Changeset::JiraIssue.new("https://foobar.atlassian.net/browse/XY-123"),
-        Changeset::JiraIssue.new("https://foo.atlassian.net/browse/AB-666")
-      ]
+        pr.jira_issues.must_equal [
+          Changeset::JiraIssue.new("https://foobar.atlassian.net/browse/XY-123"),
+          Changeset::JiraIssue.new("https://foo.atlassian.net/browse/AB-666")
+        ]
+      end
     end
 
     it "uses full URL if given and not auto-generate even when JIRA_BASE_URL is set" do
-      ENV['JIRA_BASE_URL'] = 'https://foo.atlassian.net/browse/'
-      body.replace(<<-BODY.dup)
-        Fixes XY-123, see https://foobar.atlassian.net/browse/XY-123
-      BODY
+      with_env JIRA_BASE_URL: 'https://foo.atlassian.net/browse/' do
+        body.replace(<<-BODY.dup)
+          Fixes XY-123, see https://foobar.atlassian.net/browse/XY-123
+        BODY
 
-      pr.jira_issues.must_equal [
-        Changeset::JiraIssue.new("https://foobar.atlassian.net/browse/XY-123")
-      ]
+        pr.jira_issues.must_equal [
+          Changeset::JiraIssue.new("https://foobar.atlassian.net/browse/XY-123")
+        ]
+      end
     end
 
     single_key_cases = [
@@ -241,10 +235,11 @@ describe Changeset::PullRequest do
     ]
     single_key_cases.each do |casebody, key|
       it "returns #{key} when given \"#{casebody}\"" do
-        ENV['JIRA_BASE_URL'] = jira_url
-        full_url = jira_url + key
-        body.replace(casebody)
-        pr.jira_issues.must_equal [Changeset::JiraIssue.new(full_url)]
+        with_env JIRA_BASE_URL: jira_url do
+          full_url = jira_url + key
+          body.replace(casebody)
+          pr.jira_issues.must_equal [Changeset::JiraIssue.new(full_url)]
+        end
       end
     end
 
@@ -271,10 +266,11 @@ describe Changeset::PullRequest do
     ]
     keys_with_number_cases.each do |casebody, key|
       it "returns #{key} when given \"#{casebody}\"" do
-        ENV['JIRA_BASE_URL'] = jira_url
-        full_url = jira_url + key
-        body.replace(casebody)
-        pr.jira_issues.must_equal [Changeset::JiraIssue.new(full_url)]
+        with_env JIRA_BASE_URL: jira_url do
+          full_url = jira_url + key
+          body.replace(casebody)
+          pr.jira_issues.must_equal [Changeset::JiraIssue.new(full_url)]
+        end
       end
     end
 
@@ -297,9 +293,10 @@ describe Changeset::PullRequest do
     ]
     multiple_keys_cases.each do |casebody, keys|
       it "returns #{keys} when given \"#{casebody}\"" do
-        ENV['JIRA_BASE_URL'] = jira_url
-        body.replace(casebody)
-        pr.jira_issues.must_equal keys.map { |x| Changeset::JiraIssue.new(jira_url + x) }
+        with_env JIRA_BASE_URL: jira_url do
+          body.replace(casebody)
+          pr.jira_issues.must_equal keys.map { |x| Changeset::JiraIssue.new(jira_url + x) }
+        end
       end
     end
 

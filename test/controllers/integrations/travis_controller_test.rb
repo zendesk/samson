@@ -10,15 +10,11 @@ describe Integrations::TravisController do
   let(:project) { projects(:test) }
   let(:stage) { stages(:test_staging) }
 
+  with_env TRAVIS_TOKEN: "TOKEN"
+
   before do
     Deploy.delete_all
-    @orig_token = ENV["TRAVIS_TOKEN"]
-    ENV["TRAVIS_TOKEN"] = "TOKEN"
     project.webhooks.create!(stage: stages(:test_staging), branch: "master", source: 'travis')
-  end
-
-  after do
-    ENV["TRAVIS_TOKEN"] = @orig_token
   end
 
   describe "#create" do
