@@ -20,12 +20,12 @@ module Samson
       "of this jenkins job from the above mentioned samson projects "\
       "before manually editing build parameters or description."
     JENKINS_BUILD_PARAMETERS = {
-      "buildStartedBy": "Samson username of the person who started the deployment.",
-      "originatedFrom": "Samson project + stage + commit hash from github tag",
-      "commit": "Github commit hash of the change deployed.",
-      "tag": "Github tags of the commit being deployed.",
-      "deployUrl": "Samson url which triggered the current job.",
-      "emails": "Emails of the committers, buddy and user for current deployment."\
+      buildStartedBy: "Samson username of the person who started the deployment.",
+      originatedFrom: "Samson project + stage + commit hash from github tag",
+      commit: "Github commit hash of the change deployed.",
+      tag: "Github tags of the commit being deployed.",
+      deployUrl: "Samson url which triggered the current job.",
+      emails: "Emails of the committers, buddy and user for current deployment."\
                 " Please see samson to exclude the committers email."
     }.freeze
     JENKINS_BUILD_PARAMETERS.with_indifferent_access
@@ -59,7 +59,11 @@ module Samson
       Nokogiri::XML(conf)
     end
 
-    def configure_job_config
+    # we need to add new build parameters without manually changing each job's configuration in
+    # manually. To do this, we check if this job is mentioned in
+    # description of jenkins job. if not, we add it. We use JENKINS_DESC_HEADER/FOOTER markers
+    # to keep track of description added through samson.
+    def send_job_config
       conf = jenkins_job_config
       post_config = false
       expected_build_parameters = JENKINS_BUILD_PARAMETERS.keys
@@ -98,30 +102,33 @@ module Samson
     end
 
     def jenkins_desc_job_name
-      '* ' + deploy.project.name + ' - ' + deploy.stage.name
+      "* #{deploy.project.name} - #{deploy.stage.name}"
     end
 
-    def add_job_description(conf)
-      # get previous content and job-name from desc
+    def extract_description(conf)
       job_names = []
-      prev_content = []
       desc = description(conf)
       content = desc.content.split("\n").map(&:squish)
       desc_start_index = content.index(JENKINS_DESC_HEADER)
       desc_end_index = content.index(JENKINS_DESC_FOOTER)
       if desc_start_index && desc_end_index
         job_names = content[desc_start_index..desc_end_index].select { |c| c.starts_with?('*') }
-        prev_content = content[0...desc_start_index] + content[(desc_end_index + 1)..content.size]
+        prev_content = content[0, desc_start_index] + content[(desc_end_index + 1), content.size]
       else
         prev_content = content
       end
+      [prev_content, job_names]
+    end
 
+    def add_job_description(conf)
+      prev_content, job_names = extract_description(conf)
       # add present job name if not included
       unless job_names.include?(jenkins_desc_job_name)
         job_names.append(jenkins_desc_job_name)
       end
 
       # update desc
+      desc = description(conf)
       desc.content = [
         prev_content.flatten,
         JENKINS_DESC_HEADER,
@@ -147,23 +154,18 @@ module Samson
           '</hudson.model.ParametersDefinitionProperty>'
         )
       end
+      conf.xpath("//parameterDefinitions").first
     end
 
     def add_build_parameters(conf, missing_parameters)
-      find_or_add_parameter_definition(conf)
-      properties_element = conf.xpath("//parameterDefinitions").first
+      properties_element = find_or_add_parameter_definition(conf)
       missing_parameters.each do |name|
         properties_element.add_child(
-          "<hudson.model.StringParameterDefinition>"\
-          "<name>%s</name>"\
-          "<description>%s</description>"\
-          "<defaultValue>%s</defaultValue>"\
-          "</hudson.model.StringParameterDefinition>" %
-          [
-            JENKINS_BUILD_PARAMETRS_PREFIX + name.to_s,
-            JENKINS_BUILD_PARAMETERS.fetch(name),
-            JENKINS_BUILD_PARAMETERS_DEFAULT_VALUE
-          ]
+          {
+            name: JENKINS_BUILD_PARAMETRS_PREFIX + name.to_s,
+            description: JENKINS_BUILD_PARAMETERS.fetch(name),
+            defaultValue: JENKINS_BUILD_PARAMETERS_DEFAULT_VALUE
+          }.to_xml(skip_instruct: true, root: 'hudson.model.StringParameterDefinition')
         )
       end
     end
@@ -184,7 +186,7 @@ module Samson
         emails: notify_emails
       }
       if deploy.stage.jenkins_build_params
-        configure_job_config
+        send_job_config
         build_params = build_params.map { |k, v| [JENKINS_BUILD_PARAMETRS_PREFIX + k.to_s, v] }.to_h
       end
       client.job.build(job_name, build_params, opts).to_i
