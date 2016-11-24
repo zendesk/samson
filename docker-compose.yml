@@ -1,0 +1,11 @@
+version: "2"
+services:
+  samson:
+    image: zendesk/samson:latest
+    ports:
+      - "9080:9080"
+    environment:
+      DATABASE_URL: "sqlite3://db/development.sqlite"
+      RAILS_LOG_TO_STDOUT: 1
+    env_file: .env.bootstrap
+    command: "bash -c 'rake db:setup && puma -C config/puma.rb'"

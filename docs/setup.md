@@ -1,13 +1,20 @@
 # Getting Started
 
-Run the bootstrap script to use the test credentials.
+### Docker
 
 ```bash
-script/bootstrap
+docker-compose up
+open http://$DOCKER_HOST_IP:9080
+```
+
+### Local
+```bash
+script/bootstrap # Run the bootstrap script to use the test credentials.
 rails s
 open http://localhost:3000
 ```
 
+### Setup
  - Add a new project http://localhost:3000/projects/new
  - name: example-project url: git@github.com:samson-test-org/example-project.git
  - Create a Stage
