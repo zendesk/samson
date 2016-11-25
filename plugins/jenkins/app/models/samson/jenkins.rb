@@ -29,8 +29,6 @@ module Samson
       emails: "Emails of the committers, buddy and user for current deployment."\
                 " Please see samson to exclude the committers email."
     }.freeze
-    JENKINS_BUILD_PARAMETERS.with_indifferent_access
-
     attr_reader :job_name, :deploy
 
     def self.deployed!(deploy)
