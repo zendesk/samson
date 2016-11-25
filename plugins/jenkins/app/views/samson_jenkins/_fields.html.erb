@@ -9,4 +9,11 @@
   </div>
 
   <%= form.input :jenkins_email_committers, as: :check_box, label: "Jenkins sends email to committers" %>
+  <%= form.input :jenkins_build_params,
+      as: :check_box,
+      label: "Should Samson automatically configure Jenkins Jobs for build params", 
+      help: "Samson can send some meta-data like buildStartedBy, emails etc which can be "\
+      "used by a jenkins job.These values are sent as build parameters. Checking this box "\
+      "allows Samson to add required build parameters to the jenkins job." %>
+
 </fieldset>

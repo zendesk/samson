@@ -10,7 +10,8 @@ Samson::Hooks.view :deploys_header, "samson_jenkins/deploys_header"
 Samson::Hooks.callback :stage_permitted_params do
   [
     :jenkins_job_names,
-    :jenkins_email_committers
+    :jenkins_email_committers,
+    :jenkins_build_params
   ]
 end
 
