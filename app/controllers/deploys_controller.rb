@@ -94,6 +94,7 @@ class DeploysController < ApplicationController
 
   def new
     @deploy = current_project.deploys.build(params.except(:project_id).permit(:stage_id, :reference))
+    @releases = current_project.releases.order(id: :desc).last(5)
   end
 
   def create
