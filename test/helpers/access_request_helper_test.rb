@@ -44,7 +44,7 @@ describe AccessRequestHelper do
     end
 
     describe 'feature disabled' do
-      before { ENV['REQUEST_ACCESS_FEATURE'] = nil }
+      with_env REQUEST_ACCESS_FEATURE: nil
 
       it 'returns false for all flash types' do
         refute display_access_request_link?(:authorization_error)

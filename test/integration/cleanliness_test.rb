@@ -135,4 +135,12 @@ describe "cleanliness" do
       end
     end
   end
+
+  it "does not modify the ENV without resetting state" do
+    check_content all_tests do |content|
+      if content =~ /ENV\[.*=/
+        "use with_env to setup ENV variables during test"
+      end
+    end
+  end
 end

@@ -19,14 +19,15 @@ describe AccessRequestsController do
       end
 
       it 'returns false when disabled' do
-        ENV['REQUEST_ACCESS_FEATURE'] = nil
-        refute AccessRequestsController.feature_enabled?
+        with_env REQUEST_ACCESS_FEATURE: nil do
+          refute AccessRequestsController.feature_enabled?
+        end
       end
     end
 
     describe 'GET to #new' do
       describe 'disabled' do
-        before { ENV['REQUEST_ACCESS_FEATURE'] = nil }
+        with_env REQUEST_ACCESS_FEATURE: nil
 
         it 'renders 404' do
           assert_raises(ActionController::RoutingError) { get :new }
@@ -44,7 +45,7 @@ describe AccessRequestsController do
 
     describe 'POST to #create' do
       describe 'disabled' do
-        before { ENV['REQUEST_ACCESS_FEATURE'] = nil }
+        with_env REQUEST_ACCESS_FEATURE: nil
 
         it 'renders 404' do
           assert_raises(ActionController::RoutingError) { post :create }
