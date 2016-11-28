@@ -24,14 +24,16 @@
 
       <%= Samson::Hooks.render_views(:deploy_form, self, project: @project, form: form) %>
 
-      <div class="form-group" id="recent-releases">
-        <label class="col-lg-2 control-label">Recent releases</label>
-        <div class="col-lg-4">
-          <% @recent_releases.each do |release| %>
-            <%= release_label(@project, release) %>
-          <% end %>
+      <% if @recent_releases %>
+        <div class="form-group" id="recent-releases">
+          <label class="col-lg-2 control-label">Recent releases</label>
+          <div class="col-lg-4">
+            <% @recent_releases.each do |release| %>
+              <%= release_label(@project, release) %>
+            <% end %>
+          </div>
         </div>
-      </div>
+      <% end %>
 
       <div class="form-group" id="new-deploy-buttons">
         <div class="col-lg-offset-2 col-lg-10">
