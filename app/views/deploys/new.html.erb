@@ -27,7 +27,7 @@
       <div class="form-group" id="recent-releases">
         <label class="col-lg-2 control-label">Recent releases</label>
         <div class="col-lg-4">
-          <% @releases.each do |release| %>
+          <% @recent_releases.each do |release| %>
             <%= release_label(@project, release) %>
           <% end %>
         </div>

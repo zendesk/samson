@@ -176,6 +176,7 @@ $(function () {
     }
   }
 
+  // When user clicks a release label, fill the deploy reference field with that version
   $("#recent-releases .release-label").on('click', function(event){
     event.preventDefault();
     // Get version number from link href
