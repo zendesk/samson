@@ -11,7 +11,7 @@ module Kubernetes
     # TODO: this logic might be able to go directly into Pod, which would simplify the code here a bit
     class ReleaseStatus
       attr_reader :live, :stop, :details, :pod, :role, :group
-      def initialize(live: true, stop: false, details:, pod:, role:, group:)
+      def initialize(stop: false, live:, details:, pod:, role:, group:)
         @live = live
         @stop = stop
         @details = details
@@ -199,7 +199,7 @@ module Kubernetes
           if pod.restarted?
             {live: false, stop: true, details: "Restarted", pod: pod}
           else
-            {details: "Live", pod: pod}
+            {live: true, details: "Live", pod: pod}
           end
         elsif pod.unschedulable?
           {live: false, stop: true, details: "Unschedulable", pod: pod}
