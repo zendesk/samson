@@ -201,8 +201,8 @@ module Kubernetes
           else
             {details: "Live", pod: pod}
           end
-        elsif pod.unschedulable?
-          {live: false, stop: true, details: "Unschedulable", pod: pod}
+        elsif pod.error?
+          {live: false, stop: true, details: "Error", pod: pod}
         else
           {live: false, details: "Waiting (#{pod.phase}, #{pod.reason})", pod: pod}
         end

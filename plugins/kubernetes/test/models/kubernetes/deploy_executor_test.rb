@@ -399,7 +399,7 @@ describe Kubernetes::DeployExecutor do
 
       refute execute!
 
-      out.must_include "resque-worker: Unschedulable\n"
+      out.must_include "resque-worker: Error\n"
       out.must_include "UNSTABLE"
     end
 
