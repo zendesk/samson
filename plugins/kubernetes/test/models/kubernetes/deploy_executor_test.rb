@@ -384,7 +384,7 @@ describe Kubernetes::DeployExecutor do
 
     it "stops when detecting a failure via events" do
       pod_status[:phase] = "Pending"
-      stub_request(:get, %r{http://foobar.server/api/v1/namespaces/staging/events}).
+      request = stub_request(:get, %r{http://foobar.server/api/v1/namespaces/staging/events}).
         to_return(
           body: {
             items: [
@@ -401,6 +401,8 @@ describe Kubernetes::DeployExecutor do
 
       out.must_include "resque-worker: Unschedulable\n"
       out.must_include "UNSTABLE"
+
+      assert_requested request, times: 5 # fetches pod events once and once for 4 different resources
     end
 
     it "stops when taking too long to go live" do
