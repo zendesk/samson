@@ -21,6 +21,10 @@ function startStream() {
     var origin = $('meta[name=deploy-origin]').first().attr('content');
     var source = new EventSource(origin + streamUrl, { withCredentials: true });
 
+    var throttledScroll = _.throttle(function() {
+      $messages.scrollTop($messages[0].scrollHeight);
+    }, 250);
+
     var addLine = function(data, replace) {
       var msg = JSON.parse(data).msg;
       if (replace) {
@@ -31,7 +35,7 @@ function startStream() {
       $messages.append(msg);
 
       if (following) {
-        $messages.scrollTop($messages[0].scrollHeight);
+        throttledScroll();
       }
     };
 
