@@ -5,7 +5,7 @@ SingleCov.covered!
 
 describe Api::AutomatedDeploysController do
   def post_create
-    post :create, params: {project_id: :foo, deploy_group: 'pod100', env: {'FOO' => 'bar'}}, format: :json
+    post :create, params: {project_id: :foo, deploy_group: 'pod100', env: {'FOO' => "bar\nba$"}}, format: :json
   end
 
   before do
@@ -37,6 +37,9 @@ describe Api::AutomatedDeploysController do
       # copies over the buddy id and uses current user as use
       Deploy.first.user.must_equal user
       Deploy.first.buddy_id.must_equal copied_deploy.buddy_id
+
+      # env vars are correctly encoded
+      Job.last.command.must_include "export PARAM_FOO=bar\\\\nba\\$\n"
     end
 
     it "reuses an existing stage and deploys" do

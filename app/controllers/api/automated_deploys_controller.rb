@@ -9,7 +9,7 @@ class Api::AutomatedDeploysController < Api::BaseController
 
   def create
     deploy_service = DeployService.new(current_user)
-    env = params.require(:env).to_unsafe_hash.map { |k, v| "export PARAM_#{k}=#{v.shellescape}" }
+    env = params.require(:env).to_unsafe_hash.map { |k, v| "export PARAM_#{k}=#{v.gsub("\n", "\\n").shellescape}" }
     env << "export DEPLOY_GROUPS=#{@deploy_group.env_value}"
 
     deploy = deploy_service.deploy!(
