@@ -33,7 +33,7 @@ module DeploysHelper
     output << render('shared/output', deployable: @deploy, job: @deploy.job, project: @project, hide: output_hidden)
   end
 
-  def deploy_running?
+  def deploy_executing?
     @deploy.active? && JobExecution.active?(@deploy.job_id, key: @deploy.stage_id)
   end
 
