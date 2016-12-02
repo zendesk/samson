@@ -65,13 +65,13 @@ describe TerminalExecutor do
 
     it "terminates the program on getpgid failures so we fail fast" do
       Process.expects(:getpgid).raises(Errno::ESRCH)
-      subject.execute!('echo "hi"').must_equal(nil) # status? of a killed process is 9
+      subject.execute!('sleep 0.1').must_equal(nil) # status? of a killed process is 9
     end
 
-    it "terminates the program on getpgid + kill failures when the program was already dead" do
+    it "handles the case when getpgid + kill both fail" do
       Process.expects(:getpgid).raises(Errno::ESRCH)
       Process.expects(:kill).raises(Errno::ESRCH)
-      subject.execute!('nope').must_equal(false) # status? of a killed process is 9
+      subject.execute!('sleep 0.1 && false').must_equal(false) # status? of a killed process is 9
     end
 
     it "ignores closed output errors that happen on linux" do

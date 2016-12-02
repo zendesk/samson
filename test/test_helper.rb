@@ -307,6 +307,7 @@ class ActionController::TestCase
   end
 end
 
+ActiveRecord::Base.logger.level = 1
 WebMock.disable_net_connect!(allow: 'codeclimate.com')
 
 Dir["test/support/*"].each { |f| require File.expand_path(f) }
