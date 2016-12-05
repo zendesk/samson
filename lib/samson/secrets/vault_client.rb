@@ -55,6 +55,11 @@ module Samson
         @clients = nil
       end
 
+      # called via cron job to renew the current token
+      def renew_token
+        clients.each_value { |c| with_retries { c.auth_token.renew_self } }
+      end
+
       private
 
       def wrap_key(key)
