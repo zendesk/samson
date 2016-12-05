@@ -117,7 +117,7 @@ class DeploysController < ApplicationController
   end
 
   def confirm
-    @changeset = Deploy.new(stage: stage, reference: reference).changeset
+    @changeset = Deploy.new(stage: stage, reference: reference, project: current_project).changeset
     render 'changeset', layout: false
   end
 
