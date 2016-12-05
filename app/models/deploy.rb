@@ -25,6 +25,11 @@ class Deploy < ActiveRecord::Base
     [super, commit]
   end
 
+  def job_execution_key
+    # if stage can run in parallel - set key to a unique id so it can immediately execute
+    stage.run_in_parallel ? "deploy-#{id}" : "stage-#{stage.id}"
+  end
+
   def summary
     "#{job.user.name} #{deploy_buddy} #{summary_action} #{short_reference} to #{stage.name}"
   end
