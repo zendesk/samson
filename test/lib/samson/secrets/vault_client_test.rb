@@ -65,6 +65,14 @@ describe Samson::Secrets::VaultClient do
     end
   end
 
+  describe "#renew_token" do
+    it "renews the token" do
+      stub_request(:put, "http://vault-land.com/v1/auth/token/renew-self").
+        to_return(body: "{}", headers: {content_type: 'application/json'})
+      client.renew_token
+    end
+  end
+
   describe "#clients" do
     it "scopes to matching deploy group" do
       Samson::Secrets::VaultServer.last.update_column(:address, 'do-not-use')
