@@ -4,3 +4,5 @@
 # Renew the vault token daily (only use when using vault as secret backend)
 0 0 * * * /bin/bash -c '. samson-env.sh && cd /path/to/samson && bundle exec rake vault:renew_vault_token >> /tmp/samson_renew_vault_token.log 2>&1'
 
+# Delete dead (NotReady) kubernetes nodes that were left behind because their hosts died
+*/10 * * * * /bin/bash -c '. samson-env.sh && cd /path/to/samson && bundle exec rake kubernetes:delete_dead_nodes >> /tmp/delete_dead_nodes.log 2>&1'

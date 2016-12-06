@@ -42,6 +42,22 @@ module Kubernetes
       @kubeconfig ||= Kubeclient::Config.read(config_filepath)
     end
 
+    def self.delete_dead_nodes
+      find_each do |cluster|
+        not_ready = cluster.client.get_nodes.select do |n|
+          n.status.conditions.detect do |c|
+            c.type == "Ready" && c.status == "False" && c.lastHeartbeatTime.to_time < 5.minutes.ago
+          end
+        end
+
+        not_ready.each do |node|
+          name = node.metadata.name
+          puts "Deleting #{name} -- #{node.to_h}"
+          cluster.client.delete_node name
+        end
+      end
+    end
+
     private
 
     def connection_valid?

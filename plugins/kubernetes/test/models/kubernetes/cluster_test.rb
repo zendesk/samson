@@ -93,4 +93,25 @@ describe Kubernetes::Cluster do
       refute cluster.namespace_exists?('a')
     end
   end
+
+  describe ".delete_dead_nodes" do
+    it "deletes all not ready hosts that are stale" do
+      old = 10.minutes.ago
+      nodes = [
+        {metadata: {name: 'a'}, status: {conditions: [{type: "Ready", status: "False", lastHeartbeatTime: old}]}},
+        {metadata: {name: 'b'}, status: {conditions: [{type: "Other", status: "False", lastHeartbeatTime: old}]}},
+        {metadata: {name: 'c'}, status: {conditions: [{type: "Ready", status: "True", lastHeartbeatTime: old}]}},
+        {metadata: {name: 'd'}, status: {conditions: [{type: "Ready", status: "False", lastHeartbeatTime: Time.now}]}},
+      ]
+      stub_request(:get, "http://foobar.server/api/v1/nodes").
+        to_return(headers: {content_type: 'application/json'}, body: {items: nodes}.to_json)
+
+      delete = stub_request(:delete, "http://foobar.server/api/v1/nodes/a")
+
+      Kubernetes::Cluster.expects(:puts)
+      Kubernetes::Cluster.delete_dead_nodes
+
+      assert_requested delete
+    end
+  end
 end
