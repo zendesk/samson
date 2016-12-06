@@ -73,6 +73,13 @@ describe DeployService do
             service.expects(:confirm_deploy!)
             service.deploy!(stage_production_2, reference: ref1)
           end
+
+          it "starts the deploy when stage does not use any commands like kubernetes does" do
+            StageCommand.delete_all
+            create_previous_deploy(ref1, stage_production_1)
+            service.expects(:confirm_deploy!)
+            service.deploy!(stage_production_2, reference: ref1)
+          end
         end
       end
 
