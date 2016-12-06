@@ -70,9 +70,10 @@ namespace :test do
   end
 end
 
+# ideally use --ensure-latest see https://github.com/presidentbeef/brakeman/issues/968
 desc 'Run brakeman ... use brakewan -I to add new ignores'
 task :brakeman do
-  sh "brakeman --exit-on-warn --format plain --add-engine-path 'plugins/*'"
+  sh "brakecheck brakeman && brakeman --exit-on-warn --format plain --add-engine-path 'plugins/*'"
 end
 
 desc "Run rubocop"
