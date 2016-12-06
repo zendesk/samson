@@ -32,7 +32,7 @@ class DeployGroup < ActiveRecord::Base
   end
 
   def natural_order
-    name.split(/(\d+)/).each_with_index.map { |x, i| i.odd? ? x.to_i : x }
+    Samson::NaturalOrder.covert(name)
   end
 
   private
