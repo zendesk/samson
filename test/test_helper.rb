@@ -176,6 +176,10 @@ class ActiveSupport::TestCase
       end
     end
   end
+
+  def self.with_paper_trail
+    around { |t| PaperTrail.with_logging(&t) }
+  end
 end
 
 Mocha::Expectation.class_eval do

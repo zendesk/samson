@@ -145,11 +145,9 @@ class Stage < ActiveRecord::Base
     emails.uniq.presence
   end
 
-  def command_updated_at
-    [
-      command_associations.maximum(:updated_at),
-      commands.maximum(:updated_at)
-    ].compact.max
+  # we record a version on every script change, but do not update the stage ... see Command#trigger_stage_change
+  def script_updated_after?(time)
+    versions.last&.created_at&.> time
   end
 
   # in theory this should not get called multiple times for the same state,
@@ -175,6 +173,11 @@ class Stage < ActiveRecord::Base
 
   def environments
     DeployGroup.enabled? ? deploy_groups.map(&:environment).uniq : []
+  end
+
+  def command_ids=(value)
+    @command_ids_changed = (command_ids != value.map(&:to_i))
+    super
   end
 
   private
@@ -208,5 +211,10 @@ class Stage < ActiveRecord::Base
         s.save(validate: false)
       end
     end
+  end
+
+  # overwrites papertrail to record when command_ids were changed but not trigger multiple versions per save
+  def changed_notably?
+    super || @command_ids_changed
   end
 end

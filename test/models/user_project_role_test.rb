@@ -78,7 +78,7 @@ describe UserProjectRole do
   end
 
   describe "versioning" do
-    around { |t| PaperTrail.with_logging(&t) }
+    with_paper_trail
 
     it "tracks important changes" do
       project_role.versions.size.must_equal 1

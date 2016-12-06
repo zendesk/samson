@@ -423,7 +423,7 @@ describe User do
   describe "versioning" do
     let(:user) { users(:admin) }
 
-    around { |t| PaperTrail.with_logging(&t) }
+    with_paper_trail
 
     it "tracks important changes" do
       user.update_attributes!(name: "Foo")

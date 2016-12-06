@@ -55,6 +55,7 @@ class CurrentUserConcernTest < ActionController::TestCase
 
   tests CurrentUserTestController
   use_test_routes CurrentUserTestController
+  with_paper_trail
 
   def self.authorized(method, action, params)
     it "is authorized to #{method} #{action}" do
@@ -64,7 +65,9 @@ class CurrentUserConcernTest < ActionController::TestCase
   end
 
   as_a_viewer do
-    around { |t| PaperTrail.with_whodunnit_user(nil, &t) }
+    # make sure nothing leaks
+    before { refute PaperTrail.whodunnit_user }
+    after { refute PaperTrail.whodunnit_user }
 
     it "knows who did something" do
       get :whodunnit, params: {test_route: true}
@@ -79,9 +82,7 @@ class CurrentUserConcernTest < ActionController::TestCase
 
     it "records changes" do
       stage = stages(:test_staging)
-      PaperTrail.with_logging do
-        get :change, params: {test_route: true, id: stage.id}
-      end
+      get :change, params: {test_route: true, id: stage.id}
       stage.reload.name.must_equal 'MUUUU'
       stage.versions.size.must_equal 1
     end

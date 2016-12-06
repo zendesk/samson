@@ -45,7 +45,7 @@ describe DeployService do
       end
 
       describe "similar deploy was approved" do
-        before { create_previous_deploy(ref1, stage_production_1) }
+        before { travel(-1.minute) { create_previous_deploy(ref1, stage_production_1) } }
 
         it "starts the deploy, if in grace period" do
           service.expects(:confirm_deploy!)
@@ -60,7 +60,7 @@ describe DeployService do
         end
 
         describe "when stage was modified after the similar deploy" do
-          before { stage.commands.first.update_column(:updated_at, 2.seconds.from_now) }
+          let!(:version) { stage.versions.create!(event: 'Update') }
 
           it "does not start the deploy" do
             service.expects(:confirm_deploy!).never
@@ -69,13 +69,6 @@ describe DeployService do
 
           it "starts the deploy when stage was modified after an older similar deploy" do
             Deploy.first.update_column(:started_at, 4.seconds.from_now)
-            create_previous_deploy(ref1, stage_production_1)
-            service.expects(:confirm_deploy!)
-            service.deploy!(stage_production_2, reference: ref1)
-          end
-
-          it "starts the deploy when stage does not use any commands like kubernetes does" do
-            StageCommand.delete_all
             create_previous_deploy(ref1, stage_production_1)
             service.expects(:confirm_deploy!)
             service.deploy!(stage_production_2, reference: ref1)
