@@ -160,6 +160,7 @@ GEM
     bootstrap-sass (3.3.6)
       autoprefixer-rails (>= 5.2.1)
       sass (>= 3.3.4)
+    brakecheck (0.1.9)
     brakeman (3.4.1)
     builder (3.2.2)
     byebug (8.2.2)
@@ -501,6 +502,7 @@ DEPENDENCIES
   binding_of_caller
   bootscale
   bootstrap-sass
+  brakecheck
   brakeman
   bundler
   byebug
