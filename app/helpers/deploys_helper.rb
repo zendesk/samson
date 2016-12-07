@@ -34,11 +34,11 @@ module DeploysHelper
   end
 
   def deploy_executing?
-    @deploy.active? && JobExecution.active?(@deploy.job_id, key: @deploy.stage_id)
+    @deploy.active? && JobExecution.active?(@deploy.job_id, key: @deploy.job_execution_key)
   end
 
   def deploy_queued?
-    @deploy.pending? && JobExecution.queued?(@deploy.job_id, key: @deploy.stage_id)
+    @deploy.pending? && JobExecution.queued?(@deploy.job_id, key: @deploy.job_execution_key)
   end
 
   def deploy_page_title

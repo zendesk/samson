@@ -86,6 +86,22 @@ describe Deploy do
     end
   end
 
+  describe "#job_execution_key" do
+    describe "stage can run in parallel" do
+      before { stage.update_attributes(run_in_parallel: true) }
+      it "keys on deploy id to run immediately" do
+        deploy.job_execution_key.must_equal "deploy-#{deploy.id}"
+      end
+    end
+
+    describe "stage cannot run in parallel" do
+      before { stage.update_attributes(run_in_parallel: false) }
+      it "keys on its stage id" do
+        deploy.job_execution_key.must_equal "stage-#{stage.id}"
+      end
+    end
+  end
+
   describe "#commit" do
     before { deploy.job.commit = 'abcdef' }
 

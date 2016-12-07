@@ -31,9 +31,7 @@ class DeployService
       send_after_notifications(deploy)
     end
 
-    # if stage can run in parallel - set key to a unique id so it can immediately execute
-    key = stage.run_in_parallel ? "deploy-#{deploy.id}" : "stage-#{stage.id}"
-    JobExecution.start_job(job_execution, key: key)
+    JobExecution.start_job(job_execution, key: deploy.job_execution_key)
 
     send_sse_deploy_update('start', deploy)
   end
