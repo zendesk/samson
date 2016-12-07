@@ -28,11 +28,23 @@ describe SecretStorage do
       secret.updater_id.must_equal users(:admin).id
     end
 
-    it "expires keys" do
-      SecretStorage.keys
-      secret_key = 'production/foo/pod2/hello'
+    it "adds key to keys cache" do
+      secret # create
+      SecretStorage.keys.must_equal([secret.id]) # fill and check cache
+      SecretStorage.backend.expects(:keys).never # block call
+
+      secret_key = 'production/foo/pod2/world'
       SecretStorage.write(secret_key, attributes).must_equal true
-      SecretStorage.keys.must_equal [secret_key]
+      SecretStorage.keys.sort.must_equal [secret.id, secret_key]
+    end
+
+    it "does not add known key to keys cache" do
+      secret # create
+      SecretStorage.keys.must_equal([secret.id]) # fill and check cache
+      SecretStorage.backend.expects(:keys).never # block call
+
+      SecretStorage.write(secret.id, attributes).must_equal true
+      SecretStorage.keys.sort.must_equal [secret.id]
     end
 
     it "refuses to write empty keys" do
@@ -126,15 +138,25 @@ describe SecretStorage do
   end
 
   describe ".delete" do
+    before { secret }
+
     it "deletes" do
       SecretStorage.delete(secret.id)
       refute SecretStorage::DbBackend::Secret.exists?(secret.id)
     end
 
-    it "expires keys" do
-      SecretStorage.keys
+    it "updates keys cache" do
+      SecretStorage.keys.must_equal([secret.id]) # fill and check cache
+      SecretStorage.backend.expects(:keys).never # block call
+
       SecretStorage.delete(secret.id)
       SecretStorage.keys.must_equal []
+    end
+
+    it "does not cache when cache did not exist" do
+      SecretStorage.backend.expects(:keys).never # block call
+      SecretStorage.delete(secret.id)
+      Rails.cache.read(SecretStorage::SECRET_KEYS_CACHE).must_equal nil
     end
   end
 
