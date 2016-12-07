@@ -59,7 +59,7 @@ module Kubernetes
         end
       end
 
-      def unschedulable?
+      def error?
         events.any? { |e| e.type != "Normal" }
       end
 

@@ -189,24 +189,24 @@ describe Kubernetes::Api::Pod do
     end
   end
 
-  describe "#unschedulable?" do
+  describe "#error?" do
     let(:events_url) do
       "http://foobar.server/api/v1/namespaces/the-namespace/events?fieldSelector=involvedObject.name=test_name"
     end
 
     it "is schedulable when there are no events" do
       stub_request(:get, events_url).to_return(body: {items: []}.to_json)
-      refute pod_with_client.unschedulable?
+      refute pod_with_client.error?
     end
 
     it "is schedulable when there are Normal events" do
       stub_request(:get, events_url).to_return(body: {items: [{type: 'Normal'}]}.to_json)
-      refute pod_with_client.unschedulable?
+      refute pod_with_client.error?
     end
 
     it "is unschedulable when there are abnormal events" do
       stub_request(:get, events_url).to_return(body: {items: [{type: 'Warning'}]}.to_json)
-      assert pod_with_client.unschedulable?
+      assert pod_with_client.error?
     end
   end
 end
