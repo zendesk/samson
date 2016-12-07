@@ -63,7 +63,7 @@
     }
   },
   "scripts": {
-    "postdeploy": "bundle exec rake db:schema:load"
+    "postdeploy": "DISABLE_DATABASE_ENVIRONMENT_CHECK=1 bundle exec rake db:schema:load"
   },
   "keywords": ["samson", "deploy", "github", "rails"],
   "buildpacks": [
