@@ -11,7 +11,7 @@ module Kubernetes
     # TODO: this logic might be able to go directly into Pod, which would simplify the code here a bit
     class ReleaseStatus
       attr_reader :live, :stop, :details, :pod, :role, :group
-      def initialize(live: true, stop: false, details:, pod:, role:, group:)
+      def initialize(stop: false, live:, details:, pod:, role:, group:)
         @live = live
         @stop = stop
         @details = details
@@ -55,14 +55,14 @@ module Kubernetes
 
     private
 
+    # check all pods and see if they are running
+    # once they are running check if they are stable (for apps only, since jobs are finished and will not change)
     def wait_for_resources_to_complete(release, release_docs)
       @wait_start_time = Time.now
       stable_ticks = CHECK_STABLE / TICK
       @output.puts "Waiting for pods to be created"
 
       loop do
-        return false if stopped?
-
         statuses = pod_statuses(release, release_docs)
         return success if statuses.none?
 
@@ -74,7 +74,7 @@ module Kubernetes
           else
             print_statuses(statuses)
             unstable!
-            return false
+            return statuses
           end
         else
           print_statuses(statuses)
@@ -87,14 +87,15 @@ module Kubernetes
             end
           elsif statuses.any?(&:stop)
             unstable!
-            return false
+            return statuses
           elsif seconds_waiting > WAIT_FOR_LIVE
             @output.puts "TIMEOUT, pods took too long to get live"
-            return false
+            return statuses
           end
         end
 
         sleep TICK
+        return statuses if stopped?
       end
     end
 
@@ -112,10 +113,10 @@ module Kubernetes
       end
     end
 
-    def show_failure_cause(release, release_docs)
+    def show_failure_cause(release, release_docs, statuses)
       release_docs.each { |doc| print_resource_events(doc) }
 
-      pod_statuses(release, release_docs).reject(&:live).select(&:pod).each do |status|
+      statuses.reject(&:live).select(&:pod).each do |status|
         pod = status.pod
         deploy_group = deploy_group_for_pod(pod, release)
         @output.puts "\n#{deploy_group.name} pod #{pod.name}:"
@@ -199,7 +200,7 @@ module Kubernetes
           if pod.restarted?
             {live: false, stop: true, details: "Restarted", pod: pod}
           else
-            {details: "Live", pod: pod}
+            {live: true, details: "Live", pod: pod}
           end
         elsif pod.error?
           {live: false, stop: true, details: "Error", pod: pod}
@@ -362,13 +363,15 @@ module Kubernetes
 
     def deploy_to_cluster(release, release_docs)
       deploy(release_docs)
-      successful = wait_for_resources_to_complete(release, release_docs)
-      unless successful
-        show_failure_cause(release, release_docs)
+      result = wait_for_resources_to_complete(release, release_docs)
+      if result == true
+        true
+      else
+        show_failure_cause(release, release_docs, result)
         rollback(release_docs)
         @output.puts "DONE"
+        false
       end
-      successful
     end
 
     def success
