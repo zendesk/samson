@@ -21,6 +21,8 @@ class Deploy < ActiveRecord::Base
 
   before_validation :trim_reference
 
+  attr_accessor :skip_deploy_group_validation
+
   def cache_key
     [super, commit]
   end
@@ -186,13 +188,15 @@ class Deploy < ActiveRecord::Base
   # commands and deploy groups can change via many different paths,
   # so we validate once a user actually tries to execute the command
   def validate_stage_uses_deploy_groups_properly
-    if DeployGroup.enabled? && stage.deploy_groups.none? && stage.script.include?("$DEPLOY_GROUPS")
-      errors.add(
-        :stage,
-        "contains at least one command using the $DEPLOY_GROUPS environment variable," \
-        " but there are no Deploy Groups associated with this stage."
-      )
-    end
+    return unless DeployGroup.enabled?
+    return if skip_deploy_group_validation
+    return if stage.deploy_groups.any?
+    return unless stage.script.include?("$DEPLOY_GROUPS")
+    errors.add(
+      :stage,
+      "contains at least one command using the $DEPLOY_GROUPS environment variable," \
+      " but there are no Deploy Groups associated with this stage."
+    )
   end
 
   def deploy_buddy
