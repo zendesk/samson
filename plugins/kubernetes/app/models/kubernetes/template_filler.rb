@@ -63,9 +63,6 @@ module Kubernetes
     # /vaultauth is a secrets volume in the cluster
     # /secretkeys are where the annotations from the config are mounted
     def set_secret_sidecar
-      unless vault_client = Samson::Secrets::VaultClient.client.client(@doc.deploy_group)
-        raise "Could not find Vault config for #{@doc.deploy_group.permalink}"
-      end
 
       containers.push(
         image: SIDECAR_IMAGE,
@@ -74,10 +71,6 @@ module Kubernetes
           { mountPath: "/vault-auth", name: "vaultauth" },
           { mountPath: "/secretkeys", name: "secretkeys" }
         ],
-        env: [
-          {name: :VAULT_ADDR, value: vault_client.options.fetch(:address)},
-          {name: :VAULT_SSL_VERIFY, value: vault_client.options.fetch(:ssl_verify).to_s}
-        ]
       )
 
       # share secrets volume between all containers
@@ -160,26 +153,28 @@ module Kubernetes
 
     # helpful env vars, also useful for log tagging
     def set_env
-      env = (container[:env] ||= [])
+      containers.each do |cont|
+        env = (cont[:env] ||= [])
 
-      static_env.each { |k, v| env << {name: k.to_s, value: v.to_s} }
+        static_env.each { |k, v| env << {name: k.to_s, value: v.to_s} }
 
-      # dynamic lookups for unknown things during deploy
-      {
-        POD_NAME: 'metadata.name',
-        POD_NAMESPACE: 'metadata.namespace',
-        POD_IP: 'status.podIP'
-      }.each do |k, v|
-        env << {
-         name: k.to_s,
-         valueFrom: {fieldRef: {fieldPath: v}}
-       }
+        # dynamic lookups for unknown things during deploy
+        {
+          POD_NAME: 'metadata.name',
+          POD_NAMESPACE: 'metadata.namespace',
+          POD_IP: 'status.podIP'
+        }.each do |k, v|
+          env << {
+          name: k.to_s,
+          valueFrom: {fieldRef: {fieldPath: v}}
+        }
+        end
+
+        # unique, but keep last elements
+        env.reverse!
+        env.uniq! { |h| h[:name] }
+        env.reverse!
       end
-
-      # unique, but keep last elements
-      env.reverse!
-      env.uniq! { |h| h[:name] }
-      env.reverse!
     end
 
     def static_env
@@ -197,6 +192,14 @@ module Kubernetes
       # name of the cluster
       kube_cluster_name = DeployGroup.find(metadata[:deploy_group_id]).kubernetes_cluster.name.to_s
       env[:KUBERNETES_CLUSTER_NAME] = kube_cluster_name
+
+      # the vault server to be used if we are using vault and there's an instance associated
+      # with the deploy group
+      if @doc.deploy_group.vault_server_id
+        vault_client = Samson::Secrets::VaultClient.client.client(@doc.deploy_group)
+        env[:VAULT_ADDR] = vault_client.options.fetch(:address)
+        env[:VAULT_SSL_VERIFY] = vault_client.options.fetch(:ssl_verify).to_s
+      end
 
       # env from plugins
       env.merge!(Samson::Hooks.fire(:deploy_group_env, project, @doc.deploy_group).inject({}, :merge!))
