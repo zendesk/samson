@@ -61,12 +61,18 @@ class DockerBuilderService
   end
 
   def run_build_image_job(local_job, image_name, push: false, tag_as_latest: false)
-    k8s_job = Kubernetes::BuildJobExecutor.new(output, job: local_job)
     docker_ref = docker_image_ref(image_name, build)
-
-    success, build_log = k8s_job.execute!(build, project,
-      tag: docker_ref, push: push,
-      registry: DockerBuilderService.registry_credentials, tag_as_latest: tag_as_latest)
+    k8s_job = Kubernetes::BuildJobExecutor.new(
+      output,
+      job: local_job,
+      registry: DockerBuilderService.registry_credentials
+    )
+    success, build_log = k8s_job.execute!(
+      build, project,
+      docker_ref: docker_ref,
+      push: push,
+      tag_as_latest: tag_as_latest
+    )
 
     build.docker_ref = docker_ref
     build.docker_repo_digest = nil
