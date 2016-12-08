@@ -69,9 +69,15 @@ class TerminalExecutor
       nil # output was closed ... only happens on linux
     end
 
-    _pid, status = Process.wait2(@pid)
-    input.close
-    status.success?
+    begin
+      _pid, status = Process.wait2(@pid)
+      status.success?
+    rescue Errno::ECHILD
+      @output.puts "#{$!.class}: #{$!.message}"
+      false
+    ensure
+      input.close
+    end
   end
 
   # We need the group pid to cleanly shut down all children
