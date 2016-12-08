@@ -464,26 +464,25 @@ describe Stage do
     end
   end
 
-  describe "#command_updated_at" do
-    let(:t) { 3.seconds.from_now }
+  describe "#script_updated_after?" do
+    let(:stage) { stages(:test_staging) }
 
-    it "is nil for new" do
-      Stage.new.command_updated_at.must_equal nil
+    before { stage.versions.create event: 'update', created_at: 30.minutes.ago }
+    with_paper_trail
+
+    it "is false without versions" do
+      stage.versions.each(&:delete)
+      refute stage.script_updated_after?(10.minutes.ago)
     end
 
-    it "ignores updated_at since that is changed on every deploy" do
-      stage.command_associations.clear
-      stage.command_updated_at.must_equal nil
+    it "is false without changes" do
+      refute stage.script_updated_after?(10.minutes.ago)
     end
 
-    it "is updated when command content changed" do
-      stage.commands.first.update_column(:updated_at, t)
-      stage.command_updated_at.to_i.must_equal t.to_i
-    end
-
-    it "is updated when a new command was added" do
-      stage.command_associations.first.update_column(:updated_at, t)
-      stage.command_updated_at.to_i.must_equal t.to_i
+    it "is updated when command changed" do
+      stage.commands.first.update_attributes!(command: "hellooooo") # version created now
+      stage.reload
+      assert stage.script_updated_after?(10.minutes.ago)
     end
   end
 
@@ -493,6 +492,26 @@ describe Stage do
     it "tracks important changes" do
       stage.update_attribute(:name, "Foo")
       stage.versions.size.must_equal 1
+    end
+
+    it "tracks command changes" do
+      stage.commands.first.update_attributes!(command: "Foo")
+      stage.versions.size.must_equal 1
+    end
+
+    it "tracks command additions" do
+      stage.update_attributes!(command_ids: stage.command_ids + [commands(:global).id])
+      stage.versions.size.must_equal 1
+    end
+
+    it "tracks command removal" do
+      stage.update_attributes!(command_ids: [])
+      stage.versions.size.must_equal 1
+    end
+
+    it "does not track when command does not change" do
+      stage.update_attributes!(command_ids: stage.command_ids.map(&:to_s))
+      stage.versions.size.must_equal 0
     end
 
     it "ignores unimportant changes" do

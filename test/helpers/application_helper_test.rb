@@ -314,7 +314,7 @@ describe ApplicationHelper do
   describe "#link_to_history" do
     let(:user) { users(:admin) }
 
-    around { |t| PaperTrail.with_logging(&t) }
+    with_paper_trail
 
     it "shows a link" do
       link_to_history(user).must_equal "<a href=\"/versions?item_id=#{user.id}&amp;item_type=User\">History (0)</a>"

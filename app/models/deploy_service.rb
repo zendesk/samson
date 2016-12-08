@@ -61,7 +61,7 @@ class DeployService
 
   def copy_approval_from_last_deploy(deploy)
     return false unless last_deploy = latest_approved_deploy(deploy.reference, deploy.stage.project)
-    return false if (last_update = last_deploy.stage.command_updated_at) && last_deploy.started_at < last_update
+    return false if last_deploy.stage.script_updated_after?(last_deploy.started_at)
 
     deploy.buddy = (last_deploy.buddy == @user ? last_deploy.job.user : last_deploy.buddy)
     deploy.started_at = Time.now

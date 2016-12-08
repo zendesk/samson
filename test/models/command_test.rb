@@ -37,7 +37,7 @@ describe Command do
   describe "#trigger_stage_change" do
     let(:command) { commands(:echo) }
 
-    around { |t| PaperTrail.with_logging(&t) }
+    with_paper_trail
 
     it "triggers a version when command changes" do
       command.update_attribute(:command, 'new')
