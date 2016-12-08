@@ -1,10 +1,9 @@
 # frozen_string_literal: true
 require_relative "../../test_helper"
 
-# Skip the following lines:
-# - Simple resetting tracking variables for the next loop when
-#   there is an error creating a build job or getting/watching pod log
-SingleCov.covered! uncovered: 3
+# Uncovered: create_and_wait_for_job resetting tracking variables for the next loop when
+# there is an error creating a build job or getting/watching pod log
+SingleCov.covered! uncovered: 2
 
 describe Kubernetes::BuildJobExecutor do
   let(:output) { StringIO.new }
@@ -15,18 +14,16 @@ describe Kubernetes::BuildJobExecutor do
       username: 'foo', password: 'bar', email: 'moo@cow.com'
     }
   end
-
   let(:build) { builds(:docker_build) }
   let(:job) { jobs(:succeeded_test) }
   let(:project) { job.project }
-
-  let(:executor) { Kubernetes::BuildJobExecutor.new(output, job: job) }
+  let(:executor) { Kubernetes::BuildJobExecutor.new(output, job: job, registry: registry_info) }
 
   describe '#execute!' do
     def execute!(push: false)
       executor.execute!(
         build, project,
-        tag: 'latest', push: push, registry: registry_info
+        docker_ref: 'latest', push: push
       )
     end
 

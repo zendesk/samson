@@ -9,23 +9,22 @@ module Kubernetes
     attr_reader :job
     delegate :id, to: :job
 
-    def initialize(output, job:)
+    def initialize(output, job:, registry:)
       @output = output
       @job = job
-      @registry = {}
+      @registry = registry
     end
 
-    def execute!(build, project, tag:, push: false, registry:, tag_as_latest: false)
+    def execute!(build, project, docker_ref:, push: false, tag_as_latest: false)
       job_log = job_name = job_namespace = ""
       k8s_job = nil
 
-      unless valid_registry_info?(registry)
+      unless valid_registry_info?(@registry)
         @output.puts "### Registry server should not be empty. Aborting..."
         return false, job_log
       end
-      @registry = registry
 
-      k8s_job = job_config(build, project, tag: tag, push: push, tag_as_latest: tag_as_latest)
+      k8s_job = job_config(build, project, docker_ref: docker_ref, push: push, tag_as_latest: tag_as_latest)
       job_name = k8s_job[:metadata][:name]
       job_namespace = k8s_job[:metadata][:namespace]
 
@@ -36,7 +35,7 @@ module Kubernetes
       @output.puts "### Remote build job #{job_name} #{message}"
 
       if success && clair = ENV['HYPERCLAIR_PATH']
-        Thread.new { scan_with_clair(clair, project.permalink.tr('_', '-'), tag) }
+        Thread.new { scan_with_clair(clair, project, docker_ref) }
       end
 
       return success, job_log
@@ -72,7 +71,7 @@ module Kubernetes
       ENV['KUBE_BUILD_JOB_FILE'] || File.join(Rails.root, 'plugins', 'kubernetes', 'config', 'build_job.yml')
     end
 
-    def fill_job_details(k8s_job, build, project, tag:, push: false, tag_as_latest: false)
+    def fill_job_details(k8s_job, build, project, docker_ref:, push: false, tag_as_latest: false)
       # Fill in some information to easily query the job resource
       project_name = project.permalink.tr('_', '-')
       labels = { project: project_name, role: "docker-build-job" }
@@ -87,7 +86,7 @@ module Kubernetes
       container_params = {
         env: [{name: 'DOCKER_REGISTRY', value: @registry[:serveraddress] }],
         args: [
-          project.repository_url, build.git_sha, project.docker_repo, tag,
+          project.repository_url, build.git_sha, project.docker_repo, docker_ref,
           push ? "yes" : "no",
           tag_as_latest ? "yes" : "no"
         ]
@@ -97,9 +96,16 @@ module Kubernetes
 
     # Run a shell script that wraps hyperclair.
     # Hyperclair will pull the image from registry and run scan with Clair scanner
-    def scan_with_clair(script, project, tag)
+    def scan_with_clair(script, project, git_ref)
       sleep 0.1 if Rails.env.test? # in test we reuse the same connection, so we cannot use it at the same time
-      success, output, time = execute_command(script, @registry.fetch(:serveraddress), project, tag, timeout: 60 * 60)
+      project_param = project.permalink.tr('_', '-')
+      success, output, time = execute_command(
+        script,
+        @registry.fetch(:serveraddress),
+        project_param,
+        git_ref,
+        timeout: 60 * 60
+      )
       status = (success ? "success" : "errored or vulnerabilities found")
       output = "### Clair scan: #{status} in #{time}s\n#{output}"
       @job.reload
@@ -137,11 +143,11 @@ module Kubernetes
       raise e
     end
 
-    def job_config(build, project, tag:, push: false, tag_as_latest: false)
+    def job_config(build, project, docker_ref:, push: false, tag_as_latest: false)
       # Read the external config path and create a new job config instance
       contents = File.read(build_job_config_path)
       k8s_job = Kubernetes::RoleConfigFile.new(contents, build_job_config_path).job
-      fill_job_details(k8s_job, build, project, tag: tag, push: push, tag_as_latest: tag_as_latest)
+      fill_job_details(k8s_job, build, project, docker_ref: docker_ref, push: push, tag_as_latest: tag_as_latest)
       k8s_job
     end
 
