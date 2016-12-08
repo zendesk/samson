@@ -23,7 +23,7 @@ module SecretStorage
       return false unless key =~ /\A#{SECRET_KEY_REGEX}\z/
       return false if data.blank? || data[:value].blank?
       result = backend.write(key, data)
-      clear_cache
+      modify_keys_cache { |c| c.push key unless c.include?(key) }
       result
     end
 
@@ -44,12 +44,12 @@ module SecretStorage
 
     def delete(key)
       result = backend.delete(key)
-      clear_cache
+      modify_keys_cache { |c| c.delete(key) }
       result
     end
 
     def keys
-      Rails.cache.fetch(SECRET_KEYS_CACHE, expires_in: 10.minutes) { backend.keys }
+      Rails.cache.fetch(SECRET_KEYS_CACHE) { backend.keys }
     end
 
     def backend
@@ -66,8 +66,11 @@ module SecretStorage
 
     private
 
-    def clear_cache
-      Rails.cache.delete(SECRET_KEYS_CACHE)
+    def modify_keys_cache
+      if cache = Rails.cache.read(SECRET_KEYS_CACHE)
+        yield cache
+        Rails.cache.write(SECRET_KEYS_CACHE, cache)
+      end
     end
   end
 end
