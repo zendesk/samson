@@ -74,10 +74,12 @@ class Project < ActiveRecord::Base
     repository_url.scan(%r{[:/]([A-Za-z0-9-]+/[\w.-]+?)(?:\.git)?$}).join
   end
 
+  # TODO: remove, this is misleading
   def github_repo
     user_repo_part
   end
 
+  # TODO: remove, this is misleading
   def gitlab_repo
     user_repo_part
   end

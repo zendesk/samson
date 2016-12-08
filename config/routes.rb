@@ -72,12 +72,13 @@ Samson::Application.routes.draw do
           post :confirm
         end
       end
+
+      resource :commit_statuses, only: [:show]
     end
 
     resource :changelog, only: [:show]
     resources :webhooks, only: [:index, :create, :destroy]
     resources :outbound_webhooks, only: [:create, :destroy]
-    resource :commit_statuses, only: [:show]
     resources :references, only: [:index]
 
     resources :users, only: [:index, :update]

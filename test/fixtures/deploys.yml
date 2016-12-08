@@ -4,9 +4,9 @@ succeeded_test:
   stage: test_staging
   job: succeeded_test
   reference: staging
-  started_at: 2014-01-02 20:00:00
-  updated_at: 2014-01-02 20:10:00
-  created_at: 2014-01-02 19:50:00
+  started_at: 2014-01-01 20:00:00
+  updated_at: 2014-01-01 20:10:00
+  created_at: 2014-01-01 19:50:00
 
 succeeded_production_test:
   release: true

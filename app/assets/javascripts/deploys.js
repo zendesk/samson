@@ -98,7 +98,8 @@ $(function () {
     $ref_problem_list.empty();
     $.each(status_list, function(idx, status) {
       if (status.state != "success") {
-        var item = $ref_problem_list.append($("<li>"));
+        var item = $("<li>");
+        $ref_problem_list.append(item);
         item.text(status.state + ": " + status.description);
         if(status.target_url) {
           item.append(' <a href="' + status.target_url + '">details</a>');

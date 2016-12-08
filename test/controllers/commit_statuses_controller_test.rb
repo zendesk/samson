@@ -5,14 +5,14 @@ SingleCov.covered!
 
 describe CommitStatusesController do
   as_a_viewer do
-    unauthorized :get, :show, project_id: :foo, id: 'test/test'
+    unauthorized :get, :show, stage_id: 'staging', project_id: 'foo', id: 'test/test'
   end
 
   as_a_project_deployer do
     describe '#show' do
       it "fails with unknown project" do
         assert_raises ActiveRecord::RecordNotFound do
-          get :show, params: {project_id: 123123, id: 'test/test'}
+          get :show, params: {stage_id: 'staging', project_id: 'bar', id: 'test/test'}
         end
       end
 
@@ -26,7 +26,7 @@ describe CommitStatusesController do
 
         before do
           CommitStatus.stubs(new: stub(commit_status_data))
-          get :show, params: {project_id: projects(:test), id: 'test/test'}
+          get :show, params: {project_id: projects(:test), stage_id: 'staging', id: 'test/test'}
         end
 
         it 'responds ok' do

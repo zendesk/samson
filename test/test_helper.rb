@@ -87,12 +87,12 @@ class ActiveSupport::TestCase
     old = ar_queries
     yield
     new = ar_queries
-    new_count = new.size - old.size
-    message = new[old.size..-1].join("\n")
+    extra = new[old.size..-1].reject { |q| q.include?('information_schema') }
+    message = extra.join("\n")
     if count.is_a?(Range)
-      assert_includes count, new_count, message
+      assert_includes count, extra.count, message
     else
-      assert_equal count, new_count, message
+      assert_equal count, extra.count, message
     end
   end
 

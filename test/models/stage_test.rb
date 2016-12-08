@@ -560,6 +560,18 @@ describe Stage do
     end
   end
 
+  describe "#influencing_stage_ids" do
+    it "finds self when there are none" do
+      stage.influencing_stage_ids.must_equal [stage.id]
+    end
+
+    it "finds other stages that go to the same deploy groups" do
+      other = stages(:test_production)
+      DeployGroupsStage.create!(stage: other, deploy_group: stage.deploy_groups.first)
+      stage.influencing_stage_ids.sort.must_equal [stage.id, other.id].sort
+    end
+  end
+
   describe "template linking" do
     describe "with no clones" do
       it "has no parent" do

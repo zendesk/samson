@@ -90,9 +90,19 @@ describe Release do
       Release.find_by_param!("v123").must_equal release
     end
 
+    it "does not find impossible" do
+      assert_sql_queries 0 do
+        assert_raises ActiveRecord::RecordNotFound do
+          Release.find_by_param!("123")
+        end
+      end
+    end
+
     it "does not find unknoqn" do
-      assert_raises ActiveRecord::RecordNotFound do
-        Release.find_by_param!("123")
+      assert_sql_queries 1 do
+        assert_raises ActiveRecord::RecordNotFound do
+          Release.find_by_param!("v124")
+        end
       end
     end
   end
