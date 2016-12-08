@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20161124215353) do
+ActiveRecord::Schema.define(version: 20161208170829) do
 
   create_table "builds", force: :cascade do |t|
     t.integer  "project_id",                                       null: false
@@ -249,7 +249,7 @@ ActiveRecord::Schema.define(version: 20161124215353) do
     t.datetime "created_at"
     t.datetime "updated_at"
     t.datetime "deleted_at"
-    t.string   "description"
+    t.string   "description",   limit: 1024
     t.boolean  "warning",       default: false, null: false
     t.datetime "delete_at"
     t.string   "resource_type"
