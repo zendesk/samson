@@ -157,6 +157,7 @@ describe Kubernetes::TemplateFiller do
 
     describe "secret-sidecar-containers" do
       let(:secret_key) { "global/global/global/bar" }
+      let(:template_hash) { template.to_hash[:spec][:template][:spec][:containers].first[:env] }
 
       around do |test|
         klass = Kubernetes::TemplateFiller
@@ -188,17 +189,15 @@ describe Kubernetes::TemplateFiller do
         end
       end
 
-      it "get the VAULT_ADDR in it's env" do
-        with_env('SECRET_STORAGE_BACKEND': "SecretStorage::HashicorpVault") do
-          assert template.to_hash[:spec][:template][:spec][:containers].
-            first[:env].any? { |env| env.any? { |_k, v| v == "VAULT_ADDR" } }
+      it "adds the vault server address to the cotainers env" do
+        with_env(SECRET_STORAGE_BACKEND: "SecretStorage::HashicorpVault") do
+          assert template_hash.any? { |env| env.any? { |_k, v| v == "VAULT_ADDR" } }
         end
       end
 
-      it "does not get the VAULT_ADDR in it's env" do
-        with_env('SECRET_STORAGE_BACKEND': "foobar") do
-          refute template.to_hash[:spec][:template][:spec][:containers].
-            first[:env].any? { |env| env.any? { |_k, v| v == "VAULT_ADDR" } }
+      it "does not add the vault server address to the cotainers env" do
+        with_env(SECRET_STORAGE_BACKEND: "foobar") do
+          refute template_hash.any? { |env| env.any? { |_k, v| v == "VAULT_ADDR" } }
         end
       end
 

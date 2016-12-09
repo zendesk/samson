@@ -164,9 +164,9 @@ module Kubernetes
         POD_IP: 'status.podIP'
       }.each do |k, v|
         env << {
-        name: k.to_s,
-        valueFrom: {fieldRef: {fieldPath: v}}
-      }
+          name: k.to_s,
+          valueFrom: {fieldRef: {fieldPath: v}}
+        }
       end
 
       # unique, but keep last elements
