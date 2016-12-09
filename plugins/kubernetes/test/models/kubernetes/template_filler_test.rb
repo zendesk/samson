@@ -173,12 +173,6 @@ describe Kubernetes::TemplateFiller do
       it "creates a sidecar" do
         sidecar = template.to_hash[:spec][:template][:spec][:containers].last
         sidecar[:name].must_equal('secret-sidecar')
-        sidecar[:env].must_equal(
-          [
-            {name: :VAULT_ADDR, value: "https://test.hvault.server"},
-            {name: :VAULT_SSL_VERIFY, value: "false"}
-          ]
-        )
 
         # secrets got resolved?
         template.to_hash[:spec][:template][:metadata][:annotations].must_equal(
@@ -187,9 +181,11 @@ describe Kubernetes::TemplateFiller do
       end
 
       it "fails when vault is not configured" do
-        Samson::Secrets::VaultClient.client.expects(:client).returns(nil)
-        e = assert_raises { template.to_hash }
-        e.message.must_equal "Could not find Vault config for pod1"
+        with_env('SECRET_STORAGE_BACKEND': "SecretStorage::HashicorpVault") do
+          Samson::Secrets::VaultClient.client.expects(:client).raises("Could not find Vault config for pod1")
+          e = assert_raises { template.to_hash }
+          e.message.must_equal "Could not find Vault config for pod1"
+        end
       end
 
       it "adds to existing volume definitions in the sidecar" do

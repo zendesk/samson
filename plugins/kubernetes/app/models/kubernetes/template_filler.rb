@@ -23,6 +23,7 @@ module Kubernetes
         set_secrets
         set_env
         set_image_pull_secrets
+        set_vault_env
 
         hash = template
         Rails.logger.info "Created Kubernetes hash: #{hash.to_json}"
@@ -153,28 +154,26 @@ module Kubernetes
 
     # helpful env vars, also useful for log tagging
     def set_env
-      containers.each do |cont|
-        env = (cont[:env] ||= [])
+      env = (container[:env] ||= [])
 
-        static_env.each { |k, v| env << {name: k.to_s, value: v.to_s} }
+      static_env.each { |k, v| env << {name: k.to_s, value: v.to_s} }
 
-        # dynamic lookups for unknown things during deploy
-        {
-          POD_NAME: 'metadata.name',
-          POD_NAMESPACE: 'metadata.namespace',
-          POD_IP: 'status.podIP'
-        }.each do |k, v|
-          env << {
-          name: k.to_s,
-          valueFrom: {fieldRef: {fieldPath: v}}
-        }
-        end
-
-        # unique, but keep last elements
-        env.reverse!
-        env.uniq! { |h| h[:name] }
-        env.reverse!
+      # dynamic lookups for unknown things during deploy
+      {
+        POD_NAME: 'metadata.name',
+        POD_NAMESPACE: 'metadata.namespace',
+        POD_IP: 'status.podIP'
+      }.each do |k, v|
+        env << {
+        name: k.to_s,
+        valueFrom: {fieldRef: {fieldPath: v}}
+      }
       end
+
+      # unique, but keep last elements
+      env.reverse!
+      env.uniq! { |h| h[:name] }
+      env.reverse!
     end
 
     def static_env
@@ -193,16 +192,20 @@ module Kubernetes
       kube_cluster_name = DeployGroup.find(metadata[:deploy_group_id]).kubernetes_cluster.name.to_s
       env[:KUBERNETES_CLUSTER_NAME] = kube_cluster_name
 
-      # the vault server to be used if we are using vault and there's an instance associated
-      # with the deploy group
-      if @doc.deploy_group.vault_server_id
-        vault_client = Samson::Secrets::VaultClient.client.client(@doc.deploy_group)
-        env[:VAULT_ADDR] = vault_client.options.fetch(:address)
-        env[:VAULT_SSL_VERIFY] = vault_client.options.fetch(:ssl_verify).to_s
-      end
-
       # env from plugins
       env.merge!(Samson::Hooks.fire(:deploy_group_env, project, @doc.deploy_group).inject({}, :merge!))
+    end
+
+
+    def set_vault_env
+      if needs_vault?
+        containers.each do |container|
+          env = (container[:env] ||= [])
+          vault_client = Samson::Secrets::VaultClient.client.client(@doc.deploy_group)
+          env << {name: "VAULT_ADDR", value:vault_client.options.fetch(:address)}
+          env << {name: "VAULT_SSL_VERIFY", value: vault_client.options.fetch(:ssl_verify).to_s}
+        end
+      end
     end
 
     # kubernetes needs docker secrets to be able to pull down images from the registry
@@ -221,6 +224,10 @@ module Kubernetes
 
     def needs_secret_sidecar?
       SIDECAR_IMAGE && secret_annotations.any?
+    end
+
+    def needs_vault?
+      needs_secret_sidecar? && (ENV["SECRET_STORAGE_BACKEND"] == "SecretStorage::HashicorpVault")
     end
 
     def containers
