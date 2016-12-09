@@ -188,6 +188,20 @@ describe Kubernetes::TemplateFiller do
         end
       end
 
+      it "get the VAULT_ADDR in it's env" do
+        with_env('SECRET_STORAGE_BACKEND': "SecretStorage::HashicorpVault") do
+          assert template.to_hash[:spec][:template][:spec][:containers].
+            first[:env].any? { |env| env.any? { |k,v| v == "VAULT_ADDR" } }
+        end
+      end
+
+      it "does not get the VAULT_ADDR in it's env" do
+        with_env('SECRET_STORAGE_BACKEND': "foobar") do
+          refute template.to_hash[:spec][:template][:spec][:containers].
+            first[:env].any? { |env| env.any? { |k,v| v == "VAULT_ADDR" } }
+        end
+      end
+
       it "adds to existing volume definitions in the sidecar" do
         raw_template[:spec][:template][:spec][:volumes] = [{}, {}]
         template.to_hash[:spec][:template][:spec][:volumes].count.must_equal 5
