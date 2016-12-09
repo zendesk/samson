@@ -10,10 +10,8 @@ describe DockerBuilderService do
   let(:project_repo_url) { repo_temp_dir }
   let(:git_tag) { 'v123' }
   let(:project) { projects(:test).tap { |p| p.repository_url = project_repo_url } }
-
   let(:build) { project.builds.create!(git_ref: git_tag, git_sha: 'a' * 40) }
   let(:service) { DockerBuilderService.new(build) }
-
   let(:docker_image_id) { '2d2b0b3204b0166435c3d96d0b27d0ad2083e5e040192632c58eeb9491d6bfaa' }
   let(:docker_image_json) do
     {
@@ -64,7 +62,7 @@ describe DockerBuilderService do
     end
 
     it "does not remove when DOCKER_KEEP_BUILT_IMGS is set" do
-      with_env "DOCKER_KEEP_BUILT_IMGS" => "1" do
+      with_env DOCKER_KEEP_BUILT_IMGS: "1" do
         run!(push: false)
 
         service.expects(:build_image).returns(true) # simulate that build worked
@@ -76,7 +74,7 @@ describe DockerBuilderService do
     end
 
     it "returns push_image result when it pushes" do
-      with_env "DOCKER_KEEP_BUILT_IMGS" => "1" do
+      with_env DOCKER_KEEP_BUILT_IMGS: "1" do
         run!(push: true)
 
         # simulate that build worked
@@ -97,6 +95,24 @@ describe DockerBuilderService do
         service.expects(:run_build_image_job).returns(123)
 
         execute_job.must_equal(123)
+      end
+    end
+
+    describe "with clair" do
+      with_env HYPERCLAIR_PATH: 'foobar', DOCKER_KEEP_BUILT_IMGS: "1"
+
+      it "runs clair" do
+        Samson::Clair.expects(:append_job_with_scan).with(instance_of(Job), 'latest')
+        service.expects(:build_image).returns(true)
+        run!
+        execute_job
+      end
+
+      it "does not run clair when build failed" do
+        Samson::Clair.expects(:append_job_with_scan).never
+        service.expects(:build_image).returns(false)
+        run!
+        execute_job
       end
     end
   end

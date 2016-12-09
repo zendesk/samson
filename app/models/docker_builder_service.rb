@@ -45,14 +45,21 @@ class DockerBuilderService
       @output = execution.output
       repository.executor = execution.executor
 
-      if build.kubernetes_job
-        run_build_image_job(job, image_name, push: push, tag_as_latest: tag_as_latest)
-      elsif build_image(tmp_dir)
-        ret = true
-        ret = push_image(image_name, tag_as_latest: tag_as_latest) if push
-        build.docker_image.remove(force: true) unless ENV["DOCKER_KEEP_BUILT_IMGS"] == "1"
-        ret
+      success =
+        if build.kubernetes_job
+          run_build_image_job(job, image_name, push: push, tag_as_latest: tag_as_latest)
+        elsif build_image(tmp_dir)
+          ret = true
+          ret = push_image(image_name, tag_as_latest: tag_as_latest) if push
+          build.docker_image.remove(force: true) unless ENV["DOCKER_KEEP_BUILT_IMGS"] == "1"
+          ret
+        end
+
+      if success
+        Samson::Clair.append_job_with_scan(job, docker_image_ref(image_name, build))
       end
+
+      success
     end
 
     job_execution.on_complete { send_after_notifications }
