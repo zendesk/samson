@@ -1,6 +1,10 @@
 # frozen_string_literal: true
+#
+# Hyperclair will pull the image from registry and run scan with Clair scanner
+# using a forked version with ENV var and / support
+# https://github.com/zendesk/hyperclair
+# discussion see https://github.com/wemanity-belgium/hyperclair/pull/90
 module Samson
-  # Hyperclair will pull the image from registry and run scan with Clair scanner
   # TODO: should check based on docker_repo_digest not tag
   # TODO: this should be a plugin instead and use hooks
   module Clair
@@ -26,7 +30,13 @@ module Samson
             executable,
             *project.docker_repo.split('/', 2),
             docker_ref,
-            whitelist_env: ['DOCKER_REGISTRY_USER', 'DOCKER_REGISTRY_PASS', 'PATH'],
+            whitelist_env: [
+              'DOCKER_REGISTRY_USER',
+              'DOCKER_REGISTRY_PASS',
+              'AWS_ACCESS_KEY_ID',
+              'AWS_SECRET_ACCESS_KEY',
+              'PATH'
+            ],
             timeout: 60 * 60
           )
         end
