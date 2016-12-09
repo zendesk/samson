@@ -23,6 +23,7 @@ module Kubernetes
         set_secrets
         set_env
         set_image_pull_secrets
+        set_vault_env
 
         hash = template
         Rails.logger.info "Created Kubernetes hash: #{hash.to_json}"
@@ -63,20 +64,12 @@ module Kubernetes
     # /vaultauth is a secrets volume in the cluster
     # /secretkeys are where the annotations from the config are mounted
     def set_secret_sidecar
-      unless vault_client = Samson::Secrets::VaultClient.client.client(@doc.deploy_group)
-        raise "Could not find Vault config for #{@doc.deploy_group.permalink}"
-      end
-
       containers.push(
         image: SIDECAR_IMAGE,
         name: 'secret-sidecar',
         volumeMounts: [
           { mountPath: "/vault-auth", name: "vaultauth" },
           { mountPath: "/secretkeys", name: "secretkeys" }
-        ],
-        env: [
-          {name: :VAULT_ADDR, value: vault_client.options.fetch(:address)},
-          {name: :VAULT_SSL_VERIFY, value: vault_client.options.fetch(:ssl_verify).to_s}
         ]
       )
 
@@ -171,9 +164,9 @@ module Kubernetes
         POD_IP: 'status.podIP'
       }.each do |k, v|
         env << {
-         name: k.to_s,
-         valueFrom: {fieldRef: {fieldPath: v}}
-       }
+          name: k.to_s,
+          valueFrom: {fieldRef: {fieldPath: v}}
+        }
       end
 
       # unique, but keep last elements
@@ -202,6 +195,17 @@ module Kubernetes
       env.merge!(Samson::Hooks.fire(:deploy_group_env, project, @doc.deploy_group).inject({}, :merge!))
     end
 
+    def set_vault_env
+      if needs_vault?
+        containers.each do |container|
+          env = (container[:env] ||= [])
+          vault_client = Samson::Secrets::VaultClient.client.client(@doc.deploy_group)
+          env << {name: "VAULT_ADDR", value: vault_client.options.fetch(:address)}
+          env << {name: "VAULT_SSL_VERIFY", value: vault_client.options.fetch(:ssl_verify).to_s}
+        end
+      end
+    end
+
     # kubernetes needs docker secrets to be able to pull down images from the registry
     # in kubernetes 1.3 this might work without this workaround
     def set_image_pull_secrets
@@ -218,6 +222,10 @@ module Kubernetes
 
     def needs_secret_sidecar?
       SIDECAR_IMAGE && secret_annotations.any?
+    end
+
+    def needs_vault?
+      needs_secret_sidecar? && (ENV["SECRET_STORAGE_BACKEND"] == "SecretStorage::HashicorpVault")
     end
 
     def containers
