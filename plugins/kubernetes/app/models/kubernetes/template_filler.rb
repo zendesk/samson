@@ -64,14 +64,13 @@ module Kubernetes
     # /vaultauth is a secrets volume in the cluster
     # /secretkeys are where the annotations from the config are mounted
     def set_secret_sidecar
-
       containers.push(
         image: SIDECAR_IMAGE,
         name: 'secret-sidecar',
         volumeMounts: [
           { mountPath: "/vault-auth", name: "vaultauth" },
           { mountPath: "/secretkeys", name: "secretkeys" }
-        ],
+        ]
       )
 
       # share secrets volume between all containers
@@ -196,13 +195,12 @@ module Kubernetes
       env.merge!(Samson::Hooks.fire(:deploy_group_env, project, @doc.deploy_group).inject({}, :merge!))
     end
 
-
     def set_vault_env
       if needs_vault?
         containers.each do |container|
           env = (container[:env] ||= [])
           vault_client = Samson::Secrets::VaultClient.client.client(@doc.deploy_group)
-          env << {name: "VAULT_ADDR", value:vault_client.options.fetch(:address)}
+          env << {name: "VAULT_ADDR", value: vault_client.options.fetch(:address)}
           env << {name: "VAULT_SSL_VERIFY", value: vault_client.options.fetch(:ssl_verify).to_s}
         end
       end
