@@ -164,6 +164,8 @@ GEM
     brakeman (3.4.1)
     builder (3.2.2)
     byebug (8.2.2)
+    cmd2json (0.2.0)
+      json
     coderay (1.1.1)
     concurrent-ruby (1.0.2)
     connection_pool (2.2.0)
@@ -506,6 +508,7 @@ DEPENDENCIES
   brakeman
   bundler
   byebug
+  cmd2json
   coderay
   concurrent-ruby
   connection_pool
