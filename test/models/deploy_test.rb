@@ -86,19 +86,14 @@ describe Deploy do
     end
   end
 
-  describe "#job_execution_key" do
-    describe "stage can run in parallel" do
-      before { stage.update_attributes(run_in_parallel: true) }
-      it "keys on deploy id to run immediately" do
-        deploy.job_execution_key.must_equal "deploy-#{deploy.id}"
-      end
+  describe "#job_execution_queue_name" do
+    it "queues base on it's stage when it cannot execute in parallel" do
+      deploy.job_execution_queue_name.must_equal "stage-#{stage.id}"
     end
 
-    describe "stage cannot run in parallel" do
-      before { stage.update_attributes(run_in_parallel: false) }
-      it "keys on its stage id" do
-        deploy.job_execution_key.must_equal "stage-#{stage.id}"
-      end
+    it "does not queue when it can execute in parallel" do
+      deploy.stage.run_in_parallel = true
+      deploy.job_execution_queue_name.must_equal nil
     end
   end
 

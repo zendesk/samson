@@ -26,7 +26,7 @@ describe JobExecution do
     project.repository.update_local_cache!
     job.deploy = deploy
     JobExecution.enabled = true
-    JobExecution.clear_registry
+    JobExecution.clear_queue
   end
 
   after do
@@ -168,7 +168,7 @@ describe JobExecution do
     assert_equal 'hello', last_line_of_output
   end
 
-  it 'removes the job from the registry' do
+  it 'removes the job from the queue' do
     execution = JobExecution.start_job(JobExecution.new('master', job))
 
     JobExecution.find_by_id(job.id).wont_be_nil
@@ -242,15 +242,15 @@ describe JobExecution do
     assert_equal 'MY-SECRET', last_line_of_output
   end
 
-  it 'does not add the job to the registry when JobExecution is disabled' do
+  it 'does not add the job to the queue when JobExecution is disabled' do
     JobExecution.enabled = false
 
     job_execution = JobExecution.start_job(JobExecution.new('master', job))
     job_execution.wont_be_nil
 
-    JobExecution.find_by_id(job.id).must_equal(job_execution)
-    JobExecution.queued?(job.id).must_equal(false)
-    JobExecution.active?(job.id).must_equal(false)
+    JobExecution.find_by_id(job.id).must_equal(nil)
+    JobExecution.queued?(job.id).must_equal(nil)
+    JobExecution.active?(job.id).must_equal(nil)
   end
 
   it 'can run with a block' do

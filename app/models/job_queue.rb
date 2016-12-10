@@ -1,55 +1,49 @@
 # frozen_string_literal: true
+# make jobs with the same queue run in serial and track their status
 class JobQueue
   LOCK = Mutex.new
 
   def initialize
-    @queue = Hash.new { |h, k| h[k] = [] }
+    @queue = Hash.new { |h, q| h[q] = [] }
     @active = {}
-    @registry = {}
   end
 
   def active
     @active.values
   end
 
-  def active?(key, id)
-    @active[key].try(:id) == id
+  def active?(id)
+    active.detect { |je| je.id == id }
   end
 
-  def queued?(key, id)
-    @queue.dup[key].any? { |je| je.id == id }
+  def queued?(id)
+    @queue.values.detect { |jes| jes.detect { |je| return je if je.id == id } }
+  end
+
+  def find_by_id(id)
+    LOCK.synchronize { active?(id) || queued?(id) }
   end
 
   # Assumes active threads will be closed by themselves
   def clear
     LOCK.synchronize do
-      @queue.each do |_, jobs|
-        jobs.each do |job|
-          job.close
-          @registry.delete(job.id)
-        end
-      end
-
+      @queue.each { |_, jes| jes.each(&:close) }
       @queue.clear
     end
   end
 
-  def find(id)
-    @registry[id.to_i]
-  end
-
-  def add(key, job_execution)
-    job_execution.on_complete { pop(key, job_execution) }
+  # when no queue is given jobs run in parallel (each in their own queue) and start instantly
+  # when samson is restarting we do not start jobs, but leave them pending
+  def add(job_execution, queue: nil)
+    queue ||= job_execution.id
+    job_execution.on_complete { delete_and_enqueue_next(queue, job_execution) }
 
     LOCK.synchronize do
-      @registry[job_execution.id] = job_execution
-
       if JobExecution.enabled
-        if @active[key]
-          @queue[key] << job_execution
+        if @active[queue]
+          @queue[queue] << job_execution
         else
-          @active[key] = job_execution
-          job_execution.start!
+          start_job(job_execution, queue)
         end
       end
     end
@@ -59,26 +53,26 @@ class JobQueue
     job_execution
   end
 
-  def pop(key, job_execution)
+  private
+
+  def start_job(job_execution, queue)
+    @active[queue] = job_execution
+    job_execution.start!
+  end
+
+  def delete_and_enqueue_next(queue_name, job_execution)
     LOCK.synchronize do
-      @registry.delete(job_execution.id)
+      raise "Invalid active queue" unless job_execution == @active.delete(queue_name)
 
-      if @active[key] == job_execution
-        @active.delete(key)
-
-        if JobExecution.enabled && (job_execution = @queue[key].shift)
-          @active[key] = job_execution
-          job_execution.start!
-        end
-      else
-        @queue[key].delete(job_execution)
+      if JobExecution.enabled && (job_execution = @queue[queue_name].shift)
+        start_job(job_execution, queue_name)
       end
+
+      @queue.delete(queue_name) if @queue[queue_name].empty? # save memory, and time when iterating all queues
     end
 
     instrument
   end
-
-  private
 
   def instrument
     ActiveSupport::Notifications.instrument "job.threads", thread_count: @active.length

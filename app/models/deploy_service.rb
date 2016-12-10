@@ -31,7 +31,7 @@ class DeployService
       send_after_notifications(deploy)
     end
 
-    JobExecution.start_job(job_execution, key: deploy.job_execution_key)
+    JobExecution.start_job(job_execution, queue: deploy.job_execution_queue_name)
 
     send_sse_deploy_update('start', deploy)
   end

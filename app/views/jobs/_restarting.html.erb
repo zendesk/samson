@@ -1,0 +1,7 @@
+<div class="alert alert-info">
+  Samson is currently restarting, your deploy has been queued and will be resumed shortly.
+</div>
+
+<%= javascript_tag do %>
+  waitUntilEnabled("<%= enabled_jobs_path %>");
+<% end %>
