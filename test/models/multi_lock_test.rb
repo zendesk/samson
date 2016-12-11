@@ -9,6 +9,8 @@ describe MultiLock do
     MultiLock.send(:unlock, 2)
   end
 
+  after { MultiLock.locks.clear }
+
   describe ".lock" do
     let(:calls) { [] }
 

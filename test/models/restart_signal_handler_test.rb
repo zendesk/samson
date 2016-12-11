@@ -26,8 +26,6 @@ describe RestartSignalHandler do
     Signal.expects(:trap).never
     Process.expects(:trap).never
     RestartSignalHandler.any_instance.expects(:sleep).never
-    JobExecution.clear_queue
-    MultiLock.locks.clear
   end
 
   describe ".listen" do
@@ -38,9 +36,7 @@ describe RestartSignalHandler do
     end
 
     it "turns job processing off" do
-      JobExecution.enabled = true
-      handle
-      JobExecution.enabled.must_equal false
+      with_job_execution { handle }
     end
 
     it "waits for running jobs" do

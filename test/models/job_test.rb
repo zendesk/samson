@@ -34,17 +34,9 @@ describe Job do
   end
 
   describe "#pid" do
-    around do |test|
-      begin
-        JobExecution.enabled = true
-        test.call
-      ensure
-        JobExecution.enabled = false
-      end
-    end
+    with_job_execution
 
     before do
-      JobExecution.enabled = true
       job_execution = JobExecution.new('master', job)
       job_execution.expects(:start!)
       JobExecution.start_job(job_execution)

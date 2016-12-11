@@ -18,6 +18,8 @@ describe JobExecution do
   let(:execution) { JobExecution.new('master', job) }
   let(:deploy) { Deploy.create!(stage: stage, job: job, reference: 'master', project: project) }
 
+  with_job_execution
+
   before do
     Project.any_instance.stubs(:valid_repository_url).returns(true)
     create_repo_with_tags('v1')
@@ -25,15 +27,12 @@ describe JobExecution do
     user.email = 'jdoe@test.com'
     project.repository.update_local_cache!
     job.deploy = deploy
-    JobExecution.enabled = true
-    JobExecution.clear_queue
   end
 
   after do
     FileUtils.rm_rf(repo_temp_dir)
     FileUtils.rm_rf(repo_dir)
     project.repository.clean!
-    JobExecution.enabled = false
   end
 
   it "clones the project's repository if it's not already cloned" do

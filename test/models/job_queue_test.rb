@@ -23,23 +23,20 @@ describe JobQueue do
   def with_active_job
     job_execution.expects(:start!)
 
-    enable_job_execution { subject.add(job_execution) }
+    with_job_execution do
+      subject.add(job_execution)
+      yield
+    end
   end
 
   def with_a_queued_job
     job_execution.stubs(:start!)
 
-    enable_job_execution do
+    with_job_execution do
       subject.add(job_execution, queue: :x)
       subject.add(queued_job_execution, queue: :x)
+      yield
     end
-  end
-
-  def enable_job_execution
-    JobExecution.enabled = true
-    yield
-  ensure
-    JobExecution.enabled = false
   end
 
   let(:subject) { JobQueue.new }
@@ -52,25 +49,25 @@ describe JobQueue do
 
   describe "#add" do
     it 'immediately starts a job when active is empty' do
-      with_active_job
-      assert subject.active?(1)
-      refute subject.queued?(1)
-      subject.find_by_id(1).must_equal(job_execution)
+      with_active_job do
+        assert subject.active?(1)
+        refute subject.queued?(1)
+        subject.find_by_id(1).must_equal(job_execution)
+      end
     end
 
     it 'starts parallel jobs when they are in different queues' do
       [job_execution, queued_job_execution].each do |job|
         job.expects(:start!)
 
-        enable_job_execution do
-          subject.add(job)
-        end
+        with_job_execution { subject.add(job) }
 
         assert subject.active?(job.id)
       end
     end
 
     it 'does not start a job if job execution is disabled' do
+      JobExecution.enabled = false
       job_execution.expects(:start!).never
 
       subject.add(job_execution)
@@ -81,17 +78,18 @@ describe JobQueue do
     end
 
     it 'does not queue a job if job execution is disabled' do
-      with_active_job
+      with_active_job do
+        JobExecution.enabled = false
+        subject.add(queued_job_execution, queue: :x)
 
-      subject.add(queued_job_execution, queue: :x)
-
-      refute subject.active?(2)
-      refute subject.queued?(2)
-      refute subject.find_by_id(2)
+        refute subject.active?(2)
+        refute subject.queued?(2)
+        refute subject.find_by_id(2)
+      end
     end
 
     describe 'with queued job' do
-      before { with_a_queued_job }
+      around { |t| with_a_queued_job(&t) }
 
       it 'has a queued job' do
         refute subject.active?(2)
@@ -102,7 +100,7 @@ describe JobQueue do
       it 'starts then next job when active job completes' do
         queued_job_execution.expects(:start!)
 
-        enable_job_execution { job_execution.finish }
+        with_job_execution { job_execution.finish }
 
         refute subject.find_by_id(1)
         assert subject.active?(2)
@@ -110,6 +108,7 @@ describe JobQueue do
       end
 
       it 'does not start the next job when job execution is disabled' do
+        JobExecution.enabled = false
         queued_job_execution.expects(:start!).never
 
         job_execution.finish
@@ -122,7 +121,7 @@ describe JobQueue do
       it 'does not start the next job when queue is empty' do
         queued_job_execution.expects(:start!)
 
-        enable_job_execution do
+        with_job_execution do
           job_execution.finish
           queued_job_execution.finish
         end
@@ -139,16 +138,18 @@ describe JobQueue do
 
   describe "#clear" do
     it "removes all queues" do
-      with_a_queued_job
-      queued_job_execution.expects(:close)
-      subject.clear
-      refute subject.queued?(queued_job_execution)
+      with_a_queued_job do
+        queued_job_execution.expects(:close)
+        subject.clear
+        refute subject.queued?(queued_job_execution)
+      end
     end
 
     it "keeps active since they will complete on their own" do
-      with_active_job
-      subject.clear
-      assert subject.active?(1)
+      with_active_job do
+        subject.clear
+        assert subject.active?(1)
+      end
     end
   end
 end
