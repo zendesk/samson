@@ -73,7 +73,7 @@ module Kubernetes
             return success if stable_ticks == @testing_for_stability
           else
             print_statuses(statuses)
-            unstable!
+            unstable!('one or more pods is not live', statuses.reject(&:live))
             return statuses
           end
         else
@@ -86,7 +86,7 @@ module Kubernetes
               @testing_for_stability = 0
             end
           elsif statuses.any?(&:stop)
-            unstable!
+            unstable!('one or more pods stopped', statuses.select(&:stop))
             return statuses
           elsif seconds_waiting > WAIT_FOR_LIVE
             @output.puts "TIMEOUT, pods took too long to get live"
@@ -157,7 +157,7 @@ module Kubernetes
           field_selector: selector.join(',')
         )
         next if events.none?
-        @output.puts "RESOURCE EVENTS #{resource.name}:"
+        @output.puts "RESOURCE EVENTS #{resource.namespace}.#{resource.name}:"
         print_events(events)
       end
     end
@@ -173,8 +173,11 @@ module Kubernetes
       events.each { |e| @output.puts "  #{e.reason}: #{e.message}" }
     end
 
-    def unstable!
-      @output.puts "UNSTABLE"
+    def unstable!(reason, release_statuses)
+      @output.puts "UNSTABLE: #{reason}"
+      release_statuses.each do |status|
+        @output.puts "  #{status.pod.namespace}.#{status.pod.name}: #{status.details}"
+      end
     end
 
     # user clicked stop button in UI

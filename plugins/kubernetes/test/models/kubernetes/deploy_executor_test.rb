@@ -496,7 +496,7 @@ describe Kubernetes::DeployExecutor do
           /EVENTS:\s+FailedScheduling: fit failure on node \(ip-1-2-3-4\)\s+fit failure on node \(ip-2-3-4-5\)\n\n/
         ) # no repeated events
         out.must_match /LOGS:\s+LOG-1/
-        out.must_include "RESOURCE EVENTS some-project:\n  FailedScheduling:"
+        out.must_include "RESOURCE EVENTS staging.some-project:\n  FailedScheduling:"
       end
     end
   end
