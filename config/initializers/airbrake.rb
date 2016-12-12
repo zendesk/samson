@@ -1,10 +1,21 @@
 # frozen_string_literal: true
 if defined?(Airbrake)
+  # TODO: needs to be updated to v5 + rewrite user_information logic
+  # https://github.com/airbrake/airbrake/issues/636
   Airbrake.configure do |config|
     config.api_key = ENV['AIRBRAKE_API_KEY']
     config.user_information = # replaces <!-- AIRBRAKE ERROR --> on 500 pages
       "<br/><br/>Error number: <a href='https://airbrake.io/locate/{{error_id}}'>{{error_id}}</a>"
-    # config.development_environments = [:test] # uncomment to report in development
+
+    # this will be blacklist_params in v5 ... does not support the full rails syntax
+    config.params_filters = Rails.application.config.filter_parameters
+
+    # report in development:
+    # - uncomment
+    # - add development in application.rb
+    # - add AIRBRAKE_API_KEY to ENV
+    # - set consider_all_requests_local in development.rb
+    # config.development_environments = [:test]
   end
 else
   module Airbrake

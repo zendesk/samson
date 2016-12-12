@@ -131,6 +131,12 @@ describe Admin::SecretsController do
         post :create, params: {secret: attributes}
         assert_response :unauthorized
       end
+
+      it "does not log secret values" do
+        Rails.logger.stubs(:info)
+        Rails.logger.expects(:info).with { |message| message.include?("\"value\"=>\"[FILTERED]\"") }
+        post :create, params: {secret: attributes}
+      end
     end
 
     describe '#show' do
