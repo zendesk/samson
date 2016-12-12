@@ -557,14 +557,23 @@ describe Stage do
   end
 
   describe "#influencing_stage_ids" do
+    let(:other) { stages(:test_production) }
+
     it "finds self when there are none" do
       stage.influencing_stage_ids.must_equal [stage.id]
     end
 
-    it "finds other stages that go to the same deploy groups" do
-      other = stages(:test_production)
-      DeployGroupsStage.create!(stage: other, deploy_group: stage.deploy_groups.first)
-      stage.influencing_stage_ids.sort.must_equal [stage.id, other.id].sort
+    describe "with other stage" do
+      before { DeployGroupsStage.create!(stage: other, deploy_group: stage.deploy_groups.first) }
+
+      it "finds other stages that go to the same deploy groups" do
+        stage.influencing_stage_ids.sort.must_equal [stage.id, other.id].sort
+      end
+
+      it "does not find stages in other projects" do
+        other.update_column(:project_id, 123)
+        stage.influencing_stage_ids.sort.must_equal [stage.id]
+      end
     end
   end
 

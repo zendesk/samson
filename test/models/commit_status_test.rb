@@ -44,7 +44,7 @@ describe CommitStatus do
 
       it "warns" do
         success!
-        assert_sql_queries 6 do
+        assert_sql_queries 7 do
           status.status.must_equal 'error'
         end
       end
