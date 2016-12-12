@@ -41,7 +41,7 @@ class RestartSignalHandler
       sleep(5)
     end
 
-    JobExecution.clear_registry
+    JobExecution.clear_queue
 
     output 'Passing SIGUSR2 on.'
 

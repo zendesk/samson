@@ -5,16 +5,13 @@ class JobExecution
   include ::NewRelic::Agent::Instrumentation::ControllerInstrumentation
 
   # Whether or not execution is enabled. This allows completely disabling job
-  # execution for testing purposes.
+  # execution for testing purposes and when restarting samson.
   cattr_accessor(:enabled, instance_writer: false) do
     Rails.application.config.samson.enable_job_execution
   end
 
   cattr_accessor(:lock_timeout, instance_writer: false) { 10.minutes }
   cattr_accessor(:stop_timeout, instance_writer: false) { 15.seconds }
-
-  cattr_reader(:registry, instance_accessor: false) { JobQueue.new }
-  private_class_method :registry
 
   attr_reader :output, :reference, :job, :viewers, :executor
 
@@ -254,27 +251,33 @@ class JobExecution
 
   class << self
     def find_by_id(id)
-      registry.find(id)
+      job_queue.find_by_id(id)
     end
 
-    def active?(id, key: id)
-      registry.active?(key, id)
+    def active?(id)
+      job_queue.active?(id)
     end
 
-    def queued?(id, key: id)
-      registry.queued?(key, id)
+    def queued?(id)
+      job_queue.queued?(id)
     end
 
-    def start_job(job_execution, key: job_execution.id)
-      registry.add(key, job_execution)
+    def start_job(*args)
+      job_queue.add(*args)
     end
 
     def active
-      registry.active
+      job_queue.active
     end
 
-    def clear_registry
-      registry.clear
+    def clear_queue
+      job_queue.clear
+    end
+
+    private
+
+    def job_queue
+      @job_queue ||= JobQueue.new
     end
   end
 end

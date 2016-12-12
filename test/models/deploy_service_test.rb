@@ -119,7 +119,7 @@ describe DeployService do
       it "immediately starts the job" do
         job_execution
         JobExecution.stubs(:new).returns(job_execution)
-        JobExecution.expects(:start_job).with(job_execution, key: "deploy-#{deploy.id}")
+        JobExecution.expects(:start_job).with(job_execution, queue: nil)
         deploy.buddy = user
         service.confirm_deploy!(deploy)
       end
@@ -129,7 +129,7 @@ describe DeployService do
       it "will be queued on the stage id" do
         job_execution
         JobExecution.stubs(:new).returns(job_execution)
-        JobExecution.expects(:start_job).with(job_execution, key: "stage-#{stage.id}")
+        JobExecution.expects(:start_job).with(job_execution, queue: "stage-#{stage.id}")
         deploy.buddy = user
         service.confirm_deploy!(deploy)
       end

@@ -18,6 +18,8 @@ describe JobExecution do
   let(:execution) { JobExecution.new('master', job) }
   let(:deploy) { Deploy.create!(stage: stage, job: job, reference: 'master', project: project) }
 
+  with_job_execution
+
   before do
     Project.any_instance.stubs(:valid_repository_url).returns(true)
     create_repo_with_tags('v1')
@@ -25,15 +27,12 @@ describe JobExecution do
     user.email = 'jdoe@test.com'
     project.repository.update_local_cache!
     job.deploy = deploy
-    JobExecution.enabled = true
-    JobExecution.clear_registry
   end
 
   after do
     FileUtils.rm_rf(repo_temp_dir)
     FileUtils.rm_rf(repo_dir)
     project.repository.clean!
-    JobExecution.enabled = false
   end
 
   it "clones the project's repository if it's not already cloned" do
@@ -168,7 +167,7 @@ describe JobExecution do
     assert_equal 'hello', last_line_of_output
   end
 
-  it 'removes the job from the registry' do
+  it 'removes the job from the queue' do
     execution = JobExecution.start_job(JobExecution.new('master', job))
 
     JobExecution.find_by_id(job.id).wont_be_nil
@@ -242,15 +241,15 @@ describe JobExecution do
     assert_equal 'MY-SECRET', last_line_of_output
   end
 
-  it 'does not add the job to the registry when JobExecution is disabled' do
+  it 'does not add the job to the queue when JobExecution is disabled' do
     JobExecution.enabled = false
 
     job_execution = JobExecution.start_job(JobExecution.new('master', job))
     job_execution.wont_be_nil
 
-    JobExecution.find_by_id(job.id).must_equal(job_execution)
-    JobExecution.queued?(job.id).must_equal(false)
-    JobExecution.active?(job.id).must_equal(false)
+    JobExecution.find_by_id(job.id).must_equal(nil)
+    JobExecution.queued?(job.id).must_equal(nil)
+    JobExecution.active?(job.id).must_equal(nil)
   end
 
   it 'can run with a block' do

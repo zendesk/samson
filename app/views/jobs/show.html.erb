@@ -11,16 +11,10 @@
 </h1>
 
 <div id="header">
-  <% if @job.finished? || @job.running? || JobExecution.enabled %>
-    <%= render 'header' %>
+  <% if @job.waiting_for_restart? %>
+    <%= render 'jobs/restarting' %>
   <% else %>
-    <div class="alert alert-info">
-      Samson is currently restarting, your job has been queued and will be resumed shortly.
-    </div>
-
-    <%= javascript_tag do %>
-      waitUntilEnabled("<%= enabled_jobs_path %>");
-    <% end %>
+    <%= render 'header' %>
   <% end %>
 </div>
 

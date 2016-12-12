@@ -20,7 +20,7 @@ class Api::AutomatedDeploysController < Api::BaseController
       skip_deploy_group_validation: true
     )
 
-    if deploy.persisted? # TODO: also check that the deploy is running and not waiting for buddy
+    if deploy.persisted?
       render json: deploy.to_json, status: :created, location: [@stage.project, deploy]
     else
       failed! "Unable to start deploy: #{deploy.errors.full_messages}"

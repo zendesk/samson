@@ -26,8 +26,6 @@ describe RestartSignalHandler do
     Signal.expects(:trap).never
     Process.expects(:trap).never
     RestartSignalHandler.any_instance.expects(:sleep).never
-    JobExecution.clear_registry
-    MultiLock.locks.clear
   end
 
   describe ".listen" do
@@ -38,17 +36,15 @@ describe RestartSignalHandler do
     end
 
     it "turns job processing off" do
-      JobExecution.enabled = true
-      handle
-      JobExecution.enabled.must_equal false
+      with_job_execution { handle }
     end
 
     it "waits for running jobs" do
-      registry = JobExecution.send(:registry)
+      job_queue = JobExecution.send(:job_queue)
       job_exec = stub(id: 123, pid: 444, pgid: 5555, descriptor: 'Job thingy')
 
       # we call it twice in each iteration
-      registry.expects(:active).times(3).returns [job_exec], [job_exec], []
+      job_queue.expects(:active).times(3).returns [job_exec], [job_exec], []
 
       RestartSignalHandler.any_instance.expects(:sleep).with(5)
       handle

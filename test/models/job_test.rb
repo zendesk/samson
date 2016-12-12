@@ -34,8 +34,12 @@ describe Job do
   end
 
   describe "#pid" do
+    with_job_execution
+
     before do
-      JobExecution.start_job(JobExecution.new('master', job))
+      job_execution = JobExecution.new('master', job)
+      job_execution.expects(:start!)
+      JobExecution.start_job(job_execution)
       JobExecution.any_instance.stubs(:pid).returns(1234)
     end
 

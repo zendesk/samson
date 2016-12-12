@@ -33,12 +33,8 @@ module DeploysHelper
     output << render('shared/output', deployable: @deploy, job: @deploy.job, project: @project, hide: output_hidden)
   end
 
-  def deploy_executing?
-    @deploy.active? && JobExecution.active?(@deploy.job_id, key: @deploy.job_execution_key)
-  end
-
   def deploy_queued?
-    @deploy.pending? && JobExecution.queued?(@deploy.job_id, key: @deploy.job_execution_key)
+    @deploy.pending? && JobExecution.queued?(@deploy.job_id)
   end
 
   def deploy_page_title
