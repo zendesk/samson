@@ -387,16 +387,12 @@ describe Stage do
       stage.production = true
     end
 
-    after do
-      BuddyCheck.unstub(:enabled?)
-    end
-
     it "requires approval with buddy-check + deploying + production" do
       assert stage.deploy_requires_approval?
     end
 
     it "does not require approval when buddy check is disabled" do
-      BuddyCheck.stubs(enabled?: false)
+      BuddyCheck.unstub(:enabled?)
       refute stage.deploy_requires_approval?
     end
 
