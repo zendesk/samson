@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 require_relative '../test_helper'
 
-SingleCov.covered!
+SingleCov.covered! uncovered: 2 # fork/wait call that we skip in unit tests
 
 describe DockerBuilderService do
   include GitRepoTestHelper
@@ -146,7 +146,8 @@ describe DockerBuilderService do
 
   describe "#build_image" do
     before do
-      Docker::Image.expects(:build_from_dir).returns(mock_docker_image)
+      Docker::Util.stubs(:create_relative_dir_tar).returns(nil)
+      Docker::Image.stubs(:build_from_tar).returns(mock_docker_image)
     end
 
     it 'writes the REVISION file' do
@@ -163,8 +164,8 @@ describe DockerBuilderService do
 
     it 'catches docker errors' do
       error_message = "A bad thing happened..."
-      Docker::Image.unstub(:build_from_dir)
-      Docker::Image.expects(:build_from_dir).raises(Docker::Error::DockerError.new(error_message))
+      Docker::Image.unstub(:build_from_tar)
+      Docker::Image.expects(:build_from_tar).raises(Docker::Error::DockerError.new(error_message))
       service.build_image(tmp_dir).must_equal nil
       build.docker_image_id.must_equal nil
       service.output.to_s.must_include error_message
@@ -172,8 +173,8 @@ describe DockerBuilderService do
 
     it 'catches UnexpectedResponseErrors' do
       error_message = "Really long output..."
-      Docker::Image.unstub(:build_from_dir)
-      Docker::Image.expects(:build_from_dir).raises(Docker::Error::UnexpectedResponseError.new(error_message))
+      Docker::Image.unstub(:build_from_tar)
+      Docker::Image.expects(:build_from_tar).raises(Docker::Error::UnexpectedResponseError.new(error_message))
       service.build_image(tmp_dir).must_equal nil
       build.docker_image_id.must_equal nil
       service.output.to_s.wont_include error_message
@@ -185,8 +186,8 @@ describe DockerBuilderService do
         ['{"status":"this is incomplete JSON...']
       ]
 
-      Docker::Image.unstub(:build_from_dir)
-      Docker::Image.expects(:build_from_dir).
+      Docker::Image.unstub(:build_from_tar)
+      Docker::Image.expects(:build_from_tar).
         multiple_yields(*push_output).
         returns(mock_docker_image)
 

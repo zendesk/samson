@@ -9,15 +9,46 @@ class DockerBuilderService
   attr_reader :build, :execution
 
   def self.build_docker_image(dir, docker_options, output)
-    output.puts("### Running Docker build")
+    output.puts("### Creating tarfile for Docker build")
+    tarfile = create_docker_tarfile(dir)
 
+    output.puts("### Running Docker build")
     docker_image =
-      Docker::Image.build_from_dir(dir, docker_options, Docker.connection, registry_credentials) do |chunk|
+      Docker::Image.build_from_tar(tarfile, docker_options, Docker.connection, registry_credentials) do |chunk|
         output.write_docker_chunk(chunk)
       end
     output.puts('### Docker build complete')
 
     docker_image
+  ensure
+    if tarfile
+      tarfile.close
+      FileUtils.rm(tarfile.path, force: true)
+    end
+  end
+
+  def self.create_docker_tarfile(dir)
+    dir += '/' unless dir.end_with?('/')
+    tempfile_name = Dir::Tmpname.create('out') {}
+
+    # For large git repos, creating a tarfile can do a whole lot of disk IO.
+    # It's possible for the puma process to seize up doing all those syscalls,
+    # especially if the disk is running slow. So we create the tarfile in a
+    # separate process to avoid that.
+    tar_proc = -> do
+      File.open(tempfile_name, 'wb+') do |tempfile|
+        Docker::Util.create_relative_dir_tar(dir, tempfile)
+      end
+    end
+
+    if Rails.env.test?
+      tar_proc.call
+    else
+      pid = fork(&tar_proc)
+      Process.waitpid(pid)
+    end
+
+    File.new(tempfile_name, 'r')
   end
 
   def self.registry_credentials
