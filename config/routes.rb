@@ -56,7 +56,7 @@ Samson::Application.routes.draw do
       end
     end
 
-    resources :releases, only: [:show, :index, :new, :create], id: /v(\d+(:?\.\d+)*)/, format: /json/
+    resources :releases, only: [:show, :index, :new, :create], id: Release::ROUTE_REGEX
 
     resources :stages do
       collection do

@@ -18,15 +18,14 @@ describe ReleasesController do
       end
 
       it "renders major-minor versions" do
-        release.number = "12.3"
-        release.save!
+        release.update_column :number, '12.3'
         get :show, params: {project_id: project.to_param, id: release.version}
         assert_response :success
       end
 
       it "fails to render unknown release" do
         assert_raises ActiveRecord::RecordNotFound do
-          get :show, params: {project_id: project.to_param, id: 123}
+          get :show, params: {project_id: project.to_param, id: "v321"}
         end
       end
     end
