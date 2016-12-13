@@ -11,13 +11,13 @@ module JenkinsHelper
   }.freeze
 
   JENKINS_RESULT = {
-    "SUCCESS"  => "has Passed.",
-    "FAILURE"  => "has Failed.",
-    "CANCELED" => "was canceled, Please check Jenkins job for more details.",
-    "STARTUP_ERROR" => "failed to start, Please check Jenkins job to see what went wrong.",
-    "ABORTED" => "was aborted, Please go to Jenkins job to start it manually.",
+    "SUCCESS"  => "has passed.",
+    "FAILURE"  => "has failed.",
+    "CANCELED" => "was canceled, please check Jenkins job for more details.",
+    "STARTUP_ERROR" => "failed to start, please check Jenkins job to see what went wrong.",
+    "ABORTED" => "was aborted, please go to Jenkins job to start it manually.",
     "UNSTABLE" => "was unstable.",
-    nil => "is running. This can take a few minutes to finish, Please reload this page to check latest status."
+    nil => "is running. This can take a few minutes to finish, please reload this page to check latest status."
   }.freeze
 
   def jenkins_status_panel(deploy, jenkins_job)
