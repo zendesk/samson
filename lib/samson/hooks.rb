@@ -28,7 +28,7 @@ module Samson
       :deploy_permitted_params, # for external plugin
       :project_permitted_params,
       :deploy_group_permitted_params,
-      :build_params,
+      :build_permitted_params,
       :before_deploy,
       :after_deploy_setup,
       :after_deploy,

@@ -448,16 +448,30 @@ describe Kubernetes::DeployExecutor do
       out.must_include "STOPPED"
     end
 
-    it "does not crash when rollback fails" do
-      Kubernetes::Resource::Deployment.any_instance.stubs(:revert).raises("Weird error")
-      worker_is_unstable
+    describe "when rollback is needed" do
+      before { worker_is_unstable }
 
-      refute execute!
+      it "does not crash when rollback fails" do
+        Kubernetes::Resource::Deployment.any_instance.stubs(:revert).raises("Weird error")
 
-      out.must_include "resque-worker: Restarted\n"
-      out.must_include "UNSTABLE"
-      out.must_include "DONE" # DONE is shown ... we got past the rollback
-      out.must_include "FAILED: Weird error" # rollback error cause is shown
+        refute execute!
+
+        out.must_include "resque-worker: Restarted\n"
+        out.must_include "UNSTABLE"
+        out.must_include "DONE" # DONE is shown ... we got past the rollback
+        out.must_include "FAILED: Weird error" # rollback error cause is shown
+      end
+
+      it "does not rollback when deploy disabled it" do
+        deploy.update_column(:kubernetes_rollback, false)
+        Kubernetes::Resource::Deployment.any_instance.stubs(:revert).never
+
+        refute execute!
+
+        out.must_include "resque-worker: Restarted\n"
+        out.must_include "UNSTABLE"
+        out.must_include "DONE" # DONE is shown ... we got past the rollback
+      end
     end
 
     describe "events and logs" do

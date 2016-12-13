@@ -371,7 +371,7 @@ module Kubernetes
         true
       else
         show_failure_cause(release, release_docs, result)
-        rollback(release_docs)
+        rollback(release_docs) if @job.deploy.kubernetes_rollback
         @output.puts "DONE"
         false
       end
