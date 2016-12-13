@@ -39,8 +39,8 @@ module JenkinsHelper
     end
 
     content = "Jenkins build #{jenkins_job.name} for #{deploy.stage.name} #{status_message}"
-    content_tag :a, href: jenkins_job_url, target: "_blank" do
-      content_tag :div, content.html_safe, class: "alert alert-#{status}"
+    link_to jenkins_job_url, target: "_blank" do
+      content_tag :div, content, class: "alert alert-#{status}"
     end
   end
 end
