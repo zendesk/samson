@@ -31,12 +31,11 @@ module JenkinsHelper
       jenkins_job.update_attributes!(attributes)
     end
 
-    if jenkins_job_status.include? ' ' # since it has whitespace, it's probably a human-readable message
+    if status = JENKINS_MAPPING[jenkins_job_status]
+      status_message = JENKINS_RESULT.fetch(jenkins_job_status)
+    else
       status = 'warning'
       status_message = jenkins_job_status
-    else
-      status = JENKINS_MAPPING.fetch(jenkins_job_status)
-      status_message = JENKINS_RESULT.fetch(jenkins_job_status)
     end
 
     content = "Jenkins build #{jenkins_job.name} for #{deploy.stage.name} #{status_message}"
