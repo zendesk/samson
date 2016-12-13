@@ -25,14 +25,8 @@ class UnauthorizedController < ActionController::Metal
       end
       format.html do
         flash[:authorization_error] = message
-        redirect_back_or(login_path)
+        redirect_to login_path
       end
     end
-  end
-
-  private
-
-  def redirect_back_or(path)
-    redirect_back fallback_location: path
   end
 end
