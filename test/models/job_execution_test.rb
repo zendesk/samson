@@ -255,8 +255,13 @@ describe JobExecution do
   it 'can run with a block' do
     x = :not_called
     execution = JobExecution.new('master', job) { x = :called }
-    execution.send(:run!)
+    assert execution.send(:run!)
     x.must_equal :called
+  end
+
+  it 'can finish when temp directory is cleaned up during the run' do
+    execution = JobExecution.new('master', job) { |_, dir| Dir.delete(dir) }
+    assert execution.send(:run!)
   end
 
   describe "kubernetes" do
