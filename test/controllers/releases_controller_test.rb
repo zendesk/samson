@@ -6,7 +6,6 @@ SingleCov.covered!
 describe ReleasesController do
   let(:project) { projects(:test) }
   let(:release) { releases(:test) }
-  let(:release_dot) { releases(:test_dot) }
 
   as_a_viewer do
     unauthorized :get, :new, project_id: :foo
@@ -19,7 +18,9 @@ describe ReleasesController do
       end
 
       it "renders major-minor versions" do
-        get :show, params: {project_id: project.to_param, id: release_dot.version}
+        release.number = "12.3"
+        release.save!
+        get :show, params: {project_id: project.to_param, id: release.version}
         assert_response :success
       end
 

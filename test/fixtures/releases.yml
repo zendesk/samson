@@ -3,9 +3,3 @@ test:
   commit: abcdabcdabcdabcdabcdabcdabcdabcdabcdabcd
   number: "123"
   author: deployer (User)
-
-test_dot:
-  project: test
-  commit: abcdabcdabcdabcdabcdabcdabcdabcdabcdabcd
-  number: "12.3"
-  author: deployer (User)
