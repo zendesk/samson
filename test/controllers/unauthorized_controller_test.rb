@@ -55,9 +55,11 @@ describe 'Unauthorized' do
       describe 'with a referer' do
         let(:headers) { { 'HTTP_REFERER' => '/hello' } }
 
-        it 'redirects to the referer' do
+        it 'redirects to the login path' do
           last_response.status.must_equal 302
-          last_response.headers['Location'].must_equal("http://example.org/hello")
+
+          # Really just '/', but Rack insists on using the full SERVER_NAME
+          last_response.headers['Location'].must_equal('http://example.org/login')
         end
       end
     end
