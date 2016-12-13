@@ -6,14 +6,20 @@ SingleCov.covered!
 describe ReleasesController do
   let(:project) { projects(:test) }
   let(:release) { releases(:test) }
+  let(:release_dot) { releases(:test_dot) }
 
   as_a_viewer do
     unauthorized :get, :new, project_id: :foo
     unauthorized :post, :create, project_id: :foo
 
     describe "#show" do
-      it "renders" do
+      it "renders continuous versions" do
         get :show, params: {project_id: project.to_param, id: release.version}
+        assert_response :success
+      end
+
+      it "renders major-minor versions" do
+        get :show, params: {project_id: project.to_param, id: release_dot.version}
         assert_response :success
       end
 
