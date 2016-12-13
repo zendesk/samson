@@ -3,6 +3,7 @@ class Release < ActiveRecord::Base
   NUMBER = '\d+(:?\.\d+)*'
   NUMBER_REGEX = /\A#{NUMBER}\z/
   VERSION_REGEX = /\Av(#{NUMBER})\z/
+  ROUTE_REGEX = /v(#{NUMBER})/
 
   belongs_to :project, touch: true
   belongs_to :author, polymorphic: true
