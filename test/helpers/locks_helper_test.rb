@@ -24,7 +24,7 @@ describe LocksHelper do
     let(:stage) { stages(:test_staging) }
 
     it "renders nothing when there is no lock" do
-      resource_lock_icon(stage).must_equal nil
+      resource_lock_icon(stage).must_be_nil
     end
 
     it "renders locks" do
@@ -59,8 +59,8 @@ describe LocksHelper do
   describe "#global_lock" do
     it "caches nil" do
       Lock.expects(:global).returns []
-      global_lock.must_equal nil
-      global_lock.must_equal nil
+      global_lock.must_be_nil
+      global_lock.must_be_nil
     end
 
     it "caches values" do
@@ -87,7 +87,7 @@ describe LocksHelper do
     end
 
     it "does not render when there is no locks" do
-      render_lock(stage).must_equal nil
+      render_lock(stage).must_be_nil
     end
   end
 

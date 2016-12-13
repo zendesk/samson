@@ -291,17 +291,17 @@ describe GitRepository do
     end
 
     it 'returns nil when file does not exist' do
-      repository.file_content('foox', sha).must_equal nil
+      repository.file_content('foox', sha).must_be_nil
     end
 
     it 'returns nil when sha does not exist' do
-      repository.file_content('foox', 'a' * 40).must_equal nil
+      repository.file_content('foox', 'a' * 40).must_be_nil
     end
 
     it "always updates for non-shas" do
       repository.expects(:sha_exist?).never
       repository.expects(:update!)
-      repository.file_content('foox', 'a' * 41).must_equal nil
+      repository.file_content('foox', 'a' * 41).must_be_nil
     end
 
     it "does not update when sha exists to save time" do
@@ -311,7 +311,7 @@ describe GitRepository do
 
     it "updates when sha is missing" do
       repository.expects(:update!)
-      repository.file_content('foo', 'a' * 40).must_equal nil
+      repository.file_content('foo', 'a' * 40).must_be_nil
     end
 
     describe "pull: false" do
@@ -322,7 +322,7 @@ describe GitRepository do
       end
 
       it "ignores unknown" do
-        repository.file_content('foo', 'aaaaaaaaa', pull: false).must_equal nil
+        repository.file_content('foo', 'aaaaaaaaa', pull: false).must_be_nil
       end
     end
   end

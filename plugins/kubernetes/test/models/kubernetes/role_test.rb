@@ -45,7 +45,7 @@ describe Kubernetes::Role do
       it "stores empty as nil to not run into duplication issues" do
         role.service_name = ''
         assert_valid role
-        role.service_name.must_equal nil
+        role.service_name.must_be_nil
       end
 
       it "is invalid with a already used service name" do
@@ -293,12 +293,12 @@ describe Kubernetes::Role do
 
     it "ignores unknown units" do
       assert config_content_yml.sub!('100Mi', '200T')
-      role.defaults.must_equal nil
+      role.defaults.must_be_nil
     end
 
     it "ignores when there is no config" do
       GitRepository.any_instance.stubs(file_content: nil)
-      role.defaults.must_equal nil
+      role.defaults.must_be_nil
     end
 
     it "ignores when config is invalid" do

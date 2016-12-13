@@ -51,7 +51,7 @@ describe Kubernetes::RoleConfigFile do
 
     it 'is nil when no service is found' do
       content.replace(read_kubernetes_sample_file('kubernetes_job.yml'))
-      config_file.service.must_equal nil
+      config_file.service.must_be_nil
     end
   end
 
@@ -62,7 +62,7 @@ describe Kubernetes::RoleConfigFile do
     end
 
     it 'is nil when no job is found' do
-      config_file.job.must_equal nil
+      config_file.job.must_be_nil
     end
   end
 end

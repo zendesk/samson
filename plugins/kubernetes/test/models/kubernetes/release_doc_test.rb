@@ -114,7 +114,7 @@ describe Kubernetes::ReleaseDoc do
 
       it "does nothing when service has no clusterIP" do
         doc.send(:raw_template)[1][:spec].delete(:clusterIP)
-        result.must_equal nil
+        result.must_be_nil
       end
 
       it "does nothing when ip prefix is blank" do

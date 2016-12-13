@@ -92,7 +92,7 @@ describe SessionsController do
 
       it 'does not log in' do
         assert flash[:error]
-        @controller.send(:current_user).must_equal(nil)
+        @controller.send(:current_user).must_be_nil
         assert_redirected_to root_path
       end
     end

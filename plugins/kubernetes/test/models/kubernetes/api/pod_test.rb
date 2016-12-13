@@ -185,7 +185,7 @@ describe Kubernetes::Api::Pod do
         to_raise(KubeException.new('a', 'b', 'c'))
       stub_request(:get, log_url).
         to_raise(KubeException.new('a', 'b', 'c'))
-      pod_with_client.logs('some-container').must_equal nil
+      pod_with_client.logs('some-container').must_be_nil
     end
   end
 

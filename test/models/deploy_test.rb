@@ -93,7 +93,7 @@ describe Deploy do
 
     it "does not queue when it can execute in parallel" do
       deploy.stage.run_in_parallel = true
-      deploy.job_execution_queue_name.must_equal nil
+      deploy.job_execution_queue_name.must_be_nil
     end
   end
 

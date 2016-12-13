@@ -51,7 +51,7 @@ describe Lock do
       it "nils blank resource_type" do
         lock.resource_type = ''
         assert_valid lock
-        lock.resource_type.must_equal nil
+        lock.resource_type.must_be_nil
       end
     end
   end
@@ -109,7 +109,7 @@ describe Lock do
 
   describe "#unlock_summary" do
     it "is emppty when not deleting" do
-      lock.expire_summary.must_equal nil
+      lock.expire_summary.must_be_nil
     end
 
     it "says when unlock is in the future" do

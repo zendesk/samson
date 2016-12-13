@@ -196,8 +196,8 @@ describe Project do
     it "does not contain releases after requested time" do
       staging_deploy.update_column(:updated_at, prod_deploy.updated_at - 2.days)
       deploys = project.last_deploy_by_group(prod_deploy.updated_at - 1.day)
-      deploys[pod1.id].must_equal nil
-      deploys[pod2.id].must_equal nil
+      deploys[pod1.id].must_be_nil
+      deploys[pod2.id].must_be_nil
       deploys[pod100.id].must_equal staging_deploy
     end
 
@@ -212,7 +212,7 @@ describe Project do
     it 'contains no non-releases' do
       prod_deploy.update_column(:release, false)
       deploys = project.last_deploy_by_group(Time.now)
-      deploys[pod1.id].must_equal nil
+      deploys[pod1.id].must_be_nil
     end
 
     it 'performs minimal number of queries' do
@@ -269,7 +269,7 @@ describe Project do
     let(:release) { releases(:test) }
 
     it "finds no release before given if there is none" do
-      project.release_prior_to(release).must_equal nil
+      project.release_prior_to(release).must_be_nil
     end
 
     it "finds a release before given" do
