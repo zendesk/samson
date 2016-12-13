@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 # Execute a job that can build/push Docker images
 # and write progress to the local job output.
+# TODO: this reimplementes the app/models/kubernetes/resource.rb Job logic ... unify
 module Kubernetes
   class BuildJobExecutor
     WAIT_FOR_JOB = 5.minutes

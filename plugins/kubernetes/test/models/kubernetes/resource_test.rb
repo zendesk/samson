@@ -307,14 +307,21 @@ describe Kubernetes::Resource do
       end
 
       it "replaces existing" do
-        stub_request(:get, url).to_return(body: '{}')
-
-        delete = stub_request(:delete, url).to_return(body: '{}')
-        request = stub_request(:post, base_url).to_return(body: "{}")
+        job = {spec: {selector: {matchLabels: {project: 'foo', release: 'bar'}}}}
+        stub_request(:get, url).to_return(body: job.to_json)
+        delete_job = stub_request(:delete, url).to_return(body: '{}')
+        query = "http://foobar.server/api/v1/namespaces/pod1/pods?labelSelector=project=foo,release=bar"
+        get_pods = stub_request(:get, query).
+          to_return(body: '{"items":[{"metadata":{"name":"pod1","namespace":"name1"}}]}')
+        delete_pod = stub_request(:delete, "http://foobar.server/api/v1/namespaces/name1/pods/pod1").
+          to_return(body: '{}')
+        create = stub_request(:post, base_url).to_return(body: "{}")
         resource.deploy
 
-        assert_requested delete
-        assert_requested request
+        assert_requested delete_job
+        assert_requested get_pods
+        assert_requested delete_pod
+        assert_requested create
       end
     end
 
