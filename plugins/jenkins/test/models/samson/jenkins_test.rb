@@ -193,6 +193,16 @@ describe Samson::Jenkins do
         jenkins.build.must_equal 1
       end
 
+      it "does not send invalid emails that can come from comitters" do
+        with_env GOOGLE_DOMAIN: '@example.com' do
+          deploy.user.email = 'invalid'
+          deploy.stubs(:buddy).returns(buddy)
+          stub_build_with_parameters("emails": "deployerbuddy@example.com")
+          stub_get_build_id_from_queue(1)
+          jenkins.build.must_equal 1
+        end
+      end
+
       it "includes committer emails when jenkins_email_committers flag is set" do
         deploy.stage.jenkins_email_committers = true
         stub_build_with_parameters("emails": 'super-admin@example.com,author1@example.com,author2@test.com,author3@example.comm,author4@example.co,AUTHOR5@EXAMPLE.COM')

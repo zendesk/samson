@@ -228,6 +228,8 @@ module Samson
       if deploy.stage.jenkins_email_committers
         emails.concat(deploy.changeset.commits.map(&:author_email))
       end
+
+      emails.select! { |e| e.include?('@') }
       emails.map! { |x| Mail::Address.new(x) }
       if ENV["GOOGLE_DOMAIN"]
         emails.select! { |x| ("@" + x.domain).casecmp(ENV["GOOGLE_DOMAIN"]).zero? }
