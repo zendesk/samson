@@ -169,3 +169,6 @@ pre.pre-inline {
     margin-right: 10px;
   }
 }
+
+// Labels with tooltips.
+span.label[title] { cursor: help; }
