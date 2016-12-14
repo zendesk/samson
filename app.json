@@ -26,22 +26,28 @@
       "required": true
     },
     "AUTH_GITHUB": {
-      "description": "Set to 1 to use github auth"
+      "description": "Set to 1 to use github auth",
+      "required": false
     },
     "GITHUB_CLIENT_ID": {
-      "description": "Fill in to use github auth"
+      "description": "Fill in to use github auth",
+      "required": false
     },
     "GITHUB_SECRET": {
-      "description": "Fill in to use github auth"
+      "description": "Fill in to use github auth",
+      "required": false
     },
     "AUTH_GOOGLE": {
-      "description": "Set to 1 to use google auth"
+      "description": "Set to 1 to use google auth",
+      "required": false
     },
     "GOOGLE_CLIENT_ID": {
-      "description": "Fill in to use google auth"
+      "description": "Fill in to use google auth",
+      "required": false
     },
     "GOOGLE_CLIENT_SECRET": {
-      "description": "Fill in to use google auth"
+      "description": "Fill in to use google auth",
+      "required": false
     },
     "BUNDLE_WITHOUT": {
       "description": "Groups to ignore when bundling",
@@ -57,7 +63,7 @@
     }
   },
   "scripts": {
-    "postdeploy": "bundle exec rake db:schema:load"
+    "postdeploy": "DISABLE_DATABASE_ENVIRONMENT_CHECK=1 bundle exec rake db:schema:load"
   },
   "keywords": ["samson", "deploy", "github", "rails"],
   "buildpacks": [
