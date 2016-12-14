@@ -34,7 +34,8 @@
     <% elsif @project.release_branch.present? %>
       <div class="alert alert-warning">
         <p>No release created from release branch <%= @project.release_branch %>.</p>
-        <p>Add a webhook to samson from your CI to trigger releases on green builds or from your Code hoster to get releases on merge.</p>
+        <p>Add a webhook to samson from your CI to trigger releases on green builds or from your Code host to get releases on merge.</p>
+        <p>Samsons Github user needs write permisson to the repo to create tags.</p>
       </div>
     <% end %>
   </section>

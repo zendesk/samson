@@ -4,6 +4,8 @@ require_relative '../test_helper'
 SingleCov.covered!
 
 describe Project do
+  include StubGithubAPI
+
   let(:project) { projects(:test) }
   let(:author) { users(:deployer) }
   let(:url) { "git://foo.com:hello/world.git" }
@@ -15,8 +17,40 @@ describe Project do
 
   before { Project.any_instance.stubs(:valid_repository_url).returns(true) }
 
-  it "generates a secure token when created" do
-    Project.create!(name: "hello", repository_url: url).token.wont_be_nil
+  describe "#generate_token" do
+    it "generates a secure token when created" do
+      Project.create!(name: "hello", repository_url: url).token.wont_be_nil
+    end
+  end
+
+  describe "#validate_can_release" do
+    it "does not check with blank release_branch" do
+      project.release_branch = ""
+      assert_valid project
+    end
+
+    it "does not check with unchanged release_branch" do
+      project.update_column(:release_branch, 'foobar')
+      assert_valid project
+    end
+
+    it "does not check with updated release_branch" do
+      project.update_column(:release_branch, 'foobar')
+      project.release_branch = 'barfoo'
+      assert_valid project
+    end
+
+    it "is invalid when check fails" do
+      stub_github_api("repos/bar/foo", permissions: {push: false})
+      project.release_branch = 'foobar'
+      refute_valid project
+    end
+
+    it "is valid when check passes" do
+      stub_github_api("repos/bar/foo", permissions: {push: true})
+      project.release_branch = 'foobar'
+      assert_valid project
+    end
   end
 
   describe "#repository_directory" do

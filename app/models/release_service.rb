@@ -13,6 +13,12 @@ class ReleaseService
     release
   end
 
+  def can_release?
+    GITHUB.repo(@project.user_repo_part).permissions[:push]
+  rescue Octokit::NotFound
+    false
+  end
+
   private
 
   def push_tag_to_git_repository(release)

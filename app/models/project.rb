@@ -7,6 +7,7 @@ class Project < ActiveRecord::Base
 
   validates :name, :repository_url, presence: true
   validate :valid_repository_url
+  validate :validate_can_release
   before_create :generate_token
   after_save :clone_repository, if: :repository_url_changed?
   before_update :clean_old_repository, if: :repository_url_changed?
@@ -201,6 +202,12 @@ class Project < ActiveRecord::Base
   def valid_repository_url
     return if repository.valid_url?
     errors.add(:repository_url, "is not valid or accessible")
+  end
+
+  def validate_can_release
+    return if release_branch.blank? || release_branch_was.present?
+    return if ReleaseService.new(self).can_release?
+    errors.add(:release_branch, "samsons github user needs permission to push new tags")
   end
 
   def destroy_user_project_roles
