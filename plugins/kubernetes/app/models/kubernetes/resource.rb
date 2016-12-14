@@ -223,6 +223,20 @@ module Kubernetes
         delete
       end
 
+      # deleting the job leaves the pods running, so we have to delete them manually
+      # kubernetes is a little more careful with running pods, but we just want to get rid of them
+      def delete
+        selector = resource.dig(:spec, :selector, :matchLabels).map { |k, v| "#{k}=#{v}" }.join(",")
+
+        # delete the job
+        super
+
+        # delete the pods
+        client = @deploy_group.kubernetes_cluster.client # pod api is not part of the extension client
+        pods = client.get_pods(label_selector: selector, namespace: namespace)
+        pods.each { |pod| client.delete_pod pod.metadata.name, pod.metadata.namespace }
+      end
+
       private
 
       # FYI per docs it is supposed to use batch api, but extension api works
