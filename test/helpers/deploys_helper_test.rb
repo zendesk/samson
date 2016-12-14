@@ -72,10 +72,4 @@ describe DeploysHelper do
       end
     end
   end
-
-  describe '#deploy_status_badge' do
-    it 'renders' do
-      deploy_status_badge(deploy).must_include "Succeeded"
-    end
-  end
 end

@@ -217,17 +217,6 @@ describe Stage do
     end
   end
 
-  describe "#currently_deploying?" do
-    it "is false when not deploying" do
-      stage.currently_deploying?.must_equal false
-    end
-
-    it "is true when deploying" do
-      stage.deploys.first.job.update_column(:status, 'running')
-      stage.currently_deploying?.must_equal true
-    end
-  end
-
   describe "#send_email_notifications?" do
     it "is false when there is no address" do
       refute stage.send_email_notifications?

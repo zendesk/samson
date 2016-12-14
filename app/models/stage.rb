@@ -90,10 +90,6 @@ class Stage < ActiveRecord::Base
     end
   end
 
-  def currently_deploying?
-    !!current_deploy
-  end
-
   # The next stage for the project. If this is the last stage, returns nil.
   def next_stage
     stages = project.stages.to_a
