@@ -63,7 +63,7 @@ class JobExecution
 
       @executor.stop! 'KILL'
       @thread.join(stop_timeout) ||
-        (Rails.env.test? ? @thread.join : @thread.kill) # miniest runs before blocks twice when killing thread here
+        (Rails.env.test? ? @thread.join : @thread.kill) # test hangs forever when using .kill here
     end
 
     @job.cancelled!

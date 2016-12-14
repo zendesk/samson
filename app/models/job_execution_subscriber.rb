@@ -11,7 +11,7 @@ class JobExecutionSubscriber
     Airbrake.notify(
       exception,
       error_message: "JobExecutionSubscriber failed: #{exception.message}",
-      parameters: { job_id: @job.id }
+      parameters: { job_url: @job.url }
     )
   end
 end
