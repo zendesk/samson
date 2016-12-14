@@ -10,10 +10,19 @@ describe CommitStatusesController do
 
   as_a_project_deployer do
     describe '#show' do
+      let(:stage) { stages(:test_staging) }
+      let(:project) { projects(:test) }
+      let(:valid_params) { {project_id: project.to_param, stage_id: stage.to_param, id: 'test/test'} }
+
       it "fails with unknown project" do
         assert_raises ActiveRecord::RecordNotFound do
-          get :show, params: {stage_id: 'staging', project_id: 'bar', id: 'test/test'}
+          get :show, params: valid_params.merge(project_id: 'bar')
         end
+      end
+
+      it "fails with unknown stage" do
+        stage.update_column(:project_id, 3)
+        assert_raises(ActiveRecord::RecordNotFound) { get :show, params: valid_params }
       end
 
       describe 'valid' do
@@ -26,7 +35,7 @@ describe CommitStatusesController do
 
         before do
           CommitStatus.stubs(new: stub(commit_status_data))
-          get :show, params: {project_id: projects(:test), stage_id: 'staging', id: 'test/test'}
+          get :show, params: valid_params
         end
 
         it 'responds ok' do
