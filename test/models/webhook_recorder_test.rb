@@ -40,7 +40,7 @@ describe WebhookRecorder do
     end
 
     it "reads missing as nil" do
-      WebhookRecorder.read(project).must_equal nil
+      WebhookRecorder.read(project).must_be_nil
     end
   end
 end

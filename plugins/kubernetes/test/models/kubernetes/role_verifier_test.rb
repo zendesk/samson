@@ -18,7 +18,7 @@ describe Kubernetes::RoleVerifier do
     end
 
     it "works" do
-      errors.must_equal nil
+      errors.must_be_nil
     end
 
     it "allows ConfigMap" do
@@ -53,7 +53,7 @@ describe Kubernetes::RoleVerifier do
 
     it "allows only Job" do
       role.replace(job_role)
-      errors.must_equal nil
+      errors.must_be_nil
     end
 
     it "reports missing name" do
@@ -109,12 +109,12 @@ describe Kubernetes::RoleVerifier do
 
     it "allows valid labels" do
       role.first[:metadata][:labels][:foo] = 'KubeDNS'
-      errors.must_equal nil
+      errors.must_be_nil
     end
 
     it "works with proper annotations" do
       role.first[:spec][:template][:metadata][:annotations] = { 'secret/FOO' => 'bar' }
-      errors.must_equal nil
+      errors.must_be_nil
     end
 
     it "reports invalid annotations" do

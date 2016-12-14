@@ -156,7 +156,7 @@ describe SecretStorage do
     it "does not cache when cache did not exist" do
       SecretStorage.backend.expects(:keys).never # block call
       SecretStorage.delete(secret.id)
-      Rails.cache.read(SecretStorage::SECRET_KEYS_CACHE).must_equal nil
+      Rails.cache.read(SecretStorage::SECRET_KEYS_CACHE).must_be_nil
     end
   end
 

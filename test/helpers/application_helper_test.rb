@@ -378,12 +378,12 @@ describe ApplicationHelper do
 
       it "does not use referrer from other page since redirect_back_or would not work" do
         assert request.stubs(:referrer, request.referrer.sub(root_url, 'http://hacky.com/'))
-        redirect_to_field.must_equal nil
+        redirect_to_field.must_be_nil
       end
 
       it "is empty when nothing is known" do
         request.stubs(:referrer).returns(nil)
-        redirect_to_field.must_equal nil
+        redirect_to_field.must_be_nil
       end
     end
   end

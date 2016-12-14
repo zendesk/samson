@@ -28,7 +28,7 @@ describe GithubAuthorization do
     let(:organization_member) { false }
 
     it 'is not allowed to view' do
-      authorization.role_id.must_equal(nil)
+      authorization.role_id.must_be_nil
     end
   end
 

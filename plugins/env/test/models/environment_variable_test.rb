@@ -170,7 +170,7 @@ describe EnvironmentVariable do
     end
 
     it "builds from nil so it is matched in rendered selects" do
-      environment_variable.scope_type_and_id.must_equal nil
+      environment_variable.scope_type_and_id.must_be_nil
     end
   end
 end

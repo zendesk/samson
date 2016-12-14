@@ -23,7 +23,7 @@ describe Samson::Secrets::HashicorpVaultBackend do
 
     it "returns nil when it fails to read" do
       assert_vault_request :get, "production/foo/pod2/bar", status: 404 do
-        Samson::Secrets::HashicorpVaultBackend.read('production/foo/pod2/bar').must_equal nil
+        Samson::Secrets::HashicorpVaultBackend.read('production/foo/pod2/bar').must_be_nil
       end
     end
   end

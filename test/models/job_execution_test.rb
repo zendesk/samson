@@ -247,9 +247,9 @@ describe JobExecution do
     job_execution = JobExecution.start_job(JobExecution.new('master', job))
     job_execution.wont_be_nil
 
-    JobExecution.find_by_id(job.id).must_equal(nil)
-    JobExecution.queued?(job.id).must_equal(nil)
-    JobExecution.active?(job.id).must_equal(nil)
+    JobExecution.find_by_id(job.id).must_be_nil
+    JobExecution.queued?(job.id).must_be_nil
+    JobExecution.active?(job.id).must_be_nil
   end
 
   it 'can run with a block' do

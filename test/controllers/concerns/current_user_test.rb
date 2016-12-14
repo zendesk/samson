@@ -99,7 +99,7 @@ class CurrentUserConcernTest < ActionController::TestCase
       it "unsets the user and logs them out" do
         @controller.send(:current_user=, user)
         @controller.send(:logout!)
-        @controller.send(:current_user).must_equal nil
+        @controller.send(:current_user).must_be_nil
         session.inspect.must_equal({}.inspect)
       end
     end

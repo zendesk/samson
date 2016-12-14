@@ -166,8 +166,8 @@ describe DockerBuilderService do
       error_message = "A bad thing happened..."
       Docker::Image.unstub(:build_from_tar)
       Docker::Image.expects(:build_from_tar).raises(Docker::Error::DockerError.new(error_message))
-      service.build_image(tmp_dir).must_equal nil
-      build.docker_image_id.must_equal nil
+      service.build_image(tmp_dir).must_be_nil
+      build.docker_image_id.must_be_nil
       service.output.to_s.must_include error_message
     end
 
@@ -175,8 +175,8 @@ describe DockerBuilderService do
       error_message = "Really long output..."
       Docker::Image.unstub(:build_from_tar)
       Docker::Image.expects(:build_from_tar).raises(Docker::Error::UnexpectedResponseError.new(error_message))
-      service.build_image(tmp_dir).must_equal nil
-      build.docker_image_id.must_equal nil
+      service.build_image(tmp_dir).must_be_nil
+      build.docker_image_id.must_be_nil
       service.output.to_s.wont_include error_message
     end
 
@@ -238,7 +238,7 @@ describe DockerBuilderService do
 
     it 'rescues docker error' do
       service.expects(:docker_image_ref).raises(Docker::Error::DockerError)
-      service.push_image('my-test').must_equal nil
+      service.push_image('my-test').must_be_nil
       service.output.to_s.must_equal "Docker push failed: Docker::Error::DockerError\n"
     end
 
@@ -261,7 +261,7 @@ describe DockerBuilderService do
 
     it 'fails when digest cannot be found' do
       assert push_output.reject! { |e| e.first =~ /Digest/ }
-      service.push_image('my-test').must_equal nil
+      service.push_image('my-test').must_be_nil
       service.output.to_s.must_include "Docker push failed: Unable to get repo digest"
     end
 

@@ -99,9 +99,9 @@ describe Stage do
     it 'caches nil' do
       stage
       ActiveRecord::Relation.any_instance.expects(:first).returns nil
-      stage.last_deploy.must_equal nil
+      stage.last_deploy.must_be_nil
       ActiveRecord::Relation.any_instance.expects(:first).never
-      stage.last_deploy.must_equal nil
+      stage.last_deploy.must_be_nil
     end
 
     it 'returns the last deploy for the stage' do
@@ -119,9 +119,9 @@ describe Stage do
     it 'caches nil' do
       subject
       ActiveRecord::Relation.any_instance.expects(:first).returns nil
-      stage.last_successful_deploy.must_equal nil
+      stage.last_successful_deploy.must_be_nil
       ActiveRecord::Relation.any_instance.expects(:first).never
-      stage.last_successful_deploy.must_equal nil
+      stage.last_successful_deploy.must_be_nil
     end
 
     it 'returns the last successful deploy for the stage' do
@@ -188,15 +188,15 @@ describe Stage do
 
   describe "#current_deploy" do
     it "is nil when not deploying" do
-      subject.current_deploy.must_equal nil
+      subject.current_deploy.must_be_nil
     end
 
     it 'caches nil' do
       subject
       ActiveRecord::Relation.any_instance.expects(:first).returns nil
-      subject.current_deploy.must_equal nil
+      subject.current_deploy.must_be_nil
       ActiveRecord::Relation.any_instance.expects(:first).never
-      subject.current_deploy.must_equal nil
+      subject.current_deploy.must_be_nil
     end
 
     it "is there when deploying" do
@@ -293,17 +293,17 @@ describe Stage do
 
     it "is empty when deploy was a success" do
       deploy.job.success!
-      emails.must_equal nil
+      emails.must_be_nil
     end
 
     it "is empty when last deploy was also a failure" do
       previous_deploy.job.fail!
-      emails.must_equal nil
+      emails.must_be_nil
     end
 
     it "is empty when user was human" do
       user.update_attribute(:integration, false)
-      emails.must_equal nil
+      emails.must_be_nil
     end
 
     it "includes committers when there is no previous deploy" do

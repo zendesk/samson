@@ -72,7 +72,7 @@ describe TerminalExecutor do
 
     it "terminates the program on getpgid failures so we fail fast" do
       Process.expects(:getpgid).raises(Errno::ESRCH)
-      subject.execute!('sleep 0.1').must_equal(nil) # status? of a killed process is 9
+      subject.execute!('sleep 0.1').must_be_nil # status? of a killed process is 9
     end
 
     it "handles the case when getpgid + kill both fail" do
@@ -182,11 +182,11 @@ describe TerminalExecutor do
     end
 
     it 'properly kills the execution' do
-      execute_and_stop('sleep 100', 'INT').must_equal(nil)
+      execute_and_stop('sleep 100', 'INT').must_be_nil
     end
 
     it 'terminates hanging processes with -9' do
-      execute_and_stop('trap "sleep 100" 2; sleep 100', 'KILL').must_equal(nil)
+      execute_and_stop('trap "sleep 100" 2; sleep 100', 'KILL').must_be_nil
     end
   end
 end

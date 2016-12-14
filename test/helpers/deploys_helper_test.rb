@@ -59,7 +59,7 @@ describe DeploysHelper do
       before { deploy.stubs(active?: true) }
 
       it 'does not generate a link' do
-        redeploy_button.must_equal nil
+        redeploy_button.must_be_nil
       end
     end
 

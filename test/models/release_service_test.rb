@@ -43,7 +43,7 @@ describe ReleaseService do
       Samson::Hooks.with_callback(:release_deploy_conditions, deployable_condition_check) do |_|
         service.release!(commit: commit, author: author)
 
-        assert_equal nil, stage.deploys.first
+        stage.deploys.first.must_be_nil
       end
     end
 

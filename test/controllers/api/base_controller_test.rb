@@ -35,7 +35,7 @@ describe Api::BaseController do
 
   describe "#current_project" do
     it "returns cached @project" do
-      @controller.send(:current_project).must_equal nil
+      @controller.send(:current_project).must_be_nil
       @controller.instance_variable_set(:@project, 1)
       @controller.send(:current_project).must_equal 1
     end

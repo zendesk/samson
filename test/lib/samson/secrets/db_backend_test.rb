@@ -12,7 +12,7 @@ describe Samson::Secrets::DbBackend do
     end
 
     it "returns nil when it cannot find" do
-      Samson::Secrets::DbBackend.read('production/foo/pod2/noooo').must_equal nil
+      Samson::Secrets::DbBackend.read('production/foo/pod2/noooo').must_be_nil
     end
   end
 

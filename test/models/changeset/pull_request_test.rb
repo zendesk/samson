@@ -352,7 +352,7 @@ describe Changeset::PullRequest do
         # Risks
          - None
       BODY
-      pr.risks.must_equal nil
+      pr.risks.must_be_nil
     end
 
     it "does not find None" do
@@ -360,7 +360,7 @@ describe Changeset::PullRequest do
         # Risks
         None
       BODY
-      pr.risks.must_equal nil
+      pr.risks.must_be_nil
     end
 
     it "finds risks with underline style markdown headers" do
@@ -384,13 +384,13 @@ describe Changeset::PullRequest do
       before { no_risks }
 
       it "finds nothing" do
-        pr.risks.must_equal nil
+        pr.risks.must_be_nil
       end
 
       it "caches nothing" do
         pr.risks
         add_risks
-        pr.risks.must_equal nil
+        pr.risks.must_be_nil
       end
     end
   end

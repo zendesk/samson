@@ -33,7 +33,7 @@ describe StagesHelper do
       end
 
       it "does not show local edit" do
-        edit_command_link(commands(:echo)).must_equal nil
+        edit_command_link(commands(:echo)).must_be_nil
       end
 
       it "links to local edit if command is local and user is project admin" do
