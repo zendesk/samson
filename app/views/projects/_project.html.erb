@@ -10,22 +10,21 @@
         <% cache [stage, Lock.cache_key] do %>
           <li>
             <%= link_to stage.name, [project, stage], class: 'stage-link' %>
-            <%= link_to 'Deploying', [project, stage.current_deploy], class: 'label label-primary' if stage.currently_deploying? %>
+            <% if deploy = stage.current_deploy %>
+              <%= link_to 'Deploying', [project, deploy], class: 'label label-primary' %>
+            <% end %>
             <%= resource_lock_icon stage %>
-            <%= stage.is_template ? stage_template_icon : '' %>
+            <%= stage_template_icon if stage.is_template %>
 
             <div class="pull-right">
-              <% if stage.last_deploy.try(:failed?) %>
-                <%= link_to [project, stage.last_deploy], class: 'no-hover' do %>
-                  <%= content_tag :i, '', class: 'fa fa-exclamation-triangle deployment-alert',
-                                  title: deployment_alert_title(stage.last_deploy) %>
+              <% if (deploy = stage.last_deploy) && deploy.failed? %>
+                <%= link_to [project, deploy], class: 'no-hover' do %>
+                  <%= content_tag :i, '', class: 'fa fa-exclamation-triangle deployment-alert', title: deployment_alert_title(deploy) %>
                 <% end %>
               <% end %>
 
-              <% if stage.last_successful_deploy %>
-                <%= link_to stage.last_successful_deploy.short_reference,
-                            [project, stage.last_successful_deploy],
-                            class: "status label #{status_label(stage.last_successful_deploy.status)}" %>
+              <% if deploy = stage.last_successful_deploy %>
+                <%= link_to deploy.short_reference, [project, deploy], class: "status label #{status_label(deploy.status)}" %>
               <% end %>
             </div>
           </li>

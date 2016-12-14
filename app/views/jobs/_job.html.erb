@@ -5,6 +5,6 @@
       <%= link_to "#{job.user.name} executed:", [@project, job] %>
       <pre class="pre-command"><%= job.command %></pre>
     </td>
-    <td><span class="label <%= status_label(job.status) %>"><%= job.status.titleize %></span></td>
+    <td><%= job_status_badge(job) %></td>
   </tr>
 <% end %>

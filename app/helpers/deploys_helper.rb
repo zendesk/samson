@@ -121,8 +121,4 @@ module DeploysHelper
       options.merge(method: :delete, class: options.fetch(:class, 'btn btn-danger btn-xl'))
     )
   end
-
-  def deploy_status_badge(deploy)
-    content_tag :span, deploy.status.titleize, class: "label #{status_label(deploy.status)}"
-  end
 end
