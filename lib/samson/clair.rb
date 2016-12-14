@@ -12,6 +12,7 @@ module Samson
       def append_job_with_scan(job, docker_tag)
         return unless clair = ENV['HYPERCLAIR_PATH']
 
+        ActiveRecord::Base.clear_active_connections!
         Thread.new do
           sleep 0.1 if Rails.env.test? # in test we reuse the same connection, so we cannot use it at the same time
           success, output, time = scan(clair, job.project, docker_tag)
