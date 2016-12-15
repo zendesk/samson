@@ -24,7 +24,7 @@
 
       <%= Samson::Hooks.render_views(:deploy_form, self, project: @project, form: form) %>
 
-      <% if @recent_releases %>
+      <% if @recent_releases.any? %>
         <div class="form-group" id="recent-releases">
           <label class="col-lg-2 control-label">Recent releases</label>
           <div class="col-lg-4">
