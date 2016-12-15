@@ -62,7 +62,10 @@ class JobQueue
 
   def delete_and_enqueue_next(queue_name, job_execution)
     LOCK.synchronize do
-      raise "Invalid active queue" unless job_execution == @active.delete(queue_name)
+      previous = @active.delete(queue_name)
+      unless job_execution == previous
+        raise "Unexpected active job found in queue #{queue_name}: expected #{job_execution&.id} got #{previous&.id}"
+      end
 
       if JobExecution.enabled && (job_execution = @queue[queue_name].shift)
         start_job(job_execution, queue_name)
