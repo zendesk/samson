@@ -88,6 +88,19 @@ describe JobQueue do
       end
     end
 
+    it 'reports to airbrake when active jobs were in an unexpected state' do
+      job_execution.stubs(:start!)
+
+      with_job_execution do
+        subject.add(job_execution, queue: :x)
+
+        e = assert_raises RuntimeError do
+          subject.send(:delete_and_enqueue_next, :x, queued_job_execution)
+        end
+        e.message.must_equal 'Unexpected active job found in queue x: expected 2 got 1'
+      end
+    end
+
     describe 'with queued job' do
       around { |t| with_a_queued_job(&t) }
 
