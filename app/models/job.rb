@@ -52,9 +52,9 @@ class Job < ActiveRecord::Base
   end
 
   def stop!
-    if execution
+    if ex = execution
       cancelling!
-      execution.stop!
+      ex.stop!
     else
       cancelled!
     end
