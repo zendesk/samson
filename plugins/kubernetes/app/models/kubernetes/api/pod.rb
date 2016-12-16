@@ -59,10 +59,6 @@ module Kubernetes
         end
       end
 
-      def error?
-        abnormal_events.any?
-      end
-
       def abnormal_events
         events.reject { |e| e.type == 'Normal' }
       end
