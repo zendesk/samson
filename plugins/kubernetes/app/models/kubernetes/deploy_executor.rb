@@ -35,7 +35,7 @@ module Kubernetes
       @stopped = true
     end
 
-    def execute!(*_commands)
+    def execute!(*)
       verify_kubernetes_templates!
       build = find_or_create_build
       return false if stopped?
@@ -44,11 +44,11 @@ module Kubernetes
       jobs, deploys = release.release_docs.partition(&:job?)
       if jobs.any?
         @output.puts "First deploying jobs ..." if deploys.any?
-        return false unless deploy_to_cluster(release, jobs)
+        return false unless deploy_and_watch(release, jobs)
         @output.puts "Now deploying other roles ..." if deploys.any?
       end
       if deploys.any?
-        return false unless deploy_to_cluster(release, deploys)
+        return false unless deploy_and_watch(release, deploys)
       end
       true
     end
@@ -65,28 +65,29 @@ module Kubernetes
       loop do
         statuses = pod_statuses(release, release_docs)
         return success if statuses.none?
+        not_ready = statuses.reject(&:live)
 
         if @testing_for_stability
-          if statuses.all?(&:live)
+          if not_ready.none?
             @testing_for_stability += 1
             @output.puts "Stable #{@testing_for_stability}/#{stable_ticks}"
             return success if stable_ticks == @testing_for_stability
           else
             print_statuses(statuses)
-            unstable!('one or more pods is not live', statuses.reject(&:live))
+            unstable!('one or more pods are not live', not_ready)
             return statuses
           end
         else
           print_statuses(statuses)
-          if statuses.all?(&:live)
+          if not_ready.none?
             if release_docs.all?(&:job?)
               return success
             else
               @output.puts "READY, starting stability test"
               @testing_for_stability = 0
             end
-          elsif statuses.any?(&:stop)
-            unstable!('one or more pods stopped', statuses.select(&:stop))
+          elsif stopped = not_ready.select(&:stop).presence
+            unstable!('one or more pods stopped', stopped)
             return statuses
           elsif seconds_waiting > WAIT_FOR_LIVE
             @output.puts "TIMEOUT, pods took too long to get live"
@@ -199,13 +200,11 @@ module Kubernetes
 
         if !pod
           {live: false, details: "Missing", pod: pod}
+        elsif pod.restarted?
+          {live: false, stop: true, details: "Restarted", pod: pod}
         elsif pod.live?
-          if pod.restarted?
-            {live: false, stop: true, details: "Restarted", pod: pod}
-          else
-            {live: true, details: "Live", pod: pod}
-          end
-        elsif pod.error?
+          {live: true, details: "Live", pod: pod}
+        elsif pod.abnormal_events.any?
           {live: false, stop: true, details: "Error", pod: pod}
         else
           {live: false, details: "Waiting (#{pod.phase}, #{pod.reason})", pod: pod}
@@ -218,7 +217,7 @@ module Kubernetes
     end
 
     def print_statuses(status_groups)
-      return if @last_status_output && @last_status_output > 10.seconds.ago # FIX: increase TICK to 10 and remove this ?
+      return if @last_status_output && @last_status_output > 10.seconds.ago
 
       @last_status_output = Time.now
       @output.puts "Deploy status after #{seconds_waiting} seconds:"
@@ -279,7 +278,7 @@ module Kubernetes
     def rollback(release_docs)
       release_docs.each do |release_doc|
         begin
-          action = release_doc.previous_deploy ? 'Rolling back' : 'Deleting'
+          action = (release_doc.previous_deploy ? 'Rolling back' : 'Deleting')
           @output.puts "#{action} #{release_doc.deploy_group.name} role #{release_doc.kubernetes_role.name}"
           release_doc.revert
         rescue # ... still show events and logs if somehow the rollback fails
@@ -357,6 +356,7 @@ module Kubernetes
       end
     end
 
+    # updates resources via kubernetes api
     def deploy(release_docs)
       release_docs.each do |release_doc|
         @output.puts "Creating for #{release_doc.deploy_group.name} role #{release_doc.kubernetes_role.name}"
@@ -364,7 +364,7 @@ module Kubernetes
       end
     end
 
-    def deploy_to_cluster(release, release_docs)
+    def deploy_and_watch(release, release_docs)
       deploy(release_docs)
       result = wait_for_resources_to_complete(release, release_docs)
       if result == true
