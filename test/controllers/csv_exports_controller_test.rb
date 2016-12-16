@@ -82,6 +82,7 @@ describe CsvExportsController do
           # clone a project to test it appears in the UI
           p = projects(:test).dup
           p.name = "Other Project"
+          p.permalink = "other"
           p.save!(validate: false)
         end
 

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20161213182356) do
+ActiveRecord::Schema.define(version: 20161216183341) do
 
   create_table "builds", force: :cascade do |t|
     t.integer  "project_id",                                       null: false
@@ -349,10 +349,9 @@ ActiveRecord::Schema.define(version: 20161213182356) do
     t.string   "owner"
     t.boolean  "include_new_deploy_groups",               default: false, null: false
     t.string   "docker_release_branch"
+    t.index ["permalink"], name: "index_projects_on_permalink", unique: true, length: {"permalink"=>191}, using: :btree
+    t.index ["token"], name: "index_projects_on_token", unique: true, length: {"token"=>191}, using: :btree
   end
-
-  add_index "projects", ["permalink", "deleted_at"], name: "index_projects_on_permalink_and_deleted_at", length: {"permalink"=>191, "deleted_at"=>nil}, using: :btree
-  add_index "projects", ["token", "deleted_at"], name: "index_projects_on_token_and_deleted_at", length: {"token"=>191, "deleted_at"=>nil}, using: :btree
 
   create_table "releases", force: :cascade do |t|
     t.integer  "project_id",  limit: 4,                null: false
@@ -456,11 +455,10 @@ ActiveRecord::Schema.define(version: 20161213182356) do
     t.integer  "template_stage_id"
     t.boolean  "jenkins_email_committers",                                   default: false, null: false
     t.boolean  "run_in_parallel",                                            default: false, null: false
-    t.boolean  "jenkins_build_params",                             default: false, null: false
+    t.boolean  "jenkins_build_params",                                       default: false, null: false
+    t.index ["project_id", "permalink"], name: "index_stages_on_project_id_and_permalink", unique: true, length: {"project_id"=>nil, "permalink"=>191}, using: :btree
     t.index ["template_stage_id"], name: "index_stages_on_template_stage_id", using: :btree
   end
-
-  add_index "stages", ["project_id", "permalink", "deleted_at"], name: "index_stages_on_project_id_and_permalink_and_deleted_at", length: {"project_id"=>nil, "permalink"=>191, "deleted_at"=>nil}, using: :btree
 
   create_table "stars", force: :cascade do |t|
     t.integer  "user_id",    limit: 4, null: false

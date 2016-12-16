@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 class Project < ActiveRecord::Base
+  has_soft_deletion default_scope: true
+
   include Permalinkable
   include Searchable
-
-  has_soft_deletion default_scope: true
 
   validates :name, :repository_url, presence: true
   validate :valid_repository_url

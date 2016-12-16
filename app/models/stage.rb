@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 class Stage < ActiveRecord::Base
+  has_soft_deletion default_scope: true unless self < SoftDeletion::Core
+
   include Permalinkable
   include HasCommands
-
-  has_soft_deletion default_scope: true unless self < SoftDeletion::Core
 
   has_paper_trail skip: [:order, :updated_at, :created_at]
 
