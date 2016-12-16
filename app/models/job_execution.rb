@@ -285,6 +285,10 @@ class JobExecution
       job_queue.clear
     end
 
+    def debug
+      job_queue.debug
+    end
+
     private
 
     def job_queue

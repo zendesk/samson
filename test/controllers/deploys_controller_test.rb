@@ -75,6 +75,27 @@ describe DeploysController do
           assert_template 'shared/_deploys_table'
         end
       end
+
+      it "renders debug output with job/deploy and active/queued" do
+        JobExecution.any_instance.expects(:on_complete).times(4)
+        JobExecution.any_instance.expects(:start!)
+        with_job_execution do
+          # start 1 job and queue another
+          active = Job.new(project: project) { |j| j.id = 123 }
+          active.stubs(:deploy).returns(deploy)
+          queued = Job.new(project: project) { |j| j.id = 234 }
+          JobExecution.start_job(JobExecution.new('master', active), queue: :x)
+          JobExecution.start_job(JobExecution.new('master', queued), queue: :x)
+          JobExecution.active.size.must_equal 1
+          assert JobExecution.queued?(queued.id)
+
+          get :active, params: {debug: '1'}
+
+          response.body.wont_include active.id.to_s
+          response.body.must_include active.deploy.id.to_s # renders as deploy
+          response.body.must_include queued.id.to_s # renders as job
+        end
+      end
     end
 
     describe "#changeset" do

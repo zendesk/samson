@@ -165,4 +165,10 @@ describe JobQueue do
       end
     end
   end
+
+  describe "#debug" do
+    it "returns active and queued" do
+      subject.debug.must_equal([{}, {}])
+    end
+  end
 end

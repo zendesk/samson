@@ -6,6 +6,16 @@ SingleCov.covered! uncovered: 7
 describe JobExecution do
   include GitRepoTestHelper
 
+  def execute_job(branch = 'master', **options)
+    execution = JobExecution.new(branch, job, options)
+    execution.on_complete { yield } if block_given?
+    execution.send(:run!)
+  end
+
+  def last_line_of_output
+    job.output.to_s.split("\n").last.strip
+  end
+
   let(:repo_dir) { File.join(GitRepository.cached_repos_dir, project.repository_directory) }
   let(:pod1) { deploy_groups(:pod1) }
   let(:pod2) { deploy_groups(:pod2) }
@@ -371,13 +381,9 @@ describe JobExecution do
     end
   end
 
-  def execute_job(branch = 'master', **options)
-    execution = JobExecution.new(branch, job, options)
-    execution.on_complete { yield } if block_given?
-    execution.send(:run!)
-  end
-
-  def last_line_of_output
-    job.output.to_s.split("\n").last.strip
+  describe "#debug" do
+    it "returns job queue interansl" do
+      JobExecution.debug.must_equal([{}, {}])
+    end
   end
 end
