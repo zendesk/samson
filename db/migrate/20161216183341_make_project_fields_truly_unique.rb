@@ -8,25 +8,11 @@ class MakeProjectFieldsTrulyUnique < ActiveRecord::Migration[5.0]
 
   def up
     # make duplicate permalinks unique
-    Project.group(:permalink).count.select do |permalink, count|
-      next if count == 1
-      Project.where(permalink: permalink).each do |p|
-        if p.deleted_at?
-          puts "Updating project #{p.id}"
-          p.update_column(:permalink, "#{p.permalink}-deleted-#{p.deleted_at.to_i}")
-        end
-      end
-    end
-
-    Stage.with_deleted do
-      Stage.group(:permalink, :project_id).count.select do |(permalink, project_id), count|
-        next if count == 1
-        Stage.where(permalink: permalink, project_id: project_id).each do |s|
-          if s.deleted_at?
-            puts "Updating stage #{s.id}"
-            s.update_column(:permalink, "#{s.permalink}-deleted-#{s.deleted_at.to_i}")
-          end
-        end
+    [Project, Stage].each do |klass|
+      klass.where.not(deleted_at: nil).each do |p|
+        next if p.permalink.include?('-deleted-')
+        puts "Updating #{klass} #{p.id}"
+        p.update_column(:permalink, "#{p.permalink}-deleted-#{p.deleted_at.to_i}")
       end
     end
 
