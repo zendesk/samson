@@ -53,6 +53,10 @@ class JobQueue
     job_execution
   end
 
+  def debug
+    [@active, @queue]
+  end
+
   private
 
   def start_job(job_execution, queue)

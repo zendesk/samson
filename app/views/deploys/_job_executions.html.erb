@@ -1,0 +1,29 @@
+<% if job_executions.any? %>
+  <table class="table">
+    <thead>
+    <tr>
+      <th>Project</th>
+      <th>When</th>
+      <th>Who</th>
+      <th>Stage</th>
+      <th>Status</th>
+      <th></th>
+    </tr>
+    </thead>
+    <tbody>
+    <% job_executions.each do |queue, job_exs| %>
+      <tr><td colspan="6">Queue <%= queue %></td></tr>
+      <% Array(job_exs).each do |job_ex| %>
+        <% if deploy = job_ex.job.deploy %>
+          <%= render "/projects/deploy", deploy: deploy %>
+        <% else %>
+          <%= link_to job_ex.id, [job_ex.job.project, job_ex.job] %>
+        <% end %>
+      <% end %>
+    <% end %>
+    </tbody>
+  </table>
+</table>
+<% else %>
+  None
+<% end %>
