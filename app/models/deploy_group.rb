@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 class DeployGroup < ActiveRecord::Base
-  include Permalinkable
-
   has_soft_deletion default_scope: true
+
+  include Permalinkable
 
   belongs_to :environment
   belongs_to :vault_server

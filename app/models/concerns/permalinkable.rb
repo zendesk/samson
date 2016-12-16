@@ -6,6 +6,10 @@ module Permalinkable
     before_validation :generate_permalink, on: :create
     validates :permalink, presence: true
     validate :validate_unique_permalink
+
+    # making permalink and soft-delete dependent is a bit weird, but if a model is important enough to have a permalink
+    # then it should also be soft_deleted ... also otherwise setup order is non obvious and could fail silently
+    before_soft_delete :free_permalink_for_deletion
   end
 
   module ClassMethods
@@ -48,5 +52,9 @@ module Permalinkable
 
   def validate_unique_permalink
     errors.add(:permalink, :taken) if permalink_taken?
+  end
+
+  def free_permalink_for_deletion
+    self.permalink = "#{permalink}-deleted-#{Time.now.to_i}"
   end
 end

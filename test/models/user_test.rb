@@ -314,6 +314,7 @@ describe User do
       let(:other) do
         p = project.dup
         p.name = 'xxxxx'
+        p.permalink = 'xxxxx'
         p.save!(validate: false)
         p
       end
