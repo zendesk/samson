@@ -68,30 +68,30 @@ module Kubernetes
         not_ready = statuses.reject(&:live)
 
         if @testing_for_stability
-          if not_ready.none?
-            @testing_for_stability += 1
-            @output.puts "Stable #{@testing_for_stability}/#{stable_ticks}"
-            return success if stable_ticks == @testing_for_stability
-          else
+          if not_ready.any?
             print_statuses(statuses)
             unstable!('one or more pods are not live', not_ready)
             return statuses
+          else
+            @testing_for_stability += 1
+            @output.puts "Stable #{@testing_for_stability}/#{stable_ticks}"
+            return success if stable_ticks == @testing_for_stability
           end
         else
           print_statuses(statuses)
-          if not_ready.none?
-            if release_docs.all?(&:job?)
-              return success
-            else
-              @output.puts "READY, starting stability test"
-              @testing_for_stability = 0
+          if not_ready.any?
+            if stopped = not_ready.select(&:stop).presence
+              unstable!('one or more pods stopped', stopped)
+              return statuses
+            elsif seconds_waiting > WAIT_FOR_LIVE
+              @output.puts "TIMEOUT, pods took too long to get live"
+              return statuses
             end
-          elsif stopped = not_ready.select(&:stop).presence
-            unstable!('one or more pods stopped', stopped)
-            return statuses
-          elsif seconds_waiting > WAIT_FOR_LIVE
-            @output.puts "TIMEOUT, pods took too long to get live"
-            return statuses
+          elsif release_docs.all?(&:job?)
+            return success
+          else
+            @output.puts "READY, starting stability test"
+            @testing_for_stability = 0
           end
         end
 
