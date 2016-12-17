@@ -26,44 +26,8 @@ class TerminalExecutor
 
   def execute!(*commands)
     return false if @stopped
-    if @verbose
-      commands.map! { |c| "echo » #{c.shellescape}\n#{resolve_secrets(c)}" }
-    else
-      commands.map! { |c| resolve_secrets(c) }
-    end
-    commands.unshift("set -e")
-
-    execute_command!(commands.join("\n"))
-  end
-
-  def stop!(signal)
-    @stopped = true
-    system('kill', "-#{signal}", "-#{pgid}") if pgid
-  end
-
-  private
-
-  def resolve_secrets(command)
-    deploy_groups = @deploy.try(:stage).try(:deploy_groups) || []
-    project = @deploy.try(:project)
-    resolver = Samson::Secrets::KeyResolver.new(project, deploy_groups)
-
-    result = command.gsub(/\b#{SECRET_PREFIX}(#{SecretStorage::SECRET_KEY_REGEX})\b/) do
-      key = $1
-      if expanded = resolver.expand('unused', key).first&.last
-        key.replace(expanded)
-        SecretStorage.read(key, include_value: true).fetch(:value)
-      end
-    end
-
-    resolver.verify!
-
-    result
-  end
-
-  def execute_command!(command)
     options = {in: '/dev/null', unsetenv_others: true}
-    output, input, pid = PTY.spawn(whitelisted_env, command, options)
+    output, input, pid = PTY.spawn(whitelisted_env, script(commands), options)
     record_pid(pid) do
       begin
         output.each(256) { |line| @output.write line }
@@ -81,6 +45,43 @@ class TerminalExecutor
         input.close
       end
     end
+  end
+
+  def stop!(signal)
+    @stopped = true
+    system('kill', "-#{signal}", "-#{pgid}") if pgid
+  end
+
+  private
+
+  def script(commands)
+    commands.map! do |c|
+      if @verbose
+        "echo » #{c.shellescape}\n#{resolve_secrets(c)}"
+      else
+        resolve_secrets(c)
+      end
+    end
+    commands.unshift("set -e")
+    commands.join("\n")
+  end
+
+  def resolve_secrets(command)
+    deploy_groups = @deploy.try(:stage).try(:deploy_groups) || []
+    project = @deploy.try(:project)
+    resolver = Samson::Secrets::KeyResolver.new(project, deploy_groups)
+
+    result = command.gsub(/\b#{SECRET_PREFIX}(#{SecretStorage::SECRET_KEY_REGEX})\b/) do
+      key = $1
+      if expanded = resolver.expand('unused', key).first&.last
+        key.replace(expanded)
+        SecretStorage.read(key, include_value: true).fetch(:value)
+      end
+    end
+
+    resolver.verify!
+
+    result
   end
 
   # reset pid after a command has finished so we do not kill random pids
