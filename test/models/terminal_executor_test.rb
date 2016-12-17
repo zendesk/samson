@@ -188,5 +188,11 @@ describe TerminalExecutor do
     it 'terminates hanging processes with -9' do
       execute_and_stop('trap "sleep 100" 2; sleep 100', 'KILL').must_be_nil
     end
+
+    it 'stops any further execution so current thread can finish' do
+      subject.execute!('echo 1').must_equal true
+      subject.stop! 'INT'
+      subject.execute!('echo 1').must_equal false
+    end
   end
 end

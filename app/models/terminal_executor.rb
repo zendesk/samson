@@ -21,9 +21,11 @@ class TerminalExecutor
     @output = output
     @verbose = verbose
     @deploy = deploy
+    @stopped = false
   end
 
   def execute!(*commands)
+    return false if @stopped
     if @verbose
       commands.map! { |c| "echo » #{c.shellescape}\n#{resolve_secrets(c)}" }
     else
@@ -35,6 +37,7 @@ class TerminalExecutor
   end
 
   def stop!(signal)
+    @stopped = true
     system('kill', "-#{signal}", "-#{pgid}") if pgid
   end
 
