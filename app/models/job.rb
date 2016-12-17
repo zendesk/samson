@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 class Job < ActiveRecord::Base
   belongs_to :project
-  belongs_to :user, -> { unscope(where: 'deleted_at') }
+  belongs_to :user, -> { unscope(where: :deleted_at) }
 
   has_one :deploy
 
@@ -20,7 +20,7 @@ class Job < ActiveRecord::Base
   end
 
   def self.non_deploy
-    includes(:deploy).where(deploys: { id: nil })
+    joins('left join deploys on deploys.job_id = jobs.id').where(deploys: { id: nil })
   end
 
   def self.pending

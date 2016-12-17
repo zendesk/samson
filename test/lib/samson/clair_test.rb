@@ -4,13 +4,13 @@ require_relative '../../test_helper'
 SingleCov.covered!
 
 describe Samson::Clair do
+  share_database_connection_in_all_threads
+
   def execute!
     Samson::Clair.append_job_with_scan(job, 'latest')
   end
 
   let(:job) { jobs(:succeeded_test) }
-
-  before { ActiveRecord::Base.stubs(connection: ActiveRecord::Base.connection) } # we update in another thread
 
   around do |t|
     Tempfile.open('clair') do |f|

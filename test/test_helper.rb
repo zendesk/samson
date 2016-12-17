@@ -180,6 +180,11 @@ class ActiveSupport::TestCase
   def self.with_paper_trail
     around { |t| PaperTrail.with_logging(&t) }
   end
+
+  # we update in multiple thread, to rollback changes we need to share a single transaction
+  def self.share_database_connection_in_all_threads
+    before { ActiveRecord::Base.stubs(connection: ActiveRecord::Base.connection) }
+  end
 end
 
 Mocha::Expectation.class_eval do
