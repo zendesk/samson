@@ -60,24 +60,34 @@ class TerminalExecutor
 
   def execute_command!(command)
     options = {in: '/dev/null', unsetenv_others: true}
-    output, input, @pid = PTY.spawn(whitelisted_env, command, options)
-    @pgid = pgid_from_pid(@pid)
+    output, input, pid = PTY.spawn(whitelisted_env, command, options)
+    record_pid(pid) do
+      begin
+        output.each(256) { |line| @output.write line }
+      rescue Errno::EIO
+        nil # output was closed ... only happens on linux
+      end
 
-    begin
-      output.each(256) { |line| @output.write line }
-    rescue Errno::EIO
-      nil # output was closed ... only happens on linux
+      begin
+        _pid, status = Process.wait2(pid)
+        status.success?
+      rescue Errno::ECHILD
+        @output.puts "#{$!.class}: #{$!.message}"
+        false
+      ensure
+        input.close
+      end
     end
+  end
 
-    begin
-      _pid, status = Process.wait2(@pid)
-      status.success?
-    rescue Errno::ECHILD
-      @output.puts "#{$!.class}: #{$!.message}"
-      false
-    ensure
-      input.close
-    end
+  # reset pid after a command has finished so we do not kill random pids
+  def record_pid(pid)
+    @pid = pid
+    @pgid = pgid_from_pid(pid)
+    yield
+  ensure
+    @pid = nil
+    @pgid = nil
   end
 
   # We need the group pid to cleanly shut down all children
