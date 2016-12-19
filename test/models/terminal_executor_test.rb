@@ -86,6 +86,21 @@ describe TerminalExecutor do
       subject.execute!('echo "hi"').must_equal(true)
     end
 
+    it "keeps pid while executing" do
+      refute subject.pid
+      refute subject.pgid
+
+      Thread.new { subject.execute!('sleep 0.1') }
+
+      sleep 0.05 # wait for execution to start
+      assert subject.pid
+      assert subject.pgid
+
+      sleep 0.1 # wait for execution to finish
+      refute subject.pid
+      refute subject.pgid
+    end
+
     describe 'in verbose mode' do
       subject { TerminalExecutor.new(output, verbose: true) }
 
