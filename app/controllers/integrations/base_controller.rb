@@ -21,7 +21,7 @@ class Integrations::BaseController < ApplicationController
     end
 
     stages = project.webhook_stages_for(branch, service_type, service_name)
-    failed = deploy_to_stages(stages)
+    failed = deploy_to_stages(release, stages)
 
     if failed
       head :unprocessable_entity, message: "Failed to start deploy to #{failed.name}"
@@ -58,10 +58,10 @@ class Integrations::BaseController < ApplicationController
   end
 
   # returns stage that failed to deploy or nil
-  def deploy_to_stages(stages)
+  def deploy_to_stages(release, stages)
     deploy_service = DeployService.new(user)
     stages.detect do |stage|
-      deploy_service.deploy!(stage, reference: commit).new_record?
+      deploy_service.deploy!(stage, reference: release&.version || commit).new_record?
     end
   end
 

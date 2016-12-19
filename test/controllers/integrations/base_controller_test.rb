@@ -81,18 +81,35 @@ describe Integrations::BaseController do
       project.builds.first.releases.must_equal project.releases
     end
 
-    it "stops deploy to further stages when first fails" do
-      DeployService.any_instance.expects(:deploy!).times(1).returns(Deploy.new)
-      project.webhooks.create!(branch: 'master', stage: stage, source: 'any')
-      project.webhooks.create!(branch: 'master', stage: stages(:test_production), source: 'any')
-
-      post :create, params: {test_route: true, token: token}
-      assert_response :unprocessable_entity
-    end
-
     it "fails with invalid token" do
       post :create, params: {test_route: true, token: token + 'x'}
       assert_response :unauthorized
+    end
+
+    describe "when deploy hooks are setup" do
+      before do
+        project.webhooks.create!(branch: 'master', stage: stage, source: 'any')
+        project.webhooks.create!(branch: 'master', stage: stages(:test_production), source: 'any')
+      end
+
+      it "stops deploy to further stages when first fails" do
+        DeployService.any_instance.expects(:deploy!).times(1).returns(Deploy.new)
+        post :create, params: {test_route: true, token: token}
+        assert_response :unprocessable_entity
+      end
+
+      it 'uses the release version to make the deploy easy to understand' do
+        post :create, params: {test_route: true, token: token}
+        assert_response :success
+        Deploy.first.reference.must_equal 'v1'
+      end
+
+      it 'uses the commit to make the deploy when no release was created' do
+        Project.any_instance.stubs(:create_releases_for_branch?).returns(false)
+        post :create, params: {test_route: true, token: token}
+        assert_response :success
+        Deploy.first.reference.must_equal sha
+      end
     end
   end
 
