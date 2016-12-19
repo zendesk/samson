@@ -178,6 +178,11 @@ describe Release do
       assert release.contains_commit?("NEW")
     end
 
+    it "is true when it is the same commit but not the same refrence (7 char sha or just wrong usage)" do
+      stub_github_api(url, status: 'identical')
+      assert release.contains_commit?("NEW")
+    end
+
     it "is false if it does not contain commit" do
       stub_github_api(url, status: 'ahead')
       refute release.contains_commit?("NEW")

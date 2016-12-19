@@ -64,7 +64,7 @@ class Release < ActiveRecord::Base
   def contains_commit?(other_commit)
     return true if other_commit == commit
     # status values documented here: http://stackoverflow.com/questions/23943855/github-api-to-compare-commits-response-status-is-diverged
-    GITHUB.compare(project.github_repo, commit, other_commit).status == 'behind'
+    ['behind', 'identical'].include?(GITHUB.compare(project.github_repo, commit, other_commit).status)
   rescue Octokit::NotFound
     false
   rescue Octokit::Error => e
