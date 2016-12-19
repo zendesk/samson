@@ -31,7 +31,7 @@ spec:
       labels:
         project: <%= project_label %>
         role: app-server
-<% if Kubernetes::TemplateFiller::SIDECAR_IMAGE %>
+<% if Kubernetes::TemplateFiller::SECRET_PULLER_IMAGE %>
       # secrets can be added via https://github.com/zendesk/samson_secret_puller
       # annotations:
       #  secret/RAILS_ENV: ${ENV}/global/global/rails_env

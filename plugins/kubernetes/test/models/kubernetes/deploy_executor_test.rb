@@ -160,7 +160,7 @@ describe Kubernetes::DeployExecutor do
       end
 
       it "fails before building when secrets are not configured in the backend" do
-        Kubernetes::TemplateFiller.any_instance.stubs(:needs_secret_sidecar?).returns(true)
+        Kubernetes::TemplateFiller.any_instance.stubs(:needs_secret_puller?).returns(true)
 
         # overriding the stubbed value
         template = Kubernetes::ReleaseDoc.new.send(:raw_template)[0]
