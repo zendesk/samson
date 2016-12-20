@@ -1,0 +1,16 @@
+<%= page_title @setting.new_record? ? "New Setting" : "Edit Setting #{@setting.name}" %>
+
+<section>
+  <%= form_for [:admin, @setting], html: { class: "form-horizontal" } do |form| %>
+    <fieldset>
+      <%= render 'shared/errors', object: @setting %>
+
+      <%= form.input :name, required: true %>
+      <%= form.input :value, required: true %>
+
+      <%= form.actions delete: [:admin, @setting] do %>
+        | <%= link_to_history @setting %>
+      <% end %>
+    </fieldset>
+  <% end %>
+</section>

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20161216183341) do
+ActiveRecord::Schema.define(version: 20161221001624) do
 
   create_table "builds", force: :cascade do |t|
     t.integer  "project_id",                                       null: false
@@ -381,6 +381,15 @@ ActiveRecord::Schema.define(version: 20161216183341) do
   end
 
   add_index "secrets", ["id"], name: "index_secrets_on_id", unique: true, length: {"id"=>191}, using: :btree
+
+  create_table "settings", force: :cascade do |t|
+    t.string  "name",       null: false
+    t.string  "value",      null: false
+    t.string  "comment"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["name"], name: "index_settings_on_name", unique: true, length: {"name"=>192}, using: :btree
+  end
 
   create_table "slack_channels", force: :cascade do |t|
     t.string   "name",       limit: 255, null: false
