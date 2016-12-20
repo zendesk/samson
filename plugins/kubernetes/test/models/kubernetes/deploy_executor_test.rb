@@ -486,11 +486,13 @@ describe Kubernetes::DeployExecutor do
               items: [
                 {
                   reason: 'FailedScheduling',
-                  message: "fit failure on node (ip-1-2-3-4)\nfit failure on node (ip-2-3-4-5)"
+                  message: "fit failure on node (ip-1-2-3-4)\nfit failure on node (ip-2-3-4-5)",
+                  count: 4
                 },
                 {
                   reason: 'FailedScheduling',
-                  message: "fit failure on node (ip-2-3-4-5)\nfit failure on node (ip-1-2-3-4)"
+                  message: "fit failure on node (ip-2-3-4-5)\nfit failure on node (ip-1-2-3-4)",
+                  count: 1
                 }
               ]
             }.to_json
@@ -507,7 +509,7 @@ describe Kubernetes::DeployExecutor do
         # correct debugging output
         out.scan(/Pod 100 pod pod-(\S+)/).flatten.uniq.must_equal ["resque-worker:"] # logs and events only for bad pod
         out.must_match(
-          /EVENTS:\s+FailedScheduling: fit failure on node \(ip-1-2-3-4\)\s+fit failure on node \(ip-2-3-4-5\)\n\n/
+          /EVENTS:\s+FailedScheduling: fit failure on node \(ip-1-2-3-4\)\s+fit failure on node \(ip-2-3-4-5\) x4\n\n/
         ) # no repeated events
         out.must_match /LOGS:\s+LOG-1/
         out.must_include "RESOURCE EVENTS staging.some-project:\n  FailedScheduling:"

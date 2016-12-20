@@ -189,24 +189,60 @@ describe Kubernetes::Api::Pod do
     end
   end
 
-  describe "#abnormal_events" do
+  describe "#events_indicate_failure?" do
     let(:events_url) do
       "http://foobar.server/api/v1/namespaces/the-namespace/events?fieldSelector=involvedObject.name=test_name"
     end
+    let(:readiness_failed) { {type: 'Warning', reason: 'Unhealthy', message: "Readiness probe failed: Get ", count: 1} }
 
-    it "is empty when there are no events" do
+    it "is false when there are no events" do
       stub_request(:get, events_url).to_return(body: {items: []}.to_json)
-      pod_with_client.abnormal_events.must_equal []
+      refute pod_with_client.events_indicate_failure?
     end
 
-    it "is empty when there are Normal events" do
+    it "is false when there are Normal events" do
       stub_request(:get, events_url).to_return(body: {items: [{type: 'Normal'}]}.to_json)
-      pod_with_client.abnormal_events.must_equal []
+      refute pod_with_client.events_indicate_failure?
     end
 
-    it "shows abnormal events" do
+    it "is true with bad events" do
       stub_request(:get, events_url).to_return(body: {items: [{type: 'Warning'}]}.to_json)
-      pod_with_client.abnormal_events.map(&:type).must_equal ['Warning']
+      assert pod_with_client.events_indicate_failure?
+    end
+
+    it "is false with single Readiness event" do
+      stub_request(:get, events_url).to_return(body: {items: [readiness_failed]}.to_json)
+      refute pod_with_client.events_indicate_failure?
+    end
+
+    it "fails with unknown probe failure" do
+      readiness_failed[:message] = readiness_failed[:message].sub('Readiness', 'Crazyness')
+      stub_request(:get, events_url).to_return(body: {items: [readiness_failed.merge(count: 20)]}.to_json)
+      e = assert_raises RuntimeError do
+        pod_with_client.events_indicate_failure?
+      end
+      e.message.must_equal "Unknown probe Crazyness probe failed: Get "
+    end
+
+    describe "with multiple Readiness failures" do
+      before do
+        stub_request(:get, events_url).to_return(body: {items: [readiness_failed.merge(count: 20)]}.to_json)
+      end
+
+      it "is true" do
+        assert pod_with_client.events_indicate_failure?
+      end
+
+      it "is false with less then threshold" do
+        pod_attributes[:spec][:containers][0][:readinessProbe] = {failureThreshold: 30}
+        refute pod_with_client.events_indicate_failure?
+      end
+    end
+
+    it "is true with multiple Liveliness events" do
+      readiness_failed[:message] = readiness_failed[:message].sub('Readiness', 'Liveliness')
+      stub_request(:get, events_url).to_return(body: {items: [readiness_failed.merge(count: 20)]}.to_json)
+      assert pod_with_client.events_indicate_failure?
     end
   end
 end

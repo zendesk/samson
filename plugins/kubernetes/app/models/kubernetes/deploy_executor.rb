@@ -171,7 +171,10 @@ module Kubernetes
 
     def print_events(events)
       events.uniq! { |e| e.message.split("\n").sort }
-      events.each { |e| @output.puts "  #{e.reason}: #{e.message}" }
+      events.each do |e|
+        counter = " x#{e.count}" if e.count != 1
+        @output.puts "  #{e.reason}: #{e.message}#{counter}"
+      end
     end
 
     def unstable!(reason, release_statuses)
@@ -204,7 +207,7 @@ module Kubernetes
           {live: false, stop: true, details: "Restarted", pod: pod}
         elsif pod.live?
           {live: true, details: "Live", pod: pod}
-        elsif pod.abnormal_events.any?
+        elsif pod.events_indicate_failure?
           {live: false, stop: true, details: "Error", pod: pod}
         else
           {live: false, details: "Waiting (#{pod.phase}, #{pod.reason})", pod: pod}

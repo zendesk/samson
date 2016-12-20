@@ -59,8 +59,12 @@ module Kubernetes
         end
       end
 
-      def abnormal_events
-        events.reject { |e| e.type == 'Normal' }
+      def events_indicate_failure?
+        bad = events.reject { |e| e.type == 'Normal' }
+        readiness_failures, other_failures = bad.partition do |e|
+          e.reason == "Unhealthy" && e.message =~ /\A\S+ness probe failed/
+        end
+        other_failures.any? || readiness_failures.any? { |event| probe_failed_to_often?(event) }
       end
 
       def events
@@ -71,6 +75,22 @@ module Kubernetes
       end
 
       private
+
+      def probe_failed_to_often?(event)
+        probe =
+          case event.message
+          when /\AReadiness/ then :readinessProbe
+          when /\ALiveliness/ then :livelinessProbe
+          else raise("Unknown probe #{event.message}")
+          end
+        event.count >= failure_threshold(probe)
+      end
+
+      # per http://kubernetes.io/docs/api-reference/v1/definitions/ default is 3
+      # by default checks every 10s so that gives us 30s to pass
+      def failure_threshold(probe)
+        @pod.dig(:spec, :containers, 0, probe, :failureThreshold) || 3
+      end
 
       def labels
         @pod.metadata.try(:labels)
