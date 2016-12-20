@@ -171,7 +171,10 @@ module Kubernetes
 
     def print_events(events)
       events.uniq! { |e| e.message.split("\n").sort }
-      events.each { |e| @output.puts "  #{e.reason}: #{e.message}" }
+      events.each do |e|
+        counter = " x#{e.count}" if e.count != 1
+        @output.puts "  #{e.reason}: #{e.message}#{counter}"
+      end
     end
 
     def unstable!(reason, release_statuses)

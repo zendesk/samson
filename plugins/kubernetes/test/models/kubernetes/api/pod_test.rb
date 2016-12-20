@@ -215,6 +215,15 @@ describe Kubernetes::Api::Pod do
       refute pod_with_client.events_indicate_failure?
     end
 
+    it "fails with unknown probe failure" do
+      readiness_failed[:message] = readiness_failed[:message].sub('Readiness', 'Crazyness')
+      stub_request(:get, events_url).to_return(body: {items: [readiness_failed.merge(count: 20)]}.to_json)
+      e = assert_raises RuntimeError do
+        pod_with_client.events_indicate_failure?
+      end
+      e.message.must_equal "Unknown probe Crazyness probe failed: Get "
+    end
+
     describe "with multiple Readiness failures" do
       before do
         stub_request(:get, events_url).to_return(body: {items: [readiness_failed.merge(count: 20)]}.to_json)
@@ -232,7 +241,7 @@ describe Kubernetes::Api::Pod do
 
     it "is true with multiple Liveliness events" do
       readiness_failed[:message] = readiness_failed[:message].sub('Readiness', 'Liveliness')
-      stub_request(:get, events_url).to_return(body: {items: Array.new(20) { readiness_failed }}.to_json)
+      stub_request(:get, events_url).to_return(body: {items: [readiness_failed.merge(count: 20)]}.to_json)
       assert pod_with_client.events_indicate_failure?
     end
   end
