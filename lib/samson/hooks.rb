@@ -25,7 +25,7 @@ module Samson
     EVENT_HOOKS = [
       :stage_clone,
       :stage_permitted_params,
-      :deploy_permitted_params, # for external plugin
+      :deploy_permitted_params,
       :project_permitted_params,
       :deploy_group_permitted_params,
       :build_permitted_params,
