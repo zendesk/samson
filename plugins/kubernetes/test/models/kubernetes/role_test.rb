@@ -274,6 +274,13 @@ describe Kubernetes::Role do
       role.defaults.must_equal cpu: 0.5, ram: 95, replicas: 1
     end
 
+    it "finds values for any kind of resource" do
+      assert config_content_yml.sub!('Deployment', 'Job')
+      assert config_content_yml.sub!(/\n\n---.*/m, '')
+      assert config_content_yml.sub!('containers:', "restartPolicy: Never\n      containers:")
+      assert role.defaults
+    end
+
     {
       '10000000' => 10,
       '10000000000m' => 10,

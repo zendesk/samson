@@ -92,20 +92,22 @@ module Kubernetes
 
     def defaults
       return unless raw_template = project.repository.file_content(config_file, 'HEAD', pull: false)
-      deploy = begin
-        RoleConfigFile.new(raw_template, config_file).deploy || return
+      begin
+        config = RoleConfigFile.new(raw_template, config_file)
       rescue Samson::Hooks::UserError
         return
       end
 
-      replicas = deploy[:spec][:replicas] || 1
+      config.elements.detect do |resource|
+        replicas = resource[:spec][:replicas] || 1
 
-      return unless limits = deploy[:spec][:template][:spec][:containers].first.fetch(:resources, {})[:limits]
-      return unless cpu = parse_resource_value(limits[:cpu])
-      return unless ram = parse_resource_value(limits[:memory]) # TODO: rename this and the column to memory
-      ram /= 1024**2 # we store megabyte
+        next unless limits = resource.dig(:spec, :template, :spec, :containers, 0, :resources, :limits)
+        next unless cpu = parse_resource_value(limits[:cpu])
+        next unless ram = parse_resource_value(limits[:memory]) # TODO: rename this and the column to memory
+        ram /= 1024**2 # we store megabyte
 
-      {cpu: cpu, ram: ram.round, replicas: replicas}
+        break {cpu: cpu, ram: ram.round, replicas: replicas}
+      end
     end
 
     private
