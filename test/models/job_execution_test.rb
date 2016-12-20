@@ -29,6 +29,7 @@ describe JobExecution do
   let(:deploy) { Deploy.create!(stage: stage, job: job, reference: 'master', project: project) }
 
   with_job_execution
+  share_database_connection_in_all_threads
 
   before do
     Project.any_instance.stubs(:valid_repository_url).returns(true)
@@ -128,14 +129,11 @@ describe JobExecution do
 
   it "tests additional exports hook" do
     job.update(command: 'env | sort')
-
-    Samson::Hooks.callback :job_additional_vars do |_job|
-      { ADDITIONAL_EXPORT: "yes" }
+    Samson::Hooks.with_callback(:job_additional_vars, -> (_job) { {ADDITIONAL_EXPORT: "yes"} }) do
+      execute_job
+      lines = job.output.split "\n"
+      lines.must_include "ADDITIONAL_EXPORT=yes"
     end
-
-    execute_job
-    lines = job.output.split "\n"
-    lines.must_include "ADDITIONAL_EXPORT=yes"
   end
 
   it "exports deploy information as environment variables" do
@@ -206,6 +204,7 @@ describe JobExecution do
     called_subscriber = false
 
     execution = JobExecution.new('master', job)
+    execution.start!
     execution.on_complete { called_subscriber = true }
     execution.stop!
 
@@ -350,26 +349,75 @@ describe JobExecution do
   end
 
   describe "#stop!" do
-    let(:execution) { JobExecution.new('master', job) }
-
-    it "stops the execution with interrupt" do
-      execution.start!
-      TerminalExecutor.any_instance.expects(:stop!).with('INT')
-      execution.stop!
-    end
-
-    it "stops the execution with kill if job has already been interrupted" do
+    around do |test|
       begin
         old = JobExecution.stop_timeout
-        JobExecution.stop_timeout = 0
-        execution.start!
-        TerminalExecutor.any_instance.expects(:stop!).with('INT')
-        TerminalExecutor.any_instance.expects(:stop!).with('KILL')
-        execution.stop!
-        job.reload.status.must_equal 'cancelled'
+        JobExecution.stop_timeout = 0.1
+        test.call
       ensure
         JobExecution.stop_timeout = old
       end
+    end
+
+    let(:lock) { Mutex.new }
+    let(:execution) { JobExecution.new('master', job) { lock.lock } }
+
+    before do
+      execution.executor.expects(:execute).never # avoid executing any commands
+      execution.stubs(:setup!).returns(true) # avoid state from executing git commands
+      lock.lock # pretend things are stalling
+    end
+
+    it "stops the execution with interrupt" do
+      execution.start!
+      TerminalExecutor.any_instance.expects(:stop!).with do |signal|
+        lock.unlock # pretend the command finished
+        signal.must_equal 'INT'
+        true
+      end
+      execution.stop!
+      job.reload.status.must_equal 'cancelled'
+    end
+
+    it "stops the execution with kill if job did not respond to interrupt" do
+      execution.start!
+      TerminalExecutor.any_instance.expects(:stop!).twice.with do |signal|
+        lock.unlock if signal == 'KILL' # pretend the command finished
+        ['KILL', 'INT'].must_include(signal)
+        true
+      end
+      execution.stop!
+      job.reload.status.must_equal 'cancelled'
+    end
+
+    it "calls on_complete hooks once when killing stuck thread" do
+      called = []
+      execution.on_complete { called << 1 }
+      execution.start!
+      execution.stop!
+      called.must_equal [1]
+    end
+
+    it "calls on_complete hooks once when stopping execution with INT" do
+      called = []
+      execution.on_complete { called << 1 }
+      execution.start!
+      TerminalExecutor.any_instance.expects(:stop!).with do |signal|
+        lock.unlock # pretend the command finished
+        signal.must_equal 'INT'
+        true
+      end
+      execution.stop!
+      execution.stop!
+      called.must_equal [1]
+    end
+
+    it "does not mark the execution as cancelled when it was already stopped" do
+      execution.start!
+      lock.unlock
+      sleep 0.1
+      execution.stop!
+      job.reload.status.must_equal 'succeeded'
     end
   end
 
