@@ -59,8 +59,12 @@ module Kubernetes
         end
       end
 
-      def abnormal_events
-        events.reject { |e| e.type == 'Normal' }
+      def events_indicate_failure?
+        bad = events.reject { |e| e.type == 'Normal' }
+        readiness_failures, other_failures = bad.partition do |e|
+          e.reason == "Unhealthy" && e.message =~ /\A\S+ness probe failed/
+        end
+        other_failures.any? || readiness_failures.sum(&:count) > readiness_failure_threshold
       end
 
       def events
@@ -71,6 +75,10 @@ module Kubernetes
       end
 
       private
+
+      def readiness_failure_threshold
+        @pod.dig(:spec, :containers, 0, :readinessProbe, :failureThreshold) || 10
+      end
 
       def labels
         @pod.metadata.try(:labels)

@@ -204,7 +204,7 @@ module Kubernetes
           {live: false, stop: true, details: "Restarted", pod: pod}
         elsif pod.live?
           {live: true, details: "Live", pod: pod}
-        elsif pod.abnormal_events.any?
+        elsif pod.events_indicate_failure?
           {live: false, stop: true, details: "Error", pod: pod}
         else
           {live: false, details: "Waiting (#{pod.phase}, #{pod.reason})", pod: pod}
