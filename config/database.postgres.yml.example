@@ -2,10 +2,10 @@
 common: &common
   adapter: postgresql
   port: 5432
-  username: youruser
+  username: <%= ENV['USER'] %>
   password:
   host: 127.0.0.1
-  pool: 5
+  pool: <%= ENV['RAILS_MAX_THREADS'] %>
   timeout: 5000
 
 development:
