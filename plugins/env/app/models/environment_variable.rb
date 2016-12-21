@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 class EnvironmentVariable < ActiveRecord::Base
+  has_paper_trail
+
   belongs_to :parent, polymorphic: true # Resource they are set on
   belongs_to :scope, polymorphic: true
 
