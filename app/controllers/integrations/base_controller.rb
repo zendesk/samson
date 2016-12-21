@@ -108,13 +108,17 @@ class Integrations::BaseController < ApplicationController
     DockerBuilderService.new(build).run!(push: true, tag_as_latest: true)
   end
 
+  # TODO: use first_or_create here ... some weird rails bug breaks
+  # test/controllers/integrations/base_controller_test.rb
   def find_or_create_build(label)
-    project.builds.where(git_sha: commit).first_or_create!(
+    options = {git_sha: commit}
+    scope = project.builds
+    scope.where(options).first || project.builds.create!(options.merge(
       git_ref: branch,
       description: message,
       creator: user,
       label: label
-    )
+    ))
   end
 
   def record_log(level, message)
