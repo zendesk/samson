@@ -325,6 +325,10 @@ describe ApplicationHelper do
       user.update_attributes!(name: "Bar")
       link_to_history(user).must_include "History (2)"
     end
+
+    it "can not show counter to avoid N+1 queries on large tables" do
+      link_to_history(user, counter: false).must_include ">History<"
+    end
   end
 
   describe "#page_title" do

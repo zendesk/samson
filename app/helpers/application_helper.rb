@@ -160,8 +160,9 @@ module ApplicationHelper
     end
   end
 
-  def link_to_history(resource)
-    link_to "History (#{resource.versions.count})", versions_path(item_id: resource.id, item_type: resource.class.name)
+  def link_to_history(resource, counter: true)
+    count = (counter ? " (#{resource.versions.count})" : "")
+    link_to "History#{count}", versions_path(item_id: resource.id, item_type: resource.class.name)
   end
 
   def additional_info(text)

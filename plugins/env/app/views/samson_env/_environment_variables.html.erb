@@ -6,7 +6,7 @@
       <%= fields.text_field :name, class: "form-control", placeholder: "Name" %>
     </div>
 
-    <div class="col-lg-6">
+    <div class="col-lg-5">
       <%= fields.text_area :value, class: "form-control", placeholder: "Value", rows: 1 %>
     </div>
 
@@ -17,6 +17,9 @@
     <% end %>
 
     <% if fields.object.persisted? %>
+      <div class="col-lg-1 checkbox">
+        <%= link_to_history fields.object, counter: false %>
+      </div>
       <div class="col-lg-1 checkbox">
         <%= fields.label :_destroy do %>
           <%= fields.check_box :_destroy if fields.object.persisted? %>
