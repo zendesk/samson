@@ -41,35 +41,29 @@ describe DeploysHelper do
   end
 
   describe '#redeploy_button' do
+    let(:redeploy_warning) { "Why? This deploy succeeded." }
+
     before do
       @deploy = deploy
       @project = projects(:test)
     end
 
-    describe 'when the deploy already succeeded' do
-      it 'generates a link' do
-        link = '<a class="btn btn-default" data-toggle="tooltip" data-placement="auto bottom" title="Why? This deploy'\
-               ' succeeded." rel="nofollow" data-method="post" href="/projects/foo/stages/staging/deploys?deploy%5Bre'\
-               'ference%5D=staging">Redeploy</a>'
-        redeploy_button.must_equal link
-      end
+    it "generates a link" do
+      link = redeploy_button
+      link.must_include redeploy_warning # warns about redeploying
+      link.must_include "?deploy%5Bkubernetes_rollback%5D=true&amp;deploy%5Breference%5D=staging\"" # copies params
+      link.must_include "Redeploy"
     end
 
-    describe 'when the deploy is still running' do
-      before { deploy.stubs(active?: true) }
-
-      it 'does not generate a link' do
-        redeploy_button.must_be_nil
-      end
+    it 'does not generate a link when deploy is active' do
+      deploy.stubs(active?: true)
+      redeploy_button.must_be_nil
     end
 
-    describe 'when the deploy failed' do
-      before { deploy.stubs(succeeded?: false) }
-
-      it 'generates a red link' do
-        redeploy_button.must_equal '<a class="btn btn-danger" rel="nofollow" data-method="post" href="/projects/foo/'\
-                                   'stages/staging/deploys?deploy%5Breference%5D=staging">Redeploy</a>'
-      end
+    it "generates a red link when deply failed" do
+      deploy.stubs(succeeded?: false)
+      redeploy_button.must_include "btn-danger"
+      redeploy_button.wont_include redeploy_warning
     end
   end
 end

@@ -92,10 +92,8 @@ module DeploysHelper
 
   def redeploy_button
     return if @deploy.active?
-    html_options = {
-      class: 'btn btn-danger',
-      method: :post
-    }
+
+    html_options = {method: :post}
     if @deploy.succeeded?
       html_options[:class] = 'btn btn-default'
       html_options[:data] = {
@@ -103,12 +101,18 @@ module DeploysHelper
         placement: 'auto bottom'
       }
       html_options[:title] = 'Why? This deploy succeeded.'
+    else
+      html_options[:class] = 'btn btn-danger'
     end
+
+    deploy_params = {reference: @deploy.reference}
+    Samson::Hooks.fire(:deploy_permitted_params).each { |p| deploy_params[p] = @deploy.public_send(p) }
+
     link_to "Redeploy",
       project_stage_deploys_path(
         @project,
         @deploy.stage,
-        deploy: { reference: @deploy.reference }
+        deploy: deploy_params
       ),
       html_options
   end
