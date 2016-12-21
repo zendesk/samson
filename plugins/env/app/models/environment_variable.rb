@@ -1,7 +1,8 @@
 # frozen_string_literal: true
 class EnvironmentVariable < ActiveRecord::Base
-  belongs_to :parent, polymorphic: true
+  belongs_to :parent, polymorphic: true # Resource they are set on
   belongs_to :scope, polymorphic: true
+
   validates :name, presence: true
   validates :scope_type, inclusion: ["Environment", "DeployGroup", nil]
 
@@ -75,14 +76,14 @@ class EnvironmentVariable < ActiveRecord::Base
   private
 
   def priority
-    result = []
-    result << (parent_type == "Project" ? 1 : 0)
-    result <<
+    [
+      (parent_type == "Project" ? 1 : 0),
       case scope_type
       when nil then 0
       when "Environment" then 1
       when "DeployGroup" then 2
       else raise "Unsupported scope #{scope_type}"
       end
+    ]
   end
 end
