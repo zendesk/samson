@@ -11,7 +11,7 @@ Samson::Hooks.callback :before_docker_build do |dir, build, output|
 end
 
 Samson::Hooks.callback :after_deploy_setup do |dir, job, output, reference|
-  if job.deploy.try(:stage).try(:docker_binary_plugin_enabled)
+  if job.deploy&.stage&.docker_binary_plugin_enabled
     BinaryBuilder.new(dir, job.project, reference, output).build
   else
     output.puts 'Skipping binary build phase!'
