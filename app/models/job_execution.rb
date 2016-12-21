@@ -44,8 +44,7 @@ class JobExecution
   end
 
   def start!
-    ActiveRecord::Base.clear_active_connections!
-    @thread = Thread.new { run! }
+    @thread = Thread.new { ActiveRecord::Base.connection_pool.with_connection { run! } }
   end
 
   def wait!
@@ -120,7 +119,6 @@ class JobExecution
     error!(e) unless @stopped
   ensure
     finish unless @stopped
-    ActiveRecord::Base.clear_active_connections!
   end
   add_transaction_tracer :run!,
     category: :task,
@@ -145,8 +143,6 @@ class JobExecution
       project: @job.project.name,
       command: cmds.join("\n")
     }
-
-    ActiveRecord::Base.clear_active_connections!
 
     ActiveSupport::Notifications.instrument("execute_shell.samson", payload) do
       payload[:success] =
