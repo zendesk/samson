@@ -14,6 +14,15 @@ class Job < ActiveRecord::Base
 
   ACTIVE_STATUSES = %w[pending running cancelling].freeze
   VALID_STATUSES = ACTIVE_STATUSES + %w[failed errored succeeded cancelled].freeze
+  SUMMARY_ACTION = {
+    "pending"    => "is about to execute",
+    "running"    => "is executing",
+    "cancelling" => "is cancelling an execution",
+    "cancelled"  => "cancelled an execution",
+    "succeeded"  => "executed",
+    "failed"     => "failed to execute",
+    "errored"    => "encountered an error executing"
+  }.freeze
 
   def self.valid_status?(status)
     VALID_STATUSES.include?(status)
@@ -32,7 +41,7 @@ class Job < ActiveRecord::Base
   end
 
   def summary
-    "#{user.name} #{summary_action} against #{short_reference}"
+    "#{user.name} #{SUMMARY_ACTION.fetch(status)} against #{short_reference}"
   end
 
   def user
@@ -138,26 +147,8 @@ class Job < ActiveRecord::Base
     update_attribute(:status, status)
   end
 
-  def summary_action
-    if pending?
-      "is about to execute"
-    elsif running?
-      "is executing"
-    elsif cancelling?
-      "is cancelling an execution"
-    elsif cancelled?
-      "cancelled an execution"
-    elsif succeeded?
-      "executed"
-    elsif failed?
-      "failed to execute"
-    elsif errored?
-      "encountered an error executing"
-    end
-  end
-
   def short_reference
-    if commit =~ /\A[0-9a-f]{40}\Z/
+    if commit =~ Build::SHA1_REGEX
       commit[0...7]
     else
       commit

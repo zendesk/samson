@@ -23,6 +23,16 @@ class Deploy < ActiveRecord::Base
 
   attr_accessor :skip_deploy_group_validation
 
+  SUMMARY_ACTION = {
+    "pending"    => "is about to deploy",
+    "running"    => "is deploying",
+    "cancelling" => "is cancelling a deploy",
+    "cancelled"  => "cancelled a deploy",
+    "succeeded"  => "deployed",
+    "failed"     => "failed to deploy",
+    "errored"    => "encountered an error deploying"
+  }.freeze
+
   def cache_key
     [super, commit]
   end
@@ -164,21 +174,7 @@ class Deploy < ActiveRecord::Base
   private
 
   def summary_action
-    if pending?
-      "is about to deploy"
-    elsif running?
-      "is deploying"
-    elsif cancelling?
-      "is cancelling a deploy"
-    elsif cancelled?
-      "cancelled a deploy"
-    elsif succeeded?
-      "deployed"
-    elsif failed?
-      "failed to deploy"
-    elsif errored?
-      "encountered an error deploying"
-    end
+    SUMMARY_ACTION.fetch(status)
   end
 
   def validate_stage_is_unlocked

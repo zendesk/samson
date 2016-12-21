@@ -85,22 +85,12 @@ desc "Analyze for code duplication (large, identical syntax trees) with fuzzy ma
 task :flay do
   require 'flay' # do not require in production
 
-  # FIXME: flay has a --mass option, but it ignores everything
-  Flay.prepend(Module.new do
-    def analyze(*)
-      data = super
-      data.select! { |i| i.mass > 50 }
-      self.total = data.sum(&:mass)
-      data
-    end
-  end)
-
   files = Dir["{config,lib,app,plugins/*/{config,lib,app}}/**/*.{rb,erb}"]
   files -= [
     'plugins/slack_app/app/models/slack_message.rb', # cannot depend on other plugin ... maybe extract
     'app/views/admin/secrets/index.html.erb', # search box
     'plugins/slack_webhooks/app/views/samson_slack_webhooks/_fields.html.erb', # cannot reuse form.input
   ]
-  flay = Flay.run(files)
+  flay = Flay.run([*files, '--mass', '25']) # mass threshold is show mass / occurrences
   abort "Code duplication found" if flay.report.any?
 end

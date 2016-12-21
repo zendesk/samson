@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 require_relative '../test_helper'
 
-SingleCov.covered! uncovered: 26
+SingleCov.covered! uncovered: 19
 
 describe Deploy do
   let(:project) { projects(:test) }
