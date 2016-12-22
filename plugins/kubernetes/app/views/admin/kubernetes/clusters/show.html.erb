@@ -40,11 +40,7 @@
     <label class="col-lg-2 control-label">Deploy Groups</label>
     <div class="col-lg-4">
       <p class="form-control-static">
-        <% @cluster.deploy_groups.each do |dg| %>
-          <%= link_to dg.name, admin_deploy_group_path(dg)  %>
-          (ns: <%= dg.kubernetes_namespace %>)
-          <br/>
-        <% end %>
+        <%= render 'deploy_group_list', deploy_groups: @cluster.deploy_groups %>
       </p>
     </div>
   </div>
