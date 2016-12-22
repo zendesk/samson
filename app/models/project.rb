@@ -58,8 +58,12 @@ class Project < ActiveRecord::Base
   # branch - The String name of the branch in question.
   #
   # Returns true if new releases should be created, false otherwise.
-  def create_releases_for_branch?(branch)
-    release_branch == branch
+  def create_releases_for_branch?(branch, service_type, service_name)
+    release_branch == branch && release_source_included?(service_type, service_name)
+  end
+
+  def release_source_included?(service_type, service_name)
+    release_source == 'any' || release_source == "any_#{service_type}" || release_source == service_name
   end
 
   # Whether to create a new docker image when the branch is updated.

@@ -42,6 +42,31 @@ describe Integrations::BaseController do
       project.releases.count.must_equal 1
     end
 
+    describe 'when the release branch source is defined' do
+      before do
+        Project.any_instance.unstub(:create_releases_for_branch?)
+        project.update_column(:release_branch, 'master')
+      end
+
+      Samson::Integration::SOURCES.each do |release_source|
+        it 'creates a release if the source matches' do
+          project.update_column(:release_source, release_source)
+          Integrations::BaseController.any_instance.stubs(:service_name).returns(release_source)
+          post :create, params: {test_route: true, token: token}
+          assert_response :success
+          project.releases.count.must_equal 1
+        end
+
+        it 'does not create a release if the source does not match' do
+          project.update_column(:release_source, 'none')
+          Integrations::BaseController.any_instance.stubs(:service_name).returns(release_source)
+          post :create, params: {test_route: true, token: token}
+          assert_response :success
+          project.releases.count.must_equal 0
+        end
+      end
+    end
+
     it 'returns :ok if this is not a merge' do
       Integrations::BaseController.any_instance.stubs(:deploy?).returns(false)
       post :create, params: {test_route: true, token: token}
