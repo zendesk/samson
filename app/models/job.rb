@@ -98,8 +98,12 @@ class Job < ActiveRecord::Base
     ACTIVE_STATUSES.include?(status)
   end
 
+  def executing?
+    active? || JobExecution.active?(id)
+  end
+
   def waiting_for_restart?
-    !JobExecution.enabled && !finished? && !active? && !JobExecution.active?(id)
+    !JobExecution.enabled && !finished? && !executing?
   end
 
   def output

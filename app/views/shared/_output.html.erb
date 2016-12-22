@@ -11,7 +11,7 @@
       <%= link_to "Download log", project_deploy_path(@project, deployable, format: :text), class: "btn btn-primary only-finished" %>
 
       <% if deployable.can_be_stopped_by?(current_user) %>
-        <%= stop_button(class: "btn btn-danger only-active") %>
+        <%= stop_button deploy: deployable, project: @project, class: "btn btn-danger only-active" %>
       <% end %>
     </div>
   </div>

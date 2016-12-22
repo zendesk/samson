@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 require_relative '../test_helper'
 
-SingleCov.covered! uncovered: 11
+SingleCov.covered! uncovered: 9
 
 describe BuildsHelper do
 end

@@ -10,7 +10,7 @@
   </div>
 </h1>
 
-<div id="header">
+<div id="header" class="stream-header">
   <% if @job.waiting_for_restart? %>
     <%= render 'jobs/restarting' %>
   <% else %>
@@ -24,9 +24,9 @@
   </div>
 </section>
 
-<% if (@job.active? && JobExecution.enabled) || @job.running? %>
-  <%= javascript_tag do %>
+<% if @job.executing? %>
+  <script>
     toggleOutputToolbar();
     startStream();
-  <% end %>
+  </script>
 <% end %>

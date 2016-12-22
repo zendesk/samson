@@ -4,7 +4,8 @@ class JobsController < ApplicationController
 
   skip_before_action :require_project, only: [:enabled]
 
-  before_action :authorize_project_admin!, only: [:new, :create, :destroy]
+  before_action :authorize_project_admin!, only: [:new, :create]
+  before_action :authorize_project_deployer!, only: [:new, :create, :destroy]
   before_action :find_job, only: [:show, :destroy]
 
   def index
@@ -51,15 +52,14 @@ class JobsController < ApplicationController
   end
 
   def destroy
-    # if @job.can_be_stopped_by?(current_user)
-    @job.stop!
-    # else
-      # FIXME this can never happen since can_be_stopped_by?
-      # is always true for project admins, which is a before filter
-      # flash[:error] = "You do not have privileges to stop this job."
-    # end
+    if @job.can_be_stopped_by?(current_user)
+      @job.stop!
+      flash[:notice] = "Cancelled!"
+    else
+      flash[:error] = "You are not allowed to stop this job."
+    end
 
-    redirect_to [@project, @job]
+    redirect_back_or [@project, @job]
   end
 
   private

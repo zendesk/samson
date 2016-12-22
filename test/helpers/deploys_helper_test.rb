@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 require_relative '../test_helper'
 
-SingleCov.covered! uncovered: 31
+SingleCov.covered! uncovered: 28
 
 describe DeploysHelper do
   include StatusHelper
@@ -40,7 +40,7 @@ describe DeploysHelper do
     end
   end
 
-  describe '#redeploy_button' do
+  describe "#redeploy_button" do
     let(:redeploy_warning) { "Why? This deploy succeeded." }
 
     before do
@@ -56,7 +56,7 @@ describe DeploysHelper do
     end
 
     it 'does not generate a link when deploy is active' do
-      deploy.stubs(active?: true)
+      deploy.job.stubs(executing?: true)
       redeploy_button.must_be_nil
     end
 
@@ -64,6 +64,21 @@ describe DeploysHelper do
       deploy.stubs(succeeded?: false)
       redeploy_button.must_include "btn-danger"
       redeploy_button.wont_include redeploy_warning
+    end
+  end
+
+  describe "#stop_button" do
+    before { stubs(request: stub(fullpath: '/hello')) }
+
+    it "builds with a deploy" do
+      button = stop_button(deploy: deploy, project: deploy.project)
+      button.must_include ">Stop<"
+      button.must_include "?redirect_to=%2Fhello\""
+    end
+
+    it "builds with a job" do
+      button = stop_button(deploy: deploy.job, project: deploy.project)
+      button.must_include ">Stop<"
     end
   end
 end
