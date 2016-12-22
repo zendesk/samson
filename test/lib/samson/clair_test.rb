@@ -5,6 +5,7 @@ SingleCov.covered!
 
 describe Samson::Clair do
   share_database_connection_in_all_threads
+  with_registries ["docker-registry.example.com"]
 
   def execute!
     Samson::Clair.append_job_with_scan(job, 'latest')

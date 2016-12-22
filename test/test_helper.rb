@@ -185,6 +185,18 @@ class ActiveSupport::TestCase
   def self.share_database_connection_in_all_threads
     before { ActiveRecord::Base.stubs(connection: ActiveRecord::Base.connection) }
   end
+
+  def self.with_registries(registries)
+    around do |test|
+      begin
+        old = Rails.application.config.samson.docker.registries
+        Rails.application.config.samson.docker.registries = registries
+        test.call
+      ensure
+        Rails.application.config.samson.docker.registries = old
+      end
+    end
+  end
 end
 
 Mocha::Expectation.class_eval do

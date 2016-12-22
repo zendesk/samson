@@ -9,14 +9,19 @@ describe DockerBuilderService do
   let(:tmp_dir) { Dir.mktmpdir }
   let(:project_repo_url) { repo_temp_dir }
   let(:git_tag) { 'v123' }
-  let(:project) { projects(:test).tap { |p| p.repository_url = project_repo_url } }
+  let(:project) { projects(:test) }
   let(:build) { project.builds.create!(git_ref: git_tag, git_sha: 'a' * 40) }
   let(:service) { DockerBuilderService.new(build) }
   let(:docker_image_id) { '2d2b0b3204b0166435c3d96d0b27d0ad2083e5e040192632c58eeb9491d6bfaa' }
   let(:docker_image_json) { { 'Id' => docker_image_id } }
   let(:mock_docker_image) { stub(json: docker_image_json) }
 
-  before { create_repo_with_tags(git_tag) }
+  with_registries ["docker-registry.example.com"]
+
+  before do
+    project.update_column(:repository_url, project_repo_url)
+    create_repo_with_tags(git_tag)
+  end
 
   describe "#run!" do
     def run!(options = {})
@@ -117,7 +122,9 @@ describe DockerBuilderService do
     let(:local_job) { stub }
     let(:k8s_job) { stub }
     let(:repo_digest) { 'sha256:5f1d7c7381b2e45ca73216d7b06004fdb0908ed7bb8786b62f2cdfa5035fde2c' }
-    let(:build_log) { ["status: Random status", "BUILD DIGEST: #{project.docker_repo}@#{repo_digest}"].join("\n") }
+    let(:build_log) do
+      ["status: Random status", "BUILD DIGEST: #{project.docker_repo(registry: :default)}@#{repo_digest}"].join("\n")
+    end
 
     before do
       Kubernetes::BuildJobExecutor.expects(:new).returns k8s_job
@@ -129,7 +136,7 @@ describe DockerBuilderService do
 
       service.send(:run_build_image_job, local_job, nil)
       assert_equal('version-123', build.docker_ref)
-      assert_equal("#{project.docker_repo}@#{repo_digest}", build.docker_repo_digest)
+      assert_equal("#{project.docker_repo(registry: :default)}@#{repo_digest}", build.docker_repo_digest)
     end
 
     it 'leaves the build docker metadata empty when the remote job fails' do
@@ -193,6 +200,14 @@ describe DockerBuilderService do
   end
 
   describe "#push_image" do
+    def stub_push(repo, tag, result, force: false)
+      mock_docker_image.
+        expects(:push).
+        with(anything, repo_tag: "#{repo}:#{tag}", force: force).
+        multiple_yields(*push_output).
+        returns(result)
+    end
+
     let(:repo_digest) { 'sha256:5f1d7c7381b2e45ca73216d7b06004fdb0908ed7bb8786b62f2cdfa5035fde2c' }
     let(:push_output) do
       [
@@ -203,39 +218,32 @@ describe DockerBuilderService do
         [{status: "Done"}.to_json]
       ]
     end
+    let(:tag) { 'my-test' }
+    let(:primary_repo) { project.docker_repo(registry: :default) }
+    let(:output) { service.send(:output).to_s }
 
-    before do
-      mock_docker_image.stubs(:push)
-      mock_docker_image.stubs(:tag)
-      build.docker_image = mock_docker_image
-    end
+    before { build.docker_image = mock_docker_image }
 
-    it 'sets the values on the build' do
-      mock_docker_image.expects(:push).multiple_yields(*push_output)
-      build.label = "Version 123"
-      service.send(:push_image, nil)
-      assert_equal('version-123', build.docker_ref)
-      assert_equal("#{project.docker_repo}@#{repo_digest}", build.docker_repo_digest)
+    it 'stores generated repo digest' do
+      mock_docker_image.expects(:tag).once
+      stub_push primary_repo, tag, true
+
+      assert service.send(:push_image, tag), output
+      build.docker_repo_digest.must_equal "#{project.docker_repo(registry: :default)}@#{repo_digest}"
     end
 
     it 'saves docker output to the buffer' do
-      mock_docker_image.expects(:push).multiple_yields(*push_output).once
       mock_docker_image.expects(:tag).once
-      service.send(:push_image, nil)
-      assert_includes(service.send(:output).to_s, 'Frobinating...')
-      assert_equal('latest', build.docker_ref)
-    end
+      stub_push primary_repo, tag, true
 
-    it 'uses the tag passed in' do
-      mock_docker_image.expects(:tag)
-      service.send(:push_image, 'my-test')
-      assert_equal('my-test', build.docker_ref)
+      assert service.send(:push_image, tag), output
+      output.must_include 'Frobinating...'
     end
 
     it 'rescues docker error' do
       service.expects(:docker_image_ref).raises(Docker::Error::DockerError)
-      service.send(:push_image, 'my-test').must_be_nil
-      service.send(:output).to_s.must_equal "Docker push failed: Docker::Error::DockerError\n"
+      refute service.send(:push_image, 'my-test')
+      output.to_s.must_equal "Docker push failed: Docker::Error::DockerError\n"
     end
 
     it 'pushes with credentials when DOCKER_REGISTRY is set' do
@@ -245,45 +253,96 @@ describe DockerBuilderService do
         'DOCKER_REGISTRY_PASS' => 'pas',
         'DOCKER_REGISTRY_EMAIL' => 'eml'
       ) do
-        mock_docker_image.unstub(:push)
+        default_registry = Rails.application.config.samson.docker.registries.first
+        mock_docker_image.expects(:tag)
         mock_docker_image.expects(:push).with(
-          username: 'usr', password: 'pas', email: 'eml', serveraddress: 'reg'
-        ).multiple_yields(*push_output)
-        build.label = "Version 123"
-        service.send(:push_image, nil)
-        assert_equal('version-123', build.docker_ref)
+          {username: 'usr', password: 'pas', email: 'eml', serveraddress: default_registry},
+          repo_tag: "#{primary_repo}:#{tag}", force: false
+        ).multiple_yields(*push_output).returns(true)
+
+        assert service.send(:push_image, tag), output
       end
     end
 
     it 'fails when digest cannot be found' do
       assert push_output.reject! { |e| e.first =~ /Digest/ }
-      service.send(:push_image, 'my-test').must_be_nil
-      service.send(:output).to_s.must_include "Docker push failed: Unable to get repo digest"
+      mock_docker_image.expects(:tag)
+      stub_push primary_repo, tag, true
+
+      refute service.send(:push_image, 'my-test')
+      output.to_s.must_include "Docker push failed: Unable to get repo digest"
+    end
+
+    describe "tag selection" do
+      it 'uses the tag passed in' do
+        mock_docker_image.expects(:tag)
+        stub_push primary_repo, tag, true
+
+        assert service.send(:push_image, tag), output
+        build.docker_ref.must_equal tag
+      end
+
+      it 'uses latest when no tag is given' do
+        mock_docker_image.expects(:tag)
+        stub_push primary_repo, 'latest', true, force: true
+
+        assert service.send(:push_image, nil), output
+        build.docker_ref.must_equal 'latest'
+      end
+
+      it 'uses paramified build label when label and no tag is given' do
+        mock_docker_image.expects(:tag)
+        stub_push primary_repo, 'version-123', true
+        build.label = "Version 123"
+
+        assert service.send(:push_image, nil), output
+        build.docker_ref.must_equal 'version-123'
+      end
+    end
+
+    describe "with secondary registry" do
+      let(:secondary_repo) { project.docker_repo(registry: 'extra.registry') }
+
+      with_registries ["docker-registry.example.com", 'extra.registry']
+
+      it "pushes to primary and secondary registry" do
+        mock_docker_image.expects(:tag).twice
+        stub_push primary_repo, tag, true
+        stub_push secondary_repo, tag, true
+        assert service.send(:push_image, tag), output
+        build.docker_ref.must_equal tag
+      end
+
+      it "stops and fails when pushing to primary registry fails" do
+        mock_docker_image.expects(:tag)
+        stub_push primary_repo, tag, false
+        refute service.send(:push_image, tag)
+      end
+
+      it "fails when pushing to secondary registry fails" do
+        mock_docker_image.expects(:tag).twice
+        stub_push primary_repo, tag, true
+        stub_push secondary_repo, tag, false
+        refute service.send(:push_image, tag)
+      end
     end
 
     describe 'pushing latest' do
-      it 'adds the latest tag on top of the one specified when latest is true' do
-        # block would normally set it, we prevent unset to not fail
-        build.docker_repo_digest = builds(:docker_build).docker_repo_digest
-        build.stubs(:docker_repo_digest=)
+      it 'adds the latest tag on top of the one specified' do
+        mock_docker_image.expects(:tag).with(has_entry(tag: tag))
+        mock_docker_image.expects(:tag).with(has_entry(tag: 'latest'))
 
-        mock_docker_image.expects(:tag).with(has_entry(tag: 'my-test')).with(has_entry(tag: 'latest'))
-        mock_docker_image.expects(:push).
-          with(DockerBuilderService.send(:registry_credentials), tag: 'latest', force: true).
-          multiple_yields(*push_output)
-        service.send(:push_image, 'my-test', tag_as_latest: true)
+        stub_push(primary_repo, tag, true)
+        stub_push(primary_repo, 'latest', true, force: true)
+
+        assert service.send(:push_image, 'my-test', tag_as_latest: true), output
       end
 
       it 'does not add the latest tag on top of the one specified when that tag is latest' do
-        mock_docker_image.expects(:tag).never
-        mock_docker_image.expects(:push).never
-        service.send(:push_image, 'latest', tag_as_latest: true)
-      end
+        mock_docker_image.expects(:tag).with(has_entry(tag: 'latest'))
+        stub_push(primary_repo, 'latest', true, force: true)
 
-      it 'does not add the latest tag on top of the one specified when latest is false' do
-        mock_docker_image.expects(:tag).never
-        mock_docker_image.expects(:push).never
-        service.send(:push_image, 'my-test')
+        assert service.send(:push_image, 'latest', tag_as_latest: true), output
       end
     end
   end

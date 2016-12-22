@@ -275,17 +275,30 @@ describe Project do
   end
 
   describe '#docker_repo' do
+    with_registries ["docker-registry.example.com"]
+
     it "builds" do
-      project.docker_repo.must_equal "docker-registry.example.com/foo"
+      project.docker_repo(registry: :default).must_equal "docker-registry.example.com/foo"
     end
 
-    it "caches" do
-      project.docker_repo.object_id.must_equal project.docker_repo.object_id
+    it "supports custom registries" do
+      project.docker_repo(registry: 'xyz').must_equal "xyz/foo"
     end
 
-    it "supports namespaces" do
-      with_env DOCKER_REPO_NAMESPACE: 'bar' do
-        project.docker_repo.must_equal "docker-registry.example.com/bar/foo"
+    describe 'with namespace' do
+      with_env DOCKER_REPO_NAMESPACE: 'bar'
+
+      it "namespaces default registry" do
+        project.docker_repo(registry: :default).must_equal "docker-registry.example.com/bar/foo"
+      end
+
+      it "namespaces implicit default registries" do
+        project.docker_repo(registry: 'docker-registry.example.com').must_equal "docker-registry.example.com/bar/foo"
+      end
+
+      # Not great ... but what we need atm :(
+      it "does not namespace extra registries" do
+        project.docker_repo(registry: 'xyz').must_equal "xyz/foo"
       end
     end
   end

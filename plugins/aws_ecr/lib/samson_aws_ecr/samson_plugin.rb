@@ -41,13 +41,17 @@ module SamsonAwsEcr
         !!ecr_client
       end
 
+      def registry
+        Rails.application.config.samson.docker.registries.first
+      end
+
       private
 
       attr_accessor :credentials_expire_at
 
       def ecr_client
         return @ecr_client if defined?(@ecr_client)
-        @ecr_client = if match = AMAZON_REGISTRY.match(Rails.application.config.samson.docker.registry)
+        @ecr_client = if registry && match = AMAZON_REGISTRY.match(registry)
           Aws::ECR::Client.new(region: match['region'])
         end
       end
@@ -60,7 +64,10 @@ module SamsonAwsEcr
 end
 
 # need credentials to pull (via Dockerfile FROM) and push images
+# ATM this only authenticates the default docker registry and not any extra registries
 Samson::Hooks.callback :before_docker_build do |_, build, _|
-  SamsonAwsEcr::Engine.ensure_repository(build.project.docker_repo)
-  SamsonAwsEcr::Engine.refresh_credentials
+  if SamsonAwsEcr::Engine.active?
+    SamsonAwsEcr::Engine.ensure_repository(build.project.docker_repo(registry: SamsonAwsEcr::Engine.registry))
+    SamsonAwsEcr::Engine.refresh_credentials
+  end
 end

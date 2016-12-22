@@ -141,7 +141,8 @@ module Kubernetes
 
     def set_docker_image
       if @doc.build
-        docker_path = @doc.build.docker_repo_digest || "#{project.docker_repo}:#{@doc.build.docker_ref}"
+        docker_path = @doc.build.docker_repo_digest ||
+          "#{project.docker_repo(registry: :default)}:#{@doc.build.docker_ref}"
         # Assume first container is one we want to update docker image in
         container[:image] = docker_path
       end

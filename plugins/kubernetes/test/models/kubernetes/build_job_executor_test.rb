@@ -10,7 +10,7 @@ describe Kubernetes::BuildJobExecutor do
   let(:out) { output.string }
   let(:registry_info) do
     {
-      serveraddress: Rails.application.config.samson.docker.registry,
+      serveraddress: Rails.application.config.samson.docker.registries.first,
       username: 'foo', password: 'bar', email: 'moo@cow.com'
     }
   end
@@ -18,6 +18,8 @@ describe Kubernetes::BuildJobExecutor do
   let(:job) { jobs(:succeeded_test) }
   let(:project) { job.project }
   let(:executor) { Kubernetes::BuildJobExecutor.new(output, job: job, registry: registry_info) }
+
+  with_registries ["docker-registry.example.com"]
 
   describe '#execute!' do
     def execute!(push: false)
@@ -94,7 +96,7 @@ describe Kubernetes::BuildJobExecutor do
         end
 
         assert_equal build_config.job[:spec][:template][:spec][:containers][0][:args],
-          [project.repository_url, build.git_sha, project.docker_repo, 'latest', 'no', 'no']
+          [project.repository_url, build.git_sha, project.docker_repo(registry: :default), 'latest', 'no', 'no']
         assert_equal build_config.job[:spec][:template][:spec][:containers][0][:env].length, 1
       end
 
@@ -119,7 +121,7 @@ describe Kubernetes::BuildJobExecutor do
         it 'returns a success status and a non-empty log when the job completes' do
           success, job_log = execute!
 
-          assert success
+          assert success, job_log
           assert_equal(job_pod_log.join("\n") << "\n", job_log)
         end
 
@@ -127,7 +129,7 @@ describe Kubernetes::BuildJobExecutor do
           job_api_obj.stubs(:failure?).returns true
 
           success, job_log = execute!
-          refute success
+          refute success, job_log
           assert_empty job_log
         end
 
@@ -138,7 +140,7 @@ describe Kubernetes::BuildJobExecutor do
           job_api_obj.stubs(:complete?).returns false
           success, job_log = execute!
 
-          refute success
+          refute success, job_log
           assert_empty job_log
         end
 
@@ -147,7 +149,7 @@ describe Kubernetes::BuildJobExecutor do
           extension_client.expects(:delete_job).raises(KubeException.new(404, 'Not Found', {}))
           success, job_log = execute!
 
-          assert success
+          assert success, job_log
           assert_equal(job_pod_log.join("\n") << "\n", job_log)
         end
       end

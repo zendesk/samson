@@ -83,7 +83,7 @@ module Kubernetes
       container_params = {
         env: [{name: 'DOCKER_REGISTRY', value: @registry.fetch(:serveraddress) }],
         args: [
-          project.repository_url, build.git_sha, project.docker_repo, docker_ref,
+          project.repository_url, build.git_sha, project.docker_repo(registry: :default), docker_ref,
           push ? "yes" : "no",
           tag_as_latest ? "yes" : "no"
         ]
