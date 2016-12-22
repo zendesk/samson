@@ -27,40 +27,6 @@ class DockerBuilderService
     end
   end
 
-  def self.create_docker_tarfile(dir)
-    dir += '/' unless dir.end_with?('/')
-    tempfile_name = Dir::Tmpname.create('out') {}
-
-    # For large git repos, creating a tarfile can do a whole lot of disk IO.
-    # It's possible for the puma process to seize up doing all those syscalls,
-    # especially if the disk is running slow. So we create the tarfile in a
-    # separate process to avoid that.
-    tar_proc = -> do
-      File.open(tempfile_name, 'wb+') do |tempfile|
-        Docker::Util.create_relative_dir_tar(dir, tempfile)
-      end
-    end
-
-    if Rails.env.test?
-      tar_proc.call
-    else
-      pid = fork(&tar_proc)
-      Process.waitpid(pid)
-    end
-
-    File.new(tempfile_name, 'r')
-  end
-
-  def self.registry_credentials
-    return nil unless ENV['DOCKER_REGISTRY'].present?
-    {
-      username: ENV['DOCKER_REGISTRY_USER'],
-      password: ENV['DOCKER_REGISTRY_PASS'],
-      email: ENV['DOCKER_REGISTRY_EMAIL'],
-      serveraddress: ENV['DOCKER_REGISTRY']
-    }
-  end
-
   def initialize(build)
     @build = build
   end
@@ -98,12 +64,48 @@ class DockerBuilderService
     JobExecution.start_job(job_execution)
   end
 
+  private
+
+  private_class_method def self.create_docker_tarfile(dir)
+    dir += '/' unless dir.end_with?('/')
+    tempfile_name = Dir::Tmpname.create('out') {}
+
+    # For large git repos, creating a tarfile can do a whole lot of disk IO.
+    # It's possible for the puma process to seize up doing all those syscalls,
+    # especially if the disk is running slow. So we create the tarfile in a
+    # separate process to avoid that.
+    tar_proc = -> do
+      File.open(tempfile_name, 'wb+') do |tempfile|
+        Docker::Util.create_relative_dir_tar(dir, tempfile)
+      end
+    end
+
+    if Rails.env.test?
+      tar_proc.call
+    else
+      pid = fork(&tar_proc)
+      Process.waitpid(pid)
+    end
+
+    File.new(tempfile_name, 'r')
+  end
+
+  private_class_method def self.registry_credentials
+    return nil unless ENV['DOCKER_REGISTRY'].present?
+    {
+      username: ENV['DOCKER_REGISTRY_USER'],
+      password: ENV['DOCKER_REGISTRY_PASS'],
+      email: ENV['DOCKER_REGISTRY_EMAIL'],
+      serveraddress: ENV['DOCKER_REGISTRY']
+    }
+  end
+
   def run_build_image_job(local_job, image_name, push: false, tag_as_latest: false)
     docker_ref = docker_image_ref(image_name, build)
     k8s_job = Kubernetes::BuildJobExecutor.new(
       output,
       job: local_job,
-      registry: DockerBuilderService.registry_credentials
+      registry: self.class.send(:registry_credentials)
     )
     success, build_log = k8s_job.execute!(
       build, project,
@@ -150,18 +152,8 @@ class DockerBuilderService
   def push_image(tag, tag_as_latest: false)
     build.docker_ref = docker_image_ref(tag, build)
     build.docker_repo_digest = nil
-    output.puts("### Tagging and pushing Docker image to #{project.docker_repo}:#{build.docker_ref}")
 
-    build.docker_image.tag(repo: project.docker_repo, tag: build.docker_ref, force: true)
-
-    build.docker_image.push(DockerBuilderService.registry_credentials) do |chunk|
-      parsed_chunk = output.write_docker_chunk(chunk)
-      parsed_chunk.each do |output_hash|
-        if (status = output_hash['status']) && sha = status[DIGEST_SHA_REGEX, 1]
-          build.docker_repo_digest = "#{project.docker_repo}@#{sha}"
-        end
-      end
-    end
+    push_image_to_registry(project.docker_repo)
 
     unless build.docker_repo_digest
       raise Docker::Error::DockerError, "Unable to get repo digest"
@@ -177,11 +169,24 @@ class DockerBuilderService
   end
   add_method_tracer :push_image
 
+  def push_image_to_registry(registry)
+    output.puts("### Tagging and pushing Docker image to #{registry}:#{build.docker_ref}")
+
+    build.docker_image.tag(repo: registry, tag: build.docker_ref, force: true)
+
+    build.docker_image.push(self.class.send(:registry_credentials)) do |chunk|
+      parsed_chunk = output.write_docker_chunk(chunk)
+      parsed_chunk.each do |output_hash|
+        if (status = output_hash['status']) && sha = status[DIGEST_SHA_REGEX, 1]
+          build.docker_repo_digest = "#{registry}@#{sha}"
+        end
+      end
+    end
+  end
+
   def output
     @output ||= OutputBuffer.new
   end
-
-  private
 
   def repository
     @repository ||= project.repository
@@ -198,7 +203,7 @@ class DockerBuilderService
   def push_latest
     output.puts "### Pushing the 'latest' tag for this image"
     build.docker_image.tag(repo: project.docker_repo, tag: 'latest', force: true)
-    build.docker_image.push(DockerBuilderService.registry_credentials, tag: 'latest', force: true) do |chunk|
+    build.docker_image.push(self.class.send(:registry_credentials), tag: 'latest', force: true) do |chunk|
       output.write_docker_chunk(chunk)
     end
   end
