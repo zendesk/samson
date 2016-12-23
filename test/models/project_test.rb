@@ -338,18 +338,18 @@ describe Project do
     end
   end
 
-  describe "#create_releases_for_branch?" do
+  describe "#create_release?" do
     before do
       project.update_column(:release_source, "any")
     end
 
     describe "with no release source configured" do
       it "is true when it is the release branch" do
-        assert project.create_releases_for_branch?(project.release_branch, "test_service_type", "test_service")
+        assert project.create_release?(project.release_branch, "test_service_type", "test_service")
       end
 
       it "is false when it is not the release branch" do
-        refute project.create_releases_for_branch?("x", "test_service_type", "test_service")
+        refute project.create_release?("x", "test_service_type", "test_service")
       end
     end
 
@@ -357,23 +357,23 @@ describe Project do
       Samson::Integration::SOURCES.each do |release_source|
         it "is true when the source does match" do
           project.update_column(:release_source, release_source)
-          assert project.create_releases_for_branch?(project.release_branch, "release_type", release_source)
+          assert project.create_release?(project.release_branch, "release_type", release_source)
         end
 
         it "is always true if the source is any" do
           project.update_column(:release_source, "any")
-          assert project.create_releases_for_branch?(project.release_branch, "release_type", "none")
+          assert project.create_release?(project.release_branch, "release_type", "none")
         end
 
         it "is false when the source doesn't match" do
           project.update_column(:release_source, "none")
-          refute project.create_releases_for_branch?(project.release_branch, "release_type", release_source)
+          refute project.create_release?(project.release_branch, "release_type", release_source)
         end
       end
 
       it "is true if the source type matches" do
         project.update_column(:release_source, "any_code")
-        assert project.create_releases_for_branch?(project.release_branch, "code", "github")
+        assert project.create_release?(project.release_branch, "code", "github")
       end
     end
   end

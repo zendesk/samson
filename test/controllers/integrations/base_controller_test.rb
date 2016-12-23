@@ -21,7 +21,7 @@ describe Integrations::BaseController do
     Integrations::BaseController.any_instance.stubs(:deploy?).returns(true)
     Integrations::BaseController.any_instance.stubs(:commit).returns(sha)
     Integrations::BaseController.any_instance.stubs(:branch).returns('master')
-    Project.any_instance.stubs(:create_releases_for_branch?).returns(true)
+    Project.any_instance.stubs(:create_release?).returns(true)
     Build.any_instance.stubs(:validate_git_reference).returns(true)
     stub_request(:post, "https://api.github.com/repos/bar/foo/releases")
   end
@@ -42,9 +42,9 @@ describe Integrations::BaseController do
       project.releases.count.must_equal 1
     end
 
-    describe 'when the release branch source is defined' do
+    describe 'when the release branch source is specified' do
       before do
-        Project.any_instance.unstub(:create_releases_for_branch?)
+        Project.any_instance.unstub(:create_release?)
         project.update_column(:release_branch, 'master')
       end
 
@@ -112,7 +112,7 @@ describe Integrations::BaseController do
     end
 
     it 'does not blow up when creating docker image if a release was not created' do
-      Project.any_instance.expects(create_releases_for_branch?: false)
+      Project.any_instance.expects(create_release?: false)
       Project.any_instance.expects(build_docker_image_for_branch?: true)
 
       post :create, params: {test_route: true, token: token}
@@ -142,7 +142,7 @@ describe Integrations::BaseController do
       end
 
       it 'uses the commit to make the deploy when no release was created' do
-        Project.any_instance.stubs(:create_releases_for_branch?).returns(false)
+        Project.any_instance.stubs(:create_release?).returns(false)
         post :create, params: {test_route: true, token: token}
         assert_response :success
         Deploy.first.reference.must_equal sha

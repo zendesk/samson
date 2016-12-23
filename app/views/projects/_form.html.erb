@@ -11,7 +11,7 @@
     <div class="form-group">
       <%= form.label "Release source", class: "col-lg-2 control-label" %>
       <div class="col-lg-4">
-        <%= form.collection_select :release_source, webhook_sources(Samson::Integration::SOURCES), :second, :first, {}, class: "form-control" %>
+        <%= form.collection_select :release_source, webhook_sources_select(Samson::Integration::SOURCES), :second, :first, {}, class: "form-control", help: 'Selects which type of webhook will create a release' %>
       </div>
     </div>
     <% if ENV['DOCKER_FEATURE'] %>
