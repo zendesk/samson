@@ -27,10 +27,6 @@ class DeployGroup < ActiveRecord::Base
     Deploy.where(stage: stage_ids)
   end
 
-  def long_name
-    "#{name} (#{environment.name})"
-  end
-
   def natural_order
     Samson::NaturalOrder.covert(name)
   end

@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 require_relative '../test_helper'
 
-SingleCov.covered! uncovered: 3
+SingleCov.covered!
 
 describe DeployGroup do
   let(:stage) { stages(:test_staging) }
@@ -15,6 +15,24 @@ describe DeployGroup do
       old = stage.updated_at.to_s(:db)
       deploy_group.send(method)
       stage.reload.updated_at.to_s(:db).wont_equal old
+    end
+  end
+
+  describe '.enabled?' do
+    it 'is enabled when DEPLOY_GROUP_FEATURE is present' do
+      with_env DEPLOY_GROUP_FEATURE: "1" do
+        DeployGroup.enabled?.must_equal true
+      end
+    end
+
+    it 'is disabled when DEPLOY_GROUP_FEATURE is blank' do
+      DeployGroup.enabled?.must_equal false
+    end
+  end
+
+  describe '#deploys' do
+    it 'finds deploys from all stages that go through this group' do
+      deploy_group.deploys.must_equal [deploys(:succeeded_production_test)]
     end
   end
 

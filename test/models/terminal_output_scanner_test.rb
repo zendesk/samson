@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 require_relative '../test_helper'
 
-SingleCov.covered! uncovered: 1
+SingleCov.covered!
 
 describe TerminalOutputScanner do
   let(:source) { [] }
@@ -53,5 +53,10 @@ describe TerminalOutputScanner do
   it 'can handle an invalid UTF-8 character' do
     output("invalid char\255\n")
     tokens.must_equal [[:append, "invalid char�\n"]]
+  end
+
+  it "returns finished event" do
+    source << [:finished, "foo"]
+    tokens.must_equal [[:finished, "foo"]]
   end
 end
