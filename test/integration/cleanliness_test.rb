@@ -144,6 +144,14 @@ describe "cleanliness" do
     end
   end
 
+  # tests multi_thread_db_detector.rb
+  it "blows up when using database from a different thread" do
+    e = assert_raises RuntimeError do
+      Thread.new { User.first }.join
+    end
+    e.message.must_include "Using AR outside the main thread"
+  end
+
   it "has a Readme for each plugin" do
     Dir["plugins/*"].size.must_equal Dir["plugins/*/*"].grep(/\/README\.md\z/).size
   end
