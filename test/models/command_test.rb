@@ -1,9 +1,11 @@
 # frozen_string_literal: true
 require_relative '../test_helper'
 
-SingleCov.covered! uncovered: 2
+SingleCov.covered!
 
 describe Command do
+  let(:command) { commands(:echo) }
+
   describe '.for_object' do
     let(:stage) { stages(:test_staging) }
 
@@ -35,8 +37,6 @@ describe Command do
   end
 
   describe "#trigger_stage_change" do
-    let(:command) { commands(:echo) }
-
     with_paper_trail
 
     it "triggers a version when command changes" do
@@ -47,6 +47,24 @@ describe Command do
     it "does not trigger when command does not change" do
       command.update_attribute(:project, nil)
       command.reload.stages.first.versions.size.must_equal 0
+    end
+  end
+
+  describe "#global?" do
+    it "is global when it does not belong to a project" do
+      command.project = nil
+      command.global?.must_equal true
+    end
+
+    it "is not global when it belongs to a project" do
+      command.project = projects(:test)
+      command.global?.must_equal false
+    end
+  end
+
+  describe "#usages" do
+    it "lists stages and macros" do
+      command.usages.map(&:class).uniq.must_equal [Stage, Macro]
     end
   end
 end
