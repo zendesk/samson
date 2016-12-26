@@ -31,7 +31,7 @@ Streaming is done through a [controller](app/controllers/streams_controller.rb) 
 
 * MySQL, Postgresql, or SQLite
 * Memcache
-* Ruby (>= 2.1.1)
+* Ruby (>= 2.3.1)
 * Git (>= 1.7.2)
 
 ### Documentation
@@ -55,8 +55,6 @@ Improvements are always welcome. Please follow these steps to contribute
 
 Core team is [@dasch](https://github.com/dasch), [@jwswj](https://github.com/jwswj), [@henders](https://github.com/henders),
 [@grosser](https://github.com/grosser), [@jonmoter](https://github.com/jonmoter), [@msufa](https://github.com/msufa), [@sbrnunes](https://github.com/sbrnunes).
-
-Support can be found on our [mailing list](https://groups.google.com/forum/#!forum/samson-users) `samson-users@googlegroups.com`.
 
 ### License
 
