@@ -53,8 +53,7 @@ Improvements are always welcome. Please follow these steps to contribute
 
 ### Team
 
-Core team is [@dasch](https://github.com/dasch), [@jwswj](https://github.com/jwswj), [@henders](https://github.com/henders),
-[@grosser](https://github.com/grosser), [@jonmoter](https://github.com/jonmoter), [@msufa](https://github.com/msufa), [@sbrnunes](https://github.com/sbrnunes).
+Core team is [@henders](https://github.com/henders), [@grosser](https://github.com/grosser), [@jonmoter](https://github.com/jonmoter), [@irwaters](https://github.com/irwaters).
 
 ### License
 
