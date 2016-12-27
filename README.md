@@ -21,11 +21,16 @@ A web interface for deployments.
 
 ![](http://cl.ly/image/270l1e3s2e1p/Samson.png)
 
-### How?
+### Workflow
 
-Samson works by ensuring a git repository for a project is up-to-date, and then executes the commands associated with a stage. If you want to find out exactly what's going on, have a read through [JobExecution](https://github.com/zendesk/samson/blob/master/app/models/job_execution.rb).
+Create a project and 1 or more stages (staging/production etc),
+then selects a version and start the deploy.
 
-Streaming is done through a [controller](app/controllers/streams_controller.rb) that uses [server-sent events](https://en.wikipedia.org/wiki/Server-sent_events) to display to the client.
+Samson will:
+ - clone git repository
+ - execute commands associated with the stage (or execute API calls for kubernetes)
+ - stream deploy output to everybody who wants to watch
+ - persist deploy output for future review
 
 #### Requirements
 
