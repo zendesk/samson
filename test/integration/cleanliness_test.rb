@@ -143,4 +143,20 @@ describe "cleanliness" do
       end
     end
   end
+
+  it "has a Readme for each plugin" do
+    Dir["plugins/*"].size.must_equal Dir["plugins/*/*"].grep(/\/README\.md\z/).size
+  end
+
+  it "links every plugin in docs" do
+    readme_path = 'docs/plugins.md'
+    readme = File.read(readme_path)
+    plugins = Dir['plugins/*'].map { |f| File.basename(f) } - ['samson_ledger']
+    plugins.each do |plugin_name|
+      assert(
+        readme.include?("https://github.com/zendesk/samson/tree/master/plugins/#{plugin_name}"),
+        "#{readme_path} must include link to #{plugin_name}"
+      )
+    end
+  end
 end
