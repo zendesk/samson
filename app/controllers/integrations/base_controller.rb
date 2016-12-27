@@ -104,7 +104,7 @@ class Integrations::BaseController < ApplicationController
 
   def create_docker_image(release)
     build = find_or_create_build(branch)
-    release.update_attribute(:build, build)
+    release.update_attribute(:build, build) if release
     DockerBuilderService.new(build).run!(push: true, tag_as_latest: true)
   end
 

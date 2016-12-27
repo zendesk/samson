@@ -86,6 +86,18 @@ describe Integrations::BaseController do
       assert_response :unauthorized
     end
 
+    it 'does not blow up when creating docker image if a release was not created' do
+      Project.any_instance.expects(create_releases_for_branch?: false)
+      Project.any_instance.expects(build_docker_image_for_branch?: true)
+
+      post :create, params: {test_route: true, token: token}
+
+      assert_response :success
+      project.reload
+      project.releases.count.must_equal 0
+      project.builds.count.must_equal 1
+    end
+
     describe "when deploy hooks are setup" do
       before do
         project.webhooks.create!(branch: 'master', stage: stage, source: 'any')
