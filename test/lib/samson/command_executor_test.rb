@@ -9,6 +9,14 @@ describe Samson::CommandExecutor do
       Samson::CommandExecutor.execute("echo", "hello", timeout: 1).must_equal [true, "hello\n"]
     end
 
+    it "captures stderr" do
+      Samson::CommandExecutor.execute("sh", "-c", "echo hello 1>&2", timeout: 1).must_equal [true, "hello\n"]
+    end
+
+    it "can redirect stderr" do
+      Samson::CommandExecutor.execute("sh", "-c", "echo hello 1>&2", err: '/dev/null', timeout: 1).must_equal [true, ""]
+    end
+
     it "fails" do
       Samson::CommandExecutor.execute("foo", "bar", timeout: 1).must_equal [false, "No such file or directory - foo"]
     end
