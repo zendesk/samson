@@ -28,13 +28,13 @@ module SamsonHyperclair
       job.update_column(:output, job.output + output)
     end
 
-    def scan(executable, project, docker_ref)
+    def scan(executable, project, docker_tag)
       registry = DockerRegistry.first
       with_time do
         Samson::CommandExecutor.execute(
           executable,
           *project.docker_repo(registry).split('/', 2),
-          docker_ref,
+          docker_tag,
           env: {
             'DOCKER_REGISTRY_USER' => registry.username,
             'DOCKER_REGISTRY_PASS' => registry.password
@@ -59,6 +59,6 @@ end
 
 Samson::Hooks.callback :after_docker_build do |build|
   if build.docker_build_job.succeeded?
-    SamsonHyperclair.append_job_with_scan(build.docker_build_job, build.docker_ref)
+    SamsonHyperclair.append_job_with_scan(build.docker_build_job, build.docker_tag)
   end
 end

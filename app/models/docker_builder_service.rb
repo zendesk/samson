@@ -46,7 +46,7 @@ class DockerBuilderService
 
   def run!(push: false, tag_as_latest: false)
     build.docker_build_job.try(:destroy) # if there's an old build job, delete it
-    build.docker_ref = build.label.try(:parameterize).presence || 'latest'
+    build.docker_tag = build.label.try(:parameterize).presence || 'latest'
 
     job = build.create_docker_job
     build.save!
@@ -107,7 +107,7 @@ class DockerBuilderService
     )
     success, build_log = k8s_job.execute!(
       build, project,
-      docker_ref: build.docker_ref,
+      docker_tag: build.docker_tag,
       push: push,
       tag_as_latest: tag_as_latest
     )
@@ -147,7 +147,7 @@ class DockerBuilderService
   add_method_tracer :build_image
 
   def push_image(tag_as_latest: false)
-    tag = build.docker_ref
+    tag = build.docker_tag
     tag_is_latest = (tag == 'latest')
 
     unless build.docker_repo_digest = push_image_to_registries(tag: tag, override_tag: tag_is_latest)
