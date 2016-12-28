@@ -66,12 +66,12 @@ class Deploy < ActiveRecord::Base
     end
   end
 
-  def previous_deploy
+  def previous_successful_deploy
     stage.deploys.successful.prior_to(self).first
   end
 
   def changeset
-    @changeset ||= changeset_to(previous_deploy)
+    @changeset ||= changeset_to(previous_successful_deploy)
   end
 
   def changeset_to(other)

@@ -137,7 +137,7 @@ describe Kubernetes::ReleaseDoc do
       client.expects(:create_deployment).returns(stub(to_hash: {}))
 
       doc.deploy
-      doc.instance_variable_get(:@previous_deploy).must_equal([nil, nil]) # will not revert
+      doc.instance_variable_get(:@previous_resources).must_equal([nil, nil]) # will not revert
     end
 
     it "remembers the previous deploy in case we have to revert" do
@@ -150,14 +150,13 @@ describe Kubernetes::ReleaseDoc do
       client.expects(:update_deployment).returns("Rest client resonse")
 
       doc.deploy
-      doc.instance_variable_get(:@previous_deploy).must_equal([{DE: "PLOY"}, {SER: "VICE"}])
+      doc.instance_variable_get(:@previous_resources).must_equal([{DE: "PLOY"}, {SER: "VICE"}])
     end
   end
 
   describe '#revert' do
     it "reverts all resources" do
-      doc.instance_variable_set(:@previous_deploy, [{DE: "PLOY"}, {SER: "VICE"}])
-      doc.instance_variable_set(:@deployed, true)
+      doc.instance_variable_set(:@previous_resources, [{DE: "PLOY"}, {SER: "VICE"}])
       doc.send(:resources)[0].expects(:revert).with(DE: "PLOY")
       doc.send(:resources)[1].expects(:revert).with(SER: "VICE")
       doc.revert
