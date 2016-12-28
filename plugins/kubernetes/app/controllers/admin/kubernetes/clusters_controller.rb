@@ -77,7 +77,7 @@ class Admin::Kubernetes::ClustersController < ApplicationController
   # kubectl create secret docker-registry kube-ecr-auth --docker-server=X --docker-username=X --docker-password=X
   def update_secret(namespace, user, pass)
     docker_config = {
-      Rails.application.config.samson.docker.registry => {
+      Rails.application.config.samson.docker.registries.first => {
         username: user,
         password: pass
       }

@@ -10,19 +10,6 @@ describe SamsonAwsEcr::Engine do
     end
   end
 
-  def self.restore_ecr_state
-    around do |test|
-      begin
-        old = Rails.application.config.samson.docker.registry
-        clear_client
-        test.call
-      ensure
-        clear_client
-        Rails.application.config.samson.docker.registry = old
-      end
-    end
-  end
-
   let(:stage) { stages(:test_staging) }
   let(:ecr_client) { Aws::ECR::Client.new(stub_responses: true, region: 'us-west-2') }
   let(:username) { "AWS" }
@@ -35,7 +22,19 @@ describe SamsonAwsEcr::Engine do
   let(:expired_response) do
     {authorization_data: [{authorization_token: old_base64_authorization_token, expires_at: 2.hour.ago}]}
   end
-  let(:matching_ecr_registry) { '12322323232323.dkr.ecr.us-west-1.amazonaws.com' }
+  let(:matching_ecr_registry) { Rails.application.config.samson.docker.registries.first }
+
+  with_registries ['12322323232323.dkr.ecr.us-west-1.amazonaws.com']
+
+  # reset ECR state
+  around do |test|
+    begin
+      clear_client
+      test.call
+    ensure
+      clear_client
+    end
+  end
 
   describe :before_docker_build do
     def fire
@@ -146,30 +145,27 @@ describe SamsonAwsEcr::Engine do
   end
 
   describe '.ecr_client' do
-    restore_ecr_state
-
     it 'is cached when matching' do
       stub_request(:get, %r{/latest/meta-data/iam/security-credentials/})
-      Rails.application.config.samson.docker.registry = matching_ecr_registry
       SamsonAwsEcr::Engine.send(:ecr_client).object_id.must_equal SamsonAwsEcr::Engine.send(:ecr_client).object_id
     end
 
     it 'is cached when not matching' do
+      matching_ecr_registry # store
+      Rails.application.config.samson.docker.registries = ['nope']
       refute SamsonAwsEcr::Engine.send(:ecr_client)
-      Rails.application.config.samson.docker.registry = matching_ecr_registry
+      Rails.application.config.samson.docker.registries = [matching_ecr_registry]
       refute SamsonAwsEcr::Engine.send(:ecr_client)
     end
   end
 
   describe '.active?' do
-    restore_ecr_state
-
     it "is inactive when not on ecr" do
+      Rails.application.config.samson.docker.registries = ['nope']
       refute SamsonAwsEcr::Engine.active?
     end
 
     it "is active when on ecr" do
-      Rails.application.config.samson.docker.registry = matching_ecr_registry
       stub_request(:get, "http://169.254.169.254/latest/meta-data/iam/security-credentials/")
       assert SamsonAwsEcr::Engine.active?
     end

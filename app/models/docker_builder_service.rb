@@ -13,8 +13,11 @@ class DockerBuilderService
     tarfile = create_docker_tarfile(dir)
 
     output.puts("### Running Docker build")
+    # our image can depend on other images in the registry
+    credentials_to_pull = registry_credentials(Rails.application.config.samson.docker.registries.first)
+
     docker_image =
-      Docker::Image.build_from_tar(tarfile, docker_options, Docker.connection, registry_credentials) do |chunk|
+      Docker::Image.build_from_tar(tarfile, docker_options, Docker.connection, credentials_to_pull) do |chunk|
         output.write_docker_chunk(chunk)
       end
     output.puts('### Docker build complete')
@@ -25,6 +28,16 @@ class DockerBuilderService
       tarfile.close
       FileUtils.rm(tarfile.path, force: true)
     end
+  end
+
+  def self.registry_credentials(registry)
+    return unless registry.present?
+    {
+      username: ENV['DOCKER_REGISTRY_USER'],
+      password: ENV['DOCKER_REGISTRY_PASS'],
+      email: ENV['DOCKER_REGISTRY_EMAIL'],
+      serveraddress: registry
+    }
   end
 
   def initialize(build)
@@ -90,22 +103,12 @@ class DockerBuilderService
     File.new(tempfile_name, 'r')
   end
 
-  private_class_method def self.registry_credentials
-    return nil unless ENV['DOCKER_REGISTRY'].present?
-    {
-      username: ENV['DOCKER_REGISTRY_USER'],
-      password: ENV['DOCKER_REGISTRY_PASS'],
-      email: ENV['DOCKER_REGISTRY_EMAIL'],
-      serveraddress: ENV['DOCKER_REGISTRY']
-    }
-  end
-
   def run_build_image_job(local_job, image_name, push: false, tag_as_latest: false)
     docker_ref = docker_image_ref(image_name, build)
     k8s_job = Kubernetes::BuildJobExecutor.new(
       output,
       job: local_job,
-      registry: self.class.send(:registry_credentials)
+      registry: self.class.registry_credentials(Rails.application.config.samson.docker.registries.first)
     )
     success, build_log = k8s_job.execute!(
       build, project,
@@ -150,16 +153,16 @@ class DockerBuilderService
   add_method_tracer :build_image
 
   def push_image(tag, tag_as_latest: false)
-    build.docker_ref = docker_image_ref(tag, build)
-    build.docker_repo_digest = nil
+    tag = build.docker_ref = docker_image_ref(tag, build)
+    tag_is_latest = (tag == 'latest')
 
-    push_image_to_registry(project.docker_repo)
-
-    unless build.docker_repo_digest
+    unless build.docker_repo_digest = push_image_to_registries(tag: tag, override_tag: tag_is_latest)
       raise Docker::Error::DockerError, "Unable to get repo digest"
     end
 
-    push_latest if tag_as_latest && build.docker_ref != 'latest'
+    if tag_as_latest && !tag_is_latest
+      push_image_to_registries tag: 'latest', override_tag: true
+    end
 
     build.save!
     build
@@ -169,19 +172,41 @@ class DockerBuilderService
   end
   add_method_tracer :push_image
 
-  def push_image_to_registry(registry)
-    output.puts("### Tagging and pushing Docker image to #{registry}:#{build.docker_ref}")
+  def push_image_to_registries(tag:, override_tag: false)
+    digest = nil
 
-    build.docker_image.tag(repo: registry, tag: build.docker_ref, force: true)
+    Rails.application.config.samson.docker.registries.each_with_index do |registry, i|
+      primary = i.zero?
+      repo = project.docker_repo(registry: registry)
 
-    build.docker_image.push(self.class.send(:registry_credentials)) do |chunk|
-      parsed_chunk = output.write_docker_chunk(chunk)
-      parsed_chunk.each do |output_hash|
-        if (status = output_hash['status']) && sha = status[DIGEST_SHA_REGEX, 1]
-          build.docker_repo_digest = "#{registry}@#{sha}"
+      if override_tag
+        output.puts("### Tagging and pushing Docker image to #{repo}:#{tag}")
+      else
+        output.puts("### Pushing Docker image to #{repo}")
+      end
+
+      # tag locally so we can push .. otherwise get `Repository does not exist`
+      build.docker_image.tag(repo: repo, tag: tag, force: true)
+
+      # push and optionally override tag for the image
+      # needs repo_tag to enable pushing to multiple registries
+      # otherwise will read first existing RepoTags info
+      push_options = {repo_tag: "#{repo}:#{tag}", force: override_tag}
+
+      success = build.docker_image.push(self.class.registry_credentials(registry), push_options) do |chunk|
+        parsed_chunk = output.write_docker_chunk(chunk)
+        if primary && !digest
+          parsed_chunk.each do |output_hash|
+            next unless status = output_hash['status']
+            next unless sha = status[DIGEST_SHA_REGEX, 1]
+            digest = "#{repo}@#{sha}"
+          end
         end
       end
+      return false unless success
     end
+
+    digest
   end
 
   def output
@@ -198,14 +223,6 @@ class DockerBuilderService
 
   def docker_image_ref(image_name, build)
     image_name.presence || build.label.try(:parameterize).presence || 'latest'
-  end
-
-  def push_latest
-    output.puts "### Pushing the 'latest' tag for this image"
-    build.docker_image.tag(repo: project.docker_repo, tag: 'latest', force: true)
-    build.docker_image.push(self.class.send(:registry_credentials), tag: 'latest', force: true) do |chunk|
-      output.write_docker_chunk(chunk)
-    end
   end
 
   def send_after_notifications

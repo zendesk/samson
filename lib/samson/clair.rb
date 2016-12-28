@@ -6,7 +6,8 @@
 # discussion see https://github.com/wemanity-belgium/hyperclair/pull/90
 module Samson
   # TODO: should check based on docker_repo_digest not tag
-  # TODO: this should be a plugin instead and use hooks
+  # TODO: should be a plugin instead and use hooks
+  # TODO: should immediately leave a 'clair job started' output on the job
   module Clair
     class << self
       def append_job_with_scan(job, docker_tag)
@@ -30,7 +31,7 @@ module Samson
         with_time do
           Samson::CommandExecutor.execute(
             executable,
-            *project.docker_repo.split('/', 2),
+            *project.docker_repo(registry: :default).split('/', 2),
             docker_ref,
             whitelist_env: [
               'DOCKER_REGISTRY_USER',
