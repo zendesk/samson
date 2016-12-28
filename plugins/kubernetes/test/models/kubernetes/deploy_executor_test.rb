@@ -102,7 +102,8 @@ describe Kubernetes::DeployExecutor do
       GitRepository.any_instance.stubs(:file_content).with('Dockerfile', anything).returns "FROM all"
       Kubernetes::TemplateFiller.any_instance.stubs(:set_image_pull_secrets)
 
-      stub_request(:get, service_url).to_return(body: {metadata: {uid: '123'}}.to_json)
+      stub_request(:get, service_url).to_return(status: 404) # previous service ? -> none!
+      stub_request(:post, File.dirname(service_url)).to_return(body: "{}")
       stub_request(:delete, service_url)
 
       Samson::Secrets::VaultClient.any_instance.stubs(:client).
@@ -449,7 +450,34 @@ describe Kubernetes::DeployExecutor do
     end
 
     describe "when rollback is needed" do
+      let(:rollback_indicator) { "Rolling back" }
+
       before { worker_is_unstable }
+
+      it "rolls back when previous resource existed" do
+        stub_request(:get, service_url).to_return(body: {metadata: {uid: '123'}}.to_json)
+
+        refute execute!
+
+        out.must_include "resque-worker: Restarted\n"
+        out.must_include "UNSTABLE"
+        out.must_include rollback_indicator
+        out.must_include "DONE" # DONE is shown ... we got past the rollback
+        out.wont_include "SUCCESS"
+        out.wont_include "FAILED"
+      end
+
+      it "deletes when there was no previous deployed resource" do
+        refute execute!
+
+        out.must_include "resque-worker: Restarted\n"
+        out.must_include "UNSTABLE"
+        out.must_include "Deleting"
+        out.wont_include rollback_indicator
+        out.must_include "DONE" # DONE is shown ... we got past the rollback
+        out.wont_include "SUCCESS"
+        out.wont_include "FAILED"
+      end
 
       it "does not crash when rollback fails" do
         Kubernetes::Resource::Deployment.any_instance.stubs(:revert).raises("Weird error")

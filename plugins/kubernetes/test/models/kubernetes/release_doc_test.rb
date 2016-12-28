@@ -157,7 +157,6 @@ describe Kubernetes::ReleaseDoc do
   describe '#revert' do
     it "reverts all resources" do
       doc.instance_variable_set(:@previous_resources, [{DE: "PLOY"}, {SER: "VICE"}])
-      doc.instance_variable_set(:@deployed, true)
       doc.send(:resources)[0].expects(:revert).with(DE: "PLOY")
       doc.send(:resources)[1].expects(:revert).with(SER: "VICE")
       doc.revert

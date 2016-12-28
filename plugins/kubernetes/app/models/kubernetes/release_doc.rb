@@ -28,13 +28,12 @@ module Kubernetes
     end
 
     def deploy
-      @deployed = true
       @previous_resources = resources.map(&:resource)
       resources.each(&:deploy)
     end
 
     def revert
-      raise "Can only be done after a deploy" unless @deployed
+      raise "Can only be done after a deploy" unless @previous_resources
       resources.each_with_index do |resource, i|
         resource.revert(@previous_resources[i])
       end
