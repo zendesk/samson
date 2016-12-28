@@ -17,7 +17,7 @@ module Kubernetes
 
     before_save :store_resource_template, on: :create
 
-    attr_reader :previous_deploy
+    attr_reader :previous_resources
 
     def build
       kubernetes_release.try(:build)
@@ -29,14 +29,14 @@ module Kubernetes
 
     def deploy
       @deployed = true
-      @previous_deploy = resources.map(&:resource)
+      @previous_resources = resources.map(&:resource)
       resources.each(&:deploy)
     end
 
     def revert
       raise "Can only be done after a deploy" unless @deployed
       resources.each_with_index do |resource, i|
-        resource.revert(@previous_deploy[i])
+        resource.revert(@previous_resources[i])
       end
     end
 
