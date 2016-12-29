@@ -8,12 +8,9 @@
     <%= form.input :repository_url, required: true %>
     <%= form.input :permalink, required: true if project.persisted? %>
     <%= form.input :release_branch, help: 'New commits on this branch will cause a release when a webhook arrives.' %>
-    <div class="form-group">
-      <%= form.label "Release source", class: "col-lg-2 control-label" %>
-      <div class="col-lg-4">
-        <%= form.collection_select :release_source, webhook_sources_for_select(Samson::Integration::SOURCES), :second, :first, {}, class: "form-control", help: 'Selects which type of webhook will create a release' %>
-      </div>
-    </div>
+    <%= form.input :release_source, help: 'Selects which type of webhook will create a release' do %>
+      <%= form.collection_select :release_source, webhook_sources_for_select(Samson::Integration::SOURCES, none: true), :second, :first, {}, class: "form-control" %>
+    <% end %>
     <% if ENV['DOCKER_FEATURE'] %>
       <%= form.input :docker_release_branch, help: 'New commits on this branch will cause a docker image to be built when a webhook arrives.' %>
     <% end %>
