@@ -155,15 +155,19 @@ describe Kubernetes::TemplateFiller do
       end
     end
 
-    describe "secret-sidecar-containers" do
+    describe "secret-puler-containers" do
       let(:secret_key) { "global/global/global/bar" }
-      let(:template_hash) { template.to_hash[:spec][:template][:spec][:containers].first[:env] }
+      let(:template_env) { template.to_hash[:spec][:template][:spec][:containers].first[:env] }
+      let(:init_container_key) { 'pod.beta.kubernetes.io/init-containers' }
+      let(:init_containers) do
+        JSON.parse(template.to_hash[:spec][:template][:metadata][:annotations][init_container_key])
+      end
 
       around do |test|
         klass = Kubernetes::TemplateFiller
-        silence_warnings { klass.const_set(:SIDECAR_IMAGE, "docker-registry.example.com/foo:bar") }
+        silence_warnings { klass.const_set(:SECRET_PULLER_IMAGE, "docker-registry.example.com/foo:bar") }
         test.call
-        silence_warnings { klass.const_set(:SIDECAR_IMAGE, nil) }
+        silence_warnings { klass.const_set(:SECRET_PULLER_IMAGE, nil) }
       end
 
       before do
@@ -171,14 +175,26 @@ describe Kubernetes::TemplateFiller do
         create_secret(secret_key)
       end
 
-      it "creates a sidecar" do
-        sidecar = template.to_hash[:spec][:template][:spec][:containers].last
-        sidecar[:name].must_equal('secret-sidecar')
+      it "adds secret puller container" do
+        init_containers.first['name'].must_equal('secret-puller')
+        init_containers.first['env'].must_equal(
+          [
+            {"name" => "VAULT_ADDR", "value" => "https://test.hvault.server"},
+            {"name" => "VAULT_SSL_VERIFY", "value" => "false"}
+          ]
+        )
 
         # secrets got resolved?
-        template.to_hash[:spec][:template][:metadata][:annotations].must_equal(
-          "secret/FOO" => "global/global/global/bar"
-        )
+        template.to_hash[:spec][:template][:metadata][:annotations].
+          except(init_container_key).must_equal(
+            "secret/FOO" => "global/global/global/bar"
+          )
+      end
+
+      it "keeps existing init containers" do
+        annotations = raw_template[:spec][:template][:metadata][:annotations]
+        annotations[init_container_key] = [{a: 1}].to_json
+        init_containers[1].must_equal('a' => 1)
       end
 
       it "fails when vault is not configured" do
@@ -191,17 +207,17 @@ describe Kubernetes::TemplateFiller do
 
       it "adds the vault server address to the cotainers env" do
         with_env(SECRET_STORAGE_BACKEND: "SecretStorage::HashicorpVault") do
-          assert template_hash.any? { |env| env.any? { |_k, v| v == "VAULT_ADDR" } }
+          assert template_env.any? { |env| env.any? { |_k, v| v == "VAULT_ADDR" } }
         end
       end
 
       it "does not add the vault server address to the cotainers env" do
         with_env(SECRET_STORAGE_BACKEND: "foobar") do
-          refute template_hash.any? { |env| env.any? { |_k, v| v == "VAULT_ADDR" } }
+          refute template_env.any? { |env| env.any? { |_k, v| v == "VAULT_ADDR" } }
         end
       end
 
-      it "adds to existing volume definitions in the sidecar" do
+      it "adds to existing volume definitions in the puller" do
         raw_template[:spec][:template][:spec][:volumes] = [{}, {}]
         template.to_hash[:spec][:template][:spec][:volumes].count.must_equal 5
       end
@@ -220,12 +236,12 @@ describe Kubernetes::TemplateFiller do
         template.to_hash[:spec][:template][:spec][:containers].first[:volumeMounts].count.must_equal 1
       end
 
-      it "creates no sidecar when there are no secrets" do
+      it "creates no puller when there are no secrets" do
         raw_template[:spec][:template][:metadata][:annotations].replace('public/foobar': 'xyz')
         template.to_hash[:spec][:template][:spec][:containers].map { |c| c[:name] }.must_equal(['some-project'])
       end
 
-      it "fails when it cannot find secrets needed by the sidecar" do
+      it "fails when it cannot find secrets needed by the puller" do
         raw_template[:spec][:template][:metadata][:annotations].replace('secret/FOO': 'bar', 'secret/BAR': 'baz')
         SecretStorage.delete(secret_key)
         e = assert_raises(Samson::Hooks::UserError) { template.to_hash }

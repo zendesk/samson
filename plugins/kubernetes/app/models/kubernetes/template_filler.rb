@@ -5,7 +5,7 @@ module Kubernetes
     attr_reader :template
 
     CUSTOM_UNIQUE_LABEL_KEY = 'rc_unique_identifier'
-    SIDECAR_IMAGE = ENV['SECRET_SIDECAR_IMAGE'].presence
+    SECRET_PULLER_IMAGE = ENV['SECRET_PULLER_IMAGE'].presence
 
     def initialize(release_doc, template)
       @doc = release_doc
@@ -20,8 +20,8 @@ module Kubernetes
         set_spec_template_metadata
         set_docker_image
         set_resource_usage
-        set_secrets
         set_env
+        set_secrets
         set_image_pull_secrets
         set_vault_env
 
@@ -32,8 +32,8 @@ module Kubernetes
     end
 
     def set_secrets
-      return unless needs_secret_sidecar?
-      set_secret_sidecar
+      return unless needs_secret_puller?
+      set_secret_puller
       expand_secret_annotations
     end
 
@@ -59,22 +59,24 @@ module Kubernetes
       end
     end
 
-    # Sets up the secret_sidecar and the various mounts that are required
-    # if the sidecar service is enabled
+    # Sets up the secret-puller and the various mounts that are required
+    # if the secret-puller service is enabled
     # /vaultauth is a secrets volume in the cluster
     # /secretkeys are where the annotations from the config are mounted
-    def set_secret_sidecar
-      containers.push(
-        image: SIDECAR_IMAGE,
-        name: 'secret-sidecar',
+    def set_secret_puller
+      secret_vol = { mountPath: "/secrets", name: "secrets-volume" }
+      unshift_init_container(
+        image: SECRET_PULLER_IMAGE,
+        name: 'secret-puller',
         volumeMounts: [
           { mountPath: "/vault-auth", name: "vaultauth" },
-          { mountPath: "/secretkeys", name: "secretkeys" }
-        ]
+          { mountPath: "/secretkeys", name: "secretkeys" },
+          secret_vol
+        ],
+        env: vault_env
       )
 
       # share secrets volume between all containers
-      secret_vol = { mountPath: "/secrets", name: "secrets-volume" }
       containers.each do |container|
         (container[:volumeMounts] ||= []).push secret_vol
       end
@@ -90,6 +92,15 @@ module Kubernetes
           }
         }
       ]
+    end
+
+    # Init containers are stored as a json annotation
+    # see http://kubernetes.io/docs/user-guide/production-pods/#handling-initialization
+    def unshift_init_container(container)
+      key = 'pod.beta.kubernetes.io/init-containers'
+      init_containers = JSON.parse(annotations[key] || '[]')
+      init_containers.unshift(container)
+      annotations[key] = JSON.pretty_generate(init_containers)
     end
 
     # This key replaces the default kubernetes key: 'deployment.kubernetes.io/podTemplateHash'
@@ -197,14 +208,19 @@ module Kubernetes
     end
 
     def set_vault_env
-      if needs_vault?
+      if ENV["SECRET_STORAGE_BACKEND"] == "SecretStorage::HashicorpVault"
         containers.each do |container|
-          env = (container[:env] ||= [])
-          vault_client = Samson::Secrets::VaultClient.client.client(@doc.deploy_group)
-          env << {name: "VAULT_ADDR", value: vault_client.options.fetch(:address)}
-          env << {name: "VAULT_SSL_VERIFY", value: vault_client.options.fetch(:ssl_verify).to_s}
+          (container[:env] ||= []).concat vault_env
         end
       end
+    end
+
+    def vault_env
+      vault_client = Samson::Secrets::VaultClient.client.client(@doc.deploy_group)
+      [
+        {name: "VAULT_ADDR", value: vault_client.options.fetch(:address)},
+        {name: "VAULT_SSL_VERIFY", value: vault_client.options.fetch(:ssl_verify).to_s}
+      ]
     end
 
     # kubernetes needs docker secrets to be able to pull down images from the registry
@@ -221,12 +237,8 @@ module Kubernetes
       template[:spec].fetch(:template, {}).fetch(:spec, {})[:imagePullSecrets] = docker_credentials
     end
 
-    def needs_secret_sidecar?
-      SIDECAR_IMAGE && secret_annotations.any?
-    end
-
-    def needs_vault?
-      needs_secret_sidecar? && (ENV["SECRET_STORAGE_BACKEND"] == "SecretStorage::HashicorpVault")
+    def needs_secret_puller?
+      SECRET_PULLER_IMAGE && secret_annotations.any?
     end
 
     def containers
