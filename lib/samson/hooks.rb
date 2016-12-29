@@ -166,12 +166,15 @@ module Samson
           fixtures.map! { |fixture| [fixture, File.join(fixture_path, File.basename(fixture))] }
         end
 
-        links.each { |from, to| File.symlink(from, to) rescue false } # avoid errors when running in parallel
+        # avoid errors when running in parallel
+        links.each { |from, to| File.symlink(from, to) rescue false } # rubocop:disable Style/RescueModifier
 
         if ENV['TEST_ENV_NUMBER'].to_s == '' # only run in first parallel test
           # rails test does not trigger after_run and rake does not work with at_exit
           # https://github.com/rails/rails/pull/26515
-          callback = -> { links.each { |_from, to| File.delete(to) rescue false } }
+          callback = -> do
+            links.each { |_from, to| File.delete(to) rescue false } # rubocop:disable Style/RescueModifier
+          end
           if Minitest.respond_to?(:run_with_rails_extension) && Minitest.run_with_rails_extension
             at_exit(&callback)
           else

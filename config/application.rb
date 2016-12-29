@@ -5,10 +5,13 @@ require 'rails/all'
 
 # Define dotenv before preload, so that gems can use the ENV vars defined within
 require 'dotenv'
+development_env = Bundler.root.join('.env')
 if Rails.env.test?
+  # if we went through Rakefile in development then .env is preloaded and we need to clear it out to avoid random env
+  Dotenv::Parser.call(File.read(development_env)).keys.each { |k| ENV.delete(k) } if File.exist?(development_env)
   Dotenv.overload(Bundler.root.join('.env.test'))
 else
-  Dotenv.load(Bundler.root.join('.env'))
+  Dotenv.load(development_env)
 end
 
 Bundler.require(:preload)

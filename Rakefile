@@ -92,7 +92,7 @@ task :flay do
     'app/views/admin/secrets/index.html.erb', # search box
     'plugins/slack_webhooks/app/views/samson_slack_webhooks/_fields.html.erb', # cannot reuse form.input
   ]
-  flay = Flay.run([*files, '--mass', '25']) # mass threshold is show mass / occurrences
+  flay = Flay.run([*files, '--mass', '25']) # mass threshold is shown mass / occurrences
   abort "Code duplication found" if flay.report.any?
 end
 
