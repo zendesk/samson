@@ -81,9 +81,9 @@ describe DeploysController do
         JobExecution.any_instance.expects(:start!)
         with_job_execution do
           # start 1 job and queue another
-          active = Job.new(project: project) { |j| j.id = 123 }
+          active = Job.new(project: project) { |j| j.id = 123321 }
           active.stubs(:deploy).returns(deploy)
-          queued = Job.new(project: project) { |j| j.id = 234 }
+          queued = Job.new(project: project) { |j| j.id = 234432 }
           JobExecution.start_job(JobExecution.new('master', active), queue: :x)
           JobExecution.start_job(JobExecution.new('master', queued), queue: :x)
           JobExecution.active.size.must_equal 1
