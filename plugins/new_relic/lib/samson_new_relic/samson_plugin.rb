@@ -2,6 +2,12 @@
 module SamsonNewRelic
   class Engine < Rails::Engine
   end
+
+  KEY = ENV['NEWRELIC_API_KEY'].presence
+
+  def self.enabled?
+    KEY
+  end
 end
 
 Samson::Hooks.view :stage_form, "samson_new_relic/fields"

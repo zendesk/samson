@@ -20,8 +20,7 @@ describe SamsonNewRelic::Api do
     ]
   end
 
-  before { silence_warnings { SamsonNewRelic::Api::KEY = '123' } }
-  after { silence_warnings { SamsonNewRelic::Api::KEY = nil } }
+  with_new_relic_plugin_enabled
 
   describe '.applications' do
     it 'is a hash of name -> Application' do
