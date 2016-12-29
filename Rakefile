@@ -7,6 +7,7 @@ ENV['PRECOMPILE'] = '1' if ARGV.include?("test:js") || ARGV.include?("assets:pre
 
 require_relative 'config/application'
 require "rake/testtask"
+require "parallel_tests/tasks"
 
 Samson::Application.load_tasks
 
@@ -93,4 +94,10 @@ task :flay do
   ]
   flay = Flay.run([*files, '--mass', '25']) # mass threshold is show mass / occurrences
   abort "Code duplication found" if flay.report.any?
+end
+
+# make parallel_test run all tests and not only core
+Rake::Task["parallel:test"].clear
+task 'parallel:test' do
+  exec "parallel_test test plugins/*/test"
 end

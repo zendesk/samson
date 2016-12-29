@@ -17,4 +17,4 @@ development:
 # Do not set this db to the same as development or production.
 test:
   <<: *common
-  database: samson_test
+  database: samson_test<%= ENV['TEST_ENV_NUMBER'] %>
