@@ -6,10 +6,18 @@ SingleCov.covered!
 describe Project do
   let(:project) { projects(:test) }
 
+  before { project.stubs(:valid_repository_url) }
+
   describe "#kubernetes_deploy_group_roles" do
     it "cleans them up when getting destroyed" do
       assert_difference 'Kubernetes::DeployGroupRole.count', -4 do
         project.destroy
+      end
+    end
+
+    it "cleans them up when getting soft deleted" do
+      assert_difference 'Kubernetes::DeployGroupRole.count', -4 do
+        project.soft_delete!
       end
     end
   end
@@ -18,6 +26,12 @@ describe Project do
     it "cleans them up when getting destroyed" do
       assert_difference 'Kubernetes::Role.count', -2 do
         project.destroy
+      end
+    end
+
+    it "cleans them up when getting soft deleted" do
+      assert_difference 'Kubernetes::Role.not_deleted.count', -2 do
+        project.soft_delete!
       end
     end
   end
