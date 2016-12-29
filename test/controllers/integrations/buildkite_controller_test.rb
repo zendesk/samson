@@ -63,7 +63,7 @@ describe Integrations::BuildkiteController do
       project.releases.destroy_all
       project.builds.destroy_all
       Integrations::BuildkiteController.any_instance.stubs(:project).returns(project)
-      project.stubs(:create_releases_for_branch?).returns(true)
+      project.stubs(:create_release?).returns(true)
       Build.any_instance.stubs(:validate_git_reference).returns(true)
       stub_request(:post, "https://api.github.com/repos/bar/foo/releases").
         to_return(status: 200, body: "", headers: {})

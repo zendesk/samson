@@ -90,4 +90,24 @@ describe Webhook do
       assert_equal Webhook.for_branch('master').pluck(:branch), ['', 'master']
     end
   end
+
+  describe '.for_source' do
+    Samson::Integration::SOURCES.each do |release_source|
+      it 'is true when the source matches' do
+        assert Webhook.source_matches?(release_source, 'release_type', release_source)
+      end
+
+      it "is false when the source doesn't match" do
+        refute Webhook.source_matches?('poop', 'release_type', release_source)
+      end
+
+      it 'is always true if the source is any' do
+        assert Webhook.source_matches?('any', 'release_type', release_source)
+      end
+    end
+
+    it "is true if the source type matches" do
+      assert Webhook.source_matches?('any_code', 'code', 'github')
+    end
+  end
 end

@@ -21,7 +21,7 @@ describe Integrations::BaseController do
     Integrations::BaseController.any_instance.stubs(:deploy?).returns(true)
     Integrations::BaseController.any_instance.stubs(:commit).returns(sha)
     Integrations::BaseController.any_instance.stubs(:branch).returns('master')
-    Project.any_instance.stubs(:create_releases_for_branch?).returns(true)
+    Project.any_instance.stubs(:create_release?).returns(true)
     Build.any_instance.stubs(:validate_git_reference).returns(true)
     stub_request(:post, "https://api.github.com/repos/bar/foo/releases")
   end
@@ -40,6 +40,31 @@ describe Integrations::BaseController do
       post :create, params: {test_route: true, token: token}
       assert_response :success
       project.releases.count.must_equal 1
+    end
+
+    describe 'when the release branch source is specified' do
+      before do
+        Project.any_instance.unstub(:create_release?)
+        project.update_column(:release_branch, 'master')
+      end
+
+      Samson::Integration::SOURCES.each do |release_source|
+        it 'creates a release if the source matches' do
+          project.update_column(:release_source, release_source)
+          Integrations::BaseController.any_instance.stubs(:service_name).returns(release_source)
+          post :create, params: {test_route: true, token: token}
+          assert_response :success
+          project.releases.count.must_equal 1
+        end
+
+        it 'does not create a release if the source does not match' do
+          project.update_column(:release_source, 'none')
+          Integrations::BaseController.any_instance.stubs(:service_name).returns(release_source)
+          post :create, params: {test_route: true, token: token}
+          assert_response :success
+          project.releases.count.must_equal 0
+        end
+      end
     end
 
     it 'returns :ok if this is not a merge' do
@@ -87,7 +112,7 @@ describe Integrations::BaseController do
     end
 
     it 'does not blow up when creating docker image if a release was not created' do
-      Project.any_instance.expects(create_releases_for_branch?: false)
+      Project.any_instance.expects(create_release?: false)
       Project.any_instance.expects(build_docker_image_for_branch?: true)
 
       post :create, params: {test_route: true, token: token}
@@ -117,7 +142,7 @@ describe Integrations::BaseController do
       end
 
       it 'uses the commit to make the deploy when no release was created' do
-        Project.any_instance.stubs(:create_releases_for_branch?).returns(false)
+        Project.any_instance.stubs(:create_release?).returns(false)
         post :create, params: {test_route: true, token: token}
         assert_response :success
         Deploy.first.reference.must_equal sha

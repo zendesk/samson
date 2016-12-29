@@ -58,8 +58,8 @@ class Project < ActiveRecord::Base
   # branch - The String name of the branch in question.
   #
   # Returns true if new releases should be created, false otherwise.
-  def create_releases_for_branch?(branch)
-    release_branch == branch
+  def create_release?(branch, service_type, service_name)
+    release_branch == branch && Webhook.source_matches?(release_source, service_type, service_name)
   end
 
   # Whether to create a new docker image when the branch is updated.

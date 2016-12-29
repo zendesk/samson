@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20161216183341) do
+ActiveRecord::Schema.define(version: 20161216202909) do
 
   create_table "builds", force: :cascade do |t|
     t.integer  "project_id",                                       null: false
@@ -344,6 +344,7 @@ ActiveRecord::Schema.define(version: 20161216183341) do
     t.datetime "updated_at"
     t.string   "token"
     t.string   "release_branch"
+    t.string   "release_source",                          default: "any", null: false
     t.string   "permalink",                                               null: false
     t.text     "description",               limit: 65535
     t.string   "owner"

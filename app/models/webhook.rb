@@ -17,4 +17,8 @@ class Webhook < ActiveRecord::Base
   def self.for_source(service_type, service_name)
     where(source: ['any', "any_#{service_type}", service_name])
   end
+
+  def self.source_matches?(release_source, service_type, service_name)
+    release_source == 'any' || release_source == "any_#{service_type}" || release_source == service_name
+  end
 end
