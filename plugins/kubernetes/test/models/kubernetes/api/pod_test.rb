@@ -119,7 +119,7 @@ describe Kubernetes::Api::Pod do
 
   describe "#containers" do
     it 'reads' do
-      pod.containers.first.name.must_equal 'container1'
+      pod.containers.first[:name].must_equal 'container1'
     end
   end
 
@@ -243,6 +243,17 @@ describe Kubernetes::Api::Pod do
       readiness_failed[:message] = readiness_failed[:message].sub('Readiness', 'Liveliness')
       stub_request(:get, events_url).to_return(body: {items: [readiness_failed.merge(count: 20)]}.to_json)
       assert pod_with_client.events_indicate_failure?
+    end
+  end
+
+  describe "#init_containers" do
+    it "is empty for no containers" do
+      pod.init_containers.must_equal []
+    end
+
+    it "finds init containers" do
+      pod_attributes[:metadata][:annotations] = {"pod.alpha.kubernetes.io/init-containers": [{foo: :bar}].to_json}
+      pod.init_containers.must_equal [{foo: "bar"}]
     end
   end
 end

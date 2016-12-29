@@ -46,7 +46,7 @@ module Kubernetes
       end
 
       def containers
-        @pod.spec.containers
+        @pod.spec.containers.map(&:to_h)
       end
 
       def logs(container)
@@ -72,6 +72,11 @@ module Kubernetes
           namespace: namespace,
           field_selector: "involvedObject.name=#{name}"
         )
+      end
+
+      def init_containers
+        return [] unless containers = @pod.dig(:metadata, :annotations, :'pod.alpha.kubernetes.io/init-containers')
+        JSON.parse(containers, symbolize_names: true)
       end
 
       private
