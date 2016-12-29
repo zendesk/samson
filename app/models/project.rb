@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 class Project < ActiveRecord::Base
-  has_soft_deletion default_scope: true
+  has_soft_deletion default_scope: true unless self < SoftDeletion::Core
 
   include Permalinkable
   include Searchable
