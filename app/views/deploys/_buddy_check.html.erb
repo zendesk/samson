@@ -5,7 +5,7 @@
       <p><%= details.html_safe %></p>
     <% end %>
     <div class="deployer-stop">
-      <%= stop_button %>
+      <%= stop_button deploy: @deploy, project: @project %>
       or
       <% confirm = "Are you sure this is an emergency and you cannot find a buddy?\n#{strip_tags(details)}" %>
       <%= link_to "Bypass", buddy_check_project_deploy_path(@project, @deploy), method: :post, data: {confirm: confirm}, class: "btn btn-danger" %>
@@ -16,7 +16,7 @@
       <%= link_to "Approve", buddy_check_project_deploy_path(@project, @deploy), method: :post, class: "btn btn-primary btn-xl" %>
       <% if @deploy.can_be_stopped_by?(current_user) %>
         or
-        <%= stop_button %>
+        <%= stop_button deploy: @deploy, project: @project %>
       <% end %>
     </div>
   <% else %>

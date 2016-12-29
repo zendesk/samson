@@ -23,9 +23,4 @@ module BuildsHelper
   def creator_for(build, method: :name_and_email)
     build.creator.try(method) || 'Trigger'
   end
-
-  def docker_build_running?(build)
-    job = build.docker_build_job
-    job&.active? && (JobExecution.find_by_id(job.id) || JobExecution.enabled)
-  end
 end

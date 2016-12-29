@@ -91,7 +91,7 @@ module DeploysHelper
   end
 
   def redeploy_button
-    return if @deploy.active?
+    return if @deploy.job.executing?
 
     html_options = {method: :post}
     if @deploy.succeeded?
@@ -117,11 +117,12 @@ module DeploysHelper
       html_options
   end
 
-  def stop_button(deploy: @deploy, **options)
-    return unless @project && deploy
+  # using project as argument to avoid an additional fetch
+  def stop_button(project:, deploy:, **options)
+    raise if !project || !deploy
     link_to(
       'Stop',
-      [@project, deploy],
+      [project, deploy, {redirect_to: request.fullpath}],
       options.merge(method: :delete, class: options.fetch(:class, 'btn btn-danger btn-xl'))
     )
   end

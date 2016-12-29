@@ -27,6 +27,7 @@ class BuildsController < ApplicationController
   end
 
   def show
+    @project = @build.project
   end
 
   def edit

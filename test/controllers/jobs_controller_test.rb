@@ -6,9 +6,8 @@ SingleCov.covered!
 describe JobsController do
   let(:project) { projects(:test) }
   let(:stage) { stages(:test_staging) }
-  let(:admin) { users(:admin) }
   let(:command) { "echo hi" }
-  let(:job) { Job.create!(command: command, project: project, user: admin) }
+  let(:job) { Job.create!(command: command, project: project, user: user) }
   let(:job_service) { stub(execute!: nil) }
 
   as_a_viewer do
@@ -76,10 +75,28 @@ describe JobsController do
     unauthorized :delete, :destroy, project_id: :foo, id: 1
   end
 
-  as_a_deployer do
+  as_a_project_deployer do
     unauthorized :post, :create, project_id: :foo
-    unauthorized :delete, :destroy, project_id: :foo, id: 1
-    # FIXME: I should be able to stop my own jobs
+
+    describe "#destroy" do
+      it "deletes the job" do
+        delete :destroy, params: {project_id: project.to_param, id: job}
+        assert_redirected_to [project, job]
+        flash[:notice].must_equal 'Cancelled!'
+      end
+
+      it "is unauthorized when not allowed" do
+        job.update_column(:user_id, users(:admin).id)
+        delete :destroy, params: {project_id: project.to_param, id: job}
+        assert_redirected_to [project, job]
+        flash[:error].must_equal "You are not allowed to stop this job."
+      end
+
+      it "redirects to passed path" do
+        delete :destroy, params: {project_id: project.to_param, id: job, redirect_to: '/ping'}
+        assert_redirected_to '/ping'
+      end
+    end
   end
 
   as_a_project_admin do
@@ -121,30 +138,6 @@ describe JobsController do
         Job.any_instance.expects(:save).returns(false)
         refute_difference('Job.count') { create }
         assert_template :new
-      end
-    end
-
-    describe "#destroy" do
-      describe "when being a admin of the project" do
-        before do
-          delete :destroy, params: {project_id: project.to_param, id: job}
-        end
-
-        it "deletes the job" do
-          assert_redirected_to [project, job]
-          flash.must_be_empty
-        end
-      end
-
-      describe "when not being an admin of the project" do
-        before do
-          UserProjectRole.delete_all
-          delete :destroy, params: {project_id: project.to_param, id: job}
-        end
-
-        it "does not delete the job" do
-          assert_response :unauthorized
-        end
       end
     end
   end

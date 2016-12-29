@@ -37,7 +37,7 @@
   </div>
 </section>
 
-<% if @deploy.active? %>
+<% if @deploy.job.executing? %>
   <script>
     toggleOutputToolbar();
     startStream();
