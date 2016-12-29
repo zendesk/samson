@@ -150,6 +150,7 @@ Samson::Application.routes.draw do
         post :delete_all_stages
       end
     end
+    resources :settings, except: [:edit]
   end
 
   namespace :integrations do

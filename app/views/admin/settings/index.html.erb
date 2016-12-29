@@ -1,0 +1,31 @@
+<%= page_title "Settings" %>
+
+<section class="clearfix">
+  <table class="table table-hover table-condensed">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th></th>
+      </tr>
+    </thead>
+
+    <tbody>
+      <% @settings.each do |setting| %>
+        <tr>
+          <td><%= setting.name %></td>
+          <td><%= setting.value %></td>
+          <td>
+            <%= link_to "Edit", [:admin, setting] %> |
+            <%= link_to_delete [:admin, setting] %>
+          </td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+
+  <div class="admin-actions">
+    <div class="pull-right">
+      <%= link_to "New Setting", new_admin_setting_path, class: "btn btn-default" %>
+    </div>
+  </div>
+</section>
