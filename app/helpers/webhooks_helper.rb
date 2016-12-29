@@ -9,7 +9,7 @@ module WebhooksHelper
 
   NO_SOURCE = [['None', 'none']].freeze
 
-  def webhook_sources_select(sources, none: false)
+  def webhook_sources_for_select(sources, none: false)
     default_sources = none ? GENERIC_SOURCES + NO_SOURCE : GENERIC_SOURCES
     default_sources + sources_for_select(sources)
   end

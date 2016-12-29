@@ -46,7 +46,7 @@
 
 
     <div class="form-group">
-      <%= form.select :source, webhook_sources_select(Samson::Integration::SOURCES), {}, class: "form-control" %>
+      <%= form.select :source, webhook_sources_for_select(Samson::Integration::SOURCES), {}, class: "form-control" %>
     </div>
 
     <p></p>
