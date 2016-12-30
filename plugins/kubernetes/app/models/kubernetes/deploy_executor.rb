@@ -132,8 +132,9 @@ module Kubernetes
     def print_pod_logs(pod)
       @output.puts "LOGS:"
 
-      pod.containers.map(&:name).each do |container|
-        @output.puts "Container #{container}" if pod.containers.size > 1
+      containers = (pod.containers + pod.init_containers).map { |c| c.fetch(:name) }
+      containers.each do |container|
+        @output.puts "Container #{container}" if containers.size > 1
 
         # Display the first and last n_lines of the log
         max = 50
