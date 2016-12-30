@@ -12,8 +12,14 @@ elsif Samson::EnvCheck.set?("RAILS_LOG_TO_SYSLOG")
     # show params for every request
     unwanted_keys = %w[format action controller]
     params = event.payload[:params].reject { |key, _| unwanted_keys.include? key }
-    params['commits'] = '... truncated ...' if params['commits']
-    { params: params, thread_count: Thread.list.size }
+    params['commits'] = '... truncated ...' if params['commits'] # lots of metadata from github we don't need
+    request = event.payload[:headers].instance_variable_get(:@req)
+    {
+      params: params,
+      user_id: request.env['warden']&.user&.id,
+      ip: request.remote_ip,
+      thread_count: Thread.list.size
+    }
   end
 
   require 'syslog/logger'
