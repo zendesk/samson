@@ -25,3 +25,5 @@ before_script:
   - mysql -u root -e 'set GLOBAL innodb_large_prefix = true'
   - mysql -u root -e 'set GLOBAL innodb_file_per_table = true'
   - mysql -u root -e 'set GLOBAL innodb_file_format = "barracuda"'
+  - mysql -u root -e 'GRANT ALL ON *.* TO 'travis'@'localhost';'
+

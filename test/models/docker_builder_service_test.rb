@@ -381,7 +381,8 @@ describe DockerBuilderService do
         DockerBuilderService.class_variable_set(:@@docker_major_version, nil)
       end
 
-      it "adds login commands" do
+      it "uses email flag when docker is old" do
+        DockerBuilderService.expects(:read_docker_version).returns("1.12.0")
         called[1].must_equal "docker login --username fo\\+o --password ba\\+r --email no@example.com ba\\+z.com"
       end
 
@@ -391,8 +392,12 @@ describe DockerBuilderService do
       end
 
       it "does not use email flag on newer docker versions" do
-        DockerBuilderService.expects(:docker_major_version).returns(17)
+        DockerBuilderService.expects(:read_docker_version).returns("17.0.0")
         called[1].must_equal "docker login --username fo\\+o --password ba\\+r ba\\+z.com"
+      end
+
+      it "can do a real docker check" do
+        called # checking that it does not blow up ... result varies depending on if docker is installed
       end
     end
 

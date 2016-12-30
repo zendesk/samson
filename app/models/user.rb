@@ -28,9 +28,12 @@ class User < ActiveRecord::Base
   before_soft_delete :destroy_user_project_roles
 
   scope :search, ->(query) {
-    return self if query.blank?
-    query = ActiveRecord::Base.send(:sanitize_sql_like, query)
-    where("name LIKE ? OR email LIKE ?", "%#{query}%", "%#{query}%")
+    if query.blank?
+      self
+    else
+      query = ActiveRecord::Base.send(:sanitize_sql_like, query)
+      where("name LIKE ? OR email LIKE ?", "%#{query}%", "%#{query}%")
+    end
   }
 
   def self.with_role(role_id, project_id)

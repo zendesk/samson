@@ -356,7 +356,7 @@ describe ApplicationHelper do
     end
 
     it "fails on unknown" do
-      assert_raises(ArgumentError) { link_to_resource(123) }.message.must_equal "Unsupported resource Fixnum"
+      assert_raises(ArgumentError) { link_to_resource(123) }.message.must_equal "Unsupported resource Integer"
     end
 
     # sanity check that we did not miss anything especially plugin models

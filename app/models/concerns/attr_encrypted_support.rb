@@ -2,7 +2,7 @@
 require 'attr_encrypted'
 
 module AttrEncryptedSupport
-  ENCRYPTION_KEY = Rails.application.secrets.secret_key_base
+  ENCRYPTION_KEY = Rails.application.secrets.secret_key_base[0...32]
   ENCRYPTION_KEY_SHA = Digest::SHA2.hexdigest(Rails.application.secrets.secret_key_base)
 
   def self.included(base)

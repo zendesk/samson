@@ -21,9 +21,7 @@ describe SamsonFlowdock::FlowdockService do
 
     it "shows nothing when flowdock fails to fetch users" do
       stub_request(:get, "https://api.flowdock.com/v1/users").to_timeout
-      Rails.logger.expects(:error).with(
-        'Error fetching flowdock users (token invalid / flowdock down). Net::OpenTimeout: execution expired'
-      )
+      Rails.logger.expects(:error).with(includes('Error fetching flowdock users'))
       service.users.must_equal([])
 
       # is cached
