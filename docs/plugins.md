@@ -17,6 +17,7 @@ Available plugins:
  - [Flowdock notification](https://github.com/zendesk/samson/tree/master/plugins/flowdock)
  - [Jenkins jobs management](https://github.com/zendesk/samson/tree/master/plugins/jenkins)
  - [Hipchat notification](https://github.com/listia/samson_hipchat)
+ - [Hyperclair security scanner for docker images](https://github.com/zendesk/samson/tree/master/plugins/hyperclair)
  - [Kubernetes](https://github.com/zendesk/samson/tree/master/plugins/kubernetes)
  - [Release Number From CI](https://github.com/redbubble/samson-release-number-from-ci)
  - [NewRelic monitoring](https://github.com/zendesk/samson/tree/master/plugins/new_relic)

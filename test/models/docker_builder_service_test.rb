@@ -48,6 +48,19 @@ describe DockerBuilderService do
       job.send(:finish)
     end
 
+    it "uses label as tag when present" do
+      build.label = 'Foo Bar baz'
+      run!
+      job.send(:finish)
+      build.docker_ref.must_equal 'foo-bar-baz'
+    end
+
+    it "tags as latest" do
+      run!
+      job.send(:finish)
+      build.docker_ref.must_equal 'latest'
+    end
+
     it "builds, does not push and removes the image" do
       run!
 
@@ -98,24 +111,6 @@ describe DockerBuilderService do
         execute_job.must_equal(123)
       end
     end
-
-    describe "with clair" do
-      with_env HYPERCLAIR_PATH: 'foobar', DOCKER_KEEP_BUILT_IMGS: "1"
-
-      it "runs clair" do
-        Samson::Clair.expects(:append_job_with_scan).with(instance_of(Job), 'latest')
-        service.expects(:build_image).returns(true)
-        run!
-        execute_job
-      end
-
-      it "does not run clair when build failed" do
-        Samson::Clair.expects(:append_job_with_scan).never
-        service.expects(:build_image).returns(false)
-        run!
-        execute_job
-      end
-    end
   end
 
   describe "#run_build_image_job" do
@@ -126,23 +121,19 @@ describe DockerBuilderService do
       ["status: Random status", "BUILD DIGEST: #{project.docker_repo(registry: :default)}@#{repo_digest}"].join("\n")
     end
 
-    before do
-      Kubernetes::BuildJobExecutor.expects(:new).returns k8s_job
-    end
+    before { Kubernetes::BuildJobExecutor.expects(:new).returns k8s_job }
 
     it 'updates build metadata when the remote job completes' do
       k8s_job.expects(:execute!).returns([true, build_log])
-      build.label = "Version 123"
 
-      service.send(:run_build_image_job, local_job, nil)
-      assert_equal('version-123', build.docker_ref)
+      service.send(:run_build_image_job, local_job)
       assert_equal("#{project.docker_repo(registry: :default)}@#{repo_digest}", build.docker_repo_digest)
     end
 
     it 'leaves the build docker metadata empty when the remote job fails' do
       k8s_job.expects(:execute!).returns([false, build_log])
 
-      service.send(:run_build_image_job, local_job, nil)
+      service.send(:run_build_image_job, local_job)
       assert_nil build.docker_repo_digest
     end
   end
@@ -222,13 +213,16 @@ describe DockerBuilderService do
     let(:primary_repo) { project.docker_repo(registry: :default) }
     let(:output) { service.send(:output).to_s }
 
-    before { build.docker_image = mock_docker_image }
+    before do
+      build.docker_image = mock_docker_image
+      build.docker_ref = tag
+    end
 
     it 'stores generated repo digest' do
       mock_docker_image.expects(:tag).once
       stub_push primary_repo, tag, true
 
-      assert service.send(:push_image, tag), output
+      assert service.send(:push_image), output
       build.docker_repo_digest.must_equal "#{project.docker_repo(registry: :default)}@#{repo_digest}"
     end
 
@@ -236,13 +230,13 @@ describe DockerBuilderService do
       mock_docker_image.expects(:tag).once
       stub_push primary_repo, tag, true
 
-      assert service.send(:push_image, tag), output
+      assert service.send(:push_image), output
       output.must_include 'Frobinating...'
     end
 
     it 'rescues docker error' do
-      service.expects(:docker_image_ref).raises(Docker::Error::DockerError)
-      refute service.send(:push_image, 'my-test')
+      service.expects(:push_image_to_registries).raises(Docker::Error::DockerError)
+      refute service.send(:push_image)
       output.to_s.must_equal "Docker push failed: Docker::Error::DockerError\n"
     end
 
@@ -260,7 +254,7 @@ describe DockerBuilderService do
           repo_tag: "#{primary_repo}:#{tag}", force: false
         ).multiple_yields(*push_output).returns(true)
 
-        assert service.send(:push_image, tag), output
+        assert service.send(:push_image), output
       end
     end
 
@@ -269,35 +263,8 @@ describe DockerBuilderService do
       mock_docker_image.expects(:tag)
       stub_push primary_repo, tag, true
 
-      refute service.send(:push_image, 'my-test')
+      refute service.send(:push_image)
       output.to_s.must_include "Docker push failed: Unable to get repo digest"
-    end
-
-    describe "tag selection" do
-      it 'uses the tag passed in' do
-        mock_docker_image.expects(:tag)
-        stub_push primary_repo, tag, true
-
-        assert service.send(:push_image, tag), output
-        build.docker_ref.must_equal tag
-      end
-
-      it 'uses latest when no tag is given' do
-        mock_docker_image.expects(:tag)
-        stub_push primary_repo, 'latest', true, force: true
-
-        assert service.send(:push_image, nil), output
-        build.docker_ref.must_equal 'latest'
-      end
-
-      it 'uses paramified build label when label and no tag is given' do
-        mock_docker_image.expects(:tag)
-        stub_push primary_repo, 'version-123', true
-        build.label = "Version 123"
-
-        assert service.send(:push_image, nil), output
-        build.docker_ref.must_equal 'version-123'
-      end
     end
 
     describe "with secondary registry" do
@@ -309,21 +276,21 @@ describe DockerBuilderService do
         mock_docker_image.expects(:tag).twice
         stub_push primary_repo, tag, true
         stub_push secondary_repo, tag, true
-        assert service.send(:push_image, tag), output
+        assert service.send(:push_image), output
         build.docker_ref.must_equal tag
       end
 
       it "stops and fails when pushing to primary registry fails" do
         mock_docker_image.expects(:tag)
         stub_push primary_repo, tag, false
-        refute service.send(:push_image, tag)
+        refute service.send(:push_image)
       end
 
       it "fails when pushing to secondary registry fails" do
         mock_docker_image.expects(:tag).twice
         stub_push primary_repo, tag, true
         stub_push secondary_repo, tag, false
-        refute service.send(:push_image, tag)
+        refute service.send(:push_image)
       end
     end
 
@@ -335,14 +302,15 @@ describe DockerBuilderService do
         stub_push(primary_repo, tag, true)
         stub_push(primary_repo, 'latest', true, force: true)
 
-        assert service.send(:push_image, 'my-test', tag_as_latest: true), output
+        assert service.send(:push_image, tag_as_latest: true), output
       end
 
       it 'does not add the latest tag on top of the one specified when that tag is latest' do
+        build.docker_ref = 'latest'
         mock_docker_image.expects(:tag).with(has_entry(tag: 'latest'))
         stub_push(primary_repo, 'latest', true, force: true)
 
-        assert service.send(:push_image, 'latest', tag_as_latest: true), output
+        assert service.send(:push_image, tag_as_latest: true), output
       end
     end
   end

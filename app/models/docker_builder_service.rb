@@ -44,8 +44,9 @@ class DockerBuilderService
     @build = build
   end
 
-  def run!(image_name: nil, push: false, tag_as_latest: false)
+  def run!(push: false, tag_as_latest: false)
     build.docker_build_job.try(:destroy) # if there's an old build job, delete it
+    build.docker_ref = build.label.try(:parameterize).presence || 'latest'
 
     job = build.create_docker_job
     build.save!
@@ -55,21 +56,14 @@ class DockerBuilderService
       @output = execution.output
       repository.executor = execution.executor
 
-      success =
-        if build.kubernetes_job
-          run_build_image_job(job, image_name, push: push, tag_as_latest: tag_as_latest)
-        elsif build_image(tmp_dir)
-          ret = true
-          ret = push_image(image_name, tag_as_latest: tag_as_latest) if push
-          build.docker_image.remove(force: true) unless ENV["DOCKER_KEEP_BUILT_IMGS"] == "1"
-          ret
-        end
-
-      if success
-        Samson::Clair.append_job_with_scan(job, docker_image_ref(image_name, build))
+      if build.kubernetes_job
+        run_build_image_job(job, push: push, tag_as_latest: tag_as_latest)
+      elsif build_image(tmp_dir)
+        ret = true
+        ret = push_image(tag_as_latest: tag_as_latest) if push
+        build.docker_image.remove(force: true) unless ENV["DOCKER_KEEP_BUILT_IMGS"] == "1"
+        ret
       end
-
-      success
     end
 
     job_execution.on_complete { send_after_notifications }
@@ -103,8 +97,9 @@ class DockerBuilderService
     File.new(tempfile_name, 'r')
   end
 
-  def run_build_image_job(local_job, image_name, push: false, tag_as_latest: false)
-    docker_ref = docker_image_ref(image_name, build)
+  # TODO: not calling before_docker_build hooks since we don't have a temp directory
+  # possibly call it anyway with nil so calls do not get lost
+  def run_build_image_job(local_job, push: false, tag_as_latest: false)
     k8s_job = Kubernetes::BuildJobExecutor.new(
       output,
       job: local_job,
@@ -112,12 +107,11 @@ class DockerBuilderService
     )
     success, build_log = k8s_job.execute!(
       build, project,
-      docker_ref: docker_ref,
+      docker_ref: build.docker_ref,
       push: push,
       tag_as_latest: tag_as_latest
     )
 
-    build.docker_ref = docker_ref
     build.docker_repo_digest = nil
 
     if success
@@ -152,8 +146,8 @@ class DockerBuilderService
   end
   add_method_tracer :build_image
 
-  def push_image(tag, tag_as_latest: false)
-    tag = build.docker_ref = docker_image_ref(tag, build)
+  def push_image(tag_as_latest: false)
+    tag = build.docker_ref
     tag_is_latest = (tag == 'latest')
 
     unless build.docker_repo_digest = push_image_to_registries(tag: tag, override_tag: tag_is_latest)
@@ -219,10 +213,6 @@ class DockerBuilderService
 
   def project
     @build.project
-  end
-
-  def docker_image_ref(image_name, build)
-    image_name.presence || build.label.try(:parameterize).presence || 'latest'
   end
 
   def send_after_notifications
