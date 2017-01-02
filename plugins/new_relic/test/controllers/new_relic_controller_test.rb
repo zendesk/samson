@@ -4,8 +4,7 @@ require_relative '../test_helper'
 SingleCov.covered!
 
 describe NewRelicController do
-  before { silence_warnings { SamsonNewRelic::Api::KEY = '123' } }
-  after { silence_warnings { SamsonNewRelic::Api::KEY = nil } }
+  with_new_relic_plugin_enabled
 
   as_a_viewer do
     unauthorized :get, :show, project_id: :foo, stage_id: 1
@@ -26,7 +25,7 @@ describe NewRelicController do
       end
 
       it "requires a NewReclic api key" do
-        silence_warnings { SamsonNewRelic::Api::KEY = nil }
+        silence_warnings { SamsonNewRelic::KEY = nil }
         get :show, params: {project_id: projects(:test), stage_id: stages(:test_staging)}
         assert_response :precondition_failed
       end

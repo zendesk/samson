@@ -1,6 +1,6 @@
 <fieldset>
   <legend>New Relic</legend>
-  <% if SamsonNewRelic::Api::KEY %>
+  <% if SamsonNewRelic.enabled? %>
     <% apps = SamsonNewRelic::Api.applications rescue nil %>
     <% if apps %>
       <% form.object.new_relic_applications.build %>

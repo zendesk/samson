@@ -1,8 +1,6 @@
 # frozen_string_literal: true
 module SamsonNewRelic
   module Api
-    KEY = ENV['NEWRELIC_API_KEY'].presence
-
     class << self
       def applications
         @applications ||= begin

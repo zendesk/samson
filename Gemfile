@@ -123,6 +123,7 @@ group :development, :test do
   gem 'brakecheck'
   gem 'rubocop'
   gem 'flay'
+  gem 'parallel_tests'
 end
 
 group :test do
