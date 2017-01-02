@@ -106,7 +106,7 @@ module DeploysHelper
     end
 
     deploy_params = {reference: @deploy.reference}
-    Samson::Hooks.fire(:deploy_permitted_params).each { |p| deploy_params[p] = @deploy.public_send(p) }
+    Samson::Hooks.fire(:deploy_permitted_params).flatten(1).each { |p| deploy_params[p] = @deploy.public_send(p) }
 
     link_to "Redeploy",
       project_stage_deploys_path(

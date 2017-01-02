@@ -12,7 +12,9 @@ describe SamsonKubernetes do
 
   describe :deploy_permitted_params do
     it "adds outs" do
-      Samson::Hooks.fire(:deploy_permitted_params).must_include :kubernetes_rollback
+      params = Samson::Hooks.fire(:deploy_permitted_params).flatten
+      params.must_include :kubernetes_rollback
+      params.must_include :kubernetes_reuse_build
     end
   end
 
