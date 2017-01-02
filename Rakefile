@@ -7,7 +7,6 @@ ENV['PRECOMPILE'] = '1' if ARGV.include?("test:js") || ARGV.include?("assets:pre
 
 require_relative 'config/application'
 require "rake/testtask"
-require "parallel_tests/tasks"
 
 Samson::Application.load_tasks
 
@@ -97,7 +96,11 @@ task :flay do
 end
 
 # make parallel_test run all tests and not only core
-Rake::Task["parallel:test"].clear
-task 'parallel:test' do
-  exec "parallel_test test plugins/*/test"
+# gem is not present in staging or production
+if Rails.env.development?
+  require "parallel_tests/tasks"
+  Rake::Task["parallel:test"].clear
+  task 'parallel:test' do
+    exec "parallel_test test plugins/*/test"
+  end
 end
