@@ -159,7 +159,7 @@ describe "cleanliness" do
   it "links every plugin in docs" do
     readme_path = 'docs/plugins.md'
     readme = File.read(readme_path)
-    plugins = Dir['plugins/*'].map { |f| File.basename(f) } - ['samson_ledger']
+    plugins = Dir['plugins/*'].map { |f| File.basename(f) } - ['samson_ledger', 'extra_migrations']
     plugins.each do |plugin_name|
       assert(
         readme.include?("https://github.com/zendesk/samson/tree/master/plugins/#{plugin_name}"),
