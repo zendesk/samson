@@ -19,7 +19,7 @@
     <fieldset>
       <legend>
         Environment variables
-        <%= additional_info "$VAR / ${VAR} replacements supported&#13;Priority is DeployGroup, Environment, All" %>
+        <%= additional_info SamsonEnv::HELP_TEXT %>
       </legend>
       <%= render "samson_env/environment_variables", form: form %> |
       <%= link_to "Preview", preview_admin_environment_variable_groups_path(group_id: @group.id) %>

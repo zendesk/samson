@@ -1,7 +1,7 @@
 <fieldset>
   <legend>
     Env variables written to .env before deploy
-    <%= additional_info "$VAR / ${VAR} replacements supported&#13;Priority is Stage,EnvironmentGroup then DeployGroup, Environment, All" %>
+    <%= additional_info SamsonEnv::HELP_TEXT %>
   </legend>
   <%= render "samson_env/environment_variables", form: form %>
 
