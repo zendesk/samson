@@ -87,6 +87,7 @@ class Changeset::PullRequest
     @data['head']['sha']
   end
 
+  # does not include refs/head
   def branch
     @data['head']['ref']
   end
