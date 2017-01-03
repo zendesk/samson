@@ -46,6 +46,11 @@ describe BinaryBuilder do
       ].join
     end
 
+    it 'reports docker errors' do
+      fake_container.expects(:attach).raises("Opps")
+      assert_raises(Samson::Hooks::UserError) { builder.build }
+    end
+
     it 'does nothing if docker flag is set for project but no dockerfile.build exists' do
       builder.unstub(:build_file_exist?)
       builder.expects(:create_build_image).never
@@ -77,7 +82,7 @@ describe BinaryBuilder do
 
       it 'stop build when pre build script fails' do
         File.write(pre_build_script, 'oops')
-        assert_raises(RuntimeError) { builder.build }
+        assert_raises(Samson::Hooks::UserError) { builder.build }
       end
     end
   end

@@ -45,7 +45,7 @@ class BinaryBuilder
 
     @output.puts "Running pre build script..."
     unless @executor.execute! pre_build_file
-      raise "Error running pre build script"
+      raise Samson::Hooks::UserError, "Error running pre build script"
     end
   end
 
@@ -59,8 +59,8 @@ class BinaryBuilder
     @output.puts 'Now starting Build container...'
     @container.tap(&:start).attach { |_stream, chunk| @output.write_docker_chunk(chunk) }
   rescue
-    @output.puts "Failed to run the build script '#{BUILD_SCRIPT}' inside container."
-    raise
+    Rails.logger.error("Binary builder error:\n#{$!}\n#{$!.backtrace.join("\n")}")
+    raise Samson::Hooks::UserError, "Failed to run the build script '#{BUILD_SCRIPT}' inside container.\n#{$!}"
   end
 
   def retrieve_binaries
