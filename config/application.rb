@@ -137,12 +137,6 @@ module Samson
     config.samson.auth.ldap = Samson::EnvCheck.set?("AUTH_LDAP")
     config.samson.auth.gitlab = Samson::EnvCheck.set?("AUTH_GITLAB")
 
-    config.samson.docker = ActiveSupport::OrderedOptions.new
-    config.samson.docker.registries = [
-      ENV['DOCKER_REGISTRY'].presence,
-      *ENV['DOCKER_EXTRA_REGISTRIES'].to_s.split(',')
-    ].compact
-
     config.samson.uri = URI(ENV["DEFAULT_URL"] || 'http://localhost:3000')
     config.sse_rails_engine.access_control_allow_origin = config.samson.uri.to_s
 

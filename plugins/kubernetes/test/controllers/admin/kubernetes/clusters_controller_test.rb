@@ -35,7 +35,11 @@ describe Admin::Kubernetes::ClustersController do
     describe "#seed_ecr" do
       let(:secrets_url) { "http://foobar.server/api/v1/namespaces/foobar/secrets" }
 
-      before { SamsonAwsEcr::Engine.expects(:refresh_credentials).returns('user', 'pass') }
+      before do
+        SamsonAwsEcr::Engine.expects(:refresh_credentials)
+        DockerRegistry.first.username = 'user'
+        DockerRegistry.first.password = 'pass'
+      end
 
       it "creates missing credentials" do
         Kubernetes::Cluster.any_instance.expects(:namespaces).returns(['foobar'])

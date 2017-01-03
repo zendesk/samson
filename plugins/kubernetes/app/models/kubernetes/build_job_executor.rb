@@ -14,13 +14,14 @@ module Kubernetes
       @output = output
       @job = job
       @registry = registry
+      raise if @registry.is_a?(Hash)
     end
 
     def execute!(build, project, docker_ref:, push: false, tag_as_latest: false)
       job_log = job_name = job_namespace = ""
       k8s_job = nil
 
-      unless valid_registry_info?(@registry)
+      if @registry.host.blank?
         @output.puts "### Registry server should not be empty. Aborting..."
         return false, job_log
       end
@@ -60,10 +61,6 @@ module Kubernetes
       build_cluster.extension_client
     end
 
-    def valid_registry_info?(registry)
-      registry[:serveraddress].present?
-    end
-
     def build_job_config_path
       ENV['KUBE_BUILD_JOB_FILE'] || File.join(Rails.root, 'plugins', 'kubernetes', 'config', 'build_job.yml')
     end
@@ -81,9 +78,9 @@ module Kubernetes
 
       # Pass all necessary information so that remote container can build the image
       container_params = {
-        env: [{name: 'DOCKER_REGISTRY', value: @registry.fetch(:serveraddress) }],
+        env: [{name: 'DOCKER_REGISTRY', value: @registry.host }],
         args: [
-          project.repository_url, build.git_sha, project.docker_repo(registry: :default), docker_ref,
+          project.repository_url, build.git_sha, project.docker_repo(@registry), docker_ref,
           push ? "yes" : "no",
           tag_as_latest ? "yes" : "no"
         ]

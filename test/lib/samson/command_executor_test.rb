@@ -54,6 +54,10 @@ describe Samson::CommandExecutor do
       end
     end
 
+    it "can set env" do
+      Samson::CommandExecutor.execute("printenv", "FOO", timeout: 1, env: {"FOO" => "baz"}).must_equal [true, "baz\n"]
+    end
+
     it "allows whitelisted env access" do
       with_env FOO: 'bar' do
         Samson::CommandExecutor.execute("printenv", "FOO", timeout: 1, whitelist_env: ["FOO"]).

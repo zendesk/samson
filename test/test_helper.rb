@@ -189,11 +189,13 @@ class ActiveSupport::TestCase
   def self.with_registries(registries)
     around do |test|
       begin
-        old = Rails.application.config.samson.docker.registries
-        Rails.application.config.samson.docker.registries = registries
+        old = ENV['DOCKER_REGISTRIES']
+        ENV['DOCKER_REGISTRIES'] = registries.join(',').presence
+        DockerRegistry.instance_variable_set :@all, nil
         test.call
       ensure
-        Rails.application.config.samson.docker.registries = old
+        DockerRegistry.instance_variable_set :@all, nil
+        ENV['DOCKER_REGISTRIES'] = old
       end
     end
   end

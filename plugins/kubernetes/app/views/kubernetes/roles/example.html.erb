@@ -39,7 +39,7 @@ spec:
     spec:
       containers:
       - name: <%= project_label %>
-        image: <%= ENV['DOCKER_REGISTRY'] %>/<%= project_label %>:latest
+        image: <%= DockerRegistry.first&.base %>/<%= project_label %>:latest
         resources:
           limits:
             cpu: 20m

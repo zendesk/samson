@@ -40,9 +40,9 @@ class Admin::Kubernetes::ClustersController < ApplicationController
   end
 
   def seed_ecr
-    user, password = SamsonAwsEcr::Engine.refresh_credentials
+    SamsonAwsEcr::Engine.refresh_credentials
     @cluster.namespaces.each do |namespace|
-      update_secret namespace, user, password
+      update_secret namespace
     end
     redirect_to({action: :index}, notice: "Seeded!")
   end
@@ -75,13 +75,10 @@ class Admin::Kubernetes::ClustersController < ApplicationController
   # same as this does under the hood:
   # http://kubernetes.io/docs/user-guide/images/#using-aws-ec2-container-registry
   # kubectl create secret docker-registry kube-ecr-auth --docker-server=X --docker-username=X --docker-password=X
-  def update_secret(namespace, user, pass)
-    docker_config = {
-      Rails.application.config.samson.docker.registries.first => {
-        username: user,
-        password: pass
-      }
-    }
+  def update_secret(namespace)
+    docker_config = DockerRegistry.all.each_with_object({}) do |r, h|
+      h[r.host] = { username: r.username, password: r.password }
+    end
 
     secret = {
       kind: "Secret",
