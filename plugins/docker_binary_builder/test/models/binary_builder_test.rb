@@ -4,12 +4,13 @@ require_relative '../test_helper'
 SingleCov.covered! uncovered: (defined?(Rake) ? 16 : 14) # during rake it is 16
 
 describe BinaryBuilder do
+  run_inside_of_temp_directory
+
   let(:project) { projects(:test) }
-  let(:dir) { '/tmp' }
   let(:reference) { 'aBc-19F' }
   let(:output) { StringIO.new }
-  let(:executor) { TerminalExecutor.new(@output_stream, verbose: true) }
-  let(:builder) { BinaryBuilder.new(dir, project, reference, output, executor) }
+  let(:executor) { TerminalExecutor.new(output, verbose: true) }
+  let(:builder) { BinaryBuilder.new(Dir.pwd, project, reference, output, executor) }
 
   before do
     GitRepository.any_instance.stubs(valid_url?: true)
@@ -19,7 +20,6 @@ describe BinaryBuilder do
   describe '#build' do
     let(:fake_image) { stub(remove: true) }
     let(:fake_container) { stub(delete: true, start: true, attach: true, copy: true) }
-    let(:pre_build_script) { File.join(dir, BinaryBuilder::PRE_BUILD_SCRIPT) }
 
     before do
       Docker::Container.stubs(:create).returns(fake_container)
@@ -31,7 +31,7 @@ describe BinaryBuilder do
     end
 
     it 'builds the image' do
-      executor.expects(:execute!).with(pre_build_script).never
+      executor.expects(:execute!).never
 
       builder.build
       output.string.must_equal [
@@ -53,14 +53,17 @@ describe BinaryBuilder do
     end
 
     describe "with pre build shell script" do
-      before { builder.expects(:pre_build_file_exist?).returns(true) }
+      let(:pre_build_script) { BinaryBuilder::PRE_BUILD_SCRIPT }
+      before do
+        File.write(pre_build_script, 'echo foobar')
+        File.chmod(0o755, pre_build_script)
+      end
 
-      it 'run pre build shell script if it is available' do
-        executor.expects(:execute!).with(pre_build_script).returns(true)
-
+      it 'succeeds when pre build script succeeds' do
         builder.build
-        output.string.must_equal [
+        output.string.gsub(/» .*\n/, '').must_equal [
           "Running pre build script...\n",
+          "foobar\r\n",
           "Connecting to Docker host with Api version: 1.19 ...\n",
           "### Creating tarfile for Docker build\n",
           "### Running Docker build\n",
@@ -72,12 +75,9 @@ describe BinaryBuilder do
         ].join
       end
 
-      it 'stop build when pre build shell script fails' do
-        executor.expects(:execute!).with(pre_build_script).returns(false)
-
-        assert_raises RuntimeError do
-          builder.build
-        end
+      it 'stop build when pre build script fails' do
+        File.write(pre_build_script, 'oops')
+        assert_raises(RuntimeError) { builder.build }
       end
     end
   end

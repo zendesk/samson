@@ -13,8 +13,8 @@ class BinaryBuilder
     @dir = dir
     @project = project
     @git_reference = reference
-    @output_stream = output
-    @executor = executor || TerminalExecutor.new(@output_stream, verbose: true)
+    @output = output
+    @executor = executor || TerminalExecutor.new(@output, verbose: true)
   end
 
   def build
@@ -23,7 +23,7 @@ class BinaryBuilder
     begin
       run_pre_build_script
 
-      @output_stream.puts "Connecting to Docker host with Api version: #{docker_api_version} ..."
+      @output.puts "Connecting to Docker host with Api version: #{docker_api_version} ..."
 
       @image = create_build_image
       @container = Docker::Container.create(create_container_options)
@@ -31,47 +31,40 @@ class BinaryBuilder
       start_build_script
       retrieve_binaries
 
-      @output_stream.puts 'Continuing docker build...'
+      @output.puts 'Continuing docker build...'
     ensure
-      @output_stream.puts 'Cleaning up docker build image and container...'
+      @output.puts 'Cleaning up docker build image and container...'
       @container&.delete(force: true)
       @image&.remove(force: true)
     end
   end
 
   def run_pre_build_script
-    return unless pre_build_file_exist?
+    pre_build_file = File.join(@dir, PRE_BUILD_SCRIPT)
+    return unless File.file? pre_build_file
 
-    @output_stream.puts "Running pre build script..."
-    success = @executor.execute! pre_build_file
-
-    raise "Error running pre build script" unless success
+    @output.puts "Running pre build script..."
+    unless @executor.execute! pre_build_file
+      raise "Error running pre build script"
+    end
   end
 
   private
-
-  def pre_build_file
-    File.join(@dir, PRE_BUILD_SCRIPT)
-  end
-
-  def pre_build_file_exist?
-    File.file? pre_build_file
-  end
 
   def build_file_exist?
     File.exist? File.join(@dir, DOCKER_BUILD_FILE)
   end
 
   def start_build_script
-    @output_stream.puts 'Now starting Build container...'
-    @container.tap(&:start).attach { |_stream, chunk| @output_stream.write_docker_chunk(chunk) }
-  rescue => ex
-    @output_stream.puts "Failed to run the build script '#{BUILD_SCRIPT}' inside container."
-    raise ex
+    @output.puts 'Now starting Build container...'
+    @container.tap(&:start).attach { |_stream, chunk| @output.write_docker_chunk(chunk) }
+  rescue
+    @output.puts "Failed to run the build script '#{BUILD_SCRIPT}' inside container."
+    raise
   end
 
   def retrieve_binaries
-    @output_stream.puts "Grabbing '#{ARTIFACTS_FILE_PATH}' from build container..."
+    @output.puts "Grabbing '#{ARTIFACTS_FILE_PATH}' from build container..."
     artifacts_tar = Tempfile.new(['artifacts', '.tar'], @dir)
     artifacts_tar.binmode
     @container.copy(ARTIFACTS_FILE_PATH) { |chunk| artifacts_tar.write chunk }
@@ -82,13 +75,13 @@ class BinaryBuilder
   end
 
   def untar(file_path)
-    @output_stream.puts "About to untar: #{file_path}"
+    @output.puts "About to untar: #{file_path}"
 
     File.open(file_path, 'rb') do |io|
       Gem::Package::TarReader.new io do |tar|
         tar.each do |tarfile|
           destination_file = File.join @dir, tarfile.full_name
-          @output_stream.puts "    > #{tarfile.full_name}"
+          @output.puts "    > #{tarfile.full_name}"
 
           if tarfile.directory?
             FileUtils.mkdir_p destination_file
@@ -151,7 +144,7 @@ class BinaryBuilder
       'dockerfile' => DOCKER_BUILD_FILE,
       't' => image_name
     }
-    DockerBuilderService.build_docker_image(@dir, build_options, @output_stream)
+    DockerBuilderService.build_docker_image(@dir, build_options, @output)
   end
 
   def docker_api_version
