@@ -5,22 +5,7 @@
 <section id="user-project-roles" class="tabs">
   <h2 class="section-subtitle">Project Level Roles</h2>
 
-  <%= form_tag '?', method: :get do %>
-    <div class="col-md-6 clearfix">&nbsp;</div>
-
-    <div class="col-md-3 clearfix">
-      <%= text_field_tag :search, params[:search], class: 'form-control', placeholder: 'Search' %>
-    </div>
-
-    <div class="col-md-2 clearfix">
-      <% roles = [['', '']] + UserProjectRole::ROLES.map { |r| [r.name.capitalize, r.id] } %>
-      <%= select_tag :role_id, options_for_select(roles, params[:role_id]), class: 'form-control' %>
-    </div>
-
-    <div class="col-md-1 clearfix">
-      <%= submit_tag "Search", class: "btn btn-default form-control" %>
-    </div>
-  <% end %>
+  <%= render 'users/search_bar', system_level: false %>
 
   <div class="users-csv">
     <%= link_to "Download as CSV", new_csv_export_path(format: :csv, type: :users, project_id: @project.id) %>
@@ -37,7 +22,7 @@
     </tr>
     </thead>
     <tbody>
-    <% if @users.empty? %>
+    <% if @users.length == 0 %>
       <tr>
         <td>No users found.</td>
       </tr>

@@ -279,6 +279,20 @@ describe User do
     end
   end
 
+  describe ".search_by_criteria" do
+    it "can filter by system level role" do
+      User.search_by_criteria(search: "", role_id: Role::ADMIN.id).sort.must_equal(
+        [users(:admin), users(:super_admin)].sort
+      )
+    end
+
+    it "can filter by system level role and project role" do
+      User.search_by_criteria(search: "", role_id: Role::ADMIN.id, project_id: projects(:test).id).sort.must_equal(
+        [users(:admin), users(:super_admin), users(:project_admin)].sort
+      )
+    end
+  end
+
   describe ".with_role" do
     let(:project) { projects(:test) }
     let(:deployer_list) do

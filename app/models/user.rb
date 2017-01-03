@@ -30,10 +30,25 @@ class User < ActiveRecord::Base
     query = ActiveRecord::Base.send(:sanitize_sql_like, query)
     where("name LIKE ? OR email LIKE ?", "%#{query}%", "%#{query}%")
   }
-  scope :with_role, -> (role_id, project_id) {
-    joins("LEFT OUTER JOIN user_project_roles ON users.id = user_project_roles.user_id AND user_project_roles.project_id = #{project_id.to_i}"). # rubocop:disable Metrics/LineLength
-      where('users.role_id >= ? OR user_project_roles.role_id >= ?', role_id, role_id)
-  }
+
+  def self.with_role(role_id, project_id)
+    if project_id.present?
+      join_condition = "users.id = user_project_roles.user_id AND user_project_roles.project_id = #{project_id.to_i}"
+      joins("LEFT OUTER JOIN user_project_roles ON #{join_condition}").
+        where('users.role_id >= ? OR user_project_roles.role_id >= ?', role_id, role_id)
+    else
+      where('users.role_id >= ?', role_id)
+    end
+  end
+
+  # @override Searchable
+  def self.search_by_criteria(criteria)
+    if role_id = criteria[:role_id].presence
+      super.with_role(role_id, criteria[:project_id])
+    else
+      super
+    end
+  end
 
   def starred_project?(project)
     starred_project_ids.include?(project.id)
