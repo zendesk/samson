@@ -150,11 +150,16 @@ class BinaryBuilder
     @docker_api_version ||= Docker.version['ApiVersion']
   end
 
+  # TODO: not sure what happens when value is shell safe "foo;\n;bar"
   def env_vars_for_project
-    if defined?(EnvironmentVariable) # make sure 'env' plugin is enabled
+    if env_plugin_enabled?
       EnvironmentVariable.env(@project, nil).map { |name, value| "#{name}=#{value}" }
     else
       []
     end
+  end
+
+  def env_plugin_enabled?
+    defined?(EnvironmentVariable)
   end
 end

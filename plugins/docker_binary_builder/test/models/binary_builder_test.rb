@@ -175,4 +175,17 @@ describe BinaryBuilder do
       end
     end
   end
+
+  describe "#env_vars_for_project" do
+    it "returns env vars" do
+      EnvironmentVariable.expects(:env).returns('A' => "B")
+      builder.send(:env_vars_for_project).must_equal ["A=B"]
+    end
+
+    it "is empty when plugin is not loaded" do
+      EnvironmentVariable.expects(:env).never
+      builder.expects(:env_plugin_enabled?).returns(false)
+      builder.send(:env_vars_for_project).must_equal []
+    end
+  end
 end
