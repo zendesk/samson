@@ -24,11 +24,11 @@ class Integrations::BaseController < ApplicationController
     failed = deploy_to_stages(release, stages)
 
     if failed
-      head :unprocessable_entity, message: "Failed to start deploy to #{failed.name}"
+      record_log :error, "Failed to start deploy to #{failed.name}"
     else
       record_log :info, "Deploying to #{stages.size} stages"
-      head :ok
     end
+    render plain: @recorded_log.to_s, status: (failed ? :unprocessable_entity : :ok)
   end
 
   protected

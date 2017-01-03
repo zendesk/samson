@@ -86,12 +86,13 @@ describe Integrations::BaseController do
       post :create, params: {test_route: true, token: token}
       assert_response :success
       result = WebhookRecorder.read(project)
-      result.fetch(:log).must_equal <<-LOG.strip_heredoc
+      log = <<-LOG.strip_heredoc
         INFO: Branch master is release branch: true
         INFO: Deploying to 0 stages
       LOG
+      result.fetch(:log).must_equal log
       result.fetch(:status_code).must_equal 200
-      result.fetch(:body).must_equal ""
+      result.fetch(:body).must_equal log
     end
 
     it 'creates a release and a connected build' do
