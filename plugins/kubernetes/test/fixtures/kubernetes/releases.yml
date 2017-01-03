@@ -4,3 +4,4 @@ test_release:
   project: test
   git_sha: abababababa
   git_ref: master
+  deploy: succeeded_test

@@ -66,6 +66,10 @@ class Deploy < ActiveRecord::Base
     end
   end
 
+  def previous_deploy
+    stage.deploys.prior_to(self).first
+  end
+
   def previous_successful_deploy
     stage.deploys.successful.prior_to(self).first
   end

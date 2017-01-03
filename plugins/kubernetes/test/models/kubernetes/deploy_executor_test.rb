@@ -259,6 +259,20 @@ describe Kubernetes::DeployExecutor do
           out.must_include "Build #{Build.last.url} is looking good"
         end
 
+        it "reuses build when told to do so" do
+          previous = deploys(:failed_staging_test)
+          previous.update_column(:id, deploy.id - 1) # make previous_deploy work
+          kubernetes_releases(:test_release).update_column(:deploy_id, previous.id) # find previous deploy
+          build.update_column(:docker_repo_digest, 'ababababab') # make build succeeded
+          deploy.update_column(:kubernetes_reuse_build, true)
+
+          DockerBuilderService.any_instance.expects(:run!).never
+
+          assert execute!
+          out.must_include "SUCCESS"
+          out.must_include "Build #{build.url} is looking good"
+        end
+
         it "fails when the build fails" do
           DockerBuilderService.any_instance.expects(:run!).with do
             Build.any_instance.expects(:docker_build_job).at_least_once.returns Job.new(status: 'cancelled')

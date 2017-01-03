@@ -233,22 +233,15 @@ module Kubernetes
     end
 
     def find_or_create_build
-      return unless build = (Build.find_by_git_sha(@job.commit) || create_build)
+      return unless build = (find_build || create_build)
       wait_for_build(build)
       ensure_build_is_successful(build) unless @stopped
       build
     end
 
-    def wait_for_build(build)
-      if !build.docker_repo_digest && build.docker_build_job.try(:active?)
-        @output.puts("Waiting for Build #{build.url} to finish.")
-        loop do
-          break if @stopped
-          sleep TICK
-          break if build.docker_build_job.reload.finished?
-        end
-      end
-      build.reload
+    def find_build
+      Build.find_by_git_sha(@job.commit) ||
+        (@job.deploy.kubernetes_reuse_build && @job.deploy.previous_deploy&.kubernetes_release&.build)
     end
 
     def create_build
@@ -267,6 +260,18 @@ module Kubernetes
         @output.puts("Not creating a Build for #{@job.commit} since it does not have a Dockerfile.")
         false
       end
+    end
+
+    def wait_for_build(build)
+      if !build.docker_repo_digest && build.docker_build_job.try(:active?)
+        @output.puts("Waiting for Build #{build.url} to finish.")
+        loop do
+          break if @stopped
+          sleep TICK
+          break if build.docker_build_job.reload.finished?
+        end
+      end
+      build.reload
     end
 
     def ensure_build_is_successful(build)
