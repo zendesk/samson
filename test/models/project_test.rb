@@ -288,17 +288,8 @@ describe Project do
     describe 'with namespace' do
       with_env DOCKER_REPO_NAMESPACE: 'bar'
 
-      it "namespaces default registry" do
+      it "namespaces" do
         project.docker_repo(registry: :default).must_equal "docker-registry.example.com/bar/foo"
-      end
-
-      it "namespaces implicit default registries" do
-        project.docker_repo(registry: 'docker-registry.example.com').must_equal "docker-registry.example.com/bar/foo"
-      end
-
-      # Not great ... but what we need atm :(
-      it "does not namespace extra registries" do
-        project.docker_repo(registry: 'xyz').must_equal "xyz/foo"
       end
     end
   end

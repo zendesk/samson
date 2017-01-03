@@ -44,13 +44,8 @@ class Project < ActiveRecord::Base
   scope :search, ->(name) { where("name like ?", "%#{name}%") }
 
   def docker_repo(registry:)
-    default_registry = Rails.application.config.samson.docker.registries.first
-    registry = default_registry  if registry == :default
-    parts = []
-    parts << registry
-    parts << ENV['DOCKER_REPO_NAMESPACE'].to_s if registry == default_registry
-    parts << permalink_base
-    File.join(*parts)
+    registry = Rails.application.config.samson.docker.registries.first if registry == :default
+    File.join(registry, ENV['DOCKER_REPO_NAMESPACE'].to_s, permalink_base)
   end
 
   # Whether to create new releases when the branch is updated.
