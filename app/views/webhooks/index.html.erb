@@ -44,7 +44,6 @@
       <%= form.collection_select :stage_id, @project.stages, :id, :name, {}, class: "form-control" %>
     </div>
 
-
     <div class="form-group">
       <%= form.select :source, webhook_sources_for_select(Samson::Integration::SOURCES), {}, class: "form-control" %>
     </div>
@@ -66,7 +65,7 @@
             Body:
             <pre><%= hook.fetch(:request_body, '') %></pre>
           <% else %>
-            ... visisble for admins ...
+            ... visible for admins ...
           <% end %>
         </td>
       </tr>
@@ -75,7 +74,8 @@
         <td>
           Status: <%= hook.fetch(:status_code) %><br/>
           Body:
-          <pre><%= hook.fetch(:body) %></pre>
+          <% body = hook.fetch(:body) %>
+          <pre><%= body.start_with?('{') ? (JSON.pretty_generate(JSON.parse(body)) rescue body) : body %></pre>
         </td>
       </tr>
       <tr>
