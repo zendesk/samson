@@ -18,8 +18,7 @@ describe WebhookRecorder do
     it "does not record internal rails/rack headers" do
       WebhookRecorder.record(project, request: request, log: "", response: response)
       WebhookRecorder.read(project).fetch(:request).must_equal(
-        "FOO" => "bar",
-        "RAW_POST_DATA" => "BODY"
+        "FOO" => "bar"
       )
     end
 
