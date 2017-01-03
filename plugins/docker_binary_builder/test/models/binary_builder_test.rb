@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 require_relative '../test_helper'
 
-SingleCov.covered! uncovered: (defined?(Rake) ? 16 : 14) # during rake it is 16
+SingleCov.covered!
 
 describe BinaryBuilder do
   run_inside_of_temp_directory
@@ -149,6 +149,29 @@ describe BinaryBuilder do
 
       it 'replaces slashes with dashes' do
         builder.send(:image_name).must_equal 'foo_build:namespaced-ref'
+      end
+    end
+  end
+
+  describe "#untar" do
+    it "untars" do
+      File.open("test.tar", "w") do |tarfile|
+        Gem::Package::TarWriter.new(tarfile) do |tar|
+          tar.mkdir "foo", 0o777
+          tar.add_file("bar/bar", 0o777) { |tf| tf.write "hello" }
+          tar.add_file("bar/baz", 0o777) { |tf| tf.write "world" }
+        end
+        tarfile.close
+        builder.send(:untar, tarfile.path)
+        output.string.must_equal <<-TEXT.strip_heredoc
+          About to untar: test.tar
+              > foo
+              > bar/bar
+              > bar/baz
+        TEXT
+        assert File.directory?('foo')
+        assert File.exist?('bar/bar')
+        assert File.exist?('bar/baz')
       end
     end
   end

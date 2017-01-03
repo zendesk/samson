@@ -74,6 +74,7 @@ class BinaryBuilder
     untar(File.join(@dir, ARTIFACTS_FILE))
   end
 
+  # FIXME: does not set permissons ... reuse some library instead of re-inventing
   def untar(file_path)
     @output.puts "About to untar: #{file_path}"
 
@@ -88,9 +89,7 @@ class BinaryBuilder
           else
             destination_directory = File.dirname(destination_file)
             FileUtils.mkdir_p destination_directory unless File.directory?(destination_directory)
-            File.open destination_file, "wb" do |f|
-              f.print tarfile.read
-            end
+            File.open(destination_file, "wb") { |f| f.print tarfile.read }
           end
         end
       end
