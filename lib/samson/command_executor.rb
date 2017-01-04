@@ -1,11 +1,10 @@
 # frozen_string_literal: true
 module Samson
-  # TODO: reuse in git_repo ?
   # safe command execution that makes sure to use timeouts for everything and cleans up dead sub processes
   module CommandExecutor
     class << self
       # timeout could be done more reliably with timeout(1) from gnu coreutils ... but that would add another dependency
-      def execute(*command, timeout:, whitelist_env: [], env: {})
+      def execute(*command, timeout:, whitelist_env: [], env: {}, err: [:child, :out])
         raise ArgumentError, "Positive timeout required" if timeout <= 0
         output = "ABORTED"
         pid = nil
@@ -13,7 +12,7 @@ module Samson
 
         wait = Thread.new do
           begin
-            IO.popen(env, command, unsetenv_others: true, err: [:child, :out]) do |io|
+            IO.popen(env, command, unsetenv_others: true, err: err) do |io|
               pid = io.pid
               output = io.read
             end

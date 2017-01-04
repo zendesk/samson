@@ -158,9 +158,13 @@ class GitRepository
   # error: nil
   def capture_stdout(*command, dir: repo_cache_dir)
     Dir.chdir(dir) do
-      env = {"PATH" => ENV["PATH"], "HOME" => ENV["HOME"]} # safer and also fixes locally running with hub gem
-      out = IO.popen(env, command, unsetenv_others: true, err: '/dev/null') { |io| io.read.strip }
-      out if $?.success?
+      success, output = Samson::CommandExecutor.execute(
+        *command,
+        whitelist_env: ['HOME', 'PATH'],
+        timeout: 30.minutes,
+        err: '/dev/null'
+      )
+      output.strip if success
     end
   end
 end
