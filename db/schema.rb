@@ -18,7 +18,7 @@ ActiveRecord::Schema.define(version: 20170102212707) do
     t.string   "git_sha",             limit: 255,                  null: false
     t.string   "git_ref",             limit: 255,                  null: false
     t.string   "docker_image_id",     limit: 255
-    t.string   "docker_ref",          limit: 255
+    t.string   "docker_tag",          limit: 255
     t.string   "docker_repo_digest",  limit: 255
     t.integer  "docker_build_job_id"
     t.string   "label",               limit: 255

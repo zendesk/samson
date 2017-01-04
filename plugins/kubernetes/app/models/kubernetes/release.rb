@@ -70,7 +70,7 @@ module Kubernetes
     end
 
     def validate_docker_image_in_registry
-      if build && build.docker_repo_digest.blank? && build.docker_ref.blank?
+      if build && !build.docker_repo_digest?
         errors.add(:build, 'Docker image was not pushed to registry')
       end
     end

@@ -2,6 +2,7 @@
 # Execute a job that can build/push Docker images
 # and write progress to the local job output.
 # TODO: this reimplementes the app/models/kubernetes/resource.rb Job logic ... unify
+# TODO: use digests instead of tags to be immutable
 module Kubernetes
   class BuildJobExecutor
     WAIT_FOR_JOB = 5.minutes
@@ -17,7 +18,7 @@ module Kubernetes
       raise if @registry.is_a?(Hash)
     end
 
-    def execute!(build, project, docker_ref:, push: false, tag_as_latest: false)
+    def execute!(build, project, docker_tag:, push: false, tag_as_latest: false)
       job_log = job_name = job_namespace = ""
       k8s_job = nil
 
@@ -26,7 +27,7 @@ module Kubernetes
         return false, job_log
       end
 
-      k8s_job = job_config(build, project, docker_ref: docker_ref, push: push, tag_as_latest: tag_as_latest)
+      k8s_job = job_config(build, project, docker_tag: docker_tag, push: push, tag_as_latest: tag_as_latest)
       job_name = k8s_job[:metadata][:name]
       job_namespace = k8s_job[:metadata][:namespace]
 
@@ -65,7 +66,7 @@ module Kubernetes
       ENV['KUBE_BUILD_JOB_FILE'] || File.join(Rails.root, 'plugins', 'kubernetes', 'config', 'build_job.yml')
     end
 
-    def fill_job_details(k8s_job, build, project, docker_ref:, push: false, tag_as_latest: false)
+    def fill_job_details(k8s_job, build, project, docker_tag:, push: false, tag_as_latest: false)
       # Fill in some information to easily query the job resource
       project_name = project.permalink.tr('_', '-')
       labels = { project: project_name, role: "docker-build-job" }
@@ -80,7 +81,7 @@ module Kubernetes
       container_params = {
         env: [{name: 'DOCKER_REGISTRY', value: @registry.host }],
         args: [
-          project.repository_url, build.git_sha, project.docker_repo(@registry), docker_ref,
+          project.repository_url, build.git_sha, project.docker_repo(@registry), docker_tag,
           push ? "yes" : "no",
           tag_as_latest ? "yes" : "no"
         ]
@@ -88,11 +89,11 @@ module Kubernetes
       k8s_job[:spec][:template][:spec][:containers][0].update(container_params)
     end
 
-    def job_config(build, project, docker_ref:, push: false, tag_as_latest: false)
+    def job_config(build, project, docker_tag:, push: false, tag_as_latest: false)
       # Read the external config path and create a new job config instance
       contents = File.read(build_job_config_path)
       k8s_job = Kubernetes::RoleConfigFile.new(contents, build_job_config_path).job
-      fill_job_details(k8s_job, build, project, docker_ref: docker_ref, push: push, tag_as_latest: tag_as_latest)
+      fill_job_details(k8s_job, build, project, docker_tag: docker_tag, push: push, tag_as_latest: tag_as_latest)
       k8s_job
     end
 

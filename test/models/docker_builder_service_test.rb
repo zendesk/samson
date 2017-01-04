@@ -52,13 +52,13 @@ describe DockerBuilderService do
       build.label = 'Foo Bar baz'
       run!
       job.send(:finish)
-      build.docker_ref.must_equal 'foo-bar-baz'
+      build.docker_tag.must_equal 'foo-bar-baz'
     end
 
     it "tags as latest" do
       run!
       job.send(:finish)
-      build.docker_ref.must_equal 'latest'
+      build.docker_tag.must_equal 'latest'
     end
 
     it "builds, does not push and removes the image" do
@@ -215,7 +215,7 @@ describe DockerBuilderService do
 
     before do
       build.docker_image = mock_docker_image
-      build.docker_ref = tag
+      build.docker_tag = tag
     end
 
     it 'stores generated repo digest' do
@@ -275,7 +275,7 @@ describe DockerBuilderService do
         stub_push primary_repo, tag, true
         stub_push secondary_repo, tag, true
         assert service.send(:push_image), output
-        build.docker_ref.must_equal tag
+        build.docker_tag.must_equal tag
       end
 
       it "stops and fails when pushing to primary registry fails" do
@@ -304,7 +304,7 @@ describe DockerBuilderService do
       end
 
       it 'does not add the latest tag on top of the one specified when that tag is latest' do
-        build.docker_ref = 'latest'
+        build.docker_tag = 'latest'
         mock_docker_image.expects(:tag).with(has_entry(tag: 'latest'))
         stub_push(primary_repo, 'latest', true, force: true)
 
