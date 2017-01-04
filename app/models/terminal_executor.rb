@@ -115,6 +115,8 @@ class TerminalExecutor
       'RBENV_ROOT', 'RBENV_HOOK_PATH', 'RBENV_DIR', # ruby
       'DOCKER_URL', 'DOCKER_REGISTRY' # docker
     ] + ENV['ENV_WHITELIST'].to_s.split(/, ?/)
-    ENV.to_h.slice(*whitelist)
+    env = ENV.to_h.slice(*whitelist)
+    env['DOCKER_REGISTRY'] ||= DockerRegistry.first&.host # backwards compatibility
+    env
   end
 end

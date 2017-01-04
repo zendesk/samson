@@ -16,6 +16,6 @@ It also tries to create a new repository if it does not already exist.
 To configure this plugin you need to:
 
 * Enable docker in samson (DOCKER_FEATURE=1)
-* Set your ECR registry (DOCKER_REGISTRY=<account>.dkr.ecr.<aws-region>.amazonaws.com)
+* Set your ECR registry (DOCKER_REGISTRIES=<account>.dkr.ecr.<aws-region>.amazonaws.com)
 * Set your [AWS credentials](http://docs.aws.amazon.com/sdkforruby/api/#Configuration)
 * Ensure permissions "ecr:DescribeRepositories" and "ecr:CreateRepository" are available.

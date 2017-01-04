@@ -29,14 +29,17 @@ module SamsonHyperclair
     end
 
     def scan(executable, project, docker_ref)
+      registry = DockerRegistry.first
       with_time do
         Samson::CommandExecutor.execute(
           executable,
-          *project.docker_repo(registry: :default).split('/', 2),
+          *project.docker_repo(registry).split('/', 2),
           docker_ref,
+          env: {
+            'DOCKER_REGISTRY_USER' => registry.username,
+            'DOCKER_REGISTRY_PASS' => registry.password
+          },
           whitelist_env: [
-            'DOCKER_REGISTRY_USER',
-            'DOCKER_REGISTRY_PASS',
             'AWS_ACCESS_KEY_ID',
             'AWS_SECRET_ACCESS_KEY',
             'PATH'

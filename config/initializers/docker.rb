@@ -2,10 +2,7 @@
 require 'docker'
 
 if !Rails.env.test? && !ENV['PRECOMPILE'] && ENV['DOCKER_FEATURE']
-  if ENV['DOCKER_REGISTRY'].blank?
-    puts '*** DOCKER_REGISTRY environment variable must be configured when DOCKER_FEATURE is enabled ***'
-    exit 1
-  end
+  DockerRegistry.check_config!
 
   if (url = ENV['DOCKER_URL'].presence)
     Docker.url = url

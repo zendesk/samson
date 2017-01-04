@@ -5,14 +5,15 @@ module Samson
   module CommandExecutor
     class << self
       # timeout could be done more reliably with timeout(1) from gnu coreutils ... but that would add another dependency
-      def execute(*command, timeout:, whitelist_env: [])
+      def execute(*command, timeout:, whitelist_env: [], env: {})
         raise ArgumentError, "Positive timeout required" if timeout <= 0
         output = "ABORTED"
         pid = nil
+        env = ENV.to_h.slice(*whitelist_env).merge(env)
 
         wait = Thread.new do
           begin
-            IO.popen(ENV.to_h.slice(*whitelist_env), command, unsetenv_others: true, err: [:child, :out]) do |io|
+            IO.popen(env, command, unsetenv_others: true, err: [:child, :out]) do |io|
               pid = io.pid
               output = io.read
             end

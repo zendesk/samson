@@ -118,7 +118,7 @@ describe DockerBuilderService do
     let(:k8s_job) { stub }
     let(:repo_digest) { 'sha256:5f1d7c7381b2e45ca73216d7b06004fdb0908ed7bb8786b62f2cdfa5035fde2c' }
     let(:build_log) do
-      ["status: Random status", "BUILD DIGEST: #{project.docker_repo(registry: :default)}@#{repo_digest}"].join("\n")
+      ["status: Random status", "BUILD DIGEST: #{project.docker_repo(DockerRegistry.first)}@#{repo_digest}"].join("\n")
     end
 
     before { Kubernetes::BuildJobExecutor.expects(:new).returns k8s_job }
@@ -127,7 +127,7 @@ describe DockerBuilderService do
       k8s_job.expects(:execute!).returns([true, build_log])
 
       service.send(:run_build_image_job, local_job)
-      assert_equal("#{project.docker_repo(registry: :default)}@#{repo_digest}", build.docker_repo_digest)
+      assert_equal("#{project.docker_repo(DockerRegistry.first)}@#{repo_digest}", build.docker_repo_digest)
     end
 
     it 'leaves the build docker metadata empty when the remote job fails' do
@@ -210,7 +210,7 @@ describe DockerBuilderService do
       ]
     end
     let(:tag) { 'my-test' }
-    let(:primary_repo) { project.docker_repo(registry: :default) }
+    let(:primary_repo) { project.docker_repo(DockerRegistry.first) }
     let(:output) { service.send(:output).to_s }
 
     before do
@@ -223,7 +223,7 @@ describe DockerBuilderService do
       stub_push primary_repo, tag, true
 
       assert service.send(:push_image), output
-      build.docker_repo_digest.must_equal "#{project.docker_repo(registry: :default)}@#{repo_digest}"
+      build.docker_repo_digest.must_equal "#{project.docker_repo(DockerRegistry.first)}@#{repo_digest}"
     end
 
     it 'saves docker output to the buffer' do
@@ -240,21 +240,19 @@ describe DockerBuilderService do
       output.to_s.must_equal "Docker push failed: Docker::Error::DockerError\n"
     end
 
-    it 'pushes with credentials when DOCKER_REGISTRY is set' do
-      with_env(
-        'DOCKER_REGISTRY' => 'reg',
-        'DOCKER_REGISTRY_USER' => 'usr',
-        'DOCKER_REGISTRY_PASS' => 'pas',
-        'DOCKER_REGISTRY_EMAIL' => 'eml'
-      ) do
-        default_registry = Rails.application.config.samson.docker.registries.first
-        mock_docker_image.expects(:tag)
-        mock_docker_image.expects(:push).with(
-          {username: 'usr', password: 'pas', email: 'eml', serveraddress: default_registry},
-          repo_tag: "#{primary_repo}:#{tag}", force: false
-        ).multiple_yields(*push_output).returns(true)
+    describe 'with credentials' do
+      with_registries ['usr:pas@reg']
 
-        assert service.send(:push_image), output
+      it 'pushes with credentials' do
+        with_env(DOCKER_REGISTRY_EMAIL: 'eml') do
+          mock_docker_image.expects(:tag)
+          mock_docker_image.expects(:push).with(
+            {username: 'usr', password: 'pas', email: 'eml', serveraddress: DockerRegistry.first.host},
+            repo_tag: "#{primary_repo}:#{tag}", force: false
+          ).multiple_yields(*push_output).returns(true)
+
+          assert service.send(:push_image), output
+        end
       end
     end
 
@@ -268,7 +266,7 @@ describe DockerBuilderService do
     end
 
     describe "with secondary registry" do
-      let(:secondary_repo) { project.docker_repo(registry: 'extra.registry') }
+      let(:secondary_repo) { project.docker_repo(DockerRegistry.all[1]) }
 
       with_registries ["docker-registry.example.com", 'extra.registry']
 

@@ -5,9 +5,7 @@ SingleCov.covered! unless defined?(Rake) # rake preloads all plugins
 
 describe SamsonAwsEcr::Engine do
   def clear_client
-    if SamsonAwsEcr::Engine.instance_variable_defined?(:@ecr_client)
-      SamsonAwsEcr::Engine.remove_instance_variable(:@ecr_client)
-    end
+    SamsonAwsEcr::Engine.instance_variable_set(:@ecr_clients, nil)
   end
 
   let(:stage) { stages(:test_staging) }
@@ -22,7 +20,6 @@ describe SamsonAwsEcr::Engine do
   let(:expired_response) do
     {authorization_data: [{authorization_token: old_base64_authorization_token, expires_at: 2.hour.ago}]}
   end
-  let(:matching_ecr_registry) { Rails.application.config.samson.docker.registries.first }
 
   with_registries ['12322323232323.dkr.ecr.us-west-1.amazonaws.com']
 
@@ -43,26 +40,16 @@ describe SamsonAwsEcr::Engine do
 
     run_inside_of_temp_directory
 
-    around do |t|
-      begin
-        old_time = SamsonAwsEcr::Engine.send(:credentials_expire_at)
-        SamsonAwsEcr::Engine.send(:credentials_expire_at=, nil)
-        t.call
-      ensure
-        SamsonAwsEcr::Engine.send(:credentials_expire_at=, old_time)
-      end
-    end
-
     before { SamsonAwsEcr::Engine.stubs(:ecr_client).returns(ecr_client) }
 
     describe '.refresh_credentials' do
-      it "changes the DOCKER_REGISTRY_USER and DOCKER_REGISTRY_PASS" do
+      it "changes the username and password" do
         ecr_client.stub_responses(:get_authorization_token, fresh_response)
 
         fire
 
-        ENV['DOCKER_REGISTRY_USER'].must_equal username
-        ENV['DOCKER_REGISTRY_PASS'].must_equal password
+        DockerRegistry.first.username.must_equal username
+        DockerRegistry.first.password.must_equal password
       end
 
       it "does not request new credentials if they are not expired" do
@@ -71,8 +58,8 @@ describe SamsonAwsEcr::Engine do
         fire
         fire
 
-        ENV['DOCKER_REGISTRY_USER'].must_equal username
-        ENV['DOCKER_REGISTRY_PASS'].must_equal password
+        DockerRegistry.first.username.must_equal username
+        DockerRegistry.first.password.must_equal password
       end
 
       it "requests new credentials if they have expired" do
@@ -81,8 +68,8 @@ describe SamsonAwsEcr::Engine do
         fire
         fire
 
-        ENV['DOCKER_REGISTRY_USER'].must_equal username
-        ENV['DOCKER_REGISTRY_PASS'].must_equal password
+        DockerRegistry.first.username.must_equal username
+        DockerRegistry.first.password.must_equal password
       end
 
       it "tells the user what the problem is when unable to authenticate to AWS" do
@@ -93,17 +80,12 @@ describe SamsonAwsEcr::Engine do
           fire
         end
       end
-
-      it "returns user/pass so kubenretes plugin can use it" do
-        ecr_client.stub_responses(:get_authorization_token, fresh_response)
-        fire.must_include([username, password])
-      end
     end
 
-    describe '.ensure_repository' do
+    describe '.ensure_repositories' do
       before do
         ENV.stubs(fetch: 'x')
-        SamsonAwsEcr::Engine.send(:credentials_expire_at=, 2.hour.from_now)
+        DockerRegistry.first.credentials_expire_at = 2.hour.from_now
       end
 
       it 'creates missing repository' do
@@ -144,24 +126,18 @@ describe SamsonAwsEcr::Engine do
     end
   end
 
-  describe '.ecr_client' do
-    it 'is cached when matching' do
+  describe '.ecr_clients' do
+    it 'is caches' do
       stub_request(:get, %r{/latest/meta-data/iam/security-credentials/})
-      SamsonAwsEcr::Engine.send(:ecr_client).object_id.must_equal SamsonAwsEcr::Engine.send(:ecr_client).object_id
-    end
-
-    it 'is cached when not matching' do
-      matching_ecr_registry # store
-      Rails.application.config.samson.docker.registries = ['nope']
-      refute SamsonAwsEcr::Engine.send(:ecr_client)
-      Rails.application.config.samson.docker.registries = [matching_ecr_registry]
-      refute SamsonAwsEcr::Engine.send(:ecr_client)
+      Array.new(2).map do
+        SamsonAwsEcr::Engine.send(:ecr_client, DockerRegistry.first).object_id
+      end.uniq.size.must_equal 1
     end
   end
 
   describe '.active?' do
     it "is inactive when not on ecr" do
-      Rails.application.config.samson.docker.registries = ['nope']
+      DockerRegistry.first.instance_variable_get(:@uri).host = 'xyz.com'
       refute SamsonAwsEcr::Engine.active?
     end
 

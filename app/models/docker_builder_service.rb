@@ -13,8 +13,8 @@ class DockerBuilderService
     tarfile = create_docker_tarfile(dir)
 
     output.puts("### Running Docker build")
-    # our image can depend on other images in the registry
-    credentials_to_pull = registry_credentials(Rails.application.config.samson.docker.registries.first)
+    # our image can depend on other images in the registry ... only first registry supported atm
+    credentials_to_pull = registry_credentials(DockerRegistry.first)
 
     docker_image =
       Docker::Image.build_from_tar(tarfile, docker_options, Docker.connection, credentials_to_pull) do |chunk|
@@ -33,10 +33,10 @@ class DockerBuilderService
   def self.registry_credentials(registry)
     return unless registry.present?
     {
-      username: ENV['DOCKER_REGISTRY_USER'],
-      password: ENV['DOCKER_REGISTRY_PASS'],
+      username: registry.username,
+      password: registry.password,
       email: ENV['DOCKER_REGISTRY_EMAIL'],
-      serveraddress: registry
+      serveraddress: registry.host
     }
   end
 
@@ -103,7 +103,7 @@ class DockerBuilderService
     k8s_job = Kubernetes::BuildJobExecutor.new(
       output,
       job: local_job,
-      registry: self.class.registry_credentials(Rails.application.config.samson.docker.registries.first)
+      registry: self.class.registry_credentials(DockerRegistry.first)
     )
     success, build_log = k8s_job.execute!(
       build, project,
@@ -169,9 +169,9 @@ class DockerBuilderService
   def push_image_to_registries(tag:, override_tag: false)
     digest = nil
 
-    Rails.application.config.samson.docker.registries.each_with_index do |registry, i|
+    DockerRegistry.all.each_with_index do |registry, i|
       primary = i.zero?
-      repo = project.docker_repo(registry: registry)
+      repo = project.docker_repo(registry)
 
       if override_tag
         output.puts("### Tagging and pushing Docker image to #{repo}:#{tag}")

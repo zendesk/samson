@@ -3,61 +3,59 @@ require 'aws-sdk-core'
 
 module SamsonAwsEcr
   class Engine < Rails::Engine
-    AMAZON_REGISTRY = /\A.*\.dkr.ecr.(?<region>[\w\-]+).amazonaws.com\z/
+    AMAZON_REGISTRY = /\A.*\.dkr.ecr.([\w\-]+).amazonaws.com\z/
 
     class << self
       # we make sure the repo exists so pushes do not fail
       # - ignores if the repo already exists
       # - ignores if the repo cannot be created due to permission problems
-      def ensure_repository(repository)
-        begin
-          return unless ecr_client
-          name = repository.split('/', 2).last
-          ecr_client.describe_repositories(repository_names: [name])
-        rescue Aws::ECR::Errors::RepositoryNotFoundException
-          ecr_client.create_repository(repository_name: name)
+      def ensure_repositories(project)
+        DockerRegistry.all.each do |registry|
+          next unless client = ecr_client(registry)
+          name = project.docker_repo(registry).split('/', 2).last
+
+          begin
+            begin
+              client.describe_repositories(repository_names: [name])
+            rescue Aws::ECR::Errors::RepositoryNotFoundException
+              client.create_repository(repository_name: name)
+            end
+          rescue Aws::ECR::Errors::AccessDenied
+            Rails.logger.info("Not allowed to create or describe repositories")
+          end
         end
-      rescue Aws::ECR::Errors::AccessDenied
-        Rails.logger.info("Not allowed to create or describe repositories")
       end
 
       # aws credentials are only valid for a limited time, so we need to refresh them before pushing
       def refresh_credentials
-        if credentials_stale?
-          authorization_data = ecr_client.get_authorization_token.authorization_data.first
+        DockerRegistry.all.each do |registry|
+          next if registry.credentials_expire_at&.> 1.hour.from_now
+          next unless client = ecr_client(registry)
 
-          self.credentials_expire_at = authorization_data.expires_at || raise("NO EXPIRE FOUND")
-          user, pass = Base64.decode64(authorization_data.authorization_token).split(":", 2)
-          ENV['DOCKER_REGISTRY_USER'] = user
-          ENV['DOCKER_REGISTRY_PASS'] = pass
+          authorization_data = client.get_authorization_token.authorization_data.first
+          username, password = Base64.decode64(authorization_data.authorization_token).split(":", 2)
+          registry.username = username
+          registry.password = password
+          registry.credentials_expire_at = authorization_data.expires_at || raise("NO EXPIRE FOUND")
         end
-
-        [ENV['DOCKER_REGISTRY_USER'], ENV['DOCKER_REGISTRY_PASS']]
       rescue Aws::ECR::Errors::InvalidSignatureException
         raise Samson::Hooks::UserError, "Invalid AWS credentials"
       end
 
       def active?
-        !!ecr_client
-      end
-
-      def registry
-        Rails.application.config.samson.docker.registries.first
+        DockerRegistry.all.any? { |registry| ecr_client(registry) }
       end
 
       private
 
       attr_accessor :credentials_expire_at
 
-      def ecr_client
-        return @ecr_client if defined?(@ecr_client)
-        @ecr_client = if registry && match = AMAZON_REGISTRY.match(registry)
-          Aws::ECR::Client.new(region: match['region'])
+      def ecr_client(registry)
+        host = registry.host
+        @ecr_clients ||= {}
+        @ecr_clients.fetch(host) do
+          @ecr_clients[host] = (region = host[AMAZON_REGISTRY, 1]) && Aws::ECR::Client.new(region: region)
         end
-      end
-
-      def credentials_stale?
-        ecr_client && (!credentials_expire_at || credentials_expire_at < 1.hour.from_now)
       end
     end
   end
@@ -66,8 +64,6 @@ end
 # need credentials to pull (via Dockerfile FROM) and push images
 # ATM this only authenticates the default docker registry and not any extra registries
 Samson::Hooks.callback :before_docker_build do |_, build, _|
-  if SamsonAwsEcr::Engine.active?
-    SamsonAwsEcr::Engine.ensure_repository(build.project.docker_repo(registry: SamsonAwsEcr::Engine.registry))
-    SamsonAwsEcr::Engine.refresh_credentials
-  end
+  SamsonAwsEcr::Engine.ensure_repositories(build.project)
+  SamsonAwsEcr::Engine.refresh_credentials
 end

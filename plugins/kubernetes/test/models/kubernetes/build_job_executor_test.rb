@@ -8,16 +8,10 @@ SingleCov.covered! uncovered: 2
 describe Kubernetes::BuildJobExecutor do
   let(:output) { StringIO.new }
   let(:out) { output.string }
-  let(:registry_info) do
-    {
-      serveraddress: Rails.application.config.samson.docker.registries.first,
-      username: 'foo', password: 'bar', email: 'moo@cow.com'
-    }
-  end
   let(:build) { builds(:docker_build) }
   let(:job) { jobs(:succeeded_test) }
   let(:project) { job.project }
-  let(:executor) { Kubernetes::BuildJobExecutor.new(output, job: job, registry: registry_info) }
+  let(:executor) { Kubernetes::BuildJobExecutor.new(output, job: job, registry: DockerRegistry.first) }
 
   with_registries ["docker-registry.example.com"]
 
@@ -38,7 +32,7 @@ describe Kubernetes::BuildJobExecutor do
     end
 
     it 'fails when an invalid registry is passed in' do
-      registry_info[:serveraddress] = ''
+      DockerRegistry.first.host.replace ''
       extension_client.expects(:create_job).never
       extension_client.expects(:delete_job).never
       success, job_log = execute!
@@ -96,7 +90,7 @@ describe Kubernetes::BuildJobExecutor do
         end
 
         assert_equal build_config.job[:spec][:template][:spec][:containers][0][:args],
-          [project.repository_url, build.git_sha, project.docker_repo(registry: :default), 'latest', 'no', 'no']
+          [project.repository_url, build.git_sha, project.docker_repo(DockerRegistry.first), 'latest', 'no', 'no']
         assert_equal build_config.job[:spec][:template][:spec][:containers][0][:env].length, 1
       end
 
