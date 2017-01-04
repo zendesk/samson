@@ -55,7 +55,7 @@ module SamsonNewRelic
 
       def application_map(application_names)
         application_names.each_with_object({}) do |app_name, map|
-          app = applications[app_name]
+          next unless app = applications[app_name]
           map[app_name] = (yield app).merge(id: app.id)
         end
       end
