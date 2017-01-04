@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 class Integrations::GithubController < Integrations::BaseController
-  cattr_accessor(:github_hook_secret) { ENV['GITHUB_HOOK_SECRET'] }
-
   HMAC_DIGEST = OpenSSL::Digest.new('sha1')
   WEBHOOK_HANDLERS = {
     'push' => Changeset::CodePush,
@@ -23,9 +21,10 @@ class Integrations::GithubController < Integrations::BaseController
   end
 
   def valid_signature?
+    return true unless secret = ENV['GITHUB_HOOK_SECRET']
     hmac = OpenSSL::HMAC.hexdigest(
       HMAC_DIGEST,
-      github_hook_secret,
+      secret,
       request.body.tap(&:rewind).read
     )
 

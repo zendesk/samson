@@ -9,7 +9,7 @@ class Integrations::BaseController < ApplicationController
   def create
     unless deploy?
       record_log :info, "Request is not supposed to trigger a deploy"
-      return head(:ok)
+      return render plain: @recorded_log.to_s
     end
 
     create_release = project.create_release?(branch, service_type, service_name)
@@ -61,7 +61,11 @@ class Integrations::BaseController < ApplicationController
   def deploy_to_stages(release, stages)
     deploy_service = DeployService.new(user)
     stages.detect do |stage|
-      deploy_service.deploy!(stage, reference: release&.version || commit).new_record?
+      deploy = deploy_service.deploy!(stage, reference: release&.version || commit)
+      if deploy.new_record?
+        record_log :error, "Deploy to #{stage.name} failed: #{deploy.errors.full_messages}"
+        true
+      end
     end
   end
 
