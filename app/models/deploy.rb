@@ -90,6 +90,7 @@ class Deploy < ActiveRecord::Base
     super || NullUser.new(buddy_id) if buddy_id
   end
 
+  # user clicked "Bypass" button to bypass deploy approval
   def bypassed_approval?
     stage.deploy_requires_approval? && buddy == user
   end

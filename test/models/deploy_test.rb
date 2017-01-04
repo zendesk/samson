@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 require_relative '../test_helper'
 
-SingleCov.covered! uncovered: 19
+SingleCov.covered!
 
 describe Deploy do
   let(:project) { projects(:test) }
@@ -174,6 +174,129 @@ describe Deploy do
     end
   end
 
+  describe "#changeset" do
+    it "creates a changeset to the previous deploy" do
+      deploy.changeset.commit.must_equal "abcabc1"
+    end
+  end
+
+  describe "#production" do
+    it "checks if stage is production" do
+      deploy.production.must_equal false
+    end
+  end
+
+  describe "#bypassed_approval?" do
+    before do
+      deploy.buddy = deploy.user
+      deploy.stage.expects(:deploy_requires_approval?).returns true
+    end
+
+    it "is bypassed when the user hits the bypass button" do
+      deploy.bypassed_approval?.must_equal true
+    end
+
+    it "is not bypassed when the user did not bypass" do
+      deploy.buddy = users(:viewer)
+      deploy.bypassed_approval?.must_equal false
+    end
+
+    it "does not require bypassed_approval" do
+      deploy.stage.unstub(:deploy_requires_approval?)
+      deploy.bypassed_approval?.must_equal false
+    end
+  end
+
+  describe "#waiting_for_buddy?" do
+    before do
+      deploy.stage.stubs(:deploy_requires_approval?).returns true
+      deploy.buddy = nil
+      deploy.job.status = 'pending'
+    end
+
+    it "waits for buddy" do
+      deploy.waiting_for_buddy?.must_equal true
+    end
+
+    it "does not wait for buddy when it does not require bypassed_approval" do
+      deploy.stage.unstub(:deploy_requires_approval?)
+      deploy.waiting_for_buddy?.must_equal false
+    end
+
+    it "does not wait for buddy when it is not pending" do
+      deploy.job.status = 'running'
+      deploy.waiting_for_buddy?.must_equal false
+    end
+
+    it "does not wait for buddy when it has a buddy" do
+      deploy.buddy = users(:viewer)
+      deploy.waiting_for_buddy?.must_equal false
+    end
+  end
+
+  describe "#confirm_buddy!" do
+    it "starts the deploy" do
+      DeployService.any_instance.expects(:confirm_deploy!)
+      deploy.confirm_buddy!(users(:viewer))
+      deploy.buddy.must_equal users(:viewer)
+    end
+  end
+
+  describe "#pending_start!" do
+    it "starts the deploy" do
+      DeployService.any_instance.expects(:confirm_deploy!)
+      deploy.pending_start!
+    end
+  end
+
+  describe ".active" do
+    it "finds all active deploys" do
+      deploy.job.update_column(:status, 'running')
+      Deploy.active.must_equal [deploy]
+    end
+  end
+
+  describe ".active_count" do
+    it "counts all active deploys" do
+      deploy.job.update_column(:status, 'running')
+      Deploy.active_count.must_equal 1
+    end
+
+    it "caches the result" do
+      Deploy.active_count.must_equal 0
+      deploy.job.update_column(:status, 'running')
+      Deploy.active_count.must_equal 0
+    end
+  end
+
+  describe ".pending" do
+    it "finds all pending deploys" do
+      deploy.job.update_column(:status, 'pending')
+      Deploy.pending.must_equal [deploy]
+    end
+  end
+
+  describe ".running" do
+    it "finds all running deploys" do
+      deploy.job.update_column(:status, 'running')
+      Deploy.running.must_equal [deploy]
+    end
+  end
+
+  describe ".successful" do
+    it "finds all succeeded deploys" do
+      Deploy.successful.must_equal [deploys(:succeeded_production_test), deploys(:succeeded_test)]
+    end
+  end
+
+  describe ".finished_naturally" do
+    it "finds all succeeded or failed deploys" do
+      Deploy.finished_naturally.map(&:id).sort.must_equal(
+        [deploys(:succeeded_production_test), deploys(:succeeded_test), deploys(:failed_staging_test)].map(&:id).sort
+      )
+    end
+  end
+
   describe ".prior_to" do
     let(:deploys) { Array.new(3).map { create_deploy! } }
     let(:prod_stage) { stages(:test_production) }
@@ -195,6 +318,21 @@ describe Deploy do
 
     it "properly scopes new deploys to the correct stage" do
       prod_stage.deploys.prior_to(Deploy.new).first.must_equal prod_deploy
+    end
+  end
+
+  describe ".expired" do
+    it "finds all the expired deploys" do
+      threshold = BuddyCheck.time_limit.minutes.ago
+      deploy.job.update_columns(status: 'pending', created_at: threshold + 2)
+      deploys(:succeeded_production_test).job.update_columns(status: 'pending', created_at: threshold - 2)
+      Deploy.expired.must_equal [deploys(:succeeded_production_test)]
+    end
+  end
+
+  describe "#url" do
+    it 'builds an address for a deploy' do
+      deploy.url.must_equal "http://www.test-url.com/projects/foo/deploys/#{deploy.id}"
     end
   end
 
@@ -267,6 +405,12 @@ describe Deploy do
   describe "#cache_key" do
     it "includes self and commit" do
       deploys(:succeeded_test).cache_key.must_equal ["deploys/178003093-20140101201000000000", "abcabc1"]
+    end
+  end
+
+  describe ".csv_header" do
+    it "has as many elements as csv_line does" do
+      Deploy.csv_header.size.must_equal deploy.csv_line.size
     end
   end
 
