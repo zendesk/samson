@@ -1,0 +1,18 @@
+<%= form_tag '?', method: :get do %>
+  <div class="col-md-6 clearfix">&nbsp;</div>
+
+  <div class="col-md-3 clearfix">
+    <%= text_field_tag :search, params[:search], class: 'form-control', placeholder: 'Search' %>
+  </div>
+
+  <div class="col-md-2 clearfix">
+    <% roles = [['', '']] + (system_level ? Role.all[1..-1] : UserProjectRole::ROLES).map { |r| [r.name.capitalize, r.id] } %>
+    <%= select_tag :role_id, options_for_select(roles, params[:role_id]), class: 'form-control' %>
+  </div>
+
+  <%= hidden_field_tag :project_id, @project.id unless system_level %>
+
+  <div class="col-md-1 clearfix">
+    <%= submit_tag "Search", class: "btn btn-default form-control" %>
+  </div>
+<% end %>
