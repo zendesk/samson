@@ -77,6 +77,11 @@ describe SamsonNewRelic::Api do
       it 'returns accurate count' do
         subject[:count].must_equal(2)
       end
+
+      it 'ignores apps that are in the DB but deleted from newrelic' do
+        assert SamsonNewRelic::Api.applications.delete('Production')
+        subject[:applications].size.must_equal(1)
+      end
     end
 
     describe 'not initial' do
