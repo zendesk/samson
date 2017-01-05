@@ -59,8 +59,7 @@ class BinaryBuilder
     @output.puts 'Now starting Build container...'
     @container.tap(&:start).attach { |_stream, chunk| @output.write_docker_chunk(chunk) }
   rescue
-    Rails.logger.error("Binary builder error:\n#{$!}\n#{$!.backtrace.join("\n")}")
-    raise Samson::Hooks::UserError, "Failed to run the build script '#{BUILD_SCRIPT}' inside container.\n#{$!}"
+    raise_as_user_error "Binary builder error: Failed to run the build script '#{BUILD_SCRIPT}' inside container", $!
   end
 
   def retrieve_binaries
@@ -72,6 +71,8 @@ class BinaryBuilder
 
     untar(artifacts_tar.path)
     untar(File.join(@dir, ARTIFACTS_FILE))
+  rescue
+    raise_as_user_error "Unable to extract artifact from container", $!
   end
 
   # FIXME: does not set permissons ... reuse some library instead of re-inventing
@@ -161,5 +162,10 @@ class BinaryBuilder
 
   def env_plugin_enabled?
     defined?(EnvironmentVariable)
+  end
+
+  def raise_as_user_error(message, error)
+    Rails.logger.error("#{message}:\n#{error}\n#{error.backtrace.join("\n")}")
+    raise Samson::Hooks::UserError, "#{message}\n#{error}"
   end
 end
