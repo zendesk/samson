@@ -1,15 +1,16 @@
 # frozen_string_literal: true
 require_relative '../test_helper'
 
-SingleCov.covered! uncovered: (defined?(Rake) ? 16 : 14) # during rake it is 16
+SingleCov.covered!
 
 describe BinaryBuilder do
+  run_inside_of_temp_directory
+
   let(:project) { projects(:test) }
-  let(:dir) { '/tmp' }
   let(:reference) { 'aBc-19F' }
   let(:output) { StringIO.new }
-  let(:executor) { TerminalExecutor.new(@output_stream, verbose: true) }
-  let(:builder) { BinaryBuilder.new(dir, project, reference, output, executor) }
+  let(:executor) { TerminalExecutor.new(output, verbose: true) }
+  let(:builder) { BinaryBuilder.new(Dir.pwd, project, reference, output, executor) }
 
   before do
     GitRepository.any_instance.stubs(valid_url?: true)
@@ -19,7 +20,6 @@ describe BinaryBuilder do
   describe '#build' do
     let(:fake_image) { stub(remove: true) }
     let(:fake_container) { stub(delete: true, start: true, attach: true, copy: true) }
-    let(:pre_build_script) { File.join(dir, BinaryBuilder::PRE_BUILD_SCRIPT) }
 
     before do
       Docker::Container.stubs(:create).returns(fake_container)
@@ -31,7 +31,7 @@ describe BinaryBuilder do
     end
 
     it 'builds the image' do
-      executor.expects(:execute!).with(pre_build_script).never
+      executor.expects(:execute!).never
 
       builder.build
       output.string.must_equal [
@@ -46,6 +46,11 @@ describe BinaryBuilder do
       ].join
     end
 
+    it 'reports docker errors' do
+      fake_container.expects(:attach).raises("Opps")
+      assert_raises(Samson::Hooks::UserError) { builder.build }
+    end
+
     it 'does nothing if docker flag is set for project but no dockerfile.build exists' do
       builder.unstub(:build_file_exist?)
       builder.expects(:create_build_image).never
@@ -53,14 +58,17 @@ describe BinaryBuilder do
     end
 
     describe "with pre build shell script" do
-      before { builder.expects(:pre_build_file_exist?).returns(true) }
+      let(:pre_build_script) { BinaryBuilder::PRE_BUILD_SCRIPT }
+      before do
+        File.write(pre_build_script, 'echo foobar')
+        File.chmod(0o755, pre_build_script)
+      end
 
-      it 'run pre build shell script if it is available' do
-        executor.expects(:execute!).with(pre_build_script).returns(true)
-
+      it 'succeeds when pre build script succeeds' do
         builder.build
-        output.string.must_equal [
+        output.string.gsub(/» .*\n/, '').must_equal [
           "Running pre build script...\n",
+          "foobar\r\n",
           "Connecting to Docker host with Api version: 1.19 ...\n",
           "### Creating tarfile for Docker build\n",
           "### Running Docker build\n",
@@ -72,12 +80,9 @@ describe BinaryBuilder do
         ].join
       end
 
-      it 'stop build when pre build shell script fails' do
-        executor.expects(:execute!).with(pre_build_script).returns(false)
-
-        assert_raises RuntimeError do
-          builder.build
-        end
+      it 'stop build when pre build script fails' do
+        File.write(pre_build_script, 'oops')
+        assert_raises(Samson::Hooks::UserError) { builder.build }
       end
     end
   end
@@ -145,6 +150,42 @@ describe BinaryBuilder do
       it 'replaces slashes with dashes' do
         builder.send(:image_name).must_equal 'foo_build:namespaced-ref'
       end
+    end
+  end
+
+  describe "#untar" do
+    it "untars" do
+      File.open("test.tar", "w") do |tarfile|
+        Gem::Package::TarWriter.new(tarfile) do |tar|
+          tar.mkdir "foo", 0o777
+          tar.add_file("bar/bar", 0o777) { |tf| tf.write "hello" }
+          tar.add_file("bar/baz", 0o777) { |tf| tf.write "world" }
+        end
+        tarfile.close
+        builder.send(:untar, tarfile.path)
+        output.string.must_equal <<-TEXT.strip_heredoc
+          About to untar: test.tar
+              > foo
+              > bar/bar
+              > bar/baz
+        TEXT
+        assert File.directory?('foo')
+        assert File.exist?('bar/bar')
+        assert File.exist?('bar/baz')
+      end
+    end
+  end
+
+  describe "#env_vars_for_project" do
+    it "returns env vars" do
+      EnvironmentVariable.expects(:env).returns('A' => "B")
+      builder.send(:env_vars_for_project).must_equal ["A=B"]
+    end
+
+    it "is empty when plugin is not loaded" do
+      EnvironmentVariable.expects(:env).never
+      builder.expects(:env_plugin_enabled?).returns(false)
+      builder.send(:env_vars_for_project).must_equal []
     end
   end
 end
