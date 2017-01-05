@@ -46,8 +46,13 @@ describe BinaryBuilder do
       ].join
     end
 
-    it 'reports docker errors' do
+    it 'reports docker script errors' do
       fake_container.expects(:attach).raises("Opps")
+      assert_raises(Samson::Hooks::UserError) { builder.build }
+    end
+
+    it 'reports docker copy errors' do
+      fake_container.expects(:copy).raises("Opps")
       assert_raises(Samson::Hooks::UserError) { builder.build }
     end
 
