@@ -1,12 +1,16 @@
 # frozen_string_literal: true
 require_relative '../test_helper'
 
-SingleCov.covered! uncovered: 28
+SingleCov.covered! uncovered: 27
 
 describe DeploysHelper do
   include StatusHelper
 
   let(:deploy) { deploys(:succeeded_test) }
+
+  describe "#deploy_output" do
+    # TO DO
+  end
 
   describe '#syntax_highlight' do
     it "renders code" do

@@ -105,6 +105,10 @@ class Job < ActiveRecord::Base
     !ACTIVE_STATUSES.include?(status)
   end
 
+  def queued?
+    pending? && JobExecution.queued?(id)
+  end
+
   def active?
     ACTIVE_STATUSES.include?(status)
   end

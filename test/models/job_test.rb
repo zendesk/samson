@@ -1,14 +1,14 @@
 # frozen_string_literal: true
 require_relative '../test_helper'
 
-SingleCov.covered! uncovered: 15
+SingleCov.covered! uncovered: 8
 
 describe Job do
   include GitRepoTestHelper
 
   let(:url) { "git://foo.com:hello/world.git" }
   let(:user) { users(:admin) }
-  let(:project) { Project.create!(name: 'jobtest', repository_url: url) }
+  let(:project) { projects(:test) }
   let(:job) { project.jobs.create!(command: 'cat foo', user: user, project: project, commit: 'master') }
 
   before { Project.any_instance.stubs(:valid_repository_url).returns(true) }
@@ -39,6 +39,100 @@ describe Job do
   describe ".running" do
     it "finds running jobs" do
       Job.running.must_equal [jobs(:running_test)]
+    end
+  end
+
+  describe "#started_by?" do
+    it "is started by user" do
+      job.started_by?(user).must_equal true
+    end
+
+    it "is not started by different user" do
+      job.started_by?(users(:viewer)).must_equal false
+    end
+  end
+
+  describe "#can_be_stopped_by?" do
+    it "can be stopped by user that started the job" do
+      job.can_be_stopped_by?(job.user).must_equal true
+    end
+
+    it "can be stopped by admin " do
+      job.can_be_stopped_by?(user).must_equal true
+    end
+
+    it "can be stopped by admin of this project" do
+      job.can_be_stopped_by?(users(:project_admin)).must_equal true
+    end
+
+    it "cannot be stopped by other users" do
+      job.can_be_stopped_by?(users(:viewer)).must_equal false
+    end
+  end
+
+  describe "#commands" do
+    it "splits the commands" do
+      job.command = "a\rb\r\nc\nd"
+      job.commands.must_equal ["a", "b", "c", "d"]
+    end
+  end
+
+  describe "#success!" do
+    it "marks the job as succeeded" do
+      job.success!
+      job.status.must_equal "succeeded"
+    end
+  end
+
+  describe "#fail!" do
+    it "shows failed job" do
+      job.fail!
+      job.status.must_equal "failed"
+    end
+  end
+
+  describe "#error!" do
+    it "shows errored job" do
+      job.error!
+      job.status.must_equal "errored"
+    end
+  end
+
+  describe "#cancelling!" do
+    it "shows cancelling job" do
+      job.cancelling!
+      job.status.must_equal "cancelling"
+    end
+  end
+
+  describe "#cancelled!" do
+    it "shows cancelled job" do
+      job.cancelled!
+      job.status.must_equal "cancelled"
+    end
+  end
+
+  describe "#finished?" do
+    it "is finished when it is not active" do
+      job.status = "succeeded"
+      job.finished?.must_equal true
+    end
+
+    it "is not finished when it is active" do
+      job.status = "pending"
+      job.finished?.must_equal false
+    end
+  end
+
+  describe "#active?" do
+    it "is active when its status is not finished" do
+      job.status = "pending"
+      job.active?.must_equal true
+    end
+
+    it "is not active when its status is finished" do
+      job.status = "succeeded"
+      job.active?.must_equal false
     end
   end
 

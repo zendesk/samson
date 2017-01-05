@@ -39,7 +39,7 @@ module ApplicationHelper
 
   def sortable(column, title = nil)
     title ||= column.titleize
-    direction = (column == params[:sort] && params[:direction] == "asc" ? "desc" : "asc")
+    direction = ((column == params[:sort] && params[:direction] == "asc") ? "desc" : "asc")
     link_to title, sort: column, direction: direction
   end
 
@@ -78,7 +78,6 @@ module ApplicationHelper
       when Macro then
         [item.name, project_macro_path(item.project, item)]
       when String then [item, nil]
-      when Build then [item.nice_name, project_build_path(item)]
       when Array then item
       else
         raise "Unsupported breadcrumb for #{item}"
@@ -183,7 +182,7 @@ module ApplicationHelper
   end
 
   def delete_checkbox(form)
-    return unless form.object.persisted?
+    return if form.object.new_record?
     content_tag :div, class: "col-lg-1 checkbox" do
       form.check_box(:_destroy) << form.label(:_destroy, "Delete")
     end
