@@ -26,6 +26,7 @@ module SamsonAirbrake
             deploy: {
               rails_env: rails_env,
               scm_revision: deploy.job.commit,
+              scm_repository: git_to_http(deploy.project.repository_url),
               local_username: deploy.user.name
             }
           )
@@ -33,6 +34,13 @@ module SamsonAirbrake
       end
 
       private
+
+      # git@foo:bar/baz.git -> https://foo/bar/baz
+      # https://foo/bar/baz.git -> https://foo/bar/baz
+      def git_to_http(url)
+        url = url.sub(/\.git\z/, '')
+        url.sub(/.*?@(.*?):/, "https://\\1/")
+      end
 
       def read_secret(project, deploy_groups, key)
         Samson::Secrets::KeyResolver.new(project, deploy_groups).read(key)
