@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 require_relative '../../test_helper'
 
-SingleCov.covered! uncovered: 2
+SingleCov.covered!
 
 describe Integrations::TddiumController do
   extend IntegrationsControllerTestHelper
@@ -38,9 +38,9 @@ describe Integrations::TddiumController do
 
   before do
     Deploy.delete_all
-    @webhook = project.webhooks.create!(stage: stages(:test_staging), branch: "production", source: 'tddium')
+    project.webhooks.create!(stage: stages(:test_staging), branch: "production", source: 'tddium')
     stub_github_api(
-      "repos/organization_name/repo_name/commits/dc395381e650f3bac18457909880829fc20e34ba",
+      "repos/organization_name/repo_name/commits/#{commit}",
       commit: {message: commit_message}
     )
   end
@@ -48,4 +48,8 @@ describe Integrations::TddiumController do
   test_regular_commit "Tddium", no_mapping: {branch: "foobar"}, failed: {status: "failed"}
 
   it_ignores_skipped_commits
+
+  it_deploys "when github request for commit to check if we should skip fails" do
+    GITHUB.expects(:commit).raises(Octokit::Error)
+  end
 end

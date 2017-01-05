@@ -21,12 +21,11 @@ describe Integrations::JenkinsController do
     }.with_indifferent_access
   end
 
-  before { Deploy.delete_all }
-
-  options = {
-    no_mapping: {build: { scm: { branch: "foobar" }}}, failed: {build: { status: "FAILURE" }}
-  }
-  test_regular_commit "Jenkins", options do
+  before do
+    Deploy.delete_all
     project.webhooks.create!(stage: stages(:test_staging), branch: "origin/dev", source: 'jenkins')
   end
+
+  test_regular_commit "Jenkins",
+    no_mapping: {build: { scm: { branch: "foobar" }}}, failed: {build: { status: "FAILURE" }}
 end

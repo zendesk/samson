@@ -16,11 +16,9 @@ class Integrations::TddiumController < Integrations::BaseController
     data = GITHUB.commit(repo_name, params[:commit_id])
 
     contains_skip_token?(data.commit.message)
-
   rescue Octokit::Error => e
     record_log :info, "Error trying to grab commit: #{e.message}"
-    # We'll assume that if we don't hear back, don't skip
-    false
+    false # If we don't hear back, don't skip
   end
 
   def branch
