@@ -15,7 +15,10 @@ describe Project do
     project.send(:clone_repository).join
   end
 
-  before { Project.any_instance.stubs(:valid_repository_url).returns(true) }
+  before do
+    Project.any_instance.stubs(:valid_repository_url).returns(true)
+    GitRepository.any_instance.stubs(:tag_from_ref).returns("")
+  end
 
   describe "#generate_token" do
     it "generates a secure token when created" do
