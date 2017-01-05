@@ -4,21 +4,21 @@ module IntegrationsControllerTestHelper
     describe "normal" do
       before(&block) if block
 
-      it "triggers a deploy if there's a webhook mapping for the branch" do
+      it "triggers a deploy if there is a webhook mapping for the branch" do
         post :create, params: payload.deep_merge(token: project.token)
         assert_response :success
         deploy = project.deploys.first
         deploy.commit.must_equal commit
       end
 
-      it "doesn't trigger a deploy if there's no webhook mapping for the branch" do
+      it "does not trigger a deploy if there is no webhook mapping for the branch" do
         post :create, params: payload.deep_merge(token: project.token).deep_merge(options.fetch(:no_mapping))
         assert_response :success
         project.deploys.must_equal []
       end
 
-      if (failed = options[:failed])
-        it "doesn't trigger a deploy if the build did not pass" do
+      if (failed = options.fetch(:failed))
+        it "does not trigger a deploy if the build did not pass" do
           post :create, params: payload.deep_merge(token: project.token).deep_merge(failed)
           assert_response :success
           project.deploys.must_equal []

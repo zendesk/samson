@@ -6,98 +6,39 @@ SingleCov.covered!
 describe Integrations::TravisController do
   extend IntegrationsControllerTestHelper
 
-  let(:sha) { "123abc" }
+  def post(_action, options)
+    options[:params][:payload] = options[:params][:payload].to_json
+    super
+  end
+
+  let(:commit) { "123abc" }
   let(:project) { projects(:test) }
   let(:stage) { stages(:test_staging) }
-
-  with_env TRAVIS_TOKEN: "TOKEN"
+  let(:user) { users(:deployer) }
+  let(:commit_message) { 'A change' }
+  let(:payload) do
+    {
+      payload: {
+        status_message: 'Passed',
+        branch: 'master',
+        message: commit_message,
+        committer_email: user.email,
+        commit: commit,
+        type: 'push'
+      }
+    }.with_indifferent_access
+  end
 
   before do
     Deploy.delete_all
     project.webhooks.create!(stage: stages(:test_staging), branch: "master", source: 'travis')
   end
 
-  describe "#create" do
-    def create(options = {})
-      post :create, params: {token: project.token, payload: JSON.dump(payload)}.merge(options)
-    end
+  test_regular_commit "Travis", no_mapping: {payload: {branch: "foo"}}, failed: {payload: {status_message: 'Failure'}}
 
-    let(:authorization) { Digest::SHA2.hexdigest("bar/foo#{ENV["TRAVIS_TOKEN"]}") }
-    let(:user) { users(:deployer) }
-    let(:status_message) { 'Passed' }
-    let(:commit_message) { 'A change' }
-    let(:payload) do
-      {
-        status_message: status_message,
-        branch: 'master',
-        message: commit_message,
-        committer_email: user.email,
-        commit: sha,
-        type: 'push'
-      }
-    end
-
-    before do
-      @request.headers["Authorization"] = authorization if authorization
-    end
-
-    describe "with no authorization" do
-      let(:authorization) { nil }
-
-      it "renders ok" do
-        create
-        response.status.must_equal(200)
-      end
-    end
-
-    describe "with invalid authorization" do
-      let(:authorization) { "BLAHBLAH" }
-
-      it "renders ok" do
-        create
-        response.status.must_equal(200)
-      end
-    end
-
-    describe "failure" do
-      let(:payload) do
-        {
-          status_message: 'Failure',
-          branch: 'sdavidovitz/blah',
-          message: 'A change'
-        }
-      end
-
-      it "renders ok" do
-        create
-        response.status.must_equal(200)
-      end
-    end
-
-    describe "with status_message 'Passed'" do
-      it "creates a deploy" do
-        create
-        deploy = project.deploys.first
-        deploy.try(:commit).must_equal(sha)
-      end
-    end
-
-    describe "with status_message 'Fixed'" do
-      let(:status_message) { 'Fixed' }
-
-      it "creates a deploy" do
-        create
-        deploy = project.deploys.first
-        deploy.try(:commit).must_equal(sha)
-      end
-    end
-
-    describe 'skipping' do
-      def payload
-        {payload: JSON.dump(super)}
-      end
-
-      it_ignores_skipped_commits
-    end
+  it_deploys "with status_message 'Fixed'" do
+    payload[:payload][:status_message] = 'Fixed'
   end
+
+  it_ignores_skipped_commits
 end
