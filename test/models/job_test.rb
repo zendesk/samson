@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 require_relative '../test_helper'
 
-SingleCov.covered! uncovered: 8
+SingleCov.covered! uncovered: 3
 
 describe Job do
   include GitRepoTestHelper
@@ -136,6 +136,39 @@ describe Job do
     end
   end
 
+  describe "#output" do
+    it "returns an empty string when column is nil" do
+      job.update_column :output, nil
+      job.output.must_equal ""
+    end
+  end
+
+  describe "#update_output!" do
+    it "updates output" do
+      job.update_output!("foo")
+      job.output.must_equal "foo"
+    end
+  end
+
+  describe "#update_git_references!" do
+    it "updates git references" do
+      job.update_git_references!(commit: "foo", tag: "bar")
+      job.commit.must_equal "foo"
+      job.tag.must_equal "bar"
+    end
+  end
+
+  describe "#url" do
+    it "shows deploy's url when it has a deploy" do
+      job.deploy = deploys(:succeeded_test)
+      job.url.must_equal "http://www.test-url.com/projects/foo/deploys/#{deploys(:succeeded_test).id}"
+    end
+
+    it "shows job's url when it does not have a deploy" do
+      job.url.must_equal "http://www.test-url.com/projects/foo/jobs/#{job.id}"
+    end
+  end
+
   describe "#validate_globally_unlocked" do
     def create
       Job.create(command: "", user: user, project: project)
@@ -159,6 +192,11 @@ describe Job do
   describe "#summary" do
     it "renders" do
       job.summary.must_equal "Admin is about to execute against master"
+    end
+
+    it "shortens the reference when commit is SHA1" do
+      job.commit = "a" * 40
+      job.summary.must_equal "Admin is about to execute against aaaaaaa"
     end
   end
 

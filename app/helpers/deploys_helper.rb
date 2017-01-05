@@ -50,15 +50,15 @@ module DeploysHelper
     content_tag :span, count.to_s, class: "label #{type}" unless count.zero?
   end
 
-  def github_users(users)
-    users.map { |user| github_user_avatar(user) }.join(" ").html_safe
+  def github_users(github_users)
+    github_users.map { |github_user| github_user_avatar(github_user) }.join(" ").html_safe
   end
 
-  def github_user_avatar(user)
-    return if user.nil?
+  def github_user_avatar(github_user)
+    return if github_user.nil?
 
-    link_to user.url, title: user.login do
-      image_tag user.avatar_url, width: 20, height: 20
+    link_to github_user.url, title: github_user.login do
+      image_tag github_user.avatar_url, width: 20, height: 20
     end
   end
 

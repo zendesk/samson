@@ -159,7 +159,7 @@ class Job < ActiveRecord::Base
 
   def short_reference
     if commit =~ Build::SHA1_REGEX
-      commit[0...7]
+      commit.slice(0, 7)
     else
       commit
     end

@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 require_relative '../test_helper'
 
-SingleCov.covered! uncovered: 27
+SingleCov.covered! uncovered: 20
 
 describe DeploysHelper do
   include StatusHelper
@@ -10,6 +10,22 @@ describe DeploysHelper do
 
   describe "#deploy_output" do
     # TO DO
+  end
+
+  describe "#deploy_page_title" do
+    it "renders" do
+      @deploy = deploy
+      @project = projects(:test)
+      deploy_page_title.must_equal "Staging deploy (succeeded) - Project"
+    end
+  end
+
+  describe "#deploy_notification" do
+    it "renders a notification" do
+      @project = projects(:test)
+      @deploy = deploy
+      deploy_notification.must_equal "Samson deploy finished:\nProject / Staging succeeded"
+    end
   end
 
   describe '#syntax_highlight' do
@@ -41,6 +57,26 @@ describe DeploysHelper do
 
     it "fails on unknown" do
       assert_raises(KeyError) { file_status_label('wut') }
+    end
+  end
+
+  describe "#file_changes_label" do
+    it "renders new label" do
+      file_changes_label(1, "foo").must_equal "<span class=\"label foo\">1</span>"
+    end
+
+    it "does not render new label when count is zero" do
+      file_changes_label(0, "bar").must_equal nil
+    end
+  end
+
+  describe "#github_users" do
+    it "renders users' avatar" do
+      github_users([stub(url: 'foourl', login: 'foologin', avatar_url: 'fooavatar')]).must_equal(
+        "<a title=\"foologin\" href=\"foourl\">" \
+          "<img width=\"20\" height=\"20\" src=\"/images/fooavatar\" alt=\"Fooavatar\" />" \
+        "</a>"
+      )
     end
   end
 
