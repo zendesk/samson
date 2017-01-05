@@ -43,11 +43,11 @@ class User < ActiveRecord::Base
 
   # @override Searchable
   def self.search_by_criteria(criteria)
+    scope = super
     if role_id = criteria[:role_id].presence
-      super.with_role(role_id, criteria[:project_id])
-    else
-      super
+      scope = scope.with_role(role_id, criteria[:project_id])
     end
+    scope
   end
 
   def starred_project?(project)
