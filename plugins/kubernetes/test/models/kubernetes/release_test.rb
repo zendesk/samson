@@ -35,7 +35,7 @@ describe Kubernetes::Release do
   describe '#create_release' do
     def assert_create_fails(&block)
       refute_difference 'Kubernetes::Release.count' do
-        assert_raises ArgumentError, KeyError, &block
+        assert_raises Samson::Hooks::UserError, KeyError, &block
       end
     end
 
