@@ -73,7 +73,7 @@ class JobExecution
   end
 
   def on_complete(&block)
-    @subscribers << JobExecutionSubscriber.new(job, block)
+    @subscribers << JobExecutionSubscriber.new(job, &block)
   end
 
   def descriptor

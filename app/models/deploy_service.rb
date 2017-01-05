@@ -83,14 +83,19 @@ class DeployService
 
   def send_after_notifications(deploy)
     Samson::Hooks.fire(:after_deploy, deploy, deploy.buddy)
-    send_sse_deploy_update('finish', deploy)
-    send_deploy_email(deploy)
-    send_failed_deploy_email(deploy)
-    send_github_notification(deploy)
-    notify_outbound_webhooks(deploy)
-    update_github_deployment_status(deploy)
+    execute_and_log_errors(deploy) { send_sse_deploy_update('finish', deploy) }
+    execute_and_log_errors(deploy) { send_deploy_email(deploy) }
+    execute_and_log_errors(deploy) { send_failed_deploy_email(deploy) }
+    execute_and_log_errors(deploy) { send_github_notification(deploy) }
+    execute_and_log_errors(deploy) { notify_outbound_webhooks(deploy) }
+    execute_and_log_errors(deploy) { update_github_deployment_status(deploy) }
   end
   add_method_tracer :send_after_notifications
+
+  # basically does the same as the hooks would do
+  def execute_and_log_errors(deploy, &block)
+    JobExecutionSubscriber.new(deploy.job, &block).call
+  end
 
   def send_deploy_email(deploy)
     if emails = deploy.stage.notify_email_addresses.presence
