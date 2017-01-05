@@ -104,3 +104,14 @@ if Rails.env.development?
     exec "parallel_test test plugins/*/test"
   end
 end
+
+# inspecting foreign_keys is super slow ... so we just don't dump them
+# TODO: remove and update dump once rake db:schema:dump is fast again
+# https://github.com/rails/rails/issues/27579
+raise 'delete' if Rails.version != '5.0.1'
+require 'active_record/connection_adapters/abstract_mysql_adapter'
+ActiveRecord::ConnectionAdapters::AbstractMysqlAdapter.class_eval do
+  def foreign_keys(*)
+    []
+  end
+end
