@@ -242,10 +242,21 @@ describe Deploy do
     end
   end
 
-  describe "#pending_start!" do
-    it "starts the deploy" do
+  describe ".start_deploys_waiting_for_restart!" do
+    before { deploy.job.update_column(:status, 'pending') }
+
+    it "starts deploys that we put on hold" do
       DeployService.any_instance.expects(:confirm_deploy!)
-      deploy.pending_start!
+      Deploy.start_deploys_waiting_for_restart!
+      deploy.reload
+      deploy.updated_at.must_be :>, 2.seconds.ago # did expire caches
+      deploy.started_at.must_be :<, 1.year.ago # did not update started_at
+    end
+
+    it "does not start deploys waiting for buddy" do
+      Deploy.any_instance.expects(:waiting_for_buddy?).returns(true)
+      DeployService.any_instance.expects(:confirm_deploy!).never
+      Deploy.start_deploys_waiting_for_restart!
     end
   end
 

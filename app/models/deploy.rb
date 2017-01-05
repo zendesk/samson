@@ -101,16 +101,18 @@ class Deploy < ActiveRecord::Base
 
   def confirm_buddy!(buddy)
     update_attributes!(buddy: buddy, started_at: Time.now)
-    DeployService.new(user).confirm_deploy!(self)
+    start!
   end
 
   def start_time
     started_at || created_at
   end
 
-  def pending_start!
-    touch # HACK: refresh is immediate with update
-    DeployService.new(user).confirm_deploy!(self)
+  def self.start_deploys_waiting_for_restart!
+    pending.reject(&:waiting_for_buddy?).each do |deploy|
+      deploy.touch # HACK: refresh is immediate with update
+      deploy.send :start!
+    end
   end
 
   def self.active
@@ -177,6 +179,10 @@ class Deploy < ActiveRecord::Base
   end
 
   private
+
+  def start!
+    DeployService.new(user).confirm_deploy!(self)
+  end
 
   def summary_action
     SUMMARY_ACTION.fetch(status)
