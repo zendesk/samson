@@ -167,9 +167,7 @@ module Samson
           JobExecution.start_job(JobExecution.new(job.commit, job))
         end
 
-        Deploy.pending.each do |deploy|
-          deploy.pending_start! unless deploy.waiting_for_buddy?
-        end
+        Deploy.start_deploys_waiting_for_restart!
 
         RestartSignalHandler.listen
         Samson::Tasks::LockCleaner.start
