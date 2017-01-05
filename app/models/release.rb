@@ -59,18 +59,6 @@ class Release < ActiveRecord::Base
     errors.add :number, "Unable to auto bump version" unless self.number = next_release_number
   end
 
-  def next_release_number
-    # If Github has a version tagged for this commit, use that version instead of ours
-    latest_samson_version = Gem::Version.new(project.releases.last&.number || "0")
-    latest_github_version = Gem::Version.new(project.repository.tag_from_ref(commit))
-
-    if latest_github_version > latest_samson_version
-      latest_github_version.to_s
-    else
-      latest_samson_version.to_s.dup.sub!(/\d+$/) { |d| d.to_i + 1 }
-    end
-  end
-
   def contains_commit?(other_commit)
     return true if other_commit == commit
     # status values documented here: http://stackoverflow.com/questions/23943855/github-api-to-compare-commits-response-status-is-diverged
@@ -83,6 +71,18 @@ class Release < ActiveRecord::Base
   end
 
   private
+
+  def next_release_number
+    # If Github has a version tagged for this commit, use that version instead of ours
+    latest_samson_version = Gem::Version.new(project.releases.last&.number || "0")
+    latest_github_version = Gem::Version.new(project.repository.tag_from_ref(commit))
+
+    if latest_github_version > latest_samson_version
+      latest_github_version.to_s
+    else
+      latest_samson_version.to_s.dup.sub!(/\d+$/) { |d| d.to_i + 1 }
+    end
+  end
 
   def covert_ref_to_sha
     return if commit.blank? || commit =~ Build::SHA1_REGEX
