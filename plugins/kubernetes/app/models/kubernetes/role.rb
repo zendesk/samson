@@ -99,9 +99,10 @@ module Kubernetes
       end
 
       config.elements.detect do |resource|
-        replicas = resource[:spec][:replicas] || 1
+        next unless spec = resource[:spec]
+        replicas = spec[:replicas] || 1
 
-        next unless limits = resource.dig(:spec, :template, :spec, :containers, 0, :resources, :limits)
+        next unless limits = spec.dig(:template, :spec, :containers, 0, :resources, :limits)
         next unless cpu = parse_resource_value(limits[:cpu])
         next unless ram = parse_resource_value(limits[:memory]) # TODO: rename this and the column to memory
         ram /= 1024**2 # we store megabyte

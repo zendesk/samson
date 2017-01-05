@@ -274,6 +274,22 @@ describe Kubernetes::Role do
       role.defaults.must_equal cpu: 0.5, ram: 95, replicas: 1
     end
 
+    it "does not fail without spec" do
+      map = {
+        kind: 'ConfigMap',
+        metadata: {
+          name: 'datadog'
+        },
+        namespace: 'default',
+        labels: {
+          project: 'some-project',
+          role: 'some-role'
+        }
+      }.to_yaml
+      config_content_yml.prepend("#{map}\n---\n")
+      role.defaults.must_equal cpu: 0.5, ram: 95, replicas: 2
+    end
+
     it "finds values for any kind of resource" do
       assert config_content_yml.sub!('Deployment', 'Job')
       assert config_content_yml.sub!(/\n\n---.*/m, '')
