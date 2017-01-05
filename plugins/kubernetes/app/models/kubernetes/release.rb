@@ -66,7 +66,7 @@ module Kubernetes
           )
         end
       end
-      raise ArgumentError, 'No roles or deploy groups given' if release_docs.empty?
+      raise Samson::Hooks::UserError, 'No roles or deploy groups given' if release_docs.empty?
     end
 
     def validate_docker_image_in_registry
