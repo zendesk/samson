@@ -95,17 +95,10 @@ class TerminalExecutor
   end
 
   # We need the group pid to cleanly shut down all children
-  # if we somehow fail to get that, kill everything now before more bad stuff happens
+  # if we fail to get that, the process is already dead (finished quickly or crashed)
   def pgid_from_pid(pid)
     Process.getpgid(pid)
   rescue Errno::ESRCH
-    @output.write "Failed to get pgid, stopping #{pid}."
-    begin
-      Process.kill(:KILL, pid)
-      @output.write "Stopped."
-    rescue Errno::ESRCH
-      @output.write "Already stopped."
-    end
     nil
   end
 

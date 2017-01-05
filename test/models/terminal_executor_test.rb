@@ -70,15 +70,9 @@ describe TerminalExecutor do
       output.string.must_equal("#{"ß" * 400}\r\n")
     end
 
-    it "terminates the program on getpgid failures so we fail fast" do
+    it "ignores getpgid failures since they mean the program finished early" do
       Process.expects(:getpgid).raises(Errno::ESRCH)
-      subject.execute!('sleep 0.1').must_be_nil # status? of a killed process is 9
-    end
-
-    it "handles the case when getpgid + kill both fail" do
-      Process.expects(:getpgid).raises(Errno::ESRCH)
-      Process.expects(:kill).raises(Errno::ESRCH)
-      subject.execute!('sleep 0.1 && false').must_equal(false) # status? of a killed process is 9
+      subject.execute!('sleep 0.1').must_equal true
     end
 
     it "ignores closed output errors that happen on linux" do
