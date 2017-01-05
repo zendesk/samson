@@ -345,4 +345,12 @@ describe Kubernetes::Role do
       role.reload.kubernetes_deploy_group_roles.must_equal []
     end
   end
+
+  describe "#strip_config_file" do
+    it "removes spaces from config files because that happens to often and leads to mysterious bugs" do
+      role.config_file = ' whoops '
+      role.save!
+      role.config_file.must_equal 'whoops'
+    end
+  end
 end

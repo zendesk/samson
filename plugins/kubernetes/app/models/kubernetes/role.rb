@@ -26,6 +26,7 @@ module Kubernetes
       dependent: :destroy
 
     before_validation :nilify_service_name
+    before_validation :strip_config_file
 
     validates :project, presence: true
     validates :name, presence: true, format: Kubernetes::RoleVerifier::VALID_LABEL
@@ -124,6 +125,10 @@ module Kubernetes
 
     def delete_kubernetes_deploy_group_roles
       kubernetes_deploy_group_roles.destroy_all
+    end
+
+    def strip_config_file
+      self.config_file = config_file.to_s.strip
     end
 
     class << self
