@@ -98,7 +98,7 @@ class JobExecution
 
     @job.run!
 
-    success = make_temp_directory do |dir|
+    success = Dir.mktmpdir("samson-#{@job.project.permalink}-#{@job.id}") do |dir|
       return @job.error! unless setup!(dir)
 
       if @execution_block
@@ -250,17 +250,6 @@ class JobExecution
 
   def puts_if_present(message)
     @output.puts message if message
-  end
-
-  def make_temp_directory
-    Dir.mktmpdir("samson-#{@job.project.permalink}-#{@job.id}") do |dir|
-      begin
-        yield dir
-      ensure
-        # make the mktmpdir ensure not blow up if the directory was removed
-        Dir.mkdir(dir) unless Dir.exist?(dir)
-      end
-    end
   end
 
   class << self

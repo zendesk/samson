@@ -268,11 +268,6 @@ describe JobExecution do
     x.must_equal :called
   end
 
-  it 'can finish when temp directory is cleaned up during the run' do
-    execution = JobExecution.new('master', job) { |_, dir| Dir.delete(dir) }
-    assert execution.send(:run!)
-  end
-
   describe "kubernetes" do
     before { stage.update_column :kubernetes, true }
 
