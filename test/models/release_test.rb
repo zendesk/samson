@@ -54,14 +54,14 @@ describe Release do
     end
 
     it "converts refs to commits so we later know what exactly was deployed" do
-      GitRepository.any_instance.expects(:clone!)
+      GitRepository.any_instance.expects(:update_local_cache!).twice
       GitRepository.any_instance.expects(:commit_from_ref).with('master').returns(commit)
       release = project.releases.create!(author: author, commit: 'master')
       release.commit.must_equal commit
     end
 
     it "fails with unresolvable ref" do
-      GitRepository.any_instance.expects(:clone!)
+      GitRepository.any_instance.expects(:update_local_cache!).twice
       GitRepository.any_instance.expects(:commit_from_ref).with('master').returns(nil)
       e = assert_raises ActiveRecord::RecordInvalid do
         project.releases.create!(author: author, commit: 'master')
@@ -70,12 +70,20 @@ describe Release do
     end
 
     it "does not covert blank" do
+      GitRepository.any_instance.expects(:update_local_cache!)
       GitRepository.any_instance.expects(:clone!).never
       GitRepository.any_instance.expects(:commit_from_ref).never
       e = assert_raises ActiveRecord::RecordInvalid do
         project.releases.create!(author: author, commit: '')
       end
       e.message.must_equal "Validation failed: Commit can only be a full sha"
+    end
+
+    it "uses the github version if it is present on the commit" do
+      GitRepository.any_instance.expects(:tag_from_ref).with(commit).returns("125")
+      release = project.releases.create!(author: author, commit: commit)
+      release.commit.must_equal commit
+      release.number.must_equal "125"
     end
   end
 
