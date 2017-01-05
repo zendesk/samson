@@ -93,8 +93,8 @@ class DeployService
   add_method_tracer :send_after_notifications
 
   def send_deploy_email(deploy)
-    if deploy.stage.send_email_notifications?
-      DeployMailer.deploy_email(deploy).deliver_now
+    if emails = deploy.stage.notify_email_addresses.presence
+      DeployMailer.deploy_email(deploy, emails).deliver_now
     end
   end
 

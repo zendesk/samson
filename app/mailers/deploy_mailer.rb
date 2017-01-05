@@ -3,10 +3,10 @@ class DeployMailer < ApplicationMailer
   add_template_helper(DeploysHelper)
   add_template_helper(ApplicationHelper)
 
-  def deploy_email(deploy)
+  def deploy_email(deploy, emails)
     prepare_mail(deploy)
 
-    mail(to: deploy.stage.notify_email_addresses, subject: deploy_subject(deploy))
+    mail(to: emails, subject: deploy_subject(deploy))
   end
 
   def bypass_email(deploy, user)

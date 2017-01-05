@@ -218,22 +218,6 @@ describe Stage do
     end
   end
 
-  describe "#send_email_notifications?" do
-    it "is false when there is no address" do
-      refute stage.send_email_notifications?
-    end
-
-    it "is false when there is a blank address" do
-      stage.notify_email_address = ''
-      refute stage.send_email_notifications?
-    end
-
-    it "is true when there is an address" do
-      stage.notify_email_address = 'a'
-      assert stage.send_email_notifications?
-    end
-  end
-
   describe "#global_name" do
     it "shows projects name to so we see where this stage belongs" do
       stage.global_name.must_equal "Staging - Project"

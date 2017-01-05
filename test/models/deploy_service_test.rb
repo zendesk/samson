@@ -197,9 +197,10 @@ describe DeployService do
     end
 
     it "sends email notifications if the stage has email addresses" do
-      stage.stubs(:send_email_notifications?).returns(true)
+      stage.notify_email_address = 'a@b.com;b@c.com'
 
-      DeployMailer.expects(:deploy_email).returns(stub("DeployMailer", deliver_now: true))
+      DeployMailer.expects(:deploy_email).with(anything, ['a@b.com', 'b@c.com']).
+        returns(stub("DeployMailer", deliver_now: true))
 
       service.deploy!(stage, reference: reference)
       job_execution.send(:run!)

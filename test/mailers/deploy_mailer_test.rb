@@ -16,9 +16,8 @@ describe DeployMailer do
 
   describe "#deploy_email" do
     before do
-      stage.update_attributes!(notify_email_address: 'test@test.com')
       stub_empty_changeset
-      DeployMailer.deploy_email(deploy).deliver_now
+      DeployMailer.deploy_email(deploy, ['test@test.com']).deliver_now
     end
 
     it 'is from deploys@' do
