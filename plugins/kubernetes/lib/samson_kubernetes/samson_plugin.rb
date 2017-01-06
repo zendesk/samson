@@ -27,7 +27,3 @@ end
 Samson::Hooks.callback(:stage_permitted_params) { :kubernetes }
 Samson::Hooks.callback(:deploy_permitted_params) { [:kubernetes_rollback, :kubernetes_reuse_build] }
 Samson::Hooks.callback(:build_permitted_params) { :kubernetes_job }
-
-Samson::Hooks.callback :edit_deploy_group do |deploy_group|
-  deploy_group.build_cluster_deploy_group unless deploy_group.cluster_deploy_group
-end

@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 require_relative '../test_helper'
 
-SingleCov.covered! uncovered: 21
+SingleCov.covered! uncovered: 22
 
 describe Job do
   include GitRepoTestHelper

@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 require_relative '../test_helper'
 
-SingleCov.covered! uncovered: 3
+SingleCov.covered!
 
 describe SlackMessage do
   let(:deploy) { deploys(:succeeded_test) }

@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 require_relative '../test_helper'
 
-SingleCov.covered!
+SingleCov.covered! uncovered: 5
 
 describe SamsonSlackWebhooks::SlackWebhooksService do
   let(:deploy) { deploys(:succeeded_test) }

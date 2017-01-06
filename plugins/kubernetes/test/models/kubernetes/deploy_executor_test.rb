@@ -150,14 +150,12 @@ describe Kubernetes::DeployExecutor do
 
       it "fails before building when roles are invalid" do
         Kubernetes::ReleaseDoc.any_instance.unstub(:raw_template)
-        GitRepository.any_instance.expects(:file_content).
-          with('kubernetes/resque_worker.yml', anything).
-          returns("oops: bad")
+        GitRepository.any_instance.expects(:file_content).with { |file| file =~ /^kubernetes\// }.returns("oops: bad")
 
         e = assert_raises Samson::Hooks::UserError do
           refute execute!
         end
-        e.message.must_include "Error found when parsing kubernetes/resque_worker.yml"
+        e.message.must_include "Error found when parsing kubernetes/"
       end
 
       it "fails before building when secrets are not configured in the backend" do
@@ -177,7 +175,7 @@ describe Kubernetes::DeployExecutor do
     describe "role settings" do
       it "uses configured role settings" do
         assert execute!
-        doc = Kubernetes::Release.last.release_docs.sort_by(&:id).last
+        doc = Kubernetes::Release.last.release_docs.sort_by(&:kubernetes_role).last
         config = server_role
         doc.replica_target.must_equal config.replicas
         doc.cpu.must_equal config.cpu
