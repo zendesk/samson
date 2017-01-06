@@ -194,6 +194,7 @@ describe DeployService do
       job_execution.stubs(:setup!).returns(true)
 
       JobExecution.stubs(:new).returns(job_execution)
+      JobQueue.any_instance.stubs(:delete_and_enqueue_next) # we do not properly add the job, so removal fails
     end
 
     describe "with email notifications setup" do
@@ -210,8 +211,8 @@ describe DeployService do
       it "does not fail all callbacks when 1 callback fails" do
         service.stubs(:send_sse_deploy_update)
         service.expects(:send_sse_deploy_update).with('finish', anything).raises # first callback
-        Airbrake.expects(:notify).times(3) # ideally once, but there is another bug somewhere
-        DeployMailer.expects(:deploy_email)
+        Airbrake.expects(:notify)
+        DeployMailer.expects(:deploy_email).returns(stub(deliver_now: true))
         service.deploy!(stage, reference: reference)
         job_execution.send(:run!)
       end

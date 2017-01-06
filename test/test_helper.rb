@@ -87,7 +87,7 @@ class ActiveSupport::TestCase
     old = ar_queries
     yield
     new = ar_queries
-    extra = new[old.size..-1].reject { |q| q.include?('information_schema') || q.include?('sqlite_temp_master') }
+    extra = new[old.size..-1].reject { |q| q =~ /information_schema|sqlite_temp_master|pg_constraint|pg_attribute/ }
     message = extra.join("\n")
     if count.is_a?(Range)
       assert_includes count, extra.count, message

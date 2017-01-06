@@ -20,8 +20,12 @@ if defined?(Airbrake)
 else
   module Airbrake
     def self.notify(ex, *_args)
-      Rails.logger.error "AIRBRAKE: #{ex.class} - #{ex.message} - #{ex.backtrace[0..5].join("\n")}"
-      nil
+      if Rails.env.test?
+        raise ex # tests have to use Airbrake.expects(:notify) to not hide unintented errors
+      else
+        Rails.logger.error "AIRBRAKE: #{ex.class} - #{ex.message} - #{ex.backtrace[0..5].join("\n")}"
+        nil
+      end
     end
 
     def self.notify_or_ignore(ex, *_args)

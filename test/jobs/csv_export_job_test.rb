@@ -31,6 +31,7 @@ describe CsvExportJob do
     after { File.chmod(0o755, File.dirname(deploy_export_job.path_file)) }
 
     it "sets :failed" do
+      Airbrake.expects(:notify)
       CsvExportJob.perform_now(deploy_export_job)
       assert deploy_export_job.status?('failed'), "Not Finished"
     end
