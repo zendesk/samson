@@ -7,6 +7,47 @@ describe Stage do
   subject { stages(:test_staging) }
   let(:stage) { subject }
 
+  describe "#validations" do
+    it "is valid" do
+      assert_valid stage
+    end
+
+    it "is valid with 1 email" do
+      stage.notify_email_address = 'foo@bar.com'
+      assert_valid stage
+    end
+
+    it "is invalid with email that contains spaces" do
+      stage.notify_email_address = 'fo o@bar.com'
+      refute_valid stage
+    end
+
+    it "is valid with trailing semicolon email" do
+      stage.notify_email_address = 'foo@bar.com; '
+      assert_valid stage
+    end
+
+    it "is invalid with weird emails" do
+      stage.notify_email_address = 'sdfsfdfsd'
+      refute_valid stage
+    end
+
+    it "is invalid with valid followed by invalid email" do
+      stage.notify_email_address = 'foo@bar;sfdsdf;'
+      refute_valid stage
+    end
+
+    it "is invalid with invalid followed by valid email" do
+      stage.notify_email_address = 'sfdsdf;foo@bar'
+      refute_valid stage
+    end
+
+    it "is valid with multiple valid emails" do
+      stage.notify_email_address = 'foo@bar;bar@foo'
+      assert_valid stage
+    end
+  end
+
   describe ".where_reference_being_deployed" do
     it "returns stages where the reference is currently being deployed" do
       project = projects(:test)
@@ -213,24 +254,8 @@ describe Stage do
 
   describe "#notify_email_addresses" do
     it "returns email addresses separated by a semicolon" do
-      stage = Stage.new(notify_email_address: "a@foo.com; b@foo.com")
-      stage.notify_email_addresses.must_equal ["a@foo.com", "b@foo.com"]
-    end
-  end
-
-  describe "#send_email_notifications?" do
-    it "is false when there is no address" do
-      refute stage.send_email_notifications?
-    end
-
-    it "is false when there is a blank address" do
-      stage.notify_email_address = ''
-      refute stage.send_email_notifications?
-    end
-
-    it "is true when there is an address" do
-      stage.notify_email_address = 'a'
-      assert stage.send_email_notifications?
+      stage = Stage.new(notify_email_address: "a@foo.com;b@foo.com ; c@foo.com; ")
+      stage.notify_email_addresses.must_equal ["a@foo.com", "b@foo.com", "c@foo.com"]
     end
   end
 

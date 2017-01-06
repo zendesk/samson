@@ -196,13 +196,25 @@ describe DeployService do
       JobExecution.stubs(:new).returns(job_execution)
     end
 
-    it "sends email notifications if the stage has email addresses" do
-      stage.stubs(:send_email_notifications?).returns(true)
+    describe "with email notifications setup" do
+      before { stage.notify_email_address = 'a@b.com;b@c.com' }
 
-      DeployMailer.expects(:deploy_email).returns(stub("DeployMailer", deliver_now: true))
+      it "sends email notifications if the stage has email addresses" do
+        DeployMailer.expects(:deploy_email).with(anything, ['a@b.com', 'b@c.com']).
+          returns(stub("DeployMailer", deliver_now: true))
 
-      service.deploy!(stage, reference: reference)
-      job_execution.send(:run!)
+        service.deploy!(stage, reference: reference)
+        job_execution.send(:run!)
+      end
+
+      it "does not fail all callbacks when 1 callback fails" do
+        service.stubs(:send_sse_deploy_update)
+        service.expects(:send_sse_deploy_update).with('finish', anything).raises # first callback
+        Airbrake.expects(:notify).times(3) # ideally once, but there is another bug somewhere
+        DeployMailer.expects(:deploy_email)
+        service.deploy!(stage, reference: reference)
+        job_execution.send(:run!)
+      end
     end
 
     it "sends after_deploy hook" do
@@ -212,24 +224,26 @@ describe DeployService do
       end.must_equal [[deploy, nil]]
     end
 
-    it "sends github notifications if the stage has it enabled and deploy succeeded" do
-      stage.stubs(:update_github_pull_requests?).returns(true)
-      deploy.stubs(:status).returns("succeeded")
+    describe "with github notifications enabled" do
+      before { stage.stubs(:update_github_pull_requests?).returns(true) }
 
-      GithubNotification.any_instance.expects(:deliver)
+      it "sends github notifications if the stage has it enabled and deploy succeeded" do
+        deploy.stubs(:status).returns("succeeded")
 
-      service.deploy!(stage, reference: reference)
-      job_execution.send(:run!)
-    end
+        GithubNotification.any_instance.expects(:deliver)
 
-    it "does not send github notifications if the stage has it enabled and deploy failed" do
-      stage.stubs(:update_github_pull_requests?).returns(true)
-      deploy.stubs(:status).returns("failed")
+        service.deploy!(stage, reference: reference)
+        job_execution.send(:run!)
+      end
 
-      GithubNotification.any_instance.expects(:deliver).never
+      it "does not send github notifications if the stage has it enabled and deploy failed" do
+        deploy.stubs(:status).returns("failed")
 
-      service.deploy!(stage, reference: reference)
-      job_execution.send(:run!)
+        GithubNotification.any_instance.expects(:deliver).never
+
+        service.deploy!(stage, reference: reference)
+        job_execution.send(:run!)
+      end
     end
 
     it "updates a github deployment status" do

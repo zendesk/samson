@@ -29,6 +29,10 @@ class Stage < ActiveRecord::Base
 
   validates :name, presence: true, uniqueness: { scope: [:project, :deleted_at] }
 
+  # n emails separated by ;
+  email = '([^\s;]+@[^\s;]+)'
+  validates :notify_email_address, format: /\A#{email}((\s*;\s*)?#{email}?)*\z/, allow_blank: true
+
   before_create :ensure_ordering
   after_destroy :destroy_deploy_groups_stages
   after_destroy :destroy_stage_pipeline
@@ -97,11 +101,7 @@ class Stage < ActiveRecord::Base
   end
 
   def notify_email_addresses
-    notify_email_address.split(";").map(&:strip)
-  end
-
-  def send_email_notifications?
-    notify_email_address.present?
+    notify_email_address.split(/\s*;\s*/).map(&:strip)
   end
 
   def global_name
