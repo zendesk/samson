@@ -94,7 +94,6 @@ describe "cleanliness" do
     untested = [
       "app/controllers/concerns/current_project.rb",
       "app/mailers/application_mailer.rb",
-      "app/models/changeset/code_push.rb",
       "app/models/changeset/jira_issue.rb",
       "app/models/concerns/has_commands.rb",
       "app/models/concerns/has_role.rb",

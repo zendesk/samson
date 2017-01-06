@@ -12,9 +12,13 @@ class Integrations::BaseController < ApplicationController
       return render plain: @recorded_log.to_s
     end
 
-    create_release = project.create_release?(branch, service_type, service_name)
-    record_log :info, "Branch #{branch} is release branch: #{create_release}"
-    release = find_or_create_release if create_release
+    if branch
+      create_release = project.create_release?(branch, service_type, service_name)
+      record_log :info, "Branch #{branch} is release branch: #{create_release}"
+      release = find_or_create_release if create_release
+    else
+      record_log :info, "No branch found, assuming this is a tag and not creating a release"
+    end
 
     if project.build_docker_image_for_branch?(branch)
       create_docker_image(release)

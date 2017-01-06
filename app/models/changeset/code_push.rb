@@ -20,7 +20,7 @@ class Changeset::CodePush
   end
 
   def branch
-    data['ref'][/refs\/heads\/(.+)/, 1]
+    data['ref'][/\Arefs\/heads\/(\S+)\z/, 1]
   end
 
   def service_type
