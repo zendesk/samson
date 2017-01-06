@@ -10,6 +10,10 @@ describe Release do
   let(:commit) { "abcde" * 8 }
 
   describe "create" do
+    before do
+      GitRepository.any_instance.stubs(:tag_from_ref).returns("")
+    end
+
     it "creates a new release" do
       release = project.releases.create!(commit: commit, author: author)
       assert_equal "124", release.number
@@ -54,14 +58,14 @@ describe Release do
     end
 
     it "converts refs to commits so we later know what exactly was deployed" do
-      GitRepository.any_instance.expects(:clone!)
+      GitRepository.any_instance.expects(:update_local_cache!)
       GitRepository.any_instance.expects(:commit_from_ref).with('master').returns(commit)
       release = project.releases.create!(author: author, commit: 'master')
       release.commit.must_equal commit
     end
 
     it "fails with unresolvable ref" do
-      GitRepository.any_instance.expects(:clone!)
+      GitRepository.any_instance.expects(:update_local_cache!)
       GitRepository.any_instance.expects(:commit_from_ref).with('master').returns(nil)
       e = assert_raises ActiveRecord::RecordInvalid do
         project.releases.create!(author: author, commit: 'master')
@@ -76,6 +80,13 @@ describe Release do
         project.releases.create!(author: author, commit: '')
       end
       e.message.must_equal "Validation failed: Commit can only be a full sha"
+    end
+
+    it "uses the github version if it is present on the commit" do
+      GitRepository.any_instance.expects(:tag_from_ref).with(commit).returns("125")
+      release = project.releases.create!(author: author, commit: commit)
+      release.commit.must_equal commit
+      release.number.must_equal "125"
     end
   end
 
@@ -157,6 +168,10 @@ describe Release do
   end
 
   describe "#changeset" do
+    before do
+      GitRepository.any_instance.stubs(:tag_from_ref).returns("")
+    end
+
     it "returns changeset" do
       release = project.releases.create!(commit: commit, author: author)
       assert_equal "abcdabcdabcdabcdabcdabcdabcdabcdabcdabcd...#{commit}", release.changeset.commit_range

@@ -14,7 +14,10 @@ describe ReleaseService do
     let(:commit) { "abcd" * 10 }
     let(:release_params_used) { [] }
 
-    before { GITHUB.stubs(:create_release).capture(release_params_used) }
+    before do
+      GITHUB.stubs(:create_release).capture(release_params_used)
+      GitRepository.any_instance.stubs(:tag_from_ref).returns("")
+    end
 
     it "creates a new release" do
       count = Release.count

@@ -141,6 +141,7 @@ describe Stage do
     let(:releases) { Array.new(3).map { project.releases.create!(author: author, commit: "a" * 40) } }
 
     before do
+      GitRepository.any_instance.stubs(:tag_from_ref).returns("")
       stage.deploys.create!(reference: "v124", job: job, project: project)
       stage.deploys.create!(reference: "v125", job: job, project: project)
     end

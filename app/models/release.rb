@@ -56,9 +56,7 @@ class Release < ActiveRecord::Base
     # release-number-from-ci plugin.
     return if number != DEFAULT_RELEASE_NUMBER && number.present?
 
-    latest_release_number = project.releases.last.try(:number) || "0"
-
-    raise "Unable to auto bump version" unless self.number = latest_release_number.dup.sub!(/\d+$/) { |d| d.to_i + 1 }
+    errors.add :number, "Unable to auto bump version" unless self.number = next_release_number
   end
 
   def contains_commit?(other_commit)
@@ -73,6 +71,18 @@ class Release < ActiveRecord::Base
   end
 
   private
+
+  def next_release_number
+    # If Github has a version tagged for this commit, use that version instead of ours
+    latest_samson_version = Gem::Version.new(project.releases.last&.number || "0")
+    latest_github_version = Gem::Version.new(project.repository.tag_from_ref(commit))
+
+    if latest_github_version > latest_samson_version
+      latest_github_version.to_s
+    else
+      latest_samson_version.to_s.dup.sub!(/\d+$/) { |d| d.to_i + 1 }
+    end
+  end
 
   def covert_ref_to_sha
     return if commit.blank? || commit =~ Build::SHA1_REGEX
