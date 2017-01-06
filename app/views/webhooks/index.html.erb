@@ -2,7 +2,7 @@
 
 <%= render 'projects/header', project: @project, tab: "webhooks" %>
 
-<% webhooks = @project.webhooks %>
+<% inbound_webhooks = @project.webhooks %>
 <% outbound_webhooks = @project.outbound_webhooks %>
 
 <section class="tabs">
@@ -12,14 +12,24 @@
 
   <dl>
     <% Samson::Integration::SOURCES.each do |source| %>
-      <dt><%= source.titleize %>:</dt><dd><%= link_to_url(send("integrations_#{source}_deploy_url", @project.token)) %></dd>
+      <dt>
+        <%= source.titleize %>:</dt><dd><%= link_to_url(send("integrations_#{source}_deploy_url", @project.token)) %>
+        <% if source == 'github' && token = Integrations::GithubController.secret_token %>
+          <br/>
+          <% if current_user.admin_for?(@project) %>
+            (Set <%= link_to "secret token", "javascript:alert('#{token}')" %> in <%= link_to 'hook settings', "https://github.com/#{@project.user_repo_part}/settings/hooks" %>)
+          <% else %>
+            (Secret token required, ask a super-admin)
+          <% end %>
+        <% end %>
+      </dd>
     <% end %>
   </dl>
 
-  <% if webhooks.any? %>
+  <% if inbound_webhooks.any? %>
     <h2>Webhooks mappings</h2>
     <ul>
-      <% webhooks.each do |webhook| %>
+      <% inbound_webhooks.each do |webhook| %>
         <li>
           <strong><%= webhook.branch.blank? ? 'Any' : webhook.branch %></strong>
           branch &rarr;

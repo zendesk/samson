@@ -7,6 +7,10 @@ class Integrations::GithubController < Integrations::BaseController
     'issue_comment' => Changeset::IssueComment
   }.freeze
 
+  def self.secret_token
+    ENV['GITHUB_HOOK_SECRET']
+  end
+
   protected
 
   def validate_request
@@ -20,11 +24,12 @@ class Integrations::GithubController < Integrations::BaseController
     webhook_handler&.valid_webhook?(params)
   end
 
+  # https://developer.github.com/webhooks/securing/
   def valid_signature?
-    return true unless secret = ENV['GITHUB_HOOK_SECRET']
+    return true unless self.class.secret_token
     hmac = OpenSSL::HMAC.hexdigest(
       HMAC_DIGEST,
-      secret,
+      self.class.secret_token,
       request.body.tap(&:rewind).read
     )
 
