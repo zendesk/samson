@@ -35,6 +35,15 @@ describe Integrations::BaseController do
       project.builds.count.must_equal 0
     end
 
+    it "ignores tags" do
+      Integrations::BaseController.any_instance.expects(:branch).returns(nil)
+      post :create, params: {test_route: true, token: token}
+      assert_response :success
+      project.releases.count.must_equal 0
+      project.builds.count.must_equal 0
+      response.body.must_include "assuming this is a tag"
+    end
+
     it 'does not create a release when latest already includes the commit' do
       GITHUB.expects(:compare).returns(stub(status: 'behind'))
       project.releases.create!(commit: sha.sub('d', 'e'), author: users(:admin))
