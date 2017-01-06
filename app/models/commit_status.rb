@@ -11,7 +11,16 @@ class CommitStatus
   end
 
   def status_list
-    combined_status.fetch(:statuses).map(&:to_h)
+    list = combined_status.fetch(:statuses).map(&:to_h)
+    if list.empty?
+      list << {
+        state: 'pending',
+        description:
+          "No status was reported for this commit on GitHub. " \
+          "See https://github.com/blog/1227-commit-status-api for details."
+      }
+    end
+    list
   end
 
   private

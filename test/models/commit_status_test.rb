@@ -34,7 +34,7 @@ describe CommitStatus do
       status.status.must_equal 'success'
     end
 
-    it "returns failure when not found" do
+    it "is failure when not found" do
       failure!
       status.status.must_equal 'failure'
     end
@@ -97,6 +97,13 @@ describe CommitStatus do
     it "returns list" do
       success!
       status.status_list.must_equal [{foo: "bar"}]
+    end
+
+    it "shows that github is waiting for statuses to come when non has arrived yet ... or none are set up" do
+      stub_github_api(url, statuses: [], state: "pending")
+      list = status.status_list
+      list.map { |s| s[:state] }.must_equal ["pending"]
+      list.first[:description].must_include "No status was reported"
     end
 
     it "returns failure on Reference when not found list for consistent status display" do
