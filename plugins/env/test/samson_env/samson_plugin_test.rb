@@ -45,17 +45,6 @@ describe SamsonEnv do
           fire
           File.read(".env").must_equal "HELLO=\"world\"\nWORLD=\"hello\"\n"
         end
-
-        it "overwrites .env by ignoring not required" do
-          File.write(".env", "# a comment ...\nHELLO=foo")
-          fire
-          File.read(".env").must_equal "HELLO=\"world\"\n"
-        end
-
-        it "fails when .env has an unsatisfied required key" do
-          File.write(".env", "FOO=foo")
-          assert_raises(Samson::Hooks::UserError) { fire }
-        end
       end
 
       describe "with deploy groups" do
@@ -80,33 +69,6 @@ describe SamsonEnv do
       refute all["WORLD1"]
       all["WORLD2"].must_equal "hello"
       all["WORLD3"].must_equal "hello"
-    end
-  end
-
-  describe ".parse_dotenv" do
-    def assert_symmetric(value)
-      result = SamsonEnv.send(:parse_dotenv, SamsonEnv.send(:generate_dotenv, FOO: value))
-      result['FOO'].must_equal value
-    end
-
-    it "can parse simple settings" do
-      assert_symmetric "A"
-    end
-
-    it "can parse empty strings" do
-      assert_symmetric ""
-    end
-
-    it "can parse $" do
-      assert_symmetric "A$B"
-    end
-
-    it "can parse ${}" do
-      assert_symmetric "A${B}C"
-    end
-
-    it "can parse newlines" do
-      assert_symmetric "A\nB\nC"
     end
   end
 end
