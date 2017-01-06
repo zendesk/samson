@@ -20,9 +20,9 @@ module Samson
       # different servers have different keys so combine all
       def list_recursive(path)
         path = wrap_key(path)
-        all = clients.each_value.flat_map do |vault|
-          with_retries { vault.logical.list_recursive(path) }
-        end
+        all = clients.each_value.map do |vault|
+          Thread.new { with_retries { vault.logical.list_recursive(path) } }
+        end.map(&:value).flatten(1)
         all.uniq!
         all
       end
