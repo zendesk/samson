@@ -23,7 +23,12 @@ describe SamsonAirbrake::Engine do
         with(
           body: {
             "api_key" => "MY-SECRET",
-            "deploy" => {"rails_env" => "staging", "scm_revision" => "abcabc1", "local_username" => "Super Admin"}
+            "deploy" => {
+              "rails_env" => "staging",
+              "scm_revision" => "abcabc1",
+              "local_username" => "Super Admin",
+              "scm_repository" => "https://example.com/bar/foo",
+            }
           }
         )
       notify
@@ -80,6 +85,20 @@ describe SamsonAirbrake::Engine do
   describe :stage_permitted_params do
     it "allows notify_airbrake" do
       Samson::Hooks.fire(:stage_permitted_params).must_include :notify_airbrake
+    end
+  end
+
+  describe ".git_to_http" do
+    it "converts git to http" do
+      SamsonAirbrake::Notification.send(:git_to_http, 'git@foo.com:a.git').must_equal 'https://foo.com/a'
+    end
+
+    it "converts ssh git to http" do
+      SamsonAirbrake::Notification.send(:git_to_http, 'ssh://git@foo.com:a.git').must_equal 'https://foo.com/a'
+    end
+
+    it "converts http git" do
+      SamsonAirbrake::Notification.send(:git_to_http, 'http://foo.com/a.git').must_equal 'http://foo.com/a'
     end
   end
 end
