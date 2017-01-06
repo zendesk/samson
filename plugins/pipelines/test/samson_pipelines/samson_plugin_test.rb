@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 require_relative '../test_helper'
 
-SingleCov.covered! uncovered: 6 unless defined?(Rake) # rake preloads all plugins
+SingleCov.covered! uncovered: 6
 
 describe SamsonPipelines do
   let(:deploy) { deploys(:succeeded_test) }

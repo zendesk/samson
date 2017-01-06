@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 require_relative '../../test_helper'
 
-SingleCov.covered! unless defined?(Rake) # rake preloads app which loads env check
+SingleCov.covered!
 
 describe Samson::EnvCheck do
   describe '.set?' do

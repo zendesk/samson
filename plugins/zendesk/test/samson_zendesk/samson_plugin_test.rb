@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 require_relative '../test_helper'
 
-SingleCov.covered! uncovered: 1 unless defined?(Rake) # rake preloads all plugins
+SingleCov.covered! uncovered: 1
 
 describe SamsonZendesk do
   let(:deploy) { deploys(:succeeded_test) }

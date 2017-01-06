@@ -28,17 +28,9 @@ task :asset_compilation_environment do
 end
 Rake::Task['assets:precompile'].prerequisites.unshift :asset_compilation_environment
 
-namespace :plugins do
-  Rake::TestTask.new(:test) do |t|
-    t.pattern = "plugins/*/test/**/*_test.rb"
-    t.warning = false
-  end
-end
-
 Rake::Task['test'].clear
-Rake::TestTask.new(:test) do |t|
-  t.pattern = "{test,plugins/*/test}/**/*_test.rb"
-  t.warning = false
+task :test do
+  sh "forking-test-runner test plugins/*/test --merge-coverage --quiet"
 end
 
 namespace :test do

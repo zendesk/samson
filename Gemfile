@@ -124,6 +124,7 @@ group :development, :test do
   gem 'rubocop'
   gem 'flay'
   gem 'parallel_tests'
+  gem 'forking_test_runner'
 end
 
 group :test do

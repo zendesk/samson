@@ -19,7 +19,6 @@ class Admin::DeployGroupsController < ApplicationController
 
   def new
     @deploy_group = DeployGroup.new
-    Samson::Hooks.fire(:edit_deploy_group, @deploy_group)
     render :edit
   end
 
@@ -34,7 +33,6 @@ class Admin::DeployGroupsController < ApplicationController
   end
 
   def edit
-    Samson::Hooks.fire(:edit_deploy_group, @deploy_group)
   end
 
   def update

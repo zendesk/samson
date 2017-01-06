@@ -36,7 +36,6 @@ module Samson
       :after_docker_build,
       :after_job_execution,
       :job_additional_vars,
-      :edit_deploy_group,
       :buildkite_release_params,
       :release_deploy_conditions,
       :deploy_group_env
