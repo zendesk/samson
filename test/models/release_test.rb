@@ -219,4 +219,13 @@ describe Release do
       refute release.contains_commit?("NEW")
     end
   end
+
+  describe "#assign_release_number" do
+    it "skips the github version check if no commit is defined" do
+      GitRepository.any_instance.expects(:exact_tag_from_ref).never
+      release = project.releases.new
+
+      release.assign_release_number
+    end
+  end
 end
