@@ -16,7 +16,7 @@ describe ReleaseService do
 
     before do
       GITHUB.stubs(:create_release).capture(release_params_used)
-      GitRepository.any_instance.stubs(:tag_from_ref).returns("")
+      GitRepository.any_instance.stubs(:exact_tag_from_ref).returns("")
     end
 
     it "creates a new release" do

@@ -45,10 +45,16 @@ class GitRepository
     capture_stdout(*command)
   end
 
-  # @return [nil, sha1]
-  def tag_from_ref(git_reference)
+  # @return [nil, tag-sha or tag]
+  def fuzzy_tag_from_ref(git_reference)
     return unless ensure_local_cache!
     capture_stdout 'git', 'describe', '--tags', git_reference
+  end
+
+  # @return [nil, tag]
+  def exact_tag_from_ref(git_reference)
+    return unless ensure_local_cache!
+    capture_stdout 'git', 'tag', '--points-at', git_reference
   end
 
   def repo_cache_dir

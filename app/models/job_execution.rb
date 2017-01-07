@@ -180,7 +180,7 @@ class JobExecution
   def resolve_ref_to_commit
     @repository.update_local_cache!
     commit = @repository.commit_from_ref(@reference)
-    tag = @repository.tag_from_ref(@reference)
+    tag = @repository.fuzzy_tag_from_ref(@reference)
     if commit
       @job.update_git_references!(commit: commit, tag: tag)
       @output.puts("Commit: #{commit}")
