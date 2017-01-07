@@ -23,7 +23,7 @@ describe Integrations::BaseController do
     Integrations::BaseController.any_instance.stubs(:branch).returns('master')
     Project.any_instance.stubs(:create_release?).returns(true)
     Build.any_instance.stubs(:validate_git_reference).returns(true)
-    GitRepository.any_instance.stubs(:tag_from_ref).returns("")
+    GitRepository.any_instance.stubs(:exact_tag_from_ref).returns("")
     stub_request(:post, "https://api.github.com/repos/bar/foo/releases")
   end
 

@@ -149,11 +149,11 @@ describe GitRepository do
     end
   end
 
-  describe "#tag_from_ref" do
+  describe "#fuzzy_tag_from_ref" do
     it 'returns nil when repo has no tags' do
       create_repo_without_tags
       repository.update_local_cache!
-      repository.tag_from_ref('master').must_be_nil
+      repository.fuzzy_tag_from_ref('master').must_be_nil
     end
 
     it 'returns the closest matching tag' do
@@ -163,8 +163,8 @@ describe GitRepository do
         git commit -a -m 'untagged commit'
       SHELL
       repository.update_local_cache!
-      repository.tag_from_ref('master~').must_equal 'v1'
-      repository.tag_from_ref('master').must_match /^v1-1-g[0-9a-f]{7}$/
+      repository.fuzzy_tag_from_ref('master~').must_equal 'v1'
+      repository.fuzzy_tag_from_ref('master').must_match /^v1-1-g[0-9a-f]{7}$/
     end
 
     it 'returns tag when it is ambiguous' do
@@ -173,7 +173,35 @@ describe GitRepository do
         git checkout -b v1
       SHELL
       repository.update_local_cache!
-      repository.tag_from_ref('v1').must_equal 'v1'
+      repository.fuzzy_tag_from_ref('v1').must_equal 'v1'
+    end
+  end
+
+  describe "#exact_tag_from_ref" do
+    it 'returns nil when repo has no tags' do
+      create_repo_without_tags
+      repository.update_local_cache!
+      repository.exact_tag_from_ref('master').must_equal ''
+    end
+
+    it 'returns no tag if one is not defined' do
+      create_repo_with_tags
+      execute_on_remote_repo <<-SHELL
+        echo update > foo
+        git commit -a -m 'untagged commit'
+      SHELL
+      repository.update_local_cache!
+      repository.exact_tag_from_ref('master').must_equal ''
+      repository.exact_tag_from_ref('master~').must_equal 'v1'
+    end
+
+    it 'returns tag when it is ambiguous' do
+      create_repo_with_tags
+      execute_on_remote_repo <<-SHELL
+        git checkout -b v1
+      SHELL
+      repository.update_local_cache!
+      repository.exact_tag_from_ref('v1').must_equal 'v1'
     end
   end
 

@@ -75,12 +75,16 @@ class Release < ActiveRecord::Base
   def next_release_number
     # If Github has a version tagged for this commit, use that version instead of ours
     latest_samson_version = Gem::Version.new(project.releases.last&.number || "0")
-    latest_github_version = Gem::Version.new(project.repository.tag_from_ref(commit))
+    next_samson_version = latest_samson_version.to_s.dup.sub!(/\d+$/) { |d| d.to_i + 1 }
+
+    return next_samson_version unless commit
+
+    latest_github_version = Gem::Version.new(project.repository.exact_tag_from_ref(commit))
 
     if latest_github_version > latest_samson_version
       latest_github_version.to_s
     else
-      latest_samson_version.to_s.dup.sub!(/\d+$/) { |d| d.to_i + 1 }
+      next_samson_version
     end
   end
 

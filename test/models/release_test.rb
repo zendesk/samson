@@ -11,7 +11,7 @@ describe Release do
 
   describe "create" do
     before do
-      GitRepository.any_instance.stubs(:tag_from_ref).returns("")
+      GitRepository.any_instance.stubs(:exact_tag_from_ref).returns("")
     end
 
     it "creates a new release" do
@@ -83,7 +83,7 @@ describe Release do
     end
 
     it "uses the github version if it is present on the commit" do
-      GitRepository.any_instance.expects(:tag_from_ref).with(commit).returns("125")
+      GitRepository.any_instance.expects(:exact_tag_from_ref).with(commit).returns("125")
       release = project.releases.create!(author: author, commit: commit)
       release.commit.must_equal commit
       release.number.must_equal "125"
@@ -169,7 +169,7 @@ describe Release do
 
   describe "#changeset" do
     before do
-      GitRepository.any_instance.stubs(:tag_from_ref).returns("")
+      GitRepository.any_instance.stubs(:exact_tag_from_ref).returns("")
     end
 
     it "returns changeset" do

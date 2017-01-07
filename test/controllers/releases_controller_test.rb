@@ -48,7 +48,7 @@ describe ReleasesController do
       end
 
       it "creates a new release" do
-        GitRepository.any_instance.expects(:tag_from_ref).with('abcd').returns("2")
+        GitRepository.any_instance.expects(:exact_tag_from_ref).with('abcd').returns("2")
 
         assert_difference "Release.count", +1 do
           post :create, params: {project_id: project.to_param, release: release_params}
@@ -65,7 +65,7 @@ describe ReleasesController do
 
     describe "#new" do
       it "renders" do
-        GitRepository.any_instance.stubs(:tag_from_ref).returns("")
+        GitRepository.any_instance.stubs(:exact_tag_from_ref).returns("")
 
         get :new, params: {project_id: project.to_param}
         assert_response :success
