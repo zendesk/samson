@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+require 'vault'
 
 module Samson
   module Secrets
@@ -42,7 +43,7 @@ module Samson
             :write,
             vault_path(key),
             vault: data.fetch(:value),
-            visible: data.fetch(:visible),
+            visible: ActiveRecord::Type::Boolean.new.cast(data.fetch(:visible)),
             comment: data.fetch(:comment),
             creator_id: creator_id,
             updater_id: user_id
