@@ -10,6 +10,9 @@ if defined?(Airbrake)
     # this will be blacklist_params in v5 ... does not support the full rails syntax
     config.params_filters = Rails.application.config.filter_parameters
 
+    # do not send our environment (secrets etc) to airbrake
+    config.rake_environment_filters.concat ENV.keys
+
     # report in development:
     # - uncomment
     # - add development in application.rb
