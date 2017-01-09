@@ -91,7 +91,7 @@ module DeploysHelper
   end
 
   def redeploy_button
-    return if @deploy.job.executing?
+    return if @deploy.job.active?
 
     html_options = {method: :post}
     if @deploy.succeeded?
