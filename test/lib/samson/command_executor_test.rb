@@ -17,8 +17,20 @@ describe Samson::CommandExecutor do
       Samson::CommandExecutor.execute("sh", "-c", "echo hello 1>&2", err: '/dev/null', timeout: 1).must_equal [true, ""]
     end
 
-    it "fails" do
+    it "fails nicely on missing exectable" do
       Samson::CommandExecutor.execute("foo", "bar", timeout: 1).must_equal [false, "No such file or directory - foo"]
+    end
+
+    it "does not fail on nil commands" do
+      Samson::CommandExecutor.execute("echo", 1, nil, timeout: 1).must_equal [true, "1 \n"]
+    end
+
+    it "shows full backtrace when failing" do
+      IO.expects(:popen).raises
+      e = assert_raises do
+        Samson::CommandExecutor.execute("foo", timeout: 1)
+      end
+      e.backtrace.size.must_be :>, 10
     end
 
     it "times out and cleans up" do

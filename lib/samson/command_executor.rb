@@ -4,30 +4,29 @@ module Samson
   module CommandExecutor
     class << self
       # timeout could be done more reliably with timeout(1) from gnu coreutils ... but that would add another dependency
+      # popen vs timeout http://stackoverflow.com/questions/17237743/timeout-within-a-popen-works-but-popen-inside-a-timeout-doesnt
+      # TODO: stream output so we have a partial output when command times out
       def execute(*command, timeout:, whitelist_env: [], env: {}, err: [:child, :out])
         raise ArgumentError, "Positive timeout required" if timeout <= 0
-        output = "ABORTED"
-        pid = nil
         env = ENV.to_h.slice(*whitelist_env).merge(env)
 
-        wait = Thread.new do
+        Timeout.timeout(timeout) do
           begin
-            IO.popen(env, command, unsetenv_others: true, err: err) do |io|
-              pid = io.pid
-              output = io.read
-            end
-            $?&.success? || false
+            pio = IO.popen(env, command.map(&:to_s), unsetenv_others: true, err: err)
+            output = pio.read
+            pio.close
+            [$?.success?, output]
           rescue Errno::ENOENT
-            output = "No such file or directory - #{command.first}"
-            false
+            [false, "No such file or directory - #{command.first}"]
+          ensure
+            if pio && !pio.closed?
+              kill_process pio.pid
+              pio.close
+            end
           end
         end
-        success = Timeout.timeout(timeout) { wait.value } # using timeout in a blocking thread never interrupts
-
-        return success, output
       rescue Timeout::Error
-        kill_process pid if pid
-        return false, $!.message
+        [false, $!.message]
       end
 
       private
