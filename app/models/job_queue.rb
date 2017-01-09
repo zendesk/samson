@@ -20,6 +20,10 @@ class JobQueue
     @queue.values.detect { |jes| jes.detect { |je| return je if je.id == id } }
   end
 
+  def dequeue(id)
+    !!@queue.values.detect { |jes| jes.reject! { |je| je.id == id } }
+  end
+
   def find_by_id(id)
     LOCK.synchronize { active?(id) || queued?(id) }
   end

@@ -265,6 +265,10 @@ class JobExecution
       job_queue.queued?(id)
     end
 
+    def dequeue(id)
+      job_queue.dequeue(id)
+    end
+
     def start_job(*args)
       job_queue.add(*args)
     end

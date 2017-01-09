@@ -39,6 +39,10 @@ describe JobQueue do
     end
   end
 
+  def self.with_a_queued_job
+    around { |t| with_a_queued_job(&t) }
+  end
+
   let(:subject) { JobQueue.new }
   let(:job_execution) { fake_execution.new(1) }
   let(:queued_job_execution) { fake_execution.new(2) }
@@ -102,7 +106,7 @@ describe JobQueue do
     end
 
     describe 'with queued job' do
-      around { |t| with_a_queued_job(&t) }
+      with_a_queued_job
 
       it 'has a queued job' do
         refute subject.active?(2)
@@ -146,6 +150,20 @@ describe JobQueue do
         subject.instance_variable_get(:@active).must_equal({})
         subject.instance_variable_get(:@queue).must_equal({})
       end
+    end
+  end
+
+  describe "#dequeue" do
+    with_a_queued_job
+
+    it "removes a job from the queue" do
+      assert subject.dequeue(queued_job_execution.id)
+      refute subject.queued?(queued_job_execution.id)
+    end
+
+    it "does not remove a job when it is not queued" do
+      refute subject.dequeue(job_execution.id)
+      refute subject.queued?(job_execution.id)
     end
   end
 

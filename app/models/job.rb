@@ -61,7 +61,9 @@ class Job < ActiveRecord::Base
   end
 
   def stop!
-    if ex = execution
+    if JobExecution.dequeue(id)
+      cancelled!
+    elsif ex = execution # is active
       cancelling!
       ex.stop!
     else
