@@ -17,7 +17,7 @@
 <section id="user-project-roles" class="clearfix">
   <h2 class="section-subtitle">Project Level Roles</h2>
 
-  <%= render partial: "shared/search_bar", locals: {url: admin_user_path, query: params[:search]} %>
+  <%= render "users/search_bar", system_level: false %>
 
   <div class="users-csv">
     <%= link_to "Download as CSV", new_csv_export_path(format: :csv, type: :users, user_id: @user.id) %>
@@ -34,7 +34,7 @@
     <tbody>
     <% if @projects.empty? %>
       <tr>
-        <td>No project was found!</td>
+        <td>No project roles exist.</td>
       </tr>
     <% else %>
       <%= render partial: 'project', collection: @projects, as: :project, locals: {user: @user} %>
@@ -42,4 +42,20 @@
     </tbody>
   </table>
   <%= paginate @projects %>
+
+  <h3>Create new project role</h3>
+  <%= form_tag project_roles_path(user_id: @user.id), class: 'form-horizontal' do %>
+    <div class="col-md-2">
+      <%= select_tag :project_id, options_from_collection_for_select(Project.all, :id, :name), required: true, class: 'form-control col-md-2' %>
+    </div>
+    &nbsp;
+    <% UserProjectRole::ROLES.each do |role| %>
+      <%= label_tag do %>
+        <%= radio_button_tag :role_id, role.id %>
+        <%= role.name %>
+      <% end %>
+      &nbsp;
+    <% end %>
+    <%= submit_tag "Create", class: 'btn btn-default' %>
+  <% end %>
 </section>

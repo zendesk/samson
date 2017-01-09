@@ -83,13 +83,12 @@ Samson::Application.routes.draw do
 
     resources :users, only: [:index, :update]
 
-    resources :project_roles, only: [:create]
-
     member do
       get :deploy_group_versions
     end
   end
 
+  resources :project_roles, only: [:create]
   resources :streams, only: [:show]
   resources :locks, only: [:create, :destroy]
 
