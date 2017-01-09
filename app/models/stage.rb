@@ -101,7 +101,7 @@ class Stage < ActiveRecord::Base
   end
 
   def notify_email_addresses
-    notify_email_address.split(/\s*;\s*/).map(&:strip)
+    notify_email_address.to_s.split(/\s*;\s*/).map(&:strip)
   end
 
   def global_name
