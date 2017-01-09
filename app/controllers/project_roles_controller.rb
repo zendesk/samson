@@ -18,9 +18,13 @@ class ProjectRolesController < ApplicationController
 
     role_name = (role.role.try(:display_name) || 'None')
     Rails.logger.info(
-      "#{current_user.name_and_email} set the role #{role_name} to #{user.name}} on project #{current_project.name}"
+      "#{current_user.name_and_email} set the role #{role_name} to #{user.name} on project #{current_project.name}"
     )
 
-    render plain: "Saved!"
+    if request.xhr?
+      render plain: "Saved!"
+    else
+      redirect_back_or "/", notice: "Saved!"
+    end
   end
 end

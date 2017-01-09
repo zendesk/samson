@@ -10,7 +10,7 @@ describe ApplicationController do
     end
 
     def test_redirect_back_or
-      redirect_back_or '/fallback'
+      redirect_back_or '/fallback', notice: params[:notice]
     end
   end
 
@@ -63,6 +63,12 @@ describe ApplicationController do
         Rails.logger.expects(:error)
         get :test_redirect_back_or, params: {test_route: true, redirect_to: {host: 'hacks.com', path: 'bar'}}
         assert_redirected_to '/fallback'
+      end
+
+      it "can set a notice" do
+        get :test_redirect_back_or, params: {test_route: true, redirect_to: '/param', notice: "hello"}
+        assert_redirected_to '/param'
+        assert flash[:notice]
       end
     end
   end

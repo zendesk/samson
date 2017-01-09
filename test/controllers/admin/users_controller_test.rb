@@ -103,6 +103,28 @@ describe Admin::UsersController do
       it 'succeeds' do
         get :show, params: {id: modified_user.id}
         assert_template :show, partial: '_project', locals: { user: modified_user }
+        assigns[:projects].must_equal []
+      end
+
+      describe "with project level roles" do
+        let!(:role) do
+          UserProjectRole.create!(role_id: Role::DEPLOYER.id, project: projects(:test), user: modified_user)
+        end
+
+        it 'shows projects with roles' do
+          get :show, params: {id: modified_user.id}
+          assigns[:projects].must_equal [role.project]
+        end
+
+        it 'can filter by project name' do
+          get :show, params: {id: modified_user.id, search: 'nope'}
+          assigns[:projects].must_equal []
+        end
+
+        it 'can filter by role' do
+          get :show, params: {id: modified_user.id, role_id: Role::ADMIN.id}
+          assigns[:projects].must_equal []
+        end
       end
     end
   end
