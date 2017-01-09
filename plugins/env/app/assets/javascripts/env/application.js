@@ -3,7 +3,7 @@ $(function(){
     e.preventDefault();
     var $row = $(this).prev();
     var $new_row = $row.clone();
-    $new_row.find('input').val('');
+    $new_row.find(':input').val('');
 
     // each row needs a new unique name and id to make rails do the update logic correctly for environment_variables
     $new_row.find(':input').each(function(i, input){
