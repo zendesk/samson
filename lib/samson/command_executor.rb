@@ -9,6 +9,7 @@ module Samson
       def execute(*command, timeout:, whitelist_env: [], env: {}, err: [:child, :out])
         raise ArgumentError, "Positive timeout required" if timeout <= 0
         env = ENV.to_h.slice(*whitelist_env).merge(env)
+        pio = nil
 
         Timeout.timeout(timeout) do
           begin
@@ -18,15 +19,15 @@ module Samson
             [$?.success?, output]
           rescue Errno::ENOENT
             [false, "No such file or directory - #{command.first}"]
-          ensure
-            if pio && !pio.closed?
-              kill_process pio.pid
-              pio.close
-            end
           end
         end
       rescue Timeout::Error
         [false, $!.message]
+      ensure
+        if pio && !pio.closed?
+          kill_process pio.pid
+          pio.close
+        end
       end
 
       private
