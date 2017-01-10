@@ -32,12 +32,21 @@ describe UsersController do
         get :index, params: {project_id: project.to_param, search: "Admin"}
         assert_template :index
         assigns(:users).map(&:name).sort.must_equal ["Admin", "Deployer Project Admin", "Super Admin"]
+        assigns(:users).first.user_project_role_id.must_equal nil
       end
 
       it 'filters by role' do
         get :index, params: {project_id: project.to_param, role_id: Role::ADMIN.id}
         assert_template :index
         assigns(:users).map(&:name).sort.must_equal ["Admin", "Deployer Project Admin", "Super Admin"]
+      end
+
+      it 'filters by project role' do
+        role = UserProjectRole.create!(role_id: Role::ADMIN.id, project: projects(:test), user: users(:deployer))
+        get :index, params: {project_id: project.to_param, role_id: Role::ADMIN.id}
+        assert_template :index
+        assigns(:users).map(&:name).sort.must_equal ["Admin", "Deployer", "Deployer Project Admin", "Super Admin"]
+        assigns(:users).map(&:user_project_role_id).must_include role.role_id
       end
     end
   end

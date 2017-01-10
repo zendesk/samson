@@ -23,6 +23,7 @@ class Admin::UsersController < ApplicationController
     if role_id = params[:role_id].presence
       @projects = @projects.where("user_project_roles.role_id >= ?", role_id)
     end
+    @projects = @projects.select('projects.*, user_project_roles.role_id AS user_project_role_id')
   end
 
   def update
