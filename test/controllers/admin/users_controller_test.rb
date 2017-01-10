@@ -114,6 +114,7 @@ describe Admin::UsersController do
         it 'shows projects with roles' do
           get :show, params: {id: modified_user.id}
           assigns[:projects].must_equal [role.project]
+          assigns[:projects].first.user_project_role_id.must_equal role.role_id
         end
 
         it 'can filter by project name' do

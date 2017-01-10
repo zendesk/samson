@@ -1,6 +1,6 @@
 <%= form_tag project_roles_path(project_id: project.id, user_id: user.id), class: 'autosubmit' do %>
   <% options = [['None', nil]] + UserProjectRole::ROLES.map { |r| [r.name, r.id] } %>
   <% options.each do |name, id| %>
-    <%= user_project_role_radio user, project, name, id %>
+    <%= user_project_role_radio user, name, id, user_project_role_id %>
   <% end %>
 <% end %>
