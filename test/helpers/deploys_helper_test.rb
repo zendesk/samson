@@ -57,7 +57,7 @@ describe DeploysHelper do
     end
 
     it 'does not generate a link when deploy is active' do
-      deploy.job.stubs(executing?: true)
+      deploy.job.stubs(active?: true)
       redeploy_button.must_be_nil
     end
 
