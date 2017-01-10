@@ -15,4 +15,16 @@ ActiveSupport::TestCase.class_eval do
   def self.with_job_execution
     around { |t| with_job_execution(&t) }
   end
+
+  def self.with_job_stop_timeout(value)
+    around do |test|
+      begin
+        old = JobExecution.stop_timeout
+        JobExecution.stop_timeout = value
+        test.call
+      ensure
+        JobExecution.stop_timeout = old
+      end
+    end
+  end
 end

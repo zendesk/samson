@@ -344,15 +344,7 @@ describe JobExecution do
   end
 
   describe "#stop!" do
-    around do |test|
-      begin
-        old = JobExecution.stop_timeout
-        JobExecution.stop_timeout = 0.1
-        test.call
-      ensure
-        JobExecution.stop_timeout = old
-      end
-    end
+    with_job_stop_timeout 0.1
 
     let(:lock) { Mutex.new }
     let(:execution) { JobExecution.new('master', job) { lock.lock } }
@@ -424,9 +416,16 @@ describe JobExecution do
     end
   end
 
-  describe "#debug" do
+  describe ".debug" do
     it "returns job queue interansl" do
       JobExecution.debug.must_equal([{}, {}])
+    end
+  end
+
+  describe ".dequeue" do
+    it "calls job queue" do
+      JobExecution.send(:job_queue).expects(:dequeue)
+      JobExecution.dequeue(12)
     end
   end
 end
