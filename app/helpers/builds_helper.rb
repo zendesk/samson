@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 module BuildsHelper
+  # shorten Docker SHAs "sha256:0123abc..." -> "0123abc"
   def short_sha(value, length: 7)
-    # with Docker, SHA values can be of the form "sha256:0123abc..."
-    value.split(':').last[0..length].to_s if value
+    value.split(':').last.slice(0, length) if value
   end
 
   def git_ref_and_sha_for(build, make_link: false)
@@ -18,9 +18,5 @@ module BuildsHelper
     end
 
     sha_text
-  end
-
-  def creator_for(build, method: :name_and_email)
-    build.creator.try(method) || 'Trigger'
   end
 end

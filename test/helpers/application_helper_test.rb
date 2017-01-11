@@ -2,7 +2,7 @@
 # rubocop:disable Metrics/LineLength
 require_relative '../test_helper'
 
-SingleCov.covered! uncovered: 10
+SingleCov.covered!
 
 describe ApplicationHelper do
   include LocksHelper
@@ -93,6 +93,30 @@ describe ApplicationHelper do
     end
   end
 
+  describe "#sortable" do
+    let(:url_options) { { controller: 'ping', action: 'show' } }
+
+    it "builds a link" do
+      sortable("foo").must_equal "<a href=\"/ping?direction=asc&amp;sort=foo\">Foo</a>"
+    end
+
+    it "builds a link with given title" do
+      sortable("foo", "bar").must_equal "<a href=\"/ping?direction=asc&amp;sort=foo\">bar</a>"
+    end
+
+    it "builds a desc link when sorting asc" do
+      params[:direction] = "asc"
+      params[:sort] = "foo"
+      sortable("foo").must_equal "<a href=\"/ping?direction=desc&amp;sort=foo\">Foo</a>"
+    end
+
+    it "buils a asc link when sorting asc by a different column" do
+      params[:direction] = "asc"
+      params[:sort] = "bar"
+      sortable("foo").must_equal "<a href=\"/ping?direction=asc&amp;sort=foo\">Foo</a>"
+    end
+  end
+
   describe "#github_ok?" do
     let(:status_url) { "#{Rails.application.config.samson.github.status_url}/api/status.json" }
 
@@ -162,6 +186,8 @@ describe ApplicationHelper do
     let(:project) { projects(:test) }
     let(:environment) { Environment.find_by_param!('production') }
     let(:deploy_group) { deploy_groups(:pod1) }
+    let(:macro) { macros(:test) }
+    let(:build) { builds(:docker_build) }
 
     it "renders strings" do
       breadcrumb("Foobar").must_equal "<ul class=\"breadcrumb\"><li class=\"\"><a href=\"/\">Home</a></li><li class=\"active\">Foobar</li></ul>"
@@ -208,6 +234,14 @@ describe ApplicationHelper do
     it "does not allow html injection" do
       stage.name = "<script>alert(1)</script>"
       breadcrumb(stage).must_equal "<ul class=\"breadcrumb\"><li class=\"\"><a href=\"/\">Home</a></li><li class=\"active\">&lt;script&gt;alert(1)&lt;/script&gt;</li></ul>"
+    end
+
+    it "renders macro" do
+      breadcrumb(macro).must_equal "<ul class=\"breadcrumb\"><li class=\"\"><a href=\"/\">Home</a></li><li class=\"active\">Test Macro</li></ul>"
+    end
+
+    it "renders array" do
+      breadcrumb(['foo', 'bar'], ['baz', 'bar']).must_equal "<ul class=\"breadcrumb\"><li class=\"\"><a href=\"/\">Home</a></li><li class=\"\"><a href=\"bar\">foo</a></li><li class=\"active\">baz</li></ul>"
     end
   end
 
@@ -311,6 +345,12 @@ describe ApplicationHelper do
     end
   end
 
+  describe "#additional_info" do
+    it "builds a help text" do
+      additional_info("foo").must_equal "<i class=\"glyphicon glyphicon-info-sign\" title=\"foo\"></i>"
+    end
+  end
+
   describe "#link_to_history" do
     let(:user) { users(:admin) }
 
@@ -388,6 +428,20 @@ describe ApplicationHelper do
       it "is empty when nothing is known" do
         request.stubs(:referrer).returns(nil)
         redirect_to_field.must_be_nil
+      end
+    end
+  end
+
+  describe "#delete_checkbox" do
+    it "does not show anything if the object is new" do
+      form_for Project.new do |form|
+        delete_checkbox(form).must_be_nil
+      end
+    end
+
+    it "shows a checkbox when the object is persisted" do
+      form_for projects(:test) do |form|
+        delete_checkbox(form).must_include ">Delete<"
       end
     end
   end

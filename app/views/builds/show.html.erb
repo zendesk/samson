@@ -22,7 +22,7 @@
     <dd><%= @build.created_at  %></dd>
 
     <dt>Created By</dt>
-    <dd><%= creator_for @build %></dd>
+    <dd><%= @build.creator&.name_and_email || "Trigger" %></dd>
 
     <dt>Label</dt>
     <dd><%= @build.label  %></dd>

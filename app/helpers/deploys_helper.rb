@@ -18,7 +18,7 @@ module DeploysHelper
     if JobExecution.enabled
       output << Samson::Hooks.render_views(:deploy_view, self, deploy: @deploy, project: @project)
 
-      if deploy_queued?
+      if @deploy.job.queued?
         output_hidden = true
         output << render('queued')
       elsif @deploy.waiting_for_buddy?
@@ -31,10 +31,6 @@ module DeploysHelper
     end
 
     output << render('shared/output', deployable: @deploy, job: @deploy.job, project: @project, hide: output_hidden)
-  end
-
-  def deploy_queued?
-    @deploy.pending? && JobExecution.queued?(@deploy.job_id)
   end
 
   def deploy_page_title
