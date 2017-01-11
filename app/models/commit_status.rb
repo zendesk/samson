@@ -29,7 +29,7 @@ class CommitStatus
   end
 
   def github_status
-    GITHUB.combined_status(@stage.project.user_repo_part, @reference).to_h
+    GITHUB.combined_status(@stage.project.user_repo_part, CGI.escape(@reference)).to_h
   rescue Octokit::NotFound
     {
       state: "failure",
