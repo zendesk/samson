@@ -109,7 +109,7 @@ class Project < ActiveRecord::Base
   end
 
   def release_prior_to(release)
-    releases.where('number < ?', release.number).order(:number).last
+    releases.where('id < ?', release.id).order(:id).last
   end
 
   def repository
