@@ -3,4 +3,16 @@
 There are no new commits since last time.
 <% else %>
 _<<%= changeset.github_url %>|<%= pluralize changeset.commits.count, "commit" %>> and <%= pluralize changeset.pull_requests.count, "pull request" %> by <%= changeset.author_names.to_sentence %>._
+
+<% if show_prs %>
+<% if changeset.pull_requests.empty? %>
+  <!channel> :bangbang: Warning. There are commits going live that did not go through a pull request. Please ensure this is what you really want. :bangbang:
+<% else %>
+*Pull Requests*
+
+<% changeset.pull_requests.each do |pr| %>
+> PR#<%= pr.number %> <<%= pr.url + '|' + pr.title %>> (<%= pr.users.map(&:login).join(", ") %>)
+<% end %>
+<% end %>
+<% end %>
 <% end %>
