@@ -1,6 +1,6 @@
-<% page_title do %>
-  <%= link_to @project.name, @project %> Stages
-<% end %>
+<%= breadcrumb @project, "Stages" %>
+
+<% page_title "#{@project.name} Stages" %>
 
 <section class="tabs">
   <ul id="stages" data-url="<%= reorder_project_stages_path(@project) %>" data-sortable="<%= admin_for_project? %>">
