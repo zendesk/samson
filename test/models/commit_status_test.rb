@@ -81,6 +81,16 @@ describe CommitStatus do
         status.status.must_equal 'success'
       end
     end
+
+    describe "with bad ref" do
+      let(:reference) { '[/r' }
+      let(:url) { "repos/#{stage.project.user_repo_part}/commits/%255B%252Fr/status" }
+
+      it "escapes the url" do
+        failure!
+        status.status.must_equal 'failure'
+      end
+    end
   end
 
   describe "#status_list" do

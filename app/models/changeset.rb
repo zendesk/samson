@@ -76,7 +76,7 @@ class Changeset
       # for branches that frequently change we make sure to always get the correct cache,
       # others might get an outdated changeset if they are reviewed with different shas
       if BRANCH_TAGS.include?(commit)
-        @commit = GITHUB.branch(repo, commit).commit[:sha]
+        @commit = GITHUB.branch(repo, CGI.escape(commit)).commit[:sha]
       end
 
       Rails.cache.fetch(cache_key) do

@@ -13,7 +13,7 @@ class Integrations::TddiumController < Integrations::BaseController
   def skip?
     # Tddium doesn't send commit message, so we have to get creative
     repo_name = "#{params[:repository][:org_name]}/#{params[:repository][:name]}"
-    data = GITHUB.commit(repo_name, params[:commit_id])
+    data = GITHUB.commit(repo_name, CGI.escape(params[:commit_id]))
 
     contains_skip_token?(data.commit.message)
   rescue Octokit::Error => e
