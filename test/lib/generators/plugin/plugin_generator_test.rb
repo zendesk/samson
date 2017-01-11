@@ -1,8 +1,8 @@
 # frozen_string_literal: true
-require_relative '../../test_helper'
+require_relative '../../../test_helper'
 require 'generators/plugin/plugin_generator'
 
-SingleCov.covered! file: 'lib/generators/plugin/plugin_generator.rb'
+SingleCov.covered!
 
 class PluginGeneratorTest < Rails::Generators::TestCase
   tests PluginGenerator
