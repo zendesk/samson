@@ -91,31 +91,9 @@ describe "cleanliness" do
   end
 
   it "tests all files" do
-    untested = [
-      "app/controllers/concerns/current_project.rb",
-      "app/mailers/application_mailer.rb",
-      "app/models/changeset/jira_issue.rb",
-      "app/models/concerns/has_commands.rb",
-      "app/models/concerns/has_role.rb",
-      "app/models/concerns/searchable.rb",
-      "lib/generators/plugin/plugin_generator.rb",
-      "lib/samson/integration.rb",
-      "lib/samson/logging.rb",
-      "plugins/env/app/models/concerns/accepts_environment_variables.rb",
-      "plugins/env/app/models/environment_variable_group.rb",
-      "plugins/env/app/models/project_environment_variable_group.rb",
-      "plugins/kubernetes/app/decorators/admin/deploy_groups_controller_decorator.rb",
-      "plugins/kubernetes/app/decorators/build_decorator.rb",
-      "plugins/kubernetes/app/decorators/deploy_group_decorator.rb",
-      "plugins/kubernetes/app/decorators/environment_decorator.rb",
-      "plugins/kubernetes/app/models/kubernetes/cluster_deploy_group.rb",
-      "plugins/pipelines/app/models/concerns/samson_pipelines/stage_concern.rb"
-    ]
-
     SingleCov.assert_tested(
       files: Dir['{,plugins/*/}{app,lib}/**/*.rb'],
-      tests: all_tests,
-      untested: untested
+      tests: all_tests
     )
   end
 
