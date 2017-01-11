@@ -301,22 +301,12 @@ describe Project do
       project.release_prior_to(release).must_be_nil
     end
 
-    it "finds a release before given" do
-      others = [-2, -1, 1]
-      others.map! do |diff|
-        r = Release.create!(
-          commit: 'abab' * 10,
-          author: release.author,
-          project: project
-        )
-        [diff, r]
-      end
-      others.map! do |diff, r|
-        r.update_column(:number, (release.number.to_i + diff).to_s)
-        r
-      end
-
-      others.index(project.release_prior_to(release)).must_equal 1
+    it "finds release before given by id" do
+      release.update_column(:number, "20")
+      recent = Release.create!(commit: 'abab' * 10, author: release.author, project: project)
+      recent.update_column(:number, "199")
+      newest = Release.create!(commit: 'abab' * 10, author: release.author, project: project)
+      newest.previous_release.must_equal recent
     end
   end
 
