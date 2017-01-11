@@ -1,6 +1,6 @@
 <tr>
   <td><%= project.id %></td>
-  <td><%= project.name %></td>
+  <td><%= link_to project.name, project %></td>
   <td class="editable-role">
     <%= render partial: 'shared/project_role', locals: {user: user, project: project, user_project_role_id: project.user_project_role_id} %>
   </td>
