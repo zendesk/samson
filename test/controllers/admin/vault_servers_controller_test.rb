@@ -33,7 +33,7 @@ describe Admin::VaultServersController do
     unauthorized :delete, :destroy, id: 1
   end
 
-  as_a_super_admin do
+  as_a_admin do
     describe "#new" do
       it "renders" do
         get :new

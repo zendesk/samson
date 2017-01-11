@@ -32,14 +32,6 @@ describe Admin::EnvironmentsController do
   end
 
   as_a_admin do
-    unauthorized :post, :create
-    unauthorized :get, :new
-    unauthorized :delete, :destroy, id: 1
-    unauthorized :post, :update, id: 1
-    unauthorized :put, :update, id: 1
-  end
-
-  as_a_super_admin do
     it_renders_index
 
     it 'get :new succeeds' do

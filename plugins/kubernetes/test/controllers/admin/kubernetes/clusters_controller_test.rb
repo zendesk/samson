@@ -20,11 +20,6 @@ describe Admin::Kubernetes::ClustersController do
   end
 
   as_a_admin do
-    unauthorized :get, :new
-    unauthorized :post, :create
-    unauthorized :get, :edit, id: 1
-    unauthorized :patch, :update, id: 1
-
     describe "#index" do
       it "renders" do
         get :index
@@ -57,9 +52,7 @@ describe Admin::Kubernetes::ClustersController do
         assert_redirected_to "/admin/kubernetes/clusters"
       end
     end
-  end
 
-  as_a_super_admin do
     describe "#new" do
       use_example_config
 

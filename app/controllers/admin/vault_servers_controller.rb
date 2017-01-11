@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 class Admin::VaultServersController < ApplicationController
-  before_action :authorize_super_admin!, except: [:index, :show]
+  before_action :authorize_admin!, except: [:index, :show]
   before_action :find_server, only: [:update, :show, :destroy, :sync]
 
   def index

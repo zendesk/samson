@@ -12,7 +12,7 @@
 
 ActiveRecord::Schema.define(version: 20170106212807) do
 
-  create_table "builds", force: :cascade do |t|
+  create_table "builds", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8" do |t|
     t.integer  "project_id",                                       null: false
     t.integer  "number"
     t.string   "git_sha",                                          null: false
@@ -32,14 +32,14 @@ ActiveRecord::Schema.define(version: 20170106212807) do
     t.index ["project_id"], name: "index_builds_on_project_id", using: :btree
   end
 
-  create_table "commands", force: :cascade do |t|
-    t.text     "command",    limit: 10485760
+  create_table "commands", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8" do |t|
+    t.text     "command",    limit: 16777215
     t.datetime "created_at"
     t.datetime "updated_at"
     t.integer  "project_id"
   end
 
-  create_table "csv_exports", force: :cascade do |t|
+  create_table "csv_exports", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8" do |t|
     t.integer  "user_id",                        null: false
     t.datetime "created_at",                     null: false
     t.datetime "updated_at",                     null: false
@@ -47,7 +47,7 @@ ActiveRecord::Schema.define(version: 20170106212807) do
     t.string   "status",     default: "pending", null: false
   end
 
-  create_table "deploy_groups", force: :cascade do |t|
+  create_table "deploy_groups", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8" do |t|
     t.string   "name",            null: false
     t.integer  "environment_id",  null: false
     t.datetime "deleted_at"
@@ -60,14 +60,14 @@ ActiveRecord::Schema.define(version: 20170106212807) do
     t.index ["permalink"], name: "index_deploy_groups_on_permalink", unique: true, length: { permalink: 191 }, using: :btree
   end
 
-  create_table "deploy_groups_stages", id: false, force: :cascade do |t|
+  create_table "deploy_groups_stages", id: false, force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8" do |t|
     t.integer "deploy_group_id"
     t.integer "stage_id"
     t.index ["deploy_group_id"], name: "index_deploy_groups_stages_on_deploy_group_id", using: :btree
     t.index ["stage_id"], name: "index_deploy_groups_stages_on_stage_id", using: :btree
   end
 
-  create_table "deploy_response_urls", force: :cascade do |t|
+  create_table "deploy_response_urls", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8" do |t|
     t.integer  "deploy_id",    null: false
     t.string   "response_url", null: false
     t.datetime "created_at",   null: false
@@ -75,7 +75,7 @@ ActiveRecord::Schema.define(version: 20170106212807) do
     t.index ["deploy_id"], name: "index_deploy_response_urls_on_deploy_id", unique: true, using: :btree
   end
 
-  create_table "deploys", force: :cascade do |t|
+  create_table "deploys", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8" do |t|
     t.integer  "stage_id",                               null: false
     t.integer  "job_id",                                 null: false
     t.string   "reference",                              null: false
@@ -97,13 +97,13 @@ ActiveRecord::Schema.define(version: 20170106212807) do
     t.index ["stage_id", "deleted_at"], name: "index_deploys_on_stage_id_and_deleted_at", using: :btree
   end
 
-  create_table "environment_variable_groups", force: :cascade do |t|
+  create_table "environment_variable_groups", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8" do |t|
     t.string "name",                  null: false
     t.text   "comment", limit: 65535
     t.index ["name"], name: "index_environment_variable_groups_on_name", unique: true, length: { name: 191 }, using: :btree
   end
 
-  create_table "environment_variables", force: :cascade do |t|
+  create_table "environment_variables", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8" do |t|
     t.string  "name",        null: false
     t.string  "value",       null: false
     t.integer "parent_id",   null: false
@@ -113,7 +113,7 @@ ActiveRecord::Schema.define(version: 20170106212807) do
     t.index ["parent_id", "parent_type", "name", "scope_type", "scope_id"], name: "environment_variables_unique_scope", unique: true, length: { parent_type: 191, name: 191, scope_type: 191 }, using: :btree
   end
 
-  create_table "environments", force: :cascade do |t|
+  create_table "environments", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8" do |t|
     t.string   "name",                       null: false
     t.boolean  "production", default: false, null: false
     t.datetime "deleted_at"
@@ -123,7 +123,7 @@ ActiveRecord::Schema.define(version: 20170106212807) do
     t.index ["permalink"], name: "index_environments_on_permalink", unique: true, length: { permalink: 191 }, using: :btree
   end
 
-  create_table "flowdock_flows", force: :cascade do |t|
+  create_table "flowdock_flows", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8" do |t|
     t.string   "name",                      null: false
     t.string   "token",                     null: false
     t.integer  "stage_id",                  null: false
@@ -132,7 +132,7 @@ ActiveRecord::Schema.define(version: 20170106212807) do
     t.boolean  "enabled",    default: true, null: false
   end
 
-  create_table "jenkins_jobs", force: :cascade do |t|
+  create_table "jenkins_jobs", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8" do |t|
     t.integer  "jenkins_job_id"
     t.string   "name",           null: false
     t.string   "status"
@@ -145,12 +145,12 @@ ActiveRecord::Schema.define(version: 20170106212807) do
     t.index ["jenkins_job_id"], name: "index_jenkins_jobs_on_jenkins_job_id", using: :btree
   end
 
-  create_table "jobs", force: :cascade do |t|
+  create_table "jobs", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8" do |t|
     t.text     "command",    limit: 65535,                          null: false
     t.integer  "user_id",                                           null: false
     t.integer  "project_id",                                        null: false
     t.string   "status",                        default: "pending"
-    t.text     "output",     limit: 1073741823
+    t.text     "output",     limit: 4294967295
     t.datetime "created_at"
     t.datetime "updated_at"
     t.string   "commit"
@@ -160,7 +160,7 @@ ActiveRecord::Schema.define(version: 20170106212807) do
     t.index ["user_id"], name: "index_jobs_on_user_id", using: :btree
   end
 
-  create_table "kubernetes_cluster_deploy_groups", force: :cascade do |t|
+  create_table "kubernetes_cluster_deploy_groups", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8" do |t|
     t.integer  "kubernetes_cluster_id", null: false
     t.integer  "deploy_group_id",       null: false
     t.string   "namespace",             null: false
@@ -170,7 +170,7 @@ ActiveRecord::Schema.define(version: 20170106212807) do
     t.index ["kubernetes_cluster_id"], name: "index_kuber_cluster_deploy_groups_on_kuber_cluster_id", using: :btree
   end
 
-  create_table "kubernetes_clusters", force: :cascade do |t|
+  create_table "kubernetes_clusters", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8" do |t|
     t.string   "name"
     t.string   "description"
     t.datetime "created_at"
@@ -180,7 +180,7 @@ ActiveRecord::Schema.define(version: 20170106212807) do
     t.string   "ip_prefix"
   end
 
-  create_table "kubernetes_deploy_group_roles", force: :cascade do |t|
+  create_table "kubernetes_deploy_group_roles", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8" do |t|
     t.integer "project_id",                                 null: false
     t.integer "deploy_group_id",                            null: false
     t.integer "replicas",                                   null: false
@@ -191,7 +191,7 @@ ActiveRecord::Schema.define(version: 20170106212807) do
     t.index ["project_id", "deploy_group_id", "kubernetes_role_id"], name: "index_kubernetes_deploy_group_roles_on_project_id", using: :btree
   end
 
-  create_table "kubernetes_release_docs", force: :cascade do |t|
+  create_table "kubernetes_release_docs", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8" do |t|
     t.integer  "kubernetes_role_id",                                          null: false
     t.integer  "kubernetes_release_id",                                       null: false
     t.integer  "replica_target",                                              null: false
@@ -205,7 +205,7 @@ ActiveRecord::Schema.define(version: 20170106212807) do
     t.index ["kubernetes_role_id"], name: "index_kubernetes_release_docs_on_kubernetes_role_id", using: :btree
   end
 
-  create_table "kubernetes_releases", force: :cascade do |t|
+  create_table "kubernetes_releases", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8" do |t|
     t.datetime "created_at"
     t.datetime "updated_at"
     t.integer  "build_id"
@@ -217,7 +217,7 @@ ActiveRecord::Schema.define(version: 20170106212807) do
     t.index ["build_id"], name: "index_kubernetes_releases_on_build_id", using: :btree
   end
 
-  create_table "kubernetes_roles", force: :cascade do |t|
+  create_table "kubernetes_roles", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8" do |t|
     t.integer  "project_id",    null: false
     t.string   "name",          null: false
     t.string   "config_file"
@@ -231,7 +231,7 @@ ActiveRecord::Schema.define(version: 20170106212807) do
     t.index ["service_name", "deleted_at"], name: "index_kubernetes_roles_on_service_name_and_deleted_at", unique: true, length: { service_name: 191 }, using: :btree
   end
 
-  create_table "locks", force: :cascade do |t|
+  create_table "locks", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8" do |t|
     t.integer  "resource_id"
     t.integer  "user_id",                                    null: false
     t.datetime "created_at"
@@ -244,7 +244,7 @@ ActiveRecord::Schema.define(version: 20170106212807) do
     t.index ["resource_id", "resource_type", "deleted_at"], name: "index_locks_on_resource_id_and_resource_type_and_deleted_at", unique: true, length: { resource_type: 40 }, using: :btree
   end
 
-  create_table "macro_commands", force: :cascade do |t|
+  create_table "macro_commands", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8" do |t|
     t.integer  "macro_id"
     t.integer  "command_id"
     t.integer  "position",   default: 0, null: false
@@ -252,7 +252,7 @@ ActiveRecord::Schema.define(version: 20170106212807) do
     t.datetime "updated_at"
   end
 
-  create_table "macros", force: :cascade do |t|
+  create_table "macros", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8" do |t|
     t.string   "name",       null: false
     t.string   "reference",  null: false
     t.integer  "project_id"
@@ -262,13 +262,13 @@ ActiveRecord::Schema.define(version: 20170106212807) do
     t.index ["project_id", "deleted_at"], name: "index_macros_on_project_id_and_deleted_at", using: :btree
   end
 
-  create_table "new_relic_applications", force: :cascade do |t|
+  create_table "new_relic_applications", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8" do |t|
     t.string  "name"
     t.integer "stage_id"
     t.index ["stage_id", "name"], name: "index_new_relic_applications_on_stage_id_and_name", unique: true, length: { name: 191 }, using: :btree
   end
 
-  create_table "oauth_access_grants", force: :cascade do |t|
+  create_table "oauth_access_grants", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8" do |t|
     t.integer  "resource_owner_id",               null: false
     t.integer  "application_id",                  null: false
     t.string   "token",                           null: false
@@ -281,7 +281,7 @@ ActiveRecord::Schema.define(version: 20170106212807) do
     t.index ["token"], name: "index_oauth_access_grants_on_token", unique: true, length: { token: 191 }, using: :btree
   end
 
-  create_table "oauth_access_tokens", force: :cascade do |t|
+  create_table "oauth_access_tokens", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8" do |t|
     t.integer  "resource_owner_id"
     t.integer  "application_id"
     t.string   "token",                               null: false
@@ -299,7 +299,7 @@ ActiveRecord::Schema.define(version: 20170106212807) do
     t.index ["token"], name: "index_oauth_access_tokens_on_token", unique: true, length: { token: 191 }, using: :btree
   end
 
-  create_table "oauth_applications", force: :cascade do |t|
+  create_table "oauth_applications", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8" do |t|
     t.string   "name",                                    null: false
     t.string   "uid",                                     null: false
     t.string   "secret",                                  null: false
@@ -310,7 +310,7 @@ ActiveRecord::Schema.define(version: 20170106212807) do
     t.index ["uid"], name: "index_oauth_applications_on_uid", unique: true, length: { uid: 191 }, using: :btree
   end
 
-  create_table "outbound_webhooks", force: :cascade do |t|
+  create_table "outbound_webhooks", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8" do |t|
     t.datetime "created_at",             null: false
     t.datetime "updated_at",             null: false
     t.datetime "deleted_at"
@@ -323,14 +323,14 @@ ActiveRecord::Schema.define(version: 20170106212807) do
     t.index ["project_id"], name: "index_outbound_webhooks_on_project_id", using: :btree
   end
 
-  create_table "project_environment_variable_groups", force: :cascade do |t|
+  create_table "project_environment_variable_groups", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8" do |t|
     t.integer "project_id",                    null: false
     t.integer "environment_variable_group_id", null: false
     t.index ["environment_variable_group_id"], name: "project_environment_variable_groups_group_id", using: :btree
     t.index ["project_id", "environment_variable_group_id"], name: "project_environment_variable_groups_unique_group_id", unique: true, using: :btree
   end
 
-  create_table "projects", force: :cascade do |t|
+  create_table "projects", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8" do |t|
     t.string   "name",                                                    null: false
     t.string   "repository_url",                                          null: false
     t.datetime "deleted_at"
@@ -348,7 +348,7 @@ ActiveRecord::Schema.define(version: 20170106212807) do
     t.index ["token"], name: "index_projects_on_token", unique: true, length: { token: 191 }, using: :btree
   end
 
-  create_table "releases", force: :cascade do |t|
+  create_table "releases", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8" do |t|
     t.integer  "project_id",                           null: false
     t.string   "commit",                               null: false
     t.string   "number",      limit: 20, default: "1", null: false
@@ -361,7 +361,7 @@ ActiveRecord::Schema.define(version: 20170106212807) do
     t.index ["project_id", "number"], name: "index_releases_on_project_id_and_number", unique: true, using: :btree
   end
 
-  create_table "secrets", id: false, force: :cascade do |t|
+  create_table "secrets", id: false, force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8" do |t|
     t.string   "id"
     t.string   "encrypted_value",                    null: false
     t.string   "encrypted_value_iv",                 null: false
@@ -375,7 +375,7 @@ ActiveRecord::Schema.define(version: 20170106212807) do
     t.index ["id"], name: "index_secrets_on_id", unique: true, length: { id: 191 }, using: :btree
   end
 
-  create_table "slack_channels", force: :cascade do |t|
+  create_table "slack_channels", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8" do |t|
     t.string   "name",       null: false
     t.string   "channel_id", null: false
     t.integer  "stage_id",   null: false
@@ -384,7 +384,7 @@ ActiveRecord::Schema.define(version: 20170106212807) do
     t.index ["stage_id"], name: "index_slack_channels_on_stage_id", using: :btree
   end
 
-  create_table "slack_identifiers", force: :cascade do |t|
+  create_table "slack_identifiers", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8" do |t|
     t.integer  "user_id"
     t.text     "identifier", limit: 65535, null: false
     t.datetime "created_at",               null: false
@@ -393,7 +393,7 @@ ActiveRecord::Schema.define(version: 20170106212807) do
     t.index ["user_id"], name: "index_slack_identifiers_on_user_id", unique: true, using: :btree
   end
 
-  create_table "slack_webhooks", force: :cascade do |t|
+  create_table "slack_webhooks", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8" do |t|
     t.text     "webhook_url",     limit: 65535,                 null: false
     t.string   "channel"
     t.integer  "stage_id",                                      null: false
@@ -406,7 +406,7 @@ ActiveRecord::Schema.define(version: 20170106212807) do
     t.index ["stage_id"], name: "index_slack_webhooks_on_stage_id", using: :btree
   end
 
-  create_table "stage_commands", force: :cascade do |t|
+  create_table "stage_commands", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8" do |t|
     t.integer  "stage_id"
     t.integer  "command_id"
     t.integer  "position",   default: 0, null: false
@@ -415,7 +415,7 @@ ActiveRecord::Schema.define(version: 20170106212807) do
     t.datetime "deleted_at"
   end
 
-  create_table "stages", force: :cascade do |t|
+  create_table "stages", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8" do |t|
     t.string   "name",                                                                       null: false
     t.integer  "project_id",                                                                 null: false
     t.datetime "created_at"
@@ -450,7 +450,7 @@ ActiveRecord::Schema.define(version: 20170106212807) do
     t.index ["template_stage_id"], name: "index_stages_on_template_stage_id", using: :btree
   end
 
-  create_table "stars", force: :cascade do |t|
+  create_table "stars", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8" do |t|
     t.integer  "user_id",    null: false
     t.integer  "project_id", null: false
     t.datetime "created_at"
@@ -458,7 +458,7 @@ ActiveRecord::Schema.define(version: 20170106212807) do
     t.index ["user_id", "project_id"], name: "index_stars_on_user_id_and_project_id", unique: true, using: :btree
   end
 
-  create_table "user_project_roles", force: :cascade do |t|
+  create_table "user_project_roles", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8" do |t|
     t.integer  "project_id", null: false
     t.integer  "user_id",    null: false
     t.integer  "role_id",    null: false
@@ -468,7 +468,7 @@ ActiveRecord::Schema.define(version: 20170106212807) do
     t.index ["user_id", "project_id"], name: "index_user_project_roles_on_user_id_and_project_id", unique: true, using: :btree
   end
 
-  create_table "users", force: :cascade do |t|
+  create_table "users", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8" do |t|
     t.string   "name",                                        null: false
     t.string   "email"
     t.datetime "created_at"
@@ -486,7 +486,7 @@ ActiveRecord::Schema.define(version: 20170106212807) do
     t.index ["external_id", "deleted_at"], name: "index_users_on_external_id_and_deleted_at", length: { external_id: 191 }, using: :btree
   end
 
-  create_table "vault_servers", force: :cascade do |t|
+  create_table "vault_servers", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8" do |t|
     t.string   "name",                                             null: false
     t.string   "address",                                          null: false
     t.string   "encrypted_token",                                  null: false
@@ -499,17 +499,17 @@ ActiveRecord::Schema.define(version: 20170106212807) do
     t.index ["name"], name: "index_vault_servers_on_name", unique: true, length: { name: 191 }, using: :btree
   end
 
-  create_table "versions", force: :cascade do |t|
+  create_table "versions", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8" do |t|
     t.string   "item_type",                     null: false
     t.integer  "item_id",                       null: false
     t.string   "event",                         null: false
     t.string   "whodunnit"
-    t.text     "object",     limit: 1073741823
+    t.text     "object",     limit: 4294967295
     t.datetime "created_at"
     t.index ["item_type", "item_id"], name: "index_versions_on_item_type_and_item_id", length: { item_type: 191 }, using: :btree
   end
 
-  create_table "webhooks", force: :cascade do |t|
+  create_table "webhooks", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8" do |t|
     t.integer  "project_id", null: false
     t.integer  "stage_id",   null: false
     t.string   "branch",     null: false
@@ -521,5 +521,4 @@ ActiveRecord::Schema.define(version: 20170106212807) do
     t.index ["stage_id", "branch"], name: "index_webhooks_on_stage_id_and_branch", length: { branch: 191 }, using: :btree
   end
 
-  add_foreign_key "deploy_groups", "environments"
 end

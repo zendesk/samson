@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 class Admin::EnvironmentsController < ApplicationController
   before_action :authorize_admin!, except: [:index]
-  before_action :authorize_super_admin!, only: [:create, :new, :show, :update, :destroy]
   before_action :environment, only: [:show, :update, :destroy]
 
   def index

@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 class Admin::Kubernetes::ClustersController < ApplicationController
   before_action :authorize_admin!
-  before_action :authorize_super_admin!, except: [:index, :show, :seed_ecr]
 
   before_action :find_cluster, only: [:show, :edit, :update, :seed_ecr]
   before_action :load_default_config_file, only: [:new, :edit, :update, :create]

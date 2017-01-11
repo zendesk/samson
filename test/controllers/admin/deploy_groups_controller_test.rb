@@ -39,18 +39,6 @@ describe Admin::DeployGroupsController do
       end
     end
 
-    unauthorized :post, :create
-    unauthorized :get, :new
-    unauthorized :get, :edit, id: 1
-    unauthorized :post, :update, id: 1
-    unauthorized :delete, :destroy, id: 1
-    unauthorized :get, :deploy_all, id: 1
-    unauthorized :post, :deploy_all, id: 1
-    unauthorized :post, :create_all_stages, id: 1
-    unauthorized :post, :delete_all_stages, id: 1
-  end
-
-  as_a_super_admin do
     describe "#new" do
       it 'renders' do
         get :new
