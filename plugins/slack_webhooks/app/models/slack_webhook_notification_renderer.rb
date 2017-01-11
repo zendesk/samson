@@ -3,6 +3,7 @@ class SlackWebhookNotificationRenderer
   def self.render(deploy, subject)
     controller = ActionController::Base.new
     view = ActionView::Base.new(File.expand_path("../../views/samson_slack_webhooks", __FILE__), {}, controller)
+    show_prs = deploy.pending? || deploy.running?
     status_emoji = if deploy.pending?
       ':stopwatch:'
     elsif deploy.running?
@@ -20,7 +21,8 @@ class SlackWebhookNotificationRenderer
       deploy: deploy,
       status_emoji: status_emoji,
       changeset: deploy.changeset,
-      subject: subject
+      subject: subject,
+      show_prs: show_prs
     }
     view.render(template: 'notification', locals: locals).chomp
   end
