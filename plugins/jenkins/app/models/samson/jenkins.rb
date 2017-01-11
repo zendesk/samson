@@ -139,7 +139,7 @@ module Samson
       head = desc.index(JENKINS_DESC_HEADER)
       foot = desc.index(JENKINS_DESC_FOOTER)
       job = desc.index(jenkins_desc_job_name)
-      head && foot && job && head > job && job > foot
+      head && foot && job && head < job && job < foot
     end
 
     def find_or_add_parameter_definition(conf)
