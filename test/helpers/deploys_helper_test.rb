@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 require_relative '../test_helper'
 
-SingleCov.covered! uncovered: 20
+SingleCov.covered! uncovered: 8
 
 describe DeploysHelper do
   include StatusHelper
@@ -9,7 +9,41 @@ describe DeploysHelper do
   let(:deploy) { deploys(:succeeded_test) }
 
   describe "#deploy_output" do
-    # TO DO
+    let(:output) { 'This worked!' }
+
+    before do
+      @deploy = deploy
+      @project = deploy.project
+      ActionView::Base.any_instance.stubs(current_user: users(:deployer))
+    end
+
+    it "renders output when deploy is finished" do
+      deploy_output.must_include output
+    end
+
+    describe "pending job" do
+      let(:result) { deploy_output }
+
+      before { deploy.job.status = 'pending' }
+
+      it "renders restart warning when deploy is waiting for restart" do
+        result.wont_include output
+        result.must_include 'Samson has restarted'
+      end
+
+      it "renders queued warning when job is waiting to be executed" do
+        with_job_execution do
+          result.wont_include output
+          result.must_include 'previous deploys have finished'
+        end
+      end
+
+      it "renders buddy check when waiting for buddy" do
+        deploy.expects(:waiting_for_buddy?).returns(true)
+        result.wont_include output
+        result.must_include 'This deploy requires a buddy.'
+      end
+    end
   end
 
   describe "#deploy_page_title" do
@@ -72,11 +106,25 @@ describe DeploysHelper do
 
   describe "#github_users" do
     it "renders users' avatar" do
-      github_users([stub(url: 'foourl', login: 'foologin', avatar_url: 'fooavatar')]).must_equal(
+      result = github_users(
+        [
+          stub(url: 'foourl', login: 'foologin', avatar_url: 'fooavatar'),
+          stub(url: 'barurl', login: 'bar"<script>login', avatar_url: 'baravatar'),
+        ]
+      )
+      result.must_equal(
         "<a title=\"foologin\" href=\"foourl\">" \
           "<img width=\"20\" height=\"20\" src=\"/images/fooavatar\" alt=\"Fooavatar\" />" \
+        "</a> " \
+        "<a title=\"bar&quot;&lt;script&gt;login\" href=\"barurl\">" \
+          "<img width=\"20\" height=\"20\" src=\"/images/baravatar\" alt=\"Baravatar\" />" \
         "</a>"
       )
+      result.html_safe?.must_equal true
+    end
+
+    it "ignores nils" do
+      github_users([nil, nil]).must_equal " "
     end
   end
 

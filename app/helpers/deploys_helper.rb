@@ -12,25 +12,19 @@ module DeploysHelper
   }.freeze
 
   def deploy_output
-    output_hidden = false
     output = ActiveSupport::SafeBuffer.new
 
     if JobExecution.enabled
       output << Samson::Hooks.render_views(:deploy_view, self, deploy: @deploy, project: @project)
-
-      if @deploy.job.queued?
-        output_hidden = true
-        output << render('queued')
-      elsif @deploy.waiting_for_buddy?
-        output_hidden = true
-        output << render('buddy_check', deploy: @deploy)
-      end
-    elsif @deploy.pending?
-      output_hidden = true
-      output << render('queued')
     end
 
-    output << render('shared/output', deployable: @deploy, job: @deploy.job, project: @project, hide: output_hidden)
+    if @deploy.waiting_for_buddy?
+      output << render('deploys/buddy_check', deploy: @deploy)
+    elsif @deploy.pending?
+      output << render('deploys/queued')
+    end
+
+    output << render('shared/output', deployable: @deploy, job: @deploy.job, project: @project, hide: @deploy.pending?)
   end
 
   def deploy_page_title
