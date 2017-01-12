@@ -28,7 +28,6 @@ class RestartSignalHandler
 
     JobExecution.enabled = false # Disable new job execution
     wait_for_active_jobs_to_finish
-    JobExecution.clear_queue
 
     output "Passing #{PASSED_SIGNAL} on."
 

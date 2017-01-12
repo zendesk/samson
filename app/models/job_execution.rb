@@ -277,10 +277,6 @@ class JobExecution
       job_queue.active
     end
 
-    def clear_queue
-      job_queue.clear
-    end
-
     def debug
       job_queue.debug
     end
