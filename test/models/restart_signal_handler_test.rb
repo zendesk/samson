@@ -31,8 +31,6 @@ describe RestartSignalHandler do
   end
 
   describe ".listen" do
-    around { |t| silence_stdout(&t) }
-
     it "waits for SIGUSR1 and then kills the underlying server" do
       handle
     end
@@ -52,6 +50,14 @@ describe RestartSignalHandler do
 
       RestartSignalHandler.any_instance.expects(:sleep).with(5)
       handle
+    end
+
+    it "notifies airbrake when an exception happens and keeps samson running" do
+      RestartSignalHandler.any_instance.expects(:wait_for_active_jobs_to_finish).raises("Whoops")
+      Airbrake.expects(:notify)
+      assert_raises(RuntimeError) { handle }.message.must_equal "Whoops"
+
+      Process.kill('SIGUSR2', Process.pid) # satisfy expect from `before`
     end
   end
 end
