@@ -138,6 +138,12 @@ describe DeployService do
     describe "when buddy check is needed" do
       before do
         stage.stubs(:deploy_requires_approval?).returns(true)
+
+        job_execution.stubs(:execute!)
+        job_execution.stubs(:setup!).returns(true)
+
+        JobExecution.stubs(:new).returns(job_execution)
+        JobQueue.any_instance.stubs(:delete_and_enqueue_next) # we do not properly add the job, so removal fails
       end
 
       it "starts a job execution" do
@@ -154,6 +160,7 @@ describe DeployService do
         DeployMailer.expects(bypass_email: stub(deliver_now: true))
         deploy.buddy = user
         service.confirm_deploy!(deploy)
+        job_execution.send(:run!)
       end
     end
   end
@@ -167,14 +174,25 @@ describe DeployService do
   end
 
   describe "before notifications" do
+    before do
+      stage.stubs(:create_deploy).returns(deploy)
+      deploy.stubs(:persisted?).returns(true)
+      job_execution.stubs(:execute!)
+      job_execution.stubs(:setup!).returns(true)
+
+      JobExecution.stubs(:new).returns(job_execution)
+      JobQueue.any_instance.stubs(:delete_and_enqueue_next) # we do not properly add the job, so removal fails
+    end
+
     it "sends before_deploy hook" do
       record_hooks(:before_deploy) do
         service.deploy!(stage, reference: reference)
-      end.must_equal [[Deploy.first, nil]]
+        job_execution.send(:run!)
+      end.must_equal [[deploy, nil]]
     end
 
     it "creates a github deployment" do
-      deployment = stub
+      deployment = stub(update_github_deployment_status: nil)
 
       stage.stubs(:use_github_deployment_api?).returns(true)
 
@@ -182,6 +200,7 @@ describe DeployService do
       deployment.expects(:create_github_deployment)
 
       service.deploy!(stage, reference: reference)
+      job_execution.send(:run!)
     end
   end
 

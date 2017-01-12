@@ -22,11 +22,12 @@ class DeployService
   end
 
   def confirm_deploy!(deploy)
-    send_before_notifications(deploy)
-
     stage = deploy.stage
 
     job_execution = JobExecution.new(deploy.reference, deploy.job, construct_env(stage))
+    job_execution.on_start do
+      send_before_notifications(deploy)
+    end
     job_execution.on_complete do
       send_after_notifications(deploy)
     end

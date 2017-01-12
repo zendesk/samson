@@ -7,8 +7,12 @@ describe JobExecution do
   include GitRepoTestHelper
 
   def execute_job(branch = 'master', **options)
+    on_complete = options.delete(:on_complete)
+    on_start = options.delete(:on_start)
+
     execution = JobExecution.new(branch, job, options)
-    execution.on_complete { yield } if block_given?
+    execution.on_complete { on_complete.call } if on_complete.present?
+    execution.on_start { on_start.call } if on_start.present?
     execution.send(:run!)
   end
 
@@ -185,9 +189,15 @@ describe JobExecution do
     JobExecution.find_by_id(job.id).must_be_nil
   end
 
-  it 'calls subscribers after finishing' do
+  it 'calls on complete subscribers after finishing' do
     called_subscriber = false
-    execute_job { called_subscriber = true }
+    execute_job('master', on_complete: -> { called_subscriber = true })
+    assert_equal true, called_subscriber
+  end
+
+  it 'calls on start subscribers before finishing' do
+    called_subscriber = false
+    execute_job('master', on_start: -> { called_subscriber = true })
     assert_equal true, called_subscriber
   end
 
@@ -214,7 +224,7 @@ describe JobExecution do
 
   it 'saves job output before calling subscriber' do
     output = nil
-    execute_job { output = job.output }
+    execute_job('master', on_complete: -> { output = job.output })
     assert_equal 'monkey', output.split("\n").last.strip
   end
 

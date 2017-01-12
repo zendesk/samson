@@ -23,7 +23,8 @@ class JobExecution
     @executor = TerminalExecutor.new(@output, verbose: true, deploy: job.deploy)
     @viewers = JobViewers.new(@output)
 
-    @subscribers = []
+    @start_subscribers = []
+    @complete_subscribers = []
     @env = env
     @job = job
     @reference = reference
@@ -72,8 +73,12 @@ class JobExecution
     finish
   end
 
+  def on_start(&block)
+    @start_subscribers << JobExecutionSubscriber.new(job, &block)
+  end
+
   def on_complete(&block)
-    @subscribers << JobExecutionSubscriber.new(job, &block)
+    @complete_subscribers << JobExecutionSubscriber.new(job, &block)
   end
 
   def descriptor
@@ -94,6 +99,8 @@ class JobExecution
   end
 
   def run!
+    @start_subscribers.each(&:call)
+
     @output.write('', :started)
 
     @job.run!
@@ -127,7 +134,7 @@ class JobExecution
   def finish
     return if @finished
     @finished = true
-    @subscribers.each(&:call)
+    @complete_subscribers.each(&:call)
   end
 
   def execute!(dir)
