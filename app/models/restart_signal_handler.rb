@@ -31,8 +31,11 @@ class RestartSignalHandler
     JobExecution.clear_queue
 
     output "Passing #{PASSED_SIGNAL} on."
-
     Process.kill(PASSED_SIGNAL, Process.pid) # shut down underlying server
+  rescue
+    output "Failed #{$!.message} ... restart manually when all deploys have finished"
+    Airbrake.notify($!)
+    raise
   end
 
   def wait_for_restart_signal
@@ -66,7 +69,7 @@ class RestartSignalHandler
   def output(message, data = {})
     output = {
       timestamp: Time.now.to_s,
-      message: message
+      message: "RestartSignalHandler: #{message}"
     }.merge(data).to_json
 
     Rails.logger.info(output)
