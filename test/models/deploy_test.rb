@@ -333,11 +333,23 @@ describe Deploy do
   end
 
   describe ".expired" do
-    it "finds all the expired deploys" do
-      threshold = BuddyCheck.time_limit.minutes.ago
+    let(:threshold) { BuddyCheck.time_limit.minutes.ago }
+    let(:other) { deploys(:succeeded_production_test) }
+
+    before do
+      deploy.update_column(:buddy_id, nil)
       deploy.job.update_columns(status: 'pending', created_at: threshold + 2)
-      deploys(:succeeded_production_test).job.update_columns(status: 'pending', created_at: threshold - 2)
-      Deploy.expired.must_equal [deploys(:succeeded_production_test)]
+      other.update_column(:buddy_id, nil)
+      other.job.update_columns(status: 'pending', created_at: threshold - 2)
+    end
+
+    it "finds all the expired buddy deploys" do
+      Deploy.any_instance.expects(:waiting_for_buddy?).returns(true)
+      Deploy.expired.must_equal [other]
+    end
+
+    it "does not return deploys waiting for samson restart" do
+      Deploy.expired.must_equal []
     end
   end
 
