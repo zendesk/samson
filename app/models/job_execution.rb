@@ -6,8 +6,8 @@ class JobExecution
 
   # Whether or not execution is enabled. This allows completely disabling job
   # execution for testing purposes and when restarting samson.
-  cattr_accessor(:enabled, instance_writer: false) do
-    Rails.application.config.samson.enable_job_execution
+  class << self
+    attr_accessor :enabled
   end
 
   cattr_accessor(:lock_timeout, instance_writer: false) { 10.minutes }
