@@ -93,46 +93,6 @@ describe Stage do
     end
   end
 
-  describe '#command' do
-    describe 'adding a built command' do
-      before do
-        subject.command_associations.build(
-          command: Command.new(command: 'test')
-        )
-
-        subject.command_ids = [commands(:echo).id]
-        subject.save!
-        subject.reload
-      end
-
-      it 'add new command to the end' do
-        subject.script.must_equal("#{commands(:echo).command}\ntest")
-      end
-    end
-
-    describe 'adding + sorting a command' do
-      before do
-        command = Command.create!(command: 'test')
-
-        subject.command_ids = [command.id, commands(:echo).id]
-        subject.save!
-        subject.reload
-      end
-
-      it 'joins all commands based on position' do
-        subject.script.must_equal("test\n#{commands(:echo).command}")
-      end
-    end
-
-    describe 'no commands' do
-      before { subject.commands.clear }
-
-      it 'is empty' do
-        subject.script.must_be_empty
-      end
-    end
-  end
-
   describe '#last_deploy' do
     let(:project) { projects(:test) }
     let(:stage) { stages(:test_staging) }
