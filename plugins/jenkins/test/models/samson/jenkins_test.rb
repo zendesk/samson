@@ -679,5 +679,13 @@ XML
       stub_get_build_id_from_queue(123)
       jenkins.build.must_equal 123
     end
+
+    it "does not update job when desc or params are not changed" do
+      stub_get_config(jenkins_xml_configured_with_other_params)
+      stub_build_with_parameters_when_autoconfig_is_enabled({})
+      to_post, new_conf = jenkins.check_and_build_job_config
+      assert to_post == false
+      assert_equal jenkins_xml_configured_with_other_params, new_conf.to_xml.to_s
+    end
   end
 end
