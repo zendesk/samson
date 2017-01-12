@@ -9,7 +9,7 @@ describe RestartSignalHandler do
     handler = RestartSignalHandler.listen
 
     Process.expects(:kill).with('SIGUSR2', Process.pid)
-    handler.send(:signal)
+    handler.send(:signal_restart)
     sleep 0.1
   end
 
@@ -20,6 +20,8 @@ describe RestartSignalHandler do
   ensure
     $stdout = old
   end
+
+  with_job_execution
 
   before do
     # make sure we never do something silly
@@ -36,7 +38,9 @@ describe RestartSignalHandler do
     end
 
     it "turns job processing off" do
-      with_job_execution { handle }
+      JobExecution.enabled.must_equal true
+      handle
+      JobExecution.enabled.must_equal false
     end
 
     it "waits for running jobs" do
@@ -44,7 +48,7 @@ describe RestartSignalHandler do
       job_exec = stub(id: 123, pid: 444, pgid: 5555, descriptor: 'Job thingy')
 
       # we call it twice in each iteration
-      job_queue.expects(:active).times(3).returns [job_exec], [job_exec], []
+      job_queue.expects(:active).times(2).returns [job_exec], []
 
       RestartSignalHandler.any_instance.expects(:sleep).with(5)
       handle
