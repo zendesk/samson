@@ -36,10 +36,6 @@ Samson::Application.configure do
 
   config.active_support.deprecation = :raise
 
-  # By default, we don't want to actually execute jobs when testing. However,
-  # this setting can be enabled on a per-test basis.
-  config.samson.enable_job_execution = false
-
   # We don't want to persist the repository cache between test runs.
   config.samson.cached_repos_dir = Dir.mktmpdir
 

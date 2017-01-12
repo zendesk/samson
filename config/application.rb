@@ -99,9 +99,6 @@ module Samson
     config.samson.project_deleted_email = ENV["PROJECT_DELETED_NOTIFY_ADDRESS"].presence ||
       ENV["PROJECT_CREATED_NOTIFY_ADDRESS"]
 
-    # Whether or not jobs are actually executed.
-    config.samson.enable_job_execution = true
-
     # Tired of the i18n deprecation warning
     config.i18n.enforce_available_locales = true
 
@@ -156,9 +153,10 @@ module Samson
     config.samson.export_job.downloaded_age = Integer(ENV['EXPORT_JOB_DOWNLOADED_AGE'] || 12.hours)
     config.samson.export_job.max_age = Integer(ENV['EXPORT_JOB_MAX_AGE'] || 1.day)
 
-    if !Rails.env.test? && ENV['SERVER_MODE'] && !ENV['PRECOMPILE']
-      # flowdock uses routes: run after the routes are loaded
-      initializer :execute_job, after: :set_routes_reloader_hook do
+    # flowdock uses routes: run after the routes are loaded
+    # config.ru sets SERVER_MODE after application.rb is loaded when using `rails s`
+    initializer :execute_job, after: :set_routes_reloader_hook do
+      if !Rails.env.test? && ENV['SERVER_MODE'] && !ENV['PRECOMPILE']
         JobExecution.enabled = true
 
         Job.running.each(&:stop!)
