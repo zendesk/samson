@@ -1,5 +1,12 @@
 <div class="row deploy-check">
-  <p>This deploy is queued, it will be started when previous deploys have finished.</p>
+  <p>
+    This deploy is queued, it will be started when
+    <% if JobExecution.enabled %>
+      previous deploys have finished.
+    <% else %>
+      Samson has restarted.
+    <% end %>
+  </p>
 
   <%= stop_button deploy: @deploy, project: @project %>
 </div>
