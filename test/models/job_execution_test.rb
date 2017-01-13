@@ -11,8 +11,8 @@ describe JobExecution do
     on_start = options.delete(:on_start)
 
     execution = JobExecution.new(branch, job, options)
-    execution.on_complete { on_complete.call } if on_complete.present?
-    execution.on_start { on_start.call } if on_start.present?
+    execution.on_complete(&on_complete) if on_complete.present?
+    execution.on_start(&on_start) if on_start.present?
     execution.send(:run!)
   end
 
@@ -199,6 +199,12 @@ describe JobExecution do
     called_subscriber = false
     execute_job('master', on_start: -> { called_subscriber = true })
     assert_equal true, called_subscriber
+  end
+
+  it 'fails when on start callback fails' do
+    execute_job('master', on_start: -> { raise('failure') })
+
+    job.output.wont_include 'monkey'
   end
 
   it 'outputs start / stop events' do

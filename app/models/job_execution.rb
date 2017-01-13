@@ -99,7 +99,13 @@ class JobExecution
   end
 
   def run!
-    @start_callbacks.each(&:call)
+    begin
+      @start_callbacks.each(&:call)
+    rescue => e
+      @output.write(e.message)
+      finish
+      return
+    end
 
     @output.write('', :started)
 
