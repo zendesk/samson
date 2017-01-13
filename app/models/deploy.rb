@@ -147,7 +147,8 @@ class Deploy < ActiveRecord::Base
 
   def self.expired
     threshold = BuddyCheck.time_limit.minutes.ago
-    joins(:job).where(jobs: { status: 'pending'}).where("jobs.created_at < ?", threshold)
+    stale = where(buddy_id: nil).joins(:job).where(jobs: { status: 'pending'}).where("jobs.created_at < ?", threshold)
+    stale.select(&:waiting_for_buddy?)
   end
 
   def buddy_name
