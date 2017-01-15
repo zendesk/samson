@@ -202,7 +202,7 @@ describe JobExecution do
   end
 
   it 'fails when on start callback fails' do
-    execute_job('master', on_start: -> { raise Samson::Hooks::UserError.new('failure') })
+    execute_job('master', on_start: -> { raise(Samson::Hooks::UserError, 'failure') })
 
     job.output.wont_include 'monkey'
     assert_equal 'errored', job.status
