@@ -28,7 +28,7 @@ class DeployGroup < ActiveRecord::Base
   end
 
   def natural_order
-    Samson::NaturalOrder.covert(name)
+    Samson::NaturalOrder.convert(name)
   end
 
   private

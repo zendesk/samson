@@ -1,6 +1,6 @@
 <%= page_title @vault_server.new_record? ? "New Server" : "Edit Sever #{@vault_server.name}" %>
 <% sync_targets = (@vault_server.persisted? && (Samson::Secrets::VaultServer.all - [@vault_server]).presence) %>
-<% sync_targets.sort_by! { |vs| Samson::NaturalOrder.covert(vs.name) } if sync_targets %>
+<% sync_targets.sort_by! { |vs| Samson::NaturalOrder.convert(vs.name) } if sync_targets %>
 <%
   # do not show the token and do not accidentally override it
   @vault_server.token = nil

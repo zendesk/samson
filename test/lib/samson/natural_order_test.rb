@@ -4,9 +4,9 @@ require_relative '../../test_helper'
 SingleCov.covered!
 
 describe Samson::NaturalOrder do
-  describe '#natural_order' do
+  describe '.convert' do
     def sort(list)
-      list.sort_by { |x| Samson::NaturalOrder.covert(x) }
+      list.sort_by { |x| Samson::NaturalOrder.convert(x) }
     end
 
     it "sorts naturally" do

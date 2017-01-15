@@ -21,7 +21,7 @@ class Admin::Kubernetes::ClustersController < ApplicationController
   end
 
   def index
-    @clusters = ::Kubernetes::Cluster.all
+    @clusters = ::Kubernetes::Cluster.all.sort_by { |c| Samson::NaturalOrder.convert(c.name) }
   end
 
   def show
