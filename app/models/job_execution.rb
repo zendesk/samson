@@ -99,16 +99,8 @@ class JobExecution
   end
 
   def run!
-    begin
-      @start_callbacks.each(&:call)
-    rescue => e
-      @output.write(e.message)
-      finish
-      return
-    end
-
     @output.write('', :started)
-
+    @start_callbacks.each(&:call)
     @job.run!
 
     success = Dir.mktmpdir("samson-#{@job.project.permalink}-#{@job.id}") do |dir|
