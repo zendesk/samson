@@ -1,6 +1,0 @@
-# Stop deploys when buddy approval request timed out every 5 minutes
-*/5 * * * * /bin/bash -c '. samson-env.sh && cd /path/to/samson && bundle exec rake deploys:stop_expired_deploys >> /tmp/samson_stop_expired_deploys.log 2>&1'
-
-# Renew the vault token daily (only use when using vault as secret backend)
-0 0 * * * /bin/bash -c '. samson-env.sh && cd /path/to/samson && bundle exec rake vault:renew_vault_token >> /tmp/samson_renew_vault_token.log 2>&1'
-

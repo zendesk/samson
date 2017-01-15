@@ -168,7 +168,6 @@ module Samson
         Deploy.start_deploys_waiting_for_restart!
 
         RestartSignalHandler.listen
-        Samson::Tasks::LockCleaner.start
       end
     end
 
