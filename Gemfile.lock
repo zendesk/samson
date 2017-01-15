@@ -260,6 +260,9 @@ GEM
       nokogiri (>= 1.5.9)
     mail (2.6.4)
       mime-types (>= 1.16, < 4)
+    marginalia (1.4.0)
+      actionpack (>= 2.3)
+      activerecord (>= 2.3)
     maxitest (2.4.0)
       minitest (>= 5.0.0, < 5.11.0)
     metaclass (0.0.4)
@@ -535,6 +538,7 @@ DEPENDENCIES
   kaminari (~> 0.17.0)
   lograge
   logstash-event
+  marginalia
   maxitest
   minitest-rails (= 3.0.0)
   mocha
