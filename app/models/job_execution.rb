@@ -23,7 +23,8 @@ class JobExecution
     @executor = TerminalExecutor.new(@output, verbose: true, deploy: job.deploy)
     @viewers = JobViewers.new(@output)
 
-    @subscribers = []
+    @start_callbacks = []
+    @complete_callbacks = []
     @env = env
     @job = job
     @reference = reference
@@ -72,8 +73,12 @@ class JobExecution
     finish
   end
 
+  def on_start(&block)
+    @start_callbacks << block
+  end
+
   def on_complete(&block)
-    @subscribers << JobExecutionSubscriber.new(job, &block)
+    @complete_callbacks << JobExecutionSubscriber.new(job, &block)
   end
 
   def descriptor
@@ -95,7 +100,7 @@ class JobExecution
 
   def run!
     @output.write('', :started)
-
+    @start_callbacks.each(&:call)
     @job.run!
 
     success = Dir.mktmpdir("samson-#{@job.project.permalink}-#{@job.id}") do |dir|
@@ -127,7 +132,7 @@ class JobExecution
   def finish
     return if @finished
     @finished = true
-    @subscribers.each(&:call)
+    @complete_callbacks.each(&:call)
   end
 
   def execute!(dir)

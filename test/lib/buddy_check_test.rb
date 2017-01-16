@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 require_relative '../test_helper'
 
-SingleCov.covered! uncovered: 4
+SingleCov.covered! uncovered: 5
 
 describe BuddyCheck do
   let(:project) { job.project }
@@ -69,7 +69,9 @@ describe BuddyCheck do
       stage.update_attribute(:production, true)
       job_execution.stubs(:execute!)
       job_execution.stubs(:setup!).returns(true)
-      JobExecution.expects(:start_job).returns(job_execution)
+
+      JobExecution.stubs(:new).returns(job_execution)
+      JobQueue.any_instance.stubs(:delete_and_enqueue_next) # we do not properly add the job, so removal fails
 
       BuddyCheck.stubs(:enabled?).returns(true)
     end
