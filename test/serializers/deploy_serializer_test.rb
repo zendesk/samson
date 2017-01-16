@@ -18,4 +18,10 @@ describe BuildSerializer do
   it 'serializes created_at to milliseconds' do
     parsed['updated_at'].must_equal deploy.updated_at.to_i * 1000
   end
+
+  it 'can serialize with deleted stage' do
+    deploy.stage.soft_delete!
+    deploy.reload
+    parsed
+  end
 end
