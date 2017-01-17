@@ -70,7 +70,7 @@ describe Samson::Secrets::HashicorpVaultBackend do
       assert_vault_request :get, "production/foo/pod2/bar", status: 404 do
         assert_vault_request :put, "production/foo/pod2/bar", with: {body: data.to_json} do
           assert Samson::Secrets::HashicorpVaultBackend.write(
-            'production/foo/pod2/bar', value: 'whatever', visible: 'false', user_id: 1, comment: 'secret!'
+            'production/foo/pod2/bar', value: 'whatever', visible: false, user_id: 1, comment: 'secret!'
           )
         end
       end
@@ -81,7 +81,7 @@ describe Samson::Secrets::HashicorpVaultBackend do
       assert_vault_request :get, "production/foo/pod2/bar", body: {data: {creator_id: 2, vault: "old"}}.to_json do
         assert_vault_request :put, "production/foo/pod2/bar", with: {body: data.to_json} do
           assert Samson::Secrets::HashicorpVaultBackend.write(
-            'production/foo/pod2/bar', value: 'whatever', visible: 'true', user_id: 1, comment: 'secret!'
+            'production/foo/pod2/bar', value: 'whatever', visible: true, user_id: 1, comment: 'secret!'
           )
         end
       end

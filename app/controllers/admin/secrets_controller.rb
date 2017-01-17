@@ -11,6 +11,7 @@ class Admin::SecretsController < ApplicationController
   before_action :ensure_project_access, except: DEPLOYER_ACCESS
   before_action :authorize_project_admin!, except: DEPLOYER_ACCESS
   before_action :authorize_any_deployer!, only: DEPLOYER_ACCESS
+  before_action :convert_visible_to_boolean, only: [:update, :create, :new]
 
   def index
     @secret_keys = SecretStorage.keys
@@ -102,5 +103,11 @@ class Admin::SecretsController < ApplicationController
     if !current_user.deployer? && !current_user.user_project_roles.where('role_id >= ?', Role::DEPLOYER).exists?
       unauthorized!
     end
+  end
+
+  # vault backend needs booleans and so does our view logic
+  def convert_visible_to_boolean
+    return unless secret = params[:secret]
+    secret[:visible] = ActiveRecord::Type::Boolean.new.cast(secret[:visible])
   end
 end

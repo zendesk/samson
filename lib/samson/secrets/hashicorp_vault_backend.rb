@@ -43,7 +43,7 @@ module Samson
             :write,
             vault_path(key),
             vault: data.fetch(:value),
-            visible: ActiveRecord::Type::Boolean.new.cast(data.fetch(:visible)),
+            visible: data.fetch(:visible),
             comment: data.fetch(:comment),
             creator_id: creator_id,
             updater_id: user_id
