@@ -102,4 +102,14 @@ describe Integrations::GithubController do
 
     it_deploys
   end
+
+  describe 'with payload as json because it is using x-ww-form-encoded' do
+    def payload
+      {
+        payload: super.to_json
+      }
+    end
+
+    it_deploys
+  end
 end

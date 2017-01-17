@@ -13,6 +13,14 @@ class Integrations::GithubController < Integrations::BaseController
 
   protected
 
+  def payload
+    if payload = params[:payload]
+      JSON.parse(payload)
+    else
+      params
+    end
+  end
+
   def validate_request
     unless valid_signature?
       record_log :warn, "Github webhook: failed to validate signature '#{signature}'"
@@ -21,7 +29,7 @@ class Integrations::GithubController < Integrations::BaseController
   end
 
   def deploy?
-    webhook_handler&.valid_webhook?(params)
+    webhook_handler&.valid_webhook?(payload)
   end
 
   # https://developer.github.com/webhooks/securing/
@@ -51,7 +59,7 @@ class Integrations::GithubController < Integrations::BaseController
   end
 
   def webhook_event
-    @webhook_event ||= webhook_handler.changeset_from_webhook(project, params)
+    @webhook_event ||= webhook_handler.changeset_from_webhook(project, payload)
   end
 
   def webhook_handler
