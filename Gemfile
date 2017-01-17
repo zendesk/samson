@@ -48,7 +48,6 @@ gem 'concurrent-ruby'
 gem 'vault'
 gem 'docker-api', '>= 1.32'
 gem 'newrelic_rpm'
-gem 'cmd2json'
 
 # treat included plugins like gems
 Dir[File.join(Bundler.root, 'plugins/*/')].each { |f| gemspec path: f }

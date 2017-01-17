@@ -42,7 +42,7 @@ class Lock < ActiveRecord::Base
 
   def expire_summary
     return unless delete_at
-    if delete_at < (Samson::Tasks::LockCleaner::INTERVAL * 2).seconds.ago
+    if Samson::Periodical.overdue?(:remove_expired_locks, delete_at)
       " and expiration is not working"
     else
       " and will expire in #{time_ago_in_words(delete_at)}"
