@@ -63,9 +63,23 @@ describe Admin::SecretsController do
     end
 
     describe "#new" do
-      it "renders" do
+      let(:checked) { "checked=\"checked\"" }
+
+      it "renders since we do not know what project the user is planing to create for" do
         get :new
         assert_template :show
+      end
+
+      it "renders pre-filled visible false values from params of last form" do
+        get :new, params: {secret: {visible: 'false'}}
+        assert_response :success
+        response.body.wont_include "checked=\"checked\""
+      end
+
+      it "renders pre-filled visible true values from params of last form" do
+        get :new, params: {secret: {visible: 'false'}}
+        assert_response :success
+        response.body.wont_include checked
       end
     end
 
@@ -103,13 +117,13 @@ describe Admin::SecretsController do
   as_a_project_admin do
     describe '#create' do
       it 'creates a secret' do
-        post :create, params: {secret: attributes.merge(visible: true)}
+        post :create, params: {secret: attributes.merge(visible: 'false')}
         flash[:notice].wont_be_nil
         assert_redirected_to admin_secrets_path
         secret = SecretStorage::DbBackend::Secret.find('production/foo/pod2/hi')
         secret.updater_id.must_equal user.id
         secret.creator_id.must_equal user.id
-        secret.visible.must_equal true
+        secret.visible.must_equal false
         secret.comment.must_equal 'hello'
       end
 
@@ -146,7 +160,7 @@ describe Admin::SecretsController do
         response.body.wont_include secret.value
       end
 
-      it 'shows visible secerts' do
+      it 'shows visible secrets' do
         secret.update_column(:visible, true)
         get :show, params: {id: secret}
         assert_template :show
