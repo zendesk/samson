@@ -5,7 +5,7 @@ SingleCov.covered!
 
 describe Kubernetes::Resource do
   let(:kind) { 'Service' }
-  let(:template) { {kind: kind, metadata: {name: 'some-project', namespace: 'pod1'}} }
+  let(:template) { {kind: kind, metadata: {name: 'some-project', namespace: 'pod1'}, spec: {}} }
   let(:deploy_group) { deploy_groups(:pod1) }
   let(:resource) { Kubernetes::Resource.build(template, deploy_group) }
   let(:url) { "http://foobar.server/api/v1/namespaces/pod1/services/some-project" }
@@ -256,7 +256,9 @@ describe Kubernetes::Resource do
 
       it "waits for pods to terminate before deleting" do
         client = resource.send(:client)
-        client.expects(:update_deployment)
+        client.expects(:update_deployment).with do |template|
+          template[:spec].must_equal(replicas: 0)
+        end
         client.expects(:get_deployment).times(3).returns(
           deployment_stub(3),
           deployment_stub(3),

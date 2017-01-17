@@ -38,7 +38,6 @@ module Kubernetes
         !!resource
       end
 
-      # TODO: caching might not be necessary and just complicating things ...
       def resource
         return @resource if defined?(@resource)
         @resource = fetch_resource
@@ -59,7 +58,7 @@ module Kubernetes
         expire_cache
       end
 
-      # FYI: do not use result, see https://github.com/abonas/kubeclient/issues/196
+      # FYI: do not use result of update call, see https://github.com/abonas/kubeclient/issues/196
       def update
         request(:update, @template)
         expire_cache
@@ -108,7 +107,7 @@ module Kubernetes
         return unless resource
 
         # Make kubenretes kill all the pods by scaling down
-        resource[:spec][:replicas] = 0
+        @template[:spec][:replicas] = 0
         update
 
         # Wait for there to be zero pods
