@@ -321,7 +321,7 @@ $(function () {
     }
 
     function scroll() {
-      if ($highlightedLines) {
+      if ($highlightedLines && $highlightedLines.get(0)) {
         $highlightedLines.get(0).scrollIntoView(true);
       }
     }
