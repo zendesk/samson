@@ -270,15 +270,21 @@ describe ApplicationHelper do
 
   describe "#link_to_delete" do
     it "builds a link" do
-      link_to_delete_button("/foo").must_include "Delete"
+      link_to_delete("/foo").must_include ">Delete</a>"
     end
 
     it "shows common message for paths" do
-      link_to_delete_button("/foo").must_include "Are you sure ?"
+      link_to_delete("/foo").must_include "Are you sure ?"
     end
 
     it "shows detailed message for resource" do
-      link_to_delete_button([projects(:test), stages(:test_staging)]).must_include "Delete this Stage ?"
+      link_to_delete([projects(:test), stages(:test_staging)]).must_include "Delete this Stage ?"
+    end
+
+    it "builds a hint for when disabled" do
+      link_to_delete("/foo", disabled: "Foo").must_equal(
+        "<span title=\"Foo\" class=\"mouseover\">Delete</span>"
+      )
     end
   end
 

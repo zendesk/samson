@@ -15,7 +15,7 @@
       <div class="col-lg-offset-2 col-lg-10">
         <% if current_user.admin_for?(@project) %>
           <%= form.submit @role.persisted? ? 'Save' : 'Create', class: "btn btn-primary" %>
-          <%= link_to_delete [@project, @role], 'Delete', class: 'btn btn-default' if @role.persisted? %>
+          <%= link_to_delete [@project, @role], class: 'btn btn-default' if @role.persisted? %>
         <% end %>
         <%= link_to "Cancel", :back, class: 'btn btn-default' %>
       </div>
