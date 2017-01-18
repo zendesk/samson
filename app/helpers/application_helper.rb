@@ -102,19 +102,25 @@ module ApplicationHelper
     content_tag :i, '', class: "glyphicon glyphicon-#{type}"
   end
 
-  def link_to_delete(path, body = 'Delete', options = {})
-    resource = Array(path).last
-    message =
-      if resource.is_a?(ActiveRecord::Base)
-        "Delete this #{resource.class.name.split("::").last} ?"
-      else
-        "Are you sure ?"
-      end
-    link_to body, path, options.merge(method: :delete, data: { confirm: message })
+  def link_to_delete(path, options = {})
+    text = options[:text] || 'Delete'
+    disabled_reason = options[:disabled]
+    if disabled_reason
+      content_tag :span, text, title: disabled_reason, class: 'mouseover'
+    else
+      resource = Array(path).last
+      message =
+        if resource.is_a?(ActiveRecord::Base)
+          "Delete this #{resource.class.name.split("::").last} ?"
+        else
+          "Are you sure ?"
+        end
+      link_to text, path, options.merge(method: :delete, data: { confirm: message })
+    end
   end
 
-  def link_to_delete_button(path)
-    link_to_delete(path, icon_tag('remove') + ' Delete', class: 'btn btn-danger')
+  def link_to_delete_button(path, options = {})
+    link_to_delete(path, options.merge(text: icon_tag('remove') + ' Delete', class: 'btn btn-danger'))
   end
 
   # Flash type -> Bootstrap alert class
