@@ -19,7 +19,17 @@
     <dd><%= @build.id  %></dd>
 
     <dt>Created</dt>
-    <dd><%= @build.created_at  %></dd>
+    <dd><%= @build.created_at %></dd>
+
+    <% if finished_at = @build.finished_at %>
+      <dt>Duration</dt>
+      <dd>
+        <%=
+          duration = (finished_at - @build.started_at).to_i
+          "#{duration / 60}m#{duration % 60}s"
+        %>
+      </dd>
+    <% end %>
 
     <dt>Created By</dt>
     <dd><%= @build.creator&.name_and_email || "Trigger" %></dd>
