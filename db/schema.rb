@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20170106212807) do
+ActiveRecord::Schema.define(version: 20170118172040) do
 
   create_table "builds", force: :cascade do |t|
     t.integer  "project_id",                                       null: false
@@ -27,6 +27,8 @@ ActiveRecord::Schema.define(version: 20170106212807) do
     t.datetime "created_at"
     t.datetime "updated_at"
     t.boolean  "kubernetes_job",                   default: false, null: false
+    t.datetime "started_at"
+    t.datetime "finished_at"
     t.index ["created_by"], name: "index_builds_on_created_by", using: :btree
     t.index ["git_sha"], name: "index_builds_on_git_sha", unique: true, using: :btree
     t.index ["project_id"], name: "index_builds_on_project_id", using: :btree

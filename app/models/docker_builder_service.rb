@@ -47,6 +47,7 @@ class DockerBuilderService
   def run!(push: false, tag_as_latest: false)
     build.docker_build_job.try(:destroy) # if there's an old build job, delete it
     build.docker_tag = build.label.try(:parameterize).presence || 'latest'
+    build.started_at = Time.now
 
     job = build.create_docker_job
     build.save!
@@ -66,7 +67,10 @@ class DockerBuilderService
       end
     end
 
-    job_execution.on_complete { send_after_notifications }
+    job_execution.on_complete do
+      build.update_column(:finished_at, Time.now)
+      send_after_notifications
+    end
 
     JobExecution.start_job(job_execution)
   end
