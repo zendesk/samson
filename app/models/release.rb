@@ -79,7 +79,7 @@ class Release < ActiveRecord::Base
 
     return next_samson_version unless commit
 
-    latest_github_version = Gem::Version.new(project.repository.exact_tag_from_ref(commit)[1..-1])
+    latest_github_version = Gem::Version.new(project.repository.exact_tag_from_ref(commit)&.slice(1..-1))
 
     if latest_github_version > latest_samson_version
       latest_github_version.to_s
