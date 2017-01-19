@@ -83,7 +83,7 @@ describe Release do
     end
 
     it "uses the github version if it is present on the commit" do
-      GitRepository.any_instance.expects(:tag_from_ref).with(commit).returns("125")
+      GitRepository.any_instance.expects(:exact_tag_from_ref).with(commit).returns("v125")
       release = project.releases.create!(author: author, commit: commit)
       release.commit.must_equal commit
       release.number.must_equal "125"

@@ -45,10 +45,17 @@ class GitRepository
     capture_stdout(*command)
   end
 
-  # @return [nil, sha1]
-  def tag_from_ref(git_reference)
-    return unless ensure_local_cache!
+  # @return [nil, tag-sha or tag]
+  def fuzzy_tag_from_ref(git_reference)
+    return unless update_local_cache!
     capture_stdout 'git', 'describe', '--tags', git_reference
+  end
+
+  # @return [nil, tag]
+  def exact_tag_from_ref(git_reference)
+    fuzzy_tag = fuzzy_tag_from_ref(git_reference)
+
+    fuzzy_tag && fuzzy_tag[Release::VERSION_REGEX, 0]
   end
 
   def repo_cache_dir
