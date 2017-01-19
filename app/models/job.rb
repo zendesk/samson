@@ -5,9 +5,6 @@ class Job < ActiveRecord::Base
 
   has_one :deploy
 
-  # Used by status_panel
-  alias_attribute :start_time, :created_at
-
   after_update { deploy&.touch }
 
   validate :validate_globally_unlocked
@@ -79,6 +76,7 @@ class Job < ActiveRecord::Base
 
   def run!
     status!("running")
+    update_attribute(:started_at, Time.now)
   end
 
   def success!
@@ -103,6 +101,10 @@ class Job < ActiveRecord::Base
 
   def finished?
     !ACTIVE_STATUSES.include?(status)
+  end
+
+  def finished_at
+    updated_at if finished?
   end
 
   def queued?

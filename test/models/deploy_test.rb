@@ -250,7 +250,7 @@ describe Deploy do
       Deploy.start_deploys_waiting_for_restart!
       deploy.reload
       deploy.updated_at.must_be :>, 2.seconds.ago # did expire caches
-      deploy.started_at.must_be :<, 1.year.ago # did not update started_at
+      deploy.started_at.must_be :>, 2.seconds.ago # did update started_at
     end
 
     it "does not start deploys waiting for buddy" do
@@ -480,8 +480,8 @@ describe Deploy do
                   prod_deploy.summary,
                   prod_deploy.commit,
                   job.status,
-                  prod_deploy.updated_at,
-                  prod_deploy.start_time,
+                  prod_deploy.started_at,
+                  prod_deploy.finished_at,
                   deployer.name,
                   deployer.email,
                   other_user.name,
@@ -510,8 +510,8 @@ describe Deploy do
               prod_deploy.summary,
               prod_deploy.commit,
               job.status,
-              prod_deploy.updated_at,
-              prod_deploy.start_time,
+              prod_deploy.started_at,
+              prod_deploy.finished_at,
               deployer.name,
               deployer.email,
               other_user.name,

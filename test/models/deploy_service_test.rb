@@ -36,7 +36,7 @@ describe DeployService do
       def create_previous_deploy(ref, stage, successful: true, bypassed: false)
         job = project.jobs.create!(user: user, command: "foo", status: successful ? "succeeded" : 'failed')
         buddy = bypassed ? user : other_user
-        Deploy.create!(job: job, reference: ref, stage: stage, buddy: buddy, started_at: Time.now, project: project)
+        Deploy.create!(job: job, reference: ref, stage: stage, buddy: buddy, project: project)
       end
 
       it "does not start the deploy" do
@@ -68,7 +68,7 @@ describe DeployService do
           end
 
           it "starts the deploy when stage was modified after an older similar deploy" do
-            Deploy.first.update_column(:started_at, 4.seconds.from_now)
+            Deploy.first.job.update_column(:created_at, 4.seconds.from_now)
             create_previous_deploy(ref1, stage_production_1)
             service.expects(:confirm_deploy!)
             service.deploy!(stage_production_2, reference: ref1)

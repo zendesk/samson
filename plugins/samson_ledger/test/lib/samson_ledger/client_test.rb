@@ -70,10 +70,10 @@ describe 'SamsonLedger::Client' do
     end
 
     describe "started_at" do
-      it "posts the updated_at of the deploy as started_at in iso8601" do
+      it "posts the started_at of the deploy in iso8601" do
         SamsonLedger::Client.post_deployment(deploy)
 
-        results.first['started_at'].must_equal(deploy.updated_at.iso8601)
+        results.first['started_at'].must_equal(deploy.started_at.iso8601)
       end
     end
 

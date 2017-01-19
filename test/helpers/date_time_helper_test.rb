@@ -53,5 +53,9 @@ describe DateTimeHelper do
         "<span data-time=\"1461001570000\" class=\"mouseover\">Mon, 18 Apr 2016 17:46:10 +0000</span>"
       )
     end
+
+    it "ignores unknown time" do
+      render_time(nil, 'foo').must_equal ''
+    end
   end
 end

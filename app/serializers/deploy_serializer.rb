@@ -3,7 +3,7 @@ class DeploySerializer < ActiveModel::Serializer
   include ApplicationHelper
   include ActionView::Helpers::DateHelper
 
-  attributes :id, :updated_at, :summary, :url, :production, :status
+  attributes :id, :summary, :url, :production, :status, :started_at, :finished_at, :created_at, :updated_at
 
   has_one :project
   has_one :stage

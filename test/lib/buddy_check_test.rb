@@ -3,6 +3,7 @@ require_relative '../test_helper'
 
 SingleCov.covered! uncovered: 5
 
+# TODO: full converage and move deploy related tests into deploy
 describe BuddyCheck do
   let(:project) { job.project }
   let(:user) { job.user }
@@ -15,17 +16,10 @@ describe BuddyCheck do
 
   let(:other_user) { users(:deployer_buddy) }
 
-  it "start_time is set for buddy_checked deploy" do
+  it "buddy is set for buddy_checked deploy" do
     deploy_rtn = stage.create_deploy(user, reference: reference)
     deploy_rtn.confirm_buddy!(other_user)
-
-    assert_equal true, deploy_rtn.start_time.to_i.positive?
-  end
-
-  it "start_time is set for non-buddy_checked deploy" do
-    deploy_rtn = stage.create_deploy(user, reference: reference)
-
-    assert_equal true, deploy_rtn.start_time.to_i.positive?
+    deploy_rtn.buddy.must_equal other_user
   end
 
   it "does not deploy production if buddy check is enabled" do

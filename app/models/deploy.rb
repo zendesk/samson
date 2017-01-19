@@ -16,7 +16,7 @@ class Deploy < ActiveRecord::Base
 
   delegate :started_by?, :can_be_stopped_by?, :stop!, :status, :user, :output, to: :job
   delegate :active?, :pending?, :running?, :cancelling?, :cancelled?, :succeeded?, to: :job
-  delegate :finished?, :errored?, :failed?, to: :job
+  delegate :finished?, :errored?, :failed?, :started_at, :finished_at, to: :job
   delegate :production?, to: :stage
 
   before_validation :trim_reference
@@ -100,12 +100,8 @@ class Deploy < ActiveRecord::Base
   end
 
   def confirm_buddy!(buddy)
-    update_attributes!(buddy: buddy, started_at: Time.now)
+    update_attributes!(buddy: buddy)
     start!
-  end
-
-  def start_time
-    started_at || created_at
   end
 
   def self.start_deploys_waiting_for_restart!
@@ -165,15 +161,15 @@ class Deploy < ActiveRecord::Base
 
   def self.csv_header
     [
-      "Deploy Number", "Project Name", "Deploy Summary", "Deploy Commit", "Deploy Status", "Deploy Updated",
-      "Deploy Created", "Deployer Name", "Deployer Email", "Buddy Name", "Buddy Email", "Stage Name",
+      "Deploy Number", "Project Name", "Deploy Summary", "Deploy Commit", "Deploy Status", "Deploy Started",
+      "Deploy Finished", "Deployer Name", "Deployer Email", "Buddy Name", "Buddy Email", "Stage Name",
       "Production Flag", "Code deployed", "Project Deleted On", "Deploy Groups"
     ]
   end
 
   def csv_line
     [
-      id, project.name, summary, commit, job.status, updated_at, start_time, user.try(:name), user.try(:email),
+      id, project.name, summary, commit, job.status, started_at, finished_at, user&.name, user&.email,
       buddy_name, buddy_email, stage.name, stage.production?, !stage.no_code_deployed, project.deleted_at,
       stage.deploy_group_names.join('|')
     ]

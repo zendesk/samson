@@ -38,7 +38,7 @@ module SamsonLedger
           name:          deploy.project.name,
           actor:         deploy.user.name,
           status:        deploy.status,
-          started_at:    deploy.updated_at.iso8601,
+          started_at:    deploy.started_at.iso8601,
           summary:       deploy.summary,
           environment:   deploy.stage.deploy_groups.map(&:environment).uniq.map(&:permalink).map(&:downcase).join(","),
           url:           deploy.url,
