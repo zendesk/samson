@@ -181,7 +181,7 @@ describe GitRepository do
     it 'returns nil when repo has no tags' do
       create_repo_without_tags
       repository.update_local_cache!
-      repository.exact_tag_from_ref('master').must_equal ''
+      repository.exact_tag_from_ref('master').must_equal nil
     end
 
     it 'returns no tag if one is not defined' do
@@ -191,7 +191,7 @@ describe GitRepository do
         git commit -a -m 'untagged commit'
       SHELL
       repository.update_local_cache!
-      repository.exact_tag_from_ref('master').must_equal ''
+      repository.exact_tag_from_ref('master').must_equal nil
       repository.exact_tag_from_ref('master~').must_equal 'v1'
     end
 
