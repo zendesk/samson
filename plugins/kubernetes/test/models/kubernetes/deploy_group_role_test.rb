@@ -5,6 +5,28 @@ SingleCov.covered!
 
 describe Kubernetes::DeployGroupRole do
   let(:stage) { stages(:test_staging) }
+  let(:deploy_group_role) { kubernetes_deploy_group_roles(:test_pod1_app_server) }
+
+  describe "validations" do
+    it "is valid" do
+      assert_valid deploy_group_role
+    end
+
+    it "is invalid without cpu" do
+      deploy_group_role.cpu = nil
+      refute_valid deploy_group_role
+    end
+
+    it "is invalid with infinite cpu" do
+      deploy_group_role.cpu = 0
+      refute_valid deploy_group_role
+    end
+
+    it "is invalid with infinite ram" do
+      deploy_group_role.ram = 0
+      refute_valid deploy_group_role
+    end
+  end
 
   describe ".matrix" do
     it "builds a complete matrix" do

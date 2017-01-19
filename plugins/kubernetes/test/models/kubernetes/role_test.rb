@@ -335,7 +335,7 @@ describe Kubernetes::Role do
       Kubernetes::DeployGroupRole.create!(
         kubernetes_role: role,
         project: project,
-        ram: 1,
+        ram: 10,
         replicas: 1,
         cpu: 1,
         deploy_group: deploy_groups(:pod2)

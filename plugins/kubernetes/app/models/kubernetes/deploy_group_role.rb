@@ -6,6 +6,8 @@ module Kubernetes
     belongs_to :deploy_group
     belongs_to :kubernetes_role, class_name: 'Kubernetes::Role'
     validates :ram, :cpu, :replicas, presence: true
+    validates :cpu, numericality: { greater_than: 0 }
+    validates :ram, numericality: { greater_than_or_equal_to: 4 }
 
     # The matrix is a list of deploy group and its roles + deploy-group-roles
     def self.matrix(stage)
