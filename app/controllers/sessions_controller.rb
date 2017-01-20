@@ -53,7 +53,7 @@ class SessionsController < ApplicationController
   def allowed_to_login
     return false if request.env["omniauth.auth"].nil?
     if restricted_email_domain
-      return request.env["omniauth.auth"]["info"]["email"].end_with?(restricted_email_domain)
+      return request.env["omniauth.auth"]["info"]["email"].end_with?("@#{restricted_email_domain}")
     end
     true
   end
@@ -63,7 +63,7 @@ class SessionsController < ApplicationController
   end
 
   def restricted_email_domain
-    ENV["GOOGLE_DOMAIN"]
+    ENV["EMAIL_DOMAIN"]
   end
 
   def strategy

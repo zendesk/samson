@@ -7,8 +7,8 @@ Rails.application.config.middleware.use OmniAuth::Builder do
   if Rails.application.config.samson.auth.github
     require 'omniauth-github'
     provider :github,
-      ENV["GITHUB_CLIENT_ID"],
-      ENV["GITHUB_SECRET"],
+      ENV.fetch("GITHUB_CLIENT_ID"),
+      ENV.fetch("GITHUB_SECRET"),
       scope: "user:email",
       client_options: {
         site:          Rails.application.config.samson.github.api_url,
@@ -21,21 +21,22 @@ Rails.application.config.middleware.use OmniAuth::Builder do
     require 'omniauth-google-oauth2'
     provider(
       OmniAuth::Strategies::GoogleOauth2,
-      ENV["GOOGLE_CLIENT_ID"],
-      ENV["GOOGLE_CLIENT_SECRET"],
+      ENV.fetch("GOOGLE_CLIENT_ID"),
+      ENV.fetch("GOOGLE_CLIENT_SECRET"),
       name:   "google",
       scope:  "email,profile",
-      prompt: "select_account"
+      prompt: "select_account",
+      hg: ENV['EMAIL_DOMAIN']
     )
   end
 
   if Rails.application.config.samson.auth.gitlab
     require 'omniauth-gitlab'
     provider :gitlab,
-      ENV["GITLAB_APPLICATION_ID"],
-      ENV["GITLAB_SECRET"],
+      ENV.fetch("GITLAB_APPLICATION_ID"),
+      ENV.fetch("GITLAB_SECRET"),
       client_options: {
-        site: "http://#{ENV["GITLAB_URL"]}/",
+        site: Rails.application.config.samson.gitlab.web_url,
         authorize_url: '/oauth/authorize',
         token_url: '/oauth/token'
       }
