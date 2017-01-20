@@ -115,8 +115,6 @@ module Kubernetes
     end
 
     def show_failure_cause(release, release_docs, statuses)
-      sleep TICK # logs take a few seconds to arrive, might have to increase if this does not help
-
       release_docs.each { |doc| print_resource_events(doc) }
 
       statuses.reject(&:live).select(&:pod).each do |status|

@@ -49,11 +49,12 @@ module Kubernetes
         @pod.spec.containers.map(&:to_h)
       end
 
+      # tries to get logs from current or previous pod depending on if it restarted
       def logs(container)
-        @client.get_pod_log(name, namespace, previous: restarted?, container: container)
-      rescue KubeException
+        fetch_logs(container, previous: restarted?)
+      rescue KubeException # not found or pod is initializing
         begin
-          @client.get_pod_log(name, namespace, previous: !restarted?, container: container)
+          fetch_logs(container, previous: !restarted?)
         rescue KubeException
           nil
         end
@@ -80,6 +81,31 @@ module Kubernetes
       end
 
       private
+
+      # if the pod is still running we stream the logs until it times out to get as much info as possible
+      # necessary since logs often hang for a while even if the pod is already done
+      def fetch_logs(container, previous:)
+        if previous
+          @client.get_pod_log(name, namespace, container: container, previous: true)
+        else
+          result = "".dup
+          begin
+            timeout_logs do
+              @client.watch_pod_log(name, namespace, container: container).each do |log|
+                result << log
+              end
+            end
+          rescue Timeout::Error
+            result << "\n... log streaming timeout"
+          end
+          result
+        end
+      end
+
+      # easy stub
+      def timeout_logs(&block)
+        Timeout.timeout(10, &block)
+      end
 
       def probe_failed_to_often?(event)
         probe =
