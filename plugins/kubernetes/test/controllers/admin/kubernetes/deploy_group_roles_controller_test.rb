@@ -78,7 +78,7 @@ describe Admin::Kubernetes::DeployGroupRolesController do
             kubernetes_role_id: kubernetes_roles(:app_server).id,
             deploy_group_id: deploy_group.id,
             cpu: 1,
-            ram: 1,
+            ram: 10,
             replicas: 1
           }
         }
