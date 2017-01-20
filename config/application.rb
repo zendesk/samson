@@ -14,6 +14,11 @@ else
   Dotenv.load(development_env)
 end
 
+if (google_domain = ENV["GOOGLE_DOMAIN"]) && !ENV['EMAIL_DOMAIN']
+  warn "Stop using deprecated GOOGLE_DOMAIN"
+  ENV["EMAIL_DOMAIN"] = google_domain.sub('@', '')
+end
+
 Bundler.require(:preload)
 Bundler.require(:assets) if Rails.env.development? || ENV["PRECOMPILE"]
 
