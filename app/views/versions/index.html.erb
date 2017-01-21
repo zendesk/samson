@@ -19,7 +19,7 @@
       <td>
         <% if diff %>
           <% diff.each do |key, previous, current| %>
-            <%= key %>: <%= previous.inspect %> -> <%= current.inspect %><br/>
+            <%= key %>: <%= readable_ruby_value previous %> -> <%= readable_ruby_value current %><br/>
           <% end %>
         <% else %>
           Unable to find item
