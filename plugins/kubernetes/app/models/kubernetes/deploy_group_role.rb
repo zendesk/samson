@@ -2,9 +2,13 @@
 module Kubernetes
   class DeployGroupRole < ActiveRecord::Base
     self.table_name = 'kubernetes_deploy_group_roles'
+
+    has_paper_trail skip: [:updated_at, :created_at]
+
     belongs_to :project
     belongs_to :deploy_group
     belongs_to :kubernetes_role, class_name: 'Kubernetes::Role'
+
     validates :ram, :cpu, :replicas, presence: true
     validates :cpu, numericality: { greater_than: 0 }
     validates :ram, numericality: { greater_than_or_equal_to: 4 }

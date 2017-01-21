@@ -166,6 +166,7 @@ module ApplicationHelper
   end
 
   def link_to_history(resource, counter: true)
+    return if resource.new_record?
     count = (counter ? " (#{resource.versions.count})" : "")
     link_to "History#{count}", versions_path(item_id: resource.id, item_type: resource.class.name)
   end

@@ -366,6 +366,10 @@ describe ApplicationHelper do
       link_to_history(user).must_equal "<a href=\"/versions?item_id=#{user.id}&amp;item_type=User\">History (0)</a>"
     end
 
+    it "shows nothing when new" do
+      link_to_history(User.new).must_equal nil
+    end
+
     it "shows number of entries" do
       user.update_attributes!(name: "Foo")
       user.update_attributes!(name: "Bar")

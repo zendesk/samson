@@ -18,6 +18,7 @@
           <%= link_to_delete [@project, @role], class: 'btn btn-default' if @role.persisted? %>
         <% end %>
         <%= link_to "Cancel", :back, class: 'btn btn-default' %>
+        <%= link_to_history @role %>
       </div>
     </div>
   </fieldset>
