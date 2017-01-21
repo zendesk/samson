@@ -92,11 +92,11 @@ module Kubernetes
           begin
             timeout_logs do
               @client.watch_pod_log(name, namespace, container: container).each do |log|
-                result << log
+                result << log << "\n"
               end
             end
           rescue Timeout::Error
-            result << "\n... log streaming timeout"
+            result << "... log streaming timeout"
           end
           result
         end
