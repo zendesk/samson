@@ -161,8 +161,8 @@ describe Kubernetes::Api::Pod do
 
     it "streams regular logs" do
       stub_request(:get, "#{log_url}&follow=true").
-        and_return(body: "HELLO\n")
-      pod_with_client.logs('some-container').must_equal "HELLO"
+        and_return(body: "HELLO\nWORLD\n")
+      pod_with_client.logs('some-container').must_equal "HELLO\nWORLD\n"
     end
 
     it "reads previous logs when container restarted so we see why it restarted" do
@@ -192,7 +192,7 @@ describe Kubernetes::Api::Pod do
       pod_with_client.expects(:timeout_logs).raises(Timeout::Error)
       stub_request(:get, "#{log_url}&follow=true").
         and_return(body: "HELLO\n")
-      pod_with_client.logs('some-container').must_equal "\n... log streaming timeout"
+      pod_with_client.logs('some-container').must_equal "... log streaming timeout"
     end
   end
 
