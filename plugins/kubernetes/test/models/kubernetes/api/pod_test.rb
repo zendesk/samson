@@ -159,9 +159,9 @@ describe Kubernetes::Api::Pod do
   describe "#logs" do
     let(:log_url) { "http://foobar.server/api/v1/namespaces/the-namespace/pods/test_name/log?container=some-container" }
 
-    it "reads regular logs" do
-      stub_request(:get, log_url).
-        and_return(body: "HELLO")
+    it "streams regular logs" do
+      stub_request(:get, "#{log_url}&follow=true").
+        and_return(body: "HELLO\n")
       pod_with_client.logs('some-container').must_equal "HELLO"
     end
 
@@ -172,20 +172,27 @@ describe Kubernetes::Api::Pod do
       pod_with_client.logs('some-container').must_equal "HELLO"
     end
 
-    it "requests regular logs when previous logs are not available" do
-      stub_request(:get, "#{log_url}&previous=true").
+    it "fetches previous logs when current logs are not available" do
+      stub_request(:get, "#{log_url}&follow=true").
         to_raise(KubeException.new('a', 'b', 'c'))
-      stub_request(:get, log_url).
-        to_return(body: "LOG-1")
-      pod_with_client.logs('some-container').must_equal "LOG-1"
+      stub_request(:get, "#{log_url}&previous=true").
+        and_return(body: "HELLO")
+      pod_with_client.logs('some-container').must_equal "HELLO"
     end
 
     it "does not crash when both log endpoints fails with a 404" do
+      stub_request(:get, "#{log_url}&follow=true").
+        to_raise(KubeException.new('a', 'b', 'c'))
       stub_request(:get, "#{log_url}&previous=true").
         to_raise(KubeException.new('a', 'b', 'c'))
-      stub_request(:get, log_url).
-        to_raise(KubeException.new('a', 'b', 'c'))
       pod_with_client.logs('some-container').must_be_nil
+    end
+
+    it "notifies the user when streaming times out" do
+      pod_with_client.expects(:timeout_logs).raises(Timeout::Error)
+      stub_request(:get, "#{log_url}&follow=true").
+        and_return(body: "HELLO\n")
+      pod_with_client.logs('some-container').must_equal "\n... log streaming timeout"
     end
   end
 
