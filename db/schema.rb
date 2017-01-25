@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20170118172040) do
+ActiveRecord::Schema.define(version: 20170125010044) do
 
   create_table "builds", force: :cascade do |t|
     t.integer  "project_id",                                       null: false
@@ -393,6 +393,14 @@ ActiveRecord::Schema.define(version: 20170118172040) do
     t.datetime "updated_at",               null: false
     t.index ["identifier"], name: "index_slack_identifiers_on_identifier", length: { identifier: 12 }, using: :btree
     t.index ["user_id"], name: "index_slack_identifiers_on_user_id", unique: true, using: :btree
+  end
+
+  create_table "slack_webhook_threads", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8" do |t|
+    t.integer  "deploy_id",  null: false
+    t.string   "slack_ts",   null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["deploy_id"], name: "index_slack_webhook_threads_on_deploy_id", using: :btree
   end
 
   create_table "slack_webhooks", force: :cascade do |t|
