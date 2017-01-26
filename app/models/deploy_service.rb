@@ -37,10 +37,6 @@ class DeployService
     send_sse_deploy_update('start', deploy)
   end
 
-  def stop!(deploy)
-    deploy.stop!
-  end
-
   private
 
   def construct_env(stage)

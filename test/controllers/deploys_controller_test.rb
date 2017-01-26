@@ -399,7 +399,7 @@ describe DeploysController do
 
     describe "#destroy" do
       it "cancels the deploy" do
-        deploy_service.expects(:stop!).once
+        Deploy.any_instance.expects(:stop!).once
         delete :destroy, params: {project_id: project.to_param, id: deploy.to_param}
         flash[:error].must_be_nil
       end
