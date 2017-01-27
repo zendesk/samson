@@ -104,7 +104,7 @@ module Kubernetes
 
       # easy stub
       def timeout_logs(&block)
-        Timeout.timeout(10, &block)
+        Timeout.timeout(Integer(ENV['KUBERNETES_LOG_TIMEOUT'] || '20'), &block)
       end
 
       def probe_failed_to_often?(event)
