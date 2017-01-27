@@ -83,7 +83,8 @@ function refStatusTypeahead(options){
     $ref_status_container.addClass("hidden");
     $tag_form_group.removeClass("has-success has-warning has-error");
 
-    var ref = $(this).val();
+    var ref = $(this).val().trim();
+    $(this).val(ref); // store back trimmed value, so user sees what we see
 
     if(status_check_timeout) {
       clearTimeout(status_check_timeout);
