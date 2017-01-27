@@ -366,7 +366,7 @@ describe DeploysController do
         before do
           DeployService.stubs(:new).with(user).returns(deploy_service)
           Job.any_instance.stubs(:started_by?).returns(true)
-          deploy_service.expects(:stop!).once
+          Deploy.any_instance.expects(:stop!).once
 
           delete :destroy, params: {project_id: project.to_param, id: deploy.to_param}
         end
@@ -399,7 +399,7 @@ describe DeploysController do
 
     describe "#destroy" do
       it "cancels the deploy" do
-        deploy_service.expects(:stop!).once
+        Deploy.any_instance.expects(:stop!).once
         delete :destroy, params: {project_id: project.to_param, id: deploy.to_param}
         flash[:error].must_be_nil
       end

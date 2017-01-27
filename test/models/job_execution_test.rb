@@ -412,16 +412,15 @@ describe JobExecution do
         true
       end
       execution.stop!
-      execution.stop!
       called.must_equal [1]
     end
 
-    it "does not mark the execution as cancelled when it was already stopped" do
+    it "marks the execution as cancelled when it was already stopped since we always need to enqueu the next" do
       execution.start!
       lock.unlock
       sleep 0.1
       execution.stop!
-      job.reload.status.must_equal 'succeeded'
+      job.reload.status.must_equal 'cancelled'
     end
   end
 

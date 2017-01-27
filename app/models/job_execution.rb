@@ -60,8 +60,6 @@ class JobExecution
   end
 
   def stop!
-    return unless @thread&.alive?
-
     @stopped = true
     @executor.stop! 'INT'
     unless @thread.join(stop_timeout)

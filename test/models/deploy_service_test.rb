@@ -165,14 +165,6 @@ describe DeployService do
     end
   end
 
-  describe "#stop!" do
-    it "stops the deploy" do
-      deploy.job = jobs(:running_test)
-      service.stop!(deploy)
-      deploy.job.status.must_equal 'cancelled'
-    end
-  end
-
   describe "before notifications" do
     before do
       stage.stubs(:create_deploy).returns(deploy)
