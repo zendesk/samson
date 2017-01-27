@@ -13,9 +13,6 @@ $(function () {
       $placeholderPanes = $container.find(".changeset-placeholder"),
       $form = $("#new_deploy"),
       $submit = $form.find('input[type=submit]'),
-      $reference = $("#deploy_reference"),
-      $ref_problem_list = $("#ref-problem-list"),
-      $ref_status_container = $("#ref-problem-warning"),
       $messages = $("#messages");
 
   $("#deploy-tabs a[data-type=github]").click(function (e) {
@@ -57,84 +54,6 @@ $(function () {
     window.location.hash = this.hash;
   });
 
-  var prefetchUrl = $reference.data("prefetchUrl");
-
-  if (prefetchUrl) {
-    var engine = new Bloodhound({
-      datumTokenizer: function (d) {
-        return Bloodhound.tokenizers.whitespace(d.value);
-      },
-      queryTokenizer: Bloodhound.tokenizers.whitespace,
-      limit: 100,
-      prefetch: {
-        url: prefetchUrl,
-        ttl: 30000,
-        filter: function (references) {
-          return $.map(references, function (reference) {
-            return {value: reference};
-          });
-        }
-      }
-    });
-
-    engine.initialize();
-
-    $reference.typeahead(null, {
-      display: 'value',
-      source: engine.ttAdapter()
-    });
-  }
-
-  // The typeahead plugin removes the focus from the input - restore it
-  // after initialization.
-  $reference.focus();
-
-  // Shows commit status from Github as border color
-  var timeout = null;
-  var $tag_form_group = $reference.parent();
-
-  function show_status_problems(status_list) {
-    $ref_status_container.removeClass("hidden");
-    $ref_problem_list.empty();
-    $.each(status_list, function(idx, status) {
-      if (status.state != "success") {
-        var item = $("<li>");
-        $ref_problem_list.append(item);
-        item.text(status.state + ": " + status.description);
-        if(status.target_url) {
-          item.append(' <a href="' + status.target_url + '">details</a>');
-        }
-      }
-    });
-  }
-
-  function check_status(ref) {
-    $.ajax({
-      url: $("#new_deploy").data("commit-status-url"),
-      data: { ref: ref },
-      success: function(response) {
-        switch(response.status) {
-          case "success":
-            $ref_status_container.addClass("hidden");
-            $tag_form_group.addClass("has-success");
-            break;
-          case "pending":
-            $tag_form_group.addClass("has-warning");
-            show_status_problems(response.status_list);
-            break;
-          case "failure":
-          case "error":
-            $tag_form_group.addClass("has-error");
-            show_status_problems(response.status_list);
-            break;
-          default:
-            alert("Unexpected response: " + response.toString());
-            break;
-        }
-      }
-    });
-  }
-
   function toggleConfirmed() {
     confirmed = !confirmed;
     $submit.val(!confirmed && $form.data('confirmation') ? 'Review' : 'Deploy!');
@@ -144,24 +63,7 @@ $(function () {
   }
   toggleConfirmed();
 
-  $reference.keyup(function(e) {
-    $ref_status_container.addClass("hidden");
-    $tag_form_group.removeClass("has-success has-warning has-error");
-
-    var ref = $(this).val();
-
-    if(timeout) {
-      clearTimeout(timeout);
-    }
-
-    if(ref !== "") {
-      timeout = setTimeout(function() { check_status(ref); }, 200);
-    }
-
-    if (confirmed && e.keyCode !== 13) {
-      toggleConfirmed();
-    }
-  });
+  refStatusTypeahead({changed: function() { if(confirmed) { toggleConfirmed(); } }});
 
   function showDeployConfirmationTab($this) {
     var $navTabs = $this.find("#deploy-confirmation .nav-tabs"),
