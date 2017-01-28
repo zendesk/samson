@@ -26,6 +26,12 @@ describe Kubernetes::DeployExecutor do
     end
   end
 
+  describe "#gpid" do
+    it "returns a fake pid" do
+      executor.gpid.must_include "Kubernetes"
+    end
+  end
+
   describe "#execute!" do
     def execute!
       stub_request(:get, %r{http://foobar.server/api/v1/namespaces/staging/pods\?}).

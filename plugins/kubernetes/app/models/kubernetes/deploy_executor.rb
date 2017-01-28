@@ -27,8 +27,14 @@ module Kubernetes
       @reference = reference
     end
 
+    # here to make restart_signal_handler happy
     def pid
       "Kubernetes-deploy-#{object_id}"
+    end
+
+    # here to make restart_signal_handler happy
+    def gpid
+      pid
     end
 
     def stop!(_signal)
