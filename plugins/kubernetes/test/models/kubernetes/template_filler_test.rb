@@ -29,16 +29,19 @@ describe Kubernetes::TemplateFiller do
       spec.fetch(:uniqueLabelKey).must_equal "rc_unique_identifier"
       spec.fetch(:replicas).must_equal doc.replica_target
       spec.fetch(:template).fetch(:metadata).fetch(:labels).symbolize_keys.must_equal(
-        revision: "abababababa",
         tag: "master",
-        release_id: doc.kubernetes_release_id.to_s,
         project: "some-project",
-        project_id: doc.kubernetes_release.project_id.to_s,
-        role_id: doc.kubernetes_role_id.to_s,
         role: "some-role",
         deploy_group: 'pod1',
+      )
+
+      spec.fetch(:template).fetch(:metadata).fetch(:annotations).symbolize_keys.must_equal(
         deploy_group_id: doc.deploy_group_id.to_s,
-        deploy_id: "123"
+        deploy_id: "123",
+        project_id: doc.kubernetes_release.project_id.to_s,
+        release_id: doc.kubernetes_release_id.to_s,
+        revision: "abababababa",
+        role_id: doc.kubernetes_role_id.to_s,
       )
 
       metadata = result.fetch(:metadata)
