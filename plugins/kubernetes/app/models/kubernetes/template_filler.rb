@@ -139,6 +139,7 @@ module Kubernetes
         {
           labels: {
             deploy_group: deploy_group.env_value.parameterize.tr('_', '-'),
+            revision: release.git_sha,
             tag: release.git_ref.parameterize.tr('_', '-'),
           },
           annotations: {
@@ -146,7 +147,6 @@ module Kubernetes
             deploy_group_id: pod_selector[:deploy_group_id],
             project_id: release.project_id,
             release_id: pod_selector[:release_id],
-            revision: release.git_sha,
             role_id: role.id,
           }
         }

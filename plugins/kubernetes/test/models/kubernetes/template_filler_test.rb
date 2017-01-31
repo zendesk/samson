@@ -31,6 +31,7 @@ describe Kubernetes::TemplateFiller do
       spec.fetch(:template).fetch(:metadata).fetch(:labels).symbolize_keys.must_equal(
         tag: "master",
         project: "some-project",
+        revision: "abababababa",
         role: "some-role",
         deploy_group: 'pod1',
       )
@@ -40,7 +41,6 @@ describe Kubernetes::TemplateFiller do
         deploy_id: "123",
         project_id: doc.kubernetes_release.project_id.to_s,
         release_id: doc.kubernetes_release_id.to_s,
-        revision: "abababababa",
         role_id: doc.kubernetes_role_id.to_s,
       )
 
