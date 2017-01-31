@@ -107,7 +107,7 @@ class DockerBuilderService
     k8s_job = Kubernetes::BuildJobExecutor.new(
       output,
       job: local_job,
-      registry: self.class.registry_credentials(DockerRegistry.first)
+      registry: DockerRegistry.first
     )
     success, build_log = k8s_job.execute!(
       build, project,
