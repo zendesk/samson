@@ -138,10 +138,56 @@ describe DockerBuilderService do
     end
   end
 
+  describe '#before_docker_build' do
+    let(:before_docker_build_path) { File.join(tmp_dir, 'samson/before_docker_build') }
+    let(:output) { StringIO.new }
+    let(:executor) { TerminalExecutor.new(output, verbose: true) }
+    let(:execution) { stub(executor: executor) }
+
+    before do
+      service.instance_variable_set(:@execution, execution)
+    end
+
+    it 'fires the before_docker_build hook' do
+      Samson::Hooks.expects(:fire).with(:before_docker_build, tmp_dir, build, anything)
+      service.send(:before_docker_build, tmp_dir)
+    end
+
+    describe 'when a good samson/before_docker_build is present' do
+      before do
+        FileUtils.mkdir_p(File.dirname(before_docker_build_path))
+        File.write(before_docker_build_path, 'echo foobar')
+        File.chmod(0o755, before_docker_build_path)
+      end
+
+      it 'executes it' do
+        service.send(:before_docker_build, tmp_dir)
+        output.string.must_equal "» #{before_docker_build_path}\r\nfoobar\r\n"
+      end
+    end
+
+    describe 'when a bad samson/before_docker_build is present' do
+      before do
+        FileUtils.mkdir_p(File.dirname(before_docker_build_path))
+        File.write(before_docker_build_path, 'exit 1')
+        File.chmod(0o755, before_docker_build_path)
+      end
+
+      it 'executes it and raises' do
+        lambda { service.send(:before_docker_build, tmp_dir) }.must_raise(Samson::Hooks::UserError)
+      end
+    end
+  end
+
   describe "#build_image" do
     before do
       Docker::Util.stubs(:create_relative_dir_tar).returns(nil)
       Docker::Image.stubs(:build_from_tar).returns(mock_docker_image)
+    end
+
+    it 'calls #before_docker_build' do
+      service.expects(:before_docker_build).with(tmp_dir)
+      service.send(:build_image, tmp_dir)
     end
 
     it 'writes the REVISION file' do
