@@ -19,5 +19,15 @@ module Samson
         "logged in as #{user.name}"
       end
     end
+
+    # disables all kinds of caching in the controller and Rails.cache.fetch so we get worst-case performance
+    # restart console to re-enable
+    def disable_cache
+      Rails.cache.class.class_eval do
+        def read_entry(*)
+          nil
+        end
+      end
+    end
   end
 end

@@ -4,11 +4,11 @@ require_relative '../../test_helper'
 SingleCov.covered!
 
 describe Samson::ConsoleExtensions do
+  include Samson::ConsoleExtensions
+
   with_forgery_protection
 
   describe "#login" do
-    include Samson::ConsoleExtensions
-
     class ConsoleExtensionTestController < ApplicationController
       include CurrentUser
       before_action :authorize_super_admin!
@@ -50,6 +50,33 @@ describe Samson::ConsoleExtensions do
       request['REQUEST_METHOD'] = 'POST'
       login(user)
       call_action
+    end
+  end
+
+  describe "#disable_cache" do
+    let(:dummy_cache) { Class.new(ActiveSupport::Cache::MemoryStore) }
+
+    around do |test|
+      begin
+        old = Rails.cache
+        Rails.cache = dummy_cache.new
+        test.call
+      ensure
+        Rails.cache = old
+      end
+    end
+
+    before { Rails.cache.write('x', 1) }
+
+    it "caches when not called" do
+      Rails.cache.read('x').must_equal 1
+      Rails.cache.fetch('x') { 2 }.must_equal 1
+    end
+
+    it "does not cache when called" do
+      disable_cache
+      Rails.cache.read('x').must_equal nil
+      Rails.cache.fetch('x') { 2 }.must_equal 2
     end
   end
 end
