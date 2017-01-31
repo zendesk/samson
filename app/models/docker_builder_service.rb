@@ -133,7 +133,7 @@ class DockerBuilderService
     build.save!
   end
 
-  def before_docker_build(tmp_dir)
+  def execute_before_docker_build_script(tmp_dir)
     before_docker_build_file = File.join(tmp_dir, BEFORE_DOCKER_BUILD)
     if File.file?(before_docker_build_file)
       output.puts "Running #{BEFORE_DOCKER_BUILD} ..."
@@ -142,7 +142,10 @@ class DockerBuilderService
         raise Samson::Hooks::UserError, "Error running #{BEFORE_DOCKER_BUILD}"
       end
     end
+  end
 
+  def before_docker_build(tmp_dir)
+    execute_before_docker_build_script(tmp_dir)
     Samson::Hooks.fire(:before_docker_build, tmp_dir, build, output)
   end
   add_method_tracer :before_docker_build
