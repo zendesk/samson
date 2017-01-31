@@ -4,6 +4,7 @@ require 'docker'
 class DockerBuilderService
   DIGEST_SHA_REGEX = /Digest:.*(sha256:[0-9a-f]+)/i
   DOCKER_REPO_REGEX = /^BUILD DIGEST: (.*@sha256:[0-9a-f]+)/i
+  BEFORE_DOCKER_BUILD = 'samson/before_docker_build'
   include ::NewRelic::Agent::MethodTracer
 
   attr_reader :build, :execution
@@ -132,8 +133,25 @@ class DockerBuilderService
     build.save!
   end
 
-  def build_image(tmp_dir)
+  def execute_before_docker_build_script(tmp_dir)
+    before_docker_build_file = File.join(tmp_dir, BEFORE_DOCKER_BUILD)
+    if File.file?(before_docker_build_file)
+      output.puts "Running #{BEFORE_DOCKER_BUILD} ..."
+
+      unless execution.executor.execute!(before_docker_build_file)
+        raise Samson::Hooks::UserError, "Error running #{BEFORE_DOCKER_BUILD}"
+      end
+    end
+  end
+
+  def before_docker_build(tmp_dir)
+    execute_before_docker_build_script(tmp_dir)
     Samson::Hooks.fire(:before_docker_build, tmp_dir, build, output)
+  end
+  add_method_tracer :before_docker_build
+
+  def build_image(tmp_dir)
+    before_docker_build(tmp_dir)
 
     File.write("#{tmp_dir}/REVISION", build.git_sha)
 
