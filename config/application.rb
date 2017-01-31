@@ -67,9 +67,9 @@ module Samson
       options = {
         value_max_bytes: 3000000,
         compress: true,
-        expires_in: 1.day,
+        expires_in: 7.days,
         namespace: "samson-#{Rails.version}-#{RUBY_VERSION}",
-        pool_size: 25 # 1/10 th of the default max thread count, see puma.rb
+        pool_size: Integer(ENV.fetch('RAILS_MAX_THREADS', '250')) / 10 # 1/10 th of the default max threads, see puma.rb
       }
 
       # support memcachier env used by heroku
