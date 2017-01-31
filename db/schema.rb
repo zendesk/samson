@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20170118172040) do
+ActiveRecord::Schema.define(version: 20170130235020) do
 
   create_table "builds", force: :cascade do |t|
     t.integer  "project_id",                                       null: false
@@ -448,6 +448,7 @@ ActiveRecord::Schema.define(version: 20170118172040) do
     t.boolean  "jenkins_email_committers",                                   default: false, null: false
     t.boolean  "run_in_parallel",                                            default: false, null: false
     t.boolean  "jenkins_build_params",                                       default: false, null: false
+    t.boolean  "cancel_queued_deploys",                                      default: false, null: false
     t.index ["project_id", "permalink"], name: "index_stages_on_project_id_and_permalink", unique: true, length: { permalink: 191 }, using: :btree
     t.index ["template_stage_id"], name: "index_stages_on_template_stage_id", using: :btree
   end

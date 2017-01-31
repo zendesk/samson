@@ -103,6 +103,39 @@ describe DeployService do
         end
       end
     end
+
+    describe "when cancelling queued deploys" do
+      before do
+        stage.stubs(:cancel_queued_deploys?).returns true
+      end
+
+      def create_deployment(user, ref, stage, status)
+        job = project.jobs.create!(user: user, command: "foo", status: status)
+        Deploy.create!(job: job, reference: ref, stage: stage, started_at: Time.now, project: project)
+      end
+
+      it "cancels existing queued deploys for that user" do
+        deploy_one = create_deployment(user, 'v1', stage, 'running')
+        deploy_two = create_deployment(user, 'v2', stage, 'pending')
+
+        JobExecution.expects(:dequeue).with(deploy_two.job.id)
+
+        service.deploy!(stage, reference: reference)
+
+        deploy_one.job.reload.status.must_equal 'running'
+        deploy_two.job.reload.status.must_equal 'cancelled'
+      end
+
+      it "does not cancel queued deploys for other users" do
+        deploy_one = create_deployment(other_user, 'v1', stage, 'running')
+        deploy_two = create_deployment(other_user, 'v2', stage, 'pending')
+
+        service.deploy!(stage, reference: reference)
+
+        deploy_one.job.reload.status.must_equal 'running'
+        deploy_two.job.reload.status.must_equal 'pending'
+      end
+    end
   end
 
   describe "#confirm_deploy!" do
