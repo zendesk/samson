@@ -116,8 +116,8 @@ describe Stage do
 
     it 'returns stages correctly' do
       # Set both stage1 and stage2 to trigger stage3
-      stage1.update!(next_stage_ids: [stage3.id])
-      stage2.update!(next_stage_ids: [stage3.id])
+      stage1.update!(next_stage_ids: [stage3.id.to_s])
+      stage2.update!(next_stage_ids: [stage3.id.to_s])
 
       stage3.previous_stages.sort.must_equal [stage1, stage2]
       stage1.previous_stages.must_equal []

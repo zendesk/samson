@@ -2,6 +2,7 @@
   next_stages = @stage.next_stages.sort_by(&:name)
   previous_stages = @stage.previous_stages.sort_by(&:name)
 %>
+
 <% if next_stages.presence || previous_stages.presence %>
   <h2>Pipelining</h2>
 
