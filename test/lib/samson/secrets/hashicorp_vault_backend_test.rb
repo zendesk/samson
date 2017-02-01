@@ -26,6 +26,10 @@ describe Samson::Secrets::HashicorpVaultBackend do
         Samson::Secrets::HashicorpVaultBackend.read('production/foo/pod2/bar').must_be_nil
       end
     end
+
+    it "returns nil when trying to read nil" do
+      Samson::Secrets::HashicorpVaultBackend.read(nil).must_be_nil
+    end
   end
 
   describe ".read_multi" do
