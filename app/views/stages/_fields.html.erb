@@ -2,8 +2,8 @@
   <%= form.input :name, required: true %>
   <%= form.input :permalink, required: true if form.object.persisted? %>
   <%= form.input :notify_email_address,
-        label: "Email addresses",
-        help: "Enter the email addresses that should be notified of new deploys, separated by <code>;</code>".html_safe
+        label: "Notify after deploy",
+        help: "Email addresses to notify of finished deploys, separated by <code>;</code>".html_safe
   %>
 
   <% if DeployGroup.enabled? %>
