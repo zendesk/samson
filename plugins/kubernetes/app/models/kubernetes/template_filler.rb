@@ -122,6 +122,7 @@ module Kubernetes
     def set_spec_template_metadata
       [:labels, :annotations].each do |type|
         release_doc_metadata[type].each do |key, value|
+          template[:spec][:template][:metadata][type] ||= {}
           template[:spec][:template][:metadata][type][key] ||= value.to_s
         end
       end
