@@ -98,6 +98,7 @@ describe Samson::Secrets::KeyResolver do
     end
 
     it "returns nil when it fails to read secrets" do
+      SecretStorage.expects(:read_multi).never
       resolver.read("foobar").must_be_nil
       errors.first.must_include "foobar (tried"
     end

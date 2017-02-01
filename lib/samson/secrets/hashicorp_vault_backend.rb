@@ -13,6 +13,7 @@ module Samson
 
       class << self
         def read(key)
+          return unless key
           result = vault_action(:read, vault_path(key))
           return if !result || result.data[:vault].nil?
 

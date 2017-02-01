@@ -40,7 +40,7 @@ module Samson
       end
 
       def read(key)
-        full_key = expand('unused-param', key).map(&:last).first
+        return unless full_key = expand('unused-param', key).first&.last
         SecretStorage.read_multi([full_key], include_value: true).values.first&.fetch(:value) # read key without raising
       end
 
@@ -56,11 +56,9 @@ module Samson
 
       private
 
-      # use the value of the first id that exists
+      # find the first id that exists, preserving priority in possible_ids
       def expand_simple_key(env_name, possible_ids)
-        all_found = SecretStorage.read_multi(possible_ids)
-
-        if found = possible_ids.detect { |id| all_found[id] }
+        if found = (possible_ids & SecretStorage.keys).first
           [[env_name, found]]
         else
           []
