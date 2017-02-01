@@ -120,8 +120,11 @@ module Kubernetes
     # Sets the labels for each new Pod.
     # Adding the Release ID to allow us to track the progress of a new release from the UI.
     def set_spec_template_metadata
-      release_doc_metadata.each do |key, value|
-        template[:spec][:template][:metadata][:labels][key] ||= value.to_s
+      [:labels, :annotations].each do |type|
+        release_doc_metadata[type].each do |key, value|
+          template[:spec][:template][:metadata][type] ||= {}
+          template[:spec][:template][:metadata][type][key] ||= value.to_s
+        end
       end
     end
 
@@ -132,15 +135,22 @@ module Kubernetes
         release = @doc.kubernetes_release
         role = @doc.kubernetes_role
         deploy_group = @doc.deploy_group
+        pod_selector = release.pod_selector(deploy_group)
 
-        release.pod_selector(deploy_group).merge(
-          deploy_id: release.deploy_id,
-          project_id: release.project_id,
-          role_id: role.id,
-          deploy_group: deploy_group.env_value.parameterize.tr('_', '-'),
-          revision: release.git_sha,
-          tag: release.git_ref.parameterize.tr('_', '-')
-        )
+        {
+          labels: {
+            deploy_group: deploy_group.env_value.parameterize.tr('_', '-'),
+            revision: release.git_sha,
+            tag: release.git_ref.parameterize.tr('_', '-'),
+          },
+          annotations: {
+            deploy_id: release.deploy_id,
+            deploy_group_id: pod_selector[:deploy_group_id],
+            project_id: release.project_id,
+            release_id: pod_selector[:release_id],
+            role_id: role.id,
+          }
+        }
       end
     end
 
@@ -190,7 +200,7 @@ module Kubernetes
     def static_env
       env = {}
 
-      metadata = release_doc_metadata
+      metadata = release_doc_metadata.values.reduce(&:merge)
       [:REVISION, :TAG, :DEPLOY_ID, :DEPLOY_GROUP].each do |k|
         env[k] = metadata.fetch(k.downcase)
       end
