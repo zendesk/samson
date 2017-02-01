@@ -19,6 +19,12 @@ Stage.class_eval do
     Stage.where(id: next_stage_ids).to_a
   end
 
+  def previous_stages
+    @previous_stages ||= project.stages.to_a.select do |stage|
+      stage.next_stage_ids.map(&:to_i).include? id
+    end
+  end
+
   protected
 
   # Ensure we don't have a circular pipeline:
