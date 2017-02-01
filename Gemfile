@@ -119,7 +119,6 @@ group :development, :test do
   gem 'pry'
   gem 'awesome_print'
   gem 'brakeman'
-  gem 'brakecheck'
   gem 'rubocop'
   gem 'flay'
   gem 'parallel_tests'

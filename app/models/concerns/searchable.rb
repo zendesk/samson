@@ -7,7 +7,7 @@ module Searchable
       scope = self
       scope = scope.search(criteria[:search]) if criteria[:search]
       scope.
-        order("#{table_name}.#{sort_column(criteria[:sort])} #{sort_direction(criteria[:direction])}").
+        order(sort_column(criteria[:sort]) => sort_direction(criteria[:direction])).
         page(criteria[:page])
     end
 
