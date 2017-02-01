@@ -124,6 +124,17 @@ describe Job do
     end
   end
 
+  describe "#finished_at" do
+    it "has no time when not finished" do
+      job.finished_at.must_equal nil
+    end
+
+    it "shows last change when finished" do
+      job.status = 'succeeded'
+      job.finished_at.must_equal job.updated_at
+    end
+  end
+
   describe "#active?" do
     it "is active when its status is not finished" do
       job.status = "pending"

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20170118172040) do
+ActiveRecord::Schema.define(version: 20170119044208) do
 
   create_table "builds", force: :cascade do |t|
     t.integer  "project_id",                                       null: false
@@ -84,7 +84,6 @@ ActiveRecord::Schema.define(version: 20170118172040) do
     t.datetime "created_at"
     t.datetime "updated_at"
     t.integer  "buddy_id"
-    t.datetime "started_at"
     t.datetime "deleted_at"
     t.integer  "build_id"
     t.boolean  "release",                default: false, null: false
@@ -157,6 +156,7 @@ ActiveRecord::Schema.define(version: 20170118172040) do
     t.datetime "updated_at"
     t.string   "commit"
     t.string   "tag"
+    t.datetime "started_at"
     t.index ["project_id"], name: "index_jobs_on_project_id", using: :btree
     t.index ["status"], name: "index_jobs_on_status", length: { status: 191 }, using: :btree
     t.index ["user_id"], name: "index_jobs_on_user_id", using: :btree
