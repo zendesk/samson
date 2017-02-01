@@ -106,10 +106,13 @@ class TerminalExecutor
     whitelist = [
       'PATH', 'HOME', 'TMPDIR', 'CACHE_DIR', 'TERM', 'SHELL', # general
       'RBENV_ROOT', 'RBENV_HOOK_PATH', 'RBENV_DIR', # ruby
-      'DOCKER_URL', 'DOCKER_REGISTRY' # docker
+      'DOCKER_HOST', 'DOCKER_URL', 'DOCKER_REGISTRY' # docker
     ] + ENV['ENV_WHITELIST'].to_s.split(/, ?/)
     env = ENV.to_h.slice(*whitelist)
     env['DOCKER_REGISTRY'] ||= DockerRegistry.first&.host # backwards compatibility
+
+    # DOCKER_HOST is the env var that the docker CLI uses to connect to a remote host
+    env['DOCKER_HOST'] ||= env['DOCKER_URL'] if env['DOCKER_URL']
     env
   end
 end
