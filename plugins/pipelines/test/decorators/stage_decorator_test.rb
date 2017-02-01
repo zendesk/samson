@@ -108,4 +108,19 @@ describe Stage do
       stage1.valid?.must_equal true
     end
   end
+
+  describe '#previous_stages' do
+    it 'works with an empty pipeline' do
+      stage1.previous_stages.must_equal []
+    end
+
+    it 'returns stages correctly' do
+      # Set both stage1 and stage2 to trigger stage3
+      stage1.update!(next_stage_ids: [stage3.id])
+      stage2.update!(next_stage_ids: [stage3.id])
+
+      stage3.previous_stages.sort.must_equal [stage1, stage2]
+      stage1.previous_stages.must_equal []
+    end
+  end
 end

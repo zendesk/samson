@@ -1,9 +1,29 @@
-<% if next_stages = @stage.next_stages.presence %>
+<%
+  next_stages = @stage.next_stages.sort_by(&:name)
+  previous_stages = @stage.previous_stages.sort_by(&:name)
+%>
+<% if next_stages.presence || previous_stages.presence %>
   <h2>Pipelining</h2>
-  After this stage finishes deploying it will deploy to:
-  <ul>
-    <% next_stages.each do |stage| %>
-      <li><%= link_to stage.name, [@project, stage] %></li>
-    <% end %>
-  </ul>
+
+  <% if previous_stages.presence %>
+    <div>
+      The following stages will trigger this stage on completion:
+      <ul>
+        <% previous_stages.each do |stage| %>
+          <li><%= link_to stage.name, [@project, stage] %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <% if next_stages.presence %>
+    <div>
+      After this stage finishes deploying it will deploy to:
+      <ul>
+        <% next_stages.each do |stage| %>
+          <li><%= link_to stage.name, [@project, stage] %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
 <% end %>
