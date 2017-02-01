@@ -1,0 +1,9 @@
+<% if next_stages = @stage.next_stages.presence %>
+  <h2>Pipelining</h2>
+  After this stage finishes deploying it will deploy to:
+  <ul>
+    <% next_stages.each do |stage| %>
+      <li><%= link_to stage.name, [@project, stage] %></li>
+    <% end %>
+  </ul>
+<% end %>

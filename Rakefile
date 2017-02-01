@@ -82,6 +82,7 @@ task :flay do
     'plugins/slack_app/app/models/slack_message.rb', # cannot depend on other plugin ... maybe extract
     'app/views/admin/secrets/index.html.erb', # search box
     'plugins/slack_webhooks/app/views/samson_slack_webhooks/_fields.html.erb', # cannot reuse form.input
+    'plugins/pipelines/app/views/samson_pipelines/_stage_show.html.erb', # super simple html
   ]
   flay = Flay.run([*files, '--mass', '25']) # mass threshold is shown mass / occurrences
   abort "Code duplication found" if flay.report.any?
