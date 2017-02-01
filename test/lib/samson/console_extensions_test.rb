@@ -53,13 +53,10 @@ describe Samson::ConsoleExtensions do
     end
   end
 
-  describe "#disable_cache" do
-    let(:dummy_cache) { Class.new(ActiveSupport::Cache::MemoryStore) }
-
+  describe "#use_clean_cache" do
     around do |test|
       begin
         old = Rails.cache
-        Rails.cache = dummy_cache.new
         test.call
       ensure
         Rails.cache = old
@@ -68,15 +65,15 @@ describe Samson::ConsoleExtensions do
 
     before { Rails.cache.write('x', 1) }
 
-    it "caches when not called" do
-      Rails.cache.read('x').must_equal 1
-      Rails.cache.fetch('x') { 2 }.must_equal 1
+    it "replaces cache" do
+      use_clean_cache
+      Rails.cache.read('x').must_equal nil
     end
 
-    it "does not cache when called" do
-      disable_cache
-      Rails.cache.read('x').must_equal nil
-      Rails.cache.fetch('x') { 2 }.must_equal 2
+    it "can still cache" do
+      use_clean_cache
+      Rails.cache.write('x', 2)
+      Rails.cache.read('x').must_equal 2
     end
   end
 end
