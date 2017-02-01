@@ -166,7 +166,7 @@ GEM
       autoprefixer-rails (>= 5.2.1)
       sass (>= 3.3.4)
     brakecheck (0.1.9)
-    brakeman (3.4.1)
+    brakeman (3.5.0)
     builder (3.2.2)
     byebug (8.2.2)
     coderay (1.1.1)
