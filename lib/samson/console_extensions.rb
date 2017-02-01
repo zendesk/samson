@@ -20,14 +20,10 @@ module Samson
       end
     end
 
-    # disables all kinds of caching in the controller and Rails.cache.fetch so we get worst-case performance
+    # resets all caching in the controller and Rails.cache.fetch so we get worst-case performance
     # restart console to re-enable
-    def disable_cache
-      Rails.cache.class.class_eval do
-        def read_entry(*)
-          nil
-        end
-      end
+    def use_clean_cache
+      ActionController::Base.config.cache_store = Rails.cache = ActiveSupport::Cache::MemoryStore.new
     end
   end
 end
