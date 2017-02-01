@@ -186,7 +186,7 @@ module Kubernetes
 
     def unstable!(reason, release_statuses)
       @output.puts "UNSTABLE: #{reason}"
-      release_statuses.each do |status|
+      release_statuses.select(&:pod).each do |status|
         @output.puts "  #{status.pod.namespace}.#{status.pod.name}: #{status.details}"
       end
     end

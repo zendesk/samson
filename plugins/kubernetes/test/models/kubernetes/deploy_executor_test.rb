@@ -401,6 +401,16 @@ describe Kubernetes::DeployExecutor do
       out.must_include "UNSTABLE"
     end
 
+    it "stops when detecting a restart and pod goes missing" do
+      worker_is_unstable
+      Kubernetes::DeployExecutor::ReleaseStatus.any_instance.stubs(:pod)
+
+      refute execute!
+
+      out.must_include "resque-worker: Restarted\n"
+      out.must_include "UNSTABLE"
+    end
+
     it "stops when detecting a failure via events" do
       pod_status[:phase] = "Pending"
       request = stub_request(:get, %r{http://foobar.server/api/v1/namespaces/staging/events}).
