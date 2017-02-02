@@ -38,7 +38,6 @@ describe Kubernetes::TemplateFiller do
       )
 
       spec.fetch(:template).fetch(:metadata).fetch(:annotations).symbolize_keys.must_equal(
-        deploy_group_id: doc.deploy_group_id.to_s,
         deploy_id: "123",
         project_id: doc.kubernetes_release.project_id.to_s,
         role_id: doc.kubernetes_role_id.to_s

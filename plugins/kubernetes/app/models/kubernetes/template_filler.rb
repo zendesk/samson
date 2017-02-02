@@ -146,7 +146,6 @@ module Kubernetes
           },
           annotations: {
             deploy_id: release.deploy_id,
-            deploy_group_id: pod_selector[:deploy_group_id],
             project_id: release.project_id,
             role_id: role.id,
           }
