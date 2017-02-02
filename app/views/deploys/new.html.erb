@@ -26,7 +26,8 @@
           %>
         </div>
       </div>
-      <div>
+
+      <div class="form-group">
         <div id="ref-problem-warning" class="col-lg-5 col-lg-offset-2 alert alert-warning hidden">
           <p>Problems detected, are you sure you wish to deploy?</p>
           <ul id="ref-problem-list"></ul>
@@ -35,8 +36,7 @@
 
       <%= Samson::Hooks.render_views(:deploy_form, self, project: @project, form: form) %>
 
-      <% recent_releases = @project.releases.last(5) %>
-      <% if recent_releases.any? %>
+      <% if recent_releases = @project.releases.last(5).presence %>
         <div class="form-group" id="recent-releases">
           <label class="col-lg-2 control-label">Recent releases</label>
           <div class="col-lg-4">
