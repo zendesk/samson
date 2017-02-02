@@ -209,7 +209,7 @@ describe StagesController do
 
       it 'checks the appropriate next_stage_ids checkbox' do
         next_stage = Stage.create!(name: 'food', project: subject.project)
-        subject.next_stage_ids = [next_stage.id.to_s]
+        subject.next_stage_ids = [next_stage.id]
         subject.save!
 
         get :edit, params: {project_id: subject.project.to_param, id: subject.to_param }

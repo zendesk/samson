@@ -11,7 +11,7 @@
               <%= check_box_tag(
                     "#{form.object_name}[next_stage_ids][]",
                     next_stage.id,
-                    (@stage && @stage.next_stage_ids.include?(next_stage.id.to_s))
+                    (@stage && @stage.next_stage_ids.include?(next_stage.id))
                   )
               %>
               <%= next_stage.name %>
