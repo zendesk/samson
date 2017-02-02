@@ -118,7 +118,7 @@ describe DeployService do
         deploy_one = create_deployment(user, 'v1', stage, 'running')
         deploy_two = create_deployment(user, 'v2', stage, 'pending')
 
-        JobExecution.expects(:dequeue).with(deploy_two.job.id)
+        JobExecution.expects(:dequeue).with(deploy_two.job.id).returns(true)
 
         service.deploy!(stage, reference: reference)
 
