@@ -31,17 +31,14 @@ describe Kubernetes::TemplateFiller do
       spec.fetch(:template).fetch(:metadata).fetch(:labels).symbolize_keys.must_equal(
         revision: "abababababa",
         tag: "master",
-        project: "some-project",
-        role: "some-role",
-        deploy_group: 'pod1'
-      )
-
-      spec.fetch(:template).fetch(:metadata).fetch(:annotations).symbolize_keys.must_equal(
-        deploy_group_id: doc.deploy_group_id.to_s,
-        deploy_id: "123",
-        project_id: doc.kubernetes_release.project_id.to_s,
         release_id: doc.kubernetes_release_id.to_s,
-        role_id: doc.kubernetes_role_id.to_s
+        project: "some-project",
+        project_id: doc.kubernetes_release.project_id.to_s,
+        role_id: doc.kubernetes_role_id.to_s,
+        role: "some-role",
+        deploy_group: 'pod1',
+        deploy_group_id: doc.deploy_group_id.to_s,
+        deploy_id: "123"
       )
 
       metadata = result.fetch(:metadata)
@@ -188,8 +185,10 @@ describe Kubernetes::TemplateFiller do
         )
 
         # secrets got resolved?
-        annotations = template.to_hash[:spec][:template][:metadata][:annotations]
-        annotations['secret/FOO'].must_equal 'global/global/global/bar'
+        template.to_hash[:spec][:template][:metadata][:annotations].
+          except(init_container_key).must_equal(
+            "secret/FOO" => "global/global/global/bar"
+          )
       end
 
       it "keeps existing init containers" do
