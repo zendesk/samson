@@ -4,7 +4,8 @@ require 'docker'
 if !Rails.env.test? && !ENV['PRECOMPILE'] && ENV['DOCKER_FEATURE']
   DockerRegistry.check_config!
 
-  if (url = ENV['DOCKER_URL'].presence)
+  # Check DOCKER_URL for backwards-compatibility
+  if (url = ENV['DOCKER_HOST'].presence || ENV['DOCKER_URL'].presence)
     Docker.url = url
   end
 
