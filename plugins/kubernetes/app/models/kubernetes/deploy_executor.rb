@@ -33,7 +33,7 @@ module Kubernetes
     end
 
     # here to make restart_signal_handler happy
-    def gpid
+    def pgid
       pid
     end
 

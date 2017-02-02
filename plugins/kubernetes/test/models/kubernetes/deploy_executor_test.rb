@@ -26,9 +26,9 @@ describe Kubernetes::DeployExecutor do
     end
   end
 
-  describe "#gpid" do
+  describe "#pgid" do
     it "returns a fake pid" do
-      executor.gpid.must_include "Kubernetes"
+      executor.pgid.must_include "Kubernetes"
     end
   end
 
