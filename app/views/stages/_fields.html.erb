@@ -20,7 +20,7 @@
 
   <%= form.input :run_in_parallel, as: :check_box, label: "Can run in parallel", help: "Deploys are not queued. Executed immediately" %>
 
-  <%= form.input :cancel_queued_deploys, as: :check_box, label: "Cancel queued deploys", help: "When a new deploy is created for a user. Any queued deploys for that user are cancelled." %>
+  <%= form.input :cancel_queued_deploys, as: :check_box, label: "Allow 1 queued deploy per user", help: "When a new deploy is created for a user. Any queued deploys for that user are cancelled. This most useful when trying to not deploy every push for frequently updated projects." %>
 
   <%= form.input :confirm, as: :check_box, label: "Confirm before deployment", help: "Show a review page before starting a deploy" %>
 

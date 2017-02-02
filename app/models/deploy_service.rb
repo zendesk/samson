@@ -15,8 +15,9 @@ class DeployService
 
       if stage.cancel_queued_deploys?
         stage.deploys.pending.prior_to(deploy).for_user(user).each do |queued_deploy|
-          JobExecution.dequeue(queued_deploy.job.id)
-          queued_deploy.job.cancelled!
+          if JobExecution.dequeue(queued_deploy.job.id)
+            queued_deploy.job.cancelled!
+          end
         end
       end
 
