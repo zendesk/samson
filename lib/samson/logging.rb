@@ -18,7 +18,8 @@ elsif Samson::EnvCheck.set?("RAILS_LOG_TO_SYSLOG")
       params: params,
       user_id: request.env['warden']&.user&.id,
       ip: request.remote_ip,
-      thread_count: Thread.list.size
+      thread_count: Thread.list.size,
+      mysql_wait: ActiveRecord::Base.connection_pool.num_waiting_in_queue
     }
   end
 
