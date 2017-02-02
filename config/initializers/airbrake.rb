@@ -13,6 +13,9 @@ if defined?(Airbrake)
     # do not send our environment (secrets etc) to airbrake
     config.rake_environment_filters.concat ENV.keys
 
+    # send correct errors even when something blows up during initialization
+    config.environment_name = Rails.env
+
     # report in development:
     # - uncomment
     # - add development in application.rb
