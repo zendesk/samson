@@ -69,7 +69,7 @@ describe Kubernetes::TemplateFiller do
     end
 
     it "creates labels that match up with the release pod_selector" do
-      pod_selector = doc.kubernetes_release.pod_selector(doc.deploy_group)
+      pod_selector = doc.kubernetes_release.pod_selector
 
       pod_labels = template.to_hash[:spec][:template][:metadata][:labels]
       pod_selector.keys.each do |key|

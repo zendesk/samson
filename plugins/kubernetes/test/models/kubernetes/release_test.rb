@@ -127,9 +127,8 @@ describe Kubernetes::Release do
 
   describe "#pod_selector" do
     it "generates a query that selects all pods for this deploy group" do
-      release.pod_selector(deploy_group).must_equal(
-        release_id: release.id,
-        deploy_group_id: deploy_group.id
+      release.pod_selector.must_equal(
+        release_id: release.id
       )
     end
   end

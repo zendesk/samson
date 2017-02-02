@@ -135,7 +135,7 @@ module Kubernetes
         release = @doc.kubernetes_release
         role = @doc.kubernetes_role
         deploy_group = @doc.deploy_group
-        pod_selector = release.pod_selector(deploy_group)
+        pod_selector = release.pod_selector
 
         {
           labels: {

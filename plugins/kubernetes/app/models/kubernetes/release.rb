@@ -38,13 +38,13 @@ module Kubernetes
       scopes.map do |group, namespace|
         query = {
           namespace: namespace,
-          label_selector: pod_selector(group).map { |k, v| "#{k}=#{v}" }.join(",")
+          label_selector: pod_selector.map { |k, v| "#{k}=#{v}" }.join(",")
         }
         [group.kubernetes_cluster.client, query, group]
       end
     end
 
-    def pod_selector(deploy_group)
+    def pod_selector
       {
         release_id: id
       }
