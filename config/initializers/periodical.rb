@@ -11,4 +11,6 @@ Samson::Periodical.register :remove_expired_locks, "Remove expired locks" do
   Lock.remove_expired_locks
 end
 
-Samson::Periodical.run if ENV['SERVER_MODE']
+if ENV['SERVER_MODE']
+  Rails.application.config.after_initialize { Samson::Periodical.run }
+end
