@@ -11,10 +11,11 @@ Advantages to separating your docker images include:
 
 This plugin makes a few assumptions:
 - You have 2 dockerfiles:
- - 'Dockerfile' used to generate your main deployment docker image
- - 'Dockerfile.build' used to create a temporary image to build any binaries you want to package into the former.
-- You have a build script 'build.sh' that can be executed to compile the needed binaries
+ - `Dockerfile` used to generate your main deployment docker image
+ - `Dockerfile.build` used to create a temporary image to build any binaries you want to package into the former.
+- You have a build script `build.sh` that can be executed to compile the needed binaries
   - This is packaged inside the Dockerfile.build image and executed
+    - make sure that this file has execute permissions (`chmod +x build.sh`)
   - After binaries are compiled the build.sh script finishes by tar'ing all necessary files into an 'artifacts.tar' file.
 
 If you want to share caches between builds, e.g. all your projects are Java and use Maven to build, then sharing the .m2 
