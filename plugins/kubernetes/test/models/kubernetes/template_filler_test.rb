@@ -32,6 +32,7 @@ describe Kubernetes::TemplateFiller do
         revision: "abababababa",
         tag: "master",
         project: "some-project",
+        release_id: doc.kubernetes_release_id.to_s,
         role: "some-role",
         deploy_group: 'pod1'
       )
@@ -40,7 +41,6 @@ describe Kubernetes::TemplateFiller do
         deploy_group_id: doc.deploy_group_id.to_s,
         deploy_id: "123",
         project_id: doc.kubernetes_release.project_id.to_s,
-        release_id: doc.kubernetes_release_id.to_s,
         role_id: doc.kubernetes_role_id.to_s
       )
 
@@ -66,6 +66,15 @@ describe Kubernetes::TemplateFiller do
 
     it "overrides the name" do
       template.to_hash[:metadata][:name].must_equal 'test-app-server'
+    end
+
+    it "creates labels that match up with the release pod_selector" do
+      pod_selector = doc.kubernetes_release.pod_selector(doc.deploy_group)
+
+      pod_labels = template.to_hash[:spec][:template][:metadata][:labels]
+      pod_selector.keys.each do |key|
+        pod_labels.keys.must_include(key)
+      end
     end
 
     it "sets imagePullSecrets" do

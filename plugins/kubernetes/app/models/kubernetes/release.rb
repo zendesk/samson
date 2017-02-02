@@ -46,8 +46,7 @@ module Kubernetes
 
     def pod_selector(deploy_group)
       {
-        release_id: id,
-        deploy_group_id: deploy_group.id,
+        release_id: id
       }
     end
 
