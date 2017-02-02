@@ -135,19 +135,18 @@ module Kubernetes
         release = @doc.kubernetes_release
         role = @doc.kubernetes_role
         deploy_group = @doc.deploy_group
-        pod_selector = release.pod_selector(deploy_group)
+        pod_selector = release.pod_selector
 
         {
           labels: {
             deploy_group: deploy_group.env_value.parameterize.tr('_', '-'),
+            release_id: pod_selector[:release_id],
             revision: release.git_sha,
             tag: release.git_ref.parameterize.tr('_', '-'),
           },
           annotations: {
             deploy_id: release.deploy_id,
-            deploy_group_id: pod_selector[:deploy_group_id],
             project_id: release.project_id,
-            release_id: pod_selector[:release_id],
             role_id: role.id,
           }
         }
@@ -210,7 +209,7 @@ module Kubernetes
       end
 
       # name of the cluster
-      kube_cluster_name = DeployGroup.find(metadata[:deploy_group_id]).kubernetes_cluster.name.to_s
+      kube_cluster_name = @doc.deploy_group.kubernetes_cluster.name.to_s
       env[:KUBERNETES_CLUSTER_NAME] = kube_cluster_name
 
       # env from plugins

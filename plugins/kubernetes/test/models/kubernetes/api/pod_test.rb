@@ -11,7 +11,6 @@ describe Kubernetes::Api::Pod do
         name: pod_name,
         namespace: 'the-namespace',
         labels: {
-          deploy_group_id: '123',
           role_id: '234',
         }
       },
@@ -102,12 +101,6 @@ describe Kubernetes::Api::Pod do
   describe "#namespace" do
     it "reads" do
       pod.namespace.must_equal 'the-namespace'
-    end
-  end
-
-  describe "#deploy_group_id" do
-    it 'is the label' do
-      pod.deploy_group_id.must_equal 123
     end
   end
 

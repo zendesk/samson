@@ -37,10 +37,6 @@ module Kubernetes
         reasons.reject(&:blank?).uniq.join("/").presence || "Unknown"
       end
 
-      def deploy_group_id
-        labels.deploy_group_id.to_i
-      end
-
       def role_id
         labels.role_id.to_i
       end
