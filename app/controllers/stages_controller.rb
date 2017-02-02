@@ -119,6 +119,7 @@ class StagesController < ApplicationController
       :no_code_deployed,
       :is_template,
       :run_in_parallel,
+      :cancel_queued_deploys,
       {
         deploy_group_ids: [],
         command_ids: []

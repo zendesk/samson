@@ -13,6 +13,14 @@ class DeployService
     if deploy.persisted?
       send_sse_deploy_update('new', deploy)
 
+      if stage.cancel_queued_deploys?
+        stage.deploys.pending.prior_to(deploy).for_user(user).each do |queued_deploy|
+          if JobExecution.dequeue(queued_deploy.job.id)
+            queued_deploy.job.cancelled!
+          end
+        end
+      end
+
       if !deploy.waiting_for_buddy? || copy_approval_from_last_deploy(deploy)
         confirm_deploy!(deploy)
       end

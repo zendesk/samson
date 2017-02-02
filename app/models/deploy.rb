@@ -151,6 +151,10 @@ class Deploy < ActiveRecord::Base
     stale.select(&:waiting_for_buddy?)
   end
 
+  def self.for_user(user)
+    joins(:job).where(jobs: { user: user })
+  end
+
   def buddy_name
     user.id == buddy_id ? "bypassed" : buddy.try(:name)
   end

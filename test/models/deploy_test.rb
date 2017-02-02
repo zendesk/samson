@@ -353,6 +353,16 @@ describe Deploy do
     end
   end
 
+  describe ".for_user" do
+    let!(:deploy_one) { create_deploy!(job_attributes: { user: user}) }
+    let!(:deploy_two) { create_deploy!(job_attributes: { user: user2}) }
+    let!(:deploy_three) { create_deploy!(job_attributes: { user: user}) }
+
+    it "finds  all the deploys for the given user" do
+      Deploy.for_user(user).to_a.sort.must_equal([deploy_one, deploy_three])
+    end
+  end
+
   describe "#url" do
     it 'builds an address for a deploy' do
       deploy.url.must_equal "http://www.test-url.com/projects/foo/deploys/#{deploy.id}"
