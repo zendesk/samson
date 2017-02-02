@@ -92,7 +92,7 @@ class ProjectsController < ApplicationController
     if ids = current_user.starred_project_ids.presence
       Project.where(id: ids)
     else
-      Project
+      Project.limit(9).order(id: :desc) # 3 or 1 column layout depending on size
     end
   end
 
