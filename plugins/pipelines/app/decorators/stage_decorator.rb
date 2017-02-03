@@ -7,7 +7,7 @@ Stage.class_eval do
     end
   end)
 
-  serialize :next_stage_ids, Array # array of string ids.
+  serialize :next_stage_ids, Array
 
   validate :valid_pipeline?, if: :next_stage_ids_changed?
 
@@ -21,7 +21,7 @@ Stage.class_eval do
 
   def previous_stages
     @previous_stages ||= project.stages.to_a.select do |stage|
-      stage.next_stage_ids.map(&:to_i).include? id
+      stage.next_stage_ids.include? id
     end
   end
 
@@ -34,7 +34,9 @@ Stage.class_eval do
   #   stageC saved with pipeline to stageA   => will validate if stageA above hasn't been written to DB yet
   def valid_pipeline?(origin_id = id)
     next_stage_ids.select!(&:presence)
-    if next_stage_ids.any? { |next_id| next_id.to_i == origin_id.to_i }
+    next_stage_ids.map!(&:to_i)
+
+    if next_stage_ids.include?(origin_id)
       errors[:base] << "Stage #{name} causes a circular pipeline with this stage"
       return false
     end

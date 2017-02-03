@@ -187,7 +187,7 @@ class Admin::DeployGroupsController < ApplicationController
       stage.save!
 
       if template_stage.respond_to?(:next_stage_ids) # pipeline plugin was installed
-        template_stage.next_stage_ids << stage.id.to_s
+        template_stage.next_stage_ids << stage.id
         template_stage.save!
       end
 

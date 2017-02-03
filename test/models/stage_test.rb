@@ -428,10 +428,10 @@ describe Stage do
     end
 
     it "removes the stage from the pipeline of other stages" do
-      other_stage = Stage.create!(project: stage.project, name: 'stage1', next_stage_ids: [stage.id.to_s])
-      assert other_stage.next_stage_ids.include?(stage.id.to_s)
+      other_stage = Stage.create!(project: stage.project, name: 'stage1', next_stage_ids: [stage.id])
+      assert other_stage.next_stage_ids.include?(stage.id)
       stage.soft_delete!
-      refute other_stage.reload.next_stage_ids.include?(stage.id.to_s)
+      refute other_stage.reload.next_stage_ids.include?(stage.id)
     end
   end
 
