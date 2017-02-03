@@ -101,7 +101,7 @@ class JobExecution
     @start_callbacks.each(&:call)
     @job.run!
 
-    success = Dir.mktmpdir("samson-#{@job.project.permalink}-#{@job.id}") do |dir|
+    success = make_tempdir do |dir|
       return @job.error! unless setup!(dir)
 
       if @execution_block
@@ -253,6 +253,15 @@ class JobExecution
 
   def puts_if_present(message)
     @output.puts message if message
+  end
+
+  def make_tempdir
+    result = nil
+    Dir.mktmpdir("samson-#{@job.project.permalink}-#{@job.id}") do |dir|
+      result = yield dir
+    end
+  rescue Errno::ENOTEMPTY
+    result # tempdir ensure sometimes fails ... not sure why ... return normally
   end
 
   class << self
