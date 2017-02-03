@@ -432,6 +432,13 @@ describe JobExecution do
     end
   end
 
+  describe "#make_tempdir" do
+    it "does not fail when directory cannot be removed" do
+      Dir.expects(:rmdir).at_least_once.raises(Errno::ENOTEMPTY)
+      execution.send(:make_tempdir) { 111 }.must_equal 111
+    end
+  end
+
   describe ".debug" do
     it "returns job queue interansl" do
       JobExecution.debug.must_equal([{}, {}])
