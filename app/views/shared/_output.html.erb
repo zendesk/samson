@@ -8,7 +8,7 @@
       </div>
 
       <button class="btn btn-default only-finished" id="output-grow-toggle">Expand</button>
-      <%= link_to "Download log", project_deploy_path(@project, deployable, format: :text), class: "btn btn-primary only-finished" %>
+      <%= link_to "Download log", [@project, deployable, {format: :text}], class: "btn btn-primary only-finished" %>
 
       <% if deployable.can_be_stopped_by?(current_user) %>
         <%= stop_button deploy: deployable, project: @project, class: "btn btn-danger only-active" %>
