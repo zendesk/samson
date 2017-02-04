@@ -91,6 +91,11 @@ describe Kubernetes::RoleVerifier do
       errors.must_equal ['Containers need a name']
     end
 
+    it "reports bad container names" do
+      role[0][:spec][:template][:spec][:containers][0][:name] = 'foo_bar'
+      errors.must_equal ["Container name foo_bar did not match \\A[a-zA-Z0-9]([-a-zA-Z0-9]*[a-zA-Z0-9])?\\z"]
+    end
+
     # release_doc does not support that and it would lead to chaos
     it 'reports job mixed with deploy' do
       role.concat job_role
