@@ -17,7 +17,7 @@ describe Project do
 
   before do
     Project.any_instance.stubs(:valid_repository_url).returns(true)
-    GitRepository.any_instance.stubs(:exact_tag_from_ref).returns("")
+    GitRepository.any_instance.stubs(:fuzzy_tag_from_ref).returns(nil)
   end
 
   describe "#generate_token" do
