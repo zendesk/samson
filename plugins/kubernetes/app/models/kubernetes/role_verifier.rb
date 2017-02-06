@@ -25,7 +25,7 @@ module Kubernetes
       verify_namespace
       verify_kinds
       verify_containers
-      verify_job_container_name
+      verify_container_name
       verify_job_restart_policy
       verify_numeric_limits
       verify_project_and_role_consistent
@@ -121,10 +121,13 @@ module Kubernetes
       @errors << "#{expected.join("/")} need at least 1 container"
     end
 
-    def verify_job_container_name
+    def verify_container_name
       names = map_attributes([:spec, :template, :spec, :containers]).compact.flatten(1).map { |c| c[:name] }
-      return if names.all?
-      @errors << "Containers need a name"
+      if names.any?(&:nil?)
+        @errors << "Containers need a name"
+      elsif bad = names.grep_v(VALID_LABEL).presence
+        @errors << "Container name #{bad.join(", ")} did not match #{VALID_LABEL.source}"
+      end
     end
 
     def verify_job_restart_policy
