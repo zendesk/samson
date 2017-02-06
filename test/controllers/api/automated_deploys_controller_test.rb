@@ -53,6 +53,12 @@ describe Api::AutomatedDeploysController do
       end
     end
 
+    it "does not deploy other projects deploy" do
+      Deploy.update_all(project_id: 12121)
+      post_create
+      assert_response :bad_request
+    end
+
     it "fails when no template was found" do
       template.update_column(:is_template, false)
       post_create
