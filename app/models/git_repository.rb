@@ -51,16 +51,6 @@ class GitRepository
     capture_stdout 'git', 'describe', '--tags', git_reference
   end
 
-  # @return [nil, tag]
-  # fuzzy_tag_from_ref returns v1.0 or v1.0-abcd if no tag is defined.
-  # We only want the tag in the first case.
-  # git tag --points-at is preferred, but is only available in git 2.7+
-  def exact_tag_from_ref(git_reference)
-    fuzzy_tag = fuzzy_tag_from_ref(git_reference)
-
-    fuzzy_tag && fuzzy_tag[Release::VERSION_REGEX]
-  end
-
   def repo_cache_dir
     File.join(cached_repos_dir, @repository_directory)
   end

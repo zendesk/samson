@@ -72,20 +72,27 @@ class Release < ActiveRecord::Base
 
   private
 
+  # If Github already has a version tagged for this commit, use it unless it is smaller.
+  # If the commit is after a known tag, bump it once.
+  # Othervise bump latest release number.
   def next_release_number
-    # If Github has a version tagged for this commit, use that version instead of ours
-    latest_samson_version = Gem::Version.new(project.releases.last&.number || "0")
-    next_samson_version = latest_samson_version.to_s.dup.sub!(/\d+$/) { |d| d.to_i + 1 }
+    latest_samson_number = project.releases.last&.number || "0"
+    next_samson_number = next_number(latest_samson_number)
+    return next_samson_number if commit.blank?
 
-    return next_samson_version unless commit
+    return next_samson_number unless fuzzy_tag = project.repository.fuzzy_tag_from_ref(commit)&.split('-', 2)
+    return next_samson_number unless latest_github_number = fuzzy_tag.first[VERSION_REGEX, 1]
+    next_github_number = (fuzzy_tag.size == 1 ? latest_github_number : next_number(latest_github_number))
 
-    latest_github_version = Gem::Version.new(project.repository.exact_tag_from_ref(commit)&.slice(1..-1))
-
-    if latest_github_version > latest_samson_version
-      latest_github_version.to_s
+    if Gem::Version.new(next_samson_number) > Gem::Version.new(next_github_number)
+      next_samson_number
     else
-      next_samson_version
+      next_github_number
     end
+  end
+
+  def next_number(current_version)
+    current_version.to_s.dup.sub!(/\d+$/) { |d| d.to_i + 1 }
   end
 
   def covert_ref_to_sha

@@ -9,11 +9,9 @@ describe Release do
   let(:release) { releases(:test) }
   let(:commit) { "abcde" * 8 }
 
-  describe "create" do
-    before do
-      GitRepository.any_instance.stubs(:exact_tag_from_ref).returns("")
-    end
+  before { GitRepository.any_instance.stubs(:fuzzy_tag_from_ref).returns(nil) }
 
+  describe "create" do
     it "creates a new release" do
       release = project.releases.create!(commit: commit, author: author)
       assert_equal "124", release.number
@@ -58,14 +56,14 @@ describe Release do
     end
 
     it "converts refs to commits so we later know what exactly was deployed" do
-      GitRepository.any_instance.expects(:update_local_cache!)
+      GitRepository.any_instance.expects(:update_local_cache!).at_least_once
       GitRepository.any_instance.expects(:commit_from_ref).with('master').returns(commit)
       release = project.releases.create!(author: author, commit: 'master')
       release.commit.must_equal commit
     end
 
     it "fails with unresolvable ref" do
-      GitRepository.any_instance.expects(:update_local_cache!)
+      GitRepository.any_instance.expects(:update_local_cache!).at_least_once
       GitRepository.any_instance.expects(:commit_from_ref).with('master').returns(nil)
       e = assert_raises ActiveRecord::RecordInvalid do
         project.releases.create!(author: author, commit: 'master')
@@ -73,7 +71,7 @@ describe Release do
       e.message.must_equal "Validation failed: Commit can only be a full sha"
     end
 
-    it "does not covert blank" do
+    it "does not covert blank commits" do
       GitRepository.any_instance.expects(:clone!).never
       GitRepository.any_instance.expects(:commit_from_ref).never
       e = assert_raises ActiveRecord::RecordInvalid do
@@ -82,11 +80,25 @@ describe Release do
       e.message.must_equal "Validation failed: Commit can only be a full sha"
     end
 
-    it "uses the github version if it is present on the commit" do
-      GitRepository.any_instance.expects(:exact_tag_from_ref).with(commit).returns("v125")
+    it "uses the samson version if it is higher than the github version" do
+      GitRepository.any_instance.expects(:fuzzy_tag_from_ref).with(commit).returns("v122")
+      release = project.releases.create!(author: author, commit: commit)
+      release.commit.must_equal commit
+      release.number.must_equal "124"
+    end
+
+    it "uses the github version if it is exact on the commit" do
+      GitRepository.any_instance.expects(:fuzzy_tag_from_ref).with(commit).returns("v125")
       release = project.releases.create!(author: author, commit: commit)
       release.commit.must_equal commit
       release.number.must_equal "125"
+    end
+
+    it "uses github version +1 if it is fuzzy on the commit" do
+      GitRepository.any_instance.expects(:fuzzy_tag_from_ref).with(commit).returns("v125-123123")
+      release = project.releases.create!(author: author, commit: commit)
+      release.commit.must_equal commit
+      release.number.must_equal "126"
     end
   end
 
@@ -222,7 +234,7 @@ describe Release do
 
   describe "#assign_release_number" do
     it "skips the github version check if no commit is defined" do
-      GitRepository.any_instance.expects(:exact_tag_from_ref).never
+      GitRepository.any_instance.expects(:fuzzy_tag_from_ref).never
       release = project.releases.new
 
       release.assign_release_number
