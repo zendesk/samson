@@ -17,6 +17,10 @@ class StagesController < ApplicationController
     end
   end
 
+  def diff
+    @stages = current_project.stages
+  end
+
   def show
     respond_to do |format|
       format.html do

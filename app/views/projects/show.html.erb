@@ -12,8 +12,9 @@
         <% end %>
         <th>Last Deploy</th>
         <th class="pull-right">
+          <%= link_to 'Diff', diff_project_stages_path(@project) if @stages.any? %>
           <% if current_user.admin_for?(@project) %>
-            <%= link_to 'Manage', project_stages_path(@project) %>
+            / <%= link_to 'Manage', project_stages_path(@project) %>
           <% end %>
         </th>
       </tr>

@@ -61,6 +61,7 @@ Samson::Application.routes.draw do
     resources :stages do
       collection do
         patch :reorder
+        get :diff
       end
 
       member do

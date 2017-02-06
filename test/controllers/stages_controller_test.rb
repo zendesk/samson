@@ -53,6 +53,7 @@ describe StagesController do
 
   as_a_viewer do
     unauthorized :get, :index, project_id: :foo
+    unauthorized :get, :diff, project_id: :foo
     unauthorized :get, :new, project_id: :foo
     unauthorized :post, :create, project_id: :foo
     unauthorized :get, :show, project_id: :foo, id: 1
