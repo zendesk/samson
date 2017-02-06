@@ -53,7 +53,7 @@ class Api::AutomatedDeploysController < Api::BaseController
 
   def find_last_deploy
     influencing_stages = DeployGroupsStage.where(deploy_group: @deploy_group).pluck(:stage_id)
-    unless @last_deploy = Deploy.where(stage_id: influencing_stages).successful.first
+    unless @last_deploy = Deploy.where(project_id: @stage.project_id, stage_id: influencing_stages).successful.first
       failed!("Unable to find successful deploy for #{@stage.name}")
     end
   end
