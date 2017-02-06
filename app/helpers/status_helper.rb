@@ -31,9 +31,9 @@ module StatusHelper
     end
 
     if deploy.finished?
-      content << " "
+      content << ". Started "
       content << render_time(deploy.start_time, current_user.time_format)
-      content << ", it took #{duration_text(deploy.updated_at - deploy.start_time)}."
+      content << ", took #{duration_text(deploy.updated_at - deploy.start_time)}."
     end
 
     content_tag :div, content, class: "alert #{status_alert(deploy.status)}"
