@@ -26,31 +26,27 @@ module StatusHelper
       content << content_tag(:br)
       content << "Started "
       content << relative_time(deploy.start_time)
-      job = deploy.respond_to?(:job) ? deploy.job : deploy
+      job = (deploy.respond_to?(:job) ? deploy.job : deploy)
       content << " [Process ID: #{job.pid}]"
     end
 
     if deploy.finished?
       content << " "
       content << render_time(deploy.start_time, current_user.time_format)
-      content << ", it took #{duration_text(deploy)}."
+      content << ", it took #{duration_text(deploy.updated_at - deploy.start_time)}."
     end
 
-    content_tag :div, content.html_safe, class: "alert #{status_alert(deploy.status)}"
+    content_tag :div, content, class: "alert #{status_alert(deploy.status)}"
   end
 
-  def duration_text(deploy)
-    seconds  = (deploy.updated_at - deploy.start_time).to_i
+  def duration_text(duration)
+    duration = duration.to_i
+    minutes = duration / 60
+    seconds = duration % 60
 
-    duration = "".dup
-
-    if seconds > 60
-      minutes = seconds / 60
-      seconds -= minutes * 60
-
-      duration << "#{minutes} minute".pluralize(minutes)
-    end
-
-    duration << (seconds.positive? || duration.empty? ? " #{seconds} second".pluralize(seconds) : "")
+    text = "".dup
+    text << "#{minutes} minute".pluralize(minutes) if minutes.nonzero?
+    text << " #{seconds} second".pluralize(seconds) if seconds.nonzero? || text.empty?
+    text
   end
 end

@@ -24,4 +24,22 @@ describe StatusHelper do
       status_label("succeeded").must_equal "label-success"
     end
   end
+
+  describe "#duration_text" do
+    it "shows seconds when there is nothing" do
+      duration_text(0).must_equal " 0 seconds"
+    end
+
+    it "shows seconds" do
+      duration_text(12).must_equal " 12 seconds"
+    end
+
+    it "shows minutes and seconds" do
+      duration_text(61).must_equal "1 minute 1 second"
+    end
+
+    it "shows only minutes when seconds are 0" do
+      duration_text(60).must_equal "1 minute"
+    end
+  end
 end

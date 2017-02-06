@@ -23,12 +23,7 @@
 
     <% if finished_at = @build.finished_at %>
       <dt>Duration</dt>
-      <dd>
-        <%=
-          duration = (finished_at - @build.started_at).to_i
-          "#{duration / 60}m#{duration % 60}s"
-        %>
-      </dd>
+      <dd><%= duration_text finished_at - @build.started_at %></dd>
     <% end %>
 
     <dt>Created By</dt>
