@@ -1,4 +1,8 @@
 <%= form_for project, html: { class: "form-horizontal" } do |form| %>
+  <div class="pull-right">
+    <%= link_to_history @project %>
+  </div>
+
   <%= render 'shared/errors', object: project %>
 
   <fieldset>
