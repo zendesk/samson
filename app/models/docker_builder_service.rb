@@ -138,7 +138,9 @@ class DockerBuilderService
     if File.file?(before_docker_build_file)
       output.puts "Running #{BEFORE_DOCKER_BUILD} ..."
 
-      unless execution.executor.execute!(before_docker_build_file)
+      commands = File.readlines(before_docker_build_file)
+
+      unless execution.executor.execute!(*commands)
         raise Samson::Hooks::UserError, "Error running #{BEFORE_DOCKER_BUILD}"
       end
     end

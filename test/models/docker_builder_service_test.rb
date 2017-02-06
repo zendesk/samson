@@ -162,7 +162,7 @@ describe DockerBuilderService do
 
       it 'executes it' do
         service.send(:before_docker_build, tmp_dir)
-        output.string.must_equal "» #{before_docker_build_path}\r\nfoobar\r\n"
+        output.string.must_equal "» echo foobar\r\nfoobar\r\n"
       end
     end
 
