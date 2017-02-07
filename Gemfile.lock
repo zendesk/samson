@@ -334,7 +334,7 @@ GEM
       pry (>= 0.9.10)
     puma (3.4.0)
     pyu-ruby-sasl (0.0.3.3)
-    query_diet (0.6.0)
+    query_diet (0.6.1)
     rack (2.0.1)
     rack-mini-profiler (0.10.1)
       rack (>= 1.2.0)
@@ -550,7 +550,7 @@ DEPENDENCIES
   pry
   pry-rails
   puma
-  query_diet
+  query_diet (= 0.6.1)
   rack-mini-profiler
   rails (= 5.0.1)
   rails-assets-angular!
