@@ -1,4 +1,4 @@
-FROM ruby:2.3.1-slim
+FROM ruby:2.3.3-slim
 
 RUN apt-get update && apt-get install -y wget apt-transport-https git
 RUN wget -qO- https://deb.nodesource.com/gpgkey/nodesource.gpg.key | apt-key add -
