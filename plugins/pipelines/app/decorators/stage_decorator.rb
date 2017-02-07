@@ -16,11 +16,11 @@ Stage.class_eval do
   has_soft_deletion default_scope: true
 
   def next_stages
-    Stage.where(id: next_stage_ids).to_a
+    Stage.where(id: next_stage_ids).order(:order)
   end
 
   def previous_stages
-    @previous_stages ||= project.stages.to_a.select do |stage|
+    @previous_stages ||= project.stages.select do |stage|
       stage.next_stage_ids.include? id
     end
   end

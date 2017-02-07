@@ -412,7 +412,7 @@ describe Stage do
   describe "#ensure_ordering" do
     it "puts new stages to the back" do
       new = stage.project.stages.create! name: 'Newish'
-      new.order.must_equal 1
+      new.order.must_equal 3
     end
   end
 

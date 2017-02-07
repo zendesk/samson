@@ -5,6 +5,7 @@ test_staging:
   permalink: staging
   deploy_groups: [ pod100 ]
   is_template: true
+  order: 0
 
 test_production:
   name: Production
@@ -13,6 +14,7 @@ test_production:
   production: true
   permalink: production
   deploy_groups: [ pod1, pod2 ]
+  order: 1
 
 test_production_pod:
   name: Production Pod
@@ -21,3 +23,4 @@ test_production_pod:
   production: true
   permalink: production-pod
   deploy_groups: [ pod1 ]
+  order: 2
