@@ -132,5 +132,5 @@ group :test do
   gem 'mocha'
   gem 'webmock'
   gem 'single_cov'
-  gem 'query_diet'
+  gem 'query_diet', '0.6.1'
 end
