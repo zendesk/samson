@@ -18,8 +18,8 @@ class JobExecution
   delegate :id, to: :job
   delegate :pid, :pgid, to: :executor
 
-  def initialize(reference, job, env = {}, &block)
-    @output = OutputBuffer.new
+  def initialize(reference, job, env: {}, output: OutputBuffer.new, &block)
+    @output = output
     @executor = TerminalExecutor.new(@output, verbose: true, deploy: job.deploy)
     @viewers = JobViewers.new(@output)
 
@@ -83,6 +83,24 @@ class JobExecution
     "#{job.project.name} - #{reference}"
   end
 
+  def base_commands(dir, env = {})
+    artifact_cache_dir = File.join(@job.project.repository.repo_cache_dir, "artifacts")
+    FileUtils.mkdir_p(artifact_cache_dir)
+
+    env = {
+      PROJECT_NAME: @job.project.name,
+      PROJECT_PERMALINK: @job.project.permalink,
+      PROJECT_REPOSITORY: @job.project.repository_url,
+      CACHE_DIR: artifact_cache_dir
+    }.merge(env)
+
+    commands = env.map do |key, value|
+      "export #{key}=#{value.shellescape}"
+    end
+
+    ["cd #{dir}"].concat commands
+  end
+
   private
 
   def stage
@@ -136,7 +154,6 @@ class JobExecution
   def execute!(dir)
     Samson::Hooks.fire(:after_deploy_setup, dir, @job, @output, @reference)
 
-    FileUtils.mkdir_p(artifact_cache_dir)
     @output.write("\n# Executing deploy\n")
     @output.write("# Deploy URL: #{@job.deploy.url}\n") if @job.deploy
 
@@ -200,28 +217,14 @@ class JobExecution
       DEPLOYER: @job.user.email,
       DEPLOYER_EMAIL: @job.user.email,
       DEPLOYER_NAME: @job.user.name,
-      PROJECT_NAME: @job.project.name,
-      PROJECT_PERMALINK: @job.project.permalink,
-      PROJECT_REPOSITORY: @job.project.repository_url,
       REFERENCE: @reference,
       REVISION: @job.commit,
-      TAG: (@job.tag || @job.commit),
-      CACHE_DIR: artifact_cache_dir
+      TAG: (@job.tag || @job.commit)
     }.merge(@env)
 
     env.merge!(Hash[*Samson::Hooks.fire(:job_additional_vars, @job)])
 
-    commands = env.map do |key, value|
-      "export #{key}=#{value.shellescape}"
-    end
-
-    commands << "cd #{dir}"
-    commands.concat(@job.commands)
-    commands
-  end
-
-  def artifact_cache_dir
-    File.join(@repository.repo_cache_dir, "artifacts")
+    base_commands(dir, env) + @job.commands
   end
 
   def lock_repository(&block)

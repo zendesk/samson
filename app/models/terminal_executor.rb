@@ -67,8 +67,8 @@ class TerminalExecutor
   end
 
   def resolve_secrets(command)
-    deploy_groups = @deploy.try(:stage).try(:deploy_groups) || []
-    project = @deploy.try(:project)
+    deploy_groups = @deploy&.stage&.deploy_groups || []
+    project = @deploy&.project
     resolver = Samson::Secrets::KeyResolver.new(project, deploy_groups)
 
     result = command.gsub(/\b#{SECRET_PREFIX}(#{SecretStorage::SECRET_KEY_REGEX})\b/) do

@@ -4,7 +4,6 @@ require 'docker'
 class DockerBuilderService
   DIGEST_SHA_REGEX = /Digest:.*(sha256:[0-9a-f]+)/i
   DOCKER_REPO_REGEX = /^BUILD DIGEST: (.*@sha256:[0-9a-f]+)/i
-  BEFORE_DOCKER_BUILD = 'samson/before_docker_build'
   include ::NewRelic::Agent::MethodTracer
 
   attr_reader :build, :execution
@@ -53,11 +52,7 @@ class DockerBuilderService
     job = build.create_docker_job
     build.save!
 
-    job_execution = JobExecution.new(build.git_sha, job) do |execution, tmp_dir|
-      @execution = execution
-      @output = execution.output
-      repository.executor = execution.executor
-
+    @execution = JobExecution.new(build.git_sha, job) do |_, tmp_dir|
       if build.kubernetes_job
         run_build_image_job(job, push: push, tag_as_latest: tag_as_latest)
       elsif build_image(tmp_dir)
@@ -68,12 +63,15 @@ class DockerBuilderService
       end
     end
 
-    job_execution.on_complete do
+    @output = @execution.output
+    repository.executor = @execution.executor
+
+    @execution.on_complete do
       build.update_column(:finished_at, Time.now)
       send_after_notifications
     end
 
-    JobExecution.start_job(job_execution)
+    JobExecution.start_job(@execution)
   end
 
   private
@@ -133,27 +131,24 @@ class DockerBuilderService
     build.save!
   end
 
-  def execute_before_docker_build_script(tmp_dir)
-    before_docker_build_file = File.join(tmp_dir, BEFORE_DOCKER_BUILD)
-    if File.file?(before_docker_build_file)
-      output.puts "Running #{BEFORE_DOCKER_BUILD} ..."
-
-      unless execution.executor.execute!(before_docker_build_file)
-        raise Samson::Hooks::UserError, "Error running #{BEFORE_DOCKER_BUILD}"
-      end
+  def execute_build_command(tmp_dir, command)
+    return unless command
+    commands = execution.base_commands(tmp_dir) + command.command.split(/\r?\n|\r/)
+    unless execution.executor.execute!(*commands)
+      raise Samson::Hooks::UserError, "Error running build command"
     end
   end
 
   def before_docker_build(tmp_dir)
-    execute_before_docker_build_script(tmp_dir)
     Samson::Hooks.fire(:before_docker_build, tmp_dir, build, output)
+    execute_build_command(tmp_dir, build.project.build_command)
   end
   add_method_tracer :before_docker_build
 
   def build_image(tmp_dir)
-    before_docker_build(tmp_dir)
-
     File.write("#{tmp_dir}/REVISION", build.git_sha)
+
+    before_docker_build(tmp_dir)
 
     build.docker_image = DockerBuilderService.build_docker_image(tmp_dir, {}, output)
   rescue Docker::Error::UnexpectedResponseError

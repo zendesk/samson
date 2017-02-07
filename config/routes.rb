@@ -45,6 +45,8 @@ Samson::Application.routes.draw do
       end
     end
 
+    resource :build_command, only: [:show, :update]
+
     resources :deploys, only: [:index, :show, :destroy] do
       collection do
         get :active

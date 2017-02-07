@@ -1,4 +1,5 @@
 <%= page_title(@command.new_record? ? "New Command" : "Edit Command") %>
+<% usages = @command.usages.presence %>
 
 <section>
   <%= form_for [:admin, @command], html: { class: "form-horizontal" } do |form| %>
@@ -19,15 +20,21 @@
         </div>
       </div>
 
-      <% if @command.usages.present? %>
+      <% if usages %>
         <div class="form-group">
           <%= form.label :usage, value: "Usage", class: "col-lg-2 control-label" %>
-          <% [['stage', @command.stages], ['macro', @command.macros]].select { |_,u| u.any? }.each do |type, usages| %>
+          <% usages.group_by(&:class).each do |klass, usages_by_class| %>
             <div class="col-lg-4">
-              Used in <%= pluralize(usages.count, type) %>:
+              Used in <%= pluralize(usages_by_class.count, klass.name) %>:
               <ul>
-                <% usages.each do |s| %>
-                  <li><%= link_to "#{s.project.name} - #{s.name}", [s.project, s, action: :edit] %></li>
+                <% usages_by_class.each do |s| %>
+                  <li>
+                    <% if s.is_a?(Project) %>
+                      <%= link_to s.name, project_build_command_path(s) %>
+                    <% else %>
+                      <%= link_to "#{s.project.name} - #{s.name}", [s.project, s, action: :edit] %>
+                    <% end %>
+                  </li>
                 <% end %>
               </ul>
             </div>
@@ -38,8 +45,8 @@
       <div class="form-group">
         <div class="col-lg-offset-2 col-lg-10">
           <button type="submit" class="btn btn-default">Save</button>
-          <% disabled = @command.usages.present? && "Can only delete unused commands." %>
-          <%= link_to_delete([:admin, @command], disabled: disabled) unless @command.new_record? %>
+          <% disabled = "Can only delete unused commands." if usages %>
+          <%= link_to_delete([:admin, @command], disabled: disabled) if @command.persisted? %>
         </div>
       </div>
     </fieldset>

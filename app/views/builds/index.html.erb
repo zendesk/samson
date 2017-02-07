@@ -4,6 +4,7 @@
 
 <section class="tabs">
   <p class="pull-right">
+    <%= link_to "Edit Build Command", project_build_command_path(@project), class: "btn btn-default"  %>
     <%= link_to "Create Build", new_project_build_path(@project), class: "btn btn-default" %>
   </p>
 

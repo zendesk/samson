@@ -141,40 +141,33 @@ describe DockerBuilderService do
   describe '#before_docker_build' do
     let(:before_docker_build_path) { File.join(tmp_dir, 'samson/before_docker_build') }
     let(:output) { StringIO.new }
-    let(:executor) { TerminalExecutor.new(output, verbose: true) }
-    let(:execution) { stub(executor: executor) }
+    let(:execution) { JobExecution.new('master', Job.new(project: project), output: output) { raise } }
 
-    before do
-      service.instance_variable_set(:@execution, execution)
-    end
+    before { service.instance_variable_set(:@execution, execution) }
 
     it 'fires the before_docker_build hook' do
       Samson::Hooks.expects(:fire).with(:before_docker_build, tmp_dir, build, anything)
       service.send(:before_docker_build, tmp_dir)
     end
 
-    describe 'when a good samson/before_docker_build is present' do
-      before do
-        FileUtils.mkdir_p(File.dirname(before_docker_build_path))
-        File.write(before_docker_build_path, 'echo foobar')
-        File.chmod(0o755, before_docker_build_path)
-      end
+    describe "with build_command" do
+      let(:command) { Command.create!(command: "echo foo\r\necho bar") }
 
-      it 'executes it' do
+      before { project.update_column(:build_command_id, command.id) }
+
+      it "executes it" do
         service.send(:before_docker_build, tmp_dir)
-        output.string.must_equal "» #{before_docker_build_path}\r\nfoobar\r\n"
-      end
-    end
-
-    describe 'when a bad samson/before_docker_build is present' do
-      before do
-        FileUtils.mkdir_p(File.dirname(before_docker_build_path))
-        File.write(before_docker_build_path, 'exit 1')
-        File.chmod(0o755, before_docker_build_path)
+        output.string.must_include "» echo foo\r\nfoo\r\n» echo bar\r\nbar\r\n"
+        output.string.must_include "export CACHE_DIR="
       end
 
-      it 'executes it and raises' do
-        lambda { service.send(:before_docker_build, tmp_dir) }.must_raise(Samson::Hooks::UserError)
+      it "fails when command fails" do
+        command.update_column(:command, 'exit 1')
+        e = assert_raises Samson::Hooks::UserError do
+          service.send(:before_docker_build, tmp_dir)
+        end
+        e.message.must_equal "Error running build command"
+        output.string.must_include "» exit 1\r\n"
       end
     end
   end
