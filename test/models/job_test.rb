@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 require_relative '../test_helper'
+require 'ar_multi_threaded_transactional_tests'
 
 SingleCov.covered! uncovered: 3
 
@@ -234,18 +235,15 @@ describe Job do
   end
 
   describe "#stop!" do
-    # tested with ugly stubs since real execution works in multiple threads which breaks tests
     with_job_execution
+    around { |t| ArMultiThreadedTransactionalTests.activate &t }
 
     it "stops an active job" do
-      ex = stub(start!: true, on_complete: true, id: job.id)
+      ex = JobExecution.new('master', job) { sleep 10 }
       JobExecution.start_job(ex)
       assert JobExecution.active?(ex.id)
-
-      ex.expects(:stop!)
       job.stop!
-
-      assert job.cancelling? # job execution callbacks would set it to cancelled
+      assert job.cancelled? # job execution callbacks sets it to cancelled
     end
 
     it "stops an inactive job" do
@@ -258,7 +256,7 @@ describe Job do
       active = stub(start!: true, on_complete: true, id: 123)
       JobExecution.start_job(active, queue: 'foo')
 
-      queued = stub(start!: true, on_complete: true, id: job.id)
+      queued = JobExecution.new('master', job) { sleep 10 }
       JobExecution.start_job(queued, queue: 'foo')
       assert JobExecution.queued?(queued.id)
 

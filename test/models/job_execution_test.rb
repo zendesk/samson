@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 require_relative '../test_helper'
+require 'ar_multi_threaded_transactional_tests'
 
 SingleCov.covered! uncovered: 7
 
@@ -30,7 +31,7 @@ describe JobExecution do
   let(:deploy) { Deploy.create!(stage: stage, job: job, reference: 'master', project: project) }
 
   with_job_execution
-  share_database_connection_in_all_threads
+  around { |t| ArMultiThreadedTransactionalTests.activate &t }
 
   before do
     Project.any_instance.stubs(:valid_repository_url).returns(true)
