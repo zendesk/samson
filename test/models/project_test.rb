@@ -386,4 +386,10 @@ describe Project do
       end
     end
   end
+
+  describe "#url" do
+    it "builds a url" do
+      project.url.must_equal "http://www.test-url.com/projects/foo"
+    end
+  end
 end

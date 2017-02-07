@@ -122,6 +122,10 @@ class Project < ActiveRecord::Base
     releases.map { |group_id, deploys| [group_id, deploys.sort_by(&:updated_at).last] }.to_h
   end
 
+  def url
+    Rails.application.routes.url_helpers.project_url(self)
+  end
+
   private
 
   def repository_homepage_github
