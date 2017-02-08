@@ -7,9 +7,8 @@ module SamsonEnv
   end
 
   class << self
-    def write_env_files(dir, job)
-      return unless (stage = job.deploy.try(:stage))
-      return unless groups = env_groups(stage.project, stage.deploy_groups.to_a)
+    def write_env_files(dir, project, deploy_groups)
+      return unless groups = env_groups(project, deploy_groups)
       write_dotenv("#{dir}/.env", groups)
     end
 
@@ -56,7 +55,13 @@ Samson::Hooks.callback :project_permitted_params do
 end
 
 Samson::Hooks.callback :after_deploy_setup do |dir, job|
-  SamsonEnv.write_env_files(dir, job)
+  if stage = job.deploy&.stage
+    SamsonEnv.write_env_files(dir, stage.project, stage.deploy_groups.to_a)
+  end
+end
+
+Samson::Hooks.callback :before_docker_build do |tmp_dir, build, _|
+  SamsonEnv.write_env_files(tmp_dir, build.project, [])
 end
 
 Samson::Hooks.callback :deploy_group_env do |project, deploy_group|

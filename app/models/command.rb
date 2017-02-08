@@ -1,9 +1,12 @@
 # frozen_string_literal: true
 class Command < ActiveRecord::Base
+  has_paper_trail skip: [:updated_at, :created_at]
+
   has_many :stage_commands
   has_many :stages, through: :stage_commands
   has_many :macro_commands
   has_many :macros, through: :macro_commands
+  has_many :projects, foreign_key: :build_command_id
 
   belongs_to :project
 
@@ -15,7 +18,7 @@ class Command < ActiveRecord::Base
     where(project_id: nil)
   end
 
-  # own commands in front then all available
+  # used commands in front then all available
   def self.for_object(object)
     usages = usage_ids
     available = Command.for_project(object.project).sort_by { |c| -usages.count(c.id) }
@@ -35,11 +38,13 @@ class Command < ActiveRecord::Base
   end
 
   def usages
-    stages + macros
+    stages + macros + projects
   end
 
   def self.usage_ids
-    MacroCommand.pluck(:command_id) + StageCommand.pluck(:command_id)
+    MacroCommand.pluck(:command_id) +
+    StageCommand.pluck(:command_id) +
+    Project.pluck(:build_command_id)
   end
 
   private

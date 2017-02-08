@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20170202231551) do
+ActiveRecord::Schema.define(version: 20170207193042) do
 
   create_table "builds", force: :cascade do |t|
     t.integer  "project_id",                                       null: false
@@ -252,6 +252,8 @@ ActiveRecord::Schema.define(version: 20170202231551) do
     t.integer  "position",   default: 0, null: false
     t.datetime "created_at"
     t.datetime "updated_at"
+    t.index ["command_id"], name: "index_macro_commands_on_command_id", using: :btree
+    t.index ["macro_id"], name: "index_macro_commands_on_macro_id", using: :btree
   end
 
   create_table "macros", force: :cascade do |t|
@@ -346,6 +348,8 @@ ActiveRecord::Schema.define(version: 20170202231551) do
     t.boolean  "include_new_deploy_groups",               default: false, null: false
     t.string   "docker_release_branch"
     t.string   "release_source",                          default: "any", null: false
+    t.integer  "build_command_id"
+    t.index ["build_command_id"], name: "index_projects_on_build_command_id", using: :btree
     t.index ["permalink"], name: "index_projects_on_permalink", unique: true, length: { permalink: 191 }, using: :btree
     t.index ["token"], name: "index_projects_on_token", unique: true, length: { token: 191 }, using: :btree
   end
@@ -415,6 +419,8 @@ ActiveRecord::Schema.define(version: 20170202231551) do
     t.datetime "created_at"
     t.datetime "updated_at"
     t.datetime "deleted_at"
+    t.index ["command_id"], name: "index_stage_commands_on_command_id", using: :btree
+    t.index ["stage_id"], name: "index_stage_commands_on_stage_id", using: :btree
   end
 
   create_table "stages", force: :cascade do |t|

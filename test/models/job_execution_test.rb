@@ -6,10 +6,7 @@ SingleCov.covered! uncovered: 7
 describe JobExecution do
   include GitRepoTestHelper
 
-  def execute_job(branch = 'master', **options)
-    on_complete = options.delete(:on_complete)
-    on_start = options.delete(:on_start)
-
+  def execute_job(branch = 'master', on_complete: nil, on_start: nil, **options)
     execution = JobExecution.new(branch, job, options)
     execution.on_complete(&on_complete) if on_complete.present?
     execution.on_start(&on_start) if on_start.present?
@@ -142,7 +139,7 @@ describe JobExecution do
 
   it "exports deploy information as environment variables" do
     job.update(command: 'env | sort')
-    execute_job('master', FOO: 'bar')
+    execute_job 'master', env: {FOO: 'bar'}
     lines = job.output.split "\n"
     lines.must_include "DEPLOY_URL=#{deploy.url}"
     lines.must_include "DEPLOYER=jdoe@test.com"

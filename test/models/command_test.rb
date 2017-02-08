@@ -63,8 +63,17 @@ describe Command do
   end
 
   describe "#usages" do
-    it "lists stages and macros" do
-      command.usages.map(&:class).uniq.must_equal [Stage, Macro]
+    it "lists stages, macros and projects" do
+      projects(:test).update_column(:build_command_id, command.id)
+      command.usages.map(&:class).uniq.sort_by(&:name).must_equal [Macro, Project, Stage]
+    end
+  end
+
+  describe ".usage_ids" do
+    it "returns all used commands" do
+      extra_id = Command.create!(command: 'foo').id
+      projects(:test).update_column(:build_command_id, extra_id)
+      Command.usage_ids.uniq.sort.must_equal [extra_id, command.id].sort
     end
   end
 end

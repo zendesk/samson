@@ -32,7 +32,7 @@ class DeployService
   def confirm_deploy!(deploy)
     stage = deploy.stage
 
-    job_execution = JobExecution.new(deploy.reference, deploy.job, construct_env(stage))
+    job_execution = JobExecution.new(deploy.reference, deploy.job, env: construct_env(stage))
     job_execution.on_start do
       send_before_notifications(deploy)
     end
