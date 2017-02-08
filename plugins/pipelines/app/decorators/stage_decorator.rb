@@ -16,7 +16,7 @@ Stage.class_eval do
   has_soft_deletion default_scope: true
 
   def next_stages
-    Stage.where(id: next_stage_ids).order(:order)
+    Stage.where(id: next_stage_ids)
   end
 
   def previous_stages

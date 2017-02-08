@@ -506,7 +506,7 @@ describe Stage do
       stage.record_script_change
       stage.update_column(:name, "NEW-NAME")
       stage.commands.first.update_column(:command, 'NEW')
-      stage.versions.last.reify.save!
+      stage.versions.last.reify(unversioned_attributes: :preserve).save!
       stage.reload
       stage.name.must_equal old_name
       stage.script.must_equal 'NEW'
