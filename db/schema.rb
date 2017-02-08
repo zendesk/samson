@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20170207193042) do
+ActiveRecord::Schema.define(version: 20170208221802) do
 
   create_table "builds", force: :cascade do |t|
     t.integer  "project_id",                                       null: false
@@ -429,7 +429,7 @@ ActiveRecord::Schema.define(version: 20170207193042) do
     t.datetime "created_at"
     t.datetime "updated_at"
     t.string   "notify_email_address"
-    t.integer  "order"
+    t.integer  "order",                                                                      null: false
     t.datetime "deleted_at"
     t.boolean  "confirm",                                                    default: true,  null: false
     t.string   "datadog_tags"
