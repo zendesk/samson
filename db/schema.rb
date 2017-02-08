@@ -29,6 +29,7 @@ ActiveRecord::Schema.define(version: 20170208221802) do
     t.boolean  "kubernetes_job",                   default: false, null: false
     t.datetime "started_at"
     t.datetime "finished_at"
+    t.string   "source_url"
     t.index ["created_by"], name: "index_builds_on_created_by", using: :btree
     t.index ["git_sha"], name: "index_builds_on_git_sha", unique: true, using: :btree
     t.index ["project_id"], name: "index_builds_on_project_id", using: :btree

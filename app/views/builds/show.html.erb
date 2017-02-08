@@ -29,6 +29,11 @@
     <dt>Created By</dt>
     <dd><%= @build.creator&.name_and_email || "Trigger" %></dd>
 
+    <% if url = @build.source_url %>
+      <dt>Created Via</dt>
+      <dd><%= url %></dd>
+    <% end %>
+
     <dt>Label</dt>
     <dd><%= @build.label  %></dd>
 

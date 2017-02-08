@@ -1,19 +1,20 @@
 # frozen_string_literal: true
-# TODO: should check based on docker_repo_digest not tag
+# FIXME: check based on docker_repo_digest not tag
 module SamsonHyperclair
   class Engine < Rails::Engine
   end
 
   class << self
-    def append_job_with_scan(job, docker_tag)
+    def append_build_job_with_scan(build)
       return unless clair = ENV['HYPERCLAIR_PATH']
+      job = build.docker_build_job
 
       append_output job, "### Clair scan: started\n"
 
       Thread.new do
         ActiveRecord::Base.connection_pool.with_connection do
           sleep 0.1 if Rails.env.test? # in test we reuse the same connection, so we cannot use it at the same time
-          success, output, time = scan(clair, job.project, docker_tag)
+          success, output, time = scan(clair, build.docker_repo_digest)
           status = (success ? "success" : "errored or vulnerabilities found")
           output = "### Clair scan: #{status} in #{time}s\n#{output}"
           append_output job, output
@@ -23,18 +24,23 @@ module SamsonHyperclair
 
     private
 
+    # external builds have no job ... so we cannot store output
     def append_output(job, output)
-      job.reload
-      job.update_column(:output, job.output + output)
+      if job
+        job.reload
+        job.update_column(:output, job.output + output)
+      else
+        Rails.logger.info(output)
+      end
     end
 
-    def scan(executable, project, docker_tag)
+    def scan(executable, docker_repo_digest)
       registry = DockerRegistry.first
+
       with_time do
         Samson::CommandExecutor.execute(
           executable,
-          *project.docker_repo(registry).split('/', 2),
-          docker_tag,
+          docker_repo_digest,
           env: {
             'DOCKER_REGISTRY_USER' => registry.username,
             'DOCKER_REGISTRY_PASS' => registry.password
@@ -58,7 +64,7 @@ module SamsonHyperclair
 end
 
 Samson::Hooks.callback :after_docker_build do |build|
-  if build.docker_build_job.succeeded?
-    SamsonHyperclair.append_job_with_scan(build.docker_build_job, build.docker_tag)
+  if build.docker_repo_digest
+    SamsonHyperclair.append_build_job_with_scan(build)
   end
 end

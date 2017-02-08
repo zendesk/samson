@@ -26,4 +26,4 @@ en:
       help:
         # Ideally make dynamic https://github.com/doorkeeper-gem/doorkeeper/issues/896
         # and enforce inclusion ... for now keep in sync with api controllers
-        scopes: "Separate scopes with spaces. Possible: automated_deploys, deploy_groups, deploys, locks, projects, stages, default (everything)"
+        scopes: "Separate scopes with spaces. Possible: automated_deploys, builds, deploy_groups, deploys, locks, projects, stages, default (everything)"

@@ -2,8 +2,7 @@
 class BuildsController < ApplicationController
   include CurrentProject
 
-  before_action :authorize_project_deployer!
-
+  before_action :authorize_resource!
   before_action :find_build, only: [:show, :build_docker_image, :edit, :update]
 
   def index
@@ -58,9 +57,7 @@ class BuildsController < ApplicationController
   end
 
   def new_build_params
-    params.require(:build).permit(
-      *[:git_ref, :label, :description] + Samson::Hooks.fire(:build_permitted_params)
-    )
+    params.require(:build).permit(*Build::ASSIGNABLE_KEYS)
   end
 
   def edit_build_params

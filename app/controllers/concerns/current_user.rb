@@ -63,6 +63,8 @@ module CurrentUser
 
   def authorize_resource!
     case controller_name
+    when 'builds'
+      authorize_project_deployer!
     when 'locks'
       if @project
         authorize_project_deployer!

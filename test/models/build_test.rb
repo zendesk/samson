@@ -59,8 +59,19 @@ describe Build do
     it 'validates docker digest' do
       assert_valid(valid_build(docker_repo_digest: repo_digest))
       assert_valid(valid_build(docker_repo_digest: "my-registry.zende.sk/samson/another_project@sha256:#{example_sha}"))
+      assert_valid(valid_build(docker_repo_digest: "ruby@sha256:#{"a" * 64}"))
       refute_valid(valid_build(docker_repo_digest: example_sha))
       refute_valid(valid_build(docker_repo_digest: 'some random string'))
+    end
+
+    it 'is invalid with protocol weird url' do
+      refute_valid(valid_build(source_url: 'foo.com'))
+      refute_valid(valid_build(source_url: 'ftp://foo.com'))
+    end
+
+    it 'is valid with real url' do
+      assert_valid(valid_build(source_url: 'http://foo.com'))
+      assert_valid(valid_build(source_url: 'https://foo.com'))
     end
   end
 
@@ -134,6 +145,11 @@ describe Build do
 
     it "is not built when there is no build" do
       build.docker_status.must_equal "not built"
+    end
+
+    it "is built externally when digest exists without job" do
+      build.docker_repo_digest = 'foo'
+      build.docker_status.must_equal "built externally"
     end
   end
 

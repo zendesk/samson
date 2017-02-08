@@ -32,6 +32,7 @@ module Samson
       :before_deploy,
       :after_deploy_setup,
       :after_deploy,
+      :before_docker_repository_usage,
       :before_docker_build,
       :after_docker_build,
       :after_job_execution,

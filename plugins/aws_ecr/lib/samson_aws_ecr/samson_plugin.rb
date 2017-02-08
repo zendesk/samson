@@ -63,7 +63,7 @@ end
 
 # need credentials to pull (via Dockerfile FROM) and push images
 # ATM this only authenticates the default docker registry and not any extra registries
-Samson::Hooks.callback :before_docker_build do |_, build, _|
-  SamsonAwsEcr::Engine.ensure_repositories(build.project)
+Samson::Hooks.callback :before_docker_repository_usage do |project|
+  SamsonAwsEcr::Engine.ensure_repositories(project)
   SamsonAwsEcr::Engine.refresh_credentials
 end

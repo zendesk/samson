@@ -17,7 +17,7 @@
     <%= form.input :git_ref, label: 'Git Reference' do %>
       <p class="form-control-static"><%= git_ref_and_sha_for(@build) %></p>
     <% end %>
-    <%= form.input :docker_image, label: 'Docker Repo Digest' do %>
+    <%= form.input :docker_repo_digest, label: 'Docker Digest' do %>
       <p class="form-control-static"><%= @build.docker_repo_digest %></p>
     <% end %>
 
