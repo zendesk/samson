@@ -6,6 +6,25 @@ class Api::BaseController < ApplicationController
   prepend_before_action :store_requested_oauth_scope
   before_action :require_project
 
+  # default error has very little information
+  # http://stackoverflow.com/questions/33704640/how-to-render-correct-json-format-with-raised-error
+  rescue_from ActiveRecord::RecordInvalid do |exception|
+    render json: {error: exception.record.errors}, status: 422
+  end
+
+  # default error has very little information
+  # https://github.com/rails/strong_parameters/issues/157
+  rescue_from ActionController::ParameterMissing do |exception|
+    render json: {error: {exception.param => ["is required"]}}, status: :bad_request
+  end
+
+  # otherwise renders a 500 and goes to airbrake
+  # https://coderwall.com/p/ea5vtw/validating-rest-queries-with-rails
+  rescue_from ActionController::UnpermittedParameters do |exception|
+    details = exception.params.each_with_object({}) { |p, h| h[p] = ["is not permitted"] }
+    render json: {error: details}, status: :bad_request
+  end
+
   protected
 
   def paginate(scope)
