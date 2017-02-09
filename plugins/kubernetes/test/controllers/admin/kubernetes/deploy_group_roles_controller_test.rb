@@ -13,16 +13,6 @@ describe Admin::Kubernetes::DeployGroupRolesController do
   project_id = ActiveRecord::FixtureSet.identify(:test)
 
   as_a_viewer do
-    unauthorized :get, :index
-    unauthorized :get, :new
-    unauthorized :post, :create, kubernetes_deploy_group_role: {project_id: project_id}
-    unauthorized :get, :show, id: id
-    unauthorized :get, :edit, id: id
-    unauthorized :get, :update, id: id
-    unauthorized :get, :destroy, id: id
-  end
-
-  as_a_deployer do
     describe "#index" do
       it "renders" do
         get :index
