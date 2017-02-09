@@ -76,19 +76,20 @@ describe Api::BaseController do
 end
 
 describe "Api::BaseController Integration" do
+  let(:user) { users(:super_admin) }
+  let(:token) { Doorkeeper::AccessToken.create!(resource_owner_id: user.id, scopes: 'default') }
+
   describe "#using_per_request_auth?" do
-    let(:user) { users(:super_admin) }
-    let(:token) { Doorkeeper::AccessToken.create!(resource_owner_id: user.id, scopes: 'default') }
     let(:post_params) { {lock: {resource_id: nil, resource_type: nil}, format: :json} }
 
     with_forgery_protection
 
-    it 'can POST without authenticiy_token when logging in via per request doorkeeper auth' do
+    it 'can POST without authenticity_token when logging in via per request doorkeeper auth' do
       post '/api/locks', params: post_params, headers: {'Authorization' => "Bearer #{token.token}"}
       assert_response :success
     end
 
-    it 'can POST without authenticiy_token when logging in via per request basic auth' do
+    it 'can POST without authenticity_token when logging in via per request basic auth' do
       auth = "Basic #{Base64.encode64(user.email + ':' + user.token).strip}"
       post '/api/locks', params: post_params, headers: {'Authorization' => auth}
       assert_response :success
@@ -103,22 +104,51 @@ describe "Api::BaseController Integration" do
     describe "when in the browser" do
       before { stub_session_auth }
 
-      it 'can GET without authenticiy_token' do
+      it 'can GET without authenticity_token' do
         get '/api/locks', params: {format: :json}
         assert_response :success
       end
 
-      it 'cannot POST without authenticiy_token' do
+      it 'cannot POST without authenticity_token' do
         assert_raises ActionController::InvalidAuthenticityToken do
           post '/api/locks', params: post_params
         end
       end
     end
 
-    it 'cannot POST without authenticiy_token when not logged in' do
+    it 'cannot POST without authenticity_token when not logged in' do
       assert_raises ActionController::InvalidAuthenticityToken do
         post '/api/locks', params: post_params
       end
+    end
+  end
+
+  describe "errors" do
+    def assert_json(code, message)
+      assert_response code
+      JSON.parse(response.body, symbolize_names: true).must_equal(error: message)
+    end
+
+    let(:headers) { {'Authorization' => "Bearer #{token.token}"} }
+
+    before do
+      ActionDispatch::Request.any_instance.stubs(show_exceptions?: true) # render exceptions as production would
+      stub_session_auth
+    end
+
+    it "presents validation errors" do
+      post '/api/locks.json', params: {lock: {warning: true}}, headers: headers
+      assert_json 422, description: ["can't be blank"]
+    end
+
+    it "presents missing params errors" do
+      post '/api/locks.json', params: {}, headers: headers
+      assert_json 400, lock: ["is required"]
+    end
+
+    it "presents invalid keys errors" do
+      post '/api/locks.json', params: {lock: {foo: :bar, baz: :bar}}, headers: headers
+      assert_json 400, foo: ["is not permitted"], baz: ["is not permitted"]
     end
   end
 end

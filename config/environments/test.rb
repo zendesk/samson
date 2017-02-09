@@ -23,7 +23,7 @@ Samson::Application.configure do
   config.consider_all_requests_local       = true
   config.action_controller.perform_caching = false
 
-  # Raise exceptions instead of rendering exception templates.
+  # Show rendered exceptions instead of raising them
   config.action_dispatch.show_exceptions = false
 
   # Disable request forgery protection in test environment.
