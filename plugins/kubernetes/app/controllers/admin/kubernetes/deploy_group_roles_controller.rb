@@ -1,11 +1,8 @@
 # frozen_string_literal: true
 class Admin::Kubernetes::DeployGroupRolesController < ApplicationController
-  DEPLOYER_ACCESS = [:index, :show, :new].freeze
-
-  before_action :authorize_deployer!, only: DEPLOYER_ACCESS
   before_action :find_role, only: [:show, :edit, :update, :destroy]
   before_action :find_stage, only: [:seed]
-  before_action :authorize_project_admin!, except: DEPLOYER_ACCESS
+  before_action :authorize_project_admin!, except: [:index, :show, :new]
 
   def new
     attributes = (params[:kubernetes_deploy_group_role] ? deploy_group_role_params : {})
