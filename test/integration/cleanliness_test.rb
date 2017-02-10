@@ -5,7 +5,7 @@ SingleCov.not_covered!
 
 # kitchen sink for 1-off tests
 describe "cleanliness" do
-  def check_content(files)
+  def assert_content(files)
     files -= [File.expand_path(__FILE__).sub("#{Rails.root}/", '')]
     bad = files.map do |f|
       error = yield File.read(f)
@@ -42,7 +42,7 @@ describe "cleanliness" do
   end
 
   it "does not use let(:user) inside of a as_xyz block" do
-    check_content all_tests do |content|
+    assert_content all_tests do |content|
       if content.include?("  as_") && content.include?("let(:user)")
         "uses as_xyz and let(:user) these do not mix!"
       end
@@ -60,7 +60,7 @@ describe "cleanliness" do
   end
 
   it "does not use setup/teardown" do
-    check_content all_tests do |content|
+    assert_content all_tests do |content|
       if content =~ /^\s+(setup|teardown)[\s\{]/
         "uses setup or teardown, but should use before or after"
       end
@@ -68,7 +68,7 @@ describe "cleanliness" do
   end
 
   it "uses active test case wording" do
-    check_content all_tests do |content|
+    assert_content all_tests do |content|
       if content =~ /\s+it ['"]should /
         "uses `it should` working, please use active working `it should activate` -> `it activates`"
       end
@@ -76,7 +76,7 @@ describe "cleanliness" do
   end
 
   it "does not have trailing whitespace" do
-    check_content Dir["{app,lib,plugins,test}/**/*.rb"] do |content|
+    assert_content Dir["{app,lib,plugins,test}/**/*.rb"] do |content|
       "has trailing whitespace" if content =~ / $/
     end
   end
@@ -106,7 +106,7 @@ describe "cleanliness" do
       reject { |v| File.basename(v).start_with?('_') }.
       reject { |v| v.include?('_mailer/') }.
       reject { |v| v.include?('/layouts/') }
-    check_content views do |content|
+    assert_content views do |content|
       unless content.include?(' page_title')
         "declare a page title for nicer navigation"
       end
@@ -114,7 +114,7 @@ describe "cleanliness" do
   end
 
   it "does not modify the ENV without resetting state" do
-    check_content all_tests do |content|
+    assert_content all_tests do |content|
       if content =~ /ENV\[.*=/
         "use with_env to setup ENV variables during test"
       end

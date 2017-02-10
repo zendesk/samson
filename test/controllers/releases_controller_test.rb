@@ -14,7 +14,7 @@ describe ReleasesController do
     describe "#show" do
       it "renders continuous versions" do
         get :show, params: {project_id: project.to_param, id: release.version}
-        assert_response :success
+        assert_template 'show'
       end
 
       it "renders major-minor versions" do
@@ -27,6 +27,11 @@ describe ReleasesController do
         assert_raises ActiveRecord::RecordNotFound do
           get :show, params: {project_id: project.to_param, id: "v321"}
         end
+      end
+
+      it "renders row content for xhr requests" do
+        get :show, params: {project_id: project.to_param, id: release.version}, xhr: true
+        assert_template 'row_content'
       end
     end
 

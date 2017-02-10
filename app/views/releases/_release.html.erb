@@ -3,11 +3,6 @@
     <%= release_label(@project, release) %>
   </td>
   <td>
-    <% release.changeset.authors.each do |author| %>
-      <%= github_user_avatar(author) %>
-    <% end %>
-  </td>
-  <td>
     <% @stages.select {|stage| stage.current_release?(release) }.each do |stage| %>
       <span class="label label-success release-stage" title="Currently deployed to <%= stage.name %>">
         <%= stage.name %>
@@ -25,9 +20,7 @@
     <% end %>
   </td>
 </tr>
-<tr class="release-info collapse">
+<tr class="release-info collapse" data-url="<%= url_for [@project, release] %>">
   <td></td>
-  <td colspan="3">
-  <%= render "info", release: release, changeset: release.changeset %>
-  </td>
+  <td colspan="2"></td>
 </tr>

@@ -1,25 +1,31 @@
 //= require changesets
 
 $(function() {
-  var $previousSelect;
+  var $previous;
+
+  function toggle(item, remove) {
+    item.toggleClass('active', remove);
+    item.next().toggleClass('collapse', remove);
+  }
 
   $('.release-list .release-summary').click(function(e) {
     var $this = $(this);
-    var $target = $(e.target);
 
-    if ($target.parents('.btn-group').length == 1 || $target.is('.release-label')) {
-      // One of the buttons on the row was clicked, don't toggle details.
-      return;
+    // don't show details when user wants to navigate
+    if ($(e.target).is('a,button')) { return; }
+
+    // hide previous
+    if ($previous && $this.get(0) !== $previous.get(0)) {
+      toggle($previous, true);
     }
 
-    if ($previousSelect && $this.get(0) !== $previousSelect.get(0)) {
-      $previousSelect.removeClass('active');
-      $previousSelect.next().addClass('collapse');
+    // show and load content if necessary
+    toggle($this);
+    var insert = $this.next().find('td:last-child');
+    if(insert.is(':empty')) {
+      insert.responsiveLoad($this.next().data('url'));
     }
 
-    $this.toggleClass('active');
-    $this.next().toggleClass('collapse');
-
-    $previousSelect = $this;
+    $previous = $this;
   });
 });
