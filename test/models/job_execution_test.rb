@@ -346,8 +346,8 @@ describe JobExecution do
 
     it "shows airbrake error location" do
       with_hidden_errors do
-        Airbrake.expects(:notify).returns("12345")
-        Airbrake.expects(:configuration).returns(stub(user_information: 'href="http://foo.com/{{error_id}}"'))
+        Airbrake.expects(:notify_sync).returns('id' => "12345")
+        Airbrake.expects(:user_information).returns('href="http://foo.com/{{error_id}}"')
         job.expects(:run!).raises("Oh boy")
         execution.start!
         execution.wait!

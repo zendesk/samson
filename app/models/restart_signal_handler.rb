@@ -33,7 +33,7 @@ class RestartSignalHandler
     Process.kill(PASSED_SIGNAL, Process.pid) # shut down underlying server
   rescue
     output "Failed #{$!.message} ... restart manually when all deploys have finished"
-    Airbrake.notify($!)
+    Airbrake.notify_sync($!)
     raise
   end
 

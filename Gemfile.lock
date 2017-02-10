@@ -138,9 +138,12 @@ GEM
       minitest (~> 5.1)
       tzinfo (~> 1.1)
     addressable (2.3.8)
-    airbrake (4.3.6)
-      builder
-      multi_json
+    airbrake (5.7.1)
+      airbrake-ruby (~> 1.7)
+    airbrake-ruby (1.7.1)
+    airbrake-user_informer (0.1.0)
+      rack
+      railties (~> 5.0.0)
     angular-rails-templates (1.0.2)
       railties (>= 4.2, < 6)
       sprockets (>= 3.0, < 5)
@@ -501,7 +504,8 @@ PLATFORMS
 DEPENDENCIES
   active_hash
   active_model_serializers
-  airbrake (~> 4.3.6)
+  airbrake
+  airbrake-user_informer
   angular-rails-templates
   ansible
   attr_encrypted

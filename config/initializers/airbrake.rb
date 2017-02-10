@@ -1,27 +1,25 @@
 # frozen_string_literal: true
-if defined?(Airbrake)
-  # TODO: needs to be updated to v5 + rewrite user_information logic
-  # https://github.com/airbrake/airbrake/issues/636
+if defined?(Airbrake) && key = ENV['AIRBRAKE_API_KEY']
+  Airbrake.user_information = # replaces <!-- AIRBRAKE ERROR --> on 500 pages
+    "<br/><br/>Error number: <a href='https://airbrake.io/locate/{{error_id}}'>{{error_id}}</a>"
+
   Airbrake.configure do |config|
-    config.api_key = ENV['AIRBRAKE_API_KEY']
-    config.user_information = # replaces <!-- AIRBRAKE ERROR --> on 500 pages
-      "<br/><br/>Error number: <a href='https://airbrake.io/locate/{{error_id}}'>{{error_id}}</a>"
+    config.project_id = ENV.fetch('AIRBRAKE_PROJECT_ID')
+    config.project_key = key
 
-    # this will be blacklist_params in v5 ... does not support the full rails syntax
-    config.params_filters = Rails.application.config.filter_parameters
-
-    # do not send our environment (secrets etc) to airbrake
-    config.rake_environment_filters.concat ENV.keys
+    config.blacklist_keys = Rails.application.config.filter_parameters
 
     # send correct errors even when something blows up during initialization
-    config.environment_name = Rails.env
+    config.environment = Rails.env
+    config.ignore_environments = [:test, :development]
 
     # report in development:
-    # - uncomment
-    # - add development in application.rb
+    # - add development in application.rb airbrake check
     # - add AIRBRAKE_API_KEY to ENV
-    # - set consider_all_requests_local in development.rb
-    # config.development_environments = [:test]
+    # - add AIRBRAKE_PROJECT_ID to ENV
+    # - set consider_all_requests_local = false in development.rb
+    # - uncomment
+    # config.ignore_environments = [:test]
   end
 else
   module Airbrake
@@ -34,15 +32,12 @@ else
       end
     end
 
-    def self.notify_or_ignore(ex, *_args)
-      notify(ex)
-      nil
+    def self.notify_sync(*args)
+      notify(*args)
     end
 
-    def self.configuration
-      @configuration ||= Struct.new(
-        :api_key, :host, :port, :proxy_host, :proxy_port, :proxy_user, :proxy_pass, :secure?
-      ).new('fake-key')
+    def self.user_information
+      "Nope"
     end
   end
 end

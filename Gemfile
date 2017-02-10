@@ -67,7 +67,8 @@ group :sqlite do
 end
 
 group :production, :staging do
-  gem 'airbrake', '~> 4.3.6' # different configuration format on 5.x
+  gem 'airbrake'
+  gem 'airbrake-user_informer'
 end
 
 group :assets do
