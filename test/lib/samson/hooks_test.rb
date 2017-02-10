@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 require_relative '../../test_helper'
 
-SingleCov.covered! uncovered: 14
+SingleCov.covered! uncovered: 12
 
 describe Samson::Hooks do
   let(:number_of_plugins) { Dir['plugins/*'].size }

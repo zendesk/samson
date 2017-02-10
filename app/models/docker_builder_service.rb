@@ -45,7 +45,7 @@ class DockerBuilderService
   end
 
   def run!(push: false, tag_as_latest: false)
-    build.docker_build_job.try(:destroy) # if there's an old build job, delete it
+    build.docker_build_job&.destroy # if there's an old build job, delete it
     build.docker_tag = build.label.try(:parameterize).presence || 'latest'
     build.started_at = Time.now
 
@@ -140,6 +140,7 @@ class DockerBuilderService
   end
 
   def before_docker_build(tmp_dir)
+    Samson::Hooks.fire(:before_docker_repository_usage, build.project)
     Samson::Hooks.fire(:before_docker_build, tmp_dir, build, output)
     execute_build_command(tmp_dir, build.project.build_command)
   end

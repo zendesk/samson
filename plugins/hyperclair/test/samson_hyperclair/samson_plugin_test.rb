@@ -4,36 +4,39 @@ require_relative '../test_helper'
 SingleCov.covered!
 
 describe SamsonHyperclair do
+  let(:build) do
+    build = builds(:docker_build)
+    build.docker_build_job = jobs(:succeeded_test)
+    build.docker_tag = 'latest'
+    build
+  end
+
   describe :after_docker_build do
-    let(:build) { builds(:docker_build) }
-
-    before { build.docker_build_job = jobs(:succeeded_test) }
-
     it "runs clair" do
-      SamsonHyperclair.expects(:append_job_with_scan)
+      SamsonHyperclair.expects(:append_build_job_with_scan)
       Samson::Hooks.fire(:after_docker_build, build)
     end
 
     it "does not run clair when build failed" do
-      build.docker_build_job.status = 'errored'
-      SamsonHyperclair.expects(:append_job_with_scan).never
+      build.docker_repo_digest = nil
+      SamsonHyperclair.expects(:append_build_job_with_scan).never
       Samson::Hooks.fire(:after_docker_build, build)
     end
   end
 
-  describe '.append_job_with_scan' do
+  describe '.append_build_job_with_scan' do
+    let(:job) { build.docker_build_job }
+
     share_database_connection_in_all_threads
     with_registries ["docker-registry.example.com"]
 
     def execute!
-      SamsonHyperclair.append_job_with_scan(job, 'latest')
+      SamsonHyperclair.append_build_job_with_scan(build)
     end
-
-    let(:job) { jobs(:succeeded_test) }
 
     around do |t|
       Tempfile.open('clair') do |f|
-        f.write("#!/bin/bash\necho HELLO\nexit 0")
+        f.write("#!/bin/bash\necho HELLO\necho OUT $@\nexit 0")
         f.close
         File.chmod 0o755, f.path
         with_env(HYPERCLAIR_PATH: f.path, DOCKER_REGISTRY: 'my.registry', &t)
@@ -49,7 +52,13 @@ describe SamsonHyperclair do
       wait_for_threads
 
       job.output.must_include "Clair scan: success"
-      job.output.must_include "HELLO"
+      job.output.must_include "\nHELLO\nOUT docker-registry.example.com/test@sha256:5f1d7"
+    end
+
+    it "runs clair with external build" do
+      build.docker_build_job = nil
+      execute!
+      wait_for_threads
     end
 
     it "runs clair and reports missing script to the database" do

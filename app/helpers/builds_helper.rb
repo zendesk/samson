@@ -2,7 +2,7 @@
 module BuildsHelper
   # shorten Docker SHAs "sha256:0123abc..." -> "0123abc"
   def short_sha(value, length: 7)
-    value.split(':').last.slice(0, length) if value
+    value.split(':', 2).last.slice(0, length) if value
   end
 
   def git_ref_and_sha_for(build, make_link: false)

@@ -200,7 +200,7 @@ class CurrentUserConcernTest < ActionController::TestCase
     end
   end
 
-  describe "#resource_action" do
+  describe "#authorize_resource!" do
     def perform_get(add = {})
       get :resource_action, params: add.merge(test_route: true)
     end
@@ -211,6 +211,12 @@ class CurrentUserConcernTest < ActionController::TestCase
     end
 
     it "renders when authorized" do
+      perform_get
+      assert_response :success
+    end
+
+    it "renders when authorized for builds" do
+      @controller.stubs(:controller_name).returns('builds')
       perform_get
       assert_response :success
     end

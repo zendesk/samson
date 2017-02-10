@@ -6,5 +6,5 @@
   <td><%= relative_time(build.created_at) %></td>
   <td><%= build.creator&.name || "Trigger" %></td>
   <td><%= git_ref_and_sha_for(build) %></td>
-  <td><%= (job = build.docker_build_job) ? job_status_badge(job) : 'not built' %></td>
+  <td><%= (job = build.docker_build_job) ? job_status_badge(job) : build.docker_status %></td>
 </tr>

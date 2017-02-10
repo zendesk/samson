@@ -12,15 +12,14 @@ Samson::Application.routes.draw do
     resources :deploy_groups, only: [:index]
 
     resources :projects, only: [:index] do
+      resources :automated_deploys, only: [:create]
+      resources :builds, only: [:create]
+      resources :deploys, only: [:index]
       resources :stages, only: [:index] do
         member do
           get :deploy_groups, to: 'deploy_groups#index'
         end
       end
-
-      resources :deploys, only: [:index]
-
-      resources :automated_deploys, only: [:create]
     end
 
     resources :stages, only: [] do

@@ -33,9 +33,9 @@ describe SamsonAwsEcr::Engine do
     end
   end
 
-  describe :before_docker_build do
+  describe :before_docker_repository_usage do
     def fire
-      Samson::Hooks.fire(:before_docker_build, 'foobar', builds(:docker_build), StringIO.new)
+      Samson::Hooks.fire(:before_docker_repository_usage, builds(:docker_build).project)
     end
 
     run_inside_of_temp_directory

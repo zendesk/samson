@@ -146,6 +146,7 @@ describe DockerBuilderService do
     before { service.instance_variable_set(:@execution, execution) }
 
     it 'fires the before_docker_build hook' do
+      Samson::Hooks.expects(:fire).with(:before_docker_repository_usage, build.project)
       Samson::Hooks.expects(:fire).with(:before_docker_build, tmp_dir, build, anything)
       service.send(:before_docker_build, tmp_dir)
     end
