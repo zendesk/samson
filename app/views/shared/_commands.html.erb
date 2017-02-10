@@ -55,6 +55,11 @@
       $($($(this).get(0)).siblings().get(0)).find('.editable-destroy').hide();
     });
 
+    $('#commands pre').dblclick(function(){
+      var $textarea = $($($(this).get(0)).siblings().get(0)).find('textarea');
+      $textarea.attr('rows', ($(this).text().match(/\n/g) || []).length + 1);
+    });
+
     $('#commands pre.global').dblclick(function(){
       var $warning = $('<div class="cannot-edit">Global commands cannot be edited inline, use the Admin UI.</div>')
       $(this).after($warning);
