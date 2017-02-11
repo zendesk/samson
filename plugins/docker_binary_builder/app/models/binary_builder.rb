@@ -52,7 +52,8 @@ class BinaryBuilder
   private
 
   def build_file_exist?
-    File.exist? File.join(@dir, DOCKER_BUILD_FILE)
+    File.exist?(File.join(@dir, DOCKER_BUILD_FILE)) &&
+      File.exist?(File.join(@dir, File.basename(BUILD_SCRIPT)))
   end
 
   def start_build_script
