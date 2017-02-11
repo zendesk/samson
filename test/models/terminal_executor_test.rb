@@ -130,7 +130,10 @@ describe TerminalExecutor do
       end
 
       describe "with a deploy" do
-        before { subject.instance_variable_set(:@deploy, deploy) }
+        before do
+          subject.instance_variable_set(:@deploy, deploy)
+          subject.instance_variable_set(:@project, deploy.project)
+        end
 
         it "can use project specific secrets" do
           assert_resolves "global/#{deploy.project.permalink}/global/bar"

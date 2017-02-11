@@ -20,7 +20,7 @@ class JobExecution
 
   def initialize(reference, job, env: {}, output: OutputBuffer.new, &block)
     @output = output
-    @executor = TerminalExecutor.new(@output, verbose: true, deploy: job.deploy)
+    @executor = TerminalExecutor.new(@output, verbose: true, deploy: job.deploy, project: job.project)
     @viewers = JobViewers.new(@output)
 
     @start_callbacks = []

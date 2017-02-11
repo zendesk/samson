@@ -162,6 +162,13 @@ describe DockerBuilderService do
         output.string.must_include "export CACHE_DIR="
       end
 
+      it "can resolve secrets" do
+        create_secret "global/#{project.permalink}/global/foo"
+        command.update_column(:command, "echo secret://foo")
+        service.send(:before_docker_build, tmp_dir)
+        output.string.must_include "» echo secret://foo\r\nMY-SECRET\r\n"
+      end
+
       it "fails when command fails" do
         command.update_column(:command, 'exit 1')
         e = assert_raises Samson::Hooks::UserError do

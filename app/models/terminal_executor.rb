@@ -17,10 +17,11 @@ class TerminalExecutor
 
   attr_reader :pid, :pgid, :output
 
-  def initialize(output, verbose: false, deploy: nil)
+  def initialize(output, verbose: false, deploy: nil, project: nil)
     @output = output
     @verbose = verbose
     @deploy = deploy
+    @project = project
     @stopped = false
   end
 
@@ -68,8 +69,7 @@ class TerminalExecutor
 
   def resolve_secrets(command)
     deploy_groups = @deploy&.stage&.deploy_groups || []
-    project = @deploy&.project
-    resolver = Samson::Secrets::KeyResolver.new(project, deploy_groups)
+    resolver = Samson::Secrets::KeyResolver.new(@project, deploy_groups)
 
     result = command.gsub(/\b#{SECRET_PREFIX}(#{SecretStorage::SECRET_KEY_REGEX})\b/) do
       key = $1
