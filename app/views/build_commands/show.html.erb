@@ -1,6 +1,6 @@
 <%= page_title "#{@project.name} Build Command" %>
 
-<%= breadcrumb @project, "Build Command" %>
+<%= breadcrumb @project, "Pre Build Command" %>
 
 <section>
   <%= form_for @command, url: project_build_command_path(@project), html: { class: "form-horizontal", method: :patch } do |form| %>
