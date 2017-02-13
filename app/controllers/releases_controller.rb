@@ -7,6 +7,7 @@ class ReleasesController < ApplicationController
   def show
     @release = @project.releases.find_by_param!(params[:id])
     @changeset = @release.changeset
+    render 'row_content', layout: false if request.xhr?
   end
 
   def index
