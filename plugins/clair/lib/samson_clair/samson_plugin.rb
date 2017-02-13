@@ -181,10 +181,19 @@ module SamsonClair
             puts "Pushed layer #{layer} to clair"
           end
         end
-        clair_address = 'http://clair-vip.use1.zdsys.com/v1/layers'
         layers.each do |layer|
-          response = analyse_single_layer(layer, clair_address, http)
-          puts response.body
+          response, out = analyse_single_layer(layer, clair_address, http)
+          output = "#{out}\n#{output}"
+          if response.code == "200"
+            parsed = JSON.parse(response.body)
+            if parsed['Vulnerabilities']
+              puts "Found problems with the image #{parsed['Vulnerabilities']['Name']}
+                    #{parsed['Vulnerabilities']['Severity']}
+                    #{parsed['Vulnerabilities']['Description']}\n #{parsed['Vulnerabilities']['Link']}"
+            else
+              puts "Layer #{layer} looks clean, going further.."
+            end
+          end
         end
       end
     end
@@ -193,29 +202,21 @@ module SamsonClair
       uri = URI(clair_address + '/' + layer + '?vulnerabilities')
       request = Net::HTTP::Get.new(uri.request_uri, 'Content-Type' => 'application/json')
       response = http.request request
-      return response
+      if response.code != "200"
+        output = "### Can't analyse #{layer} - clair side error"
+        return response, output
+      else
+        output = "Analysed #{layer}"
+        return response, output
+      end
     end
 
-    def scan(executable, docker_repo_digest)
+    def scan(clair, docker_repo_digest)
       registry = DockerRegistry.first
-
+      # Don't know what to do here ¯\_(ツ)_/¯
       with_time do
-
-      end
-        Samson::CommandExecutor.execute(
-          executable,
-          docker_repo_digest,
-          env: {
-            'DOCKER_REGISTRY_USER' => registry.username,
-            'DOCKER_REGISTRY_PASS' => registry.password
-          },
-          whitelist_env: [
-            'AWS_ACCESS_KEY_ID',
-            'AWS_SECRET_ACCESS_KEY',
-            'PATH'
-          ],
-          timeout: 60 * 60
-        )
+        body = retrieve_manifests(docker_repo_digest)
+        push_layers(parse_manifests(body), clair, docker_repo_digest)
       end
     end
 
