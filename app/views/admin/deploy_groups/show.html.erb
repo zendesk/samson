@@ -43,7 +43,11 @@
     <div class="form-group">
       <label class="col-lg-2 control-label">Vault Server</label>
       <div class="col-lg-4">
-        <p class="form-control-static"><%= @deploy_group.vault_server&.name %></p>
+        <p class="form-control-static">
+          <% if vault_server = @deploy_group.vault_server %>
+            <%= link_to vault_server.name, [:admin, vault_server] %>
+          <% end %>
+        </p>
       </div>
     </div>
   <% end %>

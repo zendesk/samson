@@ -6,7 +6,7 @@ class DeployGroup < ActiveRecord::Base
   include Permalinkable
 
   belongs_to :environment
-  belongs_to :vault_server
+  belongs_to :vault_server, class_name: 'Samson::Secrets::VaultServer'
   has_many :deploy_groups_stages
   has_many :stages, through: :deploy_groups_stages
   has_many :template_stages, -> { where(is_template: true) }, through: :deploy_groups_stages, source: :stage
@@ -15,6 +15,7 @@ class DeployGroup < ActiveRecord::Base
   validates_uniqueness_of :name, :env_value
   validates_format_of :env_value, with: /\A\w[-:\w]*\w\z/
   before_validation :initialize_env_value, on: :create
+  validate :validate_vault_server_has_same_environment
 
   after_save :touch_stages
   before_destroy :touch_stages
@@ -49,5 +50,10 @@ class DeployGroup < ActiveRecord::Base
   # DeployGroupsStage has no ids so the default dependent: :destroy fails
   def destroy_deploy_groups_stages
     DeployGroupsStage.where(deploy_group_id: id).delete_all
+  end
+
+  def validate_vault_server_has_same_environment
+    return if !vault_server || [[], [environment_id]].include?(vault_server.deploy_groups.pluck(:environment_id).uniq)
+    errors.add :vault_server_id, "vault server #{vault_server.name} is already in use on a different environment"
   end
 end
