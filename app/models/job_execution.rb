@@ -243,14 +243,14 @@ class JobExecution
   def report_to_airbrake(exception)
     return if exception.is_a?(Samson::Hooks::UserError) # do not spam us with users issues
 
-    return unless error_id = Airbrake.notify(
+    return unless notice = Airbrake.notify_sync(
       exception,
       error_message: exception.message,
       parameters: {job_id: @job.id}
     )
 
-    raise 'unable to find url' unless url = Airbrake.configuration.user_information[/['"](http.*?)['"]/, 1]
-    raise 'unable to find error' unless url.sub!('{{error_id}}', error_id)
+    raise 'unable to find url' unless url = Airbrake.user_information[/['"](http.*?)['"]/, 1]
+    raise 'unable to find error' unless url.sub!('{{error_id}}', notice['id'])
     "Error #{url}"
   end
 
