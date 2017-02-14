@@ -143,7 +143,7 @@ module Kubernetes
         @output.puts "Container #{container}" if containers.size > 1
 
         # Display the first and last n_lines of the log
-        max = 50
+        max = Integer(ENV['KUBERNETES_LOG_LINES'] || '50')
         lines = (pod.logs(container) || "No logs found").split("\n")
         lines = lines.first(max / 2) + ['...'] + lines.last(max / 2) if lines.size > max
         lines.each { |line| @output.puts "  #{line}" }
