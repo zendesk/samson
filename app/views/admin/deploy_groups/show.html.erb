@@ -11,43 +11,41 @@
   <div class="form-group">
     <label class="col-lg-2 control-label">Environment</label>
     <div class="col-lg-4">
-      <p class="form-control-static"><%= @deploy_group.environment.name %></p>
+      <p class="form-control-static"><%= link_to @deploy_group.environment.name, [:admin, @deploy_group.environment] %></p>
     </div>
   </div>
 
   <div class="form-group row">
     <label class="col-lg-2 control-label">Used by</label>
-    <div class="col-md-1">
-      <b>Project</b>
-    </div>
-    <div class="col-md-2">
-      <b>Stage</b>
-    </div>
-    <div class="col-md-2">
-      <b>Last Successful</b>
-    </div>
-    <div class="col-md-2">
-      <b>Template</b>
+    <div class="col-lg-10">
+      <table class="table">
+        <tr>
+          <th>Project</th>
+          <th>Stage</th>
+          <th>Last Successful</th>
+          <th>Template</th>
+        </tr>
+        <% @deploy_group.deploy_groups_stages.group_by { |dgs| dgs.stage.project }.each do |project, dgs_group| %>
+          <% dgs_group.each do |dgs| %>
+            <tr>
+              <td><%= link_to project.name, project %></td>
+              <td><%= link_to dgs.stage.name, [dgs.stage.project, dgs.stage] %></td>
+              <td><%= dgs.stage.last_successful_deploy.try(&:reference) || 'NONE' %></td>
+              <td><%= dgs.stage.template_stage&.last_successful_deploy&.reference %></td>
+            </tr>
+          <% end %>
+        <% end %>
+      </table>
     </div>
   </div>
 
-  <% @deploy_group.deploy_groups_stages.group_by { |dgs| dgs.stage.project }.each do |project, dgs_group| %>
-    <% dgs_group.each do |dgs| %>
-      <div class="form-group row">
-        <div class="col-md-offset-2 col-md-1">
-          <%= link_to project.name, project %>
-        </div>
-        <div class="col-md-2">
-          <%= link_to dgs.stage.name, [dgs.stage.project, dgs.stage] %>
-        </div>
-        <div class="col-md-2">
-          <%= dgs.stage.last_successful_deploy.try(&:reference) || 'NONE' %>
-        </div>
-        <div class="col-md-2">
-          <%= dgs.stage.template_stage&.last_successful_deploy&.reference %>
-        </div>
+  <% if SecretStorage.backend == Samson::Secrets::HashicorpVaultBackend %>
+    <div class="form-group">
+      <label class="col-lg-2 control-label">Vault Server</label>
+      <div class="col-lg-4">
+        <p class="form-control-static"><%= @deploy_group.vault_server&.name %></p>
       </div>
-    <% end %>
+    </div>
   <% end %>
 
   <%= Samson::Hooks.render_views(:deploy_group_show, self) %>
@@ -60,16 +58,21 @@
                     create_all_stages_preview_admin_deploy_group_path(@deploy_group),
                     class: "btn btn-default"
         %>
-        <%= link_to "Deploy All Projects", deploy_all_admin_deploy_group_path(@deploy_group), class: "btn btn-default", data: { method: "post" } %>
-        <%= button_to "Deploy Missing Projects",
-                    {
-                      action: :deploy_all,
-                      id: @deploy_group.id
-                    },
+        <%= link_to "Deploy All Projects",
+                    deploy_all_admin_deploy_group_path(@deploy_group),
                     class: "btn btn-default",
-                    form: {style: "display: inline-block;"},
-                    params: { missing_only: "true" },
-                    title: "Deploys will be started for any stages that haven't yet been deployed or have failed all their deploys."
+                    data: {
+                        method: "post",
+                        confirm: "Deploys will be started for all stages."
+                    }
+        %>
+        <%= link_to "Deploy Missing Projects",
+                    deploy_all_admin_deploy_group_path(@deploy_group, missing_only: "true"),
+                    class: "btn btn-default",
+                    data: {
+                        method: "post",
+                        confirm: "Deploys will be started for any stages that haven't yet been deployed or have failed all their deploys."
+                    }
         %>
         <% cloned_stage_count = @deploy_group.stages.cloned.count %>
         <%= link_to "Merge #{cloned_stage_count} Cloned Stages",
@@ -93,7 +96,7 @@
     </div>
     <br>
     <div class="col-lg-offset-2 col-lg-10" style="margin-top: 10px;">
-      <%= link_to "Back", admin_deploy_groups_path, class: "btn btn-default" %>
+      <%= link_to "Back", admin_deploy_groups_path, class: "btn btn-default" %> | <%= link_to_history @deploy_group %>
     </div>
   </div>
 </section>

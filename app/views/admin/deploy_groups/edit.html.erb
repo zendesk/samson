@@ -15,7 +15,8 @@
     <div class="form-group">
       <div class="col-lg-offset-2 col-lg-10">
         <%= form.submit "Save", class: 'btn btn-default' %>
-        <%= link_to_delete([:admin, @deploy_group]) %>
+        | <%= link_to_delete([:admin, @deploy_group]) %>
+        | <%= link_to_history @deploy_group %>
       </div>
     </div>
   <% end %>
