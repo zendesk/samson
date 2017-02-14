@@ -10,7 +10,9 @@
     <%= form.input :permalink, required: true if @environment.persisted? %>
     <%= form.input :production, as: :check_box, label: 'Affects Production' %>
 
-    <%= form.actions %>
+    <%= form.actions do %>
+      | <%= link_to_history @environment %>
+    <% end %>
   <% end %>
 
   <%= render "locks/button", lock: @environment.lock, resource: @environment %>
