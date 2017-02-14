@@ -30,6 +30,12 @@ describe Samson::Secrets::HashicorpVaultBackend do
     it "returns nil when trying to read nil" do
       Samson::Secrets::HashicorpVaultBackend.read(nil).must_be_nil
     end
+
+    it "raises when trying to read an invalid path so it behaves like a database backend" do
+      assert_raises ActiveRecord::RecordNotFound do
+        Samson::Secrets::HashicorpVaultBackend.read("wut")
+      end
+    end
   end
 
   describe ".read_multi" do

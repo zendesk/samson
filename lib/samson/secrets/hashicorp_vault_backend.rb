@@ -77,6 +77,7 @@ module Samson
         # ... could be faster by not jumping through hash generation and parsing
         def vault_path(key, direction = :encode)
           parts = SecretStorage.parse_secret_key(key)
+          raise ActiveRecord::RecordNotFound, "Invalid key #{key.inspect}" unless parts[:key]
           parts[:key] = convert_path(parts[:key], direction)
           SecretStorage.generate_secret_key(parts)
         end
