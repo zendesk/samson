@@ -79,6 +79,10 @@ describe Kubernetes::TemplateFiller do
       )
     end
 
+    it "sets revisionHistoryLimit" do
+      template.to_hash[:spec][:revisionHistoryLimit].must_equal 1
+    end
+
     describe "containers" do
       let(:result) { template.to_hash }
       let(:container) { result.fetch(:spec).fetch(:template).fetch(:spec).fetch(:containers).first }
