@@ -149,6 +149,8 @@ GEM
       sprockets (>= 3.0, < 5)
       tilt
     ansible (0.2.2)
+    ar_multi_threaded_transactional_tests (0.2.0)
+      activerecord (>= 4.2.0, < 5.1.0)
     arel (7.1.4)
     ast (2.3.0)
     attr_encrypted (3.0.3)
@@ -508,6 +510,7 @@ DEPENDENCIES
   airbrake-user_informer
   angular-rails-templates
   ansible
+  ar_multi_threaded_transactional_tests
   attr_encrypted
   awesome_print
   better_errors

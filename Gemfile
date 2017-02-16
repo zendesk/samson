@@ -134,4 +134,5 @@ group :test do
   gem 'webmock'
   gem 'single_cov'
   gem 'query_diet', '0.6.1'
+  gem 'ar_multi_threaded_transactional_tests'
 end
