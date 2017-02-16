@@ -24,16 +24,6 @@ describe JobsController do
         assert_response :accepted
       end
     end
-  end
-
-  as_a_viewer do
-    describe "#index" do
-      before { get :index, params: {project_id: project.to_param } }
-
-      it "renders the template" do
-        assert_template :index
-      end
-    end
 
     describe "#show" do
       describe 'with a job' do
@@ -71,13 +61,10 @@ describe JobsController do
       end
     end
 
-    unauthorized :post, :create, project_id: :foo
     unauthorized :delete, :destroy, project_id: :foo, id: 1
   end
 
   as_a_project_deployer do
-    unauthorized :post, :create, project_id: :foo
-
     describe "#destroy" do
       it "deletes the job" do
         delete :destroy, params: {project_id: project.to_param, id: job}
@@ -95,49 +82,6 @@ describe JobsController do
       it "redirects to passed path" do
         delete :destroy, params: {project_id: project.to_param, id: job, redirect_to: '/ping'}
         assert_redirected_to '/ping'
-      end
-    end
-  end
-
-  as_a_project_admin do
-    describe "#new" do
-      it "renders" do
-        get :new, params: {project_id: project}
-        assert_template :new
-      end
-    end
-
-    describe "#create" do
-      let(:command_ids) { [] }
-
-      def create
-        post :create, params: {
-          commands: {ids: command_ids},
-          job: {
-            command: command,
-            commit: "master"
-          },
-          project_id: project.to_param
-        }
-      end
-
-      it "creates a job and starts it" do
-        JobExecution.expects(:start_job)
-        assert_difference('Job.count') { create }
-        assert_redirected_to project_job_path(project, Job.last)
-      end
-
-      it "keeps commands in correct order" do
-        command_ids.replace([commands(:global).id, commands(:echo).id])
-        create
-        Job.last.command.must_equal("t\necho hello\necho hi")
-      end
-
-      it "fails to create job when locked" do
-        JobExecution.expects(:start_job).never
-        Job.any_instance.expects(:save).returns(false)
-        refute_difference('Job.count') { create }
-        assert_template :new
       end
     end
   end

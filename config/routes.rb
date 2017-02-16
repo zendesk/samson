@@ -32,7 +32,7 @@ Samson::Application.routes.draw do
   end
 
   resources :projects, except: [:destroy] do
-    resources :jobs, only: [:index, :new, :create, :show, :destroy]
+    resources :jobs, only: [:show, :destroy]
 
     resources :macros, only: [:index, :new, :create, :edit, :update, :destroy] do
       member { post :execute }
@@ -109,13 +109,13 @@ Samson::Application.routes.draw do
 
   resources :versions, only: [:index]
 
+  get '/jobs/enabled', to: 'jobs#enabled', as: :enabled_jobs
+
   get '/auth/github/callback', to: 'sessions#github'
   get '/auth/google/callback', to: 'sessions#google'
   post '/auth/ldap/callback', to: 'sessions#ldap'
   get '/auth/gitlab/callback', to: 'sessions#gitlab'
   get '/auth/failure', to: 'sessions#failure'
-
-  get '/jobs/enabled', to: 'jobs#enabled', as: :enabled_jobs
 
   get '/login', to: 'sessions#new'
   get '/logout', to: 'sessions#destroy'

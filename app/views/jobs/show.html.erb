@@ -2,13 +2,7 @@
 
 <%= breadcrumb @project, "Job ##{@job.id}" %>
 
-<h1>
-  <%= @project.name %>
-
-  <div class="pull-right">
-    <%= link_to "Back", project_jobs_path(@project), class: "btn btn-default" %>
-  </div>
-</h1>
+<h1><%= @project.name %></h1>
 
 <div id="header" class="stream-header">
   <% if @job.waiting_for_restart? %>
