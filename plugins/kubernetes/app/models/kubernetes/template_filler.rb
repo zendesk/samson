@@ -15,6 +15,7 @@ module Kubernetes
     def to_hash
       @to_hash ||= begin
         set_rc_unique_label_key
+        set_history_limit
         set_name
         set_replica_target
         set_spec_template_metadata
@@ -38,6 +39,13 @@ module Kubernetes
     end
 
     private
+
+    # make sure we clean up old replicasets
+    # we only ever do rollback to latest release ... and the default is infitite
+    # see discussion in https://github.com/kubernetes/kubernetes/issues/23597
+    def set_history_limit
+      template[:spec][:revisionHistoryLimit] ||= 1
+    end
 
     # look up keys in all possible namespaces by specificity
     def expand_secret_annotations
