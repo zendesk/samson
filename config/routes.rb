@@ -32,7 +32,7 @@ Samson::Application.routes.draw do
   end
 
   resources :projects, except: [:destroy] do
-    resources :jobs, only: [:index, :new, :create, :show, :destroy]
+    resources :jobs, only: [:index, :show, :destroy]
 
     resources :macros, only: [:index, :new, :create, :edit, :update, :destroy] do
       member { post :execute }
