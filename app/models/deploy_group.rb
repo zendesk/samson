@@ -53,6 +53,7 @@ class DeployGroup < ActiveRecord::Base
   end
 
   def validate_vault_server_has_same_environment
+    return unless vault_server_id_changed?
     return if !vault_server || [[], [environment_id]].include?(vault_server.deploy_groups.pluck(:environment_id).uniq)
     errors.add :vault_server_id, "vault server #{vault_server.name} is already in use on a different environment"
   end

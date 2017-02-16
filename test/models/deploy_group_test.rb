@@ -157,8 +157,13 @@ describe DeployGroup do
 
     before { deploy_groups(:pod1).update_attributes!(vault_server: server) }
 
-    it "is valid when vault servers have enclusive environments" do
+    it "is valid when vault servers have exclusive environments" do
       assert deploy_groups(:pod2).update_attributes(vault_server: server)
+    end
+
+    it "is valid when not changing invalid vault_server_id so nested saves do not blow up" do
+      deploy_groups(:pod100).update_column(:vault_server_id, server.id)
+      deploy_groups(:pod100).save!
     end
 
     it "is invalid when vault servers share environments environments" do
