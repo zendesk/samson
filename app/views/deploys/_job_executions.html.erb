@@ -17,7 +17,7 @@
         <% if deploy = job_ex.job.deploy %>
           <%= render "/projects/deploy", deploy: deploy %>
         <% else %>
-          <%= link_to job_ex.id, [job_ex.job.project, job_ex.job] %>
+          <%= link_to job_ex.id, project_job_path(job_ex.job.project, job_ex.job) %>
         <% end %>
       <% end %>
     <% end %>
