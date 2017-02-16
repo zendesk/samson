@@ -90,6 +90,12 @@ describe Kubernetes::ReleaseDoc do
       create!.resource_template[0][:metadata][:namespace].must_equal 'default'
     end
 
+    it "keeps the kube-system namespace because it's valid for cluster services " do
+      doc.send(:raw_template)[0][:metadata][:namespace] = "kube-system"
+      doc.send(:raw_template)[0][:metadata][:labels] = {"kubernetes.io/cluster-service": 'true'}
+      create!.resource_template[0][:metadata][:namespace].must_equal 'kube-system'
+    end
+
     it "configures ConfigMap" do
       doc.send(:raw_template)[1][:kind] = "ConfigMap"
       create!.resource_template[1][:metadata][:namespace].must_equal 'pod1'

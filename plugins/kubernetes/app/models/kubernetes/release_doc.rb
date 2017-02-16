@@ -110,7 +110,8 @@ module Kubernetes
     end
 
     def update_namespace(resource)
-      return if resource[:metadata][:namespace] == "default" &&
+      system_namespaces = ["default", "kube-system"]
+      return if system_namespaces.include?(resource[:metadata][:namespace]) &&
         (resource[:metadata][:labels] || {})[:'kubernetes.io/cluster-service'] == 'true'
       resource[:metadata][:namespace] = deploy_group.kubernetes_namespace
     end
