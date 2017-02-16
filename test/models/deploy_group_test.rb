@@ -146,4 +146,23 @@ describe DeployGroup do
       refute deploy_group.template_stages.empty?
     end
   end
+
+  describe "#validate_vault_server_has_same_environment" do
+    let(:server) { Samson::Secrets::VaultServer.create!(name: 'a', address: 'http://a.com', token: 't') }
+
+    before do
+      Samson::Secrets::VaultServer.any_instance.stubs(:validate_cert)
+      Samson::Secrets::VaultServer.any_instance.stubs(:validate_connection)
+    end
+
+    before { deploy_groups(:pod1).update_attributes!(vault_server: server) }
+
+    it "is valid when vault servers have enclusive environments" do
+      assert deploy_groups(:pod2).update_attributes(vault_server: server)
+    end
+
+    it "is invalid when vault servers share environments environments" do
+      refute deploy_groups(:pod100).update_attributes(vault_server: server)
+    end
+  end
 end
