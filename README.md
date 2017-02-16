@@ -46,7 +46,7 @@ Samson will:
 * [Continuous Integration](https://github.com/zendesk/samson/blob/master/docs/ci.md)
 * [Extra features](https://github.com/zendesk/samson/blob/master/docs/extra_features.md)
 * [Plugins](https://github.com/zendesk/samson/blob/master/docs/plugins.md)
-* [Getting statistics](https://github.com/zendesk/samson/blob/master/docs/stats.md)
+* [Statistics](https://github.com/zendesk/samson/blob/master/docs/stats.md)
 
 ### Contributing
 
