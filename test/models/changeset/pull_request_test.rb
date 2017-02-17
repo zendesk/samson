@@ -51,7 +51,7 @@ describe Changeset::PullRequest do
     end
   end
 
-  describe ".valid_webhook" do
+  describe ".valid_webhook?" do
     let(:webhook_data) do
       {
         number: 1,
@@ -78,8 +78,12 @@ describe Changeset::PullRequest do
         Changeset::PullRequest.valid_webhook?(webhook_data).must_equal true
       end
 
-      it 'is valid if [samson review] was in the previous description' do
+      it 'is invalid if [samson review] was in the previous description' do
         webhook_data.deep_merge!(github: {changes: {body: {from: '[samson review]'}}})
+        Changeset::PullRequest.valid_webhook?(webhook_data).must_equal false
+      end
+
+      it 'is invalid when the body was not changed' do
         Changeset::PullRequest.valid_webhook?(webhook_data).must_equal false
       end
     end

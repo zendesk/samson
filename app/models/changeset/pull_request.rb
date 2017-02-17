@@ -55,8 +55,8 @@ class Changeset::PullRequest
     return false unless data['state'] == 'open' && (VALID_ACTIONS.include? action)
 
     if action == 'edited'
-      previous_desc = params['github']['changes']['body']['from']
-      return false if previous_desc =~ WEBHOOK_FILTER && data['body'] =~ WEBHOOK_FILTER
+      previous_desc = params.dig('github', 'changes', 'body', 'from')
+      return false if !previous_desc || (previous_desc =~ WEBHOOK_FILTER && data['body'] =~ WEBHOOK_FILTER)
     end
 
     !(data['body'] =~ WEBHOOK_FILTER).nil?
