@@ -30,6 +30,15 @@ describe WebhookRecorder do
       read.fetch(:log).must_equal "LOG"
       read.fetch(:request_body).must_equal "BODY"
     end
+
+    it "does not blow up when receiving utf8 as ascii-8-bit which is the default" do
+      bad = "EVIL->😈<-EVIL".dup.force_encoding(Encoding::BINARY)
+      bad.bytesize.must_equal 16
+      request.env["RAW_POST_DATA"] = bad
+      WebhookRecorder.record(project, request: request, log: "LOG", response: response)
+      read = WebhookRecorder.read(project)
+      read.fetch(:request_body).force_encoding(Encoding::BINARY).must_equal bad
+    end
   end
 
   describe ".read" do
