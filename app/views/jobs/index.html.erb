@@ -17,6 +17,5 @@
     </tbody>
   </table>
 
-  <%= link_to "Execute", new_project_job_path(@project), class: "btn btn-primary" if admin_for_project? %>
   <%= paginate @jobs %>
 </section>
