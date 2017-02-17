@@ -9,7 +9,7 @@ class WebhookRecorder
 
       data = {
         request: request_info,
-        request_body: request.body.read,
+        request_body: request.body.read.force_encoding(Encoding::UTF_8),
         status_code: response.status,
         body: response.body,
         log: log,
