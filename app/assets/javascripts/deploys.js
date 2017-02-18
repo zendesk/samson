@@ -141,6 +141,8 @@ $(function () {
   });
 
   $("#output-expand").click(function() {
+    following = false;
+
     growOutput();
 
     $("#output-options > button").removeClass("active");
