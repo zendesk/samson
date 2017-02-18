@@ -13,7 +13,8 @@ $(function () {
       $placeholderPanes = $container.find(".changeset-placeholder"),
       $form = $("#new_deploy"),
       $submit = $form.find('input[type=submit]'),
-      $messages = $("#messages");
+      $messages = $("#messages"),
+      old_height = $messages.css('max-height');
 
   $("#deploy-tabs a[data-type=github]").click(function (e) {
       e.preventDefault();
@@ -116,7 +117,7 @@ $(function () {
   });
 
   function shrinkOutput() {
-    $messages.css("max-height", 550);
+    $messages.css("max-height", old_height);
   }
 
   $("#output-follow").click(function() {
