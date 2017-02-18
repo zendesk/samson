@@ -30,12 +30,11 @@ describe JobExecution do
   let(:execution) { JobExecution.new('master', job) }
   let(:deploy) { Deploy.create!(stage: stage, job: job, reference: 'master', project: project) }
 
-  with_job_execution
-  around { |t| ArMultiThreadedTransactionalTests.activate &t }
+  with_full_job_execution
 
   before do
+    execute_on_remote_repo "git tag v1"
     Project.any_instance.stubs(:valid_repository_url).returns(true)
-    create_repo_with_tags('v1')
     user.name = 'John Doe'
     user.email = 'jdoe@test.com'
     project.repository.update_local_cache!
@@ -43,7 +42,6 @@ describe JobExecution do
   end
 
   after do
-    FileUtils.rm_rf(repo_temp_dir)
     FileUtils.rm_rf(repo_dir)
     project.repository.clean!
   end
@@ -424,16 +422,24 @@ describe JobExecution do
 
   describe "#pid" do
     it "returns current pid" do
+      job.command = 'sleep 0.5'
       execution = JobExecution.new('master', job)
-      execution.executor.stubs(pid: 2)
-      execution.pid.must_equal 2
+      JobExecution.start_job(execution)
+      sleep 0.4
+      execution.pid.wont_equal nil
+      execution.wait!
     end
   end
 
   describe "#make_tempdir" do
+    # the actual issue we saw was Errno::ENOTEMPTY ... but that is harder to reproduce
     it "does not fail when directory cannot be removed" do
-      Dir.expects(:rmdir).at_least_once.raises(Errno::ENOTEMPTY)
-      execution.send(:make_tempdir) { 111 }.must_equal 111
+      Airbrake.expects(:notify).with { |e| e.must_include "Notify: make_tempdir error No such" }
+
+      execution.send(:make_tempdir) do |dir|
+        FileUtils.rm_rf(dir)
+        111
+      end.must_equal 111
     end
   end
 

@@ -7,7 +7,6 @@ describe DockerBuilderService do
   include GitRepoTestHelper
 
   let(:tmp_dir) { Dir.mktmpdir }
-  let(:project_repo_url) { repo_temp_dir }
   let(:git_tag) { 'v123' }
   let(:project) { projects(:test) }
   let(:build) { project.builds.create!(git_ref: git_tag, git_sha: 'a' * 40) }
@@ -17,11 +16,9 @@ describe DockerBuilderService do
   let(:mock_docker_image) { stub(json: docker_image_json) }
 
   with_registries ["docker-registry.example.com"]
+  with_project_on_remote_repo
 
-  before do
-    project.update_column(:repository_url, project_repo_url)
-    create_repo_with_tags(git_tag)
-  end
+  before { execute_on_remote_repo "git tag #{git_tag}" }
 
   describe "#run!" do
     def run!(options = {})

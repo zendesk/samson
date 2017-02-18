@@ -218,15 +218,15 @@ describe Job do
   end
 
   describe "#pid" do
-    with_job_execution
+    with_full_job_execution
 
     it "has a pid when running" do
+      job.command = 'sleep 0.5'
       job_execution = JobExecution.new('master', job)
-      job_execution.expects(:start!)
       JobExecution.start_job(job_execution)
-      JobExecution.any_instance.stubs(:pid).returns(1234)
-      job.run!
+      sleep 0.5
       job.pid.wont_be_nil
+      job_execution.wait!
     end
 
     it "has no pid when not running" do
@@ -235,12 +235,13 @@ describe Job do
   end
 
   describe "#stop!" do
-    with_job_execution
-    around { |t| ArMultiThreadedTransactionalTests.activate &t }
+    with_full_job_execution
 
     it "stops an active job" do
       ex = JobExecution.new('master', job) { sleep 10 }
       JobExecution.start_job(ex)
+      sleep 0.1 # make the job spin up properly
+
       assert JobExecution.active?(ex.id)
       job.stop!
       assert job.cancelled? # job execution callbacks sets it to cancelled
@@ -253,14 +254,19 @@ describe Job do
     end
 
     it "stops a queued job" do
-      active = stub(start!: true, on_complete: true, id: 123)
+      active_job = project.jobs.new(command: 'cat foo', user: user, project: project, commit: 'master')
+      active = JobExecution.new('master', active_job) { sleep 10 }
       JobExecution.start_job(active, queue: 'foo')
+      assert JobExecution.active?(active.id)
 
       queued = JobExecution.new('master', job) { sleep 10 }
       JobExecution.start_job(queued, queue: 'foo')
       assert JobExecution.queued?(queued.id)
 
+      sleep 0.1 # let jobs spin up
+
       job.stop!
+      active_job.stop!
 
       assert job.cancelled?
       refute JobExecution.queued?(job.id)

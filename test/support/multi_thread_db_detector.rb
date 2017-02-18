@@ -19,9 +19,10 @@ end)
 
 ActiveRecord::ConnectionAdapters::ConnectionPool.prepend(Module.new do
   def with_connection
+    old = MultiThreadDbDetector.in_with_connection
     MultiThreadDbDetector.in_with_connection = true
     super
   ensure
-    MultiThreadDbDetector.in_with_connection = false
+    MultiThreadDbDetector.in_with_connection = old
   end
 end)
