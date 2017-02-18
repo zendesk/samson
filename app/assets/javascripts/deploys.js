@@ -127,15 +127,29 @@ $(function () {
 
     $messages.scrollTop($messages.prop("scrollHeight"));
 
-    $("#output-options > button, #output-grow-toggle").removeClass("active");
+    $("#output-options > button, #output-expand-toggle").removeClass("active");
     $(this).addClass("active");
   });
 
-  function growOutput() {
-    $messages.css("max-height", "none");
-  }
+  $("#output-no-follow").click(function() {
+    following = false;
 
-  $("#output-grow-toggle").click(function() {
+    shrinkOutput();
+
+    $("#output-options > button").removeClass("active");
+    $(this).addClass("active");
+  });
+
+  $("#output-expand").click(function() {
+    growOutput();
+
+    $("#output-options > button").removeClass("active");
+    $(this).addClass("active");
+    $("#output-expand-toggle").addClass("active");
+  });
+
+  // on finished pages we only have the 'Expand' button, so it toggles
+  $("#output-expand-toggle").click(function() {
     var $self = $(this);
 
     if($self.hasClass("active")) {
@@ -147,22 +161,9 @@ $(function () {
     }
   });
 
-  $("#output-grow").click(function() {
-    growOutput();
-
-    $("#output-options > button").removeClass("active");
-    $(this).addClass("active");
-    $("#output-grow-toggle").addClass("active");
-  });
-
-  $("#output-steady").click(function() {
-    following = false;
-
-    shrinkOutput();
-
-    $("#output-options > button").removeClass("active");
-    $(this).addClass("active");
-  });
+  function growOutput() {
+    $messages.css("max-height", "none");
+  }
 
   // If there are messages being streamed, then show the output and hide buddy check
   $messages.bind('contentchanged', function() {
@@ -179,7 +180,7 @@ $(function () {
   $messages.scroll(function() {
     var position = $messages.prop("scrollHeight") - $messages.scrollTop() - $messages.height() - 30;
     if(position > 0 && following) {
-      $("#output-steady").click();
+      $("#output-no-follow").click();
     } else if (position < 0 && !following) {
       $("#output-follow").click();
     }
