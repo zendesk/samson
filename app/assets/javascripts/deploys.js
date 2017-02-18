@@ -14,7 +14,8 @@ $(function () {
       $form = $("#new_deploy"),
       $submit = $form.find('input[type=submit]'),
       $messages = $("#messages"),
-      old_height = $messages.css('max-height');
+      old_height = $messages.css('max-height'),
+      expanded = false;
 
   $("#deploy-tabs a[data-type=github]").click(function (e) {
       e.preventDefault();
@@ -117,37 +118,41 @@ $(function () {
   });
 
   function shrinkOutput() {
+    expanded = false;
     $messages.css("max-height", old_height);
   }
 
+  // also toggles the button that will be on the finished page so deploys that stop transition cleanly
+  function activateModalButton($current) {
+    $("#output-options > button, #output-expand-toggle").removeClass("active");
+    $current.addClass("active");
+  }
+
   $("#output-follow").click(function() {
+    activateModalButton($(this));
+
     following = true;
 
     shrinkOutput();
 
+    // scroll to bottom
     $messages.scrollTop($messages.prop("scrollHeight"));
-
-    $("#output-options > button, #output-expand-toggle").removeClass("active");
-    $(this).addClass("active");
   });
 
   $("#output-no-follow").click(function() {
+    activateModalButton($(this));
+
     following = false;
 
     shrinkOutput();
-
-    $("#output-options > button").removeClass("active");
-    $(this).addClass("active");
   });
 
   $("#output-expand").click(function() {
+    activateModalButton($("#output-expand-toggle, #output-expand"));
+
     following = false;
 
     growOutput();
-
-    $("#output-options > button").removeClass("active");
-    $(this).addClass("active");
-    $("#output-expand-toggle").addClass("active");
   });
 
   // on finished pages we only have the 'Expand' button, so it toggles
@@ -164,6 +169,7 @@ $(function () {
   });
 
   function growOutput() {
+    expanded = true;
     $messages.css("max-height", "none");
   }
 
@@ -179,7 +185,9 @@ $(function () {
   // when user scrolls all the way down, start following
   // when user scrolls up, stop following since it would cause jumping
   // (adds 30 px wiggle room since the math does not quiet add up)
+  // ... do nothing when in expanded view
   $messages.scroll(function() {
+    if(expanded) { return; }
     var position = $messages.prop("scrollHeight") - $messages.scrollTop() - $messages.height() - 30;
     if(position > 0 && following) {
       $("#output-no-follow").click();
