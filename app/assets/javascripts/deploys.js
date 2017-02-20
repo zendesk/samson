@@ -3,8 +3,6 @@
 //= require jquery-mentions-input/jquery.elastic.source
 //= require jquery-mentions-input/jquery.mentionsInput
 
-var following = true; // shared with stream.js
-
 $(function () {
   // Shows confirmation dropdown using Github comparison
   var changesetLoaded = false,
@@ -15,8 +13,10 @@ $(function () {
       $submit = $form.find('input[type=submit]'),
       $messages = $("#messages"),
       old_height = $messages.css('max-height'),
-      expanded = false;
+      expanded = false,
+      following = true;
 
+  // load changeset when switching to it
   $("#deploy-tabs a[data-type=github]").click(function (e) {
       e.preventDefault();
       var tab = $(this);
@@ -117,9 +117,20 @@ $(function () {
     }
   });
 
+  // Reduces overhead with throttle, since it is triggered often by contentchanged when old content streams in
+  // (scrollHeight + height would be good enough, but over-scrolling does not harm)
+  var scrollToBottom = _.throttle(function() {
+    $messages.scrollTop($messages.prop("scrollHeight"));
+  }, 250);
+
   function shrinkOutput() {
     expanded = false;
     $messages.css("max-height", old_height);
+  }
+
+  function expandOutput() {
+    expanded = true;
+    $messages.css("max-height", "none");
   }
 
   // also toggles the button that will be on the finished page so deploys that stop transition cleanly
@@ -135,8 +146,7 @@ $(function () {
 
     shrinkOutput();
 
-    // scroll to bottom
-    $messages.scrollTop($messages.prop("scrollHeight"));
+    scrollToBottom();
   });
 
   $("#output-no-follow").click(function() {
@@ -152,7 +162,7 @@ $(function () {
 
     following = false;
 
-    growOutput();
+    expandOutput();
   });
 
   // on finished pages we only have the 'Expand' button, so it toggles
@@ -163,23 +173,24 @@ $(function () {
       shrinkOutput();
       $self.removeClass("active");
     } else {
-      growOutput();
+      expandOutput();
       $self.addClass("active");
     }
   });
 
-  function growOutput() {
-    expanded = true;
-    $messages.css("max-height", "none");
-  }
-
-  // If there are messages being streamed, then show the output and hide buddy check
+  // When a message is added via stream.js
   $messages.bind('contentchanged', function() {
+    // show the output and hide buddy check
     var $output = $('#output');
-    if ($output.find('.output').hasClass("hidden") ){
+    if ($output.find('.output').hasClass("hidden") ) {
       $output.find('.output').removeClass('hidden');
       $output.find('.deploy-check').hide();
     }
+
+    // scroll when following to see new content
+    // setTimeout so we scroll after content was inserted
+    // this triggers the .scroll below, so be careful of triggering loops
+    if (following) { setTimeout(scrollToBottom, 0); }
   });
 
   // when user scrolls all the way down, start following

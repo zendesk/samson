@@ -1,18 +1,3 @@
-function timeAgoFormat() {
-  $("span[data-time]").each(function() {
-    var utcms     = this.dataset.time,
-    localDate = new Date(parseInt(utcms, 10));
-
-    this.title = localDate.toString();
-    this.innerHTML = moment(localDate).fromNow();
-  });
-}
-
-$(document).ready(function() {
-  timeAgoFormat();
-  setInterval(timeAgoFormat, 60000); // update times every 60s
-});
-
 function startStream() {
   $(document).ready(function() {
     var $messages = $("#messages");
@@ -20,10 +5,6 @@ function startStream() {
     var doNotify = $("#output").data("desktopNotify");
     var origin = $('meta[name=deploy-origin]').first().attr('content');
     var source = new EventSource(origin + streamUrl, { withCredentials: true });
-
-    var throttledScroll = _.throttle(function() {
-      $messages.scrollTop($messages[0].scrollHeight);
-    }, 250);
 
     var addLine = function(data, replace) {
       var msg = JSON.parse(data).msg;
@@ -33,17 +14,13 @@ function startStream() {
         msg = "\n" + msg;
       }
       $messages.append(msg);
-
-      if (following) {
-        throttledScroll();
-      }
     };
 
     var updateStatusAndTitle = function(e) {
       var data = JSON.parse(e.data);
 
       $('#header').html(data.html);
-      timeAgoFormat();
+      timeAgoFormat(); // header includes new dates ... show them nicely instantly
       window.document.title = data.title;
       if (doNotify && data.notification !== undefined) {
         var notification = new Notification(data.notification, {icon: '/favicon.ico'});
