@@ -1,4 +1,5 @@
-<% cache project do %>
+<%# Is expired on deploy because job touches project (job->deploy->stage->project) %>
+<% cache [project, Lock.cache_key] do %>
   <div class="col-sm-4 project-tile">
     <h2>
       <%= link_to project.name, project %>
