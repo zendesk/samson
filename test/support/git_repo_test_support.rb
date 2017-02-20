@@ -25,9 +25,7 @@ module GitRepoTestHelper
 
   def create_repo_with_tags(tag_name = 'v1')
     create_repo_without_tags
-    execute_on_remote_repo <<-SHELL
-      git tag #{tag_name}
-    SHELL
+    execute_on_remote_repo "git tag #{tag_name}"
   end
 
   def create_repo_with_an_additional_branch(branch_name = 'test_user/test_branch')
@@ -94,5 +92,22 @@ module GitRepoTestHelper
 
   def update_workspace
     `git pull`.strip
+  end
+
+  def self.included(base)
+    base.extend(ClassMethods)
+  end
+
+  module ClassMethods
+    def with_project_on_remote_repo
+      around do |test|
+        Dir.mktmpdir do |dir|
+          @repo_temp_dir = dir
+          create_repo_without_tags
+          project.update_column(:repository_url, @repo_temp_dir)
+          test.call
+        end
+      end
+    end
   end
 end

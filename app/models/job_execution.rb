@@ -263,7 +263,8 @@ class JobExecution
     Dir.mktmpdir("samson-#{@job.project.permalink}-#{@job.id}") do |dir|
       result = yield dir
     end
-  rescue Errno::ENOTEMPTY
+  rescue Errno::ENOTEMPTY, Errno::ENOENT
+    Airbrake.notify("Notify: make_tempdir error #{$!}")
     result # tempdir ensure sometimes fails ... not sure why ... return normally
   end
 

@@ -27,4 +27,11 @@ ActiveSupport::TestCase.class_eval do
       end
     end
   end
+
+  def self.with_full_job_execution
+    with_job_execution
+    with_job_stop_timeout 0.1
+    with_project_on_remote_repo
+    around { |t| ArMultiThreadedTransactionalTests.activate &t }
+  end
 end
