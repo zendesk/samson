@@ -7,7 +7,7 @@ if defined?(Airbrake) && key = ENV['AIRBRAKE_API_KEY']
     config.project_id = ENV.fetch('AIRBRAKE_PROJECT_ID')
     config.project_key = key
 
-    config.blacklist_keys = Rails.application.config.filter_parameters
+    config.blacklist_keys = Rails.application.config.filter_parameters + ['HTTP_AUTHORIZATION']
 
     # send correct errors even when something blows up during initialization
     config.environment = Rails.env
