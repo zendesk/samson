@@ -7,9 +7,14 @@ class WebhooksController < ApplicationController
   before_action :authorize_project_deployer!
 
   def create
-    current_project.webhooks.create!(webhook_params)
-
-    redirect_to project_webhooks_path(current_project)
+    webhook = current_project.webhooks.build(webhook_params)
+    if webhook.save
+      redirect_to project_webhooks_path(current_project), notice: "Webhook created!"
+    else
+      current_project.reload
+      flash[:alert] = "Error saving webhook: #{webhook.errors.full_messages.join(", ")}"
+      render :index
+    end
   end
 
   def destroy
