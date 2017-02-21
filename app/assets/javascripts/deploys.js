@@ -3,8 +3,6 @@
 //= require jquery-mentions-input/jquery.elastic.source
 //= require jquery-mentions-input/jquery.mentionsInput
 
-var following = true; // shared with stream.js
-
 $(function () {
   // Shows confirmation dropdown using Github comparison
   var changesetLoaded = false,
@@ -12,11 +10,9 @@ $(function () {
       $container = $(".deploy-details"),
       $placeholderPanes = $container.find(".changeset-placeholder"),
       $form = $("#new_deploy"),
-      $submit = $form.find('input[type=submit]'),
-      $messages = $("#messages"),
-      old_height = $messages.css('max-height'),
-      expanded = false;
+      $submit = $form.find('input[type=submit]');
 
+  // load changeset when switching to it
   $("#deploy-tabs a[data-type=github]").click(function (e) {
       e.preventDefault();
       var tab = $(this);
@@ -114,85 +110,6 @@ $(function () {
       });
 
       event.preventDefault();
-    }
-  });
-
-  function shrinkOutput() {
-    expanded = false;
-    $messages.css("max-height", old_height);
-  }
-
-  // also toggles the button that will be on the finished page so deploys that stop transition cleanly
-  function activateModalButton($current) {
-    $("#output-options > button, #output-expand-toggle").removeClass("active");
-    $current.addClass("active");
-  }
-
-  $("#output-follow").click(function() {
-    activateModalButton($(this));
-
-    following = true;
-
-    shrinkOutput();
-
-    // scroll to bottom
-    $messages.scrollTop($messages.prop("scrollHeight"));
-  });
-
-  $("#output-no-follow").click(function() {
-    activateModalButton($(this));
-
-    following = false;
-
-    shrinkOutput();
-  });
-
-  $("#output-expand").click(function() {
-    activateModalButton($("#output-expand-toggle, #output-expand"));
-
-    following = false;
-
-    growOutput();
-  });
-
-  // on finished pages we only have the 'Expand' button, so it toggles
-  $("#output-expand-toggle").click(function() {
-    var $self = $(this);
-
-    if($self.hasClass("active")) {
-      shrinkOutput();
-      $self.removeClass("active");
-    } else {
-      growOutput();
-      $self.addClass("active");
-    }
-  });
-
-  function growOutput() {
-    expanded = true;
-    $messages.css("max-height", "none");
-  }
-
-  // If there are messages being streamed, then show the output and hide buddy check
-  $messages.bind('contentchanged', function() {
-    var $output = $('#output');
-    if ($output.find('.output').hasClass("hidden") ){
-      $output.find('.output').removeClass('hidden');
-      $output.find('.deploy-check').hide();
-    }
-  });
-
-  // when user scrolls all the way down, start following
-  // when user scrolls up, stop following since it would cause jumping
-  // (adds 30 px wiggle room since the math does not quiet add up)
-  // ... do nothing when in expanded view
-  $messages.scroll(function() {
-    if(expanded) { return; }
-    var position = $messages.prop("scrollHeight") - $messages.scrollTop() - $messages.height() - 30;
-    if(position > 0 && following) {
-      $("#output-no-follow").click();
-    } else if (position < 0 && !following) {
-      $("#output-follow").click();
     }
   });
 
