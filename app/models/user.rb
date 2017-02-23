@@ -115,7 +115,7 @@ class User < ActiveRecord::Base
   end
 
   def project_role_for(project)
-    user_project_roles.find_by(project: project)
+    project && user_project_roles.find_by(project: project)
   end
 
   def record_project_role_change

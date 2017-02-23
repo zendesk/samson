@@ -16,7 +16,8 @@
       <div class="form-group">
         <%= form.label :project_id, value: "Project", class: "col-lg-2 control-label" %>
         <div class="col-lg-4">
-          <%= form.select :project_id, Project.all.map {|p| [p.name, p.id]}, { include_blank: "Global" }, class: "form-control" %>
+          <% options = (current_user.admin? ? { include_blank: "Global" } : {}) %>
+          <%= form.select :project_id, current_user.administrated_projects.all.map {|p| [p.name, p.id]}, options, class: "form-control" %>
         </div>
       </div>
 
