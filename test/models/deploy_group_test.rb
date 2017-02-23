@@ -153,9 +153,9 @@ describe DeployGroup do
     before do
       Samson::Secrets::VaultServer.any_instance.stubs(:validate_cert)
       Samson::Secrets::VaultServer.any_instance.stubs(:validate_connection)
+      deploy_groups(:pod1).update_attributes!(vault_server: server)
+      server.reload
     end
-
-    before { deploy_groups(:pod1).update_attributes!(vault_server: server) }
 
     it "is valid when vault servers have exclusive environments" do
       assert deploy_groups(:pod2).update_attributes(vault_server: server)
@@ -166,8 +166,14 @@ describe DeployGroup do
       deploy_groups(:pod100).save!
     end
 
-    it "is invalid when vault servers share environments environments" do
+    it "is invalid when vault servers mix production and non-production deploy groups" do
       refute deploy_groups(:pod100).update_attributes(vault_server: server)
+    end
+
+    it "is valid for 2 different environments, as long as they're both production" do
+      other_prod_env = Environment.create!(name: 'Other prod', production: true)
+      deploy_group = DeployGroup.create(name: 'Another group', environment: other_prod_env, vault_server: server)
+      assert deploy_group.valid?
     end
   end
 end
