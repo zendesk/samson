@@ -211,7 +211,10 @@ class Project < ActiveRecord::Base
   def validate_can_release
     return if release_branch.blank? || release_branch_was.present?
     return if ReleaseService.new(self).can_release?
-    errors.add(:release_branch, "samsons github user needs permission to push new tags")
+    errors.add(
+      :release_branch,
+      "could not be set. Samson's github user needs 'Write' permission to push new tags to #{user_repo_part}."
+    )
   end
 
   def destroy_user_project_roles
