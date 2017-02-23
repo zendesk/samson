@@ -11,6 +11,8 @@ class DeployGroup < ActiveRecord::Base
   has_many :stages, through: :deploy_groups_stages
   has_many :template_stages, -> { where(is_template: true) }, through: :deploy_groups_stages, source: :stage
 
+  delegate :production?, to: :environment
+
   validates_presence_of :name, :environment_id
   validates_uniqueness_of :name, :env_value
   validates_format_of :env_value, with: /\A\w[-:\w]*\w\z/
@@ -52,9 +54,11 @@ class DeployGroup < ActiveRecord::Base
     DeployGroupsStage.where(deploy_group_id: id).delete_all
   end
 
+  # Don't allow mixing of production and non-production vault servers
   def validate_vault_server_has_same_environment
-    return unless vault_server_id_changed?
-    return if !vault_server || [[], [environment_id]].include?(vault_server.deploy_groups.pluck(:environment_id).uniq)
-    errors.add :vault_server_id, "vault server #{vault_server.name} is already in use on a different environment"
+    return unless vault_server_id_changed? && vault_server
+    if vault_server.deploy_groups.any? { |dg| dg.production? != production? }
+      errors.add :vault_server_id, "#{vault_server.name} can't mix production and non-production deploy groups"
+    end
   end
 end
