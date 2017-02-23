@@ -24,7 +24,7 @@ class ProjectsController < ApplicationController
       end
 
       format.csv do
-        datetime = Time.now.strftime "%Y%m%d_%H%M"
+        datetime = Time.now.strftime "%Y-%m-%d_%H-%M"
         send_data as_csv, type: :csv, filename: "Projects_#{datetime}.csv"
       end
     end

@@ -16,7 +16,7 @@ describe ProjectSerializer do
     it 'returns an array of strings' do
       header = ProjectSerializer.csv_header
       header.must_be_kind_of Array
-      header.first.must_equal 'ID'
+      header.first.must_equal 'Id'
     end
   end
 

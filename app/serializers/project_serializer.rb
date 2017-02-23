@@ -1,9 +1,10 @@
 # frozen_string_literal: true
 class ProjectSerializer < ActiveModel::Serializer
-  attributes :id, :name, :url, :permalink, :repository_url, :owner, :created_at
+  PROPERTIES = [:id, :name, :url, :permalink, :repository_url, :owner, :created_at]
+  attributes *PROPERTIES
 
   def self.csv_header
-    ['ID', 'Name', 'URL', 'Permalink', 'Repository URL', 'Owner', 'Created At']
+    PROPERTIES.map { |p| p.to_s.humanize }
   end
 
   def url
@@ -11,6 +12,6 @@ class ProjectSerializer < ActiveModel::Serializer
   end
 
   def csv_line
-    to_h.values
+    PROPERTIES.map { |p| object.public_send p }
   end
 end
