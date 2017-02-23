@@ -399,6 +399,13 @@ describe User do
     it "returns the project role for the given project" do
       users(:project_admin).project_role_for(projects(:test)).must_equal user_project_roles(:project_admin)
     end
+
+    it "returns nil without a project" do
+      user = users(:project_admin)
+      assert_sql_queries 0 do
+        user.project_role_for(nil).must_equal nil
+      end
+    end
   end
 
   describe "#starred_project?" do

@@ -2,9 +2,12 @@
 class Admin::CommandsController < ApplicationController
   include CurrentProject
 
-  before_action :find_command, only: [:update, :show]
-  before_action :authorize_project_admin!, only: [:update, :show]
-  before_action :authorize_admin!, except: [:update, :show]
+  PUBLIC = [:index, :show, :new].freeze
+  PROJECT_ADMIN = [:update, :destroy, :create].freeze
+
+  before_action :find_command, only: [:update, :show, :destroy]
+  before_action :authorize_custom_project_admin!, only: PROJECT_ADMIN
+  before_action :authorize_admin!, except: PROJECT_ADMIN + PUBLIC
 
   def index
     @commands = Command.order(:project_id).page(params[:page])
@@ -51,7 +54,7 @@ class Admin::CommandsController < ApplicationController
   end
 
   def destroy
-    Command.destroy(params[:id])
+    @command.destroy
     successful_response('Command removed.')
   end
 
@@ -76,7 +79,24 @@ class Admin::CommandsController < ApplicationController
     @command = Command.find(params[:id])
   end
 
-  def current_project
-    @command.project
+  def authorize_custom_project_admin!
+    projects =
+      if action_name == 'create'
+        [project_from_params]
+      elsif action_name == 'update'
+        [project_from_params, @command.project]
+      else
+        [@command.project]
+      end
+
+    projects.each do |project|
+      unauthorized! unless current_user.admin_for?(project)
+    end
+  end
+
+  def project_from_params
+    if id = command_params[:project_id].presence
+      Project.find(id)
+    end
   end
 end

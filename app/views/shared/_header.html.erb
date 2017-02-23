@@ -65,7 +65,9 @@
               <li><%= link_to "Deploy Groups", admin_deploy_groups_path %></li>
             <% end %>
             <li><%= link_to "Projects", admin_projects_path %></li>
-            <li><%= link_to "Commands", admin_commands_path %></li>
+          <% end %>
+          <li><%= link_to "Commands", admin_commands_path %></li>
+          <% if current_user.try(:admin?) %>
             <li><%= link_to "Users", admin_users_path %></li>
             <%= Samson::Hooks.render_views(:admin_menu, self) %>
             <li class="divider"></li>
