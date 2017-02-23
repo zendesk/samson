@@ -1,4 +1,6 @@
 # frozen_string_literal: true
+require 'csv'
+
 class ProjectsController < ApplicationController
   include CurrentProject
 
@@ -19,6 +21,11 @@ class ProjectsController < ApplicationController
 
       format.json do
         render json: Project.ordered_for_user(current_user).all
+      end
+
+      format.csv do
+        datetime = Time.now.strftime "%Y-%m-%d_%H-%M"
+        send_data as_csv, type: :csv, filename: "Projects_#{datetime}.csv"
       end
     end
   end
@@ -99,5 +106,17 @@ class ProjectsController < ApplicationController
   # Overriding require_project from CurrentProject
   def require_project
     @project = (Project.find_by_param!(params[:id]) if params[:id])
+  end
+
+  def as_csv
+    projects = Project.order(:id).all
+
+    CSV.generate do |csv|
+      csv << ProjectSerializer.csv_header
+
+      projects.each do |project|
+        csv << ProjectSerializer.new(project).csv_line
+      end
+    end
   end
 end

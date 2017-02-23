@@ -21,7 +21,8 @@ describe Api::ProjectsController do
 
     it 'lists projects' do
       subject.keys.must_equal ['projects']
-      subject['projects'].first.keys.sort.must_equal ["id", "name", "permalink", "repository_url", "url"]
+      keys = subject['projects'].first.keys.sort
+      keys.must_equal ["created_at", "id", "name", "owner", "permalink", "repository_url", "url"]
     end
   end
 end

@@ -53,6 +53,19 @@ describe ProjectsController do
         result['projects'].map(&:symbolize_keys!).map { |obj| obj[:name] }.must_equal ['Project']
       end
 
+      it "responds to CSV requests" do
+        get :index, params: { format: 'csv' }
+        csv = CSV.new(response.body, headers: true)
+        all_projects = Project.order(:id).to_a
+
+        csv.each_with_index do |row, idx|
+          %w[Id Name Url].each do |attr|
+            row.headers.must_include attr
+          end
+          row['Id'].must_equal all_projects[idx].id.to_s
+        end
+      end
+
       it 'renders starred projects first for json' do
         starred_project1 = Project.create!(name: 'Z', repository_url: 'Z')
         starred_project2 = Project.create!(name: 'A', repository_url: 'A')
