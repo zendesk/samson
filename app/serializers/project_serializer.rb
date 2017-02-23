@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 class ProjectSerializer < ActiveModel::Serializer
-  PROPERTIES = [:id, :name, :url, :permalink, :repository_url, :owner, :created_at]
+  PROPERTIES = [:id, :name, :url, :permalink, :repository_url, :owner, :created_at].freeze
   attributes *PROPERTIES
 
   def self.csv_header
