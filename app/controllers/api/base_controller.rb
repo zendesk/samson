@@ -1,9 +1,6 @@
 # frozen_string_literal: true
 class Api::BaseController < ApplicationController
-  skip_before_action :verify_authenticity_token, if: :using_per_request_auth?
-
   prepend_before_action :enforce_json_format
-  prepend_before_action :store_requested_oauth_scope
   before_action :require_project
 
   # default error has very little information
@@ -47,16 +44,6 @@ class Api::BaseController < ApplicationController
     @project = (Project.find_by_id(params[:project_id]) if params[:project_id])
   end
 
-  def using_per_request_auth?
-    return unless warden = request.env['warden']
-    warden.authenticate # trigger auth so we see which strategy won
-
-    [
-      Warden::Strategies::BasicStrategy,
-      Warden::Strategies::Doorkeeper
-    ].include? warden.winning_strategy.class
-  end
-
   # without json format 404/500 pages are rendered in html and auth will redirect
   # can be tested by turning consider_all_requests_local = false in development
   # and raising an error somewhere ... cannot be tested with an integration test
@@ -66,6 +53,7 @@ class Api::BaseController < ApplicationController
   end
 
   # making sure all scopes are documented
+  # @override
   def store_requested_oauth_scope
     scope = controller_name
     raise "Add #{scope} to config/locales/en.yml" unless I18n.t('doorkeeper.applications.help.scopes') =~ /\b#{scope}\b/

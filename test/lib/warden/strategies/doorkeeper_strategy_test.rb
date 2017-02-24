@@ -46,6 +46,23 @@ describe 'Warden::Strategies::DoorkeeperStrategy Integration' do
     assert_response :unauthorized
   end
 
+  describe "when accessing web-ui" do
+    let(:path) { "/profile" }
+
+    before { stub_request(:get, "https://status.github.com/api/status.json").to_return(body: "{}") }
+
+    it "checks and fails when using api token" do
+      perform_get(valid_header)
+      assert_response :unauthorized
+    end
+
+    it "logs the user in when using web-ui token" do
+      token.update_column(:scopes, "web-ui")
+      perform_get(valid_header)
+      assert_response :success, response.body
+    end
+  end
+
   it "checks and fails with expired token" do
     token.update_attributes(expires_in: 1, created_at: 1.day.ago)
     assert_sql_queries(2) { perform_get(valid_header) } # FYI queries are: find token, revoke token
@@ -55,12 +72,6 @@ describe 'Warden::Strategies::DoorkeeperStrategy Integration' do
   it "does not check and fails with non matching header" do
     assert_sql_queries(0) { perform_get "oops" + valid_header }
     assert_response :unauthorized
-  end
-
-  it "does not check and fails with non-api resource to show users they are doing it wrong" do
-    path.replace('/')
-    assert_sql_queries(0) { perform_get valid_header }
-    assert_response :bad_request
   end
 
   describe "last_used_at" do

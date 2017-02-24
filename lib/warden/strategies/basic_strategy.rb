@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 # Strategy that allows login via email / token header
+# DEPRECATED: use OAuth
 class Warden::Strategies::BasicStrategy < Warden::Strategies::Base
   KEY = :basic
 

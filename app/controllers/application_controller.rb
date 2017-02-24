@@ -1,8 +1,10 @@
 # frozen_string_literal: true
 class ApplicationController < ActionController::Base
+  before_action :store_requested_oauth_scope
+
   # Prevent CSRF attacks by raising an exception.
   # For APIs, you may want to use :null_session instead.
-  protect_from_forgery with: :exception
+  protect_from_forgery with: :exception, unless: :using_per_request_auth?
 
   # Force all access to the app over SSL, use Strict-Transport-Security, and use secure cookies.
   force_ssl if: :force_ssl?
@@ -35,5 +37,19 @@ class ApplicationController < ActionController::Base
       end
     end
     redirect_back options.merge(fallback_location: fallback)
+  end
+
+  def store_requested_oauth_scope
+    request.env['requested_oauth_scope'] = Warden::Strategies::Doorkeeper::WEB_UI_SCOPE
+  end
+
+  def using_per_request_auth?
+    return unless warden = request.env['warden']
+    warden.authenticate # trigger auth so we see which strategy won
+
+    [
+      Warden::Strategies::BasicStrategy,
+      Warden::Strategies::Doorkeeper
+    ].include? warden.winning_strategy.class
   end
 end
