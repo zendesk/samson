@@ -11,6 +11,9 @@
 
   <%= render 'deployed_to', release: @release %>
 
+  <label>Created</label>
+  <%= relative_time(@release.created_at) %>
+
   <% if @changeset.empty? %>
     <p>This release contains no changes.</p>
   <% else %>
