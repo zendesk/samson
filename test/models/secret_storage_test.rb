@@ -119,6 +119,26 @@ describe SecretStorage do
     end
   end
 
+  describe ".exist?" do
+    it "is true when when it exists" do
+      SecretStorage.exist?(secret.id).must_equal true
+    end
+
+    it "is false on unknown" do
+      SecretStorage.exist?('sdfsfsf').must_equal false
+    end
+
+    it "is false when backend returns no values" do
+      SecretStorage.backend.expects(:read_multi).returns({})
+      SecretStorage.exist?('sdfsfsf').must_equal false
+    end
+
+    it "is false when backend returns nil values" do
+      SecretStorage.backend.expects(:read_multi).returns(foo: nil)
+      SecretStorage.exist?('sdfsfsf').must_equal false
+    end
+  end
+
   describe ".read_multi" do
     it "reads" do
       data = SecretStorage.read_multi([secret.id], include_value: true)

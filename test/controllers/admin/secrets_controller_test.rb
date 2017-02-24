@@ -118,13 +118,22 @@ describe Admin::SecretsController do
     describe '#create' do
       it 'creates a secret' do
         post :create, params: {secret: attributes.merge(visible: 'false')}
-        flash[:notice].wont_be_nil
+        assert flash[:notice]
         assert_redirected_to admin_secrets_path
         secret = SecretStorage::DbBackend::Secret.find('production/foo/pod2/hi')
         secret.updater_id.must_equal user.id
         secret.creator_id.must_equal user.id
         secret.visible.must_equal false
         secret.comment.must_equal 'hello'
+      end
+
+      it 'does not override an existing secret' do
+        attributes[:key] = secret.id.split('/').last
+        post :create, params: {secret: attributes}
+        refute flash[:notice]
+        assert flash[:error]
+        assert_template :show
+        secret.reload.value.must_equal 'MY-SECRET'
       end
 
       it "redirects to new form when user wants to create another secret" do
