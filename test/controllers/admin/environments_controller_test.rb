@@ -4,48 +4,39 @@ require_relative '../../test_helper'
 SingleCov.covered!
 
 describe Admin::EnvironmentsController do
-  def self.it_renders_index
-    it 'get :index succeeds' do
-      get :index
-      assert_response :success
-      assert_select('tbody tr').count.must_equal Environment.count
+  as_a_viewer do
+    describe "#index" do
+      it 'renders' do
+        get :index
+        assert_response :success
+        assert_select('tbody tr').count.must_equal Environment.count
+      end
+
+      it 'renders json' do
+        get :index, format: 'json'
+        result = JSON.parse(response.body)
+        result.wont_be_nil
+        result['environments'].count.must_equal Environment.count
+      end
     end
-  end
-
-  def self.it_renders_index_with_json_format
-    it 'get :index with format json succeeds' do
-      get :index, params: {format: 'json'}
-      result = JSON.parse(response.body)
-      result.wont_be_nil
-      result['environments'].count.must_equal Environment.count
-    end
-  end
-
-  as_a_deployer do
-    it_renders_index
-    it_renders_index_with_json_format
-
-    unauthorized :get, :new
-    unauthorized :post, :create
-    unauthorized :delete, :destroy, id: 1
-    unauthorized :post, :update, id: 1
   end
 
   as_a_admin do
     unauthorized :post, :create
     unauthorized :get, :new
+    unauthorized :get, :show, id: 1
     unauthorized :delete, :destroy, id: 1
     unauthorized :post, :update, id: 1
     unauthorized :put, :update, id: 1
   end
 
   as_a_super_admin do
-    it_renders_index
-
-    it 'get :new succeeds' do
-      get :new
-      assert_response :success
-      assert assigns(:environment)
+    describe "#new" do
+      it 'renders' do
+        get :new
+        assert_response :success
+        assert assigns(:environment)
+      end
     end
 
     describe '#create' do
@@ -61,6 +52,13 @@ describe Admin::EnvironmentsController do
         post :create, params: {environment: {name: nil, production: true}}
         assert_template :show
         Environment.count.must_equal env_count
+      end
+    end
+
+    describe "#show" do
+      it "renders" do
+        get :show, params: {id: environments(:production).id}
+        assert_response :success
       end
     end
 

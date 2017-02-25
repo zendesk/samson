@@ -14,6 +14,7 @@ describe Admin::Kubernetes::ClustersController do
     unauthorized :get, :index
     unauthorized :get, :new
     unauthorized :post, :create
+    unauthorized :get, :show, id: 1
     unauthorized :get, :edit, id: 1
     unauthorized :patch, :update, id: 1
     unauthorized :post, :seed_ecr, id: 1
@@ -29,6 +30,15 @@ describe Admin::Kubernetes::ClustersController do
       it "renders" do
         get :index
         assert_template :index
+      end
+    end
+
+    describe "#show" do
+      use_example_config
+
+      it "renders" do
+        get :show, params: {id: cluster.id}
+        assert_template :show
       end
     end
 
@@ -84,15 +94,6 @@ describe Admin::Kubernetes::ClustersController do
         params.delete(:name)
         post :create, params: {kubernetes_cluster: params}
         assert_template :edit
-      end
-    end
-
-    describe "#show" do
-      use_example_config
-
-      it "renders" do
-        get :show, params: {id: cluster.id}
-        assert_template :show
       end
     end
 

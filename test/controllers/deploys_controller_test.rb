@@ -265,6 +265,7 @@ describe DeploysController do
     unauthorized :post, :create, project_id: :foo, stage_id: 2
     unauthorized :post, :buddy_check, project_id: :foo, id: 1
     unauthorized :delete, :destroy, project_id: :foo, id: 1
+    unauthorized :post, :confirm, project_id: :foo, stage_id: 2
   end
 
   as_a_project_deployer do
