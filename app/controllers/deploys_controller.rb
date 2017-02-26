@@ -6,7 +6,7 @@ class DeploysController < ApplicationController
 
   skip_before_action :require_project, only: [:active, :active_count, :changeset]
 
-  before_action :authorize_project_deployer!, only: [:new, :create, :confirm, :buddy_check, :destroy]
+  before_action :authorize_project_deployer!, except: [:index, :show, :active, :active_count, :changeset, :search]
   before_action :find_deploy, except: [:index, :active, :active_count, :new, :create, :confirm, :search]
   before_action :stage, only: :new
 

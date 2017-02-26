@@ -3,7 +3,7 @@ class MacrosController < ApplicationController
   include CurrentProject
 
   before_action :authorize_project_deployer!
-  before_action :authorize_project_admin!, only: [:new, :create, :edit, :update, :destroy]
+  before_action :authorize_project_admin!, except: [:index, :execute]
   before_action :find_macro, only: [:edit, :update, :execute, :destroy]
 
   def index

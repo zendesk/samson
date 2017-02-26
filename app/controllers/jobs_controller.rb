@@ -4,7 +4,7 @@ class JobsController < ApplicationController
 
   skip_before_action :require_project, only: [:enabled]
 
-  before_action :authorize_project_deployer!, only: [:destroy]
+  before_action :authorize_project_deployer!, except: [:index, :show, :enabled]
   before_action :find_job, only: [:show, :destroy]
 
   def index

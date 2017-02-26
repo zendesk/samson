@@ -4,9 +4,8 @@ class Kubernetes::RolesController < ApplicationController
 
   DEFAULT_BRANCH = 'master'
 
-  DEPLOYER_ACCESS = [:index, :show, :example].freeze
-  before_action :authorize_project_deployer!, only: DEPLOYER_ACCESS
-  before_action :authorize_project_admin!, except: DEPLOYER_ACCESS
+  before_action :authorize_project_deployer!
+  before_action :authorize_project_admin!, except: [:index, :show, :example]
   before_action :find_role, only: [:show, :update, :destroy]
 
   def index

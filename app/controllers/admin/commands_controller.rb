@@ -3,11 +3,9 @@ class Admin::CommandsController < ApplicationController
   include CurrentProject
 
   PUBLIC = [:index, :show, :new].freeze
-  PROJECT_ADMIN = [:update, :destroy, :create].freeze
 
   before_action :find_command, only: [:update, :show, :destroy]
-  before_action :authorize_custom_project_admin!, only: PROJECT_ADMIN
-  before_action :authorize_admin!, except: PROJECT_ADMIN + PUBLIC
+  before_action :authorize_custom_project_admin!, except: PUBLIC
 
   def index
     @commands = Command.order(:project_id).page(params[:page])
