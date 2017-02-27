@@ -218,6 +218,12 @@ class ActionController::TestCase
       define_method "as_a_#{user}" do |&block|
         describe "as a #{user}" do
           let(:user) { users(user) }
+
+          def self.let(*args)
+            raise "Cannot override :user in as_a_*" if args.first.to_sym == :user
+            super
+          end
+
           before { login_as(self.user) } # rubocop:disable Style/RedundantSelf
           instance_eval(&block)
         end

@@ -41,14 +41,6 @@ describe "cleanliness" do
     end
   end
 
-  it "does not use let(:user) inside of a as_xyz block" do
-    assert_content all_tests do |content|
-      if content.include?("  as_") && content.include?("let(:user)")
-        "uses as_xyz and let(:user) these do not mix!"
-      end
-    end
-  end
-
   it "does not have public actions on base controller" do
     found = ApplicationController.action_methods.to_a
     found.reject! { |a| a =~ /^(_conditional_callback_around_|_callback_before_)/ }
