@@ -40,7 +40,7 @@ You can combine those 2 above as well.
     * You can add any value to the 'Token' field, as it is not used
 * GitHub
     * You may add a webhook for push events
-    * You'll need to add a secret token called `GITHUB_HOOK_SECRET` to your `.env` file, and enter that in the **Secret** field for the webhook.
+    * To verify Github hooks, add a secret value as `GITHUB_HOOK_SECRET` to the environment and the same secret value in the **Secret** field in the Github webhook.
 
 Note: to skip a deploy, add "[deploy skip]" to your commit message, and Samson will ignore the webhook from CI.
 
