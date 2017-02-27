@@ -4,10 +4,6 @@ require_relative '../../test_helper'
 SingleCov.covered!
 
 describe Api::AutomatedDeploysController do
-  def post_create
-    post :create, params: {project_id: :foo, deploy_group: 'pod100', env: {'FOO' => "bar\nba$"}}, format: :json
-  end
-
   before do
     # trigger deploy validation error we saw in staging ... validate_stage_uses_deploy_groups_properly
     # we set $DEPLOY_GROUPS via before_command but do not select any deploy group
@@ -18,6 +14,10 @@ describe Api::AutomatedDeploysController do
   oauth_setup!
 
   describe "#create" do
+    def post_create
+      post :create, params: {project_id: :foo, deploy_group: 'pod100', env: {'FOO' => "bar\nba$"}}, format: :json
+    end
+
     let(:template) { stages(:test_staging) }
     let(:copied_deploy) { deploys(:failed_staging_test) }
 

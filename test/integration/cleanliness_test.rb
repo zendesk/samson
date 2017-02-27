@@ -144,4 +144,46 @@ describe "cleanliness" do
       )
     end
   end
+
+  # If a controller only tests `as_a_admin { get :index }` then we don't know if authentification
+  # logic properly works, so all actions have to be tested as unauthenticated or as public/viewer level
+  # for example: as_a_deployer { unauthenticated :get, :index } + as_a_admin { get :index } is good.
+  it "checks authentication levels for all actions" do
+    controller_tests = Dir["{,plugins/*/}test/controllers/**/*_test.rb"] - [
+      'test/controllers/api/base_controller_test.rb',
+      'test/controllers/application_controller_test.rb',
+      'test/controllers/doorkeeper_base_controller_test.rb',
+      'test/controllers/unauthorized_controller_test.rb',
+    ]
+    controller_tests.reject! { |c| c =~ %r{/(integrations|concerns)/} }
+
+    controller_tests.size.must_be :>, 50 # make sure splat works correctly
+
+    bad = controller_tests.map do |f|
+      # find all actions in the controller
+      controller = f.sub('test/', 'app/').sub('_test.rb', '.rb')
+      public_section = File.read(controller).split(/  (protected|private)$/).first
+      controller_actions = public_section.scan(/def ([\w_]+)/).flatten - ['self']
+      raise "No actions in #{f} !?" if controller_actions.empty?
+
+      # find all actions tested to be unauthorized, viewer accessible, or public accessible
+      test = File.read(f)
+      action_pattern = /\s(?:get|post|put|patch|delete)\s+:([\w_]+)/
+
+      unauthorized_actions = test.scan(/^\s+unauthorized\s+(?:\S+),\s+:([\w_]+)/).flatten
+
+      viewer_block = test[/^  as_a_viewer.*?^  end/m].to_s
+      viewer_actions = viewer_block.scan(action_pattern).flatten
+
+      public_actions = test.scan(/^  describe.*?^  end/m).map { |section| section.scan(action_pattern) }.flatten
+
+      # check if all actions were tested
+      missing = controller_actions - unauthorized_actions - viewer_actions - public_actions
+      if missing.any?
+        "#{f} is missing unauthorized, viewer accessible, or public accessible test for #{missing.join(', ')}"
+      end
+    end.compact
+
+    assert bad.empty?, bad.join("\n")
+  end
 end

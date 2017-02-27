@@ -26,8 +26,13 @@ describe Admin::SecretsController do
   end
 
   as_a_viewer do
+    before { create_secret 'production/foo/group/bar' }
+
     unauthorized :get, :index
     unauthorized :get, :new
+    unauthorized :get, :show, id: 'production/foo/group/bar'
+    unauthorized :patch, :update, id: 'production/foo/group/bar'
+    unauthorized :delete, :destroy, id: 'production/foo/group/bar'
   end
 
   as_a_project_deployer do

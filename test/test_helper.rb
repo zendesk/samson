@@ -252,10 +252,6 @@ class ActionController::TestCase
     Warden.test_reset!
   end
 
-  def set_form_authenticity_token
-    session[:_csrf_token] = SecureRandom.base64(32)
-  end
-
   def warden
     request.env['warden']
   end

@@ -99,12 +99,6 @@ class Admin::DeployGroupsController < ApplicationController
     render_failures try_each_cloned_stage { |stage| delete_stage(stage) }
   end
 
-  def render_failures(failures)
-    message = failures.map { |reason, stage| "#{stage.project.name} #{stage.name} #{reason}" }.join(", ")
-
-    redirect_to [:admin, deploy_group], alert: (failures.empty? ? nil : "Some stages were skipped: #{message}")
-  end
-
   def self.create_all_stages(deploy_group)
     _, missing_stages = stages_for_creation(deploy_group)
     missing_stages.map do |template_stage|
@@ -113,6 +107,12 @@ class Admin::DeployGroupsController < ApplicationController
   end
 
   private
+
+  def render_failures(failures)
+    message = failures.map { |reason, stage| "#{stage.project.name} #{stage.name} #{reason}" }.join(", ")
+
+    redirect_to [:admin, deploy_group], alert: (failures.empty? ? nil : "Some stages were skipped: #{message}")
+  end
 
   # executes the block for each cloned stage, returns an array of [result, stage] any non-nil responses.
   def try_each_cloned_stage

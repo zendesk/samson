@@ -9,6 +9,7 @@ describe Api::LocksController do
     unauthorized :get, :index
     unauthorized :post, :create # TODO: should allow to create a stage lock as a project deployer
     unauthorized :delete, :destroy, id: 1
+    unauthorized :delete, :destroy_via_resource
   end
 
   as_a_admin do

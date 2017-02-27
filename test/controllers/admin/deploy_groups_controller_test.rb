@@ -19,6 +19,8 @@ describe Admin::DeployGroupsController do
     unauthorized :post, :deploy_all, id: 1
     unauthorized :post, :create_all_stages, id: 1
     unauthorized :post, :delete_all_stages, id: 1
+    unauthorized :post, :merge_all_stages, id: 1
+    unauthorized :get, :create_all_stages_preview, id: 1
   end
 
   as_a_admin do
