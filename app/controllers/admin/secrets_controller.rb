@@ -28,7 +28,11 @@ class Admin::SecretsController < ApplicationController
   end
 
   def create
-    update
+    if SecretStorage.exist?(key)
+      failure_response "The secret #{key} already exists."
+    else
+      update
+    end
   end
 
   def show
@@ -56,7 +60,7 @@ class Admin::SecretsController < ApplicationController
   end
 
   def key
-    params[:id] || SecretStorage.generate_secret_key(secret_params.slice(*SecretStorage::SECRET_KEYS_PARTS))
+    @key ||= (params[:id] || SecretStorage.generate_secret_key(secret_params.slice(*SecretStorage::SECRET_KEYS_PARTS)))
   end
 
   def project_permalink
