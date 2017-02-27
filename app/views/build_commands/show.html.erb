@@ -6,13 +6,16 @@
   <%= form_for @command, url: project_build_command_path(@project), html: { class: "form-horizontal", method: :patch } do |form| %>
     <%= render 'shared/errors', object: @command %>
 
-    <div class="col-lg-offset-2">
-      This command will be run before a new docker image is built.
-      <%= form.text_area :command, size: '120x10' %>
-    </div>
+    This command will run before a docker image is built.<br/>
+    Use it to build artifacts and store them in $CACHE_DIR.<br/>
+    Ideally execute a comitted <%= link_to "build.sh", "https://github.com/zendesk/samson/blob/master/docs/pre_build_command_example.md" %>
+    that can be reused and debugged locally.<br/>
 
-    <%= form.actions do %>
-    | <%= link_to_history @command %>
-    <% end %>
+    <br/>
+
+    <%= form.text_area :command, cols: 155, rows: [form.object.command.to_s.count("\n") + 1, 10].max %>
+
+    <%= form.submit "Save", class: "btn btn-primary" %> |
+    <%= link_to_history @command %>
   <% end %>
 </section>
