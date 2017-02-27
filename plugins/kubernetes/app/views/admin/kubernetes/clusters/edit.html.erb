@@ -22,7 +22,7 @@
       %>
 
       <%= form.actions do %>
-        <% if Samson::Hooks.active_plugin?('aws_ecr') && SamsonAwsEcr::Engine.active? %>
+        <% if Samson::Hooks.active_plugin?('aws_ecr') && SamsonAwsEcr::Engine.active? && @cluster.persisted? %>
           <%= link_to "Seed ECR", seed_ecr_admin_kubernetes_cluster_path(@cluster), class: "btn btn-default", data: {method: :post} %>
         <% end %>
       <% end %>
