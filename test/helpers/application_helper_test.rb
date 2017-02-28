@@ -286,6 +286,13 @@ describe ApplicationHelper do
         "<span title=\"Foo\" class=\"mouseover\">Delete</span>"
       )
     end
+
+    it "adds data/class attribute for remove_container" do
+      html = link_to_delete("/foo", remove_container: "tr")
+      html.must_include "data-remove-container=\"tr\""
+      html.must_include "class=\"remove_container\""
+      html.wont_include "method" # would conflict between our js and rails ujs
+    end
   end
 
   describe "#link_to_delete_button" do

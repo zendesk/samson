@@ -1,6 +1,6 @@
 // show loading animation and errors inside the container that is being replaced
 $.fn.responsiveLoad = function(url, callback){
-  var loading = '<center><img src="<%= asset_path "ajax-loader.gif" %>" alt="Loading"/></center>';
+  var loading = '<center><%= image_tag "ajax-loader.gif" %></center>';
   var $container = $(this);
   var height = $container.height();
   $container.html(loading).css("height", height + "px").load(url, function(response, status, xhr){
