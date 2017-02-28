@@ -77,6 +77,12 @@ describe Admin::Kubernetes::ClustersController do
         get :new
         assert_template :edit
       end
+
+      it "renders when ECR plugin is active" do
+        SamsonAwsEcr::Engine.expects(:active?).returns(true)
+        get :new
+        assert_template :edit
+      end
     end
 
     describe "#create" do
