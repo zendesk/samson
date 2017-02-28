@@ -137,6 +137,16 @@ describe "cleanliness" do
     end
   end
 
+  it "uses whitelists for authorization so new actions ar restricted by default" do
+    controllers = Dir["{,plugins/*/}app/controllers/**/*.rb"]
+    controllers.size.must_be :>, 50
+    assert_content controllers do |content|
+      if content =~ /before_action\s+:authorize_.*only:/
+        "do not use authorization filters with :only, use :except"
+      end
+    end
+  end
+
   # If a controller only tests `as_a_admin { get :index }` then we don't know if authentification
   # logic properly works, so all actions have to be tested as unauthenticated or as public/viewer level
   # for example: as_a_deployer { unauthenticated :get, :index } + as_a_admin { get :index } is good.

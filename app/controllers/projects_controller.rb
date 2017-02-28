@@ -6,8 +6,9 @@ class ProjectsController < ApplicationController
 
   skip_before_action :require_project, only: [:index, :new, :create]
 
-  before_action :authorize_admin!, only: [:new, :create, :destroy]
-  before_action :authorize_project_admin!, except: [:show, :index, :deploy_group_versions]
+  PUBLIC = [:index, :show, :deploy_group_versions].freeze
+  before_action :authorize_project_admin!, except: PUBLIC
+  before_action :authorize_admin!, except: PUBLIC + [:edit, :update]
 
   helper_method :project
 
