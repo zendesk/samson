@@ -1,5 +1,5 @@
 <tr>
-  <% cache [stage, Lock.cache_key] do %>
+  <% cache [project.permalink, stage, Lock.cache_key] do %>
     <td>
       <%= link_to stage.name, [project, stage] %>
       <%= resource_lock_icon stage %>
