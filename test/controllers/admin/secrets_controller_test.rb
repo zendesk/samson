@@ -53,11 +53,25 @@ describe Admin::SecretsController do
         response.body.wont_include secret.value
       end
 
-      it 'can filter' do
+      it 'can filter by query' do
         create_secret 'production/global/pod2/bar'
         get :index, params: {search: {query: 'bar'}}
         assert_template :index
         assigns[:secret_keys].must_equal ['production/global/pod2/bar']
+      end
+
+      it 'can filter by project' do
+        create_secret 'production/foo-bar/pod2/bar'
+        get :index, params: {search: {project_permalink: 'foo-bar'}}
+        assert_template :index
+        assigns[:secret_keys].must_equal ['production/foo-bar/pod2/bar']
+      end
+
+      it 'can filter by key' do
+        create_secret 'production/foo-bar/pod2/bar'
+        get :index, params: {search: {key: 'bar'}}
+        assert_template :index
+        assigns[:secret_keys].must_equal ['production/foo-bar/pod2/bar']
       end
 
       it 'raises when vault server is broken' do

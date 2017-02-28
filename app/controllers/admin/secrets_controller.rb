@@ -16,6 +16,11 @@ class Admin::SecretsController < ApplicationController
     if query = params.dig(:search, :query).presence
       @secret_keys.select! { |s| s.include?(query) }
     end
+    [:key, :project_permalink].each do |part|
+      if value = params.dig(:search, part).presence
+        @secret_keys = @secret_keys.grep(SecretStorage.secret_key_regex(part, value))
+      end
+    end
   rescue Samson::Secrets::BackendError => e
     flash[:error] = e.message
     render html: "", layout: true
