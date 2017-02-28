@@ -1,0 +1,23 @@
+// clicking the 'delete' link sends a DELETE and removes the container the 'delete' is in
+$(document).on('click', 'a.remove_container', function() {
+  var $link = $(this);
+  var $container = $link.closest($link.data('remove-container'));
+  var loading = '<center><%= image_tag "ajax-loader.gif" %></center>';
+  $container.html(loading);
+
+  $.ajax({
+    url: $link.attr('href'),
+    type: 'POST',
+    data: '_method=DELETE',
+    statusCode: {
+      200: function() {
+        $container.html('Done!');
+        $container.hide('slow');
+      }
+    },
+    error: function() {
+      $container.html("Error");
+    }
+  });
+  return false;
+});

@@ -35,7 +35,7 @@
             <% if used > 0 %>
               <%= content_tag :span, "Used by #{used}", title: "Click Edit to see usage details" %>
             <% else %>
-              <%= link_to_delete([:admin, command]) %>
+              <%= link_to_delete([:admin, command], remove_container: 'tr') %>
             <% end %>
           </td>
         </tr>
