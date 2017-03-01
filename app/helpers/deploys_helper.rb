@@ -56,26 +56,6 @@ module DeploysHelper
     end
   end
 
-  def buddy_check_button(_project, deploy)
-    return unless deploy.waiting_for_buddy?
-
-    button_class = ['btn']
-
-    if @deploy.started_by?(current_user)
-      button_text = 'Bypass'
-      button_class << 'btn-danger'
-    else
-      button_text = 'Approve'
-      button_class << 'btn-primary'
-    end
-
-    link_to(
-      button_text,
-      buddy_check_project_deploy_path(@project, @deploy),
-      method: :post, class: button_class.join(' ')
-    )
-  end
-
   def syntax_highlight(code, language = :ruby)
     CodeRay.scan(code, language).html.html_safe
   end
