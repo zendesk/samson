@@ -22,7 +22,11 @@ if defined?(Airbrake) && key = ENV['AIRBRAKE_API_KEY']
     # config.ignore_environments = [:test]
   end
 
-  ignored = ['ActionController::InvalidAuthenticityToken', 'ActiveRecord::RecordNotFound']
+  ignored = [
+    'ActionController::InvalidAuthenticityToken',
+    'ActiveRecord::RecordNotFound',
+    'ActionController::UnknownHttpMethod'
+  ]
   Airbrake.add_filter do |notice|
     notice.ignore! if notice[:errors].any? { |error| ignored.include?(error[:type]) }
   end
