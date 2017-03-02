@@ -1,12 +1,37 @@
 # frozen_string_literal: true
 require_relative '../../test_helper'
 
-SingleCov.covered! uncovered: 8
+SingleCov.covered!
 
 describe Changeset::Commit do
   let(:commit_data) { stub }
-  let(:data) { stub("data", commit: commit_data) }
+  let(:data) { stub("data", commit: commit_data, author: stub, sha: "aa2a33444343") }
   let(:commit) { Changeset::Commit.new("foo/bar", data) }
+
+  describe "#author_name" do
+    it "returns username that made the commit" do
+      commit_data.stubs(author: stub(name: 'foo'))
+      commit.author_name.must_equal "foo"
+    end
+  end
+
+  describe "#author_email" do
+    it "returns the email address from the author" do
+      commit_data.stubs(author: stub(email: "bar"))
+      commit.author_email.must_equal "bar"
+    end
+  end
+
+  describe "#author" do
+    it "returns a github user if there is an author" do
+      commit.author.class.must_equal Changeset::GithubUser
+    end
+
+    it "does not return any github user if there isn't an author" do
+      data.stubs(author: nil)
+      commit.author.must_equal nil
+    end
+  end
 
   describe "#summary" do
     it "returns the first line of the commit message" do
@@ -17,6 +42,18 @@ describe Changeset::Commit do
     it "truncates the line to 80 characters" do
       commit_data.stubs(:message).returns("Hello! " * 20)
       commit.summary.length.must_equal 80
+    end
+  end
+
+  describe "#sha" do
+    it "returns a sha" do
+      commit.sha.must_equal "aa2a33444343"
+    end
+  end
+
+  describe "#short_sha" do
+    it "return a short sha" do
+      commit.short_sha.must_equal "aa2a334"
     end
   end
 
@@ -41,6 +78,12 @@ describe Changeset::Commit do
     it "returns false if the commit message does not start with HOTFIX" do
       commit_data.stubs(:message).returns("JUST DANCE!")
       assert !commit.hotfix?
+    end
+  end
+
+  describe "#url" do
+    it "builds an url" do
+      commit.url.must_equal "https://github.com/foo/bar/commit/aa2a33444343"
     end
   end
 end
