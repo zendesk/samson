@@ -43,6 +43,12 @@ describe OutputBuffer do
     build_listener.value.must_equal ["hello"]
   end
 
+  describe "#write" do
+    it "encodes everything as utf-8 to avoid CompatibilityError" do
+      listen { |o| o.write("Ó".dup.force_encoding(Encoding::BINARY)) }.map(&:encoding).must_equal [Encoding::UTF_8]
+    end
+  end
+
   describe "#puts" do
     it "writes a newline without argument" do
       listen(&:puts).must_equal ["\n"]
