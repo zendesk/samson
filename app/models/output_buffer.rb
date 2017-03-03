@@ -35,10 +35,12 @@ class OutputBuffer
   end
 
   def write(data, event = :message)
+    data = data.dup.force_encoding(Encoding::UTF_8) if data.is_a?(String) && data.encoding != Encoding::UTF_8
     @previous << [event, data] unless event == :close
     @listeners.dup.each { |listener| listener.push([event, data]) }
   end
 
+  # chunks can be split in half multi-bytes, so we have to sanitize them
   def write_docker_chunk(chunk)
     chunk = chunk.encode(Encoding::UTF_8, chunk.encoding, invalid: :replace, undef: :replace).strip
     chunk.split("\n").map { |line| write_docker_chunk_line(line) }
