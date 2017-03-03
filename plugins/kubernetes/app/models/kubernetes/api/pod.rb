@@ -15,9 +15,12 @@ module Kubernetes
         @pod.metadata.namespace
       end
 
-      # jobs are 'Succeeded' ... deploys are 'Running'
       def live?
-        (phase == 'Running' && ready?) || (phase == 'Succeeded')
+        phase == 'Running' && ready?
+      end
+
+      def completed?
+        phase == 'Succeeded'
       end
 
       def restarted?

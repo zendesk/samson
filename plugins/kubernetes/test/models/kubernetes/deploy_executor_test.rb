@@ -330,6 +330,9 @@ describe Kubernetes::DeployExecutor do
         # create job
         stub_request(:post, "http://foobar.server/apis/extensions/v1beta1/namespaces/staging/jobs").
           to_return(body: '{}')
+
+        # mark the job as Succeeded
+        pod_reply[:items][0][:status][:phase] = 'Succeeded'
       end
 
       it "runs only jobs" do

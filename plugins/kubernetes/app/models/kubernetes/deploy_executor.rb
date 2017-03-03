@@ -212,7 +212,7 @@ module Kubernetes
           {live: false, details: "Missing", pod: pod}
         elsif pod.restarted?
           {live: false, stop: true, details: "Restarted", pod: pod}
-        elsif pod.live?
+        elsif release_doc.job? ? pod.completed? : pod.live?
           {live: true, details: "Live", pod: pod}
         elsif pod.events_indicate_failure?
           {live: false, stop: true, details: "Error", pod: pod}

@@ -58,17 +58,20 @@ describe Kubernetes::Api::Pod do
       refute pod.live?
     end
 
-    describe 'without conditions' do
-      before { pod_attributes[:status].delete :conditions }
+    it "is not live without conditions" do
+      pod_attributes[:status].delete :conditions
+      refute pod.live?
+    end
+  end
 
-      it "is not live" do
-        refute pod.live?
-      end
+  describe "#completed?" do
+    it "is completed when succeeded" do
+      pod_attributes[:status][:phase] = "Succeeded"
+      assert pod.completed?
+    end
 
-      it "is live when it is a finished job" do
-        pod_attributes[:status][:phase] = 'Succeeded'
-        assert pod.live?
-      end
+    it "is not completed when not succeeded" do
+      refute pod.completed?
     end
   end
 
