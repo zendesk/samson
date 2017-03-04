@@ -6,7 +6,7 @@ function startStream() {
     var origin = $('meta[name=deploy-origin]').first().attr('content');
     var source = new EventSource(origin + streamUrl, { withCredentials: true });
 
-    var addLine = function(data, replace) {
+    function addLine(data, replace) {
       var msg = JSON.parse(data).msg;
       if (replace) {
         $messages.children().last().remove();
@@ -14,9 +14,9 @@ function startStream() {
         msg = "\n" + msg;
       }
       $messages.append(msg);
-    };
+    }
 
-    var updateStatusAndTitle = function(e) {
+    function updateStatusAndTitle(e) {
       var data = JSON.parse(e.data);
 
       $('#header').html(data.html);
@@ -26,7 +26,7 @@ function startStream() {
         var notification = new Notification(data.notification, {icon: '/favicon.ico'});
         notification.onclick = function() { window.focus(); };
       }
-    };
+    }
 
     source.addEventListener('append', function(e) {
       $messages.trigger('contentchanged');

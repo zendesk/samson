@@ -8,7 +8,7 @@ describe ApplicationHelper do
   include LocksHelper
 
   describe "#render_log" do
-    it "removes ascii escapes" do
+    it "removes translates ascii escapes to html colors" do
       # false positive ansi codes
       render_log("a[Aa").must_equal "<span class=\"ansible_none\">a[Aa</span>"
       render_log("a[AAa").must_equal "<span class=\"ansible_none\">a[AAa</span>"
@@ -26,6 +26,13 @@ describe ApplicationHelper do
       result = render_log("<script>1</script>")
       result.must_equal "<span class=\"ansible_none\">&lt;script&gt;1&lt;/script&gt;</span>"
       assert result.html_safe?
+    end
+
+    it "converts urls to links" do
+      result = render_log("foo http://bar.com bar https://sdf.dd/sdfs/2131/fdfdsf.json baz")
+      result.must_equal "<span class=\"ansible_none\">foo " \
+        "<a href=\"http://bar.com\">http://bar.com</a> bar " \
+        "<a href=\"https://sdf.dd/sdfs/2131/fdfdsf.json\">https://sdf.dd/sdfs/2131/fdfdsf.json</a> baz</span>"
     end
   end
 
