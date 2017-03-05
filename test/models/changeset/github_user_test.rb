@@ -45,7 +45,7 @@ describe Changeset::GithubUser do
     end
 
     it "is not equal if the login does not match" do
-      other = Changeset::GithubUser.new(stub("data", login: "bar"))
+      other = Changeset::GithubUser.new(stub("data", login: "bar "))
       user.eql?(other).must_equal false
     end
   end
