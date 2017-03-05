@@ -12,7 +12,12 @@ module ApplicationHelper
 
   def render_log(str)
     escaped = ERB::Util.html_escape(str)
-    ansi_escaped(escaped).html_safe
+    autolink(ansi_escaped(escaped)).html_safe
+  end
+
+  # turn exact urls into links so we can follow build urls ... only super simple to stay safe
+  def autolink(text)
+    text.gsub(%r{https?://[\w:./\d-]+}, %(<a href="\\0">\\0</a>))
   end
 
   # https://github.com/showdownjs/showdown/wiki/Markdown's-XSS-Vulnerability-(and-how-to-mitigate-it)

@@ -160,6 +160,7 @@ $(function () {
     }
 
     $('#messages').on('click', 'span', function(event) {
+      if ($(event.target).is('a')) { return; } // let users click on links
       event.preventDefault();
       var clickedNumber = indexOfLine($(event.currentTarget));
       var shift = event.shiftKey;
