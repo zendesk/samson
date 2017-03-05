@@ -5,8 +5,12 @@
     <tbody>
     <% changeset.commits.each do |commit| %>
       <tr>
-        <td><%= image_tag commit.author_avatar_url, width: 20, height: 20 if commit.author_avatar_url %></td>
-        <td><%= link_to_if commit.author.present?, commit.author_name, commit.author_url %></td>
+        <td>
+          <% if url = commit.author&.avatar_url %>
+            <%= image_tag url, width: 20, height: 20 %>
+          <% end %>
+        </td>
+        <td><%= link_to_if commit.author.present?, commit.author_name, commit.author&.url %></td>
         <td><%= link_to commit.summary, commit.url %></td>
         <td align="right"><code><%= link_to commit.short_sha, commit.url %></code></td>
       </tr>

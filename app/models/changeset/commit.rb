@@ -19,14 +19,6 @@ class Changeset::Commit
     @author ||= Changeset::GithubUser.new(@data.author) if @data.author
   end
 
-  def author_avatar_url
-    author.avatar_url if author.present?
-  end
-
-  def author_url
-    author.url if author.present?
-  end
-
   def summary
     summary = @data.commit.message.split("\n").first
     summary.truncate(80)
@@ -37,7 +29,7 @@ class Changeset::Commit
   end
 
   def short_sha
-    @data.sha[0...7]
+    @data.sha.slice(0, 7)
   end
 
   def hotfix?
