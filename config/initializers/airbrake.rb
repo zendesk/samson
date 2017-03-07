@@ -25,7 +25,8 @@ if defined?(Airbrake) && key = ENV['AIRBRAKE_API_KEY']
   ignored = [
     'ActionController::InvalidAuthenticityToken',
     'ActiveRecord::RecordNotFound',
-    'ActionController::UnknownHttpMethod'
+    'ActionController::UnknownHttpMethod',
+    'ActionController::UnknownFormat'
   ]
   Airbrake.add_filter do |notice|
     notice.ignore! if notice[:errors].any? { |error| ignored.include?(error[:type]) }
