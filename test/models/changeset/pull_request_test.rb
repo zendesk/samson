@@ -1,15 +1,27 @@
 # frozen_string_literal: true
 require_relative '../../test_helper'
 
-SingleCov.covered! uncovered: 4
+SingleCov.covered!
 
 describe Changeset::PullRequest do
+  def add_risks
+    body.replace(<<-BODY.dup.strip_heredoc)
+        # Risks
+         - Explosions
+    BODY
+  end
+
+  def no_risks
+    body.replace(<<-BODY.dup.strip_heredoc)
+        Not that risky ...
+    BODY
+  end
+
   let(:project) { projects(:test) }
   let(:pr) { Changeset::PullRequest.new("xxx", data) }
   let(:body) { "".dup }
-
   let(:sawyer_agent) { Sawyer::Agent.new('') }
-  let(:data) { Sawyer::Resource.new(sawyer_agent, user: user, merged_by: merged_by, body: body) }
+  let(:data) { Sawyer::Resource.new(sawyer_agent, user: user, merged_by: merged_by, body: body, number: 5566) }
   let(:user) { Sawyer::Resource.new(sawyer_agent, login: 'foo') }
   let(:merged_by) { Sawyer::Resource.new(sawyer_agent, login: 'bar') }
 
@@ -89,6 +101,18 @@ describe Changeset::PullRequest do
     end
   end
 
+  describe "#url" do
+    it "returns an URL" do
+      pr.url.must_equal "https://github.com/xxx/pull/5566"
+    end
+  end
+
+  describe "#reference" do
+    it "returns a number" do
+      pr.reference.must_equal "#5566"
+    end
+  end
+
   describe "#users" do
     it "returns the users associated with the pull request" do
       pr.users.map(&:login).must_equal ["foo", "bar"]
@@ -105,6 +129,17 @@ describe Changeset::PullRequest do
       it 'excludes nil users' do
         pr.users.map(&:login).must_equal ['foo']
       end
+    end
+  end
+
+  describe "#risky?" do
+    it "is risky when it has risks" do
+      add_risks
+      pr.risky?.must_equal true
+    end
+
+    it "is not risky when it has no risks" do
+      pr.risky?.must_equal false
     end
   end
 
@@ -325,20 +360,13 @@ describe Changeset::PullRequest do
     end
   end
 
+  describe "#service_type" do
+    it "returns samson category" do
+      pr.service_type.must_equal "pull_request"
+    end
+  end
+
   describe "#risks" do
-    def add_risks
-      body.replace(<<-BODY.dup.strip_heredoc)
-        # Risks
-         - Explosions
-      BODY
-    end
-
-    def no_risks
-      body.replace(<<-BODY.dup.strip_heredoc)
-        Not that risky ...
-      BODY
-    end
-
     before { add_risks }
 
     it "finds risks" do
