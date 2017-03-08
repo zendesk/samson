@@ -38,7 +38,6 @@ class DeploysController < ApplicationController
   #   * project_name (name of the project)
   #   * production (boolean, is this in proudction or not)
   #   * status (what is the status of this job failed|running| etc)
-
   def search
     status = params[:status].presence
 
@@ -159,7 +158,7 @@ class DeploysController < ApplicationController
   protected
 
   def deploy_permitted_params
-    [:reference, :stage_id] + Samson::Hooks.fire(:deploy_permitted_params)
+    [:reference, :stage_id, :environment_variables] + Samson::Hooks.fire(:deploy_permitted_params)
   end
 
   def reference
