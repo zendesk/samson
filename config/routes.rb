@@ -96,7 +96,6 @@ Samson::Application.routes.draw do
   resources :deploys, only: [:index] do
     collection do
       get :active
-      get :recent
       get :search
     end
   end
