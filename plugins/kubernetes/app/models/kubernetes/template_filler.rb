@@ -122,7 +122,9 @@ module Kubernetes
     end
 
     def set_name
-      template[:metadata][:name] = @doc.kubernetes_role.resource_name
+      name = @doc.kubernetes_role.resource_name
+      template[:metadata][:name] = name
+      template[:spec][:template][:metadata][:name] = "#{name}-#{@doc.deploy_group.permalink}"
     end
 
     # Sets the labels for each new Pod.
