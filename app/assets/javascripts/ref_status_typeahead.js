@@ -79,7 +79,7 @@ function refStatusTypeahead(options){
 
   initializeTypeahead();
 
-  $reference.keyup(function(e) {
+  $reference.on('input', function(e) {
     $ref_status_container.addClass("hidden");
     $tag_form_group.removeClass("has-success has-warning has-error");
 
@@ -93,7 +93,5 @@ function refStatusTypeahead(options){
     if(ref !== "") {
       status_check_timeout = setTimeout(function() { check_status(ref); }, 200);
     }
-
-    if (e.keyCode !== 13) { options.changed(); } // everything except escape changes the ref
   });
 }
