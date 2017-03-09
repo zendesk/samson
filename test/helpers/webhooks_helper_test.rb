@@ -7,20 +7,20 @@ describe WebhooksHelper do
   describe '#webhook_sources_for_select' do
     it "renders" do
       webhook_sources_for_select(["foo"]).must_equal [
+        ["Any", "any"],
         ["Any CI", "any_ci"],
         ["Any code push", "any_code"],
         ["Any Pull Request", "any_pull_request"],
-        ["Any", "any"],
         ["Foo", "foo"]
       ]
     end
 
     it "renders with none action" do
       webhook_sources_for_select(["foo"], none: true).must_equal [
+        ["Any", "any"],
         ["Any CI", "any_ci"],
         ["Any code push", "any_code"],
         ["Any Pull Request", "any_pull_request"],
-        ["Any", "any"],
         ["None", 'none'],
         ["Foo", "foo"]
       ]
