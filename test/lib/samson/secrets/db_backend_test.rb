@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 require_relative '../../../test_helper'
 
-SingleCov.covered! uncovered: 7
+SingleCov.covered!
 
 describe Samson::Secrets::DbBackend do
   let(:secret) { create_secret 'production/foo/pod2/hello' }
@@ -24,6 +24,20 @@ describe Samson::Secrets::DbBackend do
 
     it "returns nothing when it cannot find" do
       Samson::Secrets::DbBackend.read_multi('production/foo/pod2/noooo').must_equal({})
+    end
+  end
+
+  describe ".write" do
+    it "creates a new secret" do
+      Samson::Secrets::DbBackend.write(
+        "a/b/c/foo", comment: "fooo", value: "bar", visible: "baz", user_id: "bars"
+      ).must_equal true
+    end
+
+    it "updates an existing secret" do
+      Samson::Secrets::DbBackend.write(
+        secret.id, comment: "fooo", value: "bar", visible: "baz", user_id: "bars"
+      ).must_equal true
     end
   end
 
