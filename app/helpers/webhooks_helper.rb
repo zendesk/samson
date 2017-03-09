@@ -1,10 +1,10 @@
 # frozen_string_literal: true
 module WebhooksHelper
   GENERIC_SOURCES = [
+    ['Any', 'any'],
     ['Any CI', 'any_ci'],
     ['Any code push', 'any_code'],
-    ['Any Pull Request', 'any_pull_request'],
-    ['Any', 'any']
+    ['Any Pull Request', 'any_pull_request']
   ].freeze
 
   NO_SOURCE = [['None', 'none']].freeze
