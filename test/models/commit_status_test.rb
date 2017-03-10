@@ -63,10 +63,27 @@ describe CommitStatus do
         status.status.must_equal 'success'
       end
 
-      it "warns when previous deploy was higher numerically" do
-        deploy.update_column(:reference, 'v4.10')
-        success!
-        status.status.must_equal 'error'
+      describe "when previous deploy was higher numerically" do
+        before { deploy.update_column(:reference, 'v4.10') }
+
+        it "warns" do
+          success!
+          status.status.must_equal 'error'
+          status.status_list[1][:description].must_equal(
+            "v4.10 was deployed to deploy groups in this stage by Production"
+          )
+        end
+
+        it "warns with multiple higher deploys" do
+          other = deploys(:succeeded_test)
+          other.update_column(:reference, 'v4.9')
+
+          success!
+          status.status.must_equal 'error'
+          status.status_list[1][:description].must_equal(
+            "v4.9, v4.10 was deployed to deploy groups in this stage by Staging, Production"
+          )
+        end
       end
 
       it "ignores when previous deploy was not a version" do
