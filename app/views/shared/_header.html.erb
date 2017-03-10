@@ -24,7 +24,7 @@
                 <% end %>
               </li>
             <% end %>
-            <% if current_user.try(:admin?) %>
+            <% if current_user&.admin? %>
               <li class="divider"></li>
               <li><%= link_to "Manage Projects", admin_projects_path %></li>
             <% end %>
