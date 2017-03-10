@@ -70,3 +70,30 @@
 </fieldset>
 
 <%= Samson::Hooks.render_views(:stage_form, self, form: form) %>
+
+<script>
+  // fold empty fieldsets and let users unfold them to reduce clutter
+  $(function(){
+    $("fieldset").each(function(_, fieldset){
+      var fieldset = $(fieldset);
+      var form_elements = fieldset.find('> *').not('legend');
+
+      var filled = fieldset.find(':input').filter(function(_, el){
+        if(el.type == "checkbox" || el.type == "radio") {
+          return $(el).is(':checked');
+        } else if(el.type == "hidden") {
+          return false;
+        } else {
+          return $(el).val() != "";
+        }
+      });
+
+      if(filled.size() == 0) {
+        fieldset.find('legend').
+          click(function(){ form_elements.toggle() }).click().
+          css('cursor', 'pointer').
+          append(' &#x2304;');
+      }
+    });
+  });
+</script>
