@@ -15,7 +15,7 @@ class ReleaseService
 
   def can_release?
     GITHUB.repo(@project.user_repo_part).permissions[:push]
-  rescue Octokit::NotFound
+  rescue Octokit::NotFound, Octokit::Unauthorized
     false
   end
 
