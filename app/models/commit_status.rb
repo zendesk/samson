@@ -50,30 +50,36 @@ class CommitStatus
   # @return [nil, error-state]
   def release_status
     return unless DeployGroup.enabled?
-    return unless @reference =~ Release::VERSION_REGEX
+    return unless current_version = version(@reference)
+    return unless higher_references = last_deployed_references.select { |n| version(n)&.> current_version }.presence
 
-    references = [@reference] + last_deployed_references.grep(Release::VERSION_REGEX)
-    highest_reference = references.max_by { |n| Gem::Version.new(n[Release::VERSION_REGEX, 1]) }
-    return if @reference == highest_reference
-
-    # code above is hot ... so keep it optimized and re-fetch here if something bad was found
-    interfering_stage_ids = @stage.project.deploys.where(reference: highest_reference).
-      reorder(nil).group(:stage_id).pluck(:stage_id)
-    interfering_stage = Stage.where(id: interfering_stage_ids).map(&:name).join(", ")
+    # code above is hot ... so keep it optimized and re-fetch here only if something bad was found
+    interfering_stage_ids = deploy_scope.where(reference: higher_references).pluck(:stage_id)
+    interfering_stages = Stage.where(id: interfering_stage_ids).pluck(:name)
 
     {
       state: "error", # `pending` is also supported in deploys.js, but that seems even worse
       statuses: [{
         state: "Old Release",
-        description: "#{highest_reference} was deployed to deploy groups in this stage by #{interfering_stage}"
+        description:
+          "#{higher_references.join(', ')} was deployed to deploy groups in this stage" \
+          " by #{interfering_stages.join(", ")}"
       }]
     }
   end
 
+  def version(reference)
+    return unless plain = reference[Release::VERSION_REGEX, 1]
+    Gem::Version.new(plain)
+  end
+
   # optimized to sql instead of AR fanciness to make it go from 1s -> 0.01s on our worst case stage
   def last_deployed_references
-    last_deployed = Deploy.reorder(nil).successful.
-      where(stage_id: @stage.influencing_stage_ids).group(:stage_id).pluck('max(deploys.id)')
-    Deploy.reorder(nil).where(id: last_deployed).pluck(:reference)
+    last_deployed = deploy_scope.pluck('max(deploys.id)')
+    Deploy.reorder(nil).where(id: last_deployed).pluck('distinct reference')
+  end
+
+  def deploy_scope
+    @deploy_scope ||= Deploy.reorder(nil).successful.where(stage_id: @stage.influencing_stage_ids).group(:stage_id)
   end
 end
