@@ -5,7 +5,7 @@
     form_path: Rails.application.routes.url_helpers.flowdock_notify_path(deploy_id: deploy.id),
     title: 'Request a buddy via Flowdock',
     message: FlowdockNotification.new(deploy).default_buddy_request_message,
-    channels: deploy.stage.enabled_flows_names.join(', '),
+    channels: deploy.stage.flowdock_flows.map(&:name).join(', '),
     users: SamsonFlowdock::FlowdockService.new(deploy).users,
     channel_type: 'flows'
   %>

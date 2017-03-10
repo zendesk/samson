@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20170208221802) do
+ActiveRecord::Schema.define(version: 20170310033621) do
 
   create_table "builds", force: :cascade do |t|
     t.integer  "project_id",                                       null: false
@@ -127,13 +127,13 @@ ActiveRecord::Schema.define(version: 20170208221802) do
   end
 
   create_table "flowdock_flows", force: :cascade do |t|
-    t.string   "name",                      null: false
-    t.string   "token",                     null: false
-    t.integer  "stage_id",                  null: false
+    t.string   "name",       null: false
+    t.string   "token",      null: false
+    t.integer  "stage_id",   null: false
     t.datetime "created_at"
     t.datetime "updated_at"
-    t.boolean  "enabled",    default: true, null: false
   end
+
 
   create_table "jenkins_jobs", force: :cascade do |t|
     t.integer  "jenkins_job_id"
@@ -407,7 +407,7 @@ ActiveRecord::Schema.define(version: 20170208221802) do
     t.datetime "created_at"
     t.datetime "updated_at"
     t.boolean  "before_deploy",                 default: false, null: false
-    t.boolean  "after_deploy",                  default: true,  null: false
+    t.boolean  "after_deploy",                  default: false, null: false
     t.boolean  "for_buddy",                     default: false, null: false
     t.boolean  "only_on_failure",               default: false, null: false
     t.index ["stage_id"], name: "index_slack_webhooks_on_stage_id", using: :btree

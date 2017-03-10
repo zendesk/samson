@@ -15,13 +15,6 @@
         <%= flow_field.text_field :token, class: "form-control", placeholder: "Token" %>
       </div>
 
-      <div class="col-lg-2 checkbox">
-        <%= flow_field.label :enabled do %>
-          <%= flow_field.check_box :enabled %>
-          Enabled
-        <% end %>
-      </div>
-
       <%= delete_checkbox flow_field %>
     </div>
   <% end %>

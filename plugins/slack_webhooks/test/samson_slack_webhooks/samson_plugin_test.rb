@@ -35,7 +35,7 @@ describe SamsonSlackWebhooks do
 
   describe :stage_clone do
     it "copies all attributes except id" do
-      stage.slack_webhooks << SlackWebhook.new(webhook_url: 'http://example.com')
+      stage.slack_webhooks << SlackWebhook.new(webhook_url: 'http://example.com', after_deploy: true)
       new_stage = Stage.new
       Samson::Hooks.fire(:stage_clone, stage, new_stage)
       new_stage.slack_webhooks.map(&:attributes).must_equal [{
