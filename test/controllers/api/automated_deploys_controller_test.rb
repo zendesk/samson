@@ -4,6 +4,15 @@ require_relative '../../test_helper'
 SingleCov.covered!
 
 describe Api::AutomatedDeploysController do
+  def assert_created
+    assert_difference 'Stage.count', +1 do
+      assert_difference 'Deploy.count', +1 do
+        post_create
+        assert_response :created
+      end
+    end
+  end
+
   before do
     # trigger deploy validation error we saw in staging ... validate_stage_uses_deploy_groups_properly
     # we set $DEPLOY_GROUPS via before_command but do not select any deploy group
@@ -27,12 +36,7 @@ describe Api::AutomatedDeploysController do
     end
 
     it "creates a new stage and deploys" do
-      assert_difference 'Stage.count', +1 do
-        assert_difference 'Deploy.count', +1 do
-          post_create
-          assert_response :created
-        end
-      end
+      assert_created
 
       # copies over the buddy id and uses current user as use
       Deploy.first.user.must_equal user
@@ -40,6 +44,28 @@ describe Api::AutomatedDeploysController do
 
       # env vars are correctly encoded
       Job.last.command.must_include "export PARAM_FOO=bar\\\\nba\\$\n"
+    end
+
+    it "sets command when configured" do
+      command = Command.create!(command: "foo")
+      with_env "AUTOMATED_DEPLOY_COMMAND_ID" => command.id.to_s do
+        assert_created
+        Stage.last.commands.first.command.must_equal command.command
+      end
+    end
+
+    describe "with email" do
+      with_env "AUTOMATED_DEPLOY_FAILURE_EMAIL" => "foo@bar.com"
+
+      it "sets email when configured" do
+        user.update_column(:integration, true)
+        assert_created
+        Stage.last.static_emails_on_automated_deploy_failure.must_equal "foo@bar.com"
+      end
+
+      it "raises when seting the email would have no effect" do
+        assert_raises(ArgumentError) { assert_created }
+      end
     end
 
     it "reuses an existing stage and deploys" do

@@ -40,6 +40,16 @@ class Api::AutomatedDeploysController < Api::BaseController
       @stage.name = STAGE_NAME
       @stage.dashboard = "Automatically created stage from Api::AutomatedDeploysController<br>" \
         "that will deploy to individual deploy groups or hosts when called via api."
+
+      if command_id = ENV['AUTOMATED_DEPLOY_COMMAND_ID']
+        @stage.command_ids = [command_id] + @stage.command_ids
+      end
+
+      if email = ENV['AUTOMATED_DEPLOY_FAILURE_EMAIL']
+        raise ArgumentError, "email will not work unless user is automated" unless current_user.integration?
+        @stage.static_emails_on_automated_deploy_failure = email
+      end
+
       unless @stage.save
         failed!("Unable to save stage: #{@stage.errors.full_messages}")
       end
