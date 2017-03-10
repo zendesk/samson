@@ -4,12 +4,16 @@ require_relative '../test_helper'
 SingleCov.covered!
 
 describe SlackWebhook do
-  let(:webhook) { SlackWebhook.new(after_deploy: false) }
+  let(:webhook) { SlackWebhook.new(after_deploy: true, webhook_url: 'http://example.com') }
+
+  it "is valid" do
+    assert_valid webhook
+  end
 
   describe "#validate_url" do
-    it "is valid with a valid url" do
-      webhook.webhook_url = 'http://example.com'
-      assert_valid webhook
+    it "is invalid without url" do
+      webhook.webhook_url = nil
+      refute_valid webhook
     end
 
     it "is invalid with an invalid url" do
@@ -23,8 +27,17 @@ describe SlackWebhook do
     end
   end
 
+  describe "#validate_used" do
+    it "is invalid when all types are deselected" do
+      webhook.after_deploy = false
+      refute_valid webhook
+    end
+  end
+
   describe "#deliver_for?" do
     let(:deploy) { deploys(:succeeded_test) }
+
+    before { webhook.after_deploy = false }
 
     it "does not deliver when everything is disabled" do
       refute webhook.deliver_for?(:before_deploy, deploy)
@@ -48,7 +61,7 @@ describe SlackWebhook do
     end
 
     it "fails with unknown hook" do
-      assert_raises { webhook.deliver_for?(:foobar, deploy) }
+      assert_raises { webhook.deliver_for?(:foobar, deploy) }.message.must_equal "Unknown phase :foobar"
     end
 
     describe "with only_on_failure" do
