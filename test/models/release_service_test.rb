@@ -75,6 +75,11 @@ describe ReleaseService do
       refute service.can_release?
     end
 
+    it "cannot release when user is unauthorized" do
+      stub_github_api("repos/bar/foo", {}, 401)
+      refute service.can_release?
+    end
+
     it "cannot release when user does not have github access" do
       stub_github_api("repos/bar/foo", {}, 404)
       refute service.can_release?
