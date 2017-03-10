@@ -16,7 +16,10 @@ samson.directive('handleDropdownSelection', function($timeout) {
           listItems.eq((index + (e.keyCode - 39)) % listItems.length).addClass('selected');
         } else if (e.keyCode == 13) { // enter
           e.preventDefault();
-          selected.find('a').get(0).click();
+          var a = selected.find('a').get(0);
+          if (a) {
+            a.click();
+          }
         } else {
           $timeout(function() {
             if(!selected.is(':visible')) {

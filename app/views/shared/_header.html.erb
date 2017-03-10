@@ -8,9 +8,8 @@
           <a href="#" class="dropdown-toggle" data-toggle="dropdown" focus-on="{ click: '#project_search' }">Projects <b class="caret"></b></a>
           <ul class="dropdown-menu">
             <li>
-              <a class="padding-sm">
-                <input id="project_search" type="search" handle-dropdown-selection class="filter-list form-control input-block" placeholder="Search projects" data-target=".filtered-projects">
-              </a>
+              <input id="project_search" type="search" handle-dropdown-selection class="project-search filter-list" placeholder="Search projects" data-target=".filtered-projects">
+              <div class="project-search-icon glyphicon glyphicon-search"></div>
             </li>
             <li class="divider"></li>
             <% Project.ordered_for_user(current_user).each do |project| %>
