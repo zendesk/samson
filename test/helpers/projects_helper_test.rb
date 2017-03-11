@@ -5,25 +5,28 @@ require_relative '../test_helper'
 SingleCov.covered!
 
 describe ProjectsHelper do
+  let(:project) { projects(:test) }
+  let(:stage) { stages(:test_staging) }
+
   describe "#star_link" do
-    let(:project) { projects(:test) }
     let(:current_user) { users(:admin) }
-    let(:stage) { stages(:test_staging) }
 
     it "star a project" do
-      current_user.stubs(:starred_project?).returns(false)
+      current_user.expects(:starred_project?).returns(false)
       link = star_for_project(project)
-      assert_includes link, %(href="/stars?id=#{project.to_param}")
-      assert_includes link, %(data-method="post")
+      link.must_include %(href="/projects/#{project.to_param}/stars")
+      link.must_include "Star this project"
     end
 
     it "unstar a project" do
-      current_user.stubs(:starred_project?).returns(true)
+      current_user.expects(:starred_project?).returns(true)
       link = star_for_project(project)
-      assert_includes link, %(href="/stars/#{project.to_param}")
-      assert_includes link, %(data-method="delete")
+      link.must_include %(href="/projects/#{project.to_param}/stars")
+      link.must_include "Unstar this project"
     end
+  end
 
+  describe "#deployment_alert_title" do
     it 'returns the deployment alert data' do
       job = project.jobs.create!(command: 'cat foo', user: users(:deployer), status: 'failed')
       deploy = stage.deploys.create!(reference: 'master', job: job, project: project)
@@ -65,7 +68,6 @@ describe ProjectsHelper do
 
   describe "#repository_web_link" do
     let(:current_user) { users(:admin) }
-    let(:stage) { stages(:test_staging) }
 
     def config_mock
       Rails.application.config.samson.github.stub(:web_url, "github.com") do

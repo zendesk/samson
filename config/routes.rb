@@ -78,10 +78,10 @@ Samson::Application.routes.draw do
     end
 
     resource :changelog, only: [:show]
+    resource :stars, only: [:create]
     resources :webhooks, only: [:index, :create, :destroy]
     resources :outbound_webhooks, only: [:create, :destroy]
     resources :references, only: [:index]
-
     resources :users, only: [:index, :update]
 
     member do
@@ -120,7 +120,6 @@ Samson::Application.routes.draw do
   get '/logout', to: 'sessions#destroy'
 
   resources :csv_exports, only: [:index, :new, :create, :show]
-  resources :stars, only: [:create, :destroy]
   resources :dashboards, only: [:show] do
     member do
       get :deploy_groups
