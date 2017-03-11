@@ -68,13 +68,6 @@ module SecretStorage
       SECRET_KEYS_PARTS.zip(key.split(SEPARATOR, SECRET_KEYS_PARTS.size)).to_h
     end
 
-    def secret_key_regex(part, content)
-      position = SECRET_KEYS_PARTS.index(part) || raise("Unknown part #{part.inspect}")
-      matcher = Array.new(4) { "(?:[^/]+)" }
-      matcher[position] = Regexp.escape(content)
-      %r{\A#{matcher.join("/")}\z}
-    end
-
     private
 
     def modify_keys_cache

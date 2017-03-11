@@ -12,13 +12,14 @@ class Admin::SecretsController < ApplicationController
   before_action :convert_visible_to_boolean, only: [:update, :create, :new]
 
   def index
-    @secret_keys = SecretStorage.keys
+    @secret_keys = SecretStorage.keys.map { |key| [key, SecretStorage.parse_secret_key(key)] }
+    @keys = @secret_keys.map { |_key, parts| parts.fetch(:key) }.uniq.sort
     if query = params.dig(:search, :query).presence
-      @secret_keys.select! { |s| s.include?(query) }
+      @secret_keys.select! { |key, _parts| key.include?(query) }
     end
     [:key, :project_permalink].each do |part|
       if value = params.dig(:search, part).presence
-        @secret_keys = @secret_keys.grep(SecretStorage.secret_key_regex(part, value))
+        @secret_keys.select! { |_key, parts| parts.fetch(part) == value }
       end
     end
   rescue Samson::Secrets::BackendError => e

@@ -101,13 +101,6 @@ describe SecretStorage do
     end
   end
 
-  describe ".secret_key_regex" do
-    it "can build a regex" do
-      SecretStorage.secret_key_regex(:project_permalink, 'foo.bar').
-        must_equal %r{\A(?:[^/]+)/foo\.bar/(?:[^/]+)/(?:[^/]+)\z}
-    end
-  end
-
   describe ".read" do
     it "reads" do
       data = SecretStorage.read(secret.id, include_value: true)
