@@ -1,23 +1,13 @@
-// clicking the 'delete' link sends a DELETE and removes the container the 'delete' is in
+// clicking the link sends the request and removes the container it was in or shows and error in it's place
 $(document).on('click', 'a.remove_container', function() {
   var $link = $(this);
   var $container = $link.closest($link.data('remove-container'));
-  var loading = '<center><%= image_tag "ajax-loader.gif" %></center>';
-  $container.html(loading);
+  $container.html('<center><%= image_tag "ajax-loader.gif" %></center>');
 
-  $.ajax({
-    url: $link.attr('href'),
-    type: 'POST',
-    data: '_method=DELETE',
-    statusCode: {
-      200: function() {
-        $container.html('Done!');
-        $container.hide('slow');
-      }
-    },
-    error: function() {
-      $container.html("Error");
-    }
+  $link.bind('ajax:success', function(){
+    $container.html('Done!');
+    $container.hide('slow');
+  }).bind('ajax:error', function(){
+    $container.html("Error");
   });
-  return false;
 });
