@@ -1,23 +1,15 @@
 # frozen_string_literal: true
 class StarsController < ApplicationController
-  before_action :require_project
+  include CurrentProject
 
+  # toggles star by creating/destroying it
   def create
-    current_user.stars.create!(project: @project)
+    if star = current_user.stars.find_by_project_id(current_project.id)
+      star&.destroy
+    else
+      current_user.stars.create!(project: current_project)
+    end
 
     head :ok
-  end
-
-  def destroy
-    star = current_user.stars.find_by_project_id(@project.id)
-    star&.destroy
-
-    head :ok
-  end
-
-  private
-
-  def require_project
-    @project = Project.find_by_param!(params[:id])
   end
 end
