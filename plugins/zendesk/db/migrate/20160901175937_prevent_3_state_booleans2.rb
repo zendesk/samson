@@ -1,10 +1,10 @@
 # frozen_string_literal: true
-# same as plugins/zendesk/db/migrate/20160901175937_prevent_3_state_booleans2.rb
-class Prevent3StateBooleans < ActiveRecord::Migration[4.2]
+# same as db/migrate/20160901175936_prevent_3_state_booleans.rb
+class Prevent3StateBooleans2 < ActiveRecord::Migration[4.2]
   class Stage < ActiveRecord::Base
   end
 
-  COLUMNS = [:update_github_pull_requests, :use_github_deployment_api].freeze
+  COLUMNS = [:comment_on_zendesk_tickets].freeze
 
   def up
     COLUMNS.each do |column|
