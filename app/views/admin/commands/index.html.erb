@@ -5,7 +5,7 @@
   <div class="col-sm-3">
     <%= label_tag "Project" %><br/>
     <% options = options_for_select([['Global', 'global']] + Project.order('name asc').pluck(:name, :id), params[:search].try(:[], :project_id)) %>
-    <%= select_tag 'search[project_id]', options, include_blank: "", class: "form-control" %>
+    <%= select_tag 'search[project_id]', options, include_blank: "", title: "", class: "form-control selectpicker", data: {live_search: true} %>
   </div>
   <%= render 'shared/search_button' %>
 <% end %>

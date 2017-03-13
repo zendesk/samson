@@ -23,7 +23,7 @@
         <label class="col-lg-2 control-label">Projects</label>
         <div class="col-lg-4">
           <%= select_tag :project_ids, options_from_collection_for_select(@projects, :id, :name),
-                         class: 'form-control', multiple: true, required: 'required' %>
+                         class: 'form-control selectpicker', title: "", multiple: true, required: 'required', data: {live_search: true} %>
         </div>
       </div>
 

@@ -32,7 +32,7 @@
         <% projects = [['', 0]] + Project.pluck(:name, :id) +
            Project.deleted.pluck(:name, :id).map { |name, id| ["(deleted) #{name}", id] } %>
         <div class="col-lg-4">
-          <%= select_tag(:project, options_for_select(projects, 0), class: "form-control") %>
+          <%= select_tag :project, options_for_select(projects, 0), class: "form-control selectpicker", data: {live_search: true}, title: "" %>
         </div>
       </div>
       <div class="form-group">
