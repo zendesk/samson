@@ -54,7 +54,7 @@ class Admin::SecretsController < ApplicationController
 
   def destroy
     SecretStorage.delete(key)
-    successful_response('Secret removed.')
+    head :ok
   end
 
   private

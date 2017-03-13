@@ -120,12 +120,11 @@ module ApplicationHelper
         else
           "Are you sure ?"
         end
-      options[:data] = {confirm: message}
+      options[:data] = {confirm: message, method: :delete}
       if container = options[:remove_container]
         options[:data][:remove_container] = container
+        options[:data][:remote] = true
         options[:class] = "remove_container"
-      else
-        options[:method] = :delete
       end
       link_to text, path, options
     end

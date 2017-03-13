@@ -298,7 +298,7 @@ describe ApplicationHelper do
       html = link_to_delete("/foo", remove_container: "tr")
       html.must_include "data-remove-container=\"tr\""
       html.must_include "class=\"remove_container\""
-      html.wont_include "method" # would conflict between our js and rails ujs
+      html.must_include "method"
     end
   end
 
