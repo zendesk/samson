@@ -14,25 +14,25 @@ describe Deploy do
     let!(:deploy) { create_deploy! }
 
     it "shows no buddy" do
-      deploy.summary.must_equal "Deployer  deployed baz to Staging"
+      deploy.summary.must_equal "Deployer  started deploying baz to Staging"
     end
 
     it "shows soft delete user" do
       deploy.user.soft_delete!
       deploy.reload
-      deploy.summary.must_equal "Deployer  deployed baz to Staging"
+      deploy.summary.must_equal "Deployer  started deploying baz to Staging"
     end
 
     it "shows hard delete user" do
       deploy.user.delete
       deploy.reload
-      deploy.summary.must_equal "Deleted User  deployed baz to Staging"
+      deploy.summary.must_equal "Deleted User  started deploying baz to Staging"
     end
 
     it "shows soft delete stage when INCLUDE_DELETED" do
       deploy.stage.soft_delete!
       deploy.reload
-      Stage.with_deleted { deploy.summary.must_equal "Deployer  deployed baz to Staging" }
+      Stage.with_deleted { deploy.summary.must_equal "Deployer  started deploying baz to Staging" }
     end
 
     describe "when buddy was required" do
@@ -42,19 +42,19 @@ describe Deploy do
         before { deploy.update_column(:buddy_id, user2.id) }
 
         it "shows the buddy" do
-          deploy.summary.must_equal "Deployer (with Admin) deployed baz to Staging"
+          deploy.summary.must_equal "Deployer (with Admin) started deploying baz to Staging"
         end
 
         it "shows soft delete buddy" do
           deploy.buddy.soft_delete!
           deploy.reload
-          deploy.summary.must_equal "Deployer (with Admin) deployed baz to Staging"
+          deploy.summary.must_equal "Deployer (with Admin) started deploying baz to Staging"
         end
 
         it "shows hard delete buddy" do
           deploy.buddy.delete
           deploy.reload
-          deploy.summary.must_equal "Deployer (with Deleted User) deployed baz to Staging"
+          deploy.summary.must_equal "Deployer (with Deleted User) started deploying baz to Staging"
         end
       end
 
@@ -64,12 +64,12 @@ describe Deploy do
       end
 
       it "shows that there was no buddy" do
-        deploy.summary.must_equal "Deployer (without a buddy) deployed baz to Staging"
+        deploy.summary.must_equal "Deployer (without a buddy) started deploying baz to Staging"
       end
 
       it "shows that there was no buddy when skipping" do
         deploy.buddy = user
-        deploy.summary.must_equal "Deployer (without a buddy) deployed baz to Staging"
+        deploy.summary.must_equal "Deployer (without a buddy) started deploying baz to Staging"
       end
     end
   end
@@ -82,7 +82,7 @@ describe Deploy do
 
   describe "#summary_for_email" do
     it "renders" do
-      deploy.summary_for_email.must_equal "Super Admin deployed Project to Staging (staging)"
+      deploy.summary_for_email.must_equal "Super Admin started deploying Project to Staging (staging)"
     end
   end
 

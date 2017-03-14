@@ -28,7 +28,7 @@ class Deploy < ActiveRecord::Base
     "running"    => "is deploying",
     "cancelling" => "is cancelling a deploy",
     "cancelled"  => "cancelled a deploy",
-    "succeeded"  => "deployed",
+    "succeeded"  => "started deploying",
     "failed"     => "failed to deploy",
     "errored"    => "encountered an error deploying"
   }.freeze

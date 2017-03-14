@@ -12,7 +12,7 @@ describe BuildSerializer do
   end
 
   it 'serializes summary' do
-    parsed['summary'].must_equal "staging was deployed to Staging"
+    parsed['summary'].must_equal "staging was started deploying to Staging"
   end
 
   it 'serializes created_at to milliseconds' do
