@@ -105,6 +105,11 @@ describe Lock do
     it 'lists the user who created the lock' do
       lock.summary.must_include('by Deployer')
     end
+
+    it 'shows warning' do
+      lock.warning = true
+      lock.summary.must_include('Warning: ')
+    end
   end
 
   describe "#unlock_summary" do
