@@ -1,12 +1,13 @@
 <fieldset>
-  <legend>Slack Webhooks</legend>
+  <legend>
+    Slack Webhooks
+    <%= additional_info 'To add a webhook to Slack, click "Add an app or integration" and then select "Incoming webhook"' %>
+  </legend>
 
   <% stage = form.object %>
   <% stage.slack_webhooks.build %>
 
   <div class="col-lg-offset-2">
-    <p>Details of the webhook to be notified on deploys.</p>
-
     <%= form.fields_for :slack_webhooks do |slack_field| %>
       <div class="form-group">
         <div class="col-lg-4">

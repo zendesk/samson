@@ -1,1 +1,1 @@
-Notify slack channels before/after deploy.
+Notify slack channels before/after deploy/on buddy request.
