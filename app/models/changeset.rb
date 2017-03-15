@@ -13,12 +13,6 @@ class Changeset
     "#{Rails.application.config.samson.github.web_url}/#{repo}/compare/#{commit_range}"
   end
 
-  def hotfix?
-    Rails.cache.fetch("#{cache_key}-hotfix", expires_in: 1.year) do
-      commits.any?(&:hotfix?)
-    end
-  end
-
   def commit_range
     "#{previous_commit}...#{commit}"
   end

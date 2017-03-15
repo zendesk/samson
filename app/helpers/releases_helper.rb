@@ -1,14 +1,7 @@
 # frozen_string_literal: true
 module ReleasesHelper
   def release_label(project, release)
-    if release.changeset.hotfix?
-      content = link_to(release.version, [project, release], class: "release-label label label-warning")
-      warning = content_tag(:span, "", class: "glyphicon glyphicon-exclamation-sign", title: "Hotfix!")
-
-      content + " " + warning
-    else
-      link_to(release.version, [project, release], class: "release-label label label-success")
-    end
+    link_to(release.version, [project, release], class: "release-label label label-success")
   end
 
   def link_to_deploy_stage(stage, release)

@@ -1,5 +1,4 @@
 # frozen_string_literal: true
-# rubocop:disable Metrics/LineLength
 require_relative '../test_helper'
 
 SingleCov.covered!
@@ -11,11 +10,6 @@ describe ReleasesHelper do
 
     it "produces a label" do
       result.must_equal "<a class=\"release-label label label-success\" href=\"/projects/foo/releases/v123\">v123</a>"
-    end
-
-    it "adds warnings for hotfix" do
-      release.changeset.stubs(hotfix?: true)
-      result.must_equal "<a class=\"release-label label label-warning\" href=\"/projects/foo/releases/v123\">v123</a> <span class=\"glyphicon glyphicon-exclamation-sign\" title=\"Hotfix!\"></span>"
     end
   end
 
