@@ -3,10 +3,6 @@ require_relative '../../test_helper'
 SingleCov.covered!
 
 describe Api::DeploysController do
-  assert_route :get, "/api/deploys/active_count", to: 'api/deploys#active_count'
-  assert_route :get, "/api/projects/1/deploys", to: 'api/deploys#index', params: {project_id: '1'}
-  assert_route :get, "/api/stages/2/deploys", to: 'api/deploys#index', params: {stage_id: '2'}
-
   oauth_setup!
 
   describe '#active_count' do
@@ -39,13 +35,11 @@ describe Api::DeploysController do
         job.commit = "staging"
       end
     end
-
     let(:project) { job_success.project }
     let(:stage) { stages(:test_staging) }
     let(:admin) { users(:admin) }
     let(:command) { job.command }
     let(:job_success) { jobs(:succeeded_test) }
-
     let(:deploy_success) { deploys(:succeeded_test) }
     let!(:deploy_failure) do
       deploy = deploys(:succeeded_test)
@@ -141,6 +135,13 @@ describe Api::DeploysController do
           end
         end
       end
+    end
+  end
+
+  describe '#show' do
+    it 'renders' do
+      get :show, params: {id: deploys(:succeeded_test).id}, format: :json
+      assert_response :success
     end
   end
 end
