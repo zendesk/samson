@@ -13,7 +13,7 @@
 
     <% if DeployGroup.enabled? %>
       <div class="col-lg-2">
-        <%= fields.select :scope_type_and_id, scopes, {}, class: "form-control" %>
+        <%= fields.select :scope_type_and_id, scopes, {}, class: "form-control selectpicker", title: "", data: {live_search: true} %>
       </div>
     <% end %>
 
