@@ -264,7 +264,7 @@ class JobExecution
       result = yield dir
     end
   rescue Errno::ENOTEMPTY, Errno::ENOENT
-    Airbrake.notify("Notify: make_tempdir error #{$!}")
+    Airbrake.notify("Notify: make_tempdir error #{$!.message.split('@').first}")
     result # tempdir ensure sometimes fails ... not sure why ... return normally
   end
 
