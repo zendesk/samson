@@ -8,6 +8,8 @@ describe OutputBuffer do
 
   let(:buffer) { OutputBuffer.new }
 
+  before { freeze_time }
+
   it "allows writing chunks of data to multiple listeners" do
     buffer # make sure the buffer is created before each listener
 
@@ -20,8 +22,8 @@ describe OutputBuffer do
     buffer.write("world")
     buffer.close
 
-    listener1.value.must_equal ["hello", "world"]
-    listener2.value.must_equal ["hello", "world"]
+    listener1.value.must_equal ["[04:05:06] hello", "[04:05:06] world"]
+    listener2.value.must_equal ["[04:05:06] hello", "[04:05:06] world"]
   end
 
   it "writes the previous content to new listeners" do
@@ -33,14 +35,14 @@ describe OutputBuffer do
 
     buffer.close
 
-    listener.value.must_equal ["hello"]
+    listener.value.must_equal ["[04:05:06] hello"]
   end
 
   it "yields the buffered chunks and returns if closed" do
     buffer.write("hello")
     buffer.close
 
-    build_listener.value.must_equal ["hello"]
+    build_listener.value.must_equal ["[04:05:06] hello"]
   end
 
   describe "#write" do
@@ -51,24 +53,24 @@ describe OutputBuffer do
 
   describe "#puts" do
     it "writes a newline without argument" do
-      listen(&:puts).must_equal ["\n"]
+      listen(&:puts).must_equal ["[04:05:06] \n"]
     end
 
     # the double \n case happens randomly on travis ...
     # https://travis-ci.org/zendesk/samson/jobs/174876970
     it "writes nil as newline" do
-      [["\n"], ["\n", "\n"]].must_include listen { |o| o.puts nil }
+      [["[04:05:06] \n"], ["\n", "\n"]].must_include listen { |o| o.puts nil }
     end
 
     it "rstrips content" do # not sure why we do this, just documenting
-      listen { |o| o.puts " x " }.must_equal [" x\n"]
+      listen { |o| o.puts " x " }.must_equal ["[04:05:06]  x\n"]
     end
   end
 
   describe "#write_docker_chunk" do
     it "nicely formats complete chunk" do
       buffer.write_docker_chunk('{"foo": 1, "bar": 2}').first.must_equal("foo" => 1, "bar" => 2)
-      buffer.to_s.must_equal("foo: 1 | bar: 2\n")
+      buffer.to_s.must_equal("[04:05:06] foo: 1 | bar: 2\n")
     end
 
     it "ignores blank values" do
@@ -78,7 +80,7 @@ describe OutputBuffer do
 
     it "writes partial chunks" do # ideally piece together multiple partial chunks
       buffer.write_docker_chunk('{"foo": ').first.must_equal('message' => '{"foo":')
-      buffer.to_s.must_equal "{\"foo\":\n"
+      buffer.to_s.must_equal "[04:05:06] {\"foo\":\n"
     end
 
     it "does not print spammy progressDetail" do
@@ -88,13 +90,13 @@ describe OutputBuffer do
 
     it "simplifies stream only responses" do
       buffer.write_docker_chunk('{"stream": 123}').first.must_equal("stream" => 123)
-      buffer.to_s.must_equal("123\n")
+      buffer.to_s.must_equal("[04:05:06] 123\n")
     end
 
     it "coverts dockers ASCII encoding to utf-8 with valid json" do
       buffer.write_docker_chunk('{"foo": "\255"}'.dup.force_encoding(Encoding::BINARY))
       buffer.write_docker_chunk('{"bar": "meh"}')
-      buffer.to_s.must_equal "foo: 255\nbar: meh\n"
+      buffer.to_s.must_equal "[04:05:06] foo: 255\n[04:05:06] bar: meh\n"
     end
 
     it "coverts dockers ASCII encoding to utf-8 with invalid json" do
@@ -103,7 +105,8 @@ describe OutputBuffer do
       buffer.write_docker_chunk('foo"\255"}')
       buffer.close
 
-      buffer.to_s.must_equal "foo\"\\255\"}\n---\\u003e 6c9a006fd38a\\n\nfoo\"\\255\"}\n"
+      buffer.to_s.must_equal \
+        "[04:05:06] foo\"\\255\"}\n[04:05:06] ---\\u003e 6c9a006fd38a\\n\n[04:05:06] foo\"\\255\"}\n"
       build_listener.value.map(&:encoding).uniq.must_equal([Encoding::UTF_8])
       build_listener.value.map(&:valid_encoding?).uniq.must_equal([true])
     end
@@ -116,7 +119,7 @@ describe OutputBuffer do
 
       output = lines.map(&:to_json).join("\n")
       buffer.write_docker_chunk(output).must_equal(lines)
-      buffer.to_s.must_equal "foo: 1 | bar: 2\nfoo: 3 | bar: 4\n"
+      buffer.to_s.must_equal "[04:05:06] foo: 1 | bar: 2\n[04:05:06] foo: 3 | bar: 4\n"
     end
   end
 
@@ -124,7 +127,7 @@ describe OutputBuffer do
     before { buffer.write("hello", :message) }
 
     it "is true when exact message was sent" do
-      assert buffer.include?(:message, "hello")
+      assert buffer.include?(:message, "[04:05:06] hello")
     end
 
     it "is false when different event was sent" do
@@ -141,7 +144,7 @@ describe OutputBuffer do
       buffer.write("hello", :message)
       buffer.write("hello", :close)
       buffer.write("world", :message)
-      buffer.to_s.must_equal "helloworld"
+      buffer.to_s.must_equal "[04:05:06] hello[04:05:06] world"
     end
   end
 

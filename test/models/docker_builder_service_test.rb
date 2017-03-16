@@ -158,7 +158,8 @@ describe DockerBuilderService do
 
       it "executes it" do
         service.send(:before_docker_build, tmp_dir)
-        output.string.must_include "[04:05:06] » echo foo\r\nfoo\r\n[04:05:06] » echo bar\r\nbar\r\n"
+        output.string.must_include \
+          "» echo foo\r\nfoo\r\n» echo bar\r\nbar\r\n"
         output.string.must_include "export CACHE_DIR="
       end
 
@@ -166,7 +167,7 @@ describe DockerBuilderService do
         create_secret "global/#{project.permalink}/global/foo"
         command.update_column(:command, "echo secret://foo")
         service.send(:before_docker_build, tmp_dir)
-        output.string.must_include "[04:05:06] » echo secret://foo\r\nMY-SECRET\r\n"
+        output.string.must_include "» echo secret://foo\r\nMY-SECRET\r\n"
       end
 
       it "fails when command fails" do
@@ -175,7 +176,7 @@ describe DockerBuilderService do
           service.send(:before_docker_build, tmp_dir)
         end
         e.message.must_equal "Error running build command"
-        output.string.must_include "[04:05:06] » exit 1\r\n"
+        output.string.must_include "» exit 1\r\n"
       end
     end
   end
@@ -284,7 +285,7 @@ describe DockerBuilderService do
     it 'rescues docker error' do
       service.expects(:push_image_to_registries).raises(Docker::Error::DockerError)
       refute service.send(:push_image)
-      output.to_s.must_equal "Docker push failed: Docker::Error::DockerError\n"
+      output.to_s.must_include "Docker push failed: Docker::Error::DockerError"
     end
 
     describe 'with credentials' do

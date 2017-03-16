@@ -79,7 +79,7 @@ class ActiveSupport::TestCase
   end
 
   def freeze_time
-    DateTime.stubs(:now).returns(DateTime.new(2001, 2, 3, 4, 5, 6))
+    Time.stubs(:now).returns(Time.new(2001, 2, 3, 4, 5, 6))
   end
 
   def ar_queries

@@ -31,7 +31,7 @@ class TerminalExecutor
     output, input, pid = PTY.spawn(whitelisted_env, script(commands), options)
     record_pid(pid) do
       begin
-        output.each(256) { |line| @output.write line }
+        output.each(256) { |chunk| @output.write chunk }
       rescue Errno::EIO
         nil # output was closed ... only happens on linux
       end
@@ -58,7 +58,7 @@ class TerminalExecutor
   def script(commands)
     commands.map! do |c|
       if @verbose
-        "echo [#{DateTime.now.utc.strftime("%T")}] » #{c.shellescape}\n#{resolve_secrets(c)}"
+        "echo » #{c.shellescape}\n#{resolve_secrets(c)}"
       else
         resolve_secrets(c)
       end
