@@ -69,18 +69,6 @@ describe Changeset::Commit do
     end
   end
 
-  describe "#hotfix?" do
-    it "returns true if the commit message starts with HOTFIX" do
-      commit_data.stubs(:message).returns("HOTFIX: DANCE!")
-      assert commit.hotfix?
-    end
-
-    it "returns false if the commit message does not start with HOTFIX" do
-      commit_data.stubs(:message).returns("JUST DANCE!")
-      assert !commit.hotfix?
-    end
-  end
-
   describe "#url" do
     it "builds an url" do
       commit.url.must_equal "https://github.com/foo/bar/commit/aa2a33444343"
