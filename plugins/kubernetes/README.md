@@ -11,7 +11,7 @@ pending.**
 
 ## Overview
 
-The plugin works by communicating with one or more Kubernetes clusters via 
+The plugin works by communicating with one or more Kubernetes clusters via
 their APIs. It uses a ruby gem called [kubeclient](https://github.com/abonas/kubeclient).
 It is possible for Samson to communicate with multiple clusters, e.g. one
 cluster running locally on your laptop, a second cluster running in an AWS
@@ -20,7 +20,7 @@ configuring clusters.
 
 Once you have connected to one or more clusters, you can configure a project
 to deploy it to Kubernetes. That involves:
- 
+
 1. Set up your project so you can create Builds with Docker images
 2. Configuring one or more "Roles" for the project
 3. Creating one or more Kubernetes configuration files in the project
@@ -47,7 +47,7 @@ the Samson UI.
 
 Kubernetes has the concept of a [Namespace](http://kubernetes.io/v1.0/docs/user-guide/namespaces.html),
 which means a virtual cluster inside of a single physical cluster. This can be
-useful if you want to have a single Kubernetes cluster running in AWS or a 
+useful if you want to have a single Kubernetes cluster running in AWS or a
 datacenter, but logically divide them between a "staging" and "production"
 namespace.
 
@@ -97,16 +97,17 @@ requires:
 ### Configuration Files
 
 To deploy to Kubernetes, Samson reads in configuration file from the project
-repository. That file is expected to contain the definition of a
-[Pod](http://kubernetes.io/v1.0/docs/user-guide/pods.html) or a 
-[Replication Controller](http://kubernetes.io/v1.0/docs/user-guide/replication-controller.html).
+repository. That file is expected to contain the definition of a Deployment/Daemonset/Service/Job/etc.
 Samson will read in that file from the project repository, make some
 changes (like updating the Docker image and adding labels), and send that
 to the Kubernetes API.
 
 Each role is expected to have its own configuration file. The contents of
 the files will likely be similar for each role, though it will likely
-have a different command or liveness probe.
+have a different command or liveness probe
+([kucodiff](https://github.com/grosser/kucodiff) can be used to make sure they stay in sync).
+
+Environment variables with `value: filled-by-samson` are verified to be filled out, use `env` plugin to configure them.
 
 ## Deploying to Kubernetes
 
@@ -139,10 +140,10 @@ Kubernetes::ReleaseGroup
 
 ### Clair security scans
 
-To security scan docker images using hyperclair, add:
+To security scan docker images using hyperclair, enable hyperclair plugin and add:
 
 ```
 HYPERCLAIR_PATH=/filesystem/path/to/hyperclair
-``` 
+```
 
 Must exit with 0 for success and 1 for failure.
