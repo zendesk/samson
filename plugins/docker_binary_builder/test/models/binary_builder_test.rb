@@ -67,11 +67,12 @@ describe BinaryBuilder do
       before do
         File.write(pre_build_script, 'echo foobar')
         File.chmod(0o755, pre_build_script)
+        freeze_time
       end
 
       it 'succeeds when pre build script succeeds' do
         builder.build
-        output.string.gsub(/» .*\n/, '').must_equal [
+        output.string.gsub(/\[04:05:06\] » .*\n/, '').must_equal [
           "Running pre build script...\n",
           "foobar\r\n",
           "Connecting to Docker host with Api version: 1.19 ...\n",

@@ -151,7 +151,10 @@ describe DockerBuilderService do
     describe "with build_command" do
       let(:command) { Command.create!(command: "echo foo\r\necho bar") }
 
-      before { project.update_column(:build_command_id, command.id) }
+      before do
+        project.update_column(:build_command_id, command.id)
+        freeze_time
+      end
 
       it "executes it" do
         service.send(:before_docker_build, tmp_dir)

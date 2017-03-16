@@ -98,6 +98,8 @@ describe TerminalExecutor do
     describe 'in verbose mode' do
       subject { TerminalExecutor.new(output, verbose: true) }
 
+      before { freeze_time }
+
       it 'records commands' do
         subject.execute!('echo "hi"', 'echo "hell o"')
         output.string.must_equal(%([04:05:06] » echo "hi"\r\nhi\r\n[04:05:06] » echo "hell o"\r\nhell o\r\n))
@@ -171,12 +173,15 @@ describe TerminalExecutor do
       end
 
       it "does not show secrets in verbose mode" do
+        freeze_time
+
         subject.instance_variable_set(:@verbose, true)
         id = 'global/global/global/baz'
         secret = create_secret(id)
         subject.execute!("export SECRET='secret://baz'; echo $SECRET")
+        # echo prints it, but not the execution
         output.string.must_equal \
-          "[04:05:06] » export SECRET='secret://baz'; echo $SECRET\r\n#{secret.value}\r\n" # echo prints it, but not the execution
+          "[04:05:06] » export SECRET='secret://baz'; echo $SECRET\r\n#{secret.value}\r\n"
       end
     end
   end
