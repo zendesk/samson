@@ -58,7 +58,7 @@ class TerminalExecutor
   def script(commands)
     commands.map! do |c|
       if @verbose
-        "echo » #{c.shellescape}\n#{resolve_secrets(c)}"
+        "echo [#{DateTime.now.strftime("%T")}] » #{c.shellescape}\n#{resolve_secrets(c)}"
       else
         resolve_secrets(c)
       end

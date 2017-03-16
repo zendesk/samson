@@ -42,12 +42,14 @@ module DefaultStubs
     SseRailsEngine.stubs(:send_event).returns(true)
     Project.any_instance.stubs(:clone_repository).returns(true)
     Project.any_instance.stubs(:clean_repository).returns(true)
+    DateTime.stubs(:now).returns(DateTime.new(2001,2,3,4,5,6))
   end
 
   def undo_default_stubs
     Project.any_instance.unstub(:clone_repository)
     Project.any_instance.unstub(:clean_repository)
     SseRailsEngine.unstub(:send_event)
+    DateTime.unstubs(:now)
   end
 end
 

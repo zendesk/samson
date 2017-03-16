@@ -100,12 +100,12 @@ describe TerminalExecutor do
 
       it 'records commands' do
         subject.execute!('echo "hi"', 'echo "hell o"')
-        output.string.must_equal(%(» echo "hi"\r\nhi\r\n» echo "hell o"\r\nhell o\r\n))
+        output.string.must_equal(%([04:05:06] » echo "hi"\r\nhi\r\n[04:05:06] » echo "hell o"\r\nhell o\r\n))
       end
 
       it 'does not print subcommands' do
         subject.execute!('sh -c "echo 111"')
-        output.string.must_equal("» sh -c \"echo 111\"\r\n111\r\n")
+        output.string.must_equal("[04:05:06] » sh -c \"echo 111\"\r\n111\r\n")
       end
     end
 
@@ -176,7 +176,7 @@ describe TerminalExecutor do
         secret = create_secret(id)
         subject.execute!("export SECRET='secret://baz'; echo $SECRET")
         output.string.must_equal \
-          "» export SECRET='secret://baz'; echo $SECRET\r\n#{secret.value}\r\n" # echo prints it, but not the execution
+          "[04:05:06] » export SECRET='secret://baz'; echo $SECRET\r\n#{secret.value}\r\n" # echo prints it, but not the execution
       end
     end
   end
