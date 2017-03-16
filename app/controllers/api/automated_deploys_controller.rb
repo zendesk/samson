@@ -21,7 +21,7 @@ class Api::AutomatedDeploysController < Api::BaseController
     )
 
     if deploy.persisted?
-      render json: deploy.to_json, status: :created, location: [@stage.project, deploy]
+      render json: deploy.to_json, status: :created, location: api_deploys_path(deploy)
     else
       failed! "Unable to start deploy: #{deploy.errors.full_messages}"
     end
