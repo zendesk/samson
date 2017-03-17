@@ -155,6 +155,14 @@ describe CsvExportJob do
         end
       end
     end
+
+    # needs to be in sync with app/controllers/csv_exports_controller.rb
+    it "can filter for bypassed" do
+      filter = {'deploys.buddy_id' => nil, 'stages.no_code_deployed' => false}
+      deploys(:succeeded_test).update_column(:buddy_id, 1)
+      stages(:test_production).update_column(:no_code_deployed, true)
+      completeness_test(filter, 1)
+    end
   end
 
   def completeness_test(filters, expected_count)
@@ -165,8 +173,8 @@ describe CsvExportJob do
     csv_response = CSV.read(filename)
     csv_response.shift # Remove Header in file
     csv_response.pop # Remove filter summary row
-    deploycount = csv_response.pop.pop.to_i # Remove summary row and extract count
-    expected_count.must_equal deploycount
-    deploycount.must_equal csv_response.length
+    deploy_count = csv_response.pop.pop.to_i # Remove summary row and extract count
+    deploy_count.must_equal expected_count
+    deploy_count.must_equal csv_response.length
   end
 end

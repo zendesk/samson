@@ -321,6 +321,11 @@ describe CsvExportsController do
         create_fail_test("Invalid status filter foo", status: 'foo')
         create_fail_test("Invalid project id foo", project: "foo")
       end
+
+      it "with filters bypassed" do
+        post :create, params: {bypassed: "true"}
+        CsvExport.last.filters.must_equal("deploys.buddy_id" => nil, "stages.no_code_deployed" => false)
+      end
     end
   end
 
