@@ -12,6 +12,7 @@ if defined?(Airbrake) && key = ENV['AIRBRAKE_API_KEY']
     # send correct errors even when something blows up during initialization
     config.environment = Rails.env
     config.ignore_environments = [:test, :development]
+    config.root_directory = Bundler.root.realpath # can be removed after https://github.com/airbrake/airbrake-ruby/pull/180
 
     # report in development:
     # - add development in application.rb airbrake check
