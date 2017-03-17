@@ -125,6 +125,11 @@ class CsvExportsController < ApplicationController
       end
     end
 
+    if params[:bypassed] == 'true'
+      filter['deploys.buddy_id'] = nil
+      filter['stages.no_code_deployed'] = false
+    end
+
     filter
   end
 end

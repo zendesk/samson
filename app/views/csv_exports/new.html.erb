@@ -35,6 +35,14 @@
           <%= select_tag :project, options_for_select(projects, 0), class: "form-control selectpicker", data: {live_search: true}, title: "" %>
         </div>
       </div>
+      <% if params[:type] != "users" %>
+        <div class="form-group">
+          <%= label_tag :bypassed, "Bypassed buddy check", class: "col-lg-2 control-label" %>
+          <div class="col-lg-4">
+            <%= check_box_tag :bypassed %>
+          </div>
+        </div>
+      <% end %>
       <div class="form-group">
         <div class="col-lg-offset-2 col-lg-10">
           <%= submit_tag "Create Deploys CSV Report", class: 'btn btn-default' %>
