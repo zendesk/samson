@@ -13,15 +13,12 @@
     <% ids.each do |id| %>
       <div class="form-group">
         <div class="col-lg-2 col-lg-offset-2">
-          <%= select_tag "project[environment_variable_group_ids][]",
-              options_for_select([[nil, nil]] + environment_variable_groups, id),
-              class: "form-control selectpicker", title: "", placeholder: "Name", data: {live_search: true}
-          %>
+          <%= select_tag "project[environment_variable_group_ids][]", options_for_select([[nil, nil]] + environment_variable_groups, id), class: "form-control", placeholder: "Name" %>
         </div>
       </div>
     <% end %>
-    <%= link_to "Add row", "#", class: "duplicate_previous_row" %> |
   <% end %>
+  <%= link_to "Add row", "#", class: "duplicate_previous_row" %> |
   <%= link_to "Group overview", [:admin, EnvironmentVariableGroup] %> |
   <%= link_to "Preview", preview_admin_environment_variable_groups_path(project_id: form.object.id) %>
 </fieldset>
