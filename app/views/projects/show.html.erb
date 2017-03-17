@@ -3,6 +3,8 @@
 <%= render 'projects/header', project: project, tab: "stages" %>
 
 <section class="clearfix tabs">
+  <%= render 'shared/dashboard', resource: @project %>
+
   <table class="project-stages table table-condensed">
     <thead>
       <tr>

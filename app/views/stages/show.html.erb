@@ -26,10 +26,7 @@
     </div>
   </div>
 
-  <% if @stage.dashboard.present? %>
-    <h2>Dashboard</h2>
-    <div><%= sanitize @stage.dashboard, tags: Loofah::HTML5::WhiteList::ACCEPTABLE_ELEMENTS + %w[iframe] %></div>
-  <% end %>
+  <%= render 'shared/dashboard', resource: @stage %>
 
   <%= Samson::Hooks.render_views(:stage_show, self) %>
 
