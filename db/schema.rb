@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20170310033621) do
+ActiveRecord::Schema.define(version: 20170317001258) do
 
   create_table "builds", force: :cascade do |t|
     t.integer  "project_id",                                       null: false
@@ -350,6 +350,7 @@ ActiveRecord::Schema.define(version: 20170310033621) do
     t.string   "docker_release_branch"
     t.string   "release_source",                          default: "any", null: false
     t.integer  "build_command_id"
+    t.text     "dashboard",                 limit: 65535
     t.index ["build_command_id"], name: "index_projects_on_build_command_id", using: :btree
     t.index ["permalink"], name: "index_projects_on_permalink", unique: true, length: { permalink: 191 }, using: :btree
     t.index ["token"], name: "index_projects_on_token", unique: true, length: { token: 191 }, using: :btree
