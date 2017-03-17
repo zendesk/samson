@@ -6,6 +6,7 @@ module Kubernetes
 
     CUSTOM_UNIQUE_LABEL_KEY = 'rc_unique_identifier'
     SECRET_PULLER_IMAGE = ENV['SECRET_PULLER_IMAGE'].presence
+    ENV_VERIFIER = 'filled-by-samson'
 
     def initialize(release_doc, template)
       @doc = release_doc
@@ -32,6 +33,13 @@ module Kubernetes
       end
     end
 
+    def verify_env
+      return unless missing_env # save work when there will be nothing to do
+      set_env
+      return unless missing = missing_env
+      raise Samson::Hooks::UserError, "Missing env variables #{missing.map { |e| e[:name] }.join(", ")}"
+    end
+
     def set_secrets
       return unless needs_secret_puller?
       set_secret_puller
@@ -41,13 +49,13 @@ module Kubernetes
     private
 
     # make sure we clean up old replicasets
-    # we only ever do rollback to latest release ... and the default is infitite
+    # we only ever do rollback to latest release ... and the default is infinite
     # see discussion in https://github.com/kubernetes/kubernetes/issues/23597
     def set_history_limit
       template[:spec][:revisionHistoryLimit] ||= 1
     end
 
-    # look up keys in all possible namespaces by specificity
+    # replace keys in annotations by looking them up in all possible namespaces by specificity
     def expand_secret_annotations
       resolver = Samson::Secrets::KeyResolver.new(project, [@doc.deploy_group])
       secret_annotations.each do |k, v|
@@ -171,10 +179,16 @@ module Kubernetes
       @project ||= @doc.kubernetes_release.project
     end
 
+    def env
+      (container[:env] ||= [])
+    end
+
+    def missing_env
+      env.select { |e| e[:value] == ENV_VERIFIER }.presence
+    end
+
     # helpful env vars, also useful for log tagging
     def set_env
-      env = (container[:env] ||= [])
-
       static_env.each { |k, v| env << {name: k.to_s, value: v.to_s} }
 
       # dynamic lookups for unknown things during deploy

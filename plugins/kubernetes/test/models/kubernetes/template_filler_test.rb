@@ -262,4 +262,24 @@ describe Kubernetes::TemplateFiller do
       end
     end
   end
+
+  describe "#verify_env" do
+    it "passes when everything is filled out" do
+      template.expects(:set_env).never # does not call expensive stuff if nothing is required
+      template.verify_env
+    end
+
+    it "fails when value is missing" do
+      template.send(:env) << {name: 'FOO', value: 'filled-by-samson'}
+      assert_raises Samson::Hooks::UserError do
+        template.verify_env
+      end
+    end
+
+    it "passes when missing value is filled out" do
+      EnvironmentVariable.create!(parent: projects(:test), name: 'FOO', value: 'BAR')
+      template.send(:env) << {name: 'FOO', value: 'filled-by-samson'}
+      template.verify_env
+    end
+  end
 end

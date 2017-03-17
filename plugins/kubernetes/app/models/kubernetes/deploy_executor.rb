@@ -409,7 +409,7 @@ module Kubernetes
     # verify with a temp release so we can verify everything before creating a real release
     # and having to wait for docker build to finish
     def verify_kubernetes_templates!
-      release = Kubernetes::Release.new(project: @job.project, git_sha: @job.commit)
+      release = Kubernetes::Release.new(project: @job.project, git_sha: @job.commit, git_ref: 'master')
       deploy_group_configs.each do |config|
         config.fetch(:roles).each do |role|
           Kubernetes::ReleaseDoc.new(

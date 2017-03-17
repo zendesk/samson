@@ -176,6 +176,17 @@ describe Kubernetes::DeployExecutor do
         end
         e.message.must_include "Failed to resolve secret keys:\n\tbar"
       end
+
+      it "fails before building when env is not configured" do
+        # overriding the stubbed value
+        template = Kubernetes::ReleaseDoc.new.send(:raw_template)[0]
+        template[:spec][:template][:spec][:containers][0][:env] = [{name: "FOO", value: 'filled-by-samson'}]
+
+        e = assert_raises Samson::Hooks::UserError do
+          refute execute!
+        end
+        e.message.must_include "Missing env variables FOO"
+      end
     end
 
     describe "role settings" do

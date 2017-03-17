@@ -226,7 +226,7 @@ describe Kubernetes::ReleaseDoc do
     end
   end
 
-  # tested in depth from deploy_executor.rb
+  # tested in depth from deploy_executor.rb since it has to work when called with it's local ReleaseDoc setup
   describe "#verify_template" do
     it "can run with a new release doc" do
       kubernetes_fake_raw_template
