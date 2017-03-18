@@ -11,13 +11,11 @@ class DeployMailer < ApplicationMailer
 
   def bypass_email(deploy, user)
     prepare_mail(deploy)
-
-    subject = "[BYPASS]#{deploy_subject(deploy)}"
-
-    to_email = [BuddyCheck.bypass_email_address]
-    to_email << BuddyCheck.bypass_jira_email_address if BuddyCheck.bypass_jira_email_address
-
-    mail(to: to_email, cc: user.email, subject: subject)
+    mail(
+      subject: "[BYPASS]#{deploy_subject(deploy)}",
+      to: BuddyCheck.bypass_email_addresses,
+      cc: user.email
+    )
   end
 
   def deploy_failed_email(deploy, emails)

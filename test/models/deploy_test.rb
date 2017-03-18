@@ -239,6 +239,7 @@ describe Deploy do
       DeployService.any_instance.expects(:confirm_deploy!)
       deploy.confirm_buddy!(users(:viewer))
       deploy.buddy.must_equal users(:viewer)
+      assert deploy.start_time
     end
   end
 
@@ -333,7 +334,7 @@ describe Deploy do
   end
 
   describe ".expired" do
-    let(:threshold) { BuddyCheck.time_limit.minutes.ago }
+    let(:threshold) { BuddyCheck.time_limit.ago }
     let(:other) { deploys(:succeeded_production_test) }
 
     before do

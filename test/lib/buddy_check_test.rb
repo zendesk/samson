@@ -1,130 +1,90 @@
 # frozen_string_literal: true
 require_relative '../test_helper'
 
-SingleCov.covered! uncovered: 5
+SingleCov.covered!
 
 describe BuddyCheck do
-  let(:project) { job.project }
-  let(:user) { job.user }
-  let(:service) { DeployService.new(user) }
-  let(:stage) { deploy.stage }
-  let(:reference) { deploy.reference }
-  let(:job) { jobs(:succeeded_test) }
-  let(:deploy) { deploys(:succeeded_production_test) }
-  let(:job_execution) { JobExecution.new(reference, job) }
-
-  let(:other_user) { users(:deployer_buddy) }
-
-  it "start_time is set for buddy_checked deploy" do
-    deploy_rtn = stage.create_deploy(user, reference: reference)
-    deploy_rtn.confirm_buddy!(other_user)
-
-    assert_equal true, deploy_rtn.start_time.to_i.positive?
-  end
-
-  it "start_time is set for non-buddy_checked deploy" do
-    deploy_rtn = stage.create_deploy(user, reference: reference)
-
-    assert_equal true, deploy_rtn.start_time.to_i.positive?
-  end
-
-  it "does not deploy production if buddy check is enabled" do
-    BuddyCheck.stubs(:enabled?).returns(true)
-
-    stage.expects(:production?).returns(true)
-    service.expects(:confirm_deploy!).never
-
-    service.deploy!(stage, reference: reference)
-  end
-
-  it "does deploy production if buddy check is not enabled" do
-    BuddyCheck.stubs(:enabled?).returns(false)
-
-    stage.stubs(:production?).returns(true)
-    service.expects(:confirm_deploy!).once
-
-    service.deploy!(stage, reference: reference)
-  end
-
-  it "does deploy non-production if buddy check is enabled" do
-    BuddyCheck.stubs(:enabled?).returns(true)
-
-    stage.expects(:production?).returns(false)
-    service.expects(:confirm_deploy!).once
-
-    service.deploy!(stage, reference: reference)
-  end
-
-  it "does deploy non-production if buddy check is not enabled" do
-    BuddyCheck.stubs(:enabled?).returns(false)
-
-    stage.stubs(:production?).returns(false)
-    service.expects(:confirm_deploy!).once
-
-    service.deploy!(stage, reference: reference)
-  end
-
-  describe "before notifications, buddycheck enabled" do
-    before do
-      stage.update_attribute(:production, true)
-      job_execution.stubs(:execute!)
-      job_execution.stubs(:setup!).returns(true)
-
-      JobExecution.stubs(:new).returns(job_execution)
-      JobQueue.any_instance.stubs(:delete_and_enqueue_next) # we do not properly add the job, so removal fails
-
-      BuddyCheck.stubs(:enabled?).returns(true)
-    end
-
-    describe "for buddy same" do
-      it "sends bypass alert email notification" do
-        DeployMailer.stubs(:prepare_mail)
-
-        DeployMailer.expects(:bypass_email).returns(stub("DeployMailer", deliver_now: true))
-
-        deploy.buddy = user
-        service.confirm_deploy!(deploy)
-        job_execution.send(:run!)
+  describe ".enabled?" do
+    it "is enabled when 1" do
+      with_env BUDDY_CHECK_FEATURE: "1" do
+        assert BuddyCheck.enabled?
       end
     end
 
-    describe "for buddy different" do
-      it "does not send bypass alert email notification" do
-        DeployMailer.expects(:bypass_email).never
+    it "is disabled when not 1" do
+      with_env BUDDY_CHECK_FEATURE: "true" do
+        refute BuddyCheck.enabled?
+      end
+    end
 
-        deploy.buddy = other_user
-        service.confirm_deploy!(deploy)
-        job_execution.send(:run!)
+    it "is disabled when not set" do
+      refute BuddyCheck.enabled?
+    end
+  end
+
+  describe ".grace_period" do
+    it "is 4 hours by default" do
+      BuddyCheck.grace_period.must_equal 4.hours
+    end
+
+    it "can be changed" do
+      with_env BUDDY_CHECK_GRACE_PERIOD: '2' do
+        BuddyCheck.grace_period.must_equal 2.hours
+      end
+    end
+
+    it "ignores empty" do
+      with_env BUDDY_CHECK_GRACE_PERIOD: '' do
+        BuddyCheck.grace_period.must_equal 4.hours
+      end
+    end
+
+    it "fails on bad" do
+      with_env BUDDY_CHECK_GRACE_PERIOD: 'foo' do
+        assert_raises(ArgumentError) { BuddyCheck.grace_period }
       end
     end
   end
 
-  describe "before notifications, buddycheck disabled" do
-    before do
-      job_execution.stubs(:execute!)
-      JobExecution.expects(:start_job).returns(job_execution)
-      job_execution.stubs(:setup!).returns(true)
-
-      BuddyCheck.stubs(:enabled?).returns(false)
+  describe ".time_limit" do
+    it "defaults to 20 minutes" do
+      BuddyCheck.time_limit.must_equal 20.minutes
     end
 
-    describe "for buddy same" do
-      it "sends bypass alert email notification" do
-        DeployMailer.expects(:bypass_email).never
-
-        deploy.buddy = user
-        service.confirm_deploy!(deploy)
-        job_execution.send(:run!)
+    it "can read BUDDY_CHECK_TIME_LIMIT" do
+      with_env BUDDY_CHECK_TIME_LIMIT: "10" do
+        BuddyCheck.time_limit.must_equal 10.minutes
       end
     end
 
-    describe "for buddy different" do
-      it "does not send bypass alert email notification" do
-        DeployMailer.expects(:bypass_email).never
+    it "can read deprecated DEPLOY_MAX_MINUTES_PENDING" do
+      with_env DEPLOY_MAX_MINUTES_PENDING: "10" do
+        BuddyCheck.time_limit.must_equal 10.minutes
+      end
+    end
 
-        deploy.buddy = other_user
-        service.confirm_deploy!(deploy)
-        job_execution.send(:run!)
+    it "fails nicely with invalid number" do
+      with_env DEPLOY_MAX_MINUTES_PENDING: "foo" do
+        assert_raises(ArgumentError) { BuddyCheck.time_limit }
+      end
+    end
+  end
+
+  describe ".bypass_email_addresses" do
+    it "is empty by default" do
+      BuddyCheck.bypass_email_addresses.must_equal []
+    end
+
+    it "reads BYPASS_EMAIL" do
+      with_env BYPASS_EMAIL: "a@b.com,b@c.com" do
+        BuddyCheck.bypass_email_addresses.must_equal ["a@b.com", "b@c.com"]
+      end
+    end
+
+    it "reads BYPASS_JIRA_EMAIL" do
+      with_env BYPASS_JIRA_EMAIL: "a@b.com" do
+        BuddyCheck.expects(:warn)
+        BuddyCheck.bypass_email_addresses.must_equal ["a@b.com"]
       end
     end
   end

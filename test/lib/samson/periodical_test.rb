@@ -54,16 +54,16 @@ describe Samson::Periodical do
 
   describe ".run_once" do
     it "runs" do
-      BuddyCheck.expects(:stop_expired_deploys)
-      Samson::Periodical.run_once(:stop_expired_deploys)
+      Lock.expects(:remove_expired_locks)
+      Samson::Periodical.run_once(:remove_expired_locks)
     end
 
     it "sends errors to airbrake" do
-      BuddyCheck.expects(:stop_expired_deploys).raises custom_error
+      Lock.expects(:remove_expired_locks).raises custom_error
       Airbrake.expects(:notify).
-        with(instance_of(custom_error), error_message: "Samson::Periodical stop_expired_deploys failed")
+        with(instance_of(custom_error), error_message: "Samson::Periodical remove_expired_locks failed")
       assert_raises custom_error do
-        Samson::Periodical.run_once(:stop_expired_deploys)
+        Samson::Periodical.run_once(:remove_expired_locks)
       end
     end
   end
