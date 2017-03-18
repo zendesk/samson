@@ -9,24 +9,28 @@
           <%= date_field_tag :start_date, Date.today.prev_year, id: "start-date", class: "form-control" %>
         </div>
       </div>
+
       <div class="form-group">
         <%= label_tag :end_date, "End Date:", class: "col-lg-2 control-label" %>
         <div class="col-lg-2">
           <%= date_field_tag :end_date, Date.today, id: "end-date", class: "form-control" %>
         </div>
       </div>
+
       <div class="form-group">
         <%= label_tag :production, "Production:", class: "col-lg-2 control-label" %>
         <div class="col-lg-2">
           <%= select_tag :production, options_for_select(['', 'Yes', 'No'], ''), class: "form-control" %>
         </div>
       </div>
+
       <div class="form-group">
         <%= label_tag :status, "Status:", class: "col-lg-2 control-label" %>
         <div class="col-lg-2">
           <%= select_tag :status, options_for_select([['All', 'all'], ['Succeeded', 'succeeded'], ['Failed', 'failed]']], 'all'), class: "form-control" %>
         </div>
       </div>
+
       <div class="form-group">
         <%= label_tag :project, "Project", class: "col-lg-2 control-label" %>
         <% projects = [['', 0]] + Project.pluck(:name, :id) +
@@ -35,14 +39,16 @@
           <%= select_tag :project, options_for_select(projects, 0), class: "form-control selectpicker", data: {live_search: true}, title: "" %>
         </div>
       </div>
-      <% if params[:type] != "users" %>
-        <div class="form-group">
-          <%= label_tag :bypassed, "Bypassed buddy check", class: "col-lg-2 control-label" %>
-          <div class="col-lg-4">
-            <%= check_box_tag :bypassed %>
-          </div>
+
+      <div class="form-group">
+        <div class="col-lg-offset-2 col-lg-10 checkbox">
+          <%= label_tag do %>
+            <%= check_box_tag :bypassed, true %>
+            Bypassed buddy check
+          <% end %>
         </div>
-      <% end %>
+      </div>
+
       <div class="form-group">
         <div class="col-lg-offset-2 col-lg-10">
           <%= submit_tag "Create Deploys CSV Report", class: 'btn btn-default' %>

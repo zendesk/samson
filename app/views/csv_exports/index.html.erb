@@ -2,8 +2,8 @@
 
 <section id="csv-exports" class="clearfix">
   <div>
-    <p><%= link_to "Deploys Report", new_csv_export_path %></p>
-    <p><%= link_to "Users Report", new_csv_export_path(type: :users) %></p>
+    <p><%= link_to "New Deploys Report", new_csv_export_path %></p>
+    <p><%= link_to "New Users Report", new_csv_export_path(type: :users) %></p>
   </div>
   <% if @csv_exports.empty? %>
     <p>No current CSV Reports was found!</p>
