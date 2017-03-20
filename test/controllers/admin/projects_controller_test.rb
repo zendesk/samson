@@ -37,27 +37,27 @@ describe Admin::ProjectsController do
     end
 
     describe "#destroy" do
-      before do
-        delete :destroy, params: {id: project.to_param}
-      end
-
-      it "redirects to root url" do
-        assert_redirected_to admin_projects_path
-      end
-
       it "removes the project" do
-        project.reload
-        project.deleted_at.wont_be_nil
+        assert_difference 'Project.count', -1 do
+          delete :destroy, params: {id: project.to_param}
+
+          assert_redirected_to admin_projects_path
+          request.flash[:notice].wont_be_nil
+        end
       end
 
-      it "sets the flash" do
-        request.flash[:notice].wont_be_nil
-      end
-
-      it "notifies about deletion" do
+      it "sends deletion notification" do
+        delete :destroy, params: {id: project.to_param}
         mail = ActionMailer::Base.deliveries.last
         mail.subject.include?("Samson Project Deleted")
         mail.subject.include?(project.name)
+      end
+
+      it "does not fail when validations fail" do
+        assert_difference 'Project.count', -1 do
+          project.update_column(:name, "")
+          delete :destroy, params: {id: project.to_param}
+        end
       end
     end
   end
