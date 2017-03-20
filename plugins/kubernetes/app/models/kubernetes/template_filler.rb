@@ -184,7 +184,7 @@ module Kubernetes
 
     # custom annotation we support here and in kucodiff
     def missing_env
-      required = ((annotations || {})[:required_env] || "").strip.split(/[\s,]/)
+      required = ((annotations || {})[:"samson/required_env"] || "").strip.split(/[\s,]/)
       (required - env.map { |e| e.fetch(:name) }).presence
     end
 
