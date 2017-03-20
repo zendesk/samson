@@ -17,6 +17,7 @@ group :preload do
   gem 'paper_trail'
   gem 'soft_deletion'
   gem 'doorkeeper'
+  gem 'marginalia'
 
   # Logging
   gem 'lograge'
