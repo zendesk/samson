@@ -24,13 +24,7 @@
           <% end %>
         </ul>
       </td>
-      <td>
-        <ul>
-          <% group.projects.sort_by(&:name).each do |project| %>
-            <li><%= link_to project.name, project %></li>
-          <% end %>
-        </ul>
-      </td>
+      <td><%= render 'projects', group: group %></td>
       <td>
         <% if group.projects.any? %>
           <%= link_to "Delete", "#", data: {confirm: "Cannot be deleted when still in use."} %>
