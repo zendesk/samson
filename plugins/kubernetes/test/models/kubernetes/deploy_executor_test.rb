@@ -180,12 +180,12 @@ describe Kubernetes::DeployExecutor do
       it "fails before building when env is not configured" do
         # overriding the stubbed value
         template = Kubernetes::ReleaseDoc.new.send(:raw_template)[0]
-        template[:spec][:template][:spec][:containers][0][:env] = [{name: "FOO", value: 'filled-by-samson'}]
+        template[:spec][:template][:metadata][:annotations] = {required_env: "FOO BAR"}
 
         e = assert_raises Samson::Hooks::UserError do
           refute execute!
         end
-        e.message.must_include "Missing env variables FOO"
+        e.message.must_include "Missing env variables FOO, BAR"
       end
     end
 

@@ -6,7 +6,6 @@ module Kubernetes
 
     CUSTOM_UNIQUE_LABEL_KEY = 'rc_unique_identifier'
     SECRET_PULLER_IMAGE = ENV['SECRET_PULLER_IMAGE'].presence
-    ENV_VERIFIER = 'filled-by-samson'
 
     def initialize(release_doc, template)
       @doc = release_doc
@@ -37,7 +36,7 @@ module Kubernetes
       return unless missing_env # save work when there will be nothing to do
       set_env
       return unless missing = missing_env
-      raise Samson::Hooks::UserError, "Missing env variables #{missing.map { |e| e[:name] }.join(", ")}"
+      raise Samson::Hooks::UserError, "Missing env variables #{missing.join(", ")}"
     end
 
     def set_secrets
@@ -183,8 +182,10 @@ module Kubernetes
       (container[:env] ||= [])
     end
 
+    # custom annotation we support here and in kucodiff
     def missing_env
-      env.select { |e| e[:value] == ENV_VERIFIER }.presence
+      required = ((annotations || {})[:required_env] || "").strip.split(/[\s,]/)
+      (required - env.map { |e| e.fetch(:name) }).presence
     end
 
     # helpful env vars, also useful for log tagging
