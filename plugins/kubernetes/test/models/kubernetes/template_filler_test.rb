@@ -270,7 +270,7 @@ describe Kubernetes::TemplateFiller do
     end
 
     describe "when something is required" do
-      before { raw_template[:spec][:template][:metadata][:annotations] = {required_env: 'FOO'} }
+      before { raw_template[:spec][:template][:metadata][:annotations] = {"samson/required_env": 'FOO'} }
 
       it "fails when value is missing" do
         assert_raises Samson::Hooks::UserError do
