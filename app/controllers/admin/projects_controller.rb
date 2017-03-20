@@ -12,7 +12,7 @@ class Admin::ProjectsController < ApplicationController
 
   def destroy
     project = Project.find_by_permalink!(params[:id])
-    project.soft_delete!
+    project.soft_delete(validate: false)
 
     if Rails.application.config.samson.project_deleted_email
       ProjectMailer.deleted_email(@current_user, project).deliver_later
