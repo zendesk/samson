@@ -5,14 +5,14 @@ SingleCov.covered!
 
 describe BuddyCheck do
   describe ".enabled?" do
-    it "is enabled when 1" do
+    it "is enabled when set" do
       with_env BUDDY_CHECK_FEATURE: "1" do
         assert BuddyCheck.enabled?
       end
     end
 
-    it "is disabled when not 1" do
-      with_env BUDDY_CHECK_FEATURE: "true" do
+    it "is disabled when false" do
+      with_env BUDDY_CHECK_FEATURE: "false" do
         refute BuddyCheck.enabled?
       end
     end
