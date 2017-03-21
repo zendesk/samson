@@ -100,6 +100,12 @@ describe Admin::SecretsController do
         assert_response :success
         response.body.wont_include checked
       end
+
+      it "renders pre-filled visible false values from params of last form with project set" do
+        get :new, params: {secret: {visible: 'false', project_permalink: 'foo'}}
+        assert_response :success
+        response.body.wont_include "checked=\"checked\""
+      end
     end
 
     describe '#show' do

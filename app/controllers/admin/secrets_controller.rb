@@ -7,9 +7,9 @@ class Admin::SecretsController < ApplicationController
   before_action :find_project_permalinks
   before_action :find_secret, only: [:update, :show, :destroy]
 
+  before_action :convert_visible_to_boolean, only: [:update, :create, :new]
   before_action :authorize_any_deployer!
   before_action :authorize_project_admin!, except: [:index, :new]
-  before_action :convert_visible_to_boolean, only: [:update, :create, :new]
 
   def index
     @secret_keys = SecretStorage.keys.map { |key| [key, SecretStorage.parse_secret_key(key)] }
