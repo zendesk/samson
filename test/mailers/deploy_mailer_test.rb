@@ -34,42 +34,15 @@ describe DeployMailer do
   end
 
   describe "#bypass_email" do
-    let(:jira_address) { "" }
-
-    before do
-      BuddyCheck.stubs(:bypass_email_address).returns("test1@test.com")
-      BuddyCheck.stubs(:bypass_jira_email_address).returns(jira_address)
-
-      user.update_attributes!(email: 'user_email@test.com')
-
+    it "delivers" do
       stub_empty_changeset
-
+      BuddyCheck.expects(:bypass_email_addresses).returns(["a@b.com"])
       DeployMailer.bypass_email(deploy, user).deliver_now
-    end
-
-    it 'is from deploys@' do
-      subject.from.must_equal(['deploys@samson-deployment.com'])
-    end
-
-    it 'sends to bypass_email_address' do
-      subject.to.must_equal(['test1@test.com'])
-    end
-
-    it 'CCs user email' do
-      subject.cc.must_equal(['user_email@test.com'])
-    end
-
-    it 'sets a bypass subject' do
+      subject.from.must_equal ['deploys@samson-deployment.com']
       subject.subject.must_include "BYPASS"
       subject.subject.must_include deploy.id.to_s
-    end
-
-    describe "with jira address" do
-      let(:jira_address) { "test3@test.com" }
-
-      it 'sends to bypass_email_address, jira_email_address' do
-        subject.to.must_equal(['test1@test.com', 'test3@test.com'])
-      end
+      subject.to.must_equal ["a@b.com"]
+      subject.cc.must_equal ['admin@example.com']
     end
   end
 

@@ -1,29 +1,26 @@
 # frozen_string_literal: true
 module BuddyCheck
-  module_function
+  class << self
+    def enabled?
+      "1" == ENV["BUDDY_CHECK_FEATURE"]
+    end
 
-  def enabled?
-    "1" == ENV["BUDDY_CHECK_FEATURE"]
-  end
+    # how long can the same commit be deployed ?
+    def grace_period
+      Integer(ENV["BUDDY_CHECK_GRACE_PERIOD"].presence || "4").hours
+    end
 
-  def bypass_email_address
-    ENV["BYPASS_EMAIL"]
-  end
+    def time_limit
+      Integer(ENV["BUDDY_CHECK_TIME_LIMIT"] || ENV["DEPLOY_MAX_MINUTES_PENDING"] || "20").minutes
+    end
 
-  # how long can the same commit be deployed ?
-  def grace_period
-    (ENV["BUDDY_CHECK_GRACE_PERIOD"].presence || "4").to_i.hours
-  end
-
-  def bypass_jira_email_address
-    ENV["BYPASS_JIRA_EMAIL"]
-  end
-
-  def time_limit
-    Integer(ENV["BUDDY_CHECK_TIME_LIMIT"] || ENV["DEPLOY_MAX_MINUTES_PENDING"] || 20)
-  end
-
-  def stop_expired_deploys
-    Deploy.expired.each(&:stop!)
+    def bypass_email_addresses
+      emails = ENV["BYPASS_EMAIL"].to_s.split(",")
+      if jira = ENV["BYPASS_JIRA_EMAIL"]
+        warn "BYPASS_JIRA_EMAIL is deprecated"
+        emails << jira
+      end
+      emails
+    end
   end
 end

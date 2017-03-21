@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 Samson::Periodical.register :stop_expired_deploys, "Stop deploys when buddy approval request timed out" do
-  BuddyCheck.stop_expired_deploys
+  Deploy.expired.each(&:stop!)
 end
 
 Samson::Periodical.register :renew_vault_token, "Renew vault token" do
