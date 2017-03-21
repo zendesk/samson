@@ -16,6 +16,13 @@
       <%= form.input :comment, as: :text_area, input_html: {size: "80x4"} %>
     </fieldset>
 
+    <% if @group.projects.length > 0 %>
+      <fieldset>
+        <legend>Usages</legend>
+        <%= render 'projects', group: @group %>
+      </fieldset>
+    <% end %>
+
     <fieldset>
       <legend>
         Environment variables
@@ -27,7 +34,7 @@
       <% if current_user.admin? %>
         <hr>
 
-        <%= form.actions %>
+        <%= form.actions delete: (@group.projects.length > 0 ? false : [:admin, @group]) %>
       <% end %>
     </fieldset>
   <% end %>
