@@ -273,7 +273,14 @@ describe Admin::SecretsController do
     describe "#destroy" do
       it "deletes project secret" do
         delete :destroy, params: {id: secret}
+        assert_redirected_to "/admin/secrets"
+        SecretStorage::DbBackend::Secret.exists?(secret.id).must_equal(false)
+      end
+
+      it "responds ok to xhr" do
+        delete :destroy, params: {id: secret}, xhr: true
         assert_response :success
+        SecretStorage::DbBackend::Secret.exists?(secret.id).must_equal(false)
       end
 
       it "is unauthorized for global" do
@@ -318,16 +325,16 @@ describe Admin::SecretsController do
     end
 
     describe '#destroy' do
-      it 'deletes' do
+      it 'deletes global secret' do
         delete :destroy, params: {id: secret.id}
-        assert_response :success
+        assert_redirected_to "/admin/secrets"
         SecretStorage::DbBackend::Secret.exists?(secret.id).must_equal(false)
       end
 
       it "works with unknown project" do
         secret.update_column(:id, 'oops/bar')
         delete :destroy, params: {id: secret.id}
-        assert_response :success
+        assert_redirected_to "/admin/secrets"
         SecretStorage::DbBackend::Secret.exists?(secret.id).must_equal(false)
       end
     end
