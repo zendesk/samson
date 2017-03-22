@@ -46,7 +46,7 @@ class Admin::SecretsController < ApplicationController
     attributes = secret_params.slice(:value, :visible, :comment)
     attributes[:user_id] = current_user.id
     if SecretStorage.write(key, attributes)
-      successful_response 'Secret created.'
+      successful_response "Secret #{key} saved."
     else
       failure_response 'Failed to save.'
     end
@@ -54,7 +54,11 @@ class Admin::SecretsController < ApplicationController
 
   def destroy
     SecretStorage.delete(key)
-    head :ok
+    if request.xhr?
+      head :ok
+    else
+      successful_response "#{key} deleted"
+    end
   end
 
   private
