@@ -58,7 +58,7 @@ class Changeset
   end
 
   def error
-    comparison.error if comparison.respond_to?(:error)
+    comparison.error
   end
 
   private
