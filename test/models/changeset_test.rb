@@ -1,21 +1,27 @@
 # frozen_string_literal: true
 require_relative '../test_helper'
 
-SingleCov.covered! uncovered: 12
+SingleCov.covered!
 
 describe Changeset do
+  let(:changeset) { Changeset.new("foo/bar", "a", "b") }
+
   describe "#comparison" do
     it "builds a new changeset" do
       stub_github_api("repos/foo/bar/compare/a...b", "x" => "y")
-      Changeset.new("foo/bar", "a", "b").comparison.to_h.must_equal x: "y"
+      changeset.comparison.to_h.must_equal x: "y"
+    end
+
+    it "creates no comparison when the changeset is empty" do
+      changeset = Changeset.new("foo/bar", "a", "a")
+      changeset.comparison.class.must_equal Changeset::NullComparison
     end
 
     describe "with a specificed SHA" do
       it "caches" do
-        stub_github_api("repos/foo/bar/compare/a...b", "x" => "y")
-        Changeset.new("foo/bar", "a", "b").comparison.to_h.must_equal x: "y"
-        stub_github_api("repos/foo/bar/compare/a...b", "x" => "z")
-        Changeset.new("foo/bar", "a", "b").comparison.to_h.must_equal x: "y"
+        request = stub_github_api("repos/foo/bar/compare/a...b", "x" => "y")
+        2.times { Changeset.new("foo/bar", "a", "b").comparison.to_h.must_equal x: "y" }
+        assert_requested request
       end
     end
 
@@ -61,8 +67,14 @@ describe Changeset do
 
   describe "#github_url" do
     it "returns a URL to a GitHub comparison page" do
-      changeset = Changeset.new("foo/bar", "a", "b")
       changeset.github_url.must_equal "https://github.com/foo/bar/compare/a...b"
+    end
+  end
+
+  describe "#files" do
+    it "returns compared files" do
+      stub_github_api("repos/foo/bar/compare/a...b", files: ["foo", "bar"])
+      changeset.files.must_equal ["foo", "bar"]
     end
   end
 
@@ -78,7 +90,6 @@ describe Changeset do
       GITHUB.stubs(:compare).with("foo/bar", "a", "b").returns(comparison)
 
       Changeset::PullRequest.stubs(:find).with("foo/bar", 42).returns("yeah!")
-      changeset = Changeset.new("foo/bar", "a", "b")
 
       changeset.pull_requests.must_equal ["yeah!"]
     end
@@ -88,9 +99,70 @@ describe Changeset do
       GITHUB.stubs(:compare).with("foo/bar", "a", "b").returns(comparison)
 
       Changeset::PullRequest.stubs(:find).with("foo/bar", 42).returns(nil)
-      changeset = Changeset.new("foo/bar", "a", "b")
 
       changeset.pull_requests.must_equal []
+    end
+  end
+
+  describe "#risks?" do
+    it "is risky when there are risky requests" do
+      changeset.expects(:pull_requests).returns([stub("commit", risky?: true)])
+      changeset.risks?.must_equal true
+    end
+
+    it "is not risky when there are no risky requests" do
+      changeset.expects(:pull_requests).returns([stub("commit", risky?: false)])
+      changeset.risks?.must_equal false
+    end
+  end
+
+  describe "#jira_issues" do
+    it "returns a list of jira issues" do
+      changeset.expects(:pull_requests).returns([stub("commit", jira_issues: [1, 2])])
+      changeset.jira_issues.must_equal [1, 2]
+    end
+  end
+
+  describe "#authors" do
+    it "returns a list of authors" do
+      changeset.expects(:commits).returns(
+        [
+          stub("c1", author: "foo"),
+          stub("c2", author: "foo"),
+          stub("c3", author: "bar")
+        ]
+      )
+      changeset.authors.must_equal ["foo", "bar"]
+    end
+  end
+
+  describe "#author_names" do
+    it "returns a list of author's names" do
+      changeset.expects(:commits).returns(
+        [
+          stub("c1", author_name: "foo"),
+          stub("c2", author_name: "foo"),
+          stub("c3", author_name: "bar")
+        ]
+      )
+      changeset.author_names.must_equal ["foo", "bar"]
+    end
+  end
+
+  describe "#error" do
+    it "returns error" do
+      stub_github_api("repos/foo/bar/compare/a...b", error: "foo")
+      changeset.error.must_equal "foo"
+    end
+  end
+
+  describe Changeset::NullComparison do
+    it "has no commits" do
+      Changeset::NullComparison.new(nil).commits.must_equal []
+    end
+
+    it "has no files" do
+      Changeset::NullComparison.new(nil).files.must_equal []
     end
   end
 end
