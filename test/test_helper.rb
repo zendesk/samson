@@ -78,6 +78,10 @@ class ActiveSupport::TestCase
     end
   end
 
+  def freeze_time
+    Time.stubs(:now).returns(Time.new(2001, 2, 3, 4, 5, 6))
+  end
+
   def ar_queries
     require 'query_diet'
     QueryDiet::Logger.queries.map(&:first) - ["select 1"]

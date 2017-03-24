@@ -7,6 +7,8 @@ describe TerminalExecutor do
   let(:output) { StringIO.new }
   subject { TerminalExecutor.new(output) }
 
+  before { freeze_time }
+
   describe '#execute!' do
     it 'records stdout' do
       subject.execute!('echo "hi"', 'echo "hello"')
@@ -98,9 +100,12 @@ describe TerminalExecutor do
     describe 'in verbose mode' do
       subject { TerminalExecutor.new(output, verbose: true) }
 
+      before { freeze_time }
+
       it 'records commands' do
         subject.execute!('echo "hi"', 'echo "hell o"')
-        output.string.must_equal(%(» echo "hi"\r\nhi\r\n» echo "hell o"\r\nhell o\r\n))
+        output.string.must_equal \
+          %(» echo "hi"\r\nhi\r\n» echo "hell o"\r\nhell o\r\n)
       end
 
       it 'does not print subcommands' do
@@ -171,12 +176,15 @@ describe TerminalExecutor do
       end
 
       it "does not show secrets in verbose mode" do
+        freeze_time
+
         subject.instance_variable_set(:@verbose, true)
         id = 'global/global/global/baz'
         secret = create_secret(id)
         subject.execute!("export SECRET='secret://baz'; echo $SECRET")
+        # echo prints it, but not the execution
         output.string.must_equal \
-          "» export SECRET='secret://baz'; echo $SECRET\r\n#{secret.value}\r\n" # echo prints it, but not the execution
+          "» export SECRET='secret://baz'; echo $SECRET\r\n#{secret.value}\r\n"
       end
     end
   end

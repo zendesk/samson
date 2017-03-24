@@ -31,7 +31,7 @@ class TerminalExecutor
     output, input, pid = PTY.spawn(whitelisted_env, script(commands), options)
     record_pid(pid) do
       begin
-        output.each(256) { |line| @output.write line }
+        output.each(256) { |chunk| @output.write chunk }
       rescue Errno::EIO
         nil # output was closed ... only happens on linux
       end

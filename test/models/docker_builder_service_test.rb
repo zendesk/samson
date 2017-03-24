@@ -151,11 +151,15 @@ describe DockerBuilderService do
     describe "with build_command" do
       let(:command) { Command.create!(command: "echo foo\r\necho bar") }
 
-      before { project.update_column(:build_command_id, command.id) }
+      before do
+        project.update_column(:build_command_id, command.id)
+        freeze_time
+      end
 
       it "executes it" do
         service.send(:before_docker_build, tmp_dir)
-        output.string.must_include "» echo foo\r\nfoo\r\n» echo bar\r\nbar\r\n"
+        output.string.must_include \
+          "» echo foo\r\nfoo\r\n» echo bar\r\nbar\r\n"
         output.string.must_include "export CACHE_DIR="
       end
 
@@ -281,7 +285,7 @@ describe DockerBuilderService do
     it 'rescues docker error' do
       service.expects(:push_image_to_registries).raises(Docker::Error::DockerError)
       refute service.send(:push_image)
-      output.to_s.must_equal "Docker push failed: Docker::Error::DockerError\n"
+      output.to_s.must_include "Docker push failed: Docker::Error::DockerError"
     end
 
     describe 'with credentials' do

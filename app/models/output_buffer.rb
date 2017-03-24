@@ -24,6 +24,8 @@ require 'thread_safe'
 class OutputBuffer
   attr_reader :listeners
 
+  PADDING = " " * 11
+
   def initialize
     @listeners = ThreadSafe::Array.new
     @previous = ThreadSafe::Array.new
@@ -35,7 +37,12 @@ class OutputBuffer
   end
 
   def write(data, event = :message)
-    data = data.dup.force_encoding(Encoding::UTF_8) if data.is_a?(String) && data.encoding != Encoding::UTF_8
+    if data.is_a?(String)
+      data = inject_timestamp(data)
+      if data.encoding != Encoding::UTF_8
+        data = data.dup.force_encoding(Encoding::UTF_8)
+      end
+    end
     @previous << [event, data] unless event == :close
     @listeners.dup.each { |listener| listener.push([event, data]) }
   end
@@ -85,6 +92,14 @@ class OutputBuffer
   end
 
   private
+
+  def inject_timestamp(data)
+    stamped_data = String.new
+    data.each_line do |line|
+      stamped_data << "[#{Time.now.utc.strftime("%T")}] #{line}"
+    end
+    stamped_data
+  end
 
   def write_docker_chunk_line(line)
     parsed_line = JSON.parse(line)

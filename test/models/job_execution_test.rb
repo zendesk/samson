@@ -39,6 +39,7 @@ describe JobExecution do
     user.email = 'jdoe@test.com'
     project.repository.update_local_cache!
     job.deploy = deploy
+    freeze_time
   end
 
   after do
@@ -61,7 +62,7 @@ describe JobExecution do
 
     execute_job 'foobar'
 
-    assert_equal 'monkey', last_line_of_output
+    assert_equal '[04:05:06] monkey', last_line_of_output
   end
 
   it 'checks out the specified remote branch' do
@@ -76,7 +77,7 @@ describe JobExecution do
     execute_job 'armageddon'
 
     assert job.succeeded?
-    assert_equal 'lion', last_line_of_output
+    assert_equal '[04:05:06] lion', last_line_of_output
   end
 
   it 'records the commit properly when given an annotated tag' do
@@ -95,7 +96,7 @@ describe JobExecution do
     execute_job 'annotated_tag'
 
     assert job.succeeded?
-    assert_equal 'mantis shrimp', last_line_of_output
+    assert_equal '[04:05:06] mantis shrimp', last_line_of_output
     assert job.commit.present?, "Expected #{job} to record the commit"
     assert_equal commit, job.commit
     assert_includes 'annotated_tag', job.tag
@@ -112,7 +113,7 @@ describe JobExecution do
 
     execute_job 'safari'
 
-    assert_equal 'tiger', last_line_of_output
+    assert_equal '[04:05:06] tiger', last_line_of_output
 
     execute_on_remote_repo <<-SHELL
       git checkout safari
@@ -124,15 +125,16 @@ describe JobExecution do
 
     execute_job 'safari'
 
-    assert_equal 'zebra', last_line_of_output
+    assert_equal '[04:05:06] zebra', last_line_of_output
   end
 
   it "tests additional exports hook" do
+    freeze_time
     job.update(command: 'env | sort')
     Samson::Hooks.with_callback(:job_additional_vars, -> (_job) { {ADDITIONAL_EXPORT: "yes"} }) do
       execute_job
       lines = job.output.split "\n"
-      lines.must_include "ADDITIONAL_EXPORT=yes"
+      lines.must_include "[04:05:06] ADDITIONAL_EXPORT=yes"
     end
   end
 
@@ -140,14 +142,14 @@ describe JobExecution do
     job.update(command: 'env | sort')
     execute_job 'master', env: {FOO: 'bar'}
     lines = job.output.split "\n"
-    lines.must_include "DEPLOY_URL=#{deploy.url}"
-    lines.must_include "DEPLOYER=jdoe@test.com"
-    lines.must_include "DEPLOYER_EMAIL=jdoe@test.com"
-    lines.must_include "DEPLOYER_NAME=John Doe"
-    lines.must_include "REFERENCE=master"
-    lines.must_include "REVISION=#{job.commit}"
-    lines.must_include "TAG=v1"
-    lines.must_include "FOO=bar"
+    lines.must_include "[04:05:06] DEPLOY_URL=#{deploy.url}"
+    lines.must_include "[04:05:06] DEPLOYER=jdoe@test.com"
+    lines.must_include "[04:05:06] DEPLOYER_EMAIL=jdoe@test.com"
+    lines.must_include "[04:05:06] DEPLOYER_NAME=John Doe"
+    lines.must_include "[04:05:06] REFERENCE=master"
+    lines.must_include "[04:05:06] REVISION=#{job.commit}"
+    lines.must_include "[04:05:06] TAG=v1"
+    lines.must_include "[04:05:06] FOO=bar"
   end
 
   it 'works without a deploy' do
@@ -172,7 +174,7 @@ describe JobExecution do
 
     job.command = 'cat $CACHE_DIR/foo'
     execute_job
-    assert_equal 'hello', last_line_of_output
+    assert_equal '[04:05:06] hello', last_line_of_output
   end
 
   it 'removes the job from the queue' do
@@ -228,7 +230,7 @@ describe JobExecution do
   it 'saves job output before calling subscriber' do
     output = nil
     execute_job('master', on_complete: -> { output = job.output })
-    assert_equal 'monkey', output.split("\n").last.strip
+    assert_equal '[04:05:06] monkey', output.split("\n").last.strip
   end
 
   it 'errors if job setup fails' do
@@ -260,7 +262,7 @@ describe JobExecution do
     create_secret id
     job.update(command: "echo 'secret://bar'")
     execute_job("master")
-    assert_equal 'MY-SECRET', last_line_of_output
+    assert_equal '[04:05:06] MY-SECRET', last_line_of_output
   end
 
   it 'does not add the job to the queue when JobExecution is disabled' do
