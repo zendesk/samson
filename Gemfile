@@ -136,4 +136,5 @@ group :test do
   gem 'single_cov'
   gem 'query_diet', '0.6.1'
   gem 'ar_multi_threaded_transactional_tests'
+  gem 'bundler-audit', require: false
 end
