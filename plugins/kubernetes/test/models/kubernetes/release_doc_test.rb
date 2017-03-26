@@ -6,6 +6,7 @@ SingleCov.covered!
 describe Kubernetes::ReleaseDoc do
   def deployment_stub(replica_count)
     stub(
+      "Deployment stub",
       to_hash: {
         spec: {
           'replicas=' => replica_count
@@ -19,6 +20,7 @@ describe Kubernetes::ReleaseDoc do
 
   def daemonset_stub(scheduled, misscheduled)
     stub(
+      "DaemonSet stub",
       to_hash: {
         kind: "DaemonSet",
         metadata: {
@@ -192,37 +194,20 @@ describe Kubernetes::ReleaseDoc do
   end
 
   describe "#desired_pod_count" do
-    it "uses local value for deployment" do
+    it "delegates to primary resource" do
       doc.desired_pod_count.must_equal 2
     end
+  end
 
-    it "uses local value for job" do
-      primary_template[:kind] = 'Job'
-      doc.desired_pod_count.must_equal 2
-    end
-
-    it "asks kubernetes for daemon set since we do not know how many nodes it will match" do
-      primary_template[:kind] = 'DaemonSet'
-      stub_request(:get, "http://foobar.server/apis/extensions/v1beta1/namespaces/pod1/daemonsets/some-project-rc").
-        to_return(body: {status: {desiredNumberScheduled: 3}}.to_json)
-      doc.desired_pod_count.must_equal 3
+  describe "#prerequisite?" do
+    it "delegates to primary resource" do
+      refute doc.prerequisite?
     end
   end
 
   describe "#build" do
     it "fetches the build" do
       doc.build.must_equal builds(:docker_build)
-    end
-  end
-
-  describe "#job?" do
-    it "is a job when it is a job" do
-      doc.send(:resource_template=, YAML.load_stream(read_kubernetes_sample_file('kubernetes_job.yml')))
-      assert doc.job?
-    end
-
-    it "is not a job when it is not a job" do
-      refute doc.job?
     end
   end
 

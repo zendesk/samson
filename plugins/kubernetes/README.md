@@ -138,6 +138,11 @@ Kubernetes::ReleaseGroup
         -> Kubernetes Pods (how ever many replicas specified)
 ```
 
+### Migrations
+
+Add a role with only a `Pod`, the annotation `samson/prerequisite: true`, and command to run a migrations.
+It will be executed before the rest is deployed.
+
 ### Clair security scans
 
 To security scan docker images using hyperclair, enable hyperclair plugin and add:

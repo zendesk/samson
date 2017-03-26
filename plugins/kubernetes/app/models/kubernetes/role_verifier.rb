@@ -1,15 +1,14 @@
 # frozen_string_literal: true
 module Kubernetes
   class RoleVerifier
-    DEPLOYISH = RoleConfigFile::DEPLOY_KINDS
-    JOBS = RoleConfigFile::JOB_KINDS
     VALID_LABEL = /\A[a-zA-Z0-9]([-a-zA-Z0-9]*[a-zA-Z0-9])?\z/ # also used in js ... cannot use /i
 
     SUPPORTED_KINDS = [
       ['Deployment'],
       ['DaemonSet'],
       ['Deployment', 'Service'],
-      ['Job']
+      ['Job'],
+      ['Pod'],
     ].freeze
 
     def initialize(elements)
@@ -71,18 +70,18 @@ module Kubernetes
               [:metadata, :labels],
               [:spec, :selector]
             ]
-          when *DEPLOYISH
+          when *RoleConfigFile::DEPLOY_KINDS
             [
               [:metadata, :labels],
               [:spec, :template, :metadata, :labels],
               [:spec, :selector, :matchLabels],
             ]
-          when *JOBS
+          when *RoleConfigFile::JOB_KINDS
             [
               [:metadata, :labels],
               [:spec, :template, :metadata, :labels]
             ]
-          else
+          else # when adding new keep consistent with error message below
             [] # ignore unknown / unsupported types
           end
 
@@ -109,20 +108,20 @@ module Kubernetes
         end
       end
 
-      return if labels.uniq.size == 1
+      return if labels.uniq.size <= 1
       @errors << "Project and role labels must be consistent across Deployment/DaemonSet/Service/Job"
     end
 
     def verify_containers
-      expected = DEPLOYISH + JOBS
-      deployish = @elements.select { |e| expected.include?(e[:kind]) }
-      containers = map_attributes([:spec, :template, :spec, :containers], elements: deployish)
+      primary_kinds = RoleConfigFile::PRIMARY_KINDS
+      containered = templates.select { |t| primary_kinds.include?(t[:kind]) }
+      containers = map_attributes([:spec, :containers], elements: containered)
       return if containers.all? { |c| c.is_a?(Array) && c.size >= 1 }
-      @errors << "#{expected.join("/")} need at least 1 container"
+      @errors << "#{primary_kinds.join("/")} need at least 1 container"
     end
 
     def verify_container_name
-      names = map_attributes([:spec, :template, :spec, :containers]).compact.flatten(1).map { |c| c[:name] }
+      names = map_attributes([:spec, :containers], elements: templates).compact.flatten(1).map { |c| c[:name] }
       if names.any?(&:nil?)
         @errors << "Containers need a name"
       elsif bad = names.grep_v(VALID_LABEL).presence
@@ -139,20 +138,31 @@ module Kubernetes
     end
 
     def verify_annotations
-      path = [:spec, :template, :metadata, :annotations]
-      annotations = map_attributes(path)
+      path = [:metadata, :annotations]
+      annotations = map_attributes(path, elements: templates)
       @errors << "Annotations must be a hash" if annotations.any? { |a| a && !a.is_a?(Hash) }
     end
 
     def verify_env_values
-      path = [:spec, :template, :spec, :containers, :env, :value]
-      values = map_attributes(path, array: :first).compact
+      path = [:spec, :containers, :env, :value]
+      values = map_attributes(path, array: :first, elements: templates).compact
       bad = values.reject { |x| x.is_a?(String) }
       @errors << "Env values #{bad.join(', ')} must be strings." if bad.any?
     end
 
     def jobs
-      @elements.select { |e| JOBS.include?(e[:kind]) }
+      @elements.select { |e| RoleConfigFile::JOB_KINDS.include?(e[:kind]) }
+    end
+
+    def templates
+      @elements.map do |e|
+        kind = e[:kind]
+        if kind != 'Pod'
+          e = e.dig(:spec, :template) || {}
+          e[:kind] = kind
+        end
+        e
+      end
     end
 
     def map_attributes(path, elements: @elements, array: :all)

@@ -14,10 +14,14 @@ module Kubernetes
 
     def to_hash
       @to_hash ||= begin
-        set_rc_unique_label_key
-        set_history_limit
+        if template[:kind] != 'Pod'
+          set_rc_unique_label_key
+          set_history_limit
+        end
+
+        set_replica_target unless ['DaemonSet', 'Pod'].include?(template[:kind])
+
         set_name
-        set_replica_target
         set_spec_template_metadata
         set_docker_image
         set_resource_usage
@@ -65,7 +69,11 @@ module Kubernetes
     end
 
     def annotations
-      template[:spec][:template][:metadata][:annotations]
+      pod_template[:metadata][:annotations]
+    end
+
+    def pod_template
+      template[:kind] == 'Pod' ? template : template[:spec][:template]
     end
 
     def secret_annotations
@@ -97,7 +105,7 @@ module Kubernetes
       end
 
       # define the shared volumes in the pod
-      (template[:spec][:template][:spec][:volumes] ||= []).concat [
+      (pod_template[:spec][:volumes] ||= []).concat [
         {name: secret_vol.fetch(:name), emptyDir: {}},
         {name: "vaultauth", secret: {secretName: "vaultauth"}},
         {
@@ -136,7 +144,7 @@ module Kubernetes
     # Adding the Release ID to allow us to track the progress of a new release from the UI.
     def set_spec_template_metadata
       release_doc_metadata.each do |key, value|
-        template[:spec][:template][:metadata][:labels][key] ||= value.to_s
+        pod_template[:metadata][:labels][key] ||= value.to_s
       end
     end
 
@@ -219,7 +227,7 @@ module Kubernetes
       end
 
       [:PROJECT, :ROLE].each do |k|
-        env[k] = template[:spec][:template][:metadata][:labels][k.downcase]
+        env[k] = pod_template[:metadata][:labels][k.downcase]
       end
 
       # name of the cluster
@@ -257,7 +265,7 @@ module Kubernetes
 
       return if docker_credentials.empty?
 
-      template[:spec].fetch(:template, {}).fetch(:spec, {})[:imagePullSecrets] = docker_credentials
+      pod_template.fetch(:spec, {})[:imagePullSecrets] = docker_credentials
     end
 
     def needs_secret_puller?
@@ -265,7 +273,7 @@ module Kubernetes
     end
 
     def containers
-      template[:spec][:template][:spec][:containers]
+      pod_template[:spec][:containers]
     end
 
     def container

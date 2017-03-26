@@ -255,10 +255,38 @@ describe Kubernetes::TemplateFiller do
     end
 
     describe "daemon_set" do
+      before do
+        raw_template[:kind] = 'DaemonSet'
+        raw_template[:spec].delete(:replicas)
+      end
+
       it "does not add replicas since they are not supported" do
-        template.send(:template)[:kind] = 'DaemonSet'
         result = template.to_hash
-        refute result.key?(:replicas)
+        refute result[:spec].key?(:replicas)
+      end
+    end
+
+    describe "pod" do
+      before do
+        original_metadata = raw_template.fetch(:metadata)
+        raw_template.replace(raw_template.dig(:spec, :template))
+        raw_template[:metadata].merge!(original_metadata)
+        raw_template[:kind] = "Pod"
+        raw_template[:spec].delete :replicas
+      end
+
+      it "fills out everything" do
+        result = template.to_hash
+        assert result[:metadata][:labels][:project]
+        result[:spec][:containers][0][:image].must_include 'sha256'
+        result[:spec][:containers][0][:env].map { |e| e[:name] }.must_include 'POD_NAMESPACE'
+        refute result[:spec][:revisionHistoryLimit]
+        refute result[:spec][:uniqueLabelKey]
+      end
+
+      it "does not set replicas since they are not supported" do
+        result = template.to_hash
+        refute result[:spec].key?(:replicas)
       end
     end
   end

@@ -361,7 +361,7 @@ describe Kubernetes::DeployExecutor do
         out.must_include "resque-worker: Live\n"
         out.must_include "SUCCESS"
         out.must_include "stability" # testing deploy for stability
-        out.must_include "deploying jobs" # announcing that we deploy jobs first
+        out.must_include "deploying prerequisite" # announcing that we deploy prerequisites first
         out.must_include "other roles" # announcing that we have more to deploy
       end
 

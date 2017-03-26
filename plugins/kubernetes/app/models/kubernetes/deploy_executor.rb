@@ -47,10 +47,10 @@ module Kubernetes
       return false if stopped?
       release = create_release(build)
 
-      jobs, deploys = release.release_docs.partition(&:job?)
-      if jobs.any?
-        @output.puts "First deploying jobs ..." if deploys.any?
-        return false unless deploy_and_watch(release, jobs)
+      prerequisites, deploys = release.release_docs.partition(&:prerequisite?)
+      if prerequisites.any?
+        @output.puts "First deploying prerequisite ..." if deploys.any?
+        return false unless deploy_and_watch(release, prerequisites)
         @output.puts "Now deploying other roles ..." if deploys.any?
       end
       if deploys.any?
@@ -93,7 +93,7 @@ module Kubernetes
               @output.puts "TIMEOUT, pods took too long to get live"
               return statuses
             end
-          elsif release_docs.all?(&:job?)
+          elsif statuses.all? { |s| s.pod.completed? }
             return success
           else
             @output.puts "READY, starting stability test"
@@ -212,7 +212,7 @@ module Kubernetes
           {live: false, details: "Missing", pod: pod}
         elsif pod.restarted?
           {live: false, stop: true, details: "Restarted", pod: pod}
-        elsif release_doc.job? ? pod.completed? : pod.live?
+        elsif pod.live?
           {live: true, details: "Live", pod: pod}
         elsif pod.events_indicate_failure?
           {live: false, stop: true, details: "Error", pod: pod}

@@ -17,6 +17,15 @@ module Kubernetes
         @template.fetch(:metadata).fetch(:namespace)
       end
 
+      # should it be deployed before all other things get deployed ?
+      def prerequisite?
+        @template.fetch(:kind) == "Job" || @template.dig(:metadata, :labels, :'samson/prerequisite')
+      end
+
+      def primary?
+        Kubernetes::RoleConfigFile::PRIMARY_KINDS.include?(@template.fetch(:kind))
+      end
+
       def deploy
         running? ? update : create
       end
@@ -241,6 +250,17 @@ module Kubernetes
       # FYI per docs it is supposed to use batch api, but extension api works
       def client
         @deploy_group.kubernetes_cluster.extension_client
+      end
+    end
+
+    class Pod < Base
+      def deploy
+        delete if running?
+        create
+      end
+
+      def desired_pod_count
+        1
       end
     end
 

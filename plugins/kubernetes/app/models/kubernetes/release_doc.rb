@@ -8,7 +8,7 @@ module Kubernetes
     belongs_to :deploy_group
 
     serialize :resource_template, JSON
-    delegate :desired_pod_count, to: :primary_resource
+    delegate :desired_pod_count, :prerequisite?, to: :primary_resource
 
     validates :deploy_group, presence: true
     validates :kubernetes_role, presence: true
@@ -21,10 +21,6 @@ module Kubernetes
 
     def build
       kubernetes_release.try(:build)
-    end
-
-    def job?
-      primary_resource.class == Kubernetes::Resource::Job
     end
 
     def deploy
@@ -42,7 +38,7 @@ module Kubernetes
     # run on unsaved mock ReleaseDoc to test template and secrets before we save or create a build
     # this create a bit of duplicated work, but fails the deploy fast
     def verify_template
-      primary_config = raw_template.detect { |e| Kubernetes::RoleConfigFile::PRIMARY.include?(e.fetch(:kind)) }
+      primary_config = raw_template.detect { |e| Kubernetes::RoleConfigFile::PRIMARY_KINDS.include?(e.fetch(:kind)) }
       template = Kubernetes::TemplateFiller.new(self, primary_config)
       template.set_secrets
       template.verify_env
@@ -62,8 +58,7 @@ module Kubernetes
     private
 
     def primary_resource
-      primary = resource_template.index { |r| Kubernetes::RoleConfigFile::PRIMARY.include?(r.fetch(:kind)) }
-      resources[primary]
+      resources.detect(&:primary?)
     end
 
     def resource_template=(value)
@@ -93,7 +88,7 @@ module Kubernetes
           # apps running in the Kubernetes cluster to traffic outside the cluster.
           resource[:spec][:type] = 'NodePort'
           resource
-        when *Kubernetes::RoleConfigFile::PRIMARY
+        when *Kubernetes::RoleConfigFile::PRIMARY_KINDS
           TemplateFiller.new(self, resource).to_hash
         else
           resource

@@ -11,6 +11,9 @@ describe Kubernetes::RoleVerifier do
     let(:job_role) do
       [YAML.load(read_kubernetes_sample_file('kubernetes_job.yml')).deep_symbolize_keys]
     end
+    let(:pod_role) do
+      [{kind: 'Pod', metadata: {name: 'my-map'}, spec: {containers: [{name: "foo"}]}}]
+    end
     let(:role_json) { role.to_json }
     let(:errors) do
       elements = Kubernetes::Util.parse_file(role_json, 'fake.json').map(&:deep_symbolize_keys)
@@ -78,7 +81,7 @@ describe Kubernetes::RoleVerifier do
 
     it "reports missing containers" do
       role.first[:spec][:template][:spec].delete(:containers)
-      errors.must_include "Deployment/DaemonSet/Job need at least 1 container"
+      errors.must_include "Deployment/DaemonSet/Job/Pod need at least 1 container"
     end
 
     it "ignores unknown types" do
@@ -133,6 +136,24 @@ describe Kubernetes::RoleVerifier do
         value: 1234 # can happen when using yml configs
       }
       errors.must_include "Env values 1234 must be strings."
+    end
+
+    describe 'pod' do
+      let(:role) { pod_role }
+
+      it "allows only Pod" do
+        errors.must_equal nil
+      end
+
+      it "fails without containers" do
+        role[0][:spec][:containers].clear
+        errors.must_equal ["Deployment/DaemonSet/Job/Pod need at least 1 container"]
+      end
+
+      it "fails without name" do
+        role[0][:spec][:containers][0].delete :name
+        errors.must_equal ["Containers need a name"]
+      end
     end
 
     describe 'verify_job_restart_policy' do
