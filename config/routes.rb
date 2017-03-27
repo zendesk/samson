@@ -35,7 +35,10 @@ Samson::Application.routes.draw do
     resources :jobs, only: [:index, :show, :destroy]
 
     resources :macros, only: [:index, :new, :create, :edit, :update, :destroy] do
-      member { post :execute }
+      member do
+        get :configure_execute
+        post :execute
+      end
     end
 
     resources :builds, only: [:show, :index, :new, :create, :edit, :update] do
