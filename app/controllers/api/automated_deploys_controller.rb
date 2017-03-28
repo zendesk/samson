@@ -1,8 +1,6 @@
 # frozen_string_literal: true
 # deploys that automatically get triggered when new hosts come up or are restarted
 class Api::AutomatedDeploysController < Api::BaseController
-  STAGE_NAME = 'Automated Deploys'
-
   before_action :find_or_create_stage
   before_action :find_deploy_group
   before_action :find_last_deploy
@@ -31,13 +29,13 @@ class Api::AutomatedDeploysController < Api::BaseController
 
   def find_or_create_stage
     project = Project.find_by_permalink!(params.require(:project_id))
-    @stage = project.stages.where(name: STAGE_NAME).first || begin
+    @stage = project.stages.where(name: Stage::AUTOMATED_NAME).first || begin
       unless template = project.stages.where(is_template: true).first
         return failed! "Unable to find template for #{project.name}"
       end
 
       @stage = Stage.build_clone(template)
-      @stage.name = STAGE_NAME
+      @stage.name = Stage::AUTOMATED_NAME
       @stage.dashboard = "Automatically created stage from Api::AutomatedDeploysController<br>" \
         "that will deploy to individual deploy groups or hosts when called via api."
 

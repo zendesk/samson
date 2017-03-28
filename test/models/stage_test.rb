@@ -7,7 +7,7 @@ describe Stage do
   subject { stages(:test_staging) }
   let(:stage) { subject }
 
-  describe "#validations" do
+  describe "validations" do
     it "is valid" do
       assert_valid stage
     end
@@ -341,9 +341,9 @@ describe Stage do
 
     it 'fallbacks to production field when deploy groups was enabled without selecting deploy groups' do
       stage.deploy_groups = []
-      stage.update!(production: true)
+      stage.production = true
       stage.production?.must_equal true
-      stage.update!(production: false)
+      stage.production = false
       stage.production?.must_equal false
     end
 
@@ -603,6 +603,34 @@ describe Stage do
 
       it "has multiple clones" do
         assert_equal @clones, subject.clones
+      end
+    end
+  end
+
+  describe "#validate_deploy_group_selected" do
+    it "is valid without deploy groups" do
+      stage.deploy_groups.clear
+      assert_valid stage
+    end
+
+    describe "with deploy group feature" do
+      before { DeployGroup.stubs(enabled?: true) }
+
+      it "is valid with deploy groups" do
+        assert_valid stage
+      end
+
+      describe "without deploy groups" do
+        before { stage.deploy_groups.clear }
+
+        it "is not valid" do
+          refute_valid stage
+        end
+
+        it "is valid when being the automated stage" do
+          stage.name = Stage::AUTOMATED_NAME
+          assert_valid stage
+        end
       end
     end
   end
