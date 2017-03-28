@@ -77,7 +77,11 @@ Samson::Application.routes.draw do
       resource :commit_statuses, only: [:show]
     end
 
-    resource :changelog, only: [:show]
+    resource :changelog, only: [:show] do
+      collection do
+        get :deploy_check
+      end
+    end
     resource :stars, only: [:create]
     resources :webhooks, only: [:index, :create, :destroy]
     resources :outbound_webhooks, only: [:create, :destroy]
