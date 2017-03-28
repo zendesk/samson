@@ -170,7 +170,6 @@ GEM
     bootstrap-sass (3.3.6)
       autoprefixer-rails (>= 5.2.1)
       sass (>= 3.3.4)
-    brakeman (3.6.0)
     brakeman (3.6.1)
     builder (3.2.2)
     byebug (8.2.2)

@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 # Inline Cron: use PERIODICAL environment variable
 # Cron: Execute from commandline as cron via `rails runner 'Samson::Periodical.run_once :stop_expired_deploys'`
+#
+# Has global state so should never be autoloaded
 require 'concurrent'
 
 module Samson

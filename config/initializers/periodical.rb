@@ -1,4 +1,6 @@
 # frozen_string_literal: true
+require 'samson/periodical' # avoid auto-load since we setup global state
+
 Samson::Periodical.register :stop_expired_deploys, "Stop deploys when buddy approval request timed out" do
   Deploy.expired.each(&:stop!)
 end
