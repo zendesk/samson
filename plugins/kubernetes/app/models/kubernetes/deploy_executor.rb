@@ -318,7 +318,7 @@ module Kubernetes
         raise Samson::Hooks::UserError, "Failed to create release: #{release.errors.full_messages.inspect}"
       end
 
-      @output.puts("Created release #{release.id}\nConfig: #{deploy_group_configs.to_json}")
+      @output.puts("Created kubernetes release #{release.url}")
       release
     end
 

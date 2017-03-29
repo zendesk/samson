@@ -7,4 +7,8 @@ class Kubernetes::ReleasesController < ApplicationController
   def index
     @kubernetes_releases = current_project.kubernetes_releases.order('id desc')
   end
+
+  def show
+    @kubernetes_release = current_project.kubernetes_releases.find(params.require(:id))
+  end
 end
