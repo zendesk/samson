@@ -2,8 +2,7 @@
 require 'csv'
 
 class Admin::UsersController < ApplicationController
-  before_action :authorize_admin!
-  before_action :authorize_super_admin!, except: [:index, :show]
+  before_action :authorize_resource!
 
   def index
     @users = User.search_by_criteria(params)
