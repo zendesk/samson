@@ -2,7 +2,12 @@
 
 <%= breadcrumb(title) %>
 
-<%= page_title title %>
+<% page_title title %>
+
+<h1>
+  <%= title %>
+  <%= link_to 'Variables', admin_environment_variables_path, class: 'pull-right' %>
+</h1>
 
 <section class="clearfix">
   <table class="table table-hover table-condensed">
@@ -29,7 +34,7 @@
           <% if group.projects.any? %>
             <%= link_to "Delete", "#", data: {confirm: "Cannot be deleted when still in use."} %>
           <% else %>
-            <%= link_to "Delete", [:admin, group], data: {method: :delete, confirm: "Delete #{group.name} ?"} %>
+            <%= link_to_delete [:admin, group] %>
           <% end %>
         </td>
       </tr>
