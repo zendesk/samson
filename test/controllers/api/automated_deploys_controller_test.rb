@@ -69,7 +69,7 @@ describe Api::AutomatedDeploysController do
     end
 
     it "reuses an existing stage and deploys" do
-      template.update_column(:name, Api::AutomatedDeploysController::STAGE_NAME)
+      template.update_column(:name, Stage::AUTOMATED_NAME)
 
       refute_difference 'Stage.count' do
         assert_difference 'Deploy.count', +1 do

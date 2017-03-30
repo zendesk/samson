@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 class Stage < ActiveRecord::Base
+  AUTOMATED_NAME = 'Automated Deploys'
+
   has_soft_deletion default_scope: true unless self < SoftDeletion::Core
 
   include Permalinkable
@@ -32,6 +34,7 @@ class Stage < ActiveRecord::Base
   # n emails separated by ;
   email = '([^\s;]+@[^\s;]+)'
   validates :notify_email_address, format: /\A#{email}((\s*;\s*)?#{email}?)*\z/, allow_blank: true
+  validate :validate_deploy_group_selected
 
   before_create :ensure_ordering
   after_destroy :destroy_deploy_groups_stages
@@ -220,5 +223,11 @@ class Stage < ActiveRecord::Base
   # overwrites papertrail to record when command_ids were changed but not trigger multiple versions per save
   def changed_notably?
     super || @command_ids_changed
+  end
+
+  def validate_deploy_group_selected
+    if DeployGroup.enabled? && name != AUTOMATED_NAME && deploy_groups.empty?
+      errors.add(:deploy_groups, "need to be selected")
+    end
   end
 end
