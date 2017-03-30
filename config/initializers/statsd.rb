@@ -1,34 +1,12 @@
 # frozen_string_literal: true
-require 'statsd'
-
-module Samson::StatsdLoader
-  class << self
-    def create
-      config = config_from_env || config_from_file
-      Statsd.new(config.fetch(:host), config.fetch(:port))
-    end
-
-    private
-
-    def config_from_env
-      return unless host = ENV['STATSD_HOST']
-      return unless port = ENV['STATSD_PORT']
-      {host: host, port: port.to_i}
-    end
-
-    def config_from_file
-      YAML.load_file(Rails.root + 'config/statsd.yml').
-        fetch(Rails.env).
-        symbolize_keys
-    end
-  end
-end
+require 'datadog/statsd'
 
 class << Samson
   attr_accessor :statsd
 end
 
-Samson.statsd = Samson::StatsdLoader.create
+raise "use STATSD_HOST and STATSD_PORT" if File.exist?("config/statsd.yml")
+Samson.statsd = Datadog::Statsd.new(ENV['STATSD_HOST'], ENV['STATSD_PORT'])
 Samson.statsd.namespace = "samson.app"
 
 Samson.statsd.event "Startup", "Samson startup" if ENV['SERVER_MODE']
