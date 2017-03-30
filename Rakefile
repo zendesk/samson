@@ -67,6 +67,11 @@ task :brakeman do
   sh "brakeman --exit-on-warn --exit-on-err --format plain --add-engine-path 'plugins/*' --ensure-latest"
 end
 
+desc 'Scan for gem vulnerabilities'
+task :bundle_audit do
+  sh "bundle-audit check --update"
+end
+
 desc "Run rubocop"
 task :rubocop do
   sh "rubocop"
