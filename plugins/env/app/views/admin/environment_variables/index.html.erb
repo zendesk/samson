@@ -1,0 +1,56 @@
+<% title = "Environment variables" %>
+
+<%= breadcrumb(title) %>
+
+<%= page_title title %>
+
+<%= form_tag '?', method: :get, class: 'clearfix' do %>
+  <div class="col-sm-3">
+    <%= label_tag "Name" %><br/>
+    <% options = options_for_select(EnvironmentVariable.order('name asc').pluck('distinct name'), params[:search].try(:[], :name)) %>
+    <%= select_tag 'search[name]', options, include_blank: "", title: "", class: "form-control selectpicker", data: {live_search: true} %>
+  </div>
+  <div class="col-sm-3">
+    <%= label_tag "Value" %><br/>
+    <%= text_field_tag 'search[value]', params[:search].try(:[], :value), class: "form-control selectpicker" %>
+  </div>
+  <%= render 'shared/search_button' %>
+<% end %>
+
+<section class="clearfix">
+  <table class="table table-hover table-condensed">
+    <thead>
+    <tr>
+      <th>Name</th>
+      <th>Value</th>
+      <th>Scope</th>
+      <th>Parent</th>
+      <th></th>
+    </tr>
+    </thead>
+    <% @environment_variables.each do |variable| %>
+      <tr>
+        <td><%= variable.name %></td>
+        <td><%= variable.value %></td>
+        <td><%= variable.scope_type ? (variable.scope&.name || "Deleted #{variable.scope_type} ##{variable.scope_id}") : 'All' %></td>
+        <td>
+          <% if variable.parent %>
+            <%= case variable.parent
+                when Project then link_to variable.parent.name, variable.parent
+                when EnvironmentVariableGroup then link_to variable.parent.name, [:admin, variable.parent]
+                else raise "Unsupported #{variable.parent}"
+                end
+            %>
+          <% else %>
+            <%= "Deleted #{variable.parent_type} ##{variable.parent_id}" %>
+            <% end %>
+        </td>
+        <td><%= link_to_delete [:admin, variable], remove_container: 'tr' %></td>
+      </tr>
+    <% end %>
+  </table>
+
+  <div class="admin-actions">
+    <%= paginate @environment_variables %>
+  </div>
+</section>

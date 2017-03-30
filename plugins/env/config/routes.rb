@@ -6,5 +6,6 @@ Samson::Application.routes.draw do
         get :preview
       end
     end
+    resources :environment_variables, only: [:index, :destroy]
   end
 end

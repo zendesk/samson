@@ -1,37 +1,47 @@
-<% title = "Environment variables" %>
+<% title = "Environment variable groups" %>
 
 <%= breadcrumb(title) %>
 
-<%= page_title title %>
+<% page_title title %>
 
-<%= link_to "New", new_admin_environment_variable_group_path %>
+<h1>
+  <%= title %>
+  <%= link_to 'Variables', admin_environment_variables_path, class: 'pull-right' %>
+</h1>
 
-<hr/>
-
-<table class="table">
-  <tr>
-    <th>Name</th>
-    <th>Variables</th>
-    <th>Projects</th>
-  </tr>
-  <% @groups.each do |group| %>
+<section class="clearfix">
+  <table class="table table-hover table-condensed">
+    <thead>
     <tr>
-      <td><%= link_to group.name, [:admin, group] %></td>
-      <td>
-        <ul>
-          <% group.environment_variables.map(&:name).uniq.sort.each do |name| %>
-            <li><%= name %></li>
-          <% end %>
-        </ul>
-      </td>
-      <td><%= render 'projects', group: group %></td>
-      <td>
-        <% if group.projects.any? %>
-          <%= link_to "Delete", "#", data: {confirm: "Cannot be deleted when still in use."} %>
-        <% else %>
-          <%= link_to "Delete", [:admin, group], data: {method: :delete, confirm: "Delete #{group.name} ?"} %>
-        <% end %>
-      </td>
+      <th>Name</th>
+      <th>Variables</th>
+      <th>Projects</th>
+      <th></th>
     </tr>
-  <% end %>
-</table>
+    </thead>
+    <% @groups.each do |group| %>
+      <tr>
+        <td><%= link_to group.name, [:admin, group] %></td>
+        <td>
+          <ul>
+            <% group.environment_variables.map(&:name).uniq.sort.each do |name| %>
+              <li><%= name %></li>
+            <% end %>
+          </ul>
+        </td>
+        <td><%= render 'projects', group: group %></td>
+        <td>
+          <% if group.projects.any? %>
+            <%= link_to "Delete", "#", data: {confirm: "Cannot be deleted when still in use."} %>
+          <% else %>
+            <%= link_to_delete [:admin, group] %>
+          <% end %>
+        </td>
+      </tr>
+    <% end %>
+  </table>
+
+  <div class="pull-right">
+    <%= link_to "New", new_admin_environment_variable_group_path, class: "btn btn-default" %>
+  </div>
+</section>
