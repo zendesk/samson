@@ -51,6 +51,10 @@ module Kubernetes
       }
     end
 
+    def url
+      Rails.application.routes.url_helpers.project_kubernetes_release_url(project, self)
+    end
+
     private
 
     # Creates a ReleaseDoc per each DeployGroup and Role combination.

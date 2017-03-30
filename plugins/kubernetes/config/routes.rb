@@ -8,7 +8,7 @@ Samson::Application.routes.draw do
           get :example
         end
       end
-      resources :releases, only: [:index]
+      resources :releases, only: [:index, :show]
     end
   end
 

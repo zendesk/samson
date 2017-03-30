@@ -9,6 +9,7 @@
     <thead>
       <tr>
         <th>Id</th>
+        <th>Deploy</th>
         <th>Build</th>
         <th>Deploy Groups</th>
         <th>Created</th>
@@ -23,7 +24,16 @@
       <% else %>
         <% @kubernetes_releases.each do |kubernetes_release| %>
           <tr>
-            <td><%= kubernetes_release.deploy ? link_to(kubernetes_release.id, project_deploy_path(@project, kubernetes_release.deploy, anchor: 'kubernetes_release')) : kubernetes_release.id %></td>
+            <td>
+              <%= link_to kubernetes_release.id, project_kubernetes_release_path(@project, kubernetes_release) %>
+            </td>
+            <td>
+              <% if kubernetes_release.deploy %>
+                <%= link_to job_status_badge(kubernetes_release.deploy.job), project_deploy_path(@project, kubernetes_release.deploy) %>
+              <% else %>
+                Not deployed.
+              <% end %>
+            </td>
             <td>
               <%= link_to kubernetes_release.build.label, [kubernetes_release.project, kubernetes_release.build] if kubernetes_release.build %>
             </td>

@@ -1,0 +1,52 @@
+<% page_title "Kubernetes Release #{@kubernetes_release.id}" %>
+
+<%= render 'projects/header', project: @project, tab: 'kubernetes' %>
+
+<section class="tabs kubernetes-section">
+  <%= render 'samson_kubernetes/navigation' %>
+
+  <dl class="dl-horizontal">
+    <dt>Build</dt>
+    <dd>
+      <% if @kubernetes_release.build_id %>
+        <%= link_to @kubernetes_release.build_id, project_build_path(@project, @kubernetes_release.build_id) %>
+      <% else %>
+        None
+      <% end %>
+    </dd>
+    <dt>Deploy</dt>
+    <dd>
+      <% if @kubernetes_release.deploy %>
+        <%= link_to job_status_badge(@kubernetes_release.deploy.job), project_deploy_path(@project, @kubernetes_release.deploy) %>
+      <% else %>
+        None
+      <% end %>
+    </dd>
+    <dt>Git SHA</dt>
+    <dd><%= short_sha @kubernetes_release.git_sha %></dd>
+    <dt>Git REF</dt>
+    <dd><%= @kubernetes_release.git_ref %></dd>
+  </dl>
+
+  <h2>Docs</h2>
+  <table class="table">
+    <tr>
+      <th>Id</th>
+      <th>Deploy Group</th>
+      <th>Role</th>
+      <th>Replicas</th>
+      <th>CPU Cores</th>
+      <th>Ram in MB</th>
+    </tr>
+    <% @kubernetes_release.release_docs.each do |doc| %>
+      <tr>
+        <td><%= doc.id %></td>
+        <td><%= link_to doc.deploy_group.name, doc.deploy_group %></td>
+        <td><%= link_to doc.kubernetes_role.name, project_kubernetes_role_path(@project, doc.kubernetes_role) %></td>
+        <td><%= doc.replica_target %></td>
+        <td><%= doc.cpu %></td>
+        <td><%= doc.ram %></td>
+      </tr>
+    <% end %>
+  </table>
+</section>

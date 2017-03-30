@@ -148,6 +148,13 @@ describe Kubernetes::Release do
     end
   end
 
+  describe "#url" do
+    it "builds" do
+      release.id = 123
+      release.url.must_equal "http://www.test-url.com/projects/foo/kubernetes/releases/123"
+    end
+  end
+
   def expect_file_contents_from_repo
     GitRepository.any_instance.expects(:file_content).returns(role_config_file)
   end
