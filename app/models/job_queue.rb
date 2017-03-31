@@ -86,6 +86,10 @@ class JobQueue
   end
 
   def instrument
-    ActiveSupport::Notifications.instrument "job.threads", thread_count: @active.length
+    ActiveSupport::Notifications.instrument(
+      "job_queue.samson",
+      threads: @active.length,
+      queued: @queue.values.sum(&:sum)
+    )
   end
 end

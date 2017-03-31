@@ -11,35 +11,34 @@ Samson.statsd.namespace = "samson.app"
 
 Samson.statsd.event "Startup", "Samson startup" if ENV['SERVER_MODE']
 
-ActiveSupport::Notifications.subscribe("execute_shell.samson") do |*args|
+ActiveSupport::Notifications.subscribe("execute_job.samson") do |*args|
   event = ActiveSupport::Notifications::Event.new(*args)
-
-  tags = [event.payload[:project], event.payload[:stage]]
-
+  tags = ["project:#{event.payload.fetch(:project)}", "stage:#{event.payload.fetch(:stage)}"]
   Samson.statsd.histogram "execute_shell.time", event.duration, tags: tags
-  Samson.statsd.event "Executed shell command".dup, event.payload[:command], tags: tags
-  Samson.statsd.increment "execute_shells", tags: tags
-
-  Rails.logger.debug("Executed shell command in %.2fms" % event.duration)
 end
 
-ActiveSupport::Notifications.subscribe("job.threads") do |*args|
-  event = ActiveSupport::Notifications::Event.new(*args)
-  Samson.statsd.gauge "job.threads", event.payload[:thread_count]
+ActiveSupport::Notifications.subscribe("job_queue.samson") do |*, payload|
+  payload.each { |key, value| Samson.statsd.gauge "job.#{key}", value }
+end
+
+ActiveSupport::Notifications.subscribe("system_stats.samson") do |*, payload|
+  payload.each { |key, value| Samson.statsd.gauge key.to_s, value }
 end
 
 # basic web stats
-ActiveSupport::Notifications.subscribe(/process_action.action_controller/) do |*args|
+ActiveSupport::Notifications.subscribe("process_action.action_controller") do |*args|
   event = ActiveSupport::Notifications::Event.new(*args)
-  controller = "controller:#{event.payload[:controller]}"
-  action = "action:#{event.payload[:action]}"
+  controller = "controller:#{event.payload.fetch(:controller)}"
+  action = "action:#{event.payload.fetch(:action)}"
   format = "format:#{event.payload[:format] || 'all'}"
   format = "format:all" if format == "format:*/*"
-  status = event.payload[:status]
+  status = event.payload[:status] || 401 # unauthorized redirect/error has no status because it is a `throw`
   tags = [controller, action, format]
 
+  # db and view runtime are not set for actions without db/views
+  # db_runtime does not work ... always returns 0 when running in server mode ... works fine locally and on console
   Samson.statsd.histogram "web.request.time", event.duration, tags: tags
-  Samson.statsd.histogram "web.db_query.time", event.payload[:db_runtime], tags: tags
+  Samson.statsd.histogram "web.db_query.time", event.payload[:db_runtime].to_i, tags: tags
   Samson.statsd.histogram "web.view.time", event.payload[:view_runtime].to_i, tags: tags
   Samson.statsd.increment "web.request.status.#{status}", tags: tags
 end
