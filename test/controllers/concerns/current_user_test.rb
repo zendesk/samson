@@ -227,6 +227,24 @@ class CurrentUserConcernTest < ActionController::TestCase
       e.message.must_equal "Unsupported controller"
     end
 
+    describe 'users' do
+      before { @controller.stubs(:controller_name).returns('users') }
+
+      it "renders when authorized for admin action" do
+        login_as :admin
+        @controller.stubs(:action_name).returns('index')
+        perform_get
+        assert_response :success
+      end
+
+      it "renders when authorized for super admin action" do
+        login_as :super_admin
+        @controller.stubs(:action_name).returns('destroy')
+        perform_get
+        assert_response :success
+      end
+    end
+
     describe "when user is not authorized to do everything" do
       before { login_as :project_deployer }
 

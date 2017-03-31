@@ -61,6 +61,7 @@ module CurrentUser
     unauthorized! unless current_user.deployer_for?(current_project)
   end
 
+  # tested via access checks in the actual controllers
   def authorize_resource!
     case controller_name
     when 'builds'
@@ -70,6 +71,12 @@ module CurrentUser
         authorize_project_deployer!
       else
         authorize_admin!
+      end
+    when 'users'
+      if ['index', 'show'].include?(action_name)
+        authorize_admin!
+      else
+        authorize_super_admin!
       end
     else
       raise "Unsupported controller"
