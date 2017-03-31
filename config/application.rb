@@ -34,7 +34,7 @@ end
 # END Railties
 ###
 
-require "#{Bundler.root}/lib/samson/env_check"
+require_relative "../lib/samson/env_check"
 
 module Samson
   class Application < Rails::Application
