@@ -8,7 +8,7 @@ module Kubernetes
 
     DEPLOY_KINDS = ['Deployment', 'DaemonSet'].freeze
     JOB_KINDS = ['Job'].freeze
-    PRIMARY = (DEPLOY_KINDS + JOB_KINDS).freeze
+    PRIMARY_KINDS = (DEPLOY_KINDS + JOB_KINDS + ['Pod']).freeze
     SERVICE_KINDS = ['Service'].freeze
 
     def initialize(content, path)

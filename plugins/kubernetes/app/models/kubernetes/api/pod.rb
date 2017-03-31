@@ -16,7 +16,7 @@ module Kubernetes
       end
 
       def live?
-        phase == 'Running' && ready?
+        completed? || (phase == 'Running' && ready?)
       end
 
       def completed?

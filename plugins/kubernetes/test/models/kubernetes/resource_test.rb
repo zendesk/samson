@@ -104,6 +104,35 @@ describe Kubernetes::Resource do
     end
   end
 
+  describe "#prerequisite?" do
+    it "is not a prerequisite by default" do
+      refute resource.prerequisite?
+    end
+
+    it "is a prerequisite when labeled" do
+      template[:metadata][:labels] = {"samson/prerequisite": true}
+      assert resource.prerequisite?
+    end
+
+    # testing legacy behavior ... ScheduledJob etc should not be prerequisites
+    it "is a prerequisite when it is a job" do
+      template[:kind] = "Job"
+      assert resource.prerequisite?
+    end
+  end
+
+  describe "#primary?" do
+    it "is primary when it is a primary resource" do
+      template[:kind] = "Deployment"
+      assert resource.primary?
+    end
+
+    it "is not primary when it is a secondary resource" do
+      template[:kind] = "Service"
+      refute resource.primary?
+    end
+  end
+
   describe Kubernetes::Resource::DaemonSet do
     def daemonset_stub(scheduled, misscheduled)
       stub(
@@ -388,6 +417,36 @@ describe Kubernetes::Resource do
         request = stub_request(:post, base_url).to_return(body: "{}")
         resource.deploy
         assert_requested request
+      end
+    end
+  end
+
+  describe Kubernetes::Resource::Pod do
+    let(:kind) { 'Pod' }
+
+    describe "#deploy" do
+      let(:url) { "http://foobar.server/api/v1/namespaces/pod1/pods/some-project" }
+
+      it "creates when missing" do
+        stub_request(:get, url).to_return(status: 404)
+
+        request = stub_request(:post, base_url).to_return(body: "{}")
+        resource.deploy
+        assert_requested request
+      end
+
+      it "replaces when existing" do
+        stub_request(:get, url).to_return(body: "{}")
+        stub_request(:delete, url)
+        request = stub_request(:post, base_url).to_return(body: "{}")
+        resource.deploy
+        assert_requested request
+      end
+    end
+
+    describe "#desired_pod_count" do
+      it "is 1" do
+        resource.desired_pod_count.must_equal 1
       end
     end
   end

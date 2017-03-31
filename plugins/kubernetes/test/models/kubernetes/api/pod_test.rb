@@ -38,8 +38,8 @@ describe Kubernetes::Api::Pod do
     )
   end
 
-  describe '#live?' do
-    it "is live" do
+  describe "#live?" do
+    it "is done" do
       assert pod.live?
     end
 
@@ -62,6 +62,11 @@ describe Kubernetes::Api::Pod do
       pod_attributes[:status].delete :conditions
       refute pod.live?
     end
+
+    it "is live when succeeded" do
+      pod_attributes[:status][:phase] = "Succeeded"
+      assert pod.live?
+    end
   end
 
   describe "#completed?" do
@@ -71,6 +76,7 @@ describe Kubernetes::Api::Pod do
     end
 
     it "is not completed when not succeeded" do
+      pod_attributes[:status][:phase] = "Running"
       refute pod.completed?
     end
   end
