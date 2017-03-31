@@ -110,7 +110,7 @@ describe Kubernetes::Resource do
     end
 
     it "is a prerequisite when labeled" do
-      template[:metadata][:labels] = {"samson/prerequisite": true}
+      template[:metadata][:annotations] = {"samson/prerequisite": true}
       assert resource.prerequisite?
     end
 
@@ -136,6 +136,7 @@ describe Kubernetes::Resource do
   describe Kubernetes::Resource::DaemonSet do
     def daemonset_stub(scheduled, misscheduled)
       stub(
+        "Daemonset",
         to_hash: {
           status: {
             currentNumberScheduled: scheduled,
@@ -260,6 +261,7 @@ describe Kubernetes::Resource do
   describe Kubernetes::Resource::Deployment do
     def deployment_stub(replica_count)
       stub(
+        "Deployment",
         to_hash: {
           spec: {},
           status: {replicas: replica_count}
