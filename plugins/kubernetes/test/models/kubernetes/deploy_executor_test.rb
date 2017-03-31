@@ -434,7 +434,8 @@ describe Kubernetes::DeployExecutor do
               {
                 type: 'Warning',
                 reason: 'FailedScheduling',
-                message: "fit failure on node (ip-1-2-3-4)\nfit failure on node (ip-2-3-4-5)"
+                message: "fit failure on node (ip-1-2-3-4)\nfit failure on node (ip-2-3-4-5)",
+                metadata: {creationTimestamp: "2017-03-31T22:56:20Z"}
               }
             ]
           }.to_json
@@ -557,12 +558,14 @@ describe Kubernetes::DeployExecutor do
                 {
                   reason: 'FailedScheduling',
                   message: "fit failure on node (ip-1-2-3-4)\nfit failure on node (ip-2-3-4-5)",
-                  count: 4
+                  count: 4,
+                  metadata: {creationTimestamp: "2017-03-31T22:56:20Z"}
                 },
                 {
                   reason: 'FailedScheduling',
                   message: "fit failure on node (ip-2-3-4-5)\nfit failure on node (ip-1-2-3-4)",
-                  count: 1
+                  count: 1,
+                  metadata: {creationTimestamp: "2017-03-31T22:56:20Z"}
                 }
               ]
             }.to_json

@@ -21,7 +21,8 @@ describe Kubernetes::Api::Pod do
         containerStatuses: [{
           restartCount: 0,
           state: {}
-        }]
+        }],
+        startTime: start_time,
       },
       spec: {
         containers: [
@@ -37,6 +38,7 @@ describe Kubernetes::Api::Pod do
       client: deploy_groups(:pod1).kubernetes_cluster.client
     )
   end
+  let(:start_time) { "2017-03-31T22:56:20Z" }
 
   describe "#live?" do
     it "is done" do
@@ -209,56 +211,75 @@ describe Kubernetes::Api::Pod do
     let(:events_url) do
       "http://foobar.server/api/v1/namespaces/the-namespace/events?fieldSelector=involvedObject.name=test_name"
     end
-    let(:readiness_failed) { {type: 'Warning', reason: 'Unhealthy', message: "Readiness probe failed: Get ", count: 1} }
+    let(:event) { {metadata: {creationTimestamp: start_time}, type: 'Normal'} }
+    let(:events) { [event] }
+
+    def events_indicate_failure?
+      stub_request(:get, events_url).to_return(body: {items: events}.to_json)
+      pod_with_client.events_indicate_failure?
+    end
 
     it "is false when there are no events" do
-      stub_request(:get, events_url).to_return(body: {items: []}.to_json)
-      refute pod_with_client.events_indicate_failure?
+      events.clear
+      refute events_indicate_failure?
     end
 
     it "is false when there are Normal events" do
-      stub_request(:get, events_url).to_return(body: {items: [{type: 'Normal'}]}.to_json)
-      refute pod_with_client.events_indicate_failure?
+      refute events_indicate_failure?
     end
 
-    it "is true with bad events" do
-      stub_request(:get, events_url).to_return(body: {items: [{type: 'Warning'}]}.to_json)
-      assert pod_with_client.events_indicate_failure?
-    end
-
-    it "is false with single Readiness event" do
-      stub_request(:get, events_url).to_return(body: {items: [readiness_failed]}.to_json)
-      refute pod_with_client.events_indicate_failure?
-    end
-
-    it "fails with unknown probe failure" do
-      readiness_failed[:message] = readiness_failed[:message].sub('Readiness', 'Crazyness')
-      stub_request(:get, events_url).to_return(body: {items: [readiness_failed.merge(count: 20)]}.to_json)
-      e = assert_raises RuntimeError do
-        pod_with_client.events_indicate_failure?
-      end
-      e.message.must_equal "Unknown probe Crazyness probe failed: Get "
-    end
-
-    describe "with multiple Readiness failures" do
-      before do
-        stub_request(:get, events_url).to_return(body: {items: [readiness_failed.merge(count: 20)]}.to_json)
-      end
+    describe "with bad events" do
+      before { event[:type] = "Warning" }
 
       it "is true" do
-        assert pod_with_client.events_indicate_failure?
+        assert events_indicate_failure?
       end
 
-      it "is false with less then threshold" do
-        pod_attributes[:spec][:containers][0][:readinessProbe] = {failureThreshold: 30}
-        refute pod_with_client.events_indicate_failure?
+      # not sure if this happens, just making sure ... also makes our fixtures simpler
+      it "is true when pod never started" do
+        assert pod_attributes[:status].delete(:startTime)
+        assert events_indicate_failure?
+      end
+
+      it "is false when events are for a previous generation" do
+        event[:metadata][:creationTimestamp] = "1111"
+        refute events_indicate_failure?
       end
     end
 
-    it "is true with multiple Liveliness events" do
-      readiness_failed[:message] = readiness_failed[:message].sub('Readiness', 'Liveliness')
-      stub_request(:get, events_url).to_return(body: {items: [readiness_failed.merge(count: 20)]}.to_json)
-      assert pod_with_client.events_indicate_failure?
+    describe "probe failures" do
+      before do
+        event.merge!(type: 'Warning', reason: 'Unhealthy', message: "Readiness probe failed: Get ".dup, count: 1)
+      end
+
+      it "is false with single Readiness event" do
+        refute events_indicate_failure?
+      end
+
+      it "fails with unknown probe failure" do
+        assert event[:message].sub!('Readiness', 'Crazyness')
+        e = assert_raises(RuntimeError) { events_indicate_failure? }
+        e.message.must_equal "Unknown probe Crazyness probe failed: Get "
+      end
+
+      describe "with multiple Readiness failures" do
+        before { event[:count] = 20 }
+
+        it "is true" do
+          assert events_indicate_failure?
+        end
+
+        it "is false with less then threshold" do
+          pod_attributes[:spec][:containers][0][:readinessProbe] = {failureThreshold: 30}
+          refute events_indicate_failure?
+        end
+      end
+
+      it "is true with multiple Liveliness events" do
+        assert event[:message].sub!('Readiness', 'Liveliness')
+        event[:count] = 20
+        assert events_indicate_failure?
+      end
     end
   end
 
