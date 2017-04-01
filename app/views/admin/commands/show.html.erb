@@ -37,7 +37,8 @@
 
       <%= form.actions do %>
         <% disabled = "Can only delete unused commands." if usages %>
-        <%= link_to_delete([:admin, @command], disabled: disabled) if @command.persisted? %>
+        <%= link_to_delete([:admin, @command], disabled: disabled) if @command.persisted? %> |
+        <%= link_to_history(@command) %>
       <% end %>
     </fieldset>
   <% end %>
