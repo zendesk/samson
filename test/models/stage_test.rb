@@ -628,4 +628,32 @@ describe Stage do
       end
     end
   end
+
+  describe "#direct" do
+    before do
+      stage.confirm = false
+      stage.no_reference_selection = true
+    end
+
+    it "is direct" do
+      assert stage.direct?
+    end
+
+    it "is not direct when confirmation is required" do
+      stage.confirm = true
+      refute stage.direct?
+    end
+
+    it "is not direct when reference selection is required" do
+      stage.no_reference_selection = false
+      refute stage.direct?
+    end
+
+    # this could be loosened, but then we have to make sure it goes to pending and not
+    # into a running deploy
+    it "is not direct when approval is required" do
+      stage.stubs(deploy_requires_approval?: true)
+      refute stage.direct?
+    end
+  end
 end

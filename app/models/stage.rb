@@ -183,6 +183,10 @@ class Stage < ActiveRecord::Base
     Stage.reorder(nil).where(id: stage_ids, project_id: project_id).pluck(:id)
   end
 
+  def direct?
+    !confirm? && no_reference_selection? && !deploy_requires_approval?
+  end
+
   private
 
   def permalink_base
