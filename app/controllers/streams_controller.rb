@@ -32,7 +32,7 @@ class StreamsController < ApplicationController
     case event
     when :started, :finished
       status_response(event)
-    when :viewers
+    when :viewers # show who else is viewing
       viewers = data.to_a.uniq.reject { |user| user == current_user }
       viewers.to_json(only: [:id, :name])
     else

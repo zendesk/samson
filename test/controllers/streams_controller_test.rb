@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 require_relative '../test_helper'
 
-SingleCov.covered! uncovered: 11
+SingleCov.covered!
 
 describe StreamsController do
   include OutputBufferSupport
@@ -49,6 +49,30 @@ describe StreamsController do
         response.status.must_equal(200)
         t.join
       end
+    end
+  end
+
+  # hard to test directly via show, so we get dirty
+  describe "#event_handler" do
+    let(:job) { jobs(:succeeded_test) }
+
+    before do
+      @controller.instance_variable_set(:@current_user, users(:admin))
+      @controller.instance_variable_set(:@job, job)
+    end
+
+    it "renders deploy header" do
+      response = JSON.parse(@controller.send(:event_handler, :started, {}))
+      response.fetch("title").must_include "Staging deploy"
+      response.fetch("html").must_include "<h1>"
+    end
+
+    it "renders jobs header" do
+      job.deploy.destroy!
+      response = JSON.parse(@controller.send(:event_handler, :started, {}))
+      response.fetch("title").must_equal "Project deploy (succeeded)"
+      response.fetch("html").wont_include "<h1>"
+      response.fetch("html").must_include "Super Admin executed"
     end
   end
 end
