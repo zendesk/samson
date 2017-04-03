@@ -10,6 +10,7 @@ module Kubernetes
     JOB_KINDS = ['Job'].freeze
     PRIMARY_KINDS = (DEPLOY_KINDS + JOB_KINDS + ['Pod']).freeze
     SERVICE_KINDS = ['Service'].freeze
+    PREREQUISITE = [:metadata, :annotations, :'samson/prerequisite'].freeze
 
     def initialize(content, path)
       @path = path
