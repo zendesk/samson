@@ -28,7 +28,7 @@ module Kubernetes
       verify_job_restart_policy
       verify_numeric_limits
       verify_project_and_role_consistent
-      verify_annotations
+      verify_annotations || verify_prerequisites
       verify_env_values
       @errors.presence
     end
@@ -148,6 +148,14 @@ module Kubernetes
       values = map_attributes(path, array: :first, elements: templates).compact
       bad = values.reject { |x| x.is_a?(String) }
       @errors << "Env values #{bad.join(', ')} must be strings." if bad.any?
+    end
+
+    def verify_prerequisites
+      allowed = ["Job", "Pod"]
+      bad = templates.any? do |t|
+        t.dig(*RoleConfigFile::PREREQUISITE) && !allowed.include?(t[:kind])
+      end
+      @errors << "Only elements with type #{allowed.join(", ")} can be prerequisites." if bad
     end
 
     def jobs

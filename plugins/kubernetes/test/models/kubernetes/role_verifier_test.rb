@@ -138,6 +138,32 @@ describe Kubernetes::RoleVerifier do
       errors.must_include "Env values 1234 must be strings."
     end
 
+    describe "verify_prerequisites" do
+      before do
+        role.pop
+        role.first[:kind] = "Job"
+        role.first[:spec][:template][:spec][:restartPolicy] = "Never"
+        role.first[:spec][:template][:metadata][:annotations] = {"samson/prerequisite": 'true'}
+      end
+
+      it "does not report valid prerequisites" do
+        errors.must_equal nil
+      end
+
+      it "does not report valid prerequisites for pod" do
+        assert role.first.delete(:spec)
+        role.first[:kind] = "Pod"
+        role.first[:metadata][:annotations] = {"samson/prerequisite": 'true'}
+        role.first[:spec] = {containers: [{name: "Foo"}]}
+        errors.must_equal nil
+      end
+
+      it "reports invalid prerequisites" do
+        role.first[:kind] = "Deployment"
+        errors.must_include "Only elements with type Job, Pod can be prerequisites."
+      end
+    end
+
     describe 'pod' do
       let(:role) { pod_role }
 

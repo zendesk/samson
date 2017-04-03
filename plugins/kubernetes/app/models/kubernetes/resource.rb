@@ -18,8 +18,9 @@ module Kubernetes
       end
 
       # should it be deployed before all other things get deployed ?
+      # TODO: remove Job support here and only reply on prerequisite
       def prerequisite?
-        @template.fetch(:kind) == "Job" || @template.dig(:metadata, :annotations, :'samson/prerequisite')
+        @template.fetch(:kind) == "Job" || @template.dig(*RoleConfigFile::PREREQUISITE)
       end
 
       def primary?
