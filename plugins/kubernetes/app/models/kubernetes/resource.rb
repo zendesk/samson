@@ -19,7 +19,7 @@ module Kubernetes
 
       # should it be deployed before all other things get deployed ?
       def prerequisite?
-        @template.fetch(:kind) == "Job" || @template.dig(:metadata, :labels, :'samson/prerequisite')
+        @template.fetch(:kind) == "Job" || @template.dig(:metadata, :annotations, :'samson/prerequisite')
       end
 
       def primary?
