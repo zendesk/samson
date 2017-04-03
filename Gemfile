@@ -9,6 +9,7 @@ group :preload do
   gem 'dotenv'
   gem 'sse-rails-engine'
   gem 'connection_pool'
+  gem 'marco-polo'
 
   # AR extensions
   gem 'goldiloader'
@@ -48,7 +49,6 @@ gem 'concurrent-ruby'
 gem 'vault'
 gem 'docker-api', '>= 1.32'
 gem 'newrelic_rpm'
-gem 'marco-polo'
 
 # treat included plugins like gems
 Dir[File.join(Bundler.root, 'plugins/*/')].each { |f| gemspec path: f }

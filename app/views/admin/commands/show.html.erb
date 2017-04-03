@@ -6,20 +6,12 @@
     <fieldset>
       <%= render 'shared/errors', object: @command %>
 
-      <div class="form-group">
-        <%= form.label :command, class: "col-lg-2 control-label" %>
-        <div class="col-lg-6">
-          <%= form.text_area :command, class: "form-control", rows: 10 %>
-        </div>
-      </div>
+      <%= form.input :command, as: :text_area, input_html: {rows: 10, style: 'width: 800px'} %>
 
-      <div class="form-group">
-        <%= form.label :project_id, value: "Project", class: "col-lg-2 control-label" %>
-        <div class="col-lg-4">
-          <% options = (current_user.admin? ? { include_blank: "Global" } : {}) %>
-          <%= form.select :project_id, current_user.administrated_projects.all.map {|p| [p.name, p.id]}, options, class: "form-control" %>
-        </div>
-      </div>
+      <%= form.input :project_id do %>
+        <% options = (current_user.admin? ? { include_blank: "Global" } : {}) %>
+        <%= form.select :project_id, current_user.administrated_projects.all.map {|p| [p.name, p.id]}, options, class: "form-control" %>
+      <% end %>
 
       <% if usages %>
         <div class="form-group">
@@ -43,13 +35,11 @@
         </div>
       <% end %>
 
-      <div class="form-group">
-        <div class="col-lg-offset-2 col-lg-10">
-          <button type="submit" class="btn btn-default">Save</button>
-          <% disabled = "Can only delete unused commands." if usages %>
-          <%= link_to_delete([:admin, @command], disabled: disabled) if @command.persisted? %>
-        </div>
-      </div>
+      <%= form.actions do %>
+        <% disabled = "Can only delete unused commands." if usages %>
+        <%= link_to_delete([:admin, @command], disabled: disabled) if @command.persisted? %> |
+        <%= link_to_history(@command) %>
+      <% end %>
     </fieldset>
   <% end %>
 </section>
