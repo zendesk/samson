@@ -75,7 +75,10 @@ module Kubernetes
         @events ||= @client.get_events(
           namespace: namespace,
           field_selector: "involvedObject.name=#{name}"
-        )
+        ).select do |event|
+          # compare strings to avoid parsing time '2017-03-31T22:56:20Z'
+          event.metadata.creationTimestamp >= @pod.status.startTime.to_s
+        end
       end
 
       def init_containers
