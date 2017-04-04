@@ -103,7 +103,10 @@ module Samson
     class << self
       def plugins
         @plugins ||= begin
-          Gem.find_files("*/samson_plugin.rb").map { |path| Plugin.new(path) }.select { |p| active_plugin?(p.name) }
+          Gem.find_files("*/samson_plugin.rb").
+            map { |path| Plugin.new(path) }.
+            select { |p| active_plugin?(p.name) }.
+            sort_by(&:name)
         end
       end
 
