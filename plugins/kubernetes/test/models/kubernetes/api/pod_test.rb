@@ -69,20 +69,6 @@ describe Kubernetes::Api::Pod do
       pod_attributes[:status][:phase] = "Succeeded"
       assert pod.live?
     end
-
-    describe "prerequisite" do
-      before { pod_attributes[:metadata][:annotations] = {"samson/prerequisite": "true" } }
-
-      it "is not live when running since we are waiting for it to finish" do
-        pod_attributes[:status][:phase] = "Running"
-        refute pod.live?
-      end
-
-      it "is live when succeeded" do
-        pod_attributes[:status][:phase] = "Succeeded"
-        assert pod.live?
-      end
-    end
   end
 
   describe "#completed?" do

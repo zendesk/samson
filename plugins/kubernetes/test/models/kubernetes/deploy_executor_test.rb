@@ -328,7 +328,8 @@ describe Kubernetes::DeployExecutor do
           },
           'metadata' => {
             'name' => 'test',
-            'labels' => {'project' => 'foobar', 'role' => 'migrate'}
+            'labels' => {'project' => 'foobar', 'role' => 'migrate'},
+            'annotations' => {'samson/prerequisite' => 'true'}
           }
         }.to_yaml)
         GitRepository.any_instance.stubs(:file_content).with('kubernetes/app_server.yml', anything).
@@ -356,7 +357,7 @@ describe Kubernetes::DeployExecutor do
         out.wont_include "other roles" # not announcing that we have more to deploy
       end
 
-      it "runs jobs and then the deploy" do
+      it "runs prerequisites and then the deploy" do
         assert execute!
         out.must_include "resque-worker: Live\n"
         out.must_include "SUCCESS"
@@ -476,6 +477,7 @@ describe Kubernetes::DeployExecutor do
     it "fails when pod is failing to boot" do
       pod_status[:containerStatuses][0][:restartCount] = 1
       executor.instance_variable_set(:@testing_for_stability, 0)
+      executor.expects(:raise).with("prerequisites should not check for stability") # ignore sanity check
       refute execute!
       out.must_include "resque-worker: Restarted"
       out.must_include "UNSTABLE"

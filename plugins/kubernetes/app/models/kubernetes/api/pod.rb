@@ -16,11 +16,7 @@ module Kubernetes
       end
 
       def live?
-        if prerequisite?
-          completed?
-        else
-          completed? || (phase == 'Running' && ready?)
-        end
+        completed? || (phase == 'Running' && ready?)
       end
 
       def completed?
@@ -91,10 +87,6 @@ module Kubernetes
       end
 
       private
-
-      def prerequisite?
-        @pod.dig(*RoleConfigFile::PREREQUISITE)
-      end
 
       # if the pod is still running we stream the logs until it times out to get as much info as possible
       # necessary since logs often hang for a while even if the pod is already done
