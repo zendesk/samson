@@ -248,8 +248,9 @@ class JobExecution
       parameters: {job_id: @job.id}
     )
 
-    raise 'unable to find url' unless url = Airbrake.user_information[/['"](http.*?)['"]/, 1]
-    raise 'unable to find error' unless url.sub!('{{error_id}}', notice['id'])
+    return 'Airbrake did not return an error id' unless id = notice['id']
+    return 'Unable to find Airbrake url' unless url = Airbrake.user_information[/['"](http.*?)['"]/, 1]
+    return 'Unable to find error_id placeholder' unless url.sub!('{{error_id}}', id)
     "Error #{url}"
   end
 
