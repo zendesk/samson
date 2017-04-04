@@ -105,6 +105,12 @@ describe JobQueue do
       end
     end
 
+    it 'reports queue length' do
+      ActiveSupport::Notifications.expects(:instrument).with("job_queue.samson", threads: 1, queued: 0)
+      ActiveSupport::Notifications.expects(:instrument).with("job_queue.samson", threads: 1, queued: 1)
+      with_a_queued_job {} # noop
+    end
+
     describe 'with queued job' do
       with_a_queued_job
 
