@@ -64,6 +64,7 @@ module Kubernetes
     # check all pods and see if they are running
     # once they are running check if they are stable (for apps only, since jobs are finished and will not change)
     def wait_for_resources_to_complete(release, release_docs)
+      raise "prerequisites should not check for stability" if @testing_for_stability
       @wait_start_time = Time.now
       stable_ticks = CHECK_STABLE / TICK
       @output.puts "Waiting for pods to be created"
@@ -212,7 +213,7 @@ module Kubernetes
           {live: false, details: "Missing", pod: pod}
         elsif pod.restarted?
           {live: false, stop: true, details: "Restarted", pod: pod}
-        elsif pod.live?
+        elsif release_doc.prerequisite? ? pod.completed? : pod.live?
           {live: true, details: "Live", pod: pod}
         elsif pod.events_indicate_failure?
           {live: false, stop: true, details: "Error", pod: pod}

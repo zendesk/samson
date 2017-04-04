@@ -113,12 +113,6 @@ describe Kubernetes::Resource do
       template[:metadata][:annotations] = {"samson/prerequisite": true}
       assert resource.prerequisite?
     end
-
-    # testing legacy behavior ... ScheduledJob etc should not be prerequisites
-    it "is a prerequisite when it is a job" do
-      template[:kind] = "Job"
-      assert resource.prerequisite?
-    end
   end
 
   describe "#primary?" do
