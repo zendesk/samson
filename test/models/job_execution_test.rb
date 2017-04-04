@@ -356,6 +356,17 @@ describe JobExecution do
         execution.output.to_s.must_include "http://foo.com/12345"
       end
     end
+
+    it "shows warnings to users when things went wrong instead of blowing up" do
+      with_hidden_errors do
+        Airbrake.expects(:notify_sync).returns({})
+        job.expects(:run!).raises("Oh boy")
+        execution.start!
+        execution.wait!
+        execution.output.to_s.must_include "JobExecution failed: Oh boy"
+        execution.output.to_s.must_include "Airbrake did not return an error id"
+      end
+    end
   end
 
   describe "#stop!" do
