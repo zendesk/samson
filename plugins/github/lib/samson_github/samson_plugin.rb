@@ -24,7 +24,7 @@ Samson::Hooks.callback :after_deploy do |deploy, _buddy|
     GithubNotification.new(deploy).deliver
   end
 
-  if deploy.stage.use_github_deployment_api?
-    GithubDeployment.new(deploy).update_github_deployment_status(deploy.instance_variable_get(:@deployment))
+  if deploy.stage.use_github_deployment_api? && deployment = deploy.instance_variable_get(:@deployment)
+    GithubDeployment.new(deploy).update_github_deployment_status(deployment)
   end
 end

@@ -17,10 +17,10 @@ describe SamsonDatadog do
 
   describe :after_deploy do
     describe "with github notifications enabled" do
-      before { stage.stubs(:update_github_pull_requests?).returns(true) }
+      before { stage.update_github_pull_requests = true }
 
       it "sends github notifications if the stage has it enabled and deploy succeeded" do
-        deploy.stubs(:status).returns("succeeded")
+        deploy.job.status = "succeeded"
         GithubNotification.any_instance.expects(:deliver)
         Samson::Hooks.fire(:after_deploy, deploy, nil)
       end
@@ -32,21 +32,28 @@ describe SamsonDatadog do
       end
     end
 
-    it "updates a github deployment status" do
-      stage.stubs(:use_github_deployment_api?).returns(true)
+    describe "with deployments enabled" do
+      before { stage.use_github_deployment_api = true }
 
-      deployment = stub("Deployment")
-      GithubDeployment.any_instance.expects(:create_github_deployment).returns(deployment)
-      Samson::Hooks.fire(:before_deploy, deploy, nil)
+      it "updates a github deployment status" do
+        deployment = stub("Deployment")
+        GithubDeployment.any_instance.expects(:create_github_deployment).returns(deployment)
+        Samson::Hooks.fire(:before_deploy, deploy, nil)
 
-      GithubDeployment.any_instance.expects(:update_github_deployment_status).with(deployment)
-      Samson::Hooks.fire(:after_deploy, deploy, nil)
+        GithubDeployment.any_instance.expects(:update_github_deployment_status).with(deployment)
+        Samson::Hooks.fire(:after_deploy, deploy, nil)
+      end
+
+      it "does not blow up when before hook already failed" do
+        GithubDeployment.any_instance.expects(:update_github_deployment_status).never
+        Samson::Hooks.fire(:after_deploy, deploy, nil)
+      end
     end
   end
 
   describe :before_deploy do
     it "creates a github deployment" do
-      stage.stubs(:use_github_deployment_api?).returns(true)
+      stage.use_github_deployment_api = true
       GithubDeployment.any_instance.expects(:create_github_deployment)
       Samson::Hooks.fire(:before_deploy, deploy, nil)
     end
