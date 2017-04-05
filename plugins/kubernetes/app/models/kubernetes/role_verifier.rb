@@ -30,6 +30,7 @@ module Kubernetes
       verify_project_and_role_consistent
       verify_annotations || verify_prerequisites
       verify_env_values
+      verify_host_volume_paths
       @errors.presence
     end
 
@@ -54,7 +55,7 @@ module Kubernetes
     # spec actually allows this, but blows up when used
     def verify_numeric_limits
       base = [:spec, :template, :spec, :containers, :resources, :limits, :cpu]
-      types = map_attributes(base, array: :first).map(&:class)
+      types = map_attributes(base).flatten(1).map(&:class)
       return if (types - [NilClass, String]).none?
       @errors << "Numeric cpu limits are not supported"
     end
@@ -145,7 +146,7 @@ module Kubernetes
 
     def verify_env_values
       path = [:spec, :containers, :env, :value]
-      values = map_attributes(path, array: :first, elements: templates).compact
+      values = map_attributes(path, elements: templates).flatten(1).compact
       bad = values.reject { |x| x.is_a?(String) }
       @errors << "Env values #{bad.join(', ')} must be strings." if bad.any?
     end
@@ -157,6 +158,18 @@ module Kubernetes
       end
       @errors << "Only elements with type #{allowed.join(", ")} can be prerequisites." if bad
     end
+
+    # comparing all directories with trailing / so we can use simple matching logic
+    def verify_host_volume_paths
+      return unless allowed = ENV['KUBERNETES_ALLOWED_VOLUME_HOST_PATHS'].presence
+      allowed = allowed.split(",").map { |d| File.join(d, '') }
+      used = map_attributes([:spec, :volumes, :hostPath, :path], elements: templates).
+        flatten(1).compact.map { |d| File.join(d, '') }
+      bad = used.select { |u| allowed.none? { |a| u.start_with?(a) } }
+      @errors << "Only volume host paths #{allowed.join(", ")} are allowed, not #{bad.join(", ")}." if bad.any?
+    end
+
+    # helpers below
 
     def jobs
       @elements.select { |e| RoleConfigFile::JOB_KINDS.include?(e[:kind]) }
@@ -173,12 +186,15 @@ module Kubernetes
       end
     end
 
-    def map_attributes(path, elements: @elements, array: :all)
+    def map_attributes(path, elements: @elements)
       elements.map do |e|
-        path.inject(e) do |el, p|
+        path.each_with_index.inject(e) do |el, (p, i)|
           el = el[p]
-          el = Array.wrap(el).first if array == :first
-          el || break
+          if el.is_a?(Array)
+            break map_attributes(path[(i + 1)..-1], elements: el).flatten(1)
+          else
+            el || break
+          end
         end
       end
     end
