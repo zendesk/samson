@@ -118,25 +118,29 @@ which will default to the values set in the role configuration.
 
 ### Objects Created
 
-Each time you trigger a deploy, a `Kubernetes::ReleaseGroup` is created. That
-record keeps track of which `Build` you deployed, who did the deploying, etc.
+For each deploy, a `Kubernetes::Release` is created, which tracks which `Build` was deployed and
+who executed it.
 
-For each `DeployGroup` that you are deploying to, a `Kubernetes::Release` is
-created.
-
-Then, for each `Kubernetes::Role` a project has, a `Kubernetes::ReleaseDoc`
-will be created.  That maps to a single ReplicationController in Kubernetes,
-which will generate one or more Pods.
+For each `DeployGroup` and `Kubernetes::Role` in the deploy, a `Kubernetes::ReleaseDoc` is created, which tracks what kubernetes
+configuration was used.
 
 ```
-Kubernetes::ReleaseGroup
+Kubernetes::Release
   |
-  -> Kubernetes::Release (1 per DeployGroup)
-     |
-     -> Kubernetes::ReleaseDoc (1 per role, creates a ReplicationController)
-        |
-        -> Kubernetes Pods (how ever many replicas specified)
+   -> Kubernetes::ReleaseDoc (1 per role and DeployGroup)
+      |
+      -> Kubernetes Pods (how ever many replicas specified)
 ```
+
+### Injected config
+
+Via [Template filler](/plugins/kubernetes/app/models/kubernetes/template_filler.rb)
+
+ - docker image if samson built it
+ - limits + replicas
+ - environment variables: POD_NAME, POD_NAMESPACE, POD_IP, REVISION, TAG, DEPLOY_ID, DEPLOY_GROUP, PROJECT, ROLE,
+   KUBERNETES_CLUSTER_NAME, and environment variables defined via [env](/plugins/env) plugin.
+ - secret puller and secret annotations (if secret puller + vault is used)
 
 ### Migrations
 
