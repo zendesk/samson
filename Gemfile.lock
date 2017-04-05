@@ -40,6 +40,11 @@ PATH
       flowdock (~> 0.6.0)
 
 PATH
+  remote: plugins/github
+  specs:
+    samson_github (0.0.0)
+
+PATH
   remote: plugins/hyperclair
   specs:
     samson_hyperclair (0.0.0)
@@ -603,6 +608,7 @@ DEPENDENCIES
   samson_dockerb!
   samson_env!
   samson_flowdock!
+  samson_github!
   samson_hyperclair!
   samson_jenkins!
   samson_kubernetes!

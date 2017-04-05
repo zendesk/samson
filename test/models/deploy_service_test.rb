@@ -215,18 +215,6 @@ describe DeployService do
         job_execution.send(:run!)
       end.must_equal [[deploy, nil]]
     end
-
-    it "creates a github deployment" do
-      deployment = stub(update_github_deployment_status: nil)
-
-      stage.stubs(:use_github_deployment_api?).returns(true)
-
-      GithubDeployment.stubs(new: deployment)
-      deployment.expects(:create_github_deployment)
-
-      service.deploy!(stage, reference: reference)
-      job_execution.send(:run!)
-    end
   end
 
   describe "after notifications" do
@@ -267,40 +255,6 @@ describe DeployService do
         service.deploy!(stage, reference: reference)
         job_execution.send(:run!)
       end.must_equal [[deploy, nil]]
-    end
-
-    describe "with github notifications enabled" do
-      before { stage.stubs(:update_github_pull_requests?).returns(true) }
-
-      it "sends github notifications if the stage has it enabled and deploy succeeded" do
-        deploy.stubs(:status).returns("succeeded")
-
-        GithubNotification.any_instance.expects(:deliver)
-
-        service.deploy!(stage, reference: reference)
-        job_execution.send(:run!)
-      end
-
-      it "does not send github notifications if the stage has it enabled and deploy failed" do
-        deploy.stubs(:status).returns("failed")
-
-        GithubNotification.any_instance.expects(:deliver).never
-
-        service.deploy!(stage, reference: reference)
-        job_execution.send(:run!)
-      end
-    end
-
-    it "updates a github deployment status" do
-      deployment = stub(create_github_deployment: deployment)
-
-      stage.stubs(:use_github_deployment_api?).returns(true)
-
-      GithubDeployment.stubs(new: deployment)
-      deployment.expects(:update_github_deployment_status)
-
-      service.deploy!(stage, reference: reference)
-      job_execution.send(:run!)
     end
 
     it "email notification for failed deploys" do

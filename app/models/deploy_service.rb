@@ -81,8 +81,6 @@ class DeployService
     if deploy.bypassed_approval?
       DeployMailer.bypass_email(deploy, user).deliver_now
     end
-
-    create_github_deployment(deploy)
   end
   add_method_tracer :send_before_notifications
 
@@ -91,9 +89,7 @@ class DeployService
     execute_and_log_errors(deploy) { send_sse_deploy_update('finish', deploy) }
     execute_and_log_errors(deploy) { send_deploy_email(deploy) }
     execute_and_log_errors(deploy) { send_failed_deploy_email(deploy) }
-    execute_and_log_errors(deploy) { send_github_notification(deploy) }
     execute_and_log_errors(deploy) { notify_outbound_webhooks(deploy) }
-    execute_and_log_errors(deploy) { update_github_deployment_status(deploy) }
   end
   add_method_tracer :send_after_notifications
 
@@ -114,26 +110,8 @@ class DeployService
     end
   end
 
-  def send_github_notification(deploy)
-    if deploy.stage.update_github_pull_requests? && deploy.status == "succeeded"
-      GithubNotification.new(deploy).deliver
-    end
-  end
-
   def notify_outbound_webhooks(deploy)
     deploy.stage.outbound_webhooks.each { |webhook| webhook.deliver(deploy) }
-  end
-
-  def create_github_deployment(deploy)
-    if deploy.stage.use_github_deployment_api?
-      @deployment = GithubDeployment.new(deploy).create_github_deployment
-    end
-  end
-
-  def update_github_deployment_status(deploy)
-    if deploy.stage.use_github_deployment_api?
-      GithubDeployment.new(deploy).update_github_deployment_status(@deployment)
-    end
   end
 
   def send_sse_deploy_update(type, deploy)

@@ -15,6 +15,7 @@ Available plugins:
  - [Dockerfile.erb](https://github.com/zendesk/samson/tree/master/plugins/dockerb)
  - [ENV var management](https://github.com/zendesk/samson/tree/master/plugins/env)
  - [Flowdock notification](https://github.com/zendesk/samson/tree/master/plugins/flowdock)
+ - [Github](https://github.com/zendesk/samson/tree/master/plugins/github)
  - [Jenkins jobs management](https://github.com/zendesk/samson/tree/master/plugins/jenkins)
  - [Hipchat notification](https://github.com/listia/samson_hipchat)
  - [Hyperclair security scanner for docker images](https://github.com/zendesk/samson/tree/master/plugins/hyperclair)
