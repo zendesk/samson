@@ -55,23 +55,13 @@ describe StagesController do
     unauthorized :get, :index, project_id: :foo
     unauthorized :get, :new, project_id: :foo
     unauthorized :post, :create, project_id: :foo
-    unauthorized :get, :show, project_id: :foo, id: 1
     unauthorized :get, :edit, project_id: :foo, id: 1
     unauthorized :patch, :update, project_id: :foo, id: 1
     unauthorized :delete, :destroy, project_id: :foo, id: 1
     unauthorized :patch, :reorder, project_id: :foo, id: 1
     unauthorized :get, :clone, project_id: :foo, id: 1
-  end
 
-  as_a_project_deployer do
-    describe "#index" do
-      it "renders html" do
-        get :index, params: {project_id: project}
-        assert_template 'index'
-      end
-    end
-
-    describe 'GET to :show' do
+    describe '#show' do
       describe 'valid' do
         before do
           Deploy.delete_all # triggers more github requests
@@ -96,7 +86,7 @@ describe StagesController do
         end
       end
 
-      it "fails with invalid stage" do
+      it "fails with invalid project" do
         assert_raises ActiveRecord::RecordNotFound do
           get :show, params: {project_id: 123123, id: subject.to_param}
         end
@@ -108,7 +98,9 @@ describe StagesController do
         end
       end
     end
+  end
 
+  as_a_project_deployer do
     unauthorized :get, :new, project_id: :foo
     unauthorized :post, :create, project_id: :foo
     unauthorized :get, :edit, project_id: :foo, id: 1
@@ -116,6 +108,13 @@ describe StagesController do
     unauthorized :delete, :destroy, project_id: :foo, id: 1
     unauthorized :patch, :reorder, project_id: :foo, id: 1
     unauthorized :get, :clone, project_id: :foo, id: 1
+
+    describe "#index" do
+      it "renders html" do
+        get :index, params: {project_id: project}
+        assert_template 'index'
+      end
+    end
   end
 
   as_a_project_admin do
