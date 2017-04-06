@@ -50,7 +50,7 @@ describe DeploysHelper do
     it "renders" do
       @deploy = deploy
       @project = projects(:test)
-      deploy_page_title.must_equal "Staging deploy (succeeded) - Project"
+      deploy_page_title.must_equal "Staging deploy (succeeded) - Foo"
     end
   end
 
@@ -58,7 +58,7 @@ describe DeploysHelper do
     it "renders a notification" do
       @project = projects(:test)
       @deploy = deploy
-      deploy_notification.must_equal "Samson deploy finished:\nProject / Staging succeeded"
+      deploy_notification.must_equal "Samson deploy finished:\nFoo / Staging succeeded"
     end
   end
 

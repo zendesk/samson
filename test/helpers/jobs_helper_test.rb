@@ -10,7 +10,7 @@ describe JobsHelper do
     it "renders" do
       @project = projects(:test)
       @job = jobs(:succeeded_test)
-      job_page_title.must_equal "Project deploy (succeeded)"
+      job_page_title.must_equal "Foo deploy (succeeded)"
     end
   end
 

@@ -91,7 +91,7 @@ describe CsvExportsController do
             Project.last.update_attribute(:deleted_at, DateTime.now)
             get :new
             assert_select "h1", "Request Deploys Report"
-            @response.body.must_include ">Project</option>"
+            @response.body.must_include ">Foo</option>"
             @response.body.must_include ">(deleted) Other Project</option>"
           end
         end
@@ -100,7 +100,7 @@ describe CsvExportsController do
           it "renders form options" do
             get :new, params: {type: :users}
             assert_select "h1", "User Permission Reports"
-            @response.body.must_include ">Project</option>"
+            @response.body.must_include ">Foo</option>"
             @response.body.must_include ">Other Project</option>"
             @response.body.must_include ">Viewer</option>"
             @response.body.must_include ">Super Admin</option>"

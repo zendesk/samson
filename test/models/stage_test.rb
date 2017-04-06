@@ -219,12 +219,6 @@ describe Stage do
     end
   end
 
-  describe "#global_name" do
-    it "shows projects name to so we see where this stage belongs" do
-      stage.global_name.must_equal "Staging - Project"
-    end
-  end
-
   describe "#next_stage" do
     let(:project) { Project.new }
     let(:stage1) { Stage.new(project: project) }

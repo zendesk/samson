@@ -1,5 +1,5 @@
 <h1>
-  <%= @deploy.summary_for_email %>
+  <%= @deploy.summary(show_project: true) %>
 </h1>
 
 <%= render 'commit_info' %>

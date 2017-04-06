@@ -70,7 +70,7 @@ describe StreamsController do
     it "renders jobs header" do
       job.deploy.destroy!
       response = JSON.parse(@controller.send(:event_handler, :started, {}))
-      response.fetch("title").must_equal "Project deploy (succeeded)"
+      response.fetch("title").must_equal "Foo deploy (succeeded)"
       response.fetch("html").wont_include "<h1>"
       response.fetch("html").must_include "Super Admin executed"
     end

@@ -15,7 +15,7 @@ describe UserProjectRole do
       project_role.persisted?.must_equal(true)
     end
 
-    it "it created the mapping with the User and the Project" do
+    it "it created the mapping with the user and the project" do
       project_role.user.wont_be_nil
       project_role.project.wont_be_nil
     end
