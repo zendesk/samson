@@ -143,7 +143,7 @@ describe Kubernetes::TemplateFiller do
 
       it "adds env from deploy_group_env hook" do
         Samson::Hooks.with_callback(:deploy_group_env, ->(p, dg) { {FromEnv: "#{p.name}-#{dg.name}"} }) do
-          container.fetch(:env).must_include(name: 'FromEnv', value: 'Project-Pod1')
+          container.fetch(:env).must_include(name: 'FromEnv', value: 'Foo-Pod1')
         end
       end
 

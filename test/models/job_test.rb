@@ -199,6 +199,14 @@ describe Job do
       job.commit = "a" * 40
       job.summary.must_equal "Admin is about to execute against aaaaaaa"
     end
+
+    it "uses passive voice when the user might not have done it" do
+      job.status = "cancelled"
+      job.summary.must_equal "Execution by Admin against master is cancelled"
+
+      job.status = "cancelling"
+      job.summary.must_equal "Execution by Admin against master is cancelling"
+    end
   end
 
   describe "#user" do

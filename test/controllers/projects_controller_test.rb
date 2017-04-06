@@ -50,7 +50,7 @@ describe ProjectsController do
       it "responds to json requests" do
         get :index, params: {format: 'json'}
         result = JSON.parse(response.body)
-        result['projects'].map(&:symbolize_keys!).map { |obj| obj[:name] }.must_equal ['Project']
+        result['projects'].map(&:symbolize_keys!).map { |obj| obj[:name] }.must_equal ['Foo']
       end
 
       it "responds to CSV requests" do
@@ -74,7 +74,7 @@ describe ProjectsController do
 
         get :index, params: {format: 'json'}
         result = JSON.parse(response.body)
-        result['projects'].map { |obj| obj['name'] }.must_equal ['A', 'Z', 'Project']
+        result['projects'].map { |obj| obj['name'] }.must_equal ['A', 'Z', 'Foo']
       end
     end
   end

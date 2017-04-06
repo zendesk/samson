@@ -26,8 +26,6 @@ class Deploy < ActiveRecord::Base
   SUMMARY_ACTION = {
     "pending"    => "is about to deploy",
     "running"    => "is deploying",
-    "cancelling" => "is cancelling a deploy",
-    "cancelled"  => "cancelled a deploy",
     "succeeded"  => "deployed",
     "failed"     => "failed to deploy",
     "errored"    => "encountered an error deploying"
@@ -42,16 +40,23 @@ class Deploy < ActiveRecord::Base
     "stage-#{stage.id}" unless stage.run_in_parallel
   end
 
-  def summary
-    "#{job.user.name} #{deploy_buddy} #{summary_action} #{short_reference} to #{stage.name}"
+  # job has almost identical code, keep it in sync
+  def summary(show_project: false)
+    project_name = " #{project&.name}" if show_project
+    if ["cancelled", "cancelling"].include?(status)
+      "#{job.user.name}`s deploy#{deploy_buddy} of #{short_reference} to#{project_name} #{stage&.name} is #{status}"
+    else
+      "#{job.user.name}#{deploy_buddy} #{summary_action} #{short_reference} to#{project_name} #{stage&.name}"
+    end
   end
 
+  # same as summary but without mentioning the user since it will be in the UI close by
   def summary_for_timeline
-    "#{short_reference}#{' was' if job.succeeded?} #{summary_action} to #{stage&.name}"
-  end
-
-  def summary_for_email
-    "#{job.user.name} #{summary_action} #{project.name} to #{stage.name} (#{reference})"
+    if ["cancelling", "cancelled", "errored"].include?(status)
+      "#{short_reference} deploy to #{stage&.name} is #{status}"
+    else
+      "#{short_reference}#{' was' if job.succeeded?} #{summary_action} to #{stage&.name}"
+    end
   end
 
   def commit
@@ -215,11 +220,11 @@ class Deploy < ActiveRecord::Base
     return unless stage.deploy_requires_approval?
 
     if buddy.nil? && pending?
-      "(waiting for a buddy)"
+      " (waiting for a buddy)"
     elsif buddy.nil? || job.user_id == buddy_id
-      "(without a buddy)"
+      " (without a buddy)"
     else
-      "(with #{buddy.name})"
+      " (with #{buddy.name})"
     end
   end
 

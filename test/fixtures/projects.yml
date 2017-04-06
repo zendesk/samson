@@ -1,5 +1,5 @@
 test:
-  name: Project
+  name: Foo
   repository_url: ssh://git@example.com:bar/foo.git
   token: kanyewest
   permalink: foo

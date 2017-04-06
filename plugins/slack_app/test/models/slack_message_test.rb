@@ -91,7 +91,7 @@ describe SlackMessage do
       before { deploy.stubs(:waiting_for_buddy?).returns(false) }
 
       it 'has no buttons' do
-        text = "<@Uadmin> is deploying <http://www.test-url.com/projects/foo/deploys/178003093|*Project* to *Staging*>."
+        text = "<@Uadmin> is deploying <http://www.test-url.com/projects/foo/deploys/178003093|*Foo* to *Staging*>."
         assert_equal body,
           attachments: [{
             text: 'Deploying…',

@@ -89,7 +89,7 @@ describe Api::AutomatedDeploysController do
       template.update_column(:is_template, false)
       post_create
       assert_response :bad_request
-      response.body.must_equal "{\"error\":\"Unable to find template for Project\"}"
+      response.body.must_equal "{\"error\":\"Unable to find template for Foo\"}"
     end
 
     it "fails when new stage could not be saved" do

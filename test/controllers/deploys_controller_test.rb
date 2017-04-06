@@ -226,7 +226,7 @@ describe DeploysController do
       end
 
       it "filters by project" do
-        get :search, params: {format: "json", project_name: "Project"}
+        get :search, params: {format: "json", project_name: "Foo"}
         assert_response :ok
         deploys = JSON.parse(@response.body)
         deploys["deploys"].count.must_equal 4

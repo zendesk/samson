@@ -107,10 +107,6 @@ class Stage < ActiveRecord::Base
     notify_email_address.to_s.split(/\s*;\s*/).map(&:strip)
   end
 
-  def global_name
-    "#{name} - #{project.name}"
-  end
-
   # this logic is replicated in SQL inside of app/jobs/csv_export_job.rb#filter_deploys for report filtering
   # update the SQL query as well when editing this method
   def production?

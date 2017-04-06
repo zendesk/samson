@@ -14,25 +14,44 @@ describe Deploy do
     let!(:deploy) { create_deploy! }
 
     it "shows no buddy" do
-      deploy.summary.must_equal "Deployer  deployed baz to Staging"
+      deploy.summary.must_equal "Deployer deployed baz to Staging"
     end
 
     it "shows soft delete user" do
       deploy.user.soft_delete!
       deploy.reload
-      deploy.summary.must_equal "Deployer  deployed baz to Staging"
+      deploy.summary.must_equal "Deployer deployed baz to Staging"
     end
 
     it "shows hard delete user" do
       deploy.user.delete
       deploy.reload
-      deploy.summary.must_equal "Deleted User  deployed baz to Staging"
+      deploy.summary.must_equal "Deleted User deployed baz to Staging"
     end
 
     it "shows soft delete stage when INCLUDE_DELETED" do
       deploy.stage.soft_delete!
       deploy.reload
-      Stage.with_deleted { deploy.summary.must_equal "Deployer  deployed baz to Staging" }
+      Stage.with_deleted { deploy.summary.must_equal "Deployer deployed baz to Staging" }
+    end
+
+    it "can show project" do
+      deploy.summary(show_project: true).must_equal "Deployer deployed baz to Foo Staging"
+    end
+
+    {
+      "pending"    => "Deployer is about to deploy baz to Staging",
+      "running"    => "Deployer is deploying baz to Staging",
+      "succeeded"  => "Deployer deployed baz to Staging",
+      "cancelled"  => "Deployer`s deploy of baz to Staging is cancelled", # might not be done by the user
+      "cancelling" => "Deployer`s deploy of baz to Staging is cancelling", # might not be done by the user
+      "failed"     => "Deployer failed to deploy baz to Staging",
+      "errored"    => "Deployer encountered an error deploying baz to Staging"
+    }.each do |status, message|
+      it "#{status} reads naturally" do
+        deploy.job.status = status
+        deploy.summary.must_equal message
+      end
     end
 
     describe "when buddy was required" do
@@ -75,14 +94,19 @@ describe Deploy do
   end
 
   describe "#summary_for_timeline" do
-    it "renders" do
-      deploy.summary_for_timeline.must_equal "staging was deployed to Staging"
-    end
-  end
-
-  describe "#summary_for_email" do
-    it "renders" do
-      deploy.summary_for_email.must_equal "Super Admin deployed Project to Staging (staging)"
+    {
+      "pending"    => "staging is about to deploy to Staging",
+      "running"    => "staging is deploying to Staging",
+      "succeeded"  => "staging was deployed to Staging",
+      "cancelled"  => "staging deploy to Staging is cancelled", # might not be done by the user
+      "cancelling" => "staging deploy to Staging is cancelling", # might not be done by the user
+      "failed"     => "staging failed to deploy to Staging",
+      "errored"    => "staging deploy to Staging is errored"
+    }.each do |status, message|
+      it "#{status} reads naturally" do
+        deploy.job.status = status
+        deploy.summary_for_timeline.must_equal message
+      end
     end
   end
 

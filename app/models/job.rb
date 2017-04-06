@@ -17,8 +17,6 @@ class Job < ActiveRecord::Base
   SUMMARY_ACTION = {
     "pending"    => "is about to execute",
     "running"    => "is executing",
-    "cancelling" => "is cancelling an execution",
-    "cancelled"  => "cancelled an execution",
     "succeeded"  => "executed",
     "failed"     => "failed to execute",
     "errored"    => "encountered an error executing"
@@ -40,8 +38,13 @@ class Job < ActiveRecord::Base
     where(status: 'running')
   end
 
+  # deploy has almost identical code, keep it in sync
   def summary
-    "#{user.name} #{SUMMARY_ACTION.fetch(status)} against #{short_reference}"
+    if ["cancelled", "cancelling"].include?(status)
+      "Execution by #{user.name} against #{short_reference} is #{status}"
+    else
+      "#{user.name} #{SUMMARY_ACTION.fetch(status)} against #{short_reference}"
+    end
   end
 
   def user
