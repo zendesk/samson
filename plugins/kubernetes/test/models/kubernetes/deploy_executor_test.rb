@@ -426,6 +426,15 @@ describe Kubernetes::DeployExecutor do
       out.must_include "UNSTABLE"
     end
 
+    it "stops when detecting a failure" do
+      pod_status[:phase] = "Failed"
+
+      refute execute!
+
+      out.must_include "resque-worker: Failed\n"
+      out.must_include "UNSTABLE"
+    end
+
     it "stops when detecting a failure via events" do
       pod_status[:phase] = "Pending"
       request = stub_request(:get, %r{http://foobar.server/api/v1/namespaces/staging/events}).
