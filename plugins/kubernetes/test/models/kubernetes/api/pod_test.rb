@@ -83,6 +83,17 @@ describe Kubernetes::Api::Pod do
     end
   end
 
+  describe "#failed?" do
+    it "is not failed" do
+      refute pod.failed?
+    end
+
+    it "is failed when failed" do
+      pod_attributes[:status][:phase] = "Failed"
+      assert pod.failed?
+    end
+  end
+
   describe "#restarted?" do
     it "is not restarted" do
       refute pod.restarted?

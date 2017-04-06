@@ -23,6 +23,10 @@ module Kubernetes
         phase == 'Succeeded'
       end
 
+      def failed?
+        phase == 'Failed'
+      end
+
       def restarted?
         @pod.status.containerStatuses.try(:any?) { |s| s.restartCount.positive? }
       end
