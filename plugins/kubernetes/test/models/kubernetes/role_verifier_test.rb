@@ -8,6 +8,7 @@ describe Kubernetes::RoleVerifier do
     let(:role) do
       YAML.load_stream(read_kubernetes_sample_file('kubernetes_deployment.yml')).map(&:deep_symbolize_keys)
     end
+    let(:spec) { role[0][:spec][:template][:spec] }
     let(:job_role) do
       [YAML.load(read_kubernetes_sample_file('kubernetes_job.yml')).deep_symbolize_keys]
     end
@@ -90,12 +91,12 @@ describe Kubernetes::RoleVerifier do
 
     # if there are multiple containers they each need a name ... so enforcing this from the start
     it "reports missing name for containers" do
-      role[0][:spec][:template][:spec][:containers][0].delete(:name)
+      spec[:containers][0].delete(:name)
       errors.must_equal ['Containers need a name']
     end
 
     it "reports bad container names" do
-      role[0][:spec][:template][:spec][:containers][0][:name] = 'foo_bar'
+      spec[:containers][0][:name] = 'foo_bar'
       errors.must_equal ["Container name foo_bar did not match \\A[a-zA-Z0-9]([-a-zA-Z0-9]*[a-zA-Z0-9])?\\z"]
     end
 
@@ -138,7 +139,7 @@ describe Kubernetes::RoleVerifier do
       errors.must_include "Env values 1234 must be strings."
     end
 
-    describe "verify_prerequisites" do
+    describe "#verify_prerequisites" do
       before do
         role.pop
         role.first[:kind] = "Job"
@@ -182,22 +183,22 @@ describe Kubernetes::RoleVerifier do
       end
     end
 
-    describe 'verify_job_restart_policy' do
+    describe '#verify_job_restart_policy' do
       let(:expected) { ["Job spec.template.spec.restartPolicy must be one of Never/OnFailure"] }
       before { role.replace(job_role) }
 
       it "reports missing restart policy" do
-        role[0][:spec][:template][:spec].delete(:restartPolicy)
+        spec.delete(:restartPolicy)
         errors.must_equal expected
       end
 
       it "reports bad restart policy" do
-        role[0][:spec][:template][:spec][:restartPolicy] = 'Always'
+        spec[:restartPolicy] = 'Always'
         errors.must_equal expected
       end
     end
 
-    describe 'inconsistent labels' do
+    describe '#verify_project_and_role_consistent' do
       let(:error_message) { "Project and role labels must be consistent across Deployment/DaemonSet/Service/Job" }
 
       # this is not super important, but adding it for consistency
@@ -235,6 +236,50 @@ describe Kubernetes::RoleVerifier do
         role.last[:spec][:selector][:project] = 'other'
         errors.must_include error_message
       end
+    end
+
+    describe "#verify_host_volume_paths" do
+      with_env KUBERNETES_ALLOWED_VOLUME_HOST_PATHS: '/data/,/foo/bar'
+
+      before do
+        spec[:volumes] = [
+          {hostPath: {path: '/data'}},
+          {hostPath: {path: '/data/'}},
+          {hostPath: {path: '/data/bar'}}, # subdirectories are ok too
+          {hostPath: {path: '/foo/bar/'}}
+        ]
+      end
+
+      it "allows valid paths" do
+        errors.must_be_nil
+      end
+
+      it "does not allow bad paths" do
+        spec[:volumes][0][:hostPath][:path] = "/foo"
+        errors.must_equal ["Only volume host paths /data/, /foo/bar/ are allowed, not /foo/."]
+      end
+    end
+  end
+
+  describe '.map_attributes' do
+    def call(path, elements)
+      Kubernetes::RoleVerifier.new(elements).send(:map_attributes, path)
+    end
+
+    it "finds simple" do
+      call([:a], [{a: 1}, {a: 2}]).must_equal [1, 2]
+    end
+
+    it "finds nested" do
+      call([:a, :b], [{a: {b: 1}}, {a: {b: 2}}]).must_equal [1, 2]
+    end
+
+    it "finds arrays" do
+      call([:a], [{a: [1]}, {a: [2]}]).must_equal [[1], [2]]
+    end
+
+    it "finds through nested arrays" do
+      call([:a, :b], [{a: [{b: 1}, {b: 2}]}, {a: [{b: 3}]}]).must_equal [[1, 2], [3]]
     end
   end
 end
