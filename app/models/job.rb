@@ -2,6 +2,7 @@
 class Job < ActiveRecord::Base
   belongs_to :project
   belongs_to :user, -> { unscope(where: :deleted_at) }
+  belongs_to :canceller, -> { unscope(where: "deleted_at") }, class_name: 'User'
 
   has_one :deploy
 
@@ -63,15 +64,15 @@ class Job < ActiveRecord::Base
     command.split(/\r?\n|\r/)
   end
 
-  def stop!
-    if JobExecution.dequeue(id)
-      cancelled!
-    elsif ex = execution # is active
+  def stop!(canceller)
+    update_attribute(:canceller, canceller) unless self.canceller
+
+    if !JobExecution.dequeue(id) && ex = execution # is active
       cancelling!
       ex.stop!
-    else
-      cancelled!
     end
+
+    cancelled!
   end
 
   %w[pending running succeeded cancelling cancelled failed errored].each do |status|
@@ -96,14 +97,6 @@ class Job < ActiveRecord::Base
     status!("errored")
   end
 
-  def cancelling!
-    status!("cancelling")
-  end
-
-  def cancelled!
-    status!("cancelled")
-  end
-
   def finished?
     !ACTIVE_STATUSES.include?(status)
   end
@@ -121,7 +114,7 @@ class Job < ActiveRecord::Base
   end
 
   def waiting_for_restart?
-    !JobExecution.enabled && !finished? && !executing?
+    !JobExecution.enabled && pending?
   end
 
   def output
@@ -145,6 +138,14 @@ class Job < ActiveRecord::Base
   end
 
   private
+
+  def cancelling!
+    status!("cancelling")
+  end
+
+  def cancelled!
+    status!("cancelled")
+  end
 
   def validate_globally_unlocked
     return unless lock = Lock.global.first

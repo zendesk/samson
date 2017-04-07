@@ -54,6 +54,12 @@ describe Deploy do
       end
     end
 
+    it "shows canceller when it was regularly cancelled" do
+      deploy.job.status = "cancelled"
+      deploy.job.canceller = users(:admin)
+      deploy.summary.must_equal "Admin cancelled deploy baz to Staging"
+    end
+
     describe "when buddy was required" do
       before { Stage.any_instance.stubs(:deploy_requires_approval?).returns true }
 

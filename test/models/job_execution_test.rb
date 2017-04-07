@@ -223,8 +223,7 @@ describe JobExecution do
     execution.on_complete { called_subscriber = true }
     execution.stop!
 
-    assert_equal true, called_subscriber
-    assert_equal 'cancelled', job.status
+    assert called_subscriber
   end
 
   it 'saves job output before calling subscriber' do
@@ -389,7 +388,6 @@ describe JobExecution do
         true
       end
       execution.stop!
-      job.reload.status.must_equal 'cancelled'
     end
 
     it "stops the execution with kill if job did not respond to interrupt" do
@@ -400,7 +398,6 @@ describe JobExecution do
         true
       end
       execution.stop!
-      job.reload.status.must_equal 'cancelled'
     end
 
     it "calls on_complete hooks once when killing stuck thread" do
@@ -422,14 +419,6 @@ describe JobExecution do
       end
       execution.stop!
       called.must_equal [1]
-    end
-
-    it "marks the execution as cancelled when it was already stopped since we always need to enqueu the next" do
-      execution.start!
-      lock.unlock
-      sleep 0.1
-      execution.stop!
-      job.reload.status.must_equal 'cancelled'
     end
   end
 

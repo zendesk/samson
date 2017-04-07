@@ -153,7 +153,7 @@ module Samson
       if !Rails.env.test? && ENV['SERVER_MODE'] && !ENV['PRECOMPILE']
         JobExecution.enabled = true
 
-        Job.running.each(&:stop!)
+        Job.running.each { |j| j.stop!(nil) }
 
         Job.non_deploy.pending.each do |job|
           JobExecution.start_job(JobExecution.new(job.commit, job))

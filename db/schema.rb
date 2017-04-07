@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20170328214722) do
+ActiveRecord::Schema.define(version: 20170407001330) do
 
   create_table "builds", force: :cascade do |t|
     t.integer  "project_id",                                       null: false
@@ -158,6 +158,7 @@ ActiveRecord::Schema.define(version: 20170328214722) do
     t.datetime "updated_at"
     t.string   "commit"
     t.string   "tag"
+    t.integer  "canceller_id"
     t.index ["project_id"], name: "index_jobs_on_project_id", using: :btree
     t.index ["status"], name: "index_jobs_on_status", length: { status: 191 }, using: :btree
     t.index ["user_id"], name: "index_jobs_on_user_id", using: :btree
