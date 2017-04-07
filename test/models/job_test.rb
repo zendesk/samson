@@ -2,7 +2,7 @@
 require_relative '../test_helper'
 require 'ar_multi_threaded_transactional_tests'
 
-SingleCov.covered! uncovered: 3
+SingleCov.covered!
 
 describe Job do
   include GitRepoTestHelper
@@ -99,20 +99,6 @@ describe Job do
     end
   end
 
-  describe "#cancelling!" do
-    it "shows cancelling job" do
-      job.cancelling!
-      job.status.must_equal "cancelling"
-    end
-  end
-
-  describe "#cancelled!" do
-    it "shows cancelled job" do
-      job.cancelled!
-      job.status.must_equal "cancelled"
-    end
-  end
-
   describe "#finished?" do
     it "is finished when it is not active" do
       job.status = "succeeded"
@@ -134,6 +120,64 @@ describe Job do
     it "is not active when its status is finished" do
       job.status = "succeeded"
       job.active?.must_equal false
+    end
+  end
+
+  describe "#queued?" do
+    before do
+      JobExecution.stubs(:queued?).returns true
+      job.status = 'pending'
+    end
+
+    it "is queued" do
+      assert job.queued?
+    end
+
+    it "is not queued when not pending" do
+      job.status = 'running'
+      refute job.queued?
+    end
+
+    it "is not queued when not queued" do
+      JobExecution.unstub(:queued?)
+      refute job.queued?
+    end
+  end
+
+  describe "#waiting_for_restart??" do
+    before { job.status = 'pending' }
+
+    it "is waiting" do
+      assert job.waiting_for_restart?
+    end
+
+    it "is not waiting when execution is enabled" do
+      JobExecution.stubs(:enabled).returns(true)
+      refute job.waiting_for_restart?
+    end
+
+    it "is not waiting when not pending" do
+      job.status = 'running'
+      refute job.waiting_for_restart?
+    end
+  end
+
+  describe "#executing?" do
+    before { job.status = 'pending' }
+
+    it "is executing" do
+      assert job.executing?
+    end
+
+    it "is not executing when not running" do
+      job.status = 'cancelled'
+      refute job.executing?
+    end
+
+    it "executing when not running but active" do
+      job.status = 'cancelled'
+      JobExecution.stubs(:active?).returns true
+      assert job.executing?
     end
   end
 
@@ -251,14 +295,16 @@ describe Job do
       sleep 0.1 # make the job spin up properly
 
       assert JobExecution.active?(ex.id)
-      job.stop!
+      job.stop!(user)
       assert job.cancelled? # job execution callbacks sets it to cancelled
+      job.canceller.must_equal user
     end
 
     it "stops an inactive job" do
       refute JobExecution.active?(job.id)
-      job.stop!
+      job.stop!(user)
       assert job.cancelled?
+      job.canceller.must_equal user
     end
 
     it "stops a queued job" do
@@ -273,11 +319,26 @@ describe Job do
 
       sleep 0.1 # let jobs spin up
 
-      job.stop!
-      active_job.stop!
+      job.stop!(user)
+      active_job.stop!(user)
 
       assert job.cancelled?
       refute JobExecution.queued?(job.id)
+      job.canceller.must_equal user
+    end
+
+    it "does not change a cancelled job" do
+      job.status = "cancelled"
+      job.canceller = users(:deployer)
+      job.stop!(user)
+      job.status.must_equal "cancelled"
+      job.canceller.must_equal users(:deployer)
+    end
+
+    it "can stop from application restart" do
+      job.stop!(nil)
+      job.status.must_equal "cancelled"
+      job.canceller.must_be_nil
     end
   end
 end

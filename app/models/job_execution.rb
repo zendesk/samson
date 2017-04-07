@@ -66,8 +66,6 @@ class JobExecution
       @executor.stop! 'KILL'
       @thread.join(stop_timeout) || @thread.kill
     end
-
-    @job.cancelled!
     finish
   end
 

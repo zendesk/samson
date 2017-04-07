@@ -33,7 +33,7 @@ class JobsController < ApplicationController
 
   def destroy
     if @job.can_be_stopped_by?(current_user)
-      @job.stop!
+      @job.stop!(current_user)
       flash[:notice] = "Cancelled!"
     else
       flash[:error] = "You are not allowed to stop this job."

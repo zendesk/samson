@@ -14,10 +14,8 @@ class DeployService
       send_sse_deploy_update('new', deploy)
 
       if stage.cancel_queued_deploys?
-        stage.deploys.pending.prior_to(deploy).for_user(user).each do |queued_deploy|
-          if JobExecution.dequeue(queued_deploy.job.id)
-            queued_deploy.job.cancelled!
-          end
+        stage.deploys.pending.prior_to(deploy).for_user(user).each do |deploy|
+          deploy.job.stop!(user) if deploy.job.queued? # tiny race condition, might cancel jobs that have just started
         end
       end
 
