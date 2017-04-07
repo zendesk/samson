@@ -11,8 +11,8 @@ class EnvironmentVariable < ActiveRecord::Base
   class << self
     # preview parameter can be used to not raise an error,
     # but return a value with a helpful message
-    # used by an external plugin
-    def env(project, deploy_group, preview: false) # rubocop:disable Lint/UnusedMethodArgument
+    # also used by an external plugin
+    def env(project, deploy_group, preview: false)
       variables = project.environment_variables + project.environment_variable_groups.flat_map(&:environment_variables)
       variables.sort_by! { |ev| ev.send :priority }
       env = variables.each_with_object({}) do |ev, all|
@@ -20,7 +20,7 @@ class EnvironmentVariable < ActiveRecord::Base
       end
 
       resolve_dollar_variables(env)
-      resolve_secrets(project, deploy_group, env)
+      resolve_secrets(project, deploy_group, env, preview: preview)
 
       env
     end
@@ -54,11 +54,13 @@ class EnvironmentVariable < ActiveRecord::Base
       end
     end
 
-    def resolve_secrets(project, deploy_group, env)
+    def resolve_secrets(project, deploy_group, env, preview:)
       resolver = Samson::Secrets::KeyResolver.new(project, Array(deploy_group))
       env.each_value do |value|
         if value.start_with?(TerminalExecutor::SECRET_PREFIX)
-          value.replace resolver.read(value.sub(TerminalExecutor::SECRET_PREFIX, '')).to_s
+          key = value.sub(TerminalExecutor::SECRET_PREFIX, '')
+          found = resolver.read(key)
+          value.replace(preview ? "#{value} ✓" : found.to_s)
         end
       end
       resolver.verify!
