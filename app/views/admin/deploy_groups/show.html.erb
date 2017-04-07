@@ -30,8 +30,8 @@
             <tr>
               <td><%= link_to project.name, project %></td>
               <td><%= link_to dgs.stage.name, [dgs.stage.project, dgs.stage] %></td>
-              <td><%= dgs.stage.last_successful_deploy.try(&:reference) || 'NONE' %></td>
-              <td><%= dgs.stage.template_stage&.last_successful_deploy&.reference %></td>
+              <td><%= dgs.stage.last_successful_deploy&.short_reference || 'NONE' %></td>
+              <td><%= dgs.stage.template_stage&.last_successful_deploy&.short_reference %></td>
             </tr>
           <% end %>
         <% end %>
