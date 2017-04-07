@@ -134,4 +134,10 @@ describe Samson::Periodical do
     mentioned = File.read('.env.example')[/## Periodical tasks .*^PERIODICAL=/m].scan(/# ([a-z\d_]+):\d+/)
     configureable.sort.must_equal mentioned.sort
   end
+
+  it "runs everything" do
+    Samson::Periodical.send(:registered).each_key do |task|
+      Samson::Periodical.run_once task
+    end
+  end
 end
