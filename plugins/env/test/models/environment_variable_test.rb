@@ -102,6 +102,13 @@ describe EnvironmentVariable do
           end
           e.message.must_include "Failed to resolve secret keys:\n\tfoobar"
         end
+
+        it "does not show secret values in preview mode" do
+          create_secret 'global/global/global/foobar'
+          EnvironmentVariable.env(project, nil, preview: true).must_equal(
+            "PROJECT" => "secret://foobar ✓", "X" => "Y", "Y" => "Z"
+          )
+        end
       end
     end
   end
