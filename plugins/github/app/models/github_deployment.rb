@@ -26,9 +26,19 @@ class GithubDeployment
     {
       accept: DEPLOYMENTS_PREVIEW_MEDIA_TYPE,
       force: true,
-      payload: {deployer: @deploy.user.name}.to_json,
+      payload: payload.to_json,
       environment: @stage.name,
       description: @deploy.summary
+    }
+  end
+
+  def payload
+    {
+      deployer: @deploy.user.name,
+      deployer_email: @deploy.user.email,
+      buddy: @deploy.buddy_name,
+      buddy_email: @deploy.buddy_email,
+      production: @stage.production?
     }
   end
 
