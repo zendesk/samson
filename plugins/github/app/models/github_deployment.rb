@@ -8,33 +8,32 @@ class GithubDeployment
 
   # marks deployment as "Pending"
   def create_github_deployment
-    GITHUB.create_deployment(@project.github_repo, @deploy.reference, deployment_options)
+    GITHUB.create_deployment(
+      @project.github_repo,
+      @deploy.reference,
+      payload: {
+        deployer: @deploy.user.name,
+        deployer_email: @deploy.user.email,
+        buddy: @deploy.buddy_name,
+        buddy_email: @deploy.buddy_email,
+        production: @stage.production?
+      },
+      environment: @stage.name,
+      description: @deploy.summary
+    )
   end
 
   # marks deployment as "Succeeded" or "Failed"
   def update_github_deployment_status(deployment)
-    GITHUB.create_deployment_status(deployment.url, state, deployment_status_options)
+    GITHUB.create_deployment_status(
+      deployment.url,
+      state,
+      target_url: @deploy.url,
+      description: @deploy.summary
+    )
   end
 
   private
-
-  def deployment_options
-    {
-      payload: payload,
-      environment: @stage.name,
-      description: @deploy.summary
-    }
-  end
-
-  def payload
-    {
-      deployer: @deploy.user.name,
-      deployer_email: @deploy.user.email,
-      buddy: @deploy.buddy_name,
-      buddy_email: @deploy.buddy_email,
-      production: @stage.production?
-    }
-  end
 
   def state
     if @deploy.succeeded?
@@ -46,12 +45,5 @@ class GithubDeployment
     else
       raise "Unsupported deployment stage #{@deploy.job.status}"
     end
-  end
-
-  def deployment_status_options
-    {
-      target_url: @deploy.url,
-      description: @deploy.summary
-    }
   end
 end

@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 require_relative '../test_helper'
 
-SingleCov.covered! uncovered: 5
+SingleCov.covered!
 
 describe GithubDeployment do
   include StubGithubAPI
@@ -9,8 +9,7 @@ describe GithubDeployment do
   let(:user) { users(:deployer) }
   let(:project) { projects(:test) }
   let(:stage) { stages(:test_staging) }
-  let(:job) { Job.new(status: 'succeeded', project: project, user: user) }
-  let(:deploy) { Deploy.new(id: 1, job: job, reference: "0dfa439", stage: stage) }
+  let(:deploy) { deploys(:succeeded_test) }
   let(:github_deployment) { GithubDeployment.new(deploy) }
 
   describe "#create_github_deployment" do
