@@ -24,7 +24,7 @@ class GithubDeployment
 
   def deployment_options
     {
-      payload: payload.to_json,
+      payload: payload,
       environment: @stage.name,
       description: @deploy.summary
     }
