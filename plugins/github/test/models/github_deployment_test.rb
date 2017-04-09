@@ -37,4 +37,21 @@ describe GithubDeployment do
       assert_requested deploy
     end
   end
+
+  describe "#state" do
+    it "renders failed" do
+      deploy.job.status = "failed"
+      github_deployment.send(:state).must_equal "failure"
+    end
+
+    it "renders error" do
+      deploy.job.status = "errored"
+      github_deployment.send(:state).must_equal "error"
+    end
+
+    it "fails for impossible" do
+      deploy.job.status = "pending"
+      assert_raises(ArgumentError) { github_deployment.send(:state) }
+    end
+  end
 end
