@@ -54,12 +54,8 @@ class GithubDeployment
 
   def deployment_status_options
     {
-      target_url: url,
+      target_url: @deploy.url,
       description: @deploy.summary
     }
-  end
-
-  def url
-    Rails.application.routes.url_helpers.project_deploy_url(@project, @deploy)
   end
 end
