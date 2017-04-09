@@ -7,10 +7,10 @@ class GithubDeployment
   end
 
   # marks deployment as "Pending"
-  def create_github_deployment
+  def create
     GITHUB.create_deployment(
       @project.github_repo,
-      @deploy.reference,
+      @deploy.job.commit,
       payload: {
         deployer: @deploy.user.name,
         deployer_email: @deploy.user.email,
@@ -21,10 +21,12 @@ class GithubDeployment
       environment: @stage.name,
       description: @deploy.summary
     )
+  rescue Octokit::Conflict
+    nil # cannot create new deployments on commits that were tagged
   end
 
   # marks deployment as "Succeeded" or "Failed"
-  def update_github_deployment_status(deployment)
+  def update(deployment)
     GITHUB.create_deployment_status(
       deployment.url,
       state,
