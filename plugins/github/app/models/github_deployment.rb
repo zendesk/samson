@@ -48,7 +48,7 @@ class GithubDeployment
     elsif @deploy.failed?
       'failure'
     else
-      'pending'
+      raise "Unsupported deployment stage #{@deploy.job.status}"
     end
   end
 
