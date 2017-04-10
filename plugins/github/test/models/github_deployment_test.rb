@@ -16,7 +16,17 @@ describe GithubDeployment do
     let(:endpoint) { "https://api.github.com/repos/bar/foo/deployments" }
 
     it "creates a deployment" do
-      create = stub_request(:post, endpoint)
+      body = {
+        payload: {
+          deployer: {id: deploy.user.id, name: deploy.user.name, email: deploy.user.email},
+          buddy: nil,
+          production: false
+        },
+        environment: "Staging",
+        description: "Super Admin deployed staging to Staging",
+        ref: "abcabc1"
+      }
+      create = stub_request(:post, endpoint).with(body: body.to_json)
       github_deployment.create
       assert_requested create
     end
