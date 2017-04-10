@@ -7,6 +7,7 @@ class GithubDeployment
   end
 
   # marks deployment as "Pending"
+  # https://developer.github.com/v3/repos/deployments/#create-a-deployment
   def create
     GITHUB.create_deployment(
       @project.github_repo,
@@ -14,16 +15,18 @@ class GithubDeployment
       payload: {
         deployer: @deploy.user.attributes.slice("id", "name", "email"),
         buddy: @deploy.buddy&.attributes&.slice("id", "name", "email"),
-        production: @stage.production?
       },
       environment: @stage.name,
-      description: @deploy.summary
+      description: @deploy.summary,
+      production_environment: @stage.production?,
+      auto_merge: false, # make deployments on merge commits not produce Octokit::Conflict and do not merge PRs
+      required_contexts: [], # also create deployments when commit statuses show failure (CI failed)
+      accept: "application/vnd.github.ant-man-preview+json" # special header so we can use production_environment field
     )
-  rescue Octokit::Conflict
-    nil # cannot create new deployments on commits that were tagged
   end
 
   # marks deployment as "Succeeded" or "Failed"
+  # https://developer.github.com/v3/repos/deployments/#create-a-deployment-status
   def update(deployment)
     GITHUB.create_deployment_status(
       deployment.url,
