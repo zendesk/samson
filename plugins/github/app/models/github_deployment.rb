@@ -12,10 +12,8 @@ class GithubDeployment
       @project.github_repo,
       @deploy.job.commit,
       payload: {
-        deployer: @deploy.user.name,
-        deployer_email: @deploy.user.email,
-        buddy: @deploy.buddy_name,
-        buddy_email: @deploy.buddy_email,
+        deployer: @deploy.user.attributes.slice("id", "name", "email"),
+        buddy: @deploy.buddy&.attributes&.slice("id", "name", "email"),
         production: @stage.production?
       },
       environment: @stage.name,
