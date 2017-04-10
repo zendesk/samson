@@ -1,46 +1,41 @@
 # frozen_string_literal: true
 class GithubDeployment
-  DEPLOYMENTS_PREVIEW_MEDIA_TYPE = "application/vnd.github.cannonball-preview+json"
-
   def initialize(deploy)
     @deploy = deploy
     @stage = @deploy.stage
     @project = @stage.project
   end
 
-  def create_github_deployment
-    Rails.logger.info "Creating GitHub Deployment..."
-
-    GITHUB.create_deployment(@project.github_repo, @deploy.reference, deployment_options)
+  # marks deployment as "Pending"
+  def create
+    GITHUB.create_deployment(
+      @project.github_repo,
+      @deploy.job.commit,
+      payload: {
+        deployer: @deploy.user.name,
+        deployer_email: @deploy.user.email,
+        buddy: @deploy.buddy_name,
+        buddy_email: @deploy.buddy_email,
+        production: @stage.production?
+      },
+      environment: @stage.name,
+      description: @deploy.summary
+    )
+  rescue Octokit::Conflict
+    nil # cannot create new deployments on commits that were tagged
   end
 
-  def update_github_deployment_status(deployment)
-    Rails.logger.info "Updating GitHub Deployment Status..."
-
-    GITHUB.create_deployment_status(deployment.url, state, deployment_status_options)
+  # marks deployment as "Succeeded" or "Failed"
+  def update(deployment)
+    GITHUB.create_deployment_status(
+      deployment.url,
+      state,
+      target_url: @deploy.url,
+      description: @deploy.summary
+    )
   end
 
   private
-
-  def deployment_options
-    {
-      accept: DEPLOYMENTS_PREVIEW_MEDIA_TYPE,
-      force: true,
-      payload: payload.to_json,
-      environment: @stage.name,
-      description: @deploy.summary
-    }
-  end
-
-  def payload
-    {
-      deployer: @deploy.user.name,
-      deployer_email: @deploy.user.email,
-      buddy: @deploy.buddy_name,
-      buddy_email: @deploy.buddy_email,
-      production: @stage.production?
-    }
-  end
 
   def state
     if @deploy.succeeded?
@@ -50,19 +45,7 @@ class GithubDeployment
     elsif @deploy.failed?
       'failure'
     else
-      'pending'
+      raise ArgumentError, "Unsupported deployment stage #{@deploy.job.status}"
     end
-  end
-
-  def deployment_status_options
-    {
-      accept: DEPLOYMENTS_PREVIEW_MEDIA_TYPE,
-      target_url: url,
-      description: @deploy.summary
-    }
-  end
-
-  def url
-    Rails.application.routes.url_helpers.project_deploy_url(@project, @deploy)
   end
 end

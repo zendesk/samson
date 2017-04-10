@@ -37,15 +37,15 @@ describe SamsonDatadog do
 
       it "updates a github deployment status" do
         deployment = stub("Deployment")
-        GithubDeployment.any_instance.expects(:create_github_deployment).returns(deployment)
+        GithubDeployment.any_instance.expects(:create).returns(deployment)
         Samson::Hooks.fire(:before_deploy, deploy, nil)
 
-        GithubDeployment.any_instance.expects(:update_github_deployment_status).with(deployment)
+        GithubDeployment.any_instance.expects(:update).with(deployment)
         Samson::Hooks.fire(:after_deploy, deploy, nil)
       end
 
       it "does not blow up when before hook already failed" do
-        GithubDeployment.any_instance.expects(:update_github_deployment_status).never
+        GithubDeployment.any_instance.expects(:update).never
         Samson::Hooks.fire(:after_deploy, deploy, nil)
       end
     end
@@ -54,7 +54,7 @@ describe SamsonDatadog do
   describe :before_deploy do
     it "creates a github deployment" do
       stage.use_github_deployment_api = true
-      GithubDeployment.any_instance.expects(:create_github_deployment)
+      GithubDeployment.any_instance.expects(:create)
       Samson::Hooks.fire(:before_deploy, deploy, nil)
     end
   end

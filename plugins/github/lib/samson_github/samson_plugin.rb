@@ -15,7 +15,7 @@ end
 
 Samson::Hooks.callback :before_deploy do |deploy, _buddy|
   if deploy.stage.use_github_deployment_api?
-    deploy.instance_variable_set(:@deployment, GithubDeployment.new(deploy).create_github_deployment)
+    deploy.instance_variable_set(:@deployment, GithubDeployment.new(deploy).create)
   end
 end
 
@@ -25,6 +25,6 @@ Samson::Hooks.callback :after_deploy do |deploy, _buddy|
   end
 
   if deploy.stage.use_github_deployment_api? && deployment = deploy.instance_variable_get(:@deployment)
-    GithubDeployment.new(deploy).update_github_deployment_status(deployment)
+    GithubDeployment.new(deploy).update(deployment)
   end
 end
