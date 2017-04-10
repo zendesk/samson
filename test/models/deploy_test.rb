@@ -43,8 +43,8 @@ describe Deploy do
       "pending"    => "Deployer is about to deploy baz to Staging",
       "running"    => "Deployer is deploying baz to Staging",
       "succeeded"  => "Deployer deployed baz to Staging",
-      "cancelled"  => "Deployer`s deploy of baz to Staging is cancelled", # might not be done by the user
-      "cancelling" => "Deployer`s deploy of baz to Staging is cancelling", # might not be done by the user
+      "cancelled"  => "Samson cancelled Deployer`s deploy of baz to Staging", # might not be done by the user
+      "cancelling" => "Samson is cancelling Deployer`s deploy of baz to Staging", # might not be done by the user
       "failed"     => "Deployer failed to deploy baz to Staging",
       "errored"    => "Deployer encountered an error deploying baz to Staging"
     }.each do |status, message|
@@ -57,7 +57,7 @@ describe Deploy do
     it "shows canceller when it was regularly cancelled" do
       deploy.job.status = "cancelled"
       deploy.job.canceller = users(:admin)
-      deploy.summary.must_equal "Admin cancelled deploy baz to Staging"
+      deploy.summary.must_equal "Admin cancelled Deployer`s deploy of baz to Staging"
     end
 
     describe "when buddy was required" do
