@@ -24,7 +24,7 @@ describe CsvExportsController do
       describe "#new" do
         it "renders the limited admin menu and limited new page" do
           get :new
-          @response.body.wont_include "Environment variables"
+          @response.body.wont_include "/admin/users"
           @response.body.must_include "Users Report"
           @response.body.must_include "Reports"
           @response.body.must_include "Deploys CSV Report"

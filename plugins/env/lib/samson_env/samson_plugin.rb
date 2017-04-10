@@ -48,7 +48,7 @@ module SamsonEnv
 end
 
 Samson::Hooks.view :project_form, "samson_env/fields"
-Samson::Hooks.view :admin_menu, "samson_env/admin_menu"
+Samson::Hooks.view :manage_menu, "samson_env/manage_menu"
 
 Samson::Hooks.callback :project_permitted_params do
   AcceptsEnvironmentVariables::ASSIGNABLE_ATTRIBUTES.merge(environment_variable_group_ids: [])

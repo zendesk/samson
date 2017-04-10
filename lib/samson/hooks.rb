@@ -19,6 +19,7 @@ module Samson
       :deploy_view,
       :deploy_form, # for external plugin, so they can add extra form fields
       :admin_menu,
+      :manage_menu,
       :project_tabs_view
     ].freeze
 

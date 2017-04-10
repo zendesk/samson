@@ -84,6 +84,7 @@
           <% if current_user&.super_admin? %>
             <li><%= link_to "OAuth Applications", oauth_applications_path %></li>
           <% end %>
+          <%= Samson::Hooks.render_views(:manage_menu, self) %>
         </ul>
       </li>
     </ul>
