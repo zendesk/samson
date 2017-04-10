@@ -27,7 +27,7 @@ class Deploy < ActiveRecord::Base
     "pending"    => "is about to deploy",
     "running"    => "is deploying",
     "succeeded"  => "deployed",
-    "cancelled"  => "cancelled deploy",
+    "cancelled"  => "cancelled",
     "cancelling" => "is cancelling",
     "failed"     => "failed to deploy",
     "errored"    => "encountered an error deploying"
@@ -45,13 +45,12 @@ class Deploy < ActiveRecord::Base
   # job has almost identical code, keep it in sync
   def summary(show_project: false)
     project_name = " #{project&.name}" if show_project
-    actor = job.user
-    cancel = ["cancelled", "cancelling"].include?(status)
-    if cancel && !job.canceller
-      "#{actor.name}`s deploy#{deploy_buddy} of #{short_reference} to#{project_name} #{stage&.name} is #{status}"
+    deploy_details = "#{short_reference} to#{project_name} #{stage&.name}"
+    if ["cancelled", "cancelling"].include?(status)
+      canceller_name = job.canceller&.name || "Samson"
+      "#{canceller_name} #{summary_action} #{job.user.name}`s deploy#{deploy_buddy} of #{deploy_details}"
     else
-      actor = job.canceller if cancel
-      "#{actor.name}#{deploy_buddy} #{summary_action} #{short_reference} to#{project_name} #{stage&.name}"
+      "#{job.user.name}#{deploy_buddy} #{summary_action} #{deploy_details}"
     end
   end
 
