@@ -19,22 +19,18 @@ describe GithubDeployment do
       body = {
         payload: {
           deployer: {id: deploy.user.id, name: deploy.user.name, email: deploy.user.email},
-          buddy: nil,
-          production: false
+          buddy: nil
         },
         environment: "Staging",
         description: "Super Admin deployed staging to Staging",
+        production_environment: false,
+        auto_merge: false,
+        required_contexts: [],
         ref: "abcabc1"
       }
       create = stub_request(:post, endpoint).with(body: body.to_json)
       github_deployment.create
       assert_requested create
-    end
-
-    it "returns nil when deployment for this tag already existed" do
-      deploy = stub_request(:post, endpoint).to_return(status: 409)
-      github_deployment.create.must_equal nil
-      assert_requested deploy
     end
   end
 
