@@ -15,14 +15,22 @@
     %>
   <% end %>
 
+  <%
+    confirm_label = "Confirm before deployment"
+    no_code_label = "Does not deploy code"
+    no_ref_label = "When selected with '#{no_code_label}' and disabled '#{confirm_label}' the stage can be directly executed."
+  %>
+
   <% help = "Bypass " + [("buddy check" if BuddyCheck.enabled?), "release tracking"].compact.to_sentence %>
-  <%= form.input :no_code_deployed, as: :check_box, label: "Does not deploy code", help: help %>
+  <%= form.input :no_code_deployed, as: :check_box, label: no_code_label, help: help %>
 
   <%= form.input :run_in_parallel, as: :check_box, label: "Can run in parallel", help: "Deploys are not queued. Executed immediately" %>
 
   <%= form.input :cancel_queued_deploys, as: :check_box, label: "Max 1 queued deploy per user", help: "When a new deploy is created for a user. Any queued deploys for that user are cancelled. This most useful when trying to not deploy every push for frequently updated projects." %>
 
-  <%= form.input :confirm, as: :check_box, label: "Confirm before deployment", help: "Show a review page before starting a deploy" %>
+  <%= form.input :confirm, as: :check_box, label: confirm_label, help: "Show a review page before starting a deploy" %>
+
+  <%= form.input :no_reference_selection, as: :check_box, label: "Disable reference selection", help: no_ref_label %>
 
   <% if @project.releases.any? %>
     <%= form.input :deploy_on_release, as: :check_box, label: "Automatically deploy new releases" %>

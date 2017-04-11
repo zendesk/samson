@@ -84,6 +84,12 @@ describe ApplicationHelper do
       assert_includes link, %(href="/projects/#{project.to_param}/deploys/#{deploy.id}")
     end
 
+    it "shows direct link when stage is direct" do
+      stage.stubs(direct?: true)
+      link.must_include ">Deploy!<"
+      link.must_include "btn-warning"
+    end
+
     describe "when stage can run in parallel" do
       before { stage.stubs(:run_in_parallel).returns true }
 
