@@ -139,6 +139,10 @@ pre.pre-inline {
   color: #333;
   text-decoration: none;
   font-size: 18px;
+  &.starred {
+    color: gold;
+    text-shadow: 0 0 1px gray;
+  }
 }
 
 

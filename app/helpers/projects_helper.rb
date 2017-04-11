@@ -1,13 +1,14 @@
 # frozen_string_literal: true
 module ProjectsHelper
-  # keep in sync with app/assets/javascripts/projects.js
+  # keep star classes in sync with app/assets/javascripts/projects.js
+  # and projects#index
   def star_for_project(project)
     starred = current_user.starred_project?(project)
 
     content_tag :span, class: 'star' do
       link_to(
         '', project_stars_path(project),
-        class: "glyphicon #{starred ? "glyphicon-star-empty" : "glyphicon-star"}",
+        class: "glyphicon glyphicon-star #{"starred" if starred}",
         data: {method: :post, remote: true},
         title: "#{starred ? "Unstar" : "Star"} this project"
       )
