@@ -84,5 +84,13 @@ describe Samson::CommandExecutor do
           must_equal [true, "bar\n"]
       end
     end
+
+    it "can run as a block" do
+      success, out = Samson::CommandExecutor.execute("echo", "11", timeout: 1) do |pio|
+        pio.read(256) + "MOOH"
+      end
+      success.must_equal true
+      out.must_equal "11\nMOOH"
+    end
   end
 end

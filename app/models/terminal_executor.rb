@@ -14,6 +14,7 @@ require 'pty'
 #
 class TerminalExecutor
   SECRET_PREFIX = "secret://"
+  TIMEOUT = Integer(ENV["DEPLOY_TIMEOUT"] || 2.hours.to_i)
 
   attr_reader :pid, :pgid, :output
 
@@ -27,24 +28,16 @@ class TerminalExecutor
 
   def execute!(*commands)
     return false if @stopped
-    options = {in: '/dev/null', unsetenv_others: true}
-    output, input, pid = PTY.spawn(whitelisted_env, script(commands), options)
-    record_pid(pid) do
-      begin
-        output.each(256) { |chunk| @output.write chunk }
-      rescue Errno::EIO
-        nil # output was closed ... only happens on linux
-      end
 
-      begin
-        _pid, status = Process.wait2(pid)
-        status.success?
-      rescue Errno::ECHILD
-        @output.puts "#{$!.class}: #{$!.message}"
-        false
-      ensure
-        input.close
-      end
+    script_as_file(script(commands)) do |file|
+      options = {timeout: TIMEOUT, env: whitelisted_env, in: '/dev/null', pgroup: true}
+      Samson::CommandExecutor.execute(*execute_as_tty(file), options) do |pio|
+        record_pid(pio.pid) do
+          pio.each(256) do |line|
+            @output.write line.gsub(/\r?\n/, "\r\n") # script on travis returns \n and \r\n on osx and our servers
+          end
+        end
+      end.first
     end
   end
 
@@ -54,6 +47,23 @@ class TerminalExecutor
   end
 
   private
+
+  # http://stackoverflow.com/questions/1401002/trick-an-application-into-thinking-its-stdin-is-interactive-not-a-pipe
+  def execute_as_tty(file)
+    if RbConfig::CONFIG["target_os"].include?("darwin")
+      ["script", "-q", "/dev/null", "sh", file]
+    else
+      ["script", "-qfec", "sh #{file}"]
+    end
+  end
+
+  def script_as_file(script)
+    Tempfile.open('samson-execute') do |f|
+      f.write script
+      f.flush
+      yield f.path
+    end
+  end
 
   def script(commands)
     commands.map! do |c|
