@@ -1,16 +1,32 @@
-Example `build.sh` that uses a secondary `Dockerfile.build` to generate artifacts the main `Dockerfile`
+Example `build_binary.sh` that uses a secondary `Dockerfile.build` to generate artifacts the main `Dockerfile`
 cannot produce without adding secrets or installing dev-tools that increase the image size.
 
-```Bash
-# This script prepares the target folder with compiled classes that the main Dockerfile needs to build the main image
-# This can be used both locally and on samson.
-test -n "$ARTIFACTORY_USERNAME" && test -n "$ARTIFACTORY_KEY" && \ # make sure we have all env vars we need
-    set -x && \ # show what we run so it is easy to debug
-    rm -rf target build_container_id && \ # cleanup before we start
-    docker build -t app_binary_builder -f Dockerfile.build . && \
-    docker run --cidfile build_container_id -e ARTIFACTORY_USERNAME -e ARTIFACTORY_KEY app_binary_builder command_goes_here && \
-    docker cp $(cat build_container_id):/app/target . && \ # copy generated artifacts to disk
-    touch done
+Add `sh build_binary.sh` to your stage command or as the pre-build-command
+to make these artifacts available during deploy/build.
 
-docker rm $(cat build_container_id) && docker rmi app_binary_builder && rm done # cleanup and fail when something went wrong
+```Bash
+#!/bin/sh
+# Prepares the local folder with artifacts that the main Dockerfile needs
+# Can be used both locally and on Samson via a command or as pre-build command
+image_name="build_binary_my_app_$$"
+container_id_file="build_binary_id"
+artifact_path="/app/target"
+
+# Stop the build process if any step fails
+if rm -rf $(basename "$artifact_path") $container_id_file &&
+   docker build -t $image_name -f Dockerfile.build . &&
+   docker run --cidfile $container_id_file $image_name &&
+   container_id=$(cat $container_id_file) &&
+   docker cp "${container_id}:${artifact_path}/." .
+then
+   echo "Docker build process complete"
+else
+   echo "Docker build process failed"
+   exit_status=1
+fi
+
+# Cleanup
+docker rmi -f $image_name && rm $container_id_file
+
+exit $exit_status
 ```
