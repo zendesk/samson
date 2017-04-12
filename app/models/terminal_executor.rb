@@ -30,20 +30,18 @@ class TerminalExecutor
     options = {in: '/dev/null', unsetenv_others: true}
     output, input, pid = PTY.spawn(whitelisted_env, script(commands), options)
     record_pid(pid) do
-      begin
-        output.each(256) { |chunk| @output.write chunk }
-      rescue Errno::EIO
-        nil # output was closed ... only happens on linux
-      end
+      timeout do
+        stream from: output, to: @output
 
-      begin
-        _pid, status = Process.wait2(pid)
-        status.success?
-      rescue Errno::ECHILD
-        @output.puts "#{$!.class}: #{$!.message}"
-        false
-      ensure
-        input.close
+        begin
+          _pid, status = Process.wait2(pid)
+          status.success?
+        rescue Errno::ECHILD
+          @output.puts "#{$!.class}: #{$!.message}"
+          false
+        ensure
+          input.close
+        end
       end
     end
   end
@@ -54,6 +52,21 @@ class TerminalExecutor
   end
 
   private
+
+  def timeout(&block)
+    timeout = Integer(ENV["DEPLOY_TIMEOUT"] || 2.hours.to_i)
+    Timeout.timeout(timeout, &block)
+  rescue Timeout::Error
+    stop! 'INT'
+    @output.puts "Timeout: execution took longer then #{timeout}s and was terminated"
+    false
+  end
+
+  def stream(from:, to:)
+    from.each(256) { |chunk| to.write chunk }
+  rescue Errno::EIO
+    nil # output was closed ... only happens on linux
+  end
 
   def script(commands)
     commands.map! do |c|

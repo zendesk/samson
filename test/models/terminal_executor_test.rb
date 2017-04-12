@@ -97,6 +97,14 @@ describe TerminalExecutor do
       refute subject.pgid
     end
 
+    it "can timeout" do
+      with_env DEPLOY_TIMEOUT: '1' do
+        refute subject.execute!('echo hello; sleep 10')
+      end
+      `ps -ef | grep "[s]leep 10"`.wont_include "sleep 10" # process got killed
+      output.string.must_equal("hello\r\nTimeout: execution took longer then 1s and was terminated\n")
+    end
+
     describe 'in verbose mode' do
       subject { TerminalExecutor.new(output, verbose: true) }
 
