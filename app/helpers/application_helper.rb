@@ -191,7 +191,7 @@ module ApplicationHelper
 
   def page_title(content = nil, in_tab: false, &block)
     content ||= capture(&block)
-    content_for :page_title, content
+    content_for :page_title, strip_tags(content) + (@project ? " - #{@project.name}" : "")
     content_tag((in_tab ? :h2 : :h1), content)
   end
 
