@@ -411,9 +411,16 @@ describe ApplicationHelper do
     end
 
     it "renders html" do
-      result = page_title '<img/>'.html_safe
-      result.must_equal "<h1><img/></h1>"
-      content_for(:page_title).must_equal "<img/>"
+      result = page_title '<img/>Heyhooo'.html_safe
+      result.must_equal "<h1><img/>Heyhooo</h1>"
+      content_for(:page_title).must_equal "Heyhooo"
+    end
+
+    it "adds project name if necessary" do
+      @project = projects(:test)
+      result = page_title "Hey"
+      result.must_equal "<h1>Hey</h1>"
+      content_for(:page_title).must_equal "Hey - Foo"
     end
 
     it "renders blocks" do
