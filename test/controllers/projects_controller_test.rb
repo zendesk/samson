@@ -50,7 +50,16 @@ describe ProjectsController do
       it "responds to json requests" do
         get :index, params: {format: 'json'}
         result = JSON.parse(response.body)
-        result['projects'].map(&:symbolize_keys!).map { |obj| obj[:name] }.must_equal ['Foo']
+        projects = result['projects']
+        projects.length.must_equal 1
+        projects.first['name'].must_equal 'foo'
+      end
+
+      it "returns the last deploy date in JSON" do
+        get :index, params: {format: 'json'}
+        result = JSON.parse(response.body)
+        project = result['projects'].first
+        project['last_deployed_at'].must_start_with '2014-01'
       end
 
       it "responds to CSV requests" do

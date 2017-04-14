@@ -21,10 +21,12 @@ class ProjectsController < ApplicationController
       end
 
       format.json do
-        render json: Project.ordered_for_user(current_user).all
+        @projects = Project.ordered_for_user(current_user).all
+        render json: { projects: as_json }
       end
 
       format.csv do
+        @projects = Project.order(:id).all
         datetime = Time.now.strftime "%Y-%m-%d_%H-%M"
         send_data as_csv, type: :csv, filename: "Projects_#{datetime}.csv"
       end
@@ -110,14 +112,36 @@ class ProjectsController < ApplicationController
     @project = (Project.find_by_param!(params[:id]) if params[:id])
   end
 
+  # Determine the timestamp of the successful deploy for each project, and store
+  # the Datetime in a hash that is indexed by project id
+  def project_last_deployed_at
+    @project_last_deployed_at ||= begin
+      query = Deploy.successful.select('max(created_at) as last_deploy_at').group(:project_id)
+
+      query.each_with_object({}) do |deploy, hash|
+        hash[deploy.project_id] = deploy.last_deploy_at
+      end
+    end
+  end
+
+  def as_json
+    @projects.map do |project|
+      project.as_json.merge(
+        'last_deployed_at' => project_last_deployed_at[project.id]
+      )
+    end
+  end
+
   def as_csv
-    projects = Project.order(:id).all
-
     CSV.generate do |csv|
-      csv << ProjectSerializer.csv_header
+      header = ProjectSerializer.csv_header
+      header << 'Last Deploy At'
+      csv << header
 
-      projects.each do |project|
-        csv << ProjectSerializer.new(project).csv_line
+      @projects.each do |project|
+        line = ProjectSerializer.new(project).csv_line
+        line << project_last_deployed_at[project.id]
+        csv << line
       end
     end
   end
