@@ -52,14 +52,14 @@ describe ProjectsController do
         result = JSON.parse(response.body)
         projects = result['projects']
         projects.length.must_equal 1
-        projects.first['name'].must_equal 'foo'
+        projects.first['name'].must_equal 'Foo'
       end
 
       it "returns the last deploy date in JSON" do
         get :index, params: {format: 'json'}
         result = JSON.parse(response.body)
         project = result['projects'].first
-        project['last_deployed_at'].must_start_with '2014-01'
+        project['last_deployed_at'].must_include '2014-01'
       end
 
       it "responds to CSV requests" do
@@ -72,6 +72,7 @@ describe ProjectsController do
             row.headers.must_include attr
           end
           row['Id'].must_equal all_projects[idx].id.to_s
+          row['Last Deploy At'].must_include '2014-01'
         end
       end
 

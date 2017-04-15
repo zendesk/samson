@@ -394,6 +394,12 @@ describe Deploy do
     end
   end
 
+  describe ".last_deploys_for_projects" do
+    it "returns Deploys indexed by project id" do
+      # TODO: implement this test
+    end
+  end
+
   describe "#url" do
     it 'builds an address for a deploy' do
       deploy.url.must_equal "http://www.test-url.com/projects/foo/deploys/#{deploy.id}"

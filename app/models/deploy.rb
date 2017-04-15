@@ -164,6 +164,14 @@ class Deploy < ActiveRecord::Base
     joins(:job).where(jobs: { user: user })
   end
 
+  # Return a hash of project_id => Deploy objects, where each Deploy is
+  # the last Deploy completed for that Project. You can use Deploy scopes,
+  # such as Deploy.successful.last_deploys_for_projects
+  def self.last_deploys_for_projects
+    deploy_ids = select('deploys.project_id, MAX(deploys.id) as last_deploy_id').group(:project_id).reorder(:project_id).map(&:last_deploy_id)
+    where(id: deploy_ids).index_by(&:project_id)
+  end
+
   def buddy_name
     user.id == buddy_id ? "bypassed" : buddy.try(:name)
   end
