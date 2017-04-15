@@ -482,4 +482,13 @@ describe ApplicationHelper do
       end
     end
   end
+
+  describe "#search_form" do
+    it "renders a form" do
+      result = search_form { "Hello" }
+      result.must_include "action=\"?\""
+      result.must_include "method=\"get\""
+      result.must_include "class=\"btn btn-default form-control\""
+    end
+  end
 end

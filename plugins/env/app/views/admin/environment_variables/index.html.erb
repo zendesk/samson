@@ -4,17 +4,16 @@
 
 <%= page_title title %>
 
-<%= form_tag '?', method: :get, class: 'clearfix' do %>
+<%= search_form do %>
   <div class="col-sm-3">
     <%= label_tag "Name" %><br/>
-    <% options = options_for_select(EnvironmentVariable.order('name asc').pluck('distinct name'), params[:search].try(:[], :name)) %>
+    <% options = options_for_select(EnvironmentVariable.order('name asc').pluck('distinct name'), params.dig(:search, :name)) %>
     <%= select_tag 'search[name]', options, include_blank: "", title: "", class: "form-control selectpicker", data: {live_search: true} %>
   </div>
   <div class="col-sm-3">
     <%= label_tag "Value" %><br/>
-    <%= text_field_tag 'search[value]', params[:search].try(:[], :value), class: "form-control selectpicker" %>
+    <%= text_field_tag 'search[value]', params.dig(:search, :value), class: "form-control selectpicker" %>
   </div>
-  <%= render 'shared/search_button' %>
 <% end %>
 
 <section class="clearfix">

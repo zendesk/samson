@@ -2,7 +2,7 @@
 
 <div class="timeline">
   <div class="row">
-    <%= form_tag "/deploys/search", method: "get" do %>
+    <%= search_form do %>
       <div class="col-sm-2">
         <%= label_tag(:deployer, "Deployer") %>
         <%= text_field_tag(:deployer, params[:deployer], placeholder: 'deployer name', class: "form-control") %>
@@ -27,8 +27,6 @@
         <%= label(:time_format, "Time Format") %>
         <%= select_tag(:time_format, options_for_select(User::TIME_FORMATS, selected: params[:time_format] ? params[:time_format] : current_user.time_format ), { class: 'form-control' } ) %>
       </div>
-
-      <%= render 'shared/search_button' %>
     <% end %>
   </div>
 
