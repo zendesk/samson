@@ -1,0 +1,54 @@
+{
+  "variables": {
+    "aws_access_key": "",
+    "aws_secret_key": "",
+    "source_ami": "ami-d76a8b93"
+  },
+  "builders": [
+    {
+      "type": "amazon-ebs",
+      "access_key": "{{user `aws_access_key`}}",
+      "secret_key": "{{user `aws_secret_key`}}",
+      "region": "us-east-1",
+      "source_ami": "{{user `source_ami`}}",
+      "instance_type": "m1.small",
+      "ssh_username": "ubuntu",
+      "security_group_id": "sg-ae25c8ca",
+      "ami_name": "samson-{{timestamp}}",
+
+      "vpc_id": "vpc-2bc7544e",
+      "subnet_id": "subnet-180eb36f",
+      "associate_public_ip_address": "true",
+
+      "tags": {"Builtby":"packer.io","App":"envato-samson"},
+      "ami_users" : "",
+      "user_data": "#!/bin/bash\n"
+    }
+  ],
+  "provisioners": [
+    {
+      "type": "shell",
+      "inline": ["sudo apt-get install -y software-properties-common && sudo apt-add-repository ppa:ansible/ansible"]
+    },
+    {
+      "type": "shell",
+      "inline": ["sudo apt-get update && sudo apt-get install -y ansible"]
+    },
+    {
+      "type": "shell",
+      "inline": ["sudo apt-get install -y ca-certificates"]
+    },
+    {
+      "type": "ansible-local",
+      "playbook_file": "local.yml",
+      "playbook_dir": "../",
+      "playbook_paths": [ "../plays" ]
+    }
+  ],
+  "post-processors": [
+    {
+      "type": "vagrant",
+      "output": "../../boxes/samson-latest.box"
+    }
+  ]
+}

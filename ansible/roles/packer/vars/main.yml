@@ -1,0 +1,2 @@
+---
+packer_template: '../roles/packer/files/envato-samson.json'

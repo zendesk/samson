@@ -1,0 +1,23 @@
+aws_access_key: "{{ lookup('env', 'AWS_ACCESS_KEY') }}"
+aws_secret_key: "{{ lookup('env', 'AWS_SECRET_KEY') }}"
+envato_environment: production
+region: us-east-1
+launch_id: samson_lc1
+keyname: envato-market-prod
+instance_size: m1.small
+samson_ami: ami-10793a78
+assign_public_ip: true
+samson_asg_min: 2
+samson_asg_max: 2
+samson_asg_capacity: 2
+rds_instance_name: samson-rds
+db_size: 100
+db_instance_type: db.m1.medium
+db_engine: postgres
+db_name: samson
+db_username: samson
+db_iops: 1000
+db_maint_window: "Sun:01:00-Sun:01:30"
+db_backup_window: "02:00-02:30"
+db_backup_retention: 14
+db_zone: zone2

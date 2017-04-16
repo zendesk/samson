@@ -1,0 +1,7 @@
+region: us-east-1
+samson_app_web_size: m1.small
+stack_name: samson_vpc
+owner:  siteops
+keyname: envato-market-prod
+zone1: us-east-1c
+zone2: us-east-1d

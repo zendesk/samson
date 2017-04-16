@@ -1,0 +1,6 @@
+- hosts: localhost
+- include: plays/common.yml
+  tasks:
+   - name: ls temp
+     command: ls /tmp
+

@@ -1,0 +1,34 @@
+GIT
+  remote: https://github.com/ANXS/nginx
+  ref: master
+  sha: 82e1a3e4d847a5295f10a86c4e720cf1d47add01
+  specs:
+    ANXS.nginx (0.0.0)
+
+GIT
+  remote: https://github.com/EDITD/ansible-supervisor_task
+  ref: master
+  sha: 9fbf1a376d71a8baba796caa347af561ccb74a7b
+  specs:
+    EDITD.supervisor_task (0.0.0)
+
+GIT
+  remote: https://github.com/crushlovely/ansible-newrelic
+  ref: master
+  sha: 016cda1f8706ee786f8d27f97d5c396a8f921294
+  specs:
+    crushlovely.newrelic (0.0.0)
+
+GIT
+  remote: https://github.com/znz/ansible-role-github-users
+  ref: master
+  sha: 8adc96d1d68e9f96baeb0c0d92ccb5c00367186a
+  specs:
+    znzj.github-users (0.0.0)
+
+DEPENDENCIES
+  ANXS.nginx (>= 0)
+  EDITD.supervisor_task (>= 0)
+  crushlovely.newrelic (>= 0)
+  znzj.github-users (>= 0)
+

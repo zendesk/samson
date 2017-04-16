@@ -1,0 +1,49 @@
+- name: create samson main security group
+  ec2_group:
+    name: samson_main_sg
+    description: samson security group
+    vpc_id: "{{ samson_vpc.vpc_id }}"
+    region: "{{ region }}"
+    aws_secret_key: "{{ aws_secret_key }}"
+    aws_access_key: "{{ aws_access_key }}"
+    rules:
+      - proto: tcp
+        from_port: 80
+        to_port: 80
+        cidr_ip: 0.0.0.0/0
+      - proto: tcp
+        from_port: 22
+        to_port: 22
+        cidr_ip: 0.0.0.0/0
+  register: samson_main_sg
+
+
+- name: create samson elasticcache sg
+  ec2_group:
+    name: samson_elc_sg
+    description: samson elasticcache security group
+    vpc_id: "{{ samson_vpc.vpc_id }}"
+    region: "{{ region }}"
+    aws_secret_key: "{{ aws_secret_key }}"
+    aws_access_key: "{{ aws_access_key }}"
+    rules:
+      - proto: tcp
+        from_port: 11211
+        to_port: 11211
+        cidr_ip: 192.168.0.0/24
+  register: samson_elc_sg
+
+- name: create samson rds sg
+  ec2_group:
+    name: samson_rds_sg
+    description: samson rds security group
+    vpc_id: "{{ samson_vpc.vpc_id }}"
+    region: "{{ region }}"
+    aws_secret_key: "{{ aws_secret_key }}"
+    aws_access_key: "{{ aws_access_key }}"
+    rules:
+      - proto: tcp
+        from_port: 5432
+        to_port: 5432
+        cidr_ip: 192.168.0.0/24
+  register: samson_rds_sg

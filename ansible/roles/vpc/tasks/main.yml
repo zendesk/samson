@@ -1,0 +1,5 @@
+---
+- include: samson_vpc.yml
+- include: security_groups.yml
+- include: elasticcache.yml
+- include: rds.yml
