@@ -394,6 +394,24 @@ describe Deploy do
     end
   end
 
+  describe ".last_deploys_for_projects" do
+    before do
+      Project.any_instance.stubs(:valid_repository_url).returns(true)
+    end
+
+    let!(:project_b) { Project.create!(name: "hello", repository_url: "git://foo.com:hello/world.git") }
+
+    it "returns Deploys indexed by project id" do
+      create_deploy!(project: project_b)
+
+      result = Deploy.last_deploys_for_projects
+      result.must_be_instance_of Hash
+      result.keys.sort.must_equal [project.id, project_b.id].sort
+      result.values.each { |d| d.must_be_instance_of Deploy }
+      result[project.id].id.must_equal project.deploys.map(&:id).max
+    end
+  end
+
   describe "#url" do
     it 'builds an address for a deploy' do
       deploy.url.must_equal "http://www.test-url.com/projects/foo/deploys/#{deploy.id}"
