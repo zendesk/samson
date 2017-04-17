@@ -282,6 +282,12 @@ describe JobExecution do
     x.must_equal :called
   end
 
+  it "reports to statsd" do
+    Samson.statsd.expects(:histogram).
+      with('execute_shell.time', anything, tags: ['project:duck', 'stage:stage4', 'production:false'])
+    assert execute_job("master")
+  end
+
   describe "kubernetes" do
     before { stage.update_column :kubernetes, true }
 
