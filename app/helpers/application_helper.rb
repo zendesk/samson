@@ -227,4 +227,8 @@ module ApplicationHelper
       label_tag(label) << select_tag("search[#{column}]", options_for_select(values, selected), options)
     end
   end
+
+  def live_select_tag(name, values, options = {})
+    select_tag name, values, Samson::FormBuilder::LIVE_SELECT_OPTIONS.merge(options)
+  end
 end

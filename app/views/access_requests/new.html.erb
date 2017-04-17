@@ -8,7 +8,7 @@
         <label class="col-lg-2 control-label">Manager's email</label>
         <div class="col-lg-3">
           <%= email_field_tag :manager_email, nil, class: 'form-control',
-                              placeholder: 'name@example.com', required: 'required' %>
+            placeholder: 'name@example.com', required: true %>
         </div>
       </div>
 
@@ -22,8 +22,8 @@
       <div class="form-group">
         <label class="col-lg-2 control-label">Projects</label>
         <div class="col-lg-4">
-          <%= select_tag :project_ids, options_from_collection_for_select(@projects, :id, :name),
-                         class: 'form-control selectpicker', title: "", multiple: true, required: 'required', data: {live_search: true} %>
+          <%= live_select_tag :project_ids, options_from_collection_for_select(@projects, :id, :name),
+            multiple: true, required: true %>
         </div>
       </div>
 
@@ -31,7 +31,7 @@
         <label class="col-lg-2 control-label">Role</label>
         <div class="col-lg-4">
           <%= select_tag :role_id, options_from_collection_for_select(@roles, :id, :display_name),
-                         class: 'form-control', required: 'required' %>
+            class: 'form-control', required: true %>
         </div>
       </div>
     </fieldset>
