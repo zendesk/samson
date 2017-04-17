@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 require_relative '../../test_helper'
 
-SingleCov.covered! uncovered: 12
+SingleCov.covered! uncovered: 7 # untestable mintest if/else and render_stylesheets / render_javascripts
 
 describe Samson::Hooks do
   let(:number_of_plugins) { Dir['plugins/*'].size }
@@ -70,6 +70,29 @@ describe Samson::Hooks do
       it 'return correct plugin name from Gem' do
         Samson::Hooks::Plugin.new(path).name.must_equal 'hipchat'
       end
+    end
+  end
+
+  describe '.with_callback' do
+    def hooks
+      Samson::Hooks.send(:hooks, :stage_clone)
+    end
+
+    it "adds a hook" do
+      before = hooks.size
+      Samson::Hooks.with_callback(:stage_clone, -> {}) do
+        hooks.size.must_equal before + 1
+      end
+      hooks.size.must_equal before
+    end
+  end
+
+  describe ".render_views" do
+    it "joins partials" do
+      view = stub("View", render: "OUT".html_safe)
+      html = Samson::Hooks.render_views(:stage_show, view)
+      html.must_include "OUTOUT"
+      assert html.html_safe?
     end
   end
 end
