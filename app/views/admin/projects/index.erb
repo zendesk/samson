@@ -2,9 +2,8 @@
 
 <%= render_lock :global %>
 
-<%= form_tag '?', method: :get, class: 'clearfix' do %>
+<%= search_form do %>
   <%= render 'shared/search_query' %>
-  <%= render 'shared/search_button' %>
 <% end %>
 
 <section class="clearfix">
