@@ -15,5 +15,6 @@ module CurrentProject
 
   def require_project
     @project = (Project.find_by_param!(params[:project_id]) if params[:project_id])
+    @project ||= (Project.find_by_param!(params[:id]) if params[:id])
   end
 end
