@@ -5,11 +5,9 @@
 <%= page_title title %>
 
 <%= search_form do %>
-  <div class="col-sm-3">
-    <%= label_tag "Name" %><br/>
-    <% options = options_for_select(EnvironmentVariable.order('name asc').pluck('distinct name'), params.dig(:search, :name)) %>
-    <%= select_tag 'search[name]', options, include_blank: "", title: "", class: "form-control selectpicker", data: {live_search: true} %>
-  </div>
+  <% names = EnvironmentVariable.order(:name).pluck('distinct name') %>
+  <%= search_select :name, names, live: true, size: 3 %>
+
   <div class="col-sm-3">
     <%= label_tag "Value" %><br/>
     <%= text_field_tag 'search[value]', params.dig(:search, :value), class: "form-control selectpicker" %>

@@ -172,89 +172,89 @@ describe DeploysController do
       end
 
       it "renders json" do
-        get :search, params: {format: "json"}
+        get :search, format: "json"
         assert_response :ok
       end
 
       it "renders csv" do
-        get :search, params: {format: "csv"}
+        get :search, format: "csv"
         assert_response :ok
         @response.body.split("\n").length.must_equal 7 # 4 records and 3 meta rows
       end
 
       it "renders csv with limit (1) records and links to generate full report" do
-        get :search, params: {format: "csv", limit: 1}
+        get :search, params: {limit: 1}, format: "csv"
         assert_response :ok
         @response.body.split("\n").length.must_equal 6 # 1 record and 5 meta rows
         @response.body.split("\n")[2].split(",")[2].to_i.must_equal(1) # validate that count equals = csv_limit
       end
 
       it "renders html" do
-        get :search, params: {format: "html"}
+        get :search
         assert_equal "text/html", @response.content_type
         assert_response :ok
       end
 
       it "returns no results when deploy is not found" do
-        get :search, params: {format: "json", deployer: 'jimmyjoebob'}
+        get :search, params: {search: {deployer: 'jimmyjoebob'}}, format: "json"
         assert_response :ok
         @response.body.must_equal "{\"deploys\":\[\]}"
       end
 
       it "fitlers results by deployer" do
-        get :search, params: {format: "json", deployer: 'Admin'}
+        get :search, params: {search: {deployer: 'Admin'}}, format: "json"
         assert_response :ok
         deploys = JSON.parse(@response.body)
         deploys["deploys"].count.must_equal 4
       end
 
       it "filters results by status" do
-        get :search, params: {format: "json", status: 'succeeded'}
+        get :search, params: {search: {status: 'succeeded'}}, format: "json"
         assert_response :ok
         deploys = JSON.parse(@response.body)
         deploys["deploys"].count.must_equal 2
       end
 
       it "ignores empty status" do
-        get :search, params: {format: "json", status: ' '}
+        get :search, params: {search: {status: ' '}}, format: "json"
         assert_response 200
       end
 
       it "fails with invalid status" do
-        get :search, params: {format: "json", status: 'bogus_status'}
+        get :search, params: {search: {status: 'bogus_status'}}, format: "json"
         assert_response 400
       end
 
       it "filters by project" do
-        get :search, params: {format: "json", project_name: "Foo"}
+        get :search, params: {search: {project_name: "Foo"}}, format: "json"
         assert_response :ok
         deploys = JSON.parse(@response.body)
         deploys["deploys"].count.must_equal 4
       end
 
       it "filters by non-production" do
-        get :search, params: {format: "json", production: 0}
+        get :search, params: {search: {production: 0}}, format: "json"
         assert_response :ok
         deploys = JSON.parse(@response.body)
         deploys["deploys"].count.must_equal 1
       end
 
       it "filters by non-production" do
-        get :search, params: {format: "json", production: "false"}
+        get :search, params: {search: {production: "false"}}, format: "json"
         assert_response :ok
         deploys = JSON.parse(@response.body)
         deploys["deploys"].count.must_equal 1
       end
 
       it "filters by production" do
-        get :search, params: {format: "json", production: 1}
+        get :search, params: {search: {production: 1}}, format: "json"
         assert_response :ok
         deploys = JSON.parse(@response.body)
         deploys["deploys"].count.must_equal 3
       end
 
       it "filters by production" do
-        get :search, params: {format: "json", production: "true"}
+        get :search, params: {search: {production: "true"}}, format: "json"
         assert_response :ok
         deploys = JSON.parse(@response.body)
         deploys["deploys"].count.must_equal 3

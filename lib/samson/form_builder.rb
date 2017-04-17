@@ -2,6 +2,11 @@
 module Samson
   class FormBuilder < ActionView::Helpers::FormBuilder
     SPACER = " ".html_safe
+    LIVE_SELECT_OPTIONS = {
+      class: "form-control selectpicker",
+      title: "",
+      data: {live_search: true}
+    }.freeze
 
     def input(
       attribute,

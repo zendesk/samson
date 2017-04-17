@@ -38,22 +38,23 @@ class DeploysController < ApplicationController
   #   * status (what is the status of this job failed|running| etc)
 
   def search
-    status = params[:status].presence
+    search = params[:search] || {}
+    status = search[:status].presence
 
-    if status && !Job.valid_status?(params[:status])
+    if status && !Job.valid_status?(status)
       render json: { errors: "invalid status given" }, status: 400
       return
     end
 
-    if params[:deployer].present?
+    if deployer = search[:deployer].presence
       users = User.where(
-        "name LIKE ?", "%#{ActiveRecord::Base.send(:sanitize_sql_like, params[:deployer])}%"
+        "name LIKE ?", "%#{ActiveRecord::Base.send(:sanitize_sql_like, deployer)}%"
       ).pluck(:id)
     end
 
-    if params[:project_name].present?
+    if project_name = search[:project_name].presence
       projects = Project.where(
-        "name LIKE ?", "%#{ActiveRecord::Base.send(:sanitize_sql_like, params[:project_name])}%"
+        "name LIKE ?", "%#{ActiveRecord::Base.send(:sanitize_sql_like, project_name)}%"
       ).pluck(:id)
     end
 
@@ -63,12 +64,11 @@ class DeploysController < ApplicationController
       jobs = jobs.where(status: status) if status
     end
 
-    if params[:production].present? || projects
+    if (production = search[:production].presence) || projects
       stages = Stage
       stages = stages.where(project: projects) if projects
-      if params[:production].present?
-        production = params[:production]
-        production = (!production.nil? && !ActiveModel::Type::Boolean::FALSE_VALUES.include?(production))
+      if production
+        production = !ActiveModel::Type::Boolean::FALSE_VALUES.include?(production)
         stages = stages.select { |stage| (stage.production? == production) }
       end
     end

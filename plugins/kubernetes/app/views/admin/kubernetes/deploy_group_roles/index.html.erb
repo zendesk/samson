@@ -1,19 +1,13 @@
 <%= page_title "Kubernetes Deploy Group Roles" %>
 
 <%= search_form do %>
-  <div class="col-sm-3">
-    <%= label_tag "Project" %><br/>
-    <% possible = Project.where(id: Kubernetes::DeployGroupRole.pluck('distinct project_id')).order('name asc') %>
-    <% options = options_for_select(possible.pluck(:name, :id), params.dig(:search, :project_id)) %>
-    <%= select_tag 'search[project_id]', options, include_blank: "", title: "", class: "form-control selectpicker", data: {live_search: true} %>
-  </div>
-  <div class="col-sm-3">
-    <%= label_tag "Deploy Group" %><br/>
-    <% possible = DeployGroup.where(id: Kubernetes::DeployGroupRole.pluck('distinct deploy_group_id')).sort_by(&:natural_order) %>
-    <% options = options_for_select(possible.map { |dg| [dg.name, dg.id] }, params.dig(:search, :deploy_group_id)) %>
-    <%= select_tag 'search[deploy_group_id]', options, include_blank: "", class: "form-control", style: "background-color: white; width: 100%; height: 35px" %>
-  </div>
+  <% projects = Project.where(id: Kubernetes::DeployGroupRole.pluck('distinct project_id')).order(:name).pluck(:name, :id) %>
+  <%= search_select :project_id, projects, live: true, size: 3 %>
+
+  <% deploy_groups = DeployGroup.where(id: Kubernetes::DeployGroupRole.pluck('distinct deploy_group_id')).sort_by(&:natural_order).map { |dg| [dg.name, dg.id] } %>
+  <%= search_select :deploy_group_id, deploy_groups, live: true, size: 3 %>
 <% end %>
+
 <br/>
 
 <section class="clearfix tabs">

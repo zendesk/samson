@@ -491,4 +491,27 @@ describe ApplicationHelper do
       result.must_include "class=\"btn btn-default form-control\""
     end
   end
+
+  describe "#search_select" do
+    it "builds a select with options" do
+      result = search_select :foo, ["a", "b", "c"], label: "Bar"
+      result.must_include ">Bar</label>"
+      result.must_include "name=\"search[foo]\""
+      result.must_include "<option value=\"b\">b</option>"
+      result.wont_include "selectpicker"
+    end
+
+    it "can create a live search" do
+      result = search_select :foo_id, ["a", "b", "c"], live: true
+      result.must_include ">Foo</label>"
+      result.must_include "name=\"search[foo_id]\""
+      result.must_include "selectpicker"
+      result.must_include "data-live-search"
+    end
+
+    it "can change selected" do
+      result = search_select :foo, ["a", "b", "c"], selected: "b"
+      result.must_include "<option selected=\"selected\" value=\"b\">"
+    end
+  end
 end
