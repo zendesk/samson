@@ -13,7 +13,15 @@ Samson.statsd.event "Startup", "Samson startup" if ENV['SERVER_MODE']
 
 ActiveSupport::Notifications.subscribe("execute_job.samson") do |*args|
   event = ActiveSupport::Notifications::Event.new(*args)
-  tags = ["project:#{event.payload.fetch(:project)}", "stage:#{event.payload.fetch(:stage)}"]
+  tags = [
+    "project:#{event.payload.fetch(:project)}",
+    "stage:#{event.payload.fetch(:stage)}",
+  ]
+
+  # only for deploys report if things were run in production
+  production = event.payload.fetch(:production)
+  tags << "production:#{production}" unless production.nil?
+
   Samson.statsd.histogram "execute_shell.time", event.duration, tags: tags
 end
 

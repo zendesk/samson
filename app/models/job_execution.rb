@@ -158,7 +158,8 @@ class JobExecution
     cmds = commands(dir)
     payload = {
       stage: (stage&.name || "none"),
-      project: @job.project.name
+      project: @job.project.name,
+      production: stage&.production?
     }
 
     ActiveSupport::Notifications.instrument("execute_job.samson", payload) do
