@@ -2,11 +2,7 @@
 
 <%= search_form do %>
   <%= render 'shared/search_query' %>
-  <div class="col-sm-3">
-    <%= label_tag "Project" %><br/>
-    <% options = options_for_select([['Global', 'global']] + Project.order('name asc').pluck(:name, :id), params.dig(:search, :project_id)) %>
-    <%= select_tag 'search[project_id]', options, include_blank: "", title: "", class: "form-control selectpicker", data: {live_search: true} %>
-  </div>
+  <%= search_select :project_id, [['Global', 'global']] + Project.order(:name).pluck(:name, :id), live: true, size: 3 %>
 <% end %>
 
 <section class="clearfix">
