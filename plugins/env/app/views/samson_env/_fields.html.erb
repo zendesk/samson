@@ -13,9 +13,8 @@
     <% ids.each do |id| %>
       <div class="form-group">
         <div class="col-lg-2 col-lg-offset-2">
-          <%= select_tag "project[environment_variable_group_ids][]",
-              options_for_select([[nil, nil]] + environment_variable_groups, id),
-              class: "form-control selectpicker", title: "", placeholder: "Name", data: {live_search: true}
+          <%= live_select_tag "project[environment_variable_group_ids][]",
+            options_for_select([[nil, nil]] + environment_variable_groups, id), placeholder: "Name"
           %>
         </div>
       </div>

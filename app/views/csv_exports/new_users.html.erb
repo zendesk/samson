@@ -27,7 +27,7 @@
         <%= label_tag :project_id, "Project", class: "col-lg-2 control-label" %>
         <% projects = [['', nil]] + Project.order(:name).pluck(:name, :id) %>
         <div class="col-lg-4">
-          <%= select_tag :project_id, options_for_select(projects), title: "", class: "form-control selectpicker", data: {live_search: true} %>
+          <%= live_select_tag :project_id, options_for_select(projects) %>
         </div>
       </div>
 
@@ -37,7 +37,7 @@
             User.unscoped.order(:name).where("deleted_at IS NOT NULL")
               .pluck(:name, :id).map { |u| ["(deleted) #{u[0]}", u[1]] } %>
         <div class="col-lg-4">
-          <%= select_tag :user_id, options_for_select(users), class: "form-control selectpicker", title: "", data: {live_search: true} %>
+          <%= live_select_tag :user_id, options_for_select(users) %>
         </div>
       </div>
 

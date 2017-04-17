@@ -514,4 +514,13 @@ describe ApplicationHelper do
       result.must_include "<option selected=\"selected\" value=\"b\">"
     end
   end
+
+  describe "#live_select_tag" do
+    it "builds a select" do
+      live_select_tag(:foo, options_for_select(["bar"])).must_equal(
+        "<select name=\"foo\" id=\"foo\" class=\"form-control selectpicker\" title=\"\" " \
+        "data-live-search=\"true\"><option value=\"bar\">bar</option></select>"
+      )
+    end
+  end
 end
