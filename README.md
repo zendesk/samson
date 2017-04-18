@@ -2,6 +2,7 @@
 
 [![Build Status](https://travis-ci.org/zendesk/samson.svg?branch=master)](https://travis-ci.org/zendesk/samson)
 [![DockerHub Status](https://img.shields.io/docker/stars/zendesk/samson.svg)](https://hub.docker.com/r/zendesk/samson)
+[![security](https://hakiri.io/github/zendesk/samson/master.svg)](https://hakiri.io/github/zendesk/samson/master)
 
 [Demo](https://samson-demo.herokuapp.com)
 
