@@ -401,14 +401,12 @@ describe Deploy do
 
     let!(:project_b) { Project.create!(name: "hello", repository_url: "git://foo.com:hello/world.git") }
 
-    it "returns Deploys indexed by project id" do
+    it "returns a deploy for each Project" do
       create_deploy!(project: project_b)
 
-      result = Deploy.last_deploys_for_projects
-      result.must_be_instance_of Hash
-      result.keys.sort.must_equal [project.id, project_b.id].sort
-      result.values.each { |d| d.must_be_instance_of Deploy }
-      result[project.id].id.must_equal project.deploys.map(&:id).max
+      result = Deploy.last_deploys_for_projects.to_a
+      result.map(&:project_id).sort.must_equal [project.id, project_b.id].sort
+      result.each { |d| d.must_be_instance_of Deploy }
     end
   end
 

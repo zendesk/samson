@@ -60,6 +60,8 @@ describe ProjectsController do
         result = JSON.parse(response.body)
         project = result['projects'].first
         project['last_deployed_at'].must_include '2014-01'
+        project['last_deployed_by'].must_include '@example.com'
+        project['last_deploy_url'].must_include 'www.test-url.com'
       end
 
       it "responds to CSV requests" do
@@ -73,6 +75,8 @@ describe ProjectsController do
           end
           row['Id'].must_equal all_projects[idx].id.to_s
           row['Last Deploy At'].must_include '2014-01'
+          row['Last Deploy By'].must_include '@example.com'
+          row['Last Deploy URL'].must_include 'www.test-url.com'
         end
       end
 

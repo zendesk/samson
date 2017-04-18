@@ -112,7 +112,11 @@ class ProjectsController < ApplicationController
   end
 
   def last_deploy_for(project)
-    @projects_last_deployed_at ||= Deploy.successful.last_deploys_for_projects
+    @projects_last_deployed_at ||= Deploy.successful.
+      last_deploys_for_projects.
+      includes(:project, job: :user).
+      index_by(&:project_id)
+
     @projects_last_deployed_at[project.id]
   end
 
@@ -121,7 +125,10 @@ class ProjectsController < ApplicationController
   def projects_as_json(projects)
     projects.map do |project|
       json = project.as_json
-      json['last_deployed_at'] = last_deploy_for(project)&.created_at
+      last_deploy = last_deploy_for(project)
+      json['last_deployed_at'] = last_deploy&.created_at
+      json['last_deployed_by'] = last_deploy&.user&.email
+      json['last_deploy_url'] = last_deploy&.url
       json
     end
   end
@@ -131,11 +138,16 @@ class ProjectsController < ApplicationController
     CSV.generate do |csv|
       header = ProjectSerializer.csv_header
       header << 'Last Deploy At'
+      header << 'Last Deploy By'
+      header << 'Last Deploy URL'
       csv << header
 
       projects.each do |project|
         line = ProjectSerializer.new(project).csv_line
-        line << last_deploy_for(project)&.created_at
+        last_deploy = last_deploy_for(project)
+        line << last_deploy&.created_at
+        line << last_deploy&.user&.email
+        line << last_deploy&.url
         csv << line
       end
     end
