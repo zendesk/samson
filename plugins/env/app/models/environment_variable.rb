@@ -60,10 +60,16 @@ class EnvironmentVariable < ActiveRecord::Base
         if value.start_with?(TerminalExecutor::SECRET_PREFIX)
           key = value.sub(TerminalExecutor::SECRET_PREFIX, '')
           found = resolver.read(key)
-          value.replace(preview ? "#{value} ✓" : found.to_s)
+          resolved =
+            if preview
+              found ? "#{value} ✓" : "#{value} X"
+            else
+              found.to_s
+            end
+          value.replace(resolved)
         end
       end
-      resolver.verify!
+      resolver.verify! unless preview
     end
   end
 
