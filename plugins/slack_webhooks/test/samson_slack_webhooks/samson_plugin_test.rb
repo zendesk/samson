@@ -6,15 +6,29 @@ SingleCov.covered!
 describe SamsonSlackWebhooks do
   let(:deploy) { deploys(:succeeded_test) }
   let(:stage) { deploy.stage }
+  let!(:webhook) { stage.slack_webhooks.build(before_deploy: true, after_deploy: true, buddy_request: true) }
+
+  describe :buddy_request do
+    it "sends notification" do
+      SlackWebhookNotification.any_instance.expects(:deliver)
+      Samson::Hooks.fire(:buddy_request, deploy)
+    end
+
+    it "does not send notifications when disabled" do
+      webhook.buddy_request = false
+      SlackWebhookNotification.any_instance.expects(:deliver).never
+      Samson::Hooks.fire(:buddy_request, deploy)
+    end
+  end
 
   describe :before_deploy do
     it "sends notification on before hook" do
-      stage.stubs(:send_slack_webhook_notifications?).returns(true)
       SlackWebhookNotification.any_instance.expects(:deliver)
       Samson::Hooks.fire(:before_deploy, deploy, nil)
     end
 
     it "does not send notifications when disabled" do
+      webhook.before_deploy = false
       SlackWebhookNotification.any_instance.expects(:deliver).never
       Samson::Hooks.fire(:before_deploy, deploy, nil)
     end
@@ -22,12 +36,12 @@ describe SamsonSlackWebhooks do
 
   describe :after_deploy do
     it "sends notification on after hook" do
-      stage.stubs(:send_slack_webhook_notifications?).returns(true)
       SlackWebhookNotification.any_instance.expects(:deliver)
       Samson::Hooks.fire(:after_deploy, deploy, nil)
     end
 
     it "does not send notifications when disabled" do
+      webhook.after_deploy = false
       SlackWebhookNotification.any_instance.expects(:deliver).never
       Samson::Hooks.fire(:after_deploy, deploy, nil)
     end
@@ -35,7 +49,7 @@ describe SamsonSlackWebhooks do
 
   describe :stage_clone do
     it "copies all attributes except id" do
-      stage.slack_webhooks << SlackWebhook.new(webhook_url: 'http://example.com', after_deploy: true)
+      stage.slack_webhooks = [SlackWebhook.new(webhook_url: 'http://example.com', after_deploy: true)]
       new_stage = Stage.new
       Samson::Hooks.fire(:stage_clone, stage, new_stage)
       new_stage.slack_webhooks.map(&:attributes).must_equal [{
@@ -45,9 +59,10 @@ describe SamsonSlackWebhooks do
         "stage_id" => nil,
         "created_at" => nil,
         "updated_at" => nil,
+        "buddy_request" => false,
         "before_deploy" => false,
         "after_deploy" => true,
-        "for_buddy" => false,
+        "buddy_box" => false,
         "only_on_failure" => false
       }]
     end
@@ -57,7 +72,9 @@ describe SamsonSlackWebhooks do
     it "includes our params" do
       Samson::Hooks.fire(:stage_permitted_params).must_include(
         slack_webhooks_attributes: [
-          :id, :webhook_url, :channel, :before_deploy, :after_deploy, :for_buddy, :only_on_failure, :_destroy
+          :id, :_destroy,
+          :webhook_url, :channel,
+          :buddy_box, :buddy_request, :before_deploy, :after_deploy, :only_on_failure
         ]
       )
     end

@@ -18,54 +18,40 @@ describe SlackWebhookNotification do
   let(:prs) { payload.fetch('attachments')[0].fetch('fields')[0] }
   let(:risks) { payload.fetch('attachments')[0].fetch('fields')[1] }
 
-  def stub_notification(before_deploy: false, after_deploy: true, for_buddy: false, risks: true, prs: true)
-    pr_stub = stub(
+  def stub_notification(risks: true, prs: true)
+    pr = stub(
+      "PR",
       url: 'https://github.com/foo/bar/pulls/1',
       number: 1,
       title: 'PR 1',
       risks: risks ? 'abc' : nil
     )
-    changeset = stub "changeset"
-    changeset.stubs(:pull_requests).returns(prs ? [pr_stub] : [])
-
-    webhook = SlackWebhook.new(
-      webhook_url: endpoint,
-      before_deploy: before_deploy,
-      after_deploy: after_deploy,
-      for_buddy: for_buddy
-    )
-    stage = stub(name: "Staging", slack_webhooks: [webhook], project: project)
-    deploy = stub(
-      to_s: 123456, summary: "hello world!", user: user, stage: stage, project: project,
-      changeset: changeset, reference: '123abc'
-    )
-    SlackWebhookNotification.new(deploy)
+    changeset = stub("Changeset", pull_requests: prs ? [pr] : [], commits: [])
+    webhook = SlackWebhook.new(webhook_url: endpoint)
+    deploy = deploys(:succeeded_test)
+    deploy.stubs(changeset: changeset)
+    SlackWebhookNotification.new(deploy, [webhook])
   end
 
   describe "#deliver" do
     before do
-      SlackWebhookNotificationRenderer.stubs(:render).returns("foo")
       @delivery = stub_request(:post, endpoint)
     end
 
-    it "notifies slack channels configured for the stage when the deploy_phase is enabled" do
-      stub_notification.deliver :after_deploy # column defaults to true
-      assert_requested @delivery
-    end
-
-    it "does not notify slack channels configured for the stage when the deploy_phase is disabled" do
-      stub_notification.deliver :before_deploy
-      assert_not_requested @delivery
-    end
-
     it "renders a notification" do
-      stub_notification(before_deploy: true).deliver :before_deploy
+      SlackWebhookNotification.any_instance.stubs(:deploy_callback_content).returns("foo")
+      stub_notification.deliver :before_deploy
       payload.fetch("text").must_equal "foo"
     end
 
+    it "notifies slack channels" do
+      stub_notification.deliver :after_deploy
+      assert_requested @delivery
+    end
+
     it "sends buddy request with the specified message" do
-      notification = stub_notification(for_buddy: true)
-      notification.buddy_request "buddy approval needed"
+      notification = stub_notification
+      notification.deliver :buddy_box, message: "buddy approval needed"
 
       payload.fetch('text').must_equal "buddy approval needed"
       payload.fetch('attachments').length.must_equal 1
@@ -76,23 +62,24 @@ describe SlackWebhookNotification do
     end
 
     it 'tells the user if there are no PRs' do
-      notification = stub_notification(for_buddy: true, prs: false)
-      notification.buddy_request "no PRs"
+      notification = stub_notification(prs: false)
+      notification.deliver :buddy_box, message: "no PRs"
       prs['value'].must_equal '(no PRs)'
       risks['value'].must_equal "(no risks)"
     end
 
     it 'says if there are no risks' do
-      notification = stub_notification(for_buddy: true, risks: false)
-      notification.buddy_request "PRs but no risks"
+      notification = stub_notification(risks: false)
+      notification.deliver :buddy_box, message: "PRs but no risks"
       prs['value'].must_equal '<https://github.com/foo/bar/pulls/1|#1> - PR 1'
       risks['value'].must_equal "(no risks)"
     end
 
-    it "fails silently on error" do
+    it "fails silently when a single webhook fails, but still executes the others" do
       notification = stub_notification
       stub_request(:post, endpoint).to_timeout
       Rails.logger.expects(:error)
+      Airbrake.expects(:notify)
       notification.deliver :after_deploy
     end
   end
@@ -101,8 +88,84 @@ describe SlackWebhookNotification do
     it "renders" do
       notification = stub_notification
       message = notification.default_buddy_request_message
-      message.must_include ":pray: <!here> _John Wu_ is requesting approval to deploy "\
-      "<http://www.test-url.com/projects/foo/deploys/123456|Glitter *123abc* to Staging>."\
+      message.must_equal ":pray: <!here> _Super Admin_ is requesting approval to deploy " \
+        "<http://www.test-url.com/projects/foo/deploys/178003093|Foo *staging* to Staging>."
+    end
+  end
+
+  describe "#deploy_callback_content" do
+    def render
+      SlackWebhookNotification.new(deploy, []).send(:deploy_callback_content)
+    end
+
+    let(:pull_requests) do
+      [
+        stub("PR one", number: 42, title: 'Fix bug', url: 'http://pr1.url/', users: [stub(login: 'author1')]),
+        stub("PR two", number: 43, title: 'Properly fix bug', url: 'http://pr2.url/', users: [stub(login: 'author2')])
+      ]
+    end
+    let(:changeset) do
+      stub "changeset",
+        commits: stub("commits", count: 3),
+        github_url: "https://github.com/url",
+        pull_requests: pull_requests,
+        author_names: ['author1', 'author2']
+    end
+    let(:deploy) do
+      deploy = deploys(:succeeded_test)
+      deploy.stubs(:changeset).returns(changeset)
+      deploy.stubs(:url).returns("http://sams.on/url")
+      deploy
+    end
+
+    it "renders a nicely formatted pending notification" do
+      deploy.job.status = "pending"
+      render.must_equal <<-TEXT.strip_heredoc.chomp
+        :stopwatch: *[Foo] Super Admin is about to deploy staging to Staging* (<http://sams.on/url|view the deploy>)
+        _<https://github.com/url|3 commits> and 2 pull requests by author1 and author2._
+
+        *Pull Requests*
+
+        > PR#42 <http://pr1.url/|Fix bug> (author1)
+        > PR#43 <http://pr2.url/|Properly fix bug> (author2)
+      TEXT
+    end
+
+    it "does not render pull requests for finished deploys" do
+      render.must_equal <<-TEXT.strip_heredoc.chomp
+        :white_check_mark: *[Foo] Super Admin deployed staging to Staging* (<http://sams.on/url|view the deploy>)
+        _<https://github.com/url|3 commits> and 2 pull requests by author1 and author2._
+      TEXT
+    end
+
+    it "alerts users when pull requests were not used" do
+      deploy.job.status = "pending"
+      pull_requests.clear
+      render.must_include 'There are commits going live that did not go through a pull request'
+    end
+
+    it 'uses a truck emoji for a running deploy' do
+      deploy.job.status = "running"
+      render.must_include ':truck::dash:'
+    end
+
+    it 'uses an X emoji for an errored deploy' do
+      deploy.job.status = "errored"
+      render.must_include ':x:'
+    end
+
+    it 'uses an X emoji for a failed deploy' do
+      deploy.job.status = "failed"
+      render.must_include ':x:'
+    end
+
+    it 'uses a checkmark emoji for a successful deploy' do
+      render.must_include ':white_check_mark:'
+    end
+
+    it 'omits emoji for any other situation' do
+      deploy.job.status = "cancelling"
+      render.wont_match /:.*:/
     end
   end
 end

@@ -34,6 +34,20 @@ describe SlackWebhook do
     end
   end
 
+  describe "#cleanup_channel" do
+    it "does not modify good channel" do
+      webhook.channel = "test"
+      assert_valid webhook
+      webhook.channel.must_equal "test"
+    end
+
+    it "modifies bad channel" do
+      webhook.channel = "#test"
+      assert_valid webhook
+      webhook.channel.must_equal "test"
+    end
+  end
+
   describe "#deliver_for?" do
     let(:deploy) { deploys(:succeeded_test) }
 
@@ -42,7 +56,8 @@ describe SlackWebhook do
     it "does not deliver when everything is disabled" do
       refute webhook.deliver_for?(:before_deploy, deploy)
       refute webhook.deliver_for?(:after_deploy, deploy)
-      refute webhook.deliver_for?(:for_buddy, deploy)
+      refute webhook.deliver_for?(:buddy_box, deploy)
+      refute webhook.deliver_for?(:buddy_request, deploy)
     end
 
     it "deliver before when before hook is enabled" do
@@ -55,9 +70,14 @@ describe SlackWebhook do
       assert webhook.deliver_for?(:after_deploy, deploy)
     end
 
-    it "delivers for for_buddy when for_buddy hooks is enabled" do
-      webhook.for_buddy = true
-      assert webhook.deliver_for?(:for_buddy, deploy)
+    it "delivers for buddy_box when buddy_box hooks is enabled" do
+      webhook.buddy_box = true
+      assert webhook.deliver_for?(:buddy_box, deploy)
+    end
+
+    it "delivers for buddy_request when buddy_request hooks is enabled" do
+      webhook.buddy_request = true
+      assert webhook.deliver_for?(:buddy_request, deploy)
     end
 
     it "fails with unknown hook" do

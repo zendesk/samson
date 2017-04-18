@@ -23,22 +23,29 @@
 
       <div class="form-group">
         <div class="col-lg-2 checkbox">
-          <%= slack_field.label :for_buddy do %>
-            <%= slack_field.check_box :for_buddy%>
-            Buddy Approval
+          <%= slack_field.label :buddy_box do %>
+            <%= slack_field.check_box :buddy_box %>
+            Buddy Box <%= additional_info "show a Request buddy box on the deploy page that users can click to request a buddy" %>
+          <% end %>
+        </div>
+
+        <div class="col-lg-2 checkbox">
+          <%= slack_field.label :buddy_request do %>
+            <%= slack_field.check_box :buddy_request %>
+            Buddy Request
           <% end %>
         </div>
 
         <div class="col-lg-2 checkbox">
           <%= slack_field.label :before_deploy do %>
-            <%= slack_field.check_box :before_deploy%>
+            <%= slack_field.check_box :before_deploy %>
             Before Deploy
           <% end %>
         </div>
 
         <div class="col-lg-2 checkbox">
           <%= slack_field.label :after_deploy do %>
-            <%= slack_field.check_box :after_deploy%>
+            <%= slack_field.check_box :after_deploy %>
             After Deploy
           <% end %>
         </div>

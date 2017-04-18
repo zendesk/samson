@@ -19,7 +19,9 @@ class DeployService
         end
       end
 
-      if !deploy.waiting_for_buddy? || copy_approval_from_last_deploy(deploy)
+      if deploy.waiting_for_buddy? && !copy_approval_from_last_deploy(deploy)
+        Samson::Hooks.fire(:buddy_request, deploy)
+      else
         confirm_deploy!(deploy)
       end
     end
