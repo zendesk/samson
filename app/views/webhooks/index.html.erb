@@ -33,7 +33,7 @@
         <li>
           <strong><%= webhook.branch.blank? ? 'Any' : webhook.branch %></strong>
           branch &rarr;
-          <strong><%= webhook.stage.name %></strong>
+          <strong><%= webhook.stage&.name || "Deleted stage" %></strong>
           stage for:
           <%= webhook.source.humanize %>
           (<%= link_to "remove", [@project, webhook], method: :delete %>)
