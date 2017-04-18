@@ -109,6 +109,13 @@ describe EnvironmentVariable do
             "PROJECT" => "secret://foobar ✓", "X" => "Y", "Y" => "Z"
           )
         end
+
+        it "does not raise on missing secret values in preview mode" do
+          SecretStorage::DbBackend::Secret.delete_all
+          EnvironmentVariable.env(project, nil, preview: true).must_equal(
+            "PROJECT" => "secret://foobar X", "X" => "Y", "Y" => "Z"
+          )
+        end
       end
     end
   end
