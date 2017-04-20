@@ -1,5 +1,35 @@
-<% page_title "Deploys" %>
+<% if @project %>
+  <% page_title "Deploys" %>
+  <%= render 'projects/header', project: @project, tab: "deploys" %>
+<% else %>
+  <%= page_title "Deploys" %>
+<% end %>
 
-<%= render 'projects/header', project: @project, tab: "deploys" if @project %>
+<section class="tabs">
+  <div class="row">
+    <%= search_form do %>
+      <div class="col-sm-2">
+        <%= label_tag :deployer %>
+        <%= text_field_tag 'search[deployer]', params.dig(:search, :deployer), placeholder: 'deployer name', class: "form-control" %>
+      </div>
 
-<%= render 'shared/deploys_table' %>
+      <% unless @project %>
+        <div class="col-sm-2">
+          <%= label_tag :project %>
+          <%= text_field_tag 'search[project_name]', params.dig(:search, :project_name), placeholder: 'project name', class: "form-control" %>
+        </div>
+      <% end %>
+
+      <%= search_select :production, [["Yes", "true"], ["No", "false"]], size: 1 %>
+      <%= search_select :status, Job::VALID_STATUSES %>
+      <%= search_select :time_format, User::TIME_FORMATS, selected: params.dig(:search, :time_format) || current_user.time_format %>
+    <% end %>
+  </div>
+
+  <section class="timeline-content clearfix">
+    <div class="deploy-csv">
+      <%= link_to "Download as CSV", deploys_path(format: "csv", params: params.to_h) %>
+    </div>
+    <%= render "table" %>
+  </section>
+</section>

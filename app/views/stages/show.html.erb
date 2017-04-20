@@ -43,20 +43,5 @@
   <% end %>
 
   <h2>Recent deploys</h2>
-  <table class="table">
-    <thead>
-      <tr>
-        <th>When</th>
-        <th>Who</th>
-        <% unless @stage %>
-          <th>Stage</th>
-        <% end %>
-        <th>Status</th>
-      </tr>
-    </thead>
-    <tbody>
-      <%= render partial: "/projects/deploy", collection: @deploys %>
-    </tbody>
-  </table>
-  <%= paginate @deploys %>
+  <%= render "deploys/table" %>
 </section>

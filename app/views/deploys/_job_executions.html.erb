@@ -15,7 +15,7 @@
       <tr><td colspan="6">Queue <%= queue %></td></tr>
       <% Array(job_exs).each do |job_ex| %>
         <% if deploy = job_ex.job.deploy %>
-          <%= render "/projects/deploy", deploy: deploy %>
+          <%= render deploy %>
         <% else %>
           <%= link_to job_ex.id, project_job_path(job_ex.job.project, job_ex.job) %>
         <% end %>
@@ -23,7 +23,6 @@
     <% end %>
     </tbody>
   </table>
-</table>
 <% else %>
   None
 <% end %>
