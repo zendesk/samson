@@ -40,8 +40,6 @@
         </div>
       </div>
 
-      <%= Samson::Hooks.render_views(:deploy_form, self, project: @project, form: form) %>
-
       <% if recent_releases = @project.releases.last(5).presence %>
         <div class="form-group" id="recent-releases">
           <label class="col-lg-2 control-label">Recent releases</label>
@@ -52,6 +50,22 @@
           </div>
         </div>
       <% end %>
+
+      <div class="form-group">
+        <%= label_tag :environment_variables, nil, class: "col-lg-2 control-label" %>
+
+        <div class="col-lg-3">
+          <%= text_field_tag "deploy[environment_variables][0][name]", "", class: "form-control", placeholder: "Name" %>
+        </div>
+
+        <div class="col-lg-5">
+          <%# using a text area so users can resize them with browser controls %>
+          <%= text_area_tag "deploy[environment_variables][0][value]", "", class: "form-control", placeholder: "Value", rows: 1 %>
+        </div>
+      </div>
+      <%= link_to "Add row", "#", class: "duplicate_previous_row" %>
+
+      <%= Samson::Hooks.render_views(:deploy_form, self, project: @project, form: form) %>
 
       <div class="form-group" id="new-deploy-buttons">
         <div class="col-lg-offset-2 col-lg-10">
