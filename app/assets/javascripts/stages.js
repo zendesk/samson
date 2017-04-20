@@ -57,28 +57,27 @@ $(function() {
   });
 
   $(".env-toggle-all").each(function() {
-    $(this).change(function(toggleBox) {
-      $($(this).data('target')).each(function(index, checkBox) {
-        checkBox.checked = toggleBox.target.checked;
-      });
+    var envCheckbox = $(this);
+    var deploygroupCheckboxes = $("." + envCheckbox.data('target'));
+    var updateEnv = function(){ setEnvironmentCheckbox(envCheckbox, deploygroupCheckboxes); };
+
+    envCheckbox.change(function(e) {
+      deploygroupCheckboxes.prop("checked", $(e.target).prop('checked'));
     });
 
-    // Update top-level checkboxes if user selects subset of deploygroups
-    $($(this).data('target')).each(function() {
-      $(this).change(function() {
-        setEnvironmentCheckBox($(this).attr('class'));
-      });
-    });
+    // Update top-level checkboxes if user selects subset of deploy groups
+    deploygroupCheckboxes.change(updateEnv);
 
-    setEnvironmentCheckBox(this.id);
+    // set initial state
+    updateEnv();
   });
 
-  function setEnvironmentCheckBox(envClass) {
-    var envCheckbox = $('#' + envClass),
-        checks = _.uniq(_.pluck($("." + envClass), 'checked'));
-    if (checks.length > 1) {
+  function setEnvironmentCheckbox(envCheckbox, deploygroupCheckboxes) {
+    var checks = _.uniq(_.pluck(deploygroupCheckboxes, 'checked'));
+
+    if (checks.length == 2) { // some items checked
       envCheckbox.prop('indeterminate', true);
-    } else if (checks.length > 0) {
+    } else { // all or none checked
       envCheckbox.prop('checked', checks[0]);
       envCheckbox.prop('indeterminate', false);
     }
