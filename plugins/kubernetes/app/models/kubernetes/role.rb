@@ -54,10 +54,8 @@ module Kubernetes
         scope = where(project: project)
 
         next if scope.where(config_file: config_file.path, deleted_at: nil).exists?
-        deploy = (config_file.deploy || config_file.job)
-
-        # deploy / job
-        name = deploy.fetch(:metadata).fetch(:labels).fetch(:role)
+        resource = config_file.primary
+        name = resource.fetch(:metadata).fetch(:labels).fetch(:role)
 
         # service
         if service = config_file.service
@@ -68,7 +66,7 @@ module Kubernetes
         end
 
         # ensure we have a unique resource name
-        resource_name = deploy.fetch(:metadata).fetch(:name)
+        resource_name = resource.fetch(:metadata).fetch(:name)
         if where(resource_name: resource_name).exists?
           resource_name = "#{project.permalink}-#{resource_name}".tr('_', '-')
         end
@@ -102,9 +100,14 @@ module Kubernetes
 
       config.elements.detect do |resource|
         next unless spec = resource[:spec]
-        replicas = spec[:replicas] || 1
+        if resource[:kind] == "Pod"
+          replicas = 0 # these are one-off tasks most of the time, so we should not count them in totals
+        else
+          replicas = spec[:replicas] || 1
+          spec = spec.dig(:template, :spec) || {}
+        end
 
-        next unless limits = spec.dig(:template, :spec, :containers, 0, :resources, :limits)
+        next unless limits = spec.dig(:containers, 0, :resources, :limits)
         next unless cpu = parse_resource_value(limits[:cpu])
         next unless ram = parse_resource_value(limits[:memory]) # TODO: rename this and the column to memory
         ram /= 1024**2 # we store megabyte

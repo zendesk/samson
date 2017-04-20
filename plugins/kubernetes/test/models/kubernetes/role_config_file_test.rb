@@ -23,15 +23,15 @@ describe Kubernetes::RoleConfigFile do
     end
   end
 
-  describe "#deploy" do
+  describe "#primary" do
     it 'finds a Deployment' do
-      config_file.deploy[:kind].must_equal 'Deployment'
+      config_file.primary[:kind].must_equal 'Deployment'
     end
 
     it "finds a Daemonset" do
       assert content.sub!('Deployment', 'DaemonSet')
       assert content.sub!(/\n---.*/m, '')
-      config_file.deploy[:kind].must_equal 'DaemonSet'
+      config_file.primary[:kind].must_equal 'DaemonSet'
     end
 
     it "blows up on unsupported" do
@@ -40,7 +40,7 @@ describe Kubernetes::RoleConfigFile do
     end
 
     it "allows deep symbol access" do
-      config_file.deploy.fetch(:spec).fetch(:selector).fetch(:matchLabels).fetch(:project).must_equal 'some-project'
+      config_file.primary.fetch(:spec).fetch(:selector).fetch(:matchLabels).fetch(:project).must_equal 'some-project'
     end
   end
 
@@ -52,17 +52,6 @@ describe Kubernetes::RoleConfigFile do
     it 'is nil when no service is found' do
       content.replace(read_kubernetes_sample_file('kubernetes_job.yml'))
       config_file.service.must_be_nil
-    end
-  end
-
-  describe "#job" do
-    it 'loads a job' do
-      content.replace(read_kubernetes_sample_file('kubernetes_job.yml'))
-      config_file.job[:kind].must_equal 'Job'
-    end
-
-    it 'is nil when no job is found' do
-      config_file.job.must_be_nil
     end
   end
 end
