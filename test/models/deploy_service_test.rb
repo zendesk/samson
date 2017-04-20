@@ -40,6 +40,7 @@ describe DeployService do
       end
 
       it "does not start the deploy" do
+        Samson::Hooks.expects(:fire).with(:buddy_request, anything)
         service.expects(:confirm_deploy!).never
         service.deploy!(stage, reference: reference)
       end

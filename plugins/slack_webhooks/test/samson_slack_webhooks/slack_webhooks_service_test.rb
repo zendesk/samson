@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 require_relative '../test_helper'
 
-SingleCov.covered! uncovered: 5
+SingleCov.covered!
 
 describe SamsonSlackWebhooks::SlackWebhooksService do
   let(:deploy) { deploys(:succeeded_test) }
@@ -11,7 +11,7 @@ describe SamsonSlackWebhooks::SlackWebhooksService do
     Rails.cache.delete(:slack_users)
   end
 
-  describe '#users' do
+  describe "#users" do
     with_env(SLACK_API_TOKEN: 'some-token')
 
     it "shows all users" do
@@ -57,6 +57,30 @@ describe SamsonSlackWebhooks::SlackWebhooksService do
         users_2nd_time.must_equal([])
         users_2nd_time.object_id.wont_equal users_1st_time.object_id
       end
+    end
+  end
+
+  describe "#deliver_message_via_webhook" do
+    let(:webhook) { SlackWebhook.new(webhook_url: 'http://foo.com') }
+
+    it "sends a message" do
+      stub_request(:post, "http://foo.com").
+        with(body: {"payload" => "{\"text\":\"Hey\",\"username\":\"samson-bot\"}"})
+      service.deliver_message_via_webhook(webhook: webhook, message: "Hey", attachments: [])
+    end
+
+    it "sends on a given channel" do
+      webhook.channel = "foobar"
+      stub_request(:post, "http://foo.com").
+        with(body: {"payload" => "{\"text\":\"Hey\",\"username\":\"samson-bot\",\"channel\":\"foobar\"}"})
+      service.deliver_message_via_webhook(webhook: webhook, message: "Hey", attachments: [])
+    end
+
+    it "reports errors silently so multiple channels can be sent to in a row" do
+      stub_request(:post, "http://foo.com").to_timeout
+      Airbrake.expects(:notify)
+      Rails.logger.expects(:error)
+      service.deliver_message_via_webhook(webhook: webhook, message: "Hey", attachments: [])
     end
   end
 end

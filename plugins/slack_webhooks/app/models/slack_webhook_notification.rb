@@ -1,24 +1,29 @@
 # frozen_string_literal: true
 class SlackWebhookNotification
-  def initialize(deploy)
+  def initialize(deploy, webhooks)
     @deploy = deploy
     @stage = deploy.stage
     @project = @stage.project
     @user = @deploy.user
+    @webhooks = webhooks
   end
 
-  # deploy_phase is either :before_deploy or :after_deploy
-  def deliver(deploy_phase)
-    _deliver(deploy_phase: deploy_phase, message: content)
+  # phase is:
+  # - before_deploy or after_deploy
+  # - buddy_request from callback
+  # - buddy_box from user manually sending the request with customized message
+  def deliver(phase, message: default_buddy_request_message)
+    if [:buddy_request, :buddy_box].include?(phase)
+      _deliver(message: message, attachments: [pr_and_risk_attachment])
+    else # before_deploy or after_deploy
+      _deliver(message: deploy_callback_content)
+    end
   end
 
-  def buddy_request(message)
-    _deliver(deploy_phase: :for_buddy, message: message, attachments: [pr_and_risk_attachment])
-  end
-
+  # shown in the UI so user can modify
+  # https://api.slack.com/docs/message-formatting
   def default_buddy_request_message
     project = @deploy.project
-    # https://api.slack.com/docs/message-formatting
     ":pray: <!here> _#{@deploy.user.name}_ is requesting approval to deploy " \
       "<#{Rails.application.routes.url_helpers.project_deploy_url(project, @deploy)}|" \
       "#{project.name} *#{@deploy.reference}* to #{@deploy.stage.name}>."
@@ -26,14 +31,8 @@ class SlackWebhookNotification
 
   private
 
-  def content
-    subject = "[#{@project.name}] #{@deploy.summary}"
-    @content ||= SlackWebhookNotificationRenderer.render(@deploy, subject)
-  end
-
-  def _deliver(deploy_phase:, message:, attachments: nil)
-    @stage.slack_webhooks.each do |webhook|
-      next unless webhook.deliver_for?(deploy_phase, @deploy)
+  def _deliver(message:, attachments: nil)
+    @webhooks.each do |webhook|
       SamsonSlackWebhooks::SlackWebhooksService.new.deliver_message_via_webhook(
         webhook: webhook,
         message: message,
@@ -70,5 +69,28 @@ class SlackWebhookNotification
       value: risks_string,
       short: true
     }
+  end
+
+  def deploy_callback_content
+    subject = "[#{@project.name}] #{@deploy.summary}"
+    controller = ActionController::Base.new
+    view = ActionView::Base.new(File.expand_path("../../views/samson_slack_webhooks", __FILE__), {}, controller)
+    show_prs = @deploy.pending? || @deploy.running?
+    status_emoji =
+      case @deploy.status
+      when 'pending' then ':stopwatch:'
+      when 'running' then ':truck::dash:'
+      when 'errored', 'failed', 'cancelled' then ':x:'
+      when 'succeeded' then ':white_check_mark:'
+      else ''
+      end
+    locals = {
+      deploy: @deploy,
+      status_emoji: status_emoji,
+      changeset: @deploy.changeset,
+      subject: subject,
+      show_prs: show_prs
+    }
+    view.render(template: 'notification', locals: locals).chomp
   end
 end

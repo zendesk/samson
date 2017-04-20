@@ -30,6 +30,7 @@ module Samson
       :project_permitted_params,
       :deploy_group_permitted_params,
       :build_permitted_params,
+      :buddy_request,
       :before_deploy,
       :after_deploy_setup,
       :after_deploy,
