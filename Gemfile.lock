@@ -347,7 +347,7 @@ GEM
       slop (~> 3.4)
     pry-rails (0.3.4)
       pry (>= 0.9.10)
-    puma (3.4.0)
+    puma (3.8.2)
     pyu-ruby-sasl (0.0.3.3)
     query_diet (0.6.1)
     rack (2.0.1)
