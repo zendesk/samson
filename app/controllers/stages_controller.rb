@@ -85,7 +85,7 @@ class StagesController < ApplicationController
   end
 
   def check_token
-    return if Rack::Utils.secure_compare(params[:token], Rails.application.config.samson.badge_token)
+    return if Rack::Utils.secure_compare(params[:token].to_s, Rails.application.config.samson.badge_token)
     head :not_found
   end
 
