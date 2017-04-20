@@ -6,27 +6,13 @@ class DeploysController < ApplicationController
 
   skip_before_action :require_project, only: [:active, :active_count, :changeset]
 
-  before_action :authorize_project_deployer!, except: [:index, :show, :active, :active_count, :changeset, :search]
-  before_action :find_deploy, except: [:index, :active, :active_count, :new, :create, :confirm, :search]
+  before_action :authorize_project_deployer!, except: [:index, :show, :active, :active_count, :changeset]
+  before_action :find_deploy, except: [:index, :active, :active_count, :new, :create, :confirm]
   before_action :stage, only: :new
 
-  def index
-    scope = current_project.try(:deploys) || Deploy
-    @deploys =
-      if params[:ids]
-        Kaminari.paginate_array(scope.find(params[:ids])).page(1).per(1000)
-      else
-        scope.page(params[:page])
-      end
-
-    respond_to do |format|
-      format.html
-    end
-  end
-
   def active
-    @deploys = active_deploy_scope
-    render partial: 'shared/deploys_table', layout: false if params[:partial]
+    @deploys = deploys_scope.active
+    render partial: 'deploys/table', layout: false if params[:partial]
   end
 
   # Returns a paginated json object of deploys that people are
@@ -36,47 +22,15 @@ class DeploysController < ApplicationController
   #   * project_name (name of the project)
   #   * production (boolean, is this in proudction or not)
   #   * status (what is the status of this job failed|running| etc)
-
-  def search
-    search = params[:search] || {}
-    status = search[:status].presence
-
-    if status && !Job.valid_status?(status)
-      render json: { errors: "invalid status given" }, status: 400
-      return
-    end
-
-    if deployer = search[:deployer].presence
-      users = User.where(
-        "name LIKE ?", "%#{ActiveRecord::Base.send(:sanitize_sql_like, deployer)}%"
-      ).pluck(:id)
-    end
-
-    if project_name = search[:project_name].presence
-      projects = Project.where(
-        "name LIKE ?", "%#{ActiveRecord::Base.send(:sanitize_sql_like, project_name)}%"
-      ).pluck(:id)
-    end
-
-    if users || status
-      jobs = Job
-      jobs = jobs.where(user: users) if users
-      jobs = jobs.where(status: status) if status
-    end
-
-    if (production = search[:production].presence) || projects
-      stages = Stage
-      stages = stages.where(project: projects) if projects
-      if production
-        production = !ActiveModel::Type::Boolean::FALSE_VALUES.include?(production)
-        stages = stages.select { |stage| (stage.production? == production) }
+  def index
+    @deploys =
+      if ids = params[:ids]
+        Kaminari.paginate_array(deploys_scope.find(ids)).page(1).per(1000)
+      else
+        search
       end
-    end
 
-    deploys = Deploy
-    deploys = deploys.where(stage: stages) if stages
-    deploys = deploys.where(job: jobs) if jobs
-    @deploys = deploys.page(params[:page]).per(30)
+    return if performed?
 
     respond_to do |format|
       format.json do
@@ -156,6 +110,48 @@ class DeploysController < ApplicationController
 
   protected
 
+  def search
+    search = params[:search] || {}
+    status = search[:status].presence
+
+    if status && !Job.valid_status?(status)
+      render json: { errors: "invalid status given" }, status: 400
+      return
+    end
+
+    if deployer = search[:deployer].presence
+      users = User.where(
+        "name LIKE ?", "%#{ActiveRecord::Base.send(:sanitize_sql_like, deployer)}%"
+      ).pluck(:id)
+    end
+
+    if project_name = search[:project_name].presence
+      projects = Project.where(
+        "name LIKE ?", "%#{ActiveRecord::Base.send(:sanitize_sql_like, project_name)}%"
+      ).pluck(:id)
+    end
+
+    if users || status
+      jobs = Job
+      jobs = jobs.where(user: users) if users
+      jobs = jobs.where(status: status) if status
+    end
+
+    if (production = search[:production].presence) || projects
+      stages = Stage
+      stages = stages.where(project: projects) if projects
+      if production
+        production = !ActiveModel::Type::Boolean::FALSE_VALUES.include?(production)
+        stages = stages.select { |stage| (stage.production? == production) }
+      end
+    end
+
+    deploys = deploys_scope
+    deploys = deploys.where(stage: stages) if stages
+    deploys = deploys.where(job: jobs) if jobs
+    deploys.page(params[:page]).per(30)
+  end
+
   def deploy_permitted_params
     [:reference, :stage_id] + Samson::Hooks.fire(:deploy_permitted_params)
   end
@@ -176,8 +172,8 @@ class DeploysController < ApplicationController
     @deploy = Deploy.find(params[:id])
   end
 
-  def active_deploy_scope
-    current_project ? current_project.deploys.active : Deploy.active
+  def deploys_scope
+    current_project&.deploys || Deploy
   end
 
   # Creates a CSV for @deploys as a result of the search query limited to 1000 for speed

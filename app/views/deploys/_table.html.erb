@@ -1,0 +1,19 @@
+<div class="timeline">
+  <table class="timeline-content">
+    <tr>
+      <% unless @project %>
+        <th>PROJECT</th>
+      <% end %>
+      <th>LAST UPDATE</th>
+      <th>DEPLOY</th>
+      <% unless @stage %>
+        <th>STAGE</th>
+      <% end %>
+      <th>STATUS</th>
+    </tr>
+    <tbody>
+    <%= render partial: "deploys/deploy", collection: @deploys %>
+    </tbody>
+  </table>
+  <%= paginate @deploys if @deploys.respond_to?(:total_pages) %>
+</div>

@@ -34,35 +34,6 @@ describe DeploysController do
   end
 
   as_a_viewer do
-    describe "#index" do
-      before do
-        Deploy.any_instance.stubs(:changeset).returns(changeset)
-      end
-
-      it "renders html" do
-        get :index, params: {project_id: project}
-        assert_template :index
-      end
-
-      it "renders without a project" do
-        get :index
-        assert_template :index
-        assigns[:deploys].must_equal Deploy.all.to_a
-      end
-
-      it "renders with given ids" do
-        get :index, params: {ids: [deploy.id]}
-        assert_template :index
-        assigns[:deploys].must_equal [deploy]
-      end
-
-      it "fails when given ids do not exist" do
-        assert_raises ActiveRecord::RecordNotFound do
-          get :index, params: {ids: [121211221]}
-        end
-      end
-    end
-
     describe "#active" do
       with_and_without_project do
         it "renders the template" do
@@ -72,7 +43,7 @@ describe DeploysController do
 
         it "renders the partial" do
           get :active, params: {project_id: project_id, partial: true}
-          assert_template 'shared/_deploys_table'
+          assert_template 'deploys/_table'
         end
       end
 
@@ -145,7 +116,9 @@ describe DeploysController do
       end
     end
 
-    describe "#search" do
+    describe "#index" do
+      let(:deploy) { Deploy.first }
+
       before do
         Deploy.delete_all
         Job.delete_all
@@ -172,89 +145,109 @@ describe DeploysController do
       end
 
       it "renders json" do
-        get :search, format: "json"
+        get :index, format: "json"
         assert_response :ok
       end
 
+      it "renders with given ids" do
+        get :index, params: {ids: [deploy.id]}
+        assert_template :index
+        assigns[:deploys].limit_value.must_equal 1000
+        assigns[:deploys].must_equal [deploy]
+      end
+
+      it "fails when given ids do not exist" do
+        assert_raises ActiveRecord::RecordNotFound do
+          get :index, params: {ids: [121211221]}
+        end
+      end
+
+      it "can scope by project" do
+        Deploy.where("id <> #{deploy.id}").update_all(project_id: 123)
+        get :index, params: {project_id: deploy.project}
+        assert_template :index
+        assigns[:deploys].must_equal [deploy]
+      end
+
       it "renders csv" do
-        get :search, format: "csv"
+        get :index, format: "csv"
         assert_response :ok
         @response.body.split("\n").length.must_equal 7 # 4 records and 3 meta rows
       end
 
       it "renders csv with limit (1) records and links to generate full report" do
-        get :search, params: {limit: 1}, format: "csv"
+        get :index, params: {limit: 1}, format: "csv"
         assert_response :ok
         @response.body.split("\n").length.must_equal 6 # 1 record and 5 meta rows
         @response.body.split("\n")[2].split(",")[2].to_i.must_equal(1) # validate that count equals = csv_limit
       end
 
       it "renders html" do
-        get :search
+        get :index
         assert_equal "text/html", @response.content_type
         assert_response :ok
       end
 
       it "returns no results when deploy is not found" do
-        get :search, params: {search: {deployer: 'jimmyjoebob'}}, format: "json"
+        get :index, params: {search: {deployer: 'jimmyjoebob'}}, format: "json"
         assert_response :ok
         @response.body.must_equal "{\"deploys\":\[\]}"
       end
 
       it "fitlers results by deployer" do
-        get :search, params: {search: {deployer: 'Admin'}}, format: "json"
+        get :index, params: {search: {deployer: 'Admin'}}, format: "json"
         assert_response :ok
         deploys = JSON.parse(@response.body)
         deploys["deploys"].count.must_equal 4
       end
 
       it "filters results by status" do
-        get :search, params: {search: {status: 'succeeded'}}, format: "json"
+        get :index, params: {search: {status: 'succeeded'}}, format: "json"
         assert_response :ok
         deploys = JSON.parse(@response.body)
         deploys["deploys"].count.must_equal 2
       end
 
       it "ignores empty status" do
-        get :search, params: {search: {status: ' '}}, format: "json"
+        get :index, params: {search: {status: ' '}}, format: "json"
         assert_response 200
       end
 
       it "fails with invalid status" do
-        get :search, params: {search: {status: 'bogus_status'}}, format: "json"
+        get :index, params: {search: {status: 'bogus_status'}}, format: "json"
         assert_response 400
       end
 
       it "filters by project" do
-        get :search, params: {search: {project_name: "Foo"}}, format: "json"
+        get :index, params: {search: {project_name: "Foo"}}, format: "json"
         assert_response :ok
         deploys = JSON.parse(@response.body)
         deploys["deploys"].count.must_equal 4
       end
 
       it "filters by non-production" do
-        get :search, params: {search: {production: 0}}, format: "json"
+        get :index, params: {search: {production: 0}}, format: "json"
         assert_response :ok
         deploys = JSON.parse(@response.body)
         deploys["deploys"].count.must_equal 1
       end
 
       it "filters by non-production" do
-        get :search, params: {search: {production: "false"}}, format: "json"
+        get :index, params: {search: {production: "false"}}, format: "json"
         assert_response :ok
         deploys = JSON.parse(@response.body)
         deploys["deploys"].count.must_equal 1
       end
 
       it "filters by production" do
-        get :search, params: {search: {production: 1}}, format: "json"
+        get :index, params: {search: {production: 1}}, format: "json"
         assert_response :ok
         deploys = JSON.parse(@response.body)
         deploys["deploys"].count.must_equal 3
       end
 
       it "filters by production" do
-        get :search, params: {search: {production: "true"}}, format: "json"
+        get :index, params: {search: {production: "true"}}, format: "json"
         assert_response :ok
         deploys = JSON.parse(@response.body)
         deploys["deploys"].count.must_equal 3

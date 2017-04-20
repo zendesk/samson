@@ -1,9 +1,9 @@
 <%= page_title "Current Deploys" %>
 
 <% if params[:debug].blank? %>
-  <div class="timeline" ng-controller="currentDeploysCtrl">
-    <%= render 'shared/deploys_table' %>
-  </div>
+  <section class="tabs" ng-controller="currentDeploysCtrl">
+    <%= render 'deploys/table' %>
+  </section>
   <%= link_to 'job execution debug info', '?debug=1' %>
 <% else %>
   <% active, queued = JobExecution.debug %>
