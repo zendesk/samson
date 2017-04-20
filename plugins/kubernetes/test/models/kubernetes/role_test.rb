@@ -24,6 +24,13 @@ describe Kubernetes::Role do
 
   let(:role) { kubernetes_roles(:app_server) }
   let(:project) { role.project }
+  let(:pod) do
+    {
+      kind: 'Pod',
+      metadata: {name: 'foo', labels: {role: 'migrate', project: 'bar'}},
+      spec: {containers: [{name: 'foo', resources: {limits: {cpu: '0.5', memory: '300Mi'}}}]}
+    }
+  end
   let(:config_content) do
     YAML.load_stream(read_kubernetes_sample_file('kubernetes_deployment.yml'))
   end
@@ -122,6 +129,16 @@ describe Kubernetes::Role do
         Kubernetes::Role.seed! project, 'HEAD'
         role = project.kubernetes_roles.first
         role.name.must_equal 'job-role'
+      end
+    end
+
+    describe "with a pod" do
+      before { write_config 'kubernetes/a.yml', pod.to_yaml }
+
+      it 'creates a role' do
+        Kubernetes::Role.seed! project, 'HEAD'
+        role = project.kubernetes_roles.first
+        role.name.must_equal 'migrate'
       end
     end
 
@@ -267,6 +284,11 @@ describe Kubernetes::Role do
 
     it "find defaults" do
       role.defaults.must_equal cpu: 0.5, ram: 95, replicas: 2
+    end
+
+    it "finds in pod" do
+      config_content_yml.replace(pod.to_yaml)
+      role.defaults.must_equal cpu: 0.5, ram: 286, replicas: 0
     end
 
     it "defaults to 1 replica" do

@@ -30,16 +30,12 @@ module Kubernetes
       end
     end
 
-    def deploy
-      find_by_kind(DEPLOY_KINDS)
+    def primary
+      find_by_kind(PRIMARY_KINDS)
     end
 
     def service
       find_by_kind(SERVICE_KINDS)
-    end
-
-    def job
-      find_by_kind(JOB_KINDS)
     end
 
     private
