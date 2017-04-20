@@ -25,6 +25,14 @@ Samson::Hooks.callback :stage_permitted_params do
   }
 end
 
+Samson::Hooks.callback :buddy_request do |deploy|
+  url, channel = ENV['SLACK_GLOBAL_BUDDY_REQUEST'].to_s.split('#', 2)
+  if url && channel
+    hook = SlackWebhook.new(webhook_url: url, channel: channel)
+    SlackWebhookNotification.new(deploy, [hook]).deliver(:buddy_request)
+  end
+end
+
 [:buddy_request, :before_deploy, :after_deploy].each do |callback|
   Samson::Hooks.callback callback do |deploy, _buddy|
     webhooks = deploy.stage.slack_webhooks.select { |w| w.deliver_for?(callback, deploy) }

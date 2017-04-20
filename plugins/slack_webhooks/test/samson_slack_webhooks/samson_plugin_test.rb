@@ -14,10 +14,23 @@ describe SamsonSlackWebhooks do
       Samson::Hooks.fire(:buddy_request, deploy)
     end
 
-    it "does not send notifications when disabled" do
-      webhook.buddy_request = false
-      SlackWebhookNotification.any_instance.expects(:deliver).never
-      Samson::Hooks.fire(:buddy_request, deploy)
+    describe "when disabled" do
+      before { webhook.buddy_request = false }
+
+      it "does not send notifications when disabled" do
+        SlackWebhookNotification.any_instance.expects(:deliver).never
+        Samson::Hooks.fire(:buddy_request, deploy)
+      end
+
+      # using full http test here to make sure our hackery works
+      it "sends global hook when configured" do
+        with_env SLACK_GLOBAL_BUDDY_REQUEST: 'http://foo.com/baz#bar' do
+          stub_request(:post, "http://foo.com/baz").with do |x|
+            x.body.must_include "channel%22%3A%22bar"
+          end
+          Samson::Hooks.fire(:buddy_request, deploy)
+        end
+      end
     end
   end
 
