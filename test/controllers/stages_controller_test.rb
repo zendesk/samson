@@ -38,6 +38,11 @@ describe StagesController do
       assert_response :not_found
     end
 
+    it "fails silently without token" do
+      get :show, params: valid_params.except(:token)
+      assert_response :not_found
+    end
+
     it "renders none without deploy" do
       deploy.destroy!
       get :show, params: valid_params
