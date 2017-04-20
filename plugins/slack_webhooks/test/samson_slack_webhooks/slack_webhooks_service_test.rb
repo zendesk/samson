@@ -82,5 +82,12 @@ describe SamsonSlackWebhooks::SlackWebhooksService do
       Rails.logger.expects(:error)
       service.deliver_message_via_webhook(webhook: webhook, message: "Hey", attachments: [])
     end
+
+    it "reports 404s from misconfigurations or missing channels" do
+      stub_request(:post, "http://foo.com").to_return(status: 404, body: "Oops")
+      Airbrake.expects(:notify)
+      Rails.logger.expects(:error)
+      service.deliver_message_via_webhook(webhook: webhook, message: "Hey", attachments: [])
+    end
   end
 end
