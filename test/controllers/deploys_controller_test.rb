@@ -225,7 +225,7 @@ describe DeploysController do
         deploys["deploys"].count.must_equal 4
       end
 
-      it "filters by non-production" do
+      it "filters by non-production via json" do
         get :index, params: {search: {production: 0}}, format: "json"
         assert_response :ok
         deploys = JSON.parse(@response.body)
@@ -239,15 +239,30 @@ describe DeploysController do
         deploys["deploys"].count.must_equal 1
       end
 
-      it "filters by production" do
+      it "filters by production via json" do
         get :index, params: {search: {production: 1}}, format: "json"
         assert_response :ok
         deploys = JSON.parse(@response.body)
         deploys["deploys"].count.must_equal 3
       end
 
+      it "filters by production via json boolean" do
+        get :index, params: {search: {production: false}}, format: "json"
+        assert_response :ok
+        deploys = JSON.parse(@response.body)
+        deploys["deploys"].count.must_equal 1
+      end
+
       it "filters by production" do
         get :index, params: {search: {production: "true"}}, format: "json"
+        assert_response :ok
+        deploys = JSON.parse(@response.body)
+        deploys["deploys"].count.must_equal 3
+      end
+
+      it "filters for code_deployed" do
+        Deploy.last.stage.update_column(:no_code_deployed, true)
+        get :index, params: {search: {code_deployed: "true"}}, format: "json"
         assert_response :ok
         deploys = JSON.parse(@response.body)
         deploys["deploys"].count.must_equal 3
