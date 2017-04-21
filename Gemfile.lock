@@ -165,12 +165,6 @@ GEM
     awesome_print (1.6.1)
     aws-sdk-core (2.2.36)
       jmespath (~> 1.0)
-    better_errors (2.1.1)
-      coderay (>= 1.0.0)
-      erubis (>= 2.6.6)
-      rack (>= 0.9.0)
-    binding_of_caller (0.7.2)
-      debug_inspector (>= 0.0.1)
     bootscale (0.5.1)
     bootstrap-sass (3.3.6)
       autoprefixer-rails (>= 5.2.1)
@@ -187,7 +181,6 @@ GEM
     crack (0.4.3)
       safe_yaml (~> 1.0.0)
     dalli (2.7.6)
-    debug_inspector (0.0.2)
     docker-api (1.32.0)
       excon (>= 0.38.0)
       json
@@ -525,8 +518,6 @@ DEPENDENCIES
   ar_multi_threaded_transactional_tests
   attr_encrypted
   awesome_print
-  better_errors
-  binding_of_caller
   bootscale
   bootstrap-sass
   brakeman
