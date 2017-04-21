@@ -137,12 +137,19 @@ class DeploysController < ApplicationController
       jobs = jobs.where(status: status) if status
     end
 
-    if (production = search[:production].presence) || projects
+    production = search[:production].presence
+    code_deployed = search[:code_deployed].presence
+    if projects || !code_deployed.nil? || !production.nil?
       stages = Stage
-      stages = stages.where(project: projects) if projects
-      if production
-        production = !ActiveModel::Type::Boolean::FALSE_VALUES.include?(production)
-        stages = stages.select { |stage| (stage.production? == production) }
+      if projects
+        stages = stages.where(project: projects)
+      end
+      unless code_deployed.nil?
+        stages = stages.where(no_code_deployed: param_to_bool(code_deployed))
+      end
+      unless production.nil?
+        production = param_to_bool(production)
+        stages = stages.select { |stage| stage.production? == production }
       end
     end
 
@@ -174,6 +181,10 @@ class DeploysController < ApplicationController
 
   def deploys_scope
     current_project&.deploys || Deploy
+  end
+
+  def param_to_bool(param)
+    !ActiveModel::Type::Boolean::FALSE_VALUES.include?(param)
   end
 
   # Creates a CSV for @deploys as a result of the search query limited to 1000 for speed

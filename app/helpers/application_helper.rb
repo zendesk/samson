@@ -218,12 +218,12 @@ module ApplicationHelper
 
   def search_select(
     column, values,
-    live: false, size: 2, label: column.to_s.humanize, selected: params.dig(:search, column)
+    live: false, size: 2, label: column.to_s.humanize, selected: params.dig(:search, column), title: nil
   )
     options = (live ? Samson::FormBuilder::LIVE_SELECT_OPTIONS.dup : {class: "form-control"})
     options[:include_blank] = true
 
-    content_tag :div, class: "col-sm-#{size}" do
+    content_tag :div, class: "col-sm-#{size}", title: title do
       label_tag(label) << select_tag("search[#{column}]", options_for_select(values, selected), options)
     end
   end
