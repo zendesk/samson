@@ -14,14 +14,12 @@ module.exports = function(config) {
 
     // list of files / patterns to load in the browser
     files: [
-      '<%= resolve_asset("vis.js") %>',
       '<%= resolve_asset("jquery.js") %>',
       '<%= resolve_asset("angular.js") %>',
       '<%= resolve_asset("angular-mocks.js") %>',
       '<%= resolve_asset("underscore.js") %>',
       '<%= resolve_asset("underscore_mixins.js") %>',
       '<%= resolve_asset("moment.js") %>',
-      '<%= resolve_asset("message-center") %>',
       '<%= resolve_asset("angular-spinner") %>',
       '<%= resolve_asset("angular-ui-router") %>',
       '<%= resolve_asset("angular-truncate-2") %>',

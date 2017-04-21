@@ -33,10 +33,6 @@
 //= require bootstrap/popover
 //= require bootstrap-select
 //= require x-editable/dist/bootstrap3-editable/js/bootstrap-editable
-//= require message-center
-//= require rickshaw/vendor/d3.min
-//= require rickshaw
-//= require vis
 //= require app
 //= require underscore_mixins
 //= require jstimezonedetect

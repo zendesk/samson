@@ -27,10 +27,6 @@ class DeployGroup < ActiveRecord::Base
     ENV['DEPLOY_GROUP_FEATURE'].present?
   end
 
-  def deploys
-    Deploy.where(stage: stage_ids)
-  end
-
   def natural_order
     Samson::NaturalOrder.convert(name)
   end

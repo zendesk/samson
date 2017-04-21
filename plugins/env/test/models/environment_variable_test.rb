@@ -120,28 +120,6 @@ describe EnvironmentVariable do
     end
   end
 
-  describe ".env_deploygroup_array" do
-    it "includes All" do
-      all = EnvironmentVariable.env_deploygroup_array
-      all.map! { |name, value| [name, value&.sub(/-\d+/, '-X')] }
-      all.must_equal(
-        [
-          ["All", nil],
-          ["Production", "Environment-X"],
-          ["Staging", "Environment-X"],
-          ["----", nil],
-          ["Pod1", "DeployGroup-X"],
-          ["Pod2", "DeployGroup-X"],
-          ["Pod 100", "DeployGroup-X"]
-        ]
-      )
-    end
-
-    it "does not includes All when requested" do
-      EnvironmentVariable.env_deploygroup_array(include_all: false).wont_include ["All", nil]
-    end
-  end
-
   describe ".matches?" do
     it "fails on bad references" do
       e = assert_raises RuntimeError do

@@ -125,18 +125,18 @@ describe DeploysController do
         cmd = 'cap staging deploy'
         project = Project.first
         job_def = {project_id: project.id, command: cmd, status: nil, user_id: admin.id}
-        status = [
+        statuses = [
           {status: 'failed', production: true },
           {status: 'running', production: true},
           {status: 'succeeded', production: true},
           {status: 'succeeded', production: false}
         ]
 
-        status.each do |stat|
-          job_def[:status] = stat[:status]
+        statuses.each do |status|
+          job_def[:status] = status[:status]
           job = Job.create!(job_def)
           Deploy.create!(
-            stage_id: Stage.find_by_production(stat[:production]).id,
+            stage: stages(status[:production] ? :test_production : :test_staging),
             reference: 'reference',
             project: project,
             job_id: job.id
@@ -266,6 +266,19 @@ describe DeploysController do
         assert_response :ok
         deploys = JSON.parse(@response.body)
         deploys["deploys"].count.must_equal 3
+      end
+
+      it "filters by group" do
+        group = deploy_groups(:pod1)
+        get :index, params: {search: {group: "DeployGroup-#{group.id}"}}, format: "json"
+        assert_response :ok
+        assigns[:deploys].map(&:stage).map(&:name).uniq.must_equal ["Production"]
+      end
+
+      it "filters by environment" do
+        get :index, params: {search: {group: "Environment-#{environments(:production).id}"}}, format: "json"
+        assert_response :ok
+        assigns[:deploys].map(&:stage).map(&:name).uniq.must_equal ["Production"]
       end
     end
 

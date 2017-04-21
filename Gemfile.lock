@@ -370,8 +370,6 @@ GEM
     rails-assets-angular (1.4.9)
     rails-assets-angular-mocks (1.4.9)
       rails-assets-angular (= 1.4.9)
-    rails-assets-angular-route (1.4.9)
-      rails-assets-angular (= 1.4.9)
     rails-assets-angular-scenario (1.4.9)
       rails-assets-angular (= 1.4.9)
     rails-assets-angular-spinner (0.8.1)
@@ -403,18 +401,13 @@ GEM
     rails-assets-jquery-ujs (1.2.0)
       rails-assets-jquery (> 1.8)
     rails-assets-jstimezonedetect (1.0.5)
-    rails-assets-message-center (1.2.6)
-      rails-assets-angular (>= 1.2.0, < 1.5.0)
-      rails-assets-angular-route (>= 1.2.0, < 1.5.0)
     rails-assets-moment (2.11.2)
-    rails-assets-rickshaw (1.5.1)
     rails-assets-spin (1.1.6)
       rails-assets-jquery
     rails-assets-spin.js (2.3.2)
     rails-assets-typeahead.js (0.11.1)
       rails-assets-jquery (>= 1.7)
     rails-assets-underscore (1.8.3)
-    rails-assets-vis (4.10.0)
     rails-assets-x-editable (1.5.1)
       rails-assets-jquery (>= 1.6)
     rails-controller-testing (0.1.1)
@@ -591,13 +584,10 @@ DEPENDENCIES
   rails-assets-jquery-ui!
   rails-assets-jquery-ujs!
   rails-assets-jstimezonedetect!
-  rails-assets-message-center!
   rails-assets-moment!
-  rails-assets-rickshaw!
   rails-assets-spin!
   rails-assets-typeahead.js!
   rails-assets-underscore!
-  rails-assets-vis (~> 4.10.0)!
   rails-assets-x-editable!
   rails-controller-testing
   rubocop

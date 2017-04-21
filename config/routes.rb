@@ -101,8 +101,6 @@ Samson::Application.routes.draw do
     end
   end
 
-  resources :deploy_groups, only: [:show]
-
   resource :profile, only: [:show, :update]
 
   resources :access_tokens, only: [:index, :new, :create, :destroy]
