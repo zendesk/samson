@@ -139,8 +139,12 @@ class DeploysController < ApplicationController
 
     production = search[:production].presence
     code_deployed = search[:code_deployed].presence
-    if projects || !code_deployed.nil? || !production.nil?
+    group = search[:group].presence
+    if group || projects || !code_deployed.nil? || !production.nil?
       stages = Stage
+      if group
+        stages = stages.where(id: stage_ids_for_group(group))
+      end
       if projects
         stages = stages.where(project: projects)
       end
@@ -185,6 +189,14 @@ class DeploysController < ApplicationController
 
   def param_to_bool(param)
     !ActiveModel::Type::Boolean::FALSE_VALUES.include?(param)
+  end
+
+  def stage_ids_for_group(group)
+    type, id = group.split('-', 2)
+    if type == "Environment"
+      id = DeployGroup.where(environment_id: id).pluck(:id)
+    end
+    DeployGroupsStage.where(deploy_group_id: id).pluck(:stage_id)
   end
 
   # Creates a CSV for @deploys as a result of the search query limited to 1000 for speed

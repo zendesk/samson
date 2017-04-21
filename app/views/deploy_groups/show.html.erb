@@ -1,9 +1,0 @@
-<%= breadcrumb @deploy_group.environment, @deploy_group %>
-
-<%= page_title @deploy_group.name %>
-
-<deploy-group-timeline ng-controller="DeployGroupsCtrl" ></deploy-group-timeline>
-
-<section class="tabs timeline">
-  <%= render 'deploys/table' %>
-</section>

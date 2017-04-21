@@ -38,7 +38,7 @@
   <% if groups = @stage.deploy_groups.sort_by(&:natural_order).to_a.presence %>
     <h2>Deploy groups</h2>
     <% groups.each do |group| %>
-      <%= link_to group.name, group %>
+      <%= link_to group.name, [:admin, group] %>
     <% end %>
   <% end %>
 

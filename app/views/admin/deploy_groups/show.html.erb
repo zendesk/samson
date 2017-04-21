@@ -100,7 +100,9 @@
     </div>
     <br>
     <div class="col-lg-offset-2 col-lg-10" style="margin-top: 10px;">
-      <%= link_to "Back", admin_deploy_groups_path, class: "btn btn-default" %> | <%= link_to_history @deploy_group %>
+      <%= link_to "Back", admin_deploy_groups_path, class: "btn btn-default" %>
+      | <%= link_to_history @deploy_group %>
+      | <%= link_to "Deploys", deploys_path(search: {group: "DeployGroup-#{@deploy_group.id}"}) %>
     </div>
   </div>
 </section>

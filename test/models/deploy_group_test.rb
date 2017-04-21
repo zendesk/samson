@@ -30,12 +30,6 @@ describe DeployGroup do
     end
   end
 
-  describe '#deploys' do
-    it 'finds deploys from all stages that go through this group' do
-      deploy_group.deploys.must_equal [deploys(:succeeded_production_test)]
-    end
-  end
-
   describe '.new' do
     it 'saves' do
       deploy_group = DeployGroup.new(name: 'test deploy name', environment: environment)

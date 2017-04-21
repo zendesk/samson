@@ -1,6 +1,5 @@
 var samson = angular.module("samson", [
     'templates',
-    'MessageCenterModule',
     'angularSpinner',
     'ui.router',
     'truncate'])
