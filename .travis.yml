@@ -2,7 +2,6 @@ language: ruby
 cache:
   bundler: true
   directories:
-    - tmp/rubocop_cache
     - node_modules
 sudo: false
 services:
