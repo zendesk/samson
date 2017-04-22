@@ -1,0 +1,23 @@
+<% page_title @project.name %>
+
+<%= render 'projects/header', project: @project, tab: "stages" %>
+
+<section class="clearfix tabs" style="overflow-y: hidden; white-space: nowrap">
+  <% @stages.each do |stage| %>
+    <div class="col-lg-9" style="display: inline-block; float: none">
+      <h2><%= link_to stage.name, [@project, stage] %></h2>
+      <% usage_ids = Command.usage_ids %>
+      <% stage.commands.each do |command| %>
+        <% others = usage_ids.count(command.id) - 1 %>
+
+        <div class="row stage-bar bar">
+          <div class="col-lg-8">
+            <pre ><%= command.command %></pre>
+          </div>
+          <%= edit_command_link command %>
+          <%= content_tag :span, "x#{others}", title: "#{others} use this" if others.nonzero? %>
+        </div>
+      <% end %>
+    </div>
+  <% end %>
+</section>
