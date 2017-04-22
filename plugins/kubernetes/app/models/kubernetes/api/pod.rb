@@ -124,6 +124,7 @@ module Kubernetes
           when /\ALiveliness/ then :livelinessProbe
           else raise("Unknown probe #{event.message}")
           end
+        return false if ignore_probe?(probe)
         event.count >= failure_threshold(probe)
       end
 
@@ -133,11 +134,17 @@ module Kubernetes
         @pod.dig(:spec, :containers, 0, probe, :failureThreshold) || 3
       end
 
+      def ignore_probe?(probe)
+        @pod.dig(:spec, :containers, 0, probe, :samsonIgnore)
+      end
+
       def labels
         @pod.metadata.try(:labels)
       end
 
       def ready?
+        return true if ignore_probe?(:readinessProbe)
+
         if @pod.status.conditions.present?
           ready = @pod.status.conditions.find { |c| c['type'] == 'Ready' }
           ready && ready['status'] == 'True'
