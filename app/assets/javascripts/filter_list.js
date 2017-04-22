@@ -7,12 +7,11 @@ $(document).on('keyup', 'input.filter-list', function(e){
   var $list = $($(this).data('target'));
   var selected = $list.filter('.selected');
 
-  // select by using up/down arrow and enter
   if (e.keyCode == 38 || e.keyCode == 40) { // up or down ... move selected class
     e.preventDefault();
 
     var direction = (e.keyCode - 39); // -1 or 1
-    var selectable = $list.filter(':visible:not(.divider)');
+    var selectable = $list.filter(':visible');
     var index = selectable.index(selected);
 
     selected.removeClass('selected');
