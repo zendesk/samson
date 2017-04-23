@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 require 'pty'
+require 'secret_storage' # can be removed if `docker-compose up` works
 
 # Executes commands in a fake terminal. The output will be streamed to a
 # specified IO-like object.
