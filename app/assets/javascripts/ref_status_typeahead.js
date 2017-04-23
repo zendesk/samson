@@ -94,4 +94,7 @@ function refStatusTypeahead(options){
       status_check_timeout = setTimeout(function() { check_status(ref); }, 200);
     }
   });
+
+  // check initial ref on page load
+  $reference.trigger('input');
 }
