@@ -3,14 +3,31 @@
 // <li class="filtered-projects">
 // and having an input targetting it
 // <input type="search" class="filter-list" data-target=".filtered-projects">
-$(function(){
-  $('.filter-list').on('keyup', function(){
-    var $list = $($(this).data('target'));
+$(document).on('keyup', 'input.filter-list', function(e){
+  var $list = $($(this).data('target'));
+  var selected = $list.filter('.selected');
+
+  if (e.keyCode == 38 || e.keyCode == 40) { // up or down ... move selected class
+    e.preventDefault();
+
+    var direction = (e.keyCode - 39); // -1 or 1
+    var selectable = $list.filter(':visible');
+    var index = selectable.index(selected);
+
+    selected.removeClass('selected');
+    selectable.eq((index + direction) % selectable.length).addClass('selected');
+  } else if (e.keyCode == 13) { // enter
+    e.preventDefault();
+    selected.find('a').get(0).click();
+  } else { // filter elements by typing
     var typed = $(this).val();
     $list.each(function(i, element){
       var $element = $(element);
-      var matches = !typed || (new RegExp(typed, 'i')).test($element.text());
+      var matches = (new RegExp(typed, 'i')).test($element.text());
       $element.toggle(matches);
     });
-  });
+
+    // hide selected if we filtered it
+    if(!selected.is(':visible')) { selected.removeClass('selected'); }
+  }
 });

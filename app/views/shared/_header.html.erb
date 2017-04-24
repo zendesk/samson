@@ -5,11 +5,11 @@
     <ul class="nav navbar-nav">
       <% if current_user %>
         <li class="dropdown <%= 'active' if request.path.starts_with?('/projects') %>">
-          <a href="#" class="dropdown-toggle" data-toggle="dropdown" focus-on="{ click: '#project_search' }">Projects <b class="caret"></b></a>
+          <a href="#" class="dropdown-toggle focus-on" data-focus="#project_search" data-toggle="dropdown">Projects <b class="caret"></b></a>
           <ul class="dropdown-menu">
             <li>
               <a class="padding-sm">
-                <input id="project_search" type="search" handle-dropdown-selection class="filter-list form-control input-block" placeholder="Search projects" data-target=".filtered-projects">
+                <input id="project_search" type="search" class="filter-list form-control input-block" placeholder="Search projects" data-target=".filtered-projects">
               </a>
             </li>
             <li class="divider"></li>
