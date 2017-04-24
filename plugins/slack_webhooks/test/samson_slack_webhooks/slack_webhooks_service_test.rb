@@ -62,32 +62,39 @@ describe SamsonSlackWebhooks::SlackWebhooksService do
 
   describe "#deliver_message_via_webhook" do
     let(:webhook) { SlackWebhook.new(webhook_url: 'http://foo.com') }
+    let(:icon) do
+      "\"icon_url\":\"https://github.com/zendesk/samson/blob/master/app/assets/images/32x32_light.png?raw=true\""
+    end
 
     it "sends a message" do
-      stub_request(:post, "http://foo.com").
-        with(body: {"payload" => "{\"text\":\"Hey\",\"username\":\"samson-bot\"}"})
+      request = stub_request(:post, "http://foo.com").
+        with(body: {"payload" => "{\"text\":\"Hey\",\"username\":\"Samson\",#{icon}}"})
       service.deliver_message_via_webhook(webhook: webhook, message: "Hey", attachments: [])
+      assert_requested request
     end
 
     it "sends on a given channel" do
       webhook.channel = "foobar"
-      stub_request(:post, "http://foo.com").
-        with(body: {"payload" => "{\"text\":\"Hey\",\"username\":\"samson-bot\",\"channel\":\"foobar\"}"})
+      request = stub_request(:post, "http://foo.com").
+        with(body: {"payload" => "{\"text\":\"Hey\",\"username\":\"Samson\",#{icon},\"channel\":\"foobar\"}"})
       service.deliver_message_via_webhook(webhook: webhook, message: "Hey", attachments: [])
+      assert_requested request
     end
 
     it "reports errors silently so multiple channels can be sent to in a row" do
-      stub_request(:post, "http://foo.com").to_timeout
+      request = stub_request(:post, "http://foo.com").to_timeout
       Airbrake.expects(:notify)
       Rails.logger.expects(:error)
       service.deliver_message_via_webhook(webhook: webhook, message: "Hey", attachments: [])
+      assert_requested request
     end
 
     it "reports 404s from misconfigurations or missing channels" do
-      stub_request(:post, "http://foo.com").to_return(status: 404, body: "Oops")
+      request = stub_request(:post, "http://foo.com").to_return(status: 404, body: "Oops")
       Airbrake.expects(:notify)
       Rails.logger.expects(:error)
       service.deliver_message_via_webhook(webhook: webhook, message: "Hey", attachments: [])
+      assert_requested request
     end
   end
 end
