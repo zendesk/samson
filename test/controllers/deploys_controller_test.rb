@@ -163,7 +163,7 @@ describe DeploysController do
       end
 
       it "can scope by project" do
-        Deploy.where("id <> #{deploy.id}").update_all(project_id: 123)
+        Deploy.where.not(id: deploy.id).update_all(project_id: 123)
         get :index, params: {project_id: deploy.project}
         assert_template :index
         assigns[:deploys].must_equal [deploy]
