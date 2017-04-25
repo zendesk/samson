@@ -5,7 +5,8 @@
 // <input type="search" class="filter-list" data-target=".filtered-projects">
 $(document).on('keyup', 'input.filter-list', function(e){
   var $list = $($(this).data('target'));
-  var selected = $list.filter('.selected');
+  var selected_class = 'selected';
+  var selected = $list.filter('.' + selected_class);
 
   if (e.keyCode == 38 || e.keyCode == 40) { // up or down ... move selected class
     e.preventDefault();
@@ -14,8 +15,8 @@ $(document).on('keyup', 'input.filter-list', function(e){
     var selectable = $list.filter(':visible');
     var index = selectable.index(selected);
 
-    selected.removeClass('selected');
-    selectable.eq((index + direction) % selectable.length).addClass('selected');
+    selected.removeClass(selected_class);
+    selectable.eq((index + direction) % selectable.length).addClass(selected_class);
   } else if (e.keyCode == 13) { // enter
     e.preventDefault();
     selected.find('a').get(0).click();
@@ -26,8 +27,5 @@ $(document).on('keyup', 'input.filter-list', function(e){
       var matches = (new RegExp(typed, 'i')).test($element.text());
       $element.toggle(matches);
     });
-
-    // hide selected if we filtered it
-    if(!selected.is(':visible')) { selected.removeClass('selected'); }
   }
 });
