@@ -46,7 +46,7 @@ module Permalinkable
 
   def permalink_taken?
     scope = permalink_scope.where(permalink: permalink)
-    scope = scope.where("id <> ?", id) if persisted?
+    scope = scope.where.not(id: id) if persisted?
     scope.exists?
   end
 
