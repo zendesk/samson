@@ -26,7 +26,7 @@ Rails.application.config.middleware.use OmniAuth::Builder do
       name:   "google",
       scope:  "email,profile",
       prompt: "select_account",
-      hg: ENV['EMAIL_DOMAIN']
+      hd: ENV['EMAIL_DOMAIN']
     )
   end
 
