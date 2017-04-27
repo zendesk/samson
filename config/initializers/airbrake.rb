@@ -51,5 +51,8 @@ else
     def self.user_information
       "Nope"
     end
+
+    def self.add_filter
+    end
   end
 end

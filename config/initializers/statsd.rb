@@ -50,3 +50,11 @@ ActiveSupport::Notifications.subscribe("process_action.action_controller") do |*
   Samson.statsd.histogram "web.view.time", event.payload[:view_runtime].to_i, tags: tags
   Samson.statsd.increment "web.request.status.#{status}", tags: tags
 end
+
+# test: enable local airbrake, see airbrake.rb
+# will not report for ignored errors from airbrake.rb
+Airbrake.add_filter do |notice|
+  notice[:errors].each do |error|
+    Samson.statsd.increment "airbrake_error_sent", tags: ["class:#{error[:type]}"]
+  end
+end
