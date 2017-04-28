@@ -249,7 +249,7 @@ module Kubernetes
 
       # FYI per docs it is supposed to use batch api, but extension api works
       def client
-        @deploy_group.kubernetes_cluster.extension_client
+        @deploy_group.kubernetes_cluster.batch_client
       end
     end
 

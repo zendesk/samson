@@ -24,6 +24,10 @@ module Kubernetes
       @extension_client ||= build_client 'extensions/v1beta1'
     end
 
+    def batch_client
+      @batch_client ||= build_client 'batch/v1'
+    end
+
     def context
       @context ||= kubeconfig.context(config_context)
     end

@@ -81,6 +81,7 @@ describe Kubernetes::DeployExecutor do
     let(:worker_role) { kubernetes_deploy_group_roles(:test_pod100_resque_worker) }
     let(:server_role) { kubernetes_deploy_group_roles(:test_pod100_app_server) }
     let(:deployments_url) { "http://foobar.server/apis/extensions/v1beta1/namespaces/staging/deployments" }
+    let(:jobs_url) { "http://foobar.server/apis/batch/v1/namespaces/staging/deployments" }
     let(:service_url) { "http://foobar.server/api/v1/namespaces/staging/services/some-project" }
 
     before do
@@ -336,11 +337,11 @@ describe Kubernetes::DeployExecutor do
           returns(read_kubernetes_sample_file('kubernetes_deployment.yml'))
 
         # check if the job already exists ... it does not
-        stub_request(:get, "http://foobar.server/apis/extensions/v1beta1/namespaces/staging/jobs/test-resque-worker").
+        stub_request(:get, "http://foobar.server/apis/batch/v1/namespaces/staging/jobs/test-resque-worker").
           to_return(status: 404)
 
         # create job
-        stub_request(:post, "http://foobar.server/apis/extensions/v1beta1/namespaces/staging/jobs").
+        stub_request(:post, "http://foobar.server/apis/batch/v1/namespaces/staging/jobs").
           to_return(body: '{}')
 
         # mark the job as Succeeded

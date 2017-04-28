@@ -316,11 +316,11 @@ describe Kubernetes::Resource do
 
   describe Kubernetes::Resource::Job do
     let(:kind) { 'Job' }
-    let(:url) { "http://foobar.server/apis/extensions/v1beta1/namespaces/pod1/jobs/some-project" }
+    let(:url) { "http://foobar.server/apis/batch/v1/namespaces/pod1/jobs/some-project" }
 
     describe "#client" do
       it "uses the extension client because it is in beta" do
-        resource.send(:client).must_equal deploy_group.kubernetes_cluster.extension_client
+        resource.send(:client).must_equal deploy_group.kubernetes_cluster.batch_client
       end
     end
 

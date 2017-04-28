@@ -125,5 +125,15 @@ class ActiveSupport::TestCase
       ]
     }
     stub_request(:get, "http://foobar.server/apis/extensions/v1beta1").to_return(body: discover_v1beta1.to_json)
+
+    batch_v1 = {
+      "kind" => "APIResourceList",
+      "apiVersion" => "v1",
+      "groupVersion" => "batch/v1",
+      "resources" => [
+        {"name" => "jobs", "namespaced" => true, "kind" => "Job"}
+      ]
+    }
+    stub_request(:get, "http://foobar.server/apis/batch/v1").to_return(body: batch_v1.to_json)
   end
 end
