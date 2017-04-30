@@ -76,6 +76,12 @@
 
   .stage-link {
     color: #333;
+
+    // make long stage names not push their labels down
+    text-overflow: ellipsis;
+    overflow: hidden;
+    display: inline-block;
+    max-width: 70%;
   }
 
   .status {
