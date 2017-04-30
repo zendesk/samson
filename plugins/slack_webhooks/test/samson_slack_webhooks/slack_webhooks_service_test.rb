@@ -36,7 +36,7 @@ describe SamsonSlackWebhooks::SlackWebhooksService do
     it "shows nothing when slack fails to fetch users" do
       stub_request(:post, "https://slack.com/api/users.list").to_timeout
       Rails.logger.expects(:error).with(
-        'Error fetching slack users (token invalid / service down). Faraday::TimeoutError: execution expired'
+        'Error fetching slack users (token invalid / service down). Faraday::ConnectionFailed: execution expired'
       )
       service.users.must_equal([])
 

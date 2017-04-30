@@ -16,6 +16,7 @@ require_relative '../config/environment'
 require 'rails/test_help'
 require 'minitest/rails'
 require 'rails-controller-testing'
+Rails::Controller::Testing.install
 require 'maxitest/autorun'
 require 'maxitest/timeout'
 require 'webmock/minitest'
