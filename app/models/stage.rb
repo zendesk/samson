@@ -204,7 +204,7 @@ class Stage < ActiveRecord::Base
 
   # overwrites papertrail to record script
   def object_attrs_for_paper_trail(attributes)
-    super(attributes.merge('script' => script))
+    super(attributes.merge('script' => script(previous: true)))
   end
 
   # DeployGroupsStage has no ids so the default dependent: :destroy fails

@@ -8,8 +8,9 @@ module HasCommands
     end
   end
 
-  def script
-    commands.map(&:command).join("\n")
+  def script(previous: false)
+    method = (previous ? :command_was : :command)
+    commands.map(&method).join("\n")
   end
 
   def command_ids=(new_command_ids)

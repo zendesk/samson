@@ -4,7 +4,7 @@ class VersionsController < ApplicationController
     versions = PaperTrail::Version.where(
       item_id: params.require(:item_id),
       item_type: params.require(:item_type)
-    ).order('created_at desc')
+    ).order(id: :desc)
     @versions = versions_with_diff(versions)
   end
 

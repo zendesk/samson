@@ -459,9 +459,10 @@ describe Stage do
       stage.versions.size.must_equal 1
     end
 
-    it "tracks command changes" do
+    it "tracks command changes by storing the previous version" do
       stage.commands.first.update_attributes!(command: "Foo")
       stage.versions.size.must_equal 1
+      YAML.load(stage.versions.last.object).fetch('script').must_equal "echo hello"
     end
 
     it "tracks command additions" do
