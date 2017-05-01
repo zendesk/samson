@@ -50,6 +50,9 @@ class Command < ActiveRecord::Base
   private
 
   def trigger_stage_change
-    stages.each(&:record_script_change)
+    stages.each do |stage|
+      stage.commands.detect { |c| c == self }.raw_write_attribute :command, command_was
+      stage.record_script_change
+    end
   end
 end
