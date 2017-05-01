@@ -8,7 +8,6 @@ module CurrentUser
 
     # we record with reliable reset
     skip_before_action :set_paper_trail_enabled_for_controller
-    skip_before_action :set_paper_trail_whodunnit
     skip_before_action :set_paper_trail_controller_info
   end
 

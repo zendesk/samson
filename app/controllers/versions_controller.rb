@@ -19,7 +19,7 @@ class VersionsController < ApplicationController
     rescue NameError
       nil
     end
-    current = (item ? item.send(:object_attrs_for_paper_trail, item.attributes) : {})
+    current = (item ? item.paper_trail.object_attrs_for_paper_trail : {})
 
     versions.map do |v|
       previous = YAML.load(v.object || {}.to_yaml) # version from `create` has no object

@@ -8,7 +8,7 @@
   </tr>
   <% @versions.each do |v, diff| %>
     <tr>
-      <td><%= v.created_at %></td>
+      <td><%= v.id %> -- <%= v.created_at %></td>
       <td>
         <% if v.whodunnit =~ /^\d+$/ && user = User.find_by_id(v.whodunnit) %>
           <%= link_to user.name, admin_user_path(user) %>
@@ -24,13 +24,10 @@
         <% else %>
           Unable to find item
         <% end %>
-        <br/>
-        <% full_id = "full_object_#{v.id}" %>
-        <%= link_to "Full", "#", class: "toggle", data: {target: "##{full_id}"} %>
-        <br/>
-        <div id="<%= full_id %>" style="display: none">
+        <details>
+          <summary>Full</summary>
           <%= simple_format v.object %>
-        </div>
+        </details>
       </td>
     </tr>
   <% end %>

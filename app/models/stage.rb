@@ -1,5 +1,19 @@
 # frozen_string_literal: true
 class Stage < ActiveRecord::Base
+  class Trail < PaperTrail::RecordTrail
+    attr_accessor :command_ids_changed
+
+    # overwrites paper_trail to record when command_ids were changed but not trigger multiple versions per save
+    def changed_notably?
+      super || @record.command_ids_changed
+    end
+
+    # overwrites paper_trail to record script
+    def object_attrs_for_paper_trail
+      super.merge('script' => @record.script(previous: true))
+    end
+  end
+
   AUTOMATED_NAME = 'Automated Deploys'
 
   has_soft_deletion default_scope: true unless self < SoftDeletion::Core
@@ -43,6 +57,8 @@ class Stage < ActiveRecord::Base
   after_soft_delete :destroy_stage_pipeline
 
   scope :cloned, -> { where.not(template_stage_id: nil) }
+
+  attr_reader :command_ids_changed
 
   def self.reset_order(new_order)
     transaction do
@@ -150,13 +166,14 @@ class Stage < ActiveRecord::Base
   # in theory this should not get called multiple times for the same state,
   # but adding a bit of extra sanity checking to make sure nothing slips in
   def record_script_change
-    state_to_record = object_attrs_for_paper_trail(attributes_before_change)
+    trail = paper_trail
+    state_to_record = trail.object_attrs_for_paper_trail
     if @last_recorded_state == state_to_record
       raise "Trying to record the same state twice"
     end
 
     @last_recorded_state = state_to_record
-    record_update true
+    trail.record_update true
   end
 
   def destroy
@@ -187,6 +204,10 @@ class Stage < ActiveRecord::Base
     !confirm? && no_reference_selection? && !deploy_requires_approval?
   end
 
+  def paper_trail
+    Trail.new(self)
+  end
+
   private
 
   def permalink_base
@@ -202,11 +223,6 @@ class Stage < ActiveRecord::Base
     self.order = project.stages.maximum(:order).to_i + 1
   end
 
-  # overwrites papertrail to record script
-  def object_attrs_for_paper_trail(attributes)
-    super(attributes.merge('script' => script(previous: true)))
-  end
-
   # DeployGroupsStage has no ids so the default dependent: :destroy fails
   def destroy_deploy_groups_stages
     DeployGroupsStage.where(stage_id: id).delete_all
@@ -218,11 +234,6 @@ class Stage < ActiveRecord::Base
         s.save(validate: false)
       end
     end
-  end
-
-  # overwrites papertrail to record when command_ids were changed but not trigger multiple versions per save
-  def changed_notably?
-    super || @command_ids_changed
   end
 
   def validate_deploy_group_selected
