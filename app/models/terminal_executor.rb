@@ -1,6 +1,5 @@
 # frozen_string_literal: true
 require 'pty'
-require 'secret_storage' # can be removed if `docker-compose up` works
 
 # Executes commands in a fake terminal. The output will be streamed to a
 # specified IO-like object.
@@ -82,6 +81,7 @@ class TerminalExecutor
   end
 
   def resolve_secrets(command)
+    return command unless command.include?(SECRET_PREFIX)
     deploy_groups = @deploy&.stage&.deploy_groups || []
     resolver = Samson::Secrets::KeyResolver.new(@project, deploy_groups)
 
