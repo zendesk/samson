@@ -414,13 +414,19 @@ module Kubernetes
     def verify_kubernetes_templates!
       release = Kubernetes::Release.new(project: @job.project, git_sha: @job.commit, git_ref: 'master')
       deploy_group_configs.each do |config|
-        config.fetch(:roles).each do |role|
+        roles = config.fetch(:roles)
+
+        # make sure each template is valid
+        roles.each do |role|
           Kubernetes::ReleaseDoc.new(
             kubernetes_release: release,
             deploy_group: config.fetch(:deploy_group),
             kubernetes_role: role.fetch(:role)
           ).verify_template
         end
+
+        # make sure each set of templates is valid
+        Kubernetes::RoleVerifier.verify_group(roles.map { |r| r.fetch(:role).role_config_file&.primary }.compact)
       end
     end
   end

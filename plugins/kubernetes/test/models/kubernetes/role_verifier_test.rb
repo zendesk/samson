@@ -4,10 +4,11 @@ require_relative "../../test_helper"
 SingleCov.covered!
 
 describe Kubernetes::RoleVerifier do
+  let(:role) do
+    YAML.load_stream(read_kubernetes_sample_file('kubernetes_deployment.yml')).map(&:deep_symbolize_keys)
+  end
+
   describe '.verify' do
-    let(:role) do
-      YAML.load_stream(read_kubernetes_sample_file('kubernetes_deployment.yml')).map(&:deep_symbolize_keys)
-    end
     let(:spec) { role[0][:spec][:template][:spec] }
     let(:job_role) do
       [YAML.load(read_kubernetes_sample_file('kubernetes_job.yml')).deep_symbolize_keys]
@@ -280,6 +281,36 @@ describe Kubernetes::RoleVerifier do
 
     it "finds through nested arrays" do
       call([:a, :b], [{a: [{b: 1}, {b: 2}]}, {a: [{b: 3}]}]).must_equal [[1, 2], [3]]
+    end
+  end
+
+  describe '.verify_group' do
+    it "is valid with a single role" do
+      Kubernetes::RoleVerifier.verify_group([role.first])
+    end
+
+    it "is valid with multiple different roles" do
+      primary = role.first
+      primary2 = primary.dup
+      primary2[:metadata] = {labels: {role: "meh", project: primary.dig(:metadata, :labels, :project)}}
+      Kubernetes::RoleVerifier.verify_group([primary, primary2])
+    end
+
+    it "is invalid with a duplicate role" do
+      e = assert_raises Samson::Hooks::UserError do
+        Kubernetes::RoleVerifier.verify_group([role.first, role.first])
+      end
+      e.message.must_equal "metadata.labels.role must set and unique"
+    end
+
+    it "is invalid with different projects" do
+      primary = role.first
+      primary2 = primary.dup
+      primary2[:metadata] = {labels: {role: "meh", project: "other"}}
+      e = assert_raises Samson::Hooks::UserError do
+        Kubernetes::RoleVerifier.verify_group([primary, primary2])
+      end
+      e.message.must_equal "metadata.labels.project must be consistent"
     end
   end
 end
