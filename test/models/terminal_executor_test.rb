@@ -179,6 +179,11 @@ describe TerminalExecutor do
         end
       end
 
+      it "does not try to resolve secrets when none are used to avoid doing db lookups while being in a clone thread" do
+        Samson::Secrets::KeyResolver.expects(:new).never
+        subject.execute!('echo "nothing"')
+      end
+
       it "cannot use specific secrets without a deploy" do
         refute_resolves "global/#{deploy.project.permalink}/global/bar"
       end
