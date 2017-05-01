@@ -174,6 +174,8 @@ module Samson
 
     # we want 'project' as root for project collections in controller responses
     ActiveModelSerializers.config.adapter = :json
+
+    config.active_support.deprecation = :raise
   end
 end
 

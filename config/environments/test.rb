@@ -34,8 +34,6 @@ Samson::Application.configure do
   # ActionMailer::Base.deliveries array.
   config.action_mailer.delivery_method = :test
 
-  config.active_support.deprecation = :raise
-
   # We don't want to persist the repository cache between test runs.
   config.samson.cached_repos_dir = Dir.mktmpdir
 
