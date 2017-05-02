@@ -7,6 +7,8 @@ PaperTrail.whodunnit =
     "#{`whoami`.strip}: rake"
   end
 
+PaperTrail.config.track_associations = false
+
 class << PaperTrail
   undef_method :whodunnit= # nobody uses this directly and we should never use the default papertrail before_actions
   attr_reader :whodunnit_user

@@ -8,7 +8,6 @@ class OauthTestController < ActionController::Base
 
   # no user here ... so no tracking needed
   skip_before_action :set_paper_trail_enabled_for_controller
-  skip_before_action :set_paper_trail_whodunnit
   skip_before_action :set_paper_trail_controller_info
 
   def index
