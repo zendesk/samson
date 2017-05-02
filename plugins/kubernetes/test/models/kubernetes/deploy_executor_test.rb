@@ -106,7 +106,13 @@ describe Kubernetes::DeployExecutor do
       stub_request(:get, %r{http://foobar.server/api/v1/namespaces/staging/events}).
         to_return(body: {items: []}.to_json)
       stub_request(:get, /#{Regexp.escape(log_url)}/)
+
       GitRepository.any_instance.stubs(:file_content).with('Dockerfile', anything).returns "FROM all"
+      GitRepository.any_instance.stubs(:file_content).with('kubernetes/resque_worker.yml', anything, anything).
+        returns(read_kubernetes_sample_file('kubernetes_deployment.yml'))
+      GitRepository.any_instance.stubs(:file_content).with('kubernetes/app_server.yml', anything, anything).
+        returns(read_kubernetes_sample_file('kubernetes_deployment.yml').gsub(/some-role/, 'other-role'))
+
       Kubernetes::TemplateFiller.any_instance.stubs(:set_image_pull_secrets)
 
       stub_request(:get, service_url).to_return(status: 404) # previous service ? -> none!
@@ -155,7 +161,7 @@ describe Kubernetes::DeployExecutor do
       before { build.delete } # build needs to be created -> assertion fails
       around { |test| refute_difference('Build.count') { refute_difference('Release.count', &test) } }
 
-      it "fails before building when roles are invalid" do
+      it "fails before building when a role are invalid" do
         Kubernetes::ReleaseDoc.any_instance.unstub(:raw_template)
         GitRepository.any_instance.expects(:file_content).with { |file| file =~ /^kubernetes\// }.returns("oops: bad")
 
@@ -163,6 +169,17 @@ describe Kubernetes::DeployExecutor do
           refute execute!
         end
         e.message.must_include "Error found when parsing kubernetes/"
+      end
+
+      it "fails before building when roles as a group are invalid" do
+        # same role as worker
+        GitRepository.any_instance.stubs(:file_content).with('kubernetes/app_server.yml', anything, anything).
+          returns(read_kubernetes_sample_file('kubernetes_deployment.yml'))
+
+        e = assert_raises Samson::Hooks::UserError do
+          refute execute!
+        end
+        e.message.must_equal "metadata.labels.role must set and unique"
       end
 
       it "fails before building when secrets are not configured in the backend" do

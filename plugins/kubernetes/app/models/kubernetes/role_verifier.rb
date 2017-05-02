@@ -34,6 +34,18 @@ module Kubernetes
       @errors.presence
     end
 
+    def self.verify_group(elements)
+      errors = []
+
+      roles = elements.map { |r| r.dig(:metadata, :labels, :role) }.compact
+      errors << "metadata.labels.role must set and unique" if roles.uniq.size != elements.size
+
+      projects = elements.map { |r| r.dig(:metadata, :labels, :project) }.uniq
+      errors << "metadata.labels.project must be consistent" if projects.size != 1
+
+      raise Samson::Hooks::UserError, errors.join(", ") if errors.any?
+    end
+
     private
 
     def verify_name

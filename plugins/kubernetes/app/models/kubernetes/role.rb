@@ -91,28 +91,29 @@ module Kubernetes
     end
 
     def defaults
-      return unless raw_template = project.repository.file_content(config_file, 'HEAD', pull: false)
-      begin
-        config = RoleConfigFile.new(raw_template, config_file)
-      rescue Samson::Hooks::UserError
-        return
+      return unless resource = role_config_file&.primary
+      spec = resource.fetch(:spec)
+      if resource[:kind] == "Pod"
+        replicas = 0 # these are one-off tasks most of the time, so we should not count them in totals
+      else
+        replicas = spec[:replicas] || 1
+        spec = spec.dig(:template, :spec) || {}
       end
 
-      config.elements.detect do |resource|
-        next unless spec = resource[:spec]
-        if resource[:kind] == "Pod"
-          replicas = 0 # these are one-off tasks most of the time, so we should not count them in totals
-        else
-          replicas = spec[:replicas] || 1
-          spec = spec.dig(:template, :spec) || {}
-        end
+      return unless limits = spec.dig(:containers, 0, :resources, :limits)
+      return unless cpu = parse_resource_value(limits[:cpu])
+      return unless ram = parse_resource_value(limits[:memory]) # TODO: rename this and the column to memory
+      ram /= 1024**2 # we store megabyte
 
-        next unless limits = spec.dig(:containers, 0, :resources, :limits)
-        next unless cpu = parse_resource_value(limits[:cpu])
-        next unless ram = parse_resource_value(limits[:memory]) # TODO: rename this and the column to memory
-        ram /= 1024**2 # we store megabyte
+      {cpu: cpu, ram: ram.round, replicas: replicas}
+    end
 
-        break {cpu: cpu, ram: ram.round, replicas: replicas}
+    def role_config_file
+      return unless raw_template = project.repository.file_content(config_file, 'HEAD', pull: false)
+      begin
+        RoleConfigFile.new(raw_template, config_file)
+      rescue Samson::Hooks::UserError
+        return
       end
     end
 
