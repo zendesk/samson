@@ -52,7 +52,7 @@ else
       "Nope"
     end
 
-    def self.add_filter
+    def self.add_filter(*)
     end
   end
 end
