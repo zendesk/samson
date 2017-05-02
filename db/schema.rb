@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20170424155204) do
+ActiveRecord::Schema.define(version: 20170502160403) do
 
   create_table "builds", force: :cascade do |t|
     t.integer  "project_id",                                       null: false
@@ -535,5 +535,4 @@ ActiveRecord::Schema.define(version: 20170424155204) do
     t.index ["stage_id", "branch"], name: "index_webhooks_on_stage_id_and_branch", length: { branch: 191 }, using: :btree
   end
 
-  add_foreign_key "deploy_groups", "environments"
 end
