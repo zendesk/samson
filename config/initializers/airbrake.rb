@@ -36,10 +36,10 @@ if defined?(Airbrake) && key = ENV['AIRBRAKE_API_KEY']
 else
   module Airbrake
     def self.notify(ex, *_args)
-      if Rails.env.test?
+      if ::Rails.env.test?
         raise ex # tests have to use Airbrake.expects(:notify) to not hide unintented errors
       else
-        Rails.logger.error "AIRBRAKE: #{ex.class} - #{ex.message} - #{ex.backtrace[0..5].join("\n")}"
+        ::Rails.logger.error "AIRBRAKE: #{ex.class} - #{ex.message} - #{ex.backtrace[0..5].join("\n")}"
         nil
       end
     end
