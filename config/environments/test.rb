@@ -43,3 +43,13 @@ Samson::Application.configure do
 
   config.active_support.test_order = :random
 end
+
+# config/environments/test.rb
+# make our tests fast by avoiding asset compilation
+# but do not raise when assets are not compiled either
+Rails.application.config.assets.compile = false
+Sprockets::Rails::Helper.prepend(Module.new do
+  def resolve_asset_path(path, *)
+    super || path
+  end
+end)
