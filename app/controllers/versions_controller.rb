@@ -22,7 +22,7 @@ class VersionsController < ApplicationController
     current = (item ? item.paper_trail.object_attrs_for_paper_trail : {})
 
     versions.map do |v|
-      previous = YAML.load(v.object || {}.to_yaml) # version from `create` has no object
+      previous = YAML.safe_load(v.object || {}.to_yaml, [Time]) # version from `create` has no object
       diff = hash_diff(current, previous)
       current = previous
       [v, diff]
@@ -31,6 +31,6 @@ class VersionsController < ApplicationController
 
   # {a: 1}, {a:2, b:3} -> [[:a, 1, 2], [:b, nil, 3]]
   def hash_diff(a, b)
-    (b.keys + a.keys).uniq.map { |k| [k, b[k], a[k]] }.select { |_, p, c| p != c }
+    (b.keys + a.keys).uniq.map { |k| [k, b[k], a[k]] }.reject { |_, p, c| p == c }
   end
 end

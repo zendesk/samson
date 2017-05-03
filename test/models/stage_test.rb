@@ -462,7 +462,7 @@ describe Stage do
     it "tracks command changes by storing the previous version" do
       stage.commands.first.update_attributes!(command: "Foo")
       stage.versions.size.must_equal 1
-      YAML.load(stage.versions.last.object).fetch('script').must_equal "echo hello"
+      YAML.safe_load(stage.versions.last.object).fetch('script').must_equal "echo hello"
     end
 
     it "tracks command additions" do
@@ -487,7 +487,7 @@ describe Stage do
 
     it "records script" do
       stage.record_script_change
-      YAML.load(stage.versions.first.object)['script'].must_equal stage.script
+      YAML.safe_load(stage.versions.first.object)['script'].must_equal stage.script
     end
 
     it "does not record when unchanged" do

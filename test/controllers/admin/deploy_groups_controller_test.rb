@@ -477,7 +477,7 @@ describe Admin::DeployGroupsController do
 
         post :delete_all_stages, params: {id: deploy_group}
 
-        assert Stage.with_deleted { stage.reload.deleted? }
+        assert(Stage.with_deleted { stage.reload.deleted? })
       end
 
       it "ignores a non-cloned stage" do

@@ -11,7 +11,7 @@ describe Kubernetes::RoleVerifier do
   describe '.verify' do
     let(:spec) { role[0][:spec][:template][:spec] }
     let(:job_role) do
-      [YAML.load(read_kubernetes_sample_file('kubernetes_job.yml')).deep_symbolize_keys]
+      [YAML.safe_load(read_kubernetes_sample_file('kubernetes_job.yml')).deep_symbolize_keys]
     end
     let(:pod_role) do
       [{kind: 'Pod', metadata: {name: 'my-map'}, spec: {containers: [{name: "foo"}]}}]

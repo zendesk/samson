@@ -46,7 +46,7 @@ Style/WordArray:
   Enabled: false
 
 Lint/EndAlignment:
-  AlignWith: variable
+  EnforcedStyleAlignWith: variable
 
 Style/StringLiteralsInInterpolation:
   Enabled: false
@@ -131,6 +131,9 @@ Style/Alias:
 Metrics/ParameterLists:
   Enabled: false
 
+Metrics/BlockLength:
+  Enabled: false
+
 Lint/AssignmentInCondition:
   Enabled: false
 
@@ -159,4 +162,19 @@ Style/TernaryParentheses:
 # https://github.com/bbatsov/rubocop/issues/3551
 # https://github.com/bbatsov/rubocop/issues/3561
 Style/SafeNavigation:
+  Enabled: false
+
+Style/SymbolArray:
+  Enabled: false
+
+Style/EmptyLineAfterMagicComment:
+  Enabled: false
+
+Style/EmptyMethod:
+  EnforcedStyle: expanded
+
+Bundler/OrderedGems:
+  Enabled: false
+
+Lint/AmbiguousBlockAssociation:
   Enabled: false

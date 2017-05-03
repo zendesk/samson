@@ -465,7 +465,7 @@ describe User do
     it "records project_roles change" do
       UserProjectRole.create!(project: projects(:test), user: user, role_id: 1)
       user.versions.size.must_equal 1
-      YAML.load(user.versions.first.object)['project_roles'].must_equal "foo" => 1
+      YAML.safe_load(user.versions.first.object, [Time])['project_roles'].must_equal "foo" => 1
     end
 
     it "records project_roles destruction" do
@@ -473,7 +473,7 @@ describe User do
       role.reload
       role.destroy
       user.versions.size.must_equal 2
-      YAML.load(user.versions.last.object)['project_roles'].must_equal({})
+      YAML.safe_load(user.versions.last.object, [Time])['project_roles'].must_equal({})
     end
   end
 

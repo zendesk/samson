@@ -334,7 +334,7 @@ describe Changeset::PullRequest do
       it "returns #{keys} when given \"#{casebody}\"" do
         with_env JIRA_BASE_URL: jira_url do
           body.replace(casebody)
-          pr.jira_issues.must_equal keys.map { |x| Changeset::JiraIssue.new(jira_url + x) }
+          pr.jira_issues.must_equal(keys.map { |x| Changeset::JiraIssue.new(jira_url + x) })
         end
       end
     end
