@@ -39,6 +39,14 @@ Set up a production block in database.yml with the settings to connect to your D
 
 Configure `config/puma.rb` as you need. See [puma's documentation](https://github.com/puma/puma/) for details. You can start the server using this file by doing `puma -C config/puma.rb`.
 
+### 0-Downtime restarts
+
+Use this to create a server that can receive `kill -SIGUSR1` and perform a clean restart without dropping any requests.
+
+```
+bundle exec --keep-file-descriptors puma --restart-command "bundle exec --keep-file-descriptors puma"
+```
+
 ## Settings
 
 Set the following variables in your `.env` file or set them as environment variables in the shell you spawn the webserver from:
