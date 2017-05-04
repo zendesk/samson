@@ -76,6 +76,11 @@ describe Job do
       job.command = "a\rb\r\nc\nd"
       job.commands.must_equal ["a", "b", "c", "d"]
     end
+
+    it "does not split multiline commands" do
+      job.command = "a\\\nb\nc\\\r\nd\re\\f"
+      job.commands.must_equal ["a\\\nb", "c\\\nd", "e\\f"]
+    end
   end
 
   describe "#success!" do
