@@ -30,7 +30,7 @@
 
   <section class="timeline-content clearfix">
     <div class="deploy-csv">
-      <%= link_to "Download as CSV", deploys_path(format: "csv", params: params.to_h) %>
+      <%= link_to "Download as CSV", deploys_path(format: "csv", params: params.to_unsafe_h) %>
     </div>
     <%= render "table" %>
   </section>

@@ -5,15 +5,15 @@ ruby File.read('.ruby-version').strip
 
 # gems that have rails engines are are always needed
 group :preload do
-  gem 'rails', '5.0.1'
+  gem 'rails', '5.1.0'
   gem 'dotenv'
   gem 'sse-rails-engine'
   gem 'connection_pool'
   gem 'marco-polo'
 
   # AR extensions
-  gem 'goldiloader'
-  gem 'kaminari', '~> 0.17.0'
+  gem 'goldiloader', git: "https://github.com/salsify/goldiloader" # need > 0.0.11
+  gem 'kaminari'
   gem 'active_model_serializers'
   gem 'paper_trail'
   gem 'soft_deletion'
@@ -35,7 +35,7 @@ gem 'omniauth-oauth2'
 gem 'omniauth-github'
 gem 'omniauth-google-oauth2'
 gem 'omniauth-ldap'
-gem 'omniauth-gitlab', '~> 1.0.0'
+gem 'omniauth-gitlab'
 gem 'octokit'
 gem 'faraday'
 gem 'faraday-http-cache'
@@ -47,13 +47,13 @@ gem 'coderay'
 gem 'net-http-persistent'
 gem 'concurrent-ruby'
 gem 'vault'
-gem 'docker-api', '>= 1.32'
+gem 'docker-api'
 gem 'newrelic_rpm'
 
 # treat included plugins like gems
 Dir[File.join(Bundler.root, 'plugins/*/')].each { |f| gemspec path: f }
 
-gem 'sucker_punch', '~> 2.0'
+gem 'sucker_punch'
 
 group :mysql2 do
   gem 'mysql2'
@@ -123,13 +123,13 @@ group :development, :test do
 end
 
 group :test do
-  gem 'minitest-rails', '3.0.0'
+  gem 'minitest-rails'
   gem 'rails-controller-testing'
   gem 'maxitest'
   gem 'mocha'
   gem 'webmock'
   gem 'single_cov'
-  gem 'query_diet', '0.6.1'
+  gem 'query_diet'
   gem 'ar_multi_threaded_transactional_tests'
   gem 'bundler-audit', require: false
 end

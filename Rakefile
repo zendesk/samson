@@ -56,9 +56,12 @@ namespace :test do
     end
   end
 
-  def resolve_asset(file)
-    asset = Rails.application.assets.find_asset(file).to_a.first || raise("Could not find #{file}")
-    asset.pathname.to_s
+  # TODO: make a standalone binding
+  # clunky asset finder ... see https://github.com/rails/sprockets-rails/issues/237 for more
+  # jquery.js -> <GEM_HOME>/ruby/2.3.0/gems/rails-assets-jquery-2.2.1/app/assets/javascripts/jquery.js
+  def resolve_javascript(file)
+    paths = Gem::Specification.stubs.map(&:full_gem_path)
+    Dir.glob("{#{paths.join(",")}}/app/assets/javascripts/#{file}").first || raise("Could not find #{file}")
   end
 end
 
@@ -100,16 +103,5 @@ if Rails.env.development?
   Rake::Task["parallel:test"].clear
   task 'parallel:test' do
     exec "parallel_test test plugins/*/test"
-  end
-end
-
-# inspecting foreign_keys is super slow ... so we just don't dump them
-# TODO: remove and update dump once rake db:schema:dump is fast again
-# https://github.com/rails/rails/issues/27579
-raise 'delete' if Rails.version != '5.0.1'
-require 'active_record/connection_adapters/abstract_mysql_adapter'
-ActiveRecord::ConnectionAdapters::AbstractMysqlAdapter.class_eval do
-  def foreign_keys(*)
-    []
   end
 end

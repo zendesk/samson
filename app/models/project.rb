@@ -10,7 +10,7 @@ class Project < ActiveRecord::Base
   validate :valid_repository_url
   validate :validate_can_release
   before_create :generate_token
-  after_save :clone_repository, if: :repository_url_changed?
+  after_save :clone_repository, if: -> { saved_change_to_attribute?(:repository_url) }
   before_update :clean_old_repository, if: :repository_url_changed?
   after_soft_delete :clean_repository
   before_soft_delete :destroy_user_project_roles
@@ -38,7 +38,7 @@ class Project < ActiveRecord::Base
 
   scope :ordered_for_user, ->(user) {
     select('projects.*, count(stars.id) as star_count').
-      joins("left outer join stars on stars.user_id = #{sanitize(user.id)} and stars.project_id = projects.id").
+      joins("left outer join stars on stars.user_id = #{sanitize_sql(user.id)} and stars.project_id = projects.id").
       group('projects.id').
       order('star_count desc').
       alphabetical

@@ -12,7 +12,7 @@ class Command < ActiveRecord::Base
 
   validates :command, presence: true
 
-  after_save :trigger_stage_change, if: :command_changed?
+  after_save :trigger_stage_change, if: -> { saved_change_to_attribute? :command }
 
   def self.global
     where(project_id: nil)
@@ -51,7 +51,9 @@ class Command < ActiveRecord::Base
 
   def trigger_stage_change
     stages.each do |stage|
-      stage.commands.detect { |c| c == self }.raw_write_attribute :command, command_was
+      # allow stage access to command_was since that is what paper-trail should store
+      me = stage.commands.detect { |c| c == self }
+      me.raw_write_attribute "command", attribute_before_last_save("command")
       stage.record_script_change
     end
   end

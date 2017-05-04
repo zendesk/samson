@@ -38,3 +38,22 @@ class << PaperTrail
     end
   end
 end
+
+# using record_update would otherwise record all nil attributes, which will break history display and be invalid
+# record_update sets @in_after_callback, so we need to reset it from inside of object_attrs_for_paper_trail
+PaperTrail::RecordTrail.prepend(Module.new do
+  def record_outside_update
+    @outside_after_callback = true
+    record_update true
+  ensure
+    @outside_after_callback = false
+  end
+
+  def object_attrs_for_paper_trail
+    old = @in_after_callback
+    @in_after_callback = false if @outside_after_callback
+    super
+  ensure
+    @in_after_callback = old
+  end
+end)

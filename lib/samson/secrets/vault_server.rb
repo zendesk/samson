@@ -38,6 +38,7 @@ module Samson
 
       has_many :deploy_groups
 
+      attribute :token
       attr_encrypted :token
 
       validates :name, presence: true, uniqueness: true

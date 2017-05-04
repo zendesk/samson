@@ -9,7 +9,7 @@ describe WebhookRecorder do
       "FOO" => "bar",
       "rack.foo" => "bar",
       "RAW_POST_DATA" => "BODY".dup
-    }, {})
+    }, {}, {})
   end
   let(:response) { ActionDispatch::TestResponse.new }
   let(:project) { projects(:test) }

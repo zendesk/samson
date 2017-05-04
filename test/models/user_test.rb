@@ -422,9 +422,9 @@ describe User do
     end
 
     it "is cached" do
-      user.stars.expects(:pluck).returns []
+      user.stars.delete_all
       user.starred_project?(project).must_equal false
-      user.stars.expects(:pluck).never
+      users(:admin).stars.create!(project: project).update_column(:user_id, user.id)
       user.starred_project?(project).must_equal false
     end
 

@@ -64,7 +64,7 @@ describe Integrations::BuildkiteController do
 
     it 'creates the release with the buildkite build number' do
       Samson::Hooks.with_callback(:buildkite_release_params, buildkite_build_number) do |_|
-        post :create, params: payload.merge(token: project.token), test_route: true
+        post :create, params: payload.merge(token: project.token, test_route: true)
         assert_response :success
         project.releases.size.must_equal 1
         project.releases.first.number.must_equal "9"
