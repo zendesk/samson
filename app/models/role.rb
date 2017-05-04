@@ -3,6 +3,7 @@ require 'active_hash'
 
 class Role < ActiveHash::Base
   include ActiveHash::Enum
+  undef quoted_id # https://github.com/zilkey/active_hash/issues/150
 
   self.data = [
     { id: 0, name: "viewer" },

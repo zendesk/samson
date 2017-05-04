@@ -108,7 +108,7 @@ class Admin::SecretsController < ApplicationController
 
   def authorize_any_deployer!
     return if current_user.deployer?
-    return if current_user.user_project_roles.where('role_id >= ?', Role::DEPLOYER).exists?
+    return if current_user.user_project_roles.where('role_id >= ?', Role::DEPLOYER.id).exists?
     unauthorized!
   end
 
