@@ -56,9 +56,12 @@ namespace :test do
     end
   end
 
-  def resolve_asset(file)
-    asset = Rails.application.assets.find_asset(file).to_a.first || raise("Could not find #{file}")
-    asset.pathname.to_s
+  # TODO: make a standalone binding
+  # clunky asset finder ... see https://github.com/rails/sprockets-rails/issues/237 for more
+  # jquery.js -> <GEM_HOME>/ruby/2.3.0/gems/rails-assets-jquery-2.2.1/app/assets/javascripts/jquery.js
+  def resolve_javascript(file)
+    paths = Gem::Specification.stubs.map(&:full_gem_path)
+    Dir.glob("{#{paths.join(",")}}/app/assets/javascripts/#{file}").first || raise("Could not find #{file}")
   end
 end
 
