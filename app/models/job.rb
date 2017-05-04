@@ -61,7 +61,13 @@ class Job < ActiveRecord::Base
   end
 
   def commands
-    command.split(/\r?\n|\r/)
+    commands = []
+    raw = command.split(/\r?\n|\r/)
+    while c = raw.shift
+      c << "\n" << raw.shift if c =~ /\\ *\z/ # join multiline commands
+      commands << c
+    end
+    commands
   end
 
   def stop!(canceller)
