@@ -1,3 +1,11 @@
+GIT
+  remote: https://github.com/salsify/goldiloader
+  revision: 872044517129177269b2cb1d991ecd5b486b25ed
+  specs:
+    goldiloader (0.0.12)
+      activerecord (>= 3.2, < 5.2)
+      activesupport (>= 3.2, < 5.2)
+
 PATH
   remote: plugins/airbrake
   specs:
@@ -98,65 +106,67 @@ GEM
   remote: https://rubygems.org/
   remote: https://rails-assets.org/
   specs:
-    actioncable (5.0.1)
-      actionpack (= 5.0.1)
-      nio4r (~> 1.2)
+    actioncable (5.1.0)
+      actionpack (= 5.1.0)
+      nio4r (~> 2.0)
       websocket-driver (~> 0.6.1)
-    actionmailer (5.0.1)
-      actionpack (= 5.0.1)
-      actionview (= 5.0.1)
-      activejob (= 5.0.1)
+    actionmailer (5.1.0)
+      actionpack (= 5.1.0)
+      actionview (= 5.1.0)
+      activejob (= 5.1.0)
       mail (~> 2.5, >= 2.5.4)
       rails-dom-testing (~> 2.0)
-    actionpack (5.0.1)
-      actionview (= 5.0.1)
-      activesupport (= 5.0.1)
+    actionpack (5.1.0)
+      actionview (= 5.1.0)
+      activesupport (= 5.1.0)
       rack (~> 2.0)
       rack-test (~> 0.6.3)
       rails-dom-testing (~> 2.0)
       rails-html-sanitizer (~> 1.0, >= 1.0.2)
-    actionview (5.0.1)
-      activesupport (= 5.0.1)
+    actionview (5.1.0)
+      activesupport (= 5.1.0)
       builder (~> 3.1)
-      erubis (~> 2.7.0)
+      erubi (~> 1.4)
       rails-dom-testing (~> 2.0)
-      rails-html-sanitizer (~> 1.0, >= 1.0.2)
+      rails-html-sanitizer (~> 1.0, >= 1.0.3)
     active_hash (1.4.1)
       activesupport (>= 2.2.2)
-    active_model_serializers (0.10.1)
+    active_model_serializers (0.10.6)
       actionpack (>= 4.1, < 6)
       activemodel (>= 4.1, < 6)
-      jsonapi (~> 0.1.1.beta2)
-      railties (>= 4.1, < 6)
-    activejob (5.0.1)
-      activesupport (= 5.0.1)
+      case_transform (>= 0.2)
+      jsonapi-renderer (>= 0.1.1.beta1, < 0.2)
+    activejob (5.1.0)
+      activesupport (= 5.1.0)
       globalid (>= 0.3.6)
-    activemodel (5.0.1)
-      activesupport (= 5.0.1)
-    activerecord (5.0.1)
-      activemodel (= 5.0.1)
-      activesupport (= 5.0.1)
-      arel (~> 7.0)
-    activesupport (5.0.1)
+    activemodel (5.1.0)
+      activesupport (= 5.1.0)
+    activerecord (5.1.0)
+      activemodel (= 5.1.0)
+      activesupport (= 5.1.0)
+      arel (~> 8.0)
+    activesupport (5.1.0)
       concurrent-ruby (~> 1.0, >= 1.0.2)
       i18n (~> 0.7)
       minitest (~> 5.1)
       tzinfo (~> 1.1)
     addressable (2.3.8)
-    airbrake (5.7.1)
-      airbrake-ruby (~> 1.7)
-    airbrake-ruby (1.7.1)
-    airbrake-user_informer (0.1.0)
+    airbrake (6.0.0)
+      airbrake-ruby (~> 2.0)
+    airbrake-ruby (2.2.0)
+    airbrake-user_informer (0.2.0)
+      airbrake (~> 6.0)
+      airbrake-ruby (~> 2.0)
       rack
-      railties (~> 5.0.0)
+      railties (>= 5.0.0, < 5.2.0)
     angular-rails-templates (1.0.2)
       railties (>= 4.2, < 6)
       sprockets (>= 3.0, < 5)
       tilt
     ansible (0.2.2)
-    ar_multi_threaded_transactional_tests (0.2.0)
-      activerecord (>= 4.2.0, < 5.1.0)
-    arel (7.1.4)
+    ar_multi_threaded_transactional_tests (0.2.1)
+      activerecord (>= 4.2.0, < 5.2.0)
+    arel (8.0.0)
     ast (2.3.0)
     attr_encrypted (3.0.3)
       encryptor (~> 3.0.0)
@@ -170,11 +180,13 @@ GEM
       autoprefixer-rails (>= 5.2.1)
       sass (>= 3.3.4)
     brakeman (3.6.1)
-    builder (3.2.2)
+    builder (3.2.3)
     bundler-audit (0.5.0)
       bundler (~> 1.2)
       thor (~> 0.18)
     byebug (8.2.2)
+    case_transform (0.2)
+      activesupport
     coderay (1.1.1)
     concurrent-ruby (1.0.5)
     connection_pool (2.2.1)
@@ -194,6 +206,7 @@ GEM
       railties (>= 4.2)
     dotenv (2.2.1)
     encryptor (3.0.0)
+    erubi (1.6.0)
     erubis (2.7.0)
     excon (0.55.0)
     execjs (2.7.0)
@@ -215,9 +228,6 @@ GEM
     github-markdown (0.6.9)
     globalid (0.4.0)
       activesupport (>= 4.2.0)
-    goldiloader (0.0.10)
-      activerecord (>= 3.2, < 5.1)
-      activesupport (>= 3.2, < 5.1)
     hashdiff (0.3.4)
     hashie (3.5.5)
     http (0.9.8)
@@ -244,8 +254,7 @@ GEM
       json_pure (>= 1.8.1)
     json (1.8.3)
     json_pure (1.8.3)
-    jsonapi (0.1.1.beta2)
-      json (~> 1.8)
+    jsonapi-renderer (0.1.2)
     jwt (1.5.1)
     kaminari (0.17.0)
       actionpack (>= 3.0.0)
@@ -288,7 +297,7 @@ GEM
     ngannotate-rails (1.2.2)
       execjs
       rails (>= 3.1)
-    nio4r (1.2.1)
+    nio4r (2.0.0)
     nokogiri (1.7.1)
       mini_portile2 (~> 2.1.0)
     oauth2 (1.1.0)
@@ -299,9 +308,9 @@ GEM
       rack (>= 1.2, < 3)
     octokit (4.2.0)
       sawyer (~> 0.6.0, >= 0.5.3)
-    omniauth (1.3.1)
-      hashie (>= 1.2, < 4)
-      rack (>= 1.0, < 3)
+    omniauth (1.6.1)
+      hashie (>= 3.4.6, < 3.6.0)
+      rack (>= 1.6.2, < 3)
     omniauth-github (1.1.2)
       omniauth (~> 1.0)
       omniauth-oauth2 (~> 1.1)
@@ -346,17 +355,17 @@ GEM
       rack (>= 1.2.0)
     rack-test (0.6.3)
       rack (>= 1.0)
-    rails (5.0.1)
-      actioncable (= 5.0.1)
-      actionmailer (= 5.0.1)
-      actionpack (= 5.0.1)
-      actionview (= 5.0.1)
-      activejob (= 5.0.1)
-      activemodel (= 5.0.1)
-      activerecord (= 5.0.1)
-      activesupport (= 5.0.1)
+    rails (5.1.0)
+      actioncable (= 5.1.0)
+      actionmailer (= 5.1.0)
+      actionpack (= 5.1.0)
+      actionview (= 5.1.0)
+      activejob (= 5.1.0)
+      activemodel (= 5.1.0)
+      activerecord (= 5.1.0)
+      activesupport (= 5.1.0)
       bundler (>= 1.3.0, < 2.0)
-      railties (= 5.0.1)
+      railties (= 5.1.0)
       sprockets-rails (>= 2.0.0)
     rails-assets-angular (1.4.9)
     rails-assets-angular-mocks (1.4.9)
@@ -401,7 +410,7 @@ GEM
     rails-assets-underscore (1.8.3)
     rails-assets-x-editable (1.5.1)
       rails-assets-jquery (>= 1.6)
-    rails-controller-testing (0.1.1)
+    rails-controller-testing (1.0.1)
       actionpack (~> 5.x)
       actionview (~> 5.x)
       activesupport (~> 5.x)
@@ -410,9 +419,9 @@ GEM
       nokogiri (~> 1.6)
     rails-html-sanitizer (1.0.3)
       loofah (~> 2.0)
-    railties (5.0.1)
-      actionpack (= 5.0.1)
-      activesupport (= 5.0.1)
+    railties (5.1.0)
+      actionpack (= 5.1.0)
+      activesupport (= 5.1.0)
       method_source
       rake (>= 0.8.7)
       thor (>= 0.18.1, < 2.0)
@@ -518,7 +527,7 @@ DEPENDENCIES
   concurrent-ruby
   connection_pool
   dalli
-  docker-api (>= 1.32)
+  docker-api
   dogstatsd-ruby
   doorkeeper
   dotenv
@@ -527,13 +536,13 @@ DEPENDENCIES
   flay
   forking_test_runner
   github-markdown
-  goldiloader
-  kaminari (~> 0.17.0)
+  goldiloader!
+  kaminari
   lograge
   logstash-event
   marco-polo
   maxitest
-  minitest-rails (= 3.0.0)
+  minitest-rails
   mocha
   mysql2
   net-http-persistent
@@ -542,7 +551,7 @@ DEPENDENCIES
   octokit
   omniauth
   omniauth-github
-  omniauth-gitlab (~> 1.0.0)
+  omniauth-gitlab
   omniauth-google-oauth2
   omniauth-ldap
   omniauth-oauth2
@@ -552,9 +561,9 @@ DEPENDENCIES
   pry
   pry-rails
   puma
-  query_diet (= 0.6.1)
+  query_diet
   rack-mini-profiler
-  rails (= 5.0.1)
+  rails (= 5.1.0)
   rails-assets-angular!
   rails-assets-angular-mocks!
   rails-assets-angular-scenario!
@@ -602,7 +611,7 @@ DEPENDENCIES
   soft_deletion
   sqlite3
   sse-rails-engine
-  sucker_punch (~> 2.0)
+  sucker_punch
   uglifier
   vault
   warden
