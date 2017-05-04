@@ -35,7 +35,7 @@ module SecretStorage
     end
 
     def exist?(key)
-      !!(backend.read_multi([key]).values.map(&:nil?) == [false])
+      backend.read_multi([key]).values.map(&:nil?) == [false]
     end
 
     # reads multiple keys from the backend into a hash, not raising on missing

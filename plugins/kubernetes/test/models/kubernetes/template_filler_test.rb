@@ -6,7 +6,7 @@ SingleCov.covered!
 describe Kubernetes::TemplateFiller do
   let(:doc) { kubernetes_release_docs(:test_release_pod_1) }
   let(:raw_template) do
-    raw_template = YAML.load(read_kubernetes_sample_file('kubernetes_deployment.yml')).deep_symbolize_keys
+    raw_template = YAML.safe_load(read_kubernetes_sample_file('kubernetes_deployment.yml')).deep_symbolize_keys
     raw_template[:metadata][:namespace] = "pod1"
     raw_template
   end

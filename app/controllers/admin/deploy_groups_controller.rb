@@ -89,11 +89,11 @@ class Admin::DeployGroupsController < ApplicationController
   end
 
   def merge_all_stages
-    render_failures try_each_cloned_stage { |stage| merge_stage(stage) }
+    render_failures(try_each_cloned_stage { |stage| merge_stage(stage) })
   end
 
   def delete_all_stages
-    render_failures try_each_cloned_stage { |stage| delete_stage(stage) }
+    render_failures(try_each_cloned_stage { |stage| delete_stage(stage) })
   end
 
   def self.create_all_stages(deploy_group)

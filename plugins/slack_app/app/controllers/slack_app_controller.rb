@@ -92,20 +92,26 @@ class SlackAppController < ApplicationController
     return '_(Unable to locate this deploy.)_' unless deploy
 
     # Is this user connected?
-    return {
-      replace_original: false,
-      text: unknown_user
-    } unless @current_user_from_slack
+    unless @current_user_from_slack
+      return {
+        replace_original: false,
+        text: unknown_user
+      }
+    end
 
     # Can this user approve the deployment?
-    return {
-      replace_original: false,
-      text: "You cannot approve your own deploys."
-    } if @current_user_from_slack == deploy.user
-    return {
-      replace_original: false,
-      text: "You do not have permissions to approve that deploy."
-    } unless @current_user_from_slack.deployer_for?(deploy)
+    if @current_user_from_slack == deploy.user
+      return {
+        replace_original: false,
+        text: "You cannot approve your own deploys."
+      }
+    end
+    unless @current_user_from_slack.deployer_for?(deploy)
+      return {
+        replace_original: false,
+        text: "You do not have permissions to approve that deploy."
+      }
+    end
 
     # Buddy up
     deploy.confirm_buddy!(@current_user_from_slack)

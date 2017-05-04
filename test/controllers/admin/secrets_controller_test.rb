@@ -299,8 +299,8 @@ describe Admin::SecretsController do
       end
 
       it 'redirects and sets the flash' do
-        flash[:notice].wont_be_nil
         assert_redirected_to admin_secrets_path
+        flash[:notice].wont_be_nil
       end
     end
 
