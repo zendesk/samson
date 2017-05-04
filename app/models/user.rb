@@ -127,7 +127,7 @@ class User < ActiveRecord::Base
   end
 
   def record_project_role_change
-    paper_trail.record_update true
+    paper_trail.record_outside_update
   end
 
   def paper_trail

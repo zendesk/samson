@@ -173,7 +173,7 @@ class Stage < ActiveRecord::Base
     end
 
     @last_recorded_state = state_to_record
-    trail.record_update true
+    trail.record_outside_update
   end
 
   def destroy

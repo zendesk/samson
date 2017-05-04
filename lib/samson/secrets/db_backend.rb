@@ -8,6 +8,7 @@ module Samson
         self.table_name = :secrets
         self.primary_key = :id # uses a string id
 
+        attribute :value
         attr_encrypted :value
 
         validates :id, :encrypted_value, :encryption_key_sha, presence: true
