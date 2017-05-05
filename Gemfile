@@ -12,7 +12,7 @@ group :preload do
   gem 'marco-polo'
 
   # AR extensions
-  gem 'goldiloader', git: "https://github.com/salsify/goldiloader" # need > 0.0.11
+  gem 'goldiloader'
   gem 'kaminari'
   gem 'active_model_serializers'
   gem 'paper_trail'

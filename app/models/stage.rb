@@ -35,8 +35,7 @@ class Stage < ActiveRecord::Base
   has_one :lock, as: :resource
 
   has_many :command_associations, autosave: true, class_name: 'StageCommand', dependent: :destroy
-  has_many :commands, -> { order('stage_commands.position ASC') },
-    through: :command_associations, auto_include: false
+  has_many :commands, -> { order('stage_commands.position ASC').auto_include(false) }, through: :command_associations
 
   has_many :deploy_groups_stages, dependent: :destroy
   has_many :deploy_groups, through: :deploy_groups_stages
