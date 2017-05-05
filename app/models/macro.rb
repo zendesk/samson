@@ -5,8 +5,7 @@ class Macro < ActiveRecord::Base
   include HasCommands
 
   has_many :command_associations, autosave: true, class_name: "MacroCommand", dependent: :destroy
-  has_many :commands, -> { order("macro_commands.position ASC") },
-    through: :command_associations, auto_include: false
+  has_many :commands, -> { order("macro_commands.position ASC").auto_include(false) }, through: :command_associations
 
   belongs_to :project
 
