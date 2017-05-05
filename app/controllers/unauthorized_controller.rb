@@ -25,7 +25,8 @@ class UnauthorizedController < ActionController::Metal
       end
       format.html do
         flash[:authorization_error] = message
-        redirect_to login_path
+        attempted_path = "/#{url_for(params).split("/", 4).last}" # request.fullpath is /unauthenticated
+        redirect_to login_path(redirect_to: attempted_path)
       end
     end
   end
