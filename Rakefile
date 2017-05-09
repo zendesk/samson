@@ -33,6 +33,16 @@ task :test do
   sh "forking-test-runner test plugins/*/test --merge-coverage --quiet"
 end
 
+# normalize schema after dumping so we do not have a diff
+task "db:schema:dump" do
+  file = "db/schema.rb"
+  schema = File.read(file)
+  schema.gsub!(/, options: .* do/, " do")
+  schema.gsub!('t.text "output", limit: 4294967295', 't.text "output", limit: 268435455')
+  schema.gsub!('t.text "object", limit: 4294967295', 't.text "object", limit: 1073741823')
+  File.write(file, schema)
+end
+
 namespace :test do
   task :prepare_js do
     sh "npm install"
