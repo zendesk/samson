@@ -101,11 +101,24 @@ module Kubernetes
       end
 
       return unless limits = spec.dig(:containers, 0, :resources, :limits)
-      return unless cpu = parse_resource_value(limits[:cpu])
-      return unless ram = parse_resource_value(limits[:memory]) # TODO: rename this and the column to memory
-      ram /= 1024**2 # we store megabyte
+      return unless limits_cpu = parse_resource_value(limits[:cpu])
+      return unless limits_memory = parse_resource_value(limits[:memory])
+      limits_memory /= 1024**2 # we store megabyte
 
-      {cpu: cpu, ram: ram.round, replicas: replicas}
+      if requests = spec.dig(:containers, 0, :resources, :requests)
+        requests_cpu = parse_resource_value(requests[:cpu])
+        if requests_memory = parse_resource_value(requests[:memory])
+          requests_memory /= 1024**2 # we store megabyte
+        end
+      end
+
+      {
+        limits_cpu: limits_cpu,
+        limits_memory: limits_memory.round,
+        requests_cpu: requests_cpu || limits_cpu,
+        requests_memory: (requests_memory || limits_memory).round,
+        replicas: replicas
+      }
     end
 
     def role_config_file

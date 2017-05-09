@@ -23,6 +23,9 @@ spec:
       - name: some-project
         image: docker-registry.zende.sk/truth_service:latest
         resources:
+          requests:
+            cpu: 250m
+            memory: 50Mi
           limits:
             cpu: 500m
             memory: 100Mi

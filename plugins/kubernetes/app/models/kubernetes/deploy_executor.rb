@@ -361,8 +361,10 @@ module Kubernetes
             {
               role: role,
               replicas: role_config.replicas,
-              cpu: role_config.cpu,
-              ram: role_config.ram
+              requests_cpu: role_config.requests_cpu,
+              requests_memory: role_config.requests_memory,
+              limits_cpu: role_config.limits_cpu,
+              limits_memory: role_config.limits_memory
             }
           end
 

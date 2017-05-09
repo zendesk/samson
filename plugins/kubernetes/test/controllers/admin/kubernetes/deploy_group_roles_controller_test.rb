@@ -67,8 +67,10 @@ describe Admin::Kubernetes::DeployGroupRolesController do
             project_id: project.id,
             kubernetes_role_id: kubernetes_roles(:app_server).id,
             deploy_group_id: deploy_group.id,
-            cpu: 1,
-            ram: 10,
+            requests_cpu: 0.5,
+            requests_memory: 5,
+            limits_cpu: 1,
+            limits_memory: 10,
             replicas: 1
           }
         }
@@ -85,7 +87,7 @@ describe Admin::Kubernetes::DeployGroupRolesController do
       end
 
       it "renders when failing to create" do
-        params[:kubernetes_deploy_group_role].delete(:cpu)
+        params[:kubernetes_deploy_group_role].delete(:limits_cpu)
         post :create, params: params
         assert_template :new
       end
@@ -111,11 +113,11 @@ describe Admin::Kubernetes::DeployGroupRolesController do
     end
 
     describe "#update" do
-      let(:valid_params) { {id: deploy_group_role.id, kubernetes_deploy_group_role: {cpu: 3.1}} }
+      let(:valid_params) { {id: deploy_group_role.id, kubernetes_deploy_group_role: {limits_cpu: 3.1}} }
 
       it "updates" do
         put :update, params: valid_params
-        deploy_group_role.reload.cpu.must_equal 3.1
+        deploy_group_role.reload.limits_cpu.must_equal 3.1
         assert_redirected_to [:admin, deploy_group_role]
       end
 
@@ -138,7 +140,7 @@ describe Admin::Kubernetes::DeployGroupRolesController do
       end
 
       it "renders on failure" do
-        put :update, params: {id: deploy_group_role.id, kubernetes_deploy_group_role: {cpu: ''}}
+        put :update, params: {id: deploy_group_role.id, kubernetes_deploy_group_role: {limits_cpu: ''}}
         assert_template :edit
       end
     end

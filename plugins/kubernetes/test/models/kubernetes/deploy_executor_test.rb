@@ -213,8 +213,8 @@ describe Kubernetes::DeployExecutor do
         doc = Kubernetes::Release.last.release_docs.sort_by(&:kubernetes_role).last
         config = server_role
         doc.replica_target.must_equal config.replicas
-        doc.cpu.must_equal config.cpu
-        doc.ram.must_equal config.ram
+        doc.limits_cpu.must_equal config.limits_cpu
+        doc.limits_memory.must_equal config.limits_memory
       end
 
       it "fails when role config is missing" do

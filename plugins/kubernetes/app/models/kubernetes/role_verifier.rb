@@ -66,10 +66,12 @@ module Kubernetes
 
     # spec actually allows this, but blows up when used
     def verify_numeric_limits
-      base = [:spec, :template, :spec, :containers, :resources, :limits, :cpu]
-      types = map_attributes(base).flatten(1).map(&:class)
-      return if (types - [NilClass, String]).none?
-      @errors << "Numeric cpu limits are not supported"
+      [:requests, :limits].each do |scope|
+        base = [:spec, :template, :spec, :containers, :resources, scope, :cpu]
+        types = map_attributes(base).flatten(1).map(&:class)
+        next if (types - [NilClass, String]).none?
+        @errors << "Numeric cpu resources are not supported"
+      end
     end
 
     def verify_project_and_role_consistent

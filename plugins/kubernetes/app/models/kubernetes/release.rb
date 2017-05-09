@@ -65,8 +65,10 @@ module Kubernetes
             deploy_group: dg.fetch(:deploy_group),
             kubernetes_role: role.fetch(:role),
             replica_target: role.fetch(:replicas),
-            cpu: role.fetch(:cpu),
-            ram: role.fetch(:ram)
+            requests_cpu: role.fetch(:requests_cpu),
+            requests_memory: role.fetch(:requests_memory),
+            limits_cpu: role.fetch(:limits_cpu),
+            limits_memory: role.fetch(:limits_memory)
           )
         end
       end

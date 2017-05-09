@@ -9,8 +9,8 @@
     <thead>
       <th>Deploy Group</th>
       <th>Replicas</th>
-      <th>CPU</th>
-      <th>RAM</th>
+      <th>CPU<%= additional_info "Requested to Limit" %></th>
+      <th>Memory<%= additional_info "Requested to Limit in MB" %></th>
       <th>
         <% if missing %>
           <%= link_to 'Seed Missing', seed_admin_kubernetes_deploy_group_roles_path(stage_id: @stage.id), data: {method: :post} %>
@@ -20,15 +20,15 @@
 
     <% matrix.each do |deploy_group, roles| %>
       <tr>
-        <td colspan="5"><h3><%= deploy_group.name %></h3></td>
+        <td colspan="7"><h3><%= deploy_group.name %></h3></td>
       </tr>
       <% roles.each do |role, dg_role| %>
         <tr>
           <td><%= link_to role.name, [@project, role] %></td>
           <% if dg_role %>
             <td><%= dg_role.replicas %></td>
-            <td><%= dg_role.cpu %></td>
-            <td><%= dg_role.ram %></td>
+            <td><%= dg_role.requests_cpu %> to <%= dg_role.limits_cpu %></td>
+            <td><%= dg_role.requests_memory %> to <%= dg_role.limits_memory %></td>
             <td>
               <% if current_user.admin_for?(@stage.project) %>
                 <%= link_to 'Edit', edit_admin_kubernetes_deploy_group_role_path(dg_role) %>
@@ -50,8 +50,14 @@
       <tr>
         <td>Subtotal</td>
         <td><%= dg_roles.sum(&:replicas) %></td>
-        <td><%= dg_roles.sum { |gr| gr.cpu * gr.replicas } %></td>
-        <td><%= dg_roles.sum { |gr| gr.ram * gr.replicas } %></td>
+        <td>
+          <%= dg_roles.sum { |gr| gr.requests_cpu * gr.replicas } %> to
+          <%= dg_roles.sum { |gr| gr.limits_cpu * gr.replicas } %>
+        </td>
+        <td>
+          <%= dg_roles.sum { |gr| gr.requests_memory * gr.replicas } %> to
+          <%= dg_roles.sum { |gr| gr.limits_memory * gr.replicas } %>
+        </td>
         <td></td>
       </tr>
     <% end %>
@@ -60,8 +66,14 @@
       <td><b>Total</b></td>
       <% found_roles = project_dg_roles.compact %>
       <td><%= found_roles.sum(&:replicas) %></td>
-      <td><%= found_roles.sum { |gr| gr.cpu * gr.replicas } %></td>
-      <td><%= found_roles.sum { |gr| gr.ram * gr.replicas } %></td>
+      <td>
+        <%= found_roles.sum { |gr| gr.requests_cpu * gr.replicas } %> to
+        <%= found_roles.sum { |gr| gr.limits_cpu * gr.replicas } %>
+      </td>
+      <td>
+        <%= found_roles.sum { |gr| gr.requests_memory * gr.replicas } %> to
+        <%= found_roles.sum { |gr| gr.limits_memory * gr.replicas } %>
+      </td>
       <td></td>
     </tr>
   </table>

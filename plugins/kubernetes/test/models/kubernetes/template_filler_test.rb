@@ -102,9 +102,13 @@ describe Kubernetes::TemplateFiller do
 
       it "copies resource values" do
         container.fetch(:resources).must_equal(
+          requests: {
+            cpu: 0.5,
+            memory: "50Mi"
+          },
           limits: {
-            memory: "100Mi",
-            cpu: 1.0
+            cpu: 1.0,
+            memory: "100Mi"
           }
         )
       end

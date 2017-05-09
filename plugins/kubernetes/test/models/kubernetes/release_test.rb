@@ -65,12 +65,12 @@ describe Kubernetes::Release do
       release.release_docs.count.must_equal 2
       release.release_docs.first.kubernetes_role.name.must_equal app_server.name
       release.release_docs.first.replica_target.must_equal 1
-      release.release_docs.first.cpu.must_equal 1
-      release.release_docs.first.ram.must_equal 50
+      release.release_docs.first.limits_cpu.must_equal 1
+      release.release_docs.first.limits_memory.must_equal 50
       release.release_docs.second.kubernetes_role.name.must_equal resque_worker.name
       release.release_docs.second.replica_target.must_equal 2
-      release.release_docs.second.cpu.must_equal 2
-      release.release_docs.second.ram.must_equal 100
+      release.release_docs.second.limits_cpu.must_equal 2
+      release.release_docs.second.limits_memory.must_equal 100
     end
 
     it "fails to save with missing deploy groups" do
@@ -172,8 +172,10 @@ describe Kubernetes::Release do
             {
               role: app_server,
               replicas: 1,
-              cpu: 1,
-              ram: 50
+              requests_cpu: 0.5,
+              requests_memory: 20,
+              limits_cpu: 1,
+              limits_memory: 50
             }
           ]
         }
@@ -184,7 +186,14 @@ describe Kubernetes::Release do
   def multiple_roles_release_params
     release_params.tap do |params|
       params[:deploy_groups].each do |dg|
-        dg[:roles].push(role: resque_worker, replicas: 2, cpu: 2, ram: 100)
+        dg[:roles].push(
+          role: resque_worker,
+          replicas: 2,
+          limits_cpu: 2,
+          limits_memory: 100,
+          requests_cpu: 1,
+          requests_memory: 50
+        )
       end
     end
   end

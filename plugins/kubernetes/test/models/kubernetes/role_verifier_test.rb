@@ -78,7 +78,7 @@ describe Kubernetes::RoleVerifier do
 
     it "reports numeric cpu" do
       role.first[:spec][:template][:spec][:containers].first[:resources] = {limits: {cpu: 1}}
-      errors.must_include "Numeric cpu limits are not supported"
+      errors.must_include "Numeric cpu resources are not supported"
     end
 
     it "reports missing containers" do
