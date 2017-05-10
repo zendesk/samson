@@ -36,7 +36,7 @@ describe "cleanliness" do
       status = ActiveRecord::Base.connection.execute('show table status').to_a
       refute_empty status
       status.each do |table|
-        table[3].must_equal "Dynamic"
+        table[3].must_equal "Dynamic", "#{table[0]} is not Dynamic"
       end
     end
   end
