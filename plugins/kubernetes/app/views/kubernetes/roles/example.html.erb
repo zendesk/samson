@@ -41,6 +41,9 @@ spec:
       - name: <%= project_label %>
         image: <%= DockerRegistry.first&.base %>/<%= project_label %>:latest
         resources:
+          requests:
+            cpu: 10m
+            memory: 40Mi
           limits:
             cpu: 20m
             memory: 75Mi

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20170505201145) do
+ActiveRecord::Schema.define(version: 20170509220749) do
 
   create_table "builds", id: :integer, force: :cascade do |t|
     t.integer "project_id", null: false
@@ -187,9 +187,11 @@ ActiveRecord::Schema.define(version: 20170505201145) do
     t.integer "project_id", null: false
     t.integer "deploy_group_id", null: false
     t.integer "replicas", null: false
-    t.integer "ram", null: false
-    t.decimal "cpu", precision: 4, scale: 2, null: false
+    t.integer "limits_memory", null: false
+    t.decimal "limits_cpu", precision: 4, scale: 2, null: false
     t.integer "kubernetes_role_id", null: false
+    t.decimal "requests_cpu", precision: 4, scale: 2, null: false
+    t.integer "requests_memory", null: false
     t.index ["deploy_group_id"], name: "index_kubernetes_deploy_group_roles_on_deploy_group_id"
     t.index ["project_id", "deploy_group_id", "kubernetes_role_id"], name: "index_kubernetes_deploy_group_roles_on_project_id"
   end
@@ -201,9 +203,11 @@ ActiveRecord::Schema.define(version: 20170505201145) do
     t.datetime "created_at"
     t.datetime "updated_at"
     t.integer "deploy_group_id"
-    t.decimal "cpu", precision: 4, scale: 2, null: false
-    t.integer "ram", null: false
+    t.decimal "limits_cpu", precision: 4, scale: 2, null: false
+    t.integer "limits_memory", null: false
     t.text "resource_template"
+    t.decimal "requests_cpu", precision: 4, scale: 2, null: false
+    t.integer "requests_memory", null: false
     t.index ["kubernetes_release_id"], name: "index_kubernetes_release_docs_on_kubernetes_release_id"
     t.index ["kubernetes_role_id"], name: "index_kubernetes_release_docs_on_kubernetes_role_id"
   end

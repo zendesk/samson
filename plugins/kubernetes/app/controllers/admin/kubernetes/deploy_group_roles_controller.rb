@@ -82,7 +82,8 @@ class Admin::Kubernetes::DeployGroupRolesController < ApplicationController
 
   def deploy_group_role_params
     params.require(:kubernetes_deploy_group_role).permit(
-      :kubernetes_role_id, :ram, :cpu, :replicas, :project_id, :deploy_group_id
+      :kubernetes_role_id, :requests_memory, :requests_cpu, :limits_memory, :limits_cpu,
+      :replicas, :project_id, :deploy_group_id
     )
   end
 end

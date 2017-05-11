@@ -9,9 +9,11 @@ module Kubernetes
     belongs_to :deploy_group
     belongs_to :kubernetes_role, class_name: 'Kubernetes::Role'
 
-    validates :ram, :cpu, :replicas, presence: true
-    validates :cpu, numericality: { greater_than: 0 }
-    validates :ram, numericality: { greater_than_or_equal_to: 4 }
+    validates :requests_cpu, :requests_memory, :limits_memory, :limits_cpu, :replicas, presence: true
+    validates :requests_cpu, numericality: { greater_than_or_equal_to: 0 }
+    validates :limits_cpu, numericality: { greater_than: 0 }
+    validates :requests_memory, :limits_memory, numericality: { greater_than_or_equal_to: 4 }
+    validate :requests_below_limits
 
     # The matrix is a list of deploy group and its roles + deploy-group-roles
     def self.matrix(stage)
@@ -50,10 +52,17 @@ module Kubernetes
           deploy_group: deploy_group,
           kubernetes_role: role,
           replicas: defaults.fetch(:replicas),
-          cpu: defaults.fetch(:cpu),
-          ram: defaults.fetch(:ram)
+          requests_cpu: defaults.fetch(:requests_cpu),
+          requests_memory: defaults.fetch(:requests_memory),
+          limits_cpu: defaults.fetch(:limits_cpu),
+          limits_memory: defaults.fetch(:limits_memory)
         )
       end.all?
+    end
+
+    def requests_below_limits
+      errors.add :requests_cpu, "must be less then or equal to the limit" if limits_cpu && requests_cpu > limits_cpu
+      errors.add :requests_memory, "must be less then or equal to the limit" if requests_memory > limits_memory
     end
   end
 end

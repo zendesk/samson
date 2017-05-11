@@ -283,17 +283,29 @@ describe Kubernetes::Role do
     end
 
     it "find defaults" do
-      role.defaults.must_equal cpu: 0.5, ram: 95, replicas: 2
+      role.defaults.must_equal(
+        replicas: 2,
+        requests_cpu: 0.25,
+        requests_memory: 48,
+        limits_cpu: 0.5,
+        limits_memory: 95
+      )
     end
 
     it "finds in pod" do
       config_content_yml.replace(pod.to_yaml)
-      role.defaults.must_equal cpu: 0.5, ram: 286, replicas: 0
+      role.defaults.must_equal(
+        replicas: 0,
+        requests_cpu: 0.5,
+        requests_memory: 286,
+        limits_cpu: 0.5,
+        limits_memory: 286
+      )
     end
 
     it "defaults to 1 replica" do
       assert config_content_yml.sub!('replicas: 2', 'foobar: 3')
-      role.defaults.must_equal cpu: 0.5, ram: 95, replicas: 1
+      role.defaults[:replicas].must_equal 1
     end
 
     it "does not fail without spec" do
@@ -309,7 +321,13 @@ describe Kubernetes::Role do
         }
       }.to_yaml
       config_content_yml.prepend("#{map}\n---\n")
-      role.defaults.must_equal cpu: 0.5, ram: 95, replicas: 2
+      role.defaults.must_equal(
+        replicas: 2,
+        requests_cpu: 0.25,
+        requests_memory: 48,
+        limits_cpu: 0.5,
+        limits_memory: 95
+      )
     end
 
     it "finds values for any kind of resource" do
@@ -332,7 +350,7 @@ describe Kubernetes::Role do
     }.each do |ram, expected|
       it "converts memory units #{ram}" do
         assert config_content_yml.sub!('100Mi', ram)
-        role.defaults.try(:[], :ram).must_equal expected
+        role.defaults.try(:[], :limits_memory).must_equal expected
       end
     end
 
@@ -357,9 +375,11 @@ describe Kubernetes::Role do
       Kubernetes::DeployGroupRole.create!(
         kubernetes_role: role,
         project: project,
-        ram: 10,
         replicas: 1,
-        cpu: 1,
+        requests_cpu: 0.5,
+        requests_memory: 5,
+        limits_cpu: 1,
+        limits_memory: 10,
         deploy_group: deploy_groups(:pod2)
       )
       role.kubernetes_deploy_group_roles.wont_equal []

@@ -18,8 +18,8 @@
         <th>Project</th>
         <th>Deploy Group</th>
         <th>Role</th>
-        <th>CPU</th>
-        <th>RAM</th>
+        <th>CPU<%= additional_info "Requested to Limit" %></th>
+        <th>Memory<%= additional_info "Requested to Limit in MB" %></th>
         <th>Replicas</th>
         <th>Actions</th>
       </tr>
@@ -29,8 +29,8 @@
           <td><%= link_to deploy_group_role.project.name, deploy_group_role.project %></td>
           <td><%= link_to deploy_group_role.deploy_group.name, [:admin, deploy_group_role.deploy_group] %></td>
           <td><%= link_to deploy_group_role.kubernetes_role.name, [deploy_group_role.project, deploy_group_role.kubernetes_role] %></td>
-          <td><%= deploy_group_role.cpu %></td>
-          <td><%= deploy_group_role.ram %></td>
+          <td><%= deploy_group_role.requests_cpu %> to <%= deploy_group_role.limits_cpu %></td>
+          <td><%= deploy_group_role.requests_memory %> to <%= deploy_group_role.limits_memory %></td>
           <td><%= deploy_group_role.replicas %></td>
           <td>
             <% if current_user.admin_for?(deploy_group_role.project) %>
@@ -42,8 +42,8 @@
 
       <tr>
         <td colspan="3">Total</td>
-        <td><%= @deploy_group_roles.map(&:cpu).sum %></td>
-        <td><%= @deploy_group_roles.map(&:ram).sum %></td>
+        <td><%= @deploy_group_roles.map(&:requests_cpu).sum %> to <%= @deploy_group_roles.map(&:limits_cpu).sum %></td>
+        <td><%= @deploy_group_roles.map(&:requests_memory).sum %> to <%= @deploy_group_roles.map(&:limits_memory).sum %></td>
         <td><%= @deploy_group_roles.map(&:replicas).sum %></td>
       </tr>
     </table>
