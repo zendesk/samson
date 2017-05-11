@@ -3,7 +3,7 @@
 # Self-pipe is also best practice, since signal handlers can themselves be interrupted
 class RestartSignalHandler
   LISTEN_SIGNAL = 'SIGUSR1'
-  PASSED_SIGNAL = 'SIGUSR2'
+  PASSED_SIGNAL = 'SIGTERM'
 
   class << self
     alias_method :listen, :new

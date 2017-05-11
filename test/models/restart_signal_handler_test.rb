@@ -8,7 +8,7 @@ describe RestartSignalHandler do
     Signal.expects(:trap).with('SIGUSR1')
     handler = RestartSignalHandler.listen
 
-    Process.expects(:kill).with('SIGUSR2', Process.pid)
+    Process.expects(:kill).with('SIGTERM', Process.pid)
     handler.send(:signal_restart)
     sleep 0.1
   end
@@ -57,7 +57,7 @@ describe RestartSignalHandler do
       Airbrake.expects(:notify)
       assert_raises(RuntimeError) { handle }.message.must_equal "Whoops"
 
-      Process.kill('SIGUSR2', Process.pid) # satisfy expect from `before`
+      Process.kill('SIGTERM', Process.pid) # satisfy expect from `before`
     end
   end
 end
