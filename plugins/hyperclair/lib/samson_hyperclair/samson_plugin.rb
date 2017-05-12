@@ -15,6 +15,7 @@ module SamsonHyperclair
         ActiveRecord::Base.connection_pool.with_connection do
           sleep 0.1 if Rails.env.test? # in test we reuse the same connection, so we cannot use it at the same time
           success, output, time = scan(clair, build.docker_repo_digest)
+          Airbrake.notify("Clair scan: dirty exit #{$?.exitstatus}") if $?.exitstatus > 1 # unclean exit
           status = (success ? "success" : "errored or vulnerabilities found")
           output = "### Clair scan: #{status} in #{time}s\n#{output}"
           append_output job, output
