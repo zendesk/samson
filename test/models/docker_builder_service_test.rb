@@ -33,6 +33,12 @@ describe DockerBuilderService do
     let(:start_jobs) { [] }
     let(:job) { start_jobs[0][0] }
 
+    it "skips when already running to combat racey parallel deploys/builds" do
+      JobExecution.expects(:start_job).never
+      Rails.cache.write("build-service-#{build.id}", true)
+      service.run!
+    end
+
     it "deletes previous build job" do
       build.docker_build_job = jobs(:succeeded_test)
       run!
