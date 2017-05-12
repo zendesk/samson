@@ -130,10 +130,11 @@ describe Kubernetes::DeployExecutor do
       out.wont_include "BigDecimal" # properly serialized configs
     end
 
-    it "succeeds without a build" do
+    it "succeeds without a build when there is no Dockerfile" do
       Build.delete_all
+      GitRepository.any_instance.expects(:file_content).with('Dockerfile', anything).returns nil
+
       refute_difference 'Build.count' do
-        GitRepository.any_instance.expects(:file_content).with('Dockerfile', anything).returns nil
         assert execute!
         out.must_include "Not creating a Build"
         out.must_include "resque-worker: Live\n"
@@ -278,6 +279,18 @@ describe Kubernetes::DeployExecutor do
         before do
           build.update_column(:git_sha, 'something-else')
           Build.any_instance.stubs(:validate_git_reference)
+        end
+
+        it "retries finding when build is created through parallel execution of build" do
+          job.project.docker_release_branch = 'master' # indicates that there will be a build kicked off on merge
+          executor.expects(:wait_for_parallel_build_creation).with do
+            build.update_column(:git_sha, job.commit)
+            build.update_column(:docker_repo_digest, 'somet-digest') # a bit misleading since it should be running
+          end
+          DockerBuilderService.any_instance.expects(:run!).never
+          assert execute!
+          out.must_include "SUCCESS"
+          out.must_include "Build #{build.url} is looking good!"
         end
 
         it "succeeds when the build works" do
@@ -616,6 +629,13 @@ describe Kubernetes::DeployExecutor do
         out.must_match /LOGS:\s+LOG-1/
         out.must_include "RESOURCE EVENTS staging.some-project:\n  FailedScheduling:"
       end
+    end
+  end
+
+  describe "#wait_for_parallel_build_creation" do
+    it "sleeps ... test to get coverage" do
+      executor.expects(:sleep)
+      executor.send(:wait_for_parallel_build_creation)
     end
   end
 end

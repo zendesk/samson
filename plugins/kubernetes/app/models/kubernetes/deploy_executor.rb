@@ -249,8 +249,20 @@ module Kubernetes
     end
 
     def find_build
-      Build.find_by_git_sha(@job.commit) ||
+      find_build_with_retry ||
         (@job.deploy.kubernetes_reuse_build && @job.deploy.previous_deploy&.kubernetes_release&.build)
+    end
+
+    def find_build_with_retry
+      build = Build.find_by_git_sha(@job.commit)
+      return build if build || !@job.project.docker_release_branch.present?
+      wait_for_parallel_build_creation
+      Build.find_by_git_sha(@job.commit)
+    end
+
+    # stub anchor for tests
+    def wait_for_parallel_build_creation
+      sleep 5
     end
 
     def create_build
