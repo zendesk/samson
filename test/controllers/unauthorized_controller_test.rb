@@ -16,14 +16,14 @@ describe 'Unauthorized' do
       let(:path) { '/' }
 
       before do
-        get path, {}, headers
+        get path, {controller: "ping", action: "show"}, headers
       end
 
       it 'redirects to the login path' do
         last_response.status.must_equal 302
 
-        # Really just '/', but Rack insists on using the full SERVER_NAME
-        last_response.headers['Location'].must_equal('http://example.org/login')
+        # Really just a path, but Rack insists on using the full SERVER_NAME
+        last_response.headers['Location'].must_equal('http://example.org/login?redirect_to=%2Fping')
       end
 
       it 'sets the flash' do
@@ -59,7 +59,7 @@ describe 'Unauthorized' do
           last_response.status.must_equal 302
 
           # Really just '/', but Rack insists on using the full SERVER_NAME
-          last_response.headers['Location'].must_equal('http://example.org/login')
+          last_response.headers['Location'].must_equal('http://example.org/login?redirect_to=%2Fping')
         end
       end
     end

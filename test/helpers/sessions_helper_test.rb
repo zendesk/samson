@@ -12,8 +12,13 @@ describe SessionsHelper do
     end
 
     it "escapes fancy paths" do
-      params[:origin] = "http://foo.com/bar?x=1"
-      omniauth_path(:google).must_equal "/auth/google?origin=http%3A%2F%2Ffoo.com%2Fbar%3Fx%3D1"
+      params[:redirect_to] = "/bar?x=1"
+      omniauth_path(:google).must_equal "/auth/google?origin=%2Fbar%3Fx%3D1"
+    end
+
+    it "blows up on hacking attempts" do
+      params[:redirect_to] = "https://hackers.com/bar?x=1"
+      assert_raises(ArgumentError) { omniauth_path(:google) }
     end
   end
 end
