@@ -36,10 +36,6 @@ Samson::Application.routes.draw do
   resources :projects, except: [:destroy] do
     resources :jobs, only: [:index, :show, :destroy]
 
-    resources :macros, only: [:index, :new, :create, :edit, :update, :destroy] do
-      member { post :execute }
-    end
-
     resources :builds, only: [:show, :index, :new, :create, :edit, :update] do
       member do
         post :build_docker_image

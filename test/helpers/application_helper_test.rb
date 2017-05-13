@@ -199,7 +199,6 @@ describe ApplicationHelper do
     let(:project) { projects(:test) }
     let(:environment) { Environment.find_by_param!('production') }
     let(:deploy_group) { deploy_groups(:pod1) }
-    let(:macro) { macros(:test) }
     let(:build) { builds(:docker_build) }
 
     it "renders strings" do
@@ -247,10 +246,6 @@ describe ApplicationHelper do
     it "does not allow html injection" do
       stage.name = "<script>alert(1)</script>"
       breadcrumb(stage).must_equal "<ul class=\"breadcrumb\"><li class=\"\"><a href=\"/\">Home</a></li><li class=\"active\">&lt;script&gt;alert(1)&lt;/script&gt;</li></ul>"
-    end
-
-    it "renders macro" do
-      breadcrumb(macro).must_equal "<ul class=\"breadcrumb\"><li class=\"\"><a href=\"/\">Home</a></li><li class=\"active\">Test Macro</li></ul>"
     end
 
     it "renders array" do
