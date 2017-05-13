@@ -10,9 +10,9 @@ class Lock < ActiveRecord::Base
 
   has_soft_deletion default_scope: true
 
-  belongs_to :resource, polymorphic: true
+  belongs_to :resource, polymorphic: true, optional: true
   belongs_to :user
-  belongs_to :environment
+  belongs_to :environment, optional: true
 
   before_validation :nil_out_blank_resource_type
 

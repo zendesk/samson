@@ -6,11 +6,11 @@ SingleCov.covered!
 
 describe JenkinsHelper do
   def stub_jenkins_job(status, url)
-    JenkinsJob.create!(name: "test_job", deploy_id: 11, jenkins_job_id: 111, status: status, url: url)
+    JenkinsJob.create!(name: "test_job", deploy: deploy, jenkins_job_id: 111, status: status, url: url)
   end
 
   def stub_jenkins_job_without_status
-    JenkinsJob.create!(name: "test_job", deploy_id: 11, jenkins_job_id: 111)
+    JenkinsJob.create!(name: "test_job", deploy: deploy, jenkins_job_id: 111)
   end
 
   def stub_build_detail(result, status: 200)

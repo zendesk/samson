@@ -2,7 +2,7 @@
 class Job < ActiveRecord::Base
   belongs_to :project
   belongs_to :user, -> { unscope(where: :deleted_at) }
-  belongs_to :canceller, -> { unscope(where: "deleted_at") }, class_name: 'User'
+  belongs_to :canceller, -> { unscope(where: "deleted_at") }, class_name: 'User', optional: true
 
   has_one :deploy
 

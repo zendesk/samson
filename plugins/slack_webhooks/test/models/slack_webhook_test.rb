@@ -4,7 +4,9 @@ require_relative '../test_helper'
 SingleCov.covered!
 
 describe SlackWebhook do
-  let(:webhook) { SlackWebhook.new(after_deploy: true, webhook_url: 'http://example.com') }
+  let(:webhook) do
+    SlackWebhook.new(after_deploy: true, webhook_url: 'http://example.com', stage: stages(:test_staging))
+  end
 
   it "is valid" do
     assert_valid webhook

@@ -29,7 +29,7 @@ class Stage < ActiveRecord::Base
   has_many :webhooks, dependent: :destroy
   has_many :outbound_webhooks, dependent: :destroy
 
-  belongs_to :template_stage, class_name: "Stage"
+  belongs_to :template_stage, class_name: "Stage", optional: true
   has_many :clones, class_name: "Stage", foreign_key: "template_stage_id"
 
   has_one :lock, as: :resource

@@ -10,7 +10,9 @@ describe BuildsController do
   let(:project_repo_url) { repo_temp_dir }
   let(:project) { projects(:test).tap { |p| p.repository_url = project_repo_url } }
 
-  let(:default_build) { project.builds.create!(label: 'master branch', git_ref: 'master', git_sha: 'a' * 40) }
+  let(:default_build) do
+    project.builds.create!(label: 'master branch', git_ref: 'master', git_sha: 'a' * 40, creator: user)
+  end
 
   before do
     create_repo_with_an_additional_branch('test_branch')
@@ -39,8 +41,8 @@ describe BuildsController do
       end
 
       it 'displays basic build info' do
-        project.builds.create!(label: 'test branch', git_ref: 'test_branch', git_sha: 'a' * 40)
-        project.builds.create!(label: 'master branch', git_ref: 'master', git_sha: 'b' * 40)
+        project.builds.create!(creator: user, label: 'test branch', git_ref: 'test_branch', git_sha: 'a' * 40)
+        project.builds.create!(creator: user, label: 'master branch', git_ref: 'master', git_sha: 'b' * 40)
         get :index, params: {project_id: project.to_param}
         assert_response :ok
         @response.body.must_include 'test branch'

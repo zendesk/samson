@@ -412,12 +412,14 @@ describe Stage do
 
   describe "#destroy" do
     it "soft deletes all it's StageCommand" do
-      assert_difference "StageCommand.count", -1 do
-        stage.soft_delete!
-      end
+      Stage.with_deleted do
+        assert_difference "StageCommand.count", -1 do
+          stage.soft_delete!
+        end
 
-      assert_difference "StageCommand.count", +1 do
-        stage.soft_undelete!
+        assert_difference "StageCommand.count", +1 do
+          stage.soft_undelete!
+        end
       end
     end
 

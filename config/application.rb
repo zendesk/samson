@@ -177,9 +177,6 @@ module Samson
     ActiveModelSerializers.config.adapter = :json
 
     config.active_support.deprecation = :raise
-
-    # TODO: switch to true and fix all tests or add `optional: true` where needed
-    config.active_record.belongs_to_required_by_default = false
   end
 end
 

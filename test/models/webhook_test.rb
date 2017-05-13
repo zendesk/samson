@@ -4,7 +4,14 @@ require_relative '../test_helper'
 SingleCov.covered!
 
 describe Webhook do
-  let(:webhook_attributes) { { branch: 'master', stage_id: 1, project_id: 1, source: 'any_ci'} }
+  let(:webhook_attributes) do
+    {
+      branch: 'master',
+      stage: stages(:test_staging),
+      project: projects(:test),
+      source: 'any_ci'
+    }
+  end
 
   describe '#create' do
     it 'creates the webhook' do
@@ -68,26 +75,26 @@ describe Webhook do
   describe '.for_source' do
     before do
       %w[any_ci any_code github travis tddium any].each_with_index do |source, index|
-        Webhook.create(branch: 'master', stage_id: index, project_id: 1, source: source)
+        Webhook.create!(webhook_attributes.merge(branch: "master#{index}", source: source))
       end
     end
 
     it 'filters correctly' do
-      assert_equal Webhook.for_source('ci', 'travis').pluck(:source), ['any_ci', 'travis', 'any']
-      assert_equal Webhook.for_source('code', 'github').pluck(:source), ['any_code', 'github', 'any']
+      Webhook.for_source('ci', 'travis').pluck(:source).must_equal ['any_ci', 'travis', 'any']
+      Webhook.for_source('code', 'github').pluck(:source).must_equal ['any_code', 'github', 'any']
     end
   end
 
   describe '.for_branch' do
     before do
       ['', 'master', 'feature/branch'].each_with_index do |branch, index|
-        Webhook.create(branch: branch, stage_id: index, project_id: 1, source: 'any_code')
+        Webhook.create!(webhook_attributes.merge(branch: branch, stage: Stage.all.to_a[index]))
       end
     end
 
     it 'filters correctly' do
-      assert_equal Webhook.for_branch('feature/branch').pluck(:branch), ['', 'feature/branch']
-      assert_equal Webhook.for_branch('master').pluck(:branch), ['', 'master']
+      Webhook.for_branch('feature/branch').pluck(:branch).must_equal ['', 'feature/branch']
+      Webhook.for_branch('master').pluck(:branch).must_equal ['', 'master']
     end
   end
 
