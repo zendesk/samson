@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20170509220749) do
+ActiveRecord::Schema.define(version: 20170513222253) do
 
   create_table "builds", id: :integer, force: :cascade do |t|
     t.integer "project_id", null: false
@@ -249,26 +249,6 @@ ActiveRecord::Schema.define(version: 20170509220749) do
     t.datetime "delete_at"
     t.string "resource_type"
     t.index ["resource_id", "resource_type", "deleted_at"], name: "index_locks_on_resource_id_and_resource_type_and_deleted_at", unique: true, length: { resource_type: 40 }
-  end
-
-  create_table "macro_commands", id: :integer, force: :cascade do |t|
-    t.integer "macro_id"
-    t.integer "command_id"
-    t.integer "position", default: 0, null: false
-    t.datetime "created_at"
-    t.datetime "updated_at"
-    t.index ["command_id"], name: "index_macro_commands_on_command_id"
-    t.index ["macro_id"], name: "index_macro_commands_on_macro_id"
-  end
-
-  create_table "macros", id: :integer, force: :cascade do |t|
-    t.string "name", null: false
-    t.string "reference", null: false
-    t.integer "project_id"
-    t.datetime "deleted_at"
-    t.datetime "created_at"
-    t.datetime "updated_at"
-    t.index ["project_id", "deleted_at"], name: "index_macros_on_project_id_and_deleted_at"
   end
 
   create_table "new_relic_applications", id: :integer, force: :cascade do |t|

@@ -63,9 +63,9 @@ describe Command do
   end
 
   describe "#usages" do
-    it "lists stages, macros and projects" do
+    it "lists stages and projects" do
       projects(:test).update_column(:build_command_id, command.id)
-      command.usages.map(&:class).uniq.sort_by(&:name).must_equal [Macro, Project, Stage]
+      command.usages.map(&:class).uniq.sort_by(&:name).must_equal [Project, Stage]
     end
   end
 

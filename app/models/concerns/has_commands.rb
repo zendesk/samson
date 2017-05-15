@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 # expects command_associations to be defined in base class
+# TODO: inline this into stage.rb and move tests over
 module HasCommands
   def self.included(base)
     base.class_eval do

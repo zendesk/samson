@@ -4,8 +4,6 @@ class Command < ActiveRecord::Base
 
   has_many :stage_commands
   has_many :stages, through: :stage_commands
-  has_many :macro_commands
-  has_many :macros, through: :macro_commands
   has_many :projects, foreign_key: :build_command_id
 
   belongs_to :project
@@ -38,11 +36,10 @@ class Command < ActiveRecord::Base
   end
 
   def usages
-    stages + macros + projects
+    stages + projects
   end
 
   def self.usage_ids
-    MacroCommand.pluck(:command_id) +
     StageCommand.pluck(:command_id) +
     Project.pluck(:build_command_id)
   end

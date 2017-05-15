@@ -16,11 +16,6 @@
   <li class="<%= 'active' if active == 'jobs' %>">
     <%= link_to "Jobs", project_jobs_path(project) %>
   </li>
-  <% if project.macros.exists? %>
-    <li class="<%= 'active' if active == 'macros' %>">
-      <%= link_to "Macros", project_macros_path(project) %>
-    </li>
-  <% end %>
   <li class="<%= 'active' if active == 'webhooks' %>">
     <%= link_to "Webhooks", project_webhooks_path(project) %>
   </li>

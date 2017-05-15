@@ -83,8 +83,6 @@ module ApplicationHelper
         name = item.name
         name = (item.lock.warning? ? warning_icon : lock_icon) + " " + name if item.lock
         [name, project_stage_path(item.project, item)]
-      when Macro then
-        [item.name, project_macro_path(item.project, item)]
       when String then [item, nil]
       when Array then item
       else

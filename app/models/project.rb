@@ -23,7 +23,6 @@ class Project < ActiveRecord::Base
   has_many :webhooks, dependent: :destroy
   has_many :outbound_webhooks, dependent: :destroy
   has_many :commands, dependent: :destroy
-  has_many :macros, dependent: :destroy
   has_many :user_project_roles, dependent: :destroy
   has_many :users, through: :user_project_roles
 
