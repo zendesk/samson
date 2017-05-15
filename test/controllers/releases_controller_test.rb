@@ -72,6 +72,7 @@ describe ReleasesController do
       it "renders" do
         get :new, params: {project_id: project.to_param}
         assert_response :success
+        assigns(:release).number.must_equal "124" # next after 123
       end
     end
   end
