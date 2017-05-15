@@ -4,7 +4,7 @@ class MacrosController < ApplicationController
 
   before_action :authorize_project_deployer!
   before_action :authorize_project_admin!, except: [:index, :execute]
-  before_action :find_macro, only: [:edit, :update, :execute, :destroy]
+  before_action :find_macro, only: [:edit, :update, :configure_execute, :execute, :destroy]
 
   def index
     @macros = @project.macros.page(params[:page])
@@ -35,10 +35,13 @@ class MacrosController < ApplicationController
     end
   end
 
+  def configure_execute
+  end
+
   def execute
     job = @project.jobs.build(
       user: current_user,
-      command: @macro.script,
+      command: environment_variables + @macro.script,
       commit: @macro.reference
     )
 
@@ -64,7 +67,18 @@ class MacrosController < ApplicationController
     )
   end
 
+  def environment_variables
+    params[:macro] ||= { environment_variables: {} }
+    macro_params = params.require(:macro).permit(environment_variables: [:name, :value]).to_h
+    macro_params[:environment_variables].map do |_index, variable|
+      if variable['name'].present?
+        "export #{variable['name'].shellescape}=#{variable['value'].shellescape}\n"
+      end
+    end.join("")
+  end
+
   def find_macro
     @macro = @project.macros.find(params[:id])
   end
+
 end

@@ -1,0 +1,48 @@
+<%= page_title "Execute macro" %>
+
+<section>
+  <%= form_for [:execute, @macro.project, @macro], method: :post, html: { class: "form-horizontal" } do |form| %>
+    <fieldset>
+      <legend><%= @macro.name %></legend>
+      <div class="form-group">
+        <%= label_tag :environment_variables, nil, class: "col-lg-2 control-label" %>
+        <div class="col-lg-3">
+          <%= text_field_tag "macro[environment_variables][0][name]", "", class: "form-control", placeholder: "Name" %>
+        </div>
+        <div class="col-lg-5">
+          <%# using a text area so users can resize them with browser controls %>
+          <%= text_area_tag "macro[environment_variables][0][value]", "", class: "form-control", placeholder: "Value", rows: 1 %>
+        </div>
+      </div>
+      <%= link_to "Add row", "#", class: "duplicate_previous_row" %>
+    </fieldset>
+    <hr>
+
+    <pre class="pre-command pre-scrollable"><%= @macro.script %></pre>
+    <hr>
+
+    <%= form.actions(label: "Execute") %>
+  <% end %>
+</section>
+
+<%= javascript_tag do %>
+  <%# This funcion duplicates the one in plugins/env/app/assets/javascripts/env/application.js %>
+  $(function(){
+    $(".duplicate_previous_row").click(function(e){
+      e.preventDefault();
+      var $row = $(this).prev();
+      var $new_row = $row.clone();
+      $new_row.find(':input').val('');
+
+      // each row needs a new unique name and id to make rails do the update logic correctly for environment_variables
+      $new_row.find(':input').each(function(i, input){
+        var $input = $(input);
+        $.each(['id', 'name'], function(i, attr){
+          $input.attr(attr, $input.attr(attr).replace(/\d+/, function(n){ return ++n; }));
+        });
+      });
+
+      $row.after($new_row);
+    });
+  });
+<% end %>
