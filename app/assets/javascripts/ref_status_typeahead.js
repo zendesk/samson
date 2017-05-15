@@ -1,4 +1,5 @@
 // when user types into the field offer completion and show selected commit status
+// TODO: show 500 errors to the user
 function refStatusTypeahead(options){
   var $reference = $("#deploy_reference");
   var $ref_status_container = $("#ref-problem-warning");
@@ -79,6 +80,7 @@ function refStatusTypeahead(options){
 
   initializeTypeahead();
 
+  // TODO: clean up by wrapping this in a limiter function
   $reference.on('input', function(e) {
     $ref_status_container.addClass("hidden");
     $tag_form_group.removeClass("has-success has-warning has-error");
