@@ -68,11 +68,12 @@ $(function () {
   }
 
   // When user clicks a release label, fill the deploy reference field with that version
+  // also trigger version check ... see ref_status_typeahead.js
   $("#recent-releases .release-label").on('click', function(event){
     event.preventDefault();
     // Get version number from link href
     var version = event.target.href.substring(event.target.href.lastIndexOf('/') + 1);
-    $("#deploy_reference").val(version);
+    $("#deploy_reference").val(version).trigger('input');
   });
 
   $form.submit(function(event) {
