@@ -4,7 +4,7 @@ module Kubernetes
     self.table_name = 'kubernetes_releases'
 
     belongs_to :user
-    belongs_to :build
+    belongs_to :build, optional: true
     belongs_to :project
     belongs_to :deploy
     has_many :release_docs, class_name: 'Kubernetes::ReleaseDoc', foreign_key: 'kubernetes_release_id'

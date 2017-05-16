@@ -6,7 +6,7 @@ class Build < ActiveRecord::Base
   ASSIGNABLE_KEYS = [:git_ref, :label, :description, :source_url] + Samson::Hooks.fire(:build_permitted_params)
 
   belongs_to :project
-  belongs_to :docker_build_job, class_name: 'Job'
+  belongs_to :docker_build_job, class_name: 'Job', optional: true
   belongs_to :creator, class_name: 'User', foreign_key: 'created_by'
   has_many :deploys
   has_many :releases

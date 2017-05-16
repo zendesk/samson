@@ -9,7 +9,7 @@ describe DockerBuilderService do
   let(:tmp_dir) { Dir.mktmpdir }
   let(:git_tag) { 'v123' }
   let(:project) { projects(:test) }
-  let(:build) { project.builds.create!(git_ref: git_tag, git_sha: 'a' * 40) }
+  let(:build) { project.builds.create!(git_ref: git_tag, git_sha: 'a' * 40, creator: users(:admin)) }
   let(:service) { DockerBuilderService.new(build) }
   let(:docker_image_id) { '2d2b0b3204b0166435c3d96d0b27d0ad2083e5e040192632c58eeb9491d6bfaa' }
   let(:docker_image_json) { { 'Id' => docker_image_id } }

@@ -4,7 +4,7 @@ if Rails.env.development? && !ENV['SERVER_MODE']
   Rails.configuration.after_initialize do
     [
       ActiveRecord::Base.send(:descendants).map(&:name),
-      ActionController::Base.descendants,
+      ActionController::Base.descendants.map(&:name),
       (defined?(Mocha) && "mocha")
     ].compact.flatten.each { |c| raise "#{c} should not be loaded" }
   end

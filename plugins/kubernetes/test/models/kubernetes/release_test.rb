@@ -7,7 +7,14 @@ describe Kubernetes::Release do
   let(:build)  { builds(:docker_build) }
   let(:user)   { users(:deployer) }
   let(:release) do
-    Kubernetes::Release.new(build: build, user: user, project: project, git_sha: 'abababa', git_ref: 'master')
+    Kubernetes::Release.new(
+      build: build,
+      user: user,
+      project: project,
+      git_sha: 'abababa',
+      git_ref: 'master',
+      deploy: deploys(:succeeded_test)
+    )
   end
   let(:deploy_group) { deploy_groups(:pod1) }
   let(:project) { projects(:test) }
@@ -165,6 +172,8 @@ describe Kubernetes::Release do
       git_sha: build.git_sha,
       git_ref: build.git_ref,
       project: project,
+      user: user,
+      deploy: deploys(:succeeded_test),
       deploy_groups: [
         {
           deploy_group: deploy_group,

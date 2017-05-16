@@ -3,7 +3,7 @@ class EnvironmentVariable < ActiveRecord::Base
   has_paper_trail
 
   belongs_to :parent, polymorphic: true # Resource they are set on
-  belongs_to :scope, polymorphic: true
+  belongs_to :scope, polymorphic: true, optional: true
 
   validates :name, presence: true
   validates :scope_type, inclusion: ["Environment", "DeployGroup", nil]

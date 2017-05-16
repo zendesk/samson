@@ -150,8 +150,10 @@ describe CsvExportJob do
       it "doesn't send mail when user is invalid" do
         deploy_export_job.update_attribute('user_id', -999)
         assert_difference('ActionMailer::Base.deliveries.size', 0) do
-          CsvExportJob.perform_now(deploy_export_job)
-          assert deploy_export_job.email.nil?
+          assert_raises ActiveRecord::RecordInvalid do
+            CsvExportJob.perform_now(deploy_export_job)
+            assert deploy_export_job.email.nil?
+          end
         end
       end
     end

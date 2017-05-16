@@ -26,7 +26,7 @@ class Project < ActiveRecord::Base
   has_many :user_project_roles, dependent: :destroy
   has_many :users, through: :user_project_roles
 
-  belongs_to :build_command, class_name: 'Command'
+  belongs_to :build_command, class_name: 'Command', optional: true
 
   # For permission checks on callbacks. Currently used in private plugins.
   attr_accessor :current_user

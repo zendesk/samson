@@ -6,7 +6,7 @@ class Command < ActiveRecord::Base
   has_many :stages, through: :stage_commands
   has_many :projects, foreign_key: :build_command_id
 
-  belongs_to :project
+  belongs_to :project, optional: true
 
   validates :command, presence: true
 

@@ -12,7 +12,7 @@ describe Build do
   let(:build) { builds(:staging) }
 
   def valid_build(attributes = {})
-    Build.new(attributes.reverse_merge(project: project, git_ref: 'master'))
+    Build.new(attributes.reverse_merge(project: project, git_ref: 'master', creator: users(:admin)))
   end
 
   describe 'validations' do
@@ -85,7 +85,7 @@ describe Build do
 
     it 'increments the build number' do
       biggest_build_num = project.builds.maximum(:number) || 0
-      build = project.builds.create!(git_ref: 'master')
+      build = project.builds.create!(git_ref: 'master', creator: users(:admin))
       assert_valid(build)
       assert_equal(biggest_build_num + 1, build.number)
     end

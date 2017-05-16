@@ -7,7 +7,7 @@ class Release < ActiveRecord::Base
 
   belongs_to :project, touch: true
   belongs_to :author, polymorphic: true
-  belongs_to :build # direct association is not necessary since the release commit is the same as the build sha
+  belongs_to :build, optional: true # association is not necessary since the release commit is the same as the build sha
 
   before_validation :assign_release_number
   before_validation :covert_ref_to_sha

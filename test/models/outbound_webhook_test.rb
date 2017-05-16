@@ -4,15 +4,11 @@ require_relative '../test_helper'
 SingleCov.covered!
 
 describe OutboundWebhook do
-  let(:webhook_attributes) { { stage_id: 1, project_id: 1, url: "https://testing.com/deploys" } }
-  let(:webhook_attributes_invalid) { { stage_id: 1, project_id: 1, url: "testing.com/deploys" } }
-  let(:webhook_attributes_with_auth) do
+  let(:webhook_attributes) do
     {
-      stage_id: 1,
-      project_id: 1,
-      url: "https://testing.com/deploys",
-      username: "adminuser",
-      password: "abc123"
+      stage: stages(:test_staging),
+      project: projects(:test),
+      url: "https://testing.com/deploys"
     }
   end
 
@@ -28,7 +24,7 @@ describe OutboundWebhook do
     end
 
     it "validates that url begins with http:// or https://" do
-      refute_valid OutboundWebhook.new(webhook_attributes_invalid)
+      refute_valid OutboundWebhook.new(webhook_attributes.merge(url: "/foobar"))
     end
 
     it 'recreates a webhook after soft_delete' do
@@ -92,7 +88,7 @@ describe OutboundWebhook do
     end
 
     describe "with authorization" do
-      let(:selected_webhook) { webhook_attributes_with_auth }
+      let(:selected_webhook) { webhook_attributes.merge(username: "adminuser", password: "abc123") }
 
       it "builds a connection with the correct params" do
         assert_equal @connection.headers['Authorization'], 'Basic YWRtaW51c2VyOmFiYzEyMw=='

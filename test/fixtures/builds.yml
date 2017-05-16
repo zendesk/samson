@@ -3,12 +3,14 @@ staging:
   number: 1
   git_sha: 'da39a3ee5e6b4b0d3255bfef95601890afd80709'
   git_ref: 'staging'
+  creator: admin
 
 v1_tag:
   project: test
   number: 2
   git_sha: '0fbc33a0bfe9dcb5a17e26b9c319cce9d86ede14'
   git_ref: 'v1.0'
+  creator: admin
 
 docker_build:
   project: test
@@ -19,3 +21,4 @@ docker_build:
   docker_tag: 'v123'
   docker_repo_digest: 'docker-registry.example.com/test@sha256:5f1d7c7381b2e45ca73216d7b06004fdb0908ed7bb8786b62f2cdfa5035fde2c'
   label: 'docker-build'
+  creator: admin

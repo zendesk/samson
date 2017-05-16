@@ -9,7 +9,7 @@ describe EnvironmentVariable do
   let(:deploy_group) { stage.deploy_groups.first }
   let(:environment) { deploy_group.environment }
   let(:deploy_group_scope_type_and_id) { "DeployGroup-#{deploy_group.id}" }
-  let(:environment_variable) { EnvironmentVariable.new(name: "NAME") }
+  let(:environment_variable) { EnvironmentVariable.new(name: "NAME", parent: project) }
 
   describe ".env" do
     before do

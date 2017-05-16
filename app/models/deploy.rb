@@ -3,10 +3,10 @@ class Deploy < ActiveRecord::Base
   has_soft_deletion default_scope: true
 
   belongs_to :stage, touch: true
-  belongs_to :build
+  belongs_to :build, optional: true
   belongs_to :project
   belongs_to :job
-  belongs_to :buddy, -> { unscope(where: "deleted_at") }, class_name: 'User'
+  belongs_to :buddy, -> { unscope(where: "deleted_at") }, class_name: 'User', optional: true
 
   default_scope { order(id: :desc) }
 
