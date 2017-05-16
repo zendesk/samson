@@ -44,7 +44,7 @@ describe SamsonHyperclair do
       end
     end
 
-    it "runs clair and reports success to the database" do
+    it "runs clair and reports success nonblocking to the database when finished" do
       execute!
 
       job.reload
@@ -63,10 +63,10 @@ describe SamsonHyperclair do
     end
 
     it "runs clair and reports missing script to the database" do
+      Airbrake.expects(:notify)
       File.unlink ENV['HYPERCLAIR_PATH']
 
       execute!
-
       wait_for_threads
 
       job.reload
@@ -78,12 +78,18 @@ describe SamsonHyperclair do
       File.write ENV['HYPERCLAIR_PATH'], "#!/bin/bash\necho WORLD\nexit 1"
 
       execute!
-
       wait_for_threads
 
       job.reload
       job.output.must_include "Clair scan: errored"
       job.output.must_include "WORLD"
+    end
+
+    it "runs clair and reports non-vulnerability failure to airbrake" do
+      Airbrake.expects(:notify)
+      File.write ENV['HYPERCLAIR_PATH'], "#!/bin/bash\nexit 2"
+      execute!
+      wait_for_threads
     end
   end
 end
