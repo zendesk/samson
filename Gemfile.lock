@@ -247,7 +247,7 @@ GEM
       thor (>= 0.16.0)
     jmespath (1.2.4)
       json_pure (>= 1.8.1)
-    json (1.8.3)
+    json (2.1.0)
     json_pure (1.8.3)
     jsonapi-renderer (0.1.2)
     jwt (1.5.1)
