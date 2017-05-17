@@ -285,6 +285,10 @@ describe Kubernetes::RoleVerifier do
   end
 
   describe '.verify_group' do
+    it "is valid with no role" do
+      Kubernetes::RoleVerifier.verify_group([])
+    end
+
     it "is valid with a single role" do
       Kubernetes::RoleVerifier.verify_group([role.first])
     end

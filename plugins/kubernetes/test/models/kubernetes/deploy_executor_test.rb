@@ -14,6 +14,7 @@ describe Kubernetes::DeployExecutor do
   let(:deploy_group) { stage.deploy_groups.first }
   let(:executor) { Kubernetes::DeployExecutor.new(output, job: job, reference: 'master') }
   let(:log_url) { "http://foobar.server/api/v1/namespaces/staging/pods/pod-resque-worker/log?container=container1" }
+  let(:commit) { '1a6f551a2ffa6d88e15eef5461384da0bfb1c194' }
 
   before do
     stage.update_column :kubernetes, true
@@ -107,10 +108,10 @@ describe Kubernetes::DeployExecutor do
         to_return(body: {items: []}.to_json)
       stub_request(:get, /#{Regexp.escape(log_url)}/)
 
-      GitRepository.any_instance.stubs(:file_content).with('Dockerfile', anything).returns "FROM all"
-      GitRepository.any_instance.stubs(:file_content).with('kubernetes/resque_worker.yml', anything, anything).
+      GitRepository.any_instance.stubs(:file_content).with('Dockerfile', commit).returns "FROM all"
+      GitRepository.any_instance.stubs(:file_content).with('kubernetes/resque_worker.yml', commit, anything).
         returns(read_kubernetes_sample_file('kubernetes_deployment.yml'))
-      GitRepository.any_instance.stubs(:file_content).with('kubernetes/app_server.yml', anything, anything).
+      GitRepository.any_instance.stubs(:file_content).with('kubernetes/app_server.yml', commit, anything).
         returns(read_kubernetes_sample_file('kubernetes_deployment.yml').gsub(/some-role/, 'other-role'))
 
       Kubernetes::TemplateFiller.any_instance.stubs(:set_image_pull_secrets)
@@ -132,7 +133,7 @@ describe Kubernetes::DeployExecutor do
 
     it "succeeds without a build when there is no Dockerfile" do
       Build.delete_all
-      GitRepository.any_instance.expects(:file_content).with('Dockerfile', anything).returns nil
+      GitRepository.any_instance.expects(:file_content).with('Dockerfile', commit).returns nil
 
       refute_difference 'Build.count' do
         assert execute!
@@ -174,7 +175,7 @@ describe Kubernetes::DeployExecutor do
 
       it "fails before building when roles as a group are invalid" do
         # same role as worker
-        GitRepository.any_instance.stubs(:file_content).with('kubernetes/app_server.yml', anything, anything).
+        GitRepository.any_instance.stubs(:file_content).with('kubernetes/app_server.yml', commit, anything).
           returns(read_kubernetes_sample_file('kubernetes_deployment.yml'))
 
         e = assert_raises Samson::Hooks::UserError do
@@ -222,7 +223,7 @@ describe Kubernetes::DeployExecutor do
         worker_role.delete
         e = assert_raises(Samson::Hooks::UserError) { execute! }
         e.message.must_equal(
-          "Role resque-worker for Pod 100 is not configured, but in repo at 1a6f551a2ffa6d88e15eef5461384da0bfb1c194"
+          "Role resque-worker for Pod 100 is not configured, but in repo at #{commit}"
         )
       end
 
@@ -231,7 +232,7 @@ describe Kubernetes::DeployExecutor do
         e = assert_raises(Samson::Hooks::UserError) { execute! }
         e.message.must_equal(
           "Could not find config files for Pod 100 kubernetes/app_server.yml, kubernetes/resque_worker.yml" \
-          " at 1a6f551a2ffa6d88e15eef5461384da0bfb1c194"
+          " at #{commit}"
         )
       end
     end
@@ -346,7 +347,7 @@ describe Kubernetes::DeployExecutor do
         # we need multiple different templates here
         # make the worker a job and keep the app server
         Kubernetes::ReleaseDoc.any_instance.unstub(:raw_template)
-        GitRepository.any_instance.stubs(:file_content).with('kubernetes/resque_worker.yml', anything).returns({
+        GitRepository.any_instance.stubs(:file_content).with('kubernetes/resque_worker.yml', commit).returns({
           'kind' => 'Job',
           'spec' => {
             'template' => {
@@ -363,7 +364,7 @@ describe Kubernetes::DeployExecutor do
             'annotations' => {'samson/prerequisite' => 'true'}
           }
         }.to_yaml)
-        GitRepository.any_instance.stubs(:file_content).with('kubernetes/app_server.yml', anything).
+        GitRepository.any_instance.stubs(:file_content).with('kubernetes/app_server.yml', commit).
           returns(read_kubernetes_sample_file('kubernetes_deployment.yml'))
 
         # check if the job already exists ... it does not
