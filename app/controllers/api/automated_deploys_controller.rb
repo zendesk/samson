@@ -13,7 +13,7 @@ class Api::AutomatedDeploysController < Api::BaseController
     deploy = deploy_service.deploy!(
       @stage,
       reference: @last_deploy.reference,
-      buddy_id: @last_deploy.buddy_id,
+      buddy_id: @last_deploy.buddy_id || @last_deploy.job.user_id,
       before_command: env.join("\n") << "\n",
       skip_deploy_group_validation: true
     )

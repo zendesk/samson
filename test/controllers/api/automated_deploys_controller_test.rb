@@ -79,6 +79,12 @@ describe Api::AutomatedDeploysController do
       end
     end
 
+    it "uses last deploys user as buddy if it had no buddy" do
+      copied_deploy.update_column(:buddy_id, nil)
+      assert_created
+      Deploy.first.buddy_id.must_equal copied_deploy.job.user_id
+    end
+
     it "does not deploy other projects deploy" do
       Deploy.update_all(project_id: 12121)
       post_create
