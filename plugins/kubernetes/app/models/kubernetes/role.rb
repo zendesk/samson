@@ -91,7 +91,7 @@ module Kubernetes
     end
 
     def defaults
-      return unless resource = role_config_file&.primary
+      return unless resource = role_config_file('HEAD')&.primary
       spec = resource.fetch(:spec)
       if resource[:kind] == "Pod"
         replicas = 0 # these are one-off tasks most of the time, so we should not count them in totals
@@ -121,8 +121,8 @@ module Kubernetes
       }
     end
 
-    def role_config_file
-      return unless raw_template = project.repository.file_content(config_file, 'HEAD', pull: false)
+    def role_config_file(reference)
+      return unless raw_template = project.repository.file_content(config_file, reference, pull: false)
       begin
         RoleConfigFile.new(raw_template, config_file)
       rescue Samson::Hooks::UserError

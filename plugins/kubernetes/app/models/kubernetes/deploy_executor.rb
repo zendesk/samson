@@ -440,7 +440,8 @@ module Kubernetes
         end
 
         # make sure each set of templates is valid
-        Kubernetes::RoleVerifier.verify_group(roles.map { |r| r.fetch(:role).role_config_file&.primary }.compact)
+        configs = roles.map { |r| r.fetch(:role).role_config_file(@job.commit).primary }.compact
+        Kubernetes::RoleVerifier.verify_group(configs)
       end
     end
   end
