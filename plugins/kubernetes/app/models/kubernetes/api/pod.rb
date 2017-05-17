@@ -121,7 +121,7 @@ module Kubernetes
         probe =
           case event.message
           when /\AReadiness/ then :readinessProbe
-          when /\ALiveliness/ then :livelinessProbe
+          when /\ALiveness/ then :livenessProbe
           else raise("Unknown probe #{event.message}")
           end
         event.count >= failure_threshold(probe)

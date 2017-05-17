@@ -286,8 +286,8 @@ describe Kubernetes::Api::Pod do
         end
       end
 
-      it "is true with multiple Liveliness events" do
-        assert event[:message].sub!('Readiness', 'Liveliness')
+      it "is true with multiple Liveness events" do
+        assert event[:message].sub!('Readiness', 'Liveness')
         event[:count] = 20
         assert events_indicate_failure?
       end
