@@ -123,6 +123,7 @@ module Kubernetes
 
     def show_failure_cause(release, release_docs, statuses)
       release_docs.each { |doc| print_resource_events(doc) }
+      log_end_time = Integer(ENV['KUBERNETES_LOG_TIMEOUT'] || '20').seconds.from_now
 
       statuses.reject(&:live).select(&:pod).each do |status|
         pod = status.pod
@@ -130,13 +131,13 @@ module Kubernetes
         @output.puts "\n#{deploy_group.name} pod #{pod.name}:"
         print_pod_events(pod)
         @output.puts
-        print_pod_logs(pod)
+        print_pod_logs(pod, log_end_time)
         @output.puts "\n------------------------------------------\n"
       end
     end
 
     # show why container failed to boot
-    def print_pod_logs(pod)
+    def print_pod_logs(pod, end_time)
       @output.puts "LOGS:"
 
       containers = (pod.containers + pod.init_containers).map { |c| c.fetch(:name) }
@@ -145,7 +146,7 @@ module Kubernetes
 
         # Display the first and last n_lines of the log
         max = Integer(ENV['KUBERNETES_LOG_LINES'] || '50')
-        lines = (pod.logs(container) || "No logs found").split("\n")
+        lines = (pod.logs(container, end_time) || "No logs found").split("\n")
         lines = lines.first(max / 2) + ['...'] + lines.last(max / 2) if lines.size > max
         lines.each { |line| @output.puts "  #{line}" }
       end
