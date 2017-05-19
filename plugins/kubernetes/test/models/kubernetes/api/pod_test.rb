@@ -184,14 +184,14 @@ describe Kubernetes::Api::Pod do
     it "streams regular logs" do
       stub_request(:get, "#{log_url}&follow=true").
         and_return(body: "HELLO\nWORLD\n")
-      pod_with_client.logs('some-container').must_equal "HELLO\nWORLD\n"
+      pod_with_client.logs('some-container', 10.seconds.from_now).must_equal "HELLO\nWORLD\n"
     end
 
     it "reads previous logs when container restarted so we see why it restarted" do
       pod_attributes[:status][:containerStatuses].first[:restartCount] = 1
       stub_request(:get, "#{log_url}&previous=true").
         and_return(body: "HELLO")
-      pod_with_client.logs('some-container').must_equal "HELLO"
+      pod_with_client.logs('some-container', 10.seconds.from_now).must_equal "HELLO"
     end
 
     it "fetches previous logs when current logs are not available" do
@@ -199,7 +199,7 @@ describe Kubernetes::Api::Pod do
         to_raise(KubeException.new('a', 'b', 'c'))
       stub_request(:get, "#{log_url}&previous=true").
         and_return(body: "HELLO")
-      pod_with_client.logs('some-container').must_equal "HELLO"
+      pod_with_client.logs('some-container', 10.seconds.from_now).must_equal "HELLO"
     end
 
     it "does not crash when both log endpoints fails with a 404" do
@@ -207,14 +207,21 @@ describe Kubernetes::Api::Pod do
         to_raise(KubeException.new('a', 'b', 'c'))
       stub_request(:get, "#{log_url}&previous=true").
         to_raise(KubeException.new('a', 'b', 'c'))
-      pod_with_client.logs('some-container').must_be_nil
+      pod_with_client.logs('some-container', 10.seconds.from_now).must_be_nil
     end
 
     it "notifies the user when streaming times out" do
       pod_with_client.expects(:timeout_logs).raises(Timeout::Error)
       stub_request(:get, "#{log_url}&follow=true").
         and_return(body: "HELLO\n")
-      pod_with_client.logs('some-container').must_equal "... log streaming timeout"
+      pod_with_client.logs('some-container', 10.seconds.from_now).must_equal "... log streaming timeout"
+    end
+
+    it "does not wait when timeout has already passed" do
+      pod_with_client.expects(:timeout_logs).never
+      stub_request(:get, log_url).
+        and_return(body: "HELLO\n")
+      pod_with_client.logs('some-container', 1.seconds.from_now).must_equal "HELLO\n"
     end
   end
 

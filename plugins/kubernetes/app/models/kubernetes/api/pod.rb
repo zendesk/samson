@@ -57,11 +57,11 @@ module Kubernetes
       end
 
       # tries to get logs from current or previous pod depending on if it restarted
-      def logs(container)
-        fetch_logs(container, previous: restarted?)
+      def logs(container, end_time)
+        fetch_logs(container, end_time, previous: restarted?)
       rescue KubeException # not found or pod is initializing
         begin
-          fetch_logs(container, previous: !restarted?)
+          fetch_logs(container, end_time, previous: !restarted?)
         rescue KubeException
           nil
         end
@@ -94,27 +94,33 @@ module Kubernetes
 
       # if the pod is still running we stream the logs until it times out to get as much info as possible
       # necessary since logs often hang for a while even if the pod is already done
-      def fetch_logs(container, previous:)
+      def fetch_logs(container, end_time, previous:)
         if previous
           @client.get_pod_log(name, namespace, container: container, previous: true)
         else
-          result = "".dup
-          begin
-            timeout_logs do
-              @client.watch_pod_log(name, namespace, container: container).each do |log|
-                result << log << "\n"
+          wait = end_time - Time.now
+          if wait < 2 # timeout almost over or over, so just fetch logs
+            @client.get_pod_log(name, namespace, container: container)
+          else
+            # still waiting, stream logs
+            result = "".dup
+            begin
+              timeout_logs(wait) do
+                @client.watch_pod_log(name, namespace, container: container).each do |log|
+                  result << log << "\n"
+                end
               end
+            rescue Timeout::Error
+              result << "... log streaming timeout"
             end
-          rescue Timeout::Error
-            result << "... log streaming timeout"
+            result
           end
-          result
         end
       end
 
-      # easy stub
-      def timeout_logs(&block)
-        Timeout.timeout(Integer(ENV['KUBERNETES_LOG_TIMEOUT'] || '20'), &block)
+      # easy to stub
+      def timeout_logs(timeout, &block)
+        Timeout.timeout(timeout, &block)
       end
 
       def probe_failed_to_often?(event)
