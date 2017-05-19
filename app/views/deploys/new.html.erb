@@ -42,16 +42,8 @@
 
       <%= Samson::Hooks.render_views(:deploy_form, self, project: @project, form: form) %>
 
-      <% if recent_releases = @project.releases.last(5).presence %>
-        <div class="form-group" id="recent-releases">
-          <label class="col-lg-2 control-label">Recent releases</label>
-          <div class="col-lg-4">
-            <% recent_releases.each do |release| %>
-              <%= release_label(@project, release) %>
-            <% end %>
-          </div>
-        </div>
-      <% end %>
+      <%= render 'recent_releases' %>
+      <%= render 'currently_deployed' %>
 
       <div class="form-group" id="new-deploy-buttons">
         <div class="col-lg-offset-2 col-lg-10">

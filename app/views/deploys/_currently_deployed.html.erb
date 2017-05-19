@@ -1,0 +1,17 @@
+<% if !ActiveRecord::Base.connection.class.name.downcase.include?('postgres') && deployed = @project.deploys.group(:stage_id).successful.sort_by { |d| d.stage.order }.presence %>
+  <div class="form-group" class="clickable-releases">
+    <label class="col-lg-2 control-label">Currently deployed</label>
+    <div class="col-lg-4">
+      <table class="table-condensed">
+        <% deployed.each do |deploy| %>
+          <tr>
+            <td>
+              <%= link_to deploy.stage.name, [@project, deploy.stage] %>
+            </td>
+            <td><%= link_to deploy.short_reference, [@project, deploy], class: "status label #{status_label(deploy.status)}" %></td>
+          </tr>
+        <% end %>
+      </table>
+    </div>
+  </div>
+<% end %>
