@@ -186,7 +186,6 @@ module Kubernetes
       # and the number of matches nodes could update with a changed template
       # only makes sense to call this after deploying / while waiting for pods
       def desired_pod_count
-        return 0 if @template[:spec][:replicas].to_i.zero?
         @desired_pod_count ||= begin
           desired = resource[:status][:desiredNumberScheduled]
           return desired unless desired.zero?

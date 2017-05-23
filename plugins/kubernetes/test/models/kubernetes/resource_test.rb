@@ -225,11 +225,6 @@ describe Kubernetes::Resource do
         end
         assert_requested request, times: 2
       end
-
-      it "returns 0 when replicas are 0 to pass deletion deploys" do
-        template[:spec][:replicas] = 0
-        resource.desired_pod_count.must_equal 0
-      end
     end
 
     describe "#revert" do
