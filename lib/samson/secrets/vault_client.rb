@@ -35,8 +35,9 @@ module Samson
       end
 
       # delete from all servers that hold this key
-      def delete(key)
-        parallel_map(responsible_clients(key)) do |v|
+      def delete(key, all: false)
+        selected_clients = (all ? clients.values : responsible_clients(key))
+        parallel_map(selected_clients) do |v|
           with_retries { v.logical.delete(wrap_key(key)) }
         end
       end
