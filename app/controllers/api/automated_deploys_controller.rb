@@ -35,6 +35,7 @@ class Api::AutomatedDeploysController < Api::BaseController
       end
 
       @stage = Stage.build_clone(template)
+      @stage.deploy_on_release = false
       @stage.name = Stage::AUTOMATED_NAME
       @stage.dashboard = "Automatically created stage from Api::AutomatedDeploysController<br>" \
         "that will deploy to individual deploy groups or hosts when called via api."
