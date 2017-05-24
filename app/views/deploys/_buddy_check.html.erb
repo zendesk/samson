@@ -1,9 +1,22 @@
 <div class="row deploy-check">
+  <% if status = CommitStatus.new(@deploy.stage, @deploy.reference) rescue nil %>
+    <p>
+      Commit status for <%= short_sha @deploy.reference %>: <%= status.status %><br/>
+      <% status.status_list.each do |info| %>
+        <%= info.fetch(:state) %>: <%= info.fetch(:description) %><br/>
+      <% end %>
+    </p>
+  <% else %>
+    <p>Error fetching commit status.</p>
+  <% end %>
+  <br/><br/>
+
   <% if @deploy.started_by?(current_user) %>
     <p>This deploy requires a buddy since it is going to production. Please have another engineer with deploy rights visit this URL to kick off the deploy.</p>
     <% if details = ENV["BYPASS_DETAILS"].presence %>
       <p><%= details.html_safe %></p>
     <% end %>
+
     <div class="deployer-stop">
       <%= stop_button deploy: @deploy, project: @project %>
       or
