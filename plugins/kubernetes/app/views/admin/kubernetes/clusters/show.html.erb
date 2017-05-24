@@ -1,4 +1,4 @@
-<%= page_title "Kubernetes Cluster" %>
+<%= page_title "Kubernetes Cluster #{@cluster.name}" %>
 
 <section class="form-horizontal">
   <div class="form-group">
@@ -42,6 +42,29 @@
       <p class="form-control-static">
         <%= render 'deploy_group_list', deploy_groups: @cluster.deploy_groups %>
       </p>
+    </div>
+  </div>
+
+  <div class="form-group">
+    <label class="col-lg-2 control-label">Capacity</label>
+    <div class="col-lg-8">
+      <table>
+        <tr><td></td><td>CPU</td><td>Memory</td></tr>
+        <% nodes = @cluster.client.get_nodes rescue [] %>
+        <% nodes.each do |node| %>
+          <% capacity = node.dig(:status, :capacity) %>
+          <tr>
+            <td><%= node.dig(:metadata, :name) %></td>
+            <td><%= capacity[:cpu] %></td>
+            <td><%= capacity[:memory].to_i / 1024 / 1024 %>Gi</td>
+          </tr>
+        <% end %>
+        <tr>
+          <td>Total</td>
+          <td><%= nodes.sum { |n| n.dig(:status, :capacity, :cpu).to_i } %></td>
+          <td><%= nodes.sum { |n| n.dig(:status, :capacity, :memory).to_i / 1024 / 1024 } %>Gi</td>
+        </tr>
+      </table>
     </div>
   </div>
 
