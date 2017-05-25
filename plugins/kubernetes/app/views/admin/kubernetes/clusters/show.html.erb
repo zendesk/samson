@@ -46,29 +46,6 @@
   </div>
 
   <div class="form-group">
-    <label class="col-lg-2 control-label">Capacity</label>
-    <div class="col-lg-8">
-      <table>
-        <tr><td></td><td>CPU</td><td>Memory</td></tr>
-        <% nodes = @cluster.client.get_nodes rescue [] %>
-        <% nodes.each do |node| %>
-          <% capacity = node.dig(:status, :capacity) %>
-          <tr>
-            <td><%= node.dig(:metadata, :name) %></td>
-            <td><%= capacity[:cpu] %></td>
-            <td><%= capacity[:memory].to_i / 1024 / 1024 %>Gi</td>
-          </tr>
-        <% end %>
-        <tr>
-          <td>Total</td>
-          <td><%= nodes.sum { |n| n.dig(:status, :capacity, :cpu).to_i } %></td>
-          <td><%= nodes.sum { |n| n.dig(:status, :capacity, :memory).to_i / 1024 / 1024 } %>Gi</td>
-        </tr>
-      </table>
-    </div>
-  </div>
-
-  <div class="form-group">
     <div class="col-lg-offset-2 col-lg-10">
       <%= link_to "Edit", edit_admin_kubernetes_cluster_path(@cluster), class: "btn btn-primary" %>
       <%= link_to "Back", admin_kubernetes_clusters_path, class: "btn btn-default" %>

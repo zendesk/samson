@@ -99,4 +99,34 @@ describe Kubernetes::Cluster do
       refute cluster.namespace_exists?('a')
     end
   end
+
+  describe "#schedulable_nodes" do
+    def stub_response
+      stub_request(:get, "http://foobar.server/api/v1/nodes").to_return(body: {items: nodes}.to_json)
+    end
+
+    let(:nodes) do
+      [
+        {id: 0, spec: {unschedulable: false}, metadata: {labels: {"node-type": "node"}}},
+        {id: 1, spec: {unschedulable: false}, metadata: {labels: {"node-type": "node"}}},
+        {id: 2, spec: {unschedulable: false}, metadata: {labels: {"node-type": "node"}}}
+      ]
+    end
+
+    it "finds all nodes" do
+      stub_response
+      cluster.schedulable_nodes.map { |n| n[:id] }.must_equal [0, 1, 2]
+    end
+
+    it "excludes unscheduleable" do
+      nodes[1][:spec][:unschedulable] = true
+      stub_response
+      cluster.schedulable_nodes.map { |n| n[:id] }.must_equal [0, 2]
+    end
+
+    it "does not blow up on connection issues" do
+      stub_request(:get, "http://foobar.server/api/v1/nodes").to_timeout
+      cluster.schedulable_nodes.must_equal []
+    end
+  end
 end

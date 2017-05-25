@@ -82,7 +82,16 @@ describe Kubernetes::DeployGroupRole do
     end
   end
 
-  describe "#seed!" do
+  describe ".usage" do
+    it "builds a hash" do
+      result = Kubernetes::DeployGroupRole.usage
+      pod1 = result.fetch(deploy_groups(:pod1).id)
+      pod1["cpu"].to_f.must_equal 1.3
+      pod1["memory"].must_equal 640
+    end
+  end
+
+  describe ".seed!" do
     describe "with missing role" do
       let(:created_role) do
         Kubernetes::DeployGroupRole.where(

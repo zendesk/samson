@@ -1,0 +1,31 @@
+<%
+  @deploy_group_usage ||= Kubernetes::DeployGroupRole.usage # avoiding N+1 for every cluster
+  nodes = cluster.schedulable_nodes
+  available_cpu = nodes.sum { |n| n.dig(:status, :capacity, :cpu).to_f }
+  available_memory = nodes.sum { |n| n.dig(:status, :capacity, :memory).to_i / 1024 / 1024 }
+  used_cpu = cluster.deploy_groups.sum { |dg| @deploy_group_usage.dig(dg.id, 'cpu').to_f || 0 }
+  used_memory = cluster.deploy_groups.sum { |dg| @deploy_group_usage.dig(dg.id, 'memory') || 0 } / 1024.0
+  used_cpu_percent = (available_cpu.zero? ? 0 : (used_cpu * 100.0 / available_cpu).round)
+  used_memory_percent = (available_memory.zero? ? 0 : (used_memory * 100.0 / available_memory).round)
+%>
+<table class="table-condensed">
+  <tr><td></td><td>CPU</td><td>Memory</td></tr>
+  <% nodes.each do |node| %>
+    <% capacity = node.dig(:status, :capacity) %>
+    <tr>
+      <td><%= node.dig(:metadata, :name) %></td>
+      <td><%= capacity[:cpu] %></td>
+      <td><%= capacity[:memory].to_i / 1024 / 1024 %>Gi</td>
+    </tr>
+  <% end %>
+  <tr>
+    <td>Available</td>
+    <td><%= available_cpu %></td>
+    <td><%= available_memory %>Gi</td>
+  </tr>
+  <tr>
+    <td><%= link_to "Used", admin_kubernetes_deploy_group_roles_path(search: {deploy_group_id: cluster.deploy_groups.map(&:id)}) %></td>
+    <td><%= used_cpu %> = <%= used_cpu_percent %>%</td>
+    <td><%= used_memory.round(1) %>Gi = <%= used_memory_percent %>%</td>
+  </tr>
+</table>
