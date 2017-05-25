@@ -262,6 +262,22 @@ describe Project do
     end
   end
 
+  describe '#last_deploy_by_stage' do
+    it "finds 1 deploy per stage" do
+      project.last_deploy_by_stage.must_equal([deploys(:succeeded_test), deploys(:succeeded_production_test)])
+    end
+
+    it "ignores deleted stages" do
+      deploys(:succeeded_test).stage.soft_delete!
+      project.last_deploy_by_stage.must_equal([deploys(:succeeded_production_test)])
+    end
+
+    it "returns nil when nothing was found" do
+      Stage.update_all(deleted_at: Time.now)
+      project.last_deploy_by_stage.must_be_nil
+    end
+  end
+
   describe '#ordered_for_user' do
     it 'returns unstarred projects in alphabetical order' do
       Project.create!(name: 'A', repository_url: url)
