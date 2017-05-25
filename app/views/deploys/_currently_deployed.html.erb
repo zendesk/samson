@@ -1,4 +1,4 @@
-<% if !ActiveRecord::Base.connection.class.name.downcase.include?('postgres') && deployed = @project.deploys.group(:stage_id).successful.select(&:stage).sort_by { |d| d.stage.order }.presence %>
+<% if deployed = @project.last_deploy_by_stage %>
   <div class="form-group" class="clickable-releases">
     <label class="col-lg-2 control-label">Currently deployed</label>
     <div class="col-lg-4">

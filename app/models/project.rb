@@ -123,6 +123,11 @@ class Project < ActiveRecord::Base
     releases.map { |group_id, deploys| [group_id, deploys.sort_by(&:updated_at).last] }.to_h
   end
 
+  def last_deploy_by_stage
+    return unless found = deploys.select('max(deploys.id) as id').reorder(nil).group(:stage_id).successful.presence
+    Deploy.find(found.map(&:id)).select(&:stage).sort_by { |d| d.stage.order }.presence
+  end
+
   def url
     Rails.application.routes.url_helpers.project_url(self)
   end
