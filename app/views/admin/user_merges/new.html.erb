@@ -4,7 +4,7 @@ Should be used when a user changed their login provider and created a new empty 
 <br/>
 Delete selected empty user and change #<%= @user.id %> <%= @user.name_and_email %> login credentials to that of the selected user.
 
-<% if candidates = (User.where(email: @user.email) + (@user.name.present? ? User.where(name: @user.name) : []) - [@user]).presence %>
+<% if candidates = (User.where(email: @user.email) + (@user.name.present? ? User.where(name: @user.name) : []) - [@user]).uniq.presence %>
   <h2>Users with the same name or email</h2>
   <ul>
     <% candidates.each do |user| %>
