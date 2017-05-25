@@ -17,6 +17,7 @@
           <td><%= cluster.description %></td>
           <td>
             <%= render 'deploy_group_list', deploy_groups: cluster.deploy_groups %>
+            <%= render 'capacity', cluster: cluster if params[:capacity] %>
           </td>
           <td><%= link_to "Edit", edit_admin_kubernetes_cluster_path(cluster) %></td>
         </tr>
@@ -26,6 +27,7 @@
 
   <div class="admin-actions">
     <div class="pull-right">
+      <%= link_to "Capacity", "?capacity=1" unless params[:capacity] %>
       <%= link_to "New", new_admin_kubernetes_cluster_path, class: "btn btn-default" %>
     </div>
   </div>

@@ -31,6 +31,12 @@ describe Admin::Kubernetes::ClustersController do
         get :index
         assert_template :index
       end
+
+      it "renders capacity" do
+        stub_request(:get, "http://foobar.server/api/v1/nodes").to_return(body: "[]")
+        get :index, params: {capacity: true}
+        assert_template :index
+      end
     end
 
     describe "#show" do

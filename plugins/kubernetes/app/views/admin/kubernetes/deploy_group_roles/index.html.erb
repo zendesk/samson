@@ -42,9 +42,9 @@
 
       <tr>
         <td colspan="3">Total</td>
-        <td><%= @deploy_group_roles.map(&:requests_cpu).sum %> to <%= @deploy_group_roles.map(&:limits_cpu).sum %></td>
-        <td><%= @deploy_group_roles.map(&:requests_memory).sum %> to <%= @deploy_group_roles.map(&:limits_memory).sum %></td>
-        <td><%= @deploy_group_roles.map(&:replicas).sum %></td>
+        <td><%= @deploy_group_roles.sum { |d| d.requests_cpu * d.replicas } %> to <%= @deploy_group_roles.sum { |d| d.limits_cpu * d.replicas } %></td>
+        <td><%= @deploy_group_roles.sum { |d| d.requests_memory * d.replicas } %> to <%= @deploy_group_roles.sum { |d| d.limits_memory * d.replicas } %></td>
+        <td><%= @deploy_group_roles.sum(&:replicas) %></td>
       </tr>
     </table>
   </div>

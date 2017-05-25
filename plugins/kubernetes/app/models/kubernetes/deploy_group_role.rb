@@ -32,6 +32,17 @@ module Kubernetes
       end
     end
 
+    def self.usage
+      query = select(<<-SQL).group(:deploy_group_id)
+        sum(requests_cpu * replicas) as cpu,
+        sum(requests_memory * replicas) as memory,
+        max(deploy_group_id) as deploy_group_id
+      SQL
+      connection.select_all(query).each_with_object({}) do |values, all|
+        all[values.fetch("deploy_group_id")] = values
+      end
+    end
+
     # add deploy group roles for everything missing from the matrix
     # returns:
     #  - everything was created: true

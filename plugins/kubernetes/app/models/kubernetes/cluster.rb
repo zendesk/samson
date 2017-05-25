@@ -46,6 +46,12 @@ module Kubernetes
       @kubeconfig ||= Kubeclient::Config.read(config_filepath)
     end
 
+    def schedulable_nodes
+      client.get_nodes.reject { |n| n.dig(:spec, :unschedulable) }
+    rescue
+      []
+    end
+
     private
 
     def connection_valid?
