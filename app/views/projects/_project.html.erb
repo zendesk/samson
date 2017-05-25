@@ -9,7 +9,7 @@
     <ul>
       <% project.stages.each do |stage| %>
         <% cache [stage, Lock.cache_key] do %>
-          <li>
+          <li class="clearfix">
             <%= link_to stage.name, [project, stage], class: 'stage-link' %>
             <% if deploy = stage.current_deploy %>
               <%= link_to 'Deploying', [project, deploy], class: 'label label-primary' %>
