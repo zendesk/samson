@@ -46,7 +46,7 @@ class Admin::CommandsController < ApplicationController
     else
       respond_to do |format|
         format.html { render :show }
-        format.json { render json: {}, status: :unprocessable_entity }
+        format.js { render json: {}, status: :unprocessable_entity }
       end
     end
   end
@@ -68,8 +68,7 @@ class Admin::CommandsController < ApplicationController
         flash[:notice] = notice
         redirect_to admin_commands_path
       end
-
-      format.json { render json: {} }
+      format.js { render json: {} }
     end
   end
 
