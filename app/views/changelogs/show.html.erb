@@ -3,6 +3,16 @@
 <%= render 'projects/header', project: @project, tab: "changelog" %>
 
 <section class="tabs table-responsive">
+  <form class="pull-right" action="<%= deploy_check_project_changelog_path(@project) %>" method="get">
+    <p class="form-inline">
+      Deploy check
+      <input type="text" class="form-control" name="commit" placeholder="Commit">
+      <%= select_tag :stage_id, options_from_collection_for_select(@project.stages, :id, :name), class: "form-control" %>
+      <%= submit_tag "Check", class: "btn btn-default" %>
+      <%= additional_info "shows when a commit was first deployed to the selected stage" %>
+    </p>
+  </form>
+
   <form id="date-chooser">
     <p class="form-inline">
       Changes made between
