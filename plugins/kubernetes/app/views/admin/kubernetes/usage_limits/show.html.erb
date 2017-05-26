@@ -18,6 +18,8 @@
       <%= form.input :memory, required: true %>
     </fieldset>
 
-    <%= form.actions delete: [:admin, @usage_limit] %>
+    <%= form.actions delete: [:admin, @usage_limit] do %>
+      | <%= link_to_history @usage_limit if @usage_limit.persisted? %>
+    <% end %>
   <% end %>
 </section>
