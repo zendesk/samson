@@ -1,12 +1,11 @@
 # frozen_string_literal: true
 class EnvironmentVariable < ActiveRecord::Base
+  include GroupScope
   has_paper_trail
 
   belongs_to :parent, polymorphic: true # Resource they are set on
-  belongs_to :scope, polymorphic: true, optional: true
 
   validates :name, presence: true
-  validates :scope_type, inclusion: ["Environment", "DeployGroup", nil]
 
   class << self
     # preview parameter can be used to not raise an error,
@@ -62,16 +61,6 @@ class EnvironmentVariable < ActiveRecord::Base
       end
       resolver.verify! unless preview
     end
-  end
-
-  # used to assign direct from form values
-  def scope_type_and_id=(value)
-    self.scope_type, self.scope_id = value.to_s.split("-")
-  end
-
-  def scope_type_and_id
-    return unless scope_type && scope_id
-    "#{scope_type}-#{scope_id}"
   end
 
   private

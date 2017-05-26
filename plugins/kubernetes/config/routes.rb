@@ -28,6 +28,7 @@ Samson::Application.routes.draw do
           post :seed
         end
       end
+      resources :usage_limits, except: [:edit]
     end
   end
 end

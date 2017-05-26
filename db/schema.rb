@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20170513222253) do
+ActiveRecord::Schema.define(version: 20170526151018) do
 
   create_table "builds", id: :integer, force: :cascade do |t|
     t.integer "project_id", null: false
@@ -236,6 +236,18 @@ ActiveRecord::Schema.define(version: 20170513222253) do
     t.index ["project_id"], name: "index_kubernetes_roles_on_project_id"
     t.index ["resource_name", "deleted_at"], name: "index_kubernetes_roles_on_resource_name_and_deleted_at", unique: true, length: { resource_name: 191 }
     t.index ["service_name", "deleted_at"], name: "index_kubernetes_roles_on_service_name_and_deleted_at", unique: true, length: { service_name: 191 }
+  end
+
+  create_table "kubernetes_usage_limits", force: :cascade do |t|
+    t.integer "project_id"
+    t.integer "scope_id"
+    t.string "scope_type"
+    t.integer "memory", null: false
+    t.decimal "cpu", precision: 4, scale: 2, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["project_id"], name: "index_kubernetes_usage_limits_on_project_id"
+    t.index ["scope_type", "scope_id", "project_id"], name: "index_kubernetes_usage_limits_on_scope", unique: true, length: { scope_type: 20 }
   end
 
   create_table "locks", id: :integer, force: :cascade do |t|
