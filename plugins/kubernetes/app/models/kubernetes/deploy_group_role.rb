@@ -14,6 +14,7 @@ module Kubernetes
     validates :limits_cpu, numericality: { greater_than: 0 }
     validates :requests_memory, :limits_memory, numericality: { greater_than_or_equal_to: 4 }
     validate :requests_below_limits
+    validate :requests_below_usage_limits
 
     # The matrix is a list of deploy group and its roles + deploy-group-roles
     def self.matrix(stage)
@@ -72,8 +73,18 @@ module Kubernetes
     end
 
     def requests_below_limits
-      errors.add :requests_cpu, "must be less then or equal to the limit" if limits_cpu && requests_cpu > limits_cpu
-      errors.add :requests_memory, "must be less then or equal to the limit" if requests_memory > limits_memory
+      errors.add :requests_cpu, "must be less than or equal to the limit" if limits_cpu && requests_cpu > limits_cpu
+      errors.add :requests_memory, "must be less than or equal to the limit" if requests_memory > limits_memory
+    end
+
+    def requests_below_usage_limits
+      return unless limit = UsageLimit.most_specific(project, deploy_group)
+      if requests_cpu > limit.cpu
+        errors.add :requests_cpu, "must be less than or equal to the usage limit #{limit.cpu}"
+      end
+      if requests_memory > limit.memory
+        errors.add :requests_memory, "must be less than or equal to the usage limit #{limit.memory}"
+      end
     end
   end
 end

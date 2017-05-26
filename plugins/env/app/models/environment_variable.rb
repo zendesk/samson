@@ -13,9 +13,9 @@ class EnvironmentVariable < ActiveRecord::Base
     # also used by an external plugin
     def env(project, deploy_group, preview: false)
       variables = project.environment_variables + project.environment_variable_groups.flat_map(&:environment_variables)
-      variables.sort_by! { |ev| ev.send :priority }
+      variables.sort_by! { |ev| ev.send(:priority) }
       env = variables.each_with_object({}) do |ev, all|
-        all[ev.name] = ev.value if matches?(ev, deploy_group)
+        all[ev.name] = ev.value if !all[ev.name] && ev.send(:matches_scope?, deploy_group)
       end
 
       resolve_dollar_variables(env)
@@ -25,16 +25,6 @@ class EnvironmentVariable < ActiveRecord::Base
     end
 
     private
-
-    def matches?(ev, deploy_group)
-      return true unless ev.scope_id # for all
-      return false unless deploy_group # unscoped -> no specific groups
-      case ev.scope_type
-      when "DeployGroup" then ev.scope_id == deploy_group.id # matches deploy group
-      when "Environment" then ev.scope_id == deploy_group.environment_id # matches deploy group's environment
-      else raise "Unsupported scope #{ev.scope_type}"
-      end
-    end
 
     def resolve_dollar_variables(env)
       env.each_value do |value|
@@ -63,17 +53,8 @@ class EnvironmentVariable < ActiveRecord::Base
     end
   end
 
-  private
-
-  def priority
-    [
-      (parent_type == "Project" ? 1 : 0),
-      case scope_type
-      when nil then 0
-      when "Environment" then 1
-      when "DeployGroup" then 2
-      else raise "Unsupported scope #{scope_type}"
-      end
-    ]
+  # used by `priority` from GroupScope
+  def project?
+    parent_type == "Project"
   end
 end

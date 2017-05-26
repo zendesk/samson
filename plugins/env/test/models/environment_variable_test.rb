@@ -119,26 +119,4 @@ describe EnvironmentVariable do
       end
     end
   end
-
-  describe ".matches?" do
-    it "fails on bad references" do
-      e = assert_raises RuntimeError do
-        EnvironmentVariable.send(
-          :matches?,
-          EnvironmentVariable.new(scope_type: 'Foo', scope_id: 123),
-          deploy_groups(:pod1)
-        )
-      end
-      e.message.must_equal "Unsupported scope Foo"
-    end
-  end
-
-  describe "#priority" do
-    it "fails on bad references" do
-      e = assert_raises RuntimeError do
-        EnvironmentVariable.new(scope_type: 'Foo', scope_id: 123).send(:priority)
-      end
-      e.message.must_equal "Unsupported scope Foo"
-    end
-  end
 end
