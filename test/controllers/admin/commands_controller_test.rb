@@ -93,8 +93,8 @@ describe Admin::CommandsController do
         flash[:notice].wont_be_nil
       end
 
-      it "can update as json" do
-        patch :update, params: params, format: 'json'
+      it "can update as js" do
+        patch :update, params: params, format: 'js'
         assert_response :ok
       end
 
@@ -127,8 +127,8 @@ describe Admin::CommandsController do
           assert_template :show
         end
 
-        it "cannot update invalid as json" do
-          patch :update, params: params, format: 'json'
+        it "cannot update invalid as js" do
+          patch :update, params: params, format: 'js'
           assert_response :unprocessable_entity
         end
       end
@@ -190,8 +190,8 @@ describe Admin::CommandsController do
           end
         end
 
-        describe 'json' do
-          let(:format) { 'json' }
+        describe 'js' do
+          let(:format) { 'js' }
 
           it 'responds ok' do
             assert_response :ok
