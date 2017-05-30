@@ -1,5 +1,5 @@
 <% if recent_releases = @project.releases.last(5).presence %>
-  <div class="form-group" class="clickable-releases">
+  <div class="form-group clickable-releases">
     <label class="col-lg-2 control-label">Recent releases</label>
     <div class="col-lg-4">
       <% recent_releases.each do |release| %>
