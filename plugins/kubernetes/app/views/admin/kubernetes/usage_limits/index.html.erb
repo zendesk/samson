@@ -1,0 +1,32 @@
+<%= page_title "Kubernetes Usage Limits" %>
+
+<section class="clearfix tabs">
+  <div class="table table-hover table-condensed">
+
+    <table class="table">
+      <tr>
+        <th>Project</th>
+        <th>Scope</th>
+        <th>CPU</th>
+        <th>Memory</th>
+        <th></th>
+      </tr>
+
+      <% @usage_limits.each do |usage_limit| %>
+        <tr>
+          <td><%= usage_limit.project ? link_to(usage_limit.project.name, usage_limit.project) : 'global' %></td>
+          <td><%= usage_limit.scope ? usage_limit.scope.name : 'global' %></td>
+          <td><%= usage_limit.cpu.to_f %></td>
+          <td><%= usage_limit.memory %> Mi</td>
+          <td><%= link_to "Edit", [:admin, usage_limit] %></td>
+        </tr>
+      <% end %>
+    </table>
+  </div>
+
+  <div class="admin-actions">
+    <div class="pull-right">
+      <%= link_to "New", new_admin_kubernetes_usage_limit_path, class: "btn btn-default" %>
+    </div>
+  </div>
+</section>
