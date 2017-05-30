@@ -1,9 +1,7 @@
 # frozen_string_literal: true
 require_relative "../../test_helper"
 
-# Uncovered: create_and_wait_for_job resetting tracking variables for the next loop when
-# there is an error creating a build job or getting/watching pod log
-SingleCov.covered! uncovered: 2
+SingleCov.covered!
 
 describe Kubernetes::BuildJobExecutor do
   let(:output) { StringIO.new }
@@ -45,25 +43,28 @@ describe Kubernetes::BuildJobExecutor do
       let(:job_config_file) { read_kubernetes_sample_file('kubernetes_role_config_file.yml') }
       let(:labels) { {foo: 'bar'} }
       let(:build_config) do
-        stub(job: {
-          metadata: {
-            name: 'test_job',
-            namespace: 'test_ns',
-            labels: labels
-          },
-          spec: {
-            template: {
-              metadata: {
-                name: 'test_job',
-                namespace: 'test_ns',
-                labels: labels
-              },
-              spec: {
-                containers: [{ name: 'test-job' }]
+        stub(
+          "Build config",
+          primary: {
+            metadata: {
+              name: 'test_job',
+              namespace: 'test_ns',
+              labels: labels
+            },
+            spec: {
+              template: {
+                metadata: {
+                  name: 'test_job',
+                  namespace: 'test_ns',
+                  labels: labels
+                },
+                spec: {
+                  containers: [{ name: 'test-job' }]
+                }
               }
             }
           }
-        })
+        )
       end
 
       before do
@@ -80,18 +81,30 @@ describe Kubernetes::BuildJobExecutor do
 
         project_name_dash = project.permalink.tr('_', '-')
         assert_match(/^#{Regexp.quote(project_name_dash)}-docker-build-#{build.id}-[0-9a-f]{14}$/,
-          build_config.job[:metadata][:name])
+          build_config.primary[:metadata][:name])
 
-        labels_config = [build_config.job[:metadata][:labels], build_config.job[:spec][:template][:metadata][:labels]]
+        labels_config = [
+          build_config.primary[:metadata][:labels],
+          build_config.primary[:spec][:template][:metadata][:labels]
+        ]
         labels_config.each do |v|
           assert_equal v[:project], project_name_dash
           assert_equal v[:role], 'docker-build-job'
           assert_equal v[:foo], 'bar'
         end
 
-        assert_equal build_config.job[:spec][:template][:spec][:containers][0][:args],
+        assert_equal build_config.primary[:spec][:template][:spec][:containers][0][:args],
           [project.repository_url, build.git_sha, project.docker_repo(DockerRegistry.first), 'latest', 'no', 'no']
-        assert_equal build_config.job[:spec][:template][:spec][:containers][0][:env].length, 1
+        assert_equal build_config.primary[:spec][:template][:spec][:containers][0][:env].length, 1
+      end
+
+      it "rescues internal errors" do
+        extension_client.expects(:create_job).once
+        extension_client.expects(:get_job).raises(KubeException.new(404, 'Not Found', {}))
+        success, job_log = execute!
+
+        refute success, job_log
+        job_log.must_equal ""
       end
 
       describe 'when the job resource is created' do
