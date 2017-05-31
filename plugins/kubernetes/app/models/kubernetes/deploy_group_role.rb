@@ -79,11 +79,17 @@ module Kubernetes
 
     def requests_below_usage_limits
       return unless limit = UsageLimit.most_specific(project, deploy_group)
-      if requests_cpu > limit.cpu
-        errors.add :requests_cpu, "must be less than or equal to the usage limit #{limit.cpu}"
+      if requests_cpu * replicas > limit.cpu
+        errors.add(
+          :requests_cpu,
+          "(#{requests_cpu} * #{replicas}) must be less than or equal to the usage limit #{limit.cpu}"
+        )
       end
-      if requests_memory > limit.memory
-        errors.add :requests_memory, "must be less than or equal to the usage limit #{limit.memory}"
+      if requests_memory * replicas > limit.memory
+        errors.add(
+          :requests_memory,
+          "(#{requests_memory} * #{replicas}) must be less than or equal to the usage limit #{limit.memory}"
+        )
       end
     end
   end
