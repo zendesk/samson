@@ -92,7 +92,7 @@ module Kubernetes
     def job_config(build, project, docker_tag:, push: false, tag_as_latest: false)
       # Read the external config path and create a new job config instance
       contents = File.read(build_job_config_path)
-      k8s_job = Kubernetes::RoleConfigFile.new(contents, build_job_config_path).job
+      k8s_job = Kubernetes::RoleConfigFile.new(contents, build_job_config_path).primary
       fill_job_details(k8s_job, build, project, docker_tag: docker_tag, push: push, tag_as_latest: tag_as_latest)
       k8s_job
     end
@@ -127,14 +127,14 @@ module Kubernetes
               output.puts line
             end
           end
-        rescue StandardError
+        rescue
           # Something wrong happened. It is better to reset all memorized variables for logs and previous pod name.
           # Might get duplicated/old logs if the job finished successfully but the failure came from other sources.
           pod_name = logs = ""
           output.puts "### Cannot get job #{job_name}'s pod log."
         end
 
-        return false, "" if job.failure?
+        return false, "" if !job || job.failure?
         return false, "" if start + WAIT_FOR_JOB < Time.now
         return true, logs if job.complete?
       end
