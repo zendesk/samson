@@ -44,19 +44,22 @@
     });
 
     $row.after($new_row);
+    $new_row.find(".selectpicker").selectpicker();  // add selectpicker to copied row
     return $new_row;
   }
 
-  function withoutSelectpicker(callback){
-    $('.selectpicker').selectpicker('destroy').addClass('selectpicker'); // normalize existing
+  function withoutSelectpicker($row, callback){
+    var $picker = $row.find('.selectpicker');
+    $picker.selectpicker('destroy').addClass('selectpicker'); // normalize existing so they are ready to copy
     callback();
-    $(".selectpicker").selectpicker();  // restore selects
+    $picker.selectpicker();  // restore selects
   }
 
   $(document).on("click", ".duplicate_previous_row", function(e){
     e.preventDefault();
-    withoutSelectpicker(function(){
-      copyRow($(this).prev());
+    var $row = $(this).prev();
+    withoutSelectpicker($row, function(){
+      copyRow($row);
     });
   });
 
@@ -70,7 +73,7 @@
     var $row = $(this).prev().prev();
     var selectedEnv = $row.find("select").val();
 
-    withoutSelectpicker(function() {
+    withoutSelectpicker($row, function() {
       // add and fill new rows
       $.each(env, function (k, v) {
         $row = copyRow($row);
