@@ -8,7 +8,9 @@ port = 9080
 
 # make dev puma boot on port 3000
 # remove once https://github.com/puma/puma/pull/1277 is released
-port = 3000 if (ENV["RAILS_ENV"] || "development") == "development"
+if ENV["IS_DOCKER"] != "1"
+	port = 3000 if (ENV["RAILS_ENV"] || "development") == "development"
+end
 
 bind "tcp://0.0.0.0:#{port}"
 
