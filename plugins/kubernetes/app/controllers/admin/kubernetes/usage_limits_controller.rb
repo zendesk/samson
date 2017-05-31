@@ -46,7 +46,7 @@ class Admin::Kubernetes::UsageLimitsController < ApplicationController
 
   def usage_limit_params
     params.require(:kubernetes_usage_limit).permit(
-      :project_id, :scope_type_and_id, :cpu, :memory
+      :project_id, :scope_type_and_id, :replicas, :cpu, :memory
     )
   end
 end

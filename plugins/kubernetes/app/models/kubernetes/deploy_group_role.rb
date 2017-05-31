@@ -85,6 +85,9 @@ module Kubernetes
       if requests_memory > limit.memory
         errors.add :requests_memory, "must be less than or equal to the usage limit #{limit.memory}"
       end
+      if replicas > limit.replicas
+        errors.add :replicas, "must be less than or equal to the usage limit #{limit.replicas}"
+      end
     end
   end
 end
