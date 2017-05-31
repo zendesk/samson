@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20170526151018) do
+ActiveRecord::Schema.define(version: 20170530223214) do
 
   create_table "builds", id: :integer, force: :cascade do |t|
     t.integer "project_id", null: false
@@ -246,6 +246,7 @@ ActiveRecord::Schema.define(version: 20170526151018) do
     t.decimal "cpu", precision: 4, scale: 2, null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.integer "replicas", null: false
     t.index ["project_id"], name: "index_kubernetes_usage_limits_on_project_id"
     t.index ["scope_type", "scope_id", "project_id"], name: "index_kubernetes_usage_limits_on_scope", unique: true, length: { scope_type: 20 }
   end

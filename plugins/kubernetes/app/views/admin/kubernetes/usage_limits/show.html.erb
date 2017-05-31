@@ -14,6 +14,7 @@
         <% projects = Project.with_kubernetes_roles.pluck(:name, :id).unshift ["All", nil] %>
         <%= form.select :project_id, projects, {}, Samson::FormBuilder::LIVE_SELECT_OPTIONS %>
       <% end %>
+      <%= form.input :replicas, required: true %>
       <%= form.input :cpu, required: true %>
       <%= form.input :memory, required: true %>
     </fieldset>

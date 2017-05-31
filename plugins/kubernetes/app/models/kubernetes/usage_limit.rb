@@ -7,7 +7,7 @@ class Kubernetes::UsageLimit < ActiveRecord::Base
   belongs_to :project, optional: true
   belongs_to :scope, polymorphic: true, optional: true
 
-  validates :cpu, :memory, presence: true
+  validates :cpu, :memory, :replicas, presence: true
 
   def self.most_specific(project, deploy_group)
     all.sort_by { |l| l.send :priority }.detect { |l| l.send(:matches?, project, deploy_group) }
