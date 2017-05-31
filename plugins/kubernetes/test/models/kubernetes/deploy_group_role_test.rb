@@ -8,7 +8,7 @@ describe Kubernetes::DeployGroupRole do
   let(:deploy_group_role) { kubernetes_deploy_group_roles(:test_pod1_app_server) }
   let(:deploy_group) { deploy_group_role.deploy_group }
   let(:project) { stage.project }
-  let(:usage_limit) { Kubernetes::UsageLimit.create!(scope: deploy_group, project: project, cpu: 1, memory: 200) }
+  let(:usage_limit) { Kubernetes::UsageLimit.create!(scope: deploy_group, project: project, cpu: 1, memory: 400) }
 
   describe "validations" do
     it "is valid" do
@@ -158,13 +158,13 @@ describe Kubernetes::DeployGroupRole do
     end
 
     it "is not valid when requests are above usage_limit" do
-      deploy_group_role.requests_cpu = deploy_group_role.limits_cpu = 2
-      deploy_group_role.requests_memory = 300
+      deploy_group_role.requests_cpu = deploy_group_role.limits_cpu = 1
+      deploy_group_role.requests_memory = 200
       refute_valid deploy_group_role
       deploy_group_role.errors.full_messages.must_equal(
         [
-          "Requests cpu must be less than or equal to the usage limit 1.0",
-          "Requests memory must be less than or equal to the usage limit 200"
+          "Requests cpu (1.0 * 3) must be less than or equal to the usage limit 1.0",
+          "Requests memory (200 * 3) must be less than or equal to the usage limit 400"
         ]
       )
     end
