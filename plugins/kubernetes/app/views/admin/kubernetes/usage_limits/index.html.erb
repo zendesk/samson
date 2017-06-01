@@ -14,8 +14,8 @@
 
       <% @usage_limits.each do |usage_limit| %>
         <tr>
-          <td><%= usage_limit.project ? link_to(usage_limit.project.name, usage_limit.project) : 'global' %></td>
-          <td><%= usage_limit.scope ? usage_limit.scope.name : 'global' %></td>
+          <td><%= usage_limit.project ? link_to(usage_limit.project.name, usage_limit.project) : 'All' %></td>
+          <td><%= usage_limit.scope ? usage_limit.scope.name : 'All' %></td>
           <td><%= usage_limit.cpu.to_f %></td>
           <td><%= usage_limit.memory %> Mi</td>
           <td><%= link_to "Edit", [:admin, usage_limit] %></td>
