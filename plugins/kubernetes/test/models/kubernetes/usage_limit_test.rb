@@ -11,6 +11,21 @@ describe Kubernetes::UsageLimit do
   let(:project) { projects(:test) }
   let(:deploy_group) { deploy_groups(:pod100) }
 
+  describe "validations" do
+    it "does not allow duplicate limits in the same scope" do
+      create_limit
+      limit = Kubernetes::UsageLimit.new(cpu: 1, memory: 2)
+      refute_valid limit
+      limit.errors.full_messages.must_equal ["Scope has already been taken"]
+    end
+
+    it "allows duplicate limits in different scope" do
+      create_limit
+      limit = Kubernetes::UsageLimit.new(cpu: 1, memory: 2, scope: environments(:staging))
+      assert_valid limit
+    end
+  end
+
   describe ".most_specific" do
     let!(:usage_limit) { create_limit }
 
