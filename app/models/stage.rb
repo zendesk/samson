@@ -19,7 +19,6 @@ class Stage < ActiveRecord::Base
   has_soft_deletion default_scope: true unless self < SoftDeletion::Core
 
   include Permalinkable
-  include HasCommands
 
   has_paper_trail skip: [:order, :updated_at, :created_at]
 
@@ -34,8 +33,8 @@ class Stage < ActiveRecord::Base
 
   has_one :lock, as: :resource
 
-  has_many :command_associations, autosave: true, class_name: 'StageCommand', dependent: :destroy
-  has_many :commands, -> { order('stage_commands.position ASC').auto_include(false) }, through: :command_associations
+  has_many :stage_commands, autosave: true, dependent: :destroy
+  has_many :commands, -> { order('stage_commands.position ASC').auto_include(false) }, through: :stage_commands
 
   has_many :deploy_groups_stages, dependent: :destroy
   has_many :deploy_groups, through: :deploy_groups_stages
@@ -50,6 +49,7 @@ class Stage < ActiveRecord::Base
   validate :validate_deploy_group_selected
 
   before_create :ensure_ordering
+  before_save :build_new_project_command
   after_destroy :destroy_deploy_groups_stages
   after_destroy :destroy_stage_pipeline
   after_soft_delete :destroy_deploy_groups_stages
@@ -57,6 +57,7 @@ class Stage < ActiveRecord::Base
 
   scope :cloned, -> { where.not(template_stage_id: nil) }
 
+  attr_writer :command
   attr_reader :command_ids_changed
 
   def self.reset_order(new_order)
@@ -157,6 +158,11 @@ class Stage < ActiveRecord::Base
     emails.uniq.presence
   end
 
+  def script(previous: false)
+    method = (previous ? :command_was : :command)
+    commands.map(&method).join("\n")
+  end
+
   # we record a version on every script change, but do not update the stage ... see Command#trigger_stage_change
   def script_updated_after?(time)
     versions.last&.created_at&.> time
@@ -188,9 +194,11 @@ class Stage < ActiveRecord::Base
     DeployGroup.enabled? ? deploy_groups.map(&:environment).uniq : []
   end
 
-  def command_ids=(value)
-    @command_ids_changed = (command_ids != value.map(&:to_i))
-    super
+  def command_ids=(new_command_ids)
+    @command_ids_changed = (command_ids != new_command_ids.map(&:to_i))
+    super.tap do
+      reorder_commands(new_command_ids.reject(&:blank?).map(&:to_i))
+    end
   end
 
   def influencing_stage_ids
@@ -238,6 +246,22 @@ class Stage < ActiveRecord::Base
   def validate_deploy_group_selected
     if DeployGroup.enabled? && name != AUTOMATED_NAME && deploy_groups.empty?
       errors.add(:deploy_groups, "need to be selected")
+    end
+  end
+
+  def build_new_project_command
+    return unless @command.present?
+
+    new_command = project.commands.build(command: @command)
+    stage_commands.build(command: new_command).tap do
+      reorder_commands
+    end
+  end
+
+  def reorder_commands(command_ids = self.command_ids)
+    stage_commands.each do |command_association|
+      command_association.position = command_ids.index(command_association.command_id) ||
+        stage_commands.length
     end
   end
 end
