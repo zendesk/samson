@@ -170,4 +170,13 @@ describe DeployGroup do
       assert deploy_group.valid?
     end
   end
+
+  describe "#pluck_stage_ids" do
+    it "uses 1 cheap query" do
+      deploy_group
+      queries = sql_queries { deploy_group.pluck_stage_ids.to_a }
+      queries.size.must_equal 1
+      queries.first.wont_include "JOIN"
+    end
+  end
 end
