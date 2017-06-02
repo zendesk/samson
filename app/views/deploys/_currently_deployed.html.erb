@@ -1,7 +1,7 @@
 <% if deployed = @project.last_deploy_by_stage %>
   <div class="form-group clickable-releases">
     <label class="col-lg-2 control-label">Currently deployed</label>
-    <div class="col-lg-4">
+    <div class="col-lg-4" style="max-height: 300px; overflow: auto">
       <table class="table-condensed">
         <% deployed.each do |deploy| %>
           <tr>
