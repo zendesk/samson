@@ -7,23 +7,7 @@ describe Admin::DeployGroupsController do
   let(:deploy_group) { deploy_groups(:pod100) }
   let(:stage) { stages(:test_staging) }
 
-  as_a_deployer do
-    unauthorized :get, :index
-    unauthorized :get, :show, id: 1
-    unauthorized :post, :create
-    unauthorized :get, :new
-    unauthorized :get, :edit, id: 1
-    unauthorized :post, :update, id: 1
-    unauthorized :delete, :destroy, id: 1
-    unauthorized :get, :deploy_all, id: 1
-    unauthorized :post, :deploy_all, id: 1
-    unauthorized :post, :create_all_stages, id: 1
-    unauthorized :post, :delete_all_stages, id: 1
-    unauthorized :post, :merge_all_stages, id: 1
-    unauthorized :get, :create_all_stages_preview, id: 1
-  end
-
-  as_a_admin do
+  as_a_viewer do
     describe "#index" do
       it "renders" do
         get :index
@@ -50,6 +34,8 @@ describe Admin::DeployGroupsController do
     unauthorized :post, :deploy_all, id: 1
     unauthorized :post, :create_all_stages, id: 1
     unauthorized :post, :delete_all_stages, id: 1
+    unauthorized :post, :merge_all_stages, id: 1
+    unauthorized :get, :create_all_stages_preview, id: 1
   end
 
   as_a_super_admin do

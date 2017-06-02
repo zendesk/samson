@@ -1,6 +1,5 @@
 # frozen_string_literal: true
 class Admin::DeployGroupsController < ApplicationController
-  before_action :authorize_admin!
   before_action :authorize_super_admin!, except: [:index, :show]
   before_action :deploy_group, only: [
     :show, :edit, :update, :destroy,
