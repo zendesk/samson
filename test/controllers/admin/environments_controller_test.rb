@@ -19,11 +19,9 @@ describe Admin::EnvironmentsController do
         result['environments'].count.must_equal Environment.count
       end
     end
-  end
 
-  as_a_admin do
-    unauthorized :post, :create
     unauthorized :get, :new
+    unauthorized :post, :create
     unauthorized :get, :show, id: 1
     unauthorized :delete, :destroy, id: 1
     unauthorized :post, :update, id: 1
