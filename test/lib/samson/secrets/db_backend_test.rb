@@ -62,6 +62,12 @@ describe Samson::Secrets::DbBackend do
     end
   end
 
+  describe ".deploy_groups" do
+    it "is all" do
+      Samson::Secrets::DbBackend.deploy_groups.size.must_equal DeployGroup.count
+    end
+  end
+
   describe Samson::Secrets::DbBackend::Secret do
     describe "#value " do
       it "is encrypted" do
