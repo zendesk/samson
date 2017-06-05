@@ -61,6 +61,12 @@ describe 'Warden::Strategies::DoorkeeperStrategy Integration' do
       perform_get(valid_header)
       assert_response :success, response.body
     end
+
+    it "logs the user in when using profile token" do
+      token.update_column(:scopes, "profiles")
+      perform_get(valid_header)
+      assert_response :success, response.body
+    end
   end
 
   it "checks and fails with expired token" do

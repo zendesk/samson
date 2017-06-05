@@ -10,8 +10,13 @@ class ApplicationController < ActionController::Base
   force_ssl if: :force_ssl?
 
   include CurrentUser # must be after protect_from_forgery, so that authenticate! is called
+  include JsonExceptions
 
   protected
+
+  def page
+    params.fetch(:page, 1)
+  end
 
   def force_ssl?
     ENV['FORCE_SSL'] == '1'
@@ -40,7 +45,7 @@ class ApplicationController < ActionController::Base
   end
 
   def store_requested_oauth_scope
-    request.env['requested_oauth_scope'] = Warden::Strategies::Doorkeeper::WEB_UI_SCOPE
+    request.env['requested_oauth_scopes'] = [Warden::Strategies::Doorkeeper::WEB_UI_SCOPE, controller_name]
   end
 
   def using_per_request_auth?

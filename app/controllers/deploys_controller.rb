@@ -160,7 +160,7 @@ class DeploysController < ApplicationController
     deploys = deploys_scope
     deploys = deploys.where(stage: stages) if stages
     deploys = deploys.where(job: jobs) if jobs
-    deploys.page(params[:page]).per(30)
+    deploys.page(page).per(30)
   end
 
   def deploy_permitted_params

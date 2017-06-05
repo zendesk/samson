@@ -6,7 +6,7 @@ class BuildsController < ApplicationController
   before_action :find_build, only: [:show, :build_docker_image, :edit, :update]
 
   def index
-    @builds = current_project.builds.order('id desc').page(params[:page])
+    @builds = current_project.builds.order('id desc').page(page)
 
     respond_to do |format|
       format.html

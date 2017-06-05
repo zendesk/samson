@@ -8,7 +8,7 @@ class JobsController < ApplicationController
   before_action :find_job, only: [:show, :destroy]
 
   def index
-    @jobs = @project.jobs.non_deploy.page(params[:page])
+    @jobs = @project.jobs.non_deploy.page(page)
   end
 
   def show

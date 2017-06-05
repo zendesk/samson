@@ -41,6 +41,24 @@ describe Api::BaseController do
     end
   end
 
+  describe "#require_project" do
+    it "finds a project" do
+      @controller.params[:project_id] = projects(:test).id
+      @controller.send(:require_project).must_equal projects(:test)
+    end
+
+    it "ignores missing project_id" do
+      @controller.send(:require_project).must_be_nil
+    end
+
+    it "fails on invalid project" do
+      @controller.params[:project_id] = 123
+      assert_raises ActiveRecord::RecordNotFound do
+        @controller.send(:require_project)
+      end
+    end
+  end
+
   describe "#enforce_json_format" do
     it "fails without json" do
       get :test_render, params: {test_route: true}
@@ -63,49 +81,9 @@ describe Api::BaseController do
     before { @controller.unstub(:store_requested_oauth_scope) }
 
     it "stores the controller scope" do
-      I18n.expects(:t).with('doorkeeper.applications.help.scopes').returns('foo api_base_test')
       get :test_render, params: {test_route: true}, format: :json
       assert_response :unauthorized
-      request.env['requested_oauth_scope'].must_equal 'api_base_test'
-    end
-
-    it "fails when scope is unknown" do
-      e = assert_raises(RuntimeError) { get :test_render, params: {test_route: true}, format: :json }
-      e.message.must_include "Add api_base_test to"
-    end
-  end
-end
-
-describe "Api::BaseController Integration" do
-  describe "errors" do
-    let(:user) { users(:super_admin) }
-    let(:token) { Doorkeeper::AccessToken.create!(resource_owner_id: user.id, scopes: 'default') }
-
-    def assert_json(code, message)
-      assert_response code
-      JSON.parse(response.body, symbolize_names: true).must_equal(error: message)
-    end
-
-    let(:headers) { {'Authorization' => "Bearer #{token.token}"} }
-
-    before do
-      ActionDispatch::Request.any_instance.stubs(show_exceptions?: true) # render exceptions as production would
-      stub_session_auth
-    end
-
-    it "presents validation errors" do
-      post '/api/locks.json', params: {lock: {warning: true}}, headers: headers
-      assert_json 422, description: ["can't be blank"]
-    end
-
-    it "presents missing params errors" do
-      post '/api/locks.json', params: {}, headers: headers
-      assert_json 400, lock: ["is required"]
-    end
-
-    it "presents invalid keys errors" do
-      post '/api/locks.json', params: {lock: {foo: :bar, baz: :bar}}, headers: headers
-      assert_json 400, foo: ["is not permitted"], baz: ["is not permitted"]
+      request.env['requested_oauth_scopes'].must_equal ['api_base_test']
     end
   end
 end
