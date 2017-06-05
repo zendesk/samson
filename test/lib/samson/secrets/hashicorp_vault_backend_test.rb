@@ -157,4 +157,10 @@ describe Samson::Secrets::HashicorpVaultBackend do
       end
     end
   end
+
+  describe ".deploy_groups" do
+    it "does not include ones that could not be selected" do
+      Samson::Secrets::HashicorpVaultBackend.deploy_groups.must_equal [deploy_groups(:pod2)]
+    end
+  end
 end

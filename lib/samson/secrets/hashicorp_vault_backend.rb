@@ -61,6 +61,10 @@ module Samson
           keys.map! { |secret_path| vault_path(secret_path, :decode) }
         end
 
+        def deploy_groups
+          DeployGroup.where.not(vault_server_id: nil)
+        end
+
         private
 
         def vault_action(method, path, *args)

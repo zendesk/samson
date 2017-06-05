@@ -44,6 +44,10 @@ module Samson
           Secret.order(:id).pluck(:id)
         end
 
+        def deploy_groups
+          DeployGroup.all
+        end
+
         private
 
         def secret_to_hash(secret)
