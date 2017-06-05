@@ -83,24 +83,6 @@ class ActiveSupport::TestCase
     Time.stubs(:now).returns(Time.new(2001, 2, 3, 4, 5, 6))
   end
 
-  def ar_queries
-    require 'query_diet'
-    QueryDiet::Logger.queries.map(&:first) - ["select 1"]
-  end
-
-  def assert_sql_queries(count)
-    old = ar_queries
-    yield
-    new = ar_queries
-    extra = new[old.size..-1].reject { |q| q =~ /information_schema|sqlite_temp_master|pg_constraint|pg_attribute/ }
-    message = extra.join("\n")
-    if count.is_a?(Range)
-      assert_includes count, extra.count, message
-    else
-      assert_equal count, extra.count, message
-    end
-  end
-
   # record hook and their arguments called during a given block
   def record_hooks(callback, &block)
     called = []

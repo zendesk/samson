@@ -129,7 +129,6 @@ group :test do
   gem 'mocha'
   gem 'webmock'
   gem 'single_cov'
-  gem 'query_diet'
   gem 'ar_multi_threaded_transactional_tests'
   gem 'bundler-audit', require: false
 end
