@@ -1,5 +1,5 @@
 # frozen_string_literal: true
-class Admin::CommandsController < ApplicationController
+class CommandsController < ApplicationController
   include CurrentProject
 
   PUBLIC = [:index, :show, :new].freeze
@@ -66,7 +66,7 @@ class Admin::CommandsController < ApplicationController
     respond_to do |format|
       format.html do
         flash[:notice] = notice
-        redirect_to admin_commands_path
+        redirect_to commands_path
       end
       format.js { render json: {} }
     end

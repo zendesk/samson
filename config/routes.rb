@@ -103,6 +103,8 @@ Samson::Application.routes.draw do
 
   resources :versions, only: [:index]
 
+  resources :commands, except: [:edit]
+
   get '/auth/github/callback', to: 'sessions#github'
   get '/auth/google/callback', to: 'sessions#google'
   post '/auth/ldap/callback', to: 'sessions#ldap'
@@ -126,7 +128,6 @@ Samson::Application.routes.draw do
       resource :user_merges, only: [:new, :create]
     end
     resources :projects, only: [:index, :destroy]
-    resources :commands, except: [:edit]
     resources :secrets, except: [:edit]
     resources :vault_servers, except: [:edit] do
       member do

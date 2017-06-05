@@ -2,7 +2,7 @@
 <% usages = @command.usages.presence %>
 
 <section>
-  <%= form_for [:admin, @command], html: { class: "form-horizontal" } do |form| %>
+  <%= form_for @command, html: { class: "form-horizontal" } do |form| %>
     <fieldset>
       <%= render 'shared/errors', object: @command %>
 
@@ -37,7 +37,7 @@
 
       <%= form.actions do %>
         <% disabled = "Can only delete unused commands." if usages %>
-        <%= link_to_delete([:admin, @command], disabled: disabled) if @command.persisted? %> |
+        <%= link_to_delete(@command, disabled: disabled) if @command.persisted? %> |
         <%= link_to_history(@command) %>
       <% end %>
     </fieldset>
