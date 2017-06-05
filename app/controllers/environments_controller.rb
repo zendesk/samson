@@ -1,5 +1,5 @@
 # frozen_string_literal: true
-class Admin::EnvironmentsController < ApplicationController
+class EnvironmentsController < ApplicationController
   before_action :authorize_super_admin!, except: [:index]
   before_action :environment, only: [:show, :update, :destroy]
 

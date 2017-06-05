@@ -1,12 +1,9 @@
 # frozen_string_literal: true
 module StagesHelper
   def edit_command_link(command)
-    edit_url = [:admin, command]
-    if command.global?
-      link_to "", edit_url, title: "Edit global command", class: "edit-command glyphicon glyphicon-globe no-hover"
-    else
-      link_to "", edit_url, title: "Edit", class: "edit-command glyphicon glyphicon-edit no-hover"
-    end
+    title = (command.global? ? "Edit global command" : "Edit")
+    icon = (command.global? ? "glyphicon-globe" : "glyphicon-edit")
+    link_to "", command, title: title, class: "edit-command glyphicon #{icon} no-hover"
   end
 
   def stage_template_icon

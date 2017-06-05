@@ -64,21 +64,21 @@
         <a href="#" class="dropdown-toggle" data-toggle="dropdown">Manage <b class="caret"></b></a>
         <ul class="dropdown-menu">
           <% if DeployGroup.enabled? %>
-            <li><%= link_to "Environments", admin_environments_path %></li>
+            <li><%= link_to "Environments", environments_path %></li>
             <li><%= link_to "Deploy Groups", admin_deploy_groups_path %></li>
           <% end %>
           <% if current_user.try(:admin?) %>
             <li><%= link_to "Projects", admin_projects_path %></li>
           <% end %>
-          <li><%= link_to "Commands", admin_commands_path %></li>
+          <li><%= link_to "Commands", Command %></li>
           <% if current_user.try(:admin?) %>
             <li><%= link_to "Users", admin_users_path %></li>
             <%= Samson::Hooks.render_views(:admin_menu, self) %>
             <li class="divider"></li>
           <% end %>
-          <li><%= link_to "Secrets", admin_secrets_path %></li>
+          <li><%= link_to "Secrets", secrets_path %></li>
           <% if SecretStorage.backend == Samson::Secrets::HashicorpVaultBackend %>
-            <li><%= link_to "Vault Servers", admin_vault_servers_path %></li>
+            <li><%= link_to "Vault Servers", vault_servers_path %></li>
           <% end %>
           <li><%= link_to "Reports", csv_exports_path %></li>
           <% if current_user&.super_admin? %>

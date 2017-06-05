@@ -11,7 +11,7 @@
   <div class="form-group">
     <label class="col-lg-2 control-label">Environment</label>
     <div class="col-lg-4">
-      <p class="form-control-static"><%= link_to @deploy_group.environment.name, [:admin, @deploy_group.environment] %></p>
+      <p class="form-control-static"><%= link_to @deploy_group.environment.name, @deploy_group.environment %></p>
     </div>
   </div>
 

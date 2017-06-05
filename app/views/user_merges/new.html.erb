@@ -13,7 +13,7 @@ Delete selected empty user and change #<%= @user.id %> <%= @user.name_and_email 
   </ul>
 <% end %>
 
-<%= form_for @user, url: admin_user_user_merges_path(@user), method: :post do |f| %>
+<%= form_for @user, url: user_user_merges_path(@user), method: :post do |f| %>
   <div class="form-group">
     <label class="col-lg-2 control-label">Destroy and take login credentials from user id</label>
     <div class="col-lg-4">

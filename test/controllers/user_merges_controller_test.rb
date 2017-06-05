@@ -1,9 +1,9 @@
 # frozen_string_literal: true
-require_relative '../../test_helper'
+require_relative '../test_helper'
 
 SingleCov.covered!
 
-describe Admin::UserMergesController do
+describe UserMergesController do
   as_a_admin do
     unauthorized :get, :new, user_id: 1
     unauthorized :post, :create, user_id: 1

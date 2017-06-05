@@ -1,9 +1,9 @@
 # frozen_string_literal: true
-require_relative '../../test_helper'
+require_relative '../test_helper'
 
 SingleCov.covered!
 
-describe Admin::CommandsController do
+describe CommandsController do
   let(:project) { projects(:test) }
   let(:other_project) do
     p = project.dup
@@ -68,7 +68,7 @@ describe Admin::CommandsController do
       it "can create a command for an allowed project" do
         post :create, params: params
         flash[:notice].wont_be_nil
-        assert_redirected_to admin_commands_path
+        assert_redirected_to commands_path
       end
 
       it "fails for invalid command" do
@@ -89,7 +89,7 @@ describe Admin::CommandsController do
 
       it "can update html" do
         patch :update, params: params
-        assert_redirected_to admin_commands_path
+        assert_redirected_to commands_path
         flash[:notice].wont_be_nil
       end
 
@@ -115,7 +115,7 @@ describe Admin::CommandsController do
         it "can update when admin of both" do
           UserProjectRole.create!(role_id: Role::ADMIN.id, project: other_project, user: user)
           patch :update, params: params
-          assert_redirected_to admin_commands_path
+          assert_redirected_to commands_path
         end
       end
 
@@ -137,7 +137,7 @@ describe Admin::CommandsController do
     describe "#destroy" do
       it "can delete command for an allowed project" do
         delete :destroy, params: {id: commands(:echo)}
-        assert_redirected_to admin_commands_path
+        assert_redirected_to commands_path
       end
 
       it "cannot delete global commands" do
@@ -151,19 +151,19 @@ describe Admin::CommandsController do
     describe "#create" do
       it "cannot create for a global project" do
         post :create, params: {command: {command: "hello"}}
-        assert_redirected_to admin_commands_path
+        assert_redirected_to commands_path
       end
     end
 
     describe '#update' do
       it "updates a project" do
         put :update, params: {id: commands(:echo).id, command: { command: 'echo hi', project_id: other_project.id }}
-        assert_redirected_to admin_commands_path
+        assert_redirected_to commands_path
       end
 
       it "updates a global commands" do
         put :update, params: {id: commands(:global).id, command: { command: 'echo hi' }}
-        assert_redirected_to admin_commands_path
+        assert_redirected_to commands_path
       end
     end
 
@@ -182,7 +182,7 @@ describe Admin::CommandsController do
 
           it 'redirects' do
             flash[:notice].wont_be_nil
-            assert_redirected_to admin_commands_path
+            assert_redirected_to commands_path
           end
 
           it 'removes the command' do

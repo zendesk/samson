@@ -3,7 +3,7 @@
 <%= render_lock @environment %>
 
 <section>
-  <%= form_for [:admin, @environment], html: { class: "form-horizontal" } do |form| %>
+  <%= form_for @environment, html: { class: "form-horizontal" } do |form| %>
     <%= render 'shared/errors', object: @environment %>
 
     <%= form.input :name, required: true %>
