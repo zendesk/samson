@@ -1,7 +1,11 @@
 # frozen_string_literal: true
 module ReleasesHelper
   def release_label(project, release)
-    link_to(release.version, [project, release], class: "release-label label label-success")
+    link_to(
+      release.version,
+      [project, release],
+      class: "release-label label label-success", data: {ref: release.version}
+    )
   end
 
   def link_to_deploy_stage(stage, release)

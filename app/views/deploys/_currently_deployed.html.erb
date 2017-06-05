@@ -8,7 +8,7 @@
             <td>
               <%= link_to deploy.stage.name, [@project, deploy.stage] %>
             </td>
-            <td><%= link_to deploy.short_reference, [@project, deploy], class: "status label #{status_label(deploy.status)}" %></td>
+            <td><%= link_to deploy.short_reference, "#", class: "status label #{status_label(deploy.status)}", data: {ref: deploy.short_reference} %></td>
           </tr>
         <% end %>
       </table>

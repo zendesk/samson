@@ -9,7 +9,9 @@ describe ReleasesHelper do
     let(:result) { release_label(projects(:test), release) }
 
     it "produces a label" do
-      result.must_equal "<a class=\"release-label label label-success\" href=\"/projects/foo/releases/v123\">v123</a>"
+      result.must_equal(
+        "<a class=\"release-label label label-success\" data-ref=\"v123\" href=\"/projects/foo/releases/v123\">v123</a>"
+      )
     end
   end
 
