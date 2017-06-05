@@ -165,12 +165,8 @@ class Deploy < ActiveRecord::Base
   end
 
   def self.last_deploys_for_projects
-    deploy_ids = select('deploys.project_id, MAX(deploys.id) as last_deploy_id').
-      group(:project_id).
-      reorder(:project_id).
-      map(&:last_deploy_id)
-
-    where(id: deploy_ids)
+    deploy_ids = group(:project_id).reorder("max(deploys.id)").pluck('max(deploys.id)')
+    where(id: deploy_ids) # extra select so we get all columns from the correct deploy without group functions
   end
 
   def buddy_name

@@ -31,6 +31,11 @@ class DeployGroup < ActiveRecord::Base
     Samson::NaturalOrder.convert(name)
   end
 
+  # faster alternative to stage_ids way of getting stage_ids
+  def pluck_stage_ids
+    deploy_groups_stages.pluck(:stage_id)
+  end
+
   private
 
   def permalink_base
