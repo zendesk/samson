@@ -139,7 +139,6 @@ Samson::Application.routes.draw do
 
   namespace :admin do
     resources :users, only: [:index, :show, :update, :destroy]
-    resources :projects, only: [:index, :destroy]
     resources :deploy_groups do
       member do
         post :deploy_all

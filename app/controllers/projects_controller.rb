@@ -8,7 +8,7 @@ class ProjectsController < ApplicationController
 
   PUBLIC = [:index, :show, :deploy_group_versions].freeze
   before_action :authorize_project_admin!, except: PUBLIC
-  before_action :authorize_admin!, except: PUBLIC + [:edit, :update]
+  before_action :authorize_admin!, except: PUBLIC + [:edit, :update, :destroy]
 
   helper_method :project
 
@@ -17,7 +17,7 @@ class ProjectsController < ApplicationController
   def index
     respond_to do |format|
       format.html do
-        @projects = projects_for_user.alphabetical
+        @projects = projects_for_user
       end
 
       format.json do
@@ -71,6 +71,15 @@ class ProjectsController < ApplicationController
     end
   end
 
+  def destroy
+    @project.soft_delete(validate: false)
+
+    if Rails.application.config.samson.project_deleted_email
+      ProjectMailer.deleted_email(@current_user, @project).deliver_later
+    end
+    redirect_to projects_path, notice: "Project removed."
+  end
+
   def deploy_group_versions
     before = params[:before] ? Time.parse(params[:before]) : Time.now
     deploy_group_versions = project.last_deploy_by_group(before).each_with_object({}) do |(id, deploy), hash|
@@ -99,11 +108,17 @@ class ProjectsController < ApplicationController
   end
 
   def projects_for_user
-    if ids = current_user.starred_project_ids.presence
-      Project.where(id: ids)
-    else
-      Project.limit(9).order(id: :desc) # 3 or 1 column layout depending on size
+    per_page = 9 # 3 or 1 column layout depending on size
+    scope = Project.alphabetical
+    if query = params.dig(:search, :query).presence
+      query = ActiveRecord::Base.send(:sanitize_sql_like, query)
+      scope = scope.where('name like ?', "%#{query}%")
+    elsif ids = current_user.starred_project_ids.presence
+      # fake association sorting since order by array is hard to support in mysql+postgres+sqlite
+      array = scope.all.sort_by { |p| ids.include?(p.id) ? 0 : 1 }
+      return Kaminari.paginate_array(array).page(params[:page]).per(per_page)
     end
+    scope.order(id: :desc).page(params[:page]).per(per_page)
   end
 
   # Overriding require_project from CurrentProject

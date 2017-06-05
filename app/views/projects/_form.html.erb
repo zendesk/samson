@@ -25,10 +25,6 @@
 
     <%= Samson::Hooks.render_views(:project_form, self, form: form) %>
 
-    <div class="form-group">
-      <div class="col-lg-offset-2 col-lg-10">
-        <button type="submit" class="btn btn-default">Save</button>
-      </div>
-    </div>
+    <%= form.actions delete: current_user.admin_for?(@project) %>
   </fieldset>
 <% end %>
