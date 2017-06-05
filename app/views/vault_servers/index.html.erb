@@ -27,8 +27,8 @@
             <% end %>
           </td>
           <td>
-            <%= link_to "Edit", [:admin, vault_server] %> |
-            <%= link_to_delete [:admin, vault_server] %>
+            <%= link_to "Edit", vault_server %> |
+            <%= link_to_delete vault_server %>
           </td>
         </tr>
       <% end %>
@@ -37,7 +37,7 @@
 
   <div class="admin-actions">
     <div class="pull-right">
-      <%= link_to "New Server", new_admin_vault_server_path, class: "btn btn-default" %>
+      <%= link_to "New Server", new_vault_server_path, class: "btn btn-default" %>
     </div>
   </div>
 </section>

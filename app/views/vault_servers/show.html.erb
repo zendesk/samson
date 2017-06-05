@@ -12,7 +12,7 @@
 %>
 
 <section>
-  <%= form_for [:admin, @vault_server], html: { class: "form-horizontal" } do |form| %>
+  <%= form_for @vault_server, html: { class: "form-horizontal" } do |form| %>
     <fieldset>
       <%= render 'shared/errors', object: @vault_server %>
 
@@ -22,7 +22,7 @@
       <%= form.input :tls_verify, as: :check_box %>
       <%= form.input :ca_cert, as: :text_area, input_html: {size: '80x5', style: 'width: auto'} %>
 
-      <%= form.actions delete: [:admin, @vault_server] do %>
+      <%= form.actions delete: @vault_server do %>
         | <%= link_to_history @vault_server %>
         <% if sync_targets %>
           | <%= link_to "Sync", "#", data: {target: "#sync_dialog"}, class: 'toggle' %>
@@ -33,7 +33,7 @@
 
   <% if sync_targets %>
     <div style="display: none;" id="sync_dialog">
-      <%= form_tag sync_admin_vault_server_path(@vault_server) do %>
+      <%= form_tag sync_vault_server_path(@vault_server) do %>
         <fieldset>
           Copy eligible secrets from
           <%= select_tag :other_id, options_from_collection_for_select(sync_targets, :id, :name), class: 'form-control', style: 'width: auto; display: inline-block' %>

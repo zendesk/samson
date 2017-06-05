@@ -1,9 +1,9 @@
 # frozen_string_literal: true
-require_relative '../../test_helper'
+require_relative '../test_helper'
 
 SingleCov.covered!
 
-describe Admin::VaultServersController do
+describe VaultServersController do
   let!(:server) do
     Samson::Secrets::VaultServer.any_instance.stubs(:validate_connection)
     Samson::Secrets::VaultServer.create!(name: 'pod1', address: 'http://vault-land.com', token: 'TOKEN2')
@@ -68,7 +68,7 @@ describe Admin::VaultServersController do
 
         post :sync, params: {id: server.id, other_id: other.id}
 
-        assert_redirected_to admin_vault_server_path(server)
+        assert_redirected_to vault_server_path(server)
         flash[:notice].must_equal "Synced 3 values!"
       end
     end

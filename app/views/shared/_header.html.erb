@@ -78,7 +78,7 @@
           <% end %>
           <li><%= link_to "Secrets", secrets_path %></li>
           <% if SecretStorage.backend == Samson::Secrets::HashicorpVaultBackend %>
-            <li><%= link_to "Vault Servers", admin_vault_servers_path %></li>
+            <li><%= link_to "Vault Servers", vault_servers_path %></li>
           <% end %>
           <li><%= link_to "Reports", csv_exports_path %></li>
           <% if current_user&.super_admin? %>
