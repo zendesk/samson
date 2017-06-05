@@ -107,6 +107,10 @@ Samson::Application.routes.draw do
 
   resources :secrets, except: [:edit]
 
+  resources :users, only: [] do
+    resource :user_merges, only: [:new, :create]
+  end
+
   get '/auth/github/callback', to: 'sessions#github'
   get '/auth/google/callback', to: 'sessions#google'
   post '/auth/ldap/callback', to: 'sessions#ldap'
@@ -126,9 +130,7 @@ Samson::Application.routes.draw do
   end
 
   namespace :admin do
-    resources :users, only: [:index, :show, :update, :destroy] do
-      resource :user_merges, only: [:new, :create]
-    end
+    resources :users, only: [:index, :show, :update, :destroy]
     resources :projects, only: [:index, :destroy]
     resources :vault_servers, except: [:edit] do
       member do

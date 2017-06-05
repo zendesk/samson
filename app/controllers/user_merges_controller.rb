@@ -1,5 +1,5 @@
 # frozen_string_literal: true
-class Admin::UserMergesController < ApplicationController
+class UserMergesController < ApplicationController
   before_action :authorize_super_admin!
   before_action :find_user
 
