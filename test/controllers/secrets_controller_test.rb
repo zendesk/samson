@@ -1,9 +1,9 @@
 # frozen_string_literal: true
-require_relative '../../test_helper'
+require_relative '../test_helper'
 
 SingleCov.covered!
 
-describe Admin::SecretsController do
+describe SecretsController do
   def create_global
     create_secret 'production/global/pod2/foo'
   end
@@ -144,7 +144,7 @@ describe Admin::SecretsController do
       it 'creates a secret' do
         post :create, params: {secret: attributes.merge(visible: 'false')}
         assert flash[:notice]
-        assert_redirected_to admin_secrets_path
+        assert_redirected_to secrets_path
         secret = SecretStorage::DbBackend::Secret.find('production/foo/pod2/hi')
         secret.updater_id.must_equal user.id
         secret.creator_id.must_equal user.id
@@ -162,9 +162,9 @@ describe Admin::SecretsController do
       end
 
       it "redirects to new form when user wants to create another secret" do
-        post :create, params: {secret: attributes, commit: Admin::SecretsController::ADD_MORE}
+        post :create, params: {secret: attributes, commit: SecretsController::ADD_MORE}
         flash[:notice].wont_be_nil
-        assert_redirected_to "/admin/secrets/new?#{{secret: attributes.except(:value)}.to_query}"
+        assert_redirected_to "/secrets/new?#{{secret: attributes.except(:value)}.to_query}"
       end
 
       it 'renders and sets the flash when invalid' do
@@ -225,7 +225,7 @@ describe Admin::SecretsController do
 
       it 'updates' do
         flash[:notice].wont_be_nil
-        assert_redirected_to admin_secrets_path
+        assert_redirected_to secrets_path
         secret.reload
         secret.updater_id.must_equal user.id
         secret.creator_id.must_equal users(:admin).id
@@ -248,7 +248,7 @@ describe Admin::SecretsController do
         end
 
         it "is not supported" do
-          assert_redirected_to admin_secrets_path
+          assert_redirected_to secrets_path
           secret.reload.id.must_equal 'production/foo/pod2/some_key'
         end
       end
@@ -273,7 +273,7 @@ describe Admin::SecretsController do
     describe "#destroy" do
       it "deletes project secret" do
         delete :destroy, params: {id: secret}
-        assert_redirected_to "/admin/secrets"
+        assert_redirected_to "/secrets"
         SecretStorage::DbBackend::Secret.exists?(secret.id).must_equal(false)
       end
 
@@ -299,7 +299,7 @@ describe Admin::SecretsController do
       end
 
       it 'redirects and sets the flash' do
-        assert_redirected_to admin_secrets_path
+        assert_redirected_to secrets_path
         flash[:notice].wont_be_nil
       end
     end
@@ -320,21 +320,21 @@ describe Admin::SecretsController do
     describe '#update' do
       it "updates" do
         put :update, params: {id: secret, secret: attributes.except(*SecretStorage::SECRET_KEYS_PARTS)}
-        assert_redirected_to admin_secrets_path
+        assert_redirected_to secrets_path
       end
     end
 
     describe '#destroy' do
       it 'deletes global secret' do
         delete :destroy, params: {id: secret.id}
-        assert_redirected_to "/admin/secrets"
+        assert_redirected_to "/secrets"
         SecretStorage::DbBackend::Secret.exists?(secret.id).must_equal(false)
       end
 
       it "works with unknown project" do
         secret.update_column(:id, 'oops/bar')
         delete :destroy, params: {id: secret.id}
-        assert_redirected_to "/admin/secrets"
+        assert_redirected_to "/secrets"
         SecretStorage::DbBackend::Secret.exists?(secret.id).must_equal(false)
       end
     end
