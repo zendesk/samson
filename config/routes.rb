@@ -101,6 +101,8 @@ Samson::Application.routes.draw do
 
   resources :access_tokens, only: [:index, :new, :create, :destroy]
 
+  resources :environments, except: [:edit]
+
   resources :versions, only: [:index]
 
   resources :commands, except: [:edit]
@@ -138,7 +140,6 @@ Samson::Application.routes.draw do
   namespace :admin do
     resources :users, only: [:index, :show, :update, :destroy]
     resources :projects, only: [:index, :destroy]
-    resources :environments, except: [:edit]
     resources :deploy_groups do
       member do
         post :deploy_all

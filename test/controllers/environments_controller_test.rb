@@ -1,9 +1,9 @@
 # frozen_string_literal: true
-require_relative '../../test_helper'
+require_relative '../test_helper'
 
 SingleCov.covered!
 
-describe Admin::EnvironmentsController do
+describe EnvironmentsController do
   as_a_viewer do
     describe "#index" do
       it 'renders' do
@@ -41,7 +41,7 @@ describe Admin::EnvironmentsController do
       it 'creates an environment' do
         assert_difference 'Environment.count', +1 do
           post :create, params: {environment: {name: 'gamma', production: true}}
-          assert_redirected_to admin_environments_path
+          assert_redirected_to environments_path
         end
       end
 
@@ -64,7 +64,7 @@ describe Admin::EnvironmentsController do
       it 'succeeds' do
         env = environments(:production)
         delete :destroy, params: {id: env}
-        assert_redirected_to admin_environments_path
+        assert_redirected_to environments_path
         Environment.where(id: env.id).must_equal []
       end
 
@@ -78,11 +78,11 @@ describe Admin::EnvironmentsController do
     describe '#update' do
       let(:environment) { environments(:production) }
 
-      before { request.env["HTTP_REFERER"] = admin_environments_url }
+      before { request.env["HTTP_REFERER"] = environments_url }
 
       it 'save' do
         post :update, params: {environment: {name: 'Test Update', production: false, permalink: 'foo'}, id: environment}
-        assert_redirected_to admin_environments_path
+        assert_redirected_to environments_path
         environment.reload
         environment.name.must_equal 'Test Update'
         environment.permalink.must_equal 'foo'

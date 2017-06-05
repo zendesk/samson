@@ -20,9 +20,9 @@
             </td>
             <td><%= env.production ? 'Yes' : 'No' %></td>
             <td>
-              <%= link_to "Edit", [:admin, env] %>
+              <%= link_to "Edit", env %>
               |
-              <%= link_to_delete([:admin, env]) %>
+              <%= link_to_delete env %>
             </td>
           </tr>
         <% end %>
@@ -32,7 +32,7 @@
 
   <div class="admin-actions">
     <div class="pull-right">
-      <%= link_to "New", new_admin_environment_path, class: "btn btn-default" %>
+      <%= link_to "New", new_environment_path, class: "btn btn-default" %>
     </div>
   </div>
 </section>

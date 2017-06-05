@@ -64,7 +64,7 @@
         <a href="#" class="dropdown-toggle" data-toggle="dropdown">Manage <b class="caret"></b></a>
         <ul class="dropdown-menu">
           <% if DeployGroup.enabled? %>
-            <li><%= link_to "Environments", admin_environments_path %></li>
+            <li><%= link_to "Environments", environments_path %></li>
             <li><%= link_to "Deploy Groups", admin_deploy_groups_path %></li>
           <% end %>
           <% if current_user.try(:admin?) %>
