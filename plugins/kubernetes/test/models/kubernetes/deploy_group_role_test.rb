@@ -128,6 +128,30 @@ describe Kubernetes::DeployGroupRole do
         refute Kubernetes::DeployGroupRole.seed!(stage)
         refute created_role
       end
+
+      describe "when role would be above limits" do
+        before { Kubernetes::UsageLimit.create!(cpu: 0.1, memory: 20) }
+
+        it "uses limits when role would be invalid" do
+          assert Kubernetes::DeployGroupRole.seed!(stage)
+          created_role.requests_cpu.to_f.must_equal 0.05
+          created_role.requests_memory.must_equal 10
+          created_role.replicas.must_equal 2
+        end
+
+        it "uses regular values for role with 0 replicas" do
+          assert content.sub!('replicas: 2', 'replicas: 0')
+          assert Kubernetes::DeployGroupRole.seed!(stage)
+          created_role.requests_cpu.to_f.must_equal 0.25
+          created_role.replicas.must_equal 0
+        end
+      end
+
+      it "ignores invalid roles" do
+        assert content.sub!('cpu: 500m', 'cpu: 100m') # limit below requests
+        refute Kubernetes::DeployGroupRole.seed!(stage)
+        created_role.must_be_nil
+      end
     end
   end
 
