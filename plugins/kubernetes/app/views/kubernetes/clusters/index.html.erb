@@ -13,13 +13,13 @@
 
       <% @clusters.each do |cluster| %>
         <tr>
-          <td><%= link_to cluster.name, admin_kubernetes_cluster_path(cluster) %></td>
+          <td><%= link_to cluster.name, kubernetes_cluster_path(cluster) %></td>
           <td><%= cluster.description %></td>
           <td>
             <%= render 'deploy_group_list', deploy_groups: cluster.deploy_groups %>
             <%= render 'capacity', cluster: cluster if params[:capacity] %>
           </td>
-          <td><%= link_to "Edit", edit_admin_kubernetes_cluster_path(cluster) %></td>
+          <td><%= link_to "Edit", edit_kubernetes_cluster_path(cluster) %></td>
         </tr>
       <% end %>
     </table>
@@ -28,7 +28,7 @@
   <div class="admin-actions">
     <div class="pull-right">
       <%= link_to "Capacity", "?capacity=1" unless params[:capacity] %>
-      <%= link_to "New", new_admin_kubernetes_cluster_path, class: "btn btn-default" %>
+      <%= link_to "New", new_kubernetes_cluster_path, class: "btn btn-default" %>
     </div>
   </div>
 </section>

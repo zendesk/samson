@@ -24,7 +24,7 @@
     <td><%= available_memory %>Gi</td>
   </tr>
   <tr>
-    <td><%= link_to "Used", admin_kubernetes_deploy_group_roles_path(search: {deploy_group_id: cluster.deploy_groups.map(&:id)}) %></td>
+    <td><%= link_to "Used", kubernetes_deploy_group_roles_path(search: {deploy_group_id: cluster.deploy_groups.map(&:id)}) %></td>
     <td><%= used_cpu.round(1) %> = <%= used_cpu_percent %>%</td>
     <td><%= used_memory.round(1) %>Gi = <%= used_memory_percent %>%</td>
   </tr>

@@ -34,7 +34,7 @@
           <td><%= deploy_group_role.replicas %></td>
           <td>
             <% if current_user.admin_for?(deploy_group_role.project) %>
-              <%= link_to 'Edit', edit_admin_kubernetes_deploy_group_role_path(deploy_group_role) %>
+              <%= link_to 'Edit', edit_kubernetes_deploy_group_role_path(deploy_group_role) %>
             <% end %>
           </td>
         </tr>
@@ -51,7 +51,7 @@
 
   <div class="admin-actions">
     <div class="pull-right">
-      <%= link_to "New", new_admin_kubernetes_deploy_group_role_path, class: "btn btn-default" %>
+      <%= link_to "New", new_kubernetes_deploy_group_role_path, class: "btn btn-default" %>
     </div>
   </div>
 </section>

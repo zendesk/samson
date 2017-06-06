@@ -18,7 +18,7 @@
           <td><%= usage_limit.scope ? usage_limit.scope.name : 'All' %></td>
           <td><%= usage_limit.cpu.to_f %></td>
           <td><%= usage_limit.memory %> Mi</td>
-          <td><%= link_to "Edit", [:admin, usage_limit] %></td>
+          <td><%= link_to "Edit", usage_limit %></td>
         </tr>
       <% end %>
     </table>
@@ -26,7 +26,7 @@
 
   <div class="admin-actions">
     <div class="pull-right">
-      <%= link_to "New", new_admin_kubernetes_usage_limit_path, class: "btn btn-default" %>
+      <%= link_to "New", new_kubernetes_usage_limit_path, class: "btn btn-default" %>
     </div>
   </div>
 </section>

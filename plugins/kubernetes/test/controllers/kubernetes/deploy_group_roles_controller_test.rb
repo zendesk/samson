@@ -1,9 +1,9 @@
 # frozen_string_literal: true
-require_relative '../../../test_helper'
+require_relative '../../test_helper'
 
 SingleCov.covered!
 
-describe Admin::Kubernetes::DeployGroupRolesController do
+describe Kubernetes::DeployGroupRolesController do
   let(:deploy_group_role) { kubernetes_deploy_group_roles(:test_pod1_app_server) }
   let(:deploy_group) { deploy_group_role.deploy_group }
   let(:project) { deploy_group_role.project }
@@ -78,7 +78,7 @@ describe Admin::Kubernetes::DeployGroupRolesController do
 
       it "can create for projects I am admin of" do
         post :create, params: params
-        assert_redirected_to [:admin, Kubernetes::DeployGroupRole.last]
+        assert_redirected_to Kubernetes::DeployGroupRole.last
       end
 
       it "redirects to param" do
@@ -118,7 +118,7 @@ describe Admin::Kubernetes::DeployGroupRolesController do
       it "updates" do
         put :update, params: valid_params
         deploy_group_role.reload.limits_cpu.must_equal 3.1
-        assert_redirected_to [:admin, deploy_group_role]
+        assert_redirected_to deploy_group_role
       end
 
       it "can redirect back" do
@@ -130,7 +130,7 @@ describe Admin::Kubernetes::DeployGroupRolesController do
       it "does not allow to circumvent project admin protection" do
         put :update, params: {id: deploy_group_role.id, kubernetes_deploy_group_role: {project_id: 123}}
         deploy_group_role.reload.project_id.must_equal projects(:test).id
-        assert_redirected_to [:admin, deploy_group_role]
+        assert_redirected_to deploy_group_role
       end
 
       it "does not allow updates for non-admins" do
