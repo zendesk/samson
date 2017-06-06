@@ -25,7 +25,7 @@
          [:limits_memory, 'Limits Memory in MB']
        ].each do |column, label| %>
       <%= form.input column, label: label do %>
-        <%= form.text_field column, class: "form-control" %>
+        <%= form.text_field column, class: "form-control", required: true %>
         <% if default = defaults[column] %>
           Default: <%= default %>
         <% end %>

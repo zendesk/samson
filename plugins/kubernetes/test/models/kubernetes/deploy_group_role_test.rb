@@ -20,6 +20,11 @@ describe Kubernetes::DeployGroupRole do
       refute_valid deploy_group_role
     end
 
+    it "is invalid without memory" do
+      deploy_group_role.limits_memory = nil
+      refute_valid deploy_group_role
+    end
+
     it "is valid with 0 cpu requested" do
       deploy_group_role.requests_cpu = 0
       assert_valid deploy_group_role
