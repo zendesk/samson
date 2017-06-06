@@ -21,7 +21,7 @@ describe UserMergesController do
       it "merges the users and lets the original now log in with new credentials" do
         assert_difference 'User.count', -1 do
           post :create, params: {user_id: user.id, merge_target_id: users(:deployer).id}
-          assert_redirected_to [:admin, user]
+          assert_redirected_to user
         end
         user.reload.external_id.must_equal users(:deployer).external_id
       end

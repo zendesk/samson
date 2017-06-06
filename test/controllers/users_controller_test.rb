@@ -1,16 +1,9 @@
 # frozen_string_literal: true
-require_relative '../../test_helper'
+require_relative '../test_helper'
 
 SingleCov.covered!
 
-describe Admin::UsersController do
-  as_a_viewer do
-    unauthorized :get, :index
-    unauthorized :get, :show, id: 1
-    unauthorized :delete, :destroy, project_id: 1, id: 1
-    unauthorized :put, :update, id: 1
-  end
-
+describe UsersController do
   as_a_deployer do
     unauthorized :get, :index
     unauthorized :get, :show, id: 1
@@ -158,7 +151,7 @@ describe Admin::UsersController do
       it 'soft delete the user' do
         delete :destroy, params: {id: modified_user.id}
         modified_user.reload.deleted_at.wont_be_nil
-        assert_redirected_to admin_users_path
+        assert_redirected_to users_path
       end
     end
   end

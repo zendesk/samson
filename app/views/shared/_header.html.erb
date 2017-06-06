@@ -65,7 +65,7 @@
           <% end %>
           <li><%= link_to "Commands", Command %></li>
           <% if current_user.try(:admin?) %>
-            <li><%= link_to "Users", admin_users_path %></li>
+            <li><%= link_to "Users", users_path %></li>
             <%= Samson::Hooks.render_views(:admin_menu, self) %>
             <li class="divider"></li>
           <% end %>
