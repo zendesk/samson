@@ -6,14 +6,14 @@ SingleCov.covered!
 describe Changeset::PullRequest do
   def add_risks
     body.replace(<<~BODY.dup)
-        # Risks
-         - Explosions
+      # Risks
+      - Explosions
     BODY
   end
 
   def no_risks
     body.replace(<<~BODY.dup)
-        Not that risky ...
+      Not that risky ...
     BODY
   end
 
