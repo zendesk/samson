@@ -412,6 +412,30 @@ describe Changeset::PullRequest do
       pr.risks.must_equal "- Planes"
     end
 
+    it "ends the risks section if there are subsequent sections" do
+      body.replace(<<~BODY.dup)
+        # Risks
+          - Planes
+
+        # Notes
+        This is a great PR!
+      BODY
+      pr.risks.must_equal "- Planes"
+    end
+
+    it "ends the risks section if there are subsequent underline style sections" do
+      body.replace(<<~BODY.dup)
+        Risks
+        =====
+          - Planes
+
+        Notes
+        =====
+        This is a great PR!
+      BODY
+      pr.risks.must_equal "- Planes"
+    end
+
     context "with nothing risky" do
       before { no_risks }
 
