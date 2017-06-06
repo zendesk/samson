@@ -16,14 +16,14 @@
       <tbody>
         <% @deploy_groups.each do |deploy_group| %>
           <tr>
-            <td><%= link_to deploy_group.name, [:admin, deploy_group] %></td>
+            <td><%= link_to deploy_group.name, deploy_group %></td>
             <td><%= link_to deploy_group.environment.name, deploy_group.environment %></td>
             <td><%= deploy_group.env_value %></td>
             <%= Samson::Hooks.render_views(:deploy_group_table_cell, self, deploy_group: deploy_group) %>
             <td>
-              <%= link_to "Edit", edit_admin_deploy_group_path(deploy_group) %>
+              <%= link_to "Edit", edit_deploy_group_path(deploy_group) %>
               |
-              <%= link_to_delete([:admin, deploy_group]) %>
+              <%= link_to_delete(deploy_group) %>
             </td>
           </tr>
         <% end %>
@@ -33,7 +33,7 @@
 
   <div class="admin-actions">
     <div class="pull-right">
-      <%= link_to "New", new_admin_deploy_group_path, class: "btn btn-default" %>
+      <%= link_to "New", new_deploy_group_path, class: "btn btn-default" %>
     </div>
   </div>
 </section>

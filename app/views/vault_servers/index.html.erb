@@ -23,7 +23,7 @@
           <td><%= vault_server.ca_cert.present? ? "YES" : "NO" %></td>
           <td>
             <% deploy_groups.select { |dg| dg.vault_server_id == vault_server.id }.each do |deploy_group| %>
-              <%= link_to deploy_group.name, [:admin, deploy_group] %><br/>
+              <%= link_to deploy_group.name, deploy_group %><br/>
             <% end %>
           </td>
           <td>

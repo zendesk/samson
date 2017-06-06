@@ -1,5 +1,5 @@
 # frozen_string_literal: true
-Admin::DeployGroupsController.class_eval do
+DeployGroupsController.class_eval do
   prepend(
     Module.new do
       def deploy_group_params

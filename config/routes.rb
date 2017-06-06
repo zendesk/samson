@@ -107,6 +107,16 @@ Samson::Application.routes.draw do
 
   resources :commands, except: [:edit]
 
+  resources :deploy_groups do
+    member do
+      post :deploy_all
+      get :create_all_stages_preview
+      post :create_all_stages
+      post :merge_all_stages
+      post :delete_all_stages
+    end
+  end
+
   resources :secrets, except: [:edit]
 
   resources :users, only: [] do
@@ -139,15 +149,6 @@ Samson::Application.routes.draw do
 
   namespace :admin do
     resources :users, only: [:index, :show, :update, :destroy]
-    resources :deploy_groups do
-      member do
-        post :deploy_all
-        get :create_all_stages_preview
-        post :create_all_stages
-        post :merge_all_stages
-        post :delete_all_stages
-      end
-    end
   end
 
   namespace :integrations do

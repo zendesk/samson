@@ -1,5 +1,5 @@
 # frozen_string_literal: true
-class Admin::DeployGroupsController < ApplicationController
+class DeployGroupsController < ApplicationController
   before_action :authorize_super_admin!, except: [:index, :show]
   before_action :deploy_group, only: [
     :show, :edit, :update, :destroy,
@@ -47,7 +47,7 @@ class Admin::DeployGroupsController < ApplicationController
       redirect_to action: :index
     else
       flash[:error] = "Deploy group is still in use."
-      redirect_to [:admin, deploy_group]
+      redirect_to deploy_group
     end
   end
 
@@ -84,7 +84,7 @@ class Admin::DeployGroupsController < ApplicationController
   def create_all_stages
     stages_created = self.class.create_all_stages(deploy_group)
 
-    redirect_to [:admin, deploy_group], notice: "Created #{stages_created.length} Stages"
+    redirect_to deploy_group, notice: "Created #{stages_created.length} Stages"
   end
 
   def merge_all_stages
@@ -107,7 +107,7 @@ class Admin::DeployGroupsController < ApplicationController
   def render_failures(failures)
     message = failures.map { |reason, stage| "#{stage.project.name} #{stage.name} #{reason}" }.join(", ")
 
-    redirect_to [:admin, deploy_group], alert: (failures.empty? ? nil : "Some stages were skipped: #{message}")
+    redirect_to deploy_group, alert: (failures.empty? ? nil : "Some stages were skipped: #{message}")
   end
 
   # executes the block for each cloned stage, returns an array of [result, stage] any non-nil responses.
