@@ -25,10 +25,12 @@
 
   <%= Samson::Hooks.render_views(:project_tabs_view, self, { project: @project, active: active }) %>
 
+  <%# These 2 are last since they are adminy and icons %>
+  <li class="<%= 'active' if active == 'user_project_roles' %>">
+    <%= link_to icon_tag('user'), project_user_project_roles_path(project) %>
+  </li>
+
   <% if admin_for_project? %>
-    <li class="<%= 'active' if active == 'users' %>">
-      <%= link_to icon_tag('user'), project_users_path(project) %>
-    </li>
     <li class="<%= 'active' if active == 'settings' %>">
       <%= link_to icon_tag('cog'), edit_project_path(project) %>
     </li>

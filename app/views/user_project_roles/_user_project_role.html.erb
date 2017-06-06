@@ -3,6 +3,6 @@
   <td><%= link_to_if current_user.admin?, user.name, [:admin, user] %></td>
   <td><%= user.email %></td>
   <td class="editable-role">
-    <%= render partial: 'shared/project_role', locals: {user: user, project: @project, user_project_role_id: user.user_project_role_id} %>
+    <%= render partial: 'shared/user_project_role', locals: {user: user, project: @project, user_project_role_id: user.user_project_role_id} %>
   </td>
 </tr>

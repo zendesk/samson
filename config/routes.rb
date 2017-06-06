@@ -80,14 +80,14 @@ Samson::Application.routes.draw do
     resources :webhooks, only: [:index, :create, :destroy]
     resources :outbound_webhooks, only: [:create, :destroy]
     resources :references, only: [:index]
-    resources :users, only: [:index, :update]
+    resources :user_project_roles, only: [:index]
 
     member do
       get :deploy_group_versions
     end
   end
 
-  resources :project_roles, only: [:create]
+  resources :user_project_roles, only: [:index, :create]
   resources :streams, only: [:show]
   resources :locks, only: [:create, :destroy]
 

@@ -3,7 +3,7 @@ require_relative '../test_helper'
 
 SingleCov.covered!
 
-describe UsersHelper do
+describe UserProjectRolesHelper do
   let(:project) { projects(:test) }
 
   describe "#user_project_role_radio" do
