@@ -2,8 +2,8 @@
 
 <% if @group %>
   <%= manual_breadcrumb([
-      ["Environment variables", [:admin, EnvironmentVariableGroup]],
-      [@group.name, [:admin, @group]],
+      ["Environment variables", EnvironmentVariableGroup],
+      [@group.name, @group],
       [title, nil]
     ]) %>
 <% else %>
