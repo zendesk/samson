@@ -126,7 +126,7 @@ class Changeset::PullRequest
   private
 
   def parse_risks(body)
-    body.to_s.split(RISKS_SECTION, 2)[1].to_s.strip.split(SECTION_HEADING).first.presence
+    body.to_s.split(RISKS_SECTION, 2)[1].to_s.strip.split(SECTION_HEADING).first.to_s.strip.presence
   end
 
   def parse_jira_issues
