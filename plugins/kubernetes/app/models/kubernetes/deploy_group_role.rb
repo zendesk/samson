@@ -73,8 +73,12 @@ module Kubernetes
     end
 
     def requests_below_limits
-      errors.add :requests_cpu, "must be less than or equal to the limit" if limits_cpu && requests_cpu > limits_cpu
-      errors.add :requests_memory, "must be less than or equal to the limit" if requests_memory > limits_memory
+      if limits_cpu && requests_cpu > limits_cpu
+        errors.add :requests_cpu, "must be less than or equal to the limit"
+      end
+      if limits_memory && requests_memory > limits_memory
+        errors.add :requests_memory, "must be less than or equal to the limit"
+      end
     end
 
     def requests_below_usage_limits
