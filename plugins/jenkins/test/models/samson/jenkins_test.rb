@@ -261,7 +261,7 @@ describe Samson::Jenkins do
 
   describe "with auto-config flag" do
     let(:jenkins_xml_new_job) do
-      <<-XML.strip_heredoc
+      <<~XML
 <?xml version="1.0" encoding="UTF-8"?>
 <project>
   <description>This is a test line in Description.</description>
@@ -291,7 +291,7 @@ XML
     end
 
     let(:jenkins_xml_configured) do
-      <<-XML.strip_heredoc
+      <<~XML
 <?xml version="1.0" encoding="UTF-8"?>
 <project>
   <description>This is a test line in Description.
@@ -357,7 +357,7 @@ XML
     end
 
     let(:jenkins_xml_with_build_params_without_desc) do
-      <<-XML.strip_heredoc
+      <<~XML
 <?xml version="1.0" encoding="UTF-8"?>
 <project>
   <description>This is a test line in Description.</description>
@@ -418,7 +418,7 @@ XML
     end
 
     let(:jenkins_xml_with_desc_without_params) do
-      <<-XML.strip_heredoc
+      <<~XML
 <?xml version='1.0' encoding='UTF-8'?>
 <project>
   <description>This is a test line in Description.
@@ -454,7 +454,7 @@ XML
     end
 
     let(:jenkins_xml_with_string_build_params_other_then_samson) do
-      <<-XML.strip_heredoc
+      <<~XML
 <?xml version="1.0" encoding="UTF-8"?>
 <project>
   <actions/>
@@ -500,7 +500,7 @@ XML
     end
 
     let(:jenkins_xml_configured_with_other_params) do
-      <<-XML.strip_heredoc
+      <<~XML
 <?xml version="1.0" encoding="UTF-8"?>
 <project>
   <actions/>
@@ -581,7 +581,7 @@ XML
     end
 
     let(:jenkins_xml_with_some_samson_build_params) do
-      <<-XML.strip_heredoc
+      <<~XML
 <?xml version='1.0' encoding='UTF-8'?>
 <project>
   <description>This is a test line in Description.
@@ -646,7 +646,7 @@ XML
     end
 
     let(:jenkins_xml_configured_with_some_samson_build_params) do
-      <<-XML.strip_heredoc
+      <<~XML
 <?xml version="1.0" encoding="UTF-8"?>
 <project>
   <description>This is a test line in Description.
@@ -727,7 +727,7 @@ XML
     end
 
     let(:jenkins_xml_configured_with_updated_desc) do
-      <<-XML.strip_heredoc
+      <<~XML
 <?xml version="1.0" encoding="UTF-8"?>
 <project>
   <description>This is a test line in Description.

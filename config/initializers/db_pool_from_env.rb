@@ -8,7 +8,7 @@
 pool = Integer(ENV['DB_POOL'] || ENV['RAILS_MAX_THREADS'] || 100)
 
 if !ENV['PRECOMPILE'] && (config = Rails.application.config.database_configuration[Rails.env]) && config['pool'] != pool
-  warn <<-WARN.strip_heredoc
+  warn <<~WARN
     Currently using an evil ActiveRecord patch that will be removed soon.
      - Add to database.yml `pool: <%= ENV['RAILS_MAX_THREADS'] %>`
      - Add to environment RAILS_MAX_THREADS=100

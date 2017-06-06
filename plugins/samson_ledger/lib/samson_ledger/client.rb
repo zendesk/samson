@@ -59,7 +59,7 @@ module SamsonLedger
             "<a href='#{user.url}'><img src='#{user.avatar_url}' width=20 height=20 /></a>"
           end
 
-          <<-HTML.strip_heredoc.tr("\n", ' ')
+          <<~HTML.tr("\n", ' ')
             <li>
               #{github_users.join}
               <strong>##{pull_request.number}</strong>

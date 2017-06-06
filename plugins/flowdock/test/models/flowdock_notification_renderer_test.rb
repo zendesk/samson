@@ -22,7 +22,7 @@ describe FlowdockNotificationRenderer do
 
     result = FlowdockNotificationRenderer.render(deploy)
 
-    result.must_equal <<-RESULT.strip_heredoc.chomp
+    result.must_equal <<~RESULT.chomp
       <p>2 commits by author1 and author2.</p>
 
       <p><strong>Files changed</strong></p>
