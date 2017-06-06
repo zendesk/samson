@@ -1,5 +1,5 @@
 # frozen_string_literal: true
-class Admin::Kubernetes::ClustersController < ApplicationController
+class Kubernetes::ClustersController < ApplicationController
   before_action :authorize_admin!
   before_action :authorize_super_admin!, except: [:index, :show, :seed_ecr]
 
@@ -14,7 +14,7 @@ class Admin::Kubernetes::ClustersController < ApplicationController
   def create
     @cluster = ::Kubernetes::Cluster.new(new_cluster_params)
     if @cluster.save
-      redirect_to [:admin, @cluster], notice: "Saved!"
+      redirect_to @cluster, notice: "Saved!"
     else
       render :edit
     end
@@ -60,13 +60,14 @@ class Admin::Kubernetes::ClustersController < ApplicationController
   end
 
   def load_default_config_file
-    @config_file = if @cluster
-      @cluster.config_filepath
-    elsif file = ENV['KUBE_CONFIG_FILE']
-      File.expand_path(file)
-    elsif last_cluster = ::Kubernetes::Cluster.last
-      last_cluster.config_filepath
-    end
+    @config_file =
+      if @cluster
+        @cluster.config_filepath
+      elsif file = ENV['KUBE_CONFIG_FILE']
+        File.expand_path(file)
+      elsif last_cluster = ::Kubernetes::Cluster.last
+        last_cluster.config_filepath
+      end
 
     @context_options = Kubeclient::Config.read(@config_file).contexts if @config_file
     @context_options ||= []

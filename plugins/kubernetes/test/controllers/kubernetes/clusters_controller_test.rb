@@ -1,9 +1,9 @@
 # frozen_string_literal: true
-require_relative '../../../test_helper'
+require_relative '../../test_helper'
 
 SingleCov.covered!
 
-describe Admin::Kubernetes::ClustersController do
+describe Kubernetes::ClustersController do
   def self.use_example_config
     around { |t| with_example_kube_config { |f| with_env "KUBE_CONFIG_FILE": f, &t } }
   end
@@ -62,7 +62,7 @@ describe Admin::Kubernetes::ClustersController do
         stub_request(:get, "#{secrets_url}/kube-ecr-auth").to_return(status: 404)
         stub_request(:post, secrets_url).to_return(body: "{}")
         post :seed_ecr, params: {id: cluster.id}
-        assert_redirected_to "/admin/kubernetes/clusters"
+        assert_redirected_to "/kubernetes/clusters"
       end
 
       it "updates existing credentials" do
@@ -70,7 +70,7 @@ describe Admin::Kubernetes::ClustersController do
         stub_request(:get, "#{secrets_url}/kube-ecr-auth").to_return(body: "{}")
         stub_request(:put, "#{secrets_url}/kube-ecr-auth").to_return(body: "{}")
         post :seed_ecr, params: {id: cluster.id}
-        assert_redirected_to "/admin/kubernetes/clusters"
+        assert_redirected_to "/kubernetes/clusters"
       end
     end
   end
@@ -99,7 +99,7 @@ describe Admin::Kubernetes::ClustersController do
 
       it "redirects on success" do
         post :create, params: {kubernetes_cluster: params}
-        assert_redirected_to "http://test.host/admin/kubernetes/clusters/#{Kubernetes::Cluster.last.id}"
+        assert_redirected_to "http://test.host/kubernetes/clusters/#{Kubernetes::Cluster.last.id}"
       end
 
       it "renders when it fails to create" do
@@ -123,7 +123,7 @@ describe Admin::Kubernetes::ClustersController do
 
       it "updates" do
         patch :update, params: {id: cluster.id, kubernetes_cluster: {name: "NEW"}}
-        assert_redirected_to "/admin/kubernetes/clusters"
+        assert_redirected_to "/kubernetes/clusters"
         cluster.reload.name.must_equal "NEW"
       end
 

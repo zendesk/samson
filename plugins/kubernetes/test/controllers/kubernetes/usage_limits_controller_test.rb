@@ -1,9 +1,9 @@
 # frozen_string_literal: true
-require_relative '../../../test_helper'
+require_relative '../../test_helper'
 
 SingleCov.covered!
 
-describe Admin::Kubernetes::UsageLimitsController do
+describe Kubernetes::UsageLimitsController do
   let(:deploy_group) { deploy_groups(:pod100) }
   let(:project) { projects(:test) }
   let!(:usage_limit) { Kubernetes::UsageLimit.create!(scope: deploy_group, project: project, cpu: 1, memory: 10) }
@@ -37,7 +37,7 @@ describe Admin::Kubernetes::UsageLimitsController do
 
       it "redirects on success" do
         post :create, params: {kubernetes_usage_limit: params}
-        assert_redirected_to "/admin/kubernetes/usage_limits"
+        assert_redirected_to "/kubernetes/usage_limits"
       end
 
       it "renders when it fails to create" do
@@ -57,7 +57,7 @@ describe Admin::Kubernetes::UsageLimitsController do
     describe "#update" do
       it "updates" do
         patch :update, params: {id: usage_limit.id, kubernetes_usage_limit: {cpu: 2}}
-        assert_redirected_to "/admin/kubernetes/usage_limits"
+        assert_redirected_to "/kubernetes/usage_limits"
         usage_limit.reload.cpu.must_equal 2
       end
 
@@ -71,7 +71,7 @@ describe Admin::Kubernetes::UsageLimitsController do
       it "destroys" do
         assert_difference "Kubernetes::UsageLimit.count", -1 do
           delete :destroy, params: {id: usage_limit.id}
-          assert_redirected_to "/admin/kubernetes/usage_limits"
+          assert_redirected_to "/kubernetes/usage_limits"
         end
       end
     end

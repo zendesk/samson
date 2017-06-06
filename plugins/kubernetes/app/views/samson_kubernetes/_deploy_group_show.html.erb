@@ -3,7 +3,7 @@
   <div class="col-lg-4">
     <p class="form-control-static">
       <% if @deploy_group.kubernetes_cluster %>
-        <%= link_to @deploy_group.kubernetes_cluster.name, [:admin, @deploy_group.kubernetes_cluster] %>
+        <%= link_to @deploy_group.kubernetes_cluster.name, @deploy_group.kubernetes_cluster %>
       <% else %>
         none
       <% end %>

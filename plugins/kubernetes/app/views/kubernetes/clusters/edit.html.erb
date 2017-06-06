@@ -1,7 +1,7 @@
 <%= page_title(@cluster.new_record? ? "New Kubernetes Cluster" : "Edit Kubernetes Cluster") %>
 
 <section>
-  <%= form_for [:admin, @cluster], html: { class: "form-horizontal" } do |form| %>
+  <%= form_for @cluster, html: { class: "form-horizontal" } do |form| %>
     <%= render 'shared/errors', object: @cluster %>
 
     <fieldset>
@@ -23,7 +23,7 @@
 
       <%= form.actions do %>
         <% if Samson::Hooks.active_plugin?('aws_ecr') && SamsonAwsEcr::Engine.active? && @cluster.persisted? %>
-          <%= link_to "Seed ECR", seed_ecr_admin_kubernetes_cluster_path(@cluster), class: "btn btn-default", data: {method: :post} %>
+          <%= link_to "Seed ECR", seed_ecr_kubernetes_cluster_path(@cluster), class: "btn btn-default", data: {method: :post} %>
         <% end %>
       <% end %>
     </fieldset>
