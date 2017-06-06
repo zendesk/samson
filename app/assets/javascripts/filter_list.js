@@ -2,7 +2,7 @@
 // use by adding a class to an li's
 // <li class="filtered-projects">
 // and having an input targetting it
-// <input type="search" class="filter-list" data-target=".filtered-projects">
+// <input type="search" class="filter-list" data-target=".filtered-projects" data-default="/foo">
 $(document).on('keyup', 'input.filter-list', function(e){
   var $list = $($(this).data('target'));
   var selected_class = 'selected';
@@ -19,7 +19,11 @@ $(document).on('keyup', 'input.filter-list', function(e){
     selectable.eq((index + direction) % selectable.length).addClass(selected_class);
   } else if (e.keyCode == 13) { // enter
     e.preventDefault();
-    selected.find('a').get(0).click();
+    if(selected.size() === 0) {
+      window.location.href = $(this).data('default'); // nothing selected ... go to default
+    } else {
+      selected.find('a').get(0).click();
+    }
   } else { // filter elements by typing
     var typed = $(this).val();
     $list.each(function(i, element){
