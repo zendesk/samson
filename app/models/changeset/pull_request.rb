@@ -9,6 +9,9 @@ class Changeset::PullRequest
   # Matches a markdown section heading named "Risks".
   RISKS_SECTION = /^\s*#*\s*Risks?\s*#*\s*\n(?:\s*[-=]*\s*\n)?/i
 
+  # Matches a markdown section heading
+  SECTION_HEADING = /^\s*#*\s*\w+.*\n/
+
   # Matches URLs to JIRA issues.
   JIRA_ISSUE_URL = %r[https?:\/\/[\da-z\.\-]+\.[a-z\.]{2,6}\/browse\/#{CODE_ONLY}(?=#{PUNCT}|$)]
 
@@ -123,7 +126,7 @@ class Changeset::PullRequest
   private
 
   def parse_risks(body)
-    body.to_s.split(RISKS_SECTION, 2)[1].to_s.strip.presence
+    body.to_s.split(RISKS_SECTION, 2)[1].to_s.strip.split(SECTION_HEADING).first.presence
   end
 
   def parse_jira_issues
