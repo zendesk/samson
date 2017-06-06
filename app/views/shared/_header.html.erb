@@ -24,10 +24,6 @@
                 <% end %>
               </li>
             <% end %>
-            <% if current_user.admin? %>
-              <li class="divider"></li>
-              <li><%= link_to "Manage", admin_projects_path %></li>
-            <% end %>
           </ul>
         </li>
         <% if DeployGroup.enabled? %>
@@ -66,9 +62,6 @@
           <% if DeployGroup.enabled? %>
             <li><%= link_to "Environments", environments_path %></li>
             <li><%= link_to "Deploy Groups", admin_deploy_groups_path %></li>
-          <% end %>
-          <% if current_user.try(:admin?) %>
-            <li><%= link_to "Projects", admin_projects_path %></li>
           <% end %>
           <li><%= link_to "Commands", Command %></li>
           <% if current_user.try(:admin?) %>

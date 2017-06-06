@@ -11,43 +11,29 @@ describe ProjectsController do
     Project.any_instance.stubs(:valid_repository_url).returns(true)
   end
 
-  describe "#index" do
-    as_a_viewer do
-      it "renders" do
-        get :index
-        assert_template :index
-      end
-    end
-
-    as_a_deployer do
-      it "renders" do
-        get :index
-        assert_template :index
-      end
-    end
-
-    as_a_admin do
+  as_a_viewer do
+    describe "#index" do
       it "renders" do
         get :index
         assert_template :index
       end
 
-      it "assigns the user's starred projects to @projects" do
+      it "orders user's starred projects to the front" do
         starred_project = Project.create!(name: "a", repository_url: "a")
-        users(:admin).stars.create!(project: starred_project)
+        user.stars.create!(project: starred_project)
 
         get :index
 
-        assert_equal [starred_project], assigns(:projects)
+        assigns(:projects).map(&:name).must_equal [starred_project.name, "Foo"]
       end
 
-      it "assigns all projects to @projects if the user has no starred projects" do
-        get :index
-
-        assert_equal [projects(:test)], assigns(:projects)
+      it "can search" do
+        Project.create!(name: "a", repository_url: "a")
+        get :index, params: {search: {query: "o"}}
+        assigns(:projects).map(&:name).must_equal ["Foo"]
       end
 
-      it "responds to json requests" do
+      it "renders json" do
         get :index, params: {format: 'json'}
         result = JSON.parse(response.body)
         projects = result['projects']
@@ -64,8 +50,8 @@ describe ProjectsController do
         project['last_deploy_url'].must_include 'www.test-url.com'
       end
 
-      it "responds to CSV requests" do
-        get :index, params: { format: 'csv' }
+      it "renders CSV" do
+        get :index, params: {format: 'csv'}
         csv = CSV.new(response.body, headers: true)
         all_projects = Project.order(:id).to_a
 
@@ -83,32 +69,149 @@ describe ProjectsController do
       it 'renders starred projects first for json' do
         starred_project1 = Project.create!(name: 'Z', repository_url: 'Z')
         starred_project2 = Project.create!(name: 'A', repository_url: 'A')
-        users(:admin).stars.create!(project: starred_project1)
-        users(:admin).stars.create!(project: starred_project2)
+        user.stars.create!(project: starred_project1)
+        user.stars.create!(project: starred_project2)
 
         get :index, params: {format: 'json'}
         result = JSON.parse(response.body)
         result['projects'].map { |obj| obj['name'] }.must_equal ['A', 'Z', 'Foo']
       end
     end
+
+    describe "#show" do
+      describe "as HTML" do
+        it "renders" do
+          get :show, params: {id: project.to_param}
+          assert_response :success
+        end
+
+        it "does not find soft deleted" do
+          project.soft_delete!
+          assert_raises ActiveRecord::RecordNotFound do
+            get :show, params: {id: project.to_param}
+          end
+        end
+      end
+
+      describe "as JSON" do
+        it "is json and does not include :token" do
+          get :show, params: {id: project.permalink, format: :json}
+          assert_response :success
+          result = JSON.parse(response.body)
+          result.keys.wont_include('token')
+        end
+      end
+    end
+
+    describe '#deploy_group_versions' do
+      let(:deploy) { deploys(:succeeded_production_test) }
+
+      it 'renders' do
+        get :deploy_group_versions, params: {id: project.to_param, format: 'json'}
+        result = JSON.parse(response.body)
+        result.keys.sort.must_equal DeployGroup.all.ids.map(&:to_s).sort
+      end
+
+      it 'renders a custom timestamp' do
+        time = deploy.updated_at - 1.day
+        old = Deploy.create!(
+          stage: stages(:test_production),
+          job: deploy.job,
+          reference: "new",
+          updated_at: time - 1.day,
+          release: true,
+          project: project
+        )
+        get :deploy_group_versions, params: {id: project.to_param, before: time.to_s}
+        deploy_ids = JSON.parse(response.body).map { |_id, deploy| deploy['id'] }
+        deploy_ids.include?(deploy.id).must_equal false
+        deploy_ids.include?(old.id).must_equal true
+      end
+    end
   end
 
-  describe "#new" do
-    as_a_viewer do
-      unauthorized :get, :new
+  as_a_deployer do
+    unauthorized :get, :edit, id: :foo
+    unauthorized :put, :update, id: :foo
+    unauthorized :delete, :destroy, id: :foo
+  end
+
+  as_a_project_admin do
+    unauthorized :get, :new
+    unauthorized :post, :create
+
+    describe "#edit" do
+      it "renders" do
+        get :edit, params: {id: project.to_param}
+        assert_template :edit
+      end
+
+      it "does not find soft deleted" do
+        project.soft_delete!
+        assert_raises ActiveRecord::RecordNotFound do
+          get :edit, params: {id: project.to_param}
+        end
+      end
     end
 
-    as_a_deployer do
-      unauthorized :get, :new
+    describe "#update" do
+      let(:params) { {id: project.to_param, project: {name: "Hi-yo"}} }
+
+      it "updates" do
+        put :update, params: params
+        project.reload
+        assert_redirected_to project_path(project)
+        project.name.must_equal "Hi-yo"
+      end
+
+      it "does not update invalid" do
+        params[:project][:name] = ""
+        put :update, params: params
+        assert_template :edit
+      end
+
+      it "does not find soft deleted" do
+        project.soft_delete!
+        assert_raises ActiveRecord::RecordNotFound do
+          put :update, params: params
+        end
+      end
     end
 
-    as_a_admin do
+    describe "#destroy" do
+      it "removes the project" do
+        assert_difference 'Project.count', -1 do
+          delete :destroy, params: {id: project.to_param}
+
+          assert_redirected_to projects_path
+          request.flash[:notice].wont_be_nil
+        end
+      end
+
+      it "sends deletion notification" do
+        delete :destroy, params: {id: project.to_param}
+        mail = ActionMailer::Base.deliveries.last
+        mail.subject.include?("Samson Project Deleted")
+        mail.subject.include?(project.name)
+      end
+
+      it "does not fail when validations fail" do
+        assert_difference 'Project.count', -1 do
+          project.update_column(:name, "")
+          delete :destroy, params: {id: project.to_param}
+        end
+      end
+    end
+  end
+
+  as_a_admin do
+    describe "#new" do
       it "renders" do
         get :new
         assert_template :new
       end
 
-      it "renders with no environments" do
+      it "renders without environments" do
         DeployGroup.destroy_all
         Environment.destroy_all
         get :new
@@ -116,21 +219,7 @@ describe ProjectsController do
       end
     end
 
-    as_a_project_admin do
-      unauthorized :get, :new
-    end
-  end
-
-  describe "#create" do
-    as_a_viewer do
-      unauthorized :post, :create
-    end
-
-    as_a_deployer do
-      unauthorized :post, :create
-    end
-
-    as_a_admin do
+    describe "#create" do
       before do
         post :create, params: params
       end
@@ -163,195 +252,11 @@ describe ProjectsController do
       end
 
       describe "with invalid parameters" do
-        let(:params) { { project: { name: "" } } }
+        let(:params) { {project: {name: ""}} }
 
         it "renders new template" do
           assert_template :new
         end
-      end
-    end
-
-    as_a_project_admin do
-      unauthorized :post, :create
-    end
-  end
-
-  describe "#update" do
-    as_a_viewer do
-      unauthorized :put, :update, id: :foo
-    end
-
-    as_a_deployer do
-      unauthorized :put, :update, id: :foo
-    end
-
-    as_a_admin do
-      it "does not find soft deleted" do
-        project.soft_delete!
-        assert_raises ActiveRecord::RecordNotFound do
-          put :update, params: {id: project.to_param}
-        end
-      end
-
-      describe "common" do
-        before do
-          put :update, params: params.merge(id: project.to_param)
-        end
-
-        describe "with valid parameters" do
-          let(:params) { { project: { name: "Hi-yo" } } }
-
-          it "redirects to root url" do
-            assert_redirected_to project_path(project.reload)
-          end
-
-          it "creates a new project" do
-            Project.where(name: "Hi-yo").first.wont_be_nil
-          end
-        end
-
-        describe "with invalid parameters" do
-          let(:params) { { project: { name: "" } } }
-
-          it "renders edit template" do
-            assert_template :edit
-          end
-        end
-      end
-    end
-
-    as_a_project_admin do
-      it "does not find soft deleted" do
-        project.soft_delete!
-        assert_raises ActiveRecord::RecordNotFound do
-          put :update, params: {id: project.to_param}
-        end
-      end
-
-      describe "common" do
-        before do
-          put :update, params: params.merge(id: project.to_param)
-        end
-
-        describe "with valid parameters" do
-          let(:params) { { project: { name: "Hi-yo" } } }
-
-          it "redirects to root url" do
-            assert_redirected_to project_path(project.reload)
-          end
-
-          it "creates a new project" do
-            Project.where(name: "Hi-yo").first.wont_be_nil
-          end
-        end
-
-        describe "with invalid parameters" do
-          let(:params) { { project: { name: "" } } }
-
-          it "renders edit template" do
-            assert_template :edit
-          end
-        end
-      end
-    end
-  end
-
-  describe "#edit" do
-    as_a_viewer do
-      unauthorized :get, :edit, id: :foo
-    end
-
-    as_a_deployer do
-      unauthorized :get, :edit, id: :foo
-    end
-
-    as_a_admin do
-      it "renders" do
-        get :edit, params: {id: project.to_param}
-        assert_template :edit
-      end
-
-      it "does not find soft deleted" do
-        project.soft_delete!
-        assert_raises ActiveRecord::RecordNotFound do
-          get :edit, params: {id: project.to_param}
-        end
-      end
-    end
-
-    as_a_project_admin do
-      it "renders" do
-        get :edit, params: {id: project.to_param}
-        assert_template :edit
-      end
-
-      it "does not find soft deleted" do
-        project.soft_delete!
-        assert_raises ActiveRecord::RecordNotFound do
-          get :edit, params: {id: project.to_param}
-        end
-      end
-    end
-  end
-
-  describe "#show" do
-    as_a_viewer do
-      describe "as HTML" do
-        it "does not redirect to the deploys page" do
-          get :show, params: {id: project.to_param}
-          assert_response :success
-        end
-      end
-
-      describe "as JSON" do
-        it "is json and does not include :token" do
-          get :show, params: {id: project.permalink, format: :json}
-          assert_response :success
-          result = JSON.parse(response.body)
-          result.keys.wont_include('token')
-        end
-      end
-    end
-
-    as_a_deployer do
-      it "renders" do
-        get :show, params: {id: project.to_param}
-        assert_template :show
-      end
-
-      it "does not find soft deleted" do
-        project.soft_delete!
-        assert_raises ActiveRecord::RecordNotFound do
-          get :show, params: {id: project.to_param}
-        end
-      end
-    end
-  end
-
-  describe '#deploy_group_versions' do
-    let(:deploy) { deploys(:succeeded_production_test) }
-
-    as_a_viewer do
-      it 'renders' do
-        get :deploy_group_versions, params: {id: project.to_param, format: 'json'}
-        result = JSON.parse(response.body)
-        result.keys.sort.must_equal DeployGroup.all.ids.map(&:to_s).sort
-      end
-
-      it 'renders a custom timestamp' do
-        time = deploy.updated_at - 1.day
-        old = Deploy.create!(
-          stage: stages(:test_production),
-          job: deploy.job,
-          reference: "new",
-          updated_at: time - 1.day,
-          release: true,
-          project: project
-        )
-        get :deploy_group_versions, params: {id: project.to_param, before: time.to_s}
-        deploy_ids = JSON.parse(response.body).map { |_id, deploy| deploy['id'] }
-        deploy_ids.include?(deploy.id).must_equal false
-        deploy_ids.include?(old.id).must_equal true
       end
     end
   end
