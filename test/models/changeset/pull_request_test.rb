@@ -413,7 +413,7 @@ describe Changeset::PullRequest do
     end
 
     it "ends the risks section if there are subsequent sections" do
-      body.replace(<<-BODY.dup.strip_heredoc)
+      body.replace(<<~BODY.dup)
         # Risks
           - Planes
 
@@ -424,7 +424,7 @@ describe Changeset::PullRequest do
     end
 
     it "ends the risks section if there are subsequent underline style sections" do
-      body.replace(<<-BODY.dup.strip_heredoc)
+      body.replace(<<~BODY.dup)
         Risks
         =====
           - Planes
