@@ -10,7 +10,7 @@ class UserMergesController < ApplicationController
     target = User.find(params[:merge_target_id])
     @user.update_attributes!(external_id: target.external_id)
     target.soft_delete!
-    redirect_to [:admin, @user], notice: "Merge successful."
+    redirect_to @user, notice: "Merge successful."
   end
 
   private

@@ -11,7 +11,7 @@
       <td><%= v.id %> -- <%= v.created_at %></td>
       <td>
         <% if v.whodunnit =~ /^\d+$/ && user = User.find_by_id(v.whodunnit) %>
-          <%= link_to user.name, admin_user_path(user) %>
+          <%= link_to user.name, user_path(user) %>
         <% else %>
           <%= v.whodunnit %>
         <% end %>

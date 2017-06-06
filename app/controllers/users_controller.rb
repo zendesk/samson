@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 require 'csv'
 
-class Admin::UsersController < ApplicationController
+class UsersController < ApplicationController
   before_action :authorize_resource!
 
   def index
@@ -42,7 +42,7 @@ class Admin::UsersController < ApplicationController
   def destroy
     user.soft_delete!
     Rails.logger.info("#{current_user.name_and_email} just deleted #{user.name_and_email})")
-    redirect_to admin_users_path
+    redirect_to users_path
   end
 
   private
