@@ -1,9 +1,9 @@
 # frozen_string_literal: true
-require_relative '../../test_helper'
+require_relative '../test_helper'
 
 SingleCov.covered!
 
-describe Admin::DeployGroupsController do
+describe DeployGroupsController do
   let(:deploy_group) { deploy_groups(:pod100) }
   let(:stage) { stages(:test_staging) }
 
@@ -50,7 +50,7 @@ describe Admin::DeployGroupsController do
       it 'creates a deploy group' do
         assert_difference 'DeployGroup.count', +1 do
           post :create, params: {deploy_group: {name: 'pod666', environment_id: environments(:staging).id}}
-          assert_redirected_to admin_deploy_groups_path
+          assert_redirected_to deploy_groups_path
         end
       end
 
@@ -70,7 +70,7 @@ describe Admin::DeployGroupsController do
     end
 
     describe '#update' do
-      before { request.env["HTTP_REFERER"] = admin_deploy_groups_url }
+      before { request.env["HTTP_REFERER"] = deploy_groups_url }
 
       it 'saves' do
         post :update, params: {
@@ -79,7 +79,7 @@ describe Admin::DeployGroupsController do
           },
           id: deploy_group.id
         }
-        assert_redirected_to admin_deploy_groups_path
+        assert_redirected_to deploy_groups_path
         deploy_group.reload
         deploy_group.name.must_equal 'Test Update'
         deploy_group.permalink.must_equal 'fooo'
@@ -96,7 +96,7 @@ describe Admin::DeployGroupsController do
       it 'succeeds' do
         DeployGroupsStage.delete_all
         delete :destroy, params: {id: deploy_group}
-        assert_redirected_to admin_deploy_groups_path
+        assert_redirected_to deploy_groups_path
         DeployGroup.where(id: deploy_group.id).must_equal []
       end
 
@@ -108,7 +108,7 @@ describe Admin::DeployGroupsController do
 
       it 'fails for used deploy_group and sends user to a page that shows which groups are used' do
         delete :destroy, params: {id: deploy_group}
-        assert_redirected_to [:admin, deploy_group]
+        assert_redirected_to deploy_group
         assert flash[:error]
         deploy_group.reload
       end
@@ -177,7 +177,7 @@ describe Admin::DeployGroupsController do
 
       before do
         # create the new stage to test against
-        Admin::DeployGroupsController.create_all_stages(new_deploy_group)
+        DeployGroupsController.create_all_stages(new_deploy_group)
 
         # Give it a successful deploy
         new_stage = new_deploy_group.reload.stages.first
@@ -274,7 +274,7 @@ describe Admin::DeployGroupsController do
       describe "without a created stage" do
         it "succeeds with no work to do" do
           post :merge_all_stages, params: {id: deploy_group}
-          assert_redirected_to admin_deploy_group_path(deploy_group)
+          assert_redirected_to deploy_group_path(deploy_group)
         end
       end
 
@@ -284,7 +284,7 @@ describe Admin::DeployGroupsController do
         let(:template_stage) { stages(:test_staging) }
 
         let :stage do
-          Admin::DeployGroupsController.create_all_stages(deploy_group)
+          DeployGroupsController.create_all_stages(deploy_group)
           deploy_group.stages.where(project: template_stage.project).first
         end
 
@@ -433,7 +433,7 @@ describe Admin::DeployGroupsController do
           Stage.create!(name: "foo tstage", project: project, is_template: true, deploy_groups: [template_deploy_group])
 
           # now create the non-template stages for this deploy-group
-          Admin::DeployGroupsController.create_all_stages(deploy_group)
+          DeployGroupsController.create_all_stages(deploy_group)
         end
 
         it "merges and soft-deletes all non-template stages" do
@@ -454,7 +454,7 @@ describe Admin::DeployGroupsController do
       let(:template_stage) { stages(:test_staging) }
 
       let :stage do
-        Admin::DeployGroupsController.create_all_stages(deploy_group)
+        DeployGroupsController.create_all_stages(deploy_group)
         deploy_group.stages.where(project: template_stage.project).first
       end
 

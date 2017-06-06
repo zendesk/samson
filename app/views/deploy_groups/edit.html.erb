@@ -1,0 +1,19 @@
+<%= page_title do %>
+  <%= @deploy_group.new_record? ? 'New' : 'Edit' %>
+  Deploy Group
+  <%= link_to_if @deploy_group.id, @deploy_group.name, @deploy_group %>
+<% end %>
+
+<section>
+  <%= form_for @deploy_group, html: { class: "form-horizontal" } do |form| %>
+    <%= render 'shared/errors', object: @deploy_group %>
+
+    <%= render 'deploy_groups/fields', form: form %>
+
+    <hr>
+
+    <%= form.actions(delete: true) do %>
+      | <%= link_to_history @deploy_group %>
+    <% end %>
+  <% end %>
+</section>

@@ -18,7 +18,7 @@
   <div class="form-group">
     <label class="col-lg-2 control-label">Deploy Group</label>
     <div class="col-lg-4">
-      <p class="form-control-static"><%= link_to @deploy_group_role.deploy_group.name, [:admin, @deploy_group_role.deploy_group] %></p>
+      <p class="form-control-static"><%= link_to @deploy_group_role.deploy_group.name, deploy_group_path(@deploy_group_role.deploy_group) %></p>
     </div>
   </div>
 

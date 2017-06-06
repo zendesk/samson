@@ -61,7 +61,7 @@
         <ul class="dropdown-menu">
           <% if DeployGroup.enabled? %>
             <li><%= link_to "Environments", environments_path %></li>
-            <li><%= link_to "Deploy Groups", admin_deploy_groups_path %></li>
+            <li><%= link_to "Deploy Groups", deploy_groups_path %></li>
           <% end %>
           <li><%= link_to "Commands", Command %></li>
           <% if current_user.try(:admin?) %>

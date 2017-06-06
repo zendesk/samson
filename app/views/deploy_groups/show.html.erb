@@ -62,7 +62,7 @@
       <div class="col-lg-4">
         <p class="form-control-static">
           <% if vault_server = @deploy_group.vault_server %>
-            <%= link_to vault_server.name, [:admin, vault_server] %>
+            <%= link_to vault_server.name, vault_server %>
           <% end %>
         </p>
       </div>
@@ -73,14 +73,14 @@
 
   <div class="form-group">
     <div class="col-lg-offset-2 col-lg-10">
-      <%= link_to "Edit", edit_admin_deploy_group_path(@deploy_group), class: "btn btn-primary" %>
+      <%= link_to "Edit", edit_deploy_group_path(@deploy_group), class: "btn btn-primary" %>
       <% if DeployGroup.enabled? %>
         <%= link_to "Create Stages ...",
-                    create_all_stages_preview_admin_deploy_group_path(@deploy_group),
+                    create_all_stages_preview_deploy_group_path(@deploy_group),
                     class: "btn btn-default"
         %>
         <%= link_to "Deploy All Projects",
-                    deploy_all_admin_deploy_group_path(@deploy_group),
+                    deploy_all_deploy_group_path(@deploy_group),
                     class: "btn btn-default",
                     data: {
                         method: "post",
@@ -88,7 +88,7 @@
                     }
         %>
         <%= link_to "Deploy Missing Projects",
-                    deploy_all_admin_deploy_group_path(@deploy_group, missing_only: "true"),
+                    deploy_all_deploy_group_path(@deploy_group, missing_only: "true"),
                     class: "btn btn-default",
                     data: {
                         method: "post",
@@ -97,7 +97,7 @@
         %>
         <% cloned_stage_count = @deploy_group.stages.cloned.count %>
         <%= link_to "Merge #{cloned_stage_count} Cloned Stages",
-                    merge_all_stages_admin_deploy_group_path(@deploy_group),
+                    merge_all_stages_deploy_group_path(@deploy_group),
                     class: "btn btn-default #{ 'disabled' if cloned_stage_count.zero? }",
                     data: {
                       method: "post",
@@ -106,7 +106,7 @@
                     }
         %>
         <%= link_to "Delete #{cloned_stage_count} Cloned Stages",
-                    delete_all_stages_admin_deploy_group_path(@deploy_group),
+                    delete_all_stages_deploy_group_path(@deploy_group),
                     class: "btn btn-default #{ 'disabled' if cloned_stage_count.zero? }",
                     data: {
                         method: "post",
@@ -117,7 +117,7 @@
     </div>
     <br>
     <div class="col-lg-offset-2 col-lg-10" style="margin-top: 10px;">
-      <%= link_to "Back", admin_deploy_groups_path, class: "btn btn-default" %>
+      <%= link_to "Back", deploy_groups_path, class: "btn btn-default" %>
       | <%= link_to_history @deploy_group %>
       | <%= link_to "Deploys", deploys_path(search: {group: "DeployGroup-#{@deploy_group.id}"}) %>
     </div>

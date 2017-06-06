@@ -22,7 +22,7 @@
     <tr>
       <th>Project</th>
       <% @deploy_groups.each do |deploy_group| %>
-        <th><%= link_to deploy_group.name, [:admin, deploy_group] %></th>
+        <th><%= link_to deploy_group.name, deploy_group %></th>
       <% end %>
     </tr>
     </thead>
