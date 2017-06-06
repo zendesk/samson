@@ -17,7 +17,7 @@
 <section id="user-project-roles" class="clearfix">
   <h2 class="section-subtitle">Project Level Roles</h2>
 
-  <%= render "users/search_bar", system_level: false %>
+  <%= render "user_project_roles/search_bar", system_level: false %>
 
   <div class="users-csv">
     <%= link_to "Download as CSV", new_csv_export_path(format: :csv, type: :users, user_id: @user.id) %>
@@ -44,7 +44,7 @@
   <%= paginate @projects %>
 
   <h3>Create new project role</h3>
-  <%= form_tag project_roles_path(user_id: @user.id), class: 'form-horizontal' do %>
+  <%= form_tag user_project_roles_path(user_id: @user.id), class: 'form-horizontal' do %>
     <div class="col-md-2">
       <%= select_tag :project_id, options_from_collection_for_select(@projects_without_role, :id, :name), required: true, class: 'form-control col-md-2' %>
     </div>
@@ -54,7 +54,6 @@
         <%= radio_button_tag :role_id, role.id %>
         <%= role.name %>
       <% end %>
-      &nbsp;
     <% end %>
     <%= submit_tag "Create", class: 'btn btn-default' %>
   <% end %>

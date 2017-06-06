@@ -1,7 +1,7 @@
 <%= page_title "Users" %>
 
 <section class="clearfix">
-  <%= render 'users/search_bar', system_level: true %>
+  <%= render 'user_project_roles/search_bar', system_level: true %>
 
   <div class="users-csv">
     <%= link_to "Download as CSV", new_csv_export_path(format: :csv, type: :users) %>
