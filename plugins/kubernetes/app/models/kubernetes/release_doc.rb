@@ -99,6 +99,7 @@ module Kubernetes
     # no ipv6 support
     def prefix_service_cluster_ip(resource)
       return unless ip = resource[:spec][:clusterIP]
+      return if ip == "None"
       return unless prefix = deploy_group.kubernetes_cluster.ip_prefix.presence
       ip = ip.split('.')
       prefix = prefix.split('.')

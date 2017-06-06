@@ -129,6 +129,11 @@ describe Kubernetes::ReleaseDoc do
         doc.deploy_group.kubernetes_cluster.update_column(:ip_prefix, '')
         result.must_equal '1.2.3.4'
       end
+
+      it "leaves None alone" do
+        doc.send(:raw_template)[1][:spec][:clusterIP] = "None"
+        result.must_equal 'None'
+      end
     end
   end
 
