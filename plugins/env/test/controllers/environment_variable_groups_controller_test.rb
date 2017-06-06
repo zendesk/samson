@@ -1,9 +1,9 @@
 # frozen_string_literal: true
-require_relative "../../test_helper"
+require_relative "../test_helper"
 
 SingleCov.covered!
 
-describe Admin::EnvironmentVariableGroupsController do
+describe EnvironmentVariableGroupsController do
   let(:stage) { stages(:test_staging) }
   let(:project) { stage.project }
   let(:deploy_group) { stage.deploy_groups.first }
@@ -76,7 +76,7 @@ describe Admin::EnvironmentVariableGroupsController do
             }
           end
         end
-        assert_redirected_to "/admin/environment_variable_groups"
+        assert_redirected_to "/environment_variable_groups"
       end
     end
 
@@ -97,7 +97,7 @@ describe Admin::EnvironmentVariableGroupsController do
           }
         end
 
-        assert_redirected_to "/admin/environment_variable_groups"
+        assert_redirected_to "/environment_variable_groups"
         env_group.reload
         env_group.name.must_equal "G2"
         env_group.comment.must_equal "COOMMMENT"
@@ -116,7 +116,7 @@ describe Admin::EnvironmentVariableGroupsController do
           }
         end
 
-        assert_redirected_to "/admin/environment_variable_groups"
+        assert_redirected_to "/environment_variable_groups"
         variable.reload.value.must_equal "V2"
         variable.reload.scope.must_equal deploy_group
       end
@@ -133,7 +133,7 @@ describe Admin::EnvironmentVariableGroupsController do
           }
         end
 
-        assert_redirected_to "/admin/environment_variable_groups"
+        assert_redirected_to "/environment_variable_groups"
       end
     end
 
@@ -143,7 +143,7 @@ describe Admin::EnvironmentVariableGroupsController do
         assert_difference "EnvironmentVariableGroup.count", -1 do
           delete :destroy, params: {id: env_group.id}
         end
-        assert_redirected_to "/admin/environment_variable_groups"
+        assert_redirected_to "/environment_variable_groups"
       end
     end
   end

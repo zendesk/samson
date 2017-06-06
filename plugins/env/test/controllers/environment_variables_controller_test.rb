@@ -1,9 +1,9 @@
 # frozen_string_literal: true
-require_relative "../../test_helper"
+require_relative "../test_helper"
 
 SingleCov.covered!
 
-describe Admin::EnvironmentVariablesController do
+describe EnvironmentVariablesController do
   let!(:env_var) { EnvironmentVariable.create!(name: 'FOO', value: 'bar', parent: projects(:test)) }
 
   as_a_viewer do

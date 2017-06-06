@@ -6,7 +6,7 @@
 
 <h1>
   <%= title %>
-  <%= link_to 'Variables', admin_environment_variables_path, class: 'pull-right' %>
+  <%= link_to 'Variables', environment_variables_path, class: 'pull-right' %>
 </h1>
 
 <section class="clearfix">
@@ -21,7 +21,7 @@
     <% @groups.each do |group| %>
       <tr>
         <td>
-          <%= link_to group.name, [:admin, group] %>
+          <%= link_to group.name, group %>
           <ul>
             <% group.environment_variables.map(&:name).uniq.sort.each do |name| %>
               <li><%= name %></li>
@@ -33,7 +33,7 @@
           <% if group.projects.any? %>
             <%= link_to "Delete", "#", data: {confirm: "Cannot be deleted when still in use."} %>
           <% else %>
-            <%= link_to_delete [:admin, group] %>
+            <%= link_to_delete group %>
           <% end %>
         </td>
       </tr>
@@ -41,6 +41,6 @@
   </table>
 
   <div class="pull-right">
-    <%= link_to "New", new_admin_environment_variable_group_path, class: "btn btn-default" %>
+    <%= link_to "New", new_environment_variable_group_path, class: "btn btn-default" %>
   </div>
 </section>

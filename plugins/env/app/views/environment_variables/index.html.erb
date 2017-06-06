@@ -34,7 +34,7 @@
           <% if variable.parent %>
             <%= case variable.parent
                 when Project then link_to variable.parent.name, variable.parent
-                when EnvironmentVariableGroup then link_to variable.parent.name, [:admin, variable.parent]
+                when EnvironmentVariableGroup then link_to variable.parent.name, variable.parent
                 else raise "Unsupported #{variable.parent}"
                 end
             %>
@@ -42,7 +42,7 @@
             <%= "Deleted #{variable.parent_type} ##{variable.parent_id}" %>
             <% end %>
         </td>
-        <td><%= link_to_delete [:admin, variable], remove_container: 'tr' %></td>
+        <td><%= link_to_delete variable, remove_container: 'tr' %></td>
       </tr>
     <% end %>
   </table>
