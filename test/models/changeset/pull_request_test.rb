@@ -418,7 +418,19 @@ describe Changeset::PullRequest do
           - Planes
 
         # Notes
+        This is a great PR!
+      BODY
+      pr.risks.must_equal "- Planes"
+    end
 
+    it "ends the risks section if there are subsequent underline style sections" do
+      body.replace(<<-BODY.dup.strip_heredoc)
+        Risks
+        =====
+          - Planes
+
+        Notes
+        =====
         This is a great PR!
       BODY
       pr.risks.must_equal "- Planes"

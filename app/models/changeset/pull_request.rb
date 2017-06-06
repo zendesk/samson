@@ -10,7 +10,7 @@ class Changeset::PullRequest
   RISKS_SECTION = /^\s*#*\s*Risks?\s*#*\s*\n(?:\s*[-=]*\s*\n)?/i
 
   # Matches a markdown section heading
-  SECTION_HEADING = /^\s*#*\s*\w+.*\n/
+  SECTION_HEADING = /^\s*#*\s*\w+.*\n(?:\s*[-=]*\s*\n)?/i
 
   # Matches URLs to JIRA issues.
   JIRA_ISSUE_URL = %r[https?:\/\/[\da-z\.\-]+\.[a-z\.]{2,6}\/browse\/#{CODE_ONLY}(?=#{PUNCT}|$)]
