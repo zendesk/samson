@@ -160,7 +160,7 @@ describe Project do
 
     it 'does not reset the repository if the repository_url is not changed' do
       project = Project.new(name: 'demo_apps', repository_url: repository_url)
-      project.expects(:clone_repository).once
+      project.expects(:clone_repository)
       project.expects(:clean_old_repository).never
       project.save!
       project.update!(name: 'new_name')
@@ -168,15 +168,16 @@ describe Project do
 
     it 'sets the git repository on disk' do
       project = Project.new(id: 9999, name: 'demo_apps', repository_url: repository_url)
-      project.repository.expects(:clone!).once
+      project.repository.expects(:clone!).returns(true)
+      project.repository.expects(:capture_stdout).returns("foo") # other commands would fail from stubbed `clone!`
       clone_repository(project)
     end
 
-    it 'fails to clone the repository and logs the error' do
+    it 'fails to clone the repository and reports the error' do
       project = Project.new(id: 9999, name: 'demo_apps', repository_url: repository_url)
-      project.repository.expects(:clone!).returns(false).once
-      expected_message = "Could not clone git repository #{project.repository_url} for project #{project.name} - "
-      Rails.logger.expects(:error).with(expected_message)
+      project.repository.expects(:clone!).returns(false)
+      expected_message = "Could not clone git repository #{project.repository_url} for project #{project.name}"
+      Airbrake.expects(:notify).with(expected_message)
       clone_repository(project)
     end
 

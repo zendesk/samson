@@ -94,10 +94,6 @@ class BuildsController < ApplicationController
   end
 
   def git_sha
-    @git_sha ||= begin
-      # Create/update local cache to avoid getting a stale reference
-      current_project.repository.exclusive(holder: 'BuildsController#create', &:update_local_cache!)
-      current_project.repository.commit_from_ref(new_build_params[:git_ref])
-    end
+    @git_sha ||= current_project.repository.commit_from_ref(new_build_params[:git_ref])
   end
 end

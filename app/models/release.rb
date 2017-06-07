@@ -97,9 +97,6 @@ class Release < ActiveRecord::Base
 
   def covert_ref_to_sha
     return if commit.blank? || commit =~ Build::SHA1_REGEX
-
-    # Create/update local cache to avoid getting a stale reference
-    project.repository.exclusive(holder: 'Release#covert_ref_to_sha', &:update_local_cache!)
     self.commit = project.repository.commit_from_ref(commit)
   end
 end

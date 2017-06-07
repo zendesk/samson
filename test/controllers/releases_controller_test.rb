@@ -47,7 +47,6 @@ describe ReleasesController do
     describe "#create" do
       let(:release_params) { { commit: "abcd" } }
       before do
-        GitRepository.any_instance.expects(:update_local_cache!)
         GitRepository.any_instance.expects(:commit_from_ref).with('abcd').returns('a' * 40)
         GITHUB.stubs(:create_release)
       end
