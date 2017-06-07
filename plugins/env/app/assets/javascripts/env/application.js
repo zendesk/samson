@@ -68,6 +68,7 @@
     e.preventDefault();
 
     var pasted = prompt("Paste .env formatted variables here. Fills the form but does not submit. Uses last selected scope.");
+    if(!pasted) { return; }
     var env = parseEnv(pasted);
 
     var $row = $(this).prev().prev();
