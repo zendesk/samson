@@ -31,7 +31,7 @@
     return obj;
   }
 
-  function copyRow($row) {
+  function copyRow($row, callback) {
     var $new_row = $row.clone();
     $new_row.find(':input').val('');
 
@@ -42,6 +42,8 @@
         $input.attr(attr, $input.attr(attr).replace(/\d+/, function(n){ return ++n; }));
       });
     });
+
+    if(callback){ callback($new_row); }
 
     $row.after($new_row);
     $new_row.find(".selectpicker").selectpicker();  // add selectpicker to copied row
@@ -68,19 +70,21 @@
     e.preventDefault();
 
     var pasted = prompt("Paste .env formatted variables here. Fills the form but does not submit. Uses last selected scope.");
+    if(!pasted) { return; }
     var env = parseEnv(pasted);
 
     var $row = $(this).prev().prev();
     var selectedEnv = $row.find("select").val();
 
     withoutSelectpicker($row, function() {
-      // add and fill new rows
+      // add and fill new rows while they are not select-pickered
       $.each(env, function (k, v) {
-        $row = copyRow($row);
-        var inputs = $row.find(':input');
-        $(inputs.get(0)).val(k);
-        $(inputs.get(1)).val(v);
-        $(inputs.get(2)).val(selectedEnv);
+        copyRow($row, function($raw_new_row){
+          var inputs = $raw_new_row.find(':input');
+          $(inputs.get(0)).val(k);
+          $(inputs.get(1)).val(v);
+          $(inputs.get(2)).val(selectedEnv);
+        });
       });
     });
   });
