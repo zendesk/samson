@@ -15,7 +15,6 @@
     </div>
   </div>
 
-  <% deploys = Deploy.successful.where(stage_id: @deploy_group.pluck_stage_ids).last_deploys_for_projects %>
   <div class="form-group row">
     <label class="col-lg-2 control-label">Deployed</label>
     <div class="col-lg-10">
@@ -25,7 +24,7 @@
           <th>Version</th>
           <th></th>
         </tr>
-        <% deploys.each do |deploy| %>
+        <% @deployed.each do |deploy| %>
           <tr>
             <td><%= link_to deploy.project.name, deploy.project %></td>
             <td><%= link_to deploy.short_reference, [deploy.project, deploy] %></td>

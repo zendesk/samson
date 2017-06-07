@@ -11,6 +11,17 @@ class DeployGroupsController < ApplicationController
   end
 
   def show
+    @deployed = Deploy.successful.where(stage_id: @deploy_group.pluck_stage_ids).last_deploys_for_projects
+    respond_to do |format|
+      format.html
+      format.json do
+        render json: {
+          deploy_group: @deploy_group.as_json,
+          deploys: @deployed.as_json,
+          projects: @deployed.map(&:project).as_json
+        }
+      end
+    end
   end
 
   def new
