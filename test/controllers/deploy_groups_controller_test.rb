@@ -18,10 +18,16 @@ describe DeployGroupsController do
     end
 
     describe "#show" do
-      it 'renders' do
+      it 'renders html' do
         get :show, params: {id: deploy_group.id}
         assert_template :show
         assert_response :success
+      end
+
+      it 'renders json with deploys and dependent projects' do
+        get :show, params: {id: deploy_group.id}, format: :json
+        assert_response :success
+        JSON.parse(response.body).keys.must_equal ["deploy_group", "deploys", "projects"]
       end
     end
 
