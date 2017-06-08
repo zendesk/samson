@@ -192,4 +192,16 @@ describe SecretStorage do
       SecretStorage.keys.must_equal []
     end
   end
+
+  describe ".sharing_grants?" do
+    it "is true when sharing is disabled" do
+      refute SecretStorage.sharing_grants?
+    end
+
+    it "is false when sharing is enabled" do
+      with_env SECRET_STORAGE_SHARING_GRANTS: 'true' do
+        assert SecretStorage.sharing_grants?
+      end
+    end
+  end
 end

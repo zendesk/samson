@@ -68,6 +68,10 @@ module SecretStorage
       SECRET_KEYS_PARTS.zip(key.split(SEPARATOR, SECRET_KEYS_PARTS.size)).to_h
     end
 
+    def sharing_grants?
+      ENV['SECRET_STORAGE_SHARING_GRANTS']
+    end
+
     private
 
     def modify_keys_cache

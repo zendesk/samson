@@ -15,21 +15,20 @@ module Samson
       # bar -> production/my_project/pod100/bar
       def expand(env_name, secret_key)
         env_name = env_name.to_s
-        if env_name.end_with?(WILDCARD) ^ secret_key.end_with?(WILDCARD)
-          @errors << "#{env_name} and #{secret_key} need to both end with #{WILDCARD} or not include them"
-          return []
-        end
+        return [] unless validate_wildcard(env_name, secret_key)
 
         # build a list of all possible ids
         possible_ids = possible_secret_key_parts.map do |id|
-          SecretStorage.generate_secret_key(id.merge(key: secret_key))
+          key_parts = id.merge(key: secret_key)
+          SecretStorage.generate_secret_key(key_parts) if key_shared?(key_parts)
         end
 
-        found = if secret_key.end_with?(WILDCARD)
-          expand_wildcard_keys(env_name, secret_key, possible_ids)
-        else
-          expand_simple_key(env_name, possible_ids)
-        end
+        found =
+          if secret_key.end_with?(WILDCARD)
+            expand_wildcard_keys(env_name, secret_key, possible_ids)
+          else
+            expand_simple_key(env_name, possible_ids)
+          end
 
         if found.empty?
           @errors << "#{secret_key} (tried: #{possible_ids.join(', ')})"
@@ -55,6 +54,12 @@ module Samson
       end
 
       private
+
+      def validate_wildcard(env_name, secret_key)
+        return true unless env_name.end_with?(WILDCARD) ^ secret_key.end_with?(WILDCARD)
+        @errors << "#{env_name} and #{secret_key} need to both end with #{WILDCARD} or not include them"
+        false
+      end
 
       # find the first id that exists, preserving priority in possible_ids
       def expand_simple_key(env_name, possible_ids)
@@ -85,6 +90,15 @@ module Samson
         end
 
         matched
+      end
+
+      def key_shared?(key_parts)
+        if SecretStorage.sharing_grants?
+          @shared_keys ||= SecretSharingGrant.where(project: @project).pluck(:key)
+          key_parts.fetch(:project_permalink) == "global" && @shared_keys.include?(key_parts.fetch(:key))
+        else
+          true
+        end
       end
 
       def possible_secret_key_parts

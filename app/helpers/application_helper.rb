@@ -97,6 +97,7 @@ module ApplicationHelper
       name = resource.name
       name = (resource.lock.warning? ? warning_icon : lock_icon) + " " + name if resource.lock
       [name, project_stage_path(resource.project, resource)]
+    when SecretSharingGrant then [resource.key, resource]
     else
       raise ArgumentError, "Unsupported resource #{resource}"
     end

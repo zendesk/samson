@@ -88,6 +88,26 @@ describe Samson::Secrets::KeyResolver do
         errors.first.must_include "bax* (tried: production/foo/pod1/bax*"
       end
     end
+
+    describe "secret sharing" do
+      with_env SECRET_STORAGE_SHARING_GRANTS: 'true'
+
+      it "does not include global by default" do
+        resolver.expand('ABC', 'bar').must_equal []
+      end
+
+      it "caches shared keys" do
+        resolver.expand('ABC', 'bar').must_equal []
+        assert_sql_queries 0 do
+          resolver.expand('ABC', 'foo').must_equal []
+        end
+      end
+
+      it "includes globals when allowed" do
+        SecretSharingGrant.create!(project: project, key: 'bar')
+        resolver.expand('ABC', 'bar').must_equal [["ABC", "global/global/global/bar"]]
+      end
+    end
   end
 
   describe "#read" do

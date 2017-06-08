@@ -334,6 +334,11 @@ describe ApplicationHelper do
       link_to_resource(deploy_groups(:pod1)).must_equal "<a href=\"/deploy_groups/pod1\">Pod1</a>"
     end
 
+    it "links to grants" do
+      grant = SecretSharingGrant.create!(project: projects(:test), key: 'foo')
+      link_to_resource(grant).must_equal "<a href=\"/secret_sharing_grants/#{grant.id}\">foo</a>"
+    end
+
     it "fails on unknown" do
       assert_raises(ArgumentError) { link_to_resource(123) }.message.must_equal "Unsupported resource 123"
     end
