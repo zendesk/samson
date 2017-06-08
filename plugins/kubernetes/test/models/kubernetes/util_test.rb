@@ -25,7 +25,7 @@ describe Kubernetes::Util do
     end
 
     it 'handles a YAML file with multiple entries' do
-      yaml_input = <<-YAML.strip_heredoc
+      yaml_input = <<~YAML
         ---
         name: foo
         value: 999

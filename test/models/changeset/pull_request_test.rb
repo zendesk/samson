@@ -5,15 +5,15 @@ SingleCov.covered!
 
 describe Changeset::PullRequest do
   def add_risks
-    body.replace(<<-BODY.dup.strip_heredoc)
-        # Risks
-         - Explosions
+    body.replace(<<~BODY.dup)
+      # Risks
+      - Explosions
     BODY
   end
 
   def no_risks
-    body.replace(<<-BODY.dup.strip_heredoc)
-        Not that risky ...
+    body.replace(<<~BODY.dup)
+      Not that risky ...
     BODY
   end
 
@@ -380,7 +380,7 @@ describe Changeset::PullRequest do
     end
 
     it "does not find - None" do
-      body.replace(<<-BODY.dup.strip_heredoc)
+      body.replace(<<~BODY.dup)
         # Risks
          - None
       BODY
@@ -388,7 +388,7 @@ describe Changeset::PullRequest do
     end
 
     it "does not find None" do
-      body.replace(<<-BODY.dup.strip_heredoc)
+      body.replace(<<~BODY.dup)
         # Risks
         None
       BODY
@@ -396,7 +396,7 @@ describe Changeset::PullRequest do
     end
 
     it "finds risks with underline style markdown headers" do
-      body.replace(<<-BODY.dup.strip_heredoc)
+      body.replace(<<~BODY.dup)
         Risks
         =====
           - Snakes
@@ -405,7 +405,7 @@ describe Changeset::PullRequest do
     end
 
     it "finds risks with closing hashes in atx style markdown headers" do
-      body.replace(<<-BODY.dup.strip_heredoc)
+      body.replace(<<~BODY.dup)
         ## Risks ##
           - Planes
       BODY

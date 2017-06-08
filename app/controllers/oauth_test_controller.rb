@@ -19,7 +19,7 @@ class OauthTestController < ActionController::Base
     # alternatively we could call whatever the oauth controller does internally directly
     access_token = oauth_client.auth_code.get_token(params[:code], redirect_uri: token_url).token
 
-    render plain: <<-TEXT.strip_heredoc
+    render plain: <<~TEXT
       Your access token is: #{access_token}
 
       You can use this to make requests:
@@ -47,7 +47,7 @@ class OauthTestController < ActionController::Base
 
   def ensure_application
     return if application
-    message = <<-TEXT.strip_heredoc
+    message = <<~TEXT
       Add an OAuth application at
 
       #{new_oauth_application_url}

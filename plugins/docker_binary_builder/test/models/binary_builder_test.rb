@@ -168,7 +168,7 @@ describe BinaryBuilder do
         end
         tarfile.close
         builder.send(:untar, tarfile.path)
-        output.string.must_equal <<-TEXT.strip_heredoc
+        output.string.must_equal <<~TEXT
           About to untar: test.tar
               > foo
               > bar/bar

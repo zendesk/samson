@@ -12,7 +12,7 @@ class ProjectMailer < ApplicationMailer
 
   def build_mail(user, project, address, action)
     subject = "Samson Project #{action.titleize}: #{project.name}"
-    body = <<-TEXT.strip_heredoc
+    body = <<~TEXT
       "#{user.name_and_email} just #{action} project #{project.name}
       #{project.url}
       #{project.repository_homepage}
