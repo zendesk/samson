@@ -10,7 +10,6 @@ class JobExecution
     attr_accessor :enabled
   end
 
-  cattr_accessor(:lock_timeout, instance_writer: false) { 10.minutes }
   cattr_accessor(:stop_timeout, instance_writer: false) { 15.seconds }
 
   attr_reader :output, :reference, :job, :viewers, :executor
@@ -179,24 +178,10 @@ class JobExecution
 
   def setup!(dir)
     return unless resolve_ref_to_commit
-    stage.try(:kubernetes) || checkout_workspace(dir)
-  end
-
-  def checkout_workspace(dir)
-    locked = lock_repository do
-      return false unless @repository.checkout_workspace(dir, @reference)
-    end
-
-    if locked
-      true
-    else
-      @output.puts("Could not get exclusive lock on repo.")
-      false
-    end
+    stage.try(:kubernetes) || @repository.checkout_workspace(dir, @reference)
   end
 
   def resolve_ref_to_commit
-    @repository.update_local_cache!
     commit = @repository.commit_from_ref(@reference)
     tag = @repository.fuzzy_tag_from_ref(@reference)
     if commit
@@ -223,11 +208,6 @@ class JobExecution
     env.merge!(Hash[*Samson::Hooks.fire(:job_additional_vars, @job)])
 
     base_commands(dir, env) + @job.commands
-  end
-
-  def lock_repository(&block)
-    holder = (stage.try(:name) || @job.user.name)
-    @job.project.repository.exclusive(output: @output, holder: holder, timeout: lock_timeout, &block)
   end
 
   # show full errors if we show exceptions

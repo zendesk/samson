@@ -2,7 +2,7 @@
 require_relative '../test_helper'
 require 'ar_multi_threaded_transactional_tests'
 
-SingleCov.covered! uncovered: 7
+SingleCov.covered! uncovered: 5
 
 describe JobExecution do
   include GitRepoTestHelper
@@ -37,7 +37,7 @@ describe JobExecution do
     Project.any_instance.stubs(:valid_repository_url).returns(true)
     user.name = 'John Doe'
     user.email = 'jdoe@test.com'
-    project.repository.update_local_cache!
+    project.repository.send(:clone!)
     job.deploy = deploy
     freeze_time
   end
@@ -114,6 +114,9 @@ describe JobExecution do
     execute_job 'safari'
 
     assert_equal '[04:05:06] tiger', last_line_of_output
+
+    # pretend we are in a new request
+    project.repository.instance_variable_set(:@mirror_current, nil)
 
     execute_on_remote_repo <<-SHELL
       git checkout safari

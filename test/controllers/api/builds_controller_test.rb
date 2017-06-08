@@ -24,7 +24,6 @@ describe Api::BuildsController do
       end
 
       before do
-        GitRepository.any_instance.stubs(:update_local_cache!)
         GitRepository.any_instance.stubs(:commit_from_ref).with('reff').returns('some-commit')
       end
 

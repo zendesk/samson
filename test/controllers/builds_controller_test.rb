@@ -19,7 +19,6 @@ describe BuildsController do
   end
 
   def stub_git_reference_check(returns: false)
-    GitRepository.any_instance.stubs(:update_local_cache!).returns(true)
     GitRepository.any_instance.stubs(:commit_from_ref).returns(returns)
   end
 

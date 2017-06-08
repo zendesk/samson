@@ -27,16 +27,6 @@ class ReferencesService
   end
 
   def references_from_cached_repo
-    git_references = nil
-    lock_project do
-      return unless repository.update_local_cache! # TODO: test this ...
-      tags = repository.tags
-      git_references = repository.branches.push(*tags).sort_by { |ref| [-ref.length, ref] }.reverse
-    end
-    git_references
-  end
-
-  def lock_project(&block)
-    project.with_lock(holder: 'autocomplete', timeout: lock_timeout, &block)
+    (repository.branches + repository.tags).sort_by { |ref| [-ref.length, ref] }.reverse
   end
 end

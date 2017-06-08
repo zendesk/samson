@@ -72,12 +72,6 @@ class Build < ActiveRecord::Base
 
     return if errors.include?(:git_ref) || errors.include?(:git_sha)
 
-    unless project.repository.last_pulled
-      project.repository.exclusive holder: 'Build reference validation' do
-        project.repository.update_local_cache!
-      end
-    end
-
     if git_ref.present?
       commit = project.repository.commit_from_ref(git_ref)
       if commit

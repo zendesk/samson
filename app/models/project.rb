@@ -163,16 +163,15 @@ class Project < ActiveRecord::Base
     self.token = SecureRandom.hex
   end
 
+  # clone the repository in the background so it is ready when user wants to do the first deploy
   def clone_repository
     Thread.new do
       begin
-        output = repository.executor.output
-        repository.exclusive(output: output, holder: 'Initial Repository Setup') do
-          unless repository.update_local_cache!
-            log.error("Could not clone git repository #{repository_url} for project #{name} - #{output.string}")
-          end
+        unless repository.commit_from_ref "HEAD" # bogus command to trigger clone
+          Airbrake.notify("Could not clone git repository #{repository_url} for project #{name}")
         end
       rescue => e
+        # we are in a Thread so report errors or they disappear
         alert_clone_error!(e)
       end
     end
@@ -180,10 +179,6 @@ class Project < ActiveRecord::Base
 
   def clean_repository
     repository.clean!
-  end
-
-  def log
-    Rails.logger
   end
 
   def clean_old_repository
@@ -197,7 +192,7 @@ class Project < ActiveRecord::Base
 
   def alert_clone_error!(exception)
     message = "Could not clone git repository #{repository_url} for project #{name}"
-    log.error("#{message} - #{exception.message}")
+    Rails.logger.error("#{message} - #{exception.message}")
     Airbrake.notify(
       exception,
       error_message: message,

@@ -48,9 +48,8 @@ module GitRepoTestHelper
     SHELL
   end
 
-  def create_repo_with_submodule
+  def add_submodule_to_repo
     create_submodule_repo
-    create_repo_without_tags
     execute_on_remote_repo <<-SHELL
       git submodule add #{submodule_temp_dir} submodule
       git add .gitmodules

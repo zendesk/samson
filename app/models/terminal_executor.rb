@@ -25,6 +25,7 @@ class TerminalExecutor
     @stopped = false
   end
 
+  # TODO: rename to execute since it does not blow up on failure
   def execute!(*commands)
     return false if @stopped
     options = {in: '/dev/null', unsetenv_others: true}
