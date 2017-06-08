@@ -167,7 +167,8 @@ GEM
     awesome_print (1.6.1)
     aws-sdk-core (2.2.36)
       jmespath (~> 1.0)
-    bootscale (0.5.1)
+    bootsnap (1.0.0)
+      msgpack (~> 1.0)
     bootstrap-sass (3.3.6)
       autoprefixer-rails (>= 5.2.1)
       sass (>= 3.3.4)
@@ -281,6 +282,7 @@ GEM
     mixlib-shellout (2.2.7)
     mocha (1.2.1)
       metaclass (~> 0.0.1)
+    msgpack (1.1.0)
     multi_json (1.12.0)
     multi_xml (0.5.5)
     multipart-post (2.0.0)
@@ -511,7 +513,7 @@ DEPENDENCIES
   ar_multi_threaded_transactional_tests
   attr_encrypted
   awesome_print
-  bootscale
+  bootsnap
   bootstrap-sass
   brakeman
   bundler

@@ -111,7 +111,7 @@ end
 
 group :development, :test do
   gem 'byebug'
-  gem 'bootscale'
+  gem 'bootsnap'
   gem 'pry-rails'
   gem 'pry'
   gem 'awesome_print'
