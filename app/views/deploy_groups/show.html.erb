@@ -28,7 +28,7 @@
           <tr>
             <td><%= link_to deploy.project.name, deploy.project %></td>
             <td><%= link_to deploy.short_reference, [deploy.project, deploy] %></td>
-            <td><%= render_time(deploy.start_time, params[:time_format]) %></td>
+            <td><%= render_time(deploy.start_time) %></td>
           </tr>
         <% end %>
       </table>
