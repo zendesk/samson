@@ -3,7 +3,7 @@
   <%= form.input :permalink, required: true if form.object.persisted? %>
   <%= form.input :env_value, label: "Value in $DEPLOY_GROUPS" %>
   <%= form.input :environment_id, required: true do %>
-    <%= form.collection_select :environment_id, environments, :id, :name, {}, { class: 'form-control' } %>
+    <%= form.collection_select :environment_id, Environment.all, :id, :name, {}, { class: 'form-control' } %>
   <% end %>
 
   <% if SecretStorage.backend == Samson::Secrets::HashicorpVaultBackend %>
