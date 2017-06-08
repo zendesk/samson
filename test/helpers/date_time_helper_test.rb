@@ -53,5 +53,12 @@ describe DateTimeHelper do
         "<span data-time=\"1461001570000\" class=\"mouseover\">Mon, 18 Apr 2016 17:46:10 +0000</span>"
       )
     end
+
+    it "uses default from params" do
+      stubs(params: {time_format: "utc"})
+      render_time(ts).must_equal(
+        "<time datetime=\"2016-04-18 17:46:10 UTC\">2016-04-18 17:46:10 UTC</time>"
+      )
+    end
   end
 end

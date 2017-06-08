@@ -8,7 +8,7 @@ module DateTimeHelper
     content_tag(:span, time.rfc822, data: { time: datetime_to_js_ms(time) }, class: "mouseover")
   end
 
-  def render_time(time, format)
+  def render_time(time, format = params[:time_format])
     # grab the time format that the user has in their profile
     format ||= current_user.time_format
     if format == 'local'
