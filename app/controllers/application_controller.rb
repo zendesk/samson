@@ -32,7 +32,7 @@ class ApplicationController < ActionController::Base
     payload["params"] = request.params
   end
 
-  def redirect_back_or(fallback, options = {})
+  def redirect_back(**options)
     if param_location = params[:redirect_to].presence
       if param_location.is_a?(String) && param_location.start_with?('/')
         redirect_to URI("http://ignor.ed#{param_location}").request_uri, options # using URI to silence Brakeman
@@ -41,7 +41,7 @@ class ApplicationController < ActionController::Base
         Rails.logger.error("Invalid redirect_to parameter #{param_location}")
       end
     end
-    redirect_back options.merge(fallback_location: fallback)
+    super
   end
 
   def store_requested_oauth_scope

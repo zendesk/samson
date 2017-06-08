@@ -38,7 +38,7 @@ class UserProjectRolesController < ApplicationController
     if request.xhr?
       render plain: "Saved!"
     else
-      redirect_back_or "/", notice: "Saved!"
+      redirect_back fallback_location: "/", notice: "Saved!"
     end
   end
 end

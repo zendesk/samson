@@ -22,7 +22,7 @@ class AccessRequestsController < ApplicationController
     current_user.update!(access_request_pending: true)
 
     flash[:notice] = 'Access request email sent.'
-    redirect_back_or root_path
+    redirect_back fallback_location: root_path
   end
 
   private
