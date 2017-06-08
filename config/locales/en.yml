@@ -20,10 +20,7 @@
 # available at http://guides.rubyonrails.org/i18n.html.
 
 en:
-  hello: "Hello world"
   doorkeeper:
     applications:
       help:
-        # Ideally make dynamic https://github.com/doorkeeper-gem/doorkeeper/issues/896
-        # and enforce inclusion ... for now keep in sync with api controllers
-        scopes: "Separate scopes with spaces. Possible: automated_deploys, builds, deploy_groups, deploys, locks, projects, stages, users, default (api/*), web-ui (non api/)"
+        scopes: "Separate scopes with spaces. Possible: any controller path (for example deploy_groups), default (api/*), web-ui (non api/)"

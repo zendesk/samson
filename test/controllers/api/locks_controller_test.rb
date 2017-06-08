@@ -81,7 +81,7 @@ describe Api::LocksController do
       it "fails without parameters" do
         delete :destroy_via_resource, format: :json
         assert_response :bad_request
-        JSON.parse(response.body).must_equal "error" => {"resource_id" => ["is required"]}
+        JSON.parse(response.body).must_equal "status" => 400, "error" => {"resource_id" => ["is required"]}
       end
     end
   end

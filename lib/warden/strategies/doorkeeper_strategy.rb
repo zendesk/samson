@@ -11,14 +11,14 @@ class Warden::Strategies::Doorkeeper < ::Warden::Strategies::Base
 
   def authenticate!
     token = ::Doorkeeper::OAuth::Token.authenticate(request, :from_bearer_authorization)
-    requested_scope = request.env.fetch('requested_oauth_scope')
+    requested_scopes = request.env.fetch('requested_oauth_scopes')
 
     if !token
       halt_json "Unable to find OAuth token"
     elsif !token.accessible?
       halt_json "OAuth token is expired"
-    elsif (requested_scope == WEB_UI_SCOPE || !token.acceptable?('default')) && !token.acceptable?(requested_scope)
-      halt_json "OAuth token does not have scope #{requested_scope}"
+    elsif !token_allows?(token, requested_scopes)
+      halt_json "OAuth token does not allow any scope #{requested_scopes.join(", ")}"
     elsif !(user = User.find_by_id(token.resource_owner_id))
       halt_json "OAuth token belongs to deleted user #{token.resource_owner_id}"
     else
@@ -29,6 +29,11 @@ class Warden::Strategies::Doorkeeper < ::Warden::Strategies::Base
   end
 
   private
+
+  def token_allows?(token, requested_scopes)
+    token.acceptable?(requested_scopes) ||
+    (token.acceptable?('default') && !requested_scopes.include?(WEB_UI_SCOPE))
+  end
 
   def request
     ActionDispatch::Request.new(super.env)

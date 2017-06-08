@@ -20,7 +20,7 @@ class StagesController < ApplicationController
   def show
     respond_to do |format|
       format.html do
-        @deploys = @stage.deploys.page(params[:page])
+        @deploys = @stage.deploys.page(page)
       end
       format.svg do
         badge =
