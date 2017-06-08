@@ -191,6 +191,11 @@ describe SecretsController do
       it 'renders for local secret as project-admin' do
         get :show, params: {id: secret}
         assert_template :show
+      end
+
+      it 'hides invisible secrets' do
+        get :show, params: {id: secret}
+        refute assigns(:secret).fetch(:value)
         response.body.wont_include secret.value
       end
 

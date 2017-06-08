@@ -95,6 +95,7 @@ class SecretsController < ApplicationController
 
   def find_secret
     @secret = SecretStorage.read(key, include_value: true)
+    @secret[:value] = nil unless @secret.fetch(:visible)
   end
 
   def find_project_permalinks
