@@ -10,13 +10,13 @@ class Changeset::IssueComment
     @data = data['issue']
   end
 
-  def self.changeset_from_webhook(project, params = {})
-    new(project.github_repo, params)
+  def self.changeset_from_webhook(project, payload)
+    new(project.github_repo, payload)
   end
 
-  def self.valid_webhook?(params)
-    return false unless VALID_ACTIONS.include? params.dig('github', 'action')
-    params.dig('comment', 'body') =~ Changeset::PullRequest::WEBHOOK_FILTER
+  def self.valid_webhook?(payload)
+    return false unless VALID_ACTIONS.include? payload.dig('github', 'action')
+    payload.dig('comment', 'body') =~ Changeset::PullRequest::WEBHOOK_FILTER
   end
 
   def sha

@@ -43,8 +43,8 @@ class Changeset::PullRequest
     nil
   end
 
-  def self.changeset_from_webhook(project, params = {})
-    data = Sawyer::Resource.new(Octokit.agent, params['pull_request'].to_unsafe_h)
+  def self.changeset_from_webhook(project, payload)
+    data = Sawyer::Resource.new(Octokit.agent, payload.require(:pull_request).to_unsafe_h)
     new(project.github_repo, data)
   end
 
@@ -52,24 +52,24 @@ class Changeset::PullRequest
   # to the description. The actions related to a code push are 'opened' and 'synchronized'
   # The 'edited' action gets sent when the PR description is edited. To trigger a deploy from an edit - it
   # should only be when the edit is related to adding the text [samson review]
-  def self.valid_webhook?(params)
-    data = params['pull_request'] || {}
-    action = params.dig('github', 'action')
-    return false unless data['state'] == 'open' && (VALID_ACTIONS.include? action)
+  def self.valid_webhook?(payload)
+    data = payload['pull_request'] || {}
+    action = payload.dig('github', 'action')
+    return false if data['state'] != 'open' || !VALID_ACTIONS.include?(action)
 
     if action == 'edited'
-      previous_desc = params.dig('github', 'changes', 'body', 'from')
+      previous_desc = payload.dig('github', 'changes', 'body', 'from')
       return false if !previous_desc || (previous_desc =~ WEBHOOK_FILTER && data['body'] =~ WEBHOOK_FILTER)
     end
 
-    !(data['body'] =~ WEBHOOK_FILTER).nil?
+    !!(data['body'] =~ WEBHOOK_FILTER) # rubocop:disable Style/InverseMethods
   end
 
   attr_reader :repo
 
   def initialize(repo, data)
     @repo = repo
-    @data = data
+    @data = data # Sawyer::Resource
   end
 
   delegate :number, :title, :additions, :deletions, to: :@data
