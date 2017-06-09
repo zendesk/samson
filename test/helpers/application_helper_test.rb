@@ -240,7 +240,7 @@ describe ApplicationHelper do
     end
 
     it "refuses to render unknown" do
-      assert_raises(RuntimeError) { breadcrumb(111) }
+      assert_raises(ArgumentError) { breadcrumb(111) }.message.must_equal "Unsupported breadcrumb for 111"
     end
 
     it "does not allow html injection" do
@@ -317,13 +317,25 @@ describe ApplicationHelper do
     end
   end
 
-  describe "#environments" do
-    it "loads all environments" do
-      environments.size.must_equal Environment.all.size
+  describe "#link_to_resource" do
+    it "links to project" do
+      link_to_resource(projects(:test)).must_equal "<a href=\"/projects/foo\">Foo</a>"
     end
 
-    it "caches" do
-      environments.object_id.must_equal environments.object_id
+    it "links to stages" do
+      link_to_resource(stages(:test_staging)).must_equal "<a href=\"/projects/foo/stages/staging\">Staging</a>"
+    end
+
+    it "links to environments" do
+      link_to_resource(environments(:production)).must_equal "<a href=\"/dashboards/production\">Production</a>"
+    end
+
+    it "links to deploy_groups" do
+      link_to_resource(deploy_groups(:pod1)).must_equal "<a href=\"/deploy_groups/pod1\">Pod1</a>"
+    end
+
+    it "fails on unknown" do
+      assert_raises(ArgumentError) { link_to_resource(123) }.message.must_equal "Unsupported resource 123"
     end
   end
 

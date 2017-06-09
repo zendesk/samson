@@ -12,7 +12,7 @@
       </thead>
 
       <tbody>
-        <% environments.each do |env| %>
+        <% Environment.all.each do |env| %>
           <tr>
             <td>
               <%= env.name%>

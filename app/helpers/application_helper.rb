@@ -75,21 +75,35 @@ module ApplicationHelper
 
   def breadcrumb(*items)
     items = items.map do |item|
-      case item
-      when Project then [item.name, project_path(item)]
-      when Environment then [item.name, dashboard_path(item)]
-      when DeployGroup then [item.name, item]
-      when Stage then
-        name = item.name
-        name = (item.lock.warning? ? warning_icon : lock_icon) + " " + name if item.lock
-        [name, project_stage_path(item.project, item)]
-      when String then [item, nil]
-      when Array then item
+      if item.is_a?(ActiveRecord::Base)
+        link_parts_for_resource(item)
       else
-        raise "Unsupported breadcrumb for #{item}"
+        case item
+        when String then [item, nil]
+        when Array then item
+        else
+          raise ArgumentError, "Unsupported breadcrumb for #{item}"
+        end
       end
     end
     manual_breadcrumb(items)
+  end
+
+  def link_parts_for_resource(resource)
+    case resource
+    when Project, DeployGroup then [resource.name, resource]
+    when Environment then [resource.name, dashboard_path(resource)]
+    when Stage then
+      name = resource.name
+      name = (resource.lock.warning? ? warning_icon : lock_icon) + " " + name if resource.lock
+      [name, project_stage_path(resource.project, resource)]
+    else
+      raise ArgumentError, "Unsupported resource #{resource}"
+    end
+  end
+
+  def link_to_resource(resource)
+    link_to(*link_parts_for_resource(resource))
   end
 
   def manual_breadcrumb(items)
@@ -148,10 +162,6 @@ module ApplicationHelper
 
   def link_to_url(url)
     link_to(url, url)
-  end
-
-  def environments
-    @environments ||= Environment.all
   end
 
   def render_nested_errors(object, seen = Set.new)
