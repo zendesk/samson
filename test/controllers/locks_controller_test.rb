@@ -112,7 +112,7 @@ describe LocksController do
     end
   end
 
-  as_a_admin do
+  as_an_admin do
     describe '#create' do
       it 'creates a global lock' do
         create_lock

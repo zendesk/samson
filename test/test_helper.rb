@@ -202,8 +202,9 @@ class ActionController::TestCase
     end
 
     %w[super_admin admin deployer viewer project_admin project_deployer].each do |user|
-      define_method "as_a_#{user}" do |&block|
-        describe "as a #{user}" do
+      article = (user == "admin" ? "an" : "a")
+      define_method "as_#{article}_#{user}" do |&block|
+        describe "as #{article} #{user}" do
           let(:user) { users(user) }
 
           def self.let(*args)

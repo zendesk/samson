@@ -147,7 +147,7 @@ describe CommandsController do
     end
   end
 
-  as_a_admin do
+  as_an_admin do
     describe "#create" do
       it "cannot create for a global project" do
         post :create, params: {command: {command: "hello"}}

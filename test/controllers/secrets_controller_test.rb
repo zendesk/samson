@@ -290,7 +290,7 @@ describe SecretsController do
     end
   end
 
-  as_a_admin do
+  as_an_admin do
     let(:secret) { create_global }
 
     describe '#create' do

@@ -32,7 +32,7 @@ describe EnvironmentVariablesController do
     end
   end
 
-  as_a_admin do
+  as_an_admin do
     describe "#destroy" do
       it "destroy" do
         assert_difference "EnvironmentVariable.count", -1 do

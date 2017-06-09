@@ -157,7 +157,7 @@ class CurrentUserConcernTest < ActionController::TestCase
     end
   end
 
-  as_a_admin do
+  as_an_admin do
     authorized :get, :deployer_action, test_route: true
     authorized :get, :admin_action, test_route: true
     unauthorized :get, :super_admin_action, test_route: true

@@ -17,7 +17,7 @@ describe Kubernetes::UsageLimitsController do
     unauthorized :delete, :destroy, id: 1
   end
 
-  as_a_admin do
+  as_an_admin do
     describe "#index" do
       it "renders" do
         get :index

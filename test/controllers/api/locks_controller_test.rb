@@ -12,7 +12,7 @@ describe Api::LocksController do
     unauthorized :delete, :destroy_via_resource
   end
 
-  as_a_admin do
+  as_an_admin do
     describe '#index' do
       it "renders" do
         Lock.create!(user: users(:admin))
