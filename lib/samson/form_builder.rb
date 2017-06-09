@@ -46,8 +46,8 @@ module Samson
         content_tag :div, class: "col-lg-offset-2 col-lg-10" do
           content = submit label, class: "btn btn-primary"
           resource = (delete.is_a?(Array) ? delete : object)
-          content << SPACER << @template.link_to_delete(resource) if delete && object.persisted?
           content << @template.capture(&block) if block
+          content << SPACER << @template.link_to_delete(resource, class: 'pull-right') if delete && object.persisted?
           content
         end
       end
