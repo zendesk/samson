@@ -56,7 +56,7 @@ describe EnvironmentVariableGroupsController do
     end
   end
 
-  as_a_admin do
+  as_an_admin do
     describe "#new" do
       it "renders" do
         get :new

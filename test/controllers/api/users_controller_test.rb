@@ -8,7 +8,7 @@ describe Api::UsersController do
 
   before { @request_format = :json }
 
-  as_a_admin do
+  as_an_admin do
     unauthorized :delete, :destroy, id: 1, format: :json
   end
 

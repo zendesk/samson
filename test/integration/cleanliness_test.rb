@@ -147,9 +147,9 @@ describe "cleanliness" do
     end
   end
 
-  # If a controller only tests `as_a_admin { get :index }` then we don't know if authentification
+  # If a controller only tests `as_an_admin { get :index }` then we don't know if authentification
   # logic properly works, so all actions have to be tested as unauthenticated or as public/viewer level
-  # for example: as_a_deployer { unauthenticated :get, :index } + as_a_admin { get :index } is good.
+  # for example: as_a_deployer { unauthenticated :get, :index } + as_an_admin { get :index } is good.
   it "checks authentication levels for all actions" do
     controller_tests = Dir["{,plugins/*/}test/controllers/**/*_test.rb"] - [
       'test/controllers/api/base_controller_test.rb',

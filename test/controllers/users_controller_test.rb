@@ -11,7 +11,7 @@ describe UsersController do
     unauthorized :put, :update, id: 1
   end
 
-  as_a_admin do
+  as_an_admin do
     unauthorized :delete, :destroy, id: 1
     unauthorized :put, :update, id: 1
 

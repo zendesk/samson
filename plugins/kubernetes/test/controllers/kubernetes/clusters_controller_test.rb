@@ -20,7 +20,7 @@ describe Kubernetes::ClustersController do
     unauthorized :post, :seed_ecr, id: 1
   end
 
-  as_a_admin do
+  as_an_admin do
     unauthorized :get, :new
     unauthorized :post, :create
     unauthorized :get, :edit, id: 1
