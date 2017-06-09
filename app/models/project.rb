@@ -25,6 +25,7 @@ class Project < ActiveRecord::Base
   has_many :commands, dependent: :destroy
   has_many :user_project_roles, dependent: :destroy
   has_many :users, through: :user_project_roles
+  has_many :secret_sharing_grants, dependent: :destroy
 
   belongs_to :build_command, class_name: 'Command', optional: true
 

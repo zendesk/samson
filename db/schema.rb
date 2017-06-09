@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20170526151018) do
+ActiveRecord::Schema.define(version: 20170608174705) do
 
   create_table "builds", id: :integer, force: :cascade do |t|
     t.integer "project_id", null: false
@@ -363,6 +363,15 @@ ActiveRecord::Schema.define(version: 20170526151018) do
     t.integer "build_id"
     t.index ["build_id"], name: "index_releases_on_build_id"
     t.index ["project_id", "number"], name: "index_releases_on_project_id_and_number", unique: true
+  end
+
+  create_table "secret_sharing_grants", force: :cascade do |t|
+    t.string "key", null: false
+    t.integer "project_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["key"], name: "index_secret_sharing_grants_on_key"
+    t.index ["project_id", "key"], name: "index_secret_sharing_grants_on_project_id_and_key", unique: true
   end
 
   create_table "secrets", id: false, force: :cascade do |t|

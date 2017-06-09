@@ -120,6 +120,7 @@ Samson::Application.routes.draw do
   end
 
   resources :secrets, except: [:edit]
+  resources :secret_sharing_grants, except: [:edit, :update]
 
   resources :users, only: [] do
     resource :user_merges, only: [:new, :create]

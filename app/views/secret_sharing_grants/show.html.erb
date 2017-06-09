@@ -1,0 +1,20 @@
+<%= page_title "Grant #{@secret_sharing_grant.key} for #{@secret_sharing_grant.project.name}" %>
+
+<section class="form-horizontal">
+  <div class="form-group">
+    <label class="col-lg-2 control-label">Key</label>
+    <div class="col-lg-4">
+      <%= link_to_resource @secret_sharing_grant %>
+    </div>
+  </div>
+
+  <div class="form-group">
+    <label class="col-lg-2 control-label">Project</label>
+    <div class="col-lg-4">
+      <%= link_to_resource @secret_sharing_grant.project %>
+    </div>
+  </div>
+
+  <%= link_to_history @secret_sharing_grant %> |
+  <%= link_to "Secrets", secrets_path(search: {key: @secret_sharing_grant.key, project_permalink: 'global'}) %>
+</section>
