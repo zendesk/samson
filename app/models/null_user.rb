@@ -17,6 +17,10 @@ class NullUser
     user.try(:name) || 'Deleted User'
   end
 
+  def marked_for_destruction?
+    false
+  end
+
   private
 
   def user
