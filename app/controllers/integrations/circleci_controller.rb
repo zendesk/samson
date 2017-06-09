@@ -3,7 +3,7 @@ class Integrations::CircleciController < Integrations::BaseController
   protected
 
   def payload
-    @payload ||= params.fetch('payload', '{}')
+    @payload ||= params.fetch('payload', {})
   end
 
   def deploy?

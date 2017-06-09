@@ -52,6 +52,12 @@ describe Integrations::GithubController do
 
     let(:payload) do
       {
+        action: 'edited',
+        changes: {
+          body: {
+            from: 'something'
+          }
+        },
         after: commit,
         number: '42',
         pull_request: {
@@ -61,14 +67,6 @@ describe Integrations::GithubController do
           },
           state: 'open',
           body: 'imafixwolves [samson review]'
-        },
-        github: {
-          action: 'edited',
-          changes: {
-            body: {
-              from: 'something'
-            }
-          }
         }
       }.with_indifferent_access
     end
@@ -87,9 +85,7 @@ describe Integrations::GithubController do
   describe 'with a pull issue comment' do
     let(:payload) do
       {
-        github: {
-          action: 'created'
-        },
+        action: 'created',
         comment: {body: '[samson review]'},
         issue: {number: 123}
       }.with_indifferent_access

@@ -78,20 +78,20 @@ describe Changeset::PullRequest do
     end
 
     it "is invalid for PRs that had its label changed" do
-      webhook_data.deep_merge!(github: {action: 'labeled'})
+      webhook_data.deep_merge!(action: 'labeled')
       Changeset::PullRequest.valid_webhook?(webhook_data).must_equal false
     end
 
     describe "PR change that is an edit" do
-      before { webhook_data.deep_merge!(github: {action: 'edited'}) }
+      before { webhook_data.deep_merge!(action: 'edited') }
 
       it 'is valid if [samson review] was not in the previous description' do
-        webhook_data.deep_merge!(github: {changes: {body: {from: 'a desc'}}})
+        webhook_data.deep_merge!(changes: {body: {from: 'a desc'}})
         Changeset::PullRequest.valid_webhook?(webhook_data).must_equal true
       end
 
       it 'is invalid if [samson review] was in the previous description' do
-        webhook_data.deep_merge!(github: {changes: {body: {from: '[samson review]'}}})
+        webhook_data.deep_merge!(changes: {body: {from: '[samson review]'}})
         Changeset::PullRequest.valid_webhook?(webhook_data).must_equal false
       end
 

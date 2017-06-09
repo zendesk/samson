@@ -27,7 +27,6 @@ describe Changeset::IssueComment do
   describe ".valid_webhook?" do
     let(:webhook_data) do
       {
-        github: {},
         comment: {
           body: '[samson review]'
         },
@@ -35,17 +34,17 @@ describe Changeset::IssueComment do
     end
 
     it 'is valid for new comments' do
-      webhook_data[:github][:action] = 'created'
+      webhook_data[:action] = 'created'
       assert Changeset::IssueComment.valid_webhook?(webhook_data)
     end
 
     it 'is not valid for deleted comments' do
-      webhook_data[:github][:action] = 'deleted'
+      webhook_data[:action] = 'deleted'
       refute Changeset::IssueComment.valid_webhook?(webhook_data)
     end
 
     it 'is not valid for edited comments' do
-      webhook_data[:github][:action] = 'edited'
+      webhook_data[:action] = 'edited'
       refute Changeset::IssueComment.valid_webhook?(webhook_data)
     end
   end

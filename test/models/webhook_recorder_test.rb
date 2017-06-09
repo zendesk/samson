@@ -5,11 +5,16 @@ SingleCov.covered!
 
 describe WebhookRecorder do
   let(:request) do
-    ActionController::TestRequest.new({
+    request = ActionController::TestRequest.new({
       "FOO" => "bar",
       "rack.foo" => "bar",
-      "RAW_POST_DATA" => "BODY".dup
+      "RAW_POST_DATA" => "BODY".dup,
+      "rack.input" => {"foo" => "bar"},
+      "QUERY_STRING" => "action=good&password=secret",
+      "action_dispatch.parameter_filter" => Rails.application.config.filter_parameters
     }, {}, {})
+    request.stubs(:params).returns("action" => "create") # making sure nobody calls this (includes controller action)
+    request
   end
   let(:response) { ActionDispatch::TestResponse.new }
   let(:project) { projects(:test) }
@@ -17,7 +22,7 @@ describe WebhookRecorder do
   describe ".record" do
     it "does not record internal rails/rack headers" do
       WebhookRecorder.record(project, request: request, log: "", response: response)
-      WebhookRecorder.read(project).fetch(:request).must_equal(
+      WebhookRecorder.read(project).fetch(:request_headers).must_equal(
         "FOO" => "bar"
       )
     end
@@ -25,10 +30,9 @@ describe WebhookRecorder do
     it "records status, body, log" do
       WebhookRecorder.record(project, request: request, log: "LOG", response: response)
       read = WebhookRecorder.read(project)
-      read.fetch(:status_code).must_equal 200
-      read.fetch(:body).must_equal ""
+      read.fetch(:response_code).must_equal 200
       read.fetch(:log).must_equal "LOG"
-      read.fetch(:request_body).must_equal "BODY"
+      read.fetch(:request_params).must_equal("action" => "good", "password" => "[FILTERED]")
     end
 
     it "does not blow up when receiving utf8 as ascii-8-bit which is the default" do
@@ -37,7 +41,7 @@ describe WebhookRecorder do
       request.env["RAW_POST_DATA"] = bad
       WebhookRecorder.record(project, request: request, log: "LOG", response: response)
       read = WebhookRecorder.read(project)
-      read.fetch(:request_body).force_encoding(Encoding::BINARY).must_equal bad
+      read.fetch(:request_params).must_equal("action" => "good", "password" => "[FILTERED]")
     end
   end
 

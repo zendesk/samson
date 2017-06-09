@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 module IntegrationsControllerTestHelper
   def test_regular_commit(user_name, options, &block)
-    describe "normal" do
+    describe "regular commit" do
       before(&block) if block
 
       it "triggers a deploy if there is a webhook mapping for the branch" do

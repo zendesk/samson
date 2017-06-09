@@ -93,7 +93,7 @@ describe Integrations::BaseController do
     end
 
     it 'records the request' do
-      post :create, params: {test_route: true, token: token}
+      post :create, params: {test_route: true, token: token, foo: "bar"}
       assert_response :success
       result = WebhookRecorder.read(project)
       log = <<-LOG.strip_heredoc
@@ -101,8 +101,9 @@ describe Integrations::BaseController do
         INFO: Deploying to 0 stages
       LOG
       result.fetch(:log).must_equal log
-      result.fetch(:status_code).must_equal 200
-      result.fetch(:body).must_equal log
+      result.fetch(:response_code).must_equal 200
+      result.fetch(:response_body).must_equal log
+      result.fetch(:request_params).must_equal("token" => "[FILTERED]", "foo" => "bar")
     end
 
     it 'creates a release and a connected build' do

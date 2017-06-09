@@ -15,9 +15,11 @@ class Integrations::GithubController < Integrations::BaseController
 
   def payload
     if payload = params[:payload]
+      # web request with :payload as json
       JSON.parse(payload)
     else
-      params
+      # json post request for comments sends 'action' too, so use raw POST params
+      request.GET.merge(request.POST)
     end
   end
 
