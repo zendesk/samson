@@ -24,7 +24,7 @@ class Changeset::PullRequest
   # Github pull request events can be triggered by a number of actions such as 'labeled', 'assigned'
   # Actions which aren't related to a code push should not trigger a samson deploy.
   # Docs on the pull request event: https://developer.github.com/v3/activity/events/types/#pullrequestevent
-  VALID_ACTIONS = ['opened', 'edited', 'synchronized'].freeze
+  VALID_ACTIONS = ['opened', 'edited', 'synchronize'].freeze
 
   # Finds the pull request with the given number.
   #
