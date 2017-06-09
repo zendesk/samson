@@ -39,7 +39,7 @@ class JobsController < ApplicationController
       flash[:error] = "You are not allowed to stop this job."
     end
 
-    redirect_back_or [@project, @job]
+    redirect_back fallback_location: [@project, @job]
   end
 
   private

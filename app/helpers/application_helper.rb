@@ -193,7 +193,7 @@ module ApplicationHelper
     content_tag((in_tab ? :h2 : :h1), content)
   end
 
-  # keep values short, urls would be ignored ... see application_controller.rb#redirect_back_or
+  # keep values short, urls would be ignored ... see application_controller.rb#redirect_back
   # also failing fast here for easy debugging instead of sending invalid urls around
   def redirect_to_field
     return unless location = params[:redirect_to].presence || request.referrer.to_s.dup.sub!(root_url, '/')

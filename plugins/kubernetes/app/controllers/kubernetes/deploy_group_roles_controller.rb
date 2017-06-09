@@ -12,7 +12,7 @@ class Kubernetes::DeployGroupRolesController < ApplicationController
   def create
     @deploy_group_role = ::Kubernetes::DeployGroupRole.new(deploy_group_role_params)
     if @deploy_group_role.save
-      redirect_back_or @deploy_group_role
+      redirect_back fallback_location: @deploy_group_role
     else
       render :new, status: 422
     end
@@ -39,7 +39,7 @@ class Kubernetes::DeployGroupRolesController < ApplicationController
       deploy_group_role_params.except(:project_id, :deploy_group_id, :kubernetes_role_id)
     )
     if @deploy_group_role.save
-      redirect_back_or @deploy_group_role
+      redirect_back fallback_location: @deploy_group_role
     else
       render :edit, status: 422
     end
