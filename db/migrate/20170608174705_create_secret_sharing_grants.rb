@@ -5,8 +5,8 @@ class CreateSecretSharingGrants < ActiveRecord::Migration[5.1]
       t.string :key, null: false
       t.integer :project_id, null: false
       t.timestamps
-      t.index [:key]
-      t.index [:project_id, :key], unique: true
+      t.index [:key], length: {key: 50}
+      t.index [:project_id, :key], unique: true, length: {key: 50}
     end
   end
 end

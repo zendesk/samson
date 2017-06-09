@@ -370,8 +370,8 @@ ActiveRecord::Schema.define(version: 20170608174705) do
     t.integer "project_id", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.index ["key"], name: "index_secret_sharing_grants_on_key"
-    t.index ["project_id", "key"], name: "index_secret_sharing_grants_on_project_id_and_key", unique: true
+    t.index ["key"], name: "index_secret_sharing_grants_on_key", length: { key: 50 }
+    t.index ["project_id", "key"], name: "index_secret_sharing_grants_on_project_id_and_key", unique: true, length: { key: 50 }
   end
 
   create_table "secrets", id: false, force: :cascade do |t|
