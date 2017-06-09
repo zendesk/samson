@@ -42,4 +42,10 @@ describe NullUser do
       NullUser.new(11211212).attributes.must_equal("name" => "Deleted User")
     end
   end
+
+  describe "#marked_for_destruction?" do
+    it "is never marked for destruction" do
+      refute NullUser.new(12).marked_for_destruction?
+    end
+  end
 end

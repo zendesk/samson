@@ -21,7 +21,13 @@ project.stages.create!(
   deploy_groups: [prod]
 )
 
+user = User.create!(
+  name: "Mr. Seed",
+  email: "seed@example.com",
+  external_id: "123"
+)
+
 project.releases.create!(
   commit: "1234" * 10,
-  author: User.first
+  author: user
 )
