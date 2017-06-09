@@ -8,7 +8,7 @@ port = 9080
 
 # make dev puma boot on port 3000
 # remove once https://github.com/puma/puma/pull/1277 is released
-port = 3000 if (ENV["RAILS_ENV"] || "development") == "development"
+port = 3000 if (ENV["RAILS_ENV"] || "development") == "development" && File.basename($0) == "rails"
 
 bind "tcp://0.0.0.0:#{port}"
 
