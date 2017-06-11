@@ -93,7 +93,11 @@ describe Samson::Secrets::KeyResolver do
       with_env SECRET_STORAGE_SHARING_GRANTS: 'true'
 
       it "does not include global by default" do
+        assert SecretStorage.sharing_grants?
         resolver.expand('ABC', 'bar').must_equal []
+        resolver.instance_variable_get(:@errors).first.must_equal(
+          "bar (tried: production/foo/pod1/bar, global/foo/pod1/bar, production/foo/global/bar, global/foo/global/bar)"
+        )
       end
 
       it "caches shared keys" do
