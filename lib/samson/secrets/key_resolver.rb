@@ -20,8 +20,8 @@ module Samson
         # build a list of all possible ids
         possible_ids = possible_secret_key_parts.map do |id|
           key_parts = id.merge(key: secret_key)
-          SecretStorage.generate_secret_key(key_parts) if key_shared?(key_parts)
-        end
+          SecretStorage.generate_secret_key(key_parts) if key_granted?(key_parts)
+        end.compact
 
         found =
           if secret_key.end_with?(WILDCARD)
@@ -92,10 +92,10 @@ module Samson
         matched
       end
 
-      def key_shared?(key_parts)
-        if SecretStorage.sharing_grants?
+      def key_granted?(key_parts)
+        if SecretStorage.sharing_grants? && key_parts.fetch(:project_permalink) == "global"
           @shared_keys ||= SecretSharingGrant.where(project: @project).pluck(:key)
-          key_parts.fetch(:project_permalink) == "global" && @shared_keys.include?(key_parts.fetch(:key))
+          @shared_keys.include?(key_parts.fetch(:key))
         else
           true
         end
