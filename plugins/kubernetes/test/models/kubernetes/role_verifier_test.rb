@@ -140,6 +140,17 @@ describe Kubernetes::RoleVerifier do
       errors.must_include "Env values 1234 must be strings."
     end
 
+    it "reports non-string annotations" do
+      role.first[:metadata][:annotations] = {
+        bar: true
+      }
+      role.first[:spec][:template][:metadata][:annotations] = {
+        foo: 'XYZ_PORT',
+        bar: 1234
+      }
+      errors.must_include "Annotation values 1234, true must be strings."
+    end
+
     describe "#verify_prerequisites" do
       before do
         role.pop
