@@ -157,8 +157,14 @@ module Kubernetes
 
     def verify_annotations
       path = [:metadata, :annotations]
-      annotations = map_attributes(path, elements: templates)
-      @errors << "Annotations must be a hash" if annotations.any? { |a| a && !a.is_a?(Hash) }
+      annotations = (map_attributes(path, elements: templates) + map_attributes(path)).compact
+      if annotations.any? { |a| !a.is_a?(Hash) }
+        @errors << "Annotations must be a hash"
+      else
+        values = annotations.flat_map(&:values)
+        bad = values.reject { |x| x.is_a?(String) }
+        @errors << "Annotation values #{bad.join(', ')} must be strings." if bad.any?
+      end
     end
 
     def verify_env_values
