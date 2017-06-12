@@ -300,6 +300,11 @@ describe Kubernetes::RoleVerifier do
       Kubernetes::RoleVerifier.verify_group([primary, primary2])
     end
 
+    it "is valid with a duplicate role but magic annotation" do
+      role.first[:metadata][:annotations] = {"samson/multi_project": "true"}
+      Kubernetes::RoleVerifier.verify_group([role.first, role.first])
+    end
+
     it "is invalid with a duplicate role" do
       e = assert_raises Samson::Hooks::UserError do
         Kubernetes::RoleVerifier.verify_group([role.first, role.first])

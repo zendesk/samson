@@ -36,6 +36,8 @@ module Kubernetes
 
     def self.verify_group(elements)
       return if elements.empty?
+      return if elements.any? { |r| r.dig(:metadata, :annotations, :"samson/multi_project") }
+
       errors = []
 
       roles = elements.map { |r| r.dig(:metadata, :labels, :role) }.compact
