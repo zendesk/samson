@@ -12,6 +12,19 @@ describe SecretSharingGrantsController do
       it "renders" do
         get :index
         assert_response :success
+        assigns(:secret_sharing_grants).size.must_equal 1
+      end
+
+      it "can filter" do
+        get :index, params: {search: {key: 'nope'}}
+        assert_response :success
+        assigns(:secret_sharing_grants).size.must_equal 0
+      end
+
+      it "ignores blank query" do
+        get :index, params: {search: {key: ''}}
+        assert_response :success
+        assigns(:secret_sharing_grants).size.must_equal 1
       end
     end
 
