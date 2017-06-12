@@ -44,7 +44,7 @@ class Changeset::PullRequest
   end
 
   def self.changeset_from_webhook(project, payload)
-    data = Sawyer::Resource.new(Octokit.agent, payload.require(:pull_request).to_unsafe_h)
+    data = Sawyer::Resource.new(Octokit.agent, payload.fetch(:pull_request))
     new(project.github_repo, data)
   end
 
@@ -54,11 +54,11 @@ class Changeset::PullRequest
   # should only be when the edit is related to adding the text [samson review]
   def self.valid_webhook?(payload)
     data = payload['pull_request'] || {}
-    action = payload.dig('github', 'action')
+    action = payload['action']
     return false if data['state'] != 'open' || !VALID_ACTIONS.include?(action)
 
     if action == 'edited'
-      previous_desc = payload.dig('github', 'changes', 'body', 'from')
+      previous_desc = payload.dig('changes', 'body', 'from')
       return false if !previous_desc || (previous_desc =~ WEBHOOK_FILTER && data['body'] =~ WEBHOOK_FILTER)
     end
 

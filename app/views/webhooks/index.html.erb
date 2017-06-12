@@ -19,7 +19,7 @@
           <% if current_user.admin_for?(@project) %>
             (Set <%= link_to "secret token", "javascript:alert('#{token}')" %> in <%= link_to 'hook settings', "https://github.com/#{@project.user_repo_part}/settings/hooks" %>)
           <% else %>
-            (Secret token required, ask a super-admin)
+            (Secret token required, ask a project admin)
           <% end %>
         <% end %>
       </dd>
@@ -71,9 +71,9 @@
         <th>Request</th>
         <td>
           <% if current_user.admin_for?(current_project) %>
-            <pre><%= hook.fetch(:request).map { |k,v| "#{k}: #{v}" }.join("\n") %></pre>
-            Body:
-            <pre><%= hook.fetch(:request_body, '') %></pre>
+            <pre><%= hook.fetch(:request_headers).map { |k,v| "#{k}: #{v}" }.join("\n") %></pre>
+            Raw params:
+            <pre><%= JSON.pretty_generate(hook.fetch(:request_params)) %></pre>
           <% else %>
             ... visible for admins ...
           <% end %>
@@ -82,9 +82,9 @@
       <tr>
         <th>Response</th>
         <td>
-          Status: <%= hook.fetch(:status_code) %><br/>
+          Status: <%= hook.fetch(:response_code) %><br/>
           Body:
-          <% body = hook.fetch(:body) %>
+          <% body = hook.fetch(:response_body) %>
           <pre><%= body.start_with?('{') ? (JSON.pretty_generate(JSON.parse(body)) rescue body) : body %></pre>
         </td>
       </tr>

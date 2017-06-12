@@ -1,17 +1,22 @@
 # frozen_string_literal: true
 class WebhookRecorder
-  KEY = 'WebhookRecorder'
+  KEY = 'WebhookRecorder-v2'
   NATIVE_HEADER = /^[_A-Z]+$/
+  IGNORED_HEADERS = ["QUERY_STRING", "RAW_POST_DATA"].freeze
 
   class << self
+    # record raw request without rails magic that combines GET+POST and wraps parameters
+    # to avoid duplication
     def record(project, request:, response:, log:)
-      request_info = request.env.select { |k, _v| k =~ NATIVE_HEADER && k != 'RAW_POST_DATA' }
+      request_headers = request.env.select { |k, _v| k =~ NATIVE_HEADER && !IGNORED_HEADERS.include?(k) }
+      params = request.GET.merge(request.POST) # raw params without action/controller and wrap_params
+      logged_params = request.send(:parameter_filter).filter(params) # Removing passwords, etc
 
       data = {
-        request: request_info,
-        request_body: request.body.read.force_encoding(Encoding::UTF_8),
-        status_code: response.status,
-        body: response.body,
+        request_headers: request_headers,
+        request_params: logged_params,
+        response_code: response.status,
+        response_body: response.body,
         log: log,
         time: Time.now
       }

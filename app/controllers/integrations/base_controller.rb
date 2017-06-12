@@ -5,6 +5,7 @@ class Integrations::BaseController < ApplicationController
   before_action :validate_token
   before_action :validate_request
   after_action :record_webhook
+  wrap_parameters format: [] # wrapped params make debugging messy, avoid
 
   def create
     unless deploy?
