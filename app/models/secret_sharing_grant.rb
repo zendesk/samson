@@ -2,5 +2,5 @@
 class SecretSharingGrant < ActiveRecord::Base
   has_paper_trail skip: [:created_at]
   belongs_to :project
-  validates :key, uniqueness: true
+  validates :key, uniqueness: { scope: :project }
 end
