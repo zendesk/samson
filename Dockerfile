@@ -1,9 +1,7 @@
 FROM ruby:2.3.3-slim
 
-RUN apt-get update && apt-get install -y wget apt-transport-https git
-RUN wget -qO- https://deb.nodesource.com/gpgkey/nodesource.gpg.key | apt-key add -
-RUN echo 'deb https://deb.nodesource.com/node_0.12 jessie main' > /etc/apt/sources.list.d/nodesource.list
-RUN apt-get update && apt-get install -y nodejs build-essential libmysqlclient-dev libpq-dev libsqlite3-dev
+RUN apt-get update && apt-get install -y build-essential libmysqlclient-dev libpq-dev libsqlite3-dev wget apt-transport-https git curl
+RUN curl -sL https://deb.nodesource.com/setup_6.x | bash - && apt-get install nodejs
 
 WORKDIR /app
 
