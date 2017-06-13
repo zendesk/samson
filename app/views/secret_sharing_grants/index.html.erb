@@ -1,35 +1,39 @@
 <%= page_title "Secret Sharing Grants" %>
 
-<section class="clearfix tabs">
-  <div class="table table-hover table-condensed">
-    <table class="table">
-      <thead>
+<%= search_form do %>
+  <%= search_select :key, SecretSharingGrant.order(:key).pluck(:key).uniq, live: true %>
+
+  <% projects = Project.order(:permalink).pluck(:permalink, :id) %>
+  <%= search_select :project_id, projects, live: true, label: "Project" %>
+
+  <div class="pull-right">
+    <label>&nbsp;</label>
+    <%= link_to "New", new_secret_sharing_grant_path, class: "btn btn-default", style: "display: block" %>
+  </div>
+<% end %>
+
+<section class="clearfix">
+  <table class="table table-hover table-condensed">
+    <thead>
+      <tr>
+        <th>Key</th>
+        <th>Project</th>
+        <th>Created</th>
+        <th></th>
+      </tr>
+    </thead>
+
+    <tbody>
+      <% @secret_sharing_grants.each do |grant| %>
         <tr>
-          <th>Key</th>
-          <th>Project</th>
-          <th>Created</th>
-          <th></th>
+          <td><%= link_to_resource grant %></td>
+          <td><%= link_to_resource grant.project %></td>
+          <td><%= render_time grant.created_at %></td>
+          <td><%= link_to_delete grant %></td>
         </tr>
-      </thead>
+      <% end %>
+    </tbody>
+  </table>
 
-      <tbody>
-        <% @secret_sharing_grants.each do |grant| %>
-          <tr>
-            <td><%= link_to_resource grant %></td>
-            <td><%= link_to_resource grant.project %></td>
-            <td><%= render_time grant.created_at %></td>
-            <td><%= link_to_delete grant %></td>
-          </tr>
-        <% end %>
-      </tbody>
-    </table>
-
-    <%= paginate @secret_sharing_grants %>
-  </div>
-
-  <div class="admin-actions">
-    <div class="pull-right">
-      <%= link_to "New", new_secret_sharing_grant_path, class: "btn btn-default" %>
-    </div>
-  </div>
+  <%= paginate @secret_sharing_grants %>
 </section>

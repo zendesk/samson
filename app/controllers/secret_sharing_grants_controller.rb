@@ -4,7 +4,8 @@ class SecretSharingGrantsController < ApplicationController
   before_action :find_grant, only: [:show, :destroy]
 
   def index
-    @secret_sharing_grants = SecretSharingGrant.page(page).per(25)
+    query = params[:search]&.to_unsafe_h&.slice(:key, :project_id)&.select { |_, v| v.present? }
+    @secret_sharing_grants = SecretSharingGrant.where(query).order(:key).page(page).per(25)
   end
 
   def new
