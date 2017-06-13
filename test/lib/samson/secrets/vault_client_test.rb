@@ -20,6 +20,31 @@ describe Samson::Secrets::VaultClient do
     end
   end
 
+  describe ".parallel_map" do
+    it "produces minimal amount of threads" do
+      Thread.expects(:new).never
+      Samson::Secrets::VaultClient.parallel_map([]).must_equal []
+    end
+
+    it "produces maximum amount of threads" do
+      Thread.expects(:new).times(10).returns([])
+      Samson::Secrets::VaultClient.parallel_map(Array.new(20)) { 1 }.must_equal(Array.new(20))
+    end
+
+    it "works in reused threads" do
+      list = []
+      Samson::Secrets::VaultClient.parallel_map(Array.new(20)) do
+        list << Thread.current.object_id
+        Thread.pass
+      end
+      list.uniq.size.must_equal 10
+    end
+
+    it "works" do
+      Samson::Secrets::VaultClient.parallel_map([1, 2, 3]) { |i| i + 3 }.must_equal [4, 5, 6]
+    end
+  end
+
   describe "#initialize" do
     let(:clients) { client.send(:clients) }
 
