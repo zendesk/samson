@@ -44,6 +44,12 @@ module Samson
           Secret.order(:id).pluck(:id)
         end
 
+        def filter_keys_by_value(keys, value)
+          keys.each_slice(1000).flat_map do |group|
+            Secret.where(id: group).select { |s| Rack::Utils.secure_compare(s.value, value) }.map(&:id)
+          end
+        end
+
         def deploy_groups
           DeployGroup.all
         end

@@ -14,10 +14,16 @@ class SecretsController < ApplicationController
   def index
     @secret_keys = SecretStorage.keys.map { |key| [key, SecretStorage.parse_secret_key(key)] }
     @keys = @secret_keys.map { |_key, parts| parts.fetch(:key) }.uniq.sort
+
     SecretStorage::SECRET_KEYS_PARTS.each do |part|
       if value = params.dig(:search, part).presence
         @secret_keys.select! { |_key, parts| parts.fetch(part) == value }
       end
+    end
+
+    if value = params.dig(:search, :value).presence
+      matching = SecretStorage.filter_keys_by_value(@secret_keys.map(&:first), value)
+      @secret_keys.select! { |key, _parts| matching.include?(key) }
     end
   rescue Samson::Secrets::BackendError => e
     flash[:error] = e.message

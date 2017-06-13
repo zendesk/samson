@@ -81,6 +81,14 @@ describe SecretsController do
         assigns[:secret_keys].map(&:first).must_equal ['production/foo-bar/pod2/bar']
       end
 
+      it 'can filter by value' do
+        other = create_secret 'production/global/pod2/baz'
+        other.update_attribute(:value, 'other')
+        get :index, params: {search: {value: other.value}}
+        assert_template :index
+        assigns[:secret_keys].map(&:first).must_equal [other.id]
+      end
+
       it 'raises when vault server is broken' do
         SecretStorage.expects(:keys).raises(Samson::Secrets::BackendError.new('this is my error'))
         get :index

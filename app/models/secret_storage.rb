@@ -56,6 +56,10 @@ module SecretStorage
       Rails.cache.fetch(SECRET_KEYS_CACHE) { backend.keys }
     end
 
+    def filter_keys_by_value(*args)
+      backend.filter_keys_by_value(*args)
+    end
+
     def backend
       BACKEND
     end

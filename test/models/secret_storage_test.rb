@@ -193,6 +193,14 @@ describe SecretStorage do
     end
   end
 
+  describe ".filter_keys_by_value" do
+    it "filters keys" do
+      key = secret.id
+      SecretStorage.filter_keys_by_value([key], 'NOPE').must_equal []
+      SecretStorage.filter_keys_by_value([key], secret.value).must_equal [key]
+    end
+  end
+
   describe ".sharing_grants?" do
     it "is true when sharing is disabled" do
       refute SecretStorage.sharing_grants?
