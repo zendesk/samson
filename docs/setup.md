@@ -7,6 +7,8 @@ docker-compose up
 open http://$DOCKER_HOST_IP:9080
 ```
 
+When not running on `192.168.42.45` use a different auth provider, the IP is hardcoded.
+
 ### Local
 ```bash
 script/bootstrap # Run the bootstrap script to use the test credentials.
