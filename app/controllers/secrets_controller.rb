@@ -14,10 +14,7 @@ class SecretsController < ApplicationController
   def index
     @secret_keys = SecretStorage.keys.map { |key| [key, SecretStorage.parse_secret_key(key)] }
     @keys = @secret_keys.map { |_key, parts| parts.fetch(:key) }.uniq.sort
-    if query = params.dig(:search, :query).presence
-      @secret_keys.select! { |key, _parts| key.include?(query) }
-    end
-    [:key, :project_permalink].each do |part|
+    SecretStorage::SECRET_KEYS_PARTS.each do |part|
       if value = params.dig(:search, part).presence
         @secret_keys.select! { |_key, parts| parts.fetch(part) == value }
       end

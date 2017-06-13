@@ -53,11 +53,11 @@ describe SecretsController do
         response.body.wont_include secret.value
       end
 
-      it 'can filter by query' do
+      it 'can filter by environment' do
         create_secret 'production/global/pod2/bar'
-        get :index, params: {search: {query: 'bar'}}
+        get :index, params: {search: {environment_permalink: 'production'}}
         assert_template :index
-        assigns[:secret_keys].map(&:first).must_equal ['production/global/pod2/bar']
+        assigns[:secret_keys].map(&:first).must_equal ["production/global/pod2/bar", "production/global/pod2/foo"]
       end
 
       it 'can filter by project' do
@@ -65,6 +65,13 @@ describe SecretsController do
         get :index, params: {search: {project_permalink: 'foo-bar'}}
         assert_template :index
         assigns[:secret_keys].map(&:first).must_equal ['production/foo-bar/pod2/bar']
+      end
+
+      it 'can filter by deploy group' do
+        create_secret 'production/global/pod2/bar'
+        get :index, params: {search: {deploy_group_permalink: 'pod2'}}
+        assert_template :index
+        assigns[:secret_keys].map(&:first).must_equal ["production/global/pod2/bar", "production/global/pod2/foo"]
       end
 
       it 'can filter by key' do
