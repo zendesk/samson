@@ -282,6 +282,11 @@ describe SecretsController do
         SecretStorage::DbBackend::Secret.exists?(secret.id).must_equal(false)
       end
 
+      it "deletes secret that already was deleted so we can cleanup after a partial deletetion failure" do
+        delete :destroy, params: {id: "a/foo/c/d"}
+        assert_redirected_to "/secrets"
+      end
+
       it "responds ok to xhr" do
         delete :destroy, params: {id: secret}, xhr: true
         assert_response :success
