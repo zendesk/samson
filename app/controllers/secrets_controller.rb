@@ -5,7 +5,7 @@ class SecretsController < ApplicationController
   include CurrentProject
 
   before_action :find_project_permalinks
-  before_action :find_secret, only: [:update, :show, :destroy]
+  before_action :find_secret, only: [:update, :show]
 
   before_action :convert_visible_to_boolean, only: [:update, :create, :new]
   before_action :authorize_any_deployer!
