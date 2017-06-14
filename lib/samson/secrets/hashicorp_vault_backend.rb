@@ -7,14 +7,14 @@ module Samson
     end
 
     class HashicorpVaultBackend
-      # we don't really want other directories in the key,
-      # and there may be other chars that we find we don't like
-      ENCODINGS = {"/": "%2F"}.freeze
+      # / means diretory in vault and we want to keep all the keys in the same folder
+      DIRECTORY_SEPARATOR = "/"
+      KEY_SEGMENTS = 4
 
       class << self
         def read(key)
           return unless key
-          result = vault_action(:read, vault_path(key))
+          result = vault_action(:read, vault_path(key, :encode))
           return if !result || result.data[:vault].nil?
 
           result = result.to_h
@@ -24,7 +24,8 @@ module Samson
         end
 
         def read_multi(keys)
-          keys.each_with_object({}) do |key, found|
+          found = {}
+          Samson::Parallelizer.map(keys, db: true) do |key|
             begin
               if value = read(key)
                 found[key] = value
@@ -33,6 +34,7 @@ module Samson
               nil
             end
           end
+          found
         end
 
         def write(key, data)
@@ -42,7 +44,7 @@ module Samson
 
           vault_action(
             :write,
-            vault_path(key),
+            vault_path(key, :encode),
             vault: data.fetch(:value),
             visible: data.fetch(:visible),
             comment: data.fetch(:comment),
@@ -52,7 +54,7 @@ module Samson
         end
 
         def delete(key)
-          vault_action(:delete, vault_path(key))
+          vault_action(:delete, vault_path(key, :encode))
         end
 
         def keys
@@ -82,24 +84,20 @@ module Samson
           Samson::Secrets::VaultClient.client
         end
 
-        # key is the last element and should not include bad characters
-        # ... could be faster by not jumping through hash generation and parsing
-        def vault_path(key, direction = :encode)
-          parts = SecretStorage.parse_secret_key(key)
-          raise ActiveRecord::RecordNotFound, "Invalid key #{key.inspect}" unless parts[:key]
-          parts[:key] = convert_path(parts[:key], direction)
-          SecretStorage.generate_secret_key(parts)
+        # key is the last element and should not include directories
+        def vault_path(key, direction)
+          parts = key.split(DIRECTORY_SEPARATOR, KEY_SEGMENTS)
+          raise ActiveRecord::RecordNotFound, "Invalid key #{key.inspect}" unless last = parts[KEY_SEGMENTS - 1]
+          convert_path!(last, direction)
+          parts.join(DIRECTORY_SEPARATOR)
         end
 
         # convert from/to escaped characters
-        def convert_path(string, direction)
-          string = string.dup
-          if direction == :decode
-            ENCODINGS.each { |k, v| string.gsub!(v.to_s, k.to_s) }
-          elsif direction == :encode
-            ENCODINGS.each { |k, v| string.gsub!(k.to_s, v.to_s) }
-          else
-            raise ArgumentError, "direction is required"
+        def convert_path!(string, direction)
+          case direction
+          when :encode then string.gsub!(DIRECTORY_SEPARATOR, "%2F")
+          when :decode then string.gsub!("%2F", DIRECTORY_SEPARATOR)
+          else raise ArgumentError, "direction is required"
           end
           string
         end

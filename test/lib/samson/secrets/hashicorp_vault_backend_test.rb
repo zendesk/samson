@@ -8,6 +8,10 @@ describe Samson::Secrets::HashicorpVaultBackend do
 
   let(:backend) { Samson::Secrets::HashicorpVaultBackend }
 
+  it "keeps segments in sync with storage" do
+    Samson::Secrets::HashicorpVaultBackend::KEY_SEGMENTS.must_equal SecretStorage::SECRET_KEYS_PARTS.size
+  end
+
   describe ".read" do
     it "reads" do
       assert_vault_request :get, "production/foo/pod2/bar", body: {data: { vault: "SECRET"}}.to_json do
@@ -174,7 +178,7 @@ describe Samson::Secrets::HashicorpVaultBackend do
   describe ".convert_path" do
     it "fails with invalid direction" do
       assert_raises ArgumentError do
-        backend.send(:convert_path, 'x', :ooops)
+        backend.send(:convert_path!, 'x', :ooops)
       end
     end
   end
