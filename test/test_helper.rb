@@ -64,6 +64,7 @@ class ActiveSupport::TestCase
 
   before do
     Rails.cache.clear
+    Samson::ModelCache.expire
     create_default_stubs
   end
 
