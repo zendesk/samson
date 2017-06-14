@@ -53,11 +53,11 @@ describe SecretsController do
         response.body.wont_include secret.value
       end
 
-      it 'can filter by query' do
+      it 'can filter by environment' do
         create_secret 'production/global/pod2/bar'
-        get :index, params: {search: {query: 'bar'}}
+        get :index, params: {search: {environment_permalink: 'production'}}
         assert_template :index
-        assigns[:secret_keys].map(&:first).must_equal ['production/global/pod2/bar']
+        assigns[:secret_keys].map(&:first).must_equal ["production/global/pod2/bar", "production/global/pod2/foo"]
       end
 
       it 'can filter by project' do
@@ -67,11 +67,26 @@ describe SecretsController do
         assigns[:secret_keys].map(&:first).must_equal ['production/foo-bar/pod2/bar']
       end
 
+      it 'can filter by deploy group' do
+        create_secret 'production/global/pod2/bar'
+        get :index, params: {search: {deploy_group_permalink: 'pod2'}}
+        assert_template :index
+        assigns[:secret_keys].map(&:first).must_equal ["production/global/pod2/bar", "production/global/pod2/foo"]
+      end
+
       it 'can filter by key' do
         create_secret 'production/foo-bar/pod2/bar'
         get :index, params: {search: {key: 'bar'}}
         assert_template :index
         assigns[:secret_keys].map(&:first).must_equal ['production/foo-bar/pod2/bar']
+      end
+
+      it 'can filter by value' do
+        other = create_secret 'production/global/pod2/baz'
+        other.update_attribute(:value, 'other')
+        get :index, params: {search: {value: other.value}}
+        assert_template :index
+        assigns[:secret_keys].map(&:first).must_equal [other.id]
       end
 
       it 'raises when vault server is broken' do

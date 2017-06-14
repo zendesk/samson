@@ -24,10 +24,10 @@ module Samson
         end
 
         def read_multi(keys)
-          keys.each_with_object({}) do |key, a|
+          keys.each_with_object({}) do |key, found|
             begin
               if value = read(key)
-                a[key] = value
+                found[key] = value
               end
             rescue VaultClient::VaultServerNotConfigured # deploy group has no vault server
               nil
@@ -59,6 +59,11 @@ module Samson
           keys = vault_action(:list_recursive, "")
           keys.uniq! # we read from multiple backends that might have the same keys
           keys.map! { |secret_path| vault_path(secret_path, :decode) }
+        end
+
+        def filter_keys_by_value(keys, value)
+          all = read_multi(keys)
+          all.map { |k, v| k if Rack::Utils.secure_compare(v.fetch(:value), value) }.compact
         end
 
         def deploy_groups

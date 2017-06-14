@@ -36,6 +36,7 @@ describe Samson::Secrets::VaultClient do
       Samson::Secrets::VaultClient.parallel_map(Array.new(20)) do
         list << Thread.current.object_id
         Thread.pass
+        sleep 0.01
       end
       list.uniq.size.must_equal 10
     end

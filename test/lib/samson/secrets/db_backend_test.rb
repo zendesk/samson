@@ -48,6 +48,14 @@ describe Samson::Secrets::DbBackend do
     end
   end
 
+  describe ".filter_keys_by_value" do
+    it "filters keys" do
+      key = secret.id
+      Samson::Secrets::DbBackend.filter_keys_by_value([key], 'NOPE').must_equal []
+      Samson::Secrets::DbBackend.filter_keys_by_value([key], secret.value).must_equal [key]
+    end
+  end
+
   describe ".delete" do
     it "deletes" do
       Samson::Secrets::DbBackend.delete(secret.id)
