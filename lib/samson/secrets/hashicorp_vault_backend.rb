@@ -45,16 +45,14 @@ module Samson
           user_id = data.fetch(:user_id)
           current = read(key)
           creator_id = (current && current[:creator_id]) || user_id
+          data = data.merge(creator_id: creator_id, updater_id: user_id)
 
-          vault_action(
-            :write,
-            vault_path(key, :encode),
-            vault: data.fetch(:value),
-            visible: data.fetch(:visible),
-            comment: data.fetch(:comment),
-            creator_id: creator_id,
-            updater_id: user_id
-          )
+          begin
+            deep_write(key, data)
+          rescue
+            revert(key, current)
+            raise
+          end
         end
 
         def delete(key)
@@ -77,6 +75,21 @@ module Samson
         end
 
         private
+
+        def revert(key, current)
+          if current
+            deep_write(key, current)
+          else
+            delete(key)
+          end
+        rescue
+          nil # ignore errors in here
+        end
+
+        def deep_write(key, data)
+          important = {vault: data.fetch(:value)}.merge(data.slice(:visible, :comment, :creator_id, :updater_id))
+          vault_action(:write, vault_path(key, :encode), important)
+        end
 
         def vault_action(method, path, *args)
           vault_client.public_send(method, path, *args)
