@@ -46,16 +46,16 @@ describe Changeset::PullRequest do
 
   describe ".changeset_from_webhook" do
     it 'finds the pull request' do
-      params = ActionController::Parameters.new(
-        number: 42,
-        pull_request: {
-          state: 'open',
-          head: ActionController::Parameters.new(
-            ref: 'a/ref',
-            sha: 'abcd123'
-          )
+      params = {
+        "number" => 42,
+        "pull_request" => {
+          "state" => 'open',
+          "head" => {
+            "ref" => 'a/ref',
+            "sha" => 'abcd123'
+          }
         }
-      )
+      }
       pr = Changeset::PullRequest.changeset_from_webhook(project, params)
       pr.state.must_equal 'open'
       pr.branch.must_equal 'a/ref'
@@ -66,32 +66,32 @@ describe Changeset::PullRequest do
   describe ".valid_webhook?" do
     let(:webhook_data) do
       {
-        number: 1,
-        pull_request: {
-          state: 'open',
-          body: 'pr description [samson review]'
+        "number" => 1,
+        "pull_request" => {
+          "state" => 'open',
+          "body" => 'pr description [samson review]'
         },
-        github: {
-          action: 'opened'
+        "github" => {
+          "action" => 'opened'
         }
-      }.with_indifferent_access
+      }
     end
 
     it "is invalid for PRs that had its label changed" do
-      webhook_data.deep_merge!(action: 'labeled')
+      webhook_data.deep_merge!("action" => 'labeled')
       Changeset::PullRequest.valid_webhook?(webhook_data).must_equal false
     end
 
     describe "PR change that is an edit" do
-      before { webhook_data.deep_merge!(action: 'edited') }
+      before { webhook_data.deep_merge!("action" => 'edited') }
 
       it 'is valid if [samson review] was not in the previous description' do
-        webhook_data.deep_merge!(changes: {body: {from: 'a desc'}})
+        webhook_data.deep_merge!("changes" => {"body" => {"from" => 'a desc'}})
         Changeset::PullRequest.valid_webhook?(webhook_data).must_equal true
       end
 
       it 'is invalid if [samson review] was in the previous description' do
-        webhook_data.deep_merge!(changes: {body: {from: '[samson review]'}})
+        webhook_data.deep_merge!("changes" => {"body" => {"from" => '[samson review]'}})
         Changeset::PullRequest.valid_webhook?(webhook_data).must_equal false
       end
 
