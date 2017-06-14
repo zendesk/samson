@@ -10,6 +10,7 @@ describe Samson::Secrets::VaultClient do
   before do
     server = Samson::Secrets::VaultServer.create!(name: 'pod100', address: 'http://vault-land.com', token: 'TOKEN2')
     deploy_groups(:pod100).update_column(:vault_server_id, server.id)
+    client.expire_clients
   end
 
   let(:client) { Samson::Secrets::VaultClient.new }
@@ -154,20 +155,30 @@ describe Samson::Secrets::VaultClient do
 
   describe "#client" do
     it "finds correct client" do
-      client.client(deploy_groups(:pod2)).options.fetch(:token).must_equal 'TOKEN'
+      client.send(:client, deploy_groups(:pod2).permalink).options.fetch(:token).must_equal 'TOKEN'
     end
 
     it "fails descriptively when deploy group has no vault server associated" do
       deploy_groups(:pod2).update_column(:vault_server_id, nil)
-      e = assert_raises(Samson::Secrets::VaultClient::VaultServerNotConfigured) { client.client(deploy_groups(:pod2)) }
+      client.expire_clients
+      e = assert_raises(Samson::Secrets::VaultClient::VaultServerNotConfigured) do
+        client.send(:client, deploy_groups(:pod2).permalink)
+      end
       e.message.must_equal "deploy group pod2 has no vault server configured"
     end
 
     it "fails descriptively when vault client cannot be found" do
       client # trigger caching
       deploy_groups(:pod2).update_column(:vault_server_id, 123)
-      e = assert_raises(RuntimeError) { client.client(deploy_groups(:pod2)) }
+      e = assert_raises(RuntimeError) { client.send(:client, deploy_groups(:pod2).permalink) }
       e.message.must_equal "no vault server found with id 123"
+    end
+
+    it "loads everything without doing N+1" do
+      assert_sql_queries(4) do
+        3.times { client.send(:responsible_clients, 'global/global/global/bar') }
+        3.times { client.send(:responsible_clients, 'staging/global/pod100/foo') }
+      end
     end
   end
 end

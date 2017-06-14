@@ -42,18 +42,9 @@ module Samson
         end
       end
 
-      def client(deploy_group)
-        unless id = deploy_group.vault_server_id
-          raise VaultServerNotConfigured, "deploy group #{deploy_group.permalink} has no vault server configured"
-        end
-        unless client = clients[id]
-          raise "no vault server found with id #{id}"
-        end
-        client
-      end
-
-      def refresh_clients
+      def expire_clients
         @clients = nil
+        @client_map = nil
       end
 
       # called via cron job to renew the current token
@@ -80,6 +71,19 @@ module Samson
         results
       end
 
+      def client(deploy_group_permalink)
+        unless client_map[:deploy_groups].key?(deploy_group_permalink)
+          raise "no deploy group with permalink #{deploy_group_permalink} found"
+        end
+        unless id = client_map[:deploy_groups][deploy_group_permalink]
+          raise VaultServerNotConfigured, "deploy group #{deploy_group_permalink} has no vault server configured"
+        end
+        unless client = clients[id]
+          raise "no vault server found with id #{id}"
+        end
+        client
+      end
+
       private
 
       def wrap_key(key)
@@ -102,22 +106,31 @@ module Samson
           if environment_permalink == 'global'
             clients.values
           else
-            unless environment = Environment.find_by_permalink(environment_permalink)
+            unless deploy_group_permalinks = client_map[:environments][environment_permalink]
               raise "no environment with permalink #{environment_permalink} found"
             end
-            environment.deploy_groups.select(&:vault_server_id).map { |deploy_group| client(deploy_group) }.uniq
+            deploy_group_permalinks.map { |p| client(p) }.uniq
           end
         else
-          unless deploy_group = DeployGroup.find_by_permalink(deploy_group_permalink)
-            raise "no deploy group with permalink #{deploy_group_permalink} found"
-          end
-          [client(deploy_group)]
+          [client(deploy_group_permalink)]
         end.presence || raise("no vault servers found for #{key}")
       end
 
       def clients
         @clients ||= VaultServer.all.each_with_object({}) do |vault_server, all|
           all[vault_server.id] = vault_server.client
+        end
+      end
+
+      def client_map
+        @client_map ||= ActiveSupport::Cache::MemoryStore.new
+        @client_map.fetch :map, expires_in: 1.minute, race_condition_ttl: 10.seconds do
+          {
+            deploy_groups: DeployGroup.pluck(:permalink, :vault_server_id).to_h,
+            environments: Environment.all.map do |e|
+              [e.permalink, e.deploy_groups.select(&:vault_server_id).map(&:permalink)]
+            end.to_h,
+          }
         end
       end
     end

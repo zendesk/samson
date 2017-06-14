@@ -104,7 +104,7 @@ module Samson
       end
 
       def refresh_vault_clients
-        VaultClient.client.refresh_clients
+        VaultClient.client.expire_clients
       end
     end
   end
