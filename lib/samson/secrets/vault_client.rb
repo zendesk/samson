@@ -20,16 +20,16 @@ module Samson
       # different servers have different keys so combine all
       def list_recursive(path)
         path = wrap_key(path)
-        all = parallel_map(clients.values) do |vault|
+        all = self.class.parallel_map(clients.values) do |vault|
           with_retries { vault.logical.list_recursive(path) }
-        end
+        end.flatten(1)
         all.uniq!
         all
       end
 
       # write to servers that need this key
       def write(key, data)
-        parallel_map(responsible_clients(key)) do |v|
+        self.class.parallel_map(responsible_clients(key)) do |v|
           with_retries { v.logical.write(wrap_key(key), data) }
         end
       end
@@ -37,7 +37,7 @@ module Samson
       # delete from all servers that hold this key
       def delete(key, all: false)
         selected_clients = (all ? clients.values : responsible_clients(key))
-        parallel_map(selected_clients) do |v|
+        self.class.parallel_map(selected_clients) do |v|
           with_retries { v.logical.delete(wrap_key(key)) }
         end
       end
@@ -61,11 +61,26 @@ module Samson
         clients.each_value { |c| with_retries { c.auth_token.renew_self } }
       end
 
-      private
+      def self.parallel_map(elements)
+        mutex = Mutex.new
+        current = -1
+        max = elements.size
+        results = Array.new(max)
 
-      def parallel_map(elements)
-        elements.map { |element| Thread.new { yield element } }.map(&:value).flatten(1)
+        Array.new([max, 10].min).map do
+          Thread.new do
+            loop do
+              working_index = mutex.synchronize { current += 1 }
+              break if working_index >= max
+              results[working_index] = yield elements[working_index]
+            end
+          end
+        end.map(&:join)
+
+        results
       end
+
+      private
 
       def wrap_key(key)
         "#{VaultServer::PREFIX}#{key}"
