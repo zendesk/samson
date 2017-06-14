@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 class Lock < ActiveRecord::Base
   include ActionView::Helpers::DateHelper
+  Samson::ModelCache.track(self)
+
   RESOURCE_TYPES = ['Stage', 'Environment', nil].freeze # sorted by specificity
   CACHE_KEY = 'lock-cache-key'
   ALL_CACHE_KEY = 'lock-all'
@@ -20,8 +22,6 @@ class Lock < ActiveRecord::Base
   validates :description, presence: true, if: :warning?
   validates :resource_type, inclusion: RESOURCE_TYPES
   validate :unique_global_lock, on: :create
-
-  after_save :expire_all_cached
 
   def self.global
     all_cached.select(&:global?)
@@ -84,11 +84,11 @@ class Lock < ActiveRecord::Base
   end
 
   def self.cache_key
-    Rails.cache.fetch(CACHE_KEY) { Time.now.to_f }
+    Samson::ModelCache.cache(self, :key) { Time.now.to_f }
   end
 
   private_class_method def self.all_cached
-    Rails.cache.fetch(ALL_CACHE_KEY) { all.to_a }
+    Samson::ModelCache.cache(self, :all) { all.to_a }
   end
 
   private
@@ -106,11 +106,6 @@ class Lock < ActiveRecord::Base
   # avoid loading resource if we do not have to, which is uncacheable since it is polymorphic
   def resource_equal(resource)
     resource_id == resource.id && resource_type == resource.class.name
-  end
-
-  def expire_all_cached
-    Rails.cache.delete CACHE_KEY
-    Rails.cache.delete ALL_CACHE_KEY
   end
 
   def nil_out_blank_resource_type
