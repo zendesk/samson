@@ -24,7 +24,8 @@ module Samson
         end
 
         def read_multi(keys)
-          keys.each_with_object({}) do |key, found|
+          found = {}
+          Samson::Parallelizer.map(keys, db: true) do |key|
             begin
               if value = read(key)
                 found[key] = value
@@ -33,6 +34,7 @@ module Samson
               nil
             end
           end
+          found
         end
 
         def write(key, data)
