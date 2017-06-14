@@ -98,9 +98,9 @@ describe Samson::Secrets::VaultServer do
     let(:client) { Samson::Secrets::VaultClient.client }
 
     around do |test|
-      client.refresh_clients
+      client.expire_clients
       test.call
-      client.refresh_clients
+      client.expire_clients
     end
 
     it "adds new clients" do
