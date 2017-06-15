@@ -1,7 +1,13 @@
 # frozen_string_literal: true
 module MultiThreadDbDetector
   class << self
-    attr_accessor :in_with_connection
+    def in_with_connection
+      Thread.current[:in_with_connection]
+    end
+
+    def in_with_connection=(v)
+      Thread.current[:in_with_connection] = v
+    end
   end
 end
 

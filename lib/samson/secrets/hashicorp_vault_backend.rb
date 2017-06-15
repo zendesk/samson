@@ -24,6 +24,10 @@ module Samson
         end
 
         def read_multi(keys)
+          # will be used inside the threads and can lead to errors when not preloaded
+          # reproducible by running a single test like hashicorp_vault_backend_test.rb -n '/filter_keys_by_value/'
+          SecretStorage.name
+
           found = {}
           Samson::Parallelizer.map(keys, db: true) do |key|
             begin

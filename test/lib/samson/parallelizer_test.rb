@@ -38,5 +38,12 @@ describe Samson::Parallelizer do
       count = User.count
       Samson::Parallelizer.map([1, 2, 3], db: true) { User.count }.must_equal [count, count, count]
     end
+
+    it "re-raises exceptions outside the thread" do
+      e = assert_raises RuntimeError do
+        Samson::Parallelizer.map([1, 2, 3]) { raise "foo" }
+      end
+      e.message.must_equal "foo"
+    end
   end
 end
