@@ -15,7 +15,7 @@ group :preload do
   gem 'goldiloader'
   gem 'kaminari'
   gem 'active_model_serializers'
-  gem 'paper_trail'
+  gem 'audited'
   gem 'soft_deletion'
   gem 'doorkeeper'
 

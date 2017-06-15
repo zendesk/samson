@@ -471,28 +471,6 @@ describe Stage do
     end
   end
 
-  describe "#script_updated_after?" do
-    let(:stage) { stages(:test_staging) }
-
-    before { stage.versions.create event: 'update', created_at: 30.minutes.ago }
-    with_paper_trail
-
-    it "is false without versions" do
-      stage.versions.each(&:delete)
-      refute stage.script_updated_after?(10.minutes.ago)
-    end
-
-    it "is false without changes" do
-      refute stage.script_updated_after?(10.minutes.ago)
-    end
-
-    it "is updated when command changed" do
-      stage.commands.first.update_attributes!(command: "hellooooo") # version created now
-      stage.reload
-      assert stage.script_updated_after?(10.minutes.ago)
-    end
-  end
-
   describe '#command_ids=' do
     let!(:sample_commands) do
       ['foo', 'bar', 'baz'].map { |c| Command.create!(command: c) }
@@ -529,70 +507,66 @@ describe Stage do
     end
   end
 
-  describe "versioning" do
-    around { |t| PaperTrail.with_logging(&t) }
-
+  describe "auditing" do
     it "tracks important changes" do
-      stage.update_attribute(:name, "Foo")
-      stage.versions.size.must_equal 1
-    end
-
-    it "tracks command changes by storing the previous version" do
-      stage.commands.first.update_attributes!(command: "Foo")
-      stage.versions.size.must_equal 1
-      YAML.safe_load(stage.versions.last.object).fetch('script').must_equal "echo hello"
-    end
-
-    it "tracks command additions" do
-      stage.update_attributes!(command_ids: stage.command_ids + [commands(:global).id])
-      stage.versions.size.must_equal 1
-    end
-
-    it "tracks command removal" do
-      stage.update_attributes!(command_ids: [])
-      stage.versions.size.must_equal 1
-    end
-
-    it "does not track when command does not change" do
-      stage.update_attributes!(command_ids: stage.command_ids.map(&:to_s))
-      stage.versions.size.must_equal 0
+      stage.update_attributes!(name: "Foo")
+      stage.audits.size.must_equal 1
+      stage.audits.first.audited_changes.must_equal "name" => ["Staging", "Foo"]
     end
 
     it "ignores unimportant changes" do
       stage.update_attributes(order: 5, updated_at: 1.second.from_now)
-      stage.versions.size.must_equal 0
+      stage.audits.size.must_equal 0
     end
 
-    it "records script" do
-      stage.record_script_change
-      YAML.safe_load(stage.versions.first.object)['script'].must_equal stage.script
+    it "tracks command addition" do
+      stage.update_attributes!(command: "Foo")
+      pending "did not work previously but would be nice to have" do
+        stage.audits.size.must_equal 1
+        stage.audits.first.audited_changes.must_equal "script" => ["echo hello", "Foo"]
+      end
     end
 
-    it "does not record when unchanged" do
-      stage.record_script_change
-      e = assert_raises(RuntimeError) { stage.record_script_change }
-      e.message.must_equal "Trying to record the same state twice"
+    it "tracks selecting an existing command" do
+      old = stage.command_ids
+      new = old + [commands(:global).id]
+      stage.update_attributes!(command_ids: new)
+      stage.audits.size.must_equal 1
+      stage.audits.first.audited_changes.must_equal "command_ids" => [old, new]
     end
 
-    it "can restore ... but loses script" do
-      old_name = stage.name
-      stage.record_script_change
-      stage.update_column(:name, "NEW-NAME")
-      stage.commands.first.update_column(:command, 'NEW')
-      stage.versions.last.reify(unversioned_attributes: :preserve).save!
-      stage.reload
-      stage.name.must_equal old_name
-      stage.script.must_equal 'NEW'
+    it "tracks command removal" do
+      stage.update_attributes!(command_ids: [])
+      stage.audits.size.must_equal 1
+      stage.audits.first.audited_changes.must_equal "command_ids" => [[commands(:echo).id], []]
+    end
+
+    it "does not track when command does not change" do
+      stage.update_attributes!(command_ids: stage.command_ids.map(&:to_s), command: "")
+      stage.audits.size.must_equal 0
+    end
+
+    it "tracks simulatanous command and command_id change" do
+      stage.update_attributes!(name: 'Foobar', command_ids: Command.pluck(:id), command: "foo")
+      pending "did not work previously but would be nice to have" do
+        stage.audits.size.must_equal 1
+        stage.audits.first.audited_changes.must_equal "script" => ["echo hello", "Foo"]
+      end
+    end
+
+    it "tracks external command change" do
+      stage.commands.first.update_attributes!(command: "NEW")
+      stage.audits.first.audited_changes.must_equal "script" => ["echo hello", "NEW"]
     end
 
     it "does not trigger multiple times when destroying" do
-      stage.destroy
-      stage.versions.size.must_equal 1
+      stage.destroy!
+      stage.audits.size.must_equal 1
     end
 
     it "does not trigger multiple times when creating" do
-      stage = Stage.create!(name: 'Foobar', project: projects(:test), command_ids: Command.pluck(:id))
-      stage.versions.size.must_equal 1
+      stage = Stage.create!(name: 'Foobar', project: projects(:test), command_ids: Command.pluck(:id), command: "foo")
+      stage.audits.size.must_equal 1
     end
   end
 

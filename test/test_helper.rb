@@ -164,10 +164,6 @@ class ActiveSupport::TestCase
     end
   end
 
-  def self.with_paper_trail
-    around { |t| PaperTrail.with_logging(&t) }
-  end
-
   def self.with_registries(registries)
     around do |test|
       begin

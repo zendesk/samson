@@ -12,6 +12,28 @@
 
 ActiveRecord::Schema.define(version: 20170616174952) do
 
+  create_table "audits", force: :cascade do |t|
+    t.integer "auditable_id", null: false
+    t.string "auditable_type", null: false
+    t.integer "associated_id"
+    t.string "associated_type"
+    t.integer "user_id"
+    t.string "user_type"
+    t.string "username"
+    t.string "action", null: false
+    t.text "audited_changes"
+    t.integer "version", default: 0, null: false
+    t.string "comment"
+    t.string "remote_address"
+    t.string "request_uuid"
+    t.datetime "created_at", null: false
+    t.index ["associated_id", "associated_type"], name: "associated_index", length: { associated_type: 100 }
+    t.index ["auditable_id", "auditable_type"], name: "auditable_index", length: { auditable_type: 100 }
+    t.index ["created_at"], name: "index_audits_on_created_at"
+    t.index ["request_uuid"], name: "index_audits_on_request_uuid", length: { request_uuid: 100 }
+    t.index ["user_id", "user_type"], name: "user_index", length: { user_type: 100 }
+  end
+
   create_table "builds", id: :integer, force: :cascade do |t|
     t.integer "project_id", null: false
     t.integer "number"

@@ -77,18 +77,16 @@ describe UserProjectRole do
     end
   end
 
-  describe "versioning" do
-    with_paper_trail
-
+  describe "audits" do
     it "tracks important changes" do
-      project_role.versions.size.must_equal 1
+      project_role.audits.size.must_equal 1
       project_role.update_attributes!(role_id: 1)
-      project_role.versions.size.must_equal 2
+      project_role.audits.size.must_equal 2
     end
 
     it "ignores unimportant changes" do
       project_role.update_attributes!(updated_at: 1.second.from_now)
-      project_role.versions.size.must_equal 1
+      project_role.audits.size.must_equal 1
     end
   end
 end

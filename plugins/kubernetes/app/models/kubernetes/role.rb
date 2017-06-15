@@ -18,7 +18,7 @@ module Kubernetes
     GENERATED = '-change-me-'
 
     has_soft_deletion
-    has_paper_trail skip: [:updated_at, :created_at]
+    audited
 
     belongs_to :project, inverse_of: :kubernetes_roles
     has_many :kubernetes_deploy_group_roles,

@@ -9,7 +9,7 @@ class CurrentUserConcernTest < ActionController::TestCase
     include CurrentProject
 
     def whodunnit
-      render plain: "#{PaperTrail.whodunnit} -- #{PaperTrail.whodunnit_user.name}"
+      render plain: Audited.store[:current_user].call.name
     end
 
     def change
@@ -55,7 +55,6 @@ class CurrentUserConcernTest < ActionController::TestCase
 
   tests CurrentUserTestController
   use_test_routes CurrentUserTestController
-  with_paper_trail
 
   def self.authorized(method, action, params)
     it "is authorized to #{method} #{action}" do
@@ -65,26 +64,16 @@ class CurrentUserConcernTest < ActionController::TestCase
   end
 
   as_a_viewer do
-    # make sure nothing leaks
-    before { refute PaperTrail.whodunnit_user }
-    after { refute PaperTrail.whodunnit_user }
-
     it "knows who did something" do
       get :whodunnit, params: {test_route: true}
-      response.body.must_equal "#{users(:viewer).id} -- #{users(:viewer).name}"
-    end
-
-    it "does not assign to different users by accident" do
-      before = PaperTrail.whodunnit # FIXME: this is not nil on travis ... capturing current value instead
-      get :whodunnit, params: {test_route: true}
-      PaperTrail.whodunnit.must_equal before
+      response.body.must_equal users(:viewer).name
     end
 
     it "records changes" do
       stage = stages(:test_staging)
       get :change, params: {test_route: true, id: stage.id}
       stage.reload.name.must_equal 'MUUUU'
-      stage.versions.size.must_equal 1
+      stage.audits.size.must_equal 1
     end
 
     describe "#current_user=" do

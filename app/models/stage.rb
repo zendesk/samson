@@ -1,26 +1,12 @@
 # frozen_string_literal: true
 class Stage < ActiveRecord::Base
-  class Trail < PaperTrail::RecordTrail
-    attr_accessor :command_ids_changed
-
-    # overwrites paper_trail to record when command_ids were changed but not trigger multiple versions per save
-    def changed_notably?
-      super || @record.command_ids_changed
-    end
-
-    # overwrites paper_trail to record script
-    def object_attrs_for_paper_trail
-      super.merge('script' => @record.script(previous: true))
-    end
-  end
-
   AUTOMATED_NAME = 'Automated Deploys'
 
   has_soft_deletion default_scope: true unless self < SoftDeletion::Core
 
   include Permalinkable
 
-  has_paper_trail skip: [:order, :updated_at, :created_at]
+  audited except: [:order]
 
   belongs_to :project, touch: true
 
@@ -58,7 +44,6 @@ class Stage < ActiveRecord::Base
   scope :cloned, -> { where.not(template_stage_id: nil) }
 
   attr_writer :command
-  attr_reader :command_ids_changed
 
   def self.reset_order(new_order)
     transaction do
@@ -158,27 +143,16 @@ class Stage < ActiveRecord::Base
     emails.uniq.presence
   end
 
-  def script(previous: false)
-    method = (previous ? :command_was : :command)
-    commands.map(&method).join("\n")
+  def script
+    commands.map(&:command).join("\n")
   end
 
-  # we record a version on every script change, but do not update the stage ... see Command#trigger_stage_change
-  def script_updated_after?(time)
-    versions.last&.created_at&.> time
-  end
-
-  # in theory this should not get called multiple times for the same state,
-  # but adding a bit of extra sanity checking to make sure nothing slips in
-  def record_script_change
-    trail = paper_trail
-    state_to_record = trail.object_attrs_for_paper_trail
-    if @last_recorded_state == state_to_record
-      raise "Trying to record the same state twice"
-    end
-
-    @last_recorded_state = state_to_record
-    trail.record_outside_update
+  def record_script_change(script_was)
+    commands.reload
+    write_audit(
+      action: 'update',
+      audited_changes: {"script" => [script_was, script]}
+    )
   end
 
   def destroy
@@ -195,7 +169,7 @@ class Stage < ActiveRecord::Base
   end
 
   def command_ids=(new_command_ids)
-    @command_ids_changed = (command_ids != new_command_ids.map(&:to_i))
+    @command_ids_was = command_ids
     super.tap do
       reorder_commands(new_command_ids.reject(&:blank?).map(&:to_i))
     end
@@ -211,11 +185,15 @@ class Stage < ActiveRecord::Base
     !confirm? && no_reference_selection? && !deploy_requires_approval?
   end
 
-  def paper_trail
-    Trail.new(self)
-  end
-
   private
+
+  def audited_changes
+    changes = super
+    if @command_ids_was && @command_ids_was != command_ids
+      changes["command_ids"] = [@command_ids_was, command_ids]
+    end
+    changes
+  end
 
   def permalink_base
     name

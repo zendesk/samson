@@ -115,3 +115,5 @@ if Rails.env.development?
     exec "parallel_test test plugins/*/test"
   end
 end
+
+Audited.store[:audited_user] = "rake"

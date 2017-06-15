@@ -4,11 +4,7 @@ module CurrentUser
 
   included do
     helper_method :current_user
-    around_action :login_user
-
-    # we record with reliable reset
-    skip_before_action :set_paper_trail_enabled_for_controller
-    skip_before_action :set_paper_trail_controller_info
+    before_action :login_user
   end
 
   private
@@ -28,7 +24,6 @@ module CurrentUser
 
   def login_user
     warden.authenticate || unauthorized!
-    PaperTrail.with_whodunnit_user(current_user) { yield }
   end
 
   def warden

@@ -5,19 +5,11 @@ module Samson
     # so app.get 'http://xyz.com/protected/resource' works
     def login(user)
       CurrentUser.class_eval do
-        define_method :current_user do
-          user
-        end
-
-        # this would call warden and cause a redirect
-        define_method :login_user do |&block|
-          block.call
-        end
-
-        define_method :verify_authenticity_token do
-        end
-        "logged in as #{user.name}"
+        define_method(:current_user) { user }
+        define_method(:login_user) {}
+        define_method(:verify_authenticity_token) {}
       end
+      "logged in as #{user.name}"
     end
 
     # resets all caching in the controller and Rails.cache.fetch so we get worst-case performance

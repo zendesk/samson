@@ -2,7 +2,7 @@
 class StagesController < ApplicationController
   include CurrentProject
 
-  skip_around_action :login_user, if: :badge?
+  skip_before_action :login_user, if: :badge?
 
   before_action :authorize_project_deployer!, except: [:show]
   before_action :authorize_project_admin!, except: [:index, :show]

@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 class Project < ActiveRecord::Base
   has_soft_deletion default_scope: true unless self < SoftDeletion::Core
-  has_paper_trail skip: [:updated_at, :created_at]
+  audited
 
   include Permalinkable
   include Searchable

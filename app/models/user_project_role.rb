@@ -2,7 +2,7 @@
 class UserProjectRole < ActiveRecord::Base
   include HasRole
 
-  has_paper_trail skip: [:updated_at, :created_at]
+  audited
 
   belongs_to :project
   belongs_to :user
@@ -13,13 +13,15 @@ class UserProjectRole < ActiveRecord::Base
   validates :role_id, inclusion: { in: ROLES.map(&:id) }
   validates_uniqueness_of :project_id, scope: :user_id
 
-  after_save :trigger_user_change
-  after_destroy :trigger_user_change
+  around_save :record_change_in_user_audit
+  around_destroy :record_change_in_user_audit
 
   private
 
   # tested via user_test.rb
-  def trigger_user_change
-    user.record_project_role_change
+  def record_change_in_user_audit
+    old = user.user_project_roles.to_a
+    yield
+    user.record_project_role_change(old)
   end
 end

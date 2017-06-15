@@ -3,7 +3,7 @@ module Kubernetes
   class DeployGroupRole < ActiveRecord::Base
     self.table_name = 'kubernetes_deploy_group_roles'
 
-    has_paper_trail skip: [:updated_at, :created_at]
+    audited
 
     belongs_to :project
     belongs_to :deploy_group

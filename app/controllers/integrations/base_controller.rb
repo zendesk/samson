@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 class Integrations::BaseController < ApplicationController
-  skip_around_action :login_user
+  skip_before_action :login_user
   skip_before_action :verify_authenticity_token
   before_action :validate_token
   before_action :validate_request

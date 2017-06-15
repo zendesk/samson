@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 class Kubernetes::UsageLimit < ActiveRecord::Base
   include GroupScope
-  has_paper_trail
+  audited
 
   self.table_name = 'kubernetes_usage_limits'
   belongs_to :project, optional: true
