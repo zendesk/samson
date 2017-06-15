@@ -10,18 +10,25 @@ module Samson
         mutex = Mutex.new
         current = -1
         results = Array.new(max)
+        exception = nil
 
         Array.new([max, 10].min).map do
           Thread.new do
-            with_db_connection(db) do
-              loop do
-                working_index = mutex.synchronize { current += 1 }
-                break if working_index >= max
-                results[working_index] = yield elements[working_index]
+            begin
+              with_db_connection(db) do
+                loop do
+                  working_index = mutex.synchronize { current += 1 }
+                  break if working_index >= max || exception
+                  results[working_index] = yield elements[working_index]
+                end
               end
+            rescue
+              exception = $!
             end
           end
         end.map(&:join)
+
+        raise exception if exception
 
         results
       end
