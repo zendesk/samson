@@ -85,8 +85,10 @@ describe Samson::Secrets::HashicorpVaultBackend do
   end
 
   describe ".write" do
-    it "writes" do
-      data = {vault: "whatever", visible: false, comment: "secret!", creator_id: 1, updater_id: 1}
+    let(:data) { {vault: "whatever", visible: false, comment: "secret!", creator_id: 1, updater_id: 1} }
+    let(:old_data) { data.merge(vault: "old") }
+
+    it "creates" do
       assert_vault_request :get, "production/foo/pod2/bar", status: 404 do
         assert_vault_request :put, "production/foo/pod2/bar", with: {body: data.to_json} do
           assert backend.write(
@@ -97,12 +99,41 @@ describe Samson::Secrets::HashicorpVaultBackend do
     end
 
     it "updates without changing the creator" do
-      data = {vault: "whatever", visible: true, comment: "secret!", creator_id: 2, updater_id: 1}
-      assert_vault_request :get, "production/foo/pod2/bar", body: {data: {creator_id: 2, vault: "old"}}.to_json do
+      data[:creator_id] = 2 # testing that creator does not get changed to user_id
+      data[:visible] = true # testing that we can set true too
+      assert_vault_request :get, "production/foo/pod2/bar", body: {data: old_data}.to_json do
         assert_vault_request :put, "production/foo/pod2/bar", with: {body: data.to_json} do
           assert backend.write(
             'production/foo/pod2/bar', value: 'whatever', visible: true, user_id: 1, comment: 'secret!'
           )
+        end
+      end
+    end
+
+    it "reverts when it could not update" do
+      assert_raises Vault::HTTPServerError do
+        assert_vault_request :get, "production/foo/pod2/bar", body: {data: old_data}.to_json do
+          assert_vault_request :put, "production/foo/pod2/bar", with: {body: data.to_json}, status: 500 do
+            assert_vault_request :put, "production/foo/pod2/bar", with: {body: old_data.to_json} do
+              assert backend.write(
+                'production/foo/pod2/bar', value: 'whatever', visible: false, user_id: 1, comment: 'secret!'
+              )
+            end
+          end
+        end
+      end
+    end
+
+    it "reverts when it could not create" do
+      assert_raises Vault::HTTPServerError do
+        assert_vault_request :get, "production/foo/pod2/bar", status: 404 do
+          assert_vault_request :put, "production/foo/pod2/bar", with: {body: data.to_json}, status: 500 do
+            assert_vault_request :delete, "production/foo/pod2/bar" do
+              assert backend.write(
+                'production/foo/pod2/bar', value: 'whatever', visible: false, user_id: 1, comment: 'secret!'
+              )
+            end
+          end
         end
       end
     end
