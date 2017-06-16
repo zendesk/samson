@@ -205,6 +205,16 @@ class Project < ActiveRecord::Base
 
   def valid_repository_url
     return if repository.valid_url?
+
+    if repository_url.to_s.start_with?('http')
+      old_repository_url = repository_url
+      @repository = nil
+      self.repository_url = private_repository_url
+      return if repository.valid_url?
+      @repository = nil
+      self.repository_url = old_repository_url
+    end
+
     errors.add(:repository_url, "is not valid or accessible")
   end
 
@@ -219,5 +229,12 @@ class Project < ActiveRecord::Base
 
   def destroy_user_project_roles
     user_project_roles.each(&:destroy)
+  end
+
+  # https://foo.com/bar/baz.git -> git@foo.com:bar/baz.git
+  def private_repository_url
+    uri = URI.parse(repository_url)
+    uri.path.slice!(0, 1)
+    "git@#{uri.host}:#{uri.path}"
   end
 end
