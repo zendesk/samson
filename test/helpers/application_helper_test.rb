@@ -343,11 +343,24 @@ describe ApplicationHelper do
       link_to_resource(grant).must_equal "<a href=\"/secret_sharing_grants/#{grant.id}\">foo</a>"
     end
 
-    it "fails on unknown" do
-      assert_raises(ArgumentError) { link_to_resource(123) }.message.must_equal "Unsupported resource 123"
+    it "links to vault" do
+      server = create_vault_server
+      link_to_resource(server).must_equal "<a href=\"/vault_servers/#{server.id}\">pod1</a>"
     end
 
-    # TODO: test all audited classes
+    it "fails on unknown" do
+      assert_raises(ArgumentError) { link_to_resource(123) }.message.must_equal "Unsupported resource Fixnum"
+    end
+
+    # sanity check that we did not miss anything especially plugin models
+    it "can render each versioned model" do
+      SecretSharingGrant.create!(project: projects(:test), key: 'foo')
+
+      audited_classes.map(&:constantize).each do |klass|
+        model = klass.first || klass.new
+        link_to_resource(model)
+      end
+    end
   end
 
   describe "#render_nested_errors" do

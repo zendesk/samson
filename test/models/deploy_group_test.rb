@@ -142,11 +142,10 @@ describe DeployGroup do
   end
 
   describe "#validate_vault_server_has_same_environment" do
-    let(:server) { Samson::Secrets::VaultServer.create!(name: 'a', address: 'http://a.com', token: 't') }
+    let(:server) { create_vault_server }
 
     before do
       Samson::Secrets::VaultServer.any_instance.stubs(:validate_cert)
-      Samson::Secrets::VaultServer.any_instance.stubs(:validate_connection)
       deploy_groups(:pod1).update_attributes!(vault_server: server)
       server.reload
     end

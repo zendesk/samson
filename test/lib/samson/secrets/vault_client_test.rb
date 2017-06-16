@@ -8,7 +8,7 @@ describe Samson::Secrets::VaultClient do
 
   # have 2 servers around so we can test multi-server logic
   before do
-    server = Samson::Secrets::VaultServer.create!(name: 'pod100', address: 'http://vault-land.com', token: 'TOKEN2')
+    server = create_vault_server(name: 'pod100', token: 'POD100-TOKEN')
     deploy_groups(:pod100).update_column(:vault_server_id, server.id)
     client.expire_clients
   end

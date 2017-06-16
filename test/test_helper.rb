@@ -114,6 +114,13 @@ class ActiveSupport::TestCase
     )
   end
 
+  def create_vault_server(overrides = {})
+    Samson::Secrets::VaultServer.any_instance.stubs(:validate_connection)
+    Samson::Secrets::VaultServer.create!(
+      {name: "pod1", address: 'http://vault-land.com', token: 'TOKEN'}.merge(overrides)
+    )
+  end
+
   def with_env(env)
     old = env.map do |k, v|
       k = k.to_s

@@ -1,4 +1,15 @@
-<%= page_title "Audits for #{params[:search][:auditable_type]} #{params[:search][:auditable_id]}" %>
+<%=
+  type = params.dig(:search, :auditable_type).presence
+  id = params.dig(:search, :auditable_id).presence
+  global = (!type || !id)
+  page_title(global ? "Audits" : "Audits for #{type} #{id}")
+%>
+
+<%= search_form do %>
+  <%= search_select :action, ["create", "update", "destroy"] %>
+  <%= search_select :auditable_type, audited_classes.sort, label: "Resource" %>
+  <%= search_select :user_id, User.pluck(:name, :id), live: true, label: "By" %>
+<% end %>
 
 <table class="table">
   <thead>
@@ -13,6 +24,12 @@
     <tr>
       <td><%= audit.action %></td>
       <td>
+        <% if global %>
+          <%= (begin; audit.auditable;rescue NameError;end) ? link_to_resource(audit.auditable) : "#{audit.auditable_type} #{audit.auditable_id}" %>
+          by
+          <br/>
+        <% end %>
+
         <% case audit.user %>
         <% when String %>
           <%= audit.user %>
@@ -23,16 +40,17 @@
           <%= "User##{audit.user_id}" if audit.user_id %>
         <% end %>
         <br/>
-        <%= audit.created_at.to_s :db %>
+
+        <%= render_time audit.created_at %>
         <%= additional_info "From #{audit.remote_address} request #{audit.request_uuid}" %>
       </td>
       <td>
         <% audit.audited_changes.to_a.each do |column, (before, after)| %>
           <%= column %>:
-          <% if audit.action == "create" %>
-            <%= before.inspect %>
-          <% else %>
+          <% if audit.action == "update" # others are just attribute hashes %>
             <%= readable_ruby_value before %> → <%= readable_ruby_value after %>
+          <% else %>
+            <%= readable_ruby_value before %>
           <% end %>
           <br/>
         <% end %>

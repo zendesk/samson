@@ -4,11 +4,6 @@ require_relative '../../../test_helper'
 SingleCov.covered!
 
 describe Samson::Secrets::VaultServer do
-  def create_server(i)
-    Samson::Secrets::VaultServer.any_instance.stubs(:validate_connection)
-    Samson::Secrets::VaultServer.create!(name: "pod#{i}", address: 'http://vault-land.com', token: 'TOKEN2')
-  end
-
   describe "validations" do
     let(:server) { Samson::Secrets::VaultServer.new(name: 'abc', address: 'http://vault-land.com', token: "TOKEN") }
 
@@ -55,8 +50,8 @@ describe Samson::Secrets::VaultServer do
   end
 
   describe "#sync!" do
-    let(:from) { create_server(0) }
-    let(:to) { create_server(1) }
+    let(:from) { create_vault_server(name: 'pod0') }
+    let(:to) { create_vault_server(name: 'pod1') }
     let(:scoped_key) { "secret/apps/staging/foo/pod100/a" }
 
     before { to.deploy_groups = [deploy_groups(:pod100)] }
@@ -105,12 +100,12 @@ describe Samson::Secrets::VaultServer do
 
     it "adds new clients" do
       client.send(:clients).size.must_equal 0
-      create_server(0)
+      create_vault_server(name: 'pod0')
       client.send(:clients).size.must_equal 1
     end
 
     it "updates client attributes" do
-      server = create_server(0)
+      server = create_vault_server(name: 'pod0')
       client.send(:clients).size.must_equal 1
       server.update_attribute(:address, 'http://new.com')
       client.send(:clients).values.first.address.must_equal 'http://new.com'
@@ -125,7 +120,7 @@ describe Samson::Secrets::VaultServer do
       stub_request(:get, "http://vault-land.com/v1/secret/apps/abc/?list=true").
         to_return(headers: {content_type: 'application/json'}, body: {data: {keys: ['ghi'.dup]}}.to_json)
 
-      server = create_server(0)
+      server = create_vault_server(name: 'pod0')
       Samson::Secrets::VaultServer.any_instance.unstub(:validate_connection)
       server.client.logical.list_recursive("secret/apps/").must_equal ["abc/ghi", "def"]
     end

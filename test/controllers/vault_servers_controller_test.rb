@@ -4,10 +4,7 @@ require_relative '../test_helper'
 SingleCov.covered!
 
 describe VaultServersController do
-  let!(:server) do
-    Samson::Secrets::VaultServer.any_instance.stubs(:validate_connection)
-    Samson::Secrets::VaultServer.create!(name: 'pod1', address: 'http://vault-land.com', token: 'TOKEN2')
-  end
+  let!(:server) { create_vault_server }
   before { deploy_groups(:pod1).update_column(:vault_server_id, server.id) }
 
   as_a_viewer do
