@@ -199,6 +199,27 @@ describe Project do
       project.errors.messages.must_equal repository_url: ["is not valid or accessible"]
     end
 
+    describe "private url switching" do
+      let(:project) { Project.new(id: 9999, name: 'demo_apps', repository_url: 'https://my_bad_url/foo.git') }
+
+      before { Project.any_instance.unstub(:valid_repository_url) }
+
+      it 'tries private repo url when public url fails (user picked wrong format)' do
+        GitRepository.any_instance.expects(:capture_stdout).
+          with { |*args| args.include?("https://my_bad_url/foo.git") }.returns(false)
+        GitRepository.any_instance.expects(:capture_stdout).
+          with { |*args| args.include?("git@my_bad_url:foo.git") }.returns(true)
+        assert_valid project
+        project.repository_url.must_equal "git@my_bad_url:foo.git"
+      end
+
+      it 'tries and fails with private repo url when public url fails (user picked wrong format)' do
+        GitRepository.any_instance.expects(:capture_stdout).times(2).returns(false)
+        refute_valid project
+        project.repository_url.must_equal "https://my_bad_url/foo.git"
+      end
+    end
+
     it 'can initialize with a local repo' do
       project = Project.new(name: 'demo_apps', repository_url: '/foo/bar/.git')
       project.save!
