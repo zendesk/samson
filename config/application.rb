@@ -7,8 +7,47 @@ if (google_domain = ENV["GOOGLE_DOMAIN"]) && !ENV['EMAIL_DOMAIN']
   ENV["EMAIL_DOMAIN"] = google_domain.sub('@', '')
 end
 
-Bundler.require(:preload)
-Bundler.require(:assets) if Rails.env.development? || ENV["PRECOMPILE"]
+# Bundler.require(:preload)
+# Bundler.require(:assets) if Rails.env.development? || ENV["PRECOMPILE"]
+
+require 'sse-rails-engine'
+require 'connection_pool'
+require 'marco-polo'
+require 'goldiloader'
+require 'kaminari'
+require 'active_model_serializers'
+require 'paper_trail'
+require 'soft_deletion'
+require 'doorkeeper'
+require 'lograge'
+require 'logstash-event'
+# require 'ngannotate-rails'
+# require 'sass-rails'
+# require 'uglifier'
+# require 'angular-rails-templates'
+# require 'bootstrap-sass'
+# require 'rails-assets-angular'
+# require 'rails-assets-angular-mocks'
+# require 'rails-assets-angular-scenario'
+# require 'rails-assets-spin'
+# require 'rails-assets-angular-spinner'
+# require 'rails-assets-bootstrap-select'
+# require 'rails-assets-font-awesome'
+# require 'rails-assets-jquery'
+# require 'rails-assets-jquery-ui'
+# require 'rails-assets-jquery-ujs'
+# require 'rails-assets-moment'
+# require 'rails-assets-typeahead.js'
+# require 'rails-assets-underscore'
+# require 'rails-assets-x-editable'
+# require 'rails-assets-angular-ui-router'
+# require 'rails-assets-angular-truncate-2'
+# require 'rails-assets-jstimezonedetect'
+# require 'rails-assets-jquery-cookie'
+# require 'rails-assets-datatables.net'
+# require 'rails-assets-datatables.net-bs'
+# require 'rails-assets-datatables.net-fixedcolumns'
+# require 'rails-assets-datatables.net-fixedcolumns-bs'
 
 ###
 # Railties need to be loaded before the application is defined
