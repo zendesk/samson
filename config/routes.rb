@@ -33,7 +33,7 @@ Samson::Application.routes.draw do
     resources :users, only: [:destroy]
   end
 
-  resources :projects, except: [:destroy] do
+  resources :projects do
     resources :jobs, only: [:index, :show, :destroy]
 
     resources :builds, only: [:show, :index, :new, :create, :edit, :update] do
