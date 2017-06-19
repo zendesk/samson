@@ -1,8 +1,7 @@
 # frozen_string_literal: true
 class SlackAppController < ApplicationController
   PUBLIC = [:command, :interact].freeze
-  skip_before_action :verify_authenticity_token, only: PUBLIC
-  skip_around_action :login_user, only: PUBLIC
+  skip_before_action :verify_authenticity_token, :login_user, only: PUBLIC
 
   before_action :handle_slack_inputs
 

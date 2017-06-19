@@ -442,38 +442,36 @@ describe User do
     end
   end
 
-  describe "versioning" do
+  describe "auditing" do
     let(:user) { users(:admin) }
-
-    with_paper_trail
 
     it "tracks important changes" do
       user.update_attributes!(name: "Foo")
-      user.versions.size.must_equal 1
+      user.audits.size.must_equal 1
     end
 
     it "ignores unimportant changes" do
       user.update_attributes!(updated_at: 1.second.from_now)
-      user.versions.size.must_equal 0
+      user.audits.size.must_equal 0
     end
 
     it "ignores sensitive changes" do
       user.update_attributes!(token: 'secret')
-      user.versions.size.must_equal 0
+      user.audits.size.must_equal 0
     end
 
     it "records project_roles change" do
       UserProjectRole.create!(project: projects(:test), user: user, role_id: 1)
-      user.versions.size.must_equal 1
-      YAML.safe_load(user.versions.first.object, [Time])['project_roles'].must_equal "foo" => 1
+      user.audits.size.must_equal 1
+      user.audits.first.audited_changes.must_equal(user_project_roles: [{}, {"foo" => 1}])
     end
 
     it "records project_roles destruction" do
       role = UserProjectRole.create!(project: projects(:test), user: user, role_id: 1)
       role.reload
       role.destroy
-      user.versions.size.must_equal 2
-      YAML.safe_load(user.versions.last.object, [Time])['project_roles'].must_equal({})
+      user.audits.size.must_equal 2
+      user.audits.last.audited_changes.must_equal(user_project_roles: [{"foo" => 1}, {}])
     end
   end
 

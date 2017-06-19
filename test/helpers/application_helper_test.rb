@@ -322,6 +322,10 @@ describe ApplicationHelper do
       link_to_resource(projects(:test)).must_equal "<a href=\"/projects/foo\">Foo</a>"
     end
 
+    it "links to user" do
+      link_to_resource(users(:admin)).must_equal "<a href=\"/users/#{users(:admin).id}\">Admin</a>"
+    end
+
     it "links to stages" do
       link_to_resource(stages(:test_staging)).must_equal "<a href=\"/projects/foo/stages/staging\">Staging</a>"
     end
@@ -342,6 +346,8 @@ describe ApplicationHelper do
     it "fails on unknown" do
       assert_raises(ArgumentError) { link_to_resource(123) }.message.must_equal "Unsupported resource 123"
     end
+
+    # TODO: test all audited classes
   end
 
   describe "#render_nested_errors" do
@@ -392,10 +398,10 @@ describe ApplicationHelper do
   describe "#link_to_history" do
     let(:user) { users(:admin) }
 
-    with_paper_trail
-
     it "shows a link" do
-      link_to_history(user).must_equal "<a href=\"/versions?item_id=#{user.id}&amp;item_type=User\">History (0)</a>"
+      link_to_history(user).must_equal(
+        "<a href=\"/audits?search%5Bauditable_id%5D=#{user.id}&amp;search%5Bauditable_type%5D=User\">History (0)</a>"
+      )
     end
 
     it "shows nothing when new" do

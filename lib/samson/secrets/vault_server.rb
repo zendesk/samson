@@ -23,7 +23,7 @@ module Samson
     class VaultServer < ActiveRecord::Base
       PREFIX = 'secret/apps/'
 
-      has_paper_trail skip: [:updated_at, :created_at]
+      audited
       include AttrEncryptedSupport
       self.table_name = :vault_servers
       ADDRESS_PATTERN = /\Ahttps?:\/\//

@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 class Command < ActiveRecord::Base
-  has_paper_trail skip: [:updated_at, :created_at]
+  audited
 
   has_many :stage_commands
   has_many :stages, through: :stage_commands
@@ -10,7 +10,7 @@ class Command < ActiveRecord::Base
 
   validates :command, presence: true
 
-  after_save :trigger_stage_change, if: -> { saved_change_to_attribute? :command }
+  around_save :record_change_in_stage_audit, if: :command_changed?
 
   def self.global
     where(project_id: nil)
@@ -46,12 +46,9 @@ class Command < ActiveRecord::Base
 
   private
 
-  def trigger_stage_change
-    stages.each do |stage|
-      # allow stage access to command_was since that is what paper-trail should store
-      me = stage.commands.detect { |c| c == self }
-      me.raw_write_attribute "command", attribute_before_last_save("command")
-      stage.record_script_change
-    end
+  def record_change_in_stage_audit
+    old = stages.map { |s| [s, s.script] }
+    yield
+    old.each { |s, script_was| s.record_script_change script_was }
   end
 end

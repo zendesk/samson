@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 class EnvironmentVariable < ActiveRecord::Base
   include GroupScope
-  has_paper_trail
+  audited
 
   belongs_to :parent, polymorphic: true # Resource they are set on
 

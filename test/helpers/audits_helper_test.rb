@@ -3,7 +3,7 @@ require_relative '../test_helper'
 
 SingleCov.covered!
 
-describe VersionsHelper do
+describe AuditsHelper do
   describe "#readable_ruby_value" do
     it "keeps regular things" do
       readable_ruby_value("Foo").to_s.must_equal '"Foo"'

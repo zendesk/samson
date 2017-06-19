@@ -1,0 +1,43 @@
+# frozen_string_literal: true
+require_relative '../test_helper'
+
+SingleCov.covered!
+
+describe AuditsController do
+  def create_audit(user)
+    Audited.audit_class.as_user(user) do
+      stage.update_attributes(name: 'Fooo')
+    end
+  end
+
+  let(:stage) { stages(:test_staging) }
+
+  as_a_viewer do
+    describe "#index" do
+      before { create_audit user }
+
+      it "renders" do
+        get :index, params: {search: {auditable_id: stage.id, auditable_type: stage.class.name}}
+        assert_template :index
+      end
+
+      it "renders with unfound user" do
+        create_audit(User.new { |u| u.id = 1211212 })
+        get :index, params: {search: {auditable_id: stage.id, auditable_type: stage.class.name}}
+        assert_template :index
+      end
+
+      it "renders with deleted item" do
+        stage.delete
+        get :index, params: {search: {auditable_id: stage.id, auditable_type: stage.class.name}}
+        assert_template :index
+      end
+
+      it "renders with removed class" do
+        stage.audits.last.update_column(:auditable_type, 'Whooops')
+        get :index, params: {search: {auditable_id: stage.id, auditable_type: 'Whooops'}}
+        assert_template :index
+      end
+    end
+  end
+end

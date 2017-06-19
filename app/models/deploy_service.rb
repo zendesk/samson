@@ -66,13 +66,18 @@ class DeployService
 
   def copy_approval_from_last_deploy(deploy)
     return false unless last_deploy = latest_approved_deploy(deploy.reference, deploy.stage.project)
-    return false if last_deploy.stage.script_updated_after?(last_deploy.started_at)
+    return false if stage_script_changed_after?(last_deploy)
 
     deploy.buddy = (last_deploy.buddy == @user ? last_deploy.job.user : last_deploy.buddy)
     deploy.started_at = Time.now
     deploy.save!
 
     true
+  end
+
+  def stage_script_changed_after?(deploy)
+    deploy.stage.audits.where("created_at > ?", deploy.started_at).
+      any? { |a| a.audited_changes&.key?("script") }
   end
 
   def send_before_notifications(deploy)

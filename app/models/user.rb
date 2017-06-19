@@ -3,14 +3,6 @@ require 'soft_deletion'
 require 'digest/md5'
 
 class User < ActiveRecord::Base
-  class Trail < PaperTrail::RecordTrail
-    # overwrites paper_trail to record project_roles
-    def object_attrs_for_paper_trail
-      roles = @record.user_project_roles.map { |upr| [upr.project.permalink, upr.role_id] }.to_h
-      super.merge('project_roles' => roles)
-    end
-  end
-
   include Searchable
   include HasRole
 
@@ -18,7 +10,7 @@ class User < ActiveRecord::Base
 
   has_soft_deletion default_scope: true
 
-  has_paper_trail skip: [:updated_at, :created_at, :token]
+  audited except: [:last_seen_at, :last_login_at, :token]
 
   has_many :commands
   has_many :stars
@@ -126,15 +118,20 @@ class User < ActiveRecord::Base
     project && user_project_roles.find_by(project: project)
   end
 
-  def record_project_role_change
-    paper_trail.record_outside_update
-  end
-
-  def paper_trail
-    Trail.new(self)
+  def record_project_role_change(roles_was)
+    write_audit(
+      action: 'update',
+      audited_changes: {
+        user_project_roles: [role_hash(roles_was), role_hash(user_project_roles.reload)]
+      }
+    )
   end
 
   private
+
+  def role_hash(roles)
+    roles.map { |upr| [upr.project.permalink, upr.role_id] }.to_h
+  end
 
   def set_token
     self.token = SecureRandom.hex

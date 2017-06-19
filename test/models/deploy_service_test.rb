@@ -61,7 +61,7 @@ describe DeployService do
         end
 
         describe "when stage was modified after the similar deploy" do
-          let!(:version) { stage.versions.create!(event: 'Update') }
+          before { stage.audits.create!(action: 'update', audited_changes: {"script" => ["foo", "bar"]}) }
 
           it "does not start the deploy" do
             service.expects(:confirm_deploy!).never

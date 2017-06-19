@@ -37,16 +37,14 @@ describe Command do
   end
 
   describe "#trigger_stage_change" do
-    with_paper_trail
-
-    it "triggers a version when command changes" do
+    it "triggers a audit when command changes" do
       command.update_attribute(:command, 'new')
-      command.reload.stages.first.versions.size.must_equal 1
+      command.reload.stages.first.audits.size.must_equal 1
     end
 
     it "does not trigger when command does not change" do
       command.update_attribute(:project, nil)
-      command.reload.stages.first.versions.size.must_equal 0
+      command.reload.stages.first.audits.size.must_equal 0
     end
   end
 

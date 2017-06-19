@@ -91,7 +91,7 @@ module ApplicationHelper
 
   def link_parts_for_resource(resource)
     case resource
-    when Project, DeployGroup then [resource.name, resource]
+    when Project, DeployGroup, User then [resource.name, resource]
     when Environment then [resource.name, dashboard_path(resource)]
     when Stage then
       name = resource.name
@@ -190,8 +190,8 @@ module ApplicationHelper
 
   def link_to_history(resource, counter: true)
     return if resource.new_record?
-    count = (counter ? " (#{resource.versions.count})" : "")
-    link_to "History#{count}", versions_path(item_id: resource.id, item_type: resource.class.name)
+    count = (counter ? " (#{resource.audits.count})" : "")
+    link_to "History#{count}", audits_path(search: {auditable_id: resource.id, auditable_type: resource.class.name})
   end
 
   def additional_info(text)

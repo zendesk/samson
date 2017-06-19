@@ -6,10 +6,6 @@ class OauthTestController < ActionController::Base
 
   before_action :ensure_application
 
-  # no user here ... so no tracking needed
-  skip_before_action :set_paper_trail_enabled_for_controller
-  skip_before_action :set_paper_trail_controller_info
-
   def index
     redirect_to oauth_client.auth_code.authorize_url(redirect_uri: token_url)
   end
