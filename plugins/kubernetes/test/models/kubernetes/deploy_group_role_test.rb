@@ -192,8 +192,8 @@ describe Kubernetes::DeployGroupRole do
       refute_valid deploy_group_role
       deploy_group_role.errors.full_messages.must_equal(
         [
-          "Requests cpu (1.0 * 3) must be less than or equal to the usage limit 1.0",
-          "Requests memory (200 * 3) must be less than or equal to the usage limit 400"
+          "Requests cpu (1.0 * 3) must be less than or equal to kubernetes usage limit 1.0 (##{usage_limit.id})",
+          "Requests memory (200 * 3) must be less than or equal to kubernetes usage limit 400 (##{usage_limit.id})"
         ]
       )
     end
