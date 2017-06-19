@@ -18,10 +18,6 @@ group :preload do
   gem 'paper_trail'
   gem 'soft_deletion'
   gem 'doorkeeper'
-
-  # Logging
-  gem 'lograge'
-  gem 'logstash-event'
 end
 
 gem 'bundler'
@@ -49,6 +45,8 @@ gem 'concurrent-ruby'
 gem 'vault'
 gem 'docker-api'
 gem 'newrelic_rpm'
+gem 'lograge'
+gem 'logstash-event'
 
 # treat included plugins like gems
 Dir[File.join(Bundler.root, 'plugins/*/')].each { |f| gemspec path: f }
