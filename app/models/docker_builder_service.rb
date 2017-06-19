@@ -86,16 +86,22 @@ class DockerBuilderService
     # especially if the disk is running slow. So we create the tarfile in a
     # separate process to avoid that.
     tar_proc = -> do
-      File.open(tempfile_name, 'wb+') do |tempfile|
-        Docker::Util.create_relative_dir_tar(dir, tempfile)
+      begin
+        File.open(tempfile_name, 'wb+') do |tempfile|
+          Docker::Util.create_relative_dir_tar(dir, tempfile)
+        end
+      rescue
+        File.write(tempfile_name, $!.message)
+        raise
       end
     end
 
     if Rails.env.test?
+      # forking is bad for test framework and stubs
       tar_proc.call
     else
-      pid = fork(&tar_proc)
-      Process.waitpid(pid)
+      _, status = Process.waitpid2(fork(&tar_proc))
+      raise File.read(tempfile_name) unless status.success?
     end
 
     File.new(tempfile_name, 'r')
