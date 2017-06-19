@@ -1,6 +1,10 @@
 # frozen_string_literal: true
-require 'bundler/setup'
-raise "ENV clearing failed" if File.expand_path(ENV.fetch("BUNDLE_GEMFILE")) != File.expand_path("Gemfile")
+require './vendor/bundle/bundler/setup.rb'
+def gem(*);end
+
+require 'bundler'
+#require 'bundler/setup'
+#raise "ENV clearing failed" if File.expand_path(ENV.fetch("BUNDLE_GEMFILE")) != File.expand_path("Gemfile")
 require_relative 'dotenv'
 rails_env = ENV['RAILS_ENV'] || ENV['RACK_ENV'] || 'development'
 if ['development', 'test'].include?(rails_env)
