@@ -9,7 +9,7 @@ class DeleteBogusBuilds < ActiveRecord::Migration[5.0]
 
   def change
     never_built = Build.where(docker_build_job_id: nil)
-    never_built.joins(:releases).where('git_sha = commit').delete_all
+    never_built.joins(:releases).where(Build.arel_table[:git_sha].eq(Release.arel_table[:commit])).delete_all
 
     # update manually created releases so we do not lose information
     never_built.each do |build|

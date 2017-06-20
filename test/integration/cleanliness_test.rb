@@ -188,4 +188,12 @@ describe "cleanliness" do
 
     assert bad.empty?, bad.join("\n")
   end
+
+  it "prevents the users from printing outputs when migrations are silenced" do
+    assert_content Dir["{,plugins/*/}db/migrate/*.rb"] do |content|
+      if content =~ /^\s*puts\b/
+        "use `write` instead of `puts` to avoid printing outputs when migrations are silenced"
+      end
+    end
+  end
 end

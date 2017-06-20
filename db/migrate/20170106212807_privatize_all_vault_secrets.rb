@@ -13,7 +13,7 @@ class PrivatizeAllVaultSecrets < ActiveRecord::Migration[5.0]
           }
           SecretStorage.write(key, new)
         rescue
-          puts "Error re-writing key #{key}, fix manually #{$!}"
+          write "Error re-writing key #{key}, fix manually #{$!}"
         end
       end
     end

@@ -39,14 +39,14 @@ class SeedAuditedFromVersions < ActiveRecord::Migration[5.1]
         attributes['next_stage_ids'] = model.next_stage_ids.to_yaml if type == "Stage"
         attributes['project_roles'] = model.send(:role_hash, model.user_project_roles) if type == "User"
       rescue
-        puts "Error dumping complex current state for #{type}:#{id} -- #{$!}"
+        write "Error dumping complex current state for #{type}:#{id} -- #{$!}"
       end
       attributes.to_yaml
     else
       :bad
     end
   rescue NameError
-    puts "Unable to find constant #{type} -- #{$!} -- #{$!.class}"
+    write "Unable to find constant #{type} -- #{$!} -- #{$!.class}"
     :bad
   end
 
@@ -88,8 +88,8 @@ class SeedAuditedFromVersions < ActiveRecord::Migration[5.1]
 
     @number += 1
   rescue
-    puts "ERROR processing #{version.id} (#{version.item_type}:#{version.item_id}) -- #{$!}"
-    puts $!.backtrace.select { |l| l.include?(__FILE__) }
+    write "ERROR processing #{version.id} (#{version.item_type}:#{version.item_id}) -- #{$!}"
+    write $!.backtrace.select { |l| l.include?(__FILE__) }
     abort
   end
 
