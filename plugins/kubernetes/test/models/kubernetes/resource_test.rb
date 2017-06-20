@@ -59,6 +59,12 @@ describe Kubernetes::Resource do
       assert resource.running?
       assert_requested get, times: 2
     end
+
+    it "shows errors to users when resource was invalid" do
+      stub_request(:get, url).to_return(status: 404)
+      stub_request(:post, base_url).to_return(body: '{"message":"Foo.extensions \"app\" is invalid:"}', status: 400)
+      assert_raises(Samson::Hooks::UserError) { resource.deploy }.message.must_include "Kubernetes error: Foo"
+    end
   end
 
   describe "#running?" do

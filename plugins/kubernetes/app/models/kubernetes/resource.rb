@@ -80,9 +80,15 @@ module Kubernetes
         nil
       end
 
-      # TODO: test for actual hash / usability ...
       def request(method, *args)
         client.send("#{method}_#{@template.fetch(:kind).underscore}", *args)
+      rescue
+        message = $!.message.to_s
+        if message.include?(" is invalid:") || message.include?(" no kind ")
+          raise Samson::Hooks::UserError, "Kubernetes error: #{message}"
+        else
+          raise
+        end
       end
 
       def client
