@@ -6,7 +6,7 @@ SingleCov.covered!
 describe AuditsController do
   def create_audit(user)
     Audited.audit_class.as_user(user) do
-      stage.update_attributes(name: 'Fooo')
+      stage.update_attributes(name: "Fooo #{rand(9999999)}")
     end
   end
 
@@ -37,6 +37,15 @@ describe AuditsController do
         stage.audits.last.update_column(:auditable_type, 'Whooops')
         get :index, params: {search: {auditable_id: stage.id, auditable_type: 'Whooops'}}
         assert_template :index
+      end
+
+      it "does not N+1" do
+        20.times { create_audit user }
+        assert_sql_queries 10 do
+          get :index
+          assert_template :index
+          assigns(:audits).size.must_equal 21
+        end
       end
     end
   end

@@ -89,4 +89,23 @@ describe SamsonEnv do
       all["WORLD3"].must_equal "hello"
     end
   end
+
+  describe :link_parts_for_resource do
+    it "links to env var" do
+      var = project.environment_variables.create!(name: "WORLD3", value: "hello")
+      proc = Samson::Hooks.fire(:link_parts_for_resource).to_h.fetch("EnvironmentVariable")
+      proc.call(var).must_equal ["WORLD3 on Foo", EnvironmentVariable]
+    end
+
+    it "links to scoped env var" do
+      group = EnvironmentVariableGroup.create!(name: "Bar")
+      var = group.environment_variables.create!(
+        name: "WORLD3",
+        value: "hello",
+        scope_type_and_id: "Environment-#{environments(:production).id}"
+      )
+      proc = Samson::Hooks.fire(:link_parts_for_resource).to_h.fetch("EnvironmentVariable")
+      proc.call(var).must_equal ["WORLD3 for Production on Bar", EnvironmentVariable]
+    end
+  end
 end

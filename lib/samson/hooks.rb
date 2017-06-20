@@ -41,7 +41,8 @@ module Samson
       :job_additional_vars,
       :buildkite_release_params,
       :release_deploy_conditions,
-      :deploy_group_env
+      :deploy_group_env,
+      :link_parts_for_resource,
     ].freeze
 
     INTERNAL_HOOKS = [:class_defined].freeze
@@ -55,7 +56,7 @@ module Samson
       def initialize(path)
         @path = path
         @folder = File.expand_path('../../../', @path)
-        @name = realname(File.basename(@folder))
+        @name = File.basename(@folder).sub(/-[^-]*\z/, '').sub(/\Asamson_/, "")
       end
 
       def load
@@ -71,7 +72,7 @@ module Samson
       end
 
       def add_decorators
-        Dir[decorators_root.join('**/*_decorator.rb')].each do |path|
+        Dir["#{decorators_root}/**/*_decorator.rb"].each do |path|
           Samson::Hooks.decorator(decorator_class(path), path)
         end
       end
@@ -86,12 +87,8 @@ module Samson
 
       private
 
-      def realname(gemname)
-        gemname.sub(/-[^-]*\z/, '').sub(/\Asamson_/, "")
-      end
-
       def decorators_root
-        @decorators_root ||= engine.config.root.join("app/decorators")
+        @decorators_root ||= Pathname("#{@folder}/app/decorators")
       end
 
       # {root}/xyz_decorator.rb -> Xyz

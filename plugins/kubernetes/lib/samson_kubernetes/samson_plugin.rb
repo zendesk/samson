@@ -27,3 +27,21 @@ end
 Samson::Hooks.callback(:stage_permitted_params) { :kubernetes }
 Samson::Hooks.callback(:deploy_permitted_params) { [:kubernetes_rollback, :kubernetes_reuse_build] }
 Samson::Hooks.callback(:build_permitted_params) { :kubernetes_job }
+Samson::Hooks.callback(:link_parts_for_resource) do
+  [
+    Kubernetes::DeployGroupRole.name,
+    ->(dgr) { ["#{dgr.project&.name} role #{dgr.kubernetes_role&.name} for #{dgr.deploy_group&.name}", dgr] }
+  ]
+end
+Samson::Hooks.callback(:link_parts_for_resource) do
+  [
+    Kubernetes::Role.name,
+    ->(role) { ["#{role.project&.name} role #{role.name}", [role.project, role]] }
+  ]
+end
+Samson::Hooks.callback(:link_parts_for_resource) do
+  [
+    Kubernetes::UsageLimit.name,
+    ->(limit) { ["Limit for #{limit.scope&.name} on #{limit.project&.name || "All"}", limit] }
+  ]
+end

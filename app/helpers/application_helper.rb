@@ -89,9 +89,12 @@ module ApplicationHelper
     manual_breadcrumb(items)
   end
 
+  # tested via link_to_resource
   def link_parts_for_resource(resource)
     case resource
-    when Project, DeployGroup, User then [resource.name, resource]
+    when Project, DeployGroup, User, Samson::Secrets::VaultServer then [resource.name, resource]
+    when Command then ["Command ##{resource.id}", resource]
+    when UserProjectRole then ["Role for ##{resource.user.name}", resource.user]
     when Environment then [resource.name, dashboard_path(resource)]
     when Stage then
       name = resource.name
@@ -99,7 +102,10 @@ module ApplicationHelper
       [name, project_stage_path(resource.project, resource)]
     when SecretSharingGrant then [resource.key, resource]
     else
-      raise ArgumentError, "Unsupported resource #{resource}"
+      @@link_parts_for_resource ||= Samson::Hooks.fire(:link_parts_for_resource).to_h
+      proc = @@link_parts_for_resource[resource.class.name] ||
+        raise(ArgumentError, "Unsupported resource #{resource.class.name}")
+      proc.call(resource)
     end
   end
 
@@ -116,6 +122,19 @@ module ApplicationHelper
         content = (active ? name : link_to(name, url))
         content_tag :li, content, class: (active ? "active" : "")
       end.join.html_safe
+    end
+  end
+
+  def audited_classes
+    @@audited_classes ||= begin
+      if !Rails.application.config.eager_load || Rails.env.test? # need coverage in test
+        # load all models so we can find out who is audited ... require would add warnings because of rails autoload
+        folders = Samson::Hooks.plugins.map(&:folder) << File.expand_path(".") # all gems and root
+        Dir["{#{folders.join(",")}}/app/models/**/*.rb"].reject { |f| f.include?("/concerns/") }.each do |f|
+          f.split("/app/models/").last.sub(".rb", "").camelize.constantize
+        end
+      end
+      ActiveRecord::Base.send(:descendants).select { |d| d.respond_to?(:audited_options) }.map(&:name)
     end
   end
 
