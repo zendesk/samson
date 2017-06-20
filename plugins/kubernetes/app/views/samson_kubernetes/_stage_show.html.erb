@@ -13,7 +13,7 @@
       <th>Memory<%= additional_info "Requested to Limit in MB" %></th>
       <th>
         <% if missing %>
-          <%= link_to 'Seed Missing', seed_kubernetes_deploy_group_roles_path(stage_id: @stage.id), data: {method: :post} %>
+          <%= link_to 'Seed Missing', seed_kubernetes_deploy_group_roles_path(stage_id: @stage.id), data: {method: :post}, class: 'btn btn-default' %>
         <% end %>
       </th>
     </thead>
@@ -35,7 +35,7 @@
               <% end %>
             </td>
           <% else %>
-            <td colspan="3">Missing</td>
+            <td colspan="3" style="text-align: center">----- Missing -----</td>
             <td>
               <% if current_user.admin_for?(@stage.project) %>
                 <% attributes = {kubernetes_role_id: role.id, project_id: @stage.project_id, deploy_group_id: deploy_group.id} %>
@@ -84,7 +84,7 @@
       $("#script-section").hide();
 
       // disable Deploy button when roles are missing and deploy would fail
-      var title = '<%= missing ? "A kubernetes role is missing!" : "" %>'
+      var title = '<%= missing ? "Create kubernetes role for `Missing` rows or use `Seed Missing`" : "" %>'
       $(".btn-primary").toggleClass('disabled', <%= missing %>).attr('title', title);
     });
   </script>
