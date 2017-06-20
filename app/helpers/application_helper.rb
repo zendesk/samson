@@ -259,4 +259,10 @@ module ApplicationHelper
   def live_select_tag(name, values, options = {})
     select_tag name, values, Samson::FormBuilder::LIVE_SELECT_OPTIONS.merge(options)
   end
+
+  def paginate(objects, *)
+    result = super
+    result << " #{objects.total_count} records" if objects.total_pages > 1
+    result
+  end
 end

@@ -554,4 +554,22 @@ describe ApplicationHelper do
       )
     end
   end
+
+  describe "#paginate" do
+    include Kaminari::ActionViewExtension
+
+    before { stubs(url_for: "foo") }
+
+    it "shows records for paginate" do
+      paginate(User.page(1).per(1)).must_include " #{User.count} records"
+    end
+
+    it "does not show records for single-page" do
+      paginate(User.page(1).per(100)).wont_include " records"
+    end
+
+    it "does not show records for 0-page" do
+      paginate(User.where("1=2").page(1).per(1)).wont_include " records"
+    end
+  end
 end
