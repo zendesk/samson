@@ -22,6 +22,7 @@ module Kubernetes
         set_replica_target unless ['DaemonSet', 'Pod'].include?(template[:kind])
 
         set_name
+        set_deployer
         set_spec_template_metadata
         set_docker_image
         set_resource_usage
@@ -69,11 +70,15 @@ module Kubernetes
     end
 
     def annotations
-      pod_template[:metadata][:annotations]
+      pod_template[:metadata][:annotations] ||= {}
     end
 
     def pod_template
       template[:kind] == 'Pod' ? template : template[:spec][:template]
+    end
+
+    def set_deployer
+      annotations[:deployer] = @doc.kubernetes_release.user&.email
     end
 
     def secret_annotations
