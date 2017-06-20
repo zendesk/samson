@@ -83,6 +83,10 @@ describe Kubernetes::TemplateFiller do
       template.to_hash[:spec][:revisionHistoryLimit].must_equal 1
     end
 
+    it "sets deployer" do
+      template.to_hash[:spec][:template][:metadata][:annotations].must_equal(deployer: "deployer@example.com")
+    end
+
     describe "containers" do
       let(:result) { template.to_hash }
       let(:container) { result.fetch(:spec).fetch(:template).fetch(:spec).fetch(:containers).first }
@@ -195,6 +199,7 @@ describe Kubernetes::TemplateFiller do
         # secrets got resolved?
         template.to_hash[:spec][:template][:metadata][:annotations].
           except(init_container_key).must_equal(
+            deployer: "deployer@example.com",
             "secret/FOO" => "global/global/global/bar"
           )
       end
