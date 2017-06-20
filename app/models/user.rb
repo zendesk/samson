@@ -74,12 +74,12 @@ class User < ActiveRecord::Base
     user = User.where(external_id: hash[:external_id].to_s).first || User.new
 
     # attributes are always a string hash
-    attributes = user.attributes.merge(hash.stringify_keys) do |key, old, new|
-      if key == 'role_id'
-        if !User.exists? # first user will be the super admin
-          Role::SUPER_ADMIN.id
+    attributes = user.attributes.merge(hash.stringify_keys) do |attribute, old, new|
+      if attribute == 'role_id'
+        if !User.where.not(email: 'seed@example.com').exists?
+          Role::SUPER_ADMIN.id # first user will be promoted to super admin
         elsif new && (user.new_record? || new >= old)
-          new
+          new # existing users can upgrade
         else
           old
         end

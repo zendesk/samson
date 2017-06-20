@@ -104,9 +104,25 @@ describe User do
         user.role_id.must_equal(Role::ADMIN.id)
       end
 
-      it "creates a super admin for the first user" do
-        User.delete_all
-        user.role_id.must_equal(Role::SUPER_ADMIN.id)
+      describe "seeding" do
+        before { User.delete_all }
+
+        it "creates a super admin for the first user" do
+          user.role_id.must_equal(Role::SUPER_ADMIN.id)
+        end
+
+        describe "with seeded user" do
+          before { User.create!(name: "Mr.Seed", email: "seed@example.com", external_id: "123") } # same as db/seed.rb
+
+          it "creates a super admin for the first user after seeding" do
+            user.role_id.must_equal(Role::SUPER_ADMIN.id)
+          end
+
+          it "does not make everybody an amdin" do
+            User.create!(name: "Mr.2", email: "2@example.com", external_id: "1232")
+            user.role_id.must_equal(Role::ADMIN.id)
+          end
+        end
       end
     end
 
