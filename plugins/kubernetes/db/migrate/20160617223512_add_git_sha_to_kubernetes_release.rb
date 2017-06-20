@@ -7,7 +7,7 @@ class AddGitShaToKubernetesRelease < ActiveRecord::Migration[4.2]
   def up
     bad = [:git_sha, :git_ref].flat_map { |attribute| Build.where(attribute => nil).all.to_a }
     if bad.any?
-      puts "Deleting bad builds: #{bad.map(&:attributes)}"
+      write "Deleting bad builds: #{bad.map(&:attributes)}"
       bad.each(&:destroy!)
     end
 

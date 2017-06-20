@@ -11,7 +11,7 @@ class MakeProjectFieldsTrulyUnique < ActiveRecord::Migration[5.0]
     [Project, Stage].each do |klass|
       klass.where.not(deleted_at: nil).each do |p|
         next if p.permalink.include?('-deleted-')
-        puts "Updating #{klass} #{p.id}"
+        write "Updating #{klass} #{p.id}"
         p.update_column(:permalink, "#{p.permalink}-deleted-#{p.deleted_at.to_i}")
       end
     end

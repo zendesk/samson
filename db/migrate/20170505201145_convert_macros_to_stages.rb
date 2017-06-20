@@ -33,8 +33,8 @@ class ConvertMacrosToStages < ActiveRecord::Migration[5.1]
         )
         macro.update_column(:deleted_at, Time.now) unless macro.deleted_at
       rescue
-        puts $!
-        puts $!.backtrace
+        write $!
+        write $!.backtrace
       end
     end
   end
