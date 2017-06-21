@@ -2,6 +2,8 @@
 module Kubernetes
   module Api
     class Pod
+      INIT_CONTAINER_KEY = :'pod.beta.kubernetes.io/init-containers'
+
       def initialize(api_pod, client: nil)
         @pod = api_pod
         @client = client
@@ -86,7 +88,7 @@ module Kubernetes
       end
 
       def init_containers
-        return [] unless containers = @pod.dig(:metadata, :annotations, :'pod.alpha.kubernetes.io/init-containers')
+        return [] unless containers = @pod.dig(:metadata, :annotations, INIT_CONTAINER_KEY)
         JSON.parse(containers, symbolize_names: true)
       end
 

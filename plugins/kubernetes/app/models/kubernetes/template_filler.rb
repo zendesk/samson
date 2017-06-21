@@ -125,7 +125,7 @@ module Kubernetes
     # Init containers are stored as a json annotation
     # see http://kubernetes.io/docs/user-guide/production-pods/#handling-initialization
     def unshift_init_container(container)
-      key = 'pod.beta.kubernetes.io/init-containers'
+      key = Kubernetes::Api::Pod::INIT_CONTAINER_KEY
       init_containers = JSON.parse(annotations[key] || '[]')
       init_containers.unshift(container)
       annotations[key] = JSON.pretty_generate(init_containers)

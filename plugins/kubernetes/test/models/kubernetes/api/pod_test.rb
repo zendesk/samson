@@ -307,7 +307,7 @@ describe Kubernetes::Api::Pod do
     end
 
     it "finds init containers" do
-      pod_attributes[:metadata][:annotations] = {"pod.alpha.kubernetes.io/init-containers": [{foo: :bar}].to_json}
+      pod_attributes[:metadata][:annotations] = {'pod.beta.kubernetes.io/init-containers': '[{"foo": "bar"}]'}
       pod.init_containers.must_equal [{foo: "bar"}]
     end
   end
