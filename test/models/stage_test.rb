@@ -532,13 +532,13 @@ describe Stage do
       new = old + [commands(:global).id]
       stage.update_attributes!(command_ids: new)
       stage.audits.size.must_equal 1
-      stage.audits.first.audited_changes.must_equal "command_ids" => [old, new]
+      stage.audits.first.audited_changes.must_equal "script" => ["echo hello", "echo hello\nt"]
     end
 
     it "tracks command removal" do
       stage.update_attributes!(command_ids: [])
       stage.audits.size.must_equal 1
-      stage.audits.first.audited_changes.must_equal "command_ids" => [[commands(:echo).id], []]
+      stage.audits.first.audited_changes.must_equal "script" => ["echo hello", ""]
     end
 
     it "does not track when command does not change" do

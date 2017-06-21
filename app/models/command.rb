@@ -49,6 +49,9 @@ class Command < ActiveRecord::Base
   def record_change_in_stage_audit
     old = stages.map { |s| [s, s.script] }
     yield
-    old.each { |s, script_was| s.record_script_change script_was }
+    old.each do |s, script_was|
+      s.commands.reload
+      s.record_script_change script_was
+    end
   end
 end
