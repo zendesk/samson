@@ -47,6 +47,9 @@ describe Kubernetes::TemplateFiller do
         project: 'some-project',
         role: 'some-role'
       )
+
+      # only symbol keys used because that is what we receive from a real input
+      result.deep_symbolize_keys.must_equal result
     end
 
     it "escapes things that would not be allowed in labels or environment values" do
@@ -170,7 +173,7 @@ describe Kubernetes::TemplateFiller do
     describe "secret-puler-containers" do
       let(:secret_key) { "global/global/global/bar" }
       let(:template_env) { template.to_hash[:spec][:template][:spec][:containers].first[:env] }
-      let(:init_container_key) { 'pod.beta.kubernetes.io/init-containers' }
+      let(:init_container_key) { :'pod.beta.kubernetes.io/init-containers' }
       let(:init_containers) do
         JSON.parse(template.to_hash[:spec][:template][:metadata][:annotations][init_container_key])
       end
