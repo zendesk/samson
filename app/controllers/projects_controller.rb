@@ -6,13 +6,7 @@ class ProjectsController < ApplicationController
 
   skip_before_action :require_project, only: [:index, :new, :create]
 
-  PUBLIC = [:index, :show, :deploy_group_versions].freeze
-  before_action :authorize_project_admin!, except: PUBLIC
-  before_action :authorize_admin!, except: PUBLIC + [:edit, :update, :destroy]
-
-  helper_method :project
-
-  alias_method :project, :current_project
+  before_action :authorize_resource!, except: [:deploy_group_versions]
 
   def index
     respond_to do |format|
@@ -55,8 +49,8 @@ class ProjectsController < ApplicationController
 
   def show
     respond_to do |format|
-      format.html { @stages = project.stages }
-      format.json { render json: project.to_json(except: [:token, :deleted_at]) }
+      format.html { @stages = @project.stages }
+      format.json { render json: @project.to_json(except: [:token, :deleted_at]) }
     end
   end
 
@@ -64,8 +58,8 @@ class ProjectsController < ApplicationController
   end
 
   def update
-    if project.update_attributes(project_params)
-      redirect_to project
+    if @project.update_attributes(project_params)
+      redirect_to @project
     else
       render :edit
     end
@@ -82,7 +76,7 @@ class ProjectsController < ApplicationController
 
   def deploy_group_versions
     before = params[:before] ? Time.parse(params[:before]) : Time.now
-    deploy_group_versions = project.last_deploy_by_group(before).each_with_object({}) do |(id, deploy), hash|
+    deploy_group_versions = @project.last_deploy_by_group(before).each_with_object({}) do |(id, deploy), hash|
       hash[id] = deploy.as_json(methods: :url)
     end
     render json: deploy_group_versions

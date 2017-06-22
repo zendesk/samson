@@ -3,7 +3,7 @@ module CurrentUser
   extend ActiveSupport::Concern
 
   included do
-    helper_method :current_user
+    helper_method :current_user, :can?
     before_action :login_user
   end
 
@@ -57,23 +57,12 @@ module CurrentUser
 
   # tested via access checks in the actual controllers
   def authorize_resource!
-    case controller_name
-    when 'builds'
-      authorize_project_deployer!
-    when 'locks'
-      if @project
-        authorize_project_deployer!
-      else
-        authorize_admin!
-      end
-    when 'users'
-      if ['index', 'show'].include?(action_name)
-        authorize_admin!
-      else
-        authorize_super_admin!
-      end
-    else
-      raise "Unsupported controller"
-    end
+    action = (['index', 'show'].include?(action_name) ? :read : :write)
+    unauthorized! unless can?(action, controller_name)
+  end
+
+  def can?(action, scope, project = nil)
+    project ||= current_project if respond_to?(:current_project)
+    AccessControl.can?(current_user, action, scope, project)
   end
 end

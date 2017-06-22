@@ -16,9 +16,8 @@ class UsersController < ApplicationController
   end
 
   def show
-    @user = User.find(params[:id])
     @projects = Project.search_by_criteria(params).joins(:user_project_roles).
-      where(user_project_roles: {user_id: @user.id})
+      where(user_project_roles: {user_id: user.id})
     if role_id = params[:role_id].presence
       @projects = @projects.where("user_project_roles.role_id >= ?", role_id)
     end

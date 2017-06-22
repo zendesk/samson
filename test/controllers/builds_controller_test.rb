@@ -23,16 +23,12 @@ describe BuildsController do
   end
 
   as_a_viewer do
-    unauthorized :get, :index, project_id: :foo
     unauthorized :get, :new, project_id: :foo
     unauthorized :post, :create, project_id: :foo
-    unauthorized :get, :show, id: 1, project_id: :foo
     unauthorized :get, :edit, id: 1, project_id: :foo
     unauthorized :put, :update, id: 1, project_id: :foo
     unauthorized :post, :build_docker_image, id: 1, project_id: :foo
-  end
 
-  as_a_project_deployer do
     describe '#index' do
       it 'works with no builds' do
         get :index, params: {project_id: project.to_param}
@@ -49,6 +45,27 @@ describe BuildsController do
       end
     end
 
+    describe '#show' do
+      before { default_build }
+
+      it 'displays information about the build' do
+        get :show, params: {project_id: project.to_param, id: default_build.id}
+        assert_response :ok
+        @response.body.must_include default_build.label
+      end
+
+      it 'displays the output of docker builds' do
+        default_build.create_docker_job
+        default_build.save!
+
+        get :show, params: {project_id: project.to_param, id: default_build.id}
+        assert_response :ok
+        @response.body.must_include 'Docker Build Output'
+      end
+    end
+  end
+
+  as_a_project_deployer do
     describe '#new' do
       it 'renders' do
         get :new, params: {project_id: project.to_param}
@@ -134,25 +151,6 @@ describe BuildsController do
         end
 
         it_renders_error
-      end
-    end
-
-    describe '#show' do
-      before { default_build }
-
-      it 'displays information about the build' do
-        get :show, params: {project_id: project.to_param, id: default_build.id}
-        assert_response :ok
-        @response.body.must_include default_build.label
-      end
-
-      it 'displays the output of docker builds' do
-        default_build.create_docker_job
-        default_build.save!
-
-        get :show, params: {project_id: project.to_param, id: default_build.id}
-        assert_response :ok
-        @response.body.must_include 'Docker Build Output'
       end
     end
 

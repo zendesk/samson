@@ -87,7 +87,7 @@ class CommandsController < ApplicationController
       end
 
     projects.each do |project|
-      unauthorized! unless current_user.admin_for?(project)
+      unauthorized! unless can? :write, 'projects', project
     end
   end
 

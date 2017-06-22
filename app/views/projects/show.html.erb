@@ -1,6 +1,6 @@
-<% page_title project.name %>
+<% page_title @project.name %>
 
-<%= render 'projects/header', project: project, tab: "stages" %>
+<%= render 'projects/header', project: @project, tab: "stages" %>
 
 <section class="clearfix tabs">
   <%= render 'shared/dashboard', resource: @project %>
@@ -19,7 +19,7 @@
     </thead>
     <tbody>
       <% if @stages.any? %>
-        <% cache [project, 'stages', Lock.cache_key] do %>
+        <% cache [@project, 'stages', Lock.cache_key] do %>
           <%= render partial: "stage", collection: @stages %>
         <% end %>
       <% else %>
