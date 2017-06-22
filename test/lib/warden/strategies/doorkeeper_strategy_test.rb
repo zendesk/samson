@@ -11,7 +11,7 @@ describe 'Warden::Strategies::DoorkeeperStrategy Integration' do
 
   let(:path) { "/api/deploys/active_count.json".dup }
   let!(:user) { users(:admin) }
-  let(:token) { Doorkeeper::AccessToken.create!(resource_owner_id: user.id, scopes: 'default') }
+  let(:token) { Doorkeeper::AccessToken.create!(resource_owner_id: user.id, scopes: 'api') }
   let!(:valid_header) { "Bearer #{token.token}" }
 
   it "logs the user in" do
@@ -56,13 +56,13 @@ describe 'Warden::Strategies::DoorkeeperStrategy Integration' do
       assert_response :unauthorized
     end
 
-    it "logs the user in when using web-ui token" do
-      token.update_column(:scopes, "web-ui")
+    it "logs the user in when using efault token" do
+      token.update_column(:scopes, "default")
       perform_get(valid_header)
       assert_response :success, response.body
     end
 
-    it "logs the user in when using profile token" do
+    it "logs the user in when using controller specific token" do
       token.update_column(:scopes, "profiles")
       perform_get(valid_header)
       assert_response :success, response.body

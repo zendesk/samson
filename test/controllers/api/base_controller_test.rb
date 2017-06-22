@@ -83,7 +83,7 @@ describe Api::BaseController do
     it "stores the controller scope" do
       get :test_render, params: {test_route: true}, format: :json
       assert_response :unauthorized
-      request.env['requested_oauth_scopes'].must_equal ['api_base_test']
+      request.env['requested_oauth_scopes'].must_equal ['default', 'api_base_test', 'api']
     end
   end
 end
