@@ -7,7 +7,7 @@ class Project < ActiveRecord::Base
   include Searchable
 
   validates :name, :repository_url, presence: true
-  validate :valid_repository_url
+  validate :valid_repository_url, if: :repository_url_changed?
   validate :validate_can_release
   before_create :generate_token
   after_save :clone_repository, if: -> { saved_change_to_attribute?(:repository_url) }

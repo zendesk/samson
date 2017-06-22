@@ -147,12 +147,10 @@ class Stage < ActiveRecord::Base
     commands.map(&:command).join("\n")
   end
 
+  # assumes change is never empty
   def record_script_change(script_was)
-    commands.reload
-    write_audit(
-      action: 'update',
-      audited_changes: {"script" => [script_was, script]}
-    )
+    @script_was = script_was
+    write_audit(action: 'update', audited_changes: script_changes)
   end
 
   def destroy
@@ -169,7 +167,7 @@ class Stage < ActiveRecord::Base
   end
 
   def command_ids=(new_command_ids)
-    @command_ids_was = command_ids
+    @script_was = script
     super.tap do
       reorder_commands(new_command_ids.reject(&:blank?).map(&:to_i))
     end
@@ -188,11 +186,14 @@ class Stage < ActiveRecord::Base
   private
 
   def audited_changes
-    changes = super
-    if @command_ids_was && @command_ids_was != command_ids
-      changes["command_ids"] = [@command_ids_was, command_ids]
-    end
-    changes
+    super.merge(script_changes)
+  end
+
+  def script_changes
+    return {} unless @script_was
+    script_is = script
+    return {} if script_is == @script_was
+    {"script" => [@script_was, script_is]}
   end
 
   def permalink_base

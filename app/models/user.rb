@@ -118,20 +118,19 @@ class User < ActiveRecord::Base
     project && user_project_roles.find_by(project: project)
   end
 
-  def record_project_role_change(roles_was)
+  # assumes change is never empty
+  def record_project_role_change(role_hash_was)
     write_audit(
       action: 'update',
-      audited_changes: {
-        user_project_roles: [role_hash(roles_was), role_hash(user_project_roles.reload)]
-      }
+      audited_changes: {user_project_roles: [role_hash_was, role_hash]}
     )
   end
 
-  private
-
-  def role_hash(roles)
-    roles.map { |upr| [upr.project.permalink, upr.role_id] }.to_h
+  def role_hash
+    user_project_roles.map { |upr| [upr.project.permalink, upr.role_id] }.to_h
   end
+
+  private
 
   def set_token
     self.token = SecureRandom.hex

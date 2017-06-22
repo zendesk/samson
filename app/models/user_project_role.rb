@@ -20,8 +20,11 @@ class UserProjectRole < ActiveRecord::Base
 
   # tested via user_test.rb
   def record_change_in_user_audit
-    old = user.user_project_roles.to_a
+    old = [[user, user.role_hash]]
     yield
-    user.record_project_role_change(old)
+    old.each do |u, role_hash_was|
+      u.user_project_roles.reload
+      u.record_project_role_change(role_hash_was)
+    end
   end
 end
