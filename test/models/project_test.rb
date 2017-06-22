@@ -330,6 +330,11 @@ describe Project do
       project.repository.expects(:clean!)
       assert project.soft_delete!
     end
+
+    it "creates an audit" do
+      assert project.soft_delete!
+      project.audits.last.audited_changes.keys.must_equal ["permalink", "deleted_at"]
+    end
   end
 
   describe "#release_prior_to" do
