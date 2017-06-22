@@ -140,6 +140,14 @@ Set the following variables in your `.env` file or set them as environment varia
   </tbody>
 </table>
 
+## Production assets
+
+Needs to generate assets before running in production or it will show `not present in the asset pipeline` errors.
+
+`RAILS_ENV=production PRECOMPILE=1 PLUGINS=all bundle exec rake assets:precompile assets:clean[0] --trace`
+
+## Advanced features
+
 For more settings that enable advanced features see the [Extra features page](extra_features.md).
 
 [![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/zendesk/samson)
