@@ -33,6 +33,6 @@ class Api::BaseController < ApplicationController
   # remove web-ui scope
   # @override
   def store_requested_oauth_scope
-    super.delete Warden::Strategies::Doorkeeper::WEB_UI_SCOPE
+    super << 'api'
   end
 end

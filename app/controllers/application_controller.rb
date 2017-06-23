@@ -45,7 +45,7 @@ class ApplicationController < ActionController::Base
   end
 
   def store_requested_oauth_scope
-    request.env['requested_oauth_scopes'] = [Warden::Strategies::Doorkeeper::WEB_UI_SCOPE, controller_name]
+    request.env['requested_oauth_scopes'] = ['default', controller_name]
   end
 
   def using_per_request_auth?

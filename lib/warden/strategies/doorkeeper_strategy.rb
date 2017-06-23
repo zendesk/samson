@@ -3,7 +3,6 @@
 # Strategy that allows login via OAuth baerer token
 class Warden::Strategies::Doorkeeper < ::Warden::Strategies::Base
   KEY = :doorkeeper
-  WEB_UI_SCOPE = 'web-ui'
 
   def valid?
     request.authorization.to_s.start_with?("Bearer ")
@@ -17,7 +16,7 @@ class Warden::Strategies::Doorkeeper < ::Warden::Strategies::Base
       halt_json "Unable to find OAuth token"
     elsif !token.accessible?
       halt_json "OAuth token is expired"
-    elsif !token_allows?(token, requested_scopes)
+    elsif !token.acceptable?(requested_scopes)
       halt_json "OAuth token does not allow any scope #{requested_scopes.join(", ")}"
     elsif !(user = User.find_by_id(token.resource_owner_id))
       halt_json "OAuth token belongs to deleted user #{token.resource_owner_id}"
@@ -29,11 +28,6 @@ class Warden::Strategies::Doorkeeper < ::Warden::Strategies::Base
   end
 
   private
-
-  def token_allows?(token, requested_scopes)
-    token.acceptable?(requested_scopes) ||
-    (token.acceptable?('default') && !requested_scopes.include?(WEB_UI_SCOPE))
-  end
 
   def request
     ActionDispatch::Request.new(super.env)

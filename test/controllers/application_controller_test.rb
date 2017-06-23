@@ -76,7 +76,7 @@ describe ApplicationController do
   describe "#store_requested_oauth_scope" do
     it "stores the web-ui scope" do
       get :test_render, params: {test_route: true}
-      request.env['requested_oauth_scopes'].must_equal ['web-ui', 'application_test']
+      request.env['requested_oauth_scopes'].must_equal ['default', 'application_test']
     end
   end
 end
