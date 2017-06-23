@@ -1,16 +1,16 @@
-<%= form_for project, html: { class: "form-horizontal" } do |form| %>
+<%= form_for @project, html: { class: "form-horizontal" } do |form| %>
   <div class="pull-right">
     <%= link_to_history @project %>
   </div>
 
-  <%= render 'shared/errors', object: project %>
+  <%= render 'shared/errors', object: @project %>
 
   <fieldset>
     <%= form.input :name, required: true %>
     <%= form.input :description, as: :text_area, help: 'How would you explain the project to someone new?' %>
     <%= form.input :owner, label: 'Contact', help: 'An email or group to contact with questions.' %>
     <%= form.input :repository_url, required: true %>
-    <%= form.input :permalink, required: true if project.persisted? %>
+    <%= form.input :permalink, required: true if @project.persisted? %>
     <%= form.input :release_branch, help: 'New commits on this branch will cause a release when a webhook arrives.' %>
     <%= form.input :release_source, help: 'Selects which type of webhook will create a release' do %>
       <%= form.collection_select :release_source, webhook_sources_for_select(Samson::Integration::SOURCES, none: true), :second, :first, {}, class: "form-control" %>

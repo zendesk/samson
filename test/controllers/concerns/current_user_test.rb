@@ -212,8 +212,8 @@ class CurrentUserConcernTest < ActionController::TestCase
 
     it "fails for unknown controller" do
       @controller.unstub(:controller_name)
-      e = assert_raises(RuntimeError) { perform_get }
-      e.message.must_equal "Unsupported controller"
+      e = assert_raises(ArgumentError) { perform_get }
+      e.message.must_equal "Unsupported resource current_user_test"
     end
 
     describe 'users' do

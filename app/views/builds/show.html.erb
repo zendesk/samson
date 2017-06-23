@@ -8,11 +8,13 @@
 
 <section class="clearfix tabs">
 
-  <div class="admin-actions">
-    <div class="pull-right">
-      <%= link_to "Edit", edit_project_build_path, class: "btn btn-default" %>
+  <% if can?(:write, 'builds') %>
+    <div class="admin-actions">
+      <div class="pull-right">
+        <%= link_to "Edit", edit_project_build_path, class: "btn btn-default" %>
+      </div>
     </div>
-  </div>
+  <% end %>
 
   <dl class="dl-horizontal">
     <dt>Id</dt>
