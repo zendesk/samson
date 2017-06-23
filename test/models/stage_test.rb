@@ -432,42 +432,28 @@ describe Stage do
   end
 
   describe '#script' do
-    describe 'adding a built command' do
-      before do
-        stage.stage_commands.build(
-          command: Command.new(command: 'test')
-        )
-
-        stage.command_ids = [commands(:echo).id]
-        stage.save!
-        stage.reload
-      end
-
-      it 'add new command to the end' do
-        stage.script.must_equal("#{commands(:echo).command}\ntest")
-      end
+    it 'joins all commands based on position' do
+      command = Command.create!(command: 'test')
+      stage.command_ids = [command.id, commands(:echo).id]
+      stage.save!
+      stage.reload
+      stage.script.must_equal "test\n#{commands(:echo).command}"
     end
 
-    describe 'adding + sorting a command' do
-      before do
-        command = Command.create!(command: 'test')
-
-        stage.command_ids = [command.id, commands(:echo).id]
-        stage.save!
-        stage.reload
-      end
-
-      it 'joins all commands based on position' do
-        stage.script.must_equal("test\n#{commands(:echo).command}")
-      end
+    it 'is empty without commands' do
+      stage.command_ids = []
+      stage.script.must_equal ""
     end
+  end
 
-    describe 'no commands' do
-      before { stage.commands.clear }
-
-      it 'is empty' do
-        stage.script.must_be_empty
-      end
+  describe "#command=" do
+    it 'add new command to the end' do
+      stage.update_attributes!(
+        command: 'test',
+        command_ids: [commands(:echo).id]
+      )
+      stage.reload
+      stage.script.must_equal "#{commands(:echo).command}\ntest"
     end
   end
 
@@ -478,32 +464,35 @@ describe Stage do
 
     before do
       StageCommand.delete_all
-      stage.commands = sample_commands
-      stage.reload
+      stage.command_ids = sample_commands.map(&:id)
+      stage.script.must_equal "foo\nbar\nbaz"
     end
 
     it "can reorder" do
       stage.command_ids = sample_commands.map(&:id).reverse
       stage.save!
+      stage.script.must_equal "baz\nbar\nfoo"
       stage.reload
       stage.script.must_equal "baz\nbar\nfoo"
-      stage.stage_commands.sort_by(&:id).map(&:position).must_equal [2, 1, 0]
+      stage.send(:stage_commands).sort_by(&:id).map(&:position).must_equal [2, 1, 0]
     end
 
     it "ignores blanks" do
       stage.command_ids = ['', nil, ' '] + sample_commands.map(&:id).reverse
       stage.save!
+      stage.script.must_equal "baz\nbar\nfoo"
       stage.reload
       stage.script.must_equal "baz\nbar\nfoo"
-      stage.stage_commands.sort_by(&:id).map(&:position).must_equal [2, 1, 0]
+      stage.send(:stage_commands).sort_by(&:id).map(&:position).must_equal [2, 1, 0]
     end
 
     it "can add new commands" do
       stage.command_ids = ([commands(:echo)] + sample_commands).map(&:id)
       stage.save!
+      stage.script.must_equal "echo hello\nfoo\nbar\nbaz"
       stage.reload
       stage.script.must_equal "echo hello\nfoo\nbar\nbaz"
-      stage.stage_commands.sort_by(&:id).map(&:position).must_equal [1, 2, 3, 0]
+      stage.send(:stage_commands).sort_by(&:id).map(&:position).must_equal [1, 2, 3, 0] # kept the old and added one new
     end
   end
 
@@ -521,10 +510,8 @@ describe Stage do
 
     it "tracks command addition" do
       stage.update_attributes!(command: "Foo")
-      pending "did not work previously but would be nice to have" do
-        stage.audits.size.must_equal 1
-        stage.audits.first.audited_changes.must_equal "script" => ["echo hello", "Foo"]
-      end
+      stage.audits.size.must_equal 1
+      stage.audits.first.audited_changes.must_equal "script" => ["echo hello", "echo hello\nFoo"]
     end
 
     it "tracks selecting an existing command" do
@@ -532,7 +519,7 @@ describe Stage do
       new = old + [commands(:global).id]
       stage.update_attributes!(command_ids: new)
       stage.audits.size.must_equal 1
-      stage.audits.first.audited_changes.must_equal "script" => ["echo hello", "echo hello\nt"]
+      stage.audits.first.audited_changes.must_equal "script" => ["echo hello", "echo hello\necho global"]
     end
 
     it "tracks command removal" do
@@ -546,16 +533,26 @@ describe Stage do
       stage.audits.size.must_equal 0
     end
 
-    it "tracks simulatanous command and command_id change" do
+    it "tracks simulatanous command and command_ids change" do
       stage.update_attributes!(name: 'Foobar', command_ids: Command.pluck(:id), command: "foo")
-      pending "did not work previously but would be nice to have" do
-        stage.audits.size.must_equal 1
-        stage.audits.first.audited_changes.must_equal "script" => ["echo hello", "Foo"]
-      end
+      stage.audits.size.must_equal 1
+      stage.audits.first.audited_changes.must_equal(
+        "name" => ["Staging", "Foobar"],
+        "script" => ["echo hello", "echo hello\necho global\nfoo"]
+      )
+    end
+
+    it "tracks command_ids reorder" do
+      stage.send(:stage_commands).create!(command: commands(:global), position: 1)
+      stage.update_attributes!(command_ids: stage.command_ids.reverse)
+      stage.audits.size.must_equal 1
+      stage.audits.first.audited_changes.must_equal(
+        "script" => ["echo hello\necho global", "echo global\necho hello"]
+      )
     end
 
     it "tracks external command change" do
-      stage.commands.first.update_attributes!(command: "NEW")
+      stage.send(:stage_commands).first.command.update_attributes!(command: "NEW")
       stage.audits.first.audited_changes.must_equal "script" => ["echo hello", "NEW"]
     end
 
@@ -608,14 +605,14 @@ describe Stage do
     it "adds new command to the end of commands" do
       stage.command = "yep"
       stage.save!
-      stage.commands.map(&:command).must_equal ["echo hello", "yep"]
+      stage.script.must_equal "echo hello\nyep"
       Command.last.project_id.must_equal stage.project_id
     end
 
     it "does not add an empty command" do
       stage.command = ""
       stage.save!
-      stage.commands.map(&:command).must_equal ["echo hello"]
+      stage.script.must_equal "echo hello"
     end
   end
 

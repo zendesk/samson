@@ -20,7 +20,7 @@ class Stage < ActiveRecord::Base
   has_one :lock, as: :resource
 
   has_many :stage_commands, autosave: true, dependent: :destroy
-  has_many :commands, -> { order('stage_commands.position ASC').auto_include(false) }, through: :stage_commands
+  private :stage_commands, :stage_commands= # must use ordering via script/command_ids/command_ids=
 
   has_many :deploy_groups_stages, dependent: :destroy
   has_many :deploy_groups, through: :deploy_groups_stages
@@ -35,15 +35,13 @@ class Stage < ActiveRecord::Base
   validate :validate_deploy_group_selected
 
   before_create :ensure_ordering
-  before_save :build_new_project_command
+  before_save :append_new_command
   after_destroy :destroy_deploy_groups_stages
   after_destroy :destroy_stage_pipeline
   after_soft_delete :destroy_deploy_groups_stages
   after_soft_delete :destroy_stage_pipeline
 
   scope :cloned, -> { where.not(template_stage_id: nil) }
-
-  attr_writer :command
 
   def self.reset_order(new_order)
     transaction do
@@ -167,10 +165,29 @@ class Stage < ActiveRecord::Base
   end
 
   def command_ids=(new_command_ids)
-    @script_was = script
-    super.tap do
-      reorder_commands(new_command_ids.reject(&:blank?).map(&:to_i))
+    new_command_ids = new_command_ids.reject(&:blank?).map(&:to_i)
+    @script_was ||= script
+
+    # ordering set here is not kept, so we have to still sort_by(&:position) when using
+    self.stage_commands = new_command_ids.each_with_index.map do |command_id, index|
+      stage_command = stage_commands.detect { |sc| sc.command_id == command_id } ||
+        stage_commands.new(command_id: command_id)
+      stage_command.position = index
+      stage_command
     end
+  end
+
+  def command_ids
+    stage_commands.sort_by(&:position).map(&:command_id)
+  end
+
+  def commands
+    stage_commands.sort_by(&:position).map(&:command)
+  end
+
+  def command=(c)
+    @script_was ||= script
+    @command = c
   end
 
   def influencing_stage_ids
@@ -228,19 +245,10 @@ class Stage < ActiveRecord::Base
     end
   end
 
-  def build_new_project_command
-    return unless @command.present?
-
-    new_command = project.commands.build(command: @command)
-    stage_commands.build(command: new_command).tap do
-      reorder_commands
-    end
-  end
-
-  def reorder_commands(command_ids = self.command_ids)
-    stage_commands.each do |command_association|
-      command_association.position = command_ids.index(command_association.command_id) ||
-        stage_commands.length
-    end
+  # has to be done after command_ids assignment is done
+  def append_new_command
+    return if @command.blank?
+    new_command = project.commands.new(command: @command)
+    stage_commands.build(command: new_command, position: stage_commands.map(&:position).max + 1)
   end
 end
