@@ -12,7 +12,7 @@ When not running on `192.168.42.45` use a different auth provider, the IP is har
 ### Local
 ```bash
 sudo apt-get install mysql-dev pg-dev nodejs
-script/bootstrap # Run the bootstrap script to use the test credentials.
+bin/setup # Run the setup script to use the test credentials.
 rails s
 open http://localhost:3000
 ```
@@ -60,7 +60,7 @@ Set the following variables in your `.env` file or set them as environment varia
     <tr>
       <td>SECRET_TOKEN</td>
       <td>Yes</td>
-      <td>for Rails, generated during script/bootstrap.</td>
+      <td>for Rails, generated during `bin/setup`</td>
     </tr>
     <tr>
       <td>GITHUB_TOKEN</td>
