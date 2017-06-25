@@ -188,6 +188,7 @@ GEM
     crack (0.4.3)
       safe_yaml (~> 1.0.0)
     dalli (2.7.6)
+    diffy (3.2.0)
     docker-api (1.32.0)
       excon (>= 0.38.0)
       json
@@ -522,6 +523,7 @@ DEPENDENCIES
   concurrent-ruby
   connection_pool
   dalli
+  diffy
   docker-api
   dogstatsd-ruby
   doorkeeper

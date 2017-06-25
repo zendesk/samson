@@ -48,7 +48,20 @@
         <% audit.audited_changes.to_a.each do |column, (before, after)| %>
           <%= column %>:
           <% if audit.action == "update" # others are just attribute hashes %>
-            <%= readable_ruby_value before %> → <%= readable_ruby_value after %>
+            <% if before.is_a?(String) && after.is_a?(String) && (before + after).count("\n").nonzero? %>
+              <%= text_diff before, after %>
+              <summary>
+                <details>
+                  Before:<br/>
+                  <%= simple_format readable_ruby_value before %>
+                  <br/>
+                  After:<br/>
+                  <%= simple_format readable_ruby_value after %>
+                </details>
+              </summary>
+            <% else %>
+              <%= readable_ruby_value before %> → <%= readable_ruby_value after %>
+            <% end %>
           <% else %>
             <%= readable_ruby_value before %>
           <% end %>
@@ -61,3 +74,5 @@
 </table>
 
 <%= paginate @audits %>
+
+<style><%= Diffy::CSS %></style>
