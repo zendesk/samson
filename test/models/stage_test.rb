@@ -596,6 +596,11 @@ describe Stage do
         other.update_column(:project_id, 123)
         stage.influencing_stage_ids.sort.must_equal [stage.id]
       end
+
+      it "does not list stages that prepare the deploy to avoid false-positives" do
+        other.update_column(:no_code_deployed, true)
+        stage.influencing_stage_ids.sort.must_equal [stage.id]
+      end
     end
   end
 
