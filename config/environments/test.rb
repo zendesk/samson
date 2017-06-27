@@ -11,7 +11,7 @@ Samson::Application.configure do
   # Do not eager load code on boot. This avoids loading your whole application
   # just for the purpose of running a single test. If you are using a tool that
   # preloads Rails for running tests, you may have to set it to true.
-  config.eager_load = !!ENV['CI']
+  config.eager_load = !!ENV['EAGER_LOAD']
 
   # Configure static asset server for tests with Cache-Control for performance.
   # We don't need assets in test, so no need to compile/serve them

@@ -13,6 +13,11 @@ Samson::Application.load_tasks
 Rake::Task["default"].clear
 task default: :test
 
+Rake::Task['test'].clear
+task :test do
+  sh "EAGER_LOAD=1 forking-test-runner test plugins/*/test --merge-coverage --quiet"
+end
+
 task :asset_compilation_environment do
   ENV['SECRET_TOKEN'] = 'foo'
   ENV['GITHUB_TOKEN'] = 'foo'
@@ -27,11 +32,6 @@ task :asset_compilation_environment do
   end
 end
 Rake::Task['assets:precompile'].prerequisites.unshift :asset_compilation_environment
-
-Rake::Task['test'].clear
-task :test do
-  sh "forking-test-runner test plugins/*/test --merge-coverage --quiet"
-end
 
 # normalize schema after dumping so we do not have a diff
 task "db:schema:dump" do
