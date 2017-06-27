@@ -3,4 +3,4 @@ echo:
   project: test
 
 global:
-  command: true
+  command: echo global

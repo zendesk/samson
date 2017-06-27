@@ -17,10 +17,10 @@ class Command < ActiveRecord::Base
   end
 
   # used commands in front then all available
-  def self.for_object(object)
+  def self.for_stage(stage)
     usages = usage_ids
-    available = Command.for_project(object.project).sort_by { |c| -usages.count(c.id) }
-    (object.commands + available).uniq
+    available = Command.for_project(stage.project).sort_by { |c| -usages.count(c.id) }
+    (stage.commands + available).uniq
   end
 
   def self.for_project(project)
@@ -50,7 +50,7 @@ class Command < ActiveRecord::Base
     old = stages.map { |s| [s, s.script] }
     yield
     old.each do |s, script_was|
-      s.commands.reload
+      s.send(:stage_commands).reset # a bit weird, but trying to keep it consistent with other record_change_*
       s.record_script_change script_was
     end
   end

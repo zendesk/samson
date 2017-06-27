@@ -50,7 +50,7 @@ describe Api::AutomatedDeploysController do
       command = Command.create!(command: "foo")
       with_env "AUTOMATED_DEPLOY_COMMAND_ID" => command.id.to_s do
         assert_created
-        Stage.last.commands.first.command.must_equal command.command
+        Stage.last.script.must_equal "foo\ncap $DEPLOY_GROUPS deploy"
       end
     end
 

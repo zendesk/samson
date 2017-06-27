@@ -21,23 +21,23 @@ describe CommandsController do
     unauthorized :delete, :destroy, id: command_id
 
     describe '#index' do
-      let(:echo) { commands(:echo) }
+      let(:hello) { commands(:echo) }
       let(:global) { commands(:global) }
 
       it 'renders template' do
         get :index
         assert_template :index
-        assigns[:commands].sort_by(&:id).must_equal [global, echo].sort_by(&:id)
+        assigns[:commands].sort_by(&:id).must_equal [global, hello].sort_by(&:id)
       end
 
       it 'can filter by words' do
-        get :index, params: {search: {query: 'echo'}}
-        assigns[:commands].must_equal [echo]
+        get :index, params: {search: {query: 'hello'}}
+        assigns[:commands].must_equal [hello]
       end
 
       it 'can filter by project_id' do
-        get :index, params: {search: {project_id: echo.project_id}}
-        assigns[:commands].must_equal [echo]
+        get :index, params: {search: {project_id: hello.project_id}}
+        assigns[:commands].must_equal [hello]
       end
 
       it 'can filter by global' do

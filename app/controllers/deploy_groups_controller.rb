@@ -140,7 +140,7 @@ class DeployGroupsController < ApplicationController
     return "is a template stage" if stage.is_template
     return "has no deploy groups" if stage.deploy_groups.count.zero?
     return "has more than one deploy group" if stage.deploy_groups.count > 1
-    return "commands in template stage differ" if stage.commands.to_a != template_stage.commands.to_a
+    return "commands in template stage differ" if stage.script != template_stage.script
 
     unless template_stage.deploy_groups.include?(stage.deploy_groups.first)
       template_stage.deploy_groups += stage.deploy_groups
@@ -157,7 +157,7 @@ class DeployGroupsController < ApplicationController
     return "has no template stage" unless stage.template_stage
     return "is a template stage" if stage.is_template
     return "has more than one deploy group" if stage.deploy_groups.count > 1
-    return "commands in template stage differ" if stage.commands.to_a != stage.template_stage.commands.to_a
+    return "commands in template stage differ" if stage.script != stage.template_stage.script
 
     stage.soft_delete!
 

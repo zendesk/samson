@@ -162,7 +162,6 @@ describe StagesController do
           }
 
           subject.reload
-          subject.commands.reload
         end
 
         it 'is created' do
@@ -267,7 +266,7 @@ describe StagesController do
           end
 
           it 'adds a command' do
-            command = subject.commands.reload.last
+            command = subject.commands.last
             command.command.must_equal('test command')
           end
         end

@@ -24,6 +24,6 @@ Stage.class_eval do
   end
 
   def clear_commands
-    commands.clear
+    stage_commands.clear
   end
 end

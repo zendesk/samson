@@ -6,20 +6,20 @@ SingleCov.covered!
 describe Command do
   let(:command) { commands(:echo) }
 
-  describe '.for_object' do
+  describe '.for_stage' do
     let(:stage) { stages(:test_staging) }
 
     it "shows global for new stage" do
-      Command.for_object(Stage.new).must_equal Command.global
+      Command.for_stage(Stage.new).must_equal Command.global
     end
 
     it "shows global for new stage with new project" do
-      Command.for_object(Stage.new(project: Project.new)).must_equal Command.global
+      Command.for_stage(Stage.new(project: Project.new)).must_equal Command.global
     end
 
     it "sorts own commands in front" do
       stage.commands.size.must_be :>=, 1
-      Command.for_object(stage).must_equal(
+      Command.for_stage(stage).must_equal(
         stage.commands + (Command.global - stage.commands)
       )
     end
@@ -30,7 +30,7 @@ describe Command do
         StageCommand.create!(stage: stage, command: command)
       end
 
-      Command.for_object(stage).must_equal(
+      Command.for_stage(stage).must_equal(
         stage.commands + [command] + (Command.global - stage.commands - [command])
       )
     end

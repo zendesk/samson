@@ -62,7 +62,7 @@ describe Stage do
     it "clears commands" do
       stage = stages(:test_staging)
       stage.update_attribute(:kubernetes, :true)
-      stage.reload.commands.must_equal []
+      stage.reload.script.must_equal ""
     end
   end
 end
