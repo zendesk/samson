@@ -60,4 +60,24 @@ describe RestartSignalHandler do
       Process.kill('SIGUSR2', Process.pid) # satisfy expect from `before`
     end
   end
+
+  describe ".after_restart" do
+    after { JobExecution.enabled = false }
+
+    it "turns job-execution on" do
+      RestartSignalHandler.after_restart
+      JobExecution.enabled.must_equal true
+    end
+
+    it "stops running jobs" do
+      RestartSignalHandler.after_restart
+      jobs(:running_test).status.must_equal "cancelled"
+    end
+
+    it "starts pending jobs" do
+      jobs(:running_test).update_column(:status, 'pending')
+      JobExecution.expects(:start_job)
+      RestartSignalHandler.after_restart
+    end
+  end
 end

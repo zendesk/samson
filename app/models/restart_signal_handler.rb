@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+# Ensures that we wait for all jobs to finish before shutting down the process during restart.
 # JobQueue locks a mutex, hence the need for a separate SignalHandler thread
 # Self-pipe is also best practice, since signal handlers can themselves be interrupted
 class RestartSignalHandler
@@ -7,6 +8,23 @@ class RestartSignalHandler
 
   class << self
     alias_method :listen, :new
+
+    def after_restart
+      ActiveRecord::Base.connection_pool.with_connection do
+        JobExecution.enabled = true
+
+        # any job that was left running is dead now, so we can stop it
+        Job.running.each { |j| j.stop!(nil) }
+
+        # start all non-deploys jobs waiting for restart
+        Job.non_deploy.pending.each do |job|
+          JobExecution.start_job(JobExecution.new(job.commit, job))
+        end
+
+        # start all ready deploy jobs waiting for restart
+        Deploy.start_deploys_waiting_for_restart!
+      end
+    end
   end
 
   def initialize

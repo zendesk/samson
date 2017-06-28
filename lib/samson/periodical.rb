@@ -44,9 +44,11 @@ module Samson
       def run
         registered.map do |name, config|
           next unless config.fetch(:active)
-          Concurrent::TimerTask.new(config) { config.fetch(:block).call }. # needs a Proc
-            with_observer(ExceptionReporter.new(name)).
-            execute
+          Concurrent::TimerTask.new(config) do
+            ActiveRecord::Base.connection_pool.with_connection do
+              config.fetch(:block).call # needs a Proc
+            end
+          end.with_observer(ExceptionReporter.new(name)).execute
         end.compact
       end
 
