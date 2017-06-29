@@ -639,4 +639,13 @@ describe Kubernetes::DeployExecutor do
       executor.send(:wait_for_parallel_build_creation)
     end
   end
+
+  describe "#fetch_pods" do
+    it "retries on failure" do
+      Kubeclient::Client.any_instance.expects(:get_pods).times(4).raises(KubeException.new(1, 2, 3))
+      assert_raises KubeException do
+        executor.send(:fetch_pods, kubernetes_releases(:test_release))
+      end
+    end
+  end
 end

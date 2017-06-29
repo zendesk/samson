@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 # executes a deploy and writes log to job output
 # finishes when cluster is "Ready"
+require 'vault'
+
 module Kubernetes
   class DeployExecutor
     WAIT_FOR_LIVE = ENV.fetch('KUBE_WAIT_FOR_LIVE', 10).to_i.minutes
@@ -115,9 +117,8 @@ module Kubernetes
     # efficient pod fetching by querying once per cluster instead of once per deploy group
     def fetch_pods(release)
       release.clients.flat_map do |client, query|
-        client.get_pods(query).map! do |p|
-          Kubernetes::Api::Pod.new(p, client: client)
-        end
+        pods = Vault.with_retries(KubeException, attempts: 3) { client.get_pods(query) }
+        pods.map! { |p| Kubernetes::Api::Pod.new(p, client: client) }
       end
     end
 
