@@ -21,7 +21,12 @@ module Samson
       def list_recursive(path)
         path = wrap_key(path)
         all = Samson::Parallelizer.map(clients.values) do |vault|
-          with_retries { vault.logical.list_recursive(path) }
+          begin
+            with_retries { vault.logical.list_recursive(path) }
+          rescue
+            Airbrake.notify($!, error_message: "Error talking to vault server #{vault.address} during list_recursive")
+            []
+          end
         end.flatten(1)
         all.uniq!
         all

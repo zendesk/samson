@@ -70,6 +70,13 @@ describe Samson::Secrets::VaultClient do
         client.list_recursive('').must_equal ['abc']
       end
     end
+
+    it "does not fail when a single server fails" do
+      Airbrake.expects(:notify).times(2)
+      assert_vault_request :get, '?list=true', status: 500, times: 2 do
+        client.list_recursive('').must_equal []
+      end
+    end
   end
 
   describe "#renew_token" do
