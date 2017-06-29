@@ -147,22 +147,14 @@ module Samson
     config.samson.export_job.downloaded_age = Integer(ENV['EXPORT_JOB_DOWNLOADED_AGE'] || 12.hours)
     config.samson.export_job.max_age = Integer(ENV['EXPORT_JOB_MAX_AGE'] || 1.day)
 
-    # flowdock uses routes: run after the routes are loaded
+    # flowdock uses routes: run after the routes are loaded which happens after after_initialize
     # config.ru sets SERVER_MODE after application.rb is loaded when using `rails s`
     initializer :execute_job, after: :set_routes_reloader_hook do
       if !Rails.env.test? && ENV['SERVER_MODE'] && !ENV['PRECOMPILE']
-        JobExecution.enabled = true
-
-        Job.running.each { |j| j.stop!(nil) }
-
-        Job.non_deploy.pending.each do |job|
-          JobExecution.start_job(JobExecution.new(job.commit, job))
-        end
-
-        Deploy.start_deploys_waiting_for_restart!
-
+        RestartSignalHandler.after_restart
         RestartSignalHandler.listen
       end
+      Samson::BootCheck.check if Rails.env.development?
     end
 
     unless ENV['PRECOMPILE']
