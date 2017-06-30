@@ -170,6 +170,8 @@ module Samson
 
     config.active_support.deprecation = :raise
   end
+
+  RELEASE_NUMBER = '\d+(:?\.\d+)*'
 end
 
 require 'samson/hooks'

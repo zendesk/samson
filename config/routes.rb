@@ -55,7 +55,7 @@ Samson::Application.routes.draw do
       end
     end
 
-    resources :releases, only: [:show, :index, :new, :create], id: Release::ROUTE_REGEX
+    resources :releases, only: [:show, :index, :new, :create], id: /v(#{Samson::RELEASE_NUMBER})/
 
     resources :stages do
       collection do
