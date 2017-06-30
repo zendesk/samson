@@ -22,4 +22,6 @@ class Warden::Strategies::BasicStrategy < Warden::Strategies::Base
   end
 end
 
-Warden::Strategies.add(Warden::Strategies::BasicStrategy::KEY, Warden::Strategies::BasicStrategy)
+if ENV['DEPRECATED_TOKEN_AUTH']
+  Warden::Strategies.add(Warden::Strategies::BasicStrategy::KEY, Warden::Strategies::BasicStrategy)
+end
