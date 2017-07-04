@@ -10,23 +10,18 @@ class DockerBuilderService
 
   def self.build_docker_image(dir, docker_options, output)
     output.puts("### Creating tarfile for Docker build")
-    tarfile = create_docker_tarfile(dir)
+    create_docker_tarfile(dir) do |tarfile|
+      output.puts("### Running Docker build")
+      # our image can depend on other images in the registry ... only first registry supported atm
+      credentials_to_pull = registry_credentials(DockerRegistry.first)
 
-    output.puts("### Running Docker build")
-    # our image can depend on other images in the registry ... only first registry supported atm
-    credentials_to_pull = registry_credentials(DockerRegistry.first)
+      docker_image =
+        Docker::Image.build_from_tar(tarfile, docker_options, Docker.connection, credentials_to_pull) do |chunk|
+          output.write_docker_chunk(chunk)
+        end
+      output.puts('### Docker build complete')
 
-    docker_image =
-      Docker::Image.build_from_tar(tarfile, docker_options, Docker.connection, credentials_to_pull) do |chunk|
-        output.write_docker_chunk(chunk)
-      end
-    output.puts('### Docker build complete')
-
-    docker_image
-  ensure
-    if tarfile
-      tarfile.close
-      FileUtils.rm(tarfile.path, force: true)
+      docker_image
     end
   end
 
@@ -77,34 +72,36 @@ class DockerBuilderService
 
   private
 
+  # For large git repos, creating a tarfile can do a whole lot of disk IO.
+  # It's possible for the puma process to seize up doing all those syscalls,
+  # especially if the disk is running slow. So we create the tarfile in a
+  # separate process to avoid that.
   private_class_method def self.create_docker_tarfile(dir)
-    dir += '/' unless dir.end_with?('/')
-    tempfile_name = Dir::Tmpname.create('out') {}
+    Tempfile.open('samson-docker-tarfile') do |tempfile|
+      tempfile.binmode
 
-    # For large git repos, creating a tarfile can do a whole lot of disk IO.
-    # It's possible for the puma process to seize up doing all those syscalls,
-    # especially if the disk is running slow. So we create the tarfile in a
-    # separate process to avoid that.
-    tar_proc = -> do
-      begin
-        File.open(tempfile_name, 'wb+') do |tempfile|
+      tar_proc = -> do
+        begin
+          dir += '/' unless dir.end_with?('/')
           Docker::Util.create_relative_dir_tar(dir, tempfile)
+        rescue
+          tempfile.rewind # hide previous output
+          tempfile.write $!.message # let the user know that is waiting in a different process
+          raise
         end
-      rescue
-        File.write(tempfile_name, $!.message)
-        raise
       end
-    end
 
-    if Rails.env.test?
-      # forking is bad for test framework and stubs
-      tar_proc.call
-    else
-      _, status = Process.waitpid2(fork(&tar_proc))
-      raise File.read(tempfile_name) unless status.success?
-    end
+      if Rails.env.test?
+        # forking is bad for test framework and stubs
+        tar_proc.call
+        tempfile.rewind
+      else
+        _, status = Process.waitpid2(fork(&tar_proc))
+        raise tempfile.read unless status.success?
+      end
 
-    File.new(tempfile_name, 'r')
+      yield tempfile
+    end
   end
 
   # TODO: not calling before_docker_build hooks since we don't have a temp directory
