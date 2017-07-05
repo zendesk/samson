@@ -151,10 +151,6 @@ GEM
       airbrake-ruby (~> 2.0)
       rack
       railties (>= 5.0.0, < 5.2.0)
-    angular-rails-templates (1.0.2)
-      railties (>= 4.2, < 6)
-      sprockets (>= 3.0, < 5)
-      tilt
     ansible (0.2.2)
     ar_multi_threaded_transactional_tests (0.2.1)
       activerecord (>= 4.2.0, < 5.2.0)
@@ -368,12 +364,6 @@ GEM
       rails-assets-angular (= 1.4.9)
     rails-assets-angular-scenario (1.4.9)
       rails-assets-angular (= 1.4.9)
-    rails-assets-angular-spinner (0.8.1)
-      rails-assets-angular (~> 1.0)
-      rails-assets-spin.js (~> 2.0)
-    rails-assets-angular-truncate-2 (0.4.2)
-    rails-assets-angular-ui-router (0.2.18)
-      rails-assets-angular (>= 1.0.8, < 2)
     rails-assets-bootstrap-select (1.10.0)
       rails-assets-jquery (>= 1.8)
     rails-assets-datatables.net (1.10.12)
@@ -388,7 +378,6 @@ GEM
       rails-assets-datatables.net-bs (>= 1.10.9)
       rails-assets-datatables.net-fixedcolumns (>= 3.1.0)
       rails-assets-jquery (>= 1.7)
-    rails-assets-font-awesome (4.3.0)
     rails-assets-jquery (2.2.1)
     rails-assets-jquery-cookie (1.4.1)
       rails-assets-jquery (>= 1.2)
@@ -398,9 +387,6 @@ GEM
       rails-assets-jquery (> 1.8)
     rails-assets-jstimezonedetect (1.0.5)
     rails-assets-moment (2.11.2)
-    rails-assets-spin (1.1.6)
-      rails-assets-jquery
-    rails-assets-spin.js (2.3.2)
     rails-assets-typeahead.js (0.11.1)
       rails-assets-jquery (>= 1.7)
     rails-assets-underscore (1.8.3)
@@ -507,7 +493,6 @@ DEPENDENCIES
   active_model_serializers
   airbrake
   airbrake-user_informer
-  angular-rails-templates
   ansible
   ar_multi_threaded_transactional_tests
   attr_encrypted
@@ -562,22 +547,17 @@ DEPENDENCIES
   rails-assets-angular!
   rails-assets-angular-mocks!
   rails-assets-angular-scenario!
-  rails-assets-angular-spinner!
-  rails-assets-angular-truncate-2!
-  rails-assets-angular-ui-router!
   rails-assets-bootstrap-select!
   rails-assets-datatables.net!
   rails-assets-datatables.net-bs!
   rails-assets-datatables.net-fixedcolumns!
   rails-assets-datatables.net-fixedcolumns-bs!
-  rails-assets-font-awesome!
   rails-assets-jquery!
   rails-assets-jquery-cookie!
   rails-assets-jquery-ui!
   rails-assets-jquery-ujs!
   rails-assets-jstimezonedetect!
   rails-assets-moment!
-  rails-assets-spin!
   rails-assets-typeahead.js!
   rails-assets-underscore!
   rails-assets-x-editable!
