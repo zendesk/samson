@@ -4,7 +4,10 @@ require 'samson/integration'
 class WebhooksController < ApplicationController
   include CurrentProject
 
-  before_action :authorize_project_deployer!
+  before_action :authorize_resource!
+
+  def index
+  end
 
   def create
     webhook = current_project.webhooks.build(webhook_params)

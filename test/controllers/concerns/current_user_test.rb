@@ -46,7 +46,7 @@ class CurrentUserConcernTest < ActionController::TestCase
       unauthorized!
     end
 
-    def resource_action
+    def resourced_action
       @project = Project.find(params[:project_id]) if params[:project_id]
       authorize_resource!
       head :ok
@@ -191,7 +191,7 @@ class CurrentUserConcernTest < ActionController::TestCase
 
   describe "#authorize_resource!" do
     def perform_get(add = {})
-      get :resource_action, params: add.merge(test_route: true)
+      get :resourced_action, params: add.merge(test_route: true)
     end
 
     before do

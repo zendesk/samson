@@ -2,7 +2,7 @@
 class BuildCommandsController < ApplicationController
   include CurrentProject
 
-  before_action :authorize_project_admin!, except: [:show]
+  before_action :authorize_resource!
   before_action :find_command
 
   def show

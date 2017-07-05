@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 class UserMergesController < ApplicationController
-  before_action :authorize_super_admin!
+  before_action :authorize_resource!
   before_action :find_user
 
   def new

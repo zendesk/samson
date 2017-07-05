@@ -57,7 +57,6 @@ describe StagesController do
   end
 
   as_a_viewer do
-    unauthorized :get, :index, project_id: :foo
     unauthorized :get, :new, project_id: :foo
     unauthorized :post, :create, project_id: :foo
     unauthorized :get, :edit, project_id: :foo, id: 1
@@ -103,6 +102,13 @@ describe StagesController do
         end
       end
     end
+
+    describe "#index" do
+      it "renders html" do
+        get :index, params: {project_id: project}
+        assert_template 'index'
+      end
+    end
   end
 
   as_a_project_deployer do
@@ -113,13 +119,6 @@ describe StagesController do
     unauthorized :delete, :destroy, project_id: :foo, id: 1
     unauthorized :patch, :reorder, project_id: :foo, id: 1
     unauthorized :get, :clone, project_id: :foo, id: 1
-
-    describe "#index" do
-      it "renders html" do
-        get :index, params: {project_id: project}
-        assert_template 'index'
-      end
-    end
   end
 
   as_a_project_admin do

@@ -4,8 +4,7 @@ class StagesController < ApplicationController
 
   skip_before_action :login_user, if: :badge?
 
-  before_action :authorize_project_deployer!, except: [:show]
-  before_action :authorize_project_admin!, except: [:index, :show]
+  before_action :authorize_resource!
   before_action :check_token, if: :badge?
   before_action :find_stage, only: [:show, :edit, :update, :destroy, :clone]
 
