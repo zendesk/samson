@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 require_relative '../test_helper'
 
-SingleCov.covered! uncovered: 4 # fork/wait call that we skip in unit tests
+SingleCov.covered! uncovered: 5 # fork/wait call that we skip in unit tests
 
 describe DockerBuilderService do
   include GitRepoTestHelper
