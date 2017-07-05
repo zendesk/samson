@@ -47,6 +47,7 @@ gem 'docker-api'
 gem 'newrelic_rpm'
 gem 'lograge'
 gem 'logstash-event'
+gem 'diffy'
 
 # treat included plugins like gems
 Dir[File.join(Bundler.root, 'plugins/*/')].each { |f| gemspec path: f }
