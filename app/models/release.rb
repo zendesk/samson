@@ -1,9 +1,7 @@
 # frozen_string_literal: true
 class Release < ActiveRecord::Base
-  NUMBER = '\d+(:?\.\d+)*'
-  NUMBER_REGEX = /\A#{NUMBER}\z/
-  VERSION_REGEX = /\Av(#{NUMBER})\z/
-  ROUTE_REGEX = /v(#{NUMBER})/
+  NUMBER_REGEX = /\A#{Samson::RELEASE_NUMBER}\z/
+  VERSION_REGEX = /\Av(#{Samson::RELEASE_NUMBER})\z/
 
   belongs_to :project, touch: true
   belongs_to :author, polymorphic: true
