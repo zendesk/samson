@@ -97,6 +97,7 @@ class DockerBuilderService
         tempfile.rewind
       else
         _, status = Process.waitpid2(fork(&tar_proc))
+        tempfile.rewind
         raise tempfile.read unless status.success?
       end
 
