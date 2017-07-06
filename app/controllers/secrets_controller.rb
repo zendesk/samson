@@ -8,8 +8,7 @@ class SecretsController < ApplicationController
   before_action :find_secret, only: [:update, :show]
 
   before_action :convert_visible_to_boolean, only: [:update, :create, :new]
-  before_action :authorize_any_deployer!
-  before_action :authorize_project_admin!, except: [:index, :new]
+  before_action :authorize_resource!
 
   def index
     @secret_keys = SecretStorage.keys.map { |key| [key, SecretStorage.parse_secret_key(key)] }
@@ -78,7 +77,7 @@ class SecretsController < ApplicationController
     if params[:id].present?
       SecretStorage.parse_secret_key(params[:id]).fetch(:project_permalink)
     else
-      secret_params.fetch(:project_permalink)
+      (params[:secret] && params[:secret][:project_permalink]) || 'global'
     end
   end
 
@@ -105,20 +104,21 @@ class SecretsController < ApplicationController
     @project_permalinks = SecretStorage.allowed_project_prefixes(current_user)
   end
 
-  def current_project
-    return if project_permalink == 'global'
-    Project.find_by_permalink project_permalink
-  end
-
-  def authorize_any_deployer!
-    return if current_user.deployer?
-    return if current_user.user_project_roles.where('role_id >= ?', Role::DEPLOYER.id).exists?
-    unauthorized!
+  def require_project
+    permalink = project_permalink
+    return if permalink == 'global'
+    @project = Project.find_by_permalink permalink
   end
 
   # vault backend needs booleans and so does our view logic
   def convert_visible_to_boolean
     return unless secret = params[:secret]
     secret[:visible] = ActiveRecord::Type::Boolean.new.cast(secret[:visible])
+  end
+
+  # @override CurrentUser since we need to allow any user to see new since we do not yet
+  # know what project they want to create for
+  def resource_action
+    action_name == "new" ? :read : super
   end
 end

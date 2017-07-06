@@ -26,24 +26,78 @@ describe AccessControl do
     assert_raises(ArgumentError) { AccessControl.can?(admin, :write, 'sdsdf') }
   end
 
-  describe "builds" do
-    it "fails on unknown action" do
-      assert_raises(ArgumentError) { can?(admin, :fooo) }
-    end
-
-    describe :read do
-      it "allows everyone to read all" do
-        assert can?(viewer, :read)
-      end
-    end
-
-    describe :write do
-      it "allows deployers to update everything" do
-        assert can?(deployer, :write)
+  ["builds", "webhooks"].each do |resource|
+    describe resource do
+      it "fails on unknown action" do
+        assert_raises(ArgumentError) { can?(admin, :fooo) }
       end
 
-      it "forbids viewers to update anything" do
-        refute can?(viewer, :write)
+      describe :read do
+        it "allows everyone to read all" do
+          assert can?(viewer, :read)
+        end
+      end
+
+      describe :write do
+        it "allows deployers to update everything" do
+          assert can?(deployer, :write)
+        end
+
+        it "forbids viewers to update anything" do
+          refute can?(viewer, :write)
+        end
+      end
+    end
+  end
+
+  ["projects", "build_commands", "stages", "user_project_roles"].each do |resource|
+    describe resource do
+      it "fails on unknown action" do
+        assert_raises(ArgumentError) { can?(admin, :fooo) }
+      end
+
+      describe :read do
+        it "allows everyone to read" do
+          assert can?(viewer, :read)
+        end
+      end
+
+      describe :write do
+        it "allows admins to write" do
+          assert can?(admin, :write)
+        end
+
+        it "allows project admins to write" do
+          assert can?(project_admin, :write, project)
+        end
+
+        it "forbids deployers write" do
+          refute can?(deployer, :write)
+        end
+      end
+    end
+  end
+
+  ["vault_servers", "user_merges"].each do |resource|
+    describe resource do
+      it "fails on unknown action" do
+        assert_raises(ArgumentError) { can?(admin, :fooo) }
+      end
+
+      describe :read do
+        it "allows anyone to read anyone" do
+          assert can?(viewer, :read)
+        end
+      end
+
+      describe :write do
+        it "allows super-admins to update" do
+          assert can?(super_admin, :write)
+        end
+
+        it "forbids admins to update" do
+          refute can?(admin, :write)
+        end
       end
     end
   end
@@ -82,28 +136,32 @@ describe AccessControl do
     end
   end
 
-  describe "projects" do
+  describe "secrets" do
     it "fails on unknown action" do
       assert_raises(ArgumentError) { can?(admin, :fooo) }
     end
 
     describe :read do
-      it "allows everyone to read" do
-        assert can?(viewer, :read)
+      it "does not allow viewers to read" do
+        refute can?(viewer, :read)
+      end
+
+      it "allows deployer to read" do
+        assert can?(deployer, :read)
+      end
+
+      it "allows any deployer to read" do
+        assert can?(project_deployer, :read) # without passing project
       end
     end
 
     describe :write do
-      it "allows admins to write" do
-        assert can?(admin, :write)
-      end
-
-      it "allows project admins to write" do
+      it "allows admins to update" do
         assert can?(project_admin, :write, project)
       end
 
-      it "forbids deployers write" do
-        refute can?(deployer, :write)
+      it "forbids deployers to update" do
+        refute can?(deployer, :write, project)
       end
     end
   end

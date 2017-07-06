@@ -2,7 +2,7 @@
 class UserProjectRolesController < ApplicationController
   include CurrentProject
 
-  before_action :authorize_project_admin!, except: [:index]
+  before_action :authorize_resource!
 
   def index
     options = params.to_unsafe_h

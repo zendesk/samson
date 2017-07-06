@@ -124,9 +124,29 @@ describe SecretsController do
     end
 
     describe '#show' do
-      it "is unauthrized" do
+      it 'renders for local secret as project-admin' do
         get :show, params: {id: secret}
-        assert_response :unauthorized
+        assert_template :show
+      end
+
+      it 'hides invisible secrets' do
+        get :show, params: {id: secret}
+        refute assigns(:secret).fetch(:value)
+        response.body.wont_include secret.value
+      end
+
+      it 'shows visible secrets' do
+        secret.update_column(:visible, true)
+        get :show, params: {id: secret}
+        assert_template :show
+        response.body.must_include secret.value
+      end
+
+      it 'renders with unfound users' do
+        secret.update_column(:updater_id, 32232323)
+        get :show, params: {id: secret}
+        assert_template :show
+        response.body.must_include "Unknown user id"
       end
     end
 
@@ -199,38 +219,6 @@ describe SecretsController do
         Rails.logger.stubs(:info)
         Rails.logger.expects(:info).with { |message| message.include?("\"value\"=>\"[FILTERED]\"") }
         post :create, params: {secret: attributes}
-      end
-    end
-
-    describe '#show' do
-      it 'renders for local secret as project-admin' do
-        get :show, params: {id: secret}
-        assert_template :show
-      end
-
-      it 'hides invisible secrets' do
-        get :show, params: {id: secret}
-        refute assigns(:secret).fetch(:value)
-        response.body.wont_include secret.value
-      end
-
-      it 'shows visible secrets' do
-        secret.update_column(:visible, true)
-        get :show, params: {id: secret}
-        assert_template :show
-        response.body.must_include secret.value
-      end
-
-      it 'renders with unfound users' do
-        secret.update_column(:updater_id, 32232323)
-        get :show, params: {id: secret}
-        assert_template :show
-        response.body.must_include "Unknown user id"
-      end
-
-      it "is unauthrized for global secret" do
-        get :show, params: {id: create_global}
-        assert_response :unauthorized
       end
     end
 

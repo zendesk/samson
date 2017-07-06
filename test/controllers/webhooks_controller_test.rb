@@ -9,12 +9,9 @@ describe WebhooksController do
   let(:webhook) { project.webhooks.create!(stage: stage, branch: 'master', source: 'code') }
 
   as_a_viewer do
-    unauthorized :get, :index, project_id: :foo
     unauthorized :post, :create, project_id: :foo
     unauthorized :delete, :destroy, project_id: :foo, id: 1
-  end
 
-  as_a_project_deployer do
     describe '#index' do
       before { webhook } # trigger create
 
@@ -29,7 +26,9 @@ describe WebhooksController do
         assert_template :index
       end
     end
+  end
 
+  as_a_project_deployer do
     describe '#create' do
       let(:params) { { branch: "master", stage_id: stage.id, source: 'any' } }
 

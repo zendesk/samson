@@ -57,8 +57,11 @@ module CurrentUser
 
   # tested via access checks in the actual controllers
   def authorize_resource!
-    action = (['index', 'show'].include?(action_name) ? :read : :write)
-    unauthorized! unless can?(action, controller_name)
+    unauthorized! unless can?(resource_action, controller_name)
+  end
+
+  def resource_action
+    (['index', 'show'].include?(action_name) ? :read : :write)
   end
 
   def can?(action, scope, project = nil)
