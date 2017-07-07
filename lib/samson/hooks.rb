@@ -213,6 +213,7 @@ module Samson
 end
 
 module Samson::LoadDecorators
+  # TODO: should call decorator after subclass is done being defined, see https://stackoverflow.com/questions/7093992
   def inherited(subclass)
     super
     Samson::Hooks.load_decorators(subclass.name)

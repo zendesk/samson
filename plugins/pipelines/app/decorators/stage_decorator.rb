@@ -2,8 +2,21 @@
 Stage.class_eval do
   prepend(Module.new do
     # Return true if any stages in the pipeline are marked production
-    def production?
-      super || next_stages.any?(&:production?)
+    def production?(check_next_stages: true)
+      if check_next_stages
+        super() || next_stages.any?(&:production?)
+      else
+        super()
+      end
+    end
+
+    def production_for_approval?
+      production?(check_next_stages: false)
+    end
+
+    # Return true if any stages in the pipeline deploy to production
+    def deploy_requires_approval?
+      super || next_stages.any?(&:deploy_requires_approval?)
     end
   end)
 
@@ -16,7 +29,7 @@ Stage.class_eval do
   has_soft_deletion default_scope: true
 
   def next_stages
-    Stage.where(id: next_stage_ids)
+    next_stage_ids.any? ? Stage.where(id: next_stage_ids) : []
   end
 
   def previous_stages

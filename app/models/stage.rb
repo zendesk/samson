@@ -117,8 +117,9 @@ class Stage < ActiveRecord::Base
   end
 
   def deploy_requires_approval?
-    BuddyCheck.enabled? && !no_code_deployed? && production?
+    BuddyCheck.enabled? && !no_code_deployed? && production_for_approval?
   end
+  alias_method :production_for_approval?, :production?
 
   def automated_failure_emails(deploy)
     return if !email_committers_on_automated_deploy_failure? && static_emails_on_automated_deploy_failure.blank?

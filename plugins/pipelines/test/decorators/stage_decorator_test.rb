@@ -62,6 +62,52 @@ describe Stage do
         stage1.update(production: true)
         stage1.production?.must_equal true
       end
+
+      it 'is true for production in nested child node' do
+        stage1.update!(next_stage_ids: [stage3.id])
+        stage3.update!(next_stage_ids: [stage2.id])
+        stage1.production?.must_equal true
+      end
+    end
+  end
+
+  describe '#deploy_requires_approval?' do
+    with_env BUDDY_CHECK_FEATURE: 'true'
+
+    it 'is required when going to prod' do
+      stage1.production = true
+      assert stage1.deploy_requires_approval?
+    end
+
+    it 'is not required when going to staging' do
+      refute stage1.deploy_requires_approval?
+    end
+
+    describe 'with a pipelined stage going to prod' do
+      before do
+        stage2.update_column(:production, true)
+        stage1.update!(next_stage_ids: [stage2.id])
+      end
+
+      it 'is required' do
+        assert stage1.deploy_requires_approval?
+      end
+
+      it 'is not required when not deploying' do
+        stage2.update_column(:no_code_deployed, true)
+        refute stage1.deploy_requires_approval?
+      end
+    end
+  end
+
+  describe '#next_stages' do
+    it 'does not query when empty' do
+      assert_sql_queries(0) { stage1.next_stages.must_equal [] }
+    end
+
+    it 'queries when filled' do
+      stage1.next_stage_ids = [stage2.id]
+      assert_sql_queries(1) { stage1.next_stages.must_equal [stage2] }
     end
   end
 
