@@ -141,11 +141,7 @@ class BinaryBuilder
   end
 
   def create_build_image
-    build_options = {
-      'dockerfile' => DOCKER_BUILD_FILE,
-      't' => image_name
-    }
-    DockerBuilderService.build_docker_image(@dir, build_options, @output)
+    DockerBuilderService.build_docker_image(@dir, @output, dockerfile: DOCKER_BUILD_FILE, tag: image_name)
   end
 
   def docker_api_version

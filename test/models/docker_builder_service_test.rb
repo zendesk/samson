@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 require_relative '../test_helper'
 
-SingleCov.covered! uncovered: 6 # fork/wait call that we skip in unit tests
+SingleCov.covered!
 
 describe DockerBuilderService do
   include GitRepoTestHelper
@@ -102,6 +102,16 @@ describe DockerBuilderService do
       end
     end
 
+    it "fails when bla" do
+      run!(push: true)
+
+      # simulate that build worked
+      service.expects(:build_image).returns(false)
+      service.expects(:push_image).never
+
+      execute_job.must_equal(false)
+    end
+
     it "runs via kubernetes when job is marked as kubernetes_job" do
       build.kubernetes_job = true
       with_env "DOCKER_KEEP_BUILT_IMGS" => "1" do
@@ -189,8 +199,10 @@ describe DockerBuilderService do
 
   describe "#build_image" do
     before do
-      Docker::Util.stubs(:create_relative_dir_tar).returns(nil)
-      Docker::Image.stubs(:build_from_tar).returns(mock_docker_image)
+      TerminalExecutor.any_instance.expects(:execute!).returns(true)
+      OutputBuffer.any_instance.expects(:to_s).returns("Successfully built foobar")
+      GitRepository.any_instance.expects(:commit_from_ref).returns("commitx")
+      Docker::Image.stubs(:get).with("foobar").returns(mock_docker_image)
     end
 
     it 'calls #before_docker_build' do
@@ -210,37 +222,20 @@ describe DockerBuilderService do
       assert_equal(docker_image_id, build.docker_image_id)
     end
 
+    it 'fails when docker build did not contain a image id' do
+      OutputBuffer.any_instance.unstub(:to_s)
+      OutputBuffer.any_instance.expects(:to_s).returns("some internal docker error")
+      service.send(:build_image, tmp_dir).must_be_nil
+      build.docker_image_id.must_be_nil
+    end
+
     it 'catches docker errors' do
-      error_message = "A bad thing happened..."
-      Docker::Image.unstub(:build_from_tar)
-      Docker::Image.expects(:build_from_tar).raises(Docker::Error::DockerError.new(error_message))
+      TerminalExecutor.any_instance.unstub(:execute!)
+      TerminalExecutor.any_instance.expects(:execute!).returns(false)
+      OutputBuffer.any_instance.unstub(:to_s)
+      OutputBuffer.any_instance.expects(:to_s).never
       service.send(:build_image, tmp_dir).must_be_nil
       build.docker_image_id.must_be_nil
-      service.send(:output).to_s.must_include error_message
-    end
-
-    it 'catches UnexpectedResponseErrors' do
-      error_message = "Really long output..."
-      Docker::Image.unstub(:build_from_tar)
-      Docker::Image.expects(:build_from_tar).raises(Docker::Error::UnexpectedResponseError.new(error_message))
-      service.send(:build_image, tmp_dir).must_be_nil
-      build.docker_image_id.must_be_nil
-      service.send(:output).to_s.wont_include error_message
-    end
-
-    it 'catches JSON errors' do
-      push_output = [
-        [{status: 'working okay'}.to_json],
-        ['{"status":"this is incomplete JSON...']
-      ]
-
-      Docker::Image.unstub(:build_from_tar)
-      Docker::Image.expects(:build_from_tar).
-        multiple_yields(*push_output).
-        returns(mock_docker_image)
-
-      service.send(:build_image, tmp_dir)
-      service.send(:output).to_s.must_include 'this is incomplete JSON'
     end
   end
 
@@ -363,6 +358,42 @@ describe DockerBuilderService do
         stub_push(primary_repo, 'latest', true, force: true)
 
         assert service.send(:push_image, tag_as_latest: true), output
+      end
+    end
+  end
+
+  describe ".local_docker_login" do
+    run_inside_of_temp_directory
+
+    it "yields and returns" do
+      (DockerBuilderService.send(:local_docker_login) { 1 }).must_equal 1
+    end
+
+    it "adds login commands" do
+      DockerRegistry.expects(:all).returns([DockerRegistry.new("http://fo+o:ba+r@ba+z.com")])
+      called = []
+      DockerBuilderService.send(:local_docker_login) { |commands| called = commands }
+      called[1].must_equal "docker login --username fo\\+o --password ba\\+r --email no@example.com ba\\+z.com"
+    end
+
+    it "copies previous config files from ENV location" do
+      File.write("config.json", "hello")
+      with_env DOCKER_CONFIG: '.' do
+        DockerBuilderService.send(:local_docker_login) do |commands|
+          dir = commands.first[/DOCKER_CONFIG=(.*)/, 1]
+          File.read("#{dir}/config.json").must_equal "hello"
+        end
+      end
+    end
+
+    it "copies previous config files from HOME location" do
+      Dir.mkdir(".docker")
+      File.write(".docker/config.json", "hello")
+      with_env HOME: Dir.pwd do
+        DockerBuilderService.send(:local_docker_login) do |commands|
+          dir = commands.first[/DOCKER_CONFIG=(.*)/, 1]
+          File.read("#{dir}/config.json").must_equal "hello"
+        end
       end
     end
   end

@@ -24,7 +24,7 @@ describe BinaryBuilder do
     before do
       Docker::Container.stubs(:create).returns(fake_container)
       Docker::Util.stubs(:create_relative_dir_tar).returns(nil)
-      Docker::Image.stubs(:build_from_tar).returns(fake_image)
+      TerminalExecutor.any_instance.expects(:execute!).with { |*c| c.to_s.include?("docker build") }.returns(true)
       builder.stubs(:untar).returns(true)
       project.update_attributes(docker_release_branch: 'master')
       builder.stubs(:build_file_exist?).returns(true)
@@ -36,9 +36,6 @@ describe BinaryBuilder do
       builder.build
       output.string.must_equal [
         "Connecting to Docker host with Api version: 1.19 ...\n",
-        "### Creating tarfile for Docker build\n",
-        "### Running Docker build\n",
-        "### Docker build complete\n",
         "Now starting Build container...\n",
         "Grabbing '/app/artifacts.tar' from build container...\n",
         "Continuing docker build...\n",
@@ -57,6 +54,8 @@ describe BinaryBuilder do
     end
 
     it 'does nothing if docker flag is set for project but no dockerfile.build exists' do
+      TerminalExecutor.any_instance.unstub(:execute!)
+      TerminalExecutor.any_instance.expects(:execute!).never
       builder.unstub(:build_file_exist?)
       builder.expects(:create_build_image).never
       builder.build
@@ -70,14 +69,11 @@ describe BinaryBuilder do
       end
 
       it 'succeeds when pre build script succeeds' do
+        TerminalExecutor.any_instance.expects(:execute!).with { |*c| c.to_s.include?("pre_binary_build") }.returns(true)
         builder.build
         output.string.gsub(/» .*\n/, '').must_equal [
           "Running pre build script...\n",
-          "foobar\r\n",
           "Connecting to Docker host with Api version: 1.19 ...\n",
-          "### Creating tarfile for Docker build\n",
-          "### Running Docker build\n",
-          "### Docker build complete\n",
           "Now starting Build container...\n",
           "Grabbing '/app/artifacts.tar' from build container...\n",
           "Continuing docker build...\n",
@@ -86,6 +82,7 @@ describe BinaryBuilder do
       end
 
       it 'stop build when pre build script fails' do
+        TerminalExecutor.any_instance.unstub(:execute!)
         File.write(pre_build_script, 'oops')
         assert_raises(Samson::Hooks::UserError) { builder.build }
       end

@@ -52,6 +52,10 @@ class TerminalExecutor
     system('kill', "-#{signal}", "-#{pgid}") if pgid
   end
 
+  def verbose_command(c)
+    "echo » #{c.shellescape}\n#{resolve_secrets(c)}"
+  end
+
   private
 
   def timeout(&block)
@@ -72,7 +76,7 @@ class TerminalExecutor
   def script(commands)
     commands.map! do |c|
       if @verbose
-        "echo » #{c.shellescape}\n#{resolve_secrets(c)}"
+        verbose_command(c)
       else
         resolve_secrets(c)
       end
