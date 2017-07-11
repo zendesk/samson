@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20170622010111) do
+ActiveRecord::Schema.define(version: 20170711174532) do
 
   create_table "audits", force: :cascade do |t|
     t.integer "auditable_id", null: false
@@ -385,6 +385,16 @@ ActiveRecord::Schema.define(version: 20170622010111) do
     t.integer "build_id"
     t.index ["build_id"], name: "index_releases_on_build_id"
     t.index ["project_id", "number"], name: "index_releases_on_project_id_and_number", unique: true
+  end
+
+  create_table "rollbar_webhooks", force: :cascade do |t|
+    t.text "webhook_url", null: false
+    t.string "access_token", null: false
+    t.string "environment", null: false
+    t.integer "stage_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["stage_id"], name: "index_rollbar_webhooks_on_stage_id"
   end
 
   create_table "secret_sharing_grants", force: :cascade do |t|
