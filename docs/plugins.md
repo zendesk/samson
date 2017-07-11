@@ -26,6 +26,7 @@ Available plugins:
  - [Slack deploys](https://github.com/zendesk/samson/tree/master/plugins/slack_app)
  - [Slack notifications](https://github.com/zendesk/samson/tree/master/plugins/slack_webhooks)
  - [Zendesk notifications](https://github.com/zendesk/samson/tree/master/plugins/zendesk)
+ - [Rollbar notifications on deploy](https://github.com/zendesk/samson/tree/master/plugins/rollbar)
  - Add yours here!
 
 To create your own plugin run:
