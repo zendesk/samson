@@ -1,5 +1,14 @@
 <ul>
-  <% group.projects.sort_by(&:name).each do |project| %>
-    <li><%= link_to project.name, project %></li>
+  <% if display_limit %>
+    <% group.projects.first(display_limit).sort_by(&:name).each do |project| %>
+      <li><%= link_to project.name, project %></li>
+    <% end %>
+    <% if group.projects.count > display_limit %>
+      <li><%= link_to "+ #{group.projects.count - display_limit} More", group %></li>
+    <% end %>
+  <% else %>
+    <% group.projects.sort_by(&:name).each do |project| %>
+      <li><%= link_to project.name, project %></li>
+    <% end %>
   <% end %>
 </ul>

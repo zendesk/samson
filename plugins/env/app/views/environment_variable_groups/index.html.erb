@@ -10,6 +10,10 @@
 </h1>
 
 <section class="clearfix">
+  <div class="pull-right">
+    <%= link_to "New", new_environment_variable_group_path, class: "btn btn-default" %>
+  </div>
+  <div class="clearfix"></div>
   <table class="table table-hover table-condensed">
     <thead>
     <tr>
@@ -19,16 +23,20 @@
     </tr>
     </thead>
     <% @groups.each do |group| %>
+      <% sorted_vars = group.environment_variables.map(&:name).uniq.sort %>
       <tr>
         <td>
           <%= link_to group.name, group %>
           <ul>
-            <% group.environment_variables.map(&:name).uniq.sort.each do |name| %>
+            <% sorted_vars.first(5).each do |name| %>
               <li><%= name %></li>
+            <% end %>
+            <% if sorted_vars.count > 5 %>
+              <li><%= link_to "+ #{sorted_vars.count - 5} More", group %></li>
             <% end %>
           </ul>
         </td>
-        <td><%= render 'projects', group: group %></td>
+        <td><%= render 'projects', group: group, display_limit: 7 %></td>
         <td>
           <% if group.projects.any? %>
             <%= link_to "Delete", "#", data: {confirm: "Cannot be deleted when still in use."} %>
@@ -39,8 +47,4 @@
       </tr>
     <% end %>
   </table>
-
-  <div class="pull-right">
-    <%= link_to "New", new_environment_variable_group_path, class: "btn btn-default" %>
-  </div>
 </section>

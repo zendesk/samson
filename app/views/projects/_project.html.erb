@@ -7,7 +7,7 @@
     </h2>
 
     <ul>
-      <% project.stages.each do |stage| %>
+      <% project.stages.first(8).each do |stage| %>
         <% cache [stage, Lock.cache_key] do %>
           <li class="clearfix">
             <%= link_to stage.name, [project, stage], class: 'stage-link' %>
@@ -30,6 +30,11 @@
             </div>
           </li>
         <% end %>
+      <% end %>
+      <% if project.stages.count > 8 %>
+        <li class="clearfix" style="text-align: center">
+          <%= link_to "+ #{project.stages.count - 8} More", project %>
+        </li>
       <% end %>
     </ul>
   </div>
