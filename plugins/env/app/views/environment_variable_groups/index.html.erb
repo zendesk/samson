@@ -23,18 +23,13 @@
     </tr>
     </thead>
     <% @groups.each do |group| %>
-      <% sorted_vars = group.environment_variables.map(&:name).uniq.sort %>
+      <% sorted_vars = group.environment_variables.sort_by(&:id).map(&:name).uniq %>
       <tr>
         <td>
           <%= link_to group.name, group %>
-          <ul>
-            <% sorted_vars.first(5).each do |name| %>
-              <li><%= name %></li>
-            <% end %>
-            <% if sorted_vars.count > 5 %>
-              <li><%= link_to "+ #{sorted_vars.count - 5} More", group %></li>
-            <% end %>
-          </ul>
+          <%= list_with_show_more(sorted_vars, 5, link_to("+ #{sorted_vars.count - 5} More", group)) do |name| %>
+            <li><%= name %></li>
+          <% end %>
         </td>
         <td><%= render 'projects', group: group, display_limit: 7 %></td>
         <td>
