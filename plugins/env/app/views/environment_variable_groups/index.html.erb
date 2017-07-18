@@ -1,4 +1,6 @@
 <% title = "Environment variable groups" %>
+<% max_display_variables = 5 %>
+<% max_display_projects = 7 %>
 
 <%= breadcrumb(title) %>
 
@@ -27,11 +29,11 @@
       <tr>
         <td>
           <%= link_to group.name, group %>
-          <%= list_with_show_more(sorted_vars, 5, link_to("+ #{sorted_vars.count - 5} More", group)) do |name| %>
+          <%= list_with_show_more(sorted_vars, max_display_variables, link_to("+ #{sorted_vars.count - max_display_variables} More", group)) do |name| %>
             <li><%= name %></li>
           <% end %>
         </td>
-        <td><%= render 'projects', group: group, display_limit: 7 %></td>
+        <td><%= render 'projects', group: group, display_limit: max_display_projects %></td>
         <td>
           <% if group.projects.any? %>
             <%= link_to "Delete", "#", data: {confirm: "Cannot be deleted when still in use."} %>

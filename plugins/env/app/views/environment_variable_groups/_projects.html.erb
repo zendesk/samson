@@ -1,3 +1,4 @@
-<%= list_with_show_more(group.projects.sort_by(&:name), display_limit, link_to("+ #{group.projects.size - display_limit} More")) do |project| %>
+<% projects = group.projects.to_a %>
+<%= list_with_show_more(projects.sort_by(&:name), display_limit, link_to("+ #{projects.size - display_limit} More")) do |project| %>
   <li><%= link_to project.name, project %></li>
 <% end %>
