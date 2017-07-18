@@ -8,15 +8,15 @@
       <%= form.fields_for :rollbar_webhooks do |rollbar_field| %>
         <div class="form-group">
           <div class="col-lg-4">
-            <%= rollbar_field.url_field :webhook_url, class: "form-control", placeholder: "Webhook URL", required: true  %>
+            <%= rollbar_field.url_field :webhook_url, class: "form-control", placeholder: "Webhook URL"  %>
           </div>
 
           <div class="col-lg-3">
-            <%= rollbar_field.text_field :access_token, class: "form-control", placeholder: "Access token", required: true %>
+            <%= rollbar_field.text_field :access_token, class: "form-control", placeholder: "Access token" %>
           </div>
 
           <div class="col-lg-3">
-            <%= rollbar_field.text_field :environment, class: "form-control", placeholder: "Environment", required: true %>
+            <%= rollbar_field.text_field :environment, class: "form-control", placeholder: "Environment" %>
           </div>
 
           <%= delete_checkbox rollbar_field %>
