@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 require 'docker'
+require 'shellwords'
 
 class DockerBuilderService
   DIGEST_SHA_REGEX = /Digest:.*(sha256:[0-9a-f]+)/i
@@ -8,31 +9,42 @@ class DockerBuilderService
 
   attr_reader :build, :execution
 
-  def self.build_docker_image(dir, docker_options, output)
-    output.puts("### Creating tarfile for Docker build")
-    create_docker_tarfile(dir) do |tarfile|
-      output.puts("### Running Docker build")
-      # our image can depend on other images in the registry ... only first registry supported atm
-      credentials_to_pull = registry_credentials(DockerRegistry.first)
-
-      docker_image =
-        Docker::Image.build_from_tar(tarfile, docker_options, Docker.connection, credentials_to_pull) do |chunk|
-          output.write_docker_chunk(chunk)
-        end
-      output.puts('### Docker build complete')
-
-      docker_image
+  class << self
+    def build_docker_image(dir, output, dockerfile: nil, tag: nil)
+      local_docker_login do |login_commands|
+        tag = " -t #{tag.shellescape}" if tag
+        file = " -f #{dockerfile.shellescape}" if dockerfile
+        build = "docker build#{file}#{tag} ."
+        executor = TerminalExecutor.new(output)
+        return unless executor.execute!(
+          "cd #{dir.shellescape}",
+          *login_commands,
+          executor.verbose_command(build)
+        )
+        output.to_s[/Successfully built (\S+)/, 1]
+      end
     end
-  end
 
-  def self.registry_credentials(registry)
-    return unless registry.present?
-    {
-      username: registry.username,
-      password: registry.password,
-      email: ENV['DOCKER_REGISTRY_EMAIL'],
-      serveraddress: registry.host
-    }
+    private
+
+    # store logins in a temp file and make it not accidentally added via `ADD .`
+    def local_docker_login
+      Dir.mktmpdir 'samson-tmp-docker-config' do |docker_config_folder|
+        # copy existing credentials
+        regular_config = File.join(ENV["DOCKER_CONFIG"] || File.expand_path("~/.docker"), "config.json")
+        File.write("#{docker_config_folder}/config.json", File.read(regular_config)) if File.exist?(regular_config)
+
+        # add new temp credentials like ECR ... old docker versions need email and server in last position
+        credentials = DockerRegistry.all.select { |r| r.password && r.username }.map do |r|
+          username = r.username.shellescape
+          password = r.password.shellescape
+          "docker login --username #{username} --password #{password} --email no@example.com #{r.host.shellescape}"
+        end
+
+        # run commands and then cleanup after
+        yield ["export DOCKER_CONFIG=#{docker_config_folder.shellescape}", *credentials]
+      end
+    end
   end
 
   def initialize(build)
@@ -51,11 +63,16 @@ class DockerBuilderService
     @execution = JobExecution.new(build.git_sha, job) do |_, tmp_dir|
       if build.kubernetes_job
         run_build_image_job(job, push: push, tag_as_latest: tag_as_latest)
-      elsif build_image(tmp_dir)
-        ret = true
-        ret = push_image(tag_as_latest: tag_as_latest) if push
-        build.docker_image.remove(force: true) unless ENV["DOCKER_KEEP_BUILT_IMGS"] == "1"
-        ret
+      else
+        if build_image(tmp_dir) # rubocop:disable Style/IfInsideElse
+          ret = true
+          ret = push_image(tag_as_latest: tag_as_latest) if push
+          build.docker_image.remove(force: true) unless ENV["DOCKER_KEEP_BUILT_IMGS"] == "1"
+          ret
+        else
+          output.puts("Docker build failed (image id not found in response)")
+          false
+        end
       end
     end
 
@@ -71,39 +88,6 @@ class DockerBuilderService
   end
 
   private
-
-  # For large git repos, creating a tarfile can do a whole lot of disk IO.
-  # It's possible for the puma process to seize up doing all those syscalls,
-  # especially if the disk is running slow. So we create the tarfile in a
-  # separate process to avoid that.
-  private_class_method def self.create_docker_tarfile(dir)
-    Tempfile.open('samson-docker-tarfile') do |tempfile|
-      tempfile.binmode
-
-      tar_proc = -> do
-        begin
-          dir += '/' unless dir.end_with?('/')
-          Docker::Util.create_relative_dir_tar(dir, tempfile)
-        rescue
-          tempfile.rewind # hide previous output
-          tempfile.write $!.message # let the user know that is waiting in a different process
-          raise
-        end
-      end
-
-      if Rails.env.test?
-        # forking is bad for test framework and stubs
-        tar_proc.call
-        tempfile.rewind
-      else
-        _, status = Process.waitpid2(fork(&tar_proc))
-        tempfile.rewind
-        raise tempfile.read unless status.success?
-      end
-
-      yield tempfile
-    end
-  end
 
   # TODO: not calling before_docker_build hooks since we don't have a temp directory
   # possibly call it anyway with nil so calls do not get lost
@@ -156,16 +140,8 @@ class DockerBuilderService
 
     before_docker_build(tmp_dir)
 
-    build.docker_image = DockerBuilderService.build_docker_image(tmp_dir, {}, output)
-  rescue Docker::Error::UnexpectedResponseError
-    # If the docker library isn't able to find an image id, it returns the
-    # entire output of the "docker build" command, which we've already captured
-    output.puts("Docker build failed (image id not found in response)")
-    nil
-  rescue Docker::Error::DockerError => e
-    # If a docker error is raised, consider that a "failed" job instead of an "errored" job
-    output.puts("Docker build failed: #{e.message}")
-    nil
+    image_id = DockerBuilderService.build_docker_image(tmp_dir, output)
+    build.docker_image = (image_id ? Docker::Image.get(image_id) : nil)
   end
   add_method_tracer :build_image
 
@@ -210,7 +186,7 @@ class DockerBuilderService
       # otherwise will read first existing RepoTags info
       push_options = {repo_tag: "#{repo}:#{tag}", force: override_tag}
 
-      success = build.docker_image.push(self.class.registry_credentials(registry), push_options) do |chunk|
+      success = build.docker_image.push(registry_credentials(registry), push_options) do |chunk|
         parsed_chunk = output.write_docker_chunk(chunk)
         if primary && !digest
           parsed_chunk.each do |output_hash|
@@ -224,6 +200,17 @@ class DockerBuilderService
     end
 
     digest
+  end
+
+  # might be able to get rid of this if we transition everything to use docker via cli
+  def registry_credentials(registry)
+    return unless registry.present?
+    {
+      username: registry.username,
+      password: registry.password,
+      email: ENV['DOCKER_REGISTRY_EMAIL'],
+      serveraddress: registry.host
+    }
   end
 
   def output
