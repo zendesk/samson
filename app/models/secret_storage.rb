@@ -52,8 +52,16 @@ module SecretStorage
       result
     end
 
+    # TODO: rename to ids ... do not rename shareable_keys
     def keys
       Rails.cache.fetch(SECRET_KEYS_CACHE) { backend.keys }
+    end
+
+    def shareable_keys
+      keys.map do |id|
+        parts = SecretStorage.parse_secret_key(id)
+        parts.fetch(:key) if parts.fetch(:project_permalink) == "global"
+      end.compact
     end
 
     def filter_keys_by_value(*args)
