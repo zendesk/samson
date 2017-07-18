@@ -25,6 +25,8 @@ class User < ActiveRecord::Base
   validates :time_format, inclusion: { in: TIME_FORMATS }
   validates :external_id, presence: :true, unless: :integration?
 
+  before_soft_delete :destroy_user_project_roles
+
   scope :search, ->(query) {
     return self if query.blank?
     query = ActiveRecord::Base.send(:sanitize_sql_like, query)
@@ -134,5 +136,9 @@ class User < ActiveRecord::Base
 
   def set_token
     self.token = SecureRandom.hex
+  end
+
+  def destroy_user_project_roles
+    user_project_roles.each(&:destroy)
   end
 end

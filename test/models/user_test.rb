@@ -503,4 +503,16 @@ describe User do
       user.name_and_email.must_equal "admin@example.com"
     end
   end
+
+  describe "#user_project_roles" do
+    let(:user) { users(:project_admin) }
+
+    it "deletes them on deletion and audits as user change" do
+      assert_difference 'Audited::Audit.where(auditable_type: "User").count', +2 do
+        assert_difference 'UserProjectRole.count', -1 do
+          user.soft_delete!
+        end
+      end
+    end
+  end
 end
