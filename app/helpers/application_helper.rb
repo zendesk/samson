@@ -265,4 +265,11 @@ module ApplicationHelper
     result << " #{objects.total_count} records" if objects.total_pages > 1
     result
   end
+
+  def list_with_show_more(items, display_limit, show_more_tag, ul_options = {}, &block)
+    li_tags = items.first(display_limit).map { |i| capture(i, &block) }
+    li_tags << show_more_tag if items.size > display_limit
+
+    content_tag(:ul, li_tags.join.html_safe, ul_options)
+  end
 end

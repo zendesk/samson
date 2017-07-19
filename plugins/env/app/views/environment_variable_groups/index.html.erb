@@ -1,4 +1,6 @@
 <% title = "Environment variable groups" %>
+<% max_display_variables = 5 %>
+<% max_display_projects = 7 %>
 
 <%= breadcrumb(title) %>
 
@@ -10,6 +12,10 @@
 </h1>
 
 <section class="clearfix">
+  <div class="pull-right">
+    <%= link_to "New", new_environment_variable_group_path, class: "btn btn-default" %>
+  </div>
+  <div class="clearfix"></div>
   <table class="table table-hover table-condensed">
     <thead>
     <tr>
@@ -19,16 +25,15 @@
     </tr>
     </thead>
     <% @groups.each do |group| %>
+      <% sorted_vars = group.environment_variables.sort_by(&:id).map(&:name).uniq %>
       <tr>
         <td>
           <%= link_to group.name, group %>
-          <ul>
-            <% group.environment_variables.map(&:name).uniq.sort.each do |name| %>
-              <li><%= name %></li>
-            <% end %>
-          </ul>
+          <%= list_with_show_more(sorted_vars, max_display_variables, link_to("+ #{sorted_vars.count - max_display_variables} More", group)) do |name| %>
+            <li><%= name %></li>
+          <% end %>
         </td>
-        <td><%= render 'projects', group: group %></td>
+        <td><%= render 'projects', group: group, display_limit: max_display_projects %></td>
         <td>
           <% if group.projects.any? %>
             <%= link_to "Delete", "#", data: {confirm: "Cannot be deleted when still in use."} %>
@@ -39,8 +44,4 @@
       </tr>
     <% end %>
   </table>
-
-  <div class="pull-right">
-    <%= link_to "New", new_environment_variable_group_path, class: "btn btn-default" %>
-  </div>
 </section>

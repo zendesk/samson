@@ -19,7 +19,7 @@
     <% if @group.projects.length > 0 %>
       <fieldset>
         <legend>Usages</legend>
-        <%= render 'projects', group: @group %>
+        <%= render 'projects', group: @group, display_limit: nil %>
       </fieldset>
     <% end %>
 
