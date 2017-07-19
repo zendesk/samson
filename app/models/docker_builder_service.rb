@@ -21,7 +21,7 @@ class DockerBuilderService
           *login_commands,
           executor.verbose_command(build)
         )
-        image_id = output.to_s[/Successfully built (\S+)/, 1]
+        image_id = output.to_s.scan(/Successfully built (\S+)/).last&.first
         Docker::Image.get(image_id) if image_id
       end
     end

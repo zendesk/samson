@@ -200,7 +200,7 @@ describe DockerBuilderService do
   describe "#build_image" do
     before do
       TerminalExecutor.any_instance.expects(:execute!).returns(true)
-      OutputBuffer.any_instance.expects(:to_s).returns("Successfully built foobar")
+      OutputBuffer.any_instance.expects(:to_s).returns("Ignore me\nSuccessfully built bar\nSuccessfully built foobar")
       GitRepository.any_instance.expects(:commit_from_ref).returns("commitx")
       Docker::Image.stubs(:get).with("foobar").returns(mock_docker_image)
     end
