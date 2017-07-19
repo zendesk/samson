@@ -7,14 +7,14 @@ module Samson
     end
 
     class HashicorpVaultBackend
-      # / means diretory in vault and we want to keep all the keys in the same folder
+      # / means diretory in vault and we want to keep all the ids in the same folder
       DIRECTORY_SEPARATOR = "/"
-      KEY_SEGMENTS = 4
+      ID_SEGMENTS = 4
 
       class << self
-        def read(key)
-          return unless key
-          result = vault_action(:read, vault_path(key, :encode))
+        def read(id)
+          return unless id
+          result = vault_action(:read, vault_path(id, :encode))
           return if !result || result.data[:vault].nil?
 
           result = result.to_h
@@ -23,16 +23,16 @@ module Samson
           result
         end
 
-        def read_multi(keys)
+        def read_multi(ids)
           # will be used inside the threads and can lead to errors when not preloaded
           # reproducible by running a single test like hashicorp_vault_backend_test.rb -n '/filter_keys_by_value/'
           SecretStorage.name
 
           found = {}
-          Samson::Parallelizer.map(keys, db: true) do |key|
+          Samson::Parallelizer.map(ids, db: true) do |id|
             begin
-              if value = read(key)
-                found[key] = value
+              if value = read(id)
+                found[id] = value
               end
             rescue # deploy group has no vault server or deploy group no longer exists
               nil
@@ -41,32 +41,32 @@ module Samson
           found
         end
 
-        def write(key, data)
+        def write(id, data)
           user_id = data.fetch(:user_id)
-          current = read(key)
+          current = read(id)
           creator_id = (current && current[:creator_id]) || user_id
           data = data.merge(creator_id: creator_id, updater_id: user_id)
 
           begin
-            deep_write(key, data)
+            deep_write(id, data)
           rescue
-            revert(key, current)
+            revert(id, current)
             raise
           end
         end
 
-        def delete(key)
-          vault_action(:delete, vault_path(key, :encode))
+        def delete(id)
+          vault_action(:delete, vault_path(id, :encode))
         end
 
-        def keys
-          keys = vault_action(:list_recursive, "")
-          keys.uniq! # we read from multiple backends that might have the same keys
-          keys.map! { |secret_path| vault_path(secret_path, :decode) }
+        def ids
+          ids = vault_action(:list_recursive, "")
+          ids.uniq! # we read from multiple backends that might have the same ids
+          ids.map! { |secret_path| vault_path(secret_path, :decode) }
         end
 
-        def filter_keys_by_value(keys, value)
-          all = read_multi(keys)
+        def filter_ids_by_value(ids, value)
+          all = read_multi(ids)
           all.map { |k, v| k if Rack::Utils.secure_compare(v.fetch(:value), value) }.compact
         end
 
@@ -76,19 +76,19 @@ module Samson
 
         private
 
-        def revert(key, current)
+        def revert(id, current)
           if current
-            deep_write(key, current)
+            deep_write(id, current)
           else
-            delete(key)
+            delete(id)
           end
         rescue
           nil # ignore errors in here
         end
 
-        def deep_write(key, data)
+        def deep_write(id, data)
           important = {vault: data.fetch(:value)}.merge(data.slice(:visible, :comment, :creator_id, :updater_id))
-          vault_action(:write, vault_path(key, :encode), important)
+          vault_action(:write, vault_path(id, :encode), important)
         end
 
         def vault_action(method, path, *args)
@@ -101,10 +101,10 @@ module Samson
           Samson::Secrets::VaultClient.client
         end
 
-        # key is the last element and should not include directories
-        def vault_path(key, direction)
-          parts = key.split(DIRECTORY_SEPARATOR, KEY_SEGMENTS)
-          raise ActiveRecord::RecordNotFound, "Invalid key #{key.inspect}" unless last = parts[KEY_SEGMENTS - 1]
+        # id is the last element and should not include directories
+        def vault_path(id, direction)
+          parts = id.split(DIRECTORY_SEPARATOR, ID_SEGMENTS)
+          raise ActiveRecord::RecordNotFound, "Invalid id #{id.inspect}" unless last = parts[ID_SEGMENTS - 1]
           convert_path!(last, direction)
           parts.join(DIRECTORY_SEPARATOR)
         end

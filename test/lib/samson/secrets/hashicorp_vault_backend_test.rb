@@ -9,12 +9,12 @@ describe Samson::Secrets::HashicorpVaultBackend do
   let(:backend) { Samson::Secrets::HashicorpVaultBackend }
 
   it "keeps segments in sync with storage" do
-    Samson::Secrets::HashicorpVaultBackend::KEY_SEGMENTS.must_equal SecretStorage::SECRET_KEYS_PARTS.size
+    Samson::Secrets::HashicorpVaultBackend::ID_SEGMENTS.must_equal SecretStorage::ID_PARTS.size
   end
 
   describe ".read" do
     it "reads" do
-      assert_vault_request :get, "production/foo/pod2/bar", body: {data: { vault: "SECRET"}}.to_json do
+      assert_vault_request :get, "production/foo/pod2/bar", body: {data: {vault: "SECRET"}}.to_json do
         backend.read('production/foo/pod2/bar').must_equal(
           auth: nil,
           lease_duration: nil,
@@ -139,18 +139,18 @@ describe Samson::Secrets::HashicorpVaultBackend do
     end
   end
 
-  describe ".keys" do
-    it "lists all keys with recursion" do
-      first_keys = {data: {keys: ["production/project/group/this/", "production/project/group/that/"]}}
-      sub_key = {data: {keys: ["key"]}}
+  describe ".ids" do
+    it "lists all ids with recursion" do
+      first_ids = {data: {keys: ["production/project/group/this/", "production/project/group/that/"]}}
+      sub_id = {data: {keys: ["id1"]}}
 
-      assert_vault_request :get, "?list=true", body: first_keys.to_json do
-        assert_vault_request :get, "production/project/group/this/?list=true", body: sub_key.to_json do
-          assert_vault_request :get, "production/project/group/that/?list=true", body: sub_key.to_json do
-            backend.keys.must_equal(
+      assert_vault_request :get, "?list=true", body: first_ids.to_json do
+        assert_vault_request :get, "production/project/group/this/?list=true", body: sub_id.to_json do
+          assert_vault_request :get, "production/project/group/that/?list=true", body: sub_id.to_json do
+            backend.ids.must_equal(
               [
-                "production/project/group/this/key",
-                "production/project/group/that/key"
+                "production/project/group/this/id1",
+                "production/project/group/that/id1"
               ]
             )
           end
@@ -159,20 +159,20 @@ describe Samson::Secrets::HashicorpVaultBackend do
     end
   end
 
-  describe ".filter_keys_by_value" do
-    let(:key) { "production/foo/pod2/bar" }
+  describe ".filter_ids_by_value" do
+    let(:id) { "production/foo/pod2/bar" }
 
     it "ignore non-matching" do
-      assert_vault_request :get, key, body: {data: { vault: "SECRET"}}.to_json do
-        backend.filter_keys_by_value([key], 'NOPE').must_equal []
+      assert_vault_request :get, id, body: {data: { vault: "SECRET"}}.to_json do
+        backend.filter_ids_by_value([id], 'NOPE').must_equal []
       end
     end
 
     it "finds matching" do
       missing = "production/foo/pod2/nope"
-      assert_vault_request :get, key, body: {data: { vault: "SECRET"}}.to_json do
+      assert_vault_request :get, id, body: {data: { vault: "SECRET"}}.to_json do
         assert_vault_request :get, missing, status: 404 do
-          backend.filter_keys_by_value([key, missing], "SECRET").must_equal [key]
+          backend.filter_ids_by_value([id, missing], "SECRET").must_equal [id]
         end
       end
     end
@@ -181,13 +181,13 @@ describe Samson::Secrets::HashicorpVaultBackend do
   describe "raises BackendError when a vault instance is down/unreachable" do
     let(:client) { Samson::Secrets::VaultClient.client }
 
-    it ".keys" do
+    it ".ids" do
       client.expects(:list_recursive).
-        raises(Vault::HTTPConnectionError.new("address", RuntimeError.new('no keys for you')))
+        raises(Vault::HTTPConnectionError.new("address", RuntimeError.new('no ids for you')))
       e = assert_raises Samson::Secrets::BackendError do
-        backend.keys
+        backend.ids
       end
-      e.message.must_include('no keys for you')
+      e.message.must_include('no ids for you')
     end
 
     it ".read" do

@@ -57,7 +57,7 @@ describe Samson::Secrets::VaultClient do
       end
     end
 
-    it "can delete from all servers to remove broken keys" do
+    it "can delete from all servers to remove broken ids" do
       assert_vault_request :delete, 'staging/global/pod100/foo', times: 2 do
         client.delete('staging/global/pod100/foo', all: true)
       end

@@ -16,18 +16,18 @@ module Samson
       end
 
       class << self
-        def read(key)
-          return unless secret = Secret.find_by_id(key)
+        def read(id)
+          return unless secret = Secret.find_by_id(id)
           secret_to_hash secret
         end
 
-        def read_multi(keys)
-          secrets = Secret.where(id: keys).all
+        def read_multi(ids)
+          secrets = Secret.where(id: ids).all
           secrets.each_with_object({}) { |s, a| a[s.id] = secret_to_hash(s) }
         end
 
-        def write(key, data)
-          secret = Secret.where(id: key).first_or_initialize
+        def write(id, data)
+          secret = Secret.where(id: id).first_or_initialize
           secret.value = data.fetch(:value)
           secret.visible = data.fetch(:visible)
           secret.comment = data.fetch(:comment)
@@ -36,16 +36,16 @@ module Samson
           secret.save
         end
 
-        def delete(key)
-          Secret.delete(key)
+        def delete(id)
+          Secret.delete(id)
         end
 
-        def keys
+        def ids
           Secret.order(:id).pluck(:id)
         end
 
-        def filter_keys_by_value(keys, value)
-          keys.each_slice(1000).flat_map do |group|
+        def filter_ids_by_value(ids, value)
+          ids.each_slice(1000).flat_map do |group|
             Secret.where(id: group).select { |s| Rack::Utils.secure_compare(s.value, value) }.map(&:id)
           end
         end
@@ -58,7 +58,6 @@ module Samson
 
         def secret_to_hash(secret)
           {
-            key: secret.id,
             value: secret.value,
             visible: secret.visible,
             comment: secret.comment,

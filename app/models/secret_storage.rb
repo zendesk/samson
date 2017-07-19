@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 module SecretStorage
-  SECRET_KEYS_PARTS = [:environment_permalink, :project_permalink, :deploy_group_permalink, :key].freeze
-  SEPARATOR = "/"
+  ID_PARTS = [:environment_permalink, :project_permalink, :deploy_group_permalink, :key].freeze
+  ID_PART_SEPARATOR = "/"
 
   def self.allowed_project_prefixes(user)
     allowed = user.administrated_projects.pluck(:permalink).sort
@@ -9,8 +9,8 @@ module SecretStorage
     allowed
   end
 
-  SECRET_KEY_REGEX = %r{[\w\/-]+}
-  SECRET_KEYS_CACHE = 'secret_storage_keys'
+  SECRET_ID_REGEX = %r{[\w\/-]+}
+  SECRET_IDS_CACHE = 'secret_storage_keys'
 
   # keeps older lookups working
   DbBackend = Samson::Secrets::DbBackend
@@ -19,65 +19,64 @@ module SecretStorage
   BACKEND = ENV.fetch('SECRET_STORAGE_BACKEND', 'Samson::Secrets::DbBackend').constantize
 
   class << self
-    def write(key, data)
-      return false unless key =~ /\A#{SECRET_KEY_REGEX}\z/
+    def write(id, data)
+      return false unless id =~ /\A#{SECRET_ID_REGEX}\z/
       return false if data.blank? || data[:value].blank?
-      result = backend.write(key, data)
-      modify_keys_cache { |c| c.push key unless c.include?(key) }
+      result = backend.write(id, data)
+      modify_ids_cache { |c| c.push id unless c.include?(id) }
       result
     end
 
-    # reads a single key and raises ActiveRecord::RecordNotFound if it is not found
-    def read(key, include_value: false)
-      data = backend.read(key) || raise(ActiveRecord::RecordNotFound)
+    # reads a single id and raises ActiveRecord::RecordNotFound if it is not found
+    def read(id, include_value: false)
+      data = backend.read(id) || raise(ActiveRecord::RecordNotFound)
       data.delete(:value) unless include_value
       data
     end
 
-    def exist?(key)
-      backend.read_multi([key]).values.map(&:nil?) == [false]
+    def exist?(id)
+      backend.read_multi([id]).values.map(&:nil?) == [false]
     end
 
-    # reads multiple keys from the backend into a hash, not raising on missing
+    # reads multiple ids from the backend into a hash, not raising on missing
     # [a, b, c] -> {a: 1, c: 2}
-    def read_multi(keys, include_value: false)
-      data = backend.read_multi(keys)
+    def read_multi(ids, include_value: false)
+      data = backend.read_multi(ids)
       data.each_value { |s| s.delete(:value) } unless include_value
       data
     end
 
-    def delete(key)
-      result = backend.delete(key)
-      modify_keys_cache { |c| c.delete(key) }
+    def delete(id)
+      result = backend.delete(id)
+      modify_ids_cache { |c| c.delete(id) }
       result
     end
 
-    # TODO: rename to ids ... do not rename shareable_keys
-    def keys
-      Rails.cache.fetch(SECRET_KEYS_CACHE) { backend.keys }
+    def ids
+      Rails.cache.fetch(SECRET_IDS_CACHE) { backend.ids }
     end
 
     def shareable_keys
-      keys.map do |id|
-        parts = SecretStorage.parse_secret_key(id)
+      ids.map do |id|
+        parts = SecretStorage.parse_id(id)
         parts.fetch(:key) if parts.fetch(:project_permalink) == "global"
       end.compact
     end
 
-    def filter_keys_by_value(*args)
-      backend.filter_keys_by_value(*args)
+    def filter_ids_by_value(*args)
+      backend.filter_ids_by_value(*args)
     end
 
     def backend
       BACKEND
     end
 
-    def generate_secret_key(data)
-      SECRET_KEYS_PARTS.map { |k| data.fetch(k) }.join(SEPARATOR)
+    def generate_id(data)
+      ID_PARTS.map { |k| data.fetch(k) }.join(ID_PART_SEPARATOR)
     end
 
-    def parse_secret_key(key)
-      SECRET_KEYS_PARTS.zip(key.split(SEPARATOR, SECRET_KEYS_PARTS.size)).to_h
+    def parse_id(id)
+      ID_PARTS.zip(id.split(ID_PART_SEPARATOR, ID_PARTS.size)).to_h
     end
 
     def sharing_grants?
@@ -86,10 +85,10 @@ module SecretStorage
 
     private
 
-    def modify_keys_cache
-      if cache = Rails.cache.read(SECRET_KEYS_CACHE)
+    def modify_ids_cache
+      if cache = Rails.cache.read(SECRET_IDS_CACHE)
         yield cache
-        Rails.cache.write(SECRET_KEYS_CACHE, cache)
+        Rails.cache.write(SECRET_IDS_CACHE, cache)
       end
     end
   end

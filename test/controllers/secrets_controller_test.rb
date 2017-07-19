@@ -49,7 +49,7 @@ describe SecretsController do
       it 'renders template without secret values' do
         get :index
         assert_template :index
-        assigns[:secret_keys].size.must_equal 1
+        assigns[:secret_ids].size.must_equal 1
         response.body.wont_include secret.value
       end
 
@@ -57,28 +57,28 @@ describe SecretsController do
         create_secret 'production/global/pod2/bar'
         get :index, params: {search: {environment_permalink: 'production'}}
         assert_template :index
-        assigns[:secret_keys].map(&:first).must_equal ["production/global/pod2/bar", "production/global/pod2/foo"]
+        assigns[:secret_ids].map(&:first).must_equal ["production/global/pod2/bar", "production/global/pod2/foo"]
       end
 
       it 'can filter by project' do
         create_secret 'production/foo-bar/pod2/bar'
         get :index, params: {search: {project_permalink: 'foo-bar'}}
         assert_template :index
-        assigns[:secret_keys].map(&:first).must_equal ['production/foo-bar/pod2/bar']
+        assigns[:secret_ids].map(&:first).must_equal ['production/foo-bar/pod2/bar']
       end
 
       it 'can filter by deploy group' do
         create_secret 'production/global/pod2/bar'
         get :index, params: {search: {deploy_group_permalink: 'pod2'}}
         assert_template :index
-        assigns[:secret_keys].map(&:first).must_equal ["production/global/pod2/bar", "production/global/pod2/foo"]
+        assigns[:secret_ids].map(&:first).must_equal ["production/global/pod2/bar", "production/global/pod2/foo"]
       end
 
       it 'can filter by key' do
         create_secret 'production/foo-bar/pod2/bar'
         get :index, params: {search: {key: 'bar'}}
         assert_template :index
-        assigns[:secret_keys].map(&:first).must_equal ['production/foo-bar/pod2/bar']
+        assigns[:secret_ids].map(&:first).must_equal ['production/foo-bar/pod2/bar']
       end
 
       it 'can filter by value' do
@@ -86,11 +86,11 @@ describe SecretsController do
         other.update_attribute(:value, 'other')
         get :index, params: {search: {value: other.value}}
         assert_template :index
-        assigns[:secret_keys].map(&:first).must_equal [other.id]
+        assigns[:secret_ids].map(&:first).must_equal [other.id]
       end
 
       it 'raises when vault server is broken' do
-        SecretStorage.expects(:keys).raises(Samson::Secrets::BackendError.new('this is my error'))
+        SecretStorage.expects(:ids).raises(Samson::Secrets::BackendError.new('this is my error'))
         get :index
         assert flash[:error]
       end
@@ -224,7 +224,7 @@ describe SecretsController do
 
     describe '#update' do
       def attributes
-        super.except(*SecretStorage::SECRET_KEYS_PARTS)
+        super.except(*SecretStorage::ID_PARTS)
       end
 
       before do
@@ -332,7 +332,7 @@ describe SecretsController do
 
     describe '#update' do
       it "updates" do
-        put :update, params: {id: secret, secret: attributes.except(*SecretStorage::SECRET_KEYS_PARTS)}
+        put :update, params: {id: secret, secret: attributes.except(*SecretStorage::ID_PARTS)}
         assert_redirected_to secrets_path
       end
     end
