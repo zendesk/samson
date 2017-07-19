@@ -21,7 +21,8 @@ class DockerBuilderService
           *login_commands,
           executor.verbose_command(build)
         )
-        output.to_s[/Successfully built (\S+)/, 1]
+        image_id = output.to_s[/Successfully built (\S+)/, 1]
+        Docker::Image.get(image_id) if image_id
       end
     end
 
@@ -140,8 +141,7 @@ class DockerBuilderService
 
     before_docker_build(tmp_dir)
 
-    image_id = DockerBuilderService.build_docker_image(tmp_dir, output)
-    build.docker_image = (image_id ? Docker::Image.get(image_id) : nil)
+    build.docker_image = DockerBuilderService.build_docker_image(tmp_dir, output)
   end
   add_method_tracer :build_image
 
