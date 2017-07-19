@@ -193,6 +193,15 @@ describe SecretStorage do
     end
   end
 
+  describe ".shareable_keys" do
+    it "only lists global keys" do
+      create_secret 'production/foo/pod2/foo'
+      create_secret 'production/global/pod2/bar'
+      create_secret 'production/global/pod2/baz'
+      SecretStorage.shareable_keys.must_equal ['bar', 'baz']
+    end
+  end
+
   describe ".filter_keys_by_value" do
     it "filters keys" do
       key = secret.id

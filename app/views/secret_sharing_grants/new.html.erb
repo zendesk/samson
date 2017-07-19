@@ -4,8 +4,9 @@
   <%= form_for @secret_sharing_grant, html: { class: "form-horizontal" } do |form| %>
     <%= redirect_to_field %>
     <%= render 'shared/errors', object: @secret_sharing_grant %>
-
-    <%= form.input :key, required: true %>
+    <%= form.input :key, required: true do %>
+      <%= form.select :key, SecretStorage.shareable_keys, {required: true}, Samson::FormBuilder::LIVE_SELECT_OPTIONS %>
+    <% end %>
     <%= form.input :project_id, required: true do %>
       <% projects = Project.pluck(:name, :id) %>
       <%= form.select :project_id, projects, {}, Samson::FormBuilder::LIVE_SELECT_OPTIONS %>

@@ -50,9 +50,10 @@ describe SecretSharingGrantsController do
       end
 
       it "prefills" do
+        create_secret 'production/global/pod2/doobar' # key must exist and be shared
         get :new, params: {secret_sharing_grant: {key: "doobar"} }
         assert_response :success
-        response.body.must_include 'value="doobar"'
+        response.body.must_include 'selected="selected" value="doobar"'
       end
     end
 
