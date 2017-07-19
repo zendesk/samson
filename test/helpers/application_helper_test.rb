@@ -572,4 +572,24 @@ describe ApplicationHelper do
       paginate(User.where("1=2").page(1).per(1)).wont_include " records"
     end
   end
+
+  describe '#list_with_show_more' do
+    let(:items) { %w[foo bar baz] }
+
+    it 'only shows `display_limit` records' do
+      tag = list_with_show_more(items, 2, content_tag(:li, 'More')) do |item|
+        content_tag(:li, item)
+      end
+
+      tag.must_equal '<ul><li>foo</li><li>bar</li><li>More</li></ul>'
+    end
+
+    it 'passes through any HTML options' do
+      tag = list_with_show_more(items, 2, content_tag(:li, 'More'), class: 'show-more') do |item|
+        content_tag(:li, item)
+      end
+
+      tag.must_equal '<ul class="show-more"><li>foo</li><li>bar</li><li>More</li></ul>'
+    end
+  end
 end
