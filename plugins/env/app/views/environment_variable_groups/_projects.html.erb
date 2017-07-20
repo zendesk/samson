@@ -1,4 +1,14 @@
-<% projects = group.projects.to_a %>
-<%= list_with_show_more(projects.sort_by(&:name), display_limit, link_to("+ #{projects.size - display_limit} More")) do |project| %>
-  <li><%= link_to project.name, project %></li>
+<% projects = group.projects.to_a.sort_by(&:name) %>
+
+<%# The index page has a limit, but the show page should display all projects %>
+<% if display_limit %>
+  <%= list_with_show_more(projects, display_limit, link_to("+ #{projects.size - display_limit} More")) do |project| %>
+    <li><%= link_to project.name, project %></li>
+  <% end %>
+<% else %>
+  <ul>
+    <% projects.each do |project| %>
+      <li><%= link_to project.name, project %></li>
+    <% end %>
+  </ul>
 <% end %>
