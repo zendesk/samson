@@ -38,9 +38,18 @@ module Kubernetes
         end
       end
 
+      # wait for delete to finish before doing further work so we don't run into duplication errors
+      # - first wait is 0 since the request itself already took a few ms
+      # - sum of waits should be ~30s which is the default delete timeout
       def delete
-        request(:delete, name, namespace)
-        expire_cache
+        return true unless running?
+        request_delete
+        [0.0, 0.1, 0.2, 0.5, 1, 2, 4, 8, 16].each do |wait|
+          expire_cache
+          return true unless running?
+          sleep wait
+        end
+        raise "Unable to delete resource"
       end
 
       def running?
@@ -57,6 +66,11 @@ module Kubernetes
       end
 
       private
+
+      def request_delete
+        request(:delete, name, namespace)
+        expire_cache
+      end
 
       def expire_cache
         remove_instance_variable(:@resource) if defined?(@resource)
@@ -118,23 +132,6 @@ module Kubernetes
     end
 
     class Deployment < Base
-      def delete
-        return unless resource
-
-        # Make kubenretes kill all the pods by scaling down
-        @template[:spec][:replicas] = 0
-        update
-
-        # Wait for there to be zero pods
-        loop do
-          loop_sleep
-          break if fetch_resource[:status][:replicas].to_i.zero?
-        end
-
-        # delete the actual deployment
-        super
-      end
-
       def desired_pod_count
         @template[:spec][:replicas]
       end
@@ -149,6 +146,21 @@ module Kubernetes
 
       private
 
+      def request_delete
+        # Make kubernetes kill all the pods by scaling down
+        @template[:spec][:replicas] = 0
+        update
+
+        # Wait for there to be zero pods
+        loop do
+          loop_sleep
+          break if fetch_resource[:status][:replicas].to_i.zero?
+        end
+
+        # delete the actual deployment
+        super
+      end
+
       def client
         @deploy_group.kubernetes_cluster.extension_client
       end
@@ -156,36 +168,8 @@ module Kubernetes
 
     class DaemonSet < Base
       def deploy
-        delete if running?
+        delete
         create
-      end
-
-      # we cannot replace or update a daemonset, so we take it down completely
-      #
-      # was do what `kubectl delete daemonset NAME` does:
-      # - make it match no node
-      # - waits for current to reach 0
-      # - deletes the daemonset
-      def delete
-        return super if no_pods_running? # delete when already dead from previous deletion try, update would fail
-
-        # make it match no node
-        @template[:spec][:template][:spec][:nodeSelector] = {rand(9999).to_s => rand(9999).to_s}
-        update
-
-        # wait for it to terminate all it's pods
-        max = 30
-        (1..max).each do |i|
-          loop_sleep
-          expire_cache
-          break if no_pods_running?
-          if i == max
-            raise Samson::Hooks::UserError, "Unable to terminate previous DaemonSet because it still has pods"
-          end
-        end
-
-        # delete it
-        super
       end
 
       # need http request since we do not know how many nodes we will match
@@ -213,6 +197,34 @@ module Kubernetes
 
       private
 
+      # we cannot replace or update a daemonset, so we take it down completely
+      #
+      # was do what `kubectl delete daemonset NAME` does:
+      # - make it match no node
+      # - waits for current to reach 0
+      # - deletes the daemonset
+      def request_delete
+        return super if no_pods_running? # delete when already dead from previous deletion try, update would fail
+
+        # make it match no node
+        @template[:spec][:template][:spec][:nodeSelector] = {rand(9999).to_s => rand(9999).to_s}
+        update
+
+        # wait for it to terminate all it's pods
+        max = 30
+        (1..max).each do |i|
+          loop_sleep
+          expire_cache
+          break if no_pods_running?
+          if i == max
+            raise Samson::Hooks::UserError, "Unable to terminate previous DaemonSet because it still has pods"
+          end
+        end
+
+        # delete it
+        super
+      end
+
       def no_pods_running?
         resource[:status][:currentNumberScheduled].zero? && resource[:status][:numberMisscheduled].zero?
       end
@@ -224,7 +236,7 @@ module Kubernetes
 
     class Job < Base
       def deploy
-        delete if running?
+        delete
         create
       end
 
@@ -236,9 +248,11 @@ module Kubernetes
         delete
       end
 
+      private
+
       # deleting the job leaves the pods running, so we have to delete them manually
       # kubernetes is a little more careful with running pods, but we just want to get rid of them
-      def delete
+      def request_delete
         selector = resource.dig(:spec, :selector, :matchLabels).map { |k, v| "#{k}=#{v}" }.join(",")
 
         # delete the job
@@ -250,8 +264,6 @@ module Kubernetes
         pods.each { |pod| client.delete_pod pod.metadata.name, pod.metadata.namespace }
       end
 
-      private
-
       # FYI per docs it is supposed to use batch api, but extension api works
       def client
         @deploy_group.kubernetes_cluster.batch_client
@@ -260,7 +272,7 @@ module Kubernetes
 
     class Pod < Base
       def deploy
-        delete if running?
+        delete
         create
       end
 
