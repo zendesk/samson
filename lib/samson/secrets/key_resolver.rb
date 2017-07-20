@@ -20,7 +20,7 @@ module Samson
         # build a list of all possible ids
         possible_ids = possible_secret_key_parts.map do |id|
           key_parts = id.merge(key: secret_key)
-          SecretStorage.generate_secret_key(key_parts) if key_granted?(key_parts)
+          SecretStorage.generate_id(key_parts) if key_granted?(key_parts)
         end.compact
 
         found =
@@ -63,7 +63,7 @@ module Samson
 
       # find the first id that exists, preserving priority in possible_ids
       def expand_simple_key(env_name, possible_ids)
-        if found = (possible_ids & SecretStorage.keys).first
+        if found = (possible_ids & SecretStorage.ids).first
           [[env_name, found]]
         else
           []
@@ -73,18 +73,18 @@ module Samson
       # FOO_* with foo_* -> [[FOO_BAR, a/a/a/foo_bar], [FOO_BAZ, a/a/a/foo_baz]]
       def expand_wildcard_keys(env_name, secret_key, possible_ids)
         # look through all keys to check which ones match
-        all = SecretStorage.keys
+        all = SecretStorage.ids
         matched = possible_ids.flat_map do |id|
           all.select { |a| a.start_with?(id.delete('*')) }
         end
 
         # pick the most specific id per key, they are already sorted ... [a/b/c/d, a/a/a/d] -> [a/b/c/d]
-        matched.uniq! { |id| SecretStorage.parse_secret_key(id).fetch(:key) }
+        matched.uniq! { |id| SecretStorage.parse_id(id).fetch(:key) }
 
         # expand env name to match the expanded key
         # env FOO_* with key d_* finds id a/b/c/d_bar and results in [FOO_BAR, a/b/c/d_bar]
         matched.map! do |id|
-          expanded = SecretStorage.parse_secret_key(id).fetch(:key)
+          expanded = SecretStorage.parse_id(id).fetch(:key)
           expanded.slice!(0, secret_key.size - 1)
           [env_name.delete('*') + expanded.upcase, id]
         end

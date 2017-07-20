@@ -11,18 +11,18 @@ class SecretsController < ApplicationController
   before_action :authorize_resource!
 
   def index
-    @secret_keys = SecretStorage.keys.map { |key| [key, SecretStorage.parse_secret_key(key)] }
-    @keys = @secret_keys.map { |_key, parts| parts.fetch(:key) }.uniq.sort
+    @secret_ids = SecretStorage.ids.map { |id| [id, SecretStorage.parse_id(id)] }
+    @keys = @secret_ids.map { |_key, parts| parts.fetch(:key) }.uniq.sort
 
-    SecretStorage::SECRET_KEYS_PARTS.each do |part|
+    SecretStorage::ID_PARTS.each do |part|
       if value = params.dig(:search, part).presence
-        @secret_keys.select! { |_key, parts| parts.fetch(part) == value }
+        @secret_ids.select! { |_key, parts| parts.fetch(part) == value }
       end
     end
 
     if value = params.dig(:search, :value).presence
-      matching = SecretStorage.filter_keys_by_value(@secret_keys.map(&:first), value)
-      @secret_keys.select! { |key, _parts| matching.include?(key) }
+      matching = SecretStorage.filter_ids_by_value(@secret_ids.map(&:first), value)
+      @secret_ids.select! { |key, _parts| matching.include?(key) }
     end
   rescue Samson::Secrets::BackendError => e
     flash[:error] = e.message
@@ -34,8 +34,8 @@ class SecretsController < ApplicationController
   end
 
   def create
-    if SecretStorage.exist?(key)
-      failure_response "The secret #{key} already exists."
+    if SecretStorage.exist?(id)
+      failure_response "The secret #{id} already exists."
     else
       update
     end
@@ -47,35 +47,35 @@ class SecretsController < ApplicationController
   def update
     attributes = secret_params.slice(:value, :visible, :comment)
     attributes[:user_id] = current_user.id
-    if SecretStorage.write(key, attributes)
-      successful_response "Secret #{key} saved."
+    if SecretStorage.write(id, attributes)
+      successful_response "Secret #{id} saved."
     else
       failure_response 'Failed to save.'
     end
   end
 
   def destroy
-    SecretStorage.delete(key)
+    SecretStorage.delete(id)
     if request.xhr?
       head :ok
     else
-      successful_response "#{key} deleted"
+      successful_response "#{id} deleted"
     end
   end
 
   private
 
   def secret_params
-    @secret_params ||= params.require(:secret).permit(*SecretStorage::SECRET_KEYS_PARTS, :value, :visible, :comment)
+    @secret_params ||= params.require(:secret).permit(*SecretStorage::ID_PARTS, :value, :visible, :comment)
   end
 
-  def key
-    @key ||= (params[:id] || SecretStorage.generate_secret_key(secret_params.slice(*SecretStorage::SECRET_KEYS_PARTS)))
+  def id
+    @id ||= (params[:id] || SecretStorage.generate_id(secret_params.slice(*SecretStorage::ID_PARTS)))
   end
 
   def project_permalink
     if params[:id].present?
-      SecretStorage.parse_secret_key(params[:id]).fetch(:project_permalink)
+      SecretStorage.parse_id(params[:id]).fetch(:project_permalink)
     else
       (params[:secret] && params[:secret][:project_permalink]) || 'global'
     end
@@ -96,7 +96,7 @@ class SecretsController < ApplicationController
   end
 
   def find_secret
-    @secret = SecretStorage.read(key, include_value: true)
+    @secret = SecretStorage.read(id, include_value: true)
     @secret[:value] = nil unless @secret.fetch(:visible)
   end
 

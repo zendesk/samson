@@ -12,14 +12,14 @@ module Samson
       end
 
       # responsible servers should have the same data, so read from the first
-      def read(key)
-        vault = responsible_clients(key).first
-        with_retries { vault.logical.read(wrap_key(key)) }
+      def read(id)
+        vault = responsible_clients(id).first
+        with_retries { vault.logical.read(wrap_id(id)) }
       end
 
-      # different servers have different keys so combine all
+      # different servers have different ids so combine all
       def list_recursive(path)
-        path = wrap_key(path)
+        path = wrap_id(path)
         all = Samson::Parallelizer.map(clients.values) do |vault|
           begin
             with_retries { vault.logical.list_recursive(path) }
@@ -32,18 +32,18 @@ module Samson
         all
       end
 
-      # write to servers that need this key
-      def write(key, data)
-        Samson::Parallelizer.map(responsible_clients(key)) do |v|
-          with_retries { v.logical.write(wrap_key(key), data) }
+      # write to servers that need this id
+      def write(id, data)
+        Samson::Parallelizer.map(responsible_clients(id)) do |v|
+          with_retries { v.logical.write(wrap_id(id), data) }
         end
       end
 
-      # delete from all servers that hold this key
-      def delete(key, all: false)
-        selected_clients = (all ? clients.values : responsible_clients(key))
+      # delete from all servers that hold this id
+      def delete(id, all: false)
+        selected_clients = (all ? clients.values : responsible_clients(id))
         Samson::Parallelizer.map(selected_clients) do |v|
-          with_retries { v.logical.delete(wrap_key(key)) }
+          with_retries { v.logical.delete(wrap_id(id)) }
         end
       end
 
@@ -72,19 +72,19 @@ module Samson
 
       private
 
-      def wrap_key(key)
-        "#{VaultServer::PREFIX}#{key}"
+      def wrap_id(id)
+        "#{VaultServer::PREFIX}#{id}"
       end
 
       def with_retries(&block)
         Vault.with_retries(Vault::HTTPConnectionError, attempts: 3, &block)
       end
 
-      # - local server for deploy-group specific key
-      # - servers in environment for environment specific key
-      # - all for global key
-      def responsible_clients(key)
-        parts = SecretStorage.parse_secret_key(key)
+      # - local server for deploy-group specific id
+      # - servers in environment for environment specific id
+      # - all for global id
+      def responsible_clients(id)
+        parts = SecretStorage.parse_id(id)
         deploy_group_permalink = parts.fetch(:deploy_group_permalink)
         environment_permalink = parts.fetch(:environment_permalink)
 
@@ -99,7 +99,7 @@ module Samson
           end
         else
           [client(deploy_group_permalink)]
-        end.presence || raise("no vault servers found for #{key}")
+        end.presence || raise("no vault servers found for #{id}")
       end
 
       def clients

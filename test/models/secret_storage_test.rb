@@ -20,38 +20,38 @@ describe SecretStorage do
     let(:attributes) { {value: '111', user_id: users(:admin).id, visible: false, comment: 'comment'} }
 
     it "writes" do
-      secret_key = 'production/foo/pod2/hello'
-      SecretStorage.write(secret_key, attributes).must_equal true
-      secret = SecretStorage::DbBackend::Secret.find(secret_key)
+      id = 'production/foo/pod2/hello'
+      SecretStorage.write(id, attributes).must_equal true
+      secret = SecretStorage::DbBackend::Secret.find(id)
       secret.value.must_equal '111'
       secret.creator_id.must_equal users(:admin).id
       secret.updater_id.must_equal users(:admin).id
     end
 
-    it "adds key to keys cache" do
+    it "adds id to ids cache" do
       secret # create
-      SecretStorage.keys.must_equal([secret.id]) # fill and check cache
-      SecretStorage.backend.expects(:keys).never # block call
+      SecretStorage.ids.must_equal([secret.id]) # fill and check cache
+      SecretStorage.backend.expects(:ids).never # block call
 
-      secret_key = 'production/foo/pod2/world'
-      SecretStorage.write(secret_key, attributes).must_equal true
-      SecretStorage.keys.sort.must_equal [secret.id, secret_key]
+      id = 'production/foo/pod2/world'
+      SecretStorage.write(id, attributes).must_equal true
+      SecretStorage.ids.sort.must_equal [secret.id, id]
     end
 
-    it "does not add known key to keys cache" do
+    it "does not add known id to ids cache" do
       secret # create
-      SecretStorage.keys.must_equal([secret.id]) # fill and check cache
-      SecretStorage.backend.expects(:keys).never # block call
+      SecretStorage.ids.must_equal([secret.id]) # fill and check cache
+      SecretStorage.backend.expects(:ids).never # block call
 
       SecretStorage.write(secret.id, attributes).must_equal true
-      SecretStorage.keys.sort.must_equal [secret.id]
+      SecretStorage.ids.sort.must_equal [secret.id]
     end
 
-    it "refuses to write empty keys" do
+    it "refuses to write empty ids" do
       SecretStorage.write('', attributes).must_equal false
     end
 
-    it "refuses to write keys with spaces" do
+    it "refuses to write ids with spaces" do
       SecretStorage.write('  production/foo/pod2/hello', attributes).must_equal false
     end
 
@@ -59,14 +59,14 @@ describe SecretStorage do
       SecretStorage.write('production/foo/pod2/hello', attributes.merge(value: '   ')).must_equal false
     end
 
-    it "refuses to write keys we will not be able to replace in commands" do
+    it "refuses to write ids we will not be able to replace in commands" do
       SecretStorage.write('a"b', attributes).must_equal false
     end
   end
 
-  describe ".parse_secret_key" do
+  describe ".parse_id" do
     it "parses parts" do
-      SecretStorage.parse_secret_key('marry/had/a/little/lamb').must_equal(
+      SecretStorage.parse_id('marry/had/a/little/lamb').must_equal(
         environment_permalink: "marry",
         project_permalink: "had",
         deploy_group_permalink: "a",
@@ -75,7 +75,7 @@ describe SecretStorage do
     end
 
     it "ignores missing parts" do
-      SecretStorage.parse_secret_key('').must_equal(
+      SecretStorage.parse_id('').must_equal(
         environment_permalink: nil,
         project_permalink: nil,
         deploy_group_permalink: nil,
@@ -84,9 +84,9 @@ describe SecretStorage do
     end
   end
 
-  describe ".generate_secret_key" do
-    it "generates a private key" do
-      SecretStorage.generate_secret_key(
+  describe ".generate_id" do
+    it "generates a private ud" do
+      SecretStorage.generate_id(
         environment_permalink: 'production',
         project_permalink: 'foo',
         deploy_group_permalink: 'bar',
@@ -94,9 +94,9 @@ describe SecretStorage do
       ).must_equal("production/foo/bar/snafu")
     end
 
-    it "fails raises when missing keys" do
+    it "fails raises when missing ids" do
       assert_raises KeyError do
-        SecretStorage.generate_secret_key({})
+        SecretStorage.generate_id({})
       end
     end
   end
@@ -165,31 +165,31 @@ describe SecretStorage do
       refute SecretStorage::DbBackend::Secret.exists?(secret.id)
     end
 
-    it "updates keys cache" do
-      SecretStorage.keys.must_equal([secret.id]) # fill and check cache
-      SecretStorage.backend.expects(:keys).never # block call
+    it "updates ids cache" do
+      SecretStorage.ids.must_equal([secret.id]) # fill and check cache
+      SecretStorage.backend.expects(:ids).never # block call
 
       SecretStorage.delete(secret.id)
-      SecretStorage.keys.must_equal []
+      SecretStorage.ids.must_equal []
     end
 
     it "does not cache when cache did not exist" do
-      SecretStorage.backend.expects(:keys).never # block call
+      SecretStorage.backend.expects(:ids).never # block call
       SecretStorage.delete(secret.id)
-      Rails.cache.read(SecretStorage::SECRET_KEYS_CACHE).must_be_nil
+      Rails.cache.read(SecretStorage::SECRET_IDS_CACHE).must_be_nil
     end
   end
 
-  describe ".keys" do
-    it "lists keys" do
+  describe ".ids" do
+    it "lists ids" do
       secret # trigger creation
-      SecretStorage.keys.must_equal ['production/foo/pod2/hello']
+      SecretStorage.ids.must_equal ['production/foo/pod2/hello']
     end
 
     it "is cached" do
-      SecretStorage.keys
+      SecretStorage.ids
       secret # trigger creation
-      SecretStorage.keys.must_equal []
+      SecretStorage.ids.must_equal []
     end
   end
 
@@ -202,11 +202,11 @@ describe SecretStorage do
     end
   end
 
-  describe ".filter_keys_by_value" do
+  describe ".filter_ids_by_value" do
     it "filters keys" do
-      key = secret.id
-      SecretStorage.filter_keys_by_value([key], 'NOPE').must_equal []
-      SecretStorage.filter_keys_by_value([key], secret.value).must_equal [key]
+      id = secret.id
+      SecretStorage.filter_ids_by_value([id], 'NOPE').must_equal []
+      SecretStorage.filter_ids_by_value([id], secret.value).must_equal [id]
     end
   end
 

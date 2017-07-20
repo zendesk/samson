@@ -41,25 +41,25 @@ describe Samson::Secrets::DbBackend do
     end
   end
 
-  describe ".keys" do
-    it "returns all keys" do
+  describe ".ids" do
+    it "returns all ids" do
       secret # trigger create
-      Samson::Secrets::DbBackend.keys.must_equal [secret.id]
+      Samson::Secrets::DbBackend.ids.must_equal [secret.id]
     end
   end
 
-  describe ".filter_keys_by_value" do
-    it "filters keys" do
-      key = secret.id
-      Samson::Secrets::DbBackend.filter_keys_by_value([key], 'NOPE').must_equal []
-      Samson::Secrets::DbBackend.filter_keys_by_value([key], secret.value).must_equal [key]
+  describe ".filter_ids_by_value" do
+    it "filters ids" do
+      id = secret.id
+      Samson::Secrets::DbBackend.filter_ids_by_value([id], 'NOPE').must_equal []
+      Samson::Secrets::DbBackend.filter_ids_by_value([id], secret.value).must_equal [id]
     end
   end
 
   describe ".delete" do
     it "deletes" do
       Samson::Secrets::DbBackend.delete(secret.id)
-      Samson::Secrets::DbBackend.keys.must_equal []
+      Samson::Secrets::DbBackend.ids.must_equal []
     end
   end
 
@@ -103,12 +103,12 @@ describe Samson::Secrets::DbBackend do
         refute_valid secret
       end
 
-      it "is invalid without key" do
+      it "is invalid without id" do
         secret.id = "a/b/c/"
         refute_valid secret
       end
 
-      it "is valid with keys with slashes" do
+      it "is valid with ids with slashes" do
         secret.id = "a/b/c/d/e/f/g"
         assert_valid secret
       end
