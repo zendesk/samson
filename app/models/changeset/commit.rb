@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 class Changeset::Commit
   PULL_REQUEST_MERGE_MESSAGE = /\AMerge pull request #(\d+)/
+  PULL_REQUEST_SQUASH_MESSAGE = /\A.*\(#(\d+)\)$/
 
   def initialize(repo, data)
     @repo = repo
@@ -33,7 +34,9 @@ class Changeset::Commit
   end
 
   def pull_request_number
-    Integer(Regexp.last_match(1)) if summary =~ PULL_REQUEST_MERGE_MESSAGE
+    if number = summary[PULL_REQUEST_MERGE_MESSAGE, 1] || summary[PULL_REQUEST_SQUASH_MESSAGE, 1]
+      Integer(number)
+    end
   end
 
   def url
