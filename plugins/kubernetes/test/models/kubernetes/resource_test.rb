@@ -85,17 +85,34 @@ describe Kubernetes::Resource do
   end
 
   describe "#delete" do
-    let!(:request) { stub_request(:delete, url).to_return(body: "{}") }
+    let!(:delete) { stub_request(:delete, url).to_return(body: "{}") }
 
     it "deletes" do
+      stub_request(:get, url).to_return({body: "{}"}, status: 404)
       resource.delete
-      assert_requested request
+      assert_requested delete
     end
 
     it "fetches after deleting" do
-      stub_request(:get, url).to_return(status: 404)
+      get = stub_request(:get, url).to_return({body: "{}"}, status: 404)
+
       resource.delete
       refute resource.running?
+
+      assert_requested delete
+      assert_requested get, times: 2
+    end
+
+    it "fails when deletion fails" do
+      tries = 9
+      get = stub_request(:get, url).to_return(body: "{}")
+      resource.expects(:sleep).times(tries)
+
+      e = assert_raises(RuntimeError) { resource.delete }
+      e.message.must_equal "Unable to delete resource"
+
+      assert_requested delete
+      assert_requested get, times: tries + 1
     end
   end
 
@@ -175,6 +192,7 @@ describe Kubernetes::Resource do
       end
 
       it "deletes and created when daemonset exists without pods" do
+        client.expects(:get_daemon_set).raises(KubeException.new(404, 'Not Found', {}))
         client.expects(:get_daemon_set).returns(daemonset_stub(0, 0))
         client.expects(:delete_daemon_set)
         client.expects(:create_daemon_set)
@@ -183,6 +201,7 @@ describe Kubernetes::Resource do
 
       it "deletes and created when daemonset exists with pods" do
         client.expects(:update_daemon_set)
+        client.expects(:get_daemon_set).raises(KubeException.new(404, 'Not Found', {}))
         client.expects(:get_daemon_set).times(4).returns(
           daemonset_stub(1, 1), # running check
           daemonset_stub(1, 1), # after update check #1 ... still running
@@ -285,6 +304,7 @@ describe Kubernetes::Resource do
         client.expects(:update_deployment).with do |template|
           template[:spec].must_equal(replicas: 0)
         end
+        client.expects(:get_deployment).raises(KubeException.new(404, 'Not Found', {}))
         client.expects(:get_deployment).times(3).returns(
           deployment_stub(3),
           deployment_stub(3),
@@ -336,7 +356,7 @@ describe Kubernetes::Resource do
 
       it "replaces existing" do
         job = {spec: {selector: {matchLabels: {project: 'foo', release: 'bar'}}}}
-        stub_request(:get, url).to_return(body: job.to_json)
+        stub_request(:get, url).to_return({body: job.to_json}, status: 404)
         delete_job = stub_request(:delete, url).to_return(body: '{}')
         query = "http://foobar.server/api/v1/namespaces/pod1/pods?labelSelector=project=foo,release=bar"
         get_pods = stub_request(:get, query).
@@ -433,11 +453,32 @@ describe Kubernetes::Resource do
       end
 
       it "replaces when existing" do
-        stub_request(:get, url).to_return(body: "{}")
-        stub_request(:delete, url)
-        request = stub_request(:post, base_url).to_return(body: "{}")
+        get = stub_request(:get, url).to_return({body: "{}"}, status: 404)
+        delete = stub_request(:delete, url)
+        create = stub_request(:post, base_url).to_return(body: "{}")
+
         resource.deploy
-        assert_requested request
+
+        assert_requested get, times: 2
+        assert_requested delete
+        assert_requested create
+      end
+
+      it "waits for deletion to finish before replacing to avoid duplication errors" do
+        get = stub_request(:get, url).to_return(
+          {body: "{}"},
+          {body: "{}"},
+          {body: "{}"},
+          status: 404
+        )
+        delete = stub_request(:delete, url)
+        create = stub_request(:post, base_url).to_return(body: "{}")
+
+        resource.deploy
+
+        assert_requested get, times: 4
+        assert_requested delete
+        assert_requested create
       end
     end
 
