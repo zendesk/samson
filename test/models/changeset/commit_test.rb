@@ -63,6 +63,21 @@ describe Changeset::Commit do
       commit.pull_request_number.must_equal 136
     end
 
+    it "returns the PR number of a squasch merge" do
+      commit_data.stubs(:message).returns("Something very good (#136)")
+      commit.pull_request_number.must_equal 136
+    end
+
+    it "returns the PR number of a long squasch merge" do
+      commit_data.stubs(:message).returns("Something very good (#136)\nfoobar")
+      commit.pull_request_number.must_equal 136
+    end
+
+    it "does not fetch random other numbers" do
+      commit_data.stubs(:message).returns("Something very bad (#136) here")
+      commit.pull_request_number.must_equal nil
+    end
+
     it "returns nil if the commit is not a Pull Request merge" do
       commit_data.stubs(:message).returns("Add another bug")
       commit.pull_request_number.must_be_nil
