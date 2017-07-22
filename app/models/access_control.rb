@@ -38,7 +38,7 @@ class AccessControl
         when :write then user.admin_for?(project)
         else raise ArgumentError, "Unsupported action #{action}"
         end
-      when 'user_merges', 'vault_servers'
+      when 'user_merges', 'vault_servers', 'environments'
         case action
         when :read then true
         when :write then user.super_admin?
