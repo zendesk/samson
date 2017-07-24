@@ -78,7 +78,7 @@ describe AccessControl do
     end
   end
 
-  ["vault_servers", "user_merges"].each do |resource|
+  ["vault_servers", "user_merges", "environments"].each do |resource|
     describe resource do
       it "fails on unknown action" do
         assert_raises(ArgumentError) { can?(admin, :fooo) }

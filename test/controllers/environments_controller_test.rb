@@ -20,9 +20,15 @@ describe EnvironmentsController do
       end
     end
 
+    describe "#show" do
+      it "renders" do
+        get :show, params: {id: environments(:production).id}
+        assert_response :success
+      end
+    end
+
     unauthorized :get, :new
     unauthorized :post, :create
-    unauthorized :get, :show, id: 1
     unauthorized :delete, :destroy, id: 1
     unauthorized :post, :update, id: 1
     unauthorized :put, :update, id: 1
@@ -50,13 +56,6 @@ describe EnvironmentsController do
         post :create, params: {environment: {name: nil, production: true}}
         assert_template :show
         Environment.count.must_equal env_count
-      end
-    end
-
-    describe "#show" do
-      it "renders" do
-        get :show, params: {id: environments(:production).id}
-        assert_response :success
       end
     end
 

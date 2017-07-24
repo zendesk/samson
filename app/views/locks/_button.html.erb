@@ -1,5 +1,6 @@
-<% warning = {resource: resource, warning: true, icon: warning_icon, text: "Warn", disabled: false} %>
-<% locking = {resource: resource,warning: false, icon: lock_icon, text: "Lock", disabled: false} %>
+<% prefix ||= "" %>
+<% warning = {resource: resource, warning: true, icon: warning_icon, text: "#{prefix}Warn", disabled: false} %>
+<% locking = {resource: resource, warning: false, icon: lock_icon, text: "#{prefix}Lock", disabled: false} %>
 <% if lock %>
   <% if lock.warning? %>
     <%= link_to lock, class: 'btn btn-default', method: :delete do %>
