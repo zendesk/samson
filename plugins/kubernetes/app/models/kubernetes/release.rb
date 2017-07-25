@@ -12,7 +12,6 @@ module Kubernetes
 
     validates :project, :git_sha, :git_ref, presence: true
     validate :validate_docker_image_in_registry, on: :create
-    validate :validate_project_ids_are_in_sync
 
     def user
       super || NullUser.new(user_id)
@@ -78,12 +77,6 @@ module Kubernetes
     def validate_docker_image_in_registry
       if build && !build.docker_repo_digest?
         errors.add(:build, 'Docker image was not pushed to registry')
-      end
-    end
-
-    def validate_project_ids_are_in_sync
-      if build && build.project_id != project_id
-        errors.add(:build, 'build.project_id is out of sync with project_id')
       end
     end
   end

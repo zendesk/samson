@@ -141,13 +141,6 @@ describe Kubernetes::Release do
     end
   end
 
-  describe "#validate_project_ids_are_in_sync" do
-    it 'ensures project ids are in sync' do
-      release.project_id = 123
-      refute_valid(release, :build)
-    end
-  end
-
   describe '#validate_docker_image_in_registry' do
     it 'ensures image is in registry' do
       release.build = builds(:staging) # does not have a docker image pushed
