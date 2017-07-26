@@ -1,16 +1,18 @@
 # frozen_string_literal: true
+require 'digest/sha2'
+
 module SecretStorage
   ID_PARTS = [:environment_permalink, :project_permalink, :deploy_group_permalink, :key].freeze
   ID_PART_SEPARATOR = "/"
+  SECRET_ID_REGEX = %r{[\w\/-]+}
+  SECRET_LOOKUP_CACHE = 'secret_lookup_cache'
+  SECRET_LOOKUP_CACHE_MUTEX = Mutex.new
 
   def self.allowed_project_prefixes(user)
     allowed = user.administrated_projects.pluck(:permalink).sort
     allowed.unshift 'global' if user.admin?
     allowed
   end
-
-  SECRET_ID_REGEX = %r{[\w\/-]+}
-  SECRET_IDS_CACHE = 'secret_storage_keys'
 
   # keeps older lookups working
   DbBackend = Samson::Secrets::DbBackend
@@ -23,7 +25,7 @@ module SecretStorage
       return false unless id =~ /\A#{SECRET_ID_REGEX}\z/
       return false if data.blank? || data[:value].blank?
       result = backend.write(id, data)
-      modify_ids_cache { |c| c.push id unless c.include?(id) }
+      modify_lookup_cache { |c| c[id] = lookup_cache_value(data) }
       result
     end
 
@@ -48,12 +50,12 @@ module SecretStorage
 
     def delete(id)
       result = backend.delete(id)
-      modify_ids_cache { |c| c.delete(id) }
+      modify_lookup_cache { |c| c.delete(id) }
       result
     end
 
     def ids
-      Rails.cache.fetch(SECRET_IDS_CACHE) { backend.ids }
+      lookup_cache.keys
     end
 
     def shareable_keys
@@ -63,8 +65,9 @@ module SecretStorage
       end.compact
     end
 
-    def filter_ids_by_value(*args)
-      backend.filter_ids_by_value(*args)
+    def filter_ids_by_value(ids, value)
+      value_hashed = hash_value(value)
+      lookup_cache.slice(*ids).select { |_, v| v.fetch(:value_hashed) == value_hashed }.keys
     end
 
     def backend
@@ -85,10 +88,33 @@ module SecretStorage
 
     private
 
-    def modify_ids_cache
-      if cache = Rails.cache.read(SECRET_IDS_CACHE)
+    def lookup_cache
+      SECRET_LOOKUP_CACHE_MUTEX.synchronize do
+        Rails.cache.fetch(SECRET_LOOKUP_CACHE) do
+          backend.ids.each_slice(1000).each_with_object({}) do |slice, all|
+            read_multi(slice, include_value: true).each do |id, secret|
+              all[id] = lookup_cache_value(secret)
+            end
+          end
+        end
+      end
+    end
+
+    def lookup_cache_value(secret)
+      {
+        value_hashed: hash_value(secret.fetch(:value))
+      }
+    end
+
+    def hash_value(value)
+      Digest::SHA2.hexdigest("#{Samson::Application.config.secret_key_base}#{value}").first(10)
+    end
+
+    def modify_lookup_cache
+      SECRET_LOOKUP_CACHE_MUTEX.synchronize do
+        cache = Rails.cache.read(SECRET_LOOKUP_CACHE) || {}
         yield cache
-        Rails.cache.write(SECRET_IDS_CACHE, cache)
+        Rails.cache.write(SECRET_LOOKUP_CACHE, cache)
       end
     end
   end

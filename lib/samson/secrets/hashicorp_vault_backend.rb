@@ -65,11 +65,6 @@ module Samson
           ids.map! { |secret_path| vault_path(secret_path, :decode) }
         end
 
-        def filter_ids_by_value(ids, value)
-          all = read_multi(ids)
-          all.map { |k, v| k if Rack::Utils.secure_compare(v.fetch(:value), value) }.compact
-        end
-
         def deploy_groups
           DeployGroup.where.not(vault_server_id: nil)
         end

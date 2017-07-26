@@ -103,15 +103,15 @@ class ActiveSupport::TestCase
     undef :test
   end
 
-  def create_secret(key)
-    SecretStorage::DbBackend::Secret.create!(
-      id: key,
+  def create_secret(id)
+    SecretStorage.write(
+      id,
       value: 'MY-SECRET',
       visible: false,
       comment: 'this is secret',
-      updater_id: users(:admin).id,
-      creator_id: users(:admin).id
+      user_id: users(:admin).id
     )
+    SecretStorage::DbBackend::Secret.find(id) # TODO: just return id
   end
 
   def create_vault_server(overrides = {})

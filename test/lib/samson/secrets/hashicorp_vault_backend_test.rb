@@ -159,25 +159,6 @@ describe Samson::Secrets::HashicorpVaultBackend do
     end
   end
 
-  describe ".filter_ids_by_value" do
-    let(:id) { "production/foo/pod2/bar" }
-
-    it "ignore non-matching" do
-      assert_vault_request :get, id, body: {data: { vault: "SECRET"}}.to_json do
-        backend.filter_ids_by_value([id], 'NOPE').must_equal []
-      end
-    end
-
-    it "finds matching" do
-      missing = "production/foo/pod2/nope"
-      assert_vault_request :get, id, body: {data: { vault: "SECRET"}}.to_json do
-        assert_vault_request :get, missing, status: 404 do
-          backend.filter_ids_by_value([id, missing], "SECRET").must_equal [id]
-        end
-      end
-    end
-  end
-
   describe "raises BackendError when a vault instance is down/unreachable" do
     let(:client) { Samson::Secrets::VaultClient.client }
 
