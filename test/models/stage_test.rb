@@ -455,6 +455,12 @@ describe Stage do
       stage.reload
       stage.script.must_equal "#{commands(:echo).command}\ntest"
     end
+
+    it "can add a single command" do
+      stage.send(:stage_commands).delete_all
+      stage.update_attributes!(command: 'test')
+      stage.script.must_equal "test"
+    end
   end
 
   describe '#command_ids=' do
