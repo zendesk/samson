@@ -7,8 +7,8 @@ class Api::LocksController < Api::BaseController
   end
 
   def create
-    Lock.create!(params.require(:lock).permit(Lock::ASSIGNABLE_KEYS).merge(user: current_user))
-    head :created
+    lock = Lock.create!(params.require(:lock).permit(Lock::ASSIGNABLE_KEYS).merge(user: current_user))
+    render json: lock
   end
 
   def destroy

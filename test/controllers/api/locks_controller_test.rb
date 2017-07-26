@@ -35,6 +35,7 @@ describe Api::LocksController do
           post :create, params: {lock: {description: "foo"}}, format: :json
         end
         assert_response :success
+        JSON.parse(response.body).fetch("lock").fetch("id").must_equal Lock.last.id
       end
     end
 
