@@ -250,6 +250,7 @@ class Stage < ActiveRecord::Base
   def append_new_command
     return if @command.blank?
     new_command = project.commands.new(command: @command)
-    stage_commands.build(command: new_command, position: stage_commands.map(&:position).max + 1)
+    previous = stage_commands.map(&:position).max || 0
+    stage_commands.build(command: new_command, position: previous + 1)
   end
 end
