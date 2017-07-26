@@ -1,28 +1,29 @@
 # frozen_string_literal: true
 class SecretsController < ApplicationController
   ADD_MORE = 'Save and add another'
+  UPDATEDABLE_ATTRIBUTES = [:value, :visible, :deprecated_at, :comment].freeze
 
   include CurrentProject
 
   before_action :find_project_permalinks
   before_action :find_secret, only: [:update, :show]
 
-  before_action :convert_visible_to_boolean, only: [:update, :create, :new]
+  before_action :normalize_params_for_backend, only: [:update, :create, :new]
   before_action :authorize_resource!
 
   def index
-    @secret_ids = SecretStorage.ids.map { |id| [id, SecretStorage.parse_id(id)] }
-    @keys = @secret_ids.map { |_key, parts| parts.fetch(:key) }.uniq.sort
+    @secrets = SecretStorage.lookup_cache.map { |id, secret_stub| [id, SecretStorage.parse_id(id), secret_stub] }
+    @keys = @secrets.map { |_, parts, _| parts.fetch(:key) }.uniq.sort
 
     SecretStorage::ID_PARTS.each do |part|
       if value = params.dig(:search, part).presence
-        @secret_ids.select! { |_key, parts| parts.fetch(part) == value }
+        @secrets.select! { |_, parts, _| parts.fetch(part) == value }
       end
     end
 
     if value = params.dig(:search, :value).presence
-      matching = SecretStorage.filter_ids_by_value(@secret_ids.map(&:first), value)
-      @secret_ids.select! { |key, _parts| matching.include?(key) }
+      matching = SecretStorage.filter_ids_by_value(@secrets.map(&:first), value)
+      @secrets.select! { |id, _, _| matching.include?(id) }
     end
   rescue Samson::Secrets::BackendError => e
     flash[:error] = e.message
@@ -45,7 +46,7 @@ class SecretsController < ApplicationController
   end
 
   def update
-    attributes = secret_params.slice(:value, :visible, :comment)
+    attributes = secret_params.slice(*UPDATEDABLE_ATTRIBUTES)
 
     # allow updating comments by backfilling value ... but not making visible
     if attributes[:value].blank?
@@ -78,7 +79,7 @@ class SecretsController < ApplicationController
   private
 
   def secret_params
-    @secret_params ||= params.require(:secret).permit(*SecretStorage::ID_PARTS, :value, :visible, :comment)
+    @secret_params ||= params.require(:secret).permit(*SecretStorage::ID_PARTS, *UPDATEDABLE_ATTRIBUTES)
   end
 
   def id
@@ -122,10 +123,18 @@ class SecretsController < ApplicationController
     @project = Project.find_by_permalink permalink
   end
 
-  # vault backend needs booleans and so does our view logic
-  def convert_visible_to_boolean
+  def normalize_params_for_backend
     return unless secret = params[:secret]
-    secret[:visible] = ActiveRecord::Type::Boolean.new.cast(secret[:visible])
+
+    # vault backend needs booleans and so does our view logic
+    secret[:visible] = truthy?(secret[:visible])
+
+    # vault should not store unchecked box "0" as deprecated_at
+    secret[:deprecated_at] = nil unless truthy?(secret[:deprecated_at])
+  end
+
+  def truthy?(value)
+    ActiveRecord::Type::Boolean.new.cast(value)
   end
 
   # @override CurrentUser since we need to allow any user to see new since we do not yet

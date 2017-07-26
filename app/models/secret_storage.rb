@@ -5,7 +5,7 @@ module SecretStorage
   ID_PARTS = [:environment_permalink, :project_permalink, :deploy_group_permalink, :key].freeze
   ID_PART_SEPARATOR = "/"
   SECRET_ID_REGEX = %r{[\w\/-]+}
-  SECRET_LOOKUP_CACHE = 'secret_lookup_cache'
+  SECRET_LOOKUP_CACHE = 'secret_lookup_cache_v2'
   SECRET_LOOKUP_CACHE_MUTEX = Mutex.new
 
   def self.allowed_project_prefixes(user)
@@ -86,8 +86,6 @@ module SecretStorage
       ENV['SECRET_STORAGE_SHARING_GRANTS']
     end
 
-    private
-
     def lookup_cache
       SECRET_LOOKUP_CACHE_MUTEX.synchronize do
         Rails.cache.fetch(SECRET_LOOKUP_CACHE) do
@@ -100,9 +98,13 @@ module SecretStorage
       end
     end
 
+    private
+
     def lookup_cache_value(secret)
       {
-        value_hashed: hash_value(secret.fetch(:value))
+        deprecated_at: secret[:deprecated_at],
+        value_hashed: hash_value(secret.fetch(:value)),
+        visible: secret[:visible]
       }
     end
 

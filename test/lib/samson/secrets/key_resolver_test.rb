@@ -46,6 +46,18 @@ describe Samson::Secrets::KeyResolver do
       )
     end
 
+    it "does not find deprecated" do
+      SecretStorage.write(
+        "global/global/global/bar",
+        value: 'dsffd',
+        comment: '',
+        deprecated_at: Time.now.to_s(:db),
+        user_id: users(:admin).id,
+        visible: true
+      )
+      resolver.expand('ABC', 'bar').must_equal []
+    end
+
     describe "wildcards" do
       it "fails when only name has wildcard" do
         resolver.expand('ABC_*', 'ba').must_equal []

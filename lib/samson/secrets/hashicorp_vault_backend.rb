@@ -10,6 +10,7 @@ module Samson
       # / means diretory in vault and we want to keep all the ids in the same folder
       DIRECTORY_SEPARATOR = "/"
       ID_SEGMENTS = 4
+      IMPORTANT_COLUMNS = [:visible, :deprecated_at, :comment, :creator_id, :updater_id].freeze
 
       class << self
         def read(id)
@@ -81,8 +82,9 @@ module Samson
           nil # ignore errors in here
         end
 
+        # write to the backend ... but exclude metadata from a read/write update cycle
         def deep_write(id, data)
-          important = {vault: data.fetch(:value)}.merge(data.slice(:visible, :comment, :creator_id, :updater_id))
+          important = {vault: data.fetch(:value)}.merge(data.slice(*IMPORTANT_COLUMNS))
           vault_action(:write, vault_path(id, :encode), important)
         end
 
