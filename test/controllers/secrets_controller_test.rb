@@ -57,7 +57,7 @@ describe SecretsController do
         create_secret 'production/global/pod2/bar'
         get :index, params: {search: {environment_permalink: 'production'}}
         assert_template :index
-        assigns[:secret_ids].map(&:first).must_equal ["production/global/pod2/bar", "production/global/pod2/foo"]
+        assigns[:secret_ids].map(&:first).sort.must_equal ["production/global/pod2/bar", "production/global/pod2/foo"]
       end
 
       it 'can filter by project' do
@@ -71,7 +71,7 @@ describe SecretsController do
         create_secret 'production/global/pod2/bar'
         get :index, params: {search: {deploy_group_permalink: 'pod2'}}
         assert_template :index
-        assigns[:secret_ids].map(&:first).must_equal ["production/global/pod2/bar", "production/global/pod2/foo"]
+        assigns[:secret_ids].map(&:first).sort.must_equal ["production/global/pod2/bar", "production/global/pod2/foo"]
       end
 
       it 'can filter by key' do
@@ -83,8 +83,8 @@ describe SecretsController do
 
       it 'can filter by value' do
         other = create_secret 'production/global/pod2/baz'
-        other.update_attribute(:value, 'other')
-        get :index, params: {search: {value: other.value}}
+        SecretStorage.write other.id, value: 'other', user_id: 1, visible: true, comment: nil
+        get :index, params: {search: {value: 'other'}}
         assert_template :index
         assigns[:secret_ids].map(&:first).must_equal [other.id]
       end

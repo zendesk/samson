@@ -173,14 +173,26 @@ describe SecretStorage do
       SecretStorage.ids.must_equal []
     end
 
-    it "does not cache when cache did not exist" do
+    it "caches when cache did not exist" do
       SecretStorage.backend.expects(:ids).never # block call
       SecretStorage.delete(secret.id)
-      Rails.cache.read(SecretStorage::SECRET_IDS_CACHE).must_be_nil
+      Rails.cache.read(SecretStorage::SECRET_LOOKUP_CACHE).must_equal({})
     end
   end
 
   describe ".ids" do
+    # raw insert to bypass cache
+    let(:secret) do
+      SecretStorage::DbBackend::Secret.create!(
+        id: 'production/foo/pod2/hello',
+        value: 'MY-SECRET',
+        visible: false,
+        comment: 'this is secret',
+        updater_id: users(:admin).id,
+        creator_id: users(:admin).id
+      )
+    end
+
     it "lists ids" do
       secret # trigger creation
       SecretStorage.ids.must_equal ['production/foo/pod2/hello']
