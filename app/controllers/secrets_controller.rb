@@ -46,6 +46,18 @@ class SecretsController < ApplicationController
 
   def update
     attributes = secret_params.slice(:value, :visible, :comment)
+
+    # allow updating comments by backfilling value ... but not making visible
+    if attributes[:value].blank?
+      old = SecretStorage.read(id, include_value: true)
+      if old[:visible] || attributes[:visible]
+        failure_response 'Cannot update visibility without value.'
+        return
+      else
+        attributes[:value] = old.fetch(:value)
+      end
+    end
+
     attributes[:user_id] = current_user.id
     if SecretStorage.write(id, attributes)
       successful_response "Secret #{id} saved."

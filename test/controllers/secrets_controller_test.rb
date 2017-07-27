@@ -224,14 +224,17 @@ describe SecretsController do
 
     describe '#update' do
       def attributes
-        super.except(*SecretStorage::ID_PARTS)
+        @attributes ||= super.except(*SecretStorage::ID_PARTS)
       end
 
-      before do
+      def do_update
         patch :update, params: {id: secret.id, secret: attributes}
       end
 
+      before { secret }
+
       it 'updates' do
+        do_update
         flash[:notice].wont_be_nil
         assert_redirected_to secrets_path
         secret.reload
@@ -239,32 +242,50 @@ describe SecretsController do
         secret.creator_id.must_equal users(:admin).id
       end
 
-      describe 'invalid' do
-        def attributes
-          super.merge(value: '')
-        end
-
-        it 'fails to update' do
-          assert_template :show
-          assert flash[:error]
-        end
+      it 'backfills value when user is only updating comment' do
+        attributes[:value] = ""
+        do_update
+        assert_redirected_to secrets_path
+        secret.reload
+        secret.value.must_equal "MY-SECRET"
+        secret.comment.must_equal 'hello'
       end
 
-      describe 'updating key' do
-        def attributes
-          super.merge(key: 'bar')
-        end
+      it "does not allow backfills when user tries to make hidden visible" do
+        attributes[:value] = ""
+        attributes[:visible] = true
+        do_update
+        assert_template :show
+        assert flash[:error]
+      end
 
-        it "is not supported" do
-          assert_redirected_to secrets_path
-          secret.reload.id.must_equal 'production/foo/pod2/some_key'
-        end
+      it "does not allow backfills when secret was visible since value should have been visible" do
+        attributes[:value] = ""
+        SecretStorage.write(secret.id, visible: true, value: "secret", user_id: user.id, comment: "")
+        do_update
+        assert_template :show
+        assert flash[:error]
+      end
+
+      it 'fails to update when write fails' do
+        SecretStorage.expects(:write).returns(false)
+        do_update
+        assert_template :show
+        assert flash[:error]
+      end
+
+      it "is does not allow updating key" do
+        attributes[:key] = 'bar'
+        do_update
+        assert_redirected_to secrets_path
+        secret.reload.id.must_equal 'production/foo/pod2/some_key'
       end
 
       describe 'showing a not owned project' do
         let(:secret) { create_secret "production/#{other_project.permalink}/foo/xxx" }
 
         it "is not allowed" do
+          do_update
           assert_response :unauthorized
         end
       end
@@ -273,6 +294,7 @@ describe SecretsController do
         let(:secret) { create_global }
 
         it "is unauthrized" do
+          do_update
           assert_response :unauthorized
         end
       end
