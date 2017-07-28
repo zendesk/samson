@@ -494,7 +494,7 @@ describe Deploy do
     end
   end
 
-  describe "csv_line" do
+  describe "#csv_line" do
     let(:deployer) { users(:super_admin) }
     let(:other_user) { users(:deployer_buddy) }
     let(:prod) { stages(:test_production) }
@@ -585,10 +585,17 @@ describe Deploy do
     end
   end
 
-  describe "trim_reference" do
+  describe "#trim_reference" do
     it "trims the Git reference" do
       deploy = create_deploy!(reference: " master ")
       deploy.reference.must_equal "master"
+    end
+  end
+
+  describe "#duration" do
+    it "shows duration" do
+      deploy.updated_at = deploy.start_time + 25
+      deploy.duration.must_equal 25
     end
   end
 

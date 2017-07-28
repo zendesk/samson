@@ -33,20 +33,13 @@ module StatusHelper
     if deploy.finished?
       content << ". Started "
       content << render_time(deploy.start_time, current_user.time_format)
-      content << ", took #{duration_text(deploy.updated_at - deploy.start_time)}."
+      content << ", took #{duration_text deploy.duration}."
     end
 
     content_tag :div, content, class: "alert #{status_alert(deploy.status)}"
   end
 
   def duration_text(duration)
-    duration = duration.to_i
-    minutes = duration / 60
-    seconds = duration % 60
-
-    text = "".dup
-    text << "#{minutes} minute".pluralize(minutes) if minutes.nonzero?
-    text << " #{seconds} second".pluralize(seconds) if seconds.nonzero? || text.empty?
-    text
+    Time.at(duration).utc.strftime('%H:%M:%S')
   end
 end

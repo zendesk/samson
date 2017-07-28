@@ -4,6 +4,7 @@
       <td><%= link_to deploy.project.name, deploy.project %></td>
     <% end %>
     <td><%= render_time(deploy.start_time) %></td>
+    <td><%= duration_text deploy.duration %></td>
     <td>
       <%= link_to deploy.summary, [@project || deploy.project, deploy] %>
     </td>
