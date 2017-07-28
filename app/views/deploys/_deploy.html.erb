@@ -5,7 +5,7 @@
     <% end %>
     <td><%= render_time(deploy.start_time) %></td>
     <td>
-      <%= link_to "#{deploy.summary}", [@project || deploy.project, deploy] %>
+      <%= link_to deploy.summary, [@project || deploy.project, deploy] %>
     </td>
     <% unless @stage %>
       <td><%= link_to deploy.stage.name, [deploy.project, deploy.stage] %></td>
