@@ -9,6 +9,11 @@ if !Rails.env.test? && !ENV['PRECOMPILE'] && ENV['DOCKER_FEATURE']
     Docker.url = url
   end
 
-  Docker.options = { read_timeout: 600, connect_timeout: 2 }
-  Docker.validate_version! # Confirm the Docker daemon is a recent enough version
+  Docker.options = { read_timeout: 2, connect_timeout: 2 }
+  begin
+    Docker.validate_version! # Confirm the Docker daemon is a recent enough version
+  rescue Docker::Error::TimeoutError
+    warn "Unable to connect to docker!"
+    Airbrake.notify($!)
+  end
 end
