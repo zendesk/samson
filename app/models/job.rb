@@ -56,6 +56,10 @@ class Job < ActiveRecord::Base
     self.user == user
   end
 
+  def duration
+    updated_at - created_at
+  end
+
   def can_be_stopped_by?(user)
     started_by?(user) || user.admin? || user.admin_for?(project)
   end

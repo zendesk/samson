@@ -1,16 +1,19 @@
 <div class="timeline">
-  <table class="timeline-content">
+  <table class="timeline-content table">
+    <thead>
     <tr>
       <% unless @project %>
-        <th>PROJECT</th>
+        <th>Project</th>
       <% end %>
-      <th>LAST UPDATE</th>
-      <th>DEPLOY</th>
+      <th>Started</th>
+      <th>Duration</th>
+      <th>Deploy</th>
       <% unless @stage %>
-        <th>STAGE</th>
+        <th>Stage</th>
       <% end %>
-      <th>STATUS</th>
+      <th>Status</th>
     </tr>
+    </thead>
     <tbody>
     <%= render partial: "deploys/deploy", collection: @deploys %>
     </tbody>

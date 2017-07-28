@@ -346,4 +346,11 @@ describe Job do
       job.canceller.must_be_nil
     end
   end
+
+  describe "#duration" do
+    it "shows duration" do
+      job.updated_at = job.updated_at + 25
+      job.duration.must_equal 25
+    end
+  end
 end

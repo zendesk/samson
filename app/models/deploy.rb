@@ -117,6 +117,10 @@ class Deploy < ActiveRecord::Base
     started_at || created_at
   end
 
+  def duration
+    updated_at - start_time
+  end
+
   def self.start_deploys_waiting_for_restart!
     pending.reject(&:waiting_for_buddy?).each do |deploy|
       deploy.touch # HACK: refresh is immediate with update
