@@ -272,4 +272,23 @@ module ApplicationHelper
 
     content_tag(:ul, li_tags.join.html_safe, ul_options)
   end
+
+  # See https://developers.google.com/chart/image/docs/chart_params
+  def link_to_chart(name, values)
+    return if values.size < 3
+
+    max = values.max.round
+    y_axis = [0, max / 4, max / 2, (max / 1.333333).to_i, max].map { |t| duration_text(t) }.join("|")
+    y_values = values.reverse.join(",")
+    params = {
+      cht: "lc", # chart type
+      chtt: name,
+      chd: "t:#{y_values}", # data
+      chxt: "y", # axis to draw
+      chxl: "0:|#{y_axis}", # axis labels
+      chs: "1000x200", # size
+    }
+    url = "https://chart.googleapis.com/chart?#{params.to_query}"
+    link_to icon_tag('signal'), url, target: :blank
+  end
 end

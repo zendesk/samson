@@ -17,7 +17,10 @@
       <% end %>
       <th>Created</th>
       <th>Created By</th>
-      <th>Duration</th>
+      <th>
+        Duration
+        <%= link_to_chart "Build duration", @builds.map { |b| b.docker_build_job&.duration }.compact %>
+      </th>
       <th>Git Ref</th>
       <th>Docker Build</th>
     </tr>
