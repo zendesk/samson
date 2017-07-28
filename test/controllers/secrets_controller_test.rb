@@ -21,7 +21,8 @@ describe SecretsController do
       key: 'hi',
       value: 'secret',
       comment: 'hello',
-      visible: false
+      visible: "0",
+      deprecated_at: "0"
     }
   end
 
@@ -49,7 +50,7 @@ describe SecretsController do
       it 'renders template without secret values' do
         get :index
         assert_template :index
-        assigns[:secret_ids].size.must_equal 1
+        assigns[:secrets].size.must_equal 1
         response.body.wont_include secret.value
       end
 
@@ -57,40 +58,40 @@ describe SecretsController do
         create_secret 'production/global/pod2/bar'
         get :index, params: {search: {environment_permalink: 'production'}}
         assert_template :index
-        assigns[:secret_ids].map(&:first).sort.must_equal ["production/global/pod2/bar", "production/global/pod2/foo"]
+        assigns[:secrets].map(&:first).sort.must_equal ["production/global/pod2/bar", "production/global/pod2/foo"]
       end
 
       it 'can filter by project' do
         create_secret 'production/foo-bar/pod2/bar'
         get :index, params: {search: {project_permalink: 'foo-bar'}}
         assert_template :index
-        assigns[:secret_ids].map(&:first).must_equal ['production/foo-bar/pod2/bar']
+        assigns[:secrets].map(&:first).must_equal ['production/foo-bar/pod2/bar']
       end
 
       it 'can filter by deploy group' do
         create_secret 'production/global/pod2/bar'
         get :index, params: {search: {deploy_group_permalink: 'pod2'}}
         assert_template :index
-        assigns[:secret_ids].map(&:first).sort.must_equal ["production/global/pod2/bar", "production/global/pod2/foo"]
+        assigns[:secrets].map(&:first).sort.must_equal ["production/global/pod2/bar", "production/global/pod2/foo"]
       end
 
       it 'can filter by key' do
         create_secret 'production/foo-bar/pod2/bar'
         get :index, params: {search: {key: 'bar'}}
         assert_template :index
-        assigns[:secret_ids].map(&:first).must_equal ['production/foo-bar/pod2/bar']
+        assigns[:secrets].map(&:first).must_equal ['production/foo-bar/pod2/bar']
       end
 
       it 'can filter by value' do
         other = create_secret 'production/global/pod2/baz'
-        SecretStorage.write other.id, value: 'other', user_id: 1, visible: true, comment: nil
+        SecretStorage.write other.id, value: 'other', user_id: 1, visible: true, comment: nil, deprecated_at: nil
         get :index, params: {search: {value: 'other'}}
         assert_template :index
-        assigns[:secret_ids].map(&:first).must_equal [other.id]
+        assigns[:secrets].map(&:first).must_equal [other.id]
       end
 
       it 'raises when vault server is broken' do
-        SecretStorage.expects(:ids).raises(Samson::Secrets::BackendError.new('this is my error'))
+        SecretStorage.expects(:lookup_cache).raises(Samson::Secrets::BackendError.new('this is my error'))
         get :index
         assert flash[:error]
       end
@@ -105,19 +106,19 @@ describe SecretsController do
       end
 
       it "renders pre-filled visible false values from params of last form" do
-        get :new, params: {secret: {visible: 'false'}}
+        get :new, params: {secret: {visible: '0'}}
         assert_response :success
         response.body.wont_include "checked=\"checked\""
       end
 
       it "renders pre-filled visible true values from params of last form" do
-        get :new, params: {secret: {visible: 'false'}}
+        get :new, params: {secret: {visible: '0'}}
         assert_response :success
         response.body.wont_include checked
       end
 
       it "renders pre-filled visible false values from params of last form with project set" do
-        get :new, params: {secret: {visible: 'false', project_permalink: 'foo'}}
+        get :new, params: {secret: {visible: '0', project_permalink: 'foo'}}
         assert_response :success
         response.body.wont_include "checked=\"checked\""
       end
@@ -185,6 +186,13 @@ describe SecretsController do
         secret.creator_id.must_equal user.id
         secret.visible.must_equal false
         secret.comment.must_equal 'hello'
+        secret.deprecated_at.must_equal nil
+      end
+
+      it 'writes nil to deprecated_at to make vault work and not store strange values' do
+        attributes[:deprecated_at] = "0"
+        SecretStorage.expects(:write).with { |_, data| data.fetch(:deprecated_at).must_equal nil }
+        post :create, params: {secret: attributes}
       end
 
       it 'does not override an existing secret' do
@@ -199,7 +207,8 @@ describe SecretsController do
       it "redirects to new form when user wants to create another secret" do
         post :create, params: {secret: attributes, commit: SecretsController::ADD_MORE}
         flash[:notice].wont_be_nil
-        assert_redirected_to "/secrets/new?#{{secret: attributes.except(:value)}.to_query}"
+        redirect_params = attributes.except(:value).merge(visible: false, deprecated_at: nil)
+        assert_redirected_to "/secrets/new?#{{secret: redirect_params}.to_query}"
       end
 
       it 'renders and sets the flash when invalid' do
@@ -253,7 +262,7 @@ describe SecretsController do
 
       it "does not allow backfills when user tries to make hidden visible" do
         attributes[:value] = ""
-        attributes[:visible] = true
+        attributes[:visible] = "1"
         do_update
         assert_template :show
         assert flash[:error]
@@ -261,7 +270,9 @@ describe SecretsController do
 
       it "does not allow backfills when secret was visible since value should have been visible" do
         attributes[:value] = ""
-        SecretStorage.write(secret.id, visible: true, value: "secret", user_id: user.id, comment: "")
+        SecretStorage.write(
+          secret.id, visible: true, value: "secret", user_id: user.id, comment: "", deprecated_at: nil
+        )
         do_update
         assert_template :show
         assert flash[:error]

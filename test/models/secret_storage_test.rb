@@ -17,7 +17,9 @@ describe SecretStorage do
   end
 
   describe ".write" do
-    let(:attributes) { {value: '111', user_id: users(:admin).id, visible: false, comment: 'comment'} }
+    let(:attributes) do
+      {value: '111', user_id: users(:admin).id, visible: false, comment: 'comment', deprecated_at: nil}
+    end
 
     it "writes" do
       id = 'production/foo/pod2/hello'

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20170718083150) do
+ActiveRecord::Schema.define(version: 20170727181942) do
 
   create_table "audits", force: :cascade do |t|
     t.integer "auditable_id", null: false
@@ -417,6 +417,7 @@ ActiveRecord::Schema.define(version: 20170718083150) do
     t.datetime "updated_at", null: false
     t.boolean "visible", default: false, null: false
     t.string "comment"
+    t.timestamp "deprecated_at"
     t.index ["id"], name: "index_secrets_on_id", unique: true, length: { id: 191 }
   end
 

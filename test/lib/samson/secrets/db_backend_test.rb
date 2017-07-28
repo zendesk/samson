@@ -8,7 +8,19 @@ describe Samson::Secrets::DbBackend do
 
   describe ".read" do
     it "reads" do
-      Samson::Secrets::DbBackend.read(secret.id)[:value].must_equal 'MY-SECRET'
+      Samson::Secrets::DbBackend.read(secret.id).except(:updated_at, :created_at).must_equal(
+        value: 'MY-SECRET',
+        visible: false,
+        comment: 'this is secret',
+        updater_id: users(:admin).id,
+        creator_id: users(:admin).id,
+        deprecated_at: nil
+      )
+    end
+
+    it "reads deprecated as string to return the same format as other backends" do
+      secret.update_column(:deprecated_at, Time.at(1234567890))
+      Samson::Secrets::DbBackend.read(secret.id)[:deprecated_at].must_equal "2009-02-13 23:31:30"
     end
 
     it "returns nil when it cannot find" do
@@ -30,13 +42,13 @@ describe Samson::Secrets::DbBackend do
   describe ".write" do
     it "creates a new secret" do
       Samson::Secrets::DbBackend.write(
-        "a/b/c/foo", comment: "fooo", value: "bar", visible: "baz", user_id: "bars"
+        "a/b/c/foo", comment: "fooo", value: "bar", visible: "baz", user_id: "bars", deprecated_at: nil
       ).must_equal true
     end
 
     it "updates an existing secret" do
       Samson::Secrets::DbBackend.write(
-        secret.id, comment: "fooo", value: "bar", visible: "baz", user_id: "bars"
+        secret.id, comment: "fooo", value: "bar", visible: "baz", user_id: "bars", deprecated_at: nil
       ).must_equal true
     end
   end

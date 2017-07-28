@@ -109,7 +109,8 @@ class ActiveSupport::TestCase
       value: 'MY-SECRET',
       visible: false,
       comment: 'this is secret',
-      user_id: users(:admin).id
+      user_id: users(:admin).id,
+      deprecated_at: nil
     )
     SecretStorage::DbBackend::Secret.find(id) # TODO: just return id
   end

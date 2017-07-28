@@ -18,9 +18,10 @@ module Samson
         return [] unless validate_wildcard(env_name, secret_key)
 
         # build a list of all possible ids
-        possible_ids = possible_secret_key_parts.map do |id|
-          key_parts = id.merge(key: secret_key)
-          SecretStorage.generate_id(key_parts) if key_granted?(key_parts)
+        possible_ids = possible_secret_id_parts.map do |id_parts|
+          id_parts = id_parts.merge(key: secret_key)
+          id = SecretStorage.generate_id(id_parts)
+          id if key_granted?(id_parts) && !deprecated?(id)
         end.compact
 
         found =
@@ -54,6 +55,14 @@ module Samson
       end
 
       private
+
+      # local cache so we do not have to re-fetch cache on every resolve
+      def deprecated?(id)
+        @deprecated_ids ||= SecretStorage.lookup_cache.each_with_object([]) do |(id, secret_stub), all|
+          all << id if secret_stub.fetch(:deprecated_at)
+        end
+        @deprecated_ids.include?(id)
+      end
 
       def validate_wildcard(env_name, secret_key)
         return true unless env_name.end_with?(WILDCARD) ^ secret_key.end_with?(WILDCARD)
@@ -101,8 +110,8 @@ module Samson
         end
       end
 
-      def possible_secret_key_parts
-        @possible_secret_key_parts ||= begin
+      def possible_secret_id_parts
+        @possible_secret_id_parts ||= begin
           environments = @deploy_groups.map(&:environment).uniq
 
           # build list of allowed key parts

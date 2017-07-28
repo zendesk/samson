@@ -30,6 +30,7 @@ module Samson
           secret = Secret.where(id: id).first_or_initialize
           secret.value = data.fetch(:value)
           secret.visible = data.fetch(:visible)
+          secret.deprecated_at = data.fetch(:deprecated_at)
           secret.comment = data.fetch(:comment)
           secret.updater_id = data.fetch(:user_id)
           secret.creator_id ||= data.fetch(:user_id)
@@ -54,6 +55,7 @@ module Samson
           {
             value: secret.value,
             visible: secret.visible,
+            deprecated_at: secret.deprecated_at&.to_s(:db),
             comment: secret.comment,
             updater_id: secret.updater_id,
             creator_id: secret.creator_id,
