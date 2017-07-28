@@ -32,6 +32,8 @@
 
   <%= form.input :no_reference_selection, as: :check_box, label: "Disable reference selection", help: no_ref_label %>
 
+  <%= form.input :periodical_deploy, as: :check_box, help: "Deploy periodically if last deploy succeeded, enable automated deploy failure email to be alerted " if Samson::Periodical.enabled?(:periodical_deploy) %>
+
   <% if @project.releases.any? %>
     <%= form.input :deploy_on_release, as: :check_box, label: "Automatically deploy new releases" %>
   <% end %>

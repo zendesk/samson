@@ -29,6 +29,13 @@ Samson::Periodical.register :report_system_stats, "Report system stats" do
   )
 end
 
+Samson::Periodical.register :periodical_deploy, "Deploy periodical stages" do |execution_interval|
+  time_to_next_execution = execution_interval - (Time.now.to_i % execution_interval)
+  Concurrent::ScheduledTask.execute(time_to_next_execution) do
+    Samson::PeriodicalDeploy.run
+  end
+end
+
 if ENV['SERVER_MODE']
   Rails.application.config.after_initialize { Samson::Periodical.run }
 end

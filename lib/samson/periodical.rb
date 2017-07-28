@@ -46,7 +46,7 @@ module Samson
           next unless config.fetch(:active)
           Concurrent::TimerTask.new(config) do
             ActiveRecord::Base.connection_pool.with_connection do
-              config.fetch(:block).call # needs a Proc
+              execute_block(config)
             end
           end.with_observer(ExceptionReporter.new(name)).execute
         end.compact
@@ -55,14 +55,22 @@ module Samson
       def run_once(name)
         config = registered.fetch(name)
         Timeout.timeout(config.fetch(:timeout_interval)) do
-          config.fetch(:block).call
+          execute_block(config)
         end
       rescue
         ExceptionReporter.new(name).update(nil, nil, $!)
         raise
       end
 
+      def enabled?(name)
+        registered[name].try :[], :active
+      end
+
       private
+
+      def execute_block(config)
+        config.fetch(:block).call(config.fetch(:execution_interval)) # needs a Proc
+      end
 
       def env_settings(name)
         @env_settings ||= configs_from_string(ENV['PERIODICAL'])

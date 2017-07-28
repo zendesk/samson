@@ -4,6 +4,14 @@ require_relative '../../test_helper'
 SingleCov.covered!
 
 describe Samson::Periodical do
+  def with_registered
+    registered = Samson::Periodical.send(:registered)
+    old = registered[:periodical_deploy].dup
+    registered[:periodical_deploy].merge!(execution_interval: 86400, active: true)
+    yield
+  ensure
+    registered[:periodical_deploy].replace old
+  end
   let(:custom_error) { Class.new(StandardError) }
 
   after { kill_extra_threads } # concurrent leaves a bunch of threads running
@@ -129,6 +137,18 @@ describe Samson::Periodical do
     end
   end
 
+  describe ".enable?" do
+    it "is enabled when a flag is set" do
+      with_registered do
+        assert Samson::Periodical.enabled?(:periodical_deploy)
+      end
+    end
+
+    it "is disabled when a flag is not set" do
+      refute Samson::Periodical.enabled?(:periodical_deploy)
+    end
+  end
+
   it "lists all example periodical tasks in the .env.example" do
     configureable = File.read('config/initializers/periodical.rb').scan(/\.register.*?:([a-z\d_]+)/)
     mentioned = File.read('.env.example')[/## Periodical tasks .*^PERIODICAL=/m].scan(/# ([a-z\d_]+):\d+/)
@@ -138,6 +158,15 @@ describe Samson::Periodical do
   it "runs everything" do
     Samson::Periodical.send(:registered).each_key do |task|
       Samson::Periodical.run_once task
+    end
+  end
+
+  it "executes periodical deploys on interval" do
+    with_registered do
+      now = Time.parse("2017-08-08 14:00:00")
+      Time.stubs(:now).returns(now)
+      Concurrent::ScheduledTask.expects(:execute).with(10.hours)
+      Samson::Periodical.run_once :periodical_deploy
     end
   end
 end
