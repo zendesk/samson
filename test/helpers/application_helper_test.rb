@@ -6,6 +6,7 @@ SingleCov.covered!
 
 describe ApplicationHelper do
   include LocksHelper
+  include StatusHelper
 
   describe "#render_log" do
     it "removes translates ascii escapes to html colors" do
@@ -590,6 +591,19 @@ describe ApplicationHelper do
       end
 
       tag.must_equal '<ul class="show-more"><li>foo</li><li>bar</li><li>More</li></ul>'
+    end
+  end
+
+  describe "#link_to_chart" do
+    it "renders" do
+      chart = link_to_chart("Hello world", [200, 3, 4, 100, 500])
+      chart.must_include "https://chart.googleapis.com/chart"
+    end
+
+    it "does not render for useless data" do
+      link_to_chart("Hello world", []).must_equal nil
+      link_to_chart("Hello world", [1]).must_equal nil
+      link_to_chart("Hello world", [1, 2]).must_equal nil
     end
   end
 end
