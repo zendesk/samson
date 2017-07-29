@@ -27,7 +27,7 @@ class Api::BaseController < ApplicationController
   # and raising an error somewhere ... cannot be tested with an integration test
   def enforce_json_format
     return if request.format == :json
-    render_json_error 415, 'JSON only api. Use json extension or set content type application/json'
+    render_json_error 415, 'JSON only api. Use json extension or set Accept header to application/json'
   end
 
   # remove web-ui scope
