@@ -32,6 +32,11 @@ class AccessControl
         when :write then user.super_admin?
         else raise ArgumentError, "Unsupported action #{action}"
         end
+      when 'users_search'
+        case action
+        when :read then user.super_admin?
+        else raise ArgumentError, "Unsupported action #{action}"
+        end
       when 'secrets'
         case action
         when :read then can_deploy_anything?(user)
