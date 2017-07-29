@@ -49,6 +49,9 @@ class User < ActiveRecord::Base
     if role_id = criteria[:role_id].presence
       scope = scope.with_role(role_id, criteria[:project_id])
     end
+    if email = criteria[:email].presence
+      scope = scope.where(email: email)
+    end
     scope
   end
 
