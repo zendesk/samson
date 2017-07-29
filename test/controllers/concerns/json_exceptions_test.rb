@@ -15,10 +15,22 @@ describe "Api::BaseController Integration" do
 
     let(:headers) { {'Authorization' => "Bearer #{token.token}"} }
 
-    before do
-      ActionDispatch::Request.any_instance.stubs(show_exceptions?: true) # render exceptions as production would
-      stub_session_auth
+    # render exceptions like and no exception details like production
+    around do |test|
+      begin
+        config = Rails.application.config
+        old_show = config.action_dispatch.show_exceptions
+        old_local = config.consider_all_requests_local
+        config.action_dispatch.show_exceptions = true
+        config.consider_all_requests_local = false
+        test.call
+      ensure
+        config.action_dispatch.show_exceptions = old_show
+        config.consider_all_requests_local = old_local
+      end
     end
+
+    before { stub_session_auth }
 
     it "presents validation errors" do
       post '/api/locks.json', params: {lock: {warning: true}}, headers: headers
@@ -33,6 +45,17 @@ describe "Api::BaseController Integration" do
     it "presents invalid keys errors" do
       post '/api/locks.json', params: {lock: {foo: :bar, baz: :bar}}, headers: headers
       assert_json 400, foo: ["is not permitted"], baz: ["is not permitted"]
+    end
+
+    it "presents unfound records" do
+      delete '/api/locks/1.json', params: {id: 'does-not-exist'}, headers: headers
+      assert_json 404, "Not Found"
+    end
+
+    it "presents random errors" do
+      Lock.expects(:find).raises("Something bad")
+      delete '/api/locks/1.json', params: {id: 1}, headers: headers
+      assert_json 500, "Internal Server Error"
     end
   end
 end
