@@ -44,6 +44,11 @@ class AccessControl
         when :write then user.super_admin?
         else raise ArgumentError, "Unsupported action #{action}"
         end
+      when 'ping'
+        case action
+        when :read then true
+        else raise ArgumentError, "Unsupported action #{action}"
+        end
       else
         raise ArgumentError, "Unsupported resource #{resource}"
       end

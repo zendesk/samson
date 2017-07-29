@@ -192,4 +192,16 @@ describe AccessControl do
       end
     end
   end
+
+  describe "ping" do
+    it "fails on unknown action" do
+      assert_raises(ArgumentError) { can?(admin, :fooo) }
+    end
+
+    describe :read do
+      it "allows anyone to read" do
+        assert can?(viewer, :read)
+      end
+    end
+  end
 end
