@@ -14,6 +14,11 @@ describe Api::UsersController do
 
   as_a_super_admin do
     describe "#destroy" do
+      it "returns 404" do
+        delete :destroy, params: {id: -1}, format: :json
+        assert_response :not_found
+      end
+
       it "deletes" do
         delete :destroy, params: {id: users(:admin)}, format: :json
         assert_response :success
