@@ -31,6 +31,8 @@ Samson::Application.routes.draw do
     delete '/locks', to: 'locks#destroy_via_resource'
 
     resources :users, only: [:destroy]
+
+    resources :ping, only: [:index]
   end
 
   resources :projects do
