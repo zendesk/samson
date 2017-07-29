@@ -31,12 +31,6 @@ Project.class_eval do
     end.join("\n")
   end
 
-  def record_environment_variable_change(env_was)
-    @environment_variables_was = env_was
-    return unless changes = environment_variables_changes.presence
-    write_audit(action: 'update', audited_changes: changes)
-  end
-
   private
 
   def environment_variables_changes

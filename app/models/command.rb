@@ -1,6 +1,9 @@
 # frozen_string_literal: true
 class Command < ActiveRecord::Base
+  extend AuditOnAssociation
+
   audited
+  audits_on_association(:stages, :stage_commands, audit_name: :script, &:script)
 
   has_many :stage_commands
   has_many :stages, through: :stage_commands
@@ -9,8 +12,6 @@ class Command < ActiveRecord::Base
   belongs_to :project, optional: true
 
   validates :command, presence: true
-
-  around_save :record_change_in_stage_audit, if: :command_changed?
 
   def self.global
     where(project_id: nil)
@@ -42,16 +43,5 @@ class Command < ActiveRecord::Base
   def self.usage_ids
     StageCommand.pluck(:command_id) +
     Project.pluck(:build_command_id)
-  end
-
-  private
-
-  def record_change_in_stage_audit
-    old = stages.map { |s| [s, s.script] }
-    yield
-    old.each do |s, script_was|
-      s.send(:stage_commands).reset # a bit weird, but trying to keep it consistent with other record_change_*
-      s.record_script_change script_was
-    end
   end
 end
