@@ -19,13 +19,10 @@ Project.class_eval do
     super.merge(environment_variables_changes)
   end
 
-  # Sorted as the UI displays them in _environment_variables.html.erb
-  # Combined variables as .env does it in environment_variable.rb
-  # TODO: diffing in versions UI
   def serialized_environment_variables
     @env_scopes ||= Environment.env_deploygroup_array # cache since each save needs them twice
-    variables = environment_variables + environment_variable_groups.flat_map(&:environment_variables)
-    sorted = variables.sort_by { |x| [x.name, @env_scopes.index { |_, s| s == x.scope_type_and_id } || 999] }
+    variables = EnvironmentVariable.nested_variables(self)
+    sorted = EnvironmentVariable.sort_by_scopes(variables, @env_scopes)
     sorted.map do |var|
       "#{var.name}=#{var.value.inspect} # #{var.scope&.name || "All"}"
     end.join("\n")

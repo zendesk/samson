@@ -119,4 +119,22 @@ describe EnvironmentVariable do
       end
     end
   end
+
+  describe ".sort_by_scopes" do
+    it "sorts by name, type, id" do
+      a = environments(:production)
+      b = environments(:staging)
+      variables = [
+        EnvironmentVariable.new(name: "A", scope_type: "Environment", scope_id: a.id),
+        EnvironmentVariable.new(name: "A", scope_type: "DeployGroup", scope_id: 1),
+        EnvironmentVariable.new(name: "B", scope_type: "Environment", scope_id: a.id),
+        EnvironmentVariable.new(name: "A", scope_type: "Environment", scope_id: b.id),
+        EnvironmentVariable.new(name: "A", scope_type: "Environment", scope_id: a.id),
+        EnvironmentVariable.new(name: "A", scope_type: "Environment", scope_id: b.id),
+      ]
+      scopes = Environment.env_deploygroup_array
+      result = EnvironmentVariable.sort_by_scopes(variables, scopes).map { |e| "#{e.name}-#{e.scope&.name}" }
+      result.must_equal(["A-Production", "A-Production", "A-Staging", "A-Staging", "A-", "B-Production"])
+    end
+  end
 end
