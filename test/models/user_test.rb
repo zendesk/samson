@@ -307,6 +307,11 @@ describe User do
         [users(:admin), users(:super_admin), users(:project_admin)].sort
       )
     end
+
+    it "can filter by email" do
+      user = users(:admin)
+      User.search_by_criteria(search: "", email: user.email).map(&:name).must_equal [user.name]
+    end
   end
 
   describe ".with_role" do
