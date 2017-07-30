@@ -192,4 +192,20 @@ describe AccessControl do
       end
     end
   end
+
+  describe "users_search" do
+    it "fails on unknown action" do
+      assert_raises(ArgumentError) { can?(admin, :fooo) }
+    end
+
+    describe :read do
+      it "allows super-admins to search" do
+        assert can?(super_admin, :read)
+      end
+
+      it "forbids admins to search" do
+        refute can?(admin, :read)
+      end
+    end
+  end
 end

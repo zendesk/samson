@@ -3,7 +3,13 @@ class Api::UsersController < Api::BaseController
   before_action :authorize_resource!
 
   def destroy
-    User.find(params.require(:id)).soft_delete!
-    head :ok
+    user = User.where(id: params.require(:id)).first
+
+    if user
+      user.soft_delete!
+      head :ok
+    else
+      head :not_found
+    end
   end
 end
