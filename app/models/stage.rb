@@ -146,12 +146,6 @@ class Stage < ActiveRecord::Base
     commands.map(&:command).join("\n")
   end
 
-  # assumes change is never empty
-  def record_script_change(script_was)
-    @script_was = script_was
-    write_audit(action: 'update', audited_changes: script_changes)
-  end
-
   def destroy
     mark_for_destruction
     super
@@ -183,7 +177,7 @@ class Stage < ActiveRecord::Base
   end
 
   def commands
-    stage_commands.sort_by(&:position).map(&:command)
+    stage_commands.sort_by(&:position).map(&:command).compact
   end
 
   def command=(c)

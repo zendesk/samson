@@ -36,18 +36,6 @@ describe Command do
     end
   end
 
-  describe "#trigger_stage_change" do
-    it "triggers a audit when command changes" do
-      command.update_attribute(:command, 'new')
-      command.reload.stages.first.audits.size.must_equal 1
-    end
-
-    it "does not trigger when command does not change" do
-      command.update_attribute(:project, nil)
-      command.reload.stages.first.audits.size.must_equal 0
-    end
-  end
-
   describe "#global?" do
     it "is global when it does not belong to a project" do
       command.project = nil

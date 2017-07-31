@@ -123,18 +123,6 @@ class User < ActiveRecord::Base
     project && user_project_roles.find_by(project: project)
   end
 
-  # assumes change is never empty
-  def record_project_role_change(role_hash_was)
-    write_audit(
-      action: 'update',
-      audited_changes: {user_project_roles: [role_hash_was, role_hash]}
-    )
-  end
-
-  def role_hash
-    user_project_roles.map { |upr| [upr.project.permalink, upr.role_id] }.to_h
-  end
-
   private
 
   def set_token

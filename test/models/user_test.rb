@@ -484,7 +484,7 @@ describe User do
     it "records project_roles change" do
       UserProjectRole.create!(project: projects(:test), user: user, role_id: 1)
       user.audits.size.must_equal 1
-      user.audits.first.audited_changes.must_equal(user_project_roles: [{}, {"foo" => 1}])
+      user.audits.first.audited_changes.must_equal("user_project_roles" => [{}, {"foo" => 1}])
     end
 
     it "records project_roles destruction" do
@@ -492,7 +492,7 @@ describe User do
       role.reload
       role.destroy
       user.audits.size.must_equal 2
-      user.audits.last.audited_changes.must_equal(user_project_roles: [{"foo" => 1}, {}])
+      user.audits.last.audited_changes.must_equal("user_project_roles" => [{"foo" => 1}, {}])
     end
   end
 
