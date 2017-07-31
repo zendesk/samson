@@ -13,7 +13,7 @@ class Environment < ActiveRecord::Base
   validates_uniqueness_of :name
 
   # also used by private plugin
-  def self.env_deploygroup_array(include_all: true)
+  def self.env_deploy_group_array(include_all: true)
     all = include_all ? [["All", nil]] : []
     envs = Environment.all.map { |env| [env.name, "Environment-#{env.id}"] }
     separator = [["----", nil]]

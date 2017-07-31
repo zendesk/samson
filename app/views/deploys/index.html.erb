@@ -23,7 +23,7 @@
       <%= search_select :production, [["Yes", "true"], ["No", "false"]], size: 1 %>
       <%= search_select :code_deployed, [["Yes", "true"], ["No", "false"]], title: "Code deployed?", label: "Code", size: 1 %>
       <%= search_select :status, Job::VALID_STATUSES %>
-      <%= search_select :group, Environment.env_deploygroup_array %>
+      <%= search_select :group, Environment.env_deploy_group_array %>
       <%= search_select :time_format, User::TIME_FORMATS, selected: params.dig(:search, :time_format) || current_user.time_format, label: 'Time', size: 1 %>
     <% end %>
   </div>

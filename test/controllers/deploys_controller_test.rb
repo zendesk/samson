@@ -280,6 +280,13 @@ describe DeploysController do
         assert_response :ok
         assigns[:deploys].map(&:stage).map(&:name).uniq.must_equal ["Production"]
       end
+
+      it "fails when filtering for unknown" do
+        e = assert_raises RuntimeError do
+          get :index, params: {search: {group: "Blob-#{environments(:production).id}"}}, format: "json"
+        end
+        e.message.must_equal "Unsupported type Blob"
+      end
     end
 
     unauthorized :get, :new, project_id: :foo, stage_id: 2

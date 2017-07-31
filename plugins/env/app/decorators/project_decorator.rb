@@ -20,7 +20,7 @@ Project.class_eval do
   end
 
   def serialized_environment_variables
-    @env_scopes ||= Environment.env_deploygroup_array # cache since each save needs them twice
+    @env_scopes ||= Environment.env_deploy_group_array # cache since each save needs them twice
     variables = EnvironmentVariable.nested_variables(self)
     sorted = EnvironmentVariable.sort_by_scopes(variables, @env_scopes)
     sorted.map do |var|

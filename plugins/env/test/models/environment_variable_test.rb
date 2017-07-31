@@ -132,7 +132,7 @@ describe EnvironmentVariable do
         EnvironmentVariable.new(name: "A", scope_type: "Environment", scope_id: a.id),
         EnvironmentVariable.new(name: "A", scope_type: "Environment", scope_id: b.id),
       ]
-      scopes = Environment.env_deploygroup_array
+      scopes = Environment.env_deploy_group_array
       result = EnvironmentVariable.sort_by_scopes(variables, scopes).map { |e| "#{e.name}-#{e.scope&.name}" }
       result.must_equal(["A-Production", "A-Production", "A-Staging", "A-Staging", "A-", "B-Production"])
     end

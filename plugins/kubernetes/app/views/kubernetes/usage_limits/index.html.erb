@@ -2,7 +2,7 @@
 
 <%= search_form do %>
   <%= search_select :project_id, [['All', '']] + Project.order(:name).pluck(:name, :id), live: true, size: 3 %>
-  <%= search_select :scoped_type_and_id, Environment.env_deploygroup_array, live: true, size: 3, label: "Scope" %>
+  <%= search_select :scope_type_and_id, @env_deploy_group_array, live: true, size: 3, label: "Scope" %>
 <% end %>
 
 <br/>
