@@ -18,7 +18,9 @@ class Kubernetes::UsageLimitsController < ApplicationController
   end
 
   def index
-    @usage_limits = ::Kubernetes::UsageLimit.all # TODO: smarter sorting like env vars
+    @usage_limits = ::Kubernetes::UsageLimit.all.sort_by do |l|
+      [l.project&.name || '', l.scope&.name || '']
+    end
   end
 
   def show

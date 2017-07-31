@@ -23,6 +23,12 @@ describe Kubernetes::UsageLimitsController do
         get :index
         assert_template :index
       end
+
+      it "sorts" do
+        other = Kubernetes::UsageLimit.create!(cpu: 1, memory: 10)
+        get :index
+        assigns(:usage_limits).map(&:id).must_equal [other.id, usage_limit.id]
+      end
     end
 
     describe "#new" do
