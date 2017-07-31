@@ -18,9 +18,15 @@ class Kubernetes::UsageLimitsController < ApplicationController
   end
 
   def index
-    @usage_limits = ::Kubernetes::UsageLimit.all.sort_by do |l|
-      [l.project&.name || '', l.scope&.name || '']
+    limits = ::Kubernetes::UsageLimit.all
+    if project_id = params.dig(:search, :project_id).presence
+      limits = limits.where(project_id: project_id)
     end
+    if scope_type_and_id = params.dig(:search, :scope_type_and_id).presence
+      scope_type, scope_id = GroupScope.split(scope_type_and_id)
+      limits = limits.where(scope_type: scope_type, scope_id: scope_id)
+    end
+    @usage_limits = limits.sort_by { |l| [l.project&.name || '', l.scope&.name || ''] }
   end
 
   def show

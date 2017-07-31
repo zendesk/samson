@@ -1,5 +1,12 @@
 <%= page_title "Kubernetes Usage Limits" %>
 
+<%= search_form do %>
+  <%= search_select :project_id, [['All', '']] + Project.order(:name).pluck(:name, :id), live: true, size: 3 %>
+  <%= search_select :scoped_type_and_id, Environment.env_deploygroup_array, live: true, size: 3, label: "Scope" %>
+<% end %>
+
+<br/>
+
 <section class="clearfix tabs">
   <div class="table table-hover table-condensed">
 

@@ -19,15 +19,26 @@ describe Kubernetes::UsageLimitsController do
 
   as_an_admin do
     describe "#index" do
+      let!(:other) { Kubernetes::UsageLimit.create!(cpu: 1, memory: 10) }
+
       it "renders" do
         get :index
         assert_template :index
       end
 
       it "sorts" do
-        other = Kubernetes::UsageLimit.create!(cpu: 1, memory: 10)
         get :index
         assigns(:usage_limits).map(&:id).must_equal [other.id, usage_limit.id]
+      end
+
+      it "can find by project" do
+        get :index, params: {search: {project_id: usage_limit.project_id}}
+        assigns(:usage_limits).map(&:id).must_equal [usage_limit.id]
+      end
+
+      it "can find by scope" do
+        get :index, params: {search: {scope_type_and_id: "#{usage_limit.scope_type}-#{usage_limit.scope_id}"}}
+        assigns(:usage_limits).map(&:id).must_equal [usage_limit.id]
       end
     end
 

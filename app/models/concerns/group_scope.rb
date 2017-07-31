@@ -5,9 +5,13 @@ module GroupScope
     base.belongs_to :scope, polymorphic: true, optional: true
   end
 
+  def self.split(scoped_type_and_id)
+    scoped_type_and_id.split("-", 2)
+  end
+
   # used to assign direct from form values
   def scope_type_and_id=(value)
-    self.scope_type, self.scope_id = value.to_s.split("-")
+    self.scope_type, self.scope_id = GroupScope.split(value.to_s)
   end
 
   def scope_type_and_id
