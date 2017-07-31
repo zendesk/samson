@@ -302,6 +302,12 @@ describe ApplicationHelper do
       html.must_include "class=\"remove_container\""
       html.must_include "method"
     end
+
+    it "can ask a question" do
+      link_to_delete("/foo", question: "Foo?").must_equal(
+        "<a data-confirm=\"Foo?\" data-method=\"delete\" href=\"/foo\">Delete</a>"
+      )
+    end
   end
 
   describe "#link_to_delete_button" do

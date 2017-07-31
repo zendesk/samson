@@ -150,7 +150,9 @@ module ApplicationHelper
     else
       resource = Array(path).last
       message =
-        if resource.is_a?(ActiveRecord::Base)
+        if question = options.delete(:question)
+          question
+        elsif resource.is_a?(ActiveRecord::Base)
           "Delete this #{resource.class.name.split("::").last} ?"
         else
           "Are you sure ?"
