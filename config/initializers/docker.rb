@@ -9,7 +9,7 @@ if !Rails.env.test? && !ENV['PRECOMPILE'] && ENV['DOCKER_FEATURE']
     Docker.url = url
   end
 
-  Docker.options = { read_timeout: 2, connect_timeout: 2 }
+  Docker.options = { read_timeout: Integer(ENV['DOCKER_READ_TIMEOUT'] || '10'), connect_timeout: 2 }
   begin
     Docker.validate_version! # Confirm the Docker daemon is a recent enough version
   rescue Docker::Error::TimeoutError
