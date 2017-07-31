@@ -30,7 +30,8 @@ Samson::Application.routes.draw do
     resources :locks, only: [:index, :create, :destroy]
     delete '/locks', to: 'locks#destroy_via_resource'
 
-    resources :users, only: [:destroy]
+    resources :users, only: [:show, :destroy]
+    get '/users', to: 'users#show_via_resource'
   end
 
   resources :projects do
