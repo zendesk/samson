@@ -54,7 +54,7 @@ class Build < ActiveRecord::Base
   end
 
   def docker_image=(image)
-    self.docker_image_id = image ? image.json['Id'] : nil
+    self.docker_image_id = image ? image.json.fetch('Id') : nil
     @docker_image = image
   end
 
