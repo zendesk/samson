@@ -1,4 +1,4 @@
-<% scopes = Environment.env_deploygroup_array %>
+<% scopes = Environment.env_deploy_group_array %>
 <% sorted = EnvironmentVariable.sort_by_scopes(form.object.environment_variables, scopes) %>
 <%= form.fields_for :environment_variables, sorted << EnvironmentVariable.new do |fields| %>
   <div class="form-group">

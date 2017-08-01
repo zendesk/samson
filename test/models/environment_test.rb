@@ -22,9 +22,9 @@ describe Environment do
     end
   end
 
-  describe ".env_deploygroup_array" do
+  describe ".env_deploy_group_array" do
     it "includes All" do
-      all = Environment.env_deploygroup_array
+      all = Environment.env_deploy_group_array
       all.map! { |name, value| [name, value&.sub(/-\d+/, '-X')] }
       all.must_equal(
         [
@@ -40,7 +40,7 @@ describe Environment do
     end
 
     it "does not includes All when requested" do
-      Environment.env_deploygroup_array(include_all: false).wont_include ["All", nil]
+      Environment.env_deploy_group_array(include_all: false).wont_include ["All", nil]
     end
   end
 

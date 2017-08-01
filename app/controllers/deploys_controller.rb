@@ -192,9 +192,11 @@ class DeploysController < ApplicationController
   end
 
   def stage_ids_for_group(group)
-    type, id = group.split('-', 2)
-    if type == "Environment"
-      id = DeployGroup.where(environment_id: id).pluck(:id)
+    group_type, group_id = GroupScope.split(group)
+    case group_type
+    when "Environment" then id = DeployGroup.where(environment_id: group_id).pluck(:id)
+    when "DeployGroup" then id = group_id
+    else raise "Unsupported type #{group_type}"
     end
     DeployGroupsStage.where(deploy_group_id: id).pluck(:stage_id)
   end

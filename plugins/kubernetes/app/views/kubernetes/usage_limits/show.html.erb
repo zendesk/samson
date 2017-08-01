@@ -6,7 +6,7 @@
     <fieldset>
       <% if DeployGroup.enabled? %>
         <%= form.input :scope_type_and_id, label: "Scope" do %>
-          <%= form.select :scope_type_and_id, Environment.env_deploygroup_array(include_all: true), {}, Samson::FormBuilder::LIVE_SELECT_OPTIONS %>
+          <%= form.select :scope_type_and_id, Environment.env_deploy_group_array(include_all: true), {}, Samson::FormBuilder::LIVE_SELECT_OPTIONS %>
         <% end %>
       <% end %>
 
