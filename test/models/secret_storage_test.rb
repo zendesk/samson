@@ -210,8 +210,9 @@ describe SecretStorage do
   describe ".shareable_keys" do
     it "only lists global keys" do
       create_secret 'production/foo/pod2/foo'
-      create_secret 'production/global/pod2/bar'
       create_secret 'production/global/pod2/baz'
+      create_secret 'production/global/pod2/bar'
+      create_secret 'production/global/pod3/bar'
       SecretStorage.shareable_keys.must_equal ['bar', 'baz']
     end
   end

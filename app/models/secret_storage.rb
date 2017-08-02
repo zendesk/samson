@@ -62,7 +62,7 @@ module SecretStorage
       ids.map do |id|
         parts = SecretStorage.parse_id(id)
         parts.fetch(:key) if parts.fetch(:project_permalink) == "global"
-      end.compact
+      end.compact.uniq.sort
     end
 
     def filter_ids_by_value(ids, value)
