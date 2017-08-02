@@ -45,17 +45,17 @@ class EnvironmentVariable < ActiveRecord::Base
 
     def resolve_secrets(project, deploy_group, env, preview:)
       resolver = Samson::Secrets::KeyResolver.new(project, Array(deploy_group))
-      env.each_value do |value|
+      env.each do |key, value|
         if value.start_with?(TerminalExecutor::SECRET_PREFIX)
-          key = value.sub(TerminalExecutor::SECRET_PREFIX, '')
-          found = resolver.read(key)
+          secret_key = value.sub(TerminalExecutor::SECRET_PREFIX, '')
+          found = resolver.read(secret_key)
           resolved =
             if preview
               found ? "#{value} ✓" : "#{value} X"
             else
               found.to_s
             end
-          value.replace(resolved)
+          env[key] = resolved
         end
       end
       resolver.verify! unless preview
