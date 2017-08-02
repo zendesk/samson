@@ -110,6 +110,20 @@ describe EnvironmentVariable do
           )
         end
 
+        it "does not duplicate secret values in preview mode" do
+          create_secret 'global/global/global/foobar'
+          all = DeployGroup.all.map do |dg|
+            EnvironmentVariable.env(project, dg, preview: true)
+          end
+          all.sort_by { |x| x["PROJECT"] }.must_equal(
+            [
+              {"PROJECT" => "DEPLOY", "Z" => "A", "X" => "Y", "Y" => "Z"},
+              {"PROJECT" => "secret://foobar ✓", "X" => "Y", "Y" => "Z"},
+              {"PROJECT" => "secret://foobar ✓", "X" => "Y", "Y" => "Z"}
+            ]
+          )
+        end
+
         it "does not raise on missing secret values in preview mode" do
           SecretStorage::DbBackend::Secret.delete_all
           EnvironmentVariable.env(project, nil, preview: true).must_equal(
