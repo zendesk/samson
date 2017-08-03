@@ -95,6 +95,7 @@ module Kubernetes
       secret_vol = { mountPath: "/secrets", name: "secrets-volume" }
       unshift_init_container(
         image: SECRET_PULLER_IMAGE,
+        imagePullPolicy: 'IfNotPresent',
         name: 'secret-puller',
         volumeMounts: [
           { mountPath: "/vault-auth", name: "vaultauth" },
