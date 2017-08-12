@@ -123,10 +123,10 @@ class Stage < ActiveRecord::Base
 
   def automated_failure_emails(deploy)
     return if !email_committers_on_automated_deploy_failure? && static_emails_on_automated_deploy_failure.blank?
-    return unless deploy.failed?
+    return if !deploy.failed? && deploy.errored?
     return unless deploy.user.integration?
     last_deploy = deploys.finished_naturally.prior_to(deploy).first
-    return if last_deploy.try(:failed?)
+    return if last_deploy&.failed? || last_deploy&.errored?
 
     emails = []
 

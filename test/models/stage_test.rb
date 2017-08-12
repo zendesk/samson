@@ -270,6 +270,11 @@ describe Stage do
       emails.must_be_nil
     end
 
+    it "is empty when last deploy was also a error" do
+      previous_deploy.job.error!
+      emails.must_be_nil
+    end
+
     it "is empty when user was human" do
       user.update_attribute(:integration, false)
       emails.must_be_nil
