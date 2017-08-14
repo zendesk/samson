@@ -54,7 +54,14 @@ describe Samson::Secrets::VaultServer do
     let(:to) { create_vault_server(name: 'pod1') }
     let(:scoped_key) { "secret/apps/staging/foo/pod100/a" }
 
-    before { to.deploy_groups = [deploy_groups(:pod100)] }
+    before do
+      to.deploy_groups = [deploy_groups(:pod100)]
+      to.client # cache the client
+      to.stubs(:create_client).returns(to.client) # parallel loop creates new independent clients
+
+      from.client # cache the client
+      from.stubs(:create_client).returns(from.client) # parallel loop creates new independent clients
+    end
 
     it "copies global keys" do
       key = "global/global/global/a"
