@@ -62,8 +62,9 @@ module Samson
         raise
       end
 
-      def enabled?(name)
-        registered[name].try :[], :active
+      def interval(name)
+        config = registered.fetch(name)
+        config.fetch(:active) && config.fetch(:execution_interval)
       end
 
       private

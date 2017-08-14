@@ -137,15 +137,15 @@ describe Samson::Periodical do
     end
   end
 
-  describe ".enable?" do
-    it "is enabled when a flag is set" do
+  describe ".interval" do
+    it "returns interval when a task is active" do
       with_registered do
-        assert Samson::Periodical.enabled?(:periodical_deploy)
+        Samson::Periodical.interval(:periodical_deploy).must_equal 86400
       end
     end
 
     it "is disabled when a flag is not set" do
-      refute Samson::Periodical.enabled?(:periodical_deploy)
+      refute Samson::Periodical.interval(:periodical_deploy)
     end
   end
 
