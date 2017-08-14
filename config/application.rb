@@ -146,6 +146,7 @@ module Samson
     config.samson.export_job = ActiveSupport::OrderedOptions.new
     config.samson.export_job.downloaded_age = Integer(ENV['EXPORT_JOB_DOWNLOADED_AGE'] || 12.hours)
     config.samson.export_job.max_age = Integer(ENV['EXPORT_JOB_MAX_AGE'] || 1.day)
+    config.samson.start_time = Time.now
 
     # flowdock uses routes: run after the routes are loaded which happens after after_initialize
     # config.ru sets SERVER_MODE after application.rb is loaded when using `rails s`

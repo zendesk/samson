@@ -10,7 +10,7 @@
       <% if revision = Rails.application.config.samson.revision.presence %>
         <span class="sha">
           <%= link_to "https://github.com/zendesk/samson/commit/#{revision}",
-              title: "Currently deployed samson version", class: "sha" do %>
+              title: "Currently deployed samson version since #{Rails.application.config.samson.start_time.to_s(:db)}", class: "sha" do %>
             <%= revision[0..7] %>
             <i class="glyphicon glyphicon-circle-arrow-right"></i>
           <% end %>
