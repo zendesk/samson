@@ -44,14 +44,18 @@ module Samson
       def run
         registered.map do |name, config|
           next unless config.fetch(:active)
-          Concurrent::TimerTask.new(config) do
-            ActiveRecord::Base.connection_pool.with_connection do
-              execute_block(config)
-            end
-          end.with_observer(ExceptionReporter.new(name)).execute
+          with_consistent_start_time(config) do
+            Concurrent::TimerTask.new(config) do
+              ActiveRecord::Base.connection_pool.with_connection do
+                execute_block(config)
+              end
+            end.with_observer(ExceptionReporter.new(name)).execute
+          end
         end.compact
       end
 
+      # method to test things out on console / testing
+      # simulates timeout that Concurrent::TimerTask does
       def run_once(name)
         config = registered.fetch(name)
         Timeout.timeout(config.fetch(:timeout_interval)) do
@@ -68,8 +72,18 @@ module Samson
 
       private
 
+      def with_consistent_start_time(config, &block)
+        if config[:consistent_start_time]
+          execution_interval = config.fetch(:execution_interval)
+          time_to_next_execution = execution_interval - (Time.now.to_i % execution_interval)
+          Concurrent::ScheduledTask.execute(time_to_next_execution, &block)
+        else
+          yield
+        end
+      end
+
       def execute_block(config)
-        config.fetch(:block).call(config.fetch(:execution_interval)) # needs a Proc
+        config.fetch(:block).call # needs a Proc
       end
 
       def env_settings(name)

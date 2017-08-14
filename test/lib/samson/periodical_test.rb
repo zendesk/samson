@@ -161,12 +161,12 @@ describe Samson::Periodical do
     end
   end
 
-  it "executes periodical deploys on interval" do
+  it "executes consistent_start_time tasks on interval" do
     with_registered do
       now = Time.parse("2017-08-08 14:00:00")
       Time.stubs(:now).returns(now)
-      Concurrent::ScheduledTask.expects(:execute).with(10.hours)
-      Samson::Periodical.run_once :periodical_deploy
+      Concurrent::ScheduledTask.expects(:execute).with(10.hours) # periodical_deploy
+      Samson::Periodical.run
     end
   end
 end
