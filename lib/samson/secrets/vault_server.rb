@@ -56,14 +56,7 @@ module Samson
       end
 
       def client
-        @client ||= Vault::Client.new(
-          DEFAULT_CLIENT_OPTIONS.merge(
-            ssl_verify: tls_verify,
-            token: token,
-            address: address,
-            ssl_cert_store: cert_store
-          )
-        )
+        @client ||= create_client
       end
 
       # Sync all data from one server to another
@@ -82,10 +75,28 @@ module Samson
             allowed_groups.include?(scope.fetch(:deploy_group_permalink))
         end
 
-        keys.each do |key|
-          secret = other.client.logical.read("#{PREFIX}#{key}")
-          client.logical.write("#{PREFIX}#{key}", secret.data)
+        Samson::Parallelizer.map(keys.each_slice(100)) do |keys|
+          # create new clients to avoid any kind of blocking or race conditions
+          other_client = other.create_client
+          local_client = create_client
+
+          keys.each do |key|
+            namespaced_key = "#{PREFIX}#{key}"
+            secret = other_client.logical.read(namespaced_key).data
+            local_client.logical.write(namespaced_key, secret)
+          end
         end
+      end
+
+      def create_client
+        Vault::Client.new(
+          DEFAULT_CLIENT_OPTIONS.merge(
+            ssl_verify: tls_verify,
+            token: token,
+            address: address,
+            ssl_cert_store: cert_store
+          )
+        )
       end
 
       private
