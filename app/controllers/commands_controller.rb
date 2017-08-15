@@ -8,7 +8,7 @@ class CommandsController < ApplicationController
   before_action :authorize_custom_project_admin!, except: PUBLIC
 
   def index
-    @commands = Command.order(:project_id).page(page)
+    @commands = Command.order(:project_id).page(page).includes(:stages, :projects)
     if search = params[:search]
       if query = search[:query].presence
         query = ActiveRecord::Base.send(:sanitize_sql_like, query)
@@ -52,8 +52,14 @@ class CommandsController < ApplicationController
   end
 
   def destroy
-    @command.destroy
-    successful_response('Command removed.')
+    if @command.destroy
+      successful_response('Command removed.')
+    else
+      respond_to do |format|
+        format.html { render :show }
+        format.js { render json: {}, status: :unprocessable_entity }
+      end
+    end
   end
 
   private

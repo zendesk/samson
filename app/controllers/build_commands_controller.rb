@@ -11,7 +11,7 @@ class BuildCommandsController < ApplicationController
   def update
     command = params[:command][:command]
     if command.blank?
-      @command.destroy
+      @command.destroy!
     else
       @command.command = command
       @command.project = @project

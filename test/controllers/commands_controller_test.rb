@@ -135,6 +135,8 @@ describe CommandsController do
     end
 
     describe "#destroy" do
+      before { StageCommand.delete_all }
+
       it "can delete command for an allowed project" do
         delete :destroy, params: {id: commands(:echo)}
         assert_redirected_to commands_path
@@ -175,7 +177,10 @@ describe CommandsController do
       end
 
       describe 'valid' do
-        before { delete :destroy, params: {id: commands(:echo).id, format: format } }
+        before do
+          StageCommand.delete_all
+          delete :destroy, params: {id: commands(:echo).id, format: format }
+        end
 
         describe 'html' do
           let(:format) { 'html' }
@@ -195,6 +200,30 @@ describe CommandsController do
 
           it 'responds ok' do
             assert_response :ok
+          end
+        end
+      end
+
+      describe 'invalid' do
+        before { delete :destroy, params: {id: commands(:echo).id, format: format } }
+
+        describe 'html' do
+          let(:format) { 'html' }
+
+          it 'fails' do
+            assert_template :show
+          end
+
+          it 'did not remove the command' do
+            Command.exists?(commands(:echo).id).must_equal(true)
+          end
+        end
+
+        describe 'js' do
+          let(:format) { 'js' }
+
+          it 'responds ok' do
+            assert_response :unprocessable_entity
           end
         end
       end

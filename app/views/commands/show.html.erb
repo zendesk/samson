@@ -36,7 +36,7 @@
       <% end %>
 
       <%= form.actions do %>
-        <% disabled = "Can only delete unused commands." if usages %>
+        <% disabled = "Can only delete unused commands." unless @command.unused? %>
         <%= link_to_delete(@command, disabled: disabled) if @command.persisted? %> |
         <%= link_to_history(@command) %>
       <% end %>
