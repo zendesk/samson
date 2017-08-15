@@ -65,6 +65,11 @@ describe JobExecution do
     assert_equal '[04:05:06] monkey', last_line_of_output
   end
 
+  it 'does not fail with nil ENV vars' do
+    User.any_instance.expects(:name).at_least_once.returns(nil)
+    execution.send(:run!)
+  end
+
   it 'checks out the specified remote branch' do
     execute_on_remote_repo <<-SHELL
       git checkout -b armageddon
