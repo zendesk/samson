@@ -1,6 +1,6 @@
 <fieldset>
   <legend>
-    Env variables written to .env before deploy
+    Env variables written to the .env file or added to kubernetes before deploy
     <%= additional_info SamsonEnv::HELP_TEXT %>
   </legend>
   <%= render "samson_env/environment_variables", form: form %>
