@@ -36,7 +36,7 @@ class DeployService
     job_execution.on_start do
       send_before_notifications(deploy)
     end
-    job_execution.on_complete do
+    job_execution.on_finish do
       send_after_notifications(deploy)
     end
 

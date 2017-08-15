@@ -80,7 +80,7 @@ class DockerBuilderService
     @output = @execution.output
     repository.executor = @execution.executor
 
-    @execution.on_complete do
+    @execution.on_finish do
       build.update_column(:finished_at, Time.now)
       send_after_notifications
     end

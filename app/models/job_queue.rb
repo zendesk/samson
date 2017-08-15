@@ -40,7 +40,7 @@ class JobQueue
   # when samson is restarting we do not start jobs, but leave them pending
   def add(job_execution, queue: nil)
     queue ||= job_execution.id
-    job_execution.on_complete { delete_and_enqueue_next(queue, job_execution) }
+    job_execution.on_finish { delete_and_enqueue_next(queue, job_execution) }
 
     LOCK.synchronize do
       if JobExecution.enabled

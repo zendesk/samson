@@ -23,7 +23,7 @@ class JobExecution
     @viewers = JobViewers.new(@output)
 
     @start_callbacks = []
-    @complete_callbacks = []
+    @finish_callbacks = []
     @env = env
     @job = job
     @reference = reference
@@ -35,7 +35,7 @@ class JobExecution
     @repository = @job.project.repository
     @repository.executor = @executor
 
-    on_complete do
+    on_finish do
       @output.write('', :finished)
       @output.close
 
@@ -72,8 +72,8 @@ class JobExecution
     @start_callbacks << block
   end
 
-  def on_complete(&block)
-    @complete_callbacks << JobExecutionSubscriber.new(job, &block)
+  def on_finish(&block)
+    @finish_callbacks << JobExecutionSubscriber.new(job, &block)
   end
 
   def descriptor
@@ -145,7 +145,7 @@ class JobExecution
   def finish
     return if @finished
     @finished = true
-    @complete_callbacks.each(&:call)
+    @finish_callbacks.each(&:call)
   end
 
   def execute!(dir)
