@@ -92,7 +92,7 @@ class JobExecution
     }.merge(env)
 
     commands = env.map do |key, value|
-      "export #{key}=#{value.shellescape}"
+      "export #{key}=#{value.to_s.shellescape}"
     end
 
     ["cd #{dir}"].concat commands
