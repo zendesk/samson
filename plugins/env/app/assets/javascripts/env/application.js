@@ -46,22 +46,24 @@
     if(callback){ callback($new_row); }
 
     $row.after($new_row);
-    $new_row.find(".selectpicker").selectpicker();  // add selectpicker to copied row
     return $new_row;
   }
 
   function withoutSelectpicker($row, callback){
     var $picker = $row.find('.selectpicker');
     $picker.selectpicker('destroy').addClass('selectpicker'); // normalize existing so they are ready to copy
-    callback();
-    $picker.selectpicker();  // restore selects
+
+    var rows = callback().concat([$row]);
+
+    // add selectpicker to copied and original rows
+    $.each(rows, function(k,v) { v.find(".selectpicker").selectpicker(); });
   }
 
   $(document).on("click", ".duplicate_previous_row", function(e){
     e.preventDefault();
     var $row = $(this).prev();
     withoutSelectpicker($row, function(){
-      copyRow($row);
+      return [copyRow($row)];
     });
   });
 
@@ -78,13 +80,15 @@
 
     withoutSelectpicker($row, function() {
       // add and fill new rows while they are not select-pickered
-      $.each(env, function (k, v) {
-        copyRow($row, function($raw_new_row){
+      // always pass the new row so rows get appended in order
+      return $.map(env, function(v, k) {
+        $row = copyRow($row, function($raw_new_row){
           var inputs = $raw_new_row.find(':input');
           $(inputs.get(0)).val(k);
           $(inputs.get(1)).val(v);
           $(inputs.get(2)).val(selectedEnv);
         });
+        return $row;
       });
     });
   });
