@@ -7,9 +7,9 @@ SingleCov.covered! uncovered: 5
 describe JobExecution do
   include GitRepoTestHelper
 
-  def execute_job(branch = 'master', on_complete: nil, on_start: nil, **options)
+  def execute_job(branch = 'master', on_finish: nil, on_start: nil, **options)
     execution = JobExecution.new(branch, job, options)
-    execution.on_complete(&on_complete) if on_complete.present?
+    execution.on_finish(&on_finish) if on_finish.present?
     execution.on_start(&on_start) if on_start.present?
     execution.send(:run!)
   end
@@ -197,7 +197,7 @@ describe JobExecution do
 
   it 'calls on complete subscribers after finishing' do
     called_subscriber = false
-    execute_job('master', on_complete: -> { called_subscriber = true })
+    execute_job('master', on_finish: -> { called_subscriber = true })
     assert_equal true, called_subscriber
   end
 
@@ -228,7 +228,7 @@ describe JobExecution do
 
     execution = JobExecution.new('master', job)
     execution.start!
-    execution.on_complete { called_subscriber = true }
+    execution.on_finish { called_subscriber = true }
     execution.stop!
 
     assert called_subscriber
@@ -236,7 +236,7 @@ describe JobExecution do
 
   it 'saves job output before calling subscriber' do
     output = nil
-    execute_job('master', on_complete: -> { output = job.output })
+    execute_job('master', on_finish: -> { output = job.output })
     assert_equal '[04:05:06] monkey', output.split("\n").last.strip
   end
 
@@ -414,17 +414,17 @@ describe JobExecution do
       execution.stop!
     end
 
-    it "calls on_complete hooks once when killing stuck thread" do
+    it "calls on_finish hooks once when killing stuck thread" do
       called = []
-      execution.on_complete { called << 1 }
+      execution.on_finish { called << 1 }
       execution.start!
       execution.stop!
       called.must_equal [1]
     end
 
-    it "calls on_complete hooks once when stopping execution with INT" do
+    it "calls on_finish hooks once when stopping execution with INT" do
       called = []
-      execution.on_complete { called << 1 }
+      execution.on_finish { called << 1 }
       execution.start!
       TerminalExecutor.any_instance.expects(:stop!).with do |signal|
         lock.unlock # pretend the command finished

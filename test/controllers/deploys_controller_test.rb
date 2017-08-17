@@ -48,7 +48,7 @@ describe DeploysController do
       end
 
       it "renders debug output with job/deploy and active/queued" do
-        JobExecution.any_instance.expects(:on_complete).times(4)
+        JobExecution.any_instance.expects(:on_finish).times(4)
         JobExecution.any_instance.expects(:start!)
         with_job_execution do
           # start 1 job and queue another

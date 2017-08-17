@@ -11,12 +11,12 @@ describe JobQueue do
       @id = id
     end
 
-    def on_complete(&block)
-      @on_complete = block
+    def on_finish(&block)
+      @on_finish = block
     end
 
     def finish
-      @on_complete.call
+      @on_finish.call
     end
   end
 
