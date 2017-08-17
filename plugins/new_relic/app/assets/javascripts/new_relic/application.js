@@ -1,4 +1,4 @@
-$(document).ready(function() {
+$(document).ready(function($) {
   var newrelic_loaded = false;
 
   $('#newrelic-tab').on('shown.bs.tab', function(e) {
