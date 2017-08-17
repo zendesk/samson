@@ -128,12 +128,12 @@ describe BuildsController do
         end
 
         it 'starts the build' do
-          DockerBuilderService.any_instance.expects(:run!)
+          DockerBuilderService.any_instance.expects(:run)
           create
         end
 
         it "does not start the build when there were errors" do
-          DockerBuilderService.any_instance.expects(:run!).never
+          DockerBuilderService.any_instance.expects(:run).never
           stub_git_reference_check(returns: false)
           create
         end
@@ -221,7 +221,7 @@ describe BuildsController do
 
     describe "#build_docker_image" do
       before do
-        DockerBuilderService.any_instance.expects(:run!)
+        DockerBuilderService.any_instance.expects(:run)
         post :build_docker_image, params: {project_id: project.to_param, id: default_build.id, format: format}
       end
 

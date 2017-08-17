@@ -11,82 +11,82 @@ describe TerminalExecutor do
 
   describe '#execute!' do
     it 'records stdout' do
-      subject.execute!('echo "hi"', 'echo "hello"')
+      subject.execute('echo "hi"', 'echo "hello"')
       output.string.must_equal("hi\r\nhello\r\n")
     end
 
     it 'records stderr' do
-      subject.execute!('echo "hi" >&2', 'echo "hello" >&2')
+      subject.execute('echo "hi" >&2', 'echo "hello" >&2')
       output.string.must_equal("hi\r\nhello\r\n")
     end
 
     it 'pretends to be a tty to show progress bars and fancy colors' do
-      subject.execute!('ruby -e "puts STDOUT.tty?"')
+      subject.execute('ruby -e "puts STDOUT.tty?"')
       output.string.must_equal("true\r\n")
     end
 
     it 'stops on failure' do
-      subject.execute!('echo "hi"', 'false', 'echo "ho"')
+      subject.execute('echo "hi"', 'false', 'echo "ho"')
       output.string.must_equal("hi\r\n")
     end
 
     it 'returns error value' do
-      subject.execute!('blah').must_equal(false)
+      subject.execute('blah').must_equal(false)
     end
 
     it 'returns success value' do
-      subject.execute!('echo "hi"').must_equal(true)
+      subject.execute('echo "hi"').must_equal(true)
     end
 
     it 'shows a nice message when child could not be found' do
       Process.expects(:wait2).raises(Errno::ECHILD) # No child processes found
-      subject.execute!('blah').must_equal(false)
+      subject.execute('blah').must_equal(false)
       out = output.string.sub(/.*blah: /, '').sub('command ', '') # linux has a different message
       out.must_equal "not found\r\nErrno::ECHILD: No child processes\n"
     end
 
     it 'does not expose env secrets' do
       with_env MY_SECRET: 'XYZ' do
-        subject.execute!('env')
+        subject.execute('env')
         output.string.wont_include("SECRET")
       end
     end
 
     it "keeps CACHE_DIR" do
       with_env CACHE_DIR: 'XYZ' do
-        subject.execute!('env')
+        subject.execute('env')
         output.string.must_include("CACHE_DIR=XYZ")
       end
     end
 
     it "keeps custom env vars from ENV_WHITELIST" do
       with_env ENV_WHITELIST: 'ABC, XYZ,ZZZ', XYZ: 'FOO', ZZZ: 'FOO' do
-        subject.execute!('env')
+        subject.execute('env')
         output.string.must_include("XYZ=FOO")
         output.string.must_include("ZZZ=FOO")
       end
     end
 
     it "preserves multibyte characters" do
-      subject.execute!(%(echo "#{"ß" * 400}"))
+      subject.execute(%(echo "#{"ß" * 400}"))
       output.string.must_equal("#{"ß" * 400}\r\n")
     end
 
     it "ignores getpgid failures since they mean the program finished early" do
       Process.expects(:getpgid).raises(Errno::ESRCH)
-      subject.execute!('sleep 0.1').must_equal true
+      subject.execute('sleep 0.1').must_equal true
     end
 
     it "ignores closed output errors that happen on linux" do
       output.expects(:write).raises(Errno::EIO) # it is actually the .each call that raises it, but that is hard to stub
-      subject.execute!('echo "hi"').must_equal(true)
+      subject.execute('echo "hi"').must_equal(true)
     end
 
     it "keeps pid while executing" do
       refute subject.pid
       refute subject.pgid
 
-      Thread.new { subject.execute!('sleep 0.1') }
+      Thread.new { subject.execute('sleep 0.1') }
 
       sleep 0.05 # wait for execution to start
       assert subject.pid
@@ -99,7 +99,7 @@ describe TerminalExecutor do
 
     it "can timeout" do
       with_env DEPLOY_TIMEOUT: '1' do
-        refute subject.execute!('echo hello; sleep 10')
+        refute subject.execute('echo hello; sleep 10')
       end
       `ps -ef | grep "[s]leep 10"`.wont_include "sleep 10" # process got killed
       output.string.must_equal("hello\r\nTimeout: execution took longer then 1s and was terminated\n")
@@ -111,13 +111,13 @@ describe TerminalExecutor do
       before { freeze_time }
 
       it 'records commands' do
-        subject.execute!('echo "hi"', 'echo "hell o"')
+        subject.execute('echo "hi"', 'echo "hell o"')
         output.string.must_equal \
           %(» echo "hi"\r\nhi\r\n» echo "hell o"\r\nhell o\r\n)
       end
 
       it 'does not print subcommands' do
-        subject.execute!('sh -c "echo 111"')
+        subject.execute('sh -c "echo 111"')
         output.string.must_equal("» sh -c \"echo 111\"\r\n111\r\n")
       end
     end
@@ -125,14 +125,14 @@ describe TerminalExecutor do
     describe 'with secrets' do
       def assert_resolves(id)
         secret = create_secret(id)
-        subject.execute!(%(echo "secret://#{id.split('/').last}"))
+        subject.execute(%(echo "secret://#{id.split('/').last}"))
         output.string.must_equal "#{secret.value}\r\n"
       end
 
       def refute_resolves(id)
         create_secret(id)
         assert_raises Samson::Hooks::UserError do
-          subject.execute!(%(echo "secret://#{id.split('/').last}"))
+          subject.execute(%(echo "secret://#{id.split('/').last}"))
         end
       end
 
@@ -175,13 +175,13 @@ describe TerminalExecutor do
 
       it "fails on unresolved secrets" do
         assert_raises Samson::Hooks::UserError do
-          subject.execute!('echo "secret://nothing"')
+          subject.execute('echo "secret://nothing"')
         end
       end
 
       it "does not try to resolve secrets when none are used to avoid doing db lookups while being in a clone thread" do
         Samson::Secrets::KeyResolver.expects(:new).never
-        subject.execute!('echo "nothing"')
+        subject.execute('echo "nothing"')
       end
 
       it "cannot use specific secrets without a deploy" do
@@ -194,7 +194,7 @@ describe TerminalExecutor do
         subject.instance_variable_set(:@verbose, true)
         id = 'global/global/global/baz'
         secret = create_secret(id)
-        subject.execute!("export SECRET='secret://baz'; echo $SECRET")
+        subject.execute("export SECRET='secret://baz'; echo $SECRET")
         # echo prints it, but not the execution
         output.string.must_equal \
           "» export SECRET='secret://baz'; echo $SECRET\r\n#{secret.value}\r\n"
@@ -209,7 +209,7 @@ describe TerminalExecutor do
         shell.cancel(signal)
       end
 
-      result = subject.execute!(command)
+      result = subject.execute(command)
       thread.join
       result
     end
@@ -223,9 +223,9 @@ describe TerminalExecutor do
     end
 
     it 'stops any further execution so current thread can finish' do
-      subject.execute!('echo 1').must_equal true
+      subject.execute('echo 1').must_equal true
       subject.cancel 'INT'
-      subject.execute!('echo 1').must_equal false
+      subject.execute('echo 1').must_equal false
     end
   end
 end

@@ -65,7 +65,7 @@ class BuildsController < ApplicationController
   end
 
   def start_docker_build
-    DockerBuilderService.new(@build).run!(push: true)
+    DockerBuilderService.new(@build).run(push: true)
   end
 
   def new_or_modified_build

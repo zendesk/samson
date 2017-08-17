@@ -283,7 +283,7 @@ describe Job do
       JobExecution.start_job(job_execution)
       sleep 0.5
       job.pid.wont_be_nil
-      job_execution.wait!
+      job_execution.wait
     end
 
     it "has no pid when not running" do

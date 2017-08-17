@@ -65,7 +65,7 @@ class JobQueue
 
   def start_job(job_execution, queue)
     @active[queue] = job_execution
-    job_execution.start!
+    job_execution.start
   end
 
   def delete_and_enqueue_next(queue_name, job_execution)

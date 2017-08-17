@@ -20,7 +20,7 @@ describe DeploysController do
   let(:command) { job.command }
   let(:job) { jobs(:succeeded_test) }
   let(:deploy) { deploys(:succeeded_test) }
-  let(:deploy_service) { stub(deploy!: nil, cancel: nil) }
+  let(:deploy_service) { stub(deploy: nil, cancel: nil) }
   let(:deploy_called) { [] }
   let(:changeset) { stub_everything(commits: [], files: [], pull_requests: [], jira_issues: []) }
 
@@ -49,7 +49,7 @@ describe DeploysController do
 
       it "renders debug output with job/deploy and active/queued" do
         JobExecution.any_instance.expects(:on_finish).times(4)
-        JobExecution.any_instance.expects(:start!)
+        JobExecution.any_instance.expects(:start)
         with_job_execution do
           # start 1 job and queue another
           active = Job.create!(project: project, command: "echo 1", user: user) { |j| j.id = 123321 }
@@ -299,7 +299,7 @@ describe DeploysController do
   as_a_project_deployer do
     before do
       DeployService.stubs(:new).with(user).returns(deploy_service)
-      deploy_service.stubs(:deploy!).capture(deploy_called).returns(deploy)
+      deploy_service.stubs(:deploy).capture(deploy_called).returns(deploy)
 
       Deploy.any_instance.stubs(:changeset).returns(changeset)
     end
@@ -380,7 +380,7 @@ describe DeploysController do
 
       it "confirms and redirects to the deploy" do
         DeployService.stubs(:new).with(deploy.user).returns(deploy_service)
-        deploy_service.expects(:confirm_deploy!)
+        deploy_service.expects(:confirm_deploy)
         refute deploy.buddy
 
         post :buddy_check, params: {project_id: project.to_param, id: deploy.id}

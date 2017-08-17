@@ -23,9 +23,9 @@ describe SamsonPipelines do
     before { stage.update!(next_stage_ids: next_stages.map(&:id)) }
 
     it 'kicks off the next stages in the deploy' do
-      DeployService.any_instance.expects(:deploy!).
+      DeployService.any_instance.expects(:deploy).
         with(stages(:test_production), reference: 'staging', buddy: nil).returns(deploy)
-      DeployService.any_instance.expects(:deploy!).
+      DeployService.any_instance.expects(:deploy).
         with(stages(:test_production_pod), reference: 'staging', buddy: nil).returns(deploy)
       Samson::Hooks.fire(:after_job_execution, job, true, output)
       output.string.must_equal "# Pipeline: Started stage: 'Production' - #{deploy.url}\n" \
@@ -33,21 +33,21 @@ describe SamsonPipelines do
     end
 
     it 'does not kick off the next stage in the pipeline if current stage failed' do
-      DeployService.any_instance.expects(:deploy!).never
+      DeployService.any_instance.expects(:deploy).never
       Samson::Hooks.fire(:after_job_execution, job, false, output)
       output.string.must_equal ""
     end
 
     it 'does not deploy another if the next_stage_id is nil' do
       stage.update!(next_stage_ids: nil)
-      DeployService.any_instance.expects(:deploy!).never
+      DeployService.any_instance.expects(:deploy).never
       Samson::Hooks.fire(:after_job_execution, job, true, output)
       output.string.must_equal ""
     end
 
     it 'does not deploy another if the deploy is nil' do
       job = Job.create(project: stage.project, command: "echo", status: "running", user: User.first)
-      DeployService.any_instance.expects(:deploy!).never
+      DeployService.any_instance.expects(:deploy).never
       Samson::Hooks.fire(:after_job_execution, job, true, output)
       output.string.must_equal ""
     end
@@ -61,7 +61,7 @@ describe SamsonPipelines do
     end
 
     it 'prints stage exceptions to the stream' do
-      DeployService.any_instance.expects(:deploy!).times(2).raises("Whoops")
+      DeployService.any_instance.expects(:deploy).times(2).raises("Whoops")
       Samson::Hooks.fire(:after_job_execution, job, true, output)
       output.string.must_equal "# Pipeline: Failed to start stage 'Production': Whoops\n" \
         "# Pipeline: Failed to start stage 'Production Pod': Whoops\n"
@@ -70,15 +70,15 @@ describe SamsonPipelines do
     it "shows when next stage failed to start" do
       deploy = Deploy.new
       deploy.errors.add :base, 'Foo'
-      DeployService.any_instance.expects(:deploy!).times(2).returns(deploy)
+      DeployService.any_instance.expects(:deploy).times(2).returns(deploy)
       Samson::Hooks.fire(:after_job_execution, job, true, output)
       output.string.must_equal "# Pipeline: Failed to start stage 'Production': Foo\n" \
         "# Pipeline: Failed to start stage 'Production Pod': Foo\n"
     end
 
     it "confirms when stage requires approval" do
-      DeployService.any_instance.expects(:deploy!).times(2).returns(deploy)
-      DeployService.any_instance.expects(:confirm_deploy!).times(2)
+      DeployService.any_instance.expects(:deploy).times(2).returns(deploy)
+      DeployService.any_instance.expects(:confirm_deploy).times(2)
       Stage.any_instance.expects(:deploy_requires_approval?).times(2).returns(true)
       Samson::Hooks.fire(:after_job_execution, job, true, output)
 

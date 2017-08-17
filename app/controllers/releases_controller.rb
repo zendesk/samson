@@ -21,7 +21,7 @@ class ReleasesController < ApplicationController
   end
 
   def create
-    @release = ReleaseService.new(@project).release!(release_params)
+    @release = ReleaseService.new(@project).release(release_params)
     if @release.persisted?
       redirect_to [@project, @release]
     else

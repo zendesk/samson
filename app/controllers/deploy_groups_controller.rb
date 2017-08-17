@@ -75,7 +75,7 @@ class DeployGroupsController < ApplicationController
       next unless last_success_deploy
 
       deploy_service = DeployService.new(current_user)
-      deploy_service.deploy!(stage, reference: last_success_deploy.reference)
+      deploy_service.deploy(stage, reference: last_success_deploy.reference)
     end.compact
 
     if deploys.empty?

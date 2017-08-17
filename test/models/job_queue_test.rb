@@ -21,7 +21,7 @@ describe JobQueue do
   end
 
   def with_active_job
-    job_execution.expects(:start!)
+    job_execution.expects(:start)
 
     with_job_execution do
       subject.add(job_execution)
@@ -30,7 +30,7 @@ describe JobQueue do
   end
 
   def with_a_queued_job
-    job_execution.stubs(:start!)
+    job_execution.stubs(:start)
 
     with_job_execution do
       subject.add(job_execution, queue: :x)
@@ -62,7 +62,7 @@ describe JobQueue do
 
     it 'starts parallel jobs when they are in different queues' do
       [job_execution, queued_job_execution].each do |job|
-        job.expects(:start!)
+        job.expects(:start)
 
         with_job_execution { subject.add(job) }
 
@@ -72,7 +72,7 @@ describe JobQueue do
 
     it 'does not start a job if job execution is disabled' do
       JobExecution.enabled = false
-      job_execution.expects(:start!).never
+      job_execution.expects(:start).never
 
       subject.add(job_execution)
 
@@ -93,7 +93,7 @@ describe JobQueue do
     end
 
     it 'reports to airbrake when active jobs were in an unexpected state' do
-      job_execution.stubs(:start!)
+      job_execution.stubs(:start)
 
       with_job_execution do
         subject.add(job_execution, queue: :x)
@@ -121,7 +121,7 @@ describe JobQueue do
       end
 
       it 'starts then next job when active job completes' do
-        queued_job_execution.expects(:start!)
+        queued_job_execution.expects(:start)
 
         with_job_execution { job_execution.finish }
 
@@ -132,7 +132,7 @@ describe JobQueue do
 
       it 'does not start the next job when job execution is disabled' do
         JobExecution.enabled = false
-        queued_job_execution.expects(:start!).never
+        queued_job_execution.expects(:start).never
 
         job_execution.finish
 
@@ -142,7 +142,7 @@ describe JobQueue do
       end
 
       it 'does not start the next job when queue is empty' do
-        queued_job_execution.expects(:start!)
+        queued_job_execution.expects(:start)
 
         with_job_execution do
           job_execution.finish

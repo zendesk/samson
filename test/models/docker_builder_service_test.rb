@@ -20,10 +20,10 @@ describe DockerBuilderService do
 
   before { execute_on_remote_repo "git tag #{git_tag}" }
 
-  describe "#run!" do
-    def run!(options = {})
+  describe "#run" do
+    def call(options = {})
       JobExecution.expects(:start_job).capture(start_jobs)
-      service.run!(options)
+      service.run(options)
     end
 
     def execute_job
@@ -36,36 +36,36 @@ describe DockerBuilderService do
     it "skips when already running to combat racey parallel deploys/builds" do
       JobExecution.expects(:start_job).never
       Rails.cache.write("build-service-#{build.id}", true)
-      service.run!
+      service.run
     end
 
     it "deletes previous build job" do
       build.docker_build_job = jobs(:succeeded_test)
-      run!
+      call
       assert_raises(ActiveRecord::RecordNotFound) { jobs(:succeeded_test).reload }
     end
 
     it "sends notifications when the job succeeds" do
-      run!
+      call
       Samson::Hooks.expects(:fire).with(:after_docker_build, anything)
       job.send(:finish)
     end
 
     it "uses label as tag when present" do
       build.label = 'Foo Bar baz'
-      run!
+      call
       job.send(:finish)
       build.docker_tag.must_equal 'foo-bar-baz'
     end
 
     it "tags as latest" do
-      run!
+      call
       job.send(:finish)
       build.docker_tag.must_equal 'latest'
     end
 
     it "builds, does not push and removes the image" do
-      run!
+      call
 
       # simulate that build worked
       service.expects(:build_image).returns(true)
@@ -80,7 +80,7 @@ describe DockerBuilderService do
 
     it "does not remove when DOCKER_KEEP_BUILT_IMGS is set" do
       with_env DOCKER_KEEP_BUILT_IMGS: "1" do
-        run!(push: false)
+        call(push: false)
 
         service.expects(:build_image).returns(true) # simulate that build worked
         build.expects(:docker_image).never # image will not be removed
@@ -92,7 +92,7 @@ describe DockerBuilderService do
 
     it "returns push_image result when it pushes" do
       with_env DOCKER_KEEP_BUILT_IMGS: "1" do
-        run!(push: true)
+        call(push: true)
 
         # simulate that build worked
         service.expects(:build_image).returns(true)
@@ -103,7 +103,7 @@ describe DockerBuilderService do
     end
 
     it "fails when bla" do
-      run!(push: true)
+      call(push: true)
 
       # simulate that build worked
       service.expects(:build_image).returns(false)
@@ -115,7 +115,7 @@ describe DockerBuilderService do
     it "runs via kubernetes when job is marked as kubernetes_job" do
       build.kubernetes_job = true
       with_env "DOCKER_KEEP_BUILT_IMGS" => "1" do
-        run!
+        call
 
         # simulate that build worked
         service.expects(:build_image).never
@@ -137,14 +137,14 @@ describe DockerBuilderService do
     before { Kubernetes::BuildJobExecutor.expects(:new).returns k8s_job }
 
     it 'updates build metadata when the remote job completes' do
-      k8s_job.expects(:execute!).returns([true, build_log])
+      k8s_job.expects(:execute).returns([true, build_log])
 
       service.send(:run_build_image_job, local_job)
       assert_equal("#{project.docker_repo(DockerRegistry.first)}@#{repo_digest}", build.docker_repo_digest)
     end
 
     it 'leaves the build docker metadata empty when the remote job fails' do
-      k8s_job.expects(:execute!).returns([false, build_log])
+      k8s_job.expects(:execute).returns([false, build_log])
 
       service.send(:run_build_image_job, local_job)
       assert_nil build.docker_repo_digest
@@ -199,7 +199,7 @@ describe DockerBuilderService do
 
   describe "#build_image" do
     before do
-      TerminalExecutor.any_instance.expects(:execute!).returns(true)
+      TerminalExecutor.any_instance.expects(:execute).returns(true)
       OutputBuffer.any_instance.expects(:to_s).returns("Ignore me\nSuccessfully built bar\nSuccessfully built foobar")
       GitRepository.any_instance.expects(:commit_from_ref).returns("commitx")
       Docker::Image.stubs(:get).with("foobar").returns(mock_docker_image)
@@ -230,8 +230,8 @@ describe DockerBuilderService do
     end
 
     it 'catches docker errors' do
-      TerminalExecutor.any_instance.unstub(:execute!)
-      TerminalExecutor.any_instance.expects(:execute!).returns(false)
+      TerminalExecutor.any_instance.unstub(:execute)
+      TerminalExecutor.any_instance.expects(:execute).returns(false)
       OutputBuffer.any_instance.unstub(:to_s)
       OutputBuffer.any_instance.expects(:to_s).never
       service.send(:build_image, tmp_dir).must_be_nil

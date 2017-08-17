@@ -7,7 +7,7 @@ class DeployService
     @user = user
   end
 
-  def deploy!(stage, attributes)
+  def deploy(stage, attributes)
     deploy = stage.create_deploy(user, attributes)
 
     if deploy.persisted?
@@ -22,14 +22,14 @@ class DeployService
       if deploy.waiting_for_buddy? && !copy_approval_from_last_deploy(deploy)
         Samson::Hooks.fire(:buddy_request, deploy)
       else
-        confirm_deploy!(deploy)
+        confirm_deploy(deploy)
       end
     end
 
     deploy
   end
 
-  def confirm_deploy!(deploy)
+  def confirm_deploy(deploy)
     stage = deploy.stage
 
     job_execution = JobExecution.new(deploy.reference, deploy.job, env: construct_env(stage))

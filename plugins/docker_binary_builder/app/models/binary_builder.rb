@@ -44,7 +44,7 @@ class BinaryBuilder
     return unless File.file? pre_build_file
 
     @output.puts "Running pre build script..."
-    unless @executor.execute! pre_build_file
+    unless @executor.execute pre_build_file
       raise Samson::Hooks::UserError, "Error running pre build script"
     end
   end

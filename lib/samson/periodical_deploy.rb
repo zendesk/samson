@@ -13,7 +13,7 @@ module Samson
         next unless deploy.succeeded?
 
         deployer = User.where(external_id: EXTERNAL_ID).first!
-        DeployService.new(deployer).deploy!(
+        DeployService.new(deployer).deploy(
           stage,
           reference: deploy.reference,
           buddy_id: deploy.buddy_id || deploy.job.user_id

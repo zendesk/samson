@@ -24,7 +24,7 @@ describe DeployService do
       SseRailsEngine.expects(:send_event).twice
       assert_difference "Job.count", +1 do
         assert_difference "Deploy.count", +1 do
-          service.deploy!(stage, reference: reference)
+          service.deploy(stage, reference: reference)
         end
       end
     end
@@ -41,22 +41,22 @@ describe DeployService do
 
       it "does not start the deploy" do
         Samson::Hooks.expects(:fire).with(:buddy_request, anything)
-        service.expects(:confirm_deploy!).never
-        service.deploy!(stage, reference: reference)
+        service.expects(:confirm_deploy).never
+        service.deploy(stage, reference: reference)
       end
 
       describe "similar deploy was approved" do
         before { travel(-1.minute) { create_previous_deploy(ref1, stage_production_1) } }
 
         it "starts the deploy, if in grace period" do
-          service.expects(:confirm_deploy!)
-          service.deploy!(stage_production_2, reference: ref1)
+          service.expects(:confirm_deploy)
+          service.deploy(stage_production_2, reference: ref1)
         end
 
         it "does not start the deploy, if past grace period" do
-          service.expects(:confirm_deploy!).never
+          service.expects(:confirm_deploy).never
           travel BuddyCheck.grace_period + 1.minute do
-            service.deploy!(stage_production_2, reference: ref1)
+            service.deploy(stage_production_2, reference: ref1)
           end
         end
 
@@ -64,15 +64,15 @@ describe DeployService do
           before { stage.audits.create!(action: 'update', audited_changes: {"script" => ["foo", "bar"]}) }
 
           it "does not start the deploy" do
-            service.expects(:confirm_deploy!).never
-            service.deploy!(stage_production_2, reference: ref1)
+            service.expects(:confirm_deploy).never
+            service.deploy(stage_production_2, reference: ref1)
           end
 
           it "starts the deploy when stage was modified after an older similar deploy" do
             Deploy.first.update_column(:started_at, 4.seconds.from_now)
             create_previous_deploy(ref1, stage_production_1)
-            service.expects(:confirm_deploy!)
-            service.deploy!(stage_production_2, reference: ref1)
+            service.expects(:confirm_deploy)
+            service.deploy(stage_production_2, reference: ref1)
           end
         end
       end
@@ -80,8 +80,8 @@ describe DeployService do
       describe "if similar deploy was bypassed" do
         it "does not start the deploy" do
           create_previous_deploy(ref1, stage_production_1, bypassed: true)
-          service.expects(:confirm_deploy!).never
-          service.deploy!(stage_production_2, reference: ref1)
+          service.expects(:confirm_deploy).never
+          service.deploy(stage_production_2, reference: ref1)
         end
       end
 
@@ -93,14 +93,14 @@ describe DeployService do
 
         it 'deploys because of prod deploy groups' do
           create_previous_deploy(ref1, stage_production_1)
-          service.expects(:confirm_deploy!).once
-          service.deploy!(stage_production_2, reference: ref1)
+          service.expects(:confirm_deploy).once
+          service.deploy(stage_production_2, reference: ref1)
         end
 
         it 'does not deploy if previous deploy was not on prod' do
           create_previous_deploy(ref1, stages(:test_staging))
-          service.expects(:confirm_deploy!).never
-          service.deploy!(stage_production_2, reference: ref1)
+          service.expects(:confirm_deploy).never
+          service.deploy(stage_production_2, reference: ref1)
         end
       end
     end
@@ -122,7 +122,7 @@ describe DeployService do
         JobExecution.expects(:queued?).with(deploy_two.job.id).returns(true)
         JobExecution.expects(:dequeue).with(deploy_two.job.id).returns(true)
 
-        service.deploy!(stage, reference: reference)
+        service.deploy(stage, reference: reference)
 
         deploy_one.job.reload.status.must_equal 'running'
         deploy_two.job.reload.status.must_equal 'cancelled'
@@ -132,7 +132,7 @@ describe DeployService do
         deploy_one = create_deployment(other_user, 'v1', stage, 'running')
         deploy_two = create_deployment(other_user, 'v2', stage, 'pending')
 
-        service.deploy!(stage, reference: reference)
+        service.deploy(stage, reference: reference)
 
         deploy_one.job.reload.status.must_equal 'running'
         deploy_two.job.reload.status.must_equal 'pending'
@@ -143,7 +143,7 @@ describe DeployService do
   describe "#confirm_deploy!" do
     it "starts a job execution" do
       JobExecution.expects(:start_job).returns(mock).once
-      service.confirm_deploy!(deploy)
+      service.confirm_deploy(deploy)
     end
 
     describe "when stage can run in parallel" do
@@ -156,7 +156,7 @@ describe DeployService do
         JobExecution.stubs(:new).returns(job_execution)
         JobExecution.expects(:start_job).with(job_execution, queue: nil)
         deploy.buddy = user
-        service.confirm_deploy!(deploy)
+        service.confirm_deploy(deploy)
       end
     end
 
@@ -166,7 +166,7 @@ describe DeployService do
         JobExecution.stubs(:new).returns(job_execution)
         JobExecution.expects(:start_job).with(job_execution, queue: "stage-#{stage.id}")
         deploy.buddy = user
-        service.confirm_deploy!(deploy)
+        service.confirm_deploy(deploy)
       end
     end
 
@@ -174,8 +174,8 @@ describe DeployService do
       before do
         stage.stubs(:deploy_requires_approval?).returns(true)
 
-        job_execution.stubs(:execute!)
-        job_execution.stubs(:setup!).returns(true)
+        job_execution.stubs(:execute)
+        job_execution.stubs(:setup).returns(true)
 
         JobExecution.stubs(:new).returns(job_execution)
         JobQueue.any_instance.stubs(:delete_and_enqueue_next) # we do not properly add the job, so removal fails
@@ -186,7 +186,7 @@ describe DeployService do
         JobExecution.expects(:start_job).returns(mock).once
         DeployMailer.expects(:bypass_email).never
         deploy.buddy = other_user
-        service.confirm_deploy!(deploy)
+        service.confirm_deploy(deploy)
       end
 
       it "reports bypass via mail" do
@@ -194,8 +194,8 @@ describe DeployService do
         JobExecution.expects(:start_job).returns(mock).once
         DeployMailer.expects(bypass_email: stub(deliver_now: true))
         deploy.buddy = user
-        service.confirm_deploy!(deploy)
-        job_execution.send(:run!)
+        service.confirm_deploy(deploy)
+        job_execution.send(:run)
       end
     end
   end
@@ -204,8 +204,8 @@ describe DeployService do
     before do
       stage.stubs(:create_deploy).returns(deploy)
       deploy.stubs(:persisted?).returns(true)
-      job_execution.stubs(:execute!)
-      job_execution.stubs(:setup!).returns(true)
+      job_execution.stubs(:execute)
+      job_execution.stubs(:setup).returns(true)
 
       JobExecution.stubs(:new).returns(job_execution)
       JobQueue.any_instance.stubs(:delete_and_enqueue_next) # we do not properly add the job, so removal fails
@@ -213,8 +213,8 @@ describe DeployService do
 
     it "sends before_deploy hook" do
       record_hooks(:before_deploy) do
-        service.deploy!(stage, reference: reference)
-        job_execution.send(:run!)
+        service.deploy(stage, reference: reference)
+        job_execution.send(:run)
       end.must_equal [[deploy, nil]]
     end
   end
@@ -224,8 +224,8 @@ describe DeployService do
       SseRailsEngine.expects(:send_event).with('deploys', type: 'finish').never
       stage.stubs(:create_deploy).returns(deploy)
       deploy.stubs(:persisted?).returns(true)
-      job_execution.stubs(:execute!)
-      job_execution.stubs(:setup!).returns(true)
+      job_execution.stubs(:execute)
+      job_execution.stubs(:setup).returns(true)
 
       JobExecution.stubs(:new).returns(job_execution)
       JobQueue.any_instance.stubs(:delete_and_enqueue_next) # we do not properly add the job, so removal fails
@@ -238,8 +238,8 @@ describe DeployService do
         DeployMailer.expects(:deploy_email).with(anything, ['a@b.com', 'b@c.com']).
           returns(stub("DeployMailer", deliver_now: true))
 
-        service.deploy!(stage, reference: reference)
-        job_execution.send(:run!)
+        service.deploy(stage, reference: reference)
+        job_execution.send(:run)
       end
 
       it "does not fail all callbacks when 1 callback fails" do
@@ -247,15 +247,15 @@ describe DeployService do
         service.expects(:send_sse_deploy_update).with('finish', anything).raises # first callback
         Airbrake.expects(:notify)
         DeployMailer.expects(:deploy_email).returns(stub(deliver_now: true))
-        service.deploy!(stage, reference: reference)
-        job_execution.send(:run!)
+        service.deploy(stage, reference: reference)
+        job_execution.send(:run)
       end
     end
 
     it "sends after_deploy hook" do
       record_hooks(:after_deploy) do
-        service.deploy!(stage, reference: reference)
-        job_execution.send(:run!)
+        service.deploy(stage, reference: reference)
+        job_execution.send(:run)
       end.must_equal [[deploy, nil]]
     end
 
@@ -264,8 +264,8 @@ describe DeployService do
 
       DeployMailer.expects(:deploy_failed_email).returns(stub("DeployMailer", deliver_now: true))
 
-      service.deploy!(stage, reference: reference)
-      job_execution.send(:run!)
+      service.deploy(stage, reference: reference)
+      job_execution.send(:run)
     end
   end
 end

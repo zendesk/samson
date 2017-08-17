@@ -43,7 +43,7 @@ module Kubernetes
       @stopped = true
     end
 
-    def execute!(*)
+    def execute(*)
       verify_kubernetes_templates!
       build = find_or_create_build
       return false if stopped?
@@ -277,7 +277,7 @@ module Kubernetes
           project: @job.project,
           label: "Automated build triggered via Deploy ##{@job.deploy.id}"
         )
-        DockerBuilderService.new(build).run!(push: true)
+        DockerBuilderService.new(build).run(push: true)
         build
       else
         @output.puts("Not creating a Build for #{@job.commit} since it does not have a Dockerfile.")

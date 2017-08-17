@@ -4,7 +4,7 @@ class ReleaseService
     @project = project
   end
 
-  def release!(attrs = {})
+  def release(attrs = {})
     release = @project.releases.create(attrs)
     if release.persisted?
       push_tag_to_git_repository(release)
@@ -30,7 +30,7 @@ class ReleaseService
 
     @project.stages.deployed_on_release.each do |stage|
       if Samson::Hooks.fire(:release_deploy_conditions, stage, release).all?
-        deploy_service.deploy!(stage, reference: release.version)
+        deploy_service.deploy(stage, reference: release.version)
       end
     end
   end

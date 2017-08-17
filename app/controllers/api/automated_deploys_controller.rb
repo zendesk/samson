@@ -10,7 +10,7 @@ class Api::AutomatedDeploysController < Api::BaseController
     env = params.require(:env).to_unsafe_hash.map { |k, v| "export PARAM_#{k}=#{v.gsub("\n", "\\n").shellescape}" }
     env << "export DEPLOY_GROUPS=#{@deploy_group.env_value}"
 
-    deploy = deploy_service.deploy!(
+    deploy = deploy_service.deploy(
       @stage,
       reference: @last_deploy.reference,
       buddy_id: @last_deploy.buddy_id || @last_deploy.job.user_id,

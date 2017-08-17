@@ -16,14 +16,14 @@ module SamsonPipelines
 
     def deploy_to_stage(stage, template_deploy, output)
       deploy_service = DeployService.new(template_deploy.user)
-      deploy = deploy_service.deploy!(
+      deploy = deploy_service.deploy(
         stage,
         reference: template_deploy.reference,
         buddy: template_deploy.buddy
       )
       raise deploy.errors.full_messages.join(", ") unless deploy.persisted?
 
-      deploy_service.confirm_deploy!(deploy) if stage.deploy_requires_approval?
+      deploy_service.confirm_deploy(deploy) if stage.deploy_requires_approval?
       output.puts "# Pipeline: Started stage: '#{stage.name}' - #{deploy.url}\n"
     rescue => ex
       output.puts "# Pipeline: Failed to start stage '#{stage.name}': #{ex.message}\n"

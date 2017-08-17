@@ -8,7 +8,7 @@ describe JobsController do
   let(:stage) { stages(:test_staging) }
   let(:command) { "echo hi" }
   let(:job) { Job.create!(command: command, project: project, user: user) }
-  let(:job_service) { stub(execute!: nil) }
+  let(:job_service) { stub(execute: nil) }
 
   as_a_viewer do
     describe "#enabled" do
