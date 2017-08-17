@@ -75,36 +75,26 @@ class Job < ActiveRecord::Base
   end
 
   def cancel(canceller)
+    !JobExecution.dequeue(id) && ex = execution # is executing
+    return true if !ex && !active?
+
     update_attribute(:canceller, canceller) unless self.canceller
 
-    if !JobExecution.dequeue(id) && ex = execution # is active
-      cancelling!
-      ex.cancel
+    if ex
+      ex.cancel # switches job status in the runner thread for consistent status in after_deploy hooks
+    else
+      cancelled!
     end
-
-    cancelled!
   end
 
   %w[pending running succeeded cancelling cancelled failed errored].each do |status|
     define_method "#{status}?" do
       self.status == status # rubocop:disable Style/RedundantSelf
     end
-  end
 
-  def running!
-    status!("running")
-  end
-
-  def succeeded!
-    status!("succeeded")
-  end
-
-  def failed!
-    status!("failed")
-  end
-
-  def errored!
-    status!("errored")
+    define_method "#{status}!" do
+      status!(status)
+    end
   end
 
   def finished?
@@ -148,14 +138,6 @@ class Job < ActiveRecord::Base
   end
 
   private
-
-  def cancelling!
-    status!("cancelling")
-  end
-
-  def cancelled!
-    status!("cancelled")
-  end
 
   def validate_globally_unlocked
     return unless lock = Lock.global.first

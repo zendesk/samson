@@ -60,11 +60,13 @@ class JobExecution
 
   def cancel
     @cancelled = true
+    @job.cancelling!
     @executor.cancel 'INT'
     unless @thread.join(cancel_timeout)
       @executor.cancel 'KILL'
       @thread.join(cancel_timeout) || @thread.kill
     end
+    @job.cancelled!
     finish
   end
 
