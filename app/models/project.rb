@@ -6,6 +6,7 @@ class Project < ActiveRecord::Base
   include Permalinkable
   include Searchable
 
+  before_validation :normalize_repository_url, if: :repository_url_changed?
   validates :name, :repository_url, presence: true
   validate :valid_repository_url, if: :repository_url_changed?
   validate :validate_can_release
@@ -201,6 +202,10 @@ class Project < ActiveRecord::Base
         project_id: id
       }
     )
+  end
+
+  def normalize_repository_url
+    self.repository_url = repository_url.sub(/\/$/, '')
   end
 
   def valid_repository_url
