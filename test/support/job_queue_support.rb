@@ -16,21 +16,21 @@ ActiveSupport::TestCase.class_eval do
     around { |t| with_job_execution(&t) }
   end
 
-  def self.with_job_stop_timeout(value)
+  def self.with_job_cancel_timeout(value)
     around do |test|
       begin
-        old = JobExecution.stop_timeout
-        JobExecution.stop_timeout = value
+        old = JobExecution.cancel_timeout
+        JobExecution.cancel_timeout = value
         test.call
       ensure
-        JobExecution.stop_timeout = old
+        JobExecution.cancel_timeout = old
       end
     end
   end
 
   def self.with_full_job_execution
     with_job_execution
-    with_job_stop_timeout 0.1
+    with_job_cancel_timeout 0.1
     with_project_on_remote_repo
     around { |t| ArMultiThreadedTransactionalTests.activate &t }
   end

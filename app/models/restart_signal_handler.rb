@@ -13,8 +13,8 @@ class RestartSignalHandler
       ActiveRecord::Base.connection_pool.with_connection do
         JobExecution.enabled = true
 
-        # any job that was left running is dead now, so we can stop it
-        Job.running.each { |j| j.stop!(nil) }
+        # any job that was left running is dead now, so we can cancel it
+        Job.running.each { |j| j.cancel(nil) }
 
         # start all non-deploys jobs waiting for restart
         Job.non_deploy.pending.each do |job|

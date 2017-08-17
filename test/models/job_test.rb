@@ -53,21 +53,21 @@ describe Job do
     end
   end
 
-  describe "#can_be_stopped_by?" do
-    it "can be stopped by user that started the job" do
-      job.can_be_stopped_by?(job.user).must_equal true
+  describe "#can_be_cancelled_by?" do
+    it "can be cancelled by user that started the job" do
+      job.can_be_cancelled_by?(job.user).must_equal true
     end
 
-    it "can be stopped by admin " do
-      job.can_be_stopped_by?(user).must_equal true
+    it "can be cancelled by admin " do
+      job.can_be_cancelled_by?(user).must_equal true
     end
 
-    it "can be stopped by admin of this project" do
-      job.can_be_stopped_by?(users(:project_admin)).must_equal true
+    it "can be cancelled by admin of this project" do
+      job.can_be_cancelled_by?(users(:project_admin)).must_equal true
     end
 
-    it "cannot be stopped by other users" do
-      job.can_be_stopped_by?(users(:viewer)).must_equal false
+    it "cannot be cancelled by other users" do
+      job.can_be_cancelled_by?(users(:viewer)).must_equal false
     end
   end
 
@@ -83,23 +83,23 @@ describe Job do
     end
   end
 
-  describe "#success!" do
+  describe "#succeeded!" do
     it "marks the job as succeeded" do
-      job.success!
+      job.succeeded!
       job.status.must_equal "succeeded"
     end
   end
 
-  describe "#fail!" do
+  describe "#failed!" do
     it "shows failed job" do
-      job.fail!
+      job.failed!
       job.status.must_equal "failed"
     end
   end
 
-  describe "#error!" do
+  describe "#errored!" do
     it "shows errored job" do
-      job.error!
+      job.errored!
       job.status.must_equal "errored"
     end
   end
@@ -291,28 +291,28 @@ describe Job do
     end
   end
 
-  describe "#stop!" do
+  describe "#cancel" do
     with_full_job_execution
 
-    it "stops an active job" do
+    it "cancels an active job" do
       ex = JobExecution.new('master', job) { sleep 10 }
       JobExecution.start_job(ex)
       sleep 0.1 # make the job spin up properly
 
       assert JobExecution.active?(ex.id)
-      job.stop!(user)
+      job.cancel(user)
       assert job.cancelled? # job execution callbacks sets it to cancelled
       job.canceller.must_equal user
     end
 
-    it "stops an inactive job" do
+    it "cancels an inactive job" do
       refute JobExecution.active?(job.id)
-      job.stop!(user)
+      job.cancel(user)
       assert job.cancelled?
       job.canceller.must_equal user
     end
 
-    it "stops a queued job" do
+    it "cancels a queued job" do
       active_job = project.jobs.new(command: 'cat foo', user: user, project: project, commit: 'master')
       active = JobExecution.new('master', active_job) { sleep 10 }
       JobExecution.start_job(active, queue: 'foo')
@@ -324,8 +324,8 @@ describe Job do
 
       sleep 0.1 # let jobs spin up
 
-      job.stop!(user)
-      active_job.stop!(user)
+      job.cancel(user)
+      active_job.cancel(user)
 
       assert job.cancelled?
       refute JobExecution.queued?(job.id)
@@ -335,13 +335,13 @@ describe Job do
     it "does not change a cancelled job" do
       job.status = "cancelled"
       job.canceller = users(:deployer)
-      job.stop!(user)
+      job.cancel(user)
       job.status.must_equal "cancelled"
       job.canceller.must_equal users(:deployer)
     end
 
-    it "can stop from application restart" do
-      job.stop!(nil)
+    it "can cancel from application restart" do
+      job.cancel(nil)
       job.status.must_equal "cancelled"
       job.canceller.must_be_nil
     end

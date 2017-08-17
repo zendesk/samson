@@ -32,11 +32,11 @@ class JobsController < ApplicationController
   end
 
   def destroy
-    if @job.can_be_stopped_by?(current_user)
-      @job.stop!(current_user)
+    if @job.can_be_cancelled_by?(current_user)
+      @job.cancel(current_user)
       flash[:notice] = "Cancelled!"
     else
-      flash[:error] = "You are not allowed to stop this job."
+      flash[:error] = "You are not allowed to cancel this job."
     end
 
     redirect_back fallback_location: [@project, @job]

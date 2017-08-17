@@ -99,10 +99,10 @@ class DeploysController < ApplicationController
   end
 
   def destroy
-    if @deploy.can_be_stopped_by?(current_user)
-      @deploy.stop!(current_user)
+    if @deploy.can_be_cancelled_by?(current_user)
+      @deploy.cancel(current_user)
     else
-      flash[:error] = "You do not have privileges to stop this deploy."
+      flash[:error] = "You do not have privileges to cancel this deploy."
     end
 
     redirect_to [current_project, @deploy]

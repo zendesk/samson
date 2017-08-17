@@ -84,7 +84,7 @@ describe JobsController do
         job.update_column(:user_id, users(:admin).id)
         delete :destroy, params: {project_id: project.to_param, id: job}
         assert_redirected_to [project, job]
-        flash[:error].must_equal "You are not allowed to stop this job."
+        flash[:error].must_equal "You are not allowed to cancel this job."
       end
 
       it "redirects to passed path" do

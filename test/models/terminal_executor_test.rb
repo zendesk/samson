@@ -202,11 +202,11 @@ describe TerminalExecutor do
     end
   end
 
-  describe '#stop!' do
-    def execute_and_stop(command, signal)
+  describe '#cancel' do
+    def execute_and_cancel(command, signal)
       thread = Thread.new(subject) do |shell|
         sleep(0.1) until shell.pgid
-        shell.stop!(signal)
+        shell.cancel(signal)
       end
 
       result = subject.execute!(command)
@@ -215,16 +215,16 @@ describe TerminalExecutor do
     end
 
     it 'properly kills the execution' do
-      execute_and_stop('sleep 100', 'INT').must_be_nil
+      execute_and_cancel('sleep 100', 'INT').must_be_nil
     end
 
     it 'terminates hanging processes with -9' do
-      execute_and_stop('trap "sleep 100" 2; sleep 100', 'KILL').must_be_nil
+      execute_and_cancel('trap "sleep 100" 2; sleep 100', 'KILL').must_be_nil
     end
 
     it 'stops any further execution so current thread can finish' do
       subject.execute!('echo 1').must_equal true
-      subject.stop! 'INT'
+      subject.cancel 'INT'
       subject.execute!('echo 1').must_equal false
     end
   end

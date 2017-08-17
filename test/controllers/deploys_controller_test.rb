@@ -20,7 +20,7 @@ describe DeploysController do
   let(:command) { job.command }
   let(:job) { jobs(:succeeded_test) }
   let(:deploy) { deploys(:succeeded_test) }
-  let(:deploy_service) { stub(deploy!: nil, stop!: nil) }
+  let(:deploy_service) { stub(deploy!: nil, cancel: nil) }
   let(:deploy_called) { [] }
   let(:changeset) { stub_everything(commits: [], files: [], pull_requests: [], jira_issues: []) }
 
@@ -395,7 +395,7 @@ describe DeploysController do
         before do
           DeployService.stubs(:new).with(user).returns(deploy_service)
           Job.any_instance.stubs(:started_by?).returns(true)
-          Deploy.any_instance.expects(:stop!).once
+          Deploy.any_instance.expects(:cancel).once
 
           delete :destroy, params: {project_id: project.to_param, id: deploy.to_param}
         end
@@ -407,7 +407,7 @@ describe DeploysController do
 
       describe "with a deploy not owned by the user" do
         before do
-          deploy_service.expects(:stop!).never
+          deploy_service.expects(:cancel).never
           Deploy.any_instance.stubs(:started_by?).returns(false)
           User.any_instance.stubs(:admin?).returns(false)
 
@@ -428,7 +428,7 @@ describe DeploysController do
 
     describe "#destroy" do
       it "cancels the deploy" do
-        Deploy.any_instance.expects(:stop!).once
+        Deploy.any_instance.expects(:cancel).once
         delete :destroy, params: {project_id: project.to_param, id: deploy.to_param}
         flash[:error].must_be_nil
       end

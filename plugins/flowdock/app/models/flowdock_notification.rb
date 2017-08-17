@@ -39,7 +39,7 @@ class FlowdockNotification
     if user == buddy
       "#{user.name} bypassed deploy #{deploy_url}"
     else
-      "#{user.name} #{buddy.name} #{approved ? 'approved' : 'stopped'} deploy #{deploy_url}"
+      "#{user.name} #{buddy.name} #{approved ? 'approved' : 'cancelled'} deploy #{deploy_url}"
     end
   end
 

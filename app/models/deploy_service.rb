@@ -15,7 +15,7 @@ class DeployService
 
       if stage.cancel_queued_deploys?
         stage.deploys.pending.prior_to(deploy).for_user(user).each do |deploy|
-          deploy.job.stop!(user) if deploy.job.queued? # tiny race condition, might cancel jobs that have just started
+          deploy.job.cancel(user) if deploy.job.queued? # tiny race condition, might cancel jobs that have just started
         end
       end
 

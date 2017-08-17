@@ -60,7 +60,7 @@ class Job < ActiveRecord::Base
     updated_at - created_at
   end
 
-  def can_be_stopped_by?(user)
+  def can_be_cancelled_by?(user)
     started_by?(user) || user.admin? || user.admin_for?(project)
   end
 
@@ -74,12 +74,12 @@ class Job < ActiveRecord::Base
     commands
   end
 
-  def stop!(canceller)
+  def cancel(canceller)
     update_attribute(:canceller, canceller) unless self.canceller
 
     if !JobExecution.dequeue(id) && ex = execution # is active
       cancelling!
-      ex.stop!
+      ex.cancel
     end
 
     cancelled!
@@ -91,19 +91,19 @@ class Job < ActiveRecord::Base
     end
   end
 
-  def run!
+  def running!
     status!("running")
   end
 
-  def success!
+  def succeeded!
     status!("succeeded")
   end
 
-  def fail!
+  def failed!
     status!("failed")
   end
 
-  def error!
+  def errored!
     status!("errored")
   end
 

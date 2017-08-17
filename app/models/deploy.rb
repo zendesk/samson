@@ -14,7 +14,7 @@ class Deploy < ActiveRecord::Base
   validate :validate_stage_is_unlocked, on: :create
   validate :validate_stage_uses_deploy_groups_properly, on: :create
 
-  delegate :started_by?, :can_be_stopped_by?, :stop!, :status, :user, :output, to: :job
+  delegate :started_by?, :can_be_cancelled_by?, :cancel, :status, :user, :output, to: :job
   delegate :active?, :pending?, :running?, :cancelling?, :cancelled?, :succeeded?, to: :job
   delegate :finished?, :errored?, :failed?, to: :job
   delegate :production?, to: :stage
